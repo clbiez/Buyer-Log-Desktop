@@ -104,9 +104,9 @@ test('v7.12 Collection right-button pan coalesces pointer moves into one animati
 
 test('v7.12 Collection Notes propagate to rows with the same normalized PLM in one commit', () => {
   const block = APP.slice(APP.indexOf('function commitKolEditor'), APP.indexOf('function finishKolCellEditing'));
-  assert.match(block, /if\(k==='not'\)/);
+  assert.match(block, /if\(k==='not'&&!variantOverrideEdit\)/);
   assert.match(block, /kolPlmNormalizeId\(row\.plmId\)/);
-  assert.match(block, /kolRows\.forEach\(peer=>\{[\s\S]*?kolPlmNormalizeId\(peer\.plmId\)!==plmKey[\s\S]*?variantOverrides[\s\S]*?'not'[\s\S]*?peer\.not=val;/);
+  assert.match(block, /kolRows\.forEach\(peer=>\{[\s\S]*?kolPlmNormalizeId\(peer\.plmId\)!==plmKey[\s\S]*?kolHasVariantOverride\(peer,'not'\)[\s\S]*?peer\.not=val;/);
   assert.match(block, /if\(pushUndo\)kolPushUndo\(\)/);
 });
 

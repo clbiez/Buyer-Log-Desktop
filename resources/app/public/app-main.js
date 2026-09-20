@@ -6590,7 +6590,8 @@ function _copyEnsureRequiredRowsRendered(table,selSet,idAttr){
 // öncelik sırası (canonicalModelImageSource → r.img → r.imgRef) kullanılır;
 // bkz. renderKol'daki kolPictureCell üretimi. Eksik görsel kopyayı
 // DURDURMAZ — hücre yalnız boş kalır.
-async function kolRecordImageCopyCell(row){
+async function kolRecordImageCopyCell(record){
+  const row=kolCollectionProjectionSource(record);
   const canonicalImageSource=canonicalModelImageSource(row.plmId,row.colourCode,row.colour);
   const source=canonicalImageSource||row.img||(row.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(row.imgRef)}`:'');
   if(!source) return null;
@@ -6607,7 +6608,7 @@ async function buildCollectionStyledCopy(selSet){
   const meta=TABLE_META.kolTable;
   const all=meta.rowsFn();
   const records=selSet&&selSet.size
-    ? all.filter(row=>selSet.has(row.id)||selSet.has(Number(row.id))||selSet.has(String(row.id)))
+    ? all.filter(record=>kolCollectionProjectionSelected(record,selSet))
     : all;
   if(!records.length) return null;
 
@@ -11707,33 +11708,11 @@ const TABLE_META = {
   cpTable: {tableKey:'cp', rowsFn:()=>filteredCP(), computeFn:computeFlags},
   ordersTable: {tableKey:'orders', rowsFn:()=>filteredOrders(), computeFn:computeFlags},
   kolTable: {
-    tableKey:'kol', rowsFn:()=>filteredKol(), computeFn:null,
+    tableKey:'kol', rowsFn:()=>kolCollectionExportProjection(filteredKol()), computeFn:null,
     colsFn: ()=>kolDisplayDescriptors(),
-    cellText: (col,row)=>{
-      if(col.kind==='price'){
-        const pricing=kolEffectivePricing(row),v=pricing&&pricing[col.manufacturer];
-        if(v==null||v==='') return '';
-        const n=kolParseMoneyNum(v); return Number.isFinite(n)?('$'+kolFormatMoneyDisplay(v)):String(v);
-      }
-      if(col.kind==='best'){ const c=kolBestPricing(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
-      if(col.kind==='confirmedName'){ const c=kolConfirmedDisplay(row); return c?c.name:''; }
-      if(col.kind==='confirmedPrice'){ const c=kolConfirmedDisplay(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
-      const c=col.col, v=c.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,c.k);
-      if(c.exToRetail) return v===''?'':(v+' g.');
-      if(c.endeksmatik) return endeksmatikCompactText(row);
-      // Landed hücreleri hesaplanır; dışa aktarımda okunabilir tek satır olarak yazılır.
-      if(c.trLanded){ const k=kolLandedCalc(row); return k.trLanded==null?'':`$${kolMoney2(k.trLanded)} (₺${kolMoney2(k.trPrice)} ÷ ${kolMoney2(k.fx)} × ${kolMoney2(k.trMult)})`; }
-      if(c.ydLanded){ const k=kolLandedCalc(row); if(k.ydLanded==null) return '';
-        const pr=k.profitPct==null?'':` · ${(k.profitPct>0?'+':'')}${(Math.round(k.profitPct*10)/10)}%`;
-        return `$${kolMoney2(k.ydLanded)} ($${kolMoney2(k.supp.price)} ${k.supp.source} × ${kolMoney2(k.ydMult)})${pr}`; }
-      if(c.select) return c.k==='delType'?transitDelTypeDisplay(v):L(norm(v));
-      if(c.percent) return v!==''&&v!=null?kolFormatPercentDisplay(v):'';
-      if(c.hologram) return v!==''&&v!=null?kolFormatHologramDisplay(v):'';
-      if(c.money) return v!==''&&v!=null?('$'+kolFormatMoneyDisplay(v)):'';
-      if(c.custom){ const schema=columnSchemaFor(c); return schema?schema.format(v,{row}):String(v??''); }
-      return v==null?'':String(v);
-    },
-    cellStyle: (col,row)=>{
+    cellText: (col,record)=>kolCollectionExportCellText(col,record),
+    cellStyle: (col,record)=>{
+      const row=kolCollectionProjectionSource(record);
       if(col.kind==='price'){
         const pricing=kolEffectivePricing(row),v=pricing&&pricing[col.manufacturer], n=kolParseMoneyNum(v);
         if(v==='0'||v==='0,00') return '';
@@ -19638,13 +19617,10 @@ function kolScheduleFromWeekCode(value){
 }
 function kolPeriodCurrentSchedule(){return kolScheduleFromWeekMonday(new Date());}
 function kolSetModelSharedField(row,key,value){
-  const id=Number(row&&row.id),api=window.BLCollectionModelGroups;
-  let current=kolRows.find(item=>Number(item.id)===id)||row;
-  const members=api?.groupFor?.(kolRows,current?.modelGroupId)||[];
-  const parent=members.find(member=>member.modelGroupRole==='parent')||members[0];
-  const shared=members.length>1&&!kolIsColorSpecific(key)&&parent===current&&!Object.prototype.hasOwnProperty.call(current.variantOverrides||{},key);
-  if(shared&&api?.setSharedValue){kolRows=kolNormalizeModelGroups(api.setSharedValue(kolRows,current.modelGroupId,key,value));}
-  else if(current)current[key]=value;
+  // Period picker and other non-standard editors must use the same WRITE path
+  // as inline cells; otherwise an existing variant override would be left stale
+  // while only row[key] changed and the next render would resurrect old data.
+  return kolWriteGroupedStorageValue(row,key,value);
 }
 function kolApplyInStoreSchedule(row,schedule){
   if(!row||!schedule||!kolWorkspaceCanEdit)return false;
@@ -19661,7 +19637,7 @@ function kolApplyInStoreSchedule(row,schedule){
   row=kolRows.find(item=>Number(item.id)===Number(row.id))||row;
   // Mağaza Ayı/Haftası yoluyla oluşan In Store da doğrudan hücre editindeki
   // aynı Perakende dependency'sini kullanır. Sevk Tarihine burada dokunulmaz.
-  kolApplyInStoreRetailDependency(row,schedule.inStore,kolSetModelSharedField);
+  kolApplyInStoreRetailDependency(row,schedule.inStore);
   saveKolRows();renderKol();
   const month=kolMonthDisplay(schedule.inStoreMonth),week=kolWeekDisplay(schedule.inStoreWeek),date=fmtDate(schedule.inStore);
   showToast(appLang==='en'?`In Store set: ${month} · Week ${week} · ${date}`:`Mağaza dönemi: ${month} · ${week}. hafta · ${date}`);
@@ -20423,6 +20399,11 @@ const KOL_COLOUR_OVERRIDE_PROJECTION_KEYS=Object.freeze({
 function kolColourOverrideSpec(key){
   const visibleKey=String(key||'');
   if(!visibleKey||visibleKey==='__picture__')return null;
+  // Legacy/manufacturer price cells are a visible projection of the persisted
+  // pricing map. The existing data model owns pricing as one field, so colour
+  // specificity reuses that canonical field rather than inventing per-cell
+  // shadow state.
+  if(visibleKey.startsWith('pricing:'))return {visibleKey,storageKeys:['pricing'],eligible:true,projected:true,nestedKey:visibleKey.slice(8)};
   // Internal editable inputs inside a projected cell participate directly in
   // the same inheritance system even though they are not top-level columns.
   if(KOL_LANDED_INPUT_COLS[visibleKey])return {visibleKey,storageKeys:[visibleKey],eligible:!kolIsColorSpecific(visibleKey),projected:false};
@@ -20452,9 +20433,13 @@ function kolCellLinkedToModel(row,key){
   if(spec&&spec.alreadyColorSpecific)return false;
   const storageKeys=spec?.storageKeys||kolColourOverrideStorageKeys(key);
   if(!storageKeys.length||storageKeys.every(storageKey=>kolIsColorSpecific(storageKey)))return false;
-  if(storageKeys.every(storageKey=>Object.prototype.hasOwnProperty.call(row.variantOverrides||{},storageKey)))return false;
+  if(storageKeys.every(storageKey=>kolHasVariantOverride(row,storageKey)))return false;
   const members=window.BLCollectionModelGroups?.groupFor?.(kolRows,row.modelGroupId)||[];
   return members.length>1;
+}
+function kolHasVariantOverride(row,key){
+  const api=window.BLCollectionModelGroups;
+  return api?.hasVariantOverride?api.hasVariantOverride(row,key):Boolean(row&&row.variantOverrides&&Object.prototype.hasOwnProperty.call(row.variantOverrides,key));
 }
 function kolEffectiveValue(row,key){
   const api=window.BLCollectionModelGroups;
@@ -20470,12 +20455,14 @@ function kolWriteGroupedStorageValue(row,key,value){
   const api=window.BLCollectionModelGroups;
   const members=api?.groupFor?.(kolRows,row.modelGroupId)||[];
   const grouped=members.length>1;
-  const overridden=Object.prototype.hasOwnProperty.call(row.variantOverrides||{},key);
-  if(grouped&&row.modelGroupRole==='parent'&&!overridden){
-    kolRows=kolNormalizeModelGroups(api.setSharedValue(kolRows,row.modelGroupId,key,value));
-  }else if(grouped&&row.modelGroupRole==='variant'&&overridden){
+  const overridden=kolHasVariantOverride(row,key);
+  if(grouped&&overridden){
+    // Explicit per-colour value is authoritative regardless of its falsy value.
     kolRows=kolNormalizeModelGroups(api.setVariantOverride(kolRows,row.id,key,value));
+  }else if(grouped&&row.modelGroupRole==='parent'){
+    kolRows=kolNormalizeModelGroups(api.setSharedValue(kolRows,row.modelGroupId,key,value));
   }else{
+    // Native colour fields and ungrouped rows remain ordinary row-owned data.
     row[key]=value;
   }
   return kolRows.find(item=>String(item?.id)===String(row.id))||row;
@@ -20969,8 +20956,8 @@ function filteredKol(){
     }
     return true;
   });
-  // Collapse is presentation-only. Logical filtered rows always retain every
-  // physical colour record so export/copy/totals/business actions are stable.
+  // Collapse is presentation-only. Logical filtering retains every physical
+  // colour record; UI/copy/visual Excel derive their visible projection later.
   return kolGroupAwareOrder(rows);
 }
 function kolPresentationRows(logicalRows){
@@ -21313,6 +21300,87 @@ function kolCollapsedGroupSummary(members,descriptors){
   return result;
 }
 
+/* ===================================================================
+   COLLECTION VISIBLE/EXPORT PROJECTION
+
+   Raw Collection rows remain the source for editing, persistence, import and
+   business rules.  A collapsed colour group is a display projection only.
+   This adapter is therefore the single bridge from logical rows to the same
+   summary cells used by the Collection renderer, clipboard and visual Excel
+   export.  It never writes summary text back to a Collection row.
+   =================================================================== */
+function kolCollectionProjectionSource(record){
+  return record&&record.__kolCollectionProjection===true?record.row:record;
+}
+function kolCollectionProjectionSummary(record){
+  return record&&record.__kolCollectionProjection===true?record.summary:null;
+}
+function kolCollectionProjectionSummaryEntry(record,key){
+  const summary=kolCollectionProjectionSummary(record);
+  return summary&&typeof summary.get==='function'?summary.get(String(key||'')):null;
+}
+function kolCollectionExportProjection(logicalRows,descriptors){
+  const logical=Array.isArray(logicalRows)?logicalRows:filteredKol();
+  const cols=Array.isArray(descriptors)?descriptors:kolDisplayDescriptors();
+  const visible=kolPresentationRows(logical);
+  const collapsed=kolLoadCollapsedGroups();
+  const groupIndex=kolGroupMembersIndex(kolRows);
+  const summaryCache=new Map();
+  return visible.map(row=>{
+    const groupId=String(row?.modelGroupId||'');
+    const members=groupId?(groupIndex.get(groupId)||[]):[];
+    const parent=members.length>1?(members.find(item=>item.modelGroupRole==='parent')||members[0]):null;
+    const isCollapsed=Boolean(parent&&collapsed.has(groupId)&&String(parent.id)===String(row.id));
+    let summary=null;
+    if(isCollapsed){
+      summary=summaryCache.get(groupId);
+      if(!summary){summary=kolCollapsedGroupSummary(members,cols);summaryCache.set(groupId,summary);}
+    }
+    return {__kolCollectionProjection:true,id:row?.id,row,summary,collapsed:isCollapsed,members:isCollapsed?members:null};
+  });
+}
+function kolCollectionProjectionSelected(record,selection){
+  if(!selection||!selection.size)return false;
+  const row=kolCollectionProjectionSource(record);if(!row)return false;
+  const id=row.id;
+  if(selection.has(id)||selection.has(Number(id))||selection.has(String(id)))return true;
+  if(record&&record.__kolCollectionProjection===true&&record.collapsed){
+    return (record.members||[]).some(member=>selection.has(member.id)||selection.has(Number(member.id))||selection.has(String(member.id)));
+  }
+  return false;
+}
+function kolCollectionRawCellText(col,row){
+  if(!row||!col)return '';
+  if(col.kind==='price'){
+    const pricing=kolEffectivePricing(row),v=pricing&&pricing[col.manufacturer];
+    if(v==null||v==='') return '';
+    const n=kolParseMoneyNum(v); return Number.isFinite(n)?('$'+kolFormatMoneyDisplay(v)):String(v);
+  }
+  if(col.kind==='best'){ const c=kolBestPricing(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
+  if(col.kind==='confirmedName'){ const c=kolConfirmedDisplay(row); return c?c.name:''; }
+  if(col.kind==='confirmedPrice'){ const c=kolConfirmedDisplay(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
+  const c=col.col;if(!c)return '';
+  const v=c.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,c.k);
+  if(c.exToRetail) return v===''?'':(v+' g.');
+  if(c.endeksmatik) return endeksmatikCompactText(row);
+  if(c.trLanded){ const k=kolLandedCalc(row); return k.trLanded==null?'':`$${kolMoney2(k.trLanded)} (₺${kolMoney2(k.trPrice)} ÷ ${kolMoney2(k.fx)} × ${kolMoney2(k.trMult)})`; }
+  if(c.ydLanded){ const k=kolLandedCalc(row); if(k.ydLanded==null) return '';
+    const pr=k.profitPct==null?'':` · ${(k.profitPct>0?'+':'')}${(Math.round(k.profitPct*10)/10)}%`;
+    return `$${kolMoney2(k.ydLanded)} ($${kolMoney2(k.supp.price)} ${k.supp.source} × ${kolMoney2(k.ydMult)})${pr}`; }
+  if(c.select) return c.k==='delType'?transitDelTypeDisplay(v):L(norm(v));
+  if(c.percent) return v!==''&&v!=null?kolFormatPercentDisplay(v):'';
+  if(c.hologram) return v!==''&&v!=null?kolFormatHologramDisplay(v):'';
+  if(c.money) return v!==''&&v!=null?('$'+kolFormatMoneyDisplay(v)):'';
+  if(c.custom){ const schema=columnSchemaFor(c); return schema?schema.format(v,{row}):String(v??''); }
+  return v==null?'':String(v);
+}
+function kolCollectionExportCellText(col,record){
+  const entry=kolCollectionProjectionSummaryEntry(record,col?.k);
+  if(entry)return entry.display;
+  return kolCollectionRawCellText(col,kolCollectionProjectionSource(record));
+}
+
+
 // Ex-Factory/Retail arası gün sayısı (görsel, salt-okunur — CP'deki Ex→Retail sütunuyla aynı fikir).
 function kolExToRetailDays(row){
   if(!row.exFactory || !row.retail) return '';
@@ -21329,7 +21397,15 @@ function kolAddDaysISO(iso, days){
 // Collection tarih bağımlılığı için tek kanonik yol: Mağazaya Giriş değişirse
 // Perakende mevcut kuraldaki gibi 14 gün önceye çekilir. Sevk Tarihi bu zincirin
 // parçası değildir; kullanıcıya ait manuel alan olarak yalnız kendi edit akışıyla yazılır.
-function kolApplyInStoreRetailDependency(row,inStoreIso,setField=null){
+function kolSetDependentGroupedField(row,key,value){
+  // A derived/dependent write must respect the exact same cell ownership as a
+  // direct editor. If this child field is still linked, keep inheriting it; if
+  // it is explicitly colour-specific update its override; parent edits continue
+  // through shared model state.
+  if(kolCellLinkedToModel(row,key))return row;
+  return kolSetModelSharedField(row,key,value);
+}
+function kolApplyInStoreRetailDependency(row,inStoreIso,setField=kolSetDependentGroupedField){
   if(!row||!inStoreIso)return false;
   const retail=kolAddDaysISO(inStoreIso,-14);if(!retail)return false;
   if(typeof setField==='function')setField(row,'retail',retail);
@@ -22969,25 +23045,23 @@ function commitKolEditor(el, options={}){
   const groupApi=window.BLCollectionModelGroups;
   const groupMembers=groupApi?.groupFor?.(kolRows,row.modelGroupId)||[];
   const groupParent=groupMembers.find(member=>member.modelGroupRole==='parent')||groupMembers[0];
-  const sharedEdit=groupMembers.length>1&&!kolIsColorSpecific(k)&&groupParent===row&&!Object.prototype.hasOwnProperty.call(row.variantOverrides||{},k);
-  if(sharedEdit){
-    kolRows=kolNormalizeModelGroups(groupApi.setSharedValue(kolRows,row.modelGroupId,k,val));
-  }else{
-    /* v7.81 — Miras alınan hücreye yazınca sessizce override yaratan dal
-       kaldırıldı; commitKolEditor bu durumu artık en başta reddediyor.
-       Bağı koparan tek yol sağ tık › renk özelinde yap. */
-    row[k] = val;
-  }
-  row=kolRows.find(item=>item.id===id)||row;
-  if(k==='not'){
+  const variantOverrideEdit=groupMembers.length>1&&row.modelGroupRole==='variant'&&kolHasVariantOverride(row,k);
+  const sharedEdit=groupMembers.length>1&&!kolIsColorSpecific(k)&&groupParent===row&&!kolHasVariantOverride(row,k);
+  /* One canonical WRITE path mirrors the canonical effectiveValue READ path.
+     A linked variant is rejected above; an explicitly colour-specific variant
+     updates variantOverrides, a parent updates shared model state, and a native
+     colour field writes the row itself. This keeps render/refresh/restart from
+     resurrecting the pre-edit override value. */
+  row=kolWriteGroupedStorageValue(row,k,val);
+  if(k==='not'&&!variantOverrideEdit){
     const plmKey=kolPlmNormalizeId(row.plmId);
     if(plmKey){
-      // Buying Sample/Collection notu aynı PLM ID'yi temsil eden modellerde tek
-      // ticari not olarak tutulur. Propagation yalnız düzenlenebilir mevcut
-      // workspace içinde ve tek undo/save transaction'ı altında yapılır.
+      // Model-level notes intentionally propagate to the same PLM identity,
+      // but an explicit colour-level note is local to that colour and must not
+      // mutate the parent or sibling colours.
       kolRows.forEach(peer=>{
         if(peer===row||kolPlmNormalizeId(peer.plmId)!==plmKey)return;
-        if(peer.modelGroupRole==='variant'&&Object.prototype.hasOwnProperty.call(peer.variantOverrides||{},'not'))return;
+        if(peer.modelGroupRole==='variant'&&kolHasVariantOverride(peer,'not'))return;
         peer.not=val;
       });
     }
@@ -23055,6 +23129,12 @@ function commitKolPriceEditor(el, options={}){
   if(!el || !el.dataset) return false;
   const id = Number(el.dataset.id), m = el.dataset.mfr;
   let row = kolRows.find(r=>r.id===id); if(!row || !m) return false;
+  if(kolCellLinkedToModel(row,`pricing:${m}`)){
+    showToast(appLang==='en'
+      ?'This field is linked to the model. Use right-click › Make this field colour-specific first.'
+      :'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');
+    return false;
+  }
   const effectivePricing=kolEffectivePricing(row);
   if(!row.pricing) row.pricing = {};
   let val = el.value;
@@ -23066,7 +23146,7 @@ function commitKolPriceEditor(el, options={}){
   releaseKolTransientTopRow(id);
   if(pushUndo)kolPushUndo();
   const groupApi=window.BLCollectionModelGroups,groupMembers=groupApi?.groupFor?.(kolRows,row.modelGroupId)||[],isGrouped=groupMembers.length>1;
-  if(isGrouped&&row.modelGroupRole==='parent'&&!Object.prototype.hasOwnProperty.call(row.variantOverrides||{},'pricing')){
+  if(isGrouped&&row.modelGroupRole==='parent'&&!kolHasVariantOverride(row,'pricing')){
     const nextPricing={...kolEffectivePricing(row),[m]:val};kolRows=kolNormalizeModelGroups(groupApi.setSharedValue(kolRows,row.modelGroupId,'pricing',nextPricing));
   }else if(isGrouped&&row.modelGroupRole==='variant'){
     const nextPricing={...kolEffectivePricing(row),[m]:val};kolRows=kolNormalizeModelGroups(groupApi.setVariantOverride(kolRows,row.id,'pricing',nextPricing));
@@ -23453,11 +23533,20 @@ function renderKol(){
     });
   });
   tbody.querySelectorAll('.kolPriceApprove').forEach(btn=>btn.addEventListener('pointerdown',e=>{
-    e.preventDefault();e.stopPropagation();const id=Number(btn.dataset.id),m=btn.dataset.mfr,row=kolRows.find(r=>r.id===id);if(!row)return;
-    if(!row.pricing)row.pricing={};const priceInput=btn.closest('td')?.querySelector('.kolPriceCell');let raw=priceInput?priceInput.value:row.pricing[m],n=kolParseMoneyNum(raw);
+    e.preventDefault();e.stopPropagation();const id=Number(btn.dataset.id),m=btn.dataset.mfr;let row=kolRows.find(r=>r.id===id);if(!row)return;
+    if(kolCellLinkedToModel(row,`pricing:${m}`)){
+      showToast(appLang==='en'
+        ?'This field is linked to the model. Use right-click › Make this field colour-specific first.'
+        :'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');
+      return;
+    }
+    const effectivePricing=kolEffectivePricing(row);const priceInput=btn.closest('td')?.querySelector('.kolPriceCell');let raw=priceInput?priceInput.value:effectivePricing[m],n=kolParseMoneyNum(raw);
     if(raw!==''&&Number.isFinite(n))raw=kolFormatMoneyDisplay(raw);
     if(!Number.isFinite(n)||n<=0){showToast('Onaylamak için önce bu üreticiye geçerli bir fiyat gir.');if(priceInput){priceInput.focus();priceInput.select();}return;}
-    kolPushUndo();row.pricing[m]=raw;row.confirmedManufacturer=norm(row.confirmedManufacturer)===norm(m)?'':m;kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?`${m} nihai üretici olarak onaylandı.`:'Üretici onayı kaldırıldı.');
+    kolPushUndo();
+    row=kolWriteGroupedStorageValue(row,'pricing',{...effectivePricing,[m]:raw});
+    row.confirmedManufacturer=norm(row.confirmedManufacturer)===norm(m)?'':m;
+    kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?`${m} nihai üretici olarak onaylandı.`:'Üretici onayı kaldırıldı.');
   }));
   tbody.querySelectorAll('.kolPriceCell').forEach(el=>el.addEventListener('change',()=>commitKolPriceEditor(el,{rerender:true})));
   // Elle giriş düğmeleri (v6.01). Tek dinleyici; satırlar yeniden çizildiğinde
@@ -23548,6 +23637,7 @@ function kolSpreadsheetFormulaInfo(key){
 }
 function kolSpreadsheetColumnMeta(key){
   if(key==='__picture__')return {key,label:L('Picture'),type:'image',access:'system',editable:false,formula:''};
+  if(String(key||'').startsWith('pricing:'))return {key,label:String(key).slice(8),type:'money',access:'editable',editable:true,calculated:false,inheritance:'model',overrideable:true,formula:''};
   const landedInput=KOL_LANDED_INPUT_COLS[key];
   if(landedInput)return {key,label:kolStyleFieldLabel(landedInput),type:key==='trPrice'?'money':'number',access:'editable',editable:true,formula:'',col:landedInput};
   const d=kolDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
@@ -23563,6 +23653,7 @@ function kolSpreadsheetColumnMeta(key){
 function kolSpreadsheetRawValue(row,key){
   if(!row)return '';
   if(key==='__picture__')return row.img||'';
+  if(String(key||'').startsWith('pricing:'))return kolEffectivePricing(row)[String(key).slice(8)]??'';
   const d=kolDescriptorByKey(key);if(!d)return '';
   if(d.kind==='best')return kolBestPricing(row)?.price??'';
   if(d.kind==='confirmedName')return kolConfirmedDisplay(row)?.name??'';
@@ -23757,13 +23848,13 @@ function groupedFieldOverride(row,column){
   const key=column?.k||column;
   const spec=kolColourOverrideSpec(key);
   const storageKeys=spec?.storageKeys||[String(key||'').startsWith('pricing:')?'pricing':key].filter(Boolean);
-  return Boolean(row&&storageKeys.length&&row.variantOverrides&&storageKeys.every(storageKey=>Object.prototype.hasOwnProperty.call(row.variantOverrides,storageKey)));
+  return Boolean(row&&storageKeys.length&&storageKeys.every(storageKey=>kolHasVariantOverride(row,storageKey)));
 }
 function groupedFieldHasAnyOverride(row,column){
   const key=column?.k||column;
   const spec=kolColourOverrideSpec(key);
   const storageKeys=spec?.storageKeys||[String(key||'').startsWith('pricing:')?'pricing':key].filter(Boolean);
-  return Boolean(row&&storageKeys.length&&row.variantOverrides&&storageKeys.some(storageKey=>Object.prototype.hasOwnProperty.call(row.variantOverrides,storageKey)));
+  return Boolean(row&&storageKeys.length&&storageKeys.some(storageKey=>kolHasVariantOverride(row,storageKey)));
 }
 function kolSpreadsheetBatchEdit(operations,summary={}){
   if(!kolWorkspaceCanEdit||!Array.isArray(operations)||!operations.length)return {ok:false,changed:0};
@@ -24322,7 +24413,7 @@ function kolTableClipboardColumns(){
 }
 async function copyKolSelectedRows(){
   commitActiveTableEditor({refresh:false});
-  const rows=filteredKol().filter(r=>kolSelected.has(r.id));
+  const rows=kolCollectionExportProjection(filteredKol()).filter(record=>kolCollectionProjectionSelected(record,kolSelected));
   if(!rows.length){ showToast(L('Kopyalamak için önce satır seç.')); return; }
   // Tema değiştirilmeden canlı tablodan kopyalanır; Koleksiyon tablosu işlem
   // öncesi/sonrası yeniden çizilmez.
@@ -27582,10 +27673,16 @@ async function deleteKolSelectedRows(){
 });
 // Excel'e aktarılacak satırları belirler: işaretli satır varsa yalnızca onlar, yoksa
 // o an filtrelenmiş/görünen tüm satırlar (uygulama genelindeki tutarlı davranış).
-function kolExportSelection(){
+function kolRawExportSelection(){
   const filtered=filteredKol();
   const selected=filtered.filter(r=>kolSelected.has(r.id));
   return {rows:selected.length?selected:filtered,selectedOnly:selected.length>0};
+}
+function kolExportSelection(){
+  const logical=filteredKol(),projected=kolCollectionExportProjection(logical);
+  const hasLogicalSelection=logical.some(row=>kolSelected.has(row.id)||kolSelected.has(Number(row.id))||kolSelected.has(String(row.id)));
+  const selected=hasLogicalSelection?projected.filter(record=>kolCollectionProjectionSelected(record,kolSelected)):[];
+  return {rows:hasLogicalSelection?selected:projected,selectedOnly:hasLogicalSelection};
 }
 function kolExportRows(){ return kolExportSelection().rows; }
 function kolColHeaders(){
@@ -27596,20 +27693,27 @@ function kolColHeaders(){
 // ---- Biçimli (görselsiz) hızlı dışa aktarım: xlsx-js-style, CP ile aynı görsel dil ----
 function buildKolStyledSheet(rows){
   const bd = _XLS_BORDERS;
+  const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
   const mfrCols = kolManufacturers.map(m=>m.name);
   const exportCols = kolOrderedCols();
-  exportCols.forEach(c=>{c._blSchema=columnSchemaFor(c,rows);});
+  exportCols.forEach(c=>{c._blSchema=columnSchemaFor(c,sourceRows);});
   // Görsel sütunu ekranda gizliyse dışa aktarımda da yer almaz; ofsetler kayar.
   const withImg = !kolPictureHidden;
   const imgOff = withImg ? 1 : 0;
   const headers = [...(withImg?['Görsel Notu']:[]), ...exportCols.map(c=>c.label), ...mfrCols.map(m=>m+' ($)'), ...(mfrCols.length?['Conf. Manufacturer','Conf. FOB']:[])];
   const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };
   headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{fgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:'center',vertical:'center',wrapText:true}}}));
-  rows.forEach((r,ri)=>{
+  rows.forEach((record,ri)=>{
+    const r=kolCollectionProjectionSource(record),summary=kolCollectionProjectionSummary(record);
     if(withImg) put(ri+1,0,{v:r.img?'Uygulamada görsel mevcut':'Görsel yok',t:'s',s:{border:bd,font:{sz:9,italic:true,color:{rgb:'FF98A2B3'}}}});
     exportCols.forEach((c,ci)=>{
+      const summaryEntry=summary?.get?.(c.k);
+      if(summaryEntry){
+        put(ri+1,ci+imgOff,{v:summaryEntry.display,t:'s',s:{border:bd,font:{sz:10,bold:c.k==='modelKod'},alignment:{vertical:'middle',wrapText:true}}});
+        return;
+      }
       const raw = c.exToRetail ? kolExToRetailDays(r) : kolEffectiveValue(r,c.k);
-      const schema=columnSchemaFor(c,rows);
+      const schema=columnSchemaFor(c,sourceRows);
       const s = {border:bd, font:{sz:10, bold:c.k==='modelKod'}};
       let cell;
       if(c.endeksmatik){
@@ -29153,17 +29257,25 @@ async function kolExportWithImages(rows,fileBase){
   if(typeof ExcelJS==='undefined'){showToast('Görsel gömme kütüphanesi yüklenemedi — internet/dosya erişimini kontrol et.');return null;}
   kolSyncRulePricing({save:true});
   const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Koleksiyon'),descriptors=kolDisplayDescriptors();
+  const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
   const headers=['Görsel',...descriptors.map(d=>d.label)];
   ws.columns=headers.map((h,i)=>({header:h,width:i===0?kolExcelImageMetrics().colChars:Math.max(11,Math.round(kolDescriptorWidth(descriptors[i-1])/7))}));
-  const preparedImages=await Promise.all(rows.map(r=>kolPrepareExcelImage(r.img)));
+  const preparedImages=await Promise.all((rows||[]).map(record=>kolPrepareExcelImage(kolCollectionProjectionSource(record)?.img)));
   const headerRow=ws.getRow(1);headerRow.height=22;
   headerRow.eachCell(c=>{c.font={bold:true,size:10,color:{argb:'FF475467'}};c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F4F7'}};c.alignment={horizontal:'center',vertical:'middle',wrapText:true};c.border={top:{style:'thin',color:{argb:'FFD0D5DD'}},bottom:{style:'thin',color:{argb:'FFD0D5DD'}},left:{style:'thin',color:{argb:'FFD0D5DD'}},right:{style:'thin',color:{argb:'FFD0D5DD'}}};});
   const thin={style:'thin',color:{argb:'FFD0D5DD'}},border={top:thin,bottom:thin,left:thin,right:thin};
   for(let ri=0;ri<rows.length;ri++){
-    const r=rows[ri],rowNum=ri+2,row=ws.getRow(rowNum);row.height=kolExcelImageMetrics().rowPt;const confirmed=kolConfirmedPricing(r),confirmedDisplay=kolConfirmedDisplay(r),landed=kolLandedCalc(r);
+    const record=rows[ri],r=kolCollectionProjectionSource(record),summary=kolCollectionProjectionSummary(record),rowNum=ri+2,row=ws.getRow(rowNum);row.height=kolExcelImageMetrics().rowPt;const confirmed=kolConfirmedPricing(r),confirmedDisplay=kolConfirmedDisplay(r),landed=kolLandedCalc(r);
     const effectivePricing=kolEffectivePricing(r),validPrices=kolManufacturers.map(m=>kolParseMoneyNum(effectivePricing&&effectivePricing[m.name])).filter(n=>Number.isFinite(n)&&n>0);
     descriptors.forEach((d,di)=>{
       const cell=row.getCell(di+2);cell.border=border;
+      const summaryEntry=summary?.get?.(d.k);
+      if(summaryEntry){
+        cell.value=summaryEntry.display;
+        cell.alignment={vertical:'middle',wrapText:true};
+        if(summaryEntry.title&&summaryEntry.title!==summaryEntry.display)cell.note=summaryEntry.title;
+        return;
+      }
       if(d.kind==='best'){const best=kolBestPricing(r),delta=kolBestPriceTargetDelta(r,best);if(best){cell.value=best.price;cell.numFmt='"$"#,##0.00';cell.font={bold:true,size:10,...(delta&&delta.meetsTarget?{color:{argb:'FF177A4C'}}:{})};if(delta&&delta.meetsTarget)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE4F3EB'}};cell.note=appLang==='en'?`Manufacturer: ${best.name}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nDifference: ${delta.text}`:''}`:`Üretici: ${best.name}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nFark: ${delta.text}`:''}`;}cell.alignment={horizontal:'right',vertical:'middle'};return;}
       if(d.kind==='confirmedName'){
         if(confirmedDisplay){
@@ -29190,7 +29302,7 @@ async function kolExportWithImages(rows,fileBase){
         else if(v!==''&&v!=null){cell.value=String(v);cell.font={italic:true,size:10};cell.alignment={vertical:'middle'};}
         return;
       }
-      const c=d.col,raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k),schema=columnSchemaFor(c,rows);
+      const c=d.col,raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k),schema=columnSchemaFor(c,sourceRows);
       if(c.endeksmatik){
         const text=endeksmatikExcelText(r);cell.value=text;cell.alignment={vertical:'middle',wrapText:true};
         if(text){const result=r&&r.endeksmatikData&&r.endeksmatikData.result,months=result&&result.months||{};cell.note=[
@@ -29305,7 +29417,7 @@ async function kolExportStyleManagement(rows){
   return name;
 }
 document.getElementById('kolStyleMgmtExportBtn')?.addEventListener('click',async()=>{
-  const selection=kolExportSelection(),btn=document.getElementById('kolStyleMgmtExportBtn');
+  const selection=kolRawExportSelection(),btn=document.getElementById('kolStyleMgmtExportBtn');
   const old=btn?.innerHTML;
   if(btn){btn.disabled=true;btn.textContent=appLang==='en'?'Preparing…':'Hazırlanıyor…';}
   try{

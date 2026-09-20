@@ -97,7 +97,7 @@ test('Collection hücre içindeki link/action tıklamasını yapıştırma hedef
   const end = COLLECTION_SPREADSHEET.indexOf('function init(){', start);
   assert.ok(start >= 0 && end > start);
   const block = COLLECTION_SPREADSHEET.slice(start, end);
-  assert.match(block, /const td=e\.target\.closest\('tbody td\[data-key\]'\)/);
+  assert.match(block, /const td=collectionDataCellFromEvent\(e\)/);
   assert.match(block, /if\(e\.target\.closest\('button:not\(\.kolSpreadsheetRowNumber\),a'\)\)\{state\.pendingPointerEdit=null;setActive\(td,\{extend:e\.shiftKey,focusGrid:false\}\);return;\}/);
 });
 

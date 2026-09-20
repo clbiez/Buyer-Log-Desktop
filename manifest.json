@@ -1,10 +1,10 @@
 {
   "format": "buyer-log-desktop-portable",
   "schemaVersion": 1,
-  "appVersion": "7.0.82",
+  "appVersion": "7.0.84",
   "electronVersion": "44.3.0",
   "chromiumFrom": "electron 44.3.0",
-  "createdAt": "2026-09-20T15:25:02.788Z",
+  "createdAt": "2026-09-20T16:48:09.906Z",
   "distributionMode": "same-pc",
   "adminRequired": false,
   "installerRequired": false,
@@ -114,7 +114,7 @@
     {
       "path": "resources/app/node_modules/.package-lock.json",
       "bytes": 33056,
-      "sha256": "96742878b062682347a01684473ceb38d5ab288455891ea683d3edceaf116b6a"
+      "sha256": "10c0b9569d5937c67d549d1c925aa4d1b70b14c8476a0118ebcf8bbd597fc158"
     },
     {
       "path": "resources/app/node_modules/accepts/index.js",
@@ -6159,7 +6159,7 @@
     {
       "path": "resources/app/package.json",
       "bytes": 1087,
-      "sha256": "328c99fe91f21181699df95756cfb79182799e43b0e281679f8ab45096cb5502"
+      "sha256": "d79d7130fb1588ce969ff2d443e48d965b60d21357028d56b22e2e8f631395d3"
     },
     {
       "path": "resources/app/public/ai-automation-import.js",
@@ -6173,13 +6173,13 @@
     },
     {
       "path": "resources/app/public/app-main.js",
-      "bytes": 2406897,
-      "sha256": "15fe43e9719f8c1d82c0f4274a7c4f98da813a972d213a99bd25ef6c483a765f"
+      "bytes": 2412925,
+      "sha256": "045bd81ce3544c2ed7b1efc8f995b7edd7092ddcca41dfb4293cd5ae94c2fc0d"
     },
     {
       "path": "resources/app/public/app.css",
-      "bytes": 492311,
-      "sha256": "82d2093995ae5914645cbc6c184d5c1937e31371509d5e39034ea0d6e3946b33"
+      "bytes": 492750,
+      "sha256": "e9ed39e72283c50aa1403032cce46a1bd73c97612e20cbb794c8e7b3ae126d2b"
     },
     {
       "path": "resources/app/public/automations.js",
@@ -6258,8 +6258,8 @@
     },
     {
       "path": "resources/app/public/collection-model-groups.js",
-      "bytes": 17289,
-      "sha256": "eb194189a488f4dd80fdf91314a306eb98a9b9605fc52e07448a52f20e417861"
+      "bytes": 17548,
+      "sha256": "168bfa87b4aff60e2bf5b01d1d82fc7e59ef45c2fc764e1174dcfc05ce9650c7"
     },
     {
       "path": "resources/app/public/collection-spreadsheet-engine.js",
@@ -6273,8 +6273,8 @@
     },
     {
       "path": "resources/app/public/collection-spreadsheet.js",
-      "bytes": 44056,
-      "sha256": "5874a19a620c660596096a076732c8e1a4ae4ff1527b026d50d34ef9045b62f1"
+      "bytes": 44670,
+      "sha256": "cad1b770e37fba7f08fba8e4984b7ce009fe041050f50e8f96fcf0d14702c871"
     },
     {
       "path": "resources/app/public/column-schema.js",
@@ -8273,13 +8273,23 @@
     },
     {
       "path": "resources/app/tests/collection-clipboard-safe.test.js",
-      "bytes": 5456,
-      "sha256": "7e68fdbc2cb54b153b40312a0191db5626789ab696794c98a6e201b1b6c1d350"
+      "bytes": 5444,
+      "sha256": "78cc743436a40253775898aea26d684d45c36a1cfcdc267ff11475e2e9a6824f"
+    },
+    {
+      "path": "resources/app/tests/collection-collapsed-export-projection-v7084.test.js",
+      "bytes": 7096,
+      "sha256": "f1b8802e639c076b7da04620e46bcca4f26d835d31393b35a99af8e4a1d83a0c"
+    },
+    {
+      "path": "resources/app/tests/collection-colour-override-consistency-v20260920.test.js",
+      "bytes": 8272,
+      "sha256": "bb916694efd14a67302161a12e491a0e553a478d33f759ed864ebb5e91ea2920"
     },
     {
       "path": "resources/app/tests/collection-colour-overrides-group-summary-v20260920.test.js",
-      "bytes": 13207,
-      "sha256": "b087f0284261fc36894d2b19fbf1b9fd4ab4b40bc23e52c2fa1aba3bf2395922"
+      "bytes": 13532,
+      "sha256": "0b6c220cb4e80b54cbba35cf133c2fa69e429715fc1a894ac8a2ba53810c29ff"
     },
     {
       "path": "resources/app/tests/collection-column-filter-accessible-name-v1048.test.js",
@@ -8443,8 +8453,8 @@
     },
     {
       "path": "resources/app/tests/collection-linked-cell-lock-v781.test.js",
-      "bytes": 6844,
-      "sha256": "e930e2d3fa4e0d091a95b1eb02e8c215ea202a0d74071dac914f100feb3bb7e6"
+      "bytes": 6990,
+      "sha256": "9366d24c1da4e0e9b451526f4339d52d7107c7c1653305eb78e278456b4fd82d"
     },
     {
       "path": "resources/app/tests/collection-model-group-enhancements-v1014.test.js",
@@ -8488,8 +8498,8 @@
     },
     {
       "path": "resources/app/tests/collection-product-main-definition-suggestions-v829.test.js",
-      "bytes": 7966,
-      "sha256": "9968ceeaa1b4fa867851ef382228285ab3b70dd5c2c8f164fa374c6dec1567dd"
+      "bytes": 7995,
+      "sha256": "e1f8622fc4b70552c722cf1f253a75860f8ee3ff23405e781e350abf3c623f8b"
     },
     {
       "path": "resources/app/tests/collection-quick-filter-button-v1049.test.js",
@@ -10478,8 +10488,8 @@
     },
     {
       "path": "resources/app/tests/quotation-sync-propagation-v652.test.js",
-      "bytes": 8782,
-      "sha256": "2c6b67a198103b7a30c4dccf5946be4b5461963de3fe73a323ac6e013f4f1d30"
+      "bytes": 8828,
+      "sha256": "2b043fe65dec8c4613258eb2b49bf4bc8b35c6da9e590403a8c39f04e1a30f4d"
     },
     {
       "path": "resources/app/tests/quotations-best-price.test.js",
@@ -11063,8 +11073,8 @@
     },
     {
       "path": "resources/app/tests/v712-performance-and-workflow.test.js",
-      "bytes": 9510,
-      "sha256": "1cd3552fe210a841b3ef7e950b9417a4bff68d0ccecbd1a0b0b770a68ada942c"
+      "bytes": 9538,
+      "sha256": "1bc605a5455b5324a81d23290099a60b6b53a20c33d4aa61785d617f27acaa8a"
     },
     {
       "path": "resources/app/tests/v714-complete-performance.test.js",

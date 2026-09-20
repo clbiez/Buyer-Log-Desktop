@@ -213,7 +213,7 @@ test('Endeksmatik summary weights colour-level benchmark price/rate by quantity 
   assert.match(summary.title,/YD 4\.00% · TR 6\.00%/);
 });
 
-test('collapsed projection stays display-only: renderer overlays summary while raw/copy/export paths remain canonical', () => {
+test('collapsed projection stays display-only while UI and visual export share the canonical summary resolver', () => {
   assert.match(APP,/const collapsedSummaryCache=new Map\(\)/);
   assert.match(APP,/groupSummary=kolCollapsedGroupSummary\(groupMembers,descriptors\)/);
   assert.match(APP,/data-kol-group-summary="1" data-kol-summary-display=/);
@@ -221,10 +221,14 @@ test('collapsed projection stays display-only: renderer overlays summary while r
   assert.match(CSS,/td\[data-kol-group-summary="1"\].*:not\(\.kolSpreadsheetEditing\):not\(:focus-within\)::after/);
   assert.match(CSS,/content:attr\(data-kol-summary-display\)/);
   assert.match(CSS,/text-overflow:ellipsis/);
-  assert.match(APP,/if\(c\.endeksmatik\)return endeksmatikExcelText\(kolEffectiveEndeksmatikRow\(row\)\)/);
+  assert.match(APP,/function kolCollectionExportProjection\(/);
+  assert.match(APP,/function kolCollectionExportCellText\(col,record\)/);
+  assert.match(APP,/const entry=kolCollectionProjectionSummaryEntry\(record,col\?\.k\)/);
+  assert.match(APP,/function kolSpreadsheetRawValue\(row,key\)/,'editor/raw lifecycle remains separate from display summary');
 });
 
 test('explicit Notes override is protected from legacy same-PLM propagation', () => {
   const commit = sourceBetween('function commitKolEditor(', 'function commitKolPriceEditor(');
-  assert.match(commit,/peer\.modelGroupRole==='variant'&&Object\.prototype\.hasOwnProperty\.call\(peer\.variantOverrides\|\|\{\},'not'\)\)return/);
+  assert.match(commit,/peer\.modelGroupRole==='variant'&&kolHasVariantOverride\(peer,'not'\)\)return/);
+  assert.match(commit,/if\(k==='not'&&!variantOverrideEdit\)/,'explicit colour note must not propagate back to parent/siblings');
 });

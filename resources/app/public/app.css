@@ -4620,6 +4620,13 @@ td.formulaCell.isError{color:var(--muted);}
   color:color-mix(in srgb,var(--table-ink) 76%,var(--muted) 24%)!important;
   opacity:1!important;cursor:default;
 }
+/* Disabled native controls do not dispatch/bubble contextmenu consistently in
+   Chromium. Let pointer hit the owning td instead; Collection's single delegated
+   grid handler then resolves the same row/field for input, textarea, select and
+   formatted/custom renderers without per-renderer listeners. */
+#kolTable tbody td.kolLinkedCell :is(input:disabled,select:disabled,textarea:disabled,.editCell:disabled){
+  pointer-events:none;
+}
 #kolTable tbody td.kolLinkedCell.kolSpreadsheetActiveCell,
 #kolTable tbody td.kolLinkedCell.kolActiveGridCell{background:transparent!important;}
 

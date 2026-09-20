@@ -137,9 +137,9 @@ test('v6.52 izlenmeyen bir hücre alanı (ör. quantity) sessizce yok sayılıyo
 test('v6.52 syncModelFields dışa açık ve commitKolEditor içinde çağrılıyor', () => {
   assert.match(UI, /renameManufacturer,syncModelFields,setPrice/, 'window.BL_QUOTATIONS üzerinden erişilebilir olmalı');
   const body = bodyOf(APP, 'commitKolEditor');
-  const rowAssignAt = body.indexOf('row[k] = val;');
+  const rowAssignAt = body.indexOf('row=kolWriteGroupedStorageValue(row,k,val);');
   const syncAt = body.indexOf('window.BL_QUOTATIONS?.syncModelFields');
-  assert.ok(rowAssignAt >= 0 && syncAt > rowAssignAt, 'senkron çağrısı satır ATANDIKTAN SONRA yapılmalı');
+  assert.ok(rowAssignAt >= 0 && syncAt > rowAssignAt, 'senkron çağrısı kanonik cell write TAMAMLANDIKTAN SONRA yapılmalı');
   assert.match(body, /window\.BL_QUOTATIONS\.syncModelFields\(id,k,val\)/);
 });
 

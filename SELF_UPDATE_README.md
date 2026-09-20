@@ -1,6 +1,6 @@
-# Buyer Log Self-Update — 7.0.82
+# Buyer Log Self-Update — 7.0.83
 
-Buyer Log sürümü için tek kaynak `resources/app/package.json -> version` alanıdır. Runtime, UI, release manifestleri, update karşılaştırması ve build artifact adı bu canonical SemVer değerinden türetilir. `7.0.82` UI'da yalnız görsel olarak `7.82` gösterilebilir; update mantığı her zaman `7.0.82` kullanır.
+Buyer Log sürümü için tek kaynak `resources/app/package.json -> version` alanıdır. Runtime, UI, release manifestleri, update karşılaştırması ve build artifact adı bu canonical SemVer değerinden türetilir. `7.0.83` UI'da yalnız görsel olarak `7.83` gösterilebilir; update mantığı her zaman `7.0.83` kullanır.
 
 ## İlk kurulum
 
@@ -39,7 +39,7 @@ npm run portable:manifest
 TEST'te doğrulanan binary yeniden compile edilmez:
 
 ```bash
-npm run release:promote -- 7.0.82 --source "\\\\SERVER\\BuyerLog-Releases"
+npm run release:promote -- 7.0.83 --source "\\\\SERVER\\BuyerLog-Releases"
 ```
 
 TEST ve STABLE artifact SHA-256 değerleri aynı olmak zorundadır.
@@ -63,15 +63,15 @@ BuyerLog-Releases/
   test/
     latest.json
     releases/
-      BuyerLog-7.0.82.zip
-      BuyerLog-7.0.82.zip.sha256
-      BuyerLog-7.0.82.json
+      BuyerLog-7.0.83.zip
+      BuyerLog-7.0.83.zip.sha256
+      BuyerLog-7.0.83.json
   stable/
     latest.json
     releases/
-      BuyerLog-7.0.82.zip
-      BuyerLog-7.0.82.zip.sha256
-      BuyerLog-7.0.82.json
+      BuyerLog-7.0.83.zip
+      BuyerLog-7.0.83.zip.sha256
+      BuyerLog-7.0.83.json
 ```
 
 ## Güvenlik sınırı

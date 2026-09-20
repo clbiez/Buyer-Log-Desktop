@@ -48,7 +48,7 @@ test('Collection Product Main Definition Category ile aynı suggestion editor ve
   const editorBlock = extractBetween(APP, 'function commitKolEditor', 'function commitKolPriceEditor');
   assert.match(editorBlock, /if\(el\.dataset\.kind&&norm\(val\)\)/);
   assert.match(editorBlock, /const matched=kolCatalogMatch\(el\.dataset\.kind,val\)/);
-  assert.match(editorBlock, /row\[k\] = val;/);
+  assert.match(editorBlock, /row=kolWriteGroupedStorageValue\(row,k,val\)/);
   assert.doesNotMatch(editorBlock, /strict-catalog|must be selected from the ASAS/i);
 });
 

@@ -135,9 +135,16 @@
     return (rows || []).filter(row => String(row && row.modelGroupId) === String(groupId));
   }
 
+  function hasVariantOverride(row, key) {
+    return Boolean(row && row.variantOverrides && Object.prototype.hasOwnProperty.call(row.variantOverrides, key));
+  }
+
   function effectiveValue(row, key, rows) {
     if (!row) return '';
-    if (row.variantOverrides && Object.prototype.hasOwnProperty.call(row.variantOverrides, key)) return row.variantOverrides[key];
+    // Override existence and override value are intentionally separate. Empty
+    // string, 0, false and null are all valid explicit colour-level values and
+    // must never fall back to the model merely because they are falsy.
+    if (hasVariantOverride(row, key)) return row.variantOverrides[key];
     if (row.modelGroupRole !== 'variant' && row.modelSharedValues && Object.prototype.hasOwnProperty.call(row.modelSharedValues, key)) return row.modelSharedValues[key];
     if (fieldMetadata(key).inheritance === 'model') {
       const parent = groupFor(rows, row.modelGroupId).find(item => item.modelGroupRole === 'parent');
@@ -163,8 +170,7 @@
     // consistent. A colour-specific override is authoritative and must never
     // be overwritten by a parent edit.
     members.forEach(row => {
-      const overridden = row.variantOverrides && Object.prototype.hasOwnProperty.call(row.variantOverrides, key);
-      if (!overridden) row[key] = clone(sharedValue);
+      if (!hasVariantOverride(row, key)) row[key] = clone(sharedValue);
     });
     return next;
   }
@@ -341,5 +347,5 @@
     return { id: groupId, count: members.length, parent: members.find(row => row.modelGroupRole === 'parent') || members[0] || null, mixed };
   }
 
-  return { identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, effectiveValue, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  return { identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, hasVariantOverride, effectiveValue, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

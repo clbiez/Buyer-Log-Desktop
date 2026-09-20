@@ -43,11 +43,12 @@ function loadPredicate(rows) {
     ? { storageKeys:[key], alreadyColorSpecific:true, eligible:false }
     : { storageKeys:projection[key] || [key], eligible:true };
   const overrideKeys = key => overrideSpec(key).storageKeys;
-  const factory = new Function('kolIsColorSpecific', 'kolColourOverrideSpec', 'kolColourOverrideStorageKeys', 'kolRows', 'window', `${body} return kolCellLinkedToModel;`);
+  const factory = new Function('kolIsColorSpecific', 'kolColourOverrideSpec', 'kolColourOverrideStorageKeys', 'kolHasVariantOverride', 'kolRows', 'window', `${body} return kolCellLinkedToModel;`);
   return factory(
     (key) => colorSpecific.has(key),
     overrideSpec,
     overrideKeys,
+    (row,key) => Boolean(row && row.variantOverrides && Object.prototype.hasOwnProperty.call(row.variantOverrides,key)),
     rows,
     { BLCollectionModelGroups: { groupFor: (all, id) => all.filter(r => String(r.modelGroupId) === String(id)) } },
   );
