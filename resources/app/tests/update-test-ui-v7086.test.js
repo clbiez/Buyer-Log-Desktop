@@ -10,8 +10,9 @@ const ui = fs.readFileSync(path.join(ROOT,'public','user-access-ui.js'),'utf8');
 const updateUi = fs.readFileSync(path.join(ROOT,'public','update-test-ui.js'),'utf8');
 const perf = fs.readFileSync(path.join(ROOT,'public','perf-runtime.js'),'utf8');
 
-test('moderator user menu exposes Update Test only for desktop updater sessions', () => {
-  assert.match(ui, /profile\.systemRole === 'moderator'[\s\S]*?buyerLogDesktop[\s\S]*?data-update-test/);
+test('moderator user menu always exposes Update Test; runtime availability is checked when opened', () => {
+  assert.match(ui, /profile\.systemRole === 'moderator'[\s\S]*?data-update-test/);
+  assert.doesNotMatch(ui, /profile\.systemRole === 'moderator'\s*&&\s*window\.buyerLogDesktop/);
   assert.match(ui, /data-update-test[\s\S]*?openBuyerLogUpdateTest/);
 });
 
