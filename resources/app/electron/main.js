@@ -90,6 +90,10 @@ const OAB_VIEWER_URL = 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBud
 const OAB_HOME_URL = 'https://pass.lcwaikiki.com/';
 const OAB_UI_HOST = 'pass.lcwaikiki.com';
 const OAB_API_HOST = 'pass.prod.lcwaikiki.com';
+const OAB_AUTH_CAPTURE_URLS = Object.freeze([
+  `https://${OAB_API_HOST}/*`,
+  `https://${OAB_UI_HOST}/*`,
+]);
 let oabAuthWindow = null;
 let oabAuthInFlight = null;
 
@@ -660,6 +664,28 @@ function isAllowedOabLoginUrl(value) {
   } catch (_) { return false; }
 }
 
+function isLikelyOabSignInUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    const host = url.hostname.toLowerCase();
+    const pathText = `${url.pathname}${url.search}`.toLowerCase();
+    if (host === OAB_UI_HOST) return /\/(?:login|signin|auth)(?:\/|$)/i.test(url.pathname);
+    return /login|signin|auth|identity|sso|adfs|microsoftonline|oauth|authorize/i.test(`${host}${pathText}`);
+  } catch (_) { return false; }
+}
+
+async function oabWindowLooksLikeSignIn(authWindow) {
+  if (!authWindow || authWindow.isDestroyed()) return true;
+  const currentUrl = authWindow.webContents.getURL();
+  if (isLikelyOabSignInUrl(currentUrl)) return true;
+  try {
+    return Boolean(await authWindow.webContents.executeJavaScript(
+      `Boolean(document.querySelector('input[type="password"],input[name*="password" i],input[id*="password" i],form[action*="login" i],form[action*="signin" i]'))`,
+      true,
+    ));
+  } catch (_) { return false; }
+}
+
 /* Electron loadURL() may reject with ERR_ABORTED (-3) while an SSO redirect is
  * actually continuing successfully. PASS performs exactly this kind of redirect.
  * Treating -3 as a hard failure used to close the OAB window before the user ever
@@ -713,16 +739,21 @@ async function acquireOabAuthorization(options = {}) {
     let settled = false;
     let timeoutTimer = null;
     let showTimer = null;
+    let authProbeTimer = null;
     let candidateBusy = false;
     let resolvePromise = null;
     let fallbackTried = false;
+    let postLoginViewerKickDone = false;
+    let sawExternalAuthNavigation = false;
+    const authCaptureFilter = { urls: OAB_AUTH_CAPTURE_URLS };
 
     const cleanupListener = () => {
-      try { authSession.webRequest.onBeforeSendHeaders({ urls: [`https://${OAB_API_HOST}/pass/common/report/api/*`] }, null); } catch (_) {}
+      try { authSession.webRequest.onBeforeSendHeaders(authCaptureFilter, null); } catch (_) {}
     };
     const cleanup = () => {
       if (timeoutTimer) clearTimeout(timeoutTimer);
       if (showTimer) clearTimeout(showTimer);
+      if (authProbeTimer) clearTimeout(authProbeTimer);
       cleanupListener();
       if (authWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
       if (oabAuthWindow === authWindow) oabAuthWindow = null;
@@ -755,6 +786,24 @@ async function acquireOabAuthorization(options = {}) {
       const showInteractiveWindow = () => {
         if (!interactive || settled || !authWindow || authWindow.isDestroyed()) return;
         try { authWindow.show(); authWindow.focus(); } catch (_) {}
+      };
+      const schedulePostLoginViewerKick = (delayMs = 700) => {
+        if (settled || postLoginViewerKickDone || candidateBusy || !authWindow || authWindow.isDestroyed()) return;
+        if (authProbeTimer) clearTimeout(authProbeTimer);
+        authProbeTimer = setTimeout(async () => {
+          authProbeTimer = null;
+          if (settled || postLoginViewerKickDone || candidateBusy || !authWindow || authWindow.isDestroyed()) return;
+          let current;
+          try { current = new URL(authWindow.webContents.getURL()); } catch (_) { return; }
+          if (current.hostname.toLowerCase() !== OAB_UI_HOST) return;
+          if (await oabWindowLooksLikeSignIn(authWindow)) return;
+          const onViewer = /\/v3\/report\/viewer/i.test(current.pathname);
+          if (!onViewer && !sawExternalAuthNavigation) return;
+          postLoginViewerKickDone = true;
+          log('OAB oturum dönüşü algılandı; viewer API isteği tetikleniyor.');
+          void loadLoginTarget(OAB_VIEWER_URL, false);
+        }, Math.max(250, Number(delayMs) || 700));
+        authProbeTimer.unref?.();
       };
       const loadLoginTarget = async (url, allowFallback = true) => {
         if (settled || !authWindow || authWindow.isDestroyed()) return;
@@ -805,7 +854,18 @@ async function acquireOabAuthorization(options = {}) {
       // becomes visible instead of leaving the renderer waiting indefinitely.
       showTimer = setTimeout(showInteractiveWindow, 350);
       authWindow.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
-        if (isMainFrame && isAllowedOabLoginUrl(url)) showInteractiveWindow();
+        if (!isMainFrame || !isAllowedOabLoginUrl(url)) return;
+        try {
+          const host = new URL(String(url || '')).hostname.toLowerCase();
+          if (host !== OAB_UI_HOST && host !== OAB_API_HOST) sawExternalAuthNavigation = true;
+        } catch (_) {}
+        showInteractiveWindow();
+      });
+      authWindow.webContents.on('did-finish-load', () => {
+        // SSO tamamlanıp viewer shell'i açıldığında PASS her zaman hemen
+        // report API isteği atmıyor. Tek seferlik viewer reload'u normal
+        // metadata isteğini tetikler; Authorization yakalanınca pencere kapanır.
+        schedulePostLoginViewerKick(sawExternalAuthNavigation ? 350 : 1200);
       });
       authWindow.webContents.on('did-fail-load', (_event, errorCode, _description, validatedURL, isMainFrame) => {
         if (!isMainFrame || settled || Number(errorCode) === -3) return;
@@ -838,7 +898,7 @@ async function acquireOabAuthorization(options = {}) {
         }
       });
 
-      authSession.webRequest.onBeforeSendHeaders({ urls: [`https://${OAB_API_HOST}/pass/common/report/api/*`] }, (details, callback) => {
+      authSession.webRequest.onBeforeSendHeaders(authCaptureFilter, (details, callback) => {
         const authorization = authorizationHeaderFromHeaders(details.requestHeaders);
         callback({ requestHeaders: details.requestHeaders });
         if (!authorization || settled) return;
