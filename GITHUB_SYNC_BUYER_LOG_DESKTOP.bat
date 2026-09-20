@@ -35,12 +35,13 @@ if not exist ".git\" (
     echo Git repository ilk kez olusturuluyor...
     git init
     if errorlevel 1 goto :error
-
-    git branch -M main
-    if errorlevel 1 goto :error
 ) else (
     echo Mevcut Git repository kullaniliyor...
 )
+
+echo Aktif branch main olarak ayarlaniyor...
+git branch -M main
+if errorlevel 1 goto :error
 
 git remote get-url origin >nul 2>&1
 if errorlevel 1 (
