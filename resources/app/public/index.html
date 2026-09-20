@@ -165,6 +165,7 @@
 <link rel="stylesheet" href="user-management.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="copilot.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="outlook-mail.css?v=__BL_ASSET_VERSION__&rev=7160">
+<link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=1">
 </head>
 <body data-active-tab="overview">
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
@@ -1708,6 +1709,7 @@
   buildProfilePicker(document.getElementById('filterSelect'));
 
   function anchorForPanel(panel){
+    if(panel?._buyerLogAnchor?.isConnected) return panel._buyerLogAnchor;
     const wrap=panel.closest('.colPanelWrap');
     if(!wrap) return null;
     return [...wrap.children].find(el=>el!==panel && (el.matches?.('button,select,[role="button"]'))) || wrap.querySelector('button,select,[role="button"]');

@@ -16,7 +16,7 @@ echo  Verified full export baslatiliyor.
 echo  - Repo temiz snapshot ile yeniden indexlenecek
 echo  - Full architecture ve tum node'lar alinacak
 echo  - 19 relationship turu export edilecek
-echo  - Buyuk edge turleri adaptif chunk'lara bolunecek
+echo  - Tum node ve edge turleri kayipsiz pagination ile export edilecek
 echo  - Beklenen / export edilen sayilar dogrulanacak
 echo.
 echo  Pencere kapanmadan islemin tamamlanmasini bekleyin.
@@ -109,6 +109,7 @@ $SourceLabels = @(
 
 $StagedFiles = @()
 $Integrity = @()
+$NodeIntegrity = @()
 $FatalMessage = $null
 
 function Write-Utf8([string]$Path, [string]$Text) {
@@ -348,6 +349,142 @@ function Get-CbmSchemaRelationshipRows {
     return @($Rows)
 }
 
+function Get-CbmSchemaNodeRows {
+    param([Parameter(Mandatory=$true)]$SchemaObject)
+
+    $SchemaPropertyNames = @($SchemaObject.PSObject.Properties.Name)
+
+    if ($SchemaPropertyNames -contains "node_labels") {
+        $Raw = $SchemaObject.node_labels
+    }
+    elseif ($SchemaPropertyNames -contains "node_types") {
+        $Raw = $SchemaObject.node_types
+    }
+    elseif ($SchemaPropertyNames -contains "labels") {
+        $Raw = $SchemaObject.labels
+    }
+    else {
+        return @()
+    }
+
+    if ($null -eq $Raw) {
+        return @()
+    }
+
+    $RawPropertyNames = @($Raw.PSObject.Properties.Name)
+    if ($RawPropertyNames -contains "rows") {
+        $Raw = $Raw.rows
+    }
+
+    $Entries = @($Raw)
+    $Rows = @()
+
+    # Map-shaped JSON, e.g. { "Function": 123, "File": 45 }.
+    if ($Entries.Count -eq 1) {
+        $Only = $Entries[0]
+        $OnlyProps = @($Only.PSObject.Properties.Name)
+        $LooksLikeNamedRow = (($OnlyProps -contains "label") -or
+                              ($OnlyProps -contains "type") -or
+                              ($OnlyProps -contains "name")) -and
+                             ($OnlyProps -contains "count")
+
+        if (-not $LooksLikeNamedRow -and -not ($Only -is [System.Array]) -and -not ($Only -is [string])) {
+            $Mapped = @()
+            foreach ($Property in $Only.PSObject.Properties) {
+                if ($Property.Value -is [byte] -or
+                    $Property.Value -is [int16] -or
+                    $Property.Value -is [int32] -or
+                    $Property.Value -is [int64] -or
+                    $Property.Value -is [single] -or
+                    $Property.Value -is [double] -or
+                    $Property.Value -is [decimal]) {
+                    $Mapped += [pscustomobject]@{
+                        type  = [string]$Property.Name
+                        count = [int64]$Property.Value
+                    }
+                }
+            }
+
+            if ($Mapped.Count -gt 0) {
+                return @($Mapped)
+            }
+        }
+    }
+
+    foreach ($Entry in $Entries) {
+        if ($null -eq $Entry) { continue }
+
+        # Table-row JSON may be emitted as ["Function", 123].
+        if ($Entry -is [System.Array]) {
+            if ($Entry.Count -ge 2) {
+                $Rows += [pscustomobject]@{
+                    type  = [string]$Entry[0]
+                    count = [int64]$Entry[1]
+                }
+                continue
+            }
+        }
+
+        # Compatibility with text-like JSON rows such as "Function(123)".
+        if ($Entry -is [string]) {
+            $m = [regex]::Match([string]$Entry, '^\s*([^\(]+)\((\d+)\)\s*$')
+            if ($m.Success) {
+                $Rows += [pscustomobject]@{
+                    type  = $m.Groups[1].Value.Trim()
+                    count = [int64]$m.Groups[2].Value
+                }
+                continue
+            }
+        }
+
+        $EntryProps = @($Entry.PSObject.Properties.Name)
+
+        if ($EntryProps -contains "label") {
+            $TypeName = [string]$Entry.label
+        }
+        elseif ($EntryProps -contains "type") {
+            $TypeName = [string]$Entry.type
+        }
+        elseif ($EntryProps -contains "name") {
+            $TypeName = [string]$Entry.name
+        }
+        else {
+            continue
+        }
+
+        if (-not ($EntryProps -contains "count")) {
+            continue
+        }
+
+        $Rows += [pscustomobject]@{
+            type  = $TypeName
+            count = [int64]$Entry.count
+        }
+    }
+
+    return @($Rows)
+}
+
+function Convert-CbmCountRowsToText {
+    param(
+        [Parameter(Mandatory=$true)][object[]]$Rows,
+        [Parameter(Mandatory=$true)][string]$NameHeader
+    )
+
+    if ($Rows.Count -eq 0) {
+        return "No count rows available from get_graph_schema."
+    }
+
+    $Lines = @()
+    $Lines += ($NameHeader + "`tcount")
+
+    foreach ($Row in @($Rows | Sort-Object -Property count -Descending)) {
+        $Lines += (([string]$Row.type) + "`t" + ([string]$Row.count))
+    }
+
+    return ($Lines -join $NL)
+}
+
 function Invoke-CbmJsonArgsFile {
     param(
         [Parameter(Mandatory=$true)][string]$Tool,
@@ -471,6 +608,144 @@ function Query-Graph {
         max_rows = $MaxRows
         query    = $Query
     }
+}
+
+function Get-ReturnedCount([string]$Text) {
+    if ([string]::IsNullOrWhiteSpace($Text)) { return 0 }
+
+    $m = [regex]::Match($Text, '(?m)^returned:\s*(\d+)')
+    if ($m.Success) {
+        return [int64]$m.Groups[1].Value
+    }
+
+    $m2 = [regex]::Match($Text, '(?m)^rows:\s*(\d+)')
+    if ($m2.Success) {
+        return [int64]$m2.Groups[1].Value
+    }
+
+    return 0
+}
+
+function Get-TruncationReason([string]$Text) {
+    if ([string]::IsNullOrWhiteSpace($Text)) { return "" }
+
+    $m = [regex]::Match($Text, '(?m)^truncated:\s*true\s*$')
+    if (-not $m.Success) { return "" }
+
+    $r = [regex]::Match($Text, '(?m)^truncation_reason:\s*([^\r\n]+)')
+    if ($r.Success) {
+        return $r.Groups[1].Value.Trim()
+    }
+
+    return "unknown"
+}
+
+function Query-GraphPaged {
+    param(
+        [Parameter(Mandatory=$true)][string]$BaseQuery,
+        [Parameter(Mandatory=$true)][string]$OrderBy,
+        [int]$PageSize = 250,
+        [int64]$Expected = -1
+    )
+
+    # query_graph in CBM 0.11.x can truncate a valid result because of its
+    # output budget even when max_rows is large. Page at the Cypher layer with
+    # stable ORDER BY + SKIP/LIMIT so every row can be recovered deterministically.
+    $Blocks = New-Object System.Collections.Generic.List[string]
+    $SeenOffsets = @{}
+
+    [int64]$Offset = 0
+    [int]$Page = 0
+    [int]$CurrentPageSize = [Math]::Max(1, $PageSize)
+
+    while ($true) {
+        $OffsetKey = [string]$Offset
+        if ($SeenOffsets.ContainsKey($OffsetKey)) {
+            throw "Pagination loop detected at offset $Offset."
+        }
+        $SeenOffsets[$OffsetKey] = $true
+
+        while ($true) {
+            $PageQuery = $BaseQuery.TrimEnd() + $NL +
+                         "ORDER BY " + $OrderBy + $NL +
+                         "SKIP " + $Offset + " LIMIT " + $CurrentPageSize
+
+            $Data = Query-Graph -Query $PageQuery -MaxRows $CurrentPageSize
+            $TruncationReason = Get-TruncationReason $Data
+
+            if (-not [string]::IsNullOrWhiteSpace($TruncationReason)) {
+                if ($TruncationReason -eq "output_budget") {
+                    if ($CurrentPageSize -le 1) {
+                        throw "query_graph output_budget truncation persists at one row. Offset=$Offset"
+                    }
+
+                    $CurrentPageSize = [Math]::Max(1, [int][Math]::Floor($CurrentPageSize / 2))
+                    Write-Host ("         output_budget: page size -> " + $CurrentPageSize + ", offset=" + $Offset) -ForegroundColor Yellow
+                    continue
+                }
+
+                throw "query_graph returned unexpected truncation_reason=$TruncationReason at offset $Offset."
+            }
+
+            break
+        }
+
+        [int64]$Returned = Get-ReturnedCount $Data
+
+        if ($Returned -le 0) {
+            if (($Expected -ge 0) -and ($Offset -lt $Expected)) {
+                throw "Paged query ended early. Expected=$Expected Exported=$Offset Offset=$Offset"
+            }
+            break
+        }
+
+        $Page++
+        $Blocks.Add(
+            "---- PAGE $Page / OFFSET $Offset / ROWS $Returned ----" + $NL +
+            $Data
+        )
+
+        $PreviousOffset = $Offset
+        $Offset += $Returned
+
+        if ($Offset -le $PreviousOffset) {
+            throw "Pagination made no forward progress at offset $PreviousOffset."
+        }
+
+        if (($Expected -ge 0) -and ($Offset -ge $Expected)) {
+            if ($Offset -gt $Expected) {
+                throw "Paged query exported more rows than expected. Expected=$Expected Exported=$Offset"
+            }
+            break
+        }
+
+        if ($Returned -lt $CurrentPageSize) {
+            if (($Expected -ge 0) -and ($Offset -lt $Expected)) {
+                throw "Paged query ended before expected count. Expected=$Expected Exported=$Offset"
+            }
+            break
+        }
+    }
+
+    # Synthetic first rows: line makes existing integrity/counting code see the
+    # cumulative total rather than only the first query_graph page.
+    return (
+        "rows: " + $Offset + "  (paged_export)" + $NL +
+        "pages: " + $Page + $NL +
+        "final_page_size: " + $CurrentPageSize + $NL +
+        ($Blocks -join ($NL + $NL))
+    )
+}
+
+function Get-PageCount([string]$Text) {
+    if ([string]::IsNullOrWhiteSpace($Text)) { return 0 }
+
+    $m = [regex]::Match($Text, '(?m)^pages:\s*(\d+)')
+    if ($m.Success) {
+        return [int]$m.Groups[1].Value
+    }
+
+    return 0
 }
 
 function Get-RowCount([string]$Text) {
@@ -597,7 +872,9 @@ function Invoke-RelationshipQuery {
     param(
         [Parameter(Mandatory=$true)][string]$Type,
         [string]$WhereClause = "",
-        [switch]$Simple
+        [switch]$Simple,
+        [string]$SourceLabel = "",
+        [int64]$Expected = -1
     )
 
     $WhereText = ""
@@ -605,10 +882,16 @@ function Invoke-RelationshipQuery {
         $WhereText = " WHERE " + $WhereClause
     }
 
+    $SourcePattern = "(a)"
+    if (-not [string]::IsNullOrWhiteSpace($SourceLabel)) {
+        $SourcePattern = "(a:" + $SourceLabel + ")"
+    }
+
     if (-not $Simple) {
         $Query = @"
-MATCH (a)-[r:$Type]->(b)$WhereText
+MATCH $SourcePattern-[r:$Type]->(b)$WhereText
 RETURN
+    id(r) AS __rid,
     a.name AS source_name,
     a.qualified_name AS source_qualified_name,
     a.file_path AS source_file_path,
@@ -620,8 +903,9 @@ RETURN
     }
     else {
         $Query = @"
-MATCH (a)-[r:$Type]->(b)$WhereText
+MATCH $SourcePattern-[r:$Type]->(b)$WhereText
 RETURN
+    id(r) AS __rid,
     a.name AS source_name,
     a.qualified_name AS source_qualified_name,
     a.file_path AS source_file_path,
@@ -631,7 +915,7 @@ RETURN
 "@
     }
 
-    return Query-Graph -Query $Query
+    return Query-GraphPaged -BaseQuery $Query -OrderBy "__rid" -PageSize 250 -Expected $Expected
 }
 
 function Export-RelationshipSingle {
@@ -642,18 +926,18 @@ function Export-RelationshipSingle {
 
     Write-Host "      -> $Type"
 
-    $Mode = "WITH_PROPERTIES"
+    $Mode = "PAGED_WITH_PROPERTIES"
     $Errors = @()
 
     try {
-        $Data = Invoke-RelationshipQuery -Type $Type
+        $Data = Invoke-RelationshipQuery -Type $Type -Expected $Expected
     }
     catch {
         $Errors += $_.Exception.Message
-        $Mode = "SIMPLE_FALLBACK"
+        $Mode = "PAGED_SIMPLE_FALLBACK"
 
         try {
-            $Data = Invoke-RelationshipQuery -Type $Type -Simple
+            $Data = Invoke-RelationshipQuery -Type $Type -Simple -Expected $Expected
         }
         catch {
             $Errors += $_.Exception.Message
@@ -663,6 +947,7 @@ function Export-RelationshipSingle {
     }
 
     $Count = Get-RowCount $Data
+    $Pages = Get-PageCount $Data
 
     if ($Mode -ne "FAILED") {
         Add-Section -Title ("Relationship: " + $Type) -Content $Data -Language "text"
@@ -680,7 +965,7 @@ function Export-RelationshipSingle {
         Delta      = ($Expected - $Count)
         Status     = $Status
         Mode       = $Mode
-        Chunks     = 1
+        Chunks     = $Pages
         Failures   = $(if ($Mode -eq "FAILED") { 1 } else { 0 })
     }
 }
@@ -703,8 +988,14 @@ function Export-LargeRelationshipBatch {
         return [pscustomobject]$Result
     }
 
-    $CypherList = To-CypherStringList $Paths
-    $Where = "a.file_path IN $CypherList"
+    # Avoid IN [..] list literals because older/newer CBM query_graph parsers
+    # have had compatibility gaps around list literals. Equality + OR is the
+    # most portable subset across releases.
+    $Predicates = @()
+    foreach ($Path in $Paths) {
+        $Predicates += ('a.file_path = "' + (Escape-CypherString $Path) + '"')
+    }
+    $Where = "(" + ($Predicates -join " OR ") + ")"
 
     try {
         $Data = Invoke-RelationshipQuery -Type $Type -WhereClause $Where
@@ -719,6 +1010,24 @@ function Export-LargeRelationshipBatch {
         return [pscustomobject]$Result
     }
     catch {
+        # properties(r) is not supported consistently across older CBM parsers.
+        # Before splitting the batch, retry the same portable MATCH without it.
+        try {
+            $Data = Invoke-RelationshipQuery -Type $Type -WhereClause $Where -Simple
+            $Rows = Get-RowCount $Data
+
+            if ($Rows -gt 0) {
+                Add-Section -Title ("Relationship: " + $Type + " / " + $ChunkName + " SIMPLE") -Content $Data -Language "text"
+            }
+
+            $Result.Rows = $Rows
+            $Result.Chunks = 1
+            return [pscustomobject]$Result
+        }
+        catch {
+            # If even the simple batch query fails, recursively shrink the query.
+        }
+
         if ($Paths.Count -gt 1) {
             $Mid = [Math]::Floor($Paths.Count / 2)
 
@@ -742,10 +1051,10 @@ function Export-LargeRelationshipBatch {
         $AnyLabelSucceeded = $false
 
         foreach ($Label in $SourceLabels) {
-            $WhereLabel = 'a.file_path = "' + $FileEsc + '" AND "' + $Label + '" IN labels(a)'
+            $WhereLabel = 'a.file_path = "' + $FileEsc + '"'
 
             try {
-                $Data = Invoke-RelationshipQuery -Type $Type -WhereClause $WhereLabel
+                $Data = Invoke-RelationshipQuery -Type $Type -WhereClause $WhereLabel -SourceLabel $Label
                 $Rows = Get-RowCount $Data
 
                 if ($Rows -gt 0) {
@@ -759,7 +1068,7 @@ function Export-LargeRelationshipBatch {
             catch {
                 # Final fallback for this file+label: simple source/target query.
                 try {
-                    $Data = Invoke-RelationshipQuery -Type $Type -WhereClause $WhereLabel -Simple
+                    $Data = Invoke-RelationshipQuery -Type $Type -WhereClause $WhereLabel -SourceLabel $Label -Simple
                     $Rows = Get-RowCount $Data
 
                     if ($Rows -gt 0) {
@@ -867,39 +1176,74 @@ function Export-LargeRelationship {
 function Build-IntegritySummary {
     param(
         [Parameter(Mandatory=$true)][object[]]$Rows,
-        [int64]$ExpectedTotalEdges
+        [Parameter(Mandatory=$true)][object[]]$NodeRows,
+        [int64]$ExpectedTotalEdges,
+        [int64]$ExpectedTotalNodes
     )
 
     $Lines = @()
+
+    $Lines += "### Node verification"
+    $Lines += ""
+    $Lines += "| Node label | Expected | Exported | Delta | Status |"
+    $Lines += "|---|---:|---:|---:|---|"
+
+    [int64]$ExportedTotalNodes = 0
+    foreach ($n in $NodeRows) {
+        $ExportedTotalNodes += [int64]$n.Exported
+        $Lines += "| $($n.Label) | $($n.Expected) | $($n.Exported) | $($n.Delta) | $($n.Status) |"
+    }
+
+    $CompleteNodeCount = @($NodeRows | Where-Object { $_.Status -eq "COMPLETE" }).Count
+    $NodeVerified = ($NodeRows.Count -gt 0) -and
+                    ($CompleteNodeCount -eq $NodeRows.Count) -and
+                    ($ExportedTotalNodes -eq $ExpectedTotalNodes)
+
+    $Lines += ""
+    $Lines += "**Node labels complete:** $CompleteNodeCount / $($NodeRows.Count)"
+    $Lines += ""
+    $Lines += "**Expected total nodes:** $ExpectedTotalNodes"
+    $Lines += ""
+    $Lines += "**Exported total nodes:** $ExportedTotalNodes"
+    $Lines += ""
+    $Lines += "**Total node delta:** $($ExpectedTotalNodes - $ExportedTotalNodes)"
+    $Lines += ""
+    $Lines += "### Relationship verification"
+    $Lines += ""
     $Lines += "| Relationship | Expected | Exported | Delta | Status | Mode | Chunks | Failures |"
     $Lines += "|---|---:|---:|---:|---|---|---:|---:|"
 
-    [int64]$ExportedTotal = 0
+    [int64]$ExportedTotalEdges = 0
 
     foreach ($r in $Rows) {
-        $ExportedTotal += [int64]$r.Exported
+        $ExportedTotalEdges += [int64]$r.Exported
         $Lines += "| $($r.Type) | $($r.Expected) | $($r.Exported) | $($r.Delta) | $($r.Status) | $($r.Mode) | $($r.Chunks) | $($r.Failures) |"
     }
 
     $CompleteCount = @($Rows | Where-Object { $_.Status -eq "COMPLETE" }).Count
-    $Verified = ($CompleteCount -eq $Rows.Count) -and ($ExportedTotal -eq $ExpectedTotalEdges)
+    $EdgeVerified = ($CompleteCount -eq $Rows.Count) -and ($ExportedTotalEdges -eq $ExpectedTotalEdges)
+    $Verified = $NodeVerified -and $EdgeVerified
 
     $Lines += ""
     $Lines += "**Relationship types complete:** $CompleteCount / $($Rows.Count)"
     $Lines += ""
     $Lines += "**Expected total edges:** $ExpectedTotalEdges"
     $Lines += ""
-    $Lines += "**Exported total edges:** $ExportedTotal"
+    $Lines += "**Exported total edges:** $ExportedTotalEdges"
     $Lines += ""
-    $Lines += "**Total edge delta:** $($ExpectedTotalEdges - $ExportedTotal)"
+    $Lines += "**Total edge delta:** $($ExpectedTotalEdges - $ExportedTotalEdges)"
     $Lines += ""
     $Lines += $(if ($Verified) { "**FINAL STATUS: FULL / VERIFIED**" } else { "**FINAL STATUS: INCOMPLETE / REVIEW REQUIRED**" })
 
     return [pscustomobject]@{
-        Text          = ($Lines -join $NL)
-        Verified      = $Verified
-        ExportedTotal = $ExportedTotal
-        CompleteCount = $CompleteCount
+        Text               = ($Lines -join $NL)
+        Verified           = $Verified
+        NodeVerified       = $NodeVerified
+        EdgeVerified       = $EdgeVerified
+        ExportedTotalNodes = $ExportedTotalNodes
+        ExportedTotalEdges = $ExportedTotalEdges
+        CompleteNodeCount  = $CompleteNodeCount
+        CompleteCount      = $CompleteCount
     }
 }
 
@@ -952,10 +1296,11 @@ try {
     # table-shaped JSON into one stable [{type,count}] representation.
     try {
         $SchemaRelationships = @(Get-CbmSchemaRelationshipRows -SchemaObject $SchemaObject)
+        $SchemaNodes = @(Get-CbmSchemaNodeRows -SchemaObject $SchemaObject)
     }
     catch {
         Write-Utf8 -Path $SchemaDebug -Text $Schema
-        throw "Graph schema relationship listesi normalize edilemedi: $($_.Exception.Message) Ham JSON: $SchemaDebug"
+        throw "Graph schema normalize edilemedi: $($_.Exception.Message) Ham JSON: $SchemaDebug"
     }
 
     if ($SchemaRelationships.Count -eq 0) {
@@ -963,10 +1308,26 @@ try {
         throw "Graph schema relationship listesi bos. Sayisal dogrulama yapilamaz. Ham JSON: $SchemaDebug"
     }
 
+    if ($SchemaNodes.Count -gt 0) {
+        # Use the schema's real node labels for label-based fallbacks/export.
+        # This avoids labels(a) and unlabelled-pattern regressions in query_graph.
+        $SourceLabels = @($SchemaNodes | ForEach-Object { [string]$_.type } |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+            Sort-Object -Unique)
+    }
+    else {
+        Write-Host "       UYARI: node_labels/node_types JSON'da bulunamadi; varsayilan label listesi kullanilacak." -ForegroundColor Yellow
+    }
+
     Remove-Item -LiteralPath $SchemaDebug -Force -ErrorAction SilentlyContinue
 
     $ExpectedByType = @{}
     [int64]$ExpectedEdges = 0
+    [int64]$ExpectedNodes = 0
+
+    foreach ($NodeRow in $SchemaNodes) {
+        $ExpectedNodes += [int64]$NodeRow.count
+    }
 
     foreach ($Edge in $SchemaRelationships) {
         $EdgeTypeName = [string]$Edge.type
@@ -992,16 +1353,71 @@ try {
         $Cycles = "cycles export failed: " + $_.Exception.Message
     }
 
-    Write-Host "[8/12] Graph node / relationship sayilari aliniyor..."
-    $NodeCounts = Query-Graph -Query "MATCH (n) RETURN labels(n) AS labels, count(*) AS count ORDER BY count DESC"
-    $RelationshipCounts = Query-Graph -Query "MATCH ()-[r]->() RETURN type(r) AS relationship, count(*) AS count ORDER BY count DESC"
+    Write-Host "[8/12] Graph node / relationship sayilari schema'dan aliniyor..."
+    # IMPORTANT: do not use query_graph aggregation here. Several CBM releases
+    # have had parser/evaluator bugs around labels(), type() and count(*), while
+    # get_graph_schema is the authoritative count source used by verification.
+    if ($SchemaNodes.Count -gt 0) {
+        $NodeCounts = Convert-CbmCountRowsToText -Rows $SchemaNodes -NameHeader "label"
+    }
+    else {
+        $NodeCounts = "Node counts could not be normalized separately; see Graph Schema JSON above."
+    }
+    $RelationshipCounts = Convert-CbmCountRowsToText -Rows $SchemaRelationships -NameHeader "relationship"
 
-    Write-Host "[9/12] Tum graph node'lari export ediliyor..."
-    $AllNodes = Query-Graph -Query "MATCH (n) RETURN n"
+    Write-Host "[9/12] Tum graph node'lari paginated olarak export ediliyor..."
+    $NodeBlocks = New-Object System.Collections.Generic.List[string]
 
-    Write-Host "[10/12] Repo source file listesi hazirlaniyor..."
-    $RepoPaths = Get-RepoRelativeFilePaths
-    Write-Host "       Dosya adaylari: $($RepoPaths.Count)"
+    if ($SchemaNodes.Count -gt 0) {
+        foreach ($NodeRow in $SchemaNodes) {
+            $Label = [string]$NodeRow.type
+            $ExpectedNodeRows = [int64]$NodeRow.count
+            if ([string]::IsNullOrWhiteSpace($Label)) { continue }
+
+            $NodeMode = "FULL_NODE"
+
+            try {
+                $NodeQuery = "MATCH (n:" + $Label + ") RETURN id(n) AS __nid, n"
+                $NodeData = Query-GraphPaged -BaseQuery $NodeQuery -OrderBy "__nid" -PageSize 500 -Expected $ExpectedNodeRows
+            }
+            catch {
+                # Some CBM builds can have trouble serializing a complete node.
+                # Retry the same deterministic pagination with portable scalars.
+                $NodeMode = "SCALAR_FALLBACK"
+                $FallbackQuery = "MATCH (n:" + $Label + ") RETURN id(n) AS __nid, n.name, n.qualified_name, n.file_path"
+                $NodeData = Query-GraphPaged -BaseQuery $FallbackQuery -OrderBy "__nid" -PageSize 500 -Expected $ExpectedNodeRows
+            }
+
+            [int64]$ExportedNodeRows = Get-RowCount $NodeData
+            $NodeStatus = if ($ExportedNodeRows -eq $ExpectedNodeRows) { "COMPLETE" } else { "INCOMPLETE" }
+
+            $NodeIntegrity += [pscustomobject]@{
+                Label    = $Label
+                Expected = $ExpectedNodeRows
+                Exported = $ExportedNodeRows
+                Delta    = ($ExpectedNodeRows - $ExportedNodeRows)
+                Status   = $NodeStatus
+                Mode     = $NodeMode
+            }
+
+            $NodeBlocks.Add(("### Node label: " + $Label + $NL +
+                            "Expected from schema: " + $ExpectedNodeRows + $NL +
+                            "Exported: " + $ExportedNodeRows + $NL +
+                            "Mode: " + $NodeMode + $NL +
+                            $NodeData))
+        }
+
+        $AllNodes = ($NodeBlocks -join ($NL + $NL))
+    }
+    else {
+        # No schema label histogram means the node export cannot be numerically
+        # verified. Export what is available, but final status will remain incomplete.
+        $AllNodes = Query-GraphPaged -BaseQuery "MATCH (n) RETURN id(n) AS __nid, n" -OrderBy "__nid" -PageSize 500
+    }
+
+    Write-Host "[10/12] Paginated graph export hazirlaniyor..."
+    Write-Host "       Node page size: adaptive (start 500)"
+    Write-Host "       Relationship page size: adaptive (start 250)"
 
     $Generated = Get-Date -Format "yyyy-MM-dd HH:mm:ss K"
 
@@ -1069,12 +1485,10 @@ When source code is also supplied, source code is the final authority.
 
         $Expected = [int64]$ExpectedByType[$Type]
 
-        if ($LargeRelationshipTypes -contains $Type) {
-            $Result = Export-LargeRelationship -Type $Type -Expected $Expected -RepoPaths $RepoPaths
-        }
-        else {
-            $Result = Export-RelationshipSingle -Type $Type -Expected $Expected
-        }
+        # Pagination makes file-path chunking unnecessary for correctness.
+        # Export each relationship type as one deterministic logical dataset;
+        # Query-GraphPaged handles the physical pages underneath.
+        $Result = Export-RelationshipSingle -Type $Type -Expected $Expected
 
         $Integrity += $Result
     }
@@ -1082,7 +1496,7 @@ When source code is also supplied, source code is the final authority.
     Write-Host ""
     Write-Host "[12/12] Integrity verification yapiliyor..."
 
-    $Summary = Build-IntegritySummary -Rows $Integrity -ExpectedTotalEdges $ExpectedEdges
+    $Summary = Build-IntegritySummary -Rows $Integrity -NodeRows $NodeIntegrity -ExpectedTotalEdges $ExpectedEdges -ExpectedTotalNodes $ExpectedNodes
 
     Append-Utf8 ($NL + "## Integrity Summary" + $NL + $NL + $Summary.Text + $NL)
 
@@ -1097,17 +1511,19 @@ When source code is also supplied, source code is the final authority.
   moved out of the repository before the full re-index and restored afterwards.
 - Full architecture is requested with aspects=["all"].
 - Circular CALLS analysis is requested separately with aspects=["cycles"].
-- All graph nodes are exported.
-- Smaller relationship types are exported in one query per type.
-- USAGE, CALLS and DEFINES are exported with adaptive file-path chunking.
-- Failed large chunks are recursively split until individual files are reached.
-- A failing single-file chunk is split again by source node label.
-- Relationship properties are preserved whenever supported.
+- All graph nodes are exported label-by-label with deterministic SKIP/LIMIT pagination.
+- Node counts are verified against get_graph_schema before FULL / VERIFIED can be emitted.
+- Every relationship query is paginated with stable relationship IDs so output-budget truncation cannot silently drop rows.
+- Pagination starts with a practical page size and automatically halves it when CBM reports truncation_reason=output_budget.
+- All 19 relationship types are exported as deterministic paginated datasets; file-path chunking is no longer required for normal export.
+- Relationship properties are preserved whenever supported, with a scalar fallback when properties(r) is unavailable.
 - `get_graph_schema` is requested in machine-readable JSON mode with compatibility fallbacks.
 - Both legacy `edge_types` and current `relationship_types` schema keys are supported.
+- Node/relationship count tables are derived from `get_graph_schema`; query_graph aggregate counting is intentionally avoided because CBM releases have had count()/labels()/type() parser and grouping regressions.
+- Graph nodes are exported label-by-label when schema labels are available, avoiding fragile unlabelled aggregate queries.
 - Every relationship type is compared with the count from `get_graph_schema`.
-- FULL / VERIFIED is emitted only when all 19 relationship counts match and the
-  sum of exported edges equals the schema's total edge count.
+- FULL / VERIFIED is emitted only when every schema node label count matches,
+  all 19 relationship counts match, and exported node/edge totals equal the schema totals.
 - Absence from Codebase Memory does not prove absence from source code.
 
 "@
@@ -1135,9 +1551,12 @@ When source code is also supplied, source code is the final authority.
     Write-Host ""
     Write-Host "Dosya              : $Output"
     Write-Host "Boyut              : $SizeMB MB"
+    Write-Host "Node labels         : $($Summary.CompleteNodeCount) / $($NodeIntegrity.Count)"
+    Write-Host "Expected nodes      : $ExpectedNodes"
+    Write-Host "Exported nodes      : $($Summary.ExportedTotalNodes)"
     Write-Host "Relationship types : $($Summary.CompleteCount) / $($Integrity.Count)"
     Write-Host "Expected edges      : $ExpectedEdges"
-    Write-Host "Exported edges      : $($Summary.ExportedTotal)"
+    Write-Host "Exported edges      : $($Summary.ExportedTotalEdges)"
     Write-Host ""
 
     try {

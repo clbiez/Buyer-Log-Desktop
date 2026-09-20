@@ -63,7 +63,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_1jmnf1v",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 2,
@@ -125,7 +125,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_15ccjas",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 3,
@@ -187,7 +187,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_1n2vjn",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 4,
@@ -249,7 +249,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_1otnyjj",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 5,
@@ -311,7 +311,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_1gn31li",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 6,
@@ -373,7 +373,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_122rygj",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 7,
@@ -435,7 +435,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_izr30s",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 8,
@@ -497,7 +497,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_q1wo7t",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 9,
@@ -560,7 +560,7 @@
       "variantId": "variant_1ah49dh",
       "_licensorAuto": false,
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 10,
@@ -622,7 +622,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_i48j55",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 11,
@@ -684,7 +684,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_jokj5r",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 12,
@@ -746,7 +746,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_ief0o5",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 13,
@@ -808,7 +808,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_757sre",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 14,
@@ -870,7 +870,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_svl9r",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 15,
@@ -932,7 +932,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_agqbrl",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 16,
@@ -994,7 +994,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_1h6xrw5",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 17,
@@ -1056,7 +1056,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_1u7k893",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 18,
@@ -1118,7 +1118,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_mnbbl3",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 19,
@@ -1180,7 +1180,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_opeurt",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 20,
@@ -1242,7 +1242,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_12vaygs",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 21,
@@ -1304,7 +1304,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_138qt3w",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 22,
@@ -1366,7 +1366,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_1qarvbg",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 23,
@@ -1428,7 +1428,7 @@
       "modelGroupRole": "single",
       "variantId": "variant_wiowjm",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     },
     {
       "id": 24,
@@ -1490,12 +1490,12 @@
       "modelGroupRole": "single",
       "variantId": "variant_1pq2npa",
       "_pricingRuleId": "",
-      "_rev": 1
+      "_rev": 6
     }
   ],
   "manufacturers": [],
   "customColumns": [],
   "nextId": 25,
-  "_revision": 2,
-  "_updatedAt": "2026-09-20T15:25:30.327Z"
+  "_revision": 7,
+  "_updatedAt": "2026-09-20T19:27:43.652Z"
 }

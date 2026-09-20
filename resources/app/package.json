@@ -19,6 +19,7 @@
     "release:major": "node scripts/release-publish.js --channel test --bump major",
     "release:build": "node scripts/release-publish.js --channel test --build-only",
     "release:promote": "node scripts/release-promote.js",
+    "release:bridge": "node scripts/bridge-publish.js",
     "release:test": "node scripts/release-publish.js --channel test",
     "version:assert": "node scripts/version-assert.js",
     "portable:manifest": "node scripts/portable-manifest.js"

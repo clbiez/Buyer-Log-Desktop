@@ -1,0 +1,66 @@
+name: Buyer Log TEST release
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Exact 40-character source commit SHA
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-release-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.commit_sha }}
+          persist-credentials: false
+      - name: Verify checkout
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ inputs.commit_sha }}
+        run: |
+          [[ "$EXPECTED_SHA" =~ ^[0-9a-fA-F]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "${EXPECTED_SHA,,}"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: resources/app/package-lock.json
+      - name: Deterministic install and existing validation
+        working-directory: resources/app
+        run: |
+          npm ci --ignore-scripts
+          npm run version:assert
+      - name: Build one TEST artifact and manifest
+        working-directory: resources/app
+        env:
+          BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+        run: npm run release:build -- --allow-dirty
+      - name: Save exact bridge bundle for legacy folder distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: buyerlog-bridge-bundle
+          path: |
+            resources/app/dist-updates/BuyerLog-*.zip
+            resources/app/dist-updates/latest.test.json
+          if-no-files-found: error
+      - name: Checkout public release-only repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+          token: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          path: release-repo
+          ref: main
+      - name: Publish, verify remote bytes, then advance TEST latest
+        working-directory: resources/app
+        env:
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+          BUYER_LOG_RELEASE_REPO_DIR: ${{ github.workspace }}/release-repo
+        run: node scripts/github-release.js publish-test

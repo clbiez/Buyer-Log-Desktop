@@ -38,8 +38,17 @@ async function buildArtifact(version,notes=''){
   if(readPackage().version!==version)fail('Build version package.json ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
   ensureDir(DIST_ROOT);
   const artifactName=`BuyerLog-${version}.zip`,artifactFile=path.join(DIST_ROOT,artifactName);
+  const githubRepo=String(process.env.BUYER_LOG_GITHUB_RELEASE_REPO||'').trim();
+  const sourceFile=path.join(APP_ROOT,'electron','update','release-source.json');
+  const originalSource=fs.existsSync(sourceFile)?fs.readFileSync(sourceFile):null;
+  if(githubRepo){
+    const {parseGitHubSource}=require('../electron/update/github-provider');
+    parseGitHubSource(`github:${githubRepo}`);
+    fs.writeFileSync(sourceFile,JSON.stringify({githubSource:`github:${githubRepo}`})+'\n');
+  }
   try{fs.rmSync(artifactFile,{force:true});}catch(_){}
-  createZipFromDirectory(APP_ROOT,artifactFile,{rootPrefix:'app',exclude:excludeRuntime});
+  try{createZipFromDirectory(APP_ROOT,artifactFile,{rootPrefix:'app',exclude:excludeRuntime});}
+  finally{if(githubRepo){if(originalSource)fs.writeFileSync(sourceFile,originalSource);else fs.rmSync(sourceFile,{force:true});}}
   const sha256=await sha256File(artifactFile),size=fs.statSync(artifactFile).size;
   const manifest={schemaVersion:1,channel:'test',version,publishedAt:new Date().toISOString(),artifact:`releases/${artifactName}`,sha256,size,mandatory:false,releaseNotes:String(notes||'').slice(0,8000),minimumUpdaterVersion:UPDATER_VERSION};
   parseReleaseManifest(manifest,'test');

@@ -17,16 +17,8 @@
    =================================================================== */
 
 
-/* ========== 4 · KÖŞE YARIÇAPI ==========
-   lfl.css ve open-costing.css yarıçapları düz piksel yazdığı için
-   design.css'in --r-*:0 kuralı bu ekranlara ulaşmıyordu. */
-#view-lfl *,#view-opencosting *,
-.lflDimPanel,.lflCustomComparePanel,.lflBreakdownPanel,
-.lflPortfolioModal *,.lflScenarioEditor *,.lflTrialStudio *,
-.lflTrialOverlay *,.ocMetaSuggestDrop *,
-.globalSearchCard *,.backupCard *,.verHistCard *{
-  border-radius:0 !important;
-}
+/* Yuvarlatma artık ortak --r-* bileşen tokenlarından gelir. Eski evrensel
+   !important kuralı LFL/Ön Maliyet düğme ve odak yüzeylerini kilitliyordu. */
 
 
 /* ========== 1 · UYDU DOSYALARI KAPSA ==========
@@ -238,44 +230,14 @@ select option,select optgroup{background:var(--card);color:var(--ink);}
    10 · SADELEŞTİRME KATMANI
    -------------------------------------------------------------------
    Bir araç ekranında hareket, dikkatin çalındığı yerdir. Bu bölüm
-   arayüzü tek sese indirir: hareket yok, gradyan yok, gölge tek
-   yerde, renk yalnız anlam taşıdığı yerde.
+   renk ve kontrol ağırlığını sadeleştirir; etkileşim hareketi ve
+   yükselti son yüklenen experience.css katmanında merkezileşir.
    =================================================================== */
 
-/* --- Hareket: yalnız durum değişimini bildiren mikro geçişler kalır. --- */
-*,*::before,*::after{
-  animation:none !important;
-  transition:background-color .1s linear,border-color .1s linear,color .1s linear !important;
-}
-/* Gerçekten iş bildiren tek hareket: yükleniyor göstergesi. */
-.spinner,.blBootDot,[data-loading] .ic{animation:blBootSpin .8s linear infinite !important;}
-
-/* --- Uyarı ve bildirim: yanıp sönmez, kaymaz; yerinde belirir. --- */
-.toast,.topDirtyNotice,.savebar,.warnChip,.lflTrialBanner,.ocDirtyBadge{
-  animation:none !important;
-  transform:none !important;
-  box-shadow:none !important;
-  opacity:1 !important;
-}
+/* Etkileşim hareketi ve yükselti artık ortak experience katmanında hedefli
+   bileşenler üzerinde tanımlanır. Evrensel !important kuralları date picker,
+   drawer, yüklenme ve spreadsheet odak durumlarını da bastırıyordu. */
 .savebar{border-left:2px solid var(--acc);}
-
-/* --- Yükselme, ölçekleme, kayma: hiçbiri. --- */
-*:hover,*:active,*:focus{transform:none !important;}
-
-/* --- Gradyan ve dolgu: yok. Yüzey ya kâğıt ya kart. --- */
-*{background-image:none !important;}
-.ocSuggestInput,.ocSuggestInput:focus{background-image:none !important;}
-
-/* --- Gölge: yalnız zeminden ayrılması gereken uçan yüzeylerde. --- */
-*{box-shadow:none;}
-.colPanel,.colFilterPanel,.submfrDrop,.vfMenu,.profileSelectMenu,.userMenu,
-.dateCalendarPopup,.delTypeMenu,.ocMetaSuggestDrop,.pricingRuleSeasonPanel,
-.quotationColFilterPanel,.cfpDrawer,.themeDock,.numericValueList,
-.lflDimPanel,.lflCustomComparePanel,.lflBreakdownPanel,
-.modalCard,.lflPortfolioModalPanel,.lflScenarioEditorDialog,.lflTrialStudio{
-  box-shadow:var(--shadow-3);
-}
-:focus-visible{box-shadow:var(--focus-ring) !important;}
 
 /* --- Buton renklendirmesi: üç seviye, üçü de aynı dilde. ---
    1) Birincil  — tek dolu nesne, sayfada en fazla bir tane.
@@ -484,11 +446,9 @@ body.bl-readonly::before{
 
 /* ===================================================================
    QUALITY PASS — OS reduced-motion contract
-   This stylesheet is loaded after app.css and intentionally owns the final
-   global motion policy. Keep its normal 100 ms color-state feedback, but when
-   Windows/browser reduced motion is requested remove even those decorative
-   transitions. Functional loading indicators remain slow and continuous so
-   an in-progress operation is still visible without slide/scale motion.
+   Windows/browser reduced motion is requested remove decorative transitions.
+   Functional loading indicators remain slow and continuous so in-progress
+   operations stay visible. The final experience layer uses the same policy.
    =================================================================== */
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{

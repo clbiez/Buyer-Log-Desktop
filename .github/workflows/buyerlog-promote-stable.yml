@@ -1,0 +1,38 @@
+name: Buyer Log promote STABLE
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Verified TEST semantic version to promote without rebuilding
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-release-publish
+  cancel-in-progress: false
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Checkout public release-only repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+          token: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          path: release-repo
+          ref: main
+      - name: Verify TEST and publish identical STABLE bytes
+        working-directory: resources/app
+        env:
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+          BUYER_LOG_RELEASE_REPO_DIR: ${{ github.workspace }}/release-repo
+          PROMOTE_VERSION: ${{ inputs.version }}
+        run: node scripts/github-release.js promote-stable "$PROMOTE_VERSION"

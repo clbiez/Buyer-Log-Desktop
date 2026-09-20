@@ -1954,7 +1954,11 @@ function switchTab(tab){
 }
 function activeTableInfo(){
   const btn = document.querySelector('nav.tabs button.active');
-  const tab = btn ? btn.dataset.tab : 'overview';
+  // Koleksiyon görünüm başlığındaki ortak eylemler (Sütunlar dahil) araç
+  // çubuğundan taşınabiliyor. Bu sırada eski sekme düğümünün `.active`
+  // sınıfı kısa süreliğine DOM'da bulunmayabiliyor; body'deki aktif sayfa
+  // ise tek ve güncel durum kaynağıdır.
+  const tab = document.body.dataset.activeTab || btn?.dataset.tab || 'overview';
   const map = {
     cp: {tableKey:'cp', tableSel:'#cpTable', cols:()=>CP_COLS, rowsFn:()=>filteredCP(), selSet:()=>state.cpSelected, computeFn:computeFlags, rerender:()=>renderCP(), csvName:'cp_filtered.csv',
       filterIds:['cpSearch','cpFPriority','cpFCountry','cpFLicense','cpFDelType','cpFStatus','cpFSeason']},
@@ -2281,7 +2285,7 @@ function resetColumnPanelPosition(panel){
 function closeColumnPanel(panel){
   if(!panel) return;
   panel.classList.remove('show');
-  panel.closest('.colPanelWrap')?.querySelector('[aria-expanded]')?.setAttribute('aria-expanded','false');
+  (panel._buyerLogAnchor||panel.closest('.colPanelWrap')?.querySelector('[aria-expanded]'))?.setAttribute?.('aria-expanded','false');
   resetColumnPanelPosition(panel);
 }
 function closeAllColumnPanels(except=null){
@@ -2310,6 +2314,12 @@ function toggleColumnPanel(panel, renderFn, anchor){
   const wasOpen = panel.classList.contains('show');
   closeAllColumnPanels();
   if(wasOpen) return;
+  // Araç çubuğu yatay kaydırılan/transform uygulanmış bir kabın içinde
+  // olduğunda position:fixed bile o kaba göre hesaplanır ve sağ kenarda
+  // kesilir. Paneli geçici değil, kalıcı bir popover katmanı olarak body'ye
+  // taşıyoruz; ankora ait bilgi yeniden konumlandırmalar için saklanır.
+  if(panel.parentElement!==document.body) document.body.appendChild(panel);
+  panel._buyerLogAnchor=anchor||null;
   renderFn();
   panel.classList.add('show');
   anchor?.setAttribute?.('aria-expanded','true');
@@ -13489,6 +13499,7 @@ function closeOtherToolbarAndColumnPopups(target){
   });
   document.querySelectorAll('.colPanel').forEach(panel=>{
     const wrap=panel.closest('.colPanelWrap');if(panel.closest('.themeDock'))return;
+    if(panel.contains(target))return;
     if(wrap&&wrap.contains(target))return;
     const visible=panel.classList.contains('show')||(getComputedStyle(panel).display!=='none'&&!panel.hidden);if(!visible)return;
     if(panel.id==='navColPanel'||panel.id==='shipColPanel')closeColumnPanel(panel);
@@ -20652,9 +20663,14 @@ function kolColWidth(c){
 /* v7.81 — Koleksiyon'a boş (serbest metin) sütun ekler. Hem Sütunlar
    panelindeki "+ Sütun ekle" hem de ⋯ menüsündeki "Sütun Ekle" buraya
    gelir; mantık tek yerde durur. panelEl verilirse panel de tazelenir. */
-function kolAddCustomColumn(panelEl){
+async function kolAddCustomColumn(panelEl){
   if(!kolRequireWorkspaceEdit())return false;
-  const name = String(prompt(appLang==='en'?'Name of the new column:':'Yeni sütunun adı:')||'').trim();
+  const name = String(await openHorizonTextInput({
+    title:appLang==='en'?'Add column':'Sütun ekle',
+    label:appLang==='en'?'Name of the new column':'Yeni sütunun adı',
+    confirmLabel:appLang==='en'?'Add':'Ekle',
+    maxLength:80
+  })||'').trim();
   if(!name) return false;
   if(kolColDefs().some(c=>String(c.label).toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))){
     showToast(appLang==='en'?'A column with that name already exists.':'Bu adda bir sütun zaten var.');
@@ -20688,12 +20704,18 @@ function renderKolColumnPanel(panelEl){
     saveKolColState(); renderKol();
   }));
   panelEl.querySelector('#kolAddColBtn')?.addEventListener('click', e=>{
-    e.preventDefault(); e.stopPropagation(); kolAddCustomColumn(panelEl);
+    e.preventDefault(); e.stopPropagation(); void kolAddCustomColumn(panelEl);
   });
-  panelEl.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click', e=>{
+  panelEl.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click', async e=>{
     e.preventDefault(); e.stopPropagation(); if(!kolRequireWorkspaceEdit())return;
     const col = kolCustomCols.find(c=>c.k===el.dataset.rename); if(!col) return;
-    const name = String(prompt(appLang==='en'?'New name:':'Yeni ad:', col.label)||'').trim();
+    const name = String(await openHorizonTextInput({
+      title:appLang==='en'?'Rename column':'Sütunu yeniden adlandır',
+      label:appLang==='en'?'New name':'Yeni ad',
+      initial:col.label,
+      confirmLabel:appLang==='en'?'Save':'Kaydet',
+      maxLength:80
+    })||'').trim();
     if(!name) return;
     col.label = name;
     saveKolColState(); renderKolColumnPanel(panelEl); renderKol();

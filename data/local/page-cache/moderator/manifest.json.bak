@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "activeGeneration": "mu9zunxr-5652735517db",
-  "previousGeneration": "mu9zunuk-9260ac6d9efc",
-  "contextHash": "40d8ac0cc8be26d26f8166684d95aaf71e6195817efd52a2ab3b763119fb6896",
+  "activeGeneration": "mua7jifm-6bf4546744e0",
+  "previousGeneration": "mua7jenh-4bc4590e227a",
+  "contextHash": "e4f48b386b51ee99335f4b11dae78f261c8a24020440f305d26465641232e379",
   "sourceLoadedAt": null,
-  "createdAt": "2026-09-20T15:51:33.042Z",
+  "createdAt": "2026-09-20T19:26:49.621Z",
   "modules": {
-    "cp": {
-      "bytes": 48,
-      "uncompressedBytes": 31,
-      "checksum": "75e4cf1b614fdbc361ad59daa8b74d7a0e246a1933cd0dba303e1253568db5eb"
+    "collection-catalog": {
+      "bytes": 138,
+      "uncompressedBytes": 189,
+      "checksum": "6610f4885f0394ec215a0df4405a4660ee7b5767c41bfdf90aaa695d4f8b789b"
     }
   },
   "backlogVariants": {},

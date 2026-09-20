@@ -101,3 +101,213 @@ Moderatör kaynak klasörü: (seçilmedi)
 [PERF] DELTA_STORE_HYDRATED +4085ms
 [PERF] BACKGROUND_SYNC_START +6153ms
 [PERF] SYNC_COMPLETE +6172ms · duration 10ms
+
+===== 2026-09-20T19:03:57.165Z — Buyer Log masaüstü oturumu =====
+[2026-09-20T19:03:57.259Z] Buyer Log sunucusu başlatılıyor.
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +56ms
+[PERF] DELTA_STORE_MODE +70ms
+Buyer Log runtime config: C:\Users\clbiez\Desktop\Buyer Log Desktop\config.json · port=6194 · host=127.0.0.1
+[PERF] SERVER_READY +196ms
+Buyer Log sunucusu çalışıyor: http://localhost:6194
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: (seçilmedi)
+[PERF] LOCAL_DB_CONFIG_PATH +207ms
+[PERF] SHARED_SYNC_ROOT +207ms
+[PERF] SHARED_HUB_BOOTSTRAP +210ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +218ms
+[PERF] LOCAL_DB_READY +218ms
+[PERF] LOCAL_STATE_READY +218ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +249ms
+[PERF] APP_BOOT_START · server received +4150ms · client +12ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +4150ms · client +12ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +4151ms · client +12ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +4151ms · client +12ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +4151ms · client +14ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +4151ms · client +50ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +4151ms · client +58ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +4151ms · client +120ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +4151ms · client +120ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +4151ms · client +360ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +4151ms · client +365ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +4151ms · client +365ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +4151ms · client +365ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +4151ms · client +377ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +4151ms · client +378ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +4151ms · client +546ms · duration 168ms
+[PERF] DATASOURCE_PREPARATION_START · server received +4151ms · client +546ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +4151ms · client +548ms · duration 2ms
+[PERF] FILTER_PIVOT_INIT_START · server received +4151ms · client +548ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +4151ms · client +548ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +4151ms · client +548ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +4151ms · client +548ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +4151ms · client +548ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +4151ms · client +548ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +4151ms · client +558ms · duration 10ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +4151ms · client +558ms · duration 10ms
+[PERF] UI_FIRST_RENDER · server received +4151ms · client +558ms · duration 0ms
+[PERF] UI_READY · server received +4151ms · client +567ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +4151ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4269ms
+[PERF] DELTA_STORE_HYDRATED +4269ms
+[PERF] BACKGROUND_SYNC_START +6651ms
+[PERF] SYNC_COMPLETE +6688ms · duration 16ms
+[backlog] ASAS ham başlıkları hazırlanamadı (moderator): ASAS kaynağı Excel olarak seçili ancak henüz bir kaynak klasör seçilmedi. Kaynak Veri alanından klasör seçin veya ASAS Excel yükleyin.
+[backlog] Antrepo ham başlıkları hazırlanamadı (moderator): Antrepo kaynağı Excel olarak seçili ancak henüz bir kaynak klasör seçilmedi. Kaynak Veri alanından klasör seçin veya Antrepo Excel yükleyin.
+[PERF] SYNC_COMPLETE +300915ms · duration 14ms
+[PERF] SYNC_COMPLETE +600914ms · duration 11ms
+
+===== 2026-09-20T19:18:09.093Z — Buyer Log masaüstü oturumu =====
+[2026-09-20T19:18:09.156Z] Buyer Log sunucusu başlatılıyor.
+[PERF] APP_BOOT_START +0ms
+[PERF] LOCAL_CONFIG_READY +57ms
+[PERF] DELTA_STORE_MODE +72ms
+Buyer Log runtime config: C:\Users\clbiez\Desktop\Buyer Log Desktop\config.json · port=6194 · host=127.0.0.1
+[PERF] SERVER_READY +182ms
+Buyer Log sunucusu çalışıyor: http://localhost:6194
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: (seçilmedi)
+[PERF] LOCAL_DB_CONFIG_PATH +196ms
+[PERF] SHARED_SYNC_ROOT +196ms
+[PERF] SHARED_HUB_BOOTSTRAP +196ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +206ms
+[PERF] LOCAL_DB_READY +206ms
+[PERF] LOCAL_STATE_READY +206ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +224ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4232ms
+[PERF] DELTA_STORE_HYDRATED +4233ms
+[PERF] APP_BOOT_START · server received +5359ms · client +11ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +5360ms · client +11ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +5360ms · client +11ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +5360ms · client +11ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +5360ms · client +13ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +5360ms · client +46ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +5360ms · client +60ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +5360ms · client +81ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +5360ms · client +81ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +5360ms · client +291ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +5360ms · client +296ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +5360ms · client +296ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +5360ms · client +296ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +5360ms · client +303ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +5360ms · client +303ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +5360ms · client +462ms · duration 159ms
+[PERF] DATASOURCE_PREPARATION_START · server received +5360ms · client +462ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +5360ms · client +464ms · duration 2ms
+[PERF] FILTER_PIVOT_INIT_START · server received +5360ms · client +464ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +5360ms · client +464ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +5360ms · client +464ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +5360ms · client +464ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +5360ms · client +464ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +5360ms · client +464ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +5360ms · client +476ms · duration 12ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +5360ms · client +476ms · duration 12ms
+[PERF] UI_FIRST_RENDER · server received +5360ms · client +476ms · duration 0ms
+[PERF] UI_READY · server received +5360ms · client +489ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +5360ms
+[PERF] BACKGROUND_SYNC_START +7861ms
+[PERF] SYNC_COMPLETE +7882ms · duration 10ms
+
+===== 2026-09-20T19:22:17.265Z — Buyer Log masaüstü oturumu =====
+[2026-09-20T19:22:17.303Z] Buyer Log sunucusu başlatılıyor.
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +28ms
+[PERF] DELTA_STORE_MODE +36ms
+Buyer Log runtime config: C:\Users\clbiez\Desktop\Buyer Log Desktop\config.json · port=6194 · host=127.0.0.1
+[PERF] SERVER_READY +92ms
+Buyer Log sunucusu çalışıyor: http://localhost:6194
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: (seçilmedi)
+[PERF] LOCAL_DB_CONFIG_PATH +96ms
+[PERF] SHARED_SYNC_ROOT +96ms
+[PERF] SHARED_HUB_BOOTSTRAP +97ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +99ms
+[PERF] LOCAL_DB_READY +99ms
+[PERF] LOCAL_STATE_READY +99ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +126ms
+[PERF] APP_BOOT_START · server received +3866ms · client +8ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +3866ms · client +8ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +3866ms · client +8ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +3866ms · client +8ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +3866ms · client +9ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +3866ms · client +22ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +3866ms · client +25ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +3866ms · client +69ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +3866ms · client +69ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +3866ms · client +121ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +3866ms · client +123ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +3866ms · client +123ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +3866ms · client +123ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +3866ms · client +126ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +3866ms · client +126ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +3866ms · client +220ms · duration 94ms
+[PERF] DATASOURCE_PREPARATION_START · server received +3866ms · client +220ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +3866ms · client +221ms · duration 1ms
+[PERF] FILTER_PIVOT_INIT_START · server received +3866ms · client +221ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +3866ms · client +221ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +3866ms · client +221ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +3866ms · client +221ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +3866ms · client +221ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +3866ms · client +221ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +3866ms · client +228ms · duration 7ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +3866ms · client +228ms · duration 7ms
+[PERF] UI_FIRST_RENDER · server received +3866ms · client +228ms · duration 0ms
+[PERF] UI_READY · server received +3866ms · client +286ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +3866ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4113ms
+[PERF] DELTA_STORE_HYDRATED +4114ms
+[PERF] BACKGROUND_SYNC_START +6366ms
+[PERF] SYNC_COMPLETE +6387ms · duration 9ms
+
+===== 2026-09-20T19:26:40.635Z — Buyer Log masaüstü oturumu =====
+[2026-09-20T19:26:40.707Z] Buyer Log sunucusu başlatılıyor.
+[PERF] APP_BOOT_START +1ms
+[PERF] LOCAL_CONFIG_READY +27ms
+[PERF] DELTA_STORE_MODE +35ms
+Buyer Log runtime config: C:\Users\clbiez\Desktop\Buyer Log Desktop\config.json · port=6194 · host=127.0.0.1
+[PERF] SERVER_READY +83ms
+Buyer Log sunucusu çalışıyor: http://localhost:6194
+Dinleme adresi: 127.0.0.1 (yerel kullanım için varsayılan 127.0.0.1)
+Moderatör kaynak klasörü: (seçilmedi)
+[PERF] LOCAL_DB_CONFIG_PATH +88ms
+[PERF] SHARED_SYNC_ROOT +88ms
+[PERF] SHARED_HUB_BOOTSTRAP +89ms
+[PERF] LOCAL_DB_ACTIVE_CONNECTION +92ms
+[PERF] LOCAL_DB_READY +92ms
+[PERF] LOCAL_STATE_READY +92ms
+[PERF] COLLECTION_PERMISSION_MIGRATION +115ms
+[PERF] APP_BOOT_START · server received +3678ms · client +11ms · duration 0ms
+[PERF] FRONTEND_BOOT_START · server received +3678ms · client +11ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_START · server received +3678ms · client +11ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_START · server received +3678ms · client +11ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY · server received +3678ms · client +12ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_XLSX_DEFERRED · server received +3678ms · client +27ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_CORE_RESOURCES_READY · server received +3678ms · client +31ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_START · server received +3678ms · client +83ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_START · server received +3678ms · client +83ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_MAIN_READY · server received +3678ms · client +133ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_UI_SHELL_READY · server received +3678ms · client +135ms · duration 0ms
+[PERF] PRE_FRONTEND_STEP_APP_SCRIPTS_READY · server received +3678ms · client +135ms · duration 0ms
+[PERF] FRONTEND_BOOTSTRAP_READY · server received +3678ms · client +135ms · duration 0ms
+[PERF] DOM_CREATION_READY · server received +3678ms · client +140ms · duration 0ms
+[PERF] CACHE_LOAD_START · server received +3678ms · client +141ms · duration 0ms
+[PERF] CACHE_LOAD_READY · server received +3678ms · client +235ms · duration 95ms
+[PERF] DATASOURCE_PREPARATION_START · server received +3678ms · client +235ms · duration 0ms
+[PERF] DATASOURCE_PREPARATION_READY · server received +3678ms · client +237ms · duration 1ms
+[PERF] FILTER_PIVOT_INIT_START · server received +3678ms · client +237ms · duration 0ms
+[PERF] FILTER_PIVOT_INIT_READY · server received +3678ms · client +237ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_START · server received +3678ms · client +237ms · duration 0ms
+[PERF] IMAGE_THUMBNAIL_INIT_READY · server received +3678ms · client +237ms · duration 0ms
+[PERF] ACTIVE_MODULE_INIT_START · server received +3678ms · client +237ms · duration 0ms
+[PERF] TABLE_RENDER_START · server received +3678ms · client +237ms · duration 0ms
+[PERF] TABLE_RENDER_READY · server received +3678ms · client +247ms · duration 10ms
+[PERF] ACTIVE_MODULE_INIT_READY · server received +3678ms · client +247ms · duration 10ms
+[PERF] UI_FIRST_RENDER · server received +3678ms · client +247ms · duration 0ms
+[PERF] UI_READY · server received +3678ms · client +325ms · duration 0ms
+[PERF] STARTUP_CLIENT_REPORT_RECEIVED +3678ms
+[PERF] COLLECTION_LEGACY_DELTA_QUARANTINED +4114ms
+[PERF] DELTA_STORE_HYDRATED +4115ms
+[PERF] BACKGROUND_SYNC_START +6179ms
+[PERF] SYNC_COMPLETE +6200ms · duration 9ms
+[backlog] ASAS ham başlıkları hazırlanamadı (moderator): ASAS kaynağı Excel olarak seçili ancak henüz bir kaynak klasör seçilmedi. Kaynak Veri alanından klasör seçin veya ASAS Excel yükleyin.
+[backlog] Antrepo ham başlıkları hazırlanamadı (moderator): Antrepo kaynağı Excel olarak seçili ancak henüz bir kaynak klasör seçilmedi. Kaynak Veri alanından klasör seçin veya Antrepo Excel yükleyin.
