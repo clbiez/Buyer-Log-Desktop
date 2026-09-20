@@ -1,0 +1,66 @@
+# Buyer Log Desktop
+
+# Bağımlılıklar
+node_modules/
+
+# Kullanıcı verisi, gerçek yapılandırma ve yedekler (makineye/kullanıcıya özgü — paylaşılmamalı)
+server/data/
+config.json
+*.blgbackup
+
+# Log ve geçici dosyalar
+*.log
+*.tmp
+*.bak
+npm-debug.log*
+
+# İşletim sistemi artıkları
+.DS_Store
+Thumbs.db
+
+# Not: config.example.json bilinçli olarak izlenir (şablon commit'lenmeli).
+
+*.db
+*.sqlite
+*.sqlite3
+
+.env
+.env.*
+
+logs/
+cache/
+temp/
+tmp/
+backups/
+
+data/
+runtime-data/
+local-data/
+
+images/
+model-images/
+original-images/
+thumbnails/
+thumbnail-cache/
+image-cache/
+
+BUYER_LOG_SYNC/
+outbox/
+inbox/
+
+source-data/
+exports/
+
+*.log
+*.tmp
+
+.codebase-memory/
+server/data/.codebase-memory/
+node_modules/
+.codex/
+.agents/
+GITHUB_SYNC_BUYER_LOG_DESKTOP.bat
+Buyer Log Desktop Test/
+# Masaustu (Electron) paketleyicisinin calisma zamani ve ciktilari
+tools/electron-runtime/node_modules/
+.desktop-dev/
