@@ -349,6 +349,16 @@ tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
 .dropzone{background:color-mix(in srgb, var(--acc) 30%, rgba(0,0,0,.45));border:1px dashed rgba(255,255,255,.8);}
 
 
+
+/* Backup restore alt panelleri — Full ve kişisel restore aynı Industry dili. */
+.backupRestorePanel{display:grid;gap:10px;padding:12px;border:1px solid var(--hair);background:var(--card2);border-radius:0;}
+.backupRestorePanel[hidden]{display:none!important;}
+.backupFilePicker{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--hair);background:var(--card);font-size:11px;color:var(--ink2);cursor:pointer;}
+.backupFilePicker input{min-width:0;max-width:58%;}
+.backupRestoreActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.backupRestoreActions>label{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--muted);}
+.backupRestoreStatus{min-height:34px;padding:9px 10px;border:1px solid var(--hair);background:var(--paper);font-size:11px;line-height:1.45;color:var(--muted);overflow-wrap:anywhere;}
+
 /* ========================= 9.5 · MODERATÖR GÜNCELLEME TESTİ ========================= */
 .updateTestOverlay{
   position:fixed;inset:0;z-index:52000;display:grid;place-items:center;

@@ -1534,8 +1534,47 @@ function usedScopedProfile(baseFile, storeName, args) {
   return markUsedProfile(scopedProfileFile(baseFile, a.userId), a.id, a.revision, storeName, a.userId, kind);
 }
 
+
+/* KİŞİSEL BACKUP SNAPSHOT / RESTORE
+   Yalnız kullanıcıya özel store'lar dahildir. Ortak FX, ayarlar, business
+   rules ve diğer paylaşılan veriler burada özellikle yoktur. */
+function userBackupStoreSnapshot(userId) {
+  return {
+    views: loadViewsForBackup(userId),
+    filters: loadFiltersForBackup(userId),
+    shipping: loadShipping(userId),
+    refreshHistory: loadRefreshHistory(userId),
+  };
+}
+function loadViewsForBackup(userId) {
+  return loadProfileFile(scopedProfileFile(VIEWS_FILE, userId), userId, 'view');
+}
+function loadFiltersForBackup(userId) {
+  return loadProfileFile(scopedProfileFile(FILTERS_FILE, userId), userId, 'filter');
+}
+function restoreUserBackupStores(userId, snapshot = {}) {
+  const result = {};
+  if (snapshot.views) {
+    const current = loadViewsForBackup(userId);
+    result.views = saveProfileFile(scopedProfileFile(VIEWS_FILE, userId), snapshot.views, current._revision, 'Görünümler', userId, 'view');
+  }
+  if (snapshot.filters) {
+    const current = loadFiltersForBackup(userId);
+    result.filters = saveProfileFile(scopedProfileFile(FILTERS_FILE, userId), snapshot.filters, current._revision, 'Filtre profilleri', userId, 'filter');
+  }
+  if (snapshot.shipping) {
+    const current = loadShipping(userId);
+    result.shipping = saveShipping(snapshot.shipping, current._revision, userId);
+  }
+  if (snapshot.refreshHistory) {
+    const current = loadRefreshHistory(userId);
+    result.refreshHistory = saveRefreshHistory(snapshot.refreshHistory, current._revision, userId);
+  }
+  return result;
+}
+
 module.exports = {
-  attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload,
+  attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,

@@ -15,6 +15,20 @@ function buyerLogBrowserStorageSnapshot() {
   }
   return out;
 }
+function buyerLogApplyBrowserStorageSnapshot(snapshot) {
+  const profile = window.BL_USER_CONTEXT || {}, uid = String(profile.id || 'anonymous').replace(/[^A-Za-z0-9_-]/g, '_');
+  const prefix = `bl.user.${uid}.`, storage = window.BLStorage && window.BLStorage.native || window.localStorage;
+  if (!storage) return;
+  const remove = [];
+  for (let index = 0; index < storage.length; index++) {
+    const key = storage.key(index); if (key && key.startsWith(prefix)) remove.push(key);
+  }
+  remove.forEach(key => { try { storage.removeItem(key); } catch (_) {} });
+  for (const [key, value] of Object.entries(snapshot && typeof snapshot === 'object' ? snapshot : {})) {
+    if (!String(key).startsWith(prefix)) continue;
+    try { storage.setItem(String(key), String(value == null ? '' : value)); } catch (_) {}
+  }
+}
 function buyerLogBackupModal() {
   document.getElementById('_buyerLogBackupModal')?.remove();
   const moderator = Boolean(window.BLIsModerator && window.BLIsModerator());
@@ -23,13 +37,15 @@ function buyerLogBackupModal() {
   const modal = document.createElement('div'); modal.id = '_buyerLogBackupModal'; modal.className = 'warnOverlay';
   modal.innerHTML = `<div class="modalCard backupCard" role="dialog" aria-modal="true" aria-labelledby="_backupTitle">
     <div class="backupHead"><div><div class="modalTitle" id="_backupTitle">Backup</div><div class="backupIntro">${buyerLogBackupTr('Kişisel verilerinizi ve ayarlarınızı güvenli, sürümlü tek bir ZIP dosyasında indirin.','Download your personal data and settings as one secure, versioned ZIP file.')}</div></div><button class="pricingRuleIconBtn _backupClose" aria-label="${buyerLogBackupTr('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div class="backupBody"><div class="backupActions"><button class="navActionBtn" data-backup-mode="user"><svg class="ic"><use href="#i-download"/></svg><span>${buyerLogBackupTr('Verilerimi Yedekle','Back Up My Data')}</span></button>${moderator ? `<button class="tbtn" data-backup-mode="full"><svg class="ic"><use href="#i-database-import"/></svg><span>${buyerLogBackupTr('Tam Sistem Yedeği','Full System Backup')}</span></button><button class="tbtn" data-backup-restore><svg class="ic"><use href="#i-upload"/></svg><span>${buyerLogBackupTr('Full System Restore','Full System Restore')}</span></button>` : ''}</div>
+    <div class="backupBody"><div class="backupActions"><button class="navActionBtn" data-backup-mode="user"><svg class="ic"><use href="#i-download"/></svg><span>${buyerLogBackupTr('Verilerimi Yedekle','Back Up My Data')}</span></button><button class="navActionBtn" data-user-restore><svg class="ic"><use href="#i-upload"/></svg><span>${buyerLogBackupTr('Verilerimi Geri Yükle','Restore My Data')}</span></button>${moderator ? `<button class="tbtn" data-backup-mode="full"><svg class="ic"><use href="#i-database-import"/></svg><span>${buyerLogBackupTr('Tam Sistem Yedeği','Full System Backup')}</span></button><button class="tbtn" data-backup-restore><svg class="ic"><use href="#i-upload"/></svg><span>${buyerLogBackupTr('Full System Restore','Full System Restore')}</span></button>` : ''}</div>
+    <div class="backupRestorePanel" data-user-restore-panel hidden><label class="backupFilePicker">${buyerLogBackupTr('Kişisel Backup ZIP seçin','Choose a Personal Backup ZIP')}<input type="file" data-user-restore-file accept=".zip,application/zip"/></label><div class="backupRestoreActions"><button class="tbtn" data-user-restore-inspect>${buyerLogBackupTr('Ön kontrol yap','Run preflight')}</button><button class="tbtn" data-user-restore-confirm disabled>${buyerLogBackupTr('Verilerimi geri yükle','Restore my data')}</button></div><div class="backupRestoreStatus" data-user-restore-status aria-live="polite">${buyerLogBackupTr('Bir kişisel backup seçin.','Choose a personal backup.')}</div></div>
     ${moderator ? `<div class="backupRestorePanel" data-restore-panel hidden><label class="backupFilePicker">${buyerLogBackupTr('Full System Backup ZIP seçin','Choose a Full System Backup ZIP')}<input type="file" data-restore-file accept=".zip,application/zip"/></label><div class="backupRestoreActions"><button class="tbtn" data-restore-inspect>${buyerLogBackupTr('Ön kontrol yap','Run preflight')}</button><label><input type="checkbox" data-restore-safety-backup checked/> createSafetyBackup</label><button class="tbtn" data-restore-confirm disabled>${buyerLogBackupTr('Restore’u uygula','Apply restore')}</button><button class="tbtn" data-restore-cancel hidden>${buyerLogBackupTr('İptal','Cancel')}</button></div><div class="backupRestoreStatus" data-restore-status aria-live="polite">${buyerLogBackupTr('Bir backup seçin.','Choose a backup.')}</div></div>` : ''}
     <div class="backupStages">${labels.map((label, index) => `<div class="backupStage" data-stage="${stages[index]}"><span>${index + 1}</span><b>${label}</b></div>`).join('')}</div>
     <div class="backupProgress" id="_backupStatus" aria-live="polite">${buyerLogBackupTr('Yedekleme başlatılmadı.','Backup has not started.')}</div></div></div>`;
   document.body.appendChild(modal);
   const status = modal.querySelector('#_backupStatus'), buttons = [...modal.querySelectorAll('[data-backup-mode]')];
   const restorePanel = modal.querySelector('[data-restore-panel]'), restoreFile = modal.querySelector('[data-restore-file]');
+  const userRestorePanel = modal.querySelector('[data-user-restore-panel]'), userRestoreFile = modal.querySelector('[data-user-restore-file]');
   const close = () => modal.remove();
   modal.querySelector('._backupClose').addEventListener('click', close); modal.addEventListener('click', event => { if (event.target === modal) close(); });
   function render(job) {
@@ -52,11 +68,60 @@ function buyerLogBackupModal() {
     finally { buttons.forEach(button => { button.disabled = false; }); }
   }
   buttons.forEach(button => button.addEventListener('click', () => run(button.dataset.backupMode)));
+  if (userRestorePanel) {
+    let userUploadId = '', userRestoreJobId = '';
+    const userRestoreStatus = userRestorePanel.querySelector('[data-user-restore-status]');
+    const userInspectButton = userRestorePanel.querySelector('[data-user-restore-inspect]');
+    const userConfirmButton = userRestorePanel.querySelector('[data-user-restore-confirm]');
+    const setUserRestoreStatus = message => { userRestoreStatus.textContent = message; };
+    modal.querySelector('[data-user-restore]').addEventListener('click', () => {
+      userRestorePanel.hidden = !userRestorePanel.hidden;
+      if (!userRestorePanel.hidden && restorePanel) restorePanel.hidden = true;
+    });
+    userInspectButton.addEventListener('click', async () => {
+      const file = userRestoreFile.files && userRestoreFile.files[0];
+      if (!file) return setUserRestoreStatus(buyerLogBackupTr('Önce bir kişisel backup ZIP seçin.','Choose a personal backup ZIP first.'));
+      userInspectButton.disabled = true; userConfirmButton.disabled = true; userUploadId = '';
+      try {
+        const response = await fetch('/api/backups/user-restore/inspect', { method: 'POST', headers: { 'Content-Type': 'application/zip' }, body: file });
+        const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || response.statusText);
+        userUploadId = data.uploadId;
+        const plan = data.preflight || {}, backupUser = plan.user || {};
+        setUserRestoreStatus(`${buyerLogBackupTr('Ön kontrol tamamlandı','Preflight complete')}: ${Number(plan.fileCount || 0).toLocaleString()} ${buyerLogBackupTr('dosya','files')} • ${buyerLogRestoreBytes(plan.totalBytes)} • ${backupUser.displayName || backupUser.username || backupUser.id || '—'} • v${plan.appVersion || '—'}${(plan.warnings || []).length ? ` • ${plan.warnings.join(' ')}` : ''}`);
+        userConfirmButton.disabled = false;
+      } catch (error) { setUserRestoreStatus(`${buyerLogBackupTr('Hata','Error')}: ${error.message}`); }
+      finally { userInspectButton.disabled = false; }
+    });
+    userConfirmButton.addEventListener('click', async () => {
+      if (!userUploadId) return;
+      if (!confirm(buyerLogBackupTr('Bu işlem mevcut kişisel Buyer Log verilerinizi seçtiğiniz backup ile değiştirecek. Devam edilsin mi?','This will replace your current personal Buyer Log data with the selected backup. Continue?'))) return;
+      userConfirmButton.disabled = true; userInspectButton.disabled = true;
+      try {
+        const response = await fetch('/api/backups/user-restore/start', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ uploadId: userUploadId }) });
+        let job = await response.json().catch(() => ({})); if (!response.ok) throw new Error(job.error || response.statusText);
+        userRestoreJobId = job.id;
+        while (!job.done && !job.error) {
+          await wait(350);
+          const poll = await fetch(`/api/backups/user-restore/${encodeURIComponent(userRestoreJobId)}/status`, { cache: 'no-store' });
+          job = await poll.json().catch(() => ({})); if (!poll.ok) throw new Error(job.error || poll.statusText);
+          setUserRestoreStatus(`${job.phase || ''} • ${Number(job.current || 0).toLocaleString()}/${Number(job.total || 0).toLocaleString()}${job.bytesTotal ? ` • ${buyerLogRestoreBytes(job.bytesDone)}/${buyerLogRestoreBytes(job.bytesTotal)}` : ''}${job.item ? ` • ${job.item}` : ''}`);
+        }
+        if (job.error) throw new Error(job.error);
+        const result = job.result || {};
+        buyerLogApplyBrowserStorageSnapshot(result.browserStorage || {});
+        setUserRestoreStatus(`${buyerLogBackupTr('Kişisel restore tamamlandı. Arayüz yenileniyor…','Personal restore completed. Reloading the interface…')}${(result.warnings || []).length ? ` • ${result.warnings.join(' ')}` : ''}`);
+        await wait(700); location.reload();
+      } catch (error) {
+        setUserRestoreStatus(`${buyerLogBackupTr('Hata','Error')}: ${error.message}`);
+        userConfirmButton.disabled = false; userInspectButton.disabled = false;
+      }
+    });
+  }
   if (restorePanel) {
     let uploadId = '', restoreJobId = '', commitStarted = false;
     const restoreStatus = restorePanel.querySelector('[data-restore-status]'), inspectButton = restorePanel.querySelector('[data-restore-inspect]'), confirmButton = restorePanel.querySelector('[data-restore-confirm]'), cancelButton = restorePanel.querySelector('[data-restore-cancel]'), safetyCheckbox = restorePanel.querySelector('[data-restore-safety-backup]');
     const setRestoreStatus = message => { restoreStatus.textContent = message; };
-    modal.querySelector('[data-backup-restore]').addEventListener('click', () => { restorePanel.hidden = !restorePanel.hidden; });
+    modal.querySelector('[data-backup-restore]').addEventListener('click', () => { restorePanel.hidden = !restorePanel.hidden; if (!restorePanel.hidden && userRestorePanel) userRestorePanel.hidden = true; });
     inspectButton.addEventListener('click', async () => {
       const file = restoreFile.files && restoreFile.files[0]; if (!file) return setRestoreStatus(buyerLogBackupTr('Önce bir ZIP seçin.','Choose a ZIP first.'));
       inspectButton.disabled = true; confirmButton.disabled = true; uploadId = '';

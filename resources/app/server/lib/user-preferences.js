@@ -223,6 +223,36 @@ function removeKeys(userId, keys, options = {}) {
   return saved;
 }
 
+
+/* Kişisel backup restore bir MERGE değildir: backup, kullanıcının o andaki
+   kişisel çalışma alanının snapshot'ıdır. Bu yüzden yalnız whitelist'teki
+   senkron anahtarları kabul edip mevcut kişisel kaydı atomik olarak değiştirir.
+   Restore anı yeni zaman damgası olur; açık kalmış eski bir tarayıcı sekmesi
+   backup'tan daha eski değerleri sonradan geri itemez. */
+function restoreSnapshot(userId, snapshot) {
+  const raw = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const now = new Date().toISOString(), entries = {}, rejected = [];
+  for (const [key, itemRaw] of Object.entries(raw.entries && typeof raw.entries === 'object' ? raw.entries : {})) {
+    if (!isSyncedKey(key)) { rejected.push({ key, reason: 'not-synced' }); continue; }
+    const item = itemRaw && typeof itemRaw === 'object' ? itemRaw : { value: itemRaw };
+    const value = String(item.value == null ? '' : item.value);
+    if (Buffer.byteLength(value, 'utf8') > MAX_VALUE_BYTES) { rejected.push({ key, reason: 'too-large' }); continue; }
+    entries[key] = { value, updatedAt: now };
+  }
+  if (totalBytes(entries) > MAX_TOTAL_BYTES) {
+    const error = new Error('Kişisel restore veri sınırı aşıldı.');
+    error.statusCode = 413; error.code = 'USER_PREFS_TOO_LARGE'; throw error;
+  }
+  const deletions = {};
+  for (const key of Object.keys(raw.deletions && typeof raw.deletions === 'object' ? raw.deletions : {})) {
+    if (isSyncedKey(key) && !entries[key]) deletions[key] = now;
+  }
+  fs.mkdirSync(ROOT, { recursive: true });
+  const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
+  atomicWriteJson(prefsFile(userId), saved);
+  return { ...saved, rejected };
+}
+
 function workspaceEntries(userId, categories = WORKSPACE_CATEGORIES) {
   const wanted = new Set(normalizeCategories(categories));
   const entries = load(userId).entries;
@@ -525,7 +555,7 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
 }
 
 module.exports = {
-  load, merge, removeKeys, isSyncedKey, SYNCED_PREFIXES, MAX_VALUE_BYTES, MAX_TOTAL_BYTES, safeId,
+  load, merge, removeKeys, restoreSnapshot, isSyncedKey, SYNCED_PREFIXES, MAX_VALUE_BYTES, MAX_TOTAL_BYTES, safeId,
   WORKSPACE_HORIZON_PREFIX, APPLIED_HORIZON_PREFIX, WORKSPACE_CATEGORY_PREFIXES, WORKSPACE_CATEGORIES,
   categoryForKey, normalizeCategories, workspaceEntries, replaceWorkspaceEntries,
   normalizeWorkspaceEntryMap, effectiveWorkspaceEntries, copyWorkspaceSnapshot, copyWorkspaceEntrySnapshot,

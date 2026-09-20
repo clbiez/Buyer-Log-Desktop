@@ -35,6 +35,7 @@ const { createCollectionPermissionsStore } = require('./lib/collection-permissio
 const { resolveBuyerLogDataRoots } = require('./lib/data-roots');
 const { createDataMaintenance } = require('./lib/data-maintenance');
 const { createBackupService } = require('./lib/backup-service');
+const { createUserRestoreService } = require('./lib/user-restore-service');
 const { createFullRestoreService, recoverInterruptedRestoresSync } = require('./lib/full-restore-service');
 const { isClientRequestAborted } = require('./lib/http-errors');
 // v7.81: normalizeHorizonGroups artık kullanılmıyor — Horizon grupları kaldırıldı.
@@ -770,6 +771,8 @@ syncSettings.onStateChange(state => {
   }
 });
 const backupService = createBackupService({ appVersion: APP_VERSION, userAccess, syncSettings, localDb });
+const userRestoreService = createUserRestoreService();
+const userRestoreUploads = new Map(), userRestoreJobs = new Map();
 // Full System Restore state is intentionally separate from ordinary backup jobs:
 // upload/inspect can run without a write lock, while the apply phase gates all
 // restore-aware writes and Central IAM refreshes.
@@ -5503,6 +5506,38 @@ function fullRestoreJobStatus(job) {
     result: job.result ? { ok: true, restoreId: job.result.restoreId, warnings: job.result.warnings || [], verification: job.result.verification || null } : null,
   };
 }
+const USER_RESTORE_MAX_ARCHIVE_BYTES = 1024 * 1024 * 1024;
+function userRestoreUploadFor(req, uploadId) {
+  const upload = userRestoreUploads.get(String(uploadId || ''));
+  if (!upload || upload.ownerId !== req.currentUser.id) return null;
+  return upload;
+}
+function userRestoreJobStatus(job) {
+  return {
+    id: job.id, phase: job.phase, current: job.current || 0, total: job.total || 0, item: job.item || '',
+    bytesDone: Number(job.bytesDone) || 0, bytesTotal: Number(job.bytesTotal) || 0,
+    done: Boolean(job.done), error: job.error || null, result: job.result || null,
+  };
+}
+// Kişisel restore de stream upload kullanır; backup belleğe bütünüyle alınmaz.
+app.post('/api/backups/user-restore/inspect', async (req, res) => {
+  let upload = null;
+  try {
+    if (systemRestoreState.writeLocked) return res.status(409).json({ error: 'Full System Restore devam ederken kişisel restore başlatılamaz.', code: 'SYSTEM_RESTORE_IN_PROGRESS' });
+    upload = await receiveRequestToTempFile(req, USER_RESTORE_MAX_ARCHIVE_BYTES);
+    const inspected = await userRestoreService.inspect(upload.file, req.currentUser);
+    const uploadId = crypto.randomUUID();
+    userRestoreUploads.set(uploadId, { ...upload, id: uploadId, ownerId: req.currentUser.id, inspectedAt: Date.now(), inspected });
+    upload = null;
+    return res.status(200).json({ ok: true, uploadId, preflight: inspected.public });
+  } catch (error) {
+    const status = Number(error && error.statusCode) || 400;
+    return res.status(status).json({ error: error && error.message || 'Kişisel backup incelenemedi.', code: error && error.code || 'USER_RESTORE_INSPECT_FAILED', details: error && error.details || null });
+  } finally {
+    if (upload) fs.rmSync(upload.root, { recursive: true, force: true });
+  }
+});
+
 // Upload is deliberately a raw request stream. No Buffer/body parser is used,
 // so a multi-GB Full System Backup never has to exist in process memory.
 app.post('/api/backups/restore/inspect', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), async (req, res) => {
@@ -5545,6 +5580,46 @@ app.use('/api', (_req, res, next) => {
   res.set('Expires', '0');
   next();
 });
+app.post('/api/backups/user-restore/start', (req, res) => {
+  try {
+    if (systemRestoreState.writeLocked) return res.status(409).json({ error: 'Full System Restore devam ederken kişisel restore başlatılamaz.', code: 'SYSTEM_RESTORE_IN_PROGRESS' });
+    if ([...userRestoreJobs.values()].some(job => job.ownerId === req.currentUser.id && !job.done)) return res.status(409).json({ error: 'Bu kullanıcı için bir restore zaten çalışıyor.', code: 'USER_RESTORE_IN_PROGRESS' });
+    const upload = userRestoreUploadFor(req, req.body && req.body.uploadId);
+    if (!upload) return res.status(404).json({ error: 'Restore için yüklenmiş kişisel backup bulunamadı.', code: 'USER_RESTORE_UPLOAD_NOT_FOUND' });
+    const id = crypto.randomUUID();
+    const job = { id, ownerId: req.currentUser.id, phase: 'Hazırlanıyor', current: 0, total: upload.inspected.info.fileCount || 0, item: '', bytesDone: 0, bytesTotal: upload.inspected.info.totalBytes || 0, error: null, result: null, done: false, createdAt: Date.now() };
+    userRestoreJobs.set(id, job);
+    setImmediate(async () => {
+      try {
+        const restored = await userRestoreService.restore(upload.file, {
+          user: req.currentUser,
+          preflight: upload.inspected,
+          onProgress: progress => Object.assign(job, progress),
+        });
+        sourceCaches.clear(); initialDataLoadPromises.clear();
+        job.result = restored;
+        job.phase = 'Tamamlandı';
+      } catch (error) {
+        logRuntimeFailure('userRestore', error);
+        job.phase = 'Hata';
+        job.error = error && error.message || 'Kişisel restore başarısız.';
+      } finally {
+        job.done = true;
+        try { fs.rmSync(upload.root, { recursive: true, force: true }); } catch (_) {}
+        userRestoreUploads.delete(upload.id);
+      }
+    });
+    return res.status(202).json(userRestoreJobStatus(job));
+  } catch (error) {
+    return res.status(Number(error && error.statusCode) || 500).json({ error: error && error.message || 'Kişisel restore başlatılamadı.', code: error && error.code || 'USER_RESTORE_FAILED' });
+  }
+});
+app.get('/api/backups/user-restore/:id/status', (req, res) => {
+  const job = userRestoreJobs.get(String(req.params.id || ''));
+  if (!job || job.ownerId !== req.currentUser.id) return res.status(404).json({ error: 'Kişisel restore işi bulunamadı.', code: 'USER_RESTORE_JOB_NOT_FOUND' });
+  return res.json(userRestoreJobStatus(job));
+});
+
 app.post('/api/backups/restore/start', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), (req, res) => {
   try {
     if (systemRestoreState.writeLocked || [...fullRestoreJobs.values()].some(job => !job.done)) return res.status(409).json({ error: 'Başka bir Full System Restore çalışıyor.', code: 'SYSTEM_RESTORE_IN_PROGRESS' });
@@ -5716,6 +5791,10 @@ const backupJobCleanupTimer = setInterval(() => {
   for (const [id, upload] of fullRestoreUploads) if (upload.inspectedAt < restoreCutoff) {
     fullRestoreUploads.delete(id); try { fs.rmSync(upload.root, { recursive: true, force: true }); } catch (_) {}
   }
+  for (const [id, upload] of userRestoreUploads) if (upload.inspectedAt < restoreCutoff) {
+    userRestoreUploads.delete(id); try { fs.rmSync(upload.root, { recursive: true, force: true }); } catch (_) {}
+  }
+  for (const [id, job] of userRestoreJobs) if (job.createdAt < restoreCutoff && job.done) userRestoreJobs.delete(id);
   for (const [id, job] of fullRestoreJobs) if (job.createdAt < restoreCutoff && job.done) fullRestoreJobs.delete(id);
 }, 5 * 60 * 1000);
 if (typeof backupJobCleanupTimer.unref === 'function') backupJobCleanupTimer.unref();

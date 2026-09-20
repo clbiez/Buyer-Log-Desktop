@@ -77,7 +77,8 @@ async function userEntries({ user, browserStorage, accessSnapshot }) {
     jsonEntry('user/views.json', db.loadViews(user.id), 'settings'),
     jsonEntry('user/filters.json', db.loadFilterProfiles(user.id), 'settings'),
     jsonEntry('user/shipping.json', db.loadShipping(user.id), 'data'),
-    jsonEntry('user/fx.json', db.loadFx(user.id), 'data'),
+    // FX ortak iş verisidir; kişisel backup kullanıcının verisini geri yüklerken
+    // bütün kullanıcıların kur tablosunu değiştirmemelidir.
     jsonEntry('user/refresh-history.json', db.loadRefreshHistory(user.id), 'data'),
   ];
   await collectRoot(entries, path.join(SERVER_DATA_ROOT, 'user-source-data', id), 'user/source-data');
