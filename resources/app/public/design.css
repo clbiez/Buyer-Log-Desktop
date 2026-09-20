@@ -348,6 +348,33 @@ tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
 }
 .dropzone{background:color-mix(in srgb, var(--acc) 30%, rgba(0,0,0,.45));border:1px dashed rgba(255,255,255,.8);}
 
+
+/* ========================= 9.5 · MODERATÖR GÜNCELLEME TESTİ ========================= */
+.updateTestOverlay{
+  position:fixed;inset:0;z-index:52000;display:grid;place-items:center;
+  padding:20px;background:color-mix(in srgb,var(--navy-deep) 58%,transparent);
+}
+.updateTestCard{
+  width:min(540px,calc(100vw - 28px));padding:18px;background:var(--card);
+  color:var(--ink);border:1px solid var(--hair-2);border-radius:0;box-shadow:var(--shadow-3);
+}
+.updateTestHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--hair);}
+.updateTestHead h2{margin:0}.updateTestHead p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.45;}
+.updateTestClose{font-size:18px;line-height:1;width:30px;height:30px;flex:0 0 auto;}
+.updateTestFacts{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;border-top:1px solid var(--hair);border-left:1px solid var(--hair);}
+.updateTestFacts>div{display:grid;gap:4px;padding:10px 12px;border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);min-width:0;}
+.updateTestFacts span,.updateTestControls span{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
+.updateTestFacts b{font-size:12px;font-weight:600;overflow-wrap:anywhere;}
+.updateTestStateRow{grid-column:1/-1;}
+.updateTestControls{margin-top:14px}.updateTestControls label{display:grid;gap:6px;}
+.updateTestControls select{height:32px;width:100%;padding:0 8px;}
+.updateTestMessage{margin-top:12px;min-height:38px;padding:9px 10px;border:1px solid var(--hair);background:var(--card2);font-size:11px;line-height:1.45;}
+.updateTestMessage.isReady{border-color:color-mix(in srgb,var(--green) 48%,var(--hair));color:var(--green);}
+.updateTestMessage.isError{border-color:color-mix(in srgb,var(--red) 48%,var(--hair));color:var(--red);}
+.updateTestActions{display:flex;justify-content:flex-end;gap:7px;margin-top:14px;flex-wrap:wrap;}
+.updateTestActions .navActionBtn{min-height:32px;}
+@media(max-width:560px){.updateTestFacts{grid-template-columns:1fr}.updateTestStateRow{grid-column:auto}.updateTestActions{justify-content:stretch}.updateTestActions .navActionBtn{flex:1;}}
+
 /* ========================= 10 · BANT VE ARAÇ ÇUBUĞU YERLEŞİMİ ========================= */
 /* v3.06'da onayladığın yerleşim aynen korunuyor; yalnız görünüm dili
    Industry'ye uyarlandı.
