@@ -17,6 +17,12 @@ test('Ortak deneyim katmanı tüm modül stillerinden sonra yüklenir', () => {
   assert.match(experience, /--bl-radius-control:var\(--r-sm\)/);
 });
 
+test('Refined Industry kare geometrisi ve sakin aktif navigasyon durumu korunur', () => {
+  assert.match(experience, /--r-xs:0px;--r-sm:0px;--r-md:0px;--r-lg:0px;--r-xl:0px;\s*--r-full:0px;/);
+  assert.match(experience, /nav\.tabs button\.active\{background:var\(--acc-bg\);color:var\(--acc-ink\);box-shadow:none;\}/);
+  assert.doesNotMatch(experience, /nav\.tabs button\.active\{[^}]*inset 3px 0 0 var\(--acc\)/);
+});
+
 test('Açık, kurşun ve karanlık temada uçan yüzey opaktır', () => {
   assert.match(experience, /--pop:var\(--card\)/);
   assert.match(experience, /html\[data-theme="grey"\][\s\S]*?--pop:var\(--card\)/);
