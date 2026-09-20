@@ -66,7 +66,13 @@ try{
   // Tıklama ve klavye ile aç-kapa; kapalı paneldeki filtreler sekme sırasına girmez.
   document.addEventListener('click',e=>{
     const trigger=e.target.closest('.kpiGroup > .kpiGroupLabel');
-    if(!trigger) return;
+    if(!trigger){
+      // Açık hızlı filtre grubu yalnız kendi başlığı/paneliyle etkileşimde
+      // açık kalır. Sayfanın başka bir alanına tıklamak Excel benzeri biçimde
+      // paneli otomatik kapatır.
+      if(!e.target.closest('.kpiGroup')) closeKpiGroups();
+      return;
+    }
     const grp=trigger.parentElement;
     const open=!grp.classList.contains('open');
     closeKpiGroups(grp); setKpiGroupOpen(grp,open);
