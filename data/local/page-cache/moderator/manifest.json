@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "activeGeneration": "mu9zvjsl-efc69a9af1e4",
+  "previousGeneration": "mu9zunxr-5652735517db",
+  "contextHash": "d08f5c18a4939464909ab89284a9f44189fd600c393a166896601068f864c963",
+  "sourceLoadedAt": null,
+  "createdAt": "2026-09-20T15:52:14.327Z",
+  "modules": {
+    "collection-catalog": {
+      "bytes": 138,
+      "uncompressedBytes": 189,
+      "checksum": "6610f4885f0394ec215a0df4405a4660ee7b5767c41bfdf90aaa695d4f8b789b"
+    }
+  },
+  "backlogVariants": {},
+  "runtimeMeta": {
+    "loadedAt": null,
+    "sources": {
+      "asas": null,
+      "antrepo": null,
+      "lfl": null
+    },
+    "cpupdateInfo": null,
+    "cpupdateOverrides": {
+      "submap": {},
+      "suppfobmap": {},
+      "suppfobmetamap": {}
+    },
+    "fabricHeaderInfo": null,
+    "antrepoHeaderInfo": null,
+    "lflMeta": {
+      "rowCount": 0,
+      "warnings": [],
+      "dimensions": {}
+    },
+    "refreshWarnings": [],
+    "refreshWarningDetails": [],
+    "modelRefresh": null,
+    "lastRefreshResult": null
+  },
+  "sourceRevisionKey": "f1413d10bea71745182c913f4e1637643ac5d17b461fa2488d6c18f600775ca5"
+}

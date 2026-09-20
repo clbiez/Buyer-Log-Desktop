@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "state": "complete",
+  "reason": "legacy-import",
+  "startedAt": "2026-09-20T15:25:17.650Z",
+  "completedAt": "2026-09-20T15:25:18.086Z",
+  "source": {
+    "appData": "C:\\Users\\clbiez\\AppData\\Roaming",
+    "localAppData": "C:\\Users\\clbiez\\AppData\\Local"
+  },
+  "staged": {
+    "files": 58,
+    "bytes": 532315
+  },
+  "activated": 58,
+  "keptExisting": 0,
+  "database": {
+    "present": true,
+    "ok": true,
+    "bytes": 1123,
+    "sha256": "4e7c7dd02ea4adbe84ce43a5165d02f68bd63226f28e249cffa53ef119c223be",
+    "storeCount": 0,
+    "stores": []
+  },
+  "rebasedSettings": {
+    "file": "C:\\Users\\clbiez\\Desktop\\Buyer Log Desktop\\data\\local\\sync-settings.json",
+    "changed": true,
+    "previous": "C:\\Users\\clbiez\\AppData\\Local\\BuyerLog\\BuyerLogLocal.db",
+    "current": "C:\\Users\\clbiez\\Desktop\\Buyer Log Desktop\\data\\local\\BuyerLogLocal.db"
+  },
+  "jsonChecked": 6,
+  "note": "Kaynak dosyalar SİLİNMEDİ; eski kurulum geri dönüş yolu olarak çalışmaya devam edebilir."
+}

@@ -1,0 +1,59 @@
+{
+  "userId": "moderator",
+  "entries": {
+    "lcw_theme": {
+      "value": "dark",
+      "updatedAt": "2026-09-20T15:51:32.777Z"
+    },
+    "lcw.lang.v1": {
+      "value": "tr",
+      "updatedAt": "2026-09-20T15:51:32.779Z"
+    },
+    "lcw.table.columnState.v1": {
+      "value": "{\"cp\":{\"order\":[\"__picture\",\"Priority\",\"Season\",\"Country\",\"Merch Marka Yaş Grup Kod\",\"Merch Alt Grup Kod\",\"Buyer Grup (TR)\",\"Buyer\",\"Line\",\"Manufacturer\",\"Sub-Manufacturer\",\"Licensor\",\"License\",\"Category\",\"Special Code\",\"PLM ID\",\"Model Name\",\"Ürün Tanım\",\"C.Code\",\"Colour\",\"Order Code\",\"FOB ($)\",\"Supp. FOB\",\"OPD\",\"Ex-factory\",\"LT\",\"HANDOVER Tarihi\",\"Retail Date\",\"Ex→Retail\",\"Buying Son Onay Tarihi\",\"In-Store (Model Budget)\",\"Order Quantity\",\"Shipment Quantity\",\"Remaining Units\",\"%\",\"Kumaş Kategorisi\",\"Kumaşçı Ülkesi\",\"Kumaşçı\",\"Kumaş Tipi\",\"İplik No\",\"Gramaj\",\"Karışım\",\"STATUS\",\"Ant. Arrival\",\"Del. Type\",\"Notes\",\"Ek Not\"],\"hidden\":[],\"widthPx\":{\"__picture\":74}},\"orders\":{\"order\":[\"Active/Inactive\",\"__picture\",\"Priority\",\"Season\",\"Country\",\"Merch Marka Yaş Grup Kod\",\"Merch Alt Grup Kod\",\"Buyer Grup (TR)\",\"Buyer\",\"Line\",\"Manufacturer\",\"Sub-Manufacturer\",\"Licensor\",\"License\",\"Category\",\"Special Code\",\"PLM ID\",\"Model Name\",\"Ürün Tanım\",\"C.Code\",\"Colour\",\"Order Code\",\"FOB ($)\",\"Supp. FOB\",\"OPD\",\"Ex-factory\",\"LT\",\"HANDOVER Tarihi\",\"Retail Date\",\"Ex→Retail\",\"Buying Son Onay Tarihi\",\"In-Store (Model Budget)\",\"Order Quantity\",\"Shipment Quantity\",\"Remaining Units\",\"%\",\"Kumaş Kategorisi\",\"Kumaşçı Ülkesi\",\"Kumaşçı\",\"Kumaş Tipi\",\"İplik No\",\"Gramaj\",\"Karışım\",\"STATUS\",\"Ant. Arrival\",\"Del. Type\",\"Notes\",\"Ek Not\"],\"hidden\":[],\"widthPx\":{\"__picture\":74}},\"ship\":{\"order\":[\"orderCode\",\"onay\",\"status\",\"talepTipi\",\"buyerGroup\",\"buyer\",\"category\",\"line\",\"retailDate\",\"opd\",\"exFactory\",\"leadTime\",\"specialCode\",\"styleName\",\"productMainCategory\",\"fit\",\"colour\",\"colorCode\",\"quantity\",\"country\",\"supplier\",\"fob\",\"suppFob\",\"kur\",\"trFiyatTl\",\"trFiyatUsd\",\"trFiyatFobUsdLanded\",\"ydFiyatUsd\",\"ydFiyatUsdLandedGemi\",\"ydFiyatUsdLandedGemiUcak\",\"ydFiyatUsdLandedUcak\",\"gemiAvantaj\",\"gemiUcakAvantaj\",\"ucakAvantaj\",\"retailTrWithVessel\",\"gemiUcakAntrepoTeslim\",\"ucakAntrepoTeslim\",\"nihaiVasitaKarar\",\"retailTarihPblTalep\",\"retailAyPblTalep\",\"modelButceIstenenGun\",\"gecikmeSonrasiAntrepo\",\"siparisGecilenGrup\",\"ucakNavlunKimOdeyecek\",\"ucakYuklemeSebebi\",\"acilIhtiyacVarMi\",\"hizliGemiDegerlendirildiMi\"],\"hidden\":[],\"widthPx\":{}}}",
+      "updatedAt": "2026-09-20T15:51:33.046Z"
+    },
+    "lcw.notifications.history.v1": {
+      "value": "{\"items\":[{\"id\":\"notification-mu9yx5w4-bzn3t\",\"message\":\"24 Koleksiyon görseli kalıcı belleğe taşındı.\",\"kind\":\"toast\",\"createdAt\":\"2026-09-20T15:25:30.004Z\",\"read\":false}]}",
+      "updatedAt": "2026-09-20T15:25:30.004Z"
+    },
+    "lcw.corePageFilters.auto.v1": {
+      "value": "{\"cp\":{\"search\":\"\",\"selects\":{\"cpFCountry\":\"\",\"cpFLicense\":\"\",\"cpFPriority\":\"\",\"cpFDelType\":\"\",\"cpFStatus\":\"\",\"cpFSeason\":\"\"},\"colFilters\":{},\"checkFilter\":\"\",\"quickExf\":\"\"},\"orders\":{\"search\":\"\",\"selects\":{\"ordersFCountry\":\"\",\"ordersFLicense\":\"\",\"ordersFPriority\":\"\",\"ordersFDelType\":\"\",\"ordersFStatus\":\"\",\"ordersFSeason\":\"\"},\"colFilters\":{},\"checkFilter\":\"\",\"quickExf\":\"\",\"quickActive\":[]}}",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.koleksiyon.pricingExcelColumns.v1": {
+      "value": "[\"urunTipi\",\"modelKod\",\"lisans\",\"colour\",\"fit\",\"fabric\",\"quantity\",\"exFactory\",\"targetPrice\",\"not\"]",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.cp.dimFilters.v1": {
+      "value": "{}",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.overview.dimFilters.v1": {
+      "value": "{}",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.overview.bgDimFilters.v1": {
+      "value": "{}",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.todo.pages.v1": {
+      "value": "{\"pages\":[{\"id\":\"todo-1789918349051\",\"title\":\"Yapılacaklar\",\"text\":\"\",\"updatedAt\":\"2026-09-20T15:32:29.051Z\"}],\"activeId\":\"todo-1789918349051\"}",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.todo.text.v1": {
+      "value": "",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.backlog.columnWidths.v1": {
+      "value": "{\"group\":320,\"qty\":110,\"orders\":130}",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    },
+    "lcw.backlog.autoState.v1": {
+      "value": "{\"dateFilter\":null,\"retailFrom\":\"\",\"retailTo\":\"\",\"inStoreFrom\":\"\",\"inStoreTo\":\"\",\"antrepoFrom\":\"\",\"antrepoTo\":\"\",\"buyerGrup\":[],\"dimFilters\":{},\"groupBy\":[\"status\",\"antrepoDate\"],\"colBy\":[],\"dateLevels\":[\"year\",\"month\",\"week\",\"day\"],\"expanded\":[],\"savedAt\":\"2026-09-20T15:32:29.051Z\"}",
+      "updatedAt": "2026-09-20T15:32:29.051Z"
+    }
+  },
+  "deletions": {},
+  "_updatedAt": "2026-09-20T15:51:34.102Z"
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "state": "IDLE",
+  "currentVersion": "7.0.82",
+  "lastKnownGoodVersion": "7.0.82",
+  "lastSuccessfulCheck": null,
+  "lastCheck": "2026-09-20T15:51:40.911Z",
+  "latestVersion": null,
+  "pending": null,
+  "activation": null,
+  "failedVersions": {},
+  "lastError": null
+}

@@ -1,0 +1,45 @@
+[2026-09-20T15:25:17.636Z] Buyer Log masaüstü 7.0.81 · Electron 44.3.0 · Chromium 152.0.7977.78 · Node 24.20.0
+[2026-09-20T15:25:17.638Z] Portable kök: C:\Users\clbiez\Desktop\Buyer Log Desktop
+[2026-09-20T15:25:17.638Z] Veri kökü   : C:\Users\clbiez\Desktop\Buyer Log Desktop\data
+[2026-09-20T15:25:17.650Z] İlk açılış: bu bilgisayarda eski Buyer Log verisi aranıyor…
+[2026-09-20T15:25:18.041Z]   [taşıma] BUYER LOG - ESKI VERI TASIMA
+[2026-09-20T15:25:18.042Z]   [taşıma] ----------------------------------------------------------------
+[2026-09-20T15:25:18.042Z]   [taşıma] Bulundu : Uygulama verisi (%APPDATA%)
+[2026-09-20T15:25:18.042Z]   [taşıma] C:\Users\clbiez\AppData\Roaming\Buyer Log  (0 MB)
+[2026-09-20T15:25:18.042Z]   [taşıma] Bulundu : Yerel veri (%LOCALAPPDATA%)
+[2026-09-20T15:25:18.042Z]   [taşıma] C:\Users\clbiez\AppData\Local\BuyerLog  (246 MB)
+[2026-09-20T15:25:18.042Z]   [taşıma] ----------------------------------------------------------------
+[2026-09-20T15:25:18.042Z]   [taşıma] Tasinan dosya : 58
+[2026-09-20T15:25:18.042Z]   [taşıma] Atlanan       : 0  (portable'da zaten vardi)
+[2026-09-20T15:25:18.042Z]   [taşıma] Gereksiz      : 8  (yedek/arsiv/anlik goruntu)
+[2026-09-20T15:25:18.042Z]   [taşıma] Boyut         : 1 MB
+[2026-09-20T15:25:18.042Z]   [taşıma] Kaynak dosyalar SILINMEDI; eski kurulum calismaya devam edebilir.
+[2026-09-20T15:25:18.050Z] Taşınan: 58 dosya · 1 MB. Doğrulanıyor…
+[2026-09-20T15:25:18.085Z] Ayar portable köke çekildi: localDbPath C:\Users\clbiez\AppData\Local\BuyerLog\BuyerLogLocal.db -> C:\Users\clbiez\Desktop\Buyer Log Desktop\data\local\BuyerLogLocal.db
+[2026-09-20T15:25:18.086Z] Veri taşıma tamamlandı: 58 dosya etkinleştirildi, yerel veritabanı 0 depo ile açıldı.
+[2026-09-20T15:25:18.094Z] Backend başlatılıyor: C:\Users\clbiez\Desktop\Buyer Log Desktop\resources\app\server\watchdog.js · port=6194
+[2026-09-20T15:25:18.101Z] Sunucunun hazır olması bekleniyor: http://127.0.0.1:6194
+[2026-09-20T15:25:20.514Z] Sunucu hazır (HTTP 302). Pencere açılıyor.
+[2026-09-20T15:25:20.533Z] Arayüz yükleniyor: http://127.0.0.1:6194
+[2026-09-20T15:25:20.649Z] Arayüz yüklendi: http://127.0.0.1:6194/select-user.html · başlık="Buyer Log — Giriş"
+[2026-09-20T15:25:29.528Z] Arayüz yüklendi: http://127.0.0.1:6194/ · başlık="Buyer Log"
+[2026-09-20T15:32:29.063Z] Buyer Log kapatılıyor.
+[2026-09-20T15:32:29.090Z] Backend durduruluyor (PID 272024).
+[2026-09-20T15:32:29.097Z] Backend kapandı (kod=null sinyal=SIGTERM).
+[2026-09-20T15:32:29.097Z] Backend düzgün kapandı.
+[2026-09-20T15:32:29.097Z] Kapanış tamamlandı.
+[2026-09-20T15:51:29.037Z] Buyer Log masaüstü 7.0.82 · Electron 44.3.0 · Chromium 152.0.7977.78 · Node 24.20.0
+[2026-09-20T15:51:29.038Z] Portable kök: C:\Users\clbiez\Desktop\Buyer Log Desktop
+[2026-09-20T15:51:29.038Z] Veri kökü   : C:\Users\clbiez\Desktop\Buyer Log Desktop\data
+[2026-09-20T15:51:29.065Z] Veri taşıma daha önce tamamlanmış (2026-09-20T15:25:18.086Z); atlanıyor.
+[2026-09-20T15:51:29.073Z] Backend başlatılıyor: C:\Users\clbiez\Desktop\Buyer Log Desktop\resources\app\server\watchdog.js · port=6194
+[2026-09-20T15:51:29.092Z] Sunucunun hazır olması bekleniyor: http://127.0.0.1:6194
+[2026-09-20T15:51:29.500Z] Sunucu hazır (HTTP 302). Pencere açılıyor.
+[2026-09-20T15:51:29.515Z] Arayüz yükleniyor: http://127.0.0.1:6194
+[2026-09-20T15:51:29.584Z] Arayüz yüklendi: http://127.0.0.1:6194/select-user.html · başlık="Buyer Log — Giriş"
+[2026-09-20T15:51:32.909Z] Arayüz yüklendi: http://127.0.0.1:6194/ · başlık="Buyer Log"
+[2026-09-20T15:52:51.035Z] Buyer Log kapatılıyor.
+[2026-09-20T15:52:51.050Z] Backend durduruluyor (PID 8592).
+[2026-09-20T15:52:51.056Z] Backend kapandı (kod=null sinyal=SIGTERM).
+[2026-09-20T15:52:51.056Z] Backend düzgün kapandı.
+[2026-09-20T15:52:51.056Z] Kapanış tamamlandı.

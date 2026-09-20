@@ -1,0 +1,5 @@
+2026/09/20-18:25:17.640 41cf8 Creating DB C:\Users\clbiez\Desktop\Buyer Log Desktop\data\electron-profile\Local Storage\leveldb since it was missing.
+2026/09/20-18:25:17.649 41cf8 Reusing MANIFEST C:\Users\clbiez\Desktop\Buyer Log Desktop\data\electron-profile\Local Storage\leveldb/MANIFEST-000001
+2026/09/20-18:26:17.651 41cf8 Level-0 table #5: started
+2026/09/20-18:26:17.658 41cf8 Level-0 table #5: 21051 bytes OK
+2026/09/20-18:26:17.659 41cf8 Delete type=0 #3

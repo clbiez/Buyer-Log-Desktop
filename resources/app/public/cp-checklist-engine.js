@@ -1,0 +1,283 @@
+/* Buyer Log v9.48 — CP KONTROL LİSTESİ MOTORU
+ *
+ * Buyer Log'da numune, test, kumaş hazırlığı, aksesuar ve üretici teyidi için
+ * SÜTUN YOK ve açılmayacak. Bu bilgiler yine de takip edilmeli — çözüm:
+ * bunları veri değil SORU olarak sormak.
+ *
+ *   "Yüklemeye 6 hafta kaldı. PPS onayı alındı mı?"
+ *        → kullanıcı [Tamamlandı] işaretler
+ *        → aynı soru bir daha sorulmaz
+ *
+ * TASARIM KARARLARI:
+ *
+ * 1) CEVAP VERİ DEĞİLDİR. Kullanıcının "tamamlandı" işareti bir iş verisi
+ *    alanı değil, o kullanıcının kendi takip notudur. Bu yüzden sipariş
+ *    satırına YAZILMAZ, kullanıcıya ait ayrı bir kayıtta durur ve hiçbir
+ *    hesaplamayı (risk, ETA, öncelik) DEĞİŞTİRMEZ. Yalnız soruyu susturur.
+ *
+ * 2) HER BUYER HER DETAYI TAKİP ETMEK ZORUNDA DEĞİL. Her kontrol tek tek
+ *    açılıp kapatılabilir; kapalı kontrol hiç sorulmaz, cevaplanmamış sayılmaz
+ *    ve hiçbir sayıma girmez.
+ *
+ * 3) CEVAPSIZ ≠ EKSİK. Sorulmuş ama cevaplanmamış bir kontrol "PPS yok"
+ *    demek DEĞİLDİR; "bu soru henüz yanıtlanmadı" demektir. Etiketler ve
+ *    sayımlar bunu ayırır — olmayan veriden kesin uyarı üretmiyoruz.
+ *
+ * 4) TARİH KAYARSA SORU GERİ GELİR. Yükleme tarihi cevaptan sonra ileri/geri
+ *    alınırsa cevap "eskimiş" sayılır ve kontrol yeniden sorulur; aksi hâlde
+ *    Ocak'ta "evet" denen bir kontrol, Nisan'a ertelenmiş sipariş için sonsuza
+ *    kadar onaylı görünürdü.
+ *
+ * SAF: DOM yok, fetch yok, AI yok.
+ */
+(function (root, factory) {
+  const api = factory();
+  if (typeof module === 'object' && module.exports) module.exports = api;
+  if (root) root.BLCpChecklistEngine = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  'use strict';
+
+  /* Kontroller. `maxDaysToLoad`: yüklemeye bu kadar veya daha az gün kalınca
+     sorulur. `minOrderAgeDays`: sipariş bu kadar yaşlanınca sorulur. İkisi de
+     tanımlıysa HERHANGİ biri yeterlidir (kumaş sorusu hem yaşa hem yüklemeye
+     bağlıdır). `stages`: yalnız bu aşamalardaki siparişlere sorulur —
+     depodaki siparişe "kumaş hazır mı" sormak anlamsızdır. */
+  const PRE_LOAD = Object.freeze(['PRODUCTION', 'LOADING', 'SHORTAGE']);
+
+  const ITEMS = Object.freeze([
+    Object.freeze({ id: 'pps', group: 'approval', defaultEnabled: true, maxDaysToLoad: 42, stages: PRE_LOAD,
+      tr: 'PPS onayı', en: 'PPS approval',
+      questionTr: 'PPS onayı alındı mı?', questionEn: 'Has PPS been approved?' }),
+    Object.freeze({ id: 'soff', group: 'approval', defaultEnabled: true, maxDaysToLoad: 42, stages: PRE_LOAD,
+      tr: 'S/Off onayı', en: 'S/Off approval',
+      questionTr: 'S/Off onayı alındı mı?', questionEn: 'Has S/Off been approved?' }),
+    Object.freeze({ id: 'criticalSample', group: 'sample', defaultEnabled: false, maxDaysToLoad: 56, stages: PRE_LOAD,
+      tr: 'Kritik numune onayları', en: 'Critical sample approvals',
+      questionTr: 'Kritik numune onayları (Fit, Size Set, Seal) tamam mı?', questionEn: 'Are the critical sample approvals (Fit, Size Set, Seal) complete?' }),
+    Object.freeze({ id: 'tests', group: 'test', defaultEnabled: true, maxDaysToLoad: 28, stages: PRE_LOAD,
+      tr: 'Testler', en: 'Tests',
+      questionTr: 'Gerekli testler tamamlandı mı?', questionEn: 'Are the required tests complete?' }),
+    Object.freeze({ id: 'fabric', group: 'material', defaultEnabled: true, maxDaysToLoad: 28, minOrderAgeDays: 30, stages: PRE_LOAD,
+      tr: 'Kumaş hazırlığı', en: 'Fabric readiness',
+      questionTr: 'Kumaş hazır mı?', questionEn: 'Is the fabric ready?' }),
+    Object.freeze({ id: 'accessories', group: 'material', defaultEnabled: true, maxDaysToLoad: 28, stages: PRE_LOAD,
+      tr: 'Aksesuar hazırlığı', en: 'Accessory readiness',
+      questionTr: 'Aksesuarlar hazır mı?', questionEn: 'Are the accessories ready?' }),
+    Object.freeze({ id: 'productionStart', group: 'production', defaultEnabled: false, maxDaysToLoad: 28, stages: PRE_LOAD,
+      tr: 'Üretim başlangıcı', en: 'Production start',
+      questionTr: 'Üretim başladı mı?', questionEn: 'Has production started?' }),
+    Object.freeze({ id: 'supplierConfirmation', group: 'confirmation', defaultEnabled: true, maxDaysToLoad: 14, stages: PRE_LOAD,
+      tr: 'Üretici yükleme teyidi', en: 'Supplier loading confirmation',
+      questionTr: 'Üretici yükleme teyidi verdi mi?', questionEn: 'Has the supplier confirmed the loading?' }),
+    Object.freeze({ id: 'packing', group: 'production', defaultEnabled: false, maxDaysToLoad: 14, stages: PRE_LOAD,
+      tr: 'Paketleme hazırlığı', en: 'Packing readiness',
+      questionTr: 'Paketleme ve yükleme hazırlığı tamam mı?', questionEn: 'Is packing and loading preparation complete?' }),
+  ]);
+
+  const ITEM_BY_ID = Object.freeze(ITEMS.reduce((map, item) => { map[item.id] = item; return map; }, {}));
+  const GROUP_LABELS = Object.freeze({
+    tr: { approval: 'Onaylar', sample: 'Numune', test: 'Test', material: 'Malzeme', production: 'Üretim', confirmation: 'Teyit' },
+    en: { approval: 'Approvals', sample: 'Samples', test: 'Tests', material: 'Materials', production: 'Production', confirmation: 'Confirmation' },
+  });
+
+  /* Cevap durumları. `done` ve `notRequired` soruyu susturur; ikisi ayrı
+     tutulur çünkü "yapıldı" ile "bu siparişte gerekmiyor" farklı bilgidir. */
+  const ANSWER_STATES = Object.freeze(['done', 'notRequired']);
+  const ANSWER_LABELS = Object.freeze({
+    tr: { done: 'Tamamlandı', notRequired: 'Gerekmiyor' },
+    en: { done: 'Completed', notRequired: 'Not required' },
+  });
+
+/* GECİKMİŞ SİPARİŞ PENCERESİ.
+   Kontrol listesi ileriye dönük bir geri sayımdır: "yüklemeye 6 hafta kaldı,
+   PPS alındı mı?". Yalnız üst eşiğe bakılırsa 3 ay önce yüklenmesi gereken bir
+   sipariş de `daysToLoad <= 42` koşulunu sağlar ve her kontrol için soru
+   üretir — canlı veride 1.209 siparişin HEPSİ her kontrolde listelendi, liste
+   kullanılamaz hâle geldi. Çok gecikmiş siparişler zaten öncelik tarafında
+   CRITICAL olarak görünür; onları ayrıca "PPS alındı mı?" diye sormak bilgi
+   katmaz. Bu yüzden geriye dönük bir tolerans penceresi var. */
+  const DEFAULT_OVERDUE_GRACE_DAYS = 30;
+
+/* Number(null) === 0 TUZAĞI.
+   Bu depoda daha önce de ısırdı: kaydedilmiş bir tercih `minOrderAgeDays: null`
+   değerini geri okuduğunda Number(null) sonlu bir 0 üretiyor, "yaş eşiği yok"
+   demek olan null sessizce "yaşı 0'dan büyük her sipariş" hâline geliyordu.
+   Sonuç canlıda görüldü: yaş koşulu her siparişte doğru olduğu için yükleme
+   eşikleri hiç devreye girmedi ve dokuz kontrolün hepsi AYNI 741 siparişi
+   listeledi. Bu yüzden null/'' /undefined, Number()'a girmeden ayıklanır. */
+  function finiteOrNull(value) {
+    if (value == null || value === '') return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function normalizeSettings(raw) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const graceRaw = finiteOrNull(source.overdueGraceDays);
+    const overdueGraceDays = graceRaw == null ? DEFAULT_OVERDUE_GRACE_DAYS : Math.max(0, Math.min(365, Math.round(graceRaw)));
+    const items = {};
+    for (const item of ITEMS) {
+      const override = source.items && typeof source.items === 'object' ? source.items[item.id] : null;
+      const config = override && typeof override === 'object' ? override : {};
+      const maxDays = finiteOrNull(config.maxDaysToLoad);
+      const minAge = finiteOrNull(config.minOrderAgeDays);
+      items[item.id] = {
+        enabled: typeof config.enabled === 'boolean' ? config.enabled : item.defaultEnabled,
+        // Eşikler kullanıcıya açık ama sınırsız değil: 1 yıldan uzak bir
+        // "yaklaşıyor" eşiği soruyu her siparişte sorar, listeyi çöpe çevirir.
+        maxDaysToLoad: maxDays == null ? item.maxDaysToLoad : Math.max(0, Math.min(365, Math.round(maxDays))),
+        // null = "yaş eşiği YOK". 0 ile karıştırılamaz: 0 her siparişi kapsar.
+        minOrderAgeDays: minAge == null ? (item.minOrderAgeDays == null ? null : item.minOrderAgeDays) : Math.max(1, Math.min(365, Math.round(minAge))),
+      };
+    }
+    return { enabled: source.enabled !== false, overdueGraceDays, items };
+  }
+
+  function answerKey(orderKey, itemId) { return `${orderKey}::${itemId}`; }
+
+  /* Cevap, verildiği andaki yükleme tarihine bağlanır. Tarih sonradan
+     kayarsa cevap eskir ve soru yeniden sorulur (§4). */
+  function makeAnswer(state, analysis, meta) {
+    return {
+      state: ANSWER_STATES.includes(state) ? state : 'done',
+      at: (meta && meta.at) || new Date().toISOString(),
+      by: (meta && meta.by) || '',
+      loadDate: analysis ? analysis.plannedLoadDate : null,
+    };
+  }
+
+  function answerIsStale(answer, analysis) {
+    if (!answer) return false;
+    if (answer.loadDate == null || !analysis || analysis.plannedLoadDate == null) return false;
+    return answer.loadDate !== analysis.plannedLoadDate;
+  }
+
+  function itemApplies(item, config, analysis, settings) {
+    if (!config.enabled) return false;
+    if (item.stages && !item.stages.includes(analysis.stage)) return false;
+    const grace = settings && Number.isFinite(Number(settings.overdueGraceDays))
+      ? Number(settings.overdueGraceDays) : DEFAULT_OVERDUE_GRACE_DAYS;
+    // Çok gecikmiş sipariş bu listenin konusu değil (yukarıdaki nota bak).
+    if (analysis.daysToLoad != null && analysis.daysToLoad < -grace) return false;
+    const byLoad = analysis.daysToLoad != null && analysis.daysToLoad <= config.maxDaysToLoad;
+    const byAge = config.minOrderAgeDays != null && analysis.orderAgeDays != null && analysis.orderAgeDays >= config.minOrderAgeDays;
+    return Boolean(byLoad || byAge);
+  }
+
+  /* Bir sipariş için açık kontroller. Cevaplanmış (ve cevabı eskimemiş)
+     kontroller listede YER ALMAZ — sorunun bir daha sorulmaması bu demek. */
+  function openItems(analysis, ctx) {
+    const context = ctx || {};
+    const settings = context.settings && context.settings.items ? context.settings : normalizeSettings(context.settings);
+    if (!settings.enabled) return [];
+    const answers = context.answers || {};
+    const open = [];
+    /* Kullanıcının kendi tanımladığı kontroller (ör. "Hologram siparişi verildi
+       mi?", yalnız belirli lisanslar için). Kapsam koşulu kural motorunda
+       değerlendirilir; buraya YALNIZ kapsama giren kontroller gelir. */
+    for (const item of (Array.isArray(context.customItems) ? context.customItems : [])) {
+      const answer = answers[answerKey(analysis.orderKey, item.id)];
+      const stale = answerIsStale(answer, analysis);
+      if (answer && !stale) continue;
+      open.push({
+        id: item.id, group: item.group || 'custom', custom: true,
+        tr: item.tr, en: item.en, questionTr: item.questionTr, questionEn: item.questionEn,
+        daysToLoad: analysis.daysToLoad, orderAgeDays: analysis.orderAgeDays,
+        reopened: Boolean(stale), previousAnswer: stale ? answer : null,
+      });
+    }
+    for (const item of ITEMS) {
+      const config = settings.items[item.id];
+      if (!itemApplies(item, config, analysis, settings)) continue;
+      const answer = answers[answerKey(analysis.orderKey, item.id)];
+      const stale = answerIsStale(answer, analysis);
+      if (answer && !stale) continue;
+      open.push({
+        id: item.id, group: item.group,
+        tr: item.tr, en: item.en, questionTr: item.questionTr, questionEn: item.questionEn,
+        daysToLoad: analysis.daysToLoad, orderAgeDays: analysis.orderAgeDays,
+        // Cevabı eskiyen kontrol, hiç sorulmamış olandan ayrı gösterilir.
+        reopened: Boolean(stale),
+        previousAnswer: stale ? answer : null,
+      });
+    }
+    return open;
+  }
+
+/* Bir siparişin kontrol durumu, öncelik kurallarının okuyabileceği biçimde.
+   'open'          → soru geçerli ve cevaplanmamış
+   'answered'      → işaretlenmiş (cevabı hâlâ geçerli)
+   'notApplicable' → kontrol kapalı ya da bu sipariş eşiğin dışında
+   Ayrım önemli: kapalı bir kontrol "eksik" değildir, o yüzden kural yazarken
+   'open' ile 'notApplicable' karışmamalı. */
+  function stateFor(analysis, ctx) {
+    const context = ctx || {};
+    const settings = context.settings && context.settings.items ? context.settings : normalizeSettings(context.settings);
+    const answers = context.answers || {};
+    const state = {};
+    const mark = (id, applicable) => {
+      if (!applicable) { state[id] = 'notApplicable'; return; }
+      const answer = answers[answerKey(analysis.orderKey, id)];
+      state[id] = answer && !answerIsStale(answer, analysis) ? 'answered' : 'open';
+    };
+    for (const item of ITEMS) mark(item.id, settings.enabled && itemApplies(item, settings.items[item.id], analysis, settings));
+    for (const item of (Array.isArray(context.customItems) ? context.customItems : [])) mark(item.id, settings.enabled);
+    return state;
+  }
+
+  /* Ekran özeti: hangi kontrol kaç siparişte açık. `limit` YALNIZ listeyi
+     kısaltır; sayımlar tam kümeden gelir. */
+  function summarize(analyses, ctx) {
+    const context = ctx || {};
+    const settings = context.settings && context.settings.items ? context.settings : normalizeSettings(context.settings);
+    const limit = Math.max(1, Number(context.limit) || 200);
+    const list = Array.isArray(analyses) ? analyses : [];
+    const buckets = new Map();
+    let openTotal = 0;
+    let answeredTotal = 0;
+    const answers = context.answers || {};
+
+    // Özel kontroller sipariş bazında değişir (kapsam koşulu): çağıran her
+    // sipariş için hangilerinin geçerli olduğunu verir.
+    const customFor = typeof context.customItemsFor === 'function' ? context.customItemsFor : () => [];
+    for (const analysis of list) {
+      const open = openItems(analysis, { settings, answers, customItems: customFor(analysis) });
+      for (const entry of open) {
+        if (!buckets.has(entry.id)) buckets.set(entry.id, { id: entry.id, group: entry.group, tr: entry.tr, en: entry.en, questionTr: entry.questionTr, questionEn: entry.questionEn, rows: 0, qty: 0, reopened: 0, orders: [] });
+        const bucket = buckets.get(entry.id);
+        bucket.rows += 1;
+        bucket.qty += Number(analysis.qty) || 0;
+        if (entry.reopened) bucket.reopened += 1;
+        bucket.orders.push(analysis);
+        openTotal += 1;
+      }
+      // Cevaplanmış ve hâlâ geçerli olan kontroller: "bu kadarını hallettin".
+      for (const item of ITEMS) {
+        const config = settings.items[item.id];
+        if (!itemApplies(item, config, analysis, settings)) continue;
+        const answer = answers[answerKey(analysis.orderKey, item.id)];
+        if (answer && !answerIsStale(answer, analysis)) answeredTotal += 1;
+      }
+    }
+
+    const items = [...buckets.values()].sort((a, b) => b.rows - a.rows || a.id.localeCompare(b.id));
+    for (const bucket of items) {
+      const all = bucket.orders;
+      Object.defineProperty(bucket, 'allOrders', { value: all, enumerable: false });
+      bucket.orders = all.slice(0, limit);
+    }
+    return {
+      items,
+      openTotal,
+      answeredTotal,
+      // Kapalı kontroller: kullanıcı bunları takip etmemeyi SEÇTİ. Eksik değil.
+      disabled: ITEMS.filter(item => !settings.items[item.id].enabled).map(item => ({ id: item.id, tr: item.tr, en: item.en })),
+    };
+  }
+
+  return {
+    ITEMS, ITEM_BY_ID, GROUP_LABELS, ANSWER_STATES, ANSWER_LABELS,
+    normalizeSettings, answerKey, makeAnswer, answerIsStale, stateFor,
+    itemApplies, openItems, summarize,
+  };
+});

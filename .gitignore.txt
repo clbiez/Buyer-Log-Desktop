@@ -64,3 +64,5 @@ Buyer Log Desktop Test/
 # Masaustu (Electron) paketleyicisinin calisma zamani ve ciktilari
 tools/electron-runtime/node_modules/
 .desktop-dev/
+
+BuyerLog.exe/

@@ -1,0 +1,18 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('fs');
+const os=require('os');
+const path=require('path');
+const crypto=require('crypto');
+const childProcess=require('child_process');
+const C=require('../scripts/release-common');
+const { parseReleaseManifest }=require('../electron/update/manifest');
+function tmp(){return fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-release-test-'));}
+function hash(file){return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');}
+
+test('publish channel is immutable for a semantic version',async t=>{const root=tmp();t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const artifact=path.join(root,'fixture.zip');fs.writeFileSync(artifact,'binary-one');const sha=hash(artifact),built={artifactName:'BuyerLog-7.0.82.zip',artifactFile:artifact,sha256:sha,size:fs.statSync(artifact).size,manifest:{schemaVersion:1,channel:'test',version:'7.0.82',publishedAt:new Date().toISOString(),artifact:'releases/BuyerLog-7.0.82.zip',sha256:sha,size:fs.statSync(artifact).size,mandatory:false,releaseNotes:'x',minimumUpdaterVersion:'1.0.0'}};await C.publishManifest(path.join(root,'source'),'test',built);await C.publishManifest(path.join(root,'source'),'test',built);fs.writeFileSync(artifact,'binary-two');built.sha256=hash(artifact);built.size=fs.statSync(artifact).size;built.manifest={...built.manifest,sha256:built.sha256,size:built.size};await assert.rejects(()=>C.publishManifest(path.join(root,'source'),'test',built),/farklı binary|different binary|Aynı version/);});
+
+test('TEST artifact promotes to STABLE byte-for-byte without rebuild',t=>{const root=tmp();t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const source=path.join(root,'source'),releases=path.join(source,'test','releases');fs.mkdirSync(releases,{recursive:true});const artifact=path.join(releases,'BuyerLog-7.0.82.zip');fs.writeFileSync(artifact,'verified-test-artifact');const sha=hash(artifact),manifest={schemaVersion:1,channel:'test',version:'7.0.82',publishedAt:new Date().toISOString(),artifact:'releases/BuyerLog-7.0.82.zip',sha256:sha,size:fs.statSync(artifact).size,mandatory:false,releaseNotes:'fixture',minimumUpdaterVersion:'1.0.0'};parseReleaseManifest(manifest,'test');fs.writeFileSync(path.join(releases,'BuyerLog-7.0.82.json'),JSON.stringify(manifest));const script=path.join(C.APP_ROOT,'scripts','release-promote.js');const run=childProcess.spawnSync(process.execPath,[script,'7.0.82','--source',source],{encoding:'utf8'});assert.equal(run.status,0,run.stderr||run.stdout);const stable=path.join(source,'stable','releases','BuyerLog-7.0.82.zip');assert.equal(hash(stable),sha);assert.equal(hash(artifact),sha);const latest=JSON.parse(fs.readFileSync(path.join(source,'stable','latest.json'),'utf8'));assert.equal(latest.sha256,sha);assert.equal(latest.channel,'stable');});
+
+test('release scripts expose deterministic bump/build/promote entry points',()=>{const pkg=require('../package.json');assert.match(pkg.scripts['release:test'],/release-publish/);assert.match(pkg.scripts['release:patch'],/--bump patch/);assert.match(pkg.scripts['release:promote'],/release-promote/);assert.match(pkg.scripts['version:assert'],/version-assert/);});
