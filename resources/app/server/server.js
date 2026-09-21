@@ -573,6 +573,35 @@ const collectionPermissionsReady = (async () => {
 
 const SHARED_COLLECTION_OWNER = collectionWorkspaces.SHARED_COLLECTION_OWNER;
 let sharedHubBootstrapInFlight = null;
+let sharedHubStartupSettled = false;
+let sharedHubBootstrapProgress = {
+  configured:false, validated:false, loginAllowed:false, bootstrapRequired:true,
+  setupRecommended:false, status:'starting', offline:false, phase:'starting',
+  message:'Buyer Log hazırlanıyor…',
+  steps:{
+    hub:{ status:'pending', label:'Shared Hub' },
+    users:{ status:'pending', label:'Kullanıcılar ve yetkiler' },
+    master:{ status:'pending', label:'Sistem ayarları' },
+    business:{ status:'pending', label:'Ortak iş verileri' },
+    collections:{ status:'pending', label:'Koleksiyonlar' },
+  },
+};
+function setBootstrapStep(id, patch = {}) {
+  sharedHubBootstrapProgress = {
+    ...sharedHubBootstrapProgress,
+    steps:{
+      ...sharedHubBootstrapProgress.steps,
+      [id]:{ ...(sharedHubBootstrapProgress.steps[id] || {}), ...patch },
+    },
+  };
+}
+function setBootstrapProgress(patch = {}) {
+  sharedHubBootstrapProgress = { ...sharedHubBootstrapProgress, ...patch };
+  return sharedHubBootstrapProgress;
+}
+function bootstrapStatusSnapshot(extra = {}) {
+  return JSON.parse(JSON.stringify({ ...sharedHubBootstrapProgress, ...extra }));
+}
 function plainRecordPatch(record) {
   const out = {};
   for (const [key, value] of Object.entries(record && typeof record === 'object' ? record : {})) if (!key.startsWith('_')) out[key] = value;
