@@ -441,11 +441,19 @@ function createModelImageDistribution(deps = {}) {
     return { queued, pending: current.pendingPublish.length };
   }
 
-  async function flushPublish({ limit = 200 } = {}) {
-    if (!(await shared.available())) return { published: 0, pending: state().pendingPublish.length, available: false };
+  async function flushPublish({ limit = 200, sourceIdentityPrefix = '', dropNonMatching = false } = {}) {
+    const prefix = clean(sourceIdentityPrefix, 200);
     const current = state();
-    const batch = current.pendingPublish.slice(0, Math.max(1, Math.trunc(Number(limit) || 200)));
-    if (!batch.length) return { published: 0, pending: 0, available: true };
+    if (prefix && dropNonMatching) {
+      current.pendingPublish = current.pendingPublish.filter(entry => clean(entry && entry.sourceIdentity, 200).startsWith(prefix));
+      persist(current);
+    }
+    if (!(await shared.available())) return { published: 0, pending: current.pendingPublish.length, available: false };
+    const eligible = prefix
+      ? current.pendingPublish.filter(entry => clean(entry && entry.sourceIdentity, 200).startsWith(prefix))
+      : current.pendingPublish;
+    const batch = eligible.slice(0, Math.max(1, Math.trunc(Number(limit) || 200)));
+    if (!batch.length) return { published: 0, pending: current.pendingPublish.length, available: true };
 
     const payload = [];
     const dropped = new Set();
