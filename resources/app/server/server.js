@@ -960,6 +960,136 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
     businessHead:savedBusiness && (savedBusiness.head || savedBusiness),
   };
 }
+function portableDataRootForRecovery() {
+  const explicit = String(process.env.BUYER_LOG_PORTABLE_DATA_ROOT || '').trim();
+  if (explicit) return path.resolve(explicit);
+  const serverRoot = path.resolve(SERVER_DATA_ROOT);
+  return path.basename(serverRoot).toLowerCase() === 'server' ? path.dirname(serverRoot) : null;
+}
+async function localLegacyDataBackupCandidates() {
+  const dataRoot = portableDataRootForRecovery();
+  if (!dataRoot) return [];
+  const parent = path.dirname(dataRoot);
+  let entries = [];
+  try { entries = await fs.promises.readdir(parent, { withFileTypes:true }); } catch (_) { return []; }
+  const out = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (!/^data[-_ ]?backup(?:[-_ ].*)?$/i.test(entry.name)) continue;
+    const root = path.join(parent, entry.name);
+    if (path.resolve(root) === path.resolve(dataRoot)) continue;
+    const serverRoot = path.join(root, 'server');
+    const localDbFile = path.join(root, 'local', 'BuyerLogLocal.db');
+    if (!fs.existsSync(serverRoot) && !fs.existsSync(localDbFile)) continue;
+    let mtimeMs = 0;
+    try { mtimeMs = Number((await fs.promises.stat(root)).mtimeMs) || 0; } catch (_) {}
+    out.push({ root, name:entry.name, serverRoot, localDbFile, mtimeMs });
+  }
+  return out.sort((a,b) => b.mtimeMs - a.mtimeMs || b.name.localeCompare(a.name, 'en'));
+}
+async function readLegacyDataBackupState(candidate) {
+  if (!candidate || !candidate.localDbFile || !fs.existsSync(candidate.localDbFile)) return {};
+  const tempRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'buyerlog-legacy-data-recovery-'));
+  try {
+    const targetDb = path.join(tempRoot, 'BuyerLogLocal.db');
+    await fs.promises.copyFile(candidate.localDbFile, targetDb);
+    for (const suffix of ['-wal','-shm']) {
+      const source = candidate.localDbFile + suffix;
+      if (fs.existsSync(source)) await fs.promises.copyFile(source, targetDb + suffix);
+    }
+    return await createLocalDb(targetDb).read();
+  } catch (error) {
+    markStartup('LOCAL_DATA_BACKUP_DB_READ_FAILED', { source:candidate.name, error:String(error && error.message || error) });
+    return {};
+  } finally {
+    await fs.promises.rm(tempRoot, { recursive:true, force:true }).catch(()=>{});
+  }
+}
+function masterCoverageValue(coverage) {
+  const c = coverage && typeof coverage === 'object' ? coverage : {};
+  return (
+    Number(c.modelConnections||0) * 5 +
+    Number(c.royaltyRules||0) * 20 +
+    Number(c.transitRules||0) * 5 +
+    Number(c.nonDtrManufacturers||0) * 3 +
+    Number(c.emailGroups||0) * 20 +
+    Number(c.emailCountries||0) * 3 +
+    Number(c.fxKeys||0) * 10 +
+    Math.min(1000, Number(c.endeksmatikRecords||0)) +
+    Number(c.records||0)
+  );
+}
+async function loadLocalLegacyMasterCandidate(candidate) {
+  const recoveredState = await readLegacyDataBackupState(candidate);
+  const records = prewipeMasterRecovery.loadMasterRecordsFromServerDataRoot(candidate.serverRoot, recoveredState);
+  return {
+    ...candidate,
+    records,
+    coverage:prewipeMasterRecovery.masterCoverage(records),
+  };
+}
+async function recoverSharedMasterFromLocalDataBackup(root) {
+  const remote = await sharedHub.readMaster(root, null);
+  const currentMaster = checkpointRecords(remote);
+  const currentCoverage = prewipeMasterRecovery.masterCoverage(currentMaster);
+  const candidates = await localLegacyDataBackupCandidates();
+  if (!candidates.length) return { recovered:false, reason:'local-data-backup-not-found', currentCoverage };
+
+  let selected = null;
+  for (const candidate of candidates.slice(0, 12)) {
+    const loaded = await loadLocalLegacyMasterCandidate(candidate);
+    const ids = prewipeMasterRecovery.masterRecoveryIds(loaded.records, currentMaster);
+    if (!ids.length) continue;
+    const score = masterCoverageValue(loaded.coverage);
+    if (!selected || score > selected.score || (score === selected.score && loaded.mtimeMs > selected.mtimeMs)) {
+      selected = { ...loaded, ids, score };
+    }
+  }
+  if (!selected) return { recovered:false, reason:'local-data-backup-has-no-richer-master', currentCoverage, candidates:candidates.length };
+
+  await localDb.transaction(async next => {
+    next.records = next.records && typeof next.records === 'object' ? next.records : {};
+    next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
+    for (const id of selected.ids) {
+      next.records[id] = JSON.parse(JSON.stringify(selected.records[id]));
+      delete next.tombstones[id];
+    }
+    return { recovered:selected.ids.length };
+  });
+  await deltaStore.hydrate();
+
+  const state = await localDb.read();
+  const masterRecords = sharedSyncPolicy.masterRecordsFromState(state);
+  const finalCoverage = prewipeMasterRecovery.masterCoverage(masterRecords);
+  const head = await sharedHub.readMasterHead(root);
+  const saved = await sharedHub.publishMaster(root, {
+    records:masterRecords,
+    inventory:finalCoverage,
+    recovery:{
+      source:'local-data-backup:' + selected.name,
+      recoveredAt:new Date().toISOString(),
+      coverage:finalCoverage,
+    },
+  }, {
+    actorId:'local-data-backup-auto-recovery',
+    previousRevision:head && head.revision || 0,
+  });
+  markStartup('SHARED_LOCAL_DATA_BACKUP_RECOVERED', {
+    source:selected.name,
+    records:selected.ids.length,
+    ids:selected.ids,
+    coverage:finalCoverage,
+  });
+  return {
+    recovered:true,
+    source:selected.name,
+    masterRecords:selected.ids.length,
+    masterCoverage:finalCoverage,
+    ids:selected.ids,
+    head:saved && (saved.head || saved),
+  };
+}
+
 async function publishMasterCheckpoint(actorId = '') {
   const settings = await syncSettings.read();
   if (!settings.sharedSyncRoot) return { published:false, reason:'not-configured' };
@@ -1211,6 +1341,12 @@ async function bootstrapSharedHub({ force = false } = {}) {
       // replace richer recovery data with the sparse remote checkpoint.
       const prewipeRecovery = await recoverEmptySharedHubFromPrewipe(checked.root, checked.manifest);
       if (prewipeRecovery.recovered) masterHead = await sharedHub.readMasterHead(checked.root);
+      // Eski temiz kurulum akışında yerel veri klasörü data-BACKUP-* adıyla
+      // korunmuş olabilir. Verified pre-wipe paketi yoksa veya eksikse bu
+      // klasör yalnız Master Data için güvenli ikinci kaynak olur. Collection
+      // bu yola hiç dahil edilmez.
+      const localDataRecovery = await recoverSharedMasterFromLocalDataBackup(checked.root);
+      if (localDataRecovery.recovered) masterHead = await sharedHub.readMasterHead(checked.root);
       const business = await hydrateBusinessCheckpointIfNeeded();
       // Revision metadata alone is not proof that the local cache actually
       // contains the checkpoint payload. Repair any remote records that are
@@ -1232,7 +1368,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
         current:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
         total:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
         detail:businessAfter && businessAfter.businessRevision
-          ? `rev ${businessAfter.businessRevision} · geri yüklenen ${Number(checkpointRepair.master.applied||0)+Number(checkpointRepair.business.applied||0)+Number(prewipeRecovery.masterRecords||0)+Number(prewipeRecovery.businessRecords||0)} kayıt · local M/B ${Object.keys(verifiedMasterRecords).length}/${Object.keys(verifiedBusinessRecords).length}`
+          ? `rev ${businessAfter.businessRevision} · geri yüklenen ${Number(checkpointRepair.master.applied||0)+Number(checkpointRepair.business.applied||0)+Number(prewipeRecovery.masterRecords||0)+Number(prewipeRecovery.businessRecords||0)+Number(localDataRecovery.masterRecords||0)} kayıt · local M/B ${Object.keys(verifiedMasterRecords).length}/${Object.keys(verifiedBusinessRecords).length}`
           : 'Güncel',
       });
 
@@ -1284,6 +1420,9 @@ async function bootstrapSharedHub({ force = false } = {}) {
           prewipeRecoverySource:prewipeRecovery.source || null,
           prewipeRecoveredMasterRecords:Number(prewipeRecovery.masterRecords)||0,
           prewipeRecoveredBusinessRecords:Number(prewipeRecovery.businessRecords)||0,
+          localDataBackupRecovered:Boolean(localDataRecovery.recovered),
+          localDataBackupRecoverySource:localDataRecovery.source || null,
+          localDataBackupRecoveredMasterRecords:Number(localDataRecovery.masterRecords)||0,
           masterCoverage:masterVerification.inventory,
         },
         offline:false,
