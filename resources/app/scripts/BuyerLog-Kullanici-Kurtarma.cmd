@@ -4,7 +4,11 @@ chcp 65001 >nul
 title Buyer Log - Kullanici Kimligi Kurtarma
 
 set "ROOT=%~dp0"
-set "EXE=%ROOT%BuyerLog.exe"
+rem %~dp0 her zaman ters bolu ile biter. Bu yol Node'a tirnakli arguman
+rem olarak verildiginde sondaki \ kapanis tirnagini kacirabilir ve ROOT sonuna
+rem literal bir " eklenir. Kapanis ayiracini burada kaldir.
+if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
+set "EXE=%ROOT%\BuyerLog.exe"
 if not exist "%EXE%" set "EXE=%ROOT%Buyer Log.exe"
 set "TMPJS=%TEMP%\BuyerLog-User-Recovery-%RANDOM%-%RANDOM%.js"
 
