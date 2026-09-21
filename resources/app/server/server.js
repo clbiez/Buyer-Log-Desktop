@@ -11909,48 +11909,28 @@ app.get('/api/model-images/shared/status', userAccess.requireArea('koleksiyon'),
 app.post('/api/model-images/shared/sync', userAccess.requireArea('koleksiyon'), express.json({ limit: '32kb' }), async (req, res) => {
   try {
     assertModelImageMutable();
-    // This legacy/manual action may explicitly hydrate a bounded batch. The
-    // periodic background service never does so.
-    const result = await syncSharedModelImagesOnce({ limit: Number(req.body && req.body.limit) || 500, hydrate: true });
-    res.json({ ok: true, ...result });
-  } catch (err) { apiError(res, err, 'Paylaşılan model görselleri eşitlenemedi.'); }
+    const result = await syncAuthorizedCollectionImages(req.currentUser.id);
+    res.set('Cache-Control','no-store').json({ ok:true, scope:'koleksiyon', ...result });
+  } catch (err) { apiError(res, err, 'Koleksiyon görselleri eşitlenemedi.'); }
 });
 
 /* ON-DEMAND SHARED IMAGE HYDRATION. No PLM/ASAS call is allowed here.
    Visible/current-view identities are deduped, resolved, looked up in the
    shared index and only matching pack slices are copied into the local image
    cache. Shared miss is a normal result, not an authentication trigger. */
-app.post('/api/model-images/shared/hydrate', userAccess.requireArea('koleksiyon'), express.json({ limit: '1mb' }), async (req, res) => {
+app.post('/api/model-images/shared/hydrate', userAccess.requireArea('koleksiyon'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
     assertModelImageMutable();
-    const raw = Array.isArray(req.body && req.body.items) ? req.body.items.slice(0, 250) : [];
-    if (!raw.length) return res.json({ ok:true, requested:0, installed:0, images:[], overrides:loadOverrides(), sharedAvailable:await sharedModelImageStore.available() });
-    let cachedOrders=[]; try { cachedOrders=cacheForUser(req.currentUser.id).asasOrders||[]; } catch (_) { cachedOrders=[]; }
-    const styleLinks=loadPlmStyleLinks().links||{};
-    const identity=resolveModelImageItemIdentities(raw,{orders:cachedOrders,styleLinks});
-    const seen=new Set(),requests=[];
-    for (const item of identity.resolved) {
-      const normalized=plmImageIngestLib.normalizeRequest(item);
-      if(!normalized.key||seen.has(normalized.key))continue;
-      seen.add(normalized.key);requests.push(item);
+    await refreshCollectionPermissionScope();
+    const ownerId = String(req.body && req.body.ownerId || '').trim();
+    if (!ownerId) return res.status(400).json({ error:'Koleksiyon sahibi zorunludur.', code:'COLLECTION_OWNER_REQUIRED' });
+    if (!userAccess.collectionAccessLevel(req.currentUser, ownerId)) {
+      return res.status(403).json({ error:'Bu Koleksiyon görsellerine erişim yetkiniz bulunmuyor.', code:'COLLECTION_ACCESS_DENIED' });
     }
-    if(!requests.length)return res.json({ok:true,requested:raw.length,installed:0,images:[],unresolved:identity.unresolved,overrides:loadOverrides(),sharedAvailable:await sharedModelImageStore.available()});
-    const before=loadOverrides(),imagemap=before.imagemap||{},store=plmImageOwnership.loadOwnership();
-    // Empty source = accept the winning shared record regardless of automatic
-    // origin. Manual ownership still outranks automatic records in the store.
-    const plan=await modelImageDistribution.plan(requests,{source:'',mode:'missing',imagemap,store});
-    const installed=plan.fromShared.length
-      ?await modelImageDistribution.installFromShared(plan.fromShared,{imagemap,store})
-      :{outcomes:[],overrides:before,installed:0,linksUpdated:0};
-    const images=sharedInstallPayload(installed.outcomes);
-    if(images.length){try{liveEvents.notifyChange('overrides',requestClientId(req));}catch(_){}}
-    res.set('Cache-Control','no-store').json({
-      ok:true, requested:requests.length, installed:installed.installed||0, images,
-      overrides:installed.overrides||before, unresolved:identity.unresolved,
-      sharedAvailable:plan.sharedAvailable, sharedFound:plan.fromShared.length,
-      sharedMissing:plan.upstream.length, manualProtected:plan.manualProtected.length,
-    });
-  } catch (err) { apiError(res, err, 'Paylaşılan model görselleri yerel önbelleğe alınamadı.'); }
+    await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
+    const result = await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId);
+    res.set('Cache-Control','no-store').json({ ok:true, scope:'koleksiyon', ...result });
+  } catch (err) { apiError(res, err, 'Koleksiyon görselleri yerel önbelleğe alınamadı.'); }
 });
 app.put('/api/model-images/settings', userAccess.requireArea('source'), express.json({ limit:'32kb' }), (req, res) => {
   try {
