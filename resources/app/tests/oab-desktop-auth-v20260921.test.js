@@ -109,6 +109,59 @@ test('interactive lifecycle waits for login, retries viewer in a bounded way, th
   assert.ok(phases.includes('backend-validated'));
 });
 
+test('busy navigation does not consume the bounded viewer retry budget', async () => {
+  let clock = 1000;
+  let navigationBusy = true;
+  let calls = 0;
+  const lifecycle = createOabAuthLifecycle({
+    apiHost: 'pass.prod.lcwaikiki.com',
+    uiHost: 'pass.lcwaikiki.com',
+    viewerKickIntervalMs: 1000,
+    maxViewerKicks: 2,
+    now: () => clock,
+    onViewerKick: async () => {
+      calls += 1;
+      return navigationBusy ? false : true;
+    },
+  });
+
+  await lifecycle.observe({ url: 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report', signIn: false });
+  clock += 1100;
+  await lifecycle.observe({ url: 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report', signIn: false });
+  assert.equal(calls, 1);
+  assert.equal(lifecycle.snapshot().viewerKicks, 0);
+
+  navigationBusy = false;
+  clock += 1100;
+  await lifecycle.observe({ url: 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report', signIn: false });
+  assert.equal(calls, 2);
+  assert.equal(lifecycle.snapshot().viewerKicks, 1);
+});
+
+test('concurrent duplicate report requests validate only one Authorization candidate', async () => {
+  let releaseValidation;
+  const validationGate = new Promise(resolve => { releaseValidation = resolve; });
+  let validationCalls = 0;
+  const token = 'Bearer ' + 'd'.repeat(48);
+  const lifecycle = createOabAuthLifecycle({
+    apiHost: 'pass.prod.lcwaikiki.com',
+    uiHost: 'pass.lcwaikiki.com',
+    onAuthorization: async () => {
+      validationCalls += 1;
+      await validationGate;
+      return true;
+    },
+  });
+  const request = cdpRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData', token);
+  const first = lifecycle.onNetworkRequest(request);
+  const duplicate = await lifecycle.onNetworkRequest(request);
+  assert.equal(duplicate, false);
+  assert.equal(validationCalls, 1);
+  releaseValidation();
+  assert.equal(await first, true);
+  assert.equal(lifecycle.snapshot().stopped, true);
+});
+
 test('main-process success still requires loopback backend validation and closes the login BrowserWindow', () => {
   const start = MAIN.indexOf('async function acquireOabAuthorization');
   const end = MAIN.indexOf('async function clearOabAuthSession', start);
