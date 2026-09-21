@@ -732,6 +732,7 @@ async function acquireOabAuthorization(options = {}) {
     let navigationBusy = false;
     let debuggerAttached = false;
     let captureStopping = false;
+    let networkReady = null;
     let debuggerMessageHandler = null;
     let debuggerDetachHandler = null;
 
@@ -896,9 +897,7 @@ async function acquireOabAuthorization(options = {}) {
         debuggerAttached = true;
         targetDebugger.on('message', debuggerMessageHandler);
         targetDebugger.on('detach', debuggerDetachHandler);
-        void targetDebugger.sendCommand('Network.enable').catch(() => {
-          if (!settled) finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.');
-        });
+        networkReady = targetDebugger.sendCommand('Network.enable');
       } catch (error) {
         finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.');
         return;
@@ -968,8 +967,13 @@ async function acquireOabAuthorization(options = {}) {
       }, interactive ? 180000 : 12000);
       timeoutTimer.unref?.();
 
-      // CDP listener is already attached and Network enabled before navigation.
-      void loadLoginTarget(OAB_VIEWER_URL, true);
+      // Do not navigate until CDP Network.enable has completed. This closes the
+      // initial-request race; if PASS emits the report request immediately, the
+      // listener is already active. Later SPA requests are covered by the same
+      // listener plus the bounded viewer lifecycle above.
+      void Promise.resolve(networkReady)
+        .then(() => { if (!settled) return loadLoginTarget(OAB_VIEWER_URL, true); })
+        .catch(() => { if (!settled) finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.'); });
     });
   })();
   oabAuthInFlight = request;
