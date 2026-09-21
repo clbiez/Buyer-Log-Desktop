@@ -52,3 +52,26 @@ test('bootstrap exposes record counts so an empty Shared Hub cannot masquerade a
   assert.match(bootstrap, /localBusinessRecords:Object\.keys\(verifiedBusinessRecords\)\.length/);
   assert.match(bootstrap, /remoteBusinessRecords:Number\(checkpointRepair\.business\.remoteRecords\)\|\|0/);
 });
+
+
+test('empty Master checkpoint is auto-recovered only from a verified DELETE_READY pre-wipe backup', () => {
+  assert.match(server, /async function findVerifiedPrewipeRecovery\(/);
+  assert.match(server, /critical-state\.json/);
+  assert.match(server, /DELETE-READY\.json/);
+  assert.match(server, /inspectBackupArchive\(candidate\.backupFile, \{ requireType:'full', validateData:true \}\)/);
+  assert.match(server, /PREWIPE_BACKUP_SHA_MISMATCH/);
+  assert.match(server, /currentMasterCount !== 0/);
+  assert.match(server, /async function recoverEmptySharedHubFromPrewipe\(/);
+  assert.match(server, /actorId:'prewipe-auto-recovery'/);
+  assert.match(server, /SHARED_PREWIPE_RECOVERED/);
+});
+
+test('pre-wipe recovery runs before business checkpoint hydration and is visible in bootstrap inventory', () => {
+  const bootstrap = server.slice(server.indexOf('async function bootstrapSharedHub'), server.indexOf('// Local auth starts first.'));
+  const recoveryAt = bootstrap.indexOf('const prewipeRecovery = await recoverEmptySharedHubFromPrewipe');
+  const hydrateAt = bootstrap.indexOf('const business = await hydrateBusinessCheckpointIfNeeded');
+  assert.ok(recoveryAt >= 0 && hydrateAt > recoveryAt, 'pre-wipe recovery business hydrationdan önce çalışmalı');
+  assert.match(bootstrap, /prewipeRecovered:Boolean\(prewipeRecovery\.recovered\)/);
+  assert.match(bootstrap, /prewipeRecoveredMasterRecords:Number\(prewipeRecovery\.masterRecords\)\|\|0/);
+  assert.match(bootstrap, /prewipeRecoveredBusinessRecords:Number\(prewipeRecovery\.businessRecords\)\|\|0/);
+});
