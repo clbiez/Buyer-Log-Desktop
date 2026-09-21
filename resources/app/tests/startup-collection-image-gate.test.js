@@ -35,10 +35,20 @@ test('Shared Hub image transport is Collection-only and owner namespaced', () =>
   assert.match(server, /sourceIdentityPrefix:'collection:'/);
   assert.match(server, /dropNonMatching:true/);
   assert.match(server, /allowShared: false/);
-  assert.match(server, /requireArea\('koleksiyon'\).*model-images\/shared/s);
+  assert.match(server, /model-images\/shared\/sync'[\s\S]{0,180}requireArea\('koleksiyon'\)/);
   assert.match(server, /collectionWorkspaceWithLocalImages/);
+  assert.match(server, /_sharedCollectionImageUrl/);
   assert.doesNotMatch(server, /replaceWorkspaceReplica\(owner, \{ \.\.\.workspace, rows:nextRows \}\)/);
   assert.match(distribution, /options\.allowShared !== false/);
+});
+
+test('receiver-local Collection image URLs never enter persistent workspace data or global image registry', () => {
+  const app = fs.readFileSync(path.join(APP, 'public', 'app-main.js'), 'utf8');
+  assert.match(app, /function kolPersistableRow\(row\)/);
+  assert.match(app, /delete next\._sharedCollectionImageUrl/);
+  assert.match(app, /rows:kolRows\.map\(kolPersistableRow\)/);
+  assert.match(app, /if\(row&&row\._sharedCollectionImageUrl\)continue/);
+  assert.match(app, /sharedCollectionImageSource=String\(r&&r\._sharedCollectionImageUrl\|\|''\)/);
 });
 
 test('CP and Orders do not hydrate model images from Shared Hub', () => {
