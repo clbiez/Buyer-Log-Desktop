@@ -2882,7 +2882,7 @@ app.get('/api/collection-workspaces-batch', userAccess.requireArea('koleksiyon')
     const level = userAccess.collectionAccessLevel(req.currentUser, ownerId);
     await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
     await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
-    workspaces.push({ owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, workspace:loadWorkspace(ownerId) });
+    workspaces.push({ owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, workspace:collectionWorkspaceWithLocalImages(ownerId) });
   }
   res.json({ workspaces, readOnly:true, shared:false });
 });
@@ -2900,7 +2900,7 @@ app.get('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
   if (!profile) return res.status(404).json({ error:'Koleksiyon sahibi bulunamadı.', code:'USER_NOT_FOUND' });
   await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
   await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
-  res.json({ workspace:loadWorkspace(ownerId), access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, shared:false });
+  res.json({ workspace:collectionWorkspaceWithLocalImages(ownerId), access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, shared:false });
 });
 /* v7.21 — Koleksiyon kaydetme artık ASENKRON.
 
@@ -3798,25 +3798,30 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
     replacements.set(cacheKey, imageRef);
   }
 
-  let workspaceUpdated = false;
-  if (replacements.size) {
-    const nextRows = (Array.isArray(workspace.rows) ? workspace.rows : []).map(row => {
-      const item = collectionImageSyncPolicy.rowImageIdentity(row);
-      if (!item) return row;
-      const localRef = replacements.get(collectionImageCacheKey(owner, item));
-      if (!localRef || String(row.imgRef || row.imageRef || row._imageRef || '') === localRef) return row;
-      workspaceUpdated = true;
-      return { ...row, imgRef:localRef, img:'/api/collection-images/' + encodeURIComponent(localRef) };
-    });
-    if (workspaceUpdated) await collectionWorkspaces.replaceWorkspaceReplica(owner, { ...workspace, rows:nextRows });
-  }
-
   writeCollectionSharedImageCache(cache);
-  return { ownerId:owner, requested:items.length, available, installed, reused, missing, workspaceUpdated };
+  return { ownerId:owner, requested:items.length, available, installed, reused, missing, workspaceUpdated:false };
 }
+function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
+  const owner = String(ownerId || '').trim();
+  const source = workspace || loadWorkspace(owner);
+  const cache = readCollectionSharedImageCache();
+  let changed = false;
+  const rows = (Array.isArray(source && source.rows) ? source.rows : []).map(row => {
+    const item = collectionImageSyncPolicy.rowImageIdentity(row);
+    if (!item) return row;
+    const cached = cache.entries[collectionImageCacheKey(owner, item)];
+    const ref = String(cached && cached.imageRef || '').trim();
+    if (!ref || !getCollectionImage(ref)) return row;
+    changed = true;
+    return { ...row, imgRef:ref, img:'/api/collection-images/' + encodeURIComponent(ref) };
+  });
+  return changed ? { ...source, rows } : source;
+}
+
 async function syncAuthorizedCollectionImages(userId) {
   await collectionPermissionsReady;
   await collectionPermissions.sync().catch(error => markStartup('COLLECTION_PERMISSION_SYNC_DEFERRED', { error:error && error.code || error && error.message || String(error) }));
+  await publishCollectionWorkspaceImages(userId).catch(error => markStartup('COLLECTION_IMAGE_PUBLISH_DEFERRED', { userId, error:error && error.code || error && error.message || String(error) }));
   const owners = collectionPermissions.effectiveOwners(userId);
   const ownerIds = owners.map(item => item.ownerId);
   const replication = await collectionReplication.syncAuthorizedOwners(userId);
@@ -4031,8 +4036,9 @@ function recordManualImageOwnership(items, collectionOwnerId = '') {
     if (!imageRef) {
       tombstoneKeys.push(key);
       if (owner) publishEntries.push({
-        canonicalKey: 'collection:' + owner + ':' + key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
-        ownership: sharedImageStoreLib.OWNERSHIP_MANUAL, status: sharedImageStoreLib.STATUS_DELETED,
+        canonicalKey:'collection:' + owner + ':' + key, ...identity, source:sharedImageStoreLib.SOURCE_MANUAL,
+        ownership:sharedImageStoreLib.OWNERSHIP_MANUAL, status:sharedImageStoreLib.STATUS_DELETED,
+        sourceIdentity:'collection:' + owner + ':' + key,
       });
       continue;
     }
@@ -4314,7 +4320,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
         source: sharedImageStoreLib.SOURCE_ASAS, mode,
         overwriteManual: Boolean(req.body && req.body.overwriteManual),
         force: Boolean(req.body && req.body.force), overrides,
-        allowShared: sharedForCollection,
+        allowShared: false,
       });
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_ASAS);
