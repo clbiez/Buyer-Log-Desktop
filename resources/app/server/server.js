@@ -3692,6 +3692,41 @@ const modelImageDistribution = modelImageDistributionLib.createModelImageDistrib
   onTrace: (event, detail) => plmImageRefreshLog(event, detail),
 });
 
+const LEGACY_SHARED_GLOBAL_IMAGE_MIGRATION_FILE = path.join(LOCAL_DATA_ROOT, 'collection-image-scope-migration-v1.json');
+function retireLegacySharedGlobalImageRefs() {
+  try {
+    if (fs.existsSync(LEGACY_SHARED_GLOBAL_IMAGE_MIGRATION_FILE)) return { migrated:false, reason:'already-done' };
+    const store = plmImageOwnership.loadOwnership();
+    const overrides = loadOverrides();
+    overrides.imagemap = overrides.imagemap && typeof overrides.imagemap === 'object' ? overrides.imagemap : {};
+    const retired = [];
+    for (const [key, record] of Object.entries(store.owners || {})) {
+      if (!(Number(record && record.sharedRevision) > 0)) continue;
+      const current = String(overrides.imagemap[key] || '').trim();
+      if (!current || current !== String(record.imageRef || '').trim()) continue;
+      // Empty tombstone intentionally blocks fallback to an older PLM-only
+      // key until this user's own PLM flow refreshes the identity.
+      overrides.imagemap[key] = '';
+      retired.push(key);
+    }
+    if (retired.length) {
+      overrides._revisions = overrides._revisions || {};
+      overrides._revisions.orders = (Number(overrides._revisions.orders) || 0) + 1;
+      saveOverrides(overrides, overrides._revision);
+      plmImageOwnership.forget(retired);
+    }
+    atomicWriteJson(LEGACY_SHARED_GLOBAL_IMAGE_MIGRATION_FILE, {
+      schemaVersion:1, migratedAt:new Date().toISOString(), retired:retired.length,
+    });
+    return { migrated:true, retired:retired.length };
+  } catch (error) {
+    logRuntimeFailure('legacySharedImageScopeMigration', error);
+    return { migrated:false, error:error && error.code || error && error.message || String(error) };
+  }
+}
+const legacySharedImageScopeMigration = retireLegacySharedGlobalImageRefs();
+markStartup('COLLECTION_IMAGE_SCOPE_MIGRATION', legacySharedImageScopeMigration);
+
 const COLLECTION_SHARED_IMAGE_CACHE_FILE = path.join(LOCAL_DATA_ROOT, 'collection-shared-image-cache.json');
 function readCollectionSharedImageCache() {
   try {
