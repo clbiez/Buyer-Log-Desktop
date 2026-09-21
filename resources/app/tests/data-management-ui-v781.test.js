@@ -265,9 +265,10 @@ test('v7.81 paylaşım kararı kullanıcıya sorulur, varsayılan uydurulmaz', (
 test('v7.81 alan listesi TÜM şema sütunlarını sunar', () => {
   // §17: yalnız eşlenmiş alanlar değil. /api/horizon/fields bunu zaten döndürüyor.
   assert.match(FILTER_UI, /\/api\/horizon\/fields\?target=/);
-  const pick = FILTER_UI.match(/const pickField = event\.target\.closest\('\[data-pick-field\]'\);[\s\S]*?\n      return;\n    \}/);
-  assert.ok(pick);
-  assert.match(pick[0], /fieldsFor\(\)\.map/);
+  const pickStart = FILTER_UI.indexOf("const pickField = event.target.closest('[data-pick-field]');");
+  assert.ok(pickStart >= 0, 'alan seçici dalı bulunamadı');
+  const pick = FILTER_UI.slice(pickStart, FILTER_UI.indexOf("const pickValueBtn", pickStart));
+  assert.match(pick, /fieldsFor\(\)\.map/);
 });
 
 test('v7.81 değerler database’den okunur, uydurulmaz', () => {
@@ -313,9 +314,10 @@ test('v7.81 kaynak türleri profil kaydından gelir, sabit listeden değil', () 
 test('v7.81 tür değişince geçersiz modül seçimi temizlenir', () => {
   /* ASAS için LFL seçip sonra IAS'a geçen kullanıcı, sunucunun reddedeceği
      bir seçimle "Kaynağı ekle"ye basardı. */
-  const branch = WIZARD.match(/const profile = event\.target\.closest\('\[data-profile\]'\);[\s\S]*?\n      return;\n    \}/);
-  assert.ok(branch);
-  assert.match(branch[0], /draft\.moduleIds = draft\.moduleIds\.filter/);
+  const branchStart = WIZARD.indexOf("const profile = event.target.closest('[data-profile]');");
+  assert.ok(branchStart >= 0, 'kaynak türü seçim dalı bulunamadı');
+  const branch = WIZARD.slice(branchStart, WIZARD.indexOf("const back = event.target.closest('[data-back]');", branchStart));
+  assert.match(branch, /draft\.moduleIds = draft\.moduleIds\.filter/);
 });
 
 test('v7.81 sihirbaz ikinci bir bağlantı sınaması yazmaz', () => {
