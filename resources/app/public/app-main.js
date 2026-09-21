@@ -6603,7 +6603,8 @@ function _copyEnsureRequiredRowsRendered(table,selSet,idAttr){
 async function kolRecordImageCopyCell(record){
   const row=kolCollectionProjectionSource(record);
   const canonicalImageSource=canonicalModelImageSource(row.plmId,row.colourCode,row.colour);
-  const source=canonicalImageSource||row.img||(row.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(row.imgRef)}`:'');
+  const sharedCollectionImageSource=row&&row._sharedCollectionImage&&row.img?row.img:'';
+  const source=sharedCollectionImageSource||canonicalImageSource||row.img||(row.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(row.imgRef)}`:'');
   if(!source) return null;
   const modelId=row.plmId||row.modelKod||row.id, colourCode=row.colourCode||'';
   const dataUrl=await _copyImageDataUrlFor({modelId,colourCode,source,fallbackSource:source});
@@ -15393,6 +15394,7 @@ function buildDetailImageIndex(){
      PLM bağlantı listesi henüz yüklenmemiş olsa bile Koleksiyon satırı kendi
      PLM ID'sini taşıdığı için kanonik anahtar çözülebilir. */
   if(typeof kolRows!=='undefined')for(const row of (kolRows||[])){
+    if(row&&row._sharedCollectionImage)continue;
     const url=row&&(row.img||row.imgRef&&`/api/collection-images/${encodeURIComponent(row.imgRef)}`)||'';
     const rowPlm=cpNormalizePlmImageId(row&&row.plmId),rowModel=turknorm(row&&row.modelKod||'');
     if(rowPlm&&rowModel&&!modelToPlm.has(rowModel))modelToPlm.set(rowModel,rowPlm);
@@ -23338,8 +23340,9 @@ function renderKol(){
     let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" data-id="${r.id}" ${kolSelected.has(r.id)?'checked':''}></td>`;
     if(pictureVisible){
       const canonicalImageSource=canonicalModelImageSource(r.plmId,r.colourCode,r.colour);
-      const hasCollectionImage=Boolean(canonicalImageSource||r.img||r.imgRef);
-      const collectionImageSource=canonicalImageSource||r.img||(r.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(r.imgRef)}`:'');
+      const sharedCollectionImageSource=r&&r._sharedCollectionImage&&r.img?r.img:'';
+      const hasCollectionImage=Boolean(sharedCollectionImageSource||canonicalImageSource||r.img||r.imgRef);
+      const collectionImageSource=sharedCollectionImageSource||canonicalImageSource||r.img||(r.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(r.imgRef)}`:'');
       const collectionImageTitle=appLang==='en'
         ? 'Click: select paste target · Double-click: choose image · Right-click: remove or fetch from PLM'
         : 'Tek tık: yapıştırma hedefi · Çift tık: görsel seç · Sağ tık: kaldır veya PLM\'den çağır';
