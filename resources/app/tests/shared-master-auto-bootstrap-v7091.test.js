@@ -135,9 +135,24 @@ test('bootstrap can repair catastrophic empty Master from preserved data-BACKUP 
   assert.match(SERVER, /\^data\[-_ \]\?backup/);
   assert.match(SERVER, /async function recoverSharedMasterFromLocalDataBackup\(root\)/);
   assert.match(SERVER, /masterCoverageIsCatastrophicallySparse\(currentCoverage\)/);
-  assert.match(SERVER, /loadMasterRecordsFromServerDataRoot\(candidate\.serverRoot, recoveredState\)/);
+  assert.match(SERVER, /loadMasterRecordsFromLegacyDataRoot\(candidate\.root, recoveredState\)/);
   assert.match(SERVER, /actorId:'local-data-backup-auto-recovery'/);
   assert.match(SERVER, /SHARED_LOCAL_DATA_BACKUP_RECOVERED/);
   assert.match(SERVER, /const localDataRecovery = await recoverSharedMasterFromLocalDataBackup\(checked\.root\)/);
   assert.match(SERVER, /localDataBackupRecovered:Boolean\(localDataRecovery\.recovered\)/);
+});
+
+
+test('legacy data-BACKUP can promote pre-shared user FX into central FX when server fx-rates is absent', async t => {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-data-backup-fx-'));
+  t.after(() => fsp.rm(root, { recursive:true, force:true }));
+  const serverData = path.join(root, 'server');
+  const userFxDir = path.join(root, 'app', 'user-source-data', 'moderator');
+  await fsp.mkdir(serverData, { recursive:true });
+  await fsp.mkdir(userFxDir, { recursive:true });
+  await fsp.writeFile(path.join(userFxDir, 'fx-rates.json'), JSON.stringify({
+    base:'USD', currencies:['TRY'], months:{ '202609':{ TRY:42.25 } }, updatedAt:'2026-09-19T10:00:00.000Z', _revision:4,
+  }));
+  const records = recovery.loadMasterRecordsFromLegacyDataRoot(root, {});
+  assert.equal(records['store:fx-rates.json'].months['202609'].TRY, 42.25);
 });
