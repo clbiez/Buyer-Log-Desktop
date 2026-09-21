@@ -71,6 +71,8 @@ test('pre-wipe recovery runs before business checkpoint hydration and is visible
   const recoveryAt = bootstrap.indexOf('const prewipeRecovery = await recoverEmptySharedHubFromPrewipe');
   const hydrateAt = bootstrap.indexOf('const business = await hydrateBusinessCheckpointIfNeeded');
   assert.ok(recoveryAt >= 0 && hydrateAt > recoveryAt, 'pre-wipe recovery business hydrationdan önce çalışmalı');
+  assert.match(bootstrap, /let masterHead = master\.head \|\| await sharedHub\.readMasterHead/);
+  assert.match(bootstrap, /if \(prewipeRecovery\.recovered\) masterHead = await sharedHub\.readMasterHead\(checked\.root\)/);
   assert.match(bootstrap, /prewipeRecovered:Boolean\(prewipeRecovery\.recovered\)/);
   assert.match(bootstrap, /prewipeRecoveredMasterRecords:Number\(prewipeRecovery\.masterRecords\)\|\|0/);
   assert.match(bootstrap, /prewipeRecoveredBusinessRecords:Number\(prewipeRecovery\.businessRecords\)\|\|0/);
