@@ -848,11 +848,6 @@ async function bootstrapSharedHub({ force = false } = {}) {
   }
   sharedHubBootstrapInFlight = (async () => {
     const settings = await syncSettings.read();
-    // Shared Hub bootstrap must not race the legacy→delta seed pass. A clean
-    // install can otherwise record the Hub revision as "complete" while the
-    // local DB is still empty, causing every subsequent launch to skip the
-    // checkpoint payload and show an empty application.
-    await ensureLocalDbMaintenanceReady();
     const hadLocalLoginSnapshot = userAccess.hasLocalLoginSnapshot();
     const localLoginAllowed = userAccess.canLoginLocally();
     const localState = sharedHub.readLocalState();
@@ -875,6 +870,11 @@ async function bootstrapSharedHub({ force = false } = {}) {
       setBootstrapStep('hub', { status:'waiting', detail:'Klasör seçimi bekleniyor' });
       return bootstrapStatusSnapshot();
     }
+
+    // Only a configured Shared Hub needs the legacy→delta seed pass as a
+    // bootstrap prerequisite. Local-only/test sessions keep the existing fast
+    // login path and let maintenance remain background work.
+    await ensureLocalDbMaintenanceReady();
 
     try {
       setBootstrapProgress({ configured:true, status:'syncing', phase:'hub', loginAllowed:false, bootstrapRequired:true, message:'Shared Hub doğrulanıyor…' });
