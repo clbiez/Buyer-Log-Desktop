@@ -29,6 +29,35 @@ function buyerLogApplyBrowserStorageSnapshot(snapshot) {
     try { storage.setItem(String(key), String(value == null ? '' : value)); } catch (_) {}
   }
 }
+
+let buyerLogSharedPersonalBackupBusy = false;
+let buyerLogSharedPersonalBackupLastAttempt = 0;
+async function buyerLogSharedPersonalBackupNow(force = false) {
+  const profile = window.BL_USER_CONTEXT || {};
+  if (!profile.id || buyerLogSharedPersonalBackupBusy) return { skipped: true, reason: !profile.id ? 'no-user' : 'busy' };
+  const now = Date.now();
+  if (!force && now - buyerLogSharedPersonalBackupLastAttempt < 14 * 60 * 1000) return { skipped: true, reason: 'throttled' };
+  buyerLogSharedPersonalBackupLastAttempt = now;
+  buyerLogSharedPersonalBackupBusy = true;
+  try {
+    const response = await fetch('/api/backups/shared-personal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ browserStorage: buyerLogBrowserStorageSnapshot() }),
+      cache: 'no-store',
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || response.statusText);
+    window.dispatchEvent(new CustomEvent('buyerlog:shared-personal-backup', { detail: data }));
+    return data;
+  } catch (error) {
+    console.warn('[BuyerLog] Shared personal backup:', error && error.message || error);
+    return { ok: false, error: error && error.message || String(error) };
+  } finally {
+    buyerLogSharedPersonalBackupBusy = false;
+  }
+}
+window.buyerLogSharedPersonalBackupNow = buyerLogSharedPersonalBackupNow;
 function buyerLogBackupModal() {
   document.getElementById('_buyerLogBackupModal')?.remove();
   const moderator = Boolean(window.BLIsModerator && window.BLIsModerator());
@@ -38,6 +67,7 @@ function buyerLogBackupModal() {
   modal.innerHTML = `<div class="modalCard backupCard" role="dialog" aria-modal="true" aria-labelledby="_backupTitle">
     <div class="backupHead"><div><div class="modalTitle" id="_backupTitle">Backup</div><div class="backupIntro">${buyerLogBackupTr('Kişisel verilerinizi ve ayarlarınızı güvenli, sürümlü tek bir ZIP dosyasında indirin.','Download your personal data and settings as one secure, versioned ZIP file.')}</div></div><button class="pricingRuleIconBtn _backupClose" aria-label="${buyerLogBackupTr('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="backupBody"><div class="backupActions"><button class="navActionBtn" data-backup-mode="user"><svg class="ic"><use href="#i-download"/></svg><span>${buyerLogBackupTr('Verilerimi Yedekle','Back Up My Data')}</span></button><button class="navActionBtn" data-user-restore><svg class="ic"><use href="#i-upload"/></svg><span>${buyerLogBackupTr('Verilerimi Geri Yükle','Restore My Data')}</span></button>${moderator ? `<button class="tbtn" data-backup-mode="full"><svg class="ic"><use href="#i-database-import"/></svg><span>${buyerLogBackupTr('Tam Sistem Yedeği','Full System Backup')}</span></button><button class="tbtn" data-backup-restore><svg class="ic"><use href="#i-upload"/></svg><span>${buyerLogBackupTr('Full System Restore','Full System Restore')}</span></button>` : ''}</div>
+    <div class="backupSharedPanel"><div><b>${buyerLogBackupTr('Ortak kişisel yedek','Shared personal backup')}</b><div data-shared-personal-status>${buyerLogBackupTr('Kontrol ediliyor…','Checking…')}</div></div><div class="backupRestoreActions"><button class="tbtn" data-shared-personal-now>${buyerLogBackupTr('Şimdi güncelle','Back up now')}</button><button class="tbtn" data-shared-personal-download hidden>${buyerLogBackupTr('Ortak yedeği indir','Download shared backup')}</button></div></div>
     <div class="backupRestorePanel" data-user-restore-panel hidden><label class="backupFilePicker">${buyerLogBackupTr('Kişisel Backup ZIP seçin','Choose a Personal Backup ZIP')}<input type="file" data-user-restore-file accept=".zip,application/zip"/></label><div class="backupRestoreActions"><button class="tbtn" data-user-restore-inspect>${buyerLogBackupTr('Ön kontrol yap','Run preflight')}</button><button class="tbtn" data-user-restore-confirm disabled>${buyerLogBackupTr('Verilerimi geri yükle','Restore my data')}</button></div><div class="backupRestoreStatus" data-user-restore-status aria-live="polite">${buyerLogBackupTr('Bir kişisel backup seçin.','Choose a personal backup.')}</div></div>
     ${moderator ? `<div class="backupRestorePanel" data-restore-panel hidden><label class="backupFilePicker">${buyerLogBackupTr('Full System Backup ZIP seçin','Choose a Full System Backup ZIP')}<input type="file" data-restore-file accept=".zip,application/zip"/></label><div class="backupRestoreActions"><button class="tbtn" data-restore-inspect>${buyerLogBackupTr('Ön kontrol yap','Run preflight')}</button><label><input type="checkbox" data-restore-safety-backup checked/> createSafetyBackup</label><button class="tbtn" data-restore-confirm disabled>${buyerLogBackupTr('Restore’u uygula','Apply restore')}</button><button class="tbtn" data-restore-cancel hidden>${buyerLogBackupTr('İptal','Cancel')}</button></div><div class="backupRestoreStatus" data-restore-status aria-live="polite">${buyerLogBackupTr('Bir backup seçin.','Choose a backup.')}</div></div>` : ''}
     <div class="backupStages">${labels.map((label, index) => `<div class="backupStage" data-stage="${stages[index]}"><span>${index + 1}</span><b>${label}</b></div>`).join('')}</div>
@@ -48,6 +78,38 @@ function buyerLogBackupModal() {
   const userRestorePanel = modal.querySelector('[data-user-restore-panel]'), userRestoreFile = modal.querySelector('[data-user-restore-file]');
   const close = () => modal.remove();
   modal.querySelector('._backupClose').addEventListener('click', close); modal.addEventListener('click', event => { if (event.target === modal) close(); });
+  const sharedStatus = modal.querySelector('[data-shared-personal-status]');
+  const sharedNow = modal.querySelector('[data-shared-personal-now]');
+  const sharedDownload = modal.querySelector('[data-shared-personal-download]');
+  const formatSharedBackup = data => {
+    const latest = data && data.latest;
+    if (!data || data.configured === false) return buyerLogBackupTr('Shared Hub henüz bağlı değil. Yerel kişisel veriler korunmaya devam ediyor.','Shared Hub is not connected yet. Personal data remains stored locally.');
+    if (!data.available && !latest) return buyerLogBackupTr('Shared Hub bağlı; henüz kişisel ortak yedek yok.','Shared Hub is connected; no shared personal backup exists yet.');
+    const stamp = latest && latest.createdAt ? new Date(latest.createdAt).toLocaleString() : '—';
+    return `${buyerLogBackupTr('Son ortak yedek','Latest shared backup')}: ${stamp}${latest && latest.bytes ? ` • ${buyerLogRestoreBytes(latest.bytes)}` : ''}`;
+  };
+  async function refreshSharedStatus() {
+    try {
+      const response = await fetch('/api/backups/shared-personal/status', { cache: 'no-store' });
+      const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.error || response.statusText);
+      sharedStatus.textContent = formatSharedBackup(data);
+      sharedDownload.hidden = !(data.available && data.latest);
+    } catch (error) {
+      sharedStatus.textContent = `${buyerLogBackupTr('Ortak yedek durumu okunamadı','Shared backup status unavailable')}: ${error.message}`;
+      sharedDownload.hidden = true;
+    }
+  }
+  sharedNow?.addEventListener('click', async () => {
+    sharedNow.disabled = true; sharedStatus.textContent = buyerLogBackupTr('Kişisel veriler Shared Hub’a yedekleniyor…','Backing up personal data to Shared Hub…');
+    const data = await buyerLogSharedPersonalBackupNow(true);
+    sharedNow.disabled = false;
+    if (data && data.ok === false) sharedStatus.textContent = `${buyerLogBackupTr('Ortak yedek başarısız','Shared backup failed')}: ${data.error || '—'}`;
+    else await refreshSharedStatus();
+  });
+  sharedDownload?.addEventListener('click', () => {
+    const link = document.createElement('a'); link.href = '/api/backups/shared-personal/latest'; link.download = ''; document.body.appendChild(link); link.click(); link.remove();
+  });
+  void refreshSharedStatus();
   function render(job) {
     const activeIndex = Math.max(0, stages.indexOf(job.phase));
     modal.querySelectorAll('.backupStage').forEach((node, index) => { node.classList.toggle('done', index < activeIndex || job.ready); node.classList.toggle('active', index === activeIndex && !job.error); node.classList.toggle('error', Boolean(job.error) && index === activeIndex); });
@@ -161,3 +223,14 @@ function buyerLogBackupModal() {
 window.buyerLogBackupModal = buyerLogBackupModal;
 document.getElementById('backupRestoreBtn')?.addEventListener('click', buyerLogBackupModal);
 document.getElementById('backupSettingsBtn')?.addEventListener('click', buyerLogBackupModal);
+
+(function startSharedPersonalBackupSchedule(){
+  const run = () => { void buyerLogSharedPersonalBackupNow(false); };
+  setTimeout(run, 45 * 1000);
+  const timer = setInterval(run, 15 * 60 * 1000);
+  if (timer && typeof timer.unref === 'function') timer.unref();
+  window.addEventListener('online', run);
+  window.addEventListener('focus', () => {
+    if (Date.now() - buyerLogSharedPersonalBackupLastAttempt >= 14 * 60 * 1000) run();
+  });
+})();
