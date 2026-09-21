@@ -214,7 +214,7 @@ function createModelImageDistribution(deps = {}) {
     const manualProtected = [];
     const staleProtection = [];
     const unavailable = [];
-    const sharedAvailable = await shared.available();
+    const sharedAvailable = options.allowShared !== false && await shared.available();
     // One view can contain hundreds of models. Resolve their shared metadata
     // in one heads/manifest pass instead of one SMB directory+manifest scan
     // per identity.
