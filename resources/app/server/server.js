@@ -798,6 +798,57 @@ async function loadPrewipeRecoveryRecords(candidate) {
     await fs.promises.rm(tempRoot, { recursive:true, force:true }).catch(()=>{});
   }
 }
+function masterCheckpointInventory(snapshot) {
+  const payload = snapshot && snapshot.envelope && snapshot.envelope.payload;
+  return payload && payload.inventory && typeof payload.inventory === 'object' ? payload.inventory : null;
+}
+function masterCoverageMissing(expected, actual) {
+  if (!expected || typeof expected !== 'object') return [];
+  const current = actual && typeof actual === 'object' ? actual : {};
+  const fields = [
+    'records','modelConnections','royaltyRules','transitRules','nonDtrManufacturers',
+    'landedMultipliers','freightRates','emailGroups','emailCountries','fxKeys','endeksmatikRecords',
+  ];
+  return fields.filter(field => Number(expected[field] || 0) > Number(current[field] || 0));
+}
+async function verifySharedMasterBootstrap(root) {
+  const remote = await sharedHub.readMaster(root, null);
+  const remoteRecords = checkpointRecords(remote);
+  const state = await localDb.read();
+  const localRecords = sharedSyncPolicy.masterRecordsFromState(state);
+  const missing = checkpointRecoverableIds(remoteRecords, localRecords, state.tombstones);
+  const expectedInventory = masterCheckpointInventory(remote);
+  const localInventory = prewipeMasterRecovery.masterCoverage(localRecords);
+  const coverageMissing = masterCoverageMissing(expectedInventory, localInventory);
+  if (missing.length || coverageMissing.length) {
+    throw Object.assign(new Error('Shared Hub sistem ayarları yerel önbelleğe eksiksiz alınamadı.'), {
+      code:'SHARED_HUB_MASTER_INCOMPLETE',
+      statusCode:503,
+      details:{
+        missingRecords:missing.slice(0,50),
+        coverageMissing,
+        remoteRecords:Object.keys(remoteRecords).length,
+        localRecords:Object.keys(localRecords).length,
+        expectedInventory,
+        localInventory,
+      },
+    });
+  }
+  return {
+    remoteRecords:Object.keys(remoteRecords).length,
+    localRecords:Object.keys(localRecords).length,
+    inventory:localInventory,
+    head:remote && remote.head || null,
+  };
+}
+const SHARED_BOOTSTRAP_INTEGRITY_ERRORS = new Set([
+  'PREWIPE_BACKUP_SHA_MISMATCH',
+  'PREWIPE_MASTER_INCOMPLETE',
+  'SHARED_HUB_DATA_INCOMPLETE',
+  'SHARED_HUB_MASTER_INCOMPLETE',
+  'SHARED_HUB_PENDING_CHANGES',
+]);
+
 async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const [masterRemote, businessRemote] = await Promise.all([
     sharedHub.readMaster(root, null),
@@ -865,6 +916,7 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const masterHead = await sharedHub.readMasterHead(root);
   const savedMaster = await sharedHub.publishMaster(root, {
     records:masterRecords,
+    inventory:finalCoverage,
     recovery:{
       source:path.basename(candidate.recoveryRoot),
       verifiedAt:candidate.report && candidate.report.verifiedAt || null,
@@ -912,7 +964,10 @@ async function publishMasterCheckpoint(actorId = '') {
     markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED', { area:'master', missing:guard.missing.length, stale:guard.stale.length, localRecords:Object.keys(records).length, remoteRecords:guard.remoteRecords });
     return { published:false, protected:true, reason:'local-master-incomplete', head, hub:checked.manifest, records:Object.keys(records).length, missingRecords:guard.missing.slice(0,50), staleRecords:guard.stale.slice(0,50) };
   }
-  const saved = await sharedHub.publishMaster(checked.root, { records }, { actorId, previousRevision: head && head.revision || 0 });
+  const saved = await sharedHub.publishMaster(checked.root, {
+    records,
+    inventory:prewipeMasterRecovery.masterCoverage(records),
+  }, { actorId, previousRevision: head && head.revision || 0 });
   return { published:true, unchanged:saved && saved.unchanged === true, head:saved, hub:checked.manifest, records:Object.keys(records).length };
 }
 let masterCheckpointTimer = null;
@@ -1153,9 +1208,16 @@ async function bootstrapSharedHub({ force = false } = {}) {
       // contains the checkpoint payload. Repair any remote records that are
       // absent locally (unless a local tombstone proves an intentional delete).
       const checkpointRepair = await reconcileSharedCheckpointCoverage(checked.root, checked.manifest);
+      const masterVerification = await verifySharedMasterBootstrap(checked.root);
       const verifiedState = await localDb.read();
       const verifiedMasterRecords = sharedSyncPolicy.masterRecordsFromState(verifiedState);
       const verifiedBusinessRecords = sharedSyncPolicy.businessRecordsFromState(verifiedState);
+      setBootstrapStep('master', {
+        status:'done',
+        current:masterVerification.localRecords,
+        total:masterVerification.remoteRecords,
+        detail:`rev ${masterHead && masterHead.revision || 0} · ${masterVerification.localRecords}/${masterVerification.remoteRecords} kayıt · Royalty ${masterVerification.inventory.royaltyRules} · E-mail ${masterVerification.inventory.emailGroups} · FX ${masterVerification.inventory.fxKeys} · Endeksmatik ${masterVerification.inventory.endeksmatikRecords}`,
+      });
       const businessAfter = sharedHub.readLocalState();
       setBootstrapStep('business', {
         status:'done',
@@ -1214,6 +1276,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
           prewipeRecoverySource:prewipeRecovery.source || null,
           prewipeRecoveredMasterRecords:Number(prewipeRecovery.masterRecords)||0,
           prewipeRecoveredBusinessRecords:Number(prewipeRecovery.businessRecords)||0,
+          masterCoverage:masterVerification.inventory,
         },
         offline:false,
       };
@@ -1222,7 +1285,8 @@ async function bootstrapSharedHub({ force = false } = {}) {
       return bootstrapStatusSnapshot();
     } catch (error) {
       const completed = localState && localState.completed === true && hadLocalLoginSnapshot;
-      if (completed && localLoginAllowed) {
+      const integrityFailure = SHARED_BOOTSTRAP_INTEGRITY_ERRORS.has(String(error && error.code || ''));
+      if (completed && localLoginAllowed && !integrityFailure) {
         await activateSharedHubRuntime({ migrateCollection:false }).catch(()=>{});
         const result = {
           configured:true, validated:false, loginAllowed:true, bootstrapRequired:false,
