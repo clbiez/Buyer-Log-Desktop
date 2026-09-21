@@ -1028,10 +1028,28 @@ async function loadLocalLegacyMasterCandidate(candidate) {
     coverage:prewipeMasterRecovery.masterCoverage(records),
   };
 }
+function masterCoverageIsCatastrophicallySparse(coverage) {
+  const c = coverage && typeof coverage === 'object' ? coverage : {};
+  const critical = [
+    Number(c.modelConnections||0),
+    Number(c.royaltyRules||0),
+    Number(c.emailGroups||0),
+    Number(c.fxKeys||0),
+    Number(c.endeksmatikRecords||0),
+  ];
+  return critical.filter(value => value <= 0).length >= 4;
+}
 async function recoverSharedMasterFromLocalDataBackup(root) {
   const remote = await sharedHub.readMaster(root, null);
   const currentMaster = checkpointRecords(remote);
   const currentCoverage = prewipeMasterRecovery.masterCoverage(currentMaster);
+  // data-BACKUP-* verified bir sistem checkpoint'i değildir. Bu nedenle
+  // yalnız Master'ın neredeyse tamamen boş olduğu temiz-kurulum imzasında
+  // otomatik kaynak olabilir; normal kullanımda bilerek silinmiş bir alanı
+  // eski yerel yedekten asla diriltmez.
+  if (!masterCoverageIsCatastrophicallySparse(currentCoverage)) {
+    return { recovered:false, reason:'shared-master-not-sparse', currentCoverage };
+  }
   const candidates = await localLegacyDataBackupCandidates();
   if (!candidates.length) return { recovered:false, reason:'local-data-backup-not-found', currentCoverage };
 
