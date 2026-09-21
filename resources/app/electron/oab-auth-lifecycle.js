@@ -57,6 +57,7 @@ function createOabAuthLifecycle(options = {}) {
   let stopped = false;
   let candidateBusy = false;
   let viewerKicks = 0;
+  let viewerKickBusy = false;
   let viewerFirstSeenAt = 0;
   let lastViewerKickAt = 0;
 
@@ -75,6 +76,24 @@ function createOabAuthLifecycle(options = {}) {
       viewerKicks,
       maxViewerKicks,
     };
+  }
+
+  async function attemptViewerKick(reason, currentTime) {
+    if (stopped || viewerKickBusy || viewerKicks >= maxViewerKicks) return false;
+    if (lastViewerKickAt && currentTime - lastViewerKickAt < viewerKickIntervalMs) return false;
+    viewerKickBusy = true;
+    // Reserve the interval immediately so concurrent lifecycle pulses cannot
+    // stack duplicate navigations while BrowserWindow.loadURL is still pending.
+    lastViewerKickAt = currentTime;
+    try {
+      const nextAttempt = viewerKicks + 1;
+      const started = await onViewerKick({ attempt: nextAttempt, reason });
+      if (started === false) return false;
+      viewerKicks = nextAttempt;
+      return true;
+    } finally {
+      viewerKickBusy = false;
+    }
   }
 
   async function observe({ url, signIn } = {}) {
@@ -102,10 +121,8 @@ function createOabAuthLifecycle(options = {}) {
     if (!onViewer) {
       if (sawLogin) setPhase('authenticated-opening-report');
       else setPhase('waiting-report-request');
-      if (viewerKicks < maxViewerKicks && (!lastViewerKickAt || currentTime - lastViewerKickAt >= viewerKickIntervalMs)) {
-        viewerKicks += 1;
-        lastViewerKickAt = currentTime;
-        await onViewerKick({ attempt: viewerKicks, reason: sawLogin ? 'post-login' : 'pass-shell' });
+      if (!lastViewerKickAt || currentTime - lastViewerKickAt >= viewerKickIntervalMs) {
+        await attemptViewerKick(sawLogin ? 'post-login' : 'pass-shell', currentTime);
       }
       return snapshot();
     }
@@ -119,10 +136,8 @@ function createOabAuthLifecycle(options = {}) {
     }
 
     const anchor = Math.max(viewerFirstSeenAt, lastViewerKickAt);
-    if (viewerKicks < maxViewerKicks && currentTime - anchor >= viewerKickIntervalMs) {
-      viewerKicks += 1;
-      lastViewerKickAt = currentTime;
-      await onViewerKick({ attempt: viewerKicks, reason: 'viewer-no-api-request' });
+    if (currentTime - anchor >= viewerKickIntervalMs) {
+      await attemptViewerKick('viewer-no-api-request', currentTime);
     }
     return snapshot();
   }
