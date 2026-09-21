@@ -1,0 +1,25 @@
+name: OAB targeted verification
+on:
+  push:
+    branches:
+      - verify/oab-7089-20260921
+
+permissions:
+  contents: read
+
+jobs:
+  oab-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: resources/app/package-lock.json
+      - name: Install dependencies
+        working-directory: resources/app
+        run: npm ci --ignore-scripts
+      - name: Run OAB targeted regression tests
+        working-directory: resources/app
+        run: node --test tests/oab-desktop-auth-v20260921.test.js tests/oab-pass-login-recovery-v661.test.js
