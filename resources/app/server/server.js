@@ -1122,6 +1122,28 @@ app.post('/api/outlook/lifecycle', express.json({ limit:'256kb', type:['applicat
   catch(err){ apiError(res,err,'Graph lifecycle bildirimi doğrulanamadı.'); }
 });
 app.use(userAccess.requireSelection);
+app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async (req, res) => {
+  try {
+    const gate = bootstrapStatusSnapshot();
+    if (gate.status === 'offline') {
+      return res.set('Cache-Control','no-store').json({ ok:true, ready:true, offline:true, message:'Çevrimdışı · son doğrulanmış yerel veri kullanılıyor', collectionImages:{ requested:0, installed:0, reused:0, missing:0 } });
+    }
+    if (gate.status !== 'ready') {
+      return res.status(423).set('Cache-Control','no-store').json({ ok:false, ready:false, code:'BOOTSTRAP_NOT_READY', bootstrap:gate });
+    }
+    const collectionImages = await syncAuthorizedCollectionImages(req.currentUser.id);
+    res.set('Cache-Control','no-store').json({
+      ok:true, ready:true, offline:false,
+      message:'Koleksiyonlar ve yetkili görseller eşitlendi.',
+      collectionImages,
+    });
+  } catch (error) {
+    res.status(error.statusCode || 503).set('Cache-Control','no-store').json({
+      ok:false, ready:false, code:error.code || 'USER_BOOTSTRAP_FAILED',
+      error:error.message || 'Kullanıcı verileri eşitlenemedi.',
+    });
+  }
+});
 app.post('/api/shared-hub/initialize', userAccess.requireModerator, express.json({ limit:'32kb' }), async (req, res) => {
   try {
     if (!req.body || req.body.confirmCritical !== true) return res.status(400).json({ error:'Shared Hub oluşturmak için açık onay gerekir.', code:'CRITICAL_CONFIRMATION_REQUIRED' });
@@ -2830,6 +2852,9 @@ async function updateCollectionPermission(req, res, revoke = false) {
       : await collectionPermissions.setGrant({ ownerId, granteeId, level: body.level, actorId: req.currentUser.id });
     userAccess.appendAudit(req.currentUser, revoke ? 'COLLECTION_PERMISSION_REVOKED' : 'COLLECTION_PERMISSION_SET', ownerId, { granteeId, level: revoke ? null : body.level, revision: result.revision });
     liveEvents.notifyChange('collection-permissions', requestClientId(req), { ownerId, granteeId, level: revoke ? null : body.level });
+    if (!revoke) {
+      void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnGrant', error));
+    }
     res.json({ ok: true, ...result });
   } catch (err) { res.status(err.statusCode || 500).json({ error: err.message || 'Koleksiyon izni güncellenemedi.', code: err.code || 'COLLECTION_PERMISSION_WRITE_FAILED', currentRevision: err.currentRevision }); }
 }
@@ -2856,6 +2881,7 @@ app.get('/api/collection-workspaces-batch', userAccess.requireArea('koleksiyon')
     const profile = profiles.get(ownerId); if (!profile) continue;
     const level = userAccess.collectionAccessLevel(req.currentUser, ownerId);
     await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
+    await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
     workspaces.push({ owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, workspace:loadWorkspace(ownerId) });
   }
   res.json({ workspaces, readOnly:true, shared:false });
@@ -2873,6 +2899,7 @@ app.get('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
   const profile = userAccess.allPublicProfiles().find(item => item.id === ownerId);
   if (!profile) return res.status(404).json({ error:'Koleksiyon sahibi bulunamadı.', code:'USER_NOT_FOUND' });
   await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
+  await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
   res.json({ workspace:loadWorkspace(ownerId), access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, shared:false });
 });
 /* v7.21 — Koleksiyon kaydetme artık ASENKRON.
@@ -2914,6 +2941,7 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
       try { await collectionReplication.publishOwner(ownerId); }
       catch (error) { logRuntimeFailure('collectionReplicaPublish', error); }
     }
+    void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnSave', error));
     void sharedRevisionStore.update('collection',{actorId:req.currentUser.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'COLLECTION_SAVE', ownerId, { rows: result.rowCount, revision: result.revision });
     // rowPatches null ise (sıralama/sütun değişikliği) olay yamasız gider ve
