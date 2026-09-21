@@ -60,7 +60,7 @@ set /p "BL_PREWIPE_SHARED=Shared Hub klasoru (mevcut ayari kullanmak icin ENTER)
 set "BL_PREWIPE_ROOT=%ROOT%"
 set "BL_PREWIPE_RESULT=%RESULT%"
 
-for /f "tokens=1 delims=:" %%N in ('findstr /n /c:"//__BUYERLOG_PREWIPE_JS__" "%~f0"') do set "MARK=%%N"
+for /f "tokens=1 delims=:" %%N in ('findstr /n /b /c:"//__BUYERLOG_PREWIPE_JS__" "%~f0"') do set "MARK=%%N"
 if not defined MARK (
   echo [HATA] Dahili dogrulama kodu bulunamadi.
   pause
