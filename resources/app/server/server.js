@@ -3874,7 +3874,16 @@ async function syncAuthorizedCollectionImages(userId) {
   await publishCollectionWorkspaceImages(userId).catch(error => markStartup('COLLECTION_IMAGE_PUBLISH_DEFERRED', { userId, error:error && error.code || error && error.message || String(error) }));
   const owners = collectionPermissions.effectiveOwners(userId);
   const ownerIds = owners.map(item => item.ownerId);
-  const replication = await collectionReplication.syncAuthorizedOwners(userId);
+  const replicaResults = [];
+  for (const ownerId of ownerIds) {
+    if (String(ownerId) === String(userId)) {
+      replicaResults.push({ ownerId, synced:false, reason:'own-workspace-local-authority' });
+      continue;
+    }
+    try { replicaResults.push(await collectionReplication.syncOwner(userId, ownerId)); }
+    catch (error) { replicaResults.push({ ownerId, synced:false, error:error.code || error.message }); }
+  }
+  const replication = { ownerIds, results:replicaResults };
   const results = [];
   for (const ownerId of ownerIds) {
     if (String(ownerId) === String(userId)) {
