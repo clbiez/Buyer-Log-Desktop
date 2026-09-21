@@ -791,7 +791,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
       setBootstrapStep('users', { status:'active' });
       userAccess.enableCentralIam();
       const sameCompletedHub = localState && localState.completed === true && localState.hubId === checked.manifest.hubId;
-      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:!sameCompletedHub });
+      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:!sameCompletedHub, timeoutMs:30000 });
       const iamHealth = userAccess.centralIamHealth();
       if (!iam && !sameCompletedHub && !userAccess.hasLocalLoginSnapshot()) {
         throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
