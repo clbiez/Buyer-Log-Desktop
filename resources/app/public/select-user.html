@@ -37,6 +37,7 @@
         <div class="hubGateCopy">
           <strong id="hubGateTitle">Shared Sync</strong>
           <span id="hubGateText"></span>
+          <div class="hubSteps" id="hubSteps" hidden aria-live="polite"></div>
         </div>
         <button type="button" class="hubSettingsBtn" id="hubSettingsBtn">⚙ Ayarlar</button>
       </div>
@@ -111,6 +112,7 @@
   let loginBusy = false;
   let hubBusy = false;
   let hubStatus = null;
+  let hubPollTimer = 0;
 
   const $ = id => document.getElementById(id);
   const tr = (trText, enText) => lang === 'en' ? enText : trText;
@@ -311,6 +313,7 @@
   }
 
   async function searchUsers(options = {}) {
+    if (!loginGateReady()) return [];
     const query = $('username').value.trim();
     if (!query) {
       abortSearch();
@@ -380,32 +383,65 @@
 
   function hubMessage(status) {
     if (!status) return tr('Shared Hub durumu kontrol ediliyor…', 'Checking Shared Hub status…');
-    if (status.status === 'ready') return tr('Shared Hub bağlı ve Master Data güncel.', 'Shared Hub is connected and Master Data is current.');
-    if (status.status === 'offline') return tr('Shared Hub’a ulaşılamıyor. Son geçerli local verilerle çalışabilirsiniz.', 'Shared Hub is unavailable. You can continue with the last valid local data.');
+    if (status.status === 'syncing' || status.status === 'starting') return status.message || tr('Buyer Log hazırlanıyor…', 'Preparing Buyer Log…');
+    if (status.status === 'ready') return status.message || tr('Senkronizasyon tamamlandı · Buyer Log hazır', 'Synchronization complete · Buyer Log is ready');
+    if (status.status === 'offline') return tr('Çevrimdışı · son doğrulanmış yerel veri kullanılıyor.', 'Offline · using the last verified local data.');
     if (!status.configured) return status.loginAllowed
       ? tr('Shared Hub henüz ayarlanmadı. Mevcut local verilerle giriş yapabilirsiniz; eşitleme için klasörü seçin.', 'Shared Hub is not configured yet. You can sign in with existing local data; select the folder to enable sync.')
-      : tr('Bu cihaz ilk kez kullanılıyor. Girişten önce Buyer Log Shared Hub klasörünü seçip Master Data’yı eşitleyin.', 'This device has not been bootstrapped. Select the Buyer Log Shared Hub and sync Master Data before signing in.');
+      : tr('Bu cihaz ilk kez kullanılıyor. Girişten önce Buyer Log Shared Hub klasörünü seçin.', 'This device has not been bootstrapped. Select the Buyer Log Shared Hub before signing in.');
     return status.message || tr('Shared Hub bootstrap tamamlanamadı.', 'Shared Hub bootstrap could not be completed.');
+  }
+  function loginGateReady() {
+    return Boolean(hubStatus && hubStatus.loginAllowed === true && ['ready','offline','not-configured'].includes(hubStatus.status));
+  }
+  function renderHubSteps() {
+    const box = $('hubSteps');
+    const steps = hubStatus && hubStatus.steps && typeof hubStatus.steps === 'object' ? hubStatus.steps : {};
+    const entries = Object.entries(steps);
+    if (!entries.length) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    box.innerHTML = entries.map(([id, step]) => {
+      const state = String(step && step.status || 'pending');
+      const icon = state === 'done' ? '✓' : state === 'active' ? '•' : state === 'error' ? '!' : '–';
+      const detail = step && step.detail ? `<span class="hubStepDetail">${esc(step.detail)}</span>` : '';
+      return `<div class="hubStep" data-state="${esc(state)}" data-step="${esc(id)}"><span class="hubStepIcon" aria-hidden="true">${icon}</span><span class="hubStepLabel">${esc(step && step.label || id)}</span>${detail}</div>`;
+    }).join('');
+  }
+  function scheduleHubPoll() {
+    clearTimeout(hubPollTimer);
+    if (!hubStatus || !['syncing','starting'].includes(hubStatus.status)) return;
+    hubPollTimer = setTimeout(async () => {
+      await loadHubStatus(false, { quiet:true });
+      scheduleHubPoll();
+    }, 500);
   }
   function renderHubStatus() {
     const gate = $('hubGate');
     gate.hidden = false;
     $('hubGateText').textContent = hubMessage(hubStatus);
     gate.dataset.state = hubStatus && hubStatus.status || 'loading';
-    $('hubStatusText').textContent = hubBusy ? tr('Shared Hub doğrulanıyor ve Master Data eşitleniyor…', 'Validating Shared Hub and syncing Master Data…') : hubMessage(hubStatus);
+    $('hubStatusText').textContent = hubBusy && !(hubStatus && hubStatus.status === 'syncing')
+      ? tr('Shared Hub işlemi hazırlanıyor…', 'Preparing Shared Hub operation…')
+      : hubMessage(hubStatus);
     $('hubSaveBtn').disabled = hubBusy;
     $('hubRetryBtn').disabled = hubBusy;
     $('hubBrowseBtn').disabled = hubBusy;
+    renderHubSteps();
     renderLoginButton();
   }
-  async function loadHubStatus(force = false) {
-    hubBusy = true; renderHubStatus();
+  async function loadHubStatus(force = false, options = {}) {
+    if (!options.quiet) hubBusy = true;
+    renderHubStatus();
     try {
       const response = await fetch(force ? '/api/shared-hub/bootstrap-retry' : '/api/shared-hub/bootstrap-status', { method:force ? 'POST' : 'GET', headers:force ? {'Content-Type':'application/json'} : undefined, body:force ? '{}' : undefined, cache:'no-store' });
       hubStatus = await response.json().catch(() => ({}));
     } catch (_) {
       hubStatus = { configured:false, loginAllowed:false, bootstrapRequired:true, status:'error', message:tr('Shared Hub durumu okunamadı.', 'Shared Hub status could not be read.') };
-    } finally { hubBusy = false; renderHubStatus(); }
+    } finally {
+      if (!options.quiet) hubBusy = false;
+      renderHubStatus();
+    }
+    scheduleHubPoll();
     return hubStatus;
   }
   async function configureHub() {
@@ -418,8 +454,8 @@
       if (!response.ok) throw Object.assign(new Error(data.error || tr('Shared Hub doğrulanamadı.', 'Shared Hub could not be validated.')), { code:data.code });
       hubStatus = data;
       if (data.root) $('hubPath').value = data.root;
-      $('hubPanel').hidden = Boolean(data.loginAllowed && data.status === 'ready');
-      if (data.loginAllowed) await restoreLastUser();
+      $('hubPanel').hidden = false;
+      scheduleHubPoll();
     } catch (error) {
       hubStatus = { configured:true, loginAllowed:Boolean(hubStatus && hubStatus.loginAllowed), bootstrapRequired:!(hubStatus && hubStatus.loginAllowed), status:'error', message:error.message };
     } finally { hubBusy = false; renderHubStatus(); }
@@ -432,14 +468,20 @@
 
   function renderLoginButton() {
     const button = $('loginBtn');
+    const gateReady = loginGateReady();
     const usernameReady = Boolean($('username').value.trim());
     const passwordReady = Boolean($('password').value);
-    // Shared Hub is optional for authentication. A Hub status check may run in
-    // parallel, but it must never disable local user sign-in.
-    button.disabled = loginBusy || !usernameReady || !passwordReady;
+    const controlsLocked = !gateReady || loginBusy;
+    $('username').disabled = controlsLocked;
+    $('password').disabled = controlsLocked;
+    $('togglePassword').disabled = controlsLocked;
+    $('clearSelection').disabled = controlsLocked;
+    button.disabled = controlsLocked || !usernameReady || !passwordReady;
     button.dataset.busy = loginBusy ? 'true' : 'false';
-    if (loginBusy) {
-      button.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${esc(tr('Giriş yapılıyor…', 'Signing in…'))}</span>`;
+    if (!gateReady && hubStatus && ['syncing','starting'].includes(hubStatus.status)) {
+      button.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${esc(tr('Senkronizasyon bekleniyor…', 'Waiting for synchronization…'))}</span>`;
+    } else if (loginBusy) {
+      button.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${esc(tr('Buyer Log hazırlanıyor…', 'Preparing Buyer Log…'))}</span>`;
     } else {
       button.innerHTML = `<span>${esc(tr('Giriş Yap', 'Sign In'))}</span>`;
     }
@@ -463,6 +505,10 @@
     if (code === 'LOGIN_TEMPORARILY_LOCKED') return data.error || tr('Çok fazla hatalı giriş denemesi. Lütfen biraz sonra tekrar deneyin.', 'Too many failed sign-in attempts. Please try again later.');
     if (code === 'PASSWORD_ADMIN_SETUP_REQUIRED') return tr('Bu kullanıcı için bir yönetici tarafından şifre atanmalıdır.', 'An administrator must assign a password for this user.');
     if (code === 'PASSWORD_TOO_SHORT') return tr('Şifre en az 6 karakter olmalı.', 'Password must be at least 6 characters.');
+    if (code === 'BOOTSTRAP_IN_PROGRESS' || code === 'BOOTSTRAP_NOT_READY') {
+      void loadHubStatus();
+      return tr('Buyer Log senkronizasyonu tamamlanıyor. Lütfen bekleyin.', 'Buyer Log synchronization is still running. Please wait.');
+    }
     return (data && data.error) || fallback || tr('Giriş başarısız.', 'Sign-in failed.');
   }
 
@@ -526,6 +572,62 @@
     translate();
   });
 
+  async function runUserBootstrap() {
+    const steps = { ...((hubStatus && hubStatus.steps) || {}) };
+    steps.collectionImages = { status:'active', label:tr('Koleksiyon görselleri', 'Collection images') };
+    const previousStatus = hubStatus && hubStatus.status || 'ready';
+    const previousOffline = Boolean(hubStatus && hubStatus.offline);
+    hubStatus = {
+      ...(hubStatus || {}), phase:'collection-images', steps,
+      message:tr('Koleksiyonlar ve yetkili görseller eşitleniyor…', 'Synchronizing Collections and authorized images…'),
+    };
+    renderHubStatus();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 180000);
+    try {
+      const response = await fetch('/api/shared-hub/user-bootstrap', {
+        method:'POST', headers:{'Content-Type':'application/json'}, body:'{}',
+        cache:'no-store', signal:controller.signal,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.ready !== true) {
+        const error = new Error(data.error || tr('Kullanıcı verileri eşitlenemedi.', 'User data could not be synchronized.'));
+        error.code = data.code || 'USER_BOOTSTRAP_FAILED';
+        throw error;
+      }
+      const images = data.collectionImages || {};
+      const completed = (Number(images.installed)||0) + (Number(images.reused)||0);
+      const missing = Number(images.missing)||0;
+      steps.collectionImages = {
+        status:'done',
+        label:tr('Koleksiyon görselleri', 'Collection images'),
+        detail:data.offline
+          ? tr('Çevrimdışı', 'Offline')
+          : missing ? `${completed}/${Number(images.requested)||0} · ${missing} bekliyor` : `${completed}/${Number(images.requested)||0}`,
+      };
+      hubStatus = {
+        ...(hubStatus || {}), status:data.offline ? 'offline' : 'ready', loginAllowed:true,
+        phase:'ready', offline:Boolean(data.offline), steps,
+        message:data.message || tr('Senkronizasyon tamamlandı · Buyer Log hazır', 'Synchronization complete · Buyer Log is ready'),
+      };
+      renderHubStatus();
+      return data;
+    } catch (error) {
+      steps.collectionImages = {
+        status:'error',
+        label:tr('Koleksiyon görselleri', 'Collection images'),
+        detail:tr('Yeniden deneyin', 'Retry'),
+      };
+      hubStatus = {
+        ...(hubStatus || {}), status:previousStatus, offline:previousOffline, loginAllowed:true,
+        phase:'ready', steps,
+        message:error && error.message || tr('Koleksiyon senkronizasyonu tamamlanamadı.', 'Collection synchronization could not be completed.'),
+      };
+      renderHubStatus();
+      throw error;
+    } finally { clearTimeout(timeout); }
+  }
+
   $('loginForm').addEventListener('submit', async event => {
     event.preventDefault();
     if (loginBusy) return;
@@ -575,6 +677,7 @@
         throw error;
       }
       try { localStorage.setItem(LAST_USER_KEY, username); } catch (_) {}
+      await runUserBootstrap();
       location.replace('/');
       return;
     } catch (error) {
@@ -613,7 +716,10 @@
   translate();
   renderSelected();
   renderLoginButton();
-  loadHubStatus().then(status => { if (status && status.loginAllowed) restoreLastUser(); else { $('hubPanel').hidden = false; $('hubPath').focus(); } });
+  loadHubStatus().then(status => {
+    if (status && status.loginAllowed && ['ready','offline','not-configured'].includes(status.status)) restoreLastUser();
+    else if (status && !status.configured) { $('hubPanel').hidden = false; $('hubPath').focus(); }
+  });
 })();
 </script>
 </body>

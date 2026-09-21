@@ -86,9 +86,10 @@ test('matrix paste is intercepted from a focused editor while a single scalar pa
   assert.match(bind,/void pasteText\(text\)/);
 });
 
-test('legacy Collection matrix paste is disabled when Spreadsheet V3 controller is active',()=>{
-  const legacy=between(app,"document.addEventListener('paste',e=>{\n  // Spreadsheet V3+ owns matrix paste", "document.addEventListener('keydown',e=>{",);
-  assert.match(legacy,/BLCollectionSpreadsheet\?\.enabled\?\.\(\)\)return/);
+test('legacy Collection matrix paste is bypassed whenever Spreadsheet V3 is active',()=>{
+  const legacy=between(app,"document.addEventListener('paste',e=>{","document.addEventListener('keydown',e=>{");
+  assert.match(legacy,/Spreadsheet V3\+ owns matrix paste/);
+  assert.match(legacy,/if\(window\.BLCollectionSpreadsheet\?\.enabled\?\.\(\)\)return/);
 });
 
 

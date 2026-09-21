@@ -252,6 +252,7 @@ const plmImageSyncService = require('./lib/plm-image-sync-service');
    tablo hiçbir zaman ağdan okumaz. */
 const sharedImageStoreLib = require('./lib/shared-image-store');
 const modelImageDistributionLib = require('./lib/model-image-distribution');
+const collectionImageSyncPolicy = require('./lib/collection-image-sync-policy');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
 const modelImageRegistry = require('./lib/model-image-registry');
 // Ajan kaynaklı yazmaların audit etiketi (bkz. copilot-provenance).
@@ -572,6 +573,36 @@ const collectionPermissionsReady = (async () => {
 
 const SHARED_COLLECTION_OWNER = collectionWorkspaces.SHARED_COLLECTION_OWNER;
 let sharedHubBootstrapInFlight = null;
+let sharedHubStartupSettled = false;
+const userBootstrapReady = new Set();
+let sharedHubBootstrapProgress = {
+  configured:false, validated:false, loginAllowed:false, bootstrapRequired:true,
+  setupRecommended:false, status:'starting', offline:false, phase:'starting',
+  message:'Buyer Log hazırlanıyor…',
+  steps:{
+    hub:{ status:'pending', label:'Shared Hub' },
+    users:{ status:'pending', label:'Kullanıcılar ve yetkiler' },
+    master:{ status:'pending', label:'Sistem ayarları' },
+    business:{ status:'pending', label:'Ortak iş verileri' },
+    collections:{ status:'pending', label:'Koleksiyonlar' },
+  },
+};
+function setBootstrapStep(id, patch = {}) {
+  sharedHubBootstrapProgress = {
+    ...sharedHubBootstrapProgress,
+    steps:{
+      ...sharedHubBootstrapProgress.steps,
+      [id]:{ ...(sharedHubBootstrapProgress.steps[id] || {}), ...patch },
+    },
+  };
+}
+function setBootstrapProgress(patch = {}) {
+  sharedHubBootstrapProgress = { ...sharedHubBootstrapProgress, ...patch };
+  return sharedHubBootstrapProgress;
+}
+function bootstrapStatusSnapshot(extra = {}) {
+  return JSON.parse(JSON.stringify({ ...sharedHubBootstrapProgress, ...extra }));
+}
 function plainRecordPatch(record) {
   const out = {};
   for (const [key, value] of Object.entries(record && typeof record === 'object' ? record : {})) if (!key.startsWith('_')) out[key] = value;
@@ -710,50 +741,178 @@ async function activateSharedHubRuntime({ migrateCollection = true, actorId = ''
 }
 async function bootstrapSharedHub({ force = false } = {}) {
   if (sharedHubBootstrapInFlight && !force) return sharedHubBootstrapInFlight;
+  const gateThisRun = force || !sharedHubStartupSettled;
+  if (gateThisRun) {
+    sharedHubStartupSettled = false;
+    sharedHubBootstrapProgress = {
+      configured:false, validated:false, loginAllowed:false, bootstrapRequired:true,
+      setupRecommended:false, status:'syncing', offline:false, phase:'hub',
+      message:'Buyer Log hazırlanıyor…',
+      steps:{
+        hub:{ status:'active', label:'Shared Hub' },
+        users:{ status:'pending', label:'Kullanıcılar ve yetkiler' },
+        master:{ status:'pending', label:'Sistem ayarları' },
+        business:{ status:'pending', label:'Ortak iş verileri' },
+        collections:{ status:'pending', label:'Koleksiyonlar' },
+      },
+    };
+  }
   sharedHubBootstrapInFlight = (async () => {
     const settings = await syncSettings.read();
     const hadLocalLoginSnapshot = userAccess.hasLocalLoginSnapshot();
     const localLoginAllowed = userAccess.canLoginLocally();
     const localState = sharedHub.readLocalState();
+
     if (!settings.sharedSyncRoot) {
-      return { configured:false, loginAllowed:localLoginAllowed, bootstrapRequired:!hadLocalLoginSnapshot, setupRecommended:true, status:'not-configured' };
+      const result = {
+        configured:false,
+        loginAllowed:localLoginAllowed,
+        bootstrapRequired:!hadLocalLoginSnapshot,
+        setupRecommended:true,
+        status:'not-configured',
+        offline:false,
+        phase:'hub',
+        message:localLoginAllowed
+          ? 'Shared Hub henüz ayarlanmadı. Mevcut yerel hesapla giriş yapılabilir.'
+          : 'İlk kullanım için Buyer Log Shared Hub klasörünü seçin.',
+      };
+      sharedHubStartupSettled = true;
+      setBootstrapProgress(result);
+      setBootstrapStep('hub', { status:'waiting', detail:'Klasör seçimi bekleniyor' });
+      return bootstrapStatusSnapshot();
     }
+
     try {
+      setBootstrapProgress({ configured:true, status:'syncing', phase:'hub', loginAllowed:false, bootstrapRequired:true, message:'Shared Hub doğrulanıyor…' });
       const checked = await sharedHub.validate(settings.sharedSyncRoot, { requireWrite:false });
+      setBootstrapProgress({ validated:true, hub:{ hubId:checked.manifest.hubId, schemaVersion:checked.manifest.schemaVersion } });
+      setBootstrapStep('hub', { status:'done', detail:'Bağlandı' });
+
+      setBootstrapProgress({ phase:'users', message:'Kullanıcılar ve yetkiler eşitleniyor…' });
+      setBootstrapStep('users', { status:'active' });
       userAccess.enableCentralIam();
-      const iam = await userAccess.refreshIam();
-      const iamHealth = userAccess.centralIamHealth();
-      if (!iam && !hadLocalLoginSnapshot && !userAccess.hasLocalLoginSnapshot()) throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
-      let master = { applied:0, head:null };
       const sameCompletedHub = localState && localState.completed === true && localState.hubId === checked.manifest.hubId;
-      // Existing installations keep their local working set and reconcile by
-      // delta; only a genuinely unbootstrapped device consumes the checkpoint
-      // as a pre-login seed. This prevents overwriting pending local changes.
-      if (!hadLocalLoginSnapshot && !sameCompletedHub) master = await applyMasterCheckpoint(checked.root, checked.manifest, localState);
-      const businessHead=await sharedHub.readBusinessHead(checked.root);
-      // A hub that already has a business checkpoint is authoritative. A new
-      // PC must not create/mirror an empty shared Collection before that
-      // checkpoint is hydrated after login. Legacy hubs without a business
-      // checkpoint still use the one-time local migration path.
-      await activateSharedHubRuntime({ migrateCollection:!businessHead, actorId:'bootstrap' });
+      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:!sameCompletedHub, timeoutMs:30000 });
+      const iamHealth = userAccess.centralIamHealth();
+      if (!iam && !sameCompletedHub && !userAccess.hasLocalLoginSnapshot()) {
+        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
+      }
+      const profiles = userAccess.allPublicProfiles();
+      const activeProfiles = profiles.filter(profile => profile && profile.enabled !== false);
+      setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif` });
+
+      setBootstrapProgress({ phase:'master', message:'Sistem ayarları eşitleniyor…' });
+      setBootstrapStep('master', { status:'active' });
+      let master = { applied:0, head:null };
+      const firstHubBootstrap = !sameCompletedHub;
+      if (firstHubBootstrap) {
+        const pendingBeforeBootstrap = await localDb.pendingCount();
+        if (pendingBeforeBootstrap > 0) {
+          throw Object.assign(new Error('İlk Shared Hub eşitlemesinden önce bekleyen yerel değişiklikler var.'), { code:'SHARED_HUB_PENDING_CHANGES', statusCode:409 });
+        }
+        master = await applyMasterCheckpoint(checked.root, checked.manifest, localState);
+      }
       const masterHead = master.head || await sharedHub.readMasterHead(checked.root);
+      setBootstrapStep('master', { status:'done', current:masterHead && masterHead.revision || 0, total:masterHead && masterHead.revision || 0, detail:masterHead ? `rev ${masterHead.revision}` : 'Yerel veri kullanılıyor' });
+
+      const businessHead = await sharedHub.readBusinessHead(checked.root);
+      await activateSharedHubRuntime({ migrateCollection:!businessHead, actorId:'bootstrap' });
+
+      const provisionalIam = userAccess.centralIamHealth();
+      await sharedHub.markBootstrap({
+        root:checked.root,
+        hubId:checked.manifest.hubId,
+        masterRevision:masterHead && masterHead.revision || localState && localState.masterRevision || 0,
+        businessRevision:localState && localState.businessRevision || 0,
+        iamRevision:provisionalIam.localRevision || userAccess.localIamRevision(),
+        completed:false,
+      });
+
+      setBootstrapProgress({ phase:'business', message:'Ortak iş verileri eşitleniyor…' });
+      setBootstrapStep('business', { status:'active' });
+      const syncResult = await syncSettings.syncOnce();
+      if (!syncResult || syncResult.online !== true || (await localDb.pendingCount()) !== 0) {
+        throw Object.assign(new Error('Shared Hub iş verisi senkronizasyonu tamamlanmadı.'), { code:'SHARED_HUB_SYNC_INCOMPLETE', statusCode:503 });
+      }
+      await deltaStore.hydrate();
+      const business = await hydrateBusinessCheckpointIfNeeded();
+      const businessAfter = sharedHub.readLocalState();
+      setBootstrapStep('business', {
+        status:'done',
+        current:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
+        total:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
+        detail:businessAfter && businessAfter.businessRevision ? `rev ${businessAfter.businessRevision}` : 'Güncel',
+      });
+
+      setBootstrapProgress({ phase:'collections', message:'Koleksiyon izinleri eşitleniyor…' });
+      setBootstrapStep('collections', { status:'active' });
+      await collectionPermissionsReady;
+      const permissionSync = await collectionPermissions.sync();
+      const permissionState = permissionSync && permissionSync.state || await collectionPermissions.read();
+      setBootstrapStep('collections', {
+        status:'done',
+        current:Array.isArray(permissionState && permissionState.grants) ? permissionState.grants.length : 0,
+        total:Array.isArray(permissionState && permissionState.grants) ? permissionState.grants.length : 0,
+        detail:`${Array.isArray(permissionState && permissionState.grants) ? permissionState.grants.length : 0} paylaşım yetkisi`,
+      });
+
       const finalIam = userAccess.centralIamHealth();
-      const marked = await sharedHub.markBootstrap({ root:checked.root, hubId:checked.manifest.hubId, masterRevision:masterHead && masterHead.revision || localState && localState.masterRevision || 0, iamRevision:finalIam.localRevision || userAccess.localIamRevision(), completed:true });
-      return { configured:true, validated:true, loginAllowed:userAccess.canLoginLocally(), bootstrapRequired:false, setupRecommended:false, status:'ready', hub:{ hubId:checked.manifest.hubId, schemaVersion:checked.manifest.schemaVersion }, masterRevision:marked.masterRevision, iamRevision:marked.iamRevision, offline:false };
+      const currentBootstrap = sharedHub.readLocalState();
+      const marked = await sharedHub.markBootstrap({
+        root:checked.root,
+        hubId:checked.manifest.hubId,
+        masterRevision:masterHead && masterHead.revision || currentBootstrap && currentBootstrap.masterRevision || 0,
+        businessRevision:currentBootstrap && currentBootstrap.businessRevision || businessHead && businessHead.revision || 0,
+        iamRevision:finalIam.localRevision || userAccess.localIamRevision(),
+        completed:true,
+      });
+      const result = {
+        configured:true,
+        validated:true,
+        loginAllowed:userAccess.canLoginLocally(),
+        bootstrapRequired:false,
+        setupRecommended:false,
+        status:'ready',
+        phase:'ready',
+        message:'Senkronizasyon tamamlandı · Buyer Log hazır',
+        hub:{ hubId:checked.manifest.hubId, schemaVersion:checked.manifest.schemaVersion },
+        masterRevision:marked.masterRevision,
+        businessRevision:marked.businessRevision,
+        iamRevision:marked.iamRevision,
+        offline:false,
+      };
+      sharedHubStartupSettled = true;
+      setBootstrapProgress(result);
+      return bootstrapStatusSnapshot();
     } catch (error) {
       const completed = localState && localState.completed === true && hadLocalLoginSnapshot;
-      // Shared Hub is a synchronization/bootstrap source, not an authentication
-      // dependency. If a local login candidate exists, keep sign-in available
-      // even when the configured Hub has never completed bootstrap or is offline.
-      if (localLoginAllowed) {
-        if (completed) await activateSharedHubRuntime({ migrateCollection:false }).catch(()=>{});
-        return { configured:true, validated:false, loginAllowed:true, bootstrapRequired:!hadLocalLoginSnapshot, setupRecommended:true, status:'offline', offline:true, errorCode:error && error.code || 'SHARED_HUB_UNAVAILABLE', message:'Shared Hub’a ulaşılamıyor. Yerel kullanıcı hesabıyla giriş yapabilir ve local verilerle çalışabilirsiniz.', lastBootstrap:localState && localState.completedAt || null };
+      if (completed && localLoginAllowed) {
+        await activateSharedHubRuntime({ migrateCollection:false }).catch(()=>{});
+        const result = {
+          configured:true, validated:false, loginAllowed:true, bootstrapRequired:false,
+          setupRecommended:true, status:'offline', phase:'offline', offline:true,
+          errorCode:error && error.code || 'SHARED_HUB_UNAVAILABLE',
+          message:'Shared Hub’a ulaşılamıyor. Son doğrulanmış yerel verilerle çevrimdışı çalışabilirsiniz.',
+          lastBootstrap:localState && localState.completedAt || null,
+        };
+        sharedHubStartupSettled = true;
+        setBootstrapProgress(result);
+        return bootstrapStatusSnapshot();
       }
-      return { configured:true, validated:false, loginAllowed:false, bootstrapRequired:true, status:'error', offline:false, errorCode:error && error.code || 'SHARED_HUB_BOOTSTRAP_FAILED', message:error && error.message || 'Shared Hub bootstrap tamamlanamadı.' };
+      const result = {
+        configured:true, validated:false, loginAllowed:false, bootstrapRequired:true,
+        status:'error', phase:'error', offline:false,
+        errorCode:error && error.code || 'SHARED_HUB_BOOTSTRAP_FAILED',
+        message:error && error.message || 'Shared Hub bootstrap tamamlanamadı.',
+      };
+      sharedHubStartupSettled = true;
+      setBootstrapProgress(result);
+      return bootstrapStatusSnapshot();
     }
   })().finally(() => { sharedHubBootstrapInFlight = null; });
   return sharedHubBootstrapInFlight;
 }
+
 // Local auth starts first. Shared-folder I/O is asynchronous and never sits on
 // the ordinary authorization path. A configured Hub is reconciled in the
 // background; a first-run device is gated by the pre-login bootstrap endpoint.
@@ -864,9 +1023,11 @@ function sendUserSelectionPage(_req, res) {
 // so user switching cannot fall through to Express' "Cannot GET" response.
 app.get('/select-user', sendUserSelectionPage);
 app.get(['/select-user/', '/select-user.html'], sendUserSelectionPage);
-app.get('/api/shared-hub/bootstrap-status', async (_req, res) => {
-  try { res.set('Cache-Control','no-store').json(await bootstrapSharedHub()); }
-  catch (err) { res.status(err.statusCode || 503).json({ loginAllowed:userAccess.canLoginLocally(), bootstrapRequired:!userAccess.hasLocalLoginSnapshot(), status:'error', errorCode:err.code || 'SHARED_HUB_STATUS_FAILED', message:'Shared Hub durumu okunamadı. Yerel kullanıcı girişi kullanılabilir.' }); }
+app.get('/api/shared-hub/bootstrap-status', (_req, res) => {
+  if (!sharedHubStartupSettled && !sharedHubBootstrapInFlight) {
+    void bootstrapSharedHub().catch(error => logRuntimeFailure('sharedHubBootstrapStatus', error));
+  }
+  res.set('Cache-Control','no-store').json(bootstrapStatusSnapshot());
 });
 app.post('/api/shared-hub/configure', express.json({ limit:'32kb' }), async (req, res) => {
   try {
@@ -885,18 +1046,37 @@ app.post('/api/shared-hub/configure', express.json({ limit:'32kb' }), async (req
       return res.status(409).json({ error:'Seçilen klasör farklı bir Buyer Log Shared Hub’a ait. Veri karışmasını önlemek için Hub kimliği değiştirilemez.', code:'SHARED_HUB_IDENTITY_MISMATCH', currentHubId:localState.hubId, selectedHubId:checked.manifest.hubId });
     }
     await syncSettings.save(checked.root);
-    const status = await bootstrapSharedHub({ force:true });
-    res.set('Cache-Control','no-store').json({ ok:status.loginAllowed, ...status, root:checked.root });
+    sharedHubStartupSettled = false;
+    setBootstrapProgress({ configured:true, validated:true, loginAllowed:false, bootstrapRequired:true, status:'syncing', phase:'hub', message:'Buyer Log hazırlanıyor…' });
+    void bootstrapSharedHub({ force:true }).catch(error => logRuntimeFailure('sharedHubConfigureBootstrap', error));
+    res.status(202).set('Cache-Control','no-store').json({ ok:true, ...bootstrapStatusSnapshot(), root:checked.root });
   } catch (err) { res.status(err.statusCode || 503).json({ error:err.message, code:err.code || 'SHARED_HUB_CONFIGURE_FAILED' }); }
 });
-app.post('/api/shared-hub/bootstrap-retry', express.json({ limit:'8kb' }), async (_req, res) => {
-  const status = await bootstrapSharedHub({ force:true });
-  res.status(status.loginAllowed ? 200 : 503).set('Cache-Control','no-store').json(status);
+app.post('/api/shared-hub/bootstrap-retry', express.json({ limit:'8kb' }), (_req, res) => {
+  sharedHubStartupSettled = false;
+  setBootstrapProgress({ loginAllowed:false, bootstrapRequired:true, status:'syncing', phase:'hub', message:'Senkronizasyon yeniden başlatılıyor…' });
+  void bootstrapSharedHub({ force:true }).catch(error => logRuntimeFailure('sharedHubBootstrapRetry', error));
+  res.status(202).set('Cache-Control','no-store').json(bootstrapStatusSnapshot());
 });
 app.get('/api/user-profiles', userAccess.listHandler);
 app.get('/api/user-suggestions', userAccess.suggestHandler); // legacy alias
 app.get('/api/auth/users/suggest', userAccess.suggestHandler);
-app.post('/api/user-login', express.json({ limit: '64kb' }), userAccess.loginHandler);
+app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) => {
+  const loginName = String(req.body && req.body.username || '').trim().toLocaleLowerCase('tr-TR');
+  const loginProfile = userAccess.allPublicProfiles().find(profile =>
+    [profile && profile.username, profile && profile.displayName]
+      .some(value => String(value || '').trim().toLocaleLowerCase('tr-TR') === loginName)
+  );
+  if (loginProfile && loginProfile.id) userBootstrapReady.delete(String(loginProfile.id));
+  const gate = bootstrapStatusSnapshot();
+  if (!sharedHubStartupSettled || gate.status === 'syncing' || gate.status === 'starting') {
+    return res.status(423).json({ error:'Buyer Log senkronizasyonu tamamlanmadan giriş yapılamaz.', code:'BOOTSTRAP_IN_PROGRESS', bootstrap:gate });
+  }
+  if (gate.loginAllowed !== true) {
+    return res.status(503).json({ error:gate.message || 'Buyer Log henüz girişe hazır değil.', code:gate.errorCode || 'BOOTSTRAP_NOT_READY', bootstrap:gate });
+  }
+  return userAccess.loginHandler(req, res, next);
+});
 app.post('/api/user-logout', userAccess.logoutHandler);
 app.get('/api/current-user', userAccess.currentHandler);
 // SameSite=Strict kullanıcı cookie'si Microsoft'tan gelen cross-site callback'te
@@ -949,6 +1129,43 @@ app.post('/api/outlook/lifecycle', express.json({ limit:'256kb', type:['applicat
   catch(err){ apiError(res,err,'Graph lifecycle bildirimi doğrulanamadı.'); }
 });
 app.use(userAccess.requireSelection);
+app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async (req, res) => {
+  try {
+    const gate = bootstrapStatusSnapshot();
+    if (gate.status === 'offline') {
+      userBootstrapReady.add(String(req.currentUser.id));
+      return res.set('Cache-Control','no-store').json({ ok:true, ready:true, offline:true, message:'Çevrimdışı · son doğrulanmış yerel veri kullanılıyor', collectionImages:{ requested:0, installed:0, reused:0, missing:0 } });
+    }
+    if (gate.status !== 'ready') {
+      return res.status(423).set('Cache-Control','no-store').json({ ok:false, ready:false, code:'BOOTSTRAP_NOT_READY', bootstrap:gate });
+    }
+    const collectionImages = await syncAuthorizedCollectionImages(req.currentUser.id);
+    const failedOwners = (collectionImages.results || []).filter(item => item && item.error);
+    const missingImages = Number(collectionImages.missing) || 0;
+    if (failedOwners.length || missingImages > 0) {
+      throw Object.assign(new Error(
+        missingImages > 0
+          ? missingImages + ' Koleksiyon görseli Shared Hub senkronizasyonunu bekliyor.'
+          : 'Yetkili Koleksiyon senkronizasyonu tamamlanamadı.'
+      ), {
+        code:'COLLECTION_BOOTSTRAP_INCOMPLETE',
+        statusCode:503,
+        details:{ failedOwners, missingImages, requested:Number(collectionImages.requested)||0 },
+      });
+    }
+    userBootstrapReady.add(String(req.currentUser.id));
+    res.set('Cache-Control','no-store').json({
+      ok:true, ready:true, offline:false,
+      message:'Koleksiyonlar ve yetkili görseller eşitlendi.',
+      collectionImages,
+    });
+  } catch (error) {
+    res.status(error.statusCode || 503).set('Cache-Control','no-store').json({
+      ok:false, ready:false, code:error.code || 'USER_BOOTSTRAP_FAILED',
+      error:error.message || 'Kullanıcı verileri eşitlenemedi.',
+    });
+  }
+});
 app.post('/api/shared-hub/initialize', userAccess.requireModerator, express.json({ limit:'32kb' }), async (req, res) => {
   try {
     if (!req.body || req.body.confirmCritical !== true) return res.status(400).json({ error:'Shared Hub oluşturmak için açık onay gerekir.', code:'CRITICAL_CONFIRMATION_REQUIRED' });
@@ -2657,6 +2874,9 @@ async function updateCollectionPermission(req, res, revoke = false) {
       : await collectionPermissions.setGrant({ ownerId, granteeId, level: body.level, actorId: req.currentUser.id });
     userAccess.appendAudit(req.currentUser, revoke ? 'COLLECTION_PERMISSION_REVOKED' : 'COLLECTION_PERMISSION_SET', ownerId, { granteeId, level: revoke ? null : body.level, revision: result.revision });
     liveEvents.notifyChange('collection-permissions', requestClientId(req), { ownerId, granteeId, level: revoke ? null : body.level });
+    if (!revoke) {
+      void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnGrant', error));
+    }
     res.json({ ok: true, ...result });
   } catch (err) { res.status(err.statusCode || 500).json({ error: err.message || 'Koleksiyon izni güncellenemedi.', code: err.code || 'COLLECTION_PERMISSION_WRITE_FAILED', currentRevision: err.currentRevision }); }
 }
@@ -2683,7 +2903,8 @@ app.get('/api/collection-workspaces-batch', userAccess.requireArea('koleksiyon')
     const profile = profiles.get(ownerId); if (!profile) continue;
     const level = userAccess.collectionAccessLevel(req.currentUser, ownerId);
     await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
-    workspaces.push({ owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, workspace:loadWorkspace(ownerId) });
+    await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
+    workspaces.push({ owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, workspace:collectionWorkspaceWithLocalImages(ownerId) });
   }
   res.json({ workspaces, readOnly:true, shared:false });
 });
@@ -2700,7 +2921,8 @@ app.get('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
   const profile = userAccess.allPublicProfiles().find(item => item.id === ownerId);
   if (!profile) return res.status(404).json({ error:'Koleksiyon sahibi bulunamadı.', code:'USER_NOT_FOUND' });
   await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
-  res.json({ workspace:loadWorkspace(ownerId), access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, shared:false });
+  await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
+  res.json({ workspace:collectionWorkspaceWithLocalImages(ownerId), access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, shared:false });
 });
 /* v7.21 — Koleksiyon kaydetme artık ASENKRON.
 
@@ -2741,6 +2963,7 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
       try { await collectionReplication.publishOwner(ownerId); }
       catch (error) { logRuntimeFailure('collectionReplicaPublish', error); }
     }
+    void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnSave', error));
     void sharedRevisionStore.update('collection',{actorId:req.currentUser.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'COLLECTION_SAVE', ownerId, { rows: result.rowCount, revision: result.revision });
     // rowPatches null ise (sıralama/sütun değişikliği) olay yamasız gider ve
@@ -3476,26 +3699,261 @@ const modelImageDistribution = modelImageDistributionLib.createModelImageDistrib
   onTrace: (event, detail) => plmImageRefreshLog(event, detail),
 });
 
+const LEGACY_SHARED_GLOBAL_IMAGE_MIGRATION_FILE = path.join(LOCAL_DATA_ROOT, 'collection-image-scope-migration-v1.json');
+function retireLegacySharedGlobalImageRefs() {
+  try {
+    if (fs.existsSync(LEGACY_SHARED_GLOBAL_IMAGE_MIGRATION_FILE)) return { migrated:false, reason:'already-done' };
+    const store = plmImageOwnership.loadOwnership();
+    const overrides = loadOverrides();
+    overrides.imagemap = overrides.imagemap && typeof overrides.imagemap === 'object' ? overrides.imagemap : {};
+    const retired = [];
+    for (const [key, record] of Object.entries(store.owners || {})) {
+      if (!(Number(record && record.sharedRevision) > 0)) continue;
+      const current = String(overrides.imagemap[key] || '').trim();
+      if (!current || current !== String(record.imageRef || '').trim()) continue;
+      // Empty tombstone intentionally blocks fallback to an older PLM-only
+      // key until this user's own PLM flow refreshes the identity.
+      overrides.imagemap[key] = '';
+      retired.push(key);
+    }
+    if (retired.length) {
+      overrides._revisions = overrides._revisions || {};
+      overrides._revisions.orders = (Number(overrides._revisions.orders) || 0) + 1;
+      saveOverrides(overrides, overrides._revision);
+      plmImageOwnership.forget(retired);
+    }
+    atomicWriteJson(LEGACY_SHARED_GLOBAL_IMAGE_MIGRATION_FILE, {
+      schemaVersion:1, migratedAt:new Date().toISOString(), retired:retired.length,
+    });
+    return { migrated:true, retired:retired.length };
+  } catch (error) {
+    logRuntimeFailure('legacySharedImageScopeMigration', error);
+    return { migrated:false, error:error && error.code || error && error.message || String(error) };
+  }
+}
+const legacySharedImageScopeMigration = retireLegacySharedGlobalImageRefs();
+markStartup('COLLECTION_IMAGE_SCOPE_MIGRATION', legacySharedImageScopeMigration);
+
+const COLLECTION_SHARED_IMAGE_CACHE_FILE = path.join(LOCAL_DATA_ROOT, 'collection-shared-image-cache.json');
+function readCollectionSharedImageCache() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(COLLECTION_SHARED_IMAGE_CACHE_FILE, 'utf8'));
+    return raw && raw.schemaVersion === 1 && raw.entries && typeof raw.entries === 'object'
+      ? raw : { schemaVersion:1, entries:{} };
+  } catch (_) { return { schemaVersion:1, entries:{} }; }
+}
+function writeCollectionSharedImageCache(cache) {
+  const next = cache && typeof cache === 'object' ? cache : { schemaVersion:1, entries:{} };
+  next.schemaVersion = 1;
+  next.entries = next.entries && typeof next.entries === 'object' ? next.entries : {};
+  atomicWriteJson(COLLECTION_SHARED_IMAGE_CACHE_FILE, next);
+  return next;
+}
+function collectionImageCacheKey(ownerId, item) {
+  const owner = String(ownerId || '').trim();
+  const record = String(item && item.recordId || '').trim();
+  const normalized = plmImageIngestLib.normalizeRequest(item || {});
+  return owner + '|' + (record || normalized.key || String(item && item.imageRef || '').trim());
+}
+function collectionSharedFilename(item, record) {
+  const mime = String(record && record.mimeType || '').toLowerCase();
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : mime === 'image/gif' ? 'gif' : 'jpg';
+  const recordId = String(item && item.recordId || 'model').replace(/[^A-Za-z0-9_-]/g, '_').slice(0,80) || 'model';
+  return 'collection-shared-' + recordId + '-' + String(record && record.contentHash || '').slice(0,12) + '.' + ext;
+}
+async function publishCollectionWorkspaceImages(ownerId) {
+  const owner = String(ownerId || '').trim();
+  if (!owner) return { queued:0, published:0, reason:'owner-required' };
+  const grants = collectionPermissions.outgoing(owner);
+  if (!collectionImageSyncPolicy.shouldPublishOwnerImages(grants, owner)) {
+    return { queued:0, published:0, reason:'not-shared' };
+  }
+  const workspace = loadWorkspace(owner);
+  const items = collectionImageSyncPolicy.workspaceImageItems(workspace);
+  const entries = [];
+  for (const item of items) {
+    const normalized = plmImageIngestLib.normalizeRequest(item);
+    if (!normalized.key || !item.imageRef || !getCollectionImage(item.imageRef)) continue;
+    entries.push({
+      canonicalKey: 'collection:' + owner + ':' + normalized.key,
+      source: sharedImageStoreLib.SOURCE_PLM,
+      plmId: item.plmId,
+      colourCode: item.colourCode || '',
+      colour: item.colour || '',
+      imageRef: item.imageRef,
+      ownership: sharedImageStoreLib.OWNERSHIP_AUTOMATIC,
+      status: sharedImageStoreLib.STATUS_AVAILABLE,
+      sourceIdentity: 'collection:' + owner + ':' + String(item.recordId || normalized.key),
+      sourceFetchedAt: new Date().toISOString(),
+    });
+  }
+  const queued = modelImageDistribution.queuePublish(entries);
+  let published = 0, pending = Number(queued && queued.pending) || 0;
+  let guard = 0;
+  while (pending > 0 && guard < 100) {
+    const flushed = await modelImageDistribution.flushPublish({ limit:200, sourceIdentityPrefix:'collection:', dropNonMatching:true });
+    published += Number(flushed && flushed.published) || 0;
+    pending = Number(flushed && flushed.pending) || 0;
+    if (flushed && flushed.available === false) break;
+    if (flushed && flushed.error) break;
+    guard += 1;
+  }
+  return { queued:Number(queued && queued.queued) || 0, published, pending, ownerId:owner, images:items.length };
+}
+async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
+  const user = String(userId || '').trim();
+  const owner = String(ownerId || '').trim();
+  if (!user || !owner || !collectionPermissions.accessLevel(user, owner)) {
+    throw Object.assign(new Error('Bu Koleksiyon görsellerine erişim yetkiniz bulunmuyor.'), { code:'COLLECTION_ACCESS_DENIED', statusCode:403 });
+  }
+  const workspace = loadWorkspace(owner);
+  const items = collectionImageSyncPolicy.workspaceImageItems(workspace);
+  if (!items.length) return { ownerId:owner, requested:0, available:0, installed:0, reused:0, missing:0, workspaceUpdated:false };
+
+  if (!(await sharedModelImageStore.available())) {
+    return { ownerId:owner, requested:items.length, available:0, installed:0, reused:0, missing:items.length, workspaceUpdated:false, offline:true };
+  }
+
+  const normalizedItems = items.map(item => ({ item, normalized:plmImageIngestLib.normalizeRequest(item) })).filter(entry => entry.normalized.key);
+  const sharedKeys = normalizedItems.map(entry => 'collection:' + owner + ':' + entry.normalized.key);
+  const records = await sharedModelImageStore.lookupMany(sharedKeys, { source:sharedImageStoreLib.SOURCE_PLM });
+  const cache = readCollectionSharedImageCache();
+  const replacements = new Map();
+  let installed = 0, reused = 0, missing = 0, available = 0;
+
+  for (const entry of normalizedItems) {
+    const item = entry.item;
+    const record = records.get('collection:' + owner + ':' + entry.normalized.key) || null;
+    if (!record || record.status !== sharedImageStoreLib.STATUS_AVAILABLE) { missing += 1; continue; }
+    available += 1;
+    const cacheKey = collectionImageCacheKey(owner, item);
+    const cached = cache.entries[cacheKey];
+    let imageRef = '';
+    if (cached && cached.contentHash === record.contentHash && cached.imageRef && getCollectionImage(cached.imageRef)) {
+      imageRef = cached.imageRef;
+      reused += 1;
+    } else {
+      const buffer = await sharedModelImageStore.readObject(record);
+      if (!buffer) { missing += 1; continue; }
+      const stored = saveCollectionImage({
+        rowId:'collection-shared:' + owner + ':' + String(item.recordId || entry.normalized.key),
+        filename:collectionSharedFilename(item, record),
+        mimeType:record.mimeType,
+        base64:buffer.toString('base64'),
+      });
+      imageRef = stored.id;
+      cache.entries[cacheKey] = {
+        ownerId:owner,
+        recordId:String(item.recordId || ''),
+        canonicalKey:entry.normalized.key,
+        contentHash:record.contentHash,
+        imageRef:stored.id,
+        updatedAt:new Date().toISOString(),
+      };
+      installed += 1;
+    }
+    replacements.set(cacheKey, imageRef);
+  }
+
+  writeCollectionSharedImageCache(cache);
+  return { ownerId:owner, requested:items.length, available, installed, reused, missing, workspaceUpdated:false };
+}
+function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
+  const owner = String(ownerId || '').trim();
+  const source = workspace || loadWorkspace(owner);
+  const cache = readCollectionSharedImageCache();
+  let changed = false;
+  const rows = (Array.isArray(source && source.rows) ? source.rows : []).map(row => {
+    const item = collectionImageSyncPolicy.rowImageIdentity(row);
+    if (!item) return row;
+    const cached = cache.entries[collectionImageCacheKey(owner, item)];
+    const ref = String(cached && cached.imageRef || '').trim();
+    if (!ref || !getCollectionImage(ref)) return row;
+    changed = true;
+    return { ...row, _sharedCollectionImageUrl:'/api/collection-images/' + encodeURIComponent(ref) };
+  });
+  return changed ? { ...source, rows } : source;
+}
+
+async function syncAuthorizedCollectionImages(userId) {
+  await collectionPermissionsReady;
+  await collectionPermissions.sync().catch(error => markStartup('COLLECTION_PERMISSION_SYNC_DEFERRED', { error:error && error.code || error && error.message || String(error) }));
+  await publishCollectionWorkspaceImages(userId).catch(error => markStartup('COLLECTION_IMAGE_PUBLISH_DEFERRED', { userId, error:error && error.code || error && error.message || String(error) }));
+  const owners = collectionPermissions.effectiveOwners(userId);
+  const ownerIds = owners.map(item => item.ownerId);
+  const replicaResults = [];
+  for (const ownerId of ownerIds) {
+    if (String(ownerId) === String(userId)) {
+      replicaResults.push({ ownerId, synced:false, reason:'own-workspace-local-authority' });
+      continue;
+    }
+    try { replicaResults.push(await collectionReplication.syncOwner(userId, ownerId)); }
+    catch (error) { replicaResults.push({ ownerId, synced:false, error:error.code || error.message }); }
+  }
+  const replication = { ownerIds, results:replicaResults };
+  const results = [];
+  for (const ownerId of ownerIds) {
+    if (String(ownerId) === String(userId)) {
+      results.push({ ownerId, requested:0, available:0, installed:0, reused:0, missing:0, ownWorkspace:true });
+      continue;
+    }
+    try { results.push(await syncCollectionWorkspaceImagesForUser(userId, ownerId)); }
+    catch (error) { results.push({ ownerId, requested:0, installed:0, reused:0, missing:0, error:error.code || error.message }); }
+  }
+
+  const allowed = new Set(ownerIds);
+  const cache = readCollectionSharedImageCache();
+  let cacheChanged = false;
+  for (const [key, value] of Object.entries(cache.entries)) {
+    if (allowed.has(String(value && value.ownerId || ''))) continue;
+    delete cache.entries[key];
+    cacheChanged = true;
+    const ref = String(value && value.imageRef || '');
+    if (ref && !Object.values(cache.entries).some(entry => String(entry && entry.imageRef || '') === ref)) {
+      try { deleteCollectionImage(ref); } catch (_) {}
+    }
+  }
+  if (cacheChanged) writeCollectionSharedImageCache(cache);
+
+  return {
+    ownerIds,
+    replication,
+    results,
+    requested:results.reduce((sum, item) => sum + (Number(item.requested) || 0), 0),
+    available:results.reduce((sum, item) => sum + (Number(item.available) || 0), 0),
+    installed:results.reduce((sum, item) => sum + (Number(item.installed) || 0), 0),
+    reused:results.reduce((sum, item) => sum + (Number(item.reused) || 0), 0),
+    missing:results.reduce((sum, item) => sum + (Number(item.missing) || 0), 0),
+  };
+}
+
 /* Kanonik yazma sonuçlarını yayım kuyruğuna çevirir. Yayım ASENKRONDUR:
    kullanıcı görseli çoktan görür, ağ sonra yetişir; ağ yoksa kuyrukta bekler
    ve yerel başarı ASLA geri alınmaz. */
-function queueModelImagePublish(outcomes, source, { ownership = sharedImageStoreLib.OWNERSHIP_AUTOMATIC } = {}) {
+function queueModelImagePublish(outcomes, source, {
+  ownership = sharedImageStoreLib.OWNERSHIP_AUTOMATIC,
+  collectionOwnerId = '',
+} = {}) {
+  const owner = String(collectionOwnerId || '').trim();
+  if (!owner) return { queued:0, pending:0 };
   const entries = (Array.isArray(outcomes) ? outcomes : [])
     .filter(item => item && item.imageRef && item.key
       && item.status !== plmImageIngestLib.COMMIT_FAILED && item.status !== plmImageIngestLib.COMMIT_MANUAL)
     .map(item => ({
-      canonicalKey: item.key, source,
+      canonicalKey: 'collection:' + owner + ':' + item.key, source,
       plmId: item.plmId, colourCode: item.colourCode || '', colour: item.colour || '',
       imageRef: item.imageRef, contentHash: item.contentHash || '',
       mimeType: item.mimeType || '', ownership,
       status: sharedImageStoreLib.STATUS_AVAILABLE,
-      sourceIdentity: item.sourceIdentity || '',
+      sourceIdentity: 'collection:' + owner + ':' + (item.sourceIdentity || item.key),
       sourceFetchedAt: new Date().toISOString(),
     }));
-  if (!entries.length) return { queued: 0 };
+  if (!entries.length) return { queued:0, pending:0 };
   const queued = modelImageDistribution.queuePublish(entries);
-  // Ateşle-unut: yayım hatası kullanıcının işini düşürmez, kuyrukta kalır.
-  void modelImageDistribution.flushPublish().catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error: (error && error.message) || String(error) }));
+  // Eski sürümden kalmış genel CP/Orders kuyruğu bu sınırda temizlenir.
+  void modelImageDistribution.flushPublish({
+    limit:200, sourceIdentityPrefix:'collection:', dropNonMatching:true,
+  }).catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error: (error && error.message) || String(error) }));
   return queued;
 }
 
@@ -3567,6 +4025,7 @@ async function resolveModelImagesLocalFirst(requests, options = {}) {
   const plan = await modelImageDistribution.plan(planned, {
     source, mode: options.mode, overwriteManual: options.overwriteManual === true,
     force: options.force === true, imagemap, store,
+    allowShared: options.allowShared === true,
   });
   let installed = { outcomes: [], overrides: { imagemap }, store, installed: 0 };
   if (plan.fromShared.length) {
@@ -3609,30 +4068,21 @@ async function leaseUpstreamImageIdentities(items, source, { concurrency = 8 } =
    Tek-uçuşludur — arka plan zamanlayıcısı ile elle tetikleme birbirinin
    üstüne binmez ve paylaşılan klasöre iki kat yük binmez. */
 let sharedModelImageSyncInFlight = null;
-async function syncSharedModelImagesOnce({ limit = 500, hydrate = false } = {}) {
+async function syncSharedModelImagesOnce({ limit = 500 } = {}) {
   if (sharedModelImageSyncInFlight) return sharedModelImageSyncInFlight;
   sharedModelImageSyncInFlight = (async () => {
-    if (!(await sharedModelImageStore.available())) return { available: false, published: 0, installed: 0 };
-    const published = await modelImageDistribution.flushPublish({ limit: 200 });
-    if (!hydrate) {
-      return { available: true, published: published.published || 0, pendingPublish: published.pending || 0, installed: 0, tombstones: 0, scanned: 0, remaining: 0, lazy: true };
-    }
-    // Explicit/manual compatibility path only. Normal background operation
-    // never downloads bytes from the Shared Hub.
-    const overrides = loadOverrides();
-    const pulled = await modelImageDistribution.pull({
-      deviceId: localDb.getDeviceId(), limit,
-      imagemap: overrides.imagemap || {}, store: plmImageOwnership.loadOwnership(),
+    if (!(await sharedModelImageStore.available())) return { available:false, published:0, installed:0, collectionOnly:true };
+    const published = await modelImageDistribution.flushPublish({
+      limit:Math.min(500, Math.max(1, Number(limit) || 200)),
+      sourceIdentityPrefix:'collection:',
+      dropNonMatching:true,
     });
-    if (pulled.installed || pulled.tombstones) {
-      plmImageRefreshLog('SHARED_IMAGE_SYNC', { installed: pulled.installed, tombstones: pulled.tombstones, remaining: pulled.remaining });
-      try { liveEvents.notifyChange('overrides', null); } catch (_) {}
-    }
     return {
-      available: true,
-      published: published.published || 0, pendingPublish: published.pending || 0,
-      installed: pulled.installed || 0, tombstones: pulled.tombstones || 0,
-      scanned: pulled.scanned || 0, remaining: pulled.remaining || 0, lazy: false,
+      available:true,
+      published:published.published || 0,
+      pendingPublish:published.pending || 0,
+      installed:0, tombstones:0, scanned:0, remaining:0,
+      lazy:true, collectionOnly:true,
     };
   })().finally(() => { sharedModelImageSyncInFlight = null; });
   return sharedModelImageSyncInFlight;
@@ -3643,7 +4093,8 @@ async function syncSharedModelImagesOnce({ limit = 500, hydrate = false } = {}) 
    AÇIK bir kayıtta durur ve MANUAL sahiplikle paylaşılan depoya yayımlanır.
    Böylece başka bir kullanıcının "PLM'den Tümünü Yenile" işlemi bu görseli
    ezemez. Referans boşsa yayımlanan şey bir MEZAR TAŞIDIR. */
-function recordManualImageOwnership(items) {
+function recordManualImageOwnership(items, collectionOwnerId = '') {
+  const owner = String(collectionOwnerId || '').trim();
   const manual = [];
   const publishEntries = [];
   const tombstoneKeys = [];
@@ -3654,9 +4105,10 @@ function recordManualImageOwnership(items) {
     const identity = { plmId: item.plmId, colourCode: item.colourCode || '', colour: item.colour || item.color || '' };
     if (!imageRef) {
       tombstoneKeys.push(key);
-      publishEntries.push({
-        canonicalKey: key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
-        ownership: sharedImageStoreLib.OWNERSHIP_MANUAL, status: sharedImageStoreLib.STATUS_DELETED,
+      if (owner) publishEntries.push({
+        canonicalKey:'collection:' + owner + ':' + key, ...identity, source:sharedImageStoreLib.SOURCE_MANUAL,
+        ownership:sharedImageStoreLib.OWNERSHIP_MANUAL, status:sharedImageStoreLib.STATUS_DELETED,
+        sourceIdentity:'collection:' + owner + ':' + key,
       });
       continue;
     }
@@ -3667,17 +4119,21 @@ function recordManualImageOwnership(items) {
     const contentHash = plmImageHash(buffer);
     const mimeType = (found.item && found.item.mimeType) || '';
     manual.push({ key, imageRef, hash: contentHash, mimeType, bytes: buffer.length, deviceId: localDb.getDeviceId() });
-    publishEntries.push({
-      canonicalKey: key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
+    if (owner) publishEntries.push({
+      canonicalKey: 'collection:' + owner + ':' + key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
       ownership: sharedImageStoreLib.OWNERSHIP_MANUAL, status: sharedImageStoreLib.STATUS_AVAILABLE,
-      imageRef, contentHash, mimeType, sourceFetchedAt: new Date().toISOString(),
+      imageRef, contentHash, mimeType,
+      sourceIdentity:'collection:' + owner + ':' + key,
+      sourceFetchedAt:new Date().toISOString(),
     });
   }
   if (manual.length) plmImageOwnership.rememberManual(manual);
   if (tombstoneKeys.length) plmImageOwnership.forgetManual(tombstoneKeys);
   if (publishEntries.length) {
     modelImageDistribution.queuePublish(publishEntries);
-    void modelImageDistribution.flushPublish().catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error: (error && error.message) || String(error) }));
+    void modelImageDistribution.flushPublish({
+      limit:200, sourceIdentityPrefix:'collection:', dropNonMatching:true,
+    }).catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error:(error && error.message) || String(error) }));
   }
   return { manual: manual.length, tombstones: tombstoneKeys.length };
 }
@@ -3798,9 +4254,11 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       /* LOCAL → SHARED → PLM. Üst kaynağa yalnız hiçbir yerde bulunamayan
          kimlikler gider. Kaynak SIKIDIR: ASAS kökenli paylaşılan bir nesne
          bir PLM isteğini karşılayamaz. */
+      const sharedForCollection = collectionImageSyncPolicy.scopeUsesSharedImages(plmJobScope(req));
       const first = await resolveModelImagesLocalFirst(requests, {
         source: sharedImageStoreLib.SOURCE_PLM, mode, overwriteManual,
         force: Boolean(req.body && req.body.force), overrides: before,
+        allowShared: false,
       });
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_PLM);
@@ -3852,7 +4310,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       /* YAYIM. Yerel yazma bitti, kullanıcı görseli görebiliyor; paylaşılan
          depoya taşıma buradan sonra ve asenkron olur. Ağ yoksa kuyrukta
          bekler, yerel başarı geri ALINMAZ. */
-      queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM);
+      if (sharedForCollection) queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM, { collectionOwnerId:req.currentUser.id });
       /* Kaynak duyarlı "bulunamadı" belleği: PLM'in yok demesi ASAS için
          hiçbir şey söylemez. Açık bir yenileme yine deneyebilir. */
       modelImageDistribution.rememberNotFound((run.skipped || [])
@@ -3927,10 +4385,12 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
       /* LOCAL → SHARED → ASAS. Paylaşılan depoda ASAS KÖKENLİ geçerli bir
          nesne varsa ASAS'a ikinci kez gidilmez; PLM kökenli bir nesne ise bu
          işlemi KARŞILAYAMAZ (kaynak sıkılığı). */
+      const sharedForCollection = collectionImageSyncPolicy.scopeUsesSharedImages(plmJobScope(req));
       const first = await resolveModelImagesLocalFirst(items, {
         source: sharedImageStoreLib.SOURCE_ASAS, mode,
         overwriteManual: Boolean(req.body && req.body.overwriteManual),
         force: Boolean(req.body && req.body.force), overrides,
+        allowShared: false,
       });
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_ASAS);
@@ -3956,7 +4416,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
            dağıtımda bir ASAS isteğini karşılayıp karşılayamayacakları
            bilinemezdi. Artık OTOMATİK/ASAS olarak kaydedilir ve yayımlanır. */
         const asasOutcomes = recordAsasImageProvenance(run.images || []);
-        queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS);
+        if (sharedForCollection) queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS, { collectionOwnerId:req.currentUser.id });
         modelImageDistribution.rememberNotFound((run.failedItems || [])
           .map(item => ({ canonicalKey: parseLib.plmImageKey(item && item.plmId), source: sharedImageStoreLib.SOURCE_ASAS, code: (item && item.code) || 'ASAS_TECHNICAL_IMAGE_MISSING' }))
           .filter(item => item.canonicalKey));
@@ -5889,7 +6349,12 @@ app.use((req, res, next) => {
 
 // Dynamic index is registered after the compression wrapper so the generated
 // runtime version HTML is still gzip-compressed. It remains before static files.
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
+  let profile = null;
+  try { profile = userAccess.sessionProfile(req); } catch (_) {}
+  if (!profile || !userBootstrapReady.has(String(profile.id))) {
+    return res.set('Cache-Control','no-store').redirect(302, '/select-user');
+  }
   res.set('Cache-Control', 'no-store');
   res.type('html').send(renderIndexTemplate());
 });
@@ -8812,7 +9277,7 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
          otomatik senkronu bu görseli ezebilirdi. Karar açık bir kayda yazılır
          ve MANUAL sahiplikle paylaşılan depoya yayımlanır. Boş referans bir
          MEZAR TAŞIDIR: eski bir istemcinin yerel kopyası onu diriltemesin. */
-      recordManualImageOwnership(items);
+      recordManualImageOwnership(items, req.currentUser.id);
     } catch (ownershipError) { logRuntimeFailure('plmImageOwnershipForget', ownershipError); }
     let pageCachePatched=false;
     try{pageCachePatched=await rewriteProjectionCacheForImageItems(req.currentUser,beforeContext,items);}
@@ -11520,57 +11985,37 @@ app.get('/api/model-images/registry/report', userAccess.requireAnyArea('source',
    Çekme/yayma normalde arka planda ve BLOKE ETMEDEN çalışır; bu uçlar
    yalnız durumu göstermek ve kullanıcı istediğinde bir turu öne çekmek
    içindir. Görsellerin ÇİZİMİ hiçbir zaman bu uçlara bağlı değildir. */
-app.get('/api/model-images/shared/status', userAccess.requireAnyArea('source','koleksiyon','cp','orders','backlog','lfl','overview'), async (_req, res) => {
+app.get('/api/model-images/shared/status', userAccess.requireArea('koleksiyon'), async (_req, res) => {
   try {
     const status = modelImageDistribution.status();
     res.set('Cache-Control', 'no-store').json({ ok: true, available: await sharedModelImageStore.available(), ...status });
   } catch (err) { apiError(res, err, 'Paylaşılan görsel durumu okunamadı.'); }
 });
-app.post('/api/model-images/shared/sync', userAccess.requireAnyArea('source','koleksiyon','cp','orders'), express.json({ limit: '32kb' }), async (req, res) => {
+app.post('/api/model-images/shared/sync', userAccess.requireArea('koleksiyon'), express.json({ limit: '32kb' }), async (req, res) => {
   try {
     assertModelImageMutable();
-    // This legacy/manual action may explicitly hydrate a bounded batch. The
-    // periodic background service never does so.
-    const result = await syncSharedModelImagesOnce({ limit: Number(req.body && req.body.limit) || 500, hydrate: true });
-    res.json({ ok: true, ...result });
-  } catch (err) { apiError(res, err, 'Paylaşılan model görselleri eşitlenemedi.'); }
+    const result = await syncAuthorizedCollectionImages(req.currentUser.id);
+    res.set('Cache-Control','no-store').json({ ok:true, scope:'koleksiyon', ...result });
+  } catch (err) { apiError(res, err, 'Koleksiyon görselleri eşitlenemedi.'); }
 });
 
 /* ON-DEMAND SHARED IMAGE HYDRATION. No PLM/ASAS call is allowed here.
    Visible/current-view identities are deduped, resolved, looked up in the
    shared index and only matching pack slices are copied into the local image
    cache. Shared miss is a normal result, not an authentication trigger. */
-app.post('/api/model-images/shared/hydrate', requirePlmContextAccess, express.json({ limit: '1mb' }), async (req, res) => {
+app.post('/api/model-images/shared/hydrate', userAccess.requireArea('koleksiyon'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
     assertModelImageMutable();
-    const raw = Array.isArray(req.body && req.body.items) ? req.body.items.slice(0, 250) : [];
-    if (!raw.length) return res.json({ ok:true, requested:0, installed:0, images:[], overrides:loadOverrides(), sharedAvailable:await sharedModelImageStore.available() });
-    let cachedOrders=[]; try { cachedOrders=cacheForUser(req.currentUser.id).asasOrders||[]; } catch (_) { cachedOrders=[]; }
-    const styleLinks=loadPlmStyleLinks().links||{};
-    const identity=resolveModelImageItemIdentities(raw,{orders:cachedOrders,styleLinks});
-    const seen=new Set(),requests=[];
-    for (const item of identity.resolved) {
-      const normalized=plmImageIngestLib.normalizeRequest(item);
-      if(!normalized.key||seen.has(normalized.key))continue;
-      seen.add(normalized.key);requests.push(item);
+    await refreshCollectionPermissionScope();
+    const ownerId = String(req.body && req.body.ownerId || '').trim();
+    if (!ownerId) return res.status(400).json({ error:'Koleksiyon sahibi zorunludur.', code:'COLLECTION_OWNER_REQUIRED' });
+    if (!userAccess.collectionAccessLevel(req.currentUser, ownerId)) {
+      return res.status(403).json({ error:'Bu Koleksiyon görsellerine erişim yetkiniz bulunmuyor.', code:'COLLECTION_ACCESS_DENIED' });
     }
-    if(!requests.length)return res.json({ok:true,requested:raw.length,installed:0,images:[],unresolved:identity.unresolved,overrides:loadOverrides(),sharedAvailable:await sharedModelImageStore.available()});
-    const before=loadOverrides(),imagemap=before.imagemap||{},store=plmImageOwnership.loadOwnership();
-    // Empty source = accept the winning shared record regardless of automatic
-    // origin. Manual ownership still outranks automatic records in the store.
-    const plan=await modelImageDistribution.plan(requests,{source:'',mode:'missing',imagemap,store});
-    const installed=plan.fromShared.length
-      ?await modelImageDistribution.installFromShared(plan.fromShared,{imagemap,store})
-      :{outcomes:[],overrides:before,installed:0,linksUpdated:0};
-    const images=sharedInstallPayload(installed.outcomes);
-    if(images.length){try{liveEvents.notifyChange('overrides',requestClientId(req));}catch(_){}}
-    res.set('Cache-Control','no-store').json({
-      ok:true, requested:requests.length, installed:installed.installed||0, images,
-      overrides:installed.overrides||before, unresolved:identity.unresolved,
-      sharedAvailable:plan.sharedAvailable, sharedFound:plan.fromShared.length,
-      sharedMissing:plan.upstream.length, manualProtected:plan.manualProtected.length,
-    });
-  } catch (err) { apiError(res, err, 'Paylaşılan model görselleri yerel önbelleğe alınamadı.'); }
+    await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
+    const result = await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId);
+    res.set('Cache-Control','no-store').json({ ok:true, scope:'koleksiyon', ...result });
+  } catch (err) { apiError(res, err, 'Koleksiyon görselleri yerel önbelleğe alınamadı.'); }
 });
 app.put('/api/model-images/settings', userAccess.requireArea('source'), express.json({ limit:'32kb' }), (req, res) => {
   try {

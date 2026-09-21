@@ -97,33 +97,40 @@ test('çalışma zamanı görsel kaynağı YEREL depodur — ağ yolu hiçbir ye
   assert.doesNotMatch(serveBlock, /sharedModelImageStore|modelImageDistribution/);
 });
 
-test('açılış görsel senkronunu BEKLEMEZ; tur UI-ready sonrası arka planda ve tek uçuşludur', () => {
+test('yetkili Collection görselleri kullanıcı bootstrapında beklenir; arka plan yalnız Collection yayın kuyruğunu sürdürür', () => {
+  const userBootstrap = SERVER.slice(
+    SERVER.indexOf("app.post('/api/shared-hub/user-bootstrap'"),
+    SERVER.indexOf("app.get('/api/collection-workspaces", SERVER.indexOf("app.post('/api/shared-hub/user-bootstrap'")),
+  );
+  assert.match(userBootstrap, /await syncAuthorizedCollectionImages\(req\.currentUser\.id\)/);
+  assert.match(userBootstrap, /userBootstrapReady\.add\(String\(req\.currentUser\.id\)\)/);
+  assert.match(SERVER, /!userBootstrapReady\.has\(String\(profile\.id\)\)/);
   const timerStart = SERVER.indexOf('setInterval(() => {', SERVER.indexOf('PAYLAŞILAN MODEL GÖRSELİ DAĞITIMI'));
   const timerBlock = SERVER.slice(timerStart, timerStart + 1200);
   assert.match(timerBlock, /if \(!uiReadySignaled\) return;/);
   assert.match(timerBlock, /void syncSharedModelImagesOnce\(\{ hydrate: false \}\)\.catch/);
   assert.match(SERVER, /let sharedModelImageSyncInFlight = null;/);
   assert.match(SERVER, /if \(sharedModelImageSyncInFlight\) return sharedModelImageSyncInFlight;/);
-  assert.match(SERVER, /void modelImageDistribution\.flushPublish\(\)\.catch/);
+  assert.match(SERVER, /sourceIdentityPrefix:'collection:'/);
+  assert.match(SERVER, /dropNonMatching:true/);
 });
 
-test('üst kaynağa çıkmadan önce LOCAL → SHARED geçişi ve dağıtık kira uygulanır', () => {
+test('PLM ve ASAS kendi cihazında LOCAL → UPSTREAM çalışır; Shared Hub yalnız Collection yayınıdır', () => {
   for (const route of ["'/api/model-images/import-plm'", "'/api/model-images/import-asas'"]) {
     const start = SERVER.indexOf(`app.post(${route}`);
     assert.ok(start > 0, `${route} bulunamadı`);
-    const block = SERVER.slice(start, start + 6000);
+    const block = SERVER.slice(start, start + 7000);
     const first = block.indexOf('resolveModelImagesLocalFirst');
     const lease = block.indexOf('leaseUpstreamImageIdentities');
-    assert.ok(first > 0, `${route}: yerel/paylaşılan ön geçiş yok`);
-    assert.ok(lease > first, `${route}: kira ön geçişten SONRA alınmalı`);
-    assert.match(block, /queueModelImagePublish|first\.installed/);
+    assert.ok(first > 0, `${route}: yerel ön geçiş yok`);
+    assert.ok(lease > first, `${route}: dağıtık kira yerel kontrolden SONRA alınmalı`);
+    assert.match(block, /allowShared: false/);
+    assert.match(block, /sharedForCollection/);
+    assert.match(block, /collectionOwnerId:req\.currentUser\.id/);
   }
-  // Sıra modülün kendisinde de yazılıdır.
   const distribution = read('server/lib/model-image-distribution.js');
-  const localIndex = distribution.indexOf("mode === 'missing' && hasLocalFile(currentRef)");
-  const sharedIndex = distribution.indexOf('await shared.lookup(item.key, { source })');
-  const upstreamIndex = distribution.indexOf('upstream.push(');
-  assert.ok(localIndex > 0 && sharedIndex > localIndex && upstreamIndex > sharedIndex, 'LOCAL → SHARED → UPSTREAM sırası bozulmuş');
+  assert.match(distribution, /options\.allowShared !== false && await shared\.available\(\)/);
+  assert.match(SERVER, /canonicalKey: 'collection:' \+ owner \+ ':'/);
 });
 
 /* ASAS Teknik Görsel alanı RENK taşımaz; depo da renksiz (PLM-only) anahtarla

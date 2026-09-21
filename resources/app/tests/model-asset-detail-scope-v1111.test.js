@@ -172,12 +172,13 @@ test('seçici kapısı GÖRSEL sayısına değil KİMLİK sayısına bakar', () 
   assert.ok(!/canonicalModelImageKnown[^]{0,200}return;/.test(head), 'kapı mevcut görsele bakmamalı');
 });
 
-test('PLM ID taşımayan kalem sunucuda model adından çözülür, sessizce düşmez', () => {
+test('PLM ID taşımayan kalem PLM ve ASAS akışında model adından çözülür; Shared hydrate Collection owner workspace kullanır', () => {
   assert.match(SERVER, /function resolveModelImageItemIdentities\(rawItems/);
   assert.match(SERVER, /MODEL_PLM_ID_UNRESOLVED/);
-  // PLM, ASAS ve on-demand Shared hydrate aynı kanonik identity çözümünü kullanır.
   const calls = SERVER.match(/resolveModelImageItemIdentities\(raw,/g) || [];
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, 2);
   const shared = SERVER.slice(SERVER.indexOf("app.post('/api/model-images/shared/hydrate'"), SERVER.indexOf("app.put('/api/model-images/settings'"));
-  assert.match(shared, /resolveModelImageItemIdentities\(raw,/);
+  assert.doesNotMatch(shared, /resolveModelImageItemIdentities\(raw,/);
+  assert.match(shared, /ownerId/);
+  assert.match(shared, /syncCollectionWorkspaceImagesForUser\(req\.currentUser\.id, ownerId\)/);
 });

@@ -134,7 +134,9 @@ test('uç ÖNERİ döner, hiçbir şey KAYDETMEZ', () => {
   const server = read('server/server.js');
   const at = server.indexOf("app.get('/api/horizon/filter-mapping'");
   assert.ok(at > -1, 'eşleme ucu yok');
-  const block = server.slice(at, server.indexOf('\n});\n', at));
+  const end = server.indexOf("app.get('/api/horizon/fields'", at);
+  assert.ok(end > at, 'eşleme ucunun sonu bulunamadı');
+  const block = server.slice(at, end);
   for (const write of ['saveModelConnections', 'saveRevisioned', 'writeFileSync', 'userPreferences.saveHorizon']) {
     assert.ok(!block.includes(write), `eşleme ucu ${write} çağırıyor — salt okunur olmalı`);
   }

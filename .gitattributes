@@ -1,0 +1,15 @@
+# Keep source text deterministic across Windows/macOS/Linux test runners.
+# JavaScript/HTML/CSS tests inspect source text directly, so LF avoids
+# platform-specific false failures. Windows command scripts stay CRLF.
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+*.json text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
+
+*.cmd  text eol=crlf
+*.bat  text eol=crlf

@@ -234,7 +234,7 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     health.status = health.lastError === 'IAM_NOT_INITIALIZED' ? 'uninitialized' : health.lastError.includes('CONFLICT') ? 'conflict' : health.lastError === 'IAM_OFFLINE' ? 'offline' : 'invalid';
     return e;
   }
-  async function refresh() {
+  async function refresh(options = {}) {
     if (pending) return pending;
     pending = (async () => {
       const meta = await head(await root()), local = readLocal(); health.remoteRevision = meta.revision;
@@ -245,13 +245,31 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
       if (!local && fs.existsSync(cacheFile)) {
         // Existing independently managed directories must not silently lose
         // users on first central download (including a feature-flag rollback).
+        // A brand-new Buyer Log install is the one exception: its generated
+        // one-user Moderator placeholder is not an independently managed
+        // directory. When an authoritative Central IAM is strictly richer,
+        // bootstrap may replace that placeholder, but never a real multi-user
+        // local directory.
         let legacy;
         try { legacy = JSON.parse(fs.readFileSync(cacheFile, 'utf8')); } catch (_) {}
         if (legacy && !legacy._centralIam && legacy.moderator) {
           try {
             const normalized = iam.migrateStore(legacy);
-            if (baseline(normalized).semanticSha256 !== baseline(storeFromSnapshot(snapshot, normalized)).semanticSha256) throw error('IAM_MIGRATION_CONFLICT', 409);
-          } catch (_) { throw error('IAM_MIGRATION_CONFLICT', 409); }
+            const localBase = baseline(normalized);
+            const remoteBase = baseline(storeFromSnapshot(snapshot, normalized));
+            const same = localBase.semanticSha256 === remoteBase.semanticSha256;
+            const freshPlaceholder = options.allowBootstrapPlaceholderReplace === true
+              && localBase.users <= 1
+              && localBase.enabled <= 1
+              && localBase.admins === 1
+              && remoteBase.users > localBase.users
+              && remoteBase.admins >= 1
+              && remoteBase.passwordHashCount >= localBase.passwordHashCount;
+            if (!same && !freshPlaceholder) throw error('IAM_MIGRATION_CONFLICT', 409);
+          } catch (e) {
+            if (e && e.code === 'IAM_MIGRATION_CONFLICT') throw e;
+            throw error('IAM_MIGRATION_CONFLICT', 409);
+          }
         }
         // Retain unparseable original evidence before remote recovery too.
         if (!legacy || legacy._centralIam) fs.copyFileSync(cacheFile, `${cacheFile}.invalid-${crypto.randomUUID()}`, fs.constants.COPYFILE_EXCL);
@@ -262,9 +280,9 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     })().catch(e => { throw failed(e); }).finally(() => { pending = null; });
     return pending;
   }
-  async function preflight(timeoutMs = 1500) {
+  async function preflight(timeoutMs = 1500, options = {}) {
     let timer;
-    try { return await Promise.race([refresh(), new Promise(resolve => { timer = setTimeout(() => { health.status = 'offline'; resolve(null); }, timeoutMs); })]); }
+    try { return await Promise.race([refresh(options), new Promise(resolve => { timer = setTimeout(() => { health.status = 'offline'; resolve(null); }, timeoutMs); })]); }
     catch (_) { return null; } finally { clearTimeout(timer); }
   }
   function dryRun(store) {

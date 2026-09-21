@@ -49,7 +49,7 @@ test('client resolver uses the same exact-key rule and no model-name fallback', 
 test('Collection upload and removal retain the colour name when a colour code is shared, and Collection/Pricing read the registry first', () => {
   assert.match(APP, /const items=\[\{plmId,colourCode,colour,imageRef:imageRef==null\?'':imageRef\}\];/);
   assert.match(APP, /const canonicalImageSource=canonicalModelImageSource\(r\.plmId,r\.colourCode,r\.colour\);/);
-  assert.match(APP, /const collectionImageSource=canonicalImageSource\|\|r\.img/);
+  assert.match(APP, /const collectionImageSource=sharedCollectionImageSource\|\|canonicalImageSource\|\|r\.img/);
   assert.match(APP, /if\(canonical\)await kolPlmLinkImageEverywhere\(row,''\);/);
   // Renk adı da geçilir; kanonik kayıt plm:X|colour:Y|name:Z anahtarını tutar.
   assert.match(QUOTATIONS, /resolveRegistrySource\?\.\(plmId,colourCode,'\/api\/collection-images',colourName\)/);

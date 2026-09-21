@@ -34,6 +34,12 @@ const PERF = fs.readFileSync(path.join(ROOT, 'public', 'perf-runtime.js'), 'utf8
    yapılır (kayıtlı tuzak: doesNotMatch yorumları da eşleştirir). */
 const CODE = APP.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\r\n]*/g, '$1');
 const SERVER_CODE = SERVER.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/[^\r\n]*/g, '$1');
+function functionBlock(source, name) {
+  const at = source.indexOf('function ' + name);
+  assert.ok(at > -1, name + ' yok');
+  const next = source.indexOf('\nfunction ', at + 10);
+  return source.slice(at, next > at ? next : source.length);
+}
 
 test('kişisel ufuk düzenleyicisi dosyası silindi', () => {
   assert.equal(fs.existsSync(path.join(ROOT, 'public', 'horizon-editor.js')), false,
@@ -55,9 +61,7 @@ test('rozet kaynak filtresini state\'ten okuyor, kişisel workspace\'i değil', 
      rozet için ayrı bir uç açmak her açılışta fazladan istek demekti. */
   assert.ok(!CODE.includes('ensureHorizonHeaderWorkspace('),
     'kişisel workspace okuması duruyor');
-  const at = APP.indexOf('function renderHorizonBadges()');
-  assert.ok(at > -1, 'renderHorizonBadges yok');
-  const block = APP.slice(at, APP.indexOf('\n}\n', at));
+  const block = functionBlock(APP, 'renderHorizonBadges()');
   assert.ok(!block.includes('/api/user-workspace/'), 'rozet hâlâ kişisel ufku okuyor');
   assert.ok(!block.includes('fetch('), 'rozet çizimi ağ isteği atmamalı');
   assert.match(block, /state\.modelScopes/);
@@ -65,8 +69,7 @@ test('rozet kaynak filtresini state\'ten okuyor, kişisel workspace\'i değil', 
 });
 
 test('rozet salt okunur: buton üretmiyor', () => {
-  const at = APP.indexOf('function renderHorizonBadges()');
-  const block = APP.slice(at, APP.indexOf('\n}\n', at));
+  const block = functionBlock(APP, 'renderHorizonBadges()');
   assert.ok(!/createElement\('button'\)/.test(block),
     'rozet hâlâ tıklanabilir öğe üretiyor — "sadece filtre özeti" kararına aykırı');
   assert.match(block, /horizonSummaryChip/, 'özet çipleri yok');
@@ -80,8 +83,7 @@ test('rozet için ayrı bir uç açılmadı', () => {
 });
 
 test('rozet YAZMA yolu açmıyor', () => {
-  const at = APP.indexOf('function renderHorizonBadges()');
-  const block = APP.slice(at, APP.indexOf('\n}\n', at));
+  const block = functionBlock(APP, 'renderHorizonBadges()');
   for (const write of ['fetch(', 'BLDataFilterEditor', 'planFilterChange']) {
     assert.ok(!block.includes(write), `rozet ${write} kullanıyor — salt okunur olmalı`);
   }
@@ -106,9 +108,7 @@ test('VERİ YOLUNDA kişisel ufka geri düşüş kalmadı', () => {
 test('LFL kendi kapsamı yoksa CP kapsamından beslenir', () => {
   /* horizonBadgeScope, sunucudaki loadFromModelConnections ile aynı sırayı
      izler; rozet o kuralı bozmamalı. */
-  const at = APP.indexOf('function horizonBadgeScope(');
-  assert.ok(at > -1, 'horizonBadgeScope yok');
-  const block = APP.slice(at, APP.indexOf('\n}\n', at));
+  const block = functionBlock(APP, 'horizonBadgeScope(');
   assert.match(block, /target==='lfl'/);
   assert.match(block, /byTarget\.cp\|\|byTarget\.backlog/);
 });
@@ -117,7 +117,6 @@ test('ufuk değişince özet kendiliğinden tazelenir', () => {
   /* Özet state'ten türediği için /api/data yenilendiğinde otomatik
      güncellenir; ayrı bir geçersiz kılma kancası gerekmiyor. */
   assert.match(APP, /renderHorizonBadges\(\)/, 'rozet çizimi çağrılmıyor');
-  const at = APP.indexOf('function renderHorizonBadges()');
-  const block = APP.slice(at, APP.indexOf('\n}\n', at));
+  const block = functionBlock(APP, 'renderHorizonBadges()');
   assert.match(block, /state\.modelHorizons/);
 });
