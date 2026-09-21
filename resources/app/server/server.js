@@ -740,50 +740,178 @@ async function activateSharedHubRuntime({ migrateCollection = true, actorId = ''
 }
 async function bootstrapSharedHub({ force = false } = {}) {
   if (sharedHubBootstrapInFlight && !force) return sharedHubBootstrapInFlight;
+  const gateThisRun = force || !sharedHubStartupSettled;
+  if (gateThisRun) {
+    sharedHubStartupSettled = false;
+    sharedHubBootstrapProgress = {
+      configured:false, validated:false, loginAllowed:false, bootstrapRequired:true,
+      setupRecommended:false, status:'syncing', offline:false, phase:'hub',
+      message:'Buyer Log hazırlanıyor…',
+      steps:{
+        hub:{ status:'active', label:'Shared Hub' },
+        users:{ status:'pending', label:'Kullanıcılar ve yetkiler' },
+        master:{ status:'pending', label:'Sistem ayarları' },
+        business:{ status:'pending', label:'Ortak iş verileri' },
+        collections:{ status:'pending', label:'Koleksiyonlar' },
+      },
+    };
+  }
   sharedHubBootstrapInFlight = (async () => {
     const settings = await syncSettings.read();
     const hadLocalLoginSnapshot = userAccess.hasLocalLoginSnapshot();
     const localLoginAllowed = userAccess.canLoginLocally();
     const localState = sharedHub.readLocalState();
+
     if (!settings.sharedSyncRoot) {
-      return { configured:false, loginAllowed:localLoginAllowed, bootstrapRequired:!hadLocalLoginSnapshot, setupRecommended:true, status:'not-configured' };
+      const result = {
+        configured:false,
+        loginAllowed:localLoginAllowed,
+        bootstrapRequired:!hadLocalLoginSnapshot,
+        setupRecommended:true,
+        status:'not-configured',
+        offline:false,
+        phase:'hub',
+        message:localLoginAllowed
+          ? 'Shared Hub henüz ayarlanmadı. Mevcut yerel hesapla giriş yapılabilir.'
+          : 'İlk kullanım için Buyer Log Shared Hub klasörünü seçin.',
+      };
+      sharedHubStartupSettled = true;
+      setBootstrapProgress(result);
+      setBootstrapStep('hub', { status:'waiting', detail:'Klasör seçimi bekleniyor' });
+      return bootstrapStatusSnapshot();
     }
+
     try {
+      setBootstrapProgress({ configured:true, status:'syncing', phase:'hub', loginAllowed:false, bootstrapRequired:true, message:'Shared Hub doğrulanıyor…' });
       const checked = await sharedHub.validate(settings.sharedSyncRoot, { requireWrite:false });
+      setBootstrapProgress({ validated:true, hub:{ hubId:checked.manifest.hubId, schemaVersion:checked.manifest.schemaVersion } });
+      setBootstrapStep('hub', { status:'done', detail:'Bağlandı' });
+
+      setBootstrapProgress({ phase:'users', message:'Kullanıcılar ve yetkiler eşitleniyor…' });
+      setBootstrapStep('users', { status:'active' });
       userAccess.enableCentralIam();
-      const iam = await userAccess.refreshIam();
-      const iamHealth = userAccess.centralIamHealth();
-      if (!iam && !hadLocalLoginSnapshot && !userAccess.hasLocalLoginSnapshot()) throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
-      let master = { applied:0, head:null };
       const sameCompletedHub = localState && localState.completed === true && localState.hubId === checked.manifest.hubId;
-      // Existing installations keep their local working set and reconcile by
-      // delta; only a genuinely unbootstrapped device consumes the checkpoint
-      // as a pre-login seed. This prevents overwriting pending local changes.
-      if (!hadLocalLoginSnapshot && !sameCompletedHub) master = await applyMasterCheckpoint(checked.root, checked.manifest, localState);
-      const businessHead=await sharedHub.readBusinessHead(checked.root);
-      // A hub that already has a business checkpoint is authoritative. A new
-      // PC must not create/mirror an empty shared Collection before that
-      // checkpoint is hydrated after login. Legacy hubs without a business
-      // checkpoint still use the one-time local migration path.
-      await activateSharedHubRuntime({ migrateCollection:!businessHead, actorId:'bootstrap' });
+      const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:!sameCompletedHub });
+      const iamHealth = userAccess.centralIamHealth();
+      if (!iam && !sameCompletedHub && !userAccess.hasLocalLoginSnapshot()) {
+        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
+      }
+      const profiles = userAccess.allPublicProfiles();
+      const activeProfiles = profiles.filter(profile => profile && profile.enabled !== false);
+      setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif` });
+
+      setBootstrapProgress({ phase:'master', message:'Sistem ayarları eşitleniyor…' });
+      setBootstrapStep('master', { status:'active' });
+      let master = { applied:0, head:null };
+      const firstHubBootstrap = !sameCompletedHub;
+      if (firstHubBootstrap) {
+        const pendingBeforeBootstrap = await localDb.pendingCount();
+        if (pendingBeforeBootstrap > 0) {
+          throw Object.assign(new Error('İlk Shared Hub eşitlemesinden önce bekleyen yerel değişiklikler var.'), { code:'SHARED_HUB_PENDING_CHANGES', statusCode:409 });
+        }
+        master = await applyMasterCheckpoint(checked.root, checked.manifest, localState);
+      }
       const masterHead = master.head || await sharedHub.readMasterHead(checked.root);
+      setBootstrapStep('master', { status:'done', current:masterHead && masterHead.revision || 0, total:masterHead && masterHead.revision || 0, detail:masterHead ? `rev ${masterHead.revision}` : 'Yerel veri kullanılıyor' });
+
+      const businessHead = await sharedHub.readBusinessHead(checked.root);
+      await activateSharedHubRuntime({ migrateCollection:!businessHead, actorId:'bootstrap' });
+
+      const provisionalIam = userAccess.centralIamHealth();
+      await sharedHub.markBootstrap({
+        root:checked.root,
+        hubId:checked.manifest.hubId,
+        masterRevision:masterHead && masterHead.revision || localState && localState.masterRevision || 0,
+        businessRevision:localState && localState.businessRevision || 0,
+        iamRevision:provisionalIam.localRevision || userAccess.localIamRevision(),
+        completed:false,
+      });
+
+      setBootstrapProgress({ phase:'business', message:'Ortak iş verileri eşitleniyor…' });
+      setBootstrapStep('business', { status:'active' });
+      const syncResult = await syncSettings.syncOnce();
+      if (!syncResult || syncResult.online !== true || (await localDb.pendingCount()) !== 0) {
+        throw Object.assign(new Error('Shared Hub iş verisi senkronizasyonu tamamlanmadı.'), { code:'SHARED_HUB_SYNC_INCOMPLETE', statusCode:503 });
+      }
+      await deltaStore.hydrate();
+      const business = await hydrateBusinessCheckpointIfNeeded();
+      const businessAfter = sharedHub.readLocalState();
+      setBootstrapStep('business', {
+        status:'done',
+        current:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
+        total:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
+        detail:businessAfter && businessAfter.businessRevision ? `rev ${businessAfter.businessRevision}` : 'Güncel',
+      });
+
+      setBootstrapProgress({ phase:'collections', message:'Koleksiyon izinleri eşitleniyor…' });
+      setBootstrapStep('collections', { status:'active' });
+      await collectionPermissionsReady;
+      const permissionSync = await collectionPermissions.sync();
+      const permissionState = permissionSync && permissionSync.state || await collectionPermissions.read();
+      setBootstrapStep('collections', {
+        status:'done',
+        current:Array.isArray(permissionState && permissionState.grants) ? permissionState.grants.length : 0,
+        total:Array.isArray(permissionState && permissionState.grants) ? permissionState.grants.length : 0,
+        detail:`${Array.isArray(permissionState && permissionState.grants) ? permissionState.grants.length : 0} paylaşım yetkisi`,
+      });
+
       const finalIam = userAccess.centralIamHealth();
-      const marked = await sharedHub.markBootstrap({ root:checked.root, hubId:checked.manifest.hubId, masterRevision:masterHead && masterHead.revision || localState && localState.masterRevision || 0, iamRevision:finalIam.localRevision || userAccess.localIamRevision(), completed:true });
-      return { configured:true, validated:true, loginAllowed:userAccess.canLoginLocally(), bootstrapRequired:false, setupRecommended:false, status:'ready', hub:{ hubId:checked.manifest.hubId, schemaVersion:checked.manifest.schemaVersion }, masterRevision:marked.masterRevision, iamRevision:marked.iamRevision, offline:false };
+      const currentBootstrap = sharedHub.readLocalState();
+      const marked = await sharedHub.markBootstrap({
+        root:checked.root,
+        hubId:checked.manifest.hubId,
+        masterRevision:masterHead && masterHead.revision || currentBootstrap && currentBootstrap.masterRevision || 0,
+        businessRevision:currentBootstrap && currentBootstrap.businessRevision || businessHead && businessHead.revision || 0,
+        iamRevision:finalIam.localRevision || userAccess.localIamRevision(),
+        completed:true,
+      });
+      const result = {
+        configured:true,
+        validated:true,
+        loginAllowed:userAccess.canLoginLocally(),
+        bootstrapRequired:false,
+        setupRecommended:false,
+        status:'ready',
+        phase:'ready',
+        message:'Senkronizasyon tamamlandı · Buyer Log hazır',
+        hub:{ hubId:checked.manifest.hubId, schemaVersion:checked.manifest.schemaVersion },
+        masterRevision:marked.masterRevision,
+        businessRevision:marked.businessRevision,
+        iamRevision:marked.iamRevision,
+        offline:false,
+      };
+      sharedHubStartupSettled = true;
+      setBootstrapProgress(result);
+      return bootstrapStatusSnapshot();
     } catch (error) {
       const completed = localState && localState.completed === true && hadLocalLoginSnapshot;
-      // Shared Hub is a synchronization/bootstrap source, not an authentication
-      // dependency. If a local login candidate exists, keep sign-in available
-      // even when the configured Hub has never completed bootstrap or is offline.
-      if (localLoginAllowed) {
-        if (completed) await activateSharedHubRuntime({ migrateCollection:false }).catch(()=>{});
-        return { configured:true, validated:false, loginAllowed:true, bootstrapRequired:!hadLocalLoginSnapshot, setupRecommended:true, status:'offline', offline:true, errorCode:error && error.code || 'SHARED_HUB_UNAVAILABLE', message:'Shared Hub’a ulaşılamıyor. Yerel kullanıcı hesabıyla giriş yapabilir ve local verilerle çalışabilirsiniz.', lastBootstrap:localState && localState.completedAt || null };
+      if (completed && localLoginAllowed) {
+        await activateSharedHubRuntime({ migrateCollection:false }).catch(()=>{});
+        const result = {
+          configured:true, validated:false, loginAllowed:true, bootstrapRequired:false,
+          setupRecommended:true, status:'offline', phase:'offline', offline:true,
+          errorCode:error && error.code || 'SHARED_HUB_UNAVAILABLE',
+          message:'Shared Hub’a ulaşılamıyor. Son doğrulanmış yerel verilerle çevrimdışı çalışabilirsiniz.',
+          lastBootstrap:localState && localState.completedAt || null,
+        };
+        sharedHubStartupSettled = true;
+        setBootstrapProgress(result);
+        return bootstrapStatusSnapshot();
       }
-      return { configured:true, validated:false, loginAllowed:false, bootstrapRequired:true, status:'error', offline:false, errorCode:error && error.code || 'SHARED_HUB_BOOTSTRAP_FAILED', message:error && error.message || 'Shared Hub bootstrap tamamlanamadı.' };
+      const result = {
+        configured:true, validated:false, loginAllowed:false, bootstrapRequired:true,
+        status:'error', phase:'error', offline:false,
+        errorCode:error && error.code || 'SHARED_HUB_BOOTSTRAP_FAILED',
+        message:error && error.message || 'Shared Hub bootstrap tamamlanamadı.',
+      };
+      sharedHubStartupSettled = true;
+      setBootstrapProgress(result);
+      return bootstrapStatusSnapshot();
     }
   })().finally(() => { sharedHubBootstrapInFlight = null; });
   return sharedHubBootstrapInFlight;
 }
+
 // Local auth starts first. Shared-folder I/O is asynchronous and never sits on
 // the ordinary authorization path. A configured Hub is reconciled in the
 // background; a first-run device is gated by the pre-login bootstrap endpoint.
