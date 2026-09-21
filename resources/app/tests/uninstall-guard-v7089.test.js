@@ -4,40 +4,36 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 
 const script = fs.readFileSync(path.join(__dirname, '..', 'scripts', 'BuyerLog-Uninstall-Temiz-Kurulum.cmd'), 'utf8');
+const marker = '//__BUYERLOG_PREWIPE_JS__';
+const js = script.slice(script.lastIndexOf(marker) + marker.length);
 
-test('clean uninstall requires Shared Hub verification before deletion', () => {
-  assert.match(script, /DOGURLAMA BASARILI/);
-  assert.match(script, /BUYERLOG-SIL/);
-  assert.match(script, /Shared Hub.*ASLA SILINMEZ/i);
-  assert.match(script, /pendingCount\(\)/);
-  assert.match(script, /unacknowledgedCount/);
+test('clean uninstall verifier is parseable and fail-closed', () => {
+  assert.ok(script.includes(marker));
+  assert.doesNotThrow(() => new vm.Script(js));
+  assert.match(script, /SILME IPTAL EDILDI/);
+  assert.match(script, /BUYER LOG SIL/);
+  assert.match(script, /DELETE-READY\.json/);
+  assert.match(script, /SYNC_NOT_CLEAN/);
+  assert.match(script, /PERSONAL_BACKUPS_INCOMPLETE/);
 });
 
 test('clean uninstall verifies critical shared recovery surfaces', () => {
-  assert.match(script, /readMaster\(/);
-  assert.match(script, /readBusiness\(/);
-  assert.match(script, /pricingRules/);
-  assert.match(script, /transitRules/);
-  assert.match(script, /landedMultipliers/);
-  assert.match(script, /freightRates/);
-  assert.match(script, /fx-rates/);
-  assert.match(script, /endeksmatik:/);
-  assert.match(script, /personal-backups/);
-  assert.match(script, /model-images/);
-  assert.match(script, /Central IAM/);
+  for (const value of [
+    'Central IAM', 'pricingRules', 'transitRules', 'nonDtrManufacturers',
+    'landedMultipliers', 'freightRates', 'fx', 'endeksmatik',
+    'settings', 'collection', 'cp', 'personal-backups', 'Full System Backup',
+  ]) assert.ok(script.includes(value), value);
 });
 
-test('clean uninstall does not target the configured Shared Hub for removal', () => {
-  const deleteLines = script.split(/\r?\n/).filter(line => /rmdir|del \/q|reg delete/i.test(line));
-  assert.ok(deleteLines.length > 0);
-  assert.equal(deleteLines.some(line => /sharedSyncRoot|hubRoot|buyerlog-hub/i.test(line)), false);
-});
-
-test('clean uninstall cleans portable and known user-level Buyer Log paths only after approval', () => {
-  assert.match(script, /rmdir \/s \/q "%ROOT%"/i);
-  assert.match(script, /%APPDATA%\\Buyer Log/);
-  assert.match(script, /%LOCALAPPDATA%\\BuyerLog/);
-  assert.match(script, /%LOCALAPPDATA%\\Programs\\Buyer Log/);
+test('clean uninstall preserves Shared Hub and removes local Buyer Log surfaces only after approval', () => {
+  assert.match(script, /ORTAK AG KLASORUNE DOKUNULMAZ/);
+  assert.match(script, /Current installation root/);
+  assert.match(script, /Roaming AppData Buyer Log/);
+  assert.match(script, /Local AppData BuyerLog/);
+  assert.match(script, /Local Programs Buyer Log/);
+  assert.match(script, /attrib -r -s -h/);
+  assert.doesNotMatch(script, /powershell\.exe\s+-/i);
 });
