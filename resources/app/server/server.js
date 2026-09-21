@@ -35,6 +35,7 @@ const { createCollectionPermissionsStore } = require('./lib/collection-permissio
 const { resolveBuyerLogDataRoots } = require('./lib/data-roots');
 const { createDataMaintenance } = require('./lib/data-maintenance');
 const { createBackupService } = require('./lib/backup-service');
+const { inspectBackupArchive, extractBackupArchive } = require('./lib/backup-archive');
 const { createSharedPersonalBackupService } = require('./lib/shared-personal-backup');
 const { createUserRestoreService } = require('./lib/user-restore-service');
 const { createFullRestoreService, recoverInterruptedRestoresSync } = require('./lib/full-restore-service');
@@ -736,6 +737,124 @@ async function reconcileSharedCheckpointCoverage(root, hub) {
   const business = await applyMissingCheckpointRecords('business', root, hub, stateAfterMaster, businessRemote);
   return { master, business };
 }
+async function readJsonIfPresent(file) {
+  try { return JSON.parse(await fs.promises.readFile(file, 'utf8')); }
+  catch (_) { return null; }
+}
+async function findVerifiedPrewipeRecovery(root, hub) {
+  const prewipeRoot = path.join(root, 'system-backups', 'prewipe');
+  let entries = [];
+  try { entries = await fs.promises.readdir(prewipeRoot, { withFileTypes:true }); } catch (_) { return null; }
+  const folders = entries.filter(entry => entry.isDirectory()).map(entry => entry.name).sort().reverse();
+  for (const folder of folders) {
+    const recoveryRoot = path.join(prewipeRoot, folder);
+    const [report, ready] = await Promise.all([
+      readJsonIfPresent(path.join(recoveryRoot, 'critical-state.json')),
+      readJsonIfPresent(path.join(recoveryRoot, 'DELETE-READY.json')),
+    ]);
+    if (!report || report.status !== 'DELETE_READY' || !ready || ready.status !== 'DELETE_READY') continue;
+    if (report.sharedHub && report.sharedHub.hubId && String(report.sharedHub.hubId) !== String(hub.hubId)) continue;
+    const expectedMaster = Math.max(0, Number(report.master && report.master.records) || 0);
+    const expectedBusiness = Math.max(0, Number(report.business && report.business.records) || 0);
+    if (!expectedMaster) continue;
+    const filename = String(report.fullSystemBackup && report.fullSystemBackup.filename || '');
+    if (!filename || path.basename(filename) !== filename) continue;
+    const backupFile = path.join(recoveryRoot, filename);
+    if (!fs.existsSync(backupFile)) continue;
+    return { recoveryRoot, backupFile, report, expectedMaster, expectedBusiness };
+  }
+  return null;
+}
+async function loadPrewipeRecoveryRecords(candidate) {
+  const info = await inspectBackupArchive(candidate.backupFile, { requireType:'full', validateData:true });
+  const expectedSha = String(candidate.report.fullSystemBackup && candidate.report.fullSystemBackup.sha256 || '').toLowerCase();
+  if (expectedSha && String(info.archiveSha256 || '').toLowerCase() !== expectedSha) {
+    throw Object.assign(new Error('Pre-wipe Full System Backup SHA256 doğrulaması başarısız.'), { code:'PREWIPE_BACKUP_SHA_MISMATCH', statusCode:503 });
+  }
+  const tempRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'buyerlog-prewipe-recovery-'));
+  try {
+    await extractBackupArchive(candidate.backupFile, tempRoot, { requireType:'full', preflight:info });
+    const dbCandidates = [
+      path.join(tempRoot, 'system', 'local-data', 'BuyerLogLocal.db'),
+      path.join(tempRoot, 'system', 'local', 'BuyerLogLocal.db'),
+    ];
+    const dbFile = dbCandidates.find(file => fs.existsSync(file));
+    if (!dbFile) throw Object.assign(new Error('Pre-wipe backup içinde BuyerLogLocal.db bulunamadı.'), { code:'PREWIPE_LOCAL_DB_MISSING', statusCode:503 });
+    const recoveredDb = createLocalDb(dbFile);
+    const recoveredState = await recoveredDb.read();
+    const masterRecords = sharedSyncPolicy.masterRecordsFromState(recoveredState);
+    const businessRecords = sharedSyncPolicy.businessRecordsFromState(recoveredState);
+    if (Object.keys(masterRecords).length < candidate.expectedMaster) {
+      throw Object.assign(new Error('Pre-wipe backup Master Data kaydı beklenenden eksik.'), {
+        code:'PREWIPE_MASTER_INCOMPLETE', statusCode:503,
+        details:{ expected:candidate.expectedMaster, actual:Object.keys(masterRecords).length },
+      });
+    }
+    if (Object.keys(businessRecords).length < candidate.expectedBusiness) {
+      throw Object.assign(new Error('Pre-wipe backup Business Data kaydı beklenenden eksik.'), {
+        code:'PREWIPE_BUSINESS_INCOMPLETE', statusCode:503,
+        details:{ expected:candidate.expectedBusiness, actual:Object.keys(businessRecords).length },
+      });
+    }
+    return { masterRecords, businessRecords, syncHeads:recoveredState.syncCheckpoints || {} };
+  } finally {
+    await fs.promises.rm(tempRoot, { recursive:true, force:true }).catch(()=>{});
+  }
+}
+async function recoverEmptySharedHubFromPrewipe(root, hub) {
+  const [masterRemote, businessRemote] = await Promise.all([
+    sharedHub.readMaster(root, null),
+    sharedHub.readBusiness(root, null),
+  ]);
+  const currentMaster = checkpointRecords(masterRemote);
+  const currentBusiness = checkpointRecords(businessRemote);
+  const currentMasterCount = Object.keys(currentMaster).length;
+  const currentBusinessCount = Object.keys(currentBusiness).length;
+  // Automatic recovery is intentionally narrow: a zero-record Master
+  // checkpoint is not a legitimate clean-install source when a verified
+  // DELETE_READY pre-wipe backup says Master records existed. This is the
+  // catastrophic empty-checkpoint signature, not a general rollback feature.
+  if (currentMasterCount !== 0) return { recovered:false, reason:'master-not-empty', currentMasterCount, currentBusinessCount };
+  const candidate = await findVerifiedPrewipeRecovery(root, hub);
+  if (!candidate) return { recovered:false, reason:'verified-prewipe-not-found', currentMasterCount, currentBusinessCount };
+  const recovered = await loadPrewipeRecoveryRecords(candidate);
+  await localDb.transaction(async next => {
+    next.records = next.records && typeof next.records === 'object' ? next.records : {};
+    next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
+    for (const [id, record] of Object.entries({ ...recovered.masterRecords, ...recovered.businessRecords })) {
+      next.records[id] = JSON.parse(JSON.stringify(record));
+      delete next.tombstones[id];
+    }
+    return { master:Object.keys(recovered.masterRecords).length, business:Object.keys(recovered.businessRecords).length };
+  });
+  await deltaStore.hydrate();
+  const state = await localDb.read();
+  const masterRecords = sharedSyncPolicy.masterRecordsFromState(state);
+  const businessRecords = sharedSyncPolicy.businessRecordsFromState(state);
+  const masterHead = await sharedHub.readMasterHead(root);
+  const businessHead = await sharedHub.readBusinessHead(root);
+  const savedMaster = await sharedHub.publishMaster(root, { records:masterRecords }, {
+    actorId:'prewipe-auto-recovery',
+    previousRevision:masterHead && masterHead.revision || 0,
+  });
+  const savedBusiness = await sharedHub.publishBusiness(root, { records:businessRecords, syncHeads:recovered.syncHeads }, {
+    actorId:'prewipe-auto-recovery',
+    previousRevision:businessHead && businessHead.revision || 0,
+  });
+  markStartup('SHARED_PREWIPE_RECOVERED', {
+    source:path.basename(candidate.recoveryRoot),
+    master:Object.keys(recovered.masterRecords).length,
+    business:Object.keys(recovered.businessRecords).length,
+  });
+  return {
+    recovered:true,
+    source:path.basename(candidate.recoveryRoot),
+    masterRecords:Object.keys(recovered.masterRecords).length,
+    businessRecords:Object.keys(recovered.businessRecords).length,
+    masterHead:savedMaster && (savedMaster.head || savedMaster),
+    businessHead:savedBusiness && (savedBusiness.head || savedBusiness),
+  };
+}
 async function publishMasterCheckpoint(actorId = '') {
   const settings = await syncSettings.read();
   if (!settings.sharedSyncRoot) return { published:false, reason:'not-configured' };
@@ -978,6 +1097,11 @@ async function bootstrapSharedHub({ force = false } = {}) {
         throw Object.assign(new Error('Shared Hub iş verisi senkronizasyonu tamamlanmadı.'), { code:'SHARED_HUB_SYNC_INCOMPLETE', statusCode:503 });
       }
       await deltaStore.hydrate();
+      // If the current Hub checkpoint was accidentally reduced to an empty
+      // Master snapshot during clean-install bootstrap, recover the exact
+      // verified DELETE_READY pre-wipe snapshot before business hydration can
+      // replace richer recovery data with the sparse remote checkpoint.
+      const prewipeRecovery = await recoverEmptySharedHubFromPrewipe(checked.root, checked.manifest);
       const business = await hydrateBusinessCheckpointIfNeeded();
       // Revision metadata alone is not proof that the local cache actually
       // contains the checkpoint payload. Repair any remote records that are
@@ -992,7 +1116,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
         current:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
         total:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
         detail:businessAfter && businessAfter.businessRevision
-          ? `rev ${businessAfter.businessRevision} · geri yüklenen ${Number(checkpointRepair.master.applied||0)+Number(checkpointRepair.business.applied||0)} kayıt · local M/B ${Object.keys(verifiedMasterRecords).length}/${Object.keys(verifiedBusinessRecords).length}`
+          ? `rev ${businessAfter.businessRevision} · geri yüklenen ${Number(checkpointRepair.master.applied||0)+Number(checkpointRepair.business.applied||0)+Number(prewipeRecovery.masterRecords||0)+Number(prewipeRecovery.businessRecords||0)} kayıt · local M/B ${Object.keys(verifiedMasterRecords).length}/${Object.keys(verifiedBusinessRecords).length}`
           : 'Güncel',
       });
 
@@ -1040,6 +1164,10 @@ async function bootstrapSharedHub({ force = false } = {}) {
           repairedBusinessRecords:Number(checkpointRepair.business.applied)||0,
           staleMasterRecords:Number(checkpointRepair.master.stale)||0,
           staleBusinessRecords:Number(checkpointRepair.business.stale)||0,
+          prewipeRecovered:Boolean(prewipeRecovery.recovered),
+          prewipeRecoverySource:prewipeRecovery.source || null,
+          prewipeRecoveredMasterRecords:Number(prewipeRecovery.masterRecords)||0,
+          prewipeRecoveredBusinessRecords:Number(prewipeRecovery.businessRecords)||0,
         },
         offline:false,
       };
