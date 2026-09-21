@@ -591,7 +591,7 @@ let sharedHubBootstrapInFlight = null;
 let sharedHubStartupSettled = false;
 const userBootstrapReady = new Set();
 let sharedHubBootstrapProgress = {
-  configured:false, validated:false, loginAllowed:false, bootstrapRequired:true,
+  configured:false, validated:false, loginAllowed:false, moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:true,
   setupRecommended:false, status:'starting', offline:false, phase:'starting',
   message:'Buyer Log hazırlanıyor…',
   steps:{
@@ -616,7 +616,11 @@ function setBootstrapProgress(patch = {}) {
   return sharedHubBootstrapProgress;
 }
 function bootstrapStatusSnapshot(extra = {}) {
-  return JSON.parse(JSON.stringify({ ...sharedHubBootstrapProgress, ...extra }));
+  return JSON.parse(JSON.stringify({
+    ...sharedHubBootstrapProgress,
+    moderatorLoginAllowed:userAccess.canLoginLocally(),
+    ...extra,
+  }));
 }
 function plainRecordPatch(record) {
   const out = {};
@@ -1258,7 +1262,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
   if (gateThisRun) {
     sharedHubStartupSettled = false;
     sharedHubBootstrapProgress = {
-      configured:false, validated:false, loginAllowed:false, bootstrapRequired:true,
+      configured:false, validated:false, loginAllowed:false, moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:true,
       setupRecommended:false, status:'syncing', offline:false, phase:'hub',
       message:'Buyer Log hazırlanıyor…',
       steps:{
@@ -1280,6 +1284,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
       const result = {
         configured:false,
         loginAllowed:localLoginAllowed,
+        moderatorLoginAllowed:localLoginAllowed,
         bootstrapRequired:!hadLocalLoginSnapshot,
         setupRecommended:true,
         status:'not-configured',
@@ -1465,7 +1470,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
         return bootstrapStatusSnapshot();
       }
       const result = {
-        configured:true, validated:false, loginAllowed:false, bootstrapRequired:true,
+        configured:true, validated:false, loginAllowed:false, moderatorLoginAllowed:localLoginAllowed, bootstrapRequired:true,
         status:'error', phase:'error', offline:false,
         errorCode:error && error.code || 'SHARED_HUB_BOOTSTRAP_FAILED',
         message:error && error.message || 'Shared Hub bootstrap tamamlanamadı.',
@@ -1651,10 +1656,17 @@ app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) =>
   );
   if (loginProfile && loginProfile.id) userBootstrapReady.delete(String(loginProfile.id));
   const gate = bootstrapStatusSnapshot();
-  if (!sharedHubStartupSettled || gate.status === 'syncing' || gate.status === 'starting') {
+  // The built-in local Moderator is the recovery/admin entry point on a brand
+  // new computer. It may create its first password and enter local mode before
+  // a Shared Hub/SYNC folder exists. All other users keep the strict bootstrap
+  // gate so an incomplete central directory cannot grant accidental access.
+  const moderatorLocalLogin = Boolean(loginProfile
+    && (loginProfile.systemRole === 'moderator' || loginProfile.role === 'moderator')
+    && gate.moderatorLoginAllowed === true);
+  if (!moderatorLocalLogin && (!sharedHubStartupSettled || gate.status === 'syncing' || gate.status === 'starting')) {
     return res.status(423).json({ error:'Buyer Log senkronizasyonu tamamlanmadan giriş yapılamaz.', code:'BOOTSTRAP_IN_PROGRESS', bootstrap:gate });
   }
-  if (gate.loginAllowed !== true) {
+  if (!moderatorLocalLogin && gate.loginAllowed !== true) {
     return res.status(503).json({ error:gate.message || 'Buyer Log henüz girişe hazır değil.', code:gate.errorCode || 'BOOTSTRAP_NOT_READY', bootstrap:gate });
   }
   return userAccess.loginHandler(req, res, next);

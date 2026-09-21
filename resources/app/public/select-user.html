@@ -392,7 +392,10 @@
     return status.message || tr('Shared Hub bootstrap tamamlanamadı.', 'Shared Hub bootstrap could not be completed.');
   }
   function loginGateReady() {
-    return Boolean(hubStatus && hubStatus.loginAllowed === true && ['ready','offline','not-configured'].includes(hubStatus.status));
+    return Boolean(hubStatus && (
+      (hubStatus.loginAllowed === true && ['ready','offline','not-configured'].includes(hubStatus.status))
+      || hubStatus.moderatorLoginAllowed === true
+    ));
   }
   function renderHubSteps() {
     const box = $('hubSteps');
@@ -573,6 +576,18 @@
   });
 
   async function runUserBootstrap() {
+    // A successful pre-SYNC login can only belong to the local Moderator (the
+    // server enforces this). Do not turn that successful recovery/admin login
+    // into a failure by immediately requiring the Shared Hub user bootstrap.
+    if (!hubStatus || hubStatus.configured !== true || !['ready','offline'].includes(hubStatus.status)) {
+      hubStatus = {
+        ...(hubStatus || {}), loginAllowed:true, moderatorLoginAllowed:true,
+        phase:'local', offline:true,
+        message:tr('Yerel Moderatör oturumu · Shared Sync daha sonra ayarlanabilir.', 'Local Moderator session · Shared Sync can be configured later.'),
+      };
+      renderHubStatus();
+      return { ok:true, ready:true, localOnly:true };
+    }
     const steps = { ...((hubStatus && hubStatus.steps) || {}) };
     steps.collectionImages = { status:'active', label:tr('Koleksiyon görselleri', 'Collection images') };
     const previousStatus = hubStatus && hubStatus.status || 'ready';

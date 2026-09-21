@@ -104,6 +104,20 @@ test('v7.14 login button is gated by startup sync and preserves 15 second creden
   assert.match(LOGIN, /Sunucu giriş isteğine zamanında yanıt vermedi\. Tekrar deneyin\./);
 });
 
+test('first-run local Moderator can sign in before Shared Sync is configured', () => {
+  assert.match(SERVER, /moderatorLoginAllowed:userAccess\.canLoginLocally\(\)/);
+  assert.match(SERVER, /const moderatorLocalLogin = Boolean\(loginProfile/);
+  assert.match(SERVER, /!moderatorLocalLogin && \(!sharedHubStartupSettled/);
+  assert.match(SERVER, /!moderatorLocalLogin && gate\.loginAllowed !== true/);
+  assert.match(LOGIN, /\|\| hubStatus\.moderatorLoginAllowed === true/);
+  assert.match(LOGIN, /hubStatus\.configured !== true \|\| !\['ready','offline'\]\.includes\(hubStatus\.status\)/);
+  assert.match(LOGIN, /localOnly:true/);
+  assert.ok(
+    LOGIN.indexOf('if (!hubStatus || hubStatus.configured !== true') < LOGIN.indexOf("fetch('/api/shared-hub/user-bootstrap'"),
+    'local Moderator bypass must run before user bootstrap network I/O',
+  );
+});
+
 test('v7.14 visual language is restrained ERP styling and responsive', () => {
   // Giriş ekranının vurgu rengi kendi tek seferlik değeri (#416b91) yerine
   // tasarım sisteminin --acc değerine hizalandı. İddia sabit bir hex'i değil,
