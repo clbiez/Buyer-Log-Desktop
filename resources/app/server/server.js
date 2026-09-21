@@ -3740,6 +3740,7 @@ async function resolveModelImagesLocalFirst(requests, options = {}) {
   const plan = await modelImageDistribution.plan(planned, {
     source, mode: options.mode, overwriteManual: options.overwriteManual === true,
     force: options.force === true, imagemap, store,
+    allowShared: options.allowShared === true,
   });
   let installed = { outcomes: [], overrides: { imagemap }, store, installed: 0 };
   if (plan.fromShared.length) {
@@ -3971,9 +3972,11 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       /* LOCAL → SHARED → PLM. Üst kaynağa yalnız hiçbir yerde bulunamayan
          kimlikler gider. Kaynak SIKIDIR: ASAS kökenli paylaşılan bir nesne
          bir PLM isteğini karşılayamaz. */
+      const sharedForCollection = collectionImageSyncPolicy.scopeUsesSharedImages(plmJobScope(req));
       const first = await resolveModelImagesLocalFirst(requests, {
         source: sharedImageStoreLib.SOURCE_PLM, mode, overwriteManual,
         force: Boolean(req.body && req.body.force), overrides: before,
+        allowShared: sharedForCollection,
       });
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_PLM);
@@ -4025,7 +4028,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       /* YAYIM. Yerel yazma bitti, kullanıcı görseli görebiliyor; paylaşılan
          depoya taşıma buradan sonra ve asenkron olur. Ağ yoksa kuyrukta
          bekler, yerel başarı geri ALINMAZ. */
-      queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM);
+      if (sharedForCollection) queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM);
       /* Kaynak duyarlı "bulunamadı" belleği: PLM'in yok demesi ASAS için
          hiçbir şey söylemez. Açık bir yenileme yine deneyebilir. */
       modelImageDistribution.rememberNotFound((run.skipped || [])
@@ -4100,10 +4103,12 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
       /* LOCAL → SHARED → ASAS. Paylaşılan depoda ASAS KÖKENLİ geçerli bir
          nesne varsa ASAS'a ikinci kez gidilmez; PLM kökenli bir nesne ise bu
          işlemi KARŞILAYAMAZ (kaynak sıkılığı). */
+      const sharedForCollection = collectionImageSyncPolicy.scopeUsesSharedImages(plmJobScope(req));
       const first = await resolveModelImagesLocalFirst(items, {
         source: sharedImageStoreLib.SOURCE_ASAS, mode,
         overwriteManual: Boolean(req.body && req.body.overwriteManual),
         force: Boolean(req.body && req.body.force), overrides,
+        allowShared: sharedForCollection,
       });
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_ASAS);
@@ -4129,7 +4134,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
            dağıtımda bir ASAS isteğini karşılayıp karşılayamayacakları
            bilinemezdi. Artık OTOMATİK/ASAS olarak kaydedilir ve yayımlanır. */
         const asasOutcomes = recordAsasImageProvenance(run.images || []);
-        queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS);
+        if (sharedForCollection) queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS);
         modelImageDistribution.rememberNotFound((run.failedItems || [])
           .map(item => ({ canonicalKey: parseLib.plmImageKey(item && item.plmId), source: sharedImageStoreLib.SOURCE_ASAS, code: (item && item.code) || 'ASAS_TECHNICAL_IMAGE_MISSING' }))
           .filter(item => item.canonicalKey));
@@ -11693,13 +11698,13 @@ app.get('/api/model-images/registry/report', userAccess.requireAnyArea('source',
    Çekme/yayma normalde arka planda ve BLOKE ETMEDEN çalışır; bu uçlar
    yalnız durumu göstermek ve kullanıcı istediğinde bir turu öne çekmek
    içindir. Görsellerin ÇİZİMİ hiçbir zaman bu uçlara bağlı değildir. */
-app.get('/api/model-images/shared/status', userAccess.requireAnyArea('source','koleksiyon','cp','orders','backlog','lfl','overview'), async (_req, res) => {
+app.get('/api/model-images/shared/status', userAccess.requireArea('koleksiyon'), async (_req, res) => {
   try {
     const status = modelImageDistribution.status();
     res.set('Cache-Control', 'no-store').json({ ok: true, available: await sharedModelImageStore.available(), ...status });
   } catch (err) { apiError(res, err, 'Paylaşılan görsel durumu okunamadı.'); }
 });
-app.post('/api/model-images/shared/sync', userAccess.requireAnyArea('source','koleksiyon','cp','orders'), express.json({ limit: '32kb' }), async (req, res) => {
+app.post('/api/model-images/shared/sync', userAccess.requireArea('koleksiyon'), express.json({ limit: '32kb' }), async (req, res) => {
   try {
     assertModelImageMutable();
     // This legacy/manual action may explicitly hydrate a bounded batch. The
@@ -11713,7 +11718,7 @@ app.post('/api/model-images/shared/sync', userAccess.requireAnyArea('source','ko
    Visible/current-view identities are deduped, resolved, looked up in the
    shared index and only matching pack slices are copied into the local image
    cache. Shared miss is a normal result, not an authentication trigger. */
-app.post('/api/model-images/shared/hydrate', requirePlmContextAccess, express.json({ limit: '1mb' }), async (req, res) => {
+app.post('/api/model-images/shared/hydrate', userAccess.requireArea('koleksiyon'), express.json({ limit: '1mb' }), async (req, res) => {
   try {
     assertModelImageMutable();
     const raw = Array.isArray(req.body && req.body.items) ? req.body.items.slice(0, 250) : [];
