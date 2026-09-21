@@ -3649,6 +3649,180 @@ const modelImageDistribution = modelImageDistributionLib.createModelImageDistrib
   onTrace: (event, detail) => plmImageRefreshLog(event, detail),
 });
 
+const COLLECTION_SHARED_IMAGE_CACHE_FILE = path.join(LOCAL_DATA_ROOT, 'collection-shared-image-cache.json');
+function readCollectionSharedImageCache() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(COLLECTION_SHARED_IMAGE_CACHE_FILE, 'utf8'));
+    return raw && raw.schemaVersion === 1 && raw.entries && typeof raw.entries === 'object'
+      ? raw : { schemaVersion:1, entries:{} };
+  } catch (_) { return { schemaVersion:1, entries:{} }; }
+}
+function writeCollectionSharedImageCache(cache) {
+  const next = cache && typeof cache === 'object' ? cache : { schemaVersion:1, entries:{} };
+  next.schemaVersion = 1;
+  next.entries = next.entries && typeof next.entries === 'object' ? next.entries : {};
+  atomicWriteJson(COLLECTION_SHARED_IMAGE_CACHE_FILE, next);
+  return next;
+}
+function collectionImageCacheKey(ownerId, item) {
+  const owner = String(ownerId || '').trim();
+  const record = String(item && item.recordId || '').trim();
+  const normalized = plmImageIngestLib.normalizeRequest(item || {});
+  return owner + '|' + (record || normalized.key || String(item && item.imageRef || '').trim());
+}
+function collectionSharedFilename(item, record) {
+  const mime = String(record && record.mimeType || '').toLowerCase();
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : mime === 'image/gif' ? 'gif' : 'jpg';
+  const recordId = String(item && item.recordId || 'model').replace(/[^A-Za-z0-9_-]/g, '_').slice(0,80) || 'model';
+  return 'collection-shared-' + recordId + '-' + String(record && record.contentHash || '').slice(0,12) + '.' + ext;
+}
+async function publishCollectionWorkspaceImages(ownerId) {
+  const owner = String(ownerId || '').trim();
+  if (!owner) return { queued:0, published:0, reason:'owner-required' };
+  const grants = collectionPermissions.outgoing(owner);
+  if (!collectionImageSyncPolicy.shouldPublishOwnerImages(grants, owner)) {
+    return { queued:0, published:0, reason:'not-shared' };
+  }
+  const workspace = loadWorkspace(owner);
+  const items = collectionImageSyncPolicy.workspaceImageItems(workspace);
+  const entries = [];
+  for (const item of items) {
+    const normalized = plmImageIngestLib.normalizeRequest(item);
+    if (!normalized.key || !item.imageRef || !getCollectionImage(item.imageRef)) continue;
+    entries.push({
+      canonicalKey: normalized.key,
+      source: sharedImageStoreLib.SOURCE_PLM,
+      plmId: item.plmId,
+      colourCode: item.colourCode || '',
+      colour: item.colour || '',
+      imageRef: item.imageRef,
+      ownership: sharedImageStoreLib.OWNERSHIP_AUTOMATIC,
+      status: sharedImageStoreLib.STATUS_AVAILABLE,
+      sourceIdentity: 'collection:' + owner + ':' + String(item.recordId || normalized.key),
+      sourceFetchedAt: new Date().toISOString(),
+    });
+  }
+  const queued = modelImageDistribution.queuePublish(entries);
+  let published = 0, pending = Number(queued && queued.pending) || 0;
+  let guard = 0;
+  while (pending > 0 && guard < 100) {
+    const flushed = await modelImageDistribution.flushPublish({ limit:200 });
+    published += Number(flushed && flushed.published) || 0;
+    pending = Number(flushed && flushed.pending) || 0;
+    if (flushed && flushed.available === false) break;
+    if (flushed && flushed.error) break;
+    guard += 1;
+  }
+  return { queued:Number(queued && queued.queued) || 0, published, pending, ownerId:owner, images:items.length };
+}
+async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
+  const user = String(userId || '').trim();
+  const owner = String(ownerId || '').trim();
+  if (!user || !owner || !collectionPermissions.accessLevel(user, owner)) {
+    throw Object.assign(new Error('Bu Koleksiyon görsellerine erişim yetkiniz bulunmuyor.'), { code:'COLLECTION_ACCESS_DENIED', statusCode:403 });
+  }
+  const workspace = loadWorkspace(owner);
+  const items = collectionImageSyncPolicy.workspaceImageItems(workspace);
+  if (!items.length) return { ownerId:owner, requested:0, available:0, installed:0, reused:0, missing:0, workspaceUpdated:false };
+
+  if (!(await sharedModelImageStore.available())) {
+    return { ownerId:owner, requested:items.length, available:0, installed:0, reused:0, missing:items.length, workspaceUpdated:false, offline:true };
+  }
+
+  const normalizedItems = items.map(item => ({ item, normalized:plmImageIngestLib.normalizeRequest(item) })).filter(entry => entry.normalized.key);
+  const records = await sharedModelImageStore.lookupMany(normalizedItems.map(entry => entry.normalized.key), { source:sharedImageStoreLib.SOURCE_PLM });
+  const cache = readCollectionSharedImageCache();
+  const replacements = new Map();
+  let installed = 0, reused = 0, missing = 0, available = 0;
+
+  for (const entry of normalizedItems) {
+    const item = entry.item;
+    const record = records.get(entry.normalized.key) || null;
+    if (!record || record.status !== sharedImageStoreLib.STATUS_AVAILABLE) { missing += 1; continue; }
+    available += 1;
+    const cacheKey = collectionImageCacheKey(owner, item);
+    const cached = cache.entries[cacheKey];
+    let imageRef = '';
+    if (cached && cached.contentHash === record.contentHash && cached.imageRef && getCollectionImage(cached.imageRef)) {
+      imageRef = cached.imageRef;
+      reused += 1;
+    } else {
+      const buffer = await sharedModelImageStore.readObject(record);
+      if (!buffer) { missing += 1; continue; }
+      const stored = saveCollectionImage({
+        rowId:'collection-shared:' + owner + ':' + String(item.recordId || entry.normalized.key),
+        filename:collectionSharedFilename(item, record),
+        mimeType:record.mimeType,
+        base64:buffer.toString('base64'),
+      });
+      imageRef = stored.id;
+      cache.entries[cacheKey] = {
+        ownerId:owner,
+        recordId:String(item.recordId || ''),
+        canonicalKey:entry.normalized.key,
+        contentHash:record.contentHash,
+        imageRef:stored.id,
+        updatedAt:new Date().toISOString(),
+      };
+      installed += 1;
+    }
+    replacements.set(cacheKey, imageRef);
+  }
+
+  let workspaceUpdated = false;
+  if (replacements.size) {
+    const nextRows = (Array.isArray(workspace.rows) ? workspace.rows : []).map(row => {
+      const item = collectionImageSyncPolicy.rowImageIdentity(row);
+      if (!item) return row;
+      const localRef = replacements.get(collectionImageCacheKey(owner, item));
+      if (!localRef || String(row.imgRef || row.imageRef || row._imageRef || '') === localRef) return row;
+      workspaceUpdated = true;
+      return { ...row, imgRef:localRef, img:'/api/collection-images/' + encodeURIComponent(localRef) };
+    });
+    if (workspaceUpdated) await collectionWorkspaces.replaceWorkspaceReplica(owner, { ...workspace, rows:nextRows });
+  }
+
+  writeCollectionSharedImageCache(cache);
+  return { ownerId:owner, requested:items.length, available, installed, reused, missing, workspaceUpdated };
+}
+async function syncAuthorizedCollectionImages(userId) {
+  await collectionPermissionsReady;
+  await collectionPermissions.sync().catch(error => markStartup('COLLECTION_PERMISSION_SYNC_DEFERRED', { error:error && error.code || error && error.message || String(error) }));
+  const owners = collectionPermissions.effectiveOwners(userId);
+  const ownerIds = owners.map(item => item.ownerId);
+  const replication = await collectionReplication.syncAuthorizedOwners(userId);
+  const results = [];
+  for (const ownerId of ownerIds) {
+    try { results.push(await syncCollectionWorkspaceImagesForUser(userId, ownerId)); }
+    catch (error) { results.push({ ownerId, requested:0, installed:0, reused:0, missing:0, error:error.code || error.message }); }
+  }
+
+  const allowed = new Set(ownerIds);
+  const cache = readCollectionSharedImageCache();
+  let cacheChanged = false;
+  for (const [key, value] of Object.entries(cache.entries)) {
+    if (allowed.has(String(value && value.ownerId || ''))) continue;
+    delete cache.entries[key];
+    cacheChanged = true;
+    const ref = String(value && value.imageRef || '');
+    if (ref && !Object.values(cache.entries).some(entry => String(entry && entry.imageRef || '') === ref)) {
+      try { deleteCollectionImage(ref); } catch (_) {}
+    }
+  }
+  if (cacheChanged) writeCollectionSharedImageCache(cache);
+
+  return {
+    ownerIds,
+    replication,
+    results,
+    requested:results.reduce((sum, item) => sum + (Number(item.requested) || 0), 0),
+    available:results.reduce((sum, item) => sum + (Number(item.available) || 0), 0),
+    installed:results.reduce((sum, item) => sum + (Number(item.installed) || 0), 0),
+    reused:results.reduce((sum, item) => sum + (Number(item.reused) || 0), 0),
+    missing:results.reduce((sum, item) => sum + (Number(item.missing) || 0), 0),
+  };
+}
+
 /* Kanonik yazma sonuçlarını yayım kuyruğuna çevirir. Yayım ASENKRONDUR:
    kullanıcı görseli çoktan görür, ağ sonra yetişir; ağ yoksa kuyrukta bekler
    ve yerel başarı ASLA geri alınmaz. */
