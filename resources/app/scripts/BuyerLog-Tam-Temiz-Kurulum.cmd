@@ -137,6 +137,10 @@ if /I not "%CONFIRM%"=="BUYER LOG SIL" (
 >>"%CLEANUP%" echo call :RMDIR "%%PROGRAMDATA%%\BuyerLog" "ProgramData BuyerLog"
 >>"%CLEANUP%" echo call :RMDIR "%%ProgramFiles%%\Buyer Log" "Program Files Buyer Log"
 >>"%CLEANUP%" echo call :RMDIR "%%ProgramFiles%%\BuyerLog" "Program Files BuyerLog"
+>>"%CLEANUP%" echo if defined ProgramFiles^(x86^) call :RMDIR "%%ProgramFiles(x86)%%\Buyer Log" "Program Files x86 Buyer Log"
+>>"%CLEANUP%" echo if defined ProgramFiles^(x86^) call :RMDIR "%%ProgramFiles(x86)%%\BuyerLog" "Program Files x86 BuyerLog"
+>>"%CLEANUP%" echo call :RMDIR "%%PROGRAMDATA%%\Microsoft\Windows\Start Menu\Programs\Buyer Log" "All Users Start Menu Buyer Log"
+>>"%CLEANUP%" echo call :RMDIR "%%PROGRAMDATA%%\Microsoft\Windows\Start Menu\Programs\BuyerLog" "All Users Start Menu BuyerLog"
 >>"%CLEANUP%" echo call :RMDIR "%%USERPROFILE%%\Desktop\Buyer Log" "Desktop legacy Buyer Log"
 >>"%CLEANUP%" echo call :RMDIR "%%USERPROFILE%%\Desktop\BuyerLog" "Desktop legacy BuyerLog"
 >>"%CLEANUP%" echo call :RMDIR "%%USERPROFILE%%\Desktop\Buyer Log Desktop" "Desktop Buyer Log Desktop"
@@ -174,6 +178,7 @@ if /I not "%CONFIRM%"=="BUYER LOG SIL" (
 >>"%CLEANUP%" echo.
 >>"%CLEANUP%" echo :RMDIR
 >>"%CLEANUP%" echo if not exist "%%~1\" ^(echo [SKIP] %%~2 ^>^> "%%BL_CLEAN_LOG%%" ^& goto :eof^)
+>>"%CLEANUP%" echo attrib -r -s -h "%%~1\*" /s /d ^>nul 2^>^&1
 >>"%CLEANUP%" echo rd /s /q "%%~1" ^>nul 2^>^&1
 >>"%CLEANUP%" echo if exist "%%~1\" ^(echo [WARN] Could not remove %%~2 - %%~1 ^>^> "%%BL_CLEAN_LOG%%"^) else ^(echo [OK] %%~2 ^>^> "%%BL_CLEAN_LOG%%"^)
 >>"%CLEANUP%" echo goto :eof
@@ -470,6 +475,11 @@ async function main() {
     if (fs.existsSync(source)) await atomicCopy(source, path.join(iamCopy, name));
   }
 
+  const personalBackupUsers = countPersonalBackupUsers(checked.root);
+  if (personalBackupUsers < remoteBase.enabled) {
+    console.warn('UYARI                  : Shared personal-backup bulunan kullanıcı=' + personalBackupUsers + ', aktif kullanıcı=' + remoteBase.enabled);
+    console.warn('                         Full System Backup yerel server/app/local verisini korur; browser-only bl.user.* state yalnız 7.0.88+ personal backup ile taşınır.');
+  }
   const report = {
     schemaVersion: 1, status: 'DELETE_READY', verifiedAt: new Date().toISOString(),
     computer: os.hostname(), appVersion: appVersion, localRoot: ROOT,
@@ -492,7 +502,7 @@ async function main() {
     },
     fullSystemBackup: backupMeta,
     localPersonalDataInventory: localPersonalInventory(SERVER, APP),
-    sharedPersonalBackupUsers: countPersonalBackupUsers(checked.root),
+    sharedPersonalBackupUsers: personalBackupUsers,
     personalBackupNote: 'Full System Backup bu bilgisayardaki server/app/local kullanici dosyalarini kapsar. Browser-only bl.user.* state yalniz kullanici Buyer Log 7.0.88+ ile personal-backups olusturduysa mevcuttur.',
     securityNote: 'Parola hashleri Central IAM ile korunur. Token/cookie/session ve cihaz-bagli browser credential ortak alana kopyalanmaz.'
   };
