@@ -3718,7 +3718,7 @@ async function publishCollectionWorkspaceImages(ownerId) {
     const normalized = plmImageIngestLib.normalizeRequest(item);
     if (!normalized.key || !item.imageRef || !getCollectionImage(item.imageRef)) continue;
     entries.push({
-      canonicalKey: normalized.key,
+      canonicalKey: 'collection:' + owner + ':' + normalized.key,
       source: sharedImageStoreLib.SOURCE_PLM,
       plmId: item.plmId,
       colourCode: item.colourCode || '',
@@ -3734,7 +3734,7 @@ async function publishCollectionWorkspaceImages(ownerId) {
   let published = 0, pending = Number(queued && queued.pending) || 0;
   let guard = 0;
   while (pending > 0 && guard < 100) {
-    const flushed = await modelImageDistribution.flushPublish({ limit:200 });
+    const flushed = await modelImageDistribution.flushPublish({ limit:200, sourceIdentityPrefix:'collection:', dropNonMatching:true });
     published += Number(flushed && flushed.published) || 0;
     pending = Number(flushed && flushed.pending) || 0;
     if (flushed && flushed.available === false) break;
@@ -3758,14 +3758,15 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
   }
 
   const normalizedItems = items.map(item => ({ item, normalized:plmImageIngestLib.normalizeRequest(item) })).filter(entry => entry.normalized.key);
-  const records = await sharedModelImageStore.lookupMany(normalizedItems.map(entry => entry.normalized.key), { source:sharedImageStoreLib.SOURCE_PLM });
+  const sharedKeys = normalizedItems.map(entry => 'collection:' + owner + ':' + entry.normalized.key);
+  const records = await sharedModelImageStore.lookupMany(sharedKeys, { source:sharedImageStoreLib.SOURCE_PLM });
   const cache = readCollectionSharedImageCache();
   const replacements = new Map();
   let installed = 0, reused = 0, missing = 0, available = 0;
 
   for (const entry of normalizedItems) {
     const item = entry.item;
-    const record = records.get(entry.normalized.key) || null;
+    const record = records.get('collection:' + owner + ':' + entry.normalized.key) || null;
     if (!record || record.status !== sharedImageStoreLib.STATUS_AVAILABLE) { missing += 1; continue; }
     available += 1;
     const cacheKey = collectionImageCacheKey(owner, item);
@@ -3854,23 +3855,30 @@ async function syncAuthorizedCollectionImages(userId) {
 /* Kanonik yazma sonuçlarını yayım kuyruğuna çevirir. Yayım ASENKRONDUR:
    kullanıcı görseli çoktan görür, ağ sonra yetişir; ağ yoksa kuyrukta bekler
    ve yerel başarı ASLA geri alınmaz. */
-function queueModelImagePublish(outcomes, source, { ownership = sharedImageStoreLib.OWNERSHIP_AUTOMATIC } = {}) {
+function queueModelImagePublish(outcomes, source, {
+  ownership = sharedImageStoreLib.OWNERSHIP_AUTOMATIC,
+  collectionOwnerId = '',
+} = {}) {
+  const owner = String(collectionOwnerId || '').trim();
+  if (!owner) return { queued:0, pending:0 };
   const entries = (Array.isArray(outcomes) ? outcomes : [])
     .filter(item => item && item.imageRef && item.key
       && item.status !== plmImageIngestLib.COMMIT_FAILED && item.status !== plmImageIngestLib.COMMIT_MANUAL)
     .map(item => ({
-      canonicalKey: item.key, source,
+      canonicalKey: 'collection:' + owner + ':' + item.key, source,
       plmId: item.plmId, colourCode: item.colourCode || '', colour: item.colour || '',
       imageRef: item.imageRef, contentHash: item.contentHash || '',
       mimeType: item.mimeType || '', ownership,
       status: sharedImageStoreLib.STATUS_AVAILABLE,
-      sourceIdentity: item.sourceIdentity || '',
+      sourceIdentity: 'collection:' + owner + ':' + (item.sourceIdentity || item.key),
       sourceFetchedAt: new Date().toISOString(),
     }));
-  if (!entries.length) return { queued: 0 };
+  if (!entries.length) return { queued:0, pending:0 };
   const queued = modelImageDistribution.queuePublish(entries);
-  // Ateşle-unut: yayım hatası kullanıcının işini düşürmez, kuyrukta kalır.
-  void modelImageDistribution.flushPublish().catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error: (error && error.message) || String(error) }));
+  // Eski sürümden kalmış genel CP/Orders kuyruğu bu sınırda temizlenir.
+  void modelImageDistribution.flushPublish({
+    limit:200, sourceIdentityPrefix:'collection:', dropNonMatching:true,
+  }).catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error: (error && error.message) || String(error) }));
   return queued;
 }
 
@@ -3985,30 +3993,21 @@ async function leaseUpstreamImageIdentities(items, source, { concurrency = 8 } =
    Tek-uçuşludur — arka plan zamanlayıcısı ile elle tetikleme birbirinin
    üstüne binmez ve paylaşılan klasöre iki kat yük binmez. */
 let sharedModelImageSyncInFlight = null;
-async function syncSharedModelImagesOnce({ limit = 500, hydrate = false } = {}) {
+async function syncSharedModelImagesOnce({ limit = 500 } = {}) {
   if (sharedModelImageSyncInFlight) return sharedModelImageSyncInFlight;
   sharedModelImageSyncInFlight = (async () => {
-    if (!(await sharedModelImageStore.available())) return { available: false, published: 0, installed: 0 };
-    const published = await modelImageDistribution.flushPublish({ limit: 200 });
-    if (!hydrate) {
-      return { available: true, published: published.published || 0, pendingPublish: published.pending || 0, installed: 0, tombstones: 0, scanned: 0, remaining: 0, lazy: true };
-    }
-    // Explicit/manual compatibility path only. Normal background operation
-    // never downloads bytes from the Shared Hub.
-    const overrides = loadOverrides();
-    const pulled = await modelImageDistribution.pull({
-      deviceId: localDb.getDeviceId(), limit,
-      imagemap: overrides.imagemap || {}, store: plmImageOwnership.loadOwnership(),
+    if (!(await sharedModelImageStore.available())) return { available:false, published:0, installed:0, collectionOnly:true };
+    const published = await modelImageDistribution.flushPublish({
+      limit:Math.min(500, Math.max(1, Number(limit) || 200)),
+      sourceIdentityPrefix:'collection:',
+      dropNonMatching:true,
     });
-    if (pulled.installed || pulled.tombstones) {
-      plmImageRefreshLog('SHARED_IMAGE_SYNC', { installed: pulled.installed, tombstones: pulled.tombstones, remaining: pulled.remaining });
-      try { liveEvents.notifyChange('overrides', null); } catch (_) {}
-    }
     return {
-      available: true,
-      published: published.published || 0, pendingPublish: published.pending || 0,
-      installed: pulled.installed || 0, tombstones: pulled.tombstones || 0,
-      scanned: pulled.scanned || 0, remaining: pulled.remaining || 0, lazy: false,
+      available:true,
+      published:published.published || 0,
+      pendingPublish:published.pending || 0,
+      installed:0, tombstones:0, scanned:0, remaining:0,
+      lazy:true, collectionOnly:true,
     };
   })().finally(() => { sharedModelImageSyncInFlight = null; });
   return sharedModelImageSyncInFlight;
@@ -4019,7 +4018,8 @@ async function syncSharedModelImagesOnce({ limit = 500, hydrate = false } = {}) 
    AÇIK bir kayıtta durur ve MANUAL sahiplikle paylaşılan depoya yayımlanır.
    Böylece başka bir kullanıcının "PLM'den Tümünü Yenile" işlemi bu görseli
    ezemez. Referans boşsa yayımlanan şey bir MEZAR TAŞIDIR. */
-function recordManualImageOwnership(items) {
+function recordManualImageOwnership(items, collectionOwnerId = '') {
+  const owner = String(collectionOwnerId || '').trim();
   const manual = [];
   const publishEntries = [];
   const tombstoneKeys = [];
@@ -4030,8 +4030,8 @@ function recordManualImageOwnership(items) {
     const identity = { plmId: item.plmId, colourCode: item.colourCode || '', colour: item.colour || item.color || '' };
     if (!imageRef) {
       tombstoneKeys.push(key);
-      publishEntries.push({
-        canonicalKey: key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
+      if (owner) publishEntries.push({
+        canonicalKey: 'collection:' + owner + ':' + key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
         ownership: sharedImageStoreLib.OWNERSHIP_MANUAL, status: sharedImageStoreLib.STATUS_DELETED,
       });
       continue;
@@ -4043,17 +4043,21 @@ function recordManualImageOwnership(items) {
     const contentHash = plmImageHash(buffer);
     const mimeType = (found.item && found.item.mimeType) || '';
     manual.push({ key, imageRef, hash: contentHash, mimeType, bytes: buffer.length, deviceId: localDb.getDeviceId() });
-    publishEntries.push({
-      canonicalKey: key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
+    if (owner) publishEntries.push({
+      canonicalKey: 'collection:' + owner + ':' + key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
       ownership: sharedImageStoreLib.OWNERSHIP_MANUAL, status: sharedImageStoreLib.STATUS_AVAILABLE,
-      imageRef, contentHash, mimeType, sourceFetchedAt: new Date().toISOString(),
+      imageRef, contentHash, mimeType,
+      sourceIdentity:'collection:' + owner + ':' + key,
+      sourceFetchedAt:new Date().toISOString(),
     });
   }
   if (manual.length) plmImageOwnership.rememberManual(manual);
   if (tombstoneKeys.length) plmImageOwnership.forgetManual(tombstoneKeys);
   if (publishEntries.length) {
     modelImageDistribution.queuePublish(publishEntries);
-    void modelImageDistribution.flushPublish().catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error: (error && error.message) || String(error) }));
+    void modelImageDistribution.flushPublish({
+      limit:200, sourceIdentityPrefix:'collection:', dropNonMatching:true,
+    }).catch(error => plmImageRefreshLog('SHARED_PUBLISH_DEFERRED', { error:(error && error.message) || String(error) }));
   }
   return { manual: manual.length, tombstones: tombstoneKeys.length };
 }
@@ -4178,7 +4182,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       const first = await resolveModelImagesLocalFirst(requests, {
         source: sharedImageStoreLib.SOURCE_PLM, mode, overwriteManual,
         force: Boolean(req.body && req.body.force), overrides: before,
-        allowShared: sharedForCollection,
+        allowShared: false,
       });
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_PLM);
@@ -4230,7 +4234,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       /* YAYIM. Yerel yazma bitti, kullanıcı görseli görebiliyor; paylaşılan
          depoya taşıma buradan sonra ve asenkron olur. Ağ yoksa kuyrukta
          bekler, yerel başarı geri ALINMAZ. */
-      if (sharedForCollection) queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM);
+      if (sharedForCollection) queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM, { collectionOwnerId:req.currentUser.id });
       /* Kaynak duyarlı "bulunamadı" belleği: PLM'in yok demesi ASAS için
          hiçbir şey söylemez. Açık bir yenileme yine deneyebilir. */
       modelImageDistribution.rememberNotFound((run.skipped || [])
@@ -4336,7 +4340,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
            dağıtımda bir ASAS isteğini karşılayıp karşılayamayacakları
            bilinemezdi. Artık OTOMATİK/ASAS olarak kaydedilir ve yayımlanır. */
         const asasOutcomes = recordAsasImageProvenance(run.images || []);
-        if (sharedForCollection) queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS);
+        if (sharedForCollection) queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS, { collectionOwnerId:req.currentUser.id });
         modelImageDistribution.rememberNotFound((run.failedItems || [])
           .map(item => ({ canonicalKey: parseLib.plmImageKey(item && item.plmId), source: sharedImageStoreLib.SOURCE_ASAS, code: (item && item.code) || 'ASAS_TECHNICAL_IMAGE_MISSING' }))
           .filter(item => item.canonicalKey));
@@ -9192,7 +9196,7 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
          otomatik senkronu bu görseli ezebilirdi. Karar açık bir kayda yazılır
          ve MANUAL sahiplikle paylaşılan depoya yayımlanır. Boş referans bir
          MEZAR TAŞIDIR: eski bir istemcinin yerel kopyası onu diriltemesin. */
-      recordManualImageOwnership(items);
+      recordManualImageOwnership(items, req.currentUser.id);
     } catch (ownershipError) { logRuntimeFailure('plmImageOwnershipForget', ownershipError); }
     let pageCachePatched=false;
     try{pageCachePatched=await rewriteProjectionCacheForImageItems(req.currentUser,beforeContext,items);}
