@@ -137,6 +137,19 @@ async function runLocalDbMaintenance() {
     } catch (error) { logRuntimeFailure('localDbDebrisSweep', error); }
   }
 }
+let localDbMaintenancePromise = null;
+function ensureLocalDbMaintenanceReady() {
+  if (!localDbMaintenancePromise) {
+    localDbMaintenancePromise = localDbReadyPromise
+      .then(() => runLocalDbMaintenance())
+      .catch(error => {
+        localDbMaintenancePromise = null;
+        throw error;
+      });
+  }
+  return localDbMaintenancePromise;
+}
+
 const localDbReadyPromise = (async () => {
   try {
     const configuredSync = await syncSettings.read();
@@ -153,7 +166,7 @@ const localDbReadyPromise = (async () => {
     // Bakım işleri açılış kritik yolunun DIŞINDA kalır: yalnız bir kez çalışan
     // asset boşaltımı ve yetim temp süpürmesi UI'ı bekletmez, hata verirse de
     // yalnız kendi sınırında kalır.
-    setTimeout(() => { void runLocalDbMaintenance(); }, LOCAL_DB_MAINTENANCE_DELAY_MS).unref?.();
+    setTimeout(() => { void ensureLocalDbMaintenanceReady().catch(error => logRuntimeFailure('localDbMaintenance', error)); }, LOCAL_DB_MAINTENANCE_DELAY_MS).unref?.();
   } catch (error) {
     const message = error && error.message ? error.message : String(error);
     markStartup('LOCAL_DB_READY_FAILED', { error: message });
@@ -608,6 +621,72 @@ function plainRecordPatch(record) {
   for (const [key, value] of Object.entries(record && typeof record === 'object' ? record : {})) if (!key.startsWith('_')) out[key] = value;
   return out;
 }
+function checkpointRecords(snapshot) {
+  return snapshot && snapshot.envelope && snapshot.envelope.payload
+    && snapshot.envelope.payload.records && typeof snapshot.envelope.payload.records === 'object'
+    ? snapshot.envelope.payload.records : {};
+}
+function checkpointUnaccountedIds(remoteRecords, localRecords, tombstones) {
+  const local = localRecords && typeof localRecords === 'object' ? localRecords : {};
+  const deleted = tombstones && typeof tombstones === 'object' ? tombstones : {};
+  return Object.keys(remoteRecords && typeof remoteRecords === 'object' ? remoteRecords : {})
+    .filter(id => !Object.hasOwn(local, id) && !Object.hasOwn(deleted, id));
+}
+async function guardCheckpointPublish(area, root, state, localRecords) {
+  const read = area === 'master' ? sharedHub.readMaster : sharedHub.readBusiness;
+  const remote = await read(root, null);
+  if (!remote || remote.unchanged) return { safe:true, missing:[], remoteRecords:0 };
+  const remoteRecords = checkpointRecords(remote);
+  const missing = checkpointUnaccountedIds(remoteRecords, localRecords, state && state.tombstones);
+  return { safe:missing.length === 0, missing, remoteRecords:Object.keys(remoteRecords).length, head:remote.head };
+}
+async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
+  if (!remote || remote.unchanged) return { applied:0, missing:0, head:remote && remote.head || null };
+  const remoteRecords = checkpointRecords(remote);
+  const localRecords = area === 'master'
+    ? sharedSyncPolicy.masterRecordsFromState(state)
+    : sharedSyncPolicy.businessRecordsFromState(state);
+  const missingIds = checkpointUnaccountedIds(remoteRecords, localRecords, state && state.tombstones);
+  if (!missingIds.length) return { applied:0, missing:0, head:remote.head };
+  const sourceDeviceId = `shared-hub-${area}-repair-${hub.hubId}`;
+  const events = missingIds.map((id, index) => ({
+    id,
+    entityType:String(id).split(':')[0] || 'store',
+    patch:plainRecordPatch(remoteRecords[id]),
+    revision:Math.max(1, Number(remote.head && remote.head.revision) || 1),
+    baseRevision:0,
+    deviceId:sourceDeviceId,
+    localSequence:index + 1,
+    eventId:`repair:${area}:${hub.hubId}:${remote.head && remote.head.revision || 0}:${crypto.createHash('sha256').update(id).digest('hex').slice(0,20)}`,
+    origin:'shared-checkpoint-repair',
+  }));
+  const result = await localDb.applyDeltas(events);
+  await deltaStore.hydrate();
+  const after = await localDb.read();
+  const afterRecords = area === 'master'
+    ? sharedSyncPolicy.masterRecordsFromState(after)
+    : sharedSyncPolicy.businessRecordsFromState(after);
+  const remaining = checkpointUnaccountedIds(remoteRecords, afterRecords, after.tombstones);
+  if (remaining.length) {
+    throw Object.assign(new Error(`Shared Hub ${area} checkpoint verisi yerel önbelleğe geri yüklenemedi.`), {
+      code:'SHARED_HUB_DATA_INCOMPLETE', statusCode:503,
+      details:{ area, remaining:remaining.slice(0,50), conflicts:Array.isArray(result && result.conflicts) ? result.conflicts.length : 0 },
+    });
+  }
+  markStartup('SHARED_CHECKPOINT_REPAIRED', { area, records:missingIds.length, revision:remote.head && remote.head.revision || 0 });
+  return { applied:missingIds.length, missing:0, head:remote.head };
+}
+async function reconcileSharedCheckpointCoverage(root, hub) {
+  const state = await localDb.read();
+  const [masterRemote, businessRemote] = await Promise.all([
+    sharedHub.readMaster(root, null),
+    sharedHub.readBusiness(root, null),
+  ]);
+  const master = await applyMissingCheckpointRecords('master', root, hub, state, masterRemote);
+  const stateAfterMaster = master.applied ? await localDb.read() : state;
+  const business = await applyMissingCheckpointRecords('business', root, hub, stateAfterMaster, businessRemote);
+  return { master, business };
+}
 async function publishMasterCheckpoint(actorId = '') {
   const settings = await syncSettings.read();
   if (!settings.sharedSyncRoot) return { published:false, reason:'not-configured' };
@@ -615,6 +694,11 @@ async function publishMasterCheckpoint(actorId = '') {
   const state = await localDb.read();
   const records = sharedSyncPolicy.masterRecordsFromState(state);
   const head = await sharedHub.readMasterHead(checked.root);
+  const guard = head ? await guardCheckpointPublish('master', checked.root, state, records) : { safe:true, missing:[] };
+  if (!guard.safe) {
+    markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED', { area:'master', missing:guard.missing.length, localRecords:Object.keys(records).length, remoteRecords:guard.remoteRecords });
+    return { published:false, protected:true, reason:'local-master-incomplete', head, hub:checked.manifest, records:Object.keys(records).length, missingRecords:guard.missing.slice(0,50) };
+  }
   const saved = await sharedHub.publishMaster(checked.root, { records }, { actorId, previousRevision: head && head.revision || 0 });
   return { published:true, unchanged:saved && saved.unchanged === true, head:saved, hub:checked.manifest, records:Object.keys(records).length };
 }
@@ -672,6 +756,11 @@ async function publishBusinessCheckpoint(actorId='') {
   const checked=await sharedHub.validate(settings.sharedSyncRoot,{requireWrite:true});
   const state=await localDb.read(),records=sharedSyncPolicy.businessRecordsFromState(state),syncHeads=await readSharedSyncHeads(checked.root);
   const head=await sharedHub.readBusinessHead(checked.root);
+  const guard=head?await guardCheckpointPublish('business',checked.root,state,records):{safe:true,missing:[]};
+  if(!guard.safe){
+    markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED',{area:'business',missing:guard.missing.length,localRecords:Object.keys(records).length,remoteRecords:guard.remoteRecords});
+    return {published:false,protected:true,reason:'local-business-incomplete',head,hub:checked.manifest,records:Object.keys(records).length,syncHeads:Object.keys(syncHeads).length,missingRecords:guard.missing.slice(0,50)};
+  }
   const saved=await sharedHub.publishBusiness(checked.root,{records,syncHeads},{actorId,previousRevision:head&&head.revision||0});
   return {published:true,unchanged:saved&&saved.unchanged===true,head:saved,hub:checked.manifest,records:Object.keys(records).length,syncHeads:Object.keys(syncHeads).length};
 }
@@ -759,6 +848,11 @@ async function bootstrapSharedHub({ force = false } = {}) {
   }
   sharedHubBootstrapInFlight = (async () => {
     const settings = await syncSettings.read();
+    // Shared Hub bootstrap must not race the legacy→delta seed pass. A clean
+    // install can otherwise record the Hub revision as "complete" while the
+    // local DB is still empty, causing every subsequent launch to skip the
+    // checkpoint payload and show an empty application.
+    await ensureLocalDbMaintenanceReady();
     const hadLocalLoginSnapshot = userAccess.hasLocalLoginSnapshot();
     const localLoginAllowed = userAccess.canLoginLocally();
     const localState = sharedHub.readLocalState();
@@ -836,12 +930,18 @@ async function bootstrapSharedHub({ force = false } = {}) {
       }
       await deltaStore.hydrate();
       const business = await hydrateBusinessCheckpointIfNeeded();
+      // Revision metadata alone is not proof that the local cache actually
+      // contains the checkpoint payload. Repair any remote records that are
+      // absent locally (unless a local tombstone proves an intentional delete).
+      const checkpointRepair = await reconcileSharedCheckpointCoverage(checked.root, checked.manifest);
       const businessAfter = sharedHub.readLocalState();
       setBootstrapStep('business', {
         status:'done',
         current:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
         total:businessAfter && businessAfter.businessRevision || business && business.head && business.head.revision || 0,
-        detail:businessAfter && businessAfter.businessRevision ? `rev ${businessAfter.businessRevision}` : 'Güncel',
+        detail:businessAfter && businessAfter.businessRevision
+          ? `rev ${businessAfter.businessRevision} · geri yüklenen ${Number(checkpointRepair.master.applied||0)+Number(checkpointRepair.business.applied||0)} kayıt`
+          : 'Güncel',
       });
 
       setBootstrapProgress({ phase:'collections', message:'Koleksiyon izinleri eşitleniyor…' });
