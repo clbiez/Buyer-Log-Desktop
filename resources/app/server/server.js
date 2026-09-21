@@ -1074,7 +1074,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
         }
         master = await applyMasterCheckpoint(checked.root, checked.manifest, localState);
       }
-      const masterHead = master.head || await sharedHub.readMasterHead(checked.root);
+      let masterHead = master.head || await sharedHub.readMasterHead(checked.root);
       setBootstrapStep('master', { status:'done', current:masterHead && masterHead.revision || 0, total:masterHead && masterHead.revision || 0, detail:masterHead ? `rev ${masterHead.revision}` : 'Yerel veri kullanılıyor' });
 
       const businessHead = await sharedHub.readBusinessHead(checked.root);
@@ -1102,6 +1102,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
       // verified DELETE_READY pre-wipe snapshot before business hydration can
       // replace richer recovery data with the sparse remote checkpoint.
       const prewipeRecovery = await recoverEmptySharedHubFromPrewipe(checked.root, checked.manifest);
+      if (prewipeRecovery.recovered) masterHead = await sharedHub.readMasterHead(checked.root);
       const business = await hydrateBusinessCheckpointIfNeeded();
       // Revision metadata alone is not proof that the local cache actually
       // contains the checkpoint payload. Repair any remote records that are
