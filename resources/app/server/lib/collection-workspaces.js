@@ -48,6 +48,135 @@ function ensureSharedWorkspace(ownerIds = [], actorId = '') {
   const workspace = saveWorkspace(SHARED_COLLECTION_OWNER, payload, existing._revision);
   return { workspace, migrated: true, rows: rows.length, owners: migratedOwners };
 }
+
+/* Kişisel backup'lar Shared Collection geçişinden ÖNCE kullanıcıya ait ayrı
+   workspace'i içerir. Shared Hub aktifken bu dosyayı tekrar ownerId'ye yazmak
+   veriyi diskte geri getirir ama UI kanonik olarak shared-collection okuduğu
+   için kullanıcı hiçbir şey görmez. Restore burada PAYLAŞILAN koleksiyona
+   kayıpsız MERGE edilir; başka kullanıcıların satırları asla silinmez.
+
+   Eşleşme sırası:
+   1) migration provenance (_legacyOwnerId + _legacyRowId)
+   2) stable recordId
+   Böylece aynı backup ikinci kez uygulanırsa kopya üretmez; eski satır güncel
+   backup içeriğiyle yenilenir. Shared id/recordId korunur. */
+async function mergePersonalBackupIntoShared(ownerId, rawWorkspace, actorId = '') {
+  const legacyOwnerId = safeId(ownerId);
+  const incoming = normalizeWorkspace(legacyOwnerId, rawWorkspace);
+  const actor = String(actorId || legacyOwnerId);
+  let lastConflict = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const current = loadWorkspace(SHARED_COLLECTION_OWNER);
+    const rows = (Array.isArray(current.rows) ? current.rows : []).map(row => ({ ...row }));
+    const byRecordId = new Map();
+    const byLegacy = new Map();
+    rows.forEach((row, index) => {
+      const recordId = String(row && row.recordId || '').trim();
+      if (recordId) byRecordId.set(recordId, index);
+      const sourceOwner = String(row && row._legacyOwnerId || '').trim();
+      const sourceRow = String(row && row._legacyRowId || '').trim();
+      if (sourceOwner && sourceRow) byLegacy.set(`${sourceOwner}|${sourceRow}`, index);
+    });
+
+    let nextId = Math.max(
+      1,
+      Number(current.nextId) || 1,
+      1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0),
+    );
+    let added = 0, updated = 0;
+    const at = new Date().toISOString();
+
+    incoming.rows.forEach((sourceRow, sourceIndex) => {
+      const legacyRowId = sourceRow && sourceRow.id != null ? String(sourceRow.id) : String(sourceIndex);
+      const recordId = String(sourceRow && (sourceRow.recordId || sourceRow._sharedRecordId) || stableSharedRecordId(legacyOwnerId, sourceRow, sourceIndex));
+      let targetIndex = byLegacy.get(`${legacyOwnerId}|${legacyRowId}`);
+      if (targetIndex == null) targetIndex = byRecordId.get(recordId);
+
+      if (targetIndex != null) {
+        const existing = rows[targetIndex] || {};
+        const restored = {
+          ...sourceRow,
+          id: existing.id,
+          recordId: existing.recordId || recordId,
+          _rev: Math.max(Number(existing._rev) || 0, Number(sourceRow && sourceRow._rev) || 0) + 1,
+          createdBy: existing.createdBy || sourceRow.createdBy || legacyOwnerId,
+          createdAt: existing.createdAt || sourceRow.createdAt || incoming._updatedAt || at,
+          updatedBy: actor,
+          updatedAt: at,
+          _legacyOwnerId: legacyOwnerId,
+          _legacyRowId: legacyRowId,
+        };
+        rows[targetIndex] = restored;
+        byRecordId.set(restored.recordId, targetIndex);
+        byLegacy.set(`${legacyOwnerId}|${legacyRowId}`, targetIndex);
+        updated += 1;
+        return;
+      }
+
+      if (rows.length >= MAX_ROWS) {
+        const error = new Error('Kişisel backup Koleksiyon satırları Shared Collection kapasitesini aşıyor.');
+        error.code = 'COLLECTION_RESTORE_CAPACITY_EXCEEDED';
+        error.statusCode = 409;
+        throw error;
+      }
+      const restored = {
+        ...sourceRow,
+        id: nextId++,
+        recordId,
+        _rev: Math.max(1, Number(sourceRow && sourceRow._rev) || 0),
+        createdBy: sourceRow.createdBy || legacyOwnerId,
+        createdAt: sourceRow.createdAt || incoming._updatedAt || at,
+        updatedBy: actor,
+        updatedAt: at,
+        _legacyOwnerId: legacyOwnerId,
+        _legacyRowId: legacyRowId,
+      };
+      const newIndex = rows.push(restored) - 1;
+      byRecordId.set(recordId, newIndex);
+      byLegacy.set(`${legacyOwnerId}|${legacyRowId}`, newIndex);
+      added += 1;
+    });
+
+    const manufacturers = (Array.isArray(current.manufacturers) ? current.manufacturers : []).map(item => ({ ...item }));
+    const customColumns = (Array.isArray(current.customColumns) ? current.customColumns : []).map(item => ({ ...item }));
+    mergeUniqueObjects(manufacturers, incoming.manufacturers);
+    mergeUniqueObjects(customColumns, incoming.customColumns);
+
+    try {
+      const result = await saveWorkspaceAsync(SHARED_COLLECTION_OWNER, {
+        ...current,
+        rows,
+        manufacturers,
+        customColumns,
+        nextId,
+      }, current._revision);
+      const mirrored = await documents.mirror(documentId(SHARED_COLLECTION_OWNER), result.saved);
+      if (mirrored && mirrored.ok === false) {
+        const error = mirrored.error instanceof Error ? mirrored.error : new Error('Shared Collection yerel veritabanına aynalanamadı.');
+        error.code = error.code || 'COLLECTION_RESTORE_MIRROR_FAILED';
+        throw error;
+      }
+      return {
+        workspace: result.saved,
+        ownerId: SHARED_COLLECTION_OWNER,
+        sourceOwnerId: legacyOwnerId,
+        shared: true,
+        incomingRows: incoming.rows.length,
+        added,
+        updated,
+        totalRows: result.saved.rows.length,
+      };
+    } catch (error) {
+      if (error && error.code === 'REVISION_CONFLICT' && attempt < 2) {
+        lastConflict = error;
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastConflict || Object.assign(new Error('Shared Collection restore tamamlanamadı.'), { code:'COLLECTION_RESTORE_FAILED', statusCode:409 });
+}
 async function mirrorWorkspace(ownerId) {
   // The save worker has its own module graph and intentionally has no delta
   // store attachment; it writes the local compatibility file. Read THAT fresh
@@ -551,5 +680,5 @@ module.exports = {
   loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows,
   applyRowChanges, applyRowChangesAsync, rowRev, rowId,
   defaultWorkspace, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
-  SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mirrorWorkspace,
+  SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mergePersonalBackupIntoShared, mirrorWorkspace,
 };
