@@ -13,6 +13,7 @@ const SERVICE = read('server/lib/user-restore-service.js');
 const BACKUP = read('server/lib/backup-service.js');
 const PREFS = read('server/lib/user-preferences.js');
 const DB = read('server/db.js');
+const COLLECTIONS = read('server/lib/collection-workspaces.js');
 
 test('personal backup UI exposes Restore My Data for every signed-in user', () => {
   assert.match(UI, /data-user-restore/);
@@ -49,4 +50,25 @@ test('personal preference and profile stores have explicit restore entry points'
   assert.match(PREFS, /load, merge, removeKeys, restoreSnapshot/);
   assert.match(DB, /function userBackupStoreSnapshot\(userId\)/);
   assert.match(DB, /function restoreUserBackupStores\(userId, snapshot/);
+});
+
+
+test('personal Collection restore targets Shared Collection without deleting other users rows', () => {
+  assert.match(SERVICE, /function createUserRestoreService\(\{ restoreCollectionWorkspace = null \} = \{\}\)/);
+  assert.match(SERVICE, /await restoreCollectionWorkspace\(currentUser, incoming\.collection\)/);
+  assert.match(SERVER, /mergePersonalBackupIntoShared\(userId, snapshot, userId\)/);
+  assert.match(SERVER, /userRestoreSharedCollectionSync/);
+  assert.match(COLLECTIONS, /async function mergePersonalBackupIntoShared\(/);
+  assert.match(COLLECTIONS, /const rows = \(Array\.isArray\(current\.rows\)/);
+  assert.match(COLLECTIONS, /byLegacy\.get/);
+  assert.match(COLLECTIONS, /byRecordId\.get/);
+  assert.match(COLLECTIONS, /saveWorkspaceAsync\(SHARED_COLLECTION_OWNER/);
+  assert.match(COLLECTIONS, /documents\.mirror\(documentId\(SHARED_COLLECTION_OWNER\), result\.saved\)/);
+  assert.match(COLLECTIONS, /added,/);
+  assert.match(COLLECTIONS, /updated,/);
+});
+
+test('personal restore explains which royalty and email data can and cannot return from a user backup', () => {
+  assert.match(SERVICE, /Koleksiyon satırlarındaki Royalty\/Hologram değerleri Collection ile geri gelir/);
+  assert.match(SERVICE, /merkezi Royalty kuralları ve E-posta Grupları kişisel backup kapsamı dışındadır/);
 });
