@@ -28,3 +28,10 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Run Buyer Log tests
         run: npm test
+      - name: Upload changed-files ZIP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buyerlog-update-test-fix-changed-files
+          path: ../../artifacts/BuyerLog-UpdateTest-Fix-Changed-Files.zip
+          if-no-files-found: error
