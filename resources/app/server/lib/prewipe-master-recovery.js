@@ -101,9 +101,9 @@ function makeStoreRecord(filename, value) {
   return policy.scrubSecrets(record);
 }
 
-function loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
+function loadMasterRecordsFromServerDataRoot(serverRoot, recoveredState = {}) {
   const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
-  const serverRoot = path.join(tempRoot, 'system', 'server-data');
+  if (!serverRoot) return records;
 
   for (const filename of ['settings.json', 'overrides.json', 'fx-rates.json', 'email-groups.json']) {
     const value = readJson(path.join(serverRoot, filename));
@@ -121,6 +121,57 @@ function loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
   }
 
   return records;
+}
+
+function mergeLegacyFxValues(values) {
+  const candidates = (Array.isArray(values) ? values : []).filter(value => value && typeof value === 'object');
+  if (!candidates.length) return null;
+  candidates.sort((a,b) => (Date.parse(a.updatedAt || a._updatedAt || '') || 0) - (Date.parse(b.updatedAt || b._updatedAt || '') || 0));
+  const merged = { base:'USD', currencies:[], months:{}, updatedAt:null, sourceFile:null, sourceType:null, sourceModifiedAt:null, _revision:0 };
+  let hasRates = false;
+  for (const value of candidates) {
+    if (typeof value.base === 'string' && value.base) merged.base = value.base;
+    merged.currencies = [...new Set([...merged.currencies, ...(Array.isArray(value.currencies) ? value.currencies.filter(Boolean) : [])])];
+    for (const [month, rates] of Object.entries(value.months || {})) {
+      if (!rates || typeof rates !== 'object' || !Object.keys(rates).length) continue;
+      merged.months[month] = { ...(merged.months[month] || {}), ...rates };
+      hasRates = true;
+    }
+    merged.updatedAt = value.updatedAt || merged.updatedAt;
+    merged.sourceFile = value.sourceFile || merged.sourceFile;
+    merged.sourceType = value.sourceType || merged.sourceType;
+    merged.sourceModifiedAt = value.sourceModifiedAt || merged.sourceModifiedAt;
+    merged._revision = Math.max(Number(merged._revision)||0, Number(value._revision)||0);
+  }
+  return hasRates ? merged : null;
+}
+
+function loadLegacyFxFromAppDataRoot(appRoot) {
+  if (!appRoot || !fs.existsSync(appRoot)) return null;
+  const files = [path.join(appRoot, 'fx-rates.json')];
+  const userRoot = path.join(appRoot, 'user-source-data');
+  try {
+    for (const entry of fs.readdirSync(userRoot, { withFileTypes:true })) {
+      if (entry.isDirectory()) files.push(path.join(userRoot, entry.name, 'fx-rates.json'));
+    }
+  } catch (_) {}
+  return mergeLegacyFxValues(files.filter(file => fs.existsSync(file)).map(readJson));
+}
+
+function loadMasterRecordsFromLegacyDataRoot(dataRoot, recoveredState = {}) {
+  const records = loadMasterRecordsFromServerDataRoot(path.join(dataRoot, 'server'), recoveredState);
+  const currentFx = records['store:fx-rates.json'];
+  const currentMonths = currentFx && currentFx.months && typeof currentFx.months === 'object' ? Object.keys(currentFx.months).length : 0;
+  if (!currentMonths) {
+    const legacyFx = loadLegacyFxFromAppDataRoot(path.join(dataRoot, 'app'));
+    const candidate = makeStoreRecord('fx-rates.json', legacyFx);
+    if (candidate && shouldPreferRecovery('store:fx-rates.json', candidate, currentFx)) records['store:fx-rates.json'] = candidate;
+  }
+  return records;
+}
+
+function loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
+  return loadMasterRecordsFromServerDataRoot(path.join(tempRoot, 'system', 'server-data'), recoveredState);
 }
 
 function masterCoverage(records) {
@@ -153,6 +204,9 @@ module.exports = {
   documentRevision,
   shouldPreferRecovery,
   masterRecoveryIds,
+  loadMasterRecordsFromServerDataRoot,
+  loadLegacyFxFromAppDataRoot,
+  loadMasterRecordsFromLegacyDataRoot,
   loadMasterRecordsFromExtractedBackup,
   masterCoverage,
 };
