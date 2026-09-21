@@ -7,6 +7,7 @@ const os = require('os');
 const crypto = require('crypto');
 const zlib = require('zlib');
 const { once } = require('events');
+const { Readable } = require('stream');
 
 const BACKUP_VERSION = 1;
 const BACKUP_SCHEMA_VERSION = 1;
@@ -264,6 +265,13 @@ async function archiveRecordStream(file, record) {
     if (localName.toString('utf8') !== record.rawName) throw archiveError('RESTORE_ARCHIVE_INVALID', `Backup ZIP kayıt adı uyuşmuyor: ${record.name}`);
     const dataStart = record.localOffset + 30 + localNameLength + localExtraLength;
     if (dataStart + record.compressedSize > Number((await fsp.stat(file)).size)) throw archiveError('RESTORE_ARCHIVE_INVALID', `Backup ZIP veri alanı dosya sınırını aşıyor: ${record.name}`);
+    if (Number(record.compressedSize) === 0) {
+      await handle.close();
+      if (Number(record.size) !== 0 || Number(record.method) !== 0) {
+        throw archiveError('RESTORE_ARCHIVE_INVALID', `Backup ZIP boş kayıt biçimi geçersiz: ${record.name}`);
+      }
+      return Readable.from([]);
+    }
     const source = fs.createReadStream(file, { start: dataStart, end: dataStart + record.compressedSize - 1, highWaterMark: CHUNK_BYTES });
     source.once('close', () => { void handle.close().catch(() => {}); });
     if (record.method === 0) return source;
