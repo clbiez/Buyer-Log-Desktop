@@ -159,15 +159,8 @@ function loadLegacyFxFromAppDataRoot(appRoot) {
   return mergeLegacyFxValues(files.filter(file => fs.existsSync(file)).map(readJson));
 }
 
-function loadMasterRecordsFromLegacyDataRoot(dataRoot, recoveredState = {}) {
-  const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
-  const roots = [
-    path.join(dataRoot, 'server'),
-    path.join(dataRoot, 'local', 'application-data'),
-    path.join(dataRoot, 'local', 'data'),
-    path.join(dataRoot, 'app'),
-  ];
-  const localFirst = path.join(dataRoot, 'local', 'local-first', 'backups');
+function appendLocalFirstRoots(roots, localDataRoot) {
+  const localFirst = path.join(localDataRoot, 'local-first', 'backups');
   try {
     const backups = fs.readdirSync(localFirst, { withFileTypes:true })
       .filter(entry => entry.isDirectory())
@@ -176,20 +169,45 @@ function loadMasterRecordsFromLegacyDataRoot(dataRoot, recoveredState = {}) {
       .sort();
     roots.push(...backups);
   } catch (_) {}
+  return roots;
+}
+
+function loadMasterRecordsFromFullSystemRoots({ serverDataRoot, appDataRoot, localDataRoot }, recoveredState = {}) {
+  const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
+  const roots = [
+    serverDataRoot,
+    path.join(localDataRoot, 'application-data'),
+    path.join(localDataRoot, 'data'),
+    appDataRoot,
+  ].filter(Boolean);
+  appendLocalFirstRoots(roots, localDataRoot);
   for (const root of roots) mergeMasterRecordsFromServerDataRoot(records, root);
 
   const currentFx = records['store:fx-rates.json'];
   const currentMonths = currentFx && currentFx.months && typeof currentFx.months === 'object' ? Object.keys(currentFx.months).length : 0;
   if (!currentMonths) {
-    const legacyFx = loadLegacyFxFromAppDataRoot(path.join(dataRoot, 'app'));
+    const legacyFx = loadLegacyFxFromAppDataRoot(appDataRoot);
     const candidate = makeStoreRecord('fx-rates.json', legacyFx);
     if (candidate && shouldPreferRecovery('store:fx-rates.json', candidate, currentFx)) records['store:fx-rates.json'] = candidate;
   }
   return records;
 }
 
+function loadMasterRecordsFromLegacyDataRoot(dataRoot, recoveredState = {}) {
+  return loadMasterRecordsFromFullSystemRoots({
+    serverDataRoot:path.join(dataRoot, 'server'),
+    appDataRoot:path.join(dataRoot, 'app'),
+    localDataRoot:path.join(dataRoot, 'local'),
+  }, recoveredState);
+}
+
 function loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
-  return loadMasterRecordsFromServerDataRoot(path.join(tempRoot, 'system', 'server-data'), recoveredState);
+  const systemRoot = path.join(tempRoot, 'system');
+  return loadMasterRecordsFromFullSystemRoots({
+    serverDataRoot:path.join(systemRoot, 'server-data'),
+    appDataRoot:path.join(systemRoot, 'app-data'),
+    localDataRoot:path.join(systemRoot, 'local-data'),
+  }, recoveredState);
 }
 
 function masterCoverage(records) {
@@ -225,6 +243,7 @@ module.exports = {
   mergeMasterRecordsFromServerDataRoot,
   loadMasterRecordsFromServerDataRoot,
   loadLegacyFxFromAppDataRoot,
+  loadMasterRecordsFromFullSystemRoots,
   loadMasterRecordsFromLegacyDataRoot,
   loadMasterRecordsFromExtractedBackup,
   masterCoverage,

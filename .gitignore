@@ -1,70 +1,72 @@
-﻿# Buyer Log Desktop
+# Buyer Log Desktop — source/distribution repository hygiene
 
-# Bağımlılıklar
-node_modules/
+# Installed dependencies are rebuilt deterministically with npm ci.
+**/node_modules/
 
-# Kullanıcı verisi, gerçek yapılandırma ve yedekler (makineye/kullanıcıya özgü — paylaşılmamalı)
-server/data/
-config.json
+# Machine/user configuration. The desktop bootstrap creates config.json from
+# resources/app/config.example.json on first run.
+/config.json
+**/.env
+**/.env.*
+!**/.env.example
+
+# All mutable application state must stay outside Git.
+/data/
+/resources/app/server/data/
+**/runtime-data/
+**/local-data/
+**/source-data/
+**/BUYER_LOG_SYNC/
+**/outbox/
+**/inbox/
+
+# User assets, exports and backups.
+**/images/
+**/model-images/
+**/original-images/
+**/thumbnails/
+**/thumbnail-cache/
+**/image-cache/
+**/exports/
+**/backups/
 *.blgbackup
-
-# Log ve geçici dosyalar
-*.log
-*.tmp
-*.bak
-npm-debug.log*
-
-# İşletim sistemi artıkları
-.DS_Store
-Thumbs.db
-
-# Not: config.example.json bilinçli olarak izlenir (şablon commit'lenmeli).
-
 *.db
 *.sqlite
 *.sqlite3
+*.bak
 
-.env
-.env.*
-
-logs/
-cache/
-temp/
-tmp/
-backups/
-
-data/
-runtime-data/
-local-data/
-
-images/
-model-images/
-original-images/
-thumbnails/
-thumbnail-cache/
-image-cache/
-
-BUYER_LOG_SYNC/
-outbox/
-inbox/
-
-source-data/
-exports/
-
+# Logs, caches, temporary files and generated reports.
+**/logs/
+**/cache/
+**/temp/
+**/tmp/
+/.tmp/
 *.log
 *.tmp
+npm-debug.log*
+/resources/app/dist-updates/
+/resources/app/.release-pending.json
+/coverage/
+/.desktop-dev/
+/.codebase-memory/
+/server/data/.codebase-memory/
+/.codex/
+/.agents/
 
-.codebase-memory/
-server/data/.codebase-memory/
-node_modules/
-.codex/
-.agents/
-GITHUB_SYNC_BUYER_LOG_DESKTOP.bat
-Buyer Log Desktop Test/
-# Masaustu (Electron) paketleyicisinin calisma zamani ve ciktilari
-tools/electron-runtime/node_modules/
-.desktop-dev/
+# Local-only maintenance helpers; they are not part of Buyer Log runtime.
+/.GITHUB_SYNC_BUYER_LOG_DESKTOP.bat
+/GITHUB_SYNC_BUYER_LOG_DESKTOP.bat
+/.UPDATE_CODEBASE_MEMORY_*.cmd
+/install.ps1
+/Buyer Log Desktop Test/
 
-BuyerLog.exe/
-BuyerLog.exe
-BuyerLog-Desktop-*.zip
+# Build/release outputs are distributed through GitHub Releases, not source Git.
+/BuyerLog.exe
+/BuyerLog.exe/
+/BuyerLog-Desktop-*.zip
+
+# OS/editor debris.
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

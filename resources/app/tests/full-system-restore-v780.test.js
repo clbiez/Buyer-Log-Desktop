@@ -53,6 +53,18 @@ async function makeFullArchive(root, options = {}) {
     entries.push({ name: 'system/server-data/cache/manifest.json', buffer: Buffer.from(JSON.stringify({ cacheVersion: 3, entries: ['a', 'b'] })), stage: 'data' });
     entries.push({ name: 'system/app-data/projection/manifest.json', buffer: Buffer.from(JSON.stringify({ generation: 12 })), stage: 'data' });
   }
+  if (options.includeLegacyMaster) {
+    entries.push({ name: 'system/server-data/overrides.json', buffer: Buffer.from(JSON.stringify({ pricingRules: [], transitRules: [], _revision: 20 })), stage: 'data' });
+    entries.push({ name: 'system/server-data/email-groups.json', buffer: Buffer.from(JSON.stringify({ countries: [], types: [], records: [], _revision: 20 })), stage: 'data' });
+    entries.push({ name: 'system/local-data/application-data/overrides.json', buffer: Buffer.from(JSON.stringify({
+      pricingRules: Array.from({ length: 24 }, (_, i) => ({ id: `royalty-${i}` })),
+      transitRules: Array.from({ length: 6 }, (_, i) => ({ id: `transit-${i}` })),
+      _revision: 3,
+    })), stage: 'data' });
+    entries.push({ name: 'system/local-data/application-data/email-groups.json', buffer: Buffer.from(JSON.stringify({
+      countries: [{ id: 'tr', name: 'Türkiye' }], types: [], records: [{ id: 'mail-1', email: 'buyer@example.com' }], _revision: 3,
+    })), stage: 'data' });
+  }
   if (options.includeUnknownContent) entries.push({ name: 'system/unknown/secret.json', buffer: Buffer.from('{"unexpected":true}'), stage: 'data' });
   return createBackupArchive({ entries, manifest: { app_version: options.appVersion || '7.0.79', created_at: '2026-09-14T16:00:00.000Z', backup_type: 'full', user: { id: 'moderator' }, device: { hostname: 'OLD-PC', platform: 'win32', arch: 'x64' } }, filename: options.filename || 'BuyerLog_FullBackup_test.zip' });
 }
@@ -179,6 +191,22 @@ test('v7.80 · temiz/yeni PC benzetiminde full restore data + DB + config + secu
   const sync = JSON.parse(await fsp.readFile(syncFile, 'utf8')); assert.equal(sync.localDbPath, roots.localDbFile); assert.equal(sync.deviceId, 'new-pc-device'); assert.equal(sync.sharedSyncRoot, '\\\\server\\buyerlog');
   assert.ok(result.warnings.some(item => /şifre|credential|Parolalar/i.test(item)));
   assert.deepEqual(writeLockStates, [true, false]); assert.deepEqual(commitStates, [true, false]);
+});
+
+test('v7.80 · full restore boş canonical Master yerine legacy royalty, yol süresi ve e-posta kayıtlarını yükseltir', async t => {
+  const { root, roots } = await makeRoots(t), securityFile = path.join(root, 'auth', 'user-access.json'), syncFile = path.join(roots.localDataRoot, 'sync-settings.json');
+  await seedCurrent(roots, securityFile, syncFile);
+  const archive = await makeFullArchive(root, { includeLegacyMaster: true }); t.after(() => archive.cleanup());
+  const deps = makeDependencies({ roots, securityFile, syncFile }); const localDb = createLocalDb(roots.localDbFile);
+  const service = createFullRestoreService({ appVersion: '7.0.80', roots, localDb, securityFile, ...deps });
+  const result = await service.restore(archive.path, { actor: { id: 'moderator', systemRole: 'moderator' }, createSafetyBackup: false });
+  const state = await localDb.read();
+  assert.ok(result.applied.masterRecovery.promoted >= 2);
+  assert.ok(result.applied.masterRecovery.ids.includes('store:overrides.json'));
+  assert.ok(result.applied.masterRecovery.ids.includes('store:email-groups.json'));
+  assert.equal(state.records['store:overrides.json'].pricingRules.length, 24);
+  assert.equal(state.records['store:overrides.json'].transitRules.length, 6);
+  assert.equal(state.records['store:email-groups.json'].records.length, 1);
 });
 
 test('v7.80 · restore öncesi indirilebilir Tam Sistem güvenlik yedeği kullanıcı tercihiyle atlanabilir', async t => {

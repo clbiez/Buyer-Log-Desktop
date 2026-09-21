@@ -80,6 +80,31 @@ test('verified non-empty Master data replaces later-created empty/default cache 
   assert.deepEqual(recovery.masterRecoveryIds(recovered, emptyNewer).sort(), Object.keys(recovered).sort());
 });
 
+test('full backup loader promotes rich legacy settings when canonical Master snapshot is empty', async t => {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-full-backup-legacy-master-'));
+  t.after(() => fsp.rm(root, { recursive:true, force:true }));
+  const canonical = path.join(root, 'system', 'server-data');
+  const legacy = path.join(root, 'system', 'local-data', 'application-data');
+  await fsp.mkdir(canonical, { recursive:true });
+  await fsp.mkdir(legacy, { recursive:true });
+  await fsp.writeFile(path.join(canonical, 'overrides.json'), JSON.stringify({ pricingRules:[], transitRules:[], _revision:12 }));
+  await fsp.writeFile(path.join(canonical, 'email-groups.json'), JSON.stringify({ countries:[], types:[], records:[], _revision:12 }));
+  await fsp.writeFile(path.join(legacy, 'overrides.json'), JSON.stringify({
+    pricingRules:Array.from({ length:24 }, (_,i) => ({ id:`royalty-${i}` })),
+    transitRules:Array.from({ length:6 }, (_,i) => ({ id:`transit-${i}` })),
+    _revision:3,
+  }));
+  await fsp.writeFile(path.join(legacy, 'email-groups.json'), JSON.stringify({
+    countries:[{ id:'tr', name:'Türkiye' }], types:[], records:[{ id:'mail-1', email:'buyer@example.com' }], _revision:3,
+  }));
+
+  const records = recovery.loadMasterRecordsFromExtractedBackup(root, { records:{} });
+  const coverage = recovery.masterCoverage(records);
+  assert.equal(coverage.royaltyRules, 24);
+  assert.equal(coverage.transitRules, 6);
+  assert.equal(coverage.emailGroups, 1);
+});
+
 test('first-open bootstrap verifies Master payload before Buyer Log becomes ready', () => {
   assert.match(SERVER, /async function verifySharedMasterBootstrap\(root\)/);
   assert.match(SERVER, /SHARED_HUB_MASTER_INCOMPLETE/);
@@ -214,8 +239,8 @@ test('legacy portable backup scans server plus local/application-data and local/
 
 test('deep legacy Master scan includes local-first legacy-server-data fallbacks', () => {
   const source = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'prewipe-master-recovery.js'), 'utf8');
-  assert.match(source, /path\.join\(dataRoot, 'local', 'application-data'\)/);
-  assert.match(source, /path\.join\(dataRoot, 'local', 'data'\)/);
-  assert.match(source, /path\.join\(dataRoot, 'local', 'local-first', 'backups'\)/);
+  assert.match(source, /path\.join\(localDataRoot, 'application-data'\)/);
+  assert.match(source, /path\.join\(localDataRoot, 'data'\)/);
+  assert.match(source, /path\.join\(localDataRoot, 'local-first', 'backups'\)/);
   assert.match(source, /legacy-server-data/);
 });

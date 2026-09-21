@@ -10,6 +10,7 @@ const {
 const { skipBackupFile } = require('./backup-service');
 const { createLocalDb, SCHEMA_VERSION: LOCAL_DB_SCHEMA_VERSION } = require('./local-db');
 const { isNetworkPath } = require('./local-path-policy');
+const prewipeMasterRecovery = require('./prewipe-master-recovery');
 
 const SENSITIVE_KEY = /(?:password|pinHash|secret|token|cookie|credential|clientSecret|privateKey|loginFailures?|lockUntil|session(?:Id|Key|Secret|Token|Cookie))/i;
 const MACHINE_PATH_KEY = /(?:path|folder|directory|root|file)$/i;
@@ -405,6 +406,30 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       await copyFileDurable(source, target); applied += 1;
       report(progress, { phase: 'Uygulanıyor', current: applied, total: manifest.contents.length, item: archivePath });
     }
+    let masterRecovery = { promoted:0, ids:[], coverage:null };
+    if (localDb && typeof localDb.read === 'function' && typeof localDb.transaction === 'function') {
+      if (typeof localDb.setFolder === 'function') localDb.setFolder(path.dirname(roots.localDbFile));
+      const restoredState = await localDb.read();
+      const recoveredRecords = prewipeMasterRecovery.loadMasterRecordsFromFullSystemRoots(roots, restoredState);
+      const ids = prewipeMasterRecovery.masterRecoveryIds(recoveredRecords, restoredState.records);
+      if (ids.length) {
+        await localDb.transaction(async next => {
+          next.records = next.records && typeof next.records === 'object' ? next.records : {};
+          next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
+          for (const id of ids) {
+            next.records[id] = clone(recoveredRecords[id]);
+            delete next.tombstones[id];
+          }
+          return { promoted:ids.length };
+        });
+      }
+      const after = ids.length ? await localDb.read() : restoredState;
+      masterRecovery = {
+        promoted:ids.length,
+        ids,
+        coverage:prewipeMasterRecovery.masterCoverage(after.records),
+      };
+    }
     let currentConfig = {};
     try { currentConfig = JSON.parse(await fsp.readFile(roots.configPath, 'utf8')); } catch (_) {}
     await atomicWriteJson(roots.configPath, mergePortableConfig(currentConfig, validation.configSnapshot));
@@ -416,7 +441,7 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
     const security = validation.securitySnapshot && userAccess && typeof userAccess.restoreBackupSnapshot === 'function'
       ? await userAccess.restoreBackupSnapshot(validation.securitySnapshot, { centralIamExpected: validation.configSnapshot && validation.configSnapshot.centralIamEnabled === true })
       : { applied: false, restoredUsers: 0, credentialsRequired: 0 };
-    return { appliedFiles: applied, security, sync };
+    return { appliedFiles: applied, security, sync, masterRecovery };
   }
 
   async function verifyRestored(validation = null, applied = null) {

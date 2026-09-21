@@ -1,0 +1,44 @@
+name: Buyer Log immutable version branch
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: buyerlog-version-branch
+  cancel-in-progress: false
+
+jobs:
+  record-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact main commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Create immutable updates/vVERSION branch
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          VERSION="$(node -p "require('./resources/app/package.json').version")"
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          BRANCH="updates/v${VERSION}"
+          REMOTE_SHA="$(git ls-remote --heads origin "refs/heads/${BRANCH}" | awk '{print $1}')"
+          if [[ -n "$REMOTE_SHA" && "$REMOTE_SHA" != "$SOURCE_SHA" ]]; then
+            echo "::error::${BRANCH} already records ${REMOTE_SHA}; bump package version for a new update."
+            exit 1
+          fi
+          if [[ -z "$REMOTE_SHA" ]]; then
+            git push origin "${SOURCE_SHA}:refs/heads/${BRANCH}"
+          fi
+          echo "Recorded ${SOURCE_SHA} as ${BRANCH}."

@@ -23,3 +23,24 @@ npm run release:bridge -- BUNDLE_DIR OLD_RELEASE_FOLDER
 Bu komut mevcut klasör publish yoluyla bridge sürümünü eski TEST kaynağına koyar. Moderatör testinden sonra aynı klasörde mevcut `npm run release:promote -- VERSION --source OLD_RELEASE_FOLDER` komutuyla STABLE'a taşıyın. Eski istemci bridge sürümünü klasörden alır; yeniden başlatma sonrası bridge artifact içindeki public `github:OWNER/REPO` kaydı eski klasör ayarından GitHub provider'ına geçişi sağlar. Ardından bir sonraki sürüm GitHub üzerinden gelir. Bridge ZIP'inin kendi sürümünü ayrıca GitHub TEST/STABLE release olarak doğrulamadan `latest` ilerletmeyin. Geçiş gerçek eski istemci ve gerçek klasör/OneDrive paylaşımı üzerinde doğrulanana ve tüm aktif istemciler bridge'e yükselene kadar eski klasör kaynağını koruyun.
 
 Klasör kaynağına otomatik yazma CI'da yoktur; kurumun OneDrive/SharePoint erişimi ve aktif istemci envanteri yerel dağıtım sorumlusundadır. Mevcut sürüm GitHub veya Shared Hub erişilemezken çalışmaya devam eder. Release ZIP'inde kullanıcı verisi bulunmamalıdır.
+# Source synchronization and version branches
+
+The private source repository is `clbiez/Buyer-Log-Desktop`. Mutable user data,
+machine configuration, caches, logs, backups, generated update bundles and
+installed dependencies are intentionally excluded from source control.
+
+For a normal patch update, run from `resources/app`:
+
+```powershell
+npm run github:sync:patch -- --message "Describe the update"
+```
+
+The command bumps the canonical patch version, validates the staged paths, runs
+the complete test suite, commits the update and atomically pushes both `main`
+and the immutable `updates/vX.Y.Z` branch. A version branch can never be moved
+to different content; bump the version for the next update.
+
+`npm run github:sync` performs the same validation without changing the version.
+It is useful only while the current `updates/vX.Y.Z` branch does not yet exist.
+GitHub Actions also verifies every `main` push and creates the version branch if
+the local sync command was not used.
