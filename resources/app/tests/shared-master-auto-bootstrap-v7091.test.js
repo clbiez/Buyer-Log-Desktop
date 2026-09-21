@@ -156,3 +156,66 @@ test('legacy data-BACKUP can promote pre-shared user FX into central FX when ser
   const records = recovery.loadMasterRecordsFromLegacyDataRoot(root, {});
   assert.equal(records['store:fx-rates.json'].months['202609'].TRY, 42.25);
 });
+
+
+test('legacy portable backup scans server plus local/application-data and local/data layouts', async t => {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-deep-legacy-master-'));
+  t.after(() => fsp.rm(root, { recursive:true, force:true }));
+
+  const serverRoot = path.join(root, 'server');
+  const appDataRoot = path.join(root, 'local', 'application-data');
+  const localDataRoot = path.join(root, 'local', 'data');
+  await fsp.mkdir(serverRoot, { recursive:true });
+  await fsp.mkdir(appDataRoot, { recursive:true });
+  await fsp.mkdir(localDataRoot, { recursive:true });
+
+  await fsp.writeFile(path.join(serverRoot, 'overrides.json'), JSON.stringify({
+    pricingRules:[{ id:'server-rule' }],
+    transitRules:[{ id:'server-transit' }],
+    nonDtrManufacturers:['A'],
+    landedMultipliers:{ tr:1.05, overseas:1.11 },
+    freightRates:{ routes:[{ id:'server-route' }] },
+    _revision:10,
+  }));
+  await fsp.writeFile(path.join(serverRoot, 'fx-rates.json'), JSON.stringify({
+    base:'USD', months:{ '2026-09':{ TRY:42 } }, _revision:10,
+  }));
+  await fsp.writeFile(path.join(appDataRoot, 'settings.json'), JSON.stringify({
+    modelConnections:[{ id:'asas' }, { id:'ias' }], _revision:809,
+  }));
+  await fsp.writeFile(path.join(appDataRoot, 'overrides.json'), JSON.stringify({
+    pricingRules:Array.from({ length:24 }, (_,i) => ({ id:'rule-'+i })),
+    transitRules:Array.from({ length:6 }, (_,i) => ({ id:'tr-'+i })),
+    nonDtrManufacturers:['A','B','C','D'],
+    landedMultipliers:{ tr:1.05, overseas:1.11 },
+    freightRates:{ routes:[{ id:'x' }] },
+    _revision:3042,
+  }));
+  await fsp.writeFile(path.join(appDataRoot, 'email-groups.json'), JSON.stringify({
+    countries:[], types:[{ id:'dokuma', name:'Dokuma' }], records:[], _revision:1,
+  }));
+  const endek = {
+    schemaVersion:1, generatedAt:'2026-08-14T13:36:22.280Z',
+    months:Array.from({ length:28 }, (_,i) => String(i)),
+    records:Array.from({ length:4589 }, () => ['A','B','C','D','E','','','','','','','','']),
+  };
+  await fsp.writeFile(path.join(appDataRoot, 'endeksmatik-snapshot.json.gz'), zlib.gzipSync(Buffer.from(JSON.stringify(endek))));
+  await fsp.writeFile(path.join(localDataRoot, 'settings.json'), JSON.stringify({ modelConnections:[{ id:'old' }], _revision:803 }));
+
+  const records = recovery.loadMasterRecordsFromLegacyDataRoot(root, {});
+  const coverage = recovery.masterCoverage(records);
+  assert.equal(coverage.modelConnections, 2);
+  assert.equal(coverage.royaltyRules, 24);
+  assert.equal(coverage.transitRules, 6);
+  assert.equal(coverage.nonDtrManufacturers, 4);
+  assert.equal(coverage.fxKeys, 1);
+  assert.equal(coverage.endeksmatikRecords, 4589);
+});
+
+test('deep legacy Master scan includes local-first legacy-server-data fallbacks', () => {
+  const source = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'prewipe-master-recovery.js'), 'utf8');
+  assert.match(source, /path\.join\(dataRoot, 'local', 'application-data'\)/);
+  assert.match(source, /path\.join\(dataRoot, 'local', 'data'\)/);
+  assert.match(source, /path\.join\(dataRoot, 'local', 'local-first', 'backups'\)/);
+  assert.match(source, /legacy-server-data/);
+});
