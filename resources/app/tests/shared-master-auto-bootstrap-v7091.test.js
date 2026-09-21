@@ -98,3 +98,46 @@ test('pre-wipe recovery reads legacy settings, royalty, email, FX and Endeksmati
   assert.match(SERVER, /filter\(id => !\/shared-collection\//);
   assert.match(SERVER, /inventory:finalCoverage/);
 });
+
+
+test('legacy data-BACKUP server root can rebuild Master without a Full System Backup archive', async t => {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-data-backup-root-'));
+  t.after(() => fsp.rm(root, { recursive:true, force:true }));
+  const serverData = path.join(root, 'server');
+  await fsp.mkdir(serverData, { recursive:true });
+  await fsp.writeFile(path.join(serverData, 'overrides.json'), JSON.stringify({
+    pricingRules:[{ id:'r1', licensor:'Disney', royalty:0.12 }],
+    transitRules:[{ id:'t1', days:10 }],
+    _revision:7,
+  }));
+  await fsp.writeFile(path.join(serverData, 'email-groups.json'), JSON.stringify({
+    records:[{ id:'e1', manufacturer:'SUP1', email:'a@b.com' }],
+    countries:[], types:[], _revision:3,
+  }));
+  await fsp.writeFile(path.join(serverData, 'fx-rates.json'), JSON.stringify({
+    base:'USD', months:{ '202609':{ TRY:42 } }, _revision:2,
+  }));
+  const snapshot = {
+    schemaVersion:1, generatedAt:'2026-09-19T09:00:00.000Z',
+    months:['202609'], fx:{}, records:[['A','B','C','D','E','','','','','','','','']],
+  };
+  await fsp.writeFile(path.join(serverData, 'endeksmatik-snapshot.json.gz'), zlib.gzipSync(Buffer.from(JSON.stringify(snapshot))));
+
+  const records = recovery.loadMasterRecordsFromServerDataRoot(serverData, {});
+  assert.equal(records['store:overrides.json'].pricingRules.length, 1);
+  assert.equal(records['store:email-groups.json'].records.length, 1);
+  assert.equal(Object.keys(records['store:fx-rates.json'].months).length, 1);
+  assert.equal(records['endeksmatik:snapshot'].snapshot.records.length, 1);
+});
+
+test('bootstrap can repair catastrophic empty Master from preserved data-BACKUP folder and publish it once for all users', () => {
+  assert.match(SERVER, /function portableDataRootForRecovery\(\)/);
+  assert.match(SERVER, /\^data\[-_ \]\?backup/);
+  assert.match(SERVER, /async function recoverSharedMasterFromLocalDataBackup\(root\)/);
+  assert.match(SERVER, /masterCoverageIsCatastrophicallySparse\(currentCoverage\)/);
+  assert.match(SERVER, /loadMasterRecordsFromServerDataRoot\(candidate\.serverRoot, recoveredState\)/);
+  assert.match(SERVER, /actorId:'local-data-backup-auto-recovery'/);
+  assert.match(SERVER, /SHARED_LOCAL_DATA_BACKUP_RECOVERED/);
+  assert.match(SERVER, /const localDataRecovery = await recoverSharedMasterFromLocalDataBackup\(checked\.root\)/);
+  assert.match(SERVER, /localDataBackupRecovered:Boolean\(localDataRecovery\.recovered\)/);
+});
