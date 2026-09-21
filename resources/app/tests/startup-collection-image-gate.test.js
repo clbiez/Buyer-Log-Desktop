@@ -44,5 +44,5 @@ test('Shared Hub image transport is Collection-only and owner namespaced', () =>
 test('CP and Orders do not hydrate model images from Shared Hub', () => {
   assert.match(server, /scopeUsesSharedImages\(plmJobScope\(req\)\)/);
   assert.match(server, /allowShared: false/);
-  assert.doesNotMatch(server, /requireAnyArea\('source','koleksiyon','cp','orders'\).*model-images\/shared\/sync/s);
+  assert.doesNotMatch(server, /model-images\/shared\/sync'[\s\S]{0,220}requireAnyArea\([^\n]*cp[^\n]*orders/);
 });
