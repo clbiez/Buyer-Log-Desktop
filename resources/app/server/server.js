@@ -35,6 +35,7 @@ const { createCollectionPermissionsStore } = require('./lib/collection-permissio
 const { resolveBuyerLogDataRoots } = require('./lib/data-roots');
 const { createDataMaintenance } = require('./lib/data-maintenance');
 const { createBackupService } = require('./lib/backup-service');
+const { createSharedPersonalBackupService } = require('./lib/shared-personal-backup');
 const { createUserRestoreService } = require('./lib/user-restore-service');
 const { createFullRestoreService, recoverInterruptedRestoresSync } = require('./lib/full-restore-service');
 const { isClientRequestAborted } = require('./lib/http-errors');
@@ -771,6 +772,7 @@ syncSettings.onStateChange(state => {
   }
 });
 const backupService = createBackupService({ appVersion: APP_VERSION, userAccess, syncSettings, localDb });
+const sharedPersonalBackupService = createSharedPersonalBackupService({ backupService, syncSettings, sharedHub, retentionCount: 30 });
 const userRestoreService = createUserRestoreService();
 const userRestoreUploads = new Map(), userRestoreJobs = new Map();
 // Full System Restore state is intentionally separate from ordinary backup jobs:
@@ -5746,6 +5748,40 @@ function backupJobStatus(job) {
     filename: job.archive ? job.archive.filename : null,
   };
 }
+app.get('/api/backups/shared-personal/status', async (req, res) => {
+  try {
+    const result = await sharedPersonalBackupService.status(req.currentUser);
+    res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
+  } catch (error) {
+    res.status(Number(error && error.statusCode) || 503).json({ error: error && error.message || 'Ortak kişisel yedek durumu okunamadı.', code: error && error.code || 'SHARED_PERSONAL_BACKUP_STATUS_FAILED' });
+  }
+});
+app.post('/api/backups/shared-personal', express.json({ limit: '12mb' }), async (req, res) => {
+  try {
+    if (systemRestoreState.writeLocked) return res.status(409).json({ error: 'Full System Restore devam ederken ortak kişisel yedek oluşturulamaz.', code: 'SYSTEM_RESTORE_IN_PROGRESS' });
+    const result = await sharedPersonalBackupService.create(req.currentUser, req.body && req.body.browserStorage || {});
+    res.status(result && result.configured === false ? 200 : 201).json({ ok: true, ...result });
+  } catch (error) {
+    logRuntimeFailure('sharedPersonalBackup', error);
+    res.status(Number(error && error.statusCode) || 503).json({ error: error && error.message || 'Ortak kişisel yedek oluşturulamadı.', code: error && error.code || 'SHARED_PERSONAL_BACKUP_FAILED' });
+  }
+});
+app.get('/api/backups/shared-personal/latest', async (req, res) => {
+  try {
+    const latest = await sharedPersonalBackupService.latestFile(req.currentUser);
+    if (!latest) return res.status(404).json({ error: 'Ortak klasörde bu kullanıcıya ait kişisel yedek bulunamadı.', code: 'SHARED_PERSONAL_BACKUP_NOT_FOUND' });
+    const stat = await fs.promises.stat(latest.file);
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', `attachment; filename="${path.basename(latest.file)}"`);
+    res.setHeader('Content-Length', String(stat.size));
+    const stream = fs.createReadStream(latest.file);
+    stream.on('error', error => { if (!res.headersSent) apiError(res, error, 'Ortak kişisel yedek okunamadı.'); else res.destroy(error); });
+    stream.pipe(res);
+  } catch (error) {
+    res.status(Number(error && error.statusCode) || 503).json({ error: error && error.message || 'Ortak kişisel yedek okunamadı.', code: error && error.code || 'SHARED_PERSONAL_BACKUP_READ_FAILED' });
+  }
+});
+
 app.post('/api/backups', express.json({ limit: '12mb' }), (req, res) => {
   const mode = req.body && req.body.mode === 'full' ? 'full' : 'user';
   if (mode === 'full' && req.currentUser.systemRole !== 'moderator') return res.status(403).json({ error: 'Tam Sistem Yedeği yalnız moderatör tarafından oluşturulabilir.' });
