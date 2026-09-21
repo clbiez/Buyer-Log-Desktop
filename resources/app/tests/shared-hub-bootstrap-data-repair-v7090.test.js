@@ -54,13 +54,14 @@ test('bootstrap exposes record counts so an empty Shared Hub cannot masquerade a
 });
 
 
-test('empty Master checkpoint is auto-recovered only from a verified DELETE_READY pre-wipe backup', () => {
+test('incomplete Master checkpoint is auto-recovered only from a verified DELETE_READY pre-wipe backup', () => {
   assert.match(server, /async function findVerifiedPrewipeRecovery\(/);
   assert.match(server, /critical-state\.json/);
   assert.match(server, /DELETE-READY\.json/);
   assert.match(server, /inspectBackupArchive\(candidate\.backupFile, \{ requireType:'full', validateData:true \}\)/);
   assert.match(server, /PREWIPE_BACKUP_SHA_MISMATCH/);
-  assert.match(server, /currentMasterCount !== 0/);
+  assert.match(server, /expectedMaster > 0 && currentMasterCount < expectedMaster/);
+  assert.match(server, /masterRecoveryIds\(recovered\.masterRecords, currentMaster\)/);
   assert.match(server, /async function recoverEmptySharedHubFromPrewipe\(/);
   assert.match(server, /actorId:'prewipe-auto-recovery'/);
   assert.match(server, /SHARED_PREWIPE_RECOVERED/);

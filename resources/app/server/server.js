@@ -36,6 +36,7 @@ const { resolveBuyerLogDataRoots } = require('./lib/data-roots');
 const { createDataMaintenance } = require('./lib/data-maintenance');
 const { createBackupService } = require('./lib/backup-service');
 const { inspectBackupArchive, extractBackupArchive } = require('./lib/backup-archive');
+const prewipeMasterRecovery = require('./lib/prewipe-master-recovery');
 const { createSharedPersonalBackupService } = require('./lib/shared-personal-backup');
 const { createUserRestoreService } = require('./lib/user-restore-service');
 const { createFullRestoreService, recoverInterruptedRestoresSync } = require('./lib/full-restore-service');
@@ -779,28 +780,75 @@ async function loadPrewipeRecoveryRecords(candidate) {
       path.join(tempRoot, 'system', 'local', 'BuyerLogLocal.db'),
     ];
     const dbFile = dbCandidates.find(file => fs.existsSync(file));
-    if (!dbFile) throw Object.assign(new Error('Pre-wipe backup içinde BuyerLogLocal.db bulunamadı.'), { code:'PREWIPE_LOCAL_DB_MISSING', statusCode:503 });
-    const recoveredDb = createLocalDb(dbFile);
-    const recoveredState = await recoveredDb.read();
-    const masterRecords = sharedSyncPolicy.masterRecordsFromState(recoveredState);
+    const recoveredState = dbFile ? await createLocalDb(dbFile).read() : {};
+    // Full backup sadece delta DB'yi değil, aynı anın legacy server-data
+    // dosyalarını da taşır. Eski kurulumlarda Master kayıtlarının bir kısmı
+    // yalnız settings/overrides/fx/email/endeksmatik dosyalarında olabilir.
+    // İki kaynağı birleştirerek verified pre-wipe snapshot'ı yeniden kur.
+    const masterRecords = prewipeMasterRecovery.loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState);
     const businessRecords = sharedSyncPolicy.businessRecordsFromState(recoveredState);
-    if (Object.keys(masterRecords).length < candidate.expectedMaster) {
-      throw Object.assign(new Error('Pre-wipe backup Master Data kaydı beklenenden eksik.'), {
-        code:'PREWIPE_MASTER_INCOMPLETE', statusCode:503,
-        details:{ expected:candidate.expectedMaster, actual:Object.keys(masterRecords).length },
-      });
-    }
-    if (Object.keys(businessRecords).length < candidate.expectedBusiness) {
-      throw Object.assign(new Error('Pre-wipe backup Business Data kaydı beklenenden eksik.'), {
-        code:'PREWIPE_BUSINESS_INCOMPLETE', statusCode:503,
-        details:{ expected:candidate.expectedBusiness, actual:Object.keys(businessRecords).length },
-      });
-    }
-    return { masterRecords, businessRecords, syncHeads:recoveredState.syncCheckpoints || {} };
+    return {
+      masterRecords,
+      businessRecords,
+      syncHeads:recoveredState.syncCheckpoints || {},
+      masterCoverage:prewipeMasterRecovery.masterCoverage(masterRecords),
+      localDbFound:Boolean(dbFile),
+    };
   } finally {
     await fs.promises.rm(tempRoot, { recursive:true, force:true }).catch(()=>{});
   }
 }
+function masterCheckpointInventory(snapshot) {
+  const payload = snapshot && snapshot.envelope && snapshot.envelope.payload;
+  return payload && payload.inventory && typeof payload.inventory === 'object' ? payload.inventory : null;
+}
+function masterCoverageMissing(expected, actual) {
+  if (!expected || typeof expected !== 'object') return [];
+  const current = actual && typeof actual === 'object' ? actual : {};
+  const fields = [
+    'records','modelConnections','royaltyRules','transitRules','nonDtrManufacturers',
+    'landedMultipliers','freightRates','emailGroups','emailCountries','fxKeys','endeksmatikRecords',
+  ];
+  return fields.filter(field => Number(expected[field] || 0) > Number(current[field] || 0));
+}
+async function verifySharedMasterBootstrap(root) {
+  const remote = await sharedHub.readMaster(root, null);
+  const remoteRecords = checkpointRecords(remote);
+  const state = await localDb.read();
+  const localRecords = sharedSyncPolicy.masterRecordsFromState(state);
+  const missing = checkpointRecoverableIds(remoteRecords, localRecords, state.tombstones);
+  const expectedInventory = masterCheckpointInventory(remote);
+  const localInventory = prewipeMasterRecovery.masterCoverage(localRecords);
+  const coverageMissing = masterCoverageMissing(expectedInventory, localInventory);
+  if (missing.length || coverageMissing.length) {
+    throw Object.assign(new Error('Shared Hub sistem ayarları yerel önbelleğe eksiksiz alınamadı.'), {
+      code:'SHARED_HUB_MASTER_INCOMPLETE',
+      statusCode:503,
+      details:{
+        missingRecords:missing.slice(0,50),
+        coverageMissing,
+        remoteRecords:Object.keys(remoteRecords).length,
+        localRecords:Object.keys(localRecords).length,
+        expectedInventory,
+        localInventory,
+      },
+    });
+  }
+  return {
+    remoteRecords:Object.keys(remoteRecords).length,
+    localRecords:Object.keys(localRecords).length,
+    inventory:localInventory,
+    head:remote && remote.head || null,
+  };
+}
+const SHARED_BOOTSTRAP_INTEGRITY_ERRORS = new Set([
+  'PREWIPE_BACKUP_SHA_MISMATCH',
+  'PREWIPE_MASTER_INCOMPLETE',
+  'SHARED_HUB_DATA_INCOMPLETE',
+  'SHARED_HUB_MASTER_INCOMPLETE',
+  'SHARED_HUB_PENDING_CHANGES',
+]);
+
 async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const [masterRemote, businessRemote] = await Promise.all([
     sharedHub.readMaster(root, null),
@@ -810,47 +858,104 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const currentBusiness = checkpointRecords(businessRemote);
   const currentMasterCount = Object.keys(currentMaster).length;
   const currentBusinessCount = Object.keys(currentBusiness).length;
-  // Automatic recovery is intentionally narrow: a zero-record Master
-  // checkpoint is not a legitimate clean-install source when a verified
-  // DELETE_READY pre-wipe backup says Master records existed. This is the
-  // catastrophic empty-checkpoint signature, not a general rollback feature.
-  if (currentMasterCount !== 0) return { recovered:false, reason:'master-not-empty', currentMasterCount, currentBusinessCount };
   const candidate = await findVerifiedPrewipeRecovery(root, hub);
   if (!candidate) return { recovered:false, reason:'verified-prewipe-not-found', currentMasterCount, currentBusinessCount };
+  const expectedMaster = Math.max(0, Number(candidate.expectedMaster) || 0);
+  const publishedInventory = masterCheckpointInventory(masterRemote);
+  if (publishedInventory && currentMasterCount >= expectedMaster && Number(publishedInventory.records || 0) >= expectedMaster) {
+    return { recovered:false, reason:'checkpoint-inventory-complete', currentMasterCount, currentBusinessCount, masterCoverage:publishedInventory };
+  }
+
   const recovered = await loadPrewipeRecoveryRecords(candidate);
+  const masterRecoverIds = prewipeMasterRecovery.masterRecoveryIds(recovered.masterRecords, currentMaster);
+  // Collection kişisel restore ile ayrıca yönetilir. Pre-wipe Master onarımı
+  // mevcut Shared Collection'ı ASLA geri sarmaz; business tarafında yalnız
+  // gerçekten eksik kayıt kimlikleri eklenebilir.
+  const businessRecoverIds = checkpointUnaccountedIds(recovered.businessRecords, currentBusiness, {})
+    .filter(id => !/shared-collection/.test(String(id)));
+
+  // Verified DELETE_READY raporu, wipe öncesinde Shared Master'ın kaç kayıt
+  // taşıdığını söyler. Hub o sayının altındaysa veya legacy/full-backup içinde
+  // daha zengin bir Master kaydı varsa bu normal bir "boş kurulum" değildir;
+  // otomatik kurtarma gerekir.
+  const masterShort = expectedMaster > 0 && currentMasterCount < expectedMaster;
+  if (!masterShort && !masterRecoverIds.length && !businessRecoverIds.length) {
+    return {
+      recovered:false,
+      reason:'checkpoint-complete',
+      currentMasterCount,
+      currentBusinessCount,
+      recoveredCoverage:recovered.masterCoverage,
+    };
+  }
+
   await localDb.transaction(async next => {
     next.records = next.records && typeof next.records === 'object' ? next.records : {};
     next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
-    for (const [id, record] of Object.entries({ ...recovered.masterRecords, ...recovered.businessRecords })) {
-      next.records[id] = JSON.parse(JSON.stringify(record));
+    for (const id of masterRecoverIds) {
+      next.records[id] = JSON.parse(JSON.stringify(recovered.masterRecords[id]));
       delete next.tombstones[id];
     }
-    return { master:Object.keys(recovered.masterRecords).length, business:Object.keys(recovered.businessRecords).length };
+    for (const id of businessRecoverIds) {
+      next.records[id] = JSON.parse(JSON.stringify(recovered.businessRecords[id]));
+      delete next.tombstones[id];
+    }
+    return { master:masterRecoverIds.length, business:businessRecoverIds.length };
   });
   await deltaStore.hydrate();
+
   const state = await localDb.read();
   const masterRecords = sharedSyncPolicy.masterRecordsFromState(state);
   const businessRecords = sharedSyncPolicy.businessRecordsFromState(state);
+  const finalCoverage = prewipeMasterRecovery.masterCoverage(masterRecords);
+  if (expectedMaster > 0 && Object.keys(masterRecords).length < expectedMaster) {
+    throw Object.assign(new Error('Verified pre-wipe Master Data tam olarak geri yüklenemedi.'), {
+      code:'PREWIPE_MASTER_INCOMPLETE',
+      statusCode:503,
+      details:{
+        expected:expectedMaster,
+        actual:Object.keys(masterRecords).length,
+        recovered:Object.keys(recovered.masterRecords).length,
+        coverage:finalCoverage,
+      },
+    });
+  }
+
   const masterHead = await sharedHub.readMasterHead(root);
-  const businessHead = await sharedHub.readBusinessHead(root);
-  const savedMaster = await sharedHub.publishMaster(root, { records:masterRecords }, {
+  const savedMaster = await sharedHub.publishMaster(root, {
+    records:masterRecords,
+    inventory:finalCoverage,
+    recovery:{
+      source:path.basename(candidate.recoveryRoot),
+      verifiedAt:candidate.report && candidate.report.verifiedAt || null,
+      coverage:finalCoverage,
+    },
+  }, {
     actorId:'prewipe-auto-recovery',
     previousRevision:masterHead && masterHead.revision || 0,
   });
-  const savedBusiness = await sharedHub.publishBusiness(root, { records:businessRecords, syncHeads:recovered.syncHeads }, {
-    actorId:'prewipe-auto-recovery',
-    previousRevision:businessHead && businessHead.revision || 0,
-  });
+
+  let savedBusiness = null;
+  if (businessRecoverIds.length) {
+    const businessHead = await sharedHub.readBusinessHead(root);
+    savedBusiness = await sharedHub.publishBusiness(root, { records:businessRecords, syncHeads:recovered.syncHeads }, {
+      actorId:'prewipe-auto-recovery',
+      previousRevision:businessHead && businessHead.revision || 0,
+    });
+  }
+
   markStartup('SHARED_PREWIPE_RECOVERED', {
     source:path.basename(candidate.recoveryRoot),
-    master:Object.keys(recovered.masterRecords).length,
-    business:Object.keys(recovered.businessRecords).length,
+    master:masterRecoverIds.length,
+    business:businessRecoverIds.length,
+    masterCoverage:finalCoverage,
   });
   return {
     recovered:true,
     source:path.basename(candidate.recoveryRoot),
-    masterRecords:Object.keys(recovered.masterRecords).length,
-    businessRecords:Object.keys(recovered.businessRecords).length,
+    masterRecords:masterRecoverIds.length,
+    businessRecords:businessRecoverIds.length,
+    masterCoverage:finalCoverage,
     masterHead:savedMaster && (savedMaster.head || savedMaster),
     businessHead:savedBusiness && (savedBusiness.head || savedBusiness),
   };
@@ -867,7 +972,10 @@ async function publishMasterCheckpoint(actorId = '') {
     markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED', { area:'master', missing:guard.missing.length, stale:guard.stale.length, localRecords:Object.keys(records).length, remoteRecords:guard.remoteRecords });
     return { published:false, protected:true, reason:'local-master-incomplete', head, hub:checked.manifest, records:Object.keys(records).length, missingRecords:guard.missing.slice(0,50), staleRecords:guard.stale.slice(0,50) };
   }
-  const saved = await sharedHub.publishMaster(checked.root, { records }, { actorId, previousRevision: head && head.revision || 0 });
+  const saved = await sharedHub.publishMaster(checked.root, {
+    records,
+    inventory:prewipeMasterRecovery.masterCoverage(records),
+  }, { actorId, previousRevision: head && head.revision || 0 });
   return { published:true, unchanged:saved && saved.unchanged === true, head:saved, hub:checked.manifest, records:Object.keys(records).length };
 }
 let masterCheckpointTimer = null;
@@ -1108,9 +1216,16 @@ async function bootstrapSharedHub({ force = false } = {}) {
       // contains the checkpoint payload. Repair any remote records that are
       // absent locally (unless a local tombstone proves an intentional delete).
       const checkpointRepair = await reconcileSharedCheckpointCoverage(checked.root, checked.manifest);
+      const masterVerification = await verifySharedMasterBootstrap(checked.root);
       const verifiedState = await localDb.read();
       const verifiedMasterRecords = sharedSyncPolicy.masterRecordsFromState(verifiedState);
       const verifiedBusinessRecords = sharedSyncPolicy.businessRecordsFromState(verifiedState);
+      setBootstrapStep('master', {
+        status:'done',
+        current:masterVerification.localRecords,
+        total:masterVerification.remoteRecords,
+        detail:`rev ${masterHead && masterHead.revision || 0} · ${masterVerification.localRecords}/${masterVerification.remoteRecords} kayıt · Royalty ${masterVerification.inventory.royaltyRules} · E-mail ${masterVerification.inventory.emailGroups} · FX ${masterVerification.inventory.fxKeys} · Endeksmatik ${masterVerification.inventory.endeksmatikRecords}`,
+      });
       const businessAfter = sharedHub.readLocalState();
       setBootstrapStep('business', {
         status:'done',
@@ -1169,6 +1284,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
           prewipeRecoverySource:prewipeRecovery.source || null,
           prewipeRecoveredMasterRecords:Number(prewipeRecovery.masterRecords)||0,
           prewipeRecoveredBusinessRecords:Number(prewipeRecovery.businessRecords)||0,
+          masterCoverage:masterVerification.inventory,
         },
         offline:false,
       };
@@ -1177,7 +1293,8 @@ async function bootstrapSharedHub({ force = false } = {}) {
       return bootstrapStatusSnapshot();
     } catch (error) {
       const completed = localState && localState.completed === true && hadLocalLoginSnapshot;
-      if (completed && localLoginAllowed) {
+      const integrityFailure = SHARED_BOOTSTRAP_INTEGRITY_ERRORS.has(String(error && error.code || ''));
+      if (completed && localLoginAllowed && !integrityFailure) {
         await activateSharedHubRuntime({ migrateCollection:false }).catch(()=>{});
         const result = {
           configured:true, validated:false, loginAllowed:true, bootstrapRequired:false,
