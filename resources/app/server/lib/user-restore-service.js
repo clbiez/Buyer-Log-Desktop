@@ -63,6 +63,7 @@ function publicInspect(info) {
   const manifest = info.manifest || {}, owner = manifest.user || {}, paths = archivePaths(info);
   const warnings = [];
   if (paths.has('user/fx.json')) warnings.push('Eski kişisel backup içindeki FX kaydı ortak veri olduğu için restore edilmeyecek.');
+  warnings.push('Koleksiyon satırlarındaki Royalty/Hologram değerleri Collection ile geri gelir; merkezi Royalty kuralları ve E-posta Grupları kişisel backup kapsamı dışındadır ve Shared Hub / Tam Sistem Yedeği üzerinden geri yüklenmelidir.');
   const unknown = [...paths].filter(name => name !== 'user/profile.json'
     && name !== 'user/fx.json'
     && !REQUIRED_JSON.includes(name)
@@ -80,7 +81,7 @@ function publicInspect(info) {
   };
 }
 
-function createUserRestoreService() {
+function createUserRestoreService({ restoreCollectionWorkspace = null } = {}) {
   async function inspect(file, user) {
     const current = user || {};
     const info = await inspectBackupArchive(file, { requireType: 'user', validateData: true });
@@ -110,9 +111,10 @@ function createUserRestoreService() {
     const roots = userSourceRoots(currentUser.id);
     const report = value => { if (typeof onProgress === 'function') onProgress(value); };
 
+    const customCollectionRestore = typeof restoreCollectionWorkspace === 'function';
     const before = {
       preferences: clone(userPreferences.load(currentUser.id)),
-      collection: clone(collectionWorkspaces.loadWorkspace(currentUser.id)),
+      collection: customCollectionRestore ? null : clone(collectionWorkspaces.loadWorkspace(currentUser.id)),
       stores: clone(db.userBackupStoreSnapshot(currentUser.id)),
     };
 
@@ -141,11 +143,7 @@ function createUserRestoreService() {
       report({ phase: 'Uygulanıyor', current: 0, total: 5, item: 'preferences' });
       userPreferences.restoreSnapshot(currentUser.id, incoming.preferences);
 
-      report({ phase: 'Uygulanıyor', current: 1, total: 5, item: 'collection-workspace' });
-      const currentWorkspace = collectionWorkspaces.loadWorkspace(currentUser.id);
-      collectionWorkspaces.saveWorkspace(currentUser.id, incoming.collection, currentWorkspace._revision);
-
-      report({ phase: 'Uygulanıyor', current: 2, total: 5, item: 'user-stores' });
+      report({ phase: 'Uygulanıyor', current: 1, total: 5, item: 'user-stores' });
       db.restoreUserBackupStores(currentUser.id, {
         views: incoming.views,
         filters: incoming.filters,
@@ -153,9 +151,22 @@ function createUserRestoreService() {
         refreshHistory: incoming.refreshHistory,
       });
 
-      report({ phase: 'Uygulanıyor', current: 3, total: 5, item: 'source-data' });
+      report({ phase: 'Uygulanıyor', current: 2, total: 5, item: 'source-data' });
       await replaceTree(path.join(stageRoot, 'user', 'source-data'), roots.sourceData);
       await replaceTree(path.join(stageRoot, 'user', 'local-source-data'), roots.localSourceData);
+
+      // Collection EN SON uygulanır. Shared Collection aktifse çağıran merge
+      // yapar; böylece eski kişisel backup shared-collection yerine görünmez
+      // owner workspace'ine yazılmaz ve diğer kullanıcıların satırları silinmez.
+      report({ phase: 'Uygulanıyor', current: 4, total: 5, item: 'collection-workspace' });
+      let collectionRestore;
+      if (customCollectionRestore) {
+        collectionRestore = await restoreCollectionWorkspace(currentUser, incoming.collection);
+      } else {
+        const currentWorkspace = collectionWorkspaces.loadWorkspace(currentUser.id);
+        const workspace = collectionWorkspaces.saveWorkspace(currentUser.id, incoming.collection, currentWorkspace._revision);
+        collectionRestore = { shared:false, ownerId:currentUser.id, incomingRows:Array.isArray(incoming.collection && incoming.collection.rows) ? incoming.collection.rows.length : 0, totalRows:workspace.rows.length };
+      }
 
       report({ phase: 'Tamamlandı', current: 5, total: 5, item: '' });
       return {
@@ -163,13 +174,16 @@ function createUserRestoreService() {
         browserStorage: incoming.browserStorage && typeof incoming.browserStorage === 'object' ? incoming.browserStorage : {},
         sourceAppVersion: String(info.manifest && info.manifest.app_version || ''),
         createdAt: info.manifest && info.manifest.created_at || null,
+        collectionRestore,
         warnings: publicInspect(info).warnings,
       };
     } catch (error) {
       try {
         userPreferences.restoreSnapshot(currentUser.id, before.preferences);
-        const workspace = collectionWorkspaces.loadWorkspace(currentUser.id);
-        collectionWorkspaces.saveWorkspace(currentUser.id, before.collection, workspace._revision);
+        if (!customCollectionRestore) {
+          const workspace = collectionWorkspaces.loadWorkspace(currentUser.id);
+          collectionWorkspaces.saveWorkspace(currentUser.id, before.collection, workspace._revision);
+        }
         db.restoreUserBackupStores(currentUser.id, before.stores);
         await replaceTree(path.join(rollbackRoot, 'source-data'), roots.sourceData);
         await replaceTree(path.join(rollbackRoot, 'local-source-data'), roots.localSourceData);

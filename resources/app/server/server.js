@@ -1223,7 +1223,24 @@ syncSettings.onStateChange(state => {
 });
 const backupService = createBackupService({ appVersion: APP_VERSION, userAccess, syncSettings, localDb });
 const sharedPersonalBackupService = createSharedPersonalBackupService({ backupService, syncSettings, sharedHub, retentionCount: 30 });
-const userRestoreService = createUserRestoreService();
+const userRestoreService = createUserRestoreService({
+  restoreCollectionWorkspace: async (user, snapshot) => {
+    const userId = String(user && user.id || '');
+    if (!sharedCollectionModeEnabled()) {
+      const current = collectionWorkspaces.loadWorkspace(userId);
+      const workspace = collectionWorkspaces.saveWorkspace(userId, snapshot, current._revision);
+      return { shared:false, ownerId:userId, incomingRows:Array.isArray(snapshot && snapshot.rows) ? snapshot.rows.length : 0, totalRows:workspace.rows.length };
+    }
+    const restored = await collectionWorkspaces.mergePersonalBackupIntoShared(userId, snapshot, userId);
+    // Yerel restore görünürlük için tamamlanmıştır; Shared Hub yayımı arka
+    // planda yapılır. Ağ geçici kapalıysa kişisel restore başarısız sayılmaz.
+    void syncSettings.syncOnce()
+      .then(() => deltaStore.hydrate())
+      .then(() => scheduleBusinessCheckpointPublish(userId, 750))
+      .catch(error => logRuntimeFailure('userRestoreSharedCollectionSync', error));
+    return restored;
+  },
+});
 const userRestoreUploads = new Map(), userRestoreJobs = new Map();
 // Full System Restore state is intentionally separate from ordinary backup jobs:
 // upload/inspect can run without a write lock, while the apply phase gates all
