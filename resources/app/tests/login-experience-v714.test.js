@@ -91,11 +91,15 @@ test('v7.14 login supports keyboard, ARIA, password eye, last-user preference an
   assert.doesNotMatch(LOGIN, /alert\(/);
 });
 
-test('v7.14 login button has ready/loading/disabled workflow and 15 second recovery', () => {
-  assert.match(LOGIN, /loginBusy \|\| !usernameReady \|\| !passwordReady/);
-  assert.match(LOGIN, /if \(loginBusy\) return/);
+test('v7.14 login button is gated by startup sync and preserves 15 second credential recovery', () => {
+  assert.match(LOGIN, /const gateReady = loginGateReady\(\)/);
+  assert.match(LOGIN, /const controlsLocked = !gateReady \|\| loginBusy/);
+  assert.match(LOGIN, /button\.disabled = controlsLocked \|\| !usernameReady \|\| !passwordReady/);
+  assert.match(LOGIN, /Senkronizasyon bekleniyor/);
   assert.match(LOGIN, /LOGIN_TIMEOUT_MS = 15000/);
   assert.match(LOGIN, /setTimeout\(\(\) => controller\.abort\(\), LOGIN_TIMEOUT_MS\)/);
+  assert.match(LOGIN, /await runUserBootstrap\(\)/);
+  assert.match(LOGIN, /setTimeout\(\(\) => controller\.abort\(\), 180000\)/);
   assert.match(LOGIN, /finally \{[\s\S]*loginBusy = false;[\s\S]*renderLoginButton\(\)/);
   assert.match(LOGIN, /Sunucu giriş isteğine zamanında yanıt vermedi\. Tekrar deneyin\./);
 });
