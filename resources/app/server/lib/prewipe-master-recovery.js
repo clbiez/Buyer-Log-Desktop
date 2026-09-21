@@ -101,10 +101,8 @@ function makeStoreRecord(filename, value) {
   return policy.scrubSecrets(record);
 }
 
-function loadMasterRecordsFromServerDataRoot(serverRoot, recoveredState = {}) {
-  const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
-  if (!serverRoot) return records;
-
+function mergeMasterRecordsFromServerDataRoot(records, serverRoot) {
+  if (!serverRoot || !fs.existsSync(serverRoot)) return records;
   for (const filename of ['settings.json', 'overrides.json', 'fx-rates.json', 'email-groups.json']) {
     const value = readJson(path.join(serverRoot, filename));
     const candidate = makeStoreRecord(filename, value);
@@ -112,15 +110,18 @@ function loadMasterRecordsFromServerDataRoot(serverRoot, recoveredState = {}) {
     const id = 'store:' + filename;
     if (shouldPreferRecovery(id, candidate, records[id])) records[id] = candidate;
   }
-
   const endeksmatik = readGzipJson(path.join(serverRoot, 'endeksmatik-snapshot.json.gz'));
   if (endeksmatik && Array.isArray(endeksmatik.records)) {
     const candidate = policy.scrubSecrets(toDocumentRecord({ snapshot:endeksmatik }));
     const id = 'endeksmatik:snapshot';
     if (shouldPreferRecovery(id, candidate, records[id])) records[id] = candidate;
   }
-
   return records;
+}
+
+function loadMasterRecordsFromServerDataRoot(serverRoot, recoveredState = {}) {
+  const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
+  return mergeMasterRecordsFromServerDataRoot(records, serverRoot);
 }
 
 function mergeLegacyFxValues(values) {
@@ -159,7 +160,24 @@ function loadLegacyFxFromAppDataRoot(appRoot) {
 }
 
 function loadMasterRecordsFromLegacyDataRoot(dataRoot, recoveredState = {}) {
-  const records = loadMasterRecordsFromServerDataRoot(path.join(dataRoot, 'server'), recoveredState);
+  const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
+  const roots = [
+    path.join(dataRoot, 'server'),
+    path.join(dataRoot, 'local', 'application-data'),
+    path.join(dataRoot, 'local', 'data'),
+    path.join(dataRoot, 'app'),
+  ];
+  const localFirst = path.join(dataRoot, 'local', 'local-first', 'backups');
+  try {
+    const backups = fs.readdirSync(localFirst, { withFileTypes:true })
+      .filter(entry => entry.isDirectory())
+      .map(entry => path.join(localFirst, entry.name, 'legacy-server-data'))
+      .filter(root => fs.existsSync(root))
+      .sort();
+    roots.push(...backups);
+  } catch (_) {}
+  for (const root of roots) mergeMasterRecordsFromServerDataRoot(records, root);
+
   const currentFx = records['store:fx-rates.json'];
   const currentMonths = currentFx && currentFx.months && typeof currentFx.months === 'object' ? Object.keys(currentFx.months).length : 0;
   if (!currentMonths) {
@@ -204,6 +222,7 @@ module.exports = {
   documentRevision,
   shouldPreferRecovery,
   masterRecoveryIds,
+  mergeMasterRecordsFromServerDataRoot,
   loadMasterRecordsFromServerDataRoot,
   loadLegacyFxFromAppDataRoot,
   loadMasterRecordsFromLegacyDataRoot,
