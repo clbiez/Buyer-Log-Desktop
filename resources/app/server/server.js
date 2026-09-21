@@ -1022,9 +1022,11 @@ function sendUserSelectionPage(_req, res) {
 // so user switching cannot fall through to Express' "Cannot GET" response.
 app.get('/select-user', sendUserSelectionPage);
 app.get(['/select-user/', '/select-user.html'], sendUserSelectionPage);
-app.get('/api/shared-hub/bootstrap-status', async (_req, res) => {
-  try { res.set('Cache-Control','no-store').json(await bootstrapSharedHub()); }
-  catch (err) { res.status(err.statusCode || 503).json({ loginAllowed:userAccess.canLoginLocally(), bootstrapRequired:!userAccess.hasLocalLoginSnapshot(), status:'error', errorCode:err.code || 'SHARED_HUB_STATUS_FAILED', message:'Shared Hub durumu okunamadı. Yerel kullanıcı girişi kullanılabilir.' }); }
+app.get('/api/shared-hub/bootstrap-status', (_req, res) => {
+  if (!sharedHubStartupSettled && !sharedHubBootstrapInFlight) {
+    void bootstrapSharedHub().catch(error => logRuntimeFailure('sharedHubBootstrapStatus', error));
+  }
+  res.set('Cache-Control','no-store').json(bootstrapStatusSnapshot());
 });
 app.post('/api/shared-hub/configure', express.json({ limit:'32kb' }), async (req, res) => {
   try {
@@ -1043,18 +1045,31 @@ app.post('/api/shared-hub/configure', express.json({ limit:'32kb' }), async (req
       return res.status(409).json({ error:'Seçilen klasör farklı bir Buyer Log Shared Hub’a ait. Veri karışmasını önlemek için Hub kimliği değiştirilemez.', code:'SHARED_HUB_IDENTITY_MISMATCH', currentHubId:localState.hubId, selectedHubId:checked.manifest.hubId });
     }
     await syncSettings.save(checked.root);
-    const status = await bootstrapSharedHub({ force:true });
-    res.set('Cache-Control','no-store').json({ ok:status.loginAllowed, ...status, root:checked.root });
+    sharedHubStartupSettled = false;
+    setBootstrapProgress({ configured:true, validated:true, loginAllowed:false, bootstrapRequired:true, status:'syncing', phase:'hub', message:'Buyer Log hazırlanıyor…' });
+    void bootstrapSharedHub({ force:true }).catch(error => logRuntimeFailure('sharedHubConfigureBootstrap', error));
+    res.status(202).set('Cache-Control','no-store').json({ ok:true, ...bootstrapStatusSnapshot(), root:checked.root });
   } catch (err) { res.status(err.statusCode || 503).json({ error:err.message, code:err.code || 'SHARED_HUB_CONFIGURE_FAILED' }); }
 });
-app.post('/api/shared-hub/bootstrap-retry', express.json({ limit:'8kb' }), async (_req, res) => {
-  const status = await bootstrapSharedHub({ force:true });
-  res.status(status.loginAllowed ? 200 : 503).set('Cache-Control','no-store').json(status);
+app.post('/api/shared-hub/bootstrap-retry', express.json({ limit:'8kb' }), (_req, res) => {
+  sharedHubStartupSettled = false;
+  setBootstrapProgress({ loginAllowed:false, bootstrapRequired:true, status:'syncing', phase:'hub', message:'Senkronizasyon yeniden başlatılıyor…' });
+  void bootstrapSharedHub({ force:true }).catch(error => logRuntimeFailure('sharedHubBootstrapRetry', error));
+  res.status(202).set('Cache-Control','no-store').json(bootstrapStatusSnapshot());
 });
 app.get('/api/user-profiles', userAccess.listHandler);
 app.get('/api/user-suggestions', userAccess.suggestHandler); // legacy alias
 app.get('/api/auth/users/suggest', userAccess.suggestHandler);
-app.post('/api/user-login', express.json({ limit: '64kb' }), userAccess.loginHandler);
+app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) => {
+  const gate = bootstrapStatusSnapshot();
+  if (!sharedHubStartupSettled || gate.status === 'syncing' || gate.status === 'starting') {
+    return res.status(423).json({ error:'Buyer Log senkronizasyonu tamamlanmadan giriş yapılamaz.', code:'BOOTSTRAP_IN_PROGRESS', bootstrap:gate });
+  }
+  if (gate.loginAllowed !== true) {
+    return res.status(503).json({ error:gate.message || 'Buyer Log henüz girişe hazır değil.', code:gate.errorCode || 'BOOTSTRAP_NOT_READY', bootstrap:gate });
+  }
+  return userAccess.loginHandler(req, res, next);
+});
 app.post('/api/user-logout', userAccess.logoutHandler);
 app.get('/api/current-user', userAccess.currentHandler);
 // SameSite=Strict kullanıcı cookie'si Microsoft'tan gelen cross-site callback'te
