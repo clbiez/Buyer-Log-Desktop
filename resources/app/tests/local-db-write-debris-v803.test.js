@@ -143,8 +143,11 @@ test('yeni bir kurulumda cihaz kimliği bir kez üretilip kalıcı olur', async 
   assert.equal(createLocalDb(file).getDeviceId(), id);
 });
 
-test('local DB bakımı açılış kritik yolunun dışında çalışır', () => {
-  assert.match(SERVER, /setTimeout\(\(\) => \{ void runLocalDbMaintenance\(\); \}, LOCAL_DB_MAINTENANCE_DELAY_MS\)/);
+test('local DB bakımı normal açılışta arka planda kalır, Shared Hub bootstrap gerektiğinde aynı işi bekleyebilir', () => {
+  assert.match(SERVER, /setTimeout\(\(\) => \{ void ensureLocalDbMaintenanceReady\(\)\.catch\(error => logRuntimeFailure\('localDbMaintenance', error\)\); \}, LOCAL_DB_MAINTENANCE_DELAY_MS\)/);
+  assert.match(SERVER, /function ensureLocalDbMaintenanceReady\(\)/);
+  const bootstrap = SERVER.slice(SERVER.indexOf('async function bootstrapSharedHub'), SERVER.indexOf('// Local auth starts first.'));
+  assert.match(bootstrap, /await ensureLocalDbMaintenanceReady\(\)/);
   const maintenance = SERVER.slice(SERVER.indexOf('async function runLocalDbMaintenance'), SERVER.indexOf('// Runtime failures are persisted'));
   assert.match(maintenance, /logRuntimeFailure\('localDbAssetOffload', error\)/);
   assert.match(maintenance, /logRuntimeFailure\('localDbDebrisSweep', error\)/);
