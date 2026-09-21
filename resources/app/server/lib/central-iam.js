@@ -280,9 +280,9 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     })().catch(e => { throw failed(e); }).finally(() => { pending = null; });
     return pending;
   }
-  async function preflight(timeoutMs = 1500) {
+  async function preflight(timeoutMs = 1500, options = {}) {
     let timer;
-    try { return await Promise.race([refresh(), new Promise(resolve => { timer = setTimeout(() => { health.status = 'offline'; resolve(null); }, timeoutMs); })]); }
+    try { return await Promise.race([refresh(options), new Promise(resolve => { timer = setTimeout(() => { health.status = 'offline'; resolve(null); }, timeoutMs); })]); }
     catch (_) { return null; } finally { clearTimeout(timer); }
   }
   function dryRun(store) {
