@@ -46,6 +46,8 @@ winTest('Chrome and Edge launch arguments are loopback-safe and profile validate
   assert.deepEqual(chrome, [
     `--user-data-dir=${path.join('C:', 'Users', 'test', 'BuyerLog', 'browser-profiles', 'chrome')}`,
     '--profile-directory=Default',
+    '--no-first-run',
+    '--no-default-browser-check',
     '--remote-debugging-address=127.0.0.1',
     '--remote-debugging-port=9237',
   ]);
