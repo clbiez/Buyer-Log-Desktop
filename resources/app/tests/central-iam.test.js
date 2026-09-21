@@ -156,6 +156,33 @@ test('independent legacy users cannot be overwritten by first remote refresh', a
   await assert.rejects(b.refresh(), { code: 'IAM_MIGRATION_CONFLICT' });
   assert.equal(JSON.parse(fs.readFileSync(b.cacheFile)).users.length, 2);
 });
+test('first-run single Moderator placeholder can be replaced only by a richer Central IAM', async t => {
+  const { a, b } = await environment(t);
+  await a.initialize(fixture(8), { id: 'moderator' });
+  fs.mkdirSync(path.dirname(b.cacheFile), { recursive: true });
+  fs.writeFileSync(b.cacheFile, JSON.stringify(fixture(1)));
+
+  await assert.rejects(b.refresh(), { code: 'IAM_MIGRATION_CONFLICT' });
+  assert.equal(JSON.parse(fs.readFileSync(b.cacheFile)).users.length, 0);
+
+  const restored = await b.refresh({ allowBootstrapPlaceholderReplace: true });
+  assert.equal(central.baseline(restored).users, 8);
+  assert.equal(central.baseline(restored).admins, 1);
+  assert.equal(b.readLocal()._revision, 1);
+});
+
+test('bootstrap placeholder override never replaces a real multi-user local directory', async t => {
+  const { a, b } = await environment(t);
+  await a.initialize(fixture(8), { id: 'moderator' });
+  fs.mkdirSync(path.dirname(b.cacheFile), { recursive: true });
+  fs.writeFileSync(b.cacheFile, JSON.stringify(fixture(3)));
+
+  await assert.rejects(
+    b.refresh({ allowBootstrapPlaceholderReplace: true }),
+    { code: 'IAM_MIGRATION_CONFLICT' },
+  );
+  assert.equal(JSON.parse(fs.readFileSync(b.cacheFile)).users.length, 2);
+});
 test('short login preflight timeout leaves the event loop responsive', async t => {
   const { root } = await environment(t);
   let finish; const unavailable = new Promise(resolve => { finish = resolve; });
