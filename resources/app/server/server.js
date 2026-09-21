@@ -252,6 +252,7 @@ const plmImageSyncService = require('./lib/plm-image-sync-service');
    tablo hiçbir zaman ağdan okumaz. */
 const sharedImageStoreLib = require('./lib/shared-image-store');
 const modelImageDistributionLib = require('./lib/model-image-distribution');
+const collectionImageSyncPolicy = require('./lib/collection-image-sync-policy');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
 const modelImageRegistry = require('./lib/model-image-registry');
 // Ajan kaynaklı yazmaların audit etiketi (bkz. copilot-provenance).
