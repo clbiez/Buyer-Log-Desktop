@@ -811,6 +811,40 @@ function masterCoverageMissing(expected, actual) {
   ];
   return fields.filter(field => Number(expected[field] || 0) > Number(current[field] || 0));
 }
+function prewipeCriticalCoverageMissing(report, inventory) {
+  const expected = report && report.criticalCoverage && typeof report.criticalCoverage === 'object'
+    ? report.criticalCoverage
+    : {};
+  const current = inventory && typeof inventory === 'object' ? inventory : {};
+  const checks = [
+    ['royaltyAndHologram', 'royaltyRules'],
+    ['transitTimes', 'transitRules'],
+    ['nonDtrManufacturers', 'nonDtrManufacturers'],
+    ['landedMultipliers', 'landedMultipliers'],
+    ['freightRates', 'freightRates'],
+    ['fx', 'fxKeys'],
+    ['endeksmatik', 'endeksmatikRecords'],
+  ];
+  const missing = checks
+    .filter(([flag, field]) => expected[flag] === true && Number(current[field] || 0) <= 0)
+    .map(([, field]) => field);
+  if (expected.settings === true && current.settings !== true) missing.push('settings');
+  return [...new Set(missing)];
+}
+function recoveryRecordIdsForCoverage(fields, recoveredRecords) {
+  const needed = new Set(Array.isArray(fields) ? fields : []);
+  const ids = new Set();
+  if ([...needed].some(field => ['modelConnections','settings'].includes(field))) ids.add('store:settings.json');
+  if ([...needed].some(field => ['royaltyRules','transitRules','nonDtrManufacturers','landedMultipliers','freightRates'].includes(field))) ids.add('store:overrides.json');
+  if ([...needed].some(field => ['emailGroups','emailCountries'].includes(field))) ids.add('store:email-groups.json');
+  if (needed.has('fxKeys')) ids.add('store:fx-rates.json');
+  if (needed.has('endeksmatikRecords')) {
+    for (const id of Object.keys(recoveredRecords && typeof recoveredRecords === 'object' ? recoveredRecords : {})) {
+      if (/^endeksmatik:/.test(id)) ids.add(id);
+    }
+  }
+  return [...ids];
+}
 async function verifySharedMasterBootstrap(root) {
   const remote = await sharedHub.readMaster(root, null);
   const remoteRecords = checkpointRecords(remote);
@@ -861,13 +895,34 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const candidate = await findVerifiedPrewipeRecovery(root, hub);
   if (!candidate) return { recovered:false, reason:'verified-prewipe-not-found', currentMasterCount, currentBusinessCount };
   const expectedMaster = Math.max(0, Number(candidate.expectedMaster) || 0);
-  const publishedInventory = masterCheckpointInventory(masterRemote);
-  if (publishedInventory && currentMasterCount >= expectedMaster && Number(publishedInventory.records || 0) >= expectedMaster) {
-    return { recovered:false, reason:'checkpoint-inventory-complete', currentMasterCount, currentBusinessCount, masterCoverage:publishedInventory };
+  // Kayıt sayısı veri bütünlüğü değildir. Temiz kurulumdan sonra boş/default
+  // settings/overrides/fx kayıtları yeniden oluşturulup "records=5" gibi
+  // görünerek gerçek pre-wipe verisini gizleyebiliyordu. Burada checkpoint'in
+  // kendi iddiasını değil gerçek kayıt içeriğini ve DELETE_READY coverage'ını
+  // karşılaştırıyoruz.
+  const currentInventory = prewipeMasterRecovery.masterCoverage(currentMaster);
+  const criticalMissingBefore = prewipeCriticalCoverageMissing(candidate.report, currentInventory);
+  const masterShort = expectedMaster > 0 && currentMasterCount < expectedMaster;
+  if (!masterShort && !criticalMissingBefore.length && !masterCoverageIsCatastrophicallySparse(currentInventory)) {
+    return {
+      recovered:false,
+      reason:'checkpoint-content-complete',
+      currentMasterCount,
+      currentBusinessCount,
+      masterCoverage:currentInventory,
+    };
   }
 
   const recovered = await loadPrewipeRecoveryRecords(candidate);
-  const masterRecoverIds = prewipeMasterRecovery.masterRecoveryIds(recovered.masterRecords, currentMaster);
+  const recoveredCoverageMissing = masterCoverageMissing(recovered.masterCoverage, currentInventory);
+  const forcedRecoveryIds = recoveryRecordIdsForCoverage(
+    [...criticalMissingBefore, ...recoveredCoverageMissing],
+    recovered.masterRecords,
+  );
+  const masterRecoverIds = [...new Set([
+    ...prewipeMasterRecovery.masterRecoveryIds(recovered.masterRecords, currentMaster),
+    ...forcedRecoveryIds.filter(id => Object.hasOwn(recovered.masterRecords, id)),
+  ])];
   // Collection kişisel restore ile ayrıca yönetilir. Pre-wipe Master onarımı
   // mevcut Shared Collection'ı ASLA geri sarmaz; business tarafında yalnız
   // gerçekten eksik kayıt kimlikleri eklenebilir.
@@ -878,11 +933,10 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   // taşıdığını söyler. Hub o sayının altındaysa veya legacy/full-backup içinde
   // daha zengin bir Master kaydı varsa bu normal bir "boş kurulum" değildir;
   // otomatik kurtarma gerekir.
-  const masterShort = expectedMaster > 0 && currentMasterCount < expectedMaster;
-  if (!masterShort && !masterRecoverIds.length && !businessRecoverIds.length) {
+  if (!masterShort && !criticalMissingBefore.length && !masterRecoverIds.length && !businessRecoverIds.length) {
     return {
       recovered:false,
-      reason:'checkpoint-complete',
+      reason:'checkpoint-content-complete-after-backup-check',
       currentMasterCount,
       currentBusinessCount,
       recoveredCoverage:recovered.masterCoverage,
@@ -908,7 +962,13 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const masterRecords = sharedSyncPolicy.masterRecordsFromState(state);
   const businessRecords = sharedSyncPolicy.businessRecordsFromState(state);
   const finalCoverage = prewipeMasterRecovery.masterCoverage(masterRecords);
-  if (expectedMaster > 0 && Object.keys(masterRecords).length < expectedMaster) {
+  const criticalMissingAfter = prewipeCriticalCoverageMissing(candidate.report, finalCoverage);
+  const recoveredCoverageMissingAfter = masterCoverageMissing(recovered.masterCoverage, finalCoverage);
+  if (
+    (expectedMaster > 0 && Object.keys(masterRecords).length < expectedMaster) ||
+    criticalMissingAfter.length ||
+    recoveredCoverageMissingAfter.length
+  ) {
     throw Object.assign(new Error('Verified pre-wipe Master Data tam olarak geri yüklenemedi.'), {
       code:'PREWIPE_MASTER_INCOMPLETE',
       statusCode:503,
@@ -916,7 +976,10 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
         expected:expectedMaster,
         actual:Object.keys(masterRecords).length,
         recovered:Object.keys(recovered.masterRecords).length,
+        criticalMissing:criticalMissingAfter,
+        recoveredCoverageMissing:recoveredCoverageMissingAfter,
         coverage:finalCoverage,
+        recoveredCoverage:recovered.masterCoverage,
       },
     });
   }
@@ -949,6 +1012,8 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
     master:masterRecoverIds.length,
     business:businessRecoverIds.length,
     masterCoverage:finalCoverage,
+    criticalMissingBefore,
+    forcedRecoveryIds,
   });
   return {
     recovered:true,
