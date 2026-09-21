@@ -83,6 +83,7 @@ function defaultManifest({ appVersion = '', createdBy = '' } = {}) {
       master: 'master',
       business: 'business',
       images: 'model-images',
+      personalBackups: 'personal-backups',
     },
   };
 }
@@ -143,7 +144,7 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
     if (meaningful.length && !allowNonEmpty) throw error('Boş olmayan klasör otomatik Shared Hub olarak başlatılamaz.', 'SHARED_HUB_NONEMPTY', 409);
     const manifest = defaultManifest({ appVersion, createdBy });
     // Create only the handful of bounded top-level namespaces. Per-entity directories are forbidden.
-    for (const rel of [manifest.layout.sync, manifest.layout.iam, manifest.layout.master, manifest.layout.business || 'business', manifest.layout.images]) await fsp.mkdir(safePath(selected, rel), { recursive: true });
+    for (const rel of [manifest.layout.sync, manifest.layout.iam, manifest.layout.master, manifest.layout.business || 'business', manifest.layout.images, manifest.layout.personalBackups || 'personal-backups']) await fsp.mkdir(safePath(selected, rel), { recursive: true });
     await atomicWriteJson(manifestFile, manifest);
     return { initialized: true, ...(await validate(selected, { requireWrite: true })) };
   }
