@@ -94,5 +94,7 @@ test('pre-wipe recovery reads legacy settings, royalty, email, FX and Endeksmati
   assert.match(SERVER, /prewipeMasterRecovery\.loadMasterRecordsFromExtractedBackup\(tempRoot, recoveredState\)/);
   assert.match(SERVER, /prewipeMasterRecovery\.masterRecoveryIds\(recovered\.masterRecords, currentMaster\)/);
   assert.match(SERVER, /expectedMaster > 0 && currentMasterCount < expectedMaster/);
+  assert.match(SERVER, /checkpointUnaccountedIds\(recovered\.businessRecords, currentBusiness/);
+  assert.match(SERVER, /filter\(id => !\/shared-collection\//);
   assert.match(SERVER, /inventory:finalCoverage/);
 });
