@@ -3,9 +3,6 @@ name: Buyer Log Tests
 on:
   pull_request:
     branches: [main]
-  push:
-    branches:
-      - feature/bootstrap-collection-image-sync
 
 permissions:
   contents: read
