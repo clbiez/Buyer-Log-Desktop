@@ -3863,7 +3863,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
     const ref = String(cached && cached.imageRef || '').trim();
     if (!ref || !getCollectionImage(ref)) return row;
     changed = true;
-    return { ...row, img:'/api/collection-images/' + encodeURIComponent(ref), _sharedCollectionImage:true };
+    return { ...row, _sharedCollectionImageUrl:'/api/collection-images/' + encodeURIComponent(ref) };
   });
   return changed ? { ...source, rows } : source;
 }
