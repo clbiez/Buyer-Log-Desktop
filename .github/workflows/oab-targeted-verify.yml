@@ -23,3 +23,27 @@ jobs:
       - name: Run targeted Buyer Log 7.0.89 regression tests
         working-directory: resources/app
         run: node --test tests/oab-desktop-auth-v20260921.test.js tests/oab-pass-login-recovery-v661.test.js tests/prewipe-clean-install-tool-v7088.test.js tests/uninstall-guard-v7089.test.js
+      - name: Build Buyer Log 7.0.89 runtime patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf patch-root BuyerLog-Update-7.0.89.zip
+          files=(
+            "resources/app/package.json"
+            "resources/app/electron/main.js"
+            "resources/app/electron/oab-auth-lifecycle.js"
+            "resources/app/scripts/BuyerLog-Uninstall-Temiz-Kurulum.cmd"
+          )
+          for file in "${files[@]}"; do
+            mkdir -p "patch-root/$(dirname "$file")"
+            cp "$file" "patch-root/$file"
+          done
+          (cd patch-root && zip -q -r ../BuyerLog-Update-7.0.89.zip .)
+          test -s BuyerLog-Update-7.0.89.zip
+      - name: Upload Buyer Log 7.0.89 runtime patch
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuyerLog-Update-7.0.89
+          path: BuyerLog-Update-7.0.89.zip
+          if-no-files-found: error
+          retention-days: 7
