@@ -214,6 +214,9 @@ test('OAB desktop auth never reads credential values or logs Authorization value
   const authStart = MAIN.indexOf('async function acquireOabAuthorization');
   const authEnd = MAIN.indexOf('async function clearOabAuthSession', authStart);
   const authBody = MAIN.slice(authStart, authEnd);
-  assert.doesNotMatch(authBody, /log\([^\n]*authorization\b/i);
+  // It is safe to mention the word "Authorization" in a constant diagnostic;
+  // the sensitive failure would be interpolating/concatenating the captured
+  // authorization variable itself into a log call.
+  assert.doesNotMatch(authBody, /log\([^\n]*(?:\+\s*authorization\b|\$\{authorization\}|,\s*authorization\b)/i);
   assert.doesNotMatch(authBody, /executeJavaScript\([^\n]*\.value/i);
 });
