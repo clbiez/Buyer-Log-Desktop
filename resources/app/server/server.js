@@ -860,11 +860,19 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const currentBusinessCount = Object.keys(currentBusiness).length;
   const candidate = await findVerifiedPrewipeRecovery(root, hub);
   if (!candidate) return { recovered:false, reason:'verified-prewipe-not-found', currentMasterCount, currentBusinessCount };
+  const expectedMaster = Math.max(0, Number(candidate.expectedMaster) || 0);
+  const publishedInventory = masterCheckpointInventory(masterRemote);
+  if (publishedInventory && currentMasterCount >= expectedMaster && Number(publishedInventory.records || 0) >= expectedMaster) {
+    return { recovered:false, reason:'checkpoint-inventory-complete', currentMasterCount, currentBusinessCount, masterCoverage:publishedInventory };
+  }
 
   const recovered = await loadPrewipeRecoveryRecords(candidate);
   const masterRecoverIds = prewipeMasterRecovery.masterRecoveryIds(recovered.masterRecords, currentMaster);
-  const businessRecoverIds = checkpointRecoverableIds(recovered.businessRecords, currentBusiness, {});
-  const expectedMaster = Math.max(0, Number(candidate.expectedMaster) || 0);
+  // Collection kişisel restore ile ayrıca yönetilir. Pre-wipe Master onarımı
+  // mevcut Shared Collection'ı ASLA geri sarmaz; business tarafında yalnız
+  // gerçekten eksik kayıt kimlikleri eklenebilir.
+  const businessRecoverIds = checkpointUnaccountedIds(recovered.businessRecords, currentBusiness, {})
+    .filter(id => !/shared-collection/.test(String(id)));
 
   // Verified DELETE_READY raporu, wipe öncesinde Shared Master'ın kaç kayıt
   // taşıdığını söyler. Hub o sayının altındaysa veya legacy/full-backup içinde
