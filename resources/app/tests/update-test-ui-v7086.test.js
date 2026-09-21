@@ -9,6 +9,7 @@ const ROOT = path.resolve(__dirname, '..');
 const ui = fs.readFileSync(path.join(ROOT,'public','user-access-ui.js'),'utf8');
 const updateUi = fs.readFileSync(path.join(ROOT,'public','update-test-ui.js'),'utf8');
 const perf = fs.readFileSync(path.join(ROOT,'public','perf-runtime.js'),'utf8');
+const css = fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
 
 test('moderator user menu always exposes Update Test; runtime availability is checked when opened', () => {
   assert.match(ui, /profile\.systemRole === 'moderator'[\s\S]*?data-update-test/);
@@ -28,4 +29,12 @@ test('Update Test UI uses the existing updater bridge and shows decisive status 
 
 test('Update Test UI is loaded before the user menu module in deferred UI', () => {
   assert.match(perf, /update-test-ui\.js\?rev=1','user-access-ui\.js\?rev=UPDATE-TEST-V1/);
+});
+
+
+test('Update Test modal CSS keeps the dialog visible above the dimmed overlay', () => {
+  assert.match(css, /\.updateTestOverlay\{[\s\S]*?position:fixed[\s\S]*?display:grid[\s\S]*?place-items:center/);
+  assert.match(css, /\.updateTestCard\{[\s\S]*?width:min\(540px[\s\S]*?background:var\(--card\)[\s\S]*?color:var\(--ink\)/);
+  assert.match(css, /\.updateTestHead\{[\s\S]*?display:flex/);
+  assert.match(css, /\.updateTestActions\{[\s\S]*?display:flex/);
 });
