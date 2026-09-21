@@ -575,7 +575,12 @@
   async function runUserBootstrap() {
     const steps = { ...((hubStatus && hubStatus.steps) || {}) };
     steps.collectionImages = { status:'active', label:tr('Koleksiyon görselleri', 'Collection images') };
-    hubStatus = { ...(hubStatus || {}), status:'syncing', loginAllowed:false, phase:'collection-images', message:tr('Koleksiyonlar ve yetkili görseller eşitleniyor…', 'Synchronizing Collections and authorized images…'), steps };
+    const previousStatus = hubStatus && hubStatus.status || 'ready';
+    const previousOffline = Boolean(hubStatus && hubStatus.offline);
+    hubStatus = {
+      ...(hubStatus || {}), phase:'collection-images', steps,
+      message:tr('Koleksiyonlar ve yetkili görseller eşitleniyor…', 'Synchronizing Collections and authorized images…'),
+    };
     renderHubStatus();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 180000);
@@ -585,13 +590,20 @@
         cache:'no-store', signal:controller.signal,
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || data.ready !== true) throw new Error(data.error || tr('Kullanıcı verileri eşitlenemedi.', 'User data could not be synchronized.'));
+      if (!response.ok || data.ready !== true) {
+        const error = new Error(data.error || tr('Kullanıcı verileri eşitlenemedi.', 'User data could not be synchronized.'));
+        error.code = data.code || 'USER_BOOTSTRAP_FAILED';
+        throw error;
+      }
       const images = data.collectionImages || {};
       const completed = (Number(images.installed)||0) + (Number(images.reused)||0);
+      const missing = Number(images.missing)||0;
       steps.collectionImages = {
         status:'done',
         label:tr('Koleksiyon görselleri', 'Collection images'),
-        detail:data.offline ? tr('Çevrimdışı', 'Offline') : `${completed}/${Number(images.requested)||0}`,
+        detail:data.offline
+          ? tr('Çevrimdışı', 'Offline')
+          : missing ? `${completed}/${Number(images.requested)||0} · ${missing} bekliyor` : `${completed}/${Number(images.requested)||0}`,
       };
       hubStatus = {
         ...(hubStatus || {}), status:data.offline ? 'offline' : 'ready', loginAllowed:true,
@@ -600,6 +612,19 @@
       };
       renderHubStatus();
       return data;
+    } catch (error) {
+      steps.collectionImages = {
+        status:'error',
+        label:tr('Koleksiyon görselleri', 'Collection images'),
+        detail:tr('Yeniden deneyin', 'Retry'),
+      };
+      hubStatus = {
+        ...(hubStatus || {}), status:previousStatus, offline:previousOffline, loginAllowed:true,
+        phase:'ready', steps,
+        message:error && error.message || tr('Koleksiyon senkronizasyonu tamamlanamadı.', 'Collection synchronization could not be completed.'),
+      };
+      renderHubStatus();
+      throw error;
     } finally { clearTimeout(timeout); }
   }
 
