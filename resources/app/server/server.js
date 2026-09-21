@@ -1021,7 +1021,7 @@ function masterCoverageValue(coverage) {
 }
 async function loadLocalLegacyMasterCandidate(candidate) {
   const recoveredState = await readLegacyDataBackupState(candidate);
-  const records = prewipeMasterRecovery.loadMasterRecordsFromServerDataRoot(candidate.serverRoot, recoveredState);
+  const records = prewipeMasterRecovery.loadMasterRecordsFromLegacyDataRoot(candidate.root, recoveredState);
   return {
     ...candidate,
     records,
