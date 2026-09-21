@@ -101,9 +101,9 @@ function makeStoreRecord(filename, value) {
   return policy.scrubSecrets(record);
 }
 
-function loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
+function loadMasterRecordsFromServerDataRoot(serverRoot, recoveredState = {}) {
   const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
-  const serverRoot = path.join(tempRoot, 'system', 'server-data');
+  if (!serverRoot) return records;
 
   for (const filename of ['settings.json', 'overrides.json', 'fx-rates.json', 'email-groups.json']) {
     const value = readJson(path.join(serverRoot, filename));
@@ -121,6 +121,10 @@ function loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
   }
 
   return records;
+}
+
+function loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
+  return loadMasterRecordsFromServerDataRoot(path.join(tempRoot, 'system', 'server-data'), recoveredState);
 }
 
 function masterCoverage(records) {
@@ -153,6 +157,7 @@ module.exports = {
   documentRevision,
   shouldPreferRecovery,
   masterRecoveryIds,
+  loadMasterRecordsFromServerDataRoot,
   loadMasterRecordsFromExtractedBackup,
   masterCoverage,
 };
