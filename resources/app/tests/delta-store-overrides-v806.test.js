@@ -50,7 +50,14 @@ function useDataRoots(t, roots) {
 
 async function sandbox(t, mode) {
   const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-delta-ov-'));
-  t.after(() => fsp.rm(root, { recursive: true, force: true }));
+  t.after(async () => {
+    // Windows may keep the local DB write-lease directory alive for a few
+    // milliseconds after the fire-and-forget mirror settles. Teardown is not
+    // testing deletion semantics, so wait for the queue and use Node's native
+    // EPERM retry instead of making the suite flaky under CI load.
+    await settle();
+    await fsp.rm(root, { recursive: true, force: true, maxRetries: 30, retryDelay: 50 });
+  });
   const dataDir = path.join(root, 'server-data');
   await fsp.mkdir(dataDir, { recursive: true });
 
