@@ -20,6 +20,6 @@ jobs:
       - name: Install dependencies
         working-directory: resources/app
         run: npm ci --ignore-scripts
-      - name: Run OAB targeted regression tests
+      - name: Run targeted Buyer Log 7.0.89 regression tests
         working-directory: resources/app
-        run: node --test tests/oab-desktop-auth-v20260921.test.js tests/oab-pass-login-recovery-v661.test.js
+        run: node --test tests/oab-desktop-auth-v20260921.test.js tests/oab-pass-login-recovery-v661.test.js tests/prewipe-clean-install-tool-v7088.test.js tests/uninstall-guard-v7089.test.js
