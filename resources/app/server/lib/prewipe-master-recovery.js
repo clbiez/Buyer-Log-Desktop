@@ -54,35 +54,35 @@ function shouldPreferRecovery(id, recovered, current) {
   if (!recovered || typeof recovered !== 'object') return false;
   if (!current || typeof current !== 'object' || !Object.keys(current).length) return true;
 
-  const recoveredRevision = documentRevision(recovered);
-  const currentRevision = documentRevision(current);
-  if (recoveredRevision > currentRevision) return true;
-  if (currentRevision > recoveredRevision) return false;
-
   const key = String(id || '');
+  // Verified pre-wipe content beats a later-created EMPTY/default local
+  // document even if that empty document happened to increment its revision.
   if (key === 'store:overrides.json') {
     for (const field of policy.MASTER_OVERRIDE_FIELDS) {
       if (field === 'storeRevisionMeta') continue;
       if (fieldHasMore(recovered, current, field)) return true;
     }
-    return false;
-  }
-  if (key === 'store:email-groups.json') {
+  } else if (key === 'store:email-groups.json') {
     if (arraySize(recovered.records) > 0 && arraySize(current.records) === 0) return true;
     if (arraySize(recovered.countries) > 0 && arraySize(current.countries) === 0) return true;
-    return false;
-  }
-  if (key === 'store:fx-rates.json') {
-    return objectSize(recovered) > 0 && objectSize(current) === 0;
-  }
-  if (key === 'store:settings.json') {
+  } else if (key === 'store:fx-rates.json') {
+    const recoveredMonths = recovered.months && typeof recovered.months === 'object' ? Object.keys(recovered.months).length : 0;
+    const currentMonths = current.months && typeof current.months === 'object' ? Object.keys(current.months).length : 0;
+    if (recoveredMonths > 0 && currentMonths === 0) return true;
+  } else if (key === 'store:settings.json') {
     if (arraySize(recovered.modelConnections) > 0 && arraySize(current.modelConnections) === 0) return true;
-    return objectSize(recovered) > 0 && objectSize(current) === 0;
+    if (objectSize(recovered) > 0 && objectSize(current) === 0) return true;
+  } else if (/^endeksmatik:/.test(key)) {
+    const recoveredStamp = endeksmatikStamp(recovered), currentStamp = endeksmatikStamp(current);
+    if (recoveredStamp !== currentStamp) return recoveredStamp > currentStamp;
+    const recoveredRows = arraySize(recovered.snapshot && recovered.snapshot.records);
+    const currentRows = arraySize(current.snapshot && current.snapshot.records);
+    if (recoveredRows > 0 && currentRows === 0) return true;
   }
-  if (/^endeksmatik:/.test(key)) {
-    return endeksmatikStamp(recovered) > endeksmatikStamp(current);
-  }
-  return false;
+
+  const recoveredRevision = documentRevision(recovered);
+  const currentRevision = documentRevision(current);
+  return recoveredRevision > currentRevision;
 }
 
 function masterRecoveryIds(recoveredRecords, currentRecords) {
@@ -142,7 +142,7 @@ function masterCoverage(records) {
     freightRates:objectSize(overrides.freightRates),
     emailGroups:arraySize(email.records),
     emailCountries:arraySize(email.countries),
-    fxKeys:objectSize(fx),
+    fxKeys:fx.months && typeof fx.months === 'object' ? Object.keys(fx.months).length : 0,
     endeksmatikRecords:Array.isArray(endSnapshot && endSnapshot.records) ? endSnapshot.records.length : 0,
   };
 }
