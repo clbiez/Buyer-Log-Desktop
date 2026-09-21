@@ -30,7 +30,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: buyerlog-update-test-fix-changed-files
-          path: ../../artifacts/BuyerLog-UpdateTest-Fix-Changed-Files.zip
+          path: artifacts/BuyerLog-UpdateTest-Fix-Changed-Files.zip
           if-no-files-found: error
       - name: Run Buyer Log tests
         run: npm test
