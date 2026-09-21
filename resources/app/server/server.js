@@ -1141,9 +1141,16 @@ app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async 
     }
     const collectionImages = await syncAuthorizedCollectionImages(req.currentUser.id);
     const failedOwners = (collectionImages.results || []).filter(item => item && item.error);
-    if (failedOwners.length) {
-      throw Object.assign(new Error('Yetkili Koleksiyon senkronizasyonu tamamlanamadı.'), {
-        code:'COLLECTION_BOOTSTRAP_INCOMPLETE', statusCode:503, details:{ failedOwners },
+    const missingImages = Number(collectionImages.missing) || 0;
+    if (failedOwners.length || missingImages > 0) {
+      throw Object.assign(new Error(
+        missingImages > 0
+          ? missingImages + ' Koleksiyon görseli Shared Hub senkronizasyonunu bekliyor.'
+          : 'Yetkili Koleksiyon senkronizasyonu tamamlanamadı.'
+      ), {
+        code:'COLLECTION_BOOTSTRAP_INCOMPLETE',
+        statusCode:503,
+        details:{ failedOwners, missingImages, requested:Number(collectionImages.requested)||0 },
       });
     }
     userBootstrapReady.add(String(req.currentUser.id));
