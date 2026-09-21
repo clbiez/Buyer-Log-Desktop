@@ -219,3 +219,23 @@ test('deep legacy Master scan includes local-first legacy-server-data fallbacks'
   assert.match(source, /path\.join\(dataRoot, 'local', 'local-first', 'backups'\)/);
   assert.match(source, /legacy-server-data/);
 });
+
+
+test('pre-wipe recovery does not trust record count when Master documents are empty/default', () => {
+  assert.match(SERVER, /function prewipeCriticalCoverageMissing\(report, inventory\)/);
+  assert.match(SERVER, /\['royaltyAndHologram', 'royaltyRules'\]/);
+  assert.match(SERVER, /\['fx', 'fxKeys'\]/);
+  assert.match(SERVER, /\['endeksmatik', 'endeksmatikRecords'\]/);
+  assert.match(SERVER, /const currentInventory = prewipeMasterRecovery\.masterCoverage\(currentMaster\)/);
+  assert.match(SERVER, /const criticalMissingBefore = prewipeCriticalCoverageMissing\(candidate\.report, currentInventory\)/);
+  assert.doesNotMatch(SERVER, /publishedInventory && currentMasterCount >= expectedMaster/);
+});
+
+test('verified pre-wipe coverage forces richer records back even when the same record IDs already exist', () => {
+  assert.match(SERVER, /function recoveryRecordIdsForCoverage\(fields, recoveredRecords\)/);
+  assert.match(SERVER, /const recoveredCoverageMissing = masterCoverageMissing\(recovered\.masterCoverage, currentInventory\)/);
+  assert.match(SERVER, /forcedRecoveryIds\.filter\(id => Object\.hasOwn\(recovered\.masterRecords, id\)\)/);
+  assert.match(SERVER, /recoveredCoverageMissingAfter = masterCoverageMissing\(recovered\.masterCoverage, finalCoverage\)/);
+  assert.match(SERVER, /criticalMissing:criticalMissingAfter/);
+  assert.match(SERVER, /recoveredCoverageMissing:recoveredCoverageMissingAfter/);
+});
