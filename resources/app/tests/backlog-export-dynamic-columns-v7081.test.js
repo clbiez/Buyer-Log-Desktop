@@ -104,7 +104,7 @@ test('Kaldırılan varsayılan sütun kalıcıdır; yalnız boş kayıt veya "Va
   assert.match(block, /return backlogDefaultExcelColumns\(\);/);
   const defaultUses = APP.split('backlogDefaultExcelColumns()').length - 1;
   assert.strictEqual(defaultUses, 3, 'varsayılan liste yalnız tanım, boş kayıt yedeği ve sıfırlama düğmesinde kullanılmalı');
-  assert.match(APP, /data-col-reset-selection\]\'\)\.addEventListener\('click',\(\)=>\{\n\s*workingSelected=backlogDefaultExcelColumns\(\)/);
+  assert.match(APP, /data-col-reset-selection\]\'\)\.addEventListener\('click',\(\)=>\{\r?\n\s*workingSelected=backlogDefaultExcelColumns\(\)/);
 });
 
 test('Aynı başlık export listesine iki kez girmez', () => {
