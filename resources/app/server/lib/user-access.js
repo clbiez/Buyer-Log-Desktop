@@ -1723,7 +1723,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     profileCopyHandler: centralMutation(profileCopyHandler, 'USER.PROFILE_COPY'), profileCopyPreviewHandler,
     temporaryGrantHandler: centralMutation(temporaryGrantHandler, 'USER.GRANT'), temporaryGrantRevokeHandler: centralMutation(temporaryGrantRevokeHandler, 'USER.GRANT'), auditListHandler,
     iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler,
-    refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured ? getCentralIam().preflight(1500, options) : Promise.resolve(null),
+    refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured ? getCentralIam().preflight(Math.max(250, Number(options && options.timeoutMs) || 1500), options) : Promise.resolve(null),
     // Shared Hub can be selected on the pre-login screen after the process has
     // already started. Central IAM therefore cannot be a boot-time-only flag.
     // Enabling it only swaps the directory transport; credentials remain in
