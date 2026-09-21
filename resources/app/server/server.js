@@ -574,6 +574,7 @@ const collectionPermissionsReady = (async () => {
 const SHARED_COLLECTION_OWNER = collectionWorkspaces.SHARED_COLLECTION_OWNER;
 let sharedHubBootstrapInFlight = null;
 let sharedHubStartupSettled = false;
+const userBootstrapReady = new Set();
 let sharedHubBootstrapProgress = {
   configured:false, validated:false, loginAllowed:false, bootstrapRequired:true,
   setupRecommended:false, status:'starting', offline:false, phase:'starting',
@@ -1061,6 +1062,12 @@ app.get('/api/user-profiles', userAccess.listHandler);
 app.get('/api/user-suggestions', userAccess.suggestHandler); // legacy alias
 app.get('/api/auth/users/suggest', userAccess.suggestHandler);
 app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) => {
+  const loginName = String(req.body && req.body.username || '').trim().toLocaleLowerCase('tr-TR');
+  const loginProfile = userAccess.allPublicProfiles().find(profile =>
+    [profile && profile.username, profile && profile.displayName]
+      .some(value => String(value || '').trim().toLocaleLowerCase('tr-TR') === loginName)
+  );
+  if (loginProfile && loginProfile.id) userBootstrapReady.delete(String(loginProfile.id));
   const gate = bootstrapStatusSnapshot();
   if (!sharedHubStartupSettled || gate.status === 'syncing' || gate.status === 'starting') {
     return res.status(423).json({ error:'Buyer Log senkronizasyonu tamamlanmadan giriş yapılamaz.', code:'BOOTSTRAP_IN_PROGRESS', bootstrap:gate });
@@ -1126,12 +1133,20 @@ app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async 
   try {
     const gate = bootstrapStatusSnapshot();
     if (gate.status === 'offline') {
+      userBootstrapReady.add(String(req.currentUser.id));
       return res.set('Cache-Control','no-store').json({ ok:true, ready:true, offline:true, message:'Çevrimdışı · son doğrulanmış yerel veri kullanılıyor', collectionImages:{ requested:0, installed:0, reused:0, missing:0 } });
     }
     if (gate.status !== 'ready') {
       return res.status(423).set('Cache-Control','no-store').json({ ok:false, ready:false, code:'BOOTSTRAP_NOT_READY', bootstrap:gate });
     }
     const collectionImages = await syncAuthorizedCollectionImages(req.currentUser.id);
+    const failedOwners = (collectionImages.results || []).filter(item => item && item.error);
+    if (failedOwners.length) {
+      throw Object.assign(new Error('Yetkili Koleksiyon senkronizasyonu tamamlanamadı.'), {
+        code:'COLLECTION_BOOTSTRAP_INCOMPLETE', statusCode:503, details:{ failedOwners },
+      });
+    }
+    userBootstrapReady.add(String(req.currentUser.id));
     res.set('Cache-Control','no-store').json({
       ok:true, ready:true, offline:false,
       message:'Koleksiyonlar ve yetkili görseller eşitlendi.',
@@ -3827,6 +3842,10 @@ async function syncAuthorizedCollectionImages(userId) {
   const replication = await collectionReplication.syncAuthorizedOwners(userId);
   const results = [];
   for (const ownerId of ownerIds) {
+    if (String(ownerId) === String(userId)) {
+      results.push({ ownerId, requested:0, available:0, installed:0, reused:0, missing:0, ownWorkspace:true });
+      continue;
+    }
     try { results.push(await syncCollectionWorkspaceImagesForUser(userId, ownerId)); }
     catch (error) { results.push({ ownerId, requested:0, installed:0, reused:0, missing:0, error:error.code || error.message }); }
   }
@@ -6279,7 +6298,12 @@ app.use((req, res, next) => {
 
 // Dynamic index is registered after the compression wrapper so the generated
 // runtime version HTML is still gzip-compressed. It remains before static files.
-app.get('/', (_req, res) => {
+app.get('/', (req, res) => {
+  let profile = null;
+  try { profile = userAccess.sessionProfile(req); } catch (_) {}
+  if (!profile || !userBootstrapReady.has(String(profile.id))) {
+    return res.set('Cache-Control','no-store').redirect(302, '/select-user');
+  }
   res.set('Cache-Control', 'no-store');
   res.type('html').send(renderIndexTemplate());
 });
