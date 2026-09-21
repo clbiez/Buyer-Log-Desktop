@@ -197,5 +197,16 @@ button{touch-action:manipulation}
 .hubGate{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:10px 12px;border:1px solid var(--login-line-strong);background:#f7f9fb}
 .hubGate[hidden],.hubPanel[hidden]{display:none!important}.hubGateCopy{display:flex;min-width:0;flex-direction:column;gap:2px}.hubGateCopy strong{font-size:11px;color:var(--login-text)}.hubGateCopy span{font-size:10px;line-height:1.35;color:var(--login-subtle)}
 .hubGate[data-state="ready"]{background:#f4f8f5}.hubGate[data-state="offline"],.hubGate[data-state="error"]{background:var(--login-warning-bg)}
+.hubSteps{display:grid;gap:3px;margin-top:7px;padding-top:7px;border-top:1px solid var(--login-line)}
+.hubSteps[hidden]{display:none!important}
+.hubStep{display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:5px;min-height:17px;font-size:9.5px;line-height:1.3;color:var(--login-muted)}
+.hubStepIcon{display:grid;place-items:center;width:12px;height:12px;border:1px solid var(--login-line);font-size:8px;font-weight:700;color:var(--login-muted);background:#fff}
+.hubStep[data-state="active"]{color:var(--login-text)}
+.hubStep[data-state="active"] .hubStepIcon{border-color:var(--login-focus);color:var(--login-focus)}
+.hubStep[data-state="done"] .hubStepIcon{border-color:#7e9e86;color:#476c51;background:#f4f8f5}
+.hubStep[data-state="error"] .hubStepIcon{border-color:var(--login-danger-line);color:var(--login-danger);background:var(--login-danger-bg)}
+.hubStepLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hubStepDetail{padding-left:6px;color:var(--login-subtle);white-space:nowrap}
+
 .hubSettingsBtn,.hubSecondaryBtn,.hubPrimaryBtn{min-height:34px;border-radius:0;font-family:var(--login-font);font-size:11px;font-weight:600;cursor:pointer}.hubSettingsBtn,.hubSecondaryBtn{border:1px solid var(--login-line-strong);background:#fff;color:var(--login-text);padding:0 11px}.hubPrimaryBtn{border:1px solid var(--login-brand);background:var(--login-brand);color:#fff;padding:0 13px}.hubSettingsBtn:hover,.hubSecondaryBtn:hover{background:#eef2f5}.hubPrimaryBtn:hover{background:var(--login-brand-deep)}.hubSettingsBtn:disabled,.hubSecondaryBtn:disabled,.hubPrimaryBtn:disabled{opacity:.55;cursor:not-allowed}
 .hubPanel{margin:-8px 0 18px;padding:12px;border:1px solid var(--login-line-strong);background:#fff}.hubPanel label{display:block;margin-bottom:6px;font-size:10.5px;font-weight:600;color:var(--login-text)}.hubPathRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.hubPathRow input{min-width:0;height:36px;border:1px solid var(--login-line-strong);border-radius:0;padding:0 9px;font:11px var(--login-font);color:var(--login-text);outline:0}.hubPathRow input:focus{border-color:var(--login-focus);outline:2px solid var(--login-focus-ring);outline-offset:1px}.hubStatusText{min-height:14px;margin:8px 0 0;font-size:10px;line-height:1.4;color:var(--login-subtle)}.hubActions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}
