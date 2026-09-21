@@ -51,6 +51,7 @@ const { BackendProcess, probeOrigin, ensureConfig, ensureDataTree } = require('.
 const { runFirstRunMigration, healPortableSettings, readMigrationState } = require('./first-run-migration');
 const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
+const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
 
 const APP_CORE_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_BOUNDS = { width: 1600, height: 1000 };
@@ -90,10 +91,6 @@ const OAB_VIEWER_URL = 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBud
 const OAB_HOME_URL = 'https://pass.lcwaikiki.com/';
 const OAB_UI_HOST = 'pass.lcwaikiki.com';
 const OAB_API_HOST = 'pass.prod.lcwaikiki.com';
-const OAB_AUTH_CAPTURE_URLS = Object.freeze([
-  `https://${OAB_API_HOST}/*`,
-  `https://${OAB_UI_HOST}/*`,
-]);
 let oabAuthWindow = null;
 let oabAuthInFlight = null;
 
@@ -635,16 +632,6 @@ function oabAuthSession() {
   return session.fromPartition(OAB_AUTH_PARTITION, { cache: true });
 }
 
-function authorizationHeaderFromHeaders(headers) {
-  if (!headers || typeof headers !== 'object') return '';
-  for (const [name, value] of Object.entries(headers)) {
-    if (String(name).toLowerCase() !== 'authorization') continue;
-    const text = String(Array.isArray(value) ? value[0] : value || '').replace(/[\u0000\r\n]/g, '').trim();
-    if (/^Bearer\s+\S{20,}$/i.test(text)) return text;
-  }
-  return '';
-}
-
 function isAllowedOabLoginUrl(value) {
   try {
     const url = new URL(String(value || ''));
@@ -734,45 +721,66 @@ async function acquireOabAuthorization(options = {}) {
   }
   const interactive = options.interactive !== false;
   const request = (async () => {
-    const authSession = oabAuthSession();
     let authWindow = null;
     let settled = false;
     let timeoutTimer = null;
     let showTimer = null;
-    let authProbeTimer = null;
-    let candidateBusy = false;
+    let lifecycleTimer = null;
+    let lifecycle = null;
     let resolvePromise = null;
     let fallbackTried = false;
-    let postLoginViewerKickDone = false;
-    let sawExternalAuthNavigation = false;
-    const authCaptureFilter = { urls: OAB_AUTH_CAPTURE_URLS };
+    let navigationBusy = false;
+    let debuggerAttached = false;
+    let captureStopping = false;
+    let debuggerMessageHandler = null;
+    let debuggerDetachHandler = null;
 
-    const cleanupListener = () => {
-      try { authSession.webRequest.onBeforeSendHeaders(authCaptureFilter, null); } catch (_) {}
+    const cleanupCapture = () => {
+      if (lifecycleTimer) { clearInterval(lifecycleTimer); lifecycleTimer = null; }
+      if (lifecycle) lifecycle.stop();
+      if (!authWindow || authWindow.isDestroyed()) return;
+      const targetDebugger = authWindow.webContents.debugger;
+      if (debuggerMessageHandler) {
+        try { targetDebugger.off('message', debuggerMessageHandler); } catch (_) {}
+        debuggerMessageHandler = null;
+      }
+      if (debuggerDetachHandler) {
+        try { targetDebugger.off('detach', debuggerDetachHandler); } catch (_) {}
+        debuggerDetachHandler = null;
+      }
+      if (debuggerAttached) {
+        captureStopping = true;
+        try { targetDebugger.detach(); } catch (_) {}
+        debuggerAttached = false;
+      }
     };
     const cleanup = () => {
-      if (timeoutTimer) clearTimeout(timeoutTimer);
-      if (showTimer) clearTimeout(showTimer);
-      if (authProbeTimer) clearTimeout(authProbeTimer);
-      cleanupListener();
+      if (timeoutTimer) { clearTimeout(timeoutTimer); timeoutTimer = null; }
+      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+      cleanupCapture();
       if (authWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
       if (oabAuthWindow === authWindow) oabAuthWindow = null;
     };
     const finishAuthorization = async authorization => {
-      if (settled || candidateBusy || !authorization) return null;
-      candidateBusy = true;
+      if (settled || !authorization) return false;
       try {
+        // The loopback bridge stores the candidate only in backend RAM and
+        // validates it with oabApiClient.validateAuthorization(). Success here
+        // therefore means "real report Authorization + backend validation", not
+        // merely that the PASS viewer shell is visible.
         const pushed = await pushOabAuthorizationToBackend(authorization);
-        if (!pushed || !pushed.ok) return null;
+        if (!pushed || !pushed.ok) return false;
         settled = true;
-        log('OAB otomatik oturumu hazır.');
+        log('OAB otomatik oturumu hazır (report API Authorization doğrulandı).');
         cleanup();
-        return { ok:true, authenticated:true, source:'desktop-oab-sso' };
+        if (resolvePromise) resolvePromise({ ok:true, authenticated:true, source:'desktop-oab-sso' });
+        return true;
       } catch (error) {
-        // 401/403 or a malformed captured header is not a secret-bearing error.
+        // A stale/invalid candidate is not terminal. The same authenticated
+        // viewer may emit a fresh report request moments later.
         log('OAB oturum adayı doğrulanamadı: ' + (error && error.code || 'OAB_AUTH_FAILED'));
-        return null;
-      } finally { candidateBusy = false; }
+        return false;
+      }
     };
 
     return await new Promise(resolve => {
@@ -787,26 +795,9 @@ async function acquireOabAuthorization(options = {}) {
         if (!interactive || settled || !authWindow || authWindow.isDestroyed()) return;
         try { authWindow.show(); authWindow.focus(); } catch (_) {}
       };
-      const schedulePostLoginViewerKick = (delayMs = 700) => {
-        if (settled || postLoginViewerKickDone || candidateBusy || !authWindow || authWindow.isDestroyed()) return;
-        if (authProbeTimer) clearTimeout(authProbeTimer);
-        authProbeTimer = setTimeout(async () => {
-          authProbeTimer = null;
-          if (settled || postLoginViewerKickDone || candidateBusy || !authWindow || authWindow.isDestroyed()) return;
-          let current;
-          try { current = new URL(authWindow.webContents.getURL()); } catch (_) { return; }
-          if (current.hostname.toLowerCase() !== OAB_UI_HOST) return;
-          if (await oabWindowLooksLikeSignIn(authWindow)) return;
-          const onViewer = /\/v3\/report\/viewer/i.test(current.pathname);
-          if (!onViewer && !sawExternalAuthNavigation) return;
-          postLoginViewerKickDone = true;
-          log('OAB oturum dönüşü algılandı; viewer API isteği tetikleniyor.');
-          void loadLoginTarget(OAB_VIEWER_URL, false);
-        }, Math.max(250, Number(delayMs) || 700));
-        authProbeTimer.unref?.();
-      };
       const loadLoginTarget = async (url, allowFallback = true) => {
-        if (settled || !authWindow || authWindow.isDestroyed()) return;
+        if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return;
+        navigationBusy = true;
         try {
           await authWindow.loadURL(url);
         } catch (error) {
@@ -831,7 +822,16 @@ async function acquireOabAuthorization(options = {}) {
             }
           }
           finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı açılamadı.');
+        } finally {
+          navigationBusy = false;
         }
+      };
+      const pulseLifecycle = async () => {
+        if (settled || !lifecycle || !authWindow || authWindow.isDestroyed()) return;
+        let url = '';
+        try { url = authWindow.webContents.getURL(); } catch (_) { return; }
+        const signIn = await oabWindowLooksLikeSignIn(authWindow);
+        await lifecycle.observe({ url, signIn });
       };
 
       authWindow = new BrowserWindow({
@@ -848,29 +848,84 @@ async function acquireOabAuthorization(options = {}) {
         },
       });
       oabAuthWindow = authWindow;
+
+      lifecycle = createOabAuthLifecycle({
+        apiHost: OAB_API_HOST,
+        uiHost: OAB_UI_HOST,
+        maxViewerKicks: 4,
+        viewerKickIntervalMs: 1800,
+        onViewerKick: async ({ attempt, reason }) => {
+          if (settled || !authWindow || authWindow.isDestroyed()) return;
+          log('OAB viewer report isteği yeniden tetikleniyor (' + reason + ', ' + attempt + '/4).');
+          await loadLoginTarget(OAB_VIEWER_URL, false);
+        },
+        onAuthorization: finishAuthorization,
+        onPhase: phase => {
+          // Safe lifecycle-only diagnostics. No URL query, credential, cookie or
+          // Authorization value is written to logs.
+          if (phase !== 'waiting-report-request') log('OAB auth aşaması: ' + phase);
+        },
+      });
+
+      /*
+       * Root cause of the stuck interactive flow:
+       * PASS is an SPA/SSO chain and a viewer load does not guarantee that the
+       * report request is emitted on that exact did-finish-load. The old code
+       * watched session.webRequest and performed one reload, so a delayed SPA
+       * request (or a request Chromium exposed only through DevTools Network)
+       * could be missed forever while the renderer awaited this promise.
+       *
+       * The working Edge connector captures Network.requestWillBeSent. Mirror
+       * that exact transport here: attach BEFORE the first navigation, watch
+       * only the real report API host/path, and send only the captured
+       * Authorization to the loopback backend for validation.
+       */
+      const targetDebugger = authWindow.webContents.debugger;
+      debuggerMessageHandler = (_event, method, params) => {
+        if (settled || method !== 'Network.requestWillBeSent' || !lifecycle) return;
+        void lifecycle.onNetworkRequest(params);
+      };
+      debuggerDetachHandler = (_event, reason) => {
+        debuggerAttached = false;
+        if (settled || captureStopping || !authWindow || authWindow.isDestroyed()) return;
+        log('OAB Network capture beklenmedik şekilde ayrıldı: ' + String(reason || 'unknown'));
+        finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama bağlantısı kapandı.');
+      };
+      try {
+        targetDebugger.attach('1.3');
+        debuggerAttached = true;
+        targetDebugger.on('message', debuggerMessageHandler);
+        targetDebugger.on('detach', debuggerDetachHandler);
+        void targetDebugger.sendCommand('Network.enable').catch(() => {
+          if (!settled) finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.');
+        });
+      } catch (error) {
+        finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.');
+        return;
+      }
+
       authWindow.once('ready-to-show', showInteractiveWindow);
-      // Do not depend solely on ready-to-show: corporate SSO can redirect before
-      // the first page paints. A short fallback guarantees the controlled window
-      // becomes visible instead of leaving the renderer waiting indefinitely.
+      // Corporate SSO may redirect before the first paint.
       showTimer = setTimeout(showInteractiveWindow, 350);
+      showTimer.unref?.();
+
+      const schedulePulse = delay => {
+        const timer = setTimeout(() => { void pulseLifecycle(); }, Math.max(0, Number(delay) || 0));
+        timer.unref?.();
+      };
       authWindow.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
         if (!isMainFrame || !isAllowedOabLoginUrl(url)) return;
-        try {
-          const host = new URL(String(url || '')).hostname.toLowerCase();
-          if (host !== OAB_UI_HOST && host !== OAB_API_HOST) sawExternalAuthNavigation = true;
-        } catch (_) {}
         showInteractiveWindow();
+        schedulePulse(120);
       });
       authWindow.webContents.on('did-finish-load', () => {
-        // SSO tamamlanıp viewer shell'i açıldığında PASS her zaman hemen
-        // report API isteği atmıyor. Tek seferlik viewer reload'u normal
-        // metadata isteğini tetikler; Authorization yakalanınca pencere kapanır.
-        schedulePostLoginViewerKick(sawExternalAuthNavigation ? 350 : 1200);
+        // This is only a hint. The bounded polling lifecycle below remains the
+        // authority, so completion is never tied to one load event.
+        schedulePulse(80);
       });
+      authWindow.webContents.on('did-navigate-in-page', () => schedulePulse(80));
       authWindow.webContents.on('did-fail-load', (_event, errorCode, _description, validatedURL, isMainFrame) => {
         if (!isMainFrame || settled || Number(errorCode) === -3) return;
-        // loadURL() owns initial/fallback failure handling. This listener only
-        // catches a later fatal main-frame failure during the login flow.
         if (validatedURL && isAllowedOabLoginUrl(validatedURL)) {
           log('OAB giriş sayfası main-frame yükleme hatası: ' + Number(errorCode));
         }
@@ -891,25 +946,29 @@ async function acquireOabAuthorization(options = {}) {
       });
       authWindow.on('closed', () => {
         oabAuthWindow = null;
-        cleanupListener();
+        cleanupCapture();
         if (!settled) {
           settled = true;
+          if (timeoutTimer) clearTimeout(timeoutTimer);
+          if (showTimer) clearTimeout(showTimer);
           resolve({ ok:false, authenticated:false, code:'OAB_AUTH_CANCELLED', error:'OAB kullanıcı girişi iptal edildi.' });
         }
       });
 
-      authSession.webRequest.onBeforeSendHeaders(authCaptureFilter, (details, callback) => {
-        const authorization = authorizationHeaderFromHeaders(details.requestHeaders);
-        callback({ requestHeaders: details.requestHeaders });
-        if (!authorization || settled) return;
-        void finishAuthorization(authorization).then(result => { if (result && result.ok && resolvePromise) resolvePromise(result); });
-      });
+      // Bounded lifecycle observation: it detects login UI disappearance and,
+      // if the SPA viewer emits no API request, retries the viewer a few times.
+      // No infinite reload/poll loop: viewer kicks are capped at four and the
+      // whole flow still has the existing hard timeout.
+      lifecycleTimer = setInterval(() => { void pulseLifecycle(); }, 500);
+      lifecycleTimer.unref?.();
 
       timeoutTimer = setTimeout(() => {
         if (settled) return;
         finishFailure(interactive ? 'OAB_AUTH_TIMEOUT' : 'OAB_AUTH_REQUIRED', interactive ? 'OAB oturum açma işlemi zamanında tamamlanmadı.' : 'OAB oturumu gerekli.');
       }, interactive ? 180000 : 12000);
+      timeoutTimer.unref?.();
 
+      // CDP listener is already attached and Network enabled before navigation.
       void loadLoginTarget(OAB_VIEWER_URL, true);
     });
   })();
