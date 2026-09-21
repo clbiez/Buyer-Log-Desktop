@@ -797,15 +797,16 @@ async function acquireOabAuthorization(options = {}) {
         try { authWindow.show(); authWindow.focus(); } catch (_) {}
       };
       const loadLoginTarget = async (url, allowFallback = true) => {
-        if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return;
+        if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
         navigationBusy = true;
         try {
           await authWindow.loadURL(url);
+          return true;
         } catch (error) {
           if (isBenignOabNavigationAbort(error)) {
             log('OAB SSO yönlendirmesi devam ediyor (ERR_ABORTED göz ardı edildi).');
             showInteractiveWindow();
-            return;
+            return true;
           }
           if (allowFallback && !fallbackTried) {
             fallbackTried = true;
@@ -813,16 +814,17 @@ async function acquireOabAuthorization(options = {}) {
             try {
               await authWindow.loadURL(OAB_HOME_URL);
               showInteractiveWindow();
-              return;
+              return true;
             } catch (fallbackError) {
               if (isBenignOabNavigationAbort(fallbackError)) {
                 log('OAB PASS SSO yönlendirmesi devam ediyor (fallback ERR_ABORTED göz ardı edildi).');
                 showInteractiveWindow();
-                return;
+                return true;
               }
             }
           }
           finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı açılamadı.');
+          return false;
         } finally {
           navigationBusy = false;
         }
@@ -856,9 +858,9 @@ async function acquireOabAuthorization(options = {}) {
         maxViewerKicks: 4,
         viewerKickIntervalMs: 1800,
         onViewerKick: async ({ attempt, reason }) => {
-          if (settled || !authWindow || authWindow.isDestroyed()) return;
+          if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
           log('OAB viewer report isteği yeniden tetikleniyor (' + reason + ', ' + attempt + '/4).');
-          await loadLoginTarget(OAB_VIEWER_URL, false);
+          return loadLoginTarget(OAB_VIEWER_URL, false);
         },
         onAuthorization: finishAuthorization,
         onPhase: phase => {
