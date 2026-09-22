@@ -15,7 +15,7 @@ const SHELL_PRELOAD = read('electron/workspace-preload.js');
 const SHELL = read('electron/workspace.html');
 const SHELL_JS = read('electron/workspace-renderer.js');
 const APP = read('public/app-main.js');
-const { createWorkspaceManager, normalizeModule, clampIndex, MODULES } = require('../electron/workspace-manager');
+const { createWorkspaceManager, normalizeModule, normalizeWorkspaceTheme, clampIndex, MODULES } = require('../electron/workspace-manager');
 
 let nextContentsId = 1;
 let nextWindowId = 1;
@@ -96,7 +96,7 @@ test('tab switch, reorder and cross-window transfer keep the same live View', ()
   assert.match(MANAGER, /function activateTab[\s\S]*?showActive\(state, focus\)/);
 });
 
-test('live manager moves one WebContentsView across windows without recreating it', () => {
+test('live manager moves one WebContentsView across windows without recreating it', async () => {
   const manager=mockManager();
   const first=manager.createWindow({module:'koleksiyon'});
   const lfl=manager.openModule(first.window.id,'lfl');
@@ -118,7 +118,8 @@ test('live manager moves one WebContentsView across windows without recreating i
   assert.ok(detached && detached.window.id!==first.window.id);
   assert.equal(manager.snapshot(detached).canReattach,true,'detached window exposes a reliable reattach action');
   assert.equal(manager.reattachTab(lfl.id,detached.window.id),true);
-  assert.equal(manager.windowCount(),1,'empty detached window closes without closing the app workspace');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(manager.windowCount(),1,'empty detached window closes after the transfer event stack completes');
   assert.equal(lfl.view.webContents,liveContents,'reattach preserves renderer identity and state');
   assert.equal(liveContents.isDestroyed(),false);
 });
@@ -155,8 +156,10 @@ test('multi-window host keeps one backend and shuts it down only through app qui
   assert.equal((MAIN.match(/backend = new BackendProcess\(/g) || []).length, 1);
   assert.match(MAIN, /app\.on\('window-all-closed',[\s\S]*?app\.quit\(\)/);
   assert.match(MAIN, /app\.on\('before-quit',[\s\S]*?shutdown\(\)/);
-  assert.match(MANAGER, /if \(source\.activeTabId\) showActive\(source, false\)/);
-  assert.match(MANAGER, /else \{[\s\S]*?source\.forceClosing = true;[\s\S]*?source\.window\.close\(\)/);
+  assert.match(MANAGER, /function closeEmptyDetachedWindow/);
+  assert.match(MANAGER, /state\.window\.id === primaryWindowId/);
+  assert.match(MANAGER, /setImmediate\(\(\) =>/);
+  assert.match(MANAGER, /function settleSourceAfterMove/);
   assert.doesNotMatch(MANAGER, /BackendProcess|backend\.stop|app\.quit/);
 });
 
@@ -191,7 +194,7 @@ test('beforeunload cancellation keeps the tab open and does not trigger the forc
   assert.equal(state.window.isDestroyed(),false);
 });
 
-test('dragging a detached tab over another workspace window reattaches it without recreating the renderer', () => {
+test('dragging a detached tab over another workspace window reattaches it without recreating the renderer', async () => {
   const manager=mockManager();
   const first=manager.createWindow({module:'overview'});
   const tab=manager.openModule(first.window.id,'cp');
@@ -202,20 +205,61 @@ test('dragging a detached tab over another workspace window reattaches it withou
   assert.equal(manager.finishTabDrag(tab.id,detached.window.id,{x:100,y:20}),true);
   assert.equal(tab.windowId,first.window.id);
   assert.equal(tab.view.webContents,contents);
+  await new Promise(resolve=>setImmediate(resolve));
   assert.equal(manager.windowCount(),1);
 });
 
-test('native title-bar overlay follows Electron dark/light theme updates', () => {
-  const manager=mockManager({dark:true});
-  const state=manager.createWindow({module:'overview'});
-  assert.equal(state.window.titleBarOverlay.color,'#1c1f23');
-  assert.equal(state.window.titleBarOverlay.symbolColor,'#e9eaec');
-  assert.equal(state.window.backgroundColor,'#23262a');
+test('detached window with a remaining tab stays open when another tab moves away', async () => {
+  const manager=mockManager();
+  const primary=manager.createWindow({module:'overview'});
+  const moved=manager.openModule(primary.window.id,'cp');
+  assert.equal(manager.detachTab(moved.id,primary.window.id,{x:1700,y:100}),true);
+  const detached=manager.stateForWindow(moved.windowId);
+  const remaining=manager.openModule(detached.window.id,'orders');
+  assert.equal(manager.moveTab(moved.id,primary.window.id,1),true);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(detached.window.isDestroyed(),false,'source window must remain because one tab still lives there');
+  assert.equal(manager.snapshot(detached).tabs.length,1);
+  assert.equal(manager.snapshot(detached).tabs[0].id,remaining.id);
+});
+
+test('primary workspace is never auto-closed when its last tab is detached', async () => {
+  const manager=mockManager();
+  const primary=manager.createWindow({module:'overview'});
+  const only=manager.tabForContents(manager.activeContents(primary));
+  assert.equal(manager.detachTab(only.id,primary.window.id,{x:1700,y:100}),true);
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(primary.window.isDestroyed(),false);
+  assert.equal(manager.snapshot(primary).tabs.length,0);
+  assert.equal(manager.windowCount(),2);
+});
+
+test('Buyer Log app theme overrides OS theme and updates every open window live', () => {
+  const manager=mockManager({dark:false});
+  const first=manager.createWindow({module:'overview'});
+  const second=manager.createWindow({module:'cp'});
+  assert.equal(normalizeWorkspaceTheme('grey'),'grey');
+
+  manager.setTheme('dark');
+  for(const state of [first,second]){
+    assert.equal(state.window.titleBarOverlay.color,'#212429');
+    assert.equal(state.window.titleBarOverlay.symbolColor,'#E8EAED');
+    assert.equal(state.window.backgroundColor,'#131417');
+    assert.equal(manager.snapshot(state).theme,'dark');
+  }
+
+  // OS remains light; it must not overwrite the explicit Buyer Log theme.
   manager.__nativeTheme.shouldUseDarkColors=false;
   manager.__nativeTheme.emit('updated');
-  assert.equal(state.window.titleBarOverlay.color,'#ececed');
-  assert.equal(state.window.titleBarOverlay.symbolColor,'#1d1f20');
-  assert.equal(state.window.backgroundColor,'#f2f2f3');
+  assert.equal(first.window.titleBarOverlay.color,'#212429');
+
+  manager.setTheme('light');
+  for(const state of [first,second]){
+    assert.equal(state.window.titleBarOverlay.color,'#FBFBFC');
+    assert.equal(state.window.titleBarOverlay.symbolColor,'#101828');
+    assert.equal(state.window.backgroundColor,'#F6F7F9');
+    assert.equal(manager.snapshot(state).theme,'light');
+  }
 });
 
 test('tab close honors beforeunload and native F5/F12 target the live content renderer', () => {
@@ -223,6 +267,10 @@ test('tab close honors beforeunload and native F5/F12 target the live content re
   assert.match(MANAGER, /will-prevent-unload/);
   assert.match(MANAGER, /finishTabDrag/);
   assert.match(MANAGER, /reattachTab/);
+  assert.match(MAIN, /workspace-theme/);
+  assert.match(PRELOAD, /workspace-theme/);
+  assert.match(APP, /workspace\?\.setTheme\?\.\(resolved\)/);
+  assert.match(SHELL_JS, /document\.documentElement\.dataset\.theme/);
   assert.match(MAIN, /nativeTheme/);
   assert.match(MAIN, /workspace-finish-tab-drag/);
   assert.match(MAIN, /workspace-reattach-tab/);
