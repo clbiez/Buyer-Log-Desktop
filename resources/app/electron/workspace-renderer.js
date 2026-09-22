@@ -30,6 +30,7 @@ function render(next) {
         <span class="tabTitle">${escapeHtml(tab.title)}</span>
       </button>
       <span class="tabActions">
+        ${state.canReattach?'<button class="tabIconButton reattachButton" type="button" data-reattach aria-label="Sekmeyi ana pencereye geri al" title="Ana pencereye geri al"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 3.5H3.5v9h7v-3M6.5 7.5h6M10 5l2.5 2.5L10 10"/></svg></button>':''}
         <button class="tabIconButton detachButton" type="button" data-detach aria-label="Sekmeyi yeni pencereye ayır" title="Yeni pencereye ayır"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 3.5h6v6M12.5 3.5l-7 7M10 8.5v4H3.5V6h4"/></svg></button>
         <button class="tabIconButton closeButton" type="button" data-close aria-label="Sekmeyi kapat" title="Sekmeyi kapat">×</button>
       </span>
@@ -42,6 +43,7 @@ strip.addEventListener('click', event => {
   const tab = event.target.closest('.workspaceTab');
   if (!tab) return;
   if (event.target.closest('[data-close]')) bridge.closeTab(tab.dataset.tabId);
+  else if (event.target.closest('[data-reattach]')) bridge.reattachTab(tab.dataset.tabId, state.windowId);
   else if (event.target.closest('[data-detach]')) bridge.detachTab(tab.dataset.tabId, state.windowId, { x:window.screenX + 180, y:window.screenY + 28 });
   else bridge.activateTab(tab.dataset.tabId);
 });
@@ -89,7 +91,7 @@ strip.addEventListener('dragend', event => {
   draggedSourceWindowId = 0;
   dropAccepted = false;
   dropHint.hidden = true;
-  if (!accepted && tabId) bridge.detachTab(tabId, sourceWindowId, { x:event.screenX, y:event.screenY });
+  if (!accepted && tabId) bridge.finishTabDrag(tabId, sourceWindowId, { x:event.screenX, y:event.screenY });
 });
 
 document.addEventListener('dragenter', event => {
