@@ -128,7 +128,7 @@ test('Collection auto Licensor license değişiminde güncellenir, clear ile tem
 
 test('Pricing rules değişikliği canlı istemcilere revision sinyali gönderir ve loaded consumer tablolarını günceller', () => {
   const pricingPut = between(SERVER, "app.put('/api/pricing-rules'", "const normalizeTransitDelType");
-  assert.match(pricingPut, /liveEvents\.notifyChange\('pricingRules', requestClientId\(req\)/);
+  assert.match(pricingPut, /publishSharedMasterChange\\('pricingRules', req, \\{ revision: saved\\.revision, changedLicenses \\}\\)/);
   assert.match(APP, /payload\.area==='pricingRules'/);
   assert.match(APP, /refreshPricingRulesFromServer/);
   const loadedRows = bodyOf(APP, 'applyPricingRulesToLoadedRows');
