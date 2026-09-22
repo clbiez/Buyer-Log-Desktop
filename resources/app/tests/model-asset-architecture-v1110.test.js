@@ -43,18 +43,19 @@ test('PLM/ASAS işlemleri her tabloda tek PLM SYNC menüsü altında, sayfa kaps
   assert.doesNotMatch(INDEX, /id="(?:cp|orders|kol)ModelLinks(?:Missing|Selected|All)Btn"/);
   assert.doesNotMatch(INDEX, /id="(?:cp|orders|kol)ModelImagesBtn"/);
   assert.match(APP, /function showPlmSyncPropertyChooser/);
-  assert.match(APP, /data-plmprop="details"/);
-  assert.match(APP, /data-plmprop="image"/);
-  assert.match(APP, /data-plmprop="file"/);
-  assert.match(APP, /async function runCollectionPlmUpdateFlow/);
+  assert.match(APP, /key:'details'[\s\S]*?Model Details/);
+  assert.match(APP, /key:'links'[\s\S]*?Model Links/);
+  assert.match(APP, /key:'images'[\s\S]*?Model Images/);
+  assert.match(APP, /key:'files'[\s\S]*?Model Files/);
+  assert.match(APP, /async function runPlmUpdateFlow/);
   assert.doesNotMatch(APP, /function plmAssetsSync\(/);
 });
 
 test('dosya işlemi görsel işi, görsel işlemi dosya işi BAŞLATMAZ', () => {
-  const filesStart = APP.indexOf('async function updateModelFiles(mode,button)');
+  const filesStart = APP.indexOf('async function updateModelFiles(mode,button');
   assert.ok(filesStart >= 0);
   const filesBlock = APP.slice(filesStart, APP.indexOf('/* --- GÜNCEL GÖRÜNÜM EYLEMİ', filesStart));
-  assert.match(filesBlock, /kolPlmSyncModelFilesRun\(button,rows\)/);
+  assert.match(filesBlock, /kolPlmSyncModelFilesRun\(button,targetRows,\{language\}\)/);
   assert.doesNotMatch(filesBlock, /import-plm|import-asas|updateModelImages/);
 
   const imagesStart = APP.indexOf('async function updateModelImages({source=MODEL_ASSET_SOURCE_PLM');

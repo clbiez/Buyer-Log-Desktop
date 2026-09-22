@@ -5775,10 +5775,10 @@ app.get('/api/qtx/file/:colourCode', userAccess.requireAnyArea('cp', 'orders', '
    doğrulanır; Overview > OAB açılışında login penceresi açılmaz.
    =================================================================== */
 // OAB report transport stays backend-direct and the Authorization value lives
-// only in backend memory. Authentication now prefers the user's ALREADY OPEN
-// Edge PASS/OAB tab (existing CDP context only; no browser launch). Electron's
-// controlled OAB sign-in window remains a fallback when an existing session
-// cannot be observed. 401/403 invalidates the in-memory state.
+// only in backend memory. The primary path is Electron's dedicated persistent
+// OAB partition; the existing-Edge endpoint below remains an optional explicit
+// fast-path and is not part of Get OAB's critical path. 401/403 invalidates the
+// in-memory state.
 app.get('/api/oab/auth/status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
   try { res.set('Cache-Control','no-store').json({ ok:true, status:oabAuthState.status() }); }
   catch (_) { res.status(500).set('Cache-Control','no-store').json({ ok:false, code:'OAB_AUTH_STATUS_FAILED', error:'OAB bağlantı durumu okunamadı.' }); }

@@ -26659,6 +26659,10 @@ function modelAssetLinkItems(identities){
   });
   return [...unique.values()];
 }
+function modelAssetLinkMissing(item){
+  const current=plmStyleLinkInfo(normalizePlmLinkId(item&&item.plmId));
+  return !(current&&normalizePlmModelName(current.styleName)===normalizePlmModelName(item&&item.styleName));
+}
 
 /* Boş seçim ASLA sessizce "tümü"ne düşmez. */
 function modelAssetRequireSelection(operation){
@@ -26704,10 +26708,7 @@ async function updateModelLinks(mode,button,{scope=null,quiet=false}={}){
   const operation=modelAssetOperation({asset:'links',mode,scope});
   if(!operation)return {ok:false,reason:'no-scope'};
   const identities=mode==='missing'
-    ? operation.identities.filter(item=>{
-        const current=plmStyleLinkInfo(normalizePlmLinkId(item.plmId));
-        return !(current&&normalizePlmModelName(current.styleName)===normalizePlmModelName(item.styleName));
-      })
+    ? operation.identities.filter(modelAssetLinkMissing)
     : operation.identities;
   const items=modelAssetLinkItems(identities);
   if(mode==='selected'&&!operation.identities.length){showToast(appLang==='en'?'No models selected.':'Seçili model yok.');return {ok:false,reason:'no-selection'};}
@@ -26807,19 +26808,19 @@ function openModelAssetProgress(operation,total){
 
 /* --- 3) MODEL DOSYALARI — görsel işi BAŞLATMAZ ----------------------
    Dil/dosya türü seçimi ve varyant kuralları AYNEN korunur. */
-async function updateModelFiles(mode,button){
+async function updateModelFiles(mode,button,{scope=null,rows=null,language='',quiet=false}={}){
   if(typeof kolPlmSyncModelFilesRun!=='function')return {ok:false,reason:'unavailable'};
-  const api=modelAssetScopeApi(),scope=api&&api.currentScope();
-  if(mode==='selected'&&scope&&!scope.selectedIdentities.length){
+  const api=modelAssetScopeApi(),currentScope=scope||(api&&api.currentScope());
+  if(mode==='selected'&&!currentScope?.selectedIdentities?.length){
     showToast(appLang==='en'?'No models selected.':'Seçili model yok.');
     return {ok:false,reason:'no-selection'};
   }
-  const wanted=mode==='selected'&&scope
-    ? new Set(scope.selectedIdentities.map(item=>kolPlmNormalizeId(item.plmId)))
-    : null;
-  const all=kolRows.filter(row=>kolPlmNormalizeId(row&&row.plmId));
-  const filtered=mode==='all'?filteredKol().filter(row=>kolPlmNormalizeId(row&&row.plmId)):all;
-  let rows=mode==='selected'?all.filter(row=>wanted.has(kolPlmNormalizeId(row.plmId))):filtered;
+  let targetRows;
+  if(Array.isArray(rows))targetRows=rows.slice();
+  else if(mode==='selected'){
+    const wanted=new Set((currentScope?.selectedIdentities||[]).map(item=>kolPlmNormalizeId(item.plmId)).filter(Boolean));
+    targetRows=kolRows.filter(row=>wanted.has(kolPlmNormalizeId(row&&row.plmId)));
+  }else targetRows=collectionPlmRowsForScope(mode,currentScope);
   /* "Eksikleri tamamla" yalnız teknik föyü GERÇEKTEN olmayan modelleri
      ister. Depo okunamazsa güvenli tarafa düşülür (hepsi eksik sayılır):
      eksik bir dosyayı ikinci kez indirmek, olmayan dosyayı hiç indirmemekten
@@ -26827,16 +26828,16 @@ async function updateModelFiles(mode,button){
   if(mode==='missing'){
     let existing=new Set();
     try{
-      const files=await kolListStoredModelFiles(rows);
+      const files=await kolListStoredModelFiles(targetRows);
       existing=new Set(files.filter(file=>file&&file.plmSource==='technical-sheet').map(file=>kolPlmNormalizeId(file.plmId)).filter(Boolean));
     }catch(_){existing=new Set();}
-    rows=rows.filter(row=>!existing.has(kolPlmNormalizeId(row.plmId)));
+    targetRows=targetRows.filter(row=>!existing.has(kolPlmNormalizeId(row.plmId)));
   }
-  if(!rows.length){
-    showToast(appLang==='en'?'No model files to download.':'İndirilecek model dosyası yok.');
+  if(!targetRows.length){
+    if(!quiet)showToast(appLang==='en'?'No model files to download.':'İndirilecek model dosyası yok.');
     return {ok:true,skipped:true};
   }
-  return kolPlmSyncModelFilesRun(button,rows);
+  return kolPlmSyncModelFilesRun(button,targetRows,{language});
 }
 
 /* --- GÜNCEL GÖRÜNÜM EYLEMİ ------------------------------------------
@@ -27049,11 +27050,21 @@ function plmSyncPageLabel(page){
   if(page==='cp')return 'CP';
   return appLang==='en'?'Orders':'Orders';
 }
+function plmSyncScopeActions(scope,{collection=false}={}){
+  const en=appLang==='en';
+  const actions=[
+    {id:'all',label:en?'Update All':'Tümünü Güncelle',icon:'i-refresh'},
+    {id:'selected',label:en?'Update Selected Models':'Seçili Modelleri Güncelle',icon:'i-refresh',disabled:!scope?.selectedIdentities?.length},
+    {id:'missing',label:en?'Complete Missing':'Eksikleri Tamamla',description:en?'Only update missing PLM assets':'Yalnız eksik PLM varlıklarını güncelle',icon:'i-refresh'},
+  ];
+  if(collection)actions.push({id:'import-selected',label:en?'Import PLM-Selected Models to Buyer Log':"PLM'de Seçili Olan Modelleri Buyer Log'a Aktar",icon:'i-file-import'});
+  return actions;
+}
 function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],trigger=null,onBack=null}={}){
   return new Promise(resolve=>{
     document.getElementById(id)?.remove();
     const en=appLang==='en',modal=document.createElement('div');modal.id=id;modal.className='warnOverlay';
-    const buttons=actions.map((item,index)=>`<button type="button" class="tbtn modelImageUpdateChoice${item.primary?' primary':''}" data-plmflow="${escapeHtml(item.id)}"${item.disabled?' disabled':''}>${item.icon?`<svg class="ic"><use href="#${escapeHtml(item.icon)}"/></svg>`:''}<span>${escapeHtml(item.label)}</span></button>`).join('');
+    const buttons=actions.map(item=>`<button type="button" class="tbtn modelImageUpdateChoice${item.primary?' primary':''}" data-plmflow="${escapeHtml(item.id)}"${item.disabled?' disabled':''}>${item.icon?`<svg class="ic" aria-hidden="true" focusable="false"><use href="#${escapeHtml(item.icon)}"/></svg>`:''}<span class="plmSyncActionCopy"><span>${escapeHtml(item.label)}</span>${item.description?`<small>${escapeHtml(item.description)}</small>`:''}</span></button>`).join('');
     modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true" aria-labelledby="${id}Title">
       <div class="modelImageUpdateHead"><div><div class="modalTitle" id="${id}Title">${escapeHtml(title||'PLM SYNC')}</div>${intro?`<div class="modelImageUpdateIntro">${escapeHtml(intro)}</div>`:''}</div><button type="button" class="pricingRuleIconBtn" data-plmflow="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="modelImageUpdateChoices" style="grid-template-columns:1fr">${buttons}</div>
@@ -27076,19 +27087,24 @@ function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],
     window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:()=>finish(''),initialFocus:'[data-plmflow]:not([data-plmflow="cancel"]):not([data-plmflow="back"])'});
   });
 }
-function showPlmSyncPropertyChooser({trigger=null}={}){
-  const en=appLang==='en';
+function showPlmSyncPropertyChooser({page='kol',trigger=null}={}){
+  const en=appLang==='en',collection=page==='kol';
+  const definitions=collection?[
+    {key:'details',label:en?'Model Details':'Model Detayları'},
+    {key:'links',label:en?'Model Links':'Model Linkleri'},
+    {key:'images',label:en?'Model Images':'Model Görselleri'},
+    {key:'files',label:en?'Model Files':'Model Dosyaları'},
+  ]:[
+    {key:'links',label:en?'Model Links':'Model Linkleri'},
+    {key:'images',label:en?'Model Images':'Model Görselleri'},
+  ];
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPropertyModal')?.remove();
     const modal=document.createElement('div');modal.id='_plmSyncPropertyModal';modal.className='warnOverlay';
     modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true" aria-labelledby="_plmSyncPropertyTitle">
       <div class="modelImageUpdateHead"><div class="modalTitle" id="_plmSyncPropertyTitle">${escapeHtml(en?'What do you want to update?':'Neleri güncellemek istiyorsunuz?')}</div><button type="button" class="pricingRuleIconBtn" data-plmprop-action="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
-      <div class="modelImageUpdateChoices modelImageUpdateModes">
-        <label class="tbtn modelImageUpdateChoice"><input type="checkbox" data-plmprop="details"> <span>${escapeHtml(en?'Model Details':'Model Detayları')}</span></label>
-        <label class="tbtn modelImageUpdateChoice"><input type="checkbox" data-plmprop="image"> <span>${escapeHtml(en?'Image':'Görsel')}</span></label>
-        <label class="tbtn modelImageUpdateChoice"><input type="checkbox" data-plmprop="file"> <span>${escapeHtml(en?'File':'Dosya')}</span></label>
-      </div>
-      <div class="modalFoot"><button type="button" class="tbtn" data-plmprop-action="back">${escapeHtml(en?'Back':'Geri')}</button><span></span><button type="button" class="tbtn" data-plmprop-action="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-plmprop-action="continue" disabled>${escapeHtml(en?'Continue':'Devam')}</button></div>
+      <div class="modelImageUpdateChoices modelImageUpdateModes">${definitions.map(item=>`<label class="tbtn modelImageUpdateChoice"><input type="checkbox" data-plmprop="${escapeHtml(item.key)}"> <span>${escapeHtml(item.label)}</span></label>`).join('')}</div>
+      <div class="modalFoot"><button type="button" class="tbtn" data-plmprop-action="back">${escapeHtml(en?'Back':'Geri')}</button><span></span><button type="button" class="tbtn" data-plmprop-action="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-plmprop-action="continue" disabled>${escapeHtml(en?'Start':'Başlat')}</button></div>
     </div>`;
     let settled=false;
     const checks=[...modal.querySelectorAll('[data-plmprop]')],continueBtn=modal.querySelector('[data-plmprop-action="continue"]');
@@ -27102,12 +27118,12 @@ function showPlmSyncPropertyChooser({trigger=null}={}){
       const action=event.target.closest('[data-plmprop-action]');
       if(!action){if(event.target===modal)finish({cancelled:true});return;}
       if(action.dataset.plmpropAction==='continue'){
-        finish({details:checks[0].checked,image:checks[1].checked,file:checks[2].checked});
+        finish(Object.fromEntries(checks.map(input=>[input.dataset.plmprop,Boolean(input.checked)])));
       }else if(action.dataset.plmpropAction==='back')finish({back:true});
       else finish({cancelled:true});
     });
     document.body.appendChild(modal);
-    window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:()=>finish({cancelled:true}),initialFocus:'[data-plmprop="details"]'});
+    window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:()=>finish({cancelled:true}),initialFocus:`[data-plmprop="${definitions[0].key}"]`});
   });
 }
 function collectionPlmRowsForScope(mode,scope){
@@ -27118,45 +27134,84 @@ function collectionPlmRowsForScope(mode,scope){
   const rows=filteredKol().filter(row=>kolPlmNormalizeId(row&&row.plmId));
   return wanted.size?rows.filter(row=>wanted.has(kolPlmNormalizeId(row.plmId))):rows;
 }
-async function runCollectionPlmUpdateFlow(mode,root,scope){
+function collectionPlmDetailRowsForScope(mode,scope){
+  const rows=collectionPlmRowsForScope(mode,scope);
+  if(mode!=='missing')return rows;
+  const missing=new Set(kolPlmSyncMissingRows().map(row=>norm(row&&row.id)||kolPlmNormalizeId(row&&row.plmId)).filter(Boolean));
+  return rows.filter(row=>missing.has(norm(row&&row.id)||kolPlmNormalizeId(row&&row.plmId)));
+}
+function plmSyncAssetPlan(mode,scope,props){
+  const assets=[];
+  if(props&&props.links)assets.push('links');
+  if(props&&props.images)assets.push('images');
+  const api=modelAssetScopeApi();
+  return api?.planAssetQueues?.(scope,{
+    mode,assets,
+    missing:{links:modelAssetLinkMissing,images:modelAssetIdentityMissing},
+  })||{mode,identities:[],queues:{}};
+}
+function plmSyncQueuedScope(scope,identities){
+  const queue=Array.isArray(identities)?identities:[];
+  return scope?{...scope,identities:queue,selectedIdentities:queue}:scope;
+}
+async function runPlmUpdateFlow(page,mode,root,scope){
+  if(mode==='selected'&&!scope?.selectedIdentities?.length){
+    showToast(appLang==='en'?'No models selected.':'Seçili model yok.');
+    return {ok:false,reason:'no-selection'};
+  }
+  if(!scope?.identities?.length){
+    showToast(appLang==='en'?'No model could be identified in this view.':'Bu görünümde model kimliği bulunamadı.');
+    return {ok:false,reason:'empty-scope'};
+  }
   while(true){
-    const props=await showPlmSyncPropertyChooser({trigger:root});
+    const props=await showPlmSyncPropertyChooser({page,trigger:root});
     if(props.cancelled)return;
-    if(props.back){openPlmSyncCategoryPanel('kol','plm',root);return;}
+    if(props.back){openPlmSyncCategoryPanel(page,'plm',root);return;}
+    const collection=page==='kol';
+    const assetPlan=plmSyncAssetPlan(mode,scope,props);
+    const linkQueue=assetPlan.queues.links||[],imageQueue=assetPlan.queues.images||[];
+    const rows=collection?collectionPlmRowsForScope(mode,scope):[];
+    const detailRows=collection&&props.details?collectionPlmDetailRowsForScope(mode,scope):[];
     let language='';
-    if(props.details||props.file){
+    if(collection&&props.details){
       language=await showPlmSyncLanguageChooser({trigger:root});
       if(language==='back')continue;
       if(!language)return;
     }
-    const rows=collectionPlmRowsForScope(mode,scope);
-    if(!rows.length){
-      showToast(mode==='selected'?(appLang==='en'?'No models selected.':'Seçili model yok.'):(appLang==='en'?'No models with a PLM ID are visible in the current Collection context.':'Mevcut Koleksiyon bağlamında PLM ID’si olan model yok.'));
-      return;
-    }
+    let ran=false;
     root?.setAttribute('aria-busy','true');if(root)root.disabled=true;
     try{
-      if(props.details){
-        const details=await kolPlmSyncRun(mode,root,{rows,language,includeImages:false,skipColumnChooser:true});
+      if(collection&&props.details&&detailRows.length){
+        const details=await kolPlmSyncRun(mode,root,{rows:detailRows,language,includeImages:false,skipColumnChooser:true});
         if(details?.cancelled||details?.ok===false)return;
+        ran=true;
       }
-      if(props.image){
-        const images=await updateModelImages({source:'plm',mode,button:root,scope});
+      /* Collection Model Details aynı fetch içinde link deposunu da tazeler.
+         All/Selected modunda ikinci link taraması üretme; Missing modunda ise
+         detay kuyruğunda olmayan link-eksik modeller bağımsız kalır. */
+      if(props.links&&linkQueue.length&&!(collection&&props.details&&mode!=='missing')){
+        const links=await updateModelLinks(mode,root,{scope:plmSyncQueuedScope(scope,linkQueue),quiet:props.images||props.files||props.details});
+        if(links?.ok===false)return;
+        if(!links?.skipped)ran=true;
+      }
+      if(props.images&&imageQueue.length){
+        const images=await updateModelImages({source:'plm',mode,button:root,scope:plmSyncQueuedScope(scope,imageQueue)});
         if(images?.ok===false)return;
+        if(!images?.skipped)ran=true;
       }
-      if(props.file){
-        if(!props.details){
-          const links=await updateModelLinks(mode,root,{scope,quiet:true});
-          if(links?.ok===false)return;
-        }
-        await kolPlmSyncModelFilesRun(root,rows,{language});
+      if(collection&&props.files){
+        const files=await updateModelFiles(mode,root,{scope,rows,language,quiet:true});
+        if(files?.ok===false)return;
+        if(!files?.skipped)ran=true;
       }
     }finally{
       if(root){root.disabled=false;root.removeAttribute('aria-busy');}
     }
-    return;
+    if(!ran)showToast(appLang==='en'?'The selected PLM assets are already complete.':'Seçilen PLM varlıkları zaten tamamlanmış.');
+    return {ok:true,skipped:!ran};
   }
 }
+async function runCollectionPlmUpdateFlow(mode,root,scope){return runPlmUpdateFlow('kol',mode,root,scope);}
 async function runPlmSelectedImportV10(root){
   const en=appLang==='en';
   while(true){
@@ -27182,10 +27237,6 @@ async function runPlmSelectedImportV10(root){
 async function openPlmSyncCategoryPanel(page,category,trigger){
   plmSyncCloseRootMenu(page);
   const root=plmSyncRootButton(page)||trigger,scope=modelAssetScopeApi()?.currentScope?.();
-  if(category==='plm'){
-    const ready=await ensureCoreNectumApiConnection({validate:true});
-    if(!ready)return;
-  }
   const en=appLang==='en',back=()=>plmSyncReopenRootMenu(page);
   if(category==='asas'){
     const action=await plmSyncActionModal({
@@ -27199,26 +27250,14 @@ async function openPlmSyncCategoryPanel(page,category,trigger){
     return;
   }
   const collection=page==='kol';
-  const actions=collection?[
-    {id:'all',label:en?'Update All':'Tümünü Güncelle',icon:'i-refresh'},
-    {id:'selected',label:en?'Update Selected Models':'Seçili Modelleri Güncelle',icon:'i-refresh',disabled:!scope?.selectedIdentities?.length},
-    {id:'import-selected',label:en?'Import PLM-Selected Models to Buyer Log':"PLM'de Seçili Olan Modelleri Buyer Log'a Aktar",icon:'i-file-import'},
-  ]:[
-    {id:'all',label:en?'Update All Images':'Tüm Görselleri Güncelle',icon:'i-picture'},
-    {id:'selected',label:en?'Update Selected Models’ Images':'Seçili Modellerin Görsellerini Güncelle',icon:'i-picture',disabled:!scope?.selectedIdentities?.length},
-  ];
+  const actions=plmSyncScopeActions(scope,{collection});
   const action=await plmSyncActionModal({
     id:`_${page}PlmSyncActionModal`,title:en?'PLM Synchronization':'PLM Senkronizasyonu',
-    intro:collection?'':(en?'This page updates PLM model images only.':'Bu sayfada PLM yalnız model görsellerini günceller.'),
     trigger:root,onBack:back,actions,
   });
   if(!action||action==='back')return;
-  if(collection){
-    if(action==='import-selected')await runPlmSelectedImportV10(root);
-    else if(action==='all'||action==='selected')await runCollectionPlmUpdateFlow(action,root,scope);
-  }else if(action==='all'||action==='selected'){
-    await updateModelImages({source:'plm',mode:action,button:root,scope});
-  }
+  if(collection&&action==='import-selected')await runPlmSelectedImportV10(root);
+  else if(action==='all'||action==='selected'||action==='missing')await runPlmUpdateFlow(page,action,root,scope);
 }
 document.addEventListener('click',event=>{
   const entry=event.target.closest('[data-plm-sync-category]');

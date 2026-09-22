@@ -102,6 +102,7 @@
     if (code === 'OAB_AUTH_CANCELLED') return tr('OAB kullanıcı girişi iptal edildi.', 'OAB sign-in was cancelled.');
     if (code === 'OAB_AUTH_TIMEOUT') return tr('OAB oturum açma işlemi zamanında tamamlanmadı.', 'OAB sign-in did not complete in time.');
     if (code === 'OAB_AUTH_NAVIGATION_FAILED') return tr('OAB giriş ekranı açılamadı.', 'The OAB sign-in window could not be opened.');
+    if (code === 'OAB_AUTH_RENDERER_FAILED') return tr('OAB giriş ekranı çalıştırılamadı.', 'The OAB sign-in window stopped working.');
     if (code === 'OAB_IPC_FORBIDDEN' || code === 'OAB_DESKTOP_AUTH_UNAVAILABLE') return tr('OAB kullanıcı girişi bu Buyer Log oturumunda kullanılamıyor.', 'OAB sign-in is unavailable in this Buyer Log session.');
     return tr('OAB yetkilendirmesi başarısız oldu.', 'OAB authorization failed.');
   }

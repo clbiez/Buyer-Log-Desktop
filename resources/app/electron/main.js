@@ -82,11 +82,11 @@ const desktopBridgeSecret = crypto.randomBytes(32).toString('hex');
 let coreNectumAuthWindow = null;
 let coreNectumAuthInFlight = null;
 
-/* OAB automatic auth — intentionally independent from CoreNectum.
- * This partition is ephemeral (no persist: prefix), so OAB web session data
- * disappears when Buyer Log exits. Raw Authorization is captured only from
- * the exact OAB API host and transferred to backend memory over loopback. */
-const OAB_AUTH_PARTITION = 'buyerlog-oab-auth';
+/* OAB automatic auth — intentionally independent from CoreNectum and from the
+ * user's normal Edge profile. Browser session state lives in this dedicated
+ * persistent partition; raw Authorization still exists only in process/backend
+ * memory and is captured only from the exact OAB report API. */
+const OAB_AUTH_PARTITION = 'persist:buyerlog-oab-auth';
 const OAB_VIEWER_URL = 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report';
 const OAB_HOME_URL = 'https://pass.lcwaikiki.com/';
 const OAB_UI_HOST = 'pass.lcwaikiki.com';
@@ -713,18 +713,18 @@ async function clearOabBackendAuthorization() {
 }
 
 async function acquireOabAuthorization(options = {}) {
+  const interactive = options.interactive !== false;
+  const manual = options.manual === true;
   if (oabAuthInFlight) {
-    if (options.interactive !== false && oabAuthWindow && !oabAuthWindow.isDestroyed()) {
+    if (manual && oabAuthWindow && !oabAuthWindow.isDestroyed()) {
       try { oabAuthWindow.show(); oabAuthWindow.focus(); } catch (_) {}
     }
     return oabAuthInFlight;
   }
-  const interactive = options.interactive !== false;
   const request = (async () => {
     let authWindow = null;
     let settled = false;
     let timeoutTimer = null;
-    let showTimer = null;
     let lifecycleTimer = null;
     let lifecycle = null;
     let resolvePromise = null;
@@ -735,6 +735,7 @@ async function acquireOabAuthorization(options = {}) {
     let networkReady = null;
     let debuggerMessageHandler = null;
     let debuggerDetachHandler = null;
+    const popupWindows = new Set();
 
     const cleanupCapture = () => {
       if (lifecycleTimer) { clearInterval(lifecycleTimer); lifecycleTimer = null; }
@@ -757,8 +758,11 @@ async function acquireOabAuthorization(options = {}) {
     };
     const cleanup = () => {
       if (timeoutTimer) { clearTimeout(timeoutTimer); timeoutTimer = null; }
-      if (showTimer) { clearTimeout(showTimer); showTimer = null; }
       cleanupCapture();
+      for (const popup of popupWindows) {
+        if (popup && !popup.isDestroyed()) { try { popup.close(); } catch (_) {} }
+      }
+      popupWindows.clear();
       if (authWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
       if (oabAuthWindow === authWindow) oabAuthWindow = null;
     };
@@ -805,7 +809,6 @@ async function acquireOabAuthorization(options = {}) {
         } catch (error) {
           if (isBenignOabNavigationAbort(error)) {
             log('OAB SSO yönlendirmesi devam ediyor (ERR_ABORTED göz ardı edildi).');
-            showInteractiveWindow();
             return true;
           }
           if (allowFallback && !fallbackTried) {
@@ -813,12 +816,10 @@ async function acquireOabAuthorization(options = {}) {
             log('OAB viewer doğrudan açılamadı; PASS ana sayfası deneniyor.');
             try {
               await authWindow.loadURL(OAB_HOME_URL);
-              showInteractiveWindow();
               return true;
             } catch (fallbackError) {
               if (isBenignOabNavigationAbort(fallbackError)) {
                 log('OAB PASS SSO yönlendirmesi devam ediyor (fallback ERR_ABORTED göz ardı edildi).');
-                showInteractiveWindow();
                 return true;
               }
             }
@@ -867,6 +868,7 @@ async function acquireOabAuthorization(options = {}) {
           // Safe lifecycle-only diagnostics. No URL query, credential, cookie or
           // Authorization value is written to logs.
           if (phase !== 'waiting-report-request') log('OAB auth aşaması: ' + phase);
+          if (phase === 'login-required') showInteractiveWindow();
         },
       });
 
@@ -905,10 +907,10 @@ async function acquireOabAuthorization(options = {}) {
         return;
       }
 
-      authWindow.once('ready-to-show', showInteractiveWindow);
-      // Corporate SSO may redirect before the first paint.
-      showTimer = setTimeout(showInteractiveWindow, 350);
-      showTimer.unref?.();
+      // A normal Get OAB first probes the persistent partition invisibly. The
+      // explicit user-menu command is the only path that intentionally opens
+      // the window before the lifecycle proves that sign-in is required.
+      authWindow.once('ready-to-show', () => { if (manual) showInteractiveWindow(); });
 
       const schedulePulse = delay => {
         const timer = setTimeout(() => { void pulseLifecycle(); }, Math.max(0, Number(delay) || 0));
@@ -916,7 +918,6 @@ async function acquireOabAuthorization(options = {}) {
       };
       authWindow.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
         if (!isMainFrame || !isAllowedOabLoginUrl(url)) return;
-        showInteractiveWindow();
         schedulePulse(120);
       });
       authWindow.webContents.on('did-finish-load', () => {
@@ -927,19 +928,62 @@ async function acquireOabAuthorization(options = {}) {
       authWindow.webContents.on('did-navigate-in-page', () => schedulePulse(80));
       authWindow.webContents.on('did-fail-load', (_event, errorCode, _description, validatedURL, isMainFrame) => {
         if (!isMainFrame || settled || Number(errorCode) === -3) return;
-        if (validatedURL && isAllowedOabLoginUrl(validatedURL)) {
-          log('OAB giriş sayfası main-frame yükleme hatası: ' + Number(errorCode));
-        }
+        log('OAB giriş sayfası main-frame yükleme hatası: ' + Number(errorCode));
+        finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı yüklenemedi.');
+      });
+      authWindow.webContents.on('render-process-gone', (_event, details) => {
+        if (settled) return;
+        log('OAB giriş renderer süreci kapandı: ' + String(details && details.reason || 'unknown'));
+        finishFailure('OAB_AUTH_RENDERER_FAILED', 'OAB giriş ekranı çalıştırılamadı.');
       });
       authWindow.webContents.on('page-title-updated', event => {
         event.preventDefault();
         if (!authWindow.isDestroyed()) authWindow.setTitle('OAB Kullanıcı Girişi');
       });
       authWindow.webContents.setWindowOpenHandler(({ url }) => {
-        if (isAllowedOabLoginUrl(url)) {
-          setImmediate(() => { if (authWindow && !authWindow.isDestroyed()) void loadLoginTarget(url, false); });
-        }
-        return { action:'deny' };
+        // Microsoft SSO may create an about:blank popup and navigate it only
+        // afterwards. Preserve that browser contract, but keep the child in the
+        // same dedicated partition and enforce the same HTTPS host allowlist.
+        if (url !== 'about:blank' && !isAllowedOabLoginUrl(url)) return { action:'deny' };
+        return {
+          action:'allow',
+          overrideBrowserWindowOptions: {
+            show:false,
+            parent:authWindow,
+            autoHideMenuBar:true,
+            backgroundColor:'#ffffff',
+            webPreferences: {
+              partition: OAB_AUTH_PARTITION,
+              nodeIntegration:false,
+              contextIsolation:true,
+              sandbox:true,
+              spellcheck:false,
+            },
+          },
+        };
+      });
+      authWindow.webContents.on('did-create-window', popup => {
+        popupWindows.add(popup);
+        try { popup.setMenu(null); } catch (_) {}
+        popup.webContents.on('will-navigate', (event, url) => {
+          if (url === 'about:blank' || isAllowedOabLoginUrl(url)) return;
+          event.preventDefault();
+          try { popup.close(); } catch (_) {}
+        });
+        popup.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
+          if (!isMainFrame || !isAllowedOabLoginUrl(url)) return;
+          if (isLikelyOabSignInUrl(url)) void lifecycle.observe({ url, signIn:true });
+          if (interactive && !settled && !popup.isDestroyed()) { try { popup.show(); popup.focus(); } catch (_) {} }
+        });
+        popup.webContents.on('did-fail-load', (_event, errorCode, _description, validatedURL, isMainFrame) => {
+          if (!isMainFrame || settled || Number(errorCode) === -3) return;
+          log('OAB SSO penceresi yükleme hatası: ' + Number(errorCode));
+          finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB kurumsal giriş ekranı yüklenemedi.');
+        });
+        popup.on('closed', () => {
+          popupWindows.delete(popup);
+          if (!settled) setImmediate(() => { void loadLoginTarget(OAB_VIEWER_URL, false); });
+        });
       });
       authWindow.webContents.on('will-navigate', (event, url) => {
         if (isAllowedOabLoginUrl(url)) return;
@@ -951,7 +995,6 @@ async function acquireOabAuthorization(options = {}) {
         if (!settled) {
           settled = true;
           if (timeoutTimer) clearTimeout(timeoutTimer);
-          if (showTimer) clearTimeout(showTimer);
           resolve({ ok:false, authenticated:false, code:'OAB_AUTH_CANCELLED', error:'OAB kullanıcı girişi iptal edildi.' });
         }
       });
@@ -1249,7 +1292,9 @@ async function shutdown() {
   if (updateStartupTimer) { clearTimeout(updateStartupTimer); updateStartupTimer = null; }
   if (updatePeriodicTimer) { clearInterval(updatePeriodicTimer); updatePeriodicTimer = null; }
   try { saveWindowState(); } catch (_) {}
-  try { await clearOabAuthSession(); } catch (_) {}
+  // Backend Authorization is process memory and may be cleared. The dedicated
+  // OAB browser partition is deliberately preserved across normal restarts.
+  try { await clearOabBackendAuthorization(); } catch (_) {}
   if (backend) {
     try { await backend.stop(); } catch (error) { log('Backend durdurulurken hata: ' + error.message); }
     backend = null;
@@ -1452,7 +1497,7 @@ function registerIpc() {
      therefore cannot invoke these channels. Raw Authorization never crosses IPC. */
   ipcMain.handle('buyerlog:oab-auth', async (event, options = {}) => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, authenticated:false, code:'OAB_IPC_FORBIDDEN', error:'OAB yetkilendirme isteği reddedildi.' };
-    try { return await acquireOabAuthorization({ interactive:options && options.interactive !== false }); }
+    try { return await acquireOabAuthorization({ interactive:options && options.interactive !== false, manual:options && options.manual === true }); }
     catch (error) { return { ok:false, authenticated:false, code:error && error.code || 'OAB_AUTH_FAILED', error:'OAB yetkilendirmesi başarısız oldu.' }; }
   });
   ipcMain.handle('buyerlog:oab-auth-clear', async event => {

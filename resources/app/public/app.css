@@ -354,6 +354,8 @@ footer{padding:10px var(--sp-5) 26px;font-size:var(--fs-xs);color:var(--muted);}
 .modelImageUpdateIntro,.modelImageLimitHelp{margin:0;padding:12px 18px;color:var(--muted);font-size:11px;line-height:1.45;}
 .modelImageUpdateChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 18px 14px;}
 .modelImageUpdateChoice{min-height:38px;font-weight:750;}
+.plmSyncActionCopy{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;}
+.plmSyncActionCopy small{font-size:10px;font-weight:600;line-height:1.25;color:var(--muted);}
 .modelImageUpdateChoice:has(input[type="checkbox"]){justify-content:flex-start;cursor:pointer;}
 .modelImageUpdateChoice input[type="checkbox"]{flex:none;margin:0;accent-color:var(--acc);}
 .modelImageUpdateChoice:has(input[type="checkbox"]:checked){border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
@@ -747,6 +749,9 @@ td.exf-next{background:var(--acc-bg);color:var(--acc-ink);}
   width:min(540px,calc(100vw - 28px));max-height:calc(100vh - 40px);overflow:auto;
   padding:18px;box-sizing:border-box;background:var(--card);color:var(--ink);
   border:1px solid var(--line2);border-radius:var(--r-xl);box-shadow:var(--shadow-3);
+  /* app.css'teki genel `section{display:none}` sayfa sekmeleri içindir;
+     Update Test kartı da section kökü kullandığı için açıkça görünür olmalı. */
+  display:block;
 }
 .updateTestHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--line);}
 .updateTestHead h2{margin:0}.updateTestHead p{margin:5px 0 0;color:var(--muted);font-size:11px;line-height:1.45;}

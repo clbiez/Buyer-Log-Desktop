@@ -369,7 +369,7 @@ function buildIntakeQuery({ fields = [], viewConfig, horizon = null, maxRows = I
   // The report is an aggregate/pivot, never a raw Intake DB dump. Put the cap
   // into DAX as well as the driver so the database does not serialize millions
   // of rows merely for the Node process to discard them afterwards.
-  const query = `EVALUATE\nTOPN(${rowLimit},\n  SUMMARIZECOLUMNS(\n    ${[...horizonArgs, ...filterExpressions, ...groupExpressions, ...measureExpressions].join(',\n    ')}\n  )\n)`;
+  const query = `EVALUATE\nTOPN(${rowLimit},\n  SUMMARIZECOLUMNS(\n    ${[...groupExpressions, ...horizonArgs, ...filterExpressions, ...measureExpressions].join(',\n    ')}\n  )\n)`;
   const headerMap = {};
   rows.forEach(field => outputAliases(field).forEach(alias => { headerMap[alias] = field.id; }));
   measures.forEach(field => { headerMap[field.id] = field.id; });

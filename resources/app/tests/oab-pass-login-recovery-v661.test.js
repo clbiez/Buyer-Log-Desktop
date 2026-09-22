@@ -19,32 +19,24 @@ function between(source, startNeedle, endNeedle) {
   return source.slice(start, end);
 }
 
-test('OAB auth precedence is backend RAM -> existing Edge -> Electron fallback', () => {
+test('OAB auth precedence is backend RAM -> persistent Electron session; normal Edge CDP is not on the critical path', () => {
   const body = between(OAB, 'async function oabEnsureAuthentication', 'async function oabWithAuthRetry');
   const memory = body.indexOf('OABApi.authStatus()');
-  const existing = body.indexOf('OABApi.captureExistingAuth()');
   const desktop = body.indexOf("desktop.ensureOabAuth({ interactive:true })");
-  assert.ok(memory >= 0 && existing > memory && desktop > existing);
+  assert.ok(memory >= 0 && desktop > memory);
 
-  // A valid backend RAM session exits before either browser capture path.
+  // A valid backend RAM session exits before the persistent browser path.
   const memoryReturn = body.indexOf('status.status.authenticated) return true');
-  assert.ok(memoryReturn > memory && memoryReturn < existing);
-
-  // A successful existing Edge capture exits before Electron fallback opens.
-  const existingSuccess = body.indexOf("source:'existing-edge'");
-  const existingReturn = body.indexOf('return true;', existing);
-  assert.ok(existingReturn > existing && existingReturn < desktop);
-  assert.match(body, /existing-edge|Açık OAB oturumu/);
+  assert.ok(memoryReturn > memory && memoryReturn < desktop);
+  assert.doesNotMatch(body, /captureExistingAuth/);
 });
 
-test('OAB auth existing Edge miss falls through to controlled desktop login without credential scraping', () => {
+test('OAB auth goes directly to controlled persistent desktop session without credential scraping', () => {
   const body = between(OAB, 'async function oabEnsureAuthentication', 'async function oabWithAuthRetry');
-  assert.match(body, /OAB_EXISTING_BROWSER_UNAVAILABLE/);
-  assert.match(body, /OAB_EXISTING_TAB_NOT_FOUND/);
-  assert.match(body, /OAB_EXISTING_AUTH_NOT_CAPTURED/);
   assert.match(body, /global\.buyerLogDesktop/);
   assert.match(body, /await desktop\.ensureOabAuth\(\{ interactive:true \}\)/);
   assert.match(body, /OAB_DESKTOP_AUTH_UNAVAILABLE/);
+  assert.doesNotMatch(body, /capture-existing|existing Edge|Remote Debugging|9223/i);
   assert.doesNotMatch(body, /password[^\n]{0,80}\.value/i);
 });
 

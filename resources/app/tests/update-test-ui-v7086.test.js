@@ -34,7 +34,8 @@ test('Update Test UI is loaded before the user menu module in deferred UI', () =
 
 test('Update Test modal CSS keeps the dialog visible above the dimmed overlay', () => {
   assert.match(css, /\.updateTestOverlay\{[\s\S]*?position:fixed[\s\S]*?display:grid[\s\S]*?place-items:center/);
-  assert.match(css, /\.updateTestCard\{[\s\S]*?width:min\(540px[\s\S]*?background:var\(--card\)[\s\S]*?color:var\(--ink\)/);
+  assert.match(css, /\.updateTestCard\{[\s\S]*?width:min\(540px[\s\S]*?background:var\(--card\)[\s\S]*?color:var\(--ink\)[\s\S]*?display:block/);
+  assert.match(css, /section\{display:none\}/);
   assert.match(css, /\.updateTestHead\{[\s\S]*?display:flex/);
   assert.match(css, /\.updateTestActions\{[\s\S]*?display:flex/);
 });

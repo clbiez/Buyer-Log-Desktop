@@ -459,6 +459,7 @@
     if (code === 'OAB_AUTH_EXPIRED' || code === 'OAB_AUTH_REQUIRED') return oabT('OAB oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.', 'Your OAB session has expired. Please sign in again.');
     if (code === 'OAB_IPC_FORBIDDEN' || code === 'OAB_DESKTOP_AUTH_UNAVAILABLE') return oabT('OAB kullanıcı girişi bu Buyer Log oturumunda kullanılamıyor.', 'OAB sign-in is unavailable in this Buyer Log session.');
     if (code === 'OAB_AUTH_NAVIGATION_FAILED') return oabT('OAB giriş ekranı açılamadı.', 'The OAB sign-in window could not be opened.');
+    if (code === 'OAB_AUTH_RENDERER_FAILED') return oabT('OAB giriş ekranı çalıştırılamadı.', 'The OAB sign-in window stopped working.');
     return oabT('OAB yetkilendirmesi başarısız oldu.', 'OAB authorization failed.');
   }
 
@@ -473,33 +474,13 @@
       if (status && status.status && status.status.authenticated) return true;
     }
 
-    // Önce kullanıcının zaten açık olan Edge PASS/OAB sekmesini kullan. Bu yol
-    // yeni pencere/sekme açmaz; mevcut sekmenin normal PASS isteğinden Bearer
-    // backend RAM'ine alınır. Başarısızsa mevcut kontrollü login penceresi
-    // fallback olarak korunur.
-    oabSetBusyStatus(oabT('Açık OAB oturumu kontrol ediliyor…', 'Checking the open OAB session…'));
-    try {
-      const existing = await OABApi.captureExistingAuth();
-      if (existing && existing.authenticated !== false && existing.status && existing.status.authenticated) {
-        oabSetBusyStatus(oabT('Açık OAB oturumu kullanılıyor', 'Using the open OAB session'));
-        return true;
-      }
-    } catch (error) {
-      // Expected discovery/capture misses are intentionally silent here: the
-      // interactive Electron sign-in flow below is the compatibility fallback.
-      const code = String(error && error.code || '');
-      if (!['OAB_EXISTING_BROWSER_UNAVAILABLE','OAB_EXISTING_TAB_NOT_FOUND','OAB_EXISTING_AUTH_NOT_CAPTURED'].includes(code)) {
-        try { console.warn('[OAB] existing-session capture failed:', code || 'OAB_EXISTING_AUTH_FAILED'); } catch (_) {}
-      }
-    }
-
     const desktop = global.buyerLogDesktop;
     if (!desktop || typeof desktop.ensureOabAuth !== 'function') {
       const error = new Error('OAB kullanıcı girişi masaüstü köprüsünde kullanılamıyor.');
       error.code = 'OAB_DESKTOP_AUTH_UNAVAILABLE';
       throw error;
     }
-    oabSetBusyStatus(oabT('OAB Kullanıcı Girişi bekleniyor…', 'Waiting for OAB sign-in…'), 'warning');
+    oabSetBusyStatus(oabT('OAB oturumu kontrol ediliyor…', 'Checking OAB session…'));
     const result = await desktop.ensureOabAuth({ interactive:true });
     if (!result || !result.ok || result.authenticated === false) {
       const error = new Error(oabAuthErrorMessage(result || {}));

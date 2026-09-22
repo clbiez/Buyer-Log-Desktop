@@ -7,13 +7,14 @@ const ROOT=path.join(__dirname,'..');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
 
-test('Orders PLM SYNC tek giriş noktasıdır ve selected aksiyonu seçim yokken disabled üretilir',()=>{
+test('Orders PLM SYNC tek giriş noktasıdır ve ortak üç scope aksiyonunu kullanır',()=>{
   assert.match(INDEX,/id="ordersPlmSyncBtn"/);
   assert.match(INDEX,/data-plm-sync-category="plm" data-plm-sync-page="orders"/);
-  const start=APP.indexOf('async function openPlmSyncCategoryPanel');
-  const body=APP.slice(start,APP.indexOf("document.addEventListener('click'",start));
-  assert.match(body,/page==='kol'/);
+  const start=APP.indexOf('function plmSyncScopeActions');
+  const body=APP.slice(start,APP.indexOf('function plmSyncActionModal',start));
+  assert.match(body,/id:'all'/);
   assert.match(body,/id:'selected'[\s\S]*?disabled:!scope\?\.selectedIdentities\?\.length/);
+  assert.match(body,/id:'missing'/);
 });
 
 test('selected link/image operation boş seçimde sessizce tüm kümeye genişlemez ve API bağlantısından önce durur',()=>{

@@ -211,8 +211,31 @@
     });
   }
 
+  /* İKİ AŞAMALI PLM SYNC PLANI.
+   *
+   * Scope burada bir kez dondurulup seçilen her asset için ayrı kuyruk
+   * üretilir. `missing` modunda her asset kendi kanonik eksik predicate'ini
+   * kullanır; böylece linki olan model link kuyruğuna, görseli olan model de
+   * görsel kuyruğuna girmez. Seçilmeyen asset için anahtar bile üretilmez. */
+  function planAssetQueues(scope, { mode = 'all', assets = [], missing = {} } = {}) {
+    const requested = mode === 'selected'
+      ? (scope && scope.selectedIdentities)
+      : (scope && scope.identities);
+    const identities = dedupe(requested);
+    const queues = {};
+    [...new Set(Array.isArray(assets) ? assets.map(clean).filter(Boolean) : [])].forEach(asset => {
+      const predicate = missing && missing[asset];
+      queues[asset] = mode === 'missing' && typeof predicate === 'function'
+        ? identities.filter(identity => {
+          try { return Boolean(predicate(identity)); } catch (_) { return true; }
+        })
+        : identities.slice();
+    });
+    return Object.freeze({ mode, identities: Object.freeze(identities), queues: Object.freeze(queues) });
+  }
+
   return {
     registerProvider, listProviders, currentScope, snapshot, isViewCurrent,
-    missingIdentities, dedupe, normalizeIdentity, canonicalImageKey, identityKey, normalizePlmId,
+    missingIdentities, planAssetQueues, dedupe, normalizeIdentity, canonicalImageKey, identityKey, normalizePlmId,
   };
 });

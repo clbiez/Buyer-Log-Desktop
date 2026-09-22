@@ -201,12 +201,12 @@ test('Tech Pack işlemi yalnız Koleksiyon PLM akışında sunulur ve PLM ID sev
   const chooserStart=APP.indexOf('function showPlmSyncPropertyChooser');
   const chooserEnd=APP.indexOf('function collectionPlmRowsForScope', chooserStart);
   const chooser=APP.slice(chooserStart,chooserEnd);
-  assert.match(chooser, /data-plmprop=\"file\"/);
+  assert.match(chooser, /key:'files'[\s\S]*?Model Files/);
   const categoryStart=APP.indexOf('async function openPlmSyncCategoryPanel');
   const categoryEnd=APP.indexOf("document.addEventListener('click'", categoryStart);
   const category=APP.slice(categoryStart,categoryEnd);
   assert.match(category, /const collection=page==='kol'/);
-  assert.match(category, /runCollectionPlmUpdateFlow\(action,root,scope\)/);
+  assert.match(category, /runPlmUpdateFlow\(page,action,root,scope\)/);
   assert.doesNotMatch(INDEX, /id=\"cpModelFiles(?:Missing|Selected|All)Btn\"/);
   assert.doesNotMatch(INDEX, /id=\"ordersModelFiles(?:Missing|Selected|All)Btn\"/);
   assert.match(APP, /showPlmSyncLanguageChooser\(/);

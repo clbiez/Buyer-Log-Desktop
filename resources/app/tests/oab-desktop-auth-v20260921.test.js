@@ -34,6 +34,46 @@ test('OAB desktop auth uses CDP Network capture before navigation, not session w
   assert.ok(body.indexOf("targetDebugger.attach('1.3')") < body.indexOf('loadLoginTarget(OAB_VIEWER_URL, true)'));
 });
 
+test('OAB owns a persistent dedicated session and normal shutdown preserves it', () => {
+  assert.match(MAIN, /const OAB_AUTH_PARTITION = 'persist:buyerlog-oab-auth'/);
+  const shutdownStart = MAIN.indexOf('async function shutdown()');
+  const shutdownEnd = MAIN.indexOf('/* ------------------------------------------------------------------- IPC */', shutdownStart);
+  const shutdownBody = MAIN.slice(shutdownStart, shutdownEnd);
+  assert.match(shutdownBody, /clearOabBackendAuthorization\(\)/);
+  assert.doesNotMatch(shutdownBody, /clearOabAuthSession\(\)/);
+
+  const clearStart = MAIN.indexOf('async function clearOabAuthSession()');
+  const clearEnd = MAIN.indexOf('/* ------------------------------------------------------------- pencereler */', clearStart);
+  const clearBody = MAIN.slice(clearStart, clearEnd);
+  assert.match(clearBody, /clearOabBackendAuthorization\(\)/);
+  assert.match(clearBody, /clearStorageData/);
+  assert.match(clearBody, /clearCache\(\)/);
+});
+
+test('persistent OAB probe stays hidden until sign-in is detected and navigation failures are terminal', () => {
+  const start = MAIN.indexOf('async function acquireOabAuthorization');
+  const end = MAIN.indexOf('async function clearOabAuthSession', start);
+  const body = MAIN.slice(start, end);
+  assert.match(body, /show: false/);
+  assert.match(body, /phase === 'login-required'[\s\S]*?showInteractiveWindow\(\)/);
+  assert.doesNotMatch(body, /once\('ready-to-show', showInteractiveWindow\)/);
+  assert.doesNotMatch(body, /setTimeout\(showInteractiveWindow, 350\)/);
+  assert.match(body, /did-fail-load[\s\S]*?OAB_AUTH_NAVIGATION_FAILED/);
+  assert.match(body, /render-process-gone[\s\S]*?OAB_AUTH_RENDERER_FAILED/);
+});
+
+test('Microsoft SSO popup is kept inside the dedicated partition and allowlist', () => {
+  const start = MAIN.indexOf('async function acquireOabAuthorization');
+  const end = MAIN.indexOf('async function clearOabAuthSession', start);
+  const body = MAIN.slice(start, end);
+  assert.match(body, /setWindowOpenHandler/);
+  assert.match(body, /overrideBrowserWindowOptions/);
+  assert.match(body, /partition: OAB_AUTH_PARTITION/);
+  assert.match(body, /did-create-window/);
+  assert.match(body, /isAllowedOabLoginUrl/);
+  assert.match(body, /will-navigate/);
+});
+
 test('CDP capture accepts only the real PASS report API Authorization', () => {
   const token = 'Bearer ' + 'a'.repeat(48);
   const valid = cdpRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData', token);

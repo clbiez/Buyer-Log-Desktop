@@ -107,8 +107,8 @@ test('v9.10 öncesinin eski ayrı komut GÖVDELERİ geri gelmedi', () => {
   // altyapısı klonlanmaz.
   assert.match(APP, /async function updateModelLinks\(mode,button/);
   assert.match(APP, /async function updateModelImages\(\{source=MODEL_ASSET_SOURCE_PLM/);
-  assert.match(APP, /async function updateModelFiles\(mode,button\)/);
-  assert.match(APP, /kolPlmSyncModelFilesRun\(button,rows\)/);
+  assert.match(APP, /async function updateModelFiles\(mode,button/);
+  assert.match(APP, /kolPlmSyncModelFilesRun\(button,targetRows,\{language\}\)/);
 });
 
 test('CP ve Orders tek PLM SYNC menüsünde PLM ve ASAS kategorilerini sunar', () => {
@@ -121,7 +121,8 @@ test('CP ve Orders tek PLM SYNC menüsünde PLM ve ASAS kategorilerini sunar', (
   assert.match(APP, /\['cpPlmSyncBtn','cpPlmSyncMenu'\]/);
   assert.match(APP, /\['ordersPlmSyncBtn','ordersPlmSyncMenu'\]/);
   assert.match(APP, /const collection=page==='kol';/);
-  assert.match(APP, /This page updates PLM model images only/);
+  assert.match(APP, /runPlmUpdateFlow\(page,action,root,scope\)/);
+  assert.doesNotMatch(APP, /This page updates PLM model images only/);
 });
 
 test('CP/Orders link işlemi görsel/dosya işi BAŞLATMAZ ve tablo alanı YAZMAZ', () => {
