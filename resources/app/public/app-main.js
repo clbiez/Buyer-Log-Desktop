@@ -29473,7 +29473,7 @@ function kolEnsureExcelStatusList(workbook){
   const entries=kolStatusEntries(),name='__BuyerLogStatus';
   let sheet=workbook.getWorksheet(name);if(sheet)workbook.removeWorksheet(sheet.id);
   sheet=workbook.addWorksheet(name);entries.forEach((entry,index)=>{sheet.getCell(index+1,1).value=entry.name;});sheet.state='veryHidden';
-  return entries.length?`'${name}'!$A$1:$A${entries.length}`:null;
+  return entries.length?("'"+name+"'!$A$1:$A$"+entries.length):null;
 }
 function kolStyleValidationFormula(field,statusFormula){
   let values=[];
