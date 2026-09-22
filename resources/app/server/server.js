@@ -1327,10 +1327,10 @@ async function activateSharedHubRuntime({ migrateCollection = true, actorId = ''
   const cpSeed = await cpSharedStore.seedFromOverrides(loadOverrides(), { actor: { id: actorId } });
   if (cpSeed && cpSeed.seeded) markStartup('CP_SHARED_SEEDED', { rows: cpSeed.seeded });
   if (migrateCollection) {
-    const ownerIds = userAccess.collectionAccessMigrationProfiles().map(item => item.id);
-    const migration = collectionWorkspaces.ensureSharedWorkspace(ownerIds, actorId);
-    await collectionWorkspaces.mirrorWorkspace(SHARED_COLLECTION_OWNER);
-    if (migration.migrated) markStartup('SHARED_COLLECTION_MIGRATED', { rows:migration.rows, owners:migration.owners });
+    // Shared Hub is a TRANSPORT for Collection owner workspaces, not a new
+    // owner. Permissions/replication remain owner-scoped; the historical
+    // shared-collection file is retained only as recovery evidence.
+    markStartup('COLLECTION_OWNER_REPLICATION_READY', { mode:'owner-scoped', actorId:String(actorId || '') });
   }
 }
 async function bootstrapSharedHub({ force = false } = {}) {
@@ -1594,24 +1594,7 @@ syncSettings.onStateChange(state => {
 });
 const backupService = createBackupService({ appVersion: APP_VERSION, userAccess, syncSettings, localDb });
 const sharedPersonalBackupService = createSharedPersonalBackupService({ backupService, syncSettings, sharedHub, retentionCount: 30 });
-const userRestoreService = createUserRestoreService({
-  restoreCollectionWorkspace: async (user, snapshot) => {
-    const userId = String(user && user.id || '');
-    if (!sharedCollectionModeEnabled()) {
-      const current = collectionWorkspaces.loadWorkspace(userId);
-      const workspace = collectionWorkspaces.saveWorkspace(userId, snapshot, current._revision);
-      return { shared:false, ownerId:userId, incomingRows:Array.isArray(snapshot && snapshot.rows) ? snapshot.rows.length : 0, totalRows:workspace.rows.length };
-    }
-    const restored = await collectionWorkspaces.mergePersonalBackupIntoShared(userId, snapshot, userId);
-    // Yerel restore görünürlük için tamamlanmıştır; Shared Hub yayımı arka
-    // planda yapılır. Ağ geçici kapalıysa kişisel restore başarısız sayılmaz.
-    void syncSettings.syncOnce()
-      .then(() => deltaStore.hydrate())
-      .then(() => scheduleBusinessCheckpointPublish(userId, 750))
-      .catch(error => logRuntimeFailure('userRestoreSharedCollectionSync', error));
-    return restored;
-  },
-});
+const userRestoreService = createUserRestoreService();
 const userRestoreUploads = new Map(), userRestoreJobs = new Map();
 // Full System Restore state is intentionally separate from ordinary backup jobs:
 // upload/inspect can run without a write lock, while the apply phase gates all
@@ -3511,41 +3494,89 @@ async function refreshCollectionPermissionScope() {
   try { await collectionPermissions.sync(); } catch (_) { /* doğrulanmış yerel izin önbelleği çevrimdışında geçerlidir */ }
 }
 function sharedCollectionModeEnabled() {
-  const state = sharedHub.readLocalState();
-  return Boolean(state && state.completed === true && state.hubId);
+  // Kept as a compatibility probe for old diagnostics. Collection ownership is
+  // NEVER collapsed merely because Shared Hub is configured.
+  return false;
 }
 function canonicalCollectionOwner(ownerId) {
-  return sharedCollectionModeEnabled() ? SHARED_COLLECTION_OWNER : String(ownerId || '');
+  return String(ownerId || '');
 }
 function collectionWorkspaceEditAllowed(profile, ownerId) {
-  if (sharedCollectionModeEnabled() && String(ownerId || '') === SHARED_COLLECTION_OWNER) {
-    // Preserve pre-migration buyer semantics: a user who could edit their own
-    // Collection must not become read-only merely because the workspace became
-    // shared. Explicit COLLECTIONS.EDIT remains sufficient for managers/admins.
-    const ownLevel = userAccess.collectionAccessLevel(profile, String(profile && profile.id || ''));
-    return userAccess.hasArea(profile, 'koleksiyon') && (ownLevel === 'edit' || userAccess.hasCapability(profile, 'COLLECTIONS.EDIT'));
-  }
   const level = userAccess.collectionAccessLevel(profile, ownerId);
   if (level !== 'edit') return false;
   // Sahip kendi alanını düzenler; başkasının alanında EDIT grantine ek olarak
   // global Collection EDIT yetkisi de gerekir.
   return String(profile && profile.id || '') === String(ownerId || '') || userAccess.hasCapability(profile, 'COLLECTIONS.EDIT');
 }
-async function afterSharedCollectionSave(ownerId) {
-  if (!sharedCollectionModeEnabled() || ownerId !== SHARED_COLLECTION_OWNER) return false;
-  await collectionWorkspaces.mirrorWorkspace(ownerId);
-  // UI success is based on the local commit. Network push is intentionally
-  // fire-and-forget so slow SMB never extends the save latency.
-  void syncSettings.syncOnce().catch(error => logRuntimeFailure('sharedCollectionSync', error));
-  return true;
+async function afterSharedCollectionSave() {
+  // Legacy call sites remain harmless. Owner workspaces publish through
+  // collectionReplication below; Shared Hub itself never owns Collection rows.
+  return false;
+}
+function collectionIdentityName(value) {
+  return String(value == null ? '' : value)
+    .toLocaleLowerCase('tr-TR')
+    .replace(/ı/g, 'i')
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function collectionProfileNames(profile) {
+  return [...new Set([profile && profile.displayName, profile && profile.username]
+    .map(collectionIdentityName)
+    .filter(value => value && value !== 'moderator' && value !== 'moderator user'))];
+}
+function collectionRecoveryAliasProfiles(profile) {
+  if (!profile) return [];
+  const profiles = userAccess.allPublicProfiles().filter(item => item && item.enabled !== false);
+  const isModerator = profile.systemRole === 'moderator' || String(profile.role || '').toLowerCase() === 'moderator';
+  if (!isModerator) return profiles.filter(item => item.id === profile.id);
+  const anchorNames = collectionProfileNames(profile);
+  return profiles.filter(item => {
+    if (item.id === profile.id) return true;
+    if (item.systemRole === 'moderator' || String(item.role || '').toLowerCase() === 'moderator') return true;
+    const candidateNames = collectionProfileNames(item);
+    return anchorNames.some(left => candidateNames.some(right =>
+      left === right || left.startsWith(right + ' ') || right.startsWith(left + ' ')
+    ));
+  });
+}
+async function ensureLegacyCollectionOwnerRecovery(profile) {
+  const isModerator = profile && (profile.systemRole === 'moderator' || String(profile.role || '').toLowerCase() === 'moderator');
+  if (!isModerator || !profile.id) return { recovered:false, reason:'not-moderator' };
+
+  const aliases = collectionRecoveryAliasProfiles(profile);
+  const aliasIds = new Set(aliases.map(item => String(item.id || '')).filter(Boolean));
+  aliasIds.add(String(profile.id));
+  const foreignOwnersWithData = userAccess.allPublicProfiles()
+    .filter(item => item && item.enabled !== false && !aliasIds.has(String(item.id || '')))
+    .filter(item => {
+      const workspace = loadWorkspace(item.id);
+      return Boolean(workspace && workspace.initialized && Array.isArray(workspace.rows) && workspace.rows.length);
+    });
+
+  // If another real user's owner workspace already contains data, only import
+  // shared rows whose migration provenance points to one of this moderator's
+  // aliases. With no foreign data (the current recovery case), every legacy
+  // shared row can safely be claimed by the moderator.
+  const result = collectionWorkspaces.recoverSharedWorkspaceIntoOwner(String(profile.id), {
+    sourceOwnerIds:[...aliasIds].filter(id => id !== String(profile.id)),
+    sharedSourceOwnerIds:foreignOwnersWithData.length ? [...aliasIds] : null,
+  });
+  if (result && result.changed) {
+    markStartup('COLLECTION_OWNER_RECOVERED', {
+      ownerId:String(profile.id), aliases:[...aliasIds], rows:result.totalRows,
+      added:result.added, duplicatesMerged:result.duplicatesMerged,
+      foreignOwnersSkipped:foreignOwnersWithData.map(item => item.id),
+    });
+    try { await collectionReplication.publishOwner(String(profile.id)); }
+    catch (error) { logRuntimeFailure('collectionOwnerRecoveryPublish', error); }
+    void publishCollectionWorkspaceImages(String(profile.id)).catch(error => logRuntimeFailure('collectionOwnerRecoveryImages', error));
+  }
+  return result;
 }
 app.get('/api/collection-workspaces', userAccess.requireArea('koleksiyon'), async (req, res) => {
   await refreshCollectionPermissionScope();
-  if (sharedCollectionModeEnabled()) {
-    const workspace = loadWorkspace(SHARED_COLLECTION_OWNER);
-    const canEdit = collectionWorkspaceEditAllowed(req.currentUser, SHARED_COLLECTION_OWNER);
-    return res.json({ workspaces:[{ ownerId:SHARED_COLLECTION_OWNER, ownerName:'Ortak Collection', ownerRole:'shared', supervisorName:'', level:canEdit?'edit':'view', initialized:workspace.initialized, revision:workspace._revision, updatedAt:workspace._updatedAt }], currentOwnerId:SHARED_COLLECTION_OWNER, shared:true });
-  }
+  await ensureLegacyCollectionOwnerRecovery(req.currentUser);
   const profiles = userAccess.allPublicProfiles();
   const access = new Map(userAccess.effectiveCollectionAccess(req.currentUser).map(item => [item.ownerId, item.level]));
   const byId = new Map(profiles.map(profile => [profile.id, profile]));
@@ -3568,7 +3599,8 @@ app.get('/api/collection-permissions', userAccess.requireArea('koleksiyon'), asy
       ...item,
       granteeName: profiles.get(item.granteeId)?.displayName || item.granteeId,
     }));
-    const users = [...profiles.values()].filter(profile => profile.id !== req.currentUser.id).map(profile => ({ id: profile.id, displayName: profile.displayName, username: profile.username, enabled: profile.enabled !== false }));
+    const samePersonIds = new Set(collectionRecoveryAliasProfiles(req.currentUser).map(profile => String(profile.id || '')));
+    const users = [...profiles.values()].filter(profile => profile.id !== req.currentUser.id && !samePersonIds.has(String(profile.id || ''))).map(profile => ({ id: profile.id, displayName: profile.displayName, username: profile.username, enabled: profile.enabled !== false }));
     res.set('Cache-Control', 'no-store').json({ revision: (await collectionPermissions.read()).revision, view, outgoing, users });
   } catch (err) { res.status(err.statusCode || 500).json({ error: err.message || 'Koleksiyon izinleri okunamadı.', code: err.code || 'COLLECTION_PERMISSION_READ_FAILED' }); }
 });
@@ -3598,11 +3630,6 @@ app.delete('/api/collection-permissions/:granteeId', userAccess.requireArea('kol
 // grants access and it deliberately has no matching write endpoint.
 app.get('/api/collection-workspaces-batch', userAccess.requireArea('koleksiyon'), async (req, res) => {
   await refreshCollectionPermissionScope();
-  if (sharedCollectionModeEnabled()) {
-    const workspace = loadWorkspace(SHARED_COLLECTION_OWNER);
-    const canEdit = collectionWorkspaceEditAllowed(req.currentUser, SHARED_COLLECTION_OWNER);
-    return res.json({ workspaces:[{ owner:{ id:SHARED_COLLECTION_OWNER, displayName:'Ortak Collection', role:'shared' }, access:{ level:canEdit?'edit':'view', canEdit }, workspace }], readOnly:!canEdit, shared:true });
-  }
   const requested = String(req.query.ownerIds || '').split(',').map(value => value.trim()).filter(Boolean);
   const unique = [...new Set(requested)].slice(0, 100);
   if (!unique.length) return res.status(400).json({ error: 'En az bir Koleksiyon sahibi seçilmelidir.', code: 'COLLECTION_OWNER_REQUIRED' });
@@ -3623,10 +3650,6 @@ app.get('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
   await refreshCollectionPermissionScope();
   const requestedOwnerId = String(req.params.ownerId || '');
   const ownerId = canonicalCollectionOwner(requestedOwnerId);
-  if (ownerId === SHARED_COLLECTION_OWNER) {
-    const canEdit = collectionWorkspaceEditAllowed(req.currentUser, ownerId);
-    return res.json({ workspace:loadWorkspace(ownerId), access:{ level:canEdit?'edit':'view', canEdit }, owner:{ id:ownerId, displayName:'Ortak Collection', role:'shared' }, shared:true });
-  }
   const level = userAccess.collectionAccessLevel(req.currentUser, ownerId);
   if (!level) return res.status(403).json({ error:'Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.', code:'COLLECTION_ACCESS_DENIED' });
   const profile = userAccess.allPublicProfiles().find(item => item.id === ownerId);
