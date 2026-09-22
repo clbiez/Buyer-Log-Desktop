@@ -299,6 +299,13 @@ function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [], sharedS
   }
 
   const target = loadWorkspace(targetOwnerId);
+  const completedRecovery = target && target._legacyRecovery && Number(target._legacyRecovery.ownerScopeVersion) >= 1;
+  if (completedRecovery) {
+    return {
+      changed:false, recovered:true, reason:'already-recovered', ownerId:targetOwnerId,
+      totalRows:Array.isArray(target.rows) ? target.rows.length : 0, aliases,
+    };
+  }
   const rows = [];
   const exact = new Map();
   const identities = new Map();
@@ -376,24 +383,27 @@ function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [], sharedS
     mergeUniqueObjects(manufacturers, item.workspace.manufacturers);
     mergeUniqueObjects(customColumns, item.workspace.customColumns);
   }
-  if (hasShared) {
+  if (hasShared && !Array.isArray(sharedSourceOwnerIds)) {
     mergeUniqueObjects(manufacturers, shared.manufacturers);
     mergeUniqueObjects(customColumns, shared.customColumns);
   }
 
+  const recoveryMarker = {
+    ownerScopeVersion:1,
+    completedAt:new Date().toISOString(),
+    sourceAliases:aliases,
+    sharedRevision:hasShared ? Number(shared._revision) || 0 : 0,
+    sourceRows,
+    duplicatesMerged,
+  };
   const targetComparable = JSON.stringify({
     rows: target.rows || [], manufacturers: target.manufacturers || [], customColumns: target.customColumns || [], nextId: target.nextId,
   });
   const recoveredComparable = JSON.stringify({ rows, manufacturers, customColumns, nextId });
-  if (targetComparable === recoveredComparable) {
-    return {
-      changed:false, recovered:true, ownerId:targetOwnerId, sourceRows,
-      added:0, duplicatesMerged, totalRows:rows.length, aliases,
-    };
-  }
-  const saved = saveWorkspace(targetOwnerId, { rows, manufacturers, customColumns, nextId }, target._revision);
+  const dataChanged = targetComparable !== recoveredComparable;
+  const saved = saveWorkspace(targetOwnerId, { rows, manufacturers, customColumns, nextId, _legacyRecovery:recoveryMarker }, target._revision);
   return {
-    changed:true, recovered:true, ownerId:targetOwnerId, sourceRows,
+    changed:dataChanged, markerWritten:true, recovered:true, ownerId:targetOwnerId, sourceRows,
     added, duplicatesMerged, totalRows:saved.rows.length, aliases, workspace:saved,
   };
 }
@@ -443,6 +453,7 @@ function defaultWorkspace(ownerId) {
     manufacturers: [],
     customColumns: [],
     nextId: 1,
+    _legacyRecovery: {},
     _revision: 0,
     _updatedAt: null,
   };
@@ -493,6 +504,7 @@ function saveWorkspace(ownerId, payload, expectedRevision = null) {
     manufacturers: normalizeManufacturers(payload && payload.manufacturers),
     customColumns: normalizeCustomColumns(payload && payload.customColumns),
     nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
+    _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
     _revision: current._revision + 1,
     _updatedAt: new Date().toISOString(),
   };
@@ -610,6 +622,7 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
       manufacturers: normalizeManufacturers(payload && payload.manufacturers),
       customColumns: normalizeCustomColumns(payload && payload.customColumns),
       nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
+      _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
       _revision: current._revision + 1,
       _updatedAt: new Date().toISOString(),
     };
@@ -763,6 +776,7 @@ function applyRowChanges(current, change) {
     manufacturers: current.manufacturers || [],
     customColumns: current.customColumns || [],
     nextId: current.nextId || 1,
+    _legacyRecovery: cleanObject(current._legacyRecovery),
     _revision: current._revision,
     _updatedAt: current._updatedAt,
   };
