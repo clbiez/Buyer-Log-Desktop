@@ -3293,6 +3293,42 @@ tfoot .collectionWeightedAverage .collectionWeightedChangeLine strong.isNegative
 #ordersTable tbody tr{height:var(--cp-row-h-orders,var(--cp-row-h,46px));}
 #cpTable tbody td{height:var(--cp-row-h-cp,var(--cp-row-h,46px));overflow:hidden;}
 #ordersTable tbody td{height:var(--cp-row-h-orders,var(--cp-row-h,46px));overflow:hidden;}
+
+/* CP ana satirindaki lojistik ozetleri cok satirli dogal yukseklikleriyle Picture
+   slider'inin satir geometrisini ezmemeli. Tam bilgi zaten acilir lojistik detay
+   satirinda ve hucre title'inda korunur; ana satir tek satirlik, kirpilabilir bir
+   ozet olarak secilen gorsel yuksekligine uyar. */
+#cpTable tbody td.cpLogisticStatusTd,
+#cpTable tbody td.cpLogisticArrivalTd,
+#cpTable tbody td.cpLogisticDelTypeTd{
+  padding-top:3px;
+  padding-bottom:3px;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+#cpTable tbody .cpLogisticMainCell,
+#cpTable tbody .cpLogisticSummaryStack,
+#cpTable tbody .cpLogisticDelTypeWrap,
+#cpTable tbody .cpLogisticReadOnlyTypes{
+  min-height:0;
+  max-height:calc(var(--cp-row-h-cp,var(--cp-row-h,46px)) - 6px);
+  overflow:hidden;
+  align-items:center;
+}
+#cpTable tbody .cpLogisticSummaryStack,
+#cpTable tbody .cpLogisticReadOnlyTypes{
+  flex-direction:row;
+  flex-wrap:nowrap;
+}
+#cpTable tbody .cpLogisticPrimaryDate,
+#cpTable tbody .cpLogisticDateSource,
+#cpTable tbody .cpLogisticMore{
+  display:inline;
+  margin-top:0;
+}
+#cpTable tbody .cpLogisticDateSource,
+#cpTable tbody .cpLogisticMore{margin-left:5px;}
+
 #cpTable td.cpPictureCell{width:var(--cp-img-col-cp,var(--cp-img-col,74px));max-width:var(--cp-img-col-cp,var(--cp-img-col,74px));}
 #ordersTable td.cpPictureCell{width:var(--cp-img-col-orders,var(--cp-img-col,74px));max-width:var(--cp-img-col-orders,var(--cp-img-col,74px));}
 #cpTable td.cpPictureCell img.cpThumb{max-width:var(--cp-img-w-cp,var(--cp-img-w,66px));max-height:var(--cp-img-h-cp,var(--cp-img-h,40px));}

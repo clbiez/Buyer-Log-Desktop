@@ -115,6 +115,25 @@ test('all valid local accounts can sign in independently of Shared Sync readines
   assert.match(LOGIN, /localOnly:true/);
 });
 
+test('saved Shared Sync folder is reused on every login without reopening the picker', () => {
+  const routeStart = SERVER.indexOf("app.get('/api/shared-hub/bootstrap-status'");
+  const routeEnd = SERVER.indexOf("app.post('/api/shared-hub/configure'", routeStart);
+  const route = SERVER.slice(routeStart, routeEnd);
+  assert.match(route, /await syncSettings\.read\(\)/);
+  assert.match(route, /savedSettings\.sharedSyncRoot/);
+  assert.match(route, /const snapshot = bootstrapStatusSnapshot\(\)/);
+  assert.match(route, /configured:Boolean\(savedRoot\) \|\| snapshot\.configured === true/);
+  assert.match(route, /root:savedRoot \|\| null/);
+
+  const loadStart = LOGIN.indexOf('async function loadHubStatus');
+  const loadEnd = LOGIN.indexOf('async function configureHub', loadStart);
+  const load = LOGIN.slice(loadStart, loadEnd);
+  assert.match(load, /if \(hubStatus && hubStatus\.root\) \$\('hubPath'\)\.value = hubStatus\.root/);
+
+  const startup = LOGIN.slice(LOGIN.lastIndexOf('loadHubStatus().then'));
+  assert.match(startup, /if \(status && !status\.configured\) \$\('hubPanel'\)\.hidden = false/);
+});
+
 test('v7.14 visual language is restrained ERP styling and responsive', () => {
   // Giriş ekranının vurgu rengi kendi tek seferlik değeri (#416b91) yerine
   // tasarım sisteminin --acc değerine hizalandı. İddia sabit bir hex'i değil,

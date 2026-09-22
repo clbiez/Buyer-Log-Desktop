@@ -435,6 +435,7 @@
     try {
       const response = await fetch(force ? '/api/shared-hub/bootstrap-retry' : '/api/shared-hub/bootstrap-status', { method:force ? 'POST' : 'GET', headers:force ? {'Content-Type':'application/json'} : undefined, body:force ? '{}' : undefined, cache:'no-store' });
       hubStatus = await response.json().catch(() => ({}));
+      if (hubStatus && hubStatus.root) $('hubPath').value = hubStatus.root;
     } catch (_) {
       hubStatus = { configured:false, loginAllowed:false, bootstrapRequired:true, status:'error', message:tr('Shared Hub durumu okunamadı.', 'Shared Hub status could not be read.') };
     } finally {
