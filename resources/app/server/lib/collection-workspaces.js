@@ -177,6 +177,237 @@ async function mergePersonalBackupIntoShared(ownerId, rawWorkspace, actorId = ''
   }
   throw lastConflict || Object.assign(new Error('Shared Collection restore tamamlanamadı.'), { code:'COLLECTION_RESTORE_FAILED', statusCode:409 });
 }
+
+/* ===================================================================
+   LEGACY SHARED-COLLECTION RECOVERY
+
+   Shared Hub bir donem Collection sahipligini tek "shared-collection"
+   workspace'inde birlestiriyordu. Bu, recovery/backup sirasinda ayni modelin
+   farkli kullanici kimliklerinden iki kez gelmesine ve Permissions
+   katmaninin anlamsizlasmasina yol aciyordu.
+
+   Yeni kanonik model tekrar owner-bazlidir. Bu helper eski ortak havuzu
+   SILMEZ; yalnizca guvenli oldugu server tarafinda dogrulandiginda hedef
+   owner workspace'ine kayipsiz ve idempotent bicimde konsolide eder.
+   =================================================================== */
+const RECOVERY_ROW_META_FIELDS = new Set([
+  'id','recordId','_sharedRecordId','_rev','createdBy','createdAt','updatedBy','updatedAt',
+  '_legacyOwnerId','_legacyRowId','_recoveredSourceKeys','_sharedCollectionImageUrl',
+  'modelGroupId','variantId',
+]);
+const RECOVERY_ROW_IMAGE_FIELDS = new Set(['img','imgRef']);
+function recoveryClone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
+
+function recoveryValueEmpty(value) {
+  if (value == null) return true;
+  if (typeof value === 'string') return value.trim() === '';
+  if (Array.isArray(value)) return value.length === 0;
+  if (typeof value === 'object') return Object.keys(value).length === 0;
+  return false;
+}
+function recoveryValueSignature(value) {
+  if (recoveryValueEmpty(value)) return '';
+  if (Array.isArray(value)) return '[' + value.map(recoveryValueSignature).join(',') + ']';
+  if (value && typeof value === 'object') {
+    return '{' + Object.keys(value).sort().map(key => JSON.stringify(key)+':'+recoveryValueSignature(value[key])).join(',') + '}';
+  }
+  return String(value).trim().toLocaleUpperCase('tr-TR');
+}
+function recoveryField(row, names) {
+  for (const name of names) {
+    if (!row || !Object.prototype.hasOwnProperty.call(row, name)) continue;
+    const value = row[name];
+    if (!recoveryValueEmpty(value)) return value;
+  }
+  return '';
+}
+function recoveryRowIdentity(row) {
+  const plm = recoveryField(row, ['plmId','PLM ID','plmID']);
+  const model = recoveryField(row, ['modelKod','modelCode','modelName','Model Name','model']);
+  const colourCode = recoveryField(row, ['colourCode','colorCode','C.Code','Colour Code','Color Code']);
+  const colour = recoveryField(row, ['colour','color','Colour','Color']);
+  const primary = plm || model;
+  if (recoveryValueEmpty(primary)) return '';
+  return [
+    recoveryValueSignature(primary),
+    recoveryValueSignature(model),
+    recoveryValueSignature(colourCode || colour),
+  ].join('\u001f');
+}
+function recoveryComparableKeys(row) {
+  return Object.keys(row || {}).filter(key => !RECOVERY_ROW_META_FIELDS.has(key) && !RECOVERY_ROW_IMAGE_FIELDS.has(key)).sort();
+}
+function recoveryRowsCompatible(left, right) {
+  const keys = new Set([...recoveryComparableKeys(left), ...recoveryComparableKeys(right)]);
+  for (const key of keys) {
+    const a = left && left[key], b = right && right[key];
+    if (recoveryValueEmpty(a) || recoveryValueEmpty(b)) continue;
+    if (recoveryValueSignature(a) !== recoveryValueSignature(b)) return false;
+  }
+  return true;
+}
+function recoveryRowFingerprint(row) {
+  return recoveryComparableKeys(row)
+    .filter(key => !recoveryValueEmpty(row[key]))
+    .map(key => key + '=' + recoveryValueSignature(row[key]))
+    .join('\u001e');
+}
+function recoverySourceKey(ownerId, row, index) {
+  const record = String(row && (row.recordId || row._sharedRecordId) || '').trim();
+  const legacyOwner = String(row && row._legacyOwnerId || '').trim();
+  const legacyRow = String(row && row._legacyRowId || '').trim();
+  const rawId = row && row.id != null ? String(row.id) : String(index);
+  return [String(ownerId || ''), record || [legacyOwner, legacyRow].filter(Boolean).join(':') || rawId].join('|');
+}
+function mergeRecoveryRows(base, incoming, sourceKey = '') {
+  const out = { ...(base || {}) };
+  for (const [key, value] of Object.entries(incoming || {})) {
+    if (key === 'id') continue;
+    if (RECOVERY_ROW_META_FIELDS.has(key) && key !== '_rev') continue;
+    if (recoveryValueEmpty(out[key]) && !recoveryValueEmpty(value)) out[key] = recoveryClone(value);
+  }
+  out._rev = Math.max(Number(base && base._rev) || 0, Number(incoming && incoming._rev) || 0);
+  const sourceKeys = new Set([
+    ...(Array.isArray(base && base._recoveredSourceKeys) ? base._recoveredSourceKeys : []),
+    ...(Array.isArray(incoming && incoming._recoveredSourceKeys) ? incoming._recoveredSourceKeys : []),
+  ].map(value => String(value || '')).filter(Boolean));
+  if (sourceKey) sourceKeys.add(sourceKey);
+  if (sourceKeys.size) out._recoveredSourceKeys = [...sourceKeys].slice(0, 200);
+  return out;
+}
+
+/* target owner'in mevcut satirlari + ayni kisiye ait legacy owner workspaceleri
+   + shared-collection satirlari birlestirilir.
+   - Ayni sourceKey ikinci calismada tekrar eklenmez.
+   - Tam ayni / yalniz bos alanlari farkli satirlar tek satirda birlesir.
+   - Iki dolu alan birbiriyle celisiyorsa satirlar AYRI tutulur; veri kaybi yok.
+   - Eski shared workspace silinmez. */
+function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [], sharedSourceOwnerIds = null } = {}) {
+  const targetOwnerId = String(ownerId || '').trim();
+  if (!targetOwnerId || targetOwnerId === SHARED_COLLECTION_OWNER) {
+    return { changed:false, recovered:false, reason:'invalid-target', ownerId:targetOwnerId };
+  }
+  const shared = loadWorkspace(SHARED_COLLECTION_OWNER);
+  const aliases = [...new Set((Array.isArray(sourceOwnerIds) ? sourceOwnerIds : [])
+    .map(value => String(value || '').trim())
+    .filter(value => value && value !== targetOwnerId && value !== SHARED_COLLECTION_OWNER))];
+  const aliasWorkspaces = aliases.map(owner => ({ ownerId:owner, workspace:loadWorkspace(owner) }))
+    .filter(item => item.workspace && item.workspace.initialized && item.workspace.rows.length);
+  const hasShared = Boolean(shared && shared.initialized && shared.rows.length);
+  if (!hasShared && !aliasWorkspaces.length) {
+    return { changed:false, recovered:false, reason:'no-legacy-data', ownerId:targetOwnerId };
+  }
+
+  const target = loadWorkspace(targetOwnerId);
+  const completedRecovery = target && target._legacyRecovery && Number(target._legacyRecovery.ownerScopeVersion) >= 1;
+  if (completedRecovery) {
+    return {
+      changed:false, recovered:true, reason:'already-recovered', ownerId:targetOwnerId,
+      totalRows:Array.isArray(target.rows) ? target.rows.length : 0, aliases,
+    };
+  }
+  const rows = [];
+  const exact = new Map();
+  const identities = new Map();
+  const sourceIndex = new Map();
+  const usedIds = new Set();
+  let nextId = Math.max(1, Number(target.nextId) || 1);
+  let duplicatesMerged = 0, added = 0, sourceRows = 0;
+
+  function reserveId(preferred) {
+    const numeric = Number(preferred);
+    if (Number.isFinite(numeric) && numeric > 0 && !usedIds.has(String(numeric))) {
+      usedIds.add(String(numeric)); nextId = Math.max(nextId, numeric + 1); return numeric;
+    }
+    while (usedIds.has(String(nextId))) nextId += 1;
+    const id = nextId++; usedIds.add(String(id)); return id;
+  }
+  function register(index) {
+    const row = rows[index];
+    const fp = recoveryRowFingerprint(row);
+    if (fp) exact.set(fp, index);
+    const identity = recoveryRowIdentity(row);
+    if (identity) {
+      const bucket = identities.get(identity) || [];
+      if (!bucket.includes(index)) bucket.push(index);
+      identities.set(identity, bucket);
+    }
+    for (const key of Array.isArray(row && row._recoveredSourceKeys) ? row._recoveredSourceKeys : []) {
+      if (key) sourceIndex.set(String(key), index);
+    }
+  }
+  function absorb(rawRow, sourceOwner, sourcePosition, keepPreferredId) {
+    sourceRows += 1;
+    const incoming = recoveryClone(rawRow || {});
+    const sourceKey = sourceOwner ? recoverySourceKey(sourceOwner, incoming, sourcePosition) : '';
+    let match = sourceKey ? sourceIndex.get(sourceKey) : null;
+    const fp = recoveryRowFingerprint(incoming);
+    if (match == null && fp && exact.has(fp)) match = exact.get(fp);
+    const identity = recoveryRowIdentity(incoming);
+    if (match == null && identity) {
+      const bucket = identities.get(identity) || [];
+      match = bucket.find(index => recoveryRowsCompatible(rows[index], incoming));
+    }
+    if (match != null) {
+      rows[match] = mergeRecoveryRows(rows[match], incoming, sourceKey);
+      duplicatesMerged += 1;
+      register(match);
+      return;
+    }
+    incoming.id = reserveId(keepPreferredId ? incoming.id : null);
+    if (sourceKey) {
+      const keys = new Set(Array.isArray(incoming._recoveredSourceKeys) ? incoming._recoveredSourceKeys : []);
+      keys.add(sourceKey); incoming._recoveredSourceKeys = [...keys].slice(0, 200);
+    }
+    const index = rows.push(incoming) - 1;
+    if (sourceOwner) added += 1;
+    register(index);
+  }
+
+  (target.rows || []).forEach((row, index) => absorb(row, '', index, true));
+  for (const item of aliasWorkspaces) (item.workspace.rows || []).forEach((row, index) => absorb(row, item.ownerId, index, false));
+  if (hasShared) {
+    const restricted = Array.isArray(sharedSourceOwnerIds)
+      ? new Set(sharedSourceOwnerIds.map(value => String(value || '').trim()).filter(Boolean))
+      : null;
+    (shared.rows || []).forEach((row, index) => {
+      const legacyOwner = String(row && row._legacyOwnerId || '').trim();
+      if (restricted && (!legacyOwner || !restricted.has(legacyOwner))) return;
+      absorb(row, SHARED_COLLECTION_OWNER, index, false);
+    });
+  }
+
+  const manufacturers = (target.manufacturers || []).map(recoveryClone);
+  const customColumns = (target.customColumns || []).map(recoveryClone);
+  for (const item of aliasWorkspaces) {
+    mergeUniqueObjects(manufacturers, item.workspace.manufacturers);
+    mergeUniqueObjects(customColumns, item.workspace.customColumns);
+  }
+  if (hasShared && !Array.isArray(sharedSourceOwnerIds)) {
+    mergeUniqueObjects(manufacturers, shared.manufacturers);
+    mergeUniqueObjects(customColumns, shared.customColumns);
+  }
+
+  const recoveryMarker = {
+    ownerScopeVersion:1,
+    completedAt:new Date().toISOString(),
+    sourceAliases:aliases,
+    sharedRevision:hasShared ? Number(shared._revision) || 0 : 0,
+    sourceRows,
+    duplicatesMerged,
+  };
+  const targetComparable = JSON.stringify({
+    rows: target.rows || [], manufacturers: target.manufacturers || [], customColumns: target.customColumns || [], nextId: target.nextId,
+  });
+  const recoveredComparable = JSON.stringify({ rows, manufacturers, customColumns, nextId });
+  const dataChanged = targetComparable !== recoveredComparable;
+  const saved = saveWorkspace(targetOwnerId, { rows, manufacturers, customColumns, nextId, _legacyRecovery:recoveryMarker }, target._revision);
+  return {
+    changed:dataChanged, markerWritten:true, recovered:true, ownerId:targetOwnerId, sourceRows,
+    added, duplicatesMerged, totalRows:saved.rows.length, aliases, workspace:saved,
+  };
+}
+
 async function mirrorWorkspace(ownerId) {
   // The save worker has its own module graph and intentionally has no delta
   // store attachment; it writes the local compatibility file. Read THAT fresh
@@ -222,6 +453,7 @@ function defaultWorkspace(ownerId) {
     manufacturers: [],
     customColumns: [],
     nextId: 1,
+    _legacyRecovery: {},
     _revision: 0,
     _updatedAt: null,
   };
@@ -272,6 +504,7 @@ function saveWorkspace(ownerId, payload, expectedRevision = null) {
     manufacturers: normalizeManufacturers(payload && payload.manufacturers),
     customColumns: normalizeCustomColumns(payload && payload.customColumns),
     nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
+    _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
     _revision: current._revision + 1,
     _updatedAt: new Date().toISOString(),
   };
@@ -389,6 +622,7 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
       manufacturers: normalizeManufacturers(payload && payload.manufacturers),
       customColumns: normalizeCustomColumns(payload && payload.customColumns),
       nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
+      _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
       _revision: current._revision + 1,
       _updatedAt: new Date().toISOString(),
     };
@@ -542,6 +776,7 @@ function applyRowChanges(current, change) {
     manufacturers: current.manufacturers || [],
     customColumns: current.customColumns || [],
     nextId: current.nextId || 1,
+    _legacyRecovery: cleanObject(current._legacyRecovery),
     _revision: current._revision,
     _updatedAt: current._updatedAt,
   };
@@ -680,5 +915,6 @@ module.exports = {
   loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows,
   applyRowChanges, applyRowChangesAsync, rowRev, rowId,
   defaultWorkspace, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
-  SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mergePersonalBackupIntoShared, mirrorWorkspace,
+  SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mergePersonalBackupIntoShared, recoverSharedWorkspaceIntoOwner, mirrorWorkspace,
+  recoveryRowIdentity, recoveryRowsCompatible, recoveryRowFingerprint,
 };
