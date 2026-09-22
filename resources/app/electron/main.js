@@ -104,8 +104,10 @@ const OAB_VIEWER_URL = 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBud
 const OAB_HOME_URL = 'https://pass.lcwaikiki.com/';
 const OAB_UI_HOST = 'pass.lcwaikiki.com';
 const OAB_API_HOST = 'pass.prod.lcwaikiki.com';
+const OAB_SILENT_PROBE_MS = 8000;
 let oabAuthWindow = null;
 let oabAuthInFlight = null;
+let oabAuthFlowState = null;
 
 /*
  * Tamamlanan indirmelerin token → gerçek yol eşlemesi. "Dosya hazır" bildirim
@@ -673,7 +675,9 @@ function isLikelyOabSignInUrl(value) {
     const host = url.hostname.toLowerCase();
     const pathText = `${url.pathname}${url.search}`.toLowerCase();
     if (host === OAB_UI_HOST) return /\/(?:login|signin|auth)(?:\/|$)/i.test(url.pathname);
-    return /login|signin|auth|identity|sso|adfs|microsoftonline|oauth|authorize/i.test(`${host}${pathText}`);
+    const identityHost = /(^|[.-])(keycloak|login|signin|auth|sso|identity|idp|adfs)([.-]|$)/i.test(host);
+    if (identityHost) return true;
+    return /login|signin|auth|identity|sso|adfs|microsoftonline|oauth|authorize|openid-connect/i.test(`${host}${pathText}`);
   } catch (_) { return false; }
 }
 
