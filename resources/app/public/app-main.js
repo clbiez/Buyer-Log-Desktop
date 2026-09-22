@@ -1211,7 +1211,15 @@ function classifyAndLoadDropped(wb, name, onASAS){
   console.warn('Tanımlanamayan dosya (sürükle-bırak):', name);
 }
 
-document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=> btn.addEventListener('click', ()=> switchTab(btn.dataset.tab)) );
+document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=> btn.addEventListener('click', ()=>{
+  const target=btn.dataset.tab;
+  const desktopWorkspace=window.buyerLogDesktop?.workspace;
+  if(desktopWorkspace&&typeof desktopWorkspace.openModule==='function'&&target!==currentActiveTab()){
+    void desktopWorkspace.openModule(target);
+    return;
+  }
+  switchTab(target);
+}) );
 function syncNavExcelButtonLabel(tab=document.body.dataset.activeTab){
   const label=document.getElementById('navExcelBtnLabel');
   const btn=document.getElementById('navExcelBtn');
@@ -1846,6 +1854,7 @@ function switchTab(tab){
     if(typeof showToast==='function')showToast(appLang==='en'?'You do not have access to this area.':'Bu yetki alanına erişiminiz bulunmuyor.');
     return false;
   }
+  void window.buyerLogDesktop?.workspace?.setModule?.(tab);
   const previousTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
   if(previousTab==='cp'||previousTab==='orders') saveCoreAutoFilterState();
   if(typeof closeAllColumnPanels==='function') closeAllColumnPanels();
@@ -13757,6 +13766,8 @@ async function refreshSyncStatusBadge(){
 }
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
+  const requestedModule=new URLSearchParams(location.search).get('module');
+  if(requestedModule&&document.getElementById('view-'+requestedModule))switchTab(requestedModule);
   await loadInitialBuyerLogData();
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     window.BLPerf?.mark?.('UI_READY');

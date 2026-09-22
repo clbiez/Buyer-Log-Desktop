@@ -27,6 +27,10 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
     app: String(process.env.BUYER_LOG_ACTIVE_VERSION || ''),
     updater: String(process.env.BUYER_LOG_UPDATER_VERSION || ''),
   },
+  workspace: {
+    openModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-open-module', String(moduleId || '')),
+    setModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-set-module', String(moduleId || '')),
+  },
   /* Teşhis: kimlik bilgisi, token veya oturum anahtarı İÇERMEZ (bkz. main.js → diagnostics). */
   diagnostics: () => ipcRenderer.invoke('buyerlog:diagnostics'),
   startupFailure: () => ipcRenderer.invoke('buyerlog:startup-failure'),

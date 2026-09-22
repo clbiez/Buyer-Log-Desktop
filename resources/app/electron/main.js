@@ -40,7 +40,7 @@
  *    kanalı açılır; keyfi çalıştırma yolu yoktur.
  */
 
-const { app, BrowserWindow, Menu, dialog, shell, ipcMain, screen, session } = require('electron');
+const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, screen, session } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -52,6 +52,7 @@ const { runFirstRunMigration, healPortableSettings, readMigrationState } = requi
 const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
+const { createWorkspaceManager } = require('./workspace-manager');
 
 const APP_CORE_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_BOUNDS = { width: 1600, height: 1000 };
@@ -59,6 +60,7 @@ const DEFAULT_BOUNDS = { width: 1600, height: 1000 };
 let paths = null;
 let backend = null;
 let mainWindow = null;
+let workspace = null;
 let errorWindow = null;
 let logStream = null;
 let quitting = false;
@@ -69,6 +71,17 @@ let updater = null;
 let updateStartupTimer = null;
 let updatePeriodicTimer = null;
 let updateRelaunchRequested = false;
+
+function activeBuyerLogWindow(contents) {
+  return (workspace && contents && workspace.windowForContents(contents))
+    || (workspace && workspace.focusedWindow())
+    || (mainWindow && !mainWindow.isDestroyed() ? mainWindow : null);
+}
+
+function activeBuyerLogContents() {
+  return (workspace && workspace.activeContents())
+    || (mainWindow && !mainWindow.isDestroyed() ? mainWindow.webContents : null);
+}
 
 /* CoreNectum automatic auth — dedicated Electron corporate session.
  * No raw Bearer reaches the renderer and no user has to copy it from DevTools.
@@ -176,8 +189,9 @@ async function verifyUpdateModerator(userId) {
 }
 
 async function currentRendererUserId() {
-  if(!mainWindow||mainWindow.isDestroyed())return '';
-  try{return String(await mainWindow.webContents.executeJavaScript("String((window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id)||'')",true)||'').trim();}
+  const contents=activeBuyerLogContents();
+  if(!contents||contents.isDestroyed())return '';
+  try{return String(await contents.executeJavaScript("String((window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id)||'')",true)||'').trim();}
   catch(_){return '';}
 }
 
@@ -189,8 +203,8 @@ async function effectiveUpdateChannel(userId='') {
 }
 
 function emitUpdateStatus(payload) {
-  if(!mainWindow||mainWindow.isDestroyed())return;
-  try{mainWindow.webContents.send('buyerlog:update-status-changed',payload);}catch(_){}
+  if(workspace){workspace.broadcast('buyerlog:update-status-changed',payload);return;}
+  if(mainWindow&&!mainWindow.isDestroyed())try{mainWindow.webContents.send('buyerlog:update-status-changed',payload);}catch(_){}
 }
 
 async function updateStatusFor(userId='') {
@@ -251,11 +265,11 @@ function loadWindowState() {
   return state;
 }
 
-function saveWindowState() {
-  if (!mainWindow || mainWindow.isDestroyed()) return;
+function saveWindowState(targetWindow = activeBuyerLogWindow()) {
+  if (!targetWindow || targetWindow.isDestroyed()) return;
   try {
-    const maximized = mainWindow.isMaximized();
-    const bounds = maximized ? mainWindow.getNormalBounds() : mainWindow.getBounds();
+    const maximized = targetWindow.isMaximized();
+    const bounds = maximized ? targetWindow.getNormalBounds() : targetWindow.getBounds();
     fs.mkdirSync(path.dirname(paths.windowStatePath), { recursive: true });
     fs.writeFileSync(paths.windowStatePath, JSON.stringify({
       x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height, maximized,
@@ -320,7 +334,7 @@ function uniqueDownloadPath(directory, fileName) {
  * yapılmadığı için (bkz. portable-paths.js §2) bu yol doğrudur.
  */
 function applyDownloadPolicy(targetSession) {
-  targetSession.on('will-download', (_event, item) => {
+  targetSession.on('will-download', (_event, item, initiatingContents) => {
     let target = '';
     try {
       const downloads = app.getPath('downloads');
@@ -341,11 +355,13 @@ function applyDownloadPolicy(targetSession) {
        * Yalnız başarıyla tamamlanan indirme renderer'a bildirilir — iptal/hata
        * durumunda "başarı" kartı ASLA üretilmez.
        */
-      if (state === 'completed' && target && mainWindow && !mainWindow.isDestroyed()) {
+      if (state === 'completed' && target) {
         const token = registerDownload(target);
-        mainWindow.webContents.send('buyerlog:download-complete', {
+        const payload = {
           token, filename: path.basename(target), path: target, success: true,
-        });
+        };
+        if (workspace) workspace.sendToDownloadOwner(initiatingContents, 'buyerlog:download-complete', payload);
+        else if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('buyerlog:download-complete', payload);
       }
     });
   });
@@ -533,7 +549,7 @@ async function acquireCoreNectumToken(options = {}) {
 
       authWindow = new BrowserWindow({
         width: 1120, height: 820, show: false, title: 'Buyer Log · CoreNectum Oturumu',
-        parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
+        parent: activeBuyerLogWindow(options.requestingContents) || undefined,
         autoHideMenuBar: true, backgroundColor: '#ffffff',
         webPreferences: {
           partition: CORENECTUM_AUTH_PARTITION,
@@ -841,7 +857,7 @@ async function acquireOabAuthorization(options = {}) {
       authWindow = new BrowserWindow({
         width: 1120, height: 820, show: false,
         title: 'OAB Kullanıcı Girişi',
-        parent: mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined,
+        parent: activeBuyerLogWindow(options.requestingContents) || undefined,
         autoHideMenuBar: true, backgroundColor: '#ffffff',
         webPreferences: {
           partition: OAB_AUTH_PARTITION,
@@ -1041,86 +1057,40 @@ async function clearOabAuthSession() {
 /* ------------------------------------------------------------- pencereler */
 
 function createMainWindow(origin) {
-  const state = loadWindowState();
-  mainWindow = new BrowserWindow({
-    width: state.width,
-    height: state.height,
-    x: state.x,
-    y: state.y,
-    show: false,
-    backgroundColor: '#ffffff',
-    title: 'Buyer Log',
-    icon: path.join(APP_CORE_ROOT, 'buyerlog.ico'),
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true,
-      spellcheck: false,
+  workspace = createWorkspaceManager({
+    BrowserWindow,
+    WebContentsView,
+    dialog,
+    screen,
+    path,
+    crypto,
+    origin,
+    shellFile: path.join(__dirname, 'workspace.html'),
+    shellPreload: path.join(__dirname, 'workspace-preload.js'),
+    contentPreload: path.join(__dirname, 'preload.js'),
+    iconPath: path.join(APP_CORE_ROOT, 'buyerlog.ico'),
+    loadWindowState,
+    saveWindowState,
+    applyNavigationPolicy,
+    log,
+    onFirstRendererReady: () => {
+      try {
+        if (typeof global.__buyerLogLauncherHealthReady === 'function') {
+          global.__buyerLogLauncherHealthReady({
+            version: appVersion(),
+            backendReady: Boolean(backend && backend.running),
+            localDbPath: paths && paths.localDbPath || '',
+            localDbReady: Boolean(paths && paths.localDbPath && fs.existsSync(paths.localDbPath)),
+            rendererReady: true,
+          });
+        }
+      } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
+      scheduleUpdateChecks();
     },
   });
-  if (state.maximized) mainWindow.maximize();
-
-  applyNavigationPolicy(mainWindow.webContents, origin);
-
-  /* Teşhis kısayolu. Menü kurulmadığı için (§2) yalnız bu iki tuş dinlenir;
-     diğer hiçbir tuş tüketilmez, sayfaya aynen ulaşır. */
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.type !== 'keyDown') return;
-    const key = String(input.key || '').toLowerCase();
-    if (key === 'f12' || (input.control && input.shift && key === 'i')) {
-      mainWindow.webContents.toggleDevTools();
-      event.preventDefault();
-    }
-    /* F5 = tarayıcı tarzı arayüz yenilemesi (Packet 15). Menü kurulmadığı
-       için (§2) Electron'un F5'e varsayılan bir bağlaması yok; burada
-       WebContents.reload() çağrılır — aynı pencere, aynı origin yeniden
-       yüklenir. Arka uç süreci (server/server.js) ve pencere/backend
-       ömrü BURADAN etkilenmez, yalnız arayüz süreci (webContents)
-       yeniden yüklenir. reload() standart web platformu gibi davranır:
-       sayfada kaydedilmemiş değişiklik varsa (bkz. app-main.js
-       beforeunload koruması) tarayıcı bunu kendiliğinden dikkate alır. */
-    if (key === 'f5') {
-      mainWindow.webContents.reload();
-      event.preventDefault();
-    }
-  });
-
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
-    mainWindow.focus();
-  });
-  mainWindow.on('close', saveWindowState);
-  mainWindow.on('closed', () => { mainWindow = null; });
-  mainWindow.webContents.on('render-process-gone', (_event, details) => {
-    log('Arayüz süreci sonlandı: ' + JSON.stringify(details));
-  });
-  mainWindow.webContents.on('did-fail-load', (_event, code, description, url) => {
-    if (code === -3) return; // kullanıcı iptali
-    log('Sayfa yüklenemedi (' + code + ' ' + description + '): ' + url);
-  });
-  /* Yüklendiği DOĞRULANABİLİR olmalı: CMD penceresi yokken "açıldı sandım"
-     ile "gerçekten açıldı" arasındaki farkı yalnız bu satır gösterir. */
-  mainWindow.webContents.on('did-finish-load', () => {
-    log('Arayüz yüklendi: ' + mainWindow.webContents.getURL()
-      + ' · başlık="' + mainWindow.getTitle() + '"');
-    try {
-      if (typeof global.__buyerLogLauncherHealthReady === 'function') {
-        global.__buyerLogLauncherHealthReady({
-          version: appVersion(),
-          backendReady: Boolean(backend && backend.running),
-          localDbPath: paths && paths.localDbPath || '',
-          localDbReady: Boolean(paths && paths.localDbPath && fs.existsSync(paths.localDbPath)),
-          rendererReady: true,
-        });
-      }
-    } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
-    scheduleUpdateChecks();
-  });
-
-  log('Arayüz yükleniyor: ' + origin);
-  mainWindow.loadURL(origin + '/?launch=' + Date.now());
+  log('Çoklu sekme çalışma alanı yükleniyor: ' + origin);
+  const state = workspace.createWindow({ module: 'overview' });
+  mainWindow = state.window; // eski hata/teşhis yolları için ilk pencere başvurusu
   return mainWindow;
 }
 
@@ -1160,8 +1130,9 @@ function closeErrorWindow() {
  * kullanıcı tıklar, hiçbir şey olmaz. Sessiz kalmak yerine ne olduğu söylenir.
  */
 function handleBackendLoss() {
-  if (quitting || !mainWindow || mainWindow.isDestroyed()) return;
-  dialog.showMessageBox(mainWindow, {
+  const parent = activeBuyerLogWindow();
+  if (quitting || !parent || parent.isDestroyed()) return;
+  dialog.showMessageBox(parent, {
     type: 'error',
     title: 'Buyer Log',
     message: 'Buyer Log sunucusu durdu.',
@@ -1177,7 +1148,9 @@ function handleBackendLoss() {
     restarting = true;
     try {
       if (backend) { try { await backend.stop(); } catch (_) {} backend = null; }
-      if (mainWindow && !mainWindow.isDestroyed()) { mainWindow.destroy(); mainWindow = null; }
+      if (workspace) { workspace.destroyAllWindows(); workspace = null; }
+      else if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy();
+      mainWindow = null;
       await startBuyerLog();
     } finally { restarting = false; }
   }).catch(error => log('Sunucu kaybı iletişim kutusu gösterilemedi: ' + error.message));
@@ -1349,7 +1322,9 @@ function diagnostics() {
 }
 
 function trustedBuyerLogIpcSender(event) {
-  if (!event || !mainWindow || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents) return false;
+  if (!event || !event.sender || event.sender.isDestroyed()) return false;
+  if (workspace && !workspace.tabForContents(event.sender)) return false;
+  if (!workspace && (!mainWindow || mainWindow.isDestroyed() || event.sender !== mainWindow.webContents)) return false;
   try {
     const source = new URL(String(event.senderFrame && event.senderFrame.url || event.sender.getURL() || ''));
     const expected = new URL(String(backend && backend.origin || resolveAppUrl(readJson(paths.configPath, {})).origin));
@@ -1358,6 +1333,59 @@ function trustedBuyerLogIpcSender(event) {
 }
 
 function registerIpc() {
+  ipcMain.handle('buyerlog:workspace-snapshot', event => {
+    if (!workspace || !workspace.windowForShellContents(event.sender)) return null;
+    return workspace.shellSnapshot(event);
+  });
+  ipcMain.handle('buyerlog:workspace-show-module-menu', event => {
+    const state = workspace && workspace.windowForShellContents(event.sender);
+    if (!state) return false;
+    const openModules = new Set(workspace.snapshot(state).tabs.map(tab => tab.module));
+    const template = Object.entries(workspace.MODULES).map(([moduleId, labels]) => ({
+      label: labels.tr,
+      type: 'checkbox',
+      checked: openModules.has(moduleId),
+      click: () => workspace.openModule(state.window.id, moduleId),
+    }));
+    Menu.buildFromTemplate(template).popup({ window:state.window });
+    return true;
+  });
+  ipcMain.handle('buyerlog:workspace-activate', (event, tabId) => {
+    const state = workspace && workspace.windowForShellContents(event.sender);
+    return Boolean(state && workspace.activateTab(state.window.id, tabId));
+  });
+  ipcMain.handle('buyerlog:workspace-open-module', (event, moduleId) => {
+    if (!workspace) return null;
+    const shellState = workspace.windowForShellContents(event.sender);
+    const contentWindow = workspace.windowForContents(event.sender);
+    const target = shellState?.window || contentWindow;
+    if (!target) return null;
+    const tab = workspace.openModule(target.id, moduleId);
+    return tab ? { ok:true, tabId:tab.id, module:tab.module } : null;
+  });
+  ipcMain.handle('buyerlog:workspace-set-module', (event, moduleId) => {
+    if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
+    return workspace.updateTabModule(event.sender, moduleId);
+  });
+  ipcMain.handle('buyerlog:workspace-move-tab', (event, payload = {}) => {
+    const state = workspace && workspace.windowForShellContents(event.sender);
+    return Boolean(state && workspace.moveTab(payload.tabId, state.window.id, payload.index));
+  });
+  ipcMain.handle('buyerlog:workspace-receive-tab', (event, payload = {}) => {
+    const state = workspace && workspace.windowForShellContents(event.sender);
+    return Boolean(state && workspace.moveTab(payload.tabId, state.window.id, payload.index));
+  });
+  ipcMain.handle('buyerlog:workspace-detach-tab', (event, payload = {}) => {
+    const state = workspace && workspace.windowForShellContents(event.sender);
+    if (!state || state.window.id !== Number(payload.sourceWindowId)) return false;
+    return workspace.detachTab(payload.tabId, state.window.id, payload.point || {});
+  });
+  ipcMain.handle('buyerlog:workspace-close-tab', (event, tabId) => {
+    const state = workspace && workspace.windowForShellContents(event.sender);
+    const requested = state && state.tabs.includes(String(tabId || ''));
+    return Boolean(requested && workspace.closeTab(tabId));
+  });
+
   ipcMain.handle('buyerlog:diagnostics', () => diagnostics());
   ipcMain.handle('buyerlog:startup-failure', () => startupFailure);
   ipcMain.handle('buyerlog:open-logs', () => {
@@ -1432,7 +1460,7 @@ function registerIpc() {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'IPC_FORBIDDEN' };
     const userId=String(payload.userId || '');
     if (!(await verifyUpdateModerator(userId))) return { ok:false, code:'UPDATE_ADMIN_REQUIRED' };
-    const result=await dialog.showOpenDialog(mainWindow,{title:'Buyer Log release klasörünü seçin',properties:['openDirectory']});
+    const result=await dialog.showOpenDialog(activeBuyerLogWindow(event.sender),{title:'Buyer Log release klasörünü seçin',properties:['openDirectory']});
     if(result.canceled||!Array.isArray(result.filePaths)||!result.filePaths[0])return {ok:false,cancelled:true};
     return {ok:true,path:path.resolve(String(result.filePaths[0]))};
   });
@@ -1452,14 +1480,16 @@ function registerIpc() {
     updateRelaunchRequested=true;
     /* BrowserWindow.close() deliberately uses the existing beforeunload/dirty-state
        protection. If renderer vetoes the close, the flag is cleared below. */
-    if(mainWindow&&!mainWindow.isDestroyed())mainWindow.close();else app.quit();
-    setTimeout(()=>{if(mainWindow&&!mainWindow.isDestroyed())updateRelaunchRequested=false;},1500).unref?.();
+    if(workspace&&workspace.hasWindows())workspace.closeAllWindows();
+    else if(mainWindow&&!mainWindow.isDestroyed())mainWindow.close();
+    else app.quit();
+    setTimeout(()=>{if(workspace&&workspace.hasWindows())updateRelaunchRequested=false;},1500).unref?.();
     return {ok:true};
   });
 
   ipcMain.handle('buyerlog:choose-shared-hub-folder', async event => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'IPC_FORBIDDEN' };
-    const result = await dialog.showOpenDialog(mainWindow, {
+    const result = await dialog.showOpenDialog(activeBuyerLogWindow(event.sender), {
       title: 'Buyer Log Shared Hub klasörünü seçin',
       properties: ['openDirectory', 'createDirectory'],
     });
@@ -1468,7 +1498,7 @@ function registerIpc() {
   });
   ipcMain.handle('buyerlog:choose-database-workbook', async event => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'IPC_FORBIDDEN' };
-    const result = await dialog.showOpenDialog(mainWindow, {
+    const result = await dialog.showOpenDialog(activeBuyerLogWindow(event.sender), {
       title: 'Database bağlantı bilgisini içeren Excel dosyasını seçin',
       properties: ['openFile'],
       filters: [{ name: 'Excel Workbooks', extensions: ['xlsx', 'xlsm'] }],
@@ -1483,11 +1513,13 @@ function registerIpc() {
   /* CoreNectum automatic SSO. The raw Bearer never crosses IPC: Electron main
      captures it and writes it straight to the local backend through the
      per-process loopback bridge. Renderer receives only success/error state. */
-  ipcMain.handle('buyerlog:corenectum-auth', async (_event, options = {}) => {
-    try { return await acquireCoreNectumToken({ interactive: options && options.interactive !== false }); }
+  ipcMain.handle('buyerlog:corenectum-auth', async (event, options = {}) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'CORENECTUM_IPC_FORBIDDEN', error:'CoreNectum yetkilendirme isteği reddedildi.' };
+    try { return await acquireCoreNectumToken({ interactive: options && options.interactive !== false, requestingContents:event.sender }); }
     catch (error) { return { ok:false, code:error && error.code || 'CORENECTUM_AUTH_FAILED', error:error && error.message || String(error) }; }
   });
-  ipcMain.handle('buyerlog:corenectum-auth-clear', async () => {
+  ipcMain.handle('buyerlog:corenectum-auth-clear', async event => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'CORENECTUM_IPC_FORBIDDEN' };
     try { return await clearCoreNectumAuthSession(); }
     catch (error) { return { ok:false, code:'CORENECTUM_AUTH_CLEAR_FAILED', error:error && error.message || String(error) }; }
   });
@@ -1497,7 +1529,7 @@ function registerIpc() {
      therefore cannot invoke these channels. Raw Authorization never crosses IPC. */
   ipcMain.handle('buyerlog:oab-auth', async (event, options = {}) => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, authenticated:false, code:'OAB_IPC_FORBIDDEN', error:'OAB yetkilendirme isteği reddedildi.' };
-    try { return await acquireOabAuthorization({ interactive:options && options.interactive !== false, manual:options && options.manual === true }); }
+    try { return await acquireOabAuthorization({ interactive:options && options.interactive !== false, manual:options && options.manual === true, requestingContents:event.sender }); }
     catch (error) { return { ok:false, authenticated:false, code:error && error.code || 'OAB_AUTH_FAILED', error:'OAB yetkilendirmesi başarısız oldu.' }; }
   });
   ipcMain.handle('buyerlog:oab-auth-clear', async event => {
@@ -1513,13 +1545,15 @@ function registerIpc() {
    * yeniden başladı, kayıt sınırdan düştü) ya da dosya o andan beri
    * silinmiş/taşınmışsa çökmeden kontrollü bir hata döner.
    */
-  ipcMain.handle('buyerlog:open-download', (_event, token) => {
+  ipcMain.handle('buyerlog:open-download', (event, token) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, error:'forbidden' };
     const entry = downloadRegistry.get(String(token || ''));
     if (!entry || !fs.existsSync(entry.path)) return { ok: false, error: 'not-found' };
     const error = shell.openPath(entry.path);
     return error ? { ok: false, error } : { ok: true };
   });
-  ipcMain.handle('buyerlog:reveal-download', (_event, token) => {
+  ipcMain.handle('buyerlog:reveal-download', (event, token) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, error:'forbidden' };
     const entry = downloadRegistry.get(String(token || ''));
     if (!entry || !fs.existsSync(entry.path)) return { ok: false, error: 'not-found' };
     shell.showItemInFolder(entry.path);
@@ -1578,7 +1612,7 @@ function bootstrap() {
     return;
   }
   app.on('second-instance', () => {
-    const window = mainWindow || errorWindow;
+    const window = activeBuyerLogWindow() || errorWindow;
     if (!window || window.isDestroyed()) return;
     if (window.isMinimized()) window.restore();
     window.show();
@@ -1623,7 +1657,7 @@ function bootstrap() {
 
   process.on('uncaughtException', error => {
     log('Yakalanmamış hata: ' + (error && error.stack ? error.stack : error));
-    if (!mainWindow && !errorWindow) {
+    if ((!workspace || !workspace.hasWindows()) && !mainWindow && !errorWindow) {
       try {
         dialog.showErrorBox('Buyer Log', 'Beklenmeyen bir hata oluştu:\n\n' + (error && error.message));
       } catch (_) {}

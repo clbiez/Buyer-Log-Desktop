@@ -145,10 +145,12 @@ test('server.js: yeni po/reveal route\'u aynı yetki kontrolüyle ve mevcut dosy
 
 test('electron/main.js: tamamlanan indirme yalnız BAŞARILI durumda ve token ile bildirilir — ham yol renderer\'a "aksiyon girdisi" olarak gitmez', () => {
   assert.match(MAIN_SOURCE, /function registerDownload\(filePath\)/);
-  assert.match(MAIN_SOURCE, /state === 'completed' && target && mainWindow/);
+  assert.match(MAIN_SOURCE, /state === 'completed' && target/);
+  assert.match(MAIN_SOURCE, /workspace\.sendToDownloadOwner\(initiatingContents, 'buyerlog:download-complete', payload\)/);
   assert.match(MAIN_SOURCE, /webContents\.send\('buyerlog:download-complete',/);
-  assert.match(MAIN_SOURCE, /ipcMain\.handle\('buyerlog:open-download', \(_event, token\)/);
-  assert.match(MAIN_SOURCE, /ipcMain\.handle\('buyerlog:reveal-download', \(_event, token\)/);
+  assert.match(MAIN_SOURCE, /ipcMain\.handle\('buyerlog:open-download', \(event, token\)/);
+  assert.match(MAIN_SOURCE, /ipcMain\.handle\('buyerlog:reveal-download', \(event, token\)/);
+  assert.match(MAIN_SOURCE, /trustedBuyerLogIpcSender\(event\)/);
   assert.match(MAIN_SOURCE, /shell\.showItemInFolder\(entry\.path\)/);
   // Token bulunamazsa/​dosya silinmişse çökmeden kontrollü hata döner.
   assert.match(MAIN_SOURCE, /if \(!entry \|\| !fs\.existsSync\(entry\.path\)\) return \{ ok: false, error: 'not-found' \};/);
