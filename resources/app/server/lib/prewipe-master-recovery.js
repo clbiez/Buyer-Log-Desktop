@@ -195,6 +195,15 @@ function businessValueMeaningful(value) {
   return true;
 }
 
+function explicitBlankNoteRecord(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const touched = Object.prototype.hasOwnProperty.call(value, 'Notes') || Object.prototype.hasOwnProperty.call(value, 'EkNot');
+  if (!touched) return false;
+  const notes = String(value.Notes == null ? '' : value.Notes).trim();
+  const extra = String(value.EkNot == null ? '' : value.EkNot).trim();
+  return !notes && !extra;
+}
+
 function overrideCandidateStamp(value) {
   const stamp = Date.parse(value && value._updatedAt || '');
   return {
@@ -265,6 +274,10 @@ function mergeRecoveredBusinessRecords(currentRecords, recoveredRecords, tombsto
       if (String(field).startsWith('_') || !businessValueMeaningful(value)) continue;
       // Explicit null is the modern CP-store tombstone and is respected.
       if (Object.prototype.hasOwnProperty.call(existing, field) && existing[field] === null) continue;
+      // Compatibility with deletions made before the explicit-null fix:
+      // old clients persisted {Notes:'', EkNot:''}. That still means the user
+      // intentionally cleared the note and must beat any pre-wipe backup.
+      if (field === 'notes' && Object.prototype.hasOwnProperty.call(existing, field) && explicitBlankNoteRecord(existing[field])) continue;
       if (Object.prototype.hasOwnProperty.call(existing, field) && businessValueMeaningful(existing[field])) continue;
       merged[field] = clone(value);
       recordChanged = true;
@@ -391,6 +404,7 @@ module.exports = {
   loadMasterRecordsFromLegacyDataRoot,
   loadMasterRecordsFromExtractedBackup,
   businessValueMeaningful,
+  explicitBlankNoteRecord,
   collectOverrideCandidates,
   mergeLegacyCpBusinessCandidates,
   mergeRecoveredBusinessRecords,

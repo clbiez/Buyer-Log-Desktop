@@ -1289,19 +1289,24 @@ async function hydrateBusinessCheckpointIfNeeded(){
   if((await localDb.pendingCount())>0)return {applied:0,deferred:true,reason:'pending-local-changes'};
   const snapshot=await sharedHub.readBusiness(checked.root,Number(localState.businessRevision)||0);
   if(!snapshot||snapshot.unchanged)return {applied:0,unchanged:true,head:snapshot&&snapshot.head||head};
-  const payload=snapshot.envelope&&snapshot.envelope.payload||{},records=payload.records&&typeof payload.records==='object'?payload.records:{},syncHeads=payload.syncHeads&&typeof payload.syncHeads==='object'?payload.syncHeads:{};
-  const result=await localDb.transaction(async next=>{
-    const current=sharedSyncPolicy.businessRecordsFromState(next);
-    for(const id of Object.keys(current))delete next.records[id];
-    for(const [id,record] of Object.entries(records))next.records[id]=JSON.parse(JSON.stringify(record));
+  const payload=snapshot.envelope&&snapshot.envelope.payload||{},syncHeads=payload.syncHeads&&typeof payload.syncHeads==='object'?payload.syncHeads:{};
+
+  // A checkpoint is a recovery accelerator, not permission to roll local
+  // business state backwards. syncOnce() has already applied field deltas
+  // before this point, so a freshly deleted note can legitimately be newer
+  // than the last published checkpoint. Recover only records that are absent
+  // locally or whose checkpoint clock is actually newer. Never delete local
+  // business records merely because an older snapshot does not contain them.
+  const before=await localDb.read();
+  const repair=await applyMissingCheckpointRecords('business',checked.root,checked.manifest,before,snapshot);
+  await localDb.transaction(async next=>{
     next.syncCheckpoints=next.syncCheckpoints&&typeof next.syncCheckpoints==='object'?next.syncCheckpoints:{};
     for(const [deviceId,seq] of Object.entries(syncHeads))next.syncCheckpoints[deviceId]=Math.max(Number(next.syncCheckpoints[deviceId])||0,Number(seq)||0);
-    return {removed:Object.keys(current).length,inserted:Object.keys(records).length};
+    return {syncHeads:Object.keys(syncHeads).length};
   });
-  await deltaStore.hydrate();
   await sharedHub.markBootstrap({root:checked.root,hubId:checked.manifest.hubId,masterRevision:localState.masterRevision||0,businessRevision:snapshot.head.revision,iamRevision:localState.iamRevision||0,completed:true});
-  try{liveEvents.notifyChange('collection-workspaces',null);liveEvents.notifyChange('orders',null);liveEvents.notifyChange('overrides',null);}catch(_){}
-  return {applied:result.inserted||0,removed:result.removed||0,head:snapshot.head,recoveredFrom:snapshot.recoveredFrom||null};
+  if(repair.applied){try{liveEvents.notifyChange('collection-workspaces',null);liveEvents.notifyChange('orders',null);liveEvents.notifyChange('overrides',null);}catch(_){}}
+  return {applied:repair.applied||0,removed:0,head:snapshot.head,recoveredFrom:snapshot.recoveredFrom||null};
 }
 async function applyMasterCheckpoint(root, hub, localState) {
   const currentRevision = localState && localState.hubId === hub.hubId ? Number(localState.masterRevision) || 0 : 0;

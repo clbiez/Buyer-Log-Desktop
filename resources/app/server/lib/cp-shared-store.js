@@ -66,12 +66,34 @@ function recordFromOverrides(overrides, id) {
   return out;
 }
 
+function noteTextPresent(notes, field) {
+  return Boolean(notes && typeof notes === 'object' && String(notes[field] == null ? '' : notes[field]).trim());
+}
+function notesExplicitlyCleared(notes) {
+  if (!notes || typeof notes !== 'object') return false;
+  const touched = own(notes, 'Notes') || own(notes, 'EkNot');
+  return touched && !noteTextPresent(notes, 'Notes') && !noteTextPresent(notes, 'EkNot');
+}
+function sharedNotesValue(overrides, id) {
+  const notes = fieldValue(overrides, id, 'notes');
+  // Both note text fields are blank: this is an explicit user deletion, not
+  // "missing data". Persist a field tombstone so pre-wipe/business recovery
+  // cannot treat the blank object as a gap and restore an older note.
+  return notesExplicitlyCleared(notes) ? null : (notes ?? null);
+}
+function legacyNoteTombstoneProjection() {
+  // The legacy renderer falls back from order+model+colour to the old
+  // order-code key. Deleting the line key would therefore resurrect that old
+  // fallback. Keep an explicit blank line-level projection to shadow it.
+  return { Notes:'', EkNot:'', NotesAt:'', EkNotAt:'' };
+}
+
 /* Build ONLY fields touched by an ordinary order patch. Full-record mirrors
    would be unsafe: an offline client could unknowingly overwrite an unrelated
    field that another user changed meanwhile. */
 function patchFromOrderPatch(overrides, id, patch) {
   const out = {};
-  if (patch && patch.notes && typeof patch.notes === 'object') out.notes = fieldValue(overrides, id, 'notes') ?? null;
+  if (patch && patch.notes && typeof patch.notes === 'object') out.notes = sharedNotesValue(overrides, id);
   if (patch && patch.noteColumns && typeof patch.noteColumns === 'object') out.noteColumns = fieldValue(overrides, id, 'noteColumns') ?? null;
   if (patch && Object.prototype.hasOwnProperty.call(patch, 'subManufacturer')) out.subManufacturer = fieldValue(overrides, id, 'subManufacturer') ?? null;
   if (patch && Object.prototype.hasOwnProperty.call(patch, 'licensor')) out.licensor = fieldValue(overrides, id, 'licensor') ?? null;
@@ -122,8 +144,10 @@ function overlay(overrides) {
     for (const [field, mapName] of Object.entries(FIELDS)) {
       if (!own(record, field)) continue;
       const value = record[field];
-      if (value == null) delete overrides[mapName][id];
-      else overrides[mapName][id] = clone(value);
+      if (value == null) {
+        if (field === 'notes') overrides[mapName][id] = legacyNoteTombstoneProjection();
+        else delete overrides[mapName][id];
+      } else overrides[mapName][id] = clone(value);
     }
   }
   return overrides;
@@ -136,5 +160,6 @@ function readAllSync() {
 module.exports = {
   COLLECTION, FIELDS, attachDeltaStore, attached, authoritative, legacyKeys,
   recordFromOverrides, patchFromOrderPatch, mirrorPatch, mirrorPatchDetached,
+  notesExplicitlyCleared, legacyNoteTombstoneProjection,
   seedFromOverrides, overlay, readAllSync,
 };
