@@ -138,7 +138,7 @@ test('Permissions and multi-owner Collection view remain the canonical UI flow',
   const init = block(APP, 'async function initKolWorkspaces(options)', 'const KOL_DURUM_OPTS');
   assert.match(init, /await kolLoadPermissions\(\)/);
   assert.match(init, /kolLoadWorkspaceBatch\(kolWorkspaceList\.map\(item=>item\.ownerId\)\)/);
-  const scope = block(APP, 'function renderKolScopeFilters()', 'function kolSetScopePreset');
+  const scope = block(APP, 'function renderKolScopeFilters()', 'const KOL_INIT_RETRY_DELAYS');
   assert.match(scope, /workspacePermissions/);
   assert.match(scope, /data-owner-id/);
   assert.match(scope, /data-grant-level/);
