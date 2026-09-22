@@ -448,11 +448,22 @@ async function main() {
   const remoteBusiness = br && br.envelope && br.envelope.payload && br.envelope.payload.records || {};
 
   const localOverrides = db.loadOverrides();
+  const legacyOverridesBak = readJson(path.join(SERVER, 'overrides.json.bak'), null);
+  // A previous generation may be richer than the just-written current file.
+  // This is exactly the catastrophic signature seen in production: current
+  // overrides became empty while .bak still held royalty/transit/non-DTR.
+  // Never certify DELETE_READY by comparing two equally-empty copies.
+  const expectedOverrides = JSON.parse(JSON.stringify(localOverrides || {}));
+  for (const field of ['pricingRules','transitRules','nonDtrManufacturers']) {
+    const currentList = Array.isArray(expectedOverrides[field]) ? expectedOverrides[field] : [];
+    const backupList = Array.isArray(legacyOverridesBak && legacyOverridesBak[field]) ? legacyOverridesBak[field] : [];
+    if (backupList.length > currentList.length) expectedOverrides[field] = backupList;
+  }
   const remoteOverrides = remoteMaster['store:overrides.json'] || {};
   const fields = ['pricingRules','transitRules','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoMatchConfig','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs'];
   const coverage = {};
   for (const field of fields) {
-    coverage[field] = same(localOverrides[field], remoteOverrides[field]);
+    coverage[field] = same(expectedOverrides[field], remoteOverrides[field]);
     if (!coverage[field]) throw fail('Shared Master field uyusmuyor: ' + field, 'MASTER_FIELD_MISMATCH');
   }
   const localSettings = db.loadSettings();
