@@ -63,3 +63,10 @@ test('content-visibility CP ve Orders icin tabloya ozel satir yuksekligini korur
   assert.match(CSS, /#cpTable tbody tr\{content-visibility:auto;contain-intrinsic-size:auto var\(--cp-row-h-cp,var\(--cp-row-h,46px\)\);\}/);
   assert.match(CSS, /#ordersTable tbody tr\{content-visibility:auto;contain-intrinsic-size:auto var\(--cp-row-h-orders,var\(--cp-row-h,46px\)\);\}/);
 });
+
+test('CP lojistik ozetleri Picture slider satir yuksekligini buyutemez', () => {
+  assert.match(CSS, /#cpTable tbody td\.cpLogisticStatusTd,[\s\S]*?white-space:nowrap!important;[\s\S]*?overflow:hidden!important;/);
+  assert.match(CSS, /#cpTable tbody \.cpLogisticSummaryStack,[\s\S]*?max-height:calc\(var\(--cp-row-h-cp,var\(--cp-row-h,46px\)\) - 6px\);[\s\S]*?overflow:hidden;/);
+  assert.match(CSS, /#cpTable tbody \.cpLogisticSummaryStack,[\s\S]*?flex-direction:row;[\s\S]*?flex-wrap:nowrap;/);
+  assert.match(CSS, /#cpTable tbody \.cpLogisticPrimaryDate,[\s\S]*?display:inline;[\s\S]*?margin-top:0;/);
+});
