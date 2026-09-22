@@ -63,7 +63,7 @@
       saveScope(ctx,scoped.column,values);closeValuePopover();ctx.onRender();
     };
     setTimeout(function(){
-      outsideHandler=function(event){if(!pop.contains(event.target)&&event.target!==trigger)closeValuePopover();};
+      outsideHandler=function(event){if(!pop.contains(event.target)&&!trigger.contains(event.target))closeValuePopover();};
       document.addEventListener('pointerdown',outsideHandler,true);if(search)search.focus();
     },0);
   }
