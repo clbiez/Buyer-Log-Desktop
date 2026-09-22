@@ -75,7 +75,7 @@ function ensureDataTree(paths) {
   for (const directory of [
     paths.dataRoot, paths.serverDataRoot, paths.appDataRoot, paths.localDataRoot,
     paths.authDataRoot, paths.portableAppData, paths.portableLocalAppData,
-    paths.electronProfileRoot, paths.logsRoot,
+    paths.electronProfileRoot, paths.tempRoot, paths.logsRoot,
   ]) ensureDir(directory);
 }
 

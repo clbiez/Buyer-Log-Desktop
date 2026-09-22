@@ -53,7 +53,7 @@ test('DEĞİŞEBİLİR veri uygulama çekirdeğinin DIŞINDADIR — güncelleme 
   const layout = paths.desktopPaths('C:\\BuyerLog');
   const core = path.resolve('C:\\BuyerLog\\resources\\app').toLowerCase();
   for (const key of ['dataRoot', 'localDbPath', 'configPath', 'serverDataRoot',
-    'authDataRoot', 'electronProfileRoot', 'logsRoot', 'migrationStatePath']) {
+    'authDataRoot', 'electronProfileRoot', 'tempRoot', 'logsRoot', 'migrationStatePath']) {
     assert.ok(!layout[key].toLowerCase().startsWith(core),
       key + ' uygulama çekirdeğinin içinde: ' + layout[key]);
   }
@@ -68,6 +68,7 @@ winTest('yol düzeni START-BUYER-LOG.cmd ile aynı — iki başlatıcı aynı ve
   assert.equal(layout.localDbPath, path.resolve('C:\\BuyerLog\\data\\local\\BuyerLogLocal.db'));
   assert.equal(layout.portableAppData, path.resolve('C:\\BuyerLog\\data\\portable-appdata'));
   assert.equal(layout.portableLocalAppData, path.resolve('C:\\BuyerLog\\data\\portable-localappdata'));
+  assert.equal(layout.tempRoot, path.resolve('C:\\BuyerLog\\data\\temp'));
   assert.equal(layout.configPath, path.resolve('C:\\BuyerLog\\config.json'));
 });
 
@@ -142,6 +143,10 @@ test('backend ortamı sunucunun okuduğu TÜM veri kökü değişkenlerini verir
   assert.equal(env.BUYER_LOG_LOCAL_DB, layout.localDbPath);
   assert.equal(env.BUYER_LOG_AUTH_DATA_ROOT, layout.authDataRoot);
   assert.equal(env.BUYER_LOG_CONFIG_PATH, layout.configPath);
+  assert.equal(env.BUYER_LOG_TEMP_ROOT, layout.tempRoot);
+  assert.equal(env.TEMP, layout.tempRoot);
+  assert.equal(env.TMP, layout.tempRoot);
+  assert.equal(env.BL_DATA_DIR, layout.serverDataRoot);
 });
 
 /* -------------------------------------------------------------- adres */
@@ -192,7 +197,7 @@ test('veri ağacı Electron profilini de içerir — Chromium app.asar/resources
   const layout = paths.desktopPaths(root);
   backend.ensureDataTree(layout);
   for (const key of ['serverDataRoot', 'appDataRoot', 'localDataRoot', 'authDataRoot',
-    'portableAppData', 'portableLocalAppData', 'electronProfileRoot', 'logsRoot']) {
+    'portableAppData', 'portableLocalAppData', 'electronProfileRoot', 'tempRoot', 'logsRoot']) {
     assert.ok(fs.existsSync(layout[key]), key + ' oluşturulmadı');
   }
   fs.rmSync(root, { recursive: true, force: true });

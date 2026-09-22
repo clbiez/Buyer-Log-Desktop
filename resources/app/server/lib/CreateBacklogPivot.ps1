@@ -12,7 +12,12 @@ param(
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $ErrorActionPreference = 'Stop'
-$PidFile = Join-Path $PSScriptRoot '..\data\excel-pivot.pid'
+$PidFile = if ($env:BUYER_LOG_EXCEL_PIVOT_PID_FILE) {
+  $env:BUYER_LOG_EXCEL_PIVOT_PID_FILE
+} else {
+  # Legacy/standalone çalıştırma için geriye dönük fallback.
+  Join-Path $PSScriptRoot '..\data\excel-pivot.pid'
+}
 $PidDir = Split-Path $PidFile -Parent
 if (-not (Test-Path $PidDir)) { New-Item -ItemType Directory -Path $PidDir -Force | Out-Null }
 

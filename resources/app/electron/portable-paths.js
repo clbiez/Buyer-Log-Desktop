@@ -21,12 +21,14 @@
  *    paket iki ayrı veri evreni üretir. Bu yüzden düzen kopyalanmadı, TEK
  *    tanım hâline getirildi.
  *
- * 2) APPDATA/LOCALAPPDATA YALNIZ ÇOCUK SÜRECE YÖNLENDİRİLİR. Electron ana
+ * 2) APPDATA/LOCALAPPDATA/TEMP YALNIZ ÇOCUK SÜRECE YÖNLENDİRİLİR. Electron ana
  *    süreci bu değişkenleri GERÇEK Windows değerleriyle görmeye devam eder.
  *    Sebep: Chromium kendi profil/cache yollarını süreç başlangıcında bu
  *    değişkenlerden türetir; ana süreçte değiştirmek Chromium'un yarı
  *    başlatılmış yol servisiyle yarışa girer. Electron'un kendi profili
  *    app.setPath('userData', ...) ile AÇIKÇA data\electron-profile'a alınır.
+ *    Kullanıcı çıktıları için Downloads yolu ayrıca Electron'un gerçek
+ *    app.getPath('downloads') değeri olarak korunur.
  *
  * 3) BL_HOST_* KORUNUR. Troy/PLM entegrasyonu ve "Allow Remote Debugging"
  *    kullanıcının GERÇEK Edge/Chrome profilini kullanmak zorunda
@@ -117,6 +119,10 @@ function desktopPaths(portableRoot) {
     // Electron'un KENDİ Chromium profili. Kurumsal Edge/Chrome profiliyle
     // hiçbir ilgisi yoktur ve app.asar/resources içine ASLA yazılmaz.
     electronProfileRoot: path.join(dataRoot, 'electron-profile'),
+    // Backend'in uygulama tarafından üretilen kısa ömürlü çalışma alanı.
+    // Masaüstü child süreci TEMP/TMP'yi buraya yönlendirir; kullanıcı çıktıları
+    // (Downloads) bundan etkilenmez.
+    tempRoot: path.join(dataRoot, 'temp'),
     // Masaüstü barındırıcısının logları. Backend'in kendi logları
     // portable-localappdata\BuyerLog\logs altında kalmaya devam eder.
     logsRoot: path.join(dataRoot, 'logs'),
@@ -143,6 +149,12 @@ function backendEnv(paths, hostEnv = process.env, extra = {}) {
 
   env.APPDATA = paths.portableAppData;
   env.LOCALAPPDATA = paths.portableLocalAppData;
+  // Backend'in tüm uygulama kontrollü geçici dosyaları da portable klasörde
+  // kalsın. Electron ana sürecinin Windows TEMP'i değiştirilmez; yalnızca
+  // BuyerLog'un yönettiği child/server süreci etkilenir.
+  env.TEMP = paths.tempRoot;
+  env.TMP = paths.tempRoot;
+  env.TMPDIR = paths.tempRoot;
   env.BUYER_LOG_SERVER_DATA_ROOT = paths.serverDataRoot;
   env.BUYER_LOG_DATA_ROOT = paths.appDataRoot;
   env.BUYER_LOG_LOCAL_DATA_ROOT = paths.localDataRoot;
@@ -150,6 +162,12 @@ function backendEnv(paths, hostEnv = process.env, extra = {}) {
   env.BUYER_LOG_AUTH_DATA_ROOT = paths.authDataRoot;
   env.BUYER_LOG_CONFIG_PATH = paths.configPath;
   env.BUYER_LOG_PORTABLE_DATA_ROOT = paths.dataRoot;
+  env.BUYER_LOG_TEMP_ROOT = paths.tempRoot;
+  env.BUYER_LOG_EXCEL_PID_FILE = path.join(paths.localDataRoot, 'runtime', 'excel.pid');
+  env.BUYER_LOG_EXCEL_PIVOT_PID_FILE = path.join(paths.localDataRoot, 'runtime', 'excel-pivot.pid');
+  // Eski web-script-store fallback'inin resources/app/server/data'ya yazmasını
+  // önle; packaged backend'in tek server veri kökü olsun.
+  env.BL_DATA_DIR = paths.serverDataRoot;
 
   // Sunucu, tarayıcı sekmesi kapanınca kapanmaz; masaüstü penceresinin
   // yaşam döngüsünü Electron yönetir.

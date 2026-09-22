@@ -22,7 +22,12 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$PidFile = Join-Path $PSScriptRoot "..\data\excel.pid"
+$PidFile = if ($env:BUYER_LOG_EXCEL_PID_FILE) {
+  $env:BUYER_LOG_EXCEL_PID_FILE
+} else {
+  # Legacy/standalone çalıştırma için geriye dönük fallback.
+  Join-Path $PSScriptRoot "..\data\excel.pid"
+}
 $PidFileDir = Split-Path $PidFile -Parent
 if (-not (Test-Path $PidFileDir)) { New-Item -ItemType Directory -Path $PidFileDir -Force | Out-Null }
 

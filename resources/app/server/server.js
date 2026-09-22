@@ -20,7 +20,7 @@ try { require('../public/excel-date-utils').installSheetJsHooks(require('xlsx'))
 catch (err) { console.warn('Excel tarih kancaları kurulamadı:', err && err.message); }
 const { runExcelTask, getExcelWorkerStats } = require('./excel-worker-client');
 const {
-  CONFIG_PATH, MODEL_FILES_ROOT, LOGS_ROOT, EMAIL_DRAFT_ROOT, LOCAL_DATA_ROOT, LOCAL_DB_FILE, SERVER_DATA_ROOT, APP_DATA_ROOT,
+  CONFIG_PATH, MODEL_FILES_ROOT, LOGS_ROOT, TEMP_ROOT, EMAIL_DRAFT_ROOT, LOCAL_DATA_ROOT, LOCAL_DB_FILE, SERVER_DATA_ROOT, APP_DATA_ROOT,
   getUserDataInventory, exportBackupToFile,
   saveCollectionImage, replaceCollectionImage, collectionImageOptimizationStatus, completeCollectionImageOptimization,
   getModelImageSettings, saveModelImageSettings,
@@ -813,7 +813,7 @@ async function loadPrewipeRecoveryRecords(candidate) {
   if (expectedSha && String(info.archiveSha256 || '').toLowerCase() !== expectedSha) {
     throw Object.assign(new Error('Pre-wipe Full System Backup SHA256 doğrulaması başarısız.'), { code:'PREWIPE_BACKUP_SHA_MISMATCH', statusCode:503 });
   }
-  const tempRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'buyerlog-prewipe-recovery-'));
+  const tempRoot = await fs.promises.mkdtemp(path.join(TEMP_ROOT, 'buyerlog-prewipe-recovery-'));
   try {
     await extractBackupArchive(candidate.backupFile, tempRoot, { requireType:'full', preflight:info });
     const dbCandidates = [
@@ -1070,7 +1070,7 @@ async function localLegacyDataBackupCandidates() {
 }
 async function readLegacyDataBackupState(candidate) {
   if (!candidate || !candidate.localDbFile || !fs.existsSync(candidate.localDbFile)) return {};
-  const tempRoot = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'buyerlog-legacy-data-recovery-'));
+  const tempRoot = await fs.promises.mkdtemp(path.join(TEMP_ROOT, 'buyerlog-legacy-data-recovery-'));
   try {
     const targetDb = path.join(tempRoot, 'BuyerLogLocal.db');
     await fs.promises.copyFile(candidate.localDbFile, targetDb);
@@ -3737,6 +3737,8 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
         BUYER_LOG_DATA_ROOT: process.env.BUYER_LOG_DATA_ROOT,
         BUYER_LOG_LOCAL_DATA_ROOT: process.env.BUYER_LOG_LOCAL_DATA_ROOT,
         BUYER_LOG_CONFIG_PATH: process.env.BUYER_LOG_CONFIG_PATH,
+        BUYER_LOG_TEMP_ROOT: process.env.BUYER_LOG_TEMP_ROOT,
+        BL_DATA_DIR: process.env.BL_DATA_DIR,
       },
     });
     const replication = !(await afterSharedCollectionSave(ownerId))
@@ -6325,6 +6327,8 @@ app.patch('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksi
         BUYER_LOG_DATA_ROOT: process.env.BUYER_LOG_DATA_ROOT,
         BUYER_LOG_LOCAL_DATA_ROOT: process.env.BUYER_LOG_LOCAL_DATA_ROOT,
         BUYER_LOG_CONFIG_PATH: process.env.BUYER_LOG_CONFIG_PATH,
+        BUYER_LOG_TEMP_ROOT: process.env.BUYER_LOG_TEMP_ROOT,
+        BL_DATA_DIR: process.env.BL_DATA_DIR,
       },
     });
     if (result.changed) {
@@ -6695,7 +6699,7 @@ function apiError(res, err, fallbackMessage = 'İşlem tamamlanamadı.') {
   return res.status(status).json({ error: fallbackMessage, code: err && err.code || (status<500?'REQUEST_ERROR':'INTERNAL_ERROR') });
 }
 async function receiveRequestToTempFile(req, maxBytes) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-upload-'));
+  const root = fs.mkdtempSync(path.join(TEMP_ROOT, 'buyerlog-upload-'));
   const file = path.join(root, 'upload.blgbackup');
   const output = fs.createWriteStream(file, { flags: 'wx' });
   let bytes = 0;
@@ -6729,6 +6733,8 @@ app.post('/api/backup/restore', userAccess.requireArea('source'), userAccess.req
       BUYER_LOG_DATA_ROOT:process.env.BUYER_LOG_DATA_ROOT,
       BUYER_LOG_LOCAL_DATA_ROOT:process.env.BUYER_LOG_LOCAL_DATA_ROOT,
       BUYER_LOG_CONFIG_PATH:process.env.BUYER_LOG_CONFIG_PATH,
+      BUYER_LOG_TEMP_ROOT:process.env.BUYER_LOG_TEMP_ROOT,
+      BL_DATA_DIR:process.env.BL_DATA_DIR,
     } });
     const restored = loadRuntimeConfig(CONFIG_PATH, { defaults: DEFAULT_CONFIG });
     if (restored.warning) logRuntimeFailure('restoredConfigRead', restored.error || restored.warning);
@@ -13337,7 +13343,7 @@ function cleanupOrphanExcel() {
     // Artık Excel süreçleri yalnız Windows'taki RefreshExcel.ps1 tarafından üretilir;
     // diğer platformlarda temizlenecek bir şey yoktur.
     if (!platform.IS_WINDOWS) return;
-    const pidFile = path.join(__dirname, 'data', 'excel.pid');
+    const pidFile = process.env.BUYER_LOG_EXCEL_PID_FILE || path.join(__dirname, 'data', 'excel.pid');
     if (!fs.existsSync(pidFile)) return;
     const pid = parseInt(fs.readFileSync(pidFile, 'utf8').trim(), 10);
     if (!pid) return;
