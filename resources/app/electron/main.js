@@ -40,7 +40,7 @@
  *    kanalı açılır; keyfi çalıştırma yolu yoktur.
  */
 
-const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, screen, session } = require('electron');
+const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, screen, session, nativeTheme } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -1065,6 +1065,7 @@ function createMainWindow(origin) {
     path,
     crypto,
     origin,
+    nativeTheme,
     shellFile: path.join(__dirname, 'workspace.html'),
     shellPreload: path.join(__dirname, 'workspace-preload.js'),
     contentPreload: path.join(__dirname, 'preload.js'),
@@ -1380,10 +1381,21 @@ function registerIpc() {
     if (!state || state.window.id !== Number(payload.sourceWindowId)) return false;
     return workspace.detachTab(payload.tabId, state.window.id, payload.point || {});
   });
-  ipcMain.handle('buyerlog:workspace-close-tab', (event, tabId) => {
+  ipcMain.handle('buyerlog:workspace-finish-tab-drag', (event, payload = {}) => {
     const state = workspace && workspace.windowForShellContents(event.sender);
+    if (!state || state.window.id !== Number(payload.sourceWindowId)) return false;
+    return workspace.finishTabDrag(payload.tabId, state.window.id, payload.point || {});
+  });
+  ipcMain.handle('buyerlog:workspace-reattach-tab', (event, payload = {}) => {
+    const state = workspace && workspace.windowForShellContents(event.sender);
+    if (!state || state.window.id !== Number(payload.sourceWindowId)) return false;
+    return workspace.reattachTab(payload.tabId, state.window.id);
+  });
+  ipcMain.handle('buyerlog:workspace-close-tab', async (event, tabId) => {
+    const activeWorkspace = workspace;
+    const state = activeWorkspace && activeWorkspace.windowForShellContents(event.sender);
     const requested = state && state.tabs.includes(String(tabId || ''));
-    return Boolean(requested && workspace.closeTab(tabId));
+    return Boolean(requested && await activeWorkspace.closeTab(tabId));
   });
 
   ipcMain.handle('buyerlog:diagnostics', () => diagnostics());
