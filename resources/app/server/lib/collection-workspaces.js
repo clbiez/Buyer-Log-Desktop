@@ -1,5 +1,7 @@
 'use strict';
 
+const collectionStatusCatalog = require('../../public/collection-status-catalog.js');
+
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
@@ -444,6 +446,9 @@ function normalizeManufacturers(value) {
 function normalizeCustomColumns(value) {
   return (Array.isArray(value) ? value : []).slice(0, MAX_CUSTOM_COLUMNS).map(item => cleanObject(item));
 }
+function normalizeStatusCatalog(value, rows) {
+  return collectionStatusCatalog.normalize(value, { rowStatuses: normalizeRows(rows).map(row => row && row.durum) });
+}
 function defaultWorkspace(ownerId) {
   return {
     schemaVersion: 1,
@@ -452,6 +457,7 @@ function defaultWorkspace(ownerId) {
     rows: [],
     manufacturers: [],
     customColumns: [],
+    statusCatalog: collectionStatusCatalog.seed(),
     nextId: 1,
     _legacyRecovery: {},
     _revision: 0,
@@ -460,14 +466,16 @@ function defaultWorkspace(ownerId) {
 }
 function normalizeWorkspace(ownerId, raw) {
   const base = defaultWorkspace(ownerId);
+  const rows = normalizeRows(raw && raw.rows);
   return ({
       ...base,
       ...cleanObject(raw),
       ownerId: String(ownerId || ''),
       initialized: raw && raw.initialized !== false,
-      rows: normalizeRows(raw && raw.rows),
+      rows,
       manufacturers: normalizeManufacturers(raw && raw.manufacturers),
       customColumns: normalizeCustomColumns(raw && raw.customColumns),
+      statusCatalog: normalizeStatusCatalog(raw && raw.statusCatalog, rows),
       nextId: Math.max(1, Number(raw && raw.nextId) || 1),
       _revision: Math.max(0, Number(raw && raw._revision) || 0),
     });
@@ -496,6 +504,7 @@ function saveWorkspace(ownerId, payload, expectedRevision = null) {
   }
   fs.mkdirSync(ROOT, { recursive: true });
   const rows = normalizeRows(payload && payload.rows);
+  const sourceCatalog = payload && Object.prototype.hasOwnProperty.call(payload, 'statusCatalog') ? payload.statusCatalog : current.statusCatalog;
   const saved = {
     schemaVersion: 1,
     ownerId: String(ownerId || ''),
@@ -503,6 +512,7 @@ function saveWorkspace(ownerId, payload, expectedRevision = null) {
     rows,
     manufacturers: normalizeManufacturers(payload && payload.manufacturers),
     customColumns: normalizeCustomColumns(payload && payload.customColumns),
+    statusCatalog: normalizeStatusCatalog(sourceCatalog, rows),
     nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
     _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
     _revision: current._revision + 1,
@@ -545,7 +555,8 @@ function rowKeyOf(row, index) {
 // ifade edilemez; bu durumda karşı ekran sessizce hafif yeniden yükleme yapar.
 function structuralChange(before, after) {
   return JSON.stringify(before.customColumns || []) !== JSON.stringify(after.customColumns || [])
-    || JSON.stringify(before.manufacturers || []) !== JSON.stringify(after.manufacturers || []);
+    || JSON.stringify(before.manufacturers || []) !== JSON.stringify(after.manufacturers || [])
+    || JSON.stringify(before.statusCatalog || []) !== JSON.stringify(after.statusCatalog || []);
 }
 /* Satır karşılaştırması SIĞ yapılır, JSON.stringify ile DEĞİL.
 
@@ -614,6 +625,7 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
     }
     await fsp.mkdir(ROOT, { recursive: true });
     const rows = normalizeRows(payload && payload.rows);
+    const sourceCatalog = payload && Object.prototype.hasOwnProperty.call(payload, 'statusCatalog') ? payload.statusCatalog : current.statusCatalog;
     const saved = {
       schemaVersion: 1,
       ownerId: String(ownerId || ''),
@@ -621,13 +633,12 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
       rows,
       manufacturers: normalizeManufacturers(payload && payload.manufacturers),
       customColumns: normalizeCustomColumns(payload && payload.customColumns),
+      statusCatalog: normalizeStatusCatalog(sourceCatalog, rows),
       nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
       _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
       _revision: current._revision + 1,
       _updatedAt: new Date().toISOString(),
     };
-    // Fark, yazmadan ÖNCE hesaplanır: yazma başarısız olursa yayınlanacak bir
-    // yama da kalmaz. Yayın kararı çağırana bırakılır.
     const rowPatches = diffWorkspaceRows(current, saved);
     await atomicWriteJsonAsync(workspaceFile(ownerId), saved);
     return { saved, rowPatches };
@@ -674,6 +685,7 @@ function structureSignature(workspace) {
   return JSON.stringify({
     columns: workspace.customColumns || [],
     manufacturers: workspace.manufacturers || [],
+    statusCatalog: workspace.statusCatalog || [],
   });
 }
 
@@ -775,6 +787,7 @@ function applyRowChanges(current, change) {
     rows: ordered,
     manufacturers: current.manufacturers || [],
     customColumns: current.customColumns || [],
+    statusCatalog: normalizeStatusCatalog(current.statusCatalog, survivors),
     nextId: current.nextId || 1,
     _legacyRecovery: cleanObject(current._legacyRecovery),
     _revision: current._revision,
@@ -792,6 +805,7 @@ function applyRowChanges(current, change) {
     }
     if (Array.isArray(structure.manufacturers)) saved.manufacturers = normalizeManufacturers(structure.manufacturers);
     if (Array.isArray(structure.customColumns)) saved.customColumns = normalizeCustomColumns(structure.customColumns);
+    if (Array.isArray(structure.statusCatalog)) saved.statusCatalog = normalizeStatusCatalog(structure.statusCatalog, saved.rows);
     if (Array.isArray(structure.order)) {
       // Sıra yalnız VERİLEN id'lerle yeniden dizilir; listede olmayan satırlar
       // DÜŞÜRÜLMEZ, sonuna eklenir. Sessiz satır kaybı olmaz (§142).
@@ -914,7 +928,7 @@ module.exports = {
   listOwnerIds, countRowImages, clearAllRowImages,
   loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows,
   applyRowChanges, applyRowChangesAsync, rowRev, rowId,
-  defaultWorkspace, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
+  defaultWorkspace, normalizeStatusCatalog, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
   SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mergePersonalBackupIntoShared, recoverSharedWorkspaceIntoOwner, mirrorWorkspace,
   recoveryRowIdentity, recoveryRowsCompatible, recoveryRowFingerprint,
 };
