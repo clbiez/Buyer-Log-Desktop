@@ -1408,7 +1408,22 @@ async function bootstrapSharedHub({ force = false } = {}) {
       if (firstHubBootstrap) {
         const pendingBeforeBootstrap = await localDb.pendingCount();
         if (pendingBeforeBootstrap > 0) {
-          throw Object.assign(new Error('İlk Shared Hub eşitlemesinden önce bekleyen yerel değişiklikler var.'), { code:'SHARED_HUB_PENDING_CHANGES', statusCode:409 });
+          // A verified same-Hub pre-wipe recovery is a special clean-install
+          // case: local pending events must be PRESERVED and synced, not used to
+          // lock the user out forever before the recovery code can even run.
+          // Without recovery evidence the original fail-closed guard remains.
+          const recoveryCandidate = await findVerifiedPrewipeRecovery(checked.root, checked.manifest);
+          if (!recoveryCandidate) {
+            throw Object.assign(new Error('İlk Shared Hub eşitlemesinden önce bekleyen yerel değişiklikler var.'), { code:'SHARED_HUB_PENDING_CHANGES', statusCode:409 });
+          }
+          markStartup('SHARED_HUB_PENDING_CHANGES_RECOVERY_CONTINUE', {
+            pending:pendingBeforeBootstrap,
+            source:path.basename(recoveryCandidate.recoveryRoot),
+          });
+          setBootstrapStep('master', {
+            status:'active',
+            detail:`${pendingBeforeBootstrap} yerel değişiklik korunuyor · doğrulanmış recovery ile devam`,
+          });
         }
         master = await applyMasterCheckpoint(checked.root, checked.manifest, localState);
       }
