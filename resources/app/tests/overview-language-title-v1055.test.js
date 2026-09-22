@@ -7,6 +7,7 @@ const path = require('node:path');
 
 const INDEX = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 const APP = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
+const DASH = fs.readFileSync(path.join(__dirname, '..', 'public', 'overview-collection-dashboard.js'), 'utf8');
 const buttonById = id => INDEX.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`))?.[0] || '';
 
 test('v7.0.94 Collection Summary filtre başlığı iki dilde çift tıklama ipucu taşır; eski Edit yoktur', () => {
@@ -14,7 +15,7 @@ test('v7.0.94 Collection Summary filtre başlığı iki dilde çift tıklama ipu
   assert.match(label, /data-i18n-title-tr="Filtre sütununu değiştirmek için çift tıkla"/);
   assert.match(label, /data-i18n-title-en="Double-click to change the filter column"/);
   assert.doesNotMatch(INDEX,/ovCollectionSummarySettingsBtn/);
-  assert.match(APP,/scopeLabel\.ondblclick/);
+  assert.match(DASH,/scopeLabel\.ondblclick/);
 });
 
 test('v10.55 Overview daraltma düğmeleri ilk çizimde de seçili dile uyar', () => {
