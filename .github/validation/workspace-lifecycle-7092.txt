@@ -1,0 +1,1 @@
+Temporary CI validation marker for Buyer Log workspace lifecycle 7.0.92.
