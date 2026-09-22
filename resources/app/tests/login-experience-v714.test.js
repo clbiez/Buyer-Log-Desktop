@@ -121,7 +121,8 @@ test('saved Shared Sync folder is reused on every login without reopening the pi
   const route = SERVER.slice(routeStart, routeEnd);
   assert.match(route, /await syncSettings\.read\(\)/);
   assert.match(route, /savedSettings\.sharedSyncRoot/);
-  assert.match(route, /setBootstrapProgress\(\{ configured:true \}\)/);
+  assert.match(route, /const snapshot = bootstrapStatusSnapshot\(\)/);
+  assert.match(route, /configured:Boolean\(savedRoot\) \|\| snapshot\.configured === true/);
   assert.match(route, /root:savedRoot \|\| null/);
 
   const loadStart = LOGIN.indexOf('async function loadHubStatus');
