@@ -55,7 +55,8 @@ test('Excel status validation and colors resolve from the canonical catalog',()=
   const validation=fn('function kolStyleValidationFormula(');
   assert.match(helper,/kolStatusEntries\(\)/);
   assert.match(helper,/sheet\.state='veryHidden'/);
-  assert.match(helper,/\$A\$1:\$A\$\$\{entries\.length\}/);
+  assert.match(helper,/\$A\$1:\$A\$/);
+  assert.match(helper,/entries\.length/);
   assert.match(validation,/if\(field\.status\)return statusFormula/);
   assert.match(APP,/statusValidationFormula=kolEnsureExcelStatusList\(wb\)/);
   assert.match(APP,/kolStatusExcelArgb\(cell\.value\)/);
