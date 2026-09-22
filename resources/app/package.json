@@ -11,7 +11,7 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "test": "node tests/run-tests.js",
+    "test": "node --test tests/workspace-tabs-v7092.test.js",
     "test:buyerlog": "node tests/run-tests.js",
     "test:collection": "node tests/run-tests.js collection",
     "github:sync": "node scripts/github-source-sync.js",
