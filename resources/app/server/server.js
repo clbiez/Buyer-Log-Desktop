@@ -806,6 +806,20 @@ function masterCheckpointInventory(snapshot) {
   const payload = snapshot && snapshot.envelope && snapshot.envelope.payload;
   return payload && payload.inventory && typeof payload.inventory === 'object' ? payload.inventory : null;
 }
+function masterCheckpointRecovery(snapshot) {
+  const payload = snapshot && snapshot.envelope && snapshot.envelope.payload;
+  return payload && payload.recovery && typeof payload.recovery === 'object' ? payload.recovery : null;
+}
+function prewipeRecoveryAlreadyDeepScanned(snapshot, candidate) {
+  const recovery = masterCheckpointRecovery(snapshot);
+  const expectedSha = String(candidate && candidate.report && candidate.report.fullSystemBackup && candidate.report.fullSystemBackup.sha256 || '').toLowerCase();
+  return Boolean(
+    recovery &&
+    Number(recovery.schemaVersion || 0) >= 2 &&
+    expectedSha &&
+    String(recovery.backupSha256 || '').toLowerCase() === expectedSha
+  );
+}
 function masterCoverageMissing(expected, actual) {
   if (!expected || typeof expected !== 'object') return [];
   const current = actual && typeof actual === 'object' ? actual : {};
@@ -866,10 +880,14 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   if (!candidate) return { recovered:false, reason:'verified-prewipe-not-found', currentMasterCount, currentBusinessCount };
   const expectedMaster = Math.max(0, Number(candidate.expectedMaster) || 0);
   const publishedInventory = masterCheckpointInventory(masterRemote);
-  if (publishedInventory && currentMasterCount >= expectedMaster && Number(publishedInventory.records || 0) >= expectedMaster) {
-    return { recovered:false, reason:'checkpoint-inventory-complete', currentMasterCount, currentBusinessCount, masterCoverage:publishedInventory };
+  if (prewipeRecoveryAlreadyDeepScanned(masterRemote, candidate)) {
+    return { recovered:false, reason:'verified-prewipe-deep-scan-complete', currentMasterCount, currentBusinessCount, masterCoverage:publishedInventory };
   }
 
+  // Record count alone is NOT enough. The real incident had three Master
+  // records but overrides had already been emptied and Endeksmatik was absent.
+  // The verified Full System Backup must be deeply inspected once against the
+  // current Hub before we can declare recovery complete.
   const recovered = await loadPrewipeRecoveryRecords(candidate);
   const masterRecoverIds = prewipeMasterRecovery.masterRecoveryIds(recovered.masterRecords, currentMaster);
   // Collection kişisel restore ile ayrıca yönetilir. Pre-wipe Master onarımı
@@ -883,7 +901,8 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   // daha zengin bir Master kaydı varsa bu normal bir "boş kurulum" değildir;
   // otomatik kurtarma gerekir.
   const masterShort = expectedMaster > 0 && currentMasterCount < expectedMaster;
-  if (!masterShort && !masterRecoverIds.length && !businessRecoverIds.length) {
+  const recoveryScanNeedsPublish = !prewipeRecoveryAlreadyDeepScanned(masterRemote, candidate);
+  if (!masterShort && !masterRecoverIds.length && !businessRecoverIds.length && !recoveryScanNeedsPublish) {
     return {
       recovered:false,
       reason:'checkpoint-complete',
@@ -930,8 +949,10 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
     records:masterRecords,
     inventory:finalCoverage,
     recovery:{
+      schemaVersion:2,
       source:path.basename(candidate.recoveryRoot),
       verifiedAt:candidate.report && candidate.report.verifiedAt || null,
+      backupSha256:String(candidate.report && candidate.report.fullSystemBackup && candidate.report.fullSystemBackup.sha256 || '').toLowerCase(),
       coverage:finalCoverage,
     },
   }, {

@@ -376,9 +376,30 @@ function loadOverrides() {
   cpSharedStore.overlay(merged);
   return merged;
 }
+function protectCriticalOverrideSections(current, incoming) {
+  const base = current && typeof current === 'object' ? current : defaultOverrides();
+  const source = incoming && typeof incoming === 'object' ? incoming : {};
+  const next = { ...source, _revisions:{ ...(source._revisions || {}) } };
+  // Generic/legacy writers sometimes save a partial overrides object. A real
+  // UI edit increments the section revision; a structural data-loss write
+  // does not. Therefore only preserve a non-empty section when it becomes
+  // empty WITHOUT its own revision advancing.
+  for (const field of ['pricingRules','transitRules','nonDtrManufacturers']) {
+    const before = Array.isArray(base[field]) ? base[field] : [];
+    const after = Array.isArray(next[field]) ? next[field] : [];
+    const beforeRev = Number(base._revisions && base._revisions[field]) || 0;
+    const afterRev = Number(next._revisions && next._revisions[field]) || 0;
+    if (before.length > 0 && after.length === 0 && afterRev <= beforeRev) {
+      next[field] = JSON.parse(JSON.stringify(before));
+      next._revisions[field] = beforeRev;
+    }
+  }
+  return next;
+}
 function saveOverrides(overrides, expectedRevision = null) {
   ensureDataDir();
-  return saveRevisioned(OVERRIDES_FILE, overrides, defaultOverrides, expectedRevision, 'Sipariş geçersiz kılma verileri');
+  const protectedOverrides = protectCriticalOverrideSections(loadOverrides(), overrides);
+  return saveRevisioned(OVERRIDES_FILE, protectedOverrides, defaultOverrides, expectedRevision, 'Sipariş geçersiz kılma verileri');
 }
 function replacePricingRules(rules, expectedRevision = null) {
   const ov = loadOverrides();

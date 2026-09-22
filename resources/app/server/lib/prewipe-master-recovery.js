@@ -73,11 +73,14 @@ function shouldPreferRecovery(id, recovered, current) {
     if (arraySize(recovered.modelConnections) > 0 && arraySize(current.modelConnections) === 0) return true;
     if (objectSize(recovered) > 0 && objectSize(current) === 0) return true;
   } else if (/^endeksmatik:/.test(key)) {
-    const recoveredStamp = endeksmatikStamp(recovered), currentStamp = endeksmatikStamp(current);
-    if (recoveredStamp !== currentStamp) return recoveredStamp > currentStamp;
     const recoveredRows = arraySize(recovered.snapshot && recovered.snapshot.records);
     const currentRows = arraySize(current.snapshot && current.snapshot.records);
+    // A later-created empty/default snapshot must never beat a real persisted
+    // Endeksmatik dataset merely because its timestamp is newer.
     if (recoveredRows > 0 && currentRows === 0) return true;
+    if (recoveredRows === 0 && currentRows > 0) return false;
+    const recoveredStamp = endeksmatikStamp(recovered), currentStamp = endeksmatikStamp(current);
+    if (recoveredStamp !== currentStamp) return recoveredStamp > currentStamp;
   }
 
   const recoveredRevision = documentRevision(recovered);
@@ -104,14 +107,23 @@ function makeStoreRecord(filename, value) {
 function mergeMasterRecordsFromServerDataRoot(records, serverRoot) {
   if (!serverRoot || !fs.existsSync(serverRoot)) return records;
   for (const filename of ['settings.json', 'overrides.json', 'fx-rates.json', 'email-groups.json']) {
-    const value = readJson(path.join(serverRoot, filename));
-    const candidate = makeStoreRecord(filename, value);
-    if (!candidate) continue;
-    const id = 'store:' + filename;
-    if (shouldPreferRecovery(id, candidate, records[id])) records[id] = candidate;
+    // Current file first, then its validated previous generation. Recovery is
+    // semantic: a .bak with real data is allowed to beat a one-revision-newer
+    // empty/default file, while a genuinely richer current file remains newer.
+    for (const candidateFile of [path.join(serverRoot, filename), path.join(serverRoot, filename + '.bak')]) {
+      const value = readJson(candidateFile);
+      const candidate = makeStoreRecord(filename, value);
+      if (!candidate) continue;
+      const id = 'store:' + filename;
+      if (shouldPreferRecovery(id, candidate, records[id])) records[id] = candidate;
+    }
   }
-  const endeksmatik = readGzipJson(path.join(serverRoot, 'endeksmatik-snapshot.json.gz'));
-  if (endeksmatik && Array.isArray(endeksmatik.records)) {
+  for (const candidateFile of [
+    path.join(serverRoot, 'endeksmatik-snapshot.json.gz'),
+    path.join(serverRoot, 'endeksmatik-snapshot.json.gz.bak'),
+  ]) {
+    const endeksmatik = readGzipJson(candidateFile);
+    if (!endeksmatik || !Array.isArray(endeksmatik.records)) continue;
     const candidate = policy.scrubSecrets(toDocumentRecord({ snapshot:endeksmatik }));
     const id = 'endeksmatik:snapshot';
     if (shouldPreferRecovery(id, candidate, records[id])) records[id] = candidate;
