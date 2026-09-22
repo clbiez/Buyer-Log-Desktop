@@ -133,8 +133,9 @@ function createWorkspaceManager(options) {
   }
 
   function reattachTarget(source) {
+    if (!source || source.window.id === primaryWindowId) return null;
     const primary = stateForWindow(primaryWindowId);
-    if (primary && primary !== source && !primary.window.isDestroyed()) return primary;
+    if (primary && !primary.window.isDestroyed()) return primary;
     return [...windows.values()].find(candidate => candidate !== source && !candidate.window.isDestroyed()) || null;
   }
 
