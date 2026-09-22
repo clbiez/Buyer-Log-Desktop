@@ -31,7 +31,7 @@ test('Collection Summary confirmation filter uses existing confirmation callback
   assert.deepEqual(result.rows[0],{status:'Fiyatlamada',modelCount:1,optionCount:1,confirmed:1,notConfirmed:0});
 });
 
-test('Season scope uses existing arbitrary-column aggregation path',()=>{
+test('generic Collection scope uses existing arbitrary-column aggregation path',()=>{
   const result=summary.build(rows,{columnFilters:{season:['7S']},isConfirmed:row=>Boolean(row.confirmedManufacturer)});
   assert.deepEqual(result.kpi,{total:2,optionCount:3,confirmed:1,notConfirmed:1});
 });
@@ -49,11 +49,15 @@ test('Overview Collection widget keeps identity but main surface is visual dashb
   assert.match(INDEX,/id="ovCollectionSummaryStatusDistribution"/);
   assert.match(INDEX,/id="ovCollectionSummaryDistributionBar"/);
   assert.match(INDEX,/id="ovCollectionSummaryScope"/);
+  assert.match(INDEX,/id="ovCollectionSummaryScopeLabel"/);
+  assert.doesNotMatch(INDEX,/id="ovCollectionSummarySettingsBtn"/);
   assert.doesNotMatch(INDEX,/id="ovCollectionSummaryTable"/);
   assert.match(DASH,/ovCollectionKpiCard/);
   assert.match(DASH,/ovCollectionStatusCard/);
-  assert.match(DASH,/scopeSeason/);
-  assert.match(DASH,/openSettings/);
+  assert.match(DASH,/scopeColumn/);
+  assert.match(DASH,/scopeSelections/);
+  assert.match(DASH,/inStoreMonth/);
+  assert.match(DASH,/openScopeDrawer/);
   assert.match(APP,/overviewCollectionSummaryDashboardContext/);
   assert.match(STORAGE,/buyerlog\.overview\.collectionSummary\./);
 });
@@ -69,4 +73,13 @@ test('Status distribution uses option counts so segments form a real 100% distri
   assert.match(DASH,/totalOptions=Number\(result\.kpi\.optionCount\)/);
   assert.match(DASH,/pct\(row\.optionCount,totalOptions\)/);
   assert.doesNotMatch(DASH,/pct\(row\.modelCount,total\)/);
+});
+
+test('Overview Collection scope supports configurable column and multi-value drill',()=>{
+  assert.match(DASH,/mode==='column'/);
+  assert.match(DASH,/input type="checkbox"/);
+  assert.match(DASH,/scopeValues:scoped\.selected/);
+  assert.match(APP,/scopeColumns:overviewCollectionSummaryColumns\(\)/);
+  assert.match(APP,/scopeColumn,scopeValues/);
+  assert.match(APP,/kolColFilters\[scopeKey\]=new Set\(values\)/);
 });
