@@ -20,7 +20,7 @@ const { createWorkspaceManager, normalizeModule, clampIndex, MODULES } = require
 let nextContentsId = 1;
 let nextWindowId = 1;
 class MockContents extends EventEmitter {
-  constructor(){super();this.id=nextContentsId++;this.destroyed=false;this.url='';this.messages=[];}
+  constructor(){super();this.id=nextContentsId++;this.destroyed=false;this.url='';this.messages=[];this.closeDelay=0;this.blockBeforeUnload=false;}
   isDestroyed(){return this.destroyed;}
   loadURL(url){this.url=url;this.emit('did-finish-load');return Promise.resolve();}
   getURL(){return this.url;}
@@ -29,7 +29,16 @@ class MockContents extends EventEmitter {
   toggleDevTools(){this.devtools=(this.devtools||0)+1;}
   focus(){this.focused=true;}
   send(channel,payload){this.messages.push({channel,payload});}
-  close(){if(this.destroyed)return;this.destroyed=true;this.emit('destroyed');}
+  close(options={}){
+    if(this.destroyed)return;
+    if(this.blockBeforeUnload&&options.waitForBeforeUnload){
+      let allowed=false;
+      this.emit('will-prevent-unload',{preventDefault:()=>{allowed=true;}});
+      if(!allowed)return;
+    }
+    const destroy=()=>{if(this.destroyed)return;this.destroyed=true;this.emit('destroyed');};
+    if(this.closeDelay>0)setTimeout(destroy,this.closeDelay);else destroy();
+  }
 }
 class MockView extends EventEmitter {
   constructor(){super();this.webContents=new MockContents();}
@@ -46,6 +55,8 @@ class MockWindow extends EventEmitter {
   isDestroyed(){return this.destroyed;}
   isMaximized(){return false;}
   setTitle(title){this.title=title;}
+  setBackgroundColor(color){this.backgroundColor=color;}
+  setTitleBarOverlay(value){this.titleBarOverlay=value;}
   loadFile(file){this.file=file;this.webContents.emit('did-finish-load');this.emit('ready-to-show');return Promise.resolve();}
   show(){this.visible=true;}
   focus(){MockWindow.focused=this;this.emit('focus');}
@@ -54,12 +65,16 @@ class MockWindow extends EventEmitter {
   destroy(){if(this.destroyed)return;this.destroyed=true;this.emit('closed');}
 }
 
-function mockManager(){
-  return createWorkspaceManager({
-    BrowserWindow:MockWindow,WebContentsView:MockView,dialog:{showMessageBoxSync:()=>0},screen:{getDisplayNearestPoint:()=>({workArea:{x:0,y:0,width:2560,height:1440}})},path,crypto:{randomUUID:(()=>{let id=0;return()=>`tab-${++id}`;})()},origin:'http://127.0.0.1:5055',
+function mockManager({ dialogResponse=0, dark=false }={}){
+  const nativeTheme=new EventEmitter();
+  nativeTheme.shouldUseDarkColors=dark;
+  const manager=createWorkspaceManager({
+    BrowserWindow:MockWindow,WebContentsView:MockView,dialog:{showMessageBoxSync:()=>dialogResponse},screen:{getDisplayNearestPoint:()=>({workArea:{x:0,y:0,width:2560,height:1440}})},path,crypto:{randomUUID:(()=>{let id=0;return()=>`tab-${++id}`;})()},origin:'http://127.0.0.1:5055',nativeTheme,
     shellFile:'workspace.html',shellPreload:'workspace-preload.js',contentPreload:'preload.js',iconPath:'buyerlog.ico',
     loadWindowState:()=>({width:1200,height:800,maximized:false}),saveWindowState:()=>{},applyNavigationPolicy:()=>{},log:()=>{},onFirstRendererReady:()=>{},
   });
+  manager.__nativeTheme=nativeTheme;
+  return manager;
 }
 
 test('workspace uses current WebContentsView API; deprecated BrowserView/webview are absent', () => {
@@ -100,7 +115,8 @@ test('live manager moves one WebContentsView across windows without recreating i
   assert.equal(manager.tabForContents(liveContents),lfl,'detach preserves the same tab object');
   const detached=manager.stateForWindow(lfl.windowId);
   assert.ok(detached && detached.window.id!==first.window.id);
-  assert.equal(manager.moveTab(lfl.id,first.window.id,1),true);
+  assert.equal(manager.snapshot(detached).canReattach,true,'detached window exposes a reliable reattach action');
+  assert.equal(manager.reattachTab(lfl.id,detached.window.id),true);
   assert.equal(manager.windowCount(),1,'empty detached window closes without closing the app workspace');
   assert.equal(lfl.view.webContents,liveContents,'reattach preserves renderer identity and state');
   assert.equal(liveContents.isDestroyed(),false);
@@ -115,7 +131,11 @@ test('each window has a browser-like accessible tab strip and non-drag alternati
   assert.match(SHELL_JS, /ctrlKey && event\.shiftKey/);
   assert.match(SHELL_JS, /dragstart/);
   assert.match(SHELL_JS, /receiveTab/);
+  assert.match(SHELL_JS, /finishTabDrag/);
+  assert.match(SHELL_JS, /data-reattach/);
   assert.match(SHELL_PRELOAD, /showModuleMenu/);
+  assert.match(SHELL_PRELOAD, /workspace-finish-tab-drag/);
+  assert.match(SHELL_PRELOAD, /workspace-reattach-tab/);
   assert.match(MAIN, /Menu\.buildFromTemplate\(template\)\.popup/);
 });
 
@@ -148,9 +168,63 @@ test('window-specific IPC, download and auth flows resolve the requesting tab pa
   assert.match(SHELL_PRELOAD, /workspace-receive-tab/);
 });
 
+test('window close waits for asynchronous tab destruction instead of getting stuck open', async () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const tab=manager.tabForContents(manager.activeContents(state));
+  tab.view.webContents.closeDelay=30;
+  state.window.close();
+  assert.equal(state.window.isDestroyed(),false,'native close is intercepted while the live tab is still closing');
+  await new Promise(resolve=>setTimeout(resolve,70));
+  assert.equal(state.window.isDestroyed(),true,'window closes after its tab renderer is actually destroyed');
+  assert.equal(manager.windowCount(),0);
+});
+
+test('beforeunload cancellation keeps the tab open and does not trigger the force-close fallback', async () => {
+  const manager=mockManager({dialogResponse:1});
+  const state=manager.createWindow({module:'overview'});
+  const tab=manager.tabForContents(manager.activeContents(state));
+  tab.view.webContents.blockBeforeUnload=true;
+  assert.equal(await manager.closeTab(tab.id),false);
+  assert.equal(tab.view.webContents.isDestroyed(),false);
+  assert.equal(state.window.isDestroyed(),false);
+});
+
+test('dragging a detached tab over another workspace window reattaches it without recreating the renderer', () => {
+  const manager=mockManager();
+  const first=manager.createWindow({module:'overview'});
+  const tab=manager.openModule(first.window.id,'cp');
+  const contents=tab.view.webContents;
+  assert.equal(manager.detachTab(tab.id,first.window.id,{x:1700,y:100}),true);
+  const detached=manager.stateForWindow(tab.windowId);
+  assert.ok(detached && detached.window.id!==first.window.id);
+  assert.equal(manager.finishTabDrag(tab.id,detached.window.id,{x:100,y:20}),true);
+  assert.equal(tab.windowId,first.window.id);
+  assert.equal(tab.view.webContents,contents);
+  assert.equal(manager.windowCount(),1);
+});
+
+test('native title-bar overlay follows Electron dark/light theme updates', () => {
+  const manager=mockManager({dark:true});
+  const state=manager.createWindow({module:'overview'});
+  assert.equal(state.window.titleBarOverlay.color,'#1c1f23');
+  assert.equal(state.window.titleBarOverlay.symbolColor,'#e9eaec');
+  assert.equal(state.window.backgroundColor,'#23262a');
+  manager.__nativeTheme.shouldUseDarkColors=false;
+  manager.__nativeTheme.emit('updated');
+  assert.equal(state.window.titleBarOverlay.color,'#ececed');
+  assert.equal(state.window.titleBarOverlay.symbolColor,'#1d1f20');
+  assert.equal(state.window.backgroundColor,'#f2f2f3');
+});
+
 test('tab close honors beforeunload and native F5/F12 target the live content renderer', () => {
   assert.match(MANAGER, /close\(\{ waitForBeforeUnload: true \}\)/);
   assert.match(MANAGER, /will-prevent-unload/);
+  assert.match(MANAGER, /finishTabDrag/);
+  assert.match(MANAGER, /reattachTab/);
+  assert.match(MAIN, /nativeTheme/);
+  assert.match(MAIN, /workspace-finish-tab-drag/);
+  assert.match(MAIN, /workspace-reattach-tab/);
   assert.match(MANAGER, /contents\.reload\(\)/);
   assert.match(MANAGER, /contents\.toggleDevTools\(\)/);
 });
