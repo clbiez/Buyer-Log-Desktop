@@ -20,7 +20,7 @@ const { createWorkspaceManager, normalizeModule, normalizeWorkspaceTheme, clampI
 let nextContentsId = 1;
 let nextWindowId = 1;
 class MockContents extends EventEmitter {
-  constructor(){super();this.id=nextContentsId++;this.destroyed=false;this.url='';this.messages=[];this.closeDelay=0;this.blockBeforeUnload=false;}
+  constructor(){super();this.id=nextContentsId++;this.destroyed=false;this.url='';this.messages=[];this.closeDelay=0;this.blockBeforeUnload=false;this.hangClose=false;this.forceCrashCount=0;}
   isDestroyed(){return this.destroyed;}
   loadURL(url){this.url=url;this.emit('did-finish-load');return Promise.resolve();}
   getURL(){return this.url;}
@@ -30,7 +30,7 @@ class MockContents extends EventEmitter {
   focus(){this.focused=true;}
   send(channel,payload){this.messages.push({channel,payload});}
   close(options={}){
-    if(this.destroyed)return;
+    if(this.destroyed||this.hangClose)return;
     if(this.blockBeforeUnload&&options.waitForBeforeUnload){
       let allowed=false;
       this.emit('will-prevent-unload',{preventDefault:()=>{allowed=true;}});
@@ -39,6 +39,7 @@ class MockContents extends EventEmitter {
     const destroy=()=>{if(this.destroyed)return;this.destroyed=true;this.emit('destroyed');};
     if(this.closeDelay>0)setTimeout(destroy,this.closeDelay);else destroy();
   }
+  forcefullyCrashRenderer(){this.forceCrashCount+=1;this.hangClose=false;}
 }
 class MockView extends EventEmitter {
   constructor(){super();this.webContents=new MockContents();}
@@ -68,12 +69,14 @@ class MockWindow extends EventEmitter {
 function mockManager({ dialogResponse=0, dark=false }={}){
   const nativeTheme=new EventEmitter();
   nativeTheme.shouldUseDarkColors=dark;
+  let dialogCalls=0;
   const manager=createWorkspaceManager({
-    BrowserWindow:MockWindow,WebContentsView:MockView,dialog:{showMessageBoxSync:()=>dialogResponse},screen:{getDisplayNearestPoint:()=>({workArea:{x:0,y:0,width:2560,height:1440}})},path,crypto:{randomUUID:(()=>{let id=0;return()=>`tab-${++id}`;})()},origin:'http://127.0.0.1:5055',nativeTheme,
+    BrowserWindow:MockWindow,WebContentsView:MockView,dialog:{showMessageBoxSync:()=>{dialogCalls+=1;return dialogResponse;}},screen:{getDisplayNearestPoint:()=>({workArea:{x:0,y:0,width:2560,height:1440}})},path,crypto:{randomUUID:(()=>{let id=0;return()=>`tab-${++id}`;})()},origin:'http://127.0.0.1:5055',nativeTheme,
     shellFile:'workspace.html',shellPreload:'workspace-preload.js',contentPreload:'preload.js',iconPath:'buyerlog.ico',
     loadWindowState:()=>({width:1200,height:800,maximized:false}),saveWindowState:()=>{},applyNavigationPolicy:()=>{},log:()=>{},onFirstRendererReady:()=>{},
   });
   manager.__nativeTheme=nativeTheme;
+  manager.__dialogCalls=()=>dialogCalls;
   return manager;
 }
 
@@ -172,26 +175,143 @@ test('window-specific IPC, download and auth flows resolve the requesting tab pa
   assert.match(SHELL_PRELOAD, /workspace-receive-tab/);
 });
 
-test('window close waits for asynchronous tab destruction instead of getting stuck open', async () => {
+test('native window X closes deterministically even when tab destruction is delayed', async () => {
   const manager=mockManager();
   const state=manager.createWindow({module:'overview'});
   const tab=manager.tabForContents(manager.activeContents(state));
   tab.view.webContents.closeDelay=30;
   state.window.close();
-  assert.equal(state.window.isDestroyed(),false,'native close is intercepted while the live tab is still closing');
-  await new Promise(resolve=>setTimeout(resolve,70));
-  assert.equal(state.window.isDestroyed(),true,'window closes after its tab renderer is actually destroyed');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(state.window.isDestroyed(),true,'native X does not wait on a child renderer');
   assert.equal(manager.windowCount(),0);
 });
 
-test('beforeunload cancellation keeps the tab open and does not trigger the force-close fallback', async () => {
+test('explicit tab close bypasses beforeunload without showing the confirmation dialog', async () => {
   const manager=mockManager({dialogResponse:1});
   const state=manager.createWindow({module:'overview'});
-  const tab=manager.tabForContents(manager.activeContents(state));
+  const tab=manager.openModule(state.window.id,'cp');
   tab.view.webContents.blockBeforeUnload=true;
-  assert.equal(await manager.closeTab(tab.id),false);
-  assert.equal(tab.view.webContents.isDestroyed(),false);
-  assert.equal(state.window.isDestroyed(),false);
+  assert.equal(await manager.closeTab(tab.id),true);
+  assert.equal(manager.snapshot(state).tabs.some(item=>item.id===tab.id),false);
+  assert.equal(manager.__dialogCalls(),0);
+  assert.equal(state.window.isDestroyed(),false,'other tabs keep the window alive');
+});
+
+test('close then reopen creates a fresh live tab instead of reusing stale state', async () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const oldTab=manager.openModule(state.window.id,'cp');
+  const oldContents=oldTab.view.webContents;
+  oldContents.closeDelay=40;
+  assert.equal(await manager.closeTab(oldTab.id),true);
+  const reopened=manager.openModule(state.window.id,'cp');
+  assert.ok(reopened);
+  assert.notEqual(reopened.id,oldTab.id);
+  assert.notEqual(reopened.view.webContents,oldContents);
+  assert.equal(reopened.view.webContents.isDestroyed(),false);
+  assert.equal(manager.snapshot(state).tabs.filter(item=>item.module==='cp').length,1);
+});
+
+test('close and immediate reopen are race-safe before destroyed event delivery', async () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const oldTab=manager.openModule(state.window.id,'cp');
+  oldTab.view.webContents.closeDelay=80;
+  const closing=manager.closeTab(oldTab.id);
+  const reopened=manager.openModule(state.window.id,'cp');
+  assert.equal(await closing,true);
+  assert.ok(reopened && reopened.id!==oldTab.id);
+  assert.equal(manager.snapshot(state).tabs.filter(item=>item.module==='cp').length,1);
+  await new Promise(resolve=>setTimeout(resolve,100));
+  assert.equal(manager.snapshot(state).tabs.filter(item=>item.module==='cp').length,1,'late destroyed cleanup cannot delete the replacement tab');
+});
+
+test('openModule purges a partially torn-down tab object instead of throwing isDestroyed errors', () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const stale=manager.openModule(state.window.id,'cp');
+  stale.view=undefined;
+  const reopened=manager.openModule(state.window.id,'cp');
+  assert.ok(reopened);
+  assert.notEqual(reopened.id,stale.id);
+  assert.equal(manager.snapshot(state).tabs.filter(item=>item.module==='cp').length,1);
+});
+
+test('hung renderer fallback leaves no zombie registry entry and module can reopen immediately', async () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const oldTab=manager.openModule(state.window.id,'cp');
+  const oldContents=oldTab.view.webContents;
+  oldContents.hangClose=true;
+  assert.equal(await manager.closeTab(oldTab.id),true);
+  const reopened=manager.openModule(state.window.id,'cp');
+  assert.ok(reopened && reopened.id!==oldTab.id);
+  assert.equal(manager.tabForContents(oldContents),null);
+  await new Promise(resolve=>setTimeout(resolve,300));
+  assert.equal(oldContents.forceCrashCount,1);
+  assert.equal(oldContents.isDestroyed(),true);
+});
+
+test('double close is idempotent and never leaves a hanging promise', async () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const tab=manager.openModule(state.window.id,'cp');
+  const [first,second]=await Promise.all([manager.closeTab(tab.id),manager.closeTab(tab.id)]);
+  assert.equal(first,true);
+  assert.equal(second,false);
+  assert.equal(manager.snapshot(state).tabs.some(item=>item.id===tab.id),false);
+});
+
+test('native window X ignores beforeunload in every child tab', async () => {
+  const manager=mockManager({dialogResponse:1});
+  const state=manager.createWindow({module:'overview'});
+  const blocked=manager.openModule(state.window.id,'cp');
+  blocked.view.webContents.blockBeforeUnload=true;
+  state.window.close();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(state.window.isDestroyed(),true);
+  assert.equal(manager.__dialogCalls(),0);
+});
+
+test('detached window close cleans its registry and the same module can reopen in primary', async () => {
+  const manager=mockManager();
+  const primary=manager.createWindow({module:'overview'});
+  const tab=manager.openModule(primary.window.id,'cp');
+  assert.equal(manager.detachTab(tab.id,primary.window.id,{x:1700,y:100}),true);
+  const detached=manager.stateForWindow(tab.windowId);
+  const oldId=tab.id;
+  detached.window.close();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(detached.window.isDestroyed(),true);
+  const reopened=manager.openModule(primary.window.id,'cp');
+  assert.ok(reopened && reopened.id!==oldId);
+});
+
+test('repeated open-close lifecycle keeps exactly one live module tab', async () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  let previousId='';
+  for(let index=0;index<3;index+=1){
+    const tab=manager.openModule(state.window.id,'cp');
+    assert.ok(tab.id!==previousId);
+    assert.equal(manager.snapshot(state).tabs.filter(item=>item.module==='cp').length,1);
+    previousId=tab.id;
+    if(index<2) {
+      assert.equal(await manager.closeTab(tab.id),true);
+      assert.equal(manager.snapshot(state).tabs.filter(item=>item.module==='cp').length,0);
+    }
+  }
+});
+
+test('closing one workspace window does not affect other Buyer Log windows', async () => {
+  const manager=mockManager();
+  const first=manager.createWindow({module:'overview'});
+  const second=manager.createWindow({module:'cp'});
+  second.window.close();
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(second.window.isDestroyed(),true);
+  assert.equal(first.window.isDestroyed(),false);
+  assert.equal(manager.snapshot(first).tabs.length,1);
 });
 
 test('dragging a detached tab over another workspace window reattaches it without recreating the renderer', async () => {
@@ -262,9 +382,12 @@ test('Buyer Log app theme overrides OS theme and updates every open window live'
   }
 });
 
-test('tab close honors beforeunload and native F5/F12 target the live content renderer', () => {
-  assert.match(MANAGER, /close\(\{ waitForBeforeUnload: true \}\)/);
+test('explicit close bypasses beforeunload and native F5/F12 target the live content renderer', () => {
+  assert.match(MANAGER, /close\(\{ waitForBeforeUnload:false \}\)/);
+  assert.doesNotMatch(MANAGER, /close\(\{ waitForBeforeUnload: true \}\)/);
   assert.match(MANAGER, /will-prevent-unload/);
+  assert.match(MANAGER, /function cleanupTab/);
+  assert.match(MANAGER, /function purgeStaleTabs/);
   assert.match(MANAGER, /finishTabDrag/);
   assert.match(MANAGER, /reattachTab/);
   assert.match(MAIN, /workspace-theme/);

@@ -1501,9 +1501,9 @@ function registerIpc() {
     if (!workspace) return null;
     const shellState = workspace.windowForShellContents(event.sender);
     const contentWindow = workspace.windowForContents(event.sender);
-    const target = shellState?.window || contentWindow;
-    if (!target) return null;
-    const tab = workspace.openModule(target.id, moduleId);
+    const targetState = shellState || (contentWindow ? workspace.stateForWindow(contentWindow.id) : null);
+    if (!targetState || !targetState.window || targetState.window.isDestroyed()) return null;
+    const tab = workspace.openModule(targetState.window.id, moduleId);
     return tab ? { ok:true, tabId:tab.id, module:tab.module } : null;
   });
   ipcMain.handle('buyerlog:workspace-set-module', (event, moduleId) => {
