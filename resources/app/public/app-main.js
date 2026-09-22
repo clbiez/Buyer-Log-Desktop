@@ -30978,10 +30978,14 @@ function refreshSharedMasterClient(area){
   if(area==='endeksmatik'){
     return Promise.resolve(refreshEndeksmatikStatus({silent:true})).then(()=>{ if(typeof renderKol==='function')renderKol(); });
   }
-  if(area==='transitRules'){
-    // Transit kuralları CP/Overview/Backlog formüllerinin ortak girdisidir.
-    // Olay seyrek olduğundan yalnız değişiklikte hafif sunucu yenilemesi yapılır.
+  if(['transitRules','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','systemSettings'].includes(area)){
+    // Program davranışını belirleyen Master kuralları SYNC'ten yerel cache'e
+    // uygulandığında çalışan ekran da aynı kanonik state'i yeniden okumalıdır.
     return typeof loadFromServer==='function' ? loadFromServer(false) : Promise.resolve();
+  }
+  if(area==='modelConnections'){
+    return Promise.resolve(typeof modelConnLoad==='function'?modelConnLoad():null)
+      .then(()=>typeof loadFromServer==='function'?loadFromServer(false):null);
   }
   if(area==='emailGroups'){
     return Promise.resolve(window.BLEmailDirectory?.ensureDirectory?.(true)).then(()=>{
@@ -31011,7 +31015,7 @@ function initLiveSync(){
     }
     // Kendi yazdığın değişiklik için kendine yenileme tetikleme; ekran zaten güncel.
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
-    if(['fx','endeksmatik','transitRules','emailGroups'].includes(payload.area)){
+    if(['fx','endeksmatik','transitRules','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
     }else if(payload.area==='pricingRules'){
       void refreshPricingRulesFromServer().catch(()=>{});
@@ -31039,6 +31043,9 @@ window.addEventListener('bl-shared-revision',event=>{
   if(changed.has('endeksmatik')&&!liveSyncConnected)void refreshSharedMasterClient('endeksmatik').catch(()=>{});
   if(changed.has('transitRules')&&!liveSyncConnected)void refreshSharedMasterClient('transitRules').catch(()=>{});
   if(changed.has('emailGroups')&&!liveSyncConnected)void refreshSharedMasterClient('emailGroups').catch(()=>{});
+  for(const area of ['nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings']){
+    if(changed.has(area)&&!liveSyncConnected)void refreshSharedMasterClient(area).catch(()=>{});
+  }
   // v7.21: canlı akış açıkken bu yol AYNI kayıt için ikinci bir yeniden
   // yükleme demekti. Yalnız canlı akış kopmuşsa yedek olarak çalışır.
   if(changed.has('collection')&&kolWorkspaceOwnerId&&!liveSyncConnected)void kolHandleRemoteChange(kolWorkspaceOwnerId);
