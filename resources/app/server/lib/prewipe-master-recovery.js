@@ -5,6 +5,7 @@ const path = require('path');
 const zlib = require('zlib');
 const { toDocumentRecord } = require('./delta-store');
 const policy = require('./shared-sync-policy');
+const cpSharedStore = require('./cp-shared-store');
 
 function clone(value) {
   return value == null ? value : JSON.parse(JSON.stringify(value));
@@ -184,6 +185,137 @@ function appendLocalFirstRoots(roots, localDataRoot) {
   return roots;
 }
 
+
+function businessValueMeaningful(value) {
+  if (value == null) return false;
+  if (typeof value === 'string') return Boolean(value.trim());
+  if (typeof value === 'number' || typeof value === 'boolean') return true;
+  if (Array.isArray(value)) return value.some(businessValueMeaningful);
+  if (typeof value === 'object') return Object.values(value).some(businessValueMeaningful);
+  return true;
+}
+
+function overrideCandidateStamp(value) {
+  const stamp = Date.parse(value && value._updatedAt || '');
+  return {
+    time:Number.isFinite(stamp) ? stamp : 0,
+    revision:Math.max(0, Number(value && value._revision) || 0),
+  };
+}
+
+function compareOverrideCandidates(a, b) {
+  const sa=overrideCandidateStamp(a.value), sb=overrideCandidateStamp(b.value);
+  return sa.time - sb.time || sa.revision - sb.revision || String(a.file).localeCompare(String(b.file));
+}
+
+function collectOverrideCandidates(roots) {
+  const out = [];
+  for (const root of Array.isArray(roots) ? roots : []) {
+    if (!root || !fs.existsSync(root)) continue;
+    for (const file of [path.join(root, 'overrides.json'), path.join(root, 'overrides.json.bak')]) {
+      if (!fs.existsSync(file)) continue;
+      const value = readJson(file);
+      if (value && typeof value === 'object') out.push({ file, value });
+    }
+  }
+  return out.sort(compareOverrideCandidates);
+}
+
+function mergeLegacyCpBusinessCandidates(candidates) {
+  const legacy = {};
+  for (const candidate of Array.isArray(candidates) ? candidates : []) {
+    const overrides = candidate && candidate.value;
+    if (!overrides || typeof overrides !== 'object') continue;
+    for (const id of cpSharedStore.legacyKeys(overrides)) {
+      const record = cpSharedStore.recordFromOverrides(overrides, id);
+      const key = 'cp-order:' + String(id);
+      const target = legacy[key] || (legacy[key] = {});
+      // Empty legacy placeholders are not tombstones. They were frequently
+      // emitted by old Buyer Log versions and must not erase an older real
+      // note/date/sub-manufacturer during verified backup recovery.
+      for (const [field, value] of Object.entries(record)) {
+        if (!businessValueMeaningful(value)) continue;
+        target[field] = clone(value);
+      }
+    }
+  }
+  return legacy;
+}
+
+function mergeRecoveredBusinessRecords(currentRecords, recoveredRecords, tombstones = {}) {
+  const current = clone(currentRecords && typeof currentRecords === 'object' ? currentRecords : {}) || {};
+  const recovered = recoveredRecords && typeof recoveredRecords === 'object' ? recoveredRecords : {};
+  const changed = {};
+  let fieldsAdded = 0;
+  for (const [id, recoveredRecord] of Object.entries(recovered)) {
+    if (!recoveredRecord || typeof recoveredRecord !== 'object') continue;
+    if (tombstones && tombstones[id]) continue;
+    const existing = current[id];
+    if (!existing || typeof existing !== 'object' || !Object.keys(existing).length) {
+      changed[id] = clone(recoveredRecord);
+      current[id] = clone(recoveredRecord);
+      fieldsAdded += Object.keys(recoveredRecord).filter(key => !String(key).startsWith('_')).length;
+      continue;
+    }
+    if (!String(id).startsWith('cp-order:')) continue;
+
+    const merged = clone(existing) || {};
+    let recordChanged = false;
+    for (const [field, value] of Object.entries(recoveredRecord)) {
+      if (String(field).startsWith('_') || !businessValueMeaningful(value)) continue;
+      // Explicit null is the modern CP-store tombstone and is respected.
+      if (Object.prototype.hasOwnProperty.call(existing, field) && existing[field] === null) continue;
+      if (Object.prototype.hasOwnProperty.call(existing, field) && businessValueMeaningful(existing[field])) continue;
+      merged[field] = clone(value);
+      recordChanged = true;
+      fieldsAdded += 1;
+    }
+    if (recordChanged) {
+      changed[id] = merged;
+      current[id] = merged;
+    }
+  }
+  return { records:current, changed, ids:Object.keys(changed), fieldsAdded };
+}
+
+function loadBusinessRecordsFromFullSystemRoots({ serverDataRoot, appDataRoot, localDataRoot }, recoveredState = {}) {
+  const current = clone(policy.businessRecordsFromState(recoveredState)) || {};
+  const roots = [
+    serverDataRoot,
+    path.join(localDataRoot, 'application-data'),
+    path.join(localDataRoot, 'data'),
+    appDataRoot,
+  ].filter(Boolean);
+  appendLocalFirstRoots(roots, localDataRoot);
+  const legacy = mergeLegacyCpBusinessCandidates(collectOverrideCandidates(roots));
+  return mergeRecoveredBusinessRecords(current, legacy, recoveredState && recoveredState.tombstones).records;
+}
+
+function loadBusinessRecordsFromExtractedBackup(tempRoot, recoveredState = {}) {
+  const systemRoot = path.join(tempRoot, 'system');
+  return loadBusinessRecordsFromFullSystemRoots({
+    serverDataRoot:path.join(systemRoot, 'server-data'),
+    appDataRoot:path.join(systemRoot, 'app-data'),
+    localDataRoot:path.join(systemRoot, 'local-data'),
+  }, recoveredState);
+}
+
+function businessCoverage(records) {
+  const source = records && typeof records === 'object' ? records : {};
+  const cp = Object.entries(source).filter(([id]) => String(id).startsWith('cp-order:'));
+  const countField = field => cp.filter(([,record]) => record && businessValueMeaningful(record[field])).length;
+  return {
+    records:Object.keys(source).length,
+    cpOrderRecords:cp.length,
+    notes:countField('notes'),
+    subManufacturers:countField('subManufacturer'),
+    revisedDates:countField('dates'),
+    deliveryTypes:countField('delivery'),
+    licensors:countField('licensor'),
+    supplierFobs:countField('suppFob'),
+  };
+}
+
 function loadMasterRecordsFromFullSystemRoots({ serverDataRoot, appDataRoot, localDataRoot }, recoveredState = {}) {
   const records = clone(policy.masterRecordsFromState(recoveredState)) || {};
   const roots = [
@@ -258,5 +390,12 @@ module.exports = {
   loadMasterRecordsFromFullSystemRoots,
   loadMasterRecordsFromLegacyDataRoot,
   loadMasterRecordsFromExtractedBackup,
+  businessValueMeaningful,
+  collectOverrideCandidates,
+  mergeLegacyCpBusinessCandidates,
+  mergeRecoveredBusinessRecords,
+  loadBusinessRecordsFromFullSystemRoots,
+  loadBusinessRecordsFromExtractedBackup,
   masterCoverage,
+  businessCoverage,
 };
