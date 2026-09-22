@@ -244,3 +244,58 @@ test('deep legacy Master scan includes local-first legacy-server-data fallbacks'
   assert.match(source, /path\.join\(localDataRoot, 'local-first', 'backups'\)/);
   assert.match(source, /legacy-server-data/);
 });
+
+
+test('verified Full System Backup prefers rich overrides .bak over one-revision-newer empty current file', async t => {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-rich-bak-master-'));
+  t.after(() => fsp.rm(root, { recursive:true, force:true }));
+  const serverData = path.join(root, 'system', 'server-data');
+  const legacy = path.join(root, 'system', 'local-data', 'application-data');
+  await fsp.mkdir(serverData, { recursive:true });
+  await fsp.mkdir(legacy, { recursive:true });
+
+  await fsp.writeFile(path.join(serverData, 'overrides.json'), JSON.stringify({
+    pricingRules:[], transitRules:[], nonDtrManufacturers:[],
+    _revision:3357,
+    _revisions:{ pricingRules:91, transitRules:6, nonDtrManufacturers:1 },
+  }));
+  await fsp.writeFile(path.join(serverData, 'overrides.json.bak'), JSON.stringify({
+    pricingRules:Array.from({ length:35 }, (_,i) => ({ id:'rule-'+i })),
+    transitRules:Array.from({ length:6 }, (_,i) => ({ id:'transit-'+i })),
+    nonDtrManufacturers:['A','B','C','D'],
+    _revision:3356,
+    _revisions:{ pricingRules:91, transitRules:6, nonDtrManufacturers:1 },
+  }));
+  const endek = {
+    schemaVersion:1,
+    generatedAt:'2026-08-14T13:36:22.280Z',
+    months:Array.from({ length:28 }, (_,i) => String(i)),
+    records:Array.from({ length:4589 }, () => ['A','B','C','D','E','','','','','','','','']),
+  };
+  await fsp.writeFile(path.join(legacy, 'endeksmatik-snapshot.json.gz'), zlib.gzipSync(Buffer.from(JSON.stringify(endek))));
+
+  const records = recovery.loadMasterRecordsFromExtractedBackup(root, { records:{} });
+  const coverage = recovery.masterCoverage(records);
+  assert.equal(coverage.royaltyRules, 35);
+  assert.equal(coverage.transitRules, 6);
+  assert.equal(coverage.nonDtrManufacturers, 4);
+  assert.equal(coverage.endeksmatikRecords, 4589);
+});
+
+test('verified pre-wipe deep scan is keyed by backup sha, not Master record count', () => {
+  assert.match(SERVER, /function prewipeRecoveryAlreadyDeepScanned\(snapshot, candidate\)/);
+  assert.match(SERVER, /Number\(recovery\.schemaVersion \|\| 0\) >= 2/);
+  assert.match(SERVER, /String\(recovery\.backupSha256 \|\| ''\)\.toLowerCase\(\) === expectedSha/);
+  assert.doesNotMatch(SERVER, /reason:'checkpoint-inventory-complete'/);
+  assert.match(SERVER, /Record count alone is NOT enough/);
+  assert.match(SERVER, /schemaVersion:2,/);
+  assert.match(SERVER, /backupSha256:String\(candidate\.report/);
+});
+
+test('ordinary partial overrides save cannot silently zero critical Master sections without advancing section revisions', () => {
+  const dbSource = fs.readFileSync(path.join(ROOT, 'server', 'db.js'), 'utf8');
+  assert.match(dbSource, /function protectCriticalOverrideSections\(current, incoming\)/);
+  assert.match(dbSource, /\['pricingRules','transitRules','nonDtrManufacturers'\]/);
+  assert.match(dbSource, /before\.length > 0 && after\.length === 0 && afterRev <= beforeRev/);
+  assert.match(dbSource, /protectCriticalOverrideSections\(loadOverrides\(\), overrides\)/);
+});
