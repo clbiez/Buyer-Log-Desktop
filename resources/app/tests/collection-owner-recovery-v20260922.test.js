@@ -98,6 +98,14 @@ test('legacy shared/alias Collection recovery deduplicates safely and remains id
   assert.equal(removed.conflicts.length, 0);
   assert.equal(store.loadWorkspace('owner-main').rows.some(row => row.modelKod === 'MINECRAFT-19-YD'), false,
     'recovered rows use the normal owner workspace and must be deletable');
+
+  const afterDeleteRecovery = store.recoverSharedWorkspaceIntoOwner('owner-main', {
+    sourceOwnerIds:['alias-gokberk', 'alias-gokberk-celebi'],
+    sharedSourceOwnerIds:['owner-main', 'alias-gokberk', 'alias-gokberk-celebi'],
+  });
+  assert.equal(afterDeleteRecovery.reason, 'already-recovered');
+  assert.equal(store.loadWorkspace('owner-main').rows.some(row => row.modelKod === 'MINECRAFT-19-YD'), false,
+    'the preserved legacy source must never resurrect a model the owner intentionally deleted later');
 });
 
 function block(source, start, end) {
