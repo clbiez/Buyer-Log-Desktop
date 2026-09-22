@@ -53,19 +53,15 @@ test('personal preference and profile stores have explicit restore entry points'
 });
 
 
-test('personal Collection restore targets Shared Collection without deleting other users rows', () => {
-  assert.match(SERVICE, /function createUserRestoreService\(\{ restoreCollectionWorkspace = null \} = \{\}\)/);
-  assert.match(SERVICE, /await restoreCollectionWorkspace\(currentUser, incoming\.collection\)/);
-  assert.match(SERVER, /mergePersonalBackupIntoShared\(userId, snapshot, userId\)/);
-  assert.match(SERVER, /userRestoreSharedCollectionSync/);
+test('personal Collection restore remains in the signed-in owner workspace', () => {
+  assert.match(SERVICE, /collectionWorkspaces\.saveWorkspace\(currentUser\.id, incoming\.collection/);
+  assert.match(SERVICE, /collection: customCollectionRestore \? null : clone\(collectionWorkspaces\.loadWorkspace\(currentUser\.id\)\)/);
+  assert.match(SERVER, /const userRestoreService = createUserRestoreService\(\);/);
+  const serviceInit = SERVER.slice(SERVER.indexOf('const userRestoreService ='), SERVER.indexOf('const userRestoreUploads'));
+  assert.doesNotMatch(serviceInit, /mergePersonalBackupIntoShared|SHARED_COLLECTION_OWNER|userRestoreSharedCollectionSync/);
+  // Legacy merge code may remain for forensic/backward compatibility, but the
+  // canonical personal-restore route must no longer call it.
   assert.match(COLLECTIONS, /async function mergePersonalBackupIntoShared\(/);
-  assert.match(COLLECTIONS, /const rows = \(Array\.isArray\(current\.rows\)/);
-  assert.match(COLLECTIONS, /byLegacy\.get/);
-  assert.match(COLLECTIONS, /byRecordId\.get/);
-  assert.match(COLLECTIONS, /saveWorkspaceAsync\(SHARED_COLLECTION_OWNER/);
-  assert.match(COLLECTIONS, /documents\.mirror\(documentId\(SHARED_COLLECTION_OWNER\), result\.saved\)/);
-  assert.match(COLLECTIONS, /added,/);
-  assert.match(COLLECTIONS, /updated,/);
 });
 
 test('personal restore explains which royalty and email data can and cannot return from a user backup', () => {
