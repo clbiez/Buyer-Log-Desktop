@@ -382,20 +382,17 @@
   }
 
   function hubMessage(status) {
-    if (!status) return tr('Shared Hub durumu kontrol ediliyor…', 'Checking Shared Hub status…');
-    if (status.status === 'syncing' || status.status === 'starting') return status.message || tr('Buyer Log hazırlanıyor…', 'Preparing Buyer Log…');
+    if (!status) return tr('Shared Hub durumu kontrol ediliyor… · Girişe engel değil', 'Checking Shared Hub status… · Sign-in remains available');
+    if (status.status === 'syncing' || status.status === 'starting') return (status.message || tr('Buyer Log eşitleniyor…', 'Buyer Log is synchronizing…')) + tr(' · Girişe engel değil', ' · Sign-in remains available');
     if (status.status === 'ready') return status.message || tr('Senkronizasyon tamamlandı · Buyer Log hazır', 'Synchronization complete · Buyer Log is ready');
-    if (status.status === 'offline') return tr('Çevrimdışı · son doğrulanmış yerel veri kullanılıyor.', 'Offline · using the last verified local data.');
-    if (!status.configured) return status.loginAllowed
-      ? tr('Shared Hub henüz ayarlanmadı. Mevcut local verilerle giriş yapabilirsiniz; eşitleme için klasörü seçin.', 'Shared Hub is not configured yet. You can sign in with existing local data; select the folder to enable sync.')
-      : tr('Bu cihaz ilk kez kullanılıyor. Girişten önce Buyer Log Shared Hub klasörünü seçin.', 'This device has not been bootstrapped. Select the Buyer Log Shared Hub before signing in.');
-    return status.message || tr('Shared Hub bootstrap tamamlanamadı.', 'Shared Hub bootstrap could not be completed.');
+    if (status.status === 'offline') return tr('Çevrimdışı · son doğrulanmış yerel veri kullanılıyor · Giriş yapılabilir.', 'Offline · using the last verified local data · You can sign in.');
+    if (!status.configured) return tr('Shared Hub henüz ayarlanmadı. Yerel hesabınızla giriş yapabilirsiniz; eşitleme için klasörü daha sonra seçebilirsiniz.', 'Shared Hub is not configured yet. You can sign in with your local account and configure sync later.');
+    return (status.message || tr('Shared Hub eşitlemesi tamamlanamadı.', 'Shared Hub synchronization could not be completed.')) + tr(' · Girişe engel değil', ' · Sign-in remains available');
   }
   function loginGateReady() {
-    return Boolean(hubStatus && (
-      (hubStatus.loginAllowed === true && ['ready','offline','not-configured'].includes(hubStatus.status))
-      || hubStatus.moderatorLoginAllowed === true
-    ));
+    // Shared Sync is informational here. Authentication is decided only by the
+    // local/centrally cached account and password on /api/user-login.
+    return true;
   }
   function renderHubSteps() {
     const box = $('hubSteps');
@@ -471,20 +468,17 @@
 
   function renderLoginButton() {
     const button = $('loginBtn');
-    const gateReady = loginGateReady();
     const usernameReady = Boolean($('username').value.trim());
     const passwordReady = Boolean($('password').value);
-    const controlsLocked = !gateReady || loginBusy;
+    const controlsLocked = loginBusy;
     $('username').disabled = controlsLocked;
     $('password').disabled = controlsLocked;
     $('togglePassword').disabled = controlsLocked;
     $('clearSelection').disabled = controlsLocked;
     button.disabled = controlsLocked || !usernameReady || !passwordReady;
     button.dataset.busy = loginBusy ? 'true' : 'false';
-    if (!gateReady && hubStatus && ['syncing','starting'].includes(hubStatus.status)) {
-      button.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${esc(tr('Senkronizasyon bekleniyor…', 'Waiting for synchronization…'))}</span>`;
-    } else if (loginBusy) {
-      button.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${esc(tr('Buyer Log hazırlanıyor…', 'Preparing Buyer Log…'))}</span>`;
+    if (loginBusy) {
+      button.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${esc(tr('Giriş yapılıyor…', 'Signing in…'))}</span>`;
     } else {
       button.innerHTML = `<span>${esc(tr('Giriş Yap', 'Sign In'))}</span>`;
     }
@@ -510,7 +504,7 @@
     if (code === 'PASSWORD_TOO_SHORT') return tr('Şifre en az 6 karakter olmalı.', 'Password must be at least 6 characters.');
     if (code === 'BOOTSTRAP_IN_PROGRESS' || code === 'BOOTSTRAP_NOT_READY') {
       void loadHubStatus();
-      return tr('Buyer Log senkronizasyonu tamamlanıyor. Lütfen bekleyin.', 'Buyer Log synchronization is still running. Please wait.');
+      return tr('Senkronizasyon arka planda devam ediyor. Giriş tekrar denenebilir.', 'Synchronization continues in the background. You can retry sign-in.');
     }
     return (data && data.error) || fallback || tr('Giriş başarısız.', 'Sign-in failed.');
   }
@@ -737,8 +731,9 @@
   renderSelected();
   renderLoginButton();
   loadHubStatus().then(status => {
-    if (status && status.loginAllowed && ['ready','offline','not-configured'].includes(status.status)) restoreLastUser();
-    else if (status && !status.configured) { $('hubPanel').hidden = false; $('hubPath').focus(); }
+    // Sync status never decides whether the user may type/search/sign in.
+    restoreLastUser();
+    if (status && !status.configured) $('hubPanel').hidden = false;
   });
 })();
 </script>
