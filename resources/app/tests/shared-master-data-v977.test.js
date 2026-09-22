@@ -161,10 +161,39 @@ test('shared master writes carry the existing client identity for audit and self
   assert.match(emailGroupsClient, /'X-Client-Id':window\.BL_CLIENT_ID/);
 });
 
-test('all shared master writes publish the existing revision and live-change signals', () => {
-  for (const entity of ['fx', 'endeksmatik', 'transitRules', 'emailGroups']) {
+test('all central master rule writes publish immediately to Shared Hub', () => {
+  for (const entity of [
+    'fx', 'endeksmatik', 'pricingRules', 'transitRules', 'nonDtrManufacturers',
+    'landedMultipliers', 'freightRates', 'emailGroups', 'antrepoSourceMode',
+    'asasSourceMode', 'lflSourceMode', 'antrepoMatchRule', 'modelConnections',
+    'noteColumnDefs',
+  ]) {
     assert.match(server, new RegExp(`publishSharedMasterChange\\('${entity}'`), `${entity} should publish a shared-master update`);
   }
+});
+
+test('master checkpoint publication waits for queued delta mirrors before sync/upload', () => {
+  const deltaStoreSource = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'delta-store.js'), 'utf8');
+  assert.match(deltaStoreSource, /async function flush\(\)/);
+  assert.match(deltaStoreSource, /await mirrorTail\.catch\(\(\) => \{\}\)/);
+  assert.match(server, /if \(typeof deltaStore\.flush === 'function'\) await deltaStore\.flush\(\)/);
+});
+
+test('Shared Hub master recovery announces repaired central rule categories to the running client', () => {
+  assert.match(server, /function changedMasterEntities\(remoteRecords, localRecords, ids\)/);
+  const block = server.slice(
+    server.indexOf('function changedMasterEntities('),
+    server.indexOf('function announceRecoveredMasterEntities('),
+  );
+  for (const entity of [
+    'pricingRules', 'transitRules', 'nonDtrManufacturers', 'landedMultipliers',
+    'freightRates', 'antrepoSourceMode', 'asasSourceMode', 'lflSourceMode',
+    'noteColumnDefs', 'antrepoMatchRule', 'modelConnections', 'fx',
+    'emailGroups', 'endeksmatik',
+  ]) {
+    assert.match(block, new RegExp(entity), `${entity} should be classified for announcement after master cache repair`);
+  }
+  assert.match(server, /announceRecoveredMasterEntities\(recoveredMasterEntities\)/);
 });
 
 test('active clients refresh shared master caches without a restart', () => {
