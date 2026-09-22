@@ -361,6 +361,74 @@ footer{padding:10px var(--sp-5) 26px;font-size:var(--fs-xs);color:var(--muted);}
 .modelImageUpdateChoice:has(input[type="checkbox"]:checked){border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
 .modelImageUpdateModes{grid-template-columns:1fr;}
 .modelImageUpdateCard .modalFoot,.modelImageLimitCard .modalFoot{padding:10px 18px 14px;border-top:1px solid var(--line);}
+
+/* PLM SYNC iki aşamalı seçim yüzeyi.
+   Genel modal sistemini fork etmez; Buyer Log design tokenlarını kullanır. */
+.plmSyncModalCard{
+  width:min(92vw,520px);max-height:min(86vh,720px);overflow:hidden;
+  background:var(--bl-surface-raised);border-color:var(--bl-stroke-strong);
+}
+.plmSyncModalCard .plmSyncModalHead{
+  align-items:flex-start;padding:18px 20px 14px;
+  background:var(--bl-surface-panel);border-bottom-color:var(--bl-stroke-subtle);
+}
+.plmSyncHeading{display:grid;gap:5px;min-width:0;}
+.plmSyncModalCard .modalTitle{font-size:15px;font-weight:750;line-height:1.25;color:var(--ink);}
+.plmSyncModalCard .plmSyncModalIntro{margin:0;padding:0;color:var(--ink2);font-size:11.5px;font-weight:500;line-height:1.45;}
+.plmSyncCloseBtn{flex:0 0 auto;}
+.plmSyncModalCard .plmSyncOptionList,
+.plmSyncModalCard .plmSyncPropertyList{
+  grid-template-columns:1fr!important;gap:8px;padding:14px 20px 16px;
+  background:var(--bl-surface-raised);overflow:auto;
+}
+.plmSyncModalCard .plmSyncOptionCard{
+  position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;justify-content:stretch;gap:12px;min-height:64px;width:100%;
+  padding:11px 12px;border:1px solid var(--bl-stroke-subtle);
+  border-radius:var(--bl-radius-control);background:var(--bl-surface-panel);color:var(--ink);
+  text-align:left;font-weight:600;transition:background-color var(--bl-motion-fast),border-color var(--bl-motion-fast),box-shadow var(--bl-motion-fast),color var(--bl-motion-fast);
+}
+.plmSyncModalCard .plmSyncOptionCard:hover:not(:disabled){
+  background:var(--bl-surface-soft);border-color:var(--bl-stroke-strong);color:var(--ink);
+}
+.plmSyncModalCard .plmSyncOptionCard:focus-visible{border-color:var(--acc);box-shadow:var(--focus-ring);}
+.plmSyncModalCard .plmSyncOptionCard.isSelected,
+.plmSyncModalCard .plmSyncPropertyCard:has(input[type="checkbox"]:checked){
+  background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);
+}
+.plmSyncModalCard .plmSyncOptionCard:disabled{
+  opacity:.46;cursor:not-allowed;background:var(--bl-surface-soft);color:var(--muted);
+}
+.plmSyncOptionIcon{
+  width:32px;height:32px;display:grid;place-items:center;flex:none;
+  border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);color:var(--acc-ink);
+}
+.plmSyncOptionIcon .ic{width:16px;height:16px;}
+.plmSyncModalCard .plmSyncActionCopy{gap:3px;min-width:0;}
+.plmSyncModalCard .plmSyncActionCopy strong{display:block;font-size:12.5px;font-weight:750;line-height:1.25;color:inherit;}
+.plmSyncModalCard .plmSyncActionCopy small{display:block;font-size:10.5px;font-weight:500;line-height:1.4;color:var(--muted);}
+.plmSyncModalCard .plmSyncOptionCard.isSelected .plmSyncActionCopy small,
+.plmSyncModalCard .plmSyncPropertyCard:has(input[type="checkbox"]:checked) .plmSyncActionCopy small{color:var(--ink2);}
+.plmSyncSelectedMark{display:none;width:18px;height:18px;place-items:center;color:var(--acc-ink);font-size:12px;font-weight:800;}
+.plmSyncOptionCard.isSelected .plmSyncSelectedMark{display:grid;}
+.plmSyncPropertyCard{cursor:pointer;}
+.plmSyncPropertyCard>input[type="checkbox"]{
+  width:17px;height:17px;margin:0;flex:none;accent-color:var(--acc);
+}
+.plmSyncPropertyCard .plmSyncCheck{display:none;}
+.plmSyncModalCard .plmSyncModalFoot{
+  display:flex;align-items:center;gap:8px;padding:10px 20px 14px;
+  border-top:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);
+}
+.plmSyncFootSpacer{flex:1 1 auto;}
+.plmSyncBackBtn{display:inline-flex;align-items:center;gap:6px;}
+.plmSyncContinueBtn{display:inline-flex;align-items:center;gap:7px;}
+.plmSyncModalCard .plmSyncContinueBtn:disabled{opacity:.48;cursor:not-allowed;}
+@media(max-height:660px){
+  .plmSyncModalCard .plmSyncModalHead{padding-top:14px;padding-bottom:11px;}
+  .plmSyncModalCard .plmSyncOptionList,.plmSyncModalCard .plmSyncPropertyList{padding-top:10px;padding-bottom:10px;}
+  .plmSyncModalCard .plmSyncOptionCard{min-height:56px;padding-block:9px;}
+}
 .modelImageLimitCard{width:min(92vw,620px);padding:0;}
 .modelImageLimitHelp{padding:5px 0 0;}
 .modelImageLimitGrid{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:18px;align-items:center;padding:18px;}
