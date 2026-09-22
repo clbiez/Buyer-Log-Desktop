@@ -30,6 +30,7 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
   workspace: {
     openModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-open-module', String(moduleId || '')),
     setModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-set-module', String(moduleId || '')),
+    setTheme: (theme) => ipcRenderer.invoke('buyerlog:workspace-theme', String(theme || '')),
   },
   /* Teşhis: kimlik bilgisi, token veya oturum anahtarı İÇERMEZ (bkz. main.js → diagnostics). */
   diagnostics: () => ipcRenderer.invoke('buyerlog:diagnostics'),

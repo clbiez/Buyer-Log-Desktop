@@ -1510,6 +1510,10 @@ function registerIpc() {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
     return workspace.updateTabModule(event.sender, moduleId);
   });
+  ipcMain.handle('buyerlog:workspace-theme', (event, theme) => {
+    if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
+    return workspace.setTheme(theme);
+  });
   ipcMain.handle('buyerlog:workspace-move-tab', (event, payload = {}) => {
     const state = workspace && workspace.windowForShellContents(event.sender);
     return Boolean(state && workspace.moveTab(payload.tabId, state.window.id, payload.index));

@@ -18405,6 +18405,7 @@ function applyTheme(name){
   const resolved = THEMES[name] ? name : systemTheme();
   const root = document.documentElement;
   const use=document.querySelector('#railThemeBtn use');
+  try{void window.buyerLogDesktop?.workspace?.setTheme?.(resolved);}catch(_){}
   if(root.dataset.theme===resolved){
     if(use)use.setAttribute('href',THEMES[resolved].icon);
     try{BLStorage.setItem('lcw_theme',resolved);}catch(e){}
@@ -27064,24 +27065,38 @@ function plmSyncPageLabel(page){
 function plmSyncScopeActions(scope,{collection=false}={}){
   const en=appLang==='en';
   const actions=[
-    {id:'all',label:en?'Update All':'Tümünü Güncelle',icon:'i-refresh'},
-    {id:'selected',label:en?'Update Selected Models':'Seçili Modelleri Güncelle',icon:'i-refresh',disabled:!scope?.selectedIdentities?.length},
+    {id:'all',label:en?'Update All':'Tümünü Güncelle',description:en?'All models in the current list':'Listedeki tüm modeller',icon:'i-refresh'},
+    {id:'selected',label:en?'Update Selected Models':'Seçili Modelleri Güncelle',description:en?'Limit the update to selected models':'Seçili modellerle sınırla',icon:'i-refresh',disabled:!scope?.selectedIdentities?.length},
     {id:'missing',label:en?'Complete Missing':'Eksikleri Tamamla',description:en?'Only update missing PLM assets':'Yalnız eksik PLM varlıklarını güncelle',icon:'i-refresh'},
   ];
-  if(collection)actions.push({id:'import-selected',label:en?'Import PLM-Selected Models to Buyer Log':"PLM'de Seçili Olan Modelleri Buyer Log'a Aktar",icon:'i-file-import'});
+  if(collection)actions.push({id:'import-selected',label:en?'Import PLM-Selected Models to Buyer Log':"PLM'de Seçili Olan Modelleri Buyer Log'a Aktar",description:en?'Add the models selected in PLM to Buyer Log':'PLM’de seçili modelleri Buyer Log’a ekle',icon:'i-file-import'});
   return actions;
 }
-function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],trigger=null,onBack=null}={}){
+function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],trigger=null,onBack=null,confirmSelection=false,confirmLabel=''}={}){
   return new Promise(resolve=>{
     document.getElementById(id)?.remove();
     const en=appLang==='en',modal=document.createElement('div');modal.id=id;modal.className='warnOverlay';
-    const buttons=actions.map(item=>`<button type="button" class="tbtn modelImageUpdateChoice${item.primary?' primary':''}" data-plmflow="${escapeHtml(item.id)}"${item.disabled?' disabled':''}>${item.icon?`<svg class="ic" aria-hidden="true" focusable="false"><use href="#${escapeHtml(item.icon)}"/></svg>`:''}<span class="plmSyncActionCopy"><span>${escapeHtml(item.label)}</span>${item.description?`<small>${escapeHtml(item.description)}</small>`:''}</span></button>`).join('');
-    modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true" aria-labelledby="${id}Title">
-      <div class="modelImageUpdateHead"><div><div class="modalTitle" id="${id}Title">${escapeHtml(title||'PLM SYNC')}</div>${intro?`<div class="modelImageUpdateIntro">${escapeHtml(intro)}</div>`:''}</div><button type="button" class="pricingRuleIconBtn" data-plmflow="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
-      <div class="modelImageUpdateChoices" style="grid-template-columns:1fr">${buttons}</div>
-      <div class="modalFoot"><button type="button" class="tbtn" data-plmflow="back">${escapeHtml(en?'Back':'Geri')}</button><span></span><button type="button" class="tbtn" data-plmflow="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button></div>
+    const buttons=actions.map(item=>`<button type="button" class="tbtn modelImageUpdateChoice plmSyncOptionCard${item.primary?' primary':''}" data-plmflow="${escapeHtml(item.id)}" aria-pressed="false"${item.disabled?' disabled aria-disabled="true"':''}>${item.icon?`<span class="plmSyncOptionIcon"><svg class="ic" aria-hidden="true" focusable="false"><use href="#${escapeHtml(item.icon)}"/></svg></span>`:''}<span class="plmSyncActionCopy"><strong>${escapeHtml(item.label)}</strong>${item.description?`<small>${escapeHtml(item.description)}</small>`:''}</span><span class="plmSyncSelectedMark" aria-hidden="true">✓</span></button>`).join('');
+    const backButton=onBack?`<button type="button" class="tbtn plmSyncBackBtn" data-plmflow="back">${escapeHtml(en?'Back':'Geri')}</button>`:'';
+    const continueButton=confirmSelection?`<button type="button" class="tbtn primary plmSyncContinueBtn" data-plmflow="continue" disabled>${escapeHtml(confirmLabel||(en?'Continue':'Devam'))}<span aria-hidden="true">→</span></button>`:'';
+    modal.innerHTML=`<div class="modalCard modelImageUpdateCard plmSyncModalCard" role="dialog" aria-modal="true" aria-labelledby="${id}Title">
+      <div class="modelImageUpdateHead plmSyncModalHead"><div class="plmSyncHeading"><div class="modalTitle" id="${id}Title">${escapeHtml(title||'PLM SYNC')}</div>${intro?`<div class="modelImageUpdateIntro plmSyncModalIntro">${escapeHtml(intro)}</div>`:''}</div><button type="button" class="pricingRuleIconBtn plmSyncCloseBtn" data-plmflow="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="modelImageUpdateChoices plmSyncOptionList">${buttons}</div>
+      <div class="modalFoot plmSyncModalFoot">${backButton}<span class="plmSyncFootSpacer"></span><button type="button" class="tbtn" data-plmflow="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button>${continueButton}</div>
     </div>`;
-    let settled=false;
+    let settled=false,selectedId='';
+    const continueBtn=modal.querySelector('[data-plmflow="continue"]');
+    const optionButtons=[...modal.querySelectorAll('.plmSyncOptionCard[data-plmflow]')];
+    const selectOption=button=>{
+      if(!confirmSelection||!button||button.disabled)return;
+      selectedId=button.dataset.plmflow||'';
+      optionButtons.forEach(item=>{
+        const selected=item===button;
+        item.classList.toggle('isSelected',selected);
+        item.setAttribute('aria-pressed',selected?'true':'false');
+      });
+      if(continueBtn)continueBtn.disabled=!selectedId;
+    };
     const finish=value=>{
       if(settled)return;settled=true;
       window.BLLayerSystem?.closeDialog?.(modal,{trigger});
@@ -27091,36 +27106,41 @@ function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],
     };
     modal.addEventListener('click',event=>{
       const action=event.target.closest('[data-plmflow]');
-      if(action){finish(action.dataset.plmflow);return;}
-      if(event.target===modal)finish('');
+      if(!action){if(event.target===modal)finish('');return;}
+      const value=action.dataset.plmflow;
+      if(value==='cancel'||value==='back'){finish(value==='cancel'?'':value);return;}
+      if(value==='continue'){if(selectedId)finish(selectedId);return;}
+      if(confirmSelection){selectOption(action);return;}
+      finish(value);
     });
     document.body.appendChild(modal);
-    window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:()=>finish(''),initialFocus:'[data-plmflow]:not([data-plmflow="cancel"]):not([data-plmflow="back"])'});
+    window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:()=>finish(''),initialFocus:'.plmSyncOptionCard:not(:disabled)'});
   });
 }
 function showPlmSyncPropertyChooser({page='kol',trigger=null}={}){
   const en=appLang==='en',collection=page==='kol';
   const definitions=collection?[
-    {key:'details',label:en?'Model Details':'Model Detayları'},
-    {key:'links',label:en?'Model Links':'Model Linkleri'},
-    {key:'images',label:en?'Model Images':'Model Görselleri'},
-    {key:'files',label:en?'Model Files':'Model Dosyaları'},
+    {key:'details',label:en?'Model Details':'Model Detayları',description:en?'Refresh supported PLM model fields':'Desteklenen PLM model alanlarını güncelle'},
+    {key:'links',label:en?'Model Links':'Model Linkleri',description:en?'Refresh PLM model links':'PLM model bağlantılarını güncelle'},
+    {key:'images',label:en?'Model Images':'Model Görselleri',description:en?'Refresh model images':'Model görsellerini güncelle'},
+    {key:'files',label:en?'Model Files':'Model Dosyaları',description:en?'Refresh technical sheets and model files':'Teknik föy ve model dosyalarını güncelle'},
   ]:[
-    {key:'links',label:en?'Model Links':'Model Linkleri'},
-    {key:'images',label:en?'Model Images':'Model Görselleri'},
+    {key:'links',label:en?'Model Links':'Model Linkleri',description:en?'Refresh PLM model links':'PLM model bağlantılarını güncelle'},
+    {key:'images',label:en?'Model Images':'Model Görselleri',description:en?'Refresh model images':'Model görsellerini güncelle'},
   ];
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPropertyModal')?.remove();
     const modal=document.createElement('div');modal.id='_plmSyncPropertyModal';modal.className='warnOverlay';
-    modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true" aria-labelledby="_plmSyncPropertyTitle">
-      <div class="modelImageUpdateHead"><div class="modalTitle" id="_plmSyncPropertyTitle">${escapeHtml(en?'What do you want to update?':'Neleri güncellemek istiyorsunuz?')}</div><button type="button" class="pricingRuleIconBtn" data-plmprop-action="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
-      <div class="modelImageUpdateChoices modelImageUpdateModes">${definitions.map(item=>`<label class="tbtn modelImageUpdateChoice"><input type="checkbox" data-plmprop="${escapeHtml(item.key)}"> <span>${escapeHtml(item.label)}</span></label>`).join('')}</div>
-      <div class="modalFoot"><button type="button" class="tbtn" data-plmprop-action="back">${escapeHtml(en?'Back':'Geri')}</button><span></span><button type="button" class="tbtn" data-plmprop-action="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-plmprop-action="continue" disabled>${escapeHtml(en?'Start':'Başlat')}</button></div>
+    modal.innerHTML=`<div class="modalCard modelImageUpdateCard plmSyncModalCard" role="dialog" aria-modal="true" aria-labelledby="_plmSyncPropertyTitle">
+      <div class="modelImageUpdateHead plmSyncModalHead"><div class="plmSyncHeading"><div class="modalTitle" id="_plmSyncPropertyTitle">${escapeHtml(en?'What do you want to update?':'Neleri güncellemek istiyorsunuz?')}</div><div class="modelImageUpdateIntro plmSyncModalIntro">${escapeHtml(en?'Select one or more PLM assets':'Bir veya daha fazla PLM varlığı seçin')}</div></div><button type="button" class="pricingRuleIconBtn plmSyncCloseBtn" data-plmprop-action="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="modelImageUpdateChoices modelImageUpdateModes plmSyncPropertyList">${definitions.map(item=>`<label class="tbtn modelImageUpdateChoice plmSyncOptionCard plmSyncPropertyCard"><input type="checkbox" data-plmprop="${escapeHtml(item.key)}"><span class="plmSyncCheck" aria-hidden="true"></span><span class="plmSyncActionCopy"><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.description)}</small></span></label>`).join('')}</div>
+      <div class="modalFoot plmSyncModalFoot"><button type="button" class="tbtn plmSyncBackBtn" data-plmprop-action="back">← <span>${escapeHtml(en?'Back':'Geri')}</span></button><span class="plmSyncFootSpacer"></span><button type="button" class="tbtn" data-plmprop-action="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-plmprop-action="continue" disabled>${escapeHtml(en?'Start':'Başlat')}</button></div>
     </div>`;
     let settled=false;
     const checks=[...modal.querySelectorAll('[data-plmprop]')],continueBtn=modal.querySelector('[data-plmprop-action="continue"]');
     const sync=()=>{continueBtn.disabled=!checks.some(input=>input.checked);};
     checks.forEach(input=>input.addEventListener('change',sync));
+    sync();
     const finish=value=>{
       if(settled)return;settled=true;
       window.BLLayerSystem?.closeDialog?.(modal,{trigger});modal.remove();resolve(value);
@@ -27264,7 +27284,8 @@ async function openPlmSyncCategoryPanel(page,category,trigger){
   const actions=plmSyncScopeActions(scope,{collection});
   const action=await plmSyncActionModal({
     id:`_${page}PlmSyncActionModal`,title:en?'PLM Synchronization':'PLM Senkronizasyonu',
-    trigger:root,onBack:back,actions,
+    intro:en?'Choose the model scope to update':'Güncellenecek model kapsamını seçin',
+    trigger:root,onBack:back,actions,confirmSelection:true,confirmLabel:en?'Continue':'Devam',
   });
   if(!action||action==='back')return;
   if(collection&&action==='import-selected')await runPlmSelectedImportV10(root);

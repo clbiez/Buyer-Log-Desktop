@@ -14,9 +14,15 @@ const MIN_WINDOW_WIDTH = 800;
 const MIN_WINDOW_HEIGHT = 600;
 const CLOSE_FORCE_DELAY_MS = 800;
 const WINDOW_THEME = Object.freeze({
-  light: { background:'#f2f2f3', overlay:'#ececed', symbol:'#1d1f20' },
-  dark: { background:'#23262a', overlay:'#1c1f23', symbol:'#e9eaec' },
+  light: { background:'#F6F7F9', overlay:'#FBFBFC', symbol:'#101828' },
+  grey: { background:'#DFE1E4', overlay:'#E3E5E8', symbol:'#22262B' },
+  dark: { background:'#131417', overlay:'#212429', symbol:'#E8EAED' },
 });
+
+function normalizeWorkspaceTheme(value, fallback = 'light') {
+  const theme = String(value || '').trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(WINDOW_THEME, theme) ? theme : fallback;
+}
 
 const MODULES = Object.freeze({
   overview: { tr: 'Genel Bakış', en: 'Overview' },
@@ -60,9 +66,13 @@ function createWorkspaceManager(options) {
   let lastFocusedWindowId = 0;
   let rendererReadySignaled = false;
   let primaryWindowId = 0;
+  let workspaceTheme = normalizeWorkspaceTheme(
+    options.initialTheme,
+    nativeTheme && nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
+  );
 
   function currentWindowTheme() {
-    return nativeTheme && nativeTheme.shouldUseDarkColors ? WINDOW_THEME.dark : WINDOW_THEME.light;
+    return WINDOW_THEME[workspaceTheme] || WINDOW_THEME.light;
   }
 
   function applyWindowTheme(window) {
@@ -72,7 +82,9 @@ function createWorkspaceManager(options) {
     try { window.setTitleBarOverlay({ color:theme.overlay, symbolColor:theme.symbol, height:WORKSPACE_BAR_HEIGHT }); } catch (_) {}
   }
 
-  function onNativeThemeUpdated() {
+  function setTheme(value) {
+    const next = normalizeWorkspaceTheme(value, workspaceTheme);
+    workspaceTheme = next;
     windows.forEach(state => applyWindowTheme(state.window));
     tabs.forEach(tab => {
       if (!tab.view.webContents.isDestroyed()) {
@@ -80,9 +92,8 @@ function createWorkspaceManager(options) {
       }
     });
     notifyAll();
+    return workspaceTheme;
   }
-
-  if (nativeTheme && typeof nativeTheme.on === 'function') nativeTheme.on('updated', onNativeThemeUpdated);
 
   function stateForWindow(windowId) {
     return windows.get(Number(windowId)) || null;
@@ -156,6 +167,7 @@ function createWorkspaceManager(options) {
         return tab ? { id: tab.id, module: tab.module, title: tab.title, loading: tab.loading } : null;
       }).filter(Boolean),
       modules: MODULES,
+      theme: workspaceTheme,
       isPrimaryWindow: state.window.id === primaryWindowId,
       canReattach: Boolean(reattachTarget(state)),
     };
@@ -352,6 +364,7 @@ function createWorkspaceManager(options) {
       activeTabId: '',
       closingRequested: false,
       forceClosing: false,
+      emptyCloseScheduled: false,
     };
     windows.set(window.id, state);
     if (!primaryWindowId) primaryWindowId = window.id;
@@ -432,6 +445,39 @@ function createWorkspaceManager(options) {
     return true;
   }
 
+  function closeEmptyDetachedWindow(state) {
+    if (!state || state.window.isDestroyed() || state.window.id === primaryWindowId || state.tabs.length > 0) return false;
+    if (state.emptyCloseScheduled) return true;
+    state.emptyCloseScheduled = true;
+
+    setImmediate(() => {
+      state.emptyCloseScheduled = false;
+      if (!windows.has(state.window.id) || state.window.isDestroyed() || state.window.id === primaryWindowId || state.tabs.length > 0) return;
+      state.forceClosing = true;
+      try { state.window.close(); } catch (_) {}
+
+      if (!state.window.isDestroyed()) {
+        const fallback = setTimeout(() => {
+          if (!windows.has(state.window.id) || state.window.isDestroyed() || state.window.id === primaryWindowId || state.tabs.length > 0) return;
+          try { state.window.destroy(); } catch (_) {}
+        }, 250);
+        fallback.unref?.();
+      }
+    });
+    return true;
+  }
+
+  function settleSourceAfterMove(source, target) {
+    if (!source || source === target || source.window.isDestroyed()) return;
+    if (source.tabs.length > 0) {
+      if (source.activeTabId) showActive(source, false);
+      notify(source);
+      return;
+    }
+    source.activeTabId = '';
+    closeEmptyDetachedWindow(source);
+  }
+
   function moveTab(tabId, targetWindowId, index) {
     const tab = tabs.get(String(tabId || ''));
     const target = stateForWindow(targetWindowId);
@@ -451,14 +497,7 @@ function createWorkspaceManager(options) {
     target.activeTabId = tab.id;
     showActive(target);
 
-    if (source !== target) {
-      if (source.activeTabId) showActive(source, false);
-      else {
-        source.forceClosing = true;
-        source.window.close();
-      }
-      notify(source);
-    }
+    if (source !== target) settleSourceAfterMove(source, target);
     notify(target);
     return true;
   }
@@ -553,7 +592,6 @@ function createWorkspaceManager(options) {
   }
 
   function destroyAllWindows() {
-    if (nativeTheme && typeof nativeTheme.removeListener === 'function') nativeTheme.removeListener('updated', onNativeThemeUpdated);
     windows.forEach(state => {
       state.forceClosing = true;
       state.tabs.forEach(tabId => {
@@ -595,7 +633,9 @@ function createWorkspaceManager(options) {
     detachTab,
     finishTabDrag,
     reattachTab,
+    closeEmptyDetachedWindow,
     closeTab,
+    setTheme,
     closeAllWindows,
     destroyAllWindows,
     broadcast,
@@ -615,4 +655,4 @@ function createWorkspaceManager(options) {
   };
 }
 
-module.exports = { createWorkspaceManager, MODULES, WORKSPACE_BAR_HEIGHT, normalizeModule, clampIndex };
+module.exports = { createWorkspaceManager, MODULES, WORKSPACE_BAR_HEIGHT, normalizeModule, normalizeWorkspaceTheme, clampIndex };
