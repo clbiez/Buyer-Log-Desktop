@@ -613,7 +613,12 @@
       const images = data.collectionImages || {};
       const completed = (Number(images.installed)||0) + (Number(images.reused)||0);
       const missing = Number(images.missing)||0;
-      steps.collectionImages = {
+      const imageDeferred = images.blocking === false && ['deferred','pending','syncing'].includes(String(images.status || ''));
+      steps.collectionImages = imageDeferred ? {
+        status:'active',
+        label:tr('Koleksiyon görselleri', 'Collection images'),
+        detail:tr('Arka planda · girişe engel değil', 'Background · does not block sign-in'),
+      } : {
         status:'done',
         label:tr('Koleksiyon görselleri', 'Collection images'),
         detail:data.offline
