@@ -1786,30 +1786,42 @@ app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async 
     const gate = bootstrapStatusSnapshot();
     if (gate.status === 'offline') {
       userBootstrapReady.add(String(req.currentUser.id));
-      return res.set('Cache-Control','no-store').json({ ok:true, ready:true, offline:true, message:'Çevrimdışı · son doğrulanmış yerel veri kullanılıyor', collectionImages:{ requested:0, installed:0, reused:0, missing:0 } });
+      return res.set('Cache-Control','no-store').json({ ok:true, ready:true, offline:true, message:'Çevrimdışı · son doğrulanmış yerel veri kullanılıyor', collectionImages:{ status:'offline', blocking:false, requested:0, installed:0, reused:0, missing:0 } });
     }
     if (gate.status !== 'ready') {
       return res.status(423).set('Cache-Control','no-store').json({ ok:false, ready:false, code:'BOOTSTRAP_NOT_READY', bootstrap:gate });
     }
-    const collectionImages = await syncAuthorizedCollectionImages(req.currentUser.id);
-    const failedOwners = (collectionImages.results || []).filter(item => item && item.error);
-    const missingImages = Number(collectionImages.missing) || 0;
-    if (failedOwners.length || missingImages > 0) {
-      throw Object.assign(new Error(
-        missingImages > 0
-          ? missingImages + ' Koleksiyon görseli Shared Hub senkronizasyonunu bekliyor.'
-          : 'Yetkili Koleksiyon senkronizasyonu tamamlanamadı.'
-      ), {
-        code:'COLLECTION_BOOTSTRAP_INCOMPLETE',
-        statusCode:503,
-        details:{ failedOwners, missingImages, requested:Number(collectionImages.requested)||0 },
+
+    // Koleksiyon görselleri yararlı ama giriş için kritik değildir. IAM, Master,
+    // Business ve koleksiyon izinleri hazır olduktan sonra kullanıcı ana ekrana
+    // girebilir; görseller LOCAL → SHARED akışında arka planda tamamlanır.
+    const userId = String(req.currentUser.id);
+    userBootstrapReady.add(userId);
+    void syncAuthorizedCollectionImages(userId).then(collectionImages => {
+      const failedOwners = (collectionImages.results || []).filter(item => item && item.error);
+      const missingImages = Number(collectionImages.missing) || 0;
+      markStartup(
+        failedOwners.length || missingImages > 0 ? 'COLLECTION_IMAGE_SYNC_DEFERRED' : 'COLLECTION_IMAGE_SYNC_READY',
+        {
+          userId,
+          requested:Number(collectionImages.requested)||0,
+          installed:Number(collectionImages.installed)||0,
+          reused:Number(collectionImages.reused)||0,
+          missing:missingImages,
+          failedOwners:failedOwners.length,
+        }
+      );
+    }).catch(error => {
+      markStartup('COLLECTION_IMAGE_SYNC_DEFERRED', {
+        userId,
+        error:error && error.code || error && error.message || String(error),
       });
-    }
-    userBootstrapReady.add(String(req.currentUser.id));
-    res.set('Cache-Control','no-store').json({
+    });
+
+    return res.set('Cache-Control','no-store').json({
       ok:true, ready:true, offline:false,
-      message:'Koleksiyonlar ve yetkili görseller eşitlendi.',
-      collectionImages,
+      message:'Senkronizasyon tamamlandı · Koleksiyon görselleri arka planda eşitleniyor.',
+      collectionImages:{ status:'deferred', blocking:false, requested:0, installed:0, reused:0, missing:0 },
     });
   } catch (error) {
     res.status(error.statusCode || 503).set('Cache-Control','no-store').json({

@@ -23,12 +23,14 @@ test('login is gated until Shared Hub startup bootstrap is complete', () => {
   assert.ok(login.indexOf('await runUserBootstrap();') < login.indexOf("location.replace('/');"));
 });
 
-test('main workspace is blocked until authenticated Collection bootstrap completes', () => {
+test('main workspace waits for critical bootstrap but not Collection image completion', () => {
   assert.match(server, /const userBootstrapReady = new Set\(\)/);
-  assert.match(server, /userBootstrapReady\.add\(String\(req\.currentUser\.id\)\)/);
-  assert.match(server, /const missingImages = Number\(collectionImages\.missing\) \|\| 0/);
-  assert.match(server, /failedOwners\.length \|\| missingImages > 0/);
-  assert.match(server, /COLLECTION_BOOTSTRAP_INCOMPLETE/);
+  assert.match(server, /if \(gate\.status !== 'ready'\)/);
+  assert.match(server, /const userId = String\(req\.currentUser\.id\)/);
+  assert.match(server, /userBootstrapReady\.add\(userId\)/);
+  assert.match(server, /void syncAuthorizedCollectionImages\(userId\)\.then/);
+  assert.match(server, /collectionImages:\{ status:'deferred', blocking:false/);
+  assert.doesNotMatch(server, /COLLECTION_BOOTSTRAP_INCOMPLETE/);
   assert.match(server, /!userBootstrapReady\.has\(String\(profile\.id\)\)/);
   assert.match(server, /redirect\(302, '\/select-user'\)/);
 });
