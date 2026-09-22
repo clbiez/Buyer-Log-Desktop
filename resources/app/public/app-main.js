@@ -19182,7 +19182,7 @@ function kolScopeText(key){
     noOptions:{tr:'Seçenek yok',en:'No options'},
     edit:{tr:'Düzenleme',en:'Edit'},
     view:{tr:'Görüntüleme',en:'View'},
-    workspacePermissions:{tr:'Görünüm ve Yetkiler',en:'View & Permissions'},
+    workspacePermissions:{tr:'Yetkiler',en:'Permissions'},
     viewHelp:{tr:'Kendi kayıtlarınız her zaman görünür. Paylaşım verilen kayıtları seçebilirsiniz.',en:'Your own records are always visible. Select any records shared with you.'},
     sharedPermissions:{tr:'Paylaştığım İzinler',en:'Permissions I Shared'},
     remove:{tr:'Kaldır',en:'Remove'},
