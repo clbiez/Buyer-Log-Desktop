@@ -12,7 +12,7 @@
 const WORKSPACE_BAR_HEIGHT = 44;
 const MIN_WINDOW_WIDTH = 800;
 const MIN_WINDOW_HEIGHT = 600;
-const CLOSE_FORCE_DELAY_MS = 800;
+const CLOSE_FORCE_DELAY_MS = 250;
 const WINDOW_THEME = Object.freeze({
   light: { background:'#F6F7F9', overlay:'#FBFBFC', symbol:'#101828' },
   grey: { background:'#DFE1E4', overlay:'#E3E5E8', symbol:'#22262B' },
@@ -87,7 +87,8 @@ function createWorkspaceManager(options) {
     workspaceTheme = next;
     windows.forEach(state => applyWindowTheme(state.window));
     tabs.forEach(tab => {
-      if (!tab.view.webContents.isDestroyed()) {
+      const contents = tabContents(tab);
+      if (tab && tab.view && isLiveContents(contents)) {
         try { tab.view.setBackgroundColor(currentWindowTheme().background); } catch (_) {}
       }
     });
@@ -99,21 +100,44 @@ function createWorkspaceManager(options) {
     return windows.get(Number(windowId)) || null;
   }
 
+  function isLiveWindowState(state) {
+    return Boolean(state && state.window && typeof state.window.isDestroyed === 'function' && !state.window.isDestroyed());
+  }
+
+  function tabContents(tab) {
+    return tab && tab.view && tab.view.webContents ? tab.view.webContents : null;
+  }
+
+  function isLiveContents(contents) {
+    if (!contents || typeof contents.isDestroyed !== 'function') return false;
+    try { return !contents.isDestroyed(); } catch (_) { return false; }
+  }
+
+  function isLiveTab(tab, state = null) {
+    if (!tab || tab.closing || !tab.id || tabs.get(tab.id) !== tab) return false;
+    const owner = state || stateForWindow(tab.windowId);
+    if (!isLiveWindowState(owner) || tab.windowId !== owner.window.id || !owner.tabs.includes(tab.id)) return false;
+    return Boolean(tab.view && isLiveContents(tabContents(tab)));
+  }
+
   function tabForContents(contents) {
-    if (!contents || contents.isDestroyed()) return null;
+    if (!isLiveContents(contents)) return null;
     const tabId = contentsToTab.get(contents.id);
-    return tabId ? tabs.get(tabId) || null : null;
+    const tab = tabId ? tabs.get(tabId) || null : null;
+    return isLiveTab(tab) ? tab : null;
   }
 
   function windowForContents(contents) {
     const tab = tabForContents(contents);
-    return tab ? stateForWindow(tab.windowId)?.window || null : null;
+    const state = tab ? stateForWindow(tab.windowId) : null;
+    return isLiveWindowState(state) ? state.window : null;
   }
 
   function windowForShellContents(contents) {
-    if (!contents || contents.isDestroyed()) return null;
+    if (!isLiveContents(contents)) return null;
     const windowId = shellToWindow.get(contents.id);
-    return windowId ? stateForWindow(windowId) || null : null;
+    const state = windowId ? stateForWindow(windowId) : null;
+    return isLiveWindowState(state) ? state : null;
   }
 
   function focusedState() {
@@ -128,15 +152,15 @@ function createWorkspaceManager(options) {
 
   function activeContents(state = focusedState()) {
     const tab = state && tabs.get(state.activeTabId);
-    return tab && !tab.view.webContents.isDestroyed() ? tab.view.webContents : null;
+    return isLiveTab(tab, state) ? tabContents(tab) : null;
   }
 
   function allWindows() {
-    return [...windows.values()].map(state => state.window).filter(window => !window.isDestroyed());
+    return [...windows.values()].filter(isLiveWindowState).map(state => state.window);
   }
 
   function allTabContents() {
-    return [...tabs.values()].map(tab => tab.view.webContents).filter(contents => !contents.isDestroyed());
+    return [...tabs.values()].filter(tab => isLiveTab(tab)).map(tabContents);
   }
 
   function pointInside(bounds, x, y) {
@@ -144,10 +168,10 @@ function createWorkspaceManager(options) {
   }
 
   function reattachTarget(source) {
-    if (!source || source.window.id === primaryWindowId) return null;
+    if (!isLiveWindowState(source) || source.window.id === primaryWindowId) return null;
     const primary = stateForWindow(primaryWindowId);
-    if (primary && !primary.window.isDestroyed()) return primary;
-    return [...windows.values()].find(candidate => candidate !== source && !candidate.window.isDestroyed()) || null;
+    if (isLiveWindowState(primary)) return primary;
+    return [...windows.values()].find(candidate => candidate !== source && isLiveWindowState(candidate)) || null;
   }
 
   function settleCloseRequest(tab, closed) {
@@ -158,14 +182,73 @@ function createWorkspaceManager(options) {
     request.resolve(Boolean(closed));
   }
 
+  function cleanupTab(tab, { closeEmpty = true, notifyOwner = true } = {}) {
+    if (!tab || !tab.id) return false;
+    const id = String(tab.id);
+    const owner = stateForWindow(tab.windowId);
+    const oldIndex = owner ? owner.tabs.indexOf(id) : -1;
+    const contents = tabContents(tab);
+
+    tab.closing = true;
+    if (owner) detachView(owner, tab);
+
+    if (contents) {
+      try {
+        if (contentsToTab.get(contents.id) === id) contentsToTab.delete(contents.id);
+      } catch (_) {}
+    }
+    for (const [contentsId, mappedTabId] of [...contentsToTab.entries()]) {
+      if (mappedTabId === id) contentsToTab.delete(contentsId);
+    }
+    if (tabs.get(id) === tab) tabs.delete(id);
+
+    if (owner) {
+      owner.tabs = owner.tabs.filter(tabId => tabId !== id);
+      if (owner.activeTabId === id || !tabs.has(owner.activeTabId)) {
+        const fallbackIndex = oldIndex >= 0 ? Math.min(oldIndex, owner.tabs.length - 1) : 0;
+        owner.activeTabId = owner.tabs[fallbackIndex] || owner.tabs[0] || '';
+      }
+    }
+
+    settleCloseRequest(tab, true);
+
+    if (isLiveWindowState(owner)) {
+      if (owner.activeTabId && !owner.closingRequested) showActive(owner, false);
+      else if (!owner.activeTabId && closeEmpty && !owner.closingRequested) void requestCloseWindow(owner);
+      if (notifyOwner) notify(owner);
+    }
+    return true;
+  }
+
+  function purgeStaleTabs(state) {
+    if (!state) return 0;
+    let purged = 0;
+    for (const id of [...state.tabs]) {
+      const tab = tabs.get(id);
+      if (isLiveTab(tab, state)) continue;
+      if (tab) cleanupTab(tab, { closeEmpty:false, notifyOwner:false });
+      else {
+        state.tabs = state.tabs.filter(tabId => tabId !== id);
+        for (const [contentsId, mappedTabId] of [...contentsToTab.entries()]) {
+          if (mappedTabId === id) contentsToTab.delete(contentsId);
+        }
+      }
+      purged += 1;
+    }
+    if (!state.activeTabId || !isLiveTab(tabs.get(state.activeTabId), state)) {
+      state.activeTabId = state.tabs.find(id => isLiveTab(tabs.get(id), state)) || '';
+    }
+    return purged;
+  }
+
   function snapshot(state) {
     return {
-      windowId: state.window.id,
-      activeTabId: state.activeTabId,
-      tabs: state.tabs.map(tabId => {
+      windowId: state && state.window ? state.window.id : 0,
+      activeTabId: state ? state.activeTabId : '',
+      tabs: state ? state.tabs.map(tabId => {
         const tab = tabs.get(tabId);
-        return tab ? { id: tab.id, module: tab.module, title: tab.title, loading: tab.loading } : null;
-      }).filter(Boolean),
+        return isLiveTab(tab, state) ? { id: tab.id, module: tab.module, title: tab.title, loading: tab.loading } : null;
+      }).filter(Boolean) : [],
       modules: MODULES,
       theme: workspaceTheme,
       isPrimaryWindow: state.window.id === primaryWindowId,
@@ -174,7 +257,7 @@ function createWorkspaceManager(options) {
   }
 
   function notify(state) {
-    if (!state || state.window.isDestroyed() || state.window.webContents.isDestroyed()) return;
+    if (!isLiveWindowState(state) || !isLiveContents(state.window.webContents)) return;
     try { state.window.webContents.send('buyerlog:workspace-state', snapshot(state)); } catch (_) {}
   }
 
@@ -183,10 +266,10 @@ function createWorkspaceManager(options) {
   }
 
   function layout(state) {
-    if (!state || state.window.isDestroyed()) return;
+    if (!isLiveWindowState(state)) return;
     const bounds = state.window.getContentBounds();
     const active = tabs.get(state.activeTabId);
-    if (!active || active.view.webContents.isDestroyed()) return;
+    if (!isLiveTab(active, state)) return;
     active.view.setBounds({
       x: 0,
       y: WORKSPACE_BAR_HEIGHT,
@@ -196,31 +279,37 @@ function createWorkspaceManager(options) {
   }
 
   function detachView(state, tab) {
-    if (!state || !tab) return;
+    if (!isLiveWindowState(state) || !tab || !tab.view) return;
     try { state.window.contentView.removeChildView(tab.view); } catch (_) {}
   }
 
   function showActive(state, focus = true) {
-    if (!state || state.window.isDestroyed()) return;
+    if (!isLiveWindowState(state)) return;
+    purgeStaleTabs(state);
     const tab = tabs.get(state.activeTabId);
-    if (!tab || tab.view.webContents.isDestroyed()) return;
+    if (!isLiveTab(tab, state)) {
+      notify(state);
+      return;
+    }
     state.tabs.forEach(tabId => {
       const candidate = tabs.get(tabId);
-      if (candidate && candidate !== tab) detachView(state, candidate);
+      if (candidate && candidate !== tab && candidate.view) detachView(state, candidate);
     });
-    state.window.contentView.addChildView(tab.view);
+    try { state.window.contentView.addChildView(tab.view); } catch (_) { return; }
     layout(state);
     state.window.setTitle('Buyer Log · ' + tab.title);
     if (focus) {
-      try { tab.view.webContents.focus(); } catch (_) {}
+      try { tabContents(tab).focus(); } catch (_) {}
     }
     notify(state);
   }
 
   function activateTab(windowId, tabId, focus = true) {
     const state = stateForWindow(windowId);
+    if (!isLiveWindowState(state)) return false;
+    purgeStaleTabs(state);
     const tab = tabs.get(String(tabId || ''));
-    if (!state || !tab || tab.windowId !== state.window.id) return false;
+    if (!isLiveTab(tab, state)) return false;
     state.activeTabId = tab.id;
     showActive(state, focus);
     return true;
@@ -261,6 +350,7 @@ function createWorkspaceManager(options) {
       view,
       windowId: state.window.id,
       loading: true,
+      closing: false,
       closeRequest: null,
     };
     tabs.set(id, tab);
@@ -278,6 +368,10 @@ function createWorkspaceManager(options) {
       if (code !== -3) log('Sekme yüklenemedi (' + code + ' ' + description + '): ' + url);
     });
     view.webContents.on('will-prevent-unload', event => {
+      if (tab.closing) {
+        event.preventDefault();
+        return;
+      }
       const parent = stateForWindow(tab.windowId)?.window;
       const answer = dialog.showMessageBoxSync(parent && !parent.isDestroyed() ? parent : undefined, {
         type: 'question',
@@ -297,17 +391,7 @@ function createWorkspaceManager(options) {
       }
     });
     view.webContents.on('destroyed', () => {
-      settleCloseRequest(tab, true);
-      contentsToTab.delete(view.webContents.id);
-      tabs.delete(id);
-      const owner = stateForWindow(tab.windowId);
-      if (!owner) return;
-      const oldIndex = owner.tabs.indexOf(id);
-      if (oldIndex >= 0) owner.tabs.splice(oldIndex, 1);
-      if (owner.activeTabId === id) owner.activeTabId = owner.tabs[Math.min(oldIndex, owner.tabs.length - 1)] || '';
-      if (owner.activeTabId) showActive(owner, false);
-      else if (!owner.closingRequested && !owner.window.isDestroyed()) requestCloseWindow(owner);
-      notify(owner);
+      cleanupTab(tab);
     });
     view.webContents.on('did-finish-load', () => {
       tab.loading = false;
@@ -420,9 +504,10 @@ function createWorkspaceManager(options) {
 
   function openModule(windowId, moduleId) {
     const state = stateForWindow(windowId) || focusedState();
-    if (!state) return null;
+    if (!isLiveWindowState(state) || state.closingRequested) return null;
+    purgeStaleTabs(state);
     const module = normalizeModule(moduleId);
-    const existing = state.tabs.map(id => tabs.get(id)).find(tab => tab && tab.module === module);
+    const existing = state.tabs.map(id => tabs.get(id)).find(tab => isLiveTab(tab, state) && tab.module === module);
     if (existing) {
       activateTab(state.window.id, existing.id);
       return existing;
@@ -446,19 +531,19 @@ function createWorkspaceManager(options) {
   }
 
   function closeEmptyDetachedWindow(state) {
-    if (!state || state.window.isDestroyed() || state.window.id === primaryWindowId || state.tabs.length > 0) return false;
+    if (!isLiveWindowState(state) || state.window.id === primaryWindowId || state.tabs.length > 0) return false;
     if (state.emptyCloseScheduled) return true;
     state.emptyCloseScheduled = true;
 
     setImmediate(() => {
       state.emptyCloseScheduled = false;
-      if (!windows.has(state.window.id) || state.window.isDestroyed() || state.window.id === primaryWindowId || state.tabs.length > 0) return;
+      if (!windows.has(state.window.id) || !isLiveWindowState(state) || state.window.id === primaryWindowId || state.tabs.length > 0) return;
       state.forceClosing = true;
       try { state.window.close(); } catch (_) {}
 
       if (!state.window.isDestroyed()) {
         const fallback = setTimeout(() => {
-          if (!windows.has(state.window.id) || state.window.isDestroyed() || state.window.id === primaryWindowId || state.tabs.length > 0) return;
+          if (!windows.has(state.window.id) || !isLiveWindowState(state) || state.window.id === primaryWindowId || state.tabs.length > 0) return;
           try { state.window.destroy(); } catch (_) {}
         }, 250);
         fallback.unref?.();
@@ -482,7 +567,7 @@ function createWorkspaceManager(options) {
     const tab = tabs.get(String(tabId || ''));
     const target = stateForWindow(targetWindowId);
     const source = tab ? stateForWindow(tab.windowId) : null;
-    if (!tab || !target || !source) return false;
+    if (!isLiveTab(tab, source) || !isLiveWindowState(target)) return false;
 
     const sourceIndex = source.tabs.indexOf(tab.id);
     if (sourceIndex >= 0) source.tabs.splice(sourceIndex, 1);
@@ -504,9 +589,8 @@ function createWorkspaceManager(options) {
 
   function detachTab(tabId, sourceWindowId, point = {}) {
     const tab = tabs.get(String(tabId || ''));
-    if (!tab || tab.windowId !== Number(sourceWindowId)) return false;
-    const source = stateForWindow(tab.windowId);
-    if (!source) return false;
+    const source = tab ? stateForWindow(tab.windowId) : null;
+    if (!isLiveTab(tab, source) || tab.windowId !== Number(sourceWindowId)) return false;
     const sourceBounds = source.window.getBounds();
     const pointX = Number.isFinite(Number(point.x)) && Number(point.x) !== 0 ? Math.round(Number(point.x)) : sourceBounds.x + 196;
     const pointY = Number.isFinite(Number(point.y)) && Number(point.y) !== 0 ? Math.round(Number(point.y)) : sourceBounds.y + 54;
@@ -522,7 +606,7 @@ function createWorkspaceManager(options) {
   function finishTabDrag(tabId, sourceWindowId, point = {}) {
     const tab = tabs.get(String(tabId || ''));
     const source = stateForWindow(sourceWindowId);
-    if (!tab || !source || tab.windowId !== source.window.id) return false;
+    if (!isLiveTab(tab, source) || tab.windowId !== source.window.id) return false;
     const x = Math.round(Number(point.x));
     const y = Math.round(Number(point.y));
     if (!Number.isFinite(x) || !Number.isFinite(y) || (x === 0 && y === 0)) return false;
@@ -535,55 +619,62 @@ function createWorkspaceManager(options) {
   function reattachTab(tabId, sourceWindowId) {
     const tab = tabs.get(String(tabId || ''));
     const source = stateForWindow(sourceWindowId);
-    if (!tab || !source || tab.windowId !== source.window.id) return false;
+    if (!isLiveTab(tab, source) || tab.windowId !== source.window.id) return false;
     const target = reattachTarget(source);
     return target ? moveTab(tab.id, target.window.id, target.tabs.length) : false;
   }
 
+  function forceCloseContents(contents) {
+    if (!isLiveContents(contents)) return;
+    try { contents.close({ waitForBeforeUnload:false }); } catch (_) {}
+    if (!isLiveContents(contents)) return;
+    try { contents.forcefullyCrashRenderer?.(); } catch (_) {}
+    try { contents.close({ waitForBeforeUnload:false }); } catch (_) {}
+  }
+
   function closeTab(tabId) {
     const tab = tabs.get(String(tabId || ''));
-    if (!tab || tab.view.webContents.isDestroyed()) return Promise.resolve(false);
+    if (!tab) return Promise.resolve(false);
     if (tab.closeRequest) return tab.closeRequest.promise;
+
+    const contents = tabContents(tab);
+    if (!isLiveContents(contents)) {
+      cleanupTab(tab);
+      return Promise.resolve(true);
+    }
 
     let resolveRequest = null;
     const promise = new Promise(resolve => { resolveRequest = resolve; });
-    const request = { promise, resolve:resolveRequest, timer:null, approved:false };
-    tab.closeRequest = request;
-    request.timer = setTimeout(() => {
-      if (tab.closeRequest !== request) return;
-      if (tab.view.webContents.isDestroyed()) {
-        settleCloseRequest(tab, true);
-        return;
-      }
-      try { tab.view.webContents.close({ waitForBeforeUnload: false }); }
-      catch (_) { settleCloseRequest(tab, false); return; }
-      setTimeout(() => {
-        if (tab.closeRequest === request) settleCloseRequest(tab, tab.view.webContents.isDestroyed());
-      }, 100);
-    }, CLOSE_FORCE_DELAY_MS);
+    tab.closeRequest = { promise, resolve:resolveRequest, timer:null };
+    tab.closing = true;
 
-    try { tab.view.webContents.close({ waitForBeforeUnload: true }); }
-    catch (_) { settleCloseRequest(tab, false); }
-    if (tab.view.webContents.isDestroyed()) settleCloseRequest(tab, true);
+    try { contents.close({ waitForBeforeUnload:false }); }
+    catch (error) { log('Sekme kapatma isteği başarısız (' + tab.module + '): ' + error.message); }
+
+    cleanupTab(tab);
+
+    if (isLiveContents(contents)) {
+      const fallback = setTimeout(() => forceCloseContents(contents), CLOSE_FORCE_DELAY_MS);
+      fallback.unref?.();
+    }
     return promise;
   }
 
   async function requestCloseWindow(state) {
-    if (!state || state.window.isDestroyed() || state.closingRequested) return false;
+    if (!isLiveWindowState(state) || state.closingRequested) return false;
     state.closingRequested = true;
     try {
+      purgeStaleTabs(state);
       for (const tabId of [...state.tabs]) {
-        const tab = tabs.get(tabId);
-        if (!tab || tab.view.webContents.isDestroyed()) continue;
-        const closed = await closeTab(tabId);
-        if (!closed) return false;
+        if (!tabs.has(tabId)) continue;
+        await closeTab(tabId);
       }
       try { saveWindowState(state.window); } catch (_) {}
       state.forceClosing = true;
-      if (!state.window.isDestroyed()) state.window.close();
+      if (isLiveWindowState(state)) state.window.close();
       return true;
     } finally {
-      if (!state.window.isDestroyed()) state.closingRequested = false;
+      if (isLiveWindowState(state)) state.closingRequested = false;
     }
   }
 
@@ -596,9 +687,13 @@ function createWorkspaceManager(options) {
       state.forceClosing = true;
       state.tabs.forEach(tabId => {
         const tab = tabs.get(tabId);
-        if (tab && !tab.view.webContents.isDestroyed()) tab.view.webContents.close();
+        const contents = tabContents(tab);
+        if (isLiveContents(contents)) {
+          try { contents.close({ waitForBeforeUnload:false }); } catch (_) {}
+        }
+        if (tab) cleanupTab(tab, { closeEmpty:false, notifyOwner:false });
       });
-      if (!state.window.isDestroyed()) state.window.destroy();
+      if (isLiveWindowState(state)) state.window.destroy();
     });
   }
 
@@ -609,8 +704,8 @@ function createWorkspaceManager(options) {
   }
 
   function sendToDownloadOwner(contents, channel, payload) {
-    const target = tabForContents(contents)?.view.webContents;
-    if (target && !target.isDestroyed()) {
+    const target = tabContents(tabForContents(contents));
+    if (isLiveContents(target)) {
       try { target.send(channel, payload); } catch (_) {}
       return;
     }
