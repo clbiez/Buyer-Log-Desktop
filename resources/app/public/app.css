@@ -2255,7 +2255,8 @@ td.viewOnlyCell{color:var(--ink2);background:color-mix(in srgb,var(--muted-bg) 3
    diğer yoğun tabloları için de ertele. DOM satırları korunur; filtre, seçim,
    klavye ve veri erişimi değişmez. Excel/kopyalama canlı ölçü istediğinde tabloya
    geçici .blForceFullRender sınıfı verilerek bütün satırlar tekrar çizilir. */
-#cpTable tbody tr,#ordersTable tbody tr,
+#cpTable tbody tr{content-visibility:auto;contain-intrinsic-size:auto var(--cp-row-h-cp,var(--cp-row-h,46px));}
+#ordersTable tbody tr{content-visibility:auto;contain-intrinsic-size:auto var(--cp-row-h-orders,var(--cp-row-h,46px));}
 #kolTable tbody tr,#backlogTreeTable tbody tr,#shipTable tbody tr,
 #lflGroupTable tbody tr,#lflManufacturerVolumeTable tbody tr,#lflCustomCompareTable tbody tr,
 .backlogDetailTable tbody tr,.quotationTable tbody tr,.qhTable tbody tr,
