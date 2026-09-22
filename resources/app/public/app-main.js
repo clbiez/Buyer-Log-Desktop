@@ -8792,13 +8792,18 @@ function overviewCollectionSummaryApplyCollapsed(collapsed,{persist=true}={}){
   if(persist){try{BLStorage.setItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY,value?'1':'0');}catch(_){}}
 }
 function overviewCollectionSummaryStoredCollapsed(){try{return BLStorage.getItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY)==='1';}catch(_){return false;}}
-function overviewCollectionSummaryDrill({month,status,model,season,kpi}={}){
+function overviewCollectionSummaryDrill({month,status,model,season,scopeColumn,scopeValues,kpi}={}){
   try{
     if(typeof kolColFilters==='undefined')return;
-    if(month)kolColFilters.inStoreMonth=new Set([month]);else delete kolColFilters.inStoreMonth;
-    if(status)kolColFilters.durum=new Set([status]);else delete kolColFilters.durum;
-    if(model)kolColFilters.modelKod=new Set([model]);else delete kolColFilters.modelKod;
-    if(season)kolColFilters.season=new Set([season]);else delete kolColFilters.season;
+    const scopedValues=Array.isArray(scopeValues)?scopeValues.map(value=>String(value??'').trim()).filter(Boolean):[];
+    if(scopeColumn){
+      if(scopedValues.length)kolColFilters[scopeColumn]=new Set(scopedValues);
+      else delete kolColFilters[scopeColumn];
+    }
+    if(month)kolColFilters.inStoreMonth=new Set([month]);else if(!scopeColumn)delete kolColFilters.inStoreMonth;
+    if(status)kolColFilters.durum=new Set([status]);else if(scopeColumn!=='durum')delete kolColFilters.durum;
+    if(model)kolColFilters.modelKod=new Set([model]);else if(scopeColumn!=='modelKod')delete kolColFilters.modelKod;
+    if(season)kolColFilters.season=new Set([season]);else if(!scopeColumn)delete kolColFilters.season;
     if(kpi==='confirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['confirmed']);
     else if(kpi==='notConfirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['notConfirmed']);
     else delete kolColFilters[KOL_CONFIRMATION_FILTER_KEY];
@@ -8807,16 +8812,6 @@ function overviewCollectionSummaryDrill({month,status,model,season,kpi}={}){
     if(typeof renderKol==='function')renderKol();
   }catch(_){}
 }
-const OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT={rows:['durum'],columns:['confirmation'],values:['modelCount','optionCount','confirmed','notConfirmed']};
-function overviewCollectionSummaryPivotStored(){
-  const value=overviewCollectionSummaryStored().pivot||{};
-  const normalize=(candidate,fallback)=>{
-    const values=Array.isArray(candidate)?candidate:[candidate];
-    const result=[...new Set(values.map(item=>String(item==null?'':item).trim()).filter(Boolean))];
-    return result.length?result:fallback.slice();
-  };
-  return {rows:normalize(value.rows,OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.rows),columns:Array.isArray(value.columns)?normalize(value.columns,[]):(String(value.columns||'')==='none'||!value.columns?[]:[String(value.columns)]),values:Array.isArray(value.values)&&value.values.length?value.values.slice():OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.values.slice()};
-}
 function overviewCollectionSummaryDashboardContext(){
   return {
     root:document.getElementById('ovCollectionSummary'),
@@ -8824,8 +8819,7 @@ function overviewCollectionSummaryDashboardContext(){
     summary:window.BLOverviewCollectionSummary,
     saved:overviewCollectionSummaryStored(),
     savePrefs:overviewCollectionSummarySave,
-    pivot:overviewCollectionSummaryPivotStored(),
-    pivotColumns:overviewCollectionSummaryPivotColumns(),
+    columns:overviewCollectionSummaryColumns(),
     columnValue:overviewCollectionSummaryColumnValue,
     isConfirmed:overviewCollectionSummaryConfirmed,
     statusCatalog:kolStatusEntries(),
@@ -8837,16 +8831,11 @@ function overviewCollectionSummaryDashboardContext(){
     onRender:renderOverviewCollectionSummary,
   };
 }
-function overviewCollectionSummaryOpenSettings(){
-  const dashboard=window.BLOverviewCollectionDashboard;if(!dashboard)return;
-  dashboard.openSettings(overviewCollectionSummaryDashboardContext());
-}
 function renderOverviewCollectionSummary(){
   const root=document.getElementById('ovCollectionSummary'),dashboard=window.BLOverviewCollectionDashboard;
   if(!root||!dashboard||!window.BLOverviewCollectionSummary)return;
   root.style.display='block';
   dashboard.render(overviewCollectionSummaryDashboardContext());
-  const settingsButton=document.getElementById('ovCollectionSummarySettingsBtn');if(settingsButton)settingsButton.onclick=overviewCollectionSummaryOpenSettings;
   overviewCollectionSummaryApplyCollapsed(overviewCollectionSummaryStoredCollapsed(),{persist:false});
 }
 function scheduleOverviewCollectionSummaryRender(){
@@ -23424,7 +23413,7 @@ function renderKol(){
         html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--mono);background:var(--card2);color:${ruleMissing?'var(--orange)':(fobFallback?'var(--muted)':'var(--ink2)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
       }else if(c.status){
         const statusEntries=kolStatusEntries(),statusColor=kolStatusColor(val);
-        html+=`<td class="editTd kolStatusTd"${rc}><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${val===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
+        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${val===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
       }else if(c.select){
         html+=`<td class="editTd"${rc}><select class="editCell" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
       }else if(c.exToRetail){

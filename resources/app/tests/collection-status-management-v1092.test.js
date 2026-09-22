@@ -69,4 +69,7 @@ test('status pill/dashboard styling is theme-token based and uses status color o
   assert.match(CSS,/color:var\(--ink\)/);
   assert.match(CSS,/\.ovCollectionStatusCard/);
   assert.match(CSS,/color-mix\(in srgb,var\(--status-color\) 7%,var\(--card\)\)/);
+  assert.match(CSS,/#kolTable td\.kolStatusTd/);
+  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 18%,var\(--card\)\)/);
+  assert.match(APP,/class="editTd kolStatusTd"\$\{rc\} style="--kol-status-color:/);
 });

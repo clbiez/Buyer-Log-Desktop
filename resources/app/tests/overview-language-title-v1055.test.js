@@ -7,15 +7,15 @@ const path = require('node:path');
 
 const INDEX = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 const APP = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
+const DASH = fs.readFileSync(path.join(__dirname, '..', 'public', 'overview-collection-dashboard.js'), 'utf8');
 const buttonById = id => INDEX.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`))?.[0] || '';
 
-test('v10.55 Collection Summary ayar düğmesinin araç ipucu ve erişilebilir adı seçili dile uyar', () => {
-  const button = buttonById('ovCollectionSummarySettingsBtn');
-  assert.match(button, /data-i18n-title-tr="Düzenle \/ Ayrıntılı Kırılım"/);
-  assert.match(button, /data-i18n-title-en="Edit \/ Detailed Breakdown"/);
-  assert.match(button, /aria-label="Düzenle \/ Ayrıntılı Kırılım"/);
-  const i18n=APP.match(/function applyStaticI18n\(\)\{[\s\S]*?\n\}/)?.[0]||'';
-  assert.match(i18n,/if\(el\.hasAttribute\('aria-label'\)\) el\.setAttribute\('aria-label', next\)/);
+test('v7.0.94 Collection Summary filtre başlığı iki dilde çift tıklama ipucu taşır; eski Edit yoktur', () => {
+  const label = INDEX.match(/<span[^>]*id="ovCollectionSummaryScopeLabel"[^>]*>/)?.[0] || '';
+  assert.match(label, /data-i18n-title-tr="Filtre sütununu değiştirmek için çift tıkla"/);
+  assert.match(label, /data-i18n-title-en="Double-click to change the filter column"/);
+  assert.doesNotMatch(INDEX,/ovCollectionSummarySettingsBtn/);
+  assert.match(DASH,/scopeLabel\.ondblclick/);
 });
 
 test('v10.55 Overview daraltma düğmeleri ilk çizimde de seçili dile uyar', () => {
