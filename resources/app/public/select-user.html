@@ -570,9 +570,8 @@
   });
 
   async function runUserBootstrap() {
-    // A successful pre-SYNC login can only belong to the local Moderator (the
-    // server enforces this). Do not turn that successful recovery/admin login
-    // into a failure by immediately requiring the Shared Hub user bootstrap.
+    // Credentials are already verified before this helper runs. Shared Sync is
+    // best-effort only; never convert a valid login into a synchronization error.
     if (!hubStatus || hubStatus.configured !== true || !['ready','offline'].includes(hubStatus.status)) {
       hubStatus = {
         ...(hubStatus || {}), loginAllowed:true, moderatorLoginAllowed:true,
@@ -596,7 +595,7 @@
     try {
       const response = await fetch('/api/shared-hub/user-bootstrap', {
         method:'POST', headers:{'Content-Type':'application/json'}, body:'{}',
-        cache:'no-store', signal:controller.signal,
+        cache:'no-store', signal:controller.signal, keepalive:true,
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || data.ready !== true) {
@@ -638,7 +637,7 @@
         message:error && error.message || tr('Koleksiyon senkronizasyonu tamamlanamadı.', 'Collection synchronization could not be completed.'),
       };
       renderHubStatus();
-      throw error;
+      return { ok:true, ready:true, syncDeferred:true, warning:error && error.message || '' };
     } finally { clearTimeout(timeout); }
   }
 
@@ -691,7 +690,9 @@
         throw error;
       }
       try { localStorage.setItem(LAST_USER_KEY, username); } catch (_) {}
-      await runUserBootstrap();
+      // Authentication success is enough to enter Buyer Log. Shared Sync and
+      // Collection image bootstrap continue best-effort in the background.
+      void runUserBootstrap();
       location.replace('/');
       return;
     } catch (error) {
