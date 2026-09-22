@@ -91,31 +91,28 @@ test('v7.14 login supports keyboard, ARIA, password eye, last-user preference an
   assert.doesNotMatch(LOGIN, /alert\(/);
 });
 
-test('v7.14 login button is gated by startup sync and preserves 15 second credential recovery', () => {
-  assert.match(LOGIN, /const gateReady = loginGateReady\(\)/);
-  assert.match(LOGIN, /const controlsLocked = !gateReady \|\| loginBusy/);
+test('v7.14 login button is never gated by Shared Sync and preserves 15 second credential recovery', () => {
+  assert.match(LOGIN, /function loginGateReady\(\)[\s\S]{0,220}return true;/);
+  assert.match(LOGIN, /const controlsLocked = loginBusy/);
   assert.match(LOGIN, /button\.disabled = controlsLocked \|\| !usernameReady \|\| !passwordReady/);
-  assert.match(LOGIN, /Senkronizasyon bekleniyor/);
+  assert.doesNotMatch(LOGIN, /Senkronizasyon bekleniyor/);
   assert.match(LOGIN, /LOGIN_TIMEOUT_MS = 15000/);
   assert.match(LOGIN, /setTimeout\(\(\) => controller\.abort\(\), LOGIN_TIMEOUT_MS\)/);
-  assert.match(LOGIN, /await runUserBootstrap\(\)/);
-  assert.match(LOGIN, /setTimeout\(\(\) => controller\.abort\(\), 180000\)/);
+  assert.match(LOGIN, /void runUserBootstrap\(\)/);
+  assert.match(LOGIN, /location\.replace\('\/'\)/);
   assert.match(LOGIN, /finally \{[\s\S]*loginBusy = false;[\s\S]*renderLoginButton\(\)/);
   assert.match(LOGIN, /Sunucu giriş isteğine zamanında yanıt vermedi\. Tekrar deneyin\./);
 });
 
-test('first-run local Moderator can sign in before Shared Sync is configured', () => {
-  assert.match(SERVER, /moderatorLoginAllowed:userAccess\.canLoginLocally\(\)/);
-  assert.match(SERVER, /const moderatorLocalLogin = Boolean\(loginProfile/);
-  assert.match(SERVER, /!moderatorLocalLogin && \(!sharedHubStartupSettled/);
-  assert.match(SERVER, /!moderatorLocalLogin && gate\.loginAllowed !== true/);
-  assert.match(LOGIN, /\|\| hubStatus\.moderatorLoginAllowed === true/);
+test('all valid local accounts can sign in independently of Shared Sync readiness', () => {
+  const routeStart = SERVER.indexOf("app.post('/api/user-login'");
+  const routeEnd = SERVER.indexOf("app.post('/api/user-logout'", routeStart);
+  const route = SERVER.slice(routeStart, routeEnd);
+  assert.match(route, /return userAccess\.loginHandler\(req, res, next\)/);
+  assert.doesNotMatch(route, /BOOTSTRAP_IN_PROGRESS|BOOTSTRAP_NOT_READY|moderatorLocalLogin/);
+  assert.match(LOGIN, /function loginGateReady\(\)[\s\S]{0,220}return true;/);
   assert.match(LOGIN, /hubStatus\.configured !== true \|\| !\['ready','offline'\]\.includes\(hubStatus\.status\)/);
   assert.match(LOGIN, /localOnly:true/);
-  assert.ok(
-    LOGIN.indexOf('if (!hubStatus || hubStatus.configured !== true') < LOGIN.indexOf("fetch('/api/shared-hub/user-bootstrap'"),
-    'local Moderator bypass must run before user bootstrap network I/O',
-  );
 });
 
 test('v7.14 visual language is restrained ERP styling and responsive', () => {
