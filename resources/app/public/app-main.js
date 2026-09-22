@@ -8792,13 +8792,16 @@ function overviewCollectionSummaryApplyCollapsed(collapsed,{persist=true}={}){
   if(persist){try{BLStorage.setItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY,value?'1':'0');}catch(_){}}
 }
 function overviewCollectionSummaryStoredCollapsed(){try{return BLStorage.getItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY)==='1';}catch(_){return false;}}
-function overviewCollectionSummaryDrill({month,status,model,season}={}){
+function overviewCollectionSummaryDrill({month,status,model,season,kpi}={}){
   try{
     if(typeof kolColFilters==='undefined')return;
     if(month)kolColFilters.inStoreMonth=new Set([month]);else delete kolColFilters.inStoreMonth;
     if(status)kolColFilters.durum=new Set([status]);else delete kolColFilters.durum;
     if(model)kolColFilters.modelKod=new Set([model]);else delete kolColFilters.modelKod;
     if(season)kolColFilters.season=new Set([season]);else delete kolColFilters.season;
+    if(kpi==='confirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['confirmed']);
+    else if(kpi==='notConfirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['notConfirmed']);
+    else delete kolColFilters[KOL_CONFIRMATION_FILTER_KEY];
     if(typeof saveKolColState==='function')saveKolColState();
     if(typeof switchTab==='function')switchTab('koleksiyon');
     if(typeof renderKol==='function')renderKol();
@@ -20871,7 +20874,9 @@ function saveKolRows(){
   }
 }
 const KOL_CONFIRMED_NAME_FILTER_KEY = '__confirmedName__';
+const KOL_CONFIRMATION_FILTER_KEY = '__confirmation__';
 function kolFilterValue(row,key){
+  if(key===KOL_CONFIRMATION_FILTER_KEY)return kolConfirmedPricing(row)?'confirmed':'notConfirmed';
   if(key===KOL_CONFIRMED_NAME_FILTER_KEY){
     const display=kolConfirmedDisplay(row);
     return display?norm(display.name):'';
@@ -20885,6 +20890,7 @@ function kolFilterMeta(key){
   const base=kolColDefs().find(c=>c.k===key);
   if(base) return base;
   if(key===KOL_CONFIRMED_NAME_FILTER_KEY) return {k:key,label:'Conf. Manufacturer'};
+  if(key===KOL_CONFIRMATION_FILTER_KEY) return {k:key,label:appLang==='en'?'Confirmation':'Onay'};
   return null;
 }
 function passesKolColFilters(r){
