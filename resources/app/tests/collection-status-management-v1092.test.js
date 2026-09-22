@@ -63,9 +63,12 @@ test('Excel status validation and colors resolve from the canonical catalog',()=
   assert.match(APP,/kolStatusExcelArgb\(raw\)/);
 });
 
-test('status pill/dashboard styling is theme-token based and uses status color only as semantic accent',()=>{
+test('status cell/dashboard styling is theme-token based and uses status color as semantic accent',()=>{
+  assert.match(APP,/<td class="editTd kolStatusTd"\$\{rc\} style="--kol-status-color:/);
+  assert.match(CSS,/#kolTable td\.kolStatusTd/);
+  assert.match(CSS,/background:color-mix\(in srgb,var\(--kol-status-color\) 24%,var\(--card\)\)!important/);
   assert.match(CSS,/#kolTable select\.kolStatusNoArrow/);
-  assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 11%,var\(--card\)\)/);
+  assert.match(CSS,/background-color:transparent/);
   assert.match(CSS,/color:var\(--ink\)/);
   assert.match(CSS,/\.ovCollectionStatusCard/);
   assert.match(CSS,/color-mix\(in srgb,var\(--status-color\) 7%,var\(--card\)\)/);
