@@ -3579,8 +3579,10 @@ app.get('/api/collection-workspaces', userAccess.requireArea('koleksiyon'), asyn
   await ensureLegacyCollectionOwnerRecovery(req.currentUser);
   const profiles = userAccess.allPublicProfiles();
   const access = new Map(userAccess.effectiveCollectionAccess(req.currentUser).map(item => [item.ownerId, item.level]));
+  const samePersonOwnerIds = new Set(collectionRecoveryAliasProfiles(req.currentUser).map(profile => String(profile.id || '')));
+  samePersonOwnerIds.delete(String(req.currentUser.id || ''));
   const byId = new Map(profiles.map(profile => [profile.id, profile]));
-  const workspaces = profiles.filter(profile => access.has(profile.id)).map(profile => {
+  const workspaces = profiles.filter(profile => access.has(profile.id) && !samePersonOwnerIds.has(String(profile.id || ''))).map(profile => {
     const workspace = loadWorkspace(profile.id);
     const supervisor = profile.supervisorId ? byId.get(profile.supervisorId) : null;
     return { ownerId: profile.id, ownerName: profile.displayName, ownerRole: profile.role, supervisorName: supervisor ? (supervisor.displayName || supervisor.username || '') : '', level: access.get(profile.id), initialized: workspace.initialized, revision: workspace._revision, updatedAt: workspace._updatedAt };
@@ -3591,15 +3593,20 @@ app.get('/api/collection-permissions', userAccess.requireArea('koleksiyon'), asy
   try {
     await refreshCollectionPermissionScope();
     const profiles = new Map(userAccess.allPublicProfiles().map(profile => [profile.id, profile]));
-    const view = collectionPermissions.effectiveOwners(req.currentUser.id).map(item => ({
-      ...item,
-      ownerName: profiles.get(item.ownerId)?.displayName || item.ownerId,
-    }));
-    const outgoing = collectionPermissions.outgoing(req.currentUser.id).map(item => ({
-      ...item,
-      granteeName: profiles.get(item.granteeId)?.displayName || item.granteeId,
-    }));
     const samePersonIds = new Set(collectionRecoveryAliasProfiles(req.currentUser).map(profile => String(profile.id || '')));
+    const currentOwnerId = String(req.currentUser.id || '');
+    const view = collectionPermissions.effectiveOwners(req.currentUser.id)
+      .filter(item => String(item.ownerId || '') === currentOwnerId || !samePersonIds.has(String(item.ownerId || '')))
+      .map(item => ({
+        ...item,
+        ownerName: profiles.get(item.ownerId)?.displayName || item.ownerId,
+      }));
+    const outgoing = collectionPermissions.outgoing(req.currentUser.id)
+      .filter(item => !samePersonIds.has(String(item.granteeId || '')))
+      .map(item => ({
+        ...item,
+        granteeName: profiles.get(item.granteeId)?.displayName || item.granteeId,
+      }));
     const users = [...profiles.values()].filter(profile => profile.id !== req.currentUser.id && !samePersonIds.has(String(profile.id || ''))).map(profile => ({ id: profile.id, displayName: profile.displayName, username: profile.username, enabled: profile.enabled !== false }));
     res.set('Cache-Control', 'no-store').json({ revision: (await collectionPermissions.read()).revision, view, outgoing, users });
   } catch (err) { res.status(err.statusCode || 500).json({ error: err.message || 'Koleksiyon izinleri okunamadı.', code: err.code || 'COLLECTION_PERMISSION_READ_FAILED' }); }
