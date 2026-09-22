@@ -149,6 +149,16 @@ test('Permissions and multi-owner Collection view remain the canonical UI flow',
   assert.match(batch, /readOnly:true, shared:false/);
 });
 
+test('recycle bin deletion follows the real owner workspace instead of shared-collection', () => {
+  const client = block(APP, 'async function kolBinApi', 'function kolBinDaysLeft');
+  assert.match(client, /encodeURIComponent\(kolWorkspaceOwnerId\)/);
+  const access = block(SERVER, 'function collectionBinAccess', "app.get('/api/collection-recycle-bin/:ownerId'");
+  assert.match(access, /collectionAccessLevel\(req\.currentUser, ownerId\)/);
+  assert.match(access, /collectionWorkspaceEditAllowed\(req\.currentUser, ownerId\)/);
+  const canonical = block(SERVER, 'function canonicalCollectionOwner', 'function collectionWorkspaceEditAllowed');
+  assert.doesNotMatch(canonical, /SHARED_COLLECTION_OWNER/);
+});
+
 test('personal backup restore writes back to the signed-in owner workspace', () => {
   assert.match(SERVER, /const userRestoreService = createUserRestoreService\(\);/);
   const init = SERVER.slice(SERVER.indexOf('const userRestoreService ='), SERVER.indexOf('const userRestoreUploads'));
