@@ -8789,24 +8789,21 @@ function overviewCollectionSummaryApplyCollapsed(collapsed,{persist=true}={}){
     button.setAttribute('aria-expanded',value?'false':'true');button.title=title;button.setAttribute('aria-label',title);
     const use=button.querySelector('use');if(use)use.setAttribute('href',value?'#i-chevron-down':'#i-chevron-up');
   }
-  if(persist){try{BLStorage.setItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY,value?'1':'0');}catch(_){} }
+  if(persist){try{BLStorage.setItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY,value?'1':'0');}catch(_){}}
 }
 function overviewCollectionSummaryStoredCollapsed(){try{return BLStorage.getItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY)==='1';}catch(_){return false;}}
-
-
 function overviewCollectionSummaryDrill({month,status,model,season}={}){
   try{
     if(typeof kolColFilters==='undefined')return;
-    if(month){kolColFilters.inStoreMonth=new Set([month]);}else delete kolColFilters.inStoreMonth;
-    if(status){kolColFilters.durum=new Set([status]);}else delete kolColFilters.durum;
-    if(model){kolColFilters.modelKod=new Set([model]);}else delete kolColFilters.modelKod;
-    if(season){kolColFilters.season=new Set([season]);}else delete kolColFilters.season;
+    if(month)kolColFilters.inStoreMonth=new Set([month]);else delete kolColFilters.inStoreMonth;
+    if(status)kolColFilters.durum=new Set([status]);else delete kolColFilters.durum;
+    if(model)kolColFilters.modelKod=new Set([model]);else delete kolColFilters.modelKod;
+    if(season)kolColFilters.season=new Set([season]);else delete kolColFilters.season;
     if(typeof saveKolColState==='function')saveKolColState();
     if(typeof switchTab==='function')switchTab('koleksiyon');
     if(typeof renderKol==='function')renderKol();
   }catch(_){}
 }
-
 const OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT={rows:['durum'],columns:['confirmation'],values:['modelCount','optionCount','confirmed','notConfirmed']};
 function overviewCollectionSummaryPivotStored(){
   const value=overviewCollectionSummaryStored().pivot||{};
@@ -8816,10 +8813,6 @@ function overviewCollectionSummaryPivotStored(){
     return result.length?result:fallback.slice();
   };
   return {rows:normalize(value.rows,OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.rows),columns:Array.isArray(value.columns)?normalize(value.columns,[]):(String(value.columns||'')==='none'||!value.columns?[]:[String(value.columns)]),values:Array.isArray(value.values)&&value.values.length?value.values.slice():OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.values.slice()};
-}
-function overviewCollectionSummaryOpenSettings(){
-  const dashboard=window.BLOverviewCollectionDashboard;if(!dashboard)return;
-  dashboard.openSettings(overviewCollectionSummaryDashboardContext());
 }
 function overviewCollectionSummaryDashboardContext(){
   return {
@@ -8841,6 +8834,10 @@ function overviewCollectionSummaryDashboardContext(){
     onRender:renderOverviewCollectionSummary,
   };
 }
+function overviewCollectionSummaryOpenSettings(){
+  const dashboard=window.BLOverviewCollectionDashboard;if(!dashboard)return;
+  dashboard.openSettings(overviewCollectionSummaryDashboardContext());
+}
 function renderOverviewCollectionSummary(){
   const root=document.getElementById('ovCollectionSummary'),dashboard=window.BLOverviewCollectionDashboard;
   if(!root||!dashboard||!window.BLOverviewCollectionSummary)return;
@@ -8848,7 +8845,441 @@ function renderOverviewCollectionSummary(){
   dashboard.render(overviewCollectionSummaryDashboardContext());
   const settingsButton=document.getElementById('ovCollectionSummarySettingsBtn');if(settingsButton)settingsButton.onclick=overviewCollectionSummaryOpenSettings;
   overviewCollectionSummaryApplyCollapsed(overviewCollectionSummaryStoredCollapsed(),{persist:false});
+}
+function scheduleOverviewCollectionSummaryRender(){
+  if(overviewCollectionSummaryRenderFrame)return;
+  const run=()=>{overviewCollectionSummaryRenderFrame=0;renderOverviewCollectionSummary();};
+  if(typeof requestAnimationFrame==='function')overviewCollectionSummaryRenderFrame=requestAnimationFrame(run);else overviewCollectionSummaryRenderFrame=setTimeout(run,0);
+}
+document.getElementById('ovCollectionSummaryCollapseBtn')?.addEventListener('click',()=>{
+  const root=document.getElementById('ovCollectionSummary');overviewCollectionSummaryApplyCollapsed(!root?.classList.contains('isCollapsed'));
 });
+overviewCollectionSummaryApplyCollapsed(overviewCollectionSummaryStoredCollapsed(),{persist:false});
+setTimeout(renderOverviewCollectionSummary,0);
+
+const OVERVIEW_LAYOUT_KEY='buyerlog.overview.layout.v1';
+let overviewLayoutEditing=false,overviewLayoutDragKey='';
+function overviewLayoutStored(){
+  try{return window.BLOverviewLayout.normalize(JSON.parse(BLStorage.getItem(OVERVIEW_LAYOUT_KEY)||'null'));}catch(_){return window.BLOverviewLayout.normalize(null);}
+}
+function overviewLayoutSave(value){try{BLStorage.setItem(OVERVIEW_LAYOUT_KEY,JSON.stringify(window.BLOverviewLayout.normalize(value)));}catch(_){} }
+function overviewLayoutWidgetLabel(key,scope='page'){
+  const labels={
+    notes:appLang==='en'?'CP Notes':'CP Notları',
+    collectionSummary:appLang==='en'?'Collection Summary':'Koleksiyon Özeti',
+    oab:'OAB',
+    intake:'INTAKE',
+    overviewContent:appLang==='en'?'Overview details':'Genel Bakış detayları',
+    productionFocus:appLang==='en'?"Today's Production Focus":'Bugünün Üretim Odağı',
+    attention:appLang==='en'?'Orders Requiring Attention':'Aksiyon Gereken Siparişler',
+    dataCoverage:appLang==='en'?'Data Coverage':'Veri Kapsamı',
+    country:appLang==='en'?'Active Orders by Country':'Ülke Bazlı Aktif Siparişler',
+    subManufacturer:appLang==='en'?'Active Orders by Sub-Manufacturer':'Alt Üreticiye Göre Aktif Siparişler',
+    season:appLang==='en'?'Active Orders by Season':'Sezon Bazlı Aktif Sipariş Özeti',
+    buyingGroup:appLang==='en'?'Overview per Buying Group':'Group Bazlı Özet',
+  };
+  return labels[key]||key;
+}
+function overviewLayoutBucket(state,scope){return scope==='detail'?state.details:state;}
+function overviewLayoutRenderControls(widget,state,scope='page'){
+  widget.querySelector(':scope > .ovWidgetEditControls')?.remove();
+  widget.querySelector(':scope > .ovWidgetResizeHandle')?.remove();
+  if(!overviewLayoutEditing)return;
+  const key=scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget;
+  const bucket=overviewLayoutBucket(state,scope),widths=window.BLOverviewLayout.widths;
+  const canCollapse=scope==='page'||['country','subManufacturer','season','buyingGroup'].includes(key);
+  const collapseControl=canCollapse?`<button type="button" data-layout-collapse>${escapeHtml(bucket.collapsed[key]?(appLang==='en'?'Expand':'Aç'):(appLang==='en'?'Collapse':'Kapat'))}</button>`:'';
+  const control=document.createElement('div');control.className='ovWidgetEditControls';control.innerHTML=`<span>${escapeHtml(overviewLayoutWidgetLabel(key,scope))}</span><button type="button" data-layout-move="-1" title="${escapeHtml(appLang==='en'?'Move up':'Yukarı taşı')}">↑</button><button type="button" data-layout-move="1" title="${escapeHtml(appLang==='en'?'Move down':'Aşağı taşı')}">↓</button><select data-layout-width aria-label="${escapeHtml(appLang==='en'?'Widget width':'Widget genişliği')}">${widths.map(width=>`<option value="${width}"${bucket.widths[key]===width?' selected':''}>${escapeHtml(({full:appLang==='en'?'Full width':'Tam genişlik',threeQuarter:'¾',twoThirds:'⅔',half:'½',third:'⅓',quarter:'¼'})[width]||width)}</option>`).join('')}</select>${collapseControl}<button type="button" data-layout-remove title="${escapeHtml(appLang==='en'?'Hide module':'Modülü gizle')}">×</button>`;
+  widget.prepend(control);
+  const resize=document.createElement('div');resize.className='ovWidgetResizeHandle';resize.setAttribute('role','separator');resize.setAttribute('aria-label',appLang==='en'?'Resize module':'Modülü yeniden boyutlandır');widget.appendChild(resize);
+  resize.addEventListener('pointerdown',event=>{
+    if(event.button!==0)return;event.preventDefault();event.stopPropagation();
+    const startX=event.clientX,startY=event.clientY,startWidth=widget.getBoundingClientRect().width,startHeight=widget.getBoundingClientRect().height,containerWidth=widget.parentElement?.getBoundingClientRect().width||startWidth;
+    const nearestWidth=pixels=>{const ratios={full:1,threeQuarter:.75,twoThirds:2/3,half:.5,third:1/3,quarter:.25};return widths.reduce((best,item)=>Math.abs(ratios[item]-pixels/containerWidth)<Math.abs(ratios[best]-pixels/containerWidth)?item:best,'full');};
+    const widthDataKey=scope==='detail'?'ovDetailWidth':'ovWidth';
+    const move=pointer=>{widget.style.minHeight=`${Math.max(120,Math.min(1600,startHeight+pointer.clientY-startY))}px`;widget.dataset[widthDataKey]=nearestWidth(Math.max(220,startWidth+pointer.clientX-startX));};
+    const end=pointer=>{move(pointer);document.removeEventListener('pointermove',move,true);document.removeEventListener('pointerup',end,true);const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);nextBucket.widths[key]=widget.dataset[widthDataKey]||nextBucket.widths[key];nextBucket.heights[key]=Math.round(widget.getBoundingClientRect().height);overviewLayoutSave(next);renderOverviewLayout();};
+    document.addEventListener('pointermove',move,true);document.addEventListener('pointerup',end,true);
+  });
+  control.querySelectorAll('[data-layout-move]').forEach(button=>button.addEventListener('click',()=>{
+    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);
+    nextBucket.order=window.BLOverviewLayout.move(nextBucket.order,key,Number(button.dataset.layoutMove));overviewLayoutSave(next);renderOverviewLayout();
+  }));
+  control.querySelector('[data-layout-width]')?.addEventListener('change',event=>{
+    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);nextBucket.widths[key]=event.target.value;overviewLayoutSave(next);renderOverviewLayout();
+  });
+  control.querySelector('[data-layout-collapse]')?.addEventListener('click',()=>{
+    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);nextBucket.collapsed[key]=!nextBucket.collapsed[key];overviewLayoutSave(next);renderOverviewLayout();
+  });
+  control.querySelector('[data-layout-remove]')?.addEventListener('click',()=>{
+    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);if(!nextBucket.hidden.includes(key))nextBucket.hidden.push(key);overviewLayoutSave(next);renderOverviewLayout();
+  });
+}
+function overviewLayoutApplyDetailState(widget,state){
+  const key=widget.dataset.overviewDetailWidget,detail=state.details,hidden=new Set(detail.hidden);
+  widget.draggable=overviewLayoutEditing;widget.classList.toggle('ovDetailLayoutHidden',hidden.has(key));widget.dataset.ovDetailWidth=detail.widths[key]||'full';widget.style.minHeight=detail.heights[key]?`${detail.heights[key]}px`:'';widget.classList.toggle('ovDetailWidgetCollapsed',Boolean(detail.collapsed[key]));overviewLayoutRenderControls(widget,state,'detail');
+  const button=widget.querySelector(`[data-ov-detail-collapse="${key}"]`);
+  if(button){
+    const collapsed=Boolean(detail.collapsed[key]);button.setAttribute('aria-expanded',collapsed?'false':'true');
+    button.title=appLang==='en'?(collapsed?'Expand':'Collapse'):(collapsed?'Genişlet':'Daralt');
+    const use=button.querySelector('use');if(use)use.setAttribute('href',collapsed?'#i-chevron-down':'#i-chevron-up');
+  }
+}
+function overviewLayoutApplyPageState(widget,state){
+  const key=widget.dataset.overviewWidget,collapsed=Boolean(state.collapsed[key]);
+  widget.classList.toggle('ovWidgetCollapsed',collapsed);
+  const button=widget.querySelector('[data-overview-collapse]');
+  if(!button)return;
+  const label=key==='intake'?'INTAKE':'OAB';
+  const title=appLang==='en'?(collapsed?`Expand ${label}`:`Collapse ${label}`):(collapsed?`${label}${key==='intake'?'\'i':'\'ı'} genişlet`:`${label}${key==='intake'?'\'i':'\'ı'} daralt`);
+  button.setAttribute('aria-expanded',collapsed?'false':'true');button.title=title;button.setAttribute('aria-label',title);
+  const use=button.querySelector('use');if(use)use.setAttribute('href',collapsed?'#i-chevron-down':'#i-chevron-up');
+}
+function renderOverviewLayout(){
+  const grid=document.getElementById('ovDashboardGrid'),helper=window.BLOverviewLayout;if(!grid||!helper)return;
+  const state=overviewLayoutStored();grid.classList.toggle('isEditing',overviewLayoutEditing);
+  const widgets=[...grid.children].filter(widget=>widget.hasAttribute('data-overview-widget')),byKey=new Map(widgets.map(widget=>[widget.dataset.overviewWidget,widget]));
+  state.order.forEach(key=>{const widget=byKey.get(key);if(widget)grid.appendChild(widget);});
+  const hidden=new Set(state.hidden);
+  widgets.forEach(widget=>{
+    const key=widget.dataset.overviewWidget;widget.draggable=overviewLayoutEditing;widget.classList.toggle('ovLayoutHidden',hidden.has(key));widget.dataset.ovWidth=state.widths[key]||'full';widget.style.minHeight=state.heights[key]?`${state.heights[key]}px`:'';overviewLayoutApplyPageState(widget,state);overviewLayoutRenderControls(widget,state,'page');
+  });
+  const detailGrid=document.getElementById('ovDetailGrid');
+  if(detailGrid){
+    detailGrid.classList.toggle('isEditing',overviewLayoutEditing);
+    const details=[...detailGrid.children].filter(widget=>widget.hasAttribute('data-overview-detail-widget')),detailByKey=new Map(details.map(widget=>[widget.dataset.overviewDetailWidget,widget]));
+    state.details.order.forEach(key=>{const widget=detailByKey.get(key);if(widget)detailGrid.appendChild(widget);});
+    details.forEach(widget=>overviewLayoutApplyDetailState(widget,state));
+  }
+  if(typeof applyOverviewNotesCollapsed==='function')applyOverviewNotesCollapsed(Boolean(state.collapsed.notes),{persist:false});
+  if(typeof overviewCollectionSummaryApplyCollapsed==='function')overviewCollectionSummaryApplyCollapsed(Boolean(state.collapsed.collectionSummary),{persist:false});
+  const select=document.getElementById('ovLayoutAddSelect');if(select){
+    const pageHidden=helper.widgets.filter(key=>hidden.has(key));
+    const detailHidden=helper.detailWidgets.filter(key=>state.details.hidden.includes(key));
+    const group=(label,scope,keys)=>keys.length?`<optgroup label="${escapeHtml(label)}">${keys.map(key=>`<option value="${scope}:${key}">${escapeHtml(overviewLayoutWidgetLabel(key,scope))}</option>`).join('')}</optgroup>`:'';
+    select.innerHTML=`<option value="">${escapeHtml(appLang==='en'?'Choose a module':'Modül seçin')}</option>`+group(appLang==='en'?'Page sections':'Sayfa bölümleri','page',pageHidden)+group(appLang==='en'?'CP Overview modules':'CP Overview modülleri','detail',detailHidden);
+  }
+}
+function overviewLayoutSetEditing(value){
+  overviewLayoutEditing=Boolean(value);const panel=document.getElementById('ovLayoutEditPanel'),button=document.getElementById('ovLayoutEditBtn');
+  if(panel)panel.hidden=!overviewLayoutEditing;if(button){button.setAttribute('aria-pressed',overviewLayoutEditing?'true':'false');button.classList.toggle('active',overviewLayoutEditing);}
+  renderOverviewLayout();
+}
+function overviewLayoutBindDrag(container,attribute,scope){
+  if(!container||container.dataset.layoutDragBound)return;container.dataset.layoutDragBound='1';
+  const selector=`[${attribute}]`;
+  container.addEventListener('dragstart',event=>{
+    if(!overviewLayoutEditing)return event.preventDefault();
+    if(scope==='page'&&event.target.closest('[data-overview-detail-widget]'))return;
+    const widget=event.target.closest(selector);if(!widget)return;
+    overviewLayoutDragKey=scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget;widget.classList.add('isDragging');event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',overviewLayoutDragKey);
+  });
+  container.addEventListener('dragover',event=>{if(overviewLayoutEditing&&event.target.closest(selector)){if(scope==='page'&&event.target.closest('[data-overview-detail-widget]'))return;event.preventDefault();event.dataTransfer.dropEffect='move';}});
+  container.addEventListener('drop',event=>{
+    if(!overviewLayoutEditing)return;if(scope==='page'&&event.target.closest('[data-overview-detail-widget]'))return;
+    const target=event.target.closest(selector),key=overviewLayoutDragKey||event.dataTransfer.getData('text/plain');if(!target||!key)return;
+    const targetKey=scope==='detail'?target.dataset.overviewDetailWidget:target.dataset.overviewWidget;if(targetKey===key)return;
+    event.preventDefault();const children=[...container.children].filter(widget=>widget.hasAttribute(attribute));const dragged=children.find(widget=>(scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget)===key);if(!dragged)return;
+    const rect=target.getBoundingClientRect(),after=event.clientX>rect.left+rect.width/2||event.clientY>rect.top+rect.height/2;after?target.after(dragged):target.before(dragged);
+    const next=overviewLayoutStored(),bucket=overviewLayoutBucket(next,scope);bucket.order=[...container.children].filter(widget=>widget.hasAttribute(attribute)).map(widget=>scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget);overviewLayoutSave(next);renderOverviewLayout();
+  });
+  container.addEventListener('dragend',()=>{container.querySelector('.isDragging')?.classList.remove('isDragging');overviewLayoutDragKey='';});
+}
+function overviewLayoutBind(){
+  const grid=document.getElementById('ovDashboardGrid');if(!grid||grid.dataset.layoutBound)return;grid.dataset.layoutBound='1';
+  overviewLayoutBindDrag(grid,'data-overview-widget','page');overviewLayoutBindDrag(document.getElementById('ovDetailGrid'),'data-overview-detail-widget','detail');
+  grid.addEventListener('click',event=>{
+    const button=event.target.closest('[data-overview-collapse]');if(!button)return;
+    const key=button.dataset.overviewCollapse,next=overviewLayoutStored();
+    if(!window.BLOverviewLayout.widgets.includes(key))return;
+    next.collapsed[key]=!next.collapsed[key];overviewLayoutSave(next);renderOverviewLayout();
+  });
+  document.getElementById('ovDetailGrid')?.addEventListener('click',event=>{
+    const button=event.target.closest('[data-ov-detail-collapse]');if(!button)return;
+    const key=button.dataset.ovDetailCollapse,next=overviewLayoutStored();if(!window.BLOverviewLayout.detailWidgets.includes(key))return;
+    next.details.collapsed[key]=!next.details.collapsed[key];overviewLayoutSave(next);renderOverviewLayout();
+  });
+  document.getElementById('ovLayoutEditBtn')?.addEventListener('click',()=>overviewLayoutSetEditing(!overviewLayoutEditing));
+  document.getElementById('ovLayoutDoneBtn')?.addEventListener('click',()=>overviewLayoutSetEditing(false));
+  document.getElementById('ovLayoutAddBtn')?.addEventListener('click',()=>{
+    const raw=document.getElementById('ovLayoutAddSelect')?.value;if(!raw)return;const [scope,key]=raw.split(':');const next=overviewLayoutStored(),bucket=overviewLayoutBucket(next,scope==='detail'?'detail':'page');bucket.hidden=bucket.hidden.filter(item=>item!==key);overviewLayoutSave(next);renderOverviewLayout();
+  });
+  document.getElementById('ovLayoutResetBtn')?.addEventListener('click',()=>{if(!confirm(appLang==='en'?'Restore the default Overview layout?':'Varsayılan Overview düzeni geri yüklensin mi?'))return;overviewLayoutSave(null);renderOverviewLayout();});
+}
+overviewLayoutBind();renderOverviewLayout();
+
+function overviewNoteCanonical(value){
+  return norm(value).replace(/\s+/g,' ').toLocaleLowerCase('tr-TR');
+}
+/* ===================================================================
+   NOT HATIRLATICISI YALNIZ KENDİ NOTLARINIZI GÖSTERİR (v7.29)
+
+   Kullanıcı talebi: "Overview ekranında sadece kullanıcının aldığı notlar
+   görünsün. Diğer kullanıcıların girdiği notlar CP ve Orders ekranında
+   görünsün, overview ekranına gelmesin."
+
+   Süzme ALAN BAZINDA yapılır, satır bazında değil: aynı siparişin "Notlar"ı
+   sizin, "Ek Not"u bir başkasınınsa Overview'de yalnız sizinki görünür. Satırı
+   bütün olarak elemek başkasının notunu size göstermek ya da sizinkini
+   gizlemek demek olurdu.
+
+   CP ve Orders'a DOKUNULMAZ — oradaki hücreler herkesin notunu göstermeye
+   devam eder; bu yalnız Overview'deki hatırlatıcı listesinin süzgecidir. */
+function noteAuthorIdentity(){
+  const profile=(typeof state!=='undefined'&&state&&state.currentUser)||window.BL_USER_CONTEXT||null;
+  return {
+    id:profile&&profile.id!=null?String(profile.id).trim():'',
+    name:String(profile&&(profile.displayName||profile.username)||'').trim(),
+  };
+}
+function noteAuthoredByCurrentUser(byId,byName){
+  const me=noteAuthorIdentity();
+  const author=String(byId==null?'':byId).trim();
+  const authorName=String(byName==null?'':byName).trim();
+  // Yazarı olmayan not kimseye ait sayılmaz; eski kayıtlar sunucudaki geri
+  // doldurma ile yazar kazanır.
+  if(!author&&!authorName)return false;
+  if(me.id&&author&&author===me.id)return true;
+  if(me.name&&authorName&&turknorm(authorName)===turknorm(me.name))return true;
+  // Kimliği yalnız adla saklanmış eski damgalar için ad ⇄ kimlik karşılaştırması.
+  if(me.name&&author&&turknorm(author)===turknorm(me.name))return true;
+  return false;
+}
+function overviewOrderNoteText(row){
+  const main=noteAuthoredByCurrentUser(row&&row._notesBy,row&&row._notesByName)?norm(row&&row['Notes']):'';
+  const extra=noteAuthoredByCurrentUser(row&&row._ekNotBy,row&&row._ekNotByName)?norm(row&&row['Ek Not']):'';
+  const parts=[];
+  if(main)parts.push(main);
+  if(extra&&!parts.some(value=>overviewNoteCanonical(value)===overviewNoteCanonical(extra)))parts.push(extra);
+  return parts.join('\n');
+}
+function overviewNoteTimestamp(row){
+  const values=[];
+  if(norm(row&&row['Notes'])&&row&&row._notesAt&&noteAuthoredByCurrentUser(row._notesBy,row._notesByName))values.push(Date.parse(row._notesAt));
+  if(norm(row&&row['Ek Not'])&&row&&row._ekNotAt&&noteAuthoredByCurrentUser(row._ekNotBy,row._ekNotByName))values.push(Date.parse(row._ekNotAt));
+  const valid=values.filter(Number.isFinite);
+  return valid.length?Math.min(...valid):null;
+}
+function overviewNoteDateText(timestamp){
+  if(!Number.isFinite(Number(timestamp)))return '';
+  const d=new Date(Number(timestamp));if(isNaN(d))return '';
+  const pad=value=>String(value).padStart(2,'0');
+  return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`;
+}
+function overviewNoteGroups(rows){
+  const groups=new Map();
+  (Array.isArray(rows)?rows:[]).forEach(row=>{
+    const note=overviewOrderNoteText(row);
+    if(!note)return;
+    const key=overviewNoteCanonical(note),timestamp=overviewNoteTimestamp(row);
+    if(!groups.has(key))groups.set(key,{note,rows:[],timestamps:[]});
+    const group=groups.get(key);
+    group.rows.push(row);
+    if(Number.isFinite(timestamp))group.timestamps.push(timestamp);
+  });
+  return [...groups.values()]
+    .map(group=>({
+      ...group,
+      noteTimestamp:group.timestamps.length?Math.min(...group.timestamps):null,
+      rows:group.rows.slice().sort((a,b)=>
+        norm(a['Order Code']).localeCompare(norm(b['Order Code']),'tr')||
+        norm(a['Model Name']).localeCompare(norm(b['Model Name']),'tr')),
+    }))
+    .sort((a,b)=>{
+      const aHasDate=Number.isFinite(a.noteTimestamp),bHasDate=Number.isFinite(b.noteTimestamp);
+      // Tarihi bulunmayan legacy notlar tahmini tarih almaz ve her iki yönde de listenin sonunda kalır.
+      if(aHasDate!==bHasDate)return aHasDate?-1:1;
+      if(aHasDate&&bHasDate&&a.noteTimestamp!==b.noteTimestamp){
+        return overviewNotesSortDirection==='desc'?b.noteTimestamp-a.noteTimestamp:a.noteTimestamp-b.noteTimestamp;
+      }
+      return a.note.localeCompare(b.note,appLang==='en'?'en':'tr');
+    });
+}
+function overviewNoteEditTarget(group){
+  for(const row of Array.isArray(group&&group.rows)?group.rows:[]){
+    if(row&&row._id!=null&&norm(row['Notes'])&&noteAuthoredByCurrentUser(row._notesBy,row._notesByName))return {row,key:'Notes'};
+    if(row&&row._id!=null&&norm(row['Ek Not'])&&noteAuthoredByCurrentUser(row._ekNotBy,row._ekNotByName))return {row,key:'Ek Not'};
+  }
+  return null;
+}
+function openOverviewNoteEditor(group){
+  const target=overviewNoteEditTarget(group);
+  if(!target)return;
+  openNotesEditor(Number(target.row._id),target.key);
+}
+function openOverviewNoteOrderInCp(row){
+  if(!row)return;
+  clearCpQuickFilters();state.colFilters.cp={};state.checkFilter.cp='';
+  const search=document.getElementById('cpSearch');const orderCode=norm(row['Order Code']),modelName=norm(row['Model Name']);
+  if(search)search.value=orderCode||modelName;switchTab('cp');renderCP();
+  requestAnimationFrame(()=>document.querySelector('#cpTable tbody tr')?.scrollIntoView({block:'center',behavior:'smooth'}));
+}
+function openOverviewNoteGroupInCp(group){
+  const rows=Array.isArray(group?.rows)?group.rows:[];if(!rows.length)return;
+  clearCpQuickFilters();state.colFilters.cp={};
+  const search=document.getElementById('cpSearch');if(search)search.value='';
+  const ids=new Set(rows.map(row=>row&&row._id).filter(id=>id!=null));state.cpSelected=new Set(ids);state.checkFilter.cp='checked';
+  switchTab('cp');renderCP();
+  requestAnimationFrame(()=>{document.querySelector('#cpTable tbody tr')?.scrollIntoView({block:'center',behavior:'smooth'});updateShippingBtnVisibility();});
+}
+function renderOverviewPriorityReminder(rows){
+  const root=document.getElementById('ovPriorityReminder');
+  const intro=document.getElementById('ovPriorityIntro');
+  const stats=document.getElementById('ovPriorityStats');
+  const list=document.getElementById('ovPriorityList');
+  const method=document.getElementById('ovPriorityMethod');
+  if(!root||!intro||!stats||!list||!method)return;
+  root.style.display='block';
+  updateOverviewNotesSortButton();
+  if(!state.cp){
+    const loading=overviewCpLoadState!=='error';
+    intro.textContent=loading
+      ?(appLang==='en'?'CP Tracker data is loading in the background.':'CP Tracker verisi arka planda yükleniyor.')
+      :(appLang==='en'?'CP Tracker data could not be loaded.':'CP Tracker verisi yüklenemedi.');
+    stats.innerHTML='';
+    list.innerHTML=`<div class="ovPriorityEmpty">${escapeHtml(loading?(appLang==='en'?'Preparing CP data…':'CP verisi hazırlanıyor…'):(overviewCpLoadError||(appLang==='en'?'CP Tracker data is required.':'CP Tracker verisi gerekli.')))}</div>`;
+    method.textContent='';
+    return;
+  }
+  const groups=overviewNoteGroups(rows);
+  const totalOrders=groups.reduce((sum,group)=>sum+group.rows.length,0);
+  // v7.29 — metinler artık "SİZİN notlarınız" der: başkalarının notları burada
+  // görünmediğinde kullanıcı bunun bir eksiklik değil kural olduğunu bilsin.
+  intro.textContent=groups.length
+    ?(appLang==='en'
+      ?`${totalOrders} order${totalOrders===1?'':'s'} with a note of yours are grouped under ${groups.length} note${groups.length===1?'':'s'} for the current Overview filters.`
+      :`Mevcut Genel Bakış filtrelerinde SİZİN notunuzu taşıyan ${totalOrders} sipariş, ${groups.length} not başlığı altında gruplandı.`)
+    :(appLang==='en'?'You have no notes on orders under the current Overview filters.':'Mevcut Genel Bakış filtrelerinde sizin yazdığınız not bulunamadı.');
+  stats.innerHTML=groups.length
+    ?`<span class="ovPriorityStat total"><b>${groups.length}</b>${appLang==='en'?'Notes':'Not'}</span><span class="ovPriorityStat total"><b>${totalOrders}</b>${appLang==='en'?'Orders':'Sipariş'}</span>`
+    :'';
+  if(!groups.length){
+    list.innerHTML=`<div class="ovPriorityEmpty success"><svg class="ic" aria-hidden="true"><use href="#i-check"/></svg>${appLang==='en'?'You have no notes to follow up. Notes written by other users stay on CP Tracker and Orders.':'Takip etmeniz gereken kendi notunuz yok. Diğer kullanıcıların yazdığı notlar CP Tracker ve Siparişler ekranlarında durmaya devam eder.'}</div>`;
+  }else{
+    list.innerHTML=groups.map((group,groupIndex)=>{
+      const noteHtml=escapeHtml(group.note).replace(/\n/g,'<br>');
+      const noteDate=overviewNoteDateText(group.noteTimestamp);
+      const orders=group.rows.map((row,rowIndex)=>{
+        const orderCode=norm(row['Order Code'])||'—';
+        const model=norm(row['Model Name'])||'—';
+        const manufacturer=norm(row['Manufacturer'])||norm(row['Sub-Manufacturer'])||'—';
+        const season=norm(row['Season'])||'—';
+        const exf=fmtDate(row['Ex-factory'])||'—';
+        return `<div class="ovNoteOrder" data-note-group="${groupIndex}" data-note-order="${rowIndex}">
+          <button type="button" class="ovNoteOrderOpen" data-note-group="${groupIndex}" data-note-order="${rowIndex}" title="${appLang==='en'?'Show this order in CP Tracker':'Bu siparişi CP Tracker’da göster'}">
+          <span class="ovNoteOrderBody">
+            <span class="ovNoteOrderHeadline"><strong>${escapeHtml(orderCode)}</strong><span>${escapeHtml(model)}</span></span>
+            <span class="ovNoteOrderMeta">${escapeHtml(manufacturer)} · ${escapeHtml(season)} · Ex-Factory ${escapeHtml(exf)}</span>
+          </span>
+          </button>
+          <button type="button" class="noteCellDelete ovNoteOrderDelete" data-note-delete="${rowIndex}" data-note-group="${groupIndex}" data-note-order="${rowIndex}" title="${escapeHtml(L('Notu sil'))}" aria-label="${escapeHtml(L('Notu sil'))}"><svg class="ic"><use href="#i-trash"/></svg></button>
+          <svg class="ic ovNoteOrderArrow" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+        </div>`;
+      }).join('');
+      return `<article class="ovNoteGroup">
+        <div class="ovNoteGroupHeader">
+          <button type="button" class="ovNoteText ovNoteTextEdit" data-note-edit="${groupIndex}" title="${escapeHtml(appLang==='en'?'Edit note':'Notu düzenle')}">${noteHtml}${noteDate?` <span class="ovNoteDate">- ${escapeHtml(noteDate)}</span>`:''}</button>
+          <span class="ovNoteCount" data-note-group-count="${groupIndex}" title="${escapeHtml(appLang==='en'?'Double-click to open all orders with this note':'Bu notu içeren tüm siparişleri açmak için çift tıkla')}"><b>${group.rows.length}</b>${appLang==='en'?(group.rows.length===1?'order':'orders'):'sipariş'}</span>
+        </div>
+        <div class="ovNoteOrders">${orders}</div>
+      </article>`;
+    }).join('');
+    list.querySelectorAll('.ovNoteOrderOpen').forEach(btn=>btn.addEventListener('click',()=>{
+      const group=groups[Number(btn.dataset.noteGroup)];
+      openOverviewNoteOrderInCp(group&&group.rows[Number(btn.dataset.noteOrder)]);
+    }));
+    list.querySelectorAll('.ovNoteOrderDelete').forEach(btn=>btn.addEventListener('click',event=>{
+      event.preventDefault();event.stopPropagation();
+      const group=groups[Number(btn.dataset.noteGroup)];
+      clearOverviewNoteOrder(group&&group.rows[Number(btn.dataset.noteOrder)]);
+    }));
+    list.querySelectorAll('[data-note-edit]').forEach(node=>node.addEventListener('click',event=>{
+      event.preventDefault();event.stopPropagation();openOverviewNoteEditor(groups[Number(node.dataset.noteEdit)]);
+    }));
+    list.querySelectorAll('[data-note-group-count]').forEach(node=>node.addEventListener('dblclick',event=>{
+      event.preventDefault();event.stopPropagation();openOverviewNoteGroupInCp(groups[Number(node.dataset.noteGroupCount)]);
+    }));
+  }
+  method.textContent=appLang==='en'
+    ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it, click an order to open it, or double-click the order count to open the whole note group.'
+    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine çift tıklayarak grubun tamamını aç.';
+}
+
+let _overviewRefreshResult=null;
+function normalizeOverviewRefreshResult(value){
+  if(!value||typeof value!=='object')return null;
+  const notes=Array.isArray(value.notes)?value.notes.slice(0,8).map(note=>({
+    source:String(note&&note.source||''),ocode:String(note&&note.ocode||''),modelName:String(note&&note.modelName||''),
+    colour:String(note&&note.colour||''),changeType:String(note&&note.changeType||''),detail:String(note&&note.detail||''),
+  })):[];
+  return {
+    at:value.at||new Date().toISOString(),status:value.status||'success',hasChanges:Boolean(value.hasChanges),
+    totalChanges:Number(value.totalChanges)||0,asasChangeCount:Number(value.asasChangeCount)||0,antrepoChangeCount:Number(value.antrepoChangeCount)||0,
+    newlyAppeared:Number(value.newlyAppeared)||0,disappeared:Number(value.disappeared)||0,statusChanged:Number(value.statusChanged)||0,
+    qtyChangedOrders:Number(value.qtyChangedOrders)||0,historyItemId:value.historyItemId||null,notes,message:String(value.message||''),
+  };
+}
+function renderOverviewRefreshResult(){
+  const host=document.getElementById('ovRefreshResult');if(!host)return;
+  const rec=_overviewRefreshResult;if(!rec){host.hidden=true;host.innerHTML='';return;}
+  const en=appLang==='en',isError=rec.status==='error';
+  const at=new Date(rec.at),time=Number.isNaN(at.getTime())?'':at.toLocaleString(en?'en-GB':'tr-TR');
+  const title=isError?(en?'Refresh failed':'Yenileme başarısız'):(en?'Latest refresh result':'Son yenileme sonucu');
+  const mainText=rec.message||(rec.hasChanges
+    ?(en?`${rec.totalChanges.toLocaleString('en-GB')} source-data changes found.`:`${rec.totalChanges.toLocaleString('tr-TR')} kaynak veri değişikliği bulundu.`)
+    :(en?'Refresh completed. No changes were found in ASAS or ANTREPO data.':'Yenileme tamamlandı. ASAS veya ANTREPO verisinde değişiklik bulunmadı.'));
+  host.className=`ovRefreshResult ${isError?'isError':(rec.hasChanges?'isWarning':'isSuccess')}`;
+  const chips=isError?'':[
+    [en?'ASAS':'ASAS',rec.asasChangeCount],[en?'Warehouse':'Antrepo',rec.antrepoChangeCount],
+    [en?'New':'Yeni',rec.newlyAppeared],[en?'Status':'Durum',rec.statusChanged],[en?'Qty':'Adet',rec.qtyChangedOrders],
+  ].map(([label,n])=>`<span class="ovRefreshResultChip"><span>${escapeHtml(label)}</span><b>${Number(n||0).toLocaleString(en?'en-GB':'tr-TR')}</b></span>`).join('');
+  const notes=rec.notes.length?`<ul class="ovRefreshResultNotes">${rec.notes.map(note=>{
+    const id=[note.ocode,note.modelName,note.colour].filter(Boolean).join(' · ');
+    const text=[id,note.changeType,note.detail].filter(Boolean).join(' — ');
+    return `<li><span class="ovRefreshResultSource">${escapeHtml(note.source||'—')}</span><span class="ovRefreshResultNoteText" title="${escapeHtml(text)}">${escapeHtml(text)}</span></li>`;
+  }).join('')}</ul>`:'';
+  const hiddenCount=Math.max(0,rec.totalChanges-rec.notes.length);
+  host.innerHTML=`<div class="ovRefreshResultHead"><div><p class="ovRefreshResultTitle"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>${escapeHtml(title)}</p><div class="ovRefreshResultTime">${escapeHtml(time)}</div></div><div class="ovRefreshResultActions">${rec.historyItemId?`<button type="button" class="tbtn" data-refresh-result-detail>${escapeHtml(en?'Open details':'Detayları aç')}</button>`:''}</div></div>
+    <div class="ovRefreshResultBody"><div class="ovRefreshResultSummary"><span>${escapeHtml(mainText)}</span>${chips}</div>${notes}${hiddenCount?`<div class="ovRefreshResultMore">+ ${hiddenCount.toLocaleString(en?'en-GB':'tr-TR')} ${escapeHtml(en?'more changes':'değişiklik daha')}</div>`:''}</div>`;
+  host.hidden=false;
+  host.querySelector('[data-refresh-result-detail]')?.addEventListener('click',()=>openSourceRefreshHistory(rec.historyItemId));
+}
+
+function renderOverviewState(options){
+  const target=document.getElementById('ovEmpty');
+  if(!target)return;
+  const render=window.BLUI?.renderState;
+  // Ortak primitive güvenli metin, semantik durum rolü ve eylem bağlamasını
+  // tek sözleşmede toplar. Kaynak yüklenemezse güvenli yerel DOM geri dönüşü kalır.
+  if(typeof render==='function'){render(target,options||{});return;}
+  const state=options||{},kind=['loading','empty','info','success','warning','error'].includes(state.kind)?state.kind:'info';
+  const shell=document.createElement('div');shell.className=`uiState uiState--${kind}`;shell.setAttribute('role',kind==='error'?'alert':'status');shell.setAttribute('aria-live',kind==='error'?'assertive':'polite');shell.setAttribute('aria-atomic','true');if(kind==='loading')shell.setAttribute('aria-busy','true');
+  if(kind==='loading'){
+    const spinner=document.createElement('span');spinner.className='uiStateSpinner';spinner.setAttribute('aria-hidden','true');shell.appendChild(spinner);
+  }else{
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('class','ic uiStateIcon');svg.setAttribute('aria-hidden','true');
+    const use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttribute('href',`#i-${state.icon||'notebook'}`);svg.appendChild(use);shell.appendChild(svg);
+  }
+  const body=document.createElement('div');body.className='uiStateBody';
+  const title=document.createElement('b');title.textContent=state.title||'';body.appendChild(title);
+  if(state.detail){const detail=document.createElement('span');detail.textContent=state.detail;body.appendChild(detail);}
+  if(state.actionLabel){const action=document.createElement('button');action.type='button';action.className=`navActionBtn uiStateAction${state.actionPrimary?' primary':''}`;action.textContent=state.actionLabel;if(typeof state.onAction==='function')action.addEventListener('click',state.onAction,{once:state.actionOnce!==false});body.appendChild(action);}
+  shell.appendChild(body);target.replaceChildren(shell);target.dataset.uiState=kind;
+}
+
+function renderOverviewNow(){
+  renderOverviewCollectionSummary();
+  if(!state.cp && !state.orderSummary && !state.overviewSummary) return;
+  const empty=document.getElementById('ovEmpty'),content=document.getElementById('ovContent'),notesReminder=document.getElementById('ovPriorityReminder');
+  if(window.BL_CP_SOURCE_FILTER_REQUIRED){
+    const text=sourceFilterNoticeText(window.BL_CP_SOURCE_FILTER_STATUS,window.BL_CP_SOURCE_FILTER_MESSAGE);
+    renderOverviewState({kind:'warning',icon:'binary-tree-2',title:text.title,detail:text.detail,actionLabel:text.action,onAction:()=>openDataSourceAndFilters({target:'cp'})});
+    empty.style.display='flex';content.style.display='none';if(notesReminder)notesReminder.style.display='none';
+    return;
+  }
+  if(window.BL_HAS_CACHED_MODEL_DATA===false){
+    const en=appLang==='en';
+    renderOverviewState({kind:'empty',icon:'database-import',title:en?'No data has been loaded yet.':'Henüz veri yüklenmedi.',detail:en?'The source filter is ready. Run Refresh to load data; the wait may increase with the active filter scope and data volume.':'Kaynak filtresi hazır. Verileri almak için Yenile\'yi çalıştırın; aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir.',actionLabel:en?'Refresh data':'Veriyi yenile',actionPrimary:true,onAction:()=>document.getElementById('topRefreshBtn')?.click()});
     empty.style.display='flex';content.style.display='none';if(notesReminder)notesReminder.style.display='none';return;
   }
   empty.style.display='none';
