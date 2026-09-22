@@ -1174,13 +1174,23 @@ async function acquireOabAuthorization(options = {}) {
 }
 
 async function clearOabAuthSession() {
+  const pending = oabAuthInFlight;
+  if (oabAuthWindow && !oabAuthWindow.isDestroyed()) {
+    try { oabAuthWindow.close(); } catch (_) {}
+  }
+  if (pending) {
+    await Promise.race([
+      Promise.resolve(pending).catch(() => {}),
+      new Promise(resolve => setTimeout(resolve, 250)),
+    ]);
+  }
+
   await clearOabBackendAuthorization();
   try {
     const authSession = oabAuthSession();
     await authSession.clearStorageData({ storages:['cookies','localstorage','indexdb','serviceworkers','cachestorage'] });
     await authSession.clearCache();
   } catch (_) {}
-  if (oabAuthWindow && !oabAuthWindow.isDestroyed()) oabAuthWindow.close();
   oabAuthWindow = null;
   return { ok:true, authenticated:false };
 }
