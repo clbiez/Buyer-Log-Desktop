@@ -591,7 +591,7 @@ let sharedHubBootstrapInFlight = null;
 let sharedHubStartupSettled = false;
 const userBootstrapReady = new Set();
 let sharedHubBootstrapProgress = {
-  configured:false, validated:false, loginAllowed:false, moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:true,
+  configured:false, validated:false, loginAllowed:userAccess.canLoginLocally(), moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:!userAccess.hasLocalLoginSnapshot(),
   setupRecommended:false, status:'starting', offline:false, phase:'starting',
   message:'Buyer Log hazırlanıyor…',
   steps:{
@@ -1320,7 +1320,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
   if (gateThisRun) {
     sharedHubStartupSettled = false;
     sharedHubBootstrapProgress = {
-      configured:false, validated:false, loginAllowed:false, moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:true,
+      configured:false, validated:false, loginAllowed:userAccess.canLoginLocally(), moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:!userAccess.hasLocalLoginSnapshot(),
       setupRecommended:false, status:'syncing', offline:false, phase:'hub',
       message:'Buyer Log hazırlanıyor…',
       steps:{
@@ -1364,7 +1364,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
     await ensureLocalDbMaintenanceReady();
 
     try {
-      setBootstrapProgress({ configured:true, status:'syncing', phase:'hub', loginAllowed:false, bootstrapRequired:true, message:'Shared Hub doğrulanıyor…' });
+      setBootstrapProgress({ configured:true, status:'syncing', phase:'hub', loginAllowed:localLoginAllowed, moderatorLoginAllowed:localLoginAllowed, bootstrapRequired:!hadLocalLoginSnapshot, message:'Shared Hub doğrulanıyor… · Girişe engel değil' });
       const checked = await sharedHub.validate(settings.sharedSyncRoot, { requireWrite:false });
       setBootstrapProgress({ validated:true, hub:{ hubId:checked.manifest.hubId, schemaVersion:checked.manifest.schemaVersion } });
       setBootstrapStep('hub', { status:'done', detail:'Bağlandı' });
@@ -1528,10 +1528,10 @@ async function bootstrapSharedHub({ force = false } = {}) {
         return bootstrapStatusSnapshot();
       }
       const result = {
-        configured:true, validated:false, loginAllowed:false, moderatorLoginAllowed:localLoginAllowed, bootstrapRequired:true,
+        configured:true, validated:false, loginAllowed:localLoginAllowed, moderatorLoginAllowed:localLoginAllowed, bootstrapRequired:!hadLocalLoginSnapshot,
         status:'error', phase:'error', offline:false,
         errorCode:error && error.code || 'SHARED_HUB_BOOTSTRAP_FAILED',
-        message:error && error.message || 'Shared Hub bootstrap tamamlanamadı.',
+        message:(error && error.message || 'Shared Hub bootstrap tamamlanamadı.') + (localLoginAllowed ? ' · Yerel hesapla giriş yapılabilir; eşitleme daha sonra devam eder.' : ''),
       };
       sharedHubStartupSettled = true;
       setBootstrapProgress(result);
@@ -1692,14 +1692,14 @@ app.post('/api/shared-hub/configure', express.json({ limit:'32kb' }), async (req
     }
     await syncSettings.save(checked.root);
     sharedHubStartupSettled = false;
-    setBootstrapProgress({ configured:true, validated:true, loginAllowed:false, bootstrapRequired:true, status:'syncing', phase:'hub', message:'Buyer Log hazırlanıyor…' });
+    setBootstrapProgress({ configured:true, validated:true, loginAllowed:userAccess.canLoginLocally(), moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:!userAccess.hasLocalLoginSnapshot(), status:'syncing', phase:'hub', message:'Buyer Log eşitleniyor… · Girişe engel değil' });
     void bootstrapSharedHub({ force:true }).catch(error => logRuntimeFailure('sharedHubConfigureBootstrap', error));
     res.status(202).set('Cache-Control','no-store').json({ ok:true, ...bootstrapStatusSnapshot(), root:checked.root });
   } catch (err) { res.status(err.statusCode || 503).json({ error:err.message, code:err.code || 'SHARED_HUB_CONFIGURE_FAILED' }); }
 });
 app.post('/api/shared-hub/bootstrap-retry', express.json({ limit:'8kb' }), (_req, res) => {
   sharedHubStartupSettled = false;
-  setBootstrapProgress({ loginAllowed:false, bootstrapRequired:true, status:'syncing', phase:'hub', message:'Senkronizasyon yeniden başlatılıyor…' });
+  setBootstrapProgress({ loginAllowed:userAccess.canLoginLocally(), moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:!userAccess.hasLocalLoginSnapshot(), status:'syncing', phase:'hub', message:'Senkronizasyon yeniden başlatılıyor… · Girişe engel değil' });
   void bootstrapSharedHub({ force:true }).catch(error => logRuntimeFailure('sharedHubBootstrapRetry', error));
   res.status(202).set('Cache-Control','no-store').json(bootstrapStatusSnapshot());
 });
@@ -1713,20 +1713,12 @@ app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) =>
       .some(value => String(value || '').trim().toLocaleLowerCase('tr-TR') === loginName)
   );
   if (loginProfile && loginProfile.id) userBootstrapReady.delete(String(loginProfile.id));
-  const gate = bootstrapStatusSnapshot();
-  // The built-in local Moderator is the recovery/admin entry point on a brand
-  // new computer. It may create its first password and enter local mode before
-  // a Shared Hub/SYNC folder exists. All other users keep the strict bootstrap
-  // gate so an incomplete central directory cannot grant accidental access.
-  const moderatorLocalLogin = Boolean(loginProfile
-    && (loginProfile.systemRole === 'moderator' || loginProfile.role === 'moderator')
-    && gate.moderatorLoginAllowed === true);
-  if (!moderatorLocalLogin && (!sharedHubStartupSettled || gate.status === 'syncing' || gate.status === 'starting')) {
-    return res.status(423).json({ error:'Buyer Log senkronizasyonu tamamlanmadan giriş yapılamaz.', code:'BOOTSTRAP_IN_PROGRESS', bootstrap:gate });
-  }
-  if (!moderatorLocalLogin && gate.loginAllowed !== true) {
-    return res.status(503).json({ error:gate.message || 'Buyer Log henüz girişe hazır değil.', code:gate.errorCode || 'BOOTSTRAP_NOT_READY', bootstrap:gate });
-  }
+
+  // Authentication and Shared Sync are intentionally independent. A valid
+  // locally cached account may enter Buyer Log while Shared Hub is starting,
+  // offline, retrying or carrying pending local changes. Sync state must never
+  // turn a valid password into a login failure; userAccess remains the sole
+  // authentication/authorization authority for this request.
   return userAccess.loginHandler(req, res, next);
 });
 app.post('/api/user-logout', userAccess.logoutHandler);
@@ -1782,21 +1774,26 @@ app.post('/api/outlook/lifecycle', express.json({ limit:'256kb', type:['applicat
 });
 app.use(userAccess.requireSelection);
 app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async (req, res) => {
+  const userId = String(req.currentUser.id);
+  // Credentials have already been verified by requireSelection. From this point
+  // on every synchronization operation is best-effort and non-blocking.
+  userBootstrapReady.add(userId);
   try {
     const gate = bootstrapStatusSnapshot();
     if (gate.status === 'offline') {
-      userBootstrapReady.add(String(req.currentUser.id));
-      return res.set('Cache-Control','no-store').json({ ok:true, ready:true, offline:true, message:'Çevrimdışı · son doğrulanmış yerel veri kullanılıyor', collectionImages:{ status:'offline', blocking:false, requested:0, installed:0, reused:0, missing:0 } });
+      return res.set('Cache-Control','no-store').json({ ok:true, ready:true, offline:true, syncDeferred:true, message:'Çevrimdışı · son doğrulanmış yerel veri kullanılıyor', collectionImages:{ status:'offline', blocking:false, requested:0, installed:0, reused:0, missing:0 } });
     }
     if (gate.status !== 'ready') {
-      return res.status(423).set('Cache-Control','no-store').json({ ok:false, ready:false, code:'BOOTSTRAP_NOT_READY', bootstrap:gate });
+      markStartup('USER_SYNC_DEFERRED', { userId, status:gate.status, phase:gate.phase, errorCode:gate.errorCode || null });
+      return res.set('Cache-Control','no-store').json({
+        ok:true, ready:true, offline:false, syncDeferred:true, bootstrap:gate,
+        message:'Oturum açıldı · Shared Sync arka planda devam ediyor.',
+        collectionImages:{ status:'deferred', blocking:false, requested:0, installed:0, reused:0, missing:0 },
+      });
     }
 
-    // Koleksiyon görselleri yararlı ama giriş için kritik değildir. IAM, Master,
-    // Business ve koleksiyon izinleri hazır olduktan sonra kullanıcı ana ekrana
-    // girebilir; görseller LOCAL → SHARED akışında arka planda tamamlanır.
-    const userId = String(req.currentUser.id);
-    userBootstrapReady.add(userId);
+    // Koleksiyon görselleri de giriş için kritik değildir; kullanıcı ana ekrana
+    // hemen geçer, görseller LOCAL → SHARED akışında arka planda tamamlanır.
     void syncAuthorizedCollectionImages(userId).then(collectionImages => {
       const failedOwners = (collectionImages.results || []).filter(item => item && item.error);
       const missingImages = Number(collectionImages.missing) || 0;
@@ -1819,14 +1816,16 @@ app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async 
     });
 
     return res.set('Cache-Control','no-store').json({
-      ok:true, ready:true, offline:false,
-      message:'Senkronizasyon tamamlandı · Koleksiyon görselleri arka planda eşitleniyor.',
+      ok:true, ready:true, offline:false, syncDeferred:false,
+      message:'Oturum hazır · Koleksiyon görselleri arka planda eşitleniyor.',
       collectionImages:{ status:'deferred', blocking:false, requested:0, installed:0, reused:0, missing:0 },
     });
   } catch (error) {
-    res.status(error.statusCode || 503).set('Cache-Control','no-store').json({
-      ok:false, ready:false, code:error.code || 'USER_BOOTSTRAP_FAILED',
-      error:error.message || 'Kullanıcı verileri eşitlenemedi.',
+    markStartup('USER_SYNC_DEFERRED', { userId, error:error && error.code || error && error.message || String(error) });
+    return res.set('Cache-Control','no-store').json({
+      ok:true, ready:true, offline:false, syncDeferred:true,
+      warning:error.message || 'Kullanıcı senkronizasyonu arka plana ertelendi.',
+      collectionImages:{ status:'deferred', blocking:false, requested:0, installed:0, reused:0, missing:0 },
     });
   }
 });
@@ -7016,9 +7015,11 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => {
   let profile = null;
   try { profile = userAccess.sessionProfile(req); } catch (_) {}
-  if (!profile || !userBootstrapReady.has(String(profile.id))) {
+  if (!profile) {
     return res.set('Cache-Control','no-store').redirect(302, '/select-user');
   }
+  // Shared Sync readiness is deliberately not part of the workspace gate.
+  // Once credentials/session are valid, synchronization continues in background.
   res.set('Cache-Control', 'no-store');
   res.type('html').send(renderIndexTemplate());
 });
