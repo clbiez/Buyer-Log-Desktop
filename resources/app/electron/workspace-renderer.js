@@ -22,6 +22,9 @@ function tabInsertIndex(clientX) {
 function render(next) {
   if (!next) return;
   state = next;
+  const theme = ['light','grey','dark'].includes(String(state.theme || '').toLowerCase()) ? String(state.theme).toLowerCase() : 'light';
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
   strip.innerHTML = state.tabs.map(tab => {
     const selected = tab.id === state.activeTabId;
     return `<div class="workspaceTab${selected?' isActive':''}" draggable="true" data-tab-id="${escapeHtml(tab.id)}">
