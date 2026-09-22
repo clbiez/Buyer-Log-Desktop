@@ -97,19 +97,36 @@ test('v7.15 tek kovadaki yüzlerce parsiyel saniyeler değil milisaniyeler süre
 });
 
 test('v7.15 kova iki katına çıkınca maliyet küp değil kare mertebesinde artar', () => {
-  const measure = size => {
+  const measure = (size, repeats=4) => {
     const started = process.hrtime.bigint();
-    diff.pairAntrepoRows(bucketOf(size, 0), bucketOf(size, 1));
+    for (let i = 0; i < repeats; i += 1) {
+      diff.pairAntrepoRows(bucketOf(size, i), bucketOf(size, i + 1));
+    }
     return Math.max(1, Number(process.hrtime.bigint() - started) / 1e6);
   };
   const median = values => values.slice().sort((a,b)=>a-b)[Math.floor(values.length/2)];
-  measure(60); // ısınma — ilk koşu JIT maliyetini taşımasın
-  // Test suite concurrency'si tek bir kısa ölçümü scheduler gürültüsüyle bozmasın.
-  // Eşik aynı kalır; yalnız temsilî süre median ile alınır.
-  const small = median([measure(60),measure(60),measure(60)]);
-  const large = median([measure(120),measure(120),measure(120)]);
+
+  // Her iki boyutu da JIT için ısıt. Ardından kısa tek ölçümler yerine birkaç
+  // işi tek zaman penceresinde ölç; GitHub runner scheduler gürültüsünün oranı
+  // yapay olarak şişirmesini engelle. 6× kabul sınırı DEĞİŞMEZ.
+  measure(60,2);
+  measure(120,2);
+  const ratios = [];
+  for (let i = 0; i < 5; i += 1) {
+    let small, large;
+    if (i % 2 === 0) {
+      small = measure(60);
+      large = measure(120);
+    } else {
+      large = measure(120);
+      small = measure(60);
+    }
+    ratios.push(large / small);
+  }
+  const ratio = median(ratios);
+
   // Küpsel büyüme 8×'tir. Ölçüm gürültüsüne yer bırakıp 6× sınırını çiviliyoruz.
-  assert.ok(large / small < 6, `60→120 satırda süre ${(large / small).toFixed(1)}× arttı; küpsel büyüme geri dönmüş olabilir`);
+  assert.ok(ratio < 6, `60→120 satırda süre ${ratio.toFixed(1)}× arttı; küpsel büyüme geri dönmüş olabilir`);
 });
 
 test('v7.15 sıralama karşılaştırıcıları bir kez kurulur', () => {
