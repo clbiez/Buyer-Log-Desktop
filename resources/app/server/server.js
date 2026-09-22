@@ -11337,6 +11337,7 @@ app.post('/api/data-management/database-discovery/:id/add', userAccess.requireAr
       sourceName:req.body && req.body.name || candidate.name, workbookName:entry.result.workbookName,
       connectionName:candidate.name, connectorKind:candidate.connector && candidate.connector.kind || '',
     });
+    publishSharedMasterChange('modelConnections', req);
     return res.status(201).set('Cache-Control','no-store').json({ ok:true, sourceId:plan.sourceId, revision:saved.revision, probe, warnings:plan.warnings || [] });
   } catch (err) {
     const status = Number(err && err.statusCode) || 500;
@@ -11394,6 +11395,7 @@ app.post('/api/data-management/source', userAccess.requireArea('source'), userAc
     }
     const saved = replaceModelConnections(plan.items, null);
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_SOURCE_CREATE', plan.sourceId, { profileId: body.profileId, name: body.name });
+    publishSharedMasterChange('modelConnections', req);
     res.status(201).json({ ok: true, sourceId: plan.sourceId, revision: saved.revision, warnings: plan.warnings });
   } catch (err) { apiError(res, err, 'Kaynak eklenemedi.'); }
 });
@@ -11463,6 +11465,7 @@ app.patch('/api/data-management/source/:id', userAccess.requireArea('source'), u
       enabled: typeof body.enabled === 'boolean' ? body.enabled : undefined,
       mapping: body.mapping ? Object.keys(body.mapping).length : undefined,
     });
+    publishSharedMasterChange('modelConnections', req);
     res.json({ ok: true, changed: true, revision: saved.revision, warnings: plan.warnings });
   } catch (err) { apiError(res, err, 'Kaynak güncellenemedi.'); }
 });
@@ -11508,6 +11511,7 @@ app.delete('/api/data-management/source/:id', userAccess.requireArea('source'), 
     const saved = replaceModelConnections(plan.items, null);
     try { databaseCredentialStore.remove(sourceId); } catch (_) {}
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_SOURCE_DELETE', sourceId, plan.removed);
+    publishSharedMasterChange('modelConnections', req);
     res.json({ ok: true, revision: saved.revision, removed: plan.removed, warnings: plan.warnings });
   } catch (err) { apiError(res, err, 'Kaynak silinemedi.'); }
 });
@@ -11648,6 +11652,7 @@ app.post('/api/data-management/filter', userAccess.requireArea('source'), userAc
 
     const saved = replaceModelConnections(plan.items, null);
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_FILTER_UPDATE', sourceId, { moduleId, mode: body.mode || 'shared' });
+    publishSharedMasterChange('modelConnections', req);
     res.json({ ok: true, revision: saved.revision, warnings: plan.warnings, appliedScopeId: plan.appliedScopeId || '' });
   } catch (err) { apiError(res, err, 'Modül filtresi kaydedilemedi.'); }
 });
@@ -11748,6 +11753,7 @@ app.post('/api/data-management/binding', userAccess.requireArea('source'), userA
        kaynağa yapılan eşzamanlı bir düzenlemedir — yukarıda o kontrol edildi. */
     const saved = replaceModelConnections(plan.items, null);
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_BINDING_UPDATE', sourceId, { moduleId, enabled: body.enabled });
+    publishSharedMasterChange('modelConnections', req);
     res.json({ ok: true, changed: true, revision: saved.revision });
   } catch (err) { apiError(res, err, 'Modül bağlantısı güncellenemedi.'); }
 });
