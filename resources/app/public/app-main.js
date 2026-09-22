@@ -8795,15 +8795,15 @@ function overviewCollectionSummaryStoredCollapsed(){try{return BLStorage.getItem
 function overviewCollectionSummaryDrill({month,status,model,season,scopeColumn,scopeValues,kpi}={}){
   try{
     if(typeof kolColFilters==='undefined')return;
-    if(month)kolColFilters.inStoreMonth=new Set([month]);else if(!scopeColumn)delete kolColFilters.inStoreMonth;
-    if(status)kolColFilters.durum=new Set([status]);else delete kolColFilters.durum;
-    if(model)kolColFilters.modelKod=new Set([model]);else delete kolColFilters.modelKod;
-    if(season)kolColFilters.season=new Set([season]);else if(!scopeColumn)delete kolColFilters.season;
     const scopedValues=Array.isArray(scopeValues)?scopeValues.map(value=>String(value??'').trim()).filter(Boolean):[];
     if(scopeColumn){
       if(scopedValues.length)kolColFilters[scopeColumn]=new Set(scopedValues);
       else delete kolColFilters[scopeColumn];
     }
+    if(month)kolColFilters.inStoreMonth=new Set([month]);else if(!scopeColumn)delete kolColFilters.inStoreMonth;
+    if(status)kolColFilters.durum=new Set([status]);else if(scopeColumn!=='durum')delete kolColFilters.durum;
+    if(model)kolColFilters.modelKod=new Set([model]);else if(scopeColumn!=='modelKod')delete kolColFilters.modelKod;
+    if(season)kolColFilters.season=new Set([season]);else if(!scopeColumn)delete kolColFilters.season;
     if(kpi==='confirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['confirmed']);
     else if(kpi==='notConfirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['notConfirmed']);
     else delete kolColFilters[KOL_CONFIRMATION_FILTER_KEY];
