@@ -10,29 +10,32 @@ const server = fs.readFileSync(path.join(APP, 'server', 'server.js'), 'utf8');
 const login = fs.readFileSync(path.join(APP, 'public', 'select-user.html'), 'utf8');
 const distribution = fs.readFileSync(path.join(APP, 'server', 'lib', 'model-image-distribution.js'), 'utf8');
 
-test('login is gated until Shared Hub startup bootstrap is complete', () => {
-  assert.match(server, /BOOTSTRAP_IN_PROGRESS/);
+test('Shared Hub startup continues fully but never gates authenticated login', () => {
   assert.match(server, /await syncSettings\.syncOnce\(\)/);
   assert.match(server, /await deltaStore\.hydrate\(\)/);
   assert.match(server, /await hydrateBusinessCheckpointIfNeeded\(\)/);
   assert.match(server, /await collectionPermissionsReady/);
   assert.match(server, /completed:false/);
   assert.match(server, /completed:true/);
-  assert.match(login, /Senkronizasyon bekleniyor/);
-  assert.match(login, /runUserBootstrap\(\)/);
-  assert.ok(login.indexOf('await runUserBootstrap();') < login.indexOf("location.replace('/');"));
+  const loginRoute = server.slice(server.indexOf("app.post('/api/user-login'"), server.indexOf("app.post('/api/user-logout'"));
+  assert.doesNotMatch(loginRoute, /BOOTSTRAP_IN_PROGRESS|BOOTSTRAP_NOT_READY/);
+  assert.doesNotMatch(login, /Senkronizasyon bekleniyor/);
+  assert.match(login, /void runUserBootstrap\(\)/);
+  assert.ok(login.indexOf('void runUserBootstrap();') < login.indexOf("location.replace('/');"));
 });
 
-test('main workspace waits for critical bootstrap but not Collection image completion', () => {
+test('main workspace requires authentication only; all sync layers are non-blocking', () => {
   assert.match(server, /const userBootstrapReady = new Set\(\)/);
-  assert.match(server, /if \(gate\.status !== 'ready'\)/);
   assert.match(server, /const userId = String\(req\.currentUser\.id\)/);
   assert.match(server, /userBootstrapReady\.add\(userId\)/);
+  assert.match(server, /if \(gate\.status !== 'ready'\)[\s\S]{0,600}ok:true, ready:true/);
   assert.match(server, /void syncAuthorizedCollectionImages\(userId\)\.then/);
   assert.match(server, /collectionImages:\{ status:'deferred', blocking:false/);
   assert.doesNotMatch(server, /COLLECTION_BOOTSTRAP_INCOMPLETE/);
-  assert.match(server, /!userBootstrapReady\.has\(String\(profile\.id\)\)/);
-  assert.match(server, /redirect\(302, '\/select-user'\)/);
+  const rootRoute = server.slice(server.indexOf("app.get('/',"), server.indexOf('app.use(createStaticGzip', server.indexOf("app.get('/',")));
+  assert.match(rootRoute, /if \(!profile\)/);
+  assert.doesNotMatch(rootRoute, /userBootstrapReady\.has/);
+  assert.match(rootRoute, /redirect\(302, '\/select-user'\)/);
 });
 
 test('Shared Hub image transport is Collection-only and owner namespaced', () => {
