@@ -299,3 +299,11 @@ test('ordinary partial overrides save cannot silently zero critical Master secti
   assert.match(dbSource, /before\.length > 0 && after\.length === 0 && afterRev <= beforeRev/);
   assert.match(dbSource, /protectCriticalOverrideSections\(loadOverrides\(\), overrides\)/);
 });
+
+
+test('clean-install verification cannot certify two equally-empty Master copies when overrides .bak is richer', () => {
+  const cleanup = fs.readFileSync(path.join(ROOT, 'scripts', 'BuyerLog-Uninstall-Temiz-Kurulum.cmd'), 'utf8');
+  assert.match(cleanup, /const legacyOverridesBak = readJson\(path\.join\(SERVER, 'overrides\.json\.bak'\), null\)/);
+  assert.match(cleanup, /if \(backupList\.length > currentList\.length\) expectedOverrides\[field\] = backupList/);
+  assert.match(cleanup, /coverage\[field\] = same\(expectedOverrides\[field\], remoteOverrides\[field\]\)/);
+});
