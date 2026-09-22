@@ -115,13 +115,16 @@ test('first-open bootstrap verifies Master payload before Buyer Log becomes read
   assert.match(SERVER, /completed && localLoginAllowed && !integrityFailure/);
 });
 
-test('pre-wipe recovery reads legacy settings, royalty, email, FX and Endeksmatik from Full System Backup', () => {
+test('pre-wipe recovery reads legacy Master and CP Business data from Full System Backup', () => {
   assert.match(SERVER, /prewipeMasterRecovery\.loadMasterRecordsFromExtractedBackup\(tempRoot, recoveredState\)/);
+  assert.match(SERVER, /prewipeMasterRecovery\.loadBusinessRecordsFromExtractedBackup\(tempRoot, recoveredState\)/);
   assert.match(SERVER, /prewipeMasterRecovery\.masterRecoveryIds\(recovered\.masterRecords, currentMaster\)/);
   assert.match(SERVER, /expectedMaster > 0 && currentMasterCount < expectedMaster/);
-  assert.match(SERVER, /checkpointUnaccountedIds\(recovered\.businessRecords, currentBusiness/);
-  assert.match(SERVER, /filter\(id => !\/shared-collection\//);
+  assert.match(SERVER, /mergeRecoveredBusinessRecords\(/);
+  assert.match(SERVER, /filter\(\(\[id\]\) => !\/shared-collection\//);
+  assert.match(SERVER, /businessRecovery\.changed\[id\]/);
   assert.match(SERVER, /inventory:finalCoverage/);
+  assert.match(SERVER, /businessCoverage:finalBusinessCoverage/);
 });
 
 
@@ -282,13 +285,15 @@ test('verified Full System Backup prefers rich overrides .bak over one-revision-
   assert.equal(coverage.endeksmatikRecords, 4589);
 });
 
-test('verified pre-wipe deep scan is keyed by backup sha, not Master record count', () => {
+test('verified pre-wipe deep scan is keyed by backup sha and includes CP Business coverage', () => {
   assert.match(SERVER, /function prewipeRecoveryAlreadyDeepScanned\(snapshot, candidate\)/);
-  assert.match(SERVER, /Number\(recovery\.schemaVersion \|\| 0\) >= 2/);
+  assert.match(SERVER, /Number\(recovery\.schemaVersion \|\| 0\) >= 3/);
+  assert.match(SERVER, /recovery\.businessCoverage && typeof recovery\.businessCoverage === 'object'/);
   assert.match(SERVER, /String\(recovery\.backupSha256 \|\| ''\)\.toLowerCase\(\) === expectedSha/);
   assert.doesNotMatch(SERVER, /reason:'checkpoint-inventory-complete'/);
   assert.match(SERVER, /Record count alone is NOT enough/);
-  assert.match(SERVER, /schemaVersion:2,/);
+  assert.match(SERVER, /schemaVersion:3,/);
+  assert.match(SERVER, /businessCoverage:finalBusinessCoverage/);
   assert.match(SERVER, /backupSha256:String\(candidate\.report/);
 });
 
