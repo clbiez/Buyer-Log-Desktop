@@ -12,6 +12,11 @@
 const WORKSPACE_BAR_HEIGHT = 44;
 const MIN_WINDOW_WIDTH = 800;
 const MIN_WINDOW_HEIGHT = 600;
+const CLOSE_FORCE_DELAY_MS = 800;
+const WINDOW_THEME = Object.freeze({
+  light: { background:'#f2f2f3', overlay:'#ececed', symbol:'#1d1f20' },
+  dark: { background:'#23262a', overlay:'#1c1f23', symbol:'#e9eaec' },
+});
 
 const MODULES = Object.freeze({
   overview: { tr: 'Genel Bakış', en: 'Overview' },
@@ -42,7 +47,7 @@ function clampIndex(value, length) {
 
 function createWorkspaceManager(options) {
   const {
-    BrowserWindow, WebContentsView, dialog, screen, path, crypto, origin,
+    BrowserWindow, WebContentsView, dialog, screen, path, crypto, origin, nativeTheme,
     shellFile, shellPreload, contentPreload, iconPath,
     loadWindowState, saveWindowState, applyNavigationPolicy, log,
     onFirstRendererReady,
@@ -54,6 +59,30 @@ function createWorkspaceManager(options) {
   const contentsToTab = new Map();
   let lastFocusedWindowId = 0;
   let rendererReadySignaled = false;
+  let primaryWindowId = 0;
+
+  function currentWindowTheme() {
+    return nativeTheme && nativeTheme.shouldUseDarkColors ? WINDOW_THEME.dark : WINDOW_THEME.light;
+  }
+
+  function applyWindowTheme(window) {
+    if (!window || window.isDestroyed()) return;
+    const theme = currentWindowTheme();
+    try { window.setBackgroundColor(theme.background); } catch (_) {}
+    try { window.setTitleBarOverlay({ color:theme.overlay, symbolColor:theme.symbol, height:WORKSPACE_BAR_HEIGHT }); } catch (_) {}
+  }
+
+  function onNativeThemeUpdated() {
+    windows.forEach(state => applyWindowTheme(state.window));
+    tabs.forEach(tab => {
+      if (!tab.view.webContents.isDestroyed()) {
+        try { tab.view.setBackgroundColor(currentWindowTheme().background); } catch (_) {}
+      }
+    });
+    notifyAll();
+  }
+
+  if (nativeTheme && typeof nativeTheme.on === 'function') nativeTheme.on('updated', onNativeThemeUpdated);
 
   function stateForWindow(windowId) {
     return windows.get(Number(windowId)) || null;
@@ -99,6 +128,24 @@ function createWorkspaceManager(options) {
     return [...tabs.values()].map(tab => tab.view.webContents).filter(contents => !contents.isDestroyed());
   }
 
+  function pointInside(bounds, x, y) {
+    return Boolean(bounds && x >= bounds.x && y >= bounds.y && x < bounds.x + bounds.width && y < bounds.y + bounds.height);
+  }
+
+  function reattachTarget(source) {
+    const primary = stateForWindow(primaryWindowId);
+    if (primary && primary !== source && !primary.window.isDestroyed()) return primary;
+    return [...windows.values()].find(candidate => candidate !== source && !candidate.window.isDestroyed()) || null;
+  }
+
+  function settleCloseRequest(tab, closed) {
+    const request = tab && tab.closeRequest;
+    if (!request) return;
+    tab.closeRequest = null;
+    if (request.timer) clearTimeout(request.timer);
+    request.resolve(Boolean(closed));
+  }
+
   function snapshot(state) {
     return {
       windowId: state.window.id,
@@ -108,6 +155,8 @@ function createWorkspaceManager(options) {
         return tab ? { id: tab.id, module: tab.module, title: tab.title, loading: tab.loading } : null;
       }).filter(Boolean),
       modules: MODULES,
+      isPrimaryWindow: state.window.id === primaryWindowId,
+      canReattach: Boolean(reattachTarget(state)),
     };
   }
 
@@ -191,7 +240,7 @@ function createWorkspaceManager(options) {
         spellcheck: false,
       },
     });
-    view.setBackgroundColor('#f2f2f3');
+    view.setBackgroundColor(currentWindowTheme().background);
     const tab = {
       id,
       module,
@@ -199,6 +248,7 @@ function createWorkspaceManager(options) {
       view,
       windowId: state.window.id,
       loading: true,
+      closeRequest: null,
     };
     tabs.set(id, tab);
     contentsToTab.set(view.webContents.id, id);
@@ -226,9 +276,15 @@ function createWorkspaceManager(options) {
         cancelId: 1,
         noLink: true,
       });
-      if (answer === 0) event.preventDefault();
+      if (answer === 0) {
+        if (tab.closeRequest) tab.closeRequest.approved = true;
+        event.preventDefault();
+      } else if (tab.closeRequest) {
+        settleCloseRequest(tab, false);
+      }
     });
     view.webContents.on('destroyed', () => {
+      settleCloseRequest(tab, true);
       contentsToTab.delete(view.webContents.id);
       tabs.delete(id);
       const owner = stateForWindow(tab.windowId);
@@ -259,6 +315,7 @@ function createWorkspaceManager(options) {
   }
 
   function windowOptions(bounds) {
+    const theme = currentWindowTheme();
     return {
       width: Math.max(MIN_WINDOW_WIDTH, Number(bounds.width) || 1200),
       height: Math.max(MIN_WINDOW_HEIGHT, Number(bounds.height) || 820),
@@ -267,12 +324,12 @@ function createWorkspaceManager(options) {
       minWidth: MIN_WINDOW_WIDTH,
       minHeight: MIN_WINDOW_HEIGHT,
       show: false,
-      backgroundColor: '#f2f2f3',
+      backgroundColor: theme.background,
       title: 'Buyer Log',
       icon: iconPath,
       autoHideMenuBar: true,
       titleBarStyle: 'hidden',
-      titleBarOverlay: { color: '#ececed', symbolColor: '#1d1f20', height: WORKSPACE_BAR_HEIGHT },
+      titleBarOverlay: { color: theme.overlay, symbolColor: theme.symbol, height: WORKSPACE_BAR_HEIGHT },
       webPreferences: {
         preload: shellPreload,
         nodeIntegration: false,
@@ -286,6 +343,8 @@ function createWorkspaceManager(options) {
   function createWindow({ module = 'overview', bounds = null, empty = false } = {}) {
     const initial = bounds || loadWindowState();
     const window = new BrowserWindow(windowOptions(initial));
+    const shellContentsId = window.webContents.id;
+    applyWindowTheme(window);
     const state = {
       window,
       tabs: [],
@@ -294,7 +353,8 @@ function createWorkspaceManager(options) {
       forceClosing: false,
     };
     windows.set(window.id, state);
-    shellToWindow.set(window.webContents.id, window.id);
+    if (!primaryWindowId) primaryWindowId = window.id;
+    shellToWindow.set(shellContentsId, window.id);
     lastFocusedWindowId = window.id;
 
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
@@ -321,8 +381,9 @@ function createWorkspaceManager(options) {
       void requestCloseWindow(state);
     });
     window.on('closed', () => {
-      shellToWindow.delete(window.webContents.id);
+      shellToWindow.delete(shellContentsId);
       windows.delete(window.id);
+      if (primaryWindowId === window.id) primaryWindowId = [...windows.keys()][0] || 0;
       if (lastFocusedWindowId === window.id) lastFocusedWindowId = [...windows.keys()][0] || 0;
       notifyAll();
     });
@@ -418,27 +479,69 @@ function createWorkspaceManager(options) {
     return moveTab(tab.id, target.window.id, 0);
   }
 
+  function finishTabDrag(tabId, sourceWindowId, point = {}) {
+    const tab = tabs.get(String(tabId || ''));
+    const source = stateForWindow(sourceWindowId);
+    if (!tab || !source || tab.windowId !== source.window.id) return false;
+    const x = Math.round(Number(point.x));
+    const y = Math.round(Number(point.y));
+    if (!Number.isFinite(x) || !Number.isFinite(y) || (x === 0 && y === 0)) return false;
+    if (pointInside(source.window.getBounds(), x, y)) return false;
+    const target = [...windows.values()].find(candidate => candidate !== source && !candidate.window.isDestroyed() && pointInside(candidate.window.getBounds(), x, y));
+    if (target) return moveTab(tab.id, target.window.id, target.tabs.length);
+    return detachTab(tab.id, source.window.id, { x, y });
+  }
+
+  function reattachTab(tabId, sourceWindowId) {
+    const tab = tabs.get(String(tabId || ''));
+    const source = stateForWindow(sourceWindowId);
+    if (!tab || !source || tab.windowId !== source.window.id) return false;
+    const target = reattachTarget(source);
+    return target ? moveTab(tab.id, target.window.id, target.tabs.length) : false;
+  }
+
   function closeTab(tabId) {
     const tab = tabs.get(String(tabId || ''));
-    if (!tab || tab.view.webContents.isDestroyed()) return false;
-    tab.view.webContents.close({ waitForBeforeUnload: true });
-    return true;
+    if (!tab || tab.view.webContents.isDestroyed()) return Promise.resolve(false);
+    if (tab.closeRequest) return tab.closeRequest.promise;
+
+    let resolveRequest = null;
+    const promise = new Promise(resolve => { resolveRequest = resolve; });
+    const request = { promise, resolve:resolveRequest, timer:null, approved:false };
+    tab.closeRequest = request;
+    request.timer = setTimeout(() => {
+      if (tab.closeRequest !== request) return;
+      if (tab.view.webContents.isDestroyed()) {
+        settleCloseRequest(tab, true);
+        return;
+      }
+      try { tab.view.webContents.close({ waitForBeforeUnload: false }); }
+      catch (_) { settleCloseRequest(tab, false); return; }
+      setTimeout(() => {
+        if (tab.closeRequest === request) settleCloseRequest(tab, tab.view.webContents.isDestroyed());
+      }, 100);
+    }, CLOSE_FORCE_DELAY_MS);
+
+    try { tab.view.webContents.close({ waitForBeforeUnload: true }); }
+    catch (_) { settleCloseRequest(tab, false); }
+    if (tab.view.webContents.isDestroyed()) settleCloseRequest(tab, true);
+    return promise;
   }
 
   async function requestCloseWindow(state) {
-    if (!state || state.window.isDestroyed() || state.closingRequested) return;
+    if (!state || state.window.isDestroyed() || state.closingRequested) return false;
     state.closingRequested = true;
     try {
       for (const tabId of [...state.tabs]) {
         const tab = tabs.get(tabId);
         if (!tab || tab.view.webContents.isDestroyed()) continue;
-        tab.view.webContents.close({ waitForBeforeUnload: true });
-        await new Promise(resolve => setImmediate(resolve));
-        if (!tab.view.webContents.isDestroyed()) return;
+        const closed = await closeTab(tabId);
+        if (!closed) return false;
       }
       try { saveWindowState(state.window); } catch (_) {}
       state.forceClosing = true;
       if (!state.window.isDestroyed()) state.window.close();
+      return true;
     } finally {
       if (!state.window.isDestroyed()) state.closingRequested = false;
     }
@@ -449,6 +552,7 @@ function createWorkspaceManager(options) {
   }
 
   function destroyAllWindows() {
+    if (nativeTheme && typeof nativeTheme.removeListener === 'function') nativeTheme.removeListener('updated', onNativeThemeUpdated);
     windows.forEach(state => {
       state.forceClosing = true;
       state.tabs.forEach(tabId => {
@@ -488,6 +592,8 @@ function createWorkspaceManager(options) {
     activateTab,
     moveTab,
     detachTab,
+    finishTabDrag,
+    reattachTab,
     closeTab,
     closeAllWindows,
     destroyAllWindows,
