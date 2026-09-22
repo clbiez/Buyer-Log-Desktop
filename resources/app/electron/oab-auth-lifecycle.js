@@ -169,11 +169,22 @@ function createOabAuthLifecycle(options = {}) {
     }
   }
 
+  function resetForFreshViewer() {
+    if (stopped || candidateBusy) return false;
+    sawLogin = false;
+    viewerKicks = 0;
+    viewerKickBusy = false;
+    viewerFirstSeenAt = 0;
+    lastViewerKickAt = 0;
+    setPhase('opening');
+    return true;
+  }
+
   function stop() {
     stopped = true;
   }
 
-  return { observe, onNetworkRequest, stop, snapshot };
+  return { observe, onNetworkRequest, resetForFreshViewer, stop, snapshot };
 }
 
 module.exports = {
