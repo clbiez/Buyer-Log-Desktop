@@ -8805,22 +8805,7 @@ function overviewCollectionSummaryDrill({month,status,model,season}={}){
     if(typeof switchTab==='function')switchTab('koleksiyon');
     if(typeof renderKol==='function')renderKol();
   }catch(_){}
-}={}){
-  try{
-    if(typeof kolColFilters==='undefined')return;
-    if(month){kolColFilters.inStoreMonth=new Set([month]);}
-    else delete kolColFilters.inStoreMonth;
-    if(status){kolColFilters.durum=new Set([status]);}
-    else delete kolColFilters.durum;
-    if(model){kolColFilters.modelKod=new Set([model]);}
-    else delete kolColFilters.modelKod;
-    if(typeof saveKolColState==='function')saveKolColState();
-    if(typeof switchTab==='function')switchTab('koleksiyon');
-    if(typeof renderKol==='function')renderKol();
-  }catch(_){ }
 }
-
-
 
 const OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT={rows:['durum'],columns:['confirmation'],values:['modelCount','optionCount','confirmed','notConfirmed']};
 function overviewCollectionSummaryPivotStored(){
@@ -18911,6 +18896,7 @@ function kolSetStatusColor(name,color){
 function kolRenameStatus(oldName,newName){
   if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
   const clean=String(newName||'').trim(),oldKey=KOL_STATUS_API.key(oldName);if(!clean)throw new Error(appLang==='en'?'Enter a status name.':'Status adı gir.');
+  if(clean===String(oldName||'').trim())return;
   if(KOL_STATUS_API.key(clean)!==oldKey&&kolStatusEntries().some(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(clean)))throw new Error(appLang==='en'?'This status already exists.':'Bu status zaten var.');
   const entries=kolStatusEntries();if(!entries.some(entry=>KOL_STATUS_API.key(entry.name)===oldKey))throw new Error(appLang==='en'?'Status not found.':'Status bulunamadı.');
   kolRows.forEach(row=>{if(String(row&&row.durum||'')===String(oldName))row.durum=clean;});
