@@ -21,7 +21,7 @@ catch (err) { console.warn('Excel tarih kancaları kurulamadı:', err && err.mes
 const { runExcelTask, getExcelWorkerStats } = require('./excel-worker-client');
 const {
   CONFIG_PATH, MODEL_FILES_ROOT, LOGS_ROOT, EMAIL_DRAFT_ROOT, LOCAL_DATA_ROOT, LOCAL_DB_FILE, SERVER_DATA_ROOT, APP_DATA_ROOT,
-  getUserDataInventory, exportBackupToFile, restoreBackupFromFile,
+  getUserDataInventory, exportBackupToFile,
   saveCollectionImage, replaceCollectionImage, collectionImageOptimizationStatus, completeCollectionImageOptimization,
   getModelImageSettings, saveModelImageSettings,
   getCollectionImage, deleteCollectionImage, deleteAllCollectionImages, purgeExpiredModelFiles, resolveStoredFile, atomicWriteJson, atomicWriteBuffer,
@@ -35,6 +35,7 @@ const { createCollectionPermissionsStore } = require('./lib/collection-permissio
 const { resolveBuyerLogDataRoots } = require('./lib/data-roots');
 const { createDataMaintenance } = require('./lib/data-maintenance');
 const { createBackupService } = require('./lib/backup-service');
+const { runBackupRestore } = require('./lib/backup-restore-worker-client');
 const { inspectBackupArchive, extractBackupArchive } = require('./lib/backup-archive');
 const prewipeMasterRecovery = require('./lib/prewipe-master-recovery');
 const { createSharedPersonalBackupService } = require('./lib/shared-personal-backup');
@@ -576,6 +577,7 @@ const collectionReplication = createCollectionReplication({
   workspaces: require('./lib/collection-workspaces'),
   permissions: collectionPermissions,
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
+  stateFile: path.join(LOCAL_DATA_ROOT, 'collection-replication-state.json'),
   onTrace: markStartup,
 });
 const collectionPermissionsReady = (async () => {
@@ -1599,7 +1601,11 @@ const userRestoreUploads = new Map(), userRestoreJobs = new Map();
 // Full System Restore state is intentionally separate from ordinary backup jobs:
 // upload/inspect can run without a write lock, while the apply phase gates all
 // restore-aware writes and Central IAM refreshes.
-const systemRestoreState = { writeLocked: false, commitStarted: false, restoreId: null };
+const systemRestoreState = { writeLocked: false, fullRestoreLocked:false, legacyRestoreLocked:false, commitStarted: false, restoreId: null };
+function refreshSystemRestoreWriteLock() {
+  systemRestoreState.writeLocked = Boolean(systemRestoreState.fullRestoreLocked || systemRestoreState.legacyRestoreLocked);
+  return systemRestoreState.writeLocked;
+}
 const fullRestoreUploads = new Map(), fullRestoreJobs = new Map();
 const fullRestoreRoots = {
   ...dataRoots,
@@ -1610,7 +1616,7 @@ const fullRestoreRoots = {
 const fullRestoreService = createFullRestoreService({
   appVersion: APP_VERSION, roots: fullRestoreRoots, localDb, syncSettings, userAccess, backupService, securityFile: ACCESS_FILE,
   onWriteLockState: (locked, restoreId) => {
-    systemRestoreState.writeLocked = Boolean(locked); systemRestoreState.restoreId = locked ? restoreId : null;
+    systemRestoreState.fullRestoreLocked = Boolean(locked); refreshSystemRestoreWriteLock(); systemRestoreState.restoreId = locked ? restoreId : null;
     const job = fullRestoreJobs.get(restoreId); if (job) job.writeLocked = Boolean(locked);
   },
   onCommitState: (committing, restoreId) => {
@@ -2988,7 +2994,7 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
       for(const row of (mailRows||[]))(backlogAutomation.resolveCommunicationLanguage(row)==='en'?en++:tr++);
       return en>tr?'en':'tr';
     };
-    const deliver=(group,subjectBase,mailRows,langRows)=>{
+    const deliver=async(group,subjectBase,mailRows,langRows)=>{
       const lang=groupLanguage(langRows||mailRows);
       const useEn=lang==='en'&&(email.subjectEn||email.bodyEn);
       const subject=useEn&&email.subjectEn?String(subjectBase).replace(baseSubject,email.subjectEn):subjectBase;
@@ -2996,7 +3002,7 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
       const entry={groupId:group.id,groupName:group.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,rows:mailRows.length,deliveryMode:email.deliveryMode,language:lang};
       if(dryRun)return entry;
       if(email.deliveryMode==='outlook_send'){
-        const sent=automationEmail.sendWithOutlook({name:recipe.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,body,rows:mailRows,fields});
+        const sent=await automationEmail.sendWithOutlook({name:recipe.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,body,rows:mailRows,fields});
         if(!sent.ok)throw Object.assign(new Error(sent.error||'Outlook gönderimi başarısız.'),{code:'AUTOMATION_EMAIL_SEND_FAILED',statusCode:502});
         return {...entry,...sent};
       }
@@ -3007,7 +3013,11 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
     if(email.recipientMode==='field'){
       const split=automationSplitRecipients(rows,recipe,ownerId);
       if(!split.resolved.length)throw Object.assign(new Error(`"${split.field}" alanındaki hiçbir değer adres defterinde bulunamadı; e-posta gönderilmedi.`),{code:'AUTOMATION_RECIPIENTS_UNRESOLVED',statusCode:400});
-      const messages=split.resolved.map(part=>deliver(part.group,`${baseSubject} · ${part.value}`,email.includeReport===false?[]:part.rows,part.rows));
+      const messages=[];
+      // Outlook COM automation is serialized deliberately; concurrent PowerShell
+      // senders contend for the same desktop Outlook profile. Awaiting each child
+      // keeps the server event loop free without introducing that race.
+      for(const part of split.resolved)messages.push(await deliver(part.group,`${baseSubject} · ${part.value}`,email.includeReport===false?[]:part.rows,part.rows));
       result.emails=messages;
       result.email={...messages[0],split:true,messageCount:messages.length,recipientField:split.field};
       // Çözülemeyen değerler sonuçta AÇIKÇA raporlanır; kullanıcı hangi
@@ -3015,7 +3025,7 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
       if(split.unresolved.length)result.unresolvedRecipients=split.unresolved;
     }else{
       const group=automationEmailGroup(recipe,ownerId);
-      result.email=deliver(group,baseSubject,email.includeReport===false?[]:rows,rows);
+      result.email=await deliver(group,baseSubject,email.includeReport===false?[]:rows,rows);
     }
   }
   return result;
@@ -3513,6 +3523,24 @@ async function afterSharedCollectionSave() {
   // collectionReplication below; Shared Hub itself never owns Collection rows.
   return false;
 }
+function collectionReplicationError(error) {
+  return {
+    ok:false, state:Number(error && error.statusCode) === 409 ? 'conflict' : 'error',
+    code:String(error && error.code || 'COLLECTION_REPLICA_FAILED'),
+    message:String(error && error.message || 'Koleksiyon ağ paylaşımına gönderilemedi.'),
+    localRevision:Number(error && error.localRevision) || 0,
+    remoteRevision:Number(error && error.remoteRevision) || 0,
+  };
+}
+async function publishCollectionReplica(ownerId, traceName = 'collectionReplicaPublish') {
+  try { return { ok:true, ...(await collectionReplication.publishOwner(ownerId)) }; }
+  catch (error) { logRuntimeFailure(traceName, error); return collectionReplicationError(error); }
+}
+async function collectionReplicaStatus(ownerId, syncError = null) {
+  if (syncError) return collectionReplicationError(syncError);
+  try { return await collectionReplication.status(ownerId); }
+  catch (error) { logRuntimeFailure('collectionReplicaStatus', error); return collectionReplicationError(error); }
+}
 function collectionIdentityName(value) {
   return String(value == null ? '' : value)
     .toLocaleLowerCase('tr-TR')
@@ -3651,9 +3679,10 @@ app.get('/api/collection-workspaces-batch', userAccess.requireArea('koleksiyon')
   for (const ownerId of unique) {
     const profile = profiles.get(ownerId); if (!profile) continue;
     const level = userAccess.collectionAccessLevel(req.currentUser, ownerId);
-    await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
+    let syncError = null;
+    await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => { syncError=error; logRuntimeFailure('collectionReplicaDownload', error); });
     await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
-    workspaces.push({ owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, workspace:collectionWorkspaceWithLocalImages(ownerId) });
+    workspaces.push({ owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, workspace:collectionWorkspaceWithLocalImages(ownerId), replication:await collectionReplicaStatus(ownerId, syncError) });
   }
   res.json({ workspaces, readOnly:true, shared:false });
 });
@@ -3665,9 +3694,10 @@ app.get('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
   if (!level) return res.status(403).json({ error:'Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.', code:'COLLECTION_ACCESS_DENIED' });
   const profile = userAccess.allPublicProfiles().find(item => item.id === ownerId);
   if (!profile) return res.status(404).json({ error:'Koleksiyon sahibi bulunamadı.', code:'USER_NOT_FOUND' });
-  await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionReplicaDownload', error));
+  let syncError = null;
+  await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => { syncError=error; logRuntimeFailure('collectionReplicaDownload', error); });
   await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
-  res.json({ workspace:collectionWorkspaceWithLocalImages(ownerId), access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, shared:false });
+  res.json({ workspace:collectionWorkspaceWithLocalImages(ownerId), access:{ level, canEdit:collectionWorkspaceEditAllowed(req.currentUser, ownerId) }, owner:{ id:profile.id, displayName:profile.displayName, role:profile.role }, replication:await collectionReplicaStatus(ownerId, syncError), shared:false });
 });
 /* v7.21 — Koleksiyon kaydetme artık ASENKRON.
 
@@ -3704,10 +3734,9 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
         BUYER_LOG_CONFIG_PATH: process.env.BUYER_LOG_CONFIG_PATH,
       },
     });
-    if (!(await afterSharedCollectionSave(ownerId))) {
-      try { await collectionReplication.publishOwner(ownerId); }
-      catch (error) { logRuntimeFailure('collectionReplicaPublish', error); }
-    }
+    const replication = !(await afterSharedCollectionSave(ownerId))
+      ? await publishCollectionReplica(ownerId)
+      : { ok:true, published:false, reason:'shared-save' };
     void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnSave', error));
     void sharedRevisionStore.update('collection',{actorId:req.currentUser.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'COLLECTION_SAVE', ownerId, { rows: result.rowCount, revision: result.revision });
@@ -3716,7 +3745,7 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
     liveEvents.notifyChange('collection', requestClientId(req), { ownerId, rowPatches: result.rowPatches, revision: result.revision });
     // Yanıt kasıtlı olarak KÜÇÜK: istemci zaten veriye sahip, yalnız yeni
     // revizyonu kullanıyor. 18 MB'ı geri serileştirmek kazancı geri verirdi.
-    res.json({ ok: true, workspace: { _revision: result.revision, _updatedAt: result.updatedAt, rowCount: result.rowCount } });
+    res.json({ ok: true, workspace: { _revision: result.revision, _updatedAt: result.updatedAt, rowCount: result.rowCount }, replication });
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'COLLECTION_SAVE_FAILED', currentRevision: err.currentRevision });
   }
@@ -6294,10 +6323,9 @@ app.patch('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksi
       },
     });
     if (result.changed) {
-      if (!(await afterSharedCollectionSave(ownerId))) {
-        try { await collectionReplication.publishOwner(ownerId); }
-        catch (error) { logRuntimeFailure('collectionReplicaPublish', error); }
-      }
+      result.replication = !(await afterSharedCollectionSave(ownerId))
+        ? await publishCollectionReplica(ownerId)
+        : { ok:true, published:false, reason:'shared-save' };
       void sharedRevisionStore.update('collection',{actorId:req.currentUser.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
       userAccess.appendAudit(req.currentUser, 'COLLECTION_ROW_SAVE', ownerId, { applied: result.applied.length, conflicts: result.conflicts.length, revision: result.revision });
       liveEvents.notifyChange('collection', requestClientId(req), { ownerId, rowPatches: result.rowPatches, revision: result.revision });
@@ -6309,6 +6337,7 @@ app.patch('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksi
       rowCount: result.rowCount,
       applied: result.applied,
       conflicts: result.conflicts,
+      replication: result.replication || await collectionReplicaStatus(ownerId),
     });
   } catch (err) {
     res.status(err.statusCode || 500).json({
@@ -6683,16 +6712,29 @@ async function receiveRequestToTempFile(req, maxBytes) {
 }
 app.post('/api/backup/restore', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), async (req, res) => {
   let upload = null;
+  let ownsWriteLock = false;
   try {
     upload = await receiveRequestToTempFile(req, 550 * 1024 * 1024);
-    const result = await restoreBackupFromFile(upload.file);
+    if (systemRestoreState.writeLocked || [...fullRestoreJobs.values()].some(job => !job.done)) throw Object.assign(new Error('Başka bir geri yükleme işlemi devam ediyor.'), { code:'SYSTEM_RESTORE_IN_PROGRESS', statusCode:409 });
+    // Set synchronously before starting the worker: all subsequent mutations
+    // are rejected while the worker performs its commit/rollback transaction.
+    systemRestoreState.legacyRestoreLocked = true; refreshSystemRestoreWriteLock(); ownsWriteLock = true;
+    const result = await runBackupRestore(upload.file, { env:{
+      BUYER_LOG_SERVER_DATA_ROOT:process.env.BUYER_LOG_SERVER_DATA_ROOT,
+      BUYER_LOG_DATA_ROOT:process.env.BUYER_LOG_DATA_ROOT,
+      BUYER_LOG_LOCAL_DATA_ROOT:process.env.BUYER_LOG_LOCAL_DATA_ROOT,
+      BUYER_LOG_CONFIG_PATH:process.env.BUYER_LOG_CONFIG_PATH,
+    } });
     const restored = loadRuntimeConfig(CONFIG_PATH, { defaults: DEFAULT_CONFIG });
     if (restored.warning) logRuntimeFailure('restoredConfigRead', restored.error || restored.warning);
     config = restored.config;
     sourceCaches.clear(); initialDataLoadPromises.clear();
     res.json({ ...result, restartRecommended: true });
   } catch (err) { apiError(res, err, 'Yedek geri yüklenemedi. Dosyanın geçerli ve bozulmamış olduğunu kontrol edin.'); }
-  finally { if (upload) fs.rmSync(upload.root, { recursive: true, force: true }); }
+  finally {
+    if (ownsWriteLock) { systemRestoreState.legacyRestoreLocked = false; refreshSystemRestoreWriteLock(); }
+    if (upload) await fs.promises.rm(upload.root, { recursive:true, force:true }).catch(error => logRuntimeFailure('backupRestoreTempCleanup', error));
+  }
 });
 const FULL_RESTORE_MAX_ARCHIVE_BYTES = 4 * 1024 * 1024 * 1024;
 function fullRestoreApiError(res, error, fallback = 'Full System Restore tamamlanamadı.') {

@@ -19075,6 +19075,7 @@ async function kolSaveWorkspaceNow(saveOptions){
       });
       const data=await res.json().catch(()=>({}));
       if(!res.ok){const err=new Error(data.error||res.statusText);err.code=data.code;err.currentRevision=data.currentRevision;throw err;}
+      kolReportReplication(data.replication);
       if(kolWorkspaceOwnerId!==ownerId)return {ok:true,durable:true,ownerChanged:true}; // kullanıcı bu arada başka sayfaya geçti
       if(rowMode){
         kolWorkspaceRevision=Number(data.revision)||kolWorkspaceRevision;
@@ -19122,8 +19123,24 @@ async function kolSaveWorkspaceNow(saveOptions){
   return result;
 }
 function kolQueueWorkspaceSave(){if(!kolWorkspaceCanEdit)return;clearTimeout(kolWorkspaceSaveTimer);kolWorkspaceSaveTimer=setTimeout(()=>void kolSaveWorkspaceNow(),350);}
+const kolReplicationNoticeByOwner=new Map();
+function kolReportReplication(replication){
+  if(!replication||typeof replication!=='object')return;
+  const owner=String(replication.ownerId||kolWorkspaceOwnerId||'');
+  const failed=replication.ok===false||replication.state==='conflict'||replication.state==='error';
+  if(!failed){if(owner)kolReplicationNoticeByOwner.delete(owner);return;}
+  const signature=[replication.state,replication.code,replication.localRevision,replication.remoteRevision,replication.updatedAt].join('|');
+  if(owner&&kolReplicationNoticeByOwner.get(owner)===signature)return;
+  if(owner)kolReplicationNoticeByOwner.set(owner,signature);
+  const detail=String(replication.message||'').trim();
+  const message=appLang==='en'
+    ?`Saved locally, but Collection sharing needs attention.${detail?' '+detail:''}`
+    :`Yerel kayıt tamamlandı; Koleksiyon paylaşımı ilgilenmenizi gerektiriyor.${detail?' '+detail:''}`;
+  showToast(message);
+}
 async function kolLoadWorkspace(ownerId){
   const res=await fetch(`/api/collection-workspaces/${encodeURIComponent(ownerId)}`);const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);
+  kolReportReplication(data.replication);
   kolWorkspaceOwnerId=ownerId;kolApplyWorkspace(data.workspace,data.access);const select=document.getElementById('kolWorkspaceSelect');if(select)select.value=ownerId;
 }
 function kolPersistScope(){
@@ -19154,6 +19171,7 @@ async function kolLoadWorkspaceBatch(ownerIds){
   if(ids.length===1){kolWorkspaceSelectedOwnerIds=new Set(ids);kolPersistScope();await kolLoadWorkspace(ids[0]);renderKolScopeFilters();return;}
   const res=await fetch(`/api/collection-workspaces-batch?ownerIds=${encodeURIComponent(ids.join(','))}`);const data=await res.json().catch(()=>({}));
   if(!res.ok)throw new Error(data.error||res.statusText);
+  for(const item of Array.isArray(data.workspaces)?data.workspaces:[])kolReportReplication(item&&item.replication);
   kolWorkspaceSelectedOwnerIds=new Set(ids);kolPersistScope();kolApplyCombinedWorkspaces(data.workspaces||[]);
   const select=document.getElementById('kolWorkspaceSelect');if(select)select.value='';
 }
@@ -19341,7 +19359,7 @@ async function initKolWorkspaces(options){
     }
     const select=document.getElementById('kolWorkspaceSelect');if(select){select.innerHTML='<option value="">Çoklu görünüm</option>'+kolWorkspaceList.map(item=>`<option value="${escapeHtml(item.ownerId)}">${escapeHtml(item.ownerName)} · ${escapeHtml(item.level==='edit'?(appLang==='en'?'Edit':'Düzenleme'):(appLang==='en'?'View':'Görüntüleme'))}</option>`).join('');select.value=kolWorkspaceOwnerId;select.onchange=async()=>{if(!select.value)return;try{await kolSaveWorkspaceNow();await kolLoadWorkspaceBatch([select.value]);}catch(err){showToast(err.message);select.value=kolWorkspaceMode==='single'?kolWorkspaceOwnerId:'';}};}
     const own=kolWorkspaceList.find(item=>item.ownerId===kolWorkspaceOwnerId)||kolWorkspaceList[0];if(!own)return;
-    const detail=await kolFetchJson(`/api/collection-workspaces/${encodeURIComponent(own.ownerId)}`);
+    const detail=await kolFetchJson(`/api/collection-workspaces/${encodeURIComponent(own.ownerId)}`);kolReportReplication(detail.replication);
     if(detail.workspace&&detail.workspace.initialized){kolWorkspaceOwnerId=own.ownerId;kolApplyWorkspace(detail.workspace,detail.access);if(select)select.value=own.ownerId;}
     else {kolWorkspaceOwnerId=own.ownerId;kolWorkspaceCanEdit=Boolean(detail.access&&detail.access.canEdit);kolWorkspaceRevision=Number(detail.workspace&&detail.workspace._revision)||0;kolWorkspaceSetReadonly();if(kolWorkspaceCanEdit)await kolSaveWorkspaceNow();}
     let savedIds=[];if(!kolWorkspaceSharedMode){try{const pref=JSON.parse(BLStorage.getItem(KOL_SCOPE_PREF_KEY)||'{}');savedIds=Array.isArray(pref.ownerIds)?pref.ownerIds:[];}catch(_){}}
