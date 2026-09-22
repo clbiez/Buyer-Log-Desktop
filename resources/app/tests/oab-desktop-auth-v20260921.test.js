@@ -50,14 +50,18 @@ test('OAB owns a persistent dedicated session and normal shutdown preserves it',
   assert.match(clearBody, /clearCache\(\)/);
 });
 
-test('persistent OAB probe stays hidden until sign-in is detected and navigation failures are terminal', () => {
+test('persistent OAB probe stays hidden briefly, then escalates instead of waiting invisibly for the full auth timeout', () => {
   const start = MAIN.indexOf('async function acquireOabAuthorization');
   const end = MAIN.indexOf('async function clearOabAuthSession', start);
   const body = MAIN.slice(start, end);
   assert.match(body, /show: false/);
   assert.match(body, /phase === 'login-required'[\s\S]*?showInteractiveWindow\(\)/);
+  assert.match(MAIN, /const OAB_SILENT_PROBE_MS = 8000/);
+  assert.match(body, /armSilentProbe\(\)/);
+  assert.match(body, /recoverStaleSilentProbe/);
+  assert.match(body, /resetForFreshViewer/);
+  assert.match(body, /showInteractiveWindow\(\)[\s\S]*?loadLoginTarget\(OAB_VIEWER_URL, false\)/);
   assert.doesNotMatch(body, /once\('ready-to-show', showInteractiveWindow\)/);
-  assert.doesNotMatch(body, /setTimeout\(showInteractiveWindow, 350\)/);
   assert.match(body, /did-fail-load[\s\S]*?OAB_AUTH_NAVIGATION_FAILED/);
   assert.match(body, /render-process-gone[\s\S]*?OAB_AUTH_RENDERER_FAILED/);
 });
@@ -72,6 +76,36 @@ test('Microsoft SSO popup is kept inside the dedicated partition and allowlist',
   assert.match(body, /did-create-window/);
   assert.match(body, /isAllowedOabLoginUrl/);
   assert.match(body, /will-navigate/);
+});
+
+
+test('interactive Get OAB upgrades an existing hidden auth flow instead of joining it invisibly', () => {
+  const start = MAIN.indexOf('async function acquireOabAuthorization');
+  const end = MAIN.indexOf('async function clearOabAuthSession', start);
+  const body = MAIN.slice(start, end);
+  assert.match(body, /if \(oabAuthInFlight\)/);
+  assert.match(body, /if \(requestedInteractive\)/);
+  assert.match(body, /oabAuthFlowState\.interactive = true/);
+  assert.match(body, /promoteInteractive\?\.\(\{ immediate:true, reason:'interactive-join' \}\)/);
+  assert.match(body, /target\.show\(\);[\s\S]*?target\.focus\(\)/);
+});
+
+test('main-frame and popup sign-in redirects immediately reveal a usable auth window', () => {
+  const start = MAIN.indexOf('async function acquireOabAuthorization');
+  const end = MAIN.indexOf('async function clearOabAuthSession', start);
+  const body = MAIN.slice(start, end);
+  assert.match(body, /did-start-navigation/);
+  assert.match(body, /will-redirect/);
+  assert.match(body, /markLoginRequired\(url, authWindow\)/);
+  assert.match(body, /markLoginRequired\(url, popup\)/);
+  assert.match(body, /isLikelyOabSignInUrl\(url\)/);
+  assert.match(body, /showWindow\(target\)/);
+});
+
+test('Keycloak is detected by generic identity-host semantics without hard-coding a login URL or OAuth query', () => {
+  assert.doesNotMatch(MAIN, /https:\/\/keycloak\.lcwaikiki\.com/i);
+  assert.doesNotMatch(MAIN, /code_challenge=|nonce=|state=/i);
+  assert.match(MAIN, /keycloak\|login\|signin\|auth\|sso\|identity\|idp\|adfs/);
 });
 
 test('CDP capture accepts only the real PASS report API Authorization', () => {
@@ -149,6 +183,23 @@ test('interactive lifecycle waits for login, retries viewer in a bounded way, th
   assert.ok(phases.includes('backend-validated'));
 });
 
+test('stale lifecycle state can be reset before reopening the real PASS viewer', async () => {
+  let clock = 1000;
+  const lifecycle = createOabAuthLifecycle({
+    apiHost: 'pass.prod.lcwaikiki.com',
+    uiHost: 'pass.lcwaikiki.com',
+    viewerKickIntervalMs: 1000,
+    now: () => clock,
+  });
+  await lifecycle.observe({ url: 'https://login.microsoftonline.com/common/oauth2/authorize', signIn: true });
+  assert.equal(lifecycle.snapshot().sawLogin, true);
+  assert.equal(lifecycle.snapshot().phase, 'login-required');
+  assert.equal(lifecycle.resetForFreshViewer(), true);
+  assert.equal(lifecycle.snapshot().sawLogin, false);
+  assert.equal(lifecycle.snapshot().viewerKicks, 0);
+  assert.equal(lifecycle.snapshot().phase, 'opening');
+});
+
 test('busy navigation does not consume the bounded viewer retry budget', async () => {
   let clock = 1000;
   let navigationBusy = true;
@@ -211,6 +262,17 @@ test('main-process success still requires loopback backend validation and closes
   assert.match(body, /targetDebugger\.detach\(\)/);
   assert.match(body, /authWindow\.close\(\)/);
   assert.match(body, /clearInterval\(lifecycleTimer\)/);
+});
+
+test('explicit clear cancels any active OAB window before clearing the persistent session', () => {
+  const start = MAIN.indexOf('async function clearOabAuthSession()');
+  const end = MAIN.indexOf('/* ------------------------------------------------------------- pencereler */', start);
+  const body = MAIN.slice(start, end);
+  assert.match(body, /const pending = oabAuthInFlight/);
+  assert.match(body, /oabAuthWindow\.close\(\)/);
+  assert.match(body, /clearOabBackendAuthorization\(\)/);
+  assert.match(body, /clearStorageData/);
+  assert.match(body, /clearCache\(\)/);
 });
 
 test('manual interactive window close remains OAB_AUTH_CANCELLED', () => {
