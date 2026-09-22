@@ -937,6 +937,7 @@ async function acquireOabAuthorization(options = {}) {
 
         if (navigationBusy) {
           freshReloadPending = true;
+          try { authWindow.webContents.stop(); } catch (_) {}
           return;
         }
         await loadLoginTarget(OAB_VIEWER_URL, false);
