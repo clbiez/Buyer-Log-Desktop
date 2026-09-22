@@ -3562,7 +3562,7 @@ async function ensureLegacyCollectionOwnerRecovery(profile) {
     sourceOwnerIds:[...aliasIds].filter(id => id !== String(profile.id)),
     sharedSourceOwnerIds:foreignOwnersWithData.length ? [...aliasIds] : null,
   });
-  if (result && result.changed) {
+  if (result && (result.changed || result.markerWritten)) {
     markStartup('COLLECTION_OWNER_RECOVERED', {
       ownerId:String(profile.id), aliases:[...aliasIds], rows:result.totalRows,
       added:result.added, duplicatesMerged:result.duplicatesMerged,
