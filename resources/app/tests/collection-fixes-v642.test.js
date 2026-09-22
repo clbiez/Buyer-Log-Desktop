@@ -12,6 +12,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'design-butunluk.css'), 'utf8');
+const STATUS_CATALOG = require('../public/collection-status-catalog.js');
 
 function bodyOf(source, name) {
   const start = source.indexOf(`function ${name}(`);
@@ -32,18 +33,19 @@ function bodyOf(source, name) {
 
 /* ---------------------------------------------------- 1) DUMMY PO PLACED */
 
-test('v6.42 "Dummy PO Placed" durum listesinde ve İngilizce karşılığı var', () => {
-  const decl = APP.slice(APP.indexOf('const KOL_DURUM_OPTS ='), APP.indexOf('const KOL_DURUM_OPTS =') + 400);
-  const opts = new Function(`${decl.slice(0, decl.indexOf(';') + 1)} return KOL_DURUM_OPTS;`)();
+test('v6.42 "Dummy PO Placed" canonical status kataloğunda ve İngilizce karşılığı var', () => {
+  const opts = STATUS_CATALOG.seed().map(entry=>entry.name);
   assert.ok(opts.includes('Dummy PO Placed'));
   assert.match(APP, /'Dummy PO Placed':'Dummy PO Placed',/);
 });
 
-test('v6.42 yeni durum Excel renk paletinde de tanımlı', () => {
-  // Palette'te olmayan bir değer Excel'de renksiz/varsayılan görünür.
-  const line = APP.match(/const pal = \{[^}]*\}\[raw\];/);
-  assert.ok(line);
-  assert.match(line[0], /'Dummy PO Placed':/);
+test('v6.42 status Excel rengi artık canonical katalog resolverından gelir', () => {
+  const entry=STATUS_CATALOG.seed().find(item=>item.name==='Dummy PO Placed');
+  assert.ok(entry);
+  assert.match(entry.color,/^#[0-9A-F]{6}$/i);
+  assert.equal(STATUS_CATALOG.toArgb(entry.color).length,8);
+  assert.match(APP,/kolStatusExcelArgb/);
+  assert.doesNotMatch(APP,/const pal = \{/);
 });
 
 /* -------------------------------------------------- 2) DUPLICATE SEÇİM TEMİZLİĞİ */
