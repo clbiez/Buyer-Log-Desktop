@@ -31,9 +31,9 @@ test('Collection Summary confirmation filter uses existing confirmation callback
   assert.deepEqual(result.rows[0],{status:'Fiyatlamada',modelCount:1,optionCount:1,confirmed:1,notConfirmed:0});
 });
 
-test('Season scope uses existing arbitrary-column aggregation path',()=>{
-  const result=summary.build(rows,{columnFilters:{season:['7S']},isConfirmed:row=>Boolean(row.confirmedManufacturer)});
-  assert.deepEqual(result.kpi,{total:2,optionCount:3,confirmed:1,notConfirmed:1});
+test('Collection Summary arbitrary-column scope supports multiple selected values',()=>{
+  const result=summary.build(rows,{columnFilters:{inStoreMonth:['2026-08','2026-09']},isConfirmed:row=>Boolean(row.confirmedManufacturer)});
+  assert.deepEqual(result.kpi,{total:3,optionCount:4,confirmed:2,notConfirmed:1});
 });
 
 test('advanced multi-level pivot remains available only as secondary data view',()=>{
@@ -49,17 +49,26 @@ test('Overview Collection widget keeps identity but main surface is visual dashb
   assert.match(INDEX,/id="ovCollectionSummaryStatusDistribution"/);
   assert.match(INDEX,/id="ovCollectionSummaryDistributionBar"/);
   assert.match(INDEX,/id="ovCollectionSummaryScope"/);
+  assert.match(INDEX,/id="ovCollectionSummaryScopeLabel"/);
+  assert.match(INDEX,/id="ovCollectionSummaryScopeTrigger"/);
+  assert.match(INDEX,/id="ovCollectionSummaryScopePopover"/);
+  assert.doesNotMatch(INDEX,/id="ovCollectionSummarySettingsBtn"/);
   assert.doesNotMatch(INDEX,/id="ovCollectionSummaryTable"/);
   assert.match(DASH,/ovCollectionKpiCard/);
   assert.match(DASH,/ovCollectionStatusCard/);
-  assert.match(DASH,/scopeSeason/);
-  assert.match(DASH,/openSettings/);
+  assert.match(DASH,/scopeColumn/);
+  assert.match(DASH,/scopeValues/);
+  assert.match(DASH,/inStoreMonth/);
+  assert.match(DASH,/openColumnDrawer/);
+  assert.doesNotMatch(DASH,/openSettings/);
   assert.match(APP,/overviewCollectionSummaryDashboardContext/);
   assert.match(STORAGE,/buyerlog\.overview\.collectionSummary\./);
 });
 
-test('Overview KPI drill maps Confirmed / Not Confirmed to the Collection confirmation filter',()=>{
+test('Overview KPI drill maps dynamic scope and confirmation to Collection filters',()=>{
   assert.match(APP,/const KOL_CONFIRMATION_FILTER_KEY = '__confirmation__'/);
+  assert.match(APP,/scopeColumn,scopeValues/);
+  assert.match(APP,/kolColFilters\[scopeColumn\]=new Set\(scopedValues\)/);
   assert.match(APP,/kpi==='confirmed'.*KOL_CONFIRMATION_FILTER_KEY/s);
   assert.match(APP,/kpi==='notConfirmed'.*KOL_CONFIRMATION_FILTER_KEY/s);
   assert.match(APP,/kolConfirmedPricing\(row\)\?'confirmed':'notConfirmed'/);
