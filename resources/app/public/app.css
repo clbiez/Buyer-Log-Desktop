@@ -1768,18 +1768,27 @@ body.quotationColumnResizing,body.quotationColumnResizing *{cursor:col-resize!im
 
 /* ===================== v2.84 — Collection Status arrow + locked image aspect ratio ===================== */
 /* Status remains a functional select, but its native drawer arrow is intentionally hidden. */
+#kolTable td.kolStatusTd{
+  --kol-status-color:var(--acc);
+  padding:0!important;
+  background:color-mix(in srgb,var(--kol-status-color) 24%,var(--card))!important;
+  box-shadow:inset 3px 0 0 var(--kol-status-color);
+}
+#kolTable td.kolStatusTd:hover{background:color-mix(in srgb,var(--kol-status-color) 31%,var(--card))!important}
 #kolTable select.kolStatusNoArrow{
   appearance:none;
   -webkit-appearance:none;
   -moz-appearance:none;
-  --kol-status-color:var(--acc);
-  border:1px solid color-mix(in srgb,var(--kol-status-color) 42%,var(--line));
-  border-radius:999px;
-  background-color:color-mix(in srgb,var(--kol-status-color) 11%,var(--card));
+  width:100%;
+  height:100%;
+  min-height:30px;
+  border:0;
+  border-radius:0;
+  background-color:transparent;
   background-image:radial-gradient(circle at 11px 50%,var(--kol-status-color) 0 3.5px,transparent 4px)!important;
   background-repeat:no-repeat!important;
   color:var(--ink);
-  font-weight:650;
+  font-weight:700;
   padding:3px 9px 3px 24px;
 }
 /* Explicit width/height are calculated from the same scale factor in JS. */
@@ -4953,15 +4962,16 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .ovCollectionSummaryHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
 .ovCollectionSummaryHeading{min-width:0}
 .ovCollectionSummaryHeaderActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.ovCollectionSummaryScope{display:flex;align-items:center;gap:8px;height:34px;padding:0 9px 0 11px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
-.ovCollectionSummaryScope>span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.ovCollectionSummaryScope select{height:28px;min-width:116px;border:0;background:transparent;color:var(--ink);font-weight:700;outline:0}
-.ovCollectionSummarySettingsBtn{height:34px;gap:6px}
+.ovCollectionSummaryScope{display:flex;align-items:center;gap:8px;height:34px;padding:0 7px 0 11px;border:1px solid var(--line);border-radius:0;background:var(--card)}
+.ovCollectionSummaryScopeLabel{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:default;user-select:none;outline:0}
+.ovCollectionSummaryScopeLabel:hover,.ovCollectionSummaryScopeLabel:focus-visible{color:var(--ink);text-decoration:underline dotted;text-underline-offset:3px}
+.ovCollectionSummaryScopeTrigger{height:28px;min-width:124px;display:inline-flex;align-items:center;justify-content:space-between;gap:8px;border:0;border-left:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;padding:0 7px 0 10px;cursor:pointer}
+.ovCollectionSummaryScopeTrigger:hover{background:var(--hover)}
 .ovCollectionSummaryBody{display:grid;gap:14px;margin-top:15px}
 .ovCollectionSummaryKpi{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-.ovCollectionKpiCard{min-width:0;display:flex;align-items:center;gap:11px;padding:14px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--card) 96%,var(--acc) 4%),var(--card));color:var(--ink);text-align:left;cursor:pointer;transition:border-color .14s ease,transform .14s ease,box-shadow .14s ease}
+.ovCollectionKpiCard{min-width:0;display:flex;align-items:center;gap:11px;padding:14px;border:1px solid var(--line);border-radius:0;background:linear-gradient(180deg,color-mix(in srgb,var(--card) 96%,var(--acc) 4%),var(--card));color:var(--ink);text-align:left;cursor:pointer;transition:border-color .14s ease,transform .14s ease,box-shadow .14s ease}
 .ovCollectionKpiCard:hover{transform:translateY(-1px);border-color:color-mix(in srgb,var(--acc) 32%,var(--line));box-shadow:0 8px 22px rgba(16,24,40,.08)}
-.ovCollectionKpiIcon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--card2);color:var(--muted);flex:0 0 auto}
+.ovCollectionKpiIcon{width:34px;height:34px;border-radius:0;display:grid;place-items:center;background:var(--card2);color:var(--muted);flex:0 0 auto}
 .ovCollectionKpiCard.tone-blue .ovCollectionKpiIcon{background:color-mix(in srgb,#1570EF 12%,var(--card));color:#1570EF}
 .ovCollectionKpiCard.tone-green .ovCollectionKpiIcon{background:color-mix(in srgb,#039855 12%,var(--card));color:#039855}
 .ovCollectionKpiCard.tone-amber .ovCollectionKpiIcon{background:color-mix(in srgb,#F79009 13%,var(--card));color:#DC6803}
@@ -4969,7 +4979,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .ovCollectionKpiCopy>b{font-size:24px;line-height:1;font-weight:820;letter-spacing:-.035em}
 .ovCollectionKpiCopy>b em{font-size:11px;font-style:normal;font-weight:800;color:var(--muted);margin-left:5px;letter-spacing:0}
 .ovCollectionKpiCopy>span{font-size:11px;font-weight:700;color:var(--muted)}
-.ovCollectionStatusSection{padding:14px;border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--card) 97%,var(--card2) 3%)}
+.ovCollectionStatusSection{padding:14px;border:1px solid var(--line);border-radius:0;background:color-mix(in srgb,var(--card) 97%,var(--card2) 3%)}
 .ovCollectionStatusSectionHead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
 .ovCollectionStatusSectionHead>div{display:flex;flex-direction:column;gap:2px}
 .ovCollectionStatusSectionHead b{font-size:12px}
@@ -4978,7 +4988,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .ovCollectionDistributionSegment{height:100%;min-width:2px;border:0;padding:0;background:var(--status-color);cursor:pointer;transition:filter .14s ease}
 .ovCollectionDistributionSegment:hover{filter:brightness(.92)}
 .ovCollectionSummaryStatusDistribution{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px}
-.ovCollectionStatusCard{--status-color:#667085;display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;grid-template-areas:"dot name count share" ". options options options" "track track track track";column-gap:8px;row-gap:5px;align-items:center;padding:10px 11px;border:1px solid color-mix(in srgb,var(--status-color) 26%,var(--line));border-radius:11px;background:color-mix(in srgb,var(--status-color) 7%,var(--card));color:var(--ink);text-align:left;cursor:pointer}
+.ovCollectionStatusCard{--status-color:#667085;display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;grid-template-areas:"dot name count share" ". options options options" "track track track track";column-gap:8px;row-gap:5px;align-items:center;padding:10px 11px;border:1px solid color-mix(in srgb,var(--status-color) 26%,var(--line));border-radius:0;background:color-mix(in srgb,var(--status-color) 7%,var(--card));color:var(--ink);text-align:left;cursor:pointer}
 .ovCollectionStatusCard:hover{border-color:color-mix(in srgb,var(--status-color) 55%,var(--line))}
 .ovCollectionStatusDot{grid-area:dot;width:8px;height:8px;border-radius:50%;background:var(--status-color);box-shadow:0 0 0 3px color-mix(in srgb,var(--status-color) 13%,transparent)}
 .ovCollectionStatusName{grid-area:name;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:750}
@@ -5015,3 +5025,17 @@ body.kolPeriodDrawerOpen{overflow:hidden}
   .kolStatusAddRow{grid-template-columns:1fr 42px auto}
   .kolStatusAddRow .kolStatusSwatches{grid-column:1/-1}
 }
+
+/* v7.0.94 — Collection Summary generic scope drawers */
+.ovCollectionScopeDrawerOverlay{position:fixed;inset:0;z-index:52000;display:flex;justify-content:flex-end;background:rgba(15,23,42,.32);backdrop-filter:blur(1px)}
+.ovCollectionScopeDrawer{width:min(420px,92vw);height:100%;display:flex;flex-direction:column;background:var(--pop);border-left:1px solid var(--line2);box-shadow:-16px 0 36px rgba(15,23,42,.16);color:var(--ink)}
+.ovCollectionScopeDrawerHead{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:18px;border-bottom:1px solid var(--line)}
+.ovCollectionScopeDrawerHead>div{display:grid;gap:4px}.ovCollectionScopeDrawerHead b{font-size:14px}.ovCollectionScopeDrawerHead span{font-size:10.5px;line-height:1.45;color:var(--muted)}
+.ovCollectionScopeDrawerHead>button{width:28px;height:28px;border:1px solid var(--line);border-radius:0;background:var(--card);color:var(--ink);cursor:pointer}
+.ovCollectionScopeSearch{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.ovCollectionScopeSearch input{height:32px;border:1px solid var(--line);border-radius:0;background:var(--card);color:var(--ink);padding:0 9px;outline:0}
+.ovCollectionScopeSearch button{height:32px;border:1px solid var(--line);border-radius:0;background:var(--card2);color:var(--ink2);padding:0 10px;cursor:pointer}
+.ovCollectionScopeDrawerList{display:flex;flex-direction:column;gap:2px;padding:10px 14px;overflow:auto;flex:1}
+.ovCollectionScopeChoice{display:flex;align-items:center;gap:9px;min-height:34px;padding:7px 8px;border:1px solid transparent;border-radius:0;cursor:pointer;color:var(--ink2);font-size:11px}
+.ovCollectionScopeChoice:hover{background:var(--hover);border-color:var(--line)}.ovCollectionScopeChoice input{accent-color:var(--acc);margin:0}
+.ovCollectionScopeDrawerFoot{display:flex;justify-content:flex-end;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:var(--card)}
