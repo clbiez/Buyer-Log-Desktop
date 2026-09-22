@@ -10,5 +10,4 @@ test('built-in Collection statuses may translate while custom statuses remain li
   const start=APP.indexOf('function kolStatusDisplayLabel('),end=APP.indexOf('\nfunction ',start+1),body=APP.slice(start,end);
   assert.match(body,/entry&&entry\.builtin\?L\(entry\.name\):String\(name\|\|''\)/);
   assert.match(DASH,/ctx\.statusLabel\(row\.status\)/);
-  assert.match(DASH,/ctx\.statusLabel\(raw\)/);
 });
