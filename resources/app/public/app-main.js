@@ -12485,9 +12485,12 @@ async function waitForRefreshJob(expectedJob=null){
     const renderMetric=initialScreenLoad?window.BLPerf?.begin?.('firstRenderMs'):null;
     const activeModuleMetric=initialScreenLoad?beginStartupStage('ACTIVE_MODULE_INIT'):null;
     const tableRenderMetric=initialScreenLoad?beginStartupStage('TABLE_RENDER'):null;
-    // Preset cache browserda hazırsa aktif tabloya API beklemeden uygula.
-    // Böylece ilk çizim varsayılan kolon/filtrelerle görünüp sonradan sıçramaz.
-    applyCachedProfilesForCurrentPage(true);
+    // Preset cache browserda hazırsa İLK ekran açılışında aktif tabloya API
+    // beklemeden uygula. Sonraki manuel/otomatik veri yenilemelerinde favoriyi
+    // yeniden uygulamak, kullanıcının o oturumda seçtiği Focus/Extended/All
+    // görünümünü ve filtrelerini kayıtlı profile geri döndürüyordu. Yenilemede
+    // profil listesi tazelenir ama mevcut ekran düzeni korunur.
+    applyCachedProfilesForCurrentPage(initialScreenLoad);
     const startupTab=renderStartupActiveModule();
     if(renderMetric)window.BLPerf?.end?.(renderMetric);
     if(tableRenderMetric)endStartupStage(tableRenderMetric,'TABLE_RENDER',{module:startupTab});

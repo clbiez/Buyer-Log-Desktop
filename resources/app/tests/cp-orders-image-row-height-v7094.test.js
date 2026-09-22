@@ -70,3 +70,9 @@ test('CP lojistik ozetleri Picture slider satir yuksekligini buyutemez', () => {
   assert.match(CSS, /#cpTable tbody \.cpLogisticSummaryStack,[\s\S]*?flex-direction:row;[\s\S]*?flex-wrap:nowrap;/);
   assert.match(CSS, /#cpTable tbody \.cpLogisticPrimaryDate,[\s\S]*?display:inline;[\s\S]*?margin-top:0;/);
 });
+
+test('CP Tumu gorunumundeki duzenleme sutunlari minimum Picture satirini buyutemez', () => {
+  assert.match(CSS, /#cpTable tbody tr:not\(\.cpLogisticDetailRow\):not\(\.tableDetailRow\)>td\.editTd\{[\s\S]*?padding-top:1px;[\s\S]*?padding-bottom:1px;/);
+  assert.match(CSS, /#cpTable tbody tr:not\(\.cpLogisticDetailRow\):not\(\.tableDetailRow\)>td\.editTd :is\([\s\S]*?\.noteCellDelete,[\s\S]*?\.licensorDependencyCell[\s\S]*?max-height:calc\(var\(--cp-row-h-cp,var\(--cp-row-h,46px\)\) - 2px\);/);
+  assert.match(CSS, /#cpTable tbody tr\.cpLogisticDetailRow,#cpTable tbody tr\.cpLogisticDetailRow td,[\s\S]*?height:auto;overflow:visible;/);
+});

@@ -3294,6 +3294,29 @@ tfoot .collectionWeightedAverage .collectionWeightedChangeLine strong.isNegative
 #cpTable tbody td{height:var(--cp-row-h-cp,var(--cp-row-h,46px));overflow:hidden;}
 #ordersTable tbody td{height:var(--cp-row-h-orders,var(--cp-row-h,46px));overflow:hidden;}
 
+/* "Tümü" görünümü Notes/Ek Not ve kullanıcı tanımlı düzenleme sütunlarını da
+   açar. Bu hücrelerdeki 28px aksiyon düğmeleri genel yoğunluk padding'iyle
+   birleşince tablonun 34px'lik en küçük Picture satırını büyütebiliyordu.
+   Yalnız CP ana satırlarında düzenleme hücresinin dikey boşluğunu satır kutusuna
+   dahil et; lojistik/detay satırlarının doğal yüksekliği aşağıdaki istisnada
+   korunmaya devam eder. */
+#cpTable tbody tr:not(.cpLogisticDetailRow):not(.tableDetailRow)>td.editTd{
+  padding-top:1px;
+  padding-bottom:1px;
+}
+#cpTable tbody tr:not(.cpLogisticDetailRow):not(.tableDetailRow)>td.editTd :is(
+  input.editCell,
+  select.editCell,
+  .noteCellWrap,
+  .noteCellTrigger,
+  .noteCellDelete,
+  .delTypeTrigger,
+  .licensorDependencyCell
+){
+  box-sizing:border-box;
+  max-height:calc(var(--cp-row-h-cp,var(--cp-row-h,46px)) - 2px);
+}
+
 /* CP ana satirindaki lojistik ozetleri cok satirli dogal yukseklikleriyle Picture
    slider'inin satir geometrisini ezmemeli. Tam bilgi zaten acilir lojistik detay
    satirinda ve hucre title'inda korunur; ana satir tek satirlik, kirpilabilir bir

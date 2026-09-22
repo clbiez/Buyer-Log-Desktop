@@ -94,6 +94,15 @@ test('v6.03 elle yenilemeden sonra sayaç baştan başlıyor', () => {
   assert.match(APP, /dispatchEvent\(new Event\('bl-refresh-finished'\)\)/);
 });
 
+test('otomatik veya manuel veri yenilemesi acik tablo gorunumunu favoriye resetlemez', () => {
+  const load = blockOf('async function loadFromServer(', 'let sharedRevisionSnapshot=');
+  // Favori profil yalnız gerçek ilk ekran yüklemesinde uygulanır. Daha sonraki
+  // yenilemeler profil listesini okuyabilir, fakat kullanıcının canlı
+  // Focus/Extended/All ve filtre seçimini yeniden uygulayamaz.
+  assert.match(load, /applyCachedProfilesForCurrentPage\(initialScreenLoad\)/);
+  assert.doesNotMatch(load, /applyCachedProfilesForCurrentPage\(true\)/);
+});
+
 test('v6.03 sıradaki tur saati kullanıcıya gösteriliyor', () => {
   const start = APP.indexOf('function autoRefreshLabel()');
   const block = APP.slice(start, APP.indexOf('function renderAutoRefreshState()', start));
