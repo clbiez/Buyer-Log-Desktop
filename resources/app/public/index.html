@@ -505,8 +505,11 @@
           <p id="ovCollectionSummaryIntro" class="ovCollectionSummaryIntro"></p>
         </div>
         <div class="ovCollectionSummaryHeaderActions">
-          <label class="ovCollectionSummaryScope"><span>Season</span><select id="ovCollectionSummaryScope" aria-label="Season"></select></label>
-          <button type="button" id="ovCollectionSummarySettingsBtn" class="navActionBtn ovCollectionSummarySettingsBtn" title="Düzenle / Ayrıntılı Kırılım" aria-label="Düzenle / Ayrıntılı Kırılım" data-i18n-title-tr="Düzenle / Ayrıntılı Kırılım" data-i18n-title-en="Edit / Detailed Breakdown"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Düzenle" data-i18n-en="Edit">Düzenle</span></button>
+          <div id="ovCollectionSummaryScope" class="ovCollectionSummaryScope">
+            <span id="ovCollectionSummaryScopeLabel" class="ovCollectionSummaryScopeLabel" tabindex="0" role="button" title="Filtre sütununu değiştirmek için çift tıkla" data-i18n-title-tr="Filtre sütununu değiştirmek için çift tıkla" data-i18n-title-en="Double-click to change the filter column">In Store Month</span>
+            <button type="button" id="ovCollectionSummaryScopeTrigger" class="ovCollectionSummaryScopeTrigger" aria-haspopup="listbox" aria-expanded="false"><span id="ovCollectionSummaryScopeValue">Tümü</span><span class="ovCollectionScopeChevron" aria-hidden="true">▾</span></button>
+            <div id="ovCollectionSummaryScopePopover" class="ovCollectionSummaryScopePopover" hidden></div>
+          </div>
           <button type="button" id="ovCollectionSummaryCollapseBtn" class="ovNotesCollapseBtn" title="Koleksiyon Özetini daralt" aria-label="Koleksiyon Özetini daralt" aria-expanded="true"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg></button>
         </div>
       </div>
