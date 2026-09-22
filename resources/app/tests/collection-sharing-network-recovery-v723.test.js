@@ -84,7 +84,7 @@ test('v7.23 sunucu hiç dönmezse deneme sayısı SINIRLIDIR', async () => {
 });
 
 test('v7.23 ağ hatasında mesaj sebebi söyler ve arka planda kurtarma başlatılır', () => {
-  const init = sliceBetween('async function initKolWorkspaces(options)', 'const KOL_DURUM_OPTS');
+  const init = sliceBetween('async function initKolWorkspaces(options)', 'const KOL_STATUS_API=window.BLCollectionStatusCatalog');
   assert.ok(init.includes('kolIsNetworkError(err)'), 'ağ hatası ayrı ele alınmalı');
   assert.ok(init.includes('kolScheduleSharingRecovery()'), 'sunucu geri gelince kendiliğinden kurulmalı');
   assert.ok(/yeniden başlıyor olabilir|may be restarting/.test(init), 'mesaj sebebi söylemeli');

@@ -208,15 +208,31 @@ function resolveStoredFile(root, storedName) {
 function walkFiles(root, options = {}) {
   if (!fs.existsSync(root)) return [];
   const excludedTop = new Set(options.excludeTop || []);
+  const tolerateMissing = options.tolerateMissing === true;
   const out = [];
+  const isTransientMissing = err => err && (err.code === 'ENOENT' || err.code === 'ENOTDIR');
   function visit(dir, relBase = '') {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    let entries;
+    try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
+    catch (err) {
+      if (tolerateMissing && isTransientMissing(err)) return;
+      throw err;
+    }
+    for (const entry of entries) {
       if (!relBase && excludedTop.has(entry.name)) continue;
       const full = path.join(dir, entry.name);
       const rel = path.join(relBase, entry.name).replace(/\\/g, '/');
       if (entry.isSymbolicLink()) continue;
-      if (entry.isDirectory()) visit(full, rel);
-      else if (entry.isFile() && !/\.tmp$/i.test(entry.name)) out.push({ full, rel, stat: fs.statSync(full) });
+      if (entry.isDirectory()) {
+        visit(full, rel);
+        continue;
+      }
+      if (!entry.isFile() || /\.tmp$/i.test(entry.name)) continue;
+      try { out.push({ full, rel, stat: fs.statSync(full) }); }
+      catch (err) {
+        if (tolerateMissing && isTransientMissing(err)) continue;
+        throw err;
+      }
     }
   }
   visit(root);
@@ -238,7 +254,7 @@ function getUserDataInventory() {
   });
   const configExists = fs.existsSync(CONFIG_PATH);
   result.push({ id: 'config', root: CONFIG_PATH, exists: configExists, fileCount: configExists ? 1 : 0, bytes: configExists ? fs.statSync(CONFIG_PATH).size : 0 });
-  const logFiles = walkFiles(LOGS_ROOT), draftFiles = walkFiles(EMAIL_DRAFT_ROOT), tempFiles = walkFiles(TEMP_ROOT);
+  const logFiles = walkFiles(LOGS_ROOT), draftFiles = walkFiles(EMAIL_DRAFT_ROOT), tempFiles = walkFiles(TEMP_ROOT, { tolerateMissing: true });
   result.push({ id: 'logs', root: LOGS_ROOT, exists: fs.existsSync(LOGS_ROOT), fileCount: logFiles.length, bytes: logFiles.reduce((s, f) => s + f.stat.size, 0), backupIncluded: false });
   result.push({ id: 'temp', root: TEMP_ROOT, exists: fs.existsSync(TEMP_ROOT), fileCount: tempFiles.length, bytes: tempFiles.reduce((s, f) => s + f.stat.size, 0), backupIncluded: false });
   result.push({ id: 'emailDraftTemp', root: EMAIL_DRAFT_ROOT, exists: fs.existsSync(EMAIL_DRAFT_ROOT), fileCount: draftFiles.length, bytes: draftFiles.reduce((s, f) => s + f.stat.size, 0), backupIncluded: false });

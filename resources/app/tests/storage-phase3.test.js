@@ -97,6 +97,29 @@ test('collection images are stored outside localStorage and deleted explicitly',
   assert.ok(userData.getCollectionImage(second.id));
 });
 
+test('temp inventory ignores directories that disappear while being scanned', () => {
+  const volatileDir = fs.mkdtempSync(path.join(userData.TEMP_ROOT, 'buyerlog-inventory-race-'));
+  const volatileFile = path.join(volatileDir, 'gone.txt');
+  fs.writeFileSync(volatileFile, 'gone');
+  const originalReaddirSync = fs.readdirSync;
+  let injected = false;
+  fs.readdirSync = function patchedReaddirSync(target, ...args) {
+    if (!injected && path.resolve(String(target)) === path.resolve(volatileDir)) {
+      injected = true;
+      fs.unlinkSync(volatileFile);
+      fs.rmdirSync(volatileDir);
+    }
+    return originalReaddirSync.call(this, target, ...args);
+  };
+  try {
+    assert.doesNotThrow(() => userData.getUserDataInventory());
+    assert.equal(injected, true, 'test must exercise the disappearing-directory race');
+  } finally {
+    fs.readdirSync = originalReaddirSync;
+    fs.rmSync(volatileDir, { recursive: true, force: true });
+  }
+});
+
 test('full backup restores server files, model/image files, config and browser storage', () => {
   // Tam yedek, yedek anında boş olan kapsamları da tanımlar.
   fs.rmSync(userData.COLLECTION_IMAGES_ROOT, { recursive: true, force: true });

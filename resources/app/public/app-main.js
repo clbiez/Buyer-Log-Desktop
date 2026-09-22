@@ -8789,88 +8789,23 @@ function overviewCollectionSummaryApplyCollapsed(collapsed,{persist=true}={}){
     button.setAttribute('aria-expanded',value?'false':'true');button.title=title;button.setAttribute('aria-label',title);
     const use=button.querySelector('use');if(use)use.setAttribute('href',value?'#i-chevron-down':'#i-chevron-up');
   }
-  if(persist){try{BLStorage.setItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY,value?'1':'0');}catch(_){} }
+  if(persist){try{BLStorage.setItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY,value?'1':'0');}catch(_){}}
 }
 function overviewCollectionSummaryStoredCollapsed(){try{return BLStorage.getItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY)==='1';}catch(_){return false;}}
-function overviewCollectionSummaryFilterLabel(kind,selected,total){
-  if(!selected.length)return appLang==='en'?'Select':'Seçin';
-  if(selected.length===1)return kind==='statuses'?L(selected[0]):selected[0];
-  return `${selected.length}/${total}`;
-}
-function overviewCollectionSummaryBindExclusiveFilters(){
-  const filters=[...document.querySelectorAll('#ovCollectionSummaryFilters>details[data-summary-filter]')];
-  filters.forEach(filter=>{
-    if(filter.dataset.exclusiveBound==='1')return;
-    filter.addEventListener('toggle',()=>{
-      if(!filter.open)return;
-      filters.forEach(other=>{if(other!==filter)other.open=false;});
-    });
-    filter.dataset.exclusiveBound='1';
-  });
-}
-function overviewCollectionSummaryDrill({month,status,model}={}){
+function overviewCollectionSummaryDrill({month,status,model,season,kpi}={}){
   try{
     if(typeof kolColFilters==='undefined')return;
-    if(month){kolColFilters.inStoreMonth=new Set([month]);}
-    else delete kolColFilters.inStoreMonth;
-    if(status){kolColFilters.durum=new Set([status]);}
-    else delete kolColFilters.durum;
-    if(model){kolColFilters.modelKod=new Set([model]);}
-    else delete kolColFilters.modelKod;
+    if(month)kolColFilters.inStoreMonth=new Set([month]);else delete kolColFilters.inStoreMonth;
+    if(status)kolColFilters.durum=new Set([status]);else delete kolColFilters.durum;
+    if(model)kolColFilters.modelKod=new Set([model]);else delete kolColFilters.modelKod;
+    if(season)kolColFilters.season=new Set([season]);else delete kolColFilters.season;
+    if(kpi==='confirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['confirmed']);
+    else if(kpi==='notConfirmed')kolColFilters[KOL_CONFIRMATION_FILTER_KEY]=new Set(['notConfirmed']);
+    else delete kolColFilters[KOL_CONFIRMATION_FILTER_KEY];
     if(typeof saveKolColState==='function')saveKolColState();
     if(typeof switchTab==='function')switchTab('koleksiyon');
     if(typeof renderKol==='function')renderKol();
-  }catch(_){ }
-}
-function overviewCollectionSummaryRenderFilter(kind,values,selected){
-  const host=document.getElementById(kind==='months'?'ovCollectionSummaryMonths':'ovCollectionSummaryStatuses');
-  const label=document.getElementById(kind==='months'?'ovCollectionSummaryMonthsLabel':'ovCollectionSummaryStatusesLabel');
-  if(!host||!label)return;
-  label.textContent=overviewCollectionSummaryFilterLabel(kind,selected,values.length);
-  host.innerHTML=values.map(value=>{const displayValue=kind==='statuses'?L(value):value;return `<label><input type="checkbox" value="${escapeHtml(value)}"${selected.includes(value)?' checked':''}><span>${escapeHtml(displayValue)}</span></label>`;}).join('')||`<small>${escapeHtml(appLang==='en'?'No Collection data':'Koleksiyon verisi yok')}</small>`;
-  host.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener('change',()=>{
-    const next=[...host.querySelectorAll('input:checked')].map(item=>item.value);
-    if(!next.length){input.checked=true;return;}
-    const prefs=overviewCollectionSummaryStored();prefs[kind]=next;overviewCollectionSummarySave(prefs);renderOverviewCollectionSummary();
-  }));
-}
-function overviewCollectionSummaryRenderConfirmation(selected){
-  const label=document.getElementById('ovCollectionSummaryConfirmationLabel');
-  const options=document.getElementById('ovCollectionSummaryConfirmationOptions');
-  if(!label||!options)return;
-  const labels={all:appLang==='en'?'All':'Tümü',confirmed:appLang==='en'?'Confirmed':'Onaylı',notConfirmed:appLang==='en'?'Not Confirmed':'Onaysız'};
-  label.textContent=labels[selected]||labels.all;
-  options.querySelectorAll('[data-summary-confirmation]').forEach(input=>{
-    input.checked=input.dataset.summaryConfirmation===selected;
-    input.onchange=()=>{
-      const next={...overviewCollectionSummaryStored(),confirmation:input.dataset.summaryConfirmation};
-      overviewCollectionSummarySave(next);renderOverviewCollectionSummary();
-    };
-  });
-}
-function overviewCollectionSummaryRenderColumnFilters(catalog,columnFilters){
-  const select=document.getElementById('ovCollectionSummaryFilterColumn'),host=document.getElementById('ovCollectionSummaryColumnFilters');
-  if(!select||!host)return;
-  const activeKeys=new Set(Object.keys(columnFilters||{}));
-  select.innerHTML=`<option value="">${escapeHtml(appLang==='en'?'Choose a Collection column':'Koleksiyon sütunu seçin')}</option>`+catalog.filter(column=>!activeKeys.has(column.key)).map(column=>`<option value="${escapeHtml(column.key)}">${escapeHtml(L(column.label))}</option>`).join('');
-  host.innerHTML=catalog.filter(column=>activeKeys.has(column.key)).map(column=>{
-    const selected=Array.isArray(columnFilters[column.key])?columnFilters[column.key]:[];
-    const label=selected.length&&selected.length<column.values.length?`${selected.length}/${column.values.length}`:(appLang==='en'?'All':'Tümü');
-    return `<details class="ovCollectionSummaryColumnFilter" open><summary><span>${escapeHtml(L(column.label))}</span><b>${escapeHtml(label)}</b><button type="button" data-summary-column-remove="${escapeHtml(column.key)}" title="${escapeHtml(appLang==='en'?'Remove filter':'Filtreyi kaldır')}" aria-label="${escapeHtml(appLang==='en'?'Remove filter':'Filtreyi kaldır')}">×</button></summary><div class="ovCollectionSummaryOptions">${column.values.map(value=>`<label><input type="checkbox" data-summary-column-value="${escapeHtml(column.key)}" value="${escapeHtml(value)}"${!selected.length||selected.includes(value)?' checked':''}><span>${escapeHtml(value)}</span></label>`).join('')||`<small>${escapeHtml(appLang==='en'?'No values':'Değer yok')}</small>`}</div></details>`;
-  }).join('');
-  document.getElementById('ovCollectionSummaryAddFilterBtn').onclick=()=>{
-    const key=select.value;if(!key)return;
-    const prefs=overviewCollectionSummaryStored();prefs.columnFilters={...prefs.columnFilters,[key]:[]};overviewCollectionSummarySave(prefs);renderOverviewCollectionSummary();
-  };
-  host.querySelectorAll('[data-summary-column-remove]').forEach(button=>button.addEventListener('click',event=>{
-    event.preventDefault();event.stopPropagation();
-    const prefs=overviewCollectionSummaryStored();const next={...prefs.columnFilters};delete next[button.dataset.summaryColumnRemove];prefs.columnFilters=next;overviewCollectionSummarySave(prefs);renderOverviewCollectionSummary();
-  }));
-  host.querySelectorAll('input[data-summary-column-value]').forEach(input=>input.addEventListener('change',()=>{
-    const key=input.dataset.summaryColumnValue,group=input.closest('details'),checked=[...group.querySelectorAll('input:checked')].map(item=>item.value),column=catalog.find(item=>item.key===key);
-    if(!checked.length){input.checked=true;return;}
-    const prefs=overviewCollectionSummaryStored();prefs.columnFilters={...prefs.columnFilters,[key]:checked.length===column.values.length?[]:checked};overviewCollectionSummarySave(prefs);renderOverviewCollectionSummary();
-  }));
+  }catch(_){}
 }
 const OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT={rows:['durum'],columns:['confirmation'],values:['modelCount','optionCount','confirmed','notConfirmed']};
 function overviewCollectionSummaryPivotStored(){
@@ -8882,69 +8817,36 @@ function overviewCollectionSummaryPivotStored(){
   };
   return {rows:normalize(value.rows,OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.rows),columns:Array.isArray(value.columns)?normalize(value.columns,[]):(String(value.columns||'')==='none'||!value.columns?[]:[String(value.columns)]),values:Array.isArray(value.values)&&value.values.length?value.values.slice():OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.values.slice()};
 }
+function overviewCollectionSummaryDashboardContext(){
+  return {
+    root:document.getElementById('ovCollectionSummary'),
+    rows:overviewCollectionSummaryRows(),
+    summary:window.BLOverviewCollectionSummary,
+    saved:overviewCollectionSummaryStored(),
+    savePrefs:overviewCollectionSummarySave,
+    pivot:overviewCollectionSummaryPivotStored(),
+    pivotColumns:overviewCollectionSummaryPivotColumns(),
+    columnValue:overviewCollectionSummaryColumnValue,
+    isConfirmed:overviewCollectionSummaryConfirmed,
+    statusCatalog:kolStatusEntries(),
+    statusLabel:kolStatusDisplayLabel,
+    statusColor:kolStatusColor,
+    label:value=>L(value),
+    language:appLang,
+    drill:overviewCollectionSummaryDrill,
+    onRender:renderOverviewCollectionSummary,
+  };
+}
 function overviewCollectionSummaryOpenSettings(){
-  document.getElementById('_ovCollectionSummaryPivotModal')?.remove();
-  const saved=overviewCollectionSummaryPivotStored(),modal=document.createElement('div');modal.id='_ovCollectionSummaryPivotModal';modal.className='warnOverlay';
-  const rowCatalog=overviewCollectionSummaryPivotColumns(),columnCatalog=[{k:'confirmation',label:'Confirmation'},...rowCatalog.filter(column=>column.k!=='confirmation')];
-  const selectedRows=new Set(saved.rows),selectedColumns=new Set(saved.columns);
-  const option=(value,label,selected)=>`<option value="${escapeHtml(value)}"${selected.has(value)?' selected':''}>${escapeHtml(L(label))}</option>`;
-  modal.innerHTML=`<div class="modalCard ovCollectionSummaryPivotModal" role="dialog" aria-modal="true"><div class="modalTitle">${escapeHtml(appLang==='en'?'Collection Summary settings':'Koleksiyon Özeti ayarları')}<button type="button" data-close aria-label="Close">×</button></div><div class="ovCollectionSummaryPivotGrid"><label><span>${escapeHtml(appLang==='en'?'Rows (top to bottom)':'Satırlar (üstten alta)')}</span><select data-pivot-rows multiple size="8" aria-label="${escapeHtml(appLang==='en'?'Row dimensions':'Satır kırılımları')}">${rowCatalog.map(column=>option(column.k,column.label||column.k,selectedRows)).join('')}</select></label><label><span>${escapeHtml(appLang==='en'?'Columns (left to right)':'Sütunlar (soldan sağa)')}</span><select data-pivot-columns multiple size="8" aria-label="${escapeHtml(appLang==='en'?'Column dimensions':'Sütun kırılımları')}">${option('none','None',selectedColumns)}${columnCatalog.map(column=>option(column.k,column.label||column.k,selectedColumns)).join('')}</select></label><label><span>${escapeHtml(appLang==='en'?'Values':'Değerler')}</span><select data-pivot-values multiple size="4"><option value="modelCount"${saved.values.includes('modelCount')?' selected':''}>${escapeHtml(appLang==='en'?'Model Count':'Model Sayısı')}</option><option value="optionCount"${saved.values.includes('optionCount')?' selected':''}>${escapeHtml(appLang==='en'?'Option Count':'Opsiyon Sayısı')}</option><option value="confirmed"${saved.values.includes('confirmed')?' selected':''}>${escapeHtml(appLang==='en'?'Confirmed Model Count':'Onaylı Model Sayısı')}</option><option value="notConfirmed"${saved.values.includes('notConfirmed')?' selected':''}>${escapeHtml(appLang==='en'?'Not Confirmed Model Count':'Onaysız Model Sayısı')}</option></select></label></div><div class="modalFoot"><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-apply>${escapeHtml(appLang==='en'?'Apply':'Uygula')}</button></div></div>`;
-  document.body.appendChild(modal);const close=()=>modal.remove();modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));modal.addEventListener('click',event=>{if(event.target===modal)close();});
-  const columnsSelect=modal.querySelector('[data-pivot-columns]');
-  columnsSelect?.addEventListener('change',()=>{
-    const none=columnsSelect.querySelector('option[value="none"]'),others=[...columnsSelect.options].filter(option=>option.value!=='none');
-    if(none?.selected)others.forEach(option=>{option.selected=false;});
-    else if(others.some(option=>option.selected)&&none)none.selected=false;
-  });
-  modal.querySelector('[data-apply]')?.addEventListener('click',()=>{const prefs=overviewCollectionSummaryStored(),rows=[...modal.querySelectorAll('[data-pivot-rows] option:checked')].map(option=>option.value),columns=[...modal.querySelectorAll('[data-pivot-columns] option:checked')].map(option=>option.value).filter(value=>value!=='none'),values=[...modal.querySelectorAll('[data-pivot-values] option:checked')].map(option=>option.value);prefs.pivot={rows:rows.length?rows:OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.rows.slice(),columns,values:values.length?values:OVERVIEW_COLLECTION_SUMMARY_PIVOT_DEFAULT.values.slice()};overviewCollectionSummarySave(prefs);close();renderOverviewCollectionSummary();});
+  const dashboard=window.BLOverviewCollectionDashboard;if(!dashboard)return;
+  dashboard.openSettings(overviewCollectionSummaryDashboardContext());
 }
 function renderOverviewCollectionSummary(){
-  const root=document.getElementById('ovCollectionSummary'),helper=window.BLOverviewCollectionSummary;
-  if(!root||!helper)return;
-  const rows=overviewCollectionSummaryRows(),saved=overviewCollectionSummaryStored();
-  const available=helper.availableOptions(rows),defaults=helper.defaultFilters(rows,{saved,fields:{month:'inStoreMonth',status:'durum',model:'modelKod'}});
-  const pivot=overviewCollectionSummaryPivotStored();
-  const columnCatalog=helper.availableColumns(rows,{columns:overviewCollectionSummaryColumns(),valueFor:overviewCollectionSummaryColumnValue});
-  const validColumns=new Map(columnCatalog.map(column=>[column.key,column]));
-  const columnFilters=Object.fromEntries(Object.entries(saved.columnFilters||{}).filter(([key])=>validColumns.has(key)).map(([key,values])=>[key,(Array.isArray(values)?values:[]).filter(value=>validColumns.get(key).values.includes(String(value)))]));
-  const months=defaults.months.length?defaults.months:available.months;
-  const statuses=defaults.statuses.length?defaults.statuses:available.statuses;
-  const confirmation=['all','confirmed','notConfirmed'].includes(String(defaults.confirmation))?String(defaults.confirmation):'all';
-  const prefs={...saved,months,statuses,confirmation,columnFilters};
-  // app-main'in üst kısmı Collection değişkenleri tanımlanmadan çalışabilir.
-  // Bu ilk boş çizimde eski kullanıcı tercihini silme; yalnız gerçek satırlar
-  // geldikten sonra geçerli seçeneklerle normalize et.
-  if(rows.length&&columnCatalog.length&&JSON.stringify(saved)!==JSON.stringify(prefs))overviewCollectionSummarySave(prefs);
+  const root=document.getElementById('ovCollectionSummary'),dashboard=window.BLOverviewCollectionDashboard;
+  if(!root||!dashboard||!window.BLOverviewCollectionSummary)return;
   root.style.display='block';
-  const intro=document.getElementById('ovCollectionSummaryIntro');
-  if(intro)intro.textContent=rows.length?(appLang==='en'?'Distinct Collection models for the selected month, status and confirmation.':'Seçili ay, status ve onay kapsamındaki farklı Koleksiyon modelleri.'):(appLang==='en'?'Collection data is not available yet.':'Henüz Koleksiyon verisi bulunmuyor.');
-  overviewCollectionSummaryBindExclusiveFilters();
-  overviewCollectionSummaryRenderFilter('months',available.months,months);
-  overviewCollectionSummaryRenderFilter('statuses',available.statuses,statuses);
-  overviewCollectionSummaryRenderConfirmation(confirmation);
-  overviewCollectionSummaryRenderColumnFilters(columnCatalog,columnFilters);
+  dashboard.render(overviewCollectionSummaryDashboardContext());
   const settingsButton=document.getElementById('ovCollectionSummarySettingsBtn');if(settingsButton)settingsButton.onclick=overviewCollectionSummaryOpenSettings;
-  const result=helper.build(rows,{months,statuses,confirmation,columnFilters,pivot,columnValue:overviewCollectionSummaryColumnValue,isConfirmed:overviewCollectionSummaryConfirmed,fields:{month:'inStoreMonth',status:'durum',model:'modelKod'}});
-  const kpi=document.getElementById('ovCollectionSummaryKpi'),table=document.getElementById('ovCollectionSummaryTable');
-  if(kpi)kpi.innerHTML=[['total',appLang==='en'?'Total Models':'Toplam Model','navy'],['optionCount',appLang==='en'?'Total Options':'Toplam Opsiyon','blue'],['confirmed',appLang==='en'?'Confirmed':'Onaylı','green'],['notConfirmed',appLang==='en'?'Not Confirmed':'Onaysız','red']].map(([key,label,tone])=>`<button type="button" class="ovCollectionSummaryKpiItem tone-${tone}" data-summary-drill="${key}"><b>${result.kpi[key]}</b><span>${label}</span></button>`).join('');
-  if(table){
-    const pivotRows=result.pivotRows||[],selectedValues=pivot.values;
-    const fieldLabel=new Map(overviewCollectionSummaryPivotColumns().map(column=>[column.k,column.label||column.k]));
-    const rowFields=Array.isArray(pivot.rows)?pivot.rows:[pivot.rows],rowHeaders=rowFields.map(key=>fieldLabel.get(key)||key);
-    const pivotColumns=result.pivotColumns||[{key:'',path:[],label:''}];
-    const metricLabel=value=>value==='modelCount'?(appLang==='en'?'Model Count':'Model Sayısı'):value==='optionCount'?(appLang==='en'?'Option Count':'Opsiyon Sayısı'):value==='confirmed'?(appLang==='en'?'Confirmed':'Onaylı'):(appLang==='en'?'Not Confirmed':'Onaysız');
-    const headers=pivotColumns.flatMap(column=>selectedValues.map(value=>column.label?`${column.label} · ${metricLabel(value)}`:metricLabel(value)));
-    const statusIndex=rowFields.indexOf('durum');
-    const body=pivotRows.length?pivotRows.map(row=>{
-      const path=Array.isArray(row.rowPath)?row.rowPath:[row.row];
-      const rowCells=path.map((value,index)=>index===statusIndex?`<button type="button" class="ovCollectionSummaryDrill" data-summary-status="${escapeHtml(value)}">${escapeHtml(L(value))}</button>`:escapeHtml(value));
-      const metricCells=pivotColumns.flatMap(column=>selectedValues.map(value=>`<td>${row.cells?.[column.key]?.[value]??0}</td>`));
-      return `<tr><td>${rowCells.join('</td><td>')}</td>${metricCells.join('')}</tr>`;
-    }).join(''):`<tr><td colspan="${Math.max(1,rowHeaders.length+headers.length)}" class="ovCollectionSummaryEmpty">${escapeHtml(appLang==='en'?'No models match the selected filters.':'Seçili filtrelerle eşleşen model yok.')}</td></tr>`;
-    table.innerHTML=`<thead><tr>${rowHeaders.map(header=>`<th>${escapeHtml(L(header))}</th>`).join('')}${headers.map(header=>`<th>${escapeHtml(header)}</th>`).join('')}</tr></thead><tbody>${body}</tbody>`;
-  }
-  kpi?.querySelectorAll('[data-summary-drill]').forEach(button=>button.addEventListener('click',()=>overviewCollectionSummaryDrill({month:months.length===1?months[0]:null,status:statuses.length===1?statuses[0]:null})));
-  table?.querySelectorAll('[data-summary-status]').forEach(button=>button.addEventListener('click',()=>overviewCollectionSummaryDrill({month:months.length===1?months[0]:null,status:button.dataset.summaryStatus})));
   overviewCollectionSummaryApplyCollapsed(overviewCollectionSummaryStoredCollapsed(),{persist:false});
 }
 function scheduleOverviewCollectionSummaryRender(){
@@ -8956,8 +8858,6 @@ document.getElementById('ovCollectionSummaryCollapseBtn')?.addEventListener('cli
   const root=document.getElementById('ovCollectionSummary');overviewCollectionSummaryApplyCollapsed(!root?.classList.contains('isCollapsed'));
 });
 overviewCollectionSummaryApplyCollapsed(overviewCollectionSummaryStoredCollapsed(),{persist:false});
-// Dil sözlükleri app-main'in alt bölümünde tanımlanır; ilk çizimi script tamamlandıktan
-// sonra yapmak, L() çağrılarının sözlükler başlatılmadan çalışmasını engeller.
 setTimeout(renderOverviewCollectionSummary,0);
 
 const OVERVIEW_LAYOUT_KEY='buyerlog.overview.layout.v1';
@@ -18928,7 +18828,7 @@ function kolPersistPendingWorkspace(status='pending'){
   try{
     localStorage.setItem(kolWorkspacePendingKey(kolWorkspaceOwnerId),JSON.stringify({
       schemaVersion:1,ownerId:kolWorkspaceOwnerId,baseRevision:kolWorkspaceRevision,status,
-      rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,nextId:kolNextId,
+      rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,
       updatedAt:new Date().toISOString(),
     }));
     return true;
@@ -18940,6 +18840,7 @@ function kolHasDirtyWorkspace(){const change=kolCollectChanges();return Boolean(
 function kolRestorePendingWorkspace(){
   const pending=kolReadPendingWorkspace(kolWorkspaceOwnerId);
   if(!pending||pending.ownerId!==kolWorkspaceOwnerId||!Array.isArray(pending.rows)||!kolWorkspaceCanEdit)return false;
+  kolStatusCatalog=kolNormalizeStatusCatalog(pending.statusCatalog,pending.rows);
   kolRows=kolNormalizeModelGroups(pending.rows.map(migrateKolRow));
   kolManufacturers=Array.isArray(pending.manufacturers)?pending.manufacturers:kolManufacturers;
   kolCustomCols=kolNormalizeCustomCols(Array.isArray(pending.customColumns)?pending.customColumns:kolCustomCols);
@@ -18954,7 +18855,7 @@ function kolPersistableRow(row){
   if(!Object.prototype.hasOwnProperty.call(row,'_sharedCollectionImageUrl'))return {...row};
   const next={...row};delete next._sharedCollectionImageUrl;return next;
 }
-function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,expectedRevision:kolWorkspaceRevision};}
+function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,expectedRevision:kolWorkspaceRevision};}
 
 /* ===================================================================
    v7.22 — YALNIZ DEĞİŞEN SATIRLAR GÖNDERİLİR.
@@ -18974,7 +18875,7 @@ function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manuf
 let kolBaseline=null; // { rows:Map(id→satır kopyası), structure:string, ownerId }
 function kolRowKey(row){const id=row&&row.id;return id==null||id===''?'':String(id);}
 function kolStructureSignature(){
-  return JSON.stringify({columns:kolCustomCols||[],manufacturers:kolManufacturers||[],order:kolRows.map(kolRowKey)});
+  return JSON.stringify({columns:kolCustomCols||[],manufacturers:kolManufacturers||[],statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey)});
 }
 function kolCaptureBaseline(){
   const rows=new Map();
@@ -19017,7 +18918,7 @@ function kolCollectChanges(){
   const change={upserts,deletes,nextId:kolNextId};
   if(structureChanged){
     change.baseRevision=kolWorkspaceRevision;
-    change.structure={manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,order:kolRows.map(kolRowKey).filter(Boolean)};
+    change.structure={manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey).filter(Boolean)};
   }
   return change;
 }
@@ -19042,13 +18943,15 @@ function kolWorkspaceSetReadonly(){
   const badge=document.getElementById('kolWorkspaceAccess');if(badge){badge.textContent=kolWorkspaceMode==='multi'?(appLang==='en'?'Multi view':'Çoklu görünüm'):kolWorkspaceCanEdit?(appLang==='en'?'Edit':'Düzenleme'):(appLang==='en'?'View':'Görüntüleme');badge.classList.toggle('isView',!kolWorkspaceCanEdit);}
   // Satır seçimi gerektiren eylemler burada açılmaz; güncel seçim ve işlem
   // durumu `updateKolSendBtnState` tarafından belirlenir.
-  const ids=['kolPlmImportBtn','kolPricingExcelColsBtn','kolCreateOcBtn','kolQuotationsBtn','kolSendPricingBtn','kolUndoBtn','kolRedoBtn','kolAddRowBtn','kolModelFilesBtn'];
+  const ids=['kolPlmImportBtn','kolPricingExcelColsBtn','kolCreateOcBtn','kolQuotationsBtn','kolSendPricingBtn','kolUndoBtn','kolRedoBtn','kolAddRowBtn','kolModelFilesBtn','kolManageStatusesBtn'];
   ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;if(el.tagName==='LABEL')el.style.pointerEvents=kolWorkspaceCanEdit?'':'none';el.toggleAttribute('disabled',!kolWorkspaceCanEdit);el.setAttribute('aria-disabled',kolWorkspaceCanEdit?'false':'true');});
 }
 function kolApplyWorkspace(workspace,access){
   kolWorkspaceMode='single';kolWorkspaceSelectedOwnerIds=new Set([kolWorkspaceOwnerId]);
   kolWorkspaceRevision=Number(workspace&&workspace._revision)||0;kolWorkspaceCanEdit=Boolean(access&&access.canEdit);
-  kolRows=kolNormalizeModelGroups((Array.isArray(workspace&&workspace.rows)?workspace.rows:[]).map(migrateKolRow));
+  const rawRows=Array.isArray(workspace&&workspace.rows)?workspace.rows:[];
+  kolStatusCatalog=kolNormalizeStatusCatalog(workspace&&workspace.statusCatalog,rawRows);
+  kolRows=kolNormalizeModelGroups(rawRows.map(migrateKolRow));
   kolManufacturers=Array.isArray(workspace&&workspace.manufacturers)?workspace.manufacturers:[];
   const rawCustomCols=Array.isArray(workspace&&workspace.customColumns)?workspace.customColumns:[];
   const legacyAssortment=rawCustomCols.find(col=>turknorm(norm(col&&col.label))==='ASSORTMENT');
@@ -19058,10 +18961,8 @@ function kolApplyWorkspace(workspace,access){
   kolCustomCols=kolNormalizeCustomCols(rawCustomCols.filter(col=>!legacyAssortment||col.k!==legacyAssortment.k));
   kolNextId=Math.max(Number(workspace&&workspace.nextId)||1,1+kolRows.reduce((m,r)=>Math.max(m,Number(r&&r.id)||0),0));
   kolSelected.clear();kolUndoStack=[];kolRedoStack=[];refreshSubmfrList();loadKolColState({preserveCustom:true});kolWorkspaceSetReadonly();renderKol();
-  // v7.22 — fark alınacak TEMEL burada kurulur. Kurulmazsa bir sonraki kayıt
-  // tam sayfa gönderir; yanlış olmaz, yalnız pahalı olur.
   kolCaptureBaseline();
-  try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
+  try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
   kolRestorePendingWorkspace();
   scheduleOverviewCollectionSummaryRender();
 }
@@ -19110,12 +19011,12 @@ async function kolSaveWorkspaceNow(saveOptions){
           if(item.kind==='removed'){kolBaseline.rows.delete(key);continue;}
           if(sent)kolBaseline.rows.set(key,{...sent,_rev:Number(item.rev)||sent._rev});
         }
-        if(payload.structure)kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],order:payload.structure.order||[]});
+        if(payload.structure)kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],statusCatalog:payload.structure.statusCatalog||[],order:payload.structure.order||[]});
         if(Array.isArray(data.conflicts)&&data.conflicts.length)kolReportConflicts(data.conflicts);
       }else{
         kolWorkspaceRevision=Number(data.workspace&&data.workspace._revision)||kolWorkspaceRevision;
         const serverRows=new Map();for(const row of Array.isArray(data.workspace&&data.workspace.rows)?data.workspace.rows:[]){const key=kolRowKey(row);if(key)serverRows.set(key,{...row});}
-        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey)})};
+        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],statusCatalog:data.workspace&&data.workspace.statusCatalog||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey)})};
       }
       if(kolHasDirtyWorkspace())kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');
       else kolClearPendingWorkspace(ownerId);
@@ -19163,18 +19064,21 @@ function kolPersistScope(){
 }
 function kolApplyCombinedWorkspaces(items){
   kolWorkspaceMode='multi';kolWorkspaceOwnerId='__multi__';kolWorkspaceRevision=0;kolWorkspaceCanEdit=false;
-  const manufacturers=new Set(),custom=new Map();let syntheticId=-1;
+  const manufacturers=new Set(),custom=new Map(),catalog=[],rowStatuses=[];let syntheticId=-1;
   kolRows=[];
   (items||[]).forEach(item=>{
     const owner=item&&item.owner||{},workspace=item&&item.workspace||{};
     (workspace.manufacturers||[]).forEach(name=>{if(norm(name))manufacturers.add(norm(name));});
     (workspace.customColumns||[]).forEach(col=>{if(col&&col.k&&!custom.has(col.k))custom.set(col.k,col);});
+    (workspace.statusCatalog||[]).forEach(entry=>catalog.push(entry));
     (workspace.rows||[]).forEach(source=>{
+      if(source&&source.durum)rowStatuses.push(source.durum);
       const row=migrateKolRow(JSON.parse(JSON.stringify(source||{})));
       row._collectionSourceId=row.id;row._collectionOwnerId=owner.id;row._collectionOwnerName=owner.displayName||owner.id;row.id=syntheticId--;
       kolRows.push(row);
     });
   });
+  kolStatusCatalog=KOL_STATUS_API.normalize(catalog.length?catalog:null,{rowStatuses});
   kolRows=kolNormalizeModelGroups(kolRows);
   kolManufacturers=[...manufacturers].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'}));
   kolCustomCols=kolNormalizeCustomCols([...custom.values()]);kolNextId=1;kolSelected.clear();kolUndoStack=[];kolRedoStack=[];
@@ -19398,9 +19302,57 @@ async function initKolWorkspaces(options){
   }
 }
 
-// v6.01: "Siparişe Hazır" eklendi. Yeri iş akışındaki gerçek sırasına göre
-// seçildi: fiyat netleşip model sipariş onayına girmeye hazır olduğu an.
-const KOL_DURUM_OPTS = ['Dosya Teslimi Alındı','Pending File','MB Onaya Gönderildi','GTIP','Lisans Tanım','Fiyatlamada','Capacity Request','Siparişe Hazır','Sipariş Onayda','Sipariş Geçildi','Dummy PO Placed','İptal'];
+// Collection Status tek kanonik katalogdan gelir. Grid, Overview, shared
+// workspace persistence ve Excel export aynı resolver'ı kullanır.
+const KOL_STATUS_API=window.BLCollectionStatusCatalog;
+let kolStatusCatalog=KOL_STATUS_API?KOL_STATUS_API.seed():[];
+function kolNormalizeStatusCatalog(value,rows){return KOL_STATUS_API?KOL_STATUS_API.normalize(value,{rowStatuses:(Array.isArray(rows)?rows:[]).map(row=>row&&row.durum)}):(Array.isArray(value)?value:[]);}
+function kolStatusEntries(){return KOL_STATUS_API?KOL_STATUS_API.normalize(kolStatusCatalog,{rowStatuses:(Array.isArray(kolRows)?kolRows:[]).map(row=>row&&row.durum)}):[];}
+function kolStatusEntry(name){return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),name):null;}
+function kolStatusColor(name){return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),name):'#667085';}
+function kolStatusDisplayLabel(name){const entry=kolStatusEntry(name);return entry&&entry.builtin?L(entry.name):String(name||'');}
+function kolStatusDefaultName(){return kolStatusEntries()[0]?.name||'Pending File';}
+function kolStatusExcelArgb(name){return KOL_STATUS_API?KOL_STATUS_API.toArgb(kolStatusColor(name)):'FF667085';}
+function kolStatusExcelTextArgb(name){return KOL_STATUS_API?KOL_STATUS_API.textArgb(kolStatusColor(name)):'FFFFFFFF';}
+function kolStatusUsageCount(name){return kolRows.reduce((count,row)=>count+(String(row&&row.durum||'')===String(name)?1:0),0);}
+function kolPersistCatalogOnly(){kolPersistPendingWorkspace('pending');kolQueueWorkspaceSave();renderKol();scheduleOverviewCollectionSummaryRender();}
+function kolAddStatus(name,color){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const clean=String(name||'').trim();if(!clean)throw new Error(appLang==='en'?'Enter a status name.':'Status adı gir.');
+  if(kolStatusEntries().some(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(clean)))throw new Error(appLang==='en'?'This status already exists.':'Bu status zaten var.');
+  kolStatusCatalog=KOL_STATUS_API.normalize([...kolStatusEntries(),{name:clean,color:KOL_STATUS_API.normalizeColor(color),builtin:false}]);kolPersistCatalogOnly();
+}
+function kolSetStatusColor(name,color){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const entries=kolStatusEntries(),key=KOL_STATUS_API.key(name);if(!entries.some(entry=>KOL_STATUS_API.key(entry.name)===key))throw new Error(appLang==='en'?'Status not found.':'Status bulunamadı.');
+  kolStatusCatalog=KOL_STATUS_API.normalize(entries.map(entry=>KOL_STATUS_API.key(entry.name)===key?{...entry,color:KOL_STATUS_API.normalizeColor(color)}:entry));kolPersistCatalogOnly();
+}
+function kolRenameStatus(oldName,newName){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const clean=String(newName||'').trim(),oldKey=KOL_STATUS_API.key(oldName);if(!clean)throw new Error(appLang==='en'?'Enter a status name.':'Status adı gir.');
+  if(clean===String(oldName||'').trim())return;
+  if(KOL_STATUS_API.key(clean)!==oldKey&&kolStatusEntries().some(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(clean)))throw new Error(appLang==='en'?'This status already exists.':'Bu status zaten var.');
+  const entries=kolStatusEntries();if(!entries.some(entry=>KOL_STATUS_API.key(entry.name)===oldKey))throw new Error(appLang==='en'?'Status not found.':'Status bulunamadı.');
+  kolRows.forEach(row=>{if(String(row&&row.durum||'')===String(oldName))row.durum=clean;});
+  kolStatusCatalog=KOL_STATUS_API.normalize(entries.map(entry=>KOL_STATUS_API.key(entry.name)===oldKey?{name:clean,color:entry.color,builtin:false}:entry),{rowStatuses:kolRows.map(row=>row&&row.durum)});
+  saveKolRows();renderKol();
+}
+function kolRemoveStatus(name,replacement){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const entries=kolStatusEntries(),key=KOL_STATUS_API.key(name),usage=kolStatusUsageCount(name);
+  if(entries.length<=1)throw new Error(appLang==='en'?'At least one status must remain.':'En az bir status kalmalı.');
+  if(usage){
+    const target=entries.find(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(replacement));
+    if(!target||KOL_STATUS_API.key(target.name)===key)throw new Error(appLang==='en'?'Choose a replacement status.':'Yerine geçecek statusu seç.');
+    kolRows.forEach(row=>{if(String(row&&row.durum||'')===String(name))row.durum=target.name;});
+  }
+  kolStatusCatalog=KOL_STATUS_API.normalize(entries.filter(entry=>KOL_STATUS_API.key(entry.name)!==key),{rowStatuses:kolRows.map(row=>row&&row.durum)});
+  if(usage)saveKolRows();else kolPersistCatalogOnly();renderKol();
+}
+window.BLCollectionStatusRuntime={
+  getCatalog:()=>kolStatusEntries(),presetColors:()=>KOL_STATUS_API?KOL_STATUS_API.PRESET_COLORS.slice():[],canEdit:()=>Boolean(kolWorkspaceCanEdit),language:()=>appLang,
+  displayLabel:kolStatusDisplayLabel,usage:kolStatusUsageCount,add:kolAddStatus,setColor:kolSetStatusColor,rename:kolRenameStatus,remove:kolRemoveStatus,notify:message=>showToast(message),
+};
 const KOL_COLS = [
   {k:'plmId', label:'PLM ID', w:100},
   {k:'modelKod', label:'Model Name', w:160},
@@ -19437,7 +19389,7 @@ const KOL_COLS = [
   {k:'royalty', label:'Royalty', w:90, percent:true, ruleReadonly:true},
   {k:'hologramCost', label:'Hologram Cost', w:110, hologram:true, ruleReadonly:true},
   {k:'fob', label:'FOB', w:90, money:true, formulaReadonly:true},
-  {k:'durum', label:'Durum', w:170, select:KOL_DURUM_OPTS},
+  {k:'durum', label:'Durum', w:170, status:true},
   {k:'not', label:'Notes', w:180},
   // Endeksmatik bir fiyat alanını otomatik değiştirmez; hesaplanan benchmark
   // burada görünür ve ayrıntısı kullanıcı tıklayınca açılır.
@@ -20422,7 +20374,7 @@ function migrateKolRow(r){
   // v2.08: Koleksiyon Supp. FOB alanı kaldırıldı; eski kayıtlardaki değer artık kullanılmaz.
   delete r.suppFob;
   if(r.delType===undefined || r.delType===null || !normalizeTransitDelType(r.delType)) r.delType='Gemi';
-  if(!r.durum || !KOL_DURUM_OPTS.includes(r.durum)) r.durum = KOL_DURUM_OPTS[0];
+  if(!norm(r.durum)) r.durum = kolStatusDefaultName();
   if(!r.pricing) r.pricing = {}; // {üreticiAdı: "4.50"} — kullanıcı elle girdiği fiyat
   if(!r.pricingSent) r.pricingSent = {}; // {üreticiAdı: true} — fiyatlamaya gönderildi, henüz fiyat gelmedi
   // Kullanıcının onayladığı tek üretici. Fiyat ayrıca kopyalanmaz; seçili üreticinin
@@ -20911,7 +20863,7 @@ function saveKolRows(){
     // küçük URL/ref bilgisi tutulur. Sunucu erişilemezse base64 geriye uyumluluk için korunur.
     const json = JSON.stringify(kolRows);
     BLStorage.setItem(KOL_STORAGE_KEY, json);
-    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
+    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
     kolPersistPendingWorkspace(kolWorkspaceSaving?'saving':'pending');
     kolQueueWorkspaceSave();
     scheduleOverviewCollectionSummaryRender();
@@ -20922,7 +20874,9 @@ function saveKolRows(){
   }
 }
 const KOL_CONFIRMED_NAME_FILTER_KEY = '__confirmedName__';
+const KOL_CONFIRMATION_FILTER_KEY = '__confirmation__';
 function kolFilterValue(row,key){
+  if(key===KOL_CONFIRMATION_FILTER_KEY)return kolConfirmedPricing(row)?'confirmed':'notConfirmed';
   if(key===KOL_CONFIRMED_NAME_FILTER_KEY){
     const display=kolConfirmedDisplay(row);
     return display?norm(display.name):'';
@@ -20936,6 +20890,7 @@ function kolFilterMeta(key){
   const base=kolColDefs().find(c=>c.k===key);
   if(base) return base;
   if(key===KOL_CONFIRMED_NAME_FILTER_KEY) return {k:key,label:'Conf. Manufacturer'};
+  if(key===KOL_CONFIRMATION_FILTER_KEY) return {k:key,label:appLang==='en'?'Confirmation':'Onay'};
   return null;
 }
 function passesKolColFilters(r){
@@ -23467,8 +23422,11 @@ function renderKol(){
         else if(c.hologram&&val!=='') display=kolFormatHologramDisplay(val);
         else if(c.money&&val!=='') display='$'+kolFormatMoneyDisplay(val);
         html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--mono);background:var(--card2);color:${ruleMissing?'var(--orange)':(fobFallback?'var(--muted)':'var(--ink2)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
+      }else if(c.status){
+        const statusEntries=kolStatusEntries(),statusColor=kolStatusColor(val);
+        html+=`<td class="editTd kolStatusTd"${rc}><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${val===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
       }else if(c.select){
-        html+=`<td class="editTd"${rc}><select class="editCell${c.k==='durum'?' kolStatusNoArrow':''}" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
+        html+=`<td class="editTd"${rc}><select class="editCell" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
       }else if(c.exToRetail){
         const days=kolExToRetailDays(r);
         const exToRetailTitle=appLang==='en'?'Calculated automatically (Retail − Ex-Factory)':'Otomatik hesaplanır (Retail − Ex-Factory)';
@@ -24677,8 +24635,8 @@ function kolImportNumber(value){
 function kolImportSelectValue(col,value){
   const raw=norm(value); if(!raw) return '';
   if(col.k==='durum'){
-    const found=KOL_DURUM_OPTS.find(opt=>turknorm(opt)===turknorm(raw)||turknorm(KOL_DURUM_EN[opt])===turknorm(raw));
-    return found||raw;
+    const found=kolStatusEntries().find(entry=>turknorm(entry.name)===turknorm(raw)||(entry.builtin&&turknorm(KOL_DURUM_EN[entry.name]||entry.name)===turknorm(raw)));
+    return found?found.name:raw;
   }
   if(col.k==='delType') return normalizeTransitDelType(raw)||raw;
   if(col.select){
@@ -27596,7 +27554,7 @@ function addBlankKolRow(){
   const row=kolApplyNewModelDefaults(migrateKolRow({
     id:kolNextId++,
     plmId:'',modelKod:'',lisans:'',urunTipi:'',country:'',delType:'Gemi',assortment:'',
-    durum:KOL_DURUM_OPTS[0],not:'',img:null,pricing:{},pricingSent:{},
+    durum:kolStatusDefaultName(),not:'',img:null,pricing:{},pricingSent:{},
     confirmedManufacturer:''
   }));
   kolApplyRulePricing(row);
@@ -27907,9 +27865,9 @@ function buildKolStyledSheet(rows){
       } else if(c.custom && schema){
         const value=schema.exportValue(raw);
         cell=value instanceof Date?{v:value,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}}:typeof value==='number'?{v:value,t:'n',s:{...s,numFmt:Number.isInteger(value)?'#,##0':'#,##0.00',alignment:{horizontal:'right'}}}:{v:String(value==null?'':value),t:'s',s};
-      } else if(c.k==='durum'){
-        const pal = {'Fiyatlamada':'FFE8F0F9','Siparişe Hazır':'FFEAF6E4','Sipariş Geçildi':'FFE4F3EB','Dummy PO Placed':'FFE4F3EB','Sipariş Onayda':'FFFBF1D9','Capacity Request':'FFFBF1D9'}[raw];
-        cell = {v:String(raw||''),t:'s',s: pal? {...s, fill:{fgColor:{rgb:pal}}, font:{sz:10,bold:true}} : s};
+      } else if(c.status||c.k==='durum'){
+        const argb=kolStatusExcelArgb(raw),fontArgb=kolStatusExcelTextArgb(raw);
+        cell = {v:String(raw||''),t:'s',s:{...s,fill:{fgColor:{rgb:argb}},font:{sz:10,bold:true,color:{rgb:fontArgb}}}};
       } else {
         cell = {v:String(raw==null?'':raw),t:'s',s};
       }
@@ -29412,6 +29370,7 @@ async function kolExportWithImages(rows,fileBase){
   if(typeof ExcelJS==='undefined'){showToast('Görsel gömme kütüphanesi yüklenemedi — internet/dosya erişimini kontrol et.');return null;}
   kolSyncRulePricing({save:true});
   const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Koleksiyon'),descriptors=kolDisplayDescriptors();
+  const statusValidationFormula=kolEnsureExcelStatusList(wb);
   const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
   const headers=['Görsel',...descriptors.map(d=>d.label)];
   ws.columns=headers.map((h,i)=>({header:h,width:i===0?kolExcelImageMetrics().colChars:Math.max(11,Math.round(kolDescriptorWidth(descriptors[i-1])/7))}));
@@ -29481,12 +29440,18 @@ async function kolExportWithImages(rows,fileBase){
       else if(c.hologram&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='#,##0.######';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.money&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='"$"#,##0.00';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.custom&&schema){const value=schema.exportValue(raw);cell.value=value;if(value instanceof Date)cell.numFmt='dd.mm.yy';else if(typeof value==='number')cell.numFmt=Number.isInteger(value)?'#,##0':'#,##0.00';cell.alignment={horizontal:typeof value==='number'?'right':'left',vertical:'middle'};}
+      else if(c.status||c.k==='durum'){cell.value=raw==null?'':String(raw);cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kolStatusExcelArgb(raw)}};cell.font={bold:true,size:10,color:{argb:kolStatusExcelTextArgb(raw)}};cell.alignment={vertical:'middle',wrapText:true};}
       else{cell.value=raw==null?'':String(raw);cell.alignment={vertical:'middle',wrapText:true};if(c.k==='modelKod')cell.font={bold:true,size:10};}
     });
     const imgCell=row.getCell(1);imgCell.border=border;
     // Bu seçenek yalnız Koleksiyon'un görselli Excel export'unda kullanılır.
     // Diğer workbook/export yolları mevcut one-cell/aspect-lock davranışını korur.
     kolAddCellBoundExcelImage(ws,wb,preparedImages[ri],rowNum,1,null,{moveAndSizeWithCells:true});
+  }
+  const statusDescriptorIndex=descriptors.findIndex(d=>d.kind==='base'&&(d.col?.status||d.col?.k==='durum'));
+  if(statusValidationFormula&&statusDescriptorIndex>=0){
+    const statusColumn=statusDescriptorIndex+2,validationEnd=Math.max((rows||[]).length+250,500);
+    for(let rowNum=2;rowNum<=validationEnd;rowNum++)ws.getCell(rowNum,statusColumn).dataValidation={type:'list',allowBlank:true,formulae:[statusValidationFormula],showErrorMessage:true,errorTitle:appLang==='en'?'Invalid status':'Geçersiz status',error:appLang==='en'?'Select a status from the shared catalog.':'Paylaşılan status kataloğundan bir değer seç.'};
   }
   if(window.BLExcelDates)BLExcelDates.normalizeExcelJsWorkbookDateColumns(wb);
   const buf=await wb.xlsx.writeBuffer(),blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),d=new Date(),pad=x=>String(x).padStart(2,'0'),name=`${fileBase||'Koleksiyon'}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.xlsx`,url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -29504,8 +29469,15 @@ function kolStyleExportValue(field,row){
   if(field.k==='inStoreMonth')return kolMonthDisplay(raw);
   return raw==null?'':String(raw);
 }
-function kolStyleValidationFormula(field){
+function kolEnsureExcelStatusList(workbook){
+  const entries=kolStatusEntries(),name='__BuyerLogStatus';
+  let sheet=workbook.getWorksheet(name);if(sheet)workbook.removeWorksheet(sheet.id);
+  sheet=workbook.addWorksheet(name);entries.forEach((entry,index)=>{sheet.getCell(index+1,1).value=entry.name;});sheet.state='veryHidden';
+  return entries.length?("'"+name+"'!$A$1:$A$"+entries.length):null;
+}
+function kolStyleValidationFormula(field,statusFormula){
   let values=[];
+  if(field.status)return statusFormula||null;
   if(field.boolean)values=appLang==='en'?['Yes','No']:['Evet','Hayır'];
   else if(field.select)values=field.select.map(value=>field.k==='delType'?transitDelTypeDisplay(value):L(value));
   if(!values.length)return null;
@@ -29523,6 +29495,7 @@ async function kolExportStyleManagement(rows){
   wb.subject='Collection Style Management';
   wb.description='Only editable Collection fields. Images, quotations, approved prices and calculated fields are intentionally excluded.';
   const ws=wb.addWorksheet('Style Management',{views:[{state:'frozen',ySplit:1}]});
+  const statusValidationFormula=kolEnsureExcelStatusList(wb);
   ws.columns=fields.map(field=>({
     header:kolStyleFieldLabel(field),
     key:field.k,
@@ -29549,6 +29522,7 @@ async function kolExportStyleManagement(rows){
       else if(field.number)cell.numFmt='#,##0.######';
       if(field.k==='plmId'||field.k==='colourCode'){cell.value=cell.value==null?'':String(cell.value);cell.numFmt='@';}
       if(field.k==='modelKod')cell.font={bold:true};
+      if(field.status&&cell.value){cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kolStatusExcelArgb(cell.value)}};cell.font={bold:true,color:{argb:kolStatusExcelTextArgb(cell.value)}};}
     });
     // Görünür olmayan teknik sütun kullanmadan kalıcı satır kimliğini hücre
     // notunda tutarız. Kullanıcı PLM ID veya Model Name'i değiştirse bile geri
@@ -29557,7 +29531,7 @@ async function kolExportStyleManagement(rows){
   });
   const validationEnd=Math.max(5000,(rows||[]).length+250);
   fields.forEach((field,index)=>{
-    const formula=kolStyleValidationFormula(field);
+    const formula=kolStyleValidationFormula(field,statusValidationFormula);
     if(formula){
       for(let row=2;row<=validationEnd;row++){
         ws.getCell(row,index+1).dataValidation={type:'list',allowBlank:true,formulae:[formula],showErrorMessage:true,errorTitle:appLang==='en'?'Invalid value':'Geçersiz değer',error:appLang==='en'?'Select a value from the list.':'Listeden bir değer seçin.'};
@@ -30881,7 +30855,7 @@ function kolApplyRemotePatches(rowPatches){
     kolHighlightRemoteRows(touched);
     scheduleOverviewCollectionSummaryRender();
     // Yerel kopya da güncel kalmalı; aksi halde çevrimdışı açılışta eski hâl görünür.
-    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
+    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
   }
   return applied;
 }
@@ -31785,7 +31759,7 @@ const TR_EN_DICT = {
   'Önce en az bir model seç.':'Select at least one model first.',
   'Bu sipariş için yalnız görüntüleme yetkiniz var.':'You have view-only access for this order.',
 };
-// Koleksiyon Durum seçenekleri — ayrı sözlük (KOL_DURUM_OPTS ile birebir eşleşir)
+// Built-in Collection status çevirileri. Custom/rename edilmiş status adları literal gösterilir.
 const KOL_DURUM_EN = {
   'Dosya Teslimi Alındı':'File Received',
   'Pending File':'Pending File',

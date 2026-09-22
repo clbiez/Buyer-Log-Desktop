@@ -135,7 +135,7 @@ test('Shared Hub transports owner workspaces and never replaces them with Shared
 });
 
 test('Permissions and multi-owner Collection view remain the canonical UI flow', () => {
-  const init = block(APP, 'async function initKolWorkspaces(options)', 'const KOL_DURUM_OPTS');
+  const init = block(APP, 'async function initKolWorkspaces(options)', 'const KOL_STATUS_API=window.BLCollectionStatusCatalog');
   assert.match(init, /await kolLoadPermissions\(\)/);
   assert.match(init, /kolLoadWorkspaceBatch\(kolWorkspaceList\.map\(item=>item\.ownerId\)\)/);
   const scope = block(APP, 'function renderKolScopeFilters()', 'const KOL_INIT_RETRY_DELAYS');

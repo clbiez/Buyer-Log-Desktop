@@ -13,6 +13,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const STATUS_CATALOG = require('../public/collection-status-catalog.js');
 
 /* ------------------------------------------------ 1) IN STORE OTOMATİĞİ */
 
@@ -84,21 +85,22 @@ test('v6.01 elle giriş doğrulama yapıyor', () => {
 
 /* ------------------------------------------------------------ 3) DURUM */
 
-test('v6.01 "Siparişe Hazır" durumu eklendi', () => {
-  const line = APP.slice(APP.indexOf('const KOL_DURUM_OPTS'), APP.indexOf('const KOL_COLS'));
-  const opts = new Function(`${line} return KOL_DURUM_OPTS;`)();
+test('v6.01 "Siparişe Hazır" canonical status kataloğunda doğru sırada kalır', () => {
+  const opts=STATUS_CATALOG.seed().map(entry=>entry.name);
   assert.ok(opts.includes('Siparişe Hazır'));
-  // Yeri iş akışındaki sırasına göre: fiyatlama bitti, sipariş onayına girmeden önce.
-  // v6.48: "Capacity Request" araya girdi; asıl niyet konum korunuyor —
-  // Fiyatlamada'dan SONRA, Sipariş Onayda'dan ÖNCE.
+  // v6.48: Capacity Request araya girdi; asıl iş akışı sırası korunur.
   assert.ok(opts.indexOf('Siparişe Hazır') > opts.indexOf('Fiyatlamada'));
   assert.ok(opts.indexOf('Siparişe Hazır') < opts.indexOf('Sipariş Onayda'));
-  // İptal sonda kalmalı.
   assert.equal(opts[opts.length - 1], 'İptal');
 });
 
-test('v6.01 yeni durumun İngilizcesi ve Excel rengi tanımlı', () => {
+test('v6.01 built-in İngilizce label korunur ve Excel rengi canonical resolverdan gelir', () => {
   assert.match(APP, /'Siparişe Hazır':'Ready for Order',/);
-  // Excel dışa aktarımında renksiz kalmamalı; diğer durumlar renkli.
-  assert.match(APP, /'Siparişe Hazır':'FFEAF6E4'/);
+  const entry=STATUS_CATALOG.find(STATUS_CATALOG.seed(),'Siparişe Hazır');
+  assert.ok(entry);
+  assert.match(entry.color,/^#[0-9A-F]{6}$/i);
+  assert.equal(STATUS_CATALOG.toArgb(entry.color).length,8);
+  assert.match(APP,/kolStatusExcelArgb/);
+  assert.doesNotMatch(APP,/'Siparişe Hazır':'FFEAF6E4'/);
 });
+

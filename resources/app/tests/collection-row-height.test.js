@@ -91,9 +91,15 @@ test('Collection image resizing writes width and height from one shared scale fa
   assert.match(html,/img\.style\.height=`\$\{fitted\.height\}px`/);
 });
 
-test('Collection Status select hides only its native drawer arrow', () => {
-  assert.match(html,/c\.k==='durum'\?' kolStatusNoArrow':''/);
+test('Collection Status keeps native select lifecycle while rendering shared catalog pill semantics', () => {
+  assert.match(html,/\{k:'durum', label:'Durum', w:170, status:true\}/);
+  assert.match(html,/else if\(c\.status\)/);
+  assert.match(html,/class="editCell kolStatusNoArrow"/);
+  assert.match(html,/kolStatusEntries\(\)/);
+  assert.match(html,/kolStatusColor\(val\)/);
   const css=fs.readFileSync(path.join(root,'public','app.css'),'utf8');
   assert.match(css,/#kolTable select\.kolStatusNoArrow/);
   assert.match(css,/appearance:none/);
+  assert.match(css,/--kol-status-color/);
+  assert.match(css,/border-radius:999px/);
 });

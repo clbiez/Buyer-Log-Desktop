@@ -1,5 +1,7 @@
 'use strict';
 
+const collectionStatusCatalog = require('../../public/collection-status-catalog.js');
+
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
@@ -22,6 +24,11 @@ function mergeUniqueObjects(target, items) {
   const seen = new Set(target.map(item => JSON.stringify(item)));
   for (const item of items || []) { const key = JSON.stringify(item); if (!seen.has(key)) { seen.add(key); target.push(item); } }
 }
+function mergeStatusCatalogs(...catalogs) {
+  const combined = [];
+  for (const catalog of catalogs) if (Array.isArray(catalog)) combined.push(...catalog);
+  return collectionStatusCatalog.normalize(combined.length ? combined : null);
+}
 /* Legacy owner workspaces are migration evidence, never destroyed. The first
    Shared Hub activation creates one canonical Collection by unioning them into
    a new local workspace. Row ids are reassigned to prevent cross-owner id
@@ -30,7 +37,7 @@ function ensureSharedWorkspace(ownerIds = [], actorId = '') {
   const existing = loadWorkspace(SHARED_COLLECTION_OWNER);
   if (existing.initialized) return { workspace: existing, migrated: false, rows: existing.rows.length };
   const owners = [...new Set((Array.isArray(ownerIds) ? ownerIds : listOwnerIds()).map(safeId).filter(id => id && id !== SHARED_COLLECTION_OWNER))].sort();
-  const rows = [], manufacturers = [], customColumns = [];
+  const rows = [], manufacturers = [], customColumns = [], statusCatalog = [];
   let nextId = 1, migratedOwners = 0;
   const at = new Date().toISOString();
   for (const ownerId of owners) {
@@ -39,12 +46,13 @@ function ensureSharedWorkspace(ownerIds = [], actorId = '') {
     migratedOwners += 1;
     mergeUniqueObjects(manufacturers, legacy.manufacturers);
     mergeUniqueObjects(customColumns, legacy.customColumns);
+    if (Array.isArray(legacy.statusCatalog)) statusCatalog.push(...legacy.statusCatalog);
     legacy.rows.forEach((row, index) => {
       const recordId = String(row && row.recordId || row && row._sharedRecordId || stableSharedRecordId(ownerId, row, index));
       rows.push({ ...row, id: nextId++, recordId, createdBy: row.createdBy || ownerId, createdAt: row.createdAt || legacy._updatedAt || at, updatedBy: row.updatedBy || ownerId, updatedAt: row.updatedAt || legacy._updatedAt || at, _legacyOwnerId: ownerId, _legacyRowId: row && row.id != null ? String(row.id) : '' });
     });
   }
-  const payload = { initialized: true, rows, manufacturers, customColumns, nextId, migratedFromOwners: owners, migrationActor: String(actorId || ''), migratedAt: at };
+  const payload = { initialized: true, rows, manufacturers, customColumns, statusCatalog:mergeStatusCatalogs(statusCatalog), nextId, migratedFromOwners: owners, migrationActor: String(actorId || ''), migratedAt: at };
   const workspace = saveWorkspace(SHARED_COLLECTION_OWNER, payload, existing._revision);
   return { workspace, migrated: true, rows: rows.length, owners: migratedOwners };
 }
@@ -142,6 +150,7 @@ async function mergePersonalBackupIntoShared(ownerId, rawWorkspace, actorId = ''
     const customColumns = (Array.isArray(current.customColumns) ? current.customColumns : []).map(item => ({ ...item }));
     mergeUniqueObjects(manufacturers, incoming.manufacturers);
     mergeUniqueObjects(customColumns, incoming.customColumns);
+    const statusCatalog = mergeStatusCatalogs(current.statusCatalog, incoming.statusCatalog);
 
     try {
       const result = await saveWorkspaceAsync(SHARED_COLLECTION_OWNER, {
@@ -149,6 +158,7 @@ async function mergePersonalBackupIntoShared(ownerId, rawWorkspace, actorId = ''
         rows,
         manufacturers,
         customColumns,
+        statusCatalog,
         nextId,
       }, current._revision);
       const mirrored = await documents.mirror(documentId(SHARED_COLLECTION_OWNER), result.saved);
@@ -379,14 +389,18 @@ function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [], sharedS
 
   const manufacturers = (target.manufacturers || []).map(recoveryClone);
   const customColumns = (target.customColumns || []).map(recoveryClone);
+  const statusCatalogSources = [target.statusCatalog];
   for (const item of aliasWorkspaces) {
     mergeUniqueObjects(manufacturers, item.workspace.manufacturers);
     mergeUniqueObjects(customColumns, item.workspace.customColumns);
+    statusCatalogSources.push(item.workspace.statusCatalog);
   }
+  if (hasShared) statusCatalogSources.push(shared.statusCatalog);
   if (hasShared && !Array.isArray(sharedSourceOwnerIds)) {
     mergeUniqueObjects(manufacturers, shared.manufacturers);
     mergeUniqueObjects(customColumns, shared.customColumns);
   }
+  const statusCatalog = mergeStatusCatalogs(...statusCatalogSources);
 
   const recoveryMarker = {
     ownerScopeVersion:1,
@@ -397,11 +411,11 @@ function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [], sharedS
     duplicatesMerged,
   };
   const targetComparable = JSON.stringify({
-    rows: target.rows || [], manufacturers: target.manufacturers || [], customColumns: target.customColumns || [], nextId: target.nextId,
+    rows: target.rows || [], manufacturers: target.manufacturers || [], customColumns: target.customColumns || [], statusCatalog: target.statusCatalog || [], nextId: target.nextId,
   });
-  const recoveredComparable = JSON.stringify({ rows, manufacturers, customColumns, nextId });
+  const recoveredComparable = JSON.stringify({ rows, manufacturers, customColumns, statusCatalog, nextId });
   const dataChanged = targetComparable !== recoveredComparable;
-  const saved = saveWorkspace(targetOwnerId, { rows, manufacturers, customColumns, nextId, _legacyRecovery:recoveryMarker }, target._revision);
+  const saved = saveWorkspace(targetOwnerId, { rows, manufacturers, customColumns, statusCatalog, nextId, _legacyRecovery:recoveryMarker }, target._revision);
   return {
     changed:dataChanged, markerWritten:true, recovered:true, ownerId:targetOwnerId, sourceRows,
     added, duplicatesMerged, totalRows:saved.rows.length, aliases, workspace:saved,
@@ -444,6 +458,9 @@ function normalizeManufacturers(value) {
 function normalizeCustomColumns(value) {
   return (Array.isArray(value) ? value : []).slice(0, MAX_CUSTOM_COLUMNS).map(item => cleanObject(item));
 }
+function normalizeStatusCatalog(value, rows) {
+  return collectionStatusCatalog.normalize(value, { rowStatuses: normalizeRows(rows).map(row => row && row.durum) });
+}
 function defaultWorkspace(ownerId) {
   return {
     schemaVersion: 1,
@@ -452,6 +469,7 @@ function defaultWorkspace(ownerId) {
     rows: [],
     manufacturers: [],
     customColumns: [],
+    statusCatalog: collectionStatusCatalog.seed(),
     nextId: 1,
     _legacyRecovery: {},
     _revision: 0,
@@ -460,14 +478,16 @@ function defaultWorkspace(ownerId) {
 }
 function normalizeWorkspace(ownerId, raw) {
   const base = defaultWorkspace(ownerId);
+  const rows = normalizeRows(raw && raw.rows);
   return ({
       ...base,
       ...cleanObject(raw),
       ownerId: String(ownerId || ''),
       initialized: raw && raw.initialized !== false,
-      rows: normalizeRows(raw && raw.rows),
+      rows,
       manufacturers: normalizeManufacturers(raw && raw.manufacturers),
       customColumns: normalizeCustomColumns(raw && raw.customColumns),
+      statusCatalog: normalizeStatusCatalog(raw && raw.statusCatalog, rows),
       nextId: Math.max(1, Number(raw && raw.nextId) || 1),
       _revision: Math.max(0, Number(raw && raw._revision) || 0),
     });
@@ -496,6 +516,7 @@ function saveWorkspace(ownerId, payload, expectedRevision = null) {
   }
   fs.mkdirSync(ROOT, { recursive: true });
   const rows = normalizeRows(payload && payload.rows);
+  const sourceCatalog = payload && Object.prototype.hasOwnProperty.call(payload, 'statusCatalog') ? payload.statusCatalog : current.statusCatalog;
   const saved = {
     schemaVersion: 1,
     ownerId: String(ownerId || ''),
@@ -503,6 +524,7 @@ function saveWorkspace(ownerId, payload, expectedRevision = null) {
     rows,
     manufacturers: normalizeManufacturers(payload && payload.manufacturers),
     customColumns: normalizeCustomColumns(payload && payload.customColumns),
+    statusCatalog: normalizeStatusCatalog(sourceCatalog, rows),
     nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
     _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
     _revision: current._revision + 1,
@@ -545,7 +567,8 @@ function rowKeyOf(row, index) {
 // ifade edilemez; bu durumda karşı ekran sessizce hafif yeniden yükleme yapar.
 function structuralChange(before, after) {
   return JSON.stringify(before.customColumns || []) !== JSON.stringify(after.customColumns || [])
-    || JSON.stringify(before.manufacturers || []) !== JSON.stringify(after.manufacturers || []);
+    || JSON.stringify(before.manufacturers || []) !== JSON.stringify(after.manufacturers || [])
+    || JSON.stringify(before.statusCatalog || []) !== JSON.stringify(after.statusCatalog || []);
 }
 /* Satır karşılaştırması SIĞ yapılır, JSON.stringify ile DEĞİL.
 
@@ -614,6 +637,7 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
     }
     await fsp.mkdir(ROOT, { recursive: true });
     const rows = normalizeRows(payload && payload.rows);
+    const sourceCatalog = payload && Object.prototype.hasOwnProperty.call(payload, 'statusCatalog') ? payload.statusCatalog : current.statusCatalog;
     const saved = {
       schemaVersion: 1,
       ownerId: String(ownerId || ''),
@@ -621,13 +645,12 @@ async function saveWorkspaceAsync(ownerId, payload, expectedRevision = null) {
       rows,
       manufacturers: normalizeManufacturers(payload && payload.manufacturers),
       customColumns: normalizeCustomColumns(payload && payload.customColumns),
+      statusCatalog: normalizeStatusCatalog(sourceCatalog, rows),
       nextId: Math.max(Number(payload && payload.nextId) || 1, 1 + rows.reduce((max, row) => Math.max(max, Number(row && row.id) || 0), 0)),
       _legacyRecovery: cleanObject(payload && payload._legacyRecovery && Object.keys(payload._legacyRecovery).length ? payload._legacyRecovery : current._legacyRecovery),
       _revision: current._revision + 1,
       _updatedAt: new Date().toISOString(),
     };
-    // Fark, yazmadan ÖNCE hesaplanır: yazma başarısız olursa yayınlanacak bir
-    // yama da kalmaz. Yayın kararı çağırana bırakılır.
     const rowPatches = diffWorkspaceRows(current, saved);
     await atomicWriteJsonAsync(workspaceFile(ownerId), saved);
     return { saved, rowPatches };
@@ -674,6 +697,7 @@ function structureSignature(workspace) {
   return JSON.stringify({
     columns: workspace.customColumns || [],
     manufacturers: workspace.manufacturers || [],
+    statusCatalog: workspace.statusCatalog || [],
   });
 }
 
@@ -775,6 +799,7 @@ function applyRowChanges(current, change) {
     rows: ordered,
     manufacturers: current.manufacturers || [],
     customColumns: current.customColumns || [],
+    statusCatalog: normalizeStatusCatalog(current.statusCatalog, survivors),
     nextId: current.nextId || 1,
     _legacyRecovery: cleanObject(current._legacyRecovery),
     _revision: current._revision,
@@ -792,6 +817,7 @@ function applyRowChanges(current, change) {
     }
     if (Array.isArray(structure.manufacturers)) saved.manufacturers = normalizeManufacturers(structure.manufacturers);
     if (Array.isArray(structure.customColumns)) saved.customColumns = normalizeCustomColumns(structure.customColumns);
+    if (Array.isArray(structure.statusCatalog)) saved.statusCatalog = normalizeStatusCatalog(structure.statusCatalog, saved.rows);
     if (Array.isArray(structure.order)) {
       // Sıra yalnız VERİLEN id'lerle yeniden dizilir; listede olmayan satırlar
       // DÜŞÜRÜLMEZ, sonuna eklenir. Sessiz satır kaybı olmaz (§142).
@@ -914,7 +940,7 @@ module.exports = {
   listOwnerIds, countRowImages, clearAllRowImages,
   loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows,
   applyRowChanges, applyRowChangesAsync, rowRev, rowId,
-  defaultWorkspace, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
+  defaultWorkspace, normalizeStatusCatalog, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
   SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mergePersonalBackupIntoShared, recoverSharedWorkspaceIntoOwner, mirrorWorkspace,
   recoveryRowIdentity, recoveryRowsCompatible, recoveryRowFingerprint,
 };

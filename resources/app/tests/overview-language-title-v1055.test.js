@@ -11,9 +11,11 @@ const buttonById = id => INDEX.match(new RegExp(`<button[^>]*id="${id}"[^>]*>`))
 
 test('v10.55 Collection Summary ayar düğmesinin araç ipucu ve erişilebilir adı seçili dile uyar', () => {
   const button = buttonById('ovCollectionSummarySettingsBtn');
-  assert.match(button, /data-i18n-title-tr="Pivot ayarları"/);
-  assert.match(button, /data-i18n-title-en="Pivot settings"/);
-  assert.match(button, /aria-label="Pivot ayarları"/);
+  assert.match(button, /data-i18n-title-tr="Düzenle \/ Ayrıntılı Kırılım"/);
+  assert.match(button, /data-i18n-title-en="Edit \/ Detailed Breakdown"/);
+  assert.match(button, /aria-label="Düzenle \/ Ayrıntılı Kırılım"/);
+  const i18n=APP.match(/function applyStaticI18n\(\)\{[\s\S]*?\n\}/)?.[0]||'';
+  assert.match(i18n,/if\(el\.hasAttribute\('aria-label'\)\) el\.setAttribute\('aria-label', next\)/);
 });
 
 test('v10.55 Overview daraltma düğmeleri ilk çizimde de seçili dile uyar', () => {
