@@ -24,9 +24,11 @@ test('collection image synchronization is explicitly non-blocking for login', ()
     "app.post('/api/shared-hub/initialize'"
   );
 
-  assert.match(route, /if \(gate\.status !== 'ready'\)/, 'critical Shared Hub bootstrap must still gate sign-in');
   assert.match(route, /const userId = String\(req\.currentUser\.id\)/);
   assert.match(route, /userBootstrapReady\.add\(userId\)/);
+  assert.match(route, /if \(gate\.status !== 'ready'\)/);
+  assert.match(route, /syncDeferred:true/);
+  assert.match(route, /ok:true, ready:true/);
   assert.match(route, /void syncAuthorizedCollectionImages\(userId\)\.then\(/);
   assert.match(route, /collectionImages:\{ status:'deferred', blocking:false/);
   assert.match(route, /ok:true, ready:true, offline:false/);
@@ -53,10 +55,12 @@ test('login UI labels deferred collection images as background work and still pr
   assert.match(bootstrap, /const imageDeferred = images\.blocking === false/);
   assert.match(bootstrap, /Arka planda · girişe engel değil/);
   assert.match(bootstrap, /status:'active'/);
-  assert.match(submit, /await runUserBootstrap\(\)/);
+  assert.match(submit, /void runUserBootstrap\(\)/);
   assert.match(submit, /location\.replace\('\/'\)/);
 });
 
-test('main application still requires completed critical user bootstrap readiness', () => {
-  assert.match(SERVER, /if \(!profile \|\| !userBootstrapReady\.has\(String\(profile\.id\)\)\)/);
+test('main application requires a valid session but not sync bootstrap readiness', () => {
+  const root = sliceBetween(SERVER, "app.get('/',", 'app.use(createStaticGzip');
+  assert.match(root, /if \(!profile\)/);
+  assert.doesNotMatch(root, /userBootstrapReady\.has/);
 });
