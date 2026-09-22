@@ -733,23 +733,39 @@ async function clearOabBackendAuthorization() {
 }
 
 async function acquireOabAuthorization(options = {}) {
-  const interactive = options.interactive !== false;
+  const requestedInteractive = options.interactive !== false;
   const manual = options.manual === true;
+
   if (oabAuthInFlight) {
-    if (manual && oabAuthWindow && !oabAuthWindow.isDestroyed()) {
-      try { oabAuthWindow.show(); oabAuthWindow.focus(); } catch (_) {}
+    if (requestedInteractive) {
+      if (oabAuthFlowState) {
+        oabAuthFlowState.interactive = true;
+        try { oabAuthFlowState.promoteInteractive?.({ immediate:true, reason:'interactive-join' }); } catch (_) {}
+      } else if (oabAuthWindow && !oabAuthWindow.isDestroyed()) {
+        try { oabAuthWindow.show(); oabAuthWindow.focus(); } catch (_) {}
+      }
     }
     return oabAuthInFlight;
   }
+
+  const flowState = {
+    interactive: requestedInteractive,
+    promoteInteractive: null,
+  };
+  oabAuthFlowState = flowState;
+
   const request = (async () => {
     let authWindow = null;
     let settled = false;
     let timeoutTimer = null;
+    let silentProbeTimer = null;
     let lifecycleTimer = null;
     let lifecycle = null;
     let resolvePromise = null;
     let fallbackTried = false;
     let navigationBusy = false;
+    let freshReloadPending = false;
+    let loginRequiredKnown = false;
     let debuggerAttached = false;
     let captureStopping = false;
     let networkReady = null;
@@ -757,6 +773,9 @@ async function acquireOabAuthorization(options = {}) {
     let debuggerDetachHandler = null;
     const popupWindows = new Set();
 
+    const clearSilentProbe = () => {
+      if (silentProbeTimer) { clearTimeout(silentProbeTimer); silentProbeTimer = null; }
+    };
     const cleanupCapture = () => {
       if (lifecycleTimer) { clearInterval(lifecycleTimer); lifecycleTimer = null; }
       if (lifecycle) lifecycle.stop();
@@ -778,6 +797,7 @@ async function acquireOabAuthorization(options = {}) {
     };
     const cleanup = () => {
       if (timeoutTimer) { clearTimeout(timeoutTimer); timeoutTimer = null; }
+      clearSilentProbe();
       cleanupCapture();
       for (const popup of popupWindows) {
         if (popup && !popup.isDestroyed()) { try { popup.close(); } catch (_) {} }
@@ -789,10 +809,6 @@ async function acquireOabAuthorization(options = {}) {
     const finishAuthorization = async authorization => {
       if (settled || !authorization) return false;
       try {
-        // The loopback bridge stores the candidate only in backend RAM and
-        // validates it with oabApiClient.validateAuthorization(). Success here
-        // therefore means "real report Authorization + backend validation", not
-        // merely that the PASS viewer shell is visible.
         const pushed = await pushOabAuthorizationToBackend(authorization);
         if (!pushed || !pushed.ok) return false;
         settled = true;
@@ -801,8 +817,9 @@ async function acquireOabAuthorization(options = {}) {
         if (resolvePromise) resolvePromise({ ok:true, authenticated:true, source:'desktop-oab-sso' });
         return true;
       } catch (error) {
-        // A stale/invalid candidate is not terminal. The same authenticated
-        // viewer may emit a fresh report request moments later.
+        // A rejected report token must not leave an older backend RAM token
+        // looking authenticated while the persistent browser recovers.
+        await clearOabBackendAuthorization();
         log('OAB oturum adayı doğrulanamadı: ' + (error && error.code || 'OAB_AUTH_FAILED'));
         return false;
       }
@@ -810,16 +827,44 @@ async function acquireOabAuthorization(options = {}) {
 
     return await new Promise(resolve => {
       resolvePromise = resolve;
+
       const finishFailure = (code, error) => {
         if (settled) return;
         settled = true;
         cleanup();
         resolve({ ok:false, authenticated:false, code, error });
       };
-      const showInteractiveWindow = () => {
-        if (!interactive || settled || !authWindow || authWindow.isDestroyed()) return;
-        try { authWindow.show(); authWindow.focus(); } catch (_) {}
+      const showWindow = target => {
+        if (!flowState.interactive || settled || !target || target.isDestroyed()) return false;
+        try {
+          target.show();
+          target.focus();
+          return true;
+        } catch (_) {
+          return false;
+        }
       };
+      const showInteractiveWindow = () => showWindow(authWindow);
+      const armHardTimeout = () => {
+        if (timeoutTimer) clearTimeout(timeoutTimer);
+        const interactiveNow = flowState.interactive;
+        timeoutTimer = setTimeout(() => {
+          if (settled) return;
+          finishFailure(
+            interactiveNow ? 'OAB_AUTH_TIMEOUT' : 'OAB_AUTH_REQUIRED',
+            interactiveNow ? 'OAB oturum açma işlemi zamanında tamamlanmadı.' : 'OAB oturumu gerekli.',
+          );
+        }, interactiveNow ? 180000 : 12000);
+        timeoutTimer.unref?.();
+      };
+      const promoteInteractive = ({ immediate = true } = {}) => {
+        flowState.interactive = true;
+        clearSilentProbe();
+        armHardTimeout();
+        if (immediate || loginRequiredKnown) showInteractiveWindow();
+      };
+      flowState.promoteInteractive = promoteInteractive;
+
       const loadLoginTarget = async (url, allowFallback = true) => {
         if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
         navigationBusy = true;
@@ -848,14 +893,61 @@ async function acquireOabAuthorization(options = {}) {
           return false;
         } finally {
           navigationBusy = false;
+          if (freshReloadPending && !settled) {
+            freshReloadPending = false;
+            setImmediate(() => { if (!settled) void loadLoginTarget(OAB_VIEWER_URL, false); });
+          }
         }
+      };
+      const markLoginRequired = (url, target = authWindow) => {
+        if (!isLikelyOabSignInUrl(url)) return false;
+        loginRequiredKnown = true;
+        clearSilentProbe();
+        if (lifecycle) void lifecycle.observe({ url, signIn:true });
+        showWindow(target);
+        return true;
       };
       const pulseLifecycle = async () => {
         if (settled || !lifecycle || !authWindow || authWindow.isDestroyed()) return;
         let url = '';
         try { url = authWindow.webContents.getURL(); } catch (_) { return; }
         const signIn = await oabWindowLooksLikeSignIn(authWindow);
-        await lifecycle.observe({ url, signIn });
+        if (signIn) {
+          markLoginRequired(url, authWindow);
+          return;
+        }
+        await lifecycle.observe({ url, signIn:false });
+      };
+      const recoverStaleSilentProbe = async () => {
+        if (settled || !flowState.interactive || manual || loginRequiredKnown) return;
+        const state = lifecycle && lifecycle.snapshot();
+        if (state && state.candidateBusy) {
+          silentProbeTimer = setTimeout(() => { void recoverStaleSilentProbe(); }, 1000);
+          silentProbeTimer.unref?.();
+          return;
+        }
+
+        // No validated report request arrived during the bounded hidden probe.
+        // Treat the browser auth state as stale/unknown, not as permission to
+        // leave a user-triggered Get OAB hidden for the full interactive timeout.
+        log('OAB sessiz oturum kontrolü sonuçlanmadı; görünür SSO akışına geçiliyor.');
+        await clearOabBackendAuthorization();
+        lifecycle?.resetForFreshViewer?.();
+        showInteractiveWindow();
+
+        if (navigationBusy) {
+          freshReloadPending = true;
+          return;
+        }
+        await loadLoginTarget(OAB_VIEWER_URL, false);
+      };
+      const armSilentProbe = () => {
+        if (!flowState.interactive || manual || settled || loginRequiredKnown || silentProbeTimer) return;
+        silentProbeTimer = setTimeout(() => {
+          silentProbeTimer = null;
+          void recoverStaleSilentProbe();
+        }, OAB_SILENT_PROBE_MS);
+        silentProbeTimer.unref?.();
       };
 
       authWindow = new BrowserWindow({
@@ -885,25 +977,19 @@ async function acquireOabAuthorization(options = {}) {
         },
         onAuthorization: finishAuthorization,
         onPhase: phase => {
-          // Safe lifecycle-only diagnostics. No URL query, credential, cookie or
-          // Authorization value is written to logs.
           if (phase !== 'waiting-report-request') log('OAB auth aşaması: ' + phase);
-          if (phase === 'login-required') showInteractiveWindow();
+          if (phase === 'login-required') {
+            loginRequiredKnown = true;
+            clearSilentProbe();
+            showInteractiveWindow();
+          }
         },
       });
 
       /*
-       * Root cause of the stuck interactive flow:
-       * PASS is an SPA/SSO chain and a viewer load does not guarantee that the
-       * report request is emitted on that exact did-finish-load. The old code
-       * watched session.webRequest and performed one reload, so a delayed SPA
-       * request (or a request Chromium exposed only through DevTools Network)
-       * could be missed forever while the renderer awaited this promise.
-       *
-       * The working Edge connector captures Network.requestWillBeSent. Mirror
-       * that exact transport here: attach BEFORE the first navigation, watch
-       * only the real report API host/path, and send only the captured
-       * Authorization to the loopback backend for validation.
+       * The report Authorization is captured only from the real PASS report API
+       * request. CDP Network is attached before the first viewer navigation so
+       * an immediate authenticated request cannot race the listener.
        */
       const targetDebugger = authWindow.webContents.debugger;
       debuggerMessageHandler = (_event, method, params) => {
@@ -927,26 +1013,35 @@ async function acquireOabAuthorization(options = {}) {
         return;
       }
 
-      // A normal Get OAB first probes the persistent partition invisibly. The
-      // explicit user-menu command is the only path that intentionally opens
-      // the window before the lifecycle proves that sign-in is required.
-      authWindow.once('ready-to-show', () => { if (manual) showInteractiveWindow(); });
+      authWindow.once('ready-to-show', () => {
+        if (manual || loginRequiredKnown) showInteractiveWindow();
+      });
 
       const schedulePulse = delay => {
         const timer = setTimeout(() => { void pulseLifecycle(); }, Math.max(0, Number(delay) || 0));
         timer.unref?.();
       };
-      authWindow.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
-        if (!isMainFrame || !isAllowedOabLoginUrl(url)) return;
-        schedulePulse(120);
-      });
-      authWindow.webContents.on('did-finish-load', () => {
-        // This is only a hint. The bounded polling lifecycle below remains the
-        // authority, so completion is never tied to one load event.
+      const handleAllowedMainFrameNavigation = url => {
+        if (!isAllowedOabLoginUrl(url)) return;
+        if (markLoginRequired(url, authWindow)) return;
         schedulePulse(80);
+      };
+
+      authWindow.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
+        if (!isMainFrame) return;
+        handleAllowedMainFrameNavigation(url);
       });
-      authWindow.webContents.on('did-navigate-in-page', () => schedulePulse(80));
-      authWindow.webContents.on('did-fail-load', (_event, errorCode, _description, validatedURL, isMainFrame) => {
+      authWindow.webContents.on('will-redirect', (_event, url, _inPlace, isMainFrame) => {
+        if (!isMainFrame) return;
+        handleAllowedMainFrameNavigation(url);
+      });
+      authWindow.webContents.on('did-navigate', (_event, url) => handleAllowedMainFrameNavigation(url));
+      authWindow.webContents.on('did-finish-load', () => schedulePulse(60));
+      authWindow.webContents.on('did-navigate-in-page', (_event, url, isMainFrame) => {
+        if (isMainFrame === false) return;
+        handleAllowedMainFrameNavigation(url);
+      });
+      authWindow.webContents.on('did-fail-load', (_event, errorCode, _description, _validatedURL, isMainFrame) => {
         if (!isMainFrame || settled || Number(errorCode) === -3) return;
         log('OAB giriş sayfası main-frame yükleme hatası: ' + Number(errorCode));
         finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı yüklenemedi.');
@@ -961,10 +1056,13 @@ async function acquireOabAuthorization(options = {}) {
         if (!authWindow.isDestroyed()) authWindow.setTitle('OAB Kullanıcı Girişi');
       });
       authWindow.webContents.setWindowOpenHandler(({ url }) => {
-        // Microsoft SSO may create an about:blank popup and navigate it only
-        // afterwards. Preserve that browser contract, but keep the child in the
-        // same dedicated partition and enforce the same HTTPS host allowlist.
         if (url !== 'about:blank' && !isAllowedOabLoginUrl(url)) return { action:'deny' };
+        if (url !== 'about:blank' && isLikelyOabSignInUrl(url)) {
+          loginRequiredKnown = true;
+          clearSilentProbe();
+          if (lifecycle) void lifecycle.observe({ url, signIn:true });
+          showInteractiveWindow();
+        }
         return {
           action:'allow',
           overrideBrowserWindowOptions: {
@@ -985,17 +1083,36 @@ async function acquireOabAuthorization(options = {}) {
       authWindow.webContents.on('did-create-window', popup => {
         popupWindows.add(popup);
         try { popup.setMenu(null); } catch (_) {}
+
+        const handlePopupNavigation = url => {
+          if (!isAllowedOabLoginUrl(url)) return;
+          if (markLoginRequired(url, popup)) return;
+          if (loginRequiredKnown) showWindow(popup);
+        };
+
         popup.webContents.on('will-navigate', (event, url) => {
-          if (url === 'about:blank' || isAllowedOabLoginUrl(url)) return;
+          if (url === 'about:blank' || isAllowedOabLoginUrl(url)) {
+            if (url !== 'about:blank') handlePopupNavigation(url);
+            return;
+          }
           event.preventDefault();
           try { popup.close(); } catch (_) {}
         });
         popup.webContents.on('did-start-navigation', (_event, url, _inPlace, isMainFrame) => {
-          if (!isMainFrame || !isAllowedOabLoginUrl(url)) return;
-          if (isLikelyOabSignInUrl(url)) void lifecycle.observe({ url, signIn:true });
-          if (interactive && !settled && !popup.isDestroyed()) { try { popup.show(); popup.focus(); } catch (_) {} }
+          if (!isMainFrame) return;
+          handlePopupNavigation(url);
         });
-        popup.webContents.on('did-fail-load', (_event, errorCode, _description, validatedURL, isMainFrame) => {
+        popup.webContents.on('will-redirect', (_event, url, _inPlace, isMainFrame) => {
+          if (!isMainFrame) return;
+          handlePopupNavigation(url);
+        });
+        popup.webContents.on('did-navigate', (_event, url) => handlePopupNavigation(url));
+        popup.once('ready-to-show', () => {
+          let url = '';
+          try { url = popup.webContents.getURL(); } catch (_) {}
+          if (loginRequiredKnown || isLikelyOabSignInUrl(url)) showWindow(popup);
+        });
+        popup.webContents.on('did-fail-load', (_event, errorCode, _description, _validatedURL, isMainFrame) => {
           if (!isMainFrame || settled || Number(errorCode) === -3) return;
           log('OAB SSO penceresi yükleme hatası: ' + Number(errorCode));
           finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB kurumsal giriş ekranı yüklenemedi.');
@@ -1004,14 +1121,26 @@ async function acquireOabAuthorization(options = {}) {
           popupWindows.delete(popup);
           if (!settled) setImmediate(() => { void loadLoginTarget(OAB_VIEWER_URL, false); });
         });
+
+        let currentPopupUrl = '';
+        try { currentPopupUrl = popup.webContents.getURL(); } catch (_) {}
+        if (currentPopupUrl && currentPopupUrl !== 'about:blank') handlePopupNavigation(currentPopupUrl);
       });
       authWindow.webContents.on('will-navigate', (event, url) => {
-        if (isAllowedOabLoginUrl(url)) return;
+        if (isAllowedOabLoginUrl(url)) {
+          markLoginRequired(url, authWindow);
+          return;
+        }
         event.preventDefault();
       });
       authWindow.on('closed', () => {
         oabAuthWindow = null;
+        clearSilentProbe();
         cleanupCapture();
+        for (const popup of popupWindows) {
+          if (popup && !popup.isDestroyed()) { try { popup.close(); } catch (_) {} }
+        }
+        popupWindows.clear();
         if (!settled) {
           settled = true;
           if (timeoutTimer) clearTimeout(timeoutTimer);
@@ -1019,31 +1148,29 @@ async function acquireOabAuthorization(options = {}) {
         }
       });
 
-      // Bounded lifecycle observation: it detects login UI disappearance and,
-      // if the SPA viewer emits no API request, retries the viewer a few times.
-      // No infinite reload/poll loop: viewer kicks are capped at four and the
-      // whole flow still has the existing hard timeout.
       lifecycleTimer = setInterval(() => { void pulseLifecycle(); }, 500);
       lifecycleTimer.unref?.();
+      armHardTimeout();
 
-      timeoutTimer = setTimeout(() => {
-        if (settled) return;
-        finishFailure(interactive ? 'OAB_AUTH_TIMEOUT' : 'OAB_AUTH_REQUIRED', interactive ? 'OAB oturum açma işlemi zamanında tamamlanmadı.' : 'OAB oturumu gerekli.');
-      }, interactive ? 180000 : 12000);
-      timeoutTimer.unref?.();
-
-      // Do not navigate until CDP Network.enable has completed. This closes the
-      // initial-request race; if PASS emits the report request immediately, the
-      // listener is already active. Later SPA requests are covered by the same
-      // listener plus the bounded viewer lifecycle above.
       void Promise.resolve(networkReady)
-        .then(() => { if (!settled) return loadLoginTarget(OAB_VIEWER_URL, true); })
-        .catch(() => { if (!settled) finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.'); });
+        .then(() => {
+          if (settled) return false;
+          armSilentProbe();
+          return loadLoginTarget(OAB_VIEWER_URL, true);
+        })
+        .catch(() => {
+          if (!settled) finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.');
+        });
     });
   })();
+
   oabAuthInFlight = request;
-  try { return await request; }
-  finally { if (oabAuthInFlight === request) oabAuthInFlight = null; }
+  try {
+    return await request;
+  } finally {
+    if (oabAuthInFlight === request) oabAuthInFlight = null;
+    if (oabAuthFlowState === flowState) oabAuthFlowState = null;
+  }
 }
 
 async function clearOabAuthSession() {
