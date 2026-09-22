@@ -548,12 +548,12 @@ const outlookSetupSettings = require('./lib/outlook-setup-settings');
 function requestClientId(req){ return String((req.headers && req.headers['x-client-id']) || '').slice(0,80); }
 // Ortak master veriler aynı olayla aktif istemcileri ve ayrı süreçlerdeki
 // shared-revision fallback'ini günceller. Metadata yalnız kimlik/cihaz izi taşır.
-function publishSharedMasterChange(entity, req) {
+function publishSharedMasterChange(entity, req, detail = null) {
   const actor = req && req.currentUser || {};
   const clientId = requestClientId(req || {});
   void sharedRevisionStore.update(entity, { actorId: String(actor.id || ''), deviceId: clientId })
     .catch(error => logRuntimeFailure('sharedRevision', error));
-  liveEvents.notifyChange(entity, clientId, null);
+  liveEvents.notifyChange(entity, clientId, detail);
   scheduleMasterCheckpointPublish(String(actor.id || ''));
 }
 const endeksmatik = require('./lib/endeksmatik');
@@ -682,6 +682,39 @@ async function guardCheckpointPublish(area, root, state, localRecords) {
   const stale = checkpointRemoteAheadIds(remoteRecords, localRecords, state && state.tombstones);
   return { safe:missing.length === 0 && stale.length === 0, missing, stale, remoteRecords:Object.keys(remoteRecords).length, head:remote.head };
 }
+function changedMasterEntities(remoteRecords, localRecords, ids) {
+  const remote = remoteRecords && typeof remoteRecords === 'object' ? remoteRecords : {};
+  const local = localRecords && typeof localRecords === 'object' ? localRecords : {};
+  const changed = new Set();
+  const different = (a, b) => JSON.stringify(a == null ? null : a) !== JSON.stringify(b == null ? null : b);
+  for (const id of Array.isArray(ids) ? ids : []) {
+    const before = local[id], after = remote[id];
+    if (id === 'store:overrides.json') {
+      for (const field of ['pricingRules','transitRules','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs']) {
+        if (different(before && before[field], after && after[field])) changed.add(field);
+      }
+      if (
+        different(before && before.antrepoMatchRule, after && after.antrepoMatchRule) ||
+        different(before && before.antrepoMatchConfig, after && after.antrepoMatchConfig) ||
+        different(before && before.antrepoMatchConfigVersion, after && after.antrepoMatchConfigVersion)
+      ) changed.add('antrepoMatchRule');
+    } else if (id === 'store:fx-rates.json') changed.add('fx');
+    else if (id === 'store:email-groups.json') changed.add('emailGroups');
+    else if (id === 'store:settings.json') {
+      changed.add('systemSettings');
+      if (different(before && before.modelConnections, after && after.modelConnections)) changed.add('modelConnections');
+    } else if (/^endeksmatik:/.test(String(id || ''))) changed.add('endeksmatik');
+  }
+  return [...changed];
+}
+function announceRecoveredMasterEntities(entities) {
+  for (const entity of Array.isArray(entities) ? entities : []) {
+    void sharedRevisionStore.update(entity, { actorId:'shared-hub-sync', deviceId:'sync' })
+      .catch(error => logRuntimeFailure('sharedRevisionRecoveredMaster', error));
+    liveEvents.notifyChange(entity, null, { source:'shared-hub-sync' });
+  }
+}
+
 async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
   if (!remote || remote.unchanged) return { applied:0, missing:0, stale:0, head:remote && remote.head || null, remoteRecords:0 };
   const remoteRecords = checkpointRecords(remote);
@@ -692,6 +725,7 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
   const staleIds = checkpointRemoteAheadIds(remoteRecords, localRecords, state && state.tombstones);
   const recoverIds = [...new Set([...missingIds, ...staleIds])];
   if (!recoverIds.length) return { applied:0, missing:0, stale:0, head:remote.head, remoteRecords:Object.keys(remoteRecords).length };
+  const recoveredMasterEntities = area === 'master' ? changedMasterEntities(remoteRecords, localRecords, recoverIds) : [];
   // Recovery is a cache repair, not a new local edit. Copy the authoritative
   // checkpoint record directly so it does not create an outgoing journal item
   // that would simply echo the same recovery data back to Shared Hub.
@@ -716,6 +750,7 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
       details:{ area, remaining:remaining.slice(0,50) },
     });
   }
+  if (area === 'master' && recoveredMasterEntities.length) announceRecoveredMasterEntities(recoveredMasterEntities);
   markStartup('SHARED_CHECKPOINT_REPAIRED', {
     area,
     records:recoverIds.length,
@@ -1164,12 +1199,14 @@ function scheduleMasterCheckpointPublish(actorId = '', delayMs = 1500) {
     masterCheckpointPending = false;
     const actor = masterCheckpointActor; masterCheckpointActor = '';
     try {
+      if (typeof deltaStore.flush === 'function') await deltaStore.flush();
       await syncSettings.syncOnce().catch(()=>null);
       await deltaStore.hydrate();
       await publishMasterCheckpoint(actor);
     } catch (error) {
       if (error && error.code === 'MASTER_REVISION_CONFLICT') {
         try {
+          if (typeof deltaStore.flush === 'function') await deltaStore.flush();
           await syncSettings.syncOnce().catch(()=>null);
           await deltaStore.hydrate();
           await publishMasterCheckpoint(actor);
@@ -9976,6 +10013,7 @@ app.put('/api/asas-source', userAccess.requireArea('source'), userAccess.require
     if (!['excel', 'database'].includes(mode)) return res.status(400).json({ error: 'mode yalnız excel veya database olabilir.', code: 'VALIDATION_ERROR' });
     const saved = replaceAsasSourceMode(mode, requestRevision(req));
     userAccess.appendAudit(req.currentUser, 'ASAS_SOURCE_CHANGE', 'settings', { mode: saved.mode });
+    publishSharedMasterChange('asasSourceMode', req);
     const file = currentAsasExcelFile(req);
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ...saved, sourceFolder: sourceFolderForUser(req), sourceFile: file ? file.name : null });
@@ -10001,6 +10039,7 @@ app.put('/api/lfl-source', userAccess.requireArea('source'), userAccess.requireP
     if (!['excel', 'database'].includes(mode)) return res.status(400).json({ error: 'mode yalnız excel veya database olabilir.', code: 'VALIDATION_ERROR' });
     const saved = replaceLflSourceMode(mode, requestRevision(req));
     userAccess.appendAudit(req.currentUser, 'LFL_SOURCE_CHANGE', 'settings', { mode: saved.mode });
+    publishSharedMasterChange('lflSourceMode', req);
     const file = currentAsasExcelFile(req);
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ...saved, sourceFolder: sourceFolderForUser(req), sourceFile: file ? file.name : null });
@@ -10074,6 +10113,7 @@ app.post('/api/asas-source/upload', userAccess.requireArea('source'), userAccess
     runtime.refreshWarningDetails = [];
     await saveRuntimeModelSnapshot(id, runtime);
     userAccess.appendAudit(req.currentUser, 'ASAS_EXCEL_UPLOAD', filename, { rows: parsedAsas.orders.length });
+    publishSharedMasterChange('asasSourceMode', req);
     res.json({
       ok: true, mode: 'excel', revision: modeSaved.revision,
       sourceFolder: folder, sourceFile: filename,
@@ -10119,6 +10159,7 @@ app.put('/api/antrepo-source', userAccess.requireArea('source'), userAccess.requ
     if (!['excel', 'database', 'dashboard'].includes(mode)) return res.status(400).json({ error: 'mode yalnız excel, database veya dashboard olabilir.', code: 'VALIDATION_ERROR' });
     const saved = replaceAntrepoSourceMode(mode, requestRevision(req));
     userAccess.appendAudit(req.currentUser, 'ANTREPO_SOURCE_CHANGE', 'settings', { mode: saved.mode });
+    publishSharedMasterChange('antrepoSourceMode', req);
     const file = currentAntrepoExcelFile(req);
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ...saved, sourceFolder: sourceFolderForUser(req), sourceFile: file ? file.name : null });
@@ -10190,6 +10231,7 @@ app.post('/api/antrepo-source/upload', userAccess.requireArea('source'), userAcc
     runtime.refreshWarningDetails = [...quantityInfo.details];
     await saveRuntimeModelSnapshot(id, runtime);
     userAccess.appendAudit(req.currentUser, 'ANTREPO_EXCEL_UPLOAD', filename, { rows: Number(parsed.meta && parsed.meta.dataRows) || Object.keys(parsed.map).length });
+    publishSharedMasterChange('antrepoSourceMode', req);
     res.json({
       ok: true, mode: 'excel', revision: modeSaved.revision,
       sourceFolder: folder, sourceFile: parsed.file,
@@ -10260,6 +10302,7 @@ app.put('/api/landed-multipliers', userAccess.requireArea('source'), userAccess.
     }
     const saved = replaceLandedMultipliers({ tr, overseas }, requestRevision(req));
     userAccess.appendAudit(req.currentUser, 'LANDED_MULTIPLIERS_UPDATE', 'collection', { tr:saved.multipliers.tr, overseas:saved.multipliers.overseas, revision:saved.revision });
+    publishSharedMasterChange('landedMultipliers', req);
     res.json(saved);
   } catch (err) { apiError(res, err, 'Landed çarpanları kaydedilemedi.'); }
 });
@@ -10277,6 +10320,7 @@ app.put('/api/note-columns', userAccess.requireArea('cp'), express.json({limit:'
   try {
     const saved = replaceNoteColumnDefs((req.body || {}).columns, requestRevision(req));
     userAccess.appendAudit(req.currentUser, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision });
+    publishSharedMasterChange('noteColumnDefs', req);
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ok: true, ...saved });
   } catch (err) { apiError(res, err, 'Not sütunları kaydedilemedi.'); }
@@ -10340,6 +10384,7 @@ app.put('/api/freight-rates', userAccess.requireArea('shipping'), userAccess.req
     }
     const saved = replaceFreightRates({ rates, volumetricFactor: factor, landedMultiplier, carton }, requestRevision(req));
     userAccess.appendAudit(req.currentUser, 'FREIGHT_RATES_UPDATE', 'shipping', { count: saved.freight.rates.length, revision: saved.revision });
+    publishSharedMasterChange('freightRates', req);
     res.json(saved);
   } catch (err) { apiError(res, err, 'Navlun ücretleri kaydedilemedi.'); }
 });
@@ -10396,8 +10441,7 @@ app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requi
       revision: saved.revision, count: saved.rules.length, changedLicenses,
       createdRuleIds, updatedRuleIds, deletedRuleIds,
     });
-    void sharedRevisionStore.update('pricingRules', { actorId: req.currentUser.id }).catch(error => logRuntimeFailure('sharedRevision', error));
-    liveEvents.notifyChange('pricingRules', requestClientId(req), { revision: saved.revision, changedLicenses });
+    publishSharedMasterChange('pricingRules', req, { revision: saved.revision, changedLicenses });
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ok: true, rules: saved.rules, revision: saved.revision });
   } catch (err) { apiError(res, err, 'License Royalty Calculations kaydedilemedi.'); }
@@ -10779,6 +10823,7 @@ app.put('/api/match-rule', userAccess.requireArea('source'), userAccess.requireP
       sources: config.sources.map(source => source.id),
       sourceMode,
     });
+    publishSharedMasterChange('antrepoMatchRule', req);
     res.json(saved);
   } catch (err) { apiError(res, err, 'Eşleştirme kuralı kaydedilemedi.'); }
 });
@@ -10844,6 +10889,7 @@ app.put('/api/non-dtr-manufacturers', userAccess.requireArea('source'), userAcce
       .filter(value => value.length <= 160)
       .slice(0, 1000);
     const saved = replaceNonDtrManufacturers(manufacturers, requestRevision(req));
+    publishSharedMasterChange('nonDtrManufacturers', req);
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ok: true, manufacturers: saved.manufacturers, revision: saved.revision });
   } catch (err) { apiError(res, err, 'Non-DTR üreticiler kaydedilemedi.'); }
@@ -11732,6 +11778,7 @@ app.put('/api/model-connections', userAccess.requireArea('source'), userAccess.r
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
     const saved = replaceModelConnections(items, requestRevision(req));
     userAccess.appendAudit(req.currentUser, 'MODEL_CONNECTIONS_UPDATE', 'settings', { count: saved.items.length });
+    publishSharedMasterChange('modelConnections', req);
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ok: true, items: saved.items, revision: saved.revision, ...modelSupportInfo() });
   } catch (err) { apiError(res, err, 'Veri modeli bağlantıları kaydedilemedi.'); }
