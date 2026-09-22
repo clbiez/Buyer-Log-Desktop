@@ -1668,11 +1668,20 @@ function sendUserSelectionPage(_req, res) {
 // so user switching cannot fall through to Express' "Cannot GET" response.
 app.get('/select-user', sendUserSelectionPage);
 app.get(['/select-user/', '/select-user.html'], sendUserSelectionPage);
-app.get('/api/shared-hub/bootstrap-status', (_req, res) => {
+app.get('/api/shared-hub/bootstrap-status', async (_req, res) => {
+  // sync-settings.json yerel ve kalici source-of-truth'tur. Bootstrap daha yeni
+  // basliyor olsa bile kayitli klasoru once okuyup "configured" bilgisini seed
+  // ederiz; aksi halde login ekraninin ilk status istegi gecici configured:false
+  // gorup her acilista klasor seciciyi yeniden aciyordu.
+  const savedSettings = await syncSettings.read();
+  const savedRoot = String(savedSettings && savedSettings.sharedSyncRoot || '').trim();
+  if (savedRoot && sharedHubBootstrapProgress.configured !== true) {
+    setBootstrapProgress({ configured:true });
+  }
   if (!sharedHubStartupSettled && !sharedHubBootstrapInFlight) {
     void bootstrapSharedHub().catch(error => logRuntimeFailure('sharedHubBootstrapStatus', error));
   }
-  res.set('Cache-Control','no-store').json(bootstrapStatusSnapshot());
+  res.set('Cache-Control','no-store').json({ ...bootstrapStatusSnapshot(), root:savedRoot || null });
 });
 app.post('/api/shared-hub/configure', express.json({ limit:'32kb' }), async (req, res) => {
   try {
