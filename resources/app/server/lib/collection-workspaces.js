@@ -196,6 +196,7 @@ const RECOVERY_ROW_META_FIELDS = new Set([
   'modelGroupId','variantId',
 ]);
 const RECOVERY_ROW_IMAGE_FIELDS = new Set(['img','imgRef']);
+function recoveryClone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
 
 function recoveryValueEmpty(value) {
   if (value == null) return true;
@@ -263,7 +264,7 @@ function mergeRecoveryRows(base, incoming, sourceKey = '') {
   for (const [key, value] of Object.entries(incoming || {})) {
     if (key === 'id') continue;
     if (RECOVERY_ROW_META_FIELDS.has(key) && key !== '_rev') continue;
-    if (recoveryValueEmpty(out[key]) && !recoveryValueEmpty(value)) out[key] = clone(value);
+    if (recoveryValueEmpty(out[key]) && !recoveryValueEmpty(value)) out[key] = recoveryClone(value);
   }
   out._rev = Math.max(Number(base && base._rev) || 0, Number(incoming && incoming._rev) || 0);
   const sourceKeys = new Set([
@@ -281,7 +282,7 @@ function mergeRecoveryRows(base, incoming, sourceKey = '') {
    - Tam ayni / yalniz bos alanlari farkli satirlar tek satirda birlesir.
    - Iki dolu alan birbiriyle celisiyorsa satirlar AYRI tutulur; veri kaybi yok.
    - Eski shared workspace silinmez. */
-function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [] } = {}) {
+function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [], sharedSourceOwnerIds = null } = {}) {
   const targetOwnerId = String(ownerId || '').trim();
   if (!targetOwnerId || targetOwnerId === SHARED_COLLECTION_OWNER) {
     return { changed:false, recovered:false, reason:'invalid-target', ownerId:targetOwnerId };
@@ -330,7 +331,7 @@ function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [] } = {}) 
   }
   function absorb(rawRow, sourceOwner, sourcePosition, keepPreferredId) {
     sourceRows += 1;
-    const incoming = clone(rawRow || {});
+    const incoming = recoveryClone(rawRow || {});
     const sourceKey = sourceOwner ? recoverySourceKey(sourceOwner, incoming, sourcePosition) : '';
     let match = sourceKey ? sourceIndex.get(sourceKey) : null;
     const fp = recoveryRowFingerprint(incoming);
@@ -358,10 +359,19 @@ function recoverSharedWorkspaceIntoOwner(ownerId, { sourceOwnerIds = [] } = {}) 
 
   (target.rows || []).forEach((row, index) => absorb(row, '', index, true));
   for (const item of aliasWorkspaces) (item.workspace.rows || []).forEach((row, index) => absorb(row, item.ownerId, index, false));
-  if (hasShared) (shared.rows || []).forEach((row, index) => absorb(row, SHARED_COLLECTION_OWNER, index, false));
+  if (hasShared) {
+    const restricted = Array.isArray(sharedSourceOwnerIds)
+      ? new Set(sharedSourceOwnerIds.map(value => String(value || '').trim()).filter(Boolean))
+      : null;
+    (shared.rows || []).forEach((row, index) => {
+      const legacyOwner = String(row && row._legacyOwnerId || '').trim();
+      if (restricted && (!legacyOwner || !restricted.has(legacyOwner))) return;
+      absorb(row, SHARED_COLLECTION_OWNER, index, false);
+    });
+  }
 
-  const manufacturers = (target.manufacturers || []).map(clone);
-  const customColumns = (target.customColumns || []).map(clone);
+  const manufacturers = (target.manufacturers || []).map(recoveryClone);
+  const customColumns = (target.customColumns || []).map(recoveryClone);
   for (const item of aliasWorkspaces) {
     mergeUniqueObjects(manufacturers, item.workspace.manufacturers);
     mergeUniqueObjects(customColumns, item.workspace.customColumns);
