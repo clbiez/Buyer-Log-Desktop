@@ -2530,20 +2530,37 @@ function scheduleTableImageSizeDom(tableKey){
     pending.forEach(applyTableImageSizeDom);
   });
 }
+function syncVirtualizedTableRowHeight(tableKey,rowHeight){
+  if(tableKey!=='cp'&&tableKey!=='orders')return;
+  const table=tableImageSizeTable(tableKey),tbody=table&&table.tBodies&&table.tBodies[0],virtualState=tbody&&tbody._virtualState;
+  const next=Math.max(1,Math.round(Number(rowHeight)||0));
+  if(!virtualState||!next)return;
+  if(virtualState.rowHeight===next)return;
+  virtualState.rowHeight=next;
+  virtualState.renderedStart=-1;virtualState.renderedEnd=-1;
+  if(typeof virtualState.paint==='function')virtualState.paint();
+}
 function setTableImageSize(tableKey,value,{persist=false}={}){
   const next=normalizeTableImageSizeValue(tableKey,value);
   if(tableKey==='cp')cpImageSize=next;
   else if(tableKey==='orders')ordersImageSize=next;
   else kolImgSize=next;
+  const dims=tableImageSizeDimensions(tableKey,next);
   if(tableKey==='cp'||tableKey==='orders'){
     cpApplyImageSizeVars();
-    colmgr[tableKey].widthPx.__picture=tableImageSizeDimensions(tableKey,next).col;
+    colmgr[tableKey].widthPx.__picture=dims.col;
     const table=tableImageSizeTable(tableKey);
-    if(table)applyColgroupWidths(table,tableKey,true);
+    if(table){
+      applyColgroupWidths(table,tableKey,true);
+      // CP/Orders satır yüksekliği slider hareketinde aynı frame'de değişsin.
+      // Bir sonraki rAF geçişi görsellerin natural boyutlarını tekrar hizalar.
+      applyTableImageSizeDom(tableKey);
+    }
+    syncVirtualizedTableRowHeight(tableKey,dims.row);
   }
   scheduleTableImageSizeDom(tableKey);
   if(persist)persistTableImageSize(tableKey,next);
-  return tableImageSizeDimensions(tableKey,next);
+  return dims;
 }
 let _tableImageSizePopover=null,_tableImageSizeCleanup=null,_tableImageSizeReposition=null;
 function closeTableImageSizePopover(){
@@ -5817,8 +5834,17 @@ const VIRTUALIZE_BUFFER_ROWS = 15;
 // yükseklikleri de en baştan doğru olur ve kaydırırken satırlar zıplamaz.
 function seedVirtualRowHeight(table){
   if(table.id!=='cpTable' && table.id!=='ordersTable') return 0;
-  const value=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cp-row-h'));
-  return Number.isFinite(value) && value>0 ? value : 0;
+  const tableKey=table.id==='ordersTable'?'orders':'cp';
+  const property=`--cp-row-h-${tableKey}`;
+  // Her tablo kendi Picture slider'ının satır yüksekliğini kullanır. Eski ortak
+  // --cp-row-h yalnız geriye dönük fallback'tir; Orders artık CP ölçüsünü miras almaz.
+  const tableValue=parseFloat(getComputedStyle(table).getPropertyValue(property));
+  if(Number.isFinite(tableValue)&&tableValue>0)return tableValue;
+  const rootStyle=getComputedStyle(document.documentElement);
+  const rootValue=parseFloat(rootStyle.getPropertyValue(property));
+  if(Number.isFinite(rootValue)&&rootValue>0)return rootValue;
+  const legacy=parseFloat(rootStyle.getPropertyValue('--cp-row-h'));
+  return Number.isFinite(legacy)&&legacy>0?legacy:0;
 }
 function setupVirtualizedBody(tbody, table, rows, buildRow, colCount, freezePlan){
   const scrollHost = table.closest('.tablewrap') || table.parentElement;
@@ -6102,6 +6128,10 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   }else table.querySelector('tfoot')?.remove();
   // Sütun dondurma: başlık, gövde ve toplam satırı çizildikten SONRA uygulanır.
   applyFreeze(tableId, tableKey, withChk);
+  // CP/Orders yeni DOM satırlarını her render'da kendi kayıtlı Picture ölçüsüne
+  // tekrar bağlar. Böylece CP max yükseklikte takılı kalmaz ve Orders davranışıyla
+  // aynı sözleşmeyi kullanır.
+  if(tableKey==='cp'||tableKey==='orders')applyTableImageSizeDom(tableKey);
   window.BLGridClipboard?.afterRender?.(tableId);
   if(typeof fitTableHeights==='function') setTimeout(fitTableHeights, 0);
 }
