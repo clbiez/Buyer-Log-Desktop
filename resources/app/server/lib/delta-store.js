@@ -343,7 +343,15 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     }
   }
 
-  return { get mode() { return active; }, get isAuthoritative() { return isAuthoritativeNow(); }, get writesLegacy() { return writesLegacyNow(); }, setMode, mirror, removeMirrored, readAll, readAllSync, readMetaSync, writeMeta, hydrate, seedOnce, seedMissing, recordKey, get isHydrated() { return hydrated; } };
+  async function flush() {
+    // Central Master publication must never overtake a queued local mirror.
+    // Awaiting the single-flight tail guarantees the journal/local DB contains
+    // every save that was staged before the publication cycle started.
+    await mirrorTail.catch(() => {});
+    return { ok: pendingMirrors === 0, pending: pendingMirrors };
+  }
+
+  return { get mode() { return active; }, get isAuthoritative() { return isAuthoritativeNow(); }, get writesLegacy() { return writesLegacyNow(); }, setMode, mirror, flush, removeMirrored, readAll, readAllSync, readMetaSync, writeMeta, hydrate, seedOnce, seedMissing, recordKey, get isHydrated() { return hydrated; } };
 }
 
 /* ===================================================================
