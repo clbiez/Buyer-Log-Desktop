@@ -102,6 +102,7 @@ test('live manager moves one WebContentsView across windows without recreating i
   const lfl=manager.openModule(first.window.id,'lfl');
   const liveContents=lfl.view.webContents;
   assert.equal(manager.snapshot(first).tabs.length,2);
+  assert.equal(manager.snapshot(first).canReattach,false,'primary window never offers a misleading reattach action');
   assert.equal(manager.moveTab(lfl.id,first.window.id,0),true);
   assert.equal(manager.snapshot(first).tabs[0].id,lfl.id,'same-window drag order is persisted');
   assert.equal(lfl.view.webContents,liveContents,'reorder does not recreate the renderer');
