@@ -35,12 +35,14 @@ test('Overview layout supports moving a widget without changing data state', () 
   assert.deepEqual(layout.move(['notes', 'collectionSummary', 'oab'], 'oab', -1), ['notes', 'oab', 'collectionSummary']);
 });
 
-test('Overview edit mode and Collection Summary detailed-breakdown settings keep dedicated UI hooks', () => {
+test('Overview edit mode and Collection Summary scope drawer keep dedicated UI hooks', () => {
   assert.match(INDEX, /id="ovDashboardGrid"/);
   assert.match(INDEX, /id="ovLayoutEditBtn"/);
-  assert.match(INDEX, /id="ovCollectionSummarySettingsBtn"/);
+  assert.doesNotMatch(INDEX, /id="ovCollectionSummarySettingsBtn"/);
+  assert.match(INDEX, /id="ovCollectionSummaryScopeLabel"/);
+  assert.match(INDEX, /id="ovCollectionSummaryScope"/);
   assert.match(APP, /OVERVIEW_LAYOUT_KEY/);
   assert.match(APP, /draggable/);
-  assert.match(APP, /overviewCollectionSummaryOpenSettings/);
+  assert.match(APP, /scopeColumns:overviewCollectionSummaryColumns\(\)/);
   assert.match(INDEX, /data-overview-widget="intake"/);
 });
