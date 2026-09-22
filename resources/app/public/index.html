@@ -500,34 +500,24 @@
     </section>
     <section id="ovCollectionSummary" data-overview-widget="collectionSummary" class="ovCollectionSummary" aria-live="polite">
       <div class="ovCollectionSummaryHeader">
-        <div>
-          <p class="cardTitle ovCollectionSummaryTitle"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span data-i18n-tr="Koleksiyon Özeti" data-i18n-en="Collection Summary">Koleksiyon Özeti</span></p>
+        <div class="ovCollectionSummaryHeading">
+          <p class="cardTitle ovCollectionSummaryTitle"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span data-i18n-tr="Koleksiyon" data-i18n-en="Collection">Koleksiyon</span></p>
           <p id="ovCollectionSummaryIntro" class="ovCollectionSummaryIntro"></p>
         </div>
-        <div class="ovCollectionSummaryHeaderActions"><button type="button" id="ovCollectionSummarySettingsBtn" class="ovNotesCollapseBtn" title="Pivot ayarları" aria-label="Pivot ayarları" data-i18n-title-tr="Pivot ayarları" data-i18n-title-en="Pivot settings"><svg class="ic"><use href="#i-settings"/></svg></button><button type="button" id="ovCollectionSummaryCollapseBtn" class="ovNotesCollapseBtn" title="Koleksiyon Özetini daralt" aria-label="Koleksiyon Özetini daralt" aria-expanded="true">
-          <svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg>
-        </button></div>
+        <div class="ovCollectionSummaryHeaderActions">
+          <label class="ovCollectionSummaryScope"><span>Season</span><select id="ovCollectionSummaryScope" aria-label="Season"></select></label>
+          <button type="button" id="ovCollectionSummarySettingsBtn" class="navActionBtn ovCollectionSummarySettingsBtn" title="Düzenle / Ayrıntılı Kırılım" data-i18n-title-tr="Düzenle / Ayrıntılı Kırılım" data-i18n-title-en="Edit / Detailed Breakdown"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Düzenle" data-i18n-en="Edit">Düzenle</span></button>
+          <button type="button" id="ovCollectionSummaryCollapseBtn" class="ovNotesCollapseBtn" title="Koleksiyon Özetini daralt" aria-label="Koleksiyon Özetini daralt" aria-expanded="true"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg></button>
+        </div>
       </div>
-      <div id="ovCollectionSummaryFilters" class="ovCollectionSummaryFilters">
-        <details class="ovCollectionSummaryFilter" data-summary-filter="months">
-          <summary><span data-i18n-tr="In Store Ayı" data-i18n-en="In Store Month">In Store Ayı</span><b id="ovCollectionSummaryMonthsLabel">—</b></summary>
-          <div id="ovCollectionSummaryMonths" class="ovCollectionSummaryOptions"></div>
-        </details>
-        <details class="ovCollectionSummaryFilter" data-summary-filter="statuses">
-          <summary><span data-i18n-tr="Status" data-i18n-en="Status">Status</span><b id="ovCollectionSummaryStatusesLabel">—</b></summary>
-          <div id="ovCollectionSummaryStatuses" class="ovCollectionSummaryOptions"></div>
-        </details>
-        <details class="ovCollectionSummaryFilter ovCollectionSummaryConfirmationFilter" data-summary-filter="confirmation">
-          <summary><span data-i18n-tr="Onay" data-i18n-en="Confirmation">Onay</span><b id="ovCollectionSummaryConfirmationLabel">Tümü</b></summary>
-          <div class="ovCollectionSummaryOptions" id="ovCollectionSummaryConfirmationOptions">
-            <label><input type="radio" name="ovCollectionSummaryConfirmation" value="all" data-summary-confirmation="all"><span data-i18n-tr="Tümü" data-i18n-en="All">Tümü</span></label>
-            <label><input type="radio" name="ovCollectionSummaryConfirmation" value="confirmed" data-summary-confirmation="confirmed"><span data-i18n-tr="Onaylı" data-i18n-en="Confirmed">Onaylı</span></label>
-            <label><input type="radio" name="ovCollectionSummaryConfirmation" value="notConfirmed" data-summary-confirmation="notConfirmed"><span data-i18n-tr="Onaysız" data-i18n-en="Not Confirmed">Onaysız</span></label>
-          </div>
-        </details>
+      <div class="ovCollectionSummaryBody">
         <div id="ovCollectionSummaryKpi" class="ovCollectionSummaryKpi"></div>
+        <div class="ovCollectionStatusSection">
+          <div class="ovCollectionStatusSectionHead"><div><b data-i18n-tr="Status Dağılımı" data-i18n-en="Status Distribution">Status Dağılımı</b><span data-i18n-tr="Koleksiyon akışının hangi aşamada yoğunlaştığını gösterir." data-i18n-en="Shows where the Collection workflow is concentrated.">Koleksiyon akışının hangi aşamada yoğunlaştığını gösterir.</span></div><span id="ovCollectionSummaryScopeMeta"></span></div>
+          <div id="ovCollectionSummaryDistributionBar" class="ovCollectionSummaryDistributionBar" aria-label="Status distribution"></div>
+          <div id="ovCollectionSummaryStatusDistribution" class="ovCollectionSummaryStatusDistribution"></div>
+        </div>
       </div>
-      <div class="ovCollectionSummaryTableWrap"><table id="ovCollectionSummaryTable" class="ovCollectionSummaryTable"></table></div>
     </section>
     <!-- OAB (Order-Assortment-Budget) — kasıtlı olarak ovEmpty/ovContent'ten
          BAĞIMSIZ: CP verisi yüklenmemiş/hatalı olsa bile OAB kendi başına
@@ -841,6 +831,7 @@
             <button class="tbtn" id="kolSendPricingBtn" title="Seçili modelleri fiyatlamaya gönder" data-i18n-title-tr="Seçili modelleri fiyatlamaya gönder" data-i18n-title-en="Send selected models to pricing" disabled><svg class="ic"><use href="#i-mail-send"/></svg><span data-i18n-tr="Fiyatlamaya Gönder" data-i18n-en="Send to Pricing">Fiyatlamaya Gönder</span></button>
             <button class="tbtn" id="kolSendShippingBtn" title="Seçili modelleri Nakliye Kıyaslama'ya gönder" data-i18n-title-tr="Seçili modelleri Nakliye Kıyaslama'ya gönder" data-i18n-title-en="Send selected models to Shipping Comparison" disabled><svg class="ic"><use href="#i-ship"/></svg><span data-i18n-tr="Nakliye Kıyaslamaya Gönder" data-i18n-en="Send to Shipping Comparison">Nakliye Kıyaslamaya Gönder</span></button>
             <hr class="toolbarMoreDivider" role="separator">
+            <button type="button" class="tbtn" id="kolManageStatusesBtn" title="Collection statuslarını ve renklerini yönet" data-i18n-title-tr="Collection statuslarını ve renklerini yönet" data-i18n-title-en="Manage Collection statuses and colors"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Statusları Yönet" data-i18n-en="Manage Statuses">Statusları Yönet</span></button>
             <button type="button" class="navActionBtn" id="kolLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Calculations" data-i18n-en="License Royalty Calculations">License Royalty Calculations</span></button>
             <button class="tbtn" id="kolModelFilesBtn" title="Model dosyalarını yönet" data-i18n-title-tr="Model dosyalarını yönet" data-i18n-title-en="Manage model files"><svg class="ic"><use href="#i-folder"/></svg> <span data-i18n-tr="Dosyalar" data-i18n-en="TPs">Dosyalar</span></button>
             <button class="tbtn" id="kolPricingExcelColsBtn" title="Fiyatlama e-postasına eklenecek Excel sütunlarını seç"><svg class="ic"><use href="#i-columns-3"/></svg> Pricing Excel Columns</button>
@@ -1244,7 +1235,9 @@
 <script src="column-schema.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-layout.js?v=__BL_ASSET_VERSION__"></script>
 <script src="model-option-stats.js?v=__BL_ASSET_VERSION__"></script>
+<script src="collection-status-catalog.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-summary.js?v=__BL_ASSET_VERSION__"></script>
+<script src="overview-collection-dashboard.js?v=__BL_ASSET_VERSION__"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_SCRIPTS_START');</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_START');</script>
 <script src="plm-colour-utils.js?v=__BL_ASSET_VERSION__&rev=2"></script>
@@ -1254,7 +1247,8 @@
 <script src="layer-system.js?v=__BL_ASSET_VERSION__"></script>
 <script src="toolbar-responsive.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="tab-system.js?v=__BL_ASSET_VERSION__"></script>
-<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=CONCEPT2-MINISUBROWS-V1"></script>
+<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
+<script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-spreadsheet.js?v=__BL_ASSET_VERSION__&rev=9"></script>
 <!-- Kullanıcı Excel'i içeri aktarma: deterministik motor + sihirbaz arayüzü.
