@@ -64,3 +64,9 @@ test('Overview KPI drill maps Confirmed / Not Confirmed to the Collection confir
   assert.match(APP,/kpi==='notConfirmed'.*KOL_CONFIRMATION_FILTER_KEY/s);
   assert.match(APP,/kolConfirmedPricing\(row\)\?'confirmed':'notConfirmed'/);
 });
+
+test('Status distribution uses option counts so segments form a real 100% distribution',()=>{
+  assert.match(DASH,/totalOptions=Number\(result\.kpi\.optionCount\)/);
+  assert.match(DASH,/pct\(row\.optionCount,totalOptions\)/);
+  assert.doesNotMatch(DASH,/pct\(row\.modelCount,total\)/);
+});
