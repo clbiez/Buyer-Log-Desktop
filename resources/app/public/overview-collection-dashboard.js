@@ -2,47 +2,84 @@
 (function(root,factory){root.BLOverviewCollectionDashboard=factory();})(typeof globalThis!=='undefined'?globalThis:this,function(){
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
   function pct(value,total){return total>0?Math.round((Number(value)||0)*100/total):0;}
-  function unique(rows,key){return Array.from(new Set((rows||[]).map(function(row){return String(row&&row[key]||'').trim();}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'});});}
   function icon(id){return '<svg class="ic" aria-hidden="true"><use href="#'+id+'"/></svg>';}
+  function catalog(ctx){return Array.isArray(ctx.scopeColumns)?ctx.scopeColumns.filter(function(column){return column&&column.k;}):[];}
+  function scopeState(ctx){
+    const columns=catalog(ctx),saved=ctx.saved||{};
+    let key=String(saved.scopeColumn||'inStoreMonth').trim();
+    if(!columns.some(function(column){return column.k===key;}))key=columns.some(function(column){return column.k==='inStoreMonth';})?'inStoreMonth':String(columns[0]&&columns[0].k||'inStoreMonth');
+    const valueOf=function(row){try{return String(ctx.columnValue?ctx.columnValue(row,key):(row&&row[key])||'').trim();}catch(_){return String(row&&row[key]||'').trim();}};
+    const values=Array.from(new Set((ctx.rows||[]).map(valueOf).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'});});
+    const selections=saved.scopeSelections&&typeof saved.scopeSelections==='object'?saved.scopeSelections:{};
+    const raw=Array.isArray(selections[key])?selections[key]:[];
+    const selected=Array.from(new Set(raw.map(function(value){return String(value||'').trim();}).filter(function(value){return value&&values.includes(value);})));
+    const column=columns.find(function(item){return item.k===key;});
+    const label=ctx.columnLabel?ctx.columnLabel(key):String(column&&column.label||key);
+    return {key:key,label:label,columns:columns,values:values,selected:selected};
+  }
   function scopeResult(ctx,pivot){
-    const saved=ctx.saved||{},seasons=unique(ctx.rows,'season');
-    const selected=seasons.includes(String(saved.scopeSeason||''))?String(saved.scopeSeason):'';
-    const result=ctx.summary.build(ctx.rows,{columnFilters:selected?{season:[selected]}:{},pivot:pivot||ctx.pivot,columnValue:ctx.columnValue,isConfirmed:ctx.isConfirmed,fields:{month:'inStoreMonth',status:'durum',model:'modelKod'}});
-    return {selected:selected,seasons:seasons,result:result};
+    const scoped=scopeState(ctx),filters=scoped.selected.length?{[scoped.key]:scoped.selected}:{};
+    const result=ctx.summary.build(ctx.rows,{columnFilters:filters,pivot:pivot||ctx.pivot,columnValue:ctx.columnValue,isConfirmed:ctx.isConfirmed,fields:{month:'inStoreMonth',status:'durum',model:'modelKod'}});
+    return Object.assign({},scoped,{result:result});
+  }
+  function selectedLabel(ctx,scoped){
+    if(!scoped.selected.length)return ctx.language==='en'?'All':'Tümü';
+    if(scoped.selected.length===1)return scoped.selected[0];
+    return scoped.selected[0]+' +'+(scoped.selected.length-1);
+  }
+  function saveScope(ctx,key,values){
+    const prefs=Object.assign({},ctx.saved||{}),selections=Object.assign({},prefs.scopeSelections||{});
+    prefs.scopeColumn=key;selections[key]=Array.isArray(values)?values.slice():[];prefs.scopeSelections=selections;delete prefs.scopeSeason;ctx.savePrefs(prefs);
+  }
+  function openScopeDrawer(ctx,mode){
+    document.getElementById('_ovCollectionScopeDrawer')?.remove();
+    const scoped=scopeState(ctx),isColumn=mode==='column',overlay=document.createElement('div');
+    overlay.id='_ovCollectionScopeDrawer';overlay.className='ovCollectionScopeDrawerOverlay';
+    const title=isColumn?(ctx.language==='en'?'Choose filter column':'Filtre sütununu seç'):(ctx.language==='en'?scoped.label+' values':scoped.label+' değerleri');
+    const hint=isColumn?(ctx.language==='en'?'Choose any Collection column. Double-click the filter label later to change it again.':'Koleksiyon sütunlarından birini seç. Daha sonra filtre başlığına çift tıklayarak tekrar değiştirebilirsin.'):(ctx.language==='en'?'Select one or more values. Selecting every value is treated as All.':'Bir veya birden fazla değer seç. Tüm değerleri seçmek Tümü anlamına gelir.');
+    let body='';
+    if(isColumn){
+      body='<div class="ovCollectionScopeDrawerList">'+scoped.columns.map(function(column){const label=ctx.columnLabel?ctx.columnLabel(column.k):String(column.label||column.k);return '<label class="ovCollectionScopeChoice"><input type="radio" name="_ovCollectionScopeColumn" value="'+esc(column.k)+'"'+(column.k===scoped.key?' checked':'')+'><span>'+esc(label)+'</span></label>';}).join('')+'</div>';
+    }else{
+      const selectedSet=new Set(scoped.selected.length?scoped.selected:scoped.values);
+      body='<div class="ovCollectionScopeSearch"><input type="search" data-scope-search placeholder="'+esc(ctx.language==='en'?'Search values':'Değerlerde ara')+'"><button type="button" data-scope-all>'+esc(ctx.language==='en'?'All values':'Tüm değerler')+'</button></div><div class="ovCollectionScopeDrawerList" data-scope-values>'+scoped.values.map(function(value){return '<label class="ovCollectionScopeChoice" data-scope-value-row><input type="checkbox" value="'+esc(value)+'"'+(selectedSet.has(value)?' checked':'')+'><span>'+esc(value)+'</span></label>';}).join('')+'</div>';
+    }
+    overlay.innerHTML='<aside class="ovCollectionScopeDrawer" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="ovCollectionScopeDrawerHead"><div><b>'+esc(title)+'</b><span>'+esc(hint)+'</span></div><button type="button" data-scope-close aria-label="'+esc(ctx.language==='en'?'Close':'Kapat')+'">×</button></div>'+body+'<div class="ovCollectionScopeDrawerFoot"><button type="button" class="tbtn" data-scope-close>'+esc(ctx.language==='en'?'Cancel':'Vazgeç')+'</button><button type="button" class="tbtn primary" data-scope-apply>'+esc(ctx.language==='en'?'Apply':'Uygula')+'</button></div></aside>';
+    document.body.appendChild(overlay);
+    const close=function(){overlay.remove();};
+    overlay.addEventListener('click',function(event){if(event.target===overlay)close();});
+    Array.from(overlay.querySelectorAll('[data-scope-close]')).forEach(function(button){button.addEventListener('click',close);});
+    if(!isColumn){
+      const search=overlay.querySelector('[data-scope-search]');
+      search?.addEventListener('input',function(){const q=String(search.value||'').trim().toLocaleLowerCase('tr-TR');Array.from(overlay.querySelectorAll('[data-scope-value-row]')).forEach(function(row){row.hidden=!!q&&!String(row.textContent||'').toLocaleLowerCase('tr-TR').includes(q);});});
+      overlay.querySelector('[data-scope-all]')?.addEventListener('click',function(){Array.from(overlay.querySelectorAll('[data-scope-values] input[type="checkbox"]')).forEach(function(input){input.checked=true;});});
+    }
+    overlay.querySelector('[data-scope-apply]')?.addEventListener('click',function(){
+      if(isColumn){const selected=overlay.querySelector('input[name="_ovCollectionScopeColumn"]:checked');if(!selected)return;saveScope(ctx,selected.value,[]);}
+      else{const checked=Array.from(overlay.querySelectorAll('[data-scope-values] input[type="checkbox"]:checked')).map(function(input){return input.value;});saveScope(ctx,scoped.key,checked.length===scoped.values.length?[]:checked);}
+      close();ctx.onRender();
+    });
   }
   function render(ctx){
     if(!ctx||!ctx.root||!ctx.summary)return;
     const scoped=scopeResult(ctx,ctx.pivot),result=scoped.result,total=Number(result.kpi.total)||0,locale=ctx.language==='en'?'en-GB':'tr-TR';
-    const scope=document.getElementById('ovCollectionSummaryScope');
-    if(scope){
-      scope.innerHTML='<option value="">'+esc(ctx.language==='en'?'All seasons':'Tüm sezonlar')+'</option>'+scoped.seasons.map(function(value){return '<option value="'+esc(value)+'"'+(value===scoped.selected?' selected':'')+'>'+esc(value)+'</option>';}).join('');
-      scope.onchange=function(){ctx.savePrefs(Object.assign({},ctx.saved||{},{scopeSeason:scope.value||''}));ctx.onRender();};
-    }
+    const label=document.getElementById('ovCollectionSummaryScopeLabel'),trigger=document.getElementById('ovCollectionSummaryScope'),valueText=document.getElementById('ovCollectionSummaryScopeValue');
+    if(label){label.textContent=scoped.label;label.title=ctx.language==='en'?'Double-click to change filter column':'Filtre sütununu değiştirmek için çift tıkla';label.ondblclick=function(){openScopeDrawer(ctx,'column');};label.onkeydown=function(event){if(event.key==='Enter'||event.key===' '){event.preventDefault();openScopeDrawer(ctx,'column');}};}
+    if(trigger){const text=selectedLabel(ctx,scoped);trigger.setAttribute('aria-label',scoped.label+' · '+text);trigger.onclick=function(){openScopeDrawer(ctx,'values');};if(valueText)valueText.textContent=text;}
     const intro=document.getElementById('ovCollectionSummaryIntro');
-    if(intro)intro.textContent=ctx.language==='en'?'Collection health at a glance. Select a season to focus the dashboard.':'Koleksiyonun durumunu tek bakışta gör. Dashboard kapsamını sezonla daraltabilirsin.';
+    if(intro)intro.textContent=ctx.language==='en'?'Collection health at a glance. Filter by any Collection column and one or more values.':'Koleksiyonun durumunu tek bakışta gör. İstediğin Koleksiyon sütununa ve birden fazla değere göre filtrele.';
     const meta=document.getElementById('ovCollectionSummaryScopeMeta');
-    if(meta)meta.textContent=(scoped.selected||(ctx.language==='en'?'All seasons':'Tüm sezonlar'))+' · '+total.toLocaleString(locale)+' '+(ctx.language==='en'?'models':'model');
+    if(meta)meta.textContent=scoped.label+': '+selectedLabel(ctx,scoped)+' · '+total.toLocaleString(locale)+' '+(ctx.language==='en'?'models':'model');
     const kpi=document.getElementById('ovCollectionSummaryKpi');
     if(kpi){
-      const items=[
-        {key:'total',label:ctx.language==='en'?'Total Models':'Toplam Model',value:result.kpi.total,icon:'i-table',tone:'neutral'},
-        {key:'optionCount',label:ctx.language==='en'?'Total Options':'Toplam Opsiyon',value:result.kpi.optionCount,icon:'i-columns-3',tone:'blue'},
-        {key:'confirmed',label:ctx.language==='en'?'Confirmed':'Onaylı',value:result.kpi.confirmed,ratio:pct(result.kpi.confirmed,total),icon:'i-checklist',tone:'green'},
-        {key:'notConfirmed',label:ctx.language==='en'?'Not Confirmed':'Onaysız',value:result.kpi.notConfirmed,ratio:pct(result.kpi.notConfirmed,total),icon:'i-notebook',tone:'amber'}
-      ];
+      const items=[{key:'total',label:ctx.language==='en'?'Total Models':'Toplam Model',value:result.kpi.total,icon:'i-table',tone:'neutral'},{key:'optionCount',label:ctx.language==='en'?'Total Options':'Toplam Opsiyon',value:result.kpi.optionCount,icon:'i-columns-3',tone:'blue'},{key:'confirmed',label:ctx.language==='en'?'Confirmed':'Onaylı',value:result.kpi.confirmed,ratio:pct(result.kpi.confirmed,total),icon:'i-checklist',tone:'green'},{key:'notConfirmed',label:ctx.language==='en'?'Not Confirmed':'Onaysız',value:result.kpi.notConfirmed,ratio:pct(result.kpi.notConfirmed,total),icon:'i-notebook',tone:'amber'}];
       kpi.innerHTML=items.map(function(item){return '<button type="button" class="ovCollectionKpiCard tone-'+item.tone+'" data-summary-drill="'+item.key+'"><span class="ovCollectionKpiIcon">'+icon(item.icon)+'</span><span class="ovCollectionKpiCopy"><b>'+Number(item.value||0).toLocaleString(locale)+(item.ratio==null?'':' <em>'+item.ratio+'%</em>')+'</b><span>'+esc(item.label)+'</span></span></button>';}).join('');
-      Array.from(kpi.querySelectorAll('[data-summary-drill]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({season:scoped.selected||null,kpi:button.dataset.summaryDrill});});});
+      Array.from(kpi.querySelectorAll('[data-summary-drill]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({scopeColumn:scoped.key,scopeValues:scoped.selected,kpi:button.dataset.summaryDrill});});});
     }
     const host=document.getElementById('ovCollectionSummaryStatusDistribution'),bar=document.getElementById('ovCollectionSummaryDistributionBar'),order=new Map((ctx.statusCatalog||[]).map(function(entry,index){return [String(entry.name),index];})),totalOptions=Number(result.kpi.optionCount)||0;
     const rows=(result.rows||[]).slice().sort(function(a,b){const ai=order.has(a.status)?order.get(a.status):9999,bi=order.has(b.status)?order.get(b.status):9999;return ai-bi||String(a.status).localeCompare(String(b.status),'tr-TR',{sensitivity:'base'});});
-    if(bar){
-      bar.innerHTML=rows.map(function(row){const share=pct(row.optionCount,totalOptions),color=ctx.statusColor(row.status);return '<button type="button" class="ovCollectionDistributionSegment" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(color)+';width:'+share+'%" title="'+esc(ctx.statusLabel(row.status)+' · '+share+'%')+'"></button>';}).join('');
-      Array.from(bar.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({season:scoped.selected||null,status:button.dataset.summaryStatus});});});
-    }
-    if(host){
-      host.innerHTML=rows.length?rows.map(function(row){const share=pct(row.optionCount,totalOptions),color=ctx.statusColor(row.status);return '<button type="button" class="ovCollectionStatusCard" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(color)+'"><span class="ovCollectionStatusDot"></span><span class="ovCollectionStatusName">'+esc(ctx.statusLabel(row.status))+'</span><b>'+Number(row.optionCount||0).toLocaleString(locale)+'</b><span class="ovCollectionStatusShare">'+share+'%</span><span class="ovCollectionStatusOptions">'+Number(row.modelCount||0).toLocaleString(locale)+' '+(ctx.language==='en'?'models':'model')+'</span><span class="ovCollectionStatusTrack"><i style="width:'+share+'%"></i></span></button>';}).join(''):'<div class="ovCollectionSummaryEmpty">'+esc(ctx.language==='en'?'No Collection models in this scope.':'Bu kapsamda Koleksiyon modeli yok.')+'</div>';
-      Array.from(host.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({season:scoped.selected||null,status:button.dataset.summaryStatus});});});
-    }
+    if(bar){bar.innerHTML=rows.map(function(row){const share=pct(row.optionCount,totalOptions),color=ctx.statusColor(row.status);return '<button type="button" class="ovCollectionDistributionSegment" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(color)+';width:'+share+'%" title="'+esc(ctx.statusLabel(row.status)+' · '+share+'%')+'"></button>';}).join('');Array.from(bar.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({scopeColumn:scoped.key,scopeValues:scoped.selected,status:button.dataset.summaryStatus});});});}
+    if(host){host.innerHTML=rows.length?rows.map(function(row){const share=pct(row.optionCount,totalOptions),color=ctx.statusColor(row.status);return '<button type="button" class="ovCollectionStatusCard" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(color)+'"><span class="ovCollectionStatusDot"></span><span class="ovCollectionStatusName">'+esc(ctx.statusLabel(row.status))+'</span><b>'+Number(row.optionCount||0).toLocaleString(locale)+'</b><span class="ovCollectionStatusShare">'+share+'%</span><span class="ovCollectionStatusOptions">'+Number(row.modelCount||0).toLocaleString(locale)+' '+(ctx.language==='en'?'models':'model')+'</span><span class="ovCollectionStatusTrack"><i style="width:'+share+'%"></i></span></button>';}).join(''):'<div class="ovCollectionSummaryEmpty">'+esc(ctx.language==='en'?'No Collection models in this scope.':'Bu kapsamda Koleksiyon modeli yok.')+'</div>';Array.from(host.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({scopeColumn:scoped.key,scopeValues:scoped.selected,status:button.dataset.summaryStatus});});});}
   }
   function previewTable(ctx,pivot){
     const result=scopeResult(ctx,pivot).result,rowFields=Array.isArray(pivot.rows)?pivot.rows:[pivot.rows],labels=new Map((ctx.pivotColumns||[]).map(function(column){return [column.k,column.label||column.k];})),rowHeaders=rowFields.map(function(key){return labels.get(key)||key;}),pivotColumns=result.pivotColumns||[{key:'',path:[],label:''}],metrics=Array.isArray(pivot.values)?pivot.values:['modelCount'];
@@ -61,5 +98,5 @@
     const columns=modal.querySelector('[data-pivot-columns]');columns?.addEventListener('change',function(){const none=columns.querySelector('option[value="none"]'),others=Array.from(columns.options).filter(function(o){return o.value!=='none';});if(none&&none.selected)others.forEach(function(o){o.selected=false;});else if(none&&others.some(function(o){return o.selected;}))none.selected=false;});
     modal.querySelector('[data-apply]')?.addEventListener('click',function(){const prefs=Object.assign({},ctx.saved||{}),rows=Array.from(modal.querySelectorAll('[data-pivot-rows] option:checked')).map(function(o){return o.value;}),cols=Array.from(modal.querySelectorAll('[data-pivot-columns] option:checked')).map(function(o){return o.value;}).filter(function(v){return v!=='none';}),values=Array.from(modal.querySelectorAll('[data-pivot-values] option:checked')).map(function(o){return o.value;});prefs.pivot={rows:rows.length?rows:['durum'],columns:cols,values:values.length?values:['modelCount','optionCount','confirmed','notConfirmed']};ctx.savePrefs(prefs);close();ctx.onRender();});
   }
-  return {render:render,openSettings:openSettings};
+  return {render:render,openSettings:openSettings,openScopeDrawer:openScopeDrawer,scopeState:scopeState};
 });
