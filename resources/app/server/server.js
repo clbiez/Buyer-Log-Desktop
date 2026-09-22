@@ -825,12 +825,13 @@ async function loadPrewipeRecoveryRecords(candidate) {
     // yalnız settings/overrides/fx/email/endeksmatik dosyalarında olabilir.
     // İki kaynağı birleştirerek verified pre-wipe snapshot'ı yeniden kur.
     const masterRecords = prewipeMasterRecovery.loadMasterRecordsFromExtractedBackup(tempRoot, recoveredState);
-    const businessRecords = sharedSyncPolicy.businessRecordsFromState(recoveredState);
+    const businessRecords = prewipeMasterRecovery.loadBusinessRecordsFromExtractedBackup(tempRoot, recoveredState);
     return {
       masterRecords,
       businessRecords,
       syncHeads:recoveredState.syncCheckpoints || {},
       masterCoverage:prewipeMasterRecovery.masterCoverage(masterRecords),
+      businessCoverage:prewipeMasterRecovery.businessCoverage(businessRecords),
       localDbFound:Boolean(dbFile),
     };
   } finally {
@@ -850,7 +851,8 @@ function prewipeRecoveryAlreadyDeepScanned(snapshot, candidate) {
   const expectedSha = String(candidate && candidate.report && candidate.report.fullSystemBackup && candidate.report.fullSystemBackup.sha256 || '').toLowerCase();
   return Boolean(
     recovery &&
-    Number(recovery.schemaVersion || 0) >= 2 &&
+    Number(recovery.schemaVersion || 0) >= 3 &&
+    recovery.businessCoverage && typeof recovery.businessCoverage === 'object' &&
     expectedSha &&
     String(recovery.backupSha256 || '').toLowerCase() === expectedSha
   );
@@ -925,11 +927,21 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   // current Hub before we can declare recovery complete.
   const recovered = await loadPrewipeRecoveryRecords(candidate);
   const masterRecoverIds = prewipeMasterRecovery.masterRecoveryIds(recovered.masterRecords, currentMaster);
-  // Collection kişisel restore ile ayrıca yönetilir. Pre-wipe Master onarımı
-  // mevcut Shared Collection'ı ASLA geri sarmaz; business tarafında yalnız
-  // gerçekten eksik kayıt kimlikleri eklenebilir.
-  const businessRecoverIds = checkpointUnaccountedIds(recovered.businessRecords, currentBusiness, {})
-    .filter(id => !/shared-collection/.test(String(id)));
+  // Collection kişisel restore ile ayrıca yönetilir. Pre-wipe recovery mevcut
+  // Shared Collection'ı ASLA geri sarmaz. CP/Sipariş business kayıtlarında ise
+  // sadece mevcut Shared Hub kaydında eksik/boş kalan alanlar tamamlanır:
+  // yeni not/alt üretici/tarih değerleri backup tarafından ezilemez.
+  const localRecoveryState = await localDb.read();
+  const recoveredBusinessNoCollection = Object.fromEntries(
+    Object.entries(recovered.businessRecords || {})
+      .filter(([id]) => !/shared-collection/.test(String(id)))
+  );
+  const businessRecovery = prewipeMasterRecovery.mergeRecoveredBusinessRecords(
+    currentBusiness,
+    recoveredBusinessNoCollection,
+    localRecoveryState.tombstones || {}
+  );
+  const businessRecoverIds = businessRecovery.ids;
 
   // Verified DELETE_READY raporu, wipe öncesinde Shared Master'ın kaç kayıt
   // taşıdığını söyler. Hub o sayının altındaysa veya legacy/full-backup içinde
@@ -955,10 +967,9 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
       delete next.tombstones[id];
     }
     for (const id of businessRecoverIds) {
-      next.records[id] = JSON.parse(JSON.stringify(recovered.businessRecords[id]));
-      delete next.tombstones[id];
+      next.records[id] = JSON.parse(JSON.stringify(businessRecovery.changed[id]));
     }
-    return { master:masterRecoverIds.length, business:businessRecoverIds.length };
+    return { master:masterRecoverIds.length, business:businessRecoverIds.length, businessFields:businessRecovery.fieldsAdded };
   });
   await deltaStore.hydrate();
 
@@ -966,6 +977,7 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
   const masterRecords = sharedSyncPolicy.masterRecordsFromState(state);
   const businessRecords = sharedSyncPolicy.businessRecordsFromState(state);
   const finalCoverage = prewipeMasterRecovery.masterCoverage(masterRecords);
+  const finalBusinessCoverage = prewipeMasterRecovery.businessCoverage(businessRecords);
   if (expectedMaster > 0 && Object.keys(masterRecords).length < expectedMaster) {
     throw Object.assign(new Error('Verified pre-wipe Master Data tam olarak geri yüklenemedi.'), {
       code:'PREWIPE_MASTER_INCOMPLETE',
@@ -984,11 +996,14 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
     records:masterRecords,
     inventory:finalCoverage,
     recovery:{
-      schemaVersion:2,
+      schemaVersion:3,
       source:path.basename(candidate.recoveryRoot),
       verifiedAt:candidate.report && candidate.report.verifiedAt || null,
       backupSha256:String(candidate.report && candidate.report.fullSystemBackup && candidate.report.fullSystemBackup.sha256 || '').toLowerCase(),
       coverage:finalCoverage,
+      businessCoverage:finalBusinessCoverage,
+      recoveredBusinessRecords:businessRecoverIds.length,
+      recoveredBusinessFields:businessRecovery.fieldsAdded,
     },
   }, {
     actorId:'prewipe-auto-recovery',
@@ -1008,14 +1023,18 @@ async function recoverEmptySharedHubFromPrewipe(root, hub) {
     source:path.basename(candidate.recoveryRoot),
     master:masterRecoverIds.length,
     business:businessRecoverIds.length,
+    businessFields:businessRecovery.fieldsAdded,
     masterCoverage:finalCoverage,
+    businessCoverage:finalBusinessCoverage,
   });
   return {
     recovered:true,
     source:path.basename(candidate.recoveryRoot),
     masterRecords:masterRecoverIds.length,
     businessRecords:businessRecoverIds.length,
+    businessFields:businessRecovery.fieldsAdded,
     masterCoverage:finalCoverage,
+    businessCoverage:finalBusinessCoverage,
     masterHead:savedMaster && (savedMaster.head || savedMaster),
     businessHead:savedBusiness && (savedBusiness.head || savedBusiness),
   };
