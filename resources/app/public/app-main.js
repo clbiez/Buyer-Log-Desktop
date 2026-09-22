@@ -18928,7 +18928,7 @@ function kolPersistPendingWorkspace(status='pending'){
   try{
     localStorage.setItem(kolWorkspacePendingKey(kolWorkspaceOwnerId),JSON.stringify({
       schemaVersion:1,ownerId:kolWorkspaceOwnerId,baseRevision:kolWorkspaceRevision,status,
-      rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,nextId:kolNextId,
+      rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,
       updatedAt:new Date().toISOString(),
     }));
     return true;
@@ -18940,6 +18940,7 @@ function kolHasDirtyWorkspace(){const change=kolCollectChanges();return Boolean(
 function kolRestorePendingWorkspace(){
   const pending=kolReadPendingWorkspace(kolWorkspaceOwnerId);
   if(!pending||pending.ownerId!==kolWorkspaceOwnerId||!Array.isArray(pending.rows)||!kolWorkspaceCanEdit)return false;
+  kolStatusCatalog=kolNormalizeStatusCatalog(pending.statusCatalog,pending.rows);
   kolRows=kolNormalizeModelGroups(pending.rows.map(migrateKolRow));
   kolManufacturers=Array.isArray(pending.manufacturers)?pending.manufacturers:kolManufacturers;
   kolCustomCols=kolNormalizeCustomCols(Array.isArray(pending.customColumns)?pending.customColumns:kolCustomCols);
@@ -18954,7 +18955,7 @@ function kolPersistableRow(row){
   if(!Object.prototype.hasOwnProperty.call(row,'_sharedCollectionImageUrl'))return {...row};
   const next={...row};delete next._sharedCollectionImageUrl;return next;
 }
-function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,expectedRevision:kolWorkspaceRevision};}
+function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,expectedRevision:kolWorkspaceRevision};}
 
 /* ===================================================================
    v7.22 — YALNIZ DEĞİŞEN SATIRLAR GÖNDERİLİR.
@@ -18974,7 +18975,7 @@ function kolWorkspacePayload(){return {rows:kolRows.map(kolPersistableRow),manuf
 let kolBaseline=null; // { rows:Map(id→satır kopyası), structure:string, ownerId }
 function kolRowKey(row){const id=row&&row.id;return id==null||id===''?'':String(id);}
 function kolStructureSignature(){
-  return JSON.stringify({columns:kolCustomCols||[],manufacturers:kolManufacturers||[],order:kolRows.map(kolRowKey)});
+  return JSON.stringify({columns:kolCustomCols||[],manufacturers:kolManufacturers||[],statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey)});
 }
 function kolCaptureBaseline(){
   const rows=new Map();
@@ -19017,7 +19018,7 @@ function kolCollectChanges(){
   const change={upserts,deletes,nextId:kolNextId};
   if(structureChanged){
     change.baseRevision=kolWorkspaceRevision;
-    change.structure={manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,order:kolRows.map(kolRowKey).filter(Boolean)};
+    change.structure={manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),order:kolRows.map(kolRowKey).filter(Boolean)};
   }
   return change;
 }
@@ -19042,13 +19043,15 @@ function kolWorkspaceSetReadonly(){
   const badge=document.getElementById('kolWorkspaceAccess');if(badge){badge.textContent=kolWorkspaceMode==='multi'?(appLang==='en'?'Multi view':'Çoklu görünüm'):kolWorkspaceCanEdit?(appLang==='en'?'Edit':'Düzenleme'):(appLang==='en'?'View':'Görüntüleme');badge.classList.toggle('isView',!kolWorkspaceCanEdit);}
   // Satır seçimi gerektiren eylemler burada açılmaz; güncel seçim ve işlem
   // durumu `updateKolSendBtnState` tarafından belirlenir.
-  const ids=['kolPlmImportBtn','kolPricingExcelColsBtn','kolCreateOcBtn','kolQuotationsBtn','kolSendPricingBtn','kolUndoBtn','kolRedoBtn','kolAddRowBtn','kolModelFilesBtn'];
+  const ids=['kolPlmImportBtn','kolPricingExcelColsBtn','kolCreateOcBtn','kolQuotationsBtn','kolSendPricingBtn','kolUndoBtn','kolRedoBtn','kolAddRowBtn','kolModelFilesBtn','kolManageStatusesBtn'];
   ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;if(el.tagName==='LABEL')el.style.pointerEvents=kolWorkspaceCanEdit?'':'none';el.toggleAttribute('disabled',!kolWorkspaceCanEdit);el.setAttribute('aria-disabled',kolWorkspaceCanEdit?'false':'true');});
 }
 function kolApplyWorkspace(workspace,access){
   kolWorkspaceMode='single';kolWorkspaceSelectedOwnerIds=new Set([kolWorkspaceOwnerId]);
   kolWorkspaceRevision=Number(workspace&&workspace._revision)||0;kolWorkspaceCanEdit=Boolean(access&&access.canEdit);
-  kolRows=kolNormalizeModelGroups((Array.isArray(workspace&&workspace.rows)?workspace.rows:[]).map(migrateKolRow));
+  const rawRows=Array.isArray(workspace&&workspace.rows)?workspace.rows:[];
+  kolStatusCatalog=kolNormalizeStatusCatalog(workspace&&workspace.statusCatalog,rawRows);
+  kolRows=kolNormalizeModelGroups(rawRows.map(migrateKolRow));
   kolManufacturers=Array.isArray(workspace&&workspace.manufacturers)?workspace.manufacturers:[];
   const rawCustomCols=Array.isArray(workspace&&workspace.customColumns)?workspace.customColumns:[];
   const legacyAssortment=rawCustomCols.find(col=>turknorm(norm(col&&col.label))==='ASSORTMENT');
@@ -19058,10 +19061,8 @@ function kolApplyWorkspace(workspace,access){
   kolCustomCols=kolNormalizeCustomCols(rawCustomCols.filter(col=>!legacyAssortment||col.k!==legacyAssortment.k));
   kolNextId=Math.max(Number(workspace&&workspace.nextId)||1,1+kolRows.reduce((m,r)=>Math.max(m,Number(r&&r.id)||0),0));
   kolSelected.clear();kolUndoStack=[];kolRedoStack=[];refreshSubmfrList();loadKolColState({preserveCustom:true});kolWorkspaceSetReadonly();renderKol();
-  // v7.22 — fark alınacak TEMEL burada kurulur. Kurulmazsa bir sonraki kayıt
-  // tam sayfa gönderir; yanlış olmaz, yalnız pahalı olur.
   kolCaptureBaseline();
-  try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
+  try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
   kolRestorePendingWorkspace();
   scheduleOverviewCollectionSummaryRender();
 }
@@ -19110,12 +19111,12 @@ async function kolSaveWorkspaceNow(saveOptions){
           if(item.kind==='removed'){kolBaseline.rows.delete(key);continue;}
           if(sent)kolBaseline.rows.set(key,{...sent,_rev:Number(item.rev)||sent._rev});
         }
-        if(payload.structure)kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],order:payload.structure.order||[]});
+        if(payload.structure)kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],statusCatalog:payload.structure.statusCatalog||[],order:payload.structure.order||[]});
         if(Array.isArray(data.conflicts)&&data.conflicts.length)kolReportConflicts(data.conflicts);
       }else{
         kolWorkspaceRevision=Number(data.workspace&&data.workspace._revision)||kolWorkspaceRevision;
         const serverRows=new Map();for(const row of Array.isArray(data.workspace&&data.workspace.rows)?data.workspace.rows:[]){const key=kolRowKey(row);if(key)serverRows.set(key,{...row});}
-        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey)})};
+        kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],statusCatalog:data.workspace&&data.workspace.statusCatalog||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey)})};
       }
       if(kolHasDirtyWorkspace())kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');
       else kolClearPendingWorkspace(ownerId);
@@ -19163,18 +19164,21 @@ function kolPersistScope(){
 }
 function kolApplyCombinedWorkspaces(items){
   kolWorkspaceMode='multi';kolWorkspaceOwnerId='__multi__';kolWorkspaceRevision=0;kolWorkspaceCanEdit=false;
-  const manufacturers=new Set(),custom=new Map();let syntheticId=-1;
+  const manufacturers=new Set(),custom=new Map(),catalog=[],rowStatuses=[];let syntheticId=-1;
   kolRows=[];
   (items||[]).forEach(item=>{
     const owner=item&&item.owner||{},workspace=item&&item.workspace||{};
     (workspace.manufacturers||[]).forEach(name=>{if(norm(name))manufacturers.add(norm(name));});
     (workspace.customColumns||[]).forEach(col=>{if(col&&col.k&&!custom.has(col.k))custom.set(col.k,col);});
+    (workspace.statusCatalog||[]).forEach(entry=>catalog.push(entry));
     (workspace.rows||[]).forEach(source=>{
+      if(source&&source.durum)rowStatuses.push(source.durum);
       const row=migrateKolRow(JSON.parse(JSON.stringify(source||{})));
       row._collectionSourceId=row.id;row._collectionOwnerId=owner.id;row._collectionOwnerName=owner.displayName||owner.id;row.id=syntheticId--;
       kolRows.push(row);
     });
   });
+  kolStatusCatalog=KOL_STATUS_API.normalize(catalog.length?catalog:null,{rowStatuses});
   kolRows=kolNormalizeModelGroups(kolRows);
   kolManufacturers=[...manufacturers].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'}));
   kolCustomCols=kolNormalizeCustomCols([...custom.values()]);kolNextId=1;kolSelected.clear();kolUndoStack=[];kolRedoStack=[];
@@ -19398,9 +19402,56 @@ async function initKolWorkspaces(options){
   }
 }
 
-// v6.01: "Siparişe Hazır" eklendi. Yeri iş akışındaki gerçek sırasına göre
-// seçildi: fiyat netleşip model sipariş onayına girmeye hazır olduğu an.
-const KOL_DURUM_OPTS = ['Dosya Teslimi Alındı','Pending File','MB Onaya Gönderildi','GTIP','Lisans Tanım','Fiyatlamada','Capacity Request','Siparişe Hazır','Sipariş Onayda','Sipariş Geçildi','Dummy PO Placed','İptal'];
+// Collection Status tek kanonik katalogdan gelir. Grid, Overview, shared
+// workspace persistence ve Excel export aynı resolver'ı kullanır.
+const KOL_STATUS_API=window.BLCollectionStatusCatalog;
+let kolStatusCatalog=KOL_STATUS_API?KOL_STATUS_API.seed():[];
+function kolNormalizeStatusCatalog(value,rows){return KOL_STATUS_API?KOL_STATUS_API.normalize(value,{rowStatuses:(Array.isArray(rows)?rows:[]).map(row=>row&&row.durum)}):(Array.isArray(value)?value:[]);}
+function kolStatusEntries(){return KOL_STATUS_API?KOL_STATUS_API.normalize(kolStatusCatalog,{rowStatuses:(Array.isArray(kolRows)?kolRows:[]).map(row=>row&&row.durum)}):[];}
+function kolStatusEntry(name){return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),name):null;}
+function kolStatusColor(name){return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),name):'#667085';}
+function kolStatusDisplayLabel(name){const entry=kolStatusEntry(name);return entry&&entry.builtin?L(entry.name):String(name||'');}
+function kolStatusDefaultName(){return kolStatusEntries()[0]?.name||'Pending File';}
+function kolStatusExcelArgb(name){return KOL_STATUS_API?KOL_STATUS_API.toArgb(kolStatusColor(name)):'FF667085';}
+function kolStatusExcelTextArgb(name){return KOL_STATUS_API?KOL_STATUS_API.textArgb(kolStatusColor(name)):'FFFFFFFF';}
+function kolStatusUsageCount(name){return kolRows.reduce((count,row)=>count+(String(row&&row.durum||'')===String(name)?1:0),0);}
+function kolPersistCatalogOnly(){kolPersistPendingWorkspace('pending');kolQueueWorkspaceSave();renderKol();scheduleOverviewCollectionSummaryRender();}
+function kolAddStatus(name,color){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const clean=String(name||'').trim();if(!clean)throw new Error(appLang==='en'?'Enter a status name.':'Status adı gir.');
+  if(kolStatusEntries().some(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(clean)))throw new Error(appLang==='en'?'This status already exists.':'Bu status zaten var.');
+  kolStatusCatalog=KOL_STATUS_API.normalize([...kolStatusEntries(),{name:clean,color:KOL_STATUS_API.normalizeColor(color),builtin:false}]);kolPersistCatalogOnly();
+}
+function kolSetStatusColor(name,color){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const entries=kolStatusEntries(),key=KOL_STATUS_API.key(name);if(!entries.some(entry=>KOL_STATUS_API.key(entry.name)===key))throw new Error(appLang==='en'?'Status not found.':'Status bulunamadı.');
+  kolStatusCatalog=KOL_STATUS_API.normalize(entries.map(entry=>KOL_STATUS_API.key(entry.name)===key?{...entry,color:KOL_STATUS_API.normalizeColor(color)}:entry));kolPersistCatalogOnly();
+}
+function kolRenameStatus(oldName,newName){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const clean=String(newName||'').trim(),oldKey=KOL_STATUS_API.key(oldName);if(!clean)throw new Error(appLang==='en'?'Enter a status name.':'Status adı gir.');
+  if(KOL_STATUS_API.key(clean)!==oldKey&&kolStatusEntries().some(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(clean)))throw new Error(appLang==='en'?'This status already exists.':'Bu status zaten var.');
+  const entries=kolStatusEntries();if(!entries.some(entry=>KOL_STATUS_API.key(entry.name)===oldKey))throw new Error(appLang==='en'?'Status not found.':'Status bulunamadı.');
+  kolRows.forEach(row=>{if(String(row&&row.durum||'')===String(oldName))row.durum=clean;});
+  kolStatusCatalog=KOL_STATUS_API.normalize(entries.map(entry=>KOL_STATUS_API.key(entry.name)===oldKey?{name:clean,color:entry.color,builtin:false}:entry),{rowStatuses:kolRows.map(row=>row&&row.durum)});
+  saveKolRows();renderKol();
+}
+function kolRemoveStatus(name,replacement){
+  if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
+  const entries=kolStatusEntries(),key=KOL_STATUS_API.key(name),usage=kolStatusUsageCount(name);
+  if(entries.length<=1)throw new Error(appLang==='en'?'At least one status must remain.':'En az bir status kalmalı.');
+  if(usage){
+    const target=entries.find(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(replacement));
+    if(!target||KOL_STATUS_API.key(target.name)===key)throw new Error(appLang==='en'?'Choose a replacement status.':'Yerine geçecek statusu seç.');
+    kolRows.forEach(row=>{if(String(row&&row.durum||'')===String(name))row.durum=target.name;});
+  }
+  kolStatusCatalog=KOL_STATUS_API.normalize(entries.filter(entry=>KOL_STATUS_API.key(entry.name)!==key),{rowStatuses:kolRows.map(row=>row&&row.durum)});
+  if(usage)saveKolRows();else kolPersistCatalogOnly();renderKol();
+}
+window.BLCollectionStatusRuntime={
+  getCatalog:()=>kolStatusEntries(),presetColors:()=>KOL_STATUS_API?KOL_STATUS_API.PRESET_COLORS.slice():[],canEdit:()=>Boolean(kolWorkspaceCanEdit),language:()=>appLang,
+  displayLabel:kolStatusDisplayLabel,usage:kolStatusUsageCount,add:kolAddStatus,setColor:kolSetStatusColor,rename:kolRenameStatus,remove:kolRemoveStatus,notify:message=>showToast(message),
+};
 const KOL_COLS = [
   {k:'plmId', label:'PLM ID', w:100},
   {k:'modelKod', label:'Model Name', w:160},
@@ -19437,7 +19488,7 @@ const KOL_COLS = [
   {k:'royalty', label:'Royalty', w:90, percent:true, ruleReadonly:true},
   {k:'hologramCost', label:'Hologram Cost', w:110, hologram:true, ruleReadonly:true},
   {k:'fob', label:'FOB', w:90, money:true, formulaReadonly:true},
-  {k:'durum', label:'Durum', w:170, select:KOL_DURUM_OPTS},
+  {k:'durum', label:'Durum', w:170, status:true},
   {k:'not', label:'Notes', w:180},
   // Endeksmatik bir fiyat alanını otomatik değiştirmez; hesaplanan benchmark
   // burada görünür ve ayrıntısı kullanıcı tıklayınca açılır.
@@ -20422,7 +20473,7 @@ function migrateKolRow(r){
   // v2.08: Koleksiyon Supp. FOB alanı kaldırıldı; eski kayıtlardaki değer artık kullanılmaz.
   delete r.suppFob;
   if(r.delType===undefined || r.delType===null || !normalizeTransitDelType(r.delType)) r.delType='Gemi';
-  if(!r.durum || !KOL_DURUM_OPTS.includes(r.durum)) r.durum = KOL_DURUM_OPTS[0];
+  if(!norm(r.durum)) r.durum = kolStatusDefaultName();
   if(!r.pricing) r.pricing = {}; // {üreticiAdı: "4.50"} — kullanıcı elle girdiği fiyat
   if(!r.pricingSent) r.pricingSent = {}; // {üreticiAdı: true} — fiyatlamaya gönderildi, henüz fiyat gelmedi
   // Kullanıcının onayladığı tek üretici. Fiyat ayrıca kopyalanmaz; seçili üreticinin
@@ -20911,7 +20962,7 @@ function saveKolRows(){
     // küçük URL/ref bilgisi tutulur. Sunucu erişilemezse base64 geriye uyumluluk için korunur.
     const json = JSON.stringify(kolRows);
     BLStorage.setItem(KOL_STORAGE_KEY, json);
-    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
+    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
     kolPersistPendingWorkspace(kolWorkspaceSaving?'saving':'pending');
     kolQueueWorkspaceSave();
     scheduleOverviewCollectionSummaryRender();
@@ -23467,8 +23518,11 @@ function renderKol(){
         else if(c.hologram&&val!=='') display=kolFormatHologramDisplay(val);
         else if(c.money&&val!=='') display='$'+kolFormatMoneyDisplay(val);
         html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--mono);background:var(--card2);color:${ruleMissing?'var(--orange)':(fobFallback?'var(--muted)':'var(--ink2)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
+      }else if(c.status){
+        const statusEntries=kolStatusEntries(),statusColor=kolStatusColor(val);
+        html+=`<td class="editTd kolStatusTd"${rc}><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${val===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
       }else if(c.select){
-        html+=`<td class="editTd"${rc}><select class="editCell${c.k==='durum'?' kolStatusNoArrow':''}" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
+        html+=`<td class="editTd"${rc}><select class="editCell" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
       }else if(c.exToRetail){
         const days=kolExToRetailDays(r);
         const exToRetailTitle=appLang==='en'?'Calculated automatically (Retail − Ex-Factory)':'Otomatik hesaplanır (Retail − Ex-Factory)';
@@ -24677,8 +24731,8 @@ function kolImportNumber(value){
 function kolImportSelectValue(col,value){
   const raw=norm(value); if(!raw) return '';
   if(col.k==='durum'){
-    const found=KOL_DURUM_OPTS.find(opt=>turknorm(opt)===turknorm(raw)||turknorm(KOL_DURUM_EN[opt])===turknorm(raw));
-    return found||raw;
+    const found=kolStatusEntries().find(entry=>turknorm(entry.name)===turknorm(raw)||(entry.builtin&&turknorm(KOL_DURUM_EN[entry.name]||entry.name)===turknorm(raw)));
+    return found?found.name:raw;
   }
   if(col.k==='delType') return normalizeTransitDelType(raw)||raw;
   if(col.select){
@@ -27596,7 +27650,7 @@ function addBlankKolRow(){
   const row=kolApplyNewModelDefaults(migrateKolRow({
     id:kolNextId++,
     plmId:'',modelKod:'',lisans:'',urunTipi:'',country:'',delType:'Gemi',assortment:'',
-    durum:KOL_DURUM_OPTS[0],not:'',img:null,pricing:{},pricingSent:{},
+    durum:kolStatusDefaultName(),not:'',img:null,pricing:{},pricingSent:{},
     confirmedManufacturer:''
   }));
   kolApplyRulePricing(row);
@@ -30881,7 +30935,7 @@ function kolApplyRemotePatches(rowPatches){
     kolHighlightRemoteRows(touched);
     scheduleOverviewCollectionSummaryRender();
     // Yerel kopya da güncel kalmalı; aksi halde çevrimdışı açılışta eski hâl görünür.
-    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
+    try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
   }
   return applied;
 }
@@ -31785,7 +31839,7 @@ const TR_EN_DICT = {
   'Önce en az bir model seç.':'Select at least one model first.',
   'Bu sipariş için yalnız görüntüleme yetkiniz var.':'You have view-only access for this order.',
 };
-// Koleksiyon Durum seçenekleri — ayrı sözlük (KOL_DURUM_OPTS ile birebir eşleşir)
+// Built-in Collection status çevirileri. Custom/rename edilmiş status adları literal gösterilir.
 const KOL_DURUM_EN = {
   'Dosya Teslimi Alındı':'File Received',
   'Pending File':'Pending File',
