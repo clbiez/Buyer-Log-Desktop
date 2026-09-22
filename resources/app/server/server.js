@@ -1675,13 +1675,18 @@ app.get('/api/shared-hub/bootstrap-status', async (_req, res) => {
   // gorup her acilista klasor seciciyi yeniden aciyordu.
   const savedSettings = await syncSettings.read();
   const savedRoot = String(savedSettings && savedSettings.sharedSyncRoot || '').trim();
-  if (savedRoot && sharedHubBootstrapProgress.configured !== true) {
-    setBootstrapProgress({ configured:true });
-  }
   if (!sharedHubStartupSettled && !sharedHubBootstrapInFlight) {
     void bootstrapSharedHub().catch(error => logRuntimeFailure('sharedHubBootstrapStatus', error));
   }
-  res.set('Cache-Control','no-store').json({ ...bootstrapStatusSnapshot(), root:savedRoot || null });
+  // bootstrapSharedHub() senkron baslangic adiminda progress'i gecici olarak
+  // configured:false'a cekebilir. HTTP cevabinda kalici ayar daha guclu kanittir;
+  // boylece her poll kayitli klasoru deterministik olarak "configured" gorur.
+  const snapshot = bootstrapStatusSnapshot();
+  res.set('Cache-Control','no-store').json({
+    ...snapshot,
+    configured:Boolean(savedRoot) || snapshot.configured === true,
+    root:savedRoot || null,
+  });
 });
 app.post('/api/shared-hub/configure', express.json({ limit:'32kb' }), async (req, res) => {
   try {
