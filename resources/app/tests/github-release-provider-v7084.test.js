@@ -16,6 +16,21 @@ function core(root,version){const app=path.join(root,'app');for(const d of ['ele
 function response(url,bytes){return {ok:true,url,status:200,text:async()=>bytes.toString('utf8'),body:Readable.toWeb(Readable.from(bytes))};}
 function sha(bytes){return crypto.createHash('sha256').update(bytes).digest('hex');}
 
+
+test('shipped app keeps the canonical public GitHub release source',()=>{
+  const source=JSON.parse(fs.readFileSync(path.join(__dirname,'..','electron','update','release-source.json'),'utf8'));
+  assert.equal(source.githubSource,'github:clbiez/Buyer-Log-Releases');
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-source-default-'));
+  try{
+    const app=core(path.join(root,'bootstrap'),'7.0.95');
+    fs.copyFileSync(path.join(__dirname,'..','electron','update','release-source.json'),path.join(app,'electron','update','release-source.json'));
+    const updater=new BuyerLogUpdater({currentVersion:'7.0.95',appCoreRoot:app,portableRoot:root,localDataRoot:path.join(root,'data/local'),packaged:true});
+    fs.writeFileSync(updater.configFile,JSON.stringify({releaseSource:path.join(root,'legacy-folder'),channel:'test'}));
+    assert.equal(updater.config().provider,'github');
+    assert.equal(updater.config().releaseSource,'github:clbiez/Buyer-Log-Releases');
+  }finally{fs.rmSync(root,{recursive:true,force:true});}
+});
+
 test('public GitHub source and artifact are narrowly constrained',()=>{
   assert.deepEqual(parseGitHubSource('github:buyer/release-only'),{owner:'buyer',repo:'release-only'});
   assert.throws(()=>parseGitHubSource('https://github.com/buyer/release-only'));
