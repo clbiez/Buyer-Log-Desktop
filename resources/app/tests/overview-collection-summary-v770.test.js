@@ -57,3 +57,10 @@ test('Overview Collection widget keeps identity but main surface is visual dashb
   assert.match(APP,/overviewCollectionSummaryDashboardContext/);
   assert.match(STORAGE,/buyerlog\.overview\.collectionSummary\./);
 });
+
+test('Overview KPI drill maps Confirmed / Not Confirmed to the Collection confirmation filter',()=>{
+  assert.match(APP,/const KOL_CONFIRMATION_FILTER_KEY = '__confirmation__'/);
+  assert.match(APP,/kpi==='confirmed'.*KOL_CONFIRMATION_FILTER_KEY/s);
+  assert.match(APP,/kpi==='notConfirmed'.*KOL_CONFIRMATION_FILTER_KEY/s);
+  assert.match(APP,/kolConfirmedPricing\(row\)\?'confirmed':'notConfirmed'/);
+});
