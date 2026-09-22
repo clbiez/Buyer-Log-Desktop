@@ -3625,6 +3625,10 @@ async function updateCollectionPermission(req, res, revoke = false) {
     userAccess.appendAudit(req.currentUser, revoke ? 'COLLECTION_PERMISSION_REVOKED' : 'COLLECTION_PERMISSION_SET', ownerId, { granteeId, level: revoke ? null : body.level, revision: result.revision });
     liveEvents.notifyChange('collection-permissions', requestClientId(req), { ownerId, granteeId, level: revoke ? null : body.level });
     if (!revoke) {
+      // Grant only becomes useful when the owner's canonical workspace is also
+      // available in the owner-scoped replication area. Publish data + images
+      // best-effort without turning a slow SMB share into a permission UI lock.
+      void collectionReplication.publishOwner(ownerId).catch(error => logRuntimeFailure('collectionWorkspacePublishOnGrant', error));
       void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnGrant', error));
     }
     res.json({ ok: true, ...result });
