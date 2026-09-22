@@ -149,6 +149,13 @@ test('Permissions and multi-owner Collection view remain the canonical UI flow',
   assert.match(batch, /readOnly:true, shared:false/);
 });
 
+test('granting Collection access publishes the owner workspace as well as images', () => {
+  const route = block(SERVER, 'async function updateCollectionPermission', "app.put('/api/collection-permissions/:granteeId'");
+  assert.match(route, /collectionReplication\.publishOwner\(ownerId\)/);
+  assert.match(route, /publishCollectionWorkspaceImages\(ownerId\)/);
+  assert.match(route, /collectionWorkspacePublishOnGrant/);
+});
+
 test('recycle bin deletion follows the real owner workspace instead of shared-collection', () => {
   const client = block(APP, 'async function kolBinApi', 'function kolBinDaysLeft');
   assert.match(client, /encodeURIComponent\(kolWorkspaceOwnerId\)/);
