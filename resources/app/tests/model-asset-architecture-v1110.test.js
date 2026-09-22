@@ -97,13 +97,16 @@ test('çalışma zamanı görsel kaynağı YEREL depodur — ağ yolu hiçbir ye
   assert.doesNotMatch(serveBlock, /sharedModelImageStore|modelImageDistribution/);
 });
 
-test('yetkili Collection görselleri kullanıcı bootstrapında beklenir; arka plan yalnız Collection yayın kuyruğunu sürdürür', () => {
+test('yetkili Collection görselleri kullanıcı girişini BLOKE ETMEZ; dağıtım arka planda sürer', () => {
   const userBootstrap = SERVER.slice(
     SERVER.indexOf("app.post('/api/shared-hub/user-bootstrap'"),
     SERVER.indexOf("app.get('/api/collection-workspaces", SERVER.indexOf("app.post('/api/shared-hub/user-bootstrap'")),
   );
-  assert.match(userBootstrap, /await syncAuthorizedCollectionImages\(req\.currentUser\.id\)/);
-  assert.match(userBootstrap, /userBootstrapReady\.add\(String\(req\.currentUser\.id\)\)/);
+  assert.match(userBootstrap, /if \(gate\.status !== 'ready'\)/, 'kritik Shared Hub bootstrap kapısı korunmalı');
+  assert.match(userBootstrap, /userBootstrapReady\.add\(userId\)/);
+  assert.match(userBootstrap, /void syncAuthorizedCollectionImages\(userId\)\.then/);
+  assert.match(userBootstrap, /collectionImages:\{ status:'deferred', blocking:false/);
+  assert.doesNotMatch(userBootstrap, /COLLECTION_BOOTSTRAP_INCOMPLETE/);
   assert.match(SERVER, /!userBootstrapReady\.has\(String\(profile\.id\)\)/);
   const timerStart = SERVER.indexOf('setInterval(() => {', SERVER.indexOf('PAYLAŞILAN MODEL GÖRSELİ DAĞITIMI'));
   const timerBlock = SERVER.slice(timerStart, timerStart + 1200);
