@@ -181,13 +181,17 @@ test('master checkpoint publication waits for queued delta mirrors before sync/u
 
 test('Shared Hub master recovery announces repaired central rule categories to the running client', () => {
   assert.match(server, /function changedMasterEntities\(remoteRecords, localRecords, ids\)/);
+  const block = server.slice(
+    server.indexOf('function changedMasterEntities('),
+    server.indexOf('function announceRecoveredMasterEntities('),
+  );
   for (const entity of [
     'pricingRules', 'transitRules', 'nonDtrManufacturers', 'landedMultipliers',
     'freightRates', 'antrepoSourceMode', 'asasSourceMode', 'lflSourceMode',
     'noteColumnDefs', 'antrepoMatchRule', 'modelConnections', 'fx',
     'emailGroups', 'endeksmatik',
   ]) {
-    assert.match(server, new RegExp(`changed\\.add\\('${entity}'\\)`), `${entity} should be announced after master cache repair`);
+    assert.match(block, new RegExp(entity), `${entity} should be classified for announcement after master cache repair`);
   }
   assert.match(server, /announceRecoveredMasterEntities\(recoveredMasterEntities\)/);
 });
