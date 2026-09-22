@@ -8,6 +8,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const recovery = require('../server/lib/prewipe-master-recovery');
+const cpSharedStore = require('../server/lib/cp-shared-store');
 
 async function tempBackup(t) {
   const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-prewipe-cp-'));
@@ -108,6 +109,62 @@ test('explicit field and record tombstones are respected during recovery', () =>
 });
 
 
+
+test('clearing the last CP note produces an explicit shared tombstone', () => {
+  const id = '1001|MODEL A|BLK';
+  const cleared = {
+    notesmap:{
+      [id]:{ Notes:'', EkNot:'', NotesAt:'', EkNotAt:'' },
+    },
+  };
+  const patch = cpSharedStore.patchFromOrderPatch(cleared, id, { notes:{ Notes:'', EkNot:'' } });
+  assert.equal(patch.notes, null, 'blank note object must become an explicit tombstone');
+
+  const stillHasAdditionalNote = {
+    notesmap:{
+      [id]:{ Notes:'', EkNot:'Takip devam ediyor', NotesAt:'', EkNotAt:'2026-09-22T10:00:00.000Z' },
+    },
+  };
+  const partial = cpSharedStore.patchFromOrderPatch(stillHasAdditionalNote, id, { notes:{ Notes:'' } });
+  assert.equal(partial.notes.EkNot, 'Takip devam ediyor', 'one remaining note must keep the shared note record alive');
+});
+
+test('shared note tombstone shadows the legacy order-code fallback in renderer projection', () => {
+  const id = '1001|MODEL A|BLK';
+  cpSharedStore.attachDeltaStore({
+    isAuthoritative:true,
+    readAllSync(collection) {
+      assert.equal(collection, 'cp-order');
+      return { [id]:{ notes:null } };
+    },
+  });
+  try {
+    const overrides = {
+      notesmap:{ '1001':{ Notes:'ESKI SIPARIS BAZLI NOT' } },
+      noteColumnValues:{}, submap:{}, licensormap:{}, suppfobmap:{}, suppfobmetamap:{}, delmap:{}, datemap:{},
+    };
+    const projected = cpSharedStore.overlay(overrides);
+    assert.deepEqual(projected.notesmap[id], { Notes:'', EkNot:'', NotesAt:'', EkNotAt:'' });
+    assert.equal(projected.notesmap['1001'].Notes, 'ESKI SIPARIS BAZLI NOT', 'legacy evidence stays intact but must be shadowed by the line tombstone');
+  } finally {
+    cpSharedStore.attachDeltaStore(null);
+  }
+});
+
+test('pre-fix blank note objects are also treated as intentional deletion during recovery', () => {
+  const id = 'cp-order:1001|MODEL A|BLK';
+  const current = {
+    [id]:{ notes:{ Notes:'', EkNot:'', NotesAt:'', EkNotAt:'' } },
+  };
+  const old = {
+    [id]:{ notes:{ Notes:'BACKUPTAN DIRILMEMELI', NotesAt:'2026-09-01T00:00:00.000Z' } },
+  };
+  const result = recovery.mergeRecoveredBusinessRecords(current, old, {});
+  assert.equal(result.changed[id], undefined, 'legacy blank-object deletion must beat a backup note');
+  assert.equal(result.records[id].notes.Notes, '');
+  assert.equal(recovery.explicitBlankNoteRecord(current[id].notes), true);
+});
+
 test('verified same-Hub recovery can pass the first-sync pending guard without discarding local changes', () => {
   const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
   const bootstrapStart = server.indexOf('async function bootstrapSharedHub');
@@ -120,6 +177,22 @@ test('verified same-Hub recovery can pass the first-sync pending guard without d
   assert.match(bootstrap, /SHARED_HUB_PENDING_CHANGES_RECOVERY_CONTINUE/);
   assert.match(bootstrap, /pending:pendingBeforeBootstrap/);
   assert.doesNotMatch(bootstrap, /pendingBeforeBootstrap > 0\)[\s\S]{0,120}localDb\.(?:clear|reset|delete)/);
+});
+
+test('business checkpoint hydration never rolls newer local CP state back to an older snapshot', () => {
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const start = server.indexOf('async function hydrateBusinessCheckpointIfNeeded');
+  const end = server.indexOf('async function applyMasterCheckpoint', start);
+  const block = server.slice(start, end);
+
+  assert.match(block, /applyMissingCheckpointRecords\('business'/,
+    'checkpoint hydration must use the clock-aware recovery path');
+  assert.doesNotMatch(block, /for\(const id of Object\.keys\(current\)\)delete next\.records\[id\]/,
+    'a checkpoint must never wholesale-delete newer local business records');
+  assert.doesNotMatch(block, /for\(const \[id,record\] of Object\.entries\(records\)\)next\.records\[id\]=/,
+    'a checkpoint must not blindly replace every local business record');
+  assert.match(block, /removed:0/,
+    'checkpoint hydration should report no absence-based local record deletion');
 });
 
 test('server recovery wiring performs a business-aware v3 deep scan and republishes Shared Business', () => {
