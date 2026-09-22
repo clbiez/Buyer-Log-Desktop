@@ -107,6 +107,21 @@ test('explicit field and record tombstones are respected during recovery', () =>
   assert.equal(result.changed['cp-order:2002|MODEL B|RED'], undefined);
 });
 
+
+test('verified same-Hub recovery can pass the first-sync pending guard without discarding local changes', () => {
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const bootstrapStart = server.indexOf('async function bootstrapSharedHub');
+  const bootstrapEnd = server.indexOf('// Local auth starts first.', bootstrapStart);
+  const bootstrap = server.slice(bootstrapStart, bootstrapEnd);
+
+  assert.match(bootstrap, /const pendingBeforeBootstrap = await localDb\.pendingCount\(\)/);
+  assert.match(bootstrap, /const recoveryCandidate = await findVerifiedPrewipeRecovery\(checked\.root, checked\.manifest\)/);
+  assert.match(bootstrap, /if \(!recoveryCandidate\)[\s\S]{0,300}SHARED_HUB_PENDING_CHANGES/);
+  assert.match(bootstrap, /SHARED_HUB_PENDING_CHANGES_RECOVERY_CONTINUE/);
+  assert.match(bootstrap, /pending:pendingBeforeBootstrap/);
+  assert.doesNotMatch(bootstrap, /pendingBeforeBootstrap > 0\)[\s\S]{0,120}localDb\.(?:clear|reset|delete)/);
+});
+
 test('server recovery wiring performs a business-aware v3 deep scan and republishes Shared Business', () => {
   const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
 
