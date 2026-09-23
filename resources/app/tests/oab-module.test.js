@@ -928,14 +928,18 @@ test('OAB: oabJson istemcide err.details\'i sunucu yanıtından taşıyor (önce
   assert.match(body, /err\.details = data\.details/);
 });
 
-test('OAB: OAB_HTTP_ERROR kullanıcıya güvenli HTTP durum mesajı verir', () => {
+test('OAB: PASS_HTTP_ERROR kullanıcıya güvenli endpoint ve HTTP durum mesajı verir', () => {
   const start = OAB_JS.indexOf('function oabReportErrorMessage(');
   const end = OAB_JS.indexOf('function oabFilteredRows', start);
   const source = OAB_JS.slice(start, end);
-  const fn = new Function('oabT', 'oabIsAuthError', 'oabAuthErrorMessage', `${source}; return oabReportErrorMessage;`)(
-    (tr) => tr, () => false, () => 'auth'
+  const fn = new Function('oabT', 'oabAuthErrorMessage', `${source}; return oabReportErrorMessage;`)(
+    (tr) => tr, () => 'auth'
   );
-  const message = fn({ code: 'OAB_HTTP_ERROR', details: { status: 405 } });
+  const message = fn({
+    code: 'PASS_HTTP_ERROR',
+    details: { status: 405, method: 'POST', url: 'https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData' },
+  });
+  assert.match(message, /POST \/pass\/common\/report\/api\/v2\.0\/Report\/GetReportData/);
   assert.match(message, /HTTP 405/);
   assert.doesNotMatch(message, /pass\.prod\.lcwaikiki\.com|Bearer|authorization/i);
 });
