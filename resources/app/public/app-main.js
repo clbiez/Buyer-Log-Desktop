@@ -19697,7 +19697,7 @@ function kolApplyInStoreSchedule(row,schedule){
     {rowId:row.id,key:'inStoreWeek',value:schedule.inStoreWeek},
     {rowId:row.id,key:'inStoreMonth',value:kolMonthDisplay(schedule.inStoreMonth)},
     {rowId:row.id,key:'inStore',value:schedule.inStore},
-  ],{source:'picker'},{source:'picker'});
+  ],{source:'picker'});
   if(!result?.ok)return false;
   const month=kolMonthDisplay(schedule.inStoreMonth),week=kolWeekDisplay(schedule.inStoreWeek),date=fmtDate(schedule.inStore);
   showToast(appLang==='en'?`In Store set: ${month} · Week ${week} · ${date}`:`Mağaza dönemi: ${month} · ${week}. hafta · ${date}`);
@@ -23790,6 +23790,7 @@ function kolSpreadsheetValidateValue(rowId,key,value){
   if(kolCellLinkedToModel(row,targetKey))return {ok:false,reason:'linked'};
   const c=meta.col,raw=String(value??'');
   if(c?.select&&raw){const match=c.select.find(v=>turknorm(String(v))===turknorm(raw));if(!match)return {ok:false,reason:'invalid-option'};value=match;}
+  if(c?.inStorePeriod&&['inStoreWeek','inStoreMonth','inStore'].some(periodKey=>kolCellLinkedToModel(row,periodKey)))return {ok:false,reason:'linked'};
   if(c?.inStorePeriod==='month'&&raw){const schedule=kolScheduleFromMonthCode(raw);if(!schedule)return {ok:false,reason:'invalid-period'};value=kolMonthDisplay(schedule.inStoreMonth);}
   if(c?.inStorePeriod==='week'&&raw){const schedule=kolScheduleFromWeekCode(raw);if(!schedule)return {ok:false,reason:'invalid-period'};value=schedule.inStoreWeek;}
   if(c?.date&&raw&&!parseKeyboardDateToISO(raw))return {ok:false,reason:'invalid-date'};
@@ -23953,9 +23954,9 @@ function groupedFieldHasAnyOverride(row,column){
   const storageKeys=spec?.storageKeys||[String(key||'').startsWith('pricing:')?'pricing':key].filter(Boolean);
   return Boolean(row&&storageKeys.length&&storageKeys.some(storageKey=>kolHasVariantOverride(row,storageKey)));
 }
-function kolSpreadsheetBatchEdit(operations,summary={},options={}){
+function kolSpreadsheetBatchEdit(operations,summary={}){
   if(!kolWorkspaceCanEdit||!Array.isArray(operations)||!operations.length)return {ok:false,changed:0};
-  const source=String(options?.source||summary?.source||'paste');
+  const mutationSource=String(summary?.source||'paste');
   const validated=[];
   for(const op of operations){
     const v=kolSpreadsheetValidateValue(op.rowId,op.key,op.value);
@@ -23980,19 +23981,19 @@ function kolSpreadsheetBatchEdit(operations,summary={},options={}){
     for(const op of validated){
       if(op.key==='__picture__'){
         const row=kolRows.find(r=>String(r.id)===String(op.rowId));
-        const sourceRow=op.value&&op.value.__pictureSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__pictureSourceId)):null;
-        if(row&&sourceRow){row.img=sourceRow.img||'';row.imgRef=sourceRow.imgRef||'';changed++;}
+        const source=op.value&&op.value.__pictureSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__pictureSourceId)):null;
+        if(row&&source){row.img=source.img||'';row.imgRef=source.imgRef||'';changed++;}
         continue;
       }
       if(op.key==='endeksmatik'){
         const row=kolRows.find(r=>String(r.id)===String(op.rowId));
-        const sourceRow=op.value&&op.value.__endeksmatikSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__endeksmatikSourceId)):null;
-        const sourceData=sourceRow?kolEffectiveValue(sourceRow,'endeksmatikData'):null;
+        const source=op.value&&op.value.__endeksmatikSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__endeksmatikSourceId)):null;
+        const sourceData=source?kolEffectiveValue(source,'endeksmatikData'):null;
         if(row&&sourceData){kolWriteGroupedStorageValue(row,'endeksmatikData',JSON.parse(JSON.stringify(sourceData)));changed++;}
         continue;
       }
       const key=op.writeKey||op.key;
-      if(kolApplyCollectionCellChange({rowId:op.rowId,key,value:op.value,source},{rerender:false,pushUndo:false,save:false,syncQuotations:false,deferDependencies:true})){
+      if(kolApplyCollectionCellChange({rowId:op.rowId,key,value:op.value,source:mutationSource},{rerender:false,pushUndo:false,save:false,syncQuotations:false,deferDependencies:true})){
         changed++;
         if(['plmId','modelKod','urunTipi','colour','colourCode','season','lisans'].includes(key))quoteSync.push({rowId:op.rowId,key});
       }
@@ -24023,7 +24024,7 @@ function kolSpreadsheetBatchEdit(operations,summary={},options={}){
     if(!saveKolRows())throw new Error('Collection save failed');
     if(window.BL_QUOTATIONS?.syncModelFields)quoteSync.forEach(op=>{const row=kolRows.find(r=>String(r.id)===String(op.rowId));window.BL_QUOTATIONS.syncModelFields(Number(op.rowId),op.key,row?.[op.key]??'');});
     const updatedRows=new Set(validated.map(op=>String(op.rowId))).size,updatedFields=new Set(validated.map(op=>String(op.writeKey||op.key))).size;
-    const undoSummary={kind:source==='paste'?'paste':'batch-edit',source,changed:changed+dependentChanged,explicitChanged:changed,dependentChanged,updatedRows,updatedFields,readonly:Number(summary.readonly)||0,invalid:Number(summary.invalid)||0,skipped:Number(summary.skipped)||0,at:new Date().toISOString()};
+    const undoSummary={kind:mutationSource==='paste'?'paste':'batch-edit',source:mutationSource,changed:changed+dependentChanged,explicitChanged:changed,dependentChanged,updatedRows,updatedFields,readonly:Number(summary.readonly)||0,invalid:Number(summary.invalid)||0,skipped:Number(summary.skipped)||0,at:new Date().toISOString()};
     kolUndoSummaryStack[kolUndoSummaryStack.length-1]=undoSummary;
     renderKol();
     return {ok:true,changed:changed+dependentChanged,explicitChanged:changed,dependentChanged,updatedRows,updatedFields,summary:undoSummary};
