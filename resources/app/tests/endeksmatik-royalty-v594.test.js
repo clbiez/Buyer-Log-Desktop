@@ -19,6 +19,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const ENGINE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'endeksmatik.js'), 'utf8');
+const engine = require('../server/lib/endeksmatik');
 
 // Motordaki iki yardımcıyı birebir kopyalamak yerine formülü burada kurup
 // kaynakta aynı ifadelerin durduğunu ayrıca çiviliyoruz.
@@ -54,7 +55,7 @@ test('v6.02 hedef düzeltme yüzdesi geri geldi ve AYARLANABİLİR', () => {
   // için geri getirildi. Artık sabit değil: istekte değer varsa o, yoksa
   // yüklenen dosyadan okunan orijinal değer kullanılır.
   assert.match(ENGINE, /const adjustmentRaw=numberValue\(input\.adjustmentPct\);/);
-  assert.match(ENGINE, /Number\.isFinite\(adjustmentRaw\)\?adjustmentRaw:defaultAdjustmentPct\(runtime\)/);
+  assert.match(ENGINE, /Number\.isFinite\(adjustmentRaw\)\?adjustmentRaw:defaultAdjustmentPct\(runtime\.snapshot\)/);
   assert.match(ENGINE, /const a=adjustmentPct\/100;/);
   // Varsayılan YALNIZ dosyadan gelir; alanı olmayan eski anlık görüntülerde 0
   // kalır, aksi halde doğrulanmış referans hesabı geriye dönük değişirdi.
