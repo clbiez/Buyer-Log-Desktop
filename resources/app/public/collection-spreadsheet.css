@@ -156,3 +156,53 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) .kolBuyingSampleApprove{
   pointer-events:none;
 }
+
+/* v7.0.106 — Collection cell alignment contract
+   All business text is left-aligned and vertically centered. Native spreadsheet
+   editors keep their existing interaction lifecycle; only their text geometry is
+   normalized so textarea-backed cells no longer sit visually higher than input,
+   select or read-only cells. */
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td:not(.chkCell):not(.kolSpreadsheetRowGutter){
+  vertical-align:middle!important;
+  text-align:left!important;
+}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody :is(input.editCell,select.editCell,textarea.editCell){
+  text-align:left!important;
+  box-sizing:border-box;
+}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody :is(input.editCell,select.editCell){
+  line-height:18px!important;
+}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell{
+  height:28px!important;
+  min-height:28px!important;
+  line-height:18px!important;
+  padding-top:5px!important;
+  padding-bottom:5px!important;
+  margin:0!important;
+}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant textarea.editCell{
+  height:calc(var(--kol-variant-row-h,27px) - 2px)!important;
+  min-height:calc(var(--kol-variant-row-h,27px) - 2px)!important;
+  line-height:17px!important;
+  padding-top:4px!important;
+  padding-bottom:4px!important;
+}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody :is(
+  .plmEditCell,
+  .licensorDependencyCell,
+  .kolBuyingSampleCell,
+  .kolLandedCard,
+  .kolLandedMeta,
+  .kolLandedInputGroup,
+  .kolPeriodPickerBtn
+){
+  align-items:center!important;
+  text-align:left!important;
+}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .endeksmatikCellBtn{
+  text-align:left!important;
+  align-items:center!important;
+  justify-items:start;
+}
+
