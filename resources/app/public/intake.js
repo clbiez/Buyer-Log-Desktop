@@ -180,15 +180,15 @@
       const rowIndex = (query().rows || []).findIndex(candidate => candidate.id === field.id);
       if (rowIndex === item.level) {
         const label = value == null || value === '' ? text('(boş)', '(blank)') : value;
-        return \`<td class="oabPivotGroupCell" style="padding-left:\${Math.max(4, item.level * 14 + 4)}px"><button type="button" class="oabPivotGroupToggle" data-intake-group-key="\${esc(item.pathKey)}" title="\${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">\${item.collapsed ? '▸' : '▾'}</button><strong>\${esc(label)}</strong>\${item.subtotal ? \`<span class="oabPivotSubtotalTag">\${esc(text('Alt toplam', 'Subtotal'))}</span>\` : ''}</td>\`;
+        return `<td class="oabPivotGroupCell" style="padding-left:${Math.max(4, item.level * 14 + 4)}px"><button type="button" class="oabPivotGroupToggle" data-intake-group-key="${esc(item.pathKey)}" title="${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">${item.collapsed ? '▸' : '▾'}</button><strong>${esc(label)}</strong>${item.subtotal ? `<span class="oabPivotSubtotalTag">${esc(text('Alt toplam', 'Subtotal'))}</span>` : ''}</td>`;
       }
       return '<td></td>';
     }
     if (item.kind === 'grand' && field.fieldType !== 'measure') {
       const firstRowId = (query().rows || [])[0]?.id || '';
-      return \`<td class="\${field.id === firstRowId ? 'oabPivotGrandLabel' : ''}">\${field.id === firstRowId ? \`<strong>\${esc(value)}</strong>\` : ''}</td>\`;
+      return `<td class="${field.id === firstRowId ? 'oabPivotGrandLabel' : ''}">${field.id === firstRowId ? `<strong>${esc(value)}</strong>` : ''}</td>`;
     }
-    return \`<td class="\${field.fieldType === 'measure' ? 'num' : ''}">\${esc(field.fieldType === 'measure' ? numberText(value) : clean(value))}</td>\`;
+    return `<td class="${field.fieldType === 'measure' ? 'num' : ''}">${esc(field.fieldType === 'measure' ? numberText(value) : clean(value))}</td>`;
   }
 
   function renderTable() {
@@ -198,7 +198,7 @@
     body.hidden = false;
     const fields = activeColumns();
     if (!fields.length) {
-      table.innerHTML = \`<tbody><tr><td class="intakeEmpty" colspan="1">\${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>\`;
+      table.innerHTML = `<tbody><tr><td class="intakeEmpty" colspan="1">${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>`;
       return;
     }
     const sorted = state.rows.slice();
@@ -209,14 +209,14 @@
     }
     const header = fields.map(field => {
       const direction = sort.id === field.id ? (sort.dir === -1 ? ' ↓' : ' ↑') : '';
-      return \`<th data-intake-sort="\${esc(field.id)}" data-intake-rename="\${esc(field.id)}" title="\${esc(text('Sıralamak için tıklayın · yeniden adlandırmak için çift tıklayın', 'Click to sort · double-click to rename'))}">\${esc(fieldLabel(field))}\${direction}</th>\`;
+      return `<th data-intake-sort="${esc(field.id)}" data-intake-rename="${esc(field.id)}" title="${esc(text('Sıralamak için tıklayın · yeniden adlandırmak için çift tıklayın', 'Click to sort · double-click to rename'))}">${esc(fieldLabel(field))}${direction}</th>`;
     }).join('');
     const viewRows = intakeDisplayRows(sorted);
     const rows = viewRows.map(item => {
       const cls = item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
-      return \`<tr class="\${cls}">\${fields.map(field => intakeCellHtml(item, field)).join('')}</tr>\`;
+      return `<tr class="${cls}">${fields.map(field => intakeCellHtml(item, field)).join('')}</tr>`;
     }).join('');
-    table.innerHTML = \`<thead><tr>\${header}</tr></thead><tbody>\${rows || \`<tr><td class="intakeEmpty" colspan="\${fields.length}">\${esc(text('Veri yok.', 'No data.'))}</td></tr>\`}</tbody>\`;
+    table.innerHTML = `<thead><tr>${header}</tr></thead><tbody>${rows || `<tr><td class="intakeEmpty" colspan="${fields.length}">${esc(text('Veri yok.', 'No data.'))}</td></tr>`}</tbody>`;
     attachColumnResize(table, fields);
   }
 
@@ -331,38 +331,38 @@
 
   function intakeFieldOptionsHtml(fields, selectedId) {
     const list = Array.isArray(fields) ? fields : [];
-    if (!list.length) return \`<option value="">\${esc(text('Alan yok', 'No fields'))}</option>\`;
-    return list.map(field => \`<option value="\${esc(field.id)}"\${field.id === selectedId ? ' selected' : ''}>\${esc(fieldLabel(field))}</option>\`).join('');
+    if (!list.length) return `<option value="">${esc(text('Alan yok', 'No fields'))}</option>`;
+    return list.map(field => `<option value="${esc(field.id)}"${field.id === selectedId ? ' selected' : ''}>${esc(fieldLabel(field))}</option>`).join('');
   }
 
   function intakeConfigActionsHtml() {
-    return \`<div class="oabConfigActions">
-      <button type="button" class="oabConfigIconBtn" data-intake-config-move="-1" title="\${esc(text('Yukarı taşı', 'Move up'))}" aria-label="\${esc(text('Yukarı taşı', 'Move up'))}">↑</button>
-      <button type="button" class="oabConfigIconBtn" data-intake-config-move="1" title="\${esc(text('Aşağı taşı', 'Move down'))}" aria-label="\${esc(text('Aşağı taşı', 'Move down'))}">↓</button>
-      <button type="button" class="oabConfigIconBtn danger" data-intake-config-remove title="\${esc(text('Sil', 'Remove'))}" aria-label="\${esc(text('Sil', 'Remove'))}">×</button>
-    </div>\`;
+    return `<div class="oabConfigActions">
+      <button type="button" class="oabConfigIconBtn" data-intake-config-move="-1" title="${esc(text('Yukarı taşı', 'Move up'))}" aria-label="${esc(text('Yukarı taşı', 'Move up'))}">↑</button>
+      <button type="button" class="oabConfigIconBtn" data-intake-config-move="1" title="${esc(text('Aşağı taşı', 'Move down'))}" aria-label="${esc(text('Aşağı taşı', 'Move down'))}">↓</button>
+      <button type="button" class="oabConfigIconBtn danger" data-intake-config-remove title="${esc(text('Sil', 'Remove'))}" aria-label="${esc(text('Sil', 'Remove'))}">×</button>
+    </div>`;
   }
 
   function intakePivotAxisRowHtml(field, axis, fields) {
-    return \`<div class="oabPivotAxisRow oabConfigRow intakeConfigRow" draggable="true" data-intake-axis="\${esc(axis)}">
+    return `<div class="oabPivotAxisRow oabConfigRow intakeConfigRow" draggable="true" data-intake-axis="${esc(axis)}">
       <span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>
-      <select class="intakePivotAxisField">\${intakeFieldOptionsHtml(fields, field && field.id)}</select>
-      \${intakeConfigActionsHtml()}
-    </div>\`;
+      <select class="intakePivotAxisField">${intakeFieldOptionsHtml(fields, field && field.id)}</select>
+      ${intakeConfigActionsHtml()}
+    </div>`;
   }
 
   function intakeAggOptionsHtml(selected) {
     const preferred = INTAKE_AGGREGATES.includes(clean(selected).toUpperCase()) ? clean(selected).toUpperCase() : 'SUM';
-    return INTAKE_AGGREGATES.map(agg => \`<option value="\${agg}"\${agg === preferred ? ' selected' : ''}>\${agg}</option>\`).join('');
+    return INTAKE_AGGREGATES.map(agg => `<option value="${agg}"${agg === preferred ? ' selected' : ''}>${agg}</option>`).join('');
   }
 
   function intakePivotValueRowHtml(field, fields) {
-    return \`<div class="oabPivotValueRow oabConfigRow intakeConfigRow" draggable="true">
+    return `<div class="oabPivotValueRow oabConfigRow intakeConfigRow" draggable="true">
       <span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>
-      <select class="intakePivotValueField">\${intakeFieldOptionsHtml(fields, field && field.id)}</select>
-      <select class="intakePivotValueAgg">\${intakeAggOptionsHtml(field && field.agg)}</select>
-      \${intakeConfigActionsHtml()}
-    </div>\`;
+      <select class="intakePivotValueField">${intakeFieldOptionsHtml(fields, field && field.id)}</select>
+      <select class="intakePivotValueAgg">${intakeAggOptionsHtml(field && field.agg)}</select>
+      ${intakeConfigActionsHtml()}
+    </div>`;
   }
 
   function intakeRefreshConfigOrderButtons(list) {
@@ -399,33 +399,33 @@
     const modal = document.createElement('div');
     modal.className = 'autoModalOverlay';
     modal.id = '_intakeFieldsModal';
-    modal.innerHTML = \`<div class="autoModal oabSettingsModal intakeFieldsModal" role="dialog" aria-modal="true" aria-labelledby="_intakeFieldsTitle">
-      <header><h3 id="_intakeFieldsTitle">\${esc(text('INTAKE Ayarları', 'INTAKE Settings'))}</h3><button type="button" data-intake-close aria-label="\${esc(text('Kapat', 'Close'))}">×</button></header>
+    modal.innerHTML = `<div class="autoModal oabSettingsModal intakeFieldsModal" role="dialog" aria-modal="true" aria-labelledby="_intakeFieldsTitle">
+      <header><h3 id="_intakeFieldsTitle">${esc(text('INTAKE Ayarları', 'INTAKE Settings'))}</h3><button type="button" data-intake-close aria-label="${esc(text('Kapat', 'Close'))}">×</button></header>
       <div class="autoModalBody">
         <div class="oabPivotBehaviorGrid">
-          <label class="oabCheckField"><input type="checkbox" id="intakeGroupedViewInput"\${draft.display.grouped !== false ? ' checked' : ''}><span>\${esc(text('Gruplu pivot görünümü', 'Grouped pivot view'))}</span></label>
-          <label class="oabCheckField"><input type="checkbox" id="intakeShowSubtotalsInput"\${draft.display.showSubtotals !== false ? ' checked' : ''}><span>\${esc(text('Alt toplamları ve genel toplamı göster', 'Show subtotals and grand total'))}</span></label>
+          <label class="oabCheckField"><input type="checkbox" id="intakeGroupedViewInput"${draft.display.grouped !== false ? ' checked' : ''}><span>${esc(text('Gruplu pivot görünümü', 'Grouped pivot view'))}</span></label>
+          <label class="oabCheckField"><input type="checkbox" id="intakeShowSubtotalsInput"${draft.display.showSubtotals !== false ? ' checked' : ''}><span>${esc(text('Alt toplamları ve genel toplamı göster', 'Show subtotals and grand total'))}</span></label>
         </div>
 
         <div class="oabSettingsSection">
-          <div class="oabSettingsSectionHead"><span>\${esc(text('Pivot Satırları', 'Pivot Rows'))}</span><button type="button" class="navActionBtn" id="intakeAddRowBtn">+ \${esc(text('Alan ekle', 'Add field'))}</button></div>
-          <div class="oabPivotConfigList" id="intakePivotRowsList">\${(draft.query.rows || []).map(field => intakePivotAxisRowHtml(field, 'rows', dimensionPool)).join('')}</div>
+          <div class="oabSettingsSectionHead"><span>${esc(text('Pivot Satırları', 'Pivot Rows'))}</span><button type="button" class="navActionBtn" id="intakeAddRowBtn">+ ${esc(text('Alan ekle', 'Add field'))}</button></div>
+          <div class="oabPivotConfigList" id="intakePivotRowsList">${(draft.query.rows || []).map(field => intakePivotAxisRowHtml(field, 'rows', dimensionPool)).join('')}</div>
         </div>
 
         <div class="oabSettingsSection">
-          <div class="oabSettingsSectionHead"><span>\${esc(text('Pivot Sütunları', 'Pivot Columns'))}</span><button type="button" class="navActionBtn" id="intakeAddColumnBtn">+ \${esc(text('Alan ekle', 'Add field'))}</button></div>
-          <div class="oabPivotConfigList" id="intakePivotColsList">\${(draft.query.columns || []).map(field => intakePivotAxisRowHtml(field, 'columns', dimensionPool)).join('')}</div>
+          <div class="oabSettingsSectionHead"><span>${esc(text('Pivot Sütunları', 'Pivot Columns'))}</span><button type="button" class="navActionBtn" id="intakeAddColumnBtn">+ ${esc(text('Alan ekle', 'Add field'))}</button></div>
+          <div class="oabPivotConfigList" id="intakePivotColsList">${(draft.query.columns || []).map(field => intakePivotAxisRowHtml(field, 'columns', dimensionPool)).join('')}</div>
         </div>
 
         <div class="oabSettingsSection">
-          <div class="oabSettingsSectionHead"><span>\${esc(text('Pivot Değerleri', 'Pivot Values'))}</span><button type="button" class="navActionBtn" id="intakeAddValueBtn">+ \${esc(text('Değer ekle', 'Add value'))}</button></div>
-          <div class="oabPivotConfigList" id="intakePivotValuesList">\${(draft.query.measures || []).map(field => intakePivotValueRowHtml(field, valuePool)).join('')}</div>
+          <div class="oabSettingsSectionHead"><span>${esc(text('Pivot Değerleri', 'Pivot Values'))}</span><button type="button" class="navActionBtn" id="intakeAddValueBtn">+ ${esc(text('Değer ekle', 'Add value'))}</button></div>
+          <div class="oabPivotConfigList" id="intakePivotValuesList">${(draft.query.measures || []).map(field => intakePivotValueRowHtml(field, valuePool)).join('')}</div>
         </div>
 
-        <p class="oabSettingsHint">\${esc(text('Satırları tutup sürükleyerek veya oklarla sıralayabilirsiniz. Pivot Values için SUM, AVG, COUNT, MIN, MAX ve FIRST özetleme seçenekleri kullanılabilir.', 'Drag rows to reorder them or use the arrows. Pivot Values support SUM, AVG, COUNT, MIN, MAX and FIRST summarization.'))}</p>
+        <p class="oabSettingsHint">${esc(text('Satırları tutup sürükleyerek veya oklarla sıralayabilirsiniz. Pivot Values için SUM, AVG, COUNT, MIN, MAX ve FIRST özetleme seçenekleri kullanılabilir.', 'Drag rows to reorder them or use the arrows. Pivot Values support SUM, AVG, COUNT, MIN, MAX and FIRST summarization.'))}</p>
       </div>
-      <footer><button type="button" class="tbtn" data-intake-settings-reset>\${esc(text('Pivot Varsayılanına Dön', 'Reset Pivot'))}</button><button type="button" class="tbtn" data-intake-close>\${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-intake-save>\${esc(text('Kaydet', 'Save'))}</button></footer>
-    </div>\`;
+      <footer><button type="button" class="tbtn" data-intake-settings-reset>${esc(text('Pivot Varsayılanına Dön', 'Reset Pivot'))}</button><button type="button" class="tbtn" data-intake-close>${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-intake-save>${esc(text('Kaydet', 'Save'))}</button></footer>
+    </div>`;
     document.body.appendChild(modal);
 
     const close = () => modal.remove();
