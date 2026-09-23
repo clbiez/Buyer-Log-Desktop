@@ -96,42 +96,11 @@
     if (typeof showToast === 'function') showToast(tr('Kullanıcı yönetimi arayüzü yüklenemedi.', 'The user management screen could not be loaded.'));
   }
 
-  let oabLoginPending = false;
-  function oabLoginMessage(code, ok) {
-    if (ok) return tr('OAB oturumu hazır.', 'OAB session is ready.');
-    if (code === 'OAB_AUTH_CANCELLED') return tr('OAB kullanıcı girişi iptal edildi.', 'OAB sign-in was cancelled.');
-    if (code === 'OAB_AUTH_TIMEOUT') return tr('OAB oturum açma işlemi zamanında tamamlanmadı.', 'OAB sign-in did not complete in time.');
-    if (code === 'OAB_AUTH_NAVIGATION_FAILED') return tr('OAB giriş ekranı açılamadı.', 'The OAB sign-in window could not be opened.');
-    if (code === 'OAB_AUTH_RENDERER_FAILED') return tr('OAB giriş ekranı çalıştırılamadı.', 'The OAB sign-in window stopped working.');
-    if (code === 'OAB_IPC_FORBIDDEN' || code === 'OAB_DESKTOP_AUTH_UNAVAILABLE') return tr('OAB kullanıcı girişi bu Buyer Log oturumunda kullanılamıyor.', 'OAB sign-in is unavailable in this Buyer Log session.');
-    return tr('OAB yetkilendirmesi başarısız oldu.', 'OAB authorization failed.');
-  }
-  async function openOabUserLogin() {
-    if (oabLoginPending) return;
-    const desktop = window.buyerLogDesktop;
-    if (!desktop || typeof desktop.ensureOabAuth !== 'function') {
-      const message = oabLoginMessage('OAB_DESKTOP_AUTH_UNAVAILABLE', false);
-      if (typeof showToast === 'function') showToast(message); else alert(message);
-      return;
-    }
-    oabLoginPending = true;
-    try {
-      if (typeof showToast === 'function') showToast(tr('OAB Kullanıcı Girişi açılıyor…', 'Opening OAB User Sign-In…'));
-      const result = await desktop.ensureOabAuth({ interactive:true, manual:true });
-      const ok = Boolean(result && result.ok && result.authenticated !== false);
-      const message = oabLoginMessage(result && result.code, ok);
-      if (typeof showToast === 'function') showToast(message); else if (!ok) alert(message);
-    } catch (_) {
-      const message = oabLoginMessage('OAB_AUTH_FAILED', false);
-      if (typeof showToast === 'function') showToast(message); else alert(message);
-    } finally { oabLoginPending = false; }
-  }
-  window.openOabUserLogin = openOabUserLogin;
   function openMenu(anchor) {
     if (menu) return closeMenu();
     const profile = current(); if (!profile) return;
     menu = document.createElement('div'); menu.className = 'userMenu';
-    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar">${esc(initials(profile.displayName))}</span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div>${canManageUsers() ? `<button type="button" data-user-admin>⚙ ${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}${hasCapability('OUTLOOK.SEARCH') ? `<button type="button" data-outlook-settings-menu>✉ ${esc(tr('Microsoft 365 · Outlook', 'Microsoft 365 · Outlook'))}</button>` : ''}<button type="button" data-plm-user-login>↻ ${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}</button>${hasCapability('OAB.VIEW') ? `<button type="button" data-oab-user-login>↻ ${esc(tr('OAB Kullanıcı Girişi', 'OAB User Sign-In'))}</button>` : ''}${profile.systemRole === 'moderator' ? `<button type="button" data-update-test>↑ ${esc(tr('Güncelleme Testi', 'Update Test'))}</button>` : ''}<button type="button" data-backup-settings>⇩ ${esc(tr('Backup', 'Backup'))}</button><button type="button" data-reset-my-view>↺ ${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user>⇄ ${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
+    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar">${esc(initials(profile.displayName))}</span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div>${canManageUsers() ? `<button type="button" data-user-admin>⚙ ${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}${hasCapability('OUTLOOK.SEARCH') ? `<button type="button" data-outlook-settings-menu>✉ ${esc(tr('Microsoft 365 · Outlook', 'Microsoft 365 · Outlook'))}</button>` : ''}<button type="button" data-plm-user-login>↻ ${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}</button>${profile.systemRole === 'moderator' ? `<button type="button" data-update-test>↑ ${esc(tr('Güncelleme Testi', 'Update Test'))}</button>` : ''}<button type="button" data-backup-settings>⇩ ${esc(tr('Backup', 'Backup'))}</button><button type="button" data-reset-my-view>↺ ${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user>⇄ ${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
     document.body.appendChild(menu);
     const rect = anchor.getBoundingClientRect(), width = Math.min(380, window.innerWidth - 24); menu.style.width = `${width}px`; menu.style.left = `${Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12))}px`; menu.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - menu.offsetHeight - 12)}px`;
     menu.querySelector('[data-switch-user]').addEventListener('click', switchUser);
@@ -139,7 +108,6 @@
     menu.querySelector('[data-user-admin]')?.addEventListener('click', () => { closeMenu(); openUserManagement(); });
     menu.querySelector('[data-outlook-settings-menu]')?.addEventListener('click', () => { closeMenu(); if (window.BLOutlook) window.BLOutlook.openSettings(); });
     menu.querySelector('[data-plm-user-login]')?.addEventListener('click', () => { closeMenu(); window.openCoreNectumApiSettings?.({ required:false, manual:true }); });
-    menu.querySelector('[data-oab-user-login]')?.addEventListener('click', () => { closeMenu(); void openOabUserLogin(); });
     menu.querySelector('[data-update-test]')?.addEventListener('click', () => { closeMenu(); window.openBuyerLogUpdateTest?.(); });
     menu.querySelector('[data-backup-settings]')?.addEventListener('click', () => { closeMenu(); window.buyerLogBackupModal?.(); });
   }
