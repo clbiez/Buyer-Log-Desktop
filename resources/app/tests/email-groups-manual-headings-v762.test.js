@@ -28,3 +28,20 @@ test('Kaynak Veri gereksiz kısa yolları kaldırılmıştır', () => {
   assert.match(DM_UI, /id: 'backup'/, 'Yedekleme erişilebilir kalmalı');
   assert.match(DM_UI, /buyerLogBackupModal/);
 });
+
+
+test('yalnız yeni başlık ekleme revizyon çakışmasında güncel listeyle güvenli şekilde yeniden denenir', () => {
+  assert.match(UI, /function headingAppenditionsOnly\(state\)/);
+  assert.match(UI, /baseItems/);
+  assert.match(UI, /async function retryAddOnlyHeadingsAfterConflict\(state\)/);
+  assert.match(UI, /if \(error && error\.code === 'REVISION_CONFLICT'\)/);
+  assert.match(UI, /await retryAddOnlyHeadingsAfterConflict\(state\)/);
+  assert.match(UI, /const latest = await api\('\/api\/email-groups'\)/);
+  assert.match(UI, /expectedRevision:S\.data\.revision/);
+});
+
+test('başlık silme veya yeniden adlandırma çakışmada otomatik merge edilmez', () => {
+  const body = UI.slice(UI.indexOf('function headingAppenditionsOnly'), UI.indexOf('async function retryAddOnlyHeadingsAfterConflict'));
+  assert.match(body, /draft\.length < base\.length/);
+  assert.match(body, /headingKey\(same\.name\) !== headingKey\(original\.name\)/);
+});
