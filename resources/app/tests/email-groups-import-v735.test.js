@@ -255,3 +255,20 @@ test('v7.35/v7.36 sürüm tüm dosyalarda canonical runtime kaynaktan birlikte i
   assert.match(read('server/server.js'), /replace\(\/__BL_DISPLAY_VERSION__\/g, DISPLAY_VERSION\)/);
   assert.match(read('public/version-history.js'), /v: '7\.35'/, 'v7.35 kaydı geçmişte durmalı');
 });
+
+
+test('central directory self-repair is repeatable when the canonical directory later becomes sparse', () => {
+  assert.match(EG, /async function reconcileLegacyDirectoryIfSparse\(\)/);
+  assert.match(EG, /prepareEmailCandidates\(\)\.filter\(item => clean\(item && item\.email\)\)/);
+  assert.match(EG, /currentRecipients \* 3 < candidates\.length/);
+  assert.match(EG, /for \(let attempt = 0; attempt < 2; attempt \+= 1\)/);
+  assert.match(EG, /error\.code !== 'REVISION_CONFLICT'/);
+  const repairBody = EG.slice(EG.indexOf('async function reconcileLegacyDirectoryIfSparse'), EG.indexOf('async function migrateLegacyDirectoryOnce'));
+  assert.doesNotMatch(repairBody, /centralMigration\.v1[^\n]*===['"]1['"][^\n]*return/, 'old one-shot marker must not block later repair');
+});
+
+test('opening E-Mail Groups repairs a sparse canonical directory before the user starts editing', () => {
+  const block = EG.slice(EG.indexOf('async function open()'), EG.indexOf('function close()', EG.indexOf('async function open()')));
+  assert.match(block, /await refresh\(\{ force: true \}\)/);
+  assert.match(block, /await reconcileLegacyDirectoryIfSparse\(\)/);
+});
