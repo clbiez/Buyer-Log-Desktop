@@ -76,24 +76,7 @@ test('INTAKE UI OAB-parite pivot alanı, sürükleyerek sıralama, etiket ve fil
     'data-intake-rename',
     'data-intake-filter',
     'data-intake-add-filter',
-  ]) assert.match(ui, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\test('INTAKE UI alan ekleme, sürükleyerek sıralama, etiket ve filtre akışlarını içerir', () => {
-  for (const marker of [
-    '/api/intake/state',
-    '/api/intake/metadata',
-    '/api/intake/settings',
-    '/api/intake/distinct',
-    '/api/intake/report',
-    'data-intake-add',
-    'data-intake-remove',
-    'dragstart',
-    'data-intake-rename',
-    'data-intake-filter',
-    'data-intake-add-filter',
-  ]) assert.match(ui, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  assert.match(css, /\.intakeSection/);
-  assert.match(css, /\.intakeConfigRow\{[^}]*cursor:grab/);
-  assert.match(css, /\.intakeFilterPopover/);
-});')));
+  ]) assert.ok(ui.includes(marker), `INTAKE UI marker missing: ${marker}`);
   assert.match(css, /\.intakeSection/);
   assert.match(css, /\.oabConfigRow\[draggable="true"\]\{cursor:grab/);
   assert.match(css, /\.intakeFilterPopover/);
