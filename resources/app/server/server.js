@@ -5770,7 +5770,7 @@ app.get('/api/qtx/file/:colourCode', userAccess.requireAnyArea('cp', 'orders', '
 // OAB transport is owned by Buyer Log's internal Electron session.
 // The browser window captures a short-lived Authorization into backend RAM;
 // report traffic then goes directly through oabApiClient. No Edge/Chrome,
-// remote-debugging port, external browser profile or browser connector is used.
+// external debugging port, external browser profile or browser connector is used.
 function oabInternalAuthStatus() {
   const current = oabAuthState.status();
   return {
