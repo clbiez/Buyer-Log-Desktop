@@ -357,3 +357,61 @@ test('healthy Master can still repair only the e-mail directory from data-BACKUP
   assert.match(SERVER, /mergeEmailDirectoryRecovery\(currentEmail, candidateEmail\)/);
   assert.match(SERVER, /reason:catastrophicMaster \? 'local-data-backup-has-no-richer-master' : 'local-data-backup-has-no-richer-email-directory'/);
 });
+
+
+test('legacy quotations rebuild the missing central e-mail directory used by Send to Pricing', async t => {
+  const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-quotation-mail-recovery-'));
+  t.after(() => fsp.rm(root, { recursive:true, force:true }));
+  const serverRoot = path.join(root, 'server');
+  await fsp.mkdir(serverRoot, { recursive:true });
+
+  await fsp.writeFile(path.join(serverRoot, 'quotations.json'), JSON.stringify({
+    schemaVersion:1,
+    _revision:1163,
+    _updatedAt:'2026-09-18T13:24:46.199Z',
+    requests:[
+      {
+        id:'q1', createdAt:'2026-09-17T10:00:00.000Z', updatedAt:'2026-09-17T10:30:00.000Z',
+        manufacturers:[
+          { name:'STUDIO STITCH - FZCO', email:'old@studio.test' },
+          { name:'AMAN TEX. LTD', email:'aman@example.com' },
+        ],
+      },
+      {
+        id:'q2', createdAt:'2026-09-18T10:00:00.000Z', updatedAt:'2026-09-18T10:30:00.000Z',
+        manufacturers:[
+          { name:'STUDIO STITCH - FZCO', email:'latest@studio.test; second@studio.test' },
+          { name:'FARIHA KNIT TEX LTD', email:'fariha@example.com' },
+        ],
+      },
+    ],
+  }));
+
+  const currentEmail = {
+    records:[{ id:'current', manufacturer:'Studio Stitch Pricing', email:'new-current@example.com' }],
+    countries:[], types:[],
+    storeRevisionMeta:{ revision:2, updatedAt:'2026-09-23T09:00:00.000Z' },
+  };
+  const records = recovery.loadMasterRecordsFromLegacyDataRoot(root, { records:{ 'store:email-groups.json':currentEmail } });
+  const email = records['store:email-groups.json'];
+  assert.ok(email);
+  assert.equal(email.records.length, 4, 'current record plus three recovered manufacturers');
+  assert.equal(email.records.find(item => item.manufacturer === 'STUDIO STITCH - FZCO').email, 'latest@studio.test; second@studio.test');
+  assert.equal(email.records.find(item => item.manufacturer === 'AMAN TEX. LTD').email, 'aman@example.com');
+  assert.equal(email.records.find(item => item.manufacturer === 'FARIHA KNIT TEX LTD').email, 'fariha@example.com');
+  assert.equal(email.records.find(item => item.manufacturer === 'Studio Stitch Pricing').email, 'new-current@example.com', 'current record is preserved');
+});
+
+test('quotation-derived e-mail recovery has stable manufacturer IDs and keeps latest recipient history', () => {
+  const directory = recovery.legacyQuotationEmailDirectory({
+    _revision:20,
+    requests:[
+      { createdAt:'2026-01-01T00:00:00.000Z', manufacturers:[{ name:'SUP A', email:'old@example.com' }] },
+      { updatedAt:'2026-02-01T00:00:00.000Z', manufacturers:[{ name:'SUP A', email:'new@example.com' }] },
+    ],
+  });
+  assert.equal(directory.records.length, 1);
+  assert.match(directory.records[0].id, /^em-legacy-[0-9a-f]{20}$/);
+  assert.equal(directory.records[0].email, 'new@example.com');
+  assert.equal(directory._revision, 20);
+});
