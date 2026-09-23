@@ -6693,15 +6693,11 @@ async function buildCollectionStyledCopy(selSet){
     // desenle aynı); kayıttan çözüldüğü için DOM'a hiç dokunulmaz.
     pictureCells=await Promise.all(records.map(kolRecordImageCopyCell));
   }
-  // Outlook/Word kopyası kayıt matrisinden üretilir (DOM'a değil); yalnız
-  // Görsel sütununa CP ile aynı yoldan gerçek <img> gömülür. Diğer sütunlar
-  // toSafeHTML ile birebir aynı kaçışlı/çok-satır davranışını korur:
-  // etkileşimli Collection kontrolleri clipboard'a hiç girmez.
+  // Outlook/Word/Excel rich clipboard da TSV ve doğrudan XLSX ile aynı
+  // tek-satır sözleşmesini kullanır: hücre içi Enter fiziksel satıra dönüşmez.
+  // Görsel sütunu aynı satırda gerçek <img> olarak kalır.
   const cellStyle='border:1px solid #B4B8BD;padding:3px 6px;text-align:left;vertical-align:top;';
-  const htmlCellText=value=>{
-    const text=String(value==null?'':value).replace(/\r\n?|[\u000B\u000C\u0085\u2028\u2029]/g,'\n').replace(/\t/g,' ');
-    return text.split('\n').map(escapeHtml).join('<br>');
-  };
+  const htmlCellText=value=>escapeHtml(BLTableExport.normalizeCell(value));
   const html=BLTableExport.toHTML(matrix,{
     border:'1px solid #B4B8BD',
     headerStyle:'border:1px solid #B4B8BD;padding:4px 6px;text-align:left;vertical-align:top;background-color:#F2F4F7;color:#54595F;font-weight:bold;',
