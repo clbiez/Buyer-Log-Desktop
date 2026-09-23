@@ -55,21 +55,29 @@ test('INTAKE bağlantı ayarları ana veri offline olsa da yerel sunucudan yükl
   assert.doesNotMatch(save, /SERVER_BACKED/);
 });
 
-test('INTAKE UI alan ekleme, sürükleyerek sıralama, etiket ve filtre akışlarını içerir', () => {
+test('INTAKE UI OAB-parite pivot alanı, sürükleyerek sıralama, etiket ve filtre akışlarını içerir', () => {
   for (const marker of [
     '/api/intake/state',
     '/api/intake/metadata',
     '/api/intake/settings',
     '/api/intake/distinct',
     '/api/intake/report',
-    'data-intake-add',
-    'data-intake-remove',
+    'intakeAddRowBtn',
+    'intakeAddColumnBtn',
+    'intakeAddValueBtn',
+    'data-intake-config-remove',
+    'data-intake-config-move',
+    'intakePivotValueAgg',
+    'intakeGroupedViewInput',
+    'intakeShowSubtotalsInput',
     'dragstart',
+    'dragover',
+    'drop',
     'data-intake-rename',
     'data-intake-filter',
     'data-intake-add-filter',
-  ]) assert.match(ui, new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  ]) assert.ok(ui.includes(marker), `INTAKE UI marker missing: ${marker}`);
   assert.match(css, /\.intakeSection/);
-  assert.match(css, /\.intakeConfigRow\{[^}]*cursor:grab/);
+  assert.match(css, /\.oabConfigRow\[draggable="true"\]\{cursor:grab/);
   assert.match(css, /\.intakeFilterPopover/);
 });
