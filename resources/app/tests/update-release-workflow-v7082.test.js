@@ -16,3 +16,17 @@ test('publish channel is immutable for a semantic version',async t=>{const root=
 test('TEST artifact promotes to STABLE byte-for-byte without rebuild',t=>{const root=tmp();t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const source=path.join(root,'source'),releases=path.join(source,'test','releases');fs.mkdirSync(releases,{recursive:true});const artifact=path.join(releases,'BuyerLog-7.0.82.zip');fs.writeFileSync(artifact,'verified-test-artifact');const sha=hash(artifact),manifest={schemaVersion:1,channel:'test',version:'7.0.82',publishedAt:new Date().toISOString(),artifact:'releases/BuyerLog-7.0.82.zip',sha256:sha,size:fs.statSync(artifact).size,mandatory:false,releaseNotes:'fixture',minimumUpdaterVersion:'1.0.0'};parseReleaseManifest(manifest,'test');fs.writeFileSync(path.join(releases,'BuyerLog-7.0.82.json'),JSON.stringify(manifest));const script=path.join(C.APP_ROOT,'scripts','release-promote.js');const run=childProcess.spawnSync(process.execPath,[script,'7.0.82','--source',source],{encoding:'utf8'});assert.equal(run.status,0,run.stderr||run.stdout);const stable=path.join(source,'stable','releases','BuyerLog-7.0.82.zip');assert.equal(hash(stable),sha);assert.equal(hash(artifact),sha);const latest=JSON.parse(fs.readFileSync(path.join(source,'stable','latest.json'),'utf8'));assert.equal(latest.sha256,sha);assert.equal(latest.channel,'stable');});
 
 test('release scripts expose deterministic bump/build/promote entry points',()=>{const pkg=require('../package.json');assert.match(pkg.scripts['release:test'],/release-publish/);assert.match(pkg.scripts['release:patch'],/--bump patch/);assert.match(pkg.scripts['release:promote'],/release-promote/);assert.match(pkg.scripts['version:assert'],/version-assert/);});
+
+
+test('release workflows can be triggered from repository request files without rebuilding STABLE',()=>{
+  const root=path.resolve(__dirname,'..','..','..');
+  const testWorkflow=fs.readFileSync(path.join(root,'.github','workflows','buyerlog-test-release.yml'),'utf8');
+  const stableWorkflow=fs.readFileSync(path.join(root,'.github','workflows','buyerlog-promote-stable.yml'),'utf8');
+  const versionWorkflow=fs.readFileSync(path.join(root,'.github','workflows','buyerlog-version-branch.yml'),'utf8');
+  assert.match(testWorkflow,/release-requests\/test\.json/);
+  assert.match(testWorkflow,/SOURCE_SHA/);
+  assert.match(testWorkflow,/--notes "\$RELEASE_NOTES"/);
+  assert.match(stableWorkflow,/release-requests\/stable\.json/);
+  assert.match(stableWorkflow,/promote-stable "\$PROMOTE_VERSION"/);
+  assert.match(versionWorkflow,/paths-ignore:[\s\S]*release-requests\/\*\*/);
+});

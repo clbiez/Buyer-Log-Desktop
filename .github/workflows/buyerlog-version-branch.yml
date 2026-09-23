@@ -3,6 +3,8 @@ name: Buyer Log immutable version branch
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '.github/release-requests/**'
 
 permissions:
   contents: write
