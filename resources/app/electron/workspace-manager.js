@@ -9,7 +9,7 @@
  * pending editors and in-memory module state survive the operation.
  */
 
-const WORKSPACE_BAR_HEIGHT = 44;
+const WORKSPACE_BAR_HEIGHT = 28;
 const MIN_WINDOW_WIDTH = 800;
 const MIN_WINDOW_HEIGHT = 600;
 const CLOSE_FORCE_DELAY_MS = 250;
