@@ -31,7 +31,7 @@ test('Get OAB opens Buyer Log internal authentication and automatically retries 
 
 test('OAB renderer progress text refers to Buyer Log internal sign-in, never Edge or Remote Debugging', () => {
   const body = between(OAB, 'function oabAuthErrorMessage', '/* ================================================================');
-  assert.match(body, /Buyer Log kendi giriş ekranını açacak/);
+  assert.match(body, /Buyer Log gerekirse kendi giriş ekranını açacak/);
   assert.match(body, /giriş tamamlanınca otomatik devam edecek/);
   assert.doesNotMatch(body, /Edge|uzaktan hata ayıklama|remote debugging/i);
 });
