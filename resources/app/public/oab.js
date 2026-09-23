@@ -348,7 +348,6 @@
   }
   const OABApi = {
     authStatus: () => oabJson('/api/oab/auth/status'),
-    captureExistingAuth: () => oabJson('/api/oab/auth/capture-existing', { method: 'POST' }),
     seasons: () => oabJson('/api/oab/seasons'),
     mag: seasonRef => oabJson('/api/oab/mag', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ seasonRef }) }),
     buyerGroups: merchSubGroupRef => oabJson('/api/oab/buyer-groups', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ merchSubGroupRef }) }),
@@ -357,7 +356,6 @@
     plan: selection => oabJson('/api/oab/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(selection) }),
     batchStart: selection => oabJson('/api/oab/batch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(selection) }),
     batchStatus: () => oabJson('/api/oab/batch-status'),
-    batchResumeAuth: () => oabJson('/api/oab/batch/resume-auth', { method: 'POST' }),
     batchCancel: () => oabJson('/api/oab/batch/cancel', { method: 'POST' }),
     state: () => oabJson('/api/oab/state'),
     getSettings: () => oabJson('/api/oab/settings'),
