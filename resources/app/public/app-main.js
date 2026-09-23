@@ -27812,6 +27812,10 @@ function kolColHeaders(){
   const base=kolOrderedCols();
   return { base, mfr: mfrCols, all: [...base.map(c=>c.label), ...mfrCols.map(m=>m+' ($)')] };
 }
+function kolExportSingleLineText(value){
+  if(window.BLTableExport?.normalizeCell)return window.BLTableExport.normalizeCell(value);
+  return String(value==null?'':value).replace(/[\r\n\u000B\u000C\u0085\u2028\u2029\t]+/g,' ').replace(/ {2,}/g,' ').trim();
+}
 // ---- Biçimli (görselsiz) hızlı dışa aktarım: xlsx-js-style, CP ile aynı görsel dil ----
 function buildKolStyledSheet(rows){
   const bd = _XLS_BORDERS;
@@ -27831,7 +27835,7 @@ function buildKolStyledSheet(rows){
     exportCols.forEach((c,ci)=>{
       const summaryEntry=summary?.get?.(c.k);
       if(summaryEntry){
-        put(ri+1,ci+imgOff,{v:summaryEntry.display,t:'s',s:{border:bd,font:{sz:10,bold:c.k==='modelKod'},alignment:{vertical:'middle',wrapText:true}}});
+        put(ri+1,ci+imgOff,{v:kolExportSingleLineText(summaryEntry.display),t:'s',s:{border:bd,font:{sz:10,bold:c.k==='modelKod'},alignment:{vertical:'middle',wrapText:true}}});
         return;
       }
       const raw = c.exToRetail ? kolExToRetailDays(r) : kolEffectiveValue(r,c.k);
@@ -27844,7 +27848,7 @@ function buildKolStyledSheet(rows){
         // (endeksmatikCompactText) yazıyordu; index satırı Excel'e hiç gitmiyordu.
         // endeksmatikExcelText ikisini birden verir — Kopyala yolunda zaten
         // bu kullanılıyordu, buradaki eksiklik ikisini tutarsız kılıyordu.
-        const textValue=endeksmatikExcelText(r);
+        const textValue=kolExportSingleLineText(endeksmatikExcelText(r));
         cell={v:textValue,t:'s',s:{...s,alignment:{horizontal:'left',vertical:'center',wrapText:true}}};
         put(ri+1,ci+imgOff,cell);return;
       }
@@ -27857,12 +27861,12 @@ function buildKolStyledSheet(rows){
         return;
       }
       if(c.k==='colourCode'){
-        cell={v:String(raw==null?'':raw),t:'s',s:{...s,numFmt:'@',alignment:{horizontal:'left',vertical:'center'}}};
+        cell={v:kolExportSingleLineText(raw),t:'s',s:{...s,numFmt:'@',alignment:{horizontal:'left',vertical:'center'}}};
       } else if(c.exToRetail){
         cell = raw==='' ? {v:'',t:'s',s} : {v:Number(raw),t:'n',s:{...s,numFmt:'#,##0" g."',alignment:{horizontal:'right'},font:{sz:10,color:{rgb:'FF98A2B3'}}}};
       } else if(c.date && raw){
         const d = coerceDateLoose(raw);
-        cell = !d ? {v:String(raw),t:'s',s} : {v:d,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}};
+        cell = !d ? {v:kolExportSingleLineText(raw),t:'s',s} : {v:d,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}};
       } else if(c.qty && raw!==''&&raw!=null && Number.isFinite(kolParseQuantityNum(raw))){
         cell = {v:kolParseQuantityNum(raw),t:'n',s:{...s,numFmt:'#,##0',alignment:{horizontal:'right'}}};
       } else if(c.percent && raw!==''&&raw!=null && Number.isFinite(kolParseMoneyNum(raw))){
@@ -27873,12 +27877,12 @@ function buildKolStyledSheet(rows){
         cell = {v:kolParseMoneyNum(raw),t:'n',s:{...s,numFmt:'"$"#,##0.00',alignment:{horizontal:'right'}}};
       } else if(c.custom && schema){
         const value=schema.exportValue(raw);
-        cell=value instanceof Date?{v:value,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}}:typeof value==='number'?{v:value,t:'n',s:{...s,numFmt:Number.isInteger(value)?'#,##0':'#,##0.00',alignment:{horizontal:'right'}}}:{v:String(value==null?'':value),t:'s',s};
+        cell=value instanceof Date?{v:value,t:'d',s:{...s,numFmt:'dd.mm.yy',alignment:{horizontal:'right'}}}:typeof value==='number'?{v:value,t:'n',s:{...s,numFmt:Number.isInteger(value)?'#,##0':'#,##0.00',alignment:{horizontal:'right'}}}:{v:kolExportSingleLineText(value),t:'s',s};
       } else if(c.status||c.k==='durum'){
         const argb=kolStatusExcelArgb(raw),fontArgb=kolStatusExcelTextArgb(raw);
-        cell = {v:String(raw||''),t:'s',s:{...s,fill:{fgColor:{rgb:argb}},font:{sz:10,bold:true,color:{rgb:fontArgb}}}};
+        cell = {v:kolExportSingleLineText(raw),t:'s',s:{...s,fill:{fgColor:{rgb:argb}},font:{sz:10,bold:true,color:{rgb:fontArgb}}}};
       } else {
-        cell = {v:String(raw==null?'':raw),t:'s',s};
+        cell = {v:kolExportSingleLineText(raw),t:'s',s};
       }
       put(ri+1, ci+imgOff, cell);
     });
@@ -27901,7 +27905,7 @@ function buildKolStyledSheet(rows){
       }
       else if(v!=='' && v!=null){
         // "Fiyatlamada" gibi metin bir değer — sayı değil, olduğu gibi yazılır.
-        put(ri+1,ci,{v:String(v),t:'s',s:{border:bd,font:{sz:10,italic:true}}});
+        put(ri+1,ci,{v:kolExportSingleLineText(v),t:'s',s:{border:bd,font:{sz:10,italic:true}}});
       }
       else put(ri+1,ci,{v:'',t:'s',s:{border:bd}});
     });
@@ -27909,7 +27913,7 @@ function buildKolStyledSheet(rows){
       const confirmed = kolConfirmedPricing(r);
       const bi = imgOff + exportCols.length + mfrCols.length;
       const confirmedFill = confirmed ? {fgColor:{rgb:'FFE4F3EB'}} : undefined;
-      put(ri+1,bi,{v:confirmed?confirmed.name:'',t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF177A4C'}}, ...(confirmedFill?{fill:confirmedFill}:{})}});
+      put(ri+1,bi,{v:confirmed?kolExportSingleLineText(confirmed.name):'',t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF177A4C'}}, ...(confirmedFill?{fill:confirmedFill}:{})}});
       put(ri+1,bi+1,{v:confirmed?confirmed.price:'',t: confirmed?'n':'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF177A4C'}},numFmt:confirmed?'"$"#,##0.00':undefined,alignment:{horizontal:'right'}, ...(confirmedFill?{fill:confirmedFill}:{})}});
     }
   });
@@ -29394,7 +29398,7 @@ async function kolExportWithImages(rows,fileBase){
       const cell=row.getCell(di+2);cell.border=border;
       const summaryEntry=summary?.get?.(d.k);
       if(summaryEntry){
-        cell.value=summaryEntry.display;
+        cell.value=kolExportSingleLineText(summaryEntry.display);
         cell.alignment={vertical:'middle',wrapText:true};
         if(summaryEntry.title&&summaryEntry.title!==summaryEntry.display)cell.note=summaryEntry.title;
         return;
@@ -29402,7 +29406,7 @@ async function kolExportWithImages(rows,fileBase){
       if(d.kind==='best'){const best=kolBestPricing(r),delta=kolBestPriceTargetDelta(r,best);if(best){cell.value=best.price;cell.numFmt='"$"#,##0.00';cell.font={bold:true,size:10,...(delta&&delta.meetsTarget?{color:{argb:'FF177A4C'}}:{})};if(delta&&delta.meetsTarget)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE4F3EB'}};cell.note=appLang==='en'?`Manufacturer: ${best.name}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nDifference: ${delta.text}`:''}`:`Üretici: ${best.name}${delta?`\nTarget Price: $${kolFormatMoneyDisplay(String(delta.target))}\nFark: ${delta.text}`:''}`;}cell.alignment={horizontal:'right',vertical:'middle'};return;}
       if(d.kind==='confirmedName'){
         if(confirmedDisplay){
-          cell.value=confirmedDisplay.name;
+          cell.value=kolExportSingleLineText(confirmedDisplay.name);
           cell.font=confirmedDisplay.isFallback?{bold:false,size:10,color:{argb:'FF98A2B3'}}:{bold:true,size:10,color:{argb:'FF177A4C'}};
           if(!confirmedDisplay.isFallback)cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE4F3EB'}};
           if(confirmedDisplay.isFallback)cell.note=appLang==='en'?'No approval yet; Best Price manufacturer is shown as reference.':'Henüz onay yok; Best Price üreticisi referans olarak gösteriliyor.';
@@ -29422,12 +29426,12 @@ async function kolExportWithImages(rows,fileBase){
         const v=effectivePricing&&effectivePricing[d.manufacturer],n=kolParseMoneyNum(v);
         if(v==='0'||v==='0,00'){cell.value=0;cell.numFmt='"$"#,##0.00';cell.alignment={horizontal:'right',vertical:'middle'};}
         else if(v!==''&&v!=null&&Number.isFinite(n)){cell.value=n;cell.numFmt='"$"#,##0.00';cell.alignment={horizontal:'right',vertical:'middle'};if(n>0&&validPrices.length){const min=Math.min(...validPrices),max=Math.max(...validPrices),t=max===min?0:(n-min)/(max-min),hue=150-t*150;cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:hslToArgb(hue,55,88)}};}}
-        else if(v!==''&&v!=null){cell.value=String(v);cell.font={italic:true,size:10};cell.alignment={vertical:'middle'};}
+        else if(v!==''&&v!=null){cell.value=kolExportSingleLineText(v);cell.font={italic:true,size:10};cell.alignment={vertical:'middle'};}
         return;
       }
       const c=d.col,raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k),schema=columnSchemaFor(c,sourceRows);
       if(c.endeksmatik){
-        const text=endeksmatikExcelText(r);cell.value=text;cell.alignment={vertical:'middle',wrapText:true};
+        const text=kolExportSingleLineText(endeksmatikExcelText(r));cell.value=text;cell.alignment={vertical:'middle',wrapText:true};
         if(text){const result=r&&r.endeksmatikData&&r.endeksmatikData.result,months=result&&result.months||{};cell.note=[
           `${appLang==='en'?'Previous order':'Eski sipariş'}: ${kolMonthDisplay(months.previousOrderMonth)||months.previousOrderMonth||'—'}`,
           `${appLang==='en'?'Previous In Store':'Eski In Store'}: ${kolMonthDisplay(months.previousInStoreMonth)||months.previousInStoreMonth||'—'}`,
@@ -29441,16 +29445,16 @@ async function kolExportWithImages(rows,fileBase){
         const profitNote=landed.profitPct==null||!Number.isFinite(landed.profitPct)?'':`\n${appLang==='en'?'Advantage vs TR Landed':'TR Landed\u2019a göre avantaj'}: ${(landed.profitPct>0?'+':'')+(Math.round(landed.profitPct*10)/10).toLocaleString('tr-TR',{maximumFractionDigits:1})}%`;
         cell.note=`${appLang==='en'?'Source':'Kaynak'}: ${src}\n${appLang==='en'?'Multiplier':'Çarpan'}: ×${landed.ydMult}${profitNote}`;}}
       else if(c.trLanded){if(landed&&Number.isFinite(landed.trLanded)){cell.value=landed.trLanded;cell.numFmt='"$"#,##0.00';cell.alignment={horizontal:'right',vertical:'middle'};cell.note=`${appLang==='en'?'TR price':'TR fiyatı'}: ₺${kolMoney2(landed.trPrice)}\n${appLang==='en'?'FX':'Kur'}: ${kolMoney2(landed.fx)}\n${appLang==='en'?'Multiplier':'Çarpan'}: ×${landed.trMult}`;}}
-      else if(c.k==='plmId'||c.k==='colourCode'){cell.value=raw==null?'':(c.k==='plmId'?String(raw).replace(/\.(?=\d{3}(?:\D|$))/g,''):String(raw));cell.numFmt='@';cell.alignment={horizontal:'left',vertical:'middle'};}
+      else if(c.k==='plmId'||c.k==='colourCode'){cell.value=raw==null?'':kolExportSingleLineText(c.k==='plmId'?String(raw).replace(/\.(?=\d{3}(?:\D|$))/g,''):raw);cell.numFmt='@';cell.alignment={horizontal:'left',vertical:'middle'};}
       else if(c.exToRetail){if(raw!==''){cell.value=kolParseQuantityNum(raw);cell.numFmt='#,##0" g."';cell.alignment={horizontal:'right',vertical:'middle'};cell.font={size:10,color:{argb:'FF98A2B3'}};}}
-      else if(c.date&&raw){const dt=coerceDateLoose(raw);if(dt){cell.value=dt;cell.numFmt='dd.mm.yy';cell.alignment={horizontal:'right',vertical:'middle'};}else{cell.value=String(raw);cell.alignment={vertical:'middle'};}}
+      else if(c.date&&raw){const dt=coerceDateLoose(raw);if(dt){cell.value=dt;cell.numFmt='dd.mm.yy';cell.alignment={horizontal:'right',vertical:'middle'};}else{cell.value=kolExportSingleLineText(raw);cell.alignment={vertical:'middle'};}}
       else if(c.qty&&raw!==''&&raw!=null&&Number.isFinite(kolParseQuantityNum(raw))){cell.value=kolParseQuantityNum(raw);cell.numFmt='#,##0';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.percent&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw)/100;cell.numFmt='0.00%';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.hologram&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='#,##0.######';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.money&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='"$"#,##0.00';cell.alignment={horizontal:'right',vertical:'middle'};}
-      else if(c.custom&&schema){const value=schema.exportValue(raw);cell.value=value;if(value instanceof Date)cell.numFmt='dd.mm.yy';else if(typeof value==='number')cell.numFmt=Number.isInteger(value)?'#,##0':'#,##0.00';cell.alignment={horizontal:typeof value==='number'?'right':'left',vertical:'middle'};}
-      else if(c.status||c.k==='durum'){cell.value=raw==null?'':String(raw);cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kolStatusExcelArgb(raw)}};cell.font={bold:true,size:10,color:{argb:kolStatusExcelTextArgb(raw)}};cell.alignment={vertical:'middle',wrapText:true};}
-      else{cell.value=raw==null?'':String(raw);cell.alignment={vertical:'middle',wrapText:true};if(c.k==='modelKod')cell.font={bold:true,size:10};}
+      else if(c.custom&&schema){const value=schema.exportValue(raw);cell.value=typeof value==='string'?kolExportSingleLineText(value):value;if(value instanceof Date)cell.numFmt='dd.mm.yy';else if(typeof value==='number')cell.numFmt=Number.isInteger(value)?'#,##0':'#,##0.00';cell.alignment={horizontal:typeof value==='number'?'right':'left',vertical:'middle'};}
+      else if(c.status||c.k==='durum'){cell.value=kolExportSingleLineText(raw);cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kolStatusExcelArgb(raw)}};cell.font={bold:true,size:10,color:{argb:kolStatusExcelTextArgb(raw)}};cell.alignment={vertical:'middle',wrapText:true};}
+      else{cell.value=kolExportSingleLineText(raw);cell.alignment={vertical:'middle',wrapText:true};if(c.k==='modelKod')cell.font={bold:true,size:10};}
     });
     const imgCell=row.getCell(1);imgCell.border=border;
     // Bu seçenek yalnız Koleksiyon'un görselli Excel export'unda kullanılır.
