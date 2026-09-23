@@ -99,11 +99,12 @@ let coreNectumAuthInFlight = null;
  * user's normal Edge profile. Browser session state lives in this dedicated
  * persistent partition; raw Authorization still exists only in process/backend
  * memory and is captured only from the exact OAB report API. */
-const OAB_AUTH_PARTITION = 'persist:buyerlog-oab-auth';
+const OAB_AUTH_PARTITION = 'persist:oab';
 const OAB_VIEWER_URL = 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report';
 const OAB_HOME_URL = 'https://pass.lcwaikiki.com/';
 const OAB_UI_HOST = 'pass.lcwaikiki.com';
 const OAB_API_HOST = 'pass.prod.lcwaikiki.com';
+const OAB_REPORT_CAPTURE_FILTER = { urls: [`https://${OAB_API_HOST}/pass/common/report/api/*`] };
 const OAB_SILENT_PROBE_MS = 8000;
 let oabAuthWindow = null;
 let oabAuthInFlight = null;
@@ -766,11 +767,9 @@ async function acquireOabAuthorization(options = {}) {
     let navigationBusy = false;
     let freshReloadPending = false;
     let loginRequiredKnown = false;
-    let debuggerAttached = false;
-    let captureStopping = false;
+    let networkCaptureInstalled = false;
+    let authWebRequest = null;
     let networkReady = null;
-    let debuggerMessageHandler = null;
-    let debuggerDetachHandler = null;
     const popupWindows = new Set();
 
     const clearSilentProbe = () => {
@@ -779,21 +778,11 @@ async function acquireOabAuthorization(options = {}) {
     const cleanupCapture = () => {
       if (lifecycleTimer) { clearInterval(lifecycleTimer); lifecycleTimer = null; }
       if (lifecycle) lifecycle.stop();
-      if (!authWindow || authWindow.isDestroyed()) return;
-      const targetDebugger = authWindow.webContents.debugger;
-      if (debuggerMessageHandler) {
-        try { targetDebugger.off('message', debuggerMessageHandler); } catch (_) {}
-        debuggerMessageHandler = null;
+      if (authWebRequest && networkCaptureInstalled) {
+        try { authWebRequest.onBeforeSendHeaders(null); } catch (_) {}
       }
-      if (debuggerDetachHandler) {
-        try { targetDebugger.off('detach', debuggerDetachHandler); } catch (_) {}
-        debuggerDetachHandler = null;
-      }
-      if (debuggerAttached) {
-        captureStopping = true;
-        try { targetDebugger.detach(); } catch (_) {}
-        debuggerAttached = false;
-      }
+      networkCaptureInstalled = false;
+      authWebRequest = null;
     };
     const cleanup = () => {
       if (timeoutTimer) { clearTimeout(timeoutTimer); timeoutTimer = null; }
@@ -997,27 +986,19 @@ async function acquireOabAuthorization(options = {}) {
       });
 
       /*
-       * The report Authorization is captured only from the real PASS report API
-       * request. CDP Network is attached before the first viewer navigation so
-       * an immediate authenticated request cannot race the listener.
+       * Authorization is observed only inside the dedicated persist:oab
+       * Electron session. webRequest is installed before the first viewer
+       * navigation, so no external browser, debugging port or DevTools
+       * protocol connection is involved.
        */
-      const targetDebugger = authWindow.webContents.debugger;
-      debuggerMessageHandler = (_event, method, params) => {
-        if (settled || method !== 'Network.requestWillBeSent' || !lifecycle) return;
-        void lifecycle.onNetworkRequest(params);
-      };
-      debuggerDetachHandler = (_event, reason) => {
-        debuggerAttached = false;
-        if (settled || captureStopping || !authWindow || authWindow.isDestroyed()) return;
-        log('OAB Network capture beklenmedik şekilde ayrıldı: ' + String(reason || 'unknown'));
-        finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama bağlantısı kapandı.');
-      };
       try {
-        targetDebugger.attach('1.3');
-        debuggerAttached = true;
-        targetDebugger.on('message', debuggerMessageHandler);
-        targetDebugger.on('detach', debuggerDetachHandler);
-        networkReady = targetDebugger.sendCommand('Network.enable');
+        authWebRequest = oabAuthSession().webRequest;
+        authWebRequest.onBeforeSendHeaders(OAB_REPORT_CAPTURE_FILTER, (details, callback) => {
+          if (!settled && lifecycle) void lifecycle.onNetworkRequest(details);
+          callback({ requestHeaders: details.requestHeaders });
+        });
+        networkCaptureInstalled = true;
+        networkReady = Promise.resolve(true);
       } catch (error) {
         finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.');
         return;
