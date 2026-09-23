@@ -312,3 +312,48 @@ test('clean-install verification cannot certify two equally-empty Master copies 
   assert.match(cleanup, /if \(backupList\.length > currentList\.length\) expectedOverrides\[field\] = backupList/);
   assert.match(cleanup, /coverage\[field\] = same\(expectedOverrides\[field\], remoteOverrides\[field\]\)/);
 });
+
+
+test('focused e-mail recovery merges a richer older directory without overwriting current edits', () => {
+  const current = {
+    records:[{ id:'new-1', manufacturer:'CURRENT SUP', email:'current@example.com' }],
+    countries:[], types:[], storeRevisionMeta:{ revision:2 },
+  };
+  const recovered = {
+    records:[
+      { id:'old-1', manufacturer:'OLD A', email:'a@example.com' },
+      { id:'old-2', manufacturer:'OLD B', email:'b@example.com' },
+      { id:'old-3', manufacturer:'CURRENT SUP', email:'old@example.com', contact:'Old Contact' },
+    ],
+    countries:[{ id:'tr', name:'Türkiye' }],
+    types:[{ id:'orme', name:'Örme' }],
+    storeRevisionMeta:{ revision:9 },
+  };
+  assert.equal(recovery.safeFocusedEmailRecovery(recovered, current), true);
+  const merged = recovery.mergeEmailDirectoryRecovery(current, recovered);
+  assert.equal(merged.records.length, 3);
+  assert.equal(merged.records.find(item => item.manufacturer === 'CURRENT SUP').email, 'current@example.com', 'current non-empty e-mail wins');
+  assert.equal(merged.records.find(item => item.manufacturer === 'CURRENT SUP').contact, 'Old Contact', 'backup may fill an empty field');
+  assert.equal(merged.countries.length, 1);
+  assert.equal(merged.types.length, 1);
+  assert.equal(merged.storeRevisionMeta.revision, 10);
+});
+
+test('focused e-mail recovery refuses an older backup when current directory has a newer revision', () => {
+  const current = {
+    records:[{ id:'new-1', manufacturer:'CURRENT', email:'current@example.com' }],
+    storeRevisionMeta:{ revision:20 },
+  };
+  const recovered = {
+    records:Array.from({ length:20 }, (_,i) => ({ id:'old-'+i, manufacturer:'OLD '+i, email:`old${i}@example.com` })),
+    storeRevisionMeta:{ revision:10 },
+  };
+  assert.equal(recovery.safeFocusedEmailRecovery(recovered, current), false);
+});
+
+test('healthy Master can still repair only the e-mail directory from data-BACKUP', () => {
+  assert.match(SERVER, /const catastrophicMaster = masterCoverageIsCatastrophicallySparse\(currentCoverage\)/);
+  assert.match(SERVER, /safeFocusedEmailRecovery\(candidateEmail, currentEmail\)/);
+  assert.match(SERVER, /mergeEmailDirectoryRecovery\(currentEmail, candidateEmail\)/);
+  assert.match(SERVER, /reason:catastrophicMaster \? 'local-data-backup-has-no-richer-master' : 'local-data-backup-has-no-richer-email-directory'/);
+});
