@@ -116,7 +116,7 @@ test('Collection copy/export call sites share the projection rather than raw par
   assert.match(APP,/cellText:\s*\(col,record\)=>kolCollectionExportCellText\(col,record\)/);
   assert.match(APP,/function buildCollectionStyledCopy[\s\S]*?const all=meta\.rowsFn\(\)/);
   assert.match(APP,/function kolExportSelection\(\)[\s\S]*?kolCollectionExportProjection\(logical\)/);
-  assert.match(APP,/async function kolExportWithImages[\s\S]*?const summaryEntry=summary\?\.get\?\.\(d\.k\)[\s\S]*?cell\.value=summaryEntry\.display/);
+  assert.match(APP,/async function kolExportWithImages[\s\S]*?const summaryEntry=summary\?\.get\?\.\(d\.k\)[\s\S]*?cell\.value=kolExportSingleLineText\(summaryEntry\.display\)/);
   assert.match(APP,/kolStyleMgmtExportBtn[\s\S]*?kolRawExportSelection\(\)/,'editable/import-compatible Style Management export must stay raw');
 });
 
