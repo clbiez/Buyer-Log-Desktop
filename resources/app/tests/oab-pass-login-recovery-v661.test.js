@@ -2,14 +2,13 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const OAB = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
-const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
-const API_CLIENT = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'oab-api-client.js'), 'utf8');
+const CONNECTOR = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
 
 function between(source, startNeedle, endNeedle) {
   const start = source.indexOf(startNeedle);
@@ -19,69 +18,69 @@ function between(source, startNeedle, endNeedle) {
   return source.slice(start, end);
 }
 
-test('OAB auth precedence is backend RAM -> persistent Electron session; normal Edge CDP is not on the critical path', () => {
-  const body = between(OAB, 'async function oabEnsureAuthentication', 'async function oabWithAuthRetry');
-  const memory = body.indexOf('OABApi.authStatus()');
-  const desktop = body.indexOf("desktop.ensureOabAuth({ interactive:true })");
-  assert.ok(memory >= 0 && desktop > memory);
-
-  // A valid backend RAM session exits before the persistent browser path.
-  const memoryReturn = body.indexOf('status.status.authenticated) return true');
-  assert.ok(memoryReturn > memory && memoryReturn < desktop);
-  assert.doesNotMatch(body, /captureExistingAuth/);
+test('Get OAB uses the legacy PASS Edge/CDP flow without a separate Electron auth pre-step', () => {
+  const body = between(OAB, 'async function oabFetchReport', '/* ================================================================');
+  assert.doesNotMatch(body, /ensureOabAuth|oabEnsureAuthentication|oabWithAuthRetry|buyerLogDesktop/);
+  assert.match(body, /OABApi\.report\(/);
+  assert.match(body, /OABApi\.authStatus\(\)/);
+  assert.match(body, /oabAuthProgressMessage/);
 });
 
-test('OAB auth goes directly to controlled persistent desktop session without credential scraping', () => {
-  const body = between(OAB, 'async function oabEnsureAuthentication', 'async function oabWithAuthRetry');
-  assert.match(body, /global\.buyerLogDesktop/);
-  assert.match(body, /await desktop\.ensureOabAuth\(\{ interactive:true \}\)/);
-  assert.match(body, /OAB_DESKTOP_AUTH_UNAVAILABLE/);
-  assert.doesNotMatch(body, /capture-existing|existing Edge|Remote Debugging|9223/i);
-  assert.doesNotMatch(body, /password[^\n]{0,80}\.value/i);
+test('legacy OAB renderer reports PASS/Edge login progress while the report request is pending', () => {
+  assert.match(OAB, /function oabAuthProgressMessage/);
+  assert.match(OAB, /PASS oturum açma ekranı bekleniyor/);
+  assert.match(OAB, /Edge üzerinde kullanıcı adı\/şifrenizle giriş yapın/);
+  assert.match(OAB, /PASS bağlantısı doğrulanıyor/);
+  assert.match(OAB, /PASS girişi tamamlandı\. OAB raporu açılıyor/);
 });
 
-test('interactive Electron success resolves the same pending renderer authentication await', () => {
-  const authBody = between(OAB, 'async function oabEnsureAuthentication', 'async function oabWithAuthRetry');
-  const fetchBody = between(OAB, 'async function oabFetchReport', '/* ================================================================');
-  assert.match(authBody, /const result = await desktop\.ensureOabAuth\(\{ interactive:true \}\)/);
-  assert.match(authBody, /oabSetBusyStatus\(oabT\('OAB oturumu doğrulandı'/);
-  assert.match(fetchBody, /await oabEnsureAuthentication\(\);/);
-  assert.match(fetchBody, /await oabWithAuthRetry\(\(\) => OABApi\.report/);
-
-  // Main resolves only from validated capture or explicit failure/cancel; there
-  // is no "viewer opened == success" shortcut.
-  const mainBody = between(MAIN, 'async function acquireOabAuthorization', 'async function clearOabAuthSession');
-  assert.match(mainBody, /pushOabAuthorizationToBackend\(authorization\)/);
-  assert.match(mainBody, /resolvePromise\(\{ ok:true, authenticated:true, source:'desktop-oab-sso' \}\)/);
-  assert.doesNotMatch(mainBody, /did-finish-load[^\n]*resolve\(\{\s*ok:true/);
-});
-
-test('OAB auth 401/403 clears RAM auth and renderer retries the same operation only once', () => {
-  assert.match(API_CLIENT, /response\.status === 401 \|\| response\.status === 403/);
-  assert.match(API_CLIENT, /authState\.clear\(\{ abortPending:false \}\)/);
-  assert.match(API_CLIENT, /OAB_AUTH_EXPIRED/);
-
-  const body = between(OAB, 'async function oabWithAuthRetry', '/* ================================================================');
-  assert.match(body, /let retried = false/);
-  assert.match(body, /if \(!retried && oabIsAuthError\(error\)\)/);
-  assert.match(body, /retried = true/);
-  assert.match(body, /await oabEnsureAuthentication\(\{ force:true \}\)/);
-  assert.match(body, /continue;/);
-});
-
-test('existing Edge capture endpoint keeps Authorization in backend RAM and validates it', () => {
-  const start = SERVER.indexOf("app.post('/api/oab/auth/capture-existing'");
-  const end = SERVER.indexOf("app.get('/api/oab/seasons'", start);
+test('OAB auth status is sourced from the legacy browser connector', () => {
+  const start = SERVER.indexOf("app.get('/api/oab/auth/status'");
+  const end = SERVER.indexOf("app.post('/api/oab/auth/capture-existing'", start);
   const body = SERVER.slice(start, end);
-  assert.match(body, /captureExistingPassAuthorization/);
-  assert.match(body, /oabAuthState\.setAuthorization/);
-  assert.match(body, /oabApiClient\.validateAuthorization\(\)/);
-  assert.doesNotMatch(body, /res[^\n]*authorization|json\([^)]*Bearer/i);
+  assert.match(body, /agentBrowserConnector\.passAuthStatus\(req\.currentUser\.id\)/);
+  assert.doesNotMatch(body, /oabAuthState\.status\(\)/);
 });
 
-test('manual Electron login-window close remains a cancellation, not an auth success', () => {
-  const body = between(MAIN, 'async function acquireOabAuthorization', 'async function clearOabAuthSession');
-  assert.match(body, /authWindow\.on\('closed'/);
-  assert.match(body, /code:'OAB_AUTH_CANCELLED'/);
-  assert.doesNotMatch(body, /authWindow\.on\('closed'[\s\S]{0,500}authenticated:true/);
+test('single Get OAB restores the 7.0.80 PASS viewer capture and browser-context fetch path', () => {
+  const helpers = between(SERVER, 'async function ensurePassConnected', "app.get('/api/oab/auth/status'");
+  assert.match(helpers, /agentBrowserConnector\.passAuthStatus/);
+  assert.match(helpers, /agentBrowserConnector\.capturePassAuthorization/);
+  assert.match(helpers, /agentBrowserConnector\.fetchPassReportData/);
+  assert.match(helpers, /PASS_SESSION_EXPIRED/);
+
+  const report = between(SERVER, "app.post('/api/oab/report'", '/* ===================================================================');
+  assert.match(report, /await ensurePassConnected\(req\.currentUser\.id/);
+  assert.match(report, /await fetchOabReportWithLoginRecovery\(req\.currentUser\.id/);
+  assert.doesNotMatch(report, /oabApiClient\.fetchReportData/);
+});
+
+test('batch OAB combinations use the same legacy PASS browser transport and do not require Electron auth state', () => {
+  const fetchOne = between(SERVER, 'async function oabFetchOneCombination', '/* Toplu BuyerGroupRefs');
+  assert.match(fetchOne, /await ensurePassConnected\(userId, params\)/);
+  assert.match(fetchOne, /await fetchOabReportWithLoginRecovery\(userId, params\)/);
+  assert.doesNotMatch(fetchOne, /oabApiClient\.fetchReportData/);
+
+  const batchRoute = between(SERVER, "app.post('/api/oab/batch'", "app.post('/api/oab/batch/resume-auth'");
+  assert.doesNotMatch(batchRoute, /oabAuthState\.status\(\)\.authenticated/);
+});
+
+test('legacy connector opens the real PASS viewer and captures the real report API request through CDP', () => {
+  const capture = between(CONNECTOR, 'async function capturePassAuthorization', 'function requirePassAuth');
+  assert.match(capture, /ensureContext\(ownerId\)/);
+  assert.match(capture, /pageForCurrentBuyerLogProfile\(context,targetUrl\)/);
+  assert.match(capture, /Network\.requestWillBeSent/);
+  assert.match(capture, /Network\.enable/);
+  assert.match(capture, /page\.goto\(targetUrl/);
+
+  const request = between(CONNECTOR, 'async function passRequest', '// Rapor metadata servisi');
+  assert.match(request, /passPageForRequest\(context\)/);
+  assert.match(request, /page\._evaluateValue\(expression\)/);
+  assert.match(request, /PASS_SESSION_EXPIRED/);
+});
+
+test('retrying failed OAB combinations also stays on the legacy browser transport', () => {
+  const body = between(OAB, 'async function oabRetryFailedCombinations', '// Yeni satırları mevcut raporun ÜZERİNE ekler');
+  assert.match(body, /OABApi\.batchStart\(\{ combinations, forceRefresh: true \}\)/);
+  assert.doesNotMatch(body, /ensureOabAuth|oabEnsureAuthentication|oabWithAuthRetry/);
 });
