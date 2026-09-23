@@ -24452,7 +24452,7 @@ window.BLPriceSupplierAnalysisBridge={
       const plmId=item&&(item.plmId||item.row&&item.row.plmId||item.raw&&item.raw.plmId)||'';
       const colourCode=norm(item&&(item.colourCode||item.row&&item.row.colourCode))||'',colour=norm(item&&item.colour)||'';
       const resolved=modelAssetCanonicalPlmId(plmId,norm(item&&item.model));
-      return {plmId,colourCode,colour,styleName:norm(item&&item.model)||'',rowId:String(item&&item.rowId!=null?item.rowId:''),
+      return {plmId,colourCode,colour,styleName:norm(item&&item.model)||'',orderCode:norm(item&&(item.orderKey||item.orderCode||item.row&&item.row.orderCode||item.raw&&item.raw.orderCode))||'',rowId:String(item&&item.rowId!=null?item.rowId:''),
         hasImage:resolved?Boolean(canonicalModelImageSource(resolved,colourCode,colour)):null};
     };
     const bodyHtml=()=>`<table><thead><tr><th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th><th>${labels.order}</th><th>${labels.model}</th><th>${labels.supplier}</th><th>${labels.country}</th><th>${labels.buyer}</th><th>${labels.season}</th><th>${labels.price}</th><th>${labels.currency}</th><th>${labels.quantity}</th></tr></thead><tbody>${list.map(item=>{const id=identityOf(item),plmId=modelAssetCanonicalPlmId(id.plmId,id.styleName);const source=plmId?canonicalModelImageSource(plmId,id.colourCode,id.colour):'';return `<tr data-id="${escapeHtml(id.rowId)}"><td class="detailImgCell">${detailImageThumbHtml(source,{modelId:plmId||id.styleName,colourCode:id.colourCode,plmId,modelName:id.styleName,colour:id.colour},{allowEmpty:true})}</td><td>${escapeHtml(item.orderKey||'')}</td><td>${escapeHtml(item.model||'')}</td><td>${escapeHtml(item.manufacturer||'')}</td><td>${escapeHtml(item.country||'')}</td><td>${escapeHtml(item.buyer||'')}</td><td>${escapeHtml(item.season||'')}</td><td>${escapeHtml(item.price??'')}</td><td>${escapeHtml(item.currency||'')}</td><td>${escapeHtml(item.quantity??'')}</td></tr>`;}).join('')}</tbody></table>`;
@@ -26441,13 +26441,15 @@ function registerModelAssetScopeHost(host,{identities,repaint,label,contextType}
     if(!plmId&&!styleName)return;
     const colourCode=norm(item.colourCode!=null?item.colourCode:item.ccode);
     const colour=norm(item.colour!=null?item.colour:item.colourName);
-    const key=`${plmId||`name:${turknorm(styleName)}`}|${turknorm(colourCode)}|${turknorm(colour)}`;
+    const orderCode=norm(item.orderCode!=null?item.orderCode:item.ocode);
+    const unresolvedKey=`name:${turknorm(styleName)}${orderCode?`|order:${turknorm(orderCode)}`:''}`;
+    const key=`${plmId||unresolvedKey}|${turknorm(colourCode)}|${turknorm(colour)}`;
     if(seen.has(key))return;seen.add(key);
-    list.push({plmId,colourCode,colour,styleName,rowId:norm(item.rowId!=null?item.rowId:item.id),
+    list.push({plmId,colourCode,colour,styleName,orderCode,rowId:norm(item.rowId!=null?item.rowId:item.id),
       hasImage:item.hasImage!=null?Boolean(item.hasImage):null,manualProtected:Boolean(item.manualProtected)});
   });
   if(Array.isArray(identities)){
-    const signature=list.map(item=>`${item.plmId}|${turknorm(item.styleName)}|${turknorm(item.colourCode)}|${turknorm(item.colour)}`).join(';;');
+    const signature=list.map(item=>`${item.plmId}|${turknorm(item.styleName)}|${turknorm(item.colourCode)}|${turknorm(item.colour)}|${turknorm(item.orderCode)}`).join(';;');
     if(host.__blModelAssetIdentitySignature!==signature){
       host.__blModelAssetIdentitySignature=signature;
       host.dataset.blModelAssetToken=`view-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`;
