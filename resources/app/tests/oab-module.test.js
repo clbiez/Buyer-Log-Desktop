@@ -932,8 +932,10 @@ test('OAB: OAB_HTTP_ERROR kullanıcıya güvenli endpoint ve HTTP durum mesajı 
   const start = OAB_JS.indexOf('function oabReportErrorMessage(');
   const end = OAB_JS.indexOf('function oabFilteredRows', start);
   const source = OAB_JS.slice(start, end);
-  const fn = new Function('oabT', 'oabAuthErrorMessage', `${source}; return oabReportErrorMessage;`)(
-    (tr) => tr, () => 'auth'
+  const fn = new Function('oabT', 'oabAuthErrorMessage', 'oabIsAuthErrorCode', `${source}; return oabReportErrorMessage;`)(
+    (tr) => tr,
+    () => 'auth',
+    code => code === 'OAB_AUTH_REQUIRED' || code === 'OAB_AUTH_EXPIRED',
   );
   const message = fn({
     code: 'OAB_HTTP_ERROR',
