@@ -19,8 +19,14 @@
     if(idx<0||idx>11)return raw;
     return `${(isEn()?MONTH_NAMES_EN:MONTH_NAMES)[idx]} ${m[1]}`;
   }
+  const DATE_FIELD_META=Object.freeze({
+    inStore:{label:'In-Store',dateKey:'inStore',periodKey:'inStoreMonth'},
+    opd:{label:'OPD',dateKey:'opd',periodKey:'opdMonth'},
+    retailDate:{label:'Retail Date',dateKey:'retailDate',periodKey:'retailDateMonth'},
+  });
+  const DATE_FIELDS=Object.keys(DATE_FIELD_META);
   const FILTER_META={
-    currentMonth:{label:'Güncel In-Store',alabel:'tüm aylar',rowKey:'inStoreMonth',month:true,seasonControl:'lflCurrentSeason'},
+    currentMonth:{label:'Güncel In-Store',allLabel:'tüm aylar',rowKey:'inStoreMonth',month:true,seasonControl:'lflCurrentSeason'},
     compareMonth:{label:'Kıyas In-Store',allLabel:'tüm aylar',rowKey:'inStoreMonth',month:true,seasonControl:'lflCompareSeason'},
     country:{label:'Ülke',allLabel:'hepsi',rowKey:'country'},
     mag:{label:'MAG',allLabel:'hepsi',rowKey:'mag'},
@@ -104,6 +110,7 @@
     serverRows:[],
     trial:{enabled:false,items:new Map(),rows:[],scope:null,pendingCorrections:new Map()},
     filters:Object.fromEntries(FILTER_DIMS.map(k=>[k,new Set()])),
+    periods:{current:{dateField:'inStore'},compare:{dateField:'inStore'}},
     showFabricDetails:false,
     breakdown:['mag','mmyg','classification'],
     sort:{key:'qty',dir:-1},analysis:null,
@@ -171,6 +178,14 @@
     return found||raw;
   }
   const countryCurrency=value=>COUNTRY_CURRENCY_MAP[countryKey(value)]||null;
+  const normalizeDateField=value=>DATE_FIELDS.includes(value)?value:'inStore';
+  const dateFieldLabel=value=>DATE_FIELD_META[normalizeDateField(value)].label;
+  const monthFromDateValue=value=>{const match=norm(value).match(/^(\d{4})-(\d{2})/);return match?`${match[1]}-${match[2]}`:'';};
+  const rowPeriodMonth=(row,dateField='inStore')=>{const meta=DATE_FIELD_META[normalizeDateField(dateField)];return norm(row&&row[meta.periodKey])||monthFromDateValue(row&&row[meta.dateKey]);};
+  const periodSideForDim=dim=>dim==='compareMonth'?'compare':'current';
+  const dateFieldForDim=dim=>normalizeDateField(state.periods[periodSideForDim(dim)]?.dateField);
+  const comparisonPeriod=side=>{const current=side!=='compare',dim=current?'currentMonth':'compareMonth',seasonControl=current?'lflCurrentSeason':'lflCompareSeason';return {season:$(seasonControl)?.value||'',dateField:normalizeDateField(state.periods[current?'current':'compare']?.dateField),selectedPeriods:new Set(state.filters[dim]||[])};};
+  const syncDateFieldControls=()=>{const current=$('lflCurrentDateField'),compare=$('lflCompareDateField');if(current)current.value=normalizeDateField(state.periods.current.dateField);if(compare)compare.value=normalizeDateField(state.periods.compare.dateField);};
   const orderKey=row=>norm(row&&row.orderCode)||norm(row&&row.id);
   const ROW_META_CACHE=new WeakMap();
   function rowMeta(row){
@@ -178,7 +193,7 @@
     let cached=ROW_META_CACHE.get(row);if(cached)return cached;
     const identities=Object.create(null);SHARED_DIMS.forEach(dim=>{identities[dim]=dimensionIdentity(dim,row[FILTER_META[dim].rowKey]);});
     const quantity=num(row.quantity),fob=num(row.fob);
-    cached={identities,season:row.season||'',month:row.inStoreMonth||'',quantity,fob,valid:quantity>0&&fob>0,currency:currencyForRow(row),order:orderKey(row),model:countryKey(row.modelName),groups:new Map()};
+    cached={identities,season:row.season||'',periods:Object.fromEntries(DATE_FIELDS.map(field=>[field,rowPeriodMonth(row,field)])),quantity,fob,valid:quantity>0&&fob>0,currency:currencyForRow(row),order:orderKey(row),model:countryKey(row.modelName),groups:new Map()};
     ROW_META_CACHE.set(row,cached);return cached;
   }
   function rowIdentity(row,dim){return rowMeta(row).identities[dim]||'';}
@@ -195,7 +210,7 @@
     return {};
   }
   function saveFilters(){
-    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',breakdown:[...state.breakdown],showFabricDetails:!!state.showFabricDetails};
+    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',currentDateField:normalizeDateField(state.periods.current.dateField),compareDateField:normalizeDateField(state.periods.compare.dateField),breakdown:[...state.breakdown],showFabricDetails:!!state.showFabricDetails};
     FILTER_DIMS.forEach(dim=>{data[dim]=[...state.filters[dim]];});
     try{BLStorage.setItem(STORAGE_KEY,JSON.stringify(data));}catch(e){}
   }
@@ -327,7 +342,7 @@
   }
   function readySave(items){try{BLStorage.setItem(READY_FILTERS_KEY,JSON.stringify(items));}catch(e){}}
   function currentFilterSnapshot(){
-    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',breakdown:[...state.breakdown],showFabricDetails:!!state.showFabricDetails};
+    const data={currentSeason:$('lflCurrentSeason')?.value||'',compareSeason:$('lflCompareSeason')?.value||'',currentDateField:normalizeDateField(state.periods.current.dateField),compareDateField:normalizeDateField(state.periods.compare.dateField),breakdown:[...state.breakdown],showFabricDetails:!!state.showFabricDetails};
     FILTER_DIMS.forEach(dim=>{data[dim]=[...state.filters[dim]];});return data;
   }
   function closeReadyPanel(){const panel=$('lflReadyFiltersPanel'),btn=$('lflReadyFiltersBtn');if(panel)panel.hidden=true;if(btn)btn.setAttribute('aria-expanded','false');}
@@ -335,6 +350,9 @@
     if(!item)return;const seasons=[...($('lflCurrentSeason')?.options||[])].map(o=>o.value);
     if(seasons.includes(item.currentSeason))$('lflCurrentSeason').value=item.currentSeason;
     if(seasons.includes(item.compareSeason))$('lflCompareSeason').value=item.compareSeason;
+    state.periods.current.dateField=normalizeDateField(item.currentDateField);
+    state.periods.compare.dateField=normalizeDateField(item.compareDateField);
+    syncDateFieldControls();
     const savedBreakdown=Array.isArray(item.breakdown)?item.breakdown:(item.groupBy==='lflKey'?['mag','mmyg','classification']:[item.groupBy]);
     const valid=[...new Set(savedBreakdown.filter(isValidBreakdownDim))].slice(0,MAX_BREAKDOWN_LEVELS);if(valid.length)state.breakdown=valid;
     if(typeof item.showFabricDetails==='boolean')state.showFabricDetails=item.showFabricDetails;
@@ -361,7 +379,10 @@
   function unique(values){return [...new Set((values||[]).filter(isUsableValue))].sort((a,b)=>String(a).localeCompare(String(b),'tr',{numeric:true}));}
   function monthLabel(value){const m=norm(value).match(/^(\d{4})-(\d{2})$/);return m?`${MONTH_NAMES[Number(m[2])-1]||m[2]} ${m[1]}`:value;}
   function shiftMonth(value,amount){const m=norm(value).match(/^(\d{4})-(\d{2})$/);return m?`${Number(m[1])+amount}-${m[2]}`:value;}
-  function filterMetaLabel(dim){const meta=FILTER_META[dim]||{};return isEn()?(meta.labelEn||meta.label||dim):(meta.label||dim);}
+  function filterMetaLabel(dim){
+    if(MONTH_DIMS.includes(dim)){const prefix=dim==='currentMonth'?(isEn()?'Current':'Güncel'):(isEn()?'Comparison':'Kıyas');return `${prefix} ${dateFieldLabel(dateFieldForDim(dim))}`;}
+    const meta=FILTER_META[dim]||{};return isEn()?(meta.labelEn||meta.label||dim):(meta.label||dim);
+  }
   function displayFilterValue(dim,value){return FILTER_META[dim]?.month?monthLabel(value):value;}
   function fillControls(){
     const saved=loadSaved(),dims=state.meta.dimensions||{};
@@ -378,6 +399,8 @@
     const savedBreakdown=Array.isArray(saved.breakdown)?saved.breakdown:(saved.groupBy==='lflKey'?['mag','mmyg','classification']:(saved.groupBy?[saved.groupBy]:[]));
     const validBreakdown=[...new Set(savedBreakdown.filter(isValidBreakdownDim))].slice(0,MAX_BREAKDOWN_LEVELS);if(validBreakdown.length)state.breakdown=validBreakdown;
     if(!state.filtersLoaded){
+      state.periods.current.dateField=normalizeDateField(saved.currentDateField);
+      state.periods.compare.dateField=normalizeDateField(saved.compareDateField);
       state.showFabricDetails=saved.showFabricDetails===true;
       const legacyMap={classification:'classification',manufacturer:'manufacturer',buyingGroup:'buyingGroup',buyer:'buyer',mag:'mag',mmyg:'mmyg',country:'country'};
       SHARED_DIMS.forEach(dim=>{
@@ -396,6 +419,7 @@
       state.filters.compareMonth=new Set(compareVals.filter(isUsableValue).map(String));
       state.filtersLoaded=true;
     }
+    syncDateFieldControls();
     pruneFilters();
     loadCustomCompare();
     updateAllFilterButtons();
@@ -405,11 +429,12 @@
   function filterRows(rows,opts={}){
     const normalized={};
     SHARED_DIMS.forEach(dim=>{const set=opts[dim];if(set&&set.size)normalized[dim]=new Set([...set].map(value=>dimensionIdentity(dim,value)).filter(Boolean));});
-    const season=opts.season||'',months=opts.months;
+    const season=opts.season||'',periods=opts.periods||opts.months,dateField=normalizeDateField(opts.dateField);
     return rows.filter(r=>{
-      const meta=rowMeta(r);
+      const meta=rowMeta(r),periodMonth=meta.periods[dateField]||'';
       if(season&&meta.season!==season)return false;
-      if(months&&months.size&&!months.has(meta.month))return false;
+      if(!periodMonth)return false;
+      if(periods&&periods.size&&!periods.has(periodMonth))return false;
       // Trial satırları gerçek LFL satırlarıyla tamamen aynı filtre zincirinden geçer.
       // Böylece yalnız aktif sezon, ay ve portföy filtreleriyle eşleşen Trial
       // modelleri analiz, kıyaslama, kırılım ve Excel çıktısına dahil edilir.
@@ -439,27 +464,27 @@
     // Trial'dan gelen ay ve portföy değerleri seçilebilir kalmalıdır. Böylece
     // örneğin gerçek veride yalnız Şubat/Mart varken Trial Nisan modeli de
     // Güncel In-Store listesinde görünür ve kullanıcı onu analize dahil edebilir.
-    const currentSeason=$('lflCurrentSeason')?.value||'';
-    return state.trial.rows.filter(row=>!currentSeason||row.season===currentSeason);
+    const currentSeason=$('lflCurrentSeason')?.value||'',dateField=dateFieldForDim(dim);
+    return state.trial.rows.filter(row=>(!currentSeason||row.season===currentSeason)&&!!rowPeriodMonth(row,dateField));
   }
   function rowsForFacet(dim){
     let rows;
     if(MONTH_DIMS.includes(dim)){
-      const meta=FILTER_META[dim],season=$(meta.seasonControl)?.value||'';
-      rows=filterRows(state.rows,{season,months:new Set(),...sharedFilterOpts()});
+      const meta=FILTER_META[dim],season=$(meta.seasonControl)?.value||'',dateField=dateFieldForDim(dim);
+      rows=filterRows(state.rows,{season,dateField,periods:new Set(),...sharedFilterOpts()});
     }else{
-      const shared=sharedFilterOpts(dim),currentRows=filterRows(state.rows,{season:$('lflCurrentSeason')?.value||'',months:state.filters.currentMonth,...shared}),compareRows=filterRows(state.rows,{season:$('lflCompareSeason')?.value||'',months:state.filters.compareMonth,...shared});
+      const shared=sharedFilterOpts(dim),currentRows=filterRows(state.rows,{season:$('lflCurrentSeason')?.value||'',dateField:normalizeDateField(state.periods.current.dateField),periods:state.filters.currentMonth,...shared}),compareRows=filterRows(state.rows,{season:$('lflCompareSeason')?.value||'',dateField:normalizeDateField(state.periods.compare.dateField),periods:state.filters.compareMonth,...shared});
       rows=[...currentRows,...compareRows];
     }
     return mergeFacetRows(rows,activeTrialRowsForFacet(dim));
   }
   function facetValues(dim){
-    const key=FILTER_META[dim].rowKey,available=unique(rowsForFacet(dim).map(r=>r[key])),selected=[...state.filters[dim]].filter(isUsableValue);
+    const available=unique(rowsForFacet(dim).map(r=>MONTH_DIMS.includes(dim)?rowPeriodMonth(r,dateFieldForDim(dim)):r[FILTER_META[dim].rowKey]).filter(isUsableValue)),selected=[...state.filters[dim]].filter(isUsableValue);
     return unique([...selected,...available]);
   }
   function pruneFilters(){
     SHARED_DIMS.forEach(dim=>{const all=new Set(unique(state.rows.map(r=>r[FILTER_META[dim].rowKey])));state.filters[dim]=new Set([...state.filters[dim]].filter(v=>all.has(v)));});
-    MONTH_DIMS.forEach(dim=>{state.filters[dim]=new Set([...state.filters[dim]].filter(v=>/^\d{4}-\d{2}$/.test(v)));});
+    MONTH_DIMS.forEach(dim=>{const side=periodSideForDim(dim),season=$(side==='current'?'lflCurrentSeason':'lflCompareSeason')?.value||'',dateField=dateFieldForDim(dim),available=new Set(state.rows.filter(r=>!season||r.season===season).map(r=>rowPeriodMonth(r,dateField)).filter(isUsableValue));state.filters[dim]=new Set([...state.filters[dim]].filter(v=>/^\d{4}-\d{2}$/.test(v)&&available.has(v)));});
   }
   function filterButtonText(dim){
     const meta=FILTER_META[dim],set=state.filters[dim];
@@ -577,7 +602,7 @@
   }
   function renderFacetPanel(dim){
     const panel=$(`lflDimPanel_${dim}`);if(!panel)return;const values=facetValues(dim),selected=state.filters[dim],rows=rowsForFacet(dim),key=FILTER_META[dim].rowKey,counts=new Map();
-    rows.forEach(r=>counts.set(r[key],(counts.get(r[key])||0)+1));
+    rows.forEach(r=>{const value=MONTH_DIMS.includes(dim)?rowPeriodMonth(r,dateFieldForDim(dim)):r[key];if(isUsableValue(value))counts.set(value,(counts.get(value)||0)+1);});
     panel.innerHTML=`<div class="lflDimPanelHead"><div><strong>${esc(filterMetaLabel(dim))}</strong><span>${selected.size?selected.size+' '+(isEn()?'selected':'seçim'):(isEn()?'All':'Tümü')}</span></div><button type="button" class="lflPanelClear"${selected.size?'':' disabled'}>${isEn()?'Clear':'Temizle'}</button></div><div class="lflDimSearchWrap"><input type="search" class="lflDimSearch" placeholder="${isEn()?'Search…':'Ara…'}" autocomplete="off"></div><div class="lflDimList"><label class="lflDimOption lflDimAll${selected.size?'':' isSelected'}"><input type="checkbox" class="lflDimAllCheck"${selected.size?'':' checked'}><span>${isEn()?'All':'Hepsi'}</span><em>${integer(rows.length)}</em></label>${values.map(value=>`<label class="lflDimOption${selected.has(value)?' isSelected':''}" data-search="${esc(displayFilterValue(dim,value))}"><input type="checkbox" class="lflDimCheck" value="${esc(value)}"${selected.has(value)?' checked':''}><span>${esc(displayFilterValue(dim,value))}</span><em>${integer(counts.get(value)||0)}</em></label>`).join('')||`<div class="lflDimNoResult">${isEn()?'No selectable values.':'Seçilebilir değer bulunamadı.'}</div>`}</div>`;
     const rerender=()=>{updateFilterButton(dim);saveFilters();render();renderFacetPanel(dim);};
     panel.querySelector('.lflPanelClear')?.addEventListener('click',()=>{state.filters[dim].clear();rerender();});
@@ -702,31 +727,36 @@
     if(meta.groups.has(cacheKey))return meta.groups.get(cacheKey);
     const value=dims.map(dim=>breakdownValue(row,dim)).join(' · ');meta.groups.set(cacheKey,value);return value;
   }
-  function lflAnalysisCacheKey(currentSeason,compareSeason,currentMonths,compareMonths,dims){
-    const key={datasetVersion:`${analysisDatasetRevision}|${state.analysisRevision||0}|${state.loadedAt||''}|${state.serverRows.length}|${state.rows.length}`,currentSeason,compareSeason,currentMonths:[...currentMonths].sort(),compareMonths:[...compareMonths].sort(),dims:Object.fromEntries(Object.entries(dims).map(([name,values])=>[name,[...(values||[])].sort()])),breakdown:[...state.breakdown]};
+  function lflAnalysisCacheKey(currentPeriod,comparePeriod,dims){
+    const serialize=period=>({season:period.season,dateField:period.dateField,selectedPeriods:[...period.selectedPeriods].sort()});
+    const key={datasetVersion:`${analysisDatasetRevision}|${state.analysisRevision||0}|${state.loadedAt||''}|${state.serverRows.length}|${state.rows.length}`,currentPeriod:serialize(currentPeriod),comparePeriod:serialize(comparePeriod),dims:Object.fromEntries(Object.entries(dims).map(([name,values])=>[name,[...(values||[])].sort()])),breakdown:[...state.breakdown]};
     return globalThis.BLAnalysisCache?.key?globalThis.BLAnalysisCache.key(key):JSON.stringify(key);
   }
   function compute(){
-    const currentSeason=$('lflCurrentSeason').value,compareSeason=$('lflCompareSeason').value,currentMonths=new Set(state.filters.currentMonth),compareMonths=new Set(state.filters.compareMonth);
+    const currentPeriod=comparisonPeriod('current'),comparePeriod=comparisonPeriod('compare'),currentSeason=currentPeriod.season,compareSeason=comparePeriod.season,currentMonths=currentPeriod.selectedPeriods,compareMonths=comparePeriod.selectedPeriods;
     const dims={};SHARED_DIMS.forEach(dim=>{dims[dim]=state.filters[dim];});
-    const cacheKey=lflAnalysisCacheKey(currentSeason,compareSeason,currentMonths,compareMonths,dims),cached=lflAnalysisCache.get(cacheKey);if(cached)return cached;
+    const cacheKey=lflAnalysisCacheKey(currentPeriod,comparePeriod,dims),cached=lflAnalysisCache.get(cacheKey);if(cached)return cached;
     const realRows=Array.isArray(state.serverRows)?state.serverRows:[];
-    const baselineCurrentRows=filterRows(realRows,{season:currentSeason,months:currentMonths,...dims});
-    const compareRows=filterRows(realRows,{season:compareSeason,months:compareMonths,...dims});
-    const currentRows=filterRows(state.rows,{season:currentSeason,months:currentMonths,...dims});
+    const baselineCurrentRows=filterRows(realRows,{season:currentSeason,dateField:currentPeriod.dateField,periods:currentMonths,...dims});
+    const compareRows=filterRows(realRows,{season:compareSeason,dateField:comparePeriod.dateField,periods:compareMonths,...dims});
+    const currentRows=filterRows(state.rows,{season:currentSeason,dateField:currentPeriod.dateField,periods:currentMonths,...dims});
     const trialCurrentRows=currentRows.filter(row=>row&&row.isTrial),baselineCurrent=summary(baselineCurrentRows);
     const current=summary(currentRows),previous=summary(compareRows),groupBy=[...state.breakdown],groupMap=new Map();
     const collectGroups=(rows,side)=>{for(const row of rows){const key=groupValue(row,groupBy);if(!key)continue;let item=groupMap.get(key);if(!item){item={currentRows:[],previousRows:[]};groupMap.set(key,item);}item[side].push(row);}};
     collectGroups(currentRows,'currentRows');collectGroups(compareRows,'previousRows');
     const groups=unique([...groupMap.keys()]).map(key=>{const item=groupMap.get(key),c=summary(item.currentRows),p=summary(item.previousRows);return {key,current:c,previous:p,currentRows:item.currentRows,previousRows:item.previousRows,currentAvg:c.avg,previousAvg:p.avg,priceChange:metricBetween(c,p,'change'),improvement:metricBetween(c,p,'improvement'),qty:c.qty,orders:c.orders,rows:c.rows};}).filter(g=>g.current.currencies.length||g.previous.currencies.length);
-    const result={currentSeason,compareSeason,currentMonths,compareMonths,dims,currentRows,compareRows,baselineCurrentRows,trialCurrentRows,baselineCurrent,current,previous,baselinePriceChange:metricBetween(baselineCurrent,previous,'change'),priceChange:metricBetween(current,previous,'change'),improvement:metricBetween(current,previous,'improvement'),groupBy,groups};
+    const result={currentPeriod,comparePeriod,currentSeason,compareSeason,currentDateField:currentPeriod.dateField,compareDateField:comparePeriod.dateField,currentMonths,compareMonths,dims,currentRows,compareRows,baselineCurrentRows,trialCurrentRows,baselineCurrent,current,previous,baselinePriceChange:metricBetween(baselineCurrent,previous,'change'),priceChange:metricBetween(current,previous,'change'),improvement:metricBetween(current,previous,'improvement'),groupBy,groups};
     lflAnalysisCache.set(cacheKey,result);return result;
   }
   function kpi(label,value,sub,cls=''){return `<div class="lflKpi lflCard"><div class="lflKpiLabel">${esc(label)}</div><div class="lflKpiValue ${cls}">${value}</div><div class="lflKpiSub">${esc(sub)}</div></div>`;}
   function metricClass(value,goodWhenPositive=true){if(value==null||Math.abs(value)<.05)return 'isNeutral';return (value>0)===goodWhenPositive?'isGood':'isBad';}
   function priceDeltaClass(value){if(value==null||Math.abs(value)<.05)return 'isNeutral';return value<0?'isGood':'isBad';}
   function tablePriceClass(value){if(value==null||Math.abs(value)<.05)return 'muted';return value<0?'good':'bad';}
-  function monthSelectionLabel(months){return months.size?[...months].sort().map(monthLabel).join(', '):'Tüm aylar';}
+  function monthSelectionLabel(months){return months.size?[...months].sort().map(monthLabel).join(', '):(isEn()?'All months':'Tüm aylar');}
+  function comparisonColumnHeader(period,metric){
+    const base=`${period?.season||''} ${metric||''}`.trim(),selected=[...(period?.selectedPeriods||[])].map(monthLabel);
+    return selected.length?[base,...selected].join('\n'):base;
+  }
   function dtrScopeText(sum){if(!sum||!sum.hasDtrBreakdown)return '';return [`DTR ${integer(sum.dtrOrders.dtr)} sipariş`,`NON-DTR ${integer(sum.dtrOrders.nonDtr)} sipariş`].join(' · ');}
   function scopeSub(sum){return [`${integer(sum.models)} model`,`${integer(sum.qty)} adet`,dtrScopeText(sum)].filter(Boolean).join(' · ');}
   function renderKpis(a){
@@ -1025,8 +1055,8 @@
   function renderGroupTable(a){
     const groupLabel=breakdownLabel(a.groupBy),columns=[
       {key:'key',label:groupLabel,value:g=>g.key,type:'text',weight:17},
-      {key:'currentAvg',label:()=>a.currentSeason+' FOB',value:g=>g.current.avg??g.current.byCurrency.USD?.avg??g.current.byCurrency.TRY?.avg,display:g=>moneySummary(g.current),exportDisplay:true,type:'number',cls:'num',weight:11},
-      {key:'previousAvg',label:()=>a.compareSeason+' FOB',value:g=>g.previous.avg??g.previous.byCurrency.USD?.avg??g.previous.byCurrency.TRY?.avg,display:g=>moneySummary(g.previous),exportDisplay:true,type:'number',cls:'num',weight:11},
+      {key:'currentAvg',label:()=>comparisonColumnHeader(a.currentPeriod,'FOB'),value:g=>g.current.avg??g.current.byCurrency.USD?.avg??g.current.byCurrency.TRY?.avg,display:g=>moneySummary(g.current),exportDisplay:true,type:'number',cls:'num',weight:11},
+      {key:'previousAvg',label:()=>comparisonColumnHeader(a.comparePeriod,'FOB'),value:g=>g.previous.avg??g.previous.byCurrency.USD?.avg??g.previous.byCurrency.TRY?.avg,display:g=>moneySummary(g.previous),exportDisplay:true,type:'number',cls:'num',weight:11},
       {key:'priceChange',label:()=>isEn()?'FOB Change':'FOB Değişimi',value:g=>g.priceChange,display:g=>pct(g.priceChange),type:'number',cls:'num',cellClass:g=>tablePriceClass(g.priceChange),weight:10},
       {key:'qty',label:()=>isEn()?'Units':'Adet',value:g=>g.qty,display:g=>integer(g.qty),type:'number',integer:true,cls:'num',weight:9},
       {key:'orders',label:()=>isEn()?'Orders':'Sipariş',value:g=>g.orders,display:g=>integer(g.orders),type:'number',integer:true,cls:'num',weight:8},
@@ -1061,12 +1091,12 @@
     $('lflManufacturerVolumeSubtitle').textContent=isEn()?'Order quantities, seasonal weighted FOB values and FOB change by manufacturer. Negative FOB change is an improvement.':'Üretici bazında sipariş miktarı, sezonların ağırlıklı FOB değerleri ve FOB değişimi. Negatif FOB değişimi iyileşmedir.';
     const columns=[
       {key:'manufacturer',label:isEn()?'Manufacturer':'Üretici',value:r=>r.manufacturer,type:'text',weight:18},
-      {key:'currentQty',label:`${a.currentSeason} ${isEn()?'Units':'Adet'}`,value:r=>r.currentQty,display:row=>integer(row.currentQty),type:'number',integer:true,cls:'num',weight:10},
-      {key:'previousQty',label:`${a.compareSeason} ${isEn()?'Units':'Adet'}`,value:r=>r.previousQty,display:row=>integer(row.previousQty),type:'number',integer:true,cls:'num',weight:10},
-      {key:'currentOrders',label:`${a.currentSeason} ${isEn()?'Orders':'Sipariş'}`,value:r=>r.currentOrders,display:r=>integer(r.currentOrders),type:'number',integer:true,cls:'num',weight:9},
-      {key:'previousOrders',label:`${a.compareSeason} ${isEn()?'Orders':'Sipariş'}`,value:r=>r.previousOrders,display:r=>integer(r.previousOrders),type:'number',integer:true,cls:'num',weight:9},
-      {key:'currentFob',label:`${a.currentSeason} FOB`,value:r=>r.current.avg??r.current.byCurrency.USD?.avg??r.current.byCurrency.TRY?.avg,display:r=>moneySummary(r.current),exportDisplay:true,type:'number',cls:'num',weight:11},
-      {key:'previousFob',label:`${a.compareSeason} FOB`,value:r=>r.previous.avg??r.previous.byCurrency.USD?.avg??r.previous.byCurrency.TRY?.avg,display:r=>moneySummary(r.previous),exportDisplay:true,type:'number',cls:'num',weight:11},
+      {key:'currentQty',label:comparisonColumnHeader(a.currentPeriod,isEn()?'Units':'Adet'),value:r=>r.currentQty,display:row=>integer(row.currentQty),type:'number',integer:true,cls:'num',weight:10},
+      {key:'previousQty',label:comparisonColumnHeader(a.comparePeriod,isEn()?'Units':'Adet'),value:r=>r.previousQty,display:row=>integer(row.previousQty),type:'number',integer:true,cls:'num',weight:10},
+      {key:'currentOrders',label:comparisonColumnHeader(a.currentPeriod,isEn()?'Orders':'Sipariş'),value:r=>r.currentOrders,display:r=>integer(r.currentOrders),type:'number',integer:true,cls:'num',weight:9},
+      {key:'previousOrders',label:comparisonColumnHeader(a.comparePeriod,isEn()?'Orders':'Sipariş'),value:r=>r.previousOrders,display:r=>integer(r.previousOrders),type:'number',integer:true,cls:'num',weight:9},
+      {key:'currentFob',label:comparisonColumnHeader(a.currentPeriod,'FOB'),value:r=>r.current.avg??r.current.byCurrency.USD?.avg??r.current.byCurrency.TRY?.avg,display:r=>moneySummary(r.current),exportDisplay:true,type:'number',cls:'num',weight:11},
+      {key:'previousFob',label:comparisonColumnHeader(a.comparePeriod,'FOB'),value:r=>r.previous.avg??r.previous.byCurrency.USD?.avg??r.previous.byCurrency.TRY?.avg,display:r=>moneySummary(r.previous),exportDisplay:true,type:'number',cls:'num',weight:11},
       {key:'fobChange',label:isEn()?'FOB Change':'FOB Değişimi',value:r=>r.fobChange,display:r=>pct(r.fobChange),type:'number',cls:'num',cellClass:r=>tablePriceClass(r.fobChange),weight:10},
     ];
     renderCpTable({tableId:'lflManufacturerVolumeTable',viewName:'manufacturer',columns,sourceRows:rows,title:()=>$('lflManufacturerVolumeTitle')?.textContent||(isEn()?'Manufacturer Order Volumes':'Üretici Sipariş Hacimleri'),drillKey:'manufacturer',onDrill:r=>openLflPortfolioModal({title:`${isEn()?'Manufacturer':'Üretici'}: ${r.manufacturer}`,currentRows:r.currentRows,previousRows:r.previousRows,currentSeason:a.currentSeason,compareSeason:a.compareSeason}),emptyText:isEn()?'No manufacturer volume data was found for the selected filters.':'Seçili filtrelerde üretici hacmi verisi bulunamadı.',footer:(filtered,visible)=>{
@@ -1831,7 +1861,7 @@
   function exportAnalysis(){
     const a=state.analysis||compute();if(!window.XLSX){if(window.showToast)showToast('Excel kütüphanesi yüklenemedi.');return;}
     const list=dim=>[...state.filters[dim]].sort().map(v=>displayFilterValue(dim,v)).join(', ')||'Tümü';
-    const filters=[['Güncel Sezon',a.currentSeason],['Güncel In-Store Ayları',list('currentMonth')],['Karşılaştırma Sezonu',a.compareSeason],['Karşılaştırma In-Store Ayları',list('compareMonth')],['Ülke',list('country')],['MAG',list('mag')],['MMYG',list('mmyg')],['Marka Müdürlükleri',list('brandDirectorate')],['Klasman',list('classification')],['Üretici',list('manufacturer')],['Buying Group',list('buyingGroup')],['Buyer',list('buyer')],['Kumaş Kategorisi',list('fabricCategory')],['Kumaşçı Ülkesi',list('fabricSupplierCountry')],['Kumaşçı',list('fabricSupplier')],['Kumaş Tipi',list('kumasTipi')],['İplik No',list('iplikNo')],['Gramaj',list('fabricWeight')],['Karışım',list('karisim')]];
+    const filters=[['Güncel Sezon',a.currentSeason],[`Güncel ${dateFieldLabel(a.currentDateField)} Ayları`,list('currentMonth')],['Karşılaştırma Sezonu',a.compareSeason],[`Karşılaştırma ${dateFieldLabel(a.compareDateField)} Ayları`,list('compareMonth')],['Ülke',list('country')],['MAG',list('mag')],['MMYG',list('mmyg')],['Marka Müdürlükleri',list('brandDirectorate')],['Klasman',list('classification')],['Üretici',list('manufacturer')],['Buying Group',list('buyingGroup')],['Buyer',list('buyer')],['Kumaş Kategorisi',list('fabricCategory')],['Kumaşçı Ülkesi',list('fabricSupplierCountry')],['Kumaşçı',list('fabricSupplier')],['Kumaş Tipi',list('kumasTipi')],['İplik No',list('iplikNo')],['Gramaj',list('fabricWeight')],['Karışım',list('karisim')]];
     const kpiRows=[];for(const currency of ['TRY','USD']){if(a.current.byCurrency[currency])kpiRows.push([`${a.currentSeason} Ağırlıklı FOB`,a.current.byCurrency[currency].avg,currency]);if(a.previous.byCurrency[currency])kpiRows.push([`${a.compareSeason} Ağırlıklı FOB`,a.previous.byCurrency[currency].avg,currency]);}
     kpiRows.push(['FOB Değişimi %',a.priceChange,''],[`${a.currentSeason} Sipariş Sayısı`,a.current.orders,''],[`${a.currentSeason} Model Sayısı`,a.current.models,''],[`${a.currentSeason} Ürün Adedi`,a.current.qty,'']);
     if(a.current.hasDtrBreakdown)kpiRows.push([`${a.currentSeason} DTR Sipariş Sayısı`,a.current.dtrOrders.dtr,''],[`${a.currentSeason} NON-DTR Sipariş Sayısı`,a.current.dtrOrders.nonDtr,'']);
@@ -1843,7 +1873,7 @@
     }
     const fxRows=fxRateReport(a);
     const summaryRows=[['LFL Analiz Özeti','Değer','Para Birimi'],['Kaynak Dosya',state.source||'',''],...filters.map(r=>[...r,'']),[],['KPI','Değer','Para Birimi'],...kpiRows,...(fxRows.length?[[],['Ülke / Ay Bazlı USD Kuru','Değer','Döviz'],...fxRows.flatMap(x=>x.points.map(p=>[`${x.country} · ${monthLabel(p.requested)}`,p.rate,x.currency]))]:[])];
-    const groupRows=[[breakdownLabel(a.groupBy),`${a.currentSeason} Ağırlıklı FOB`,`${a.compareSeason} Ağırlıklı FOB`,'FOB Değişimi %','Adet','Sipariş'],...a.groups.map(g=>[g.key,moneySummary(g.current),moneySummary(g.previous),g.priceChange,g.qty,g.orders])];
+    const groupRows=[[breakdownLabel(a.groupBy),comparisonColumnHeader(a.currentPeriod,'Ağırlıklı FOB'),comparisonColumnHeader(a.comparePeriod,'Ağırlıklı FOB'),'FOB Değişimi %','Adet','Sipariş'],...a.groups.map(g=>[g.key,moneySummary(g.current),moneySummary(g.previous),g.priceChange,g.qty,g.orders])];
     const scenarioRows=comparisonScenarioResults(a),customRows=[['Karşılaştırma','Portföy Kapsamı','Güncel Dönem','Kıyas Dönemi','Güncel Adet','Kıyas Adet','Hacim Değişimi %','Güncel Sipariş','Kıyas Sipariş','Güncel Ağırlıklı FOB','Kıyas Ağırlıklı FOB','Ağırlıklı LFL Değişimi %'],...scenarioRows.map(row=>[row.name,scenarioScopeLabel(row),scenarioPeriodLabel(row.currentSeason,row.currentMonths),scenarioPeriodLabel(row.compareSeason,row.compareMonths),row.currentQty,row.previousQty,row.qtyChange,row.currentOrders,row.previousOrders,moneySummary(row.current),moneySummary(row.previous),row.priceChange])];
     const fabricExcelHead=state.showFabricDetails?['Kumaş Kategorisi','Kumaşçı Ülkesi','Kumaşçı','Kumaş Tipi','İplik No','Gramaj','Karışım']:[];
     const detailHead=['Tür','Order Code','Model','MAG','MMYG','Klasman','Sezon','OPD','Ex-F.','In-Store','Üretici','Ülke','Buying Group','Buyer',...fabricExcelHead,'FOB','Para Birimi','Quantity','Weighted Amount'];
@@ -1863,10 +1893,10 @@
     const currentSeason=$('lflCurrentSeason').value,previous=previousSeason(currentSeason,seasons);if(previous)$('lflCompareSeason').value=previous;
     state.filters.compareMonth=new Set([...state.filters.currentMonth].map(m=>shiftMonth(m,-1)));
     closePanels();saveFilters();render();
-    if(window.showToast)showToast(state.filters.currentMonth.size?'Güncel In-Store ayları karşılaştırma tarafına 1 yıl geri kopyalandı.':'Güncel ay seçimi olmadığı için kıyas tarafı tüm aylar olarak bırakıldı.');
+    if(window.showToast)showToast(state.filters.currentMonth.size?`${dateFieldLabel(state.periods.current.dateField)} ayları ${dateFieldLabel(state.periods.compare.dateField)} kıyas tarafına 1 yıl geri kopyalandı.`:(isEn()?'No current period was selected; comparison remains all months.':'Güncel dönem seçimi olmadığı için kıyas tarafı tüm aylar olarak bırakıldı.'));
   }
   function resetFilters(){
-    const seasons=unique((state.meta.dimensions&&state.meta.dimensions.seasons)||state.rows.map(r=>r.season)).sort(seasonSort),current=seasons[seasons.length-1]||'';$('lflCurrentSeason').value=current;$('lflCompareSeason').value=previousSeason(current,seasons);state.breakdown=['mag','mmyg','classification'];FILTER_DIMS.forEach(dim=>state.filters[dim].clear());Object.values(state.tableViews).forEach(view=>view.filters={});Object.values(LFL_CP_TABLE_KEYS).forEach(key=>window.BLTableFramework?.clearFilters(key));closePanels();closeBreakdownPanel();closeCustomComparePanels();closeLflColumnPanel();render();
+    const seasons=unique((state.meta.dimensions&&state.meta.dimensions.seasons)||state.rows.map(r=>r.season)).sort(seasonSort),current=seasons[seasons.length-1]||'';$('lflCurrentSeason').value=current;$('lflCompareSeason').value=previousSeason(current,seasons);state.periods.current.dateField='inStore';state.periods.compare.dateField='inStore';syncDateFieldControls();state.breakdown=['mag','mmyg','classification'];FILTER_DIMS.forEach(dim=>state.filters[dim].clear());Object.values(state.tableViews).forEach(view=>view.filters={});Object.values(LFL_CP_TABLE_KEYS).forEach(key=>window.BLTableFramework?.clearFilters(key));closePanels();closeBreakdownPanel();closeCustomComparePanels();closeLflColumnPanel();render();
   }
   function bind(){
     if(state.initialized)return;state.initialized=true;
@@ -1880,6 +1910,8 @@
     document.querySelectorAll('[data-scenario-close]').forEach(btn=>btn.addEventListener('click',closeComparisonScenarioEditor));
     $('lflCompareSeason')?.addEventListener('change',()=>{state.filters.compareMonth.clear();closePanels();saveFilters();render();});
     $('lflCurrentSeason')?.addEventListener('change',()=>{const seasons=unique((state.meta.dimensions&&state.meta.dimensions.seasons)||state.rows.map(r=>r.season));$('lflCompareSeason').value=previousSeason($('lflCurrentSeason').value,seasons);state.filters.currentMonth.clear();state.filters.compareMonth.clear();closePanels();saveFilters();render();});
+    $('lflCurrentDateField')?.addEventListener('change',event=>{state.periods.current.dateField=normalizeDateField(event.target.value);state.filters.currentMonth.clear();closePanels();saveFilters();render();});
+    $('lflCompareDateField')?.addEventListener('change',event=>{state.periods.compare.dateField=normalizeDateField(event.target.value);state.filters.compareMonth.clear();closePanels();saveFilters();render();});
     document.querySelectorAll('[data-lfldim]').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();openFacet(btn.dataset.lfldim);}));
     document.addEventListener('click',e=>{if(!e.target.closest('.lflDimWrap'))closePanels();if(!e.target.closest('.lflReadyWrap'))closeReadyPanel();if(!e.target.closest('.lflBreakdownPicker'))closeBreakdownPanel();if(!e.target.closest('.lflCustomComparePicker'))closeCustomComparePanels();});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePanels();closeReadyPanel();closeBreakdownPanel();closeCustomComparePanels();closeLflPortfolioModal();closeLflDetailModal();closeComparisonScenarioEditor();}});
@@ -1907,5 +1939,5 @@
     values(field){const rowKey=field==='category'?'classification':field==='inStoreMonth'?'inStoreMonth':field;return unique((state.serverRows||[]).map(row=>norm(row&&row[rowKey])).filter(isUsableValue)).sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));},
     async ensureLoaded(){if(!state.serverRows.length&&!state.loading)await load(false);return this.values('category');}
   };
-  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,metricBetween,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
+  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,metricBetween,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
 })();
