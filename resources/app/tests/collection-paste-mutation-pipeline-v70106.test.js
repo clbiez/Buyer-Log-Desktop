@@ -132,11 +132,12 @@ test('pricing paste uses the exact manual price commit path so FOB/rule pricing 
 
 test('bind/inheritance state remains identical for manual and paste because both use canonical grouped storage',()=>{
   const base=Groups.normalizeRows([
-    {id:1,plmId:'P1',modelKod:'M1',colour:'BLACK',colourCode:'BLK',fabric:'Cotton',targetPrice:'10'},
-    {id:2,plmId:'P1',modelKod:'M1',colour:'GREY',colourCode:'GRY',fabric:'Cotton',targetPrice:'10'},
+    {id:1,plmId:'P1',modelKod:'M1',inStoreMonth:'May 2027',colour:'BLACK',colourCode:'BLK',quantity:'10',fabric:'Cotton',targetPrice:'10'},
+    {id:2,plmId:'P1',modelKod:'M1',inStoreMonth:'May 2027',colour:'GREY',colourCode:'GRY',quantity:'10',fabric:'Cotton',targetPrice:'10'},
   ]).rows;
-  const parent=base.find(r=>r.modelGroupRole==='parent');
-  const variant=base.find(r=>r.modelGroupRole==='variant');
+  const parent=base.find(r=>r.modelGroupRole==='parent')||base[0];
+  const variant=base.find(r=>r.modelGroupRole==='variant')||base[1];
+  assert.ok(parent&&variant&&parent.modelGroupId===variant.modelGroupId,'test fixture must form one model group');
 
   let withOverride=Groups.setVariantOverride(base,variant.id,'fabric','Viscose');
   const applyCanonical=rows=>Groups.setSharedValue(rows,parent.modelGroupId,'fabric','Linen');
