@@ -190,7 +190,7 @@ test('v7.23 başarısız kombinasyon, YENİDEN DENENEBİLİR referansları ile r
   const failure = finished.job.failures[0];
   // Detay ekranının gösterdiği alanlar: etiket, kod ve mesaj.
   assert.match(failure.label, /S6/);
-  assert.equal(failure.code, 'OAB_HTTP_ERROR');
+  assert.equal(failure.code, 'PASS_HTTP_ERROR');
   assert.match(failure.message, /500/);
   // Ve "yeniden dene" için gereken üçlü: bunlar olmadan tek çare tam çekimdi.
   assert.deepEqual(failure.combinations, [{
