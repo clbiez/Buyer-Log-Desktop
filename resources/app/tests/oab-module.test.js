@@ -290,9 +290,9 @@ test('OAB: bütün API uçları overview yetki alanıyla korunuyor', () => {
   }
 });
 
-test('OAB: auth durumu backend RAM state üzerinden raporlanır; token renderer yanıtına çıkmaz', () => {
+test('OAB: auth durumu eski PASS Edge/CDP connector state üzerinden raporlanır; credential renderer yanıtına çıkmaz', () => {
   const body = SERVER.slice(SERVER.indexOf("app.get('/api/oab/auth/status'"), SERVER.indexOf("app.post('/api/oab/auth/capture-existing'"));
-  assert.match(body, /oabAuthState\.status\(\)/);
+  assert.match(body, /agentBrowserConnector\.passAuthStatus\(req\.currentUser\.id\)/);
   assert.doesNotMatch(body, /authorization|Bearer/i);
 });
 
