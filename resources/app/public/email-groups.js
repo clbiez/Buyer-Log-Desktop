@@ -398,6 +398,38 @@
     input.focus();
   }
 
+  function headingAppenditionsOnly(state) {
+    const base = Array.isArray(state && state.baseItems) ? state.baseItems : [];
+    const draft = Array.isArray(state && state.items) ? state.items : [];
+    if (draft.length < base.length) return null;
+    for (const original of base) {
+      const same = draft.find(item => item.id && item.id === original.id);
+      if (!same || headingKey(same.name) !== headingKey(original.name)) return null;
+    }
+    return draft.filter(item => !item.id && clean(item.name)).map(item => clean(item.name));
+  }
+
+  async function retryAddOnlyHeadingsAfterConflict(state) {
+    const additions = headingAppenditionsOnly(state);
+    if (!additions || !additions.length) return false;
+    const latest = await api('/api/email-groups');
+    absorb(latest);
+    const current = state.kind === 'country' ? S.data.countries : S.data.types;
+    const merged = current.map((item, order) => ({ id:item.id, name:item.name, order }));
+    const seen = new Set(merged.map(item => headingKey(item.name)));
+    for (const name of additions) {
+      const key = headingKey(name);
+      if (!key || seen.has(key)) continue;
+      merged.push({ id:'', name, order:merged.length });
+      seen.add(key);
+    }
+    absorb(await api(`/api/email-groups/headings/${state.kind}`, {
+      method:'PUT',
+      body:JSON.stringify({ items:merged, expectedRevision:S.data.revision }),
+    }));
+    return true;
+  }
+
   async function saveHeadings() {
     const state = S.headingEditor;
     if (!state) return;
@@ -409,6 +441,16 @@
       render();
       toast(T('Başlıklar kaydedildi.', 'Headings saved.'));
     } catch (error) {
+      if (error && error.code === 'REVISION_CONFLICT') {
+        try {
+          if (await retryAddOnlyHeadingsAfterConflict(state)) {
+            closeHeadingEditor();
+            render();
+            toast(T('Başlıklar güncel listeyle birleştirilerek kaydedildi.', 'Headings were merged with the latest list and saved.'));
+            return;
+          }
+        } catch (retryError) { error = retryError; }
+      }
       toast(error.message || String(error));
       await refresh({ force: true });
       closeHeadingEditor();
@@ -420,7 +462,8 @@
     const list = isCountry ? S.data.countries : S.data.types;
     const title = isCountry ? T('Ülkeler', 'Countries') : T('Gruplar', 'Groups');
     closeHeadingEditor();
-    S.headingEditor = { kind, items: list.map((item, order) => ({ id: item.id, name: item.name, order })) };
+    const items = list.map((item, order) => ({ id: item.id, name: item.name, order }));
+    S.headingEditor = { kind, baseItems: items.map(item => ({ ...item })), items };
     const editor = document.createElement('div');
     editor.className = 'egHeadingOverlay';
     editor.dataset.egHeadingEditor = '';
@@ -528,17 +571,50 @@
     } catch (error) { toast(error.message || String(error)); }
   }
 
+  async function reconcileLegacyDirectoryIfSparse() {
+    /* Eski tek-seferlik migration işareti artık bir KAPI değildir. Merkezi
+       rehber sonradan seyrekleşirse (ör. sync/recovery arızası), işaret '1'
+       kalsa bile kullanıcı profilindeki eski üretici→e-posta eşlemesi güvenli
+       bir onarım kaynağı olabilir. Onarım yalnız güçlü seyrekleşme imzasında
+       ve yalnız GERÇEK e-posta taşıyan adaylarla çalışır; normal bir silme
+       işleminden sonra eski üreticileri sürekli geri getirmez. */
+    const candidates = prepareEmailCandidates().filter(item => clean(item && item.email));
+    if (candidates.length < 3) return false;
+    await ensureDirectory(true);
+    const currentRecipients = S.data.records.filter(record => clean(record && record.email)).length;
+    const sparse = S.data.records.length <= 1
+      || currentRecipients === 0
+      || currentRecipients * 3 < candidates.length;
+    if (!sparse) return false;
+
+    const repair = candidates.filter(candidate => {
+      const existing = recordFor(candidate.manufacturer);
+      if (!existing) return true;
+      return !clean(existing.email) && clean(candidate.email);
+    });
+    if (!repair.length) return false;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const data = await api('/api/email-groups/import', {
+          method:'POST',
+          body:JSON.stringify({ records:repair, expectedRevision:S.data.revision }),
+        });
+        absorb(data);
+        try { (window.BLStorage || localStorage).setItem('lcw.emailGroups.centralMigration.v2.repaired','1'); } catch (_) {}
+        return true;
+      } catch (error) {
+        if (!error || error.code !== 'REVISION_CONFLICT' || attempt > 0) return false;
+        await ensureDirectory(true);
+      }
+    }
+    return false;
+  }
+
+  /* Eski dış çağrılar/testler için ad korunur; artık "once" işaretiyle
+     engellenmez, yukarıdaki seyrekleşme korumasını kullanır. */
   async function migrateLegacyDirectoryOnce() {
-    const keyName='lcw.emailGroups.centralMigration.v1';
-    try{if((window.BLStorage?BLStorage.getItem(keyName):localStorage.getItem(keyName))==='1')return;}catch(_){ }
-    const candidates=prepareEmailCandidates();
-    if(!candidates.length){try{(window.BLStorage||localStorage).setItem(keyName,'1');}catch(_){ }return;}
-    try{
-      await ensureDirectory(true);
-      const data=await api('/api/email-groups/import',{method:'POST',body:JSON.stringify({records:candidates,expectedRevision:S.data.revision})});
-      absorb(data);
-      try{(window.BLStorage||localStorage).setItem(keyName,'1');}catch(_){ }
-    }catch(_){ /* migration remains retryable; workflow never writes a legacy address */ }
+    return reconcileLegacyDirectoryIfSparse();
   }
 
   async function open() {
@@ -620,6 +696,7 @@
     document.addEventListener('keydown', onKey, true);
 
     await refresh({ force: true });
+    if (await reconcileLegacyDirectoryIfSparse()) { render(); }
     S.refreshTimer = setInterval(() => refresh(), REFRESH_MS);
   }
 
@@ -638,10 +715,10 @@
   window.addEventListener('beforeunload', () => { if (S.editingId) { try { navigator.sendBeacon?.(`/api/email-groups/records/${encodeURIComponent(S.editingId)}/lock-release`); } catch (_) {} } });
 
   window.BLEmailGroups = { open, close, refresh, sections, lockedByOther, stampText, state: S,
-    prepareEmailCandidates, importFromPrepareEmail, importSummaryText };
+    prepareEmailCandidates, importFromPrepareEmail, importSummaryText, reconcileLegacyDirectoryIfSparse };
   /* Prepare E-Mail bu rehberden okur. Ayrı bir nesne olmasının sebebi, adres
      sorgulamak için e-posta grupları EKRANINA hiç ihtiyaç duyulmamasıdır. */
   window.BLEmailDirectory = { emailFor, recordFor, recipientsFor, ensureDirectory, parseRecipients, formatRecipients, records:()=>S.data.records.slice(), size: () => directory.size };
   // Açılışta bir kez okunur; ilk e-posta hazırlamada rehber hazır olsun.
-  setTimeout(() => { void ensureDirectory(); void migrateLegacyDirectoryOnce(); }, 2500);
+  setTimeout(() => { void ensureDirectory().then(() => reconcileLegacyDirectoryIfSparse()); }, 2500);
 })();
