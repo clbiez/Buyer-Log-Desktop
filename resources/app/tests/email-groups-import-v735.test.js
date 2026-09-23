@@ -1,4 +1,5 @@
 'use strict';
+// Temporary CI marker: validate central e-mail directory repair.
 
 /*
  * v7.35 — PREPARE E-MAIL KAYITLARININ ORTAK ALANA TAŞINMASI
