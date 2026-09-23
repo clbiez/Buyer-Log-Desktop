@@ -1,4 +1,5 @@
 'use strict';
+// Release gate marker for Buyer Log 7.0.103 final.
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('fs');
