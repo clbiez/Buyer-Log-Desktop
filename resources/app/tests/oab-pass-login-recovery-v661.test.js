@@ -19,60 +19,59 @@ function between(source, startNeedle, endNeedle) {
   return source.slice(start, end);
 }
 
-test('Get OAB uses the legacy PASS Edge/CDP flow without a separate Electron auth pre-step', () => {
-  const body = between(OAB, 'async function oabFetchReport', '/* ================================================================');
-  assert.doesNotMatch(body, /ensureOabAuth|oabEnsureAuthentication|oabWithAuthRetry|buyerLogDesktop/);
-  assert.match(body, /OABApi\.report\(/);
-  assert.match(body, /OABApi\.authStatus\(\)/);
-  assert.match(body, /oabAuthProgressMessage/);
+test('Get OAB opens Buyer Log internal authentication and automatically retries the failed request', () => {
+  const api = between(OAB, 'function oabIsAuthErrorCode', 'const OABApi');
+  assert.match(api, /OAB_AUTH_REQUIRED/);
+  assert.match(api, /OAB_AUTH_EXPIRED/);
+  assert.match(api, /buyerLogDesktop/);
+  assert.match(api, /ensureOabAuth\(\{ interactive:true \}\)/);
+  assert.match(api, /return oabJson\(url, options, false\)/);
+  assert.doesNotMatch(api, /Edge|remote debugging|9223/);
 });
 
-test('legacy OAB renderer reports PASS/Edge login progress while the report request is pending', () => {
-  assert.match(OAB, /function oabAuthProgressMessage/);
-  assert.match(OAB, /PASS oturum açma ekranı bekleniyor/);
-  assert.match(OAB, /Edge üzerinde kullanıcı adı\/şifrenizle giriş yapın/);
-  assert.match(OAB, /PASS bağlantısı doğrulanıyor/);
-  assert.match(OAB, /PASS girişi tamamlandı\. OAB raporu açılıyor/);
+test('OAB renderer progress text refers to Buyer Log internal sign-in, never Edge or Remote Debugging', () => {
+  const body = between(OAB, 'function oabAuthErrorMessage', '/* ================================================================');
+  assert.match(body, /Buyer Log kendi giriş ekranını açacak/);
+  assert.match(body, /giriş tamamlanınca otomatik devam edecek/);
+  assert.doesNotMatch(body, /Edge|uzaktan hata ayıklama|remote debugging/i);
 });
 
-test('OAB auth status is sourced from the legacy browser connector', () => {
-  const start = SERVER.indexOf("app.get('/api/oab/auth/status'");
-  const end = SERVER.indexOf("app.get('/api/oab/seasons'", start);
-  const body = SERVER.slice(start, end);
-  assert.match(body, /agentBrowserConnector\.passAuthStatus\(req\.currentUser\.id\)/);
-  assert.doesNotMatch(body, /oabAuthState\.status\(\)/);
+test('OAB auth status is sourced only from backend RAM auth state', () => {
+  const body = between(SERVER, "app.get('/api/oab/auth/status'", "app.get('/api/oab/seasons'");
+  assert.match(body, /oabInternalAuthStatus\(\)/);
+  assert.doesNotMatch(body, /agentBrowserConnector\.passAuthStatus/);
+  assert.doesNotMatch(body, /authorization|Bearer/i);
 });
 
-test('single Get OAB restores the 7.0.80 PASS viewer capture and browser-context fetch path', () => {
-  const helpers = between(SERVER, 'async function ensurePassConnected', "app.get('/api/oab/auth/status'");
-  assert.match(helpers, /agentBrowserConnector\.passAuthStatus/);
-  assert.match(helpers, /agentBrowserConnector\.capturePassAuthorization/);
-  assert.match(helpers, /agentBrowserConnector\.fetchPassReportData/);
-  assert.match(helpers, /PASS_SESSION_EXPIRED/);
+test('single Get OAB fetches directly through oabApiClient after internal session auth', () => {
+  const helpers = between(SERVER, 'function oabInternalAuthStatus', "app.get('/api/oab/auth/status'");
+  assert.match(helpers, /oabAuthState\.status\(\)/);
+  assert.match(helpers, /OAB_AUTH_REQUIRED/);
+  assert.match(helpers, /oabApiClient\.fetchReportData/);
+  assert.doesNotMatch(helpers, /agentBrowserConnector|capturePassAuthorization|fetchPassReportData|PASS_SESSION_EXPIRED/);
 
   const report = between(SERVER, "app.post('/api/oab/report'", '/* ===================================================================');
-  assert.match(report, /await ensurePassConnected\(req\.currentUser\.id/);
-  assert.match(report, /await fetchOabReportWithLoginRecovery\(req\.currentUser\.id/);
-  assert.doesNotMatch(report, /oabApiClient\.fetchReportData/);
+  assert.match(report, /fetchOabReportFromInternalSession\(\{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
+  assert.doesNotMatch(report, /agentBrowserConnector|ensurePassConnected|fetchOabReportWithLoginRecovery/);
 });
 
-test('batch OAB combinations use the same legacy PASS browser transport and do not require Electron auth state', () => {
+test('batch OAB preflights internal auth and uses the same direct API transport', () => {
   const fetchOne = between(SERVER, 'async function oabFetchOneCombination', '/* Toplu BuyerGroupRefs');
-  assert.match(fetchOne, /await ensurePassConnected\(userId, params\)/);
-  assert.match(fetchOne, /await fetchOabReportWithLoginRecovery\(userId, params\)/);
-  assert.doesNotMatch(fetchOne, /oabApiClient\.fetchReportData/);
+  assert.match(fetchOne, /fetchOabReportFromInternalSession\(params\)/);
+  assert.doesNotMatch(fetchOne, /agentBrowserConnector|ensurePassConnected|fetchOabReportWithLoginRecovery/);
 
   const batchRoute = between(SERVER, "app.post('/api/oab/batch'", "app.get('/api/oab/batch-status'");
-  assert.doesNotMatch(batchRoute, /oabAuthState\.status\(\)\.authenticated|authPendingQueue|authRetryCount|OAB_AUTH_REQUIRED|OAB_AUTH_EXPIRED/);
+  assert.match(batchRoute, /requireOabInternalAuth\(\)/);
   const runner = between(SERVER, 'async function runOabBatchJob', '// Planı hesaplar');
-  assert.match(runner, /error\.code === 'PASS_NOT_CONNECTED'/);
-  assert.doesNotMatch(SERVER, /app\.post\('\/api\/oab\/batch\/resume-auth'/);
+  assert.match(runner, /OAB_AUTH_REQUIRED/);
+  assert.match(runner, /OAB_AUTH_EXPIRED/);
 });
 
-test('new Electron-auth helper endpoints are absent from the active OAB web flow', () => {
-  assert.doesNotMatch(SERVER, /app\.post\('\/api\/oab\/auth\/capture-existing'/);
-  assert.doesNotMatch(SERVER, /app\.post\('\/api\/oab\/batch\/resume-auth'/);
-  assert.doesNotMatch(OAB, /captureExistingAuth|batchResumeAuth/);
+test('OAB active server path contains no Edge/Chrome Remote Debugging fallback', () => {
+  const start = SERVER.indexOf('/* ===================================================================\n   OAB (Order-Assortment-Budget)');
+  const end = SERVER.indexOf('/* ===================================================================\n   INTAKE', start);
+  const body = SERVER.slice(start, end);
+  assert.doesNotMatch(body, /capturePassAuthorization|fetchPassReportData|passAuthStatus|ensurePassConnected|remote-debugging|9223/);
 });
 
 test('legacy connector opens the real PASS viewer and captures the real report API request through CDP', () => {
@@ -89,8 +88,10 @@ test('legacy connector opens the real PASS viewer and captures the real report A
   assert.match(request, /PASS_SESSION_EXPIRED/);
 });
 
-test('retrying failed OAB combinations also stays on the legacy browser transport', () => {
+test('retrying failed OAB combinations inherits the same internal auth retry through oabJson', () => {
   const body = between(OAB, 'async function oabRetryFailedCombinations', '// Yeni satırları mevcut raporun ÜZERİNE ekler');
   assert.match(body, /OABApi\.batchStart\(\{ combinations, forceRefresh: true \}\)/);
-  assert.doesNotMatch(body, /ensureOabAuth|oabEnsureAuthentication|oabWithAuthRetry/);
+  const api = between(OAB, 'function oabIsAuthErrorCode', 'const OABApi');
+  assert.match(api, /ensureOabAuth/);
+  assert.match(api, /return oabJson\(url, options, false\)/);
 });
