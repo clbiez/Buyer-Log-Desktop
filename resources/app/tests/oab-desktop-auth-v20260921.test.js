@@ -308,17 +308,14 @@ test('manual interactive window close remains OAB_AUTH_CANCELLED', () => {
   assert.match(body, /cleanupCapture\(\)/);
 });
 
-test('renderer waits for desktop auth promise and continues the same report action without a second GET OAB click', () => {
-  const authStart = OAB.indexOf('async function oabEnsureAuthentication');
-  const retryStart = OAB.indexOf('async function oabWithAuthRetry', authStart);
-  const fetchStart = OAB.indexOf('async function oabFetchReport', retryStart);
-  const authBody = OAB.slice(authStart, retryStart);
-  const retryBody = OAB.slice(retryStart, OAB.indexOf('/* ================================================================', retryStart));
+test('Get OAB no longer depends on the dedicated Electron auth flow', () => {
+  const fetchStart = OAB.indexOf('async function oabFetchReport');
   const fetchBody = OAB.slice(fetchStart, OAB.indexOf('/* ================================================================', fetchStart));
-
-  assert.match(authBody, /await desktop\.ensureOabAuth\(\{ interactive:true \}\)/);
-  assert.match(retryBody, /await oabEnsureAuthentication\(\{ force:true \}\);[\s\S]*?continue;/);
-  assert.match(fetchBody, /await oabEnsureAuthentication\(\);[\s\S]*?await oabWithAuthRetry\(\(\) => OABApi\.report/);
+  assert.ok(fetchStart >= 0);
+  assert.doesNotMatch(fetchBody, /ensureOabAuth|oabEnsureAuthentication|oabWithAuthRetry|buyerLogDesktop/);
+  assert.match(fetchBody, /OABApi\.report\(/);
+  assert.match(fetchBody, /OABApi\.authStatus\(\)/);
+  assert.match(fetchBody, /oabAuthProgressMessage/);
 });
 
 test('backend bridge stores Authorization only in RAM and validates through oabApiClient', () => {
