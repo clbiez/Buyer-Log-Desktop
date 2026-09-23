@@ -71,12 +71,14 @@
    * demekle sonuçlanıyordu: ekranda 11 satır varken eylem hiç açılmıyordu.
    * Model adı taşıyan kimlik KORUNUR; PLM ID'yi sunucu kendi ASAS sipariş
    * kaynağından çözer. Uydurma bir ID üretilmez. */
-  function identityKey(plmId, colourCode, colour, styleName) {
+  function identityKey(plmId, colourCode, colour, styleName, orderCode = '') {
     if (plmId) return canonicalImageKey(plmId, colourCode, colour);
     const name = upper(styleName);
     if (!name) return '';
     const code = upper(colourCode);
-    return code ? `name:${name}|colour:${code}` : `name:${name}`;
+    const order = upper(orderCode);
+    const orderSuffix = order ? `|order:${order}` : '';
+    return code ? `name:${name}|colour:${code}${orderSuffix}` : `name:${name}${orderSuffix}`;
   }
 
   function normalizeIdentity(raw) {
@@ -85,7 +87,8 @@
     if (!plmId && !styleName) return null;
     const colourCode = clean(raw && (raw.colourCode != null ? raw.colourCode : raw.ccode));
     const colour = clean(raw && (raw.colour != null ? raw.colour : raw.color));
-    const key = identityKey(plmId, colourCode, colour, styleName);
+    const orderCode = clean(raw && (raw.orderCode != null ? raw.orderCode : raw.ocode));
+    const key = identityKey(plmId, colourCode, colour, styleName, orderCode);
     if (!key) return null;
     return {
       modelId: clean(raw && raw.modelId),
@@ -94,6 +97,7 @@
       colourCode,
       colour,
       styleName,
+      orderCode,
       specialCode: clean(raw && raw.specialCode),
       /* Görünümün GERÇEKTE görsel gösterip göstermediği. Kanonik kayıt "var"
          dese bile dosya yoksa kullanıcı görsel görmez; "eksik" kararı bu

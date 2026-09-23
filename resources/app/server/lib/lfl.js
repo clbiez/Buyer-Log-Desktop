@@ -84,6 +84,7 @@ function isoWeek(iso) {
 const FIELD_ALIASES = {
   orderCode: ['SIPARIS KOD', 'SIPARIS KODU', 'ORDER CODE', 'ORDER NO', 'PO', 'OCODE'],
   modelName: ['MODEL ADI', 'MODEL NAME', 'STYLE NAME', 'STYLE', 'MODEL'],
+  plmId: ['PLM ID', 'PLM KOD', 'PLM CODE'],
   productDescription: ['URUN ANA TANIM', 'URUN TANIM', 'URUN TANIMI', 'PRODUCT DESCRIPTION', 'PRODUCT DESC', 'PRODUCT DEFINITION'],
   colourCode: ['RENK KOD', 'RENK KODU', 'COLOUR CODE', 'COLOR CODE', 'C.CODE'],
   mag: ['MAG', 'MERCH ALT GRUP KOD', 'MERCH ALT GRUP', 'MERCHANDISE ALT GROUP', 'MERCH SUB GROUP'],
@@ -217,6 +218,7 @@ function parseDetectedSheet(detected) {
       sourceRow: i + 1,
       orderCode: norm(valueAt(source, map.orderCode)),
       modelName: norm(valueAt(source, map.modelName)),
+      plmId: norm(valueAt(source, map.plmId)),
       productDescription: norm(valueAt(source, map.productDescription)),
       colourCode: norm(valueAt(source, map.colourCode)),
       mag: core.mag,
@@ -422,7 +424,7 @@ function modelImagePlmId(value) {
   return modelImageIdentityText(text);
 }
 function attachModelImageIdentities(rows, orders) {
-  const exact = new Map(), byModel = new Map();
+  const exact = new Map(), byOrderModelColour = new Map(), byModel = new Map();
   const put = (map, key, plmId, colour) => {
     if (!key || !plmId) return;
     const current = map.get(key);
@@ -434,18 +436,23 @@ function attachModelImageIdentities(rows, orders) {
   for (const order of Array.isArray(orders) ? orders : []) {
     const model = modelImageIdentityText(order && (order.model ?? order.modelName));
     const colourCode = modelImageIdentityText(order && (order.ccode ?? order.colourCode ?? order.colorCode));
+    const orderCode = modelImageIdentityText(order && (order.ocode ?? order.orderCode ?? order['Order Code']));
     const plmId = modelImagePlmId(order && (order.plm ?? order.plmId));
     if (!model || !plmId) continue;
     put(byModel, model, plmId, order && (order.colour ?? order.color));
     if (colourCode) put(exact, `${model}\u0000${colourCode}`, plmId, order && (order.colour ?? order.color));
+    if (orderCode && colourCode) put(byOrderModelColour, `${orderCode}\u0000${model}\u0000${colourCode}`, plmId, order && (order.colour ?? order.color));
   }
   return (Array.isArray(rows) ? rows : []).map(row => {
     if (!row || typeof row !== 'object' || modelImagePlmId(row.plmId)) return row;
     const model = modelImageIdentityText(row.modelName ?? row.model);
     const colourCode = modelImageIdentityText(row.colourCode ?? row.colorCode ?? row.ccode);
+    const orderCode = modelImageIdentityText(row.orderCode ?? row.ocode ?? row['Order Code']);
+    const orderHit = orderCode && model && colourCode ? byOrderModelColour.get(`${orderCode}\u0000${model}\u0000${colourCode}`) : null;
     const exactHit = model && colourCode ? exact.get(`${model}\u0000${colourCode}`) : null;
     const modelHit = model ? byModel.get(model) : null;
-    const hit = exactHit && !exactHit.conflict ? exactHit : (modelHit && !modelHit.conflict ? modelHit : null);
+    const hit = orderHit && !orderHit.conflict ? orderHit
+      : (exactHit && !exactHit.conflict ? exactHit : (modelHit && !modelHit.conflict ? modelHit : null));
     if (!hit) return row;
     return { ...row, plmId: hit.plmId, colour: norm(row.colour ?? row.color) || hit.colour || '' };
   });

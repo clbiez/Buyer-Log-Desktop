@@ -813,14 +813,13 @@
   function closeLflColumnPanel(){if(openLflColumnPanel){openLflColumnPanel.classList.remove('show','viewportFloating');openLflColumnPanel.style.cssText='';openLflColumnPanel=null;}}
   function safeFilePart(value){return norm(value).replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'LFL';}
   function columnLabel(col){return typeof col.label==='function'?col.label():col.label;}
-  /* LFL satırı PLM ID TAŞIMAZ (kaynak ASAS/LFL Excel'idir); yalnız model adı
-     ve renk kodu vardır. Kimlik ekrandaki metinden ÜRETİLMEZ: kanonik model
-     adı → PLM ID köprüsü ortak katmandan sorulur. Köprü çözemezse kimlik
-     üretilmez ve o satır uzak kaynağa hiç sorulmaz. */
+  /* LFL PLM ID'yi ekranda göstermek zorunda değildir. Kaynak PLM ID
+     taşıyorsa gizli metadata olarak korunur; taşımıyorsa model + renk +
+     sipariş kodu ortak çözümleyiciye bırakılır. */
   function lflModelIdentity(row){
     const styleName=norm(row&&row.modelName);
     const plmId=window.BLDetailImages?.resolvePlmId?.(row&&row.plmId,styleName)||norm(row&&row.plmId);
-    return {plmId,colourCode:norm(row&&row.colourCode),colour:norm(row&&row.colour),styleName};
+    return {plmId,colourCode:norm(row&&row.colourCode),colour:norm(row&&row.colour),styleName,orderCode:norm(row&&row.orderCode)};
   }
   function lflModelImageCellHtml(row,imageIndex,title){
     const id=lflModelIdentity(row);

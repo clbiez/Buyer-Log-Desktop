@@ -252,6 +252,7 @@ const platform = require('./lib/platform');
 const { buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, deriveOperationalStatus, findAntrepoHit, applyDateOverrides } = require('./lib/parse');
 const { withFabricDimensions, attachModelImageIdentities } = require('./lib/lfl');
 const parseLib = require('./lib/parse');
+const modelImageIdentityResolver = require('./lib/model-image-identity-resolver');
 const { resolveUsablePlmImage } = require('./lib/plm-image-availability');
 /* KANONİK PLM GÖRSEL BORUSU — canlı CoreNectum senkronu ve hazır
    BUYERLOG_IMPORT paketi AYNI alım yolundan geçer (bkz. plm-image-ingest.js). */
@@ -4774,42 +4775,11 @@ function queueModelImagePublish(outcomes, source, {
  *
  * Çözülemeyen kimlik SESSİZCE ATILMAZ: açık bir hata kalemi olarak döner,
  * böylece kullanıcı "hiçbir şey olmadı" sonucuyla karşılaşmaz. */
-function modelImageNameKey(value) {
-  let text = String(value == null ? '' : value).toUpperCase();
-  [['İ', 'I'], ['I', 'I'], ['Ş', 'S'], ['Ç', 'C'], ['Ö', 'O'], ['Ü', 'U'], ['Ğ', 'G']]
-    .forEach(([a, b]) => { text = text.split(a).join(b); });
-  return text.replace(/\s+/g, ' ').trim();
+function resolveModelImageItemIdentities(rawItems, context = {}) {
+  return modelImageIdentityResolver.resolveItems(rawItems, context);
 }
-function buildModelNameToPlmIdMap({ orders = [], styleLinks = {} } = {}) {
-  const map = new Map();
-  const add = (name, plmId) => {
-    const key = modelImageNameKey(name), id = String(plmId == null ? '' : plmId).trim();
-    if (key && parseLib.normalizePlmImageId(id) && !map.has(key)) map.set(key, id);
-  };
-  for (const order of Array.isArray(orders) ? orders : []) add(order && order.model, order && order.plm);
-  for (const link of Object.values(styleLinks || {})) add(link && link.styleName, link && link.plmId);
-  return map;
-}
-function resolveModelImageItemIdentities(rawItems, { orders = [], styleLinks = {} } = {}) {
-  const list = Array.isArray(rawItems) ? rawItems : [];
-  const needsLookup = list.some(item => !parseLib.normalizePlmImageId(item && item.plmId));
-  const byName = needsLookup ? buildModelNameToPlmIdMap({ orders, styleLinks }) : new Map();
-  const resolved = [], unresolved = [];
-  for (const raw of list) {
-    const item = raw && typeof raw === 'object' ? { ...raw } : {};
-    const styleName = String(item.styleName == null ? '' : item.styleName).trim();
-    if (!parseLib.normalizePlmImageId(item.plmId)) {
-      const match = byName.get(modelImageNameKey(styleName));
-      if (match) item.plmId = match;
-    }
-    if (parseLib.normalizePlmImageId(item.plmId)) resolved.push(item);
-    else unresolved.push({
-      plmId: '', styleName, colourCode: String(item.colourCode == null ? '' : item.colourCode).trim(),
-      code: 'MODEL_PLM_ID_UNRESOLVED',
-      error: styleName ? `"${styleName}" için PLM ID çözülemedi.` : 'Model kimliği (PLM ID) eksik.',
-    });
-  }
-  return { resolved, unresolved };
+function modelImageIdentityOrders(runtime) {
+  return modelImageIdentityResolver.ordersFromRuntime(runtime);
 }
 
 async function resolveModelImagesLocalFirst(requests, options = {}) {
@@ -5039,7 +5009,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       // İstekler TEKİLLEŞTİRİLİR: aynı PLM+Renk iki kez API'ye gitmez.
       /* PLM ID taşımayan alt detay kalemleri önce model adı üzerinden çözülür;
          çözülemeyenler SESSİZCE ATILMAZ, hata kalemi olarak raporlanır. */
-      let cachedOrders=[];try{cachedOrders=cacheForUser(req.currentUser.id).asasOrders||[];}catch(_){cachedOrders=[];}
+      let cachedOrders=[];try{cachedOrders=modelImageIdentityOrders(cacheForUser(req.currentUser.id));}catch(_){cachedOrders=[];}
       const identity=resolveModelImageItemIdentities(raw,{orders:cachedOrders,styleLinks});
       const seen=new Set(),requests=[];
       for(const item of identity.resolved){
@@ -5179,7 +5149,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
       await ensureDataLoaded(req.currentUser.id);const runtime=cacheForUser(req.currentUser.id),overrides=loadOverrides();
       /* Kimlik önce ÇÖZÜLÜR: PLM ID taşımayan alt detay kalemleri model adı
          üzerinden ASAS kaydına bağlanır. Çözülemeyenler sessizce düşmez. */
-      const identity = resolveModelImageItemIdentities(raw, { orders: runtime.asasOrders || [], styleLinks: loadPlmStyleLinks().links || {} });
+      const identity = resolveModelImageItemIdentities(raw, { orders: modelImageIdentityOrders(runtime), styleLinks: loadPlmStyleLinks().links || {} });
       const items = identity.resolved;
       if (!items.length) {
         return { mode, candidates: [], requested: raw.length, saved: 0,
@@ -7471,7 +7441,7 @@ async function loadInitialDataAndLfl(value){
 }
 async function ensureDataLoaded(value){
   const id = sourceUserId(value), runtime = cacheForUser(id);
-  if(runtime.asasOrders && runtime.lflLoadedAt) return runtime;
+  if(runtime.loadedAt && Array.isArray(runtime.asasOrders) && runtime.lflLoadedAt) return runtime;
   if(!initialDataLoadPromises.has(id)) {
     initialDataLoadPromises.set(id, loadInitialDataAndLfl(id).finally(()=>{ initialDataLoadPromises.delete(id); }));
   }
@@ -12318,7 +12288,7 @@ app.get('/api/lfl', userAccess.requireArea('lfl'), async (req, res) => {
     await ensureDataLoaded(id);
     const runtime=cacheForUser(id);
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,runtime.asasOrders||[]);
+    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
     sendDateSafeJson(res, {
       rows: imageAwareRows,
       meta: {...(runtime.lflMeta||{}),rowCount:imageAwareRows.length},
@@ -12336,7 +12306,7 @@ app.post('/api/lfl/refresh', userAccess.requireArea('lfl'), async (req, res) => 
     const pending=initialDataLoadPromises.get(id); if(pending) await pending;
     const runtime=await loadFromModels(id, ['lfl']);
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,runtime.asasOrders||[]);
+    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
     const result={rows:imageAwareRows,meta:{...(runtime.lflMeta||{}),rowCount:imageAwareRows.length},source:runtime.sources&&runtime.sources.lfl||null,loadedAt:runtime.lflLoadedAt};
     userAccess.appendAudit(req.currentUser,'LFL_MODEL_REFRESH','Data Model Connection',{source:result.source,rowCount:Number(result.meta&&result.meta.rowCount)||0});
     sendDateSafeJson(res, result);
@@ -12359,7 +12329,7 @@ app.post('/api/lfl/upload', userAccess.requireArea('lfl'), async (req, res) => {
     runtime.sources = { ...(runtime.sources || {}), lfl: name || 'Yüklenen dosya' };
     userAccess.appendAudit(req.currentUser,'LFL_UPLOAD',name||'uploaded',{rowCount:Number(parsed.meta&&parsed.meta.rowCount)||0});
     const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,runtime.asasOrders||[]);
+    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
     sendDateSafeJson(res, { rows: imageAwareRows, meta: {...(runtime.lflMeta||{}),rowCount:imageAwareRows.length}, source: runtime.sources.lfl, loadedAt: runtime.lflLoadedAt });
   } catch (err) { apiError(res, err, 'Yüklenen LFL Excel dosyası işlenemedi.'); }
 });
