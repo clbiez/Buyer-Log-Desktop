@@ -845,6 +845,16 @@ async function acquireOabAuthorization(options = {}) {
         }
       };
       const showInteractiveWindow = () => showWindow(authWindow);
+      const resetOabBrowserAuthState = async reason => {
+        await clearOabBackendAuthorization();
+        try {
+          const authSession = oabAuthSession();
+          await authSession.clearStorageData({ storages:['cookies','localstorage','indexdb','serviceworkers','cachestorage'] });
+          await authSession.clearCache();
+        } catch (_) {}
+        lifecycle?.resetForFreshViewer?.();
+        log('OAB tarayıcı oturumu yeni kullanıcı girişi için sıfırlandı (' + String(reason || 'interactive') + ').');
+      };
       const armHardTimeout = () => {
         if (timeoutTimer) clearTimeout(timeoutTimer);
         const interactiveNow = flowState.interactive;
@@ -931,8 +941,7 @@ async function acquireOabAuthorization(options = {}) {
         // Treat the browser auth state as stale/unknown, not as permission to
         // leave a user-triggered Get OAB hidden for the full interactive timeout.
         log('OAB sessiz oturum kontrolü sonuçlanmadı; görünür SSO akışına geçiliyor.');
-        await clearOabBackendAuthorization();
-        lifecycle?.resetForFreshViewer?.();
+        await resetOabBrowserAuthState('stale-silent-probe');
         showInteractiveWindow();
 
         if (navigationBusy) {
@@ -1015,7 +1024,10 @@ async function acquireOabAuthorization(options = {}) {
       }
 
       authWindow.once('ready-to-show', () => {
-        if (manual || loginRequiredKnown) showInteractiveWindow();
+        // Do not reveal the PASS viewer shell merely because the user selected
+        // "OAB Kullanıcı Girişi". The actual sign-in surface can be a child
+        // SSO window; showing this parent early is what produced the blank page.
+        if (loginRequiredKnown) showInteractiveWindow();
       });
 
       const schedulePulse = delay => {
@@ -1062,7 +1074,9 @@ async function acquireOabAuthorization(options = {}) {
           loginRequiredKnown = true;
           clearSilentProbe();
           if (lifecycle) void lifecycle.observe({ url, signIn:true });
-          showInteractiveWindow();
+          // The popup itself is revealed in did-create-window. Showing the
+          // parent here exposes an empty PASS shell before Electron gives us
+          // the child BrowserWindow.
         }
         return {
           action:'allow',
@@ -1111,7 +1125,13 @@ async function acquireOabAuthorization(options = {}) {
         popup.once('ready-to-show', () => {
           let url = '';
           try { url = popup.webContents.getURL(); } catch (_) {}
-          if (loginRequiredKnown || isLikelyOabSignInUrl(url)) showWindow(popup);
+          // Microsoft/Keycloak can create an about:blank child and populate or
+          // redirect it afterwards. For a user-triggered interactive auth flow,
+          // the child is the usable sign-in surface and must never stay hidden.
+          if (flowState.interactive || loginRequiredKnown || isLikelyOabSignInUrl(url)) showWindow(popup);
+        });
+        popup.webContents.on('did-finish-load', () => {
+          if (flowState.interactive && !settled) showWindow(popup);
         });
         popup.webContents.on('did-fail-load', (_event, errorCode, _description, _validatedURL, isMainFrame) => {
           if (!isMainFrame || settled || Number(errorCode) === -3) return;
@@ -1154,7 +1174,13 @@ async function acquireOabAuthorization(options = {}) {
       armHardTimeout();
 
       void Promise.resolve(networkReady)
-        .then(() => {
+        .then(async () => {
+          if (settled) return false;
+          // The explicit user-menu command means "start a fresh sign-in", not
+          // "show whatever stale PASS shell is cached in the persistent
+          // partition". Get OAB keeps the fast silent-session probe; manual
+          // sign-in clears only the dedicated OAB browser partition.
+          if (manual) await resetOabBrowserAuthState('manual-login');
           if (settled) return false;
           armSilentProbe();
           return loadLoginTarget(OAB_VIEWER_URL, true);
