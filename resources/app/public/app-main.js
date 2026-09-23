@@ -8441,7 +8441,7 @@ function enterKolDateEdit(span){
   span.replaceWith(input);
   // Dinamik eklenen native input, renderKol sırasında bağlanan doğrudan change
   // dinleyicilerinin dışında kaldığı için kendi kayıt dinleyicisini alır.
-  input.addEventListener('change',()=>commitKolEditor(input,{rerender:true}));
+  input.addEventListener('change',()=>kolApplyCollectionCellChange({rowId:id,key,editor:input,source:'manual'},{rerender:true}));
   enhanceDateInput(input);
   const visibleInput=input._dateDisplayInput||input;
   const host=input.closest('.dateFieldWrap')||input;
@@ -19661,23 +19661,44 @@ function kolSetModelSharedField(row,key,value){
   // while only row[key] changed and the next render would resurrect old data.
   return kolWriteGroupedStorageValue(row,key,value);
 }
+function kolApplyInStoreScheduleFields(row,schedule,{preserveKeys=null,applyRetail=true}={}){
+  if(!row||!schedule)return {row,changed:0};
+  const preserve=preserveKeys instanceof Set?preserveKeys:new Set(Array.isArray(preserveKeys)?preserveKeys:[]);
+  let current=row,changed=0;
+  const setScheduleField=(key,value)=>{
+    if(preserve.has(key)||kolCellLinkedToModel(current,key))return;
+    const before=kolEffectiveValue(current,key);
+    current=kolSetModelSharedField(current,key,value);
+    current=kolRows.find(item=>Number(item.id)===Number(row.id))||current;
+    if(!editableValuesEqual(before,kolEffectiveValue(current,key)))changed++;
+  };
+  setScheduleField('inStoreWeek',schedule.inStoreWeek);
+  setScheduleField('inStoreMonth',kolMonthDisplay(schedule.inStoreMonth));
+  setScheduleField('inStore',schedule.inStore);
+  if(applyRetail&&!preserve.has('retail')){
+    current=kolRows.find(item=>Number(item.id)===Number(row.id))||current;
+    const finalInStore=toISODate(kolEffectiveValue(current,'inStore'));
+    if(finalInStore&&!kolCellLinkedToModel(current,'retail')){
+      const before=kolEffectiveValue(current,'retail');
+      kolApplyInStoreRetailDependency(current,finalInStore);
+      current=kolRows.find(item=>Number(item.id)===Number(row.id))||current;
+      if(!editableValuesEqual(before,kolEffectiveValue(current,'retail')))changed++;
+    }
+  }
+  return {row:current,changed};
+}
 function kolApplyInStoreSchedule(row,schedule){
   if(!row||!schedule||!kolWorkspaceCanEdit)return false;
   if(isAreaFrozen('koleksiyon'))return false;
   if(['inStoreWeek','inStoreMonth','inStore'].some(key=>kolCellLinkedToModel(row,key))){
     showToast(appLang==='en'?'This period is linked to the model. Make it colour-specific first.':'Bu dönem modele bağlı. Önce alanı renk özelinde yap.');return false;
   }
-  releaseKolTransientTopRow(row.id);kolPushUndo();
-  kolSetModelSharedField(row,'inStoreWeek',schedule.inStoreWeek);
-  row=kolRows.find(item=>Number(item.id)===Number(row.id))||row;
-  kolSetModelSharedField(row,'inStoreMonth',kolMonthDisplay(schedule.inStoreMonth));
-  row=kolRows.find(item=>Number(item.id)===Number(row.id))||row;
-  kolSetModelSharedField(row,'inStore',schedule.inStore);
-  row=kolRows.find(item=>Number(item.id)===Number(row.id))||row;
-  // Mağaza Ayı/Haftası yoluyla oluşan In Store da doğrudan hücre editindeki
-  // aynı Perakende dependency'sini kullanır. Sevk Tarihine burada dokunulmaz.
-  kolApplyInStoreRetailDependency(row,schedule.inStore);
-  saveKolRows();renderKol();
+  const result=kolSpreadsheetBatchEdit([
+    {rowId:row.id,key:'inStoreWeek',value:schedule.inStoreWeek},
+    {rowId:row.id,key:'inStoreMonth',value:kolMonthDisplay(schedule.inStoreMonth)},
+    {rowId:row.id,key:'inStore',value:schedule.inStore},
+  ],{source:'picker'});
+  if(!result?.ok)return false;
   const month=kolMonthDisplay(schedule.inStoreMonth),week=kolWeekDisplay(schedule.inStoreWeek),date=fmtDate(schedule.inStore);
   showToast(appLang==='en'?`In Store set: ${month} · Week ${week} · ${date}`:`Mağaza dönemi: ${month} · ${week}. hafta · ${date}`);
   return true;
@@ -23050,6 +23071,7 @@ function commitKolEditor(el, options={}){
   const rerender = options.rerender !== false;
   const pushUndo = options.pushUndo !== false;
   const persist = options.save !== false;
+  const deferDependencies = options.deferDependencies === true;
   if(!el || !el.dataset) return false;
   const id = Number(el.dataset.id), k = el.dataset.k;
   let row = kolRows.find(r=>r.id===id); if(!row || !k) return false;
@@ -23153,7 +23175,7 @@ function commitKolEditor(el, options={}){
   // düzenlensin ister dönem seçicisinden gelsin aynı helper kullanılır. Sevk Tarihi
   // Collection'da user-owned'dır ve hiçbir dependency tarafından yazılmaz.
   if(k==='inStore'){
-    if(val)kolApplyInStoreRetailDependency(row,val);
+    if(val&&!deferDependencies)kolApplyInStoreRetailDependency(row,val);
     needsRerender=true;
   }
   else if(k==='retail'||k==='exFactory'){
@@ -23563,7 +23585,7 @@ function renderKol(){
     if(!kolWorkspaceCanEdit)return;
     openKolPeriodDrawer(cell.dataset.periodId,cell.dataset.periodMode);
   }));
-  tbody.querySelectorAll('.editCell:not(.kolPriceCell):not(.kolPeriodPickerBtn)').forEach(el=>el.addEventListener('change',()=>commitKolEditor(el,{rerender:true})));
+  tbody.querySelectorAll('.editCell:not(.kolPriceCell):not(.kolPeriodPickerBtn)').forEach(el=>el.addEventListener('change',()=>kolApplyCollectionCellChange({rowId:Number(el.dataset.id),key:el.dataset.k,editor:el,source:'manual'},{rerender:true})));
   tbody.querySelectorAll('.kolCustomSchemaCell').forEach(el=>{
     el.addEventListener('focus',()=>{if(el.dataset.schemaFocused==='1')return;el.value=el.dataset.rawValue||'';el.dataset.schemaFocused='1';});
     el.addEventListener('blur',()=>{if(el.dataset.schemaFocused==='1'&&el.value===el.dataset.rawValue){el.value=el.dataset.displayValue||'';el.dataset.schemaFocused='';}});
@@ -23605,7 +23627,7 @@ function renderKol(){
     row.confirmedManufacturer=norm(row.confirmedManufacturer)===norm(m)?'':m;
     kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?`${m} nihai üretici olarak onaylandı.`:'Üretici onayı kaldırıldı.');
   }));
-  tbody.querySelectorAll('.kolPriceCell').forEach(el=>el.addEventListener('change',()=>commitKolPriceEditor(el,{rerender:true})));
+  tbody.querySelectorAll('.kolPriceCell').forEach(el=>el.addEventListener('change',()=>kolApplyCollectionCellChange({rowId:Number(el.dataset.id),key:`pricing:${el.dataset.mfr}`,editor:el,source:'manual'},{rerender:true})));
   // Elle giriş düğmeleri (v6.01). Tek dinleyici; satırlar yeniden çizildiğinde
   // tekrar bağlanmaya gerek kalmasın diye tbody üzerinde.
   tbody.addEventListener('click',event=>{
@@ -23768,6 +23790,9 @@ function kolSpreadsheetValidateValue(rowId,key,value){
   if(kolCellLinkedToModel(row,targetKey))return {ok:false,reason:'linked'};
   const c=meta.col,raw=String(value??'');
   if(c?.select&&raw){const match=c.select.find(v=>turknorm(String(v))===turknorm(raw));if(!match)return {ok:false,reason:'invalid-option'};value=match;}
+  if(c?.inStorePeriod&&['inStoreWeek','inStoreMonth','inStore'].some(periodKey=>kolCellLinkedToModel(row,periodKey)))return {ok:false,reason:'linked'};
+  if(c?.inStorePeriod==='month'&&raw){const schedule=kolScheduleFromMonthCode(raw);if(!schedule)return {ok:false,reason:'invalid-period'};value=kolMonthDisplay(schedule.inStoreMonth);}
+  if(c?.inStorePeriod==='week'&&raw){const schedule=kolScheduleFromWeekCode(raw);if(!schedule)return {ok:false,reason:'invalid-period'};value=schedule.inStoreWeek;}
   if(c?.date&&raw&&!parseKeyboardDateToISO(raw))return {ok:false,reason:'invalid-date'};
   if(c?.qty&&raw&&!Number.isFinite(kolParseQuantityNum(raw)))return {ok:false,reason:'invalid-number'};
   /* v7.81 — trPrice'ın col nesnesi (KOL_STYLE_EXTRA_FIELDS) money:true
@@ -23796,6 +23821,22 @@ function kolSpreadsheetMakeEditor(rowId,key,value){
   if(c?.hologram)el.classList.add('kolHologramCell');
   if(c?.suggest)el.dataset.kind=c.suggest;
   return el;
+}
+function kolApplyCollectionCellChange(change,options={}){
+  const editor=change?.editor||null;
+  const rowId=Number(change?.rowId??editor?.dataset?.id);
+  const key=String(change?.key||editor?.dataset?.k||'');
+  if(!Number.isFinite(rowId)||!key)return false;
+  if(key.startsWith('pricing:')){
+    const manufacturer=key.slice(8);if(!manufacturer)return false;
+    const priceEditor=editor||document.createElement('input');
+    priceEditor.dataset.id=String(rowId);priceEditor.dataset.mfr=manufacturer;
+    if(!editor)priceEditor.value=String(change?.value??'');
+    priceEditor.classList.add('editCell','kolPriceCell');
+    return commitKolPriceEditor(priceEditor,options);
+  }
+  const cellEditor=editor||kolSpreadsheetMakeEditor(rowId,key,change?.value);
+  return commitKolEditor(cellEditor,options);
 }
 const KOL_VARIANT_FIELDS=new Set(['quantity','img','imgRef','colour','colourCode','durum','status']);
 const KOL_PRICING_OVERRIDE_FIELDS=['targetPrice','previousFob','fabricPriceS6','fabricPriceS7'];
@@ -23915,37 +23956,84 @@ function groupedFieldHasAnyOverride(row,column){
 }
 function kolSpreadsheetBatchEdit(operations,summary={}){
   if(!kolWorkspaceCanEdit||!Array.isArray(operations)||!operations.length)return {ok:false,changed:0};
-  const validated=[];for(const op of operations){const v=kolSpreadsheetValidateValue(op.rowId,op.key,op.value);if(v.ok)validated.push({...op,value:v.value,writeKey:v.meta?.key||op.key});}
+  const mutationSource=String(summary?.source||'paste');
+  const validated=[];
+  for(const op of operations){
+    const v=kolSpreadsheetValidateValue(op.rowId,op.key,op.value);
+    if(v.ok)validated.push({...op,value:v.value,writeKey:v.meta?.key||op.key});
+  }
   if(!validated.length)return {ok:false,changed:0};
-  const before=kolSnapshot(),previousUndo=kolUndoStack.slice(),previousUndoSummaries=kolUndoSummaryStack.slice(),previousRedo=kolRedoStack.slice(),previousRedoSummaries=kolRedoSummaryStack.slice();kolPushUndo();
-  const quoteSync=[];let changed=0;
+  const explicitByRow=new Map(),periodByRow=new Map();
+  validated.forEach((op,index)=>{
+    const rowId=String(op.rowId),key=String(op.writeKey||op.key);
+    if(!explicitByRow.has(rowId))explicitByRow.set(rowId,new Set());
+    explicitByRow.get(rowId).add(key);
+    if(['inStoreWeek','inStoreMonth','inStore'].includes(key)){
+      const info=periodByRow.get(rowId)||{rowId:op.rowId,driver:null};
+      if(key==='inStoreWeek'||key==='inStoreMonth')info.driver={key,value:op.value,index};
+      periodByRow.set(rowId,info);
+    }
+  });
+  const before=kolSnapshot(),previousUndo=kolUndoStack.slice(),previousUndoSummaries=kolUndoSummaryStack.slice(),previousRedo=kolRedoStack.slice(),previousRedoSummaries=kolRedoSummaryStack.slice();
+  kolPushUndo();
+  const quoteSync=[];let changed=0,dependentChanged=0;
   try{
     for(const op of validated){
-  if(op.key==='__picture__'){
-    const row=kolRows.find(r=>String(r.id)===String(op.rowId));
-    const source=op.value&&op.value.__pictureSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__pictureSourceId)):null;
-    if(row&&source){row.img=source.img||'';row.imgRef=source.imgRef||'';changed++;}
-    continue;
-  }
-  if(op.key==='endeksmatik'){
-    const row=kolRows.find(r=>String(r.id)===String(op.rowId));
-    const source=op.value&&op.value.__endeksmatikSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__endeksmatikSourceId)):null;
-    const sourceData=source?kolEffectiveValue(source,'endeksmatikData'):null;
-    if(row&&sourceData){kolWriteGroupedStorageValue(row,'endeksmatikData',JSON.parse(JSON.stringify(sourceData)));changed++;}
-    continue;
-  }
-  const el=kolSpreadsheetMakeEditor(op.rowId,op.writeKey||op.key,op.value);
-  if(commitKolEditor(el,{rerender:false,pushUndo:false,save:false,syncQuotations:false})){changed++;if(['plmId','modelKod','urunTipi','colour','colourCode','season','lisans'].includes(op.key))quoteSync.push(op);}
-}
-    if(!changed){kolUndoStack=previousUndo;kolUndoSummaryStack=previousUndoSummaries;kolRedoStack=previousRedo;kolRedoSummaryStack=previousRedoSummaries;updateKolUndoRedoButtons();return {ok:true,changed:0};}
+      if(op.key==='__picture__'){
+        const row=kolRows.find(r=>String(r.id)===String(op.rowId));
+        const source=op.value&&op.value.__pictureSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__pictureSourceId)):null;
+        if(row&&source){row.img=source.img||'';row.imgRef=source.imgRef||'';changed++;}
+        continue;
+      }
+      if(op.key==='endeksmatik'){
+        const row=kolRows.find(r=>String(r.id)===String(op.rowId));
+        const source=op.value&&op.value.__endeksmatikSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__endeksmatikSourceId)):null;
+        const sourceData=source?kolEffectiveValue(source,'endeksmatikData'):null;
+        if(row&&sourceData){kolWriteGroupedStorageValue(row,'endeksmatikData',JSON.parse(JSON.stringify(sourceData)));changed++;}
+        continue;
+      }
+      const key=op.writeKey||op.key;
+      if(kolApplyCollectionCellChange({rowId:op.rowId,key,value:op.value,source:mutationSource},{rerender:false,pushUndo:false,save:false,syncQuotations:false,deferDependencies:true})){
+        changed++;
+        if(['plmId','modelKod','urunTipi','colour','colourCode','season','lisans'].includes(key))quoteSync.push({rowId:op.rowId,key});
+      }
+    }
+    for(const info of periodByRow.values()){
+      const rowId=String(info.rowId),preserve=explicitByRow.get(rowId)||new Set();
+      let row=kolRows.find(r=>String(r.id)===rowId);if(!row)continue;
+      if(info.driver){
+        const schedule=info.driver.key==='inStoreMonth'?kolScheduleFromMonthCode(info.driver.value):kolScheduleFromWeekCode(info.driver.value);
+        if(schedule){
+          const applied=kolApplyInStoreScheduleFields(row,schedule,{preserveKeys:preserve,applyRetail:true});
+          dependentChanged+=applied.changed||0;row=applied.row||row;
+        }
+      }else if(preserve.has('inStore')&&!preserve.has('retail')){
+        const finalInStore=toISODate(kolEffectiveValue(row,'inStore'));
+        if(finalInStore&&!kolCellLinkedToModel(row,'retail')){
+          const beforeRetail=kolEffectiveValue(row,'retail');
+          kolApplyInStoreRetailDependency(row,finalInStore);
+          row=kolRows.find(r=>String(r.id)===rowId)||row;
+          if(!editableValuesEqual(beforeRetail,kolEffectiveValue(row,'retail')))dependentChanged++;
+        }
+      }
+    }
+    if(!changed&&!dependentChanged){
+      kolUndoStack=previousUndo;kolUndoSummaryStack=previousUndoSummaries;kolRedoStack=previousRedo;kolRedoSummaryStack=previousRedoSummaries;updateKolUndoRedoButtons();
+      return {ok:true,changed:0};
+    }
     if(!saveKolRows())throw new Error('Collection save failed');
     if(window.BL_QUOTATIONS?.syncModelFields)quoteSync.forEach(op=>{const row=kolRows.find(r=>String(r.id)===String(op.rowId));window.BL_QUOTATIONS.syncModelFields(Number(op.rowId),op.key,row?.[op.key]??'');});
-    const updatedRows=new Set(validated.map(op=>String(op.rowId))).size,updatedFields=new Set(validated.map(op=>String(op.key))).size;
-    const undoSummary={kind:'paste',changed,updatedRows,updatedFields,readonly:Number(summary.readonly)||0,invalid:Number(summary.invalid)||0,skipped:Number(summary.skipped)||0,at:new Date().toISOString()};
+    const updatedRows=new Set(validated.map(op=>String(op.rowId))).size,updatedFields=new Set(validated.map(op=>String(op.writeKey||op.key))).size;
+    const undoSummary={kind:mutationSource==='paste'?'paste':'batch-edit',source:mutationSource,changed:changed+dependentChanged,explicitChanged:changed,dependentChanged,updatedRows,updatedFields,readonly:Number(summary.readonly)||0,invalid:Number(summary.invalid)||0,skipped:Number(summary.skipped)||0,at:new Date().toISOString()};
     kolUndoSummaryStack[kolUndoSummaryStack.length-1]=undoSummary;
-    renderKol();return {ok:true,changed,updatedRows,updatedFields,summary:undoSummary};
-  }catch(err){kolRows=before;kolUndoStack=previousUndo;kolUndoSummaryStack=previousUndoSummaries;kolRedoStack=previousRedo;kolRedoSummaryStack=previousRedoSummaries;updateKolUndoRedoButtons();renderKol();return {ok:false,changed:0,error:err};}
+    renderKol();
+    return {ok:true,changed:changed+dependentChanged,explicitChanged:changed,dependentChanged,updatedRows,updatedFields,summary:undoSummary};
+  }catch(err){
+    kolRows=before;kolUndoStack=previousUndo;kolUndoSummaryStack=previousUndoSummaries;kolRedoStack=previousRedo;kolRedoSummaryStack=previousRedoSummaries;updateKolUndoRedoButtons();renderKol();
+    return {ok:false,changed:0,error:err};
+  }
 }
+
 function kolSpreadsheetSetColumnWidth(key,width){
   const d=kolDescriptorByKey(key);if(!d)return false;kolColWidths[key]=Math.max(kolDescriptorMinWidth(d),Math.min(600,Number(width)||kolDescriptorDefaultWidth(d)));saveKolColState();return true;
 }
