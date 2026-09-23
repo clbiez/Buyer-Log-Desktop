@@ -310,10 +310,11 @@ test('OAB: metadata uçları paketlenmiş JSON kullanıyor; filtre seçiminde PA
   assert.doesNotMatch(bgBody, /ensurePassConnected|fetchPassBuyerGroupOptions|GetVariableWithData/);
 });
 
-test('OAB: /api/oab/report üç filtreyi doğrudan allowlisted OAB API clientına taşır', () => {
+test('OAB: /api/oab/report üç filtreyi eski PASS Edge/CDP taşıma yoluna verir', () => {
   const body = SERVER.slice(SERVER.indexOf("app.post('/api/oab/report'"), SERVER.indexOf("app.get('/api/oab/settings'"));
-  assert.match(body, /oabApiClient\.fetchReportData\(\{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
-  assert.doesNotMatch(body, /ensurePassConnected|fetchPassReportData/);
+  assert.match(body, /await ensurePassConnected\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
+  assert.match(body, /await fetchOabReportWithLoginRecovery\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
+  assert.doesNotMatch(body, /oabApiClient\.fetchReportData/);
 });
 
 test('OAB: /api/oab/report cache\'i kontrol eder, forceRefresh bypass eder', () => {
