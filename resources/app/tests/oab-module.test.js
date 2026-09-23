@@ -290,9 +290,10 @@ test('OAB: bütün API uçları overview yetki alanıyla korunuyor', () => {
   }
 });
 
-test('OAB: auth durumu eski PASS Edge/CDP connector state üzerinden raporlanır; credential renderer yanıtına çıkmaz', () => {
+test('OAB: auth durumu internal Electron oturumunun RAM state bilgisinden raporlanır; credential renderer yanıtına çıkmaz', () => {
   const body = SERVER.slice(SERVER.indexOf("app.get('/api/oab/auth/status'"), SERVER.indexOf("app.get('/api/oab/seasons'"));
-  assert.match(body, /agentBrowserConnector\.passAuthStatus\(req\.currentUser\.id\)/);
+  assert.match(body, /oabInternalAuthStatus\(\)/);
+  assert.doesNotMatch(body, /agentBrowserConnector\.passAuthStatus/);
   assert.doesNotMatch(body, /authorization|Bearer/i);
 });
 
@@ -310,11 +311,10 @@ test('OAB: metadata uçları paketlenmiş JSON kullanıyor; filtre seçiminde PA
   assert.doesNotMatch(bgBody, /ensurePassConnected|fetchPassBuyerGroupOptions|GetVariableWithData/);
 });
 
-test('OAB: /api/oab/report üç filtreyi eski PASS Edge/CDP taşıma yoluna verir', () => {
+test('OAB: /api/oab/report üç filtreyi internal auth sonrası doğrudan oabApiClient yoluna verir', () => {
   const body = SERVER.slice(SERVER.indexOf("app.post('/api/oab/report'"), SERVER.indexOf("app.get('/api/oab/settings'"));
-  assert.match(body, /await ensurePassConnected\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
-  assert.match(body, /await fetchOabReportWithLoginRecovery\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
-  assert.doesNotMatch(body, /oabApiClient\.fetchReportData/);
+  assert.match(body, /fetchOabReportFromInternalSession\(\{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
+  assert.doesNotMatch(body, /agentBrowserConnector|ensurePassConnected|fetchOabReportWithLoginRecovery/);
 });
 
 test('OAB: /api/oab/report cache\'i kontrol eder, forceRefresh bypass eder', () => {
@@ -928,7 +928,7 @@ test('OAB: oabJson istemcide err.details\'i sunucu yanıtından taşıyor (önce
   assert.match(body, /err\.details = data\.details/);
 });
 
-test('OAB: PASS_HTTP_ERROR kullanıcıya güvenli endpoint ve HTTP durum mesajı verir', () => {
+test('OAB: OAB_HTTP_ERROR kullanıcıya güvenli endpoint ve HTTP durum mesajı verir', () => {
   const start = OAB_JS.indexOf('function oabReportErrorMessage(');
   const end = OAB_JS.indexOf('function oabFilteredRows', start);
   const source = OAB_JS.slice(start, end);
@@ -936,7 +936,7 @@ test('OAB: PASS_HTTP_ERROR kullanıcıya güvenli endpoint ve HTTP durum mesajı
     (tr) => tr, () => 'auth'
   );
   const message = fn({
-    code: 'PASS_HTTP_ERROR',
+    code: 'OAB_HTTP_ERROR',
     details: { status: 405, method: 'POST', url: 'https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData' },
   });
   assert.match(message, /POST \/pass\/common\/report\/api\/v2\.0\/Report\/GetReportData/);
