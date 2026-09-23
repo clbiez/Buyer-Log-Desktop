@@ -17,12 +17,23 @@ function assertCi(){
 }
 function tag(channel,version){if(!['test','stable'].includes(channel)||!C.parseSemver(version))C.fail('Release tag geçersiz.','RELEASE_TAG_INVALID');return `${channel}-v${version}`;}
 function releaseExists(channel,version){try{gh(['release','view',tag(channel,version),'--json','tagName']);return true;}catch(_){return false;}}
+function releaseAssetNames(channel,version){
+  const raw=JSON.parse(gh(['release','view',tag(channel,version),'--json','assets'])||'{}');
+  return new Set((Array.isArray(raw.assets)?raw.assets:[]).map(asset=>String(asset&&asset.name||'')).filter(Boolean));
+}
 function verifyExistingManifest(channel,version,expected,dir){
   const name=`BuyerLog-${version}.json`;
   gh(['release','download',tag(channel,version),'--pattern',name,'--dir',dir,'--clobber']);
   const existing=parseReleaseManifest(C.readJson(path.join(dir,name),null),channel);
   if(existing.version!==version||existing.sha256!==expected.sha256||existing.size!==expected.size)
     C.fail('Mevcut release aynı version için farklı artifact içeriyor.','RELEASE_VERSION_IMMUTABLE');
+}
+function ensureReleaseAssets(channel,version,manifest,files,dir){
+  const names=releaseAssetNames(channel,version);
+  const manifestName=`BuyerLog-${version}.json`;
+  if(names.has(manifestName))verifyExistingManifest(channel,version,manifest,dir);
+  const missing=(Array.isArray(files)?files:[]).filter(file=>!names.has(path.basename(file)));
+  if(missing.length)gh(['release','upload',tag(channel,version),...missing]);
 }
 async function verifyDownloaded(channel,version,manifest,dir){
   const name=path.posix.basename(manifest.artifact),file=path.join(dir,name);
@@ -61,8 +72,8 @@ async function publishTest(repoDir){
   const per=path.join(C.DIST_ROOT,`BuyerLog-${manifest.version}.json`);C.atomicWriteJson(per,manifest);
   const temp=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-remote-'));
   try{
-    if(releaseExists('test',manifest.version))verifyExistingManifest('test',manifest.version,manifest,temp);
-    else gh(['release','create',tag('test',manifest.version),artifact,per,'--title',`Buyer Log TEST ${manifest.version}`,'--notes',`TEST release for ${manifest.version}`]);
+    if(!releaseExists('test',manifest.version))gh(['release','create',tag('test',manifest.version),'--title',`Buyer Log TEST ${manifest.version}`,'--notes',`TEST release for ${manifest.version}`]);
+    ensureReleaseAssets('test',manifest.version,manifest,[artifact,per],temp);
     await verifyDownloaded('test',manifest.version,manifest,temp);await verifyPublicArtifact('test',manifest,temp);updateLatest(repoDir,'test',manifest);
   }finally{fs.rmSync(temp,{recursive:true,force:true});}
 }
@@ -78,8 +89,8 @@ async function promoteStable(repoDir,version){
     const stable=parseReleaseManifest({...test,channel:'stable',publishedAt:new Date().toISOString()},'stable');
     const stableManifestDir=path.join(temp,'stable');fs.mkdirSync(stableManifestDir);
     const stableManifestFile=path.join(stableManifestDir,name);C.atomicWriteJson(stableManifestFile,stable);
-    if(releaseExists('stable',version))verifyExistingManifest('stable',version,stable,temp);
-    else gh(['release','create',tag('stable',version),artifact,stableManifestFile,'--title',`Buyer Log STABLE ${version}`,'--notes',`Promoted from TEST ${version}; SHA-256 ${test.sha256}`]);
+    if(!releaseExists('stable',version))gh(['release','create',tag('stable',version),'--title',`Buyer Log STABLE ${version}`,'--notes',`Promoted from TEST ${version}; SHA-256 ${test.sha256}`]);
+    ensureReleaseAssets('stable',version,stable,[artifact,stableManifestFile],temp);
     const remoteDir=path.join(temp,'remote');fs.mkdirSync(remoteDir);
     await verifyDownloaded('stable',version,stable,remoteDir);
     await verifyPublicArtifact('stable',stable,remoteDir);
@@ -96,4 +107,4 @@ async function main(){
   C.fail('Kullanım: github-release.js publish-test | promote-stable VERSION','RELEASE_ARG_INVALID');
 }
 if(require.main===module)main().catch(error=>{console.error(`[${error.code||'RELEASE_FAILED'}] ${error.message}`);process.exitCode=1;});
-module.exports={tag,updateLatest,publishTest,promoteStable};
+module.exports={tag,releaseAssetNames,ensureReleaseAssets,updateLatest,publishTest,promoteStable};
