@@ -60,7 +60,8 @@ test('persistent OAB probe stays hidden briefly, then escalates instead of waiti
   assert.match(body, /armSilentProbe\(\)/);
   assert.match(body, /recoverStaleSilentProbe/);
   assert.match(body, /resetForFreshViewer/);
-  assert.match(body, /showInteractiveWindow\(\)[\s\S]*?loadLoginTarget\(OAB_VIEWER_URL, false\)/);
+  assert.match(body, /resetOabBrowserAuthState\('stale-silent-probe'\)[\s\S]*?showInteractiveWindow\(\)[\s\S]*?loadLoginTarget\(OAB_VIEWER_URL, false\)/);
+  assert.match(body, /resetOabBrowserAuthState[\s\S]*?clearStorageData[\s\S]*?clearCache/);
   assert.doesNotMatch(body, /once\('ready-to-show', showInteractiveWindow\)/);
   assert.match(body, /did-fail-load[\s\S]*?OAB_AUTH_NAVIGATION_FAILED/);
   assert.match(body, /render-process-gone[\s\S]*?OAB_AUTH_RENDERER_FAILED/);
@@ -76,6 +77,30 @@ test('Microsoft SSO popup is kept inside the dedicated partition and allowlist',
   assert.match(body, /did-create-window/);
   assert.match(body, /isAllowedOabLoginUrl/);
   assert.match(body, /will-navigate/);
+});
+
+test('interactive OAB reveals the SSO child itself and manual sign-in does not expose the blank PASS parent', () => {
+  const start = MAIN.indexOf('async function acquireOabAuthorization');
+  const end = MAIN.indexOf('async function clearOabAuthSession', start);
+  const body = MAIN.slice(start, end);
+  assert.match(body, /authWindow\.once\('ready-to-show',[\s\S]*?if \(loginRequiredKnown\) showInteractiveWindow\(\)/);
+  assert.doesNotMatch(body, /if \(manual \|\| loginRequiredKnown\) showInteractiveWindow\(\)/);
+  assert.match(body, /popup\.once\('ready-to-show',[\s\S]*?flowState\.interactive[\s\S]*?showWindow\(popup\)/);
+  assert.match(body, /popup\.webContents\.on\('did-finish-load',[\s\S]*?flowState\.interactive[\s\S]*?showWindow\(popup\)/);
+
+  const openHandlerStart = body.indexOf('authWindow.webContents.setWindowOpenHandler');
+  const childHandlerStart = body.indexOf("authWindow.webContents.on('did-create-window'", openHandlerStart);
+  const openHandler = body.slice(openHandlerStart, childHandlerStart);
+  assert.doesNotMatch(openHandler, /showInteractiveWindow\(\)/);
+});
+
+test('manual OAB sign-in clears only the dedicated browser auth state before navigation', () => {
+  const start = MAIN.indexOf('async function acquireOabAuthorization');
+  const end = MAIN.indexOf('async function clearOabAuthSession', start);
+  const body = MAIN.slice(start, end);
+  assert.match(body, /if \(manual\) await resetOabBrowserAuthState\('manual-login'\)/);
+  assert.match(body, /resetOabBrowserAuthState[\s\S]*?oabAuthSession\(\)[\s\S]*?clearStorageData[\s\S]*?clearCache/);
+  assert.match(body, /if \(manual\)[\s\S]*?resetOabBrowserAuthState\('manual-login'\)[\s\S]*?loadLoginTarget\(OAB_VIEWER_URL, true\)/);
 });
 
 
