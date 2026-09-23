@@ -1,4 +1,5 @@
 'use strict';
+// Temporary CI marker: final quotation e-mail recovery validation.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
