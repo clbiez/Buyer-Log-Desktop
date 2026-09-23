@@ -1229,8 +1229,7 @@
     oabUpdateActionButtons();
     oabSetBusyStatus(oabT(`${combinations.length} kombinasyon yeniden deneniyor`, `Retrying ${combinations.length} combinations`));
     try {
-      await oabEnsureAuthentication();
-      const started = await oabWithAuthRetry(() => OABApi.batchStart({ combinations, forceRefresh: true }));
+      const started = await OABApi.batchStart({ combinations, forceRefresh: true });
       S.batchJob = started.job;
       oabRenderProgress(S.batchJob);
       const finished = await oabPollBatch();
