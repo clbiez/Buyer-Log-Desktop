@@ -1,4 +1,5 @@
 'use strict';
+// Temporary CI marker: validate Buyer Log 7.0.105 release source.
 
 /* v10.85 — CP/COLLECTION/ORDERS: BİRLEŞİK DIŞ PANO SÖZLEŞMESİ (Packet 10).
  *
