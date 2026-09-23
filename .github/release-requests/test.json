@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.105",
-  "commit_sha": "d95443c71cd4cb50b993b95b62c82d2be2800035",
-  "release_notes": "Buyer Log 7.0.105: Uygulamanın güncel main kaynakları tek sürüm altında toplandı. Collection Ctrl+C / rich clipboard akışında hücre içi Enter ve diğer satır sonları tek satıra normalize edilerek her modelin dış panoda tek fiziksel satır olarak kalması güvenceye alındı; etkileşimli DOM verisinin clipboard'a sızmaması korunuyor. İlgili regresyon sözleşmesi yeni davranışla hizalandı ve tam Buyer Log test paketi başarıyla geçti."
+  "version": "7.0.106",
+  "commit_sha": "c0a859b10f15717d95d01b603b8e923426581094",
+  "release_notes": "Buyer Log 7.0.106: Collection/Koleksiyon hücrelerinde manuel giriş, picker ve clipboard paste ortak mutation/commit akışına bağlandı. In Store Month/Week paste artık In Store ve Retail dependency kurallarını manuel girişle aynı şekilde uygular; Shipment Date otomatik doldurulmaz. Çok hücreli paste explicit kullanıcı değerlerini koruyarak dependency hesaplarını final state üzerinde çalıştırır. Dinamik üretici fiyat paste işlemleri manuel price commit yolunu kullanır; model/renk bind ve override davranışı korunur. Yeni regression testleri ve tam Buyer Log test paketi PASS."
 }
