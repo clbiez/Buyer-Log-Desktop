@@ -1,4 +1,5 @@
 'use strict';
+// Temporary CI trigger for current-main final legacy OAB validation.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
