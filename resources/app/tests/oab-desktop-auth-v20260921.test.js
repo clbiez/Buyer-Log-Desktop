@@ -11,31 +11,30 @@ const OAB = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const {
   createOabAuthLifecycle,
-  authorizationHeaderFromCdpRequest,
+  authorizationHeaderFromRequest,
   isReportApiRequest,
 } = require('../electron/oab-auth-lifecycle');
 
-function cdpRequest(url, authorization = '') {
-  const headers = { Accept: 'application/json' };
-  if (authorization) headers.Authorization = authorization;
-  return { request: { url, method: 'POST', headers } };
+function webRequest(url, authorization = '') {
+  const requestHeaders = { Accept: 'application/json' };
+  if (authorization) requestHeaders.Authorization = authorization;
+  return { url, method: 'POST', requestHeaders };
 }
 
-test('OAB desktop auth uses CDP Network capture before navigation, not session webRequest', () => {
+test('OAB desktop auth captures only the dedicated Electron session through webRequest, never debugger/CDP', () => {
   const start = MAIN.indexOf('async function acquireOabAuthorization');
   const end = MAIN.indexOf('async function clearOabAuthSession', start);
   const body = MAIN.slice(start, end);
-  assert.match(body, /webContents\.debugger/);
-  assert.match(body, /targetDebugger\.attach\('1\.3'\)/);
-  assert.match(body, /sendCommand\('Network\.enable'\)/);
-  assert.match(body, /Network\.requestWillBeSent/);
+  assert.match(body, /oabAuthSession\(\)\.webRequest/);
+  assert.match(body, /onBeforeSendHeaders\(OAB_REPORT_CAPTURE_FILTER/);
   assert.match(body, /createOabAuthLifecycle/);
-  assert.doesNotMatch(body, /onBeforeSendHeaders|OAB_AUTH_CAPTURE_URLS/);
-  assert.ok(body.indexOf("targetDebugger.attach('1.3')") < body.indexOf('loadLoginTarget(OAB_VIEWER_URL, true)'));
+  assert.match(body, /networkReady = Promise\.resolve\(true\)/);
+  assert.doesNotMatch(body, /webContents\.debugger|Network\.requestWillBeSent|Network\.enable|targetDebugger|remote-debugging|9223/);
+  assert.ok(body.indexOf('onBeforeSendHeaders(OAB_REPORT_CAPTURE_FILTER') < body.indexOf('loadLoginTarget(OAB_VIEWER_URL, true)'));
 });
 
 test('OAB owns a persistent dedicated session and normal shutdown preserves it', () => {
-  assert.match(MAIN, /const OAB_AUTH_PARTITION = 'persist:buyerlog-oab-auth'/);
+  assert.match(MAIN, /const OAB_AUTH_PARTITION = 'persist:oab'/);
   const shutdownStart = MAIN.indexOf('async function shutdown()');
   const shutdownEnd = MAIN.indexOf('/* ------------------------------------------------------------------- IPC */', shutdownStart);
   const shutdownBody = MAIN.slice(shutdownStart, shutdownEnd);
@@ -133,15 +132,15 @@ test('Keycloak is detected by generic identity-host semantics without hard-codin
   assert.match(MAIN, /keycloak\|login\|signin\|auth\|sso\|identity\|idp\|adfs/);
 });
 
-test('CDP capture accepts only the real PASS report API Authorization', () => {
+test('Electron webRequest capture accepts only the real PASS report API Authorization', () => {
   const token = 'Bearer ' + 'a'.repeat(48);
-  const valid = cdpRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData', token);
+  const valid = webRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData', token);
   assert.equal(isReportApiRequest(valid, 'pass.prod.lcwaikiki.com'), true);
-  assert.equal(authorizationHeaderFromCdpRequest(valid), token);
+  assert.equal(authorizationHeaderFromRequest(valid), token);
 
-  assert.equal(isReportApiRequest(cdpRequest('https://pass.lcwaikiki.com/v3/report/viewer', token), 'pass.prod.lcwaikiki.com'), false);
-  assert.equal(isReportApiRequest(cdpRequest('https://pass.prod.lcwaikiki.com/other/api', token), 'pass.prod.lcwaikiki.com'), false);
-  assert.equal(authorizationHeaderFromCdpRequest(cdpRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/x')), '');
+  assert.equal(isReportApiRequest(webRequest('https://pass.lcwaikiki.com/v3/report/viewer', token), 'pass.prod.lcwaikiki.com'), false);
+  assert.equal(isReportApiRequest(webRequest('https://pass.prod.lcwaikiki.com/other/api', token), 'pass.prod.lcwaikiki.com'), false);
+  assert.equal(authorizationHeaderFromRequest(webRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/x')), '');
 });
 
 test('interactive lifecycle waits for login, retries viewer in a bounded way, then resolves only after backend validation', async () => {
@@ -187,22 +186,22 @@ test('interactive lifecycle waits for login, retries viewer in a bounded way, th
   assert.equal(lifecycle.snapshot().viewerKicks, 3);
 
   // A non-report request cannot complete authentication.
-  assert.equal(await lifecycle.onNetworkRequest(cdpRequest('https://pass.prod.lcwaikiki.com/health', validToken)), false);
+  assert.equal(await lifecycle.onNetworkRequest(webRequest('https://pass.prod.lcwaikiki.com/health', validToken)), false);
   assert.equal(validated.length, 0);
 
   // A captured but rejected/expired candidate is not success.
   const reportUrl = 'https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportVariablesWithData';
-  assert.equal(await lifecycle.onNetworkRequest(cdpRequest(reportUrl, staleToken)), false);
+  assert.equal(await lifecycle.onNetworkRequest(webRequest(reportUrl, staleToken)), false);
   assert.equal(lifecycle.snapshot().stopped, false);
 
   // Only backend-accepted Authorization completes the lifecycle.
-  assert.equal(await lifecycle.onNetworkRequest(cdpRequest(reportUrl, validToken)), true);
+  assert.equal(await lifecycle.onNetworkRequest(webRequest(reportUrl, validToken)), true);
   assert.equal(lifecycle.snapshot().stopped, true);
   assert.equal(lifecycle.snapshot().phase, 'backend-validated');
   assert.deepEqual(validated, [staleToken, validToken]);
 
   // Duplicate requests after success cannot trigger duplicate validation/fetch.
-  assert.equal(await lifecycle.onNetworkRequest(cdpRequest(reportUrl, validToken)), false);
+  assert.equal(await lifecycle.onNetworkRequest(webRequest(reportUrl, validToken)), false);
   assert.equal(validated.length, 2);
   assert.ok(phases.includes('authorization-captured'));
   assert.ok(phases.includes('backend-validated'));
@@ -268,7 +267,7 @@ test('concurrent duplicate report requests validate only one Authorization candi
       return true;
     },
   });
-  const request = cdpRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData', token);
+  const request = webRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData', token);
   const first = lifecycle.onNetworkRequest(request);
   const duplicate = await lifecycle.onNetworkRequest(request);
   assert.equal(duplicate, false);
@@ -284,7 +283,7 @@ test('main-process success still requires loopback backend validation and closes
   const body = MAIN.slice(start, end);
   assert.match(body, /pushOabAuthorizationToBackend\(authorization\)/);
   assert.match(body, /settled = true;[\s\S]*?cleanup\(\);[\s\S]*?resolvePromise\(\{ ok:true, authenticated:true/);
-  assert.match(body, /targetDebugger\.detach\(\)/);
+  assert.match(body, /authWebRequest\.onBeforeSendHeaders\(null\)/);
   assert.match(body, /authWindow\.close\(\)/);
   assert.match(body, /clearInterval\(lifecycleTimer\)/);
 });
@@ -308,14 +307,20 @@ test('manual interactive window close remains OAB_AUTH_CANCELLED', () => {
   assert.match(body, /cleanupCapture\(\)/);
 });
 
-test('Get OAB no longer depends on the dedicated Electron auth flow', () => {
+test('Get OAB uses the dedicated Electron auth bridge and retries the original request after login', () => {
+  const apiStart = OAB.indexOf('function oabIsAuthErrorCode');
+  const apiEnd = OAB.indexOf('const OABApi', apiStart);
+  const apiBody = OAB.slice(apiStart, apiEnd);
+  assert.match(apiBody, /buyerLogDesktop/);
+  assert.match(apiBody, /ensureOabAuth\(\{ interactive:true \}\)/);
+  assert.match(apiBody, /OAB_AUTH_REQUIRED/);
+  assert.match(apiBody, /OAB_AUTH_EXPIRED/);
+  assert.match(apiBody, /return oabJson\(url, options, false\)/);
+
   const fetchStart = OAB.indexOf('async function oabFetchReport');
   const fetchBody = OAB.slice(fetchStart, OAB.indexOf('/* ================================================================', fetchStart));
-  assert.ok(fetchStart >= 0);
-  assert.doesNotMatch(fetchBody, /ensureOabAuth|oabEnsureAuthentication|oabWithAuthRetry|buyerLogDesktop/);
   assert.match(fetchBody, /OABApi\.report\(/);
-  assert.match(fetchBody, /OABApi\.authStatus\(\)/);
-  assert.match(fetchBody, /oabAuthProgressMessage/);
+  assert.doesNotMatch(fetchBody, /Edge|remote debugging|9223|agentBrowserConnector/);
 });
 
 test('backend bridge stores Authorization only in RAM and validates through oabApiClient', () => {
