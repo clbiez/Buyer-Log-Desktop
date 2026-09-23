@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const crypto = require('crypto');
 const { toDocumentRecord } = require('./delta-store');
 const policy = require('./shared-sync-policy');
 const cpSharedStore = require('./cp-shared-store');
@@ -201,6 +202,58 @@ function makeStoreRecord(filename, value) {
   return policy.scrubSecrets(record);
 }
 
+function legacyQuotationEmailDirectory(value) {
+  const src = value && typeof value === 'object' ? value : {};
+  const requests = Array.isArray(src.requests) ? src.requests.slice() : [];
+  if (!requests.length) return null;
+  // Old quotation requests are an authoritative historical copy of the
+  // recipient list that Send to Pricing actually used. Process oldest->newest
+  // so a later request for the same manufacturer wins.
+  requests.sort((a,b) => {
+    const stamp = item => Date.parse(item && (item.updatedAt || item.createdAt) || '') || 0;
+    return stamp(a) - stamp(b);
+  });
+  const byManufacturer = new Map();
+  let latestStamp = '';
+  for (const request of requests) {
+    const stamp = String(request && (request.updatedAt || request.createdAt) || '');
+    if (Date.parse(stamp) > Date.parse(latestStamp || '')) latestStamp = stamp;
+    for (const item of Array.isArray(request && request.manufacturers) ? request.manufacturers : []) {
+      const manufacturer = String(item && item.name || '').trim().slice(0, 240);
+      const email = String(item && item.email || '').trim().slice(0, 2000);
+      if (!manufacturer || !email) continue;
+      const key = manufacturer.toLocaleLowerCase('tr-TR').replace(/[ıi]/g,'i').replace(/\s+/g,' ').trim();
+      const id = 'em-legacy-' + crypto.createHash('sha256').update(key).digest('hex').slice(0, 20);
+      byManufacturer.set(key, {
+        id,
+        manufacturer,
+        email,
+        contact:'',
+        phone:'',
+        note:'Recovered from legacy quotation recipient history',
+        countryId:'',
+        typeId:'',
+        createdAt:String(request.createdAt || request.updatedAt || latestStamp || ''),
+        createdBy:'',
+        createdByName:'',
+        updatedAt:String(request.updatedAt || request.createdAt || latestStamp || ''),
+        updatedBy:'',
+        updatedByName:'',
+        lock:null,
+      });
+    }
+  }
+  if (!byManufacturer.size) return null;
+  return {
+    schemaVersion:1,
+    countries:[],
+    types:[],
+    records:[...byManufacturer.values()],
+    _revision:Math.max(1, Number(src._revision) || requests.length),
+    _updatedAt:String(src._updatedAt || latestStamp || ''),
+  };
+}
+
 function mergeMasterRecordsFromServerDataRoot(records, serverRoot) {
   if (!serverRoot || !fs.existsSync(serverRoot)) return records;
   for (const filename of ['settings.json', 'overrides.json', 'fx-rates.json', 'email-groups.json']) {
@@ -215,6 +268,25 @@ function mergeMasterRecordsFromServerDataRoot(records, serverRoot) {
       if (shouldPreferRecovery(id, candidate, records[id])) records[id] = candidate;
     }
   }
+  // Some pre-central-directory versions did not persist email-groups.json at
+  // all. Their quotation history still contains the exact manufacturer +
+  // recipient lists used by Send to Pricing. Use that as a narrow recovery
+  // source and MERGE it into the current directory; current non-empty fields
+  // always win.
+  for (const candidateFile of [
+    path.join(serverRoot, 'quotations.json'),
+    path.join(serverRoot, 'quotations.json.bak'),
+  ]) {
+    const quotations = readJson(candidateFile);
+    const legacyDirectory = legacyQuotationEmailDirectory(quotations);
+    const candidate = makeStoreRecord('email-groups.json', legacyDirectory);
+    if (!candidate) continue;
+    const id = 'store:email-groups.json';
+    if (safeFocusedEmailRecovery(candidate, records[id])) {
+      records[id] = policy.scrubSecrets(mergeEmailDirectoryRecovery(records[id], candidate));
+    }
+  }
+
   for (const candidateFile of [
     path.join(serverRoot, 'endeksmatik-snapshot.json.gz'),
     path.join(serverRoot, 'endeksmatik-snapshot.json.gz.bak'),
@@ -495,6 +567,7 @@ module.exports = {
   emailDirectoryStats,
   safeFocusedEmailRecovery,
   mergeEmailDirectoryRecovery,
+  legacyQuotationEmailDirectory,
   shouldPreferRecovery,
   masterRecoveryIds,
   mergeMasterRecordsFromServerDataRoot,
