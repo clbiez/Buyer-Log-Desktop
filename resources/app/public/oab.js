@@ -497,11 +497,10 @@
   }
   function oabAuthProgressMessage(status) {
     const state = status && status.status || status || {};
-    if (state.authenticated) return oabT('OAB oturumu hazır.', 'OAB session is ready.');
     if (state.loginRequired) {
       return oabT(
-        'OAB oturumu gerekli. Buyer Log kendi giriş ekranını açacak ve giriş tamamlanınca otomatik devam edecek.',
-        'OAB sign-in is required. Buyer Log will open its own sign-in window and continue automatically after sign-in.',
+        'OAB oturumu gerekli. Buyer Log gerekirse kendi giriş ekranını açacak ve giriş tamamlanınca otomatik devam edecek.',
+        'OAB sign-in is required. Buyer Log will open its own sign-in window if needed and continue automatically after sign-in.',
       );
     }
     return '';
