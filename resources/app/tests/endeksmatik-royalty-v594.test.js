@@ -67,6 +67,31 @@ test('v6.02 hedef düzeltme yüzdesi geri geldi ve AYARLANABİLİR', () => {
   assert.match(APP, /function endeksmatikDefaultAdjustment\(\)/);
 });
 
+test('v7.0.97 Adjustment Rate snapshot değerini kullanır ve arayüzde boş kalmaz', () => {
+  const months=['202501','202601'];
+  const record=['MMYG','MAG','SUPPLY','BUYING','CATEGORY',1,0,0,0,[100,110],[100,110],[100,110],[100,110]];
+  const runtime={
+    snapshot:{targetAdjustmentPct:3.55,fx:{'202501':30,'202601':30}},
+    monthIndex:new Map(months.map((m,i)=>[m,i])),
+    byKey:new Map([[engine.keyOf(record.slice(0,5)),record]]),
+    byNoSupply:new Map(),
+  };
+  const result=engine.calculate({
+    mmyg:'MMYG',mag:'MAG',supplyGroup:'SUPPLY',buyingGroup:'BUYING',category:'CATEGORY',
+    previousOrderMonth:'202501',previousInStoreMonth:'202501',
+    newOrderMonth:'202601',newInStoreMonth:'202601',
+    previousUsdPrice:1,previousTryPrice:30,
+  },runtime);
+  assert.equal(result.indexes.adjustmentPct,3.55);
+  assert.ok(Math.abs(result.indexes.targetTl-0.06095)<1e-9);
+
+  assert.match(APP,/adjustmentPct:endeksmatikDefaultAdjustment\(\),defaultAdjustmentPct:endeksmatikDefaultAdjustment\(\)/);
+  assert.match(APP,/adjustmentPct:saved\.adjustmentPct!==undefined&&String\(saved\.adjustmentPct\)\.trim\(\)!==''\?saved\.adjustmentPct:endeksmatikDefaultAdjustment\(\)/);
+  assert.match(APP,/data-em-field="adjustmentPct" value="\$\{endeksmatikInputValue\(ctx\.adjustmentPct\)\}"/);
+  assert.match(APP,/data\.indexes&&Number\.isFinite\(Number\(data\.indexes\.adjustmentPct\)\).*adjustmentInput\.value=String\(data\.indexes\.adjustmentPct\)/);
+  assert.match(APP,/Adjustment rate \$\{adjustmentLabel\}/);
+});
+
 test('v5.94 motor masrafları çıkarıp sonra ekliyor', () => {
   assert.match(ENGINE, /const stripCosts=\(price,hologram\)=>/);
   assert.match(ENGINE, /return \(price-hologram\)\*\(1-royaltyPct\/100\);/);
