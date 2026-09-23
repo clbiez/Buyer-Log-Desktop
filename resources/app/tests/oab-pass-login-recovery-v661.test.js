@@ -36,7 +36,7 @@ test('legacy OAB renderer reports PASS/Edge login progress while the report requ
 
 test('OAB auth status is sourced from the legacy browser connector', () => {
   const start = SERVER.indexOf("app.get('/api/oab/auth/status'");
-  const end = SERVER.indexOf("app.post('/api/oab/auth/capture-existing'", start);
+  const end = SERVER.indexOf("app.get('/api/oab/seasons'", start);
   const body = SERVER.slice(start, end);
   assert.match(body, /agentBrowserConnector\.passAuthStatus\(req\.currentUser\.id\)/);
   assert.doesNotMatch(body, /oabAuthState\.status\(\)/);
@@ -61,8 +61,17 @@ test('batch OAB combinations use the same legacy PASS browser transport and do n
   assert.match(fetchOne, /await fetchOabReportWithLoginRecovery\(userId, params\)/);
   assert.doesNotMatch(fetchOne, /oabApiClient\.fetchReportData/);
 
-  const batchRoute = between(SERVER, "app.post('/api/oab/batch'", "app.post('/api/oab/batch/resume-auth'");
-  assert.doesNotMatch(batchRoute, /oabAuthState\.status\(\)\.authenticated/);
+  const batchRoute = between(SERVER, "app.post('/api/oab/batch'", "app.get('/api/oab/batch-status'");
+  assert.doesNotMatch(batchRoute, /oabAuthState\.status\(\)\.authenticated|authPendingQueue|authRetryCount|OAB_AUTH_REQUIRED|OAB_AUTH_EXPIRED/);
+  const runner = between(SERVER, 'async function runOabBatchJob', '// Planı hesaplar');
+  assert.match(runner, /error\.code === 'PASS_NOT_CONNECTED'/);
+  assert.doesNotMatch(SERVER, /app\.post\('\/api\/oab\/batch\/resume-auth'/);
+});
+
+test('new Electron-auth helper endpoints are absent from the active OAB web flow', () => {
+  assert.doesNotMatch(SERVER, /app\.post\('\/api\/oab\/auth\/capture-existing'/);
+  assert.doesNotMatch(SERVER, /app\.post\('\/api\/oab\/batch\/resume-auth'/);
+  assert.doesNotMatch(OAB, /captureExistingAuth|batchResumeAuth/);
 });
 
 test('legacy connector opens the real PASS viewer and captures the real report API request through CDP', () => {
