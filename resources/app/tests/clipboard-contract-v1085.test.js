@@ -84,8 +84,11 @@ test('görsel eksikse hücre boş kalır, kopyalama durmaz (mevcut davranışla 
   assert.match(fn, /return picked\|\|\{style:cellStyle\};/);
 });
 
-test('diğer sütunlar hâlâ kaçışlı/çok-satır güvenli: etkileşimli Collection DOM\'u clipboard\'a girmiyor', () => {
+test('diğer sütunlar kaçışlı ve tek-satır güvenli: etkileşimli Collection DOM\'u clipboard\'a girmiyor', () => {
   const fn = extractFunction(APP, 'buildCollectionStyledCopy');
-  assert.match(fn, /const htmlCellText\s*=\s*value\s*=>\s*\{/);
-  assert.match(fn, /\.split\('\\n'\)\.map\(escapeHtml\)\.join\('<br>'\)/);
+  assert.match(fn, /const htmlCellText\s*=\s*value\s*=>\s*escapeHtml\(BLTableExport\.normalizeCell\(value\)\)/);
+  assert.doesNotMatch(fn, /\.split\('\\n'\)\.map\(escapeHtml\)\.join\('<br>'\)/,
+    'rich clipboard hücre içi satır sonlarını yeniden üretmemeli');
+  assert.doesNotMatch(fn, /textContent|innerHTML|outerHTML/,
+    'clipboard değeri etkileşimli DOM üzerinden okunmamalı');
 });
