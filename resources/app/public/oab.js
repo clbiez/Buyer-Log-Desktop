@@ -2563,7 +2563,8 @@
   }
 
   function oabPivotAxisRowHtml(field, axis, fields) {
-    return `<div class="oabPivotAxisRow oabConfigRow" data-axis="${oabEsc(axis)}">
+    return `<div class="oabPivotAxisRow oabConfigRow" draggable="true" data-axis="${oabEsc(axis)}">
+      <span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>
       <select class="oabPivotAxisField">${oabFieldOptionsHtml(fields, field)}</select>
       ${oabConfigActionsHtml()}
     </div>`;
@@ -2709,6 +2710,32 @@
         oabMoveConfigRow(row, Number(moveBtn.dataset.oabConfigMove));
       }
     });
+    let draggedConfigRow = null;
+    modal.addEventListener('dragstart', event => {
+      const row = event.target.closest && event.target.closest('.oabConfigRow');
+      if (!row || !modal.contains(row)) return;
+      draggedConfigRow = row;
+      row.classList.add('isDragging');
+      if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', 'oab-config-row'); }
+    });
+    modal.addEventListener('dragover', event => {
+      const target = event.target.closest && event.target.closest('.oabConfigRow');
+      if (!draggedConfigRow || !target || target === draggedConfigRow || target.parentElement !== draggedConfigRow.parentElement) return;
+      event.preventDefault();
+      const rect = target.getBoundingClientRect();
+      target.parentElement.insertBefore(draggedConfigRow, event.clientY > rect.top + rect.height / 2 ? target.nextElementSibling : target);
+    });
+    modal.addEventListener('drop', event => {
+      if (!draggedConfigRow) return;
+      event.preventDefault();
+      oabRefreshConfigOrderButtons(draggedConfigRow.parentElement);
+    });
+    modal.addEventListener('dragend', () => {
+      if (draggedConfigRow) draggedConfigRow.classList.remove('isDragging');
+      draggedConfigRow = null;
+      refreshOrderButtons();
+    });
+
     modal.addEventListener('change', event => {
       const fieldSelect = event.target.closest && event.target.closest('.oabPivotValueField');
       if (!fieldSelect || !modal.contains(fieldSelect)) return;
@@ -2741,7 +2768,8 @@
   function oabPivotValueRowHtml(value, index, numericFields) {
     const selectedField = value && value.field;
     const selectedAgg = value && value.agg ? value.agg : (OABDataUtils.isFormulaMetric(selectedField) ? 'CALC' : (OABDataUtils.isNumericField(S.rows, selectedField) ? 'SUM' : 'FIRST'));
-    return `<div class="oabPivotValueRow oabConfigRow" data-idx="${index}">
+    return `<div class="oabPivotValueRow oabConfigRow" draggable="true" data-idx="${index}">
+      <span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>
       <select class="oabPivotValueField">${oabFieldOptionsHtml(numericFields, value.field)}</select>
       <select class="oabPivotValueAgg">${oabAggOptionsHtml(value.field, selectedAgg)}</select>
       ${oabConfigActionsHtml()}

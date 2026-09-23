@@ -9,7 +9,7 @@
 
   const state = {
     fields: [],
-    viewConfig: { version: 1, query: { rows: [], columns: [], measures: [], filters: [], filterValues: {} }, display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [] } },
+    viewConfig: { version: 1, query: { rows: [], columns: [], measures: [], filters: [], filterValues: {} }, display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [], grouped: true, showSubtotals: true, collapsedGroups: [] } },
     rows: [],
     loaded: false,
     loading: false,
@@ -29,7 +29,7 @@
   const esc = value => clean(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const clone = value => value == null ? value : JSON.parse(JSON.stringify(value));
   const query = () => state.viewConfig && state.viewConfig.query || { rows: [], columns: [], measures: [], filters: [], filterValues: {} };
-  const display = () => state.viewConfig && state.viewConfig.display || { labels: {}, widths: {}, sort: { id: '', dir: 1 } };
+  const display = () => state.viewConfig && state.viewConfig.display || { labels: {}, widths: {}, sort: { id: '', dir: 1 }, grouped: true, showSubtotals: true, collapsedGroups: [] };
   const fieldLabel = field => clean(display().labels && display().labels[field.id]) || clean(field.defaultLabel || field.name);
   const fieldId = field => clean(field && field.id);
   const configuredFields = () => [...query().rows, ...query().columns, ...query().measures, ...query().filters];
@@ -95,6 +95,102 @@
     bar.innerHTML = `${filterFields}<button type="button" class="navActionBtn intakeFilterAdd" data-intake-add-filter${available ? '' : ' disabled'}>+ ${esc(text('Filtre ekle', 'Add filter'))}</button>`;
   }
 
+  const INTAKE_AGGREGATES = ['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'FIRST'];
+
+  function intakeAggregateRows(rows, field) {
+    const source = Array.isArray(rows) ? rows : [];
+    const values = source.map(row => row && row[field.id]).filter(value => value !== null && value !== undefined && value !== '');
+    const agg = INTAKE_AGGREGATES.includes(clean(field && field.agg).toUpperCase()) ? clean(field.agg).toUpperCase() : 'SUM';
+    if (agg === 'FIRST') return values.length ? values[0] : '';
+    if (agg === 'COUNT') return values.length;
+    const numbers = values.map(value => typeof value === 'number' ? value : Number(String(value).replace(/\s/g, '').replace(',', '.'))).filter(Number.isFinite);
+    if (!numbers.length) return values.length ? values[0] : '';
+    if (agg === 'AVG') return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+    if (agg === 'MIN') return Math.min(...numbers);
+    if (agg === 'MAX') return Math.max(...numbers);
+    return numbers.reduce((sum, value) => sum + value, 0);
+  }
+
+  function intakeGroupKey(path) {
+    return JSON.stringify((Array.isArray(path) ? path : []).map(value => clean(value)));
+  }
+
+  function intakeDisplayRows(sorted) {
+    const rowFields = query().rows || [];
+    const columnFields = query().columns || [];
+    const measureFields = query().measures || [];
+    const grouped = display().grouped !== false && rowFields.length > 0;
+    if (!grouped) return sorted.map(row => ({ kind: 'leaf', row, level: rowFields.length }));
+    const showSubtotals = display().showSubtotals !== false;
+    const collapsed = new Set(Array.isArray(display().collapsedGroups) ? display().collapsedGroups : []);
+    const output = [];
+
+    const walk = (sourceRows, level, path) => {
+      if (level >= rowFields.length) {
+        sourceRows.forEach(row => output.push({ kind: 'leaf', row, level }));
+        return;
+      }
+      const field = rowFields[level];
+      const groups = new Map();
+      sourceRows.forEach(row => {
+        const value = row && row[field.id] != null ? row[field.id] : '';
+        const key = clean(value);
+        if (!groups.has(key)) groups.set(key, { value, rows: [] });
+        groups.get(key).rows.push(row);
+      });
+      groups.forEach(group => {
+        const isLeafLevel = level === rowFields.length - 1 && columnFields.length === 0;
+        if (isLeafLevel) {
+          const leaf = { ...(group.rows[0] || {}) };
+          leaf[field.id] = group.value;
+          measureFields.forEach(item => { leaf[item.id] = intakeAggregateRows(group.rows, item); });
+          output.push({ kind: 'leaf', row: leaf, level });
+          return;
+        }
+
+        const nextPath = [...path, group.value];
+        const pathKey = intakeGroupKey(nextPath);
+        const aggregateRow = {};
+        rowFields.forEach(item => { aggregateRow[item.id] = ''; });
+        columnFields.forEach(item => { aggregateRow[item.id] = ''; });
+        aggregateRow[field.id] = group.value;
+        if (showSubtotals) measureFields.forEach(item => { aggregateRow[item.id] = intakeAggregateRows(group.rows, item); });
+        const isCollapsed = collapsed.has(pathKey);
+        output.push({ kind: 'group', row: aggregateRow, level, pathKey, collapsed: isCollapsed, subtotal: showSubtotals });
+        if (!isCollapsed) walk(group.rows, level + 1, nextPath);
+      });
+    };
+
+    walk(sorted, 0, []);
+    if (showSubtotals && sorted.length) {
+      const grand = {};
+      rowFields.forEach(item => { grand[item.id] = ''; });
+      columnFields.forEach(item => { grand[item.id] = ''; });
+      if (rowFields[0]) grand[rowFields[0].id] = text('Genel Toplam', 'Grand Total');
+      measureFields.forEach(item => { grand[item.id] = intakeAggregateRows(sorted, item); });
+      output.push({ kind: 'grand', row: grand, level: 0 });
+    }
+    return output;
+  }
+
+  function intakeCellHtml(item, field) {
+    const row = item.row || {};
+    const value = row[field.id];
+    if (item.kind === 'group' && field.fieldType !== 'measure') {
+      const rowIndex = (query().rows || []).findIndex(candidate => candidate.id === field.id);
+      if (rowIndex === item.level) {
+        const label = value == null || value === '' ? text('(boş)', '(blank)') : value;
+        return \`<td class="oabPivotGroupCell" style="padding-left:\${Math.max(4, item.level * 14 + 4)}px"><button type="button" class="oabPivotGroupToggle" data-intake-group-key="\${esc(item.pathKey)}" title="\${esc(item.collapsed ? text('Grubu genişlet', 'Expand group') : text('Grubu daralt', 'Collapse group'))}">\${item.collapsed ? '▸' : '▾'}</button><strong>\${esc(label)}</strong>\${item.subtotal ? \`<span class="oabPivotSubtotalTag">\${esc(text('Alt toplam', 'Subtotal'))}</span>\` : ''}</td>\`;
+      }
+      return '<td></td>';
+    }
+    if (item.kind === 'grand' && field.fieldType !== 'measure') {
+      const firstRowId = (query().rows || [])[0]?.id || '';
+      return \`<td class="\${field.id === firstRowId ? 'oabPivotGrandLabel' : ''}">\${field.id === firstRowId ? \`<strong>\${esc(value)}</strong>\` : ''}</td>\`;
+    }
+    return \`<td class="\${field.fieldType === 'measure' ? 'num' : ''}">\${esc(field.fieldType === 'measure' ? numberText(value) : clean(value))}</td>\`;
+  }
+
   function renderTable() {
     const body = byId('intakeBody');
     const table = byId('intakeTable');
@@ -102,7 +198,7 @@
     body.hidden = false;
     const fields = activeColumns();
     if (!fields.length) {
-      table.innerHTML = `<tbody><tr><td class="intakeEmpty" colspan="1">${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>`;
+      table.innerHTML = \`<tbody><tr><td class="intakeEmpty" colspan="1">\${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>\`;
       return;
     }
     const sorted = state.rows.slice();
@@ -113,11 +209,14 @@
     }
     const header = fields.map(field => {
       const direction = sort.id === field.id ? (sort.dir === -1 ? ' ↓' : ' ↑') : '';
-      // Genişlik artık <colgroup> üzerinden verilir (bkz. attachColumnResize).
-      return `<th data-intake-sort="${esc(field.id)}" data-intake-rename="${esc(field.id)}" title="${esc(text('Sıralamak için tıklayın · yeniden adlandırmak için çift tıklayın', 'Click to sort · double-click to rename'))}">${esc(fieldLabel(field))}${direction}</th>`;
+      return \`<th data-intake-sort="\${esc(field.id)}" data-intake-rename="\${esc(field.id)}" title="\${esc(text('Sıralamak için tıklayın · yeniden adlandırmak için çift tıklayın', 'Click to sort · double-click to rename'))}">\${esc(fieldLabel(field))}\${direction}</th>\`;
     }).join('');
-    const rows = sorted.map(row => `<tr>${fields.map(field => `<td class="${field.fieldType === 'measure' ? 'num' : ''}">${esc(field.fieldType === 'measure' ? numberText(row && row[field.id]) : clean(row && row[field.id]))}</td>`).join('')}</tr>`).join('');
-    table.innerHTML = `<thead><tr>${header}</tr></thead><tbody>${rows || `<tr><td class="intakeEmpty" colspan="${fields.length}">${esc(text('Veri yok.', 'No data.'))}</td></tr>`}</tbody>`;
+    const viewRows = intakeDisplayRows(sorted);
+    const rows = viewRows.map(item => {
+      const cls = item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
+      return \`<tr class="\${cls}">\${fields.map(field => intakeCellHtml(item, field)).join('')}</tr>\`;
+    }).join('');
+    table.innerHTML = \`<thead><tr>\${header}</tr></thead><tbody>\${rows || \`<tr><td class="intakeEmpty" colspan="\${fields.length}">\${esc(text('Veri yok.', 'No data.'))}</td></tr>\`}</tbody>\`;
     attachColumnResize(table, fields);
   }
 
@@ -230,22 +329,103 @@
     return fields.filter(field => !current.has(field.id));
   }
 
-  function axisEditorHtml(axis, config) {
-    const fields = copyAxis(config, axis);
-    const pool = availableFor(axis, config);
-    const title = isEnglish() ? axisNamesEn[axis] : axisNames[axis];
-    const options = pool.map(field => `<option value="${esc(field.id)}">${esc(fieldLabel(field))}</option>`).join('');
-    const items = fields.map((field, index) => `<div class="intakeConfigRow" draggable="true" data-intake-axis="${esc(axis)}" data-intake-index="${index}"><span class="intakeDrag" aria-hidden="true">⋮⋮</span><span class="intakeConfigName">${esc(fieldLabel(field))}<small>${esc(field.sourceUniqueName || '')}</small></span><button type="button" class="navActionBtn intakeConfigMove" data-intake-move="-1"${index === 0 ? ' disabled' : ''} aria-label="${esc(text('Yukarı taşı', 'Move up'))}">↑</button><button type="button" class="navActionBtn intakeConfigMove" data-intake-move="1"${index === fields.length - 1 ? ' disabled' : ''} aria-label="${esc(text('Aşağı taşı', 'Move down'))}">↓</button><button type="button" class="navActionBtn intakeConfigRemove" data-intake-remove="1" aria-label="${esc(text('Kaldır', 'Remove'))}">×</button></div>`).join('');
-    return `<div class="intakeConfigSection" data-intake-config-section="${esc(axis)}"><div class="intakeConfigHead"><h4>${esc(title)}</h4><span>${fields.length}</span></div><div class="intakeConfigList">${items || `<p class="intakeConfigEmpty">${esc(text('Henüz alan seçilmedi.', 'No fields selected yet.'))}</p>`}</div><div class="intakeConfigAdd"><select data-intake-add-select aria-label="${esc(text(`${title} alanı ekle`, `Add ${title.toLowerCase()} field`))}><option value="">${esc(text('Alan seç…', 'Select a field…'))}</option>${options}</select><button type="button" class="navActionBtn" data-intake-add="${esc(axis)}">+ ${esc(text('Ekle', 'Add'))}</button></div></div>`;
+  function intakeFieldOptionsHtml(fields, selectedId) {
+    const list = Array.isArray(fields) ? fields : [];
+    if (!list.length) return \`<option value="">\${esc(text('Alan yok', 'No fields'))}</option>\`;
+    return list.map(field => \`<option value="\${esc(field.id)}"\${field.id === selectedId ? ' selected' : ''}>\${esc(fieldLabel(field))}</option>\`).join('');
+  }
+
+  function intakeConfigActionsHtml() {
+    return \`<div class="oabConfigActions">
+      <button type="button" class="oabConfigIconBtn" data-intake-config-move="-1" title="\${esc(text('Yukarı taşı', 'Move up'))}" aria-label="\${esc(text('Yukarı taşı', 'Move up'))}">↑</button>
+      <button type="button" class="oabConfigIconBtn" data-intake-config-move="1" title="\${esc(text('Aşağı taşı', 'Move down'))}" aria-label="\${esc(text('Aşağı taşı', 'Move down'))}">↓</button>
+      <button type="button" class="oabConfigIconBtn danger" data-intake-config-remove title="\${esc(text('Sil', 'Remove'))}" aria-label="\${esc(text('Sil', 'Remove'))}">×</button>
+    </div>\`;
+  }
+
+  function intakePivotAxisRowHtml(field, axis, fields) {
+    return \`<div class="oabPivotAxisRow oabConfigRow intakeConfigRow" draggable="true" data-intake-axis="\${esc(axis)}">
+      <span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>
+      <select class="intakePivotAxisField">\${intakeFieldOptionsHtml(fields, field && field.id)}</select>
+      \${intakeConfigActionsHtml()}
+    </div>\`;
+  }
+
+  function intakeAggOptionsHtml(selected) {
+    const preferred = INTAKE_AGGREGATES.includes(clean(selected).toUpperCase()) ? clean(selected).toUpperCase() : 'SUM';
+    return INTAKE_AGGREGATES.map(agg => \`<option value="\${agg}"\${agg === preferred ? ' selected' : ''}>\${agg}</option>\`).join('');
+  }
+
+  function intakePivotValueRowHtml(field, fields) {
+    return \`<div class="oabPivotValueRow oabConfigRow intakeConfigRow" draggable="true">
+      <span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>
+      <select class="intakePivotValueField">\${intakeFieldOptionsHtml(fields, field && field.id)}</select>
+      <select class="intakePivotValueAgg">\${intakeAggOptionsHtml(field && field.agg)}</select>
+      \${intakeConfigActionsHtml()}
+    </div>\`;
+  }
+
+  function intakeRefreshConfigOrderButtons(list) {
+    if (!list) return;
+    const rows = [...list.querySelectorAll('.oabConfigRow')];
+    rows.forEach((row, index) => {
+      const up = row.querySelector('[data-intake-config-move="-1"]');
+      const down = row.querySelector('[data-intake-config-move="1"]');
+      if (up) up.disabled = index === 0;
+      if (down) down.disabled = index === rows.length - 1;
+    });
+  }
+
+  function intakeFirstUnusedField(list, fields, selector) {
+    const used = new Set([...list.querySelectorAll(selector)].map(select => select.value).filter(Boolean));
+    return (fields || []).find(field => !used.has(field.id)) || (fields || [])[0] || null;
+  }
+
+  function intakeMoveConfigRow(row, direction) {
+    if (!row || !row.parentElement) return;
+    const parent = row.parentElement;
+    if (direction < 0 && row.previousElementSibling) parent.insertBefore(row, row.previousElementSibling);
+    if (direction > 0 && row.nextElementSibling) parent.insertBefore(row.nextElementSibling, row);
+    intakeRefreshConfigOrderButtons(parent);
   }
 
   function openFields() {
     if (state.metadataLoading) return;
+    document.getElementById('_intakeFieldsModal')?.remove();
+    const draft = clone(state.viewConfig);
+    draft.display = { ...(draft.display || {}), grouped: draft.display?.grouped !== false, showSubtotals: draft.display?.showSubtotals !== false, collapsedGroups: Array.isArray(draft.display?.collapsedGroups) ? draft.display.collapsedGroups : [] };
+    const dimensionPool = dimensionFields();
+    const valuePool = measureFields();
     const modal = document.createElement('div');
     modal.className = 'autoModalOverlay';
     modal.id = '_intakeFieldsModal';
-    const draft = clone(state.viewConfig);
-    modal.innerHTML = `<div class="autoModal intakeFieldsModal" role="dialog" aria-modal="true" aria-labelledby="_intakeFieldsTitle"><header><h3 id="_intakeFieldsTitle">${esc(text('INTAKE Ayarları', 'INTAKE Settings'))}</h3><button type="button" data-intake-close aria-label="${esc(text('Kapat', 'Close'))}">×</button></header><div class="autoModalBody"><p class="intakeModalHint">${esc(text('INTAKE veritabanı alanlarını Pivot Satırları, Pivot Sütunları, Pivot Ölçüleri ve Filtreler arasında ekleyip çıkarabilir; sıralamayı sürükleyerek veya oklarla değiştirebilirsiniz. Kaynak kimlikleri sabit kalır, görünen başlıklar ayrı saklanır.', 'Add or remove INTAKE database fields from Pivot Rows, Pivot Columns, Pivot Measures and Filters. Reorder them by dragging or using the arrows. Source identities remain stable and visible labels are stored separately.'))}</p><div class="intakeSettingsLegend"><span>${esc(text('Alanlar canlı INTAKE şemasından gelir.', 'Fields come from the live INTAKE schema.'))}</span><span>${esc(text('Ölçüler ayrı tutulur; sorgu aggregate’ı model belirler.', 'Measures stay separate; aggregation is defined by the model.'))}</span></div><div id="intakeConfigSections"></div></div><footer><button type="button" class="tbtn" data-intake-close>${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-intake-save>${esc(text('Kaydet', 'Save'))}</button></footer></div>`;
+    modal.innerHTML = \`<div class="autoModal oabSettingsModal intakeFieldsModal" role="dialog" aria-modal="true" aria-labelledby="_intakeFieldsTitle">
+      <header><h3 id="_intakeFieldsTitle">\${esc(text('INTAKE Ayarları', 'INTAKE Settings'))}</h3><button type="button" data-intake-close aria-label="\${esc(text('Kapat', 'Close'))}">×</button></header>
+      <div class="autoModalBody">
+        <div class="oabPivotBehaviorGrid">
+          <label class="oabCheckField"><input type="checkbox" id="intakeGroupedViewInput"\${draft.display.grouped !== false ? ' checked' : ''}><span>\${esc(text('Gruplu pivot görünümü', 'Grouped pivot view'))}</span></label>
+          <label class="oabCheckField"><input type="checkbox" id="intakeShowSubtotalsInput"\${draft.display.showSubtotals !== false ? ' checked' : ''}><span>\${esc(text('Alt toplamları ve genel toplamı göster', 'Show subtotals and grand total'))}</span></label>
+        </div>
+
+        <div class="oabSettingsSection">
+          <div class="oabSettingsSectionHead"><span>\${esc(text('Pivot Satırları', 'Pivot Rows'))}</span><button type="button" class="navActionBtn" id="intakeAddRowBtn">+ \${esc(text('Alan ekle', 'Add field'))}</button></div>
+          <div class="oabPivotConfigList" id="intakePivotRowsList">\${(draft.query.rows || []).map(field => intakePivotAxisRowHtml(field, 'rows', dimensionPool)).join('')}</div>
+        </div>
+
+        <div class="oabSettingsSection">
+          <div class="oabSettingsSectionHead"><span>\${esc(text('Pivot Sütunları', 'Pivot Columns'))}</span><button type="button" class="navActionBtn" id="intakeAddColumnBtn">+ \${esc(text('Alan ekle', 'Add field'))}</button></div>
+          <div class="oabPivotConfigList" id="intakePivotColsList">\${(draft.query.columns || []).map(field => intakePivotAxisRowHtml(field, 'columns', dimensionPool)).join('')}</div>
+        </div>
+
+        <div class="oabSettingsSection">
+          <div class="oabSettingsSectionHead"><span>\${esc(text('Pivot Değerleri', 'Pivot Values'))}</span><button type="button" class="navActionBtn" id="intakeAddValueBtn">+ \${esc(text('Değer ekle', 'Add value'))}</button></div>
+          <div class="oabPivotConfigList" id="intakePivotValuesList">\${(draft.query.measures || []).map(field => intakePivotValueRowHtml(field, valuePool)).join('')}</div>
+        </div>
+
+        <p class="oabSettingsHint">\${esc(text('Satırları tutup sürükleyerek veya oklarla sıralayabilirsiniz. Pivot Values için SUM, AVG, COUNT, MIN, MAX ve FIRST özetleme seçenekleri kullanılabilir.', 'Drag rows to reorder them or use the arrows. Pivot Values support SUM, AVG, COUNT, MIN, MAX and FIRST summarization.'))}</p>
+      </div>
+      <footer><button type="button" class="tbtn" data-intake-settings-reset>\${esc(text('Pivot Varsayılanına Dön', 'Reset Pivot'))}</button><button type="button" class="tbtn" data-intake-close>\${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-intake-save>\${esc(text('Kaydet', 'Save'))}</button></footer>
+    </div>\`;
     document.body.appendChild(modal);
 
     const close = () => modal.remove();
@@ -253,59 +433,111 @@
     modal.addEventListener('pointerdown', event => { modal.dataset.backdropDown = event.target === modal ? '1' : '0'; });
     modal.addEventListener('pointerup', event => { if (event.target === modal && modal.dataset.backdropDown === '1') close(); modal.dataset.backdropDown = '0'; });
 
-    const draw = () => { byId('intakeConfigSections').innerHTML = ['rows', 'columns', 'measures', 'filters'].map(axis => axisEditorHtml(axis, draft)).join(''); };
-    const move = (axis, index, direction) => {
-      const values = copyAxis(draft, axis), target = index + direction;
-      if (target < 0 || target >= values.length) return;
-      [values[index], values[target]] = [values[target], values[index]];
-      draft.query[axis] = values;
-      draw();
+    const rowList = modal.querySelector('#intakePivotRowsList');
+    const colList = modal.querySelector('#intakePivotColsList');
+    const valueList = modal.querySelector('#intakePivotValuesList');
+    const refreshOrderButtons = () => {
+      intakeRefreshConfigOrderButtons(rowList);
+      intakeRefreshConfigOrderButtons(colList);
+      intakeRefreshConfigOrderButtons(valueList);
     };
-    draw();
+    refreshOrderButtons();
+
+    modal.querySelector('#intakeAddRowBtn')?.addEventListener('click', () => {
+      const field = intakeFirstUnusedField(rowList, dimensionPool, '.intakePivotAxisField');
+      if (!field) return;
+      rowList.insertAdjacentHTML('beforeend', intakePivotAxisRowHtml(field, 'rows', dimensionPool));
+      refreshOrderButtons();
+    });
+    modal.querySelector('#intakeAddColumnBtn')?.addEventListener('click', () => {
+      const field = intakeFirstUnusedField(colList, dimensionPool, '.intakePivotAxisField');
+      if (!field) return;
+      colList.insertAdjacentHTML('beforeend', intakePivotAxisRowHtml(field, 'columns', dimensionPool));
+      refreshOrderButtons();
+    });
+    modal.querySelector('#intakeAddValueBtn')?.addEventListener('click', () => {
+      const field = intakeFirstUnusedField(valueList, valuePool, '.intakePivotValueField');
+      if (!field) return;
+      valueList.insertAdjacentHTML('beforeend', intakePivotValueRowHtml({ ...field, agg: field.agg || 'SUM' }, valuePool));
+      refreshOrderButtons();
+    });
+
     modal.addEventListener('click', event => {
-      const add = event.target.closest('[data-intake-add]');
-      if (add) {
-        const axis = add.dataset.intakeAdd;
-        const select = add.closest('.intakeConfigAdd')?.querySelector('[data-intake-add-select]');
-        const field = allFields().find(item => item.id === select?.value);
-        if (!field) return;
-        draft.query[axis] = [...copyAxis(draft, axis), clone(field)];
-        select.value = '';
-        draw();
+      const remove = event.target.closest && event.target.closest('[data-intake-config-remove]');
+      if (remove && modal.contains(remove)) {
+        const row = remove.closest('.oabConfigRow');
+        const list = row && row.parentElement;
+        row?.remove();
+        intakeRefreshConfigOrderButtons(list);
         return;
       }
-      const remove = event.target.closest('[data-intake-remove]');
-      if (remove) {
-        const row = remove.closest('[data-intake-axis]');
-        const axis = row?.dataset.intakeAxis;
-        const index = Number(row?.dataset.intakeIndex);
-        if (!axis || !Number.isInteger(index)) return;
-        draft.query[axis] = copyAxis(draft, axis).filter((_, itemIndex) => itemIndex !== index);
-        draw();
-        return;
-      }
-      const moveButton = event.target.closest('[data-intake-move]');
-      if (moveButton) {
-        const row = moveButton.closest('[data-intake-axis]');
-        move(row?.dataset.intakeAxis, Number(row?.dataset.intakeIndex), Number(moveButton.dataset.intakeMove));
+      const moveButton = event.target.closest && event.target.closest('[data-intake-config-move]');
+      if (moveButton && modal.contains(moveButton)) {
+        intakeMoveConfigRow(moveButton.closest('.oabConfigRow'), Number(moveButton.dataset.intakeConfigMove));
       }
     });
+
+    let draggedRow = null;
     modal.addEventListener('dragstart', event => {
-      const row = event.target.closest('[data-intake-axis]');
-      if (!row) return;
-      state.drag = { axis: row.dataset.intakeAxis, index: Number(row.dataset.intakeIndex) };
-      event.dataTransfer?.setData('text/plain', `${state.drag.axis}:${state.drag.index}`);
+      const row = event.target.closest && event.target.closest('.oabConfigRow');
+      if (!row || !modal.contains(row)) return;
+      draggedRow = row;
+      row.classList.add('isDragging');
+      if (event.dataTransfer) { event.dataTransfer.effectAllowed = 'move'; event.dataTransfer.setData('text/plain', 'intake-config-row'); }
     });
-    modal.addEventListener('dragover', event => { if (event.target.closest('[data-intake-axis]')) event.preventDefault(); });
-    modal.addEventListener('drop', event => {
+    modal.addEventListener('dragover', event => {
+      const target = event.target.closest && event.target.closest('.oabConfigRow');
+      if (!draggedRow || !target || target === draggedRow || target.parentElement !== draggedRow.parentElement) return;
       event.preventDefault();
-      const target = event.target.closest('[data-intake-axis]');
-      if (!target || !state.drag || target.dataset.intakeAxis !== state.drag.axis) return;
-      const axis = state.drag.axis, values = copyAxis(draft, axis), from = state.drag.index, to = Number(target.dataset.intakeIndex);
-      if (!Number.isInteger(from) || !Number.isInteger(to) || from === to) return;
-      const [item] = values.splice(from, 1); values.splice(to, 0, item); draft.query[axis] = values; state.drag = null; draw();
+      const rect = target.getBoundingClientRect();
+      target.parentElement.insertBefore(draggedRow, event.clientY > rect.top + rect.height / 2 ? target.nextElementSibling : target);
     });
-    modal.querySelector('[data-intake-save]').addEventListener('click', () => void saveView(draft, close));
+    modal.addEventListener('drop', event => {
+      if (!draggedRow) return;
+      event.preventDefault();
+      intakeRefreshConfigOrderButtons(draggedRow.parentElement);
+    });
+    modal.addEventListener('dragend', () => {
+      if (draggedRow) draggedRow.classList.remove('isDragging');
+      draggedRow = null;
+      refreshOrderButtons();
+    });
+
+    const selectedAxis = list => {
+      const result = [], seen = new Set();
+      list.querySelectorAll('.intakePivotAxisField').forEach(select => {
+        const field = dimensionPool.find(item => item.id === select.value);
+        if (!field || seen.has(field.id)) return;
+        seen.add(field.id); result.push(clone(field));
+      });
+      return result;
+    };
+
+    modal.querySelector('[data-intake-save]')?.addEventListener('click', async () => {
+      draft.query.rows = selectedAxis(rowList);
+      draft.query.columns = selectedAxis(colList);
+      draft.query.measures = [...valueList.querySelectorAll('.oabPivotValueRow')].map(row => {
+        const field = valuePool.find(item => item.id === row.querySelector('.intakePivotValueField')?.value);
+        const agg = clean(row.querySelector('.intakePivotValueAgg')?.value).toUpperCase();
+        return field ? { ...clone(field), agg: INTAKE_AGGREGATES.includes(agg) ? agg : 'SUM' } : null;
+      }).filter(Boolean);
+      draft.display.grouped = Boolean(modal.querySelector('#intakeGroupedViewInput')?.checked);
+      draft.display.showSubtotals = Boolean(modal.querySelector('#intakeShowSubtotalsInput')?.checked);
+      draft.display.collapsedGroups = [];
+      await saveView(draft, close);
+    });
+
+    modal.querySelector('[data-intake-settings-reset]')?.addEventListener('click', async () => {
+      try {
+        const result = await requestJson('/api/intake/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reset: true }) });
+        state.viewConfig = result.viewConfig || state.viewConfig;
+        state.rows = [];
+        state.loaded = false;
+        close();
+        render();
+        setStatus(text('INTAKE Pivot varsayılan düzenine döndü. Yenile ile veriyi çekin.', 'INTAKE Pivot reset to defaults. Refresh to query data.'), 'ok');
+      } catch (error) { setStatus(error.message || String(error), 'error'); }
+    });
   }
 
   function closePopover() {
@@ -526,6 +758,18 @@
       }
     });
     byId('intakeTable')?.addEventListener('click', event => {
+      const groupToggle = event.target.closest('[data-intake-group-key]');
+      if (groupToggle) {
+        const next = clone(state.viewConfig);
+        next.display = { ...(next.display || {}) };
+        const collapsed = new Set(Array.isArray(next.display.collapsedGroups) ? next.display.collapsedGroups : []);
+        const key = groupToggle.dataset.intakeGroupKey;
+        collapsed.has(key) ? collapsed.delete(key) : collapsed.add(key);
+        next.display.collapsedGroups = [...collapsed];
+        state.viewConfig = next;
+        renderTable();
+        return;
+      }
       const header = event.target.closest('[data-intake-sort]');
       if (!header || event.detail > 1) return;
       const next = clone(state.viewConfig);

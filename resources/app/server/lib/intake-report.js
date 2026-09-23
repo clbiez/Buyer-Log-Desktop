@@ -63,6 +63,11 @@ function keyOf(value) {
   return clean(value).replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR');
 }
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
+const INTAKE_AGGREGATES = Object.freeze(['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'FIRST']);
+function normalizeAggregate(value, fallback = 'SUM') {
+  const agg = clean(value).toUpperCase();
+  return INTAKE_AGGREGATES.includes(agg) ? agg : fallback;
+}
 
 function stableFieldId(sourceUniqueName) {
   const digest = crypto.createHash('sha256').update(clean(sourceUniqueName), 'utf8').digest('hex');
@@ -99,6 +104,7 @@ function createField(definition = {}) {
     name,
     folder: clean(definition.folder),
     dataType: clean(definition.dataType || definition.data_type || definition.DATA_TYPE || definition.type),
+    ...(fieldType === 'measure' ? { agg: normalizeAggregate(definition.agg || definition.aggregate, 'SUM') } : {}),
   };
 }
 
@@ -155,7 +161,7 @@ function defaultViewConfig() {
       filters: pick(DEFAULT_FILTER_DEFINITIONS),
       filterValues: {},
     },
-    display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [] },
+    display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [], grouped: true, showSubtotals: true, collapsedGroups: [] },
   };
 }
 
@@ -163,11 +169,11 @@ function refFromInput(raw, maps, allowDefault = true) {
   if (raw && typeof raw === 'object') {
     if (raw.id && maps.byId.has(clean(raw.id))) {
       const live = maps.byId.get(clean(raw.id));
-      return { ...live, defaultLabel: clean(raw.defaultLabel) || live.defaultLabel };
+      return { ...live, defaultLabel: clean(raw.defaultLabel) || live.defaultLabel, ...(live.fieldType === 'measure' ? { agg: normalizeAggregate(raw.agg || raw.aggregate || live.agg, 'SUM') } : {}) };
     }
     if (raw.sourceUniqueName && maps.bySource.has(keyOf(raw.sourceUniqueName))) {
       const live = maps.bySource.get(keyOf(raw.sourceUniqueName));
-      return { ...live, defaultLabel: clean(raw.defaultLabel) || live.defaultLabel };
+      return { ...live, defaultLabel: clean(raw.defaultLabel) || live.defaultLabel, ...(live.fieldType === 'measure' ? { agg: normalizeAggregate(raw.agg || raw.aggregate || live.agg, 'SUM') } : {}) };
     }
     if (raw.defaultLabel && maps.byLabel.has(keyOf(raw.defaultLabel))) return maps.byLabel.get(keyOf(raw.defaultLabel));
     if (!maps.byId.size && allowDefault) return createField(raw);
@@ -240,7 +246,10 @@ function reconcileViewConfig(input, availableFields = []) {
   const rawSort = sourceDisplay.sort && typeof sourceDisplay.sort === 'object' ? sourceDisplay.sort : {};
   const sort = activeIds.has(clean(rawSort.id)) ? { id: clean(rawSort.id), dir: Number(rawSort.dir) === -1 ? -1 : 1 } : { id: '', dir: 1 };
   const collapsed = Array.isArray(sourceDisplay.collapsed) ? sourceDisplay.collapsed.map(clean).filter(id => activeIds.has(id)) : [];
-  return { version: 1, query: { rows, columns, measures, filters, filterValues }, display: { labels, widths, sort, collapsed } };
+  const grouped = sourceDisplay.grouped !== false;
+  const showSubtotals = sourceDisplay.showSubtotals !== false;
+  const collapsedGroups = Array.isArray(sourceDisplay.collapsedGroups) ? [...new Set(sourceDisplay.collapsedGroups.map(clean).filter(Boolean))].slice(0, 5000) : [];
+  return { version: 1, query: { rows, columns, measures, filters, filterValues }, display: { labels, widths, sort, collapsed, grouped, showSubtotals, collapsedGroups } };
 }
 
 function updateDisplayLabel(config, id, value) {
@@ -426,6 +435,7 @@ module.exports = {
   displayLabel,
   daxRef,
   intakeFieldValueType, intakeFilterValues, intakeColumnTypeIndex,
+  INTAKE_AGGREGATES, normalizeAggregate,
   buildIntakeQuery,
   normalizeRows,
 };

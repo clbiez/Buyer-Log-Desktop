@@ -4086,8 +4086,12 @@ td.qtxColourBridgeBusy{cursor:progress!important;animation:qtxColourPulse .8s ea
 .oabSettingsSectionHead>span{font-size:11px;font-weight:700;color:var(--ink2);}
 .oabPivotConfigList{display:grid;gap:6px;}
 .oabPivotAxisRow,.oabPivotValueRow{display:grid;gap:6px;align-items:center;padding:6px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card2);}
-.oabPivotAxisRow{grid-template-columns:minmax(0,1fr) auto;}
-.oabPivotValueRow{grid-template-columns:minmax(0,1fr) minmax(92px,120px) auto;}
+.oabPivotAxisRow{grid-template-columns:auto minmax(0,1fr) auto;}
+.oabPivotValueRow{grid-template-columns:auto minmax(0,1fr) minmax(92px,120px) auto;}
+.oabConfigRow[draggable="true"]{cursor:grab;}
+.oabConfigRow[draggable="true"]:active{cursor:grabbing;}
+.oabConfigRow.isDragging{opacity:.55;}
+.oabConfigDrag{align-self:center;flex:none;color:var(--muted);font-size:14px;letter-spacing:-3px;}
 .oabPivotAxisRow select,.oabPivotValueRow select{height:30px;min-width:0;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink);font-size:11px;padding:0 7px;}
 .oabConfigActions{display:flex;align-items:center;gap:4px;}
 .oabConfigIconBtn{width:30px;height:30px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink2);font-size:14px;font-weight:750;cursor:pointer;}
@@ -4095,7 +4099,7 @@ td.qtxColourBridgeBusy{cursor:progress!important;animation:qtxColourPulse .8s ea
 .oabConfigIconBtn.danger:hover:not(:disabled){border-color:var(--red);color:var(--red);background:color-mix(in srgb,var(--red) 8%,var(--card));}
 .oabConfigIconBtn:disabled{opacity:.3;cursor:default;}
 .oabSettingsHint{font-size:10.5px;color:var(--muted);margin:0;}
-@media(max-width:640px){.oabPivotValueRow{grid-template-columns:minmax(0,1fr) 92px;}.oabPivotValueRow .oabConfigActions{grid-column:1/-1;justify-content:flex-end;}.oabPivotAxisRow{grid-template-columns:minmax(0,1fr);}.oabPivotAxisRow .oabConfigActions{justify-content:flex-end;}}
+@media(max-width:640px){.oabPivotValueRow{grid-template-columns:auto minmax(0,1fr) 92px;}.oabPivotValueRow .oabConfigActions{grid-column:1/-1;justify-content:flex-end;}.oabPivotAxisRow{grid-template-columns:auto minmax(0,1fr);}.oabPivotAxisRow .oabConfigActions{grid-column:1/-1;justify-content:flex-end;}}
 
 /* Excel-benzeri sütun sağ-tık menüsü — CP / Orders / Collection / OAB */
 .tableColumnContextMenu,.oabColumnContextMenu{
