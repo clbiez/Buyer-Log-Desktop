@@ -143,7 +143,7 @@ function calculate(input,runtime=loadSnapshot()){
      Artık AYARLANABİLİR: istek gövdesinde bir değer varsa o kullanılır, yoksa
      kaynak dosyadan okunan orijinal değere düşülür. */
   const adjustmentRaw=numberValue(input.adjustmentPct);
-  const adjustmentPct=Number.isFinite(adjustmentRaw)?adjustmentRaw:defaultAdjustmentPct(runtime);
+  const adjustmentPct=Number.isFinite(adjustmentRaw)?adjustmentRaw:defaultAdjustmentPct(runtime.snapshot);
   const a=adjustmentPct/100;
   /* ROYALTY + HOLOGRAM (v5.94)
      Endeksleme aradaki farkı YÜZDE olarak uygular. Royalty payı ve sabit hologram
@@ -281,8 +281,8 @@ function parseWorkbookBuffer(buffer,sourceFile='ENDEKSMATİK.xlsx'){
   /* Hedef düzeltme yüzdesi (v6.02): kaynak Excel'de ENDEKSMATİK!B22'de ondalık
      kesir olarak durur (0,03 = %3). Programa GÖMMEK yerine dosyadan okunur;
      böylece Excel güncellendiğinde varsayılan da güncellenir. Hücre yoksa ya da
-     makul aralığın dışındaysa 3 kabul edilir — hesabın sessizce sıfırlanması,
-     yanlış ama görünür bir varsayılandan daha kötüdür. */
+     makul aralığın dışındaysa 0 kabul edilir; geçerli B22 değeri ise yüzdeye
+     çevrilerek snapshot içinde saklanır. */
   const adjustmentRaw=Number(screen.B22&&screen.B22.v);
   const targetAdjustmentPct=Number.isFinite(adjustmentRaw)&&adjustmentRaw>-1&&adjustmentRaw<1
     ? Math.round(adjustmentRaw*10000)/100
