@@ -476,7 +476,6 @@
   }
 
   /* ================================================================
-     v7.20 — ÇOKLU SEÇİM BİLEŞENİ  /* ================================================================
      v7.20 — ÇOKLU SEÇİM BİLEŞENİ
 
      OAB sitesi Season/MAG/Buyer Group filtrelerini tek seçime kapatıyor.
@@ -1031,7 +1030,6 @@
   }
 
   /* ================================================================
-     v7.20 — ARKA PLAN TOPLU ÇEKME  /* ================================================================
      v7.20 — ARKA PLAN TOPLU ÇEKME (çoklu seçim)
 
      Tek OAB çağrısı 15-25 saniye ve PASS istekleri tek tarayıcı sayfası
@@ -1125,7 +1123,7 @@
       void tick();
     });
   }
-  /* Kısmi başarı SESSİZ GEÇİLMEZ  /* Kısmi başarı SESSİZ GEÇİLMEZ: kaç kombinasyon çekildi, kaçı başarısız,
+  /* Kısmi başarı SESSİZ GEÇİLMEZ: kaç kombinasyon çekildi, kaçı başarısız,
      hangileri — kullanıcı raporun kapsamını bilerek okumalı.
 
      v7.23 — Saha bulgusu (kullanıcı): "9 combinations merged · 1 combinations
@@ -1312,7 +1310,7 @@
     return oabT('OAB raporu alınamadı. Bir süre sonra tekrar deneyin.', 'Could not retrieve the OAB report. Try again in a moment.');
   }
 
-  function oabFilteredRows() {  function oabFilteredRows() {
+  function oabFilteredRows() {
     const filterKey=global.BLAnalysisCache?.key?global.BLAnalysisCache.key({data:oabDataRevision,filters:S.localFilters}):`${oabDataRevision}|${JSON.stringify(S.localFilters)}`;
     const cached=oabFilterRowsCache.get(filterKey);if(cached)return cached;
     const engine = new OABLocalFilterEngine(S.rows),filtered=engine.apply(S.localFilters);
