@@ -93,8 +93,9 @@ const FIELD_ALIASES = {
   classification: ['KLASMAN', 'URUN KLASMAN', 'PRODUCT CLASSIFICATION', 'PRODUCT CLASS', 'CLASSIFICATION', 'CLASS'],
   season: ['SEZON', 'SEASON'],
   inStore: ['IN-STORE (MODEL BUDGET)', 'IN-STORE', 'IN STORE', 'MODEL BUTCE TARIH YIL AY GUN', 'MODEL BUDGET DATE', 'INSTORE'],
-  // LFL detail dates are bound strictly to the ASAS source columns requested by business.
+  // LFL comparison/detail dates are bound strictly to the ASAS business columns.
   opd: ['SIPARIS YERLESTIRME MERCHTARIH'],
+  retailDate: ['RETAIL DEPO TARIH YIL AY GUN', 'RETAIL DATE', 'RETAIL TARIH', 'RETAIL TARIHI', 'RETAIL DEPO TARIH'],
   exFactory: ['ORIJINAL EXFACTORY MERCH TARIH'],
   fob: ['FOB FIYATI', 'FOB PRICE', 'FOB ($)', 'FOB USD', 'CONF. FOB', 'CONF FOB', 'SUPP. FOB', 'SUPP FOB', 'FOB'],
   quantity: ['NET ALIM SIPARIS MIKTARI', 'ORDER QUANTITY', 'ORDER QTY', 'SIPARIS ADEDI', 'QUANTITY', 'QTY', 'ADET'],
@@ -119,7 +120,7 @@ const FIELD_ALIASES = {
 const ALIAS_KEYS = Object.fromEntries(Object.entries(FIELD_ALIASES).map(([field, aliases]) => [field, aliases.map(headerKey)]));
 // These LFL dates must come only from the exact ASAS business columns. Do not
 // allow fuzzy header matching to fall back to generic OPD / EX-FACTORY fields.
-const STRICT_HEADER_FIELDS = new Set(['opd', 'exFactory']);
+const STRICT_HEADER_FIELDS = new Set(['opd', 'retailDate', 'exFactory']);
 
 function findFieldIndex(headers, field) {
   const keys = headers.map(headerKey);
@@ -146,7 +147,7 @@ function headerScore(map) {
   if (map.fob >= 0) score += 5;
   if (map.quantity >= 0) score += 5;
   if (map.season >= 0) score += 4;
-  if (map.inStore >= 0) score += 4;
+  if (map.inStore >= 0 || map.opd >= 0 || map.retailDate >= 0) score += 4;
   if (map.mag >= 0) score += 2;
   if (map.mmyg >= 0) score += 2;
   if (map.classification >= 0) score += 2;
@@ -179,7 +180,7 @@ function parseDetectedSheet(detected) {
   const rows = [];
   let skippedMissingPrice = 0, skippedMissingQuantity = 0, skippedEmpty = 0, skippedMissingDimensions = 0;
   let mainFabricRows = 0, ignoredNonMainFabricRows = 0;
-  const missingDimensionCounts = { mag: 0, mmyg: 0, classification: 0, season: 0, inStore: 0, manufacturer: 0, country: 0, buyingGroup: 0, buyer: 0 };
+  const missingDimensionCounts = { mag: 0, mmyg: 0, classification: 0, season: 0, periodDate: 0, manufacturer: 0, country: 0, buyingGroup: 0, buyer: 0 };
   const { matrix, rowIndex, map, name } = detected;
   const hasMainFabricColumn = map.mainFabric >= 0;
   for (let i = rowIndex + 1; i < matrix.length; i++) {
@@ -190,18 +191,20 @@ function parseDetectedSheet(detected) {
     if (!(fob > 0)) { skippedMissingPrice++; continue; }
     if (!(quantity > 0)) { skippedMissingQuantity++; continue; }
     const inStore = dateIso(valueAt(source, map.inStore));
+    const opd = dateIso(valueAt(source, map.opd));
+    const retailDate = dateIso(valueAt(source, map.retailDate));
     const core = {
       mag: norm(valueAt(source, map.mag)),
       mmyg: norm(valueAt(source, map.mmyg)),
       classification: norm(valueAt(source, map.classification)),
       season: norm(valueAt(source, map.season)),
-      inStore,
       manufacturer: norm(valueAt(source, map.manufacturer)),
       country: norm(valueAt(source, map.country)),
       buyingGroup: norm(valueAt(source, map.buyingGroup)),
       buyer: norm(valueAt(source, map.buyer)),
     };
     const missing = Object.keys(core).filter(key => !core[key]);
+    if (!inStore && !opd && !retailDate) missing.push('periodDate');
     if (missing.length) {
       skippedMissingDimensions++;
       missing.forEach(key => { missingDimensionCounts[key] = (missingDimensionCounts[key] || 0) + 1; });
@@ -229,7 +232,10 @@ function parseDetectedSheet(detected) {
       inStore,
       inStoreMonth: yearMonth(inStore),
       inStoreWeek: isoWeek(inStore),
-      opd: dateIso(valueAt(source, map.opd)),
+      opd,
+      opdMonth: yearMonth(opd),
+      retailDate,
+      retailDateMonth: yearMonth(retailDate),
       exFactory: dateIso(valueAt(source, map.exFactory)),
       fob,
       quantity,
@@ -308,7 +314,7 @@ function finalizeParsedSheets(eligible) {
   const fabricFields = ['fabricCategory', 'fabricSupplierCountry', 'fabricSupplier', 'kumasTipi', 'iplikNo', 'fabricWeight', 'karisim'];
   const seen = new Map();
   for (const row of allRows) {
-    const key = [row.orderCode, row.modelName, row.colourCode, row.season, row.inStore, row.fob, row.quantity, row.mag, row.mmyg, row.brandDirectorate, row.classification, row.manufacturer, row.country, row.buyingGroup, row.buyer, row.license, row.licensor, row.dtrType].map(turknorm).join('|');
+    const key = [row.orderCode, row.modelName, row.colourCode, row.season, row.inStore, row.opd, row.retailDate, row.fob, row.quantity, row.mag, row.mmyg, row.brandDirectorate, row.classification, row.manufacturer, row.country, row.buyingGroup, row.buyer, row.license, row.licensor, row.dtrType].map(turknorm).join('|');
     const current = seen.get(key);
     if (!current) { seen.set(key, row); continue; }
     // Aynı ASAS sipariş satırı kumaş bileşeni kadar çoğalır. Ana kumaş satırı
@@ -326,7 +332,7 @@ function finalizeParsedSheets(eligible) {
   const warnings = [];
   if (skippedMissingPrice) warnings.push(`${skippedMissingPrice} satır geçerli FOB bulunamadığı için dışarıda bırakıldı.`);
   if (skippedMissingQuantity) warnings.push(`${skippedMissingQuantity} satır geçerli miktar bulunamadığı için dışarıda bırakıldı.`);
-  if (skippedMissingDimensions) warnings.push(`${skippedMissingDimensions} satır MAG, MMYG, Klasman, Sezon, In-Store, Üretici, Ülke, Buying Group veya Buyer alanlarından en az biri boş olduğu için dışarıda bırakıldı.`);
+  if (skippedMissingDimensions) warnings.push(`${skippedMissingDimensions} satır MAG, MMYG, Klasman, Sezon, Üretici, Ülke, Buying Group veya Buyer alanlarından biri ya da karşılaştırma tarih alanlarının tamamı boş olduğu için dışarıda bırakıldı.`);
   if (missingMainFabricSheets) warnings.push(`${missingMainFabricSheets} ASAS sonucunda "Ana Kumaş Mı" alanı bulunamadı; LFL kumaş bilgileri uygulanmadı. Alanı ana ASAS bağlantısında eşleyin.`);
   if (ignoredNonMainFabricRows) warnings.push(`${ignoredNonMainFabricRows} yan kumaş satırı Ana Kumaş Mı = 0 olduğu için kumaş detaylarında dikkate alınmadı.`);
   if (!rows.some(r => r.inStore)) warnings.push('In-Store tarih sütunu bulunamadı veya tarihler okunamadı; dönem karşılaştırması sezon bazında çalışacaktır.');
@@ -369,6 +375,8 @@ function finalizeParsedSheets(eligible) {
         fabricWeights: uniqueSorted(rows, 'fabricWeight'),
         fabricBlends: uniqueSorted(rows, 'karisim'),
         inStoreMonths: uniqueSorted(rows, 'inStoreMonth'),
+        opdMonths: uniqueSorted(rows, 'opdMonth'),
+        retailDateMonths: uniqueSorted(rows, 'retailDateMonth'),
       },
     },
   };
