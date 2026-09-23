@@ -20,7 +20,7 @@ const CP_ROWS = [
     _id: 'a', 'PLM ID': 'PLM-123', 'Model Name': 'JERSEY TEE', Colour: 'BLACK',
     'Order Quantity': 1200, Season: 'W6', MMYG: 'MMYG-1', MAG: 'MAG-1',
     'Buying Group': 'ORME', Manufacturer: 'ACME', 'Sub-Manufacturer': 'BETA',
-    Category: 'T-Shirt', 'Ex-factory': '2026-10-19', 'Retail Date': '2026-12-01',
+    Category: 'T-Shirt', OPD: '2026-09-30', 'Ex-factory': '2026-10-19', 'Retail Date': '2026-12-01',
     'FOB ($)': 8.5, Country: 'Egypt', 'Supp. FOB': 99, 'In-Store': '2027-01-15'
   },
   {
@@ -33,7 +33,7 @@ const CP_ROWS = [
     _id: 'c', 'PLM ID': 'PLM-123', 'Model Name': 'JERSEY SET', Colour: 'BLUE',
     'Order Quantity': 500, Season: 'W6', MMYG: 'MMYG-1', MAG: 'MAG-1',
     'Buying Group': 'ORME', 'Sub-Manufacturer': 'BETA',
-    Category: "2'li Takım (T-shirt+Şort)",
+    Category: "2'li Takım (T-shirt+Şort)", OPD: '2026-09-30',
     'Ex-factory': '2026-11-02', 'Retail Date': '2026-12-20', 'FOB ($)': 12.75
   }
 ];
@@ -92,7 +92,7 @@ test('uretilen workbook geri okundugunda sozlesmeye uyar', async () => {
     const sending = r1[idx('Capacity Request sending Date')];
     const issuing = r1[idx('PO Issuing Date')];
     assert.strictEqual(sending, day(2026, 9, 17), 'gonderim tarihi export gunu olmali');
-    assert.strictEqual(issuing, sending, 'PO Issuing Date ayni gun olmali');
+    assert.strictEqual(issuing, day(2026, 9, 30), 'CP PO Issuing Date canonical OPD kaynagindan gelmeli');
     assert.strictEqual(r1[idx('garment ex-factory date: (shipment date)')], day(2026, 10, 19));
     assert.strictEqual(r1[idx('Retail Stock Date')], day(2026, 12, 1), 'Retail Date kaynagi, In-Store degil');
     // Hucre gercekten tarih formatli mi (saat bileseni yok)
@@ -124,7 +124,7 @@ test('Koleksiyon secimi de ayni workbook sozlesmesini uretir', async () => {
   const rows = [
     { id: 1, plmId: 'PLM-9', modelKod: 'ARDA-1', colour: 'BLACK', quantity: 300, season: 'W6',
       confirmedManufacturer: 'ACME', urunTipi: 'T-Shirt', exFactory: '2026-10-19',
-      retail: '2026-12-01', fob: 7, mmyg: 'M1', mag: 'A1', buyingGroup: 'ORME' },
+      retail: '2026-12-01', fob: 7, mmyg: 'M1', mag: 'A1', buyingGroup: 'ORME', OPD: '2026-08-01' },
     { id: 2, plmId: 'PLM-9', modelKod: 'ARDA-1-TKM', colour: 'WHITE', quantity: 300, season: 'W6',
       confirmedManufacturer: 'ACME', urunTipi: "2'li Takım", exFactory: '2026-10-19',
       retail: '2026-12-01', fob: 7, mmyg: 'M1', mag: 'A1', buyingGroup: 'ORME' }
@@ -138,6 +138,8 @@ test('Koleksiyon secimi de ayni workbook sozlesmesini uretir', async () => {
     assert.deepStrictEqual(aoa.slice(1).map(r => r[idx('Garment Qty')]), [300, 600]);
     assert.deepStrictEqual(aoa.slice(1).map(r => r[idx('Supplier Name')]), ['ACME', 'ACME']);
     assert.deepStrictEqual(aoa.slice(1).map(r => r[idx('Color')]), ['BLACK', 'WHITE']);
+    const day = (y, m, d) => DATES.excelSerial(new Date(y, m - 1, d));
+    assert.deepStrictEqual(aoa.slice(1).map(r => r[idx('PO Issuing Date')]), [day(2026,9,17), day(2026,9,17)], 'Collection OPD degeri olsa bile export gununu kullanmali');
   } finally {
     fs.rmSync(path.dirname(file), { recursive: true, force: true });
   }
