@@ -45,6 +45,7 @@ function cpRow(over) {
     'Buying Group': 'ORME',
     Manufacturer: 'ACME',
     Category: 'T-Shirt',
+    OPD: '2026-09-30',
     'Ex-factory': '2026-10-19',
     'Retail Date': '2026-12-01',
     'FOB ($)': 8.5
@@ -124,13 +125,30 @@ test('satirlar arasinda tarih/FOB/supplier tasinmaz', () => {
   assert.deepStrictEqual(out.rows.map(r => r.exFactoryDate.getMonth()), [9, 10]);
 });
 
-test('9-11 · iki export tarihi export gunudur ve birbirine esittir', () => {
-  const out = CR.buildExport([cpRow()], 'cp', { today: TODAY });
+test('9-11 · Collection PO Issuing Date export gunudur; OPD olsa bile kullanilmaz', () => {
+  const out = CR.buildExport([collectionRow({ OPD: '2026-08-01' })], 'collection', { today: TODAY });
   const row = out.rows[0];
   assert.strictEqual(row.capacityRequestSendingDate.getTime(), TODAY.getTime());
   assert.strictEqual(row.poIssuingDate.getTime(), TODAY.getTime());
-  assert.strictEqual(row.capacityRequestSendingDate.getTime(), row.poIssuingDate.getTime());
   assert.strictEqual(row.capacityRequestSendingDate.getHours(), 0, 'saat yazilmaz');
+});
+
+test('Collection disinda PO Issuing Date canonical OPD / Order Placement Date degerinden gelir', () => {
+  const out = CR.buildExport([cpRow({ OPD: '2026-10-15' })], 'cp', { today: TODAY });
+  const row = out.rows[0];
+  assert.strictEqual(row.capacityRequestSendingDate.getTime(), TODAY.getTime(), 'gonderim tarihi yine export gunudur');
+  assert.strictEqual(row.poIssuingDate.getFullYear(), 2026);
+  assert.strictEqual(row.poIssuingDate.getMonth(), 9);
+  assert.strictEqual(row.poIssuingDate.getDate(), 15);
+});
+
+test('Collection disinda gecmis/ileri OPD aynen korunur; bos OPD bugune dusmez', () => {
+  const past = CR.buildExport([cpRow({ OPD: '2026-08-01' })], 'cp', { today: TODAY }).rows[0];
+  const future = CR.buildExport([cpRow({ OPD: '2027-01-05' })], 'cp', { today: TODAY }).rows[0];
+  const blank = CR.buildExport([cpRow({ OPD: '', 'Order Placement Date': '', orderPlacementDate: '' })], 'cp', { today: TODAY }).rows[0];
+  assert.deepStrictEqual([past.poIssuingDate.getFullYear(), past.poIssuingDate.getMonth()+1, past.poIssuingDate.getDate()],[2026,8,1]);
+  assert.deepStrictEqual([future.poIssuingDate.getFullYear(), future.poIssuingDate.getMonth()+1, future.poIssuingDate.getDate()],[2027,1,5]);
+  assert.strictEqual(blank.poIssuingDate, null, 'eksik OPD sahte bugun tarihiyle doldurulmaz');
 });
 
 test('12 · Retail Stock Date yalniz Retail Date kaynagindan gelir', () => {
