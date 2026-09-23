@@ -71,5 +71,12 @@ test('status pill/dashboard styling is theme-token based and uses status color o
   assert.match(CSS,/color-mix\(in srgb,var\(--status-color\) 7%,var\(--card\)\)/);
   assert.match(CSS,/#kolTable td\.kolStatusTd/);
   assert.match(CSS,/background-color:color-mix\(in srgb,var\(--kol-status-color\) 18%,var\(--card\)\)/);
+  const tdStart=CSS.indexOf('#kolTable td.kolStatusTd{');
+  const tdBlock=CSS.slice(tdStart,CSS.indexOf('}',tdStart)+1);
+  const selectStart=CSS.indexOf('#kolTable select.kolStatusNoArrow{');
+  const selectBlock=CSS.slice(selectStart,CSS.indexOf('}',selectStart)+1);
+  assert.doesNotMatch(tdBlock,/box-shadow/,'status cell must not draw a thick left accent line');
+  assert.doesNotMatch(selectBlock,/radial-gradient|background-image/,'status select must not draw a leading status dot');
+  assert.match(selectBlock,/padding:3px 9px;/,'status text uses symmetric padding after dot removal');
   assert.match(APP,/class="editTd kolStatusTd"\$\{rc\} style="--kol-status-color:/);
 });
