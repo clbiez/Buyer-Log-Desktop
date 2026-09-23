@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.102",
-  "commit_sha": "1552c33664ce45f54901310ffdb4d36a4e5fa264",
-  "release_notes": "Buyer Log 7.0.102: Kayıp E-Mail Groups kayıtları eski quotation alıcı geçmişinden güvenli şekilde geri kazanılıp mevcut merkezi rehberle birleştirilir; mevcut dolu e-posta kayıtları ezilmez. Collection Status hücrelerindeki gereksiz nokta/sol renk çizgisi kaldırıldı ve Collection Excel dışa aktarımında hücre içi satır sonları tek satıra normalize edilerek her modelin tek fiziksel Excel satırında kalması sağlandı."
+  "version": "7.0.105",
+  "commit_sha": "d95443c71cd4cb50b993b95b62c82d2be2800035",
+  "release_notes": "Buyer Log 7.0.105: Uygulamanın güncel main kaynakları tek sürüm altında toplandı. Collection Ctrl+C / rich clipboard akışında hücre içi Enter ve diğer satır sonları tek satıra normalize edilerek her modelin dış panoda tek fiziksel satır olarak kalması güvenceye alındı; etkileşimli DOM verisinin clipboard'a sızmaması korunuyor. İlgili regresyon sözleşmesi yeni davranışla hizalandı ve tam Buyer Log test paketi başarıyla geçti."
 }
