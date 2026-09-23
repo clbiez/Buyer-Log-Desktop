@@ -1211,15 +1211,27 @@ function classifyAndLoadDropped(wb, name, onASAS){
   console.warn('Tanımlanamayan dosya (sürükle-bırak):', name);
 }
 
-document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=> btn.addEventListener('click', ()=>{
-  const target=btn.dataset.tab;
-  const desktopWorkspace=window.buyerLogDesktop?.workspace;
-  if(desktopWorkspace&&typeof desktopWorkspace.openModule==='function'&&target!==currentActiveTab()){
-    void desktopWorkspace.openModule(target);
-    return;
-  }
-  switchTab(target);
-}) );
+document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    // Normal sol tik her zaman mevcut workspace sekmesinde gezinir.
+    switchTab(btn.dataset.tab);
+  });
+  btn.addEventListener('auxclick', event=>{
+    // Tarayici davranisi gibi orta tus yalnizca acikca yeni sekme ister.
+    if(event.button!==1)return;
+    const desktopWorkspace=window.buyerLogDesktop?.workspace;
+    if(!desktopWorkspace||typeof desktopWorkspace.openModule!=='function')return;
+    event.preventDefault();
+    void desktopWorkspace.openModule(btn.dataset.tab);
+  });
+  btn.addEventListener('contextmenu', event=>{
+    const desktopWorkspace=window.buyerLogDesktop?.workspace;
+    if(!desktopWorkspace||typeof desktopWorkspace.showModuleContextMenu!=='function')return;
+    event.preventDefault();
+    event.stopPropagation();
+    void desktopWorkspace.showModuleContextMenu(btn.dataset.tab, appLang);
+  });
+});
 function syncNavExcelButtonLabel(tab=document.body.dataset.activeTab){
   const label=document.getElementById('navExcelBtnLabel');
   const btn=document.getElementById('navExcelBtn');
@@ -13656,8 +13668,14 @@ async function refreshSyncStatusBadge(){
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
   const requestedModule=new URLSearchParams(location.search).get('module');
-  if(requestedModule&&document.getElementById('view-'+requestedModule))switchTab(requestedModule);
   await loadInitialBuyerLogData();
+  // Workspace ile acilan yeni sekmelerde yetki/kullanici baglami yuklenmeden
+  // modulu degistirmek Overview'da kalmis, fakat basligi hedef modul olmus bir
+  // sekme uretebiliyordu. Ilk veri/yetki hidrasyonu bittikten sonra hedefi uygula.
+  if(requestedModule&&document.getElementById('view-'+requestedModule)){
+    const switched=switchTab(requestedModule);
+    if(switched===false&&requestedModule!=='overview')switchTab('overview');
+  }
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     window.BLPerf?.mark?.('UI_READY');
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));

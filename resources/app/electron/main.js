@@ -1498,13 +1498,27 @@ function registerIpc() {
     return Boolean(state && workspace.activateTab(state.window.id, tabId));
   });
   ipcMain.handle('buyerlog:workspace-open-module', (event, moduleId) => {
-    if (!workspace) return null;
+    if (!workspace || !trustedBuyerLogIpcSender(event)) return null;
     const shellState = workspace.windowForShellContents(event.sender);
     const contentWindow = workspace.windowForContents(event.sender);
     const targetState = shellState || (contentWindow ? workspace.stateForWindow(contentWindow.id) : null);
     if (!targetState || !targetState.window || targetState.window.isDestroyed()) return null;
-    const tab = workspace.openModule(targetState.window.id, moduleId);
+    const tab = workspace.openModule(targetState.window.id, moduleId, { forceNew:true });
     return tab ? { ok:true, tabId:tab.id, module:tab.module } : null;
+  });
+  ipcMain.handle('buyerlog:workspace-show-module-context-menu', (event, payload = {}) => {
+    if (!workspace || !trustedBuyerLogIpcSender(event)) return false;
+    const contentWindow = workspace.windowForContents(event.sender);
+    const targetState = contentWindow ? workspace.stateForWindow(contentWindow.id) : null;
+    if (!targetState || !targetState.window || targetState.window.isDestroyed()) return false;
+    const moduleId = String(payload.moduleId || '');
+    const language = String(payload.language || '').toLowerCase() === 'en' ? 'en' : 'tr';
+    const template = [{
+      label: language === 'en' ? 'Open in new tab' : 'Yeni sekmede aç',
+      click: () => workspace.openModule(targetState.window.id, moduleId, { forceNew:true }),
+    }];
+    Menu.buildFromTemplate(template).popup({ window:targetState.window });
+    return true;
   });
   ipcMain.handle('buyerlog:workspace-set-module', (event, moduleId) => {
     if (!workspace || !trustedBuyerLogIpcSender(event)) return false;

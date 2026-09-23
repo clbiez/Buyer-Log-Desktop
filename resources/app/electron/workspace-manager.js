@@ -502,12 +502,15 @@ function createWorkspaceManager(options) {
     return state;
   }
 
-  function openModule(windowId, moduleId) {
+  function openModule(windowId, moduleId, options = {}) {
     const state = stateForWindow(windowId) || focusedState();
     if (!isLiveWindowState(state) || state.closingRequested) return null;
     purgeStaleTabs(state);
     const module = normalizeModule(moduleId);
-    const existing = state.tabs.map(id => tabs.get(id)).find(tab => isLiveTab(tab, state) && tab.module === module);
+    const forceNew = Boolean(options && options.forceNew);
+    const existing = forceNew
+      ? null
+      : state.tabs.map(id => tabs.get(id)).find(tab => isLiveTab(tab, state) && tab.module === module);
     if (existing) {
       activateTab(state.window.id, existing.id);
       return existing;

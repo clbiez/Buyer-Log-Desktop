@@ -165,11 +165,28 @@ test('each window has a browser-like accessible tab strip and non-drag alternati
   assert.match(MAIN, /Menu\.buildFromTemplate\(template\)\.popup/);
 });
 
-test('module rail opens or focuses a desktop workspace tab while internal switchTab remains reusable', () => {
-  assert.match(PRELOAD, /workspace:[\s\S]*?openModule[\s\S]*?setModule/);
-  assert.match(APP, /desktopWorkspace\.openModule\(target\)/);
+test('module rail keeps left click in the current tab and reserves new tabs for explicit gestures', () => {
+  assert.match(PRELOAD, /workspace:[\s\S]*?openModule[\s\S]*?showModuleContextMenu[\s\S]*?setModule/);
+  assert.match(APP, /addEventListener\('click',[\s\S]*?switchTab\(btn\.dataset\.tab\)/);
+  assert.match(APP, /addEventListener\('auxclick',[\s\S]*?event\.button!==1[\s\S]*?desktopWorkspace\.openModule\(btn\.dataset\.tab\)/);
+  assert.match(APP, /addEventListener\('contextmenu',[\s\S]*?showModuleContextMenu\(btn\.dataset\.tab, appLang\)/);
   assert.match(APP, /workspace\?\.setModule\?\.\(tab\)/);
-  assert.match(APP, /new URLSearchParams\(location\.search\)\.get\('module'\)/);
+  assert.match(MAIN, /workspace-open-module[\s\S]*?forceNew:true/);
+  assert.match(MAIN, /workspace-show-module-context-menu[\s\S]*?Open in new tab[\s\S]*?Yeni sekmede aç[\s\S]*?forceNew:true/);
+  assert.match(MANAGER, /function openModule\(windowId, moduleId, options = \{\}\)/);
+  assert.match(MANAGER, /const forceNew = Boolean\(options && options\.forceNew\)/);
+
+  const startup=APP.slice(APP.indexOf("window.addEventListener('DOMContentLoaded'"), APP.indexOf('async function refreshFolderLabel'));
+  assert.ok(startup.indexOf('await loadInitialBuyerLogData();') < startup.indexOf('switchTab(requestedModule)'),
+    'workspace target module must be applied after initial user/access hydration');
+
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const first=manager.openModule(state.window.id,'cp');
+  const second=manager.openModule(state.window.id,'cp',{forceNew:true});
+  assert.notEqual(first.id,second.id);
+  assert.equal(manager.snapshot(state).tabs.filter(item=>item.module==='cp').length,2);
+
   assert.equal(normalizeModule('koleksiyon'), 'koleksiyon');
   assert.equal(normalizeModule('not-a-module'), 'overview');
   assert.equal(clampIndex(99, 3), 3);

@@ -29,6 +29,10 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
   },
   workspace: {
     openModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-open-module', String(moduleId || '')),
+    showModuleContextMenu: (moduleId, language) => ipcRenderer.invoke('buyerlog:workspace-show-module-context-menu', {
+      moduleId: String(moduleId || ''),
+      language: String(language || ''),
+    }),
     setModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-set-module', String(moduleId || '')),
     setTheme: (theme) => ipcRenderer.invoke('buyerlog:workspace-theme', String(theme || '')),
   },
