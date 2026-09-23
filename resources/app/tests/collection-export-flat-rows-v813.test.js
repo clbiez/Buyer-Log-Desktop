@@ -212,6 +212,15 @@ test('Excel görsel aktarımı model başına tek satır yazar', () => {
     APP_MAIN.indexOf('function kolStyleExportValue'));
   assert.match(block, /rowNum=ri\+2/);
   assert.doesNotMatch(block, /mergeCells|ws\.merge/i, 'Excel aktarımında hücre birleştirme olmamalı');
+  assert.match(APP_MAIN,/function kolExportSingleLineText\(value\)[\s\S]*?BLTableExport\?\.normalizeCell/);
+  assert.match(block,/cell\.value=kolExportSingleLineText\(summaryEntry\.display\)/);
+  assert.match(block,/else\{cell\.value=kolExportSingleLineText\(raw\);cell\.alignment=/,
+    'Fabric dahil serbest metin ExcelJS hücresine fiziksel satır sonu taşımamalı');
+  const styled = APP_MAIN.slice(APP_MAIN.indexOf('function buildKolStyledSheet'),
+    APP_MAIN.indexOf('// ---- Görsel gömülü dışa aktarım'));
+  assert.match(styled,/v:kolExportSingleLineText\(summaryEntry\.display\)/);
+  assert.match(styled,/cell = \{v:kolExportSingleLineText\(raw\),t:'s',s\};/,
+    'görselsiz Collection export da aynı tek-satır normalizasyonunu kullanmalı');
 });
 
 test('normal metin kopyalaması körlemesine ele geçirilmez', () => {
