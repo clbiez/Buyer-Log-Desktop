@@ -16,8 +16,11 @@ function clean(value) {
   return String(value == null ? '' : value).replace(/[\u0000\r\n]/g, '').trim();
 }
 
-function authorizationHeaderFromCdpRequest(params) {
-  const headers = params && params.request && params.request.headers;
+function authorizationHeaderFromRequest(params) {
+  const headers = params && (
+    (params.requestHeaders && typeof params.requestHeaders === 'object' && params.requestHeaders)
+    || (params.request && params.request.headers)
+  );
   if (!headers || typeof headers !== 'object') return '';
   for (const [name, value] of Object.entries(headers)) {
     if (String(name).toLowerCase() !== 'authorization') continue;
@@ -28,7 +31,7 @@ function authorizationHeaderFromCdpRequest(params) {
 }
 
 function isReportApiRequest(params, apiHost, reportApiPath = DEFAULT_REPORT_API_PATH) {
-  const raw = clean(params && params.request && params.request.url);
+  const raw = clean(params && (params.url || (params.request && params.request.url)));
   if (!raw) return false;
   try {
     const url = new URL(raw);
@@ -145,7 +148,7 @@ function createOabAuthLifecycle(options = {}) {
   async function onNetworkRequest(params) {
     if (stopped || candidateBusy) return false;
     if (!isReportApiRequest(params, apiHost, reportApiPath)) return false;
-    const authorization = authorizationHeaderFromCdpRequest(params);
+    const authorization = authorizationHeaderFromRequest(params);
     if (!authorization) return false;
 
     candidateBusy = true;
@@ -190,7 +193,7 @@ function createOabAuthLifecycle(options = {}) {
 module.exports = {
   DEFAULT_REPORT_API_PATH,
   DEFAULT_VIEWER_PATH,
-  authorizationHeaderFromCdpRequest,
+  authorizationHeaderFromRequest,
   isReportApiRequest,
   createOabAuthLifecycle,
 };

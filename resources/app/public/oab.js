@@ -340,10 +340,45 @@
      4) OAB API — sunucu iletişimi. UI kodundan kasıtlı olarak ayrı: bu
      bölüm hiçbir DOM işlemi yapmaz, yalnız fetch çağırıp JSON döndürür.
      ================================================================ */
-  async function oabJson(url, options) {
+  function oabIsAuthErrorCode(code) {
+    return code === 'OAB_AUTH_REQUIRED' || code === 'OAB_AUTH_EXPIRED';
+  }
+  let oabDesktopAuthInFlight = null;
+  async function oabEnsureAuthentication() {
+    const bridge = global.buyerLogDesktop;
+    if (!bridge || typeof bridge.ensureOabAuth !== 'function') {
+      const err = new Error(oabT('OAB oturumu Buyer Log masaüstü uygulamasından açılmalıdır.', 'OAB sign-in must be opened from the Buyer Log desktop app.'));
+      err.code = 'OAB_DESKTOP_AUTH_UNAVAILABLE';
+      throw err;
+    }
+    if (!oabDesktopAuthInFlight) {
+      const request = Promise.resolve(bridge.ensureOabAuth({ interactive:true }))
+        .then(result => {
+          if (result && result.ok && result.authenticated) return result;
+          const err = new Error((result && result.error) || oabT('OAB kullanıcı girişi tamamlanmadı.', 'OAB sign-in was not completed.'));
+          err.code = (result && result.code) || 'OAB_AUTH_REQUIRED';
+          throw err;
+        })
+        .finally(() => {
+          if (oabDesktopAuthInFlight === request) oabDesktopAuthInFlight = null;
+        });
+      oabDesktopAuthInFlight = request;
+    }
+    return oabDesktopAuthInFlight;
+  }
+  async function oabJson(url, options, allowAuthRetry = true) {
     const res = await fetch(url, options);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) { const err = new Error(data.error || res.statusText); err.code = data.code; err.details = data.details; throw err; }
+    if (!res.ok) {
+      const err = new Error(data.error || res.statusText);
+      err.code = data.code;
+      err.details = data.details;
+      if (allowAuthRetry && oabIsAuthErrorCode(err.code)) {
+        await oabEnsureAuthentication();
+        return oabJson(url, options, false);
+      }
+      throw err;
+    }
     return data;
   }
   const OABApi = {
@@ -452,24 +487,22 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
-    if (code === 'PASS_AUTH_TIMEOUT') return oabT('PASS’ten filtre/rapor isteği algılanamadı. PASS oturumunuzun açık olduğundan emin olun.', 'No PASS filter/report request was detected. Make sure your PASS session is open.');
-    if (code === 'PASS_LOGIN_TIMEOUT') return oabT('PASS oturum açma işlemi tamamlanmadı. Edge üzerindeki giriş ekranını tamamlayıp tekrar deneyin.', 'PASS sign-in was not completed. Finish signing in on Edge and try again.');
-    if (code === 'PASS_SESSION_EXPIRED') return oabT('PASS oturumu sona erdi. Buyer Log yeniden bağlantı kurmayı deneyecek.', 'PASS session expired. Buyer Log will try to reconnect.');
-    if (code === 'EDGE_EXISTING_PROFILE_DEBUG_DISABLED' || code === 'EDGE_CONNECTION_NOT_READY') return oabT('Edge bağlantısı hazır değil. Açılan Edge sayfasında uzaktan hata ayıklamaya izin verin.', 'Edge connection is not ready. Allow remote debugging on the opened Edge page.');
-    if (code === 'PASS_CAPTURE_ALREADY_RUNNING') return oabT('Bir PASS bağlantı denemesi zaten sürüyor, bir süre sonra tekrar deneyin.', 'A PASS connection attempt is already running, try again shortly.');
+    if (code === 'OAB_AUTH_REQUIRED') return oabT('OAB oturumu gerekli. Buyer Log giriş ekranını açacak.', 'OAB sign-in is required. Buyer Log will open the sign-in window.');
+    if (code === 'OAB_AUTH_EXPIRED') return oabT('OAB oturumu sona erdi. Buyer Log tekrar giriş isteyecek.', 'OAB session expired. Buyer Log will ask you to sign in again.');
+    if (code === 'OAB_AUTH_CANCELLED') return oabT('OAB kullanıcı girişi iptal edildi.', 'OAB sign-in was cancelled.');
+    if (code === 'OAB_AUTH_TIMEOUT') return oabT('OAB oturum açma işlemi zamanında tamamlanmadı.', 'OAB sign-in did not complete in time.');
+    if (code === 'OAB_AUTH_NAVIGATION_FAILED' || code === 'OAB_AUTH_RENDERER_FAILED') return oabT('OAB giriş ekranı açılamadı.', 'The OAB sign-in window could not be opened.');
+    if (code === 'OAB_AUTH_CAPTURE_UNAVAILABLE') return oabT('OAB oturumu doğrulanamadı.', 'The OAB session could not be validated.');
     return String((err && err.message) || err || oabT('Bilinmeyen hata.', 'Unknown error.'));
   }
   function oabAuthProgressMessage(status) {
     const state = status && status.status || status || {};
-    if (!state.captureInProgress) return '';
-    if (state.loginRequired || state.phase === 'login-required') {
+    if (state.loginRequired) {
       return oabT(
-        'PASS oturum açma ekranı bekleniyor. Edge üzerinde kullanıcı adı/şifrenizle giriş yapın; Buyer Log giriş tamamlanınca otomatik devam edecek. Giriş bilgileriniz Buyer Log tarafından okunmaz veya kaydedilmez.',
-        'PASS sign-in is waiting. Sign in with your username/password in Edge; Buyer Log will continue automatically after sign-in. Your credentials are not read or stored by Buyer Log.',
+        'OAB oturumu gerekli. Buyer Log gerekirse kendi giriş ekranını açacak ve giriş tamamlanınca otomatik devam edecek.',
+        'OAB sign-in is required. Buyer Log will open its own sign-in window if needed and continue automatically after sign-in.',
       );
     }
-    if (state.phase === 'authenticated-opening-report') return oabT('PASS girişi tamamlandı. OAB raporu açılıyor…', 'PASS sign-in completed. Opening the OAB report…');
-    if (state.phase === 'opening' || state.phase === 'waiting-request') return oabT('PASS bağlantısı doğrulanıyor…', 'Validating PASS connection…');
     return '';
   }
 
@@ -987,8 +1020,9 @@
     S.busyStatusMessage = '';
     S.busyStatusKind = '';
     oabUpdateActionButtons();
-    // Legacy 7.0.80 flow: Get/Refresh OAB itself opens/uses PASS through the
-    // normal Edge/CDP connector. There is no separate Electron auth pre-step.
+    // Get/Refresh OAB first tries the backend RAM session. If authentication
+    // is missing/expired, oabJson opens Buyer Log's internal Chromium sign-in
+    // and automatically retries the original request after successful login.
     oabSetBusyStatus(forceRefresh ? oabT('OAB yenileniyor', 'Refreshing OAB') : oabT('OAB getiriliyor', 'Getting OAB'));
     if (!S.rows.length) oabEl('oabBody').hidden = true;
     let authPollBusy = false;
@@ -1005,6 +1039,7 @@
       } catch (_) { /* progress polling ana rapor isteğini asla bozmaz */ }
       finally { authPollBusy = false; }
     }, 900);
+    let retryAfterAuth = false;
     try {
       const single = S.seasonRefs.length === 1 && S.magRefs.length === 1 && !S.allBuyerGroups && S.buyerGroupRefs.length === 1;
       if (single) {
@@ -1015,7 +1050,16 @@
         await oabRunBatch(forceRefresh);
       }
     } catch (err) {
-      oabShowRetry(oabReportErrorMessage(err), () => oabFetchReport(forceRefresh));
+      if (oabIsAuthErrorCode(err && err.code)) {
+        try {
+          await oabEnsureAuthentication();
+          retryAfterAuth = true;
+        } catch (authError) {
+          oabShowRetry(oabReportErrorMessage(authError), () => oabFetchReport(forceRefresh));
+        }
+      } else {
+        oabShowRetry(oabReportErrorMessage(err), () => oabFetchReport(forceRefresh));
+      }
     } finally {
       clearInterval(authPoll);
       clearInterval(elapsedTimer);
@@ -1025,6 +1069,7 @@
       S.busyStatusKind = '';
       oabUpdateActionButtons();
     }
+    if (retryAfterAuth) return oabFetchReport(forceRefresh);
   }
 
   /* ================================================================
@@ -1115,6 +1160,12 @@
           S.batchJob = status.job;
           oabRenderProgress(status.job);
           if (status.job.running) { S.batchTimer = setTimeout(tick, 1000); return; }
+          if (oabIsAuthErrorCode(status.job.errorCode)) {
+            const error = new Error(status.job.error || oabT('OAB oturumu gerekli.', 'OAB sign-in is required.'));
+            error.code = status.job.errorCode;
+            reject(error);
+            return;
+          }
           resolve(status);
         } catch (error) { reject(error); }
       };
@@ -1224,6 +1275,7 @@
     S.busy = true; S.busyStartedAt = performance.now();
     oabUpdateActionButtons();
     oabSetBusyStatus(oabT(`${combinations.length} kombinasyon yeniden deneniyor`, `Retrying ${combinations.length} combinations`));
+    let retryAfterAuth = false;
     try {
       const started = await OABApi.batchStart({ combinations, forceRefresh: true });
       S.batchJob = started.job;
@@ -1235,11 +1287,21 @@
       await oabMergeRetryRows(finished);
       oabReportBatchOutcome(finished, { merged: true });
     } catch (error) {
-      oabShowRetry(oabReportErrorMessage(error), () => oabRetryFailedCombinations());
+      if (oabIsAuthErrorCode(error && error.code)) {
+        try {
+          await oabEnsureAuthentication();
+          retryAfterAuth = true;
+        } catch (authError) {
+          oabShowRetry(oabReportErrorMessage(authError), () => oabRetryFailedCombinations());
+        }
+      } else {
+        oabShowRetry(oabReportErrorMessage(error), () => oabRetryFailedCombinations());
+      }
     } finally {
       S.busy = false; S.busyStartedAt = 0;
       oabUpdateActionButtons();
     }
+    if (retryAfterAuth) return oabRetryFailedCombinations();
   }
   // Yeni satırları mevcut raporun ÜZERİNE ekler. Aynı kombinasyondan gelen
   // eski satırlar önce çıkarılır: aksi halde yeniden denenen bir kombinasyon
@@ -1290,9 +1352,8 @@
   }
   function oabReportErrorMessage(err) {
     const code = err && err.code;
-    if (code === 'PASS_SESSION_EXPIRED') return oabT('PASS oturumu sona erdi. Yeniden bağlanıp tekrar deneyin.', 'PASS session expired. Reconnect to PASS and try again.');
-    if (code === 'PASS_NOT_CONNECTED' || code === 'PASS_CAPTURE_ALREADY_RUNNING') return oabAuthErrorMessage(err);
-    if (code === 'PASS_HTTP_ERROR' || code === 'OAB_REPORT_FETCH_FAILED') return oabPassHttpErrorMessage(err);
+    if (oabIsAuthErrorCode(code) || String(code || '').startsWith('OAB_AUTH_')) return oabAuthErrorMessage(err);
+    if (code === 'OAB_HTTP_ERROR' || code === 'OAB_REPORT_FETCH_FAILED') return oabPassHttpErrorMessage(err);
     return oabAuthErrorMessage(err);
   }
   function oabPassHttpErrorMessage(err) {
