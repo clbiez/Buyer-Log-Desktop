@@ -5774,14 +5774,26 @@ app.get('/api/qtx/file/:colourCode', userAccess.requireAnyArea('cp', 'orders', '
    session/Authorization yalnız kullanıcı "Get OAB"/"Refresh OAB" dediğinde
    doğrulanır; Overview > OAB açılışında login penceresi açılmaz.
    =================================================================== */
-// OAB report transport stays backend-direct and the Authorization value lives
-// only in backend memory. The primary path is Electron's dedicated persistent
-// OAB partition; the existing-Edge endpoint below remains an optional explicit
-// fast-path and is not part of Get OAB's critical path. 401/403 invalidates the
-// in-memory state.
+// 7.0.80 transport restored: Get/Refresh OAB uses the normal Buyer Log Edge/CDP
+// context, opens the real PASS viewer and captures the real report request.
+// No separate Electron OAB login window is required by this route.
+async function ensurePassConnected(userId, params) {
+  const status = agentBrowserConnector.passAuthStatus(userId);
+  if (status.connected) return status;
+  return agentBrowserConnector.capturePassAuthorization(userId, params || {});
+}
+async function fetchOabReportWithLoginRecovery(userId, params) {
+  try {
+    return await agentBrowserConnector.fetchPassReportData(userId, params);
+  } catch (err) {
+    if (!err || err.code !== 'PASS_SESSION_EXPIRED') throw err;
+    await agentBrowserConnector.capturePassAuthorization(userId, params || {});
+    return agentBrowserConnector.fetchPassReportData(userId, params);
+  }
+}
 app.get('/api/oab/auth/status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try { res.set('Cache-Control','no-store').json({ ok:true, status:oabAuthState.status() }); }
-  catch (_) { res.status(500).set('Cache-Control','no-store').json({ ok:false, code:'OAB_AUTH_STATUS_FAILED', error:'OAB bağlantı durumu okunamadı.' }); }
+  try { res.set('Cache-Control','no-store').json({ ok:true, status:agentBrowserConnector.passAuthStatus(req.currentUser.id) }); }
+  catch (err) { automationError(res, err, 'PASS bağlantı durumu okunamadı.'); }
 });
 app.post('/api/oab/auth/capture-existing', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), async (req, res) => {
   try {
@@ -5886,7 +5898,8 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
         return res.json({ ok:true, rows:cached.rows, fields:cached.fields, fromCache:true, fetchedAt:cached.fetchedAt, ttlMinutes:cached.ttlMinutes });
       }
     }
-    const rows = await oabApiClient.fetchReportData({ seasonRef, merchSubGroupRef, buyerGroupRef });
+    await ensurePassConnected(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef });
+    const rows = await fetchOabReportWithLoginRecovery(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef });
     // Alan listesi HARD-CODE EDİLMEZ: response'taki satırların birleşik anahtar
     // kümesinden dinamik üretilir (81 civarındaki alanın hepsi, hangi satırda
     // olursa olsun kaybolmadan taşınır).
@@ -5971,7 +5984,8 @@ async function oabFetchOneCombination(userId, currentUser, item, forceRefresh) {
   const params = single
     ? { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRef }
     : { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRefs:item.buyerGroupRefs };
-  const rows = await oabApiClient.fetchReportData(params);
+  await ensurePassConnected(userId, params);
+  const rows = await fetchOabReportWithLoginRecovery(userId, params);
   const fields = [...new Set(rows.flatMap(row => Object.keys(row || {})))];
   let fetchedAt = new Date().toISOString();
   if (single) {
@@ -6174,7 +6188,6 @@ app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.req
   try {
     const existing = oabBatchJobs.get(req.currentUser.id);
     if (existing && existing.running) return res.status(409).json({ error:'Bu kullanıcı için bir OAB toplu çekme işlemi zaten sürüyor.', code:'OAB_BATCH_IN_PROGRESS', job: oabBatchPublicJob(existing) });
-    if (!oabAuthState.status().authenticated) return res.status(401).set('Cache-Control','no-store').json({ error:'OAB oturumu gerekli.', code:'OAB_AUTH_REQUIRED' });
     const built = oabBuildPlan(req.body || {});
     if (built.error) return res.status(400).json({ error:'Season, MAG ve Buyer Group seçimi zorunlu.', code:'OAB_PARAMS_REQUIRED', details:{ field: built.error } });
     if (!built.combinationCount) {
