@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.101",
-  "commit_sha": "64c477c8e3ccd93a785a4d1f85d8d8c82e04a526",
-  "release_notes": "Buyer Log 7.0.101: LFL, Price Analysis, OAB ve benzeri alt detaylarda PLM SYNC kimlik çözümleme düzeltildi; görünür PLM ID bulunmasa da gizli kimlik metadata ve güvenli model/renk/sipariş eşleştirmesi kullanılıyor; ASAS target snapshotları çözümlemeye dahil edildi."
+  "version": "7.0.102",
+  "commit_sha": "1552c33664ce45f54901310ffdb4d36a4e5fa264",
+  "release_notes": "Buyer Log 7.0.102: Kayıp E-Mail Groups kayıtları eski quotation alıcı geçmişinden güvenli şekilde geri kazanılıp mevcut merkezi rehberle birleştirilir; mevcut dolu e-posta kayıtları ezilmez. Collection Status hücrelerindeki gereksiz nokta/sol renk çizgisi kaldırıldı ve Collection Excel dışa aktarımında hücre içi satır sonları tek satıra normalize edilerek her modelin tek fiziksel Excel satırında kalması sağlandı."
 }
