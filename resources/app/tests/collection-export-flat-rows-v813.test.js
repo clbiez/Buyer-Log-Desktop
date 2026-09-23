@@ -28,6 +28,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const exporter = require('../public/table-export.js');
 const APP_MAIN = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+const SHEET = fs.readFileSync(path.join(ROOT, 'public', 'collection-spreadsheet.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 
 const COLUMNS = [
@@ -176,8 +177,18 @@ test('Koleksiyon dışa aktarım değeri kayıttan üretilir', () => {
   assert.match(block, /cellText:\(col,row\)=>meta\.cellText\(col,row\)/,
     'hücre metni TABLE_META üzerinden kayıttan gelmeli');
   assert.match(block, /BLTableExport\.buildMatrix/);
+  assert.match(block, /htmlCellText=value=>escapeHtml\(BLTableExport\.normalizeCell\(value\)\)/,
+    'rich clipboard da Fabric/serbest metin satır sonlarını tek satıra indirmeli');
   assert.doesNotMatch(block, /textContent|innerHTML|outerHTML/,
     'değer üretiminde DOM metni okunmamalı');
+});
+
+test('Koleksiyon spreadsheet Ctrl+C rich HTML satır sonlarını yeniden üretmez', () => {
+  const start=SHEET.indexOf('function selectedClipboard(');
+  assert.ok(start>0);
+  const block=SHEET.slice(start,start+2200);
+  assert.match(block,/const rows=matrix\.map\(row=>row\.map\(exporter\.normalizeCell\)\)/);
+  assert.match(block,/rawRows:rows/,'toSafeHTML ham çok-satırlı değeri tekrar görmemeli');
 });
 
 test('TSV ve HTML üreten bütün yollar merkezî serializer üzerinden geçer', () => {
