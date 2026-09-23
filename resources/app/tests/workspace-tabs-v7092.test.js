@@ -14,6 +14,7 @@ const PRELOAD = read('electron/preload.js');
 const SHELL_PRELOAD = read('electron/workspace-preload.js');
 const SHELL = read('electron/workspace.html');
 const SHELL_JS = read('electron/workspace-renderer.js');
+const SHELL_CSS = read('electron/workspace.css');
 const APP = read('public/app-main.js');
 const { createWorkspaceManager, normalizeModule, normalizeWorkspaceTheme, clampIndex, MODULES } = require('../electron/workspace-manager');
 
@@ -125,6 +126,26 @@ test('live manager moves one WebContentsView across windows without recreating i
   assert.equal(manager.windowCount(),1,'empty detached window closes after the transfer event stack completes');
   assert.equal(lfl.view.webContents,liveContents,'reattach preserves renderer identity and state');
   assert.equal(liveContents.isDestroyed(),false);
+});
+
+test('workspace title bar stays within compact 28px geometry and preserves native interaction zones', () => {
+  assert.match(MANAGER, /const WORKSPACE_BAR_HEIGHT = 28;/);
+  assert.match(SHELL_CSS, /\.workspaceBar\{height:28px;[^}]*align-items:center;[^}]*padding:0 144px 0 4px;[^}]*border-bottom:1px solid var\(--line\);[^}]*-webkit-app-region:drag/);
+  assert.match(SHELL_CSS, /\.tabStrip\{[^}]*height:27px;[^}]*-webkit-app-region:no-drag/);
+  assert.match(SHELL_CSS, /\.workspaceTab\{[^}]*height:26px;[^}]*font:500 12px\/1[^}]*-webkit-app-region:no-drag/);
+  assert.match(SHELL_CSS, /\.workspaceTab\.isActive\{height:26px;/);
+  assert.match(SHELL_CSS, /\.newTabWrap\{[^}]*height:27px;[^}]*-webkit-app-region:no-drag/);
+  assert.match(SHELL_CSS, /\.newTabButton\{width:26px;height:26px;font-size:18px\}/);
+  assert.match(SHELL_CSS, /\.windowDrag\{[^}]*-webkit-app-region:drag/);
+  assert.doesNotMatch(SHELL_CSS, /height:44px|height:37px|inset:52px/);
+
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const tab=manager.tabForContents(manager.activeContents(state));
+  assert.equal(state.window.options.titleBarOverlay.height,28);
+  assert.equal(state.window.titleBarOverlay.height,28);
+  assert.equal(tab.view.bounds.y,28);
+  assert.equal(tab.view.bounds.height,772);
 });
 
 test('each window has a browser-like accessible tab strip and non-drag alternatives', () => {
