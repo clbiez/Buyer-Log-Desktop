@@ -1124,33 +1124,56 @@ async function recoverSharedMasterFromLocalDataBackup(root) {
   const remote = await sharedHub.readMaster(root, null);
   const currentMaster = checkpointRecords(remote);
   const currentCoverage = prewipeMasterRecovery.masterCoverage(currentMaster);
-  // data-BACKUP-* verified bir sistem checkpoint'i değildir. Bu nedenle
-  // yalnız Master'ın neredeyse tamamen boş olduğu temiz-kurulum imzasında
-  // otomatik kaynak olabilir; normal kullanımda bilerek silinmiş bir alanı
-  // eski yerel yedekten asla diriltmez.
-  if (!masterCoverageIsCatastrophicallySparse(currentCoverage)) {
-    return { recovered:false, reason:'shared-master-not-sparse', currentCoverage };
-  }
+  const catastrophicMaster = masterCoverageIsCatastrophicallySparse(currentCoverage);
+  const emailId = 'store:email-groups.json';
+  const currentEmail = currentMaster[emailId] || null;
+
+  /* data-BACKUP-* normalde yalnız katastrofik boş Master için otomatik
+     kaynaktır. E-posta rehberi tek başına kaybolduğunda ise diğer sağlıklı
+     Master aileleri bu kapıyı kapatıyordu. Bu nedenle ikinci, dar bir yol var:
+     sadece e-posta belgesi kendi revizyonu ve kapsamıyla açıkça daha zenginse
+     geri alınır. Başka hiçbir Master ailesi bu dar yoldan değiştirilemez. */
   const candidates = await localLegacyDataBackupCandidates();
   if (!candidates.length) return { recovered:false, reason:'local-data-backup-not-found', currentCoverage };
 
   let selected = null;
   for (const candidate of candidates.slice(0, 12)) {
     const loaded = await loadLocalLegacyMasterCandidate(candidate);
-    const ids = prewipeMasterRecovery.masterRecoveryIds(loaded.records, currentMaster);
+    let ids = [];
+    let recoveredEmail = null;
+    if (catastrophicMaster) {
+      ids = prewipeMasterRecovery.masterRecoveryIds(loaded.records, currentMaster);
+    } else {
+      const candidateEmail = loaded.records && loaded.records[emailId];
+      if (prewipeMasterRecovery.safeFocusedEmailRecovery(candidateEmail, currentEmail)) {
+        ids = [emailId];
+        recoveredEmail = prewipeMasterRecovery.mergeEmailDirectoryRecovery(currentEmail, candidateEmail);
+      }
+    }
     if (!ids.length) continue;
-    const score = masterCoverageValue(loaded.coverage);
+    const emailStats = prewipeMasterRecovery.emailDirectoryStats(recoveredEmail || loaded.records[emailId]);
+    const score = catastrophicMaster
+      ? masterCoverageValue(loaded.coverage)
+      : emailStats.records * 20 + emailStats.recipients * 10 + emailStats.countries * 3 + emailStats.types * 3;
     if (!selected || score > selected.score || (score === selected.score && loaded.mtimeMs > selected.mtimeMs)) {
-      selected = { ...loaded, ids, score };
+      selected = { ...loaded, ids, score, recoveredEmail };
     }
   }
-  if (!selected) return { recovered:false, reason:'local-data-backup-has-no-richer-master', currentCoverage, candidates:candidates.length };
+  if (!selected) {
+    return {
+      recovered:false,
+      reason:catastrophicMaster ? 'local-data-backup-has-no-richer-master' : 'local-data-backup-has-no-richer-email-directory',
+      currentCoverage,
+      candidates:candidates.length,
+    };
+  }
 
   await localDb.transaction(async next => {
     next.records = next.records && typeof next.records === 'object' ? next.records : {};
     next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
     for (const id of selected.ids) {
-      next.records[id] = JSON.parse(JSON.stringify(selected.records[id]));
+      const value = id === emailId && selected.recoveredEmail ? selected.recoveredEmail : selected.records[id];
+      next.records[id] = JSON.parse(JSON.stringify(value));
       delete next.tombstones[id];
     }
     return { recovered:selected.ids.length };
