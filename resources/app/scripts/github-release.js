@@ -82,10 +82,19 @@ async function promoteStable(repoDir,version){
   const temp=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-promote-'));
   try{
     const name=`BuyerLog-${version}.json`;
-    gh(['release','download',tag('test',version),'--pattern',name,'--dir',temp,'--clobber']);
-    const test=parseReleaseManifest(C.readJson(path.join(temp,name),null),'test');
-    if(test.version!==version)C.fail('TEST manifest version yanlış.','RELEASE_VERSION_MISMATCH');
-    const artifact=await verifyDownloaded('test',version,test,temp);
+    /* TEST latest is already committed to the public release-only repo after
+       publish verification. Read that canonical manifest instead of asking
+       gh release download for the JSON asset; GitHub CLI can transiently
+       report "no assets to download" even while the public release assets are
+       already available. The ZIP itself is then fetched anonymously through
+       the same provider used by installed clients and hash/size verified. */
+    const test=parseReleaseManifest(C.readJson(path.join(repoDir,'test','latest.json'),null),'test');
+    if(test.version!==version)C.fail('TEST latest istenen version ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
+    const artifact=path.join(temp,path.posix.basename(test.artifact));
+    const provider=new GitHubReleaseProvider(`github:${process.env.BUYER_LOG_GITHUB_RELEASE_REPO}`,{artifactTimeoutMs:15*60*1000});
+    await provider.copyArtifact('test',test.artifact,artifact,version);
+    if(await C.sha256File(artifact)!==test.sha256||fs.statSync(artifact).size!==test.size)
+      C.fail('TEST public artifact SHA/boyut doğrulaması başarısız.','RELEASE_REMOTE_VERIFY');
     const stable=parseReleaseManifest({...test,channel:'stable',publishedAt:new Date().toISOString()},'stable');
     const stableManifestDir=path.join(temp,'stable');fs.mkdirSync(stableManifestDir);
     const stableManifestFile=path.join(stableManifestDir,name);C.atomicWriteJson(stableManifestFile,stable);
