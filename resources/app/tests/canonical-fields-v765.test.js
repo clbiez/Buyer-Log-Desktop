@@ -36,6 +36,13 @@ test('verified shared dimensions resolve across Collection, CP, Orders and LFL',
   assert.equal(fields.canJoin('collection','category','lfl','category'),true);
 });
 
+test('OPD resolves through one canonical Order Placement Date field without mutating source keys',()=>{
+  assert.equal(fields.canonicalId('cp','OPD'),'orderPlacementDate');
+  assert.equal(fields.canonicalId('orders','Order Placement Date'),'orderPlacementDate');
+  assert.equal(fields.value({OPD:'2026-10-15'},'cp','orderPlacementDate'),'2026-10-15');
+  assert.equal(fields.value({orderPlacementDate:'2026-11-20'},'orders','orderPlacementDate'),'2026-11-20');
+});
+
 test('same-looking but different PLM/ASAS semantics are protected',()=>{
   assert.equal(fields.canonicalId('collection','productMainDefinition'),'productMainDefinition');
   assert.notEqual(fields.canonicalId('collection','productMainDefinition'),'productDescription');
