@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.100",
-  "commit_sha": "39a7a2587e959abdec321458eeebd717a393b9a0",
-  "release_notes": "Buyer Log 7.0.100: OAB legacy PASS/Edge veri çekimi geri getirildi; merkezi E-Mail Groups ve Send to Pricing alıcı kurtarma/senkronizasyonu düzeltildi; INTAKE ve OAB pivot ayarları hizalandı; çalışma alanı sekme navigasyonu, kompakt üst bar, Overview filtre katmanı ve Endeksmatik Adjustment Rate görünürlüğü iyileştirildi."
+  "version": "7.0.101",
+  "commit_sha": "64c477c8e3ccd93a785a4d1f85d8d8c82e04a526",
+  "release_notes": "Buyer Log 7.0.101: LFL, Price Analysis, OAB ve benzeri alt detaylarda PLM SYNC kimlik çözümleme düzeltildi; görünür PLM ID bulunmasa da gizli kimlik metadata ve güvenli model/renk/sipariş eşleştirmesi kullanılıyor; ASAS target snapshotları çözümlemeye dahil edildi."
 }
