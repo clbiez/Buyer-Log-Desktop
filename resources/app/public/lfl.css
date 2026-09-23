@@ -712,3 +712,61 @@ body.lflPortfolioModalOpen{overflow:hidden;}
 
 /* v6.66 LFL dynamic ASAS breakdown picker */
 .lflAsasFieldChoice{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);padding:9px 11px;cursor:pointer}.lflAsasFieldChoice:hover{border-color:var(--acc);background:var(--acc-bg)}.lflAsasFieldChoice strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lflAsasFieldChoice span{color:var(--muted);font-size:10px}.lflAsasFieldChoice em{font-style:normal;font-size:9px;color:var(--good);font-weight:800}
+
+/* v7.0.106 — selectable LFL comparison periods */
+#view-lfl .lflPeriodDimWrap{
+  display:inline-flex;
+  align-items:stretch;
+  gap:0;
+}
+#view-lfl .lflPeriodDimWrap .lflDateFieldSelect{
+  flex:0 0 auto;
+  height:34px;
+  min-width:98px;
+  max-width:122px;
+  padding:0 24px 0 8px;
+  border:1px solid var(--line);
+  border-right:0;
+  border-radius:7px 0 0 7px;
+  background:var(--card2);
+  color:var(--ink);
+  font:600 10.5px/1 var(--sans);
+  outline:none;
+}
+#view-lfl .lflPeriodDimWrap .lflDateFieldSelect:focus{
+  position:relative;
+  z-index:2;
+  border-color:var(--acc);
+  box-shadow:var(--focus-ring);
+}
+#view-lfl .lflPeriodDimWrap>.lflDimBtn{
+  border-radius:0 7px 7px 0;
+}
+#view-lfl :is(#lflGroupTable,#lflManufacturerVolumeTable) thead tr.colRow th{
+  height:auto!important;
+  min-height:42px;
+  vertical-align:middle;
+  white-space:normal!important;
+}
+#view-lfl :is(#lflGroupTable,#lflManufacturerVolumeTable) thead tr.colRow th .thInner{
+  min-height:34px;
+  align-items:flex-start;
+}
+#view-lfl :is(#lflGroupTable,#lflManufacturerVolumeTable) thead tr.colRow th .thLabel{
+  display:block;
+  min-width:0;
+  white-space:pre-line!important;
+  overflow:visible;
+  text-overflow:clip;
+  line-height:1.28;
+}
+#view-lfl :is(#lflGroupTable,#lflManufacturerVolumeTable) thead tr.colRow th .thFilterBtn{
+  flex:none;
+  margin-top:1px;
+}
+@media(max-width:760px){
+  #view-lfl .lflPeriodDimWrap{width:100%;}
+  #view-lfl .lflPeriodDimWrap .lflDateFieldSelect{min-width:104px;}
+  #view-lfl .lflPeriodDimWrap>.lflDimBtn{flex:1;min-width:0;}
+}
+
