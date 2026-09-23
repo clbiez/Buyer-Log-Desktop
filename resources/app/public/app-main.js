@@ -19841,7 +19841,7 @@ function endeksmatikModelContext(mode,row){
       mmyg:norm(row&&row['Merch Marka Yaş Grup Kod']),mag:norm(row&&row['Merch Alt Grup Kod']),buyingGroup:norm(row&&row['Buyer Grup (TR)']),category:norm(row&&row.Category),
       supplyGroup:'',previousOrderMonth:oldOrder,previousInStoreMonth:oldStore,newOrderMonth:endeksmatikAddYear(oldOrder),newInStoreMonth:endeksmatikAddYear(oldStore),
       separateTryPeriods:false,previousTryOrderMonth:oldOrder,previousTryInStoreMonth:oldStore,
-      previousUsdPrice:row&&row['FOB ($)']!=null?row['FOB ($)']:'',previousTryPrice:'',adjustmentPct:'',defaultAdjustmentPct:endeksmatikDefaultAdjustment(),royaltyIncluded:false,royaltyRule:endeksmatikRoyaltyRule(mode,row),
+      previousUsdPrice:row&&row['FOB ($)']!=null?row['FOB ($)']:'',previousTryPrice:'',adjustmentPct:endeksmatikDefaultAdjustment(),defaultAdjustmentPct:endeksmatikDefaultAdjustment(),royaltyIncluded:false,royaltyRule:endeksmatikRoyaltyRule(mode,row),
     };
   }
   const effectiveSaved=mode==='collection'?kolEffectiveValue(row,'endeksmatikData'):(row&&row.endeksmatikData);
@@ -19865,7 +19865,7 @@ function endeksmatikModelContext(mode,row){
     newInStoreMonth:seededNewInStore,
     // Previous Season FOB bir başlangıç önerisidir; alan manuel düzenlemeye açıktır.
     previousUsdPrice:saved.previousUsdPrice!==undefined?saved.previousUsdPrice:(row&&row.previousFob||''),
-    previousTryPrice:saved.previousTryPrice!==undefined?saved.previousTryPrice:'',adjustmentPct:saved.adjustmentPct!==undefined?saved.adjustmentPct:'',defaultAdjustmentPct:endeksmatikDefaultAdjustment(),royaltyIncluded:Boolean(saved.royaltyIncluded),royaltyRule:endeksmatikRoyaltyRule(mode,row),
+    previousTryPrice:saved.previousTryPrice!==undefined?saved.previousTryPrice:'',adjustmentPct:saved.adjustmentPct!==undefined&&String(saved.adjustmentPct).trim()!==''?saved.adjustmentPct:endeksmatikDefaultAdjustment(),defaultAdjustmentPct:endeksmatikDefaultAdjustment(),royaltyIncluded:Boolean(saved.royaltyIncluded),royaltyRule:endeksmatikRoyaltyRule(mode,row),
   };
 }
 function endeksmatikComponentTableHtml(components,title=''){
@@ -19877,7 +19877,7 @@ function endeksmatikResultHtml(result){
   if(!result)return '';
   const c=result.class||{},i=result.indexes||{},fx=result.fx||{},months=result.months||{},separate=Boolean(months.separateTryPeriods);
   const sharedComponents=Array.isArray(result.components)?result.components:[],usdComponents=Array.isArray(result.componentsUsd)?result.componentsUsd:sharedComponents,tryComponents=Array.isArray(result.componentsTry)?result.componentsTry:sharedComponents;
-  const usd=endeksmatikMoney(result.prices&&result.prices.usd,'USD'),tr=endeksmatikMoney(result.prices&&result.prices.try,'TRY');
+  const usd=endeksmatikMoney(result.prices&&result.prices.usd,'USD'),tr=endeksmatikMoney(result.prices&&result.prices.try,'TRY'),adjustment=Number(i.adjustmentPct),adjustmentLabel=Number.isFinite(adjustment)?adjustment.toLocaleString(appLang==='en'?'en-US':'tr-TR',{maximumFractionDigits:4})+'%':'—';
   const componentHtml=separate
     ? `${endeksmatikComponentTableHtml(usdComponents,appLang==='en'?'Overseas USD reference periods':'Overseas USD referans dönemleri')}${endeksmatikComponentTableHtml(tryComponents,appLang==='en'?'Domestic TRY reference periods':'Domestic TL referans dönemleri')}`
     : endeksmatikComponentTableHtml(sharedComponents);
@@ -19889,8 +19889,8 @@ function endeksmatikResultHtml(result){
   <div class="endeksmatikResolvedClass"><b>${escapeHtml(appLang==='en'?'Resolved class':'Eşleşen klasman')}</b><span>${escapeHtml([c.mmyg,c.mag,c.supplyGroup,c.buyingGroup,c.category].filter(Boolean).join(' · '))}</span></div>
   ${componentHtml}
   <div class="endeksmatikFormulaNote">${escapeHtml(appLang==='en'
-    ? `TRY index ${endeksmatikPct(i.tl)}; USD index ${endeksmatikPct(i.usd)}. Fabric/Accessory use order months; CMT/Extra Process use In Store months.${separate?' Domestic TRY uses its separate previous periods; the new-season target periods are shared.':''}`
-    : `TL endeksi ${endeksmatikPct(i.tl)}; USD endeksi ${endeksmatikPct(i.usd)}. Kumaş/Aksesuar sipariş aylarını, CMT/Ek İşlem In Store aylarını kullanır.${separate?' Domestic TL hesabı kendi ayrı eski dönemlerini kullanır; yeni sezon hedef dönemleri ortaktır.':''}`)}</div>`;
+    ? `Adjustment rate ${adjustmentLabel}; TRY index ${endeksmatikPct(i.tl)}; USD index ${endeksmatikPct(i.usd)}. Fabric/Accessory use order months; CMT/Extra Process use In Store months.${separate?' Domestic TRY uses its separate previous periods; the new-season target periods are shared.':''}`
+    : `Adjustment rate %${adjustmentLabel.replace('%','')}; TL endeksi ${endeksmatikPct(i.tl)}; USD endeksi ${endeksmatikPct(i.usd)}. Kumaş/Aksesuar sipariş aylarını, CMT/Ek İşlem In Store aylarını kullanır.${separate?' Domestic TL hesabı kendi ayrı eski dönemlerini kullanır; yeni sezon hedef dönemleri ortaktır.':''}`)}</div>`;
 }
 const ENDEKSMATIK_CLIPBOARD_KEY='buyerlog.endeksmatikClipboard.v1';
 function endeksmatikClipboardRead(){
@@ -19959,7 +19959,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
       <div class="endeksmatikPriceGrid">
         <label class="endeksmatikField"><span>${escapeHtml(en?'Previous overseas price (USD)':'Geçen YD fiyatı (USD)')}</span><div class="endeksmatikMoneyInput"><i>$</i><input type="text" inputmode="decimal" data-em-field="previousUsdPrice" value="${endeksmatikInputValue(ctx.previousUsdPrice)}" placeholder="0,00"></div><small>${escapeHtml(mode==='collection'?(en?'Previous Season FOB is only the default; manual entry is allowed.':'Previous Season FOB yalnız varsayılandır; manuel giriş serbesttir.'):(en?'Selected order FOB is only the default; manual entry is allowed.':'Seçili sipariş FOB’u yalnız varsayılandır; manuel giriş serbesttir.'))}</small></label>
         <label class="endeksmatikField"><span>${escapeHtml(en?'Previous TR price (TRY)':'Geçen TR fiyatı (TRY)')}</span><div class="endeksmatikMoneyInput"><i>₺</i><input type="text" inputmode="decimal" data-em-field="previousTryPrice" value="${endeksmatikInputValue(ctx.previousTryPrice)}" placeholder="0,00"></div><small>${escapeHtml(en?'Optional manual reference price':'Opsiyonel manuel referans fiyat')}</small></label>
-        <label class="endeksmatikField"><span>${escapeHtml(en?'Target adjustment %':'Hedef düzeltme %')}</span><div class="endeksmatikMoneyInput"><i>%</i><input type="text" inputmode="decimal" data-em-field="adjustmentPct" value="${endeksmatikInputValue(ctx.adjustmentPct)}" placeholder="${escapeHtml(String(ctx.defaultAdjustmentPct))}"></div><small>${escapeHtml(en
+        <label class="endeksmatikField"><span>${escapeHtml(en?'Target adjustment %':'Hedef düzeltme %')}</span><div class="endeksmatikMoneyInput"><i>%</i><input type="text" inputmode="decimal" data-em-field="adjustmentPct" value="${endeksmatikInputValue(ctx.adjustmentPct)}" placeholder="${escapeHtml(String(ctx.defaultAdjustmentPct))}" aria-label="${escapeHtml(en?'Adjustment rate percent':'Adjustment rate yüzde')}"></div><small>${escapeHtml(en
           ? `Comes from the ENDEKSMATIK workbook (${ctx.defaultAdjustmentPct}%); type another value to override it for this model.`
           : `ENDEKSMATİK dosyasından gelir (%${ctx.defaultAdjustmentPct}); bu model için başka bir değer yazarak değiştirebilirsiniz.`)}</small></label>
         <label class="endeksmatikField endeksmatikRoyaltyField"><span>${escapeHtml(en?'Are royalty and hologram included in the prices above?':'Yukarıdaki fiyatlara Royalty ve Hologram dahil mi?')}</span>
@@ -20127,7 +20127,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
       const res=await fetch('/api/endeksmatik/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),data=await res.json().catch(()=>({}));
       if(!res.ok)throw Object.assign(new Error(data.error||res.statusText),{details:data.details||null});
       const resultEl=overlay.querySelector('#_endeksmatikResult');if(resultEl)resultEl.innerHTML=endeksmatikResultHtml(data);
-      const supply=overlay.querySelector('[data-em-field="supplyGroup"]');if(supply&&!supply.value)supply.value=data.class&&data.class.supplyGroup||'';
+      const supply=overlay.querySelector('[data-em-field="supplyGroup"]');if(supply&&!supply.value)supply.value=data.class&&data.class.supplyGroup||'';const adjustmentInput=overlay.querySelector('[data-em-field="adjustmentPct"]');if(adjustmentInput&&data.indexes&&Number.isFinite(Number(data.indexes.adjustmentPct)))adjustmentInput.value=String(data.indexes.adjustmentPct);
       if(mode==='collection'){
         if(!kolRequireWorkspaceEdit())return;
         const nextEndeksmatik={previousOrderMonth:payload.previousOrderMonth,previousInStoreMonth:payload.previousInStoreMonth,newOrderMonth:payload.newOrderMonth,newInStoreMonth:payload.newInStoreMonth,separateTryPeriods:payload.separateTryPeriods,previousTryOrderMonth:payload.previousTryOrderMonth||'',previousTryInStoreMonth:payload.previousTryInStoreMonth||'',previousUsdPrice:payload.previousUsdPrice??'',previousTryPrice:payload.previousTryPrice??'',adjustmentPct:payload.adjustmentPct!==undefined?payload.adjustmentPct:'',royaltyIncluded:Boolean(payload.royaltyIncluded),royaltyPct:payload.royaltyPct||0,hologramCost:payload.hologramCost||0,supplyGroup:data.class&&data.class.supplyGroup||payload.supplyGroup||'',result:data,calculatedAt:new Date().toISOString()};

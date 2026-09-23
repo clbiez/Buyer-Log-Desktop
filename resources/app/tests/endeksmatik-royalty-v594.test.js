@@ -19,6 +19,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const ENGINE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'endeksmatik.js'), 'utf8');
+const engine = require('../server/lib/endeksmatik');
 
 // Motordaki iki yardımcıyı birebir kopyalamak yerine formülü burada kurup
 // kaynakta aynı ifadelerin durduğunu ayrıca çiviliyoruz.
@@ -54,7 +55,7 @@ test('v6.02 hedef düzeltme yüzdesi geri geldi ve AYARLANABİLİR', () => {
   // için geri getirildi. Artık sabit değil: istekte değer varsa o, yoksa
   // yüklenen dosyadan okunan orijinal değer kullanılır.
   assert.match(ENGINE, /const adjustmentRaw=numberValue\(input\.adjustmentPct\);/);
-  assert.match(ENGINE, /Number\.isFinite\(adjustmentRaw\)\?adjustmentRaw:defaultAdjustmentPct\(runtime\)/);
+  assert.match(ENGINE, /Number\.isFinite\(adjustmentRaw\)\?adjustmentRaw:defaultAdjustmentPct\(runtime\.snapshot\)/);
   assert.match(ENGINE, /const a=adjustmentPct\/100;/);
   // Varsayılan YALNIZ dosyadan gelir; alanı olmayan eski anlık görüntülerde 0
   // kalır, aksi halde doğrulanmış referans hesabı geriye dönük değişirdi.
@@ -65,6 +66,31 @@ test('v6.02 hedef düzeltme yüzdesi geri geldi ve AYARLANABİLİR', () => {
   assert.match(APP, /data-em-field="adjustmentPct"/);
   assert.match(APP, /Target adjustment %/);
   assert.match(APP, /function endeksmatikDefaultAdjustment\(\)/);
+});
+
+test('v7.0.97 Adjustment Rate snapshot değerini kullanır ve arayüzde boş kalmaz', () => {
+  const months=['202501','202601'];
+  const record=['MMYG','MAG','SUPPLY','BUYING','CATEGORY',1,0,0,0,[100,110],[100,110],[100,110],[100,110]];
+  const runtime={
+    snapshot:{targetAdjustmentPct:3.55,fx:{'202501':30,'202601':30}},
+    monthIndex:new Map(months.map((m,i)=>[m,i])),
+    byKey:new Map([[engine.keyOf(record.slice(0,5)),record]]),
+    byNoSupply:new Map(),
+  };
+  const result=engine.calculate({
+    mmyg:'MMYG',mag:'MAG',supplyGroup:'SUPPLY',buyingGroup:'BUYING',category:'CATEGORY',
+    previousOrderMonth:'202501',previousInStoreMonth:'202501',
+    newOrderMonth:'202601',newInStoreMonth:'202601',
+    previousUsdPrice:1,previousTryPrice:30,
+  },runtime);
+  assert.equal(result.indexes.adjustmentPct,3.55);
+  assert.ok(Math.abs(result.indexes.targetTl-0.06095)<1e-9);
+
+  assert.match(APP,/adjustmentPct:endeksmatikDefaultAdjustment\(\),defaultAdjustmentPct:endeksmatikDefaultAdjustment\(\)/);
+  assert.match(APP,/adjustmentPct:saved\.adjustmentPct!==undefined&&String\(saved\.adjustmentPct\)\.trim\(\)!==''\?saved\.adjustmentPct:endeksmatikDefaultAdjustment\(\)/);
+  assert.match(APP,/data-em-field="adjustmentPct" value="\$\{endeksmatikInputValue\(ctx\.adjustmentPct\)\}"/);
+  assert.match(APP,/data\.indexes&&Number\.isFinite\(Number\(data\.indexes\.adjustmentPct\)\).*adjustmentInput\.value=String\(data\.indexes\.adjustmentPct\)/);
+  assert.match(APP,/Adjustment rate \$\{adjustmentLabel\}/);
 });
 
 test('v5.94 motor masrafları çıkarıp sonra ekliyor', () => {
