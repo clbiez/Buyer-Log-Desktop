@@ -1776,11 +1776,9 @@ body.quotationColumnResizing,body.quotationColumnResizing *{cursor:col-resize!im
   border:1px solid color-mix(in srgb,var(--kol-status-color) 42%,var(--line));
   border-radius:999px;
   background-color:color-mix(in srgb,var(--kol-status-color) 11%,var(--card));
-  background-image:radial-gradient(circle at 11px 50%,var(--kol-status-color) 0 3.5px,transparent 4px)!important;
-  background-repeat:no-repeat!important;
   color:var(--ink);
   font-weight:650;
-  padding:3px 9px 3px 24px;
+  padding:3px 9px;
 }
 /* Explicit width/height are calculated from the same scale factor in JS. */
 #kolTable tbody .kolThumb,
@@ -5063,7 +5061,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .ovCollectionScopeColumnList button:hover{background:var(--table-hover);color:var(--ink)}
 .ovCollectionScopeColumnList button.isActive{border-color:color-mix(in srgb,var(--acc) 35%,var(--line));background:var(--acc-bg);color:var(--acc-ink)}
 .ovCollectionScopeColumnList button i{font-style:normal;font-weight:800}
-#kolTable td.kolStatusTd{--kol-status-color:var(--acc);background-color:color-mix(in srgb,var(--kol-status-color) 18%,var(--card))!important;box-shadow:inset 3px 0 0 var(--kol-status-color)}
+#kolTable td.kolStatusTd{--kol-status-color:var(--acc);background-color:color-mix(in srgb,var(--kol-status-color) 18%,var(--card))!important}
 #kolTable td.kolStatusTd select.kolStatusNoArrow{background-color:color-mix(in srgb,var(--kol-status-color) 8%,transparent)}
 @media(max-width:700px){
   .ovCollectionSummaryScope{width:100%}
