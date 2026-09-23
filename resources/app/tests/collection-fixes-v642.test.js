@@ -80,12 +80,13 @@ test('v7.81 Endeksmatik sürükle-kopyala tutamacı geri gelmedi', () => {
 
 /* -------------------------------------------- 4) ENDEKSMATIK EXCEL DIŞA AKTARIM */
 
-test('v6.42 Excel dışa aktarımı ekrandaki iki satırı (fiyat + index) taşıyor', () => {
-  // Eskiden yalnız endeksmatikCompactText (tek satır fiyat) kullanılıyordu;
-  // index satırı Excel'e hiç gitmiyordu. Kopyalama yolu zaten doğruydu, ikisi
-  // artık aynı kaynağı (endeksmatikExcelText) kullanıyor.
-  const exportBlock = APP.slice(APP.indexOf('function buildKolStyledSheet'), APP.indexOf('function buildKolStyledSheet') + 3000);
-  assert.match(exportBlock, /v6\.42[\s\S]*const textValue=endeksmatikExcelText\(r\);/);
+test('v6.42 Endeksmatik Excel export verisi korunur ve hücre tek satıra normalize edilir', () => {
+  // Güncel Collection export kuralı: bir model Excel'de her zaman tek fiziksel
+  // satırdır. Endeksmatik fiyat/index özeti kaybolmaz; hücre içindeki newline
+  // tek satırlı metne dönüştürülür.
+  const exportBlock = APP.slice(APP.indexOf('function buildKolStyledSheet'), APP.indexOf('function buildKolStyledSheet') + 4000);
+  assert.match(exportBlock, /endeksmatikExcelText\(r\)/);
+  assert.match(exportBlock, /kolExportSingleLineText/);
   assert.doesNotMatch(exportBlock, /const textValue=endeksmatikCompactText\(r\);/);
 });
 
