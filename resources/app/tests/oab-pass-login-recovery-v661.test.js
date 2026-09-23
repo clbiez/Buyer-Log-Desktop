@@ -1,4 +1,5 @@
 'use strict';
+// Temporary CI marker: final validation for restored 7.0.80 OAB transport.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
