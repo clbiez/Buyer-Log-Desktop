@@ -1040,6 +1040,7 @@
       } catch (_) { /* progress polling ana rapor isteğini asla bozmaz */ }
       finally { authPollBusy = false; }
     }, 900);
+    let retryAfterAuth = false;
     try {
       const single = S.seasonRefs.length === 1 && S.magRefs.length === 1 && !S.allBuyerGroups && S.buyerGroupRefs.length === 1;
       if (single) {
@@ -1050,7 +1051,16 @@
         await oabRunBatch(forceRefresh);
       }
     } catch (err) {
-      oabShowRetry(oabReportErrorMessage(err), () => oabFetchReport(forceRefresh));
+      if (oabIsAuthErrorCode(err && err.code)) {
+        try {
+          await oabEnsureAuthentication();
+          retryAfterAuth = true;
+        } catch (authError) {
+          oabShowRetry(oabReportErrorMessage(authError), () => oabFetchReport(forceRefresh));
+        }
+      } else {
+        oabShowRetry(oabReportErrorMessage(err), () => oabFetchReport(forceRefresh));
+      }
     } finally {
       clearInterval(authPoll);
       clearInterval(elapsedTimer);
@@ -1060,6 +1070,7 @@
       S.busyStatusKind = '';
       oabUpdateActionButtons();
     }
+    if (retryAfterAuth) return oabFetchReport(forceRefresh);
   }
 
   /* ================================================================
@@ -1265,6 +1276,7 @@
     S.busy = true; S.busyStartedAt = performance.now();
     oabUpdateActionButtons();
     oabSetBusyStatus(oabT(`${combinations.length} kombinasyon yeniden deneniyor`, `Retrying ${combinations.length} combinations`));
+    let retryAfterAuth = false;
     try {
       const started = await OABApi.batchStart({ combinations, forceRefresh: true });
       S.batchJob = started.job;
@@ -1276,11 +1288,21 @@
       await oabMergeRetryRows(finished);
       oabReportBatchOutcome(finished, { merged: true });
     } catch (error) {
-      oabShowRetry(oabReportErrorMessage(error), () => oabRetryFailedCombinations());
+      if (oabIsAuthErrorCode(error && error.code)) {
+        try {
+          await oabEnsureAuthentication();
+          retryAfterAuth = true;
+        } catch (authError) {
+          oabShowRetry(oabReportErrorMessage(authError), () => oabRetryFailedCombinations());
+        }
+      } else {
+        oabShowRetry(oabReportErrorMessage(error), () => oabRetryFailedCombinations());
+      }
     } finally {
       S.busy = false; S.busyStartedAt = 0;
       oabUpdateActionButtons();
     }
+    if (retryAfterAuth) return oabRetryFailedCombinations();
   }
   // Yeni satırları mevcut raporun ÜZERİNE ekler. Aynı kombinasyondan gelen
   // eski satırlar önce çıkarılır: aksi halde yeniden denenen bir kombinasyon
