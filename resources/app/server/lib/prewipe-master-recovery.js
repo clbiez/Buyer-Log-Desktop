@@ -51,6 +51,102 @@ function fieldHasMore(recovered, current, field) {
   return a != null && b == null;
 }
 
+function emailDirectoryStats(value) {
+  const src = value && typeof value === 'object' ? value : {};
+  const records = Array.isArray(src.records) ? src.records : [];
+  return {
+    records:records.length,
+    recipients:records.filter(record => String(record && record.email || '').trim()).length,
+    countries:Array.isArray(src.countries) ? src.countries.length : 0,
+    types:Array.isArray(src.types) ? src.types.length : 0,
+  };
+}
+
+/* A normal, healthy Master must never be replaced wholesale from an old
+   backup merely because the backup is larger. Focused e-mail recovery is
+   allowed only when the persisted e-mail document itself is demonstrably
+   richer: an empty current document, or a richer document with a strictly
+   newer store revision. The recovered content is MERGED below rather than
+   replacing current edits. */
+function safeFocusedEmailRecovery(recovered, current) {
+  if (!recovered || typeof recovered !== 'object') return false;
+  const oldStats = emailDirectoryStats(recovered);
+  const nowStats = emailDirectoryStats(current);
+  const oldHasData = oldStats.records > 0 || oldStats.recipients > 0 || oldStats.countries > 0 || oldStats.types > 0;
+  if (!oldHasData) return false;
+  if (!current || typeof current !== 'object' || !Object.keys(current).length) return true;
+  if (nowStats.records === 0 && oldStats.records > 0) return true;
+  if (documentRevision(recovered) <= documentRevision(current)) return false;
+  return oldStats.records > nowStats.records
+    || oldStats.recipients > nowStats.recipients
+    || oldStats.countries > nowStats.countries
+    || oldStats.types > nowStats.types;
+}
+
+function emailRecoveryKey(record) {
+  const src = record && typeof record === 'object' ? record : {};
+  const manufacturer = String(src.manufacturer || '').trim().toLocaleLowerCase('tr-TR').replace(/[ıi]/g, 'i').replace(/\s+/g, ' ');
+  if (manufacturer) return 'm:' + manufacturer;
+  const email = String(src.email || '').trim().toLowerCase();
+  if (email) return 'e:' + email;
+  const id = String(src.id || '').trim();
+  return id ? 'i:' + id : '';
+}
+
+function mergeEmailDirectoryRecovery(current, recovered) {
+  const nowValue = current && typeof current === 'object' ? clone(current) : {};
+  const oldValue = recovered && typeof recovered === 'object' ? clone(recovered) : {};
+  const merged = { ...oldValue, ...nowValue };
+
+  const mergeHeadings = (currentList, recoveredList) => {
+    const out = Array.isArray(currentList) ? clone(currentList) : [];
+    const keys = new Set(out.map(item => String(item && (item.id || item.name) || '').trim().toLocaleLowerCase('tr-TR')).filter(Boolean));
+    for (const item of Array.isArray(recoveredList) ? recoveredList : []) {
+      const key = String(item && (item.id || item.name) || '').trim().toLocaleLowerCase('tr-TR');
+      if (!key || keys.has(key)) continue;
+      out.push(clone(item));
+      keys.add(key);
+    }
+    return out.map((item, order) => ({ ...item, order }));
+  };
+
+  merged.countries = mergeHeadings(nowValue.countries, oldValue.countries);
+  merged.types = mergeHeadings(nowValue.types, oldValue.types);
+
+  const records = Array.isArray(nowValue.records) ? clone(nowValue.records) : [];
+  const byKey = new Map();
+  records.forEach((record, index) => {
+    const key = emailRecoveryKey(record);
+    if (key && !byKey.has(key)) byKey.set(key, index);
+  });
+  const fillable = ['email','contact','phone','note','countryId','typeId'];
+  for (const oldRecord of Array.isArray(oldValue.records) ? oldValue.records : []) {
+    const key = emailRecoveryKey(oldRecord);
+    const index = key ? byKey.get(key) : undefined;
+    if (index == null) {
+      const copy = clone(oldRecord);
+      records.push(copy);
+      if (key) byKey.set(key, records.length - 1);
+      continue;
+    }
+    const target = { ...records[index] };
+    for (const field of fillable) {
+      if (!String(target[field] == null ? '' : target[field]).trim() && String(oldRecord && oldRecord[field] == null ? '' : oldRecord[field]).trim()) {
+        target[field] = clone(oldRecord[field]);
+      }
+    }
+    records[index] = target;
+  }
+  merged.records = records;
+  merged.storeRevisionMeta = {
+    ...(oldValue.storeRevisionMeta || {}),
+    ...(nowValue.storeRevisionMeta || {}),
+    revision:Math.max(documentRevision(oldValue), documentRevision(nowValue)) + 1,
+    updatedAt:new Date().toISOString(),
+  };
+  return merged;
+}
+
 function shouldPreferRecovery(id, recovered, current) {
   if (!recovered || typeof recovered !== 'object') return false;
   if (!current || typeof current !== 'object' || !Object.keys(current).length) return true;
@@ -385,6 +481,7 @@ function masterCoverage(records) {
     landedMultipliers:objectSize(overrides.landedMultipliers),
     freightRates:objectSize(overrides.freightRates),
     emailGroups:arraySize(email.records),
+    emailRecipients:emailDirectoryStats(email).recipients,
     emailCountries:arraySize(email.countries),
     fxKeys:fx.months && typeof fx.months === 'object' ? Object.keys(fx.months).length : 0,
     endeksmatikRecords:Array.isArray(endSnapshot && endSnapshot.records) ? endSnapshot.records.length : 0,
@@ -395,6 +492,9 @@ module.exports = {
   readJson,
   readGzipJson,
   documentRevision,
+  emailDirectoryStats,
+  safeFocusedEmailRecovery,
+  mergeEmailDirectoryRecovery,
   shouldPreferRecovery,
   masterRecoveryIds,
   mergeMasterRecordsFromServerDataRoot,
