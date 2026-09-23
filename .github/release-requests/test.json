@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.100",
+  "commit_sha": "39a7a2587e959abdec321458eeebd717a393b9a0",
+  "release_notes": "Buyer Log 7.0.100: OAB legacy PASS/Edge veri çekimi geri getirildi; merkezi E-Mail Groups ve Send to Pricing alıcı kurtarma/senkronizasyonu düzeltildi; INTAKE ve OAB pivot ayarları hizalandı; çalışma alanı sekme navigasyonu, kompakt üst bar, Overview filtre katmanı ve Endeksmatik Adjustment Rate görünürlüğü iyileştirildi."
+}
