@@ -1,4 +1,5 @@
 'use strict';
+// Temporary CI trigger branch: validates the current main OAB auth fix.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
