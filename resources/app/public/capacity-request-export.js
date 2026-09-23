@@ -189,6 +189,10 @@
     if(!cfg)throw new Error('Bilinmeyen Capacity Request kaynagi: '+source);
     const api=fields(),moduleId=cfg.moduleId;
     const today=startOfDay(options&&options.today);
+    // Source context is explicit: Collection keeps export-day behavior; every
+    // other supported source uses its real canonical Order Placement Date.
+    // Missing OPD intentionally stays null; it must never fall back to today.
+    const poIssuingDate=source==='collection'?today:toDate(api.value(row,moduleId,'orderPlacementDate'));
     const units=toNumber(api.value(row,moduleId,cfg.quantityField));
     const exFactoryDate=toDate(api.value(row,moduleId,'exFactory'));
     const retailStockDate=toDate(api.value(row,moduleId,'retailDate'));
@@ -204,7 +208,7 @@
       merchAltGroup:text(api.value(row,moduleId,'mag')),
       buyerGroup:text(api.value(row,moduleId,'buyingGroup')),
       capacityRequestSendingDate:today,
-      poIssuingDate:today,
+      poIssuingDate:poIssuingDate,
       exFactoryDate:exFactoryDate,
       fabricCountryOrigin:'',
       fabricMillName:'',
