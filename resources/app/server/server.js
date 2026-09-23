@@ -5795,28 +5795,6 @@ app.get('/api/oab/auth/status', userAccess.requireAnyArea('overview'), userAcces
   try { res.set('Cache-Control','no-store').json({ ok:true, status:agentBrowserConnector.passAuthStatus(req.currentUser.id) }); }
   catch (err) { automationError(res, err, 'PASS bağlantı durumu okunamadı.'); }
 });
-app.post('/api/oab/auth/capture-existing', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), async (req, res) => {
-  try {
-    if (oabAuthState.status().authenticated) {
-      return res.set('Cache-Control','no-store').json({ ok:true, authenticated:true, source:'memory', status:oabAuthState.status() });
-    }
-    const captured = await agentBrowserConnector.captureExistingPassAuthorization(req.currentUser.id, { timeoutMs:12000 });
-    oabAuthState.setAuthorization(captured && captured.authorization);
-    await oabApiClient.validateAuthorization();
-    userAccess.appendAudit(req.currentUser, 'OAB_AUTH_EXISTING_EDGE', 'pass', { source:'existing-edge' });
-    return res.set('Cache-Control','no-store').json({ ok:true, authenticated:true, source:'existing-edge', status:oabAuthState.status() });
-  } catch (err) {
-    oabAuthState.clear({ abortPending:false });
-    const code = String(err && err.code || 'OAB_EXISTING_AUTH_FAILED');
-    const expected = ['OAB_EXISTING_BROWSER_UNAVAILABLE','OAB_EXISTING_TAB_NOT_FOUND','OAB_EXISTING_AUTH_NOT_CAPTURED'].includes(code);
-    return res.status(expected ? 409 : Number(err && err.statusCode) || 502).set('Cache-Control','no-store').json({
-      ok:false,
-      authenticated:false,
-      code,
-      error: expected ? 'Açık OAB oturumu otomatik olarak kullanılamadı.' : 'Açık OAB oturumu doğrulanamadı.'
-    });
-  }
-});
 app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
   try {
     // Bundled metadata: filtre seçenekleri uygulamayla birlikte gelen JSON'dan
@@ -5961,7 +5939,6 @@ function oabBatchPublicJob(job) {
     batchedBuyerGroups: job.batchedBuyerGroups,
     error: job.error,
     errorCode: job.errorCode,
-    authRetryCount: Number(job.authRetryCount) || 0,
   };
 }
 // Tek bir (Sezon, MAG, BuyerGroup listesi) isteğini çeker. Cache yalnız TEK
@@ -6011,9 +5988,7 @@ async function oabProbeBatchedBuyerGroups(userId, group) {
 async function runOabBatchJob(job, currentUser) {
   const userId = job.userId;
   try {
-    job.authPendingQueue = [];
-    for (let queueIndex = 0; queueIndex < job.queue.length; queueIndex += 1) {
-      const item = job.queue[queueIndex];
+    for (const item of job.queue) {
       if (job.cancelled) break;
       job.currentLabel = oabCombinationLabel(item);
       try {
@@ -6024,11 +5999,9 @@ async function runOabBatchJob(job, currentUser) {
       } catch (error) {
         /* Tek kombinasyonun hatası bütün işi çöpe atmaz; adıyla raporlanır.
 
-           v7.23: hata kaydı artık KOMBİNASYON REFERANSLARINI da taşıyor.
-           Kullanıcı "yeniden dene" dediğinde yalnız bu üçlüler istenebilsin
-           diye; aksi halde başarısız olanı tekrar almanın tek yolu bütün
-           seçimi baştan çekmekti. Toplu (çok Buyer Group'lu) bir istekte
-           hata, kapsadığı BÜTÜN üçlüleri etkiler; tek tek açılır. */
+           v7.23: hata kaydı KOMBİNASYON REFERANSLARINI taşır. Kullanıcı
+           "yeniden dene" dediğinde yalnız bu üçlüler istenir. Toplu (çok
+           Buyer Group'lu) bir istekte hata, kapsadığı bütün üçlüleri etkiler. */
         const refs = (Array.isArray(item.buyerGroupRefs) && item.buyerGroupRefs.length
           ? item.buyerGroupRefs
           : [item.buyerGroupRef]).filter(value => value != null && value !== '');
@@ -6043,10 +6016,9 @@ async function runOabBatchJob(job, currentUser) {
             label: oabCombinationLabel({ seasonRef: item.seasonRef, merchSubGroupRef: item.merchSubGroupRef, buyerGroupRef }),
           })),
         });
-        if (error && (error.code === 'OAB_AUTH_REQUIRED' || error.code === 'OAB_AUTH_EXPIRED')) {
-          job.error = 'OAB oturumu gerekli.';
-          job.errorCode = String(error.code);
-          job.authPendingQueue = job.queue.slice(queueIndex).map(entry => ({ ...entry, buyerGroupRefs:Array.isArray(entry.buyerGroupRefs) ? [...entry.buyerGroupRefs] : entry.buyerGroupRefs }));
+        if (error && error.code === 'PASS_NOT_CONNECTED') {
+          job.error = redactSecrets(String(error.message || error)).slice(0, 300);
+          job.errorCode = 'PASS_NOT_CONNECTED';
           break;
         }
       }
@@ -6208,7 +6180,6 @@ app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.req
       mergeWithSnapshot: Array.isArray(req.body && req.body.combinations) && req.body.combinations.length > 0,
       queue: [], total: 0, completed: 0, fromCacheCount: 0, rowCount: 0,
       currentLabel: '', results: [], failures: [], merged: null,
-      authRetryCount: 0, authPendingQueue: [],
       skipped: built.skipped.slice(0, 200),
       batchedBuyerGroups: built.capability.state,
       error: '', errorCode: '',
@@ -6258,26 +6229,6 @@ app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.req
     res.status(202).json({ started:true, job: oabBatchPublicJob(job) });
   } catch (err) { automationError(res, err, 'OAB toplu çekme başlatılamadı.'); }
 });
-app.post('/api/oab/batch/resume-auth', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try {
-    const job = oabBatchJobs.get(req.currentUser.id);
-    if (!job) return res.status(404).json({ error:'Devam ettirilecek OAB işi bulunamadı.', code:'OAB_BATCH_NOT_FOUND' });
-    if (job.running) return res.status(409).json({ error:'OAB işi zaten çalışıyor.', code:'OAB_BATCH_IN_PROGRESS', job:oabBatchPublicJob(job) });
-    if (!['OAB_AUTH_REQUIRED','OAB_AUTH_EXPIRED'].includes(String(job.errorCode || '')) || !Array.isArray(job.authPendingQueue) || !job.authPendingQueue.length) {
-      return res.status(409).json({ error:'OAB işi authentication beklemiyor.', code:'OAB_BATCH_AUTH_RESUME_NOT_AVAILABLE', job:oabBatchPublicJob(job) });
-    }
-    if ((Number(job.authRetryCount) || 0) >= 1) return res.status(409).json({ error:'OAB authentication otomatik tekrar sınırına ulaşıldı.', code:'OAB_AUTH_RETRY_LIMIT', job:oabBatchPublicJob(job) });
-    if (!oabAuthState.status().authenticated) return res.status(401).json({ error:'OAB oturumu gerekli.', code:'OAB_AUTH_REQUIRED' });
-    job.authRetryCount = (Number(job.authRetryCount) || 0) + 1;
-    job.queue = job.authPendingQueue.map(entry => ({ ...entry, buyerGroupRefs:Array.isArray(entry.buyerGroupRefs) ? [...entry.buyerGroupRefs] : entry.buyerGroupRefs }));
-    job.authPendingQueue = [];
-    job.failures = (job.failures || []).filter(item => !['OAB_AUTH_REQUIRED','OAB_AUTH_EXPIRED'].includes(String(item && item.code || '')));
-    job.error = ''; job.errorCode = ''; job.finishedAt = null; job.merged = null; job.cancelled = false; job.running = true; job.currentLabel = '';
-    void runOabBatchJob(job, req.currentUser);
-    return res.status(202).json({ resumed:true, job:oabBatchPublicJob(job) });
-  } catch (err) { automationError(res, err, 'OAB işi yeniden başlatılamadı.'); }
-});
-
 app.get('/api/oab/batch-status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
   try {
     const job = oabBatchJobs.get(req.currentUser.id);
