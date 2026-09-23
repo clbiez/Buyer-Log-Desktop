@@ -86,6 +86,6 @@ test('görsel eksikse hücre boş kalır, kopyalama durmaz (mevcut davranışla 
 
 test('diğer sütunlar hâlâ kaçışlı/çok-satır güvenli: etkileşimli Collection DOM\'u clipboard\'a girmiyor', () => {
   const fn = extractFunction(APP, 'buildCollectionStyledCopy');
-  assert.match(fn, /const htmlCellText=value=>\{/);
+  assert.match(fn, /const htmlCellText\s*=\s*value\s*=>\s*\{/);
   assert.match(fn, /\.split\('\\n'\)\.map\(escapeHtml\)\.join\('<br>'\)/);
 });
