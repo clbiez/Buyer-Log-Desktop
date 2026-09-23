@@ -12,7 +12,8 @@ function between(source,start,end){
 test('v5.52 Collection Excel writes Endeksmatik summary instead of the empty synthetic row field',()=>{
   const exportBlock=between(APP,'async function kolExportWithImages','function kolStyleExportValue');
   assert.match(exportBlock,/if\(c\.endeksmatik\)/);
-  assert.match(exportBlock,/const text=endeksmatikExcelText\(r\);cell\.value=text/);
+  assert.match(exportBlock,/endeksmatikExcelText\(r\)/);
+  assert.match(exportBlock,/kolExportSingleLineText/);
   assert.match(APP,/function endeksmatikExcelText\(row\)/);
   assert.match(APP,/endeksmatikCompactText\(row\)/);
 });
