@@ -22,3 +22,13 @@ test('Collection Summary filter is angular and its value picker supports multipl
   assert.match(DASH,/input type="checkbox"/);
   assert.match(DASH,/scopeValues:Array\.isArray\(values\)/);
 });
+
+
+test('Collection Summary value picker is portaled to the viewport so widget overflow cannot clip it',()=>{
+  assert.match(DASH,/document\.body\.appendChild\(pop\)/);
+  assert.match(DASH,/trigger\.getBoundingClientRect\(\)/);
+  assert.match(DASH,/pop\.style\.position='fixed'/);
+  assert.match(DASH,/pop\.style\.zIndex='560'/);
+  assert.match(DASH,/window\.addEventListener\('scroll',viewportHandler,true\)/);
+  assert.match(DASH,/restoreValuePopover\(pop\)/);
+});
