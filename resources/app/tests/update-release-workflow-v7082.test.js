@@ -40,3 +40,15 @@ test('GitHub release publisher creates the release first and uploads missing ass
   assert.doesNotMatch(source,/\['release','create',tag\('test',manifest\.version\),artifact,per/);
   assert.doesNotMatch(source,/\['release','create',tag\('stable',version\),artifact,stableManifestFile/);
 });
+
+
+test('STABLE promotion reads the verified TEST manifest from the release repo and downloads the public ZIP without gh manifest download',()=>{
+  const source=fs.readFileSync(path.join(C.APP_ROOT,'scripts','github-release.js'),'utf8');
+  const start=source.indexOf('async function promoteStable');
+  const end=source.indexOf('async function main()',start);
+  const body=source.slice(start,end);
+  assert.match(body,/path\.join\(repoDir,'test','latest\.json'\)/);
+  assert.match(body,/provider\.copyArtifact\('test',test\.artifact,artifact,version\)/);
+  assert.match(body,/TEST public artifact SHA\/boyut doğrulaması başarısız/);
+  assert.doesNotMatch(body,/gh\(\['release','download',tag\('test',version\),'--pattern',name/);
+});
