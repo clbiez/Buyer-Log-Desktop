@@ -30,3 +30,13 @@ test('release workflows can be triggered from repository request files without r
   assert.match(stableWorkflow,/promote-stable "\$PROMOTE_VERSION"/);
   assert.match(versionWorkflow,/paths-ignore:[\s\S]*release-requests\/\*\*/);
 });
+
+
+test('GitHub release publisher creates the release first and uploads missing assets explicitly',()=>{
+  const source=fs.readFileSync(path.join(C.APP_ROOT,'scripts','github-release.js'),'utf8');
+  assert.match(source,/function releaseAssetNames\(channel,version\)/);
+  assert.match(source,/function ensureReleaseAssets\(channel,version,manifest,files,dir\)/);
+  assert.match(source,/\['release','upload',tag\(channel,version\),\.\.\.missing\]/);
+  assert.doesNotMatch(source,/\['release','create',tag\('test',manifest\.version\),artifact,per/);
+  assert.doesNotMatch(source,/\['release','create',tag\('stable',version\),artifact,stableManifestFile/);
+});
