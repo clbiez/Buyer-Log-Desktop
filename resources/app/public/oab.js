@@ -454,59 +454,29 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
-    if (code === 'OAB_AUTH_CANCELLED') return oabT('OAB kullanıcı girişi iptal edildi.', 'OAB sign-in was cancelled.');
-    if (code === 'OAB_AUTH_TIMEOUT') return oabT('OAB oturum açma işlemi zamanında tamamlanmadı.', 'OAB sign-in did not complete in time.');
-    if (code === 'OAB_AUTH_EXPIRED' || code === 'OAB_AUTH_REQUIRED') return oabT('OAB oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.', 'Your OAB session has expired. Please sign in again.');
-    if (code === 'OAB_IPC_FORBIDDEN' || code === 'OAB_DESKTOP_AUTH_UNAVAILABLE') return oabT('OAB kullanıcı girişi bu Buyer Log oturumunda kullanılamıyor.', 'OAB sign-in is unavailable in this Buyer Log session.');
-    if (code === 'OAB_AUTH_NAVIGATION_FAILED') return oabT('OAB giriş ekranı açılamadı.', 'The OAB sign-in window could not be opened.');
-    if (code === 'OAB_AUTH_RENDERER_FAILED') return oabT('OAB giriş ekranı çalıştırılamadı.', 'The OAB sign-in window stopped working.');
-    return oabT('OAB yetkilendirmesi başarısız oldu.', 'OAB authorization failed.');
+    if (code === 'PASS_AUTH_TIMEOUT') return oabT('PASS’ten filtre/rapor isteği algılanamadı. PASS oturumunuzun açık olduğundan emin olun.', 'No PASS filter/report request was detected. Make sure your PASS session is open.');
+    if (code === 'PASS_LOGIN_TIMEOUT') return oabT('PASS oturum açma işlemi tamamlanmadı. Edge üzerindeki giriş ekranını tamamlayıp tekrar deneyin.', 'PASS sign-in was not completed. Finish signing in on Edge and try again.');
+    if (code === 'PASS_SESSION_EXPIRED') return oabT('PASS oturumu sona erdi. Buyer Log yeniden bağlantı kurmayı deneyecek.', 'PASS session expired. Buyer Log will try to reconnect.');
+    if (code === 'EDGE_EXISTING_PROFILE_DEBUG_DISABLED' || code === 'EDGE_CONNECTION_NOT_READY') return oabT('Edge bağlantısı hazır değil. Açılan Edge sayfasında uzaktan hata ayıklamaya izin verin.', 'Edge connection is not ready. Allow remote debugging on the opened Edge page.');
+    if (code === 'PASS_CAPTURE_ALREADY_RUNNING') return oabT('Bir PASS bağlantı denemesi zaten sürüyor, bir süre sonra tekrar deneyin.', 'A PASS connection attempt is already running, try again shortly.');
+    return String((err && err.message) || err || oabT('Bilinmeyen hata.', 'Unknown error.'));
   }
-
-  function oabIsAuthError(err) {
-    return ['OAB_AUTH_REQUIRED', 'OAB_AUTH_EXPIRED'].includes(String(err && err.code || ''));
-  }
-
-  async function oabEnsureAuthentication(options = {}) {
-    const force = options.force === true;
-    if (!force) {
-      const status = await OABApi.authStatus().catch(() => null);
-      if (status && status.status && status.status.authenticated) return true;
+  function oabAuthProgressMessage(status) {
+    const state = status && status.status || status || {};
+    if (!state.captureInProgress) return '';
+    if (state.loginRequired || state.phase === 'login-required') {
+      return oabT(
+        'PASS oturum açma ekranı bekleniyor. Edge üzerinde kullanıcı adı/şifrenizle giriş yapın; Buyer Log giriş tamamlanınca otomatik devam edecek. Giriş bilgileriniz Buyer Log tarafından okunmaz veya kaydedilmez.',
+        'PASS sign-in is waiting. Sign in with your username/password in Edge; Buyer Log will continue automatically after sign-in. Your credentials are not read or stored by Buyer Log.',
+      );
     }
-
-    const desktop = global.buyerLogDesktop;
-    if (!desktop || typeof desktop.ensureOabAuth !== 'function') {
-      const error = new Error('OAB kullanıcı girişi masaüstü köprüsünde kullanılamıyor.');
-      error.code = 'OAB_DESKTOP_AUTH_UNAVAILABLE';
-      throw error;
-    }
-    oabSetBusyStatus(oabT('OAB oturumu kontrol ediliyor…', 'Checking OAB session…'));
-    const result = await desktop.ensureOabAuth({ interactive:true });
-    if (!result || !result.ok || result.authenticated === false) {
-      const error = new Error(oabAuthErrorMessage(result || {}));
-      error.code = result && result.code || 'OAB_AUTH_FAILED';
-      throw error;
-    }
-    oabSetBusyStatus(oabT('OAB oturumu doğrulandı', 'OAB session verified'));
-    return true;
-  }
-
-  async function oabWithAuthRetry(operation) {
-    let retried = false;
-    while (true) {
-      try { return await operation(); }
-      catch (error) {
-        if (!retried && oabIsAuthError(error)) {
-          retried = true;
-          await oabEnsureAuthentication({ force:true });
-          continue;
-        }
-        throw error;
-      }
-    }
+    if (state.phase === 'authenticated-opening-report') return oabT('PASS girişi tamamlandı. OAB raporu açılıyor…', 'PASS sign-in completed. Opening the OAB report…');
+    if (state.phase === 'opening' || state.phase === 'waiting-request') return oabT('PASS bağlantısı doğrulanıyor…', 'Validating PASS connection…');
+    return '';
   }
 
   /* ================================================================
+     v7.20 — ÇOKLU SEÇİM BİLEŞENİ  /* ================================================================
      v7.20 — ÇOKLU SEÇİM BİLEŞENİ
 
      OAB sitesi Season/MAG/Buyer Group filtrelerini tek seçime kapatıyor.
@@ -1020,28 +990,37 @@
     S.busyStatusMessage = '';
     S.busyStatusKind = '';
     oabUpdateActionButtons();
-    oabSetBusyStatus(oabT('OAB oturumu doğrulanıyor', 'Checking OAB session'));
+    // Legacy 7.0.80 flow: Get/Refresh OAB itself opens/uses PASS through the
+    // normal Edge/CDP connector. There is no separate Electron auth pre-step.
+    oabSetBusyStatus(forceRefresh ? oabT('OAB yenileniyor', 'Refreshing OAB') : oabT('OAB getiriliyor', 'Getting OAB'));
     if (!S.rows.length) oabEl('oabBody').hidden = true;
+    let authPollBusy = false;
     const elapsedTimer = setInterval(() => {
       if (S.busy && S.busyStatusMessage) oabSetStatus(`${S.busyStatusMessage} · ${oabBusyElapsedText()}`, S.busyStatusKind);
     }, 50);
+    const authPoll = setInterval(async () => {
+      if (!S.busy || authPollBusy) return;
+      authPollBusy = true;
+      try {
+        const status = await OABApi.authStatus();
+        const message = oabAuthProgressMessage(status);
+        if (message) oabSetBusyStatus(message, status && status.status && status.status.loginRequired ? 'warning' : '');
+      } catch (_) { /* progress polling ana rapor isteğini asla bozmaz */ }
+      finally { authPollBusy = false; }
+    }, 900);
     try {
-      await oabEnsureAuthentication();
-      oabSetBusyStatus(forceRefresh ? oabT('OAB yenileniyor', 'Refreshing OAB') : oabT('OAB getiriliyor', 'Getting OAB'));
-      // Tek kombinasyon aynı cache/request/mapping yolunu kullanır. Authentication
-      // 401/403 dönerse kontrollü login açılır ve aynı istek yalnız bir kez yinelenir.
       const single = S.seasonRefs.length === 1 && S.magRefs.length === 1 && !S.allBuyerGroups && S.buyerGroupRefs.length === 1;
       if (single) {
-        const data = await oabWithAuthRetry(() => OABApi.report(S.seasonRefs[0], S.magRefs[0], S.buyerGroupRefs[0], forceRefresh));
-        await oabApplyReportData(data, { fromSnapshot:false });
+        const data = await OABApi.report(S.seasonRefs[0], S.magRefs[0], S.buyerGroupRefs[0], forceRefresh);
+        await oabApplyReportData(data, { fromSnapshot: false });
         oabSetStatus('');
       } else {
         await oabRunBatch(forceRefresh);
       }
     } catch (err) {
-      if (err && err.code === 'OAB_AUTH_CANCELLED') oabSetStatus(oabAuthErrorMessage(err), 'warning');
-      else oabShowRetry(oabReportErrorMessage(err), () => oabFetchReport(forceRefresh));
+      oabShowRetry(oabReportErrorMessage(err), () => oabFetchReport(forceRefresh));
     } finally {
+      clearInterval(authPoll);
       clearInterval(elapsedTimer);
       S.busy = false;
       S.busyStartedAt = 0;
@@ -1052,6 +1031,7 @@
   }
 
   /* ================================================================
+     v7.20 — ARKA PLAN TOPLU ÇEKME  /* ================================================================
      v7.20 — ARKA PLAN TOPLU ÇEKME (çoklu seçim)
 
      Tek OAB çağrısı 15-25 saniye ve PASS istekleri tek tarayıcı sayfası
@@ -1114,7 +1094,7 @@
       oabSetStatus('');
       return;
     }
-    const started = await oabWithAuthRetry(() => OABApi.batchStart(oabCurrentSelection(forceRefresh)));
+    const started = await OABApi.batchStart(oabCurrentSelection(forceRefresh));
     S.batchJob = started.job;
     oabRenderProgress(S.batchJob);
     oabUpdateActionButtons();
@@ -1131,33 +1111,21 @@
     oabReportBatchOutcome(finished);
   }
   function oabPollBatch() {
-    let authRecoveryAttempted = false;
     return new Promise((resolve, reject) => {
       const tick = async () => {
         try {
           const status = await OABApi.batchStatus();
-          if (!status.job) { resolve({ job:null, rows:null }); return; }
+          if (!status.job) { resolve({ job: null, rows: null }); return; }
           S.batchJob = status.job;
           oabRenderProgress(status.job);
           if (status.job.running) { S.batchTimer = setTimeout(tick, 1000); return; }
-          const authRequired = ['OAB_AUTH_REQUIRED','OAB_AUTH_EXPIRED'].includes(String(status.job.errorCode || ''));
-          if (authRequired && !authRecoveryAttempted && (Number(status.job.authRetryCount) || 0) < 1) {
-            authRecoveryAttempted = true;
-            oabSetBusyStatus(oabT('OAB oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.', 'Your OAB session has expired. Please sign in again.'), 'warning');
-            await oabEnsureAuthentication({ force:true });
-            const resumed = await OABApi.batchResumeAuth();
-            S.batchJob = resumed.job;
-            oabRenderProgress(S.batchJob);
-            S.batchTimer = setTimeout(tick, 250);
-            return;
-          }
           resolve(status);
         } catch (error) { reject(error); }
       };
       void tick();
     });
   }
-  /* Kısmi başarı SESSİZ GEÇİLMEZ: kaç kombinasyon çekildi, kaçı başarısız,
+  /* Kısmi başarı SESSİZ GEÇİLMEZ  /* Kısmi başarı SESSİZ GEÇİLMEZ: kaç kombinasyon çekildi, kaçı başarısız,
      hangileri — kullanıcı raporun kapsamını bilerek okumalı.
 
      v7.23 — Saha bulgusu (kullanıcı): "9 combinations merged · 1 combinations
@@ -1327,18 +1295,25 @@
   }
   function oabReportErrorMessage(err) {
     const code = err && err.code;
-    if (oabIsAuthError(err) || ['OAB_AUTH_CANCELLED','OAB_AUTH_TIMEOUT','OAB_AUTH_FAILED','OAB_AUTH_NAVIGATION_FAILED','OAB_DESKTOP_AUTH_UNAVAILABLE','OAB_IPC_FORBIDDEN'].includes(String(code || ''))) return oabAuthErrorMessage(err);
-    if (code === 'OAB_HTTP_ERROR') {
-      const status = err && err.details && err.details.status;
-      return status ? oabT(`OAB verileri alınamadı: HTTP ${status}`, `Could not retrieve OAB data: HTTP ${status}`) : oabT('OAB verileri alınamadı.', 'Could not retrieve OAB data.');
+    if (code === 'PASS_SESSION_EXPIRED') return oabT('PASS oturumu sona erdi. Yeniden bağlanıp tekrar deneyin.', 'PASS session expired. Reconnect to PASS and try again.');
+    if (code === 'PASS_NOT_CONNECTED' || code === 'PASS_CAPTURE_ALREADY_RUNNING') return oabAuthErrorMessage(err);
+    if (code === 'PASS_HTTP_ERROR' || code === 'OAB_REPORT_FETCH_FAILED') return oabPassHttpErrorMessage(err);
+    return oabAuthErrorMessage(err);
+  }
+  function oabPassHttpErrorMessage(err) {
+    const details = err && err.details;
+    if (details && details.url && details.status) {
+      let path = details.url;
+      try { path = new URL(details.url).pathname; } catch (_) { /* URL değilse olduğu gibi göster */ }
+      return oabT(
+        `PASS isteği başarısız: ${details.method || 'POST'} ${path} → HTTP ${details.status}.`,
+        `PASS request failed: ${details.method || 'POST'} ${path} → HTTP ${details.status}.`,
+      );
     }
-    if (code === 'OAB_TIMEOUT') return oabT('OAB servisine erişim zaman aşımına uğradı.', 'The OAB service request timed out.');
-    if (code === 'OAB_NETWORK_ERROR') return oabT('OAB servisine erişilemedi.', 'The OAB service could not be reached.');
-    if (code === 'OAB_REDIRECT_BLOCKED' || code === 'OAB_HOST_BLOCKED') return oabT('OAB isteği güvenlik nedeniyle durduruldu.', 'The OAB request was stopped for security reasons.');
-    return oabT('OAB verileri alınamadı. Bir süre sonra tekrar deneyin.', 'Could not retrieve OAB data. Try again in a moment.');
+    return oabT('OAB raporu alınamadı. Bir süre sonra tekrar deneyin.', 'Could not retrieve the OAB report. Try again in a moment.');
   }
 
-  function oabFilteredRows() {
+  function oabFilteredRows() {  function oabFilteredRows() {
     const filterKey=global.BLAnalysisCache?.key?global.BLAnalysisCache.key({data:oabDataRevision,filters:S.localFilters}):`${oabDataRevision}|${JSON.stringify(S.localFilters)}`;
     const cached=oabFilterRowsCache.get(filterKey);if(cached)return cached;
     const engine = new OABLocalFilterEngine(S.rows),filtered=engine.apply(S.localFilters);
