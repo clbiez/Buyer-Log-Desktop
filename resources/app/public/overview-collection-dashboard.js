@@ -34,12 +34,65 @@
     if(scoped.selected.length<=2)return scoped.selected.join(' + ');
     return scoped.selected[0]+' +'+(scoped.selected.length-1);
   }
-  let outsideHandler=null;
+  let outsideHandler=null,viewportHandler=null,popoverHome=null,popoverFrame=0;
+  function resetPopoverInlineLayout(pop){
+    if(!pop)return;
+    ['position','z-index','left','right','top','bottom','width','max-height','display','flex-direction'].forEach(function(name){pop.style.removeProperty(name);});
+    const list=pop.querySelector('.ovCollectionScopeValueList');
+    if(list){['min-height','flex','max-height'].forEach(function(name){list.style.removeProperty(name);});}
+  }
+  function restoreValuePopover(pop){
+    if(!pop||!popoverHome)return;
+    const parent=popoverHome.parent,next=popoverHome.next;
+    if(parent&&parent.isConnected){
+      if(next&&next.parentNode===parent)parent.insertBefore(pop,next);
+      else parent.appendChild(pop);
+    }
+    popoverHome=null;
+  }
+  function positionValuePopover(pop,trigger){
+    if(!pop||!trigger||pop.hidden)return;
+    const margin=8,gap=5;
+    const viewportWidth=Math.max(0,window.innerWidth||document.documentElement.clientWidth||0);
+    const viewportHeight=Math.max(0,window.innerHeight||document.documentElement.clientHeight||0);
+    const rect=trigger.getBoundingClientRect();
+    const width=Math.min(350,Math.max(0,viewportWidth-(margin*2)));
+    const maxHeight=Math.max(0,viewportHeight-(margin*2));
+    pop.style.position='fixed';
+    pop.style.zIndex='560';
+    pop.style.right='auto';
+    pop.style.bottom='auto';
+    pop.style.width=width+'px';
+    pop.style.maxHeight=maxHeight+'px';
+    pop.style.display='flex';
+    pop.style.flexDirection='column';
+    const list=pop.querySelector('.ovCollectionScopeValueList');
+    if(list){list.style.minHeight='0';list.style.flex='1 1 auto';list.style.maxHeight='none';}
+    const height=Math.min(pop.getBoundingClientRect().height,maxHeight);
+    const below=viewportHeight-rect.bottom-gap-margin,above=rect.top-gap-margin;
+    let top=(below>=height||below>=above)?rect.bottom+gap:rect.top-gap-height;
+    top=Math.max(margin,Math.min(top,viewportHeight-margin-height));
+    const left=Math.max(margin,Math.min(rect.right-width,viewportWidth-margin-width));
+    pop.style.top=top+'px';
+    pop.style.left=left+'px';
+  }
+  function scheduleValuePopoverPosition(pop,trigger){
+    if(popoverFrame)cancelAnimationFrame(popoverFrame);
+    popoverFrame=requestAnimationFrame(function(){popoverFrame=0;positionValuePopover(pop,trigger);});
+  }
   function closeValuePopover(){
     const pop=document.getElementById('ovCollectionSummaryScopePopover'),trigger=document.getElementById('ovCollectionSummaryScopeTrigger');
     if(pop)pop.hidden=true;
     if(trigger)trigger.setAttribute('aria-expanded','false');
     if(outsideHandler){document.removeEventListener('pointerdown',outsideHandler,true);outsideHandler=null;}
+    if(viewportHandler){
+      window.removeEventListener('resize',viewportHandler);
+      window.removeEventListener('scroll',viewportHandler,true);
+      viewportHandler=null;
+    }
+    if(popoverFrame){cancelAnimationFrame(popoverFrame);popoverFrame=0;}
+    restoreValuePopover(pop);
+    resetPopoverInlineLayout(pop);
   }
   function openValuePopover(ctx,scoped){
     const pop=document.getElementById('ovCollectionSummaryScopePopover'),trigger=document.getElementById('ovCollectionSummaryScopeTrigger');
@@ -53,7 +106,15 @@
       (scoped.values.length?scoped.values.map(function(value){return '<label data-scope-row><input type="checkbox" value="'+esc(value)+'"'+(selected.has(value)?' checked':'')+'><span>'+esc(value)+'</span></label>';}).join(''):'<div class="ovCollectionScopeEmpty">'+esc(ctx.language==='en'?'No values in this column.':'Bu sütunda değer yok.')+'</div>')+
       '</div>'+
       '<div class="ovCollectionScopePopoverFoot"><button type="button" class="tbtn" data-scope-cancel>'+(ctx.language==='en'?'Cancel':'Vazgeç')+'</button><button type="button" class="tbtn primary" data-scope-apply>'+(ctx.language==='en'?'Apply':'Uygula')+'</button></div>';
-    pop.hidden=false;trigger.setAttribute('aria-expanded','true');pop.onclick=function(event){event.stopPropagation();};
+    if(!popoverHome)popoverHome={parent:pop.parentNode,next:pop.nextSibling};
+    document.body.appendChild(pop);
+    pop.hidden=false;
+    trigger.setAttribute('aria-expanded','true');
+    pop.onclick=function(event){event.stopPropagation();};
+    positionValuePopover(pop,trigger);
+    viewportHandler=function(){scheduleValuePopoverPosition(pop,trigger);};
+    window.addEventListener('resize',viewportHandler,{passive:true});
+    window.addEventListener('scroll',viewportHandler,true);
     const search=pop.querySelector('[data-scope-search]');
     if(search)search.oninput=function(){const q=text(search.value).toLocaleLowerCase(ctx.language==='en'?'en':'tr');Array.from(pop.querySelectorAll('[data-scope-row]')).forEach(function(row){row.hidden=!text(row.textContent).toLocaleLowerCase(ctx.language==='en'?'en':'tr').includes(q);});};
     const clear=pop.querySelector('[data-scope-clear]');if(clear)clear.onclick=function(){Array.from(pop.querySelectorAll('input[type="checkbox"]')).forEach(function(input){input.checked=false;});};
