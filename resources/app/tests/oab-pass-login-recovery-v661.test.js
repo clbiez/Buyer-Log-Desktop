@@ -1,4 +1,5 @@
 'use strict';
+// Temporary CI-only validation trigger.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
