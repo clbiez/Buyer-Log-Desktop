@@ -32,6 +32,7 @@ const createModelAssetScope = require(path.join(ROOT, 'public/model-asset-scope.
 const distributionLib = require(path.join(ROOT, 'server/lib/model-image-distribution.js'));
 const ownershipLib = require(path.join(ROOT, 'server/lib/plm-image-ownership.js'));
 const sharedImageStore = require(path.join(ROOT, 'server/lib/shared-image-store.js'));
+const identityResolver = require(path.join(ROOT, 'server/lib/model-image-identity-resolver.js'));
 
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const OAB = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
@@ -172,9 +173,15 @@ test('seçici kapısı GÖRSEL sayısına değil KİMLİK sayısına bakar', () 
   assert.ok(!/canonicalModelImageKnown[^]{0,200}return;/.test(head), 'kapı mevcut görsele bakmamalı');
 });
 
-test('PLM ID taşımayan kalem PLM ve ASAS akışında model adından çözülür; Shared hydrate Collection owner workspace kullanır', () => {
-  assert.match(SERVER, /function resolveModelImageItemIdentities\(rawItems/);
-  assert.match(SERVER, /MODEL_PLM_ID_UNRESOLVED/);
+test('PLM ID taşımayan kalem ortak resolver ile çözülür; Shared hydrate Collection owner workspace kullanır', () => {
+  const resolved = identityResolver.resolveItems(
+    [{ styleName: 'PNT,GALATA-6', colourCode: 'HFB', orderCode: '1001' }],
+    { orders: [{ model: 'PNT,GALATA-6', ccode: 'HFB', ocode: '1001', plm: '1202929' }] }
+  );
+  assert.equal(resolved.unresolved.length, 0);
+  assert.equal(resolved.resolved[0].plmId, '1202929');
+  assert.match(SERVER, /function resolveModelImageItemIdentities\(rawItems, context = \{\}\)/);
+  assert.match(SERVER, /modelImageIdentityResolver\.resolveItems\(rawItems, context\)/);
   const calls = SERVER.match(/resolveModelImageItemIdentities\(raw,/g) || [];
   assert.equal(calls.length, 2);
   const shared = SERVER.slice(SERVER.indexOf("app.post('/api/model-images/shared/hydrate'"), SERVER.indexOf("app.put('/api/model-images/settings'"));
