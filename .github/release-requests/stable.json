@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.101",
-  "source": "test-v7.0.101",
-  "requestedAt": "2026-09-23T10:45:00Z",
-  "reason": "verified-open-pr-audit-no-missing-functional-changes"
+  "version": "7.0.102",
+  "source": "test-v7.0.102",
+  "requestedAt": "2026-09-23T11:05:00Z",
+  "reason": "verified-full-regression-and-quotation-email-recovery"
 }
