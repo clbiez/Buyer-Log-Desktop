@@ -33,24 +33,28 @@
         </button>
       </div>
 
-      <div class="hubGate" id="hubGate" hidden>
-        <div class="hubGateCopy">
-          <strong id="hubGateTitle">Shared Sync</strong>
-          <span id="hubGateText"></span>
-          <div class="hubSteps" id="hubSteps" hidden aria-live="polite"></div>
-        </div>
-        <button type="button" class="hubSettingsBtn" id="hubSettingsBtn">⚙ Ayarlar</button>
+      <div class="hubSettingsRow">
+        <button type="button" class="hubSettingsBtn" id="hubSettingsBtn" aria-expanded="false" aria-controls="hubDetails">⚙ Ayarlar</button>
       </div>
-      <div class="hubPanel" id="hubPanel" hidden>
-        <label for="hubPath" id="hubPathLabel">Shared Sync Folder / Buyer Log Shared Hub</label>
-        <div class="hubPathRow">
-          <input id="hubPath" type="text" spellcheck="false" autocomplete="off" placeholder="\\company-network\...\BuyerLog-Shared">
-          <button type="button" class="hubSecondaryBtn" id="hubBrowseBtn">Gözat</button>
+      <div class="hubDetails" id="hubDetails" hidden>
+        <div class="hubGate" id="hubGate">
+          <div class="hubGateCopy">
+            <strong id="hubGateTitle">Shared Sync</strong>
+            <span id="hubGateText"></span>
+            <div class="hubSteps" id="hubSteps" hidden aria-live="polite"></div>
+          </div>
         </div>
-        <p class="hubStatusText" id="hubStatusText"></p>
-        <div class="hubActions">
-          <button type="button" class="hubSecondaryBtn" id="hubRetryBtn">Tekrar Dene</button>
-          <button type="button" class="hubPrimaryBtn" id="hubSaveBtn">Kaydet ve Eşitle</button>
+        <div class="hubPanel" id="hubPanel">
+          <label for="hubPath" id="hubPathLabel">Shared Sync Folder / Buyer Log Shared Hub</label>
+          <div class="hubPathRow">
+            <input id="hubPath" type="text" spellcheck="false" autocomplete="off" placeholder="\\company-network\...\BuyerLog-Shared">
+            <button type="button" class="hubSecondaryBtn" id="hubBrowseBtn">Gözat</button>
+          </div>
+          <p class="hubStatusText" id="hubStatusText"></p>
+          <div class="hubActions">
+            <button type="button" class="hubSecondaryBtn" id="hubRetryBtn">Tekrar Dene</button>
+            <button type="button" class="hubPrimaryBtn" id="hubSaveBtn">Kaydet ve Eşitle</button>
+          </div>
         </div>
       </div>
 
@@ -120,6 +124,7 @@
   let loginBusy = false;
   let hubBusy = false;
   let hubStatus = null;
+  let hubDetailsOpen = false;
   let hubPollTimer = 0;
   let updatePollTimer = 0;
   let updateUnsubscribe = null;
@@ -191,7 +196,7 @@
     $('setupBox').textContent = tr('Bu Moderatör hesabı ilk kez kullanılıyor. En az 6 karakterli bir şifre oluşturun.', 'This Moderator account is being used for the first time. Create a password of at least 6 characters.');
     $('hint').textContent = tr('Hesabınız görünmüyorsa bir Moderatör veya yöneticiden kullanıcı hesabı oluşturmasını isteyin.', 'If your account does not appear, ask a Moderator or manager to create it.');
     $('hubGateTitle').textContent = tr('Shared Sync', 'Shared Sync');
-    $('hubSettingsBtn').textContent = tr('⚙ Ayarlar', '⚙ Settings');
+    renderHubSettingsToggle();
     $('hubPathLabel').textContent = tr('Shared Sync Folder / Buyer Log Shared Hub', 'Shared Sync Folder / Buyer Log Shared Hub');
     $('hubBrowseBtn').textContent = tr('Gözat', 'Browse');
     $('hubRetryBtn').textContent = tr('Tekrar Dene', 'Retry');
@@ -433,6 +438,19 @@
     searchTimer = setTimeout(() => { searchUsers(); }, SEARCH_DEBOUNCE_MS);
   }
 
+  function renderHubSettingsToggle() {
+    const button = $('hubSettingsBtn');
+    if (!button) return;
+    button.setAttribute('aria-expanded', hubDetailsOpen ? 'true' : 'false');
+    button.textContent = hubDetailsOpen ? tr('✕ Ayarları Kapat', '✕ Close Settings') : tr('⚙ Ayarlar', '⚙ Settings');
+  }
+  function setHubDetailsOpen(open, { focus = false } = {}) {
+    hubDetailsOpen = Boolean(open);
+    $('hubDetails').hidden = !hubDetailsOpen;
+    renderHubSettingsToggle();
+    if (hubDetailsOpen && focus) $('hubPath').focus();
+  }
+
   function hubMessage(status) {
     if (!status) return tr('Shared Hub durumu kontrol ediliyor… · Girişe engel değil', 'Checking Shared Hub status… · Sign-in remains available');
     if (status.status === 'syncing' || status.status === 'starting') return (status.message || tr('Buyer Log eşitleniyor…', 'Buyer Log is synchronizing…')) + tr(' · Girişe engel değil', ' · Sign-in remains available');
@@ -469,7 +487,6 @@
   }
   function renderHubStatus() {
     const gate = $('hubGate');
-    gate.hidden = false;
     $('hubGateText').textContent = hubMessage(hubStatus);
     gate.dataset.state = hubStatus && hubStatus.status || 'loading';
     $('hubStatusText').textContent = hubBusy && !(hubStatus && hubStatus.status === 'syncing')
@@ -507,7 +524,6 @@
       if (!response.ok) throw Object.assign(new Error(data.error || tr('Shared Hub doğrulanamadı.', 'Shared Hub could not be validated.')), { code:data.code });
       hubStatus = data;
       if (data.root) $('hubPath').value = data.root;
-      $('hubPanel').hidden = false;
       scheduleHubPoll();
     } catch (error) {
       hubStatus = { configured:true, loginAllowed:Boolean(hubStatus && hubStatus.loginAllowed), bootstrapRequired:!(hubStatus && hubStatus.loginAllowed), status:'error', message:error.message };
@@ -777,7 +793,7 @@
     else { $('username').focus(); $('username').select(); }
   }
 
-  $('hubSettingsBtn').addEventListener('click', () => { $('hubPanel').hidden = !$('hubPanel').hidden; if (!$('hubPanel').hidden) $('hubPath').focus(); });
+  $('hubSettingsBtn').addEventListener('click', () => setHubDetailsOpen(!hubDetailsOpen, { focus:true }));
   $('hubBrowseBtn').addEventListener('click', browseHub);
   $('hubSaveBtn').addEventListener('click', configureHub);
   $('hubRetryBtn').addEventListener('click', () => loadHubStatus(true));
@@ -786,10 +802,12 @@
   renderSelected();
   renderLoginButton();
   initStartupUpdateStatus();
-  loadHubStatus().then(status => {
+  setHubDetailsOpen(false);
+  loadHubStatus().then(() => {
     // Sync status never decides whether the user may type/search/sign in.
+    // Shared Sync ayrıntıları da ilk açılışta kapalı kalır; kullanıcı yalnız
+    // Ayarlar düğmesine basarsa durum ve klasör ayarları gösterilir.
     restoreLastUser();
-    if (status && !status.configured) $('hubPanel').hidden = false;
   });
 })();
 </script>
