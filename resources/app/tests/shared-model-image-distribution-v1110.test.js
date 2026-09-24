@@ -111,6 +111,21 @@ test('LOCAL → SHARED → UPSTREAM sırası korunur', async () => {
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test('Eksikleri Tamamla ana renk eski otomatik OPTION ise LOCAL saymaz, üst kaynağa yollar', async () => {
+  const client = createClient('', 'devRole');
+  const key = 'plm:150|colour:CVL';
+  client.files.set('ci_option', JPEG);
+  client.imagemap[key] = 'ci_option';
+  client.store = ownershipLib.rememberAutomatic([{
+    key, owner: ownershipLib.OWNER_PLM, imageRef: 'ci_option', sourceType: 'OPTION', sourceIdentity: 'option:1:1', hash: 'h'
+  }], { store: client.store, persist: value => value }).store;
+  const plan = await client.distribution.plan([{ plmId: '150', colourCode: 'CVL', imageRole: 'main' }], {
+    source: 'PLM', mode: 'missing', imagemap: client.imagemap, store: client.store, allowShared: false,
+  });
+  assert.equal(plan.counts.localAvailable, 0);
+  assert.equal(plan.counts.remoteRequired, 1, 'yanlış otomatik Option Image kendini onarmak için PLM’e gitmeli');
+});
+
 test('KAYNAK SIKI: PLM kökenli paylaşılan nesne bir ASAS işlemini karşılayamaz', async () => {
   const root = tempRoot('bl-source-');
   try {
