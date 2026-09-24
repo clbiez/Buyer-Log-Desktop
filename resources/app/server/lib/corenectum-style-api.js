@@ -44,6 +44,9 @@ const SOURCE_OPTION = 'OPTION';
 const SOURCE_STYLE_DEFAULT = 'STYLE_DEFAULT';
 const SOURCE_STYLE_LIST = 'STYLE_LIST';
 const SOURCE_MISSING = 'MISSING';
+const IMAGE_ROLE_AUTO = 'auto';
+const IMAGE_ROLE_MAIN = 'main';
+const IMAGE_ROLE_OPTION = 'option';
 // Otomatik kaynak önceliği. Kullanıcının elle koyduğu görsel bu sıranın
 // ÜSTÜNDEDİR; o kural plm-image-ownership.js içindedir.
 const SOURCE_PRIORITY = Object.freeze([SOURCE_OPTION, SOURCE_STYLE_DEFAULT, SOURCE_STYLE_LIST]);
@@ -63,6 +66,12 @@ function coreId(value) {
 
 function normalizeColourCode(value) {
   return normalizeCpImageColourCode(value);
+}
+
+function normalizeImageRole(value) {
+  const role = clean(value, 20).toLowerCase();
+  if (role === IMAGE_ROLE_MAIN || role === IMAGE_ROLE_OPTION) return role;
+  return IMAGE_ROLE_AUTO;
 }
 
 function boundedConcurrency(value, fallback) {
@@ -306,59 +315,77 @@ function stableBy(items, keyOf) {
    Tek güvenilir işaret isDefault bayrağıdır. Varsayılan olmayan bir Style
    Image Buyer Log model görseli olamaz.
    ====================================================================== */
-function selectColourImage({ colourCode, optionImages = [], styleImages = [], styleListImageUrl = '' } = {}) {
+function selectColourImage({ colourCode, imageRole = IMAGE_ROLE_AUTO, optionImages = [], styleImages = [], styleListImageUrl = '' } = {}) {
   const wanted = normalizeColourCode(colourCode);
+  const role = normalizeImageRole(imageRole);
+  const listUrl = attachmentUrl(styleListImageUrl);
 
-  if (wanted) {
-    /* Hem normalize edilmiş (colourCode) hem ham CoreNectum (colorCode)
-       alan adı kabul edilir: seçim politikası, yanıtın parseStyleImages'ten
-       mi yoksa doğrudan mı geldiğine göre farklı davranmamalıdır. */
-    const matches = optionImages.filter(item => normalizeColourCode(item && (item.colourCode ?? item.colorCode)) === wanted
-      && attachmentUrl(item && item.imageUrl));
-    if (matches.length) {
-      // Aynı renkte birden çok Option Image varsa: varsayılan işaretli olan,
-      // yoksa en küçük styleOptionImageId. Seçim belirlenimci olmalıdır;
-      // aksi hâlde aynı iş iki koşumda farklı görsel yazabilirdi.
-      const preferred = matches.filter(item => item.isDefault);
-      const pick = stableBy(preferred.length ? preferred : matches, item => item.styleOptionImageId)[0];
-      return {
-        sourceType: SOURCE_OPTION,
-        imageUrl: attachmentUrl(pick.imageUrl),
-        sourceIdentity: optionIdentity(pick),
-        colour: clean(pick.colour ?? pick.name, 160),
-        reason: 'Exact ColourCode Option Image.',
-        candidateCount: matches.length,
-      };
-    }
-  }
+  const matches = wanted
+    ? optionImages.filter(item => normalizeColourCode(item && (item.colourCode ?? item.colorCode)) === wanted
+      && attachmentUrl(item && item.imageUrl))
+    : [];
+  const optionPick = () => {
+    if (!matches.length) return null;
+    const preferred = matches.filter(item => item.isDefault);
+    const pick = stableBy(preferred.length ? preferred : matches, item => item.styleOptionImageId)[0];
+    return {
+      sourceType: SOURCE_OPTION,
+      imageUrl: attachmentUrl(pick.imageUrl),
+      sourceIdentity: optionIdentity(pick),
+      colour: clean(pick.colour ?? pick.name, 160),
+      reason: 'Exact ColourCode Option Image.',
+      candidateCount: matches.length,
+    };
+  };
 
-  // isDefault SADECE birebir true kabul edilir: "belki varsayılandır"
-  // yorumuna yer yok, yanlış yorum teknik çizimi model görseli yapardı.
+  // isDefault SADECE birebir true kabul edilir: keyfi teknik çizim seçilmez.
   const defaults = styleImages.filter(item => item && truthy(item.isDefault) && attachmentUrl(item.imageUrl));
-  if (defaults.length) {
+  const defaultPick = reason => {
+    if (!defaults.length) return null;
     const pick = stableBy(defaults, item => item.attachmentAssociationId)[0];
     return {
       sourceType: SOURCE_STYLE_DEFAULT,
       imageUrl: attachmentUrl(pick.imageUrl),
       sourceIdentity: styleDefaultIdentity(pick),
       colour: '',
-      reason: wanted
-        ? `No matching Option Image for ${wanted}; explicit isDefault Style Image fallback.`
-        : 'Explicit isDefault Style Image.',
+      reason,
       candidateCount: defaults.length,
     };
+  };
+  const listPick = reason => listUrl ? {
+    sourceType: SOURCE_STYLE_LIST,
+    imageUrl: listUrl,
+    sourceIdentity: `stylelist:${attachmentIdentity(listUrl)}`,
+    colour: '',
+    reason,
+    candidateCount: 1,
+  } : null;
+
+  /* Collection ana renk/single satırı PLM'in model seviyesindeki görselini
+     kullanır. Bu, CoreNectum sol panelinde ön+arka birlikte gösterilen
+     GetStyleList.model.imageUrl kaynağıdır. Option Image ana rengi ezemez. */
+  if (role === IMAGE_ROLE_MAIN) {
+    const selected = listPick('Main colour uses GetStyleList model image (front/back).')
+      || defaultPick('Main colour model image missing; explicit isDefault Style Image fallback.');
+    if (selected) return selected;
   }
 
-  const listUrl = attachmentUrl(styleListImageUrl);
-  if (listUrl) {
-    return {
-      sourceType: SOURCE_STYLE_LIST,
-      imageUrl: listUrl,
-      sourceIdentity: `stylelist:${attachmentIdentity(listUrl)}`,
-      colour: '',
-      reason: 'GetStyleList row image fallback.',
-      candidateCount: 1,
-    };
+  /* Variant satırında renk bazlı Option Image esastır. O renk için Option
+     Image yoksa önce ana model görseline, o da yoksa güvenli default'a düş. */
+  if (role === IMAGE_ROLE_OPTION) {
+    const selected = optionPick()
+      || listPick(wanted ? `No matching Option Image for ${wanted}; GetStyleList model image fallback.` : 'No colour code; GetStyleList model image fallback.')
+      || defaultPick('Option/model image missing; explicit isDefault Style Image fallback.');
+    if (selected) return selected;
+  }
+
+  /* CP/Orders ve rol bilgisi taşımayan eski çağrılar için mevcut davranış
+     aynen korunur: Option > explicit default > Style List. */
+  if (role === IMAGE_ROLE_AUTO) {
+    const selected = optionPick()
+      || defaultPick(wanted ? `No matching Option Image for ${wanted}; explicit isDefault Style Image fallback.` : 'Explicit isDefault Style Image.')
+      || listPick('GetStyleList row image fallback.');
+    if (selected) return selected;
   }
 
   return {
@@ -366,16 +393,17 @@ function selectColourImage({ colourCode, optionImages = [], styleImages = [], st
     imageUrl: '',
     sourceIdentity: '',
     colour: '',
-    // Varsayılan olmayan Style Image sayısı raporlanır ama ASLA seçilmez:
-    // kullanıcı "aslında görsel vardı" diye düşünmesin, ne olduğu görünsün.
-    reason: styleImages.length
-      ? 'No matching Option Image and no explicit DEFAULT Style Image (non-default Style Images are never auto-selected).'
-      : 'No matching Option Image and no explicit DEFAULT Style Image.',
+    reason: role === IMAGE_ROLE_MAIN
+      ? 'No GetStyleList model image and no explicit DEFAULT Style Image.'
+      : role === IMAGE_ROLE_OPTION
+        ? 'No matching Option Image, GetStyleList model image or explicit DEFAULT Style Image.'
+        : (styleImages.length
+          ? 'No matching Option Image and no explicit DEFAULT Style Image (non-default Style Images are never auto-selected).'
+          : 'No matching Option Image and no explicit DEFAULT Style Image.'),
     candidateCount: 0,
     nonDefaultStyleImages: styleImages.length,
   };
 }
-
 function optionIdentity(item) {
   const imageId = clean(item && item.styleOptionImageId, 80);
   const optionId = clean(item && item.styleOptionId, 80);
@@ -410,10 +438,14 @@ module.exports = {
   SOURCE_STYLE_DEFAULT,
   SOURCE_STYLE_LIST,
   SOURCE_MISSING,
+  IMAGE_ROLE_AUTO,
+  IMAGE_ROLE_MAIN,
+  IMAGE_ROLE_OPTION,
   SOURCE_PRIORITY,
   clean,
   coreId,
   normalizeColourCode,
+  normalizeImageRole,
   boundedConcurrency,
   attachmentUrl,
   attachmentIdentity,

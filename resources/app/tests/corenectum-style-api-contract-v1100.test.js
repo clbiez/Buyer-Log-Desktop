@@ -100,6 +100,24 @@ test('1. öncelik: Renk Kodu birebir eşleşen Option Image seçilir', () => {
   assert.equal(selection.sourceIdentity, 'option:4141433:8138107');
 });
 
+test('Collection ana renk rolünde Option olsa bile ön+arka Style List model görseli seçilir', () => {
+  const selection = api.selectColourImage({ colourCode: 'FFS', imageRole: 'main', optionImages: OPTION_IMAGES, styleImages: STYLE_IMAGES, styleListImageUrl: ATTACH('front-back') });
+  assert.equal(selection.sourceType, api.SOURCE_STYLE_LIST);
+  assert.match(selection.imageUrl, /GetAttachment\/front-back$/);
+});
+
+test('Collection variant rolünde kendi Option Image seçilir', () => {
+  const selection = api.selectColourImage({ colourCode: 'FFS', imageRole: 'option', optionImages: OPTION_IMAGES, styleImages: STYLE_IMAGES, styleListImageUrl: ATTACH('front-back') });
+  assert.equal(selection.sourceType, api.SOURCE_OPTION);
+  assert.match(selection.imageUrl, /GetAttachment\/ffs$/);
+});
+
+test('Collection variant Option Image yoksa ana ön+arka model görseline düşer', () => {
+  const selection = api.selectColourImage({ colourCode: 'QQQ', imageRole: 'option', optionImages: OPTION_IMAGES, styleImages: STYLE_IMAGES, styleListImageUrl: ATTACH('front-back') });
+  assert.equal(selection.sourceType, api.SOURCE_STYLE_LIST);
+  assert.match(selection.imageUrl, /GetAttachment\/front-back$/);
+});
+
 test('2. öncelik: eşleşen Option yoksa isDefault Style Image seçilir', () => {
   const selection = api.selectColourImage({ colourCode: 'QQQ', optionImages: OPTION_IMAGES, styleImages: STYLE_IMAGES, styleListImageUrl: ATTACH('list') });
   assert.equal(selection.sourceType, api.SOURCE_STYLE_DEFAULT);

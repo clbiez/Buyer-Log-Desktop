@@ -80,6 +80,7 @@ function normalizeRequest(raw) {
     plmId,
     colourCode,
     colour,
+    imageRole: ['main', 'option'].includes(clean(raw && raw.imageRole, 20).toLowerCase()) ? clean(raw && raw.imageRole, 20).toLowerCase() : 'auto',
     styleId: clean(raw && raw.styleId, 40),
     styleName: clean(raw && raw.styleName, 300),
     key,

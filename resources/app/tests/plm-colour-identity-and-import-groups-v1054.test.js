@@ -40,7 +40,7 @@ test('istemci gerçek renk adını PLM görsel isteğine taşır ve renk adına 
   const block = app.slice(start, end);
   assert.match(block, /colour:row&&row\.colour/);
   assert.match(block, /turknorm\(colour\)/);
-  assert.match(block, /unique\.set\(key,\{plmId,styleName,colourCode,colour\}\)/);
+  assert.match(block, /next=\{plmId,styleName,colourCode,colour,imageRole\}/);
   assert.match(app, /async function fetchPlmImageForModel\(\{plmId,colourCode,colour,styleName\}/);
   assert.match(app, /colour:requestedColourName/);
 });

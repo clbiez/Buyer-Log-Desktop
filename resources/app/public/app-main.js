@@ -26377,7 +26377,7 @@ function plmToolRows(source,scope='filtered'){
     mapRow=row=>({modelId:row&&row._id,plmId:row&&row['PLM ID'],styleName:row&&row['Model Name'],specialCode:row&&row['Special Code'],colourCode:row&&row['C.Code'],colour:row&&row.Colour||row&&row['Colour']||row&&row.Color||row&&row['Color']||''});
   }else if(source==='koleksiyon'){
     rows=filteredKol();selected=kolSelected;idOf=row=>row&&row.id;
-    mapRow=row=>({modelId:row&&row.id,plmId:row&&row.plmId,styleName:row&&row.modelKod,specialCode:row&&row.specialCode,colourCode:row&&row.colourCode,colour:row&&row.colour});
+    mapRow=row=>({modelId:row&&row.id,plmId:row&&row.plmId,styleName:row&&row.modelKod,specialCode:row&&row.specialCode,colourCode:row&&row.colourCode,colour:row&&row.colour,modelGroupRole:row&&row.modelGroupRole});
   }else{
     rows=filteredCP();selected=state.cpSelected;idOf=row=>row&&row._id;
     mapRow=row=>({modelId:row&&row._id,plmId:row&&row['PLM ID'],styleName:row&&row['Model Name'],specialCode:row&&row['Special Code'],colourCode:row&&row['C.Code'],colour:row&&row.Colour||row&&row['Colour']||row&&row.Color||row&&row['Color']||''});
@@ -26396,12 +26396,15 @@ function missingPlmLinkItems(source){
   return [...unique.values()];
 }
 function modelImageItems(source,imageSource,scope='filtered'){
-  const unique=new Map();
+  const unique=new Map(),roleRank={auto:0,option:1,main:2};
   plmToolRows(source,scope).forEach(row=>{
     const plmId=normalizePlmLinkId(row&&row.plmId);if(!plmId)return;
-    const colourCode=norm(row&&row.colourCode),colour=norm(row&&row.colour),styleName=norm(row&&row.styleName);
+    const colourCode=norm(row&&row.colourCode),colour=norm(row&&row.colour),styleName=norm(row&&row.styleName),groupRole=norm(row&&row.modelGroupRole).toLowerCase();
+    const imageRole=groupRole==='parent'||groupRole==='single'?'main':groupRole==='variant'?'option':'auto';
     const key=imageSource==='plm'&&colourCode?`${plmId}\u0000${turknorm(colourCode)}${colour?`\u0000${turknorm(colour)}`:''}`:plmId;
-    if(!unique.has(key))unique.set(key,{plmId,styleName,colourCode,colour});
+    const current=unique.get(key),next={plmId,styleName,colourCode,colour,imageRole};
+    if(!current)unique.set(key,next);
+    else if((roleRank[imageRole]||0)>(roleRank[current.imageRole]||0))unique.set(key,{...current,imageRole});
   });
   return [...unique.values()];
 }
