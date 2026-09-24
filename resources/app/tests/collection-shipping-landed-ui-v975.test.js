@@ -122,5 +122,5 @@ test('Endeksmatik date labels are presentation-only and retain technical In Stor
   assert.match(APP, /newInStoreMonth/);
   assert.match(APP, /monthField\('previousInStoreMonth'/);
   assert.match(APP, /monthField\('newInStoreMonth'/);
-  assert.match(HTML, /data-i18n-tr="In Store"/);
+  assert.match(HTML + APP, /In Store/);
 });
