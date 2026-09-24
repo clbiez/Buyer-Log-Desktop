@@ -79,6 +79,11 @@ test('INTAKE varsayılan filtreleri sadeleştirilir ve sıfır Güncel Alım Bü
     ['Merch Yil Ay', 'Satış Cluster', 'Versiyon Tanim', 'SezonKod', 'MerchAltGrupKod', 'BuyerGrupTanim']
   );
   assert.equal(config.display.hideZeroCurrentBudget, true);
+
+  const catalogSources = new Set(intake.defaultFields().map(field => field.sourceUniqueName));
+  assert.ok(catalogSources.has('[Dim_Urun].[MerchAltGrupTanim]'));
+  assert.ok(catalogSources.has('[Dim_Tarih].[Son Guncelleme Tarihi]'));
+  assert.ok(catalogSources.has('[Dim_Urun].[UrunKlasmanKod]'));
 });
 
 test('INTAKE v1 boş eski varsayılan filtreleri v2 görünümüne taşırken temizler', () => {
