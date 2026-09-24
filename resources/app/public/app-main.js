@@ -19008,6 +19008,49 @@ function kolRowEqual(a,b){
   }
   return true;
 }
+function kolValueEqual(a,b){
+  if(a===b||(a==null&&b==null))return true;
+  if((a&&typeof a==='object')||(b&&typeof b==='object')){
+    try{return JSON.stringify(a)===JSON.stringify(b);}catch(_){}
+  }
+  return false;
+}
+function kolRowChangedFromBase(base,local){
+  if(!base||!local)return base!==local;
+  const keys=new Set([...Object.keys(base),...Object.keys(local)]);
+  keys.delete('_rev');keys.delete('_sharedCollectionImageUrl');
+  for(const key of keys){
+    const hasBase=Object.prototype.hasOwnProperty.call(base,key);
+    const hasLocal=Object.prototype.hasOwnProperty.call(local,key);
+    if(hasBase!==hasLocal||!kolValueEqual(base[key],local[key]))return true;
+  }
+  return false;
+}
+function kolCloneConflictValue(value){
+  if(!value||typeof value!=='object')return value;
+  try{return JSON.parse(JSON.stringify(value));}catch(_){return value;}
+}
+// Üç yönlü birleştirme: uzak satırı temel alır, yalnız bu ekranda gerçekten
+// değiştirilmiş alanları tekrar uygular. Böylece başka pencerenin farklı
+// alanlardaki güncellemesi ezilmez; kullanıcının kendi girişi de kaybolmaz.
+function kolMergeLocalRowDelta(base,local,remote){
+  const next=migrateKolRow({...remote});
+  const keys=new Set([...Object.keys(base||{}),...Object.keys(local||{})]);
+  keys.delete('_rev');keys.delete('_sharedCollectionImageUrl');
+  for(const key of keys){
+    const hasBase=Object.prototype.hasOwnProperty.call(base||{},key);
+    const hasLocal=Object.prototype.hasOwnProperty.call(local||{},key);
+    if(hasBase===hasLocal&&kolValueEqual(base&&base[key],local&&local[key]))continue;
+    if(!hasLocal){delete next[key];continue;}
+    next[key]=kolCloneConflictValue(local[key]);
+  }
+  if(remote&&Object.prototype.hasOwnProperty.call(remote,'_rev'))next._rev=remote._rev;
+  return next;
+}
+function kolIsOwnWorkspace(){
+  const current=String(window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id||'');
+  return Boolean(current)&&String(kolWorkspaceOwnerId||'')===current;
+}
 function kolCollectChanges(){
   if(!kolBaseline||kolBaseline.ownerId!==kolWorkspaceOwnerId)return null; // temel yok: tam kayıt gerekir
   const upserts=[],deletes=[];
@@ -19037,17 +19080,33 @@ function kolCollectChanges(){
 // kaydedilmediğini ve sunucudaki değerin ne olduğunu bilmelidir.
 function kolReportConflicts(conflicts){
   const list=Array.isArray(conflicts)?conflicts.filter(item=>item&&item.id!=null):[];
-  if(!list.length)return;
-  // Sunucudaki güncel satır baseline olur; kullanıcının ekrandaki girişini
-  // değiştirmeyiz. Böylece giriş kaybolmaz ve sonraki bilinçli düzenleme/kayıt
-  // sırasında fark olarak kalır.
-  if(kolBaseline)for(const item of list){if(item.current)kolBaseline.rows.set(String(item.id),migrateKolRow({...item.current}));}
-  kolPersistPendingWorkspace('conflict');
-  const ids=list.map(item=>item.id).slice(0,5).join(', ');
-  const more=list.length>5?` (+${list.length-5})`:'';
-  showToast(appLang==='en'
-    ?`${list.length} row(s) were changed by a teammate while you were editing and could not be saved: ${ids}${more}. The current values are shown; re-enter your change.`
-    :`${list.length} satır siz düzenlerken bir ekip arkadaşı tarafından değiştirildi ve kaydedilemedi: ${ids}${more}. Güncel değerler gösteriliyor; değişikliğinizi yeniden girin.`);
+  if(!list.length)return false;
+  const own=kolIsOwnWorkspace();
+  let rebased=false;
+  for(const item of list){
+    if(!item.current)continue;
+    const key=String(item.id);
+    const remote=migrateKolRow({...item.current});
+    const base=kolBaseline&&kolBaseline.rows.get(key);
+    const index=kolRowIndexById(item.id);
+    const local=index>=0?kolRows[index]:null;
+    // Kendi Koleksiyon'unda satır revizyonu değişmişse kullanıcıyı durdurma:
+    // uzaktaki güncel satır üzerine yalnız yerel farkı taşı ve otomatik tekrar dene.
+    if(own&&base&&local){
+      kolRows[index]=kolMergeLocalRowDelta(base,local,remote);
+      rebased=true;
+    }
+    if(kolBaseline)kolBaseline.rows.set(key,{...remote});
+  }
+  kolPersistPendingWorkspace(rebased?'rebased':'conflict');
+  if(!rebased){
+    const ids=list.map(item=>item.id).slice(0,5).join(', ');
+    const more=list.length>5?` (+${list.length-5})`:'';
+    showToast(appLang==='en'
+      ?`${list.length} row(s) changed while you were editing: ${ids}${more}. Your local edit is still preserved.`
+      :`${list.length} satır siz düzenlerken değişti: ${ids}${more}. Yerel girişiniz korunmaya devam ediyor.`);
+  }
+  return rebased;
 }
 function kolWorkspaceSetReadonly(){
   const root=document.getElementById('view-koleksiyon');if(root)root.dataset.workspaceReadonly=kolWorkspaceCanEdit?'0':'1';
@@ -19077,21 +19136,100 @@ function kolApplyWorkspace(workspace,access){
   kolRestorePendingWorkspace();
   scheduleOverviewCollectionSummaryRender();
 }
+async function kolRebaseOwnWorkspace(ownerId){
+  if(!kolIsOwnWorkspace()||String(ownerId)!==String(kolWorkspaceOwnerId)||!kolBaseline||kolBaseline.ownerId!==ownerId)return false;
+  const originalBaseline=kolBaseline;
+  const baseRows=originalBaseline.rows;
+  let baseStructure={};
+  try{baseStructure=JSON.parse(originalBaseline.structure||'{}')||{};}catch(_){}
+  const localRows=kolRows.map(kolPersistableRow);
+  const localById=new Map(localRows.map(row=>[kolRowKey(row),row]).filter(([key])=>key));
+  const localStructure={
+    columns:kolCustomCols||[],
+    manufacturers:kolManufacturers||[],
+    statusCatalog:kolStatusEntries(),
+    order:localRows.map(kolRowKey).filter(Boolean),
+  };
+  kolPersistPendingWorkspace('rebasing');
+
+  const res=await fetch(`/api/collection-workspaces/${encodeURIComponent(ownerId)}?rebase=${Date.now()}`,{cache:'no-store'});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok||kolWorkspaceOwnerId!==ownerId)return false;
+  kolReportReplication(data.replication);
+  const remote=data.workspace||{};
+  const remoteRows=Array.isArray(remote.rows)?remote.rows.map(row=>migrateKolRow({...row})):[];
+  const remoteStructure={
+    columns:Array.isArray(remote.customColumns)?remote.customColumns:[],
+    manufacturers:Array.isArray(remote.manufacturers)?remote.manufacturers:[],
+    statusCatalog:Array.isArray(remote.statusCatalog)?remote.statusCatalog:[],
+    order:remoteRows.map(kolRowKey).filter(Boolean),
+  };
+
+  const merged=[];
+  const consumed=new Set();
+  for(const remoteRow of remoteRows){
+    const key=kolRowKey(remoteRow);
+    const local=key?localById.get(key):null;
+    const base=key?baseRows.get(key):null;
+    if(local){
+      merged.push(base?kolMergeLocalRowDelta(base,local,remoteRow):kolMergeLocalRowDelta({},local,remoteRow));
+      consumed.add(key);
+      continue;
+    }
+    if(base){
+      // Yerelde silinmiş ama uzakta aynı satır sonradan değiştirilmişse sessizce
+      // silmeyiz; uzak değişiklik korunur. Değişmemişse kullanıcının silmesi kalır.
+      if(kolRowChangedFromBase(base,remoteRow))merged.push(remoteRow);
+      consumed.add(key);
+      continue;
+    }
+    merged.push(remoteRow);
+  }
+  for(const local of localRows){
+    const key=kolRowKey(local);
+    if(!key||consumed.has(key))continue;
+    const base=baseRows.get(key);
+    // Uzakta silinen dokunulmamış satır geri dirilmez; yerelde değiştirilmiş
+    // veya yeni satır ise kullanıcının işi korunur.
+    if(!base||kolRowChangedFromBase(base,local))merged.push(local);
+  }
+
+  const choose=(localValue,baseValue,remoteValue)=>kolValueEqual(localValue,baseValue)?remoteValue:localValue;
+  kolCustomCols=kolNormalizeCustomCols(choose(localStructure.columns,baseStructure.columns||[],remoteStructure.columns));
+  kolManufacturers=choose(localStructure.manufacturers,baseStructure.manufacturers||[],remoteStructure.manufacturers);
+  kolStatusCatalog=kolNormalizeStatusCatalog(choose(localStructure.statusCatalog,baseStructure.statusCatalog||[],remoteStructure.statusCatalog),merged);
+
+  const localOrderChanged=!kolValueEqual(localStructure.order,baseStructure.order||[]);
+  const wanted=localOrderChanged?localStructure.order:remoteStructure.order;
+  const byId=new Map(merged.map(row=>[kolRowKey(row),row]).filter(([key])=>key));
+  const ordered=[];
+  for(const id of wanted){const row=byId.get(String(id));if(row){ordered.push(row);byId.delete(String(id));}}
+  for(const row of byId.values())ordered.push(row);
+  kolRows=kolNormalizeModelGroups(ordered);
+
+  kolWorkspaceRevision=Number(remote._revision)||kolWorkspaceRevision;
+  const remoteBaselineRows=new Map();
+  for(const row of remoteRows){const key=kolRowKey(row);if(key)remoteBaselineRows.set(key,{...row});}
+  kolBaseline={ownerId,rows:remoteBaselineRows,structure:JSON.stringify(remoteStructure)};
+  kolNextId=Math.max(Number(remote.nextId)||1,kolNextId,1+kolRows.reduce((max,row)=>Math.max(max,Number(row&&row.id)||0),0));
+  kolSelected=new Set([...kolSelected].filter(id=>kolRowIndexById(id)>=0));
+  refreshSubmfrList();loadKolColState({preserveCustom:true});renderKol();scheduleOverviewCollectionSummaryRender();
+  try{localStorage.setItem(kolWorkspaceLocalKey(ownerId),JSON.stringify({rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
+  kolPersistPendingWorkspace('rebased');
+  return true;
+}
 async function kolSaveWorkspaceNow(saveOptions){
+  const options=saveOptions&&typeof saveOptions==='object'?saveOptions:{};
+  const conflictRetry=Math.max(0,Number(options._conflictRetry)||0);
   clearTimeout(kolWorkspaceSaveTimer);kolWorkspaceSaveTimer=null;
   if(!kolWorkspaceCanEdit)return {ok:true,durable:true,skipped:true};
-  if(kolWorkspaceSaving){kolWorkspacePending=true;const activeResult=await kolWorkspaceSavePromise;return kolWorkspacePending?kolSaveWorkspaceNow(saveOptions):activeResult;}
+  if(kolWorkspaceSaving){kolWorkspacePending=true;const activeResult=await kolWorkspaceSavePromise;return kolWorkspacePending?kolSaveWorkspaceNow(options):activeResult;}
   const ownerId=kolWorkspaceOwnerId;
-  // v7.22 — önce SATIR BAZLI yol denenir. Temel anlık görüntü yoksa (ilk
-  // kayıt, sayfa değişimi, tam yeniden yükleme sonrası) tam sayfa gönderilir.
   const change=kolCollectChanges();
-  if(change&&change.empty){kolWorkspacePending=false;return {ok:true,durable:true,unchanged:true};} // gerçekten değişen bir şey yok
+  if(change&&change.empty){kolWorkspacePending=false;return {ok:true,durable:true,unchanged:true};}
   const payload=JSON.parse(JSON.stringify(change||kolWorkspacePayload()));
   const rowMode=Boolean(change);
-  /* ATOMİK PARTİ. Normal düzenlemede çakışmayan satırların yazılması doğrudur;
-     onaylanmış bir Excel içe aktarma planı ise TEK işlemdir. atomic bayrağı
-     sunucuya "tek satır bile çakışırsa hiçbirini yazma" der. */
-  if(rowMode&&saveOptions&&saveOptions.atomic===true)payload.atomic=true;
+  if(rowMode&&options.atomic===true)payload.atomic=true;
   kolWorkspaceSaving=true;kolWorkspacePending=false;
   kolWorkspaceSavePromise=(async()=>{
     try{
@@ -19101,21 +19239,17 @@ async function kolSaveWorkspaceNow(saveOptions){
         body:JSON.stringify(payload),
       });
       const data=await res.json().catch(()=>({}));
-      if(!res.ok){const err=new Error(data.error||res.statusText);err.code=data.code;err.currentRevision=data.currentRevision;throw err;}
+      if(!res.ok){const err=new Error(data.error||res.statusText);err.code=data.code;err.currentRevision=data.currentRevision;err.conflicts=data.conflicts;throw err;}
       kolReportReplication(data.replication);
-      if(kolWorkspaceOwnerId!==ownerId)return {ok:true,durable:true,ownerChanged:true}; // kullanıcı bu arada başka sayfaya geçti
+      if(kolWorkspaceOwnerId!==ownerId)return {ok:true,durable:true,ownerChanged:true};
+      let ownConflictRebased=false;
       if(rowMode){
         kolWorkspaceRevision=Number(data.revision)||kolWorkspaceRevision;
-        // Uygulanan satırların yeni _rev'i istemcide de tutulmalı; yoksa bir
-        // sonraki kayıt kendi yazdığı satırı çakışmış sanardı.
         for(const item of Array.isArray(data.applied)?data.applied:[]){
           if(item.kind==='removed')continue;
           const index=kolRowIndexById(item.id);
           if(index>=0)kolRows[index]._rev=Number(item.rev)||kolRows[index]._rev;
         }
-        // Yalnız sunucunun gerçekten uyguladığı snapshot baseline'a alınır.
-        // Fetch sürerken yapılan yeni bir edit, yanlışlıkla "kaydedildi"
-        // sayılmaz ve sonraki turda tekrar fark edilir.
         if(!kolBaseline)kolCaptureBaseline();
         for(const item of Array.isArray(data.applied)?data.applied:[]){
           const key=String(item.id),sent=(payload.upserts||[]).find(row=>kolRowKey(row)===key);
@@ -19123,22 +19257,27 @@ async function kolSaveWorkspaceNow(saveOptions){
           if(sent)kolBaseline.rows.set(key,{...sent,_rev:Number(item.rev)||sent._rev});
         }
         if(payload.structure)kolBaseline.structure=JSON.stringify({columns:payload.structure.customColumns||[],manufacturers:payload.structure.manufacturers||[],statusCatalog:payload.structure.statusCatalog||[],order:payload.structure.order||[]});
-        if(Array.isArray(data.conflicts)&&data.conflicts.length)kolReportConflicts(data.conflicts);
+        if(Array.isArray(data.conflicts)&&data.conflicts.length)ownConflictRebased=kolReportConflicts(data.conflicts);
       }else{
         kolWorkspaceRevision=Number(data.workspace&&data.workspace._revision)||kolWorkspaceRevision;
         const serverRows=new Map();for(const row of Array.isArray(data.workspace&&data.workspace.rows)?data.workspace.rows:[]){const key=kolRowKey(row);if(key)serverRows.set(key,{...row});}
         kolBaseline={ownerId:kolWorkspaceOwnerId,rows:serverRows,structure:JSON.stringify({columns:data.workspace&&data.workspace.customColumns||[],manufacturers:data.workspace&&data.workspace.manufacturers||[],statusCatalog:data.workspace&&data.workspace.statusCatalog||[],order:(data.workspace&&data.workspace.rows||[]).map(kolRowKey)})};
       }
-      if(kolHasDirtyWorkspace())kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');
+      const dirty=kolHasDirtyWorkspace();
+      if(dirty)kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');
       else kolClearPendingWorkspace(ownerId);
-      return {ok:true,durable:true,pending:kolHasDirtyWorkspace()};
+      return {ok:true,durable:true,pending:dirty,retryOwnConflict:ownConflictRebased};
     }
     catch(err){
-      // Yapısal çakışma (sütun/üretici/sıra) hâlâ sayfa bazındadır; o durumda
-      // güncel sürümü yüklemek doğru davranıştır.
-      if((err.code==='REVISION_CONFLICT'||err.code==='STRUCTURE_REVISION_CONFLICT'||err.code==='COLLECTION_ATOMIC_CONFLICT')&&kolWorkspaceOwnerId===ownerId){
+      const conflictCode=err.code==='REVISION_CONFLICT'||err.code==='STRUCTURE_REVISION_CONFLICT';
+      const canRebase=conflictCode&&kolWorkspaceOwnerId===ownerId&&kolIsOwnWorkspace()&&options.atomic!==true&&conflictRetry<3&&kolBaseline;
+      if(canRebase){
+        kolPersistPendingWorkspace('rebasing');
+        return {ok:false,pending:true,rebase:true,error:err};
+      }
+      if((conflictCode||err.code==='COLLECTION_ATOMIC_CONFLICT')&&kolWorkspaceOwnerId===ownerId){
         kolPersistPendingWorkspace('conflict');
-        showToast(appLang==='en'?'This Collection page changed elsewhere. Your local edit is preserved; review and retry.':'Bu Koleksiyon sayfası başka bir yerde değişti. Yerel girişiniz korundu; kontrol edip yeniden deneyin.');
+        showToast(appLang==='en'?'The Collection changed while saving. Your local edit is safe on this device.':'Koleksiyon kayıt sırasında değişti. Yerel girişiniz bu cihazda güvende.');
       }else showToast((appLang==='en'?'Collection page could not be saved: ':'Koleksiyon sayfası kaydedilemedi: ')+(err.message||err));
       if(kolWorkspaceOwnerId===ownerId)kolPersistPendingWorkspace('save-failed');
       return {ok:false,pending:true,error:err};
@@ -19146,7 +19285,18 @@ async function kolSaveWorkspaceNow(saveOptions){
     finally{kolWorkspaceSaving=false;kolWorkspaceSavePromise=null;}
   })();
   const result=await kolWorkspaceSavePromise;
-  if(kolWorkspacePending){kolWorkspacePending=false;return kolSaveWorkspaceNow(saveOptions);}
+  if(result&&result.rebase&&conflictRetry<3){
+    const rebased=await kolRebaseOwnWorkspace(ownerId).catch(()=>false);
+    if(rebased){
+      kolWorkspacePending=false;
+      return kolSaveWorkspaceNow({...options,_conflictRetry:conflictRetry+1});
+    }
+  }
+  if(result&&result.retryOwnConflict&&options.atomic!==true&&conflictRetry<3){
+    kolWorkspacePending=false;
+    return kolSaveWorkspaceNow({...options,_conflictRetry:conflictRetry+1});
+  }
+  if(kolWorkspacePending){kolWorkspacePending=false;return kolSaveWorkspaceNow(options);}
   return result;
 }
 function kolQueueWorkspaceSave(){if(!kolWorkspaceCanEdit)return;clearTimeout(kolWorkspaceSaveTimer);kolWorkspaceSaveTimer=setTimeout(()=>void kolSaveWorkspaceNow(),350);}
@@ -31015,51 +31165,59 @@ function kolEditingRowIds(){
   const id=host&&host.dataset?host.dataset.id:'';
   return new Set(id===''||id==null?[]:[String(id)]);
 }
+function kolDirtyRowIds(){
+  const change=kolCollectChanges();
+  return new Set(change&&Array.isArray(change.upserts)?change.upserts.map(kolRowKey).filter(Boolean):[]);
+}
 function kolApplyRemotePatches(rowPatches){
   const items=Array.isArray(rowPatches)?rowPatches.filter(Boolean):[];
   if(!items.length)return 0;
   const busy=kolEditingRowIds();
-  const touched=new Set(),deferred=[];
+  const dirty=kolDirtyRowIds();
+  const touched=new Set(),deferred=[],appliedItems=[];
   let applied=0;
   for(const item of items){
     const incoming=item.row;
     const id=incoming&&incoming.id!=null?String(incoming.id):(String(item.key||'').startsWith('id:')?String(item.key).slice(3):'');
+    const index=id?kolRowIndexById(id):-1;
+    const current=index>=0?kolRows[index]:null;
+    // Kullanıcı bu satırı düzenliyor veya henüz kaydedilmemiş bir fark taşıyorsa
+    // uzak yama local değeri ASLA ezmez.
+    if(id&&((busy&&busy.has(id))||dirty.has(id))){deferred.push(item);continue;}
     if(item.kind==='removed'){
-      // Silinen satır düzenleniyorsa dokunulmaz: kullanıcının o an yazdığı
-      // değer gözünün önünde yok olmamalı. Sonraki turda yeniden denenir.
-      if(id&&busy&&busy.has(id)){deferred.push(item);continue;}
-      const index=id?kolRowIndexById(id):-1;
       if(index>=0){kolRows.splice(index,1);kolSelected.delete(Number(id));applied++;}
+      appliedItems.push(item);
       continue;
     }
     if(!incoming)continue;
-    if(id&&busy&&busy.has(id)){deferred.push(item);continue;}
-    const index=id?kolRowIndexById(id):-1;
+    // Daha yeni yerel kayıt zaten oluşmuşsa beklemiş eski SSE yaması atılır.
+    const incomingRev=Math.max(0,Number(incoming._rev)||0);
+    const currentRev=Math.max(0,Number(current&&current._rev)||0);
+    if(current&&incomingRev&&currentRev>=incomingRev)continue;
     if(index>=0)kolRows[index]=migrateKolRow({...incoming});
     else kolRows.push(migrateKolRow({...incoming}));
     if(id)touched.add(id);
-    applied++;
+    applied++;appliedItems.push(item);
   }
   kolDeferredPatches=deferred;
+  if(appliedItems.length&&kolBaseline&&kolBaseline.ownerId===kolWorkspaceOwnerId){
+    // Yalnız gerçekten uygulanan yamalar baseline'a geçer. Bekletilen satırı
+    // baseline'a erken yazmak, yerel farkın kaydedilmeden "temiz" görünmesine yol açardı.
+    for(const item of appliedItems){
+      const incoming=item.row;
+      const id=incoming&&incoming.id!=null?String(incoming.id):(String(item.key||'').startsWith('id:')?String(item.key).slice(3):'');
+      if(!id)continue;
+      if(item.kind==='removed')kolBaseline.rows.delete(id);
+      else if(incoming)kolBaseline.rows.set(id,{...incoming});
+    }
+    // Satır yaması yapısal baseline'ı değiştirmez; yerel sütun/sıra değişikliği
+    // böylece yanlışlıkla kaydedilmiş sayılmaz.
+  }
   if(applied){
     kolNextId=Math.max(kolNextId,1+kolRows.reduce((max,row)=>Math.max(max,Number(row&&row.id)||0),0));
-    // v7.22 — uzaktan gelen satır artık TEMELİN de parçasıdır. Güncellenmezse
-    // bir sonraki kayıt bu satırı "ben değiştirdim" sanıp eski _rev ile geri
-    // gönderir ve boş yere çakışma alırdı.
-    if(kolBaseline&&kolBaseline.ownerId===kolWorkspaceOwnerId){
-      for(const item of items){
-        const incoming=item.row;
-        const id=incoming&&incoming.id!=null?String(incoming.id):(String(item.key||'').startsWith('id:')?String(item.key).slice(3):'');
-        if(!id)continue;
-        if(item.kind==='removed')kolBaseline.rows.delete(id);
-        else if(incoming)kolBaseline.rows.set(id,{...incoming});
-      }
-      kolBaseline.structure=kolStructureSignature();
-    }
     renderKol();
     kolHighlightRemoteRows(touched);
     scheduleOverviewCollectionSummaryRender();
-    // Yerel kopya da güncel kalmalı; aksi halde çevrimdışı açılışta eski hâl görünür.
     try{localStorage.setItem(kolWorkspaceLocalKey(kolWorkspaceOwnerId),JSON.stringify({rows:kolRows,manufacturers:kolManufacturersForPersistence(),customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,_revision:kolWorkspaceRevision}));}catch(_){}
   }
   return applied;
@@ -31082,7 +31240,10 @@ function kolHighlightRemoteRows(ids){
 // Ertelenen yamalar, kullanıcı düzenlemeyi bitirir bitirmez uygulanır.
 document.addEventListener('focusout',()=>{
   if(!kolDeferredPatches.length)return;
-  setTimeout(()=>{
+  setTimeout(async()=>{
+    // Önce kullanıcının hücreden çıkarken oluşan yerel kaydını tamamla.
+    // Sonra bekleyen yama uygulanır; yerel kayıt daha yeniyse stale yama düşer.
+    await kolSettlePendingSave();
     const pending=kolDeferredPatches;kolDeferredPatches=[];
     if(pending.length)kolApplyRemotePatches(pending);
   },0);
