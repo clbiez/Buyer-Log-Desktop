@@ -13,6 +13,7 @@ const {
   createOabAuthLifecycle,
   authorizationHeaderFromRequest,
   isReportApiRequest,
+  isOabApiRequest,
 } = require('../electron/oab-auth-lifecycle');
 
 function webRequest(url, authorization = '') {
@@ -26,11 +27,11 @@ test('OAB desktop auth captures only the dedicated Electron session through webR
   const end = MAIN.indexOf('async function clearOabAuthSession', start);
   const body = MAIN.slice(start, end);
   assert.match(body, /oabAuthSession\(\)\.webRequest/);
-  assert.match(body, /onBeforeSendHeaders\(OAB_REPORT_CAPTURE_FILTER/);
+  assert.match(body, /onBeforeSendHeaders\(OAB_AUTH_CAPTURE_FILTER/);
   assert.match(body, /createOabAuthLifecycle/);
   assert.match(body, /networkReady = Promise\.resolve\(true\)/);
   assert.doesNotMatch(body, /webContents\.debugger|Network\.requestWillBeSent|Network\.enable|targetDebugger|remote-debugging|9223/);
-  assert.ok(body.indexOf('onBeforeSendHeaders(OAB_REPORT_CAPTURE_FILTER') < body.indexOf('loadLoginTarget(OAB_VIEWER_URL, true)'));
+  assert.ok(body.indexOf('onBeforeSendHeaders(OAB_AUTH_CAPTURE_FILTER') < body.indexOf('loadLoginTarget(OAB_VIEWER_URL, true)'));
 });
 
 test('OAB owns a persistent dedicated session and normal shutdown preserves it', () => {
@@ -143,6 +144,37 @@ test('Electron webRequest capture accepts only the real PASS report API Authoriz
   assert.equal(authorizationHeaderFromRequest(webRequest('https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/x')), '');
 });
 
+test('Electron auth capture accepts Bearer traffic from the trusted PASS /pass namespace before report filters are applied', () => {
+  const token = 'Bearer ' + 'b'.repeat(48);
+  const bootstrap = webRequest('https://pass.prod.lcwaikiki.com/pass/common/security/api/v1.0/User/Profile', token);
+
+  assert.equal(isOabApiRequest(bootstrap, 'pass.prod.lcwaikiki.com'), true);
+  assert.equal(isReportApiRequest(bootstrap, 'pass.prod.lcwaikiki.com'), false);
+  assert.equal(authorizationHeaderFromRequest(bootstrap), token);
+
+  assert.equal(isOabApiRequest(webRequest('https://pass.prod.lcwaikiki.com/other/api', token), 'pass.prod.lcwaikiki.com'), false);
+  assert.equal(isOabApiRequest(webRequest('https://evil.example/pass/common/security/api', token), 'pass.prod.lcwaikiki.com'), false);
+});
+
+test('trusted PASS bootstrap request can finish auth without waiting for Report/GetReportData', async () => {
+  const token = 'Bearer ' + 'c'.repeat(48);
+  const validated = [];
+  const lifecycle = createOabAuthLifecycle({
+    apiHost: 'pass.prod.lcwaikiki.com',
+    uiHost: 'pass.lcwaikiki.com',
+    onAuthorization: async authorization => {
+      validated.push(authorization);
+      return authorization === token;
+    },
+  });
+
+  const bootstrap = webRequest('https://pass.prod.lcwaikiki.com/pass/common/security/api/v1.0/User/Profile', token);
+  assert.equal(await lifecycle.onNetworkRequest(bootstrap), true);
+  assert.deepEqual(validated, [token]);
+  assert.equal(lifecycle.snapshot().phase, 'backend-validated');
+  assert.equal(lifecycle.snapshot().stopped, true);
+});
+
 test('interactive lifecycle waits for login, retries viewer in a bounded way, then resolves only after backend validation', async () => {
   let clock = 1000;
   const phases = [];
@@ -155,6 +187,7 @@ test('interactive lifecycle waits for login, retries viewer in a bounded way, th
     apiHost: 'pass.prod.lcwaikiki.com',
     uiHost: 'pass.lcwaikiki.com',
     viewerKickIntervalMs: 1000,
+    viewerSettleMs: 1000,
     maxViewerKicks: 3,
     now: () => clock,
     onPhase: phase => phases.push(phase),
@@ -213,6 +246,7 @@ test('stale lifecycle state can be reset before reopening the real PASS viewer',
     apiHost: 'pass.prod.lcwaikiki.com',
     uiHost: 'pass.lcwaikiki.com',
     viewerKickIntervalMs: 1000,
+    viewerSettleMs: 1000,
     now: () => clock,
   });
   await lifecycle.observe({ url: 'https://login.microsoftonline.com/common/oauth2/authorize', signIn: true });
@@ -224,6 +258,29 @@ test('stale lifecycle state can be reset before reopening the real PASS viewer',
   assert.equal(lifecycle.snapshot().phase, 'opening');
 });
 
+test('viewer gets a settle window after login instead of being reloaded every few seconds', async () => {
+  let clock = 1000;
+  let kicks = 0;
+  const lifecycle = createOabAuthLifecycle({
+    apiHost: 'pass.prod.lcwaikiki.com',
+    uiHost: 'pass.lcwaikiki.com',
+    viewerKickIntervalMs: 1000,
+    viewerSettleMs: 10000,
+    now: () => clock,
+    onViewerKick: async () => { kicks += 1; return true; },
+  });
+
+  const viewer = 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report';
+  await lifecycle.observe({ url: viewer, signIn: false });
+  clock += 5000;
+  await lifecycle.observe({ url: viewer, signIn: false });
+  assert.equal(kicks, 0, 'viewer henüz yüklenirken yeniden yönlendirilmemeli');
+
+  clock += 6000;
+  await lifecycle.observe({ url: viewer, signIn: false });
+  assert.equal(kicks, 1, 'settle süresi dolduktan sonra tek bounded retry yapılabilir');
+});
+
 test('busy navigation does not consume the bounded viewer retry budget', async () => {
   let clock = 1000;
   let navigationBusy = true;
@@ -232,6 +289,7 @@ test('busy navigation does not consume the bounded viewer retry budget', async (
     apiHost: 'pass.prod.lcwaikiki.com',
     uiHost: 'pass.lcwaikiki.com',
     viewerKickIntervalMs: 1000,
+    viewerSettleMs: 1000,
     maxViewerKicks: 2,
     now: () => clock,
     onViewerKick: async () => {
