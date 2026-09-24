@@ -42,7 +42,7 @@ class BuyerLogUpdater{
     const prior=local.releaseSource??process.env.BUYER_LOG_RELEASE_SOURCE??base.releaseSource??'';
     const source=migration&&prior&&!String(prior).startsWith('github:')?migration:(prior||migration);
     const channel=String(local.channel||process.env.BUYER_LOG_UPDATE_CHANNEL||base.channel||'stable').toLowerCase();
-    return {enabled:(local.enabled??base.enabled??true)!==false,provider:String(source).startsWith('github:')?'github':'folder',releaseSource:sanitizeSource(source),channel:['stable','test'].includes(channel)?channel:'stable',checkIntervalHours:Math.max(1,Number(local.checkIntervalHours??base.checkIntervalHours??6)||6),startupDelayMs:Math.max(1000,Number(local.startupDelayMs??base.startupDelayMs??8000)||8000)};
+    return {enabled:(local.enabled??base.enabled??true)!==false,provider:String(source).startsWith('github:')?'github':'folder',releaseSource:sanitizeSource(source),channel:['stable','test'].includes(channel)?channel:'stable',checkIntervalHours:Math.max(1,Number(local.checkIntervalHours??base.checkIntervalHours??6)||6),startupDelayMs:Math.max(0,Number(local.startupDelayMs??base.startupDelayMs??0)||0)};
   }
   configure(patch,base={}){
     const before=this.config(base), next={...before};

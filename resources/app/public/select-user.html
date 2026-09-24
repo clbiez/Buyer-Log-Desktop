@@ -54,6 +54,14 @@
         </div>
       </div>
 
+      <div class="startupUpdateNotice" id="startupUpdateNotice" hidden role="status" aria-live="polite">
+        <div class="startupUpdateIcon" aria-hidden="true">↑</div>
+        <div class="startupUpdateCopy">
+          <strong id="startupUpdateTitle">Güncelleme Mevcut</strong>
+          <span id="startupUpdateText"></span>
+        </div>
+      </div>
+
       <form class="loginForm" id="loginForm" autocomplete="on" novalidate>
         <div class="field" id="usernameField">
           <label for="username" id="usernameLabel">Kullanıcı adı</label>
@@ -113,6 +121,9 @@
   let hubBusy = false;
   let hubStatus = null;
   let hubPollTimer = 0;
+  let updatePollTimer = 0;
+  let updateUnsubscribe = null;
+  let lastUpdateStatus = null;
 
   const $ = id => document.getElementById(id);
   const tr = (trText, enText) => lang === 'en' ? enText : trText;
@@ -123,6 +134,47 @@
     const words = String(value || '').trim().split(/\s+/).filter(Boolean);
     if (!words.length) return 'BL';
     return (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : '')).toLocaleUpperCase('tr-TR').slice(0, 2);
+  }
+
+  function renderStartupUpdate(status) {
+    lastUpdateStatus = status || null;
+    const notice = $('startupUpdateNotice');
+    if (!notice) return;
+    const code = String(status && status.state || '').toUpperCase();
+    const version = String(status && (status.pendingVersion || status.latestVersion) || '').trim();
+    const available = Boolean(status && version && (
+      status.pendingReady === true ||
+      ['UPDATE_AVAILABLE','DOWNLOADING','VERIFYING','READY_TO_INSTALL'].includes(code)
+    ));
+    notice.hidden = !available;
+    if (!available) return;
+    $('startupUpdateTitle').textContent = tr('Güncelleme Mevcut', 'Update Available');
+    $('startupUpdateText').textContent = status.pendingReady
+      ? tr(`Buyer Log ${version} hazır. Program yeniden başlatıldığında otomatik kurulacak.`, `Buyer Log ${version} is ready. It will install automatically after restart.`)
+      : tr(`Buyer Log ${version} bulundu. Güncelleme hazırlanıyor…`, `Buyer Log ${version} was found. Preparing the update…`);
+    notice.dataset.state = status.pendingReady ? 'ready' : 'available';
+  }
+
+  function stopStartupUpdatePolling() {
+    if (updatePollTimer) clearInterval(updatePollTimer);
+    updatePollTimer = 0;
+  }
+
+  function initStartupUpdateStatus() {
+    const api = window.buyerLogDesktop && window.buyerLogDesktop.updates;
+    if (!api || typeof api.status !== 'function') return;
+
+    const refresh = async () => {
+      try { renderStartupUpdate(await api.status('')); }
+      catch (_) { /* updater erişilemezse giriş akışı etkilenmez */ }
+    };
+
+    if (typeof api.onStatus === 'function') {
+      updateUnsubscribe = api.onStatus(status => renderStartupUpdate(status));
+    }
+    void refresh();
+    updatePollTimer = setInterval(() => { void refresh(); }, 350);
+    setTimeout(stopStartupUpdatePolling, 15000);
   }
 
   function translate() {
@@ -568,6 +620,7 @@
   $('lang').addEventListener('click', () => {
     lang = lang === 'tr' ? 'en' : 'tr';
     translate();
+    if (lastUpdateStatus) renderStartupUpdate(lastUpdateStatus);
   });
 
   async function runUserBootstrap() {
@@ -732,6 +785,7 @@
   translate();
   renderSelected();
   renderLoginButton();
+  initStartupUpdateStatus();
   loadHubStatus().then(status => {
     // Sync status never decides whether the user may type/search/sign in.
     restoreLastUser();

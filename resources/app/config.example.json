@@ -24,6 +24,6 @@
     "releaseSource": "",
     "channel": "stable",
     "checkIntervalHours": 6,
-    "startupDelayMs": 8000
+    "startupDelayMs": 0
   }
 }

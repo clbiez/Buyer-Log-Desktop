@@ -233,11 +233,12 @@ async function runUpdateCheck(options={}) {
 
 function scheduleUpdateChecks() {
   if(!updater||!app.isPackaged)return;
-  if(updateStartupTimer)clearTimeout(updateStartupTimer);
+  if(updateStartupTimer){clearTimeout(updateStartupTimer);updateStartupTimer=null;}
   if(updatePeriodicTimer)clearInterval(updatePeriodicTimer);
   const cfg=updater.config(updaterBaseConfig());
-  updateStartupTimer=setTimeout(()=>{void runUpdateCheck({manual:false}).catch(()=>{});},cfg.startupDelayMs);
-  if(updateStartupTimer.unref)updateStartupTimer.unref();
+  // Açılış kontrolü login/renderer beklemez: uygulama ayağa kalkarken hemen
+  // başlar. Ağ veya release kaynağı yavaşsa Buyer Log yine bloklanmadan açılır.
+  void runUpdateCheck({manual:false}).catch(()=>{});
   updatePeriodicTimer=setInterval(()=>{void runUpdateCheck({manual:false}).catch(()=>{});},cfg.checkIntervalHours*60*60*1000);
   if(updatePeriodicTimer.unref)updatePeriodicTimer.unref();
 }
@@ -1258,7 +1259,6 @@ function createMainWindow(origin) {
           });
         }
       } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
-      scheduleUpdateChecks();
     },
   });
   log('Çoklu sekme çalışma alanı yükleniyor: ' + origin);
@@ -1861,6 +1861,10 @@ function bootstrap() {
     } catch (error) {
       log('config.json hazırlanamadı: ' + error.message);
     }
+
+    // Güncelleme kontrolü backend/login akışından bağımsızdır. Böylece kullanıcı
+    // giriş ekranını görmeden önce bile STABLE manifest kontrolü başlamış olur.
+    scheduleUpdateChecks();
 
     const started = await startBuyerLog();
     if (!started) log('Başlatma tamamlanamadı; hata ekranı gösteriliyor.');
