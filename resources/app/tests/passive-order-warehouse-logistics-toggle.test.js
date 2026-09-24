@@ -76,7 +76,7 @@ test('Orders logistics toggle opens and closes the correct detail row after rere
   // Hücre çizimi ve detay satırı aynı kümeyi okur.
   assert.match(js, /function cpLogisticStatusCellHtml\(row,tableKey='cp'\)/);
   assert.match(js, /const expanded=cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)/);
-  assert.match(js, /function cpLogisticDetailRowHtml\(row,cols,withChk,tableKey='cp'\)\{\s*\n\s*if\(!cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)\) return '';/);
+  assert.match(js, /function cpLogisticDetailRowHtml\(row,cols,withChk,tableKey='cp'\)\{\s*\n\s*if\(row&&row\._partialViewActive\)return '';\s*\n\s*if\(!cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)\) return '';/);
   // Tablo kimliği hücre çizim zincirinde taşınır.
   assert.match(js, /opts\.cellHtmlFn\(c,r,cf,tableKey\):cellHtml\(c,r,cf,tableKey\)/);
   assert.match(js, /function ordersCellHtml\(column,row,flags,tableKey='orders'\)/);
@@ -94,7 +94,7 @@ test('Orders logistics toggle opens and closes the correct detail row after rere
   // üretir ve açık satır varken sanallaştırmayı devre dışı bırakır.
   const ordersRender = js.slice(js.indexOf("renderFullTable('ordersTable','orders'"));
   assert.match(ordersRender.slice(0, 1200), /detailRowHtmlFn:\(r,cols,withChk\)=>cpLogisticDetailRowHtml\(r,cols,withChk,'orders'\), detailRowClass:'cpLogisticDetailRow'/);
-  assert.match(ordersRender.slice(0, 1200), /hasExpandedRows:state\.ordersLogisticExpanded\.size>0/);
+  assert.match(ordersRender.slice(0, 1200), /hasExpandedRows:!partialViewEnabled\('orders'\)&&state\.ordersLogisticExpanded\.size>0/);
 
   // Detay satırı Siparişler tablosunda da görünür olmalı (CP'ye özel CSS değil).
   const css = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');

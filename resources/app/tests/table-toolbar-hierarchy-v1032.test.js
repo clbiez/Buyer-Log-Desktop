@@ -42,7 +42,8 @@ test('v10.32 Collection birincil eylemi önde, seçili kapsamı açık ve silme 
 test('v10.32 çalışma alanı meta bilgisi her çizimde gerçek satır kapsamından güncellenir', () => {
   assert.match(APP, /ordersWorkspaceMeta/);
   assert.match(APP, /kolWorkspaceMeta/);
-  assert.match(APP, /rows\.length.*state\.orders\.rows\.length/);
+  assert.match(APP, /const totalRowCount=partialViewEnabled\('orders'\)\?partialViewRows\('orders',state\.orders\.rows\)\.length:state\.orders\.rows\.length;/);
+  assert.match(APP, /rows\.length.*totalRowCount/);
   assert.match(APP, /logicalRows\.length.*kolRows\.length/);
 });
 

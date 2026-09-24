@@ -288,7 +288,7 @@ test('v6.61 tüm parsiyellerin durumu aynıysa Status değeri tekilleştirilir',
 
 test('v6.61 CP/Orders Status hücresi parsiyel detaylarında çoklu durum özetini kullanır', () => {
   const js = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-  assert.match(js, /case 'status': return cpLogisticHasDetails\(r\) \? cpLogisticStatusCellHtml\(r,tableKey\)/);
+  assert.match(js, /case 'status': return r&&r\._partialViewActive \? partialViewStatusCellHtml\(r\) : cpLogisticHasDetails\(r\) \? cpLogisticStatusCellHtml\(r,tableKey\)/);
   assert.match(js, /const partials=all\.filter\(segment=>segment&&segment\.kind==='partial'\)/);
 });
 

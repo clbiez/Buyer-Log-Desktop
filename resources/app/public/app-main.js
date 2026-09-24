@@ -3363,6 +3363,19 @@ const TABLE_VIEW_PRESETS = Object.freeze({
 const TABLE_VIEW_FOCUS_KEY = 'lcw.tableViewFocus.v1';
 const TABLE_VIEW_EDITABLE_PRESETS = Object.freeze(['focus','extended']);
 const tableViewLastAppliedPreset=Object.create(null);
+
+// CP / Orders Partial View yalnız SATIR sunumunu değiştirir. Sütun presetlerinden
+// bilerek bağımsızdır; Focus / Extended / All seçimi olduğu gibi kalır.
+const partialViewState={cp:false,orders:false};
+function partialViewEnabled(tableKey){return (tableKey==='cp'||tableKey==='orders')&&partialViewState[tableKey]===true;}
+function setPartialView(tableKey,enabled){
+  if(tableKey!=='cp'&&tableKey!=='orders')return false;
+  partialViewState[tableKey]=!!enabled;
+  cpLogisticExpandedSet(tableKey).clear();
+  renderTableViewContext(tableKey);
+  if(tableKey==='cp')renderCP();else renderOrders();
+  return true;
+}
 function tableViewPresetStored(){
   try{
     const value=JSON.parse(BLStorage.getItem(TABLE_VIEW_FOCUS_KEY)||'null');
@@ -3488,9 +3501,11 @@ function renderTableViewContext(tableKey){
   const all=tableViewAllKeys(tableKey),hidden=tableViewHiddenKeys(tableKey),visible=all.filter(key=>!hidden.has(key)).length,preset=tableViewPresetState(tableKey);
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
+  root.querySelectorAll('[data-partial-view-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(partialViewEnabled(button.dataset.partialViewToggle))));
   const name=preset==='focus'?(appLang==='en'?'Focus':'Odak'):preset==='extended'?'Extended':preset==='all'?(appLang==='en'?'All':'Tümü'):(appLang==='en'?'Custom':'Özel');
   const hint=appLang==='en'?'Arrow keys move cells':'Ok tuşları hücrelerde ilerler';
-  status.textContent=`${name} · ${visible} / ${all.length} ${appLang==='en'?'columns':'sütun'} · ${hint}`;
+  const partial=partialViewEnabled(tableKey)?' · Partial View':'';
+  status.textContent=`${name} · ${visible} / ${all.length} ${appLang==='en'?'columns':'sütun'}${partial} · ${hint}`;
 }
 function applyTableViewPreset(tableKey,preset){
   const all=tableViewAllKeys(tableKey);if(!all.length||!TABLE_VIEW_PRESETS[tableKey]||!['focus','extended','all'].includes(preset))return false;
@@ -3513,6 +3528,11 @@ function applyTableViewPreset(tableKey,preset){
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button)return;
   applyTableViewPreset(button.dataset.tableKey,button.dataset.tableViewPreset);
+});
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('[data-partial-view-toggle]');if(!button)return;
+  const tableKey=button.dataset.partialViewToggle;
+  setPartialView(tableKey,!partialViewEnabled(tableKey));
 });
 function openTableViewFocusEditor(tableKey,preset='focus'){
   if(!TABLE_VIEW_EDITABLE_PRESETS.includes(preset))return;
@@ -4239,6 +4259,69 @@ function cpLogisticHasDetails(row){ return cpLogisticSegments(row).length>0; }
    kümesi de tablo başına ayrıdır. Tek kanonik erişim noktası burasıdır: hücre
    çizimi, detay satırı ve tıklama işleyicisi aynı kümeyi okur. */
 function cpLogisticExpandedSet(tableKey){ return tableKey==='orders'?state.ordersLogisticExpanded:state.cpLogisticExpanded; }
+
+// Partial View mevcut lojistik segmentleri STATUS etiketi bazında tekilleştirir.
+// Normal görünümün "tek sipariş satırı + çoklu etiket" davranışına dokunmaz.
+// Burada production/shortage dahil TÜM segmentler kullanılır; böylece Status
+// alt toplamı siparişin yalnız yüklenmiş kısmını değil üretim bakiyesini de kapsar.
+function partialViewStatusGroups(row){
+  const segments=cpLogisticSegments(row).filter(Boolean);
+  if(!segments.length){
+    return [{status:norm(row&&row.STATUS)||'Durum Belirsiz',quantity:Math.max(0,toNum(row&&row['Order Quantity'])||0),priority:0,segments:[]}];
+  }
+  const groups=[],byKey=new Map();
+  segments.forEach(segment=>{
+    const status=norm(segment.status)||norm(row&&row.STATUS)||'Durum Belirsiz';
+    const key=turknorm(status)||status;
+    let group=byKey.get(key);
+    if(!group){group={status,quantity:0,priority:Number(segment.priority)||2,segments:[]};byKey.set(key,group);groups.push(group);}
+    group.quantity+=Math.max(0,toNum(segment.quantity)||0);
+    group.priority=Math.min(group.priority,Number(segment.priority)||2);
+    group.segments.push(segment);
+  });
+  return groups.sort((a,b)=>a.priority-b.priority);
+}
+function partialViewRows(tableKey,rows){
+  if(!partialViewEnabled(tableKey))return Array.isArray(rows)?rows:[];
+  const out=[];
+  (Array.isArray(rows)?rows:[]).forEach(row=>{
+    partialViewStatusGroups(row).forEach((group,index)=>{
+      const segments=group.segments||[],primary=segments[0]||null;
+      const copy={...row,
+        _partialViewActive:true,
+        _partialViewSourceId:row&&row._id,
+        _partialViewIndex:index,
+        _partialViewStatusQuantity:group.quantity,
+        _logisticSegments:segments,
+        _logisticStatusValues:[group.status],
+        STATUS:group.status,
+      };
+      copy._logisticDelTypeValues=[...new Set(segments.map(s=>normalizeTransitDelType(s.delType)||norm(s.delType)).filter(Boolean))];
+      copy._logisticArrivalValues=segments.map(s=>coerceDateLoose(s.arrival)).filter(Boolean);
+      if(primary){
+        copy['Ant. Arrival']=coerceDateLoose(primary.arrival);
+        copy['Del. Type']=normalizeTransitDelType(primary.delType)||norm(primary.delType);
+        copy['HANDOVER Tarihi']=coerceDateLoose(primary.handover);
+      }
+      out.push(copy);
+    });
+  });
+  return out;
+}
+function partialViewUniqueSourceRows(rows){
+  const seen=new Set(),out=[];
+  (Array.isArray(rows)?rows:[]).forEach(row=>{
+    const key=row&&row._partialViewActive?(row._partialViewSourceId??row._id):row&&row._id;
+    if(seen.has(key))return;
+    seen.add(key);out.push(row);
+  });
+  return out;
+}
+function partialViewStatusCellHtml(row){
+  const status=norm(row&&row.STATUS)||'Durum Belirsiz';
+  const quantity=Math.max(0,toNum(row&&row._partialViewStatusQuantity)||0);
+  return `<td class="cpLogisticStatusTd partialViewStatusTd" title="${escapeHtml(statusDisplay(status))}: ${fmtInt(quantity)}"><div class="cpLogisticSummaryStack"><span class="cpLogisticSummaryItem">${badge(escapeHtml(statusDisplay(status)),statusTone(status))}<b>${fmtInt(quantity)}</b></span></div></td>`;
+}
 function cpLogisticStatusGroups(row){
   const all=cpLogisticSegments(row);
   const partials=all.filter(segment=>segment&&segment.kind==='partial');
@@ -4307,6 +4390,7 @@ function cpLogisticSegmentTitle(segment){
   return `${appLang==='en'?'Partial':'Parsiyel'} ${segment.partialNo||''}`.trim();
 }
 function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
+  if(row&&row._partialViewActive)return '';
   if(!cpLogisticExpandedSet(tableKey).has(row._id)) return '';
   const segments=cpLogisticSegments(row); if(!segments.length) return '';
   const total=Math.max(0,toNum(row._logisticTotalQty)||toNum(row['Order Quantity'])||0);
@@ -4428,7 +4512,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       if(rev) return `<td${title}>${revisionHtml(c.k, rev, value=>badge(priorityDisplay(value)||'—', priorityTone(value)))}</td>`;
       return `<td${title}>${badge(priorityDisplay(v)||'—', priorityTone(v))}</td>`;
     }
-    case 'status': return cpLogisticHasDetails(r) ? cpLogisticStatusCellHtml(r,tableKey) : `<td>${badge(escapeHtml(statusDisplay(v)||'—'), statusTone(v))}</td>`;
+    case 'status': return r&&r._partialViewActive ? partialViewStatusCellHtml(r) : cpLogisticHasDetails(r) ? cpLogisticStatusCellHtml(r,tableKey) : `<td>${badge(escapeHtml(statusDisplay(v)||'—'), statusTone(v))}</td>`;
     case 'active': { const t = norm(v)==='Active'?'green':'gray'; return `<td>${badge(norm(v), t)}</td>`; }
     case 'ordercode': return `<td class="num"${oc?' data-ordercode-cell="1"':''} data-copy-text="${escapeHtml(oc||'')}">${oc?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${ORDER_URL(oc)}">${fmtOC(oc)}</a>`:''}${outlookRowActionHtml('',id)}</td>`;
     case 'retail': return `<td>${(v&&oc)?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${SHIP_URL(oc)}">${fmtDate(v)}</a>`:fmtDate(v)}</td>`;
@@ -4550,6 +4634,7 @@ function cellPlainText(c,r,cf){
   // (imagemap) bir model _imageRef taşımasa da "Görsel mevcut"tur; aksi hâlde
   // panodaki <img> ile TSV metni birbirini tutmuyordu.
   if(c.type==='cpImage') return cpOrdersRowImageIdentity(r)?(appLang==='en'?'Image available':'Görsel mevcut'):(appLang==='en'?'No image':'Görsel yok');
+  if(r&&r._partialViewActive&&c.k==='STATUS') return `${statusDisplay(r.STATUS)} ${fmtInt(r._partialViewStatusQuantity)}`;
   if(cpLogisticHasDetails(r)&&c.k==='STATUS') return cpLogisticStatusPlainText(r);
   if(cpLogisticHasDetails(r)&&c.k==='Ant. Arrival') return cpLogisticArrivalPlainText(r);
   if(cpLogisticHasDetails(r)&&(c.type==='deltype'||c.k==='Del. Type')) return cpLogisticDelTypePlainText(r);
@@ -5082,8 +5167,9 @@ function uniqueColValues(tableKey, key){
   const vals = new Set();
   rowsForFilterUniverse(tableKey, key).forEach(r=>{
     if((tableKey==='cp'||tableKey==='orders')&&key==='Priority'){const code=actionPriorityCode(r&&r['Priority']);if(code)vals.add(code);}
-    else if(tableKey==='cp'&&key==='STATUS'&&cpLogisticHasDetails(r)) (r._logisticStatusValues||cpLogisticSegments(r).map(s=>s.status)).forEach(v=>vals.add(norm(v)));
-    else if(tableKey==='cp'&&key==='Del. Type'&&cpLogisticHasDetails(r)) (r._logisticDelTypeValues||cpLogisticSegments(r).map(s=>s.delType)).forEach(v=>vals.add(normalizeTransitDelType(v)||norm(v)));
+    else if((tableKey==='cp'||tableKey==='orders')&&key==='STATUS'&&r&&r._partialViewActive) vals.add(norm(r.STATUS));
+    else if((tableKey==='cp'||tableKey==='orders')&&key==='STATUS'&&cpLogisticHasDetails(r)) (r._logisticStatusValues||cpLogisticSegments(r).map(s=>s.status)).forEach(v=>vals.add(norm(v)));
+    else if((tableKey==='cp'||tableKey==='orders')&&key==='Del. Type'&&cpLogisticHasDetails(r)) (r._logisticDelTypeValues||cpLogisticSegments(r).map(s=>s.delType)).forEach(v=>vals.add(normalizeTransitDelType(v)||norm(v)));
     else vals.add(cellPlainText(col,r));
   });
   const out=[...vals];
@@ -5091,7 +5177,7 @@ function uniqueColValues(tableKey, key){
 }
 function uniqueDateBuckets(tableKey, key, gran){
   const vals = new Set(); rowsForFilterUniverse(tableKey, key).forEach(r=>{
-    const values=(tableKey==='cp'&&key==='Ant. Arrival'&&cpLogisticHasDetails(r))?(r._logisticArrivalValues||cpLogisticSegments(r).map(s=>s.arrival)):[r[key]];
+    const values=((tableKey==='cp'||tableKey==='orders')&&key==='Ant. Arrival'&&cpLogisticHasDetails(r))?(r._logisticArrivalValues||cpLogisticSegments(r).map(s=>s.arrival)):[r[key]];
     values.forEach(value=>vals.add(dateBucketKey(value, gran)));
   });
   return [...vals].sort();
@@ -5440,8 +5526,11 @@ function formatQuantityTotal(value){
 }
 function tableVisibleSelectedCount(rows,selectedSet,getId){
   if(!selectedSet||typeof selectedSet.has!=='function')return 0;
-  const resolve=typeof getId==='function'?getId:(row=>row&&row._id);
-  return (rows||[]).reduce((count,row)=>count+(selectedSet.has(resolve(row))?1:0),0);
+  const resolve=typeof getId==='function'?getId:(row=>row&&row._id),seen=new Set();
+  return (rows||[]).reduce((count,row)=>{
+    const id=resolve(row);if(seen.has(id))return count;seen.add(id);
+    return count+(selectedSet.has(id)?1:0);
+  },0);
 }
 function selectionFooterCellHtml(count){
   const includeTotal=arguments[1]===true;
@@ -5466,14 +5555,17 @@ function updateSelectionFooterCount(table,rows,selectedSet,getId){
 }
 function renderQuantityTotalsFooter(table,rows,cols,options={}){
   if(!table)return;
+  const statusRows=Array.isArray(options.statusRows)?options.statusRows:rows;
+  if(Array.isArray(options.totalRows))rows=options.totalRows;
   const quantityCols=cols.map((c,i)=>isQuantityLikeColumn(c)?i:-1).filter(i=>i>=0);
   const withCheck=options.withCheck!==false;
+  const statusSubtotal=options.statusSubtotal&&typeof options.statusSubtotal==='object'?options.statusSubtotal:null;
   // v10.11 — isteğe bağlı: Map<sütunAnahtarı,{label,getQty?}>. Verilen sütun
   // hücresi toplam yerine Koleksiyon'daki ile aynı ağırlıklı/aritmetik
   // ortalama kartını basar (kolAverageFooter).
   const averageCols=options.averageCols instanceof Map ? options.averageCols : null;
   let foot=table.tFoot;
-  if(!quantityCols.length&&!withCheck&&!(averageCols&&averageCols.size)){if(foot)foot.remove();return;}
+  if(!quantityCols.length&&!withCheck&&!(averageCols&&averageCols.size)&&!statusSubtotal){if(foot)foot.remove();return;}
   if(!foot)foot=table.createTFoot();
   const getValue=options.getValue||((row,c)=>row[c.k]);
   const cells=[];
@@ -5484,6 +5576,12 @@ function renderQuantityTotalsFooter(table,rows,cols,options={}){
   for(let i=0;i<Number(options.leading||0);i++)cells.push('<td class="quantityTotalSpacer"></td>');
   let labelPlaced=withCheck&&quantityCols.length>0;
   cols.forEach((c,i)=>{
+    if(statusSubtotal&&c.k===statusSubtotal.key){
+      const getQty=typeof statusSubtotal.getQty==='function'?statusSubtotal.getQty:(row=>row&&row._partialViewStatusQuantity);
+      const total=(statusRows||[]).reduce((sum,row)=>sum+tableNumericValue(getQty(row)),0);
+      cells.push(`<td class="quantityTotalValue partialStatusSubtotal"><span class="partialStatusSubtotalLabel">${escapeHtml(appLang==='en'?'Subtotal':'Alt toplam')}</span><strong>${formatQuantityTotal(total)}</strong></td>`);
+      return;
+    }
     const averageSpec=averageCols&&averageCols.get(c.k);
     if(averageSpec){
       const price=row=>getValue(row,c);
@@ -6142,7 +6240,8 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     // ortalama desenini paylaşır (kolWeightedAverage/kolArithmeticAverage,
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
     // aktif filtreyi yansıtır (bkz. filteredCP()/filteredOrders()).
-    renderQuantityTotalsFooter(table,rows,cols,{withCheck:true,selectedSet:selSet,getId:row=>row._id,getValue:(row,c)=>row[c.k],averageCols:cpOrdersAverageFooterCols(tableKey)});
+    const footerRows=partialViewEnabled(tableKey)?partialViewUniqueSourceRows(rows):rows;
+    renderQuantityTotalsFooter(table,rows,cols,{withCheck:true,selectedSet:selSet,getId:row=>row._id,getValue:(row,c)=>row[c.k],averageCols:cpOrdersAverageFooterCols(tableKey),totalRows:footerRows,statusRows:rows,statusSubtotal:partialViewEnabled(tableKey)?{key:'STATUS',getQty:row=>row&&row._partialViewStatusQuantity}:null});
     if(opts.withGroups&&table.tFoot?.rows?.[0])applyGroupedBoundariesToRow(table.tFoot.rows[0],cols,1);
   }else if(typeof opts.footerHtmlFn==='function'){
     let tfoot=table.querySelector('tfoot');if(!tfoot){tfoot=document.createElement('tfoot');table.appendChild(tfoot);}tfoot.innerHTML=opts.footerHtmlFn(rows,cols)||'';
@@ -7419,7 +7518,8 @@ function filteredCP(){
   // final user decision used by the visible CP table.
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const ctx=cpBuildFilterContext();
-  let rows=state.cp.rows.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
+  const source=partialViewRows('cp',state.cp.rows);
+  let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
   return rows;
 }
@@ -7518,11 +7618,13 @@ function renderCPNow(){
   document.getElementById('cpContent').style.display='block';
   // Tek gecis: sonuc kumesi + bes capraz kapsam + "Tumu" ayni taramadan gelir.
   const scope = cpEvaluateAll();
-  const rows = state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all;
-  const qtySumCP = rows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
-  const cpStats=pageModelOptionStats(rows);
+  const rows = partialViewEnabled('cp') ? filteredCP() : (state.cpSort.key ? sortRows(scope.all, state.cpSort.key, state.cpSort.dir) : scope.all);
+  const metricRows=partialViewEnabled('cp')?partialViewUniqueSourceRows(rows):rows;
+  const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
+  const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
+  const cpStats=pageModelOptionStats(metricRows);
   const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon`;
-  const cpScopeText=`${cpLabel} · ${rows.length} / ${state.cp.rows.length} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qtySumCP.toLocaleString('tr-TR')}`;
+  const cpScopeText=`${cpLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qtySumCP.toLocaleString('tr-TR')}`;
   document.getElementById('cpCount').textContent = cpScopeText;
   const cpWorkspaceMeta=document.getElementById('cpWorkspaceMeta');
   if(cpWorkspaceMeta)cpWorkspaceMeta.textContent=cpScopeText;
@@ -7530,7 +7632,7 @@ function renderCPNow(){
   renderActiveFilterContext('cp');
   const buckets = actionPriorityCounts(scope.pri);
   const statusCounts = {}; scope.status.forEach(r=>{
-    const values=cpLogisticHasDetails(r)?(r._logisticStatusValues||cpLogisticSegments(r).map(s=>s.status)):[r.STATUS];
+    const values=partialViewEnabled('cp')?partialViewStatusGroups(r).map(group=>group.status):(cpLogisticHasDetails(r)?(r._logisticStatusValues||cpLogisticSegments(r).map(s=>s.status)):[r.STATUS]);
     [...new Set(values.map(v=>norm(v)||'—'))].forEach(s=>{statusCounts[s]=(statusCounts[s]||0)+1;});
   });
   const delCounts = {}; scope.del.forEach(r=>{
@@ -7603,7 +7705,7 @@ function renderCPNow(){
     state.cpSort = {key, dir: state.cpSort.key===key ? -state.cpSort.dir : 1}; renderCP();
   }, {withGroups:true, computeFn:computeFlags, dirtySet:state.cpDirty, selectedSet:state.cpSelected, rerenderOuter:renderCP, onSelectionChange:updateShippingBtnVisibility,
     detailRowHtmlFn:(r,cols,withChk)=>cpLogisticDetailRowHtml(r,cols,withChk,'cp'), detailRowClass:'cpLogisticDetailRow',
-    virtualize:true, hasExpandedRows:state.cpLogisticExpanded.size>0});
+    virtualize:true, hasExpandedRows:!partialViewEnabled('cp')&&state.cpLogisticExpanded.size>0});
   bindCpImageCells();
   bindStatusBacklogDrilldown('cpTable','cp');
 }
@@ -7739,7 +7841,8 @@ function filteredOrders(){
   if(!state.orders)return [];
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('orders');
   const ctx=ordersBuildFilterContext();
-  let rows=state.orders.rows.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
+  const source=partialViewRows('orders',state.orders.rows);
+  let rows=source.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
 }
@@ -7804,11 +7907,13 @@ function renderOrdersNow(){
   document.getElementById('ordersEmpty').style.display='none';
   document.getElementById('ordersContent').style.display='block';
   const scope=ordersEvaluateAll();
-  const rows=state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all;
-  const qty=rows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
-  const ordersStats=pageModelOptionStats(rows);
+  const rows=partialViewEnabled('orders')?filteredOrders():(state.ordersSort.key?sortRows(scope.all,state.ordersSort.key,state.ordersSort.dir):scope.all);
+  const metricRows=partialViewEnabled('orders')?partialViewUniqueSourceRows(rows):rows;
+  const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
+  const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
+  const ordersStats=pageModelOptionStats(metricRows);
   const ordersLabel=appLang==='en'?`${ordersStats.modelCount} Model${ordersStats.modelCount===1?'':'s'} · ${ordersStats.optionCount} Option${ordersStats.optionCount===1?'':'s'}`:`${ordersStats.modelCount} Model · ${ordersStats.optionCount} Opsiyon`;
-  const ordersScopeText=`${ordersLabel} · ${rows.length} / ${state.orders.rows.length} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qty.toLocaleString('tr-TR')}`;
+  const ordersScopeText=`${ordersLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qty.toLocaleString('tr-TR')}`;
   document.getElementById('ordersCount').textContent=ordersScopeText;
   const ordersWorkspaceMeta=document.getElementById('ordersWorkspaceMeta');
   if(ordersWorkspaceMeta)ordersWorkspaceMeta.textContent=ordersScopeText;
@@ -7819,7 +7924,10 @@ function renderOrdersNow(){
   const inactiveCount=statusBase.filter(row=>norm(row['Active/Inactive'])==='Inactive').length;
   const seasonCounts={},statusCounts={},delCounts={};
   scope.season.forEach(row=>{const v=norm(row.Season)||'—';seasonCounts[v]=(seasonCounts[v]||0)+1;});
-  scope.status.forEach(row=>{const v=norm(row.STATUS)||'—';statusCounts[v]=(statusCounts[v]||0)+1;});
+  scope.status.forEach(row=>{
+    const values=partialViewEnabled('orders')?partialViewStatusGroups(row).map(group=>group.status):[row.STATUS];
+    [...new Set(values.map(value=>norm(value)||'—'))].forEach(v=>{statusCounts[v]=(statusCounts[v]||0)+1;});
+  });
   scope.del.forEach(row=>{const v=normalizeTransitDelType(row['Del. Type'])||norm(row['Del. Type'])||'—';delCounts[v]=(delCounts[v]||0)+1;});
   const buckets=actionPriorityCounts(scope.pri);
   const exfDefs=[['past',appLang==='en'?'Past':'Geçmiş','red'],['thisWeek',appLang==='en'?'This Week':'Bu Hafta','yellow'],['nextWeek',appLang==='en'?'Next Week':'Önümüzdeki Hafta','blue'],['thisMonth',appLang==='en'?'This Month':'Bu Ay','orange'],['nextMonth',appLang==='en'?'Next Month':'Önümüzdeki Ay','purple']];
@@ -7871,7 +7979,7 @@ function renderOrdersNow(){
     // Lojistik detay satırı CP ile aynı kanonik render zincirini kullanır; yalnız
     // açık satır kümesi Siparişler tablosuna aittir.
     detailRowHtmlFn:(r,cols,withChk)=>cpLogisticDetailRowHtml(r,cols,withChk,'orders'), detailRowClass:'cpLogisticDetailRow',
-    virtualize:true, hasExpandedRows:state.ordersLogisticExpanded.size>0});
+    virtualize:true, hasExpandedRows:!partialViewEnabled('orders')&&state.ordersLogisticExpanded.size>0});
   bindOrdersImageHover();
   bindStatusBacklogDrilldown('ordersTable','orders');
 }
