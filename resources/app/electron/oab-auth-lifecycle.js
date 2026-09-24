@@ -10,6 +10,7 @@
  */
 
 const DEFAULT_REPORT_API_PATH = '/pass/common/report/api/';
+const DEFAULT_API_PATH_PREFIX = '/pass/';
 const DEFAULT_VIEWER_PATH = '/v3/report/viewer';
 
 function clean(value) {
@@ -43,13 +44,29 @@ function isReportApiRequest(params, apiHost, reportApiPath = DEFAULT_REPORT_API_
   }
 }
 
+function isOabApiRequest(params, apiHost, apiPathPrefix = DEFAULT_API_PATH_PREFIX) {
+  const raw = clean(params && (params.url || (params.request && params.request.url)));
+  if (!raw) return false;
+  try {
+    const url = new URL(raw);
+    const prefix = String(apiPathPrefix || DEFAULT_API_PATH_PREFIX).toLowerCase();
+    return url.protocol === 'https:'
+      && url.hostname.toLowerCase() === String(apiHost || '').toLowerCase()
+      && url.pathname.toLowerCase().startsWith(prefix);
+  } catch (_) {
+    return false;
+  }
+}
+
 function createOabAuthLifecycle(options = {}) {
   const apiHost = String(options.apiHost || '').toLowerCase();
   const uiHost = String(options.uiHost || '').toLowerCase();
   const reportApiPath = options.reportApiPath || DEFAULT_REPORT_API_PATH;
+  const apiPathPrefix = options.apiPathPrefix || DEFAULT_API_PATH_PREFIX;
   const viewerPath = options.viewerPath || DEFAULT_VIEWER_PATH;
-  const maxViewerKicks = Math.max(1, Number(options.maxViewerKicks) || 4);
-  const viewerKickIntervalMs = Math.max(250, Number(options.viewerKickIntervalMs) || 1800);
+  const maxViewerKicks = Math.max(1, Number(options.maxViewerKicks) || 2);
+  const viewerKickIntervalMs = Math.max(500, Number(options.viewerKickIntervalMs) || 6000);
+  const viewerSettleMs = Math.max(1000, Number(options.viewerSettleMs) || 12000);
   const now = typeof options.now === 'function' ? options.now : Date.now;
   const onViewerKick = typeof options.onViewerKick === 'function' ? options.onViewerKick : async () => {};
   const onAuthorization = typeof options.onAuthorization === 'function' ? options.onAuthorization : async () => false;
@@ -139,7 +156,8 @@ function createOabAuthLifecycle(options = {}) {
     }
 
     const anchor = Math.max(viewerFirstSeenAt, lastViewerKickAt);
-    if (currentTime - anchor >= viewerKickIntervalMs) {
+    const requiredDelay = viewerKicks === 0 ? viewerSettleMs : viewerKickIntervalMs;
+    if (currentTime - anchor >= requiredDelay) {
       await attemptViewerKick('viewer-no-api-request', currentTime);
     }
     return snapshot();
@@ -147,7 +165,13 @@ function createOabAuthLifecycle(options = {}) {
 
   async function onNetworkRequest(params) {
     if (stopped || candidateBusy) return false;
-    if (!isReportApiRequest(params, apiHost, reportApiPath)) return false;
+    /* The PASS viewer may not issue a report request until its own filter
+       controls are populated. Waiting specifically for Report/GetReportData
+       therefore deadlocks the Buyer Log flow after a successful SSO login.
+       Accept a Bearer only from the exact trusted PASS API host + /pass/
+       namespace, then let the loopback backend validate that token against
+       the real report API before treating authentication as complete. */
+    if (!isOabApiRequest(params, apiHost, apiPathPrefix)) return false;
     const authorization = authorizationHeaderFromRequest(params);
     if (!authorization) return false;
 
@@ -192,8 +216,10 @@ function createOabAuthLifecycle(options = {}) {
 
 module.exports = {
   DEFAULT_REPORT_API_PATH,
+  DEFAULT_API_PATH_PREFIX,
   DEFAULT_VIEWER_PATH,
   authorizationHeaderFromRequest,
   isReportApiRequest,
+  isOabApiRequest,
   createOabAuthLifecycle,
 };
