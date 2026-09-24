@@ -3205,7 +3205,7 @@ async function saveCpNoteColumnDefs(nextDefs){
   syncCpNoteColumns(data.columns||nextDefs);
 }
 async function addCpNoteColumn(rerenderFn){
-  const name=String(prompt(appLang==='en'?'Name of the new note column:':'Yeni not sütununun adı:')||'').trim();
+  const name=await openHorizonTextInput({title:appLang==='en'?'Add note column':'Not sütunu ekle',label:appLang==='en'?'Name of the new note column':'Yeni not sütununun adı',confirmLabel:appLang==='en'?'Add':'Ekle'});
   if(!name)return false;
   if(CP_COLS.some(c=>String(c.label).toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))){
     showToast(appLang==='en'?'A column with that name already exists.':'Bu adda bir sütun zaten var.');
@@ -3221,7 +3221,7 @@ async function addCpNoteColumn(rerenderFn){
 }
 async function renameCpNoteColumn(id,rerenderFn){
   const def=CP_NOTE_COLUMN_DEFS.find(d=>d.id===id); if(!def)return;
-  const name=String(prompt(appLang==='en'?'New name:':'Yeni ad:',def.label)||'').trim();
+  const name=await openHorizonTextInput({title:appLang==='en'?'Rename note column':'Not sütununu yeniden adlandır',label:appLang==='en'?'New name':'Yeni ad',initial:def.label,confirmLabel:appLang==='en'?'Rename':'Yeniden adlandır'});
   if(!name||name===def.label)return;
   try{
     await saveCpNoteColumnDefs(CP_NOTE_COLUMN_DEFS.map(d=>d.id===id?{...d,label:name}:d));
@@ -14136,7 +14136,7 @@ document.getElementById('viewSaveBtn').addEventListener('click', async ()=>{
   }catch(err){ alert('Kaydedilemedi: '+err.message); }
 });
 document.getElementById('viewSaveAsBtn').addEventListener('click', async ()=>{
-  const name = prompt('Bu görünüme bir isim ver:'); if(!name) return;
+  const name=await openHorizonTextInput({title:appLang==='en'?'Save view':'Görünümü kaydet',label:appLang==='en'?'View name':'Görünüm adı',confirmLabel:appLang==='en'?'Save':'Kaydet'}); if(!name) return;
   const page=activeProfilePage(),data=collectViewState();
   try{
     const saved=await enqueueProfileMutation('view',()=>fetchJSON('/api/views',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,data}),expectedRevision:viewStore._revision}));
@@ -14190,7 +14190,7 @@ document.getElementById('viewDeleteBtn').addEventListener('click', async ()=>{
 async function renameProfile(kind){
   const select=document.getElementById(kind==='view'?'viewSelect':'filterSelect'),id=select?.value,page=activeProfilePage();
   const store=kind==='view'?viewStore:filterStore,item=profileItem(kind,id,page);if(!item)return;
-  const name=prompt('Yeni ad:',item.name);if(!name||name.trim()===item.name)return;
+  const name=await openHorizonTextInput({title:kind==='view'?(appLang==='en'?'Rename view':'Görünümü yeniden adlandır'):(appLang==='en'?'Rename filter':'Filtreyi yeniden adlandır'),label:appLang==='en'?'New name':'Yeni ad',initial:item.name,confirmLabel:appLang==='en'?'Rename':'Yeniden adlandır'});if(!name||name===item.name)return;
   const data=item.data;
   try{
     const saved=await enqueueProfileMutation(kind,()=>fetchJSON(`/api/${kind==='view'?'views':'filter-profiles'}/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name.trim(),data}),expectedRevision:(kind==='view'?viewStore:filterStore)._revision}));
@@ -14262,7 +14262,7 @@ document.getElementById('filterSaveBtn').addEventListener('click', async ()=>{
   }catch(err){ alert('Kaydedilemedi: '+err.message); }
 });
 document.getElementById('filterSaveAsBtn').addEventListener('click', async ()=>{
-  const name = prompt('Bu filtreye bir isim ver:'); if(!name) return;
+  const name=await openHorizonTextInput({title:appLang==='en'?'Save filter':'Filtreyi kaydet',label:appLang==='en'?'Filter name':'Filtre adı',confirmLabel:appLang==='en'?'Save':'Kaydet'}); if(!name) return;
   const page=activeProfilePage(),data=collectFilterState();
   try{
     const saved=await enqueueProfileMutation('filter',()=>fetchJSON('/api/filter-profiles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,data}),expectedRevision:filterStore._revision}));
