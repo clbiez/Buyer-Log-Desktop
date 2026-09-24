@@ -13,10 +13,10 @@ const intake = require('../server/lib/intake-report');
 
 test('INTAKE pivot settings OAB ile aynı ana kontrolleri taşır', () => {
   for (const marker of [
-    'intakeGroupedViewInput', 'intakeShowSubtotalsInput', 'intakePivotRowsList',
+    'intakeGroupedViewInput', 'intakeShowSubtotalsInput', 'intakeHideZeroBudgetInput', 'intakePivotRowsList',
     'intakePivotColsList', 'intakePivotValuesList', 'intakePivotValueAgg',
     'Pivot Rows', 'Pivot Columns', 'Pivot Values', 'Grouped pivot view',
-    'Show subtotals and grand total',
+    'Show subtotals and grand total', 'Hide rows where Current Purchase Budget is 0',
   ]) assert.ok(intakeUi.includes(marker), `INTAKE UI marker missing: ${marker}`);
   for (const agg of ['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'FIRST']) assert.ok(intakeUi.includes(`'${agg}'`), `Aggregate missing: ${agg}`);
 });
@@ -31,11 +31,12 @@ test('INTAKE aggregate ve grouped görünüm ayarları reconcile sırasında kor
   const view = intake.reconcileViewConfig({
     version: 1,
     query: { rows: [row], columns: [], measures: [{ ...value, agg: 'FIRST' }], filters: [], filterValues: {} },
-    display: { grouped: false, showSubtotals: false, collapsedGroups: ['["A"]'] },
+    display: { grouped: false, showSubtotals: false, collapsedGroups: ['["A"]'], hideZeroCurrentBudget: false },
   }, fields);
   assert.equal(view.query.measures[0].agg, 'FIRST');
   assert.equal(view.display.grouped, false);
   assert.equal(view.display.showSubtotals, false);
+  assert.equal(view.display.hideZeroCurrentBudget, false);
   assert.deepEqual(view.display.collapsedGroups, ['["A"]']);
 });
 
