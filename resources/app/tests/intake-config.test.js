@@ -84,7 +84,13 @@ test('INTAKE varsayılan filtreleri sadeleştirilir ve sıfır Güncel Alım Bü
 test('INTAKE v1 boş eski varsayılan filtreleri v2 görünümüne taşırken temizler', () => {
   const saved = intake.defaultViewConfig();
   saved.version = 1;
-  const legacyFields = intake.defaultFields();
+  const legacyFields = intake.normalizeSchema({
+    columns: [
+      { table: 'Dim_Urun', name: 'MerchAltGrupTanim' },
+      { table: 'Dim_Tarih', name: 'Son Guncelleme Tarihi' },
+      { table: 'Dim_Urun', name: 'UrunKlasmanKod' },
+    ],
+  });
   const bySource = new Map(legacyFields.map(field => [field.sourceUniqueName, field]));
   saved.query.filters.push(
     bySource.get('[Dim_Urun].[MerchAltGrupTanim]'),
@@ -92,7 +98,7 @@ test('INTAKE v1 boş eski varsayılan filtreleri v2 görünümüne taşırken te
     bySource.get('[Dim_Urun].[UrunKlasmanKod]'),
   );
 
-  const resolved = intake.reconcileViewConfig(saved, legacyFields);
+  const resolved = intake.reconcileViewConfig(saved, [...intake.defaultFields(), ...legacyFields]);
   const sources = new Set(resolved.query.filters.map(field => field.sourceUniqueName));
 
   assert.equal(resolved.version, 2);
@@ -102,8 +108,10 @@ test('INTAKE v1 boş eski varsayılan filtreleri v2 görünümüne taşırken te
 });
 
 test('INTAKE v1 eski varsayılan filtresinde seçili değer varsa migration filtreyi korur', () => {
-  const fields = intake.defaultFields();
-  const legacy = fields.find(field => field.sourceUniqueName === '[Dim_Urun].[UrunKlasmanKod]');
+  const legacy = intake.normalizeSchema({
+    columns: [{ table: 'Dim_Urun', name: 'UrunKlasmanKod', dataType: 'Int64' }],
+  })[0];
+  const fields = [...intake.defaultFields(), legacy];
   const saved = intake.defaultViewConfig();
   saved.version = 1;
   saved.query.filters.push(legacy);
