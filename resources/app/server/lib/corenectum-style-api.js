@@ -185,7 +185,11 @@ function styleListRow(record) {
   const plmId = coreId(record && record.plmCode);
   const styleId = coreId(record && record.styleId);
   if (!plmId) return null;
-  const imageUrl = attachmentUrl((record && record.model && record.model.imageUrl) || (record && record.imageUrl));
+  /* Style List satırındaki üst-seviye imageUrl, ekranda görünen kanonik
+     model görselidir (ön+arka). record.model.imageUrl ise bazı stillerde
+     Options görselini taşıyabilir ve tekli ön görünüş olabilir. Bu yüzden
+     ikisi birlikte geldiyse Style List görseli HER ZAMAN önce gelir. */
+  const imageUrl = attachmentUrl((record && record.imageUrl) || (record && record.model && record.model.imageUrl));
   return {
     plmId,
     styleId,
