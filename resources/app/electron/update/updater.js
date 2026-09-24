@@ -74,13 +74,37 @@ class BuyerLogUpdater{
       this.appendLog('update-available',{channel,discoveredVersion:manifest.version});
       await this.prepare(provider,manifest);
       return {ok:true,available:true,manifest,...this.status(base,channel)};
-    }catch(error){const detail={code:error.code||'UPDATE_CHECK_FAILED',message:String(error.message||'Güncelleme kontrolü başarısız oldu.').slice(0,500)};this.saveState({state:STATES.FAILED,lastError:detail});this.appendLog('check-failed',detail);if(options.manual)throw Object.assign(error,detail);return {ok:false,offline:true,error:detail,...this.status(base,channel)};}
+    }catch(error){
+      const cause=error&&error.cause||null;
+      const detail={code:error.code||'UPDATE_CHECK_FAILED',message:String(error.message||'Güncelleme kontrolü başarısız oldu.').slice(0,500)};
+      const transportCode=String(error.transportCode||cause&&cause.code||'').slice(0,120);
+      const transportMessage=String(error.transportMessage||cause&&cause.message||'').slice(0,500);
+      const transport=String(error.transport||cause&&cause.transport||'').slice(0,80);
+      if(transportCode)detail.transportCode=transportCode;
+      if(transportMessage)detail.transportMessage=transportMessage;
+      if(transport)detail.transport=transport;
+      this.saveState({state:STATES.FAILED,lastError:detail});this.appendLog('check-failed',detail);if(options.manual)throw Object.assign(error,detail);return {ok:false,offline:true,error:detail,...this.status(base,channel)};
+    }
   }
   async prepare(provider,manifest){
     const versionKey=manifest.version.replace(/[^0-9A-Za-z._-]/g,'_'),cacheFile=path.join(this.cacheRoot,`${versionKey}-${manifest.sha256.slice(0,12)}.zip`),partial=cacheFile+'.partial';
     let reuse=false;
     if(fs.existsSync(cacheFile)){const hash=await sha256File(cacheFile);reuse=hash===manifest.sha256;if(!reuse)rmSafe(cacheFile);}
-    if(!reuse){this.saveState({state:STATES.DOWNLOADING});rmSafe(partial);this.appendLog('download-started',{version:manifest.version});try{await provider.copyArtifact(manifest.channel,manifest.artifact,partial,manifest.version);}catch(error){rmSafe(partial);throw updaterError('Update paketi kopyalanamadı.','UPDATE_DOWNLOAD_FAILED',{cause:error});}fs.renameSync(partial,cacheFile);}
+    if(!reuse){
+      this.saveState({state:STATES.DOWNLOADING});rmSafe(partial);this.appendLog('download-started',{version:manifest.version});
+      try{
+        await provider.copyArtifact(manifest.channel,manifest.artifact,partial,manifest.version);
+      }catch(error){
+        rmSafe(partial);
+        throw updaterError('Update paketi kopyalanamadı.','UPDATE_DOWNLOAD_FAILED',{
+          cause:error,
+          transportCode:String(error&&error.code||'').slice(0,120),
+          transportMessage:String(error&&error.message||'').slice(0,500),
+          transport:String(error&&error.transport||'').slice(0,80),
+        });
+      }
+      fs.renameSync(partial,cacheFile);
+    }
     const stat=fs.statSync(cacheFile);if(stat.size!==manifest.size){rmSafe(cacheFile);throw updaterError('Update paket boyutu manifest ile eşleşmiyor.','UPDATE_SIZE_MISMATCH');}
     this.saveState({state:STATES.VERIFYING});const actual=await sha256File(cacheFile);if(actual!==manifest.sha256){rmSafe(cacheFile);throw updaterError('Update SHA-256 doğrulaması başarısız.','UPDATE_SHA256_MISMATCH');}this.appendLog('checksum-ok',{version:manifest.version});
     const free=diskFreeBytes(this.opsRoot);if(free!=null&&free<manifest.size*3)throw updaterError('Update için yeterli boş disk alanı yok.','UPDATE_DISK_SPACE');
