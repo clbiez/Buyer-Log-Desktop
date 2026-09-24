@@ -24,7 +24,7 @@ test('Get OAB opens Buyer Log internal authentication and automatically retries 
   assert.match(api, /OAB_AUTH_REQUIRED/);
   assert.match(api, /OAB_AUTH_EXPIRED/);
   assert.match(api, /buyerLogDesktop/);
-  assert.match(api, /ensureOabAuth\(\{ interactive:true \}\)/);
+  assert.match(api, /ensureOabAuth\(\{ interactive:true, \.\.\.oabLastAuthContext \}\)/);
   assert.match(api, /return oabJson\(url, options, false\)/);
   assert.doesNotMatch(api, /Edge|remote debugging|9223/);
 });

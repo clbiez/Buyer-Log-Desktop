@@ -344,7 +344,28 @@
     return code === 'OAB_AUTH_REQUIRED' || code === 'OAB_AUTH_EXPIRED';
   }
   let oabDesktopAuthInFlight = null;
-  async function oabEnsureAuthentication() {
+  let oabLastAuthContext = {};
+  function oabNormalizeAuthContext(source) {
+    const input = source && typeof source === 'object' ? source : {};
+    const cleanRef = value => String(value == null ? '' : value).replace(/[\u0000\r\n]/g, '').trim().slice(0, 200);
+    const context = {
+      seasonRef: cleanRef(input.seasonRef),
+      merchSubGroupRef: cleanRef(input.merchSubGroupRef),
+      buyerGroupRef: cleanRef(input.buyerGroupRef),
+    };
+    return Object.fromEntries(Object.entries(context).filter(([, value]) => Boolean(value)));
+  }
+  function oabAuthContextFromRequest(url, options) {
+    let body = {};
+    try { body = options && typeof options.body === 'string' ? JSON.parse(options.body) : (options && options.body) || {}; }
+    catch (_) { body = {}; }
+    let source = body;
+    if (String(url || '').includes('/api/oab/batch') && Array.isArray(body.combinations) && body.combinations.length) source = body.combinations[0] || {};
+    const next = oabNormalizeAuthContext(source);
+    if (Object.keys(next).length) oabLastAuthContext = next;
+    return { ...oabLastAuthContext };
+  }
+  async function oabEnsureAuthentication(authContext = {}) {
     const bridge = global.buyerLogDesktop;
     if (!bridge || typeof bridge.ensureOabAuth !== 'function') {
       const err = new Error(oabT('OAB oturumu Buyer Log masaüstü uygulamasından açılmalıdır.', 'OAB sign-in must be opened from the Buyer Log desktop app.'));
@@ -352,7 +373,9 @@
       throw err;
     }
     if (!oabDesktopAuthInFlight) {
-      const request = Promise.resolve(bridge.ensureOabAuth({ interactive:true }))
+      const nextContext = oabNormalizeAuthContext(authContext);
+      if (Object.keys(nextContext).length) oabLastAuthContext = nextContext;
+      const request = Promise.resolve(bridge.ensureOabAuth({ interactive:true, ...oabLastAuthContext }))
         .then(result => {
           if (result && result.ok && result.authenticated) return result;
           const err = new Error((result && result.error) || oabT('OAB kullanıcı girişi tamamlanmadı.', 'OAB sign-in was not completed.'));
@@ -374,7 +397,7 @@
       err.code = data.code;
       err.details = data.details;
       if (allowAuthRetry && oabIsAuthErrorCode(err.code)) {
-        await oabEnsureAuthentication();
+        await oabEnsureAuthentication(oabAuthContextFromRequest(url, options));
         return oabJson(url, options, false);
       }
       throw err;
