@@ -208,6 +208,12 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
 .lflReadyHead{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:3px 3px 8px;border-bottom:1px solid var(--line);}
 .lflReadyHead strong{font-size:11.5px;}
 .lflReadySave{height:26px;padding:0 8px;border:1px solid var(--line);border-radius:7px;background:var(--card2);color:var(--ink2);font:inherit;font-size:10.5px;font-weight:700;cursor:pointer;}
+.lflReadyNameEditor{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:5px;align-items:center;padding:7px 3px 0;}
+.lflReadyNameEditor[hidden]{display:none!important;}
+.lflReadyNameInput{min-width:0;height:28px;border:1px solid var(--line2);border-radius:7px;background:var(--paper);color:var(--ink);padding:0 8px;font:inherit;font-size:11px;outline:none;}
+.lflReadyNameInput:focus{border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 12%,transparent);}
+.lflReadyNameAction{height:28px;padding:0 8px;border:1px solid var(--line);border-radius:7px;background:var(--card2);color:var(--ink2);font:inherit;font-size:10.5px;font-weight:700;cursor:pointer;}
+.lflReadyNameAction:hover{background:var(--hover);}
 .lflReadyList{display:grid;gap:4px;padding-top:7px;}
 .lflReadyItem{display:grid;grid-template-columns:minmax(0,1fr) 28px;gap:5px;align-items:center;}
 .lflReadyApply,.lflReadyDelete{height:30px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--ink);font:inherit;cursor:pointer;}
