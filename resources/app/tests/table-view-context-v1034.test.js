@@ -10,11 +10,11 @@ const CSS = fs.readFileSync('public/app.css', 'utf8');
 const GRID = fs.readFileSync('public/grid-clipboard.js', 'utf8');
 const KOL = fs.readFileSync('public/collection-spreadsheet.js', 'utf8');
 
-test('v10.34 Orders ve Collection görünür tablo bağlamında Odak/Tümü presetlerini sunar', () => {
+test('Orders ve Collection görünür tablo bağlamında Odak/Tümü presetlerini sade biçimde sunar', () => {
   assert.match(INDEX, /id="ordersTableViewActions"[^>]*role="group"[\s\S]*?data-table-view-preset="focus"[^>]*data-table-key="orders"[\s\S]*?data-table-view-preset="all"/);
   assert.match(INDEX, /id="kolTableViewActions"[^>]*role="group"[\s\S]*?data-table-view-preset="focus"[^>]*data-table-key="koleksiyon"[\s\S]*?data-table-view-preset="all"/);
-  assert.match(INDEX, /id="ordersTableViewStatus"[^>]*role="status"[^>]*aria-live="polite"/);
-  assert.match(INDEX, /id="kolTableViewStatus"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.doesNotMatch(INDEX, /id="ordersTableViewStatus"|id="kolTableViewStatus"/);
+  assert.doesNotMatch(INDEX, /Sipariş karar alanı|Order decision workspace|Düzenlenebilir model alanı|Editable model workspace/);
 });
 
 test('v10.34 mevcut tek Sütunlar bileşeni aktif çalışma alanının görünür bağlamına taşınır', () => {
@@ -35,11 +35,12 @@ test('v10.34 presetler mevcut sütun yöneticilerini kullanır ve kullanıcı d�
   assert.match(APP, /info\.rerender\(\)/);
 });
 
-test('v10.34 görünüm bağlamı özel durumu, görünür sütun sayısını ve klavye ipucunu açıklar', () => {
+test('görünüm bağlamı açıklama metni üretmeden preset durumunu erişilebilir biçimde günceller', () => {
   assert.match(APP, /function tableViewPresetState\(tableKey\)/);
   assert.match(APP, /function renderTableViewContext\(tableKey\)/);
-  assert.match(APP, /Arrow keys move cells|Ok tuşları hücrelerde ilerler/);
-  assert.match(APP, /aria-pressed/);
+  const render = APP.slice(APP.indexOf('function renderTableViewContext('), APP.indexOf('function applyTableViewPreset('));
+  assert.doesNotMatch(render, /Arrow keys move cells|Ok tuşları hücrelerde ilerler|TableViewStatus|columns':'sütun/);
+  assert.match(render, /aria-pressed/);
   assert.match(CSS, /\.tableViewActions\{/);
   assert.match(CSS, /\.tableViewPreset:focus-visible/);
   assert.doesNotMatch(CSS.match(/\/\* v10\.34[\s\S]*?(?=\/\* =====================|$)/)?.[0] || '', /#[0-9a-f]{3,8}/i);
