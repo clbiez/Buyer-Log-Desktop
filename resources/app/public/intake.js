@@ -780,9 +780,6 @@
   }
 
   function bind() {
-    byId('intakeConnectionBtn')?.addEventListener('click', () => {
-      if (typeof openDataSourceAndFilters === 'function') openDataSourceAndFilters({ target: 'intake' });
-    });
     byId('intakeFieldsBtn')?.addEventListener('click', () => { void loadMetadata().finally(openFields); });
     byId('intakeResetBtn')?.addEventListener('click', async () => {
       try {

@@ -582,13 +582,12 @@
           <span id="intakeStateMeta" class="intakeStateMeta"></span>
         </div>
         <div class="intakeHeaderActions">
-          <button type="button" class="navActionBtn" id="intakeConnectionBtn" data-i18n-tr="Veritabanı bağlantısı" data-i18n-en="Database connection">Veritabanı bağlantısı</button>
-          <button type="button" class="navActionBtn" id="intakeFieldsBtn" data-i18n-tr="Pivot ayarları" data-i18n-en="Pivot settings" title="INTAKE pivot satır, sütun, ölçü ve filtre alanlarını düzenle" data-i18n-title-tr="INTAKE pivot satır, sütun, ölçü ve filtre alanlarını düzenle" data-i18n-title-en="Edit INTAKE pivot rows, columns, measures and filters">Pivot ayarları</button>
           <button type="button" class="navActionBtn" id="intakeResetBtn" data-i18n-tr="Varsayılana dön" data-i18n-en="Reset view">Varsayılana dön</button>
           <button type="button" class="navActionBtn" id="intakeRefreshBtn" title="INTAKE verisini yenile" data-i18n-title-tr="INTAKE verisini yenile" data-i18n-title-en="Refresh INTAKE"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
           <button type="button" class="navActionBtn oabGroupAction" id="intakeCollapseAllBtn" hidden title="Tüm grupları daralt" data-i18n-title-tr="Tüm grupları daralt" data-i18n-title-en="Collapse all groups"><svg class="ic"><use href="#i-chevrons-left"/></svg></button>
           <button type="button" class="navActionBtn oabGroupAction" id="intakeExpandAllBtn" hidden title="Tüm grupları genişlet" data-i18n-title-tr="Tüm grupları genişlet" data-i18n-title-en="Expand all groups"><svg class="ic"><use href="#i-chevrons-right"/></svg></button>
           <button type="button" class="ovNotesCollapseBtn" id="intakeCollapseBtn" data-overview-collapse="intake" aria-expanded="true" title="INTAKE'i daralt" aria-label="INTAKE'i daralt" data-i18n-title-tr="INTAKE'i daralt" data-i18n-title-en="Collapse INTAKE"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg></button>
+          <button type="button" class="navActionBtn" id="intakeFieldsBtn" title="INTAKE pivot satır, sütun, ölçü ve filtre alanlarını düzenle" aria-label="Pivot ayarları" data-i18n-title-tr="INTAKE pivot satır, sütun, ölçü ve filtre alanlarını düzenle" data-i18n-title-en="Edit INTAKE pivot rows, columns, measures and filters"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></button>
         </div>
       </div>
       <div id="intakeHorizonBadge" class="horizonBadge" data-horizon-target="intake"></div>
@@ -639,7 +638,7 @@
           <div class="ovDetailWidgetBody"><table class="miniTable" id="tblBuyingGroup"></table><div id="ovFilterBadgeBg" style="display:none;margin-top:8px;font-size:11.5px;color:var(--acc-ink);background:var(--acc-bg);border:1px solid var(--acc-lite);border-radius:8px;padding:8px 12px;"></div></div>
         </div>
       </div>
-      <div class="kpirow" id="kpiOrders" style="margin-top:16px"></div>
+      <div class="kpirow" id="kpiOrders" hidden aria-hidden="true" style="display:none!important"></div>
       <div id="ovFilterBadge" style="display:none;margin-top:10px;font-size:11.5px;color:var(--acc-ink);background:var(--acc-bg);border:1px solid var(--acc-lite);border-radius:8px;padding:8px 12px;"></div>
     </div>
     </div>
