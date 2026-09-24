@@ -408,6 +408,23 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
 #view-lfl .lflGenericColPanel{right:0;top:36px;min-width:220px;max-height:360px;overflow:auto;}
 @media(max-width:760px){#view-lfl .lflSectionHead{flex-direction:column;}#view-lfl .lflCpTableTools{width:100%;justify-content:flex-start;margin-left:0;}#view-lfl .lflCpTableTool span{display:none;}}
 
+/* v7.0.110 — LFL tablolarında kullanıcı kontrollü sütun genişliği.
+   Başlık genişliği sütunun minimumunu belirlemez: daraltıldığında başlık
+   hücre içinde görünür kalır ve gerektiği kadar alt satıra geçer. */
+#view-lfl .lflTable.blResizableTable{table-layout:fixed;}
+#view-lfl .lflTable.blResizableTable thead th{
+  white-space:normal;overflow-wrap:anywhere;word-break:normal;height:auto;
+  vertical-align:bottom;line-height:1.25;padding-right:13px;
+}
+#view-lfl .lflTable.blResizableTable thead th .thInner{align-items:flex-end;}
+#view-lfl .lflTable.blResizableTable .lflTableSortLabel{
+  white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;
+  align-items:flex-end;line-height:1.25;
+}
+#view-lfl .lflTable.blResizableTable tbody td{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
 /* v3.38 — LFL percentage colours, table exports and portfolio drill-down */
 #view-lfl .lflCpTableTool .ic{width:13px;height:13px;flex:none;}
 #view-lfl .lflPortfolioDrillCell{cursor:zoom-in;font-weight:700;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,var(--primary) 55%,transparent);}
