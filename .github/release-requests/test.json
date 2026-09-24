@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.111",
-  "commit_sha": "1e1615273f2e8e6a38732aab3a730240872dd3e7",
-  "release_notes": "Buyer Log 7.0.111: LFL Comparison ve Manufacturer tablolarında dikey yükseklik kullanıcı tarafından manuel ayarlanabilir hale getirildi ve sayfanın alt içeriğini kapatan taşma düzeltildi. Koleksiyon sahibinin kendi çalışma alanını birden fazla pencere/oturumda düzenlemesinde kilit kaldırıldı; yerel değişiklikler otomatik rebase edilerek korunuyor ve canlı güncellemeler kaydedilmemiş veriyi ezmiyor. LFL Multi-dimensional Comparison alanı seçilen güncel/kıyaslanan periyotları doğru yansıtacak ve ana LFL raporuyla aynı yalnız-kıyaslanabilir veri hesabını kullanacak şekilde düzeltildi. OAB dahili giriş sonrası oturum algılama ve seçili filtreyle otomatik devam akışı güçlendirildi. PLM Operations Center hata detaylarının polling sırasında açılıp kapanması/yükleniyor durumuna dönmesi düzeltildi. Tam Buyer Log regression testleri PASS."
+  "version": "7.0.112",
+  "commit_sha": "b1c6e78553bfc69f2715c5e6fea3962edc9b9504",
+  "release_notes": "Buyer Log 7.0.112: Açılış güncelleme kontrolündeki 8 saniyelik bekleme kaldırıldı. Buyer Log artık Electron açılır açılmaz, kullanıcı girişi beklemeden STABLE güncelleme kontrolünü başlatıyor. Yeni sürüm bulunduğunda giriş ekranında doğrudan “Güncelleme Mevcut” bildirimi gösteriliyor; indirme/hazırlık ve kuruluma hazır durumları login öncesinde görünür. 6 saatlik periyodik kontrol korunuyor. İlgili regresyon testi eklendi ve tam Buyer Log regression paketi PASS."
 }
