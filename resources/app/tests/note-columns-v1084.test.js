@@ -137,7 +137,8 @@ test('syncCpNoteColumns: CP_COLS içine dinamik metin sütunu ekler, Orders\'a m
 test('addCpNoteColumn/renameCpNoteColumn/removeCpNoteColumn mevcut PUT akışını kullanır, ikinci bir sistem kurmaz', () => {
   assert.match(APP, /fetch\('\/api\/note-columns',\{method:'PUT'/);
   const add = extractFunction(APP, 'addCpNoteColumn');
-  assert.match(add, /prompt\(appLang==='en'\?'Name of the new note column:'/);
+  assert.doesNotMatch(add, /\b(?:window\.)?prompt\s*\(/);
+  assert.match(add, /await openHorizonTextInput\(/);
   assert.match(add, /saveCpNoteColumnDefs\(/);
   const remove = extractFunction(APP, 'removeCpNoteColumn');
   assert.match(remove, /Values entered in this column will be lost/);
