@@ -98,13 +98,15 @@ let coreNectumAuthInFlight = null;
 /* OAB automatic auth — intentionally independent from CoreNectum and from the
  * user's normal Edge profile. Browser session state lives in this dedicated
  * persistent partition; raw Authorization still exists only in process/backend
- * memory and is captured only from the exact OAB report API. */
+ * memory and is captured only from the exact trusted PASS API host. The
+ * captured Bearer is still accepted only after the loopback backend validates
+ * it against the real OAB report endpoint. */
 const OAB_AUTH_PARTITION = 'persist:oab';
 const OAB_VIEWER_URL = 'https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report';
 const OAB_HOME_URL = 'https://pass.lcwaikiki.com/';
 const OAB_UI_HOST = 'pass.lcwaikiki.com';
 const OAB_API_HOST = 'pass.prod.lcwaikiki.com';
-const OAB_REPORT_CAPTURE_FILTER = { urls: [`https://${OAB_API_HOST}/pass/common/report/api/*`] };
+const OAB_AUTH_CAPTURE_FILTER = { urls: [`https://${OAB_API_HOST}/pass/*`] };
 const OAB_SILENT_PROBE_MS = 8000;
 let oabAuthWindow = null;
 let oabAuthInFlight = null;
@@ -967,11 +969,12 @@ async function acquireOabAuthorization(options = {}) {
       lifecycle = createOabAuthLifecycle({
         apiHost: OAB_API_HOST,
         uiHost: OAB_UI_HOST,
-        maxViewerKicks: 4,
-        viewerKickIntervalMs: 1800,
+        maxViewerKicks: 2,
+        viewerKickIntervalMs: 6000,
+        viewerSettleMs: 12000,
         onViewerKick: async ({ attempt, reason }) => {
           if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
-          log('OAB viewer report isteği yeniden tetikleniyor (' + reason + ', ' + attempt + '/4).');
+          log('OAB viewer report isteği yeniden tetikleniyor (' + reason + ', ' + attempt + '/2).');
           return loadLoginTarget(OAB_VIEWER_URL, false);
         },
         onAuthorization: finishAuthorization,
@@ -993,7 +996,7 @@ async function acquireOabAuthorization(options = {}) {
        */
       try {
         authWebRequest = oabAuthSession().webRequest;
-        authWebRequest.onBeforeSendHeaders(OAB_REPORT_CAPTURE_FILTER, (details, callback) => {
+        authWebRequest.onBeforeSendHeaders(OAB_AUTH_CAPTURE_FILTER, (details, callback) => {
           if (!settled && lifecycle) void lifecycle.onNetworkRequest(details);
           callback({ requestHeaders: details.requestHeaders });
         });
