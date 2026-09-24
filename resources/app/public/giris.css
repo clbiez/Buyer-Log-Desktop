@@ -192,6 +192,25 @@ button{touch-action:manipulation}
   .spinner,.miniSpinner{animation-duration:1.4s}
 }
 
+/* Açılış güncelleme bildirimi login öncesinde de görünür; mevcut giriş
+   yüzeyinin kare kontrol ve renk tokenlarını aynen kullanır. */
+.startupUpdateNotice{
+  display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:9px;
+  margin:16px 0 -12px;padding:9px 11px;
+  border:1px solid var(--login-line-strong);background:var(--login-selected);
+}
+.startupUpdateNotice[hidden]{display:none!important}
+.startupUpdateIcon{
+  width:24px;height:24px;display:grid;place-items:center;
+  border:1px solid var(--login-focus);background:#fff;color:var(--login-focus);
+  font-size:14px;font-weight:700;line-height:1;
+}
+.startupUpdateCopy{min-width:0;display:flex;flex-direction:column;gap:2px}
+.startupUpdateCopy strong{font-size:11px;line-height:1.25;color:var(--login-text)}
+.startupUpdateCopy span{font-size:10px;line-height:1.4;color:var(--login-subtle)}
+.startupUpdateNotice[data-state="ready"]{background:#f4f8f5}
+.startupUpdateNotice[data-state="ready"] .startupUpdateIcon{border-color:#7e9e86;color:#476c51}
+
 /* Shared Hub bootstrap gate — intentionally uses the login page's existing
    square controls/typography instead of introducing a second visual system. */
 .hubGate{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:10px 12px;border:1px solid var(--login-line-strong);background:#f7f9fb}
