@@ -76,6 +76,8 @@ function createOabAuthLifecycle(options = {}) {
   let sawLogin = false;
   let stopped = false;
   let candidateBusy = false;
+  let activeAuthorization = '';
+  const pendingAuthorizations = [];
   let viewerKicks = 0;
   let viewerKickBusy = false;
   let viewerFirstSeenAt = 0;
@@ -164,40 +166,59 @@ function createOabAuthLifecycle(options = {}) {
   }
 
   async function onNetworkRequest(params) {
-    if (stopped || candidateBusy) return false;
+    if (stopped) return false;
     /* The PASS viewer may not issue a report request until its own filter
        controls are populated. Waiting specifically for Report/GetReportData
        therefore deadlocks the Buyer Log flow after a successful SSO login.
        Accept a Bearer only from the exact trusted PASS API host + /pass/
        namespace, then let the loopback backend validate that token against
-       the real report API before treating authentication as complete. */
+       the real report API before treating authentication as complete.
+
+       PASS can issue several authenticated bootstrap/report requests almost at
+       once after SSO. Validation is asynchronous; dropping every request while
+       one candidate is being checked can therefore discard the later, valid
+       report token. Keep distinct candidates in arrival order and drain them
+       serially instead of losing them while candidateBusy is true. */
     if (!isOabApiRequest(params, apiHost, apiPathPrefix)) return false;
     const authorization = authorizationHeaderFromRequest(params);
     if (!authorization) return false;
 
+    if (authorization !== activeAuthorization && !pendingAuthorizations.includes(authorization)) {
+      pendingAuthorizations.push(authorization);
+    }
+    if (candidateBusy) return false;
+
     candidateBusy = true;
-    setPhase('authorization-captured');
     try {
-      const accepted = await onAuthorization(authorization);
-      if (!accepted) {
-        setPhase('waiting-report-request');
-        return false;
+      while (!stopped && pendingAuthorizations.length) {
+        const candidate = pendingAuthorizations.shift();
+        activeAuthorization = candidate;
+        setPhase('authorization-captured');
+        let accepted = false;
+        try {
+          accepted = await onAuthorization(candidate);
+        } catch (_) {
+          accepted = false;
+        }
+        if (!accepted) continue;
+
+        pendingAuthorizations.length = 0;
+        setPhase('backend-validated');
+        stopped = true;
+        return true;
       }
-      setPhase('backend-validated');
-      stopped = true;
-      return true;
-    } catch (_) {
-      // Invalid/expired candidates are deliberately non-terminal. A later real
-      // report request in the same login flow may carry a fresh Authorization.
-      setPhase('waiting-report-request');
+      if (!stopped) setPhase('waiting-report-request');
       return false;
     } finally {
+      activeAuthorization = '';
       candidateBusy = false;
     }
   }
 
   function resetForFreshViewer() {
     if (stopped || candidateBusy) return false;
+    activeAuthorization = '';
+    pendingAuthorizations.length = 0;
     sawLogin = false;
     viewerKicks = 0;
     viewerKickBusy = false;
@@ -209,6 +230,8 @@ function createOabAuthLifecycle(options = {}) {
 
   function stop() {
     stopped = true;
+    activeAuthorization = '';
+    pendingAuthorizations.length = 0;
   }
 
   return { observe, onNetworkRequest, resetForFreshViewer, stop, snapshot };
