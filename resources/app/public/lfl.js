@@ -1244,7 +1244,7 @@
   const TRIAL_MODEL_DIM_ALIASES=Object.freeze({
     mag:['mag'],mmyg:['mmyg'],brandDirectorate:['brandDirectorate','markaMudurlugu','markaMudurluk'],
     classification:['classification','urunTipi','klasman'],
-    productDescription:['productDescription','urunAnaTanim','urunAnaTanım','urunTanim','urunTanım','productDesc'],
+    productDescription:['productDescription','productMainDefinition','urunAnaTanim','urunAnaTanım','urunTanim','urunTanım','productDesc'],
     manufacturer:['manufacturer','uretici','nihaiUretici','finalManufacturer'],
     country:['country','ulke','ülke'],buyingGroup:['buyingGroup','buyerGroup'],buyer:['buyer'],
     fabricCategory:['fabricCategory','kumasKategorisi','kumasKategori'],
