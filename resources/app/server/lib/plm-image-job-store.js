@@ -66,6 +66,7 @@ function normalizeItem(raw) {
     plmId: clean(raw && raw.plmId, 40),
     colourCode: clean(raw && (raw.colourCode ?? raw.colorCode), 40),
     colour: clean(raw && (raw.colour ?? raw.color), 160),
+    imageRole: ['main', 'option'].includes(clean(raw && raw.imageRole, 20).toLowerCase()) ? clean(raw && raw.imageRole, 20).toLowerCase() : 'auto',
     styleId: clean(raw && raw.styleId, 40),
     styleName: clean(raw && raw.styleName, 300),
   };
