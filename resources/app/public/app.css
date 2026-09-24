@@ -1508,6 +1508,37 @@ html[data-theme="light"] table:not(#shipTable) thead th{
   #ordersTableActions>:is(#undoBtn,#redoBtn,#navCopy,#navExcelBtn)>span{display:none!important;}
 }
 
+/* v11.13 — CP / Orders / Collection ortak tablo eylem sadeleştirmesi.
+   Kopyala ve Excel dışa aktar ana toolbar'da yalnız ikon olarak kalır.
+   Sütun yönetimi gerçek mevcut kontrolüyle ⋯ menüsüne taşınır; panel ve
+   işleyiciler kopyalanmaz. CP/Orders Koleksiyona Kopyala eylemi Araçlar'dadır. */
+.tableActionIconOnly{
+  width:var(--ctl-h)!important;
+  min-width:var(--ctl-h)!important;
+  padding-left:0!important;
+  padding-right:0!important;
+  justify-content:center!important;
+}
+.tableActionIconOnly>span{display:none!important;}
+.toolbarMoreMenu>.toolbarMenuColumns{
+  position:relative!important;
+  display:block!important;
+  width:100%;
+  margin:0;
+  padding:0;
+  background:transparent!important;
+}
+.toolbarMoreMenu>.toolbarMenuColumns>#navColsBtn{
+  width:100%;
+  min-width:0;
+  justify-content:flex-start;
+}
+.toolbarMoreMenu>.toolbarMenuNativeItem{
+  width:100%;
+  min-width:0;
+  justify-content:flex-start;
+}
+
 /* ===================== v2.57 — Sayfa araçları, filtreler ve yerleşim ===================== */
 /* Koleksiyonun tüm sayfa seçenekleri tablo araç çubuğuna taşındığı için boş vfBar gösterilmez. */
 body[data-active-tab="koleksiyon"] .vfBar{display:none!important;}
