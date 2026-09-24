@@ -18,9 +18,11 @@ test('v6.30 JSON-restored retail and in-store dates are actually filtered',()=>{
   assert.equal(report(rows,{inStoreFrom:'2026-09-01',inStoreTo:'2026-09-30'}).totalOrders,1);
 });
 
-test('v6.30 Apply commits visible dates and Excel reuses the canonical filter query',()=>{
+test('Pivot Ayarları kaydı tarihleri commit eder ve Excel kanonik filtre sorgusunu kullanır',()=>{
   assert.match(APP,/function commitBacklogDateInputs\(\)/);
-  assert.match(APP,/backlogApplyBtn'\)\.addEventListener\('click', \(\)=>\{ if\(!commitBacklogDateInputs\(\)\)return;/);
+  assert.match(APP,/backlogPivotSettingsBtn'\)\?\.addEventListener\('click', openBacklogPivotSettings\)/);
+  assert.match(APP,/data-backlog-settings-save/);
+  assert.match(APP,/if\(!commitBacklogDateInputs\(\)\)return;/);
   const start=APP.indexOf('async function exportBacklogToExcel'),end=APP.indexOf("document.getElementById('backlogExportBtn')",start),block=APP.slice(start,end);
   assert.match(block,/const params=backlogExportQueryParams\(\)/);
   assert.doesNotMatch(block,/dimFiltersObj/);

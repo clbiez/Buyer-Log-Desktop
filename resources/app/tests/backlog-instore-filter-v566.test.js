@@ -26,10 +26,14 @@ function backlog(orders, opts={}){
   return parse.buildBacklogGrouped(orders, {}, OV, Object.assign({groupBy:['buyerGrup']}, opts));
 }
 
-test('v5.66 Backlog üst zaman filtrelerinde In Store başlangıç/bitiş alanları bulunur', ()=>{
+test('Backlog In Store tarih state alanları korunur ve görünür düzenleme Pivot Ayarları modalındadır', ()=>{
+  assert.match(INDEX, /id="backlogFilterState" hidden/);
   assert.match(INDEX, /id="backlogInStoreFrom"/);
   assert.match(INDEX, /id="backlogInStoreTo"/);
-  assert.match(INDEX, /data-i18n-tr="In Store"/);
+  assert.match(INDEX, /id="backlogPivotSettingsBtn"/);
+  assert.match(APP, /id="backlogSettingsInStoreFrom"/);
+  assert.match(APP, /id="backlogSettingsInStoreTo"/);
+  assert.match(APP, /Rapor Ön Filtreleri|Report Pre-Filters/);
 });
 
 test('v5.66 In Store filtresi Model Bütçe tarihini kullanır ve iki uçlu/tek uçlu çalışır', ()=>{

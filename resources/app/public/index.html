@@ -1090,57 +1090,15 @@
   </section>
   <section id="view-backlog">
     <div class="horizonBadge" id="backlogHorizonBadge"><span class="horizonBadgeLabel">Model ufku</span><span class="horizonBadgeText">ortak/yerel horizon — tüm veri kaynağı</span></div>
-    <!-- Filtreler tek bir kartta, etiketli alanlar hâlinde. Gruplama/hiyerarşi bir
-         kurulum ayarı olduğu için sürekli açık durmaz; katlanır panele alındı. -->
-    <div class="panel backlogFilterCard">
-      <div class="backlogFilterRow">
-        <div class="backlogField">
-          <span class="backlogFieldLabel" data-i18n-tr="Retail tarihi" data-i18n-en="Retail date">Retail tarihi</span>
-          <div class="backlogRange">
-            <input type="date" id="backlogFrom" aria-label="Retail tarihi başlangıç">
-            <span class="backlogRangeSep">—</span>
-            <input type="date" id="backlogTo" aria-label="Retail tarihi bitiş">
-          </div>
-        </div>
-        <div class="backlogField">
-          <span class="backlogFieldLabel" data-i18n-tr="In Store" data-i18n-en="In Store">In Store</span>
-          <div class="backlogRange">
-            <input type="date" id="backlogInStoreFrom" aria-label="In Store başlangıç">
-            <span class="backlogRangeSep">—</span>
-            <input type="date" id="backlogInStoreTo" aria-label="In Store bitiş">
-          </div>
-        </div>
-        <div class="backlogField">
-          <span class="backlogFieldLabel" data-i18n-tr="Antrepo giriş tarihi" data-i18n-en="Warehouse entry date">Antrepo giriş tarihi</span>
-          <div class="backlogRange">
-            <input type="date" id="backlogAntrepoFrom" aria-label="Antrepo giriş tarihi başlangıç">
-            <span class="backlogRangeSep">—</span>
-            <input type="date" id="backlogAntrepoTo" aria-label="Antrepo giriş tarihi bitiş">
-          </div>
-        </div>
-        <!-- Boyut filtreleri artık yalnız "Gruplama ve hiyerarşi" panelindeki
-             Grupla listesinde: her boyutun kendi filtre düğmesi orada. Aynı
-             filtreleri hem üstte hem altta göstermek gereksiz tekrardı. -->
-        <button class="tbtn primary backlogApply" id="backlogApplyBtn" data-i18n-tr="Uygula" data-i18n-en="Apply">Uygula</button>
-      </div>
-      <div class="backlogFilterFoot">
-        <button type="button" class="backlogGroupToggle" id="backlogGroupToggle" aria-expanded="false" aria-controls="backlogGroupPanel"><svg class="ic"><use href="#i-hierarchy"/></svg><span data-i18n-tr="Gruplama ve hiyerarşi" data-i18n-en="Grouping and hierarchy">Gruplama ve hiyerarşi</span></button>
-        <span class="count" id="backlogRangeLabel"></span>
-      </div>
-      <div class="backlogGroupPanel" id="backlogGroupPanel" hidden>
-        <div class="backlogGroupCol">
-          <span class="backlogFieldLabel" data-i18n-tr="Grupla" data-i18n-en="Group by">Grupla</span>
-          <div id="backlogDimPicker" class="backlogChkRow"></div>
-        </div>
-        <div class="backlogGroupCol">
-          <span class="backlogFieldLabel" data-i18n-tr="Hiyerarşi sırası" data-i18n-en="Hierarchy order">Hiyerarşi sırası</span>
-          <div id="backlogDimOrder" class="backlogOrderList"></div>
-        </div>
-        <div class="backlogGroupCol" id="backlogDateLevelWrap" style="display:none;">
-          <span class="backlogFieldLabel" data-i18n-tr="Antrepo giriş tarihi görünümü" data-i18n-en="Warehouse entry date view">Antrepo giriş tarihi görünümü</span>
-          <div id="backlogDateLevelPicker" class="backlogChkRow"></div>
-        </div>
-      </div>
+    <!-- Backlog filtre/pivot ayarlarının kalıcı veri alanları. Kullanıcıya
+         görünmez; düzenleme OAB-parite Pivot Ayarları modalından yapılır. -->
+    <div id="backlogFilterState" hidden aria-hidden="true">
+      <input type="date" id="backlogFrom">
+      <input type="date" id="backlogTo">
+      <input type="date" id="backlogInStoreFrom">
+      <input type="date" id="backlogInStoreTo">
+      <input type="date" id="backlogAntrepoFrom">
+      <input type="date" id="backlogAntrepoTo">
     </div>
     <div id="backlogEmpty" class="empty">Backlog raporu, veri modeli yenilendiğinde ("Veri Modelinden Güncelle") otomatik oluşur.</div>
     <div id="backlogDetailModal" class="backlogDetailOverlay" hidden></div>
@@ -1161,6 +1119,7 @@
             <button class="tbtn backlogTreeCtl" id="backlogExpandAllBtn" title="Tümünü genişlet" aria-label="Tümünü genişlet"><svg class="ic"><use href="#i-chevrons-right"/></svg></button>
           </span>
           <span class="backlogTreeSpacer"></span>
+          <button class="tbtn" id="backlogPivotSettingsBtn" title="Backlog pivot ve ön filtre ayarları" data-i18n-title-tr="Backlog pivot ve ön filtre ayarları" data-i18n-title-en="Backlog pivot and pre-filter settings"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Pivot ayarları" data-i18n-en="Pivot settings">Pivot ayarları</span></button>
           <button class="tbtn" id="backlogExcelOptionsBtn" title="Excel sütun ve formül seçenekleri"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Excel seçenekleri" data-i18n-en="Excel options">Excel seçenekleri</span></button>
           <button class="tbtn" id="backlogExportBtn" title="Mevcut Backlog pivot raporunu Excel olarak indir"><svg class="ic"><use href="#i-download"/></svg> <span data-i18n-tr="Excel'e aktar" data-i18n-en="Export to Excel">Excel'e aktar</span></button>
         </div>

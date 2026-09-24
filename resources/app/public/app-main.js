@@ -14722,6 +14722,7 @@ function fmtQty(n){ return (n||0).toLocaleString('tr-TR'); }
 
 function renderBacklogDateLevelPicker(){
   const outerWrap = document.getElementById('backlogDateLevelWrap');
+  if(!outerWrap) return;
   const show = backlogGroupBy.includes('antrepoDate');
   // Boş string, satır içi stili kaldırıp CSS sınıfının (flex sütun) devralmasını sağlar.
   outerWrap.style.display = show ? '' : 'none';
@@ -14752,6 +14753,7 @@ function renderBacklogDateLevelPicker(){
 // ---- Grupla kutucukları + sıralanabilir hiyerarşi listesi ----
 function renderBacklogDimPicker(){
   const wrap = document.getElementById('backlogDimPicker');
+  if(!wrap) return;
   // Boyutlar alt alta ve A'dan Z'ye. Her satırda hem "grupla" kutucuğu hem de o
   // boyuta özel filtre düğmesi var; böylece bir boyutu gruplamadan da filtreleyebilirsin
   // ve üstte ayrı bir filtre şeridi tutmaya gerek kalmaz.
@@ -14837,6 +14839,7 @@ function openBacklogAddDimensionDialog(){
 }
 function renderBacklogDimOrder(){
   const wrap = document.getElementById('backlogDimOrder');
+  if(!wrap) return;
   const chip = (dim, i, area, arr) => {
     const fCount = dim==='antrepoDate'
       ? ((backlogDateFilter.values && backlogDateFilter.values.length) || 0)
@@ -14894,6 +14897,185 @@ function renderBacklogDimOrder(){
     e.stopPropagation();
     openBacklogDimFilterPanel(b.dataset.dim, b);
   }));
+}
+
+
+/* ===================== Backlog Pivot Ayarları — OAB paritesi =====================
+   Eski sayfa-üstü filtre/gruplama kartı kaldırıldı. Backlog'un satır/sütun
+   hiyerarşisi ve rapor ön filtreleri artık OAB Pivot Ayarları ile aynı modal
+   davranışında, tek bir çalışma kopyası üzerinde düzenlenir. Vazgeç hiçbir canlı
+   state'i değiştirmez; Kaydet tek seferde uygular ve raporu yeniler. */
+function backlogSettingsFieldPool(){
+  const custom=backlogCustomDimensions.map(item=>item&&item.id).filter(Boolean);
+  return [...new Set([
+    ...BACKLOG_DIM_ORDER,
+    ...custom,
+    ...backlogGroupBy,
+    ...backlogColBy,
+    ...Object.keys(backlogDimFilters||{}),
+    ...(backlogBuyerGrupSelected.size?['buyerGrup']:[]),
+    ...(backlogDateFilter&&backlogDateFilter.granularity?['antrepoDate']:[]),
+  ].filter(isBacklogDimensionId))];
+}
+function backlogSettingsFieldOptionsHtml(fields,selected){
+  return (fields||[]).map(dim=>'<option value="'+escapeHtml(dim)+'"'+(dim===selected?' selected':'')+'>'+escapeHtml(backlogDimLabelUI(dim))+'</option>').join('');
+}
+function backlogSettingsConfigActionsHtml(){
+  return '<div class="oabConfigActions">'
+    +'<button type="button" class="oabConfigIconBtn" data-backlog-config-move="-1" title="'+escapeHtml(appLang==='en'?'Move up':'Yukarı taşı')+'" aria-label="'+escapeHtml(appLang==='en'?'Move up':'Yukarı taşı')+'">↑</button>'
+    +'<button type="button" class="oabConfigIconBtn" data-backlog-config-move="1" title="'+escapeHtml(appLang==='en'?'Move down':'Aşağı taşı')+'" aria-label="'+escapeHtml(appLang==='en'?'Move down':'Aşağı taşı')+'">↓</button>'
+    +'<button type="button" class="oabConfigIconBtn danger" data-backlog-config-remove title="'+escapeHtml(appLang==='en'?'Remove':'Sil')+'" aria-label="'+escapeHtml(appLang==='en'?'Remove':'Sil')+'">×</button>'
+    +'</div>';
+}
+function backlogSettingsAxisRowHtml(dim,axis,fields){
+  return '<div class="oabPivotAxisRow oabConfigRow" draggable="true" data-backlog-axis="'+axis+'">'
+    +'<span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>'
+    +'<select class="backlogPivotAxisField">'+backlogSettingsFieldOptionsHtml(fields,dim)+'</select>'
+    +backlogSettingsConfigActionsHtml()+'</div>';
+}
+function backlogSettingsRefreshOrderButtons(list){
+  if(!list)return;
+  const rows=[...list.querySelectorAll('.oabConfigRow')];
+  rows.forEach((row,index)=>{
+    const up=row.querySelector('[data-backlog-config-move="-1"]');
+    const down=row.querySelector('[data-backlog-config-move="1"]');
+    if(up)up.disabled=index===0;
+    if(down)down.disabled=index===rows.length-1;
+  });
+}
+function backlogSettingsFirstUnusedField(modal,fields){
+  const used=new Set([...modal.querySelectorAll('.backlogPivotAxisField')].map(select=>select.value).filter(Boolean));
+  return (fields||[]).find(dim=>!used.has(dim)) || '';
+}
+function backlogSettingsFilterCount(draft,dim){
+  if(dim==='antrepoDate')return draft.dateFilter&&Array.isArray(draft.dateFilter.values)?draft.dateFilter.values.length:0;
+  const set=draft.filters[dim];
+  return set instanceof Set?set.size:0;
+}
+function backlogSettingsFilterRowHtml(dim,fields,draft){
+  const count=backlogSettingsFilterCount(draft,dim);
+  const label=count?(appLang==='en'?count+' selected':count+' seçili'):(appLang==='en'?'Select values':'Değer seç');
+  return '<div class="backlogSettingsFilterRow oabConfigRow" data-backlog-filter-row data-filter-dim="'+escapeHtml(dim)+'">'
+    +'<span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>'
+    +'<select class="backlogSettingsFilterField">'+backlogSettingsFieldOptionsHtml(fields,dim)+'</select>'
+    +'<button type="button" class="navActionBtn backlogSettingsFilterValues" data-backlog-filter-values>'+escapeHtml(label)+'</button>'
+    +'<div class="oabConfigActions"><button type="button" class="oabConfigIconBtn danger" data-backlog-filter-remove title="'+escapeHtml(appLang==='en'?'Remove filter':'Filtreyi kaldır')+'" aria-label="'+escapeHtml(appLang==='en'?'Remove filter':'Filtreyi kaldır')+'">×</button></div>'
+    +'</div>';
+}
+function backlogSettingsDraft(){
+  const filters={};
+  Object.entries(backlogDimFilters||{}).forEach(([dim,set])=>{if(set&&set.size)filters[dim]=new Set([...set]);});
+  if(backlogBuyerGrupSelected.size)filters.buyerGrup=new Set([...backlogBuyerGrupSelected]);
+  const filterDims=[
+    ...Object.keys(filters),
+    ...(backlogDateFilter&&backlogDateFilter.granularity&&Array.isArray(backlogDateFilter.values)&&backlogDateFilter.values.length?['antrepoDate']:[]),
+  ];
+  const value=id=>document.getElementById(id)?.value||'';
+  return {
+    rows:[...backlogGroupBy], columns:[...backlogColBy], dateLevels:[...backlogDateLevels],
+    filters, filterDims:[...new Set(filterDims)],
+    dateFilter:backlogDateFilter&&backlogDateFilter.granularity?{granularity:String(backlogDateFilter.granularity),values:[...(backlogDateFilter.values||[])]}:{},
+    retailFrom:value('backlogFrom'), retailTo:value('backlogTo'),
+    inStoreFrom:value('backlogInStoreFrom'), inStoreTo:value('backlogInStoreTo'),
+    antrepoFrom:value('backlogAntrepoFrom'), antrepoTo:value('backlogAntrepoTo'),
+  };
+}
+function openBacklogPivotSettings(){
+  document.getElementById('_backlogPivotSettingsModal')?.remove();
+  const fields=backlogSettingsFieldPool();
+  const draft=backlogSettingsDraft();
+  const modal=document.createElement('div');
+  modal.id='_backlogPivotSettingsModal';modal.className='autoModalOverlay';
+  const dateLevelLabel={year:appLang==='en'?'Year':'Yıl',month:appLang==='en'?'Month':'Ay',week:appLang==='en'?'Week':'Hafta',day:appLang==='en'?'Day':'Gün'};
+  modal.innerHTML='<div class="autoModal oabSettingsModal backlogPivotSettingsModal">'
+    +'<header><h3>'+escapeHtml(appLang==='en'?'Backlog Pivot Settings':'Backlog Pivot Ayarları')+'</h3><button type="button" data-backlog-settings-close>×</button></header>'
+    +'<div class="autoModalBody backlogPivotSettingsBody">'
+      +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Report Pre-Filters':'Rapor Ön Filtreleri')+'</span></div>'
+        +'<div class="backlogSettingsDateGrid">'
+          +'<label><span>'+escapeHtml(appLang==='en'?'Retail date':'Retail tarihi')+'</span><div class="backlogSettingsDateRange"><input type="date" id="backlogSettingsRetailFrom" value="'+escapeHtml(draft.retailFrom)+'"><span>—</span><input type="date" id="backlogSettingsRetailTo" value="'+escapeHtml(draft.retailTo)+'"></div></label>'
+          +'<label><span>In Store</span><div class="backlogSettingsDateRange"><input type="date" id="backlogSettingsInStoreFrom" value="'+escapeHtml(draft.inStoreFrom)+'"><span>—</span><input type="date" id="backlogSettingsInStoreTo" value="'+escapeHtml(draft.inStoreTo)+'"></div></label>'
+          +'<label><span>'+escapeHtml(appLang==='en'?'Warehouse entry date':'Antrepo giriş tarihi')+'</span><div class="backlogSettingsDateRange"><input type="date" id="backlogSettingsAntrepoFrom" value="'+escapeHtml(draft.antrepoFrom)+'"><span>—</span><input type="date" id="backlogSettingsAntrepoTo" value="'+escapeHtml(draft.antrepoTo)+'"></div></label>'
+        +'</div></div>'
+      +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Pivot Rows':'Pivot Satırları')+'</span><button type="button" class="navActionBtn" id="backlogSettingsAddRow">+ '+escapeHtml(appLang==='en'?'Add field':'Alan ekle')+'</button></div><div class="oabPivotConfigList" id="backlogSettingsRows"></div></div>'
+      +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Pivot Columns':'Pivot Sütunları')+'</span><button type="button" class="navActionBtn" id="backlogSettingsAddColumn">+ '+escapeHtml(appLang==='en'?'Add field':'Alan ekle')+'</button></div><div class="oabPivotConfigList" id="backlogSettingsColumns"></div></div>'
+      +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Pivot Values':'Pivot Değerleri')+'</span></div><div class="oabPivotConfigList">'
+        +'<div class="oabPivotValueRow backlogFixedPivotValue"><span class="oabConfigDrag" aria-hidden="true">•</span><input type="text" value="'+escapeHtml(appLang==='en'?'Quantity':'Adet')+'" disabled><select disabled><option>SUM</option></select><span></span></div>'
+        +'<div class="oabPivotValueRow backlogFixedPivotValue"><span class="oabConfigDrag" aria-hidden="true">•</span><input type="text" value="'+escapeHtml(appLang==='en'?'Order Count':'Sipariş Sayısı')+'" disabled><select disabled><option>COUNT</option></select><span></span></div>'
+      +'</div></div>'
+      +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Dimension Filters':'Boyut Filtreleri')+'</span><button type="button" class="navActionBtn" id="backlogSettingsAddFilter">+ '+escapeHtml(appLang==='en'?'Add filter':'Filtre ekle')+'</button></div><div class="oabPivotConfigList" id="backlogSettingsFilters"></div></div>'
+      +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Warehouse Date Hierarchy':'Antrepo Tarih Kademeleri')+'</span></div><div class="oabPivotBehaviorGrid backlogDateLevelSettings">'
+        +['year','month','week','day'].map(level=>'<label class="oabCheckField"><input type="checkbox" data-backlog-date-level="'+level+'"'+(draft.dateLevels.includes(level)?' checked':'')+'><span>'+escapeHtml(dateLevelLabel[level])+'</span></label>').join('')
+      +'</div></div>'
+      +'<p class="oabSettingsHint">'+escapeHtml(appLang==='en'
+        ?'Rows and Columns define the Backlog pivot hierarchy. Pre-filters are applied before the pivot is calculated. Quantity and Order Count remain the canonical Backlog measures.'
+        :'Satırlar ve Sütunlar Backlog pivot hiyerarşisini belirler. Ön filtreler pivot hesaplanmadan önce uygulanır. Adet ve Sipariş Sayısı Backlog’un kanonik ölçüleri olarak korunur.')+'</p>'
+    +'</div>'
+    +'<footer><button type="button" class="tbtn" data-backlog-settings-reset>'+escapeHtml(appLang==='en'?'Reset Pivot':'Pivot Varsayılanına Dön')+'</button><button type="button" class="tbtn" data-backlog-settings-close>'+escapeHtml(appLang==='en'?'Cancel':'Vazgeç')+'</button><button type="button" class="tbtn primary" data-backlog-settings-save>'+escapeHtml(appLang==='en'?'Save':'Kaydet')+'</button></footer>'
+    +'</div>';
+  document.body.appendChild(modal);
+  const rowsList=modal.querySelector('#backlogSettingsRows'),colsList=modal.querySelector('#backlogSettingsColumns'),filtersList=modal.querySelector('#backlogSettingsFilters');
+  const renderAxes=()=>{rowsList.innerHTML=draft.rows.map(dim=>backlogSettingsAxisRowHtml(dim,'rows',fields)).join('');colsList.innerHTML=draft.columns.map(dim=>backlogSettingsAxisRowHtml(dim,'columns',fields)).join('');backlogSettingsRefreshOrderButtons(rowsList);backlogSettingsRefreshOrderButtons(colsList);};
+  const renderFilters=()=>{filtersList.innerHTML=draft.filterDims.map(dim=>backlogSettingsFilterRowHtml(dim,fields,draft)).join('');};
+  const syncDraftAxes=()=>{draft.rows=[...rowsList.querySelectorAll('.backlogPivotAxisField')].map(el=>el.value).filter(Boolean);draft.columns=[...colsList.querySelectorAll('.backlogPivotAxisField')].map(el=>el.value).filter(Boolean);};
+  const close=()=>{if(typeof closeHeaderFilter==='function')closeHeaderFilter();modal.remove();};
+  renderAxes();renderFilters();
+  modal.querySelectorAll('[data-backlog-settings-close]').forEach(btn=>btn.addEventListener('click',close));
+  let pressedOnBackdrop=false;
+  modal.addEventListener('pointerdown',event=>{pressedOnBackdrop=event.target===modal;});
+  modal.addEventListener('pointerup',event=>{if(pressedOnBackdrop&&event.target===modal)close();pressedOnBackdrop=false;});
+  modal.querySelector('#backlogSettingsAddRow')?.addEventListener('click',()=>{syncDraftAxes();const field=backlogSettingsFirstUnusedField(modal,fields);if(!field){showToast(appLang==='en'?'No unused Backlog field is available.':'Eklenebilecek kullanılmamış Backlog alanı yok.');return;}draft.rows.push(field);renderAxes();});
+  modal.querySelector('#backlogSettingsAddColumn')?.addEventListener('click',()=>{syncDraftAxes();const field=backlogSettingsFirstUnusedField(modal,fields);if(!field){showToast(appLang==='en'?'No unused Backlog field is available.':'Eklenebilecek kullanılmamış Backlog alanı yok.');return;}draft.columns.push(field);renderAxes();});
+  modal.querySelector('#backlogSettingsAddFilter')?.addEventListener('click',()=>{const used=new Set(draft.filterDims);const field=fields.find(dim=>!used.has(dim));if(!field){showToast(appLang==='en'?'No unused filter field is available.':'Eklenebilecek kullanılmamış filtre alanı yok.');return;}draft.filterDims.push(field);renderFilters();});
+  modal.addEventListener('click',event=>{
+    const remove=event.target.closest?.('[data-backlog-config-remove]');
+    if(remove&&modal.contains(remove)){const row=remove.closest('.oabConfigRow'),list=row?.parentElement;row?.remove();backlogSettingsRefreshOrderButtons(list);syncDraftAxes();return;}
+    const move=event.target.closest?.('[data-backlog-config-move]');
+    if(move&&modal.contains(move)){const row=move.closest('.oabConfigRow'),parent=row?.parentElement;if(row&&parent){const dir=Number(move.dataset.backlogConfigMove);if(dir<0&&row.previousElementSibling)parent.insertBefore(row,row.previousElementSibling);if(dir>0&&row.nextElementSibling)parent.insertBefore(row.nextElementSibling,row);backlogSettingsRefreshOrderButtons(parent);syncDraftAxes();}return;}
+    const filterRemove=event.target.closest?.('[data-backlog-filter-remove]');
+    if(filterRemove&&modal.contains(filterRemove)){const row=filterRemove.closest('[data-backlog-filter-row]'),dim=row?.dataset.filterDim;draft.filterDims=draft.filterDims.filter(item=>item!==dim);if(dim==='antrepoDate')draft.dateFilter={};else delete draft.filters[dim];renderFilters();return;}
+    const valuesBtn=event.target.closest?.('[data-backlog-filter-values]');
+    if(valuesBtn&&modal.contains(valuesBtn)){
+      const row=valuesBtn.closest('[data-backlog-filter-row]'),dim=row?.dataset.filterDim;if(!dim)return;
+      if(dim==='antrepoDate'){
+        openValueFilterPanel({anchorEl:valuesBtn,title:backlogDimLabelUI(dim),granularities:['year','month','week','day'],currentGran:draft.dateFilter.granularity||'month',values:gran=>((backlogDimValues.antrepoDate&&backlogDimValues.antrepoDate[gran])||[]),activeValues:gran=>new Set((backlogDimValuesActive.antrepoDate&&backlogDimValuesActive.antrepoDate[gran])||[]),selected:draft.dateFilter.granularity?new Set(draft.dateFilter.values||[]):new Set(),labelFor:(v,gran)=>dateBucketLabel(v,gran),onApply:(vals,gran)=>{draft.dateFilter=vals.size?{granularity:gran,values:[...vals]}:{};renderFilters();},onRemove:()=>{draft.dateFilter={};renderFilters();}});
+      }else{
+        openValueFilterPanel({anchorEl:valuesBtn,title:backlogDimLabelUI(dim),values:backlogValuesFor(dim),activeValues:backlogActiveSetFor(dim),selected:draft.filters[dim]||new Set(),onApply:vals=>{draft.filters[dim]=new Set(vals);renderFilters();},onRemove:()=>{delete draft.filters[dim];renderFilters();}});
+      }
+    }
+  });
+  modal.addEventListener('change',event=>{
+    const axisSelect=event.target.closest?.('.backlogPivotAxisField');if(axisSelect&&modal.contains(axisSelect)){syncDraftAxes();return;}
+    const filterSelect=event.target.closest?.('.backlogSettingsFilterField');
+    if(filterSelect&&modal.contains(filterSelect)){const row=filterSelect.closest('[data-backlog-filter-row]'),oldDim=row?.dataset.filterDim,newDim=filterSelect.value;const idx=draft.filterDims.indexOf(oldDim);if(idx>=0)draft.filterDims[idx]=newDim;if(newDim!=='antrepoDate'&&!draft.filters[newDim])draft.filters[newDim]=new Set();row.dataset.filterDim=newDim;renderFilters();}
+  });
+  let dragged=null;
+  modal.addEventListener('dragstart',event=>{const row=event.target.closest?.('.oabConfigRow');if(!row||!modal.contains(row)||row.matches('[data-backlog-filter-row]'))return;dragged=row;row.classList.add('isDragging');if(event.dataTransfer){event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain','backlog-config-row');}});
+  modal.addEventListener('dragover',event=>{const target=event.target.closest?.('.oabConfigRow');if(!dragged||!target||target===dragged||target.parentElement!==dragged.parentElement)return;event.preventDefault();const rect=target.getBoundingClientRect();target.parentElement.insertBefore(dragged,event.clientY>rect.top+rect.height/2?target.nextElementSibling:target);});
+  modal.addEventListener('drop',event=>{if(!dragged)return;event.preventDefault();backlogSettingsRefreshOrderButtons(dragged.parentElement);syncDraftAxes();});
+  modal.addEventListener('dragend',()=>{if(dragged)dragged.classList.remove('isDragging');dragged=null;syncDraftAxes();});
+  modal.querySelector('[data-backlog-settings-reset]')?.addEventListener('click',()=>{
+    draft.rows=['status','antrepoDate'];draft.columns=[];draft.dateLevels=['year','month','week','day'];draft.filters={};draft.filterDims=[];draft.dateFilter={};
+    ['backlogSettingsRetailFrom','backlogSettingsRetailTo','backlogSettingsInStoreFrom','backlogSettingsInStoreTo','backlogSettingsAntrepoFrom','backlogSettingsAntrepoTo'].forEach(id=>{const el=modal.querySelector('#'+id);if(el)el.value='';});
+    modal.querySelectorAll('[data-backlog-date-level]').forEach(input=>{input.checked=true;});renderAxes();renderFilters();
+  });
+  modal.querySelector('[data-backlog-settings-save]')?.addEventListener('click',()=>{
+    syncDraftAxes();
+    const combined=[...draft.rows,...draft.columns];
+    if(new Set(combined).size!==combined.length){showToast(appLang==='en'?'A field can only be used once in Rows or Columns.':'Bir alan Satırlar veya Sütunlar içinde yalnız bir kez kullanılabilir.');return;}
+    const selectedLevels=[...modal.querySelectorAll('[data-backlog-date-level]:checked')].map(input=>input.dataset.backlogDateLevel);
+    if(combined.includes('antrepoDate')&&!selectedLevels.length){showToast(appLang==='en'?'Choose at least one warehouse date level.':'Antrepo tarihi için en az bir kademe seçin.');return;}
+    backlogGroupBy=[...draft.rows];backlogColBy=[...draft.columns];backlogDateLevels=selectedLevels;
+    backlogBuyerGrupSelected=new Set();backlogDimFilters={};backlogDateFilter={};
+    [...new Set(draft.filterDims)].forEach(dim=>{
+      if(dim==='antrepoDate'){if(draft.dateFilter&&draft.dateFilter.granularity&&(draft.dateFilter.values||[]).length)backlogDateFilter={granularity:draft.dateFilter.granularity,values:[...draft.dateFilter.values]};return;}
+      const set=draft.filters[dim] instanceof Set?draft.filters[dim]:new Set();
+      if(dim==='buyerGrup')backlogBuyerGrupSelected=new Set([...set]);else if(set.size)backlogDimFilters[dim]=new Set([...set]);
+    });
+    const assign=(stateId,modalId)=>{const target=document.getElementById(stateId),source=modal.querySelector('#'+modalId);if(target&&source){target.value=source.value||'';syncEnhancedDateDisplay(target);}};
+    assign('backlogFrom','backlogSettingsRetailFrom');assign('backlogTo','backlogSettingsRetailTo');assign('backlogInStoreFrom','backlogSettingsInStoreFrom');assign('backlogInStoreTo','backlogSettingsInStoreTo');assign('backlogAntrepoFrom','backlogSettingsAntrepoFrom');assign('backlogAntrepoTo','backlogSettingsAntrepoTo');
+    if(!commitBacklogDateInputs())return;
+    backlogExpanded.clear();saveBacklogAutoState();close();fetchCurrentBacklog();
+  });
 }
 
 // Backlog boyut filtresi artık CP'deki sütun filtresiyle aynı bileşeni kullanır:
@@ -15019,7 +15201,8 @@ function renderBacklog(data){
   document.getElementById('backlogInStoreTo').value = data.inStoreTo || ''; syncDateInputById('backlogInStoreTo');
   document.getElementById('backlogAntrepoFrom').value = data.antrepoFrom || ''; syncDateInputById('backlogAntrepoFrom');
   document.getElementById('backlogAntrepoTo').value = data.antrepoTo || ''; syncDateInputById('backlogAntrepoTo');
-  document.getElementById('backlogRangeLabel').textContent = `Retail: ${dateDisplayFromISO(data.retailFrom)||'—'} → ${dateDisplayFromISO(data.retailTo)||'—'} · In Store: ${dateDisplayFromISO(data.inStoreFrom)||'—'} → ${dateDisplayFromISO(data.inStoreTo)||'—'} · ${fmtQty(data.totalOrders)} ${appLang==="en"?"orders":"sipariş"}`;
+  const backlogRangeLabel=document.getElementById('backlogRangeLabel');
+  if(backlogRangeLabel) backlogRangeLabel.textContent = `Retail: ${dateDisplayFromISO(data.retailFrom)||'—'} → ${dateDisplayFromISO(data.retailTo)||'—'} · In Store: ${dateDisplayFromISO(data.inStoreFrom)||'—'} → ${dateDisplayFromISO(data.inStoreTo)||'—'} · ${fmtQty(data.totalOrders)} ${appLang==="en"?"orders":"sipariş"}`;
 
   document.getElementById('backlogKpi').innerHTML = `
     <div class="kpi tone-navy"><div class="n">${fmtQty(data.totalQty)}</div><div class="l">Toplam Adet</div></div>
@@ -16076,7 +16259,7 @@ function fetchCurrentBacklog(){
   if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog')) return;
   fetchBacklog(buildBacklogParams());
 }
-document.getElementById('backlogApplyBtn').addEventListener('click', ()=>{ if(!commitBacklogDateInputs())return;saveBacklogAutoState();fetchCurrentBacklog(); });
+document.getElementById('backlogPivotSettingsBtn')?.addEventListener('click', openBacklogPivotSettings);
 (function initBacklogRetailRange(){
   const restored=restoreBacklogAutoState();
   // Yeni/temiz başlangıçta iki uç da boş bırakılır. Sunucu boş başlangıcı -∞,
