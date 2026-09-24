@@ -4,6 +4,7 @@
   const READY_FILTERS_KEY='lcw.lfl.readyFilters.v1';
   const CUSTOM_COMPARE_KEY='lcw.lfl.customCompare.v4';
   const ANALYSIS_SPLIT_KEY='lcw.lfl.analysisSplit.v1';
+  const ANALYSIS_HEIGHTS_KEY='lcw.lfl.analysisHeights.v1';
   const LEGACY_CUSTOM_COMPARE_KEYS=['lcw.lfl.customCompare.v3','lcw.lfl.customCompare.v2','lcw.lfl.customCompare.v1'];
   const LEGACY_STORAGE_KEYS=['lcw.lfl.filters.v4','lcw.lfl.filters.v3','lcw.lfl.filters.v2','lcw.lfl.filters.v1'];
   const MAX_BREAKDOWN_LEVELS=6;
@@ -336,6 +337,82 @@
     // Çift tıklama varsayılana döndürür.
     handle.addEventListener('dblclick',()=>{applyAnalysisSplit(ANALYSIS_SPLIT_DEFAULT);saveAnalysisSplit(ANALYSIS_SPLIT_DEFAULT);});
   }
+  const ANALYSIS_HEIGHT_MIN=120, ANALYSIS_HEIGHT_MAX=760;
+  const ANALYSIS_HEIGHT_TARGETS={
+    group:{tableId:'lflGroupTable',handleId:'lflGroupHeightHandle'},
+    manufacturer:{wrapId:'lflManufacturerVolume',handleId:'lflManufacturerHeightHandle'},
+  };
+  function analysisHeightWrap(key){
+    const meta=ANALYSIS_HEIGHT_TARGETS[key];
+    if(!meta)return null;
+    return meta.wrapId?$(meta.wrapId):$(meta.tableId)?.closest('.lflTableWrap')||null;
+  }
+  function clampAnalysisHeight(value){
+    if(value==null||value===''||typeof value==='boolean')return null;
+    const n=Number(value);if(!Number.isFinite(n))return null;
+    const viewportMax=Math.max(ANALYSIS_HEIGHT_MIN,Math.min(ANALYSIS_HEIGHT_MAX,(window.innerHeight||900)-220));
+    return Math.round(Math.min(viewportMax,Math.max(ANALYSIS_HEIGHT_MIN,n)));
+  }
+  function loadAnalysisHeights(){
+    try{const value=JSON.parse(BLStorage.getItem(ANALYSIS_HEIGHTS_KEY)||'{}');return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}
+    catch(e){return {};}
+  }
+  function applyAnalysisHeight(key,value){
+    const wrap=analysisHeightWrap(key),meta=ANALYSIS_HEIGHT_TARGETS[key],handle=meta?$(meta.handleId):null;
+    if(!wrap)return;
+    const height=clampAnalysisHeight(value);
+    if(height==null){
+      wrap.classList.remove('lflManualHeight');wrap.style.removeProperty('--lfl-manual-height');delete wrap.dataset.lflHeight;
+      handle?.removeAttribute('aria-valuenow');return;
+    }
+    wrap.classList.add('lflManualHeight');wrap.style.setProperty('--lfl-manual-height',`${height}px`);wrap.dataset.lflHeight=String(height);
+    handle?.setAttribute('aria-valuenow',String(height));
+  }
+  function saveAnalysisHeight(key,value){
+    const saved=loadAnalysisHeights(),height=clampAnalysisHeight(value);
+    if(height==null)delete saved[key];else saved[key]=height;
+    try{BLStorage.setItem(ANALYSIS_HEIGHTS_KEY,JSON.stringify(saved));}catch(e){}
+  }
+  function initAnalysisHeightResizers(){
+    const saved=loadAnalysisHeights();
+    Object.entries(ANALYSIS_HEIGHT_TARGETS).forEach(([key,meta])=>{
+      const wrap=analysisHeightWrap(key),handle=$(meta.handleId);if(!wrap||!handle)return;
+      applyAnalysisHeight(key,saved[key]);
+      if(handle.dataset.heightBound==='1')return;
+      handle.dataset.heightBound='1';
+      let dragging=false,startY=0,startHeight=0,lastHeight=null;
+      const move=event=>{
+        if(!dragging)return;
+        lastHeight=clampAnalysisHeight(startHeight+(event.clientY-startY));
+        applyAnalysisHeight(key,lastHeight);event.preventDefault();
+      };
+      const stop=()=>{
+        if(!dragging)return;
+        dragging=false;handle.classList.remove('isDragging');document.body.classList.remove('lflHeightDragging');
+        const current=lastHeight??clampAnalysisHeight(wrap.getBoundingClientRect().height);saveAnalysisHeight(key,current);
+        window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',stop);window.removeEventListener('pointercancel',stop);
+      };
+      handle.addEventListener('pointerdown',event=>{
+        if(event.button!=null&&event.button!==0)return;
+        dragging=true;startY=event.clientY;startHeight=wrap.getBoundingClientRect().height;lastHeight=clampAnalysisHeight(startHeight);
+        handle.classList.add('isDragging');document.body.classList.add('lflHeightDragging');
+        window.addEventListener('pointermove',move);window.addEventListener('pointerup',stop);window.addEventListener('pointercancel',stop);
+        event.preventDefault();
+      });
+      handle.addEventListener('keydown',event=>{
+        if(event.key==='Home'){
+          event.preventDefault();applyAnalysisHeight(key,null);saveAnalysisHeight(key,null);return;
+        }
+        if(event.key!=='ArrowUp'&&event.key!=='ArrowDown')return;
+        event.preventDefault();
+        const step=event.shiftKey?40:16,current=wrap.getBoundingClientRect().height;
+        const next=clampAnalysisHeight(current+(event.key==='ArrowDown'?step:-step));
+        applyAnalysisHeight(key,next);saveAnalysisHeight(key,next);
+      });
+      handle.addEventListener('dblclick',()=>{applyAnalysisHeight(key,null);saveAnalysisHeight(key,null);});
+    });
+  }
+
   function saveCustomCompare(){
     const values={};state.customCompare.dimensions.forEach(dim=>{values[dim]=[...(state.customCompare.values[dim]||new Set())];});
     const scenarios=(state.customCompare.scenarios||[]).map((item,index)=>serializeComparisonScenario(item,index));
@@ -1886,6 +1963,7 @@
     // Ayırıcı ancak lflContent görünür olduğunda ölçülebilir; bağlama tek seferlik
     // (dataset.splitBound) olduğu için her çizimde çağrılması güvenli.
     initAnalysisSplitter();
+    initAnalysisHeightResizers();
     const a=compute();state.analysis=a;updatePortfolioAccessButtons(a);renderTrialImpact(a);renderKpis(a);renderInsights(a);renderSource();renderGroupTable(a);renderManufacturerVolumes(a);renderCustomCompare(a);
     // v6.64: Sipariş hacmi analizi mevcut LFL current/compare satırlarını doğrudan
     // tüketir. Burada ikinci bir fetch/API çağrısı yoktur; drilldown da LFL'nin
