@@ -335,6 +335,38 @@ test('concurrent duplicate report requests validate only one Authorization candi
   assert.equal(lifecycle.snapshot().stopped, true);
 });
 
+test('distinct PASS Authorization arriving during validation is queued instead of being lost', async () => {
+  let releaseFirstValidation;
+  const firstGate = new Promise(resolve => { releaseFirstValidation = resolve; });
+  const staleToken = 'Bearer ' + 's'.repeat(48);
+  const validToken = 'Bearer ' + 'v'.repeat(48);
+  const validated = [];
+  const lifecycle = createOabAuthLifecycle({
+    apiHost: 'pass.prod.lcwaikiki.com',
+    uiHost: 'pass.lcwaikiki.com',
+    onAuthorization: async authorization => {
+      validated.push(authorization);
+      if (authorization === staleToken) {
+        await firstGate;
+        return false;
+      }
+      return authorization === validToken;
+    },
+  });
+
+  const securityUrl = 'https://pass.prod.lcwaikiki.com/pass/common/security/api/v1.0/User/Profile';
+  const reportUrl = 'https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0/Report/GetReportData';
+  const first = lifecycle.onNetworkRequest(webRequest(securityUrl, staleToken));
+  assert.equal(await lifecycle.onNetworkRequest(webRequest(reportUrl, validToken)), false);
+  assert.deepEqual(validated, [staleToken]);
+
+  releaseFirstValidation();
+  assert.equal(await first, true);
+  assert.deepEqual(validated, [staleToken, validToken]);
+  assert.equal(lifecycle.snapshot().phase, 'backend-validated');
+  assert.equal(lifecycle.snapshot().stopped, true);
+});
+
 test('main-process success still requires loopback backend validation and closes the login BrowserWindow', () => {
   const start = MAIN.indexOf('async function acquireOabAuthorization');
   const end = MAIN.indexOf('async function clearOabAuthSession', start);
