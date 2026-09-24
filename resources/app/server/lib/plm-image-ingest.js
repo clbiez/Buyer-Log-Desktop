@@ -71,6 +71,20 @@ function currentRefFor(imagemap, { plmId, colourCode, colour } = {}) {
   return '';
 }
 
+function imageRoleNeedsRefresh(raw, currentRef, { store, ownership = ownershipStore } = {}) {
+  const item = normalizeRequest(raw);
+  const ref = clean(currentRef, 120);
+  if (!ref || item.imageRole !== 'main' || !ownership || typeof ownership.ownershipOf !== 'function') return false;
+  const current = ownership.ownershipOf(store, item.key, ref);
+  /* 7.0.115 öncesinde/ilk 7.0.115 turunda ana renk Option Image ile
+     yazılmış olabilir. Bu OTOMATİK kayıt artık "eksik değil" diye
+     saklanmamalı; bir sonraki Eksikleri Tamamla turunda kendini onarır.
+     Manuel görseller bu kurala girmez. */
+  return current.state === ownership.OWNERSHIP_AUTOMATIC
+    && current.record
+    && clean(current.record.sourceType, 40).toUpperCase() === 'OPTION';
+}
+
 function normalizeRequest(raw) {
   const plmId = clean(raw && raw.plmId, 80);
   const colourCode = clean(raw && (raw.colourCode ?? raw.colorCode), 80);
@@ -120,10 +134,11 @@ function createPlmImageIngest(deps = {}) {
     if (!permission.allowed) {
       return { ...item, currentRef, decision: DECISION_MANUAL, ownershipState: permission.state, reason: 'Kullanıcının elle seçtiği görsel korunur.' };
     }
-    if (mode === 'missing' && usable) {
+    const roleRefresh = imageRoleNeedsRefresh(item, currentRef, { store, ownership });
+    if (mode === 'missing' && usable && !roleRefresh) {
       return { ...item, currentRef, decision: DECISION_CACHED, ownershipState: permission.state, reason: 'Kullanılabilir görsel zaten var (eksikleri tamamla modu).' };
     }
-    return { ...item, currentRef, decision: DECISION_FETCH, ownershipState: permission.state };
+    return { ...item, currentRef, decision: DECISION_FETCH, ownershipState: permission.state, reason: roleRefresh ? 'Ana renk eski otomatik Option Image kaydından kanonik model görseline geçirilecek.' : undefined };
   }
 
   /* 2. AŞAMA — indirme öncesi. Kaynak kimliği (styleOptionImageId /
@@ -295,6 +310,7 @@ module.exports = {
   canonicalKeyFor,
   currentRefFor,
   normalizeRequest,
+  imageRoleNeedsRefresh,
   imageHash,
   countOutcomes,
 };
