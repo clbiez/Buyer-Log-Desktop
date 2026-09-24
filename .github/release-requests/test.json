@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.121",
-  "commit_sha": "dcef70b8fc168c5ceacf7ced59cd33d633dfc6f6",
-  "release_notes": "Buyer Log 7.0.121: CP, Orders ve Koleksiyon tablo araç çubukları ortak düzene alındı. Kopyala ve Excel dışa aktar eylemleri ana toolbar'da yalnız ikon olarak gösteriliyor; Sütunlar kontrolü üç sayfada da '...' menüsüne taşındı; Koleksiyona Kopyala eylemi CP/Orders tarafında Araçlar menüsüne alındı. Mevcut action handler'ları korunarak gerçek DOM kontrolleri yeniden konumlandırıldı. Tam Buyer Log regression paketi PASS."
+  "version": "7.0.122",
+  "commit_sha": "9c4ed93a1b64e2b4c22c819c497f2e4064f26d6b",
+  "release_notes": "Buyer Log 7.0.122: GitHub release güncelleme indirmesi kurumsal ağlarda Electron/Chromium net.fetch öncelikli olacak şekilde sağlamlaştırıldı; Node fetch fallback'i korundu. UPDATE_DOWNLOAD_FAILED durumunda gerçek transport hata kodu, mesajı ve kullanılan transport updater.log'a yazılıyor. Tam Buyer Log regression paketi PASS."
 }
