@@ -735,14 +735,31 @@ async function clearOabBackendAuthorization() {
   } catch (_) {}
 }
 
+function oabAuthSelectionValue(value) {
+  return String(value == null ? '' : value).replace(/[\u0000\r\n]/g, '').trim().slice(0, 200);
+}
+
+function oabViewerUrl(options = {}) {
+  const url = new URL(OAB_VIEWER_URL);
+  const seasonRef = oabAuthSelectionValue(options.seasonRef);
+  const merchSubGroupRef = oabAuthSelectionValue(options.merchSubGroupRef);
+  const buyerGroupRef = oabAuthSelectionValue(options.buyerGroupRef);
+  if (seasonRef) url.searchParams.set('SeasonRef', seasonRef);
+  if (merchSubGroupRef) url.searchParams.set('MerchSubGroupRef', merchSubGroupRef);
+  if (buyerGroupRef) url.searchParams.set('BuyerGroupRefs', buyerGroupRef);
+  return url.toString();
+}
+
 async function acquireOabAuthorization(options = {}) {
   const requestedInteractive = options.interactive !== false;
   const manual = options.manual === true;
+  const requestedViewerUrl = oabViewerUrl(options);
 
   if (oabAuthInFlight) {
     if (requestedInteractive) {
       if (oabAuthFlowState) {
         oabAuthFlowState.interactive = true;
+        oabAuthFlowState.viewerUrl = requestedViewerUrl;
         try { oabAuthFlowState.promoteInteractive?.({ immediate:true, reason:'interactive-join' }); } catch (_) {}
       } else if (oabAuthWindow && !oabAuthWindow.isDestroyed()) {
         try { oabAuthWindow.show(); oabAuthWindow.focus(); } catch (_) {}
@@ -753,6 +770,7 @@ async function acquireOabAuthorization(options = {}) {
 
   const flowState = {
     interactive: requestedInteractive,
+    viewerUrl: requestedViewerUrl,
     promoteInteractive: null,
   };
   oabAuthFlowState = flowState;
@@ -773,6 +791,8 @@ async function acquireOabAuthorization(options = {}) {
     let authWebRequest = null;
     let networkReady = null;
     const popupWindows = new Set();
+
+    const targetViewerUrl = () => flowState.viewerUrl || OAB_VIEWER_URL;
 
     const clearSilentProbe = () => {
       if (silentProbeTimer) { clearTimeout(silentProbeTimer); silentProbeTimer = null; }
@@ -896,7 +916,7 @@ async function acquireOabAuthorization(options = {}) {
           navigationBusy = false;
           if (freshReloadPending && !settled) {
             freshReloadPending = false;
-            setImmediate(() => { if (!settled) void loadLoginTarget(OAB_VIEWER_URL, false); });
+            setImmediate(() => { if (!settled) void loadLoginTarget(targetViewerUrl(), false); });
           }
         }
       };
@@ -940,7 +960,7 @@ async function acquireOabAuthorization(options = {}) {
           try { authWindow.webContents.stop(); } catch (_) {}
           return;
         }
-        await loadLoginTarget(OAB_VIEWER_URL, false);
+        await loadLoginTarget(targetViewerUrl(), false);
       };
       const armSilentProbe = () => {
         if (!flowState.interactive || manual || settled || loginRequiredKnown || silentProbeTimer) return;
@@ -975,7 +995,7 @@ async function acquireOabAuthorization(options = {}) {
         onViewerKick: async ({ attempt, reason }) => {
           if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
           log('OAB viewer report isteği yeniden tetikleniyor (' + reason + ', ' + attempt + '/2).');
-          return loadLoginTarget(OAB_VIEWER_URL, false);
+          return loadLoginTarget(targetViewerUrl(), false);
         },
         onAuthorization: finishAuthorization,
         onPhase: phase => {
@@ -1124,7 +1144,7 @@ async function acquireOabAuthorization(options = {}) {
         });
         popup.on('closed', () => {
           popupWindows.delete(popup);
-          if (!settled) setImmediate(() => { void loadLoginTarget(OAB_VIEWER_URL, false); });
+          if (!settled) setImmediate(() => { void loadLoginTarget(targetViewerUrl(), false); });
         });
 
         let currentPopupUrl = '';
@@ -1167,7 +1187,7 @@ async function acquireOabAuthorization(options = {}) {
           if (manual) await resetOabBrowserAuthState('manual-login');
           if (settled) return false;
           armSilentProbe();
-          return loadLoginTarget(OAB_VIEWER_URL, true);
+          return loadLoginTarget(targetViewerUrl(), true);
         })
         .catch(() => {
           if (!settled) finishFailure('OAB_AUTH_CAPTURE_UNAVAILABLE', 'OAB ağ isteği yakalama başlatılamadı.');
@@ -1711,7 +1731,16 @@ function registerIpc() {
      therefore cannot invoke these channels. Raw Authorization never crosses IPC. */
   ipcMain.handle('buyerlog:oab-auth', async (event, options = {}) => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, authenticated:false, code:'OAB_IPC_FORBIDDEN', error:'OAB yetkilendirme isteği reddedildi.' };
-    try { return await acquireOabAuthorization({ interactive:options && options.interactive !== false, manual:options && options.manual === true, requestingContents:event.sender }); }
+    try {
+      return await acquireOabAuthorization({
+        interactive:options && options.interactive !== false,
+        manual:options && options.manual === true,
+        seasonRef:options && options.seasonRef,
+        merchSubGroupRef:options && options.merchSubGroupRef,
+        buyerGroupRef:options && options.buyerGroupRef,
+        requestingContents:event.sender,
+      });
+    }
     catch (error) { return { ok:false, authenticated:false, code:error && error.code || 'OAB_AUTH_FAILED', error:'OAB yetkilendirmesi başarısız oldu.' }; }
   });
   ipcMain.handle('buyerlog:oab-auth-clear', async event => {
