@@ -109,7 +109,20 @@ test('hatalı modeller detaylandırılabiliyor', () => {
   assert.match(block, /PLM ID/);
   assert.match(block, /item\.code/);
   assert.match(block, /item\.error/);
-  assert.match(OPS, /\/api\/plm-jobs\/\$\{encodeURIComponent\(jobId\)\}/);
+  assert.match(OPS, /\/api\/plm-jobs\/\$\{encodeURIComponent\((?:jobId|id)\)\}/);
+});
+
+test('REGRESYON: açık hata detayı 1sn polling renderında kapanmaz veya Loading durumuna dönmez', () => {
+  assert.match(OPS, /failureCache: new Map\(\)/);
+  assert.match(OPS, /failureLoads: new Map\(\)/);
+  assert.match(OPS, /const jobId = String\(job && job\.id != null \? job\.id : ''\)/);
+  assert.match(OPS, /const cached = state\.failureCache\.get\(jobId\)/);
+  assert.match(OPS, /cached \? failureTable\(cached\.failures\)/);
+  assert.match(OPS, /const scrollTop = body\.scrollTop/);
+  assert.match(OPS, /body\.scrollTop = scrollTop/);
+  assert.match(OPS, /cached\.failureCount !== Number\(job\.failureCount \|\| 0\)/);
+  assert.match(OPS, /const pending = state\.failureLoads\.get\(id\)/);
+  assert.match(OPS, /state\.failureCache\.set\(id, \{ failureCount: Number\(current\.failureCount \|\| 0\), failures \}\)/);
 });
 
 test('yalnız başarısızlar yeniden denenebiliyor ve akış devredilir', () => {

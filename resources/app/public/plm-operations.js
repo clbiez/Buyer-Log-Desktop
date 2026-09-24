@@ -62,12 +62,15 @@
 
   /* ---------- veri katmanı ---------- */
 
-  const state = { jobs: [], timer: null, subscribers: new Set(), panelOpen: false, expanded: new Set() };
+  const state = { jobs: [], timer: null, subscribers: new Set(), panelOpen: false, expanded: new Set(), failureCache: new Map(), failureLoads: new Map() };
 
   async function refresh() {
     try {
       const data = await api('/api/plm-jobs');
       state.jobs = Array.isArray(data && data.jobs) ? data.jobs : [];
+      const liveIds = new Set(state.jobs.map(job => String(job && job.id != null ? job.id : '')));
+      for (const id of state.expanded) if (!liveIds.has(id)) state.expanded.delete(id);
+      for (const id of state.failureCache.keys()) if (!liveIds.has(id)) state.failureCache.delete(id);
     } catch (_) { /* ağ hatası izlemeyi durdurmamalı */ }
     state.subscribers.forEach(fn => { try { fn(state.jobs); } catch (_) {} });
     render();
@@ -83,6 +86,11 @@
 
   function jobsForScope(scope) {
     return scope ? state.jobs.filter(job => job.scope === scope) : state.jobs.slice();
+  }
+
+  function jobById(jobId) {
+    const id = String(jobId == null ? '' : jobId);
+    return state.jobs.find(job => String(job && job.id != null ? job.id : '') === id) || null;
   }
 
   /* ---------- görünüm parçaları ---------- */
@@ -132,15 +140,19 @@
   }
 
   function jobCard(job, { detailed }) {
-    const expanded = state.expanded.has(job.id);
+    const jobId = String(job && job.id != null ? job.id : '');
+    const expanded = state.expanded.has(jobId);
+    const cached = state.failureCache.get(jobId);
+    const failureHtml = cached ? failureTable(cached.failures)
+      : `<div class="plmOpsEmpty">${esc(t('Yükleniyor…', 'Loading…'))}</div>`;
     const active = job.running && job.activeModel
       ? `<span class="plmOpsActive">${esc(t('İşlenen model: ', 'Active model: '))}${esc(job.activeModel)}</span>` : '';
     const actions = [];
-    if (job.running && !job.cancelRequested) actions.push(`<button type="button" class="tbtn" data-plmops-cancel="${esc(job.id)}">${esc(t('Durdur', 'Stop'))}</button>`);
-    if (job.failureCount) actions.push(`<button type="button" class="tbtn" data-plmops-toggle="${esc(job.id)}">${esc(expanded ? t('Hataları gizle', 'Hide errors') : t('Hataları göster', 'Show errors'))} (${job.failureCount})</button>`);
-    if (job.failureCount && !job.running) actions.push(`<button type="button" class="tbtn primary" data-plmops-retry="${esc(job.id)}">${esc(t('Başarısızları yeniden dene', 'Retry failed'))}</button>`);
+    if (job.running && !job.cancelRequested) actions.push(`<button type="button" class="tbtn" data-plmops-cancel="${esc(jobId)}">${esc(t('Durdur', 'Stop'))}</button>`);
+    if (job.failureCount) actions.push(`<button type="button" class="tbtn" data-plmops-toggle="${esc(jobId)}">${esc(expanded ? t('Hataları gizle', 'Hide errors') : t('Hataları göster', 'Show errors'))} (${job.failureCount})</button>`);
+    if (job.failureCount && !job.running) actions.push(`<button type="button" class="tbtn primary" data-plmops-retry="${esc(jobId)}">${esc(t('Başarısızları yeniden dene', 'Retry failed'))}</button>`);
 
-    return `<article class="plmOpsJob${job.running ? ' isRunning' : ''}" data-plmops-job="${esc(job.id)}">
+    return `<article class="plmOpsJob${job.running ? ' isRunning' : ''}" data-plmops-job="${esc(jobId)}">
       <header class="plmOpsJobHead">
         <div class="plmOpsTitle"><strong>${esc(label(KIND_LABEL, job.kind))}</strong>
           <span class="plmOpsScope">${esc(job.scope)}</span>${statusBadge(job)}</div>
@@ -150,7 +162,7 @@
       <div class="plmOpsLine">${esc(job.label || '')} · ${job.processed}/${job.total} (%${job.percent})</div>
       ${detailed ? jobMetrics(job) : ''}
       ${actions.length ? `<div class="plmOpsActions">${actions.join('')}</div>` : ''}
-      ${expanded ? `<div class="plmOpsFailures" data-plmops-failures="${esc(job.id)}">${esc(t('Yükleniyor…', 'Loading…'))}</div>` : ''}
+      ${expanded ? `<div class="plmOpsFailures" data-plmops-failures="${esc(jobId)}">${failureHtml}</div>` : ''}
     </article>`;
   }
 
@@ -189,6 +201,7 @@
     const history = all.filter(job => !job.running);
     const body = modal.querySelector('[data-plmops-body]');
     if (!body) return;
+    const scrollTop = body.scrollTop;
     body.innerHTML = `
       <section class="plmOpsSection">
         <h4>${esc(t('Çalışan işler', 'Running jobs'))} <span class="plmOpsCount">${running.length}</span></h4>
@@ -200,18 +213,41 @@
         ${history.length ? history.map(job => jobCard(job, { detailed: true })).join('')
           : `<div class="plmOpsEmpty">${esc(t('Geçmiş boş.', 'History is empty.'))}</div>`}
       </section>`;
-    body.querySelectorAll('[data-plmops-failures]').forEach(node => void loadFailures(node.dataset.plmopsFailures));
+    body.scrollTop = scrollTop;
+    body.querySelectorAll('[data-plmops-failures]').forEach(node => {
+      const id = String(node.dataset.plmopsFailures || '');
+      const job = jobById(id);
+      const cached = state.failureCache.get(id);
+      if (job && (!cached || cached.failureCount !== Number(job.failureCount || 0))) void loadFailures(id);
+    });
   }
 
-  async function loadFailures(jobId) {
-    const node = document.querySelector(`[data-plmops-failures="${CSS.escape(jobId)}"]`);
-    if (!node) return;
-    try {
-      const data = await api(`/api/plm-jobs/${encodeURIComponent(jobId)}`);
-      node.innerHTML = failureTable(Array.isArray(data && data.failures) ? data.failures : []);
-    } catch (error) {
-      node.innerHTML = `<div class="plmOpsEmpty">${esc(t('Hata listesi alınamadı.', 'Could not load errors.'))}</div>`;
-    }
+  function loadFailures(jobId) {
+    const id = String(jobId == null ? '' : jobId);
+    if (!id) return Promise.resolve();
+    const pending = state.failureLoads.get(id);
+    if (pending) return pending;
+
+    const task = (async () => {
+      try {
+        const data = await api(`/api/plm-jobs/${encodeURIComponent(id)}`);
+        const failures = Array.isArray(data && data.failures) ? data.failures : [];
+        const current = jobById(id);
+        if (!current) return;
+        state.failureCache.set(id, { failureCount: Number(current.failureCount || 0), failures });
+        const node = document.querySelector(`[data-plmops-failures="${CSS.escape(id)}"]`);
+        if (node && state.expanded.has(id)) node.innerHTML = failureTable(failures);
+      } catch (error) {
+        const node = document.querySelector(`[data-plmops-failures="${CSS.escape(id)}"]`);
+        if (node && state.expanded.has(id) && !state.failureCache.has(id)) {
+          node.innerHTML = `<div class="plmOpsEmpty">${esc(t('Hata listesi alınamadı.', 'Could not load errors.'))}</div>`;
+        }
+      } finally {
+        state.failureLoads.delete(id);
+      }
+    })();
+    state.failureLoads.set(id, task);
+    return task;
   }
 
   function render() { renderStrip(); if (state.panelOpen) renderPanel(); syncPolling(); }
