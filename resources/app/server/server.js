@@ -5021,7 +5021,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         // Style ID istemciden DEĞİL kalıcı PLM link deposundan gelir; yoksa
         // GetStyleList zaten çözer.
         const styleLink=styleLinks[plmStyleLinks.normalizeNumericId(plmId)];
-        requests.push({plmId,colourCode,colour,styleName:String(item&&item.styleName||'').trim(),styleId:String(styleLink&&styleLink.styleId||'')});
+        requests.push({plmId,colourCode,colour,imageRole:coreNectumStyleApi.normalizeImageRole(item&&item.imageRole),styleName:String(item&&item.styleName||'').trim(),styleId:String(styleLink&&styleLink.styleId||'')});
       }
       if(!requests.length)return {overrides:before,requested:0,images:[],imagesSaved:0,failedItems:identity.unresolved,imageFailedItems:identity.unresolved,mode,counts:plmImageJobCounts({}),status:plmImageJobStore.STATUS_COMPLETED};
 
