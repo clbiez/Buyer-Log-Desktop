@@ -141,6 +141,25 @@ test('aynı kaynak kimliği zaten kayıtlıysa görsel TEKRAR İNDİRİLMEZ', as
   assert.equal(run2.counts.cacheHits, 1);
 });
 
+test('Eksikleri Tamamla ana renkte eski otomatik OPTION kaydını cache saymaz ve ön+arka görsele geçirir', async () => {
+  const fake = createFakeStore();
+  const request = { plmId: '2121571', colourCode: 'CVL', colour: 'NEW BLACK', imageRole: 'main' };
+  const key = ingestLib.canonicalKeyFor(request);
+  fake.files.set('old_option', { id: 'old_option', url: '/x', mimeType: 'image/png', size: 10, updatedAt: 'old', buffer: png('old-option') });
+  fake.imagemap[key] = 'old_option';
+  const remembered = ownership.rememberAutomatic([{
+    key, owner: ownership.OWNER_PLM, imageRef: 'old_option', sourceType: 'OPTION', sourceIdentity: 'option:1:1', hash: 'old'
+  }], { store: fake.store(), persist: value => fake.ownership.saveOwnership(value) });
+  const decision = fake.ingest.decideBeforeFetch(request, { store: remembered.store, imagemap: fake.imagemap, mode: 'missing' });
+  assert.equal(decision.decision, ingestLib.DECISION_FETCH, 'eski Option Image ana renk için yeniden çekilmeli');
+
+  const correctStore = ownership.rememberAutomatic([{
+    key, owner: ownership.OWNER_PLM, imageRef: 'old_option', sourceType: 'STYLE_LIST', sourceIdentity: 'stylelist:front-back', hash: 'old'
+  }], { store: remembered.store, persist: value => fake.ownership.saveOwnership(value) }).store;
+  const cached = fake.ingest.decideBeforeFetch(request, { store: correctStore, imagemap: fake.imagemap, mode: 'missing' });
+  assert.equal(cached.decision, ingestLib.DECISION_CACHED, 'doğru ana model görseli yeniden indirilmemeli');
+});
+
 test('kullanıcının ELLE koyduğu görsel otomatik senkronda korunur', async () => {
   const { fake, calls, input } = harness();
   // Manuel görsel: imagemap'te var, sahiplik kaydında YOK.
