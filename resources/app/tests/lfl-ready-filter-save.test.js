@@ -11,9 +11,9 @@ const CSS = fs.readFileSync(path.join(ROOT, 'public', 'lfl.css'), 'utf8');
 
 function readyFilterBlock() {
   const start = LFL.indexOf('function renderReadyPanel(){');
-  const end = LFL.indexOf('function closeReadyPanel()', start);
+  const end = LFL.indexOf('function toggleReadyPanel()', start);
   assert.ok(start >= 0, 'renderReadyPanel should exist');
-  assert.ok(end > start, 'ready filter block should be bounded by closeReadyPanel');
+  assert.ok(end > start, 'ready filter block should be bounded by toggleReadyPanel');
   return LFL.slice(start, end);
 }
 
