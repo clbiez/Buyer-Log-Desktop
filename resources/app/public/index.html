@@ -337,12 +337,12 @@
   </div>
   <!-- Sayfanın temel (boyut) filtreleri başlığın hemen yanında durur; ayrı bir
        eylem şeridi (vfBar) açmaya gerek kalmaz. İçerik JS ile buraya taşınır. -->
-  <div class="pageTitleFilters" id="pageTitleFilters" hidden></div>
+  <div class="pageTitleFilters" id="pageTitleFilters" hidden aria-hidden="true"></div>
   <!-- v7.81 — Kaynak Veri şeridinden taşındı. refreshWarnChips() uyarı çipini
        bu kimliğe basıyor; şeritle birlikte silinseydi yenileme uyarıları
        hiçbir yerde görünmezdi. Uyarılar yenilemeden doğduğu için başlıkta,
        Yenile düğmesinin yakınında duruyor. -->
-  <span class="topSourceStatus" id="sourceStatusInline" role="status" aria-live="polite"></span>
+  <span class="topSourceStatus" id="sourceStatusInline" role="status" aria-live="polite" hidden aria-hidden="true"></span>
   <div class="topDirtyNotice" id="cpDirtyNotice" role="status" aria-live="polite" aria-hidden="true">
     <span id="cpDirtyNoticeText">0 satırda değişiklik var</span>
     <button type="button" id="cpDirtyRevert">Değişiklikleri geri al</button>
