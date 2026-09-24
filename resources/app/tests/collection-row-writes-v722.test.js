@@ -289,7 +289,7 @@ test('v7.22 çakışan satırlar kullanıcıya bildirilir ve yerel giriş korunu
   const report = APP.slice(APP.indexOf('function kolReportConflicts'), APP.indexOf('function kolWorkspaceSetReadonly'));
   assert.doesNotMatch(report, /kolRows\[index\]=migrateKolRow\(\{\.\.\.item\.current\}\)/, 'sunucu değeri yerel girişi ezmemeli');
   assert.match(report, /kolBaseline\.rows\.set/, 'sunucu değeri yalnız karşılaştırma temeline alınmalı');
-  assert.match(report, /kolPersistPendingWorkspace\('conflict'\)/, 'yerel giriş cihazda kurtarılabilir kalmalı');
+  assert.match(report, /kolPersistPendingWorkspace\(rebased\?'rebased':'conflict'\)/, 'yerel giriş hem otomatik rebase hem gerçek conflict durumunda cihazda kurtarılabilir kalmalı');
   assert.match(report, /showToast/);
   assert.match(report, /kaydedilemedi/, 'hangi satırların kaydedilemediği söylenmeli');
 });
