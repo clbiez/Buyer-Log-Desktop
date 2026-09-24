@@ -293,3 +293,66 @@ test('v7.22 çakışan satırlar kullanıcıya bildirilir ve yerel giriş korunu
   assert.match(report, /showToast/);
   assert.match(report, /kaydedilemedi/, 'hangi satırların kaydedilemediği söylenmeli');
 });
+
+
+/* ---------------- 6 · Kendi Koleksiyonunda kilitsiz / kayıpsız rebase ---------------- */
+
+test('v7.0.111 kendi satırındaki eşzamanlı değişiklik üç yönlü birleştirilir', () => {
+  const start = APP.indexOf('function kolValueEqual');
+  const end = APP.indexOf('function kolCollectChanges', start);
+  assert.ok(start > 0 && end > start, 'Collection merge yardımcıları bulunmalı');
+  const source = APP.slice(start, end);
+  const scene = new Function('migrateKolRow', `
+    ${source}
+    return { kolMergeLocalRowDelta, kolRowChangedFromBase };
+  `)(row => ({ ...row }));
+
+  const base = { id: 1, _rev: 4, not: 'eski', targetPrice: '10', pricing: { confirmed: false } };
+  const local = { ...base, not: 'benim girişim', pricing: { confirmed: true } };
+  const remote = { ...base, _rev: 5, not: 'öteki pencere', targetPrice: '11', colour: 'KIRMIZI' };
+  const merged = scene.kolMergeLocalRowDelta(base, local, remote);
+
+  assert.equal(merged.not, 'benim girişim', 'aynı alanda kullanıcının aktif yerel girişi korunmalı');
+  assert.deepEqual(merged.pricing, { confirmed: true }, 'yerel nesne alanı da korunmalı');
+  assert.equal(merged.targetPrice, '11', 'yerelde dokunulmayan uzak alan ezilmemeli');
+  assert.equal(merged.colour, 'KIRMIZI', 'uzakta eklenen alan korunmalı');
+  assert.equal(merged._rev, 5, 'tekrar kayıt güncel satır revizyonuna dayanmalı');
+  assert.equal(scene.kolRowChangedFromBase(base, local), true);
+});
+
+test('v7.0.111 kendi Koleksiyonunda revizyon çakışması kullanıcıyı durdurmadan otomatik yeniden tabanlanır', () => {
+  const report = APP.slice(APP.indexOf('function kolReportConflicts'), APP.indexOf('function kolWorkspaceSetReadonly'));
+  assert.match(report, /kolIsOwnWorkspace\(\)/);
+  assert.match(report, /kolMergeLocalRowDelta\(base,local,remote\)/);
+  assert.match(report, /return rebased/);
+
+  const rebase = APP.slice(APP.indexOf('async function kolRebaseOwnWorkspace'), APP.indexOf('async function kolSaveWorkspaceNow'));
+  assert.match(rebase, /kolPersistPendingWorkspace\('rebasing'\)/, 'rebase öncesi yerel çalışma cihazda güvenceye alınmalı');
+  assert.match(rebase, /remoteBaselineRows/, 'güncel sunucu satırları yeni baseline olmalı');
+  assert.match(rebase, /kolMergeLocalRowDelta/, 'yerel alan farkları güncel satırın üstüne taşınmalı');
+  assert.match(rebase, /localOrderChanged/, 'yerel sıra değişikliği kaybolmamalı');
+
+  const save = APP.slice(APP.indexOf('async function kolSaveWorkspaceNow'), APP.indexOf('function kolQueueWorkspaceSave'));
+  assert.match(save, /retryOwnConflict/);
+  assert.match(save, /kolRebaseOwnWorkspace\(ownerId\)/);
+  assert.match(save, /_conflictRetry:conflictRetry\+1/);
+  assert.doesNotMatch(save, /This Collection page changed elsewhere\. Your local edit is preserved; review and retry\./);
+});
+
+test('v7.0.111 düzenlenen Koleksiyon satırını bekleyen uzak yama ezemez', () => {
+  const apply = APP.slice(APP.indexOf('function kolDirtyRowIds'), APP.indexOf('function kolHighlightRemoteRows'));
+  assert.match(apply, /const dirty=kolDirtyRowIds\(\)/);
+  assert.match(apply, /dirty\.has\(id\)/, 'kaydedilmemiş satır yaması ertelenmeli');
+  assert.match(apply, /appliedItems/, 'baseline yalnız uygulanmış yamalardan ilerlemeli');
+  assert.doesNotMatch(apply, /kolBaseline\.structure=kolStructureSignature\(\)/,
+    'satır yaması yerel yapısal değişikliği kaydedilmiş saymamalı');
+
+  const deferredStart = APP.indexOf("document.addEventListener('focusout',()=>{", APP.indexOf('let kolDeferredPatches=[]'));
+  const deferredEnd = APP.indexOf('/* Kirli-workspace', deferredStart);
+  const deferred = APP.slice(deferredStart, deferredEnd);
+  assert.match(deferred, /await kolSettlePendingSave\(\)/, 'focusout önce yerel kaydı tamamlamalı');
+  assert.ok(
+    deferred.indexOf('await kolSettlePendingSave()') < deferred.indexOf('kolApplyRemotePatches(pending)'),
+    'uzak yama yerel kayıt tamamlanmadan uygulanmamalı',
+  );
+});
