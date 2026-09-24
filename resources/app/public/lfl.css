@@ -425,6 +425,36 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 
+/* LFL analysis cards: keep the default table viewport content-sized and compact,
+   while allowing each panel to be resized vertically and persisted by lfl.js. */
+#view-lfl .lflAnalysisGrid>.lflAnalysisResizableCard{
+  display:flex;flex-direction:column;align-self:start;height:auto;min-height:0;
+}
+#view-lfl .lflAnalysisGrid .lflTableWrap:not(.lflManualHeight){
+  height:auto!important;
+  max-height:clamp(220px,34vh,360px)!important;
+  flex:none;
+}
+#view-lfl .lflAnalysisGrid .lflTableWrap.lflManualHeight{
+  height:var(--lfl-manual-height)!important;
+  max-height:var(--lfl-manual-height)!important;
+  min-height:120px;
+  flex:none;
+}
+#view-lfl .lflHeightHandle{
+  height:12px;min-height:12px;display:grid;place-items:center;flex:none;
+  cursor:row-resize;touch-action:none;user-select:none;background:var(--card);
+  border-top:1px solid var(--line);
+}
+#view-lfl .lflHeightHandle>span{
+  display:block;width:44px;height:3px;border-radius:999px;background:var(--line2);
+  transition:background .14s var(--ease),width .14s var(--ease);
+}
+#view-lfl .lflHeightHandle:hover>span,
+#view-lfl .lflHeightHandle.isDragging>span{background:var(--primary);width:58px;}
+#view-lfl .lflHeightHandle:focus-visible{outline:2px solid var(--primary);outline-offset:-2px;}
+body.lflHeightDragging{cursor:row-resize;user-select:none;}
+
 /* v3.38 — LFL percentage colours, table exports and portfolio drill-down */
 #view-lfl .lflCpTableTool .ic{width:13px;height:13px;flex:none;}
 #view-lfl .lflPortfolioDrillCell{cursor:zoom-in;font-weight:700;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,var(--primary) 55%,transparent);}
