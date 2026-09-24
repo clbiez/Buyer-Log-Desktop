@@ -9,7 +9,7 @@
 
   const state = {
     fields: [],
-    viewConfig: { version: 1, query: { rows: [], columns: [], measures: [], filters: [], filterValues: {} }, display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [], grouped: true, showSubtotals: true, collapsedGroups: [] } },
+    viewConfig: { version: 2, query: { rows: [], columns: [], measures: [], filters: [], filterValues: {} }, display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [], grouped: true, showSubtotals: true, collapsedGroups: [], hideZeroCurrentBudget: true } },
     rows: [],
     loaded: false,
     loading: false,
@@ -29,7 +29,7 @@
   const esc = value => clean(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
   const clone = value => value == null ? value : JSON.parse(JSON.stringify(value));
   const query = () => state.viewConfig && state.viewConfig.query || { rows: [], columns: [], measures: [], filters: [], filterValues: {} };
-  const display = () => state.viewConfig && state.viewConfig.display || { labels: {}, widths: {}, sort: { id: '', dir: 1 }, grouped: true, showSubtotals: true, collapsedGroups: [] };
+  const display = () => state.viewConfig && state.viewConfig.display || { labels: {}, widths: {}, sort: { id: '', dir: 1 }, grouped: true, showSubtotals: true, collapsedGroups: [], hideZeroCurrentBudget: true };
   const fieldLabel = field => clean(display().labels && display().labels[field.id]) || clean(field.defaultLabel || field.name);
   const fieldId = field => clean(field && field.id);
   const configuredFields = () => [...query().rows, ...query().columns, ...query().measures, ...query().filters];
@@ -115,6 +115,57 @@
     return JSON.stringify((Array.isArray(path) ? path : []).map(value => clean(value)));
   }
 
+  function intakeGroupPathKeys(rows) {
+    const rowFields = query().rows || [];
+    const columnFields = query().columns || [];
+    if (display().grouped === false || !rowFields.length) return [];
+    const keys = [];
+    const walk = (sourceRows, level, path) => {
+      if (level >= rowFields.length) return;
+      const field = rowFields[level];
+      const groups = new Map();
+      sourceRows.forEach(row => {
+        const value = row && row[field.id] != null ? row[field.id] : '';
+        const key = clean(value);
+        if (!groups.has(key)) groups.set(key, { value, rows: [] });
+        groups.get(key).rows.push(row);
+      });
+      groups.forEach(group => {
+        const isLeafLevel = level === rowFields.length - 1 && columnFields.length === 0;
+        if (isLeafLevel) return;
+        const nextPath = [...path, group.value];
+        keys.push(intakeGroupKey(nextPath));
+        walk(group.rows, level + 1, nextPath);
+      });
+    };
+    walk(Array.isArray(rows) ? rows : [], 0, []);
+    return [...new Set(keys)];
+  }
+
+  function intakeUpdateGroupButtons(rows) {
+    const expand = byId('intakeExpandAllBtn');
+    const collapse = byId('intakeCollapseAllBtn');
+    const keys = intakeGroupPathKeys(rows);
+    const enabled = keys.length > 0;
+    const collapsed = new Set(Array.isArray(display().collapsedGroups) ? display().collapsedGroups : []);
+    if (expand) { expand.hidden = !enabled; expand.disabled = !enabled || collapsed.size === 0; }
+    if (collapse) { collapse.hidden = !enabled; collapse.disabled = !enabled; }
+  }
+
+  function intakeExpandAllGroups() {
+    const next = clone(state.viewConfig);
+    next.display = { ...(next.display || {}), collapsedGroups: [] };
+    state.viewConfig = next;
+    renderTable();
+  }
+
+  function intakeCollapseAllGroups() {
+    const next = clone(state.viewConfig);
+    next.display = { ...(next.display || {}), collapsedGroups: intakeGroupPathKeys(state.rows) };
+    state.viewConfig = next;
+    renderTable();
+  }
+
   function intakeDisplayRows(sorted) {
     const rowFields = query().rows || [];
     const columnFields = query().columns || [];
@@ -198,6 +249,7 @@
     body.hidden = false;
     const fields = activeColumns();
     if (!fields.length) {
+      intakeUpdateGroupButtons([]);
       table.innerHTML = `<tbody><tr><td class="intakeEmpty" colspan="1">${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>`;
       return;
     }
@@ -207,6 +259,7 @@
       const direction = Number(sort.dir) === -1 ? -1 : 1;
       sorted.sort((left, right) => String(left && left[sort.id] == null ? '' : left && left[sort.id]).localeCompare(String(right && right[sort.id] == null ? '' : right && right[sort.id]), isEnglish() ? 'en' : 'tr', { numeric: true, sensitivity: 'base' }) * direction);
     }
+    intakeUpdateGroupButtons(sorted);
     const header = fields.map(field => {
       const direction = sort.id === field.id ? (sort.dir === -1 ? ' ↓' : ' ↑') : '';
       return `<th data-intake-sort="${esc(field.id)}" data-intake-rename="${esc(field.id)}" title="${esc(text('Sıralamak için tıklayın · yeniden adlandırmak için çift tıklayın', 'Click to sort · double-click to rename'))}">${esc(fieldLabel(field))}${direction}</th>`;
@@ -393,7 +446,13 @@
     if (state.metadataLoading) return;
     document.getElementById('_intakeFieldsModal')?.remove();
     const draft = clone(state.viewConfig);
-    draft.display = { ...(draft.display || {}), grouped: draft.display?.grouped !== false, showSubtotals: draft.display?.showSubtotals !== false, collapsedGroups: Array.isArray(draft.display?.collapsedGroups) ? draft.display.collapsedGroups : [] };
+    draft.display = {
+      ...(draft.display || {}),
+      grouped: draft.display?.grouped !== false,
+      showSubtotals: draft.display?.showSubtotals !== false,
+      collapsedGroups: Array.isArray(draft.display?.collapsedGroups) ? draft.display.collapsedGroups : [],
+      hideZeroCurrentBudget: draft.display?.hideZeroCurrentBudget !== false,
+    };
     const dimensionPool = dimensionFields();
     const valuePool = measureFields();
     const modal = document.createElement('div');
@@ -405,6 +464,7 @@
         <div class="oabPivotBehaviorGrid">
           <label class="oabCheckField"><input type="checkbox" id="intakeGroupedViewInput"${draft.display.grouped !== false ? ' checked' : ''}><span>${esc(text('Gruplu pivot görünümü', 'Grouped pivot view'))}</span></label>
           <label class="oabCheckField"><input type="checkbox" id="intakeShowSubtotalsInput"${draft.display.showSubtotals !== false ? ' checked' : ''}><span>${esc(text('Alt toplamları ve genel toplamı göster', 'Show subtotals and grand total'))}</span></label>
+          <label class="oabCheckField"><input type="checkbox" id="intakeHideZeroBudgetInput"${draft.display.hideZeroCurrentBudget !== false ? ' checked' : ''}><span>${esc(text('Güncel Alım Bütçe = 0 olanları listeleme', 'Hide rows where Current Purchase Budget is 0'))}</span></label>
         </div>
 
         <div class="oabSettingsSection">
@@ -523,6 +583,7 @@
       }).filter(Boolean);
       draft.display.grouped = Boolean(modal.querySelector('#intakeGroupedViewInput')?.checked);
       draft.display.showSubtotals = Boolean(modal.querySelector('#intakeShowSubtotalsInput')?.checked);
+      draft.display.hideZeroCurrentBudget = Boolean(modal.querySelector('#intakeHideZeroBudgetInput')?.checked);
       draft.display.collapsedGroups = [];
       await saveView(draft, close);
     });
@@ -734,6 +795,8 @@
       } catch (error) { setStatus(error.message || String(error), 'error'); }
     });
     byId('intakeRefreshBtn')?.addEventListener('click', () => void refresh(true));
+    byId('intakeCollapseAllBtn')?.addEventListener('click', intakeCollapseAllGroups);
+    byId('intakeExpandAllBtn')?.addEventListener('click', intakeExpandAllGroups);
     byId('intakeFilterBar')?.addEventListener('click', event => {
       const add = event.target.closest('[data-intake-add-filter]');
       if (add) {
