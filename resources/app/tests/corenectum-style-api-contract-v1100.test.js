@@ -62,6 +62,15 @@ test('GetStyleList satırları plmCode ile styleId ayrımını korur', () => {
   assert.deepEqual(row.colors[0].colourCode, 'CVL');
 });
 
+test('GetStyleList üst-seviye imageUrl, model.imageUrl ile birlikteyse ön+arka kanonik görsel olarak önceliklidir', () => {
+  const payload = { data: { coreNectumResultData: { styleListResult: [
+    { plmCode: 2121571, styleId: 2502647, styleName: 'MUSTANG-Y1',
+      imageUrl: ATTACH('front-back'), model: { imageUrl: ATTACH('single-option') } },
+  ] } } };
+  const row = api.styleListRowsByPlm(payload).rows.get('2121571');
+  assert.match(row.imageUrl, /GetAttachment\/front-back$/);
+});
+
 test('aynı PLM için çelişen satırlar keyfi seçim yerine belirsiz sayılır', () => {
   const payload = { data: { coreNectumResultData: { styleListResult: [
     { plmCode: 1, styleId: 10 }, { plmCode: 1, styleId: 11 },

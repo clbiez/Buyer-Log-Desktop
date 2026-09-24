@@ -17,6 +17,15 @@ test('v6.12 extracts the exact model.imageUrl Attachment URL from GetStyleList',
   }]);
 });
 
+test('Style List üst-seviye imageUrl, model.imageUrl ile çakışınca ön+arka görsel kazanır', () => {
+  const frontBack = 'https://mym-api.lcwaikiki.com/lcw/live/corenectum/service/api/Attachment/GetAttachment/front-back';
+  const singleOption = 'https://mym-api.lcwaikiki.com/lcw/live/corenectum/service/api/Attachment/GetAttachment/single-option';
+  const payload = {data:{coreNectumResultData:{styleListResult:[{
+    styleId:2502647, plmCode:2121571, styleName:'MUSTANG-Y1', imageUrl:frontBack, model:{imageUrl:singleOption}
+  }]}}};
+  assert.equal(connector.coreNectumStyleListRows(payload)[0].imageUrl, frontBack);
+});
+
 test('v6.12 rejects unrelated imageUrl hosts and non-Attachment paths', () => {
   const payload = {data:{coreNectumResultData:{styleListResult:[
     {styleId:1,plmCode:101,styleName:'A',model:{imageUrl:'https://example.com/Attachment/GetAttachment/a'}},
