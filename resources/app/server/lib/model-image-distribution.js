@@ -243,9 +243,11 @@ function createModelImageDistribution(deps = {}) {
       const permission = ownership.canWriteAutomatic(store, item.key, refAlive ? currentRef : '', { overwriteManual });
       if (!permission.allowed) { manualProtected.push({ ...item, currentRef, origin: ORIGIN_MANUAL }); continue; }
 
-      // 2) LOCAL. "Eksikleri tamamla" modunda kullanılabilir yerel görsel
-      //    hiçbir uzak isteğe dönüşmez; yalnız hidrasyon/repaint gerekir.
-      if (mode === 'missing' && hasLocalFile(currentRef)) {
+      // 2) LOCAL. "Eksikleri tamamla" normalde kullanılabilir yerel
+      //    görseli yeniden istemez. İstisna: ana renk geçmişte otomatik
+      //    Option Image ile yazılmışsa yeni kanonik ön+arka görsele göç eder.
+      const roleRefresh = ingestLib.imageRoleNeedsRefresh(item, currentRef, { store, ownership });
+      if (mode === 'missing' && hasLocalFile(currentRef) && !roleRefresh) {
         local.push({ ...item, currentRef, imageRef: currentRef, origin: ORIGIN_LOCAL });
         continue;
       }
