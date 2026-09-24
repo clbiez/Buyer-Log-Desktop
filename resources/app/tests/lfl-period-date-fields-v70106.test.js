@@ -216,6 +216,75 @@ test('shared comparison header formatter keeps same-season period sets distingui
   assert.equal(api.comparisonColumnHeader({ season: 'S7', selectedPeriods: new Set() }, 'FOB'), 'S7 FOB');
 });
 
+test('Bangladesh and Bangladeş share the same LFL country identity', () => {
+  const api = loadApi();
+  assert.equal(api.countryIdentity('Bangladesh'), 'BD');
+  assert.equal(api.countryIdentity('Bangladeş'), 'BD');
+  const row = clientRow('country-alias', 'S7', { inStoreMonth: '2027-04' });
+  row.country = 'Bangladeş';
+  assert.deepEqual(
+    api.filterRows([row], {
+      season: 'S7',
+      dateField: 'inStore',
+      periods: new Set(['2027-04']),
+      country: new Set(['Bangladesh']),
+    }).map(item => item.id),
+    ['country-alias'],
+  );
+});
+
+test('LFL Trial carries Collection Product Description into the synthetic row', () => {
+  const api = loadApi();
+  const scope = {
+    season: 'S7',
+    months: ['2027-04'],
+    filters: { productDescription: ['CU4E - T-Shirt'], country: ['Bangladeş'] },
+  };
+  const draft = api.trialDraftFromModel({
+    id: 'trial-product-description',
+    modelKod: 'MODEL-A',
+    mag: 'MAG1',
+    mmyg: 'MMYG1',
+    urunTipi: 'K1',
+    urunAnaTanim: 'CU4E - T-Shirt',
+    country: 'Bangladesh',
+    buyingGroup: 'BG',
+    buyer: 'BUYER',
+    quantity: 100,
+  }, scope, { fob: 10 });
+  assert.equal(draft.productDescription, 'CU4E - T-Shirt');
+  assert.equal(api.countryIdentity(draft.country), 'BD');
+
+  const built = api.trialRowFrom(draft, scope);
+  assert.ok(built.row);
+  assert.equal(built.row.productDescription, 'CU4E - T-Shirt');
+  assert.deepEqual(
+    api.filterRows([built.row], {
+      season: 'S7',
+      dateField: 'inStore',
+      periods: new Set(['2027-04']),
+      productDescription: new Set(['CU4E - T-Shirt']),
+      country: new Set(['Bangladeş']),
+    }).map(row => row.id),
+    ['trial:trial-product-description'],
+  );
+});
+
+test('LFL Trial reports a selected filter dimension that is missing from a Collection model', () => {
+  const api = loadApi();
+  const scope = {
+    season: 'S7',
+    months: ['2027-04'],
+    filters: { productDescription: ['CU4E - T-Shirt'] },
+  };
+  const notices = api.trialScopeNotices({
+    id: 'missing-product-description',
+    productDescription: '',
+    inStoreMonth: '2027-04',
+  }, scope);
+  assert.ok(notices.some(item => item.field === 'productDescription'));
+});
+
 test('LFL UI exposes independent date-field selectors and multiline table headers', () => {
   assert.match(HTML, /id="lflCurrentDateField"[^>]*>[\s\S]*?value="inStore"[\s\S]*?value="opd"[\s\S]*?value="retailDate"/);
   assert.match(HTML, /id="lflCompareDateField"[^>]*>[\s\S]*?value="inStore"[\s\S]*?value="opd"[\s\S]*?value="retailDate"/);
