@@ -131,7 +131,20 @@ test('saved Shared Sync folder is reused on every login without reopening the pi
   assert.match(load, /if \(hubStatus && hubStatus\.root\) \$\('hubPath'\)\.value = hubStatus\.root/);
 
   const startup = LOGIN.slice(LOGIN.lastIndexOf('loadHubStatus().then'));
-  assert.match(startup, /if \(status && !status\.configured\) \$\('hubPanel'\)\.hidden = false/);
+  assert.match(startup, /restoreLastUser\(\)/);
+  assert.doesNotMatch(startup, /hubPanel'\)\.hidden = false/);
+  assert.match(LOGIN, /id="hubDetails" hidden/);
+  assert.match(LOGIN, /aria-expanded="false"/);
+});
+
+test('Shared Sync ayrıntıları ilk açılışta gizlidir ve yalnız Ayarlar ile açılır', () => {
+  assert.match(LOGIN, /let hubDetailsOpen = false/);
+  assert.match(LOGIN, /function setHubDetailsOpen\(open/);
+  assert.match(LOGIN, /\$\('hubDetails'\)\.hidden = !hubDetailsOpen/);
+  assert.match(LOGIN, /hubSettingsBtn'\)\.addEventListener\('click', \(\) => setHubDetailsOpen\(!hubDetailsOpen/);
+  assert.match(LOGIN, /setHubDetailsOpen\(false\);/);
+  const startup = LOGIN.slice(LOGIN.lastIndexOf('setHubDetailsOpen(false)'));
+  assert.doesNotMatch(startup, /!status\.configured[\s\S]{0,100}hidden = false/);
 });
 
 test('v7.14 visual language is restrained ERP styling and responsive', () => {
