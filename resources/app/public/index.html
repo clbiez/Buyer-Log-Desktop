@@ -1092,7 +1092,7 @@
     <div class="horizonBadge" id="backlogHorizonBadge"><span class="horizonBadgeLabel">Model ufku</span><span class="horizonBadgeText">ortak/yerel horizon — tüm veri kaynağı</span></div>
     <!-- Filtreler tek bir kartta, etiketli alanlar hâlinde. Gruplama/hiyerarşi bir
          kurulum ayarı olduğu için sürekli açık durmaz; katlanır panele alındı. -->
-    <div class="panel backlogFilterCard">
+    <div class="backlogSettingsCompat" id="backlogSettingsCompat" aria-hidden="true">
       <div class="backlogFilterRow">
         <div class="backlogField">
           <span class="backlogFieldLabel" data-i18n-tr="Retail tarihi" data-i18n-en="Retail date">Retail tarihi</span>
@@ -1161,6 +1161,7 @@
             <button class="tbtn backlogTreeCtl" id="backlogExpandAllBtn" title="Tümünü genişlet" aria-label="Tümünü genişlet"><svg class="ic"><use href="#i-chevrons-right"/></svg></button>
           </span>
           <span class="backlogTreeSpacer"></span>
+          <button class="tbtn" id="backlogSettingsBtn" title="Backlog pivot ve ön filtre ayarları" data-i18n-title-tr="Backlog pivot ve ön filtre ayarları" data-i18n-title-en="Backlog pivot and pre-filter settings"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Ayarlar" data-i18n-en="Settings">Ayarlar</span></button>
           <button class="tbtn" id="backlogExcelOptionsBtn" title="Excel sütun ve formül seçenekleri"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Excel seçenekleri" data-i18n-en="Excel options">Excel seçenekleri</span></button>
           <button class="tbtn" id="backlogExportBtn" title="Mevcut Backlog pivot raporunu Excel olarak indir"><svg class="ic"><use href="#i-download"/></svg> <span data-i18n-tr="Excel'e aktar" data-i18n-en="Export to Excel">Excel'e aktar</span></button>
         </div>
@@ -1240,6 +1241,7 @@
 <script src="toolbar-responsive.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="tab-system.js?v=__BL_ASSET_VERSION__"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
+<script src="backlog-settings.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-spreadsheet.js?v=__BL_ASSET_VERSION__&rev=9"></script>
