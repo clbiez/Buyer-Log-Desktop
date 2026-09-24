@@ -130,6 +130,45 @@ test('OPD and Retail Date filtering use their real source fields', () => {
   assert.deepEqual(api.filterRows(rows, { season: 'S7', dateField: 'retailDate', periods: new Set(['2027-07']) }).map(row => row.id), ['a']);
 });
 
+test('independent scenarios honor OPD and Retail Date period fields', () => {
+  const api = loadApi();
+  const rows = [
+    clientRow('current-opd', 'S7', {
+      inStoreMonth: '2027-09',
+      opd: '2027-04-03',
+      opdMonth: '2027-04',
+      retailDate: '2027-08-15',
+      retailDateMonth: '2027-08',
+    }, 12, 100),
+    clientRow('compare-retail', 'S6', {
+      inStoreMonth: '2026-09',
+      opd: '2026-03-01',
+      opdMonth: '2026-03',
+      retailDate: '2027-05-15',
+      retailDateMonth: '2027-05',
+    }, 10, 100),
+  ];
+
+  const result = api.scenarioComparisonResult(rows, {
+    name: 'Cross date fields',
+    currentSeason: 'S7',
+    compareSeason: 'S6',
+    currentDateField: 'opd',
+    compareDateField: 'retailDate',
+    currentMonths: ['2027-04'],
+    compareMonths: ['2027-05'],
+    filters: {},
+    inheritGlobal: false,
+  });
+
+  assert.deepEqual(result.currentRows.map(row => row.id), ['current-opd']);
+  assert.deepEqual(result.previousRows.map(row => row.id), ['compare-retail']);
+  assert.equal(result.currentDateField, 'opd');
+  assert.equal(result.compareDateField, 'retailDate');
+  assert.equal(api.scenarioPeriodLabel('S7', ['2027-04'], 'opd'), 'S7 · OPD · Nisan 2027');
+  assert.equal(api.scenarioPeriodLabel('S6', ['2027-05'], 'retailDate'), 'S6 · Retail Date · Mayıs 2027');
+});
+
 test('same season can produce two independent month datasets', () => {
   const api = loadApi();
   const rows = [
@@ -183,6 +222,8 @@ test('LFL UI exposes independent date-field selectors and multiline table header
   assert.match(LFL, /periods:\{current:\{dateField:'inStore'\},compare:\{dateField:'inStore'\}\}/);
   assert.match(LFL, /currentDateField:normalizeDateField\(state\.periods\.current\.dateField\)/);
   assert.match(LFL, /compareDateField:normalizeDateField\(state\.periods\.compare\.dateField\)/);
+  assert.match(LFL, /data-scenario-date-field="current"/);
+  assert.match(LFL, /data-scenario-date-field="compare"/);
   assert.match(CSS, /#lflGroupTable,#lflManufacturerVolumeTable/);
   assert.match(CSS, /white-space:pre-line!important/);
   assert.match(CSS, /min-height:42px/);
