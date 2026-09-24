@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.120",
-  "commit_sha": "bf08e2838aaefb0752427b7917a9dd477c5a278c",
-  "release_notes": "Buyer Log 7.0.120: Backlog üstündeki eski filtre/gruplama alanı kaldırıldı; Retail Tarihi, In Store, Antrepo Giriş Tarihi ön filtreleri ile pivot satırları, hiyerarşi ve tarih görünümü OAB ile aynı ayar penceresi yaklaşımında birleştirildi. Yeni Ayarlar butonu pivot alanında Excel Seçenekleri'nin soluna taşındı. Mevcut Backlog veri ve hesaplama semantiği korunurken ayarlar tek pencereden uygulanıyor. Tam regression paketi PASS."
+  "version": "7.0.121",
+  "commit_sha": "dcef70b8fc168c5ceacf7ced59cd33d633dfc6f6",
+  "release_notes": "Buyer Log 7.0.121: CP, Orders ve Koleksiyon tablo araç çubukları ortak düzene alındı. Kopyala ve Excel dışa aktar eylemleri ana toolbar'da yalnız ikon olarak gösteriliyor; Sütunlar kontrolü üç sayfada da '...' menüsüne taşındı; Koleksiyona Kopyala eylemi CP/Orders tarafında Araçlar menüsüne alındı. Mevcut action handler'ları korunarak gerçek DOM kontrolleri yeniden konumlandırıldı. Tam Buyer Log regression paketi PASS."
 }
