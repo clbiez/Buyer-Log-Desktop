@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.108",
-  "commit_sha": "66c03237b349999bc4eef26f5e8fe9a7bb33e9e6",
-  "release_notes": "Buyer Log 7.0.108: OAB artık Edge/Chrome Remote Debugging, 127.0.0.1:9223 veya harici browser profile bağımlılığı olmadan Buyer Log’un dahili Electron/Chromium oturumu üzerinden çalışır. OAB için persist:oab kalıcı oturumu kullanılır; GET/Refresh OAB sırasında oturum yoksa veya süresi dolmuşsa Buyer Log kendi login/MFA penceresini açar ve başarılı girişten sonra isteği otomatik tekrarlar. OAB rapor ve batch çağrıları backend RAM auth + oabApiClient üzerinden yürür; mevcut cache, filtre, parsing, snapshot ve batch merge davranışları korunur. OAB aktif execution path’inde CDP/debugger ve Remote Debugging fallback bulunmaz. Tam Buyer Log regression testleri PASS."
+  "version": "7.0.109",
+  "commit_sha": "007c505f7f4664e5a0dd63f9609cf28e21dc7566",
+  "release_notes": "Buyer Log 7.0.109: INTAKE pivotunda Güncel Alım Bütçesi 0 olan kayıtları gizleme seçeneği ve tüm grupları daralt/genişlet kontrolleri eklendi; varsayılan filtrelerden MerchAltGrupTanım, UrunKlasmanKod ve SonGuncellenmeTarihi çıkarılırken bu alanlar kullanıcı tarafından yeniden eklenebilir kaldı. OAB dahili Electron oturumunda giriş/MFA tamamlandıktan sonra seçili GET OAB isteği otomatik devam edecek şekilde düzeltildi. CP ve Orders üst çubuğundaki Page Filters ve teknik 'Loaded from cache' durumu kaldırıldı. CP, Orders ve Collection tablo arama kutuları yazılan metin sığmadığında sağa doğru dinamik genişlerken sağdaki eylem düğmelerini sıkıştırmayacak şekilde güncellendi. Tam Buyer Log regression testleri PASS."
 }
