@@ -4104,7 +4104,28 @@ td.qtxColourBridgeBusy{cursor:progress!important;animation:qtxColourPulse .8s ea
 .oabConfigIconBtn:hover:not(:disabled){border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
 .oabConfigIconBtn.danger:hover:not(:disabled){border-color:var(--red);color:var(--red);background:color-mix(in srgb,var(--red) 8%,var(--card));}
 .oabConfigIconBtn:disabled{opacity:.3;cursor:default;}
+
 .oabSettingsHint{font-size:10.5px;color:var(--muted);margin:0;}
+
+/* Backlog pivot settings reuses the proven OAB modal grammar. */
+.autoModal.backlogPivotSettingsModal{width:min(820px,calc(100vw - 24px));}
+.backlogPivotSettingsBody{display:grid;gap:12px;}
+.backlogSettingsDateGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+.backlogSettingsDateGrid>label{display:grid;gap:5px;color:var(--muted);font-size:10.5px;font-weight:700;}
+.backlogSettingsDateRange{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px;align-items:center;}
+.backlogSettingsDateRange>span{color:var(--muted);text-align:center;}
+.backlogSettingsDateRange input{min-width:0;height:30px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink);padding:0 7px;}
+.backlogSettingsFilterRow{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(110px,150px) auto;gap:6px;align-items:center;padding:6px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card2);}
+.backlogSettingsFilterRow select{height:30px;min-width:0;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink);font-size:11px;padding:0 7px;}
+.backlogSettingsFilterValues{justify-content:center;min-width:0;white-space:nowrap;}
+.backlogFixedPivotValue input[disabled],.backlogFixedPivotValue select[disabled]{opacity:.82;cursor:default;}
+.backlogDateLevelSettings{grid-template-columns:repeat(4,minmax(0,1fr));}
+@media(max-width:760px){
+  .backlogSettingsDateGrid{grid-template-columns:1fr;}
+  .backlogSettingsFilterRow{grid-template-columns:auto minmax(0,1fr) auto;}
+  .backlogSettingsFilterValues{grid-column:2/4;}
+  .backlogDateLevelSettings{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
 @media(max-width:640px){.oabPivotValueRow{grid-template-columns:auto minmax(0,1fr) 92px;}.oabPivotValueRow .oabConfigActions{grid-column:1/-1;justify-content:flex-end;}.oabPivotAxisRow{grid-template-columns:auto minmax(0,1fr);}.oabPivotAxisRow .oabConfigActions{grid-column:1/-1;justify-content:flex-end;}}
 
 /* Excel-benzeri sütun sağ-tık menüsü — CP / Orders / Collection / OAB */
