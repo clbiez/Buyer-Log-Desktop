@@ -38,22 +38,21 @@ function bigPatch(rows) {
 
 /* ------------------------------------------------- 1) MALİYET ÖLÇEKLENMESİN */
 
-test('küçük bir yazmanın maliyeti veritabanının büyüklüğüyle büyümez', async t => {
+test('küçük bir yazma büyük snapshotı yeniden yazmaz; yalnız küçük WAL kaydı ekler', async t => {
   const box = await freshDb(t);
   await box.db.queuePatch({ id: 'store:collection-workspaces/moderator.json', patch: { rows: bigPatch(20000) } });
 
-  // Anlık görüntü büyük; küçük yazma buna rağmen küçük kalmalı.
-  const before = fs.statSync(box.file).size;
-  assert.ok(before > 3 * 1024 * 1024, `taban görüntü büyük olmalı, ${before} bayt`);
+  // Anlık görüntü büyük; ilgisiz küçük yazma onu yeniden serialize/yazmamalı.
+  // Duvar saati eşiği CI disk yüküne göre yalancı negatif üretiyordu. Asıl
+  // ölçeklenebilirlik sözleşmesini doğrudan doğruluyoruz: büyük snapshot
+  // byte'ları değişmez, yalnız birkaç KB'lık WAL kaydı eklenir.
+  const before = fs.statSync(box.file);
+  assert.ok(before.size > 3 * 1024 * 1024, `taban görüntü büyük olmalı, ${before.size} bayt`);
 
-  const started = process.hrtime.bigint();
   await box.db.queuePatch({ id: 'store:settings.json', patch: { sourceFolder: 'C:/kaynak' } });
-  const ms = Number(process.hrtime.bigint() - started) / 1e6;
 
-  // Eski modelde bu yazma bütün durumu (MB'larca) yeniden serialize ediyordu.
-  // WAL'da yalnız bir satır ekleniyor; ölçüm makineye göre değişse de aradaki
-  // fark bir büyüklük mertebesi. Eşik cömert tutuldu ki test kırılgan olmasın.
-  assert.ok(ms < 60, `küçük yazma ${ms.toFixed(0)} ms sürdü; durum boyutuna bağlı kalmış olabilir`);
+  const after = fs.statSync(box.file);
+  assert.equal(after.size, before.size, 'küçük yazma büyük snapshot dosyasını yeniden yazmamalı');
 
   const walSize = fs.statSync(box.wal).size;
   assert.ok(walSize < 4096, `WAL satırı küçük olmalı, ${walSize} bayt`);
