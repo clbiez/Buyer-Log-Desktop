@@ -34,6 +34,23 @@ test('INTAKE pivot grupları OAB ile aynı daralt/tümünü genişlet aksiyonlar
   assert.match(intakeHeader, /i-chevrons-right/);
 });
 
+test('INTAKE pivot ayarı OAB gibi daraltma okunun sağında kalem ikonudur ve DB düğmesi yoktur', () => {
+  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeHorizonBadge"'));
+  assert.doesNotMatch(intakeHeader, /id="intakeConnectionBtn"|Veritabanı bağlantısı|Database connection/);
+  const collapsePos = intakeHeader.indexOf('id="intakeCollapseBtn"');
+  const fieldsPos = intakeHeader.indexOf('id="intakeFieldsBtn"');
+  assert.ok(collapsePos >= 0 && fieldsPos > collapsePos, 'kalem daralt/genişlet okunun sağında olmalı');
+  assert.match(intakeHeader.slice(fieldsPos, fieldsPos + 700), /i-pencil/);
+});
+
+test('Overview sipariş KPI özet satırı görünmez', () => {
+  const match = INDEX.match(/<div class="kpirow" id="kpiOrders"([^>]*)><\/div>/);
+  assert.ok(match);
+  assert.match(match[1], /hidden/);
+  assert.match(match[1], /aria-hidden="true"/);
+  assert.match(match[1], /display:none!important/);
+});
+
 test('v7.83 page collapse düğmeleri ortak layout state ile uygulanır ve persist edilir', () => {
   assert.match(APP, /data-overview-collapse/);
   assert.match(APP, /next\.collapsed\[key\]=!next\.collapsed\[key\]/);
