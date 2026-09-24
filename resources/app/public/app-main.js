@@ -19103,8 +19103,8 @@ function kolReportConflicts(conflicts){
     const ids=list.map(item=>item.id).slice(0,5).join(', ');
     const more=list.length>5?` (+${list.length-5})`:'';
     showToast(appLang==='en'
-      ?`${list.length} row(s) changed while you were editing: ${ids}${more}. Your local edit is still preserved.`
-      :`${list.length} satır siz düzenlerken değişti: ${ids}${more}. Yerel girişiniz korunmaya devam ediyor.`);
+      ?`${list.length} row(s) changed while you were editing and could not be saved: ${ids}${more}. Your local edit is still preserved.`
+      :`${list.length} satır siz düzenlerken değişti ve kaydedilemedi: ${ids}${more}. Yerel girişiniz korunmaya devam ediyor.`);
   }
   return rebased;
 }
