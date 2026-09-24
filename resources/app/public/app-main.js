@@ -3496,16 +3496,12 @@ function tableViewPresetState(tableKey){
 }
 function renderTableViewContext(tableKey){
   const prefix=tableKey==='koleksiyon'?'kol':tableKey;
-  const root=document.getElementById(`${prefix}TableViewActions`),status=document.getElementById(`${prefix}TableViewStatus`);
-  if(!root||!status)return;
-  const all=tableViewAllKeys(tableKey),hidden=tableViewHiddenKeys(tableKey),visible=all.filter(key=>!hidden.has(key)).length,preset=tableViewPresetState(tableKey);
+  const root=document.getElementById(`${prefix}TableViewActions`);
+  if(!root)return;
+  const preset=tableViewPresetState(tableKey);
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
   root.querySelectorAll('[data-partial-view-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(partialViewEnabled(button.dataset.partialViewToggle))));
-  const name=preset==='focus'?(appLang==='en'?'Focus':'Odak'):preset==='extended'?'Extended':preset==='all'?(appLang==='en'?'All':'Tümü'):(appLang==='en'?'Custom':'Özel');
-  const hint=appLang==='en'?'Arrow keys move cells':'Ok tuşları hücrelerde ilerler';
-  const partial=partialViewEnabled(tableKey)?' · Partial View':'';
-  status.textContent=`${name} · ${visible} / ${all.length} ${appLang==='en'?'columns':'sütun'}${partial} · ${hint}`;
 }
 function applyTableViewPreset(tableKey,preset){
   const all=tableViewAllKeys(tableKey);if(!all.length||!TABLE_VIEW_PRESETS[tableKey]||!['focus','extended','all'].includes(preset))return false;

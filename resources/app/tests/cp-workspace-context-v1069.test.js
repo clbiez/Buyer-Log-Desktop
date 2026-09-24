@@ -9,14 +9,15 @@ const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 
-test('v10.69 CP, Orders ile aynı çalışma alanı başlığını ve görünüm denetimlerini sunar', () => {
+test('CP görünüm başlığı yalnız yararlı metrik ve görünüm denetimlerini sunar', () => {
   const cp = INDEX.slice(INDEX.indexOf('<section id="view-cp">'), INDEX.indexOf('<section id="view-orders">'));
   assert.match(cp, /class="workspaceContextBar" aria-label="CP workspace context"/);
   assert.match(cp, /id="cpWorkspaceMeta"/);
   assert.match(cp, /id="cpTableViewActions"/);
   assert.match(cp, /data-table-view-preset="focus" data-table-key="cp"/);
   assert.match(cp, /data-table-view-preset="all" data-table-key="cp"/);
-  assert.match(cp, /id="cpTableViewStatus" role="status" aria-live="polite"/);
+  assert.doesNotMatch(cp, /workspaceContextIdentity|CP planlama çalışma alanı|CP planning workspace/);
+  assert.doesNotMatch(cp, /id="cpTableViewStatus"/);
 });
 
 test('v10.69 CP, Orders ile aynı aktif tablo filtreleri alanını kullanır', () => {
