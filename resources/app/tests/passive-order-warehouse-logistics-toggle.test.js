@@ -76,7 +76,7 @@ test('Orders logistics toggle opens and closes the correct detail row after rere
   // Hücre çizimi ve detay satırı aynı kümeyi okur.
   assert.match(js, /function cpLogisticStatusCellHtml\(row,tableKey='cp'\)/);
   assert.match(js, /const expanded=cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)/);
-  assert.match(js, /function cpLogisticDetailRowHtml\(row,cols,withChk,tableKey='cp'\)\{\s*\n\s*if\(!cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)\) return '';/);
+  assert.match(js, /function cpLogisticDetailRowHtml\(row,cols,withChk,tableKey='cp'\)\{\s*\n\s*if\(row&&row\._partialViewActive\)return '';\s*\n\s*if\(!cpLogisticExpandedSet\(tableKey\)\.has\(row\._id\)\) return '';/);
   // Tablo kimliği hücre çizim zincirinde taşınır.
   assert.match(js, /opts\.cellHtmlFn\(c,r,cf,tableKey\):cellHtml\(c,r,cf,tableKey\)/);
   assert.match(js, /function ordersCellHtml\(column,row,flags,tableKey='orders'\)/);
