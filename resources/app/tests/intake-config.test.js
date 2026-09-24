@@ -71,6 +71,50 @@ test('INTAKE varsayılan görünüm Excel hiyerarşisini ve measure sırasını 
   assert.equal(config.query.measures[9].sourceUniqueName, '[Measures].[Güncel Alım Bütçe OTB Oranı]');
 });
 
+test('INTAKE varsayılan filtreleri sadeleştirilir ve sıfır Güncel Alım Bütçe gizleme açık gelir', () => {
+  const config = intake.defaultViewConfig();
+
+  assert.deepEqual(
+    config.query.filters.map(field => field.defaultLabel),
+    ['Merch Yil Ay', 'Satış Cluster', 'Versiyon Tanim', 'SezonKod', 'MerchAltGrupKod', 'BuyerGrupTanim']
+  );
+  assert.equal(config.display.hideZeroCurrentBudget, true);
+});
+
+test('INTAKE v1 boş eski varsayılan filtreleri v2 görünümüne taşırken temizler', () => {
+  const saved = intake.defaultViewConfig();
+  saved.version = 1;
+  const legacyFields = intake.defaultFields();
+  const bySource = new Map(legacyFields.map(field => [field.sourceUniqueName, field]));
+  saved.query.filters.push(
+    bySource.get('[Dim_Urun].[MerchAltGrupTanim]'),
+    bySource.get('[Dim_Tarih].[Son Guncelleme Tarihi]'),
+    bySource.get('[Dim_Urun].[UrunKlasmanKod]'),
+  );
+
+  const resolved = intake.reconcileViewConfig(saved, legacyFields);
+  const sources = new Set(resolved.query.filters.map(field => field.sourceUniqueName));
+
+  assert.equal(resolved.version, 2);
+  assert.equal(sources.has('[Dim_Urun].[MerchAltGrupTanim]'), false);
+  assert.equal(sources.has('[Dim_Tarih].[Son Guncelleme Tarihi]'), false);
+  assert.equal(sources.has('[Dim_Urun].[UrunKlasmanKod]'), false);
+});
+
+test('INTAKE v1 eski varsayılan filtresinde seçili değer varsa migration filtreyi korur', () => {
+  const fields = intake.defaultFields();
+  const legacy = fields.find(field => field.sourceUniqueName === '[Dim_Urun].[UrunKlasmanKod]');
+  const saved = intake.defaultViewConfig();
+  saved.version = 1;
+  saved.query.filters.push(legacy);
+  saved.query.filterValues[legacy.id] = ['123'];
+
+  const resolved = intake.reconcileViewConfig(saved, fields);
+
+  assert.ok(resolved.query.filters.some(field => field.id === legacy.id));
+  assert.deepEqual(resolved.query.filterValues[legacy.id], ['123']);
+});
+
 test('INTAKE custom label yalnız display katmanında tutulur ve reset ile silinir', () => {
   const base = intake.defaultViewConfig();
   const target = base.query.measures.find(field => field.defaultLabel === 'Kümülatif Sipariş Miktar');
