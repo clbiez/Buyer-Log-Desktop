@@ -31,7 +31,7 @@ test('OAB desktop auth captures only the dedicated Electron session through webR
   assert.match(body, /createOabAuthLifecycle/);
   assert.match(body, /networkReady = Promise\.resolve\(true\)/);
   assert.doesNotMatch(body, /webContents\.debugger|Network\.requestWillBeSent|Network\.enable|targetDebugger|remote-debugging|9223/);
-  assert.ok(body.indexOf('onBeforeSendHeaders(OAB_AUTH_CAPTURE_FILTER') < body.indexOf('loadLoginTarget(OAB_VIEWER_URL, true)'));
+  assert.ok(body.indexOf('onBeforeSendHeaders(OAB_AUTH_CAPTURE_FILTER') < body.indexOf('loadLoginTarget(targetViewerUrl(), true)'));
 });
 
 test('OAB owns a persistent dedicated session and normal shutdown preserves it', () => {
@@ -60,7 +60,7 @@ test('persistent OAB probe stays hidden briefly, then escalates instead of waiti
   assert.match(body, /armSilentProbe\(\)/);
   assert.match(body, /recoverStaleSilentProbe/);
   assert.match(body, /resetForFreshViewer/);
-  assert.match(body, /resetOabBrowserAuthState\('stale-silent-probe'\)[\s\S]*?showInteractiveWindow\(\)[\s\S]*?loadLoginTarget\(OAB_VIEWER_URL, false\)/);
+  assert.match(body, /resetOabBrowserAuthState\('stale-silent-probe'\)[\s\S]*?showInteractiveWindow\(\)[\s\S]*?loadLoginTarget\(targetViewerUrl\(\), false\)/);
   assert.match(body, /resetOabBrowserAuthState[\s\S]*?clearStorageData[\s\S]*?clearCache/);
   assert.doesNotMatch(body, /once\('ready-to-show', showInteractiveWindow\)/);
   assert.match(body, /did-fail-load[\s\S]*?OAB_AUTH_NAVIGATION_FAILED/);
@@ -100,7 +100,7 @@ test('manual OAB sign-in clears only the dedicated browser auth state before nav
   const body = MAIN.slice(start, end);
   assert.match(body, /if \(manual\) await resetOabBrowserAuthState\('manual-login'\)/);
   assert.match(body, /resetOabBrowserAuthState[\s\S]*?oabAuthSession\(\)[\s\S]*?clearStorageData[\s\S]*?clearCache/);
-  assert.match(body, /if \(manual\)[\s\S]*?resetOabBrowserAuthState\('manual-login'\)[\s\S]*?loadLoginTarget\(OAB_VIEWER_URL, true\)/);
+  assert.match(body, /if \(manual\)[\s\S]*?resetOabBrowserAuthState\('manual-login'\)[\s\S]*?loadLoginTarget\(targetViewerUrl\(\), true\)/);
 });
 
 
@@ -370,7 +370,7 @@ test('Get OAB uses the dedicated Electron auth bridge and retries the original r
   const apiEnd = OAB.indexOf('const OABApi', apiStart);
   const apiBody = OAB.slice(apiStart, apiEnd);
   assert.match(apiBody, /buyerLogDesktop/);
-  assert.match(apiBody, /ensureOabAuth\(\{ interactive:true \}\)/);
+  assert.match(apiBody, /ensureOabAuth\(\{ interactive:true, \.\.\.oabLastAuthContext \}\)/);
   assert.match(apiBody, /OAB_AUTH_REQUIRED/);
   assert.match(apiBody, /OAB_AUTH_EXPIRED/);
   assert.match(apiBody, /return oabJson\(url, options, false\)/);
