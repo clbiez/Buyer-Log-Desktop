@@ -38,6 +38,22 @@
     return Number.isFinite(n)?n:(fallback||0);
   }
 
+  const SEARCH_BASE_WIDTH=230;
+  const SEARCH_MAX_WIDTH=520;
+  const SEARCH_TEXT_CHROME=42;
+
+  /* Arama alanı yalnız girilen metin mevcut taban genişliği aştığında büyür.
+     Genişlik bir HEDEF'tir; flex-shrink açık kaldığı için sağdaki sabit eylemler
+     hiçbir zaman ezilmez. Yer yetersizse arama alanı önce geri küçülür. */
+  function searchInputTargetWidth(textWidth,options){
+    const opts=options||{};
+    const base=Math.max(0,numeric(opts.base,SEARCH_BASE_WIDTH));
+    const max=Math.max(base,numeric(opts.max,SEARCH_MAX_WIDTH));
+    const chrome=Math.max(0,numeric(opts.chrome,SEARCH_TEXT_CHROME));
+    const desired=Math.ceil(Math.max(0,numeric(textWidth))+chrome);
+    return desired>base?Math.min(max,desired):null;
+  }
+
   function rankOf(priority){
     const rank=PRIORITY_RANK[priority];
     return rank==null?PRIORITY_RANK[DEFAULT_PRIORITY]:rank;
@@ -149,6 +165,44 @@
   const VIEWPORT_BUCKETS=[900,1000,1150,1350];
   const controllers=new Map();
   let uidSeed=0;
+
+  let searchMeasureContext=null;
+  function measureSearchText(input){
+    const value=String(input&&input.value||'');
+    if(!value)return 0;
+    const style=getComputedStyle(input);
+    try{
+      if(!searchMeasureContext){
+        const canvas=document.createElement('canvas');
+        searchMeasureContext=canvas.getContext('2d');
+      }
+      if(searchMeasureContext){
+        searchMeasureContext.font=style.font||[style.fontWeight,style.fontSize,style.fontFamily].filter(Boolean).join(' ');
+        const measured=searchMeasureContext.measureText(value).width;
+        const spacing=parseFloat(style.letterSpacing||'0');
+        return measured+(Number.isFinite(spacing)?Math.max(0,value.length-1)*spacing:0);
+      }
+    }catch(_){}
+    return value.length*Math.max(7,numeric(parseFloat(style.fontSize),12)*0.58);
+  }
+
+  function syncSearchInputWidth(input){
+    if(!input)return;
+    const target=searchInputTargetWidth(measureSearchText(input));
+    if(target==null)input.style.removeProperty('--tb-search-width');
+    else input.style.setProperty('--tb-search-width',target+'px');
+  }
+
+  function bindSearchInputFit(ctrl){
+    const input=ctrl&&ctrl.toolbar&&ctrl.toolbar.querySelector(':scope > input[type="search"]');
+    if(!input)return;
+    if(input.dataset.tbSearchFitBound!=='1'){
+      input.dataset.tbSearchFitBound='1';
+      input.addEventListener('input',()=>syncSearchInputWidth(input));
+      input.addEventListener('change',()=>syncSearchInputWidth(input));
+    }
+    syncSearchInputWidth(input);
+  }
 
   function readGap(element){
     if(!element||typeof getComputedStyle!=='function')return 0;
@@ -301,6 +355,7 @@
     const toolbar=ctrl.toolbar;
     restoreAll(ctrl);
     toolbar.removeAttribute('data-toolbar-compact');
+    syncSearchInputWidth(toolbar.querySelector(':scope > input[type="search"]'));
     toolbar.removeAttribute('data-toolbar-wrap');
     const items=collect(ctrl);
     const gaps={};
@@ -404,6 +459,7 @@
       overflowed:new Map(),key:'',lastWidth:-1,dirty:true,frame:0,pendingRemeasure:false,
     };
     controllers.set(toolbar,ctrl);
+    bindSearchInputFit(ctrl);
     if(typeof ResizeObserver==='function'){
       /* Tek gözlemci, tek araç çubuğu. Yalnız GENİŞLİK değişimi yeniden yerleşim
          tetikler; sarma yüksekliği değiştirdiğinde geri besleme döngüsü olmaz. */
@@ -483,6 +539,7 @@
 
   return Object.freeze({
     PRIORITY_RANK,
+    searchInputTargetWidth,
     layoutWidth,
     planToolbarLayout,
     samePlan,

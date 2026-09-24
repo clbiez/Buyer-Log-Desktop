@@ -19,7 +19,7 @@ const CSS = read('public/app.css');
 const INDEX = read('public/index.html');
 const APP = read('public/app-main.js');
 
-const { planToolbarLayout, layoutWidth, overflowCandidates, samePlan } = TOOLBAR;
+const { planToolbarLayout, layoutWidth, overflowCandidates, samePlan, searchInputTargetWidth } = TOOLBAR;
 
 const GROUP = 'kolTableActions';
 const GAPS = { __root__: 6, [GROUP]: 5 };
@@ -245,4 +245,20 @@ test('v11.11 paylaşılan eylem taşıma sistemi ortak katmanla senkron çalış
   assert.match(body, /BLToolbarResponsive\?\.refresh\?\.\(null,\{remeasure:true\}\)/);
   /* ⋯ menüsü ekran dışına açılmaz. */
   assert.match(APP, /if\(!menu\.hidden\)window\.BLToolbarResponsive\?\.placeMenu\?\.\(menu\)/);
+});
+
+
+test('v11.12 arama kutusu yalnız metin taban genişliği aştığında büyür ve üst sınırı geçmez', () => {
+  assert.equal(searchInputTargetWidth(120), null, 'kısa metin kutuyu gereksiz büyütmemeli');
+  assert.equal(searchInputTargetWidth(240), 282, 'uzun metin için yazı + kontrol payı kadar büyümeli');
+  assert.equal(searchInputTargetWidth(900), 520, 'çok uzun metin üst sınırda kalmalı');
+  assert.equal(searchInputTargetWidth(260, { base:180, max:360, chrome:40 }), 300);
+});
+
+test('v11.12 dinamik arama genişliği sağdaki eylemleri ezmeden flex-shrink ile geri küçülebilir', () => {
+  assert.match(SOURCE, /--tb-search-width/);
+  assert.match(SOURCE, /input\.addEventListener\('input',\(\)=>syncSearchInputWidth\(input\)\)/);
+  assert.match(CSS, /\.tableActionToolbar>input\[type=search\]\{[\s\S]*?flex:0 1 var\(--tb-search-width,230px\);[\s\S]*?max-width:min\(var\(--tb-search-width,230px\),520px\);/);
+  assert.match(CSS, /\.tableActionToolbar>:not\(input\[type=search\]\):not\(\.tableToolbarActions\)\{flex:0 0 auto;\}/);
+  assert.match(CSS, /\.tableActionToolbar \.tableToolbarActions>\*\{flex:0 0 auto;\}/);
 });
