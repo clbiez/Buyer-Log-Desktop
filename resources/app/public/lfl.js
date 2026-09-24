@@ -440,13 +440,21 @@
   }
   function renderReadyPanel(){
     const panel=$('lflReadyFiltersPanel');if(!panel)return;const items=readyLoad();
-    panel.innerHTML=`<div class="lflReadyHead"><strong>${isEn()?'Ready Filters':'Hazır Filtreler'}</strong><button type="button" class="lflReadySave" data-ready-save><svg class="ic"><use href="#i-star"/></svg>${isEn()?'Save Current':'Mevcut Filtreyi Kaydet'}</button></div><div class="lflReadyList">${items.length?items.map((item,i)=>`<div class="lflReadyItem"><button type="button" class="lflReadyApply" data-ready-apply="${i}" title="${esc(item.name)}"><span>${esc(item.name)}</span><small>${esc([item.currentSeason,item.compareSeason].filter(Boolean).join(' → '))}</small></button><button type="button" class="lflReadyDelete" data-ready-delete="${i}" title="${isEn()?'Delete':'Sil'}"><svg class="ic"><use href="#i-trash"/></svg></button></div>`).join(''):`<div class="lflReadyEmpty">${isEn()?'No saved filters yet.':'Henüz kayıtlı filtre yok.'}</div>`}</div>`;
-    panel.querySelector('[data-ready-save]')?.addEventListener('click',()=>{
-      const name=prompt(isEn()?'Ready filter name:':'Hazır filtre adı:');if(!name||!name.trim())return;
-      const all=readyLoad(),snapshot=currentFilterSnapshot(),existing=all.findIndex(x=>String(x.name).toLocaleLowerCase('tr-TR')===name.trim().toLocaleLowerCase('tr-TR'));
-      const item={name:name.trim(),...snapshot,updatedAt:new Date().toISOString()};if(existing>=0)all[existing]=item;else all.push(item);readySave(all);renderReadyPanel();
+    panel.innerHTML=`<div class="lflReadyHead"><strong>${isEn()?'Ready Filters':'Hazır Filtreler'}</strong><button type="button" class="lflReadySave" data-ready-save><svg class="ic"><use href="#i-star"/></svg>${isEn()?'Save Current':'Mevcut Filtreyi Kaydet'}</button></div><div class="lflReadyNameEditor" data-ready-editor hidden><input class="lflReadyNameInput" data-ready-name type="text" maxlength="80" autocomplete="off" aria-label="${isEn()?'Ready filter name':'Hazır filtre adı'}" placeholder="${isEn()?'Filter name':'Filtre adı'}"><button type="button" class="lflReadyNameAction" data-ready-confirm>${isEn()?'Save':'Kaydet'}</button><button type="button" class="lflReadyNameAction" data-ready-cancel>${isEn()?'Cancel':'İptal'}</button></div><div class="lflReadyList">${items.length?items.map((item,i)=>`<div class="lflReadyItem"><button type="button" class="lflReadyApply" data-ready-apply="${i}" title="${esc(item.name)}"><span>${esc(item.name)}</span><small>${esc([item.currentSeason,item.compareSeason].filter(Boolean).join(' → '))}</small></button><button type="button" class="lflReadyDelete" data-ready-delete="${i}" title="${isEn()?'Delete':'Sil'}"><svg class="ic"><use href="#i-trash"/></svg></button></div>`).join(''):`<div class="lflReadyEmpty">${isEn()?'No saved filters yet.':'Henüz kayıtlı filtre yok.'}</div>`}</div>`;
+    const editor=panel.querySelector('[data-ready-editor]'),nameInput=panel.querySelector('[data-ready-name]');
+    const hideNameEditor=()=>{if(!editor)return;editor.hidden=true;if(nameInput)nameInput.value='';};
+    const saveNamedFilter=()=>{
+      const name=String(nameInput?.value||'').trim();
+      if(!name){nameInput?.focus();if(window.showToast)showToast(isEn()?'Enter a filter name.':'Filtre adı girin.');return;}
+      const all=readyLoad(),snapshot=currentFilterSnapshot(),existing=all.findIndex(x=>String(x.name).toLocaleLowerCase('tr-TR')===name.toLocaleLowerCase('tr-TR'));
+      const item={name,...snapshot,updatedAt:new Date().toISOString()};if(existing>=0)all[existing]=item;else all.push(item);readySave(all);renderReadyPanel();
       if(window.showToast)showToast(isEn()?'Ready filter saved.':'Hazır filtre kaydedildi.');
-    });
+    };
+    panel.querySelector('[data-ready-save]')?.addEventListener('click',()=>{if(!editor||!nameInput)return;editor.hidden=false;nameInput.value='';nameInput.focus();});
+    panel.querySelector('[data-ready-confirm]')?.addEventListener('click',saveNamedFilter);
+    panel.querySelector('[data-ready-cancel]')?.addEventListener('click',hideNameEditor);
+    nameInput?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();saveNamedFilter();}else if(event.key==='Escape'){event.preventDefault();hideNameEditor();}});
+
     panel.querySelectorAll('[data-ready-apply]').forEach(btn=>btn.addEventListener('click',()=>applyReadyFilter(items[Number(btn.dataset.readyApply)])));
     panel.querySelectorAll('[data-ready-delete]').forEach(btn=>btn.addEventListener('click',()=>{const i=Number(btn.dataset.readyDelete),all=readyLoad();all.splice(i,1);readySave(all);renderReadyPanel();}));
   }
