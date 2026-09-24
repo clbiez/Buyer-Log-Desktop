@@ -1583,7 +1583,10 @@ function coreNectumExtraFields(model){
 // CDP script enjeksiyonunun kaçınılmaz kısıtıdır, kod tekrarı tercihi değil.
 const CORENECTUM_EXTRA_FIELDS_JS=`(model)=>{const fields=${JSON.stringify(CORENECTUM_EXTRA_FIELDS)},out={};for(const [target,candidates] of fields){for(const key of candidates){const value=model&&model[key];if(value!=null&&String(value).trim()){out[target]=String(value).trim().slice(0,300);break;}}}return out;}`;
 function coreNectumRecordImageUrl(item){
-  const direct=clean(item&&item.model&&item.model.imageUrl)||clean(item&&item.imageUrl);if(direct)return direct;
+  // Style List'in üst-seviye imageUrl'u kanonik ön+arka model görselidir.
+  // model.imageUrl bazı kayıtlarda Options'taki tekli görseli taşır; yalnız
+  // üst-seviye alan yoksa geriye dönük fallback olarak kullanılır.
+  const direct=clean(item&&item.imageUrl)||clean(item&&item.model&&item.model.imageUrl);if(direct)return direct;
   let found='';const visit=(value,depth=0)=>{if(found||depth>6||value==null||typeof value!=='object')return;for(const [key,entry] of Object.entries(value)){if(/^imageUrl$/i.test(key)&&clean(entry)){found=clean(entry);return;}visit(entry,depth+1);}};visit(item);return found;
 }
 function coreNectumAttachmentUrl(value){
