@@ -561,7 +561,10 @@
     return unique([...selected,...available]);
   }
   function pruneFilters(){
-    SHARED_DIMS.forEach(dim=>{const all=new Set(unique(state.rows.map(r=>r[FILTER_META[dim].rowKey])));state.filters[dim]=new Set([...state.filters[dim]].filter(v=>all.has(v)));});
+    // Filtre seçimini görünen etikete değil kanonik kimliğe göre koru.
+    // Böylece Bangladesh / Bangladeş gibi aynı ülkenin farklı kaynak etiketleri
+    // Trial satırı eklendiğinde veya veri yenilendiğinde birbirini düşürmez.
+    SHARED_DIMS.forEach(dim=>{const all=new Set(state.rows.map(r=>dimensionIdentity(dim,r[FILTER_META[dim].rowKey])).filter(Boolean));state.filters[dim]=new Set([...state.filters[dim]].filter(v=>all.has(dimensionIdentity(dim,v))));});
     MONTH_DIMS.forEach(dim=>{const side=periodSideForDim(dim),season=$(side==='current'?'lflCurrentSeason':'lflCompareSeason')?.value||'',dateField=dateFieldForDim(dim),available=new Set(state.rows.filter(r=>!season||r.season===season).map(r=>rowPeriodMonth(r,dateField)).filter(isUsableValue));state.filters[dim]=new Set([...state.filters[dim]].filter(v=>/^\d{4}-\d{2}$/.test(v)&&available.has(v)));});
   }
   function filterButtonText(dim){
@@ -1233,11 +1236,23 @@
      Corrections explicitly approved in the basket are also written back to the matching
      Collection model, so the simulation and Collection page stay aligned. */
   const TRIAL_REQUIRED=['mag','mmyg','classification','country','buyingGroup','buyer','inStoreMonth','quantity','fob'];
-  const TRIAL_LABELS={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Marka Müdürlüğü',classification:'Klasman',manufacturer:'Üretici',country:'Ülke',buyingGroup:'Buying Group',buyer:'Buyer',inStoreMonth:'In-Store Ayı',quantity:'Adet',fob:'LFL FOB'};
-  const TRIAL_LABELS_EN={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Brand Directorate',classification:'Classification',manufacturer:'Manufacturer',country:'Country',buyingGroup:'Buying Group',buyer:'Buyer',inStoreMonth:'In-Store Month',quantity:'Quantity',fob:'LFL FOB'};
+  const TRIAL_LABELS={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Marka Müdürlüğü',classification:'Klasman',productDescription:'Ürün Tanım',manufacturer:'Üretici',country:'Ülke',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Kumaş Kategorisi',fabricSupplierCountry:'Kumaşçı Ülkesi',fabricSupplier:'Kumaşçı',kumasTipi:'Kumaş Tipi',iplikNo:'İplik No',fabricWeight:'Gramaj',karisim:'Karışım',inStoreMonth:'In-Store Ayı',quantity:'Adet',fob:'LFL FOB'};
+  const TRIAL_LABELS_EN={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Brand Directorate',classification:'Classification',productDescription:'Product Description',manufacturer:'Manufacturer',country:'Country',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Fabric Category',fabricSupplierCountry:'Fabric Supplier Country',fabricSupplier:'Fabric Supplier',kumasTipi:'Fabric Type',iplikNo:'Yarn Count',fabricWeight:'Weight (GSM)',karisim:'Composition',inStoreMonth:'In-Store Month',quantity:'Quantity',fob:'LFL FOB'};
   const TRIAL_SOURCE_LABELS={confirmed:{tr:'Onaylı fiyat',en:'Approved price'},best:{tr:'Best price',en:'Best price'},target:{tr:'Hedef fiyat',en:'Target price'},manual:{tr:'Elle girildi',en:'Manual'}};
   const TRIAL_TEXT_FIELDS=['mag','mmyg','brandDirectorate','classification','country','buyingGroup','buyer'];
   const TRIAL_CATALOG_FIELDS=[...TRIAL_TEXT_FIELDS];
+  const TRIAL_MODEL_DIM_ALIASES=Object.freeze({
+    mag:['mag'],mmyg:['mmyg'],brandDirectorate:['brandDirectorate','markaMudurlugu','markaMudurluk'],
+    classification:['classification','urunTipi','klasman'],
+    productDescription:['productDescription','productMainDefinition','urunAnaTanim','urunAnaTanım','urunTanim','urunTanım','productDesc'],
+    manufacturer:['manufacturer','uretici','nihaiUretici','finalManufacturer'],
+    country:['country','ulke','ülke'],buyingGroup:['buyingGroup','buyerGroup'],buyer:['buyer'],
+    fabricCategory:['fabricCategory','kumasKategorisi','kumasKategori'],
+    fabricSupplierCountry:['fabricSupplierCountry','kumasciUlkesi','kumasciUlke','fabricCountry'],
+    fabricSupplier:['fabricSupplier','kumasci','fabricManufacturer'],
+    kumasTipi:['kumasTipi','fabricType'],iplikNo:['iplikNo','yarnCount'],
+    fabricWeight:['fabricWeight','gramaj','gsm'],karisim:['karisim','composition'],
+  });
   function trialLabel(k){return (isEn()?TRIAL_LABELS_EN:TRIAL_LABELS)[k]||k;}
   function trialSourceLabel(s){const m=TRIAL_SOURCE_LABELS[s];return m?(isEn()?m.en:m.tr):'';}
   function trialToast(msg){if(window.showToast)showToast(msg);}
@@ -1265,6 +1280,18 @@
   }
   function trialModelId(model){return String(model&&model.id!=null?model.id:'');}
   function positiveNumber(value){const n=num(value);return n!=null&&n>0?n:null;}
+  function trialModelDimensionValue(model,dim,bridge,previous){
+    const rowKey=FILTER_META[dim]?.rowKey||dim,previousValue=previous&&previous[rowKey];
+    if(isUsableValue(previousValue))return previousValue;
+    const bridgeFn=bridge&&bridge[`${dim}For`];
+    if(typeof bridgeFn==='function'){
+      const bridged=bridgeFn.call(bridge,model);
+      if(isUsableValue(bridged))return bridged;
+    }
+    const aliases=TRIAL_MODEL_DIM_ALIASES[dim]||[rowKey];
+    for(const key of aliases){const value=model&&model[key];if(isUsableValue(value))return value;}
+    return '';
+  }
   function trialDraftFromModel(model,scope=trialScope(),previous=null){
     const bridge=window.BLCollection;
     const priced=(bridge?.fobFor?.(model))||{fob:null,source:''};
@@ -1273,23 +1300,23 @@
     // değiştirilmez. Filtre dışı kalma yalnız bilgilendirme olarak gösterilir.
     const month=(previous&&previous.inStoreMonth)||ownMonth||scope.months[0]||'';
     const previousQuantity=positiveNumber(previous&&previous.quantity),modelQuantity=positiveNumber(bridge?.quantityFor?.(model))??positiveNumber(model&&model.quantity);
-    const previousFob=positiveNumber(previous&&previous.fob),derivedFob=positiveNumber(priced.fob);
-    const rawCountry=norm(previous&&previous.country)||norm(model&&model.country);
+    const previousFob=positiveNumber(previous&&previous.fob),derivedFob=positiveNumber(priced.fob),dimensions={};
+    // Trial satırı, LFL'de filtrelenebilen bütün portföy boyutlarını Koleksiyon
+    // modelinden taşır. Aksi halde örn. Product Description filtresi seçiliyken
+    // model "Ready" görünse bile sentetik satır boş kimlik yüzünden rapordan düşer.
+    SHARED_DIMS.forEach(dim=>{
+      const rowKey=FILTER_META[dim]?.rowKey||dim,value=trialModelDimensionValue(model,dim,bridge,previous);
+      dimensions[rowKey]=resolveDimensionLabel(dim,value);
+    });
+    // Üretici Koleksiyon aşamasında henüz belli olmayabilir veya LFL kaynağında
+    // daha önce görülmemiş yeni bir üretici olabilir. Bu alan doğrulama hatası
+    // üretmez; boşsa yalnız Trial satırında sanal "Trial" üreticisi kullanılır.
+    if(!isUsableValue(dimensions.manufacturer))dimensions.manufacturer='Trial';
     return {
       id:trialModelId(model),modelName:norm(model&&model.modelKod)||norm(model&&model.plmId),plmId:norm(model&&model.plmId),
       season:scope.season,inStoreMonth:month,quantity:previousQuantity??modelQuantity,
       fob:previousFob??derivedFob,priceSource:(previous&&previous.priceSource)||priced.source||'',
-      mag:resolveDimensionLabel('mag',norm(previous&&previous.mag)||norm(model&&model.mag)),
-      mmyg:resolveDimensionLabel('mmyg',norm(previous&&previous.mmyg)||norm(model&&model.mmyg)),
-      brandDirectorate:norm(previous&&previous.brandDirectorate)||norm(model&&model.brandDirectorate),
-      classification:resolveDimensionLabel('classification',norm(previous&&previous.classification)||(bridge?.classificationFor?.(model)||norm(model&&model.urunTipi))),
-      // Üretici Koleksiyon aşamasında henüz belli olmayabilir veya LFL kaynağında
-      // daha önce görülmemiş yeni bir üretici olabilir. Bu alan doğrulama hatası
-      // üretmez; boşsa yalnız Trial satırında sanal "Trial" üreticisi kullanılır.
-      manufacturer:norm(previous&&previous.manufacturer)||norm(bridge?.manufacturerFor?.(model))||norm(model&&model.manufacturer)||'Trial',
-      country:resolveDimensionLabel('country',rawCountry),
-      buyingGroup:resolveDimensionLabel('buyingGroup',norm(previous&&previous.buyingGroup)||norm(model&&model.buyingGroup)),
-      buyer:resolveDimensionLabel('buyer',norm(previous&&previous.buyer)||norm(model&&model.buyer)),
+      ...dimensions,
       license:norm(previous&&previous.license)||norm(model&&model.lisans),licensor:norm(previous&&previous.licensor)||norm(model&&model.licensor),
       collectionSeason:norm(model&&model.season),collectionMonth:ownMonth,image:norm(model&&model.img),
       priceBase:positiveNumber(priced.base),royalty:positiveNumber(priced.royalty)??0,hologram:positiveNumber(priced.hologram)??0,
@@ -1327,7 +1354,8 @@
     SHARED_DIMS.forEach(dim=>{
       if(dim==='brandDirectorate')return;
       const selectedKeys=selectedByDim[dim];if(!selectedKeys||!selectedKeys.size)return;
-      const rowKey=FILTER_META[dim].rowKey,value=draft&&draft[rowKey];if(!isUsableValue(value))return;
+      const rowKey=FILTER_META[dim].rowKey,value=draft&&draft[rowKey];
+      if(!isUsableValue(value)){add(rowKey,`${trialLabel(dim)} ${isEn()?'is not available for the active filter':'aktif filtre için mevcut değil'}`);return;}
       if(!selectedKeys.has(dimensionIdentity(dim,value)))add(rowKey,`${trialLabel(dim)} ${isEn()?'is outside the active filter':'aktif filtrenin dışında'}`);
     });
     return notices;
@@ -1335,15 +1363,16 @@
   function trialValidation(draft,scope=trialScope()){return trialValidationDetails(draft,scope).map(item=>item.message);}
   function trialRowFrom(draft,scope=trialScope()){
     const errors=trialValidation(draft,scope);if(errors.length)return {missing:errors};
-    const month=norm(draft.inStoreMonth);
+    const month=norm(draft.inStoreMonth),dimensions={};
+    SHARED_DIMS.forEach(dim=>{const rowKey=FILTER_META[dim]?.rowKey||dim;dimensions[rowKey]=resolveDimensionLabel(dim,draft&&draft[rowKey]);});
+    if(!isUsableValue(dimensions.manufacturer))dimensions.manufacturer='Trial';
     return {row:{
       id:`trial:${draft.id}`,sheet:'TRIAL',sourceRow:0,orderCode:`TRIAL-${draft.id}`,
-      modelName:norm(draft.modelName)||norm(draft.plmId),mag:norm(draft.mag),mmyg:norm(draft.mmyg),brandDirectorate:norm(draft.brandDirectorate),
-      classification:norm(draft.classification),season:scope.season,inStore:month?`${month}-01`:'',inStoreMonth:month,inStoreWeek:'',
-      fob:num(draft.fob),quantity:num(draft.quantity),manufacturer:norm(draft.manufacturer)||'Trial',country:resolveDimensionLabel('country',draft.country),
-      buyer:norm(draft.buyer),buyingGroup:norm(draft.buyingGroup),license:norm(draft.license),licensor:norm(draft.licensor),
+      modelName:norm(draft.modelName)||norm(draft.plmId),...dimensions,
+      season:scope.season,inStore:month?`${month}-01`:'',inStoreMonth:month,inStoreWeek:'',
+      fob:num(draft.fob),quantity:num(draft.quantity),license:norm(draft.license),licensor:norm(draft.licensor),
       dtrType:norm(draft.licensor).toLocaleUpperCase('tr-TR')==='DTR'?'DTR':(norm(draft.licensor)?'NON-DTR':''),line:'',
-      currency:isTurkeyCountry(draft.country)?'TRY':'USD',isTrial:true,trialSource:draft.priceSource||'manual',trialModelId:draft.id,
+      currency:isTurkeyCountry(dimensions.country||draft.country)?'TRY':'USD',isTrial:true,trialSource:draft.priceSource||'manual',trialModelId:draft.id,
       collectionSeason:norm(draft.collectionSeason),collectionMonth:norm(draft.collectionMonth),
     }};
   }
