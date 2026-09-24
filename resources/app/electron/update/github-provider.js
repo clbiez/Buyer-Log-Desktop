@@ -16,16 +16,37 @@ function githubAssetUrl(source,channel,version,artifact){
     throw Object.assign(new Error('GitHub artifact yolu manifest ile eşleşmiyor.'),{code:'UPDATE_ARTIFACT_PATH'});
   return `https://github.com/${owner}/${repo}/releases/download/${channel}-v${version}/${path.posix.basename(safe)}`;
 }
+function fetchTransports(){
+  const transports=[];
+  try{
+    const electron=require('electron');
+    if(electron&&electron.net&&typeof electron.net.fetch==='function')transports.push({name:'electron-net',fetch:(url,options)=>electron.net.fetch(url,options)});
+  }catch(_){}
+  if(typeof fetch==='function')transports.push({name:'node-fetch',fetch:(url,options)=>fetch(url,options)});
+  return transports;
+}
 async function fetchPublic(url,timeoutMs){
   const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeoutMs);
   if(timer.unref)timer.unref();
+  const options={signal:controller.signal,headers:{'Accept':'application/octet-stream','Cache-Control':'no-cache'},redirect:'follow'};
+  let lastError=null;
   try{
-    const response=await fetch(url,{signal:controller.signal,headers:{'Accept':'application/octet-stream','Cache-Control':'no-cache'},redirect:'follow'});
-    if(!response.ok)throw Object.assign(new Error(`GitHub release HTTP ${response.status}`),{code:'UPDATE_SOURCE_HTTP'});
-    const final=new URL(response.url);
-    if(final.protocol!=='https:'||!(final.hostname==='github.com'||final.hostname==='raw.githubusercontent.com'||final.hostname.endsWith('.githubusercontent.com')))
-      throw Object.assign(new Error('GitHub indirme yönlendirmesi güvenli değil.'),{code:'UPDATE_SOURCE_REDIRECT'});
-    return {response,controller,timer};
+    const transports=fetchTransports();
+    if(!transports.length)throw Object.assign(new Error('Kullanılabilir HTTPS indirme altyapısı yok.'),{code:'UPDATE_SOURCE_TRANSPORT_UNAVAILABLE'});
+    for(const transport of transports){
+      try{
+        const response=await transport.fetch(url,options);
+        if(!response.ok)throw Object.assign(new Error(`GitHub release HTTP ${response.status}`),{code:'UPDATE_SOURCE_HTTP',status:response.status});
+        const final=new URL(response.url);
+        if(final.protocol!=='https:'||!(final.hostname==='github.com'||final.hostname==='raw.githubusercontent.com'||final.hostname.endsWith('.githubusercontent.com')))
+          throw Object.assign(new Error('GitHub indirme yönlendirmesi güvenli değil.'),{code:'UPDATE_SOURCE_REDIRECT'});
+        return {response,controller,timer,transport:transport.name};
+      }catch(error){
+        lastError=Object.assign(error||new Error('GitHub indirme hatası.'),{transport:transport.name});
+        if(controller.signal.aborted)break;
+      }
+    }
+    throw lastError||Object.assign(new Error('GitHub indirme bağlantısı kurulamadı.'),{code:'UPDATE_SOURCE_FETCH_FAILED'});
   }catch(error){clearTimeout(timer);throw error;}
 }
 class GitHubReleaseProvider{
@@ -48,4 +69,4 @@ class GitHubReleaseProvider{
     }finally{clearTimeout(timer);}
   }
 }
-module.exports={GitHubReleaseProvider,parseGitHubSource,githubAssetUrl};
+module.exports={GitHubReleaseProvider,parseGitHubSource,githubAssetUrl,fetchTransports,fetchPublic};
