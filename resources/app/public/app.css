@@ -493,6 +493,7 @@ footer{padding:10px var(--sp-5) 26px;font-size:var(--fs-xs);color:var(--muted);}
 .tableViewPreset{min-height:var(--control-sm);padding:0 var(--sp-2);border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--ink2);font:650 var(--fs-xs)/1 var(--sans);cursor:pointer;}
 .tableViewPreset:hover{border-color:var(--line2);background:var(--card);color:var(--ink);}
 .tableViewPreset[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
+.tablePartialViewToggle{margin-left:var(--sp-1);border-color:var(--line2);}
 .tableViewPreset:focus-visible,.tableViewActions #navColsBtn:focus-visible{outline:none;box-shadow:var(--focus-ring);}
 .tableViewStatus{max-width:360px;overflow:hidden;text-overflow:ellipsis;color:var(--muted);font:600 var(--fs-2xs)/1.2 var(--mono);}
 .tableViewActions .navColsRight{position:relative;display:inline-flex;}
@@ -1128,6 +1129,9 @@ tfoot tr{position:sticky;bottom:0;z-index:4;}
 tfoot td{padding:7px 8px;border-top:1px solid var(--line2);background:var(--card2);color:var(--ink2);font-size:11px;}
 tfoot .quantityTotalLabel{font-weight:700;text-align:left;white-space:nowrap;}
 tfoot .quantityTotalValue{font-family:var(--mono);font-weight:800;text-align:right;color:var(--acc-ink);white-space:nowrap;}
+tfoot .partialStatusSubtotal{vertical-align:middle;}
+tfoot .partialStatusSubtotalLabel{display:block;font-family:var(--font);font-size:9px;font-weight:700;line-height:1.05;color:var(--muted);text-transform:uppercase;letter-spacing:.2px;}
+tfoot .partialStatusSubtotal strong{font-size:11px;font-weight:850;}
 tfoot .selectionTotalCell{position:relative;z-index:6;text-align:left;padding-left:3px;padding-right:3px;overflow:visible;}
 tfoot .selectionFooterCount{display:inline-grid;grid-auto-flow:column;grid-template-columns:auto auto;align-items:center;justify-content:start;width:max-content;min-width:25px;height:23px;padding:0 7px;border:1px solid var(--line2);border-radius:var(--r-full);background:var(--card);color:var(--acc-ink);font-family:var(--mono);font-size:10.5px;font-weight:800;white-space:nowrap;box-shadow:0 1px 2px rgba(16,24,40,.06);}
 tfoot .selectionFooterCount.includesTotal{gap:7px;}
