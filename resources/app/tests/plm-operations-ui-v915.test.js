@@ -109,7 +109,7 @@ test('hatalı modeller detaylandırılabiliyor', () => {
   assert.match(block, /PLM ID/);
   assert.match(block, /item\.code/);
   assert.match(block, /item\.error/);
-  assert.match(OPS, /\/api\/plm-jobs\/\$\{encodeURIComponent\(jobId\)\}/);
+  assert.match(OPS, /\/api\/plm-jobs\/\$\{encodeURIComponent\((?:jobId|id)\)\}/);
 });
 
 test('REGRESYON: açık hata detayı 1sn polling renderında kapanmaz veya Loading durumuna dönmez', () => {
