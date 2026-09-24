@@ -261,6 +261,7 @@ async function runPlmImageSync(input = {}) {
     const metaError = item.styleId ? meta.errors.get(item.styleId) : null;
     const selection = api.selectColourImage({
       colourCode: item.colourCode,
+      imageRole: item.imageRole,
       optionImages: (bucket && bucket.optionImages) || [],
       styleImages: (bucket && bucket.styleImages) || [],
       styleListImageUrl: item.styleListImageUrl,
