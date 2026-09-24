@@ -104,7 +104,7 @@ test('renderQuantityTotalsFooter: averageCols verilen sütunda kolAverageFooter 
 
 test("CP/Orders satır çizimi averageCols'u tableKey üzerinden geçirir; DOM'dan yeniden hesaplama yok", () => {
   const fn = extractFunction(APP, 'renderFullTable');
-  assert.match(fn, /renderQuantityTotalsFooter\(table,rows,cols,\{[^}]*averageCols:cpOrdersAverageFooterCols\(tableKey\)\}\)/);
+  assert.match(fn, /renderQuantityTotalsFooter\(table,rows,cols,\{[^\n]*averageCols:cpOrdersAverageFooterCols\(tableKey\)[^\n]*\}\);/);
 });
 
 test('ship tablosu (Nakliye Kıyaslama) averageCols göndermiyor — kapsam yalnız CP/Orders', () => {
