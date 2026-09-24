@@ -213,7 +213,10 @@ button{touch-action:manipulation}
 
 /* Shared Hub bootstrap gate — intentionally uses the login page's existing
    square controls/typography instead of introducing a second visual system. */
-.hubGate{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:10px 12px;border:1px solid var(--login-line-strong);background:#f7f9fb}
+.hubSettingsRow{display:flex;justify-content:flex-end;margin:16px 0 10px}
+.hubDetails[hidden]{display:none!important}
+.hubDetails{margin:0 0 18px}
+.hubGate{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px;padding:10px 12px;border:1px solid var(--login-line-strong);background:#f7f9fb}
 .hubGate[hidden],.hubPanel[hidden]{display:none!important}.hubGateCopy{display:flex;min-width:0;flex-direction:column;gap:2px}.hubGateCopy strong{font-size:11px;color:var(--login-text)}.hubGateCopy span{font-size:10px;line-height:1.35;color:var(--login-subtle)}
 .hubGate[data-state="ready"]{background:#f4f8f5}.hubGate[data-state="offline"],.hubGate[data-state="error"]{background:var(--login-warning-bg)}
 .hubSteps{display:grid;gap:3px;margin-top:7px;padding-top:7px;border-top:1px solid var(--login-line)}
@@ -228,4 +231,4 @@ button{touch-action:manipulation}
 .hubStepDetail{padding-left:6px;color:var(--login-subtle);white-space:nowrap}
 
 .hubSettingsBtn,.hubSecondaryBtn,.hubPrimaryBtn{min-height:34px;border-radius:0;font-family:var(--login-font);font-size:11px;font-weight:600;cursor:pointer}.hubSettingsBtn,.hubSecondaryBtn{border:1px solid var(--login-line-strong);background:#fff;color:var(--login-text);padding:0 11px}.hubPrimaryBtn{border:1px solid var(--login-brand);background:var(--login-brand);color:#fff;padding:0 13px}.hubSettingsBtn:hover,.hubSecondaryBtn:hover{background:#eef2f5}.hubPrimaryBtn:hover{background:var(--login-brand-deep)}.hubSettingsBtn:disabled,.hubSecondaryBtn:disabled,.hubPrimaryBtn:disabled{opacity:.55;cursor:not-allowed}
-.hubPanel{margin:-8px 0 18px;padding:12px;border:1px solid var(--login-line-strong);background:#fff}.hubPanel label{display:block;margin-bottom:6px;font-size:10.5px;font-weight:600;color:var(--login-text)}.hubPathRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.hubPathRow input{min-width:0;height:36px;border:1px solid var(--login-line-strong);border-radius:0;padding:0 9px;font:11px var(--login-font);color:var(--login-text);outline:0}.hubPathRow input:focus{border-color:var(--login-focus);outline:2px solid var(--login-focus-ring);outline-offset:1px}.hubStatusText{min-height:14px;margin:8px 0 0;font-size:10px;line-height:1.4;color:var(--login-subtle)}.hubActions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}
+ .hubPanel{margin:0;padding:12px;border:1px solid var(--login-line-strong);background:#fff}.hubPanel label{display:block;margin-bottom:6px;font-size:10.5px;font-weight:600;color:var(--login-text)}.hubPathRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.hubPathRow input{min-width:0;height:36px;border:1px solid var(--login-line-strong);border-radius:0;padding:0 9px;font:11px var(--login-font);color:var(--login-text);outline:0}.hubPathRow input:focus{border-color:var(--login-focus);outline:2px solid var(--login-focus-ring);outline-offset:1px}.hubStatusText{min-height:14px;margin:8px 0 0;font-size:10px;line-height:1.4;color:var(--login-subtle)}.hubActions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}
