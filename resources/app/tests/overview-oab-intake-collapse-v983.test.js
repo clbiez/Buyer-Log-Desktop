@@ -26,6 +26,14 @@ test('v7.83 OAB ve INTAKE başlıklarında ortak daraltma düğmesi bulunur', ()
   assert.match(oabHeader + intakeHeader, /i-chevron-up/);
 });
 
+test('INTAKE pivot grupları OAB ile aynı daralt/tümünü genişlet aksiyonlarını taşır', () => {
+  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeHorizonBadge"'));
+  assert.match(intakeHeader, /id="intakeCollapseAllBtn"/);
+  assert.match(intakeHeader, /id="intakeExpandAllBtn"/);
+  assert.match(intakeHeader, /i-chevrons-left/);
+  assert.match(intakeHeader, /i-chevrons-right/);
+});
+
 test('v7.83 page collapse düğmeleri ortak layout state ile uygulanır ve persist edilir', () => {
   assert.match(APP, /data-overview-collapse/);
   assert.match(APP, /next\.collapsed\[key\]=!next\.collapsed\[key\]/);

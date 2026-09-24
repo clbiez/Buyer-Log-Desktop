@@ -43,6 +43,43 @@ test('INTAKE DAX yalnız aktif source alanlarını kullanır; custom label sorgu
   assert.deepEqual(built.queryFields.measures, [measure.id]);
 });
 
+test('INTAKE Güncel Alım Bütçe 0 veya boş satırları varsayılan olarak DAX seviyesinde dışlar', () => {
+  const fields = intake.normalizeSchema({
+    columns: [{ table: 'Phase', name: 'Dönem Tanim' }],
+    measures: [{ table: 'Measures', name: 'Güncel Alım Bütçe' }],
+  });
+  const row = fields.find(field => field.fieldType === 'dimension');
+  const budget = fields.find(field => field.fieldType === 'measure');
+  const view = intake.reconcileViewConfig({
+    version: 2,
+    query: { rows: [row], columns: [], measures: [budget], filters: [], filterValues: {} },
+  }, fields);
+
+  const built = intake.buildIntakeQuery({ fields, viewConfig: view });
+
+  assert.match(built.query, /FILTER\(/);
+  assert.match(built.query, /NOT ISBLANK\(CALCULATE\(\[Güncel Alım Bütçe\]\)\)/);
+  assert.match(built.query, /CALCULATE\(\[Güncel Alım Bütçe\]\) <> 0/);
+});
+
+test('INTAKE sıfır bütçe gizleme seçeneği kapatılırsa DAX ek filtresi uygulanmaz', () => {
+  const fields = intake.normalizeSchema({
+    columns: [{ table: 'Phase', name: 'Dönem Tanim' }],
+    measures: [{ table: 'Measures', name: 'Güncel Alım Bütçe' }],
+  });
+  const row = fields.find(field => field.fieldType === 'dimension');
+  const budget = fields.find(field => field.fieldType === 'measure');
+  const view = intake.reconcileViewConfig({
+    version: 2,
+    query: { rows: [row], columns: [], measures: [budget], filters: [], filterValues: {} },
+    display: { hideZeroCurrentBudget: false },
+  }, fields);
+
+  const built = intake.buildIntakeQuery({ fields, viewConfig: view });
+
+  assert.doesNotMatch(built.query, /NOT ISBLANK\(CALCULATE\(\[Güncel Alım Bütçe\]\)\)/);
+});
+
 const ORDER_FIELDS = intake.normalizeSchema({
   columns: [
     { table: 'Dim', name: 'Country' },

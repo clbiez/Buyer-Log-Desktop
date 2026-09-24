@@ -24,11 +24,17 @@ const INTAKE_CONNECTION = Object.freeze({
 const DEFAULT_FILTER_DEFINITIONS = Object.freeze([
   ['Merch Yil Ay', '[Dim_Tarih].[Merch Yil Ay]'],
   ['Satış Cluster', '[SalesCluster].[Satış Cluster]'],
-  ['MerchAltGrupTanim', '[Dim_Urun].[MerchAltGrupTanim]'],
   ['Versiyon Tanim', '[Versiyon].[Versiyon Tanim]'],
   ['SezonKod', '[Dim_Sezon].[SezonKod]'],
   ['MerchAltGrupKod', '[Dim_Urun].[MerchAltGrupKod]'],
   ['BuyerGrupTanim', '[Dim_Urun].[BuyerGrupTanim]'],
+].map(([defaultLabel, sourceUniqueName]) => ({ defaultLabel, sourceUniqueName, fieldType: 'dimension' })));
+
+/* Bu alanlar yeni görünümde varsayılan filtre değildir; yine de alan
+ * kataloğunda tutulur ki kullanıcı + Filtre ekle ile istediğinde ekleyebilsin
+ * ve canlı şema geçici olarak kullanılamadığında da seçenek kaybolmasın. */
+const OPTIONAL_FILTER_DEFINITIONS = Object.freeze([
+  ['MerchAltGrupTanim', '[Dim_Urun].[MerchAltGrupTanim]'],
   ['Son Guncelleme Tarihi', '[Dim_Tarih].[Son Guncelleme Tarihi]'],
   ['UrunKlasmanKod', '[Dim_Urun].[UrunKlasmanKod]'],
 ].map(([defaultLabel, sourceUniqueName]) => ({ defaultLabel, sourceUniqueName, fieldType: 'dimension' })));
@@ -54,6 +60,7 @@ const DEFAULT_MEASURE_DEFINITIONS = Object.freeze([
 
 const DEFAULT_FIELD_DEFINITIONS = Object.freeze([
   ...DEFAULT_FILTER_DEFINITIONS,
+  ...OPTIONAL_FILTER_DEFINITIONS,
   ...DEFAULT_ROW_DEFINITIONS,
   ...DEFAULT_MEASURE_DEFINITIONS,
 ]);
@@ -62,6 +69,15 @@ function clean(value) { return String(value == null ? '' : value).trim(); }
 function keyOf(value) {
   return clean(value).replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR');
 }
+
+const INTAKE_VIEW_VERSION = 2;
+const INTAKE_ZERO_BUDGET_SOURCE = '[Measures].[Güncel Alım Bütçe]';
+const INTAKE_LEGACY_DEFAULT_FILTERS_TO_REMOVE = new Set([
+  '[Dim_Urun].[MerchAltGrupTanim]',
+  '[Dim_Tarih].[Son Guncelleme Tarihi]',
+  '[Dim_Urun].[UrunKlasmanKod]',
+].map(keyOf));
+
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
 const INTAKE_AGGREGATES = Object.freeze(['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'FIRST']);
 function normalizeAggregate(value, fallback = 'SUM') {
@@ -153,7 +169,7 @@ function defaultViewConfig() {
   const byLabel = new Map(fields.map(field => [field.defaultLabel, field]));
   const pick = definitions => definitions.map(definition => byLabel.get(definition.defaultLabel)).filter(Boolean).map(clone);
   return {
-    version: 1,
+    version: INTAKE_VIEW_VERSION,
     query: {
       rows: pick(DEFAULT_ROW_DEFINITIONS),
       columns: [],
@@ -161,7 +177,11 @@ function defaultViewConfig() {
       filters: pick(DEFAULT_FILTER_DEFINITIONS),
       filterValues: {},
     },
-    display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [], grouped: true, showSubtotals: true, collapsedGroups: [] },
+    display: {
+      labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [],
+      grouped: true, showSubtotals: true, collapsedGroups: [],
+      hideZeroCurrentBudget: true,
+    },
   };
 }
 
@@ -220,10 +240,25 @@ function reconcileViewConfig(input, availableFields = []) {
   const rows = listFor('rows', DEFAULT_ROW_DEFINITIONS).filter(field => field.fieldType === 'dimension');
   const columns = listFor('columns', []).filter(field => field.fieldType === 'dimension');
   const measures = listFor('measures', DEFAULT_MEASURE_DEFINITIONS).filter(field => field.fieldType === 'measure');
-  const filters = listFor('filters', DEFAULT_FILTER_DEFINITIONS).filter(field => field.fieldType === 'dimension');
+  let filters = listFor('filters', DEFAULT_FILTER_DEFINITIONS).filter(field => field.fieldType === 'dimension');
+  const rawValues = sourceQuery && sourceQuery.filterValues && typeof sourceQuery.filterValues === 'object' ? sourceQuery.filterValues : {};
+
+  /* v2 — Eski varsayılan görünümde otomatik gelen üç alan artık başlangıç
+     filtresi değildir. Kullanıcı bu alanlardan birine gerçekten değer seçmişse
+     davranışı sessizce değiştirmemek için filtre korunur; boş/All durumundaki
+     eski varsayılanlar bir kez temizlenir. Alanlar şemada kalır ve + Filtre
+     ekle üzerinden yeniden seçilebilir. */
+  if (source && Number(source.version || 0) < INTAKE_VIEW_VERSION) {
+    filters = filters.filter(field => {
+      if (!INTAKE_LEGACY_DEFAULT_FILTERS_TO_REMOVE.has(keyOf(field.sourceUniqueName))) return true;
+      const candidates = [rawValues[field.id], rawValues[field.sourceUniqueName], rawValues[field.defaultLabel]];
+      const values = candidates.find(item => Array.isArray(item)) || [];
+      return values.map(clean).filter(Boolean).length > 0;
+    });
+  }
+
   const active = [...rows, ...columns, ...measures, ...filters];
   const activeIds = new Set(active.map(field => field.id));
-  const rawValues = sourceQuery && sourceQuery.filterValues && typeof sourceQuery.filterValues === 'object' ? sourceQuery.filterValues : {};
   const filterValues = {};
   for (const field of filters) {
     const candidates = [rawValues[field.id], rawValues[field.sourceUniqueName], rawValues[field.defaultLabel]];
@@ -249,7 +284,12 @@ function reconcileViewConfig(input, availableFields = []) {
   const grouped = sourceDisplay.grouped !== false;
   const showSubtotals = sourceDisplay.showSubtotals !== false;
   const collapsedGroups = Array.isArray(sourceDisplay.collapsedGroups) ? [...new Set(sourceDisplay.collapsedGroups.map(clean).filter(Boolean))].slice(0, 5000) : [];
-  return { version: 1, query: { rows, columns, measures, filters, filterValues }, display: { labels, widths, sort, collapsed, grouped, showSubtotals, collapsedGroups } };
+  const hideZeroCurrentBudget = sourceDisplay.hideZeroCurrentBudget !== false;
+  return {
+    version: INTAKE_VIEW_VERSION,
+    query: { rows, columns, measures, filters, filterValues },
+    display: { labels, widths, sort, collapsed, grouped, showSubtotals, collapsedGroups, hideZeroCurrentBudget },
+  };
 }
 
 function updateDisplayLabel(config, id, value) {
@@ -378,7 +418,13 @@ function buildIntakeQuery({ fields = [], viewConfig, horizon = null, maxRows = I
   // The report is an aggregate/pivot, never a raw Intake DB dump. Put the cap
   // into DAX as well as the driver so the database does not serialize millions
   // of rows merely for the Node process to discard them afterwards.
-  const query = `EVALUATE\nTOPN(${rowLimit},\n  SUMMARIZECOLUMNS(\n    ${[...groupExpressions, ...horizonArgs, ...filterExpressions, ...measureExpressions].join(',\n    ')}\n  )\n)`;
+  const summarizedTable = `SUMMARIZECOLUMNS(\n    ${[...groupExpressions, ...horizonArgs, ...filterExpressions, ...measureExpressions].join(',\n    ')}\n  )`;
+  const currentBudgetField = available.find(field => keyOf(field.sourceUniqueName) === keyOf(INTAKE_ZERO_BUDGET_SOURCE));
+  const hideZeroBudget = config.display.hideZeroCurrentBudget !== false && currentBudgetField;
+  const reportTable = hideZeroBudget
+    ? `FILTER(\n    ${summarizedTable},\n    NOT ISBLANK(CALCULATE(${daxRef(currentBudgetField)})) && CALCULATE(${daxRef(currentBudgetField)}) <> 0\n  )`
+    : summarizedTable;
+  const query = `EVALUATE\nTOPN(${rowLimit},\n  ${reportTable}\n)`;
   const headerMap = {};
   rows.forEach(field => outputAliases(field).forEach(alias => { headerMap[alias] = field.id; }));
   measures.forEach(field => { headerMap[field.id] = field.id; });
