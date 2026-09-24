@@ -30,6 +30,15 @@ const DEFAULT_FILTER_DEFINITIONS = Object.freeze([
   ['BuyerGrupTanim', '[Dim_Urun].[BuyerGrupTanim]'],
 ].map(([defaultLabel, sourceUniqueName]) => ({ defaultLabel, sourceUniqueName, fieldType: 'dimension' })));
 
+/* Bu alanlar yeni görünümde varsayılan filtre değildir; yine de alan
+ * kataloğunda tutulur ki kullanıcı + Filtre ekle ile istediğinde ekleyebilsin
+ * ve canlı şema geçici olarak kullanılamadığında da seçenek kaybolmasın. */
+const OPTIONAL_FILTER_DEFINITIONS = Object.freeze([
+  ['MerchAltGrupTanim', '[Dim_Urun].[MerchAltGrupTanim]'],
+  ['Son Guncelleme Tarihi', '[Dim_Tarih].[Son Guncelleme Tarihi]'],
+  ['UrunKlasmanKod', '[Dim_Urun].[UrunKlasmanKod]'],
+].map(([defaultLabel, sourceUniqueName]) => ({ defaultLabel, sourceUniqueName, fieldType: 'dimension' })));
+
 const DEFAULT_ROW_DEFINITIONS = Object.freeze([
   ['Tedarik Cluster', '[SupplyBasket].[Tedarik Cluster].[Tedarik Cluster]'],
   ['Dönem Tanim', '[Phase].[Dönem Tanim].[Dönem Tanim]'],
@@ -51,6 +60,7 @@ const DEFAULT_MEASURE_DEFINITIONS = Object.freeze([
 
 const DEFAULT_FIELD_DEFINITIONS = Object.freeze([
   ...DEFAULT_FILTER_DEFINITIONS,
+  ...OPTIONAL_FILTER_DEFINITIONS,
   ...DEFAULT_ROW_DEFINITIONS,
   ...DEFAULT_MEASURE_DEFINITIONS,
 ]);
