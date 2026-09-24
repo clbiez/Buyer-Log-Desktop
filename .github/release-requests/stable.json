@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.108",
-  "source": "test-v7.0.108",
-  "requestedAt": "2026-09-24T04:14:00Z",
-  "reason": "verified-full-regression-and-oab-internal-browser-transport"
+  "version": "7.0.109",
+  "source": "test-v7.0.109",
+  "requestedAt": "2026-09-24T06:23:30Z",
+  "reason": "verified-full-regression-and-test-release"
 }
