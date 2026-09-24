@@ -1,0 +1,22 @@
+{
+  "id": "/",
+  "name": "Buyer Log — LCW Licensed Knitwear",
+  "short_name": "Buyer Log",
+  "description": "Sipariş, fiyat, onay, koleksiyon ve LFL süreçleri",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#F6F7F9",
+  "theme_color": "#5980A6",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Koleksiyon", "short_name": "Koleksiyon", "url": "/?tab=koleksiyon", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "LFL Analizi", "short_name": "LFL", "url": "/?tab=lfl", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

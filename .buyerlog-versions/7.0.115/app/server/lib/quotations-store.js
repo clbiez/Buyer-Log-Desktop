@@ -1,0 +1,366 @@
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
+const { withFileLeaseSync } = require('./shared-file-transaction');
+const { readJsonWithValidatedBackup } = require('./safe-json-read');
+
+const FILE = path.join(SERVER_DATA_ROOT, 'quotations.json');
+/* Delta motoruna taşınmış belge; kimlik veri köküne göreli yol. */
+const DOCUMENT_ID = 'quotations.json';
+const { createDocumentApi } = require('./delta-store');
+let documents = createDocumentApi(null);
+function attachDeltaStore(store) { documents = createDocumentApi(store); return documents; }
+const VISIBILITY_DIR = path.join(SERVER_DATA_ROOT, 'quotation-visibility');
+const RETENTION_YEARS = 2;
+const MAX_IMPORT_REQUESTS = 10000;
+const MAX_ITEMS = 50000;
+const MAX_MANUFACTURERS = 1000;
+
+function clean(value, max = 500) { return String(value == null ? '' : value).trim().slice(0, max); }
+function cleanId(value) { return clean(value, 160).replace(/[^A-Za-z0-9_.:-]/g, '_'); }
+function cleanObject(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }
+function uniqueIds(values) {
+  return [...new Set((Array.isArray(values) ? values : []).map(cleanId).filter(Boolean))].slice(0, 500);
+}
+function now() { return new Date().toISOString(); }
+function defaultStore() { return { schemaVersion: 1, requests: [], _revision: 0, _updatedAt: null }; }
+
+function normalizeManufacturer(value) {
+  const src = cleanObject(value);
+  return { name: clean(src.name, 240), email: clean(src.email, 320) };
+}
+function normalizeItem(value) {
+  const src = cleanObject(value);
+  const rowId = src.rowId !== null && src.rowId !== '' && Number.isFinite(Number(src.rowId)) ? Number(src.rowId) : null;
+  const quantity = src.quantity !== null && src.quantity !== '' && Number.isFinite(Number(src.quantity)) ? Number(src.quantity) : null;
+  return {
+    id: cleanId(src.id) || `quote-line-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    modelKey: clean(src.modelKey, 300), rowId,
+    orderCode: clean(src.orderCode, 160), plmId: clean(src.plmId, 160), modelCode: clean(src.modelCode, 240), license: clean(src.license, 240),
+    category: clean(src.category, 240), colour: clean(src.colour, 240), fabric: clean(src.fabric, 1000), season: clean(src.season, 120),
+    picture: clean(src.picture, 5000000), inStoreMonth: clean(src.inStoreMonth, 120), quantity, targetPrice: clean(src.targetPrice, 120),
+    manufacturer: clean(src.manufacturer, 240), manufacturerEmail: clean(src.manufacturerEmail, 320), price: clean(src.price, 120),
+    approved: Boolean(src.approved), dropped: Boolean(src.dropped),
+  };
+}
+function normalizeRequest(value, defaults = {}) {
+  const src = cleanObject(value);
+  const createdAt = clean(src.createdAt, 80) || now();
+  const status = src.status === 'closed' ? 'closed' : 'active';
+  const ownerId = cleanId(src.ownerId || defaults.ownerId);
+  const ownerName = clean(src.ownerName || defaults.ownerName, 240);
+  return {
+    id: cleanId(src.id) || `quotation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    source: src.source === 'cp' ? 'cp' : 'collection',
+    createdAt,
+    updatedAt: clean(src.updatedAt, 80) || createdAt,
+    status,
+    closedAt: status === 'closed' ? (clean(src.closedAt, 80) || clean(src.updatedAt, 80) || now()) : '',
+    ownerId,
+    ownerName,
+    editorIds: uniqueIds(src.editorIds).filter(id => id !== ownerId),
+    note: clean(src.note, 10000),
+    capacityConfirmed: Boolean(src.capacityConfirmed),
+    manufacturers: (Array.isArray(src.manufacturers) ? src.manufacturers : []).slice(0, MAX_MANUFACTURERS).map(normalizeManufacturer).filter(item => item.name),
+    items: (Array.isArray(src.items) ? src.items : []).slice(0, MAX_ITEMS).map(normalizeItem).filter(item => item.modelKey && item.manufacturer),
+    sortOrder: Number.isFinite(Number(src.sortOrder)) ? Number(src.sortOrder) : 0,
+    archived: Boolean(src.archived),
+    archiveReason: clean(src.archiveReason, 120),
+    mergedIntoId: cleanId(src.mergedIntoId),
+    mergedAt: clean(src.mergedAt, 80),
+  };
+}
+function normalizeStore(raw) {
+  const base = defaultStore();
+  return {
+    ...base,
+    ...cleanObject(raw),
+    schemaVersion: 1,
+    requests: (Array.isArray(raw && raw.requests) ? raw.requests : []).map(item => normalizeRequest(item)),
+    _revision: Math.max(0, Number(raw && raw._revision) || 0),
+  };
+}
+function loadStore() {
+  // Delta yetkiliyse kayıt oradan, değilse eski dosyadan; ikisi de aynı
+  // normalizasyondan geçer, yani biçim özdeştir.
+  const fromDelta = documents.read(DOCUMENT_ID);
+  if (fromDelta) return normalizeStore(fromDelta);
+  return readJsonWithValidatedBackup(FILE, {
+    fallback: () => defaultStore(),
+    normalize: normalizeStore,
+    restore: value => atomicWriteJson(FILE, value),
+  });
+}
+function saveStore(store) {
+  return withFileLeaseSync(FILE,()=>{
+  fs.mkdirSync(path.dirname(FILE), { recursive: true });
+  const current = loadStore();
+  const expected=Math.max(0,Number(store&&store._revision)||0);
+  if(current._revision!==expected){const error=new Error('Quotation records changed in another Buyer Log instance. Reload and retry.');error.code='REVISION_CONFLICT';error.statusCode=409;error.expectedRevision=expected;error.currentRevision=current._revision;throw error;}
+  const saved = {
+    schemaVersion: 1,
+    requests: (Array.isArray(store && store.requests) ? store.requests : []).map(item => normalizeRequest(item)),
+    _revision: current._revision + 1,
+    _updatedAt: now(),
+  };
+  if (documents.writesLegacy) atomicWriteJson(FILE, saved);
+  documents.mirror(DOCUMENT_ID, saved);
+  return saved;
+  });
+}
+
+function retentionTimestamp(request) {
+  return Math.max(...['createdAt','updatedAt','closedAt','mergedAt'].map(key => {
+    const value = Date.parse(request && request[key] || '');
+    return Number.isFinite(value) ? value : 0;
+  }));
+}
+function isRetentionExpired(request, at = Date.now()) {
+  const stamp = retentionTimestamp(request);
+  if (!(stamp > 0)) return false;
+  // '2 sene'yi sabit 730 gün olarak yorumlamak artık yıl içeren dönemlerde bir
+  // günü erken purge edebilir. Takvim yılı esas alınır: bugün 25.08.2026 ise
+  // ancak 25.08.2024 ve öncesindeki son iş zamanı retention dışındadır.
+  const cutoff = new Date(at);
+  cutoff.setFullYear(cutoff.getFullYear() - RETENTION_YEARS);
+  return stamp <= cutoff.getTime();
+}
+function visibilityFile(profileOrId) {
+  const id = cleanId(typeof profileOrId === 'string' ? profileOrId : profileOrId && profileOrId.id);
+  return id ? path.join(VISIBILITY_DIR, `${id}.json`) : '';
+}
+function loadVisibility(profileOrId) {
+  const file = visibilityFile(profileOrId);
+  if (!file || !fs.existsSync(file)) return { schemaVersion: 1, hidden: {} };
+  try {
+    const raw = cleanObject(JSON.parse(fs.readFileSync(file, 'utf8')));
+    const hidden = {};
+    for (const [id, stamp] of Object.entries(cleanObject(raw.hidden))) {
+      const key = cleanId(id), value = clean(stamp, 80);
+      if (key && value) hidden[key] = value;
+    }
+    return { schemaVersion: 1, hidden };
+  } catch (_) { return { schemaVersion: 1, hidden: {} }; }
+}
+function saveVisibility(profileOrId, value) {
+  const file = visibilityFile(profileOrId);
+  if (!file) return;
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  atomicWriteJson(file, { schemaVersion: 1, hidden: cleanObject(value && value.hidden), _updatedAt: now() });
+}
+function requestsForUser(profile, options = {}) {
+  const store = loadStore();
+  const hidden = loadVisibility(profile).hidden;
+  const includeHidden = Boolean(options.includeHidden);
+  return {
+    ...store,
+    requests: store.requests.filter(request => !request.archived && (includeHidden || !hidden[request.id])),
+    hiddenIds: includeHidden ? Object.keys(hidden) : [],
+  };
+}
+function hideRequest(profile, id) {
+  const store = loadStore();
+  const request = findRequest(store, id);
+  if (!request || request.archived) return null;
+  const visibility = loadVisibility(profile);
+  visibility.hidden[request.id] = now();
+  saveVisibility(profile, visibility);
+  return request;
+}
+function restoreRequest(profile, id) {
+  const store = loadStore();
+  const request = findRequest(store, id);
+  if (!request || request.archived) return null;
+  const visibility = loadVisibility(profile);
+  delete visibility.hidden[request.id];
+  saveVisibility(profile, visibility);
+  return request;
+}
+function cleanupExpired(at = Date.now()) {
+  const store = loadStore();
+  const expired = new Set(store.requests.filter(request => isRetentionExpired(request, at)).map(request => request.id));
+  if (!expired.size) return { removed: 0 };
+  store.requests = store.requests.filter(request => !expired.has(request.id));
+  saveStore(store);
+  if (fs.existsSync(VISIBILITY_DIR)) {
+    for (const name of fs.readdirSync(VISIBILITY_DIR)) {
+      if (!name.endsWith('.json')) continue;
+      const file = path.join(VISIBILITY_DIR, name);
+      try {
+        const raw = cleanObject(JSON.parse(fs.readFileSync(file, 'utf8')));
+        const hidden = cleanObject(raw.hidden);
+        let changed = false;
+        for (const id of expired) if (Object.prototype.hasOwnProperty.call(hidden, id)) { delete hidden[id]; changed = true; }
+        if (changed) atomicWriteJson(file, { ...raw, hidden, _updatedAt: now() });
+      } catch (_) {}
+    }
+  }
+  return { removed: expired.size };
+}
+
+function findRequest(store, id) { return (store.requests || []).find(item => item.id === cleanId(id)) || null; }
+function canEdit(profile, request) {
+  if (!profile || !request) return false;
+  return profile.role === 'moderator' || request.ownerId === profile.id || request.editorIds.includes(profile.id);
+}
+function canManageAccess(profile, request) {
+  return Boolean(profile && request && (profile.role === 'moderator' || request.ownerId === profile.id));
+}
+function createRequest(profile, payload) {
+  const store = loadStore();
+  const request = normalizeRequest(payload, { ownerId: profile.id, ownerName: profile.displayName });
+  request.ownerId = profile.id;
+  request.ownerName = clean(profile.displayName || profile.username || profile.id, 240);
+  request.editorIds = [];
+  request.status = 'active';
+  request.closedAt = '';
+  request.createdAt = clean(payload && payload.createdAt, 80) || now();
+  request.updatedAt = request.createdAt;
+  request.sortOrder = Date.now();
+  store.requests.unshift(request);
+  saveStore(store);
+  return request;
+}
+function updateRequest(profile, id, payload) {
+  const store = loadStore();
+  const current = findRequest(store, id);
+  if (!current) return null;
+  if (!canEdit(profile, current)) {
+    const error = new Error('Bu quotation kaydını düzenleme yetkiniz bulunmuyor.');
+    error.statusCode = 403; error.code = 'QUOTATION_EDIT_DENIED'; throw error;
+  }
+  // v6.51 — Kapalı quotation içeriğinin düzenlenmesini engelleyen kısıtlama
+  // kaldırıldı (kullanıcı kararı: "kapalı quotation'lara edit yasağı koyma").
+  // Sahiplik/erişim kontrolü (yukarıdaki canEdit) hâlâ geçerli; yalnız statü
+  // temelli kilit kaldırıldı.
+  const incoming = normalizeRequest({ ...payload, id: current.id }, { ownerId: current.ownerId, ownerName: current.ownerName });
+  incoming.ownerId = current.ownerId;
+  incoming.ownerName = current.ownerName;
+  incoming.source = current.source;
+  incoming.editorIds = current.editorIds;
+  incoming.createdAt = current.createdAt;
+  incoming.status = current.status;
+  incoming.closedAt = current.closedAt;
+  incoming.updatedAt = now();
+  incoming.sortOrder = Number.isFinite(Number(payload && payload.sortOrder)) ? Number(payload.sortOrder) : current.sortOrder;
+  const index = store.requests.findIndex(item => item.id === current.id);
+  store.requests[index] = incoming;
+  saveStore(store);
+  return incoming;
+}
+function setStatus(profile, id, status) {
+  const store = loadStore();
+  const request = findRequest(store, id);
+  if (!request) return null;
+  if (!canEdit(profile, request)) {
+    const error = new Error('Bu quotation kaydının durumunu değiştirme yetkiniz bulunmuyor.');
+    error.statusCode = 403; error.code = 'QUOTATION_EDIT_DENIED'; throw error;
+  }
+  request.status = status === 'closed' ? 'closed' : 'active';
+  request.closedAt = request.status === 'closed' ? now() : '';
+  request.updatedAt = now();
+  saveStore(store);
+  return request;
+}
+function setEditors(profile, id, editorIds, validUserIds) {
+  const store = loadStore();
+  const request = findRequest(store, id);
+  if (!request) return null;
+  if (!canManageAccess(profile, request)) {
+    const error = new Error('Bu quotation kaydının düzenleme yetkilerini değiştiremezsiniz.');
+    error.statusCode = 403; error.code = 'QUOTATION_ACCESS_DENIED'; throw error;
+  }
+  const valid = new Set(validUserIds || []);
+  request.editorIds = uniqueIds(editorIds).filter(userId => userId !== request.ownerId && valid.has(userId));
+  request.updatedAt = now();
+  saveStore(store);
+  return request;
+}
+function deleteRequest(profile, id) { return hideRequest(profile, id); }
+function mergeRequests(profile, sourceId, targetId) {
+  const store = loadStore();
+  const source = findRequest(store, sourceId);
+  const target = findRequest(store, targetId);
+  if (!source || !target) return null;
+  if (source.id === target.id || source.source !== target.source) {
+    const error = new Error('Yalnız aynı ekrandaki iki farklı quotation kaydı birleştirilebilir.');
+    error.statusCode = 400; error.code = 'QUOTATION_MERGE_INVALID'; throw error;
+  }
+  if (!canManageAccess(profile, source) || !canManageAccess(profile, target)) {
+    const error = new Error('Quotation birleştirme işlemi için iki kaydın da sahibi olmanız gerekir.');
+    error.statusCode = 403; error.code = 'QUOTATION_MERGE_DENIED'; throw error;
+  }
+  // v6.47 — Kapalı kayıtları birleştirme yasağı KALDIRILDI (kullanıcı kararı:
+  // "kapalı kayıt hem kaynak hem hedef olabilsin, tam serbest"). Kapalı bir
+  // kayıt artık hem kaynak (silinir) hem hedef (korunur, içeriği zenginleşir)
+  // olabilir. Hedef kapalıysa birleşme sonrası da KAPALI kalır — birleştirme
+  // statüyü değiştirmez, yalnız iki kaydın içeriğini tek kayıtta toplar.
+
+  // Bırakma hedefi ana kayıttır. Aynı model + üretici satırı iki kayıtta da
+  // varsa hedefteki dolu değerler korunur; yalnız hedefte boş olan alanlar
+  // kaynak satırdan tamamlanır. Böylece fiyat/onay kaybı veya çift satır oluşmaz.
+  const manufacturers = new Map();
+  [...target.manufacturers, ...source.manufacturers].forEach(item => {
+    const normalized = normalizeManufacturer(item); if (!normalized.name) return;
+    const key = normalized.name.toLocaleUpperCase('tr-TR');
+    const current = manufacturers.get(key);
+    manufacturers.set(key, current ? { ...current, email: current.email || normalized.email } : normalized);
+  });
+  const items = new Map();
+  const itemKey = item => `${clean(item.modelKey, 300).toLocaleUpperCase('tr-TR')}\u0000${clean(item.manufacturer, 240).toLocaleUpperCase('tr-TR')}`;
+  [...target.items, ...source.items].forEach(raw => {
+    const item = normalizeItem(raw), key = itemKey(item), current = items.get(key);
+    if (!current) { items.set(key, item); return; }
+    const merged = { ...current };
+    for (const field of ['orderCode','plmId','modelCode','license','category','colour','fabric','season','picture','inStoreMonth','targetPrice','manufacturerEmail','price']) {
+      if (!clean(merged[field], field === 'picture' ? 5000000 : 1000) && clean(item[field], field === 'picture' ? 5000000 : 1000)) merged[field] = item[field];
+    }
+    if (merged.rowId == null && item.rowId != null) merged.rowId = item.rowId;
+    if (merged.quantity == null && item.quantity != null) merged.quantity = item.quantity;
+    merged.approved = Boolean(merged.approved || item.approved);
+    merged.dropped = Boolean(merged.dropped && item.dropped);
+    items.set(key, merged);
+  });
+  const notes = [clean(target.note, 10000), clean(source.note, 10000)].filter(Boolean);
+  target.note = [...new Set(notes)].join('\n\n').slice(0, 10000);
+  target.capacityConfirmed = Boolean(target.capacityConfirmed || source.capacityConfirmed);
+  target.manufacturers = [...manufacturers.values()];
+  target.items = [...items.values()];
+  target.updatedAt = now();
+  source.archived = true;
+  source.archiveReason = 'merged';
+  source.mergedIntoId = target.id;
+  source.mergedAt = now();
+  source.updatedAt = source.mergedAt;
+  const sourceIndex = store.requests.findIndex(item => item.id === source.id);
+  if (sourceIndex >= 0) store.requests[sourceIndex] = normalizeRequest(source);
+  const targetIndex = store.requests.findIndex(item => item.id === target.id);
+  store.requests[targetIndex] = normalizeRequest(target);
+  saveStore(store);
+  return { request: store.requests[targetIndex], removedId: source.id };
+}
+function importLegacy(profile, requests) {
+  const store = loadStore();
+  const existing = new Set(store.requests.map(item => item.id));
+  let imported = 0;
+  for (const raw of (Array.isArray(requests) ? requests : []).slice(0, MAX_IMPORT_REQUESTS)) {
+    const request = normalizeRequest(raw, { ownerId: profile.id, ownerName: profile.displayName });
+    if (existing.has(request.id)) continue;
+    request.ownerId = profile.id;
+    request.ownerName = clean(profile.displayName || profile.username || profile.id, 240);
+    request.editorIds = [];
+    request.status = raw && raw.status === 'closed' ? 'closed' : 'active';
+    request.closedAt = request.status === 'closed' ? (clean(raw.closedAt, 80) || now()) : '';
+    store.requests.push(request); existing.add(request.id); imported += 1;
+  }
+  if (imported) saveStore(store);
+  return { imported, requests: requestsForUser(profile).requests };
+}
+
+module.exports = {
+  attachDeltaStore,
+  loadStore, requestsForUser, createRequest, updateRequest, setStatus, setEditors, deleteRequest, hideRequest, restoreRequest, mergeRequests, importLegacy, cleanupExpired,
+  canEdit, canManageAccess, normalizeRequest, isRetentionExpired, RETENTION_YEARS,
+};

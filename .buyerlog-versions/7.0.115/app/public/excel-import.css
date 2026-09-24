@@ -1,0 +1,138 @@
+/* Kullanıcı Excel'i içeri aktarma sihirbazı.
+   Yeni renk/ölçü üretilmez; DESIGN_SYSTEM token'ları kullanılır. */
+
+.ximOverlay{ align-items:flex-start; }
+.ximCard{
+  width:min(1180px, 96vw);
+  max-height:92vh;
+  display:flex; flex-direction:column;
+  gap:var(--sp-3);
+  padding:var(--sp-5);
+  background:var(--card);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow-3);
+}
+.ximHead{ display:flex; align-items:baseline; gap:var(--sp-3); flex-wrap:wrap; }
+.ximHead strong{ font-family:var(--head); font-size:1.15rem; letter-spacing:.01em; }
+
+.ximSteps{ display:flex; gap:var(--sp-2); list-style:none; margin:0; padding:0; flex-wrap:wrap; }
+.ximSteps li{
+  display:flex; align-items:center; gap:var(--sp-2);
+  padding:var(--sp-1) var(--sp-3);
+  border:1px solid var(--line);
+  color:var(--muted); font-size:.82rem; white-space:nowrap;
+}
+.ximSteps li span{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:1.25rem; height:1.25rem; border:1px solid var(--line2); font-size:.72rem;
+}
+.ximSteps li.isActive{ color:var(--ink); border-color:var(--acc); background:var(--acc-bg); }
+.ximSteps li.isActive span{ border-color:var(--acc); color:var(--acc-ink); }
+.ximSteps li.isDone{ color:var(--ink2); }
+
+.ximBody{ overflow:auto; flex:1 1 auto; }
+.ximPane{ display:flex; flex-direction:column; gap:var(--sp-4); }
+.ximLead{ margin:0; color:var(--ink2); }
+.ximBlock{ border:1px solid var(--line); padding:var(--sp-3); display:flex; flex-direction:column; gap:var(--sp-2); }
+.ximBlock.is-bad{ border-color:var(--red); }
+.ximBlock h4{ margin:0; font-family:var(--head); font-size:.95rem; letter-spacing:.02em; text-transform:uppercase; color:var(--ink2); }
+.ximRow{ display:flex; gap:var(--sp-2); align-items:center; flex-wrap:wrap; }
+.ximSpacer{ flex:1 1 auto; }
+.ximFoot{ display:flex; gap:var(--sp-2); align-items:center; border-top:1px solid var(--line); padding-top:var(--sp-3); }
+
+.ximFileDrop{
+  display:flex; flex-direction:column; gap:var(--sp-2); align-items:center; justify-content:center;
+  padding:var(--sp-6); border:1px dashed var(--line2); cursor:pointer; text-align:center;
+}
+.ximFileDrop:hover{ background:var(--hover); }
+
+.ximChip{
+  display:inline-flex; align-items:center; padding:0 var(--sp-2);
+  border:1px solid var(--line2); font-size:.76rem; color:var(--ink2);
+}
+.ximChip.is-high{ border-color:var(--green); color:var(--green); }
+.ximChip.is-medium{ border-color:var(--orange); color:var(--orange); }
+.ximChip.is-low,.ximChip.is-user{ border-color:var(--red); color:var(--red); }
+
+.ximSheetList{ display:flex; gap:var(--sp-2); flex-wrap:wrap; }
+.ximSheet{
+  display:flex; flex-direction:column; gap:2px; align-items:flex-start;
+  padding:var(--sp-2) var(--sp-3); border:1px solid var(--line); background:var(--card2); cursor:pointer;
+}
+.ximSheet.isActive{ border-color:var(--acc); background:var(--acc-bg); }
+
+.ximFacts{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:var(--sp-2); margin:0; }
+.ximFacts div{ border:1px solid var(--line); padding:var(--sp-2); }
+.ximFacts dt{ font-size:.74rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+.ximFacts dd{ margin:0; font-weight:600; }
+
+.ximWarnList{ margin:0; padding-left:1.1rem; color:var(--orange); font-size:.8rem; }
+.ximNotice{ margin:0; padding:var(--sp-2) var(--sp-3); border:1px solid var(--line2); background:var(--card2); font-size:.85rem; }
+.ximNotice.is-bad{ border-color:var(--red); color:var(--red); background:var(--red-bg); }
+.ximNotice.is-ok{ border-color:var(--green); color:var(--green); background:var(--green-bg); }
+
+.ximToggle{ display:inline-flex; gap:var(--sp-2); align-items:center; font-size:.85rem; }
+.ximChecks{ display:flex; gap:var(--sp-3); flex-wrap:wrap; }
+
+.ximTable{ width:100%; border-collapse:collapse; font-size:.84rem; }
+.ximTable th,.ximTable td{ border:1px solid var(--line); padding:var(--sp-2); vertical-align:top; text-align:left; }
+.ximTable thead th{ background:var(--card2); font-family:var(--head); text-transform:uppercase; font-size:.76rem; letter-spacing:.03em; }
+.ximTable tr.isBad td{ background:var(--red-bg); }
+.ximTable select,.ximTable input[type="text"]{ width:100%; }
+.ximSample{ max-width:220px; overflow:hidden; text-overflow:ellipsis; }
+
+.ximDiff{ border-collapse:collapse; width:100%; font-size:.8rem; }
+.ximDiff th{ text-align:left; font-weight:600; border:0; padding:1px var(--sp-2) 1px 0; color:var(--ink2); }
+.ximDiff td{ border:0; padding:1px var(--sp-2) 1px 0; }
+.ximDiff tr.is-clear strong{ color:var(--red); }
+.ximDiff tr.is-set strong{ color:var(--green); }
+.ximDiff tr.is-unchanged{ color:var(--muted); }
+
+.ximStats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:var(--sp-2); }
+.ximStat{ border:1px solid var(--line); padding:var(--sp-2); display:flex; flex-direction:column; gap:2px; }
+.ximStat span{ font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+.ximStat strong{ font-size:1.15rem; font-family:var(--head); }
+
+.ximList{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:var(--sp-1); }
+.ximList li{ display:flex; gap:var(--sp-3); align-items:center; border-bottom:1px solid var(--hair); padding:var(--sp-1) 0; }
+.ximList li span:first-child{ flex:1 1 auto; }
+
+.ximProgress{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:var(--sp-2); }
+.ximProgress li{ padding:var(--sp-2) var(--sp-3); border:1px solid var(--line); color:var(--muted); }
+.ximProgress li.isActive{ border-color:var(--acc); background:var(--acc-bg); color:var(--ink); }
+
+@media (max-width:820px){
+  .ximCard{ width:96vw; padding:var(--sp-3); }
+  .ximTable{ font-size:.78rem; }
+}
+
+/* Collection import step 3 — action-based column decisions. */
+.ximTableScroll{ overflow:auto; border:1px solid var(--line); }
+.ximTableScroll .ximTable{ border:0; }
+.ximTableScroll .ximTable th:first-child,.ximTableScroll .ximTable td:first-child{ border-left:0; }
+.ximTableScroll .ximTable th:last-child,.ximTableScroll .ximTable td:last-child{ border-right:0; }
+.ximActionTable{ min-width:1120px; table-layout:fixed; }
+.ximActionTable th:nth-child(1){ width:16%; }
+.ximActionTable th:nth-child(2){ width:18%; }
+.ximActionTable th:nth-child(3),
+.ximActionTable th:nth-child(4),
+.ximActionTable th:nth-child(5){ width:19%; }
+.ximActionTable th:nth-child(6){ width:9%; }
+.ximActionCell{ min-width:0; }
+.ximActionChoice{
+  display:flex; align-items:flex-start; gap:var(--sp-2);
+  min-height:28px; padding:4px 6px;
+  border:1px solid transparent; cursor:pointer;
+  color:var(--ink2); line-height:1.25;
+}
+.ximActionChoice:hover{ background:var(--hover); color:var(--ink); }
+.ximActionChoice.isSelected{ border-color:var(--acc); background:var(--acc-bg); color:var(--ink); }
+.ximActionChoice input{ flex:0 0 auto; margin-top:2px; accent-color:var(--acc); }
+.ximActionConfig{ display:flex; gap:var(--sp-1); margin-top:var(--sp-1); align-items:center; }
+.ximActionConfig select,.ximActionConfig input[type="text"]{ min-width:0; width:100%; }
+.ximActionConfig select + select{ width:42%; flex:0 0 42%; }
+.ximActionTable .ximWarnList{ margin-top:var(--sp-1); }
+
+@media (max-width:1100px){
+  .ximActionTable{ min-width:1040px; }
+}

@@ -1,0 +1,566 @@
+'use strict';
+
+/* KULLANICI TERCİHLERİ / PERSONAL WORKSPACE — SUNUCU TARAFI (v7.01)
+
+   Not Defteri, mail şablonları ve benzeri kişisel veriler bugüne kadar yalnız
+   tarayıcının localStorage'ında duruyordu. localStorage TARAYICIYA özeldir:
+   Edge'de yazılan not Chrome'da görünmez, tarayıcı verisi temizlenince ya da
+   makine değişince tamamen kaybolur.
+
+   Burada gerçek kullanıcı kimliğine bağlı, sunucuda duran tek bir depo var.
+   v7.01 ile filtre, görünüm, kolon ve Horizon tercihleri de aynı depoya
+   bağlanır. Operasyonel kayıtlar (Collection satırları/notları, CP revizyonu),
+   parola ve oturum verisi bu whitelist'e özellikle dahil edilmez.
+
+   Çakışma çözümü zaman damgasına göredir: aynı anahtarın en son yazılan
+   sürümü kazanır. İki tarayıcıda aynı anda not yazmak nadir olduğu için bu
+   yeterli; kaybı önlemek adına yazma her zaman TAM değeri gönderir. */
+
+const fs = require('fs');
+const path = require('path');
+const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
+const { readJsonWithValidatedBackup } = require('./safe-json-read');
+
+const ROOT = path.join(SERVER_DATA_ROOT, 'user-preferences');
+const MAX_VALUE_BYTES = 2 * 1024 * 1024;   // tek anahtar
+const MAX_TOTAL_BYTES = 8 * 1024 * 1024;   // kullanıcı başına
+
+const WORKSPACE_HORIZON_PREFIX = 'buyerlog.workspace.horizon.';
+// Applied Horizon is derived from the last successful refresh. It is persisted
+// for restart consistency, but is intentionally not part of profile/workspace
+// copying because it describes the data snapshot on this device.
+const APPLIED_HORIZON_PREFIX = 'buyerlog.workspace.applied-horizon.';
+
+// Kopyalama ve reset işlemleri bu kategoriler üzerinden çalışır. Aynı anahtar
+// birden fazla kategoriye girmez; böylece REPLACE yalnız seçilen alanı siler.
+const WORKSPACE_CATEGORY_PREFIXES = Object.freeze({
+  horizon: Object.freeze([WORKSPACE_HORIZON_PREFIX]),
+  filters: Object.freeze([
+    'lcw.corePageFilters.', 'lcw.cp.dimFilters.', 'lcw.orders.dimFilters.',
+    'lcw.overview.dimFilters.', 'lcw.overview.bgDimFilters.',
+    'lcw.backlog.autoState.', 'lcw.lfl.filters.', 'lcw.lfl.readyFilters.',
+    'lcw.lfl.customCompare.', 'lcw.lfl.analysisSplit.', 'lcw.koleksiyon.scope.',
+    'lcw.koleksiyon.analytics.', 'lcw.oab.', 'lcw.intake.', 'lcw_filter_favorite_',
+    'bl.autoRefresh.',
+  ]),
+  columns: Object.freeze([
+    'lcw.table.columnState.', 'lcw.freeze.', 'lcw.backlog.columnWidths.',
+    'lcw.quotations.columnWidths.', 'lcw.koleksiyon.colState.',
+    'lcw.koleksiyon.pricingExcelColumns.', 'bl.backlog.excelColumns.',
+    'bl.detailTables.showImages.', 'lcw.cp.imageSize.',
+    // v7.28 — hesaplanan (formül) sütun tanımları. "columns" kategorisinde
+    // olduğu için Profil Kopyalama panelinden başka kullanıcıya aktarılabilir.
+    'bl.formulaColumns.',
+  ]),
+  views: Object.freeze(['lcw_view_favorite_']),
+  dashboard: Object.freeze(['buyerlog.dashboard.', 'lcw.dashboard.']),
+  favorites: Object.freeze(['buyerlog.favorites.', 'lcw.favorites.']),
+  appearance: Object.freeze([
+    'lcw_theme', 'lcw_rail', 'lcw_sidebar_collapsed', 'lcw.lang.',
+    'lcw.font.', 'lcw_font_step', 'buyerlog.overview.notesReminderCollapsed', 'bl.refreshHistory.',
+  ]),
+});
+
+const WORKSPACE_CATEGORIES = Object.freeze(Object.keys(WORKSPACE_CATEGORY_PREFIXES));
+
+// Tarayıcılar arasında taşınacak anahtar önekleri. Kişisel çalışma alanı
+// anahtarları kullanıcı değiştirince sunucudan hydrate edilir; bu depo tek
+// source of truth'tur, localStorage yalnız çevrimdışı/başlangıç önbelleğidir.
+const SYNCED_PREFIXES = Object.freeze([
+  'lcw.todo.',            // Not Defteri — asıl istek
+  'lcw.notifications.',   // kullanıcının bildirim geçmişi
+  'lcw.mailTemplates.',   // mail şablonları
+  'lcw.prodstatus.mails.',
+  'lcw_view_favorite_',   // kayıtlı görünümler
+  'lcw_filter_favorite_', // kayıtlı filtreler
+  ...Object.values(WORKSPACE_CATEGORY_PREFIXES).flat(),
+  APPLIED_HORIZON_PREFIX,
+]);
+
+function safeId(value) {
+  return String(value || '').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 100) || 'anonymous';
+}
+function prefsFile(userId) { return path.join(ROOT, `${safeId(userId)}.json`); }
+function isSyncedKey(key) {
+  const text = String(key || '');
+  return SYNCED_PREFIXES.some(prefix => text.indexOf(prefix) === 0);
+}
+
+function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
+function categoryForKey(key) {
+  const text = String(key || '');
+  for (const [category, prefixes] of Object.entries(WORKSPACE_CATEGORY_PREFIXES)) {
+    if (prefixes.some(prefix => text.indexOf(prefix) === 0)) return category;
+  }
+  return null;
+}
+function normalizeCategories(value) {
+  const source = Array.isArray(value) ? value : Object.entries(value || {}).filter(([, enabled]) => Boolean(enabled)).map(([name]) => name);
+  return [...new Set(source.map(item => String(item || '').toLowerCase()).filter(item => WORKSPACE_CATEGORIES.includes(item)))];
+}
+function horizonKey(moduleName) {
+  const module = String(moduleName || 'default').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40) || 'default';
+  return `${WORKSPACE_HORIZON_PREFIX}${module}.v1`;
+}
+function appliedHorizonKey(moduleName) {
+  const module = String(moduleName || 'default').toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 40) || 'default';
+  return `${APPLIED_HORIZON_PREFIX}${module}.v1`;
+}
+
+/* AÇIKÇA SİLİNMİŞ ANAHTAR (mezar taşı).
+
+   Kayıtta üç durum ayırt edilmelidir: (1) anahtar hiç yazılmamış,
+   (2) anahtar var, (3) anahtar KULLANICI TARAFINDAN SİLİNMİŞ. Eskiden (1) ve
+   (3) diskte aynı görünüyordu: silinen kayıt yalnız yok oluyordu. Tarayıcıdaki
+   yerel kopya bir sonraki açılışta "sunucuda yok, bende var" diyerek onu geri
+   gönderiyor ve silinen kişisel Horizon diriliyordu.
+
+   Silme artık zaman damgasıyla kaydedilir. Aynı anahtara DAHA YENİ bir yazma
+   gelirse mezar taşı kalkar — kullanıcı yeni bir kişisel katman kaydedebilir.
+   Daha eski bir yazma (bayat tarayıcı kopyası) reddedilir. */
+const MAX_DELETIONS = 500;
+
+function normalizeDeletions(raw) {
+  const source = raw && typeof raw === 'object' ? raw : {};
+  const out = {};
+  for (const [key, at] of Object.entries(source)) {
+    if (!isSyncedKey(key)) continue;
+    const stamp = String(at || '');
+    if (stamp) out[key] = stamp;
+  }
+  return out;
+}
+
+// Mezar taşı sonsuza kadar birikmesin: en yeni MAX_DELETIONS kaydı tutulur.
+function capDeletions(deletions) {
+  const keys = Object.keys(deletions);
+  if (keys.length <= MAX_DELETIONS) return deletions;
+  const kept = keys.sort((a, b) => String(deletions[b]).localeCompare(String(deletions[a]))).slice(0, MAX_DELETIONS);
+  return Object.fromEntries(kept.map(key => [key, deletions[key]]));
+}
+
+function load(userId) {
+  const file = prefsFile(userId);
+  return readJsonWithValidatedBackup(file, {
+    fallback: () => ({ userId: String(userId || ''), entries: {}, deletions: {}, _updatedAt: '' }),
+    normalize: raw => {
+      const entries = raw && typeof raw.entries === 'object' && raw.entries ? raw.entries : {};
+      const clean = {};
+      for (const [key, entry] of Object.entries(entries)) {
+        if (!isSyncedKey(key) || !entry || typeof entry !== 'object') continue;
+        clean[key] = { value: String(entry.value == null ? '' : entry.value), updatedAt: String(entry.updatedAt || '') };
+      }
+      const deletions = normalizeDeletions(raw && raw.deletions);
+      // Kayıt geri yazıldıysa mezar taşı anlamını yitirmiştir; kendiliğinden temizlenir.
+      for (const [key, stamp] of Object.entries(deletions)) {
+        const entry = clean[key];
+        if (entry && entry.updatedAt && entry.updatedAt > stamp) delete deletions[key];
+      }
+      return { userId: String(userId || ''), entries: clean, deletions, _updatedAt: String(raw && raw._updatedAt || '') };
+    },
+    restore: value => atomicWriteJson(file, value),
+  });
+}
+
+function totalBytes(entries) {
+  return Object.values(entries).reduce((sum, entry) => sum + Buffer.byteLength(entry.value || '', 'utf8'), 0);
+}
+
+/**
+ * Gelen anahtarları birleştirir. Aynı anahtarda GELEN daha eskiyse yazılmaz —
+ * böylece geç açılan bir tarayıcının bayat kopyası yenisini ezmez.
+ */
+function merge(userId, incoming) {
+  const current = load(userId);
+  const entries = { ...current.entries };
+  const deletions = { ...current.deletions };
+  const now = new Date().toISOString();
+  const rejected = [];
+  for (const [key, raw] of Object.entries(incoming || {})) {
+    if (!isSyncedKey(key)) { rejected.push({ key, reason: 'not-synced' }); continue; }
+    const item = raw && typeof raw === 'object' ? raw : { value: raw };
+    const value = String(item.value == null ? '' : item.value);
+    if (Buffer.byteLength(value, 'utf8') > MAX_VALUE_BYTES) { rejected.push({ key, reason: 'too-large' }); continue; }
+    const updatedAt = String(item.updatedAt || now);
+    const existing = entries[key];
+    if (existing && existing.updatedAt && updatedAt < existing.updatedAt) { rejected.push({ key, reason: 'stale' }); continue; }
+    /* SİLİNMİŞ ANAHTARI BAYAT KOPYA DİRİLTEMEZ. Kullanıcı kaydı sildikten
+       SONRA yazılmış bir değer (yeni kişisel katman) mezar taşını kaldırır;
+       silmeden ÖNCEKİ bir kopya reddedilir. */
+    const tombstone = deletions[key];
+    if (tombstone && updatedAt <= tombstone) { rejected.push({ key, reason: 'deleted' }); continue; }
+    delete deletions[key];
+    entries[key] = { value, updatedAt };
+  }
+  if (totalBytes(entries) > MAX_TOTAL_BYTES) {
+    const error = new Error('Kişisel veri sınırı aşıldı.');
+    error.statusCode = 413; error.code = 'USER_PREFS_TOO_LARGE';
+    throw error;
+  }
+  fs.mkdirSync(ROOT, { recursive: true });
+  const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
+  atomicWriteJson(prefsFile(userId), saved);
+  return { ...saved, rejected };
+}
+
+/* Anahtarı siler ve silmeyi KAYIT ALTINA ALIR (bkz. mezar taşı notu).
+   `options.tombstone === false` yalnız bakım/taşıma amaçlı sessiz temizlik
+   içindir; kullanıcının açık silme eylemleri her zaman iz bırakır. */
+function removeKeys(userId, keys, options = {}) {
+  const current = load(userId);
+  const entries = { ...current.entries };
+  const deletions = { ...current.deletions };
+  const now = new Date().toISOString();
+  const tombstone = options.tombstone !== false;
+  (Array.isArray(keys) ? keys : []).forEach(key => {
+    const name = String(key);
+    delete entries[name];
+    if (tombstone && isSyncedKey(name)) deletions[name] = now;
+  });
+  fs.mkdirSync(ROOT, { recursive: true });
+  const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
+  atomicWriteJson(prefsFile(userId), saved);
+  return saved;
+}
+
+
+/* Kişisel backup restore bir MERGE değildir: backup, kullanıcının o andaki
+   kişisel çalışma alanının snapshot'ıdır. Bu yüzden yalnız whitelist'teki
+   senkron anahtarları kabul edip mevcut kişisel kaydı atomik olarak değiştirir.
+   Restore anı yeni zaman damgası olur; açık kalmış eski bir tarayıcı sekmesi
+   backup'tan daha eski değerleri sonradan geri itemez. */
+function restoreSnapshot(userId, snapshot) {
+  const raw = snapshot && typeof snapshot === 'object' ? snapshot : {};
+  const now = new Date().toISOString(), entries = {}, rejected = [];
+  for (const [key, itemRaw] of Object.entries(raw.entries && typeof raw.entries === 'object' ? raw.entries : {})) {
+    if (!isSyncedKey(key)) { rejected.push({ key, reason: 'not-synced' }); continue; }
+    const item = itemRaw && typeof itemRaw === 'object' ? itemRaw : { value: itemRaw };
+    const value = String(item.value == null ? '' : item.value);
+    if (Buffer.byteLength(value, 'utf8') > MAX_VALUE_BYTES) { rejected.push({ key, reason: 'too-large' }); continue; }
+    entries[key] = { value, updatedAt: now };
+  }
+  if (totalBytes(entries) > MAX_TOTAL_BYTES) {
+    const error = new Error('Kişisel restore veri sınırı aşıldı.');
+    error.statusCode = 413; error.code = 'USER_PREFS_TOO_LARGE'; throw error;
+  }
+  const deletions = {};
+  for (const key of Object.keys(raw.deletions && typeof raw.deletions === 'object' ? raw.deletions : {})) {
+    if (isSyncedKey(key) && !entries[key]) deletions[key] = now;
+  }
+  fs.mkdirSync(ROOT, { recursive: true });
+  const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
+  atomicWriteJson(prefsFile(userId), saved);
+  return { ...saved, rejected };
+}
+
+function workspaceEntries(userId, categories = WORKSPACE_CATEGORIES) {
+  const wanted = new Set(normalizeCategories(categories));
+  const entries = load(userId).entries;
+  return Object.fromEntries(Object.entries(entries).filter(([key]) => wanted.has(categoryForKey(key))));
+}
+
+function normalizeWorkspaceEntryMap(incoming, categories = WORKSPACE_CATEGORIES) {
+  const wanted = new Set(normalizeCategories(categories)), out = {};
+  for (const [key, raw] of Object.entries(incoming || {})) {
+    if (!wanted.has(categoryForKey(key))) continue;
+    const item = raw && typeof raw === 'object' ? raw : { value: raw };
+    const value = String(item.value == null ? '' : item.value);
+    if (Buffer.byteLength(value, 'utf8') > MAX_VALUE_BYTES) continue;
+    out[key] = { value, updatedAt: String(item.updatedAt || '') };
+  }
+  return out;
+}
+
+function effectiveWorkspaceEntries(userId, roleEntries, categories = WORKSPACE_CATEGORIES) {
+  const inherited = normalizeWorkspaceEntryMap(roleEntries, categories);
+  const personal = workspaceEntries(userId, categories);
+  return { entries: { ...inherited, ...personal }, personal, inherited };
+}
+
+function replaceWorkspaceEntries(userId, incoming, categories, mode = 'MERGE') {
+  const wanted = new Set(normalizeCategories(categories));
+  if (!wanted.size) return { ...load(userId), rejected: [] };
+  const current = load(userId), entries = { ...current.entries };
+  const deletions = { ...current.deletions };
+  const now = new Date().toISOString(), rejected = [];
+  if (String(mode || '').toUpperCase() === 'REPLACE') {
+    // REPLACE, hedefteki kaydı KALDIRIR; iz bırakmasaydı hedef kullanıcının
+    // tarayıcısındaki yerel kopya onu ilk açılışta geri gönderirdi.
+    for (const key of Object.keys(entries)) {
+      if (!wanted.has(categoryForKey(key))) continue;
+      delete entries[key];
+      deletions[key] = now;
+    }
+  }
+  for (const [key, raw] of Object.entries(incoming || {})) {
+    const category = categoryForKey(key);
+    if (!category || !wanted.has(category)) { rejected.push({ key, reason: 'category-not-selected' }); continue; }
+    const item = raw && typeof raw === 'object' ? raw : { value: raw };
+    const value = String(item.value == null ? '' : item.value);
+    if (Buffer.byteLength(value, 'utf8') > MAX_VALUE_BYTES) { rejected.push({ key, reason: 'too-large' }); continue; }
+    // Profil kopyalama bir snapshot'tır. Kaynağın eski zaman damgasını hedefe
+    // taşımak yerine kopyalama anını yazarız; aksi halde hedefteki yeni kayıt
+    // last-write-wins kontrolünde snapshot'ı yanlışlıkla reddederdi.
+    entries[key] = { value, updatedAt: now };
+    delete deletions[key];
+  }
+  if (totalBytes(entries) > MAX_TOTAL_BYTES) {
+    const error = new Error('Kişisel çalışma alanı veri sınırı aşıldı.');
+    error.statusCode = 413; error.code = 'USER_WORKSPACE_TOO_LARGE'; throw error;
+  }
+  fs.mkdirSync(ROOT, { recursive: true });
+  const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
+  atomicWriteJson(prefsFile(userId), saved);
+  return { ...saved, rejected };
+}
+
+function copyWorkspaceSnapshot(sourceUserId, targetUserId, categories, mode = 'MERGE') {
+  const selected = normalizeCategories(categories);
+  return replaceWorkspaceEntries(targetUserId, workspaceEntries(sourceUserId, selected), selected, mode);
+}
+
+function copyWorkspaceEntrySnapshot(sourceEntries, targetUserId, categories, mode = 'MERGE') {
+  const selected = normalizeCategories(categories);
+  return replaceWorkspaceEntries(targetUserId, normalizeWorkspaceEntryMap(sourceEntries, selected), selected, mode);
+}
+
+function parseStoredJson(entry) {
+  if (!entry || entry.value == null || entry.value === '') return null;
+  try { const parsed = JSON.parse(entry.value); return parsed && typeof parsed === 'object' ? parsed : null; }
+  catch (_) { return null; }
+}
+
+function getHorizon(userId, moduleName) {
+  const entries = load(userId).entries;
+  return clone(parseStoredJson(entries[horizonKey(moduleName)]));
+}
+
+/* v7.81 — getHorizonGroups / saveHorizonGroups KALDIRILDI.
+   Adlandırılmış Horizon grupları artık yok; okuyan da yazan da kalmadı.
+   Diskteki eski "groups" kaydına dokunulmaz. */
+
+function saveHorizonState(userId, key, moduleName, horizon, context = {}) {
+  const now = new Date().toISOString();
+  let value = horizon && typeof horizon === 'object' ? clone(horizon) : {};
+  /* v7.81 — linkedGroupId ARTIK YAZILMAZ. Horizon grupları kaldırıldı; alanı
+     yazmaya devam etmek, hiçbir şeyin okumadığı bir işaret bırakmak olurdu.
+     Eski kayıtlardaki alan olduğu gibi durur ve zararsızdır (okunmaz). */
+  const connectionId = String(context.connectionId || '').trim();
+  if (connectionId) {
+    const current = getStoredHorizon(userId, key), bundle = current && current.byConnection ? clone(current) : { version: 1, byConnection: {} };
+    bundle.byConnection[connectionId] = value;
+    if (context.role) {
+      bundle.connectionRoles = bundle.connectionRoles || {};
+      bundle.connectionRoles[connectionId] = String(context.role);
+    }
+    value = bundle;
+  }
+  return merge(userId, { [key]: { value: JSON.stringify(value), updatedAt: now } });
+}
+
+function getStoredHorizon(userId, key) {
+  const entries = load(userId).entries;
+  return clone(parseStoredJson(entries[key]));
+}
+
+function saveHorizon(userId, moduleName, horizon, context = {}) {
+  return saveHorizonState(userId, horizonKey(moduleName), moduleName, horizon, context);
+}
+
+function getAppliedHorizon(userId, moduleName) {
+  const entries = load(userId).entries;
+  return clone(parseStoredJson(entries[appliedHorizonKey(moduleName)]));
+}
+
+function saveAppliedHorizon(userId, moduleName, horizon, context = {}) {
+  return saveHorizonState(userId, appliedHorizonKey(moduleName), moduleName, horizon, context);
+}
+
+function resetWorkspace(userId, moduleName, categories = WORKSPACE_CATEGORIES) {
+  const wanted = new Set(normalizeCategories(categories));
+  const module = String(moduleName || '').toLowerCase();
+  const keys = Object.keys(load(userId).entries).filter(key => {
+    const category = categoryForKey(key);
+    if (!wanted.has(category)) return false;
+    if (!module || module === 'all') return true;
+    if (category === 'horizon') return key === horizonKey(module) || key === appliedHorizonKey(module);
+    // Modül adı anahtarın doğal parçasıysa yalnız onu sil; genel görünüm
+    // anahtarları ancak all ile sıfırlanır.
+    return key.toLowerCase().includes(`.${module}.`) || key.toLowerCase().endsWith(`_${module}`);
+  });
+  return { ...removeKeys(userId, keys), removedKeys: keys };
+}
+
+/* v7.81 — KATMAN GÖRÜNÜR OLDU.
+
+   Bir modülün ufku beş ayrı yerden gelebiliyor ve ekran bugüne kadar hangisinin
+   kazandığını SÖYLEMİYORDU. Kullanıcı ekranda bir filtre görüyor, ortak ayarı
+   değiştiriyor, hiçbir şey değişmiyordu — çünkü kendi kişisel ayarı üstteydi.
+   Bu, Veri Yönetimi analizinde tespit edilen bir numaralı UX sorunuydu.
+
+   Katman bilgisi AYRI bir çözümleme yazılarak üretilmez: ikinci bir uygulama
+   er geç asıl çözümlemeden sapar ve ekran yanlış katmanı gösterir — sessizce.
+   Bunun yerine tek çözümleme çekirdeği hem değeri hem katmanı döndürür;
+   resolveHorizon() artık o çekirdeğin ince bir sarmalayıcısıdır.
+
+   Katmanlar, öncelik sırasıyla:
+     personal        kullanıcının bu modül için kendi ayarı
+     personalDefault kullanıcının tüm modüller için varsayılanı
+     roleTemplate    rolünden miras aldığı şablon (bu modül)
+     roleDefault     rolünden miras aldığı şablon (varsayılan)
+     source          hiçbiri yok; bağlantının/kapsamın kendi ufku geçerli
+
+   v7.81 — 'preset' VE 'group' KATMANLARI KALDIRILDI (kullanıcı kararı).
+
+   Ön ayar, hiç seçim yapmamış kullanıcıya profiline (MAG/MMYG/Buying Group)
+   göre otomatik bir ufuk atıyordu; grup ise kişisel bir ufku adlandırılmış
+   bir kayda bağlıyordu. İkisi de kullanıcının GÖRMEDİĞİ bir katmandı ve
+   ortak filtreyi sessizce eziyordu: "Veri Yönetimi'nden filtreyi değiştirdim,
+   ekranımda hiçbir şey değişmedi" şikâyetinin kaynağı buydu.
+
+   Kalan zincir üç soruyu cevaplar: kendi ayarım var mı, rolümün şablonu var
+   mı, yoksa kaynağın (Veri Yönetimi'ndeki ortak) filtresi mi geçerli.
+
+   VERİ SİLİNMEZ: eskiden yazılmış horizon:__groups__ kaydı ve
+   horizon-presets.json diskte durur, yalnız artık okunmaz. Bir kararı geri
+   almak, kullanıcının verisini yok etmekten her zaman kolaydır.
+*/
+const HORIZON_LAYERS = Object.freeze(['personal', 'personalDefault', 'roleTemplate', 'roleDefault', 'source']);
+
+function selectHorizonPreference(userId, moduleName, context = {}, roleEntries = null) {
+  const personalEntries = load(userId).entries;
+  const inheritedEntries = normalizeWorkspaceEntryMap(roleEntries, ['horizon']);
+
+  // Sıra, eski koddaki || zincirinin BİREBİR aynısıdır. Değiştirilirse
+  // çözümleme davranışı değişir; yalnız hangi dalın kazandığı artık kaydediliyor.
+  const candidates = [
+    ['personal', parseStoredJson(personalEntries[horizonKey(moduleName)])],
+    ['personalDefault', parseStoredJson(personalEntries[horizonKey('default')])],
+    ['roleTemplate', parseStoredJson(inheritedEntries[horizonKey(moduleName)])],
+    ['roleDefault', parseStoredJson(inheritedEntries[horizonKey('default')])],
+  ];
+  const hit = candidates.find(entry => entry[1]) || ['source', null];
+  return { preference: hit[1], layer: hit[0] };
+}
+
+function resolveHorizon(userId, moduleName, applicationDefault, context = {}, roleEntries = null) {
+  return resolveHorizonProvenance(userId, moduleName, applicationDefault, context, roleEntries).horizon;
+}
+
+/** resolveHorizon ile AYNI değeri, ayrıca hangi katmandan geldiğini döndürür. */
+function resolveHorizonProvenance(userId, moduleName, applicationDefault, context = {}, roleEntries = null) {
+  const selected = selectHorizonPreference(userId, moduleName, context, roleEntries);
+  const resolved = resolveHorizonValueProvenance(selected.preference, applicationDefault, context);
+  return {
+    horizon: resolved.horizon,
+    // Kayıt bulundu ama içi boştu → gerçekte kaynağın ufku geçerli oldu.
+    layer: resolved.layer === 'source' ? 'source' : selected.layer,
+    preferenceLayer: selected.layer,
+  };
+}
+
+function resolveHorizonValue(preference, applicationDefault, context = {}) {
+  return resolveHorizonValueProvenance(preference, applicationDefault, context).horizon;
+}
+
+function resolveHorizonValueProvenance(preference, applicationDefault, context = {}) {
+  const none = { horizon: clone(applicationDefault || {}), layer: 'source' };
+  if (!preference) return none;
+  const connectionId = String(context.connectionId || '');
+  const role = String(context.role || '');
+  let selected = preference;
+  if (preference.byConnection && connectionId && preference.byConnection[connectionId]) selected = preference.byConnection[connectionId];
+  else if (preference.byRole && role && preference.byRole[role]) selected = preference.byRole[role];
+  else if (preference.horizon && typeof preference.horizon === 'object') selected = preference.horizon;
+  /* v7.81: linkedGroupId ARTIK ÇÖZÜMLENMEZ. Adlandırılmış Horizon grupları
+     kaldırıldı; bir gruba bağlı eski kayıt artık kendi içindeki ufukla (varsa)
+     ya da kaynağın ufkuyla çalışır. Alan SİLİNMEZ: kayıtta durur, okunmaz —
+     bir kararı geri almak, kullanıcının verisini yok etmekten kolaydır. */
+  if (selected && typeof selected === 'object' && (selected.table || Array.isArray(selected.groups)
+    || Array.isArray(selected.seasons) || selected.dateStart || selected.dateEnd)) {
+    return { horizon: clone(selected), layer: 'preference' };
+  }
+  // v7.01'in ilk geliştirme paketinde yazılmış düz Horizon kayıtlarıyla uyum.
+  return none;
+}
+
+/* KİŞİSEL UFKU BAĞLANTI KAPSAMLARINA UYGULAR.
+
+   Sıra: KİŞİSEL > ROL ŞABLONU > bağlantının (kapsamın) kendi ufku.
+
+   v7.81 — ÖN AYAR GERİ DÜŞÜŞÜ VE GRUP ÇÖZÜMLEMESİ KALDIRILDI (kullanıcı
+   kararı). İkisi de kullanıcının görmediği bir katmandı ve Veri Yönetimi'nde
+   ayarlanan ortak filtreyi sessizce eziyordu; "filtreyi değiştirdim, ekranımda
+   hiçbir şey değişmedi" şikâyetinin kaynağı buydu. Hiç kişisel ayarı olmayan
+   kullanıcı artık doğrudan kaynağın ortak filtresini görür.
+
+   Eski kayıtlar SİLİNMEZ, yalnız okunmaz (bkz. selectHorizonPreference). */
+function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = null) {
+  const wanted = new Set(Array.isArray(requestedTargets) && requestedTargets.length
+    ? requestedTargets.map(value => String(value || '').toLowerCase())
+    : ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+  // Tek Refresh içinde aynı preference dosyasını scope/target başına tekrar
+  // okumak senkron disk yükü yaratır. Bir kez yükle, bütün modül Horizon'larını
+  // bu immutable snapshot üzerinden çöz.
+  const storedEntries = load(userId).entries;
+  const inheritedEntries = normalizeWorkspaceEntryMap(roleEntries, ['horizon']);
+  const preferenceCache = new Map();
+  const preferenceFor = moduleName => {
+    const module = String(moduleName || 'default').toLowerCase();
+    if (!preferenceCache.has(module)) preferenceCache.set(module, clone(parseStoredJson(storedEntries[horizonKey(module)])));
+    return preferenceCache.get(module);
+  };
+  const inheritedFor = moduleName => clone(parseStoredJson(inheritedEntries[horizonKey(moduleName)]));
+  const resolvedPreference = moduleName => preferenceFor(moduleName) || preferenceFor('default') || inheritedFor(moduleName) || inheritedFor('default');
+  return (Array.isArray(items) ? items : []).map(item => {
+    const next = clone(item || {}), baseScopes = Array.isArray(next.scopes) && next.scopes.length
+      ? next.scopes : [{ id: `${next.id || 'connection'}-default`, name: '', targets: [], enabled: true, horizon: next.horizon || {} }];
+    const scopes = [];
+    for (const scope of baseScopes) {
+      const targets = Array.isArray(scope.targets) ? scope.targets : [];
+      const groups = new Map();
+      for (const target of targets) {
+        const normalizedTarget = String(target || '').toLowerCase();
+        const horizon = wanted.has(normalizedTarget)
+          ? resolveHorizonValue(
+            resolvedPreference(normalizedTarget),
+            scope.horizon || next.horizon || {},
+            { connectionId: next.id, role: next.role },
+          )
+          : clone(scope.horizon || next.horizon || {});
+        const signature = JSON.stringify(horizon || {});
+        if (!groups.has(signature)) groups.set(signature, { horizon, targets: [] });
+        groups.get(signature).targets.push(target);
+      }
+      if (!targets.length) scopes.push(scope);
+      else for (const [signature, group] of groups) {
+        const personal = group.targets.some(target => {
+          const pref = resolvedPreference(target);
+          return Boolean(pref && ((pref.byConnection && pref.byConnection[next.id]) || (pref.byRole && pref.byRole[next.role]) || pref.horizon || pref.table || Array.isArray(pref.groups)));
+        });
+        scopes.push({
+          ...scope,
+          id: groups.size === 1 ? scope.id : `${scope.id || 'scope'}-user-${group.targets.join('-')}`,
+          name: groups.size === 1 ? scope.name : `${scope.name || 'Scope'} · ${group.targets.join(' + ')}`,
+          targets: group.targets,
+          horizon: group.horizon,
+          _personalHorizon: personal,
+          _horizonSignature: signature,
+        });
+      }
+    }
+    next.scopes = scopes;
+    return next;
+  });
+}
+
+module.exports = {
+  load, merge, removeKeys, restoreSnapshot, isSyncedKey, SYNCED_PREFIXES, MAX_VALUE_BYTES, MAX_TOTAL_BYTES, safeId,
+  WORKSPACE_HORIZON_PREFIX, APPLIED_HORIZON_PREFIX, WORKSPACE_CATEGORY_PREFIXES, WORKSPACE_CATEGORIES,
+  categoryForKey, normalizeCategories, workspaceEntries, replaceWorkspaceEntries,
+  normalizeWorkspaceEntryMap, effectiveWorkspaceEntries, copyWorkspaceSnapshot, copyWorkspaceEntrySnapshot,
+  horizonKey, appliedHorizonKey, getHorizon, saveHorizon, getAppliedHorizon, saveAppliedHorizon, resetWorkspace, resolveHorizon,
+  applyHorizonOverrides,
+  // v7.81 — Veri Yönetimi ekranı hangi katmanın kazandığını gösterebilsin diye.
+  HORIZON_LAYERS, resolveHorizonProvenance, selectHorizonPreference,
+};
