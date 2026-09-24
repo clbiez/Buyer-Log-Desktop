@@ -137,7 +137,8 @@
   const parseTableSearchTerms=globalThis.BLTableSearch.parseTerms;
   const tableSearchMatches=globalThis.BLTableSearch.matches;
   const integer=value=>{const n=num(value);return n==null?'—':Math.round(n).toLocaleString('tr-TR');};
-  const pct=value=>{const n=num(value);return n==null?'—':(n>0?'+':'')+n.toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';};
+  const pct=value=>{if(value==null||value==='')return '—';const n=num(value);return n==null?'—':(n>0?'+':'')+n.toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'%';};
+  const comparablePct=value=>value==null?'':pct(value);
   const dateTR=iso=>{if(!iso)return '—';const m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}.${m[2]}.${m[1].slice(-2)}`:iso;};
   const dateTimeShort=value=>{const d=new Date(value);if(isNaN(d))return '—';const p=n=>String(n).padStart(2,'0');return `${p(d.getDate())}.${p(d.getMonth()+1)}.${String(d.getFullYear()).slice(-2)} ${p(d.getHours())}:${p(d.getMinutes())}`;};
   const isEn=()=>typeof appLang!=='undefined'&&appLang==='en';
@@ -641,10 +642,28 @@
   function metricBetween(current,reference,type='change'){
     if(!current||!reference)return null;let weighted=0,totalQty=0;
     for(const currency of ['TRY','USD']){
-      const c=current.byCurrency[currency],r=reference.byCurrency[currency];if(!c||!r||!(r.avg>0))continue;
+      const c=current.byCurrency[currency],r=reference.byCurrency[currency];if(!c||!r||!(c.avg>0)||!(r.avg>0)||!(c.qty>0))continue;
       const value=type==='improvement'?(r.avg-c.avg)/r.avg*100:(c.avg-r.avg)/r.avg*100;weighted+=value*c.qty;totalQty+=c.qty;
     }
     return totalQty?weighted/totalQty:null;
+  }
+  function comparablePeriodRows(currentRows,referenceRows,groupBy=state.breakdown){
+    const dims=Array.isArray(groupBy)?groupBy.filter(Boolean):[],pairKey=row=>{
+      const meta=rowMeta(row);if(!meta.valid)return '';
+      const group=dims.length?groupValue(row,dims):'__all__';
+      return group?`${group}\u0001${meta.currency}`:'';
+    };
+    const currentKeys=new Set((currentRows||[]).map(pairKey).filter(Boolean)),referenceKeys=new Set((referenceRows||[]).map(pairKey).filter(Boolean));
+    const sharedKeys=new Set([...currentKeys].filter(key=>referenceKeys.has(key)));
+    return {
+      currentRows:(currentRows||[]).filter(row=>sharedKeys.has(pairKey(row))),
+      referenceRows:(referenceRows||[]).filter(row=>sharedKeys.has(pairKey(row))),
+      sharedKeys,
+    };
+  }
+  function comparableMetricBetweenRows(currentRows,referenceRows,groupBy=state.breakdown,type='change'){
+    const comparable=comparablePeriodRows(currentRows,referenceRows,groupBy);
+    return metricBetween(summary(comparable.currentRows),summary(comparable.referenceRows),type);
   }
   function comparisonScenarioId(){return `cmp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;}
   function normalizeScenarioMonth(value){const raw=norm(value);const compact=/^(\d{4})(\d{2})$/.exec(raw);return compact?`${compact[1]}-${compact[2]}`:raw;}
@@ -745,7 +764,8 @@
     const collectGroups=(rows,side)=>{for(const row of rows){const key=groupValue(row,groupBy);if(!key)continue;let item=groupMap.get(key);if(!item){item={currentRows:[],previousRows:[]};groupMap.set(key,item);}item[side].push(row);}};
     collectGroups(currentRows,'currentRows');collectGroups(compareRows,'previousRows');
     const groups=unique([...groupMap.keys()]).map(key=>{const item=groupMap.get(key),c=summary(item.currentRows),p=summary(item.previousRows);return {key,current:c,previous:p,currentRows:item.currentRows,previousRows:item.previousRows,currentAvg:c.avg,previousAvg:p.avg,priceChange:metricBetween(c,p,'change'),improvement:metricBetween(c,p,'improvement'),qty:c.qty,orders:c.orders,rows:c.rows};}).filter(g=>g.current.currencies.length||g.previous.currencies.length);
-    const result={currentPeriod,comparePeriod,currentSeason,compareSeason,currentDateField:currentPeriod.dateField,compareDateField:comparePeriod.dateField,currentMonths,compareMonths,dims,currentRows,compareRows,baselineCurrentRows,trialCurrentRows,baselineCurrent,current,previous,baselinePriceChange:metricBetween(baselineCurrent,previous,'change'),priceChange:metricBetween(current,previous,'change'),improvement:metricBetween(current,previous,'improvement'),groupBy,groups};
+    const comparable=comparablePeriodRows(currentRows,compareRows,groupBy),baselineComparable=comparablePeriodRows(baselineCurrentRows,compareRows,groupBy),comparableCurrent=summary(comparable.currentRows),comparablePrevious=summary(comparable.referenceRows),baselineComparableCurrent=summary(baselineComparable.currentRows),baselineComparablePrevious=summary(baselineComparable.referenceRows);
+    const result={currentPeriod,comparePeriod,currentSeason,compareSeason,currentDateField:currentPeriod.dateField,compareDateField:comparePeriod.dateField,currentMonths,compareMonths,dims,currentRows,compareRows,baselineCurrentRows,trialCurrentRows,baselineCurrent,current,previous,comparableCurrentRows:comparable.currentRows,comparableCompareRows:comparable.referenceRows,baselinePriceChange:metricBetween(baselineComparableCurrent,baselineComparablePrevious,'change'),priceChange:metricBetween(comparableCurrent,comparablePrevious,'change'),improvement:metricBetween(comparableCurrent,comparablePrevious,'improvement'),groupBy,groups};
     lflAnalysisCache.set(cacheKey,result);return result;
   }
   function kpi(label,value,sub,cls=''){return `<div class="lflKpi lflCard"><div class="lflKpiLabel">${esc(label)}</div><div class="lflKpiValue ${cls}">${value}</div><div class="lflKpiSub">${esc(sub)}</div></div>`;}
@@ -763,7 +783,7 @@
     $('lflKpis').innerHTML=[
       kpi(`${a.currentSeason} Ağırlıklı FOB`,moneySummary(a.current),monthSelectionLabel(a.currentMonths)),
       kpi(`${a.compareSeason} Ağırlıklı FOB`,moneySummary(a.previous),monthSelectionLabel(a.compareMonths)),
-      kpi(isEn()?'FOB Change':'FOB Değişimi',pct(a.priceChange),a.priceChange==null?(isEn()?'No comparable data in the same currency':'Aynı para biriminde karşılaştırma verisi yok'):a.priceChange<0?(isEn()?'Lower price than the comparison season':'Kıyas sezonuna göre fiyat iyileşmesi'):(isEn()?'Higher price than the comparison season':'Kıyas sezonuna göre fiyat artışı'),priceDeltaClass(a.priceChange)),
+      kpi(isEn()?'FOB Change':'FOB Değişimi',comparablePct(a.priceChange),a.priceChange==null?(isEn()?'No comparable data':'Kıyaslanacak veri yok'):a.priceChange<0?(isEn()?'Lower price than the comparison season':'Kıyas sezonuna göre fiyat iyileşmesi'):(isEn()?'Higher price than the comparison season':'Kıyas sezonuna göre fiyat artışı'),priceDeltaClass(a.priceChange)),
       kpi(`${a.currentSeason} Analiz Kapsamı`,`${integer(a.current.orders)} sipariş`,scopeSub(a.current)),
       kpi(`${a.compareSeason} Analiz Kapsamı`,`${integer(a.previous.orders)} sipariş`,scopeSub(a.previous)),
     ].join('');
@@ -793,7 +813,7 @@
     if(!a.current.currencies.length)items.push(['!','Seçili koşullarda güncel dönem için geçerli FOB ve miktar satırı bulunamadı.']);
     else if(a.priceChange!=null)items.push([a.priceChange<0?'↓':'↑',`${a.currentSeason} güncel dönem ağırlıklı fiyatı ${a.compareSeason} kıyas dönemine göre ${pct(a.priceChange)} ${a.priceChange<0?'değişti; negatif değer fiyat iyileşmesini gösterir.':'değişti; pozitif değer fiyat artışını gösterir.'}`]);
     if(a.current.currencies.length>1)items.push(['₺/$','Türkiye ve diğer ülkeler aynı fiyat ortalamasında karıştırılmadı; TRY ve USD sonuçları ayrı gösteriliyor. Yüzde kıyasları para birimi içinde hesaplanıp miktarla ağırlıklandırılıyor.']);
-    items.push(['◫',`Güncel ${dateFieldLabel(a.currentDateField)} kapsamı: ${monthSelectionLabel(a.currentMonths)}. Kıyas ${dateFieldLabel(a.compareDateField)} kapsamı: ${monthSelectionLabel(a.compareMonths)}. Her iki tarafta seçilen ayların siparişleri kendi portföyü içinde tek ağırlıklı ortalamada hesaplandı.`]);
+    items.push(['◫',`Güncel ${dateFieldLabel(a.currentDateField)} kapsamı: ${monthSelectionLabel(a.currentMonths)}. Kıyas ${dateFieldLabel(a.compareDateField)} kapsamı: ${monthSelectionLabel(a.compareMonths)}. FOB değişimi yalnız her iki dönemde de geçerli FOB bulunan aynı kırılım ve para birimi çiftleri üzerinden hesaplanır.`]);
     items.push(['DTR',isEn()?'DTR classification uses only the Non-DTR manufacturer list: listed manufacturers are NON-DTR and every other order is DTR.':'DTR sınıflandırması yalnız Non-DTR üretici listesine göre yapılır: listedeki üreticiler NON-DTR, diğer tüm siparişler DTR kabul edilir.']);
     const fxReports=fxRateReport(a);fxReports.forEach(report=>items.push(['$',(isEn()?'USD rate by country and month: ':'Ülke ve ay bazlı Dolar kuru: ')+report.text]));
     const comparableQty=Math.min(a.current.qty,a.previous.qty),coverage=a.current.qty>0?comparableQty/a.current.qty*100:null;if(coverage!=null)items.push(['#',`Kıyas dönemi hacmi, güncel dönem hacminin yaklaşık %${coverage.toLocaleString('tr-TR',{maximumFractionDigits:0})} seviyesinde.`]);
@@ -1077,7 +1097,7 @@
       {key:'key',label:groupLabel,value:g=>g.key,type:'text',weight:17},
       {key:'currentAvg',label:()=>comparisonColumnHeader(a.currentPeriod,'FOB'),value:g=>g.current.avg??g.current.byCurrency.USD?.avg??g.current.byCurrency.TRY?.avg,display:g=>moneySummary(g.current),exportDisplay:true,type:'number',cls:'num',weight:11},
       {key:'previousAvg',label:()=>comparisonColumnHeader(a.comparePeriod,'FOB'),value:g=>g.previous.avg??g.previous.byCurrency.USD?.avg??g.previous.byCurrency.TRY?.avg,display:g=>moneySummary(g.previous),exportDisplay:true,type:'number',cls:'num',weight:11},
-      {key:'priceChange',label:()=>isEn()?'FOB Change':'FOB Değişimi',value:g=>g.priceChange,display:g=>pct(g.priceChange),type:'number',cls:'num',cellClass:g=>tablePriceClass(g.priceChange),weight:10},
+      {key:'priceChange',label:()=>isEn()?'FOB Change':'FOB Değişimi',value:g=>g.priceChange,display:g=>comparablePct(g.priceChange),type:'number',cls:'num',cellClass:g=>tablePriceClass(g.priceChange),weight:10},
       {key:'qty',label:()=>isEn()?'Units':'Adet',value:g=>g.qty,display:g=>integer(g.qty),type:'number',integer:true,cls:'num',weight:9},
       {key:'orders',label:()=>isEn()?'Orders':'Sipariş',value:g=>g.orders,display:g=>integer(g.orders),type:'number',integer:true,cls:'num',weight:8},
     ];
@@ -1117,7 +1137,7 @@
       {key:'previousOrders',label:comparisonColumnHeader(a.comparePeriod,isEn()?'Orders':'Sipariş'),value:r=>r.previousOrders,display:r=>integer(r.previousOrders),type:'number',integer:true,cls:'num',weight:9},
       {key:'currentFob',label:comparisonColumnHeader(a.currentPeriod,'FOB'),value:r=>r.current.avg??r.current.byCurrency.USD?.avg??r.current.byCurrency.TRY?.avg,display:r=>moneySummary(r.current),exportDisplay:true,type:'number',cls:'num',weight:11},
       {key:'previousFob',label:comparisonColumnHeader(a.comparePeriod,'FOB'),value:r=>r.previous.avg??r.previous.byCurrency.USD?.avg??r.previous.byCurrency.TRY?.avg,display:r=>moneySummary(r.previous),exportDisplay:true,type:'number',cls:'num',weight:11},
-      {key:'fobChange',label:isEn()?'FOB Change':'FOB Değişimi',value:r=>r.fobChange,display:r=>pct(r.fobChange),type:'number',cls:'num',cellClass:r=>tablePriceClass(r.fobChange),weight:10},
+      {key:'fobChange',label:isEn()?'FOB Change':'FOB Değişimi',value:r=>r.fobChange,display:r=>comparablePct(r.fobChange),type:'number',cls:'num',cellClass:r=>tablePriceClass(r.fobChange),weight:10},
     ];
     renderCpTable({tableId:'lflManufacturerVolumeTable',viewName:'manufacturer',columns,sourceRows:rows,title:()=>$('lflManufacturerVolumeTitle')?.textContent||(isEn()?'Manufacturer Order Volumes':'Üretici Sipariş Hacimleri'),drillKey:'manufacturer',onDrill:r=>openLflPortfolioModal({title:`${isEn()?'Manufacturer':'Üretici'}: ${r.manufacturer}`,currentRows:r.currentRows,previousRows:r.previousRows,currentSeason:a.currentSeason,compareSeason:a.compareSeason}),emptyText:isEn()?'No manufacturer volume data was found for the selected filters.':'Seçili filtrelerde üretici hacmi verisi bulunamadı.',footer:(filtered,visible)=>{
       const currentQty=filtered.reduce((sum,r)=>sum+(num(r.currentQty)||0),0),previousQty=filtered.reduce((sum,r)=>sum+(num(r.previousQty)||0),0);
@@ -1746,7 +1766,7 @@
     const host=$('lflScenarioCards');if(!host)return;
     host.innerHTML=results.map((result,index)=>{
       const hasComparable=result.priceChange!=null,filters=scenarioScopeParts(result),periodCurrent=scenarioPeriodLabel(result.currentSeason,result.currentMonths),periodPrevious=scenarioPeriodLabel(result.compareSeason,result.compareMonths);
-      return `<article class="lflScenarioCard${hasComparable?'':' hasNoData'}" data-scenario-id="${esc(result.id)}"><div class="lflScenarioCardHead"><div><span class="lflScenarioIndex">${index+1}</span><strong>${esc(result.name)}</strong></div><div class="lflScenarioCardActions"><button type="button" class="lflScenarioIconBtn" data-scenario-edit="${esc(result.id)}" title="${esc(isEn()?'Edit comparison':'Karşılaştırmayı düzenle')}"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="lflScenarioIconBtn" data-scenario-clone="${esc(result.id)}" title="${esc(isEn()?'Duplicate':'Çoğalt')}"><svg class="ic"><use href="#i-copy"/></svg></button><button type="button" class="lflScenarioIconBtn isDanger" data-scenario-delete="${esc(result.id)}" title="${esc(isEn()?'Delete':'Sil')}"><svg class="ic"><use href="#i-trash"/></svg></button></div></div><div class="lflScenarioPeriods"><div><small>${esc(isEn()?'Current':'Güncel')}</small><span>${esc(periodCurrent)}</span></div><svg class="ic"><use href="#i-chevron-right"/></svg><div><small>${esc(isEn()?'Comparison':'Kıyas')}</small><span>${esc(periodPrevious)}</span></div></div><div class="lflScenarioScopeChips">${filters.map(text=>`<span>${esc(text)}</span>`).join('')}</div><div class="lflScenarioResult"><div><small>${esc(isEn()?'Current weighted FOB':'Güncel ağırlıklı FOB')}</small><strong>${moneySummary(result.current)}</strong><em>${integer(result.currentQty)} ${esc(isEn()?'units':'adet')}</em></div><div><small>${esc(isEn()?'Comparison weighted FOB':'Kıyas ağırlıklı FOB')}</small><strong>${moneySummary(result.previous)}</strong><em>${integer(result.previousQty)} ${esc(isEn()?'units':'adet')}</em></div><div class="lflScenarioDelta ${tablePriceClass(result.priceChange)}"><small>LFL</small><strong>${pct(result.priceChange)}</strong><em>${hasComparable?esc(result.priceChange<0?(isEn()?'Improvement':'İyileşme'):(isEn()?'Increase':'Artış')):esc(isEn()?'No comparable currency':'Ortak para birimi yok')}</em></div></div></article>`;
+      return `<article class="lflScenarioCard${hasComparable?'':' hasNoData'}" data-scenario-id="${esc(result.id)}"><div class="lflScenarioCardHead"><div><span class="lflScenarioIndex">${index+1}</span><strong>${esc(result.name)}</strong></div><div class="lflScenarioCardActions"><button type="button" class="lflScenarioIconBtn" data-scenario-edit="${esc(result.id)}" title="${esc(isEn()?'Edit comparison':'Karşılaştırmayı düzenle')}"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="lflScenarioIconBtn" data-scenario-clone="${esc(result.id)}" title="${esc(isEn()?'Duplicate':'Çoğalt')}"><svg class="ic"><use href="#i-copy"/></svg></button><button type="button" class="lflScenarioIconBtn isDanger" data-scenario-delete="${esc(result.id)}" title="${esc(isEn()?'Delete':'Sil')}"><svg class="ic"><use href="#i-trash"/></svg></button></div></div><div class="lflScenarioPeriods"><div><small>${esc(isEn()?'Current':'Güncel')}</small><span>${esc(periodCurrent)}</span></div><svg class="ic"><use href="#i-chevron-right"/></svg><div><small>${esc(isEn()?'Comparison':'Kıyas')}</small><span>${esc(periodPrevious)}</span></div></div><div class="lflScenarioScopeChips">${filters.map(text=>`<span>${esc(text)}</span>`).join('')}</div><div class="lflScenarioResult"><div><small>${esc(isEn()?'Current weighted FOB':'Güncel ağırlıklı FOB')}</small><strong>${moneySummary(result.current)}</strong><em>${integer(result.currentQty)} ${esc(isEn()?'units':'adet')}</em></div><div><small>${esc(isEn()?'Comparison weighted FOB':'Kıyas ağırlıklı FOB')}</small><strong>${moneySummary(result.previous)}</strong><em>${integer(result.previousQty)} ${esc(isEn()?'units':'adet')}</em></div><div class="lflScenarioDelta ${tablePriceClass(result.priceChange)}"><small>LFL</small><strong>${comparablePct(result.priceChange)}</strong><em>${hasComparable?esc(result.priceChange<0?(isEn()?'Improvement':'İyileşme'):(isEn()?'Increase':'Artış')):esc(isEn()?'No comparable data':'Kıyaslanacak veri yok')}</em></div></div></article>`;
     }).join('');
     host.querySelectorAll('[data-scenario-edit]').forEach(btn=>btn.addEventListener('click',()=>openComparisonScenarioEditor(btn.dataset.scenarioEdit)));
     host.querySelectorAll('[data-scenario-clone]').forEach(btn=>btn.addEventListener('click',()=>cloneComparisonScenario(btn.dataset.scenarioClone,a)));
@@ -1811,7 +1831,7 @@
       {key:'qtyChange',label:isEn()?'Volume Change':'Hacim Değişimi',value:r=>r.qtyChange,display:r=>pct(r.qtyChange),type:'number',cls:'num',cellClass:r=>tablePriceClass(r.qtyChange),weight:10},
       {key:'currentFob',label:isEn()?'Current Weighted FOB':'Güncel Ağırlıklı FOB',value:r=>r.current.avg??r.current.byCurrency.USD?.avg??r.current.byCurrency.TRY?.avg,display:r=>moneySummary(r.current),exportDisplay:true,type:'number',cls:'num',weight:13},
       {key:'previousFob',label:isEn()?'Comparison Weighted FOB':'Kıyas Ağırlıklı FOB',value:r=>r.previous.avg??r.previous.byCurrency.USD?.avg??r.previous.byCurrency.TRY?.avg,display:r=>moneySummary(r.previous),exportDisplay:true,type:'number',cls:'num',weight:13},
-      {key:'priceChange',label:isEn()?'Weighted LFL Change':'Ağırlıklı LFL Değişimi',value:r=>r.priceChange,display:r=>pct(r.priceChange),type:'number',cls:'num',cellClass:r=>tablePriceClass(r.priceChange),weight:12},
+      {key:'priceChange',label:isEn()?'Weighted LFL Change':'Ağırlıklı LFL Değişimi',value:r=>r.priceChange,display:r=>comparablePct(r.priceChange),type:'number',cls:'num',cellClass:r=>tablePriceClass(r.priceChange),weight:12},
     ];
     renderCpTable({tableId:'lflCustomCompareTable',viewName:'customCompare',columns,sourceRows:results,title:()=>$('lflCustomCompareTitle')?.textContent||(isEn()?'Independent LFL Comparisons':'Bağımsız LFL Karşılaştırmaları'),drillKey:'name',onDrill:r=>openLflPortfolioModal({title:r.name,currentRows:r.currentRows,previousRows:r.previousRows,currentSeason:r.currentSeason,compareSeason:r.compareSeason}),emptyText:isEn()?'Add at least one comparison scenario.':'En az bir karşılaştırma senaryosu ekle.'});
     const add=$('lflScenarioAddBtn');if(add){add.disabled=scenarios.length>=12;add.title=scenarios.length>=12?(isEn()?'Maximum 12 comparisons':'En fazla 12 karşılaştırma'):'';}
@@ -1959,5 +1979,5 @@
     values(field){const rowKey=field==='category'?'classification':field==='inStoreMonth'?'inStoreMonth':field;return unique((state.serverRows||[]).map(row=>norm(row&&row[rowKey])).filter(isUsableValue)).sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));},
     async ensureLoaded(){if(!state.serverRows.length&&!state.loading)await load(false);return this.values('category');}
   };
-  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,metricBetween,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
+  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,pct,comparablePct,metricBetween,comparablePeriodRows,comparableMetricBetweenRows,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
 })();
