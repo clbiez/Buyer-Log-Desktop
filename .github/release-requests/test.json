@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.113",
-  "commit_sha": "7e90d7b4ebacde79edf74252af5bef4f8e693a33",
-  "release_notes": "Buyer Log 7.0.113: LFL Hazır Filtreler alanında Mevcut Filtreyi Kaydet işlemi Electron'da desteklenmeyen prompt() nedeniyle çalışmıyordu. Native prompt kaldırıldı; panel içinde filtre adı girişi, Kaydet/İptal ve Enter/Escape desteği eklendi. LFL Trial aktif filtre eşleme düzeltmeleri de güncel paket kapsamında. Tam Buyer Log regression paketi PASS."
+  "version": "7.0.114",
+  "commit_sha": "81e01a5fe8a4205052f9eb6208ce6a74d332a9e6",
+  "release_notes": "Buyer Log 7.0.114: CP, Collection ve Orders sayfalarındaki kayıtlı Görünüm/Filtre akışlarında Electron tarafından desteklenmeyen prompt() kullanımı kaldırıldı. Farklı Kaydet ve Yeniden Adlandır işlemleri artık uygulama içi metin giriş penceresiyle çalışıyor. CP/Orders özel not sütunu ekleme ve yeniden adlandırma akışındaki aynı risk de kaldırıldı. Tam Buyer Log regression paketi PASS."
 }
