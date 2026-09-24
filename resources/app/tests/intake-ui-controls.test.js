@@ -12,19 +12,25 @@ const ui = fs.readFileSync(path.join(root, 'public', 'intake.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
 
 test('INTAKE Overview yüzeyi kendi kontrolleri ve lazy loader ile bağlıdır', () => {
-  for (const id of ['intakeSection', 'intakeConnectionBtn', 'intakeFieldsBtn', 'intakeResetBtn', 'intakeRefreshBtn', 'intakeCollapseAllBtn', 'intakeExpandAllBtn', 'intakeFilterBar', 'intakeTable']) {
+  for (const id of ['intakeSection', 'intakeFieldsBtn', 'intakeResetBtn', 'intakeRefreshBtn', 'intakeCollapseAllBtn', 'intakeExpandAllBtn', 'intakeFilterBar', 'intakeTable']) {
     assert.match(html, new RegExp(`id="${id}"`));
   }
+  assert.doesNotMatch(html, /id="intakeConnectionBtn"/, 'Veritabanı bağlantısı düğmesi INTAKE başlığında görünmemeli');
   assert.match(app, /ensureOverviewIntakeModule/);
   assert.match(app, /loader\('intake\.js\?rev=[A-Za-z0-9._-]+'\)/);
   assert.match(app, /catalog:'WSSI Intake Raporu4', role:'intake'/);
   assert.match(app, /BL_GET_OVERVIEW_FILTERS/);
   assert.match(app, /BLINTAKE\?\.onOverviewFiltersChanged/);
-  assert.match(ui, /openDataSourceAndFilters\(\{ target: 'intake' \}\)/);
   assert.match(ui, /metadataPromise: null/);
   assert.match(ui, /if \(state\.metadataLoading\) return state\.metadataPromise \|\| Promise\.resolve\(\)/);
   assert.match(ui, /state\.metadataPromise = \(async \(\) =>/);
   assert.match(html, /data-overview-widget="intake"/);
+  const intakeHeader = html.slice(html.indexOf('<div class="intakeHeader">'), html.indexOf('<div id="intakeHorizonBadge"'));
+  const collapsePos = intakeHeader.indexOf('id="intakeCollapseBtn"');
+  const settingsPos = intakeHeader.indexOf('id="intakeFieldsBtn"');
+  assert.ok(collapsePos >= 0 && settingsPos > collapsePos, 'Pivot ayarları kalemi daralt/genişlet okunun sağında olmalı');
+  assert.match(intakeHeader.slice(settingsPos, settingsPos + 700), /i-pencil/);
+
   assert.match(app, /MODEL_TARGET_LABELS=\{[^}]*intake:'INTAKE'/);
   /* v7.81: bağlantı listesi ve alan eşlemesi başlığı eski modaldaydı; ikisi de
      Veri Yönetimi ekranına taşındı. INTAKE'in korunan güvencesi aynı — kendi
