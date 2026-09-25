@@ -5003,6 +5003,10 @@ const _preparedColFilterCache=new WeakMap();
 function prepareColFilter(tableKey,key,entry){
   if(!entry)return null;
   if(entry.range)return {kind:'range',min:entry.range.min,max:entry.range.max,col:columnByKey(tableKey,key)};
+  // Sayı paneli numericRule ile birlikte boş bir values Set'i bırakır. Kuralı
+  // values kontrolünden ÖNCE hazırlamazsak bu filtre {kind:'value', set:∅}
+  // olur ve CP/Orders gerçek satır yolunda bütün satırları eler.
+  if(entry.numericRule)return {kind:'numeric-rule',rule:entry.numericRule,col:columnByKey(tableKey,key)};
   // Değer kümesi yoksa eski davranış satırı ELEMEKTİ; bu korunuyor.
   if(!entry.values)return {kind:'none'};
   const cached=_preparedColFilterCache.get(entry);
@@ -5024,6 +5028,7 @@ function buildPreparedColFilter(tableKey,key,entry){
 function preparedColFilterPasses(prepared,key,row){
   if(!prepared)return true;
   if(prepared.kind==='none')return false;
+  if(prepared.kind==='numeric-rule')return numericFilterRulePasses(prepared.rule,row?row[key]:null,prepared.col);
   if(prepared.kind==='range'){
     const raw=row?row[key]:null;
     // DİKKAT: toNum(null) ve toNum('') SIFIR döndürür. Boş hücreyi doğrudan
@@ -5506,6 +5511,47 @@ function normalizeDecimalText(text){
   if(comma>=0&&dot>=0) return comma>dot?text.replace(/\./g,'').replace(',','.'):text.replace(/,/g,'');
   if(comma>=0) return text.replace(',','.');
   return text;
+}
+// Başlık sayı filtreleri CP, Orders ve registerGenericTable ile kaydedilen tüm
+// yönetilen tablolarda aynı sayısal karşılaştırma çekirdeğini kullanır. Ham sayı,
+// TR/EN ondalık-binlik biçimleri ve para/yüzde işaretli metinler burada tek kez
+// normalize edilir. Boş/geçersiz hücre 0 sayılmaz; aktif sayı kuralından elenir.
+function numericFilterValue(value,col){
+  if(typeof value==='number')return Number.isFinite(value)?value:null;
+  if(value==null||value==='')return null;
+  let text=String(value).trim().replace(/\s/g,'');
+  if(!text||!/[0-9]/.test(text))return null;
+  const type=String(col?.schema?.dataType||col?.dataType||col?.type||'').toLowerCase();
+  // Adet/tam sayı alanlarında 2.364 gibi Türkçe gösterim 2364'tür. Ondalıklı
+  // para/num alanlarında tek nokta ondalık olarak korunur.
+  if(['int','integer','quantity'].includes(type)&&/^[+-]?\d{1,3}(?:\.\d{3})+$/.test(text)){
+    text=text.replace(/\./g,'');
+  }else{
+    const hadComma=text.includes(',');
+    text=normalizeDecimalText(text);
+    if(!hadComma&&(text.match(/\./g)||[]).length>1)text=text.replace(/\./g,'');
+  }
+  text=text.replace(/[^0-9+\-.]/g,'');
+  if(!text||!/[0-9]/.test(text))return null;
+  const n=Number(text);
+  return Number.isFinite(n)?n:null;
+}
+function numericFilterRulePasses(rule,value,col){
+  if(!rule)return true;
+  const n=numericFilterValue(value,col);
+  if(n==null)return false;
+  const op=String(rule.op||'');
+  const a=numericFilterValue(rule.a),b=numericFilterValue(rule.b),avg=numericFilterValue(rule.avg);
+  if(op==='eq')return a!=null&&n===a;
+  if(op==='neq')return a!=null&&n!==a;
+  if(op==='gt')return a!=null&&n>a;
+  if(op==='gte')return a!=null&&n>=a;
+  if(op==='lt')return a!=null&&n<a;
+  if(op==='lte')return a!=null&&n<=a;
+  if(op==='between')return a!=null&&b!=null&&n>=Math.min(a,b)&&n<=Math.max(a,b);
+  if(op==='aboveAvg')return avg!=null&&n>avg;
+  if(op==='belowAvg')return avg!=null&&n<avg;
+  return false;
 }
 function tableNumericValue(value){
   if(typeof value==='number') return Number.isFinite(value)?value:0;
