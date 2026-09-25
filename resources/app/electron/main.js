@@ -94,6 +94,7 @@ const CORENECTUM_STYLE_LIST_API = 'https://mym-api.lcwaikiki.com/lcw/live/corene
 const desktopBridgeSecret = crypto.randomBytes(32).toString('hex');
 let coreNectumAuthWindow = null;
 let coreNectumAuthInFlight = null;
+let coreNectumStyleListTemplate = null;
 
 /* OAB automatic auth — intentionally independent from CoreNectum and from the
  * user's normal Edge profile. Browser session state lives in this dedicated
@@ -422,6 +423,49 @@ function authorizationTokenFromHeaders(headers) {
   return '';
 }
 
+function coreNectumStyleTemplateFromRequest(details) {
+  try {
+    if (!details || String(details.method || '').toUpperCase() !== 'POST') return null;
+    const url = new URL(String(details.url || ''));
+    const expected = new URL(CORENECTUM_STYLE_LIST_API);
+    if (url.origin !== expected.origin || url.pathname !== expected.pathname) return null;
+    const chunks = [];
+    for (const part of Array.from(details.uploadData || [])) {
+      if (!part || !part.bytes) continue;
+      const chunk = Buffer.from(part.bytes);
+      if (chunk.length) chunks.push(chunk);
+    }
+    if (!chunks.length) return null;
+    const body = Buffer.concat(chunks);
+    if (!body.length || body.length > 256 * 1024) return null;
+    const parsed = JSON.parse(body.toString('utf8'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  } catch (_) { return null; }
+}
+
+async function pushCoreNectumStyleTemplateToBackend(template) {
+  if (!template || !backend || !backend.running || !backend.origin) return false;
+  const response = await fetch(backend.origin + '/api/internal/desktop/corenectum-style-template', {
+    method:'POST', cache:'no-store',
+    headers:{
+      'Content-Type':'application/json',
+      'X-BuyerLog-Desktop-Bridge':desktopBridgeSecret,
+    },
+    body:JSON.stringify({ template }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.ok) throw new Error(data.error || 'CoreNectum Style List istek şablonu backend’e aktarılamadı.');
+  return true;
+}
+
+async function waitForCoreNectumStyleTemplate(timeoutMs = 2500) {
+  const deadline = Date.now() + Math.max(0, Number(timeoutMs) || 0);
+  while (!coreNectumStyleListTemplate && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  return coreNectumStyleListTemplate;
+}
+
 const CORENECTUM_STORAGE_PROBE = `(()=>{try{
   const extract=value=>{const text=String(value==null?'':value).trim();if(!text)return '';
     if(/^bearer\\s+/i.test(text))return text.replace(/^bearer\\s+/i,'').trim();
@@ -525,6 +569,7 @@ async function acquireCoreNectumToken(options = {}) {
       if (storageTimer) clearInterval(storageTimer);
       if (timeoutTimer) clearTimeout(timeoutTimer);
       if (silentTimer) clearTimeout(silentTimer);
+      try { authSession.webRequest.onBeforeRequest({ urls: [CORENECTUM_STYLE_LIST_API] }, null); } catch (_) {}
       try { authSession.webRequest.onBeforeSendHeaders({ urls: ['https://mym-api.lcwaikiki.com/*'] }, null); } catch (_) {}
       if (authWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
       if (coreNectumAuthWindow === authWindow) coreNectumAuthWindow = null;
@@ -543,8 +588,13 @@ async function acquireCoreNectumToken(options = {}) {
           // report the network condition accurately later.
         }
         await pushCoreNectumTokenToBackend(usable);
+        const template = coreNectumStyleListTemplate || await waitForCoreNectumStyleTemplate(2500);
+        if (template) {
+          try { await pushCoreNectumStyleTemplateToBackend(template); }
+          catch (error) { log('CoreNectum Style List şablonu aktarılamadı: ' + String(error && error.message || error)); }
+        }
         settled = true;
-        log('CoreNectum otomatik oturumu hazır (' + source + ').');
+        log('CoreNectum otomatik oturumu hazır (' + source + (template ? ', Style List şablonu hazır' : '') + ').');
         cleanup();
         return { ok: true, source: 'desktop-sso', capture: source };
       } finally { candidateBusy = false; }
@@ -588,6 +638,12 @@ async function acquireCoreNectumToken(options = {}) {
           settled = true;
           resolve({ ok: false, code: 'CORENECTUM_AUTH_CANCELLED', error: 'CoreNectum oturum açma işlemi kapatıldı.' });
         }
+      });
+
+      authSession.webRequest.onBeforeRequest({ urls: [CORENECTUM_STYLE_LIST_API] }, (details, callback) => {
+        const template = coreNectumStyleTemplateFromRequest(details);
+        if (template) coreNectumStyleListTemplate = template;
+        callback({});
       });
 
       authSession.webRequest.onBeforeSendHeaders({ urls: ['https://mym-api.lcwaikiki.com/*'] }, (details, callback) => {
@@ -637,6 +693,7 @@ async function acquireCoreNectumToken(options = {}) {
 }
 
 async function clearCoreNectumAuthSession() {
+  coreNectumStyleListTemplate = null;
   await clearCoreNectumBackendToken();
   try {
     const authSession = coreNectumAuthSession();

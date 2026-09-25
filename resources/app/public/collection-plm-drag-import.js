@@ -220,7 +220,7 @@
 
   async function ensurePlmReady() {
     if (typeof ensureCoreNectumApiConnection !== 'function') return true;
-    try { return await ensureCoreNectumApiConnection(); }
+    try { return await ensureCoreNectumApiConnection({ requireStyleListTemplate:true }); }
     catch (error) {
       console.warn('PLM drag CoreNectum preflight failed:', error);
       return false;

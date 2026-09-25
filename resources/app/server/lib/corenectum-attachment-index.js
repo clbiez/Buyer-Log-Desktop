@@ -11,8 +11,8 @@
 
 const styleApi = require('./corenectum-style-api');
 const apiClient = require('./corenectum-api-client');
+const apiSettings = require('./corenectum-api-settings');
 
-const DEFAULT_PAGE_SIZE = 500;
 const DEFAULT_MAX_PAGES = 1000;
 const DEFAULT_TTL_MS = 15 * 60 * 1000;
 
@@ -26,16 +26,6 @@ function resolveError(message, code, statusCode = 502, details = null) {
   error.statusCode = statusCode;
   if (details) error.details = details;
   return error;
-}
-
-function browseBody(pageNumber = 1, pageSize = DEFAULT_PAGE_SIZE) {
-  return {
-    pageNumber: Math.max(1, Math.trunc(Number(pageNumber)) || 1),
-    pageSize: Math.max(20, Math.min(1000, Math.trunc(Number(pageSize)) || DEFAULT_PAGE_SIZE)),
-    filterCriterias: [],
-    searchCriteria: { columnNames: [], searchText: '' },
-    favoriteGroupId: null,
-  };
 }
 
 function styleListTotalCount(payload) {
@@ -80,7 +70,8 @@ function indexRecords(records, byAttachment, ambiguous) {
 function createAttachmentResolver(deps = {}) {
   const postJson = typeof deps.postJson === 'function' ? deps.postJson : apiClient.postJson;
   const now = typeof deps.now === 'function' ? deps.now : Date.now;
-  const pageSize = Math.max(20, Math.min(1000, Number(deps.pageSize) || DEFAULT_PAGE_SIZE));
+  const getTemplate = typeof deps.getTemplate === 'function' ? deps.getTemplate : apiSettings.getStyleListTemplate;
+  const paginateTemplate = typeof deps.paginateTemplate === 'function' ? deps.paginateTemplate : apiSettings.paginateStyleListTemplate;
   const maxPages = Math.max(1, Math.min(5000, Number(deps.maxPages) || DEFAULT_MAX_PAGES));
   const ttlMs = Math.max(1000, Number(deps.ttlMs) || DEFAULT_TTL_MS);
   const cache = new Map();
@@ -90,6 +81,14 @@ function createAttachmentResolver(deps = {}) {
     const ownerKey = clean(ownerId, 120) || 'moderator';
     if (inflight.has(ownerKey)) return inflight.get(ownerKey);
     const task = (async () => {
+      const template = getTemplate();
+      if (!template) {
+        throw resolveError(
+          'CoreNectum Style List istek şablonu henüz hazır değil. Buyer Log PLM oturumunu otomatik tazeleyip Style List isteğini yakalamalıdır.',
+          'CORENECTUM_STYLE_TEMPLATE_REQUIRED',
+          409
+        );
+      }
       const byAttachment = new Map();
       const ambiguous = new Set();
       let scannedPages = 0;
@@ -98,10 +97,19 @@ function createAttachmentResolver(deps = {}) {
       let completed = false;
 
       for (let pageNumber = 1; pageNumber <= maxPages; pageNumber += 1) {
+        let pagePlan;
+        try { pagePlan = paginateTemplate(template, pageNumber); }
+        catch (error) {
+          throw resolveError(
+            error && error.message || 'CoreNectum Style List sayfalama şablonu geçersiz.',
+            error && error.code || 'CORENECTUM_STYLE_TEMPLATE_INVALID',
+            409
+          );
+        }
         const payload = await postJson(
           ownerId,
           styleApi.GET_STYLE_LIST_URL,
-          browseBody(pageNumber, pageSize),
+          pagePlan.body,
           { timeoutMs: 90000, retries: 3, language: options.language }
         );
         const records = styleApi.styleListRecords(payload);
@@ -115,7 +123,7 @@ function createAttachmentResolver(deps = {}) {
           completed = true;
           break;
         }
-        if (totalCount == null && records.length < pageSize) {
+        if (totalCount == null && records.length < pagePlan.pageSize) {
           completed = true;
           break;
         }
@@ -203,10 +211,8 @@ function createAttachmentResolver(deps = {}) {
 const defaultResolver = createAttachmentResolver();
 
 module.exports = {
-  DEFAULT_PAGE_SIZE,
   DEFAULT_MAX_PAGES,
   DEFAULT_TTL_MS,
-  browseBody,
   styleListTotalCount,
   attachmentIdentity,
   indexRecords,

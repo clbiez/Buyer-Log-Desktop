@@ -26919,13 +26919,13 @@ function coreNectumAuthenticationError(error){
   const code=String(error&&error.code||'');
   return code==='CORENECTUM_API_TOKEN_REQUIRED'||code==='CORENECTUM_API_TOKEN_INVALID'||code==='CORENECTUM_LOGIN_REQUIRED';
 }
-async function ensureCoreNectumApiConnection({validate=false}={}){
+async function ensureCoreNectumApiConnection({validate=false,requireStyleListTemplate=false}={}){
   let status=null;
   try{
     const data=await coreNectumApiRaw('/api/corenectum-api/status');
     status=data&&data.status||null;
   }catch(_){}
-  if(status&&status.configured){
+  if(status&&status.configured&&(!requireStyleListTemplate||status.styleListTemplateReady)){
     if(!validate)return true;
     try{
       await coreNectumApiRaw('/api/corenectum-api/test',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
@@ -26941,7 +26941,16 @@ async function ensureCoreNectumApiConnection({validate=false}={}){
     }
   }
   if(coreNectumDesktopAuthAvailable()){
-    try{await runCoreNectumAutoAuth({interactive:true,force:Boolean(status&&status.configured)});return true;}
+    try{
+      const refreshed=await runCoreNectumAutoAuth({interactive:true,force:Boolean(status&&status.configured)||requireStyleListTemplate});
+      if(requireStyleListTemplate&&!refreshed?.styleListTemplateReady){
+        showCenterNotice(appLang==='en'
+          ?'CoreNectum Style List request template could not be captured. Wait for Style List to load and try again.'
+          :'CoreNectum Style List istek şablonu yakalanamadı. Style List’in yüklenmesini bekleyip tekrar deneyin.',{icon:false,duration:9000});
+        return false;
+      }
+      return true;
+    }
     catch(error){showCenterNotice(String(error&&error.message||error),{icon:false,duration:9000});return false;}
   }
   return openCoreNectumApiSettings({required:true});

@@ -8,11 +8,25 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const resolverLib = require('../server/lib/corenectum-attachment-index');
 const drag = require('../public/collection-plm-drag-import');
+const apiSettings = require('../server/lib/corenectum-api-settings');
 
 const HOT_WHEELS_URL = 'https://mym-api.lcwaikiki.com/lcw/live/corenectum/service/api/Attachment/GetAttachment/b6aa77e49e6bc3ecf0b2ee900607c7f9';
 
 function payload(records, totalCount = records.length) {
   return { data: { coreNectumResultData: { styleListResult: records, totalCount } } };
+}
+
+function liveTemplate(overrides = {}) {
+  return {
+    pageNumber:1,
+    pageSize:20,
+    filterCriterias:[{ filterColumnName:'seasonName', filterOperator:1, filterValue:'S7-2027 YAZ' }],
+    searchCriteria:{ columnNames:['styleName'], searchText:'HOT' },
+    favoriteGroupId:777,
+    sortModel:[{ field:'updatedAt', direction:'desc' }],
+    securityScope:{ businessUnit:'LCW', tenantId:9 },
+    ...overrides,
+  };
 }
 
 test('gerçek Hot Wheels drag URLsi attachment kimliğine ayrılır', () => {
@@ -66,10 +80,14 @@ test('attachment reverse index Hot Wheels görselini PLM 2131790 ile eşler ve c
   let calls = 0;
   const resolver = resolverLib.createAttachmentResolver({
     ttlMs:60000,
+    getTemplate:()=>apiSettings.sanitizeStyleListTemplate(liveTemplate()),
+    paginateTemplate:apiSettings.paginateStyleListTemplate,
     postJson:async (_owner, _url, body) => {
       calls += 1;
       assert.equal(body.pageNumber, 1);
       assert.deepEqual(body.filterCriterias, []);
+      assert.deepEqual(body.sortModel, [{ field:'updatedAt', direction:'desc' }]);
+      assert.deepEqual(body.securityScope, { businessUnit:'LCW', tenantId:9 });
       return payload([{
         styleId:2533116,
         styleName:'HOTWHEELS-2-YI',
@@ -92,7 +110,8 @@ test('attachment reverse index Hot Wheels görselini PLM 2131790 ile eşler ve c
 test('reverse index totalCount bitmeden sonraki sayfayı tarar', async () => {
   const calls = [];
   const resolver = resolverLib.createAttachmentResolver({
-    pageSize:20,
+    getTemplate:()=>apiSettings.sanitizeStyleListTemplate(liveTemplate()),
+    paginateTemplate:apiSettings.paginateStyleListTemplate,
     postJson:async (_owner, _url, body) => {
       calls.push(body.pageNumber);
       if (body.pageNumber === 1) return payload([{
@@ -111,12 +130,62 @@ test('reverse index totalCount bitmeden sonraki sayfayı tarar', async () => {
 
 test('aynı attachment iki farklı PLMye bağlıysa keyfi model seçilmez', async () => {
   const resolver = resolverLib.createAttachmentResolver({
+    getTemplate:()=>apiSettings.sanitizeStyleListTemplate(liveTemplate()),
+    paginateTemplate:apiSettings.paginateStyleListTemplate,
     postJson:async () => payload([
       {styleId:1,styleName:'A',plmCode:100,imageUrl:HOT_WHEELS_URL},
       {styleId:2,styleName:'B',plmCode:200,imageUrl:HOT_WHEELS_URL},
     ], 2),
   });
   await assert.rejects(() => resolver.resolve('buyer-3', HOT_WHEELS_URL), error => error && error.code === 'CORENECTUM_ATTACHMENT_AMBIGUOUS');
+});
+
+
+test('yakalanan canlı Style List template filtreleri temizler ama şemayı ve scopeu korur', () => {
+  const sanitized=apiSettings.sanitizeStyleListTemplate(liveTemplate({
+    authorization:'Bearer SHOULD_NOT_SURVIVE',
+    accessToken:'SECRET',
+  }));
+  assert.deepEqual(sanitized.filterCriterias, []);
+  assert.deepEqual(sanitized.searchCriteria, { columnNames:[], searchText:'' });
+  assert.equal(sanitized.favoriteGroupId, null);
+  assert.deepEqual(sanitized.sortModel, [{ field:'updatedAt', direction:'desc' }]);
+  assert.deepEqual(sanitized.securityScope, { businessUnit:'LCW', tenantId:9 });
+  assert.equal('authorization' in sanitized, false);
+  assert.equal('accessToken' in sanitized, false);
+  const second=apiSettings.paginateStyleListTemplate(sanitized,2);
+  assert.equal(second.body.pageNumber,2);
+  assert.equal(second.body.pageSize,20);
+  assert.equal(second.pageSize,20);
+});
+
+test('reverse index template yoksa CoreNectum 400 göndermek yerine açık preflight hatası verir', async () => {
+  let calls=0;
+  const resolver=resolverLib.createAttachmentResolver({
+    getTemplate:()=>null,
+    postJson:async()=>{calls+=1;return payload([]);},
+  });
+  await assert.rejects(
+    ()=>resolver.resolve('buyer-template-missing',HOT_WHEELS_URL),
+    error=>error&&error.code==='CORENECTUM_STYLE_TEMPLATE_REQUIRED'&&error.statusCode===409
+  );
+  assert.equal(calls,0);
+});
+
+test('Electron SSO gerçek GetStyleList POST body şablonunu internal bridge ile yakalar', () => {
+  const source=fs.readFileSync(path.join(ROOT,'electron','main.js'),'utf8');
+  assert.match(source,/webRequest\.onBeforeRequest\(\{ urls: \[CORENECTUM_STYLE_LIST_API\] \}/);
+  assert.match(source,/coreNectumStyleTemplateFromRequest/);
+  assert.match(source,/\/api\/internal\/desktop\/corenectum-style-template/);
+  assert.match(source,/pushCoreNectumStyleTemplateToBackend/);
+});
+
+test('Collection drag preflight template hazır değilse otomatik SSO yenilemesini ister', () => {
+  const dragSource=fs.readFileSync(path.join(ROOT,'public','collection-plm-drag-import.js'),'utf8');
+  const appSource=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
+  assert.match(dragSource,/ensureCoreNectumApiConnection\(\{ requireStyleListTemplate:true \}\)/);
+  assert.match(appSource,/requireStyleListTemplate/);
+  assert.match(appSource,/styleListTemplateReady/);
 });
 
 test('drag/drop document capture seviyesinde yalnız Collection için kurulur', () => {
