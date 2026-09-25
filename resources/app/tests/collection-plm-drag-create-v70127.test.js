@@ -85,7 +85,9 @@ test('attachment reverse index Hot Wheels görselini PLM 2131790 ile eşler ve c
     postJson:async (_owner, _url, body) => {
       calls += 1;
       assert.equal(body.pageNumber, 1);
-      assert.deepEqual(body.filterCriterias, []);
+      assert.deepEqual(body.filterCriterias, [{ filterColumnName:'seasonName', filterOperator:1, filterValue:'S7-2027 YAZ' }]);
+      assert.deepEqual(body.searchCriteria, { columnNames:['styleName'], searchText:'HOT' });
+      assert.equal(body.favoriteGroupId, 777);
       assert.deepEqual(body.sortModel, [{ field:'updatedAt', direction:'desc' }]);
       assert.deepEqual(body.securityScope, { businessUnit:'LCW', tenantId:9 });
       return payload([{
@@ -141,14 +143,14 @@ test('aynı attachment iki farklı PLMye bağlıysa keyfi model seçilmez', asyn
 });
 
 
-test('yakalanan canlı Style List template filtreleri temizler ama şemayı ve scopeu korur', () => {
+test('yakalanan canlı Style List template request semantiğini korur; yalnız sırları ve sayfalamayı değiştirir', () => {
   const sanitized=apiSettings.sanitizeStyleListTemplate(liveTemplate({
     authorization:'Bearer SHOULD_NOT_SURVIVE',
     accessToken:'SECRET',
   }));
-  assert.deepEqual(sanitized.filterCriterias, []);
-  assert.deepEqual(sanitized.searchCriteria, { columnNames:[], searchText:'' });
-  assert.equal(sanitized.favoriteGroupId, null);
+  assert.deepEqual(sanitized.filterCriterias, [{ filterColumnName:'seasonName', filterOperator:1, filterValue:'S7-2027 YAZ' }]);
+  assert.deepEqual(sanitized.searchCriteria, { columnNames:['styleName'], searchText:'HOT' });
+  assert.equal(sanitized.favoriteGroupId, 777);
   assert.deepEqual(sanitized.sortModel, [{ field:'updatedAt', direction:'desc' }]);
   assert.deepEqual(sanitized.securityScope, { businessUnit:'LCW', tenantId:9 });
   assert.equal('authorization' in sanitized, false);
@@ -157,6 +159,11 @@ test('yakalanan canlı Style List template filtreleri temizler ama şemayı ve s
   assert.equal(second.body.pageNumber,2);
   assert.equal(second.body.pageSize,20);
   assert.equal(second.pageSize,20);
+  assert.deepEqual(second.body.filterCriterias, sanitized.filterCriterias);
+  assert.deepEqual(second.body.searchCriteria, sanitized.searchCriteria);
+  assert.equal(second.body.favoriteGroupId, sanitized.favoriteGroupId);
+  assert.deepEqual(second.body.sortModel, sanitized.sortModel);
+  assert.deepEqual(second.body.securityScope, sanitized.securityScope);
 });
 
 test('reverse index template yoksa CoreNectum 400 göndermek yerine açık preflight hatası verir', async () => {
