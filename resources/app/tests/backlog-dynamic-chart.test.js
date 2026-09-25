@@ -80,7 +80,8 @@ test('Backlog render refreshes chart and Excel export appends chart sheets', () 
   assert.match(APP,/window\.BLBacklogChartContext=/);
   assert.match(APP,/prepareQuery:\(\)=>fetchBacklogSourceColumns\(\)/);
   assert.match(APP,/appendWorkbookSheets\?\.\(/);
-  assert.match(APP,/const chartSpecs=chartExport&&Array\.isArray\(chartExport\.charts\)\?chartExport\.charts:\[\]/);\n  assert.match(APP,/charts:chartSpecs/);
+  assert.match(APP,/const chartSpecs=chartExport&&Array\.isArray\(chartExport\.charts\)\?chartExport\.charts:\[\]/);
+  assert.match(APP,/charts:chartSpecs/);
   assert.match(APP,/window\.BLBacklogChart\.applyExcelCharts\(patched,charts,JSZip,'blob'\)/);
   assert.match(APP,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
 });
