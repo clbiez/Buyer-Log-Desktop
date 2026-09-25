@@ -178,7 +178,18 @@
     if(comparisons.length<2)return '';const metric=state.metric,result=E.compareAnalyses(comparisons.map(slot=>slot.result),metric);if(!result.compatible)return `<section class="paV2Panel paV2Comparison"><h2>${t('compare')}</h2><p>${t('mixedWarning')}</p></section>`;
     return `<section class="paV2Panel paV2Comparison"><div class="paV2PanelHead"><h2>${t('compare')}</h2><button class="tbtn" data-pa="clearComparison">${t('clear')}</button></div><div><table class="miniTable"><thead><tr>${result.dimensions.map(dim=>`<th>${esc(dimensionLabel(dim))}</th>`).join('')}${comparisons.map(slot=>`<th>${esc(slot.name)}</th>`).join('')}<th>${t('difference')}</th><th>${t('differencePct')}</th></tr></thead><tbody>${result.rows.slice(0,250).map(row=>`<tr>${row.path.map(value=>`<td>${esc(value)}</td>`).join('')}${row.values.map(value=>`<td>${format(value?.value,metric,value?.currency)}</td>`).join('')}<td>${format(row.delta,'difference',row.values[0]?.currency)}</td><td>${format(row.deltaPct,'differencePct')}</td></tr>`).join('')}</tbody></table></div></section>`;
   }
-  function empty(){return `<section class="paV2Panel paV2Empty">${error?`${t('failed')}: ${esc(error)}`:t('noData')}</section>`;}
+  function empty(){
+    const ui=window.BLUI;
+    if(ui&&typeof ui.stateView==='function'){
+      const en=isEn();
+      const view=error
+        ?ui.stateView({kind:'error',title:t('failed'),detail:error})
+        :ui.stateView({kind:'empty',icon:'chart-histogram',title:t('noData'),
+          detail:en?'Change the source or scope above. The analysis fills in as prices are entered in Collection or Quotations.':'Yukarıdan kaynağı veya kapsamı değiştir. Koleksiyon ya da Quotations’a fiyat girildikçe analiz dolar.'});
+      return `<section class="paV2Panel paV2Empty">${view}</section>`;
+    }
+    return `<section class="paV2Panel paV2Empty">${error?`${t('failed')}: ${esc(error)}`:t('noData')}</section>`;
+  }
   function render(){
     if(!root)return;root.innerHTML=`${toolbar()}${chips()}${drawer()}${loading?`<div class="paV2Busy"><span></span>${t('loading')}</div>`:analysis&&analysis.records.length?`${overview()}${opportunities()}${ranking()}${heatmap()}${comparison()}`:empty()}`;bind();if(analysis){const viewport=root.querySelector('#paV2Virtual');if(viewport){viewport.scrollTop=scrollTop;requestAnimationFrame(renderVirtual);}}
   }

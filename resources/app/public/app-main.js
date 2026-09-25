@@ -1281,8 +1281,10 @@ function restoreSharedTableActions(){
   ['view','filter'].forEach(kind=>{const node=vfProfileMenuNode(kind);if(node&&rowBreak)rowBreak.before(node);});
   const shipHome=document.getElementById('shipSecondaryToolbar'),shipAnchor=document.getElementById('shipCount');
   if(shipHome&&shipAnchor){['shipExportBtn','shipUpdateFxBtn','shipDeleteBtn'].forEach(id=>{const node=document.getElementById(id);if(node){node.classList.remove('navActionBtn');shipHome.insertBefore(node,shipAnchor);}});}
-document.getElementById('shipPlmSyncBtn')?.addEventListener('click',event=>openCurrentViewImageAction(event.currentTarget));
 }
+/* Tek bağlama: bu satır eskiden restoreSharedTableActions İÇİNDEYDİ ve her sekme
+   geçişinde yeni bir dinleyici ekleyip tek tıkta birden çok PLM senkronu başlatıyordu. */
+document.getElementById('shipPlmSyncBtn')?.addEventListener('click',event=>openCurrentViewImageAction(event.currentTarget));
 function appendSharedTableActions(targetId,ids){
   const target=document.getElementById(targetId); if(!target) return;
   ids.forEach(id=>{const node=sharedTableActionNode(id)||document.getElementById(id);if(node)target.appendChild(node);});
@@ -7658,6 +7660,33 @@ function cpRowsScoped(exclude){
   const ids = CP_MIRROR_IDS.filter(id=>!ex.includes(id));
   return state.cp.rows.filter(r=>cpRowPasses(r,ctx,ids));
 }
+/* Boş tablo yönlendirmesi: kaynakta hiç satır yoksa Veri Yönetimi'ne, filtreler
+   her şeyi eliyorsa filtre temizlemeye yönlendirir. Tablo başlığı ve araç
+   çubuğu görünür kalır; ipucu tablo kabının içinde yatayda sabit durur. */
+function renderTableEmptyHint(tableKey,visibleCount,totalCount){
+  const wrap=document.getElementById(tableKey==='cp'?'cpTableWrap':'ordersTableWrap');if(!wrap)return;
+  let hint=wrap.querySelector(':scope > .tableEmptyHint');
+  const mode=Number(totalCount)===0?'source':(Number(visibleCount)===0?'filter':'');
+  if(!mode){if(hint)hint.hidden=true;return;}
+  if(!hint){hint=document.createElement('div');hint.className='tableEmptyHint';wrap.appendChild(hint);}
+  hint.hidden=false;hint.dataset.mode=mode;
+  const en=appLang==='en',label=tableKey==='cp'?'CP':(en?'Orders':'Sipariş');
+  const opts=mode==='source'?{
+    kind:'empty',icon:'database-import',
+    title:en?`No ${label} data yet`:`Henüz ${label} verisi yok`,
+    detail:en?'Connect the ASAS source in Data Management, then refresh this table.':'ASAS kaynağını Veri Yönetimi’nden bağla, ardından bu tabloyu yenile.',
+    actionLabel:en?'Open Data Management':'Veri Yönetimi’ni aç',actionPrimary:true,
+    onAction:()=>document.querySelector('nav.tabs button[data-tab="source"]')?.click(),
+  }:{
+    kind:'info',icon:'eraser',
+    title:en?'No rows match the current filters':'Mevcut filtrelere uyan satır yok',
+    detail:en?`${Number(totalCount).toLocaleString('en-GB')} rows are hidden by filters.`:`${Number(totalCount).toLocaleString('tr-TR')} satır filtreler nedeniyle gizli.`,
+    actionLabel:en?'Clear filters':'Filtreleri temizle',
+    onAction:()=>document.getElementById('navClearFilters')?.click(),
+  };
+  if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(hint,opts);
+  else hint.textContent=opts.title;
+}
 function renderCPNow(){
   if(!state.cp) return;
   if(!ensureUnifiedPrioritiesForTable('cp'))return;
@@ -7676,6 +7705,7 @@ function renderCPNow(){
   const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon`;
   const cpScopeText=`${cpLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qtySumCP.toLocaleString('tr-TR')}`;
   document.getElementById('cpCount').textContent = cpScopeText;
+  renderTableEmptyHint('cp',rows.length,totalRowCount);
   const cpWorkspaceMeta=document.getElementById('cpWorkspaceMeta');
   if(cpWorkspaceMeta)cpWorkspaceMeta.textContent=cpScopeText;
   renderTableViewContext('cp');
@@ -7965,6 +7995,7 @@ function renderOrdersNow(){
   const ordersLabel=appLang==='en'?`${ordersStats.modelCount} Model${ordersStats.modelCount===1?'':'s'} · ${ordersStats.optionCount} Option${ordersStats.optionCount===1?'':'s'}`:`${ordersStats.modelCount} Model · ${ordersStats.optionCount} Opsiyon`;
   const ordersScopeText=`${ordersLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qty.toLocaleString('tr-TR')}`;
   document.getElementById('ordersCount').textContent=ordersScopeText;
+  renderTableEmptyHint('orders',rows.length,totalRowCount);
   const ordersWorkspaceMeta=document.getElementById('ordersWorkspaceMeta');
   if(ordersWorkspaceMeta)ordersWorkspaceMeta.textContent=ordersScopeText;
   renderTableViewContext('orders');
@@ -17802,9 +17833,22 @@ function renderShipDecision(){
   });
 }
 
+/* Nakliye boşken satır işlemleri şeridi gizlenir; düz metin yerine CP Tracker'a
+   yönlendiren ortak boş durum kartı çizilir. */
+function renderShipEmptyState(empty,isEmpty){
+  document.getElementById('view-shipping')?.classList.toggle('isShipEmpty',isEmpty);
+  if(!isEmpty||!empty||!window.BLUI||typeof window.BLUI.renderState!=='function')return;
+  const en=appLang==='en';
+  window.BLUI.renderState(empty,{kind:'empty',icon:'ship',
+    title:en?'No rows in the shipping comparison yet':'Nakliye kıyasında henüz satır yok',
+    detail:en?'Tick rows in CP Tracker and use “Send to shipping comparison” to compare freight options here.':'CP Tracker’da satırları işaretleyip “Nakliye kıyasına aktar” ile buraya gönder; navlun seçeneklerini burada karşılaştır.',
+    actionLabel:en?'Go to CP Tracker':'CP Tracker’a git',actionPrimary:true,actionOnce:false,
+    onAction:()=>document.querySelector('nav.tabs button[data-tab="cp"]')?.click()});
+}
 function renderShipTable(){
   applyFormulaColumns('ship');
   const empty = document.getElementById('shipEmpty'), content = document.getElementById('shipContent');
+  renderShipEmptyState(empty,!shipRows.length);
   if(!shipRows.length){ empty.style.display='block'; content.style.display='none'; document.getElementById('shipCount').textContent=''; updateShipSelectionActions(); return; }
   empty.style.display='none'; content.style.display='block';
   document.getElementById('shipCount').textContent = `${shipRows.length} satır`;
