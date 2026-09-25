@@ -83,6 +83,16 @@ test('v6.01 elle giriş doğrulama yapıyor', () => {
   assert.match(block, /Quotations kaydı açılamadı/);
 });
 
+test('elle fiyat üretici önerileri ASAS kataloğundan gelir', () => {
+  const catalogBlock = APP.slice(APP.indexOf('const KOL_ASAS_CATALOG_KINDS'), APP.indexOf('function kolCatalogMatch'));
+  assert.match(catalogBlock, /'manufacturer'/);
+  const helperBlock = APP.slice(APP.indexOf('function kolManualManufacturerSuggestions'), APP.indexOf('function kolBestPricing'));
+  assert.match(helperBlock, /kolCatalogValues\('manufacturer'\)/);
+  assert.match(helperBlock, /kolManufacturers\|\|\[\]/);
+  assert.match(helperBlock, /await ensureCollectionCatalogLoaded\(\{deferRender:true\}\)/);
+  assert.match(helperBlock, /manualManufacturers\.map\(name=>/);
+});
+
 /* ------------------------------------------------------------ 3) DURUM */
 
 test('v6.01 "Siparişe Hazır" canonical status kataloğunda doğru sırada kalır', () => {
