@@ -39,3 +39,18 @@ test('Send to Pricing blocks creation when a selected manufacturer has no canoni
   assert.match(APP,/const missing=checked\.filter\(m=>!String\(m\.email\|\|''\)\.trim\(\)\)/);
   assert.match(APP,/Settings > E-Mail Groups/);
 });
+
+
+test('Send to Pricing mirrors manufacturers from the canonical E-Mail Groups directory',()=>{
+  assert.match(APP,/function prepareEmailMergeDirectoryManufacturers\(\)/);
+  const syncBlock=APP.slice(APP.indexOf('function prepareEmailMergeDirectoryManufacturers'),APP.indexOf('function prepareEmailFillFromShared'));
+  assert.match(syncBlock,/BLEmailDirectory\.records\(\)/);
+  assert.match(syncBlock,/kolManufacturers\.push\(\{name,email:''\}\)/);
+  const renderStart=APP.slice(APP.indexOf('function renderKolMfrModal'),APP.indexOf('function renderKolMfrModal')+260);
+  assert.match(renderStart,/prepareEmailMergeDirectoryManufacturers\(\);\s*prepareEmailFillFromShared\(\);/);
+});
+
+test('Send to Pricing re-mirrors canonical manufacturers after the forced directory refresh',()=>{
+  const asyncBlock=APP.slice(APP.indexOf('function prepareEmailFillFromSharedAsync'),APP.indexOf('function renderKolMfrModal'));
+  assert.match(asyncBlock,/ensureDirectory\(true\)\.then\(\(\)=>\{\s*prepareEmailMergeDirectoryManufacturers\(\);\s*prepareEmailFillFromShared\(\);/);
+});

@@ -30691,6 +30691,29 @@ function prepareEmailProgressStart(button,meta={}){
    BOŞ olanlar: burada girilmiş bir adresin üzerine yazmak, kullanıcının
    bilerek yazdığı değeri sessizce değiştirmek olurdu (§152). Ortak alan
    okunamazsa hiçbir şey değişmez. */
+function prepareEmailMergeDirectoryManufacturers(){
+  try{
+    if(!window.BLEmailDirectory || !Array.isArray(kolManufacturers) || typeof window.BLEmailDirectory.records!=='function') return 0;
+    const records=window.BLEmailDirectory.records();
+    if(!Array.isArray(records) || !records.length) return 0;
+    const key=value=>String(value==null?'':value).replace(/\\s+/g,' ').trim().toLocaleLowerCase('tr-TR');
+    const known=new Set(kolManufacturers.map(item=>key(item?.name)).filter(Boolean));
+    let added=0;
+    records.forEach(record=>{
+      const name=String(record?.manufacturer||'').replace(/\\s+/g,' ').trim();
+      const normalized=key(name);
+      if(!normalized || known.has(normalized)) return;
+      // Only the manufacturer identity is mirrored into the workflow list.
+      // Recipient addresses remain canonical in Settings > E-Mail Groups and
+      // are populated transiently by prepareEmailFillFromShared().
+      kolManufacturers.push({name,email:''});
+      known.add(normalized);
+      added++;
+    });
+    return added;
+  }catch(_){return 0;}
+}
+
 function prepareEmailFillFromShared(){
   try{
     if(!window.BLEmailDirectory || !Array.isArray(kolManufacturers)) return 0;
@@ -30709,6 +30732,7 @@ function prepareEmailFillFromSharedAsync(){
   try{
     if(!window.BLEmailDirectory)return;
     window.BLEmailDirectory.ensureDirectory(true).then(()=>{
+      prepareEmailMergeDirectoryManufacturers();
       prepareEmailFillFromShared();
       const modal=document.getElementById('kolMfrModal');
       if(modal&&typeof modal.__refreshCanonicalRecipients==='function')modal.__refreshCanonicalRecipients();
@@ -30717,6 +30741,7 @@ function prepareEmailFillFromSharedAsync(){
 }
 
 function renderKolMfrModal(ctx){
+  prepareEmailMergeDirectoryManufacturers();
   prepareEmailFillFromShared();
   prepareEmailFillFromSharedAsync();
   const SRC = ctx || { rows:null, count:kolSelected.size, btnId:'kolSendPricingBtn', persist:true };

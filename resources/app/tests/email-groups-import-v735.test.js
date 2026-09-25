@@ -217,7 +217,7 @@ test('central directory · workflow refresh overwrites transient addresses but n
 });
 
 test('central directory · Send to Pricing force-refreshes the shared directory without blocking the initial shell', () => {
-  assert.match(APP, /function renderKolMfrModal\(ctx\)\{\s*prepareEmailFillFromShared\(\);\s*prepareEmailFillFromSharedAsync\(\);/);
+  assert.match(APP, /function renderKolMfrModal\(ctx\)\{\s*prepareEmailMergeDirectoryManufacturers\(\);\s*prepareEmailFillFromShared\(\);\s*prepareEmailFillFromSharedAsync\(\);/);
   const block = APP.slice(APP.indexOf('function prepareEmailFillFromSharedAsync'), APP.indexOf('function renderKolMfrModal'));
   assert.match(block, /ensureDirectory\(true\)/);
   assert.match(block, /__refreshCanonicalRecipients/);
