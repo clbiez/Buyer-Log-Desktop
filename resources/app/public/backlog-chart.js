@@ -96,6 +96,7 @@
     return Object.assign({}, state);
   }
   function getState() { return Object.assign({}, state); }
+  function getViewRange() { return {start:Number(chartView.start)||0,end:Number(chartView.end)||0,signature:String(chartView.signature||'')}; }
 
   function normalizeHeader(value) {
     const helper = root.BLExcelDates && root.BLExcelDates.normalizedHeader;
@@ -901,7 +902,7 @@
 
   return Object.freeze({
     init,onBacklogRendered,openSettings,render,invalidate,
-    getState,saveState,sanitizeState,normalizeHeaders,detectDateHeaders,inferState,
+    getState,getViewRange,saveState,sanitizeState,normalizeHeaders,detectDateHeaders,inferState,
     parseDate,parseNumber,bucketFor,buildModel,appendWorkbookSheets,
     svgChart,todayKeyFor,todayPosition,axisTickLabel,chartMetrics,niceStep,niceTickScale,formatWholeValue,averageValue,clampChartRange,defaultVisibleSpan,defaultChartRange,rangeForPreset,zoomChartRange,shiftChartRange,panChartRange,sliceModel,
     chartXml,drawingXml,applyExcelCharts,
