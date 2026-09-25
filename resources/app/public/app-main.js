@@ -6473,12 +6473,24 @@ function buildHTMLTable(tableKey, rows, computeFn){
     },
   });
 }
+/* Kopyalama geri bildirimi düğmenin İÇERİĞİNİ değiştirmez: eskiden metin
+   "✓ Kopyalandı (N satır, biçimlendirmeli)" ile değiştiriliyordu; düğme
+   genişleyip komşu eylemleri itiyor ve geri yazılan düz metin SVG simgeyi
+   kalıcı olarak siliyordu. Artık yalnız kısa bir durum sınıfı + köşe bildirimi. */
 function flashCopyBtn(btnId, ok, n){
   const btn = document.getElementById(btnId);
-  const orig = btn.textContent;
-  btn.textContent = ok? `✓ Kopyalandı (${n} satır, biçimlendirmeli)` : 'Kopyalama başarısız';
-  btn.classList.toggle('copied', ok);
-  setTimeout(()=>{ btn.textContent = orig; btn.classList.remove('copied'); }, 2400);
+  const en = appLang==='en';
+  if(btn){
+    btn.classList.remove('copied','copyFailed');
+    void btn.offsetWidth;
+    btn.classList.add(ok?'copied':'copyFailed');
+    clearTimeout(btn._copyFlashTimer);
+    btn._copyFlashTimer = setTimeout(()=>btn.classList.remove('copied','copyFailed'), 1600);
+  }
+  showToast(ok
+    ? (en?`Copied ${n} row${n===1?'':'s'} with formatting`:`${n} satır biçimlendirmeyle kopyalandı`)
+    : (en?'Copy failed':'Kopyalama başarısız'),
+    {kind:ok?'success':'error'});
 }
 // ---- Panoya kopyalama: "Excel'e Aktar" ile AYNI hücre biçimi ----
 // Excel dışa aktarımı hücre renklerini/hizasını canlı DOM'dan (getComputedStyle) okur.
@@ -15468,6 +15480,7 @@ function openBacklogDetailShell(title,loadingText){
       <div class="backlogDetailActions">
         ${detailImageToggleHtml('backlogDetailImagesBtn')}
         ${detailModelImagesButtonHtml('backlogDetailModelImagesBtn')}
+        <button type="button" class="tbtn" id="backlogDetailColsBtn" aria-pressed="${backlogDetailCompact()?'false':'true'}" hidden></button>
         <button type="button" class="tbtn" id="backlogDetailExportBtn" disabled><svg class="ic"><use href="#i-file-export"/></svg><span>${escapeHtml(appLang==='en'?'Export to Excel':"Excel'e Aktar")}</span></button>
         <button type="button" class="backlogDetailClose" id="backlogDetailClose" title="${escapeHtml(appLang==='en'?'Close':'Kapat')}" aria-label="${escapeHtml(appLang==='en'?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
       </div>
@@ -15482,6 +15495,10 @@ function openBacklogDetailShell(title,loadingText){
   bindDetailImageToggle('backlogDetailImagesBtn',()=>renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders));
   // Ekrandan çıkmadan bu detayın eksik görsellerini tamamla.
   bindDetailModelImagesButton('backlogDetailModelImagesBtn');
+  modal.querySelector('#backlogDetailColsBtn')?.addEventListener('click',()=>{
+    try{BLStorage.setItem(BACKLOG_DETAIL_COMPACT_KEY,backlogDetailCompact()?'0':'1');}catch(_){}
+    renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders);
+  });
   modal.onclick=event=>{if(event.target===modal)closeBacklogDetailModal();};
   return modal;
 }
@@ -15954,6 +15971,17 @@ function backlogExpandDateDimensions(headers,rows){
   });
   return {headers:expandedHeaders,rows:expandedRows,sourceDateHeaders,derivedHeaders,derivedHeaderSources};
 }
+/* Detay ekranı kompakt açılır: BACKLOG.xlsx şablonunun türetilmiş tarih
+   parçaları (Ay/Hafta/Yıl-Ay), ikincil miktar kolonları ve özel kodlar ekranda
+   gizlenir. Excel'e Aktar tüm sütunları yazmaya devam eder. */
+const BACKLOG_DETAIL_COMPACT_KEY='buyerlog.backlog.detail.compact.v1';
+const BACKLOG_DETAIL_SECONDARY_RE=[/\((?:Ay|Hafta|Month|Week)\)\s*$/i,/\b(?:Yil|Yıl|Year)\s+(?:Ay|Hafta|Month|Week)\s*$/i,/Merch\s+Ay\s*$/i,/Merkez\s+Sevke\s+Hazır/i,/^Net\s+Gelen\s+Alım/i,/^Özel\s+Kod/i];
+function backlogDetailCompact(){try{return BLStorage.getItem(BACKLOG_DETAIL_COMPACT_KEY)!=='0';}catch(_){return true;}}
+function backlogDetailVisibleColumns(cols,compact){
+  if(!compact)return cols;
+  const kept=cols.filter(col=>!BACKLOG_DETAIL_SECONDARY_RE.some(re=>re.test(String(col))));
+  return kept.length?kept:cols;
+}
 function renderBacklogDetailTable(rows,headers){
   const wrap=document.getElementById('backlogDetailTableWrap');
   const meta=document.getElementById('backlogDetailMeta');
@@ -15972,12 +16000,24 @@ function renderBacklogDetailTable(rows,headers){
   }
   const baseCols=currentBacklogDetailHeaders.length?currentBacklogDetailHeaders:Object.keys(currentBacklogDetailRows[0]||{});
   const expanded=backlogExpandDateDimensions(baseCols,currentBacklogDetailRows);
-  const cols=expanded.headers,displayRows=expanded.rows;
+  const allCols=expanded.headers,displayRows=expanded.rows;
+  const compact=backlogDetailCompact();
+  const cols=backlogDetailVisibleColumns(allCols,compact);
+  const colsBtn=document.getElementById('backlogDetailColsBtn');
+  if(colsBtn){
+    const hiddenCount=allCols.length-cols.length;
+    colsBtn.hidden=!compact&&allCols.length===backlogDetailVisibleColumns(allCols,true).length;
+    colsBtn.setAttribute('aria-pressed',compact?'false':'true');
+    colsBtn.innerHTML=`<svg class="ic"><use href="#i-columns-3"/></svg><span>${escapeHtml(compact
+      ?(appLang==='en'?`All columns (+${hiddenCount})`:`Tüm sütunlar (+${hiddenCount})`)
+      :(appLang==='en'?'Compact view':'Kompakt görünüm'))}</span>`;
+    if(compact&&!hiddenCount)colsBtn.hidden=true;
+  }
   // Görsel sütunu isteğe bağlı ve EN SOLA eklenir; veri sütunlarının sırasını bozmaz.
-  const identity=detailShowImages?detailIdentityColumns(cols):null;
+  const identity=detailShowImages?detailIdentityColumns(allCols):null;
   const imageIndex=identity?buildDetailImageIndex():null;
   const imgHead=identity?`<th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th>`:'';
-  const thead=`<thead><tr>${imgHead}${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
+  const thead=`<thead><tr>${imgHead}${cols.map(c=>`<th title="${escapeHtml(c)}">${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
   const tbody='<tbody>'+displayRows.map((r,rowIndex)=>`<tr>${identity?detailImageCellHtml(currentBacklogDetailRows[rowIndex],identity,imageIndex):''}${cols.map(c=>{
     let v=r[c];
     if(expanded.sourceDateHeaders.has(c)&&v)v=fmtDate(v);

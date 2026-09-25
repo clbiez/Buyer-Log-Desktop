@@ -33,7 +33,7 @@
     const action=options.actionLabel
       ?`<button type="button" class="navActionBtn uiStateAction${options.actionPrimary?' primary':''}" data-ui-state-action>${escapeHtml(options.actionLabel)}</button>`:'';
     const visual=kind==='loading'
-      ?'<span class="uiStateSpinner" aria-hidden="true"></span>'
+      ?'<span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span>'
       :`<svg class="ic uiStateIcon" aria-hidden="true"><use href="#i-${icon}"/></svg>`;
     return `<div class="uiState uiState--${kind}" role="${role}" aria-live="${kind==='error'?'assertive':'polite'}" aria-atomic="true"${kind==='loading'?' aria-busy="true"':''}>${visual}<div class="uiStateBody"><b>${title}</b>${detail?`<span>${detail}</span>`:''}${action}</div></div>`;
   }
@@ -178,5 +178,11 @@
     return close;
   }
 
-  return Object.freeze({STATE_KINDS,stateView,renderState,feedbackDuration,feedbackView,notify});
+  /* Thinking Orb işaretlemesi — durum: idle | thinking | warn | done. */
+  function orbHtml(state='idle',size=''){
+    const kind=['idle','thinking','warn','done'].includes(state)?state:'idle';
+    return `<span class="blOrb${size?` blOrb--${escapeHtml(size)}`:''}" data-state="${kind}" aria-hidden="true"></span>`;
+  }
+
+  return Object.freeze({STATE_KINDS,orbHtml,stateView,renderState,feedbackDuration,feedbackView,notify});
 });

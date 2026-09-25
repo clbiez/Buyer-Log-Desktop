@@ -87,6 +87,13 @@
     const d=Math.round(h/24);return l==='en'?`${d} d ago`:`${d} gün önce`;
   }
 
+  /* Veri nabzı: üst çubuktaki yenileme düğmesi dönerken orb "düşünür". */
+  function refreshing(){return Boolean(document.getElementById('topRefreshBtn')?.classList.contains('spinning'));}
+  function pulseHtml(l){
+    const busy=refreshing();
+    const text=busy?(l==='en'?'Refreshing data…':'Veriler yenileniyor…'):(l==='en'?'Workspace ready':'Çalışma alanı hazır');
+    return `<p class="ovLaunchPulse" data-pulse="${busy?'thinking':'idle'}"><span class="blOrb blOrb--sm" data-state="${busy?'thinking':'idle'}" aria-hidden="true"></span><span>${esc(text)}</span></p>`;
+  }
   function render(){
     const host=document.getElementById('ovLaunchpad');if(!host)return;
     /* Düzen düzenleme kontrolleri host'a eklenir; içerik ayrı gövdeye yazılır. */
@@ -114,7 +121,7 @@
     body.innerHTML=`<div class="ovLaunchHead"><div class="ovLaunchHeading">`+
       `<p class="ovLaunchDate">${esc(date)}</p>`+
       `<h2 class="ovLaunchTitle">${esc(greeting(now.getHours(),l))}${name?`, ${esc(name)}`:''}</h2>`+
-      `<p class="ovLaunchSub">${esc(sub)}</p></div></div>`+
+      `<p class="ovLaunchSub">${esc(sub)}</p>`+pulseHtml(l)+`</div></div>`+
       (tiles?`<div class="ovLaunchGrid" role="list" aria-label="${esc(l==='en'?'Quick access':'Hızlı erişim')}">${tiles}</div>`:'');
   }
 
@@ -132,6 +139,11 @@
     }).observe(document.body,{attributes:true,attributeFilter:['data-active-tab']});
     new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
     window.addEventListener('bl:user-access-applied',render);
+    const refreshBtn=document.getElementById('topRefreshBtn');
+    if(refreshBtn)new MutationObserver(()=>{
+      const pulse=host.querySelector('.ovLaunchPulse');
+      if(pulse&&pulse.dataset.pulse!==(refreshing()?'thinking':'idle'))render();
+    }).observe(refreshBtn,{attributes:true,attributeFilter:['class']});
     render();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});

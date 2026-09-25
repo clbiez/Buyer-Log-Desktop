@@ -1508,8 +1508,8 @@
     if(!queue){ if(busy)return; await runAsk({question:text,conversationId,attachments}); return; }
     queue.enqueue({question:text,conversationId,attachments});
     paint(queue.stats().queued
-      ? `<div class="bCpBusy">${t('Sırada bekliyor…','Queued…')}</div>`
-      : `<div class="bCpBusy">${t('Analiz ediliyor…','Analysing…')}</div>`);
+      ? `<div class="bCpBusy"><span class="blOrb" data-state="thinking" aria-hidden="true"></span>${t('Sırada bekliyor…','Queued…')}</div>`
+      : `<div class="bCpBusy"><span class="blOrb" data-state="thinking" aria-hidden="true"></span>${t('Analiz ediliyor…','Analysing…')}</div>`);
   }
 
   /* İşin gövdesi. `paint` yerine `show` kullanır: hangi konuşmaya
@@ -1524,7 +1524,7 @@
        etmek olurdu. */
     const signal=ctx&&ctx.signal;
     busy=true;
-    show(`<div class="bCpBusy">${t('Analiz ediliyor…','Analysing…')}</div>`);
+    show(`<div class="bCpBusy"><span class="blOrb" data-state="thinking" aria-hidden="true"></span>${t('Analiz ediliyor…','Analysing…')}</div>`);
     try{
       /* ÖNCE AJAN. Kullanıcının cümlesi hiçbir desene çarpmadan modele gider;
          model ne yapılacağına kendi karar verir, gerekirse çok adımlı plan
@@ -2001,7 +2001,7 @@
     if(!proposal){paint(renderNotice({state:'TOOL_ERROR',
       message:t('Uygulanacak öneri kalmadı.','There is no proposal left to apply.')}));return;}
     const actions=global.BLCopilotActions;
-    paint(`<div class="bCpBusy">${t('Uygulanıyor…','Applying…')}</div>`);
+    paint(`<div class="bCpBusy"><span class="blOrb" data-state="thinking" aria-hidden="true"></span>${t('Uygulanıyor…','Applying…')}</div>`);
     const result=await actions.apply(proposal,{proposalId,confirmed:true},{
       writers,
       /* Provenance sunucuya YAZILIR: konsol satırı sayfa yenilenince kaybolur
