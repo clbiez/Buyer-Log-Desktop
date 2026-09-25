@@ -8656,13 +8656,20 @@ async function saveWorkbookWithValidations(wb, filename, validations, conditiona
   const formats=Array.isArray(conditionalFormats)?conditionalFormats:[];
   const locks=Array.isArray(protections)?protections:[];
   const options=workbookOptions&&typeof workbookOptions==='object'?workbookOptions:{};
+  const charts=Array.isArray(options.charts)?options.charts.filter(Boolean):[];
   const isBacklogReport=/^Backlog_Report_/i.test(String(filename||''));
   const pivotStyle=options.pivotStyle||(isBacklogReport?{name:'BuyerLogPivot',fillColor:'F2F4F7',fontColor:'475467',bodyFillColor:'FFFFFF',bodyFontColor:'101828',bold:true}:null);
   const freezePanes=Array.isArray(options.freezePanes)?options.freezePanes:(isBacklogReport?[{sheetPath:'xl/worksheets/sheet1.xml',rows:1,topLeftCell:'A2'}]:[]);
-  if(!specs.length&&!formats.length&&!locks.length&&!pivotStyle&&!freezePanes.length){XLSX.writeFile(wb,filename);return;}
-  if(!window.BLExcelWorkbookGuards || typeof JSZip==='undefined') throw new Error('Excel validation engine is unavailable.');
+  const needsGuards=!!(specs.length||formats.length||locks.length||pivotStyle||freezePanes.length);
+  if(!needsGuards&&!charts.length){XLSX.writeFile(wb,filename);return;}
+  if(needsGuards&&(!window.BLExcelWorkbookGuards||typeof JSZip==='undefined'))throw new Error('Excel validation engine is unavailable.');
+  if(charts.length&&(!window.BLBacklogChart||typeof window.BLBacklogChart.applyExcelCharts!=='function'||typeof JSZip==='undefined'))throw new Error('Excel chart engine is unavailable.');
   const raw=XLSX.write(wb,{type:'array',bookType:'xlsx',cellStyles:true});
-  const blob=await BLExcelWorkbookGuards.applyWorkbookGuards(raw,{validations:specs,conditionalFormats:formats,protections:locks,pivotStyle,freezePanes},JSZip,'blob');
+  let patched=raw;
+  if(needsGuards)patched=await BLExcelWorkbookGuards.applyWorkbookGuards(raw,{validations:specs,conditionalFormats:formats,protections:locks,pivotStyle,freezePanes},JSZip,'uint8array');
+  const blob=charts.length
+    ? await window.BLBacklogChart.applyExcelCharts(patched,charts,JSZip,'blob')
+    : new Blob([patched],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
@@ -15315,6 +15322,7 @@ function renderBacklog(data){
      çizildiğinde haberdar edilir, filtre imzası değiştiyse satırlarını
      yeniler. Panel kapalıysa hiçbir şey yapmaz (ek istek yok). */
   window.BLBacklogAnalysis?.onBacklogRendered?.(data);
+  window.BLBacklogChart?.onBacklogRendered?.(data);
 }
 function renderBacklogFlatRows(flat){
   recomputeBacklogRowVisibility(flat);
@@ -15477,6 +15485,7 @@ async function exportCurrentBacklogDetail(){
     const includeImages=false;
     const detailSheet=buildBacklogDetailSheet(headers,currentBacklogDetailRows);
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
+    const chartExport=window.BLBacklogChart?.appendWorkbookSheets?.(wb,data.rows||[],data.headers||[],{XLSX,state:window.BLBacklogChart?.getState?.()})||null;
     forceWorkbookFormulaCalculation(wb);
     const baseRules=backlogWorkbookGuardConfig(headers,currentBacklogDetailRows);
     const workbookHeaders=includeImages?['Görsel',...headers]:headers;
@@ -16217,6 +16226,12 @@ async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
   }
   return book.xlsx.writeBuffer();
 }
+window.BLBacklogChartContext={
+  queryParams:()=>Object.assign({},backlogExportQueryParams()),
+  toast:message=>showToast(message),
+  language:()=>appLang,
+};
+
 async function exportBacklogToExcel(){
   if(!lastBacklogData || !lastBacklogFlat || !lastBacklogFlat.length){ showToast('Aktarılacak Backlog verisi yok.'); return; }
   if(!commitBacklogDateInputs())return;
@@ -16250,8 +16265,9 @@ async function exportBacklogToExcel(){
     forceWorkbookFormulaCalculation(wb);
     const backlogHeaders=includeImages?['Görsel',...exportHeaders]:exportHeaders,backlogRows=data.rows||[];
     const rules=backlogWorkbookGuardConfig(backlogHeaders,backlogRows);
-    await saveWorkbookWithValidations(wb,`Backlog_Report_${stamp}.xlsx`,rules.validations,rules.conditionalFormats,rules.protections,{freezePanes:rules.freezePanes});
-    showToast(`Backlog raporu aktarıldı: BACKLOG ${data.rows?.length||0} satır + Ayarlar.`);
+    await saveWorkbookWithValidations(wb,`Backlog_Report_${stamp}.xlsx`,rules.validations,rules.conditionalFormats,rules.protections,{freezePanes:rules.freezePanes,charts:chartExport&&Array.isArray(chartExport.charts)?chartExport.charts:[]});
+    const chartSuffix=chartExport?.charts?.length?' + Grafik + Grafik Verisi':'';
+    showToast(`Backlog raporu aktarıldı: BACKLOG ${data.rows?.length||0} satır + Ayarlar${chartSuffix}.`);
   }catch(err){
     showToast('Dışa aktarım hatası: '+err.message);
   }finally{
