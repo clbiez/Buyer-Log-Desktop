@@ -14451,13 +14451,24 @@ function backlogSelectedDataHeaders(serverHeaders){
     seen.add(header);return true;
   });
 }
+function backlogChartSourceIds(){
+  const chartState=window.BLBacklogChart?.getState?.();
+  if(!chartState?.enabled)return [];
+  const wanted=new Set([chartState.timeField,chartState.metricField,chartState.seriesField]
+    .map(value=>String(value||'').trim()).filter(value=>value&&value!=='__records'));
+  if(!wanted.size)return [];
+  return backlogExportSourceCatalog()
+    .filter(item=>wanted.has(String(item.label||'').trim())||wanted.has(String(item.header||'').trim()))
+    .map(item=>item.id);
+}
 function backlogExportQueryParams(){
   const raw=buildBacklogParams(),params={format:'json'};
   for(const [key,value] of Object.entries(raw||{})){
     if(value==null||value===''||(Array.isArray(value)&&!value.length))continue;
     params[key]=typeof value==='object'&&!Array.isArray(value)?JSON.stringify(value):Array.isArray(value)?value.join(','):value;
   }
-  const source=backlogSelectedSourceIds();if(source.length)params.sourceColumns=source.join(',');
+  const source=[...new Set([...backlogSelectedSourceIds(),...backlogChartSourceIds()])];
+  if(source.length)params.sourceColumns=source.join(',');
   return params;
 }
 // Katalog: sabit alanlar (field:N) + ASAS/Antrepo custom source sütunları tek haritada.
@@ -16228,7 +16239,17 @@ async function backlogWorkbookBufferWithImages(wb,rows,includeImages){
   return book.xlsx.writeBuffer();
 }
 window.BLBacklogChartContext={
-  queryParams:()=>Object.assign({},backlogExportQueryParams()),
+  prepareQuery:()=>fetchBacklogSourceColumns(),
+  queryParams:()=>{
+    const raw=buildBacklogParams(),params={format:'json'};
+    for(const [key,value] of Object.entries(raw||{})){
+      if(value==null||value===''||(Array.isArray(value)&&!value.length))continue;
+      params[key]=typeof value==='object'&&!Array.isArray(value)?JSON.stringify(value):Array.isArray(value)?value.join(','):value;
+    }
+    const allSource=backlogExportSourceCatalog().map(item=>item.id);
+    if(allSource.length)params.sourceColumns=[...new Set(allSource)].join(',');
+    return params;
+  },
   toast:message=>showToast(message),
   language:()=>appLang,
 };
@@ -16236,6 +16257,7 @@ window.BLBacklogChartContext={
 async function exportBacklogToExcel(){
   if(!lastBacklogData || !lastBacklogFlat || !lastBacklogFlat.length){ showToast('Aktarılacak Backlog verisi yok.'); return; }
   if(!commitBacklogDateInputs())return;
+  await fetchBacklogSourceColumns();
   const params=backlogExportQueryParams();
   const qs=new URLSearchParams(Object.entries(params).filter(([,v])=>v!=null&&v!=='')).toString();
   const btn=document.getElementById('backlogExportBtn'); const old=btn.innerHTML; btn.disabled=true; btn.textContent='Hazırlanıyor…';
