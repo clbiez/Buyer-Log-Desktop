@@ -16198,7 +16198,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(1,rows.length),c:allHeaders.length-1}});
   ws['!autofilter']={ref:ws['!ref']};
   ws['!cols']=[
-    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...BLBacklogExcel.columnSpec(h),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:14)}),
+    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...(dateDimensionTextHeaders.has(h)?{}:BLBacklogExcel.columnSpec(h)),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:dateDimensionTextHeaders.has(h)?22:14)}),
     ...helperHeaders.map(h=>BLBacklogExcel.columnSpec(h,{helper:true})),
   ];
   // Excel'in üstündeki 1/2 ve +/- outline kontrolleriyle gizli iş sütunları
