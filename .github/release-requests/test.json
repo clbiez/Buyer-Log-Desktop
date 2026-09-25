@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.125",
-  "commit_sha": "6f50074553180efe8c8204f9010501b8889d3a50",
-  "release_notes": "Buyer Log 7.0.125: tablo aramalarına kullanım ipucu açılır pencereleri eklendi; uzun süren e-posta işlemleri Operation Center özetinde aşama bilgisiyle gösteriliyor; Koleksiyon listesi açılırken legacy owner recovery artık otomatik çalışmıyor, böylece eski satırların yeniden canlanması/model çoğalması riski engelleniyor. Koleksiyon listeleme güvenliği için regression testi eklendi. Tam Buyer Log regression paketi PASS."
+  "version": "7.0.126",
+  "commit_sha": "c7a7f98d8f5630f0f37295f004325fbe25eaff57",
+  "release_notes": "Buyer Log 7.0.126: Koleksiyon elle fiyat girişindeki üretici önerileri artık ASAS database üretici kataloğundan geliyor ve mevcut Koleksiyon/Quotation üreticileriyle tekilleştirilerek birleştiriliyor; eski katalog cache'leri otomatik yenileniyor. TR Landed hesabı Türkiye'ye özel royalty kurallarını kullanıyor ve uygun TR kuralı yoksa uyarı veriyor. Send to Pricing ekranındaki e-posta grubu görünürlüğü düzeltildi. Tam Buyer Log regression paketi PASS."
 }
