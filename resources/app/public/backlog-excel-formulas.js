@@ -134,6 +134,21 @@
     return `"${String(value == null ? '' : value).replace(/"/g, '""')}"`;
   }
 
+  function dateDimensionFormula(sourceRef, kind, language) {
+    const ref=String(sourceRef||'').trim();
+    if(!ref)return '';
+    const lang=String(language||'tr').toLowerCase().startsWith('en')?'en':'tr';
+    const sunday='('+ref+'-WEEKDAY('+ref+',2)+7)';
+    const months=lang==='en'
+      ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+      : ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const monthExpr='CHOOSE(MONTH('+sunday+'),'+months.map(excelString).join(',')+')&" "&YEAR('+sunday+')';
+    if(String(kind).toLowerCase()==='week'){
+      return 'IF('+ref+'="","",'+(lang==='en'?'"Week "&':'')+'WEEKNUM('+ref+',21)&'+(lang==='en'?'" "&':'". Hafta "&')+monthExpr+')';
+    }
+    return 'IF('+ref+'="","",'+monthExpr+')';
+  }
+
   function refMap(headers, excelRow) {
     const all = [...headers, ...HELPER_HEADERS];
     const refs = {};
@@ -473,6 +488,6 @@
     EMPHASIS_HEADER_FILL_RGB, EMPHASIS_HEADER_FONT_RGB, headerStyleSpec,
     STATUS_OPTIONS, statusOptions, SOFT_YELLOW_FILL_RGB, conditionalFormats, excelSerialDate,
     TRANSIT_DEFAULT_TYPES, TRANSIT_DEFAULT_DAYS, transitSettingsPlan, transitRuleKey, normalizeDelTypeKey,
-    isDefaultVisibleHeader, columnSpec, columnName, formulaPlan, normalizedDate, excelString,
+    isDefaultVisibleHeader, columnSpec, columnName, formulaPlan, normalizedDate, excelString, dateDimensionFormula,
   });
 });
