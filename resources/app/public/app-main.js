@@ -1147,11 +1147,18 @@ let dragCounter=0;
 // bu ayrım yapılmadan önce her sürükleme "Dosyayı buraya bırak" katmanını açıp sütun
 // sıralamasının çalışmasını engelliyordu.
 function isFileDrag(e){ return e.dataTransfer && e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files'); }
-window.addEventListener('dragenter', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragCounter++; dz.classList.add('show'); });
-window.addEventListener('dragleave', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); dragCounter--; if(dragCounter<=0) dz.classList.remove('show'); });
-window.addEventListener('dragover', e=>{ if(!isFileDrag(e)) return; e.preventDefault(); });
+// Collection'da tarayıcıdan gelen PLM model görseli de "Files" taşır; eski
+// Excel dropzone bunu dosya importu sanıp tüm ekranı kapatıyordu. PLM importer
+// kendi payload sözleşmesini bildiriyorsa global dropzone tamamen geri çekilir.
+function isCollectionPlmImageDrag(e){
+  return document.body.dataset.activeTab==='koleksiyon'
+    && Boolean(window.BLCollectionPlmDragImport?.isCandidateTransfer?.(e.dataTransfer));
+}
+window.addEventListener('dragenter', e=>{ if(!isFileDrag(e)||isCollectionPlmImageDrag(e)) return; e.preventDefault(); dragCounter++; dz.classList.add('show'); });
+window.addEventListener('dragleave', e=>{ if(!isFileDrag(e)||isCollectionPlmImageDrag(e)) return; e.preventDefault(); dragCounter--; if(dragCounter<=0) dz.classList.remove('show'); });
+window.addEventListener('dragover', e=>{ if(!isFileDrag(e)||isCollectionPlmImageDrag(e)) return; e.preventDefault(); });
 window.addEventListener('drop', e=>{
-  if(!isFileDrag(e)) return;
+  if(!isFileDrag(e)||isCollectionPlmImageDrag(e)) return;
   e.preventDefault(); dragCounter=0; dz.classList.remove('show');
   const files = Array.from(e.dataTransfer.files||[]).filter(f=>/\.xlsx$/i.test(f.name));
   if(!files.length) return;

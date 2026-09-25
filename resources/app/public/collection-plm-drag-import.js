@@ -83,6 +83,29 @@
     catch (_) { return []; }
   }
 
+  // Chrome/CoreNectum image drags carry BOTH Files and browser URL/HTML
+  // formats. Explorer Excel drags carry Files only. This distinction is the
+  // routing contract between the Collection PLM importer and Buyer Log's
+  // legacy global Excel dropzone.
+  function isCandidateTransfer(dataTransfer) {
+    const types = transferTypeList(dataTransfer).map(type => String(type).toLowerCase());
+    if (!types.includes('files')) return false;
+    const browserTypes = new Set([
+      'text/uri-list',
+      'text/html',
+      'downloadurl',
+      'chromium/x-drag-id',
+      'text/x-moz-url',
+      'application/x-moz-file-promise-url',
+    ]);
+    if (types.some(type => browserTypes.has(type))) return true;
+    try {
+      const items = Array.from(dataTransfer && dataTransfer.items || []);
+      const imageFile = items.some(item => item && item.kind === 'file' && /^image\//i.test(String(item.type || '')));
+      return imageFile && types.some(type => type !== 'files');
+    } catch (_) { return false; }
+  }
+
   function imageFileFromTransfer(dataTransfer) {
     return transferFiles(dataTransfer).find(file => /^image\//i.test(String(file && file.type || ''))) || null;
   }
@@ -314,26 +337,34 @@
     injectStyle();
     let depth = 0;
 
-    const active = event => {
-      if (document.body.dataset.activeTab !== 'koleksiyon') return false;
-      const target = event && event.target;
-      return !target || target === document || target === document.body || root.contains(target);
+    const active = event => document.body.dataset.activeTab === 'koleksiyon'
+      && isCandidateTransfer(event && event.dataTransfer);
+
+    const suppressLegacyDropzone = () => {
+      const legacy = document.getElementById('dropzone');
+      if (legacy) legacy.classList.remove('show');
     };
 
     const enter = event => {
       if (!active(event)) return;
       depth += 1;
       event.preventDefault();
+      event.stopImmediatePropagation();
+      suppressLegacyDropzone();
       root.classList.add('blPlmDragOver');
     };
     const over = event => {
       if (!active(event)) return;
       event.preventDefault();
+      event.stopImmediatePropagation();
+      suppressLegacyDropzone();
       if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
       root.classList.add('blPlmDragOver');
     };
     const leave = event => {
       if (!active(event)) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
       depth = Math.max(0, depth - 1);
       if (!depth) root.classList.remove('blPlmDragOver');
     };
@@ -341,10 +372,10 @@
       if (!active(event)) return;
       depth = 0;
       root.classList.remove('blPlmDragOver');
+      suppressLegacyDropzone();
 
-      // Capture phase is deliberate: Collection grid/editor code may call
-      // stopImmediatePropagation. Prevent browser/Electron default navigation
-      // first, then inspect all drag formats asynchronously.
+      // Capture phase is deliberate: Collection grid/editor code and the
+      // global Excel dropzone must never steal a CoreNectum image drop.
       event.preventDefault();
       event.stopImmediatePropagation();
       const transfer = event.dataTransfer;
@@ -381,6 +412,7 @@
     extractDropPayload,
     extractDropPayloadAsync,
     diagnosticsForTransfer,
+    isCandidateTransfer,
     install,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
