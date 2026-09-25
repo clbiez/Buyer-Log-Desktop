@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.132",
-  "commit_sha": "e541d668b5018300afab012da4f9f30996bbe52d",
-  "release_notes": "Buyer Log 7.0.132: Backlog sayfasına filtrelerle senkron dinamik adet/zaman grafiği eklendi. Kullanıcı zaman alanını herhangi bir tarih sütunundan, kırılımı Gün/Hafta/Ay/Yıl olarak, değer alanını ve hesaplamayı (adet, benzersiz adet, toplam, ortalama) ve seri/kırılım alanını Buyer, MAG, Buyer Group, Klasman veya mevcut diğer başlıklardan seçebilir. Hafta/ay gruplaması Collection ile aynı merkezi tarih mantığını kullanır; örneğin 31.08.2026 Eylül 2026 ve 36. Hafta Eylül 2026 olarak gruplanır. Excel dışa aktarımında mevcut BACKLOG/Ayarlar yapısı korunur; ayrıca Grafik ve Grafik Verisi sayfaları ile native Excel grafik üretilir. Mevcut tarih boyutu ve filtreleme güncellemeleri ezilmeden korunmuştur. Tam Buyer Log regression paketi exact release branch üzerinde PASS."
+  "version": "7.0.133",
+  "commit_sha": "d45f3d5e3c18edcaa89d5704d6a9b17a6d0351da",
+  "release_notes": "Buyer Log 7.0.133: Koleksiyon ekranındaki PLM görsel sürükle-bırak akışında görülen CoreNectum HTTP 400 hatası düzeltildi. Attachment→PLM reverse lookup artık uydurma boş GetStyleList gövdesi göndermiyor. Buyer Log’un özel CoreNectum Electron SSO oturumunda çalışan gerçek GetStyleList POST şablonu yakalanıyor, güvenli alanları korunarak filtreleri temizleniyor ve yalnız backend RAM’inde tutuluyor; bearer/cookie/parola renderer’a verilmez ve diske yazılmaz. Reverse index bu gerçek istek şemasıyla sayfalanıyor. Collection-only yeni model ekleme davranışı korunuyor; mevcut PLM ID güncellenmiyor/çoğaltılmıyor, normal Excel drag-drop etkilenmiyor. 7.0.132’deki Backlog grafik ve diğer main güncellemeleri aynen korunmuştur. Tam Buyer Log regression paketi PASS."
 }
