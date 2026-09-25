@@ -10,11 +10,19 @@ function parseGitHubSource(source){
   if(!match||match[1].startsWith('-')||match[1].endsWith('-')||['.','..'].includes(match[2])||match[2].endsWith('.git'))throw Object.assign(new Error('Public GitHub release kaynağı github:owner/repo biçiminde olmalı.'),{code:'UPDATE_GITHUB_SOURCE_INVALID'});
   return {owner:match[1],repo:match[2]};
 }
-function githubAssetUrl(source,channel,version,artifact){
-  const {owner,repo}=parseGitHubSource(source),safe=safeArtifactPath(artifact);
+function validateArtifact(channel,version,artifact){
+  const safe=safeArtifactPath(artifact);
   if(!['test','stable'].includes(channel)||!/^releases\/BuyerLog-[0-9A-Za-z.+-]+\.zip$/.test(safe)||safe!==`releases/BuyerLog-${version}.zip`)
     throw Object.assign(new Error('GitHub artifact yolu manifest ile eşleşmiyor.'),{code:'UPDATE_ARTIFACT_PATH'});
+  return safe;
+}
+function githubAssetUrl(source,channel,version,artifact){
+  const {owner,repo}=parseGitHubSource(source),safe=validateArtifact(channel,version,artifact);
   return `https://github.com/${owner}/${repo}/releases/download/${channel}-v${version}/${path.posix.basename(safe)}`;
+}
+function githubRawArtifactUrl(source,channel,version,artifact){
+  const {owner,repo}=parseGitHubSource(source),safe=validateArtifact(channel,version,artifact);
+  return `https://raw.githubusercontent.com/${owner}/${repo}/raw-dist/${channel}/${path.posix.basename(safe)}?v=${encodeURIComponent(version)}`;
 }
 function fetchTransports(){
   const transports=[];
@@ -59,14 +67,28 @@ class GitHubReleaseProvider{
     try{return {file,raw:await response.text()};}finally{clearTimeout(timer);}
   }
   async copyArtifact(channel,artifact,destination,version){
-    const url=githubAssetUrl(this.source,channel,version,artifact);
-    const {response,controller,timer}=await fetchPublic(url,this.artifactTimeoutMs);
-    try{
-      if(!response.body)throw Object.assign(new Error('GitHub artifact içeriği boş.'),{code:'UPDATE_DOWNLOAD_FAILED'});
-      await fs.promises.mkdir(path.dirname(destination),{recursive:true});
-      await pipeline(Readable.fromWeb(response.body),fs.createWriteStream(destination,{flags:'wx'}),{signal:controller.signal});
-      return fs.promises.stat(destination);
-    }finally{clearTimeout(timer);}
+    const urls=[
+      {name:'raw-mirror',url:githubRawArtifactUrl(this.source,channel,version,artifact)},
+      {name:'github-release',url:githubAssetUrl(this.source,channel,version,artifact)},
+    ];
+    await fs.promises.mkdir(path.dirname(destination),{recursive:true});
+    let lastError=null;
+    for(const candidate of urls){
+      let timer=null;
+      try{
+        const fetched=await fetchPublic(candidate.url,this.artifactTimeoutMs);
+        const {response,controller}=fetched;timer=fetched.timer;
+        if(!response.body)throw Object.assign(new Error('GitHub artifact içeriği boş.'),{code:'UPDATE_DOWNLOAD_FAILED'});
+        await pipeline(Readable.fromWeb(response.body),fs.createWriteStream(destination,{flags:'wx'}),{signal:controller.signal});
+        return fs.promises.stat(destination);
+      }catch(error){
+        try{fs.rmSync(destination,{force:true});}catch(_){}
+        lastError=Object.assign(error||new Error('GitHub artifact indirilemedi.'),{artifactSource:candidate.name});
+      }finally{
+        if(timer)clearTimeout(timer);
+      }
+    }
+    throw lastError||Object.assign(new Error('GitHub artifact indirilemedi.'),{code:'UPDATE_DOWNLOAD_FAILED'});
   }
 }
-module.exports={GitHubReleaseProvider,parseGitHubSource,githubAssetUrl,fetchTransports,fetchPublic};
+module.exports={GitHubReleaseProvider,parseGitHubSource,githubAssetUrl,githubRawArtifactUrl,fetchTransports,fetchPublic};
