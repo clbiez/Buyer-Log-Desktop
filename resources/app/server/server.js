@@ -8433,6 +8433,7 @@ const COLLECTION_CATALOG_FIELDS = Object.freeze({
   mmyg: 'Merch Marka Yaş Grup Kod',
   buyingGroup: 'Buyer Grup (TR)',
   buyer: 'Buyer',
+  manufacturer: 'Manufacturer',
   season: 'Season',
   license: 'License',
   licensor: 'Licensor',
@@ -8451,6 +8452,7 @@ const COLLECTION_CATALOG_CANONICAL_FIELDS = Object.freeze({
   mmyg: 'mmyg',
   buyingGroup: 'buyingGroup',
   buyer: 'buyer',
+  manufacturer: 'manufacturer',
   season: 'season',
   license: 'license',
   licensor: 'licensor',
@@ -8460,10 +8462,10 @@ const COLLECTION_CATALOG_CANONICAL_FIELDS = Object.freeze({
 });
 
 // Increment when the persisted collection-catalog payload contract changes.
-// Version 2 guarantees Product Main Definition is sourced from canonical
-// ASAS productDescription and prevents old cached empty catalogs from being
-// mistaken for a valid current-schema projection.
-const COLLECTION_CATALOG_SCHEMA_VERSION = 2;
+// Version 3 adds the ASAS manufacturer directory used by Collection price
+// entry, while keeping Product Main Definition sourced from canonical ASAS
+// productDescription. Old cached catalogs are rebuilt on demand.
+const COLLECTION_CATALOG_SCHEMA_VERSION = 3;
 
 function collectionCatalogsComplete(catalogs) {
   if (!catalogs || typeof catalogs !== 'object') return false;
