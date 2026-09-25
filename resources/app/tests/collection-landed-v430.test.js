@@ -50,18 +50,31 @@ function loadCalc(fxRate) {
     grab('kolSuppFob'),
     grab('kolLandedIsNonDtr'),
     grab('kolLandedPriceWithCosts'),
+    grab('kolLandedPriceWithRule'),
     grab('kolLandedCalc')
-  ].join('\n') + '\nreturn {kolSuppFob, kolLandedIsNonDtr, kolLandedPriceWithCosts, kolLandedCalc};';
+  ].join('\n') + '\nreturn {kolSuppFob, kolLandedIsNonDtr, kolLandedPriceWithCosts, kolLandedPriceWithRule, kolLandedCalc};';
   /* v7.81 — kolLandedPriceWithCosts artik kolLicenseRuleMissing'e bagli
      (Non-DTR + esleşen kural yoksa hesap durur). Bu dosyanin isi FORMULU
      dogrulamak, kural-eksik davranisini degil (o license-royalty-missing-
      warning-v781.test.js'te) -- stub hep 'kural var' dondurur, satirdaki
      royalty degeri eskisi gibi kullanilir. */
+  const trRuleForRow = row => {
+    const licensor=String(row&&row.licensor||'').trim().toUpperCase();
+    if(!licensor||licensor==='DTR') return null;
+    const royalty=kolParseMoneyNum(row&&row.royalty);
+    const hologramCost=kolParseMoneyNum(row&&row.hologramCost);
+    return {
+      countryGroup:'TR',
+      royalty:Number.isFinite(royalty)?royalty:0,
+      hologramCost:Number.isFinite(hologramCost)?hologramCost:0,
+    };
+  };
   return new Function('kolParseMoneyNum', 'kolConfirmedPricing', 'kolBestPricing', 'kolAutoFx',
-    'turknorm', 'KOL_TR_LANDED_MULT', 'KOL_YD_LANDED_MULT', 'kolLicenseRuleMissing', src)(
+    'turknorm', 'KOL_TR_LANDED_MULT', 'KOL_YD_LANDED_MULT', 'kolLicenseRuleMissing',
+    'kolFindPricingRuleForCountryGroup','kolTrLicenseRuleMissing', src)(
     kolParseMoneyNum, kolConfirmedPricing, kolBestPricing, () => fxRate,
     value => String(value == null ? '' : value).trim().toUpperCase(),
-    1.05, 1.11, () => false);
+    1.05, 1.11, () => false, (row,group)=>group==='TR'?trRuleForRow(row):null, () => false);
 }
 
 const row = extra => Object.assign({
