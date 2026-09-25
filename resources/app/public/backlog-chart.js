@@ -364,6 +364,7 @@
   function chartMetrics(model) {
     const width=1080,height=430,left=24,right=88,top=28,bottom=58,pw=width-left-right,ph=height-top-bottom;
     const values=(model&&model.series||[]).flatMap(s=>s.values||[]).filter(Number.isFinite);
+    if(model&&model.state&&model.state.showAverage)values.push(averageValue(model));
     const rawMax=Math.max(0,...values),scale=niceTickScale(rawMax,5);
     return {width,height,left,right,top,bottom,pw,ph,max:scale.max,tickStep:scale.step,ticks:scale.ticks};
   }
@@ -783,33 +784,77 @@
     const chartName=uniqueSheetName(wb,tr('Grafik','Chart')),dataName=uniqueSheetName(wb,tr('Grafik Verisi','Chart Data'));
     const chartWs=XLSX.utils.aoa_to_sheet([[model.title],[configSummary(st)],[tr('Görünür aralık','Visible range')+': '+(model.categories[0]?.label||'')+' – '+(model.categories[model.categories.length-1]?.label||'')],[]]);
     chartWs['!cols']=[{wch:28},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18}];XLSX.utils.book_append_sheet(wb,chartWs,chartName);
-    const exportSeries=model.series.map(s=>Object.assign({},s));
-    if(st.showAverage){
-      const avg=averageValue(model);exportSeries.push({name:tr('Ortalama','Average'),color:'#64748b',dash:true,isAverage:true,values:model.categories.map(()=>avg)});
-    }
-    const matrix=[[tr('Zaman','Time'),...exportSeries.map(s=>s.name)]];
-    model.categories.forEach((cat,i)=>matrix.push([axisTickLabel(cat,st.granularity),...exportSeries.map(s=>s.values[i])]));
-    const dataWs=XLSX.utils.aoa_to_sheet(matrix);dataWs['!cols']=[{wch:20},...exportSeries.map(()=>({wch:18}))];XLSX.utils.book_append_sheet(wb,dataWs,dataName);
+
+    const live=opts.liveSource&&opts.liveSource.bucket1Col&&opts.liveSource.metricCol&&Number(opts.liveSource.lastRow)>=Number(opts.liveSource.firstRow)?opts.liveSource:null;
+    const sourceSheet=live?quoteSheet(live.sheetName||'BACKLOG'):'';
+    const sourceRange=col=>live&&col?sourceSheet+'!$'+col+'$'+Number(live.firstRow)+':$'+col+'$'+Number(live.lastRow):'';
+    const formulaText=value=>'"'+String(value==null?'':value).replace(/"/g,'""')+'"';
+    const metricRange=live?sourceRange(live.metricCol):'',seriesRange=live&&live.seriesCol?sourceRange(live.seriesCol):'';
+    const liveFormula=(serie,keyRef)=>{
+      if(!live)return '';
+      const bucketCol=serie.timeFieldIndex===2&&live.bucket2Col?live.bucket2Col:live.bucket1Col;
+      const bucketRange=sourceRange(bucketCol);if(!bucketRange)return '';
+      const criteria=[bucketRange,keyRef],hasSeries=!!(st.seriesField&&seriesRange);
+      if(hasSeries)criteria.push(seriesRange,formulaText(serie.baseName));
+      if(st.aggregation==='sum')return 'IFERROR(SUMIFS('+metricRange+','+criteria.join(',')+'),0)';
+      if(st.aggregation==='avg')return 'IFERROR(AVERAGEIFS('+metricRange+','+criteria.join(',')+'),0)';
+      if(st.aggregation==='count'){
+        if(st.metricField==='__records')return 'COUNTIFS('+criteria.join(',')+')';
+        return 'COUNTIFS('+criteria.concat([metricRange,'"<>"']).join(',')+')';
+      }
+      if(st.aggregation==='distinct'){
+        const predicates=['('+bucketRange+'='+keyRef+')'];
+        if(hasSeries)predicates.push('('+seriesRange+'='+formulaText(serie.baseName)+')');
+        predicates.push('('+metricRange+'<>"")');
+        return 'IFERROR(ROWS(UNIQUE(FILTER('+metricRange+','+predicates.join('*')+'))),0)';
+      }
+      return '';
+    };
+
+    const baseSeries=model.series.map(item=>Object.assign({},item));
+    const subtotalIndex=2+baseSeries.length,avgIndex=st.showAverage?subtotalIndex+1:-1;
+    const headerRow=[tr('Zaman','Time'),'_BL_KEY',...baseSeries.map(item=>item.name),tr('Alt Toplam','Subtotal')];
+    if(st.showAverage)headerRow.push(tr('Ortalama','Average'));
+    const matrix=[headerRow],cachedTotals=subtotalValues(model),avg=averageValue(model);
+    model.categories.forEach((cat,i)=>{
+      const excelRow=i+2,row=[axisTickLabel(cat,st.granularity),cat.key];
+      baseSeries.forEach((serie,si)=>{
+        const formula=liveFormula(serie,'$B'+excelRow),cached=Number(serie.values[i])||0;
+        row.push(formula?{f:formula,v:cached,t:'n'}:cached);
+      });
+      const firstSeriesCol=excelColumn(2),lastSeriesCol=excelColumn(1+baseSeries.length);
+      row.push({f:'SUM('+firstSeriesCol+excelRow+':'+lastSeriesCol+excelRow+')',v:cachedTotals[i]||0,t:'n'});
+      if(st.showAverage){
+        const subtotalCol=excelColumn(subtotalIndex),lastDataRow=model.categories.length+1;
+        row.push({f:'AVERAGE($'+subtotalCol+'$2:$'+subtotalCol+'$'+lastDataRow+')',v:avg,t:'n'});
+      }
+      matrix.push(row);
+    });
+    const dataWs=XLSX.utils.aoa_to_sheet(matrix);
+    dataWs['!cols']=[{wch:20},{hidden:true,wch:2},...baseSeries.map(()=>({wch:18})),{hidden:true,wch:2},...(st.showAverage?[{wch:18}]:[])];
+    XLSX.utils.book_append_sheet(wb,dataWs,dataName);
+
     const first=2,last=model.categories.length+1,categories=quoteSheet(dataName)+'!$A$'+first+':$A$'+last;
-    const series=exportSeries.map((serie,i)=>({name:serie.name,valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(i+1)+'$'+first+':$'+excelColumn(i+1)+'$'+last,dash:!!serie.dash,color:String(serie.color||'').replace('#',''),isAverage:!!serie.isAverage}));
+    const series=baseSeries.map((serie,i)=>({name:serie.name,valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(i+2)+'$'+first+':$'+excelColumn(i+2)+'$'+last,dash:!!serie.dash,color:String(serie.color||'').replace('#',''),isAverage:false}));
+    if(st.showAverage)series.push({name:tr('Ortalama','Average'),valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(avgIndex)+'$'+first+':$'+excelColumn(avgIndex)+'$'+last,dash:true,color:'64748B',isAverage:true});
     const metrics=chartMetrics(model);
-    return {model,viewRange:range,charts:[{sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',chartType:st.chartType,title:model.title,categoriesFormula:categories,series,majorUnit:metrics.tickStep,maxValue:metrics.max,anchor:{fromCol:0,fromRow:4,toCol:15,toRow:28}}],chartSheetName:chartName,dataSheetName:dataName};
+    return {model,viewRange:range,live:!!live,charts:[{sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',chartType:st.chartType,title:model.title,categoriesFormula:categories,series,majorUnit:metrics.tickStep,maxValue:metrics.max,anchor:{fromCol:0,fromRow:4,toCol:15,toRow:28}}],chartSheetName:chartName,dataSheetName:dataName};
   }
   function titleXml(title) {
     return '<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/><a:t>'+xml(title)+'</a:t></a:r><a:endParaRPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/></a:p></c:rich></c:tx><c:layout/><c:overlay val="0"/></c:title>';
   }
   function chartXml(spec,index) {
     const catAx=100000+index*2,valAx=catAx+1;
-    const seriesXml=(items,kind)=>(items||[]).map((s,i)=>{
-      const color=String(s.color||'').replace(/[^0-9A-F]/ig,'').slice(0,6),lineStyle=color?'<c:spPr><a:ln w="19050"><a:solidFill><a:srgbClr val="'+color.toUpperCase()+'"/></a:solidFill>'+(s.dash?'<a:prstDash val="dash"/>':'')+'</a:ln></c:spPr>':'';
-      return '<c:ser><c:idx val="'+i+'"/><c:order val="'+i+'"/><c:tx><c:v>'+xml(s.name)+'</c:v></c:tx>'+(kind==='line'?(s.isAverage?'<c:marker><c:symbol val="none"/></c:marker>':'<c:marker><c:symbol val="circle"/><c:size val="5"/></c:marker>'):'')+lineStyle+'<c:cat><c:strRef><c:f>'+xml(spec.categoriesFormula)+'</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>'+xml(s.valuesFormula)+'</c:f></c:numRef></c:val>'+(kind==='line'?'<c:smooth val="0"/>':'')+'</c:ser>';
+    const seriesXml=(items,kind,offset)=>(items||[]).map((s,i)=>{
+      const order=(Number(offset)||0)+i,color=String(s.color||'').replace(/[^0-9A-F]/ig,'').slice(0,6),lineStyle=color?'<c:spPr><a:ln w="19050"><a:solidFill><a:srgbClr val="'+color.toUpperCase()+'"/></a:solidFill>'+(s.dash?'<a:prstDash val="dash"/>':'')+'</a:ln></c:spPr>':'';
+      return '<c:ser><c:idx val="'+order+'"/><c:order val="'+order+'"/><c:tx><c:v>'+xml(s.name)+'</c:v></c:tx>'+(kind==='line'?(s.isAverage?'<c:marker><c:symbol val="none"/></c:marker>':'<c:marker><c:symbol val="circle"/><c:size val="5"/></c:marker>'):'')+lineStyle+'<c:cat><c:strRef><c:f>'+xml(spec.categoriesFormula)+'</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>'+xml(s.valuesFormula)+'</c:f></c:numRef></c:val>'+(kind==='line'?'<c:smooth val="0"/>':'')+'</c:ser>';
     }).join('');
     const all=spec.series||[],avg=all.filter(s=>s.isAverage),normal=all.filter(s=>!s.isAverage);
     let chartBody;
     if(spec.chartType==='bar'){
-      chartBody='<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>'+seriesXml(normal,'bar')+'<c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:barChart>';
-      if(avg.length)chartBody+='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(avg,'line')+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
-    }else chartBody='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(all,'line')+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
+      chartBody='<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>'+seriesXml(normal,'bar',0)+'<c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:barChart>';
+      if(avg.length)chartBody+='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(avg,'line',normal.length)+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
+    }else chartBody='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(all,'line',0)+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
     const scaling='<c:scaling><c:orientation val="minMax"/><c:min val="0"/>'+(Number(spec.maxValue)>0?'<c:max val="'+Number(spec.maxValue)+'"/>':'')+'</c:scaling>';
     const major=Number(spec.majorUnit)>0?'<c:majorUnit val="'+Number(spec.majorUnit)+'"/>':'';
     return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:date1904 val="0"/><c:lang val="'+(lang()==='en'?'en-US':'tr-TR')+'"/><c:chart>'+titleXml(spec.title||'')+'<c:autoTitleDeleted val="0"/><c:plotArea><c:layout/>'+chartBody+'<c:catAx><c:axId val="'+catAx+'"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:tickLblPos val="nextTo"/><c:crossAx val="'+valAx+'"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/></c:catAx><c:valAx><c:axId val="'+valAx+'"/>'+scaling+'<c:delete val="0"/><c:axPos val="r"/><c:majorGridlines/><c:numFmt formatCode="#,##0" sourceLinked="0"/><c:tickLblPos val="nextTo"/>'+major+'<c:crossAx val="'+catAx+'"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx></c:plotArea><c:legend><c:legendPos val="b"/><c:layout/><c:overlay val="0"/></c:legend><c:plotVisOnly val="1"/><c:dispBlanksAs val="zero"/><c:showDLblsOverMax val="0"/></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b="0.75" l="0.7" r="0.7" t="0.75" header="0.3" footer="0.3"/><c:pageSetup/></c:printSettings></c:chartSpace>';
