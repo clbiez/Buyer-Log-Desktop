@@ -1104,6 +1104,7 @@
     <div id="backlogDetailModal" class="backlogDetailOverlay" hidden></div>
     <div id="backlogContent" style="display:none">
       <div class="kpirow" id="backlogKpi"></div>
+      <div id="backlogChartPanel" class="panel backlogChartPanel" hidden></div>
       <!-- v9.46 — Teslimat Riski Analizi. Backlog'un mevcut filtresi ve
            toplamları değişmez; analiz aynı filtrelenmiş kümeyi kullanır. -->
       <div class="backlogFilterFoot">
@@ -1120,6 +1121,7 @@
           </span>
           <span class="backlogTreeSpacer"></span>
           <button class="tbtn" id="backlogPivotSettingsBtn" title="Backlog pivot ve ön filtre ayarları" data-i18n-title-tr="Backlog pivot ve ön filtre ayarları" data-i18n-title-en="Backlog pivot and pre-filter settings"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Pivot ayarları" data-i18n-en="Pivot settings">Pivot ayarları</span></button>
+          <button class="tbtn" id="backlogChartBtn" title="Adet / zaman grafiğini oluştur veya düzenle" data-i18n-title-tr="Adet / zaman grafiğini oluştur veya düzenle" data-i18n-title-en="Create or edit quantity / time chart"><svg class="ic"><use href="#i-chart-histogram"/></svg> <span data-i18n-tr="Grafik" data-i18n-en="Chart">Grafik</span></button>
           <button class="tbtn" id="backlogExcelOptionsBtn" title="Excel sütun ve formül seçenekleri"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Excel seçenekleri" data-i18n-en="Excel options">Excel seçenekleri</span></button>
           <button class="tbtn" id="backlogExportBtn" title="Mevcut Backlog pivot raporunu Excel olarak indir"><svg class="ic"><use href="#i-download"/></svg> <span data-i18n-tr="Excel'e aktar" data-i18n-en="Export to Excel">Excel'e aktar</span></button>
         </div>
@@ -1198,7 +1200,8 @@
 <script src="layer-system.js?v=__BL_ASSET_VERSION__"></script>
 <script src="toolbar-responsive.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="tab-system.js?v=__BL_ASSET_VERSION__"></script>
-<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>\n<script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>\n<script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1"></script>
+<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
+<script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n<script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>\n<script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1"></script>
 <script src="table-toolbar-action-cleanup.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>
