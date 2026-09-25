@@ -21305,7 +21305,7 @@ const KOL_MFR_KEY = 'lcw.koleksiyon.manufacturers.v1';
 function loadKolManufacturers(){
   try{ const raw = BLStorage.getItem(KOL_MFR_KEY); if(raw) kolManufacturers = JSON.parse(raw); }catch(e){}
 }
-function kolManufacturersForPersistence(){return (Array.isArray(kolManufacturers)?kolManufacturers:[]).map(m=>({...m,email:''}));}
+function kolManufacturersForPersistence(){return (Array.isArray(kolManufacturers)?kolManufacturers:[]).filter(m=>m&&!m._emailDirectoryOnly).map(m=>({...m,email:''}));}
 function saveKolManufacturers(){
   try{ BLStorage.setItem(KOL_MFR_KEY, JSON.stringify(kolManufacturersForPersistence())); }catch(e){}
   kolQueueWorkspaceSave();
@@ -30714,10 +30714,30 @@ function prepareEmailMergeDirectoryManufacturers(){
   }catch(_){return 0;}
 }
 
+function prepareEmailSyncDirectoryManufacturers(){
+  try{
+    if(!window.BLEmailDirectory || !Array.isArray(kolManufacturers)) return 0;
+    const records=window.BLEmailDirectory.records?.();
+    if(!Array.isArray(records)||!records.length)return 0;
+    const key=value=>String(value==null?'':value).replace(/\s+/g,' ').trim().toLocaleLowerCase('tr-TR');
+    const existing=new Set(kolManufacturers.map(item=>key(item?.name)).filter(Boolean));
+    let added=0;
+    records.forEach(record=>{
+      const name=String(record?.manufacturer||'').replace(/\s+/g,' ').trim();
+      const normalized=key(name);
+      if(!normalized||existing.has(normalized))return;
+      kolManufacturers.push({name,email:'',_emailDirectoryOnly:true});
+      existing.add(normalized);
+      added++;
+    });
+    return added;
+  }catch(_){return 0;}
+}
 function prepareEmailFillFromShared(){
   try{
     if(!window.BLEmailDirectory || !Array.isArray(kolManufacturers)) return 0;
-    let changed=0;
+    const added=prepareEmailSyncDirectoryManufacturers();
+    let changed=added;
     kolManufacturers.forEach(item=>{
       if(!item)return;
       const canonical=String(window.BLEmailDirectory.emailFor(item.name)||'').trim();
@@ -30823,18 +30843,20 @@ function renderKolMfrModal(ctx){
   const mfrEditHint = ()=>appLang==='en'?'Ctrl+Enter to save · Esc to cancel':'Kaydet: Ctrl+Enter · İptal: Esc';
   const listHtml = () => prepareEmailSortedManufacturerEntries(kolManufacturers,null,appLang).map(({m,i})=>{
     const editing=editingMfrIndex===i;
+    const directoryOnly=!!m?._emailDirectoryOnly;
     return `<div class="verHistNavItem mfrNavItem${_mfrPicked.has(i)?' isActive':''}${editing?' isEditing':''}" data-mfr-item="${i}">
       <div class="mfrNavControlCol">
         <button type="button" class="mfrPickBtn" data-mfr-pick="${i}" title="${escapeHtml(appLang==='en'?'Select manufacturer':'Üreticiyi seç')}">
           <span class="mfrChkBox">${_mfrPicked.has(i)?'<svg class="ic"><use href="#i-check"/></svg>':''}</span>
         </button>
         <div class="mfrNavActionRow">
+          ${directoryOnly?`<button type="button" class="mfrInlineEditBtn" data-manage-email-groups title="${escapeHtml(appLang==='en'?'Manage in E-Mail Groups':'E-Mail Grupları’nda yönet')}" aria-label="${escapeHtml(appLang==='en'?'Manage in E-Mail Groups':'E-Mail Grupları’nda yönet')}"><svg class="ic"><use href="#i-mail-send"/></svg></button>`:`
           <button type="button" class="mfrInlineEditBtn${editing?' isEditing':''}" data-mfr-edit="${i}" title="${escapeHtml(editing?mfrSaveLabel():mfrEditLabel())}" aria-label="${escapeHtml(editing?mfrSaveLabel():mfrEditLabel())}">
             <svg class="ic"><use href="#${editing?'i-check':'i-pencil'}"/></svg>
           </button>
           <button type="button" class="mfrInlineDeleteBtn" data-mfr-delete="${i}" title="${escapeHtml(appLang==='en'?'Delete manufacturer':'Üreticiyi sil')}" aria-label="${escapeHtml(appLang==='en'?'Delete manufacturer':'Üreticiyi sil')}">
             <svg class="ic"><use href="#i-trash"/></svg>
-          </button>
+          </button>`}
         </div>
       </div>
       ${editing?`<div class="mfrInlineEditor" data-mfr-editor="${i}">
@@ -31134,6 +31156,9 @@ function renderKolMfrModal(ctx){
   const close = ()=>{
     if(editingMfrIndex>=0 && !commitInlineMfrEdit(editingMfrIndex)) return;
     closeSubmfrDrop(); modal.remove();
+    for(let i=kolManufacturers.length-1;i>=0;i--){
+      if(kolManufacturers[i]?._emailDirectoryOnly)kolManufacturers.splice(i,1);
+    }
   };
   modal.querySelector('.kolMfrClose').addEventListener('click', close);
   modal.querySelector('#kolMfrCancel').addEventListener('click', close);
