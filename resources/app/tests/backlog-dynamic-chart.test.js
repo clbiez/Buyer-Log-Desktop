@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const XLSX = require('xlsx');
+const JSZip = require('../public/vendor/jszip.min.js');
 
 const ROOT = path.join(__dirname, '..');
 const chart = require(path.join(ROOT, 'public', 'backlog-chart.js'));
@@ -87,4 +88,28 @@ test('Excel export creates Chart and Chart Data sheets with native chart formula
   assert.match(xml,/<c:lineChart>/);
   assert.match(xml,/<c:strRef><c:f>&apos;Grafik Verisi&apos;!\$A\$2:\$A\$3<\/c:f>/);
   assert.match(xml,/<c:numRef>/);
+});
+
+
+test('native Excel chart package contains drawing relationships and reopens as XLSX', async () => {
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['BACKLOG'],['sample']]),'BACKLOG');
+  const result=chart.appendWorkbookSheets(wb,rows,headers,{XLSX,state:state()});
+  const raw=XLSX.write(wb,{type:'buffer',bookType:'xlsx',cellStyles:true});
+  const patched=await chart.applyExcelCharts(raw,result.charts,JSZip,'nodebuffer');
+  const zip=await JSZip.loadAsync(patched);
+  assert.ok(zip.file('xl/charts/chart1.xml'));
+  assert.ok(zip.file('xl/drawings/drawing1.xml'));
+  assert.ok(zip.file('xl/drawings/_rels/drawing1.xml.rels'));
+  const sheet=await zip.file(result.charts[0].sheetPath).async('string');
+  assert.match(sheet,/<drawing r:id="rId\d+"\/>/);
+  const relPath=result.charts[0].sheetPath.replace(/\/[^/]+$/, '/_rels/'+result.charts[0].sheetPath.split('/').pop()+'.rels');
+  const rels=await zip.file(relPath).async('string');
+  assert.match(rels,/relationships\/drawing/);
+  const chartXml=await zip.file('xl/charts/chart1.xml').async('string');
+  assert.match(chartXml,/<c:lineChart>/);
+  assert.match(chartXml,/Grafik Verisi/);
+  const reopened=XLSX.read(patched,{type:'buffer'});
+  assert.ok(reopened.SheetNames.includes('Grafik'));
+  assert.ok(reopened.SheetNames.includes('Grafik Verisi'));
 });
