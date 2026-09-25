@@ -49,4 +49,8 @@ test('Backlog Excel Ay/Hafta hücreleri orijinal tarih hücresine formülle bağ
   assert.match(APP,/derivedHeaderSources/);
   assert.match(APP,/dateDimensionSources:expanded\.derivedHeaderSources/);
   assert.match(APP,/BLBacklogExcel\.dateDimensionFormula/);
+  assert.match(APP,/function backlogChartBucketFormula/);
+  assert.match(APP,/_BL_CHART_TIME1/);
+  assert.match(APP,/_BL_CHART_BUCKET1/);
+  assert.match(APP,/__backlogChartLiveSource/);
 });
