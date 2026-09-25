@@ -5156,12 +5156,27 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartHead small{font-size:10.5px;color:var(--muted);white-space:normal;}
 .backlogChartActions{display:flex;gap:6px;align-items:center;flex:0 0 auto;}
 .backlogChartActions [data-backlog-chart-disable]{min-width:30px;padding-inline:8px;font-size:17px;line-height:1;}
-.backlogChartCanvas{width:100%;overflow-x:auto;border-top:1px solid var(--line);padding-top:8px;}
+.backlogChartControls{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin:6px 0;}
+.backlogChartZoomControls,.backlogChartInlineActions{display:flex;align-items:center;gap:5px;min-width:0;flex-wrap:wrap;}
+.backlogChartRangeInfo{min-width:180px;max-width:420px;padding:0 4px;color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;}
+.backlogChartControlHint,.backlogChartTodayStatus{color:var(--muted);font-size:10px;}
+.backlogChartFilterPanel{margin:6px 0 8px;padding:8px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card2);}
+.backlogChartFilterHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;}
+.backlogChartFilterHead>div{display:flex;gap:6px;flex:0 0 auto;}
+.backlogChartFilterHead input{min-width:180px;max-width:340px;width:100%;height:30px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink);padding:0 8px;font:inherit;}
+.backlogChartFilterList{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px 10px;max-height:180px;overflow:auto;padding:2px;}
+.backlogChartFilterList label{display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink);font-size:10.5px;cursor:pointer;}
+.backlogChartFilterList label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.backlogChartCanvas{width:100%;overflow-x:auto;border-top:1px solid var(--line);padding-top:8px;outline:none;overscroll-behavior:contain;}
+.backlogChartCanvas:focus-visible{box-shadow:inset 0 0 0 1px var(--acc);}
 .backlogChartSvg{display:block;width:100%;min-width:680px;height:auto;}
 .backlogChartBg{fill:var(--card);}
 .backlogChartGrid{stroke:var(--line);stroke-width:1;}
 .backlogChartAxisText,.backlogChartLegendText{fill:var(--muted);font:10px var(--font,system-ui,sans-serif);}
 .backlogChartLegendText{fill:var(--ink);}
+.backlogChartTodayLine{stroke:var(--acc);stroke-width:1.5;stroke-dasharray:4 4;opacity:.9;}
+.backlogChartTodayBadge{fill:var(--card);stroke:var(--acc);stroke-width:1;}
+.backlogChartTodayText{fill:var(--acc);font:700 9px var(--font,system-ui,sans-serif);}
 .backlogChartNotice{margin:6px 0 2px;padding:7px 9px;border:1px solid var(--line);background:var(--card2);color:var(--muted);font-size:10.5px;}
 .backlogChartLoading,.backlogChartError{padding:18px;text-align:center;color:var(--muted);font-size:11px;}
 .backlogChartError{color:var(--red);}
@@ -5177,4 +5192,13 @@ body.kolPeriodDrawerOpen{overflow:hidden}
   .backlogChartActions{width:100%;justify-content:flex-end;}
   .backlogChartSettingsGrid{grid-template-columns:1fr;}
   .backlogChartTitleField{grid-column:auto;}
+  .backlogChartControls{align-items:stretch;}
+  .backlogChartZoomControls,.backlogChartInlineActions{width:100%;}
+  .backlogChartInlineActions{justify-content:flex-end;}
+  .backlogChartRangeInfo{order:-1;width:100%;max-width:none;text-align:left;}
+  .backlogChartControlHint{display:none;}
+  .backlogChartFilterHead{align-items:stretch;flex-direction:column;}
+  .backlogChartFilterHead input{max-width:none;}
+  .backlogChartFilterHead>div{justify-content:flex-end;}
+  .backlogChartFilterList{grid-template-columns:repeat(2,minmax(0,1fr));}
 }

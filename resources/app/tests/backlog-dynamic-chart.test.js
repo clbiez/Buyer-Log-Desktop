@@ -48,6 +48,38 @@ test('Backlog chart uses the shared Collection month/week date dimension', () =>
   assert.equal(chart.bucketFor(chart.parseDate('31.08.2026'),'month').label,'Eylül 2026');
 });
 
+test('Backlog chart filters series inside the chart before applying the series limit', () => {
+  const filtered=chart.buildModel(rows,headers,state({seriesFilter:['B'],seriesLimit:'5'}));
+  assert.deepEqual(filtered.availableSeriesNames,['A','B']);
+  assert.deepEqual(filtered.series.map(item=>item.name),['B']);
+  assert.equal(filtered.filteredOutSeriesCount,1);
+  assert.deepEqual(filtered.series[0].values,[7,0]);
+
+  const sanitized=chart.sanitizeState(Object.assign({},state(),{seriesFilter:[' A ','A','B','']}));
+  assert.deepEqual(sanitized.seriesFilter,['A','B']);
+});
+
+test('Backlog chart zoom range helpers clamp, zoom and pan without losing the data window', () => {
+  assert.deepEqual(chart.clampChartRange({start:-5,end:50},12),{start:0,end:12});
+  const zoomed=chart.zoomChartRange({start:0,end:12},12,-1,.5);
+  assert.ok(zoomed.end-zoomed.start<12);
+  assert.ok(zoomed.end-zoomed.start>=4);
+  const panned=chart.panChartRange(zoomed,12,1);
+  assert.equal(panned.end-panned.start,zoomed.end-zoomed.start);
+  const sliced=chart.sliceModel(chart.buildModel(rows,headers,state()),{start:0,end:1});
+  assert.equal(sliced.categories.length,1);
+  assert.equal(sliced.series[0].values.length,1);
+});
+
+test('Backlog chart renders a current-date marker when today falls inside the visible range', () => {
+  const model=chart.buildModel(rows,headers,state());
+  const svg=chart.svgChart(model,{today:new Date(2026,8,2)});
+  assert.match(svg,/backlogChartTodayLine/);
+  assert.match(svg,/backlogChartTodayBadge/);
+  assert.match(svg,/Bugün/);
+  assert.doesNotMatch(chart.svgChart(model,{today:new Date(2030,0,1)}),/backlogChartTodayLine/);
+});
+
 test('Backlog chart supports count, distinct count, sum and average aggregations', () => {
   assert.deepEqual(chart.buildModel(rows,headers,state({aggregation:'count'})).series.find(s=>s.name==='A').values,[2,1]);
   assert.deepEqual(chart.buildModel(rows,headers,state({aggregation:'distinct',metricField:'MAG'})).series.find(s=>s.name==='A').values,[1,1]);
@@ -73,6 +105,13 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(INDEX,/src="backlog-chart\.js\?v=__BL_ASSET_VERSION__/);
   assert.match(CSS,/\.backlogChartPanel/);
   assert.match(CSS,/\.backlogChartSettingsGrid/);
+  assert.match(CSS,/\.backlogChartControls/);
+  assert.match(CSS,/\.backlogChartFilterPanel/);
+  assert.match(CSS,/\.backlogChartTodayLine/);
+  const chartSource=fs.readFileSync(path.join(ROOT,'public','backlog-chart.js'),'utf8');
+  assert.match(chartSource,/data-backlog-chart-filter/);
+  assert.match(chartSource,/addEventListener\('wheel'/);
+  assert.match(chartSource,/data-backlog-chart-today/);
 });
 
 test('Backlog render refreshes chart and Excel export appends chart sheets', () => {

@@ -23,11 +23,13 @@
     chartType:'line',
     seriesLimit:'20',
     title:'',
+    seriesFilter:[],
   });
   const COLORS = ['#2563eb','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#db2777','#4f46e5','#0f766e','#9333ea','#475569','#ca8a04'];
   let state = Object.assign({}, DEFAULT_STATE);
   let initialized = false;
   let cache = { signature:'', headers:[], rows:[] };
+  let chartView = { signature:'', start:0, end:0 };
 
   function esc(value) {
     return String(value == null ? '' : value)
@@ -61,6 +63,9 @@
     const agg = ['count','distinct','sum','avg'].includes(src.aggregation) ? src.aggregation : DEFAULT_STATE.aggregation;
     const chart = ['line','bar'].includes(src.chartType) ? src.chartType : DEFAULT_STATE.chartType;
     const limit = ['5','10','20','50','all'].includes(String(src.seriesLimit)) ? String(src.seriesLimit) : DEFAULT_STATE.seriesLimit;
+    const seriesFilter = Array.isArray(src.seriesFilter)
+      ? [...new Set(src.seriesFilter.map(v=>String(v == null ? '' : v).trim()).filter(Boolean))].slice(0,200)
+      : [];
     return {
       enabled:!!src.enabled,
       timeField:String(src.timeField || ''),
@@ -71,6 +76,7 @@
       chartType:chart,
       seriesLimit:limit,
       title:String(src.title || '').slice(0,160),
+      seriesFilter,
     };
   }
   function loadState() {
@@ -222,7 +228,7 @@
   }
   function buildModel(rows,headers,inputState) {
     const all=normalizeHeaders(headers,rows), st=sanitizeState(inputState||state);
-    if (!st.timeField || !all.includes(st.timeField)) return {categories:[],series:[],state:st,reason:'time-field'};
+    if (!st.timeField || !all.includes(st.timeField)) return {categories:[],series:[],availableSeriesNames:[],state:st,reason:'time-field'};
     const buckets=new Map(), labels=new Map(), seriesMaps=new Map();
     let used=0, invalidDates=0;
     for (const row of (Array.isArray(rows)?rows:[])) {
@@ -245,22 +251,34 @@
       totals.set(name,categoryKeys.reduce((sum,key)=>sum+accumulatorValue(map.get(key),st.aggregation,st.metricField),0));
     });
     names.sort((a,b)=>(totals.get(b)||0)-(totals.get(a)||0)||String(a).localeCompare(String(b),'tr'));
+    const availableSeriesNames=names.slice();
+    if (st.seriesFilter.length) {
+      const selected=new Set(st.seriesFilter);
+      const matched=names.filter(name=>selected.has(name));
+      if (matched.length) names=matched;
+    }
+    const filteredOutSeriesCount=Math.max(0,availableSeriesNames.length-names.length);
     const limit=st.seriesLimit==='all'?Infinity:Number(st.seriesLimit)||20;
     const omitted=Math.max(0,names.length-limit);
     if (Number.isFinite(limit)) names=names.slice(0,limit);
-    const series=names.map((name,index)=>({
-      name,
-      color:COLORS[index%COLORS.length],
-      values:categoryKeys.map(key=>accumulatorValue(seriesMaps.get(name).get(key),st.aggregation,st.metricField)),
-    }));
+    const series=names.map(name=>{
+      const colorIndex=Math.max(0,availableSeriesNames.indexOf(name));
+      return {
+        name,
+        color:COLORS[colorIndex%COLORS.length],
+        values:categoryKeys.map(key=>accumulatorValue(seriesMaps.get(name).get(key),st.aggregation,st.metricField)),
+      };
+    });
     return {
       title:st.title.trim()||generatedTitle(st),
       state:st,
       categories:categoryKeys.map(key=>({key,label:labels.get(key)||key})),
       series,
+      availableSeriesNames,
       usedRows:used,
       invalidDates,
       omittedSeriesCount:omitted,
+      filteredOutSeriesCount,
       sourceSeriesCount:seriesMaps.size,
     };
   }
@@ -274,7 +292,21 @@
     const metric=st.metricField==='__records'?tr('Kayıtlar','Records'):st.metricField;
     return st.timeField+' · '+gran+' · '+agg+' '+metric+(st.seriesField?' · '+st.seriesField:'');
   }
-  function svgChart(model) {
+  function todayKeyFor(granularity,date) {
+    const d=parseDate(date || new Date());
+    return d ? bucketFor(d,granularity).key : '';
+  }
+  function todayPosition(categories,key) {
+    const list=Array.isArray(categories)?categories:[];
+    if(!key||!list.length)return null;
+    const keys=list.map(item=>String(item&&item.key||''));
+    if(key<keys[0]||key>keys[keys.length-1])return null;
+    const exact=keys.indexOf(key);
+    if(exact>=0)return exact+.5;
+    const insert=keys.findIndex(item=>item>key);
+    return insert<0?keys.length:insert;
+  }
+  function svgChart(model,options) {
     const width=1080, baseHeight=430, cols=4, legendRows=Math.max(1,Math.ceil(model.series.length/cols));
     const height=baseHeight+legendRows*24, left=72,right=24,top=28,bottom=78+legendRows*22;
     const pw=width-left-right, ph=height-top-bottom;
@@ -294,6 +326,15 @@
       const x=left+step*(i+.5);
       if(i%labelStep===0||i===model.categories.length-1) out+='<text x="'+x+'" y="'+(top+ph+25)+'" text-anchor="middle" class="backlogChartAxisText">'+esc(cat.label)+'</text>';
     });
+    const today=options&&options.today?options.today:new Date();
+    const todayKey=todayKeyFor(model.state.granularity,today);
+    const todayPos=todayPosition(model.categories,todayKey);
+    if(todayPos!=null){
+      const x=left+step*todayPos;
+      out+='<line x1="'+x.toFixed(2)+'" x2="'+x.toFixed(2)+'" y1="'+top+'" y2="'+(top+ph)+'" class="backlogChartTodayLine"/>';
+      out+='<rect x="'+(x-25).toFixed(2)+'" y="'+(top-21)+'" width="50" height="16" rx="4" class="backlogChartTodayBadge"/>';
+      out+='<text x="'+x.toFixed(2)+'" y="'+(top-10)+'" text-anchor="middle" class="backlogChartTodayText">'+esc(tr('Bugün','Today'))+'</text>';
+    }
     if(model.state.chartType==='bar'){
       const count=Math.max(1,model.series.length), group=step*.78, bw=Math.max(.7,group/count);
       model.series.forEach((serie,si)=>{
@@ -320,6 +361,170 @@
       out+='<text x="'+(x+25)+'" y="'+y+'" class="backlogChartLegendText">'+esc(serie.name)+'</text>';
     });
     out+='</svg>'; return out;
+  }
+  function chartViewSignature(model) {
+    return [model.state.timeField,model.state.granularity,(model.categories||[]).map(cat=>cat.key).join(',')].join('|');
+  }
+  function clampChartRange(range,total) {
+    const count=Math.max(0,Number(total)||0);
+    if(!count)return {start:0,end:0};
+    let start=Math.max(0,Math.min(count-1,Math.floor(Number(range&&range.start)||0)));
+    let end=Math.max(start+1,Math.min(count,Math.floor(Number(range&&range.end)||count)));
+    if(end>count){const shift=end-count;start=Math.max(0,start-shift);end=count;}
+    return {start,end};
+  }
+  function zoomChartRange(range,total,delta,focusRatio) {
+    const count=Math.max(0,Number(total)||0), current=clampChartRange(range,count);
+    if(count<=1)return current;
+    const span=current.end-current.start, minSpan=Math.min(count,4);
+    const zoomIn=Number(delta)<0;
+    let nextSpan=Math.round(span*(zoomIn?.75:1.34));
+    nextSpan=Math.max(minSpan,Math.min(count,nextSpan));
+    if(nextSpan===span && zoomIn && span>minSpan)nextSpan=span-1;
+    if(nextSpan===span && !zoomIn && span<count)nextSpan=span+1;
+    const ratio=Math.max(0,Math.min(1,Number(focusRatio)||.5));
+    const focus=current.start+ratio*Math.max(0,span-1);
+    let start=Math.round(focus-ratio*Math.max(0,nextSpan-1));
+    start=Math.max(0,Math.min(count-nextSpan,start));
+    return {start,end:start+nextSpan};
+  }
+  function panChartRange(range,total,direction) {
+    const count=Math.max(0,Number(total)||0), current=clampChartRange(range,count);
+    const span=current.end-current.start;
+    if(span>=count)return current;
+    const step=Math.max(1,Math.round(span*.15))*(Number(direction)<0?-1:1);
+    let start=Math.max(0,Math.min(count-span,current.start+step));
+    return {start,end:start+span};
+  }
+  function sliceModel(model,range) {
+    const safe=clampChartRange(range,(model.categories||[]).length);
+    return Object.assign({},model,{
+      categories:(model.categories||[]).slice(safe.start,safe.end),
+      series:(model.series||[]).map(item=>Object.assign({},item,{values:(item.values||[]).slice(safe.start,safe.end)})),
+      viewRange:safe,
+    });
+  }
+  function ensureChartView(model) {
+    const total=(model.categories||[]).length, signature=chartViewSignature(model);
+    if(chartView.signature!==signature){
+      chartView={signature,start:0,end:total};
+    } else {
+      const safe=clampChartRange(chartView,total);
+      chartView={signature,start:safe.start,end:safe.end};
+    }
+    return {start:chartView.start,end:chartView.end};
+  }
+  function moveViewToToday(model) {
+    const total=(model.categories||[]).length, current=ensureChartView(model);
+    const key=todayKeyFor(model.state.granularity,new Date());
+    const pos=todayPosition(model.categories,key);
+    if(pos==null)return false;
+    const span=current.end-current.start;
+    let start=Math.round(pos-span/2);
+    start=Math.max(0,Math.min(total-span,start));
+    chartView={signature:chartViewSignature(model),start,end:start+span};
+    return true;
+  }
+  function filterSelection(model) {
+    const available=Array.isArray(model.availableSeriesNames)?model.availableSeriesNames:[];
+    if(!available.length)return [];
+    if(!model.state.seriesFilter.length)return available.slice();
+    const selected=new Set(model.state.seriesFilter);
+    const matched=available.filter(name=>selected.has(name));
+    return matched.length?matched:available.slice();
+  }
+  function mountInteractiveChart(host,model,detail) {
+    const target=host&&host.querySelector('[data-backlog-chart-body]');
+    if(!target)return;
+    const total=model.categories.length, range=ensureChartView(model), visible=sliceModel(model,range);
+    const span=range.end-range.start, zoomed=span<total, canZoom=total>Math.min(total,4);
+    const selected=filterSelection(model), available=model.availableSeriesNames||[];
+    const first=visible.categories[0], last=visible.categories[visible.categories.length-1];
+    const rangeText=(first&&last?first.label+(first.key===last.key?'':' – '+last.label):'')+' · '+span+'/'+total;
+    const todayKey=todayKeyFor(model.state.granularity,new Date());
+    const fullTodayPos=todayPosition(model.categories,todayKey);
+    const filterButton=available.length>1
+      ? '<button type="button" class="tbtn" data-backlog-chart-filter aria-expanded="false">'+esc(tr('Filtre','Filter')+' '+selected.length+'/'+available.length)+'</button>'
+      : '';
+    const todayButton=fullTodayPos!=null
+      ? '<button type="button" class="tbtn" data-backlog-chart-today>'+esc(tr('Bugün','Today'))+'</button>'
+      : '<span class="backlogChartTodayStatus">'+esc(tr('Bugün veri aralığı dışında','Today is outside the data range'))+'</span>';
+    const filterPanel=available.length>1
+      ? '<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden>'
+        +'<div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'">'
+        +'<div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button>'
+        +'<button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div>'
+        +'<div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>'
+      : '';
+    target.innerHTML='<div class="backlogChartControls"><div class="backlogChartZoomControls">'
+      +'<button type="button" class="tbtn" data-backlog-chart-pan-left'+(!zoomed?' disabled':'')+' aria-label="'+esc(tr('Zaman aralığını sola kaydır','Pan time range left'))+'">←</button>'
+      +'<button type="button" class="tbtn" data-backlog-chart-zoom-out'+(!canZoom||!zoomed?' disabled':'')+' aria-label="'+esc(tr('Uzaklaştır','Zoom out'))+'">−</button>'
+      +'<span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span>'
+      +'<button type="button" class="tbtn" data-backlog-chart-zoom-in'+(!canZoom||span<=Math.min(total,4)?' disabled':'')+' aria-label="'+esc(tr('Yakınlaştır','Zoom in'))+'">+</button>'
+      +'<button type="button" class="tbtn" data-backlog-chart-reset'+(!zoomed?' disabled':'')+'>'+esc(tr('Tümü','All'))+'</button>'
+      +'<button type="button" class="tbtn" data-backlog-chart-pan-right'+(!zoomed?' disabled':'')+' aria-label="'+esc(tr('Zaman aralığını sağa kaydır','Pan time range right'))+'">→</button>'
+      +'<span class="backlogChartControlHint">'+esc(tr('Tekerlek: yakınlaştır/uzaklaştır · Shift+tekerlek: kaydır','Wheel: zoom · Shift+wheel: pan'))+'</span>'
+      +'</div><div class="backlogChartInlineActions">'+todayButton+filterButton+'</div></div>'
+      +filterPanel
+      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek ile zaman aralığını yakınlaştırıp uzaklaştırabilirsiniz.','Backlog chart. Use the mouse wheel to zoom the time range.'))+'">'+svgChart(visible)+'</div>';
+    const updateRange=next=>{
+      const safe=clampChartRange(next,total);
+      chartView={signature:chartViewSignature(model),start:safe.start,end:safe.end};
+      mountInteractiveChart(host,model,detail);
+    };
+    target.querySelector('[data-backlog-chart-zoom-in]')?.addEventListener('click',()=>updateRange(zoomChartRange(range,total,-1,.5)));
+    target.querySelector('[data-backlog-chart-zoom-out]')?.addEventListener('click',()=>updateRange(zoomChartRange(range,total,1,.5)));
+    target.querySelector('[data-backlog-chart-pan-left]')?.addEventListener('click',()=>updateRange(panChartRange(range,total,-1)));
+    target.querySelector('[data-backlog-chart-pan-right]')?.addEventListener('click',()=>updateRange(panChartRange(range,total,1)));
+    target.querySelector('[data-backlog-chart-reset]')?.addEventListener('click',()=>updateRange({start:0,end:total}));
+    target.querySelector('[data-backlog-chart-today]')?.addEventListener('click',()=>{if(moveViewToToday(model))mountInteractiveChart(host,model,detail);});
+    const canvas=target.querySelector('.backlogChartCanvas');
+    canvas?.addEventListener('wheel',event=>{
+      if(total<=1)return;
+      event.preventDefault();
+      if(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)){
+        const direction=(event.deltaX||event.deltaY)>0?1:-1;
+        updateRange(panChartRange(range,total,direction));
+        return;
+      }
+      const rect=canvas.getBoundingClientRect(), ratio=rect.width?Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)):.5;
+      updateRange(zoomChartRange(range,total,event.deltaY,ratio));
+    },{passive:false});
+    canvas?.addEventListener('keydown',event=>{
+      let next=null;
+      if(event.key==='+'||event.key==='=')next=zoomChartRange(range,total,-1,.5);
+      else if(event.key==='-')next=zoomChartRange(range,total,1,.5);
+      else if(event.key==='ArrowLeft')next=panChartRange(range,total,-1);
+      else if(event.key==='ArrowRight')next=panChartRange(range,total,1);
+      else if(event.key==='0'||event.key==='Home')next={start:0,end:total};
+      if(next){event.preventDefault();updateRange(next);}
+    });
+    const filterToggle=target.querySelector('[data-backlog-chart-filter]');
+    const filterPanelEl=target.querySelector('[data-backlog-chart-filter-panel]');
+    filterToggle?.addEventListener('click',()=>{
+      const opening=!!filterPanelEl?.hidden;
+      if(filterPanelEl)filterPanelEl.hidden=!opening;
+      filterToggle.setAttribute('aria-expanded',opening?'true':'false');
+      if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();
+    });
+    target.querySelector('[data-backlog-chart-filter-search]')?.addEventListener('input',event=>{
+      const q=String(event.target.value||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR');
+      target.querySelectorAll('[data-backlog-chart-filter-item]').forEach(label=>{
+        label.hidden=q&&!String(label.textContent||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR').includes(q);
+      });
+    });
+    target.querySelector('[data-backlog-chart-filter-all]')?.addEventListener('click',()=>{
+      saveState(Object.assign({},state,{seriesFilter:[]}));
+      render(false,detail);
+    });
+    target.querySelector('[data-backlog-chart-filter-apply]')?.addEventListener('click',()=>{
+      const chosen=[...target.querySelectorAll('[data-backlog-chart-series-index]:checked')]
+        .map(input=>available[Number(input.getAttribute('data-backlog-chart-series-index'))]).filter(Boolean);
+      if(!chosen.length){notify(tr('Grafikte en az bir seri seçili kalmalı.','Keep at least one series selected.'));return;}
+      const nextFilter=chosen.length===available.length?[]:chosen;
+      saveState(Object.assign({},state,{seriesFilter:nextFilter}));
+      render(false,detail);
+    });
   }
   function cacheSignature(params) {
     return Object.keys(params||{}).sort().map(k=>k+'='+String(params[k]==null?'':params[k])).join('&');
@@ -355,7 +560,10 @@
       const detail=detailOverride||await loadDetail(!!force);
       const inferred=inferState(detail.headers,detail.rows,state);
       if(!inferred.timeField) throw new Error(tr('Grafik için tarih alanı bulunamadı.','No date field was found for the chart.'));
-      if(inferred.timeField!==state.timeField || inferred.metricField!==state.metricField || inferred.seriesField!==state.seriesField) saveState(Object.assign({},state,inferred,{enabled:true}));
+      if(inferred.timeField!==state.timeField || inferred.metricField!==state.metricField || inferred.seriesField!==state.seriesField) {
+        const preserveFilter=inferred.seriesField===state.seriesField?state.seriesFilter:[];
+        saveState(Object.assign({},state,inferred,{enabled:true,seriesFilter:preserveFilter}));
+      }
       const model=buildModel(detail.rows,detail.headers,state);
       if(!model.categories.length||!model.series.length) throw new Error(tr('Seçili ayarlarla grafikte gösterilecek veri yok.','There is no chart data for the selected settings.'));
       host.innerHTML='<div class="backlogChartHead"><div><strong>'+esc(model.title)+'</strong><small>'+esc(configSummary(model.state))+'</small></div>'
@@ -363,7 +571,8 @@
         +'<button type="button" class="tbtn" data-backlog-chart-edit>'+esc(tr('Ayarlar','Settings'))+'</button>'
         +'<button type="button" class="tbtn" data-backlog-chart-disable aria-label="'+esc(tr('Grafiği kapat','Hide chart'))+'">×</button></div></div>'
         +(model.omittedSeriesCount?'<div class="backlogChartNotice">'+esc(tr('Okunabilirlik için en yüksek '+model.series.length+' seri gösteriliyor; '+model.omittedSeriesCount+' seri gizli. Ayarlardan seri limitini artırabilirsiniz.','Showing the top '+model.series.length+' series; '+model.omittedSeriesCount+' series are hidden. Increase the series limit in settings.'))+'</div>':'')
-        +'<div class="backlogChartCanvas">'+svgChart(model)+'</div>';
+        +'<div data-backlog-chart-body></div>';
+      mountInteractiveChart(host,model,detail);
       host.querySelector('[data-backlog-chart-edit]')?.addEventListener('click',openSettings);
       host.querySelector('[data-backlog-chart-refresh]')?.addEventListener('click',()=>{invalidate();render(true);});
       host.querySelector('[data-backlog-chart-disable]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{enabled:false}));host.hidden=true;});
@@ -371,7 +580,6 @@
       host.innerHTML='<div class="backlogChartError">'+esc(tr('Grafik oluşturulamadı: ','Chart could not be created: ')+err.message)+'</div>';
     }
   }
-
   function optionHtml(values,selected,blankLabel) {
     let html=blankLabel!=null?'<option value="">'+esc(blankLabel)+'</option>':'';
     return html+values.map(v=>'<option value="'+esc(v)+'"'+(v===selected?' selected':'')+'>'+esc(v)+'</option>').join('');
@@ -419,6 +627,7 @@
         metricField:overlay.querySelector('#backlogChartMetric')?.value,
         aggregation:overlay.querySelector('#backlogChartAgg')?.value,
         seriesField:overlay.querySelector('#backlogChartSeries')?.value,
+        seriesFilter:overlay.querySelector('#backlogChartSeries')?.value===state.seriesField?state.seriesFilter:[],
         chartType:overlay.querySelector('#backlogChartType')?.value,
         seriesLimit:overlay.querySelector('#backlogChartLimit')?.value,
         title:overlay.querySelector('#backlogChartTitle')?.value,
@@ -580,6 +789,7 @@
     init,onBacklogRendered,openSettings,render,invalidate,
     getState,saveState,sanitizeState,normalizeHeaders,detectDateHeaders,inferState,
     parseDate,parseNumber,bucketFor,buildModel,appendWorkbookSheets,
+    svgChart,todayKeyFor,todayPosition,clampChartRange,zoomChartRange,panChartRange,sliceModel,
     chartXml,drawingXml,applyExcelCharts,
   });
 });
