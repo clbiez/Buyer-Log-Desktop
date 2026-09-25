@@ -30630,18 +30630,22 @@ function prepareEmailProgressStart(button,meta={}){
     }
     return parts.join(' · ');
   };
+  // Uzun süren e-posta işlemleri, PLM/diğer uzun işler gibi sağ alttaki
+  // Operation Center özetinde görünür. PLM şeridi açıksa kart onun üstüne
+  // yığılır; iki durum kutusu birbirini örtmez.
   const position=()=>{
     raf=0;
-    if(stopped||!button.isConnected||!note.isConnected)return;
-    const rect=button.getBoundingClientRect();
-    if(rect.width<=0||rect.height<=0){note.style.display='none';return;}
-    note.style.display='block';
-    const width=Math.min(520,Math.max(300,window.innerWidth-16));
-    const left=Math.max(8,Math.min(rect.left+rect.width/2-width/2,window.innerWidth-width-8));
-    const top=rect.bottom+6;
+    if(stopped||!note.isConnected)return;
+    note.style.display='grid';
+    const width=Math.min(420,Math.max(300,window.innerWidth-32));
+    const plmStrip=document.getElementById('plmOpsStrip');
+    const plmVisible=Boolean(plmStrip&&!plmStrip.hidden&&plmStrip.offsetHeight>0);
+    const bottom=16+(plmVisible?plmStrip.offsetHeight+8:0);
     note.style.width=`${width}px`;
-    note.style.left=`${Math.round(left)}px`;
-    note.style.top=`${Math.round(top)}px`;
+    note.style.right='16px';
+    note.style.bottom=`${bottom}px`;
+    note.style.left='auto';
+    note.style.top='auto';
   };
   const schedulePosition=()=>{if(!raf)raf=requestAnimationFrame(position);};
   const render=()=>{
@@ -30651,7 +30655,14 @@ function prepareEmailProgressStart(button,meta={}){
       ?'Processing time may increase depending on file size and workload.'
       :'Dosya boyutuna ve iş yüküne göre işlem süresi uzayabilir.';
     const work=workload();
-    note.innerHTML=`<span class="prepareEmailProgressSpinner" aria-hidden="true"></span><span><strong>${escapeHtml(stage)}</strong><small>${escapeHtml([work,elapsed].filter(Boolean).join(' · '))}</small><em>${escapeHtml(warning)}</em></span>`;
+    const running=appLang==='en'?'Running':'Çalışıyor';
+    const title=appLang==='en'?'E-mail operation':'E-posta işlemi';
+    note.innerHTML=`<div class="prepareEmailOperationHead">
+      <div class="prepareEmailOperationTitle"><strong>${escapeHtml(title)}</strong><span class="badge plmOpsBadge isRun">${escapeHtml(running)}</span></div>
+      <div class="prepareEmailOperationStage">${escapeHtml(stage)}</div>
+    </div>
+    <div class="plmOpsBar prepareEmailOperationBar" role="progressbar" aria-label="${escapeHtml(stage)}"><span></span></div>
+    <div class="prepareEmailOperationMeta"><span class="prepareEmailProgressSpinner" aria-hidden="true"></span><span><small>${escapeHtml([work,elapsed].filter(Boolean).join(' · '))}</small><em>${escapeHtml(warning)}</em></span></div>`;
     position();
   };
   const interval=setInterval(render,1000);

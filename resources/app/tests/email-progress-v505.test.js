@@ -15,17 +15,23 @@ function between(start,end){
   return APP.slice(a,b);
 }
 
-test('v5.05 Prepare E-Mail shows a live processing note under the source button',()=>{
+test('Prepare E-Mail uses the lower-right Operation Center summary and stacks above PLM jobs',()=>{
   const block=between('function prepareEmailProgressStart','function renderKolMfrModal');
   assert.match(block,/prepareEmailProgressNote/);
-  assert.match(block,/button\.getBoundingClientRect\(\)/);
-  assert.match(block,/rect\.bottom\+6/);
+  assert.match(block,/plmOpsStrip/);
+  assert.match(block,/plmStrip\.offsetHeight/);
+  assert.match(block,/note\.style\.right='16px'/);
+  assert.match(block,/note\.style\.bottom=/);
+  assert.match(block,/prepareEmailOperationTitle/);
+  assert.match(block,/prepareEmailOperationStage/);
+  assert.match(block,/plmOpsBadge isRun/);
   assert.match(block,/prepareEmailProgressFormatElapsed/);
   assert.match(block,/Dosya boyutuna ve iş yüküne göre işlem süresi uzayabilir/);
   assert.match(block,/pricingFormatBytes/);
+  assert.doesNotMatch(block,/button\.getBoundingClientRect\(\)/);
 });
 
-test('v5.05 e-mail generation updates progress stages and always removes the note',()=>{
+test('e-mail generation updates the live Operation Center stage and always removes it',()=>{
   const block=between("modal.querySelector('#kolMfrConfirm').addEventListener('click', async ()=>{", "document.getElementById('kolSendPricingBtn')");
   assert.match(block,/const prepareProgress=prepareEmailProgressStart/);
   assert.match(block,/Excel ve ekler hazırlanıyor/);
@@ -35,8 +41,12 @@ test('v5.05 e-mail generation updates progress stages and always removes the not
   assert.ok((block.match(/prepareProgress\.stop\(\)/g)||[]).length>=2);
 });
 
-test('v5.05 processing note has spinner and busy button styling',()=>{
+test('e-mail Operation Center card reuses PLM visual language and busy-button styling',()=>{
   assert.match(CSS,/\.prepareEmailProgressNote\{/);
+  assert.match(CSS,/right:16px;bottom:16px/);
+  assert.match(CSS,/\.prepareEmailOperationTitle\{/);
+  assert.match(CSS,/\.prepareEmailOperationStage\{/);
+  assert.match(CSS,/\.prepareEmailOperationBar>span\{/);
   assert.match(CSS,/\.prepareEmailProgressSpinner\{/);
   assert.match(CSS,/#cpProdStatusBtn\.prepareEmailBusy,#kolSendPricingBtn\.prepareEmailBusy/);
 });
