@@ -124,7 +124,7 @@ test('drag/drop document capture seviyesinde yalnız Collection için kurulur', 
   assert.match(source, /getElementById\('view-koleksiyon'\)/);
   assert.match(source, /document\.addEventListener\('drop', drop, true\)/);
   assert.match(source, /document\.addEventListener\('dragover', over, true\)/);
-  assert.match(source, /document\.body\.dataset\.activeTab !== 'koleksiyon'/);
+  assert.match(source, /document\.body\.dataset\.activeTab === 'koleksiyon'/);
   assert.doesNotMatch(source, /getElementById\('view-(?:cp|orders)'\)/);
   assert.match(source, /event\.stopImmediatePropagation\(\)/);
 });
@@ -148,4 +148,40 @@ test('server reverse lookup route yalnız Collection yetkisiyle ve direct resolv
   assert.match(route, /userAccess\.requireArea\('koleksiyon'\)/);
   assert.match(route, /coreNectumAttachmentIndex\.resolve/);
   assert.doesNotMatch(route, /browserDebugService|CDP|Edge/);
+});
+
+
+test('CoreNectum browser drag global Excel dropzone yerine Collection importerına yönlenir', () => {
+  const browserDrag = {
+    types:['text/plain','text/uri-list','text/html','chromium/x-drag-id','Files'],
+    items:[
+      {kind:'string',type:'text/plain'},
+      {kind:'file',type:'image/png'},
+    ],
+  };
+  assert.equal(drag.isCandidateTransfer(browserDrag), true);
+
+  const excelDrag = {
+    types:['Files'],
+    items:[{kind:'file',type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}],
+  };
+  assert.equal(drag.isCandidateTransfer(excelDrag), false, 'Explorer Excel drop davranışı korunmalı');
+});
+
+test('legacy global dropzone Collection PLM draginde geri çekilir', () => {
+  const source = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+  const start = source.indexOf('function isCollectionPlmImageDrag');
+  assert.ok(start >= 0);
+  const block = source.slice(start, start + 2200);
+  assert.match(block, /BLCollectionPlmDragImport\?\.isCandidateTransfer/);
+  assert.match(block, /if\(!isFileDrag\(e\)\|\|isCollectionPlmImageDrag\(e\)\) return/);
+});
+
+test('PLM drag capture target dropzone olsa bile aktif kalır ve eski overlayi kapatır', () => {
+  const source = fs.readFileSync(path.join(ROOT, 'public', 'collection-plm-drag-import.js'), 'utf8');
+  assert.match(source, /dataset\.activeTab === 'koleksiyon'[\s\S]{0,120}isCandidateTransfer/);
+  assert.doesNotMatch(source, /root\.contains\(target\)/);
+  assert.match(source, /getElementById\('dropzone'\)/);
+  assert.match(source, /legacy\.classList\.remove\('show'\)/);
+  assert.match(source, /event\.stopImmediatePropagation\(\)/);
 });
