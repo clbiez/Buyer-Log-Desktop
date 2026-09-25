@@ -108,6 +108,27 @@ function updateLatest(repoDir,channel,manifest){
   run('git',['-C',repoDir,'-c','user.name=Buyer Log Release Bot','-c','user.email=buyer-log-release-bot@users.noreply.github.com','commit','-m',`Publish ${channel} latest ${manifest.version}`]);
   run('git',['-C',repoDir,'push','origin','HEAD:main']);
 }
+function updateRawMirror(repoDir,channel,manifest,artifact){
+  if(!['test','stable'].includes(channel))C.fail('Raw mirror channel geçersiz.','RELEASE_CHANNEL_INVALID');
+  if(!fs.existsSync(artifact))C.fail('Raw mirror artifact bulunamadı.','RELEASE_ARTIFACT_MISSING');
+  const worktree=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-raw-mirror-'));
+  try{
+    run('git',['-C',repoDir,'fetch','origin','raw-dist']);
+    run('git',['-C',repoDir,'worktree','add','--detach',worktree,'origin/raw-dist']);
+    const channelDir=path.join(worktree,channel);fs.mkdirSync(channelDir,{recursive:true});
+    for(const name of fs.readdirSync(channelDir)){if(/^BuyerLog-.*\.zip$/i.test(name))fs.rmSync(path.join(channelDir,name),{force:true});}
+    const target=path.join(channelDir,path.basename(artifact));fs.copyFileSync(artifact,target);
+    if(fs.statSync(target).size!==manifest.size)C.fail('Raw mirror boyutu manifest ile eşleşmiyor.','RELEASE_RAW_MIRROR_SIZE');
+    run('git',['-C',worktree,'add',channel]);
+    const changed=cp.spawnSync('git',['-C',worktree,'diff','--cached','--quiet','--',channel],{stdio:'ignore'}).status;
+    if(changed===1){
+      run('git',['-C',worktree,'-c','user.name=Buyer Log Release Bot','-c','user.email=buyer-log-release-bot@users.noreply.github.com','commit','-m',`Mirror ${channel} ${manifest.version}`]);
+      run('git',['-C',worktree,'push','origin','HEAD:raw-dist']);
+    }else if(changed!==0)C.fail('Raw mirror staged diff doğrulanamadı.','RELEASE_GIT_VERIFY');
+  }finally{
+    try{run('git',['-C',repoDir,'worktree','remove','--force',worktree]);}catch(_){fs.rmSync(worktree,{recursive:true,force:true});}
+  }
+}
 async function publishTest(repoDir){
   assertCi();const manifest=parseReleaseManifest(C.readJson(path.join(C.DIST_ROOT,'latest.test.json'),null),'test');
   if(manifest.version!==C.readPackage().version)C.fail('Canonical package version manifest ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
@@ -149,6 +170,7 @@ async function promoteStable(repoDir,version){
     ensureReleaseAssets('stable',version,stable,[artifact,stableManifestFile],temp);
     const remoteDir=path.join(temp,'remote');fs.mkdirSync(remoteDir);
     await verifyDownloaded('stable',version,stable,remoteDir);
+    updateRawMirror(repoDir,'stable',stable,artifact);
     await verifyPublicArtifact('stable',stable,remoteDir);
     if(await C.sha256File(path.join(remoteDir,path.basename(artifact)))!==await C.sha256File(artifact))C.fail('TEST ve STABLE SHA farklı.','RELEASE_PROMOTE_HASH_MISMATCH');
     await publishRawMirror(repoDir,{stable});
