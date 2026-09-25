@@ -54,3 +54,21 @@ test('Send to Pricing re-mirrors canonical manufacturers after the forced direct
   const asyncBlock=APP.slice(APP.indexOf('function prepareEmailFillFromSharedAsync'),APP.indexOf('function renderKolMfrModal'));
   assert.match(asyncBlock,/ensureDirectory\(true\)\.then\(\(\)=>\{\s*prepareEmailMergeDirectoryManufacturers\(\);\s*prepareEmailFillFromShared\(\);/);
 });
+
+
+test('Send to Pricing exposes manufacturers that exist only in the central E-Mail Groups directory',()=>{
+  assert.match(APP,/function prepareEmailSyncDirectoryManufacturers\(\)/);
+  assert.match(APP,/BLEmailDirectory\.records\?\.\(\)/);
+  assert.match(APP,/kolManufacturers\.push\(\{name,email:'',_emailDirectoryOnly:true\}\)/);
+  const fill=APP.slice(APP.indexOf('function prepareEmailFillFromShared'),APP.indexOf('function prepareEmailFillFromSharedAsync'));
+  assert.match(fill,/prepareEmailSyncDirectoryManufacturers\(\)/);
+});
+
+test('central-directory-only picker rows never pollute the persisted Collection manufacturer catalog',()=>{
+  const persist=APP.slice(APP.indexOf('function kolManufacturersForPersistence'),APP.indexOf('function saveKolManufacturers'));
+  assert.match(persist,/filter\(m=>m&&!m\._emailDirectoryOnly\)/);
+  const modal=APP.slice(APP.indexOf('function renderKolMfrModal'),APP.indexOf('function prepareEmailOpenQuotationReminder'));
+  assert.match(modal,/const directoryOnly=!!m\?\._emailDirectoryOnly/);
+  assert.match(modal,/data-manage-email-groups/);
+  assert.match(modal,/if\(kolManufacturers\[i\]\?\._emailDirectoryOnly\)kolManufacturers\.splice\(i,1\)/);
+});
