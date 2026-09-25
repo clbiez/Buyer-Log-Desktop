@@ -14,8 +14,10 @@ function calcWithDefaults(defaults,row){
   const parse=v=>{if(v==null||v==='')return NaN;const n=Number(String(v).replace(',','.').replace('%',''));return Number.isFinite(n)?n:NaN;};
   const confirmed=r=>null;
   const best=r=>{const p=parse(r.price);return Number.isFinite(p)&&p>0?{price:p,source:'best',name:'A'}:null;};
-  const src=[fn('kolSuppFob'),fn('kolLandedIsNonDtr'),fn('kolLandedPriceWithCosts'),fn('kolLandedCalc')].join('\n')+'\nreturn kolLandedCalc(row);';
-  return new Function('row','kolParseMoneyNum','kolConfirmedPricing','kolBestPricing','kolAutoFx','turknorm','KOL_TR_LANDED_MULT','KOL_YD_LANDED_MULT','kolDefaultLandedMultipliers','kolLicenseRuleMissing',src)(row,parse,confirmed,best,()=>40,v=>String(v||'').trim().toUpperCase(),1.05,1.11,()=>defaults,()=>false);
+  const src=[fn('kolSuppFob'),fn('kolLandedIsNonDtr'),fn('kolLandedPriceWithCosts'),fn('kolLandedPriceWithRule'),fn('kolLandedCalc')].join('\n')+'\nreturn kolLandedCalc(row);';
+  return new Function('row','kolParseMoneyNum','kolConfirmedPricing','kolBestPricing','kolAutoFx','turknorm','KOL_TR_LANDED_MULT','KOL_YD_LANDED_MULT','kolDefaultLandedMultipliers','kolLicenseRuleMissing','kolFindPricingRuleForCountryGroup','kolTrLicenseRuleMissing',src)(
+    row,parse,confirmed,best,()=>40,v=>String(v||'').trim().toUpperCase(),1.05,1.11,()=>defaults,()=>false,()=>null,()=>false
+  );
 }
 
 test('v5.49 Source Ayarları içinde Landed Çarpanları bulunur ve ortak kaydetme API kullanılır',()=>{
