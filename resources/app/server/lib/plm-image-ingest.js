@@ -77,12 +77,20 @@ function imageRoleNeedsRefresh(raw, currentRef, { store, ownership = ownershipSt
   if (!ref || item.imageRole !== 'main' || !ownership || typeof ownership.ownershipOf !== 'function') return false;
   const current = ownership.ownershipOf(store, item.key, ref);
   /* 7.0.115 öncesinde/ilk 7.0.115 turunda ana renk Option Image ile
-     yazılmış olabilir. Bu OTOMATİK kayıt artık "eksik değil" diye
-     saklanmamalı; bir sonraki Eksikleri Tamamla turunda kendini onarır.
-     Manuel görseller bu kurala girmez. */
+     yazılmış olabilir. Paylaşılan Collection görseli başka bir cihazdan
+     kurulduğunda eski kayıtlarda sourceType yalnız "PLM" olarak kalabiliyor;
+     fakat sourceIdentity gerçek seçimi (option:...) koruyor. Ana renk için
+     bu iki biçim de yanlış Option kaynağı sayılır ve GetStyleList'in
+     kanonik model görseliyle kendini onarmalıdır. Manuel görseller bu
+     kurala girmez. */
+  const sourceType = clean(current.record && current.record.sourceType, 40).toUpperCase();
+  const sourceIdentity = clean(current.record && current.record.sourceIdentity, 200).toLowerCase();
+  const optionSource = sourceType === 'OPTION'
+    || sourceIdentity.startsWith('option:')
+    || sourceIdentity.startsWith('option-url:');
   return current.state === ownership.OWNERSHIP_AUTOMATIC
     && current.record
-    && clean(current.record.sourceType, 40).toUpperCase() === 'OPTION';
+    && optionSource;
 }
 
 function normalizeRequest(raw) {
