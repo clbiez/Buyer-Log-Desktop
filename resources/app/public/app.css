@@ -5146,3 +5146,35 @@ body.kolPeriodDrawerOpen{overflow:hidden}
   .ovCollectionSummaryScope{width:100%}
   .ovCollectionSummaryScopeTrigger{flex:1;max-width:none}
 }
+
+
+/* Backlog dynamic quantity/time chart */
+.backlogChartPanel{margin:10px 0;padding:12px;overflow:hidden;}
+.backlogChartHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;}
+.backlogChartHead>div:first-child{display:grid;gap:3px;min-width:0;}
+.backlogChartHead strong{font-size:13px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.backlogChartHead small{font-size:10.5px;color:var(--muted);white-space:normal;}
+.backlogChartActions{display:flex;gap:6px;align-items:center;flex:0 0 auto;}
+.backlogChartActions [data-backlog-chart-disable]{min-width:30px;padding-inline:8px;font-size:17px;line-height:1;}
+.backlogChartCanvas{width:100%;overflow-x:auto;border-top:1px solid var(--line);padding-top:8px;}
+.backlogChartSvg{display:block;width:100%;min-width:680px;height:auto;}
+.backlogChartBg{fill:var(--card);}
+.backlogChartGrid{stroke:var(--line);stroke-width:1;}
+.backlogChartAxisText,.backlogChartLegendText{fill:var(--muted);font:10px var(--font,system-ui,sans-serif);}
+.backlogChartLegendText{fill:var(--ink);}
+.backlogChartNotice{margin:6px 0 2px;padding:7px 9px;border:1px solid var(--line);background:var(--card2);color:var(--muted);font-size:10.5px;}
+.backlogChartLoading,.backlogChartError{padding:18px;text-align:center;color:var(--muted);font-size:11px;}
+.backlogChartError{color:var(--red);}
+.autoModal.backlogChartSettingsModal{width:min(760px,calc(100vw - 24px));}
+.backlogChartSettingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;}
+.backlogChartSettingsGrid label{display:grid;gap:5px;min-width:0;color:var(--muted);font-size:10.5px;font-weight:700;}
+.backlogChartSettingsGrid select,.backlogChartSettingsGrid input{width:100%;height:32px;min-width:0;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink);padding:0 8px;font:inherit;}
+.backlogChartTitleField{grid-column:1/-1;}
+.backlogChartSettingsHint{margin:10px 0 0;color:var(--muted);font-size:10.5px;line-height:1.45;}
+.backlogChartSettingsModal>footer{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;}
+@media(max-width:760px){
+  .backlogChartHead{flex-direction:column;}
+  .backlogChartActions{width:100%;justify-content:flex-end;}
+  .backlogChartSettingsGrid{grid-template-columns:1fr;}
+  .backlogChartTitleField{grid-column:auto;}
+}
