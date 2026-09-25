@@ -16350,11 +16350,12 @@ async function exportBacklogToExcel(){
     forceWorkbookFormulaCalculation(wb);
     const backlogHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers,backlogRows=expanded.rows;
     const rules=backlogWorkbookGuardConfig(backlogHeaders,backlogRows);
+    const chartSpecs=chartExport&&Array.isArray(chartExport.charts)?chartExport.charts:[];
     await saveWorkbookWithValidations(
       wb,`Backlog_Report_${stamp}.xlsx`,
       rules.validations,rules.conditionalFormats,rules.protections,
-      {freezePanes:rules.freezePanes,charts:chartExport&&Array.isArray(chartExport.charts)?chartExport.charts:[]});
-    const chartSuffix=chartExport?.charts?.length?' + Grafik + Grafik Verisi':'';
+      {freezePanes:rules.freezePanes,charts:chartSpecs});
+    const chartSuffix=chartSpecs.length?' + Grafik + Grafik Verisi':'';
     showToast(`Backlog raporu aktarıldı: BACKLOG ${data.rows?.length||0} satır + Ayarlar${chartSuffix}.`);
   }catch(err){
     showToast('Dışa aktarım hatası: '+err.message);
