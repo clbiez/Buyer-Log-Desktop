@@ -112,6 +112,8 @@ test('Backlog chart uses whole-number nice ticks and compact time labels', () =>
   assert.equal(chart.niceStep(249000,5),50000);
   assert.equal(chart.niceStep(499000,5),100000);
   assert.equal(chart.formatWholeValue(12205.25),'12.205');
+  assert.equal(chart.formatAxisValue(30000),'30k');
+  assert.equal(chart.formatAxisValue(150000),'150k');
   assert.equal(chart.axisTickLabel({key:'2026-W33',label:'33. Hafta Ağustos 2026'},'week'),'33');
   assert.equal(chart.axisTickLabel({key:'2026-05',label:'May 2026'},'month'),'MAY 26');
 });
