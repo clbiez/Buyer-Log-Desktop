@@ -91,7 +91,7 @@ test('browser and worker exports remove sheet protection for sorting while keepi
   assert.match(appMain, /values:\['VAR','YOK'\]/);
   assert.match(appMain, /allowBlank:false/);
   assert.match(appMain, /removeProtection:true/);
-  assert.match(appMain, /saveWorkbookWithValidations\\(wb,`Backlog_Report_\\$\\{stamp\\}\\.xlsx`,rules\\.validations,rules\\.conditionalFormats,rules\\.protections,\\{freezePanes:rules\\.freezePanes,charts:chartExport&&Array\\.isArray\\(chartExport\\.charts\\)\\?chartExport\\.charts:\\[\\]\\}\\)/);
+  assert.ok(appMain.includes("await saveWorkbookWithValidations(wb,`Backlog_Report_${stamp}.xlsx`,rules.validations,rules.conditionalFormats,rules.protections,{freezePanes:rules.freezePanes,charts:chartExport&&Array.isArray(chartExport.charts)?chartExport.charts:[]});"));
   assert.doesNotMatch(appMain, /const formulaHeaders=new Set\(BLBacklogExcel\.FORMULA_HEADERS/);
   assert.match(worker, /values: \['VAR', 'YOK'\]/);
   assert.match(worker, /removeProtection: true/);
