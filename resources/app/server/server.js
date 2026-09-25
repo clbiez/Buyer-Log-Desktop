@@ -419,6 +419,19 @@ app.delete('/api/internal/desktop/corenectum-token', (req, res) => {
   const status = coreNectumApiSettings.clearDesktopToken();
   return res.set('Cache-Control','no-store').json({ ok:true, status });
 });
+app.post('/api/internal/desktop/corenectum-style-template', express.json({ limit:'320kb' }), (req, res) => {
+  if (!desktopBridgeAuthorized(req)) return res.status(403).json({ ok:false, code:'DESKTOP_BRIDGE_FORBIDDEN' });
+  try {
+    const template = coreNectumApiSettings.setDesktopStyleListTemplate(req.body && req.body.template);
+    return res.set('Cache-Control','no-store').json({ ok:true, template });
+  } catch (err) {
+    return res.status(Number(err && err.statusCode) || 400).set('Cache-Control','no-store').json({
+      ok:false,
+      code:err && err.code || 'CORENECTUM_STYLE_TEMPLATE_INVALID',
+      error:err && err.message || 'CoreNectum Style List istek şablonu alınamadı.'
+    });
+  }
+});
 // Desktop-only OAB credential bridge. Authorization exists only in process memory.
 // The renderer can neither submit nor read the raw value; Electron main owns capture.
 app.post('/api/internal/desktop/oab-authorization', express.json({ limit:'16kb' }), async (req, res) => {
