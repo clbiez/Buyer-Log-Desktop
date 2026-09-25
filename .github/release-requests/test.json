@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.133",
-  "commit_sha": "d45f3d5e3c18edcaa89d5704d6a9b17a6d0351da",
-  "release_notes": "Buyer Log 7.0.133: Koleksiyon ekranındaki PLM görsel sürükle-bırak akışında görülen CoreNectum HTTP 400 hatası düzeltildi. Attachment→PLM reverse lookup artık uydurma boş GetStyleList gövdesi göndermiyor. Buyer Log’un özel CoreNectum Electron SSO oturumunda çalışan gerçek GetStyleList POST şablonu yakalanıyor, güvenli alanları korunarak filtreleri temizleniyor ve yalnız backend RAM’inde tutuluyor; bearer/cookie/parola renderer’a verilmez ve diske yazılmaz. Reverse index bu gerçek istek şemasıyla sayfalanıyor. Collection-only yeni model ekleme davranışı korunuyor; mevcut PLM ID güncellenmiyor/çoğaltılmıyor, normal Excel drag-drop etkilenmiyor. 7.0.132’deki Backlog grafik ve diğer main güncellemeleri aynen korunmuştur. Tam Buyer Log regression paketi PASS."
+  "version": "7.0.134",
+  "commit_sha": "05efe535522ad68a033dfe12c3e9459173ca0da2",
+  "release_notes": "Buyer Log 7.0.134: Backlog grafiği geliştirildi. Zaman aralığı mouse wheel ile yakınlaştırılıp uzaklaştırılabilir; Shift+tekerlek ve ok kontrolleriyle zaman ekseninde kaydırılabilir. Grafikte günümüzü gösteren Bugün/Today çizgisi ve bugüne gitme kontrolü eklendi. Buyer Group, Buyer, MAG, klasman ve benzeri seri kırılımları grafik içinden aranıp çoklu seçilerek filtrelenebilir; bu filtre Backlog ana filtrelerini değiştirmez. Klavye erişilebilirliği ve ilgili regression testleri eklendi. Tam Buyer Log regression paketi PASS."
 }
