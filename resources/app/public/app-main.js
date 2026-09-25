@@ -15900,12 +15900,15 @@ function backlogExpandDateDimensions(headers,rows){
   const sourceHeaders=Array.isArray(headers)?headers.slice():[];
   const sourceRows=Array.isArray(rows)?rows:[];
   const sourceDateHeaders=new Set(sourceHeaders.filter(header=>backlogIsDateHeader(header,sourceRows)));
-  const expandedHeaders=[],derivedHeaders=new Set(),seen=new Set();
+  const expandedHeaders=[],derivedHeaders=new Set(),derivedHeaderSources={},seen=new Set();
   sourceHeaders.forEach(header=>{
     if(!seen.has(header)){seen.add(header);expandedHeaders.push(header);}
     if(!sourceDateHeaders.has(header))return;
     const labels=backlogDateDerivedLabels(header);
-    [labels.month,labels.week].forEach(label=>{if(!seen.has(label)){seen.add(label);expandedHeaders.push(label);derivedHeaders.add(label);}});
+    [[labels.month,'month'],[labels.week,'week']].forEach(([label,kind])=>{
+      if(!seen.has(label)){seen.add(label);expandedHeaders.push(label);derivedHeaders.add(label);}
+      derivedHeaderSources[label]={source:header,kind};
+    });
   });
   const expandedRows=sourceRows.map(row=>{
     const out={...row};
@@ -15917,7 +15920,7 @@ function backlogExpandDateDimensions(headers,rows){
     });
     return out;
   });
-  return {headers:expandedHeaders,rows:expandedRows,sourceDateHeaders,derivedHeaders};
+  return {headers:expandedHeaders,rows:expandedRows,sourceDateHeaders,derivedHeaders,derivedHeaderSources};
 }
 function renderBacklogDetailTable(rows,headers){
   const wrap=document.getElementById('backlogDetailTableWrap');
@@ -16212,6 +16215,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   const allHeaders=[...visibleHeaders,...helperHeaders];
   const dateHeaders=new Set(dataHeaders.filter(header=>backlogIsDateHeader(header,rows)));
   const dateDimensionTextHeaders=new Set(dataHeaders.filter(header=>/\s\((?:Ay|Hafta|Month|Week)\)$/i.test(String(header||''))));
+  const dateDimensionSources=options.dateDimensionSources||{};
   const intHeaders=new Set(['Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','ANTREPO-RETAIL']);
   const directTextHeaders=new Set(['Renk Kod','Colour Code','Color Code','Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','RİSK\n(PRIORITY)','YÜKLEME TİPİ','Üretici Tükleme Tipi Teyidi']);
   const fobHeader='FOB Fiyatı',orderCodeHeader='Sipariş Kod';
@@ -16232,9 +16236,15 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
       const baseStyle={border:bd,font:{sz:10,bold:BLBacklogExcel.EMPHASIS_HEADERS.includes(h)},alignment:{vertical:'center'}};
       const formulaCandidate=plan.formulas[h],formulaOverride=backlogExcelFormulaOverrides()[h];
       const formulaSpec=formulaCandidate&&formulaCandidate.formula&&!/undefined|null/.test(formulaCandidate.formula)?backlogFormulaWithOverride(h,formulaCandidate,ri+2):formulaOverride?{kind:'text',cached:'',formula:String(formulaOverride).replace(/^=/,'').replace(/\{row\}/g,String(ri+2))}:null;
+      const dimensionSpec=dateDimensionSources[h];
+      const dimensionSourceIndex=dimensionSpec?visibleHeaders.indexOf(dimensionSpec.source):-1;
+      const dimensionSourceRef=dimensionSourceIndex>=0?XLSX.utils.encode_col(dimensionSourceIndex)+(ri+2):'';
+      const dimensionFormula=dimensionSourceRef&&window.BLBacklogExcel?.dateDimensionFormula
+        ?BLBacklogExcel.dateDimensionFormula(dimensionSourceRef,dimensionSpec.kind,appLang):'';
       let cell;
       if(h==='Görsel')cell=backlogExcelCellFromValue('','text',baseStyle);
       else if(formulaSpec)cell=backlogExcelFormulaCell(formulaSpec,baseStyle);
+      else if(dimensionFormula)cell=backlogExcelFormulaCell({kind:'text',cached:row[h],formula:dimensionFormula},{...baseStyle,numFmt:'@'});
       else if(h===orderCodeHeader||directTextHeaders.has(h)||dateDimensionTextHeaders.has(h))cell=backlogExcelCellFromValue(row[h],'text',{...baseStyle,numFmt:'@'});
       else if(dateHeaders.has(h))cell=backlogExcelCellFromValue(row[h],'date',baseStyle);
       else if(h===fobHeader){cell=backlogExcelCellFromValue(row[h],'number',{...baseStyle,numFmt:'#,##0.00',alignment:{horizontal:'right',vertical:'center'}});}
@@ -16318,6 +16328,10 @@ async function exportBacklogToExcel(){
   if(!commitBacklogDateInputs())return;
   await fetchBacklogSourceColumns();
   const params=backlogExportQueryParams();
+  // Grafik ayarlarında seçilebilen ham ASAS/Antrepo alanları export sırasında da
+  // kaynak payload'da bulunmalı; görünür BACKLOG sütun seçimi bundan bağımsızdır.
+  const chartSourceColumns=backlogExportSourceCatalog().map(item=>item.id);
+  if(chartSourceColumns.length)params.sourceColumns=[...new Set(chartSourceColumns)].join(',');
   const qs=new URLSearchParams(Object.entries(params).filter(([,v])=>v!=null&&v!=='')).toString();
   const btn=document.getElementById('backlogExportBtn'); const old=btn.innerHTML; btn.disabled=true; btn.textContent='Hazırlanıyor…';
   const d0=new Date(); const p=x=>String(x).padStart(2,'0');
@@ -16341,7 +16355,7 @@ async function exportBacklogToExcel(){
     const selectedHeaders=backlogSelectedDataHeaders(data.headers||[]);
     const exportHeaders=selectedHeaders.length?selectedHeaders:(data.headers||[]);
     const expanded=backlogExpandDateDimensions(exportHeaders,data.rows||[]);
-    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages});
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     const chartExport=window.BLBacklogChart?.appendWorkbookSheets?.(
       wb,data.rows||[],data.headers||[],{XLSX,state:window.BLBacklogChart?.getState?.()})||null;
