@@ -345,6 +345,10 @@
     } catch (_) { return {}; }
   }
   async function loadDetail(force) {
+    try {
+      const ctx=root.BLBacklogChartContext;
+      if(ctx&&typeof ctx.prepareQuery==='function')await ctx.prepareQuery();
+    } catch (_) {}
     const params=queryParams(), sig=cacheSignature(params);
     if (!force && cache.signature===sig && cache.rows.length) return cache;
     const qs=new URLSearchParams(Object.entries(params).filter(([,v])=>v!=null&&v!=='')).toString();
@@ -404,7 +408,7 @@
     body.innerHTML='<div class="backlogChartSettingsGrid">'
       +'<label><span>'+esc(tr('Zaman alanı','Time field'))+'</span><select id="backlogChartTime">'+optionHtml(dates,draft.timeField,null)+'</select></label>'
       +'<label><span>'+esc(tr('Zaman kırılımı','Time interval'))+'</span><select id="backlogChartGran"><option value="day">'+esc(tr('Gün','Day'))+'</option><option value="week">'+esc(tr('Hafta','Week'))+'</option><option value="month">'+esc(tr('Ay','Month'))+'</option><option value="year">'+esc(tr('Yıl','Year'))+'</option></select></label>'
-      +'<label><span>'+esc(tr('Adet / değer alanı','Quantity / value field'))+'</span><select id="backlogChartMetric"><option value="__records">'+esc(tr('Kayıtlar','Records'))+'</option>'+optionHtml(headers.filter(h=>!dates.includes(h)),draft.metricField,null)+'</select></label>'
+      +'<label><span>'+esc(tr('Adet / değer alanı','Quantity / value field'))+'</span><select id="backlogChartMetric"><option value="__records">'+esc(tr('Kayıtlar','Records'))+'</option>'+optionHtml(headers,draft.metricField,null)+'</select></label>'
       +'<label><span>'+esc(tr('Hesaplama','Aggregation'))+'</span><select id="backlogChartAgg"><option value="count">'+esc(tr('Adet','Count'))+'</option><option value="distinct">'+esc(tr('Benzersiz adet','Distinct count'))+'</option><option value="sum">'+esc(tr('Toplam','Sum'))+'</option><option value="avg">'+esc(tr('Ortalama','Average'))+'</option></select></label>'
       +'<label><span>'+esc(tr('Kırılım / seri','Breakdown / series'))+'</span><select id="backlogChartSeries">'+optionHtml(headers,draft.seriesField,tr('Kırılım yok','No breakdown'))+'</select></label>'
       +'<label><span>'+esc(tr('Grafik tipi','Chart type'))+'</span><select id="backlogChartType"><option value="line">'+esc(tr('Çizgi','Line'))+'</option><option value="bar">'+esc(tr('Sütun','Column'))+'</option></select></label>'
