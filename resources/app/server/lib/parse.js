@@ -2,6 +2,8 @@
 // (fonksiyon isimleri ve davranışları korunarak) Node.js tarafına taşınmış halidir.
 // Amaç: Excel dosyalarını tarayıcıya yüklemek yerine doğrudan ağ sürücüsünden okumak.
 
+const BLDateDimension = require('../../public/date-dimension');
+
 let _xlsx = null;
 // Saat dilimi kaymasına karşı okuma/yazma kancaları ilk kullanımda kurulur.
 // Kanca idempotenttir; hangi modül önce çağırırsa orada bir kez takılır.
@@ -2537,28 +2539,14 @@ function toISODateLocal(d){
   const p = x => String(x).padStart(2,'0');
   return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
 }
-function isoWeekNum(d){
-  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dayNr = (target.getDay()+6)%7;
-  target.setDate(target.getDate()-dayNr+3);
-  const firstThursday = target.valueOf();
-  target.setMonth(0,1);
-  if(target.getDay()!==4) target.setMonth(0, 1+((4-target.getDay())+7)%7);
-  return 1+Math.round((firstThursday-target)/604800000);
-}
-// ISO hafta-yılı takvim yılından farklı olabilir (örn. 30 Aralık 2025, 2026'nın 1. haftasına düşebilir).
-// Hafta etiketinin başındaki yıl her zaman bu doğru ISO hafta-yılı olmalı.
-function isoWeekYear(d){
-  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dayNr = (target.getDay()+6)%7;
-  target.setDate(target.getDate()-dayNr+3);
-  return target.getFullYear();
-}
-const MONTH_NAMES = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
-function monthLabel(d){ return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`; }
-function monthSortKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
-function weekLabel(d){ return `${String(isoWeekNum(d)).padStart(2,'0')}. Hafta`; }
-function weekSortKey(d){ return `${isoWeekYear(d)}-${String(isoWeekNum(d)).padStart(2,'0')}`; }
+function isoWeekNum(d){ return BLDateDimension.isoWeekNumber(d) || 0; }
+// ISO hafta-yılı ile Collection'ın hafta→ay ataması aynı merkezi tarih boyutundan gelir.
+function isoWeekYear(d){ return BLDateDimension.isoWeekYear(d) || 0; }
+const MONTH_NAMES = [...BLDateDimension.MONTHS_TR];
+function monthLabel(d){ return BLDateDimension.monthLabel(d,'tr'); }
+function monthSortKey(d){ return BLDateDimension.bucketKey(d,'month'); }
+function weekLabel(d){ return BLDateDimension.weekLabel(d,'tr'); }
+function weekSortKey(d){ return BLDateDimension.bucketKey(d,'week'); }
 
 // Backlog'da gruplanabilecek boyutlar. Her biri yeni operasyon satırından bir
 // etiket üretir. 'antrepoDate' özel bir boyuttur: tek seviye değil, seçilirse
@@ -2650,26 +2638,22 @@ function buildAntrepoDateTree(orders, levels, remainingDims, dimensions=BACKLOG_
   if(!levels || !levels.length) return remainingDims && remainingDims.length ? buildBacklogTree(orders, remainingDims, 0, [], dimensions) : null;
   const level = levels[0];
   const rest = levels.slice(1);
-  const yearIncluded = levels.includes('year');
   const groups = {};
   orders.forEach(o=>{
     let key, label, sortKey;
-    if(!o._arr){
+    const period=BLDateDimension.describe(o&&o._arr);
+    if(!period.valid){
       key = '(belirsiz)'; label = 'Tarih Belirsiz'; sortKey = 'zzzz';
+    } else if(level==='year'){
+      key=String(period.periodYear);label=key;sortKey=key;
+    } else if(level==='month'){
+      key=period.monthKey;label=period.monthLabelTr;sortKey=period.monthKey;
+    } else if(level==='week'){
+      key=period.weekKey;label=period.weekLabelTr;sortKey=period.weekKey;
+    } else if(level==='day'){
+      key=period.dateKey;label=period.dateKey;sortKey=period.dateKey;
     } else {
-      const d = o._arr;
-      if(level==='year'){ key = String(d.getFullYear()); label = key; sortKey = key; }
-      else if(level==='month'){
-        if(yearIncluded){ key = monthSortKey(d); label = MONTH_NAMES[d.getMonth()]; sortKey = monthSortKey(d); }
-        else { key = 'm'+d.getMonth(); label = MONTH_NAMES[d.getMonth()]; sortKey = String(d.getMonth()).padStart(2,'0'); }
-      }
-      else if(level==='week'){
-        const wn = isoWeekNum(d);
-        if(yearIncluded){ key = weekSortKey(d); label = `${String(wn).padStart(2,'0')}. Hafta`; sortKey = weekSortKey(d); }
-        else { key = 'w'+wn; label = `${String(wn).padStart(2,'0')}. Hafta`; sortKey = String(wn).padStart(2,'0'); }
-      }
-      else if(level==='day'){ key = toISODateLocal(d); label = key; sortKey = key; }
-      else { key = 'x'; label=''; sortKey='x'; }
+      key='x';label='';sortKey='x';
     }
     if(!groups[key]) groups[key] = { label, sortKey, list: [] };
     groups[key].list.push(o);
@@ -2802,17 +2786,7 @@ function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions
 // üzerinden filtrelenebilir.
 const BACKLOG_DATE_GRANS = ['year', 'month', 'week', 'day'];
 function backlogDateBucketKey(order, gran) {
-  const d = toDateOnly(order && order._arr);
-  if (!d) return '';
-  const pad = n => String(n).padStart(2, '0');
-  if (gran === 'year') return String(d.getFullYear());
-  if (gran === 'month') return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
-  if (gran === 'week') {
-    const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
-    return `${mon.getFullYear()}-${pad(mon.getMonth() + 1)}-${pad(mon.getDate())}`;
-  }
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return BLDateDimension.bucketKey(order && order._arr, gran);
 }
 function backlogDateValues(orders) {
   const out = {};
@@ -2974,12 +2948,11 @@ function buildBacklogDetailRows(asasOrders, antrepoMap, overrides, selector, opt
 
 
 function backlogYearMonth(d){
-  if(!(d instanceof Date) || isNaN(d)) return '';
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  return BLDateDimension.bucketKey(d,'month');
 }
 function backlogYearWeek(d){
-  if(!(d instanceof Date) || isNaN(d)) return '';
-  return `${isoWeekYear(d)}-${String(isoWeekNum(d)).padStart(2,'0')}`;
+  const key=BLDateDimension.bucketKey(d,'week');
+  return key ? key.replace('-W','-') : '';
 }
 // Canonical Backlog risk consumes structured operational signals only.
 // Legacy CP Priority display text is not a business-logic input anywhere.

@@ -46,14 +46,16 @@ test('v5.13 Backlog magnifier Excel uses the same detail sheet/formula and valid
   const detail=between('async function exportCurrentBacklogDetail','// Pivot büyüteci:');
   // v5.86: dördüncü argüman artık boş dizi değil; Backlog sarı koşullu
   // biçimlendirmesi bu yoldan geçtiği için buraya bağlandı.
-  assert.match(detail,/buildBacklogDetailSheet\(headers,currentBacklogDetailRows\)/);
-  assert.match(detail,/backlogWorkbookGuardConfig\(headers,currentBacklogDetailRows\)/);
+  assert.match(detail,/backlogExpandDateDimensions\(headers,currentBacklogDetailRows\)/);
+  assert.match(detail,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows\)/);
+  assert.match(detail,/backlogWorkbookGuardConfig\(workbookHeaders,expanded\.rows\)/);
   assert.match(detail,/saveWorkbookWithValidations\(wb,filename,rules\.validations,rules\.conditionalFormats,rules\.protections/);
   const full=between('async function exportBacklogToExcel','async function fetchBacklog');
   // v5.87: yol süresi tablosu BACKLOG formüllerine bağlandığı için üçüncü
   // argüman olarak geçiliyor.
   // v7.0.81: sayfa kullanıcının kaydettiği sütun seçimi/sırasıyla kurulur
   // (exportHeaders); motor ve üçüncü argüman aynı kalır.
-  assert.match(full,/buildBacklogDetailSheet\(exportHeaders,data\.rows\|\|\[\],transitPlan,\{includeImages\}\)/);
+  assert.match(full,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
+  assert.match(full,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages\}\)/);
   assert.match(full,/backlogWorkbookGuardConfig\(backlogHeaders,backlogRows\)/);
 });

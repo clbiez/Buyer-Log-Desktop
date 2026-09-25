@@ -105,10 +105,12 @@ test('v5.87 tablo BACKLOG sayfasından ÖNCE kurulur', () => {
   assert.ok(exportStart > 0 && exportEnd > exportStart, 'exportBacklogToExcel bloğu bulunmalı');
   const block = APP.slice(exportStart, exportEnd);
   const planIndex = block.indexOf('BLBacklogExcel.transitSettingsPlan(');
-  // v7.0.81: sayfa artık kullanıcının seçtiği sütun listesiyle kurulur; sıra kuralı aynı.
-  const sheetIndex = block.indexOf('buildBacklogDetailSheet(exportHeaders,');
-  assert.ok(planIndex > 0 && sheetIndex > 0 && planIndex < sheetIndex, 'plan önce üretilmeli');
-  assert.match(block, /buildBacklogDetailSheet\(exportHeaders,data\.rows\|\|\[\],transitPlan,\{includeImages\}\)/);
+  // Tarih boyutları export'tan hemen önce genişletilir; transit planı yine önce kurulmalıdır.
+  const expandIndex = block.indexOf('backlogExpandDateDimensions(exportHeaders,');
+  const sheetIndex = block.indexOf('buildBacklogDetailSheet(expanded.headers,');
+  assert.ok(planIndex > 0 && expandIndex > planIndex && sheetIndex > expandIndex, 'plan önce üretilmeli, sonra tarih boyutları genişletilmeli');
+  assert.match(block, /backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
+  assert.match(block, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages\}\)/);
   assert.match(block, /buildBacklogSettingsSheet\(transitPlan\)/);
 });
 

@@ -93,7 +93,8 @@ test('Export sütunları her zaman kullanıcının seçimi ve sırasıdır', () 
   // geri gelmemeli: sıralama değişikliği ve "bir varsayılanı sil + bir ASAS sütunu ekle"
   // senaryosu bu dalda sessizce iptal oluyordu.
   assert.doesNotMatch(block, /exportHeaders\.length!==\(data\.headers\|\|\[\]\)\.length/);
-  assert.match(block, /buildBacklogDetailSheet\(exportHeaders,data\.rows\|\|\[\],transitPlan,\{includeImages\}\)/);
+  assert.match(block, /const expanded=backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
+  assert.match(block, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages\}\)/);
 });
 
 test('Kaldırılan varsayılan sütun kalıcıdır; yalnız boş kayıt veya "Varsayılana Dön" geri getirir', () => {

@@ -4658,36 +4658,37 @@ function escapeHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replac
 // ---------- per-column header filters (Excel-like) ----------
 const DATE_COL_TYPES = ['date','exfactory','retail','retailEdit','instoreEdit'];
 function isDateColType(t){ return DATE_COL_TYPES.includes(t); }
+function isDateColumnDefinition(column,rows){
+  if(!column)return false;
+  if(isDateColType(column.type))return true;
+  const schema=columnSchemaFor(column,Array.isArray(rows)?rows:[]);
+  return !!(schema&&['date','datetime'].includes(schema.dataType));
+}
 function dateBucketKey(v, gran){
-  const d = (v instanceof Date && !isNaN(v)) ? v : null;
-  if(!d) return '';
-  const y=d.getFullYear(), m=d.getMonth()+1, day=d.getDate();
-  if(gran==='year') return String(y);
-  if(gran==='month') return `${y}-${String(m).padStart(2,'0')}`;
-  if(gran==='week'){ const mon=mondayOf(toDateOnly(d)); return toISODate(mon); }
+  const api=window.BLDateDimension;
+  if(api&&typeof api.bucketKey==='function')return api.bucketKey(v,gran);
+  const d=(v instanceof Date&&!isNaN(v))?v:null;if(!d)return '';
+  const y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();
+  if(gran==='year')return String(y);
+  if(gran==='month')return `${y}-${String(m).padStart(2,'0')}`;
+  if(gran==='week'){const mon=mondayOf(toDateOnly(d));return toISODate(mon);}
   return toISODate(toDateOnly(d));
 }
-const TR_MONTHS=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const TR_MONTHS=(window.BLDateDimension&&window.BLDateDimension.MONTHS_TR)||['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 function isoWeekNumber(d){
-  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const dayNum = (date.getDay()+6)%7;
-  date.setDate(date.getDate()-dayNum+3);
-  const firstThursday = new Date(date.getFullYear(),0,4);
-  const fdDayNum = (firstThursday.getDay()+6)%7;
-  firstThursday.setDate(firstThursday.getDate()-fdDayNum+3);
-  return 1 + Math.round((date-firstThursday)/(7*86400000));
+  const api=window.BLDateDimension;
+  if(api&&typeof api.isoWeekNumber==='function')return api.isoWeekNumber(d)||0;
+  const date=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const dayNum=(date.getDay()+6)%7;date.setDate(date.getDate()-dayNum+3);
+  const firstThursday=new Date(date.getFullYear(),0,4);
+  const fdDayNum=(firstThursday.getDay()+6)%7;firstThursday.setDate(firstThursday.getDate()-fdDayNum+3);
+  return 1+Math.round((date-firstThursday)/(7*86400000));
 }
 function dateBucketLabel(key, gran){
-  if(!key) return '(boş)';
-  if(gran==='year') return key;
-  if(gran==='month'){ const [y,m]=key.split('-'); return `${TR_MONTHS[+m-1]} ${y}`; }
-  if(gran==='week'){
-    const [y,m,d]=key.split('-').map(Number); const mon=new Date(y,m-1,d); const sun=new Date(mon); sun.setDate(mon.getDate()+6);
-    const p=x=>String(x).padStart(2,'0');
-    return `${isoWeekNumber(mon)}. Hafta · ${p(mon.getDate())}.${p(mon.getMonth()+1)} – ${p(sun.getDate())}.${p(sun.getMonth()+1)}.${String(sun.getFullYear()).slice(-2)}`;
-  }
-  const [y,m,d]=key.split('-').map(Number); const p=x=>String(x).padStart(2,'0');
-  return `${p(d)}.${p(m)}.${String(y).slice(-2)}`;
+  const api=window.BLDateDimension;
+  if(api&&typeof api.bucketLabel==='function')return api.bucketLabel(key,gran,appLang);
+  if(!key)return appLang==='en'?'(blank)':'(boş)';
+  return String(key);
 }
 /* ---------------------------------------------------------------------------
    GENEL AMAÇLI DEĞER FİLTRESİ PANELİ.
@@ -5254,7 +5255,7 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
   closeHeaderFilter();
   const cols = COLS_BY_TABLE[tableKey];
   const col = cols.find(c=>c.k===key) || {k:key, type:'ro'};
-  const isDate = isDateColType(col.type);
+  const isDate = isDateColumnDefinition(col, rowsForFilterUniverse(tableKey,key));
   const existing = state.colFilters[tableKey][key];
   let currentGran = isDate ? (existing && existing.granularity ? existing.granularity : 'day') : null;
   const panel = document.createElement('div');
@@ -14384,15 +14385,30 @@ async function applyFavoritesOnStartup(){
 }
 
 let lastBacklogData = null;
-const BACKLOG_EXCEL_COLUMNS_KEY='bl.backlog.excelColumns.v3';
+const BACKLOG_EXCEL_COLUMNS_KEY='bl.backlog.excelColumns.v4';
+const BACKLOG_EXCEL_COLUMNS_LEGACY_KEY='bl.backlog.excelColumns.v3';
 const BACKLOG_EXCEL_FORMULAS_KEY='bl.backlog.excelFormulas.v1';
 const BACKLOG_DEFAULT_EXPORT_HEADERS=[
   'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','Üretici Tükleme Tipi Teyidi','RİSK\n(PRIORITY)','buying note'
 ];
+const BACKLOG_LEGACY_DATE_DERIVED_HEADERS=new Set([
+  'Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta'
+]);
 const backlogFieldId=index=>`field:${index}`;
-function backlogDefaultExcelColumns(){return BACKLOG_DEFAULT_EXPORT_HEADERS.map((_,index)=>backlogFieldId(index));}
+function backlogIsLegacyDateDerivedId(id){
+  const match=/^field:(\d+)$/.exec(String(id||''));
+  return !!(match&&BACKLOG_LEGACY_DATE_DERIVED_HEADERS.has(BACKLOG_DEFAULT_EXPORT_HEADERS[Number(match[1])]));
+}
+function backlogDefaultExcelColumns(){
+  return BACKLOG_DEFAULT_EXPORT_HEADERS.map((_,index)=>backlogFieldId(index)).filter(id=>!backlogIsLegacyDateDerivedId(id));
+}
 function backlogExcelColumns(){
-  try{const value=JSON.parse(BLStorage.getItem(BACKLOG_EXCEL_COLUMNS_KEY)||'null');if(Array.isArray(value))return value.filter(item=>typeof item==='string'&&item!=='image:model');}catch(_){}
+  for(const key of [BACKLOG_EXCEL_COLUMNS_KEY,BACKLOG_EXCEL_COLUMNS_LEGACY_KEY]){
+    try{
+      const value=JSON.parse(BLStorage.getItem(key)||'null');
+      if(Array.isArray(value))return value.filter(item=>typeof item==='string'&&item!=='image:model'&&!backlogIsLegacyDateDerivedId(item));
+    }catch(_){}
+  }
   return backlogDefaultExcelColumns();
 }
 function saveBacklogExcelColumns(columns){try{BLStorage.setItem(BACKLOG_EXCEL_COLUMNS_KEY,JSON.stringify(columns));}catch(_){} }
@@ -15475,12 +15491,12 @@ async function exportCurrentBacklogDetail(){
     const headers=currentBacklogDetailHeaders.length?currentBacklogDetailHeaders:Object.keys(currentBacklogDetailRows[0]||{});
     const wb=XLSX.utils.book_new();
     const includeImages=false;
-    const detailSheet=buildBacklogDetailSheet(headers,currentBacklogDetailRows);
+    const expanded=backlogExpandDateDimensions(headers,currentBacklogDetailRows);
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows);
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     forceWorkbookFormulaCalculation(wb);
-    const baseRules=backlogWorkbookGuardConfig(headers,currentBacklogDetailRows);
-    const workbookHeaders=includeImages?['Görsel',...headers]:headers;
-    const rules=includeImages?backlogWorkbookGuardConfig(workbookHeaders,currentBacklogDetailRows):baseRules;
+    const workbookHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers;
+    const rules=backlogWorkbookGuardConfig(workbookHeaders,expanded.rows);
     const d=new Date(),pad=value=>String(value).padStart(2,'0');
     const stamp=`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}`;
     const filename=`Backlog_Report_${backlogDetailSafeFilePart(currentBacklogDetailTitle)}_${stamp}.xlsx`;
@@ -15839,7 +15855,49 @@ window.BLDetailImages={
   },
 };
 
-const BACKLOG_DETAIL_DATE_COLS = new Set(['Sipariş Yerleştirme MerchTarih','Orijinal Exfactory Merch Tarih','Retail Depo Tarih','Model Bütçe Tarih','REVİZE YÜKLEME TARİHİ','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ']);
+const BACKLOG_CANONICAL_DATE_HEADERS = new Set([
+  'Sipariş Yerleştirme MerchTarih','Orijinal Exfactory Merch Tarih','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün',
+  'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ'
+]);
+const BACKLOG_DETAIL_DATE_COLS = new Set([
+  ...BACKLOG_CANONICAL_DATE_HEADERS,'Retail Depo Tarih','Model Bütçe Tarih','REVİZE YÜKLEME TARİHİ'
+]);
+function backlogIsDateHeader(header,rows){
+  const name=String(header||'');
+  if(!name||/\s\((?:Ay|Hafta|Month|Week)\)$/i.test(name))return false;
+  if(BACKLOG_DETAIL_DATE_COLS.has(name))return true;
+  const sample=(Array.isArray(rows)?rows:[]).map(row=>row&&row[name]).find(value=>value!=null&&value!=='');
+  if(sample instanceof Date&&!Number.isNaN(sample.getTime()))return true;
+  const schema=columnSchemaFor({k:name,label:name,type:'ro'},Array.isArray(rows)?rows:[]);
+  return !!(schema&&['date','datetime'].includes(schema.dataType));
+}
+function backlogDateDerivedLabels(header){
+  const base=String(header||'').replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();
+  return {month:`${base} (Ay)`,week:`${base} (Hafta)`};
+}
+function backlogExpandDateDimensions(headers,rows){
+  const sourceHeaders=Array.isArray(headers)?headers.slice():[];
+  const sourceRows=Array.isArray(rows)?rows:[];
+  const sourceDateHeaders=new Set(sourceHeaders.filter(header=>backlogIsDateHeader(header,sourceRows)));
+  const expandedHeaders=[],derivedHeaders=new Set(),seen=new Set();
+  sourceHeaders.forEach(header=>{
+    if(!seen.has(header)){seen.add(header);expandedHeaders.push(header);}
+    if(!sourceDateHeaders.has(header))return;
+    const labels=backlogDateDerivedLabels(header);
+    [labels.month,labels.week].forEach(label=>{if(!seen.has(label)){seen.add(label);expandedHeaders.push(label);derivedHeaders.add(label);}});
+  });
+  const expandedRows=sourceRows.map(row=>{
+    const out={...row};
+    sourceDateHeaders.forEach(header=>{
+      const labels=backlogDateDerivedLabels(header);
+      const period=window.BLDateDimension?.describe?.(row&&row[header]);
+      out[labels.month]=period&&period.valid?(appLang==='en'?period.monthLabelEn:period.monthLabelTr):'';
+      out[labels.week]=period&&period.valid?(appLang==='en'?period.weekLabelEn:period.weekLabelTr):'';
+    });
+    return out;
+  });
+  return {headers:expandedHeaders,rows:expandedRows,sourceDateHeaders,derivedHeaders};
+}
 function renderBacklogDetailTable(rows,headers){
   const wrap=document.getElementById('backlogDetailTableWrap');
   const meta=document.getElementById('backlogDetailMeta');
@@ -15856,22 +15914,22 @@ function renderBacklogDetailTable(rows,headers){
     registerModelAssetScopeHost(wrap.closest('.modalCard'),{contextType:'backlog-detail',identities:[]});
     return;
   }
-  const cols=currentBacklogDetailHeaders.length?currentBacklogDetailHeaders:Object.keys(currentBacklogDetailRows[0]||{});
+  const baseCols=currentBacklogDetailHeaders.length?currentBacklogDetailHeaders:Object.keys(currentBacklogDetailRows[0]||{});
+  const expanded=backlogExpandDateDimensions(baseCols,currentBacklogDetailRows);
+  const cols=expanded.headers,displayRows=expanded.rows;
   // Görsel sütunu isteğe bağlı ve EN SOLA eklenir; veri sütunlarının sırasını bozmaz.
   const identity=detailShowImages?detailIdentityColumns(cols):null;
   const imageIndex=identity?buildDetailImageIndex():null;
   const imgHead=identity?`<th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th>`:'';
   const thead=`<thead><tr>${imgHead}${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
-  const tbody='<tbody>'+currentBacklogDetailRows.map((r,rowIndex)=>`<tr>${identity?detailImageCellHtml(r,identity,imageIndex):''}${cols.map(c=>{
+  const tbody='<tbody>'+displayRows.map((r,rowIndex)=>`<tr>${identity?detailImageCellHtml(currentBacklogDetailRows[rowIndex],identity,imageIndex):''}${cols.map(c=>{
     let v=r[c];
-    if(BACKLOG_DETAIL_DATE_COLS.has(c)&&v)v=fmtDate(v);
+    if(expanded.sourceDateHeaders.has(c)&&v)v=fmtDate(v);
     else if(v==null)v='';
     const outlookAction=/(?:order|sipariş).*(?:no|number|code|kod)/i.test(c)?outlookRowActionHtml('backlog',rowIndex):'';
     return `<td${outlookAction?` data-copy-text="${escapeHtml(String(v))}"`:''}>${escapeHtml(String(v))}${outlookAction}</td>`;
   }).join('')}</tr>`).join('')+'</tbody>';
   wrap.innerHTML=`<table class="backlogDetailTable">${thead}${tbody}</table>`;
-  /* Kapsam kaydı: görsel sütunu KAPALIYKEN de bu detayın modelleri bilinir,
-     böylece "Model Görselleri" düğmesi ekranı değiştirmeden çalışır. */
   const identityCols=detailIdentityColumns(cols);
   registerModelAssetScopeHost(wrap.closest('.modalCard'),{
     contextType:'backlog-detail',
@@ -15881,7 +15939,6 @@ function renderBacklogDetailTable(rows,headers){
       const colourCode=row&&row._colourCode||(identityCols.colour?row[identityCols.colour]:'');
       const styleName=row&&row._modelName||(identityCols.model?row[identityCols.model]:'');
       return {plmId,colourCode,styleName,rowId:String(rowIndex),
-        // Görsel sütunu açıkken ekranın gerçeği bildirilir.
         hasImage:imageIndex?Boolean(norm(row&&row._imageRef)||detailImageUrlFrom(imageIndex,{plmId,colourCode,modelName:styleName})):null};
     }),
     repaint:()=>renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders),
@@ -16132,7 +16189,8 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   const bd=_XLS_BORDERS;
   const helperHeaders=[...BLBacklogExcel.HELPER_HEADERS];
   const allHeaders=[...visibleHeaders,...helperHeaders];
-  const dateHeaders=new Set(['Sipariş Yerleştirme MerchTarih','Orijinal Exfactory Merch Tarih','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ']);
+  const dateHeaders=new Set(dataHeaders.filter(header=>backlogIsDateHeader(header,rows)));
+  const dateDimensionTextHeaders=new Set(dataHeaders.filter(header=>/\s\((?:Ay|Hafta|Month|Week)\)$/i.test(String(header||''))));
   const intHeaders=new Set(['Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','ANTREPO-RETAIL']);
   const directTextHeaders=new Set(['Renk Kod','Colour Code','Color Code','Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','RİSK\n(PRIORITY)','YÜKLEME TİPİ','Üretici Tükleme Tipi Teyidi']);
   const fobHeader='FOB Fiyatı',orderCodeHeader='Sipariş Kod';
@@ -16156,7 +16214,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
       let cell;
       if(h==='Görsel')cell=backlogExcelCellFromValue('','text',baseStyle);
       else if(formulaSpec)cell=backlogExcelFormulaCell(formulaSpec,baseStyle);
-      else if(h===orderCodeHeader||directTextHeaders.has(h))cell=backlogExcelCellFromValue(row[h],'text',{...baseStyle,numFmt:'@'});
+      else if(h===orderCodeHeader||directTextHeaders.has(h)||dateDimensionTextHeaders.has(h))cell=backlogExcelCellFromValue(row[h],'text',{...baseStyle,numFmt:'@'});
       else if(dateHeaders.has(h))cell=backlogExcelCellFromValue(row[h],'date',baseStyle);
       else if(h===fobHeader){cell=backlogExcelCellFromValue(row[h],'number',{...baseStyle,numFmt:'#,##0.00',alignment:{horizontal:'right',vertical:'center'}});}
       else if(intHeaders.has(h)){cell=backlogExcelCellFromValue(row[h],'number',{...baseStyle,numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}});}
@@ -16186,7 +16244,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(1,rows.length),c:allHeaders.length-1}});
   ws['!autofilter']={ref:ws['!ref']};
   ws['!cols']=[
-    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...BLBacklogExcel.columnSpec(h),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:14)}),
+    ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...(dateDimensionTextHeaders.has(h)?{}:BLBacklogExcel.columnSpec(h)),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:dateDimensionTextHeaders.has(h)?22:14)}),
     ...helperHeaders.map(h=>BLBacklogExcel.columnSpec(h,{helper:true})),
   ];
   // Excel'in üstündeki 1/2 ve +/- outline kontrolleriyle gizli iş sütunları
@@ -16243,12 +16301,13 @@ async function exportBacklogToExcel(){
     // sessizce geri alıyordu.) Seçim hiçbir başlığa çözülmezse sunucu listesine düşülür.
     const selectedHeaders=backlogSelectedDataHeaders(data.headers||[]);
     const exportHeaders=selectedHeaders.length?selectedHeaders:(data.headers||[]);
-    const detailSheet=buildBacklogDetailSheet(exportHeaders,data.rows||[],transitPlan,{includeImages});
+    const expanded=backlogExpandDateDimensions(exportHeaders,data.rows||[]);
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     const settingsWs = buildBacklogSettingsSheet(transitPlan);
     if(settingsWs) XLSX.utils.book_append_sheet(wb, settingsWs, 'Ayarlar');
     forceWorkbookFormulaCalculation(wb);
-    const backlogHeaders=includeImages?['Görsel',...exportHeaders]:exportHeaders,backlogRows=data.rows||[];
+    const backlogHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers,backlogRows=expanded.rows;
     const rules=backlogWorkbookGuardConfig(backlogHeaders,backlogRows);
     await saveWorkbookWithValidations(wb,`Backlog_Report_${stamp}.xlsx`,rules.validations,rules.conditionalFormats,rules.protections,{freezePanes:rules.freezePanes});
     showToast(`Backlog raporu aktarıldı: BACKLOG ${data.rows?.length||0} satır + Ayarlar.`);
@@ -20104,14 +20163,12 @@ function kolMonthDisplay(value){
 // Örnekler: Ekim 2026 => 2026-40 => 28.09.2026
 //           2026-53   => Ocak 2027 => 28.12.2026
 function kolIsoWeekYear(date){
-  const d=new Date(date.getFullYear(),date.getMonth(),date.getDate());
-  const day=(d.getDay()+6)%7;
-  d.setDate(d.getDate()-day+3); // ISO haftasının perşembesi
-  return d.getFullYear();
+  return window.BLDateDimension?.isoWeekYear?.(date)||0;
 }
 function kolWeekCodeForDate(value){
-  const d=value instanceof Date?value:coerceDateLoose(value);if(!d||Number.isNaN(d.getTime()))return '';
-  return `${kolIsoWeekYear(d)}-${String(isoWeekNumber(d)).padStart(2,'0')}`;
+  const period=window.BLDateDimension?.describe?.(value);
+  if(!period||!period.valid)return '';
+  return `${period.isoWeekYear}-${String(period.isoWeek).padStart(2,'0')}`;
 }
 function kolWeekCode(value,fallbackDate=''){
   const raw=norm(value);if(!raw)return fallbackDate?kolWeekCodeForDate(fallbackDate):'';
@@ -20125,19 +20182,18 @@ function kolWeekDisplay(value,fallbackDate=''){
   const code=kolWeekCode(value,fallbackDate);return code?String(Number(code.slice(5))):'';
 }
 function kolMondayFromIsoWeek(year,week){
-  const jan4=new Date(Number(year),0,4),week1=mondayOf(jan4);if(!week1)return null;
-  const monday=new Date(week1);monday.setDate(week1.getDate()+(Number(week)-1)*7);return monday;
+  return window.BLDateDimension?.mondayFromIsoWeek?.(Number(year),Number(week))||null;
 }
 function kolScheduleFromMonthCode(value){
   const code=kolMonthCode(value);if(!code)return null;
   const year=Number(code.slice(0,4)),month=Number(code.slice(4,6));
-  const first=new Date(year,month-1,1),monday=mondayOf(first);if(!monday)return null;
+  const first=new Date(year,month-1,1),monday=window.BLDateDimension?.mondayOf?.(first)||mondayOf(first);if(!monday)return null;
   return {inStoreMonth:code,inStoreWeek:kolWeekCodeForDate(monday),inStore:toISODate(monday),monday};
 }
 function kolScheduleFromWeekMonday(value){
-  const monday=mondayOf(value);if(!monday)return null;
-  const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
-  const monthCode=`${sunday.getFullYear()}${String(sunday.getMonth()+1).padStart(2,'0')}`;
+  const monday=window.BLDateDimension?.mondayOf?.(value)||mondayOf(value);if(!monday)return null;
+  const period=window.BLDateDimension?.describe?.(monday);
+  const monthCode=period&&period.valid?period.monthCode:`${monday.getFullYear()}${String(monday.getMonth()+1).padStart(2,'0')}`;
   return {inStoreMonth:monthCode,inStoreWeek:kolWeekCodeForDate(monday),inStore:toISODate(monday),monday};
 }
 function kolScheduleFromWeekCode(value){

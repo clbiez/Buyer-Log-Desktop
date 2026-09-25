@@ -98,8 +98,9 @@ test('v5.13 Backlog detail modal exports with the same report headers, formulas 
   assert.match(CSS, /\.backlogDetailCard\{width:min\(98vw,1880px\);height:min\(94vh,1040px\)/);
   assert.match(INDEX, /id="backlogDetailExportBtn"/);
   assert.match(INDEX, /function exportCurrentBacklogDetail\(\)/);
-  assert.match(INDEX, /buildBacklogDetailSheet\(headers,currentBacklogDetailRows\)/);
-  assert.match(INDEX, /backlogWorkbookGuardConfig\(headers,currentBacklogDetailRows\)/);
+  assert.match(INDEX, /backlogExpandDateDimensions\(headers,currentBacklogDetailRows\)/);
+  assert.match(INDEX, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows\)/);
+  assert.match(INDEX, /backlogWorkbookGuardConfig\(workbookHeaders,expanded\.rows\)/);
   assert.match(INDEX, /saveWorkbookWithValidations\(wb,filename,rules\.validations,rules\.conditionalFormats,rules\.protections/);
   assert.match(INDEX, /currentBacklogDetailHeaders=Array\.isArray\(headers\)/);
   assert.match(SERVER, /headers: BACKLOG_TEMPLATE_HEADERS/);
