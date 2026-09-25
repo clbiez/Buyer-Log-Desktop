@@ -3633,7 +3633,10 @@ async function ensureLegacyCollectionOwnerRecovery(profile) {
 }
 app.get('/api/collection-workspaces', userAccess.requireArea('koleksiyon'), async (req, res) => {
   await refreshCollectionPermissionScope();
-  await ensureLegacyCollectionOwnerRecovery(req.currentUser);
+  // Legacy Collection recovery is forensic/manual-only. A read/list request must
+  // never merge historical owner/shared workspaces into the live Collection.
+  // This prevents a restart or stale delta snapshot from resurrecting old rows,
+  // duplicating models, or changing image ownership merely by opening the page.
   const profiles = userAccess.allPublicProfiles();
   const access = new Map(userAccess.effectiveCollectionAccess(req.currentUser).map(item => [item.ownerId, item.level]));
   const samePersonOwnerIds = new Set(collectionRecoveryAliasProfiles(req.currentUser).map(profile => String(profile.id || '')));
