@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.134",
-  "commit_sha": "05efe535522ad68a033dfe12c3e9459173ca0da2",
-  "release_notes": "Buyer Log 7.0.134: Backlog grafiği geliştirildi. Zaman aralığı mouse wheel ile yakınlaştırılıp uzaklaştırılabilir; Shift+tekerlek ve ok kontrolleriyle zaman ekseninde kaydırılabilir. Grafikte günümüzü gösteren Bugün/Today çizgisi ve bugüne gitme kontrolü eklendi. Buyer Group, Buyer, MAG, klasman ve benzeri seri kırılımları grafik içinden aranıp çoklu seçilerek filtrelenebilir; bu filtre Backlog ana filtrelerini değiştirmez. Klavye erişilebilirliği ve ilgili regression testleri eklendi. Tam Buyer Log regression paketi PASS."
+  "version": "7.0.135",
+  "commit_sha": "f71ba387aea872285f39c436c0ab666ed0423042",
+  "release_notes": "Buyer Log 7.0.135: Koleksiyon ekranındaki PLM görsel sürükle-bırak akışında görülen CoreNectum HTTP 400 / StatusType 3 hatası düzeltildi. Attachment→PLM reverse lookup artık canlı GetStyleList isteğinin filtre, arama, favori grup, sıralama ve güvenlik kapsamı semantiğini aynen koruyor; yalnız sayfalama kontrollü olarak değiştiriliyor ve request body içindeki olası gizli alanlar temizleniyor. Hot Wheels PLM 2131790 senaryosu regression testleriyle koruma altına alındı. 7.0.134 Backlog grafik güncellemeleri ve aradaki diğer main değişiklikleri korunmuştur. Tam Buyer Log regression paketi exact 7.0.135 release branch üzerinde PASS."
 }
