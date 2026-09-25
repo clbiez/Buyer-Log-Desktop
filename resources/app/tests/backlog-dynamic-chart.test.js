@@ -25,9 +25,9 @@ const rows = [
 
 function state(extra={}) {
   return Object.assign({
-    enabled:true,timeField:'Model Bütçe Tarihi',granularity:'week',
+    enabled:true,timeField:'Model Bütçe Tarihi',timeField2:'',granularity:'week',
     metricField:'Adet',aggregation:'sum',seriesField:'Buyer',
-    chartType:'line',seriesLimit:'20',title:'',
+    chartType:'line',seriesLimit:'20',title:'',showAverage:false,
   },extra);
 }
 
@@ -97,6 +97,33 @@ test('Backlog chart renders a current-date marker when today falls inside the vi
   assert.doesNotMatch(chart.svgChart(model,{today:new Date(2030,0,1)}),/backlogChartTodayLine/);
 });
 
+test('Backlog chart supports a second time field as an overlaid dashed series', () => {
+  const overlayHeaders=[...headers,'Retail Tarihi'];
+  const overlayRows=rows.map((row,index)=>({...row,'Retail Tarihi':['07.09.2026','08.09.2026','09.09.2026','15.09.2026'][index]}));
+  const model=chart.buildModel(overlayRows,overlayHeaders,state({timeField2:'Retail Tarihi'}));
+  assert.equal(model.fieldSpecs.length,2);
+  assert.equal(model.series.length,4);
+  assert.ok(model.series.some(item=>item.timeFieldIndex===2&&item.dash===true));
+  assert.ok(model.series.some(item=>item.name.includes('Retail Tarihi')));
+});
+
+test('Backlog chart uses whole-number nice ticks and compact time labels', () => {
+  assert.equal(chart.niceStep(149000,5),30000);
+  assert.equal(chart.niceStep(249000,5),50000);
+  assert.equal(chart.niceStep(499000,5),100000);
+  assert.equal(chart.formatWholeValue(12205.25),'12.205');
+  assert.equal(chart.axisTickLabel({key:'2026-W33',label:'33. Hafta Ağustos 2026'},'week'),'33');
+  assert.equal(chart.axisTickLabel({key:'2026-05',label:'May 2026'},'month'),'MAY 26');
+});
+
+test('Backlog chart average line is calculated from visible bucket subtotals', () => {
+  const model=chart.buildModel(rows,headers,state({showAverage:true}));
+  assert.equal(chart.averageValue(model),12.5);
+  const svg=chart.svgChart(model,{today:new Date(2030,0,1)});
+  assert.match(svg,/backlogChartAverageLine/);
+  assert.match(svg,/Ort\.|Avg\./);
+});
+
 test('Backlog chart supports count, distinct count, sum and average aggregations', () => {
   assert.deepEqual(chart.buildModel(rows,headers,state({aggregation:'count'})).series.find(s=>s.name==='A').values,[2,1]);
   assert.deepEqual(chart.buildModel(rows,headers,state({aggregation:'distinct',metricField:'MAG'})).series.find(s=>s.name==='A').values,[1,1]);
@@ -137,6 +164,11 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(chartSource,/addEventListener\('pointermove'/);
   assert.match(chartSource,/addEventListener\('dblclick'/);
   assert.match(chartSource,/data-backlog-chart-today/);
+  assert.match(chartSource,/data-backlog-chart-average/);
+  assert.match(chartSource,/data-backlog-chart-export="svg"/);
+  assert.match(chartSource,/data-backlog-chart-export="png"/);
+  assert.match(chartSource,/timeField2/);
+  assert.match(chartSource,/backlogChartTooltipTotal/);
 });
 
 test('Backlog render refreshes chart and Excel export appends chart sheets', () => {
@@ -148,6 +180,20 @@ test('Backlog render refreshes chart and Excel export appends chart sheets', () 
   assert.match(APP,/charts:chartSpecs/);
   assert.match(APP,/window\.BLBacklogChart\.applyExcelCharts\(patched,charts,JSZip,'blob'\)/);
   assert.match(APP,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
+});
+
+test('Excel chart export keeps the selected visible time range and whole-number axis', () => {
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['BACKLOG']]),'BACKLOG');
+  const result=chart.appendWorkbookSheets(wb,rows,headers,{XLSX,state:state({showAverage:true}),viewRange:{start:1,end:2}});
+  assert.equal(result.model.categories.length,1);
+  assert.deepEqual(result.viewRange,{start:1,end:2});
+  const data=wb.Sheets[result.dataSheetName];
+  assert.equal(data['!ref'],'A1:D2');
+  const generated=chart.chartXml(result.charts[0],0);
+  assert.match(generated,/formatCode="#,##0"/);
+  assert.doesNotMatch(generated,/formatCode="#,##0\.00"/);
+  assert.match(generated,/<c:majorUnit val="/);
 });
 
 test('Excel export creates Grafik and Grafik Verisi sheets with native chart formulas', () => {
