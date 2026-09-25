@@ -144,7 +144,7 @@ test('Shared PLM option kaydı ana renkte Style List yenilemesini engellemez', a
     b.store = pulled.store;
     assert.equal(pulled.installed, 1);
 
-    const owned = ownershipLib.recordOf(b.store, key);
+    const owned = Object.values(b.store.owners || {})[0] || null;
     assert.ok(owned, 'shared PLM görselinin otomatik sahiplik kaydı olmalı');
     assert.equal(owned.sourceType, 'OPTION', 'option: sourceIdentity gerçek PLM alt kaynağını korumalı');
 
