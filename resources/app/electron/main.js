@@ -52,6 +52,7 @@ const { runFirstRunMigration, healPortableSettings, readMigrationState } = requi
 const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
+const { createOabSessionTransport } = require('./oab-session-transport');
 const { createWorkspaceManager } = require('./workspace-manager');
 
 const APP_CORE_ROOT = path.resolve(__dirname, '..');
@@ -59,6 +60,8 @@ const DEFAULT_BOUNDS = { width: 1600, height: 1000 };
 
 let paths = null;
 let backend = null;
+let oabTransport = null;
+let oabTransportOrigin = '';
 let mainWindow = null;
 let workspace = null;
 let errorWindow = null;
@@ -1018,7 +1021,11 @@ async function acquireOabAuthorization(options = {}) {
       try {
         authWebRequest = oabAuthSession().webRequest;
         authWebRequest.onBeforeSendHeaders(OAB_AUTH_CAPTURE_FILTER, (details, callback) => {
-          if (!settled && lifecycle) void lifecycle.onNetworkRequest(details);
+          // Session.fetch also triggers webRequest, but has no login-window
+          // webContents. Capture only requests initiated by the sign-in UI.
+          const fromLoginWindow = details.webContentsId === authWindow.webContents.id
+            || [...popupWindows].some(popup => !popup.isDestroyed() && details.webContentsId === popup.webContents.id);
+          if (fromLoginWindow && !settled && lifecycle) void lifecycle.onNetworkRequest(details);
           callback({ requestHeaders: details.requestHeaders });
         });
         networkCaptureInstalled = true;
@@ -1385,10 +1392,19 @@ async function startBuyerLog() {
     return false;
   }
 
+  if (!oabTransport) {
+    oabTransport = createOabSessionTransport({ authSession:oabAuthSession(), secret:desktopBridgeSecret, log });
+    try { oabTransportOrigin = await oabTransport.start(); }
+    catch (error) {
+      oabTransport = null;
+      log('OAB iç tarayıcı bağlantısı başlatılamadı: ' + error.message);
+    }
+  }
   backend = new BackendProcess({
     paths,
     appCoreRoot: APP_CORE_ROOT,
     desktopBridgeSecret,
+    oabTransportOrigin,
     log,
     onUnexpectedExit: info => {
       if (quitting) return;
@@ -1444,6 +1460,11 @@ async function shutdown() {
   if (backend) {
     try { await backend.stop(); } catch (error) { log('Backend durdurulurken hata: ' + error.message); }
     backend = null;
+  }
+  if (oabTransport) {
+    try { await oabTransport.stop(); } catch (_) {}
+    oabTransport = null;
+    oabTransportOrigin = '';
   }
   log('Kapanış tamamlandı.');
   await new Promise(resolve => {
