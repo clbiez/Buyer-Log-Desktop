@@ -2,8 +2,18 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const { createOabSessionTransport } = require('../electron/oab-session-transport');
 const authState = require('../server/lib/oab-auth-state');
+
+test('OAB captures report requests without a webContentsId, including service workers', () => {
+  const main = fs.readFileSync(path.join(__dirname, '../electron/main.js'), 'utf8');
+  const handler = main.match(/authWebRequest\.onBeforeSendHeaders\(OAB_AUTH_CAPTURE_FILTER, \(details, callback\) => \{([\s\S]*?)\n\s*\}\);/);
+  assert.ok(handler, 'OAB capture handler exists');
+  assert.match(handler[1], /if \(!settled && lifecycle\) void lifecycle\.onNetworkRequest\(details\)/);
+  assert.doesNotMatch(handler[1], /details\.webContentsId/);
+});
 
 test('OAB report requests use the persistent Chromium session with cookies and preserve the upstream status', async () => {
   const calls = [];
