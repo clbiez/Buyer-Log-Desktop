@@ -9409,9 +9409,13 @@ function renderOverviewPriorityReminder(rows){
       event.preventDefault();event.stopPropagation();openOverviewNoteGroupInCp(groups[Number(node.dataset.noteGroupCount)]);
     }));
   }
-  method.textContent=appLang==='en'
+  /* Kullanım açıklaması her zaman görünen uzun paragraf değil; tek tıkla açılan
+     "Nasıl çalışır?" notu. Açık/kapalı tercihi oturum boyunca korunur. */
+  const methodText=appLang==='en'
     ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it, click an order to open it, or double-click the order count to open the whole note group.'
-    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine çift tıklayarak grubun tamamını aç.';
+    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine çift tıklayarak grubun tamamını aç.';;
+  const methodOpen=method.querySelector('details')?.open||false;
+  method.innerHTML=`<details class="ovHelp"${methodOpen?' open':''}><summary>${escapeHtml(appLang==='en'?'How does this work?':'Nasıl çalışır?')}</summary><span>${escapeHtml(methodText)}</span></details>`
 }
 
 let _overviewRefreshResult=null;

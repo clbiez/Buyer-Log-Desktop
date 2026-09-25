@@ -92,12 +92,12 @@
   ];
 
   const SECTIONS = [
-    { id: 'users', tr: 'Kullanıcılar', en: 'Users', icon: '👤' },
-    { id: 'roles', tr: 'Roller & Yetkiler', en: 'Roles & Permissions', icon: '🛡' },
-    { id: 'templates', tr: 'Workspace Şablonları', en: 'Workspace Templates', icon: '▦' },
-    { id: 'organization', tr: 'Organizasyon', en: 'Organization', icon: '🏢' },
-    { id: 'copy', tr: 'Profil Kopyalama', en: 'Copy User Profile', icon: '⧉' },
-    { id: 'history', tr: 'Değişiklik Geçmişi', en: 'Change History', icon: '🕘' },
+    { id: 'users', tr: 'Kullanıcılar', en: 'Users', icon: 'users-group' },
+    { id: 'roles', tr: 'Roller & Yetkiler', en: 'Roles & Permissions', icon: 'rosette-discount-check' },
+    { id: 'templates', tr: 'Workspace Şablonları', en: 'Workspace Templates', icon: 'layout-dashboard' },
+    { id: 'organization', tr: 'Organizasyon', en: 'Organization', icon: 'hierarchy' },
+    { id: 'copy', tr: 'Profil Kopyalama', en: 'Copy User Profile', icon: 'copy' },
+    { id: 'history', tr: 'Değişiklik Geçmişi', en: 'Change History', icon: 'bl-history' },
   ];
 
   /* ===================== 2 · Merkezi depo ===================== */
@@ -346,7 +346,7 @@
     const counts = statusCounts();
     return SECTIONS.filter(section => section.id !== 'copy' || store.canCopyProfiles).map(section => `
       <button type="button" class="umNavItem${store.section === section.id ? ' isActive' : ''}" data-act="section" data-id="${section.id}">
-        <span class="umNavIcon" aria-hidden="true">${section.icon}</span>
+        <span class="umNavIcon" aria-hidden="true"><svg class="ic"><use href="#i-${esc(section.icon)}"/></svg></span>
         <span class="umNavLabel">${esc(T(section.tr, section.en))}</span>
         ${section.id === 'users' && store.status === 'ready' ? `<span class="umNavCount">${counts.all}</span>` : ''}
       </button>`).join('');
@@ -678,22 +678,28 @@
     </table>`;
   }
 
+  /* Avatar tonu kimlikten türetilir: aynı kişi her ekranda aynı renkte. */
+  function avatarHue(value) {
+    let hash = 0;
+    for (const ch of String(value || '')) hash = (hash * 31 + ch.codePointAt(0)) >>> 0;
+    return hash % 360;
+  }
   // Kök Moderatör hesabı pasife alınamaz (sunucu da reddeder); düğmeyi hiç gösterme.
   const statusLocked = user => user.id === 'moderator';
   function userRow(user) {
     const active = user.status === 'ACTIVE';
     return `<tr class="umRow${store.detailId === user.id ? ' isOpen' : ''}${active ? '' : ' isInactive'}" data-act="openDetail" data-id="${esc(user.id)}">
       <td class="umColCheck"><input type="checkbox" data-act="selectRow" data-id="${esc(user.id)}" ${store.selectedIds.has(user.id) ? 'checked' : ''} aria-label="${esc(userName(user))}"></td>
-      <td class="umCellUser"><span class="umAvatar">${esc(initials(userName(user)))}</span><span class="umCellUserText"><b>${esc(userName(user))}</b><small>${esc(dash(user.email || user.title))}</small></span></td>
+      <td class="umCellUser"><span class="umAvatar" style="--um-hue:${avatarHue(user.id || userName(user))}">${esc(initials(userName(user)))}</span><span class="umCellUserText"><b>${esc(userName(user))}</b><small>${esc(dash(user.email || user.title))}</small></span></td>
       ${/* v7.39 — kullanıcı adı listede görünür; tanımsız olanı bulmanın tek
             yolu tek tek kartları açmaktı. */ ''}
       <td class="umCellWrap">${clean(user.username) ? esc(user.username)
         : `<span class="umWarn" title="${esc(T('Giriş ekranında seçilebiliyor ama giriş yapamıyor.', 'Can be picked on the login screen but cannot sign in.'))}">${esc(T('tanımsız', 'not set'))}</span>`}</td>
-      <td>${esc(roleLabel(user.systemRole))}</td>
+      <td><span class="umRole is-${esc(user.systemRole || 'buyer')}">${esc(roleLabel(user.systemRole))}</span></td>
       <td class="umCellWrap">${esc(dash(joinText(user.mags)))}</td>
       <td class="umCellWrap">${esc(dash(joinText(user.mmygs)))}</td>
       <td>${esc(dash(nameOf(user.managerId)))}</td>
-      <td><span class="umPill ${active ? 'isActive' : 'isInactive'}">${active ? '🟢' : '⚪'} ${esc(statusLabel(user.status))}</span></td>
+      <td><span class="umPill ${active ? 'isActive' : 'isInactive'}">${esc(statusLabel(user.status))}</span></td>
       <td>${esc(formatDateTime(user.updatedAt))}</td>
       <td class="umColActions">
         ${user.canEdit === false ? `<span class="umLocked">${esc(T('Salt görüntü', 'Read only'))}</span>` : `
@@ -717,7 +723,7 @@
           <span class="umAvatar umAvatarLarge">${esc(initials(userName(user)))}</span>
           <div>
             <h3>${esc(userName(user))}</h3>
-            <span class="umPill ${active ? 'isActive' : 'isInactive'}">${active ? '🟢' : '⚪'} ${esc(statusLabel(user.status))}</span>
+            <span class="umPill ${active ? 'isActive' : 'isInactive'}">${esc(statusLabel(user.status))}</span>
           </div>
         </div>
         <button type="button" class="umDrawerClose" data-act="closeDetail" aria-label="${esc(T('Kapat', 'Close'))}">×</button>
@@ -1050,7 +1056,7 @@
           <small>MMYG: ${esc(dash(joinText(user.mmygs)))}</small>
           ${list(user.buyingGroups).length ? `<small>${esc(T('Buying Group', 'Buying Group'))}: ${esc(joinText(user.buyingGroups))}</small>` : ''}
         </span>
-        <span class="umNodeStatus" title="${esc(statusLabel(user.status))}">${active ? '🟢' : '⚪'}</span>
+        <span class="umNodeStatus ${active ? 'isActive' : 'isInactive'}" title="${esc(statusLabel(user.status))}"></span>
       </button>
       ${children.length ? `<div class="umTreeChildren">${children.map(child => orgBranch(child, next)).join('')}</div>` : ''}
     </div>`;

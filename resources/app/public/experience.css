@@ -66,14 +66,25 @@
   --head:var(--sans);
 }
 
+/* Kurşun = gerçek ara ton (arduvaz). Tüm metin/zemin çiftleri WCAG AA
+   (≥4.5) ölçülerek seçildi; durum renkleri bu zeminde koyulaştırıldı.
+   Dışa aktarılan thead renkleri (design.css) bilerek değişmez. */
 html[data-theme="grey"]{
-  --paper:#e9ecf0;--rail-bg:#e4e8ed;--card:#f7f8fa;
-  --card2:#f1f3f6;--card2-strong:#dfe5eb;
-  --ink:#19232e;--ink2:#405061;--muted:#5e6d7d;
-  --line:#d9dfe6;--line2:#c4cdd6;
+  --paper:#c3cad2;--rail-bg:#bcc4cd;--card:#d9dee4;
+  --card2:#cfd5dc;--card2-strong:#bec6cf;
+  --ink:#101820;--ink2:#2b3947;--muted:#414e5a;
+  --line:#b3bcc6;--line2:#9ca7b3;
   --hair:var(--line);--hair-2:var(--line2);
-  --acc:#315f87;--acc-hover:#244d70;--acc-bg:#dce9f3;
-  --acc-ink:#244e70;--pop:var(--card);--pop-blur:none;
+  --acc:#264f73;--acc-hover:#1c3e5b;--acc-bg:#bccfe0;
+  --acc-ink:#183a57;--on-acc:#f6f6f7;--pop:var(--card);--pop-blur:none;
+  --green:#0f6640;--green-lite:#0f6640;--green-bg:#c3d8cb;
+  --orange:#7a5000;--orange-lite:#7a5000;--yellow:#7a5000;--orange-bg:#ddd0b0;--yellow-bg:#ddd0b0;
+  --red:#a01d14;--red-lite:#a01d14;--red-bg:#e3c7c4;
+  --table-bg:var(--card);
+  --table-hover:color-mix(in srgb,#101820 6%,var(--card));
+  --shadow-1:0 1px 2px rgba(16,24,32,.14);
+  --shadow-2:0 4px 12px rgba(16,24,32,.18);
+  --shadow-3:0 16px 38px rgba(16,24,32,.26),0 2px 8px rgba(16,24,32,.12);
 }
 html[data-theme="dark"]{
   --paper:#171c22;--rail-bg:#14191f;--card:#20262e;
@@ -422,10 +433,12 @@ thead tr.groupRow th.draggableGroup{text-align:left;padding-left:12px;letter-spa
 
 /* Tablo araç çubuğu: birincil eylem etiketli, diğer her şey tek bakışta
    okunan simge. Etiket DOM'da kalır (erişilebilir ad + ipucu kaynağı). */
-.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.tableSearchHelpButton):has(>svg.ic){
+/* Açılır menülerin (Araçlar, ⋯, PLM SYNC) İÇİ bu kuralın dışında: orada
+   etiket, eylemin kendisidir. */
+.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.tableSearchHelpButton):not(.toolbarMoreMenu *):not(.toolbarOverflowSlot *):has(>svg.ic){
   font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
 }
-.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):has(>svg.ic)>svg.ic{width:16px;height:16px;}
+.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}
 .tableActionToolbar .toolbarMoreWrap>:is(.tbtn,.navActionBtn):has(>svg.ic){position:relative;}
 .tableActionToolbar .toolbarMoreWrap>:is(.tbtn,.navActionBtn):has(>svg.ic)::after{
   content:"";position:absolute;right:4px;bottom:4px;width:4px;height:4px;
@@ -557,3 +570,54 @@ button:disabled .ic{--ic-tint-o:.08;}
 .backlogDetailTable th{white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;}
 .backlogDetailTable td{white-space:nowrap;}
 .backlogDetailTable .detailImgCell img,.backlogDetailTable .detailImgCell .detailImgPlaceholder{max-height:30px;}
+.toolbarMoreMenu .vfMenuWrap{width:100%;}
+.toolbarMoreMenu .vfMenuWrap>.vfMenuTrigger{width:100%;justify-content:flex-start;padding-left:10px;text-align:left;}
+
+/* =====================================================================
+   Kullanıcı & Yetki Yönetimi
+   Tam genişlik tablo, SVG gezinme ikonları, rol rozetleri, kimliğe göre
+   renklenen avatarlar; satır eylemleri yalnız üzerine gelince/odakta.
+   ===================================================================== */
+.umMain>.umIamFields{flex:1 1 auto;min-width:0;display:flex;}
+.umMain>.umIamFields>.umSection{flex:1 1 auto;min-width:0;}
+.umNavIcon{display:inline-grid;place-items:center;width:18px;}
+.umNavIcon .ic{width:16px;height:16px;}
+.umAvatar{
+  --um-hue:210;border-radius:50%;
+  background:linear-gradient(135deg,hsl(var(--um-hue) 55% 88%),hsl(calc(var(--um-hue) + 40) 50% 80%));
+  color:hsl(var(--um-hue) 45% 26%);box-shadow:inset 0 0 0 1px hsl(var(--um-hue) 40% 70% / .45);
+}
+html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um-hue) 35% 32%),hsl(calc(var(--um-hue) + 40) 30% 26%));color:hsl(var(--um-hue) 60% 88%);}
+.umPill{gap:6px;border-radius:999px;padding:2px 9px 2px 7px;font-size:var(--fs-xs);font-weight:600;}
+.umPill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+.umPill.isActive::before{box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 22%,transparent);}
+.umNodeStatus{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);}
+.umNodeStatus.isActive{background:var(--green);}
+.umRole{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);font-size:var(--fs-xs);font-weight:600;background:var(--card2);color:var(--ink2);white-space:nowrap;}
+.umRole.is-moderator{background:color-mix(in srgb,#7d6bff 16%,var(--card));color:color-mix(in srgb,#5a48d8 80%,var(--ink));}
+.umRole.is-senior_manager{background:var(--acc-bg);color:var(--acc-ink);}
+.umRole.is-manager{background:color-mix(in srgb,var(--green) 13%,var(--card));color:var(--green);}
+.umTable tbody tr .umColActions>*{opacity:0;transition:opacity var(--bl-motion-fast);}
+.umTable tbody tr:is(:hover,:focus-within,.isOpen) .umColActions>*{opacity:1;}
+@media(hover:none){.umTable tbody tr .umColActions>*{opacity:1;}}
+
+/* Kısa yardım notları: uzun açıklama paragrafı yerine tek satırlık açılır ipucu. */
+.ovHelp{margin-top:8px;font-size:var(--fs-xs);color:var(--muted);}
+.ovHelp>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;color:var(--acc-ink);font-weight:600;}
+.ovHelp>summary::-webkit-details-marker{display:none;}
+.ovHelp>summary::before{content:"?";display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--acc-bg);font-size:10px;font-weight:700;}
+.ovHelp[open]>span{display:block;margin-top:6px;max-width:880px;line-height:1.55;}
+/* Ön Maliyet diğer sayfalarla aynı hizadan başlar (fazladan 14px iç boşluk vardı). */
+#view-opencosting{padding-inline:0;}
+
+/* Nakliye Kıyaslama ikincil şeridi: tablo araç çubuğuyla aynı simge dili;
+   etiketler ipucuna geçer, şerit tek sakin satır olur. */
+#shipSecondaryToolbar{margin-bottom:8px!important;gap:6px;}
+#shipSecondaryToolbar>:is(.tbtn,.colPanelWrap>.tbtn):has(>svg.ic),#shipSecondaryToolbar>.colPanelWrap>.tbtn:has(>svg.ic){
+  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+}
+#shipSecondaryToolbar :is(.tbtn):has(>svg.ic)>svg.ic{width:16px;height:16px;}
+.vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic){
+  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+}
+.vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}

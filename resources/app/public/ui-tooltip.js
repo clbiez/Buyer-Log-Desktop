@@ -7,7 +7,7 @@
 (function(){
   'use strict';
   if(typeof document==='undefined')return;
-  const SELECTOR='.tableActionToolbar button:not(.primary):not(.tableSearchHelpButton),[data-tip]';
+  const SELECTOR='.tableActionToolbar button:not(.primary):not(.tableSearchHelpButton):not(.toolbarMoreMenu *),#shipSecondaryToolbar button,.vfBar button:not(.toolbarMoreMenu *),[data-tip]';
   let tip=null,active=null,timer=0;
 
   function ensureTip(){
