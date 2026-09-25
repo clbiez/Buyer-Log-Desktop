@@ -160,6 +160,26 @@ test('Eksikleri Tamamla ana renkte eski otomatik OPTION kaydını cache saymaz v
   assert.equal(cached.decision, ingestLib.DECISION_CACHED, 'doğru ana model görseli yeniden indirilmemeli');
 });
 
+test('Paylaşılandan gelen PLM/option kimliği ana renkte cache sayılmaz', () => {
+  const fake = createFakeStore();
+  const request = { plmId: '2131790', colourCode: 'HMW', colour: 'BRIGHT RED', imageRole: 'main' };
+  const key = ingestLib.canonicalKeyFor(request);
+  fake.files.set('shared_option', { id: 'shared_option', url: '/x', mimeType: 'image/png', size: 10, updatedAt: 'old', buffer: png('shared-option') });
+  fake.imagemap[key] = 'shared_option';
+
+  // Eski shared kurulumlarında kaynak ailesi PLM olarak kalabiliyordu;
+  // gerçek Option kökeni sourceIdentity içinde korunur.
+  const store = ownership.rememberAutomatic([{
+    key, owner: ownership.OWNER_PLM, imageRef: 'shared_option',
+    sourceType: 'PLM', sourceIdentity: 'option:4381079:9000001', hash: 'old'
+  }], { store: fake.store(), persist: value => fake.ownership.saveOwnership(value) }).store;
+
+  const decision = fake.ingest.decideBeforeFetch(request, { store, imagemap: fake.imagemap, mode: 'missing' });
+  assert.equal(decision.decision, ingestLib.DECISION_FETCH,
+    'ana renk paylaşılan eski Option görseli yerine GetStyleList görselini yeniden çekmeli');
+});
+
+
 test('kullanıcının ELLE koyduğu görsel otomatik senkronda korunur', async () => {
   const { fake, calls, input } = harness();
   // Manuel görsel: imagemap'te var, sahiplik kaydında YOK.

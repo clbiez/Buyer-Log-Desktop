@@ -375,6 +375,14 @@ function createModelImageDistribution(deps = {}) {
     return { outcomes, overrides: patched.overrides, linksUpdated: patched.updated || 0, store, installed };
   }
 
+  function automaticSourceType(record) {
+    const identity = clean(record && record.sourceIdentity, 200).toLowerCase();
+    if (identity.startsWith('option:') || identity.startsWith('option-url:')) return 'OPTION';
+    if (identity.startsWith('stylelist:')) return 'STYLE_LIST';
+    if (identity.startsWith('styledefault:') || identity.startsWith('styledefault-url:')) return 'STYLE_DEFAULT';
+    return clean(record && record.source, 40);
+  }
+
   function ownerEntry(entry, record, imageRef, hash, mimeType, bytes) {
     const base = {
       key: entry.key, imageRef, hash, mimeType, bytes,
@@ -385,7 +393,11 @@ function createModelImageDistribution(deps = {}) {
     return {
       ...base,
       owner: ownerFor(record.source),
-      sourceType: record.sourceIdentity ? clean(record.source, 40) : clean(record.source, 40),
+      // Shared manifest kaynak ailesini (PLM/ASAS/PACKAGE) taşır; PLM
+      // içindeki gerçek görsel türü sourceIdentity'den geri kazanılır.
+      // Aksi hâlde option:... kaydı yerelde yalnız "PLM" görünür ve
+      // ana renk self-heal politikası yanlış Option görselini cache sayar.
+      sourceType: automaticSourceType(record),
       sourceIdentity: record.sourceIdentity,
       styleId: clean(entry.styleId, 40),
       sourceFetchedAt: record.sourceFetchedAt,

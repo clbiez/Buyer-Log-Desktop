@@ -126,6 +126,39 @@ test('Eksikleri Tamamla ana renk eski otomatik OPTION ise LOCAL saymaz, üst kay
   assert.equal(plan.counts.remoteRequired, 1, 'yanlış otomatik Option Image kendini onarmak için PLM’e gitmeli');
 });
 
+test('Shared PLM option kaydı ana renkte Style List yenilemesini engellemez', async () => {
+  const root = tempRoot('bl-shared-role-');
+  try {
+    const counter = sharedCounter();
+    const a = createClient(root, 'devA', { revisionCounter: counter });
+    const b = createClient(root, 'devB', { revisionCounter: counter });
+    const key = 'plm:2131790|colour:HMW';
+
+    await a.sharedStore.publish([{
+      canonicalKey:key, plmId:'2131790', colourCode:'HMW', colour:'BRIGHT RED',
+      source:'PLM', sourceIdentity:'option:4381079:9000001',
+      buffer:JPEG, mimeType:'image/jpeg', sourceFetchedAt:new Date().toISOString(),
+    }]);
+
+    const pulled = await b.distribution.pull({ deviceId:'devB', imagemap:b.imagemap, store:b.store });
+    b.store = pulled.store;
+    assert.equal(pulled.installed, 1);
+
+    const owned = Object.values(b.store.owners || {})[0] || null;
+    assert.ok(owned, 'shared PLM görselinin otomatik sahiplik kaydı olmalı');
+    assert.equal(owned.sourceType, 'OPTION', 'option: sourceIdentity gerçek PLM alt kaynağını korumalı');
+
+    const plan = await b.distribution.plan(
+      [{ plmId:'2131790', colourCode:'HMW', colour:'BRIGHT RED', imageRole:'main' }],
+      { source:'PLM', mode:'missing', imagemap:b.imagemap, store:b.store, allowShared:false }
+    );
+    assert.equal(plan.counts.localAvailable, 0);
+    assert.equal(plan.counts.remoteRequired, 1,
+      'ana renk paylaşılandan gelmiş Option görselini cache saymamalı; GetStyleList kaynağına çıkmalı');
+  } finally { fs.rmSync(root, { recursive:true, force:true }); }
+});
+
+
 test('KAYNAK SIKI: PLM kökenli paylaşılan nesne bir ASAS işlemini karşılayamaz', async () => {
   const root = tempRoot('bl-source-');
   try {
