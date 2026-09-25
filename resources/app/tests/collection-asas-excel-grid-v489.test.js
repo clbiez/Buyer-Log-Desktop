@@ -21,22 +21,25 @@ function extractBetween(source, startText, endText) {
 
 test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows', () => {
   const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,buildCollectionCatalogs};`);
-  const { COLLECTION_CATALOG_FIELDS, buildCollectionCatalogs } = factory(canonicalFields);
+  const factory = new Function('canonicalFields', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,buildCollectionCatalogs};`);
+  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, buildCollectionCatalogs } = factory(canonicalFields);
 
   assert.equal(COLLECTION_CATALOG_FIELDS.category, 'Category');
   assert.equal(COLLECTION_CATALOG_FIELDS.mag, 'Merch Alt Grup Kod');
   assert.equal(COLLECTION_CATALOG_FIELDS.mmyg, 'Merch Marka Yaş Grup Kod');
   assert.equal(COLLECTION_CATALOG_FIELDS.buyingGroup, 'Buyer Grup (TR)');
   assert.equal(COLLECTION_CATALOG_FIELDS.buyer, 'Buyer');
+  assert.equal(COLLECTION_CATALOG_FIELDS.manufacturer, 'Manufacturer');
   assert.equal(COLLECTION_CATALOG_FIELDS.season, 'Season');
+  assert.equal(COLLECTION_CATALOG_SCHEMA_VERSION, 3);
 
   const catalogs = buildCollectionCatalogs([
-    {Category:'Tişört','Merch Alt Grup Kod':'MAG 2','Merch Marka Yaş Grup Kod':'MMYG 4','Buyer Grup (TR)':'BG A',Buyer:'AYŞE',Season:'S7'},
-    {Category:'tişört','Merch Alt Grup Kod':'MAG 1','Merch Marka Yaş Grup Kod':'MMYG 4','Buyer Grup (TR)':'BG A',Buyer:'AYŞE',Season:'S7'},
+    {Category:'Tişört','Merch Alt Grup Kod':'MAG 2','Merch Marka Yaş Grup Kod':'MMYG 4','Buyer Grup (TR)':'BG A',Buyer:'AYŞE',Manufacturer:'SUPPLIER B',Season:'S7'},
+    {Category:'tişört','Merch Alt Grup Kod':'MAG 1','Merch Marka Yaş Grup Kod':'MMYG 4','Buyer Grup (TR)':'BG A',Buyer:'AYŞE',Manufacturer:'supplier b',Season:'S7'},
   ]);
   assert.deepEqual(catalogs.category, ['Tişört']);
   assert.deepEqual(catalogs.mag, ['MAG 1','MAG 2']);
+  assert.deepEqual(catalogs.manufacturer, ['SUPPLIER B']);
   assert.deepEqual(catalogs.season, ['S7']);
   // Katalog artık Refresh sonunda page projection cache'e bir kez yazılıyor.
   // Schema version eski/partial collection-catalog cache'lerinin güvenle
