@@ -19,6 +19,7 @@ test('gerçek Hot Wheels drag URLsi attachment kimliğine ayrılır', () => {
   assert.equal(drag.normalizeAttachmentUrl(HOT_WHEELS_URL), HOT_WHEELS_URL);
   assert.equal(drag.fileAttachment({ name:'b6aa77e49e6bc3ecf0b2ee900607c7f9.png' }), HOT_WHEELS_URL);
   const dt = {
+    types:['text/uri-list','text/html','Files'],
     files: [{ name:'b6aa77e49e6bc3ecf0b2ee900607c7f9.png', type:'image/png' }],
     getData(type) {
       if (type === 'text/uri-list' || type === 'text/plain') return HOT_WHEELS_URL;
@@ -27,6 +28,38 @@ test('gerçek Hot Wheels drag URLsi attachment kimliğine ayrılır', () => {
     },
   };
   assert.equal(drag.extractDropPayload(dt).attachmentUrl, HOT_WHEELS_URL);
+});
+
+test('Chromium DownloadURL ve HTML/CSS payloadları URLyi gömülü metinden bulur', () => {
+  assert.equal(
+    drag.attachmentUrlFromText('image/png:hotwheels.png:' + HOT_WHEELS_URL),
+    HOT_WHEELS_URL
+  );
+  assert.equal(
+    drag.attachmentUrlFromText('<div style="background-image:url(\'' + HOT_WHEELS_URL + '?v=1\')"></div>'),
+    HOT_WHEELS_URL
+  );
+  const dt = {
+    types:['DownloadURL'],
+    files:[],
+    getData(type){ return type === 'DownloadURL' ? 'image/png:x.png:' + HOT_WHEELS_URL : ''; },
+  };
+  assert.equal(drag.extractDropPayload(dt).attachmentUrl, HOT_WHEELS_URL);
+});
+
+test('DataTransferItem.getAsString fallbackı cross-window drag payloadını çözer', async () => {
+  const dt = {
+    types:['text/html'],
+    files:[],
+    getData(){ return ''; },
+    items:[{
+      kind:'string',
+      type:'text/html',
+      getAsString(callback){ setImmediate(() => callback('<img src="' + HOT_WHEELS_URL + '">')); },
+    }],
+  };
+  const result = await drag.extractDropPayloadAsync(dt);
+  assert.equal(result.attachmentUrl, HOT_WHEELS_URL);
 });
 
 test('attachment reverse index Hot Wheels görselini PLM 2131790 ile eşler ve cache kullanır', async () => {
@@ -86,10 +119,19 @@ test('aynı attachment iki farklı PLMye bağlıysa keyfi model seçilmez', asyn
   await assert.rejects(() => resolver.resolve('buyer-3', HOT_WHEELS_URL), error => error && error.code === 'CORENECTUM_ATTACHMENT_AMBIGUOUS');
 });
 
-test('drag/drop yalnız Collection sayfasına bağlanır ve mevcut PLMyi update etmez', () => {
+test('drag/drop document capture seviyesinde yalnız Collection için kurulur', () => {
   const source = fs.readFileSync(path.join(ROOT, 'public', 'collection-plm-drag-import.js'), 'utf8');
   assert.match(source, /getElementById\('view-koleksiyon'\)/);
+  assert.match(source, /document\.addEventListener\('drop', drop, true\)/);
+  assert.match(source, /document\.addEventListener\('dragover', over, true\)/);
+  assert.match(source, /document\.body\.dataset\.activeTab !== 'koleksiyon'/);
   assert.doesNotMatch(source, /getElementById\('view-(?:cp|orders)'\)/);
+  assert.match(source, /event\.stopImmediatePropagation\(\)/);
+});
+
+test('drag import CoreNectum preflight yapar ve mevcut PLMyi update etmez', () => {
+  const source = fs.readFileSync(path.join(ROOT, 'public', 'collection-plm-drag-import.js'), 'utf8');
+  assert.match(source, /ensureCoreNectumApiConnection/);
   assert.match(source, /existingRowsFor\(plmId\)\.length/);
   assert.match(source, /Sürükle-bırak mevcut modeli değiştirmez/);
   assert.match(source, /\/api\/corenectum-api\/resolve-attachment/);
