@@ -1386,10 +1386,9 @@
     // kendisinde hesaplanmış olarak duruyor (CP satırı kurulurken yazılıyor).
     return row[col.k];
   }
-  function numericValueKey(v){
-    if(v==null || v==='') return '';
-    const n=Number(v);
-    return Number.isFinite(n) ? String(n) : '';
+  function numericValueKey(v,col){
+    const n=numericFilterValue(v,col);
+    return n==null ? '' : String(n);
   }
   passesColFilters=function(tableKey,row){
     const filters=state.colFilters[tableKey]||{};const cols=COLS_BY_TABLE[tableKey]||[];
@@ -1426,13 +1425,11 @@
         continue;
       }
       if(entry.numericRule){
-        const n=Number(numericRawValue(col,row)); if(!Number.isFinite(n))return false;
-        const r=entry.numericRule,a=Number(r.a),b=Number(r.b),avg=Number(r.avg);
-        if(r.op==='eq'&&n!==a)return false;if(r.op==='neq'&&n===a)return false;if(r.op==='gt'&&!(n>a))return false;if(r.op==='gte'&&!(n>=a))return false;if(r.op==='lt'&&!(n<a))return false;if(r.op==='lte'&&!(n<=a))return false;if(r.op==='between'&&!(n>=Math.min(a,b)&&n<=Math.max(a,b)))return false;if(r.op==='aboveAvg'&&!(n>avg))return false;if(r.op==='belowAvg'&&!(n<avg))return false;
+        if(!numericFilterRulePasses(entry.numericRule,numericRawValue(col,row),col))return false;
       } else {
         const val=entry.granularity
           ? dateBucketKey(row[k],entry.granularity)
-          : (NUM_TYPES.has(col.type) ? numericValueKey(numericRawValue(col,row)) : cellPlainText(col,row));
+          : (NUM_TYPES.has(col.type) ? numericValueKey(numericRawValue(col,row),col) : cellPlainText(col,row));
         if(k==='Del. Type'){
           const actual=comparableColumnFilterValue(k,val);
           if(entry.values&&![...entry.values].some(v=>comparableColumnFilterValue(k,v)===actual))return false;
@@ -1451,7 +1448,7 @@
     // oluyordu. Bunlar app-main'deki yüzde aralığı paneline gider (v5.99).
     if(!NUM_TYPES.has(col.type)||col.type==='pct'){originalOpen(tableKey,key,anchorEl,rerenderOuter);activeAnchor=anchorEl;return;}
     const base=(typeof rowsForFilterUniverse==='function')?rowsForFilterUniverse(tableKey,key):(state.cp?.rows||[]);
-    const nums=base.map(r=>Number(numericRawValue(col,r))).filter(Number.isFinite);const avg=nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:0;
+    const nums=base.map(r=>numericFilterValue(numericRawValue(col,r),col)).filter(n=>n!=null);const avg=nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:0;
     const panel=document.createElement('div');panel.className='colFilterPanel';document.body.appendChild(panel);_openFilterPanel=panel;
     if(typeof window.positionBuyerLogPopup==='function')window.positionBuyerLogPopup(panel,anchorEl,{gap:5});
     const ex=state.colFilters[tableKey][key]?.numericRule||{};
@@ -1463,7 +1460,7 @@
     const list=panel.querySelector('.numericValueList');
     const vals=[...new Set(nums)].sort((x,y)=>x-y);
     const existingValues=state.colFilters[tableKey][key]?.values;
-    list.innerHTML=`<input class="cfpSearch" placeholder="Ara…"><div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">Tümü</button><button type="button" class="cfpAll" data-v="none">Temizle</button></div><div class="cfpList">${vals.map(v=>{const k=numericValueKey(v);const checked=!existingValues||existingValues.has(k);const display=v.toLocaleString('tr-TR',{maximumFractionDigits:6});return `<label class="cfpItem" data-txt="${escapeHtml(display.toLowerCase())}"><input type="checkbox" value="${escapeHtml(k)}" ${checked?'checked':''}> ${escapeHtml(display)}</label>`}).join('')}</div>`;
+    list.innerHTML=`<input class="cfpSearch" placeholder="Ara…"><div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">Tümü</button><button type="button" class="cfpAll" data-v="none">Temizle</button></div><div class="cfpList">${vals.map(v=>{const k=numericValueKey(v,col);const checked=!existingValues||existingValues.has(k);const display=v.toLocaleString('tr-TR',{maximumFractionDigits:6});return `<label class="cfpItem" data-txt="${escapeHtml(display.toLowerCase())}"><input type="checkbox" value="${escapeHtml(k)}" ${checked?'checked':''}> ${escapeHtml(display)}</label>`}).join('')}</div>`;
     const boxes=[...list.querySelectorAll('input[type=checkbox]')];
     const applyVals=()=>{
       const checked=boxes.filter(x=>x.checked).map(x=>x.value);
