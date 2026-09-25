@@ -40,7 +40,7 @@
  *    kanalı açılır; keyfi çalıştırma yolu yoktur.
  */
 
-const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, screen, session, nativeTheme } = require('electron');
+const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, screen, session, nativeTheme, net } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -1392,7 +1392,7 @@ async function startBuyerLog() {
   }
 
   if (!oabTransport) {
-    oabTransport = createOabSessionTransport({ authSession:oabAuthSession(), secret:desktopBridgeSecret, log });
+    oabTransport = createOabSessionTransport({ authSession:oabAuthSession(), netRequest:options => net.request(options), secret:desktopBridgeSecret, log });
     try { oabTransportOrigin = await oabTransport.start(); }
     catch (error) {
       oabTransport = null;
