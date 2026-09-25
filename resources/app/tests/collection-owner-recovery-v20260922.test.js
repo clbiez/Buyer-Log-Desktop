@@ -128,7 +128,9 @@ test('Shared Hub transports owner workspaces and never replaces them with Shared
   assert.doesNotMatch(canonical, /SHARED_COLLECTION_OWNER/);
 
   const listing = block(SERVER, "app.get('/api/collection-workspaces'", "app.get('/api/collection-permissions'");
-  assert.match(listing, /ensureLegacyCollectionOwnerRecovery\(req\.currentUser\)/);
+  assert.doesNotMatch(listing, /ensureLegacyCollectionOwnerRecovery\(req\.currentUser\)/,
+    'opening/listing Collection must never mutate live data through legacy recovery');
+  assert.match(listing, /Legacy Collection recovery is forensic\/manual-only/);
   assert.match(listing, /effectiveCollectionAccess\(req\.currentUser\)/);
   assert.match(listing, /shared:false/);
   assert.match(listing, /samePersonOwnerIds/);
