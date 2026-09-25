@@ -21620,6 +21620,20 @@ function kolLandedPriceWithCosts(basePrice,row){
   if(denom<=0)return null;
   return base/denom+hologram;
 }
+// TR Landed, satırdaki üretim ülkesinin royalty alanlarını değil, doğrudan
+// Country Group = TR için bulunan kuralın oran ve hologram maliyetini kullanır.
+function kolLandedPriceWithRule(basePrice,row,rule){
+  const base=Number(basePrice);
+  if(!Number.isFinite(base)||base<=0)return null;
+  if(!kolLandedIsNonDtr(row))return base;
+  if(!rule)return null;
+  const royaltyRaw=Number(rule.royalty),hologramRaw=Number(rule.hologramCost);
+  const royalty=Number.isFinite(royaltyRaw)&&royaltyRaw>0?royaltyRaw/100:0;
+  const hologram=Number.isFinite(hologramRaw)&&hologramRaw>0?hologramRaw:0;
+  const denom=1-royalty;
+  if(denom<=0)return null;
+  return base/denom+hologram;
+}
 function kolLandedCalc(row){
   const trPrice=kolParseMoneyNum(row&&row.trPrice);
   const defaults=typeof kolDefaultLandedMultipliers==='function'?kolDefaultLandedMultipliers():{tr:KOL_TR_LANDED_MULT,overseas:KOL_YD_LANDED_MULT};
@@ -21630,7 +21644,9 @@ function kolLandedCalc(row){
   const fxAuto=kolAutoFx(row);
   const fx=Number.isFinite(fxManual)&&fxManual>0?fxManual:fxAuto;
   const trBaseUsd=(Number.isFinite(trPrice)&&trPrice>0&&Number.isFinite(fx)&&fx>0)?trPrice/fx:null;
-  const trCostedUsd=trBaseUsd==null?null:kolLandedPriceWithCosts(trBaseUsd,row);
+  const trRule=kolFindPricingRuleForCountryGroup(row,'TR');
+  const trRuleMissing=kolTrLicenseRuleMissing(row);
+  const trCostedUsd=(trBaseUsd==null||trRuleMissing)?null:kolLandedPriceWithRule(trBaseUsd,row,trRule);
   const trLanded=trCostedUsd==null?null:trCostedUsd*trMult;
 
   const supp=kolSuppFob(row);
@@ -21647,9 +21663,12 @@ function kolLandedCalc(row){
   const hologramRaw=kolParseMoneyNum(row&&row.hologramCost);
   const royaltyPct=Number.isFinite(royaltyRaw)&&royaltyRaw>0?royaltyRaw:0;
   const hologramCost=Number.isFinite(hologramRaw)&&hologramRaw>0?hologramRaw:0;
+  const trRoyaltyRaw=Number(trRule&&trRule.royalty),trHologramRaw=Number(trRule&&trRule.hologramCost);
+  const trRoyaltyPct=Number.isFinite(trRoyaltyRaw)&&trRoyaltyRaw>0?trRoyaltyRaw:0;
+  const trHologramCost=Number.isFinite(trHologramRaw)&&trHologramRaw>0?trHologramRaw:0;
   // Kâr: TR yerine yurt dışında üretmenin TR fiyatına oranla kazandırdığı pay.
   const profitPct=(trLanded!=null&&ydLanded!=null&&trLanded>0)?((trLanded-ydLanded)/trLanded)*100:null;
-  return {trPrice,trMult,trMultIsManual,defaultTrMult:defaults.tr,fx,fxAuto,fxIsManual:Number.isFinite(fxManual)&&fxManual>0,trBaseUsd,trCostedUsd,trLanded,supp,ydBaseFob,ydCostedFob,ydMult,ydMultIsManual,defaultYdMult:defaults.overseas,ydLanded,nonDtr,royaltyPct,hologramCost,profitPct,ruleMissing};
+  return {trPrice,trMult,trMultIsManual,defaultTrMult:defaults.tr,fx,fxAuto,fxIsManual:Number.isFinite(fxManual)&&fxManual>0,trBaseUsd,trRule,trRuleMissing,trCostedUsd,trLanded,trRoyaltyPct,trHologramCost,supp,ydBaseFob,ydCostedFob,ydMult,ydMultIsManual,defaultYdMult:defaults.overseas,ydLanded,nonDtr,royaltyPct,hologramCost,profitPct,ruleMissing};
 }
 
 function kolMoney2(v){
@@ -22702,9 +22721,10 @@ function kolPricingRuleContext(row){
     license: norm(row&&row.lisans) || norm(cp&&cp.License),
   };
 }
-function kolPricingRuleDimensionMatches(rule,ctx){
+function kolPricingRuleDimensionMatches(rule,ctx,countryGroupOverride=''){
+  const expectedCountryGroup=normalizePricingCountryGroup(countryGroupOverride)||pricingCountryGroup(ctx.country);
   return pricingRuleSeasonMatches(rule,ctx.season) &&
-    pricingCountryGroup(ctx.country)===normalizePricingCountryGroup(rule&&rule.countryGroup) &&
+    expectedCountryGroup===normalizePricingCountryGroup(rule&&rule.countryGroup) &&
     turknorm(ctx.licensor)===turknorm(rule&&rule.licensor) &&
     turknorm(ctx.license)===turknorm(rule&&rule.license);
 }
@@ -22715,17 +22735,23 @@ function kolPricingRuleFreshness(rule){
   // bitiş tarihi ise eşitlik bozucu sıralama değeridir.
   return {start:start==null?-Infinity:start,end:end==null?-Infinity:end};
 }
-function kolFindPricingRule(row){
-  const ctx=kolPricingRuleContext(row);
-  if(!ctx.country||!ctx.licensor||!ctx.license) return null;
-  const candidates=(state.overrides.pricingRules||[]).filter(rule=>kolPricingRuleDimensionMatches(rule,ctx));
+function kolFindPricingRuleForCountryGroup(row,countryGroup){
+  const ctx=kolPricingRuleContext(row),group=normalizePricingCountryGroup(countryGroup);
+  if(!group||!ctx.licensor||!ctx.license) return null;
+  const candidates=(state.overrides.pricingRules||[]).filter(rule=>kolPricingRuleDimensionMatches(rule,ctx,group));
   if(!candidates.length) return null;
-  // Koleksiyon'da OPD hiçbir zaman filtre olarak kullanılmaz. Ülke, sezon,
-  // Licensor ve License eşleşen hesaplar arasından en yeni tarihli kayıt seçilir.
+  // Koleksiyon'da OPD hiçbir zaman filtre olarak kullanılmaz. Ülke grubu açıkça
+  // verildiğinde de sezon, Licensor ve License eşleşen hesaplar arasından en
+  // yeni tarihli kayıt seçilir.
   return [...candidates].sort((a,b)=>{
     const af=kolPricingRuleFreshness(a), bf=kolPricingRuleFreshness(b);
     return bf.start-af.start || bf.end-af.end || String(b.id||'').localeCompare(String(a.id||''),'tr');
   })[0]||null;
+}
+function kolFindPricingRule(row){
+  const ctx=kolPricingRuleContext(row);
+  if(!ctx.country||!ctx.licensor||!ctx.license) return null;
+  return kolFindPricingRuleForCountryGroup(row,pricingCountryGroup(ctx.country));
 }
 /* v7.81 — Non-DTR bir Koleksiyon modelinde eşleşen License Royalty hesabı
    var mı? Yoksa FOB hesaplanmaz ve royalty hücresi uyarı gösterir. */
@@ -22734,6 +22760,30 @@ function kolLicenseRuleMissing(row){
   if(kolLicensorUnresolvedState(row)) return true;
   if(!kolLandedIsNonDtr(row)) return false;
   return !kolFindPricingRule(row);
+}
+// TR Landed üretim ülkesinden bağımsızdır: lisanslı Non-DTR model Türkiye'de
+// üretiliyormuş gibi Country Group = TR royalty/hologram kuralı ile hesaplanır.
+// Bu kural yoksa Overseas Landed çalışmaya devam eder, yalnız TR Landed durur.
+function kolTrLicenseRuleMissing(row){
+  if(!row) return false;
+  if(kolLicensorUnresolvedState(row)) return true;
+  if(!kolLandedIsNonDtr(row)) return false;
+  return !kolFindPricingRuleForCountryGroup(row,'TR');
+}
+function kolTrLicenseRuleMissingText(row){
+  const unresolved=kolLicensorUnresolvedState(row);
+  if(unresolved) return licenseLicensorWarningText(unresolved);
+  const ctx=kolPricingRuleContext(row),missing=[];
+  if(!ctx.license) missing.push('License');
+  if(!ctx.licensor) missing.push('Licensor');
+  if(missing.length){
+    return appLang==='en'
+      ? `TR Royalty cannot be resolved: ${missing.join(', ')} is empty on this row. TR Landed is not calculated.`
+      : `TR Royalty çözülemiyor: bu satırda ${missing.join(', ')} boş. TR Landed hesaplanmadı.`;
+  }
+  return appLang==='en'
+    ? 'No TR License Royalty calculation matches this model. TR Landed is not calculated — define a Country Group = TR rule under License Royalty Calculations.'
+    : 'Bu model için eşleşen TR License Royalty hesabı yok. TR Landed hesaplanmadı — License Royalty Calculations altında Country Group = TR kuralını tanımlayın.';
 }
 /* Uyarının NEDENİNİ de söyler: kural hiç tanımlı değil mi, yoksa eşleşme
    için gereken alanlar (Ülke / License) bu satırda boş mu? İkisi de aynı
@@ -23913,17 +23963,17 @@ function renderKol(){
         // Tek hücrede: TR fiyatı (TL) + landed çarpanı + kur. Sonuç üstte büyük.
         const landedRow=kolGroupSummaryEffectiveLandedRow(r),k=kolLandedCalc(landedRow);
         const fxTitle=k.fx==null?L('Kur bulunamadı'):(k.fxIsManual?L('Elle girilen kur'):L('Ex-Factory ayının kuru'));
-        const trCostTitle=k.ruleMissing
-          ? kolLicenseRuleMissingText(r)
+        const trCostTitle=k.trRuleMissing
+          ? kolTrLicenseRuleMissingText(r)
           : (k.nonDtr&&k.trBaseUsd!=null
-            ? `${L('TR landed')} · ${L('Non-DTR')}: ($${kolMoney2(k.trBaseUsd)} ÷ (1 − %${k.royaltyPct.toLocaleString(appLang==='en'?'en-GB':'tr-TR',{maximumFractionDigits:3})})) + $${kolMoney2(k.hologramCost)} = $${kolMoney2(k.trCostedUsd)}`
+            ? `${L('TR landed')} · TR Royalty: ($${kolMoney2(k.trBaseUsd)} ÷ (1 − %${k.trRoyaltyPct.toLocaleString(appLang==='en'?'en-GB':'tr-TR',{maximumFractionDigits:3})})) + $${kolMoney2(k.trHologramCost)} = $${kolMoney2(k.trCostedUsd)}`
             : L('TR landed'));
         const trMultState=k.trMultIsManual?(appLang==='en'?'Manual':'Manuel'):(appLang==='en'?'Default':'Varsayılan');
         // Hücrede TL fiyat / çarpan / kur girdileri var; kopyalama DOM'daki İLK
         // input'u (TL fiyat) alıp landed sonucu yerine onu yazıyordu. Kopyaya
         // Excel dışa aktarımındaki gibi hesaplanan landed SAYISI verilir.
-        html+=`<td class="kolLandedTd${k.ruleMissing?' kolRuleMissing':''}"${rc}${kolLandedCopyAttrs(k.trLanded)}><div class="kolLandedCard">
-          <b class="kolLandedVal" title="${escapeHtml(trCostTitle)}" style="${k.ruleMissing?'color:var(--orange);':''}">${k.ruleMissing?'⚠':(k.trLanded==null?'—':'$'+kolMoney2(k.trLanded))}</b>
+        html+=`<td class="kolLandedTd${k.trRuleMissing?' kolRuleMissing':''}"${rc}${kolLandedCopyAttrs(k.trLanded)}><div class="kolLandedCard">
+          <b class="kolLandedVal" title="${escapeHtml(trCostTitle)}" style="${k.trRuleMissing?'color:var(--orange);':''}">${k.trRuleMissing?'⚠':(k.trLanded==null?'—':'$'+kolMoney2(k.trLanded))}</b>
           <div class="kolLandedMeta">
             <span class="kolLandedInputGroup" title="${escapeHtml(L('Türkiye fiyatı (TL)'))}"><i aria-hidden="true">₺</i><input type="text" inputmode="decimal" class="editCell kolLandedInput" data-id="${r.id}" data-k="trPrice" value="${escapeHtml(String(kolEffectiveValue(r,'trPrice')||''))}" placeholder="0,00"></span>
             <span class="kolLandedInputGroup" title="${escapeHtml((appLang==='en'?'Landed multiplier':'Landed çarpanı')+' · '+trMultState)}"><i aria-hidden="true">×</i><input type="text" inputmode="decimal" class="editCell kolLandedInput isMult${k.trMultIsManual?' isManual':''}" data-id="${r.id}" data-k="trLandedMult" value="${escapeHtml(String(kolEffectiveValue(r,'trLandedMult')||''))}" placeholder="${escapeHtml(landedMultiplierInputValue(k.defaultTrMult))}"></span>

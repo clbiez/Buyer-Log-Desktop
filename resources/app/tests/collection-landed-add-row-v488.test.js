@@ -11,7 +11,8 @@ test('v4.90 Non-DTR landed calculation divides by one minus royalty and adds hol
   assert.match(INDEX, /function kolLandedPriceWithCosts\(basePrice,row\)/);
   assert.match(INDEX, /const denom=1-royalty/);
   assert.match(INDEX, /return base\/denom\+hologram/);
-  assert.match(INDEX, /const trCostedUsd=trBaseUsd==null\?null:kolLandedPriceWithCosts\(trBaseUsd,row\)/);
+  assert.match(INDEX, /const trRule=kolFindPricingRuleForCountryGroup\(row,'TR'\)/);
+  assert.match(INDEX, /const trCostedUsd=\(trBaseUsd==null\|\|trRuleMissing\)\?null:kolLandedPriceWithRule\(trBaseUsd,row,trRule\)/);
   assert.match(INDEX, /const ydCostedFob=ydBaseFob==null\?null:kolLandedPriceWithCosts\(ydBaseFob,row\)/);
   assert.match(INDEX, /const trLanded=trCostedUsd==null\?null:trCostedUsd\*trMult/);
   assert.match(INDEX, /const ydLanded=ydCostedFob==null\?null:ydCostedFob\*ydMult/);
