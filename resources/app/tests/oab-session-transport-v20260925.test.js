@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { EventEmitter } = require('node:events');
 const { createOabSessionTransport } = require('../electron/oab-session-transport');
 const authState = require('../server/lib/oab-auth-state');
 
@@ -45,6 +46,42 @@ test('OAB report requests use the persistent Chromium session with cookies and p
       body:JSON.stringify({ ...request, endpoint:'https://other.example/' }) });
     assert.equal(forbidden.status, 400);
     assert.equal(calls.length, 1);
+  } finally { await transport.stop(); }
+});
+
+test('OAB retries a rejected session.fetch through net.request with the same session and no token in logs', async () => {
+  const logs = [];
+  const authorization = 'Bearer ' + 's'.repeat(48);
+  const authSession = { fetch:async () => { throw new TypeError('Failed to fetch ' + authorization); } };
+  let options;
+  const transport = createOabSessionTransport({ authSession, secret:'test-secret', log:message => logs.push(message),
+    netRequest:input => {
+      options = input;
+      const request = new EventEmitter();
+      request.abort = () => {};
+      request.end = () => {
+        const upstream = new EventEmitter();
+        upstream.statusCode = 200;
+        queueMicrotask(() => {
+          request.emit('response', upstream);
+          upstream.emit('data', Buffer.from('{"Data":[]}'));
+          upstream.emit('end');
+        });
+      };
+      return request;
+    } });
+  const origin = await transport.start();
+  try {
+    const response = await fetch(origin + '/request', { method:'POST',
+      headers:{ 'Content-Type':'application/json', 'X-BuyerLog-Desktop-Bridge':'test-secret' },
+      body:JSON.stringify({ endpoint:'Report/GetReportData', authorization, body:{ reportRef:'OrderBudget_List_Report' } }) });
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), '{"Data":[]}');
+    assert.equal(options.session, authSession);
+    assert.equal(options.credentials, 'include');
+    assert.equal(options.headers.Authorization, authorization);
+    assert.match(logs.join(' '), /OAB Chromium fetch hatası: TypeError/);
+    assert.ok(!logs.join(' ').includes(authorization));
   } finally { await transport.stop(); }
 });
 
