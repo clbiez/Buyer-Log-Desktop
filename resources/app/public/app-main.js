@@ -20660,7 +20660,7 @@ function kolApplyNewModelDefaults(row){
   if(row&&!norm(row.plmId))row.durum='Pending File';
   return row;
 }
-const KOL_ASAS_CATALOG_KINDS = new Set(['category','mag','mmyg','buyingGroup','buyer','season','license','licensor','country','line','productMainDefinition']);
+const KOL_ASAS_CATALOG_KINDS = new Set(['category','mag','mmyg','buyingGroup','buyer','manufacturer','season','license','licensor','country','line','productMainDefinition']);
 function collectionCatalogsReady(catalogs){
   if(!catalogs||typeof catalogs!=='object')return false;
   return [...KOL_ASAS_CATALOG_KINDS].every(kind=>Array.isArray(catalogs[kind]));
@@ -22538,12 +22538,22 @@ function kolPriceGradientHex(price, validPrices){
    açılır. Böylece Best Price kendiliğinden doğru değeri gösterir ve fiyatın
    nereden geldiği Quotations'ta izlenebilir kalır.
    =================================================================== */
-function openKolManualPriceModal(row,{confirm=false}={}){
+function kolManualManufacturerSuggestions(){
+  const values=[...kolCatalogValues('manufacturer')];
+  (kolManufacturers||[]).forEach(item=>{if(item&&item.name)values.push(item.name);});
+  return kolUniqueCatalogValues(values);
+}
+async function openKolManualPriceModal(row,{confirm=false}={}){
   if(!row)return;
   if(!kolRequireWorkspaceEdit())return;
   document.getElementById('_kolManualPrice')?.remove();
+  // Manufacturer suggestions are an ASAS-backed Collection catalog. On a cold
+  // Collection visit, wait for that lightweight projection before opening the
+  // dialog so a model with no local quotations still gets the full directory.
+  if(!collectionCatalogsReady(state.collectionCatalogs))await ensureCollectionCatalogLoaded({deferRender:true});
   const en=appLang==='en';
   const best=kolBestPricing(row);
+  const manualManufacturers=kolManualManufacturerSuggestions();
   const modal=document.createElement('div');
   modal.id='_kolManualPrice'; modal.className='warnOverlay';
   const title=confirm?(en?'Set confirmed manufacturer':'Onaylı üreticiyi belirle'):(en?'Enter price manually':'Elle fiyat gir');
@@ -22558,7 +22568,7 @@ function openKolManualPriceModal(row,{confirm=false}={}){
     <div class="kolManualBody">
       <label class="kolManualField"><span>${escapeHtml(en?'Manufacturer':'Üretici')}</span>
         <input id="_kolManualMfr" list="_kolManualMfrList" autocomplete="off" value="${escapeHtml(confirm?(row.confirmedManufacturer||''):(best?best.name:''))}">
-        <datalist id="_kolManualMfrList">${kolManufacturers.map(m=>`<option value="${escapeHtml(m.name)}"></option>`).join('')}</datalist>
+        <datalist id="_kolManualMfrList">${manualManufacturers.map(name=>`<option value="${escapeHtml(name)}"></option>`).join('')}</datalist>
       </label>
       <label class="kolManualField"><span>${escapeHtml(en?'Price (USD)':'Fiyat (USD)')}</span>
         <input id="_kolManualPriceInput" inputmode="decimal" value="${escapeHtml(best&&(!confirm||norm(row.confirmedManufacturer)===norm(best.name))?kolFormatMoneyDisplay(String(best.price)):'')}">
