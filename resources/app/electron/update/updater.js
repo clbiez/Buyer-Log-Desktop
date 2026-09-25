@@ -80,9 +80,11 @@ class BuyerLogUpdater{
       const transportCode=String(error.transportCode||cause&&cause.code||'').slice(0,120);
       const transportMessage=String(error.transportMessage||cause&&cause.message||'').slice(0,500);
       const transport=String(error.transport||cause&&cause.transport||'').slice(0,80);
+      const artifactSource=String(error.artifactSource||cause&&cause.artifactSource||'').slice(0,80);
       if(transportCode)detail.transportCode=transportCode;
       if(transportMessage)detail.transportMessage=transportMessage;
       if(transport)detail.transport=transport;
+      if(artifactSource)detail.artifactSource=artifactSource;
       this.saveState({state:STATES.FAILED,lastError:detail});this.appendLog('check-failed',detail);if(options.manual)throw Object.assign(error,detail);return {ok:false,offline:true,error:detail,...this.status(base,channel)};
     }
   }
@@ -101,6 +103,7 @@ class BuyerLogUpdater{
           transportCode:String(error&&error.code||'').slice(0,120),
           transportMessage:String(error&&error.message||'').slice(0,500),
           transport:String(error&&error.transport||'').slice(0,80),
+          artifactSource:String(error&&error.artifactSource||'').slice(0,80),
         });
       }
       fs.renameSync(partial,cacheFile);
