@@ -10,7 +10,7 @@ const {Readable}=require('stream');
 const {createZipFromDirectory}=require('../electron/update/zip');
 const {BuyerLogUpdater}=require('../electron/update/updater');
 const {createLauncherState}=require('../electron/update/launcher-state');
-const {GitHubReleaseProvider,parseGitHubSource,githubAssetUrl}=require('../electron/update/github-provider');
+const {GitHubReleaseProvider,parseGitHubSource,githubAssetUrl,githubRawArtifactUrl}=require('../electron/update/github-provider');
 
 function core(root,version){const app=path.join(root,'app');for(const d of ['electron/update','server','public'])fs.mkdirSync(path.join(app,d),{recursive:true});fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({version}));fs.writeFileSync(path.join(app,'electron/main.js'),'module.exports=true');fs.writeFileSync(path.join(app,'server/server.js'),'module.exports=true');fs.writeFileSync(path.join(app,'public/index.html'),'<html></html>');return app;}
 function response(url,bytes){return {ok:true,url,status:200,text:async()=>bytes.toString('utf8'),body:Readable.toWeb(Readable.from(bytes))};}
@@ -35,6 +35,7 @@ test('public GitHub source and artifact are narrowly constrained',()=>{
   assert.deepEqual(parseGitHubSource('github:buyer/release-only'),{owner:'buyer',repo:'release-only'});
   assert.throws(()=>parseGitHubSource('https://github.com/buyer/release-only'));
   assert.equal(githubAssetUrl('github:buyer/release-only','stable','7.0.85','releases/BuyerLog-7.0.85.zip'),'https://github.com/buyer/release-only/releases/download/stable-v7.0.85/BuyerLog-7.0.85.zip');
+  assert.equal(githubRawArtifactUrl('github:buyer/release-only','stable','7.0.85','releases/BuyerLog-7.0.85.zip'),'https://raw.githubusercontent.com/buyer/release-only/raw-dist/stable/BuyerLog-7.0.85.zip?v=7.0.85');
   assert.throws(()=>githubAssetUrl('github:buyer/release-only','stable','7.0.85','releases/other.zip'));
 });
 
@@ -53,7 +54,7 @@ test('GitHub bridge stages through original updater; stable never reads TEST; ac
   const result=await updater.checkAndStage({channel:'stable'});
   assert.equal(result.pendingReady,true);assert.equal(result.pendingVersion,'7.0.85');
   assert.ok(seen.every(url=>!url.includes('/test/')));assert.ok(seen.some(url=>url.includes('/stable/latest.json')));
-  assert.ok(seen.some(url=>url.includes('/stable-v7.0.85/BuyerLog-7.0.85.zip')));
+  assert.ok(seen.some(url=>url.includes('/raw-dist/stable/BuyerLog-7.0.85.zip?v=7.0.85')));
   const life=createLauncherState({bootstrapCore:bootstrap,portableRoot:root});
   const active=life.activatePending();assert.equal(active.selected.version,'7.0.85');
   assert.equal(life.confirmHealth(active.activation.token,{version:'7.0.85',backendReady:true,rendererReady:true,localDbReady:true}),true);
