@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.129",
-  "commit_sha": "baedd0de4601deb9008df97e425f8f6e01ccca2a",
-  "release_notes": "Buyer Log 7.0.129: Koleksiyon ekranında CoreNectum/PLM model görseli sürüklenirken açılan eski genel 'Drop the file here' Excel katmanı devre dışı bırakıldı. Tarayıcı/CoreNectum image drag payloadları Collection PLM importerına öncelikli yönlendiriliyor; Windows Explorer'dan Excel sürükleme davranışı korunuyor. Drop hedefi eski overlay olsa bile PLM akışı kaybolmuyor. Aynı PLM ID mevcutsa hiçbir kayıt güncellenmiyor veya çoğaltılmıyor. Tam Buyer Log regression paketi PASS."
+  "version": "7.0.130",
+  "commit_sha": "b693b0fbf65e2a3c258f54bc70470f2d9ce7dd43",
+  "release_notes": "Buyer Log 7.0.130: Güncel main üzerinden güvenli paket. Koleksiyon ekranında CoreNectum/PLM model görseli sürüklenirken eski genel 'Drop the file here' Excel katmanı artık PLM image drag için devreye girmiyor; browser/CoreNectum payloadları Collection PLM importerına öncelikli yönlendiriliyor, Excel dosyası sürükleme davranışı korunuyor. Drop hedefi eski overlay olsa bile PLM akışı kaybolmuyor. Aynı PLM ID mevcutsa hiçbir kayıt güncellenmiyor veya çoğaltılmıyor. 7.0.129 sonrasında main'e giren diğer güncellemeler de aynen korunuyor. Tam Buyer Log regression paketi ikinci koşumda PASS."
 }
