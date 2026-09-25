@@ -15268,6 +15268,9 @@ function renderBacklog(data){
     <div class="kpi tone-navy"><div class="n">${fmtQty(data.totalQty)}</div><div class="l">Toplam Adet</div></div>
     <div class="kpi tone-green"><div class="n">${fmtQty(data.totalOrders)}</div><div class="l">Sipariş Sayısı</div></div>`;
 
+  // Grafik pivot ağacından bağımsızdır; gruplama seçilmemiş olsa bile aktif Backlog filtresini izler.
+  window.BLBacklogChart?.onBacklogRendered?.(data);
+
   backlogPivotCols = [];
   const body = document.getElementById('backlogTreeBody');
   if(!data.tree){
@@ -15322,7 +15325,6 @@ function renderBacklog(data){
      çizildiğinde haberdar edilir, filtre imzası değiştiyse satırlarını
      yeniler. Panel kapalıysa hiçbir şey yapmaz (ek istek yok). */
   window.BLBacklogAnalysis?.onBacklogRendered?.(data);
-  window.BLBacklogChart?.onBacklogRendered?.(data);
 }
 function renderBacklogFlatRows(flat){
   recomputeBacklogRowVisibility(flat);
