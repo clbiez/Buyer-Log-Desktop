@@ -36,6 +36,7 @@ test('help copy documents OR, AND, exclusion and Excel paste behavior without br
 test('search help uses a compact themed fixed popover', () => {
   assert.match(CSS, /\.tableSearchHelpButton\{/);
   assert.match(CSS, /width:24px/);
+  assert.match(CSS, /border-radius:var\(--r-xs\)/);
   assert.match(CSS, /\.tableSearchHelpPopover\{/);
   assert.match(CSS, /position:fixed/);
   assert.match(CSS, /background:var\(--card\)/);
