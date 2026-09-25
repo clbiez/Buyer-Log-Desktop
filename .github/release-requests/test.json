@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.123",
-  "commit_sha": "b30c1a0c474a054776c7f16657413a4fb635202b",
-  "release_notes": "Buyer Log 7.0.123: updater artık GitHub Release asset hattı bloklandığında raw.githubusercontent.com üzerindeki raw-dist aynasını öncelikli kullanıyor; klasik release indirmesi fallback olarak korunuyor. TEST/STABLE release pipeline ZIP paketlerini raw-dist dalına otomatik aynalıyor. Tam Buyer Log regression paketi PASS."
+  "version": "7.0.125",
+  "commit_sha": "6f50074553180efe8c8204f9010501b8889d3a50",
+  "release_notes": "Buyer Log 7.0.125: tablo aramalarına kullanım ipucu açılır pencereleri eklendi; uzun süren e-posta işlemleri Operation Center özetinde aşama bilgisiyle gösteriliyor; Koleksiyon listesi açılırken legacy owner recovery artık otomatik çalışmıyor, böylece eski satırların yeniden canlanması/model çoğalması riski engelleniyor. Koleksiyon listeleme güvenliği için regression testi eklendi. Tam Buyer Log regression paketi PASS."
 }
