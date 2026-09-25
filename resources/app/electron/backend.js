@@ -136,6 +136,7 @@ class BackendProcess {
     this.log = typeof options.log === 'function' ? options.log : () => {};
     this.onUnexpectedExit = typeof options.onUnexpectedExit === 'function' ? options.onUnexpectedExit : () => {};
     this.desktopBridgeSecret = String(options.desktopBridgeSecret || '');
+    this.oabTransportOrigin = String(options.oabTransportOrigin || '');
     this.child = null;
     this.stopping = false;
     this.exited = false;
@@ -175,6 +176,7 @@ class BackendProcess {
     this.openLogStream();
     const env = backendEnv(this.paths, process.env);
     if (this.desktopBridgeSecret) env.BUYER_LOG_DESKTOP_BRIDGE_SECRET = this.desktopBridgeSecret;
+    if (this.oabTransportOrigin) env.BUYER_LOG_OAB_TRANSPORT_ORIGIN = this.oabTransportOrigin;
     this.log('Backend başlatılıyor: ' + watchdog + ' · port=' + this.port);
 
     this.child = spawn(process.execPath, [watchdog], {
