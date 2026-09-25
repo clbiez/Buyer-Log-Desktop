@@ -180,6 +180,9 @@ test('Backlog render refreshes chart and Excel export appends chart sheets', () 
   assert.match(APP,/charts:chartSpecs/);
   assert.match(APP,/window\.BLBacklogChart\.applyExcelCharts\(patched,charts,JSZip,'blob'\)/);
   assert.match(APP,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
+  assert.match(APP,/viewRange:window\.BLBacklogChart\?\.getViewRange\?\.\(\)/);
+  assert.match(APP,/liveSource:detailSheet\.__backlogChartLiveSource/);
+  assert.match(APP,/_BL_CHART_BUCKET1/);
 });
 
 test('Excel chart export keeps the selected visible time range and whole-number axis', () => {
@@ -189,11 +192,41 @@ test('Excel chart export keeps the selected visible time range and whole-number 
   assert.equal(result.model.categories.length,1);
   assert.deepEqual(result.viewRange,{start:1,end:2});
   const data=wb.Sheets[result.dataSheetName];
-  assert.equal(data['!ref'],'A1:D2');
+  assert.equal(data['!ref'],'A1:F2');
   const generated=chart.chartXml(result.charts[0],0);
   assert.match(generated,/formatCode="#,##0"/);
   assert.doesNotMatch(generated,/formatCode="#,##0\.00"/);
   assert.match(generated,/<c:majorUnit val="/);
+});
+
+test('Excel chart data stays live against the exported BACKLOG sheet', () => {
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['BACKLOG']]),'BACKLOG');
+  const liveSource={sheetName:'BACKLOG',firstRow:2,lastRow:5,bucket1Col:'AZ',metricCol:'BA',seriesCol:'BB'};
+  const result=chart.appendWorkbookSheets(wb,rows,headers,{XLSX,state:state(),liveSource,viewRange:{start:0,end:2}});
+  assert.equal(result.live,true);
+  const data=wb.Sheets[result.dataSheetName];
+  assert.match(data.C2.f,/SUMIFS\('BACKLOG'!\$BA\$2:\$BA\$5,'BACKLOG'!\$AZ\$2:\$AZ\$5,\$B2,'BACKLOG'!\$BB\$2:\$BB\$5,"A"\)/);
+  assert.match(data.D2.f,/SUMIFS\(/);
+  assert.match(data.E2.f,/SUM\(C2:D2\)/);
+  assert.equal(data.B2.v,result.model.categories[0].key);
+});
+
+test('Excel live chart uses the second time-field bucket for overlay series', () => {
+  const overlayHeaders=[...headers,'Retail Tarihi'];
+  const overlayRows=rows.map((row,index)=>({...row,'Retail Tarihi':['07.09.2026','08.09.2026','09.09.2026','15.09.2026'][index]}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['BACKLOG']]),'BACKLOG');
+  const result=chart.appendWorkbookSheets(wb,overlayRows,overlayHeaders,{
+    XLSX,
+    state:state({timeField2:'Retail Tarihi'}),
+    liveSource:{sheetName:'BACKLOG',firstRow:2,lastRow:5,bucket1Col:'AZ',bucket2Col:'AY',metricCol:'BA',seriesCol:'BB'},
+  });
+  const data=wb.Sheets[result.dataSheetName];
+  const overlayColumnIndex=result.model.series.findIndex(item=>item.timeFieldIndex===2);
+  assert.ok(overlayColumnIndex>=0);
+  const cell=XLSX.utils.encode_cell({r:1,c:2+overlayColumnIndex});
+  assert.match(data[cell].f,/'BACKLOG'!\$AY\$2:\$AY\$5/);
 });
 
 test('Excel export creates Grafik and Grafik Verisi sheets with native chart formulas', () => {

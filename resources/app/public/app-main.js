@@ -15513,7 +15513,7 @@ async function exportCurrentBacklogDetail(){
     const wb=XLSX.utils.book_new();
     const includeImages=false;
     const expanded=backlogExpandDateDimensions(headers,currentBacklogDetailRows);
-    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows);
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,null,{includeImages,dateDimensionSources:expanded.derivedHeaderSources});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     forceWorkbookFormulaCalculation(wb);
     const workbookHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers;
@@ -16205,6 +16205,14 @@ function backlogFormulaWithOverride(header, spec, excelRow){
   const formula=override.replace(/^=/,'').replace(/\{row\}/g,String(excelRow));
   return formula?{...spec,formula}:spec;
 }
+function backlogChartBucketFormula(sourceRef,granularity){
+  const ref=String(sourceRef||'').trim();if(!ref)return '';
+  const sunday='('+ref+'-WEEKDAY('+ref+',2)+7)';
+  if(granularity==='week')return 'IF('+ref+'="","",YEAR('+ref+'-WEEKDAY('+ref+',2)+4)&"-W"&TEXT(WEEKNUM('+ref+',21),"00"))';
+  if(granularity==='month')return 'IF('+ref+'="","",TEXT('+sunday+',"yyyy-mm"))';
+  if(granularity==='year')return 'IF('+ref+'="","",YEAR('+sunday+'))';
+  return 'IF('+ref+'="","",TEXT('+ref+',"yyyy-mm-dd"))';
+}
 function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   if(!window.BLBacklogExcel)throw new Error('Backlog Excel formül motoru yüklenemedi.');
   const includeImages=options.includeImages===true;
@@ -16212,7 +16220,17 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   const visibleHeaders=includeImages?['Görsel',...dataHeaders]:dataHeaders;
   const bd=_XLS_BORDERS;
   const helperHeaders=[...BLBacklogExcel.HELPER_HEADERS];
-  const allHeaders=[...visibleHeaders,...helperHeaders];
+  const chartState=options.chartState&&options.chartState.enabled&&options.chartState.timeField?options.chartState:null;
+  const chartHelperSpecs=chartState?[
+    {name:'_BL_CHART_TIME1',role:'time1',source:chartState.timeField,kind:'date'},
+    ...(chartState.timeField2?[{name:'_BL_CHART_TIME2',role:'time2',source:chartState.timeField2,kind:'date'}]:[]),
+    {name:'_BL_CHART_METRIC',role:'metric',source:chartState.metricField,kind:'metric'},
+    ...(chartState.seriesField?[{name:'_BL_CHART_SERIES',role:'series',source:chartState.seriesField,kind:'text'}]:[]),
+    {name:'_BL_CHART_BUCKET1',role:'bucket1',kind:'bucket',timeRole:'time1'},
+    ...(chartState.timeField2?[{name:'_BL_CHART_BUCKET2',role:'bucket2',kind:'bucket',timeRole:'time2'}]:[]),
+  ]:[];
+  const chartHelperHeaders=chartHelperSpecs.map(item=>item.name);
+  const allHeaders=[...visibleHeaders,...helperHeaders,...chartHelperHeaders];
   const dateHeaders=new Set(dataHeaders.filter(header=>backlogIsDateHeader(header,rows)));
   const dateDimensionTextHeaders=new Set(dataHeaders.filter(header=>/\s\((?:Ay|Hafta|Month|Week)\)$/i.test(String(header||''))));
   const dateDimensionSources=options.dateDimensionSources||{};
@@ -16271,13 +16289,49 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
         :backlogExcelCellFromValue(spec?spec.value:'',spec?spec.kind:'text',{});
       put(ri+1,visibleHeaders.length+hi,cell);
     });
+    if(chartState&&chartHelperSpecs.length){
+      const chartBase=visibleHeaders.length+helperHeaders.length;
+      const roleCol=new Map(chartHelperSpecs.map((item,index)=>[item.role,chartBase+index]));
+      chartHelperSpecs.forEach((item,index)=>{
+        const ci=chartBase+index,excelRow=ri+2;
+        let cell;
+        if(item.kind==='bucket'){
+          const timeCi=roleCol.get(item.timeRole),timeRef=timeCi!=null?BLBacklogExcel.columnName(timeCi)+excelRow:'';
+          const formula=backlogChartBucketFormula(timeRef,chartState.granularity);
+          const rawDate=item.timeRole==='time2'?row[chartState.timeField2]:row[chartState.timeField];
+          const cached=window.BLDateDimension?.bucketKey?.(rawDate,chartState.granularity)||'';
+          cell=formula?backlogExcelFormulaCell({kind:'text',cached,formula},{numFmt:'@'}):backlogExcelCellFromValue(cached,'text',{numFmt:'@'});
+        }else if(item.role==='metric'&&item.source==='__records'){
+          cell=backlogExcelCellFromValue(1,'number',{numFmt:'#,##0'});
+        }else{
+          const visibleCi=visibleHeaders.indexOf(item.source),sourceRef=visibleCi>=0?BLBacklogExcel.columnName(visibleCi)+excelRow:'';
+          const raw=item.source?row[item.source]:'';
+          let kind=item.kind;
+          if(kind==='metric')kind=typeof raw==='number'&&Number.isFinite(raw)?'number':'text';
+          cell=sourceRef
+            ?backlogExcelFormulaCell({kind,cached:raw,formula:sourceRef},kind==='date'?{numFmt:'dd.mm.yy'}:{})
+            :backlogExcelCellFromValue(raw,kind,kind==='date'?{numFmt:'dd.mm.yy'}:{});
+        }
+        put(ri+1,ci,cell);
+      });
+    }
   });
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(1,rows.length),c:allHeaders.length-1}});
   ws['!autofilter']={ref:ws['!ref']};
   ws['!cols']=[
     ...visibleHeaders.map(h=>h==='Görsel'?{wch:kolExcelImageMetrics().colChars}:{...(dateDimensionTextHeaders.has(h)?{}:BLBacklogExcel.columnSpec(h)),wch:h==='Model Adı'?26:(dateHeaders.has(h)?12:dateDimensionTextHeaders.has(h)?22:14)}),
     ...helperHeaders.map(h=>BLBacklogExcel.columnSpec(h,{helper:true})),
+    ...chartHelperHeaders.map(()=>({hidden:true,wch:2})),
   ];
+  if(chartState&&chartHelperSpecs.length){
+    const chartBase=visibleHeaders.length+helperHeaders.length,roleCols={};
+    chartHelperSpecs.forEach((item,index)=>{roleCols[item.role]=BLBacklogExcel.columnName(chartBase+index);});
+    Object.defineProperty(ws,'__backlogChartLiveSource',{value:{
+      sheetName:'BACKLOG',firstRow:2,lastRow:rows.length+1,
+      bucket1Col:roleCols.bucket1||'',bucket2Col:roleCols.bucket2||'',
+      metricCol:roleCols.metric||'',seriesCol:roleCols.series||'',
+    },enumerable:false});
+  }
   // Excel'in üstündeki 1/2 ve +/- outline kontrolleriyle gizli iş sütunları
   // tek tıkla açılıp kapanabilir; formül yardımcı sütunları ayrı ve kilitli kalır.
   ws['!outline']={left:false,above:false};
@@ -16355,10 +16409,16 @@ async function exportBacklogToExcel(){
     const selectedHeaders=backlogSelectedDataHeaders(data.headers||[]);
     const exportHeaders=selectedHeaders.length?selectedHeaders:(data.headers||[]);
     const expanded=backlogExpandDateDimensions(exportHeaders,data.rows||[]);
-    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources});
+    const chartState=window.BLBacklogChart?.getState?.()||null;
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources,chartState});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     const chartExport=window.BLBacklogChart?.appendWorkbookSheets?.(
-      wb,data.rows||[],data.headers||[],{XLSX,state:window.BLBacklogChart?.getState?.()})||null;
+      wb,data.rows||[],data.headers||[],{
+        XLSX,
+        state:chartState,
+        viewRange:window.BLBacklogChart?.getViewRange?.(),
+        liveSource:detailSheet.__backlogChartLiveSource||null,
+      })||null;
     const settingsWs = buildBacklogSettingsSheet(transitPlan);
     if(settingsWs) XLSX.utils.book_append_sheet(wb, settingsWs, 'Ayarlar');
     forceWorkbookFormulaCalculation(wb);

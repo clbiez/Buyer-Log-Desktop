@@ -47,7 +47,7 @@ test('v5.13 Backlog magnifier Excel uses the same detail sheet/formula and valid
   // v5.86: dördüncü argüman artık boş dizi değil; Backlog sarı koşullu
   // biçimlendirmesi bu yoldan geçtiği için buraya bağlandı.
   assert.match(detail,/backlogExpandDateDimensions\(headers,currentBacklogDetailRows\)/);
-  assert.match(detail,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows\)/);
+  assert.match(detail,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,null,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources\}\)/);
   assert.match(detail,/backlogWorkbookGuardConfig\(workbookHeaders,expanded\.rows\)/);
   assert.match(detail,/saveWorkbookWithValidations\(wb,filename,rules\.validations,rules\.conditionalFormats,rules\.protections/);
   const full=between('async function exportBacklogToExcel','async function fetchBacklog');
@@ -56,6 +56,7 @@ test('v5.13 Backlog magnifier Excel uses the same detail sheet/formula and valid
   // v7.0.81: sayfa kullanıcının kaydettiği sütun seçimi/sırasıyla kurulur
   // (exportHeaders); motor ve üçüncü argüman aynı kalır.
   assert.match(full,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
-  assert.match(full,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources\}\)/);
+  assert.match(full,/const chartState=window\.BLBacklogChart\?\.getState\?\.\(\)\|\|null/);
+  assert.match(full,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources,chartState\}\)/);
   assert.match(full,/backlogWorkbookGuardConfig\(backlogHeaders,backlogRows\)/);
 });

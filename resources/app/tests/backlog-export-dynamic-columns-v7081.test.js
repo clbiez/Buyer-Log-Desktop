@@ -94,7 +94,8 @@ test('Export sütunları her zaman kullanıcının seçimi ve sırasıdır', () 
   // senaryosu bu dalda sessizce iptal oluyordu.
   assert.doesNotMatch(block, /exportHeaders\.length!==\(data\.headers\|\|\[\]\)\.length/);
   assert.match(block, /const expanded=backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
-  assert.match(block, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources\}\)/);
+  assert.match(block, /const chartState=window\.BLBacklogChart\?\.getState\?\.\(\)\|\|null/);
+  assert.match(block, /buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources,chartState\}\)/);
 });
 
 test('Kaldırılan varsayılan sütun kalıcıdır; yalnız boş kayıt veya "Varsayılana Dön" geri getirir', () => {
