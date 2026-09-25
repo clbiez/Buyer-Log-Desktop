@@ -293,7 +293,7 @@ test('Supp. FOB hücresi şablonu uyarı durumunda birim yerine ⚠ gösteriyor'
 
 /* --- 6) TR Landed / Overseas Landed: aynı kural landed'a da uygulanıyor -- */
 
-function loadLandedCalc({ licenseRuleMissing }) {
+function loadLandedCalc({ licenseRuleMissing, trLicenseRuleMissing = licenseRuleMissing, trRule = null }) {
   const parse = v => {
     if (v === '' || v == null) return NaN;
     const n = Number(String(v).replace(/\s/g, '').replace('%', '').replace(',', '.'));
@@ -302,30 +302,41 @@ function loadLandedCalc({ licenseRuleMissing }) {
   const start = APP.indexOf('function kolLandedIsNonDtr(');
   const end = APP.indexOf('\nfunction kolLandedCalc(', start);
   const endFull = APP.indexOf('\n}', end) + 2;
-  const src = APP.slice(start, endFull) + '\nreturn {kolLandedIsNonDtr,kolLandedPriceWithCosts,kolLandedCalc};';
+  const src = APP.slice(start, endFull) + '\nreturn {kolLandedIsNonDtr,kolLandedPriceWithCosts,kolLandedPriceWithRule,kolLandedCalc};';
   return new Function(
     'turknorm', 'kolParseMoneyNum', 'kolAutoFx', 'kolSuppFob',
     'kolDefaultLandedMultipliers', 'KOL_TR_LANDED_MULT', 'KOL_YD_LANDED_MULT',
-    'kolLicenseRuleMissing', src,
+    'kolLicenseRuleMissing', 'kolFindPricingRuleForCountryGroup', 'kolTrLicenseRuleMissing', src,
   )(
     turknorm, parse, () => 40, row => row.__suppFob || null,
     () => ({ tr: 1.05, overseas: 1.11 }), 1.05, 1.11,
-    licenseRuleMissing,
+    licenseRuleMissing, (_row, group) => group === 'TR' ? trRule : null, trLicenseRuleMissing,
   );
 }
 
-test('TR Landed: Non-DTR + kural yok → HESAPLANMAZ, kural varsa hesaplanır', () => {
-  const row = { licensor: 'WARNER', trPrice: '100', trFx: '40', trLandedMult: '1', royalty: '25%', hologramCost: '0.05', __suppFob: { price: '1', source: 'confirmed' } };
+test('TR Landed: Non-DTR + TR kuralı yok → yalnız TR HESAPLANMAZ, TR kuralı varsa hesaplanır', () => {
+  const row = { licensor: 'WARNER', trPrice: '100', trFx: '40', trLandedMult: '1', royalty: '10%', hologramCost: '0', __suppFob: { price: '1', source: 'confirmed' } };
 
-  const missing = loadLandedCalc({ licenseRuleMissing: () => true });
+  const missing = loadLandedCalc({
+    licenseRuleMissing: () => false,
+    trLicenseRuleMissing: () => true,
+    trRule: null,
+  });
   const kMissing = missing.kolLandedCalc(row);
-  assert.equal(kMissing.trLanded, null, 'kural yokken TR Landed royaltysiz (yanlış) hesaplanmamalı');
-  assert.equal(kMissing.ruleMissing, true, 'kolLandedCalc uyarı bayrağını taşımıyor');
+  assert.equal(kMissing.trLanded, null, 'TR kuralı yokken TR Landed royaltysiz (yanlış) hesaplanmamalı');
+  assert.equal(kMissing.trRuleMissing, true, 'TR Landed kendi uyarı bayrağını taşımıyor');
+  assert.equal(kMissing.ruleMissing, false, 'TR kuralı eksikliği Overseas kuralını eksik göstermemeli');
 
-  const present = loadLandedCalc({ licenseRuleMissing: () => false });
+  const present = loadLandedCalc({
+    licenseRuleMissing: () => false,
+    trLicenseRuleMissing: () => false,
+    trRule: { countryGroup: 'TR', royalty: 25, hologramCost: 0.05 },
+  });
   const kPresent = present.kolLandedCalc(row);
   assert.equal(Number(kPresent.trLanded.toFixed(4)), 3.3833, '(($100/40)/(1-0.25)+0.05)*1');
-  assert.equal(kPresent.ruleMissing, false);
+  assert.equal(kPresent.trRuleMissing, false);
+  assert.equal(kPresent.trRoyaltyPct, 25);
+  assert.equal(kPresent.trHologramCost, 0.05);
 });
 
 test('Overseas Landed: Non-DTR + kural yok → HESAPLANMAZ', () => {
@@ -340,9 +351,13 @@ test('DTR satırında landed hesabı ruleMissing hep false döndürür', () => {
      1-3); burada kolLandedCalc'ın o sonucu SORGUSUZ kabul ettiğini
      ölçüyoruz — stub gerçek fonksiyonun DTR davranışını taklit ediyor. */
   const row = { licensor: 'DTR', trPrice: '100', trFx: '40', trLandedMult: '1', ydLandedMult: '1', __suppFob: { price: '1', source: 'confirmed' } };
-  const mod = loadLandedCalc({ licenseRuleMissing: r => turknorm(r.licensor) !== 'DTR' });
+  const mod = loadLandedCalc({
+    licenseRuleMissing: r => turknorm(r.licensor) !== 'DTR',
+    trLicenseRuleMissing: r => turknorm(r.licensor) !== 'DTR',
+  });
   const k = mod.kolLandedCalc(row);
   assert.equal(k.ruleMissing, false);
+  assert.equal(k.trRuleMissing, false);
   assert.equal(k.trLanded, 2.5, 'DTR royaltysiz hesaplanmaya devam etmeli');
   assert.equal(k.ydLanded, 1);
 });
@@ -354,17 +369,17 @@ test('kolLandedPriceWithCosts kural yoksa null döner (tek gerçek kaynak)', () 
 });
 
 test('TR Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor', () => {
-  const start = APP.indexOf("const trCostTitle=k.ruleMissing");
+  const start = APP.indexOf("const trCostTitle=k.trRuleMissing");
   assert.ok(start > -1, 'trCostTitle bulunamadı');
   const block = APP.slice(start, APP.indexOf('</div></td>`;', start) + 20);
-  assert.match(block, /kolLandedTd\$\{k\.ruleMissing\?' kolRuleMissing':''\}/,
-    'TR Landed <td> uyarı sınıfı koşula bağlı değil');
-  assert.match(block, /\$\{k\.ruleMissing\?'⚠':\(k\.trLanded==null/,
-    'TR Landed değeri uyarıda ⚠ göstermiyor');
-  assert.match(block, /style="\$\{k\.ruleMissing\?'color:var\(--orange\);':''\}"/,
-    'TR Landed rengi uyarıda turuncu değil');
-  assert.match(block, /kolLicenseRuleMissingText\(r\)/,
-    'TR Landed başlığı uyarı metnini kullanmıyor');
+  assert.match(block, /kolLandedTd\$\{k\.trRuleMissing\?' kolRuleMissing':''\}/,
+    'TR Landed <td> TR kural uyarısına bağlı değil');
+  assert.match(block, /\$\{k\.trRuleMissing\?'⚠':\(k\.trLanded==null/,
+    'TR Landed değeri TR kuralı eksikken ⚠ göstermiyor');
+  assert.match(block, /style="\$\{k\.trRuleMissing\?'color:var\(--orange\);':''\}"/,
+    'TR Landed rengi TR kuralı eksikken turuncu değil');
+  assert.match(block, /kolTrLicenseRuleMissingText\(r\)/,
+    'TR Landed başlığı TR kuralına özel uyarı metnini kullanmıyor');
 });
 
 test('Overseas Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu rengi taşıyor', () => {
