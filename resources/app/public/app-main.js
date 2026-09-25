@@ -16351,8 +16351,7 @@ async function exportBacklogToExcel(){
     const backlogHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers,backlogRows=expanded.rows;
     const rules=backlogWorkbookGuardConfig(backlogHeaders,backlogRows);
     const chartSpecs=chartExport&&Array.isArray(chartExport.charts)?chartExport.charts:[];
-    await saveWorkbookWithValidations(
-      wb,`Backlog_Report_${stamp}.xlsx`,
+    await saveWorkbookWithValidations(wb,`Backlog_Report_${stamp}.xlsx`,
       rules.validations,rules.conditionalFormats,rules.protections,
       {freezePanes:rules.freezePanes,charts:chartSpecs});
     const chartSuffix=chartSpecs.length?' + Grafik + Grafik Verisi':'';
