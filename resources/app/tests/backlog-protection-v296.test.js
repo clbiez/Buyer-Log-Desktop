@@ -80,7 +80,7 @@ test('Backlog risk is reduced to the required VAR/YOK business values', () => {
 });
 
 // Tarayıcı tarafı Backlog Excel dışa aktarım kodu index.html'den app-main.js'e taşındı;
-// saveWorkbookWithValidations çağrısı da rules.* nesnesi + {freezePanes} alan 6 argümana
+// saveWorkbookWithValidations çağrısı rules.* nesnesi + {freezePanes, charts} alan 6 argümana
 // genişledi. 'Üretici Tükleme Tipi Teyidi' FORMULA_HEADERS'a eklendi (version-history v-753).
 test('browser and worker exports remove sheet protection for sorting while keeping strict validations and hidden helpers', () => {
   const appMain = fs.readFileSync(path.join(ROOT, 'public/app-main.js'), 'utf8');
@@ -91,7 +91,7 @@ test('browser and worker exports remove sheet protection for sorting while keepi
   assert.match(appMain, /values:\['VAR','YOK'\]/);
   assert.match(appMain, /allowBlank:false/);
   assert.match(appMain, /removeProtection:true/);
-  assert.match(appMain, /saveWorkbookWithValidations\(wb,`Backlog_Report_\$\{stamp\}\.xlsx`,rules\.validations,rules\.conditionalFormats,rules\.protections,\{freezePanes:rules\.freezePanes\}\)/);
+  assert.match(appMain, /saveWorkbookWithValidations\\(wb,`Backlog_Report_\\$\\{stamp\\}\\.xlsx`,rules\\.validations,rules\\.conditionalFormats,rules\\.protections,\\{freezePanes:rules\\.freezePanes,charts:chartExport&&Array\\.isArray\\(chartExport\\.charts\\)\\?chartExport\\.charts:\\[\\]\\}\\)/);
   assert.doesNotMatch(appMain, /const formulaHeaders=new Set\(BLBacklogExcel\.FORMULA_HEADERS/);
   assert.match(worker, /values: \['VAR', 'YOK'\]/);
   assert.match(worker, /removeProtection: true/);
