@@ -1021,11 +1021,10 @@ async function acquireOabAuthorization(options = {}) {
       try {
         authWebRequest = oabAuthSession().webRequest;
         authWebRequest.onBeforeSendHeaders(OAB_AUTH_CAPTURE_FILTER, (details, callback) => {
-          // Session.fetch also triggers webRequest, but has no login-window
-          // webContents. Capture only requests initiated by the sign-in UI.
-          const fromLoginWindow = details.webContentsId === authWindow.webContents.id
-            || [...popupWindows].some(popup => !popup.isDestroyed() && details.webContentsId === popup.webContents.id);
-          if (fromLoginWindow && !settled && lifecycle) void lifecycle.onNetworkRequest(details);
+          // PASS may make report requests from a service worker without a
+          // webContentsId. The lifecycle de-duplicates the current candidate
+          // while validation through session.fetch is in progress.
+          if (!settled && lifecycle) void lifecycle.onNetworkRequest(details);
           callback({ requestHeaders: details.requestHeaders });
         });
         networkCaptureInstalled = true;
