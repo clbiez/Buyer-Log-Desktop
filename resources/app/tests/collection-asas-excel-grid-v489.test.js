@@ -21,8 +21,8 @@ function extractBetween(source, startText, endText) {
 
 test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders rows', () => {
   const block = extractBetween(SERVER, 'const COLLECTION_CATALOG_FIELDS', 'async function buildResponse');
-  const factory = new Function('canonicalFields', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,buildCollectionCatalogs};`);
-  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, buildCollectionCatalogs } = factory(canonicalFields);
+  const factory = new Function('canonicalFields', `${block}\nreturn {COLLECTION_CATALOG_FIELDS,COLLECTION_CATALOG_SCHEMA_VERSION,collectionCatalogsComplete,buildCollectionCatalogs};`);
+  const { COLLECTION_CATALOG_FIELDS, COLLECTION_CATALOG_SCHEMA_VERSION, collectionCatalogsComplete, buildCollectionCatalogs } = factory(canonicalFields);
 
   assert.equal(COLLECTION_CATALOG_FIELDS.category, 'Category');
   assert.equal(COLLECTION_CATALOG_FIELDS.mag, 'Merch Alt Grup Kod');
@@ -32,6 +32,10 @@ test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders
   assert.equal(COLLECTION_CATALOG_FIELDS.manufacturer, 'Manufacturer');
   assert.equal(COLLECTION_CATALOG_FIELDS.season, 'Season');
   assert.equal(COLLECTION_CATALOG_SCHEMA_VERSION, 3);
+  const completeShape = Object.fromEntries(Object.keys(COLLECTION_CATALOG_FIELDS).map(key => [key, []]));
+  assert.equal(collectionCatalogsComplete(completeShape), true, 'current schema catalog must be complete');
+  const staleShape = { ...completeShape }; delete staleShape.manufacturer;
+  assert.equal(collectionCatalogsComplete(staleShape), false, 'pre-v3 catalog without manufacturer must be rebuilt');
 
   const catalogs = buildCollectionCatalogs([
     {Category:'Tişört','Merch Alt Grup Kod':'MAG 2','Merch Marka Yaş Grup Kod':'MMYG 4','Buyer Grup (TR)':'BG A',Buyer:'AYŞE',Manufacturer:'SUPPLIER B',Season:'S7'},
