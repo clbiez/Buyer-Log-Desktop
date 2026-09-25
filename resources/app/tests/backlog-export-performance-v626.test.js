@@ -39,8 +39,8 @@ test('v6.32 Backlog Excel export skips image embedding for speed and integrity',
 });
 
 test('v6.26 Backlog Excel column dialog always has a visible fixed catalog',()=>{
-  assert.match(APP,/BACKLOG_EXCEL_COLUMNS_KEY='bl\\.backlog\\.excelColumns\\.v4'/);
-  assert.match(APP,/BACKLOG_EXCEL_COLUMNS_LEGACY_KEY='bl\\.backlog\\.excelColumns\\.v3'/);
+  assert.match(APP,/BACKLOG_EXCEL_COLUMNS_KEY='bl\.backlog\.excelColumns\.v4'/);
+  assert.match(APP,/BACKLOG_EXCEL_COLUMNS_LEGACY_KEY='bl\.backlog\.excelColumns\.v3'/);
   assert.match(APP,/function backlogExportSourceCatalog\(\)/);
   assert.match(APP,/BACKLOG_DEFAULT_EXPORT_HEADERS\.map/);
   assert.match(APP,/role="dialog" aria-modal="true"/);
