@@ -16409,13 +16409,15 @@ async function exportBacklogToExcel(){
     const selectedHeaders=backlogSelectedDataHeaders(data.headers||[]);
     const exportHeaders=selectedHeaders.length?selectedHeaders:(data.headers||[]);
     const expanded=backlogExpandDateDimensions(exportHeaders,data.rows||[]);
-    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources});
+    const chartState=window.BLBacklogChart?.getState?.()||null;
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources,chartState});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     const chartExport=window.BLBacklogChart?.appendWorkbookSheets?.(
       wb,data.rows||[],data.headers||[],{
         XLSX,
-        state:window.BLBacklogChart?.getState?.(),
+        state:chartState,
         viewRange:window.BLBacklogChart?.getViewRange?.(),
+        liveSource:detailSheet.__backlogChartLiveSource||null,
       })||null;
     const settingsWs = buildBacklogSettingsSheet(transitPlan);
     if(settingsWs) XLSX.utils.book_append_sheet(wb, settingsWs, 'Ayarlar');
