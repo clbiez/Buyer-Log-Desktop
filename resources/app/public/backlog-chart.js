@@ -795,7 +795,8 @@
       const bucketCol=serie.timeFieldIndex===2&&live.bucket2Col?live.bucket2Col:live.bucket1Col;
       const bucketRange=sourceRange(bucketCol);if(!bucketRange)return '';
       const criteria=[bucketRange,keyRef],hasSeries=!!(st.seriesField&&seriesRange);
-      if(hasSeries)criteria.push(seriesRange,formulaText(serie.baseName));
+      const seriesCriterion=serie.baseName===tr('(boş)','(blank)')?'':serie.baseName;
+      if(hasSeries)criteria.push(seriesRange,formulaText(seriesCriterion));
       if(st.aggregation==='sum')return 'IFERROR(SUMIFS('+metricRange+','+criteria.join(',')+'),0)';
       if(st.aggregation==='avg')return 'IFERROR(AVERAGEIFS('+metricRange+','+criteria.join(',')+'),0)';
       if(st.aggregation==='count'){
@@ -804,7 +805,7 @@
       }
       if(st.aggregation==='distinct'){
         const predicates=['('+bucketRange+'='+keyRef+')'];
-        if(hasSeries)predicates.push('('+seriesRange+'='+formulaText(serie.baseName)+')');
+        if(hasSeries)predicates.push('('+seriesRange+'='+formulaText(seriesCriterion)+')');
         predicates.push('('+metricRange+'<>"")');
         return 'IFERROR(ROWS(UNIQUE(FILTER('+metricRange+','+predicates.join('*')+'))),0)';
       }
