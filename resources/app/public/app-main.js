@@ -16209,9 +16209,9 @@ function backlogChartBucketFormula(sourceRef,granularity){
   const ref=String(sourceRef||'').trim();if(!ref)return '';
   const sunday='('+ref+'-WEEKDAY('+ref+',2)+7)';
   if(granularity==='week')return 'IF('+ref+'="","",YEAR('+ref+'-WEEKDAY('+ref+',2)+4)&"-W"&TEXT(WEEKNUM('+ref+',21),"00"))';
-  if(granularity==='month')return 'IF('+ref+'="","",TEXT('+sunday+',"yyyy-mm"))';
+  if(granularity==='month')return 'IF('+ref+'="","",YEAR('+sunday+')&"-"&TEXT(MONTH('+sunday+'),"00"))';
   if(granularity==='year')return 'IF('+ref+'="","",YEAR('+sunday+'))';
-  return 'IF('+ref+'="","",TEXT('+ref+',"yyyy-mm-dd"))';
+  return 'IF('+ref+'="","",YEAR('+ref+')&"-"&TEXT(MONTH('+ref+'),"00")&"-"&TEXT(DAY('+ref+'),"00"))';
 }
 function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   if(!window.BLBacklogExcel)throw new Error('Backlog Excel formül motoru yüklenemedi.');
