@@ -17,6 +17,133 @@
 const tokens = new Map();
 let desktopToken = '';
 let desktopTokenUpdatedAt = 0;
+let desktopStyleListTemplate = null;
+let desktopStyleListTemplateUpdatedAt = 0;
+
+const STYLE_TEMPLATE_MAX_BYTES = 256 * 1024;
+
+function templateError(message, code = 'CORENECTUM_STYLE_TEMPLATE_INVALID') {
+  const error = new Error(message);
+  error.code = code;
+  error.statusCode = 400;
+  return error;
+}
+function jsonClone(value) {
+  try { return JSON.parse(JSON.stringify(value)); }
+  catch (_) { throw templateError('CoreNectum Style List istek şablonu JSON olarak kopyalanamadı.'); }
+}
+function styleTemplateFields(value) {
+  const fields = [];
+  const visit = (current, path = []) => {
+    if (!current || typeof current !== 'object') return;
+    for (const [key, child] of Object.entries(current)) {
+      const childPath = [...path, key];
+      const normalized = String(key).replace(/[_\-\s]/g, '').toLowerCase();
+      if (typeof child === 'number') {
+        let type = '';
+        if (/^(page|pageno|pagenumber|pageindex|currentpage|currentpageno|currentpagenumber|currentpageindex)$/.test(normalized)) type = 'page';
+        else if (/^(skip|offset|start|startindex|first|firstrow|startrow)$/.test(normalized)) type = 'offset';
+        else if (/^(pagesize|size|limit|take|length|rowcount|maxresultcount)$/.test(normalized)) type = 'size';
+        if (type) fields.push({ type, path:childPath, key:normalized, base:child });
+      }
+      if (child && typeof child === 'object') visit(child, childPath);
+    }
+  };
+  visit(value);
+  return fields;
+}
+function valueAtPath(object, path) {
+  return path.reduce((current, key) => current == null ? undefined : current[key], object);
+}
+function setAtPath(object, path, value) {
+  let current = object;
+  for (let index = 0; index < path.length - 1; index += 1) current = current[path[index]];
+  current[path[path.length - 1]] = value;
+}
+function sanitizeStyleListTemplate(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw templateError('CoreNectum Style List istek şablonu nesne olmalıdır.');
+  }
+  let serialized = '';
+  try { serialized = JSON.stringify(value); } catch (_) {}
+  if (!serialized || Buffer.byteLength(serialized, 'utf8') > STYLE_TEMPLATE_MAX_BYTES) {
+    throw templateError('CoreNectum Style List istek şablonu geçersiz veya çok büyük.');
+  }
+  const clone = JSON.parse(serialized);
+  const filterKeys = new Set(['filter','filters','filterlist','filtermodel','appliedfilters','columnfilters','filteritems','filtercriterias','filtercriteria','searchcriteria','searchcriterias']);
+  const nullKeys = new Set(['favoritegroupid','favouritegroupid','favoritegroup','groupid']);
+  const protectedKeys = new Set(['securityscope','accessscope','userscope','permission','permissions','tenant','tenants']);
+  const secretKey = normalized => /(?:authorization|accesstoken|refreshtoken|bearertoken|password|passwd|secret|cookie|sessiontoken)/.test(normalized);
+  const blankInPlace = current => {
+    if (!current || typeof current !== 'object') return;
+    for (const [key, child] of Object.entries(current)) {
+      if (Array.isArray(child)) current[key] = [];
+      else if (child && typeof child === 'object') blankInPlace(child);
+      else if (typeof child === 'string') current[key] = '';
+      else if (typeof child === 'boolean') current[key] = false;
+      else if (typeof child === 'number') current[key] = 0;
+    }
+  };
+  const visit = (current, protectedBranch = false) => {
+    if (!current || typeof current !== 'object') return;
+    for (const [key, child] of Object.entries(current)) {
+      const normalized = String(key).replace(/[_\-\s]/g, '').toLowerCase();
+      if (secretKey(normalized)) { delete current[key]; continue; }
+      if (protectedBranch) { visit(child, true); continue; }
+      if (nullKeys.has(normalized) && (child === null || typeof child !== 'object')) {
+        current[key] = null;
+        continue;
+      }
+      if (filterKeys.has(normalized)) {
+        if (Array.isArray(child)) current[key] = [];
+        else if (child && typeof child === 'object') blankInPlace(child);
+        else if (typeof child === 'string') current[key] = '';
+        else if (typeof child === 'boolean') current[key] = false;
+        else current[key] = null;
+        continue;
+      }
+      visit(child, protectedKeys.has(normalized));
+    }
+  };
+  visit(clone);
+  const fields = styleTemplateFields(clone);
+  const pageFields = fields.filter(field => field.type === 'page');
+  const offsetFields = fields.filter(field => field.type === 'offset');
+  const sizeField = fields.find(field => field.type === 'size' && Number(valueAtPath(clone, field.path)) > 0);
+  if ((!pageFields.length && !offsetFields.length) || !sizeField) {
+    throw templateError('CoreNectum Style List istek şablonunda sayfalama alanları bulunamadı.');
+  }
+  return clone;
+}
+function paginateStyleListTemplate(template, logicalPageNumber = 1) {
+  const body = jsonClone(template);
+  const fields = styleTemplateFields(body);
+  const pages = fields.filter(field => field.type === 'page');
+  const offsets = fields.filter(field => field.type === 'offset');
+  const sizeField = fields.find(field => field.type === 'size' && Number(valueAtPath(body, field.path)) > 0);
+  if ((!pages.length && !offsets.length) || !sizeField) throw templateError('CoreNectum Style List sayfalama şablonu geçersiz.');
+  const pageSize = Math.max(1, Math.trunc(Number(valueAtPath(body, sizeField.path))) || 1);
+  const logical = Math.max(1, Math.trunc(Number(logicalPageNumber)) || 1);
+  for (const field of pages) {
+    const zeroBased = /index$/.test(field.key) || Number(field.base) === 0;
+    setAtPath(body, field.path, zeroBased ? logical - 1 : logical);
+  }
+  for (const field of offsets) setAtPath(body, field.path, (logical - 1) * pageSize);
+  return { body, pageSize };
+}
+function setDesktopStyleListTemplate(value) {
+  desktopStyleListTemplate = sanitizeStyleListTemplate(value);
+  desktopStyleListTemplateUpdatedAt = Date.now();
+  return { ready:true, updatedAt:new Date(desktopStyleListTemplateUpdatedAt).toISOString() };
+}
+function getStyleListTemplate() {
+  return desktopStyleListTemplate ? jsonClone(desktopStyleListTemplate) : null;
+}
+function clearDesktopStyleListTemplate() {
+  desktopStyleListTemplate = null;
+  desktopStyleListTemplateUpdatedAt = 0;
+  return { ready:false, updatedAt:'' };
+}
 
 function clean(value, max = 20000) {
   return String(value == null ? '' : value).replace(/[\u0000\r\n]/g, '').trim().slice(0, max);
@@ -50,6 +177,8 @@ function publicSettings(userId) {
     persistence: source === 'environment' ? 'environment' : source === 'desktop-sso' ? 'persistent-browser-session' : 'session-memory',
     automatic: source === 'desktop-sso',
     updatedAt: source === 'desktop-sso' && desktopTokenUpdatedAt ? new Date(desktopTokenUpdatedAt).toISOString() : '',
+    styleListTemplateReady: Boolean(desktopStyleListTemplate),
+    styleListTemplateUpdatedAt: desktopStyleListTemplateUpdatedAt ? new Date(desktopStyleListTemplateUpdatedAt).toISOString() : '',
   };
 }
 function assertToken(normalized) {
@@ -76,6 +205,7 @@ function setDesktopToken(token) {
 function clearDesktopToken() {
   desktopToken = '';
   desktopTokenUpdatedAt = 0;
+  clearDesktopStyleListTemplate();
   return publicSettings('desktop');
 }
 function hasDesktopToken() { return Boolean(desktopToken); }
@@ -83,4 +213,6 @@ function hasDesktopToken() { return Boolean(desktopToken); }
 module.exports = {
   normalizeToken, getToken, publicSettings, saveToken, clearToken,
   setDesktopToken, clearDesktopToken, hasDesktopToken,
+  sanitizeStyleListTemplate, paginateStyleListTemplate,
+  setDesktopStyleListTemplate, getStyleListTemplate, clearDesktopStyleListTemplate,
 };
