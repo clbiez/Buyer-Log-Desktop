@@ -252,3 +252,107 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
   .spinner,.blBootDot,[data-loading] .ic{animation-duration:1.8s!important;}
 }
+
+/* =====================================================================
+   Premium ritim katmanı · 2026-09-25
+   Sakin, ferah ve tek dilli yüzey: modül dışı düğmeler, modül başlıkları,
+   KPI şeritleri ve Genel Bakış "Bugün" modülü aynı ölçü ve tipografiyi
+   paylaşır. Izgara geometrisi (--ctl-h, satır yüksekliği, thead renkleri)
+   değişmez; yalnız token tüketilir.
+   ===================================================================== */
+
+/* Form öğeleri tarayıcı yazı tipine düşmez (Arial/13.33px karışıklığı). */
+:where(button,input,select,textarea,optgroup){font-family:inherit;}
+
+/* Araç çubuğu dışındaki .tbtn için tek taban: modül başlıkları, paneller ve
+   diyaloglar tarayıcı varsayılanı 20px düğme yerine standart kontrol boyunu
+   kullanır. :where() özgüllüğü sıfırdır; özel kurallar kazanmaya devam eder. */
+:where(button.tbtn,label.tbtn,a.tbtn){
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:var(--ctl-h);padding:0 12px;border:1px solid var(--bl-stroke-subtle);
+  background:var(--bl-surface-panel);color:var(--ink2);
+  font-size:var(--fs-xs);font-weight:600;line-height:1.15;white-space:nowrap;cursor:pointer;text-decoration:none;
+}
+:where(.tbtn)>svg.ic{width:14px;height:14px;flex:0 0 auto;}
+:where(button.tbtn,label.tbtn,a.tbtn):hover:not(:disabled){background:var(--bl-surface-soft);border-color:var(--bl-stroke-strong);color:var(--ink);}
+
+/* Modül başlıkları: Quotations, Fiyat Geçmişi, Otomasyonlar, Veri Yönetimi. */
+.pricingWorkspaceHeader,.autoHeader{padding:18px 20px 16px;align-items:center;}
+.pricingWorkspaceHeader h1,.autoHeader h2,.dmTitle{
+  margin:0;font-family:var(--sans);font-size:calc(19px + var(--ui-font-add));font-weight:700;
+  line-height:1.2;letter-spacing:-.022em;color:var(--ink);
+}
+.pricingWorkspaceHeader p,.autoHeader p,.dmSub{
+  margin:4px 0 0;max-width:760px;font-size:var(--fs-sm);line-height:1.5;color:var(--ink2);
+}
+.autoEyebrow{margin-bottom:4px;font-size:10.5px;font-weight:700;letter-spacing:.09em;color:var(--acc-ink);}
+.pricingWorkspaceHeaderActions,.autoHeaderActions{gap:8px;}
+.autoBadge{height:var(--ctl-h);font-size:var(--fs-xs);font-weight:600;}
+.dmHead{margin-bottom:14px;}
+
+/* KPI şeritleri: okunur etiket, net rakam, taşmayan kolonlar. */
+.pricingWorkspaceKpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+.pricingMetric{min-height:64px;padding:10px 18px;column-gap:10px;}
+.pricingMetric span,.autoStats span{font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.06em;color:var(--muted);}
+.pricingMetric b{font-family:var(--sans);font-size:calc(20px + var(--ui-font-add));font-weight:700;letter-spacing:-.02em;}
+.pricingMetric.isHistory b{font-size:calc(20px + var(--ui-font-add));}
+
+/* Çalışma alanı gövdesi: tek yazı ailesi, rahat filtre satırı, sakin paneller. */
+.pricingPaneTitle,.pricingHistoryTable th{font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.06em;}
+.pricingPaneTitle{padding:10px 14px;color:var(--ink2);}
+.pricingWorkspaceTabs{padding:10px 20px;}
+.pricingWorkspaceSearch,.pricingHistoryFilters{padding:10px 20px;gap:8px;}
+.pricingWorkspaceSearch input,.pricingHistoryFilters input,.pricingHistoryFilters select{height:var(--ctl-h);padding:0 10px;border-color:var(--bl-stroke-strong);}
+.pricingWorkspaceSearch span{font-size:var(--fs-xs);color:var(--muted);}
+.pricingHistoryTable{font-size:var(--fs-xs);}
+.pricingHistoryTable th,.pricingHistoryTable td{padding:8px 10px;}
+.pricingHistoryTableTitle .tbtn{min-height:24px;padding:0 9px;font-size:var(--fs-xs);}
+.pricingDecisionStats dt,.quotationWorkspaceShell .quotationNavMeta{font-size:var(--fs-xs);}
+.pricingEmptyState,.autoEmpty{padding:28px 18px;font-size:var(--fs-sm);line-height:1.55;color:var(--muted);}
+.quotationWorkspaceShell .quotationNavItem{padding:10px 12px;}
+
+/* Veri Yönetimi: kaynak modu anahtarı okunur. */
+.sourceModeBtn{height:26px;padding:0 11px;font-size:var(--fs-xs);font-weight:650;}
+
+/* Genel Bakış: modüller arası boşluğu yalnız ızgara boşluğu belirler. */
+main{padding-top:16px;}
+.ovDashboardGrid{gap:18px;}
+.ovDashboardGrid>[data-overview-widget]{margin-top:0;margin-bottom:0;}
+.ovPriorityMethod{font-size:var(--fs-xs);line-height:1.5;color:var(--muted);}
+
+/* Genel Bakış · Bugün */
+/* Görünümler <section> ile gizlenir (section{display:none}); modül açıkça görünür. */
+.ovLaunchpad{
+  display:block;padding:20px 22px;background:var(--bl-surface-panel);border:1px solid var(--bl-stroke-subtle);
+  border-radius:var(--bl-radius-panel);box-shadow:var(--shadow-1);
+}
+.ovLaunchBody{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:center;gap:18px 28px;}
+.ovLaunchpad>.ovWidgetEditControls{margin-bottom:12px;}
+.ovLaunchDate{margin:0 0 6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);}
+.ovLaunchTitle{margin:0;font-family:var(--sans);font-size:calc(22px + var(--ui-font-add));font-weight:700;line-height:1.15;letter-spacing:-.025em;color:var(--ink);}
+.ovLaunchSub{margin:6px 0 0;font-size:var(--fs-sm);line-height:1.5;color:var(--ink2);}
+.ovLaunchGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.ovLaunchTile{
+  display:grid;grid-template-columns:34px minmax(0,1fr) 14px;align-items:center;gap:12px;
+  min-height:58px;padding:10px 14px 10px 12px;text-align:left;cursor:pointer;
+  border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);color:var(--ink);
+  border-radius:var(--bl-radius-control);
+}
+.ovLaunchTile:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--bl-stroke-subtle));background:var(--bl-surface-panel);box-shadow:var(--shadow-1);}
+.ovLaunchIcon{display:grid;place-items:center;width:34px;height:34px;background:var(--acc-bg);color:var(--acc-ink);border-radius:var(--r-md);}
+.ovLaunchIcon .ic{width:17px;height:17px;}
+.ovLaunchText{display:grid;gap:2px;min-width:0;}
+.ovLaunchText b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-base);font-weight:650;}
+.ovLaunchText small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs);color:var(--muted);}
+.ovLaunchArrow{width:14px;height:14px;color:var(--muted);transition:transform var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast);}
+.ovLaunchTile:hover .ovLaunchArrow{color:var(--acc);transform:translateX(2px);}
+@media(max-width:1280px){.ovLaunchBody{grid-template-columns:1fr;}}
+@media(max-width:900px){.ovLaunchGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:560px){.ovLaunchGrid{grid-template-columns:1fr;}}
+/* Barlow'da kelime aralığı dar; negatif harf aralığı kelimeleri birleştiriyordu. */
+.cardTitle,.modalTitle,.appTop h1{letter-spacing:-.008em;}
+/* Otomasyonlar: sayaç şeridi başlıkla hizalı, yan panel başlıkları okunur. */
+.autoStatChips{gap:8px;margin:0;padding:12px 20px;border-bottom:1px solid var(--bl-stroke-subtle);}
+.autoStatChip{min-height:var(--ctl-h);padding:0 12px;font-size:var(--fs-xs);}
+.autoSideHead{height:auto;min-height:40px;padding:0 14px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);}
+.autoEditorEmpty{font-size:var(--fs-sm);color:var(--muted);}

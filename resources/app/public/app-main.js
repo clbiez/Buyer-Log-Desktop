@@ -9030,6 +9030,7 @@ function overviewLayoutStored(){
 function overviewLayoutSave(value){try{BLStorage.setItem(OVERVIEW_LAYOUT_KEY,JSON.stringify(window.BLOverviewLayout.normalize(value)));}catch(_){} }
 function overviewLayoutWidgetLabel(key,scope='page'){
   const labels={
+    launchpad:appLang==='en'?'Today · Quick access':'Bugün · Hızlı erişim',
     notes:appLang==='en'?'CP Notes':'CP Notları',
     collectionSummary:appLang==='en'?'Collection Summary':'Koleksiyon Özeti',
     oab:'OAB',

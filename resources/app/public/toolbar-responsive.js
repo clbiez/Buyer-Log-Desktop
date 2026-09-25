@@ -372,7 +372,11 @@
         overflowable:meta.overflowable,
         flexible:meta.flexible,
         width:Math.ceil(item.node.getBoundingClientRect().width),
-        minWidth:meta.flexible?Math.ceil(numeric(parseFloat(getComputedStyle(item.node).minWidth))):null,
+        /* Araç çubuğu flex-wrap:wrap'tır: tarayıcı satırı kırarken arama kutusunu
+           min-width'e KÜÇÜLTMEZ, flex tabanına bakar. Plan bu yüzden ölçülen
+           gerçek genişliği kullanır; yoksa "sığar" deyip son eylemi alt satıra
+           düşürüyordu (Koleksiyon ⋯ düğmesi). */
+        minWidth:null,
         compactWidth:null,
         compactMinWidth:null,
       };
@@ -380,7 +384,6 @@
     toolbar.setAttribute('data-toolbar-compact','1');
     for(const entry of entries){
       entry.compactWidth=Math.ceil(entry.node.getBoundingClientRect().width);
-      if(entry.flexible)entry.compactMinWidth=Math.ceil(numeric(parseFloat(getComputedStyle(entry.node).minWidth)));
     }
     toolbar.removeAttribute('data-toolbar-compact');
     ctrl.gaps=gaps;
