@@ -124,7 +124,7 @@ test('drag/drop document capture seviyesinde yalnız Collection için kurulur', 
   assert.match(source, /getElementById\('view-koleksiyon'\)/);
   assert.match(source, /document\.addEventListener\('drop', drop, true\)/);
   assert.match(source, /document\.addEventListener\('dragover', over, true\)/);
-  assert.match(source, /document\.body\.dataset\.activeTab !== 'koleksiyon'/);
+  assert.match(source, /document\.body\.dataset\.activeTab === 'koleksiyon'/);
   assert.doesNotMatch(source, /getElementById\('view-(?:cp|orders)'\)/);
   assert.match(source, /event\.stopImmediatePropagation\(\)/);
 });
