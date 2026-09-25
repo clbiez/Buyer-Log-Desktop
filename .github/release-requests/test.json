@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.130",
-  "commit_sha": "b693b0fbf65e2a3c258f54bc70470f2d9ce7dd43",
-  "release_notes": "Buyer Log 7.0.130: Güncel main üzerinden güvenli paket. Koleksiyon ekranında CoreNectum/PLM model görseli sürüklenirken eski genel 'Drop the file here' Excel katmanı artık PLM image drag için devreye girmiyor; browser/CoreNectum payloadları Collection PLM importerına öncelikli yönlendiriliyor, Excel dosyası sürükleme davranışı korunuyor. Drop hedefi eski overlay olsa bile PLM akışı kaybolmuyor. Aynı PLM ID mevcutsa hiçbir kayıt güncellenmiyor veya çoğaltılmıyor. 7.0.129 sonrasında main'e giren diğer güncellemeler de aynen korunuyor. Tam Buyer Log regression paketi ikinci koşumda PASS."
+  "version": "7.0.132",
+  "commit_sha": "e541d668b5018300afab012da4f9f30996bbe52d",
+  "release_notes": "Buyer Log 7.0.132: Backlog sayfasına filtrelerle senkron dinamik adet/zaman grafiği eklendi. Kullanıcı zaman alanını herhangi bir tarih sütunundan, kırılımı Gün/Hafta/Ay/Yıl olarak, değer alanını ve hesaplamayı (adet, benzersiz adet, toplam, ortalama) ve seri/kırılım alanını Buyer, MAG, Buyer Group, Klasman veya mevcut diğer başlıklardan seçebilir. Hafta/ay gruplaması Collection ile aynı merkezi tarih mantığını kullanır; örneğin 31.08.2026 Eylül 2026 ve 36. Hafta Eylül 2026 olarak gruplanır. Excel dışa aktarımında mevcut BACKLOG/Ayarlar yapısı korunur; ayrıca Grafik ve Grafik Verisi sayfaları ile native Excel grafik üretilir. Mevcut tarih boyutu ve filtreleme güncellemeleri ezilmeden korunmuştur. Tam Buyer Log regression paketi exact release branch üzerinde PASS."
 }
