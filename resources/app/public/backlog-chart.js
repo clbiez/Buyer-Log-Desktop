@@ -110,28 +110,28 @@
     if (value instanceof Date && !isNaN(value)) return new Date(value.getFullYear(),value.getMonth(),value.getDate());
     if (value == null || value === '') return null;
     const text=String(value).trim();
-    let m=text.match(/^(\\d{4})[-/.](\\d{1,2})[-/.](\\d{1,2})/);
+    let m=text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
     if (m) { const d=new Date(+m[1],+m[2]-1,+m[3]); return isNaN(d)?null:d; }
-    m=text.match(/^(\\d{1,2})[-/.](\\d{1,2})[-/.](\\d{4})/);
+    m=text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
     if (m) { const d=new Date(+m[3],+m[2]-1,+m[1]); return isNaN(d)?null:d; }
     const d=new Date(text); return isNaN(d)?null:new Date(d.getFullYear(),d.getMonth(),d.getDate());
   }
   function parseNumber(value) {
     if (typeof value === 'number') return Number.isFinite(value) ? value : null;
     if (value == null || value === '') return null;
-    let s=String(value).trim().replace(/\\s/g,'');
+    let s=String(value).trim().replace(/\s/g,'');
     if (!/[0-9]/.test(s)) return null;
     const comma=s.lastIndexOf(','), dot=s.lastIndexOf('.');
     if (comma>=0 && dot>=0) {
-      if (comma>dot) s=s.replace(/\\./g,'').replace(',','.');
+      if (comma>dot) s=s.replace(/\./g,'').replace(',','.');
       else s=s.replace(/,/g,'');
     } else if (comma>=0) {
-      if (/^[+-]?\\d{1,3}(?:,\\d{3})+$/.test(s)) s=s.replace(/,/g,'');
+      if (/^[+-]?\d{1,3}(?:,\d{3})+$/.test(s)) s=s.replace(/,/g,'');
       else s=s.replace(',','.');
-    } else if (dot>=0 && /^[+-]?\\d{1,3}(?:\\.\\d{3})+$/.test(s)) {
-      s=s.replace(/\\./g,'');
+    } else if (dot>=0 && /^[+-]?\d{1,3}(?:\.\d{3})+$/.test(s)) {
+      s=s.replace(/\./g,'');
     }
-    s=s.replace(/[^0-9+\\-.]/g,'');
+    s=s.replace(/[^0-9+.\-]/g,'');
     const n=Number(s);
     return Number.isFinite(n)?n:null;
   }
