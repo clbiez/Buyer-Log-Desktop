@@ -56,6 +56,6 @@ test('v5.13 Backlog magnifier Excel uses the same detail sheet/formula and valid
   // v7.0.81: sayfa kullanıcının kaydettiği sütun seçimi/sırasıyla kurulur
   // (exportHeaders); motor ve üçüncü argüman aynı kalır.
   assert.match(full,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
-  assert.match(full,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages\}\)/);
+  assert.match(full,/buildBacklogDetailSheet\(expanded\.headers,expanded\.rows,transitPlan,\{includeImages,dateDimensionSources:expanded\.derivedHeaderSources\}\)/);
   assert.match(full,/backlogWorkbookGuardConfig\(backlogHeaders,backlogRows\)/);
 });
