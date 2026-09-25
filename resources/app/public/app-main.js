@@ -15811,7 +15811,7 @@ window.BLDetailImages={
 
 const BACKLOG_CANONICAL_DATE_HEADERS = new Set([
   'Sipariş Yerleştirme MerchTarih','Orijinal Exfactory Merch Tarih','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün',
-  'REVİZE YÜKLEME TARİHİ\\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ'
+  'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ'
 ]);
 const BACKLOG_DETAIL_DATE_COLS = new Set([
   ...BACKLOG_CANONICAL_DATE_HEADERS,'Retail Depo Tarih','Model Bütçe Tarih','REVİZE YÜKLEME TARİHİ'
@@ -16143,7 +16143,8 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   const bd=_XLS_BORDERS;
   const helperHeaders=[...BLBacklogExcel.HELPER_HEADERS];
   const allHeaders=[...visibleHeaders,...helperHeaders];
-  const dateHeaders=new Set(dataHeaders.filter(header=>backlogIsDateHeader(header,rows)));\n  const dateDimensionTextHeaders=new Set(dataHeaders.filter(header=>/\\s\\((?:Ay|Hafta|Month|Week)\\)$/i.test(String(header||''))));
+  const dateHeaders=new Set(dataHeaders.filter(header=>backlogIsDateHeader(header,rows)));
+  const dateDimensionTextHeaders=new Set(dataHeaders.filter(header=>/\s\((?:Ay|Hafta|Month|Week)\)$/i.test(String(header||''))));
   const intHeaders=new Set(['Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','ANTREPO-RETAIL']);
   const directTextHeaders=new Set(['Renk Kod','Colour Code','Color Code','Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','RİSK\n(PRIORITY)','YÜKLEME TİPİ','Üretici Tükleme Tipi Teyidi']);
   const fobHeader='FOB Fiyatı',orderCodeHeader='Sipariş Kod';
