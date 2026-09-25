@@ -9,7 +9,7 @@
   align-items:center;
   justify-content:center;
   border:1px solid var(--line2);
-  border-radius:50%;
+  border-radius:var(--r-xs);
   background:var(--card);
   color:var(--muted);
   font:700 12px/1 Georgia,serif;
