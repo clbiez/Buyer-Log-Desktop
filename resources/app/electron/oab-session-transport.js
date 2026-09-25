@@ -7,7 +7,54 @@ const ENDPOINTS = new Set(['Report/GetReportData', 'Report/GetReportVariablesWit
 const MAX_REQUEST_BYTES = 64 * 1024;
 const MAX_RESPONSE_BYTES = 128 * 1024 * 1024;
 
-function createOabSessionTransport({ authSession, secret, log = () => {} }) {
+function safeErrorKind(error) {
+  const name = /^[A-Za-z]{1,32}Error$/.test(error && error.name || '') ? error.name : 'Error';
+  const rawCode = error && error.code || '';
+  const code = /^(?:NET::)?ERR_[A-Z_]+$|^E[A-Z_]{2,30}$/.test(rawCode) ? rawCode
+    : (String(error && error.message || '').match(/\b(?:net::)?ERR_[A-Z_]+\b/) || [])[0] || '';
+  return code ? `${name}/${code}` : name;
+}
+
+function fetchWithClientRequest(netRequest, authSession, url, authorization, body) {
+  return new Promise((resolve, reject) => {
+    let done = false;
+    let client;
+    const finish = (error, result) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (error) reject(error);
+      else resolve(result);
+    };
+    const timer = setTimeout(() => {
+      if (client) client.abort();
+      finish(Object.assign(new Error('timeout'), { name:'AbortError' }));
+    }, 90000);
+    try {
+      client = netRequest({ url, method:'POST', session:authSession, credentials:'include', redirect:'manual',
+        headers:{ Accept:'application/json', 'Content-Type':'application/json',
+          Origin:'https://pass.lcwaikiki.com', Referer:'https://pass.lcwaikiki.com/', Authorization:authorization } });
+      client.on('error', error => finish(error));
+      client.on('response', upstream => {
+        const chunks = [];
+        let size = 0;
+        upstream.on('data', chunk => {
+          if (done) return;
+          size += chunk.length;
+          if (size > MAX_RESPONSE_BYTES) {
+            client.abort();
+            finish(new Error('OAB_RESPONSE_TOO_LARGE'));
+          } else chunks.push(chunk);
+        });
+        upstream.on('error', error => finish(error));
+        upstream.on('end', () => finish(null, { status:upstream.statusCode, body:Buffer.concat(chunks).toString('utf8') }));
+      });
+      client.end(JSON.stringify(body));
+    } catch (error) { finish(error); }
+  });
+}
+
+function createOabSessionTransport({ authSession, netRequest, secret, log = () => {} }) {
   if (!authSession || typeof authSession.fetch !== 'function' || !secret) throw new Error('OAB transport yapılandırılamadı.');
   const server = http.createServer(async (request, response) => {
     response.setHeader('Cache-Control', 'no-store');
@@ -31,25 +78,36 @@ function createOabSessionTransport({ authSession, secret, log = () => {} }) {
       }
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 90000);
-      let upstream;
+      let status;
+      let body;
       try {
-        upstream = await authSession.fetch(API_ROOT + input.endpoint, {
-          method: 'POST', redirect: 'manual', cache: 'no-store', credentials: 'include', signal: controller.signal,
-          headers: {
-            Accept: 'application/json', 'Content-Type': 'application/json',
-            Origin: 'https://pass.lcwaikiki.com', Referer: 'https://pass.lcwaikiki.com/',
-            Authorization: input.authorization,
-          },
-          body: JSON.stringify(input.body),
-        });
-        const body = await upstream.text();
+        try {
+          const upstream = await authSession.fetch(API_ROOT + input.endpoint, {
+            method: 'POST', redirect: 'manual', cache: 'no-store', credentials: 'include', signal: controller.signal,
+            headers: {
+              Accept: 'application/json', 'Content-Type': 'application/json',
+              Origin: 'https://pass.lcwaikiki.com', Referer: 'https://pass.lcwaikiki.com/',
+              Authorization: input.authorization,
+            },
+            body: JSON.stringify(input.body),
+          });
+          status = upstream.status;
+          body = await upstream.text();
+        } catch (error) {
+          log('OAB Chromium fetch hatası: ' + safeErrorKind(error));
+          if (!netRequest || controller.signal.aborted) throw error;
+          const fallback = await fetchWithClientRequest(netRequest, authSession,
+            API_ROOT + input.endpoint, input.authorization, input.body);
+          status = fallback.status;
+          body = fallback.body;
+        }
         if (Buffer.byteLength(body) > MAX_RESPONSE_BYTES) throw new Error('OAB_RESPONSE_TOO_LARGE');
-        log(`OAB ${input.endpoint} HTTP ${upstream.status}`);
-        response.writeHead(upstream.status, { 'Content-Type': 'application/json; charset=utf-8' }).end(body);
+        log(`OAB ${input.endpoint} HTTP ${status}`);
+        response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' }).end(body);
       } finally { clearTimeout(timer); }
     } catch (error) {
       // Never log a raw request, response body or Authorization value.
-      log('OAB Chromium isteği başarısız: ' + (error && error.name === 'AbortError' ? 'timeout' : 'transport'));
+      log('OAB Chromium isteği başarısız: ' + (error && error.name === 'AbortError' ? 'timeout' : safeErrorKind(error)));
       if (!response.headersSent) response.writeHead(502).end();
     }
   });
