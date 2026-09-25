@@ -15513,7 +15513,7 @@ async function exportCurrentBacklogDetail(){
     const wb=XLSX.utils.book_new();
     const includeImages=false;
     const expanded=backlogExpandDateDimensions(headers,currentBacklogDetailRows);
-    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows);
+    const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,null,{includeImages,dateDimensionSources:expanded.derivedHeaderSources});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     forceWorkbookFormulaCalculation(wb);
     const workbookHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers;
@@ -16358,7 +16358,11 @@ async function exportBacklogToExcel(){
     const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
     const chartExport=window.BLBacklogChart?.appendWorkbookSheets?.(
-      wb,data.rows||[],data.headers||[],{XLSX,state:window.BLBacklogChart?.getState?.()})||null;
+      wb,data.rows||[],data.headers||[],{
+        XLSX,
+        state:window.BLBacklogChart?.getState?.(),
+        viewRange:window.BLBacklogChart?.getViewRange?.(),
+      })||null;
     const settingsWs = buildBacklogSettingsSheet(transitPlan);
     if(settingsWs) XLSX.utils.book_append_sheet(wb, settingsWs, 'Ayarlar');
     forceWorkbookFormulaCalculation(wb);
