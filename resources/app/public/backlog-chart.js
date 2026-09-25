@@ -16,6 +16,7 @@
   const DEFAULT_STATE = Object.freeze({
     enabled:false,
     timeField:'',
+    timeField2:'',
     granularity:'week',
     metricField:'__records',
     aggregation:'count',
@@ -24,6 +25,7 @@
     seriesLimit:'20',
     title:'',
     seriesFilter:[],
+    showAverage:false,
   });
   const COLORS = ['#2563eb','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#db2777','#4f46e5','#0f766e','#9333ea','#475569','#ca8a04'];
   let state = Object.assign({}, DEFAULT_STATE);
@@ -69,6 +71,7 @@
     return {
       enabled:!!src.enabled,
       timeField:String(src.timeField || ''),
+      timeField2:String(src.timeField2 || ''),
       granularity:gran,
       metricField:String(src.metricField || '__records'),
       aggregation:agg,
@@ -77,6 +80,7 @@
       seriesLimit:limit,
       title:String(src.title || '').slice(0,160),
       seriesFilter,
+      showAverage:!!src.showAverage,
     };
   }
   function loadState() {
@@ -196,6 +200,7 @@
     const all=normalizeHeaders(headers,rows), next=sanitizeState(base||state);
     const dates=detectDateHeaders(all,rows);
     if (!all.includes(next.timeField)) next.timeField=fieldIndex(dates,[/ANTREPO GIRIS/,/IN STORE/,/MODEL BUTCE/,/RETAIL/,/SEVK/,/TARIH/,/DATE/]) || dates[0] || '';
+    if (next.timeField2 && !all.includes(next.timeField2)) next.timeField2='';
     if (next.metricField!=='__records' && !all.includes(next.metricField)) next.metricField='__records';
     if (next.metricField==='__records') {
       const qty=fieldIndex(all,[/^ADET$/,/^QUANTITY$/,/^QTY$/,/KALAN MIKTAR/,/ORDER QTY/]);
@@ -229,124 +234,150 @@
   function buildModel(rows,headers,inputState) {
     const all=normalizeHeaders(headers,rows), st=sanitizeState(inputState||state);
     if (!st.timeField || !all.includes(st.timeField)) return {categories:[],series:[],availableSeriesNames:[],state:st,reason:'time-field'};
-    const buckets=new Map(), labels=new Map(), seriesMaps=new Map();
-    let used=0, invalidDates=0;
-    for (const row of (Array.isArray(rows)?rows:[])) {
-      const d=parseDate(row && row[st.timeField]);
-      if (!d) { invalidDates++; continue; }
-      const bucket=bucketFor(d,st.granularity);
-      buckets.set(bucket.key,true); labels.set(bucket.key,bucket.label);
-      const seriesName=st.seriesField ? String(row[st.seriesField]==null||String(row[st.seriesField]).trim()===''?tr('(boş)','(blank)'):row[st.seriesField]) : generatedTitle(st);
-      if (!seriesMaps.has(seriesName)) seriesMaps.set(seriesName,new Map());
-      const map=seriesMaps.get(seriesName);
-      if (!map.has(bucket.key)) map.set(bucket.key,newAccumulator());
-      addAccumulator(map.get(bucket.key),st.metricField==='__records'?1:row[st.metricField],st.metricField);
-      used++;
+    const fieldSpecs=[{field:st.timeField,index:1}];
+    if(st.timeField2&&st.timeField2!==st.timeField&&all.includes(st.timeField2))fieldSpecs.push({field:st.timeField2,index:2});
+    const buckets=new Map(),labels=new Map(),mapsByField=fieldSpecs.map(()=>new Map());
+    let used=0,invalidDates=0;
+    for(const row of (Array.isArray(rows)?rows:[])){
+      const baseName=st.seriesField
+        ? String(row[st.seriesField]==null||String(row[st.seriesField]).trim()===''?tr('(boş)','(blank)'):row[st.seriesField])
+        : generatedTitle(st);
+      fieldSpecs.forEach((spec,fi)=>{
+        const d=parseDate(row&&row[spec.field]);
+        if(!d){if(fi===0)invalidDates++;return;}
+        if(fi===0)used++;
+        const bucket=bucketFor(d,st.granularity);
+        buckets.set(bucket.key,true);labels.set(bucket.key,bucket.label);
+        const seriesMaps=mapsByField[fi];
+        if(!seriesMaps.has(baseName))seriesMaps.set(baseName,new Map());
+        const map=seriesMaps.get(baseName);
+        if(!map.has(bucket.key))map.set(bucket.key,newAccumulator());
+        addAccumulator(map.get(bucket.key),st.metricField==='__records'?1:row[st.metricField],st.metricField);
+      });
     }
     const categoryKeys=[...buckets.keys()].sort();
-    let names=[...seriesMaps.keys()];
+    let names=[...new Set(mapsByField.flatMap(map=>[...map.keys()]))];
     const totals=new Map();
     names.forEach(name=>{
-      const map=seriesMaps.get(name);
-      totals.set(name,categoryKeys.reduce((sum,key)=>sum+accumulatorValue(map.get(key),st.aggregation,st.metricField),0));
+      let total=0;
+      mapsByField.forEach(map=>{
+        const seriesMap=map.get(name);
+        if(seriesMap)total+=categoryKeys.reduce((sum,key)=>sum+accumulatorValue(seriesMap.get(key),st.aggregation,st.metricField),0);
+      });
+      totals.set(name,total);
     });
     names.sort((a,b)=>(totals.get(b)||0)-(totals.get(a)||0)||String(a).localeCompare(String(b),'tr'));
     const availableSeriesNames=names.slice();
-    if (st.seriesFilter.length) {
-      const selected=new Set(st.seriesFilter);
-      const matched=names.filter(name=>selected.has(name));
-      if (matched.length) names=matched;
+    if(st.seriesFilter.length){
+      const selected=new Set(st.seriesFilter),matched=names.filter(name=>selected.has(name));
+      if(matched.length)names=matched;
     }
     const filteredOutSeriesCount=Math.max(0,availableSeriesNames.length-names.length);
     const limit=st.seriesLimit==='all'?Infinity:Number(st.seriesLimit)||20;
     const omitted=Math.max(0,names.length-limit);
-    if (Number.isFinite(limit)) names=names.slice(0,limit);
-    const series=names.map(name=>{
-      const colorIndex=Math.max(0,availableSeriesNames.indexOf(name));
-      return {
-        name,
-        color:COLORS[colorIndex%COLORS.length],
-        values:categoryKeys.map(key=>accumulatorValue(seriesMaps.get(name).get(key),st.aggregation,st.metricField)),
-      };
+    if(Number.isFinite(limit))names=names.slice(0,limit);
+    const hasOverlay=fieldSpecs.length>1;
+    const series=[];
+    names.forEach(baseName=>{
+      const colorIndex=Math.max(0,availableSeriesNames.indexOf(baseName));
+      fieldSpecs.forEach((spec,fi)=>{
+        const map=mapsByField[fi].get(baseName);
+        if(!map)return;
+        series.push({
+          name:hasOverlay?baseName+' · '+spec.field:baseName,
+          baseName,
+          timeField:spec.field,
+          timeFieldIndex:spec.index,
+          dash:spec.index===2,
+          color:COLORS[colorIndex%COLORS.length],
+          values:categoryKeys.map(key=>accumulatorValue(map.get(key),st.aggregation,st.metricField)),
+        });
+      });
     });
     return {
       title:st.title.trim()||generatedTitle(st),
       state:st,
       categories:categoryKeys.map(key=>({key,label:labels.get(key)||key})),
-      series,
-      availableSeriesNames,
-      usedRows:used,
-      invalidDates,
-      omittedSeriesCount:omitted,
-      filteredOutSeriesCount,
-      sourceSeriesCount:seriesMaps.size,
+      series,availableSeriesNames,fieldSpecs,usedRows:used,invalidDates,
+      omittedSeriesCount:omitted,filteredOutSeriesCount,sourceSeriesCount:availableSeriesNames.length,
     };
   }
-  function formatValue(value) {
+  function formatWholeValue(value) {
     const n=Number(value)||0;
-    try { return n.toLocaleString(lang()==='en'?'en-US':'tr-TR',{maximumFractionDigits:2}); } catch (_) { return String(Math.round(n*100)/100); }
+    try{return Math.round(n).toLocaleString('tr-TR',{maximumFractionDigits:0});}catch(_){return String(Math.round(n));}
+  }
+  function formatValue(value) { return formatWholeValue(value); }
+  function niceStep(maxValue,targetTicks) {
+    const max=Math.max(0,Number(maxValue)||0),target=Math.max(2,Number(targetTicks)||5);
+    if(!(max>0))return 1;
+    const raw=max/target,pow=Math.pow(10,Math.floor(Math.log10(raw))),norm=raw/pow;
+    const nice=[1,2,2.5,3,5,10].find(v=>v>=norm)||10;
+    return nice*pow;
+  }
+  function niceTickScale(maxValue,targetTicks) {
+    const step=niceStep(maxValue,targetTicks),max=Math.max(step,Math.ceil((Number(maxValue)||0)/step)*step);
+    const ticks=[];for(let v=0;v<=max+step*.001;v+=step)ticks.push(Math.round(v*1e8)/1e8);
+    return {step,max,ticks};
   }
   function configSummary(st) {
     const agg={count:tr('Adet','Count'),distinct:tr('Benzersiz adet','Distinct count'),sum:tr('Toplam','Sum'),avg:tr('Ortalama','Average')}[st.aggregation];
     const gran={day:tr('Gün','Day'),week:tr('Hafta','Week'),month:tr('Ay','Month'),year:tr('Yıl','Year')}[st.granularity];
     const metric=st.metricField==='__records'?tr('Kayıtlar','Records'):st.metricField;
-    return st.timeField+' · '+gran+' · '+agg+' '+metric+(st.seriesField?' · '+st.seriesField:'');
+    return st.timeField+(st.timeField2?' + '+st.timeField2:'')+' · '+gran+' · '+agg+' '+metric+(st.seriesField?' · '+st.seriesField:'');
   }
   function todayKeyFor(granularity,date) {
-    const d=parseDate(date || new Date());
-    return d ? bucketFor(d,granularity).key : '';
+    const d=parseDate(date||new Date());return d?bucketFor(d,granularity).key:'';
   }
   function todayPosition(categories,key) {
     const list=Array.isArray(categories)?categories:[];
     if(!key||!list.length)return null;
     const keys=list.map(item=>String(item&&item.key||''));
     if(key<keys[0]||key>keys[keys.length-1])return null;
-    const exact=keys.indexOf(key);
-    if(exact>=0)return exact+.5;
-    const insert=keys.findIndex(item=>item>key);
-    return insert<0?keys.length:insert;
+    const exact=keys.indexOf(key);if(exact>=0)return exact+.5;
+    const insert=keys.findIndex(item=>item>key);return insert<0?keys.length:insert;
   }
-  function shortMonth(date) {
-    try {
-      return new Intl.DateTimeFormat(lang()==='en'?'en-US':'tr-TR',{month:'short'}).format(date).replace(/\.$/,'');
-    } catch (_) { return String(date.getMonth()+1); }
-  }
+  const SHORT_MONTHS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   function axisTickLabel(category,granularity) {
-    const cat=category||{}, key=String(cat.key||''), label=String(cat.label||key);
+    const cat=category||{},key=String(cat.key||''),label=String(cat.label||key);
     if(granularity==='year')return key||label;
     if(granularity==='month'){
       const m=key.match(/^(\d{4})-(\d{2})$/);
-      if(m){const d=new Date(+m[1],+m[2]-1,1);return shortMonth(d)+' '+String(m[1]).slice(-2);}
-    }
-    if(granularity==='day'){
-      const d=parseDate(key);
-      if(d)return d.getDate()+' '+shortMonth(d);
+      if(m)return SHORT_MONTHS[Math.max(0,Math.min(11,+m[2]-1))]+' '+String(m[1]).slice(-2);
     }
     if(granularity==='week'){
-      const d=parseDate(key), wm=label.match(/(?:Week\s*)?(\d+)(?:\.\s*Hafta)?/i);
-      if(d&&wm)return (lang()==='en'?'W':'H')+wm[1]+' · '+shortMonth(d);
+      const wk=key.match(/-W(\d{1,2})$/i)||label.match(/(?:Week\s*)?(\d+)(?:\.\s*Hafta)?/i);
+      if(wk)return String(Number(wk[1]));
     }
-    return label.length>18?label.slice(0,17)+'…':label;
+    if(granularity==='day'){
+      const d=parseDate(key);if(d)return String(d.getDate()).padStart(2,'0')+' '+SHORT_MONTHS[d.getMonth()];
+    }
+    return label.length>14?label.slice(0,13)+'…':label;
+  }
+  function subtotalValues(model) {
+    const count=(model&&model.categories||[]).length;
+    return Array.from({length:count},(_,i)=>(model.series||[]).reduce((sum,s)=>sum+(Number(s.values&&s.values[i])||0),0));
+  }
+  function averageValue(model) {
+    const totals=subtotalValues(model);return totals.length?totals.reduce((a,b)=>a+b,0)/totals.length:0;
   }
   function chartMetrics(model) {
-    const width=1080,height=430,left=24,right=84,top=28,bottom=58;
-    const pw=width-left-right,ph=height-top-bottom;
+    const width=1080,height=430,left=24,right=88,top=28,bottom=58,pw=width-left-right,ph=height-top-bottom;
     const values=(model&&model.series||[]).flatMap(s=>s.values||[]).filter(Number.isFinite);
-    let max=Math.max(0,...values);if(!(max>0))max=1;
-    return {width,height,left,right,top,bottom,pw,ph,max};
+    const rawMax=Math.max(0,...values),scale=niceTickScale(rawMax,5);
+    return {width,height,left,right,top,bottom,pw,ph,max:scale.max,tickStep:scale.step,ticks:scale.ticks};
   }
   function svgChart(model,options) {
-    const m=chartMetrics(model), width=m.width,height=m.height,left=m.left,right=m.right,top=m.top,bottom=m.bottom,pw=m.pw,ph=m.ph,max=m.max;
-    const tickCount=5;
+    const m=chartMetrics(model),width=m.width,height=m.height,left=m.left,right=m.right,top=m.top,pw=m.pw,ph=m.ph,max=m.max;
     let out='<svg class="backlogChartSvg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+esc(model.title)+'">';
     out+='<rect x="0" y="0" width="'+width+'" height="'+height+'" rx="8" class="backlogChartBg"/>';
     out+='<rect x="'+(width-right)+'" y="'+top+'" width="'+right+'" height="'+ph+'" class="backlogChartPriceAxis"/>';
-    for(let i=0;i<=tickCount;i++){
-      const val=max*(tickCount-i)/tickCount,y=top+ph*i/tickCount;
+    m.ticks.slice().reverse().forEach(val=>{
+      const y=top+ph*(1-val/max);
       out+='<line x1="'+left+'" x2="'+(width-right)+'" y1="'+y+'" y2="'+y+'" class="backlogChartGrid"/>';
-      out+='<text x="'+(width-right+10)+'" y="'+(y+4)+'" text-anchor="start" class="backlogChartAxisText">'+esc(formatValue(val))+'</text>';
-    }
-    const n=Math.max(1,model.categories.length),step=pw/n,labelStep=Math.max(1,Math.ceil(n/12));
+      out+='<text x="'+(width-right+10)+'" y="'+(y+4)+'" text-anchor="start" class="backlogChartAxisText">'+esc(formatWholeValue(val))+'</text>';
+    });
+    const n=Math.max(1,model.categories.length),step=pw/n,minLabelPx=model.state.granularity==='week'?30:model.state.granularity==='month'?58:50;
+    const maxLabels=Math.max(1,Math.floor(pw/minLabelPx)),labelStep=Math.max(1,Math.ceil(n/maxLabels));
     model.categories.forEach((cat,i)=>{
       const x=left+step*(i+.5);
       if(i%labelStep===0||i===model.categories.length-1)out+='<text x="'+x+'" y="'+(top+ph+27)+'" text-anchor="middle" class="backlogChartAxisText">'+esc(axisTickLabel(cat,model.state.granularity))+'</text>';
@@ -358,12 +389,17 @@
       out+='<rect x="'+(x-25).toFixed(2)+'" y="'+(top-21)+'" width="50" height="16" rx="4" class="backlogChartTodayBadge"/>';
       out+='<text x="'+x.toFixed(2)+'" y="'+(top-10)+'" text-anchor="middle" class="backlogChartTodayText">'+esc(tr('Bugün','Today'))+'</text>';
     }
+    if(model.state.showAverage){
+      const avg=averageValue(model),y=top+ph-ph*(avg/max);
+      out+='<line x1="'+left+'" x2="'+(width-right)+'" y1="'+y.toFixed(2)+'" y2="'+y.toFixed(2)+'" class="backlogChartAverageLine"/>';
+      out+='<text x="'+(width-right-6)+'" y="'+(y-5).toFixed(2)+'" text-anchor="end" class="backlogChartAverageText">'+esc(tr('Ort. ','Avg. ')+formatWholeValue(avg))+'</text>';
+    }
     if(model.state.chartType==='bar'){
       const count=Math.max(1,model.series.length),group=step*.76,bw=Math.max(.7,group/count);
       model.series.forEach((serie,si)=>{
         serie.values.forEach((v,i)=>{
           const h=ph*(Number(v)||0)/max,x=left+step*(i+.5)-group/2+si*bw,y=top+ph-h;
-          out+='<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(.6,bw-1).toFixed(2)+'" height="'+Math.max(0,h).toFixed(2)+'" fill="'+serie.color+'" opacity=".86"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatValue(v))+'</title></rect>';
+          out+='<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(.6,bw-1).toFixed(2)+'" height="'+Math.max(0,h).toFixed(2)+'" fill="'+serie.color+'" opacity="'+(serie.dash?'.48':'.86')+'"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></rect>';
         });
       });
     }else{
@@ -371,21 +407,20 @@
         const pts=serie.values.map((v,i)=>{
           const x=left+step*(i+.5),y=top+ph-ph*(Number(v)||0)/max;return x.toFixed(2)+','+y.toFixed(2);
         }).join(' ');
-        out+='<polyline points="'+pts+'" fill="none" stroke="'+serie.color+'" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
+        out+='<polyline points="'+pts+'" fill="none" stroke="'+serie.color+'" stroke-width="2"'+(serie.dash?' stroke-dasharray="7 5" opacity=".78"':'')+' vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
         serie.values.forEach((v,i)=>{
           const x=left+step*(i+.5),y=top+ph-ph*(Number(v)||0)/max;
-          out+='<circle cx="'+x.toFixed(2)+'" cy="'+y.toFixed(2)+'" r="2.6" fill="'+serie.color+'" class="backlogChartPoint"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatValue(v))+'</title></circle>';
+          out+='<circle cx="'+x.toFixed(2)+'" cy="'+y.toFixed(2)+'" r="2.6" fill="'+serie.color+'" opacity="'+(serie.dash?'.68':'1')+'" class="backlogChartPoint"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></circle>';
         });
       });
     }
     out+='</svg>';return out;
   }
   function chartViewSignature(model) {
-    return [model.state.timeField,model.state.granularity,(model.categories||[]).map(cat=>cat.key).join(',')].join('|');
+    return [model.state.timeField,model.state.timeField2,model.state.granularity,(model.categories||[]).map(cat=>cat.key).join(',')].join('|');
   }
   function clampChartRange(range,total) {
-    const count=Math.max(0,Number(total)||0);
-    if(!count)return {start:0,end:0};
+    const count=Math.max(0,Number(total)||0);if(!count)return {start:0,end:0};
     let start=Math.max(0,Math.min(count-1,Math.floor(Number(range&&range.start)||0)));
     let end=Math.max(start+1,Math.min(count,Math.floor(Number(range&&range.end)||count)));
     if(end>count){const shift=end-count;start=Math.max(0,start-shift);end=count;}
@@ -400,36 +435,25 @@
     if(!total)return {start:0,end:0};
     const key=todayKeyFor(model.state.granularity,date||new Date()),pos=todayPosition(model.categories,key);
     if(pos==null)return {start:Math.max(0,total-count),end:total};
-    let start=Math.round(pos-count*.38);
-    start=Math.max(0,Math.min(total-count,start));
+    let start=Math.round(pos-count*.38);start=Math.max(0,Math.min(total-count,start));
     return {start,end:start+count};
   }
-  function defaultChartRange(model,date) {
-    return centeredRange(model,defaultVisibleSpan(model.state.granularity,(model.categories||[]).length),date);
-  }
+  function defaultChartRange(model,date) { return centeredRange(model,defaultVisibleSpan(model.state.granularity,(model.categories||[]).length),date); }
   function zoomChartRange(range,total,delta,focusRatio) {
-    const count=Math.max(0,Number(total)||0),current=clampChartRange(range,count);
-    if(count<=1)return current;
+    const count=Math.max(0,Number(total)||0),current=clampChartRange(range,count);if(count<=1)return current;
     const span=current.end-current.start,minSpan=Math.min(count,4),zoomIn=Number(delta)<0;
-    let nextSpan=Math.round(span*(zoomIn?.78:1.28));
-    nextSpan=Math.max(minSpan,Math.min(count,nextSpan));
-    if(nextSpan===span&&zoomIn&&span>minSpan)nextSpan=span-1;
-    if(nextSpan===span&&!zoomIn&&span<count)nextSpan=span+1;
+    let nextSpan=Math.round(span*(zoomIn?.82:1.22));nextSpan=Math.max(minSpan,Math.min(count,nextSpan));
+    if(nextSpan===span&&zoomIn&&span>minSpan)nextSpan=span-1;if(nextSpan===span&&!zoomIn&&span<count)nextSpan=span+1;
     const ratio=Math.max(0,Math.min(1,Number(focusRatio)||.5)),focus=current.start+ratio*Math.max(0,span-1);
-    let start=Math.round(focus-ratio*Math.max(0,nextSpan-1));
-    start=Math.max(0,Math.min(count-nextSpan,start));
+    let start=Math.round(focus-ratio*Math.max(0,nextSpan-1));start=Math.max(0,Math.min(count-nextSpan,start));
     return {start,end:start+nextSpan};
   }
   function shiftChartRange(range,total,buckets) {
     const count=Math.max(0,Number(total)||0),current=clampChartRange(range,count),span=current.end-current.start;
     if(span>=count)return current;
-    let start=Math.max(0,Math.min(count-span,current.start+(Number(buckets)||0)));
-    return {start,end:start+span};
+    const start=Math.max(0,Math.min(count-span,current.start+(Number(buckets)||0)));return {start,end:start+span};
   }
-  function panChartRange(range,total,direction) {
-    const current=clampChartRange(range,total),span=current.end-current.start;
-    return shiftChartRange(current,total,Math.max(1,Math.round(span*.15))*(Number(direction)<0?-1:1));
-  }
+  function panChartRange(range,total,direction) { return shiftChartRange(range,total,Number(direction)<0?-1:1); }
   function sliceModel(model,range) {
     const safe=clampChartRange(range,(model.categories||[]).length);
     return Object.assign({},model,{
@@ -439,248 +463,207 @@
     });
   }
   function presetSpan(granularity,preset,total) {
-    const table={
-      day:{'4w':28,'3m':90,'6m':180,'1y':365},
-      week:{'4w':4,'3m':13,'6m':26,'1y':52},
-      month:{'4w':1,'3m':3,'6m':6,'1y':12},
-      year:{'4w':1,'3m':1,'6m':1,'1y':1},
-    };
+    const table={day:{'4w':28,'3m':90,'6m':180,'1y':365},week:{'4w':4,'3m':13,'6m':26,'1y':52},month:{'4w':1,'3m':3,'6m':6,'1y':12},year:{'4w':1,'3m':1,'6m':1,'1y':1}};
     const wanted=table[granularity]&&table[granularity][preset];
     return Math.max(1,Math.min(Math.max(1,Number(total)||1),wanted||defaultVisibleSpan(granularity,total)));
   }
   function rangeForPreset(model,preset,date) {
-    const total=(model.categories||[]).length;
-    if(!total)return {start:0,end:0};
-    if(preset==='all')return {start:0,end:total};
-    if(preset==='fit')return defaultChartRange(model,date);
+    const total=(model.categories||[]).length;if(!total)return {start:0,end:0};
+    if(preset==='all')return {start:0,end:total};if(preset==='fit')return defaultChartRange(model,date);
     if(preset==='ytd'){
       const d=parseDate(date||new Date()),year=d?String(d.getFullYear()):'',keys=model.categories.map(c=>String(c.key||''));
-      let start=keys.findIndex(key=>key.slice(0,4)===year);
-      if(start<0)return defaultChartRange(model,date);
-      let end=keys.findIndex(key=>key>todayKeyFor(model.state.granularity,date||new Date()));
-      if(end<0)end=total;
+      let start=keys.findIndex(key=>key.slice(0,4)===year);if(start<0)return defaultChartRange(model,date);
+      let end=keys.findIndex(key=>key>todayKeyFor(model.state.granularity,date||new Date()));if(end<0)end=total;
       return clampChartRange({start,end:Math.max(start+1,end)},total);
     }
     return centeredRange(model,presetSpan(model.state.granularity,preset,total),date);
   }
-  function rangesEqual(a,b) {
-    return !!a&&!!b&&a.start===b.start&&a.end===b.end;
-  }
+  function rangesEqual(a,b) { return !!a&&!!b&&a.start===b.start&&a.end===b.end; }
   function ensureChartView(model) {
     const total=(model.categories||[]).length,signature=chartViewSignature(model);
-    if(chartView.signature!==signature){
-      const initial=defaultChartRange(model);
-      chartView={signature,start:initial.start,end:initial.end};
-    }else{
-      const safe=clampChartRange(chartView,total);
-      chartView={signature,start:safe.start,end:safe.end};
-    }
+    if(chartView.signature!==signature){const initial=defaultChartRange(model);chartView={signature,start:initial.start,end:initial.end};}
+    else{const safe=clampChartRange(chartView,total);chartView={signature,start:safe.start,end:safe.end};}
     return {start:chartView.start,end:chartView.end};
   }
   function moveViewToToday(model) {
     const current=ensureChartView(model),span=current.end-current.start,next=centeredRange(model,span,new Date());
     if(rangesEqual(current,next))return todayPosition(model.categories,todayKeyFor(model.state.granularity,new Date()))!=null;
-    chartView={signature:chartViewSignature(model),start:next.start,end:next.end};
-    return true;
+    chartView={signature:chartViewSignature(model),start:next.start,end:next.end};return true;
   }
   function filterSelection(model) {
     const available=Array.isArray(model.availableSeriesNames)?model.availableSeriesNames:[];
-    if(!available.length)return [];
-    if(!model.state.seriesFilter.length)return available.slice();
-    const selected=new Set(model.state.seriesFilter),matched=available.filter(name=>selected.has(name));
-    return matched.length?matched:available.slice();
+    if(!available.length)return [];if(!model.state.seriesFilter.length)return available.slice();
+    const selected=new Set(model.state.seriesFilter),matched=available.filter(name=>selected.has(name));return matched.length?matched:available.slice();
   }
   function legendHtml(model) {
     const available=model.availableSeriesNames||[],selected=new Set(filterSelection(model));
-    return '<div class="backlogChartLegend" aria-label="'+esc(tr('Grafik serileri','Chart series'))+'">'
-      +(model.series||[]).map(serie=>{
-        const index=Math.max(0,available.indexOf(serie.name)),color=COLORS[index%COLORS.length],active=selected.has(serie.name);
-        return '<button type="button" class="backlogChartLegendItem'+(active?'':' is-muted')+'" data-backlog-chart-legend-name="'+esc(serie.name)+'" style="--series-color:'+color+'" title="'+esc(tr('Tıkla: gizle/göster · Çift tık: yalnız bu seri','Click: hide/show · Double-click: isolate series'))+'"><span></span><b>'+esc(serie.name)+'</b></button>';
-      }).join('')
-      +'</div>';
+    return '<div class="backlogChartLegend" aria-label="'+esc(tr('Grafik serileri','Chart series'))+'">'+available.map((name,index)=>{
+      const active=selected.has(name),hasSecond=!!model.state.timeField2;
+      return '<button type="button" class="backlogChartLegendItem'+(active?'':' is-muted')+'" data-backlog-chart-legend-name="'+esc(name)+'" style="--series-color:'+COLORS[index%COLORS.length]+'" title="'+esc(tr('Tıkla: gizle/göster · Çift tık: yalnız bu seri','Click: hide/show · Double-click: isolate series'))+'"><span></span><b>'+esc(name)+'</b>'+(hasSecond?'<i class="backlogChartOverlayMark">A/B</i>':'')+'</button>';
+    }).join('')+'</div>';
+  }
+  function safeChartFileName(title,ext) {
+    const base=String(title||'Backlog Chart').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'Backlog Chart';
+    return base+'.'+ext;
+  }
+  function downloadBlob(blob,name) {
+    if(!root.document||!root.URL)return;
+    const url=root.URL.createObjectURL(blob),a=root.document.createElement('a');a.href=url;a.download=name;a.style.display='none';
+    root.document.body.appendChild(a);a.click();a.remove();setTimeout(()=>root.URL.revokeObjectURL(url),1500);
+  }
+  function serializeSvgForExport(svg) {
+    if(!svg)return '';
+    const clone=svg.cloneNode(true),original=[svg,...svg.querySelectorAll('*')],copies=[clone,...clone.querySelectorAll('*')];
+    const props=['fill','stroke','stroke-width','stroke-dasharray','opacity','font-family','font-size','font-weight','font-style'];
+    original.forEach((node,i)=>{
+      const copy=copies[i];if(!copy||!root.getComputedStyle)return;
+      const cs=root.getComputedStyle(node),style=props.map(p=>p+':'+cs.getPropertyValue(p)).filter(x=>!x.endsWith(':')).join(';');
+      if(style)copy.setAttribute('style',style);
+    });
+    clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    const vb=clone.viewBox&&clone.viewBox.baseVal;if(vb&&vb.width){clone.setAttribute('width',vb.width);clone.setAttribute('height',vb.height);}
+    return new XMLSerializer().serializeToString(clone);
+  }
+  async function exportChartGraphic(host,type,model) {
+    const svg=host&&host.querySelector('.backlogChartSvg');if(!svg)return;
+    const xmlText=serializeSvgForExport(svg);if(!xmlText)return;
+    if(type==='svg'){downloadBlob(new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),safeChartFileName(model.title,'svg'));return;}
+    const blob=new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),url=root.URL.createObjectURL(blob);
+    try{
+      const img=new root.Image();
+      await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=url;});
+      const vb=svg.viewBox.baseVal,scale=2,canvas=root.document.createElement('canvas');canvas.width=Math.round(vb.width*scale);canvas.height=Math.round(vb.height*scale);
+      const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.drawImage(img,0,0,vb.width,vb.height);
+      const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+      if(png)downloadBlob(png,safeChartFileName(model.title,'png'));
+    }finally{root.URL.revokeObjectURL(url);}
   }
   function mountInteractiveChart(host,model,detail) {
-    const target=host&&host.querySelector('[data-backlog-chart-body]');
-    if(!target)return;
+    const target=host&&host.querySelector('[data-backlog-chart-body]');if(!target)return;
     const total=model.categories.length,range=ensureChartView(model),visible=sliceModel(model,range),span=range.end-range.start;
     const selected=filterSelection(model),available=model.availableSeriesNames||[],first=visible.categories[0],last=visible.categories[visible.categories.length-1];
     const rangeText=(first&&last?first.label+(first.key===last.key?'':' – '+last.label):'')+' · '+span+'/'+total;
-    const todayKey=todayKeyFor(model.state.granularity,new Date()),fullTodayPos=todayPosition(model.categories,todayKey);
-    const filterButton=available.length>1
-      ? '<button type="button" class="tbtn" data-backlog-chart-filter aria-expanded="false">'+esc(tr('Filtre','Filter')+' '+selected.length+'/'+available.length)+'</button>'
-      : '';
-    const todayButton=fullTodayPos!=null
-      ? '<button type="button" class="tbtn" data-backlog-chart-today>'+esc(tr('Bugün','Today'))+'</button>'
-      : '<span class="backlogChartTodayStatus">'+esc(tr('Bugün veri aralığı dışında','Today is outside the data range'))+'</span>';
-    const presetDefs=[
-      ['4w',tr('4H','4W')],['3m',tr('3Ay','3M')],['6m',tr('6Ay','6M')],['ytd','YTD'],['1y','1Y'],['fit',tr('Sığdır','Fit')],['all',tr('Tümü','All')]
-    ];
-    const presetButtons=presetDefs.map(([key,label])=>{
-      const active=rangesEqual(range,rangeForPreset(model,key,new Date()));
+    const fullTodayPos=todayPosition(model.categories,todayKeyFor(model.state.granularity,new Date()));
+    const filterButton=available.length>1?'<button type="button" class="tbtn" data-backlog-chart-filter aria-expanded="false">'+esc(tr('Filtre','Filter')+' '+selected.length+'/'+available.length)+'</button>':'';
+    const todayButton=fullTodayPos!=null?'<button type="button" class="tbtn" data-backlog-chart-today>'+esc(tr('Bugün','Today'))+'</button>':'<span class="backlogChartTodayStatus">'+esc(tr('Bugün veri aralığı dışında','Today is outside the data range'))+'</span>';
+    const presetDefs=[['4w',tr('4H','4W')],['3m',tr('3Ay','3M')],['6m',tr('6Ay','6M')],['ytd','YTD'],['1y','1Y'],['fit',tr('Sığdır','Fit')],['all',tr('Tümü','All')]];
+    const presetButtons=presetDefs.map(item=>{
+      const key=item[0],label=item[1],active=rangesEqual(range,rangeForPreset(model,key,new Date()));
       return '<button type="button" class="backlogChartRangeBtn'+(active?' is-active':'')+'" data-backlog-chart-range="'+key+'">'+esc(label)+'</button>';
     }).join('');
-    const filterPanel=available.length>1
-      ? '<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden>'
-        +'<div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'">'
-        +'<div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button>'
-        +'<button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div>'
-        +'<div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>'
-      : '';
-    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets">'+presetButtons+'</div>'
-      +'<div class="backlogChartInlineActions"><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span>'+todayButton+filterButton+'</div></div>'
+    const filterPanel=available.length>1?'<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden><div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'"><div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button><button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div><div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>':'';
+    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets">'+presetButtons+'</div><div class="backlogChartInlineActions"><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button>'+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
       +filterPanel
-      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek ile zoom, sürükleyerek yatay kaydırma yapabilirsiniz.','Backlog chart. Use the wheel to zoom and drag to pan horizontally.'))+'">'
-      +'<div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)
-      +'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div>'
-      +'</div></div>'
+      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek ile zoom, sürükleyerek yatay kaydırma yapabilirsiniz.','Backlog chart. Use the wheel to zoom and drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div></div>'
       +legendHtml(model)
-      +'<div class="backlogChartGestureHint">'+esc(tr('Tekerlek: zoom · Sürükle: zaman eksenini kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Wheel: zoom · Drag: pan time · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
+      +'<div class="backlogChartGestureHint">'+esc(tr('Tekerlek: zoom · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Wheel: zoom · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
     const updateRange=next=>{
-      const safe=clampChartRange(next,total);
-      chartView={signature:chartViewSignature(model),start:safe.start,end:safe.end};
-      mountInteractiveChart(host,model,detail);
+      const safe=clampChartRange(next,total);chartView={signature:chartViewSignature(model),start:safe.start,end:safe.end};mountInteractiveChart(host,model,detail);
     };
-    target.querySelectorAll('[data-backlog-chart-range]').forEach(button=>{
-      button.addEventListener('click',()=>updateRange(rangeForPreset(model,button.getAttribute('data-backlog-chart-range'),new Date())));
-    });
+    target.querySelectorAll('[data-backlog-chart-range]').forEach(button=>button.addEventListener('click',()=>updateRange(rangeForPreset(model,button.getAttribute('data-backlog-chart-range'),new Date()))));
+    target.querySelector('[data-backlog-chart-average]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{showAverage:!state.showAverage}));render(false,detail);});
     target.querySelector('[data-backlog-chart-today]')?.addEventListener('click',()=>{if(moveViewToToday(model))mountInteractiveChart(host,model,detail);});
+    target.querySelectorAll('[data-backlog-chart-export]').forEach(button=>button.addEventListener('click',()=>void exportChartGraphic(host,button.getAttribute('data-backlog-chart-export'),visible)));
     const canvas=target.querySelector('.backlogChartCanvas'),viewport=target.querySelector('[data-backlog-chart-viewport]'),svg=viewport&&viewport.querySelector('svg');
     const metrics=chartMetrics(visible),cross=viewport&&viewport.querySelector('[data-backlog-chart-crosshair]');
-    let pinnedIndex=null,drag=null,suppressClickUntil=0;
-    function hideCrosshair(){
-      if(cross&&pinnedIndex==null)cross.hidden=true;
-    }
-    function crosshairAt(clientX,clientY,forceIndex) {
+    let pinnedIndex=null,drag=null,suppressClickUntil=0,dragFrame=0;
+    function hideCrosshair(){if(cross&&pinnedIndex==null)cross.hidden=true;}
+    function crosshairAt(clientX,clientY,forceIndex){
       if(!viewport||!svg||!cross)return null;
-      const sr=svg.getBoundingClientRect(),vr=viewport.getBoundingClientRect();
-      if(!sr.width||!sr.height)return null;
+      const sr=svg.getBoundingClientRect(),vr=viewport.getBoundingClientRect();if(!sr.width||!sr.height)return null;
       let vx=(clientX-sr.left)/sr.width*metrics.width,vy=(clientY-sr.top)/sr.height*metrics.height;
       if(forceIndex==null&&(vx<metrics.left||vx>metrics.width-metrics.right||vy<metrics.top||vy>metrics.top+metrics.ph)){hideCrosshair();return null;}
       const count=Math.max(1,visible.categories.length),step=metrics.pw/count;
-      let index=forceIndex==null?Math.floor((vx-metrics.left)/step):Number(forceIndex);
-      index=Math.max(0,Math.min(count-1,index));
-      const xSvg=metrics.left+step*(index+.5);
-      vy=Math.max(metrics.top,Math.min(metrics.top+metrics.ph,vy));
+      let index=forceIndex==null?Math.floor((vx-metrics.left)/step):Number(forceIndex);index=Math.max(0,Math.min(count-1,index));
+      const xSvg=metrics.left+step*(index+.5);vy=Math.max(metrics.top,Math.min(metrics.top+metrics.ph,vy));
       const xPx=(xSvg/metrics.width)*sr.width+(sr.left-vr.left),yPx=(vy/metrics.height)*sr.height+(sr.top-vr.top);
-      const plotTop=(metrics.top/metrics.height)*sr.height+(sr.top-vr.top),plotHeight=(metrics.ph/metrics.height)*sr.height;
-      const plotLeft=(metrics.left/metrics.width)*sr.width+(sr.left-vr.left),plotWidth=(metrics.pw/metrics.width)*sr.width;
-      const value=metrics.max*(1-(vy-metrics.top)/metrics.ph),cat=visible.categories[index];
-      cross.hidden=false;
-      cross.classList.toggle('is-pinned',pinnedIndex!=null);
+      const plotTop=(metrics.top/metrics.height)*sr.height+(sr.top-vr.top),plotHeight=(metrics.ph/metrics.height)*sr.height,plotLeft=(metrics.left/metrics.width)*sr.width+(sr.left-vr.left),plotWidth=(metrics.pw/metrics.width)*sr.width;
+      const value=metrics.max*(1-(vy-metrics.top)/metrics.ph),cat=visible.categories[index],subtotal=(visible.series||[]).reduce((sum,serie)=>sum+(Number(serie.values[index])||0),0);
+      cross.hidden=false;cross.classList.toggle('is-pinned',pinnedIndex!=null);
       cross.querySelector('.backlogChartCrosshairV').style.cssText='left:'+xPx+'px;top:'+plotTop+'px;height:'+plotHeight+'px;';
       cross.querySelector('.backlogChartCrosshairH').style.cssText='left:'+plotLeft+'px;top:'+yPx+'px;width:'+plotWidth+'px;';
-      const valueEl=cross.querySelector('.backlogChartCrosshairValue');
-      valueEl.textContent=formatValue(value);
-      valueEl.style.cssText='left:'+(plotLeft+plotWidth+4)+'px;top:'+yPx+'px;';
+      const valueEl=cross.querySelector('.backlogChartCrosshairValue');valueEl.textContent=formatWholeValue(value);valueEl.style.cssText='left:'+(plotLeft+plotWidth+4)+'px;top:'+yPx+'px;';
       const tooltip=cross.querySelector('.backlogChartTooltip');
-      tooltip.innerHTML='<strong>'+esc(cat&&cat.label||'')+'</strong>'
-        +(visible.series||[]).map(serie=>'<span><i style="--series-color:'+serie.color+'"></i><b>'+esc(serie.name)+'</b><em>'+esc(formatValue(serie.values[index]))+'</em></span>').join('');
-      const flip=xPx>vr.width*.62;
-      tooltip.classList.toggle('is-flipped',flip);
-      tooltip.style.cssText='left:'+xPx+'px;top:'+Math.max(plotTop+4,Math.min(yPx,plotTop+plotHeight-24))+'px;';
+      tooltip.innerHTML='<strong>'+esc(cat&&cat.label||'')+'</strong>'+(visible.series||[]).map(serie=>'<span><i style="--series-color:'+serie.color+'"></i><b>'+esc(serie.name)+'</b><em>'+esc(formatWholeValue(serie.values[index]))+'</em></span>').join('')+'<span class="backlogChartTooltipTotal"><i></i><b>'+esc(tr('Alt Toplam','Subtotal'))+'</b><em>'+esc(formatWholeValue(subtotal))+'</em></span>';
+      tooltip.classList.toggle('is-flipped',xPx>vr.width*.62);tooltip.style.cssText='left:'+xPx+'px;top:'+Math.max(plotTop+4,Math.min(yPx,plotTop+plotHeight-24))+'px;';
       return index;
+    }
+    function setDragTransform(px,animate){
+      if(!svg)return;svg.style.transition=animate?'transform 110ms cubic-bezier(.2,.75,.25,1)':'none';svg.style.transform='translate3d('+px+'px,0,0)';
+    }
+    function animatedPan(next){
+      if(!viewport||!svg){updateRange(next);return;}
+      const delta=next.start-range.start;if(!delta){return;}
+      const plotPx=Math.max(1,viewport.getBoundingClientRect().width*(metrics.pw/metrics.width)),pxPerBucket=plotPx/Math.max(1,span);
+      setDragTransform(-delta*pxPerBucket,true);setTimeout(()=>updateRange(next),105);
     }
     viewport?.addEventListener('pointermove',event=>{
       if(drag){
-        const dx=event.clientX-drag.startX;
-        if(Math.abs(dx)>5){drag.moved=true;viewport.classList.add('is-grabbing');}
-        return;
+        const now=performance.now(),dx=event.clientX-drag.startX,dt=Math.max(1,now-drag.lastT);
+        drag.velocity=(event.clientX-drag.lastX)/dt;drag.lastX=event.clientX;drag.lastT=now;
+        if(Math.abs(dx)>3){drag.moved=true;viewport.classList.add('is-grabbing');hideCrosshair();}
+        if(dragFrame)cancelAnimationFrame(dragFrame);dragFrame=requestAnimationFrame(()=>setDragTransform(dx,false));return;
       }
       if(pinnedIndex==null)crosshairAt(event.clientX,event.clientY,null);
     });
     viewport?.addEventListener('pointerleave',hideCrosshair);
     viewport?.addEventListener('pointerdown',event=>{
-      if(event.button!==0)return;
-      drag={pointerId:event.pointerId,startX:event.clientX,startY:event.clientY,startRange:{start:range.start,end:range.end},moved:false};
+      if(event.button!==0)return;const now=performance.now();
+      drag={pointerId:event.pointerId,startX:event.clientX,lastX:event.clientX,lastT:now,velocity:0,startRange:{start:range.start,end:range.end},moved:false};
       try{viewport.setPointerCapture(event.pointerId);}catch(_){}
     });
     viewport?.addEventListener('pointerup',event=>{
       if(!drag||drag.pointerId!==event.pointerId)return;
-      const current=drag,dx=event.clientX-current.startX;
-      viewport.classList.remove('is-grabbing');
+      const current=drag,dx=event.clientX-current.startX,momentum=current.velocity*120;drag=null;viewport.classList.remove('is-grabbing');
       try{viewport.releasePointerCapture(event.pointerId);}catch(_){}
-      drag=null;
       if(current.moved){
         suppressClickUntil=Date.now()+250;
         const plotPx=Math.max(1,viewport.getBoundingClientRect().width*(metrics.pw/metrics.width)),pxPerBucket=plotPx/Math.max(1,span);
-        const shift=-Math.round(dx/pxPerBucket);
-        if(shift)updateRange(shiftChartRange(current.startRange,total,shift));
-      }
+        const shift=-Math.round((dx+momentum)/pxPerBucket),next=shiftChartRange(current.startRange,total,shift);
+        const settledPx=-(next.start-current.startRange.start)*pxPerBucket;
+        if(rangesEqual(next,current.startRange)){setDragTransform(0,true);return;}
+        setDragTransform(settledPx,true);setTimeout(()=>updateRange(next),105);
+      }else setDragTransform(0,true);
     });
-    viewport?.addEventListener('pointercancel',()=>{drag=null;viewport.classList.remove('is-grabbing');});
+    viewport?.addEventListener('pointercancel',()=>{drag=null;viewport.classList.remove('is-grabbing');setDragTransform(0,true);});
     viewport?.addEventListener('click',event=>{
-      if(Date.now()<suppressClickUntil)return;
-      const index=crosshairAt(event.clientX,event.clientY,null);
-      if(index==null)return;
-      pinnedIndex=pinnedIndex===index?null:index;
-      if(pinnedIndex==null)crosshairAt(event.clientX,event.clientY,null);
-      else crosshairAt(event.clientX,event.clientY,pinnedIndex);
+      if(Date.now()<suppressClickUntil)return;const index=crosshairAt(event.clientX,event.clientY,null);if(index==null)return;
+      pinnedIndex=pinnedIndex===index?null:index;if(pinnedIndex==null)crosshairAt(event.clientX,event.clientY,null);else crosshairAt(event.clientX,event.clientY,pinnedIndex);
     });
-    viewport?.addEventListener('dblclick',event=>{
-      if(event.target.closest&&event.target.closest('[data-backlog-chart-legend-name]'))return;
-      event.preventDefault();updateRange(defaultChartRange(model,new Date()));
-    });
+    viewport?.addEventListener('dblclick',event=>{event.preventDefault();updateRange(defaultChartRange(model,new Date()));});
     canvas?.addEventListener('wheel',event=>{
-      if(total<=1)return;
-      event.preventDefault();
+      if(total<=1)return;event.preventDefault();
       const rect=viewport?viewport.getBoundingClientRect():canvas.getBoundingClientRect(),ratio=rect.width?Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)):.5;
-      if(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)){
-        const direction=(event.deltaX||event.deltaY)>0?1:-1;updateRange(panChartRange(range,total,direction));return;
-      }
+      if(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)){animatedPan(panChartRange(range,total,(event.deltaX||event.deltaY)>0?1:-1));return;}
       updateRange(zoomChartRange(range,total,event.deltaY,ratio));
     },{passive:false});
     canvas?.addEventListener('keydown',event=>{
-      let next=null;
-      if(event.key==='Escape'&&pinnedIndex!=null){pinnedIndex=null;if(cross)cross.hidden=true;event.preventDefault();return;}
-      if(event.key==='+'||event.key==='=')next=zoomChartRange(range,total,-1,.5);
-      else if(event.key==='-')next=zoomChartRange(range,total,1,.5);
-      else if(event.key==='ArrowLeft')next=panChartRange(range,total,-1);
-      else if(event.key==='ArrowRight')next=panChartRange(range,total,1);
+      let next=null;if(event.key==='Escape'&&pinnedIndex!=null){pinnedIndex=null;if(cross)cross.hidden=true;event.preventDefault();return;}
+      if(event.key==='+'||event.key==='=')next=zoomChartRange(range,total,-1,.5);else if(event.key==='-')next=zoomChartRange(range,total,1,.5);
+      else if(event.key==='ArrowLeft'){event.preventDefault();animatedPan(panChartRange(range,total,-1));return;}
+      else if(event.key==='ArrowRight'){event.preventDefault();animatedPan(panChartRange(range,total,1));return;}
       else if(event.key==='0'||event.key==='Home')next=defaultChartRange(model,new Date());
       if(next){event.preventDefault();updateRange(next);}
     });
     target.querySelectorAll('[data-backlog-chart-legend-name]').forEach(button=>{
-      let clickTimer=null;
-      const name=button.getAttribute('data-backlog-chart-legend-name');
-      const applyLegend=(isolate)=>{
-        const current=filterSelection(model),set=new Set(current);
-        let next;
-        if(isolate)next=[name];
-        else{
-          if(set.has(name)){if(set.size<=1){notify(tr('Grafikte en az bir seri görünür kalmalı.','Keep at least one series visible.'));return;}set.delete(name);}
-          else set.add(name);
-          next=available.filter(item=>set.has(item));
-        }
-        saveState(Object.assign({},state,{seriesFilter:next.length===available.length?[]:next}));
-        render(false,detail);
+      let clickTimer=null;const name=button.getAttribute('data-backlog-chart-legend-name');
+      const applyLegend=isolate=>{
+        const current=filterSelection(model),set=new Set(current);let next;
+        if(isolate)next=[name];else{if(set.has(name)){if(set.size<=1){notify(tr('Grafikte en az bir seri görünür kalmalı.','Keep at least one series visible.'));return;}set.delete(name);}else set.add(name);next=available.filter(item=>set.has(item));}
+        saveState(Object.assign({},state,{seriesFilter:next.length===available.length?[]:next}));render(false,detail);
       };
-      button.addEventListener('click',()=>{
-        if(clickTimer)clearTimeout(clickTimer);
-        clickTimer=setTimeout(()=>{clickTimer=null;applyLegend(false);},210);
-      });
-      button.addEventListener('dblclick',event=>{
-        event.preventDefault();if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}applyLegend(true);
-      });
+      button.addEventListener('click',()=>{if(clickTimer)clearTimeout(clickTimer);clickTimer=setTimeout(()=>{clickTimer=null;applyLegend(false);},210);});
+      button.addEventListener('dblclick',event=>{event.preventDefault();if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}applyLegend(true);});
     });
     const filterToggle=target.querySelector('[data-backlog-chart-filter]'),filterPanelEl=target.querySelector('[data-backlog-chart-filter-panel]');
-    filterToggle?.addEventListener('click',()=>{
-      const opening=!!filterPanelEl?.hidden;
-      if(filterPanelEl)filterPanelEl.hidden=!opening;
-      filterToggle.setAttribute('aria-expanded',opening?'true':'false');
-      if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();
-    });
+    filterToggle?.addEventListener('click',()=>{const opening=!!filterPanelEl?.hidden;if(filterPanelEl)filterPanelEl.hidden=!opening;filterToggle.setAttribute('aria-expanded',opening?'true':'false');if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();});
     target.querySelector('[data-backlog-chart-filter-search]')?.addEventListener('input',event=>{
       const q=String(event.target.value||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR');
-      target.querySelectorAll('[data-backlog-chart-filter-item]').forEach(label=>{
-        label.hidden=q&&!String(label.textContent||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR').includes(q);
-      });
+      target.querySelectorAll('[data-backlog-chart-filter-item]').forEach(label=>{label.hidden=q&&!String(label.textContent||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR').includes(q);});
     });
-    target.querySelector('[data-backlog-chart-filter-all]')?.addEventListener('click',()=>{
-      saveState(Object.assign({},state,{seriesFilter:[]}));render(false,detail);
-    });
+    target.querySelector('[data-backlog-chart-filter-all]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{seriesFilter:[]}));render(false,detail);});
     target.querySelector('[data-backlog-chart-filter-apply]')?.addEventListener('click',()=>{
-      const chosen=[...target.querySelectorAll('[data-backlog-chart-series-index]:checked')]
-        .map(input=>available[Number(input.getAttribute('data-backlog-chart-series-index'))]).filter(Boolean);
+      const chosen=[...target.querySelectorAll('[data-backlog-chart-series-index]:checked')].map(input=>available[Number(input.getAttribute('data-backlog-chart-series-index'))]).filter(Boolean);
       if(!chosen.length){notify(tr('Grafikte en az bir seri seçili kalmalı.','Keep at least one series selected.'));return;}
       saveState(Object.assign({},state,{seriesFilter:chosen.length===available.length?[]:chosen}));render(false,detail);
     });
@@ -746,60 +729,40 @@
   async function openSettings() {
     if(!root.document)return;
     root.document.getElementById('_backlogChartSettingsModal')?.remove();
-    const overlay=root.document.createElement('div');
-    overlay.id='_backlogChartSettingsModal'; overlay.className='autoModalOverlay';
+    const overlay=root.document.createElement('div');overlay.id='_backlogChartSettingsModal';overlay.className='autoModalOverlay';
     overlay.innerHTML='<div class="autoModal backlogChartSettingsModal"><header><h3>'+esc(tr('Backlog Grafik Ayarları','Backlog Chart Settings'))+'</h3><button type="button" data-chart-close>×</button></header><div class="autoModalBody"><div class="backlogChartLoading">'+esc(tr('Alanlar yükleniyor…','Loading fields…'))+'</div></div></div>';
-    root.document.body.appendChild(overlay);
-    const close=()=>overlay.remove();
-    overlay.querySelector('[data-chart-close]')?.addEventListener('click',close);
-    let detail;
-    try { detail=await loadDetail(false); }
-    catch(err){ overlay.querySelector('.autoModalBody').innerHTML='<div class="backlogChartError">'+esc(err.message)+'</div>'; return; }
-    const headers=normalizeHeaders(detail.headers,detail.rows), dates=detectDateHeaders(headers,detail.rows);
-    const draft=inferState(headers,detail.rows,state);
-    const body=overlay.querySelector('.autoModalBody');
+    root.document.body.appendChild(overlay);const close=()=>overlay.remove();overlay.querySelector('[data-chart-close]')?.addEventListener('click',close);
+    let detail;try{detail=await loadDetail(false);}catch(err){overlay.querySelector('.autoModalBody').innerHTML='<div class="backlogChartError">'+esc(err.message)+'</div>';return;}
+    const headers=normalizeHeaders(detail.headers,detail.rows),dates=detectDateHeaders(headers,detail.rows),draft=inferState(headers,detail.rows,state),body=overlay.querySelector('.autoModalBody');
     body.innerHTML='<div class="backlogChartSettingsGrid">'
-      +'<label><span>'+esc(tr('Zaman alanı','Time field'))+'</span><select id="backlogChartTime">'+optionHtml(dates,draft.timeField,null)+'</select></label>'
+      +'<label><span>'+esc(tr('Zaman alanı 1','Time field 1'))+'</span><select id="backlogChartTime">'+optionHtml(dates,draft.timeField,null)+'</select></label>'
+      +'<label><span>'+esc(tr('Zaman alanı 2 (opsiyonel)','Time field 2 (optional)'))+'</span><select id="backlogChartTime2">'+optionHtml(dates,draft.timeField2,tr('İkinci zaman alanı yok','No second time field'))+'</select></label>'
       +'<label><span>'+esc(tr('Zaman kırılımı','Time interval'))+'</span><select id="backlogChartGran"><option value="day">'+esc(tr('Gün','Day'))+'</option><option value="week">'+esc(tr('Hafta','Week'))+'</option><option value="month">'+esc(tr('Ay','Month'))+'</option><option value="year">'+esc(tr('Yıl','Year'))+'</option></select></label>'
       +'<label><span>'+esc(tr('Adet / değer alanı','Quantity / value field'))+'</span><select id="backlogChartMetric"><option value="__records">'+esc(tr('Kayıtlar','Records'))+'</option>'+optionHtml(headers,draft.metricField,null)+'</select></label>'
       +'<label><span>'+esc(tr('Hesaplama','Aggregation'))+'</span><select id="backlogChartAgg"><option value="count">'+esc(tr('Adet','Count'))+'</option><option value="distinct">'+esc(tr('Benzersiz adet','Distinct count'))+'</option><option value="sum">'+esc(tr('Toplam','Sum'))+'</option><option value="avg">'+esc(tr('Ortalama','Average'))+'</option></select></label>'
       +'<label><span>'+esc(tr('Kırılım / seri','Breakdown / series'))+'</span><select id="backlogChartSeries">'+optionHtml(headers,draft.seriesField,tr('Kırılım yok','No breakdown'))+'</select></label>'
       +'<label><span>'+esc(tr('Grafik tipi','Chart type'))+'</span><select id="backlogChartType"><option value="line">'+esc(tr('Çizgi','Line'))+'</option><option value="bar">'+esc(tr('Sütun','Column'))+'</option></select></label>'
       +'<label><span>'+esc(tr('Seri limiti','Series limit'))+'</span><select id="backlogChartLimit"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="all">'+esc(tr('Tümü','All'))+'</option></select></label>'
+      +'<label class="backlogChartToggleField"><input id="backlogChartAverage" type="checkbox"'+(draft.showAverage?' checked':'')+'><span>'+esc(tr('Görünür aralık ortalama çizgisini göster','Show visible-range average line'))+'</span></label>'
       +'<label class="backlogChartTitleField"><span>'+esc(tr('Başlık (opsiyonel)','Title (optional)'))+'</span><input id="backlogChartTitle" type="text" maxlength="160" value="'+esc(draft.title)+'"></label>'
-      +'</div><p class="backlogChartSettingsHint">'+esc(tr('Grafik Backlog filtrelerini aynen kullanır. Excel aktarımında Grafik ve Grafik Verisi sayfaları da oluşturulur.','The chart uses the active Backlog filters. Excel export also creates Chart and Chart Data sheets.'))+'</p>';
-    const modal=overlay.querySelector('.autoModal');
-    const footer=root.document.createElement('footer');
-    footer.innerHTML=(state.enabled?'<button type="button" class="tbtn" data-chart-remove>'+esc(tr('Grafiği kaldır','Remove chart'))+'</button>':'<span></span>')
-      +'<button type="button" class="tbtn" data-chart-cancel>'+esc(tr('Vazgeç','Cancel'))+'</button>'
-      +'<button type="button" class="tbtn primary" data-chart-save>'+esc(tr('Uygula','Apply'))+'</button>';
+      +'</div><p class="backlogChartSettingsHint">'+esc(tr('İkinci zaman alanı aynı metriği iki tarih eksenine göre üst üste bindirir. Excel aktarımı ekrandaki görünür tarih aralığını ve seri filtresini korur.','The second time field overlays the same metric by another date field. Excel export keeps the visible time range and series filter.'))+'</p>';
+    const modal=overlay.querySelector('.autoModal'),footer=root.document.createElement('footer');
+    footer.innerHTML=(state.enabled?'<button type="button" class="tbtn" data-chart-remove>'+esc(tr('Grafiği kaldır','Remove chart'))+'</button>':'<span></span>')+'<button type="button" class="tbtn" data-chart-cancel>'+esc(tr('Vazgeç','Cancel'))+'</button><button type="button" class="tbtn primary" data-chart-save>'+esc(tr('Uygula','Apply'))+'</button>';
     modal.appendChild(footer);
     const set=(id,val)=>{const el=overlay.querySelector('#'+id);if(el)el.value=val;};
-    set('backlogChartGran',draft.granularity); set('backlogChartAgg',draft.aggregation); set('backlogChartType',draft.chartType); set('backlogChartLimit',draft.seriesLimit);
+    set('backlogChartGran',draft.granularity);set('backlogChartAgg',draft.aggregation);set('backlogChartType',draft.chartType);set('backlogChartLimit',draft.seriesLimit);
     overlay.querySelector('[data-chart-cancel]')?.addEventListener('click',close);
     overlay.querySelector('[data-chart-remove]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{enabled:false}));const p=panel();if(p)p.hidden=true;close();});
     overlay.querySelector('[data-chart-save]')?.addEventListener('click',()=>{
-      const next=sanitizeState({
-        enabled:true,
-        timeField:overlay.querySelector('#backlogChartTime')?.value,
-        granularity:overlay.querySelector('#backlogChartGran')?.value,
-        metricField:overlay.querySelector('#backlogChartMetric')?.value,
-        aggregation:overlay.querySelector('#backlogChartAgg')?.value,
-        seriesField:overlay.querySelector('#backlogChartSeries')?.value,
-        seriesFilter:overlay.querySelector('#backlogChartSeries')?.value===state.seriesField?state.seriesFilter:[],
-        chartType:overlay.querySelector('#backlogChartType')?.value,
-        seriesLimit:overlay.querySelector('#backlogChartLimit')?.value,
-        title:overlay.querySelector('#backlogChartTitle')?.value,
-      });
+      const seriesField=overlay.querySelector('#backlogChartSeries')?.value;
+      const next=sanitizeState({enabled:true,timeField:overlay.querySelector('#backlogChartTime')?.value,timeField2:overlay.querySelector('#backlogChartTime2')?.value,granularity:overlay.querySelector('#backlogChartGran')?.value,metricField:overlay.querySelector('#backlogChartMetric')?.value,aggregation:overlay.querySelector('#backlogChartAgg')?.value,seriesField,seriesFilter:seriesField===state.seriesField?state.seriesFilter:[],chartType:overlay.querySelector('#backlogChartType')?.value,seriesLimit:overlay.querySelector('#backlogChartLimit')?.value,title:overlay.querySelector('#backlogChartTitle')?.value,showAverage:!!overlay.querySelector('#backlogChartAverage')?.checked});
       if(!next.timeField){notify(tr('Grafik için bir tarih alanı seçin.','Select a date field for the chart.'));return;}
       if(next.metricField==='__records')next.aggregation='count';
-      const model=buildModel(detail.rows,detail.headers,next);
-      if(!model.categories.length){notify(tr('Seçili tarih alanında grafiğe uygun veri yok.','The selected date field has no chartable data.'));return;}
-      saveState(next); close(); render(false,detail);
+      const model=buildModel(detail.rows,detail.headers,next);if(!model.categories.length){notify(tr('Seçili tarih alanında grafiğe uygun veri yok.','The selected date field has no chartable data.'));return;}
+      saveState(next);chartView={signature:'',start:0,end:0};close();render(false,detail);
     });
     overlay.addEventListener('mousedown',e=>{if(e.target===overlay)close();});
   }
-
   function uniqueSheetName(wb,base) {
     const used=new Set((wb.SheetNames||[]).map(String));
     if(!used.has(base))return base;
@@ -811,52 +774,44 @@
   }
   function quoteSheet(name) { return "'"+String(name).replace(/'/g,"''")+"'"; }
   function appendWorkbookSheets(wb,rows,headers,options) {
-    const opts=options||{}, XLSX=opts.XLSX||root.XLSX, st=sanitizeState(opts.state||state);
+    const opts=options||{},XLSX=opts.XLSX||root.XLSX,st=sanitizeState(opts.state||state);
     if(!st.enabled||!st.timeField||!XLSX||!XLSX.utils||!wb)return null;
-    const model=buildModel(rows,headers,st);
-    if(!model.categories.length||!model.series.length)return null;
-    const chartName=uniqueSheetName(wb,tr('Grafik','Chart'));
-    const dataName=uniqueSheetName(wb,tr('Grafik Verisi','Chart Data'));
-    const chartWs=XLSX.utils.aoa_to_sheet([[model.title],[configSummary(st)],[]]);
-    chartWs['!cols']=[{wch:24},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18}];
-    XLSX.utils.book_append_sheet(wb,chartWs,chartName);
-    const matrix=[[tr('Zaman','Time'),...model.series.map(s=>s.name)]];
-    model.categories.forEach((cat,i)=>matrix.push([cat.label,...model.series.map(s=>s.values[i])]));
-    const dataWs=XLSX.utils.aoa_to_sheet(matrix);
-    dataWs['!cols']=[{wch:20},...model.series.map(()=>({wch:18}))];
-    XLSX.utils.book_append_sheet(wb,dataWs,dataName);
+    const fullModel=buildModel(rows,headers,st);if(!fullModel.categories.length||!fullModel.series.length)return null;
+    const range=opts.viewRange?clampChartRange(opts.viewRange,fullModel.categories.length):ensureChartView(fullModel);
+    const model=sliceModel(fullModel,range);if(!model.categories.length)return null;
+    const chartName=uniqueSheetName(wb,tr('Grafik','Chart')),dataName=uniqueSheetName(wb,tr('Grafik Verisi','Chart Data'));
+    const chartWs=XLSX.utils.aoa_to_sheet([[model.title],[configSummary(st)],[tr('Görünür aralık','Visible range')+': '+(model.categories[0]?.label||'')+' – '+(model.categories[model.categories.length-1]?.label||'')],[]]);
+    chartWs['!cols']=[{wch:28},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18},{wch:18}];XLSX.utils.book_append_sheet(wb,chartWs,chartName);
+    const exportSeries=model.series.map(s=>Object.assign({},s));
+    if(st.showAverage){
+      const avg=averageValue(model);exportSeries.push({name:tr('Ortalama','Average'),color:'#64748b',dash:true,isAverage:true,values:model.categories.map(()=>avg)});
+    }
+    const matrix=[[tr('Zaman','Time'),...exportSeries.map(s=>s.name)]];
+    model.categories.forEach((cat,i)=>matrix.push([axisTickLabel(cat,st.granularity),...exportSeries.map(s=>s.values[i])]));
+    const dataWs=XLSX.utils.aoa_to_sheet(matrix);dataWs['!cols']=[{wch:20},...exportSeries.map(()=>({wch:18}))];XLSX.utils.book_append_sheet(wb,dataWs,dataName);
     const first=2,last=model.categories.length+1,categories=quoteSheet(dataName)+'!$A$'+first+':$A$'+last;
-    const series=model.series.map((s,i)=>({name:s.name,valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(i+1)+'$'+first+':$'+excelColumn(i+1)+'$'+last}));
-    return {model,charts:[{
-      sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',
-      chartType:st.chartType,title:model.title,categoriesFormula:categories,series,
-      anchor:{fromCol:0,fromRow:3,toCol:15,toRow:27},
-    }],chartSheetName:chartName,dataSheetName:dataName};
+    const series=exportSeries.map((serie,i)=>({name:serie.name,valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(i+1)+'$'+first+':$'+excelColumn(i+1)+'$'+last,dash:!!serie.dash,color:String(serie.color||'').replace('#',''),isAverage:!!serie.isAverage}));
+    const metrics=chartMetrics(model);
+    return {model,viewRange:range,charts:[{sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',chartType:st.chartType,title:model.title,categoriesFormula:categories,series,majorUnit:metrics.tickStep,maxValue:metrics.max,anchor:{fromCol:0,fromRow:4,toCol:15,toRow:28}}],chartSheetName:chartName,dataSheetName:dataName};
   }
-
   function titleXml(title) {
     return '<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/><a:t>'+xml(title)+'</a:t></a:r><a:endParaRPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/></a:p></c:rich></c:tx><c:layout/><c:overlay val="0"/></c:title>';
   }
   function chartXml(spec,index) {
     const catAx=100000+index*2,valAx=catAx+1;
-    const series=(spec.series||[]).map((s,i)=>{
-      return '<c:ser><c:idx val="'+i+'"/><c:order val="'+i+'"/><c:tx><c:v>'+xml(s.name)+'</c:v></c:tx>'
-        +(spec.chartType==='line'?'<c:marker><c:symbol val="circle"/><c:size val="5"/></c:marker>':'')
-        +'<c:cat><c:strRef><c:f>'+xml(spec.categoriesFormula)+'</c:f></c:strRef></c:cat>'
-        +'<c:val><c:numRef><c:f>'+xml(s.valuesFormula)+'</c:f></c:numRef></c:val>'
-        +(spec.chartType==='line'?'<c:smooth val="0"/>':'')+'</c:ser>';
+    const seriesXml=(items,kind)=>(items||[]).map((s,i)=>{
+      const color=String(s.color||'').replace(/[^0-9A-F]/ig,'').slice(0,6),lineStyle=color?'<c:spPr><a:ln w="19050"><a:solidFill><a:srgbClr val="'+color.toUpperCase()+'"/></a:solidFill>'+(s.dash?'<a:prstDash val="dash"/>':'')+'</a:ln></c:spPr>':'';
+      return '<c:ser><c:idx val="'+i+'"/><c:order val="'+i+'"/><c:tx><c:v>'+xml(s.name)+'</c:v></c:tx>'+(kind==='line'?(s.isAverage?'<c:marker><c:symbol val="none"/></c:marker>':'<c:marker><c:symbol val="circle"/><c:size val="5"/></c:marker>'):'')+lineStyle+'<c:cat><c:strRef><c:f>'+xml(spec.categoriesFormula)+'</c:f></c:strRef></c:cat><c:val><c:numRef><c:f>'+xml(s.valuesFormula)+'</c:f></c:numRef></c:val>'+(kind==='line'?'<c:smooth val="0"/>':'')+'</c:ser>';
     }).join('');
-    const chartBody=spec.chartType==='bar'
-      ? '<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>'+series+'<c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:barChart>'
-      : '<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+series+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
-    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-      +'<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-      +'<c:date1904 val="0"/><c:lang val="'+(lang()==='en'?'en-US':'tr-TR')+'"/><c:chart>'+titleXml(spec.title||'')
-      +'<c:autoTitleDeleted val="0"/><c:plotArea><c:layout/>'+chartBody
-      +'<c:catAx><c:axId val="'+catAx+'"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:tickLblPos val="nextTo"/><c:crossAx val="'+valAx+'"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/></c:catAx>'
-      +'<c:valAx><c:axId val="'+valAx+'"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/><c:majorGridlines/><c:numFmt formatCode="#,##0.00" sourceLinked="0"/><c:tickLblPos val="nextTo"/><c:crossAx val="'+catAx+'"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx>'
-      +'</c:plotArea><c:legend><c:legendPos val="b"/><c:layout/><c:overlay val="0"/></c:legend><c:plotVisOnly val="1"/><c:dispBlanksAs val="zero"/><c:showDLblsOverMax val="0"/></c:chart>'
-      +'<c:printSettings><c:headerFooter/><c:pageMargins b="0.75" l="0.7" r="0.7" t="0.75" header="0.3" footer="0.3"/><c:pageSetup/></c:printSettings></c:chartSpace>';
+    const all=spec.series||[],avg=all.filter(s=>s.isAverage),normal=all.filter(s=>!s.isAverage);
+    let chartBody;
+    if(spec.chartType==='bar'){
+      chartBody='<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>'+seriesXml(normal,'bar')+'<c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:barChart>';
+      if(avg.length)chartBody+='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(avg,'line')+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
+    }else chartBody='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(all,'line')+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
+    const scaling='<c:scaling><c:orientation val="minMax"/><c:min val="0"/>'+(Number(spec.maxValue)>0?'<c:max val="'+Number(spec.maxValue)+'"/>':'')+'</c:scaling>';
+    const major=Number(spec.majorUnit)>0?'<c:majorUnit val="'+Number(spec.majorUnit)+'"/>':'';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:date1904 val="0"/><c:lang val="'+(lang()==='en'?'en-US':'tr-TR')+'"/><c:chart>'+titleXml(spec.title||'')+'<c:autoTitleDeleted val="0"/><c:plotArea><c:layout/>'+chartBody+'<c:catAx><c:axId val="'+catAx+'"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:tickLblPos val="nextTo"/><c:crossAx val="'+valAx+'"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/></c:catAx><c:valAx><c:axId val="'+valAx+'"/>'+scaling+'<c:delete val="0"/><c:axPos val="r"/><c:majorGridlines/><c:numFmt formatCode="#,##0" sourceLinked="0"/><c:tickLblPos val="nextTo"/>'+major+'<c:crossAx val="'+catAx+'"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx></c:plotArea><c:legend><c:legendPos val="b"/><c:layout/><c:overlay val="0"/></c:legend><c:plotVisOnly val="1"/><c:dispBlanksAs val="zero"/><c:showDLblsOverMax val="0"/></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b="0.75" l="0.7" r="0.7" t="0.75" header="0.3" footer="0.3"/><c:pageSetup/></c:printSettings></c:chartSpace>';
   }
   function drawingXml(chartRelId,spec,index) {
     const a=spec.anchor||{},fc=Number.isFinite(+a.fromCol)?+a.fromCol:0,fr=Number.isFinite(+a.fromRow)?+a.fromRow:2,tc=Number.isFinite(+a.toCol)?+a.toCol:15,trr=Number.isFinite(+a.toRow)?+a.toRow:27;
@@ -948,7 +903,7 @@
     init,onBacklogRendered,openSettings,render,invalidate,
     getState,saveState,sanitizeState,normalizeHeaders,detectDateHeaders,inferState,
     parseDate,parseNumber,bucketFor,buildModel,appendWorkbookSheets,
-    svgChart,todayKeyFor,todayPosition,axisTickLabel,chartMetrics,clampChartRange,defaultVisibleSpan,defaultChartRange,rangeForPreset,zoomChartRange,shiftChartRange,panChartRange,sliceModel,
+    svgChart,todayKeyFor,todayPosition,axisTickLabel,chartMetrics,niceStep,niceTickScale,formatWholeValue,averageValue,clampChartRange,defaultVisibleSpan,defaultChartRange,rangeForPreset,zoomChartRange,shiftChartRange,panChartRange,sliceModel,
     chartXml,drawingXml,applyExcelCharts,
   });
 });

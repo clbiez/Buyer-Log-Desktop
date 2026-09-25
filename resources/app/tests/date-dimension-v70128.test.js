@@ -67,7 +67,9 @@ test('tarayıcı filtreleri ve Collection picker ortak date dimension motoruna b
 test('Backlog detay ve Excel her gerçek tarih alanının sağına Ay ve Hafta ekler',()=>{
   assert.match(APP,/function backlogExpandDateDimensions\(headers,rows\)/);
   assert.match(APP,/expandedHeaders\.push\(header\)/);
-  assert.match(APP,/labels\.month,labels\.week/);
+  assert.match(APP,/\[labels\.month,'month'\]/);
+  assert.match(APP,/\[labels\.week,'week'\]/);
+  assert.match(APP,/derivedHeaderSources\[label\]=\{source:header,kind\}/);
   assert.match(APP,/backlogExpandDateDimensions\(exportHeaders,data\.rows\|\|\[\]\)/);
   assert.match(APP,/backlogExpandDateDimensions\(headers,currentBacklogDetailRows\)/);
   assert.match(APP,/BACKLOG_EXCEL_COLUMNS_KEY='bl\.backlog\.excelColumns\.v4'/);

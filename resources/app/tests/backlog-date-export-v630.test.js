@@ -4,6 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const parse=require('../server/lib/parse');
+const backlogExcel=require('../public/backlog-excel-formulas.js');
 
 const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
@@ -35,3 +36,17 @@ test('v6.30 Excel image placement omits invalid editAs on oneCellAnchor',()=>{
   assert.doesNotMatch(block,/editAs/);
 });
 
+
+
+test('Backlog Excel Ay/Hafta hücreleri orijinal tarih hücresine formülle bağlıdır',()=>{
+  const month=backlogExcel.dateDimensionFormula('Q2','month','tr');
+  const week=backlogExcel.dateDimensionFormula('Q2','week','tr');
+  assert.match(month,/Q2/);
+  assert.match(month,/WEEKDAY\(Q2,2\)/);
+  assert.match(month,/CHOOSE\(MONTH/);
+  assert.match(week,/WEEKNUM\(Q2,21\)/);
+  assert.match(week,/\. Hafta/);
+  assert.match(APP,/derivedHeaderSources/);
+  assert.match(APP,/dateDimensionSources:expanded\.derivedHeaderSources/);
+  assert.match(APP,/BLBacklogExcel\.dateDimensionFormula/);
+});

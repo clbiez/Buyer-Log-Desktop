@@ -5158,6 +5158,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartActions [data-backlog-chart-disable]{min-width:30px;padding-inline:8px;font-size:17px;line-height:1;}
 .backlogChartTradingToolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:6px 0 8px;}
 .backlogChartPresets,.backlogChartInlineActions{display:flex;align-items:center;gap:4px;min-width:0;flex-wrap:wrap;}
+.backlogChartInlineActions .tbtn.is-active{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--acc);}
 .backlogChartRangeBtn{height:28px;min-width:36px;padding:0 8px;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--muted);font:700 10px var(--font,system-ui,sans-serif);cursor:pointer;}
 .backlogChartRangeBtn:hover,.backlogChartRangeBtn:focus-visible{border-color:var(--line);color:var(--ink);outline:none;}
 .backlogChartRangeBtn.is-active{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,transparent);color:var(--acc);}
@@ -5174,7 +5175,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartCanvas:focus-visible{box-shadow:inset 0 0 0 1px var(--acc);}
 .backlogChartViewport{position:relative;min-width:760px;cursor:crosshair;touch-action:pan-y;}
 .backlogChartViewport.is-grabbing{cursor:grabbing;user-select:none;}
-.backlogChartSvg{display:block;width:100%;height:auto;}
+.backlogChartSvg{display:block;width:100%;height:auto;will-change:transform;transform:translate3d(0,0,0);}
 .backlogChartBg{fill:var(--card);}
 .backlogChartPriceAxis{fill:var(--card2);opacity:.44;}
 .backlogChartGrid{stroke:var(--line);stroke-width:1;}
@@ -5183,6 +5184,8 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartTodayLine{stroke:var(--acc);stroke-width:1.4;stroke-dasharray:4 4;opacity:.9;}
 .backlogChartTodayBadge{fill:var(--card);stroke:var(--acc);stroke-width:1;}
 .backlogChartTodayText{fill:var(--acc);font:700 9px var(--font,system-ui,sans-serif);}
+.backlogChartAverageLine{stroke:var(--muted);stroke-width:1.25;stroke-dasharray:8 5;opacity:.8;}
+.backlogChartAverageText{fill:var(--muted);font:700 9px var(--font,system-ui,sans-serif);}
 .backlogChartCrosshair{position:absolute;inset:0;pointer-events:none;z-index:3;}
 .backlogChartCrosshairV,.backlogChartCrosshairH{position:absolute;display:block;background:color-mix(in srgb,var(--muted) 66%,transparent);pointer-events:none;}
 .backlogChartCrosshairV{width:1px;}
@@ -5196,12 +5199,15 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartTooltip span i{width:7px;height:7px;border-radius:50%;background:var(--series-color);}
 .backlogChartTooltip span b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;}
 .backlogChartTooltip span em{font-style:normal;font-variant-numeric:tabular-nums;color:var(--muted);}
+.backlogChartTooltip .backlogChartTooltipTotal{margin-top:5px;padding-top:6px;border-top:1px solid var(--line);font-weight:800;}
+.backlogChartTooltip .backlogChartTooltipTotal i{background:var(--muted);}
 .backlogChartLegend{display:flex;align-items:center;gap:5px 14px;flex-wrap:wrap;padding:8px 2px 2px;}
 .backlogChartLegendItem{display:inline-flex;align-items:center;gap:6px;max-width:240px;padding:3px 2px;border:0;background:transparent;color:var(--ink);font:10px var(--font,system-ui,sans-serif);cursor:pointer;}
 .backlogChartLegendItem>span{width:14px;height:3px;border-radius:2px;background:var(--series-color);flex:0 0 auto;}
 .backlogChartLegendItem>b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .backlogChartLegendItem:hover,.backlogChartLegendItem:focus-visible{color:var(--acc);outline:none;}
 .backlogChartLegendItem.is-muted{opacity:.38;text-decoration:line-through;}
+.backlogChartOverlayMark{font-style:normal;font-size:8px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:1px 3px;}
 .backlogChartGestureHint{margin-top:5px;color:var(--muted);font-size:9.5px;}
 .backlogChartNotice{margin:6px 0 2px;padding:7px 9px;border:1px solid var(--line);background:var(--card2);color:var(--muted);font-size:10.5px;}
 .backlogChartLoading,.backlogChartError{padding:18px;text-align:center;color:var(--muted);font-size:11px;}
@@ -5209,7 +5215,9 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .autoModal.backlogChartSettingsModal{width:min(760px,calc(100vw - 24px));}
 .backlogChartSettingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;}
 .backlogChartSettingsGrid label{display:grid;gap:5px;min-width:0;color:var(--muted);font-size:10.5px;font-weight:700;}
-.backlogChartSettingsGrid select,.backlogChartSettingsGrid input{width:100%;height:32px;min-width:0;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink);padding:0 8px;font:inherit;}
+.backlogChartSettingsGrid select,.backlogChartSettingsGrid input:not([type="checkbox"]){width:100%;height:32px;min-width:0;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card);color:var(--ink);padding:0 8px;font:inherit;}
+.backlogChartToggleField{grid-template-columns:auto 1fr!important;align-items:center;align-content:center;gap:8px!important;min-height:32px;}
+.backlogChartToggleField input[type="checkbox"]{width:16px;height:16px;margin:0;accent-color:var(--acc);}
 .backlogChartTitleField{grid-column:1/-1;}
 .backlogChartSettingsHint{margin:10px 0 0;color:var(--muted);font-size:10.5px;line-height:1.45;}
 .backlogChartSettingsModal>footer{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;}
