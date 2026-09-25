@@ -221,8 +221,8 @@ button{touch-action:manipulation}
 .hubGate[data-state="ready"]{background:#f4f8f5}.hubGate[data-state="offline"],.hubGate[data-state="error"]{background:var(--login-warning-bg)}
 .hubSteps{display:grid;gap:3px;margin-top:7px;padding-top:7px;border-top:1px solid var(--login-line)}
 .hubSteps[hidden]{display:none!important}
-.hubStep{display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:5px;min-height:17px;font-size:9.5px;line-height:1.3;color:var(--login-muted)}
-.hubStepIcon{display:grid;place-items:center;width:12px;height:12px;border:1px solid var(--login-line);font-size:8px;font-weight:700;color:var(--login-muted);background:#fff}
+.hubStep{display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:5px;min-height:17px;font-size:10px;line-height:1.3;color:var(--login-muted)}
+.hubStepIcon{display:grid;place-items:center;width:12px;height:12px;border:1px solid var(--login-line);font-size:10px;font-weight:700;color:var(--login-muted);background:#fff}
 .hubStep[data-state="active"]{color:var(--login-text)}
 .hubStep[data-state="active"] .hubStepIcon{border-color:var(--login-focus);color:var(--login-focus)}
 .hubStep[data-state="done"] .hubStepIcon{border-color:#7e9e86;color:#476c51;background:#f4f8f5}

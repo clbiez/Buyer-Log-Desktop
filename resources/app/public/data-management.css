@@ -52,7 +52,7 @@
 .dmLabStage--pass { border-top-color: var(--green); }
 .dmLabStage--warning { border-top-color: var(--orange); }
 .dmLabStage--fail, .dmLabStage--blocked { border-top-color: var(--red); }
-.dmLabStageNo { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border: 1px solid var(--line2); color: var(--muted); font-size: 9px; }
+.dmLabStageNo { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border: 1px solid var(--line2); color: var(--muted); font-size: 10px; }
 .dmLabStage strong { font-size: 11px; color: var(--ink); white-space: nowrap; }
 .dmLabStage > span:nth-child(3) { grid-column: 1 / -1; color: var(--ink); font-size: 16px; font-weight: 600; }
 .dmLabStage small { grid-column: 1 / -1; color: var(--muted); font-size: 10px; line-height: 1.25; }
@@ -251,7 +251,7 @@
 .dmsStep { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
 .dmsStep.isActive { color: var(--ink); font-weight: 600; }
 .dmsStep.isDone { color: var(--ink2); }
-.dmsStepNo { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 9px; border: 1px solid var(--line2); }
+.dmsStepNo { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 10px; border: 1px solid var(--line2); }
 .dmsStep.isActive .dmsStepNo { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
 .dmsStep.isDone .dmsStepNo { border-color: var(--green); color: var(--green); }
 
