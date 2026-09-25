@@ -779,7 +779,9 @@
     const opts=options||{},XLSX=opts.XLSX||root.XLSX,st=sanitizeState(opts.state||state);
     if(!st.enabled||!st.timeField||!XLSX||!XLSX.utils||!wb)return null;
     const fullModel=buildModel(rows,headers,st);if(!fullModel.categories.length||!fullModel.series.length)return null;
-    const range=opts.viewRange?clampChartRange(opts.viewRange,fullModel.categories.length):ensureChartView(fullModel);
+    const requestedView=opts.viewRange||null,expectedSignature=chartViewSignature(fullModel);
+    const compatibleView=requestedView&&(!requestedView.signature||requestedView.signature===expectedSignature);
+    const range=compatibleView?clampChartRange(requestedView,fullModel.categories.length):ensureChartView(fullModel);
     const model=sliceModel(fullModel,range);if(!model.categories.length)return null;
     const chartName=uniqueSheetName(wb,tr('Grafik','Chart')),dataName=uniqueSheetName(wb,tr('Grafik Verisi','Chart Data'));
     const chartWs=XLSX.utils.aoa_to_sheet([[model.title],[configSummary(st)],[tr('Görünür aralık','Visible range')+': '+(model.categories[0]?.label||'')+' – '+(model.categories[model.categories.length-1]?.label||'')],[]]);
