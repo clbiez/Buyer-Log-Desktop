@@ -59,6 +59,22 @@ test('Backlog chart filters series inside the chart before applying the series l
   assert.deepEqual(sanitized.seriesFilter,['A','B']);
 });
 
+test('Backlog chart TradingView-style ranges open at a readable window and support presets', () => {
+  const categories=Array.from({length:60},(_,i)=>{
+    const d=new Date(2026,0,5+i*7);
+    return {key:chart.bucketFor(d,'week').key,label:chart.bucketFor(d,'week').label};
+  });
+  const fake={state:state({granularity:'week'}),categories,series:[]};
+  assert.equal(chart.defaultVisibleSpan('week',60),16);
+  const initial=chart.defaultChartRange(fake,new Date(2026,8,25));
+  assert.equal(initial.end-initial.start,16);
+  const fourWeeks=chart.rangeForPreset(fake,'4w',new Date(2026,8,25));
+  assert.equal(fourWeeks.end-fourWeeks.start,4);
+  const threeMonths=chart.rangeForPreset(fake,'3m',new Date(2026,8,25));
+  assert.equal(threeMonths.end-threeMonths.start,13);
+  assert.deepEqual(chart.rangeForPreset(fake,'all',new Date(2026,8,25)),{start:0,end:60});
+});
+
 test('Backlog chart zoom range helpers clamp, zoom and pan without losing the data window', () => {
   assert.deepEqual(chart.clampChartRange({start:-5,end:50},12),{start:0,end:12});
   const zoomed=chart.zoomChartRange({start:0,end:12},12,-1,.5);
@@ -76,6 +92,7 @@ test('Backlog chart renders a current-date marker when today falls inside the vi
   const svg=chart.svgChart(model,{today:new Date(2026,8,2)});
   assert.match(svg,/backlogChartTodayLine/);
   assert.match(svg,/backlogChartTodayBadge/);
+  assert.match(svg,/backlogChartPriceAxis/);
   assert.match(svg,/Bugün/);
   assert.doesNotMatch(chart.svgChart(model,{today:new Date(2030,0,1)}),/backlogChartTodayLine/);
 });
@@ -105,12 +122,20 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(INDEX,/src="backlog-chart\.js\?v=__BL_ASSET_VERSION__/);
   assert.match(CSS,/\.backlogChartPanel/);
   assert.match(CSS,/\.backlogChartSettingsGrid/);
-  assert.match(CSS,/\.backlogChartControls/);
-  assert.match(CSS,/\.backlogChartFilterPanel/);
+  assert.match(CSS,/\.backlogChartTradingToolbar/);
+  assert.match(CSS,/\.backlogChartViewport/);
+  assert.match(CSS,/\.backlogChartCrosshair/);
+  assert.match(CSS,/\.backlogChartLegendItem/);
   assert.match(CSS,/\.backlogChartTodayLine/);
   const chartSource=fs.readFileSync(path.join(ROOT,'public','backlog-chart.js'),'utf8');
   assert.match(chartSource,/data-backlog-chart-filter/);
+  assert.match(chartSource,/data-backlog-chart-range/);
+  assert.match(chartSource,/data-backlog-chart-crosshair/);
+  assert.match(chartSource,/data-backlog-chart-legend-name/);
   assert.match(chartSource,/addEventListener\('wheel'/);
+  assert.match(chartSource,/addEventListener\('pointerdown'/);
+  assert.match(chartSource,/addEventListener\('pointermove'/);
+  assert.match(chartSource,/addEventListener\('dblclick'/);
   assert.match(chartSource,/data-backlog-chart-today/);
 });
 
