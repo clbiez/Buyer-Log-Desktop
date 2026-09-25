@@ -259,6 +259,7 @@ const { resolveUsablePlmImage } = require('./lib/plm-image-availability');
 const coreNectumStyleApi = require('./lib/corenectum-style-api');
 const coreNectumApiClient = require('./lib/corenectum-api-client');
 const coreNectumApiSettings = require('./lib/corenectum-api-settings');
+const coreNectumAttachmentIndex = require('./lib/corenectum-attachment-index');
 const plmImageIngestLib = require('./lib/plm-image-ingest');
 const plmImageOwnership = require('./lib/plm-image-ownership');
 const plmImagePackage = require('./lib/plm-image-package');
@@ -4303,6 +4304,20 @@ app.post('/api/corenectum-api/test', requirePlmContextAccess, express.json({ lim
     userAccess.appendAudit(req.currentUser, 'CORENECTUM_API_TEST', 'corenectum', { ok:true, mode:'direct-bearer' });
     res.set('Cache-Control', 'no-store').json({ ok:true, result, status:coreNectumApiSettings.publicSettings(req.currentUser.id) });
   } catch (err) { automationError(res, err, 'CoreNectum API bağlantısı doğrulanamadı.'); }
+});
+/* Collection-only drag/drop identity resolver. The browser drag payload exposes
+   the CoreNectum Attachment URL but not the PLM Code. Resolve it through the
+   direct authenticated GetStyleList API; never drive Edge/CDP for this path. */
+app.post('/api/corenectum-api/resolve-attachment', userAccess.requireArea('koleksiyon'), express.json({ limit:'16kb' }), async (req, res) => {
+  try {
+    const result = await coreNectumAttachmentIndex.resolve(req.currentUser.id, req.body && req.body.attachmentUrl, {
+      language:String(req.body && req.body.language || '').toLowerCase()==='en'?'en':'tr',
+    });
+    userAccess.appendAudit(req.currentUser, 'PLM_DRAG_ATTACHMENT_RESOLVE', 'corenectum', {
+      plmId:result.plmId, cached:Boolean(result.cached), scannedPages:result.scannedPages, scannedRows:result.scannedRows,
+    });
+    res.set('Cache-Control','no-store').json({ ok:true, ...result });
+  } catch (err) { automationError(res, err, 'Sürüklenen PLM görseli modele bağlanamadı.'); }
 });
 
 app.get('/api/plm-style-links/browser/status', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), async (_req, res) => {
