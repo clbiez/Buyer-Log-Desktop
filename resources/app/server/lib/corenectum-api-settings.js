@@ -70,42 +70,21 @@ function sanitizeStyleListTemplate(value) {
     throw templateError('CoreNectum Style List istek şablonu geçersiz veya çok büyük.');
   }
   const clone = JSON.parse(serialized);
-  const filterKeys = new Set(['filter','filters','filterlist','filtermodel','appliedfilters','columnfilters','filteritems','filtercriterias','filtercriteria','searchcriteria','searchcriterias']);
-  const nullKeys = new Set(['favoritegroupid','favouritegroupid','favoritegroup','groupid']);
-  const protectedKeys = new Set(['securityscope','accessscope','userscope','permission','permissions','tenant','tenants']);
+  // GetStyleList'in filtre/search/favorite alanları request sözleşmesinin bir
+  // parçasıdır. Bunları "genişletmek" için boşaltmak CoreNectum'da HTTP 400
+  // üretebilir. Eski doğrulanmış tarama davranışı gibi canlı request body'yi
+  // aynen koru; yalnız gövdeye yanlışlıkla düşmüş olabilecek sırları temizle.
+  // Sayfalama ayrıca paginateStyleListTemplate içinde kontrollü değiştirilir.
   const secretKey = normalized => /(?:authorization|accesstoken|refreshtoken|bearertoken|password|passwd|secret|cookie|sessiontoken)/.test(normalized);
-  const blankInPlace = current => {
-    if (!current || typeof current !== 'object') return;
-    for (const [key, child] of Object.entries(current)) {
-      if (Array.isArray(child)) current[key] = [];
-      else if (child && typeof child === 'object') blankInPlace(child);
-      else if (typeof child === 'string') current[key] = '';
-      else if (typeof child === 'boolean') current[key] = false;
-      else if (typeof child === 'number') current[key] = 0;
-    }
-  };
-  const visit = (current, protectedBranch = false) => {
+  const stripSecrets = current => {
     if (!current || typeof current !== 'object') return;
     for (const [key, child] of Object.entries(current)) {
       const normalized = String(key).replace(/[_\-\s]/g, '').toLowerCase();
       if (secretKey(normalized)) { delete current[key]; continue; }
-      if (protectedBranch) { visit(child, true); continue; }
-      if (nullKeys.has(normalized) && (child === null || typeof child !== 'object')) {
-        current[key] = null;
-        continue;
-      }
-      if (filterKeys.has(normalized)) {
-        if (Array.isArray(child)) current[key] = [];
-        else if (child && typeof child === 'object') blankInPlace(child);
-        else if (typeof child === 'string') current[key] = '';
-        else if (typeof child === 'boolean') current[key] = false;
-        else current[key] = null;
-        continue;
-      }
-      visit(child, protectedKeys.has(normalized));
+      stripSecrets(child);
     }
   };
-  visit(clone);
+  stripSecrets(clone);
   const fields = styleTemplateFields(clone);
   const pageFields = fields.filter(field => field.type === 'page');
   const offsetFields = fields.filter(field => field.type === 'offset');
