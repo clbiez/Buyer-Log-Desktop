@@ -98,7 +98,7 @@ test('raw ASAS normalized row -> lightweight Overview -> Collection catalog zinc
 
 test('client partial Collection catalog cache hazır sayılmaz, tam catalog tekrar fetch gerektirmez', () => {
   const helperBlock = extractBetween(APP, 'function collectionCatalogsReady', 'function kolCatalogIdentity');
-  const kinds = new Set(['category','mag','mmyg','buyingGroup','buyer','season','license','licensor','country','line','productMainDefinition']);
+  const kinds = new Set(['category','mag','mmyg','buyingGroup','buyer','manufacturer','season','license','licensor','country','line','productMainDefinition']);
   const ready = new Function('KOL_ASAS_CATALOG_KINDS', `${helperBlock}\nreturn collectionCatalogsReady;`)(kinds);
 
   assert.equal(ready({ category:['Tişört'], season:['S7'] }), false);
@@ -117,12 +117,13 @@ test('server eski/partial collection-catalog projection cache şemasını redded
   const api = factory(canonicalFields);
   const full = Object.fromEntries(Object.keys(api.COLLECTION_CATALOG_FIELDS).map(key => [key, []]));
 
-  assert.equal(api.COLLECTION_CATALOG_SCHEMA_VERSION, 2);
+  assert.equal(api.COLLECTION_CATALOG_SCHEMA_VERSION, 3);
   assert.equal(api.collectionCatalogsComplete({ category:[] }), false);
   assert.equal(api.collectionCatalogsComplete(full), true);
   assert.equal(api.collectionCatalogProjectionComplete({ catalogs:full }), false, 'old cache without schema version must rebuild');
   assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:1, catalogs:full }), false);
-  assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:2, catalogs:full }), true);
+  assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:2, catalogs:full }), false, 'pre-manufacturer v2 cache must rebuild');
+  assert.equal(api.collectionCatalogProjectionComplete({ catalogSchemaVersion:3, catalogs:full }), true);
 
   assert.match(SERVER, /collectionCatalogProjectionComplete\(cached\.data\)/);
   assert.match(SERVER, /catalogSchemaVersion:\s*COLLECTION_CATALOG_SCHEMA_VERSION/);
