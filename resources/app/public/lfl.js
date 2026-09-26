@@ -102,6 +102,8 @@
   const CUSTOM_COMPARE_SORTS=['currentQty','previousQty','qtyChange','priceChange','currentOrders','name','relativeQty','relativeOrders','relativeFob'];
   const emptyTableView=(sortKey=null,dir=1)=>({sortKey,dir,filters:{}});
   const lflAnalysisCache=(globalThis.BLAnalysisCache?.create||globalThis.BLPerf?.createBoundedCache)?.(8)||new Map();
+  // Bağımsız karşılaştırma senaryoları: sekmeye her dönüşte 30k satırı yeniden süzmesin.
+  const lflScenarioCache=(globalThis.BLAnalysisCache?.create||globalThis.BLPerf?.createBoundedCache)?.(24)||new Map();
   let analysisDatasetRevision=0;
   const state={
     rows:[],meta:{},source:null,loadedAt:null,initialized:false,loading:false,filtersLoaded:false,
@@ -1880,7 +1882,19 @@
     }
     state.customCompare.reference='';state.customCompare.seeded=true;saveCustomCompare();closeCustomComparePanels();render();
   }
-  function comparisonScenarioResults(a){return ensureComparisonScenarios(a).map(item=>scenarioComparisonResult(state.rows,item,state.filters));}
+  function scenarioResultCacheKey(scenario){
+    return JSON.stringify({
+      dataset:`${analysisDatasetRevision}|${state.analysisRevision||0}|${state.loadedAt||''}|${state.serverRows.length}|${state.rows.length}`,
+      lang:isEn()?'en':'tr',scenario:serializeComparisonScenario(scenario),
+      global:Object.fromEntries(SHARED_DIMS.map(dim=>[dim,globalScenarioFilterValues(state.filters,dim)])),
+      breakdown:[...state.breakdown],dateFields:[state.periods.current.dateField,state.periods.compare.dateField],
+    });
+  }
+  function cachedScenarioComparisonResult(item){
+    const key=scenarioResultCacheKey(item),cached=lflScenarioCache.get(key);if(cached)return cached;
+    const result=scenarioComparisonResult(state.rows,item,state.filters);lflScenarioCache.set(key,result);return result;
+  }
+  function comparisonScenarioResults(a){return ensureComparisonScenarios(a).map(item=>cachedScenarioComparisonResult(item));}
   function renderComparisonScenarioCards(a,results){
     const host=$('lflScenarioCards');if(!host)return;
     host.innerHTML=results.map((result,index)=>{
@@ -2047,7 +2061,7 @@
   }
   async function load(force=false){
     if(state.loading)return;state.loading=true;const btn=$('lflRefreshBtn'),old=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML=`<span>${isEn()?'Refreshing…':'Yenileniyor…'}</span>`;}
-    analysisDatasetRevision+=1;lflAnalysisCache.clear();
+    analysisDatasetRevision+=1;lflAnalysisCache.clear();lflScenarioCache.clear();
     try{if(window.BLFX&&BLFX.load)await BLFX.load();const res=await fetch(force?'/api/lfl/refresh':'/api/lfl',{method:force?'POST':'GET'}),data=await res.json();if(!res.ok)throw new Error(data.error||'LFL verisi okunamadı.');if(data&&data.sourceFilterRequired&&typeof window.showSourceFilterRequiredNotice==='function')window.showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);state.serverRows=(Array.isArray(data.rows)?data.rows:[]).filter(r=>['mag','mmyg','classification','season','manufacturer','country','buyingGroup','buyer'].every(k=>isUsableValue(r[k]))&&['inStore','opd','retailDate'].some(k=>isUsableValue(r[k])));rebuildDimensionLabelIndex(state.serverRows);applyTrialRows();state.meta=data.meta||{};state.source=data.source||null;state.loadedAt=data.loadedAt||null;fillControls();render();if(force&&window.showToast)showToast(isEn()?`LFL refresh completed: ${state.rows.length.toLocaleString('en-GB')} rows.`:`LFL yenileme tamamlandı: ${state.rows.length.toLocaleString('tr-TR')} satır.`);}catch(err){state.serverRows=[];rebuildDimensionLabelIndex([]);state.trial.rows=[];state.rows=[];state.meta={warnings:[err.message],rowCount:0};state.source=null;render();if(window.showToast)showToast((isEn()?'LFL refresh failed: ':'LFL yenileme başarısız: ')+err.message);}finally{state.loading=false;if(btn){btn.disabled=false;btn.innerHTML=old;}}
   }
   function copyPreviousYearMonths(){

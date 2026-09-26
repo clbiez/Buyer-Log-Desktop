@@ -9,7 +9,19 @@
   const PLM_FIELDS=['plmId','PLM ID','plm','plmID'];
   const STYLE_FIELDS=['styleId','Style ID','styleCode','Style Code'];
   const text=value=>String(value==null?'':value).trim().replace(/\s+/g,' ');
-  const keyText=value=>text(value).toLocaleUpperCase('tr-TR');
+  // Aynı model/renk metni binlerce satırda tekrarlanır; tr-TR büyük harf
+  // dönüşümü sınırlı önbellekle bir kez yapılır.
+  const KEY_TEXT_CACHE_MAX=20000,keyTextCache=new Map();
+  const keyText=value=>{
+    const raw=value==null?'':value;
+    if(typeof raw!=='string'&&typeof raw!=='number')return text(raw).toLocaleUpperCase('tr-TR');
+    let key=keyTextCache.get(raw);
+    if(key===undefined){
+      if(keyTextCache.size>=KEY_TEXT_CACHE_MAX)keyTextCache.clear();
+      key=text(raw).toLocaleUpperCase('tr-TR');keyTextCache.set(raw,key);
+    }
+    return key;
+  };
   const first=(row,fields)=>{for(const field of fields){const value=text(row?.[field]);if(value)return value;}return '';};
   const stableId=(row)=>first(row,['id','_id','rowId']);
 

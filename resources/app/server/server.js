@@ -7559,7 +7559,8 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
   const projections = {
     cp: { rows: cpRows, cpModelColumns },
     overview: { rows: overviewRows },
-    orders: { rows: ordersRows, orderSummary: orderSummaryRows },
+    orders: { rows: ordersRows },
+    'order-summary': { rows: orderSummaryRows },
     'collection-catalog': {
       catalogs: cpDataAllowed ? buildCollectionCatalogs(ordersRows.length ? ordersRows : overviewRows) : {},
       catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
@@ -7606,6 +7607,14 @@ async function warmPageProjectionCachesFromSnapshots() {
   }
 }
 
+// Sipariş özeti ayrı 'order-summary' modülündedir; eski generation'larda orders
+// içine gömülüdür. İkisi de yoksa null: önbellek isabet sayılmaz.
+function orderSummaryFromCache(byModule) {
+  const split = byModule['order-summary'];
+  if (split && split.data && Array.isArray(split.data.rows)) return split.data.rows;
+  const legacy = byModule.orders && byModule.orders.data && byModule.orders.data.orderSummary;
+  return Array.isArray(legacy) ? legacy : null;
+}
 async function loadCachedPageProjectionSet(currentUser, startup) {
   const ctx = pageProjectionContext(currentUser);
   if (!ctx.filterStatus.ready) return { ctx, hit: false };
@@ -7620,9 +7629,14 @@ async function loadCachedPageProjectionSet(currentUser, startup) {
   // görünmeyen iki büyük payload'u gunzip/parse edip tekrar JSON'a dönüştürüyordu.
   // Bunlar ilgili sekme ilk kez açıldığında hazır gzip projection olarak alınır.
   const wanted = ['cp','overview','orders','collection-catalog'];
-  const loaded = await Promise.all(wanted.map(module => pageProjectionCache.readProjection(ctx.id, module, ctx.contextHash)));
+  const [loaded, summary] = await Promise.all([
+    Promise.all(wanted.map(module => pageProjectionCache.readProjection(ctx.id, module, ctx.contextHash))),
+    pageProjectionCache.readProjection(ctx.id, 'order-summary', ctx.contextHash),
+  ]);
   if (loaded.some(item => !item)) return { ctx, hit: false, manifest };
   const byModule = Object.fromEntries(loaded.map(item => [item.module, item]));
+  if (summary) byModule['order-summary'] = summary;
+  if (orderSummaryFromCache(byModule) === null) return { ctx, hit: false, manifest };
   const loadedManifest = loaded[0].manifest;
   if(!pageProjectionMatchesRuntime(loadedManifest,runtime))return {ctx,hit:false,stale:true};
   return { ctx, hit: true, byModule, manifest:loadedManifest, readMs: loaded.reduce((sum,item)=>sum+(Number(item.ms)||0),0) };
@@ -7669,7 +7683,7 @@ async function buildResponse(currentUser = null, options = {}) {
     overviewSummary = startup ? (cached.byModule.overview.data.rows || []) : null;
     if (!startup) {
       orders = cached.byModule.orders.data.rows || [];
-      orderSummary = cached.byModule.orders.data.orderSummary || [];
+      orderSummary = orderSummaryFromCache(cached.byModule);
       const cachedCatalogData = cached.byModule['collection-catalog'].data || {};
       if (collectionCatalogProjectionComplete(cachedCatalogData)) {
         collectionCatalogs = cachedCatalogData.catalogs;
@@ -7721,7 +7735,8 @@ async function buildResponse(currentUser = null, options = {}) {
       projections.cp = { rows: cp, cpModelColumns };
       projections['collection-catalog'] = { catalogs: collectionCatalogs, catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION };
       projections.overview = { rows: buildOverviewSummaryRowsFromASAS(scopedCpSource, overridesForBuild) };
-      projections.orders = { rows: orders || [], orderSummary: orderSummary || [] };
+      projections.orders = { rows: orders || [] };
+      projections['order-summary'] = { rows: orderSummary || [] };
     }
     try {
       await pageProjectionCache.writeGeneration(id, { contextHash: ctx.contextHash, sourceLoadedAt: active.loadedAt || null, projections, extra: { runtimeMeta: pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active) } });
@@ -7965,7 +7980,8 @@ app.get('/api/data/orders', userAccess.requireArea('orders'), async (req, res) =
     orderSummary.forEach(row => { row._canEdit = Boolean(canUserEditOrderCode(req.currentUser, row['Order Code'])); });
     const catalogs = buildCollectionCatalogs(orders);
     try {
-      await storeOnDemandProjection(req.currentUser,ctx,'orders',{rows:orders,orderSummary},active);
+      await storeOnDemandProjection(req.currentUser,ctx,'orders',{rows:orders},active);
+      await storeOnDemandProjection(req.currentUser,ctx,'order-summary',{rows:orderSummary},active);
       await storeOnDemandProjection(req.currentUser,ctx,'collection-catalog',{
         catalogs,
         catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,

@@ -84,5 +84,5 @@ test('v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenile
   assert.match(INDEX, /state\.ordersQuickActive\.clear\(\);clearColumnFilters\('orders',mirrored\)/);
   assert.match(INDEX, /const MODEL_ROLE_TARGETS=\{asas:\['cp','orders','backlog','lfl'\]/);
   assert.match(INDEX, /\['orders',appLang==='en'\?'Orders':'Siparişler'\]/);
-  assert.match(SERVER, /orders: \{ rows: ordersRows, orderSummary: orderSummaryRows \}/);
+  assert.match(SERVER, /orders: \{ rows: ordersRows \},\s*'order-summary': \{ rows: orderSummaryRows \}/);
 });

@@ -11,7 +11,9 @@ const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
 const CACHE_SCHEMA_VERSION = 1;
 const ROOT = path.join(LOCAL_DATA_ROOT, 'page-cache');
-const MODULES = new Set(['cp', 'overview', 'orders', 'collection-catalog']);
+// order-summary: CP tabanlı sipariş özeti. Siparişler ekranı okumaz; orders
+// projeksiyonuna gömülüyken her ilk girişte ~%35 fazla veri indiriliyordu.
+const MODULES = new Set(['cp', 'overview', 'orders', 'order-summary', 'collection-catalog']);
 const BACKLOG_MAX_VARIANTS = 8;
 const MEMORY_MAX_ENTRIES = Math.max(2, Number(process.env.BL_PAGE_CACHE_MEMORY_ITEMS) || 12);
 const MEMORY_MAX_BYTES = Math.max(4 * 1024 * 1024, Number(process.env.BL_PAGE_CACHE_MEMORY_BYTES) || 48 * 1024 * 1024);
