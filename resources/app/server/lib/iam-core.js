@@ -66,18 +66,24 @@ const SAFE_VIEW_PERMISSIONS = Object.freeze(['CP.VIEW', 'ORDERS.VIEW', 'COLLECTI
 /* Buyer kendi ASAS kaynağını yeniler ve fiyat talebi açar/düzenler (kullanıcı
    kararı). Ortak ayarları (kur, royalty, yol süreleri, DTR/non-DTR, e-posta
    grupları, Endeksmatik, veri bağlantıları) değiştirme izni SOURCE_DATA.MANAGE
-   hiçbir rolde varsayılan DEĞİLDİR; yalnız Moderatör kişiye özel verir. */
-const BUYER_DEFAULT_PERMISSIONS = Object.freeze([...SAFE_VIEW_PERMISSIONS, 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT']);
+   hiçbir rolde varsayılan DEĞİLDİR; yalnız Moderatör kişiye özel verir.
+   COLLECTIONS.EDIT tek başına başkasının koleksiyonunu açmaz: koleksiyon
+   sahibinin açık "düzenleme" grantiyle birlikte gerekir. Varsayılan olmadığında
+   sahibin verdiği düzenleme yetkisi buyer'da sessizce salt okunura düşüyordu. */
+const BUYER_DEFAULT_PERMISSIONS = Object.freeze([...SAFE_VIEW_PERMISSIONS, 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT', 'COLLECTIONS.EDIT']);
 const SHARED_SETTINGS_PERMISSION = 'SOURCE_DATA.MANAGE';
 /* Saklanmış rol matrisleri (merkezi IAM dahil) varsayılan değişikliğini bir
    kez alır; rol nesnesindeki defaultsRevision işareti sonraki Moderatör
    düzenlemelerinin geri alınmasını engeller. */
-const ROLE_DEFAULTS_REVISION = 2;
+const ROLE_DEFAULTS_REVISION = 3;
 const ROLE_DEFAULT_MIGRATIONS = Object.freeze({
   2: Object.freeze({
     buyer: { add: ['SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT'], remove: [] },
     manager: { add: [], remove: [SHARED_SETTINGS_PERMISSION] },
     senior_manager: { add: [], remove: [SHARED_SETTINGS_PERMISSION] },
+  }),
+  3: Object.freeze({
+    buyer: { add: ['COLLECTIONS.EDIT'], remove: [] },
   }),
 });
 const LEGACY_AREA_RESOURCE = Object.freeze({

@@ -153,12 +153,17 @@ test('aynı revizyondaki farklı Collection kopyası sessizce yerel verinin üst
     permissions: store,
     getSharedSyncRoot: async () => sharedRoot,
   });
-  await assert.rejects(() => receiver.publishOwner('owner-a'), error => error.code === 'COLLECTION_REPLICA_CONFLICT');
-  const result = await receiver.syncOwner('user-b', 'owner-a');
-  assert.equal(result.synced, false);
-  assert.equal(result.reason, 'EQUAL_REVISION_DIVERGED');
-  assert.equal(replaced, 0, 'eşit revizyonlu farklı içerik yerel değişikliği ezmemeli');
-  assert.equal(local.rows[0].note, 'yerel değişiklik');
+  // v20260926: tabanı bilinmeyen ayrışma artık kalıcı çakışmada takılı kalmaz
+  // (kopyalar bir daha hiç yakınsamıyordu). İki yönlü birleşimde önce
+  // yayımlanan uzak değer kalır; yerel değer SESSİZCE kaybolmaz, çözülebilir
+  // çakışma olarak saklanır.
+  const merged = await receiver.publishOwner('owner-a');
+  assert.equal(merged.merged, true);
+  assert.equal(replaced, 1);
+  const [conflict] = await receiver.listMergeConflicts(['owner-a']);
+  assert.equal(conflict.field, 'note');
+  assert.equal(conflict.incoming, 'yerel değişiklik', 'eşit revizyonlu farklı yerel içerik kaybolmamalı');
+  assert.equal(conflict.current, 'uzak değişiklik');
 });
 
 test('daha eski yerel Collection revizyonu uzaktaki yeni kopyayı geri alamaz', async t => {
@@ -253,10 +258,18 @@ test('uzak revizyon ilerlediğinde yayımlanmamış yerel değişiklik indirme s
   await otherDevice.publishOwner('owner-a');
 
   const result = await dirtyDevice.syncOwner('user-b', 'owner-a');
-  assert.equal(result.reason, 'REMOTE_NEWER_LOCAL_DIRTY');
-  assert.equal(result.conflict, true);
-  assert.equal(dirtyReplaced, 0);
-  assert.equal(dirtyLocal.rows[0].note, 'yerel bekleyen');
+  // v20260926: bu cihaz ortak tabanı bildiği için üç yönlü birleşim yapılır.
+  // Aynı alanda önce yayımlanan uzak değer kalır; yerel bekleyen değer SESSİZCE
+  // kaybolmaz, çözülebilir bir çakışma olarak saklanır. (Tabanı bilinmeyen
+  // kopya hâlâ hiç ezilmez: yukarıdaki EQUAL_REVISION/ANCESTRY testleri.)
+  assert.equal(result.merged, true);
+  assert.equal(result.conflicts, 1);
+  const [conflict] = await dirtyDevice.listMergeConflicts(['owner-a']);
+  assert.equal(conflict.field, 'note');
+  assert.equal(conflict.incoming, 'yerel bekleyen');
+  assert.equal(conflict.current, 'uzak ilerledi');
+  assert.equal(dirtyReplaced, 1);
+  assert.equal(dirtyLocal.rows[0].note, 'uzak ilerledi');
 });
 
 test('replikasyon sağlığı save/load yanıtından kullanıcıya görünür biçimde taşınır', () => {

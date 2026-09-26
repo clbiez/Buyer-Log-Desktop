@@ -42,9 +42,11 @@ test('legacy migration is idempotent and preserves Gökberk moderator identity a
 test('new Buyer role grants safe VIEW permissions plus own source refresh and quotation create/edit', () => {
   // v20260926 kullanıcı kararı: Buyer kendi ASAS kaynağını yeniler ve fiyat
   // talebi açıp düzenler. Ortak ayar yönetimi ve güvenlik izinleri YOKTUR.
+  // COLLECTIONS.EDIT: sahibin açık "düzenleme" grantiyle başkasının koleksiyonunu
+  // düzenleyebilmek için (grant olmadan tek başına hiçbir koleksiyonu açmaz).
   const user = baseProfile('viewer'), store = storeOf(baseProfile('moderator', { role: 'moderator', systemRole: 'moderator' }), [user]);
   const set = iam.effectivePermissionSet(store.users[0], store);
-  assert.deepEqual([...iam.SAFE_VIEW_PERMISSIONS, 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT'].sort(), [...set].sort());
+  assert.deepEqual([...iam.SAFE_VIEW_PERMISSIONS, 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT', 'COLLECTIONS.EDIT'].sort(), [...set].sort());
   assert.equal(set.has('USER.MANAGE'), false);
   assert.equal(set.has('SYSTEM.MANAGE'), false);
   assert.equal(set.has('SOURCE_DATA.MANAGE'), false);
@@ -56,7 +58,10 @@ test('shared-settings permission is never a role default and never inherited thr
   assert.equal(roles.moderator.permissions.includes('SOURCE_DATA.MANAGE'), true);
   // Saklanmış (eski) rol matrisi bir kez güncellenir; Moderatörün sonraki kararı korunur.
   const migrated = iam.normalizeRoles({ buyer: { id: 'buyer', permissions: ['CP.VIEW'] }, manager: { id: 'manager', permissions: ['SOURCE_DATA.MANAGE', 'CP.EDIT'] } });
-  assert.deepEqual(migrated.buyer.permissions, ['CP.VIEW', 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT']);
+  assert.deepEqual(migrated.buyer.permissions, ['CP.VIEW', 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT', 'COLLECTIONS.EDIT']);
+  // Revizyon 2'yi almış kurulum yalnız revizyon 3 adımını alır.
+  const fromRev2 = iam.normalizeRoles({ buyer: { id: 'buyer', permissions: ['CP.VIEW'], defaultsRevision: 2 } });
+  assert.deepEqual(fromRev2.buyer.permissions, ['CP.VIEW', 'COLLECTIONS.EDIT']);
   assert.deepEqual(migrated.manager.permissions, ['CP.EDIT']);
   const afterModeratorEdit = iam.normalizeRoles({ buyer: { ...migrated.buyer, permissions: ['CP.VIEW'] } });
   assert.deepEqual(afterModeratorEdit.buyer.permissions, ['CP.VIEW'], 'geçiş Moderatörün kaldırdığı izni geri eklemez');

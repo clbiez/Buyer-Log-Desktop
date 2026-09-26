@@ -866,11 +866,18 @@ async function applyRowChangesAsync(ownerId, change) {
 // Sahip-bazlı replikasyon uzak, yetkili belgenin yerel kopyasını yalnızca
 // daha yeni/eşit revizyonla yazar. Yerelde daha yeni bir değişiklik varsa bu
 // fonksiyon onu ezmez; çağıran bu durumu senkron çakışması olarak ele alır.
-async function replaceWorkspaceReplica(ownerId, raw) {
+async function replaceWorkspaceReplica(ownerId, raw, options = {}) {
   return withFileLeaseAsync(workspaceFile(ownerId), async () => {
     const current = loadWorkspace(ownerId);
+    // Birleşim yazımı: birleştirilen yerel kopya bu arada değiştiyse yazılmaz
+    // (araya giren kullanıcı kaydı ezilmez; sonraki senkron yeniden birleştirir).
+    if (options && options.expectedSha256) {
+      const currentSha256 = crypto.createHash('sha256').update(JSON.stringify(current), 'utf8').digest('hex');
+      if (currentSha256 !== options.expectedSha256) return { applied: false, reason: 'LOCAL_CHANGED', workspace: current };
+    }
     const incoming = normalizeWorkspace(ownerId, raw);
-    if (Number(current._revision) > Number(incoming._revision)) return { applied: false, reason: 'LOCAL_NEWER', workspace: current };
+    // force: salt okunur (izleyici) kopya yalnız önbellektir; uzak kopya benimsenir.
+    if (!(options && options.force) && Number(current._revision) > Number(incoming._revision)) return { applied: false, reason: 'LOCAL_NEWER', workspace: current };
     await fsp.mkdir(ROOT, { recursive: true });
     await atomicWriteJsonAsync(workspaceFile(ownerId), incoming);
     return { applied: true, workspace: incoming };

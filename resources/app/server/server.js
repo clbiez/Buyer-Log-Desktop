@@ -3411,8 +3411,68 @@ function collectionReplicationError(error) {
   };
 }
 async function publishCollectionReplica(ownerId, traceName = 'collectionReplicaPublish') {
-  try { return { ok:true, ...(await collectionReplication.publishOwner(ownerId)) }; }
+  try {
+    const result = await collectionReplication.publishOwner(ownerId);
+    // Başka cihazın eşzamanlı değişikliği birleştirildi: kaydeden istemci dahil
+    // açık ekranlar birleşik sayfayı yeniden yükler.
+    if (result && result.merged) liveEvents.notifyChange('collection', null, { ownerId, revision:result.revision, source:'shared-hub-merge' });
+    return { ok:true, ...result, ...(result && result.conflicts ? await collectionReplication.status(ownerId) : {}) };
+  }
   catch (error) { logRuntimeFailure(traceName, error); return collectionReplicationError(error); }
+}
+/* KOLEKSİYON CANLI EŞİTLEME. Başka bir cihazdaki düzenleyicinin kaydı, açık
+   Koleksiyon ekranına sayfa yeniden açılmadan ulaşır: uzak kopya dosyası
+   değiştiyse (mtime+boyut) eşitlenir/birleştirilir ve canlı olay yayılır.
+   Yalnız bu cihazda Koleksiyon kullanan (son 12 saat) kullanıcılar için. */
+const collectionLiveUsers = new Map();
+function touchCollectionLiveUser(userId) { if (userId) collectionLiveUsers.set(String(userId), Date.now()); }
+let collectionLivePollBusy = false;
+async function pollCollectionReplicas() {
+  if (collectionLivePollBusy) return [];
+  collectionLivePollBusy = true;
+  try {
+    await collectionPermissionsReady;
+    const changed = [];
+    for (const [userId, seenAt] of [...collectionLiveUsers]) {
+      if (Date.now() - seenAt > 12 * 3600 * 1000) { collectionLiveUsers.delete(userId); continue; }
+      const ownerIds = collectionPermissions.effectiveOwners(userId).map(item => item.ownerId);
+      for (const item of await collectionReplication.pollOwners(userId, ownerIds)) {
+        changed.push(item);
+        if (String(item.ownerId) !== String(userId)) void syncCollectionWorkspaceImagesForUser(userId, item.ownerId).catch(error => logRuntimeFailure('collectionLiveImageSync', error));
+        liveEvents.notifyChange('collection', null, { ownerId:item.ownerId, revision:item.revision, source:'shared-hub' });
+      }
+    }
+    return changed;
+  } finally { collectionLivePollBusy = false; }
+}
+setInterval(() => {
+  if (!uiReadySignaled) return;
+  void pollCollectionReplicas().catch(error => logRuntimeFailure('collectionLivePoll', error));
+}, 5000).unref();
+async function collectionMergeConflictsFor(profile) {
+  if (!profile || !profile.id) return [];
+  await collectionPermissionsReady;
+  return collectionReplication.listMergeConflicts(collectionPermissions.effectiveOwners(profile.id).map(item => item.ownerId));
+}
+async function applyCollectionConflictChoice(profile, conflict) {
+  const ownerId = String(conflict.ownerId || '');
+  if (!collectionWorkspaceEditAllowed(profile, ownerId)) throw Object.assign(new Error('Bu Koleksiyon sayfasını düzenleme yetkiniz bulunmuyor.'), { code:'COLLECTION_EDIT_DENIED', statusCode:403 });
+  const current = (collectionWorkspaces.loadWorkspace(ownerId).rows || []).find(row => String(row && row.id) === String(conflict.rowId));
+  let change = null;
+  if (conflict.field === '_deleted') {
+    if (current && conflict.incoming === 'yerelde silindi') change = { deletes:[{ id:current.id, _rev:current._rev }] };
+  } else if (current) {
+    const row = { ...current };
+    if (conflict.incoming == null) delete row[conflict.field]; else row[conflict.field] = conflict.incoming;
+    change = { upserts:[row] };
+  }
+  if (!change) return;
+  const result = await collectionWorkspaces.applyRowChangesAsync(ownerId, change);
+  if (result.conflicts && result.conflicts.length) throw Object.assign(new Error('Satır bu arada değişti; çakışmayı yeniden deneyin.'), { code:'COLLECTION_ROW_CHANGED', statusCode:409 });
+  if (result.changed) {
+    await publishCollectionReplica(ownerId, 'collectionConflictPublish');
+    liveEvents.notifyChange('collection', null, { ownerId, rowPatches:result.rowPatches, revision:result.saved && result.saved._revision });
+  }
 }
 async function collectionReplicaStatus(ownerId, syncError = null) {
   if (syncError) return collectionReplicationError(syncError);
@@ -3575,6 +3635,7 @@ app.get('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
   if (!level) return res.status(403).json({ error:'Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.', code:'COLLECTION_ACCESS_DENIED' });
   const profile = userAccess.allPublicProfiles().find(item => item.id === ownerId);
   if (!profile) return res.status(404).json({ error:'Koleksiyon sahibi bulunamadı.', code:'USER_NOT_FOUND' });
+  touchCollectionLiveUser(req.currentUser.id);
   let syncError = null;
   await collectionReplication.syncOwner(req.currentUser.id, ownerId).catch(error => { syncError=error; logRuntimeFailure('collectionReplicaDownload', error); });
   await syncCollectionWorkspaceImagesForUser(req.currentUser.id, ownerId).catch(error => logRuntimeFailure('collectionImageReplicaDownload', error));
@@ -4236,6 +4297,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
 }
 
 async function syncAuthorizedCollectionImages(userId) {
+  touchCollectionLiveUser(userId);
   await collectionPermissionsReady;
   await collectionPermissions.sync().catch(error => markStartup('COLLECTION_PERMISSION_SYNC_DEFERRED', { error:error && error.code || error && error.message || String(error) }));
   await publishCollectionWorkspaceImages(userId).catch(error => markStartup('COLLECTION_IMAGE_PUBLISH_DEFERRED', { userId, error:error && error.code || error && error.message || String(error) }));
@@ -8441,16 +8503,26 @@ app.post('/api/startup/ready', express.json({ limit: '32kb' }), (req, res) => {
   scheduleBackgroundServices();
   res.status(202).json({ ok: true, backgroundSyncDelayMs: BACKGROUND_SYNC_DELAY_MS });
 });
-app.get('/api/sync-conflicts', userAccess.requireArea('source'), async (_req, res) => {
-  try { res.set('Cache-Control', 'no-store').json({ ok: true, conflicts: await localDb.listConflicts() }); }
+// Koleksiyon birleşim çakışmaları (collection:*) aynı listede, yalnız erişilebilir sahipler için.
+async function allSyncConflicts(profile) { return [...await localDb.listConflicts(), ...await collectionMergeConflictsFor(profile)]; }
+app.get('/api/sync-conflicts', userAccess.requireArea('source'), async (req, res) => {
+  try { res.set('Cache-Control', 'no-store').json({ ok: true, conflicts: await allSyncConflicts(req.currentUser) }); }
   catch (err) { apiError(res, err, 'Sync çakışmaları okunamadı.'); }
 });
 app.post('/api/sync-conflicts/:id/resolve', userAccess.requireArea('source'), express.json({ limit: '32kb' }), async (req, res) => {
   try {
     const choice = String(req.body && req.body.choice || 'current');
-    const conflict = await localDb.resolveConflict(req.params.id, choice, req.body && req.body.value);
-    res.json({ ok: true, conflict, conflicts: await localDb.listConflicts() });
-  } catch (err) { apiError(res, err, 'Sync çakışması çözülemedi.'); }
+    let conflict;
+    if (String(req.params.id).startsWith('collection:')) {
+      const visible = (await collectionMergeConflictsFor(req.currentUser)).some(item => item.conflictId === req.params.id);
+      if (!visible) return res.status(404).json({ error:'Koleksiyon çakışması bulunamadı.', code:'COLLECTION_CONFLICT_NOT_FOUND' });
+      conflict = await collectionReplication.resolveMergeConflict(req.params.id, choice, item => applyCollectionConflictChoice(req.currentUser, item));
+    } else conflict = await localDb.resolveConflict(req.params.id, choice, req.body && req.body.value);
+    res.json({ ok: true, conflict, conflicts: await allSyncConflicts(req.currentUser) });
+  } catch (err) {
+    if (err && err.statusCode) return res.status(err.statusCode).json({ error: err.message, code: err.code });
+    apiError(res, err, 'Sync çakışması çözülemedi.');
+  }
 });
 app.put('/api/sync-settings', userAccess.requireArea('source'), express.json({ limit: '16kb' }), async (req, res) => {
   try {
@@ -8505,8 +8577,13 @@ app.post('/api/sync-settings/test', userAccess.requireArea('source'), express.js
     res.json({ok:true,folder:checked.root,hubId:checked.manifest.hubId,schemaVersion:checked.manifest.schemaVersion});
   } catch (err) { res.status(err.statusCode||400).json({ ok:false, error:err.message||String(err), code:err.code||'SHARED_HUB_TEST_FAILED' }); }
 });
-app.post('/api/sync-settings/sync-now', userAccess.requireArea('source'), async (_req, res) => {
-  try { res.json({ ok: true, settings: await syncSettings.syncOnce(), localDbPath: localDb.getFile() }); }
+app.post('/api/sync-settings/sync-now', userAccess.requireArea('source'), async (req, res) => {
+  try {
+    const settings = await syncSettings.syncOnce();
+    touchCollectionLiveUser(req.currentUser && req.currentUser.id);
+    await pollCollectionReplicas().catch(error => logRuntimeFailure('collectionLivePoll', error));
+    res.json({ ok: true, settings, localDbPath: localDb.getFile() });
+  }
   catch (err) { apiError(res, err, 'Senkron başlatılamadı.'); }
 });
 app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {

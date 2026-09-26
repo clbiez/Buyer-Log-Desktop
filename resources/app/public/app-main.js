@@ -19804,12 +19804,19 @@ function kolReportReplication(replication){
   if(!replication||typeof replication!=='object')return;
   const owner=String(replication.ownerId||kolWorkspaceOwnerId||'');
   const failed=replication.ok===false||replication.state==='conflict'||replication.state==='error';
-  if(!failed){if(owner)kolReplicationNoticeByOwner.delete(owner);return;}
-  const signature=[replication.state,replication.code,replication.localRevision,replication.remoteRevision,replication.updatedAt].join('|');
+  // Eşzamanlı düzenleme birleştirildi ama aynı alanda önce kaydedilen değer
+  // korundu: kullanıcının değeri Senkron çakışmalarında bekler, sessiz kalmaz.
+  const mergeConflicts=Number(replication.mergeConflicts)||0;
+  if(!failed&&!mergeConflicts){if(owner)kolReplicationNoticeByOwner.delete(owner);return;}
+  const signature=[replication.state,replication.code,replication.localRevision,replication.remoteRevision,replication.updatedAt,mergeConflicts].join('|');
   if(owner&&kolReplicationNoticeByOwner.get(owner)===signature)return;
   if(owner)kolReplicationNoticeByOwner.set(owner,signature);
   const detail=String(replication.message||'').trim();
-  const message=appLang==='en'
+  const message=!failed
+    ?(appLang==='en'
+      ?`Another user changed the same Collection fields at the same time; the value saved first was kept in ${mergeConflicts} field(s). Your values are waiting in Sync Conflicts.`
+      :`Başka bir kullanıcı aynı Koleksiyon alanlarını eşzamanlı değiştirdi; ${mergeConflicts} alanda önce kaydedilen değer korundu. Sizin değerleriniz Senkron çakışmalarında bekliyor.`)
+    :appLang==='en'
     ?`Saved locally, but Collection sharing needs attention.${detail?' '+detail:''}`
     :`Yerel kayıt tamamlandı; Koleksiyon paylaşımı ilgilenmenizi gerektiriyor.${detail?' '+detail:''}`;
   showToast(message);
