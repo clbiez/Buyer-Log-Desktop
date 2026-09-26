@@ -23699,7 +23699,7 @@ function kolQuickScoped(excludeKey){
 }
 function renderKolQuickFilters(){
   const wrap = document.getElementById('kolQuickFilters'); if(!wrap) return;
-  let html = '';
+  let html = `<button type="button" class="kpiGroupEdit" id="kolQuickFiltersEdit" title="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}" aria-label="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}"><svg class="ic"><use href="#i-settings"/></svg></button>`;
   loadKolQuickDims().forEach(dim=>{
     const scoped = kolQuickScoped(dim.key);
     const counts = {};
@@ -23715,7 +23715,6 @@ function renderKolQuickFilters(){
     });
     html += `<div class="kpiSep"></div>`;
   });
-  html += `<button type="button" class="kpiGroupEdit" id="kolQuickFiltersEdit" title="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}" aria-label="${escapeHtml(appLang==='en'?'Add or remove quick filters':'Hızlı filtre ekle veya çıkar')}"><svg class="ic"><use href="#i-settings"/></svg></button>`;
   wrap.innerHTML = html;
   wrap.querySelector('#kolQuickFiltersEdit')?.addEventListener('click',e=>openKolQuickFiltersEditor(e.currentTarget));
   wrap.querySelectorAll('.kpi[data-kolq-key]').forEach(el=>{
