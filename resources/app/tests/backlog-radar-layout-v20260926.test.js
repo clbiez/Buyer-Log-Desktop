@@ -35,7 +35,7 @@ test('Pivot and radar workspace defaults to half width and supports resize, swap
   assert.match(RADAR,/pivotShare:\.5/);
   assert.match(RADAR,/pointerdown/);
   assert.match(RADAR,/Math\.max\(\.28,Math\.min\(\.72/);
-  assert.match(RADAR,/data-bl-layout="swap"/);
+  assert.match(RADAR,/iconButton\('swap'/);
   assert.match(RADAR,/pivot-collapse/);
   assert.match(RADAR,/radar-collapse/);
   assert.match(CSS,/\.backlogPivotRadarWorkspace/);
