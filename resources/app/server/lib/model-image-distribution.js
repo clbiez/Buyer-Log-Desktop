@@ -480,7 +480,11 @@ function createModelImageDistribution(deps = {}) {
         dropped.add(`${entry.canonicalKey}|${entry.source}`);
         continue;
       }
-      payload.push({ ...entry, buffer, contentHash: entry.contentHash || hashOf(buffer) });
+      // mimeType'sız giriş paylaşımlı depoda uzantısız kalır ve SESSİZCE
+      // atlanır; tür yerel görsel kaydından tamamlanır.
+      const found = entry.mimeType ? null : getImage(clean(entry.imageRef, 120));
+      const mimeType = entry.mimeType || clean(found && found.item && found.item.mimeType, 60).toLowerCase();
+      payload.push({ ...entry, mimeType, buffer, contentHash: entry.contentHash || hashOf(buffer) });
     }
 
     let result = { published: 0, skipped: 0, reused: 0, revision: 0 };

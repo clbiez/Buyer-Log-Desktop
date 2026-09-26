@@ -21611,8 +21611,10 @@ function loadKolRows(){
       return;
     }
   }catch(e){}
-  // İlk çalıştırma: yüklenen NISAN AVRP PDF'inden çıkarılan 24 model örnek veri olarak gelir.
-  kolRows = kolNormalizeModelGroups((typeof KOLEKSIYON_SEED_ROWS!=='undefined') ? JSON.parse(JSON.stringify(KOLEKSIYON_SEED_ROWS)).map(migrateKolRow) : []);
+  // İlk çalıştırma BOŞ başlar. Örnek modeller (KOLEKSIYON_SEED_ROWS) burada
+  // yüklenirse, başlatılmamış sunucu çalışma alanı "eski yerel veri" diye
+  // kaydedilir ve sahte modeller gerçek koleksiyona ve yetkili herkese dağılır.
+  kolRows = [];
   kolNextId = 1 + kolRows.reduce((m,r)=>Math.max(m, r.id||0), 0);
   loadKolManufacturers();
   loadKolColState();

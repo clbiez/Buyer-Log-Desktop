@@ -4092,21 +4092,23 @@ async function publishCollectionWorkspaceImages(ownerId) {
     return { queued:0, published:0, reason:'not-shared' };
   }
   const workspace = loadWorkspace(owner);
-  const items = collectionImageSyncPolicy.workspaceImageItems(workspace);
+  const items = collectionImageSyncPolicy.workspaceSharedImageItems(workspace);
   const entries = [];
   for (const item of items) {
-    const normalized = plmImageIngestLib.normalizeRequest(item);
-    if (!normalized.key || !item.imageRef || !getCollectionImage(item.imageRef)) continue;
+    const key = collectionImageSyncPolicy.sharedImageKey(item, plmImageIngestLib.normalizeRequest(item).key);
+    const found = item.imageRef ? getCollectionImage(item.imageRef) : null;
+    if (!key || !found) continue;
     entries.push({
-      canonicalKey: 'collection:' + owner + ':' + normalized.key,
+      canonicalKey: 'collection:' + owner + ':' + key,
       source: sharedImageStoreLib.SOURCE_PLM,
       plmId: item.plmId,
       colourCode: item.colourCode || '',
       colour: item.colour || '',
       imageRef: item.imageRef,
+      mimeType: (found.item && found.item.mimeType) || '',
       ownership: sharedImageStoreLib.OWNERSHIP_AUTOMATIC,
       status: sharedImageStoreLib.STATUS_AVAILABLE,
-      sourceIdentity: 'collection:' + owner + ':' + String(item.recordId || normalized.key),
+      sourceIdentity: 'collection:' + owner + ':' + String(item.recordId || key),
       sourceFetchedAt: new Date().toISOString(),
     });
   }
@@ -4130,14 +4132,14 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
     throw Object.assign(new Error('Bu Koleksiyon görsellerine erişim yetkiniz bulunmuyor.'), { code:'COLLECTION_ACCESS_DENIED', statusCode:403 });
   }
   const workspace = loadWorkspace(owner);
-  const items = collectionImageSyncPolicy.workspaceImageItems(workspace);
+  const items = collectionImageSyncPolicy.workspaceSharedImageItems(workspace);
   if (!items.length) return { ownerId:owner, requested:0, available:0, installed:0, reused:0, missing:0, workspaceUpdated:false };
 
   if (!(await sharedModelImageStore.available())) {
     return { ownerId:owner, requested:items.length, available:0, installed:0, reused:0, missing:items.length, workspaceUpdated:false, offline:true };
   }
 
-  const normalizedItems = items.map(item => ({ item, normalized:plmImageIngestLib.normalizeRequest(item) })).filter(entry => entry.normalized.key);
+  const normalizedItems = items.map(item => ({ item, normalized:{ key:collectionImageSyncPolicy.sharedImageKey(item, plmImageIngestLib.normalizeRequest(item).key) } })).filter(entry => entry.normalized.key);
   const sharedKeys = normalizedItems.map(entry => 'collection:' + owner + ':' + entry.normalized.key);
   const records = await sharedModelImageStore.lookupMany(sharedKeys, { source:sharedImageStoreLib.SOURCE_PLM });
   const cache = readCollectionSharedImageCache();
@@ -4187,7 +4189,7 @@ function collectionWorkspaceWithLocalImages(ownerId, workspace = null) {
   const cache = readCollectionSharedImageCache();
   let changed = false;
   const rows = (Array.isArray(source && source.rows) ? source.rows : []).map(row => {
-    const item = collectionImageSyncPolicy.rowImageIdentity(row);
+    const item = collectionImageSyncPolicy.rowSharedImageIdentity(row);
     if (!item) return row;
     const cached = cache.entries[collectionImageCacheKey(owner, item)];
     const ref = String(cached && cached.imageRef || '').trim();
@@ -5107,13 +5109,13 @@ require('./routes/oab-batch-routes')(app, {
   oabStaticMetadata,
   oabStore,
   publishCollectionReplica,
+  publishCollectionWorkspaceImages,
   redactSecrets,
   refreshCollectionPermissionScope,
   requestClientId,
   requireOabInternalAuth,
   sharedRevisionStore,
   userAccess,
-
 });
 /* ===================================================================
    INTAKE — WSSI Intake Raporu4 / Model.

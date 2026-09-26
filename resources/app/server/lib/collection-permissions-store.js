@@ -149,8 +149,12 @@ function createCollectionPermissionsStore({ file, getProfiles = () => [], getSha
     const actorId = clean(input && input.actorId);
     const root = clean(await getSharedSyncRoot());
     const target = root ? remoteFile(root) : localFile;
+    // Hub belgesi ilk kez oluşurken yerel önbellekten tohumlanır: yerelde
+    // tamamlanmış geçiş işareti düşerse her cihaz isReady()=false görür ve
+    // hub'daki hiçbir yetki etkili olmaz.
+    const seed = target === localFile ? defaultState() : ((await readJson(localFile)) || defaultState());
     const result = await withFileLeaseAsync(target, async () => {
-      const current = (await readJson(target)) || defaultState();
+      const current = (await readJson(target)) || seed;
       const applied = apply(current, action, detail, actorId);
       if (applied.changed) await writeJson(target, applied.state);
       return applied;
@@ -166,6 +170,12 @@ function createCollectionPermissionsStore({ file, getProfiles = () => [], getSha
     if (!root) return { synced: false, reason: 'not-configured', state: await read() };
     const remote = await readJson(remoteFile(root));
     if (!remote) return { synced: false, reason: 'not-initialized', state: await read() };
+    // Eski sürümün işaretsiz bıraktığı hub belgesi burada onarılır; geçiş
+    // idempotenttir ve hub belgesinin kendi kilidi altında yürür.
+    if (!(remote.migrations && remote.migrations.legacyInboundAccessV1)) {
+      await migrateLegacyInboundAccess(profiles());
+      return { synced: true, migrated: true, state: await read() };
+    }
     const state = await replaceLocal(remote);
     return { synced: true, state };
   }

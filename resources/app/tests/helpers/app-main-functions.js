@@ -92,6 +92,8 @@ function loadAppMainFunctions(names, globals = {}) {
   const code = names.map(name => extractFunction(cachedSource, name)).join('\n');
   const context = vm.createContext({ ...globals });
   vm.runInContext(`${code}\n;globalThis.__blExports={${names.join(',')}};`, context, { filename: 'app-main.js (seçili fonksiyonlar)' });
+  // Fonksiyonların yazdığı üst düzey durumu (ör. kolRows) okuyabilmek için bağlam.
+  Object.defineProperty(context.__blExports, 'context', { value: context });
   return context.__blExports;
 }
 

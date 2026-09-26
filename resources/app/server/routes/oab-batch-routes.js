@@ -22,6 +22,7 @@ module.exports = function registerOabBatchRoutes(app, deps) {
     oabStaticMetadata,
     oabStore,
     publishCollectionReplica,
+    publishCollectionWorkspaceImages,
     redactSecrets,
     refreshCollectionPermissionScope,
     requestClientId,
@@ -437,6 +438,8 @@ app.patch('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksi
       result.replication = !(await afterSharedCollectionSave(ownerId))
         ? await publishCollectionReplica(ownerId)
         : { ok:true, published:false, reason:'shared-save' };
+      // Tam kayıt (PUT) ile aynı: yeni/değişen görsel yetkili kullanıcılara hemen yayımlanır.
+      void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnRowSave', error));
       void sharedRevisionStore.update('collection',{actorId:req.currentUser.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
       userAccess.appendAudit(req.currentUser, 'COLLECTION_ROW_SAVE', ownerId, { applied: result.applied.length, conflicts: result.conflicts.length, revision: result.revision });
       liveEvents.notifyChange('collection', requestClientId(req), { ownerId, rowPatches: result.rowPatches, revision: result.revision });

@@ -105,6 +105,17 @@ async function writeState(file, state) {
   await recovery.replace(file, Buffer.from(JSON.stringify(state, null, 2), 'utf8'));
 }
 
+/* Belge defteri (delta-store DOCUMENT_REVISION_META): her cihaz kendi
+   yazımında yerel revizyon sayacını ve zaman damgasını günceller. İş verisi
+   değildir; kullanıcıya "çakışma" olarak sorulacak bir seçim içermez. Yüksek
+   revizyonlu defter kazanır, eşitlikte yerel kalır. */
+const DOCUMENT_REVISION_META_FIELD = 'storeRevisionMeta';
+function newerRevisionMeta(current, incoming) {
+  const currentRevision = Number(current && current.revision) || 0;
+  const incomingRevision = Number(incoming && incoming.revision) || 0;
+  return incoming && typeof incoming === 'object' && incomingRevision > currentRevision ? incoming : current;
+}
+
 function fieldMerge(current, incoming, revision, baseRevision = null) {
   const base = current && typeof current === 'object' ? current : {};
   const next = { ...base };
@@ -113,6 +124,11 @@ function fieldMerge(current, incoming, revision, baseRevision = null) {
   for (const [key, value] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
     if (key === '_fieldRevisions' || key === '_revision') continue;
     const previousRevision = Number(fields[key]) || 0;
+    if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
+      next[key] = newerRevisionMeta(next[key], value);
+      fields[key] = Math.max(previousRevision, revision);
+      continue;
+    }
     const changedLocally = baseRevision != null && previousRevision > Number(baseRevision || 0) && JSON.stringify(next[key]) !== JSON.stringify(value);
     if (changedLocally || (baseRevision == null && previousRevision > revision)) {
       conflicts.push({ field: key, current: clone(next[key]), incoming: clone(value), currentRevision: previousRevision, baseRevision: Number(baseRevision) || 0 });
@@ -500,6 +516,15 @@ function createLocalDb(file) {
       const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
+      // Alan, çakışmayı görmüş daha yeni bir olayla çakışmasız güncellendi:
+      // o alandaki eski çakışmanın seçenekleri artık geçersiz, kayıt kapanır.
+      const conflictedFields = new Set(merged.conflicts.map(item => item.field));
+      const appliedFields = new Set(Object.keys(delta.patch || delta.value || {}).filter(field => !conflictedFields.has(field)));
+      for (const open of state.conflicts) {
+        if (!open.resolved && open.type === 'field' && open.id === key && appliedFields.has(open.field)) {
+          open.resolved = true; open.resolvedAt = at; open.resolution = 'superseded';
+        }
+      }
       for (const conflict of merged.conflicts) state.conflicts.push({ conflictId: nextConflictId(), eventId: eid, id: key, type: 'field', ...conflict, at, resolved: false });
     }
     state.revision = Math.max(Number(state.revision) || 0, revision);
@@ -876,8 +901,17 @@ function createLocalDb(file) {
     const state = await read();
     const conflict = state.conflicts.find(item => item.conflictId === id && !item.resolved);
     if (!conflict) throw new Error('Çakışma bulunamadı veya zaten çözüldü.');
+    /* Çözüm, çakışan İKİ revizyonu da aşan bir tabanla yayımlanır. Aksi hâlde
+       karşı değeri kabul etmiş cihazlar kararı yeni bir çakışma sayar ya da
+       ("benimkini koru" seçiminde) hiç duymaz ve cihazlar kalıcı olarak ayrışır. */
+    const incomingRevision = Number(state.events[conflict.eventId] && state.events[conflict.eventId].revision) || 0;
+    const resolutionBase = Math.max(Number(conflict.currentRevision) || 0, incomingRevision);
     if (choice === 'incoming' && conflict.type === 'field') {
-      await queuePatch({ id: conflict.id, patch: { [conflict.field]: customValue === undefined ? conflict.incoming : customValue }, baseRevision: conflict.currentRevision, origin: 'conflict-resolution' });
+      await queuePatch({ id: conflict.id, patch: { [conflict.field]: customValue === undefined ? conflict.incoming : customValue }, baseRevision: resolutionBase, origin: 'conflict-resolution' });
+    } else if (choice === 'current' && conflict.type === 'field') {
+      const record = state.records[conflict.id];
+      const kept = record && Object.prototype.hasOwnProperty.call(record, conflict.field) ? record[conflict.field] : conflict.current;
+      await queuePatch({ id: conflict.id, patch: { [conflict.field]: kept === undefined ? null : clone(kept) }, baseRevision: resolutionBase, origin: 'conflict-resolution' });
     } else if (choice === 'incoming' && conflict.type === 'delete') {
       await tombstone({ id: conflict.id, baseRevision: conflict.currentRevision, origin: 'conflict-resolution' });
     } else if (choice !== 'current' && choice !== 'incoming') {
