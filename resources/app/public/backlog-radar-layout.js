@@ -189,11 +189,12 @@
   }
   function riskPositionCard(host,card){
     const kpi=host.querySelector('.bdaKpiRow');if(!kpi)return;
-    if(state.riskPosition==='before-kpi')kpi.before(card);
-    else if(state.riskPosition==='after-attention'){
-      const attention=host.querySelector('[data-fold="attention"]');
-      (attention||kpi).after(card);
-    }else kpi.after(card);
+    if(state.riskPosition==='before-kpi'){
+      if(card.nextElementSibling!==kpi)kpi.before(card);
+    }else if(state.riskPosition==='after-attention'){
+      const target=host.querySelector('[data-fold="attention"]')||kpi;
+      if(target.nextElementSibling!==card)target.after(card);
+    }else if(kpi.nextElementSibling!==card)kpi.after(card);
   }
   function renderRiskRadar(){
     const host=root.document.getElementById('backlogAnalysis');if(!host)return;
