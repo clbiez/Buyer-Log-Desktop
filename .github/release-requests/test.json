@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.142",
-  "commit_sha": "075b9467bfc422ede2c484c419804f979a8b4c65",
-  "release_notes": "Buyer Log 7.0.142: Overview ekranındaki Global Flow Map görünürlük sorunu düzeltildi. Modül 7.0.141'de DOM ve layout durumuna doğru şekilde eklenmişti ancak uygulamanın genel section { display:none } kuralını override etmediği için ekranda görünmüyor, buna rağmen düzen yöneticisi modülü mevcut saydığı için Modül Ekle listesinde de çıkmıyordu. Global Flow Map artık Overview'da normal şekilde görünür; mevcut 2D/3D görünüm, CP/Orders/Backlog/Combined kaynakları, filtreler, animasyonlu rota akışları, tam ekran ve çift tık detay özellikleri korunur. Bu görünürlük davranışı için regresyon testi eklendi."
+  "version": "7.0.143",
+  "commit_sha": "32ad0eec914c2b5d9e997a31a8a86609a81a05be",
+  "release_notes": "Buyer Log 7.0.143: Global Flow Map daha doğru Natural Earth ülke sınırlarıyla yenilendi; harita yüklenirken thinking-orbs Working görseli kullanılıyor. Deniz sevkiyatları Suez/Çanakkale gibi gerçekçi deniz koridorlarından geçirilir, rota hover alanı tüm çizgi boyunca kesintisiz çalışır. İhracat/ithalat dosya numarası bazında gemi, uçak ve tır simgeleri Handover tarihi ile ülke/yükleme yol süresi kurallarına göre rota ilerlemesine yerleştirilir ve yakın araçlar gruplanır. Araç tıklaması ilgili siparişleri, rota tıklaması tüm rota siparişlerini açar. İstanbul varışında Awaiting Retail Transfer, Customs Operation ve In Warehouse; kalkış ülkesinde Production ve Loading Operations ayrımları hover/click detaylarıyla gösterilir. Global Flow, LFL, Backlog, CP, Collection Analytics, Price & Supplier Analysis ve operasyonel uyarı detayları ortak sağ çekmece altyapısına taşındı. Çekmece model görsellerini, PLM Sync'i, kalıcı sütun seçimini, aramayı ve yalnız görünür sütunları görseller hücreye bağlı olacak şekilde Excel'e aktarmayı destekler. Regresyon testleri genişletildi."
 }
