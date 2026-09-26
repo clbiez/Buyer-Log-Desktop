@@ -157,7 +157,7 @@
 <link rel="stylesheet" href="pricing-workspace.css?v=__BL_ASSET_VERSION__&rev=4">
 <link rel="stylesheet" href="data-maintenance.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="data-management.css?v=__BL_ASSET_VERSION__&rev=1">
-<link rel="stylesheet" href="backlog-delivery-analysis.css?v=__BL_ASSET_VERSION__&rev=7141">
+<link rel="stylesheet" href="backlog-delivery-analysis.css?v=__BL_ASSET_VERSION__&rev=20260926-1">
 <link rel="stylesheet" href="cp-overview-assistant.css?v=__BL_ASSET_VERSION__&rev=7142">
 <link rel="stylesheet" href="design.css?v=__BL_ASSET_VERSION__&rev=7181">
 <link rel="stylesheet" href="design-butunluk.css?v=__BL_ASSET_VERSION__">
@@ -1135,12 +1135,9 @@
     <div id="backlogContent" style="display:none">
       <div class="kpirow" id="backlogKpi"></div>
       <div id="backlogChartPanel" class="panel backlogChartPanel" hidden></div>
-      <!-- v9.46 — Teslimat Riski Analizi. Backlog'un mevcut filtresi ve
-           toplamları değişmez; analiz aynı filtrelenmiş kümeyi kullanır. -->
-      <div class="backlogFilterFoot">
-        <button type="button" class="backlogGroupToggle" id="backlogAnalysisToggle" aria-expanded="false" aria-controls="backlogAnalysis"><svg class="ic"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="Teslimat riski analizi" data-i18n-en="Delivery risk analysis">Teslimat riski analizi</span></button>
-      </div>
-      <div id="backlogAnalysis" hidden></div>
+      <!-- Teslimat Riski Analizi Backlog ile birlikte otomatik görünür.
+           Ayrı aç/kapat düğmesi yoktur; analiz aynı filtrelenmiş kümeyi kullanır. -->
+      <div id="backlogAnalysis"></div>
       <div class="panel">
         <div class="toolbar backlogTreeToolbar">
           <span class="backlogTreeCtlGroup">
@@ -1235,7 +1232,7 @@
 <script src="toolbar-responsive.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="tab-system.js?v=__BL_ASSET_VERSION__"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
-<script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=3"></script>\n<script src="backlog-radar-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1"></script>
 <script src="table-toolbar-action-cleanup.js?v=__BL_ASSET_VERSION__&rev=1"></script>
