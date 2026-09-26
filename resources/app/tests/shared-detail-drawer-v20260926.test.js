@@ -33,6 +33,6 @@ test('CP Attention satırı navigasyon yerine ortak detay çekmecesini açar',()
 });
 test('Ortak drawer Excel export görünür sütunları kullanır',()=>{
   const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
-  assert.match(DRAWER,/const columns=currentColumns\\(\\),rows=filteredRows\\(\\)/);
-  assert.match(DRAWER,/moveAndSizeWithCells:true/);
+  assert.ok(DRAWER.includes('const columns=currentColumns(),rows=filteredRows()'));
+  assert.ok(DRAWER.includes('moveAndSizeWithCells:true'));
 });
