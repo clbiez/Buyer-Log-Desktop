@@ -55,10 +55,12 @@ test('v9.46 modül lazy yüklenir; motorlar görünümden ÖNCE gelir', () => {
   assert.match(APP, /ensureFeature\?\.\('backlogAnalysis'\)/);
 });
 
-test('v9.46 panel kabuğu ve stil sayfası kayıtlı, ikon sprite\'ta tanımlı', () => {
-  assert.match(HTML, /<div id="backlogAnalysis" hidden><\/div>/);
-  assert.match(HTML, /id="backlogAnalysisToggle"/);
+test('v9.46 panel kabuğu Backlog ile otomatik görünür; ayrı toggle yoktur', () => {
+  assert.match(HTML, /<div id="backlogAnalysis"><\/div>/);
+  assert.doesNotMatch(HTML, /id="backlogAnalysisToggle"/);
   assert.match(HTML, /backlog-delivery-analysis\.css/);
+  assert.match(VIEW, /state\.open = true/);
+  assert.doesNotMatch(VIEW, /saved\.open/);
   assert.ok(HTML.includes('id="i-chart-histogram"'), 'kullanılan simge sprite\'ta tanımlı olmalı');
 });
 
