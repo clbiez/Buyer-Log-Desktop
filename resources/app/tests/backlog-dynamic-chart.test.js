@@ -27,7 +27,7 @@ function state(extra={}) {
   return Object.assign({
     enabled:true,timeField:'Model Bütçe Tarihi',timeField2:'',granularity:'week',
     metricField:'Adet',aggregation:'sum',seriesField:'Buyer',
-    chartType:'line',seriesLimit:'20',title:'',showAverage:false,
+    chartType:'line',seriesLimit:'20',title:'',showAverage:false,showSubtotal:false,
   },extra);
 }
 
@@ -124,6 +124,18 @@ test('Backlog chart average line is calculated from visible bucket subtotals', (
   assert.match(svg,/Ort\.|Avg\./);
 });
 
+test('Backlog chart average follows the visible window and subtotal is a toggleable dashed line', () => {
+  const full=chart.buildModel(rows,headers,state({showAverage:true,showSubtotal:true}));
+  const visible=chart.sliceModel(full,{start:0,end:1});
+  assert.equal(chart.averageValue(visible),22);
+  const svg=chart.svgChart(visible,{today:new Date(2030,0,1)});
+  assert.match(svg,/backlogChartSubtotalLine/);
+  assert.match(svg,/backlogChartPanLayer/);
+  assert.match(svg,/backlogChartPlotMask/);
+  assert.match(svg,/(?:Ort\.|Avg\.) 22/);
+  assert.ok(chart.chartMetrics(visible).max>=22);
+});
+
 test('Backlog chart supports count, distinct count, sum and average aggregations', () => {
   assert.deepEqual(chart.buildModel(rows,headers,state({aggregation:'count'})).series.find(s=>s.name==='A').values,[2,1]);
   assert.deepEqual(chart.buildModel(rows,headers,state({aggregation:'distinct',metricField:'MAG'})).series.find(s=>s.name==='A').values,[1,1]);
@@ -151,6 +163,8 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(CSS,/\.backlogChartSettingsGrid/);
   assert.match(CSS,/\.backlogChartTradingToolbar/);
   assert.match(CSS,/\.backlogChartViewport/);
+  assert.match(CSS,/\.backlogChartPanLayer/);
+  assert.match(CSS,/\.backlogChartSubtotalLine/);
   assert.match(CSS,/\.backlogChartCrosshair/);
   assert.match(CSS,/\.backlogChartLegendItem/);
   assert.match(CSS,/\.backlogChartTodayLine/);
@@ -165,6 +179,9 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(chartSource,/addEventListener\('dblclick'/);
   assert.match(chartSource,/data-backlog-chart-today/);
   assert.match(chartSource,/data-backlog-chart-average/);
+  assert.match(chartSource,/data-backlog-chart-subtotal/);
+  assert.match(chartSource,/data-backlog-chart-pan-layer/);
+  assert.doesNotMatch(chartSource,/svg\.style\.transform='translate3d/);
   assert.match(chartSource,/data-backlog-chart-export="svg"/);
   assert.match(chartSource,/data-backlog-chart-export="png"/);
   assert.match(chartSource,/timeField2/);
