@@ -203,11 +203,12 @@ function applyPlmStyleLinksPayload(data){
 }
 
 let plmEnhanceScheduled=false;
-function enhanceModelNameCells(root=document){
+function enhanceModelNameCells(root=document,onlyTables=null){
   const modelAliases=new Set(['MODEL NAME','MODEL ADI','STYLE NAME','MODEL']);
   const orderAliases=new Set(['ORDER CODE','ORDER','ORDER NO','ORDER NUMBER','SIPARIS KOD','SIPARIS KODU']);
   const plmAliases=new Set(['PLM ID','PLM CODE','PLM KOD','PLM KODU']);
-  (root.querySelectorAll?root.querySelectorAll('table'):[]).forEach(table=>{
+  const tables=onlyTables?[...onlyTables].filter(table=>table&&table.isConnected!==false):(root.querySelectorAll?root.querySelectorAll('table'):[]);
+  tables.forEach(table=>{
     // Backlog raporları salt veri tablosudur. Bu ekranlarda sipariş/model
     // hücrelerini sonradan köprüye dönüştürme.
     if(table.matches('.backlogDetailTable'))return;
@@ -232,11 +233,33 @@ function enhanceModelNameCells(root=document){
     });
   });
 }
-function schedulePlmModelLinkEnhancement(){
-  if(plmEnhanceScheduled)return;plmEnhanceScheduled=true;
-  requestAnimationFrame(()=>{plmEnhanceScheduled=false;enhanceModelNameCells(document);});
+/* Eklenen düğümlerin ilgilendirdiği tablolar: düğüm tablonun içindeyse o
+   tablo, düğüm tablo içeriyorsa içerdikleri. Bildirim/ipucu gibi tablo dışı
+   eklemeler hiçbir tabloyu yeniden taratmaz. */
+function tablesForMutations(mutations){
+  const tables=new Set();
+  for(const mutation of mutations||[]){
+    for(const node of mutation.addedNodes||[]){
+      if(!node||node.nodeType!==1)continue;
+      if(node.tagName==='TABLE')tables.add(node);
+      const owner=node.closest&&node.closest('table');if(owner)tables.add(owner);
+      if(node.querySelectorAll)for(const inner of node.querySelectorAll('table'))tables.add(inner);
+    }
+  }
+  return tables;
 }
-new MutationObserver(mutations=>{if(mutations.some(item=>item.addedNodes&&item.addedNodes.length))schedulePlmModelLinkEnhancement();}).observe(document.documentElement,{subtree:true,childList:true});
+let plmEnhancePendingTables=new Set();
+function schedulePlmModelLinkEnhancement(tables=null){
+  if(tables){if(plmEnhancePendingTables)for(const table of tables)plmEnhancePendingTables.add(table);}
+  else plmEnhancePendingTables=null; // tam tarama istendi
+  if(plmEnhanceScheduled)return;plmEnhanceScheduled=true;
+  requestAnimationFrame(()=>{
+    plmEnhanceScheduled=false;
+    const pending=plmEnhancePendingTables;plmEnhancePendingTables=new Set();
+    enhanceModelNameCells(document,pending);
+  });
+}
+new MutationObserver(mutations=>{const tables=tablesForMutations(mutations);if(tables.size)schedulePlmModelLinkEnhancement(tables);}).observe(document.documentElement,{subtree:true,childList:true});
 async function loadPlmStyleLinks({rerender=true}={}){
   try{
     const res=await fetch('/api/plm-style-links',{cache:'no-store'}),data=await res.json().catch(()=>({}));
@@ -919,9 +942,12 @@ function applyFormulas(row){
 let _unifiedPriorityDataRevision=1;
 let _unifiedPriorityFeaturePromise=null;
 const _unifiedPriorityCache={cp:null,orders:null};
-function invalidateUnifiedPriorityDecisions(reason){
+// Tablo başına revizyon: bir tablonun verisi yüklenince diğerinin kararları
+// geçersiz sayılmaz (Siparişler yüklenince CP ≈1 sn boşuna yeniden hesaplanıyordu).
+const _unifiedPriorityTableRevision={cp:1,orders:1};
+function invalidateUnifiedPriorityDecisions(reason,tables=null){
   _unifiedPriorityDataRevision+=1;
-  _unifiedPriorityCache.cp=null;_unifiedPriorityCache.orders=null;
+  for(const key of Array.isArray(tables)&&tables.length?tables:['cp','orders']){_unifiedPriorityTableRevision[key]=(_unifiedPriorityTableRevision[key]||0)+1;_unifiedPriorityCache[key]=null;}
   window.BLPerf?.mark?.('UNIFIED_PRIORITY_INVALIDATED',{reason:reason||'data',revision:_unifiedPriorityDataRevision});
 }
 function unifiedPriorityRowActive(tableKey,row){
@@ -941,7 +967,7 @@ function syncUnifiedPrioritiesForTable(tableKey){
   if(!rows||!assistant||typeof assistant.computeDecisionsForRows!=='function')return false;
   const contextRevision=typeof assistant.decisionContextRevision==='function'?assistant.decisionContextRevision():0;
   const cached=_unifiedPriorityCache[tableKey];
-  if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityDataRevision&&cached.contextRevision===contextRevision)return true;
+  if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===contextRevision)return true;
   const activeRows=rows.filter(row=>unifiedPriorityRowActive(tableKey,row));
   const result=assistant.computeDecisionsForRows(activeRows);
   for(const row of rows){
@@ -975,7 +1001,7 @@ function syncUnifiedPrioritiesForTable(tableKey){
       }
     }
   }
-  _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityDataRevision,contextRevision};
+  _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision};
   return true;
 }
 function showUnifiedPriorityLoading(tableKey){
@@ -1789,7 +1815,7 @@ async function ensureCpLoaded(options={}){
       reviveServerDates(rows);
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
       overviewCpLoadState='ready';overviewCpLoadError='';
-      invalidateUnifiedPriorityDecisions('cp-projection-loaded');
+      invalidateUnifiedPriorityDecisions('cp-projection-loaded',['cp']);
       syncCpModelColumns(Array.isArray(data.cpModelColumns)?data.cpModelColumns:[]);
       buildCPFilters();applyCoreAutoFilterState();refreshSubmfrList();refreshLicenseList();refreshLicensorList();if(!options.deferRender)renderCP();
       window.BLPerf?.mark?.('CP_LOAD_READY',{reason:options.reason||'cp',rows:rows.length,revision:_unifiedPriorityDataRevision});
@@ -1849,7 +1875,7 @@ async function ensureOrdersLoaded(options={}){
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
       state.ordersLogisticExpanded.clear();
-      invalidateUnifiedPriorityDecisions('orders-projection-loaded');
+      invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
       // Sipariş projeksiyonu yenilemeden sonra belleğe alındığında, açık ekranda
       // tutulan lisans royalty kuralları da aynı satırlara yeniden uygulanmalı.
       // Çizim aşağıda tek kez yapılır; burada yalnız türetilmiş fiyatlar hesaplanır.
@@ -1936,8 +1962,11 @@ function switchTab(tab){
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
   if(['cp','orders','shipping'].includes(tab)){
+    // Özellik zaten yüklüyse değişmemiş tablo baştan çizilmez (30k satırda her
+    // girişte ≈1,3 sn donma). Veri değiştiyse ertelenmiş çizim zaten çalışır.
+    const deferredUiWasLoaded=window.BLPerf?.isFeatureLoaded?.('deferredUi')===true;
     void window.BLPerf.ensureFeature('deferredUi').then(()=>{
-      if(currentActiveTab()!==tab)return;
+      if(currentActiveTab()!==tab||deferredUiWasLoaded)return;
       // İlk girişte veri ve kullanıcı profili birlikte çözümleniyor; erken
       // çizim favori görünüm/filtre uygulanmadan yanlış bir tablo göstermemeli.
       if(profileFirstVisit)return;
@@ -1957,8 +1986,13 @@ function switchTab(tab){
   /* v9.48 — Genel Bakış'ın üretim öncelikleri paneli açılış kritik yolunda
      değil: sekmeye geçildiğinde yüklenir, yüklendiğinde mevcut satırlarla
      kendini çizer (Genel Bakış zaten çizilmiş olabilir). */
-  if(tab==='overview')void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve())
-    .then(()=>{try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready');syncUnifiedPrioritiesForTable('cp');renderOverview();}catch(_){}}).catch(()=>{});
+  if(tab==='overview'){
+    // Motor zaten yüklüyse "hazır" olayı yeniden işlenmez: her girişte kararları
+    // temizlemek CP/Siparişler önceliklerini ≈1 sn baştan hesaplatıyordu.
+    const decisionEngineWasReady=Boolean(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function');
+    void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve())
+      .then(()=>{if(decisionEngineWasReady)return;try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready');syncUnifiedPrioritiesForTable('cp');renderOverview();}catch(_){}}).catch(()=>{});
+  }
   document.querySelectorAll('.vfMenu.open').forEach(x=>x.classList.remove('open'));
   const bar=document.querySelector('.vfBar');
   const allowed=['cp','orders','shipping','koleksiyon'].includes(tab);

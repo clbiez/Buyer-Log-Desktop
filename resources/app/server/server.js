@@ -7404,7 +7404,12 @@ function pageProjectionContext(currentUser = null) {
 }
 function projectionSourceRevision(runtime){
   const source=runtime&&typeof runtime==='object'?runtime:{};
-  return stableHashValue({loadedAt:source.loadedAt||null,sources:source.sources||null,excelRefresh:source.excelRefresh||null});
+  // LFL sayfa önbelleği modülü değildir ve kendi dosyasını sayfa açılınca
+  // yükler; kaynak adını anahtara katmak LFL'ye girildiği an CP/Siparişler/
+  // Genel Bakış önbelleklerini boşuna geçersiz kılıyordu.
+  const sources=source.sources&&typeof source.sources==='object'?{...source.sources}:null;
+  if(sources)delete sources.lfl;
+  return stableHashValue({loadedAt:source.loadedAt||null,sources:sources&&Object.keys(sources).length?sources:null,excelRefresh:source.excelRefresh||null});
 }
 function pageProjectionMatchesRuntime(manifest,runtime){
   const expected=String(runtime&&runtime.loadedAt||'');
