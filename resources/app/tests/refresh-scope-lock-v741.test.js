@@ -168,9 +168,13 @@ test('v7.41 · kilit bırakılırken işaretler temizlenir', () => {
   assert.match(APP, /window\.BL_REFRESH_BUSY='';\s*setReadOnlyMode\(false\)/);
 });
 
-test('v7.41 · şerit hangi alanların donduğunu ve diğerlerinin açık olduğunu yazar', () => {
-  assert.match(APP, /yenileniyor — hiçbir giriş kaybolmasın diye YALNIZ bu alanlarda düzenleme duraklatıldı\. Diğer ekranlar açık\./);
-  assert.match(APP, /editing is paused there so no entry is lost\. Other screens stay editable\./);
+test('v7.41 · yenileme bilgisi sabit sarı şerit yerine normal bildirim sistemine gider', () => {
+  const fn = extractFunction(APP, 'setReadOnlyMode');
+  assert.match(fn, /showToast\(appLang===['"]en['"]/);
+  assert.match(fn, /yenileniyor — hiçbir giriş kaybolmasın diye YALNIZ bu alanlarda düzenleme duraklatıldı\. Diğer ekranlar açık\./);
+  assert.match(fn, /editing is paused there so no entry is lost\. Other screens stay editable\./);
+  assert.doesNotMatch(fn, /setAttribute\('data-readonly-label'/);
+  assert.doesNotMatch(CSS, /body\.bl-readonly::before/);
 });
 
 test('v7.41 · uyarı metni de donan alanı adıyla söyler', () => {
