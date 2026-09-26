@@ -772,6 +772,7 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
       next.revision = Math.max(Number(next.revision) || 0, sharedSyncPolicy.checkpointRecordRevision(remoteRecords[id]));
       delete next.tombstones[id];
     }
+    next.causalKnowledge = sharedSyncPolicy.mergeKnowledge(next.causalKnowledge, sharedSyncPolicy.checkpointWriterKnowledge(Object.fromEntries(recoverIds.map(id => [id, remoteRecords[id]]))));
     return { recovered:recoverIds.length };
   });
   await deltaStore.hydrate();

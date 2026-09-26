@@ -115,6 +115,10 @@ function masterRecordsFromState(state) {
       for (const key of Object.keys(safe)) if (value._fieldRevisions && value._fieldRevisions[key] != null) fields[key] = value._fieldRevisions[key];
       if (value._revision != null) safe._revision = value._revision;
       if (Object.keys(fields).length) safe._fieldRevisions = fields;
+      // Nedensel çakışma algılaması için alanın son yazanı da taşınır.
+      const writers = {};
+      for (const key of Object.keys(safe)) if (value._fieldWriters && value._fieldWriters[key]) writers[key] = value._fieldWriters[key];
+      if (Object.keys(writers).length) safe._fieldWriters = writers;
       records[id] = safe;
     }
   }
@@ -135,18 +139,43 @@ function mergeCheckpointRecord(local, remote) {
   const out = clone(local);
   const fields = { ...(local._fieldRevisions || {}) };
   const remoteFields = incoming._fieldRevisions || {};
+  const writers = { ...(local._fieldWriters || {}) };
+  const remoteWriters = incoming._fieldWriters || {};
   for (const [key, value] of Object.entries(incoming)) {
-    if (key === '_revision' || key === '_fieldRevisions') continue;
+    if (key === '_revision' || key === '_fieldRevisions' || key === '_fieldWriters') continue;
     out[key] = value;
     const revision = Number(remoteFields[key]) || 0;
     if (revision > (Number(fields[key]) || 0)) fields[key] = revision;
+    if (remoteWriters[key]) writers[key] = remoteWriters[key];
   }
   out._fieldRevisions = fields;
+  if (Object.keys(writers).length) out._fieldWriters = writers;
   out._revision = Math.max(Number(local._revision) || 0, checkpointRecordRevision(incoming));
   return out;
 }
 
+/* Checkpoint'ten alınan değerler, yazan cihazların o sıraya kadarki
+   değişikliklerinin bu cihazda bulunduğunu gösterir. Sürüm vektörüne eklenir;
+   yoksa checkpoint ile güncellenen cihazın sonraki yazımı "görmeden yazılmış"
+   sayılıp sahte çakışma üretirdi. */
+function checkpointWriterKnowledge(records) {
+  const out = {};
+  for (const record of Object.values(records && typeof records === 'object' ? records : {})) {
+    for (const writer of Object.values(record && record._fieldWriters || {})) {
+      const device = String(writer && writer.d || '').trim(), seq = Number(writer && writer.s) || 0;
+      if (device && seq > (out[device] || 0)) out[device] = seq;
+    }
+  }
+  return out;
+}
+function mergeKnowledge(current, incoming) {
+  const out = { ...(current && typeof current === 'object' ? current : {}) };
+  for (const [device, seq] of Object.entries(incoming || {})) if ((Number(seq) || 0) > (Number(out[device]) || 0)) out[device] = Number(seq);
+  return out;
+}
+
 module.exports = {
+  checkpointWriterKnowledge, mergeKnowledge,
   MASTER_OVERRIDE_FIELDS, CP_OVERRIDE_FIELDS, classifyRecordId, scrubSecrets,
   sanitizeSettings, sanitizeOverridesMaster, sanitizeOverridesBusiness,
   sanitizeDelta, filterDeltas, masterRecordsFromState, businessRecordsFromState,

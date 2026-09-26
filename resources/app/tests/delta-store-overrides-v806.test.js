@@ -89,6 +89,9 @@ async function settle() { await new Promise(resolve => setImmediate(resolve)); a
 async function hydrateUntil(store, predicate, timeoutMs = 5000) {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
+    // v20260926: hydrate yoldaki (diske henüz inmemiş) yazımları da belleğe
+    // yeniden uygular; "aynaya yazıldı" kanıtı için önce bekleyen yazımlar biter.
+    if (typeof store.flush === 'function') await store.flush();
     await store.hydrate();
     if (predicate(store)) return true;
     if (Date.now() > deadline) return false;

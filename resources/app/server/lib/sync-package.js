@@ -56,6 +56,9 @@ function coalescePendingEvents(items = []) {
         ...current,
         operation: prevCreate ? 'create' : (current.operation || 'update'),
         baseRevision: Number(previous.baseRevision) || 0,
+        // Birleşik olayın bilgisi en eski olayınki kadardır (sürüm vektörü
+        // monoton artar): çakışma kaçırılmaz, en fazla temkinli davranılır.
+        ...(previous.seen !== undefined ? { seen: previous.seen } : {}),
         patch: { ...(previous.patch || {}), ...(current.patch || {}) },
         sourceEventIds: [...sourceIds(previous), ...sourceIds(current)],
         sourceFirstSeq: Math.min(sourceFirstSeq(previous), sourceFirstSeq(current)),

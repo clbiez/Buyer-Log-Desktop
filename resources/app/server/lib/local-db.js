@@ -65,6 +65,8 @@ function normalizeState(raw, deviceId) {
   state.journal = Array.isArray(state.journal) ? state.journal : [];
   state.assets = state.assets && typeof state.assets === 'object' ? state.assets : {};
   state.migrations = state.migrations && typeof state.migrations === 'object' ? state.migrations : {};
+  // Olay dışı yoldan (checkpoint onarımı) edinilmiş bilgi: kaynak cihaz → sıra.
+  state.causalKnowledge = state.causalKnowledge && typeof state.causalKnowledge === 'object' ? state.causalKnowledge : {};
   return state;
 }
 async function readState(file, deviceId = null) {
@@ -152,13 +154,25 @@ function listMergeRule(recordKey, field) {
   return rules && Object.prototype.hasOwnProperty.call(rules, field) ? rules[field] : null;
 }
 
-function fieldMerge(current, incoming, revision, baseRevision = null, recordKey = '') {
+/* NEDENSEL ÇAKIŞMA ALGILAMA (v20260926).
+   Cihaz sayaçları bağımsız ilerlediği için "uzak tabanı < yerel alan
+   revizyonu" kuralı, sayacı ileride olan cihazın yerel değişikliği HİÇ
+   görmeden yaptığı yazımı sıralı sanıyor ve çakışma olmadan son yazan
+   kazanıyordu. Artık her alan son yazanını (_fieldWriters: cihaz + sıra) tutar;
+   uzak olay yazıldığı andaki sürüm vektörünü (seen: kaynak cihaz → alınan son
+   sıra) taşır. Olayı yazan cihaz alanın son yazımını görmemişse gerçek
+   eşzamanlılıktır → çakışma. Vektörü olmayan (eski sürüm) olay veya son yazanı
+   bilinmeyen alan eski kuralla değerlendirilir. causal = { writer, seen }. */
+function fieldMerge(current, incoming, revision, baseRevision = null, recordKey = '', causal = null) {
   const base = current && typeof current === 'object' ? current : {};
   const next = { ...base };
   const fields = { ...(base._fieldRevisions || {}) };
+  const writers = { ...(base._fieldWriters || {}) };
+  const writer = causal && causal.writer && causal.writer.d ? { d: String(causal.writer.d), s: Number(causal.writer.s) || 0 } : null;
+  const seen = writer && causal.seen && typeof causal.seen === 'object' ? causal.seen : null;
   const conflicts = [];
   for (const [key, value] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
-    if (key === '_fieldRevisions' || key === '_revision') continue;
+    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters') continue;
     const previousRevision = Number(fields[key]) || 0;
     if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
       next[key] = newerRevisionMeta(next[key], value);
@@ -176,6 +190,21 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
       if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
       else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {});
       fields[key] = Math.max(previousRevision, revision);
+      if (writer) writers[key] = writer;
+      continue;
+    }
+    const lastWriter = seen && writers[key] && writers[key].d ? writers[key] : null;
+    if (lastWriter) {
+      if (lastWriter.d === writer.d) {
+        // Aynı cihazın daha eski olayı daha yeni değeri geri almaz.
+        if (writer.s < (Number(lastWriter.s) || 0)) continue;
+      } else if (!(Number(seen[lastWriter.d]) >= (Number(lastWriter.s) || 0)) && JSON.stringify(next[key]) !== JSON.stringify(value)) {
+        conflicts.push({ field: key, current: clone(next[key]), incoming: clone(value), currentRevision: previousRevision, baseRevision: Number(baseRevision) || 0 });
+        continue;
+      }
+      next[key] = value;
+      fields[key] = Math.max(previousRevision, revision);
+      writers[key] = writer;
       continue;
     }
     const changedLocally = baseRevision != null && previousRevision > Number(baseRevision || 0) && JSON.stringify(next[key]) !== JSON.stringify(value);
@@ -195,8 +224,10 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
     }
     next[key] = value;
     fields[key] = revision;
+    if (writer) writers[key] = writer;
   }
   next._fieldRevisions = fields;
+  if (Object.keys(writers).length) next._fieldWriters = writers;
   next._revision = Math.max(Number(base._revision) || 0, revision);
   return { value: next, conflicts };
 }
@@ -495,13 +526,18 @@ function createLocalDb(file) {
     const revision = Math.max(Number(state.revision) || 0, effectiveBaseRevision) + 1;
     // Local writes are authoritative for this device; baseRevision is carried
     // in the journal for remote conflict detection, not used to reject the edit.
-    const merged = fieldMerge(state.records[key], patch, revision);
+    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 } });
     const operation = state.records[key] ? 'update' : 'create';
     state.revision = revision;
     state.localSequence = Number(state.localSequence) + 1;
     state.records[key] = { ...merged.value, _deleted: false };
     delete state.tombstones[key];
-    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
+    // Sürüm vektörü: bu yazım anında her kaynak cihazdan kesintisiz alınmış son sıra.
+    const seenVector = {};
+    for (const source of [state.syncCheckpoints || {}, state.causalKnowledge || {}]) {
+      for (const [device, seq] of Object.entries(source)) if (Number(seq) > (seenVector[device] || 0)) seenVector[device] = Number(seq);
+    }
+    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
     state.journal.push(journalItem);
@@ -572,7 +608,8 @@ function createLocalDb(file) {
         delete state.records[key];
       }
     } else if (!tomb || Number(tomb.revision) <= revision) {
-      const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key);
+      const causal = delta.deviceId ? { writer: { d: String(delta.deviceId), s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen } : null;
+      const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key, causal);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
       // Alan, çakışmayı görmüş daha yeni bir olayla çakışmasız güncellendi:

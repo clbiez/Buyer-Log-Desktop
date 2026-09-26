@@ -92,6 +92,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
   const memory = new Map();
   let hydrated = false;
   let mirrorTail = Promise.resolve(), pendingMirrors = 0;
+  const inflight = new Set(); // diske henüz inmemiş ayna yazımları
   const report = (stage, error) => {
     try { if (typeof onError === 'function') onError(stage, error); } catch (_) { /* raporlama ikinci bir hata üretmemeli */ }
   };
@@ -164,6 +165,8 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
        Yazma başarısız olursa staged değer geri alınır; böylece diskte olmayan
        bir değer kalıcı olarak okunmaz. */
     const rollback = stage(collection, effectiveEntries);
+    const inflightEntry = { collection, entries: effectiveEntries };
+    inflight.add(inflightEntry);
     if (pendingMirrors === 1) trace('mirror:single-flight', { invocation: invocationId, collection }, true);
     pendingMirrors += 1;
     const run = mirrorTail.catch(() => {}).then(async () => {
@@ -179,6 +182,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
         return { mirrored: 0, ok: false, error };
       } finally {
         pendingMirrors -= 1;
+        inflight.delete(inflightEntry);
       }
     });
     mirrorTail = run.catch(() => {});
@@ -236,6 +240,10 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
         if (!memory.has(collection)) memory.set(collection, new Map());
         memory.get(collection).set(id, flatten(value));
       }
+      // Diske henüz inmemiş (yoldaki) yazımlar yeniden uygulanır: aksi hâlde arka
+      // plan senkronunun hydrate'i yeni kaydı bellekten düşürüyor, sonraki kayıt
+      // bu bayat bellekten hesaplanıp kaydı kalıcı olarak siliyordu.
+      for (const item of inflight) stage(item.collection, item.entries);
       hydrated = true;
       return { ok: true, collections: memory.size, records: [...memory.values()].reduce((sum, bucket) => sum + bucket.size, 0) };
     } catch (error) {
