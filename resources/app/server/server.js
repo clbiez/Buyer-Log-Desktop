@@ -272,6 +272,7 @@ const sharedImageStoreLib = require('./lib/shared-image-store');
 const modelImageDistributionLib = require('./lib/model-image-distribution');
 const collectionImageSyncPolicy = require('./lib/collection-image-sync-policy');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
+const backlogPlanActual = require('./lib/backlog-plan-actual');
 const modelImageRegistry = require('./lib/model-image-registry');
 // Ajan kaynaklı yazmaların audit etiketi (bkz. copilot-provenance).
 const copilotProvenance = require('./lib/copilot-provenance');
@@ -8214,6 +8215,99 @@ function antrepoForTarget(active, target) {
   return map || active.antrepoMap || {};
 }
 
+/* Planlanan & Gerçekleşen Analizi snapshot'ı.
+   Backlog'un KENDİ hedef veri kümesi ve effective override'ları kullanılır;
+   analiz için ikinci bir veri modeli kurulmaz. Snapshot sipariş/model/renk
+   düzeyinde kompaktlaştırılır ve store yalnız delta yazar. */
+async function captureBacklogPlanActualSnapshot(id, runtime, overrides) {
+  const active = runtime || cacheForUser(id);
+  if (!active || !active.loadedAt || !Array.isArray(active.asasOrders)) return null;
+  const effective = overrides || effectiveOverridesForUser(id);
+  const orders = ordersForTarget(active, 'backlog', effective);
+  const antrepo = antrepoForTarget(active, 'backlog');
+  const templateRows = buildBacklogTemplateRows(orders, antrepo, effective, {}, [], {});
+  const snapshot = backlogPlanActual.projectSnapshot(orders, templateRows, {
+    capturedAt: new Date().toISOString(),
+    sourceGenerationId: active.modelRefresh && active.modelRefresh.sourceGenerationId || active.loadedAt || '',
+  });
+  return backlogPlanActual.appendSnapshot(id, snapshot);
+}
+
+async function ensureBacklogPlanActualArchive(id) {
+  let archive = await backlogPlanActual.readArchive(id);
+  if (archive && archive.base) return archive;
+  const runtime = cacheForUser(id);
+  if (!runtime.loadedAt) await ensureDataLoaded(id);
+  const hydrated = cacheForUser(id);
+  if (hydrated.loadedAt) await captureBacklogPlanActualSnapshot(id, hydrated, effectiveOverridesForUser(id));
+  archive = await backlogPlanActual.readArchive(id);
+  return archive;
+}
+
+app.get('/api/backlog-plan-actual', userAccess.requireArea('backlog'), async (req, res) => {
+  try {
+    assertSourceFilters(['backlog'], req);
+    const id = sourceUserId(req);
+    const from = String(req.query.from || '');
+    const to = String(req.query.to || '');
+    const fromMs = Date.parse(from), toMs = Date.parse(to);
+    if (!Number.isFinite(fromMs) || !Number.isFinite(toMs) || fromMs >= toMs) {
+      return res.status(400).json({ error:'Geçerli bir başlangıç ve bitiş zamanı seçin.' });
+    }
+
+    const archive = await ensureBacklogPlanActualArchive(id);
+    const resolved = backlogPlanActual.resolveRange(archive, from, to);
+    if (!resolved.start || !resolved.end) {
+      return sendDateSafeJson(res, {
+        requested:{ from, to }, coverage:resolved.coverage || null, resolved:{ start:null, end:null },
+        summary:null, changes:[], activity:[], catalogs:{}, message:'Henüz karşılaştırılabilir Backlog snapshotı yok.'
+      });
+    }
+
+    // Yetki filtresi snapshot farkından ÖNCE uygulanır. Böylece kullanıcı
+    // geçmişte bugün erişemediği Buyer/MAG/MMYG/Buying Group satırlarını da göremez.
+    const startRows = userAccess.filterRowsByScope(req.currentUser, resolved.start.rows);
+    const endRows = userAccess.filterRowsByScope(req.currentUser, resolved.end.rows);
+
+    // Refresh History Kaynak Veri alanına ait ayrı bir UI olabilir; bu API onu
+    // doğrudan açmaz. Yalnız analiz aralığındaki detaylar alınır ve aynı Backlog
+    // veri yetkisiyle süzülür.
+    const historyStore = loadRefreshHistory(id);
+    const scopedHistory = {
+      items:(Array.isArray(historyStore && historyStore.items) ? historyStore.items : []).map(item => ({
+        ...item,
+        details:userAccess.filterRowsByScope(req.currentUser, Array.isArray(item && item.details) ? item.details : []),
+      })),
+    };
+    const activityResult = backlogPlanActual.collapseHistory(
+      scopedHistory.items,
+      resolved.start.capturedAt,
+      resolved.end.capturedAt
+    );
+    const comparison = backlogPlanActual.compareSnapshots(startRows, endRows, {
+      from, to, activity:activityResult.activity,
+    });
+    const catalogRows = [
+      ...comparison.changes,
+      ...activityResult.activity,
+    ];
+    return sendDateSafeJson(res, {
+      requested:{ from, to },
+      coverage:resolved.coverage,
+      resolved:{
+        start:{ capturedAt:resolved.start.capturedAt, sourceGenerationId:resolved.start.sourceGenerationId || '' },
+        end:{ capturedAt:resolved.end.capturedAt, sourceGenerationId:resolved.end.sourceGenerationId || '' },
+      },
+      summary:comparison.summary,
+      changes:comparison.changes,
+      activity:activityResult.activity,
+      catalogs:backlogPlanActual.catalogsFromRows(catalogRows),
+    });
+  } catch (err) {
+    apiError(res, err, 'Planlanan & Gerçekleşen Analizi oluşturulamadı.');
+  }
+});
+
 const refreshInFlight = new Set();
 // "Yenile" Data Model Connection ekranındaki aktif ASAS / Antrepo bağlantılarını
 // doğrudan sorgular. Kaynak klasördeki Excel dosyaları bu akışta kullanılmaz.
@@ -8397,6 +8491,18 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   catch (cacheError) { logRuntimeFailure('refreshPageCacheWrite', cacheError); }
   markPhase('finalizing');
   clearDeliveryOverridesForOrders((active.asasOrders || []).map(order => order.ocode));
+  // Her başarılı yenileme bir zaman işareti üretir. İçerik değişmemişse store
+  // yalnız boş delta marker'ı yazar; Pzt 10:00 → Pzt 10:00 gibi sınırlar yine
+  // doğru snapshot'a çözülebilir.
+  try {
+    await runRefreshTelemetry(telemetry, 'Local storage', 'backlog-plan-actual-snapshot', 'save', () =>
+      captureBacklogPlanActualSnapshot(id, active, effectiveOverridesForUser(id))
+    );
+  } catch (snapshotError) {
+    // Analiz geçmişi türetilebilir bir katmandır; kaydedilememesi başarılı veri
+    // yenilemesini geri almamalı, fakat teşhis kaydı bırakmalıdır.
+    logRuntimeFailure('backlogPlanActualSnapshot', snapshotError);
+  }
   if (summary.hasChanges) {
     historyItem = addRefreshHistory({
       createdAt: new Date().toISOString(),
