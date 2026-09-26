@@ -24,3 +24,18 @@ test('v10.49 Collection quick filters are keyboard-operable toggle buttons with 
   assert.match(GROUPS, /function setKpiGroupOpen\(group,open\)/);
   assert.match(DESIGN, /\.kpiGroup\.open>\.kpiGroupMenu\{display:flex;\}/);
 });
+
+
+test('Collection quick-filter settings button is the first item in the strip', () => {
+  const renderStart = APP.indexOf('function renderKolQuickFilters()');
+  const renderEnd = APP.indexOf('// ================= PRICING PREFLIGHT =================', renderStart);
+  const render = APP.slice(renderStart, renderEnd);
+  const settingsAt = render.indexOf('id="kolQuickFiltersEdit"');
+  const groupsAt = render.indexOf('loadKolQuickDims().forEach');
+  assert.ok(settingsAt > -1 && groupsAt > -1 && settingsAt < groupsAt,
+    'Collection ayar düğmesi hızlı filtre gruplarından önce oluşturulmalı');
+  assert.doesNotMatch(render, /html \+= `<button[^>]+id="kolQuickFiltersEdit"/,
+    'ayar düğmesi şeridin sonuna eklenmemeli');
+  assert.match(CSS, /\.kpiGroupEdit\{[^}]*order:-1000[^}]*margin:0 4px 0 0/,
+    'ortak CSS tüm hızlı filtre ayar düğmelerini solda tutmalı');
+});
