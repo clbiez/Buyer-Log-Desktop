@@ -10,7 +10,13 @@
      items:[ {tr:'...', en:'...'}, ... ] }
    =================================================================== */
 window.BL_VERSION_HISTORY = [
-  { v: '__CURRENT__', date: '2026-09-26', title: { tr: 'Çok kullanıcılı senkron, yetkiler ve çoklu sekme', en: 'Multi-user sync, permissions and multiple tabs' }, items: [
+  { v: '__CURRENT__', date: '2026-09-26', title: { tr: 'Daha hızlı sayfa geçişleri', en: 'Faster page switching' }, items: [
+    { tr: 'Hazır ekran önbelleği artık gerçekten kullanılıyor: CP ilk açılışı ~8 sn yerine ~1 sn, Siparişler ilk açılışı ~24 sn yerine ~3,5 sn (30 bin satırlık veride).', en: 'The prepared-screen cache is now actually used: CP opens in ~1 s instead of ~8 s and Orders in ~3.5 s instead of ~24 s (30k-row data).' },
+    { tr: 'Açılmış bir sayfaya geri dönmek anlıktır (CP, Siparişler, Genel Bakış ~0,1 sn; LFL ~0,8 sn yerine ~0,25 sn); veri değişmediyse sayfa yeniden hesaplanmaz.', en: 'Returning to an already opened page is instant (CP, Orders, Overview ~0.1 s; LFL ~0.25 s instead of ~0.8 s); pages are not recomputed when data has not changed.' },
+    { tr: 'Siparişler ekranı kullanmadığı sipariş özetini artık indirmez (~%35 daha az veri); LFL ziyareti CP/Siparişler/Genel Bakış önbelleğini geçersiz kılmaz.', en: 'The Orders screen no longer downloads the order summary it does not use (~35% less data); visiting LFL no longer invalidates the CP/Orders/Overview cache.' },
+  ] },
+
+  { v: '7.137', date: '2026-09-26', title: { tr: 'Çok kullanıcılı senkron, yetkiler ve çoklu sekme', en: 'Multi-user sync, permissions and multiple tabs' }, items: [
     { tr: 'Fiyat talepleri ve üretici teklifleri yalnız yetkili kullanıcılara görünür (talep sahibi, koleksiyona erişimi olan veya siparişi görebilen kullanıcı ve Moderatör). Önceki sürümdeki "tüm kullanıcılar görüntüleyebilir" kuralı kaldırıldı.', en: 'Quotations and supplier offers are visible only to authorised users (owner, users with collection access or order scope, and Moderators). The previous "all users can view" rule was removed.' },
     { tr: 'Buyer rolü varsayılan olarak Kaynak Veri görüntüleme, fiyat talebi açma/düzenleme ve sahibin verdiği düzenleme yetkisiyle başkasının Koleksiyonunu düzenleme yetkisine sahiptir; mevcut kurulumlara otomatik uygulanır.', en: 'The Buyer role now includes Source Data view, quotation create/edit and editing another user\'s Collection when the owner grants edit access; applied automatically to existing installations.' },
     { tr: 'Kur, yol süreleri, royalty/landed kuralları, non-DTR üreticiler, e-posta grupları, Endeksmatik ve veri bağlantıları yalnız Moderatörün verdiği yetkiyle değiştirilebilir ve değişiklik herkese yansır. Bu yetki üst role miras kalmaz.', en: 'FX, transit times, royalty/landed rules, non-DTR manufacturers, email groups, Endeksmatik and data connections can be changed only with Moderator-granted permission, and changes reach everyone. The permission is not inherited upwards.' },
