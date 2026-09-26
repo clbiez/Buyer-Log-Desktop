@@ -10,6 +10,7 @@ const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
 const SERVER=read('server/server.js');
 const HTML=read('public/index.html');
 const UI=read('public/backlog-plan-actual.js');
+const CSS=read('public/backlog-plan-actual.css');
 const STORAGE=read('public/user-storage.js');
 
 test('plan actual API is Backlog-authorized and snapshots the Backlog target',()=>{
@@ -53,4 +54,12 @@ test('panel preferences are user scoped and synced like existing Backlog analysi
   const count=(STORAGE.match(/'lcw\.backlog\.planactual\.'/g)||[]).length;
   assert.equal(count,2,'prefix must exist in both scoped and synced registries');
   assert.match(UI,/STORAGE_KEY='lcw\.backlog\.planactual\.v1'/);
+});
+
+
+test('plan actual module uses shared theme tokens without light-theme fallbacks',()=>{
+  assert.match(CSS,/\.bpaModule\{[^}]*background:var\(--card\);color:var\(--ink\)/);
+  assert.match(CSS,/\.bpaModuleHead\{[^}]*background:var\(--card2\)/);
+  assert.match(CSS,/background:var\(--paper,var\(--card2\)\)/);
+  assert.doesNotMatch(CSS,/#fff|#f8fafc|#111827/);
 });

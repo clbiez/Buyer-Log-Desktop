@@ -43,10 +43,23 @@ test('Pivot and radar workspace defaults to half width and supports resize, swap
   assert.match(CSS,/grid-template-columns:minmax\(0,1fr\) 7px minmax\(0,1fr\)/);
 });
 
-test('Both radar cards can collapse and the delivery radar can move vertically',()=>{
-  assert.match(RADAR,/riskCollapsed/);
-  assert.match(RADAR,/riskPosition:'after-kpi'/);
-  assert.match(RADAR,/risk-up/);
-  assert.match(RADAR,/risk-down/);
+test('Both radars have independent filters and keep side labels readable',()=>{
+  assert.match(RADAR,/pivotHidden:\[\]/);
+  assert.match(RADAR,/riskHidden:\[\]/);
+  assert.match(RADAR,/data-radar-filter-panel="pivot"/);
+  assert.match(RADAR,/data-radar-filter-panel="risk"/);
+  assert.match(RADAR,/const width=620,height=390/);
+  assert.match(CSS,/\.backlogRadarCard\{[^}]*overflow:visible/);
+  assert.match(CSS,/\.backlogRadarBody\{[^}]*overflow:visible/);
+  assert.match(CSS,/\.blRadarSvg\{[^}]*overflow:visible/);
+  assert.match(CSS,/\.backlogRadarFilterList/);
+});
+
+test('Delivery Risk KPI labels and radar share a 50-50 workspace with a 3x2 KPI grid',()=>{
+  assert.match(RADAR,/bdaRiskOverview/);
+  assert.match(RADAR,/ensureRiskOverview/);
+  assert.match(CSS,/\.bdaRiskOverview\{[^}]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
+  assert.match(CSS,/\.bdaRiskOverview \.bdaKpiRow\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(CSS,/\.bdaRadarCard\.is-collapsed \.backlogRadarBody/);
+  assert.doesNotMatch(RADAR,/risk-up|risk-down/);
 });

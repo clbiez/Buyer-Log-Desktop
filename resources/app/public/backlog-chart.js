@@ -361,7 +361,8 @@
     return Array.from({length:count},(_,i)=>(model.series||[]).reduce((sum,s)=>sum+(Number(s.values&&s.values[i])||0),0));
   }
   function averageValue(model) {
-    const totals=subtotalValues(model);return totals.length?totals.reduce((a,b)=>a+b,0)/totals.length:0;
+    const values=(model&&model.series||[]).flatMap(series=>(series.values||[]).filter(Number.isFinite));
+    return values.length?values.reduce((sum,value)=>sum+value,0)/values.length:0;
   }
   function chartMetrics(model) {
     const width=1080,height=430,left=24,right=88,top=28,bottom=58,pw=width-left-right,ph=height-top-bottom;
@@ -609,7 +610,12 @@
       const valueEl=cross.querySelector('.backlogChartCrosshairValue');valueEl.textContent=formatWholeValue(value);valueEl.style.cssText='left:'+(plotLeft+plotWidth+4)+'px;top:'+yPx+'px;';
       const tooltip=cross.querySelector('.backlogChartTooltip');
       tooltip.innerHTML='<strong>'+esc(cat&&cat.label||'')+'</strong>'+(visible.series||[]).map(serie=>'<span><i style="--series-color:'+serie.color+'"></i><b>'+esc(serie.name)+'</b><em>'+esc(formatWholeValue(serie.values[index]))+'</em></span>').join('')+'<span class="backlogChartTooltipTotal"><i></i><b>'+esc(tr('Alt Toplam','Subtotal'))+'</b><em>'+esc(formatWholeValue(subtotal))+'</em></span>';
-      tooltip.classList.toggle('is-flipped',xPx>vr.width*.62);tooltip.style.cssText='left:'+xPx+'px;top:'+Math.max(plotTop+4,Math.min(yPx,plotTop+plotHeight-24))+'px;';
+      tooltip.classList.toggle('is-flipped',xPx>vr.width*.62);
+      const maxTooltipHeight=Math.max(120,Math.min(300,vr.height-16));
+      tooltip.style.maxHeight=maxTooltipHeight+'px';
+      tooltip.style.left=xPx+'px';
+      const tooltipHeight=Math.min(maxTooltipHeight,tooltip.scrollHeight||maxTooltipHeight);
+      tooltip.style.top=Math.max(8,Math.min(yPx-8,vr.height-tooltipHeight-8))+'px';
       return index;
     }
     function setDragTransform(px,animate){
@@ -632,6 +638,10 @@
       }
       if(pinnedIndex==null)crosshairAt(event.clientX,event.clientY,null);
     });
+    const tooltip=cross?.querySelector('.backlogChartTooltip');
+    tooltip?.addEventListener('wheel',event=>event.stopPropagation(),{passive:true});
+    tooltip?.addEventListener('pointerdown',event=>event.stopPropagation());
+    tooltip?.addEventListener('click',event=>event.stopPropagation());
     viewport?.addEventListener('pointerleave',hideCrosshair);
     viewport?.addEventListener('pointerdown',event=>{
       if(event.button!==0)return;const now=performance.now();

@@ -12,7 +12,8 @@
     pivotCollapsed:false,
     pivotRadarCollapsed:false,
     riskCollapsed:false,
-    riskPosition:'after-kpi',
+    pivotHidden:[],
+    riskHidden:[],
   };
   let state={...DEFAULTS},pivotWorkspace=null,pivotPanel=null,pivotRadarCard=null,splitter=null;
   let riskScheduled=false,pivotScheduled=false;
@@ -26,7 +27,8 @@
       const raw=store()?.getItem(STORAGE_KEY),saved=raw?JSON.parse(raw):{};
       state={...DEFAULTS,...saved};
       state.pivotShare=Math.max(.28,Math.min(.72,Number(state.pivotShare)||.5));
-      if(!['before-kpi','after-kpi','after-attention'].includes(state.riskPosition))state.riskPosition='after-kpi';
+      state.pivotHidden=Array.isArray(state.pivotHidden)?state.pivotHidden.map(String):[];
+      state.riskHidden=Array.isArray(state.riskHidden)?state.riskHidden.map(String):[];
     }catch(_){state={...DEFAULTS};}
   }
   function save(){try{store()?.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
@@ -44,16 +46,32 @@
     return Number.isFinite(n)?n:0;
   }
   function fmt(value){return Math.round(Number(value)||0).toLocaleString(lang()==='en'?'en-GB':'tr-TR');}
+  function hiddenKey(kind){return kind==='risk'?'riskHidden':'pivotHidden';}
+  function visibleItems(kind,items){
+    const hidden=new Set(state[hiddenKey(kind)]||[]);
+    return (items||[]).filter(item=>!hidden.has(String(item&&item.label||'')));
+  }
+  function radarFilterHtml(kind,items){
+    const hidden=new Set(state[hiddenKey(kind)]||[]),labels=[...new Set((items||[]).map(item=>String(item&&item.label||'').trim()).filter(Boolean))];
+    return '<div class="backlogRadarFilterHead"><strong>'+esc(L('Radar filtresi','Radar filter'))+'</strong><button type="button" class="tbtn" data-bl-layout="'+kind+'-filter-clear">'+esc(L('Temizle','Clear'))+'</button></div>'
+      +'<div class="backlogRadarFilterList">'+labels.map(label=>'<label><input type="checkbox" data-radar-filter-kind="'+kind+'" data-radar-filter-value="'+esc(label)+'"'+(hidden.has(label)?'':' checked')+'><span>'+esc(label)+'</span></label>').join('')+'</div>';
+  }
+  function syncRadarFilter(card,kind,items){
+    const panel=card?.querySelector('[data-radar-filter-panel="'+kind+'"]');if(!panel)return;
+    const signature=JSON.stringify({items:(items||[]).map(item=>item.label),hidden:state[hiddenKey(kind)]||[]});
+    if(panel.dataset.signature===signature)return;
+    panel.dataset.signature=signature;panel.innerHTML=radarFilterHtml(kind,items);
+  }
 
   function radarSvg(items,label){
     const list=(items||[]).filter(item=>item&&String(item.label||'').trim()).slice(0,10);
     if(list.length<3)return '<div class="blRadarEmpty">'+esc(L('Radar için en az 3 başlık gerekiyor.','At least 3 categories are required for the radar.'))+'</div>';
-    const size=360,cx=180,cy=178,radius=116,rings=4,max=Math.max(1,...list.map(item=>Number(item.value)||0));
+    const width=620,height=390,cx=310,cy=190,radius=108,rings=4,max=Math.max(1,...list.map(item=>Number(item.value)||0));
     const point=(index,ratio=1)=>{
       const angle=-Math.PI/2+Math.PI*2*index/list.length;
       return [cx+Math.cos(angle)*radius*ratio,cy+Math.sin(angle)*radius*ratio,angle];
     };
-    let svg='<svg class="blRadarSvg" viewBox="0 0 '+size+' '+size+'" role="img" aria-label="'+esc(label)+'">';
+    let svg='<svg class="blRadarSvg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+esc(label)+'">';
     for(let ring=1;ring<=rings;ring++){
       const pts=list.map((_,i)=>{const p=point(i,ring/rings);return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
       svg+='<polygon class="blRadarGrid" points="'+pts+'"/>';
@@ -64,7 +82,7 @@
     list.forEach((item,i)=>{
       const p=point(i,Math.max(.035,(Number(item.value)||0)/max));
       svg+='<circle class="blRadarPoint" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3.2"/>';
-      const lp=point(i,1.22),anchor=Math.cos(lp[2])>.25?'start':Math.cos(lp[2])<-.25?'end':'middle';
+      const lp=point(i,1.55),anchor=Math.cos(lp[2])>.25?'start':Math.cos(lp[2])<-.25?'end':'middle';
       const labelText=String(item.label||'').length>22?String(item.label).slice(0,21)+'…':String(item.label||'');
       svg+='<text class="blRadarLabel" x="'+lp[0].toFixed(1)+'" y="'+lp[1].toFixed(1)+'" text-anchor="'+anchor+'"><tspan x="'+lp[0].toFixed(1)+'">'+esc(labelText)+'</tspan><tspan class="blRadarValue" x="'+lp[0].toFixed(1)+'" dy="12">'+esc(fmt(item.value))+'</tspan></text>';
     });
@@ -86,10 +104,11 @@
     if(!pivotRadarCard)return;
     const body=pivotRadarCard.querySelector('[data-pivot-radar-body]'),items=pivotItems();
     if(!body)return;
-    const signature=JSON.stringify(items);
+    syncRadarFilter(pivotRadarCard,'pivot',items);
+    const shown=visibleItems('pivot',items),signature=JSON.stringify({shown,hidden:state.pivotHidden});
     if(body.dataset.signature===signature)return;
     body.dataset.signature=signature;
-    body.innerHTML=radarSvg(items,L('Backlog durum radarı','Backlog status radar'));
+    body.innerHTML=radarSvg(shown,L('Backlog durum radarı','Backlog status radar'));
   }
   function schedulePivotRadar(){
     if(pivotScheduled)return;pivotScheduled=true;
@@ -132,7 +151,15 @@
       const action=button.dataset.blLayout;
       if(action==='pivot-collapse'){state.pivotCollapsed=!state.pivotCollapsed;save();applyPivotLayout();}
       else if(action==='radar-collapse'){state.pivotRadarCollapsed=!state.pivotRadarCollapsed;save();applyPivotLayout();}
+      else if(action==='radar-filter'){const panel=pivotRadarCard?.querySelector('[data-radar-filter-panel="pivot"]');if(panel)panel.hidden=!panel.hidden;}
+      else if(action==='pivot-filter-clear'){state.pivotHidden=[];save();schedulePivotRadar();}
       else if(action==='swap'){swapPivot();}
+    });
+    pivotWorkspace?.addEventListener('change',event=>{
+      const input=event.target.closest('[data-radar-filter-kind="pivot"]');if(!input)return;
+      const label=String(input.dataset.radarFilterValue||''),hidden=new Set(state.pivotHidden||[]);
+      if(input.checked)hidden.delete(label);else hidden.add(label);
+      state.pivotHidden=[...hidden];save();schedulePivotRadar();
     });
     splitter?.addEventListener('pointerdown',event=>{
       if(event.button!==0)return;
@@ -168,8 +195,9 @@
 
     pivotRadarCard=root.document.createElement('div');pivotRadarCard.className='panel backlogRadarCard';pivotRadarCard.dataset.pivotRadarCard='1';
     pivotRadarCard.innerHTML='<div class="backlogWorkspaceCardHead"><div><strong>'+esc(L('Durum Radarı','Status Radar'))+'</strong><span>'+esc(L('Yalnız ana başlıklar','Top-level groups only'))+'</span></div><div class="backlogWorkspaceCardActions">'
+      +iconButton('radar-filter',L('Radar filtresi','Radar filter'),'⌕')
       +iconButton('swap',L('Pivot ile yer değiştir','Swap with pivot'),'⇄')
-      +iconButton('radar-collapse',L('Radarı aç / kapat','Expand / collapse radar'),'▾')+'</div></div><div class="backlogRadarBody" data-pivot-radar-body></div>';
+      +iconButton('radar-collapse',L('Radarı aç / kapat','Expand / collapse radar'),'▾')+'</div></div><div class="backlogRadarFilter" data-radar-filter-panel="pivot" hidden></div><div class="backlogRadarBody" data-pivot-radar-body></div>';
     pivotWorkspace.appendChild(pivotRadarCard);
 
     splitter=root.document.createElement('div');splitter.className='backlogWorkspaceSplitter';splitter.setAttribute('role','separator');splitter.setAttribute('aria-orientation','vertical');splitter.title=L('Sürükleyerek genişliği ayarla','Drag to resize');
@@ -187,14 +215,15 @@
       value:parseNumber(card.querySelector('.bdaKpiValue')?.textContent),
     })).filter(item=>item.label);
   }
-  function riskPositionCard(host,card){
-    const kpi=host.querySelector('.bdaKpiRow');if(!kpi)return;
-    if(state.riskPosition==='before-kpi'){
-      if(card.nextElementSibling!==kpi)kpi.before(card);
-    }else if(state.riskPosition==='after-attention'){
-      const target=host.querySelector('[data-fold="attention"]')||kpi;
-      if(target.nextElementSibling!==card)target.after(card);
-    }else if(kpi.nextElementSibling!==card)kpi.after(card);
+  function ensureRiskOverview(host,kpi,card){
+    let overview=host.querySelector('[data-risk-overview]');
+    if(!overview){
+      overview=root.document.createElement('div');overview.className='bdaRiskOverview';overview.dataset.riskOverview='1';
+      kpi.parentNode.insertBefore(overview,kpi);overview.appendChild(kpi);
+    }
+    if(card.parentNode!==overview)overview.appendChild(card);
+    overview.classList.toggle('is-radar-collapsed',!!state.riskCollapsed);
+    return overview;
   }
   function renderRiskRadar(){
     const host=root.document.getElementById('backlogAnalysis');if(!host)return;
@@ -203,23 +232,29 @@
     if(!card){
       card=root.document.createElement('div');card.className='bdaRadarCard';card.dataset.riskRadarCard='1';
       card.innerHTML='<div class="backlogWorkspaceCardHead"><div><strong>'+esc(L('Teslimat Risk Radarı','Delivery Risk Radar'))+'</strong><span>'+esc(L('Ekrandaki risk etiketleri','Current risk labels'))+'</span></div><div class="backlogWorkspaceCardActions">'
-        +iconButton('risk-up',L('Yukarı taşı','Move up'),'↑')
-        +iconButton('risk-down',L('Aşağı taşı','Move down'),'↓')
-        +iconButton('risk-collapse',L('Radarı aç / kapat','Expand / collapse radar'),'▾')+'</div></div><div class="backlogRadarBody" data-risk-radar-body></div>';
+        +iconButton('risk-filter',L('Radar filtresi','Radar filter'),'⌕')
+        +iconButton('risk-collapse',L('Radarı aç / kapat','Expand / collapse radar'),'▾')+'</div></div><div class="backlogRadarFilter" data-radar-filter-panel="risk" hidden></div><div class="backlogRadarBody" data-risk-radar-body></div>';
       card.addEventListener('click',event=>{
         const button=event.target.closest('[data-bl-layout]');if(!button)return;
-        const positions=['before-kpi','after-kpi','after-attention'],current=Math.max(0,positions.indexOf(state.riskPosition));
-        if(button.dataset.blLayout==='risk-collapse')state.riskCollapsed=!state.riskCollapsed;
-        else if(button.dataset.blLayout==='risk-up')state.riskPosition=positions[Math.max(0,current-1)];
-        else if(button.dataset.blLayout==='risk-down')state.riskPosition=positions[Math.min(positions.length-1,current+1)];
-        save();renderRiskRadar();
+        const action=button.dataset.blLayout;
+        if(action==='risk-collapse'){state.riskCollapsed=!state.riskCollapsed;save();renderRiskRadar();}
+        else if(action==='risk-filter'){const panel=card.querySelector('[data-radar-filter-panel="risk"]');if(panel)panel.hidden=!panel.hidden;}
+        else if(action==='risk-filter-clear'){state.riskHidden=[];save();renderRiskRadar();}
+      });
+      card.addEventListener('change',event=>{
+        const input=event.target.closest('[data-radar-filter-kind="risk"]');if(!input)return;
+        const label=String(input.dataset.radarFilterValue||''),hidden=new Set(state.riskHidden||[]);
+        if(input.checked)hidden.delete(label);else hidden.add(label);
+        state.riskHidden=[...hidden];save();renderRiskRadar();
       });
     }
-    riskPositionCard(host,card);
+    ensureRiskOverview(host,kpi,card);
     card.classList.toggle('is-collapsed',!!state.riskCollapsed);
     card.querySelector('[data-bl-layout="risk-collapse"]')?.setAttribute('aria-expanded',String(!state.riskCollapsed));
-    const body=card.querySelector('[data-risk-radar-body]'),items=riskItems(host),signature=JSON.stringify(items);
-    if(body&&body.dataset.signature!==signature){body.dataset.signature=signature;body.innerHTML=radarSvg(items,L('Teslimat risk radarı','Delivery risk radar'));}
+    const body=card.querySelector('[data-risk-radar-body]'),items=riskItems(host);
+    syncRadarFilter(card,'risk',items);
+    const shown=visibleItems('risk',items),signature=JSON.stringify({shown,hidden:state.riskHidden});
+    if(body&&body.dataset.signature!==signature){body.dataset.signature=signature;body.innerHTML=radarSvg(shown,L('Teslimat risk radarı','Delivery risk radar'));}
   }
   function scheduleRiskRadar(){
     if(riskScheduled)return;riskScheduled=true;

@@ -116,9 +116,9 @@ test('Backlog chart uses whole-number nice ticks and compact time labels', () =>
   assert.equal(chart.axisTickLabel({key:'2026-05',label:'May 2026'},'month'),'MAY 26');
 });
 
-test('Backlog chart average line is calculated from visible bucket subtotals', () => {
+test('Backlog chart average line is calculated from visible plotted data points', () => {
   const model=chart.buildModel(rows,headers,state({showAverage:true}));
-  assert.equal(chart.averageValue(model),12.5);
+  assert.equal(chart.averageValue(model),6.25);
   const svg=chart.svgChart(model,{today:new Date(2030,0,1)});
   assert.match(svg,/backlogChartAverageLine/);
   assert.match(svg,/Ort\.|Avg\./);
@@ -127,12 +127,12 @@ test('Backlog chart average line is calculated from visible bucket subtotals', (
 test('Backlog chart average follows the visible window and subtotal is a toggleable dashed line', () => {
   const full=chart.buildModel(rows,headers,state({showAverage:true,showSubtotal:true}));
   const visible=chart.sliceModel(full,{start:0,end:1});
-  assert.equal(chart.averageValue(visible),22);
+  assert.equal(chart.averageValue(visible),11);
   const svg=chart.svgChart(visible,{today:new Date(2030,0,1)});
   assert.match(svg,/backlogChartSubtotalLine/);
   assert.match(svg,/backlogChartPanLayer/);
   assert.match(svg,/backlogChartPlotMask/);
-  assert.match(svg,/(?:Ort\.|Avg\.) 22/);
+  assert.match(svg,/(?:Ort\.|Avg\.) 11/);
   assert.ok(chart.chartMetrics(visible).max>=22);
 });
 
@@ -186,6 +186,8 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(chartSource,/data-backlog-chart-export="png"/);
   assert.match(chartSource,/timeField2/);
   assert.match(chartSource,/backlogChartTooltipTotal/);
+  assert.match(chartSource,/tooltip\?\.addEventListener\('wheel'/);
+  assert.match(CSS,/\.backlogChartTooltip\{[^}]*pointer-events:auto/);
 });
 
 test('Backlog render refreshes chart and Excel export appends chart sheets', () => {
