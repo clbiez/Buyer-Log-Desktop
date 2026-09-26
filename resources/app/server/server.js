@@ -8221,7 +8221,7 @@ function antrepoForTarget(active, target) {
    düzeyinde kompaktlaştırılır ve store yalnız delta yazar. */
 async function captureBacklogPlanActualSnapshot(id, runtime, overrides) {
   const active = runtime || cacheForUser(id);
-  if (!active || !active.asasOrders) return null;
+  if (!active || !active.loadedAt || !Array.isArray(active.asasOrders)) return null;
   const effective = overrides || effectiveOverridesForUser(id);
   const orders = ordersForTarget(active, 'backlog', effective);
   const antrepo = antrepoForTarget(active, 'backlog');
@@ -8237,8 +8237,9 @@ async function ensureBacklogPlanActualArchive(id) {
   let archive = await backlogPlanActual.readArchive(id);
   if (archive && archive.base) return archive;
   const runtime = cacheForUser(id);
-  if (!runtime.asasOrders) await ensureDataLoaded(id);
-  await captureBacklogPlanActualSnapshot(id, cacheForUser(id), effectiveOverridesForUser(id));
+  if (!runtime.loadedAt) await ensureDataLoaded(id);
+  const hydrated = cacheForUser(id);
+  if (hydrated.loadedAt) await captureBacklogPlanActualSnapshot(id, hydrated, effectiveOverridesForUser(id));
   archive = await backlogPlanActual.readArchive(id);
   return archive;
 }
