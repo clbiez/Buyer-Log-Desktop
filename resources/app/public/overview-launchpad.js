@@ -64,7 +64,7 @@
   if(typeof document==='undefined')return {STORAGE_KEY,DEFAULT_CLOCKS,CLOCKS,greetingKey,greeting,normalizeSelection,clockParts};
 
   const lang=()=>(document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';
-  const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[ch]));
+  const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function store(){return window.BLStorage||null;}
   function loadSelection(){try{const raw=store()?.getItem(STORAGE_KEY);return raw==null?DEFAULT_CLOCKS.slice():normalizeSelection(JSON.parse(raw));}catch(_){return DEFAULT_CLOCKS.slice();}}
   function saveSelection(value){try{store()?.setItem(STORAGE_KEY,JSON.stringify(normalizeSelection(value)));}catch(_){}}
