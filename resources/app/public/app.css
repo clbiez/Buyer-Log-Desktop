@@ -5177,11 +5177,12 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartFilterList{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px 10px;max-height:180px;overflow:auto;padding:2px;}
 .backlogChartFilterList label{display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink);font-size:10.5px;cursor:pointer;}
 .backlogChartFilterList label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.backlogChartCanvas{width:100%;overflow-x:auto;border-top:1px solid var(--line);padding-top:8px;outline:none;overscroll-behavior:contain;}
+.backlogChartCanvas{width:100%;overflow:hidden;border-top:1px solid var(--line);padding-top:8px;outline:none;overscroll-behavior:contain;}
 .backlogChartCanvas:focus-visible{box-shadow:inset 0 0 0 1px var(--acc);}
-.backlogChartViewport{position:relative;min-width:760px;cursor:crosshair;touch-action:pan-y;}
+.backlogChartViewport{position:relative;width:100%;min-width:0;overflow:hidden;cursor:crosshair;touch-action:pan-y;}
 .backlogChartViewport.is-grabbing{cursor:grabbing;user-select:none;}
-.backlogChartSvg{display:block;width:100%;height:auto;will-change:transform;transform:translate3d(0,0,0);}
+.backlogChartSvg{display:block;width:100%;height:auto;overflow:visible;}
+.backlogChartPanLayer{will-change:transform;transform:translate3d(0,0,0);transform-box:view-box;transform-origin:0 0;}
 .backlogChartBg{fill:var(--card);}
 .backlogChartPriceAxis{fill:var(--card2);opacity:.44;}
 .backlogChartGrid{stroke:var(--line);stroke-width:1;}
@@ -5192,6 +5193,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartTodayText{fill:var(--acc);font:700 10px var(--font,system-ui,sans-serif);}
 .backlogChartAverageLine{stroke:var(--muted);stroke-width:1.25;stroke-dasharray:8 5;opacity:.8;}
 .backlogChartAverageText{fill:var(--muted);font:700 10px var(--font,system-ui,sans-serif);}
+.backlogChartSubtotalLine{stroke:var(--acc);stroke-width:1.8;stroke-dasharray:10 6;opacity:.9;}
 .backlogChartCrosshair{position:absolute;inset:0;pointer-events:none;z-index:3;}
 .backlogChartCrosshairV,.backlogChartCrosshairH{position:absolute;display:block;background:color-mix(in srgb,var(--muted) 66%,transparent);pointer-events:none;}
 .backlogChartCrosshairV{width:1px;}
