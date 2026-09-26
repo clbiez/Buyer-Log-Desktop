@@ -167,6 +167,7 @@
 <link rel="stylesheet" href="copilot.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="outlook-mail.css?v=__BL_ASSET_VERSION__&rev=7160">
 <link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=2">
+<link rel="stylesheet" href="overview-radar.css?v=__BL_ASSET_VERSION__&rev=1">
 </head>
 <body data-active-tab="overview">
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
@@ -496,7 +497,7 @@
       </div>
     </div>
     <div id="ovDashboardGrid" class="ovDashboardGrid">
-    <section id="ovLaunchpad" data-overview-widget="launchpad" class="ovLaunchpad" aria-label="Bugün" data-i18n-aria-label-tr="Bugün" data-i18n-aria-label-en="Today"></section>
+    <section id="ovLaunchpad" data-overview-widget="launchpad" class="ovLaunchpad" aria-label="Dünya Saatleri" data-i18n-aria-label-tr="Dünya Saatleri" data-i18n-aria-label-en="World Clocks"></section>
     <section id="ovPriorityReminder" data-overview-widget="notes" class="ovPriorityReminder" aria-live="polite" style="display:none">
         <div class="ovPriorityHeader">
           <div>
@@ -620,6 +621,13 @@
       <div id="ovDetailGrid" class="ovDetailGrid">
         <div class="ovDetailWidget" data-overview-detail-widget="productionFocus">
           <div id="cpAssistant"></div>
+        </div>
+        <div class="cardBox ovDetailWidget" data-overview-detail-widget="priorityRadar">
+          <div class="ovDetailHeader">
+            <p class="cardTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="CP Öncelik Radarı" data-i18n-en="CP Priority Radar">CP Öncelik Radarı</span></p>
+            <button type="button" class="ovDetailCollapseBtn" data-ov-detail-collapse="priorityRadar" aria-expanded="true" title="Daralt"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
+          </div>
+          <div class="ovDetailWidgetBody"><div id="ovPriorityRadar" class="ovRadarHost" aria-live="polite"></div></div>
         </div>
         <div class="ovDetailWidget" data-overview-detail-widget="attention">
           <div id="cpAssistantAttention"></div>
@@ -1211,7 +1219,8 @@
 <script src="collection-status-catalog.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-summary.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-dashboard.js?v=__BL_ASSET_VERSION__"></script>
-<script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="overview-radar-charts.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_SCRIPTS_START');</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_START');</script>
 <script src="plm-colour-utils.js?v=__BL_ASSET_VERSION__&rev=2"></script>

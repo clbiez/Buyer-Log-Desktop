@@ -6,10 +6,10 @@
   const WIDGETS=Object.freeze(['launchpad','notes','collectionSummary','oab','intake','overviewContent']);
   /* Sonradan eklenen üst modüller kayıtlı eski düzenlerde de en üstte başlar. */
   const LEADING_WIDGETS=Object.freeze(['launchpad']);
-  const DETAIL_WIDGETS=Object.freeze(['productionFocus','attention','dataCoverage','country','subManufacturer','season','buyingGroup']);
+  const DETAIL_WIDGETS=Object.freeze(['productionFocus','priorityRadar','attention','dataCoverage','country','subManufacturer','season','buyingGroup']);
   const WIDTHS=Object.freeze(['full','threeQuarter','twoThirds','half','third','quarter']);
   const DETAIL_DEFAULT_WIDTHS=Object.freeze({
-    productionFocus:'full', attention:'full', dataCoverage:'full',
+    productionFocus:'full', priorityRadar:'full', attention:'full', dataCoverage:'full',
     country:'half', subManufacturer:'half', season:'full', buyingGroup:'full',
   });
   const DEFAULT=Object.freeze({

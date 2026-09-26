@@ -850,6 +850,15 @@ function actionPriorityCode(value){
   }
   return '';
 }
+function renderOverviewPriorityRadar(rows){
+  const codes=actionPriorityCodes();
+  const labels=Object.fromEntries(codes.map(code=>[code,priorityDisplay(code)]));
+  const points=(Array.isArray(rows)?rows:[]).map(row=>({
+    priority:actionPriorityCode(row&&row['Priority']),
+    units:toNum(row&&row['Order Quantity'])||0,
+  }));
+  window.BLOverviewRadar?.renderPriority?.(points,{codes,labels,lang:appLang});
+}
 function actionPriorityCodes(){
   const OD=window.BLOrderDecisionEngine;
   return OD&&Array.isArray(OD.ACTION_PRIORITIES)?OD.ACTION_PRIORITIES.slice():[];
@@ -9108,13 +9117,14 @@ function overviewLayoutStored(){
 function overviewLayoutSave(value){try{BLStorage.setItem(OVERVIEW_LAYOUT_KEY,JSON.stringify(window.BLOverviewLayout.normalize(value)));}catch(_){} }
 function overviewLayoutWidgetLabel(key,scope='page'){
   const labels={
-    launchpad:appLang==='en'?'Today · Quick access':'Bugün · Hızlı erişim',
+    launchpad:appLang==='en'?'World Clocks':'Dünya Saatleri',
     notes:appLang==='en'?'CP Notes':'CP Notları',
     collectionSummary:appLang==='en'?'Collection Summary':'Koleksiyon Özeti',
     oab:'OAB',
     intake:'INTAKE',
     overviewContent:appLang==='en'?'Overview details':'Genel Bakış detayları',
     productionFocus:appLang==='en'?"Today's Production Focus":'Bugünün Üretim Odağı',
+    priorityRadar:appLang==='en'?'CP Priority Radar':'CP Öncelik Radarı',
     attention:appLang==='en'?'Orders Requiring Attention':'Aksiyon Gereken Siparişler',
     dataCoverage:appLang==='en'?'Data Coverage':'Veri Kapsamı',
     country:appLang==='en'?'Active Orders by Country':'Ülke Bazlı Aktif Siparişler',
@@ -9131,7 +9141,7 @@ function overviewLayoutRenderControls(widget,state,scope='page'){
   if(!overviewLayoutEditing)return;
   const key=scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget;
   const bucket=overviewLayoutBucket(state,scope),widths=window.BLOverviewLayout.widths;
-  const canCollapse=scope==='page'||['country','subManufacturer','season','buyingGroup'].includes(key);
+  const canCollapse=scope==='page'||['priorityRadar','country','subManufacturer','season','buyingGroup'].includes(key);
   const collapseControl=canCollapse?`<button type="button" data-layout-collapse>${escapeHtml(bucket.collapsed[key]?(appLang==='en'?'Expand':'Aç'):(appLang==='en'?'Collapse':'Kapat'))}</button>`:'';
   const control=document.createElement('div');control.className='ovWidgetEditControls';control.innerHTML=`<span>${escapeHtml(overviewLayoutWidgetLabel(key,scope))}</span><button type="button" data-layout-move="-1" title="${escapeHtml(appLang==='en'?'Move up':'Yukarı taşı')}">↑</button><button type="button" data-layout-move="1" title="${escapeHtml(appLang==='en'?'Move down':'Aşağı taşı')}">↓</button><select data-layout-width aria-label="${escapeHtml(appLang==='en'?'Widget width':'Widget genişliği')}">${widths.map(width=>`<option value="${width}"${bucket.widths[key]===width?' selected':''}>${escapeHtml(({full:appLang==='en'?'Full width':'Tam genişlik',threeQuarter:'¾',twoThirds:'⅔',half:'½',third:'⅓',quarter:'¼'})[width]||width)}</option>`).join('')}</select>${collapseControl}<button type="button" data-layout-remove title="${escapeHtml(appLang==='en'?'Hide module':'Modülü gizle')}">×</button>`;
   widget.prepend(control);
@@ -9541,6 +9551,7 @@ function renderOverviewNow(){
   const orderRowsF = ovFilteredOrderRows();
   renderOverviewPriorityReminder(cpRows);
   if(!state.cp){
+    renderOverviewPriorityRadar([]);
     const mode=overviewCpLoadState==='error'?'error':'loading';
     renderOverviewCpDependencyState(mode,overviewCpLoadError);
     // Overview kabuğunu bloklamadan CP projection'ı arka planda hazırla.
@@ -9564,6 +9575,7 @@ function renderOverviewNow(){
   }
   if(state.cp){
     if(window.BLCpAssistant?.computeDecisionsForRows)syncUnifiedPrioritiesForTable('cp');
+    renderOverviewPriorityRadar(cpRows);
     fillMiniTable('tblCountry', groupCount(cpRows,'Country'));
     fillMiniTable('tblLicense', groupCount(cpRows,'Sub-Manufacturer'));
     bindMiniDrill('tblCountry', v=>{ clearCpQuickFilters(); setSelectValue('cpFCountry', v); });
