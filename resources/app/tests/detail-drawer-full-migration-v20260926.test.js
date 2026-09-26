@@ -7,9 +7,25 @@ const ROOT=path.join(__dirname,'..');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
 const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
 
-test('Collection Analytics detayları ortak sağ çekmeceyi kullanır',()=>{assert.match(APP,/storageKey:'collection\\.analytics\\.detail'/);});
-test('Price & Supplier Analysis detayları ortak sağ çekmeceyi kullanır',()=>{assert.match(APP,/storageKey:'priceSupplier\\.'/);assert.match(APP,/source:'price-supplier'/);});
-test('Backlog pivot ve CP Orders raporları ortak sağ çekmeceyi kullanır',()=>{const hits=APP.match(/storageKey:'backlog\\.report\\.detail'/g)||[];assert.ok(hits.length>=2);});
-test('Uyarı satır detayları ortak sağ çekmeceyi kullanır',()=>{assert.match(APP,/storageKey:'warning\\.detail'/);});
-test('Ortak çekmece görselli Excel export yapar',()=>{assert.match(DRAWER,/prepareForExcel/);assert.match(DRAWER,/moveAndSizeWithCells:true/);assert.match(DRAWER,/seçili sütunlar Excel/);});
-test('Collection modelKod kimliği görsel eşleştirmesinde desteklenir',()=>{assert.match(DRAWER,/modelKod/);assert.match(DRAWER,/helper\\.sourceFor/);});
+test('Collection Analytics detayları ortak sağ çekmeceyi kullanır',()=>{
+  assert.ok(APP.includes("storageKey:'collection.analytics.detail'"));
+});
+test('Price & Supplier Analysis detayları ortak sağ çekmeceyi kullanır',()=>{
+  assert.ok(APP.includes("storageKey:'priceSupplier."));
+  assert.ok(APP.includes("source:'price-supplier'"));
+});
+test('Backlog pivot ve CP Orders raporları ortak sağ çekmeceyi kullanır',()=>{
+  assert.ok(APP.split("storageKey:'backlog.report.detail'").length-1>=2);
+});
+test('Uyarı satır detayları ortak sağ çekmeceyi kullanır',()=>{
+  assert.ok(APP.includes("storageKey:'warning.detail'"));
+});
+test('Ortak çekmece görselli Excel export yapar',()=>{
+  assert.ok(DRAWER.includes('prepareForExcel'));
+  assert.ok(DRAWER.includes('moveAndSizeWithCells:true'));
+  assert.ok(DRAWER.includes('seçili sütunlar Excel'));
+});
+test('Collection modelKod kimliği görsel eşleştirmesinde desteklenir',()=>{
+  assert.ok(DRAWER.includes('modelKod'));
+  assert.ok(DRAWER.includes('helper.sourceFor'));
+});
