@@ -192,9 +192,17 @@
   function openOrders(title, orders) {
     const rows = (orders || []).map(order => order.sourceRow).filter(Boolean);
     if (!rows.length) { if (typeof showToast === 'function') showToast(L('Gösterilecek sipariş bulunamadı.', 'No orders to show.')); return; }
+    const headers = Object.keys(rows[0]).filter(key => !key.startsWith('_'));
+    if (window.BLDetailDrawer?.open) {
+      window.BLDetailDrawer.open({
+        storageKey:'backlog.analysis.detail',source:'backlog',title,
+        subtitle:`${int(rows.length)} ${L('satır', 'rows')}`,rows,
+        columns:headers.map(key=>({key,label:key})),images:true,fileName:`Backlog_${title}`
+      });
+      return;
+    }
     if (typeof openBacklogDetailShell !== 'function' || typeof renderBacklogDetailTable !== 'function') return;
     openBacklogDetailShell(`${title} · ${int(rows.length)} ${L('satır', 'rows')}`, L('Yükleniyor…', 'Loading…'));
-    const headers = Object.keys(rows[0]).filter(key => !key.startsWith('_'));
     renderBacklogDetailTable(rows, headers);
   }
   const ordersWhere = predicate => (state.model ? state.model.orders.filter(predicate) : []);

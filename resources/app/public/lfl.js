@@ -1070,7 +1070,16 @@
     lflRegisterModelAssetScope(modal.querySelector('.lflDetailAccessPanel'),filtered.map(row=>row&&row._source||row),title,renderLflDetailModal,imageIndex);
   }
   function openLflDetailModal(side){
-    const normalized=side==='compare'?'compare':'current',modal=ensureLflDetailModal();closeLflPortfolioModal();
+    const normalized=side==='compare'?'compare':'current';
+    if(window.BLDetailDrawer?.open){
+      const a=state.analysis||compute(),current=normalized==='current';
+      const rows=current?a.currentRows:a.compareRows,season=current?a.currentSeason:a.compareSeason,months=current?a.currentMonths:a.compareMonths;
+      const title=current?(isEn()?'Selected Portfolio Detail':'Seçili Portföy Detayı'):(isEn()?'Compared Portfolio Detail':'Kıyaslanan Portföy Detayı');
+      const columns=detailColumns().map(col=>({key:col.key,label:columnLabel(col),value:row=>col.display?col.display(row):columnRawValue(col,row),exportWidth:col.exportWidth||col.weight}));
+      window.BLDetailDrawer.open({storageKey:'lfl.'+normalized+'.detail',source:'lfl',title,subtitle:[season,monthSelectionLabel(months)].filter(Boolean).join(' · '),rows,columns,images:true,fileName:'LFL_'+title});
+      return;
+    }
+    const modal=ensureLflDetailModal();closeLflPortfolioModal();
     if(lflDetailModalState?.side!==normalized){closeLflColumnPanel();window.BLTableFramework?.closeFilter?.();modal.querySelector('.lflCpTableTools')?.remove();}lflDetailModalState={side:normalized};renderLflDetailModal();modal.hidden=false;document.body.classList.add('lflPortfolioModalOpen');requestAnimationFrame(()=>modal.querySelector('.lflPortfolioModalClose')?.focus());
   }
   function updatePortfolioAccessButtons(a){
@@ -1112,8 +1121,13 @@
     tbody.innerHTML=rows.length?rows.map(row=>`<tr>${imgCell(row)}${columns.map(col=>{const raw=columnRawValue(col,row),display=col.display?col.display(row):(col.type==='date'?dateTR(raw):(raw==null||raw===''?'—':raw));const linked=window.BLDetailLinks?.cellHtml?.({column:col.key,label:columnLabel(col),value:raw,displayValue:display,row,plmId:row.plmId});return `<td class="${col.type==='number'?'num':''}">${linked==null?esc(display):linked}</td>`;}).join('')}</tr>`).join(''):`<tr><td class="empty" colspan="${columns.length+(showImages?1:0)}">${esc(isEn()?'No portfolio detail was found.':'Portföy detayı bulunamadı.')}</td></tr>`;
   }
   function openLflPortfolioModal({title,currentRows=[],previousRows=[],currentSeason,compareSeason}){
-    closeLflDetailModal();const modal=ensureLflPortfolioModal(),rows=[...(currentRows||[]).map(row=>({...row,_lflPeriod:currentSeason})),...(previousRows||[]).map(row=>({...row,_lflPeriod:compareSeason}))],summary=`${currentSeason}: ${integer(currentRows.length)} ${isEn()?'rows':'satır'} · ${integer(quantityTotal(currentRows))} ${isEn()?'units':'adet'}   |   ${compareSeason}: ${integer(previousRows.length)} ${isEn()?'rows':'satır'} · ${integer(quantityTotal(previousRows))} ${isEn()?'units':'adet'}`;
-    lflPortfolioModalState={title,rows,summary};renderLflPortfolioModal();modal.hidden=false;document.body.classList.add('lflPortfolioModalOpen');requestAnimationFrame(()=>modal.querySelector('.lflPortfolioModalClose')?.focus());
+    const rows=[...(currentRows||[]).map(row=>({...row,_lflPeriod:currentSeason})),...(previousRows||[]).map(row=>({...row,_lflPeriod:compareSeason}))],summary=`${currentSeason}: ${integer(currentRows.length)} ${isEn()?'rows':'satır'} · ${integer(quantityTotal(currentRows))} ${isEn()?'units':'adet'}   |   ${compareSeason}: ${integer(previousRows.length)} ${isEn()?'rows':'satır'} · ${integer(quantityTotal(previousRows))} ${isEn()?'units':'adet'}`;
+    if(window.BLDetailDrawer?.open){
+      const columns=portfolioModalColumns().map(col=>({key:col.key,label:columnLabel(col),value:row=>col.display?col.display(row):columnRawValue(col,row),exportWidth:col.exportWidth||col.weight}));
+      window.BLDetailDrawer.open({storageKey:'lfl.portfolio.detail',source:'lfl',title,subtitle:summary,rows,columns,images:true,fileName:'LFL_Portfolio_'+title});
+      return;
+    }
+    closeLflDetailModal();const modal=ensureLflPortfolioModal();lflPortfolioModalState={title,rows,summary};renderLflPortfolioModal();modal.hidden=false;document.body.classList.add('lflPortfolioModalOpen');requestAnimationFrame(()=>modal.querySelector('.lflPortfolioModalClose')?.focus());
   }
   function ensureCpTableTools(tableId,tableKey,rerender){
     const table=$(tableId),card=table?.closest('.lflCard');if(!card)return;

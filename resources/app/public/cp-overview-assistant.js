@@ -619,7 +619,7 @@
     if (excludedBtn) excludedBtn.onclick = event => { event.stopPropagation(); openAttentionExcluded(); };
     container.querySelectorAll('[data-cpa-order]').forEach(el => el.onclick = event => {
       if (event.target.closest('button,input,select,textarea,a')) return;
-      openInCp(el.dataset.cpaOrder);
+      openAttentionDetail(el.dataset.cpaOrderKey);
     });
     container.querySelectorAll('[data-cpa-open-checklist]').forEach(el => el.onclick = () => openChecklist(el.dataset.cpaOpenChecklist));
     const settings = container.querySelector('[data-cpa-settings]');
@@ -973,6 +973,22 @@
   }
 
   /* Drill-down mevcut CP ekranını kullanır; ikinci bir liste kurulmaz. */
+  function openAttentionDetail(orderKey) {
+    const item = state.model && state.model.orders ? state.model.orders.find(row => row.orderKey === orderKey) : null;
+    if (!item || !item.sourceRow || !window.BLDetailDrawer?.open) {
+      if (item && item.orderCode) openInCp(item.orderCode);
+      return;
+    }
+    const columns = attentionCpColumns().map(column => ({ key: column.key, label: column.label || column.key }));
+    window.BLDetailDrawer.open({
+      storageKey:'cp.attention.detail',source:'cp',
+      title:`CP · ${item.orderCode || L('Sipariş Detayı','Order Detail')}`,
+      subtitle:[item.modelName,item.colourCode,item.dims && item.dims.manufacturer].filter(Boolean).join(' · '),
+      rows:[item.sourceRow],columns,images:true,fileName:`CP_${item.orderCode || 'Detail'}`,
+      actions:[{label:L('CP’de Aç','Open in CP'),run:()=>openInCp(item.orderCode)}]
+    });
+  }
+
   function openInCp(orderCode) {
     if (!orderCode) return;
     try {
