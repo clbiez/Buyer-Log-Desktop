@@ -28,3 +28,13 @@
 @media(max-width:1180px){.globalFlowFilters{grid-template-columns:repeat(3,minmax(130px,1fr))}.globalFlowHead{align-items:flex-start}.globalFlowControls{justify-content:flex-start}}
 @media(max-width:760px){.globalFlowHead{display:grid}.globalFlowFilters{grid-template-columns:repeat(2,minmax(120px,1fr))}.gfFilterSearch{grid-column:1/-1}.globalFlowCanvasWrap{height:420px}.gfKpi{min-width:72px;padding:5px 6px}.globalFlowLegend{display:none}}
 @media(max-width:520px){.globalFlowFilters{grid-template-columns:1fr}.gfFilterSearch{grid-column:1}.globalFlowCanvasWrap{height:380px}.globalFlowControls{display:grid;grid-template-columns:1fr 1fr}.gfCompactField{min-width:0}.gfCompactField select{width:100%;min-width:0}.gfSegment button{flex:1}}
+
+
+/* Accurate-map loading + interactive route/node layer (v2). */
+.globalFlowLoadingOverlay{position:absolute;inset:0;z-index:12;display:grid;place-items:center;background:color-mix(in srgb,var(--card2) 84%,transparent);backdrop-filter:blur(2px);transition:opacity .16s ease}
+.globalFlowLoadingOverlay[hidden]{display:none!important}
+.gfWorkingCard{min-width:210px;display:grid;justify-items:center;gap:4px;padding:18px 22px;border:1px solid var(--line);border-radius:var(--r);background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:var(--shadow-1)}
+.gfWorkingCard canvas{width:64px;height:64px;color:var(--acc-ink)}
+.gfWorkingCard b{font-size:11px}.gfWorkingCard span{font-size:9.5px;color:var(--muted)}
+.globalFlowTooltip{width:230px;line-height:1.35}
+.globalFlowCanvasWrap{cursor:crosshair}.globalFlowCanvasWrap:active{cursor:grabbing}
