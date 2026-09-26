@@ -1,4 +1,5 @@
 'use strict';
+// Final regression gate marker for the complete Planlanan & Gerçekleşen feature head.
 
 const test=require('node:test');
 const assert=require('node:assert/strict');
