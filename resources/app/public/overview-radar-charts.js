@@ -13,8 +13,29 @@
     {id:'tblBuyingGroup',mode:'multi',key:'buyingGroup'},
   ];
   const SERIES_STYLES=['a','b','c','d','e','f','g'];
+  const FILTER_STORAGE_KEY='buyerlog.overview.radarFilters.v1';
 
   function cleanText(value){return String(value==null?'':value).replace(/\s+/g,' ').trim();}
+  function filterStore(){
+    if(typeof window==='undefined')return null;
+    try{return window.BLStorage||window.localStorage||null;}catch(_){return null;}
+  }
+  function readFilterMap(){
+    try{const raw=filterStore()?.getItem(FILTER_STORAGE_KEY);const parsed=raw?JSON.parse(raw):{};return parsed&&typeof parsed==='object'?parsed:{};}catch(_){return {};}
+  }
+  function readFilterState(key){
+    const saved=readFilterMap()[String(key||'')]||{};
+    return {
+      axesHidden:Array.isArray(saved.axesHidden)?saved.axesHidden.map(String):[],
+      seriesHidden:Array.isArray(saved.seriesHidden)?saved.seriesHidden.map(String):[],
+    };
+  }
+  function saveFilterState(key,next){
+    if(!key)return;
+    const all=readFilterMap();
+    all[String(key)]={axesHidden:Array.isArray(next.axesHidden)?next.axesHidden:[],seriesHidden:Array.isArray(next.seriesHidden)?next.seriesHidden:[]};
+    try{filterStore()?.setItem(FILTER_STORAGE_KEY,JSON.stringify(all));}catch(_){}
+  }
   function numberFromText(value){
     const text=cleanText(value);
     if(!text)return 0;
@@ -106,13 +127,40 @@
   function escapeHtml(value){return cleanText(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
   function renderRadar(host,config){
     if(!host)return;
-    const axes=(config.axes||[]).map(cleanText).filter(Boolean);
-    const series=normalizeSeries(config.series||[],config.normalize||'series');
+    const rawAxes=(config.axes||[]).map(cleanText).filter(Boolean);
+    const rawSeries=(Array.isArray(config.series)?config.series:[]).map(item=>({...item,values:(Array.isArray(item.values)?item.values:[]).map(v=>Math.max(0,Number(v)||0))}));
+    const filterKey=String(config.filterKey||'').trim();
+    const filterState=filterKey?readFilterState(filterKey):{axesHidden:[],seriesHidden:[]};
+    const axesHidden=new Set(filterState.axesHidden),seriesHidden=new Set(filterState.seriesHidden);
+    const axisIndexes=rawAxes.map((axis,index)=>({axis,index})).filter(item=>!axesHidden.has(item.axis)).map(item=>item.index);
+    const axes=axisIndexes.map(index=>rawAxes[index]);
+    const filteredSeries=rawSeries.filter(item=>!seriesHidden.has(cleanText(item.label))).map(item=>({...item,values:axisIndexes.map(index=>item.values[index]||0)}));
+    const series=normalizeSeries(filteredSeries,config.normalize||'series');
+    const l=(typeof document!=='undefined'&&(document.documentElement.lang||'tr').toLowerCase().startsWith('en'))?'en':'tr';
+    const filterCount=axisIndexes.length+'/'+rawAxes.length+(rawSeries.length>1?' · '+series.length+'/'+rawSeries.length:'');
+    const filterControls=filterKey?'<details class="ovRadarFilter"><summary>'+(l==='en'?'Filter':'Filtre')+' <span>'+escapeHtml(filterCount)+'</span></summary><div class="ovRadarFilterPanel">'
+      +(rawAxes.length>1?'<div class="ovRadarFilterGroup"><strong>'+(l==='en'?'Categories / axes':'Kategoriler / eksenler')+'</strong>'+rawAxes.map(axis=>'<label><input type="checkbox" data-radar-filter-axis="'+escapeHtml(axis)+'"'+(axesHidden.has(axis)?'':' checked')+'><span>'+escapeHtml(truncate(axis,30))+'</span></label>').join('')+'</div>':'')
+      +(rawSeries.length>1?'<div class="ovRadarFilterGroup"><strong>'+(l==='en'?'Series':'Seriler')+'</strong>'+rawSeries.map(item=>{const label=cleanText(item.label);return '<label><input type="checkbox" data-radar-filter-series="'+escapeHtml(label)+'"'+(seriesHidden.has(label)?'':' checked')+'><span>'+escapeHtml(truncate(label,30))+'</span></label>';}).join('')+'</div>':'')
+      +'<button type="button" class="tbtn" data-radar-filter-clear>'+(l==='en'?'Clear filter':'Filtreyi temizle')+'</button></div></details>':'';
+    const bindFilters=()=>{
+      if(!filterKey)return;
+      host.querySelectorAll('[data-radar-filter-axis]').forEach(input=>input.addEventListener('change',()=>{
+        const next=readFilterState(filterKey),hidden=new Set(next.axesHidden),value=String(input.dataset.radarFilterAxis||'');
+        if(input.checked)hidden.delete(value);else hidden.add(value);
+        next.axesHidden=[...hidden];saveFilterState(filterKey,next);renderRadar(host,config);
+      }));
+      host.querySelectorAll('[data-radar-filter-series]').forEach(input=>input.addEventListener('change',()=>{
+        const next=readFilterState(filterKey),hidden=new Set(next.seriesHidden),value=String(input.dataset.radarFilterSeries||'');
+        if(input.checked)hidden.delete(value);else hidden.add(value);
+        next.seriesHidden=[...hidden];saveFilterState(filterKey,next);renderRadar(host,config);
+      }));
+      host.querySelector('[data-radar-filter-clear]')?.addEventListener('click',()=>{saveFilterState(filterKey,{axesHidden:[],seriesHidden:[]});renderRadar(host,config);});
+    };
     if(axes.length<2||!series.length||!series.some(item=>item.values.some(v=>v>0))){
-      host.innerHTML='<div class="ovRadarEmpty">'+escapeHtml(config.emptyText||'No data')+'</div>';
-      return;
+      host.innerHTML='<div class="ovRadarEmpty">'+escapeHtml(config.emptyText||'No data')+'</div><div class="ovRadarSide">'+filterControls+'</div>';
+      bindFilters();return;
     }
-    const width=620,height=370,cx=310,cy=170,r=122,levels=4;
+    const width=760,height=400,cx=380,cy=186,r=118,levels=4;
     let svg='<svg class="ovRadarSvg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+escapeHtml(config.ariaLabel||'Radar chart')+'">';
     for(let level=1;level<=levels;level++){
       const lr=r*level/levels;
@@ -120,9 +168,9 @@
       svg+='<polygon class="ovRadarGrid" points="'+points+'"/>';
     }
     axes.forEach((axis,i)=>{
-      const edge=point(cx,cy,r,i,axes.length),label=point(cx,cy,r+34,i,axes.length);
+      const edge=point(cx,cy,r,i,axes.length),label=point(cx,cy,r+42,i,axes.length);
       const anchor=Math.abs(Math.cos(label.angle))<.28?'middle':Math.cos(label.angle)>0?'start':'end';
-      const row=config.axisRows&&Number.isInteger(config.axisRows[i])?config.axisRows[i]:null;
+      const originalIndex=axisIndexes[i],row=config.axisRows&&Number.isInteger(config.axisRows[originalIndex])?config.axisRows[originalIndex]:null;
       svg+='<line class="ovRadarAxis" x1="'+cx+'" y1="'+cy+'" x2="'+edge.x.toFixed(1)+'" y2="'+edge.y.toFixed(1)+'"/>';
       svg+='<text class="ovRadarAxisLabel'+(row!=null?' isClickable':'')+'" data-axis-index="'+i+'" x="'+label.x.toFixed(1)+'" y="'+label.y.toFixed(1)+'" text-anchor="'+anchor+'"><title>'+escapeHtml(axis)+'</title>'+escapeHtml(truncate(axis,18))+'</text>';
     });
@@ -141,15 +189,16 @@
       const totals=item.values.reduce((sum,value)=>sum+(Number(value)||0),0);
       return '<button type="button" class="ovRadarLegendItem'+(row!=null?' isClickable':'')+'" data-series-index="'+index+'"'+(row==null?' disabled':'')+'><span class="ovRadarLegendSwatch ovRadarLegendSwatch--'+(item.style||SERIES_STYLES[index%SERIES_STYLES.length])+'"></span><span>'+escapeHtml(truncate(item.label,28))+'</span><b>'+Number(totals).toLocaleString()+'</b></button>';
     }).join('');
-    host.innerHTML='<div class="ovRadarCanvas">'+svg+'</div><div class="ovRadarLegend">'+legend+'</div>';
+    host.innerHTML='<div class="ovRadarCanvas">'+svg+'</div><div class="ovRadarSide">'+filterControls+'<div class="ovRadarLegend">'+legend+'</div></div>';
     host.querySelectorAll('.ovRadarAxisLabel.isClickable').forEach(label=>label.addEventListener('click',()=>{
-      const index=Number(label.dataset.axisIndex),rowIndex=config.axisRows&&config.axisRows[index];
+      const index=Number(label.dataset.axisIndex),originalIndex=axisIndexes[index],rowIndex=config.axisRows&&config.axisRows[originalIndex];
       if(Number.isInteger(rowIndex))config.onRowClick?.(rowIndex);
     }));
     host.querySelectorAll('.ovRadarLegendItem.isClickable').forEach(button=>button.addEventListener('click',()=>{
       const item=series[Number(button.dataset.seriesIndex)];
       if(item&&Number.isInteger(item.rowIndex))config.onRowClick?.(item.rowIndex);
     }));
+    bindFilters();
   }
   function ensureHost(table,key){
     if(!table)return null;
@@ -166,6 +215,7 @@
     const host=ensureHost(table,def.key);if(!host)return;
     const en=(document.documentElement.lang||'tr').toLowerCase().startsWith('en');
     config.emptyText=en?'No data for the active filters.':'Aktif filtrelerde veri yok.';
+    config.filterKey='overview:'+def.key;
     config.ariaLabel=(table.closest('[data-overview-detail-widget]')?.querySelector('.cardTitle')?.textContent||def.key)+' radar';
     config.onRowClick=rowIndex=>{
       const row=matrix.rows.find(item=>item.rowIndex===rowIndex)?.element;
@@ -191,6 +241,7 @@
       normalize:'series',
       emptyText:en?'No priority data for the active filters.':'Aktif filtrelerde öncelik verisi yok.',
       ariaLabel:en?'CP priority radar chart':'CP öncelik radar diyagramı',
+      filterKey:'overview:priority',
     });
   }
   function bind(){
@@ -208,5 +259,5 @@
   if(typeof document!=='undefined'){
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
   }
-  return {numberFromText,normalizeSeries,prioritySummary,singleMetricConfig,multiMetricConfig,renderRadar,renderPriority,refreshAll};
+  return {FILTER_STORAGE_KEY,numberFromText,normalizeSeries,prioritySummary,singleMetricConfig,multiMetricConfig,renderRadar,renderPriority,refreshAll,readFilterState};
 });
