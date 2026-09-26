@@ -3,7 +3,7 @@
   else root.BLOverviewLayout=factory();
 })(typeof window!=='undefined'?window:globalThis,function(){
   'use strict';
-  const WIDGETS=Object.freeze(['launchpad','notes','collectionSummary','oab','intake','overviewContent']);
+  const WIDGETS=Object.freeze(['launchpad','globalFlowMap','notes','collectionSummary','oab','intake','overviewContent']);
   /* Sonradan eklenen üst modüller kayıtlı eski düzenlerde de en üstte başlar. */
   const LEADING_WIDGETS=Object.freeze(['launchpad']);
   const DETAIL_WIDGETS=Object.freeze(['productionFocus','priorityRadar','attention','dataCoverage','country','subManufacturer','season','buyingGroup']);
@@ -14,7 +14,7 @@
   });
   const DEFAULT=Object.freeze({
     order:WIDGETS.slice(), hidden:[],
-    widths:{launchpad:'full',notes:'full',collectionSummary:'full',oab:'full',intake:'full',overviewContent:'full'},
+    widths:{launchpad:'full',globalFlowMap:'full',notes:'full',collectionSummary:'full',oab:'full',intake:'full',overviewContent:'full'},
     heights:{},collapsed:{},
     details:{order:DETAIL_WIDGETS.slice(),hidden:[],widths:{...DETAIL_DEFAULT_WIDTHS},heights:{},collapsed:{}},
   });
@@ -34,6 +34,12 @@
   function normalize(value){
     const input=value&&typeof value==='object'?value:{};
     const page=normalizeBucket(input,WIDGETS,DEFAULT.widths);
+    /* Yeni Global Flow Map, kayıtlı eski düzenlerde kaybolmasın veya en alta düşmesin:\n       mevcut launchpad'in hemen arkasına bir kez yerleştirilir. Kullanıcı daha sonra\n       Edit Layout ile istediği yere taşıyabilir. */
+    const savedOrder=Array.isArray(input.order)?input.order:[];
+    if(savedOrder.length&&!savedOrder.includes('globalFlowMap')){
+      const current=page.order.indexOf('globalFlowMap');if(current>=0)page.order.splice(current,1);
+      const launch=page.order.indexOf('launchpad');page.order.splice(launch>=0?launch+1:0,0,'globalFlowMap');
+    }
     const details=normalizeBucket(input.details,DETAIL_WIDGETS,DETAIL_DEFAULT_WIDTHS);
     return {...page,details};
   }
