@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.140",
-  "commit_sha": "68692656830e37e4f97d01021f5e714eeaad59fc",
-  "release_notes": "Buyer Log 7.0.140: Backlog grafik navigasyonunda uzun hover listeleri kaydırılabilir hale getirildi ve Average çizgisi alt toplamların değil görünür veri noktalarının gerçek ortalamasını kullanacak şekilde düzeltildi. Tüm radar diyagramlarında sağ/sol etiket kırpılması giderildi ve her radara bağımsız filtreleme eklendi. Delivery Risk alanında KPI kartları ile risk radarı varsayılan 50/50 yan yana yerleşime alındı; KPI'lar 2 sıra x 3 kolon düzeninde gösteriliyor. Planlanan & Gerçekleşen Analizi karanlık tema tokenlarına bağlandı. Overview dünya saatlerine Dijital / Analog / Analog + Dijital görünüm seçimi ve tüm IANA saat dilimlerinden saat ekleme desteği eklendi; boşta görünen Workspace ready mesajı kaldırıldı."
+  "version": "7.0.141",
+  "commit_sha": "68e77fcba67bc0b03daca6091b2b99caa4f30e60",
+  "release_notes": "Buyer Log 7.0.141: Overview ekranına Global Flow Map eklendi. Harita CP, Orders, Backlog veya Combined veri kaynağını kullanabilir; Combined görünüm aynı siparişi Backlog > Orders > CP önceliğiyle tekilleştirir. 2D dünya haritası ve 3D küre görünümü, açık/koyu tema desteği, sürükleme, yakınlaştırma, tam ekran, KPI ve detay filtreleri bulunur. Üretimde, sevke hazır, yolda ve İstanbul/depo durumları görselleştirilir; Gemi, Uçak, Tır ve Gemi+Uçak akışları animasyonlu rota çizgileriyle gösterilir. Harita üzerindeki akışlara çift tıklayarak sipariş detay drawer'ı açılabilir. Backlog verisi mevcut yetki ve aktif filtreleri koruyan /api/backlog-export hattından alınır. Global Flow Map mevcut Overview Edit Layout sistemine tam genişlik, taşınabilir ve daraltılabilir modül olarak entegre edilmiştir."
 }
