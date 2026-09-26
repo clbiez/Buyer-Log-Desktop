@@ -49,11 +49,30 @@
 .ovClockToolbar{display:flex;justify-content:flex-end;align-items:center;gap:6px;}
 .ovClockManageBtn,.ovClockAddBtn,.ovClockRemove{display:inline-grid;place-items:center;min-height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);color:var(--ink2);border-radius:var(--bl-radius-control);cursor:pointer;font:600 var(--fs-xs)/1 var(--sans);}
 .ovClockManageBtn{grid-auto-flow:column;gap:6px;padding:0 9px;}
+.ovClockManageControls{display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
+.ovClockModeControl{display:grid;gap:3px;color:var(--muted);font-size:var(--fs-xs);}
+.ovClockModeControl select{min-width:150px;height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink);border-radius:var(--bl-radius-control);font:500 var(--fs-xs)/1 var(--sans);}
 .ovClockAddControls{display:flex;gap:6px;justify-content:flex-end;}
-.ovClockAddControls select{min-width:180px;height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink);border-radius:var(--bl-radius-control);font:500 var(--fs-xs)/1 var(--sans);}
+.ovClockAddControls select{min-width:250px;max-width:420px;height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink);border-radius:var(--bl-radius-control);font:500 var(--fs-xs)/1 var(--sans);}
 .ovClockAddBtn{padding:0 10px;}
-.ovClockGrid{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:8px;}
+.ovClockGrid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:8px;}
 .ovClockCard{position:relative;min-width:0;padding:12px 12px 10px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);border-radius:var(--bl-radius-control);}
+.ovClockReadout{display:grid;align-items:center;gap:10px;margin-top:8px;min-width:0;}
+.ovClockReadout.is-both{grid-template-columns:64px minmax(0,1fr);}
+.ovClockReadout.is-analog{grid-template-columns:64px minmax(0,1fr);}
+.ovClockReadout.is-digital{grid-template-columns:minmax(0,1fr);}
+.ovClockText{min-width:0;}
+.ovAnalogClock{position:relative;width:62px;height:62px;border:1px solid var(--bl-stroke-subtle);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--bl-surface-panel) 0 7%,transparent 8%),var(--bl-surface-panel);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bl-stroke-subtle) 35%,transparent);color:var(--muted);font:600 8px/1 var(--mono);}
+.ovAnalogDialMark{position:absolute;z-index:1;}
+.ovAnalogDialMark--12{top:4px;left:50%;transform:translateX(-50%);}
+.ovAnalogDialMark--3{right:4px;top:50%;transform:translateY(-50%);}
+.ovAnalogDialMark--6{bottom:4px;left:50%;transform:translateX(-50%);}
+.ovAnalogDialMark--9{left:4px;top:50%;transform:translateY(-50%);}
+.ovAnalogHand{position:absolute;left:50%;bottom:50%;display:block;transform-origin:50% 100%;border-radius:99px;z-index:2;}
+.ovAnalogHand--hour{width:3px;height:17px;background:var(--ink);}
+.ovAnalogHand--minute{width:2px;height:23px;background:var(--ink2);}
+.ovAnalogHand--second{width:1px;height:25px;background:var(--acc);}
+.ovAnalogPin{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--acc);transform:translate(-50%,-50%);z-index:3;}
 .ovClockCountry{display:flex;align-items:center;gap:7px;min-width:0;color:var(--ink2);font-size:var(--fs-xs);font-weight:650;}
 .ovClockCode{display:inline-grid;place-items:center;min-width:26px;height:20px;padding:0 5px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font:700 10px/1 var(--mono);}
 .ovClockCountry span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -62,6 +81,6 @@
 .ovClockRemove{position:absolute;top:5px;right:5px;width:24px;min-height:24px;border-color:transparent;background:transparent;font-size:16px;line-height:1;}
 .ovClockRemove:hover{background:var(--card2);color:var(--red);}
 .ovClockEmpty{padding:22px;border:1px dashed var(--bl-stroke-subtle);color:var(--muted);text-align:center;font-size:var(--fs-sm);}
-@media(max-width:1500px){.ovClockGrid{grid-template-columns:repeat(3,minmax(130px,1fr));}.ovRadarHost{grid-template-columns:1fr;}.ovRadarLegend{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}}
+@media(max-width:1500px){.ovClockGrid{grid-template-columns:repeat(3,minmax(160px,1fr));}.ovRadarHost{grid-template-columns:1fr;}.ovRadarLegend{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}}
 @media(max-width:900px){.ovClockGrid{grid-template-columns:repeat(2,minmax(130px,1fr));}}
-@media(max-width:560px){.ovClockGrid{grid-template-columns:1fr;}.ovClockAddControls{flex-wrap:wrap;}.ovClockAddControls select{min-width:0;flex:1 1 170px;}}
+@media(max-width:560px){.ovClockGrid{grid-template-columns:1fr;}.ovClockManageControls{align-items:stretch}.ovClockAddControls{flex-wrap:wrap;}.ovClockAddControls select,.ovClockModeControl select{min-width:0;flex:1 1 170px;width:100%;}}
