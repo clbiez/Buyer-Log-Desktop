@@ -5,7 +5,6 @@
 'use strict';
 
 const ISTANBUL=Object.freeze({name:'İstanbul',lat:41.0082,lon:28.9784});
-const DUBAI=Object.freeze({name:'Dubai',lat:25.2048,lon:55.2708});
 const STORAGE_KEY='buyerlog.overview.globalFlow.v1';
 const SOURCE_PRIORITY=Object.freeze({cp:1,orders:2,backlog:3});
 const FIELD_CANDIDATES=Object.freeze({
@@ -201,7 +200,7 @@ function uniqueValues(records,key){
 }
 
 if(typeof document==='undefined'){
-  return {ISTANBUL,DUBAI,FIELD_CANDIDATES,clean,norm,toNumber,pick,countryCoordinate,detectMode,classifyState,riskLevel,normalizeRecord,recordKey,dedupeRecords,aggregateRecords,uniqueValues};
+  return {ISTANBUL,FIELD_CANDIDATES,clean,norm,toNumber,pick,countryCoordinate,detectMode,classifyState,riskLevel,normalizeRecord,recordKey,dedupeRecords,aggregateRecords,uniqueValues};
 }
 
 const $=id=>document.getElementById(id);
@@ -212,7 +211,7 @@ const nf=()=>new Intl.NumberFormat(isEn()?'en-GB':'tr-TR',{maximumFractionDigits
 const state={
   source:'backlog',view:'2d',records:[],filtered:[],groups:[],loading:false,error:'',warning:'',
   filters:{search:'',season:'',mag:'',buyer:'',buyingGroup:'',manufacturer:'',country:'',mode:'',status:''},
-  riskOnly:false,transitOnly:false,measure:'qty',collapsed:false,fullscreen:false,filterOpen:false,
+  phaseFilter:'',riskOnly:false,transitOnly:false,measure:'qty',collapsed:false,fullscreen:false,filterOpen:false,
   panX:0,panY:0,zoom2d:1,rotLon:18,rotLat:-12,zoom3d:1,drag:null,hover:null,hitTargets:[],
   frame:0,lastFrame:0,lastBacklogRows:null,lastBacklogSignature:'',observers:[]
 };
@@ -224,12 +223,13 @@ function loadPrefs(){
     if(raw.view==='2d'||raw.view==='3d')state.view=raw.view;
     if(raw.measure==='qty'||raw.measure==='orders')state.measure=raw.measure;
     if(raw.filters&&typeof raw.filters==='object')Object.keys(state.filters).forEach(key=>{if(typeof raw.filters[key]==='string')state.filters[key]=raw.filters[key];});
+    state.phaseFilter=['production','ready','transit','arrived'].includes(raw.phaseFilter)?raw.phaseFilter:'';
     state.riskOnly=Boolean(raw.riskOnly);state.transitOnly=Boolean(raw.transitOnly);state.collapsed=Boolean(raw.collapsed);
   }catch(_){}
 }
 function savePrefs(){
   try{(window.BLStorage||localStorage).setItem(STORAGE_KEY,JSON.stringify({
-    source:state.source,view:state.view,measure:state.measure,filters:state.filters,riskOnly:state.riskOnly,transitOnly:state.transitOnly,collapsed:state.collapsed
+    source:state.source,view:state.view,measure:state.measure,filters:state.filters,phaseFilter:state.phaseFilter,riskOnly:state.riskOnly,transitOnly:state.transitOnly,collapsed:state.collapsed
   }));}catch(_){}
 }
 
@@ -303,6 +303,7 @@ function filterMatch(rec){
   for(const key of ['season','mag','buyer','buyingGroup','manufacturer','country','mode','status']){
     if(f[key]&&clean(rec[key])!==f[key])return false;
   }
+  if(state.phaseFilter&&rec.state!==state.phaseFilter)return false;
   if(state.riskOnly&&rec.risk==='none')return false;
   if(state.transitOnly&&rec.state!=='transit')return false;
   return true;
@@ -341,7 +342,7 @@ function renderControls(){
   $('globalFlowFullscreenBtn')?.addEventListener('click',toggleFullscreen);
 }
 function activeFilterCount(){
-  return Object.values(state.filters).filter(Boolean).length+(state.riskOnly?1:0)+(state.transitOnly?1:0);
+  return Object.values(state.filters).filter(Boolean).length+(state.phaseFilter?1:0)+(state.riskOnly?1:0)+(state.transitOnly?1:0);
 }
 function filterOptions(key,label){
   const values=key==='mode'
@@ -371,7 +372,7 @@ function renderFilters(){
     savePrefs();applyFilters();
   }));
   panel.querySelector('[data-gf-clear]')?.addEventListener('click',()=>{
-    Object.keys(state.filters).forEach(key=>state.filters[key]='');state.riskOnly=false;state.transitOnly=false;savePrefs();applyFilters();renderControls();
+    Object.keys(state.filters).forEach(key=>state.filters[key]='');state.phaseFilter='';state.riskOnly=false;state.transitOnly=false;savePrefs();applyFilters();renderControls();
   });
 }
 function renderKpis(){
@@ -386,11 +387,11 @@ function renderKpis(){
   const cards=[
     ['production',stateLabel('production')],['ready',stateLabel('ready')],['transit',stateLabel('transit')],['arrived',stateLabel('arrived')],['risk',L('Riskli','At risk')]
   ];
-  host.innerHTML=cards.map(([key,label])=>'<button type="button" class="gfKpi gfKpi--'+key+'" data-gf-kpi="'+key+'"><span>'+esc(label)+'</span><b>'+esc(nf().format(val(key)||0))+'</b></button>').join('');
+  host.innerHTML=cards.map(([key,label])=>'<button type="button" class="gfKpi gfKpi--'+key+(state.phaseFilter===key||key==='risk'&&state.riskOnly?' active':'')+'" data-gf-kpi="'+key+'"><span>'+esc(label)+'</span><b>'+esc(nf().format(val(key)||0))+'</b></button>').join('');
   host.querySelectorAll('[data-gf-kpi]').forEach(button=>button.addEventListener('click',()=>{
     const key=button.dataset.gfKpi;
-    if(key==='risk'){state.riskOnly=!state.riskOnly;}
-    else {state.transitOnly=key==='transit';if(key!=='transit')state.filters.status='';}
+    if(key==='risk')state.riskOnly=!state.riskOnly;
+    else state.phaseFilter=state.phaseFilter===key?'':key;
     savePrefs();applyFilters();renderControls();
   }));
 }
@@ -494,7 +495,8 @@ function drawTarget(ctx,q,p){
 function modeColor(mode,p){return mode==='air'?p.purple:mode==='sea'?p.cyan:mode==='road'?p.orange:mode==='sea-air'?p.acc:p.muted;}
 function routePoints(group,w,h){
   const start=group.origin,end=ISTANBUL;if(!start)return [];
-  const legs=group.mode==='sea-air'?[[start,DUBAI,'sea'],[DUBAI,end,'air']]:[[start,end,group.mode]];
+  const transfer=group.mode==='sea-air'?geoInterpolate(start,end,.55):null;
+  const legs=group.mode==='sea-air'?[[start,transfer,'sea'],[transfer,end,'air']]:[[start,end,group.mode]];
   const out=[];
   legs.forEach((leg,legIndex)=>{
     const a=leg[0],b=leg[1],mode=leg[2],steps=state.view==='3d'?34:28;
@@ -532,6 +534,8 @@ function drawRoutes(ctx,w,h,p,now){
       const idx=Math.min(points.length-1,Math.floor(((phase+(Math.abs(hash(group.key))%100)/100)%1)*points.length));
       const vehicle=points[idx];drawVehicle(ctx,vehicle,vehicle.mode||group.mode,color);
       const mid=points[Math.floor(points.length/2)];state.hitTargets.push({x:mid.x,y:mid.y,group,r:Math.max(12,width*3)});
+      state.hitTargets.push({x:vehicle.x,y:vehicle.y,group,r:18});
+      points.forEach((point,index)=>{if(index%5===0)state.hitTargets.push({x:point.x,y:point.y,group,r:9});});
     }else{
       const loc=group.state==='arrived'?ISTANBUL:group.origin;if(!loc)return;
       const q=state.view==='3d'?project3d(loc,w,h,0):project2d(loc,w,h);if(!q||!q.visible)return;
@@ -651,7 +655,7 @@ function init(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
 return {
-  ISTANBUL,DUBAI,FIELD_CANDIDATES,clean,norm,toNumber,pick,countryCoordinate,detectMode,classifyState,riskLevel,
+  ISTANBUL,FIELD_CANDIDATES,clean,norm,toNumber,pick,countryCoordinate,detectMode,classifyState,riskLevel,
   normalizeRecord,recordKey,dedupeRecords,aggregateRecords,uniqueValues,refresh:()=>refresh(true),resetView
 };
 });
