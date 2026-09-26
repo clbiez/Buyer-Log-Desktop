@@ -49,6 +49,7 @@ test('Both radars have independent filters and keep side labels readable',()=>{
   assert.match(RADAR,/data-radar-filter-panel="pivot"/);
   assert.match(RADAR,/data-radar-filter-panel="risk"/);
   assert.match(RADAR,/const width=620,height=390/);
+  assert.match(CSS,/\.backlogRadarCard\{[^}]*overflow:visible/);
   assert.match(CSS,/\.backlogRadarBody\{[^}]*overflow:visible/);
   assert.match(CSS,/\.blRadarSvg\{[^}]*overflow:visible/);
   assert.match(CSS,/\.backlogRadarFilterList/);
