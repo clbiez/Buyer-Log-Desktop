@@ -62,7 +62,7 @@
 .ovClockReadout.is-analog{grid-template-columns:64px minmax(0,1fr);}
 .ovClockReadout.is-digital{grid-template-columns:minmax(0,1fr);}
 .ovClockText{min-width:0;}
-.ovAnalogClock{position:relative;width:62px;height:62px;border:1px solid var(--bl-stroke-subtle);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--bl-surface-panel) 0 7%,transparent 8%),var(--bl-surface-panel);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bl-stroke-subtle) 35%,transparent);color:var(--muted);font:600 8px/1 var(--mono);}
+.ovAnalogClock{position:relative;width:62px;height:62px;border:1px solid var(--bl-stroke-subtle);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--bl-surface-panel) 0 7%,transparent 8%),var(--bl-surface-panel);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bl-stroke-subtle) 35%,transparent);color:var(--muted);font:600 10px/1 var(--mono);}
 .ovAnalogDialMark{position:absolute;z-index:1;}
 .ovAnalogDialMark--12{top:4px;left:50%;transform:translateX(-50%);}
 .ovAnalogDialMark--3{right:4px;top:50%;transform:translateY(-50%);}
