@@ -435,6 +435,9 @@ app.patch('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksi
       },
     });
     if (result.changed) {
+      // Yerel kayıt bitti: aynı bilgisayardaki diğer sekmeler/kullanıcılar paylaşım
+      // yayınını (ağ klasörü) beklemeden hemen görür.
+      liveEvents.notifyChange('collection', requestClientId(req), { ownerId, rowPatches: result.rowPatches, revision: result.revision });
       result.replication = !(await afterSharedCollectionSave(ownerId))
         ? await publishCollectionReplica(ownerId)
         : { ok:true, published:false, reason:'shared-save' };
@@ -442,7 +445,6 @@ app.patch('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksi
       void publishCollectionWorkspaceImages(ownerId).catch(error => logRuntimeFailure('collectionImagePublishOnRowSave', error));
       void sharedRevisionStore.update('collection',{actorId:req.currentUser.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
       userAccess.appendAudit(req.currentUser, 'COLLECTION_ROW_SAVE', ownerId, { applied: result.applied.length, conflicts: result.conflicts.length, revision: result.revision });
-      liveEvents.notifyChange('collection', requestClientId(req), { ownerId, rowPatches: result.rowPatches, revision: result.revision });
     }
     res.json({
       ok: true,

@@ -125,7 +125,7 @@ function newerRevisionMeta(current, incoming) {
    silindi işaretiyle birleşimden düşer. Birleşim değişmeli ve tekrarlanabilir
    olduğu için cihazlar yeniden yayına gerek kalmadan aynı sonuca yakınsar. */
 const DOCUMENT_LIST_MERGE = Object.freeze({
-  'store:quotations.json': { requests: {} },
+  'store:quotations.json': { requests: { tombstones: 'deletedRequests' }, deletedRequests: { tombstoneMap: true } },
   'store:email-groups.json': { records: { tombstones: 'deletedRecords' }, deletedRecords: { tombstoneMap: true } },
 });
 function mergeTombstoneMaps(a, b) {
@@ -162,6 +162,19 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
     const previousRevision = Number(fields[key]) || 0;
     if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
       next[key] = newerRevisionMeta(next[key], value);
+      fields[key] = Math.max(previousRevision, revision);
+      continue;
+    }
+    /* Uzak olayda liste alanı HER ZAMAN kimlikle birleşir. Cihaz sayaçları
+       bağımsız ilerlediği için "yerelde değişti mi" sorusu revizyonla her zaman
+       doğru cevaplanamaz; yerel kaydı hiç görmemiş cihazın yüksek tabanlı olayı
+       listeyi bütün olarak yazıp yeni kaydı sessizce siliyordu. Birleşim
+       değişmeli ve tekrarlanabilir olduğundan her durumda güvenlidir; silme,
+       silme iziyle taşınır. (Yerel yazımda recordKey yoktur: liste aynen yazılır.) */
+    const listRule = recordKey ? listMergeRule(recordKey, key) : null;
+    if (listRule && next[key] !== undefined) {
+      if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
+      else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {});
       fields[key] = Math.max(previousRevision, revision);
       continue;
     }

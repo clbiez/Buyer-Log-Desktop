@@ -1880,6 +1880,7 @@ function switchTab(tab){
   if(previousTab==='cp'||previousTab==='orders') saveCoreAutoFilterState();
   if(typeof closeAllColumnPanels==='function') closeAllColumnPanels();
   document.body.dataset.activeTab = tab;
+  if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
   flushDeferredRenderForTab(tab);
   syncTableToolbarActions(tab);
   syncNavExcelButtonLabel(tab);
@@ -12313,7 +12314,9 @@ function endStartupStage(token,name,detail={}){
 }
 function renderStartupActiveModule(){
   const activeTab=currentActiveTab();
-  if(activeTab==='overview')renderOverview();
+  // Modül sekmesi (?module=…) Genel Bakış'ı çizmez: onun CP bağımlılığı ve
+  // projeksiyonu her yeni sekmede boşuna yükleniyordu. İlk girişte yüklenir.
+  if(activeTab==='overview'&&!window.BL_BOOT_MODULE)renderOverview();
   return activeTab;
 }
 async function loadFromServer(force, targets){
@@ -13877,6 +13880,7 @@ async function refreshSyncStatusBadge(){
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
   const requestedModule=new URLSearchParams(location.search).get('module');
+  if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
   await loadInitialBuyerLogData();
   // Workspace ile acilan yeni sekmelerde yetki/kullanici baglami yuklenmeden
   // modulu degistirmek Overview'da kalmis, fakat basligi hedef modul olmus bir
@@ -13890,7 +13894,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
     schedulePostUiStartupTasks();
     signalStartupReady();
-    if(state.overviewDeferred)void ensureOverviewLoaded();
+    if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
     const idle=window.requestIdleCallback||((fn)=>setTimeout(()=>fn({timeRemaining:()=>8}),40));
     idle(()=>{
       void loadPlmStyleLinks({rerender:false});
@@ -19503,6 +19507,10 @@ function kolRowEqual(a,b){
     const left=a[key],right=b[key];
     if(left===right)continue;
     if(left==null&&right==null)continue;
+    // Kayıt öncesi normalleştirme iç nesneleri (pricing, pricingSent,
+    // variantOverrides…) yeniden oluşturur: referans değil içerik karşılaştırılır,
+    // yoksa dokunulmamış bütün satırlar değişmiş sayılıp gönderiliyordu.
+    if(left&&right&&typeof left==='object'&&typeof right==='object'&&kolValueEqual(left,right))continue;
     return false;
   }
   return true;
@@ -32070,14 +32078,20 @@ function refreshSharedMasterClient(area){
   }
   return Promise.resolve();
 }
+/* v20260926 — TEK CANLI BAĞLANTI, TÜM SEKMELER.
+   Her sekme kendi SSE bağlantısını açık tuttuğunda aynı bilgisayardaki sekmeler
+   (tarayıcı veya masaüstü çalışma alanı sekmeleri) HTTP/1.1'in kaynak başına 6
+   bağlantı sınırını dolduruyordu: kayıt istekleri kuyrukta bekliyor, canlı
+   güncelleme gelmiyor, 6. sekmeden sonra sayfa hiç yüklenmiyordu. Artık Web
+   Locks ile seçilen TEK sekme bağlantıyı açar ve olayları BroadcastChannel ile
+   diğer sekmelere dağıtır; o sekme kapanınca kilit bir sonrakine geçer.
+   Bağlantı kalıcı kapanırsa (401, sunucu yeniden başlatma) geri çekilmeli
+   yeniden kurulur; boşlukta kaçırılmış olabilecek değişiklikler için açık veri
+   hafif yoldan yeniden okunur. API yoksa eski davranış: sekme kendi bağlantısı. */
 function initLiveSync(){
-  if(typeof EventSource==='undefined'||!window.BL_CLIENT_ID)return;
+  if(!window.BL_CLIENT_ID)return;
   const url=`/api/live-events?clientId=${encodeURIComponent(window.BL_CLIENT_ID)}`;
-  const source=new EventSource(url);
-  source.onopen=()=>{liveSyncConnected=true;};
-  source.onmessage=event=>{
-    let payload=null;
-    try{payload=JSON.parse(event.data);}catch(_){return;}
+  const handle=payload=>{
     if(!payload||!payload.area)return;
     liveSyncConnected=true;
     if(payload.area==='iam'){window.dispatchEvent(new CustomEvent('bl:iam-revision-available'));return;}
@@ -32108,8 +32122,58 @@ function initLiveSync(){
       void initKolWorkspaces({permissionChanged:true}).catch(()=>{});
     }
   };
-  // Bağlantı hatasında EventSource kendiliğinden yeniden dener; ekstra kod gerekmez.
-  source.onerror=()=>{liveSyncConnected=false;};
+  const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('buyerlog-live-sync'):null;
+  const locks=typeof navigator!=='undefined'&&navigator.locks&&typeof navigator.locks.request==='function'?navigator.locks:null;
+  const shared=Boolean(channel&&locks);
+  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false;
+  const announce=message=>{if(shared)channel.postMessage(message);};
+  function connect(){
+    if(typeof EventSource==='undefined')return;
+    source=new EventSource(url);
+    source.onopen=()=>{
+      liveSyncConnected=true;retryMs=1000;announce({type:'status',connected:true});
+      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();}
+    };
+    source.onmessage=event=>{
+      let payload=null;
+      try{payload=JSON.parse(event.data);}catch(_){return;}
+      if(!payload||!payload.area)return;
+      announce({type:'event',payload});
+      handle(payload);
+    };
+    // Geçici hatada EventSource kendiliğinden yeniden dener; kalıcı kapanmada
+    // (readyState CLOSED, ör. 401) denemez: yeniden kurulur.
+    source.onerror=()=>{
+      liveSyncConnected=false;gap=true;announce({type:'status',connected:false});
+      if(source&&source.readyState===2){
+        clearTimeout(retryTimer);
+        retryTimer=setTimeout(connect,retryMs);
+        retryMs=Math.min(retryMs*2,30000);
+      }
+    };
+  }
+  if(!shared){connect();return;}
+  channel.onmessage=event=>{
+    const message=event&&event.data||{};
+    if(message.type==='event'&&message.payload)handle(message.payload);
+    else if(message.type==='status'){followed=true;liveSyncConnected=Boolean(message.connected);}
+    else if(message.type==='resync')liveSyncResyncAfterGap();
+    else if(message.type==='status?'&&source)announce({type:'status',connected:liveSyncConnected});
+  };
+  announce({type:'status?'});
+  // Kilit sekme açık kaldığı sürece tutulur (dönen söz hiç çözülmez).
+  locks.request('buyerlog-live-sync-leader',()=>new Promise(()=>{
+    // Önceki liderden devralındıysa arada kaçırılmış olay olabilir.
+    if(followed)gap=true;
+    connect();
+  }));
+}
+/* Canlı bağlantı boşluğundan sonra açık veriler hafif yoldan yeniden okunur
+   (tam kaynak yenilemesi değil). */
+function liveSyncResyncAfterGap(){
+  if(state.cp||state.orders)void loadFromServer(false).catch(()=>{});
+  if(kolWorkspaceOwnerId)void kolHandleRemoteChange(kolWorkspaceOwnerId,{mode:'reload'});
+  void window.BL_QUOTATIONS?.refresh?.();
 }
 initLiveSync();
 window.addEventListener('bl-shared-revision',event=>{

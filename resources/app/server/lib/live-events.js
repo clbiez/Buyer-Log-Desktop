@@ -58,7 +58,10 @@
 // yaması taşıyor ve uygulanması ölçülen 1 ms sürüyor, dolayısıyla bu kadar
 // beklemenin bedeli var, faydası yok: kullanıcı "canlı görmek" istiyor.
 // Kısa bir pencere, art arda kaydedilen hücreleri hâlâ tek olayda birleştirir.
-const THROTTLE_MS = 800;
+// v20260926: 800 → 300 ms. İstemci yazmaları zaten 350–500 ms biriktirir; 800 ms
+// aynı bilgisayardaki diğer sekmede gecikmeyi gereksiz uzatıyordu. Aynı turdaki
+// ardışık yazımlar yine tek olayda birleşir.
+const THROTTLE_MS = 300;
 
 const clients = new Set(); // { res, id, req }
 const pendingByArea = new Map(); // key -> { timer, originClientId, area, meta, rowPatches, mode }

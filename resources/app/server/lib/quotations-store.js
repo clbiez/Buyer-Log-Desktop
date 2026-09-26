@@ -25,7 +25,20 @@ function uniqueIds(values) {
   return [...new Set((Array.isArray(values) ? values : []).map(cleanId).filter(Boolean))].slice(0, 500);
 }
 function now() { return new Date().toISOString(); }
-function defaultStore() { return { schemaVersion: 1, requests: [], _revision: 0, _updatedAt: null }; }
+function defaultStore() { return { schemaVersion: 1, requests: [], deletedRequests: {}, _revision: 0, _updatedAt: null }; }
+/* Silme izi: saklama süresi dolan kayıt kaldırılınca kimliği zamanıyla tutulur.
+   Cihazlar arası liste birleşimi kimlikle yapıldığından, izi olmayan silme eski
+   bir uzak kopyadan geri gelirdi. */
+const MAX_DELETED_REQUESTS = 2000;
+function normalizeDeletedRequests(value) {
+  const src = cleanObject(value);
+  return Object.fromEntries(Object.entries(src)
+    .map(([id, at]) => [cleanId(id), clean(at, 80)]).filter(([id, at]) => id && at)
+    .sort((a, b) => String(b[1]).localeCompare(String(a[1]))).slice(0, MAX_DELETED_REQUESTS));
+}
+function withoutDeletedRequests(requests, deleted) {
+  return requests.filter(request => !(deleted[request.id] && String(deleted[request.id]) >= String(request.updatedAt || '')));
+}
 
 function normalizeManufacturer(value) {
   const src = cleanObject(value);
@@ -78,7 +91,8 @@ function normalizeStore(raw) {
     ...base,
     ...cleanObject(raw),
     schemaVersion: 1,
-    requests: (Array.isArray(raw && raw.requests) ? raw.requests : []).map(item => normalizeRequest(item)),
+    deletedRequests: normalizeDeletedRequests(raw && raw.deletedRequests),
+    requests: withoutDeletedRequests((Array.isArray(raw && raw.requests) ? raw.requests : []).map(item => normalizeRequest(item)), normalizeDeletedRequests(raw && raw.deletedRequests)),
     _revision: Math.max(0, Number(raw && raw._revision) || 0),
   };
 }
@@ -102,6 +116,7 @@ function saveStore(store) {
   const saved = {
     schemaVersion: 1,
     requests: (Array.isArray(store && store.requests) ? store.requests : []).map(item => normalizeRequest(item)),
+    deletedRequests: normalizeDeletedRequests(store && store.deletedRequests !== undefined ? store.deletedRequests : current.deletedRequests),
     _revision: current._revision + 1,
     _updatedAt: now(),
   };
@@ -187,6 +202,9 @@ function cleanupExpired(at = Date.now()) {
   const expired = new Set(store.requests.filter(request => isRetentionExpired(request, at)).map(request => request.id));
   if (!expired.size) return { removed: 0 };
   store.requests = store.requests.filter(request => !expired.has(request.id));
+  const stamp = now();
+  store.deletedRequests = normalizeDeletedRequests(store.deletedRequests);
+  for (const id of expired) store.deletedRequests[id] = stamp;
   saveStore(store);
   if (fs.existsSync(VISIBILITY_DIR)) {
     for (const name of fs.readdirSync(VISIBILITY_DIR)) {

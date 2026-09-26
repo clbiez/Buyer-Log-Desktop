@@ -61,3 +61,32 @@ test('E-posta kaydı silmesi eşzamanlı eklemeyle birleşir ve silinen kayıt g
     assert.deepEqual((await devs[name].listConflicts()).filter(item => !item.resolved), [], `${name}: çakışma yok`);
   }
 });
+
+test('Çakışma algılanmasa bile (uzak sayaç ileride) uzak liste yerel yeni kaydı silmez', async t => {
+  // 5 kullanıcılı paralel senaryoda bulundu: cihaz sayaçları bağımsız ilerlediği
+  // için yerel kaydı hiç görmemiş cihazın yüksek tabanlı olayı "sıralı düzenleme"
+  // sanılıyor, liste bütün olarak yazılıyor ve yerel yeni fiyat talebi sessizce
+  // kayboluyordu (çakışma kaydı da açılmıyordu).
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-list-race-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const db = createLocalDb(path.join(dir, 'L.db'));
+  await db.queuePatch({ id: 'store:quotations.json', patch: { requests: [{ id: 'q0', updatedAt: '1' }] } });
+  await db.queuePatch({ id: 'store:quotations.json', patch: { requests: [{ id: 'q0', updatedAt: '1' }, { id: 'q-yerel', updatedAt: '3' }] } });
+  await db.applyDelta({ id: 'store:quotations.json', patch: { requests: [{ id: 'q0', updatedAt: '1' }, { id: 'q-uzak', updatedAt: '2' }] }, revision: 41, baseRevision: 40, deviceId: 'X', eventId: 'x1', localSequence: 1 });
+  const state = await db.read();
+  assert.deepEqual(state.records['store:quotations.json'].requests.map(item => item.id).sort(), ['q-uzak', 'q-yerel', 'q0']);
+  assert.equal(state.conflicts.length, 0);
+});
+
+test('Saklama süresi dolan fiyat talebi silme izi bırakır; eski uzak kopya onu geri getirmez', async t => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-list-tomb-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const db = createLocalDb(path.join(dir, 'L.db'));
+  await db.queuePatch({ id: 'store:quotations.json', patch: { requests: [{ id: 'q-yeni', updatedAt: '5' }], deletedRequests: { 'q-eski': '9' } } });
+  await db.applyDelta({ id: 'store:quotations.json', patch: { requests: [{ id: 'q-eski', updatedAt: '1' }, { id: 'q-yeni', updatedAt: '5' }] }, revision: 50, baseRevision: 49, deviceId: 'Y', eventId: 'y1', localSequence: 1 });
+  const record = (await db.read()).records['store:quotations.json'];
+  assert.deepEqual(record.requests.map(item => item.id), ['q-yeni']);
+  const store = require('../server/lib/quotations-store');
+  assert.match(fs.readFileSync(require.resolve('../server/lib/quotations-store'), 'utf8'), /deletedRequests\[request\.id\] = stamp|deletedRequests\[id\] = stamp/);
+  assert.equal(typeof store.cleanupExpired, 'function');
+});
