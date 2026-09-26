@@ -450,7 +450,7 @@ function compareSnapshots(startRows, endRows, options = {}) {
     let plannedQty = 0, realizedPlannedQty = 0;
     if (a) {
       const planDay = dayOrdinal(a.planExFactory);
-      if (planDay != null && (fromDay == null || planDay >= fromDay) && (toDay == null || planDay <= toDay)) {
+      if (planDay != null && fromDay != null && toDay != null && planDay >= fromDay && planDay <= toDay) {
         plannedQty = Math.max(0, number(a.remainingQty));
         realizedPlannedQty = Math.min(plannedQty, loadedQty);
         summary.plannedQty = round(summary.plannedQty + plannedQty);
