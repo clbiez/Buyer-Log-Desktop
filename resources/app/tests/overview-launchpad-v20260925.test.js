@@ -28,16 +28,20 @@ test('Varsayılan dünya saatleri Türkiye, Bangladeş, Hindistan, Çin ve Mıs�
   assert.equal(zones.EG, 'Africa/Cairo');
 });
 
-test('Saat seçimi bilinmeyen ve tekrar eden ülkeleri temizler', () => {
+test('Saat seçimi bilinmeyen ve tekrar eden ülkeleri temizler; tüm IANA saat dilimlerini kabul eder', () => {
   assert.deepEqual(launchpad.normalizeSelection(['TR', 'TR', 'XX', 'IN']), ['TR', 'IN']);
+  assert.deepEqual(launchpad.normalizeSelection(['TZ:Europe/Paris','TZ:Europe/Paris']), ['TZ:Europe/Paris']);
+  assert.ok(launchpad.supportedTimeZones().includes('Europe/Paris'));
   assert.deepEqual(launchpad.normalizeSelection(null), launchpad.DEFAULT_CLOCKS);
   assert.deepEqual(launchpad.normalizeSelection([]), []);
 });
 
-test('IANA saat dilimi canlı saat hesaplamasını deterministik yapar', () => {
+test('IANA saat dilimi canlı saat ve analog ibre açılarını deterministik yapar', () => {
   const at = new Date('2026-09-26T12:00:00Z');
-  assert.equal(launchpad.clockParts(at, 'Europe/Istanbul', 'tr').time, '15:00:00');
+  const ist=launchpad.clockParts(at, 'Europe/Istanbul', 'tr');
+  assert.equal(ist.time, '15:00:00');
   assert.equal(launchpad.clockParts(at, 'Asia/Dhaka', 'en').time, '18:00:00');
+  assert.deepEqual(launchpad.clockAngles(ist), {hour:90,minute:0,second:0});
 });
 
 test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekleyip çıkarabilir', () => {
@@ -46,7 +50,13 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /buyerlog\.overview\.worldClocks\.v1/);
   assert.match(SOURCE, /data-clock-add/);
   assert.match(SOURCE, /data-clock-remove/);
+  assert.match(SOURCE, /data-clock-display-select/);
+  assert.match(SOURCE, /Analog \+ dijital/);
+  assert.match(SOURCE, /Intl\.supportedValuesOf\('timeZone'\)/);
+  assert.match(SOURCE, /'TZ:'\+zone/);
   assert.match(SOURCE, /window\.BLStorage/);
+  assert.match(CSS, /\.ovAnalogClock/);
+  assert.doesNotMatch(SOURCE, /Workspace ready|Çalışma alanı hazır/);
   assert.doesNotMatch(SOURCE, /data-launch-tab/);
   assert.doesNotMatch(SOURCE, /rankTabs/);
   assert.match(CSS, /\.ovClockGrid/);
