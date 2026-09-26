@@ -12,7 +12,9 @@ test('Overview default layout opens with Today launchpad and keeps Collection Su
   const value = layout.normalize(null);
   assert.deepEqual(value.order.slice(0, 5), ['launchpad', 'notes', 'collectionSummary', 'oab', 'intake']);
   assert.equal(value.hidden.includes('collectionSummary'), false);
-  assert.equal(value.widths.intake, 'full');\n  assert.equal(value.details.order[1], 'priorityRadar');\n  assert.equal(value.details.widths.priorityRadar, 'full');
+  assert.equal(value.widths.intake, 'full');
+  assert.equal(value.details.order[1], 'priorityRadar');
+  assert.equal(value.details.widths.priorityRadar, 'full');
 });
 
 test('Overview layout drops unknown widgets and clamps widths', () => {
@@ -45,5 +47,7 @@ test('Overview edit mode and Collection Summary configurable scope keep dedicate
   assert.match(APP, /OVERVIEW_LAYOUT_KEY/);
   assert.match(APP, /draggable/);
   assert.match(APP, /scopeColumn,scopeValues/);
-  assert.match(INDEX, /data-overview-widget="intake"/);\n  assert.match(INDEX, /data-overview-detail-widget="priorityRadar"/);\n  assert.ok(layout.detailWidgets.includes('priorityRadar'));
+  assert.match(INDEX, /data-overview-widget="intake"/);
+  assert.match(INDEX, /data-overview-detail-widget="priorityRadar"/);
+  assert.ok(layout.detailWidgets.includes('priorityRadar'));
 });
