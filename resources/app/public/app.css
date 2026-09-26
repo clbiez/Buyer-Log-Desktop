@@ -340,7 +340,7 @@ footer{padding:10px var(--sp-5) 26px;font-size:var(--fs-xs);color:var(--muted);}
 .kpiSep{align-self:stretch;width:1px;background:var(--line);margin:2px 4px;}
 .kpiGroupLabel{font-size:10px;color:var(--muted);letter-spacing:.5px;margin-right:2px;}
 /* v7.36 — hızlı filtre başlıklarını düzenleme düğmesi ve kesilen çip sayacı. */
-.kpiGroupEdit{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:1px dashed var(--line2);border-radius:var(--r-sm);background:transparent;color:var(--muted);cursor:pointer;}
+.kpiGroupEdit{order:-1000;flex:0 0 auto;margin:0 4px 0 0;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border:1px dashed var(--line2);border-radius:var(--r-sm);background:transparent;color:var(--muted);cursor:pointer;}
 .kpiGroupEdit:hover{border-style:solid;border-color:var(--acc);color:var(--ink);}
 .kpiGroupMore{font-size:10.5px;color:var(--muted);align-self:center;padding:0 2px;cursor:default;}
 .quickFilterEditorCard{width:min(94vw,900px);max-height:min(86vh,900px);padding:0;overflow:hidden;}
