@@ -14,6 +14,10 @@ const FIELD_CANDIDATES=Object.freeze({
   colour:['Renk','Colour','Color'],
   season:['Sezon','Season'],
   mag:['MAG','Merch','Merchandiser','Merch Group','Merch Grubu'],
+  mmyg:['MMYG','Age Group','AgeGroup'],
+  line:['Line','Product Line'],
+  category:['Kategori','Category'],
+  license:['Lisans','License'],
   buyer:['Buyer','Alıcı'],
   buyingGroup:['Buyer Grup (TR)','Buyer Group','Buying Group','Buyer Grup','Buying Grup'],
   manufacturer:['Üretici','Manufacturer','Supplier','Alt Üretici','Sub-Manufacturer','Vendor'],
@@ -152,6 +156,10 @@ function normalizeRecord(row,source,index){
     colour:clean(pick(row,FIELD_CANDIDATES.colour)),
     season:clean(pick(row,FIELD_CANDIDATES.season)),
     mag:clean(pick(row,FIELD_CANDIDATES.mag)),
+    mmyg:clean(pick(row,FIELD_CANDIDATES.mmyg)),
+    line:clean(pick(row,FIELD_CANDIDATES.line)),
+    category:clean(pick(row,FIELD_CANDIDATES.category)),
+    license:clean(pick(row,FIELD_CANDIDATES.license)),
     buyer:clean(pick(row,FIELD_CANDIDATES.buyer)),
     buyingGroup:clean(pick(row,FIELD_CANDIDATES.buyingGroup)),
     manufacturer:clean(pick(row,FIELD_CANDIDATES.manufacturer)),
@@ -210,7 +218,7 @@ const esc=value=>clean(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>
 const nf=()=>new Intl.NumberFormat(isEn()?'en-GB':'tr-TR',{maximumFractionDigits:0});
 const state={
   source:'backlog',view:'2d',records:[],filtered:[],groups:[],loading:false,error:'',warning:'',
-  filters:{search:'',season:'',mag:'',buyer:'',buyingGroup:'',manufacturer:'',country:'',mode:'',status:''},
+  filters:{search:'',season:'',mag:'',mmyg:'',buyer:'',buyingGroup:'',manufacturer:'',country:'',line:'',category:'',license:'',mode:'',status:''},
   phaseFilter:'',riskOnly:false,transitOnly:false,measure:'qty',collapsed:false,fullscreen:false,filterOpen:false,
   panX:0,panY:0,zoom2d:1,rotLon:18,rotLat:-12,zoom3d:1,drag:null,hover:null,hitTargets:[],
   frame:0,lastFrame:0,lastBacklogRows:null,lastBacklogSignature:'',observers:[]
@@ -286,6 +294,7 @@ async function refresh(force){
   try{
     const rows=await sourceRows(state.source,Boolean(force));
     state.records=state.source==='combined'?dedupeRecords(rows):rows;
+    hydrateFilterValidity();
     const unknown=state.records.filter(r=>!r.origin&&r.state!=='arrived').length;
     if(unknown)state.warning=L(unknown+' kayıtta üretim ülkesi haritada eşleşmedi.',unknown+' records have an origin country that could not be mapped.');
     if(!state.records.length)state.warning=L('Seçili kaynakta haritada gösterilebilir satır yok. Kaynak ekranın verisinin yüklenmiş olduğundan emin olun.','No mappable rows are available in the selected source. Make sure the source screen has loaded its data.');
@@ -300,13 +309,19 @@ function filterMatch(rec){
     const hay=norm([rec.orderCode,rec.model,rec.colourCode,rec.buyer,rec.manufacturer,rec.status,rec.country].join(' '));
     if(!hay.includes(norm(f.search)))return false;
   }
-  for(const key of ['season','mag','buyer','buyingGroup','manufacturer','country','mode','status']){
+  for(const key of ['season','mag','mmyg','buyer','buyingGroup','manufacturer','country','line','category','license','mode','status']){
     if(f[key]&&clean(rec[key])!==f[key])return false;
   }
   if(state.phaseFilter&&rec.state!==state.phaseFilter)return false;
   if(state.riskOnly&&rec.risk==='none')return false;
   if(state.transitOnly&&rec.state!=='transit')return false;
   return true;
+}
+function hydrateFilterValidity(){
+  for(const key of ['season','mag','mmyg','buyer','buyingGroup','manufacturer','country','line','category','license','mode','status']){
+    if(state.filters[key]&&!uniqueValues(state.records,key).includes(state.filters[key]))state.filters[key]='';
+  }
+  savePrefs();
 }
 function applyFilters(renderPanel=true){
   state.filtered=state.records.filter(filterMatch);
@@ -358,9 +373,10 @@ function renderFilters(){
   if(!state.filterOpen)return;
   panel.innerHTML=
     '<label class="gfFilterField gfFilterSearch"><span>'+esc(L('Ara','Search'))+'</span><input type="search" data-gf-search value="'+esc(state.filters.search)+'" placeholder="'+esc(L('Sipariş, model, üretici…','Order, model, supplier…'))+'"></label>'+
-    filterOptions('season',L('Sezon','Season'))+filterOptions('mag','MAG')+filterOptions('buyer','Buyer')+
+    filterOptions('season',L('Sezon','Season'))+filterOptions('mag','MAG')+filterOptions('mmyg','MMYG')+filterOptions('buyer','Buyer')+
     filterOptions('buyingGroup','Buyer Group')+filterOptions('manufacturer',L('Üretici','Supplier'))+
-    filterOptions('country',L('Ülke','Country'))+filterOptions('mode',L('Taşıma','Transport'))+filterOptions('status',L('Statü','Status'))+
+    filterOptions('country',L('Ülke','Country'))+filterOptions('line','Line')+filterOptions('category',L('Kategori','Category'))+filterOptions('license',L('Lisans','License'))+
+    filterOptions('mode',L('Taşıma','Transport'))+filterOptions('status',L('Statü','Status'))+
     '<label class="gfCheck"><input type="checkbox" data-gf-flag="transitOnly"'+(state.transitOnly?' checked':'')+'><span>'+esc(L('Yalnız yoldakiler','In transit only'))+'</span></label>'+
     '<label class="gfCheck"><input type="checkbox" data-gf-flag="riskOnly"'+(state.riskOnly?' checked':'')+'><span>'+esc(L('Yalnız riskliler','Risk only'))+'</span></label>'+
     '<button type="button" class="tbtn" data-gf-clear>'+esc(L('Filtreleri temizle','Clear filters'))+'</button>';
