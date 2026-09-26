@@ -76,6 +76,17 @@ test('unchanged backlog rows are not returned', () => {
   assert.deepEqual(result.changes, []);
 });
 
+test('missed planned load is visible even when source fields did not otherwise change', () => {
+  const snap = Engine.projectSnapshot([order()], [row()], {capturedAt:'2026-09-28T07:00:00.000Z'});
+  const result = Engine.compareSnapshots(snap.rows, snap.rows, {
+    from:'2026-09-28T07:00:00.000Z', to:'2026-10-12T07:00:00.000Z', activity:[],
+  });
+  assert.equal(result.summary.plannedQty, 100);
+  assert.equal(result.summary.planGapQty, 100);
+  assert.equal(result.changes.length, 1);
+  assert.ok(result.changes[0].fields.some(field => field.label === 'Planlanan yükleme gerçekleşmesi'));
+});
+
 test('refresh history preserves repeated and reverted changes even when net value returns', () => {
   const details = [
     {field:'Ex-Factory',before:'05.10.2026',after:'07.10.2026'},
