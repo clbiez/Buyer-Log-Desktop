@@ -76,3 +76,9 @@ test('Overview Global Flow widget, assets, 2D/3D canvas and detail drawer are wi
   assert.ok(LAYOUT.widgets.includes('globalFlowMap'));
   assert.equal(LAYOUT.defaults().widths.globalFlowMap,'full');
 });
+
+
+test('Global Flow widget explicitly overrides the global section hidden rule',()=>{
+  assert.match(CSS,/\.globalFlowMapWidget\{display:block;/);
+  assert.match(INDEX,/data-overview-widget="globalFlowMap"/);
+});
