@@ -1,4 +1,5 @@
 'use strict';
+// Final PR test-gate marker: keeps the latest feature head covered by CI.
 
 const test=require('node:test');
 const assert=require('node:assert/strict');
