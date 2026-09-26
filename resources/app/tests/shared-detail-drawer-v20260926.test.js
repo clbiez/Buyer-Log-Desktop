@@ -31,3 +31,8 @@ test('CP Attention satırı navigasyon yerine ortak detay çekmecesini açar',()
   assert.match(CP,/storageKey:'cp\.attention\.detail'/);
   assert.match(CP,/openAttentionDetail\(el\.dataset\.cpaOrderKey\)/);
 });
+test('Ortak drawer Excel export görünür sütunları kullanır',()=>{
+  const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
+  assert.match(DRAWER,/const columns=currentColumns\\(\\),rows=filteredRows\\(\\)/);
+  assert.match(DRAWER,/moveAndSizeWithCells:true/);
+});

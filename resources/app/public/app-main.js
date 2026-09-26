@@ -11364,6 +11364,13 @@ function warningDetailValue(value){
   return String(value);
 }
 function showWarningDetailTable(detail){
+  if(window.BLDetailDrawer?.open){
+    const sharedRows=Array.isArray(detail&&detail.rows)?detail.rows:[];
+    const sharedColumns=Array.isArray(detail&&detail.columns)&&detail.columns.length?detail.columns.map(col=>({key:col.key,label:col.label||col.key,value:row=>warningDetailValue(row&&row[col.key])})):[...new Set(sharedRows.flatMap(row=>Object.keys(row||{})))].map(key=>({key,label:key,value:row=>warningDetailValue(row&&row[key])}));
+    const sharedTotal=Number(detail&&detail.totalRows)||sharedRows.length,sharedTrunc=detail&&detail.truncated&&sharedTotal>sharedRows.length;
+    window.BLDetailDrawer.open({storageKey:'warning.detail',source:'warning-detail',title:detail&&detail.title||(appLang==='en'?'Warning Details':'Uyarı Detayları'),subtitle:[detail&&detail.source,String(sharedTotal)+' '+(appLang==='en'?'rows':'satır')].filter(Boolean).join(' · '),note:[detail&&detail.message,sharedTrunc?(appLang==='en'?'First '+sharedRows.length+' rows are shown.':'İlk '+sharedRows.length+' satır gösteriliyor.'):''].filter(Boolean).join(' · '),rows:sharedRows,columns:sharedColumns,images:true,fileName:'Warning_Detail'});
+    return;
+  }
   if(!detail)return;
   document.getElementById('warningDetailOverlay')?.remove();
   const rows=Array.isArray(detail.rows)?detail.rows:[];
@@ -15639,6 +15646,17 @@ async function exportCurrentBacklogDetail(){
 
 // Pivot büyüteci: düğümün satırlarını pivotla aynı filtre/yol mantığıyla açar.
 async function showBacklogDetail(nodeLabel,nodePath,rowCount){
+  if(window.BLDetailDrawer?.open){
+    const sharedTitle=appLang==='en'?'Backlog Detail: '+String(nodeLabel):'Backlog Detayı: '+String(nodeLabel);
+    window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:appLang==='en'?'Loading '+(rowCount||0)+' row(s)…':(rowCount||0)+' satır yükleniyor…',rows:[],columns:[],images:true,fileName:sharedTitle});
+    try{
+      const sharedData=await fetchJSON('/api/backlog-detail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({path:nodePath},buildBacklogParams()))});
+      const sharedRows=sharedData.rows||[],sharedHeaders=(sharedData.headers&&sharedData.headers.length?sharedData.headers:Object.keys(sharedRows[0]||{}));
+      currentBacklogDetailRows=sharedRows;currentBacklogDetailHeaders=sharedHeaders.slice();currentBacklogDetailTitle=sharedTitle;
+      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),images:true,fileName:sharedTitle});
+    }catch(err){showToast((appLang==='en'?'Details could not be loaded: ':'Detay alınamadı: ')+(err&&err.message||String(err)));}
+    return;
+  }
   const title=appLang==='en'
     ?`Backlog Detail: ${String(nodeLabel)}`
     :`Backlog Detayı: ${String(nodeLabel)}`;
@@ -15717,6 +15735,20 @@ function backlogReportTitleForRows(rows,selectedMode){
   return `${appLang==='en'?'Order Backlog Report':'Sipariş Backlog Raporu'}${identity?` — ${identity}`:''}`;
 }
 async function showBacklogReportForRows(tab,rows,{selectedMode=false}={}){
+  if(window.BLDetailDrawer?.open){
+    if(tab!=='cp'&&tab!=='orders')return;
+    const sharedIdentities=selectedBacklogIdentities(rows);
+    if(!sharedIdentities.length){showToast(appLang==='en'?'No valid order identity was found.':'Geçerli sipariş kimliği bulunamadı.');return;}
+    const sharedTitle=backlogReportTitleForRows(rows,selectedMode);
+    window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:appLang==='en'?'Loading all partial shipments for '+sharedIdentities.length+' order(s)…':sharedIdentities.length+' siparişin tüm parsiyelleri yükleniyor…',rows:[],columns:[],images:true,fileName:sharedTitle});
+    try{
+      const sharedData=await fetchJSON('/api/backlog-detail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sourceTarget:tab,identities:sharedIdentities})});
+      const sharedRows=sharedData.rows||[],sharedHeaders=(sharedData.headers&&sharedData.headers.length?sharedData.headers:Object.keys(sharedRows[0]||{}));
+      currentBacklogDetailRows=sharedRows;currentBacklogDetailHeaders=sharedHeaders.slice();currentBacklogDetailTitle=sharedTitle;
+      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),images:true,fileName:sharedTitle});
+    }catch(err){showToast((appLang==='en'?'Backlog report could not be loaded: ':'Backlog raporu alınamadı: ')+(err&&err.message||String(err)));}
+    return;
+  }
   if(tab!=='cp'&&tab!=='orders')return;
   const identities=selectedBacklogIdentities(rows);
   if(!identities.length){
@@ -25318,6 +25350,16 @@ window.BLCollectionAnalyticsBridge={
     return observations;
   },
   openDrilldown(rows,title){
+    if(window.BLDetailDrawer?.open){
+      const sharedRows=[...new Map((rows||[]).map((row,index)=>[row&&row.id!=null?row.id:index,row])).values()].filter(Boolean);
+      const sharedTitle=title||(appLang==='en'?'Collection Detail':'Collection Detayı');
+      window.BLDetailDrawer.open({storageKey:'collection.analytics.detail',source:'collection',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'models':'model'),rows:sharedRows,images:true,fileName:sharedTitle,columns:[
+        {key:'plmId',label:'PLM ID'},{key:'modelKod',label:'Model'},{key:'colourCode',label:appLang==='en'?'Colour Code':'Renk Kod'},{key:'colour',label:appLang==='en'?'Colour':'Renk'},
+        {key:'buyer',label:'Buyer',value:row=>row.buyer||row._collectionOwnerName||''},{key:'mmyg',label:'MMYG'},{key:'mag',label:'MAG'},{key:'buyingGroup',label:'Buying Group'},
+        {key:'urunTipi',label:appLang==='en'?'Category':'Kategori'},{key:'manufacturer',label:appLang==='en'?'Manufacturer':'Üretici',value:row=>kolConfirmedPricing(row)?.name||kolBestPricing(row)?.name||row.buyingSampleManufacturer||''},{key:'season',label:appLang==='en'?'Season':'Sezon'}
+      ]});
+      return;
+    }
     const unique=[...new Map((rows||[]).map(row=>[row.id,row])).values()];document.getElementById('_collectionAnalyticsDrill')?.remove();
     const overlay=document.createElement('div');overlay.id='_collectionAnalyticsDrill';overlay.className='warnOverlay';
     const label=title||'Collection Detayı';
@@ -25400,6 +25442,17 @@ window.BLPriceSupplierAnalysisBridge={
     return {source:selected,scope,priceType:chosen,priceTypes,observations,rawCount:rows.length,version:`${selected}:${rows.length}:${rows[0]?._id||''}:${rows[rows.length-1]?._id||''}`};
   },
   openDrilldown(source,observations,title){
+    if(window.BLDetailDrawer?.open){
+      const sharedLabels=appLang==='en'?{title:'Details',records:'records',order:'Order',model:'Model',supplier:'Supplier',country:'Country',buyer:'Buyer',season:'Season',price:'Price',currency:'Currency',quantity:'Quantity',status:'Status',category:'Category',buyingGroup:'Buying Group'}:{title:'Detay',records:'kayıt',order:'Sipariş',model:'Model',supplier:'Üretici',country:'Ülke',buyer:'Buyer',season:'Sezon',price:'Fiyat',currency:'Para Birimi',quantity:'Adet',status:'Statü',category:'Kategori',buyingGroup:'Buying Group'};
+      const sharedRows=(observations||[]).filter(Boolean).map(item=>({...item,plmId:item.plmId||item.row&&item.row.plmId||item.raw&&item.raw.plmId||'',colourCode:item.colourCode||item.row&&item.row.colourCode||item.raw&&item.raw.colourCode||'',colour:item.colour||item.row&&item.row.colour||item.raw&&item.raw.colour||'',orderCode:item.orderKey||item.orderCode||item.row&&item.row.orderCode||item.raw&&item.raw.orderCode||''}));
+      const sharedTitle=title||sharedLabels.title;
+      window.BLDetailDrawer.open({storageKey:'priceSupplier.'+String(source||'generic')+'.detail',source:'price-supplier',title:sharedTitle,subtitle:sharedRows.length+' '+sharedLabels.records,rows:sharedRows,images:true,fileName:sharedTitle,columns:[
+        {key:'orderCode',label:sharedLabels.order},{key:'plmId',label:'PLM ID'},{key:'model',label:sharedLabels.model},{key:'colourCode',label:appLang==='en'?'Colour Code':'Renk Kod'},{key:'colour',label:appLang==='en'?'Colour':'Renk'},
+        {key:'manufacturer',label:sharedLabels.supplier},{key:'country',label:sharedLabels.country},{key:'buyer',label:sharedLabels.buyer},{key:'buyingGroup',label:sharedLabels.buyingGroup},{key:'season',label:sharedLabels.season},
+        {key:'status',label:sharedLabels.status},{key:'classification',label:sharedLabels.category},{key:'price',label:sharedLabels.price},{key:'currency',label:sharedLabels.currency},{key:'quantity',label:sharedLabels.quantity}
+      ]});
+      return;
+    }
     const items=(observations||[]).map(item=>item&&item.row||item&&item.raw||item);
     const labels=appLang==='en'?{title:'Details',records:'records',order:'Order',model:'Model',supplier:'Supplier',country:'Country',buyer:'Buyer',season:'Season',price:'Price',currency:'Currency',quantity:'Quantity',close:'Close'}:{title:'Detay',records:'kayıt',order:'Sipariş',model:'Model',supplier:'Üretici',country:'Ülke',buyer:'Buyer',season:'Sezon',price:'Fiyat',currency:'Para Birimi',quantity:'Adet',close:'Kapat'};
     if(source==='collection')return window.BLCollectionAnalyticsBridge.openDrilldown(items,title);
