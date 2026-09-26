@@ -294,6 +294,7 @@ function bindShell(){
   }
 }
 function init(){
+  if(state.preset==='prevWeek'||state.preset==='currentWeek')applyPreset(state.preset);
   bindShell();positionModule();openModule(Boolean(state.open));
   document.addEventListener('bl:language-changed',()=>{if(state.open)render()});
 }
