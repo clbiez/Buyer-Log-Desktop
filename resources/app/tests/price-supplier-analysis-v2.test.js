@@ -116,6 +116,15 @@ test('V2 ranking sanallaştırılır, drill-down ve dataset tabanlı Excel expor
   assert.doesNotMatch(ui,/table\.outerHTML/);
 });
 
+test('V2 heatmap veri hücreleri sıralama yapmaz; sıralama yalnız başlık hücrelerinde kalır',()=>{
+  const ui=read('public/collection-analytics.js');
+  assert.match(ui,/paV2HeatmapRowSort/);
+  assert.match(ui,/data-heat-column-sort/);
+  assert.match(ui,/data-heat-row-sort/);
+  assert.match(ui,/querySelectorAll\('\[data-heat-row\]'\).*dblclick/s);
+  assert.doesNotMatch(ui,/<td[^>]*data-heat-row="[^"]*"[^>]*data-heat-row-sort=/);
+});
+
 test('V2 kaynak adaptörü ortak alanları canonical registry üzerinden okur',()=>{
   const app=read('public/app-main.js');
   const bridge=app.slice(app.indexOf('window.BLPriceSupplierAnalysisBridge='),app.indexOf('function kolTableClipboardColumns'));
