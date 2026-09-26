@@ -20,7 +20,7 @@
   const DIM_TABS = Engine.DIMENSIONS;
 
   const state = {
-    open: false,
+    open: true,
     loading: false,
     error: '',
     rows: null,
@@ -71,7 +71,6 @@
       if (saved.preferences && typeof saved.preferences === 'object') state.preferences = { ...state.preferences, ...saved.preferences };
       if (saved.settings && typeof saved.settings === 'object') state.settings = { ...state.settings, ...saved.settings };
       if (Array.isArray(saved.customRules)) state.customRules = saved.customRules.map((rule, index) => Insights.normalizeRule(rule, index));
-      if (typeof saved.open === 'boolean') state.open = saved.open;
       if (saved.folds && typeof saved.folds === 'object') Object.keys(state.folds).forEach(key => { if (typeof saved.folds[key] === 'boolean') state.folds[key] = saved.folds[key]; });
     } catch (_) { /* bozuk tercih uygulamayı düşürmez */ }
   }
@@ -79,7 +78,7 @@
     try {
       BLStorage.setItem(STORAGE_KEY, JSON.stringify({
         dim: state.dim, measure: state.measure, insightLimit: state.insightLimit,
-        preferences: state.preferences, settings: state.settings, customRules: state.customRules, open: state.open, folds: state.folds,
+        preferences: state.preferences, settings: state.settings, customRules: state.customRules, folds: state.folds,
       }));
     } catch (_) {}
   }
@@ -465,8 +464,9 @@
   function render() {
     const host = document.getElementById('backlogAnalysis');
     if (!host) return;
-    host.hidden = !state.open;
-    if (!state.open) return;
+    // Backlog açıldığında analiz her zaman görünür; ayrı aç/kapat düğmesi yoktur.
+    state.open = true;
+    host.hidden = false;
     if (state.loading) { host.innerHTML = `${renderHeader()}<div class="bdaMuted bdaPad">${esc(L('Analiz hesaplanıyor…', 'Calculating analysis…'))}</div>`; bind(host); return; }
     if (state.error) { host.innerHTML = `${renderHeader()}<div class="bdaError">${esc(state.error)}</div>`; bind(host); return; }
     const model = state.model;
@@ -674,29 +674,21 @@
   }
 
   /* ------------------------------------------------------------- bağlantı */
+  // Geriye dönük API uyumluluğu: eski çağrılar analizi kapatmak yerine yeniler.
   function toggle() {
-    state.open = !state.open;
-    save();
-    const button = document.getElementById('backlogAnalysisToggle');
-    if (button) button.setAttribute('aria-expanded', String(state.open));
-    if (state.open) void refresh(false); else render();
+    state.open = true;
+    void refresh(false);
   }
 
   function onBacklogRendered() {
-    if (!state.open) return;
     // Filtre değişmişse satırlar bayattır; imza karşılaştırması yeniden çekmeye karar verir.
     void refresh(false);
   }
 
   function init() {
     load();
-    const button = document.getElementById('backlogAnalysisToggle');
-    if (button && !button.dataset.bdaBound) {
-      button.dataset.bdaBound = '1';
-      button.addEventListener('click', toggle);
-      button.setAttribute('aria-expanded', String(state.open));
-    }
-    if (state.open) void refresh(false);
+    state.open = true;
+    void refresh(false);
   }
 
   window.BLBacklogAnalysis = { init, toggle, refresh, onBacklogRendered, _state: state };
