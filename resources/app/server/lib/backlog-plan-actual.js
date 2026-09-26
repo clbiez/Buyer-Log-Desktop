@@ -83,71 +83,63 @@ function templateRowKey(row) {
 }
 
 function projectSnapshot(orders, templateRows, meta = {}) {
-  const map = new Map();
+  // Önce yalnız kaynak kimlik/plan sözlüğünü kur. Snapshot'ın satır kümesi
+  // templateRows tarafından belirlenir; böylece ASAS'ta var ama kanonik Backlog'a
+  // girmeyen bir sipariş analizde hayalet kayıt olarak görünmez.
+  const sourceOrders = new Map();
   for (const order of Array.isArray(orders) ? orders : []) {
     const id = sourceOrderKey(order);
-    if (!clean(order && order.ocode)) continue;
-    map.set(id, {
-      id,
-      orderCode: clean(order.ocode),
-      modelName: clean(order.model),
-      colourCode: clean(order.ccode),
-      colour: clean(order.colour),
-      buyer: clean(order.buyer),
-      buyingGroup: clean(order.buyerGrup),
-      manufacturer: clean(order.manufacturer),
-      subMfr: '',
-      season: clean(order.season),
-      mag: clean(order.merch),
-      mmyg: clean(order.ageGroup),
-      country: clean(order.countryRaw),
-      license: clean(order.license),
-      line: clean(order.line),
-      specialCode: clean(order.ozel),
-      originalExFactory: dateIso(order._asasEx || order.ex),
-      planExFactory: dateIso(order.ex),
-      retail: dateIso(order.retail),
-      inStore: dateIso(order.mb),
-      orderQty: Math.max(0, number(order.qty)),
-      remainingQty: Math.max(0, number(order.kalan)),
-      receivedQty: 0,
-      warehouseQty: 0,
-      riskQty: 0,
-      statuses: {},
-      etaDates: {},
-      handoverDates: {},
-      deliveryTypes: {},
-    });
+    if (clean(order && order.ocode)) sourceOrders.set(id, order);
   }
 
+  const map = new Map();
   for (const row of Array.isArray(templateRows) ? templateRows : []) {
     const id = templateRowKey(row);
+    const order = sourceOrders.get(id) || null;
     let item = map.get(id);
     if (!item) {
       item = {
         id,
-        orderCode: clean(row['Sipariş Kod']), modelName: clean(row['Model Adı']),
-        colourCode: clean(row['Renk Kod']), colour: clean(row.Renk), buyer: clean(row.Buyer),
-        buyingGroup: clean(row['Buyer Grup (TR)']), manufacturer: clean(row['Üretici']),
-        subMfr: clean(row['Alt Üretici']), season: clean(row.Sezon), mag: '', mmyg: '',
-        country: clean(row['Siparişin Üretildiği Ülke']), license: clean(row.Lisans),
-        line: clean(row.Line), specialCode: clean(row['Özel Kod 1']),
-        originalExFactory: dateIso(row['Orijinal Exfactory Merch Tarih']),
-        planExFactory: '', retail: dateIso(row['Retail Depo Tarih Yıl Ay Gün']),
-        inStore: dateIso(row['Model Bütçe Tarih Yıl Ay Gün']),
-        orderQty: Math.max(0, number(row['Net Alım Sipariş Miktarı'])),
-        remainingQty: 0, receivedQty: 0, warehouseQty: 0, riskQty: 0,
-        statuses: {}, etaDates: {}, handoverDates: {}, deliveryTypes: {},
+        orderCode: clean(order ? order.ocode : row['Sipariş Kod']),
+        modelName: clean(order ? order.model : row['Model Adı']),
+        colourCode: clean(order ? order.ccode : row['Renk Kod']),
+        colour: clean(order ? order.colour : row.Renk),
+        buyer: clean(order ? order.buyer : row.Buyer),
+        buyingGroup: clean(order ? order.buyerGrup : row['Buyer Grup (TR)']),
+        manufacturer: clean(order ? order.manufacturer : row['Üretici']),
+        subMfr: clean(row['Alt Üretici']),
+        season: clean(order ? order.season : row.Sezon),
+        mag: clean(order && order.merch),
+        mmyg: clean(order && order.ageGroup),
+        country: clean(order ? order.countryRaw : row['Siparişin Üretildiği Ülke']),
+        license: clean(order ? order.license : row.Lisans),
+        line: clean(order ? order.line : row.Line),
+        specialCode: clean(order ? order.ozel : row['Özel Kod 1']),
+        originalExFactory: dateIso(order ? (order._asasEx || order.ex) : row['Orijinal Exfactory Merch Tarih']),
+        // Planlanan Ex-Factory yalnız kaynak siparişten alınır. Parsiyel Backlog
+        // satırındaki REVİZE YÜKLEME TARİHİ gerçekleşen Handover olabilir ve plan
+        // olarak geri okunmamalıdır.
+        planExFactory: order ? dateIso(order.ex) : '',
+        retail: dateIso(order ? order.retail : row['Retail Depo Tarih Yıl Ay Gün']),
+        inStore: dateIso(order ? order.mb : row['Model Bütçe Tarih Yıl Ay Gün']),
+        orderQty: Math.max(0, number(order ? order.qty : row['Net Alım Sipariş Miktarı'])),
+        remainingQty: 0,
+        receivedQty: 0,
+        warehouseQty: 0,
+        riskQty: 0,
+        statuses: {},
+        etaDates: {},
+        handoverDates: {},
+        deliveryTypes: {},
       };
       map.set(id, item);
     }
     const qty = Math.max(0, number(row.Adet));
     item.subMfr = item.subMfr || clean(row['Alt Üretici']);
+    item.orderQty = Math.max(item.orderQty, Math.max(0, number(row['Net Alım Sipariş Miktarı'])));
+    item.remainingQty = Math.max(item.remainingQty, Math.max(0, number(row['Kalan Alım Sipariş Miktarı'])));
     item.receivedQty = round(item.receivedQty + Math.max(0, number(row['Net Gelen Alım Sipariş Miktarı'])));
     item.warehouseQty = round(item.warehouseQty + Math.max(0, number(row['Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo'])));
-    if (!map.has(id) || !item.remainingQty) {
-      item.remainingQty = Math.max(item.remainingQty, Math.max(0, number(row['Kalan Alım Sipariş Miktarı'])));
-    }
     if (clean(row['RİSK\n(PRIORITY)']).toLocaleUpperCase('tr-TR') === 'VAR') item.riskQty = round(item.riskQty + qty);
     addBucket(item.statuses, row['GÜNCEL DURUM\n(STATUS)'], qty);
     const eta = dateIso(row['ANTREPO GİRİŞ TARİHİ']);
@@ -177,7 +169,6 @@ function projectSnapshot(orders, templateRows, meta = {}) {
     rows,
   };
 }
-
 function emptyArchive() {
   return { schemaVersion: SCHEMA_VERSION, base: null, deltas: [] };
 }
