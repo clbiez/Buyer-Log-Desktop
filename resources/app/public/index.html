@@ -169,6 +169,7 @@
 <link rel="stylesheet" href="outlook-mail.css?v=__BL_ASSET_VERSION__&rev=7160">
 <link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=2">
 <link rel="stylesheet" href="overview-radar.css?v=__BL_ASSET_VERSION__&rev=1">
+<link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=1">
 </head>
 <body data-active-tab="overview">
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
@@ -501,6 +502,41 @@
     </div>
     <div id="ovDashboardGrid" class="ovDashboardGrid">
     <section id="ovLaunchpad" data-overview-widget="launchpad" class="ovLaunchpad" aria-label="Dünya Saatleri" data-i18n-aria-label-tr="Dünya Saatleri" data-i18n-aria-label-en="World Clocks"></section>
+    <section id="globalFlowMapWidget" data-overview-widget="globalFlowMap" class="globalFlowMapWidget" aria-label="Global Flow Map">
+      <div class="globalFlowHead">
+        <p class="globalFlowTitle">
+          <svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>
+          <span class="globalFlowTitleText"><span>Global Flow Map</span><small data-i18n-tr="Siparişlerin global üretim ve sevkiyat akışı" data-i18n-en="Global production and shipment flow">Siparişlerin global üretim ve sevkiyat akışı</small></span>
+        </p>
+        <div id="globalFlowControls" class="globalFlowControls"></div>
+        <button type="button" class="ovNotesCollapseBtn" id="globalFlowCollapseBtn" aria-expanded="true" title="Global Flow Map'i daralt" data-i18n-title-tr="Global Flow Map'i daralt" data-i18n-title-en="Collapse Global Flow Map"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
+      </div>
+      <div id="globalFlowBody" class="globalFlowBody">
+        <div id="globalFlowMeta" class="globalFlowMeta" role="status" aria-live="polite"></div>
+        <div id="globalFlowFilters" class="globalFlowFilters" hidden></div>
+        <div class="globalFlowStage">
+          <div id="globalFlowCanvasWrap" class="globalFlowCanvasWrap">
+            <canvas id="globalFlowCanvas" aria-label="Global shipment flow map"></canvas>
+            <div id="globalFlowKpis" class="globalFlowKpis"></div>
+            <div class="globalFlowLegend" aria-hidden="true">
+              <span><i></i><b data-i18n-tr="Üretim" data-i18n-en="Production">Üretim</b></span>
+              <span class="sea"><i></i><b data-i18n-tr="Gemi" data-i18n-en="Sea">Gemi</b></span>
+              <span class="air"><i></i><b data-i18n-tr="Uçak" data-i18n-en="Air">Uçak</b></span>
+              <span class="road"><i></i><b data-i18n-tr="Tır" data-i18n-en="Road">Tır</b></span>
+              <span class="risk"><i></i><b data-i18n-tr="Risk" data-i18n-en="Risk">Risk</b></span>
+            </div>
+            <div id="globalFlowTooltip" class="globalFlowTooltip" hidden></div>
+          </div>
+        </div>
+        <div class="globalFlowFoot">
+          <strong data-i18n-tr="Etkileşim" data-i18n-en="Interaction">Etkileşim</strong>
+          <span data-i18n-tr="Sürükle: hareket · Tekerlek: yakınlaştır · Çift tık: detay" data-i18n-en="Drag: move · Wheel: zoom · Double-click: details">Sürükle: hareket · Tekerlek: yakınlaştır · Çift tık: detay</span>
+          <span class="gfSpacer"></span>
+          <span data-i18n-tr="Rotalar operasyonel yaklaşımdır; canlı GPS/AIS değildir." data-i18n-en="Routes are operational approximations, not live GPS/AIS.">Rotalar operasyonel yaklaşımdır; canlı GPS/AIS değildir.</span>
+        </div>
+      </div>
+      <aside id="globalFlowDrawer" class="globalFlowDrawer" aria-hidden="true"></aside>
+    </section>
     <section id="ovPriorityReminder" data-overview-widget="notes" class="ovPriorityReminder" aria-live="polite" style="display:none">
         <div class="ovPriorityHeader">
           <div>
@@ -1236,6 +1272,7 @@
 <script src="overview-collection-dashboard.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="overview-radar-charts.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="overview-global-flow.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_SCRIPTS_START');</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_START');</script>
 <script src="plm-colour-utils.js?v=__BL_ASSET_VERSION__&rev=2"></script>

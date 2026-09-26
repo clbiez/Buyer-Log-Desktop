@@ -9118,6 +9118,7 @@ function overviewLayoutSave(value){try{BLStorage.setItem(OVERVIEW_LAYOUT_KEY,JSO
 function overviewLayoutWidgetLabel(key,scope='page'){
   const labels={
     launchpad:appLang==='en'?'World Clocks':'Dünya Saatleri',
+    globalFlowMap:'Global Flow Map',
     notes:appLang==='en'?'CP Notes':'CP Notları',
     collectionSummary:appLang==='en'?'Collection Summary':'Koleksiyon Özeti',
     oab:'OAB',
