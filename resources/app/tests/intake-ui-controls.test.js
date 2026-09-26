@@ -12,7 +12,7 @@ const ui = fs.readFileSync(path.join(root, 'public', 'intake.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
 
 test('INTAKE Overview yüzeyi kendi kontrolleri ve lazy loader ile bağlıdır', () => {
-  for (const id of ['intakeSection', 'intakeFieldsBtn', 'intakeResetBtn', 'intakeRefreshBtn', 'intakeCollapseAllBtn', 'intakeExpandAllBtn', 'intakeFilterBar', 'intakeTable']) {
+  for (const id of ['intakeSection', 'intakeFieldsBtn', 'intakeResetBtn', 'intakeRefreshBtn', 'intakeFiltersBtn', 'intakeFilterPanel', 'intakeCollapseAllBtn', 'intakeExpandAllBtn', 'intakeFilterBar', 'intakeTable']) {
     assert.match(html, new RegExp(`id="${id}"`));
   }
   assert.doesNotMatch(html, /id="intakeConnectionBtn"/, 'Veritabanı bağlantısı düğmesi INTAKE başlığında görünmemeli');
@@ -26,6 +26,12 @@ test('INTAKE Overview yüzeyi kendi kontrolleri ve lazy loader ile bağlıdır',
   assert.match(ui, /state\.metadataPromise = \(async \(\) =>/);
   assert.match(html, /data-overview-widget="intake"/);
   const intakeHeader = html.slice(html.indexOf('<div class="intakeHeader">'), html.indexOf('<div id="intakeHorizonBadge"'));
+  const refreshPos = intakeHeader.indexOf('id="intakeRefreshBtn"');
+  const filterPos = intakeHeader.indexOf('id="intakeFiltersBtn"');
+  assert.ok(refreshPos >= 0 && filterPos > refreshPos, 'INTAKE filtre düğmesi Refresh düğmesinin sağında olmalı');
+  assert.match(html, /id="intakeFilterPanel"[^>]*hidden[\s\S]{0,300}id="intakeFilterBar"/);
+  assert.match(ui, /function setFilterPanelOpen\(open\)/);
+  assert.match(ui, /byId\('intakeFiltersBtn'\)\?\.addEventListener\('click'/);
   const collapsePos = intakeHeader.indexOf('id="intakeCollapseBtn"');
   const settingsPos = intakeHeader.indexOf('id="intakeFieldsBtn"');
   assert.ok(collapsePos >= 0 && settingsPos > collapsePos, 'Pivot ayarları kalemi daralt/genişlet okunun sağında olmalı');
