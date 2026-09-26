@@ -10,7 +10,7 @@ const db = require('../server/db');
 const ROOT = path.join(__dirname, '..');
 const html = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
 const css = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
-const server = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const server = require('./helpers/server-source')();
 const dbSource = fs.readFileSync(path.join(ROOT, 'server', 'db.js'), 'utf8');
 
 function order(overrides = {}) {

@@ -1965,224 +1965,24 @@ app.post('/api/iam/users/:id/temporary-grants', userAccess.requireCapability('US
 app.delete('/api/iam/users/:id/temporary-grants/:grantId', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '64kb' }), userAccess.temporaryGrantRevokeHandler);
 app.get('/api/iam/audit', userAccess.requireCapability('AUDIT.VIEW'), userAccess.auditListHandler);
 
-// ---- Microsoft 365 / Outlook — kullanıcıya özel delegated Mail.Read --------
-app.get('/api/outlook/status', userAccess.requireCapability('OUTLOOK.SEARCH'), (req, res) => {
-  res.set('Cache-Control','no-store').json(outlookMail.publicStatus(req.currentUser.id));
+// ---- Microsoft 365 / Outlook route'ları (delegated Mail.Read + Mail Intelligence V2) → server/routes/outlook-routes.js ----
+require('./routes/outlook-routes')(app, {
+  LOCAL_DATA_ROOT,
+  apiError,
+  atomicWriteJson,
+  cleanupOrphanExcel,
+  createOutlookGraphService,
+  crypto,
+  express,
+  logRuntimeFailure,
+  outlookGraph,
+  outlookLocal,
+  outlookMail,
+  outlookSetupSettings,
+  outlookV2,
+  userAccess,
+  getConfig: () => config,
 });
-app.post('/api/outlook/connect', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({ limit: '32kb' }), (req, res) => {
-  try {
-    const result = outlookGraph.beginConnect(req.currentUser, req);
-    userAccess.appendAudit(req.currentUser, 'OUTLOOK_CONNECT_STARTED', 'microsoft365', { mock: Boolean(result.mock) }, req);
-    res.set('Cache-Control','no-store').json({ ok: true, ...result });
-  } catch (err) { apiError(res, err, 'Microsoft 365 bağlantısı başlatılamadı.'); }
-});
-app.post('/api/outlook/disconnect', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({ limit: '32kb' }), (req, res) => {
-  try {
-    const disconnected = outlookGraph.disconnect(req.currentUser.id);
-    userAccess.appendAudit(req.currentUser, 'OUTLOOK_DISCONNECTED', 'microsoft365', { disconnected }, req);
-    res.json({ ok: true, disconnected });
-  } catch (err) { apiError(res, err, 'Microsoft 365 bağlantısı kesilemedi.'); }
-});
-app.post('/api/outlook/search', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({ limit: '128kb' }), async (req, res) => {
-  const context = req.body && req.body.context || {}, searchOptions = req.body && req.body.options || {};
-  try {
-    const hash = outlookMail.contextHash(context);
-    userAccess.appendAudit(req.currentUser, 'OUTLOOK_SEARCH_STARTED', 'microsoft365', { contextHash: hash }, req);
-    const result = await outlookMail.search(req.currentUser.id, context, searchOptions);
-    userAccess.appendAudit(req.currentUser, 'OUTLOOK_SEARCH_COMPLETED', 'microsoft365', { contextHash: hash, resultCount: result.items.length, cached: Boolean(result.cached) }, req);
-    res.set('Cache-Control','no-store').json({ ok: true, ...result });
-  } catch (err) {
-    const authFailure = ['REAUTH_REQUIRED','OUTLOOK_NOT_CONNECTED','MICROSOFT_TOKEN_FAILED','MICROSOFT_CONSENT_DENIED'].includes(err && err.code);
-    userAccess.appendAudit(req.currentUser, authFailure ? 'OUTLOOK_AUTH_FAILED' : 'OUTLOOK_SEARCH_FAILED', 'microsoft365', { code: err.code || 'OUTLOOK_SEARCH_FAILED' }, req);
-    apiError(res, err, 'Outlook araması tamamlanamadı.');
-  }
-});
-app.post('/api/outlook/message-detail', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({ limit: '32kb' }), async (req, res) => {
-  try {
-    const detail = await outlookMail.messageDetail(req.currentUser.id, req.body && req.body.messageId);
-    res.set('Cache-Control','no-store').json({ ok: true, ...detail });
-  } catch (err) { apiError(res, err, 'Mail detayı yüklenemedi.'); }
-});
-app.post('/api/outlook/message-opened', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({ limit: '32kb' }), (req, res) => {
-  const fingerprint = crypto.createHash('sha256').update(String(req.body && req.body.messageId || '')).digest('hex').slice(0,16);
-  userAccess.appendAudit(req.currentUser, 'OUTLOOK_MESSAGE_OPENED', 'microsoft365', { messageFingerprint: fingerprint }, req);
-  res.json({ ok: true });
-});
-
-app.post('/api/outlook/local/open', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({ limit: '32kb' }), async (req, res) => {
-  try {
-    const messageId = String(req.body && req.body.messageId || '');
-    const result = await outlookMail.openLocal(messageId, { internetMessageId:String(req.body&&req.body.internetMessageId||'') });
-    const fingerprint = crypto.createHash('sha256').update(messageId).digest('hex').slice(0,16);
-    userAccess.appendAudit(req.currentUser, 'OUTLOOK_MESSAGE_OPENED', 'classic-outlook-local', { messageFingerprint: fingerprint, engine:'CLASSIC_OUTLOOK_LOCAL' }, req);
-    res.set('Cache-Control','no-store').json({ ok:true, ...result });
-  } catch (err) { apiError(res, err, 'Classic Outlook mesajı açılamadı.'); }
-});
-app.post('/api/outlook/bridge', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({ limit: '128kb' }), async (req, res) => {
-  try {
-    const context = req.body && req.body.context || {}, searchOptions = req.body && req.body.options || {};
-    const result = await outlookMail.bridge(context, searchOptions);
-    userAccess.appendAudit(req.currentUser, 'OUTLOOK_BRIDGE_OPENED', 'classic-outlook-local', { contextHash:outlookMail.contextHash(context), mode:result.mode }, req);
-    res.set('Cache-Control','no-store').json({ ok:true, ...result });
-  } catch (err) { apiError(res, err, 'Outlook Bridge başlatılamadı.'); }
-});
-
-// ---- Outlook Mail Intelligence V2 -----------------------------------------
-app.get('/api/outlook/v2/features', userAccess.requireCapability('OUTLOOK.SEARCH'), (req,res) => res.set('Cache-Control','no-store').json({ ok:true, features:outlookV2.features }));
-function outlookSetupPublic() {
-  const settings=outlookSetupSettings.publicSettings(config,process.env),graph=settings.graph||{},application=settings.application||{},webhook=settings.webhook||{},local=outlookLocal.status();
-  const httpsWebhook=/^https:\/\//i.test(webhook.notificationUrl||'')&&/^https:\/\//i.test(webhook.lifecycleUrl||'');
-  return {
-    ...settings,
-    local,
-    running:{ graphReady:Boolean(outlookGraph.setup&&outlookGraph.setup.ready),graphState:outlookGraph.setup&&outlookGraph.setup.code||'CONFIG_REQUIRED',applicationReady:Boolean(outlookGraph.config&&outlookGraph.config.applicationConfigured),activeEngine:outlookMail.publicStatus('setup-preview').activeEngine,features:outlookV2.features },
-    readiness:{
-      classicOutlookLocal:Boolean(local&&local.connected),
-      delegatedConfigured:Boolean(graph.enabled&&graph.clientId&&graph.tenantId&&graph.redirectUri&&graph.hasClientSecret&&settings.security&&settings.security.tokenEncryptionReady),
-      applicationCredentialsConfigured:Boolean(application.clientId&&application.tenantId&&application.hasClientSecret),
-      webhookConfigured:Boolean(httpsWebhook&&webhook.hasClientState),
-      sharedMailboxCandidates:(graph.sharedMailboxCandidates||[]).length,
-      externalAdminConsent:'MANUAL_VERIFICATION_REQUIRED',
-      externalExchangeRbac:'MANUAL_VERIFICATION_REQUIRED',
-      externalPublicHttps:'MANUAL_VERIFICATION_REQUIRED',
-    },
-    externalSteps:[
-      {id:'ENTRA_PERMISSIONS',label:'Entra API permissions + admin consent',external:true,url:'https://entra.microsoft.com/'},
-      {id:'EXCHANGE_RBAC',label:'Exchange Online RBAC for Applications',external:true,url:'https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac'},
-      {id:'PUBLIC_HTTPS',label:'Public HTTPS + trusted certificate/DNS',external:true,url:'https://learn.microsoft.com/en-us/graph/change-notifications-delivery-webhooks'},
-    ],
-  };
-}
-app.get('/api/outlook/v2/admin/setup', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), (_req,res) => {
-  try { res.set('Cache-Control','no-store').json({ok:true,...outlookSetupPublic()}); }
-  catch(err){apiError(res,err,'Outlook kurulum ayarları okunamadı.');}
-});
-app.post('/api/outlook/v2/admin/setup', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), express.json({limit:'128kb'}), (req,res) => {
-  try {
-    outlookSetupSettings.saveSettings(req.body||{},req.currentUser.id);
-    const result=outlookSetupPublic();
-    userAccess.appendAudit(req.currentUser,'OUTLOOK_SETUP_UPDATED','microsoft365',{graphEnabled:Boolean(result.graph&&result.graph.enabled),applicationConfigured:Boolean(result.application&&result.application.hasClientSecret),changeNotificationsEnabled:Boolean(result.features&&result.features.changeNotificationsEnabled),sharedMailboxCount:Number(result.readiness&&result.readiness.sharedMailboxCandidates)||0,environmentOverrideCount:(result.security&&result.security.environmentOverrides||[]).length},req);
-    res.set('Cache-Control','no-store').json({ok:true,...result,restartRequired:true});
-  } catch(err){if(Number(err&&err.statusCode)===400)return res.status(400).json({error:err.message,code:err.code||'OUTLOOK_SETUP_INVALID'});apiError(res,err,'Outlook kurulum ayarları kaydedilemedi.');}
-});
-app.post('/api/outlook/v2/admin/setup/test', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const runtime=outlookSetupSettings.applyToRuntime(config,process.env),probe=createOutlookGraphService({config:runtime.config,env:runtime.env,dataRoot:LOCAL_DATA_ROOT,writeJson:atomicWriteJson}),mailbox=String(req.body&&req.body.mailbox||'').trim().toLowerCase(),checks=[];
-    checks.push({id:'DELEGATED_CONFIG',ok:Boolean(probe.setup&&probe.setup.ready),code:probe.setup&&probe.setup.code||'CONFIG_REQUIRED',message:probe.setup&&probe.setup.message||'Delegated Graph yapılandırması hazır.'});
-    const localStatus=outlookLocal.status(true);
-    checks.push({id:'CLASSIC_OUTLOOK_LOCAL',ok:Boolean(localStatus&&localStatus.connected),code:localStatus&&localStatus.state||'CLASSIC_OUTLOOK_UNAVAILABLE',message:localStatus&&localStatus.connected?`Classic Outlook kullanılabilir: ${localStatus.profileName||localStatus.storeName||'yerel profil'}`:(localStatus&&localStatus.message||'Classic Outlook kullanılamıyor.')});
-    if(req.body&&req.body.testDelegatedMailbox&&mailbox){
-      try { const item=await probe.probeSharedMailbox(req.currentUser.id,mailbox);checks.push({id:'DELEGATED_MAILBOX',ok:Boolean(item),code:item?'ACCESSIBLE':'MAILBOX_ACCESS_DENIED',message:item?'Shared mailbox kullanıcı tarafından erişilebilir.':'Shared mailbox erişimi Microsoft tarafından doğrulanamadı.'}); }
-      catch(error){checks.push({id:'DELEGATED_MAILBOX',ok:false,code:error.code||'GRAPH_TEST_FAILED',message:String(error.message||'Graph testi başarısız.').slice(0,500)});}
-    }
-    if(req.body&&req.body.testApplication){
-      try {
-        await probe.applicationAccessToken();
-        checks.push({id:'APPLICATION_TOKEN',ok:true,code:'TOKEN_ACQUIRED',message:'Application token başarıyla alındı.'});
-        if(mailbox){await probe.applicationGraph(`/users/${encodeURIComponent(mailbox)}/mailFolders/inbox?$select=id,displayName`);checks.push({id:'EXCHANGE_RBAC_MAILBOX',ok:true,code:'MAILBOX_SCOPED',message:'Application Mail.Read ve Exchange RBAC mailbox erişimi doğrulandı.'});}
-      } catch(error){checks.push({id:mailbox?'EXCHANGE_RBAC_MAILBOX':'APPLICATION_TOKEN',ok:false,code:error.code||'GRAPH_TEST_FAILED',message:String(error.message||'Graph testi başarısız.').slice(0,500)});}
-    }
-    const setup=outlookSetupPublic();
-    checks.push({id:'WEBHOOK_FORMAT',ok:Boolean(setup.readiness.webhookConfigured),code:setup.readiness.webhookConfigured?'HTTPS_READY':'WEBHOOK_SETUP_REQUIRED',message:setup.readiness.webhookConfigured?'Webhook adresleri ve clientState hazır.':'Public HTTPS webhook adresleri eksik.'});
-    userAccess.appendAudit(req.currentUser,'OUTLOOK_SETUP_TESTED','microsoft365',{checks:checks.map(item=>({id:item.id,ok:item.ok,code:item.code})),mailboxTested:Boolean(mailbox)},req);
-    res.set('Cache-Control','no-store').json({ok:true,checks,restartRequired:false});
-  } catch(err){apiError(res,err,'Outlook kurulum testi tamamlanamadı.');}
-});
-app.post('/api/outlook/v2/admin/setup/restart', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), express.json({limit:'8kb'}), (req,res) => {
-  if(process.env.BL_KEEP_ALIVE!=='1')return res.status(409).json({error:'Otomatik yeniden başlatma yalnız Buyer Log gözetmeniyle açıldığında kullanılabilir. Programı kapatıp yeniden açın.',code:'WATCHDOG_REQUIRED'});
-  userAccess.appendAudit(req.currentUser,'OUTLOOK_SETUP_RESTART_REQUESTED','microsoft365',{},req);
-  res.json({ok:true,restarting:true});
-  setTimeout(()=>{try{cleanupOrphanExcel();}catch(_){}process.exit(0);},350).unref();
-});
-app.get('/api/outlook/v2/mailboxes', userAccess.requireCapability('OUTLOOK.SEARCH'), async (req,res) => {
-  try { const sources=await outlookV2.mailboxSources(req.currentUser); if(!userAccess.hasCapability(req.currentUser,'OUTLOOK_SHARED_MAIL.SEARCH'))sources.shared=[];res.set('Cache-Control','no-store').json({ok:true,...sources}); }
-  catch(err){apiError(res,err,'Mailbox kaynakları okunamadı.');}
-});
-app.post('/api/outlook/v2/search', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({limit:'192kb'}), async (req,res) => {
-  try { const options=req.body&&req.body.options||{},source=String(options.mailboxSource||'PERSONAL').toUpperCase();if(source!=='PERSONAL'&&!userAccess.hasCapability(req.currentUser,'OUTLOOK_SHARED_MAIL.SEARCH'))return res.status(403).json({error:'Shared mailbox arama yetkisi bulunmuyor.',code:'PERMISSION_DENIED'});const started=Date.now(),result=await outlookV2.search(req.currentUser,req.body&&req.body.context||{},options);outlookV2.store.metric('graph_search_count');outlookV2.store.metric('graph_search_latency',0,Date.now()-started);if(source!=='PERSONAL')userAccess.appendAudit(req.currentUser,'OUTLOOK_SHARED_MAILBOX_ACCESSED','microsoft365',{mailboxCount:new Set((result.items||[]).map(item=>item.mailboxAddress).filter(Boolean)).size,resultCount:(result.items||[]).length},req);res.set('Cache-Control','no-store').json({ok:true,...result}); }
-  catch(err){apiError(res,err,'Outlook V2 araması tamamlanamadı.');}
-});
-app.post('/api/outlook/v2/message-detail', userAccess.requireCapability('OUTLOOK.SEARCH'), express.json({limit:'64kb'}), async (req,res) => {
-  try { const body=req.body||{},type=String(body.mailboxType||'PERSONAL').toUpperCase();if(type!=='PERSONAL'&&!userAccess.hasCapability(req.currentUser,'OUTLOOK_SHARED_MAIL.SEARCH'))return res.status(403).json({error:'Mailbox erişim yetkisi bulunmuyor.',code:'PERMISSION_DENIED'});const detail=await outlookV2.messageDetail(req.currentUser,body);res.set('Cache-Control','no-store').json({ok:true,...detail}); }
-  catch(err){apiError(res,err,'Mail detayı yüklenemedi.');}
-});
-app.post('/api/outlook/v2/links', userAccess.requireCapability('OUTLOOK_MAIL.LINK'), express.json({limit:'128kb'}), (req,res) => {
-  try { const result=outlookV2.link(req.currentUser,req.body||{});userAccess.appendAudit(req.currentUser,'OUTLOOK_MAIL_LINKED','mail',{linkIds:result.map(item=>item.item.id),targets:result.map(item=>`${item.item.entityType}:${item.item.entityId}`)},req);res.status(201).json({ok:true,results:result}); }
-  catch(err){apiError(res,err,'Mail siparişe bağlanamadı.');}
-});
-app.delete('/api/outlook/v2/links/:id', userAccess.requireCapability('OUTLOOK_MAIL.LINK'), (req,res) => {
-  try { const removed=outlookV2.unlink(req.currentUser,req.params.id);userAccess.appendAudit(req.currentUser,'OUTLOOK_MAIL_UNLINKED',req.params.id,{entityType:removed.entityType,entityId:removed.entityId},req);res.json({ok:true,removed}); }
-  catch(err){apiError(res,err,'Mail bağlantısı kaldırılamadı.');}
-});
-app.patch('/api/outlook/v2/links/:id', userAccess.requireCapability('OUTLOOK_MAIL.PIN'), express.json({limit:'64kb'}), (req,res) => {
-  try { const updated=outlookV2.pin(req.currentUser,req.params.id,req.body||{}),event=updated.isPinned?'OUTLOOK_MAIL_PINNED':'OUTLOOK_MAIL_UNPINNED';userAccess.appendAudit(req.currentUser,event,updated.id,{tags:updated.tags||[],pinReason:Boolean(updated.pinReason)},req);res.json({ok:true,item:updated}); }
-  catch(err){apiError(res,err,'Mail işareti kaydedilemedi.');}
-});
-app.get('/api/outlook/v2/timeline/:entityType/:entityId', userAccess.requireCapability('OUTLOOK_MAIL.TIMELINE_VIEW'), (req,res) => {
-  try { res.set('Cache-Control','no-store').json({ok:true,...outlookV2.timeline(req.currentUser,req.params.entityType,req.params.entityId)}); }
-  catch(err){apiError(res,err,'İletişim timeline yüklenemedi.');}
-});
-app.post('/api/outlook/v2/analyze', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.VIEW'), express.json({limit:'768kb'}), async (req,res) => {
-  try { const result=await outlookV2.analyze(req.currentUser,req.body||{});userAccess.appendAudit(req.currentUser,'MAIL_INTELLIGENCE_DETECTED',`${req.body&&req.body.entityType}:${req.body&&req.body.entityId}`,{candidateCount:(result.candidates||[]).length,classifications:(result.classifications||[]).map(item=>item.type)},req);res.json({ok:true,...result}); }
-  catch(err){apiError(res,err,'Mail intelligence analizi tamamlanamadı.');}
-});
-app.get('/api/outlook/v2/candidates/:entityType/:entityId', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.VIEW'), (req,res) => {
-  try { res.set('Cache-Control','no-store').json({ok:true,items:outlookV2.changeCandidates(req.currentUser,req.params.entityType,req.params.entityId)}); }
-  catch(err){apiError(res,err,'Değişiklik adayları yüklenemedi.');}
-});
-app.post('/api/outlook/v2/candidates/:id/decision', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.VIEW'), express.json({limit:'32kb'}), async (req,res) => {
-  try { const decision=String(req.body&&req.body.decision||'').toUpperCase(),item=await outlookV2.decideCandidate(req.currentUser,req.params.id,decision),event=decision==='ACCEPTED'?'MAIL_INTELLIGENCE_ACCEPTED':'MAIL_INTELLIGENCE_REJECTED';userAccess.appendAudit(req.currentUser,event,item.id,{entityType:item.entityType,entityId:item.entityId,type:item.type},req);res.json({ok:true,item}); }
-  catch(err){apiError(res,err,'Değişiklik adayı kararı uygulanamadı.');}
-});
-app.post('/api/outlook/v2/summary', userAccess.requireCapability('OUTLOOK_MAIL.AI_SUMMARY'), express.json({limit:'2mb'}), async (req,res) => {
-  try { const result=await outlookV2.summarize(req.currentUser,req.body||{});userAccess.appendAudit(req.currentUser,'MAIL_AI_SUMMARY_CREATED',String(req.body&&req.body.conversationId||''),{cached:Boolean(result.cached),provider:result.provider,mailCount:Array.isArray(req.body&&req.body.messages)?req.body.messages.length:0},req);res.set('Cache-Control','private, no-store').json({ok:true,...result}); }
-  catch(err){apiError(res,err,'Mail özeti oluşturulamadı.');}
-});
-app.post('/api/outlook/v2/watch/:entityId', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.VIEW'), express.json({limit:'32kb'}), (req,res) => {
-  try { res.json({ok:true,item:outlookV2.setWatch(req.currentUser,req.params.entityId,req.body||{})}); }
-  catch(err){apiError(res,err,'Sipariş takip tercihi kaydedilemedi.');}
-});
-app.post('/api/outlook/v2/attachment', userAccess.requireCapability('OUTLOOK_MAIL.ATTACHMENT_VIEW'), express.json({limit:'64kb'}), async (req,res) => {
-  try { const item=await outlookV2.attachment(req.currentUser,req.body||{});userAccess.appendAudit(req.currentUser,'OUTLOOK_ATTACHMENT_OPENED','attachment',{nameHash:crypto.createHash('sha256').update(item.name).digest('hex').slice(0,16),size:item.size,contentType:item.contentType},req);res.set({'Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; sandbox",'X-Content-Type-Options':'nosniff','Content-Disposition':`inline; filename="${String(item.name||'attachment').replace(/[\r\n"\\]/g,'_')}"`}).type(item.contentType).send(item.buffer); }
-  catch(err){apiError(res,err,'Attachment güvenli önizleme için açılamadı.');}
-});
-app.post('/api/outlook/v2/feedback', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.VIEW'), express.json({limit:'32kb'}), (req,res) => {
-  try { res.status(201).json({ok:true,item:outlookV2.feedback(req.currentUser,req.body||{})}); }
-  catch(err){apiError(res,err,'Geri bildirim kaydedilemedi.');}
-});
-app.get('/api/outlook/v2/notifications', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.VIEW'), (req,res) => res.set('Cache-Control','no-store').json({ok:true,items:outlookV2.notifications(req.currentUser)}));
-app.get('/api/outlook/v2/dashboard', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.VIEW'), (req,res) => {
-  try { res.set('Cache-Control','no-store').json({ok:true,...outlookV2.dashboard(req.currentUser)}); }
-  catch(err){apiError(res,err,'Mail Intelligence dashboard yüklenemedi.');}
-});
-app.get('/api/outlook/v2/admin/managed-mailboxes', userAccess.requireCapability('OUTLOOK_MANAGED_MAILBOX.ADMIN'), (req,res) => res.set('Cache-Control','no-store').json({ok:true,items:outlookV2.store.listManagedMailboxes()}));
-app.post('/api/outlook/v2/admin/managed-mailboxes', userAccess.requireCapability('OUTLOOK_MANAGED_MAILBOX.ADMIN'), express.json({limit:'64kb'}), (req,res) => {
-  try { const result=outlookV2.store.upsertManagedMailbox(req.body||{},req.currentUser.id),event=result.created?'MANAGED_MAILBOX_ADDED':result.item.isEnabled?'MANAGED_MAILBOX_ENABLED':'MANAGED_MAILBOX_DISABLED';userAccess.appendAudit(req.currentUser,event,result.item.id,{emailHash:crypto.createHash('sha256').update(result.item.email).digest('hex').slice(0,16),intelligenceEnabled:result.item.intelligenceEnabled},req);res.status(result.created?201:200).json({ok:true,...result}); }
-  catch(err){apiError(res,err,'Managed mailbox kaydedilemedi.');}
-});
-app.delete('/api/outlook/v2/admin/managed-mailboxes/:id', userAccess.requireCapability('OUTLOOK_MANAGED_MAILBOX.ADMIN'), (req,res) => {
-  try { const removed=outlookV2.store.removeManagedMailbox(req.params.id);if(!removed)return res.status(404).json({error:'Mailbox bulunamadı.',code:'MAILBOX_NOT_FOUND'});userAccess.appendAudit(req.currentUser,'MANAGED_MAILBOX_REMOVED',removed.id,{emailHash:crypto.createHash('sha256').update(removed.email).digest('hex').slice(0,16)},req);res.json({ok:true,removed:true}); }
-  catch(err){apiError(res,err,'Managed mailbox silinemedi.');}
-});
-app.get('/api/outlook/v2/admin/health', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), (req,res) => res.set('Cache-Control','no-store').json({ok:true,...outlookV2.health()}));
-app.post('/api/outlook/v2/admin/subscriptions/ensure', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), express.json({limit:'16kb'}), async (req,res) => {
-  try { const result=await outlookV2.subscriptions.ensureAll();userAccess.appendAudit(req.currentUser,result.failed?'GRAPH_SUBSCRIPTION_FAILED':result.renewed?'GRAPH_SUBSCRIPTION_RENEWED':'GRAPH_SUBSCRIPTION_CREATED','microsoft365',result,req);res.json({ok:true,...result}); }
-  catch(err){apiError(res,err,'Graph subscription işlemi tamamlanamadı.');}
-});
-app.post('/api/outlook/v2/admin/delta/:mailboxId/:folderId', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), express.json({limit:'16kb'}), async (req,res) => {
-  try { res.json({ok:true,...await outlookV2.subscriptions.deltaRecover(req.params.mailboxId,req.params.folderId)}); }
-  catch(err){apiError(res,err,'Delta recovery tamamlanamadı.');}
-});
-app.post('/api/outlook/v2/admin/queue/process', userAccess.requireCapability('OUTLOOK_INTELLIGENCE.ADMIN'), express.json({limit:'16kb'}), async (req,res) => {
-  try { res.json({ok:true,results:await outlookV2.subscriptions.processQueue(Math.max(1,Math.min(50,Number(req.body&&req.body.limit)||10)))}); }
-  catch(err){apiError(res,err,'Mail intelligence kuyruğu işlenemedi.');}
-});
-
-if (outlookV2.features.changeNotifications) {
-  setInterval(() => outlookV2.subscriptions.ensureAll().catch(error=>logRuntimeFailure('outlookSubscriptionRenewal',error)), 60*60*1000).unref();
-  setInterval(() => outlookV2.subscriptions.processQueue(10).catch(error=>logRuntimeFailure('outlookIntelligenceQueue',error)), 15000).unref();
-}
-setInterval(() => { try { outlookV2.store.pruneRetention(); } catch(error){ logRuntimeFailure('outlookRetention',error); } }, 24*60*60*1000).unref();
 
 // ---- Agent Workflow Platform ------------------------------------------------
 // v5.46: Eski scheduler/web-recorder Agent sistemi tamamen kaldırıldı. Yeni
@@ -3853,362 +3653,49 @@ app.post('/api/user-workspace/:module/reset',express.json({limit:'256kb'}),(req,
    Ekran üç şeye ihtiyaç duyar: alan listesi, bir alanın GERÇEK değerleri
    (Excel'deki filtre listesi gibi) ve başka bir kullanıcının ufku.
    =================================================================== */
-/* ===================================================================
-   v7.81 — ASAS FİLTRESİNİ IAS İÇİN ÖNERİR (yazmaz)
+// ---- Sayfa Horizon'u route'ları (alanlar, değerler, önizleme, kullanıcıdan kopyalama) → server/routes/horizon-routes.js ----
+require('./routes/horizon-routes')(app, {
+  USER_WORKSPACE_MODULES,
+  apiError,
+  cacheForUser,
+  express,
+  horizonFields,
+  horizonFilterMapping,
+  intakeHorizonFields,
+  intakeLiveFields,
+  intakeReport,
+  intakeStore,
+  loadModelConnections,
+  logRuntimeFailure,
+  modelQuery,
+  queryModelDistinctValues,
+  resolveDynamicHorizonValueSource,
+  resolveHorizonValueSource,
+  selectConnection,
+  userAccess,
+  userPreferences,
 
-   Bir modül iki kaynaktan besleniyorsa (ör. Genel Bakış: ASAS + IAS),
-   kullanıcı aynı filtreyi iki kez kurmak zorunda kalmasın. Bu uç ASAS
-   tarafındaki koşulları IAS alanlarına eşleyip ÖNERİ döner; hiçbir şey
-   kaydetmez. Yazma, kullanıcının düzenleyicide onaylayıp kaydetmesiyle
-   olur — alan adları birebir tutmayabildiği için onay şart.
-   =================================================================== */
-app.get('/api/horizon/filter-mapping', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  try {
-    const target = String(req.query && req.query.target || '').trim().toLowerCase();
-    const fromRole = String(req.query && req.query.from || 'asas').trim().toLowerCase();
-    const toRole = String(req.query && req.query.to || 'intake').trim().toLowerCase();
-    if (!target) return res.status(400).json({ error: 'target zorunlu.', code: 'TARGET_REQUIRED' });
+});
+// ---- Koleksiyon geri dönüşüm kutusu route'ları → server/routes/collection-recycle-bin-routes.js ----
+require('./routes/collection-recycle-bin-routes')(app, {
+  apiError,
+  collectionRecycleBin,
+  collectionWorkspaceEditAllowed,
+  express,
+  userAccess,
 
-    const items = loadModelConnections().items || [];
-    const scopeFor = role => {
-      const item = items.find(entry => entry && entry.role === role);
-      if (!item || !Array.isArray(item.scopes)) return null;
-      const scope = item.scopes.find(entry => entry && Array.isArray(entry.targets) && entry.targets.includes(target));
-      return scope ? { item, scope } : null;
-    };
-    const from = scopeFor(fromRole);
-    const to = scopeFor(toRole);
-    /* Modül gerçekten İKİ kaynaktan beslenmiyorsa öneri üretmek anlamsız;
-       sessiz boş liste yerine sebebi söylenir. */
-    if (!from) return res.status(409).json({ error: 'Bu modülü besleyen bir ' + fromRole.toUpperCase() + ' kaynağı yok.', code: 'SOURCE_SCOPE_MISSING' });
-    if (!to) return res.status(409).json({ error: 'Bu modülü besleyen bir ' + toRole.toUpperCase() + ' kaynağı yok.', code: 'TARGET_SCOPE_MISSING' });
+});
+// ---- PLM → ASAS çeviri sözlüğü route'ları → server/routes/plm-translation-routes.js ----
+require('./routes/plm-translation-routes')(app, {
+  apiError,
+  express,
+  loadPlmTranslations,
+  publicPlmTranslations,
+  requestRevision,
+  upsertPlmTranslations,
+  userAccess,
 
-    const groups = (from.scope.horizon && Array.isArray(from.scope.horizon.groups)) ? from.scope.horizon.groups : [];
-    if (!groups.length) return res.status(409).json({ error: 'Kaynak filtresi boş — eşlenecek koşul yok.', code: 'SOURCE_FILTER_EMPTY' });
-
-    /* Hedef alanları CANLI şemadan okunur: eşleme, kullanıcının gerçekten
-       seçebileceği alanlar üzerinden yapılmalı. Şema okunamazsa öneri
-       üretmek yerine hata döneriz — eski/eksik listeden üretilen bir öneri
-       kullanıcıyı yanlış onaya sürükler. */
-    let targetFields = [];
-    if (toRole === 'intake') {
-      const found = await intakeLiveFields(to.item || undefined);
-      targetFields = intakeHorizonFields(found.fields);
-    } else {
-      const schema = await modelQuery.discoverSchema({ server: to.item.server, catalog: to.item.catalog });
-      targetFields = horizonFields.fromSchema(schema);
-    }
-
-    const result = horizonFilterMapping.proposeMapping({ groups, targetFields });
-    res.set('Cache-Control', 'no-store').json({
-      ok: true, target, from: fromRole, to: toRole,
-      fromSource: String(from.item.name || from.item.catalog || ''),
-      toSource: String(to.item.name || to.item.catalog || ''),
-      ...result,
-    });
-  } catch (err) { apiError(res, err, 'Filtre eşlemesi üretilemedi.'); }
 });
-app.get('/api/horizon/fields', async (req, res) => {
-  try {
-    const profile = req.currentUser || null;
-    const target = String(req.query && req.query.target || 'cp').trim().toLowerCase();
-    let fields = horizonFields.FIELDS;
-    let schemaError = '';
-    const connection = selectConnection(loadModelConnections().items, target);
-    if (target === 'intake') {
-      try {
-        const found = await intakeLiveFields(connection || undefined);
-        fields = intakeHorizonFields(found.fields);
-        schemaError = (found.schema.errors || []).map(item => item && item.error).filter(Boolean).join(' · ');
-      } catch (error) {
-        const snapshot = intakeStore.loadSnapshot(req.currentUser.id);
-        fields = intakeHorizonFields(snapshot && snapshot.fields && snapshot.fields.length ? snapshot.fields : intakeReport.defaultFields());
-        schemaError = String(error && error.message || error);
-      }
-    } else if (connection) {
-      try {
-        const schema = await modelQuery.discoverSchema({ server: connection.server, catalog: connection.catalog });
-        fields = horizonFields.fromSchema(schema);
-        schemaError = (schema.errors || []).map(item => item && item.error).filter(Boolean).join(' · ');
-      } catch (error) {
-        schemaError = String(error && error.message || error);
-      }
-    }
-    res.set('Cache-Control', 'no-store').json({
-      ok: true,
-      fields,
-      schemaError,
-      operators: Object.entries(horizonFields.OPERATORS).map(([id, item]) => ({ id, arity: item.arity, label: item.label })),
-      // Kullanıcı kartındaki MAG / MMYG / Buying Group — "bilgilerimden doldur".
-      profileScope: profile ? {
-        mags: Array.isArray(profile.mags) ? profile.mags : [],
-        mmygs: Array.isArray(profile.mmygs) ? profile.mmygs : [],
-        buyingGroups: Array.isArray(profile.buyingGroups) ? profile.buyingGroups : [],
-      } : { mags: [], mmygs: [], buyingGroups: [] },
-    });
-  } catch (err) { apiError(res, err, 'Ufuk alanları okunamadı.'); }
-});
-
-/* Bir alanın seçilebilir değerleri. Sayfa Horizon'u, Horizon ve Bağlantı
-   ile aynı canonical eşlemeyi kullanarak ASAS database'inin TAM tekil değer
-   listesini okur; mevcut kişisel Horizon veya yüklü sayfa satırları bu listeyi
-   daraltmaz. Database erişilemezse kullanıcı çalışmaya devam edebilsin diye
-   yerel/yüklü satırlar yalnız açıkça işaretlenmiş geri dönüş kaynağıdır. */
-app.get('/api/horizon/values', async (req, res) => {
-  try {
-    const field = String(req.query && req.query.field || '').trim();
-    const table = String(req.query && req.query.table || '').trim();
-    const column = String(req.query && req.query.column || '').trim() || field;
-    const target = String(req.query && req.query.target || 'cp').trim().toLowerCase();
-    if (!field) return res.status(400).json({ error: 'field zorunlu.', code: 'FIELD_REQUIRED' });
-    const connections = loadModelConnections().items;
-    let databaseSource = null;
-    if (table) {
-      databaseSource = resolveDynamicHorizonValueSource(connections, target, table, column);
-      if (!databaseSource) return res.status(400).json({ error: 'Geçersiz Horizon alanı.', code: 'HORIZON_FIELD_INVALID' });
-      const schema = await modelQuery.discoverSchema({ server: databaseSource.server, catalog: databaseSource.catalog });
-      const valid = (schema.columns || []).some(item => String(item.table || '').trim().toLocaleLowerCase('tr-TR') === table.toLocaleLowerCase('tr-TR')
-        && String(item.name || '').trim().toLocaleLowerCase('tr-TR') === column.toLocaleLowerCase('tr-TR'));
-      if (!valid) return res.status(400).json({ error: 'Geçersiz ASAS Horizon sütunu.', code: 'HORIZON_FIELD_INVALID' });
-    } else if (!horizonFields.FIELDS.some(item => item.header === field)) {
-      return res.status(400).json({ error: 'Geçersiz Horizon alanı.', code: 'HORIZON_FIELD_INVALID' });
-    } else {
-      databaseSource = resolveHorizonValueSource(connections, target, field);
-    }
-    let databaseError = '';
-    if (databaseSource) {
-      try {
-        const distinct = await queryModelDistinctValues({ ...databaseSource, search: req.query && req.query.q, offset: req.query && req.query.offset }, Math.min(20000, Math.max(50, Number(req.query && req.query.limit) || 1000)));
-        return res.set('Cache-Control', 'no-store').json({
-          ok: true, field, target,
-          values: distinct.values,
-          /* Değerin ALAN TİPİ birlikte gider: ekran koşulu bu tiple damgalar ve
-             seçilen değer aynı şemaya karşı doğrudan filtre olarak çalışır. */
-          valueType: distinct.valueType || '',
-          rowCount: null,
-          truncated: Boolean(distinct.truncated),
-          source: 'database',
-          connectionId: databaseSource.connectionId,
-          cached: Boolean(distinct.cached),
-        });
-      } catch (error) {
-        databaseError = String(error && error.message ? error.message : error);
-        logRuntimeFailure('horizonDatabaseValues', error);
-      }
-    }
-
-    if (target === 'intake') {
-      const snapshot = intakeStore.loadSnapshot(req.currentUser.id);
-      const snapshotFields = Array.isArray(snapshot && snapshot.fields) ? snapshot.fields : [];
-      const meta = snapshotFields.find(item => String(item.id) === field
-        || (String(item.table).toLocaleLowerCase('tr-TR') === table.toLocaleLowerCase('tr-TR') && String(item.name).toLocaleLowerCase('tr-TR') === column.toLocaleLowerCase('tr-TR')));
-      const seen = new Set();
-      if (meta) {
-        for (const row of Array.isArray(snapshot && snapshot.rows) ? snapshot.rows : []) {
-          const rawValue = row && row[meta.id];
-          const value = rawValue == null ? '' : String(rawValue).trim();
-          if (value) seen.add(value);
-        }
-      }
-      return res.set('Cache-Control', 'no-store').json({ok:true,field,target,values:[...seen].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'})),rowCount:Array.isArray(snapshot&&snapshot.rows)?snapshot.rows.length:0,truncated:false,source:'intake-snapshot-fallback',warning:databaseError||'INTAKE canlı kaynağı kullanılamadı.'});
-    }
-    const cache = cacheForUser(req);
-    const rows = Array.isArray(cache && cache.asasOrders) ? cache.asasOrders : [];
-    const seen = new Set();
-    for (const row of rows) {
-      const value = String(horizonFields.rowValue(row, table ? column : field) == null ? '' : horizonFields.rowValue(row, table ? column : field)).trim();
-      if (!value) continue;
-      seen.add(value);
-      if (seen.size >= 2000) break;
-    }
-    const values = [...seen].sort((a, b) => a.localeCompare(b, 'tr', { sensitivity: 'base' }));
-    res.set('Cache-Control', 'no-store').json({
-      ok: true, field, target, values, rowCount: rows.length,
-      truncated: seen.size >= 2000,
-      source: 'loaded-data-fallback',
-      warning: databaseError || (databaseSource ? '' : 'Alan için database eşlemesi bulunamadı.'),
-    });
-  } catch (err) { apiError(res, err, 'Alan değerleri okunamadı.'); }
-});
-
-/* Ufkun kaç satır getireceğinin ÖNİZLEMESİ. Kullanıcı kaydetmeden önce
-   sonucu görür; "kaydettim ama ekran boş" durumu böylece kapanır. */
-app.post('/api/horizon/preview', express.json({ limit: '256kb' }), (req, res) => {
-  try {
-    const horizon = (req.body || {}).horizon;
-    const target = String(req.body && req.body.target || 'cp').trim().toLowerCase();
-    const cache = cacheForUser(req);
-    const snapshot = target === 'intake' ? intakeStore.loadSnapshot(req.currentUser.id) : null;
-    const rows = target === 'intake'
-      ? (Array.isArray(snapshot && snapshot.rows) ? snapshot.rows : [])
-      : (Array.isArray(cache && cache.asasOrders) ? cache.asasOrders : []);
-    const kept = horizonFields.filterRows(rows, horizon);
-    res.set('Cache-Control', 'no-store').json({
-      ok: true, total: rows.length, matched: kept.length,
-      bounded: horizonFields.isBounded(horizon),
-      summary: horizonFields.describeHorizon(horizon, String(req.query && req.query.lang || 'tr')),
-    });
-  } catch (err) { apiError(res, err, 'Ufuk önizlemesi hesaplanamadı.'); }
-});
-
-/* Kullanıcıdan kopyalama: kimlerden kopyalanabilir ve o kişinin ufku nedir.
-   Ufuk bir FİLTREDİR, veri değil; bu yüzden aktif kullanıcılar arasında
-   paylaşılabilir. Kopyalanan ufuk yalnız KENDİ çalışma alanınıza yazılır. */
-app.get('/api/horizon/users', (req, res) => {
-  try {
-    const module = String(req.query && req.query.module || '').toLowerCase();
-    const me = String(req.currentUser && req.currentUser.id || '');
-    const items = userAccess.allPublicProfiles()
-      .filter(profile => profile && profile.id !== me && profile.status !== 'INACTIVE')
-      .map(profile => {
-        const horizon = USER_WORKSPACE_MODULES.has(module) ? userPreferences.getHorizon(profile.id, module) : null;
-        return {
-          id: profile.id,
-          name: profile.displayName || profile.username || profile.id,
-          role: profile.systemRoleLabel || profile.roleLabel || '',
-          mags: profile.mags || [], mmygs: profile.mmygs || [], buyingGroups: profile.buyingGroups || [],
-          hasHorizon: Boolean(horizon && Object.keys(horizon).length),
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name, 'tr', { sensitivity: 'base' }));
-    res.set('Cache-Control', 'no-store').json({ ok: true, users: items });
-  } catch (err) { apiError(res, err, 'Kullanıcı listesi okunamadı.'); }
-});
-app.get('/api/horizon/from-user/:id', (req, res) => {
-  try {
-    const module = String(req.query && req.query.module || '').toLowerCase();
-    if (!USER_WORKSPACE_MODULES.has(module)) return res.status(400).json({ error: 'Geçersiz çalışma alanı modülü.', code: 'INVALID_WORKSPACE_MODULE' });
-    const target = userAccess.profileById(req.params.id);
-    if (!target) return res.status(404).json({ error: 'Kullanıcı bulunamadı.', code: 'USER_NOT_FOUND' });
-    const stored = userPreferences.getHorizon(target.id, module);
-    const roleEntries = userAccess.roleWorkspaceEntries(target);
-    const resolved = userPreferences.resolveHorizon(target.id, module, null, {}, roleEntries);
-    // Kişisel ufku yoksa o kullanıcının EKRANINDA GEÇERLİ olan ufuk döner;
-    // "kopyaladım ama boş geldi" durumu oluşmaz.
-    const horizon = stored && Object.keys(stored).length ? stored : resolved;
-    res.set('Cache-Control', 'no-store').json({
-      ok: true, module, userId: target.id,
-      userName: target.displayName || target.username || target.id,
-      horizon: horizon || {}, fromPersonal: Boolean(stored && Object.keys(stored).length),
-    });
-  } catch (err) { apiError(res, err, 'Kullanıcının ufku okunamadı.'); }
-});
-
-/* v7.81 — /api/horizon-presets KALDIRILDI (kullanıcı kararı).
-   Ön ayar, hiç seçim yapmamış kullanıcıya profiline göre otomatik bir ufuk
-   atıyordu. Kullanıcı bunu görmüyor, ortak filtreyi değiştirip hiçbir şeyin
-   değişmediğini fark ediyordu. Ufuk artık ya kullanıcının kendi ayarından ya
-   da Veri Yönetimi'ndeki ortak filtreden gelir — ikisi de görünür.
-   horizon-presets.json diskte durur; okunmaz. */
-
-/* Moderatör / Yönetici, kullanıcılar panelinden BİR KULLANICININ ufkunu
-   doğrudan ayarlar. Kişisel ufuk her zaman ön ayarı yendiği için, buradan
-   yazılan değer kullanıcının ekranında hemen geçerli olur; kullanıcı
-   isterse kendi ekranından değiştirebilir (talep: "Kullanıcı, Yönetici ve
-   Moderatör istediğinde bu ufukları değiştirebilsin"). */
-app.put('/api/iam/users/:id/horizon', express.json({ limit: '2mb' }), (req, res) => {
-  try {
-    const target = userAccess.profileById(req.params.id);
-    if (!target) return res.status(404).json({ error: 'Kullanıcı bulunamadı.', code: 'USER_NOT_FOUND' });
-    // Yönetici yalnız KENDİ ekibindeki kullanıcının ufkunu ayarlayabilir;
-    // Moderatör hepsini. Yetkisiz istek hiç veri görmeden reddedilir (§32).
-    if (!userAccess.canManageTarget(req.currentUser, target)) {
-      return res.status(403).json({ error: 'Bu kullanıcı sizin yönetim alanınızda değil.', code: 'USER_NOT_MANAGEABLE' });
-    }
-    const body = req.body || {};
-    const module = String(body.module || '').toLowerCase();
-    if (!USER_WORKSPACE_MODULES.has(module)) return res.status(400).json({ error: 'Geçersiz çalışma alanı modülü.', code: 'INVALID_WORKSPACE_MODULE' });
-    /* v7.81: ön ayardan uygulama kaldırıldı; yönetici doğrudan bir Horizon
-       yazar. Ön ayar kavramı artık yok (bkz. /api/horizon-presets notu). */
-    const horizon = body.horizon;
-    if (!horizon || typeof horizon !== 'object') return res.status(400).json({ error: 'Uygulanacak Horizon seçin.', code: 'HORIZON_REQUIRED' });
-    userPreferences.saveHorizon(target.id, module, horizon, { connectionId: String(body.connectionId || ''), role: String(body.role || '') });
-    userAccess.appendAudit(req.currentUser, 'USER_HORIZON_SET', target.id, {
-      targetName: target.displayName || target.username, module, connectionId: String(body.connectionId || ''),
-    });
-    res.json({ ok: true, module, horizon: userPreferences.getHorizon(target.id, module) });
-  } catch (err) { apiError(res, err, 'Kullanıcı Horizon ayarı kaydedilemedi.'); }
-});
-app.post('/api/iam/users/:id/horizon/reset', express.json({ limit: '256kb' }), (req, res) => {
-  try {
-    const target = userAccess.profileById(req.params.id);
-    if (!target) return res.status(404).json({ error: 'Kullanıcı bulunamadı.', code: 'USER_NOT_FOUND' });
-    // Yönetici yalnız KENDİ ekibindeki kullanıcının ufkunu ayarlayabilir;
-    // Moderatör hepsini. Yetkisiz istek hiç veri görmeden reddedilir (§32).
-    if (!userAccess.canManageTarget(req.currentUser, target)) {
-      return res.status(403).json({ error: 'Bu kullanıcı sizin yönetim alanınızda değil.', code: 'USER_NOT_MANAGEABLE' });
-    }
-    const module = String((req.body || {}).module || 'all').toLowerCase();
-    if (module !== 'all' && !USER_WORKSPACE_MODULES.has(module)) return res.status(400).json({ error: 'Geçersiz çalışma alanı modülü.', code: 'INVALID_WORKSPACE_MODULE' });
-    const saved = userPreferences.resetWorkspace(target.id, module, ['horizon']);
-    userAccess.appendAudit(req.currentUser, 'USER_HORIZON_RESET', target.id, { targetName: target.displayName || target.username, module, removedKeys: saved.removedKeys || [] });
-    res.json({ ok: true, module, removedKeys: saved.removedKeys || [] });
-  } catch (err) { apiError(res, err, 'Kullanıcı Horizon ayarı sıfırlanamadı.'); }
-});
-
-/* ---- Koleksiyon geri dönüşüm kutusu (v5.97) ----
-   Silinen modeller 30 gün saklanır. Yetki kontrolü çalışma alanının aynısıdır:
-   okumak için erişim, geri yüklemek/temizlemek için DÜZENLEME yetkisi gerekir —
-   geri yükleme çalışma alanını değiştirir. */
-function collectionBinAccess(req, res, needEdit) {
-  const ownerId = String(req.params.ownerId || '');
-  const level = userAccess.collectionAccessLevel(req.currentUser, ownerId);
-  if (!level) { res.status(403).json({ error: 'Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.', code: 'COLLECTION_ACCESS_DENIED' }); return null; }
-  if (needEdit && !collectionWorkspaceEditAllowed(req.currentUser, ownerId)) { res.status(403).json({ error: 'Bu Koleksiyon sayfasını düzenleme yetkiniz bulunmuyor.', code: 'COLLECTION_EDIT_DENIED' }); return null; }
-  return ownerId;
-}
-app.get('/api/collection-recycle-bin/:ownerId', userAccess.requireArea('koleksiyon'), (req, res) => {
-  const ownerId = collectionBinAccess(req, res, false); if (ownerId == null) return;
-  res.set('Cache-Control', 'no-store').json(collectionRecycleBin.loadBin(ownerId));
-});
-app.post('/api/collection-recycle-bin/:ownerId', userAccess.requireArea('koleksiyon'), express.json({ limit: '100mb' }), (req, res) => {
-  try {
-    const ownerId = collectionBinAccess(req, res, true); if (ownerId == null) return;
-    const entries = Array.isArray(req.body && req.body.entries) ? req.body.entries : [];
-    const bin = collectionRecycleBin.addEntries(ownerId, entries, {
-      deletedBy: req.currentUser.id,
-      deletedByName: req.currentUser.displayName || req.currentUser.username || '',
-      reason: String((req.body && req.body.reason) || 'manual'),
-    });
-    userAccess.appendAudit(req.currentUser, 'COLLECTION_ROWS_DELETED', ownerId, { count: entries.length });
-    res.json({ ok: true, bin });
-  } catch (err) { apiError(res, err, 'Silinen modeller saklanamadı.'); }
-});
-// Geri yükleme: kayıtlar kutudan ÇIKARILIP istemciye döndürülür. Satırları
-// çalışma alanına yazmak istemcinin işidir; çakışma kararını orada veriyor.
-app.post('/api/collection-recycle-bin/:ownerId/restore', userAccess.requireArea('koleksiyon'), express.json({ limit: '1mb' }), (req, res) => {
-  try {
-    const ownerId = collectionBinAccess(req, res, true); if (ownerId == null) return;
-    const result = collectionRecycleBin.takeEntries(ownerId, req.body && req.body.entryIds);
-    userAccess.appendAudit(req.currentUser, 'COLLECTION_ROWS_RESTORED', ownerId, { count: result.taken.length });
-    res.json({ ok: true, restored: result.taken, bin: result.bin });
-  } catch (err) { apiError(res, err, 'Modeller geri yüklenemedi.'); }
-});
-app.post('/api/collection-recycle-bin/:ownerId/purge', userAccess.requireArea('koleksiyon'), express.json({ limit: '1mb' }), (req, res) => {
-  try {
-    const ownerId = collectionBinAccess(req, res, true); if (ownerId == null) return;
-    const bin = collectionRecycleBin.removeEntries(ownerId, req.body && req.body.entryIds);
-    userAccess.appendAudit(req.currentUser, 'COLLECTION_BIN_PURGED', ownerId, { count: (req.body && req.body.entryIds || []).length });
-    res.json({ ok: true, bin });
-  } catch (err) { apiError(res, err, 'Kayıtlar temizlenemedi.'); }
-});
-
-app.get('/api/plm-translations', userAccess.requireArea('koleksiyon'), (_req, res) => {
-  res.set('Cache-Control', 'no-store').json(publicPlmTranslations(loadPlmTranslations()));
-});
-app.post('/api/plm-translations', userAccess.requireArea('koleksiyon'), express.json({ limit: '512kb' }), (req, res) => {
-  try {
-    const canEditCollection = userAccess.effectiveCollectionAccess(req.currentUser).some(item => item.level === 'edit');
-    if (!canEditCollection) return res.status(403).json({ error: 'PLM çeviri sözlüğünü güncellemek için Koleksiyon düzenleme yetkisi gerekir.', code: 'COLLECTION_EDIT_DENIED' });
-    const items = req.body && req.body.items;
-    if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const saved = upsertPlmTranslations(items, req.currentUser, requestRevision(req));
-    userAccess.appendAudit(req.currentUser, 'PLM_TRANSLATION_APPROVE', 'collection', { count: saved.updated, fields: [...new Set(items.map(item => item && item.field).filter(Boolean))] });
-    res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, ...saved });
-  } catch (err) { apiError(res, err, 'PLM çeviri sözlüğü kaydedilemedi.'); }
-});
-
 // ---- CoreNectum PLM Code -> styleId deep-link dictionary ------------------
 // CoreNectum oturum bilgileri Buyer Log'a alınmaz. Eşleşmeler CSV/Excel ile
 // içe aktarılabilir veya kullanıcının giriş yaptığı mevcut Edge profilinde
@@ -5237,140 +4724,33 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
   finally { clearModelOperationProgress(req.currentUser&&req.currentUser.id); }
 });
 
-/* ===================================================================
-   HAZIR PLM GÖRSEL PAKETİ (BUYERLOG_IMPORT)
+// ---- Hazır PLM görsel paketi ve görsel iş durumu route'ları → server/routes/plm-image-package-routes.js ----
+require('./routes/plm-image-package-routes')(app, {
+  apiError,
+  assertModelImageMutable,
+  canonicalPlmImageIngest,
+  express,
+  finishImageJob,
+  fs,
+  getCollectionImage,
+  loadOverrides,
+  modelOperationProgress,
+  path,
+  plmImageJobCounts,
+  plmImageJobStore,
+  plmImageOwnership,
+  plmImagePackage,
+  plmImagePayload,
+  plmImageRefreshLog,
+  plmImageSyncService,
+  plmJobScope,
+  plmJobs,
+  reportImageProgress,
+  requirePlmContextAccess,
+  userAccess,
+  withModelImageImportLock,
 
-   Dış PLM görsel testi binlerce görseli ZATEN indirdi. Bu iki uç o paketi
-   CoreNectum'a hiç gitmeden Buyer Log'un KANONİK deposuna alır.
-
-   ÖNCE ÖNİZLEME, SONRA ONAY: yazma yalnız kullanıcı sayıları gördükten ve
-   açıkça onayladıktan sonra yapılır. Önizleme hiçbir şey yazmaz.
-
-   Paket klasörüne KALICI BAĞIMLILIK BIRAKILMAZ: baytlar kanonik depoya
-   kopyalanır, kayıt güncellenir; paket sonradan silinebilir.
-   =================================================================== */
-/* Kullanıcı yolu Gezgin'den yapıştırır. Gezgin'in "Yol olarak kopyala"
-   komutu yolu TIRNAK İÇİNDE verir ("C:\...\BUYERLOG_IMPORT"); sondaki ters
-   bölü de sık görülür. İkisi de geçerli bir klasör niyetidir ve yalnız
-   yazım farkı yüzünden "klasör bulunamadı" demek kullanıcıyı yanıltır.
-   Kopyalamada araya girebilen U+202A/U+200E gibi görünmez yön işaretleri de
-   temizlenir. */
-function plmPackageRootFrom(req) {
-  let raw = String((req.body && (req.body.folder || req.body.path)) || '')
-    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '')
-    .trim();
-  if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) raw = raw.slice(1, -1).trim();
-  if (!raw) { const error = new Error('Paket klasörü zorunlu.'); error.statusCode = 400; error.code = 'PLM_PACKAGE_ROOT_REQUIRED'; throw error; }
-  if (raw.length > 1024) { const error = new Error('Paket klasörü yolu çok uzun.'); error.statusCode = 400; error.code = 'PLM_PACKAGE_ROOT_INVALID'; throw error; }
-  return path.resolve(raw);
-}
-function plmPackageContext(overwriteManual) {
-  const overrides = loadOverrides();
-  return {
-    imagemap: overrides.imagemap || {},
-    store: plmImageOwnership.loadOwnership(),
-    ownership: plmImageOwnership,
-    hasStoredFile: ref => Boolean(String(ref || '').trim() && getCollectionImage(ref)),
-    overwriteManual: overwriteManual === true,
-  };
-}
-app.post('/api/model-images/package/preview', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), express.json({ limit: '64kb' }), (req, res) => {
-  try {
-    assertModelImageMutable();
-    const root = plmPackageRootFrom(req);
-    const preview = plmImagePackage.previewPackage(root, plmPackageContext(req.body && req.body.overwriteManual));
-    userAccess.appendAudit(req.currentUser, 'PLM_IMAGE_PACKAGE_PREVIEW', 'package', { root, ...preview.counts });
-    res.json({ ok: true, ...preview });
-  } catch (err) { apiError(res, err, 'PLM görsel paketi okunamadı.'); }
 });
-app.post('/api/model-images/package/import', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), express.json({ limit: '64kb' }), async (req, res) => {
-  const imageJobRef = { id: null };
-  let checkpoint = null;
-  try {
-    assertModelImageMutable();
-    // Onay AÇIK olmalı: kazayla yazma olmasın.
-    if (req.body && req.body.confirm !== true) return res.status(400).json({ error: 'İçe aktarma için önce önizlemeyi onaylayın.', code: 'PLM_PACKAGE_CONFIRM_REQUIRED' });
-    const root = plmPackageRootFrom(req);
-    const overwriteManual = Boolean(req.body && req.body.overwriteManual);
-    const context = plmPackageContext(overwriteManual);
-    const info = plmImagePackage.readPackageManifest(root, {});
-    const classified = plmImagePackage.classifyPackageEntries(info, { ...context, withBytes: false });
-    const ready = classified.entries.filter(entry => entry.status === plmImagePackage.ENTRY_READY);
-    imageJobRef.id = plmJobs.create(req.currentUser.id, {
-      kind: 'plm-images', scope: plmJobScope(req), total: ready.length,
-      label: 'Model gorseli · ' + ready.length + ' paket girdisi', phase: 'Paket goresellerini aliyor',
-    }).id;
-    const result = await withModelImageImportLock(req.currentUser.id, async () => {
-      checkpoint = plmImageJobStore.createCheckpoint({
-        jobId: imageJobRef.id, userId: String(req.currentUser.id), kind: 'plm-images',
-        scope: plmJobScope(req), source: 'package', mode: 'all', overwriteManual,
-        items: ready.map(entry => ({ plmId: entry.plmId, colourCode: entry.colourCode, colour: entry.colour, styleId: entry.styleId, styleName: entry.styleName })),
-      });
-      return plmImageSyncService.runPackageImport({
-        entries: ready,
-        ingest: canonicalPlmImageIngest(plmImageOwnership.OWNER_PACKAGE),
-        // Baytlar TEK TEK okunur; 5.000+ görsel aynı anda belleğe alınmaz.
-        readImage: file => fs.readFileSync(file),
-        imagemap: context.imagemap, store: context.store, overwriteManual,
-        checkpoint, commitBatchSize: 200,
-        isCancelled: () => plmJobs.isCancelled(req.currentUser.id, imageJobRef.id),
-        onProgress: progress => reportImageProgress(req, imageJobRef, progress),
-      });
-    });
-    for (const item of result.failures || []) plmJobs.addFailure(req.currentUser.id, imageJobRef.id, { plmId: item.plmId, model: item.styleName, error: item.error, code: item.code });
-    plmJobs.update(req.currentUser.id, imageJobRef.id, { processed: ready.length, total: ready.length, succeeded: Math.max(0, ready.length - (result.failures || []).length) });
-    plmImageRefreshLog('PLM_IMAGE_PACKAGE_IMPORT', { root, ...result.counts });
-    userAccess.appendAudit(req.currentUser, 'PLM_IMAGE_PACKAGE_IMPORT', 'package', { root, ...result.counts, skipped: classified.counts });
-    res.json({
-      ok: true, root, status: result.status, mode: 'all',
-      overrides: result.overrides, images: plmImagePayload(result.outcomes),
-      imagesSaved: result.counts.linksUpdated || result.linksUpdated || 0,
-      requested: ready.length, counts: plmImageJobCounts(result.counts),
-      preview: classified.counts, failedItems: result.failures || [], imageFailedItems: result.failures || [],
-      jobId: imageJobRef.id,
-    });
-    finishImageJob(req, imageJobRef, null);
-  } catch (err) {
-    if (checkpoint) try { checkpoint.finish(plmImageJobStore.STATUS_FAILED, { error: err && err.message }); } catch (_) {}
-    finishImageJob(req, imageJobRef, err);
-    apiError(res, err, 'PLM görsel paketi içe aktarılamadı.');
-  }
-});
-/* Yeniden başlatmadan sonra yarım kalmış işler. Kayıt diskte durduğu için
-   birkaç bin modellik bir iş sıfırdan başlamak zorunda kalmaz. */
-app.get('/api/plm-image-jobs', requirePlmContextAccess, (req, res) => {
-  const records = plmImageJobStore.listRecords(String(req.currentUser.id)).map(record => ({
-    jobId: record.jobId, kind: record.kind, scope: record.scope, source: record.source, mode: record.mode,
-    status: record.status, phase: record.phase, counts: record.counts,
-    total: record.items.length, done: record.done.length, pending: Math.max(0, record.items.length - record.done.length),
-    failures: record.failures.length, createdAt: record.createdAt, updatedAt: record.updatedAt, finishedAt: record.finishedAt,
-    resumable: plmImageJobStore.ACTIVE_STATUSES.has(record.status) && record.done.length < record.items.length,
-  }));
-  res.set('Cache-Control', 'no-store').json({ ok: true, jobs: records });
-});
-/* Devam / yalnız başarısızları yeniden dene: İSTEK LİSTESİNİ döndürür,
-   çalıştırmayı istemci mevcut akışıyla başlatır. Böylece ikinci bir
-   "yalnız başarısızlar" yolu yazılmaz. */
-app.get('/api/plm-image-jobs/:id/pending', requirePlmContextAccess, (req, res) => {
-  const record = plmImageJobStore.readRecord(req.params.id);
-  if (!record || record.userId !== String(req.currentUser.id)) return res.status(404).json({ error: 'İş bulunamadı.', code: 'PLM_JOB_NOT_FOUND' });
-  const only = String(req.query.only || '').trim();
-  const done = new Set(record.done);
-  const items = only === 'failed'
-    ? plmImageJobStore.retryItems(record.jobId)
-    : record.items.filter(item => !done.has(plmImageJobStore.itemKey(item)));
-  res.json({ ok: true, jobId: record.jobId, scope: record.scope, mode: record.mode, source: record.source, only: only === 'failed' ? 'failed' : 'pending', items });
-});
-app.delete('/api/plm-image-jobs/:id', requirePlmContextAccess, (req, res) => {
-  const record = plmImageJobStore.readRecord(req.params.id);
-  if (!record || record.userId !== String(req.currentUser.id)) return res.status(404).json({ error: 'İş bulunamadı.', code: 'PLM_JOB_NOT_FOUND' });
-  plmImageJobStore.removeRecord(record.jobId);
-  res.json({ ok: true, removed: record.jobId });
-});
-app.get('/api/model-operation-status', requirePlmContextAccess, (req,res) => {
-  res.set('Cache-Control','no-store').json(modelOperationProgress.get(String(req.currentUser.id)) || {running:false});
-});
-
 /* ===================================================================
    PLM OPERASYON MERKEZİ — jobId bazlı iş uçları
 
@@ -5539,252 +4919,35 @@ app.post('/api/plm-style-links/sync', userAccess.requireAnyArea('cp', 'orders', 
   } catch (err) { automationError(res, err, 'CoreNectum PLM bağlantıları otomatik alınamadı.'); }
 });
 
-/* ===================================================================
-   COLLECTION DIRECT PLM SYNC
+// ---- Koleksiyon doğrudan PLM senkronu ve QTX route'ları → server/routes/plm-sync-routes.js ----
+require('./routes/plm-sync-routes')(app, {
 
-   Bu uç nokta "PLM Excel'inden Modelleri Aktar" ile AYNI normalize edilmiş
-   model nesnesini üretmek için VERİ KAYNAĞIDIR — eşleme/güncelleme mantığı
-   burada değil, istemcideki paylaşılan mapping motorunda
-   (public/app-main.js: kolPlmNormalizeDirectRecord → kolBuildPlmImportPlan)
-   yaşar. İkinci bir GetStyleList/pagination/authentication uygulaması
-   YOKTUR: agentBrowserConnector.collectCoreNectumStyleLinks zaten "PLM Link
-   ve Görsellerini Bul" tarafından üretimde kullanılan AYNI fonksiyondur —
-   yalnız artık kayıt başına daha fazla iş alanı taşıyor (bkz.
-   agent-browser-connector.js CORENECTUM_EXTRA_FIELDS).
-
-   needImage HER ZAMAN false: görsel çekme ayrı, zaten var olan
-   /api/model-images/import-plm akışının işidir (§13 — görsel altyapısı
-   yeniden yazılmaz). PLM linki sözlüğü (plmId→styleId) burada da tazelenir
-   (upsertPlmStyleLinks) — Collection PLM Sync çalıştıran kullanıcı, PLM
-   model linklerini de bedavaya güncellemiş olur. */
-app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.json({ limit: '4mb' }), async (req, res) => {
-  try {
-     const selectedOnly = Boolean(req.body && req.body.selectedOnly === true);
-     const language = String(req.body && req.body.language || '').toLowerCase()==='tr'?'tr':String(req.body && req.body.language || '').toLowerCase()==='en'?'en':'';
-     const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
-     if (!selectedOnly && !raw) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-     const plmIds = selectedOnly ? [] : [...new Set(raw.map(value => normalizePlmId(value)).filter(Boolean))].slice(0, 2000);
-     if (!selectedOnly && !plmIds.length) return res.status(400).json({ error: 'Geçerli PLM ID bulunamadı.', code: 'PLM_ID_REQUIRED' });
-     // selectedOnly modunda CoreNectum Style List'teki mevcut DOM checkbox'ları
-     // connector okur; istemciden PLM ID listesi beklenmez.
-     const items = selectedOnly ? [] : plmIds.map(plmId => ({ plmId, needImage: false }));
-    setModelOperationProgress(req.currentUser.id, { kind: 'plm-sync', phase: 'PLM verisi aranıyor', current: 0, total: items.length, model: '' });
-    /* İş kaydı: bu iş Koleksiyon kapsamına yazılır, böylece CP/Orders
-       ekranlarında görünmez ama sayfa değişince de durmaz. */
-    const fetchRun = await withPlmJob(req, {
-       kind: 'plm-sync', scope: 'koleksiyon', total: items.length,
-       label: selectedOnly ? 'PLM seçili modelleri aktar' : `PLM verisi · ${items.length} model`, phase: 'PLM verisi aranıyor',
-     }, async job => agentBrowserConnector.collectCoreNectumStyleLinks(req.currentUser.id, items, {
-       ...getModelImageSettings(),
-       selectedOnly,
-       language,
-      onProgress: progress => {
-        setModelOperationProgress(req.currentUser.id, { kind: 'plm-sync', ...progress });
-        job.report({
-          phase: progress && progress.phase,
-          processed: progress && progress.current,
-           total: (progress && progress.total) || items.length,
-          activeModel: progress && progress.model,
-        });
-      },
-    }));
-    const collected = fetchRun.result;
-    // Bulunamayan modeller işin başarısız listesine yazılır ki kullanıcı
-    // ayrıntısını görebilsin ve YALNIZ onları yeniden deneyebilsin.
-    for (const item of collected.failed || []) {
-      plmJobs.addFailure(req.currentUser.id, fetchRun.job.id, {
-        plmId: item && item.plmId, model: item && item.styleName,
-        error: (item && item.error) || 'PLM listesinde bulunamadı.', code: (item && item.code) || 'PLM_NOT_FOUND',
-      });
-    }
-     plmJobs.update(req.currentUser.id, fetchRun.job.id, {
-       processed: collected.requested || items.length, total: collected.requested || items.length,
-       succeeded: collected.links.length,
-     });
-    // PLM linki sözlüğü de tazelensin — "PLM Link ve Görsellerini Bul"
-    // ile ikinci bir ayrı istek gerekmesin. Başarısız olsa bile ana sonuç
-    // (records) etkilenmemeli; bu tazeleme bir yan fayda, kritik yol değil.
-    // styleLinks: upsert sonrası GÜNCEL TAM link deposu. İstemci bunu
-    // applyPlmStyleLinksPayload'a verip link haritasını tazeler; böylece
-    // "Model Linklerini PLM'den Al" için AYRI bir Style List taraması
-    // (pahalı, dakikalar süren tam liste gezintisi) gerekmez.
-    let styleLinks = null;
-    try { styleLinks = upsertPlmStyleLinks(collected.links, req.currentUser); } catch (_) {}
-    userAccess.appendAudit(req.currentUser, 'PLM_SYNC_FETCH', 'corenectum', {
-      requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
-      scannedPages: collected.scannedPages, scannedRows: collected.scannedRows,
-    });
-    res.json({
-      ok: true, records: collected.links, failed: collected.failed,
-      requested: collected.requested, found: collected.links.length,
-      scannedPages: collected.scannedPages, scannedRows: collected.scannedRows,
-      // Sırsız tanı izi: tarayıcı/profil/oturum/HTTP/kayıt aşamaları. Hata
-      // hâlinde de aynı iz automationError üzerinden details.diagnostics olarak
-      // döner, böylece "0 model" ile "oturum yok" karıştırılamaz.
-      diagnostics: collected.diagnostics || [],
-      styleLinks, jobId: fetchRun.job.id,
-    });
-  } catch (err) { automationError(res, err, 'PLM verileri alınamadı.'); }
-  finally { clearModelOperationProgress(req.currentUser && req.currentUser.id); }
+  MODEL_FILES_ROOT,
+  agentBrowserConnector,
+  apiError,
+  automationError,
+  clearModelOperationProgress,
+  crypto,
+  ensureModelFilesRoot,
+  express,
+  fs,
+  loadPlmStyleLinks,
+  modelStoredFileExists,
+  normalizePlmId,
+  plmJobs,
+  publicModelFileMeta,
+  qtxStore,
+  readModelFilesIndex,
+  resolveStoredFile,
+  safeMailFilename,
+  setModelOperationProgress,
+  technicalSheetOwnership,
+  upsertPlmStyleLinks,
+  userAccess,
+  withPlmJob,
+  writeModelFilesIndex,
+  getModelImageSettings,
 });
-
-/* PLM teknik föylerini (Technical Sheet Report) toplu indirip Koleksiyon'un
-   "Dosyalar" deposuna yazar.
-
-   NEDEN AYRI BİR UÇ: dosyalar /api/model-files deposuna gider ama o uç
-   'source' yetkisi ister; PLM Sync'i çalıştıran kullanıcının yetkisi
-   'koleksiyon'dur. Aynı depoyu burada PLM Sync'in kendi yetkisiyle yazıyoruz
-   ki 'source' yetkisi olmayan bir kullanıcıda işlem yarıda patlamasın.
-
-   styleId BURADA çözülür (PLM link deposundan) ve tarayıcıya hazır verilir.
-   Bulunamayan model atlanır ve raporlanır — asla tahmin edilmez, çünkü yanlış
-   bir styleId hata vermeden BAŞKA BİR MODELİN PDF'ini getirir. */
-app.post('/api/plm-sync/model-files', userAccess.requireArea('koleksiyon'), express.json({ limit: '2mb' }), async (req, res) => {
-  try {
-    const rawItems = Array.isArray(req.body && req.body.items) ? req.body.items : null;
-    if (!rawItems) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const language = String(req.body && req.body.language || 'en').toLowerCase() === 'tr' ? 'tr' : 'en';
-    const links = loadPlmStyleLinks().links || {};
-    const seen = new Set();
-    const items = [];
-    for (const raw of rawItems.slice(0, 500)) {
-      const plmId = normalizePlmId(raw && raw.plmId);
-      if (!plmId || seen.has(plmId)) continue;
-      seen.add(plmId);
-      const link = links[plmId];
-      items.push({
-        plmId,
-        styleId: link && link.styleId ? String(link.styleId) : '',
-        // A technical sheet belongs to a PLM style, not to the first colour
-        // row that happened to request it.
-        modelKey: technicalSheetOwnership.canonicalTechnicalSheetKey(plmId),
-        modelLabel: String(raw && raw.modelLabel || '').trim().slice(0, 300),
-        filename: String(raw && raw.filename || '').trim().slice(0, 200),
-      });
-    }
-    if (!items.length) return res.status(400).json({ error: 'Geçerli PLM ID bulunamadı.', code: 'PLM_ID_REQUIRED' });
-    const byPlmId = new Map(items.map(item => [item.plmId, item]));
-
-    setModelOperationProgress(req.currentUser.id, { kind: 'plm-technical-sheet', phase: 'Teknik föy indiriliyor', current: 0, total: items.length, model: '' });
-    const sheetRun = await withPlmJob(req, {
-      kind: 'plm-files', scope: 'koleksiyon', total: items.length,
-      label: `Teknik föy · ${items.length} model (${language.toUpperCase()})`,
-      phase: 'Teknik föy indiriliyor',
-    }, async job => agentBrowserConnector.downloadCoreNectumTechnicalSheets(
-      req.currentUser.id,
-      items.map(item => ({ plmId: item.plmId, styleId: item.styleId })),
-      { language, isCancelled: job.cancelled, onProgress: progress => {
-        setModelOperationProgress(req.currentUser.id, { kind: 'plm-technical-sheet', ...progress });
-        job.report({ phase: progress && progress.phase, processed: progress && progress.current, total: (progress && progress.total) || items.length, activeModel: progress && progress.model });
-      } }
-    ));
-    const collected = sheetRun.result;
-    for (const item of collected.failed || []) plmJobs.addFailure(req.currentUser.id, sheetRun.job.id, { plmId: item && item.plmId, error: item && item.error, code: item && item.code });
-
-    ensureModelFilesRoot();
-    const index = readModelFilesIndex();
-    const ownership = technicalSheetOwnership.resolveTechnicalSheetOwnership(index, items.map(item => item.plmId), { fileExists: modelStoredFileExists });
-    const saved = [];
-    const storeFailed = [];
-    for (const file of collected.files) {
-      const meta = byPlmId.get(file.plmId);
-      if (!meta || !meta.modelKey) { storeFailed.push({ plmId: file.plmId, error: 'Model anahtarı yok.', code: 'MODEL_KEY_REQUIRED' }); continue; }
-      try {
-        const buffer = Buffer.from(file.base64, 'base64');
-        if (!buffer.length) throw new Error('PLM boş dosya döndürdü.');
-        const filename = safeMailFilename(meta.filename || `TechnicalSheet_${file.plmId}_${language.toUpperCase()}.pdf`, 'technical-sheet');
-        const id = `mf_${Date.now()}_${crypto.randomBytes(6).toString('hex')}`;
-        const storedName = `${id}_${filename}`;
-        fs.writeFileSync(resolveStoredFile(MODEL_FILES_ROOT, storedName), buffer);
-        // Aynı PLM ID için önceki canonical PLM föyünü değiştir; dil varyantı
-        // ikinci bir source of truth yaratamaz. Kullanıcının kendi
-        // yüklediği dosyalara (plmSource'u olmayanlara) DOKUNULMAZ.
-        for (let i = index.length - 1; i >= 0; i -= 1) {
-          const old = index[i];
-          if (old && old.modelKey === meta.modelKey && old.plmSource === 'technical-sheet') {
-            try { fs.unlinkSync(resolveStoredFile(MODEL_FILES_ROOT, old.storedName)); } catch (err) { if (err && err.code !== 'ENOENT') throw err; }
-            index.splice(i, 1);
-          }
-        }
-        const item = {
-          id, modelKey: meta.modelKey, modelLabel: meta.modelLabel, filename, storedName,
-          mimeType: 'application/pdf', size: buffer.length, lastModified: null,
-          createdAt: new Date().toISOString(),
-          plmSource: 'technical-sheet', plmLanguage: language, plmId: file.plmId, styleId: file.styleId,
-        };
-        index.push(item);
-        saved.push(publicModelFileMeta(item));
-      } catch (err) {
-        storeFailed.push({ plmId: file.plmId, error: String(err && err.message || err).slice(0, 300), code: 'MODEL_FILE_WRITE_FAILED' });
-      }
-    }
-    if (saved.length || ownership.migrated.length) writeModelFilesIndex(index);
-
-    const failed = [...collected.failed, ...storeFailed];
-    userAccess.appendAudit(req.currentUser, 'PLM_SYNC_MODEL_FILES', 'corenectum', {
-      requested: collected.requested, downloaded: collected.files.length, saved: saved.length, failed: failed.length, language,
-    });
-    for (const item of storeFailed) plmJobs.addFailure(req.currentUser.id, sheetRun.job.id, { plmId: item.plmId, error: item.error, code: item.code });
-    plmJobs.update(req.currentUser.id, sheetRun.job.id, { processed: items.length, succeeded: saved.length });
-    res.json({ ok: true, requested: collected.requested, downloaded: collected.files.length, saved: saved.length, files: saved, failedItems: failed, language, jobId: sheetRun.job.id, migrated: ownership.migrated, ownershipConflicts: ownership.conflicts });
-  } catch (err) { automationError(res, err, 'PLM teknik föyleri alınamadı.'); }
-  finally { clearModelOperationProgress(req.currentUser && req.currentUser.id); }
-});
-
-/* Pricing preflight reads only the normalized model-file metadata. It neither
-   downloads PDFs nor contacts CoreNectum, so opening the warning is cheap. */
-app.post('/api/plm-sync/model-files/status', userAccess.requireArea('koleksiyon'), express.json({ limit: '128kb' }), (req, res) => {
-  try {
-    const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
-    if (!raw) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const plmIds = [...new Set(raw.map(normalizePlmId).filter(Boolean))].slice(0, 500);
-    const index = readModelFilesIndex();
-    const ownership = technicalSheetOwnership.resolveTechnicalSheetOwnership(index, plmIds, { fileExists: modelStoredFileExists });
-    if (ownership.migrated.length) writeModelFilesIndex(index);
-    res.set('Cache-Control', 'no-store').json({ ok: true, statusByPlmId: ownership.statusByPlmId, migrated: ownership.migrated, conflicts: ownership.conflicts });
-  } catch (err) { apiError(res, err, 'PLM teknik föy durumu okunamadı.'); }
-});
-
-/* v6.55 — QTX'İ KALICI OLARAK SAĞ TIK MENÜSÜNDEN YÖNETME.
-   Eskiden Colour Code hücresine ÇİFT TIKLAMA yalnız tarayıcının kendi
-   indirme mekanizmasını TETİKLİYORDU; Buyer Log dosyanın baytlarını hiç
-   görmüyordu (kalıcı kayıt YOKTU). Kullanıcı kararı: sağ tık ile "Umbrella'da
-   Bul" (indir + KAYDET) ve "QTX indir" (kayıtlıyı indir) — Colour Code
-   TÜM modellerde ortak bir değer olduğu için kayıt bir kez yapılınca AYNI
-   Colour Code'a sahip HER satırda görünür/indirilebilir olur (bkz. qtx-store.js). */
-// "Umbrella'da Bul": arayıp bulur, dosyanın GERÇEK baytlarını yakalar (mode:'fetch')
-// ve Colour Code anahtarıyla kalıcı olarak kaydeder.
-app.post('/api/qtx/fetch-and-save', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), express.json({ limit: '16kb' }), async (req, res) => {
-  try {
-    const body=req.body&&typeof req.body==='object'?req.body:{};
-    const colourCode=String(body.colourCode||'').replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,80);
-    const source=['cp','orders','koleksiyon'].includes(String(body.source||''))?String(body.source):'cp';
-    if(!colourCode)return res.status(400).json({error:'Colour Code boş olamaz.',code:'QTX_COLOUR_REQUIRED'});
-    const result=await agentBrowserConnector.downloadUmbrellaQtx(req.currentUser.id,{colourCode,mode:'fetch'});
-    if(!result.base64)throw Object.assign(new Error('QTX dosyasının içeriği yakalanamadı.'),{code:result.code||'QTX_BYTES_NOT_CAPTURED',statusCode:409});
-    const buffer=Buffer.from(result.base64,'base64');
-    const saved=qtxStore.saveQtxFile(colourCode,buffer,{fileName:result.filename,savedBy:req.currentUser.id});
-    userAccess.appendAudit(req.currentUser,'QTX_FETCH_AND_SAVE',colourCode,{source,filename:saved.fileName,size:saved.size,pageNumber:result.pageNumber,pagesScanned:result.pagesScanned,rowsScanned:result.rowsScanned});
-    res.json({ok:true,saved,result:{filename:result.filename,pagesScanned:result.pagesScanned,rowsScanned:result.rowsScanned}});
-  } catch (err) { automationError(res,err,'QTX dosyası bulunup kaydedilemedi.'); }
-});
-// Görsel işaretleme (kalın+mavi Colour Code): tüm kayıtlı Colour Code'ların listesi.
-app.get('/api/qtx/saved', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), (req, res) => {
-  try {
-    res.set('Cache-Control','no-store').json({ok:true,colourCodes:qtxStore.listSavedColourCodes()});
-  } catch (err) { automationError(res,err,'Kayıtlı QTX listesi okunamadı.'); }
-});
-// "QTX indir": daha önce kaydedilmiş dosyayı doğrudan tarayıcıya indirir —
-// Umbrella'ya hiç gidilmez, sunucudaki kopya servis edilir.
-app.get('/api/qtx/file/:colourCode', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), (req, res) => {
-  try {
-    const file=qtxStore.filePathFor(req.params.colourCode);
-    if(!file)return res.status(404).json({error:'Bu Colour Code için kayıtlı QTX dosyası yok.',code:'QTX_NOT_SAVED'});
-    userAccess.appendAudit(req.currentUser,'QTX_FILE_DOWNLOAD',qtxStore.colourKey(req.params.colourCode),{fileName:file.fileName});
-    res.download(file.fullPath,file.fileName);
-  } catch (err) { automationError(res,err,'QTX dosyası indirilemedi.'); }
-});
-
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
    PASS'e (LC Waikiki intranet raporlama sistemi) bağlanıp
@@ -5927,453 +5090,31 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
   } catch (err) { automationError(res, err, 'OAB raporu alınamadı.'); }
 });
 
-/* ===================================================================
-   v7.20 — OAB ÇOKLU SEÇİM: ARKA PLAN TOPLU ÇEKME
+// ---- OAB çoklu seçim toplu çekme ve OAB durum route'ları → server/routes/oab-batch-routes.js ----
+require('./routes/oab-batch-routes')(app, {
+  afterSharedCollectionSave,
+  automationError,
+  canonicalCollectionOwner,
+  collectionReplicaStatus,
+  collectionSaveWorker,
+  collectionWorkspaceEditAllowed,
+  express,
+  fetchOabReportFromInternalSession,
+  liveEvents,
+  logRuntimeFailure,
+  oabBatch,
+  oabSessionStore,
+  oabStaticMetadata,
+  oabStore,
+  publishCollectionReplica,
+  redactSecrets,
+  refreshCollectionPermissionScope,
+  requestClientId,
+  requireOabInternalAuth,
+  sharedRevisionStore,
+  userAccess,
 
-   Kullanıcı talebi: Season / MAG / Buyer Group çoklu seçilebilsin, seçilen
-   kombinasyonların tamamı OAB'dan çekilip TEK rapor olarak gösterilsin.
-
-   NEDEN ARKA PLAN İŞİ: tek OAB rapor çağrısı kullanıcının ortamında 15-25
-   saniye sürebiliyor. Mevcut batch sıralama, kısmi başarı ve iptal semantiği
-   korunur; authentication transport değişikliği bu planlama davranışını değiştirmez. HTTP
-   isteğini açık tutmak hem tarayıcıyı hem sunucuyu kilitlerdi; iş kimlikli bir
-   arka plan işi olarak yürür, istemci ilerlemeyi ayrı bir uçtan okur.
-
-   VERİ KAYBI YOK (§142): kısmi başarı korunur. Başarısız kombinasyon ADIYLA
-   raporlanır; başarılı olanlar atılmaz. İptal edilen iş, o ana kadar çekilmiş
-   kombinasyonları yine döndürür.
-   =================================================================== */
-const oabBatchJobs = new Map(); // userId -> job
-const OAB_BATCH_MAX_COMBINATIONS = 400; // kaçak bir "hepsini seç" işini sınırlar
-
-function oabCombinationLabel(item) {
-  const labels = oabStaticMetadata.labelsFor(item);
-  const buyer = Array.isArray(item.buyerGroupRefs) && item.buyerGroupRefs.length > 1
-    ? `${item.buyerGroupRefs.length} Buyer Group`
-    : labels.buyerGroup;
-  return [labels.season, labels.mag, buyer].filter(Boolean).join(' · ');
-}
-function oabBatchPublicJob(job) {
-  if (!job) return null;
-  return {
-    jobId: job.jobId,
-    running: job.running,
-    cancelled: job.cancelled,
-    startedAt: job.startedAt,
-    finishedAt: job.finishedAt,
-    total: job.total,
-    completed: job.completed,
-    fromCache: job.fromCacheCount,
-    currentLabel: job.currentLabel,
-    rowCount: job.rowCount,
-    failures: job.failures,
-    skipped: job.skipped,
-    batchedBuyerGroups: job.batchedBuyerGroups,
-    error: job.error,
-    errorCode: job.errorCode,
-  };
-}
-// Tek bir (Sezon, MAG, BuyerGroup listesi) isteğini çeker. Cache yalnız TEK
-// buyer group'lu istekler için kullanılır: mevcut cache anahtarı üçlü bazlıdır
-// ve toplu bir yanıtı tek anahtara yazmak sessiz veri karışması olurdu.
-async function oabFetchOneCombination(userId, currentUser, item, forceRefresh) {
-  const single = !Array.isArray(item.buyerGroupRefs) || item.buyerGroupRefs.length <= 1;
-  const buyerGroupRef = single
-    ? (Array.isArray(item.buyerGroupRefs) ? item.buyerGroupRefs[0] : item.buyerGroupRef)
-    : '';
-  if (single) {
-    const key = oabStore.cacheKeyOf(item.seasonRef, item.merchSubGroupRef, buyerGroupRef);
-    if (!forceRefresh && key) {
-      const cached = oabStore.get(key);
-      if (cached && cached.fresh) {
-        return { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRef, buyerGroupRefs:[buyerGroupRef], rows:cached.rows, fields:cached.fields, fromCache:true, fetchedAt:cached.fetchedAt };
-      }
-    }
-  }
-  const params = single
-    ? { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRef }
-    : { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRefs:item.buyerGroupRefs };
-  const rows = await fetchOabReportFromInternalSession(params);
-  const fields = [...new Set(rows.flatMap(row => Object.keys(row || {})))];
-  let fetchedAt = new Date().toISOString();
-  if (single) {
-    const key = oabStore.cacheKeyOf(item.seasonRef, item.merchSubGroupRef, buyerGroupRef);
-    if (key) {
-      const saved = oabStore.set(key, { rows, fields, params: { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRef } });
-      if (saved && saved.fetchedAt) fetchedAt = saved.fetchedAt;
-    }
-  }
-  return { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRef, buyerGroupRefs: single ? [buyerGroupRef] : item.buyerGroupRefs, rows, fields, fromCache:false, fetchedAt };
-}
-/* Toplu BuyerGroupRefs yeteneğini BİR KEZ dener ve YANIT İÇERİĞİNDEN doğrular.
-   Doğrulanamazsa (parametre yok sayılmış, alan yok, tek grup dönmüş) yetenek
-   'unsupported' yazılır ve kombinasyon başına isteğe düşülür. Doğrulama
-   başarısızsa çekilen satırlar ATILIR: yarım veriyi rapora katmak, kullanıcıya
-   sessizce eksik rapor vermek olurdu. */
-async function oabProbeBatchedBuyerGroups(userId, group) {
-  const probe = await oabFetchOneCombination(userId, null, { seasonRef:group.seasonRef, merchSubGroupRef:group.merchSubGroupRef, buyerGroupRefs:group.buyerGroupRefs }, true);
-  const verdict = oabBatch.verifyBatchedBuyerGroupResponse(probe.rows, group.buyerGroupRefs);
-  oabStore.saveBatchCapability({ state: verdict.verified ? 'supported' : 'unsupported', reason: verdict.reason, distinctGroups: verdict.distinct });
-  return { verdict, result: verdict.verified ? probe : null };
-}
-async function runOabBatchJob(job, currentUser) {
-  const userId = job.userId;
-  try {
-    for (const item of job.queue) {
-      if (job.cancelled) break;
-      job.currentLabel = oabCombinationLabel(item);
-      try {
-        const result = await oabFetchOneCombination(userId, currentUser, item, job.forceRefresh);
-        job.results.push(result);
-        job.rowCount += result.rows.length;
-        if (result.fromCache) job.fromCacheCount += 1;
-      } catch (error) {
-        /* Tek kombinasyonun hatası bütün işi çöpe atmaz; adıyla raporlanır.
-
-           v7.23: hata kaydı KOMBİNASYON REFERANSLARINI taşır. Kullanıcı
-           "yeniden dene" dediğinde yalnız bu üçlüler istenir. Toplu (çok
-           Buyer Group'lu) bir istekte hata, kapsadığı bütün üçlüleri etkiler. */
-        const refs = (Array.isArray(item.buyerGroupRefs) && item.buyerGroupRefs.length
-          ? item.buyerGroupRefs
-          : [item.buyerGroupRef]).filter(value => value != null && value !== '');
-        job.failures.push({
-          label: oabCombinationLabel(item),
-          code: String(error && error.code || 'OAB_COMBINATION_FAILED'),
-          message: redactSecrets(String(error && error.message || error)).slice(0, 300),
-          combinations: refs.map(buyerGroupRef => ({
-            seasonRef: item.seasonRef,
-            merchSubGroupRef: item.merchSubGroupRef,
-            buyerGroupRef,
-            label: oabCombinationLabel({ seasonRef: item.seasonRef, merchSubGroupRef: item.merchSubGroupRef, buyerGroupRef }),
-          })),
-        });
-        if (error && (error.code === 'OAB_AUTH_REQUIRED' || error.code === 'OAB_AUTH_EXPIRED')) {
-          job.error = redactSecrets(String(error.message || error)).slice(0, 300);
-          job.errorCode = String(error.code);
-          break;
-        }
-      }
-      job.completed += 1;
-      job.currentLabel = '';
-    }
-  } catch (error) {
-    job.error = redactSecrets(String(error && error.message || error)).slice(0, 300);
-    job.errorCode = String(error && error.code || 'OAB_BATCH_FAILED');
-  } finally {
-    job.running = false;
-    job.finishedAt = new Date().toISOString();
-    const merged = oabBatch.mergeReportResults(job.results);
-    job.merged = merged;
-    if (merged.rows.length || job.results.length) {
-      try {
-        /* v7.23 — KISMİ İŞ SNAPSHOT'I EZMEZ.
-
-           Yeniden deneme işi yalnız başarısız üçlüleri çeker. Sonucu doğrudan
-           yazmak, kullanıcının elindeki tüm raporu (başarıyla çekilmiş diğer
-           kombinasyonlar dâhil) silerdi. Kalıcı snapshot bu yüzden eldekiyle
-           BİRLEŞTİRİLİR; seçim de birleşiktir ki açılışta aynı kapsam geri
-           yüklensin. */
-        const previous = job.mergeWithSnapshot ? oabSessionStore.load(userId) : null;
-        const prevSnapshot = previous && previous.snapshot ? previous.snapshot : null;
-        const prevSelection = previous && previous.selection ? previous.selection : {};
-        const combined = prevSnapshot
-          ? oabBatch.mergeSnapshotRows(prevSnapshot.rows, merged.rows)
-          : { rows: merged.rows };
-        const fields = prevSnapshot
-          ? [...new Set([...(prevSnapshot.fields || []), ...merged.fields])]
-          : merged.fields;
-        oabSessionStore.save(userId, {
-          selection: prevSnapshot ? {
-            seasonRefs: oabBatch.mergeRefLists(prevSelection.seasonRefs, job.selection.seasonRefs),
-            merchSubGroupRefs: oabBatch.mergeRefLists(prevSelection.merchSubGroupRefs, job.selection.merchSubGroupRefs),
-            buyerGroupRefs: oabBatch.mergeRefLists(prevSelection.buyerGroupRefs, job.selection.buyerGroupRefs),
-            allBuyerGroups: Boolean(prevSelection.allBuyerGroups),
-          } : job.selection,
-          rows: combined.rows,
-          fields,
-          fetchedAt: job.finishedAt,
-          fromCache: !prevSnapshot && job.fromCacheCount === job.results.length && job.results.length > 0,
-        });
-      } catch (error) { logRuntimeFailure('oabBatchSnapshot', error); }
-    }
-  }
-}
-// Planı hesaplar: kaç istek, tahmini süre, kaçı önbellekten gelecek, hangi
-// kombinasyonlar karşılıksız. İstemcideki tahmin bu UÇTAN gelir; ekranda
-// gösterilen sayı ile gerçekte çekilen sayı ayrışamaz.
-function oabBuildPlan(body) {
-  const selection = {
-    seasonRefs: Array.isArray(body.seasonRefs) ? body.seasonRefs : [],
-    merchSubGroupRefs: Array.isArray(body.merchSubGroupRefs) ? body.merchSubGroupRefs : [],
-    buyerGroupRefs: Array.isArray(body.buyerGroupRefs) ? body.buyerGroupRefs : [],
-    allBuyerGroups: Boolean(body.allBuyerGroups),
-  };
-  /* v7.23 — AÇIK KOMBİNASYON LİSTESİ.
-
-     "Başarısızları yeniden dene" tam bir yeniden planlama yapmamalı: yalnız
-     alınamayan üçlüler istenmelidir. Aksi halde zaten elde olan kombinasyonlar
-     yeniden çekilir, kullanıcı dakikalarca bekler ve eldeki rapor bir süre
-     eksik kalır. Liste yine de metadata ile DOĞRULANIR — istemciden gelen bir
-     üçlü doğrudan PASS'e sorulmaz. */
-  const explicit = Array.isArray(body.combinations) ? body.combinations : null;
-  const plan = explicit
-    ? oabBatch.planFromCombinations(oabStaticMetadata.planningMetadata(), explicit)
-    : oabBatch.planCombinations(oabStaticMetadata.planningMetadata(), selection);
-  /* Açık liste geldiğinde seçim, listenin KENDİSİNDEN türetilir. Aksi halde
-     yeniden deneme işi BOŞ bir seçimle kaydedilir; snapshot geri yüklenirken
-     hangi filtrelerle çekildiği bilinemez ve son rapor açılışta kaybolur. */
-  if (explicit) {
-    selection.seasonRefs = oabBatch._uniqueRefs(plan.combinations.map(item => item.seasonRef));
-    selection.merchSubGroupRefs = oabBatch._uniqueRefs(plan.combinations.map(item => item.merchSubGroupRef));
-    selection.buyerGroupRefs = oabBatch._uniqueRefs(plan.combinations.map(item => item.buyerGroupRef));
-    selection.allBuyerGroups = false;
-  }
-  const capability = oabStore.loadBatchCapability();
-  // 'unknown' iken de toplu mod DENENECEĞİ için plan ona göre gösterilir; ilk
-  // istekte doğrulanmazsa iş kendini kombinasyon başına moda çevirir ve
-  // ilerleme toplamı güncellenir.
-  const useBatched = capability.state !== 'unsupported';
-  const groups = oabBatch.groupBySeasonMag(plan.combinations);
-  const requestCount = useBatched ? groups.length : plan.combinations.length;
-  let cachedCount = 0;
-  if (!useBatched) {
-    for (const item of plan.combinations) {
-      const key = oabStore.cacheKeyOf(item.seasonRef, item.merchSubGroupRef, item.buyerGroupRef);
-      const cached = key ? oabStore.get(key) : null;
-      if (cached && cached.fresh) cachedCount += 1;
-    }
-  }
-  const pending = Math.max(0, requestCount - cachedCount);
-  /* EN KÖTÜ DURUM AYRICA HESAPLANIR.
-
-     Yetenek henüz 'unknown' iken plan toplu modu VARSAYAR ve 164 kombinasyon
-     "4 istek · ~80 sn" görünür. Doğrulama başarısız olursa aynı iş 164 istek,
-     yani ~55 dakikadır. İyimser sayıyı tek başına göstermek, kullanıcıyı
-     onaysız biçimde saatlik bir işe sokardı. Bu yüzden onay eşiği DAİMA en
-     kötü duruma bakar; ekranda da ikisi birden yazılır. */
-  const worstCaseRequests = capability.state === 'supported' ? requestCount : plan.combinations.length;
-  const worstCasePending = Math.max(0, worstCaseRequests - (capability.state === 'supported' ? cachedCount : 0));
-  return {
-    selection, plan, groups, capability, useBatched,
-    combinationCount: plan.combinations.length,
-    requestCount, cachedCount, pendingCount: pending,
-    estimateSeconds: oabBatch.estimateSeconds(pending),
-    worstCaseRequestCount: worstCaseRequests,
-    worstCaseSeconds: oabBatch.estimateSeconds(worstCasePending),
-    batchUnproven: capability.state === 'unknown' && worstCaseRequests > requestCount,
-    skipped: plan.skipped.map(item => ({ ...item, label: oabCombinationLabel(item) })),
-    error: plan.error,
-  };
-}
-app.post('/api/oab/plan', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '64kb' }), (req, res) => {
-  try {
-    const built = oabBuildPlan(req.body || {});
-    res.set('Cache-Control','no-store').json({
-      ok: !built.error,
-      error: built.error || undefined,
-      combinationCount: built.combinationCount,
-      requestCount: built.requestCount,
-      cachedCount: built.cachedCount,
-      pendingCount: built.pendingCount,
-      estimateSeconds: built.estimateSeconds,
-      worstCaseRequestCount: built.worstCaseRequestCount,
-      worstCaseSeconds: built.worstCaseSeconds,
-      batchUnproven: built.batchUnproven,
-      useBatched: built.useBatched,
-      capability: built.capability,
-      skipped: built.skipped.slice(0, 200),
-      skippedCount: built.skipped.length,
-      maxCombinations: OAB_BATCH_MAX_COMBINATIONS,
-    });
-  } catch (err) { automationError(res, err, 'OAB çoklu seçim planı hesaplanamadı.'); }
 });
-app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '64kb' }), async (req, res) => {
-  try {
-    const existing = oabBatchJobs.get(req.currentUser.id);
-    if (existing && existing.running) return res.status(409).json({ error:'Bu kullanıcı için bir OAB toplu çekme işlemi zaten sürüyor.', code:'OAB_BATCH_IN_PROGRESS', job: oabBatchPublicJob(existing) });
-    const built = oabBuildPlan(req.body || {});
-    if (built.error) return res.status(400).json({ error:'Season, MAG ve Buyer Group seçimi zorunlu.', code:'OAB_PARAMS_REQUIRED', details:{ field: built.error } });
-    if (!built.combinationCount) {
-      return res.status(400).json({ error:'Seçilen filtreler OAB metadata ile eşleşen hiçbir kombinasyon üretmiyor.', code:'OAB_NO_VALID_COMBINATION', skipped: built.skipped.slice(0, 50) });
-    }
-    if (built.combinationCount > OAB_BATCH_MAX_COMBINATIONS) {
-      return res.status(400).json({ error:`Seçim ${built.combinationCount} kombinasyon üretiyor; üst sınır ${OAB_BATCH_MAX_COMBINATIONS}. Seçimi daraltın.`, code:'OAB_BATCH_TOO_LARGE', details:{ combinationCount: built.combinationCount, maxCombinations: OAB_BATCH_MAX_COMBINATIONS } });
-    }
-    // Do not start a background job that is guaranteed to fail for lack of
-    // authentication. Cached-only plans remain usable without opening PASS.
-    if (built.pendingCount > 0 || Boolean(req.body && req.body.forceRefresh)) requireOabInternalAuth();
-    const job = {
-      jobId: `oab_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-      userId: req.currentUser.id,
-      running: true, cancelled: false,
-      startedAt: new Date().toISOString(), finishedAt: null,
-      forceRefresh: Boolean(req.body && req.body.forceRefresh),
-      selection: built.selection,
-      // Açık kombinasyon listesi = "yeniden dene": sonuç eldeki snapshot'ın
-      // üzerine EKLENİR, yerine geçmez.
-      mergeWithSnapshot: Array.isArray(req.body && req.body.combinations) && req.body.combinations.length > 0,
-      queue: [], total: 0, completed: 0, fromCacheCount: 0, rowCount: 0,
-      currentLabel: '', results: [], failures: [], merged: null,
-      skipped: built.skipped.slice(0, 200),
-      batchedBuyerGroups: built.capability.state,
-      error: '', errorCode: '',
-    };
-    // Toplu mod denenecekse önce YETENEK DOĞRULANIR; kuyruk sonuca göre kurulur.
-    const multiGroups = built.groups.filter(group => group.buyerGroupRefs.length > 1);
-    if (built.useBatched && built.capability.state === 'unknown' && multiGroups.length) {
-      job.queue = built.groups.map(group => ({ ...group }));
-      job.total = job.queue.length;
-      job.probe = multiGroups[0];
-    } else if (built.useBatched && built.capability.state === 'supported') {
-      job.queue = built.groups.map(group => ({ ...group }));
-      job.total = job.queue.length;
-    } else {
-      job.queue = built.plan.combinations.map(item => ({ ...item, buyerGroupRefs: [item.buyerGroupRef] }));
-      job.total = job.queue.length;
-    }
-    oabBatchJobs.set(req.currentUser.id, job);
-    userAccess.appendAudit(req.currentUser, 'OAB_BATCH_START', job.jobId, { combinations: built.combinationCount, requests: job.total, batched: job.batchedBuyerGroups });
-    // İş arka planda yürür; istek hemen döner.
-    void (async () => {
-      if (job.probe) {
-        try {
-          const { verdict, result } = await oabProbeBatchedBuyerGroups(job.userId, job.probe);
-          job.batchedBuyerGroups = verdict.verified ? 'supported' : 'unsupported';
-          if (verdict.verified && result) {
-            job.results.push(result); job.rowCount += result.rows.length; job.completed += 1;
-            job.queue = job.queue.filter(group => !(group.seasonRef === job.probe.seasonRef && group.merchSubGroupRef === job.probe.merchSubGroupRef));
-          } else {
-            // Toplu mod doğrulanmadı: kuyruk kombinasyon başına yeniden kurulur.
-            job.queue = built.plan.combinations.map(item => ({ ...item, buyerGroupRefs: [item.buyerGroupRef] }));
-            job.completed = 0; job.results = []; job.rowCount = 0;
-            job.total = job.queue.length;
-          }
-        } catch (error) {
-          // Doğrulama isteği başarısız olsa da iş kombinasyon başına devam
-          // eder; bu kayıt yalnız bilgilendirmedir, yeniden denenecek bir
-          // kombinasyon listesi taşımaz (kuyruk zaten yeniden kuruluyor).
-          job.failures.push({ label: oabCombinationLabel(job.probe), code: String(error && error.code || 'OAB_BATCH_PROBE_FAILED'), message: redactSecrets(String(error && error.message || error)).slice(0, 300), combinations: [] });
-          job.queue = built.plan.combinations.map(item => ({ ...item, buyerGroupRefs: [item.buyerGroupRef] }));
-          job.completed = 0; job.results = []; job.rowCount = 0; job.total = job.queue.length;
-        }
-        job.probe = null;
-      }
-      await runOabBatchJob(job, req.currentUser);
-    })();
-    res.status(202).json({ started:true, job: oabBatchPublicJob(job) });
-  } catch (err) { automationError(res, err, 'OAB toplu çekme başlatılamadı.'); }
-});
-app.get('/api/oab/batch-status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try {
-    const job = oabBatchJobs.get(req.currentUser.id);
-    if (!job) return res.set('Cache-Control','no-store').json({ ok:true, job:null });
-    const payload = { ok:true, job: oabBatchPublicJob(job) };
-    // İş bittiyse birleşik rapor da aynı yanıtta döner; istemci ayrı bir istek
-    // yapmak zorunda kalmaz ve "bitti ama veri yok" aralığı oluşmaz.
-    if (!job.running && job.merged) {
-      payload.rows = job.merged.rows;
-      payload.fields = job.merged.fields;
-      payload.sources = job.merged.sources;
-      payload.fetchedAt = job.finishedAt;
-    }
-    res.set('Cache-Control','no-store').json(payload);
-  } catch (err) { automationError(res, err, 'OAB toplu çekme durumu okunamadı.'); }
-});
-app.post('/api/oab/batch/cancel', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try {
-    const job = oabBatchJobs.get(req.currentUser.id);
-    if (!job || !job.running) return res.json({ ok:true, cancelled:false, job: oabBatchPublicJob(job) });
-    // İptal, o ana kadar çekilmiş kombinasyonları ATMAZ; kuyruk durur ve
-    // eldeki sonuçlar birleştirilip rapor olarak sunulur.
-    job.cancelled = true;
-    userAccess.appendAudit(req.currentUser, 'OAB_BATCH_CANCEL', job.jobId, { completed: job.completed, total: job.total });
-    res.json({ ok:true, cancelled:true, job: oabBatchPublicJob(job) });
-  } catch (err) { automationError(res, err, 'OAB toplu çekme iptal edilemedi.'); }
-});
-// Toplu BuyerGroupRefs yeteneği yanlış öğrenilmişse (PASS tarafı değişirse)
-// kullanıcı tek tıkla sıfırlar; bir sonraki toplu işte yeniden denenir.
-app.post('/api/oab/batch/reset-capability', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try {
-    const capability = oabStore.resetBatchCapability();
-    userAccess.appendAudit(req.currentUser, 'OAB_BATCH_CAPABILITY_RESET', 'oab', capability);
-    res.json({ ok:true, capability });
-  } catch (err) { automationError(res, err, 'OAB toplu istek yeteneği sıfırlanamadı.'); }
-});
-
-/* v7.22 — SATIR BAZLI KAYDETME.
-
-   Bu uç, tam sayfa yerine yalnız DEĞİŞEN SATIRLARI alır ve satır bazlı
-   revizyonla uygular. v7.20 incelemesinde ölçülen veri kaybı buradan
-   kapanıyor: A 1. satırı, B 900. satırı düzenlediğinde ikisi de kaydedilir.
-
-   Çakışan satır ne ezilir ne de sessizce atılır: sunucudaki güncel hâliyle
-   yanıtta döner, istemci kullanıcıya hangi satırın kaydedilemediğini
-   gösterir. Kısmi başarı normaldir ve HTTP 200'dür — bazı satırlar
-   uygulanmışken bütün isteği hata saymak, uygulanan satırları görünmez
-   kılardı. */
-app.patch('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyon'), express.raw({ type: () => true, limit: '100mb' }), async (req, res) => {
-  try {
-    await refreshCollectionPermissionScope();
-    const ownerId = canonicalCollectionOwner(String(req.params.ownerId || ''));
-    if (!collectionWorkspaceEditAllowed(req.currentUser, ownerId)) return res.status(403).json({ error: 'Bu Koleksiyon sayfasını düzenleme yetkiniz bulunmuyor.', code: 'COLLECTION_EDIT_DENIED' });
-    const body = Buffer.isBuffer(req.body) ? req.body : Buffer.from(String(req.body == null ? '' : req.body), 'utf8');
-    if (!body.length) return res.status(400).json({ error: 'Koleksiyon değişiklik gövdesi boş.', code: 'COLLECTION_BODY_EMPTY' });
-    const result = await collectionSaveWorker.runCollectionSave({
-      ownerId, body, mode: 'rows',
-      env: {
-        BUYER_LOG_SERVER_DATA_ROOT: process.env.BUYER_LOG_SERVER_DATA_ROOT,
-        BUYER_LOG_DATA_ROOT: process.env.BUYER_LOG_DATA_ROOT,
-        BUYER_LOG_LOCAL_DATA_ROOT: process.env.BUYER_LOG_LOCAL_DATA_ROOT,
-        BUYER_LOG_CONFIG_PATH: process.env.BUYER_LOG_CONFIG_PATH,
-        BUYER_LOG_TEMP_ROOT: process.env.BUYER_LOG_TEMP_ROOT,
-        BL_DATA_DIR: process.env.BL_DATA_DIR,
-      },
-    });
-    if (result.changed) {
-      result.replication = !(await afterSharedCollectionSave(ownerId))
-        ? await publishCollectionReplica(ownerId)
-        : { ok:true, published:false, reason:'shared-save' };
-      void sharedRevisionStore.update('collection',{actorId:req.currentUser.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
-      userAccess.appendAudit(req.currentUser, 'COLLECTION_ROW_SAVE', ownerId, { applied: result.applied.length, conflicts: result.conflicts.length, revision: result.revision });
-      liveEvents.notifyChange('collection', requestClientId(req), { ownerId, rowPatches: result.rowPatches, revision: result.revision });
-    }
-    res.json({
-      ok: true,
-      revision: result.revision,
-      updatedAt: result.updatedAt,
-      rowCount: result.rowCount,
-      applied: result.applied,
-      conflicts: result.conflicts,
-      replication: result.replication || await collectionReplicaStatus(ownerId),
-    });
-  } catch (err) {
-    res.status(err.statusCode || 500).json({
-      error: err.message, code: err.code || 'COLLECTION_SAVE_FAILED', currentRevision: err.currentRevision,
-      ...(Array.isArray(err.conflicts) ? { conflicts: err.conflicts } : {}),
-    });
-  }
-});
-
-// Son başarılı OAB snapshot'ı ve ona ait seçimler kullanıcı bazında kalıcıdır.
-// Uygulama açılışında PASS'e bağlanmadan son görünüm bu uçtan geri yüklenir.
-app.get('/api/oab/state', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try {
-    const state = oabSessionStore.load(req.currentUser.id);
-    res.set('Cache-Control','no-store').json({ ok:true, state });
-  } catch (err) { automationError(res, err, 'OAB son snapshot durumu okunamadı.'); }
-});
-app.get('/api/oab/settings', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try { res.set('Cache-Control','no-store').json({ ok:true, settings: oabStore.loadCacheSettings() }); }
-  catch (err) { automationError(res, err, 'OAB ayarları okunamadı.'); }
-});
-app.put('/api/oab/settings', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.MANAGE'), express.json({ limit: '4kb' }), (req, res) => {
-  try {
-    const settings = oabStore.saveCacheSettings(req.body || {});
-    userAccess.appendAudit(req.currentUser, 'OAB_SETTINGS_SAVE', 'oab', settings);
-    res.json({ ok:true, settings });
-  } catch (err) { automationError(res, err, 'OAB ayarları kaydedilemedi.'); }
-});
-
 /* ===================================================================
    INTAKE — WSSI Intake Raporu4 / Model.
 
@@ -10131,152 +8872,28 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
   } catch (err) { apiError(res, err, 'Supp. FOB düzenlemeleri kaydedilemedi.'); }
 });
 
-// ---- ASAS veri kaynağı: Excel (varsayılan) / Database (isteğe bağlı) ----
-function currentAsasExcelFile(value) {
-  const folder = sourceFolderForUser(value);
-  if (!folder) return null;
-  try { return findLatestSourceFiles(folder).asas || null; } catch (_) { return null; }
-}
-function safeAsasUploadName(value) {
-  const original = path.basename(String(value || 'ASAS.xlsx')).replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').trim();
-  const stem = original.replace(/\.xlsx$/i, '') || 'ASAS';
-  const prefixed = /^asas/i.test(stem) ? stem : `ASAS - ${stem}`;
-  return `${prefixed.slice(0, 160)}.xlsx`;
-}
-app.get('/api/asas-source', userAccess.requireArea('source'), (req, res) => {
-  const ov = loadOverrides();
-  const file = currentAsasExcelFile(req);
-  const revision = Number(ov._revisions && ov._revisions.asasSourceMode) || 0;
-  res.set('ETag', `"${revision}"`);
-  res.json({
-    mode: ov.asasSourceMode === 'database' ? 'database' : 'excel',
-    revision,
-    sourceFolder: sourceFolderForUser(req),
-    sourceFile: file ? file.name : null,
-  });
-});
-app.put('/api/asas-source', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
-  try {
-    const mode = String(req.body && req.body.mode || '').toLowerCase();
-    if (!['excel', 'database'].includes(mode)) return res.status(400).json({ error: 'mode yalnız excel veya database olabilir.', code: 'VALIDATION_ERROR' });
-    const saved = replaceAsasSourceMode(mode, requestRevision(req));
-    userAccess.appendAudit(req.currentUser, 'ASAS_SOURCE_CHANGE', 'settings', { mode: saved.mode });
-    publishSharedMasterChange('asasSourceMode', req);
-    const file = currentAsasExcelFile(req);
-    res.set('ETag', `"${saved.revision}"`);
-    res.json({ ...saved, sourceFolder: sourceFolderForUser(req), sourceFile: file ? file.name : null });
-  } catch (err) { apiError(res, err, 'ASAS veri kaynağı değiştirilemedi.'); }
-});
-// LFL kaynağı: ASAS ile aynı çalışma kitabından beslenir, ama Excel/Database
-// seçimi ASAS'tan bağımsızdır (ör. siparişler Database, LFL Excel olabilir).
-app.get('/api/lfl-source', userAccess.requireArea('source'), (req, res) => {
-  const ov = loadOverrides();
-  const file = currentAsasExcelFile(req);
-  const revision = Number(ov._revisions && ov._revisions.lflSourceMode) || 0;
-  res.set('ETag', `"${revision}"`);
-  res.json({
-    mode: ov.lflSourceMode === 'database' ? 'database' : 'excel',
-    revision,
-    sourceFolder: sourceFolderForUser(req),
-    sourceFile: file ? file.name : null,
-  });
-});
-app.put('/api/lfl-source', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
-  try {
-    const mode = String(req.body && req.body.mode || '').toLowerCase();
-    if (!['excel', 'database'].includes(mode)) return res.status(400).json({ error: 'mode yalnız excel veya database olabilir.', code: 'VALIDATION_ERROR' });
-    const saved = replaceLflSourceMode(mode, requestRevision(req));
-    userAccess.appendAudit(req.currentUser, 'LFL_SOURCE_CHANGE', 'settings', { mode: saved.mode });
-    publishSharedMasterChange('lflSourceMode', req);
-    const file = currentAsasExcelFile(req);
-    res.set('ETag', `"${saved.revision}"`);
-    res.json({ ...saved, sourceFolder: sourceFolderForUser(req), sourceFile: file ? file.name : null });
-  } catch (err) { apiError(res, err, 'LFL veri kaynağı değiştirilemedi.'); }
-});
-app.post('/api/asas-source/upload', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  let temp = '';
-  try {
-    const id = sourceUserId(req);
-    const folder = sourceFolderForUser(id);
-    if (!folder) {
-      const error = new Error('ASAS Excel yüklemek için önce Kaynak Klasör seçin.');
-      error.statusCode = 400; error.code = 'SOURCE_FOLDER_MISSING'; throw error;
-    }
-    const dataBase64 = String(req.body && req.body.dataBase64 || '');
-    if (!dataBase64) return res.status(400).json({ error: 'dataBase64 alanı zorunlu.', code: 'VALIDATION_ERROR' });
-    const buffer = Buffer.from(dataBase64, 'base64');
-    if (!buffer.length || buffer.length > 100 * 1024 * 1024) return res.status(400).json({ error: 'ASAS Excel dosyası boş veya çok büyük.', code: 'VALIDATION_ERROR' });
-    fs.mkdirSync(folder, { recursive: true });
-    const filename = safeAsasUploadName(req.body && req.body.name);
-    const target = path.join(folder, filename);
-    temp = target.replace(/\.xlsx$/i, `.upload-${process.pid}-${Date.now()}.xlsx`);
-    await fs.promises.writeFile(temp, buffer);
+// ---- ASAS / LFL veri kaynağı modu ve yükleme route'ları → server/routes/asas-source-routes.js ----
+require('./routes/asas-source-routes')(app, {
+  apiError,
+  cacheForUser,
+  excelParseTimeoutMs,
+  findLatestSourceFiles,
+  fs,
+  loadOverrides,
+  path,
+  publishSharedMasterChange,
+  refreshAsasExcelBeforeRead,
+  replaceAsasSourceMode,
+  replaceLflSourceMode,
+  requestRevision,
+  runExcelTask,
+  saveRuntimeModelSnapshot,
+  sourceFolderForUser,
+  sourceUserId,
+  userAccess,
+  withFabricDimensions,
 
-    // Yüklenen çalışma kitabı önce gerçek Excel'de açılıp pivot/veri bağlantıları
-    // yenilenmeye çalışılır. Bu adım başarısız olursa (ör. Excel/COM erişilemiyor)
-    // yüklemeyi tamamen reddetmek yerine dosyanın kendi son kaydedilmiş (yenilenmemiş)
-    // hâliyle devam edilir; kullanıcı açık bir uyarıyla bilgilendirilir.
-    let excelRefresh = null;
-    let refreshFailureWarning = null;
-    try {
-      excelRefresh = await refreshAsasExcelBeforeRead({ name: filename, full: temp });
-    } catch (err) {
-      excelRefresh = { ok: false, source: 'ASAS', name: filename, error: (err && (err.publicMessage || err.message)) || String(err) };
-      refreshFailureWarning = `ASAS Excel pivot tabloları yenilenemedi; veri sunucudan güncellenmedi, "${filename}" dosyasının yüklenen son kaydedilmiş hali kullanıldı. ${excelRefresh.error}`;
-    }
-    const stat = fs.statSync(temp);
-    const parsedResult = await runExcelTask('parseAsasFile', {
-      fullPath: temp,
-      matchRule: loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) });
-    const parsedAsas = parsedResult && parsedResult.parsedAsas;
-    if (!parsedAsas || !Array.isArray(parsedAsas.orders)) {
-      const error = new Error(`ASAS Excel dosyasında "Sipariş Kod" sütunu bulunamadı: ${filename}.`);
-      error.statusCode = 422; error.code = 'ASAS_EXCEL_MAPPING_INVALID'; throw error;
-    }
-    const parsedLfl = parsedResult && parsedResult.parsedLfl && Array.isArray(parsedResult.parsedLfl.rows) ? parsedResult.parsedLfl : null;
-
-    try { if (fs.existsSync(target)) fs.unlinkSync(target); } catch (_) { /* rename gerçek hatayı versin */ }
-    fs.renameSync(temp, target);
-    temp = '';
-
-    const modeSaved = replaceAsasSourceMode('excel');
-    const runtime = cacheForUser(id);
-    runtime.asasOrders = parsedAsas.orders;
-    runtime.asasOrdersByTarget = { ...(runtime.asasOrdersByTarget || {}), cp: parsedAsas.orders, orders: parsedAsas.orders, backlog: parsedAsas.orders, priceanalysis: parsedAsas.orders };
-    runtime.fabricHeaderInfo = parsedAsas.fabricHeaderInfo || null;
-    runtime.sources = { ...(runtime.sources || {}), asas: `Excel: ${filename}` };
-    if (parsedLfl) {
-      runtime.lflRows = parsedLfl.rows;
-      runtime.lflMeta = withFabricDimensions(parsedLfl.meta, parsedLfl.rows);
-      runtime.lflLoadedAt = new Date().toISOString();
-      runtime.sources.lfl = `Excel: ${filename}`;
-    }
-    runtime.refreshWarnings = [
-      ...(refreshFailureWarning ? [refreshFailureWarning] : []),
-      ...(parsedResult && parsedResult.lflError
-        ? [`LFL aynı ASAS Excel kaynağından üretilemedi; son başarılı LFL verisi korundu: ${parsedResult.lflError}`]
-        : []),
-    ];
-    runtime.refreshWarningDetails = [];
-    await saveRuntimeModelSnapshot(id, runtime);
-    userAccess.appendAudit(req.currentUser, 'ASAS_EXCEL_UPLOAD', filename, { rows: parsedAsas.orders.length });
-    publishSharedMasterChange('asasSourceMode', req);
-    res.json({
-      ok: true, mode: 'excel', revision: modeSaved.revision,
-      sourceFolder: folder, sourceFile: filename,
-      rowCount: parsedAsas.orders.length,
-      lflRowCount: parsedLfl ? parsedLfl.rows.length : 0,
-      pivotRefreshed: !refreshFailureWarning,
-      excelRefresh,
-      warning: refreshFailureWarning || null,
-    });
-  } catch (err) {
-    if (temp) { try { fs.unlinkSync(temp); } catch (_) {} }
-    apiError(res, err, 'ASAS Excel dosyası yüklenemedi.');
-  }
 });
-
 // ---- Antrepo veri kaynağı: Excel (varsayılan) / Database (isteğe bağlı) ----
 function currentAntrepoExcelFile(value) {
   const folder = sourceFolderForUser(value);
@@ -10455,50 +9072,17 @@ app.put('/api/landed-multipliers', userAccess.requireArea('source'), userAccess.
   } catch (err) { apiError(res, err, 'Landed çarpanları kaydedilemedi.'); }
 });
 
-// ---- Kullanıcı tanımlı boş not sütunları (CP/Orders "Add Column" — Packet 9) ----
-// Tanımlar ortak listede tutulur (Add Column ile aynı mimari, ikinci bir sistem
-// kurulmaz); değerler notesmap deseniyle patchOrderOverride üzerinden yazılır.
-app.get('/api/note-columns', userAccess.requireAnyArea('cp', 'orders'), (req, res) => {
-  const ov = loadOverrides();
-  const revision = Number(ov._revisions && ov._revisions.noteColumnDefs) || 0;
-  res.set('ETag', `"${revision}"`);
-  res.json({ columns: ov.noteColumnDefs || [], revision });
-});
-app.put('/api/note-columns', userAccess.requireArea('cp'), express.json({limit:'32kb'}), (req, res) => {
-  try {
-    const saved = replaceNoteColumnDefs((req.body || {}).columns, requestRevision(req));
-    userAccess.appendAudit(req.currentUser, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision });
-    publishSharedMasterChange('noteColumnDefs', req);
-    res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, ...saved });
-  } catch (err) { apiError(res, err, 'Not sütunları kaydedilemedi.'); }
-});
+// ---- Kullanıcı tanımlı not sütunları ve Excel içe aktarma denetimi route'ları → server/routes/note-column-routes.js ----
+require('./routes/note-column-routes')(app, {
+  apiError,
+  express,
+  loadOverrides,
+  publishSharedMasterChange,
+  replaceNoteColumnDefs,
+  requestRevision,
+  userAccess,
 
-/* ---- Kullanıcı Excel'i içe aktarma — SINIRLI denetim kaydı ----
-   Mevcut audit mimarisi kullanılır; ikinci bir günlük kurulmaz. Çalışma
-   kitabının içeriği KAYDEDİLMEZ: yalnız kim, ne zaman, hangi dosya/sayfa,
-   hangi modül ve kaç satırın ne olduğu. Sayaçlar istemciden gelir ama
-   AKTÖR her zaman oturumdan belirlenir. */
-app.post('/api/excel-import/audit', userAccess.requireAnyArea('cp', 'koleksiyon'), express.json({ limit: '32kb' }), (req, res) => {
-  try {
-    const body = req.body || {};
-    const moduleId = String(body.moduleId || '').slice(0, 24);
-    if (moduleId !== 'cp' && moduleId !== 'collection') return res.status(400).json({ error: 'Geçersiz içe aktarma modülü.', code: 'VALIDATION_ERROR' });
-    const count = value => Math.max(0, Math.min(1000000, Number(value) || 0));
-    userAccess.appendAudit(req.currentUser, 'EXCEL_IMPORT', moduleId, {
-      fileName: String(body.fileName || '').slice(0, 160),
-      sheet: String(body.sheet || '').slice(0, 120),
-      profile: String(body.profile || '').slice(0, 80),
-      planId: String(body.planId || '').slice(0, 64),
-      status: ['success', 'failed', 'partial', 'aborted'].includes(String(body.status)) ? String(body.status) : 'failed',
-      analyzed: count(body.analyzed), created: count(body.created), updated: count(body.updated),
-      skipped: count(body.skipped), failed: count(body.failed), warnings: count(body.warnings),
-      customFieldsCreated: count(body.customFieldsCreated),
-    });
-    res.json({ ok: true });
-  } catch (err) { apiError(res, err, 'İçe aktarma denetim kaydı yazılamadı.'); }
 });
-
 // ---- Navlun Ücretleri (Nakliye Kıyaslama > Navlun Hesaplama) ----
 // Ücretler kaynak Excel'de tablonun başında duruyordu ve elle güncelleniyordu.
 // Burada tek merkezde tutulur: bir kez güncellenince tüm kullanıcıların
@@ -11674,977 +10258,117 @@ app.delete('/api/data-management/source/:id', userAccess.requireArea('source'), 
    Paylaşım kararı (güncelle / ayır) İSTEMCİDEN AÇIKÇA gelir; sunucu varsayılan
    uydurmaz. Uyarılar yanıtla birlikte döner — sessizce kaydetmek, kullanıcının
    başka bir sayfanın verisi değişince durumu keşfetmesi demekti. */
-/* ===================================================================
-   HORIZON ŞABLONLARI (v7.81)
+// ---- Horizon şablonları ve Veri Yönetimi katman route'ları → server/routes/horizon-template-routes.js ----
+require('./routes/horizon-template-routes')(app, {
+  addHorizonTemplate,
+  apiError,
+  dataManagementAdapter,
+  dataManagementBindingWriter,
+  dataManagementFilterWriter,
+  deleteHorizonTemplate,
+  express,
+  loadHorizonTemplates,
+  loadModelConnections,
+  modelHorizon,
+  modelSupportInfo,
+  publishSharedMasterChange,
+  replaceModelConnections,
+  requestRevision,
+  sourceUserId,
+  userAccess,
+  userPreferences,
 
-   Kaydedilmiş hazır ufuklar. Kullanıcı kararı: modül başlarındaki kişisel
-   horizon kalkıyor, ufuk tek yerden — Data Management'tan — yönetiliyor;
-   ama "hazır ön ayar" ve "başkasıyla paylaşma" korunuyor.
-
-   Bir şablon = kaydedilmiş filtre tanımı (table + groups) + ad. Uygulanınca
-   normal ortak filtre yazma yolundan (/api/data-management/filter) geçer;
-   ikinci bir yazma yolu YOKTUR, yoksa iki ayrı doğruluk kaynağı olurdu.
-   =================================================================== */
-app.get('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
-  try {
-    const personal = loadHorizonTemplates(req.currentUser.id);
-    const shared = loadHorizonTemplates();
-    const mapItem = (item, isShared) => ({
-      id: item.id, name: item.name, definition: item.data || null,
-      shared: isShared, ownerId: item.userId || null,
-      updatedAt: item.updatedAt || item.createdAt || null,
-    });
-    res.set('Cache-Control', 'no-store').json({
-      ok: true,
-      personal: (personal.items || []).map(item => mapItem(item, false)),
-      shared: (shared.items || []).map(item => mapItem(item, true)),
-      personalRevision: personal._revision || 0,
-      sharedRevision: shared._revision || 0,
-    });
-  } catch (err) { apiError(res, err, 'Horizon şablonları okunamadı.'); }
 });
+// ---- Veri modeli bağlantıları route'ları (şema, sorgu, çalıştırma) → server/routes/model-connection-routes.js ----
+require('./routes/model-connection-routes')(app, {
+  MODEL_EXPORT_ROOT,
+  alignHorizonWithMapping,
+  apiError,
+  ensureConnectionMapping,
+  express,
+  fs,
+  intakeLiveFields,
+  intakeSafeSourceMessage,
+  intakeStore,
+  loadModelConnections,
+  logRuntimeFailure,
+  modelApiError,
+  modelExportPath,
+  modelFields,
+  modelHorizon,
+  modelQuery,
+  modelRunInFlight,
+  queryModelDistinctValues,
+  recordModelConnectionRun,
+  replaceModelConnections,
+  resolveColumnTypes,
+  userAccess,
 
-app.post('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), (req, res) => {
-  try {
-    const body = req.body || {};
-    const name = String(body.name || '').trim();
-    if (!name) return res.status(400).json({ error: 'Şablon adı zorunlu.', code: 'VALIDATION_ERROR' });
-    const definition = body.definition;
-    if (!definition || typeof definition !== 'object') {
-      return res.status(400).json({ error: 'Şablon tanımı zorunlu.', code: 'VALIDATION_ERROR' });
-    }
-    /* Kaydedilen şey, sorguyu üretecek olanın birebir aynısı olmalı:
-       tanım burada normalleştirilir, uygulanırken ikinci kez yorumlanmaz. */
-    let normalized;
-    try {
-      normalized = { table: String(definition.table || ''), groups: modelHorizon.conditions.normalizeGroups(definition.groups, String(definition.table || '')) };
-    } catch (error) {
-      return res.status(400).json({ error: String(error && error.message || error), code: 'HORIZON_TEMPLATE_INVALID' });
-    }
-    const shared = body.shared === true;
-    const saved = shared
-      ? addHorizonTemplate(name, normalized, null)
-      : addHorizonTemplate(req.currentUser.id, name, normalized, null);
-    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_CREATE', name, { shared });
-    res.json({ ok: true, shared, revision: saved && saved._revision || 0 });
-  } catch (err) { apiError(res, err, 'Horizon şablonu kaydedilemedi.'); }
 });
+// ---- LFL verisi route'ları → server/routes/lfl-routes.js ----
+require('./routes/lfl-routes')(app, {
+  apiError,
+  attachModelImageIdentities,
+  cacheForUser,
+  ensureDataLoaded,
+  initialDataLoadPromises,
+  loadFromModels,
+  modelImageIdentityOrders,
+  runExcelTask,
+  sendDateSafeJson,
+  sourceFilterReadiness,
+  sourceFilterReadinessMessage,
+  sourceUserId,
+  userAccess,
+  withFabricDimensions,
 
-app.delete('/api/horizon-templates/:id', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), (req, res) => {
-  try {
-    const shared = String(req.query && req.query.shared || '') === '1';
-    /* Paylaşılan şablonu yalnız sahibi veya yönetim yetkisi olan siler;
-       ortak depoda duran bir kaydı herkesin silebilmesi veri kaybı olurdu. */
-    if (shared) {
-      const store = loadHorizonTemplates();
-      const item = (store.items || []).find(entry => entry && entry.id === req.params.id);
-      if (!item) return res.status(404).json({ error: 'Şablon bulunamadı.', code: 'NOT_FOUND' });
-      const owns = item.userId && String(item.userId) === String(req.currentUser.id);
-      if (!owns && !userAccess.hasPermission(req.currentUser, 'manageAllOrders')) {
-        return res.status(403).json({ error: 'Bu paylaşılan şablonu yalnız sahibi veya bir moderatör silebilir.', code: 'NOT_OWNER' });
-      }
-      deleteHorizonTemplate(req.params.id, null);
-    } else {
-      deleteHorizonTemplate(req.currentUser.id, req.params.id, null);
-    }
-    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_DELETE', req.params.id, { shared });
-    res.json({ ok: true });
-  } catch (err) { apiError(res, err, 'Horizon şablonu silinemedi.'); }
 });
-
-app.post('/api/horizon-templates/:id/share', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), (req, res) => {
-  try {
-    const personal = loadHorizonTemplates(req.currentUser.id);
-    const item = (personal.items || []).find(entry => entry && entry.id === req.params.id);
-    if (!item) return res.status(404).json({ error: 'Şablon bulunamadı.', code: 'NOT_FOUND' });
-    /* KOPYALAR, TAŞIMAZ: kişisel kayıt sahibinde kalır. Paylaşılanı biri
-       silince kimsenin kendi şablonu kaybolmasın. */
-    addHorizonTemplate(item.name, item.data, null);
-    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_SHARE', item.name, {});
-    res.json({ ok: true });
-  } catch (err) { apiError(res, err, 'Horizon şablonu paylaşılamadı.'); }
+// ---- Octopus (Copilot) route'ları → server/routes/copilot-routes.js ----
+require('./routes/copilot-routes')(app, {
+  APP_VERSION,
+  DISPLAY_VERSION,
+  agentAi,
+  agentPlatformError,
+  agentPolicyEngine,
+  agentToolRegistry,
+  apiError,
+  auth,
+  cacheForUser,
+  copilotActions,
+  copilotAgent,
+  express,
+  getExcelWorkerStats,
+  octopusExports,
+  sourceFolderForUser,
+  sourceUserId,
+  userAccess,
+  getConfig: () => config,
 });
-app.post('/api/data-management/filter', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), (req, res) => {
-  try {
-    const body = req.body || {};
-    const sourceId = String(body.sourceId || '').trim();
-    const moduleId = String(body.moduleId || '').trim();
-    if (!sourceId || !moduleId) {
-      return res.status(400).json({ error: 'sourceId ve moduleId zorunlu.', code: 'VALIDATION_ERROR' });
-    }
+// ---- Görünüm ve filtre profilleri + kaynak klasör seçimi route'ları → server/routes/view-profile-routes.js ----
+require('./routes/view-profile-routes')(app, {
+  addFilterProfile,
+  addView,
+  apiError,
+  chooseFolderDialog,
+  deleteFilterProfile,
+  deleteView,
+  loadFilterProfiles,
+  loadViews,
+  markUsedFilterProfile,
+  markUsedView,
+  requestRevision,
+  resetUserCache,
+  setFavoriteFilterProfile,
+  setFavoriteView,
+  setUserSourceFolder,
+  sourceFolderForUser,
+  sourceUserId,
+  syncFxFromKurWorkbook,
+  updateFilterProfile,
+  updateView,
+  userAccess,
 
-    const store = loadModelConnections();
-    // Eşzamanlılık kontrolü kaynak başınadır (P9 ile aynı sözleşme).
-    const expected = String(body.expectedSourceRevision || '').trim();
-    if (expected) {
-      const current = store.items.find(item => item && String(item.id) === sourceId);
-      const actual = current ? dataManagementAdapter.configRevision(current) : '';
-      if (actual && actual !== expected) {
-        return res.status(409).json({
-          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
-          code: 'SOURCE_CHANGED',
-        });
-      }
-    }
-
-    const plan = dataManagementFilterWriter.planFilterChange(store.items, {
-      sourceId, moduleId,
-      definition: body.definition,
-      mode: body.mode,
-      name: Object.prototype.hasOwnProperty.call(body, 'name') ? body.name : null,
-    });
-    if (!plan.ok) {
-      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : (plan.code === 'FILTER_INVALID' || plan.code === 'FILTER_MODE_INVALID' ? 400 : 409);
-      return res.status(status).json({ error: plan.message, code: plan.code, warnings: plan.warnings });
-    }
-
-    const saved = replaceModelConnections(plan.items, null);
-    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_FILTER_UPDATE', sourceId, { moduleId, mode: body.mode || 'shared' });
-    publishSharedMasterChange('modelConnections', req);
-    res.json({ ok: true, revision: saved.revision, warnings: plan.warnings, appliedScopeId: plan.appliedScopeId || '' });
-  } catch (err) { apiError(res, err, 'Modül filtresi kaydedilemedi.'); }
 });
-
-/* EZEN KİŞİSEL KATMANI KALDIR (P3 — çıkmazı açar).
-
-   KORUNAN KUSUR: ekran, ortak filtrenin üstünde kişisel bir Horizon varken
-   düzenleyiciyi hiç açmıyor ve "önce onu kaldırın" diyordu. Ama kaldırılacak
-   yer BAŞKA BİR EKRANDI; kullanıcı "her şeyi Veri Yönetimi'nde yapmak
-   istiyorum" derken tam olarak bunu kastediyor. Yol burada açılır.
-
-   YALNIZ KULLANICININ KENDİ AYARINI siler. Ön ayar ve rol şablonu buradan
-   kaldırılmaz: ikisi de kullanıcının değil, çalışma alanının kararıdır ve
-   silinseydi başka kullanıcıları da etkilerdi. O katmanlar ekranda
-   açıklanır, silinmez.
-
-   'default' anahtarı BÜTÜN modülleri etkiler; istemci bunu ayrıca sorar. */
-app.post('/api/data-management/layer', userAccess.requireArea('source'), express.json({ limit: '16kb' }), (req, res) => {
-  try {
-    const body = req.body || {};
-    const moduleId = String(body.moduleId || '').trim();
-    const layerKey = String(body.layerKey || '').trim();
-    if (!moduleId) return res.status(400).json({ error: 'moduleId zorunlu.', code: 'VALIDATION_ERROR' });
-
-    const key = layerKey === 'personalDefault' ? userPreferences.horizonKey('default')
-      : (layerKey === 'personal' ? userPreferences.horizonKey(moduleId) : '');
-    if (!key) {
-      return res.status(400).json({
-        error: 'Bu katman sizin kişisel ayarınız değil; buradan kaldırılamaz.',
-        code: 'LAYER_NOT_PERSONAL',
-      });
-    }
-
-    const userId = sourceUserId(req);
-    userPreferences.removeKeys(userId, [key]);
-    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_LAYER_CLEAR', userId, { moduleId, layerKey });
-    res.json({ ok: true, moduleId, layerKey });
-  } catch (err) { apiError(res, err, 'Kişisel katman kaldırılamadı.'); }
-});
-
-/* MODÜL BAĞLANTISINI AÇ / KAPAT (P5).
-
-   Kapsamlı "bağlantıları kaydet" yerine TEK bir hücreyi değiştirir. Sebebi:
-   mevcut /api/model-connections ucu bütün diziyi değiştiriyor ve iki yönetici
-   farklı kaynaklarda çalışsa bile birbirini eziyor. Burada değişen tek şey bir
-   modül bağlantısıdır; revizyon kontrolü yine uygulanır.
-
-   Kapatılan bağlantının filtresi SİLİNMEZ, park edilir (§11). */
-app.post('/api/data-management/binding', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), (req, res) => {
-  try {
-    const body = req.body || {};
-    const sourceId = String(body.sourceId || '').trim();
-    const moduleId = String(body.moduleId || '').trim();
-    if (!sourceId || !moduleId) {
-      return res.status(400).json({ error: 'sourceId ve moduleId zorunlu.', code: 'VALIDATION_ERROR' });
-    }
-    if (typeof body.enabled !== 'boolean') {
-      return res.status(400).json({ error: 'enabled (boolean) zorunlu.', code: 'VALIDATION_ERROR' });
-    }
-
-    const store = loadModelConnections();
-
-    /* EŞZAMANLILIK KONTROLÜ KAYNAK BAŞINADIR (P9).
-
-       Depodaki revizyon sayacı bütün diziye ait. Onu kullansaydık —ki P5'te
-       öyleydi— ASAS'ı düzenleyen bir yönetici, IAS'ı düzenleyen diğerini
-       "başkası değiştirdi" diye reddederdi. Ölçüldü ve doğrulandı.
-
-       Artık yalnız DOKUNULAN kaynağın yapılandırma parmak izi karşılaştırılır.
-       İstemci sürüm göndermezse kontrol atlanır: eski istemciler ve betikler
-       çalışmaya devam eder, yalnız korumasız kalır. */
-    const expected = String(body.expectedSourceRevision || '').trim();
-    if (expected) {
-      const current = store.items.find(item => item && String(item.id) === sourceId);
-      const actual = current ? dataManagementAdapter.configRevision(current) : '';
-      if (actual && actual !== expected) {
-        return res.status(409).json({
-          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
-          code: 'SOURCE_CHANGED',
-        });
-      }
-    }
-
-    const plan = dataManagementBindingWriter.planBindingChange(store.items, { sourceId, moduleId, enabled: body.enabled });
-    if (!plan.ok) {
-      // Kilitli hedef ya da imkânsız hücre: 409, çünkü istek biçimsel olarak
-      // geçerli ama mevcut yapılandırmayla çelişiyor.
-      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : 409;
-      return res.status(status).json({ error: plan.message, code: plan.code });
-    }
-    if (plan.code === 'NO_CHANGE') {
-      return res.json({ ok: true, changed: false, revision: store.revision });
-    }
-
-    /* Global revizyon BİLEREK geçilmiyor. Plan, az önce okunan güncel depo
-       üzerine uygulandı; dizinin başka bir kaydı bu arada değiştiyse o değişiklik
-       plan.items içinde zaten var ve korunur. Kaybolabilecek tek şey, aynı
-       kaynağa yapılan eşzamanlı bir düzenlemedir — yukarıda o kontrol edildi. */
-    const saved = replaceModelConnections(plan.items, null);
-    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_BINDING_UPDATE', sourceId, { moduleId, enabled: body.enabled });
-    publishSharedMasterChange('modelConnections', req);
-    res.json({ ok: true, changed: true, revision: saved.revision });
-  } catch (err) { apiError(res, err, 'Modül bağlantısı güncellenemedi.'); }
-});
-
-app.get('/api/model-connections', (_req, res) => {
-  const store = loadModelConnections();
-  res.set('ETag', `"${store.revision}"`);
-  /* v7.81 — KAYNAK BAŞINA YAPILANDIRMA SÜRÜMÜ de döner.
-
-     Depo revizyonu (store.revision) BÜTÜN diziye aittir: Veri Yönetimi'nden
-     bir kaynağa dokunmak, başka bir kaynağı düzenleyen ikinci bir ekranı
-     "başkası değiştirdi" diye reddettiriyordu. Tek-işlem uçları kaynak başına
-     sürümle çalışıyor; bu uç da o sürümü verirse aynı ekran iki yerden
-     çağrıldığında ikisi de doğru olanı gönderebilir.
-
-     lastRun bu parmak izine DAHİL DEĞİLDİR (bkz. legacy-adapter): arka planda
-     çalışan bir yenileme, açık duran bir ekranı bayatlatmamalı. */
-  const items = store.items.map(item => ({
-    ...item,
-    configRevision: dataManagementAdapter.configRevision(item),
-  }));
-  res.json({ items, revision: store.revision, ...modelSupportInfo() });
-});
-
-app.put('/api/model-connections', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
-  try {
-    const items = (req.body || {}).items;
-    if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const saved = replaceModelConnections(items, requestRevision(req));
-    userAccess.appendAudit(req.currentUser, 'MODEL_CONNECTIONS_UPDATE', 'settings', { count: saved.items.length });
-    publishSharedMasterChange('modelConnections', req);
-    res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, items: saved.items, revision: saved.revision, ...modelSupportInfo() });
-  } catch (err) { apiError(res, err, 'Veri modeli bağlantıları kaydedilemedi.'); }
-});
-
-// Bağlantıyı sınar ve modeldeki tabloları listeler. Veri çekmez; yalnız şema okur.
-// TMSCHEMA görünümleri yönetici yetkisi istediği için, erişilemezse Excel'in de
-// kullandığı MDSCHEMA görünümlerine düşülür (bkz. lib/modelQuery.js).
-app.post('/api/model-connections/inspect', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const found = await modelQuery.discoverTables({ server: body.server, catalog: body.catalog });
-    res.json({
-      ok: true, provider: found.provider, elapsedMs: found.elapsedMs,
-      tableCount: found.tables.length, tables: found.tables,
-      method: found.method, methodNote: found.methodNote, attempts: found.attempts,
-    });
-  } catch (err) {
-    logRuntimeFailure('modelInspect', err);
-    modelApiError(res, err, 'Veri modeline bağlanılamadı.');
-  }
-});
-
-// Seçilen tablonun sütun adları. Sorguyu yazarken alan adlarını görebilmek için.
-app.post('/api/model-connections/columns', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const found = await modelQuery.discoverColumns({ server: body.server, catalog: body.catalog, table: body.table });
-    res.json({ ok: true, ...found });
-  } catch (err) {
-    logRuntimeFailure('modelColumns', err);
-    modelApiError(res, err, 'Tablo sütunları okunamadı.');
-  }
-});
-
-// Uygulamanın bir rol için beklediği alanların kataloğu. Arayüz listeyi burada
-// tanımlı tek kaynaktan alır; iki yerde ayrı liste tutulmaz.
-app.get('/api/model-fields', async (req, res) => {
-  const role = String(req.query.role || 'asas');
-  if (role !== 'intake') return res.json({ role, fields: modelFields.fieldsForRole(role), derived: modelFields.DERIVED_FIELDS });
-  let fields = modelFields.fieldsForRole(role), source = 'defaults', warning = '';
-  try {
-    const found = await intakeLiveFields();
-    fields = modelFields.intakeFieldsForMapping(found.fields);
-    source = 'database';
-  } catch (error) {
-    const snapshot = intakeStore.loadSnapshot(req.currentUser.id);
-    if (snapshot && Array.isArray(snapshot.fields) && snapshot.fields.length) {
-      fields = modelFields.intakeFieldsForMapping(snapshot.fields);
-      source = 'snapshot';
-    }
-    warning = intakeSafeSourceMessage();
-  }
-  res.set('Cache-Control','no-store').json({ role, fields, derived: [], source, warning });
-});
-
-// Seçilen tablonun sütunlarını okuyup katalogla otomatik eşleştirir.
-// Modelin tamamını tarar: bütün tabloların sütunları + bütün ölçüler. Tek bir tabloya
-// bakmak yetmez, çünkü FOB ve miktar alanları genelde ayrı bir ölçü grubunda durur.
-app.post('/api/model-connections/automap', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const schema = await modelQuery.discoverSchema({ server: body.server, catalog: body.catalog });
-    const role = body.role || 'asas';
-    const mapped = modelFields.autoMapSchema(role, schema);
-    res.json({
-      ok: true, ...mapped,
-      /* v7.81 — hangi ZORUNLU alanların bulunamadığı. "37 alan eşlendi" demek
-         yetmiyordu: eksik olan tek bir zorunlu alan yenilemeyi tamamen
-         durdurur ve kullanıcı bunu ancak yenilemede öğreniyordu. */
-      missingRequired: modelFields.missingRequired(role, mapped.mapping),
-      columns: schema.columns, measures: schema.measures,
-      schemaErrors: schema.errors, provider: schema.provider || '',
-    });
-  } catch (err) {
-    logRuntimeFailure('modelAutomap', err);
-    modelApiError(res, err, 'Alanlar eşleştirilemedi.');
-  }
-});
-
-/* v7.38 — KULLANICI KAPSAMI SEÇİM LİSTELERİNİ ASAS'TAN TAZELE.
-
-   Kullanıcı bulgusu: kullanıcı ayarlarında MAG/MMYG listeleri boş, Buyer Grup
-   listesinde yalnız bir kısmı var. Sebep, kataloğun okunmuş (ve kaynak
-   filtresinden geçmiş) sipariş satırlarından kurulmasıydı. Burası tekil
-   değerleri veri modelinden DOĞRUDAN okur; ufuk/kaynak filtresi uygulanmaz.
-
-   Alan başına AYRI ayrı denenir ve sonuç alan başına bildirilir: biri
-   okunamazsa diğerleri yine gelir ve okunamayanın SEBEBİ yazılır — sessizce
-   eksik liste göstermek, kullanıcının "veriler gelmiyor" demesine yol açan
-   durumun ta kendisiydi (§152). */
-const USER_SCOPE_CATALOG_FIELDS = [
-  { key: 'mags', header: 'Merch Alt Grup Kod', label: 'MAG' },
-  { key: 'mmygs', header: 'Merch Marka Yaş Grup Kod', label: 'MMYG' },
-  { key: 'buyingGroups', header: 'Buyer Grup (TR)', label: 'Buying Group' },
-];
-function userScopeCatalogSource(item, header) {
-  const mapping = (item && item.mapping) || {};
-  const direct = mapping[header];
-  if (direct && direct.name) return { table: direct.table || (item.horizon && item.horizon.table) || '', name: direct.name };
-  const custom = (Array.isArray(item && item.customFields) ? item.customFields : [])
-    .find(field => field && String(field.header || '').trim() === header);
-  if (custom && custom.column && custom.column.name) {
-    return { table: custom.column.table || (item.horizon && item.horizon.table) || '', name: custom.column.name };
-  }
-  return null;
-}
-app.post('/api/user-scope-catalog/refresh', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), async (req, res) => {
-  try {
-    const connections = loadModelConnections().items.filter(item => item && item.role === 'asas' && item.server && item.catalog);
-    if (!connections.length) {
-      return res.status(409).json({ error: 'ASAS Data Model bağlantısı bulunamadı. Seçim listeleri ancak model bağlantısından okunabilir.', code: 'ASAS_CONNECTION_MISSING' });
-    }
-    const limit = 20000;
-    const values = { mags: [], mmygs: [], buyingGroups: [] };
-    const fields = [];
-    for (const field of USER_SCOPE_CATALOG_FIELDS) {
-      let read = 0, failure = '', source = '';
-      for (const item of connections) {
-        const column = userScopeCatalogSource(item, field.header);
-        if (!column || !column.table || !column.name) {
-          if (!failure) failure = `"${field.header}" alanı bu bağlantıda eşlenmemiş.`;
-          continue;
-        }
-        source = `${column.table}[${column.name}]`;
-        try {
-          const dax = `'${column.table.replace(/'/g, "''")}'[${column.name.replace(/]/g, ']]')}]`;
-          const result = await modelQuery.runModelRows({
-            server: item.server, catalog: item.catalog,
-            query: `EVALUATE TOPN(${limit}, DISTINCT(${dax}), ${dax}, ASC)`,
-            generated: true, maxRows: limit, timeoutMs: 120000,
-          });
-          for (const row of result.rows || []) {
-            const first = Object.values(row)[0];
-            const text = first == null ? '' : String(first).trim();
-            if (text) values[field.key].push(text);
-          }
-          read = values[field.key].length;
-          failure = '';
-        } catch (err) { if (!failure) failure = err && err.message ? err.message : String(err); }
-      }
-      fields.push({ key: field.key, label: field.label, header: field.header, count: read, source, error: failure });
-    }
-    const merged = userAccess.mergeCatalogValues(values);
-    const catalog = merged.catalog || {};
-    userAccess.appendAudit(req.currentUser, 'USER_SCOPE_CATALOG_REFRESH', 'asas', {
-      mags: (catalog.mags || []).length, mmygs: (catalog.mmygs || []).length, buyingGroups: (catalog.buyingGroups || []).length,
-    });
-    res.json({
-      ok: true, changed: merged.changed, fields,
-      totals: { mags: (catalog.mags || []).length, mmygs: (catalog.mmygs || []).length, buyingGroups: (catalog.buyingGroups || []).length },
-    });
-  } catch (err) { apiError(res, err, 'Seçim listeleri ASAS’tan tazelenemedi.'); }
-});
-
-// Şemayı ham haliyle döndürür (eşleme tablosundaki açılır listeleri doldurmak için).
-app.post('/api/model-connections/schema', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const schema = await modelQuery.discoverSchema({ server: body.server, catalog: body.catalog });
-    res.json({ ok: true, ...schema });
-  } catch (err) {
-    logRuntimeFailure('modelSchema', err);
-    modelApiError(res, err, 'Model şeması okunamadı.');
-  }
-});
-
-// Bir sütunun modeldeki tekil değerleri. Ufuk koşullarında değer ELLE yazılmasın,
-// CP/LFL sayfalarındaki sütun filtresi gibi listeden seçilsin diye.
-app.post('/api/model-connections/distinct', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const table = String(body.table || '').trim();
-    const field = String(body.field || '').trim();
-    if (!table || !field) return res.status(400).json({ error: 'Tablo ve sütun zorunlu.', code: 'VALIDATION_ERROR' });
-    const limit = Math.min(20000, Math.max(50, Number(body.limit) || 5000));
-    // Page Horizon ve Settings aynı sorgu/cache yolunu kullanır; böylece iki
-    // ekranda farklı veya farklı genişlikte seçenek listeleri oluşmaz.
-    const distinct = await queryModelDistinctValues(body, limit);
-    res.json(distinct);
-  } catch (err) {
-    logRuntimeFailure('modelDistinct', err);
-    modelApiError(res, err, 'Sütun değerleri okunamadı.');
-  }
-});
-
-// Ufuk ayarından üretilecek DAX'ı, çalıştırmadan önce göstermek için.
-app.post('/api/model-connections/preview-query', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const mapping = body.mapping && Object.keys(body.mapping).length ? body.mapping : null;
-    const transient = { name: 'Sorgu önizlemesi', role: body.role || 'asas', horizon: { ...(body.horizon || {}) } };
-    const aligned = mapping ? alignHorizonWithMapping(transient, mapping) : { horizon: transient.horizon, warnings: [] };
-    // Önizleme, yenilemenin GÖNDERECEĞİ DAX'ı göstermeli. Şema tipi burada
-    // çözülmezse ekranda metin literali görünür, yenileme sayısal literal
-    // gönderir; kullanıcı hatayı önizlemede hiç göremez.
-    const columnType = await resolveColumnTypes({ server: body.server, catalog: body.catalog });
-    const built = mapping
-      ? modelHorizon.buildMappedQuery(aligned.horizon, mapping, { topN: Number(body.topN) || 0, columnType })
-      : modelHorizon.buildHorizonQuery(aligned.horizon, { topN: Number(body.topN) || 0, columnType });
-    const leftOut = modelHorizon.seasonsLeftOut(aligned.horizon, body.knownSeasons);
-    const missing = mapping ? modelFields.missingRequired(body.role || 'asas', mapping) : [];
-    res.json({
-      ok: true, query: built.query, warnings: [...(aligned.warnings || []), ...(built.warnings || [])],
-      usedSeasons: built.usedSeasons, usedDates: built.usedDates,
-      seasonsLeftOut: leftOut, missingRequired: missing,
-    });
-  } catch (err) { modelApiError(res, err, 'Sorgu oluşturulamadı.'); }
-});
-
-// Ufuk kaç satır getirecek? Veri çekmeden yalnız sayar.
-app.post('/api/model-connections/count', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const mapping = body.mapping && Object.keys(body.mapping).length ? body.mapping : null;
-    const transient = { name: 'Satır sayımı', role: body.role || 'asas', horizon: { ...(body.horizon || {}) } };
-    const aligned = mapping ? alignHorizonWithMapping(transient, mapping) : { horizon: transient.horizon, warnings: [] };
-    // v7.26: sayım sorgusu da alan eşlemesini bilmeli; aksi halde ASAS
-    // başlığıyla kurulmuş bir koşul modelde var olmayan sütuna filtre koyar.
-    // v7.83: sayım sorgusu da sütun tipini şemadan çözer; aksi halde veri
-    // sorgusu çalışırken sayım tip hatasıyla düşerdi.
-    const columnType = await resolveColumnTypes({ server: body.server, catalog: body.catalog });
-    const built = modelHorizon.buildCountQuery(aligned.horizon, mapping, { columnType });
-    const result = await modelQuery.runModelRows({
-      server: body.server, catalog: body.catalog, query: built.query, generated: true, timeoutMs: 120000, maxRows: 10,
-    });
-    const first = result.rows[0] || {};
-    const rowCount = Number(first.SatirSayisi != null ? first.SatirSayisi : Object.values(first)[0]) || 0;
-    res.json({ ok: true, rowCount, elapsedMs: result.elapsedMs, provider: result.provider, query: built.query, warnings: [...(aligned.warnings || []), ...(built.warnings || [])] });
-  } catch (err) {
-    logRuntimeFailure('modelCount', err);
-    modelApiError(res, err, 'Satır sayısı okunamadı.');
-  }
-});
-
-/* ELLE YAZILAN DAX'I KAYDETMEDEN SINA (§7).
-
-   Manuel sorgunun tek doğruluk kaynağı motorun kendisidir; DAX'ı sunucuda
-   ayrıştırmak ikinci bir dil yorumlayıcısı yazmak olurdu. Bu uç sorguyu
-   GERÇEKTEN çalıştırır ama YALNIZ birkaç satır ister ve hiçbir şey yazmaz:
-   /run gibi dışa aktarma klasörüne dosya bırakmaz, önbelleğe dokunmaz.
-
-   Kaydetmeden önce sınamanın nedeni: hatalı bir manuel sorgu kaydedilirse
-   bir sonraki yenileme çöker ve kullanıcı hatayı ancak o zaman görür. */
-app.post('/api/model-connections/try-query', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), async (req, res) => {
-  const body = req.body || {};
-  try {
-    const text = String(body.query == null ? '' : body.query);
-    if (!text.trim()) return res.status(400).json({ error: 'Sınanacak sorgu boş.', code: 'QUERY_REQUIRED' });
-    const maxRows = Math.min(Math.max(Number(body.maxRows) || 5, 1), 50);
-    const result = await modelQuery.runModelRows({
-      server: body.server, catalog: body.catalog, query: text,
-      // generated:false → kullanıcının yazdığı metin; motor onu olduğu gibi çalıştırır.
-      generated: false, timeoutMs: 120000, maxRows,
-    });
-    const rows = result.rows || [];
-    res.json({
-      ok: true,
-      rowCount: rows.length,
-      /* Sütun adları da döner: manuel sorgunun uygulamanın beklediği başlıkları
-         üretip üretmediğini kullanıcı ancak böyle görebilir. */
-      columns: rows.length ? Object.keys(rows[0]) : [],
-      sample: rows.slice(0, 5),
-      elapsedMs: result.elapsedMs,
-      provider: result.provider,
-      truncated: rows.length >= maxRows,
-    });
-  } catch (err) {
-    logRuntimeFailure('modelTryQuery', err);
-    modelApiError(res, err, 'Sorgu çalıştırılamadı.');
-  }
-});
-
-// Kayıtlı bir bağlantının sorgusunu çalıştırır, sonucu dışa aktarma klasörüne yazar.
-app.post('/api/model-connections/run', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
-  const body = req.body || {};
-  const store = loadModelConnections();
-  const saved = body.id ? store.items.find(item => item.id === String(body.id)) : null;
-  if (body.id && !saved) return res.status(404).json({ error: 'Bağlantı bulunamadı.', code: 'MODEL_CONNECTION_NOT_FOUND' });
-
-  const server = saved ? saved.server : body.server;
-  const catalog = saved ? saved.catalog : body.catalog;
-  // Otomatik modda sorgu ufuk ayarından üretilir; manuel modda kullanıcının yazdığı DAX çalışır.
-  let mode = body.mode || (saved && saved.mode) || 'auto';
-  let horizon = body.horizon || (saved && saved.horizon) || null;
-  let query = body.query != null && String(body.query).trim() ? body.query : (saved ? saved.query : '');
-  let horizonWarnings = [];
-  let headerMap = null;
-  const role = body.role || (saved && saved.role) || 'asas';
-  let mapping = (body.mapping && Object.keys(body.mapping).length ? body.mapping : null)
-    || (saved && saved.mapping && Object.keys(saved.mapping).length ? saved.mapping : null);
-  const brokenManualQuery = mode === 'manual' && /\[object Object\]/i.test(String(query || ''));
-  let connectionSettingsChanged = false;
-  if ((mode !== 'manual' || brokenManualQuery) && horizon && String(horizon.table || '').trim()) {
-    // Kayıtlı eski eşleme [object Object] biçiminde bozulmuşsa Test/Run işlemi de
-    // ana Refresh gibi şemayı tarayıp kendiliğinden onarır.
-    const transientConnection = {
-      ...(saved || {}), ...body,
-      server, catalog, role, horizon,
-      mapping: mapping || {},
-      mode, query,
-    };
-    try {
-      const repair = await ensureConnectionMapping(transientConnection);
-      mapping = transientConnection.mapping;
-      mode = transientConnection.mode || mode;
-      query = transientConnection.query || query;
-      if (repair.repaired) connectionSettingsChanged = true;
-      horizonWarnings.push(...(repair.warnings || []));
-      if (mapping) {
-        const aligned = alignHorizonWithMapping(transientConnection, mapping);
-        horizon = aligned.horizon;
-        horizonWarnings.push(...(aligned.warnings || []));
-        if (aligned.repaired) connectionSettingsChanged = true;
-      }
-    } catch (err) { return modelApiError(res, err, 'Alan eşlemesi otomatik onarılamadı.'); }
-    if (connectionSettingsChanged && saved) {
-      const repairedItems = store.items.map(item => item.id === saved.id
-        ? { ...item, mapping, mode: transientConnection.mode, query: transientConnection.query, horizon: transientConnection.horizon, mappingEnhancementScanVersion: transientConnection.mappingEnhancementScanVersion }
-        : item);
-      try {
-        replaceModelConnections(repairedItems, store.revision);
-      } catch (err) {
-        horizonWarnings = [
-          ...horizonWarnings,
-          `Alan eşlemesi otomatik onarıldı ancak kaydedilemedi: ${String(err && err.message || err)}`,
-        ];
-      }
-    }
-    const missing = mapping ? modelFields.missingRequired(role, mapping) : [];
-    if (mapping && missing.length) {
-      return res.status(400).json({
-        error: `Zorunlu alanlar eşleştirilmedi: ${missing.join(', ')}`,
-        code: 'MAPPING_INCOMPLETE', missingRequired: missing,
-      });
-    }
-    try {
-      // Test/Run, ana yenilemeyle AYNI predicate'i üretmeli: sütun tipi
-      // kaynağın kendi şemasından çözülür (best-effort; okunamazsa kayıtlı
-      // valueType ile bugünkü davranışa düşülür).
-      const columnType = await resolveColumnTypes({ server, catalog });
-      const built = mapping
-        ? modelHorizon.buildMappedQuery(horizon, mapping, { topN: Number(body.topN) || 0, columnType })
-        : modelHorizon.buildHorizonQuery(horizon, { topN: Number(body.topN) || 0, columnType });
-      query = built.query;
-      headerMap = built.headerMap || null;
-      horizonWarnings = [...horizonWarnings, ...(built.warnings || [])];
-    } catch (err) { return modelApiError(res, err, 'Ufuk ayarından sorgu oluşturulamadı.'); }
-  }
-  const format = (body.format || (saved && saved.format) || 'csv') === 'json' ? 'json' : 'csv';
-  const outputName = body.outputName || (saved && saved.outputName) || (saved && saved.name) || `${catalog || 'model'}`;
-  const runKey = `${server}|${catalog}`;
-
-  if (modelRunInFlight.has(runKey)) {
-    return res.status(409).json({ error: 'Bu model için bir sorgu zaten çalışıyor.', code: 'OPERATION_IN_PROGRESS' });
-  }
-  modelRunInFlight.add(runKey);
-  try {
-    fs.mkdirSync(MODEL_EXPORT_ROOT, { recursive: true });
-    const outFile = modelExportPath(outputName, format);
-    const summary = await modelQuery.runModelQuery({
-      server, catalog, query, format, outFile, headerMap,
-      previewRows: Math.min(25, Math.max(0, Number(body.previewRows) || 10)),
-      maxRows: body.maxRows, timeoutMs: body.timeoutMs,
-    });
-    const lastRun = {
-      at: new Date().toISOString(), ok: true, rowCount: summary.rowCount,
-      elapsedMs: summary.elapsedMs, provider: summary.provider, outFile: summary.outFile, error: '',
-    };
-    if (saved) recordModelConnectionRun(saved.id, lastRun);
-    userAccess.appendAudit(req.currentUser, 'MODEL_QUERY_RUN', `${server}/${catalog}`, { rowCount: summary.rowCount, elapsedMs: summary.elapsedMs });
-    res.json({ ok: true, ...summary, lastRun, query, mode, horizonWarnings });
-  } catch (err) {
-    if (saved) {
-      try {
-        recordModelConnectionRun(saved.id, {
-          at: new Date().toISOString(), ok: false, rowCount: 0, elapsedMs: 0,
-          provider: err && err.provider || '', outFile: '', error: String(err && err.message || ''),
-        });
-      } catch (_) { /* son çalıştırma bilgisi yazılamazsa asıl hatayı gölgeleme */ }
-    }
-    logRuntimeFailure('modelRun', err);
-    modelApiError(res, err, 'Model sorgusu çalıştırılamadı.');
-  } finally { modelRunInFlight.delete(runKey); }
-});
-
-// Program açılışındaki ilk okuma tamamlanmışsa seçili kullanıcının LFL verisini döndürür.
-// GET çağrısı Excel/Power Query yenilemesi başlatmaz; yalnız diskteki kayıtlı dosyayı okur.
-app.get('/api/lfl', userAccess.requireArea('lfl'), async (req, res) => {
-  try{
-    const id=sourceUserId(req);
-    const filterStatus=sourceFilterReadiness(['lfl'],req);
-    if(!filterStatus.ready){
-      return sendDateSafeJson(res,{rows:[],meta:{rowCount:0,warnings:[sourceFilterReadinessMessage(filterStatus,'tr')]},source:null,loadedAt:null,sourceFilterRequired:true,sourceFilterStatus:filterStatus,sourceFilterMessage:sourceFilterReadinessMessage(filterStatus,'tr')});
-    }
-    await ensureDataLoaded(id);
-    const runtime=cacheForUser(id);
-    const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
-    sendDateSafeJson(res, {
-      rows: imageAwareRows,
-      meta: {...(runtime.lflMeta||{}),rowCount:imageAwareRows.length},
-      source: runtime.sources && runtime.sources.lfl || null,
-      loadedAt: runtime.lflLoadedAt,
-    });
-  }catch(err){apiError(res,err,'LFL Excel dosyası okunamadı.');}
-});
-const lflRefreshInFlight=new Set();
-app.post('/api/lfl/refresh', userAccess.requireArea('lfl'), async (req, res) => {
-  const id=sourceUserId(req);
-  if(lflRefreshInFlight.has(id))return res.status(409).json({error:'Bu kullanıcı için bir LFL yenileme işlemi zaten devam ediyor.',code:'OPERATION_IN_PROGRESS'});
-  lflRefreshInFlight.add(id);
-  try {
-    const pending=initialDataLoadPromises.get(id); if(pending) await pending;
-    const runtime=await loadFromModels(id, ['lfl']);
-    const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
-    const result={rows:imageAwareRows,meta:{...(runtime.lflMeta||{}),rowCount:imageAwareRows.length},source:runtime.sources&&runtime.sources.lfl||null,loadedAt:runtime.lflLoadedAt};
-    userAccess.appendAudit(req.currentUser,'LFL_MODEL_REFRESH','Data Model Connection',{source:result.source,rowCount:Number(result.meta&&result.meta.rowCount)||0});
-    sendDateSafeJson(res, result);
-  }
-  catch (err) { apiError(res, err, 'LFL veri modeli yenilenemedi.'); }
-  finally{lflRefreshInFlight.delete(id);}
-});
-// Kullanıcının seçtiği LFL dosyası yalnız o kullanıcının çalışma önbelleğine yüklenir.
-app.post('/api/lfl/upload', userAccess.requireArea('lfl'), async (req, res) => {
-  try {
-    const id=sourceUserId(req), runtime=cacheForUser(id);
-    const { name, dataBase64 } = req.body || {};
-    if (!dataBase64) return res.status(400).json({ error: 'dataBase64 alanı zorunlu.', code: 'VALIDATION_ERROR' });
-    const buf = Buffer.from(dataBase64, 'base64');
-    const exact = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-    const parsed = await runExcelTask('parseLflBuffer', { data: exact }, { timeoutMs: 300000 });
-    runtime.lflRows = Array.isArray(parsed.rows) ? parsed.rows : [];
-    runtime.lflMeta = withFabricDimensions(parsed.meta, runtime.lflRows);
-    runtime.lflLoadedAt = new Date().toISOString();
-    runtime.sources = { ...(runtime.sources || {}), lfl: name || 'Yüklenen dosya' };
-    userAccess.appendAudit(req.currentUser,'LFL_UPLOAD',name||'uploaded',{rowCount:Number(parsed.meta&&parsed.meta.rowCount)||0});
-    const scopedRows=userAccess.filterRowsByScope(req.currentUser,runtime.lflRows||[]);
-    const imageAwareRows=attachModelImageIdentities(scopedRows,modelImageIdentityOrders(runtime));
-    sendDateSafeJson(res, { rows: imageAwareRows, meta: {...(runtime.lflMeta||{}),rowCount:imageAwareRows.length}, source: runtime.sources.lfl, loadedAt: runtime.lflLoadedAt });
-  } catch (err) { apiError(res, err, 'Yüklenen LFL Excel dosyası işlenemedi.'); }
-});
-
-/* ---- Octopus: yerel modele ince vekil ----
-   İş gerçeği burada ÜRETİLMEZ. İstemci deterministic sonucu zaten hesaplamış
-   olur; buradan geçen tek şey o sonucun cümleye çevrilmesidir. Dönen metin
-   istemcide grounding validator'dan geçmeden kullanıcıya gösterilmez. */
-const copilotLlm = require('./lib/copilot-llm');
-const formulaWriter = require('./lib/cp-formula-writer');
-app.get('/api/copilot/status', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'overview'), async (req, res) => {
-  try {
-    const requestedModel = String(req.query && req.query.model || '').trim();
-    const status = await copilotLlm.status(requestedModel ? { ...config, aiModel: requestedModel } : config);
-    const aiPub = agentAi.providerStatus();
-    res.set('Cache-Control', 'no-store').json({ ...status, canConfigure:String(req.currentUser.role || '').trim().toLowerCase() === 'moderator', openrouter: aiPub.openrouter, nvidia: aiPub.nvidia });
-  }
-  catch (err) { res.json({ status: copilotLlm.STATUS.OFFLINE, ok: false, reason: err && err.message }); }
-});
-app.post('/api/copilot/explain', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'overview'), express.json({ limit: '256kb' }), async (req, res) => {
-  try {
-    const result = req.body && req.body.result;
-    // Cevaplanamaz bir sonuç için açıklama üretmek, olmayan bir gerçeği
-    // cümleye dökmektir; istemci de bunu reddederdi, burada da reddedilir.
-    if (!result || result.answerable !== true) return res.status(400).json({ error: 'Açıklanacak cevaplanabilir bir sonuç yok.' });
-    const text = await copilotLlm.explain(config, { result, question: req.body.question, language: req.body.language, model: req.body.model });
-    res.set('Cache-Control', 'no-store').json({ ok: true, text });
-  } catch (err) {
-    // AI'ın yokluğu bir hata değil bir durumdur; istemci yapılandırılmış
-    // sonucu göstermeye devam eder.
-    res.status(200).json({ ok: false, text: '', reason: err && err.message || String(err) });
-  }
-});
-/* Formula AI yalnızca güvenli, doğrulanmış bir öneri üretir. Öneri istemciye
-   uygulanmadan önce kullanıcı tarafından incelenir; burada da aynı parser ile
-   doğrulanır. Aynı kullanıcıdan eşzamanlı istekleri engellemek, provider'ın
-   gecikmeli yanıtlarında duplicate üretim ve gereksiz maliyeti önler. */
-const formulaAiInFlight = new Set();
-app.post('/api/copilot/formula', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'overview'), express.json({ limit: '64kb' }), async (req, res) => {
-  const body = req.body && typeof req.body === 'object' ? req.body : {};
-  const userId = String(req.currentUser && req.currentUser.id || '');
-  if (formulaAiInFlight.has(userId)) return res.status(409).json({ ok: false, code: 'FORMULA_AI_IN_PROGRESS', error: 'Formula AI request already in progress.' });
-  let request;
-  let fields;
-  try {
-    request = formulaWriter.sanitizeRequest(body.request);
-    fields = formulaWriter.sanitizeFields(body.fields);
-    if (!fields.length) return res.status(400).json({ ok: false, code: 'FORMULA_AI_FIELDS_REQUIRED', error: 'No formula fields were supplied.' });
-  } catch (err) {
-    return res.status(400).json({ ok: false, code: 'FORMULA_AI_INPUT_INVALID', error: err.message || 'Formula AI input is invalid.' });
-  }
-  formulaAiInFlight.add(userId);
-  try {
-    const result = await copilotLlm.generateFormula(config, {
-      request,
-      fields,
-      language: body.language,
-      model: body.model,
-    });
-    userAccess.appendAudit(req.currentUser, 'COPILOT_FORMULA_AI_SUGGESTION', 'formula-writer', {
-      fieldCount: fields.length,
-      formulaValid: true,
-    });
-    res.set('Cache-Control', 'no-store').json({
-      ok: true,
-      formula: result.formula,
-      explanation: result.explanation,
-      fields: result.fields,
-      conditions: result.conditions,
-      match: result.match,
-    });
-  } catch (err) {
-    const code = String(err && err.code || 'FORMULA_AI_UNAVAILABLE');
-    const invalid = code === 'AI_FORMULA_INVALID' || code === 'AI_FORMULA_EMPTY';
-    const status = Number(err && err.statusCode) || (invalid ? 422 : 503);
-    res.status(status >= 500 ? 503 : status).json({
-      ok: false,
-      code,
-      error: invalid ? 'AI returned no safe Buyer Log formula suggestion.' : 'Formula AI is currently unavailable.',
-    });
-  } finally {
-    formulaAiInFlight.delete(userId);
-  }
-});
-/* Ajan önerisi uygulandığında provenance kaydı. Audit iş taahhüdü sınırı
-   DEĞİLDİR: burada bir hata olması değişikliği geri almaz, bu yüzden istemci
-   de cevabı beklemez. Yine de sessizce kaybolmaz — appendAudit kendi
-   acil-durum izini tutar. */
-app.post('/api/copilot/audit', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'overview'), express.json({ limit: '32kb' }), (req, res) => {
-  try {
-    const body = req.body && typeof req.body === 'object' ? req.body : {};
-    const type = String(body.type || '').trim();
-    // Eylem listesi kapalı: istemci uydurma bir tür bildirip audit'i kirletemez.
-    if (!Object.prototype.hasOwnProperty.call(copilotActions.ACTIONS, type)) {
-      return res.status(400).json({ ok: false, error: 'Bilinmeyen eylem türü.', code: 'COPILOT_AUDIT_TYPE_INVALID' });
-    }
-    const proposalId = String(body.proposalId || '').trim().slice(0, 120);
-    const status = String(body.status || '').trim().slice(0, 40);
-    /* Aktör OTURUMDAN gelir; istemcinin gönderdiği bir kimlik kullanılmaz.
-       Payload istemci tarafından bildirilir ve öyle kaydedilir — kullanıcının
-       ONAYLADIĞI şeyin kaydıdır, verinin ne olduğunun kanıtı değil. */
-    userAccess.appendAudit(req.currentUser, 'COPILOT_APPLY', proposalId || type, {
-      type, status: status || 'APPLIED',
-      payload: body.payload && typeof body.payload === 'object' ? body.payload : null,
-      reason: String(body.reason || '').slice(0, 500) || null,
-      clientReported: true,
-    }, req);
-    res.json({ ok: true });
-  } catch (err) { apiError(res, err, 'Octopus denetim kaydı yazılamadı.'); }
-});
-/* Octopus çıktısını indirir. Dosya İSTENDİĞİNDE yazılır: her cevapta bir
-   workbook üretmek, kullanıcıların çoğunun hiç indirmeyeceği dosyalar için
-   iş yapmak olurdu.
-
-   Yetki iki katmanlı: rota alan kontrolünden geçer VE depo isteyenin o
-   çıktının sahibi olduğunu doğrular. Kimliğin tahmin edilemez olması tek
-   başına yeterli sayılmaz — kimliği ele geçiren biri, yetki katmanına hiç
-   uğramadan başkasının kapsamındaki veriyi indirebilirdi. */
-app.get('/api/copilot/export/:exportId', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'overview'), (req, res) => {
-  try {
-    const model = octopusExports.get(req.currentUser.id, req.params.exportId);
-    // Sahibi olmayan ile hiç var olmayan AYNI cevabı alır: aksi hâlde
-    // başkasının çıktısının varlığı sızardı.
-    if (!model) return res.status(404).json({ error: 'Çıktı bulunamadı ya da süresi doldu.', code: 'OCTOPUS_EXPORT_NOT_FOUND' });
-    const XLSX = require('xlsx');
-    const workbook = XLSX.utils.book_new();
-    for (const sheet of model.sheets) XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(sheet.aoa), sheet.name);
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-    userAccess.appendAudit(req.currentUser, 'OCTOPUS_EXPORT', String(req.params.exportId), {
-      fileName: model.fileName, tableCount: model.tableCount, rowCount: model.rowCount,
-    }, req);
-    /* Dosya adı ASCII'ye indirgenmiş hâliyle de verilir: eski istemciler
-       filename* alanını okumuyor ve Türkçe karakterli bir ad başlığı bozuyor. */
-    const asciiName = String(model.fileName || 'octopus.xlsx').replace(/[^\x20-\x7E]/g, '_').replace(/"/g, '');
-    res.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.set('Content-Disposition', `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(model.fileName)}`);
-    res.set('Cache-Control', 'no-store');
-    res.send(buffer);
-  } catch (err) { apiError(res, err, 'Octopus çıktısı üretilemedi.'); }
-});
-/* Görsel eki (§7): sabit bir izin listesi + say/boyut sınırı. Base64 ham
-   boyuta göre ~%33 büyür; 6 MB decode sınırı ekran görüntüsü/rapor
-   görseli için yeterli, sunucuyu büyük yüklerle boğmaz. Geçersiz/aşırı
-   büyük bir ek sessizce ATILIR — kullanıcı "gönderildi ama görülmedi"
-   sanmasın diye copilot-agent.js görsel isteyip hiç ek gelmediğini
-   fark ederse kullanıcıya söyler (bkz. vision routing). */
-const COPILOT_MAX_ATTACHMENTS = 3;
-const COPILOT_MAX_ATTACHMENT_BYTES = 6 * 1024 * 1024;
-const COPILOT_ALLOWED_IMAGE_MIME = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
-function sanitizeCopilotAttachments(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw.slice(0, COPILOT_MAX_ATTACHMENTS).map(item => {
-    const mimeType = String(item && item.mimeType || '').toLowerCase().trim();
-    const dataBase64 = String(item && item.dataBase64 || '').trim();
-    if (!COPILOT_ALLOWED_IMAGE_MIME.has(mimeType) || !dataBase64) return null;
-    if (dataBase64.length * 0.75 > COPILOT_MAX_ATTACHMENT_BYTES) return null;
-    return { mimeType, dataBase64 };
-  }).filter(Boolean);
-}
-app.post('/api/copilot/ask', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'overview'), express.json({ limit: '16mb' }), async (req, res) => {
-  try {
-    const body=req.body&&typeof req.body==='object'?req.body:{};
-    const requestedPolicy=String(body.horizon&&body.horizon.outsideHorizon||'allow').trim().toLowerCase();
-    const horizon={
-      seasons:Array.isArray(body.horizon&&body.horizon.seasons)?body.horizon.seasons.map(value=>String(value||'').trim()).filter(Boolean).slice(0,50):[],
-      outsideHorizon:['allow','ask','deny'].includes(requestedPolicy)?requestedPolicy:'allow',
-    };
-    const result=await copilotAgent.respond({
-      question:String(body.question||''),history:body.history,language:body.language,model:body.model,
-      attachments:sanitizeCopilotAttachments(body.attachments),
-      horizon,ownerId:req.currentUser.id,profile:req.currentUser,
-      toolRegistry:agentToolRegistry,policyEngine:agentPolicyEngine,
-    });
-    userAccess.appendAudit(req.currentUser,'COPILOT_RESPONSE',result.model||'gemma',{mode:result.mode,toolCount:result.toolCalls.length,sources:[...new Set((result.evidence||[]).map(item=>item.source).filter(Boolean))]});
-    /* ÇIKTI MODELİ İSTEMCİYE GİTMEZ. Ajan onu üretiyor çünkü araç
-       satırları yalnız orada; ama satırların istemciye gönderilmemesi
-       kasıtlı bir karar. Model sunucuda saklanır, yerine kısa ömürlü bir
-       kimlik gider. Ayıklamayı unutmak, tam da o kararı sessizce geri
-       almak olurdu. */
-    const { exportModel, ...payload } = result;
-    const exportId = exportModel ? octopusExports.put(req.currentUser.id, exportModel) : null;
-    res.set('Cache-Control','no-store').json(exportId
-      ? { ...payload, export: { id: exportId, fileName: exportModel.fileName, tableCount: exportModel.tableCount, rowCount: exportModel.rowCount } }
-      : payload);
-  } catch(err) { agentPlatformError(res,err,'Octopus yanıt üretemedi.'); }
-});
-
-/* Akışlı (SSE) ikiz uç. Yukarıdaki /api/copilot/ask ile AYNI ajanı çağırır —
-   tek fark onDelta/onReset callback'leri: model "answer" alanını üretirken
-   parça parça yollanır (bkz. copilot-agent.js createAnswerStreamExtractor).
-   EventSource kullanılmaz çünkü yalnız GET destekler; istemci düz fetch() +
-   ReadableStream ile POST gövdesiyle SSE tüketir (gateway.chatStream'in
-   kendi SSE tüketimiyle aynı desen). */
-app.post('/api/copilot/ask/stream', userAccess.requireAnyArea('source', 'koleksiyon', 'cp', 'orders', 'overview'), express.json({ limit: '16mb' }), async (req, res) => {
-  const body=req.body&&typeof req.body==='object'?req.body:{};
-  const requestedPolicy=String(body.horizon&&body.horizon.outsideHorizon||'allow').trim().toLowerCase();
-  const horizon={
-    seasons:Array.isArray(body.horizon&&body.horizon.seasons)?body.horizon.seasons.map(value=>String(value||'').trim()).filter(Boolean).slice(0,50):[],
-    outsideHorizon:['allow','ask','deny'].includes(requestedPolicy)?requestedPolicy:'allow',
-  };
-  res.set({ 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
-  if (typeof res.flushHeaders === 'function') res.flushHeaders();
-  const send = (event, data) => { res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`); };
-  try {
-    const result=await copilotAgent.respond({
-      question:String(body.question||''),history:body.history,language:body.language,model:body.model,
-      attachments:sanitizeCopilotAttachments(body.attachments),
-      horizon,ownerId:req.currentUser.id,profile:req.currentUser,
-      toolRegistry:agentToolRegistry,policyEngine:agentPolicyEngine,
-      onDelta:text=>send('delta',{text}),
-      onReset:()=>send('reset',{}),
-    });
-    userAccess.appendAudit(req.currentUser,'COPILOT_RESPONSE',result.model||'gemma',{mode:result.mode,toolCount:result.toolCalls.length,sources:[...new Set((result.evidence||[]).map(item=>item.source).filter(Boolean))]});
-    const { exportModel, ...payload } = result;
-    const exportId = exportModel ? octopusExports.put(req.currentUser.id, exportModel) : null;
-    send('done', exportId
-      ? { ...payload, export: { id: exportId, fileName: exportModel.fileName, tableCount: exportModel.tableCount, rowCount: exportModel.rowCount } }
-      : payload);
-  } catch(err) {
-    send('error', { error: (err && err.message) || 'Octopus yanıt üretemedi.', code: err && err.code || 'AGENT_PLATFORM_ERROR' });
-  } finally { res.end(); }
-});
-
-app.get('/api/status', (req, res) => {
-  res.set('Cache-Control', 'no-store');
-  // The desktop launcher needs a version marker before either authentication layer.
-  // When the optional outer password gate is enabled, do not expose local paths or
-  // source metadata until that gate has been passed.
-  if (auth.enabled && !auth.isAuthenticated(req)) {
-    return res.json({ app: 'Buyer Log', appVersion: APP_VERSION, displayVersion: DISPLAY_VERSION, authRequired: true });
-  }
-  const id=sourceUserId(req),runtime=cacheForUser(id);
-  res.json({ app: 'Buyer Log', appVersion: APP_VERSION, displayVersion: DISPLAY_VERSION, loadedAt: runtime.loadedAt, sources: runtime.sources, sourceFolder: sourceFolderForUser(id), userId:id, excelWorker: getExcelWorkerStats() });
-});
-
-// ---- Görünüm profilleri (kolon seçimi/sırası/genişliği) ----
-app.get('/api/views', (req, res) => res.json(loadViews(req.currentUser.id)));
-app.post('/api/views', (req, res) => {
-  const { name, data } = req.body || {}; if (!name || !data) return res.status(400).json({ error: 'name ve data alanları zorunlu.' });
-  try { res.json(addView(req.currentUser.id, name, data, requestRevision(req))); } catch (err) { apiError(res, err, 'Görünüm kaydedilemedi.'); }
-});
-app.delete('/api/views/:id', (req, res) => { try { res.json(deleteView(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Görünüm silinemedi.'); } });
-app.put('/api/views/:id', (req, res) => { try { res.json(updateView(req.currentUser.id, req.params.id, (req.body || {}).data, requestRevision(req), (req.body || {}).name)); } catch (err) { apiError(res, err, 'Görünüm güncellenemedi.'); } });
-app.post('/api/views/:id/favorite', (req, res) => { try { res.json(setFavoriteView(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Favori görünüm değiştirilemedi.'); } });
-app.post('/api/views/:id/use', (req, res) => { try { res.json(markUsedView(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Son kullanılan görünüm kaydedilemedi.'); } });
-
-// ---- Filtre profilleri ----
-app.get('/api/filter-profiles', (req, res) => res.json(loadFilterProfiles(req.currentUser.id)));
-app.post('/api/filter-profiles', (req, res) => {
-  const { name, data } = req.body || {}; if (!name || !data) return res.status(400).json({ error: 'name ve data alanları zorunlu.' });
-  try { res.json(addFilterProfile(req.currentUser.id, name, data, requestRevision(req))); } catch (err) { apiError(res, err, 'Filtre profili kaydedilemedi.'); }
-});
-app.delete('/api/filter-profiles/:id', (req, res) => { try { res.json(deleteFilterProfile(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Filtre profili silinemedi.'); } });
-app.put('/api/filter-profiles/:id', (req, res) => { try { res.json(updateFilterProfile(req.currentUser.id, req.params.id, (req.body || {}).data, requestRevision(req), (req.body || {}).name)); } catch (err) { apiError(res, err, 'Filtre profili güncellenemedi.'); } });
-app.post('/api/filter-profiles/:id/favorite', (req, res) => { try { res.json(setFavoriteFilterProfile(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Favori filtre değiştirilemedi.'); } });
-app.post('/api/filter-profiles/:id/use', (req, res) => { try { res.json(markUsedFilterProfile(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Son kullanılan filtre kaydedilemedi.'); } });
-
-// "📁 Kaynak Klasörü Seç" her kullanıcı için ayrı bir klasör kaydeder.
-// Seçim yalnız aktif kullanıcının önbelleğini ve KUR kaynağını etkiler.
-app.post('/api/choose-folder', userAccess.requireArea('source'), async (req, res) => {
-  try {
-    const id=sourceUserId(req);
-    const folder = await chooseFolderDialog({ mode:'modern', initialPath:sourceFolderForUser(id) || '' });
-    if (!folder) return res.json({ cancelled: true });
-    setUserSourceFolder(id, folder);
-    resetUserCache(id);
-    const fxSync = await syncFxFromKurWorkbook(id, true);
-    userAccess.appendAudit(req.currentUser,'SOURCE_FOLDER_CHANGE',folder,{fxUpdated:Boolean(fxSync&&fxSync.updated)});
-    res.json({ ok: true, sourceFolder: folder, fxSync });
-  } catch (err) { apiError(res, err, 'Klasör seçme penceresi açılamadı.'); }
-});
-
 // ---- Koleksiyon model dosyaları / TPs ----
 const MODEL_FILES_INDEX = path.join(MODEL_FILES_ROOT, 'index.json');
 function ensureModelFilesRoot(){ fs.mkdirSync(MODEL_FILES_ROOT,{recursive:true}); }
@@ -12772,28 +10496,18 @@ app.delete('/api/model-files/:id',userAccess.requireArea('source'),(req,res)=>{
   }catch(err){apiError(res,err,'Model dosyası silinemedi.');}
 });
 
-// ---- Koleksiyon görselleri ----
-app.post('/api/collection-images', userAccess.requireArea('koleksiyon'), express.json({ limit: '70mb' }), (req, res) => {
-  try {
-    assertModelImageMutable();
-    const body = req.body || {};
-    const image = saveCollectionImage({ rowId: body.rowId, filename: body.filename, mimeType: body.mimeType, base64: body.base64 });
-    res.json({ ok: true, image });
-  } catch (err) { apiError(res, err, 'Koleksiyon görseli kaydedilemedi.'); }
-});
-app.get('/api/model-images/optimization/status', userAccess.requireAnyArea('source','koleksiyon','cp','orders'), (_req, res) => {
-  try { res.set('Cache-Control', 'no-store').json({ ok: true, ...collectionImageOptimizationStatus(50) }); }
-  catch (err) { apiError(res, err, 'Model görseli optimizasyon durumu okunamadı.'); }
-});
-app.get('/api/model-images/settings', userAccess.requireAnyArea('source','koleksiyon','cp','orders'), (_req, res) => {
-  try { res.set('Cache-Control', 'no-store').json({ ok:true, ...getModelImageSettings() }); }
-  catch (err) { apiError(res, err, 'Görsel boyut limiti okunamadı.'); }
-});
-app.get('/api/model-images/registry/report', userAccess.requireAnyArea('source','koleksiyon','cp','orders','backlog','lfl','overview'), (_req, res) => {
-  try {
-    const overrides=loadOverrides();
-    res.set('Cache-Control','no-store').json({ok:true,...modelImageRegistry.migrationReport(overrides&&overrides.imagemap)});
-  } catch (err) { apiError(res, err, 'Model görseli kayıt raporu okunamadı.'); }
+// ---- Koleksiyon görselleri ve görsel kayıt ayarları route'ları → server/routes/collection-image-routes.js ----
+require('./routes/collection-image-routes')(app, {
+  apiError,
+  assertModelImageMutable,
+  collectionImageOptimizationStatus,
+  express,
+  getModelImageSettings,
+  loadOverrides,
+  modelImageRegistry,
+  saveCollectionImage,
+  userAccess,
+
 });
 /* ===================================================================
    PAYLAŞILAN GÖRSEL DAĞITIMI — durum ve elle tetikleme.
@@ -12938,32 +10652,17 @@ app.delete('/api/collection-images/:id', userAccess.requireArea('koleksiyon'), (
   catch (err) { apiError(res, err, 'Koleksiyon görseli silinemedi.'); }
 });
 
-// ---- CP görselleri ----
-// Fiziksel dosyalar Koleksiyon görselleriyle aynı yedeklenebilir depoda tutulur;
-// bağlantı PLM ID + Colour Code anahtarıyla overrides.imagemap'e yazılır.
-app.post('/api/cp-images', userAccess.requireArea('cp'), (req, res) => {
-  try {
-    assertModelImageMutable();
-    const body = req.body || {};
-    const stored = saveCollectionImage({ rowId: `cp:${body.rowId || ''}`, filename: body.filename, mimeType: body.mimeType, base64: body.base64 });
-    res.json({ ok: true, image: { ...stored, url: `/api/cp-images/${encodeURIComponent(stored.id)}` } });
-  } catch (err) { apiError(res, err, 'CP görseli kaydedilemedi.'); }
-});
-app.get('/api/cp-images/:id', userAccess.requireAnyArea('cp','orders','backlog','koleksiyon','lfl','overview','priceanalysis','opencosting','shipping'), (req, res) => {
-  try {
-    const found = getCollectionImage(req.params.id);
-    if (!found) return res.status(404).json({ error: 'CP görseli bulunamadı.' });
-    res.setHeader('Content-Type', found.item.mimeType || 'application/octet-stream');
-    res.setHeader('Content-Length', String(fs.statSync(found.full).size));
-    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
-    res.sendFile(found.full);
-  } catch (err) { apiError(res, err, 'CP görseli okunamadı.'); }
-});
-app.delete('/api/cp-images/:id', userAccess.requireArea('cp'), (req, res) => {
-  try { res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
-  catch (err) { apiError(res, err, 'CP görseli silinemedi.'); }
-});
+// ---- CP görselleri route'ları → server/routes/cp-image-routes.js ----
+require('./routes/cp-image-routes')(app, {
+  apiError,
+  assertModelImageMutable,
+  deleteCollectionImage,
+  fs,
+  getCollectionImage,
+  saveCollectionImage,
+  userAccess,
 
+});
 // ---- Fiyatlama e-posta taslakları (.eml) ----
 // Model dosyaları kalıcı MODEL_FILES_ROOT altında saklanır. E-posta taslakları ise
 // kalıcı veri değildir: yalnız Outlook/varsayılan istemciye açma komutu verilene
@@ -13133,60 +10832,30 @@ app.get('/api/email-drafts/:filename', (_req, res) => {
   res.status(410).json({ error: 'Taslaklar kalıcı olarak saklanmaz. Yeni bir taslak oluşturun.' });
 });
 
-// ---- Open Costing ----
-app.get('/api/open-costing', userAccess.requireArea('opencosting'), (_req, res) => res.json(loadOpenCostings()));
-app.post('/api/open-costing', userAccess.requireArea('opencosting'), (req, res) => { try { res.json(createOpenCosting(req.body || {}, requestRevision(req))); } catch (err) { apiError(res, err, 'Ön maliyet kaydedilemedi.'); } });
-app.put('/api/open-costing/:id', userAccess.requireArea('opencosting'), (req, res) => { try { res.json(updateOpenCosting(req.params.id, req.body || {}, requestRevision(req))); } catch (err) { apiError(res, err, 'Ön maliyet güncellenemedi.'); } });
-app.delete('/api/open-costing/:id', userAccess.requireArea('opencosting'), (req, res) => { try { res.json(deleteOpenCosting(req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Ön maliyet silinemedi.'); } });
+// ---- Ön Maliyet, Aylık Döviz Kurları ve Nakliye Kıyaslaması route'ları → server/routes/costing-fx-shipping-routes.js ----
+require('./routes/costing-fx-shipping-routes')(app, {
+  addShippingRows,
+  apiError,
+  createOpenCosting,
+  currentUserIsModerator,
+  deleteOpenCosting,
+  deleteShippingRows,
+  fxMonthResolved,
+  loadFx,
+  loadOpenCostings,
+  loadShipping,
+  patchShippingRow,
+  publishSharedMasterChange,
+  recordOrderCode,
+  rejectUnauthorizedOrders,
+  requestRevision,
+  saveFx,
+  sourceUserId,
+  updateOpenCosting,
+  userAccess,
+  withOrderAccess,
 
-// ---- Aylık Döviz Kurları (FX) ----
-app.get('/api/fx',userAccess.requireAnyArea('source','opencosting','koleksiyon'),(_req,res)=>{res.set('Cache-Control','no-store, no-cache, must-revalidate');res.json(loadFx());});
-app.put('/api/fx', userAccess.requireAnyArea('source','opencosting','koleksiyon'), (req, res) => { try { const saved=saveFx(req.body || {}, requestRevision(req)); publishSharedMasterChange('fx', req); userAccess.appendAudit(req.currentUser,'FX_UPDATE','rates',{revision:saved._revision}); res.json(saved); } catch (err) { apiError(res, err, 'Döviz kurları kaydedilemedi.'); } });
-app.get('/api/fx/resolve/:month', userAccess.requireAnyArea('source','opencosting','koleksiyon'), (req, res) => { const store = loadFx(); const r = fxMonthResolved(store, req.params.month); res.json({ base: store.base, month: r.month, requestedMonth: req.params.month, exact: r.exact, rates: r.rates, _revision: store._revision }); });
-
-// ---- Nakliye Tipine Göre Maliyet Kıyaslaması ----
-app.get('/api/shipping-comparison', userAccess.requireArea('shipping'), (req, res) => {
-  // v7.23 — kullanıcıya özgü: her kullanıcı YALNIZ kendi nakliye kıyaslamasını görür.
-  const store = loadShipping(sourceUserId(req));
-  res.json({ ...store, rows: store.rows.map(row => withOrderAccess(req, row)) });
 });
-app.post('/api/shipping-comparison', userAccess.requireArea('shipping'), (req, res) => {
-  const rows = (req.body || {}).rows; if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'rows (dizi) zorunlu.' });
-  const codes = rows.map(recordOrderCode).filter(Number.isFinite);
-  const codeLessRows = rows.filter(row => recordOrderCode(row) == null);
-  if (codeLessRows.some(row => row && row._sourceModule !== 'collection') && !currentUserIsModerator(req)) return res.status(403).json({ error: 'Sipariş kodu olmayan nakliye satırlarını yalnız Moderatör ekleyebilir.', code: 'MODERATOR_REQUIRED' });
-  if (rejectUnauthorizedOrders(req, res, codes)) return;
-  try {
-    const saved = addShippingRows(rows.map(({ _canEdit, _inherited, ...row }) => row), requestRevision(req), sourceUserId(req));
-    userAccess.appendAudit(req.currentUser, 'SHIPPING_ADD', 'orders', { orderCodes: [...new Set(codes)], count: rows.length });
-    res.json({ ...saved, rows: saved.rows.map(row => withOrderAccess(req, row)) });
-  } catch (err) { apiError(res, err, 'Nakliye satırları eklenemedi.'); }
-});
-app.patch('/api/shipping-comparison/:shipId', userAccess.requireArea('shipping'), (req, res) => {
-  try {
-    const store = loadShipping(sourceUserId(req)), row = store.rows.find(item => item._shipId === req.params.shipId);
-    if (!row) return res.status(404).json({ error: 'Nakliye satırı bulunamadı.' });
-    const code = recordOrderCode(row);
-    if (code == null && row._sourceModule !== 'collection' && !currentUserIsModerator(req)) return res.status(403).json({ error: 'Bu satırı yalnız Moderatör değiştirebilir.', code: 'MODERATOR_REQUIRED' });
-    if (code != null && rejectUnauthorizedOrders(req, res, [code])) return;
-    const saved = patchShippingRow(req.params.shipId, (({ _canEdit, _inherited, ...patch }) => patch)(req.body || {}), requestRevision(req), sourceUserId(req));
-    userAccess.appendAudit(req.currentUser, 'SHIPPING_UPDATE', 'order', { orderCode: code, shipId: req.params.shipId });
-    res.json({ ...saved, rows: saved.rows.map(item => withOrderAccess(req, item)) });
-  } catch (err) { apiError(res, err, 'Nakliye satırı güncellenemedi.'); }
-});
-app.post('/api/shipping-comparison/delete', userAccess.requireArea('shipping'), (req, res) => {
-  const ids = (req.body || {}).ids; if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'ids (dizi) zorunlu.' });
-  try {
-    const store = loadShipping(sourceUserId(req)), selected = store.rows.filter(row => ids.includes(row._shipId));
-    const codes = selected.map(recordOrderCode).filter(Number.isFinite);
-    if (selected.some(row => recordOrderCode(row) == null && row._sourceModule !== 'collection') && !currentUserIsModerator(req)) return res.status(403).json({ error: 'Sipariş kodu olmayan satırları yalnız Moderatör silebilir.', code: 'MODERATOR_REQUIRED' });
-    if (rejectUnauthorizedOrders(req, res, codes)) return;
-    const saved = deleteShippingRows(ids, requestRevision(req), sourceUserId(req));
-    userAccess.appendAudit(req.currentUser, 'SHIPPING_DELETE', 'orders', { orderCodes: [...new Set(codes)], count: selected.length });
-    res.json({ ...saved, rows: saved.rows.map(row => withOrderAccess(req, row)) });
-  } catch (err) { apiError(res, err, 'Nakliye satırları silinemedi.'); }
-});
-
 /* ===================================================================
    YAŞAM DÖNGÜSÜ — yalnız BL_AUTOEXIT=1 açıkça verilirse kullanılabilen
    eski geliştirme modu. Normal Windows başlatıcıları BL_KEEP_ALIVE=1 kullanır;

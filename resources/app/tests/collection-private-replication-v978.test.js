@@ -12,7 +12,7 @@ const fsp = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const SERVER_SOURCE = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+const SERVER_SOURCE = require('./helpers/server-source')();
 const UI_SOURCE = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
 
 const { createCollectionPermissionsStore } = require('../server/lib/collection-permissions-store');

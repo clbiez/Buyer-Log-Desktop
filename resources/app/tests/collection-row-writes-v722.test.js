@@ -36,7 +36,7 @@ Object.assign(process.env, {
 
 const store = require('../server/lib/collection-workspaces');
 const ROOT = path.join(__dirname, '..');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const WORKER = fs.readFileSync(path.join(ROOT, 'server', 'collection-save-worker.js'), 'utf8');
 

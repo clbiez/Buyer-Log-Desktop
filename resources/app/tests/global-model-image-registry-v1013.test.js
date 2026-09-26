@@ -9,7 +9,7 @@ const { createModelImageCache } = require('../public/model-image-cache');
 
 const APP = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
 const QUOTATIONS = fs.readFileSync(path.join(__dirname, '..', 'public', 'quotations.js'), 'utf8');
-const SERVER = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 test('canonical identity normalizes PLM IDs but preserves colour-code text', () => {
   assert.deepEqual(registry.identity('000215013.0', ' 0012 '), {

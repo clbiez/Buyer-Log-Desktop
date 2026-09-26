@@ -9,7 +9,7 @@ const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const app = read('public/app-main.js');
 const index = read('public/index.html');
-const server = read('server/server.js');
+const server = require('./helpers/server-source')();
 const connector = require('../server/lib/agent-browser-connector');
 const colourUtils = require('../public/plm-colour-utils.js');
 

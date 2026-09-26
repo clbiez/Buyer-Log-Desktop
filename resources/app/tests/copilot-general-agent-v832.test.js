@@ -333,7 +333,7 @@ test('v8.32 local Gemma inference gets a bounded cold-start allowance without bl
 });
 
 test('v8.32 server exposes a permission-aware general Copilot endpoint backed by the shared agent tools', () => {
-  const server = fs.readFileSync(path.join(root, 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   assert.match(server, /require\('\.\/lib\/copilot-agent'\)/);
   assert.match(server, /app\.post\('\/api\/copilot\/ask'/);
   assert.match(server, /copilotAgent\.respond\(\{/);

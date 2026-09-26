@@ -184,7 +184,7 @@ test('v7.34 · yetkisiz kullanıcıya düğme değil SEBEP gösterilir (§32)', 
 });
 
 test('v7.34 · yetki kararı SUNUCUDA verilir', () => {
-  const SERVER = read('server/server.js');
+  const SERVER = require('./helpers/server-source')();
   assert.match(SERVER, /app\.put\('\/api\/model-connections', userAccess\.requireArea\('source'\), userAccess\.requirePermission\('manageModelConnections'\)/,
     'istemcideki gizleme yalnız kolaylıktır; asıl engel sunucuda');
 });

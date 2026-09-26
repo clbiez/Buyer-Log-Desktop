@@ -131,7 +131,7 @@ test('tip uyuşmazlığı gizlenmez', () => {
 });
 
 test('uç ÖNERİ döner, hiçbir şey KAYDETMEZ', () => {
-  const server = read('server/server.js');
+  const server = require('./helpers/server-source')();
   const at = server.indexOf("app.get('/api/horizon/filter-mapping'");
   assert.ok(at > -1, 'eşleme ucu yok');
   const end = server.indexOf("app.get('/api/horizon/fields'", at);
@@ -148,7 +148,7 @@ test('uç ÖNERİ döner, hiçbir şey KAYDETMEZ', () => {
 test('modül iki kaynaktan beslenmiyorsa sebep söylenir, boş liste değil', () => {
   /* Sessiz boş cevap, kullanıcının "eşlenecek bir şey yokmuş" diye yanlış
      sonuç çıkarmasına yol açardı. */
-  const server = read('server/server.js');
+  const server = require('./helpers/server-source')();
   const at = server.indexOf("app.get('/api/horizon/filter-mapping'");
   const block = server.slice(at, server.indexOf('\n});\n', at));
   assert.match(block, /SOURCE_SCOPE_MISSING/);

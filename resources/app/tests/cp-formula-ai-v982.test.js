@@ -71,7 +71,7 @@ test('formula writer validates provider output before returning it', async () =>
 test('formula AI UI and server route are wired without a client-side auto-execute path', () => {
   const ui = fs.readFileSync(path.join(ROOT, 'public/cp-overview-assistant.js'), 'utf8');
   const css = fs.readFileSync(path.join(ROOT, 'public/cp-overview-assistant.css'), 'utf8');
-  const server = fs.readFileSync(path.join(ROOT, 'server/server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   assert.match(ui, /data-cpa-formula-ai/);
   assert.match(ui, /api\/copilot\/formula/);
   assert.match(ui, /formulaFieldCatalog/);

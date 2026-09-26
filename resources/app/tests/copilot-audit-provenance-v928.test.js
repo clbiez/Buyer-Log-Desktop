@@ -34,7 +34,7 @@ const provenance = require('../server/lib/copilot-provenance');
 const copilotActions = require('../public/copilot-actions.js');
 
 const read = rel => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 const CLIENT = read('public/copilot.js');
 const APP = read('public/app-main.js');
 

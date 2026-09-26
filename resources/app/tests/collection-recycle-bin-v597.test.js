@@ -17,7 +17,7 @@ process.env.BUYER_LOG_SERVER_DATA_ROOT = fs.mkdtempSync(path.join(os.tmpdir(), '
 const bin = require('../server/lib/collection-recycle-bin');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const HTML = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 test.after(() => fs.rmSync(process.env.BUYER_LOG_SERVER_DATA_ROOT, { recursive: true, force: true }));
 

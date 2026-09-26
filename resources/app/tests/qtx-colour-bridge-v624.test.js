@@ -40,7 +40,7 @@ test('PLM Sync komutları her ekranda kendi tekil PLM Sync menüsündedir',()=>{
 });
 
 test('v6.25/v6.55 Colour Code hücreleri yalnız Colour Code ile eşleşen QTX akışını başlatıyor',()=>{
-  const app=read('public/app-main.js'),css=read('public/app.css'),server=read('server/server.js');
+  const app=read('public/app-main.js'),css=read('public/app.css'),server=require('./helpers/server-source')();
   assert.match(app,/function bindQtxColourBridge\(tableId\)/);
   // v6.55 — çift tıklama YERİNE sağ tık (contextmenu) menüsü; endpoint de
   // tek /api/qtx/download YERİNE fetch-and-save + saved + file/:colourCode

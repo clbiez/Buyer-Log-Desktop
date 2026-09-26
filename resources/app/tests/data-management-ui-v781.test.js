@@ -194,7 +194,7 @@ test('v7.81 matris görünümündeyken odaklanma listeye geçer', () => {
 /* v7.81 (P3-yazma) — ORTAK FİLTRE DÜZENLEYİCİSİ. */
 
 const FILTER_UI = read('public/data-management-filter.js');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 
 test('v7.81 filtre çipi artık eski 1.619 satırlık modalı açmıyor', () => {
   const branch = UI.match(/const filter = event\.target\.closest\('\[data-open-filter\]'\);[\s\S]*?\n    \}/);

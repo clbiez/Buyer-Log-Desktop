@@ -8,7 +8,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const app = fs.readFileSync(path.join(root, 'public', 'app-main.js'), 'utf8');
 const quotations = fs.readFileSync(path.join(root, 'public', 'quotations.js'), 'utf8');
-const server = fs.readFileSync(path.join(root, 'server', 'server.js'), 'utf8');
+const server = require('./helpers/server-source')();
 
 function block(source, start, end) {
   const from = source.indexOf(start);

@@ -54,7 +54,7 @@ test('ASAS otomatik mapping Ürün Tanım alanını gerçek Ürün Ana Tanım so
   assert.match(read('server/lib/lfl.js'), /URUN ANA TANIM/);
   assert.match(read('server/lib/parse.js'), /Ürün Ana Tanım/);
   assert.match(read('public/canonical-fields.js'), /productDescription:[\s\S]*Ürün Ana Tanım/);
-  assert.match(read('server/server.js'), /mappingEnhancementScanVersion: transientConnection\.mappingEnhancementScanVersion/);
+  assert.match(require('./helpers/server-source')(), /mappingEnhancementScanVersion: transientConnection\.mappingEnhancementScanVersion/);
 });
 
 test('mevcut eski ASAS mappingi schema onarımında Ürün Ana Tanım kaynağına yükseltilir', async () => {

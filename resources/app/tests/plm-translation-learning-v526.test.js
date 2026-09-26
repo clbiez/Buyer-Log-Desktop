@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const os=require('node:os');
 const APP=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'utf8');
-const SERVER=fs.readFileSync(path.join(__dirname,'..','server','server.js'),'utf8');
+const SERVER=require('./helpers/server-source')();
 function between(source,start,end){const a=source.indexOf(start),b=source.indexOf(end,a+start.length);assert.ok(a>=0,start+' missing');assert.ok(b>a,end+' missing');return source.slice(a,b);}
 function norm(v){return String(v==null?'':v).trim();}
 function turknorm(v){return norm(v).toUpperCase().replace(/[İI]/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' ').trim();}

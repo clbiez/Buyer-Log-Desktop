@@ -121,7 +121,7 @@ test('profil deposu kullanıcı senkron listesine kayıtlıdır', () => {
 const WIZARD = read('public/excel-import-wizard.js');
 const APP = read('public/app-main.js');
 const INDEX = read('public/index.html');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 
 test('CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır', () => {
   assert.match(INDEX, /data-excel-import="cp"/);

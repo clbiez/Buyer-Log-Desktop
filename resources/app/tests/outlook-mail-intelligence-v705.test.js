@@ -14,7 +14,7 @@ const { attachmentPolicy, createOutlookIntelligenceService } = require('../serve
 const { createGraphSubscriptionManager } = require('../server/lib/outlook-subscriptions');
 
 const ROOT = path.join(__dirname, '..');
-const SERVER = fs.readFileSync(path.join(ROOT,'server','server.js'),'utf8');
+const SERVER = require('./helpers/server-source')();
 const UI = fs.readFileSync(path.join(ROOT,'public','outlook-mail.js'),'utf8');
 const CSS = fs.readFileSync(path.join(ROOT,'public','outlook-mail.css'),'utf8');
 

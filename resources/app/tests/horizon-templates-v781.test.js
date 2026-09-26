@@ -25,7 +25,7 @@ const os = require('node:os');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 const EDITOR = fs.readFileSync(path.join(ROOT, 'public', 'data-management-filter.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'data-management.css'), 'utf8');
 const DB_SRC = fs.readFileSync(path.join(ROOT, 'server', 'db.js'), 'utf8');

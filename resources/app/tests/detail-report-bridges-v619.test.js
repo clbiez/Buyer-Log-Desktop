@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const LFL = fs.readFileSync(path.join(ROOT, 'public', 'lfl.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 test('v6.19 drill-down image column is enabled by default and shares every screen image pool', () => {
   assert.match(APP, /DETAIL_IMAGE_PREF_KEY='bl\.detailTables\.showImages\.v2'/);

@@ -10,7 +10,7 @@ const { spawnSync } = require('child_process');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const UI = fs.readFileSync(path.join(ROOT, 'public', 'outlook-mail.js'), 'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 function run(script, extraEnv = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyer-log-outlook-setup-'));

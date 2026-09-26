@@ -1,0 +1,294 @@
+'use strict';
+
+/* Horizon şablonları ve Veri Yönetimi katman route'ları
+   server.js'ten birebir taşındı (davranış değişikliği yok). Kayıt, server.js'te
+   blokların eskiden durduğu satırda yapılır; Express route SIRASI korunur.
+   Bağımlılıklar kayıt anında enjekte edilir; çalışma sırasında yeniden atanan
+   değerler (yok) canlı okuyucu fonksiyonla okunur. */
+module.exports = function registerHorizonTemplateRoutes(app, deps) {
+  const {
+    addHorizonTemplate,
+    apiError,
+    dataManagementAdapter,
+    dataManagementBindingWriter,
+    dataManagementFilterWriter,
+    deleteHorizonTemplate,
+    express,
+    loadHorizonTemplates,
+    loadModelConnections,
+    modelHorizon,
+    modelSupportInfo,
+    publishSharedMasterChange,
+    replaceModelConnections,
+    requestRevision,
+    sourceUserId,
+    userAccess,
+    userPreferences,
+  } = deps;
+
+
+/* ===================================================================
+   HORIZON ŞABLONLARI (v7.81)
+
+   Kaydedilmiş hazır ufuklar. Kullanıcı kararı: modül başlarındaki kişisel
+   horizon kalkıyor, ufuk tek yerden — Data Management'tan — yönetiliyor;
+   ama "hazır ön ayar" ve "başkasıyla paylaşma" korunuyor.
+
+   Bir şablon = kaydedilmiş filtre tanımı (table + groups) + ad. Uygulanınca
+   normal ortak filtre yazma yolundan (/api/data-management/filter) geçer;
+   ikinci bir yazma yolu YOKTUR, yoksa iki ayrı doğruluk kaynağı olurdu.
+   =================================================================== */
+app.get('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
+  try {
+    const personal = loadHorizonTemplates(req.currentUser.id);
+    const shared = loadHorizonTemplates();
+    const mapItem = (item, isShared) => ({
+      id: item.id, name: item.name, definition: item.data || null,
+      shared: isShared, ownerId: item.userId || null,
+      updatedAt: item.updatedAt || item.createdAt || null,
+    });
+    res.set('Cache-Control', 'no-store').json({
+      ok: true,
+      personal: (personal.items || []).map(item => mapItem(item, false)),
+      shared: (shared.items || []).map(item => mapItem(item, true)),
+      personalRevision: personal._revision || 0,
+      sharedRevision: shared._revision || 0,
+    });
+  } catch (err) { apiError(res, err, 'Horizon şablonları okunamadı.'); }
+});
+
+app.post('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), (req, res) => {
+  try {
+    const body = req.body || {};
+    const name = String(body.name || '').trim();
+    if (!name) return res.status(400).json({ error: 'Şablon adı zorunlu.', code: 'VALIDATION_ERROR' });
+    const definition = body.definition;
+    if (!definition || typeof definition !== 'object') {
+      return res.status(400).json({ error: 'Şablon tanımı zorunlu.', code: 'VALIDATION_ERROR' });
+    }
+    /* Kaydedilen şey, sorguyu üretecek olanın birebir aynısı olmalı:
+       tanım burada normalleştirilir, uygulanırken ikinci kez yorumlanmaz. */
+    let normalized;
+    try {
+      normalized = { table: String(definition.table || ''), groups: modelHorizon.conditions.normalizeGroups(definition.groups, String(definition.table || '')) };
+    } catch (error) {
+      return res.status(400).json({ error: String(error && error.message || error), code: 'HORIZON_TEMPLATE_INVALID' });
+    }
+    const shared = body.shared === true;
+    const saved = shared
+      ? addHorizonTemplate(name, normalized, null)
+      : addHorizonTemplate(req.currentUser.id, name, normalized, null);
+    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_CREATE', name, { shared });
+    res.json({ ok: true, shared, revision: saved && saved._revision || 0 });
+  } catch (err) { apiError(res, err, 'Horizon şablonu kaydedilemedi.'); }
+});
+
+app.delete('/api/horizon-templates/:id', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), (req, res) => {
+  try {
+    const shared = String(req.query && req.query.shared || '') === '1';
+    /* Paylaşılan şablonu yalnız sahibi veya yönetim yetkisi olan siler;
+       ortak depoda duran bir kaydı herkesin silebilmesi veri kaybı olurdu. */
+    if (shared) {
+      const store = loadHorizonTemplates();
+      const item = (store.items || []).find(entry => entry && entry.id === req.params.id);
+      if (!item) return res.status(404).json({ error: 'Şablon bulunamadı.', code: 'NOT_FOUND' });
+      const owns = item.userId && String(item.userId) === String(req.currentUser.id);
+      if (!owns && !userAccess.hasPermission(req.currentUser, 'manageAllOrders')) {
+        return res.status(403).json({ error: 'Bu paylaşılan şablonu yalnız sahibi veya bir moderatör silebilir.', code: 'NOT_OWNER' });
+      }
+      deleteHorizonTemplate(req.params.id, null);
+    } else {
+      deleteHorizonTemplate(req.currentUser.id, req.params.id, null);
+    }
+    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_DELETE', req.params.id, { shared });
+    res.json({ ok: true });
+  } catch (err) { apiError(res, err, 'Horizon şablonu silinemedi.'); }
+});
+
+app.post('/api/horizon-templates/:id/share', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), (req, res) => {
+  try {
+    const personal = loadHorizonTemplates(req.currentUser.id);
+    const item = (personal.items || []).find(entry => entry && entry.id === req.params.id);
+    if (!item) return res.status(404).json({ error: 'Şablon bulunamadı.', code: 'NOT_FOUND' });
+    /* KOPYALAR, TAŞIMAZ: kişisel kayıt sahibinde kalır. Paylaşılanı biri
+       silince kimsenin kendi şablonu kaybolmasın. */
+    addHorizonTemplate(item.name, item.data, null);
+    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_SHARE', item.name, {});
+    res.json({ ok: true });
+  } catch (err) { apiError(res, err, 'Horizon şablonu paylaşılamadı.'); }
+});
+app.post('/api/data-management/filter', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), (req, res) => {
+  try {
+    const body = req.body || {};
+    const sourceId = String(body.sourceId || '').trim();
+    const moduleId = String(body.moduleId || '').trim();
+    if (!sourceId || !moduleId) {
+      return res.status(400).json({ error: 'sourceId ve moduleId zorunlu.', code: 'VALIDATION_ERROR' });
+    }
+
+    const store = loadModelConnections();
+    // Eşzamanlılık kontrolü kaynak başınadır (P9 ile aynı sözleşme).
+    const expected = String(body.expectedSourceRevision || '').trim();
+    if (expected) {
+      const current = store.items.find(item => item && String(item.id) === sourceId);
+      const actual = current ? dataManagementAdapter.configRevision(current) : '';
+      if (actual && actual !== expected) {
+        return res.status(409).json({
+          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
+          code: 'SOURCE_CHANGED',
+        });
+      }
+    }
+
+    const plan = dataManagementFilterWriter.planFilterChange(store.items, {
+      sourceId, moduleId,
+      definition: body.definition,
+      mode: body.mode,
+      name: Object.prototype.hasOwnProperty.call(body, 'name') ? body.name : null,
+    });
+    if (!plan.ok) {
+      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : (plan.code === 'FILTER_INVALID' || plan.code === 'FILTER_MODE_INVALID' ? 400 : 409);
+      return res.status(status).json({ error: plan.message, code: plan.code, warnings: plan.warnings });
+    }
+
+    const saved = replaceModelConnections(plan.items, null);
+    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_FILTER_UPDATE', sourceId, { moduleId, mode: body.mode || 'shared' });
+    publishSharedMasterChange('modelConnections', req);
+    res.json({ ok: true, revision: saved.revision, warnings: plan.warnings, appliedScopeId: plan.appliedScopeId || '' });
+  } catch (err) { apiError(res, err, 'Modül filtresi kaydedilemedi.'); }
+});
+
+/* EZEN KİŞİSEL KATMANI KALDIR (P3 — çıkmazı açar).
+
+   KORUNAN KUSUR: ekran, ortak filtrenin üstünde kişisel bir Horizon varken
+   düzenleyiciyi hiç açmıyor ve "önce onu kaldırın" diyordu. Ama kaldırılacak
+   yer BAŞKA BİR EKRANDI; kullanıcı "her şeyi Veri Yönetimi'nde yapmak
+   istiyorum" derken tam olarak bunu kastediyor. Yol burada açılır.
+
+   YALNIZ KULLANICININ KENDİ AYARINI siler. Ön ayar ve rol şablonu buradan
+   kaldırılmaz: ikisi de kullanıcının değil, çalışma alanının kararıdır ve
+   silinseydi başka kullanıcıları da etkilerdi. O katmanlar ekranda
+   açıklanır, silinmez.
+
+   'default' anahtarı BÜTÜN modülleri etkiler; istemci bunu ayrıca sorar. */
+app.post('/api/data-management/layer', userAccess.requireArea('source'), express.json({ limit: '16kb' }), (req, res) => {
+  try {
+    const body = req.body || {};
+    const moduleId = String(body.moduleId || '').trim();
+    const layerKey = String(body.layerKey || '').trim();
+    if (!moduleId) return res.status(400).json({ error: 'moduleId zorunlu.', code: 'VALIDATION_ERROR' });
+
+    const key = layerKey === 'personalDefault' ? userPreferences.horizonKey('default')
+      : (layerKey === 'personal' ? userPreferences.horizonKey(moduleId) : '');
+    if (!key) {
+      return res.status(400).json({
+        error: 'Bu katman sizin kişisel ayarınız değil; buradan kaldırılamaz.',
+        code: 'LAYER_NOT_PERSONAL',
+      });
+    }
+
+    const userId = sourceUserId(req);
+    userPreferences.removeKeys(userId, [key]);
+    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_LAYER_CLEAR', userId, { moduleId, layerKey });
+    res.json({ ok: true, moduleId, layerKey });
+  } catch (err) { apiError(res, err, 'Kişisel katman kaldırılamadı.'); }
+});
+
+/* MODÜL BAĞLANTISINI AÇ / KAPAT (P5).
+
+   Kapsamlı "bağlantıları kaydet" yerine TEK bir hücreyi değiştirir. Sebebi:
+   mevcut /api/model-connections ucu bütün diziyi değiştiriyor ve iki yönetici
+   farklı kaynaklarda çalışsa bile birbirini eziyor. Burada değişen tek şey bir
+   modül bağlantısıdır; revizyon kontrolü yine uygulanır.
+
+   Kapatılan bağlantının filtresi SİLİNMEZ, park edilir (§11). */
+app.post('/api/data-management/binding', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), (req, res) => {
+  try {
+    const body = req.body || {};
+    const sourceId = String(body.sourceId || '').trim();
+    const moduleId = String(body.moduleId || '').trim();
+    if (!sourceId || !moduleId) {
+      return res.status(400).json({ error: 'sourceId ve moduleId zorunlu.', code: 'VALIDATION_ERROR' });
+    }
+    if (typeof body.enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled (boolean) zorunlu.', code: 'VALIDATION_ERROR' });
+    }
+
+    const store = loadModelConnections();
+
+    /* EŞZAMANLILIK KONTROLÜ KAYNAK BAŞINADIR (P9).
+
+       Depodaki revizyon sayacı bütün diziye ait. Onu kullansaydık —ki P5'te
+       öyleydi— ASAS'ı düzenleyen bir yönetici, IAS'ı düzenleyen diğerini
+       "başkası değiştirdi" diye reddederdi. Ölçüldü ve doğrulandı.
+
+       Artık yalnız DOKUNULAN kaynağın yapılandırma parmak izi karşılaştırılır.
+       İstemci sürüm göndermezse kontrol atlanır: eski istemciler ve betikler
+       çalışmaya devam eder, yalnız korumasız kalır. */
+    const expected = String(body.expectedSourceRevision || '').trim();
+    if (expected) {
+      const current = store.items.find(item => item && String(item.id) === sourceId);
+      const actual = current ? dataManagementAdapter.configRevision(current) : '';
+      if (actual && actual !== expected) {
+        return res.status(409).json({
+          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
+          code: 'SOURCE_CHANGED',
+        });
+      }
+    }
+
+    const plan = dataManagementBindingWriter.planBindingChange(store.items, { sourceId, moduleId, enabled: body.enabled });
+    if (!plan.ok) {
+      // Kilitli hedef ya da imkânsız hücre: 409, çünkü istek biçimsel olarak
+      // geçerli ama mevcut yapılandırmayla çelişiyor.
+      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : 409;
+      return res.status(status).json({ error: plan.message, code: plan.code });
+    }
+    if (plan.code === 'NO_CHANGE') {
+      return res.json({ ok: true, changed: false, revision: store.revision });
+    }
+
+    /* Global revizyon BİLEREK geçilmiyor. Plan, az önce okunan güncel depo
+       üzerine uygulandı; dizinin başka bir kaydı bu arada değiştiyse o değişiklik
+       plan.items içinde zaten var ve korunur. Kaybolabilecek tek şey, aynı
+       kaynağa yapılan eşzamanlı bir düzenlemedir — yukarıda o kontrol edildi. */
+    const saved = replaceModelConnections(plan.items, null);
+    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_BINDING_UPDATE', sourceId, { moduleId, enabled: body.enabled });
+    publishSharedMasterChange('modelConnections', req);
+    res.json({ ok: true, changed: true, revision: saved.revision });
+  } catch (err) { apiError(res, err, 'Modül bağlantısı güncellenemedi.'); }
+});
+
+app.get('/api/model-connections', (_req, res) => {
+  const store = loadModelConnections();
+  res.set('ETag', `"${store.revision}"`);
+  /* v7.81 — KAYNAK BAŞINA YAPILANDIRMA SÜRÜMÜ de döner.
+
+     Depo revizyonu (store.revision) BÜTÜN diziye aittir: Veri Yönetimi'nden
+     bir kaynağa dokunmak, başka bir kaynağı düzenleyen ikinci bir ekranı
+     "başkası değiştirdi" diye reddettiriyordu. Tek-işlem uçları kaynak başına
+     sürümle çalışıyor; bu uç da o sürümü verirse aynı ekran iki yerden
+     çağrıldığında ikisi de doğru olanı gönderebilir.
+
+     lastRun bu parmak izine DAHİL DEĞİLDİR (bkz. legacy-adapter): arka planda
+     çalışan bir yenileme, açık duran bir ekranı bayatlatmamalı. */
+  const items = store.items.map(item => ({
+    ...item,
+    configRevision: dataManagementAdapter.configRevision(item),
+  }));
+  res.json({ items, revision: store.revision, ...modelSupportInfo() });
+});
+
+app.put('/api/model-connections', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
+  try {
+    const items = (req.body || {}).items;
+    if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    const saved = replaceModelConnections(items, requestRevision(req));
+    userAccess.appendAudit(req.currentUser, 'MODEL_CONNECTIONS_UPDATE', 'settings', { count: saved.items.length });
+    publishSharedMasterChange('modelConnections', req);
+    res.set('ETag', `"${saved.revision}"`);
+    res.json({ ok: true, items: saved.items, revision: saved.revision, ...modelSupportInfo() });
+  } catch (err) { apiError(res, err, 'Veri modeli bağlantıları kaydedilemedi.'); }
+});
+
+};

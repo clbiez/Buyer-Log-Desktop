@@ -7,7 +7,7 @@ const test = require('node:test');
 
 const ROOT = path.join(__dirname, '..');
 const { resolveHorizonValueSource, selectConnection } = require(path.join(ROOT, 'server', 'lib', 'horizon-value-source.js'));
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 test('page Horizon resolves the target database column from the canonical field mapping', () => {
   const connections = [

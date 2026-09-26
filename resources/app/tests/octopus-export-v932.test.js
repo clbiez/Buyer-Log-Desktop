@@ -223,7 +223,7 @@ test('v9.32 depo sınırsız büyümez', () => {
 const fsNode = require('node:fs');
 const pathNode = require('node:path');
 const readSource = rel => fsNode.readFileSync(pathNode.join(__dirname, '..', rel), 'utf8');
-const SERVER = readSource('server/server.js');
+const SERVER = require('./helpers/server-source')();
 const AGENT = readSource('server/lib/copilot-agent.js');
 const CLIENT = readSource('public/copilot.js');
 
