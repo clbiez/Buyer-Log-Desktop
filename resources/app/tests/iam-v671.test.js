@@ -39,12 +39,33 @@ test('legacy migration is idempotent and preserves Gökberk moderator identity a
   assert.equal(iam.hasPermission(twice.moderator, 'USER.GRANT', twice), true);
 });
 
-test('new Buyer role grants only safe business VIEW permissions', () => {
+test('new Buyer role grants safe VIEW permissions plus own source refresh and quotation create/edit', () => {
+  // v20260926 kullanıcı kararı: Buyer kendi ASAS kaynağını yeniler ve fiyat
+  // talebi açıp düzenler. Ortak ayar yönetimi ve güvenlik izinleri YOKTUR.
   const user = baseProfile('viewer'), store = storeOf(baseProfile('moderator', { role: 'moderator', systemRole: 'moderator' }), [user]);
   const set = iam.effectivePermissionSet(store.users[0], store);
-  assert.deepEqual([...iam.SAFE_VIEW_PERMISSIONS].sort(), [...set].sort());
+  assert.deepEqual([...iam.SAFE_VIEW_PERMISSIONS, 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT'].sort(), [...set].sort());
   assert.equal(set.has('USER.MANAGE'), false);
   assert.equal(set.has('SYSTEM.MANAGE'), false);
+  assert.equal(set.has('SOURCE_DATA.MANAGE'), false);
+});
+
+test('shared-settings permission is never a role default and never inherited through hierarchy', () => {
+  const roles = iam.normalizeRoles(null);
+  for (const id of ['buyer', 'manager', 'senior_manager']) assert.equal(roles[id].permissions.includes('SOURCE_DATA.MANAGE'), false, id);
+  assert.equal(roles.moderator.permissions.includes('SOURCE_DATA.MANAGE'), true);
+  // Saklanmış (eski) rol matrisi bir kez güncellenir; Moderatörün sonraki kararı korunur.
+  const migrated = iam.normalizeRoles({ buyer: { id: 'buyer', permissions: ['CP.VIEW'] }, manager: { id: 'manager', permissions: ['SOURCE_DATA.MANAGE', 'CP.EDIT'] } });
+  assert.deepEqual(migrated.buyer.permissions, ['CP.VIEW', 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT']);
+  assert.deepEqual(migrated.manager.permissions, ['CP.EDIT']);
+  const afterModeratorEdit = iam.normalizeRoles({ buyer: { ...migrated.buyer, permissions: ['CP.VIEW'] } });
+  assert.deepEqual(afterModeratorEdit.buyer.permissions, ['CP.VIEW'], 'geçiş Moderatörün kaldırdığı izni geri eklemez');
+  // Moderatör bir buyer'a doğrudan verirse buyer'ın yöneticisine miras kalmaz.
+  const manager = baseProfile('lead', { systemRole: 'manager', role: 'team_lead', orgLevel: 'mmyg' });
+  const buyer = baseProfile('grantee', { managerId: 'lead', supervisorId: 'lead', directPermissions: [{ permission: 'SOURCE_DATA.MANAGE', source: 'DIRECT' }] });
+  const store = storeOf(baseProfile('moderator', { role: 'moderator', systemRole: 'moderator' }), [manager, buyer]);
+  assert.equal(iam.hasPermission(store.users.find(u => u.id === 'grantee'), 'SOURCE_DATA.MANAGE', store), true);
+  assert.equal(iam.hasPermission(store.users.find(u => u.id === 'lead'), 'SOURCE_DATA.MANAGE', store), false);
 });
 
 test('stable identity duplicate detection does not depend on display name', () => {

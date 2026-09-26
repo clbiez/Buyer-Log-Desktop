@@ -108,14 +108,47 @@ function masterRecordsFromState(state) {
     if (classification === 'GLOBAL_MASTER') records[id] = /^store:settings\.json$/.test(id) ? sanitizeSettings(value) : scrubSecrets(value);
     else if (classification === 'MIXED_OVERRIDE') {
       const safe = sanitizeOverridesMaster(value);
-      if (Object.keys(safe).length) records[id] = safe;
+      if (!Object.keys(safe).length) continue;
+      // Revizyon saati de taşınır: checkpoint'ten onarılan cihazın sonraki
+      // yazımı doğru tabanı gösterir, diğer cihazlarda sahte çakışma olmaz.
+      const fields = {};
+      for (const key of Object.keys(safe)) if (value._fieldRevisions && value._fieldRevisions[key] != null) fields[key] = value._fieldRevisions[key];
+      if (value._revision != null) safe._revision = value._revision;
+      if (Object.keys(fields).length) safe._fieldRevisions = fields;
+      records[id] = safe;
     }
   }
   return records;
+}
+
+/* Checkpoint onarımı yerel kaydı ezmez: checkpoint'teki alanlar alınır,
+   checkpoint'te olmayan cihaza özel/iş alanları (settings.sourceFolders,
+   overrides.notesmap) korunur ve revizyon saati hiçbir zaman geri gitmez. */
+function checkpointRecordRevision(record) {
+  let max = Number(record && record._revision) || 0;
+  for (const value of Object.values(record && record._fieldRevisions || {})) max = Math.max(max, Number(value) || 0);
+  return max;
+}
+function mergeCheckpointRecord(local, remote) {
+  const incoming = clone(remote || {});
+  if (!local || typeof local !== 'object') return incoming;
+  const out = clone(local);
+  const fields = { ...(local._fieldRevisions || {}) };
+  const remoteFields = incoming._fieldRevisions || {};
+  for (const [key, value] of Object.entries(incoming)) {
+    if (key === '_revision' || key === '_fieldRevisions') continue;
+    out[key] = value;
+    const revision = Number(remoteFields[key]) || 0;
+    if (revision > (Number(fields[key]) || 0)) fields[key] = revision;
+  }
+  out._fieldRevisions = fields;
+  out._revision = Math.max(Number(local._revision) || 0, checkpointRecordRevision(incoming));
+  return out;
 }
 
 module.exports = {
   MASTER_OVERRIDE_FIELDS, CP_OVERRIDE_FIELDS, classifyRecordId, scrubSecrets,
   sanitizeSettings, sanitizeOverridesMaster, sanitizeOverridesBusiness,
   sanitizeDelta, filterDeltas, masterRecordsFromState, businessRecordsFromState,
+  mergeCheckpointRecord, checkpointRecordRevision,
 };

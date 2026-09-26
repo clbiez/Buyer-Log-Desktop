@@ -648,22 +648,22 @@
         en: 'Shared rules: changing one changes the numbers everyone sees.',
       },
       tools: [
-        { id: 'transit', icon: 'i-ship',
+        { id: 'transit', requires: 'manageBusinessRules', icon: 'i-ship',
           label: { tr: 'Yol Süreleri', en: 'Transfer Lead Times' },
           hint: { tr: 'Üretim ülkesi ve sevkiyat tipine göre transit gün sayısı; tahmini varış bundan hesaplanır.',
             en: 'Transit days by production country and shipment type; estimated arrival is derived from this.' },
           run: () => openTransitRulesModal() },
-        { id: 'landed', icon: 'i-calculator',
+        { id: 'landed', requires: 'manageBusinessRules', icon: 'i-calculator',
           label: { tr: 'Landed Çarpanları', en: 'Landed Multipliers' },
           hint: { tr: 'Koleksiyon TR ve Overseas landed maliyet çarpanları.',
             en: 'Collection TR and Overseas landed cost multipliers.' },
           run: () => openLandedMultipliersModal() },
-        { id: 'royalty', icon: 'i-calculator',
+        { id: 'royalty', requires: 'manageBusinessRules', icon: 'i-calculator',
           label: { tr: 'License Royalty', en: 'License Royalty' },
           hint: { tr: 'OPD tarih aralığı, sezon, üretim ülkesi, Licensor ve License bazlı royalty ve hologram hesapları.',
             en: 'Royalty and hologram calculations by OPD date range, season, production country, Licensor and License.' },
           run: () => openSuppFobRulesModal() },
-        { id: 'nondtr', icon: 'i-users-group',
+        { id: 'nondtr', requires: 'manageBusinessRules', icon: 'i-users-group',
           label: { tr: 'Non-DTR Üreticiler', en: 'Non-DTR Manufacturers' },
           hint: { tr: 'DTR dışı sayılan üreticiler; maliyet ve royalty hesabı bu listeye bakar.',
             en: 'Manufacturers treated as non-DTR; cost and royalty calculations read this list.' },
@@ -683,11 +683,11 @@
           hint: { tr: 'Üretici e-posta adresleri, ülke ve gruplara göre.',
             en: 'Manufacturer email addresses by country and group.' },
           run: async () => { await feature('deferredUi'); window.BLEmailGroups?.open?.(); } },
-        { id: 'fx', icon: 'i-coins',
+        { id: 'fx', requires: 'manageBusinessRules', icon: 'i-coins',
           label: { tr: 'Kur Excel’i', en: 'FX Excel' },
           hint: { tr: 'Döviz kuru tablosunu Excel’den yükler.', en: 'Loads the exchange-rate table from Excel.' },
           run: () => document.getElementById('sourceFxFile')?.click() },
-        { id: 'endeksmatik', icon: 'i-file-import',
+        { id: 'endeksmatik', requires: 'manageModelConnections', icon: 'i-file-import',
           label: { tr: 'Endeksmatik Güncelle', en: 'Update Endeksmatik' },
           hint: { tr: 'Yeni ENDEKSMATİK çalışma kitabını doğrular ve yükler.',
             en: 'Validates and loads a new ENDEKSMATIK workbook.' },
@@ -720,7 +720,7 @@
           hint: { tr: 'Yerel veritabanının yeri ve paylaşılan senkron klasörü.',
             en: 'Local database location and the shared sync folder.' },
           run: () => openSyncLocalDataModal() },
-        { id: 'backup', icon: 'i-database-import',
+        { id: 'backup', requires: 'manageModelConnections', icon: 'i-database-import',
           label: { tr: 'Yedekleme', en: 'Backup' },
           hint: { tr: 'Yedek al, geri yükle, zamanlanmış yedeklemeyi ayarla.',
             en: 'Take a backup, restore one, schedule automatic backups.' },
@@ -746,11 +746,24 @@
       : Promise.resolve();
   }
 
+  /* Ortak ayar düzenleyicileri Moderatörün verdiği izinle açılır; cihaza özel
+     araçlar (kaynak klasör, senkron, görsel limiti, tarayıcı, bakım) Kaynak
+     Veri alanı olan herkese açıktır. E-posta grupları herkese görünür,
+     düzenleme yetkisi modülün içinde denetlenir. */
+  function toolAllowed(tool) {
+    if (!tool || !tool.requires) return true;
+    return typeof window.BLHasPermission === 'function' ? window.BLHasPermission(tool.requires) : Boolean(model.canManage);
+  }
+  function visibleToolGroups() {
+    return TOOL_GROUPS.map(group => ({ ...group, tools: group.tools.filter(toolAllowed) })).filter(group => group.tools.length);
+  }
+
   function toolsPanel() {
-    if (!model.canManage) return '';
+    const groups = visibleToolGroups();
+    if (!groups.length) return '';
     return `<div class="dmPanel dmTools">
       <div class="dmPanelHead"><span class="dmPanelTitle">${esc(T('Araçlar', 'Tools'))}</span></div>
-      ${TOOL_GROUPS.map(group => `<div class="dmToolGroup">
+      ${groups.map(group => `<div class="dmToolGroup">
         <div class="dmToolGroupHead">
           <span class="dmToolGroupTitle">${esc(group.label[en() ? 'en' : 'tr'])}</span>
           <span class="dmsHint">${esc(group.hint[en() ? 'en' : 'tr'])}</span>
@@ -783,7 +796,7 @@
 
   async function runTool(id) {
     const tool = findTool(id);
-    if (!tool || !model.canManage) return;
+    if (!tool || !toolAllowed(tool)) return;
 
     if (tool.inline) {
       /* Satır içi araç ikinci tıklamada KAPANIR. Diğer düzenleyicilerle aynı

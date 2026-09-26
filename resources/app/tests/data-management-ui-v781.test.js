@@ -520,12 +520,20 @@ test('v7.81 araçlar üç soruya göre gruplanır, düz bir yığın değil', ()
 test('v7.81 Araçlar YETKİSİ OLMAYANA çizilmez', () => {
   // Yapılandırmayı değiştiremeyecek kullanıcıya çalışmayan satırlar göstermek,
   // onu erişemeyeceği bir yola sokar.
+  // v20260926: yetki ARAÇ BAZINDA — ortak ayar düzenleyicileri Moderatörün
+  // verdiği izni ister; cihaza özel araçlar (kaynak klasör vb.) Kaynak Veri
+  // alanı olan herkese açıktır. Yetkisiz araç yine hiç çizilmez.
   const fn = UI.match(/function toolsPanel\(\) \{[\s\S]*?\n  \}/);
   assert.ok(fn);
-  assert.match(fn[0], /if \(!model\.canManage\) return '';/);
+  assert.match(fn[0], /const groups = visibleToolGroups\(\);\s*if \(!groups\.length\) return '';/);
+  assert.match(UI, /function visibleToolGroups\(\) \{[\s\S]*?group\.tools\.filter\(toolAllowed\)/);
   const run = UI.match(/async function runTool\(id\) \{[\s\S]*?\n  \}/);
   assert.ok(run);
-  assert.match(run[0], /!model\.canManage/, 'sunucuya gitmeden önce yetki de kontrol edilmeli');
+  assert.match(run[0], /!toolAllowed\(tool\)/, 'sunucuya gitmeden önce yetki de kontrol edilmeli');
+  for (const id of ['transit', 'landed', 'royalty', 'nondtr', 'fx']) {
+    assert.match(UI, new RegExp(`\\{ id: '${id}', requires: 'manageBusinessRules'`), `${id} ortak ayar izni istemeli`);
+  }
+  assert.match(UI, /\{ id: 'endeksmatik', requires: 'manageModelConnections'/);
 });
 
 test('v7.81 Data Maintenance SATIR İÇİ açılır, ikinci bir arayüz yazılmadan', () => {

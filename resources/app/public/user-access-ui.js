@@ -21,7 +21,7 @@
   const roleLabels = { buyer: 'Buyer', manager: 'Manager', senior_manager: 'Senior Manager', moderator: tr('Moderatör', 'Moderator') };
   const scopeLabels = { SELF: tr('Kendi Kayıtları', 'Own Records'), TEAM: tr('Ekibi', 'Their Team'), MMYG: 'MMYG', MAG: 'MAG', ALL: tr('Tüm Veriler', 'All Data'), CUSTOM: tr('Özel', 'Custom') };
   const areaLabels = { overview: 'Overview', cp: 'CP', quotations:'Quotations', pricinghistory:tr('Fiyat Geçmişi','Pricing History'), orders: tr('Siparişler', 'Orders'), koleksiyon: tr('Koleksiyon', 'Collections'), priceanalysis: tr('Fiyat & Üretici Analizi', 'Price & Supplier Analysis'), lfl: tr('Analizler', 'Analysis'), opencosting: tr('Ön Maliyet', 'Open Costing'), backlog: 'Backlog', shipping: tr('Nakliye', 'Shipping'), agents: 'Agent Studio', automations: tr('Otomasyonlar', 'Automations'), source: tr('Kaynak Veri', 'Source Data') };
-  const permissionControls={manageBusinessRules:['transitRulesBtn','nonDtrManufacturersBtn','cpSuppFobRulesBtn'],manageModelConnections:['modelConnectionBtn','endeksmatikUploadBtn']};
+  const permissionControls={manageBusinessRules:['transitRulesBtn','nonDtrManufacturersBtn','cpSuppFobRulesBtn','cpLicenseRoyaltyBtn','ordersLicenseRoyaltyBtn','kolLicenseRoyaltyBtn','ocFxBtn','btnSourceFx'],manageModelConnections:['modelConnectionBtn','endeksmatikUploadBtn']};
   const canManageUsers = () => Boolean(current() && current().canManageUsers);
   const hasPermission = key => Boolean(current() && current().permissions && current().permissions[key]);
   const hasCapability = key => Boolean(current() && Array.isArray(current().capabilities) && current().capabilities.includes(key));

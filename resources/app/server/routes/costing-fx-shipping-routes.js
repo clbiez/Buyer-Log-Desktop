@@ -38,7 +38,7 @@ app.delete('/api/open-costing/:id', userAccess.requireArea('opencosting'), (req,
 
 // ---- Aylık Döviz Kurları (FX) ----
 app.get('/api/fx',userAccess.requireAnyArea('source','opencosting','koleksiyon'),(_req,res)=>{res.set('Cache-Control','no-store, no-cache, must-revalidate');res.json(loadFx());});
-app.put('/api/fx', userAccess.requireAnyArea('source','opencosting','koleksiyon'), (req, res) => { try { const saved=saveFx(req.body || {}, requestRevision(req)); publishSharedMasterChange('fx', req); userAccess.appendAudit(req.currentUser,'FX_UPDATE','rates',{revision:saved._revision}); res.json(saved); } catch (err) { apiError(res, err, 'Döviz kurları kaydedilemedi.'); } });
+app.put('/api/fx', userAccess.requireAnyArea('source','opencosting','koleksiyon'), userAccess.requirePermission('manageBusinessRules'), (req, res) => { try { const saved=saveFx(req.body || {}, requestRevision(req)); publishSharedMasterChange('fx', req); userAccess.appendAudit(req.currentUser,'FX_UPDATE','rates',{revision:saved._revision}); res.json(saved); } catch (err) { apiError(res, err, 'Döviz kurları kaydedilemedi.'); } });
 app.get('/api/fx/resolve/:month', userAccess.requireAnyArea('source','opencosting','koleksiyon'), (req, res) => { const store = loadFx(); const r = fxMonthResolved(store, req.params.month); res.json({ base: store.base, month: r.month, requestedMonth: req.params.month, exact: r.exact, rates: r.rates, _revision: store._revision }); });
 
 // ---- Nakliye Tipine Göre Maliyet Kıyaslaması ----

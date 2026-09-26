@@ -498,6 +498,20 @@ for (const store of [plmStyleLinks, require('./db'), require('./lib/email-groups
 collectionWorkspaces.attachDeltaStore(deltaStore);
 markStartup('DELTA_STORE_MODE', { mode: deltaStore.mode });
 const quotationStore = require('./lib/quotations-store');
+const overrideScope = require('./lib/override-scope');
+const quotationVisibility = require('./lib/quotation-visibility').createQuotationVisibility({
+  canEdit: quotationStore.canEdit,
+  collectionAccessLevel: (profile, ownerId) => userAccess.collectionAccessLevel(profile, ownerId),
+  hasPermission: (profile, key) => userAccess.hasPermission(profile, key),
+  authoritativeOrderRows: code => userAccess.authoritativeOrderRows(code),
+  canEditOrder: (profile, order) => userAccess.canEditOrder(profile, order),
+});
+function quotationsVisibleTo(profile, options = {}) {
+  return quotationStore.requestsForUser(profile, { ...options, canView: request => quotationVisibility.visibleTo(profile, request) });
+}
+function quotationVisibleById(profile, id) {
+  return quotationsVisibleTo(profile, { includeHidden: true }).requests.some(request => request.id === String(id || ''));
+}
 const emailGroupsStore = require('./lib/email-groups-store');
 const agentWorkflowStore = require('./lib/agent-workflow-store');
 const automationRecipeStore = require('./lib/automation-recipe-store');
@@ -750,7 +764,12 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
     next.records = next.records && typeof next.records === 'object' ? next.records : {};
     next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
     for (const id of recoverIds) {
-      next.records[id] = JSON.parse(JSON.stringify(remoteRecords[id]));
+      // Ortak ayar kopyası yalnız ortak alanları taşır: yerel kayda birleşir
+      // (cihaz/iş alanları korunur). İş kaydı checkpoint'in tam kopyasıdır.
+      next.records[id] = area === 'master'
+        ? sharedSyncPolicy.mergeCheckpointRecord(next.records[id], remoteRecords[id])
+        : JSON.parse(JSON.stringify(remoteRecords[id]));
+      next.revision = Math.max(Number(next.revision) || 0, sharedSyncPolicy.checkpointRecordRevision(remoteRecords[id]));
       delete next.tombstones[id];
     }
     return { recovered:recoverIds.length };
@@ -1853,6 +1872,19 @@ app.post('/api/outlook/lifecycle', express.json({ limit:'256kb', type:['applicat
   catch(err){ apiError(res,err,'Graph lifecycle bildirimi doğrulanamadı.'); }
 });
 app.use(userAccess.requireSelection);
+// Sipariş bazlı düzenlemeler yalnız kullanıcının veri kapsamındaki siparişler
+// için döner (bkz. override-scope.js). Güvenlik ağı: override belgesi taşıyan
+// HER yanıt burada kırpılır; yeni bir uç eklendiğinde atlanması mümkün olmaz.
+app.use((req, res, next) => {
+  const json = res.json.bind(res);
+  res.json = body => {
+    if (body && typeof body === 'object' && !Array.isArray(body) && body.overrides && typeof body.overrides === 'object' && req.currentUser) {
+      body = { ...body, overrides: overridesForViewer(req.currentUser, body.overrides) };
+    }
+    return json(body);
+  };
+  next();
+});
 app.post('/api/shared-hub/user-bootstrap', express.json({ limit:'8kb' }), async (req, res) => {
   const userId = String(req.currentUser.id);
   // Credentials have already been verified by requireSelection. From this point
@@ -3153,7 +3185,8 @@ async function runScheduledAutomations(){
    ÜRETİCİ E-POSTA GRUPLARI (v7.32) — ORTAK ALAN
 
    Veri tüm kullanıcılara açıktır (talep: "herkesin girdiği veri ortak alanda
-   görünür durumda olsun"). Yazma işlemleri KAYIT BAZLI KİLİTLE korunur ve
+   görünür durumda olsun"). Değiştirme yalnız Moderatörün verdiği ortak ayar
+   yetkisiyle (manageBusinessRules) yapılır. Yazma işlemleri KAYIT BAZLI KİLİTLE korunur ve
    kilit SUNUCUDA doğrulanır (§32): istemcinin kendini kilit sahibi ilan
    etmesi yeterli değildir.
    =================================================================== */
@@ -3168,7 +3201,7 @@ app.get('/api/email-groups', (req, res) => {
   try { res.set('Cache-Control', 'no-store').json({ ok: true, currentUserId: emailGroupsActor(req).id, ...emailGroupsStore.publicStore() }); }
   catch (err) { apiError(res, err, 'E-posta grupları okunamadı.'); }
 });
-app.put('/api/email-groups/headings/:kind', express.json({ limit: '1mb' }), (req, res) => {
+app.put('/api/email-groups/headings/:kind', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '1mb' }), (req, res) => {
   try {
     const body = req.body || {};
     emailGroupsStore.replaceHeadings(req.params.kind, body.items, body.expectedRevision);
@@ -3177,7 +3210,7 @@ app.put('/api/email-groups/headings/:kind', express.json({ limit: '1mb' }), (req
     emailGroupsRespond(res, {});
   } catch (err) { apiError(res, err, 'Başlıklar kaydedilemedi.'); }
 });
-app.post('/api/email-groups/records', express.json({ limit: '1mb' }), (req, res) => {
+app.post('/api/email-groups/records', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '1mb' }), (req, res) => {
   try {
     const body = req.body || {};
     const result = emailGroupsStore.createRecord(body.record, emailGroupsActor(req), body.expectedRevision);
@@ -3189,7 +3222,7 @@ app.post('/api/email-groups/records', express.json({ limit: '1mb' }), (req, res)
 /* v7.35 — Prepare E-Mail kayıtlarının ortak alana taşınması. Aday listesi
    istemciden gelir (kullanıcının kendi çalışma alanında durur, sunucu okuyamaz);
    birleştirme kararını SUNUCU verir ve tek yazma işleminde uygular. */
-app.post('/api/email-groups/import', express.json({ limit: '4mb' }), (req, res) => {
+app.post('/api/email-groups/import', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '4mb' }), (req, res) => {
   try {
     const body = req.body || {};
     const result = emailGroupsStore.importRecords(body.records, emailGroupsActor(req), body.expectedRevision);
@@ -3202,7 +3235,7 @@ app.post('/api/email-groups/import', express.json({ limit: '4mb' }), (req, res) 
     emailGroupsRespond(res, { summary: result.summary });
   } catch (err) { apiError(res, err, 'Prepare E-Mail kayıtları taşınamadı.'); }
 });
-app.put('/api/email-groups/records/:id', express.json({ limit: '1mb' }), (req, res) => {
+app.put('/api/email-groups/records/:id', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '1mb' }), (req, res) => {
   try {
     const body = req.body || {};
     const result = emailGroupsStore.updateRecord(req.params.id, body.record, emailGroupsActor(req), body.expectedRevision);
@@ -3211,7 +3244,7 @@ app.put('/api/email-groups/records/:id', express.json({ limit: '1mb' }), (req, r
     emailGroupsRespond(res, { record: result.record });
   } catch (err) { apiError(res, err, 'E-posta kaydı kaydedilemedi.'); }
 });
-app.delete('/api/email-groups/records/:id', express.json({ limit: '256kb' }), (req, res) => {
+app.delete('/api/email-groups/records/:id', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '256kb' }), (req, res) => {
   try {
     emailGroupsStore.deleteRecord(req.params.id, emailGroupsActor(req), (req.body || {}).expectedRevision);
     userAccess.appendAudit(req.currentUser, 'EMAIL_GROUP_RECORD_DELETED', req.params.id, {});
@@ -3221,7 +3254,7 @@ app.delete('/api/email-groups/records/:id', express.json({ limit: '256kb' }), (r
 });
 /* Kilit al / tazele. Aynı uç kalp atışı olarak da kullanılır: düzenleme
    penceresi açık kaldıkça kilit tazelenir, kapanınca kendiliğinden düşer. */
-app.post('/api/email-groups/records/:id/lock', express.json({ limit: '256kb' }), (req, res) => {
+app.post('/api/email-groups/records/:id/lock', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '256kb' }), (req, res) => {
   try {
     const result = emailGroupsStore.acquireLock(req.params.id, emailGroupsActor(req));
     liveEvents.notifyChange('emailGroups', requestClientId(req), null);
@@ -3243,7 +3276,7 @@ app.delete('/api/email-groups/records/:id/lock', express.json({ limit: '256kb' }
 });
 
 app.get('/api/quotations', userAccess.requireCapability('QUOTATIONS.VIEW'), (req, res) => {
-  const store = quotationStore.requestsForUser(req.currentUser);
+  const store = quotationsVisibleTo(req.currentUser);
   const profiles = userAccess.allPublicProfiles().filter(profile => profile.enabled !== false).map(profile => ({
     id: profile.id, displayName: profile.displayName, username: profile.username, role: profile.role,
   }));
@@ -3257,7 +3290,7 @@ app.post('/api/quotations/import', userAccess.requireCapability('QUOTATIONS.CREA
     const result = quotationStore.importLegacy(req.currentUser, req.body && req.body.requests);
     void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     userAccess.appendAudit(req.currentUser, 'QUOTATION_IMPORT', 'quotations', { imported: result.imported });
-    res.json({ ok: true, imported: result.imported, requests: result.requests });
+    res.json({ ok: true, imported: result.imported, requests: quotationsVisibleTo(req.currentUser).requests });
   } catch (err) {
     res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_IMPORT_FAILED' });
   }
@@ -3321,6 +3354,7 @@ app.post('/api/quotations/merge', userAccess.requireCapability('QUOTATIONS.EDIT'
 });
 app.delete('/api/quotations/:id', userAccess.requireCapability('QUOTATIONS.DELETE'), (req, res) => {
   try {
+    if (!quotationVisibleById(req.currentUser, req.params.id)) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
     const request = quotationStore.hideRequest(req.currentUser, req.params.id);
     if (!request) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
     void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
@@ -3332,6 +3366,7 @@ app.delete('/api/quotations/:id', userAccess.requireCapability('QUOTATIONS.DELET
 });
 app.post('/api/quotations/:id/restore', userAccess.requireCapability('QUOTATIONS.DELETE'), (req, res) => {
   try {
+    if (!quotationVisibleById(req.currentUser, req.params.id)) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
     const request = quotationStore.restoreRequest(req.currentUser, req.params.id);
     if (!request) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
     void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
@@ -5382,6 +5417,10 @@ function orderRowsForCode(profile, orderCode) {
   return profile && !userAccess.hasPermission(profile, 'manageAllOrders') ? userAccess.authoritativeOrderRows(code) : [];
 }
 
+function overridesForViewer(profile, overrides) {
+  if (!profile || userAccess.hasPermission(profile, 'manageAllOrders')) return overrides;
+  return overrideScope.scopeOverridesForViewer(overrides, code => userAccess.authoritativeOrderRows(code).some(order => userAccess.canEditOrder(profile, order)));
+}
 function canUserEditOrderCode(profile, orderCode, precomputed = null) {
   // v7.16: manageAllOrders kontrolü KULLANICIYA bağlıdır, satıra değil. Satır
   // başına çağrıldığında her seferinde alt kullanıcı ağacı yürünüp izin kümesi
@@ -10592,7 +10631,7 @@ app.get('/api/collection-images/:id', userAccess.requireAnyArea('source','koleks
    sonunda sayımla DOĞRULANIR; doğrulama geçmezse başarı DÖNMEZ. Yeniden
    çalıştırmak güvenlidir (idempotent). maxKb gibi görsel AYARLARI ayrı
    dosyadadır ve korunur. */
-app.delete('/api/model-images/all', userAccess.requireArea('source'), (req, res) => {
+app.delete('/api/model-images/all', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
   if (modelImageResetInProgress) {
     return res.status(409).json({ error:'Model görseli sıfırlama işlemi zaten sürüyor.', code:'MODEL_IMAGE_RESET_BUSY', stage:'lock' });
   }

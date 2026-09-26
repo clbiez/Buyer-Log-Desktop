@@ -217,11 +217,14 @@ function roleBasePermissions(profile) {
   if (profile && normalizeRole(profile.role) === 'moderator') for (const key of PERMISSION_KEYS) out[key] = true;
   return out;
 }
+const SHARED_SETTINGS_PERMISSION_KEYS = new Set(['manageBusinessRules', 'manageModelConnections']);
 function effectivePermissions(profile, store = readStore()) {
   const out = roleBasePermissions(profile);
   for (const child of descendantProfiles(store, profile && profile.id)) {
     const childPermissions = roleBasePermissions(child);
-    for (const key of PERMISSION_KEYS) out[key] = out[key] || childPermissions[key];
+    // Ortak ayar yönetimi (kur, royalty, yol süresi, bağlantılar…) ekipten
+    // yöneticiye devrolmaz; yalnız Moderatörün kişiye verdiği izinle açılır.
+    for (const key of PERMISSION_KEYS) if (!SHARED_SETTINGS_PERMISSION_KEYS.has(key)) out[key] = out[key] || childPermissions[key];
   }
   const codes = iam.effectivePermissionSet(profile, store);
   if (codes.has('SYSTEM.MANAGE')) out.manageBackup = true;

@@ -154,9 +154,13 @@ function requestsForUser(profile, options = {}) {
   const store = loadStore();
   const hidden = loadVisibility(profile).hidden;
   const includeHidden = Boolean(options.includeHidden);
+  // Görünürlük yetkisi çağırandan gelir (bkz. quotation-visibility.js);
+  // düzenleme hakkı olan her zaman görür.
+  const canView = typeof options.canView === 'function' ? options.canView : null;
   return {
     ...store,
-    requests: store.requests.filter(request => !request.archived && (includeHidden || !hidden[request.id])),
+    requests: store.requests.filter(request => !request.archived && (includeHidden || !hidden[request.id])
+      && (!canView || canEdit(profile, request) || canView(request))),
     hiddenIds: includeHidden ? Object.keys(hidden) : [],
   };
 }

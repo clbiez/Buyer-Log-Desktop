@@ -258,6 +258,18 @@
     </section>`;
   }
 
+  /* Rehber herkese görünür; değiştirme Moderatörün verdiği ortak ayar
+     yetkisiyle yapılır (sunucu da aynı izni ister). Yetkisiz kullanıcıya
+     çalışmayacak düzenleme düğmeleri gösterilmez. */
+  function canManage() {
+    return typeof window.BLHasPermission !== 'function' || window.BLHasPermission('manageBusinessRules');
+  }
+  function applyReadOnly() {
+    if (!S.modal || canManage()) return;
+    S.modal.classList.add('egReadOnly');
+    S.modal.querySelectorAll('[data-eg-add],[data-eg-headings],[data-eg-edit],[data-eg-delete]').forEach(el => el.remove());
+  }
+
   function render() {
     if (!S.modal) return;
     const body = S.modal.querySelector('[data-eg-body]');
@@ -275,6 +287,7 @@
     const typeFilter=S.modal.querySelector('[data-eg-filter-type]');
     if(typeFilter)typeFilter.innerHTML=`<option value="">${esc(T('Tüm gruplar','All groups'))}</option>${optionsHtml(S.data.types,S.filterType)}`;
     if(S.editingId)setTimeout(()=>S.modal?.querySelector('[data-eg-input="manufacturer"]')?.focus(),0);
+    applyReadOnly();
   }
 
   /* ---------------- veri ---------------- */
@@ -286,6 +299,7 @@
   }
 
   async function startEdit(id) {
+    if (!canManage()) return;
     try {
       const data = await api(`/api/email-groups/records/${encodeURIComponent(id)}/lock`, { method: 'POST' });
       absorb(data);
@@ -327,6 +341,7 @@
     } catch (error) { toast(error.message || String(error)); await refresh({ force: true }); }
   }
   async function addRecord() {
+    if (!canManage()) return;
     try {
       const data = await api('/api/email-groups/records', {
         method: 'POST',
@@ -554,6 +569,7 @@
   }
 
   async function importFromPrepareEmail() {
+    if (!canManage()) { toast(T('E-posta rehberini güncellemek için ortak ayar yetkisi gerekir.', 'Updating the email directory requires shared-settings permission.')); return; }
     const candidates = prepareEmailCandidates();
     if (!candidates.length) {
       toast(T('Prepare E-Mail listenizde taşınacak üretici yok.', 'Your Prepare E-Mail list has no manufacturer to move.'));
@@ -578,6 +594,7 @@
        bir onarım kaynağı olabilir. Onarım yalnız güçlü seyrekleşme imzasında
        ve yalnız GERÇEK e-posta taşıyan adaylarla çalışır; normal bir silme
        işleminden sonra eski üreticileri sürekli geri getirmez. */
+    if (!canManage()) return false;
     const candidates = prepareEmailCandidates().filter(item => clean(item && item.email));
     if (candidates.length < 3) return false;
     await ensureDirectory(true);

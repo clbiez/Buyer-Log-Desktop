@@ -116,7 +116,43 @@ function newerRevisionMeta(current, incoming) {
   return incoming && typeof incoming === 'object' && incomingRevision > currentRevision ? incoming : current;
 }
 
-function fieldMerge(current, incoming, revision, baseRevision = null) {
+/* PAYLAŞILAN BELGE LİSTELERİ — kayıt bazında birleşim.
+   Fiyat talepleri ve e-posta grupları tek bir belge alanında dizi olarak
+   durur. İki cihaz aynı aralıkta AYRI kayıt eklediğinde alanı bütün olarak
+   seçmek (çakışma) bir tarafın kaydını kaybettirirdi. Bu alanlar kimliğe göre
+   birleştirilir: aynı kayıtta en yeni updatedAt kazanır (eşitlikte içerik
+   karşılaştırması iki cihazda aynı sonucu verir); silinen e-posta kaydı
+   silindi işaretiyle birleşimden düşer. Birleşim değişmeli ve tekrarlanabilir
+   olduğu için cihazlar yeniden yayına gerek kalmadan aynı sonuca yakınsar. */
+const DOCUMENT_LIST_MERGE = Object.freeze({
+  'store:quotations.json': { requests: {} },
+  'store:email-groups.json': { records: { tombstones: 'deletedRecords' }, deletedRecords: { tombstoneMap: true } },
+});
+function mergeTombstoneMaps(a, b) {
+  const out = { ...(a && typeof a === 'object' ? a : {}) };
+  for (const [id, at] of Object.entries(b && typeof b === 'object' ? b : {})) if (!out[id] || String(at) > String(out[id])) out[id] = at;
+  return out;
+}
+function newerListItem(a, b) {
+  const at = String(a && a.updatedAt || ''), bt = String(b && b.updatedAt || '');
+  if (at !== bt) return at > bt ? a : b;
+  return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
+}
+function mergeListById(current, incoming, tombstones = {}) {
+  const out = new Map(), extra = [];
+  for (const item of [...(Array.isArray(current) ? current : []), ...(Array.isArray(incoming) ? incoming : [])]) {
+    const id = item && typeof item === 'object' ? String(item.id || '') : '';
+    if (!id) { extra.push(item); continue; }
+    out.set(id, out.has(id) ? newerListItem(out.get(id), item) : item);
+  }
+  return [...out.values()].filter(item => !(tombstones[item.id] && String(tombstones[item.id]) >= String(item.updatedAt || ''))).concat(extra);
+}
+function listMergeRule(recordKey, field) {
+  const rules = DOCUMENT_LIST_MERGE[String(recordKey || '')];
+  return rules && Object.prototype.hasOwnProperty.call(rules, field) ? rules[field] : null;
+}
+
+function fieldMerge(current, incoming, revision, baseRevision = null, recordKey = '') {
   const base = current && typeof current === 'object' ? current : {};
   const next = { ...base };
   const fields = { ...(base._fieldRevisions || {}) };
@@ -131,6 +167,16 @@ function fieldMerge(current, incoming, revision, baseRevision = null) {
     }
     const changedLocally = baseRevision != null && previousRevision > Number(baseRevision || 0) && JSON.stringify(next[key]) !== JSON.stringify(value);
     if (changedLocally || (baseRevision == null && previousRevision > revision)) {
+      const rule = listMergeRule(recordKey, key);
+      if (rule) {
+        if (rule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
+        else {
+          const tombstones = rule.tombstones ? mergeTombstoneMaps(next[rule.tombstones], incoming[rule.tombstones]) : {};
+          next[key] = mergeListById(next[key], value, tombstones);
+        }
+        fields[key] = Math.max(previousRevision, revision);
+        continue;
+      }
       conflicts.push({ field: key, current: clone(next[key]), incoming: clone(value), currentRevision: previousRevision, baseRevision: Number(baseRevision) || 0 });
       continue;
     }
@@ -513,7 +559,7 @@ function createLocalDb(file) {
         delete state.records[key];
       }
     } else if (!tomb || Number(tomb.revision) <= revision) {
-      const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision);
+      const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
       // Alan, çakışmayı görmüş daha yeni bir olayla çakışmasız güncellendi:

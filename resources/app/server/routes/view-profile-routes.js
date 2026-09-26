@@ -62,7 +62,8 @@ app.post('/api/choose-folder', userAccess.requireArea('source'), async (req, res
     if (!folder) return res.json({ cancelled: true });
     setUserSourceFolder(id, folder);
     resetUserCache(id);
-    const fxSync = await syncFxFromKurWorkbook(id, true);
+    // Kur ortak ayardır: klasördeki KUR.xlsx yalnız yetkili kullanıcıda herkese yayılır.
+    const fxSync = userAccess.hasPermission(req.currentUser, 'manageBusinessRules') ? await syncFxFromKurWorkbook(id, true) : { found:false, updated:false, reason:'permission' };
     userAccess.appendAudit(req.currentUser,'SOURCE_FOLDER_CHANGE',folder,{fxUpdated:Boolean(fxSync&&fxSync.updated)});
     res.json({ ok: true, sourceFolder: folder, fxSync });
   } catch (err) { apiError(res, err, 'Klasör seçme penceresi açılamadı.'); }
