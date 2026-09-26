@@ -72,19 +72,32 @@ function valueOf(col,row){
 }
 function textValue(col,row){const value=valueOf(col,row);return value==null?'':String(value);}
 function modelIdentity(row){
-  const get=(...keys)=>{for(const key of keys){const v=row&&row[key];if(v!=null&&clean(v))return clean(v);}return '';};
+  const nested=row&&typeof row==='object'?(row.row||row.raw||null):null;
+  const get=(...keys)=>{
+    for(const source of [row,nested]){
+      if(!source)continue;
+      for(const key of keys){const v=source[key];if(v!=null&&clean(v))return clean(v);}
+    }
+    return '';
+  };
   return {
     plmId:get('plmId','PLM ID','PLM Id','PLMID'),
-    modelName:get('model','modelName','Model Adı','Model Name','Style Name','Style'),
-    colourCode:get('colourCode','colorCode','Renk Kod','Renk Kodu','Colour Code','Color Code'),
-    colour:get('colour','color','Renk','Renk Tanım','Colour','Color'),
-    orderCode:get('orderCode','Sipariş Kod','Sipariş Kodu','Order Code','Order No')
+    modelName:get('model','modelName','modelKod','Model Adı','Model Name','Style Name','Style'),
+    colourCode:get('colourCode','colorCode','C.Code','Renk Kod','Renk Kodu','Colour Code','Color Code'),
+    colour:get('colour','color','Colour','Color','Renk','Renk Tanım'),
+    orderCode:get('orderCode','orderKey','Sipariş Kod','Sipariş Kodu','Order Code','Order No')
   };
+}
+function imageUrl(row,index){
+  const helper=root.BLDetailImages,id=modelIdentity(row);
+  if(!helper)return '';
+  return helper.urlFrom?.(index,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})||
+    helper.sourceFor?.({plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})||'';
 }
 function imageCell(row,index){
   const helper=root.BLDetailImages,id=modelIdentity(row);
   if(!helper||!helper.thumbHtml)return '<span class="blDetailNoImage">—</span>';
-  const url=helper.urlFrom?.(index,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})||'';
+  const url=imageUrl(row,index);
   return helper.thumbHtml(url,{modelId:id.plmId||id.modelName,plmId:id.plmId,modelName:id.modelName,colourCode:id.colourCode,colour:id.colour},{
     title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),allowEmpty:true
   });
@@ -104,7 +117,7 @@ function registerAssetScope(panel,rows){
       contextType:'shared-detail-drawer',label:active.title,
       identities:rows.map((row,i)=>{
         const id=modelIdentity(row);
-        return {...id,rowId:String(i),hasImage:index?Boolean(helper.urlFrom?.(index,{plmId:id.plmId,colourCode:id.colourCode,colour:id.colour,modelName:id.modelName})):null};
+        return {...id,rowId:String(i),hasImage:index?Boolean(imageUrl(row,index)):null};
       }),
       repaint:render
     });
@@ -139,20 +152,53 @@ function renderTable(){
   if(summary)summary.textContent=(active.subtitle?active.subtitle+' · ':'')+rows.length.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+L('satır','rows');
   registerAssetScope(host.querySelector('.blDetailDrawerPanel'),rows);
 }
+function downloadBuffer(buffer,name,mime){
+  const helper=root.BLDetailImages;
+  if(helper?.downloadBuffer){helper.downloadBuffer(buffer,name,mime);return;}
+  const blob=new Blob([buffer],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+}
+async function exportExcelJsWithImages(columns,rows,fileName){
+  const helper=root.BLDetailImages;
+  if(!active.images||!helper?.prepareForExcel||!helper?.addToExcel)return false;
+  if(root.BLPerf?.ensureLibrary)await root.BLPerf.ensureLibrary('exceljs');
+  if(!root.ExcelJS)return false;
+  const wb=new root.ExcelJS.Workbook(),ws=wb.addWorksheet(L('Detay','Detail')),imageIndex=helper.buildIndex?.();
+  ws.columns=[{header:L('Görsel','Image'),key:'__image',width:12},...columns.map((col,index)=>({header:col.label,key:'c'+index,width:Math.max(11,Math.min(40,Number(col.exportWidth)||18))}))];
+  const head=ws.getRow(1);head.height=22;head.font={bold:true};head.alignment={vertical:'middle',wrapText:true};
+  rows.forEach(row=>{const excelRow=ws.addRow(['',...columns.map(col=>valueOf(col,row))]);excelRow.height=48;});
+  for(let start=0;start<rows.length;start+=8){
+    const slice=rows.slice(start,start+8);
+    const prepared=await Promise.all(slice.map(async row=>{const url=imageUrl(row,imageIndex);if(!url)return null;try{return await helper.prepareForExcel(url);}catch(_){return null;}}));
+    prepared.forEach((image,offset)=>{if(image)helper.addToExcel(ws,wb,image,start+offset+2,1,null,{moveAndSizeWithCells:true});});
+  }
+  ws.views=[{state:'frozen',ySplit:1}];
+  if(rows.length)ws.autoFilter={from:{row:1,column:1},to:{row:rows.length+1,column:Math.max(1,columns.length+1)}};
+  const buffer=await wb.xlsx.writeBuffer();
+  downloadBuffer(buffer,fileName,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  return true;
+}
 async function exportExcel(){
   if(!active)return;
+  const button=document.querySelector('#blSharedDetailDrawer [data-bl-detail-excel]'),old=button&&button.textContent;
+  if(button){button.disabled=true;button.textContent=L('Hazırlanıyor…','Preparing…');}
   try{
-    if(!root.XLSX&&root.BLPerf?.ensureLibrary)await root.BLPerf.ensureLibrary('xlsx');
-    if(!root.XLSX)throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
-    const columns=currentColumns(),rows=filteredRows();
-    const data=[columns.map(c=>c.label),...rows.map(row=>columns.map(col=>valueOf(col,row)))];
-    const ws=root.XLSX.utils.aoa_to_sheet(data,{cellDates:true});
-    if(data.length&&columns.length)ws['!autofilter']={ref:root.XLSX.utils.encode_range({r:0,c:0},{r:Math.max(0,data.length-1),c:columns.length-1})};
-    ws['!cols']=columns.map(col=>({wch:Math.max(11,Math.min(40,Number(col.exportWidth)||18))}));
-    const wb=root.XLSX.utils.book_new();root.XLSX.utils.book_append_sheet(wb,ws,L('Detay','Detail'));
-    root.XLSX.writeFile(wb,safeFilePart(active.fileName||active.title)+'.xlsx');
-    root.showToast?.(L('Görünen detay satırları Excel’e aktarıldı.','Visible detail rows were exported to Excel.'));
+    const columns=currentColumns(),rows=filteredRows(),fileName=safeFilePart(active.fileName||active.title)+'.xlsx';
+    if(typeof active.exporter==='function'){
+      await active.exporter({rows,columns,includeImages:active.images,fileName,title:active.title,source:active.source,valueOf});
+    }else if(!(await exportExcelJsWithImages(columns,rows,fileName))){
+      if(!root.XLSX&&root.BLPerf?.ensureLibrary)await root.BLPerf.ensureLibrary('xlsx');
+      if(!root.XLSX)throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
+      const data=[columns.map(c=>c.label),...rows.map(row=>columns.map(col=>valueOf(col,row)))];
+      const ws=root.XLSX.utils.aoa_to_sheet(data,{cellDates:true});
+      if(data.length&&columns.length)ws['!autofilter']={ref:root.XLSX.utils.encode_range({r:0,c:0},{r:Math.max(0,data.length-1),c:columns.length-1})};
+      ws['!cols']=columns.map(col=>({wch:Math.max(11,Math.min(40,Number(col.exportWidth)||18))}));
+      const wb=root.XLSX.utils.book_new();root.XLSX.utils.book_append_sheet(wb,ws,L('Detay','Detail'));
+      root.XLSX.writeFile(wb,fileName);
+    }
+    root.showToast?.(L('Görünen detay satırları ve seçili sütunlar Excel’e aktarıldı.','Visible detail rows and selected columns were exported to Excel.'));
   }catch(err){root.showToast?.(err&&err.message?err.message:String(err));}
+  finally{if(button){button.disabled=false;button.textContent=old||'⇩ Excel';}}
 }
 function render(){
   const host=ensureHost();if(!active){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');return;}
@@ -190,11 +236,12 @@ function open(options){
   const rows=Array.isArray(input.rows)?input.rows.filter(Boolean):[];
   const columns=normalizeColumns(input.columns,rows);
   active={
-    scope:input.storageKey||input.scope||input.source||'generic',
+    scope:input.storageKey||input.scope||input.source||'generic',source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
     rows,columns,visible:loadVisible(input.storageKey||input.scope||input.source||'generic',columns),
-    images:input.images!==false,search:'',actions:Array.isArray(input.actions)?input.actions:[]
+    images:input.images!==false,search:'',actions:Array.isArray(input.actions)?input.actions:[],
+    exporter:typeof input.exporter==='function'?input.exporter:null
   };
   render();
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
