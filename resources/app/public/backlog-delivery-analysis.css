@@ -126,3 +126,45 @@
 .bdaCheckWide { grid-column: 1 / -1; margin-top: 6px; }
 /* v9.51 — analizden otomasyon kısayolları */
 .bdaAutomateRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+
+
+/* Backlog radar + pivot workspace ------------------------------------------------ */
+.backlogPivotRadarWorkspace{display:grid;grid-template-columns:minmax(0,1fr) 7px minmax(0,1fr);align-items:stretch;gap:0;margin-top:8px;min-width:0}
+.backlogPivotWorkspacePanel,.backlogRadarCard{min-width:0;margin:0!important}
+.backlogWorkspaceCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px;padding:7px 9px;border-bottom:1px solid var(--line);background:var(--card)}
+.backlogWorkspaceCardHead>div:first-child{display:flex;align-items:baseline;gap:8px;min-width:0}
+.backlogWorkspaceCardHead strong{font-size:11px;color:var(--ink);white-space:nowrap}
+.backlogWorkspaceCardHead span{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.backlogWorkspaceCardActions{display:flex;align-items:center;gap:3px;flex:0 0 auto}
+.blWorkspaceIconBtn{width:25px;height:24px;padding:0;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--muted);font:700 13px/1 var(--font,system-ui,sans-serif);cursor:pointer}
+.blWorkspaceIconBtn:hover,.blWorkspaceIconBtn:focus-visible{border-color:var(--line);background:var(--card2);color:var(--ink);outline:none}
+.backlogWorkspaceSplitter{position:relative;min-width:7px;cursor:col-resize;touch-action:none;background:transparent}
+.backlogWorkspaceSplitter::before{content:"";position:absolute;top:10px;bottom:10px;left:3px;width:1px;background:var(--line2)}
+.backlogWorkspaceSplitter:hover::before,.backlogWorkspaceSplitter:active::before{width:2px;left:2px;background:var(--acc)}
+.backlogPivotWorkspacePanel.is-collapsed>.backlogTreeToolbar,.backlogPivotWorkspacePanel.is-collapsed>.tablewrap{display:none!important}
+.backlogRadarCard.is-collapsed .backlogRadarBody,.bdaRadarCard.is-collapsed .backlogRadarBody{display:none}
+.backlogPivotWorkspacePanel.is-collapsed,.backlogRadarCard.is-collapsed{align-self:start}
+.backlogRadarCard{border:1px solid var(--line);background:var(--card);overflow:hidden}
+.backlogRadarBody{display:flex;align-items:center;justify-content:center;min-height:310px;padding:8px;overflow:hidden}
+.blRadarSvg{display:block;width:min(100%,430px);height:auto;min-height:260px}
+.blRadarGrid{fill:none;stroke:var(--line2);stroke-width:1}
+.blRadarAxis{stroke:var(--line);stroke-width:1}
+.blRadarArea{fill:color-mix(in srgb,var(--acc) 15%,transparent);stroke:var(--acc);stroke-width:1.7}
+.blRadarPoint{fill:var(--acc);stroke:var(--card);stroke-width:1.2}
+.blRadarLabel{fill:var(--muted);font:600 9.5px var(--font,system-ui,sans-serif)}
+.blRadarValue{fill:var(--ink);font:700 9.5px var(--mono,ui-monospace,monospace)}
+.blRadarEmpty{padding:24px;color:var(--muted);font-size:10.5px;text-align:center}
+.bdaRadarCard{margin:8px 0;border:1px solid var(--line);background:var(--card2);overflow:hidden}
+.bdaRadarCard .backlogRadarBody{min-height:280px}
+.bdaRadarCard .blRadarSvg{width:min(100%,400px)}
+@media(max-width:1100px){
+  .backlogPivotRadarWorkspace{grid-template-columns:1fr!important;gap:8px}
+  .backlogWorkspaceSplitter{display:none!important}
+  .backlogPivotWorkspacePanel,.backlogRadarCard{order:initial!important}
+}
+@media(max-width:680px){
+  .backlogWorkspaceCardHead{align-items:flex-start}
+  .backlogWorkspaceCardHead>div:first-child{display:grid;gap:2px}
+  .backlogRadarBody{min-height:260px;padding:2px}
+  .blRadarSvg{min-height:230px}
+}
