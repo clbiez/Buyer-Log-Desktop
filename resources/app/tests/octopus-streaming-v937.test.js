@@ -148,7 +148,7 @@ test('v9.37 onDelta VERİLMEDİĞİNDE chatStream hiç çağrılmaz (opt-in, reg
 /* --------------------------------- 4) server.js SSE ucu var mı */
 
 test('v9.37 /api/copilot/ask/stream ucu tanımlı ve aynı yetki koruması altında', () => {
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   assert.match(server, /app\.post\('\/api\/copilot\/ask\/stream'/);
   assert.match(server, /text\/event-stream/);
 });

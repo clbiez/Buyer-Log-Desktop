@@ -1,5 +1,13 @@
 'use strict';
 
+const crypto = require('crypto');
+/* Okuma sırasında türetilen kapsam kimliği KARARLI olmalıdır: kimlik sayfa
+   önbelleğinin bağlam özetine ve kullanıcı ufuk ayarlarına girer. Rastgele
+   kimlik her okumada değişip önbelleği hiç okunamaz hâle getiriyordu. */
+function stableScopeId(seed) {
+  return `sc_${crypto.createHash('sha1').update(JSON.stringify(seed)).digest('hex').slice(0, 10)}`;
+}
+
 /*
  * Kapsamlar (scopes): bir bağlantının hedef başına ayrı ufku.
  *
@@ -83,7 +91,7 @@ function isolateOrdersScope(scopes, role, fallbackHorizon, normalizeHorizon, det
        aynen korunur. */
     if (detached && detached.has('orders')) return dedupeTargets(out);
     ordersScope = {
-      id: `sc_${Math.random().toString(36).slice(2, 9)}`,
+      id: stableScopeId(['orders', role, source ? source.id : '']),
       name: '',
       targets: ['orders'],
       enabled: source ? source.enabled !== false : true,
@@ -109,11 +117,11 @@ function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedT
   const detached = new Set((Array.isArray(detachedTargets) ? detachedTargets : [])
     .map(value => String(value == null ? '' : value).trim()).filter(Boolean));
 
-  const list = (Array.isArray(raw) ? raw : []).map(entry => {
+  const list = (Array.isArray(raw) ? raw : []).map((entry, index) => {
     const item = entry && typeof entry === 'object' ? entry : {};
     return {
       id: String(item.id || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40)
-        || `sc_${Math.random().toString(36).slice(2, 9)}`,
+        || stableScopeId(['scope', role, index, item.name || '', item.targets || []]),
       name: String(item.name == null ? '' : item.name).replace(/\s+/g, ' ').trim().slice(0, 80),
       targets: normalizeTargets(item.targets, role),
       enabled: item.enabled !== false,
@@ -139,7 +147,7 @@ function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedT
   // kurtarması yapmak, kullanıcının kapattığı her şeyi geri açmak olurdu.
   if (!remaining.length) return [];
   const fallback = [{
-    id: `sc_${Math.random().toString(36).slice(2, 9)}`,
+    id: stableScopeId(['fallback', role, remaining]),
     name: '',
     targets: remaining,
     enabled: true,

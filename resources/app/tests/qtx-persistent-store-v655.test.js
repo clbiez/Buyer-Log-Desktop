@@ -24,7 +24,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 const CONNECTOR = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
 
 function bodyOf(source, name) {

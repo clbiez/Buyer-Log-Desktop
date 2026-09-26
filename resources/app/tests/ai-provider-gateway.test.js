@@ -117,7 +117,7 @@ test('Ollama model pull reports streamed progress and does not expose secrets', 
 });
 
 test('AI model lifecycle endpoints remain inside the existing agent authorization boundary', () => {
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   for (const endpoint of [
     '/api/agent-platform/ai/models',
     '/api/agent-platform/ai/models/pull',
@@ -138,7 +138,7 @@ test('Copilot keeps deterministic rendering while sending the selected model onl
 
 test('Model Manager is reachable from the Copilot model control and supports streamed pull progress', () => {
   const copilot = fs.readFileSync(path.join(__dirname, '..', 'public', 'copilot.js'), 'utf8');
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   assert.match(copilot, /data-bcp-manage/);
   assert.match(copilot, /ai\/models\/pull\?stream=1/);
   assert.match(copilot, /data-bcp-provider/);
@@ -149,7 +149,7 @@ test('Model Manager is reachable from the Copilot model control and supports str
 
 test('Copilot rechecks the visible installed model instead of keeping a missing default model status', () => {
   const copilot = fs.readFileSync(path.join(__dirname, '..', 'public', 'copilot.js'), 'utf8');
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   assert.match(copilot, /installedIds\.has\(aiState\.model\)/);
   assert.match(copilot, /refreshStatus\(aiState\.model\)/);
   assert.match(copilot, /encodeURIComponent\(model\)/);

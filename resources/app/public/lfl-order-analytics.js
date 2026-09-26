@@ -41,7 +41,17 @@
   function host(){return document.getElementById('lflOrderAnalytics');}
   function filterConfig(){return JSON.stringify([state.stableThreshold,...Engine.DIMENSIONS.map(dim=>state.filters[dim])]);}
   function ensureModel(force=false){const ctx=state.context;if(!ctx)return null;const config=filterConfig();if(force||state.lastCurrent!==ctx.analysis.currentRows||state.lastPrevious!==ctx.analysis.compareRows||state.lastConfig!==config){state.model=Engine.aggregate(ctx.analysis.currentRows,ctx.analysis.compareRows,{stableThreshold:state.stableThreshold,filters:state.filters});state.lastCurrent=ctx.analysis.currentRows;state.lastPrevious=ctx.analysis.compareRows;state.lastConfig=config;}return state.model;}
-  function uniqueValues(dim){const rows=[...(state.context?.analysis.currentRows||[]),...(state.context?.analysis.compareRows||[])],seen=new Map();rows.forEach(row=>{const value=String(row&&row[dim]||'').trim();if(value&&!seen.has(value.toLocaleUpperCase('tr-TR')))seen.set(value.toLocaleUpperCase('tr-TR'),value);});return [...seen.values()].sort((a,b)=>a.localeCompare(b,locale(),{numeric:true,sensitivity:'base'}));}
+  // LFL analizi önbellekli ve sekmeye dönüşte aynı nesnedir; seçenek listeleri
+  // analiz + dil başına bir kez hesaplanır (her boyutta 30k satır taraması yerine).
+  const uniqueValuesCache=new WeakMap();
+  function uniqueValues(dim){
+    const analysis=state.context?.analysis,cacheKey=`${locale()}|${dim}`;let byKey=analysis&&uniqueValuesCache.get(analysis);
+    if(byKey&&byKey.has(cacheKey))return byKey.get(cacheKey);
+    const rows=[...(analysis?.currentRows||[]),...(analysis?.compareRows||[])],seen=new Map();rows.forEach(row=>{const value=String(row&&row[dim]||'').trim();if(!value)return;const upper=value.toLocaleUpperCase('tr-TR');if(!seen.has(upper))seen.set(upper,value);});
+    const values=[...seen.values()].sort((a,b)=>a.localeCompare(b,locale(),{numeric:true,sensitivity:'base'}));
+    if(analysis){if(!byKey){byKey=new Map();uniqueValuesCache.set(analysis,byKey);}byKey.set(cacheKey,values);}
+    return values;
+  }
   function options(values,selected){return `<option value="">${esc(T('all'))}</option>${values.map(value=>`<option value="${esc(value)}"${value===selected?' selected':''}>${esc(value)}</option>`).join('')}`;}
   function periodOptions(selected){return (state.context?.seasons||[]).map(value=>`<option value="${esc(value)}"${value===selected?' selected':''}>${esc(value)}</option>`).join('');}
 

@@ -47,6 +47,40 @@ function workspaceImageItems(workspace) {
   return out;
 }
 
+/* PLM ID'si olmayan konsept modelde kullanıcının elle yüklediği görsel de
+   yetkili kullanıcılara taşınmalıdır. PLM kimliği varsa o kullanılır (yukarıdaki
+   sözleşme değişmez); yoksa görsel sahip kapsamlı satır kimliğiyle paylaşılır.
+   Anahtar her zaman "collection:<owner>:" önekiyle kullanılır. */
+function rowSharedImageIdentity(row) {
+  const identity = rowImageIdentity(row);
+  if (identity) return identity;
+  const imageRef = firstValue(row, ['imgRef', 'imageRef', '_imageRef']);
+  const recordId = firstValue(row, ['recordId', '_sharedRecordId', 'id']);
+  if (!imageRef || !recordId) return null;
+  return { imageRef, plmId: '', colourCode: '', colour: '', recordId, rowKey: 'row:' + recordId };
+}
+
+function workspaceSharedImageItems(workspace) {
+  const rows = Array.isArray(workspace && workspace.rows) ? workspace.rows : [];
+  const out = [];
+  const seen = new Set();
+  for (const row of rows) {
+    const item = rowSharedImageIdentity(row);
+    if (!item) continue;
+    // Satır kimlikli öğede satır da anahtara girer: aynı görseli taşıyan iki
+    // PLM'siz satırın her biri kendi görselini almalı.
+    const key = [item.plmId, item.colourCode, item.colour, item.imageRef, item.rowKey || ''].join('|').toLocaleUpperCase('tr-TR');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+function sharedImageKey(item, plmKey) {
+  return clean(plmKey) || clean(item && item.rowKey);
+}
+
 function shouldPublishOwnerImages(outgoingGrants, ownerId) {
   const owner = clean(ownerId);
   return Boolean(owner && (Array.isArray(outgoingGrants) ? outgoingGrants : []).some(grant =>
@@ -60,5 +94,8 @@ module.exports = {
   scopeUsesSharedImages,
   rowImageIdentity,
   workspaceImageItems,
+  rowSharedImageIdentity,
+  workspaceSharedImageItems,
+  sharedImageKey,
   shouldPublishOwnerImages,
 };

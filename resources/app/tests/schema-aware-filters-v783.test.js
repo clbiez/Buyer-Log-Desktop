@@ -396,7 +396,7 @@ test('INTAKE tip metadata yoksa eski davranış (metin) korunur', () => {
 /* --- Distinct değer, tipiyle birlikte ---------------------------------- */
 
 test('distinct uçları değerin ALAN TİPİNİ de döndürür', () => {
-  const server = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   const distinct = server.slice(
     server.indexOf('async function queryModelDistinctValues('),
     server.indexOf('/* VERİ YÖNETİMİ ÖZETİ (P2)'));
@@ -452,7 +452,7 @@ test('SATIR SAYIMI sorgusu veri sorgusuyla aynı tipi yazar', () => {
 });
 
 test('önizleme, sayım ve Test/Run uçları sütun tipini şemadan çözer', () => {
-  const source = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+  const source = require('./helpers/server-source')();
   assert.match(source, /require\('\.\/lib\/model-refresh'\)/);
   assert.ok(/\{[^}]*resolveColumnTypes[^}]*\} = require\('\.\/lib\/model-refresh'\)/.test(source),
     'çözücü model-refresh.js\'ten alınmalı; ikinci bir kopya yazılmamalı');

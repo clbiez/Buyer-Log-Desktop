@@ -81,9 +81,23 @@ function defaultStore() {
     countries: [],
     types: DEFAULT_TYPES.map((name, index) => ({ id: `type-${turkishKey(name).replace(/[^a-z0-9]+/g, '')}`, name, order: index })),
     records: [],
+    // Silinen kaydın kimliği → silinme zamanı. Senkron birleşimi (local-db
+    // DOCUMENT_LIST_MERGE) başka cihazdaki eski kopyanın kaydı diriltmesini
+    // bununla engeller.
+    deletedRecords: {},
     _revision: 0,
     _updatedAt: null,
   };
+}
+const MAX_DELETED_RECORDS = 2000;
+function normalizeDeletedRecords(value) {
+  const src = cleanObject(value);
+  return Object.fromEntries(Object.entries(src)
+    .map(([id, at]) => [cleanId(id), clean(at, 80)]).filter(([id, at]) => id && at)
+    .sort((a, b) => String(b[1]).localeCompare(String(a[1]))).slice(0, MAX_DELETED_RECORDS));
+}
+function withoutDeleted(records, deletedRecords) {
+  return records.filter(record => !(deletedRecords[record.id] && String(deletedRecords[record.id]) >= String(record.updatedAt || '')));
 }
 
 function normalizeHeading(value, index) {
@@ -147,7 +161,8 @@ function normalizeStore(raw) {
     schemaVersion: 1,
     countries: normalizeHeadings(raw && raw.countries),
     types: normalizeHeadings(raw && raw.types),
-    records: (Array.isArray(raw && raw.records) ? raw.records : []).slice(0, MAX_RECORDS).map(normalizeRecord),
+    deletedRecords: normalizeDeletedRecords(raw && raw.deletedRecords),
+    records: withoutDeleted((Array.isArray(raw && raw.records) ? raw.records : []).slice(0, MAX_RECORDS).map(normalizeRecord), normalizeDeletedRecords(raw && raw.deletedRecords)),
     _revision: Math.max(0, Number(raw && raw._revision) || 0),
   };
 }
@@ -189,6 +204,7 @@ function saveStore(next, expectedRevision) {
       countries: normalizeHeadings(resolved.countries),
       types: normalizeHeadings(resolved.types),
       records: (Array.isArray(resolved.records) ? resolved.records : []).slice(0, MAX_RECORDS).map(normalizeRecord),
+      deletedRecords: normalizeDeletedRecords(resolved.deletedRecords !== undefined ? resolved.deletedRecords : current.deletedRecords),
       _revision: current._revision + 1,
       _updatedAt: now(),
     };
@@ -314,7 +330,8 @@ function deleteRecord(id, actor, expectedRevision) {
   const index = recordIndex(store, id);
   assertHoldsLock(store.records[index], actor);
   const records = store.records.filter((_, position) => position !== index);
-  const saved = saveStore({ ...store, records }, expectedRevision);
+  const deletedRecords = { ...(store.deletedRecords || {}), [store.records[index].id]: now() };
+  const saved = saveStore({ ...store, records, deletedRecords }, expectedRevision);
   return { deleted: true, revision: saved._revision };
 }
 

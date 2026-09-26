@@ -65,6 +65,8 @@ function normalizeState(raw, deviceId) {
   state.journal = Array.isArray(state.journal) ? state.journal : [];
   state.assets = state.assets && typeof state.assets === 'object' ? state.assets : {};
   state.migrations = state.migrations && typeof state.migrations === 'object' ? state.migrations : {};
+  // Olay dışı yoldan (checkpoint onarımı) edinilmiş bilgi: kaynak cihaz → sıra.
+  state.causalKnowledge = state.causalKnowledge && typeof state.causalKnowledge === 'object' ? state.causalKnowledge : {};
   return state;
 }
 async function readState(file, deviceId = null) {
@@ -105,23 +107,127 @@ async function writeState(file, state) {
   await recovery.replace(file, Buffer.from(JSON.stringify(state, null, 2), 'utf8'));
 }
 
-function fieldMerge(current, incoming, revision, baseRevision = null) {
+/* Belge defteri (delta-store DOCUMENT_REVISION_META): her cihaz kendi
+   yazımında yerel revizyon sayacını ve zaman damgasını günceller. İş verisi
+   değildir; kullanıcıya "çakışma" olarak sorulacak bir seçim içermez. Yüksek
+   revizyonlu defter kazanır, eşitlikte yerel kalır. */
+const DOCUMENT_REVISION_META_FIELD = 'storeRevisionMeta';
+function newerRevisionMeta(current, incoming) {
+  const currentRevision = Number(current && current.revision) || 0;
+  const incomingRevision = Number(incoming && incoming.revision) || 0;
+  return incoming && typeof incoming === 'object' && incomingRevision > currentRevision ? incoming : current;
+}
+
+/* PAYLAŞILAN BELGE LİSTELERİ — kayıt bazında birleşim.
+   Fiyat talepleri ve e-posta grupları tek bir belge alanında dizi olarak
+   durur. İki cihaz aynı aralıkta AYRI kayıt eklediğinde alanı bütün olarak
+   seçmek (çakışma) bir tarafın kaydını kaybettirirdi. Bu alanlar kimliğe göre
+   birleştirilir: aynı kayıtta en yeni updatedAt kazanır (eşitlikte içerik
+   karşılaştırması iki cihazda aynı sonucu verir); silinen e-posta kaydı
+   silindi işaretiyle birleşimden düşer. Birleşim değişmeli ve tekrarlanabilir
+   olduğu için cihazlar yeniden yayına gerek kalmadan aynı sonuca yakınsar. */
+const DOCUMENT_LIST_MERGE = Object.freeze({
+  'store:quotations.json': { requests: { tombstones: 'deletedRequests' }, deletedRequests: { tombstoneMap: true } },
+  'store:email-groups.json': { records: { tombstones: 'deletedRecords' }, deletedRecords: { tombstoneMap: true } },
+});
+function mergeTombstoneMaps(a, b) {
+  const out = { ...(a && typeof a === 'object' ? a : {}) };
+  for (const [id, at] of Object.entries(b && typeof b === 'object' ? b : {})) if (!out[id] || String(at) > String(out[id])) out[id] = at;
+  return out;
+}
+function newerListItem(a, b) {
+  const at = String(a && a.updatedAt || ''), bt = String(b && b.updatedAt || '');
+  if (at !== bt) return at > bt ? a : b;
+  return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
+}
+function mergeListById(current, incoming, tombstones = {}) {
+  const out = new Map(), extra = [];
+  for (const item of [...(Array.isArray(current) ? current : []), ...(Array.isArray(incoming) ? incoming : [])]) {
+    const id = item && typeof item === 'object' ? String(item.id || '') : '';
+    if (!id) { extra.push(item); continue; }
+    out.set(id, out.has(id) ? newerListItem(out.get(id), item) : item);
+  }
+  return [...out.values()].filter(item => !(tombstones[item.id] && String(tombstones[item.id]) >= String(item.updatedAt || ''))).concat(extra);
+}
+function listMergeRule(recordKey, field) {
+  const rules = DOCUMENT_LIST_MERGE[String(recordKey || '')];
+  return rules && Object.prototype.hasOwnProperty.call(rules, field) ? rules[field] : null;
+}
+
+/* NEDENSEL ÇAKIŞMA ALGILAMA (v20260926).
+   Cihaz sayaçları bağımsız ilerlediği için "uzak tabanı < yerel alan
+   revizyonu" kuralı, sayacı ileride olan cihazın yerel değişikliği HİÇ
+   görmeden yaptığı yazımı sıralı sanıyor ve çakışma olmadan son yazan
+   kazanıyordu. Artık her alan son yazanını (_fieldWriters: cihaz + sıra) tutar;
+   uzak olay yazıldığı andaki sürüm vektörünü (seen: kaynak cihaz → alınan son
+   sıra) taşır. Olayı yazan cihaz alanın son yazımını görmemişse gerçek
+   eşzamanlılıktır → çakışma. Vektörü olmayan (eski sürüm) olay veya son yazanı
+   bilinmeyen alan eski kuralla değerlendirilir. causal = { writer, seen }. */
+function fieldMerge(current, incoming, revision, baseRevision = null, recordKey = '', causal = null) {
   const base = current && typeof current === 'object' ? current : {};
   const next = { ...base };
   const fields = { ...(base._fieldRevisions || {}) };
+  const writers = { ...(base._fieldWriters || {}) };
+  const writer = causal && causal.writer && causal.writer.d ? { d: String(causal.writer.d), s: Number(causal.writer.s) || 0 } : null;
+  const seen = writer && causal.seen && typeof causal.seen === 'object' ? causal.seen : null;
   const conflicts = [];
   for (const [key, value] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
-    if (key === '_fieldRevisions' || key === '_revision') continue;
+    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters') continue;
     const previousRevision = Number(fields[key]) || 0;
+    if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
+      next[key] = newerRevisionMeta(next[key], value);
+      fields[key] = Math.max(previousRevision, revision);
+      continue;
+    }
+    /* Uzak olayda liste alanı HER ZAMAN kimlikle birleşir. Cihaz sayaçları
+       bağımsız ilerlediği için "yerelde değişti mi" sorusu revizyonla her zaman
+       doğru cevaplanamaz; yerel kaydı hiç görmemiş cihazın yüksek tabanlı olayı
+       listeyi bütün olarak yazıp yeni kaydı sessizce siliyordu. Birleşim
+       değişmeli ve tekrarlanabilir olduğundan her durumda güvenlidir; silme,
+       silme iziyle taşınır. (Yerel yazımda recordKey yoktur: liste aynen yazılır.) */
+    const listRule = recordKey ? listMergeRule(recordKey, key) : null;
+    if (listRule && next[key] !== undefined) {
+      if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
+      else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {});
+      fields[key] = Math.max(previousRevision, revision);
+      if (writer) writers[key] = writer;
+      continue;
+    }
+    const lastWriter = seen && writers[key] && writers[key].d ? writers[key] : null;
+    if (lastWriter) {
+      if (lastWriter.d === writer.d) {
+        // Aynı cihazın daha eski olayı daha yeni değeri geri almaz.
+        if (writer.s < (Number(lastWriter.s) || 0)) continue;
+      } else if (!(Number(seen[lastWriter.d]) >= (Number(lastWriter.s) || 0)) && JSON.stringify(next[key]) !== JSON.stringify(value)) {
+        conflicts.push({ field: key, current: clone(next[key]), incoming: clone(value), currentRevision: previousRevision, baseRevision: Number(baseRevision) || 0 });
+        continue;
+      }
+      next[key] = value;
+      fields[key] = Math.max(previousRevision, revision);
+      writers[key] = writer;
+      continue;
+    }
     const changedLocally = baseRevision != null && previousRevision > Number(baseRevision || 0) && JSON.stringify(next[key]) !== JSON.stringify(value);
     if (changedLocally || (baseRevision == null && previousRevision > revision)) {
+      const rule = listMergeRule(recordKey, key);
+      if (rule) {
+        if (rule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
+        else {
+          const tombstones = rule.tombstones ? mergeTombstoneMaps(next[rule.tombstones], incoming[rule.tombstones]) : {};
+          next[key] = mergeListById(next[key], value, tombstones);
+        }
+        fields[key] = Math.max(previousRevision, revision);
+        continue;
+      }
       conflicts.push({ field: key, current: clone(next[key]), incoming: clone(value), currentRevision: previousRevision, baseRevision: Number(baseRevision) || 0 });
       continue;
     }
     next[key] = value;
     fields[key] = revision;
+    if (writer) writers[key] = writer;
   }
   next._fieldRevisions = fields;
+  if (Object.keys(writers).length) next._fieldWriters = writers;
   next._revision = Math.max(Number(base._revision) || 0, revision);
   return { value: next, conflicts };
 }
@@ -420,13 +526,18 @@ function createLocalDb(file) {
     const revision = Math.max(Number(state.revision) || 0, effectiveBaseRevision) + 1;
     // Local writes are authoritative for this device; baseRevision is carried
     // in the journal for remote conflict detection, not used to reject the edit.
-    const merged = fieldMerge(state.records[key], patch, revision);
+    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 } });
     const operation = state.records[key] ? 'update' : 'create';
     state.revision = revision;
     state.localSequence = Number(state.localSequence) + 1;
     state.records[key] = { ...merged.value, _deleted: false };
     delete state.tombstones[key];
-    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
+    // Sürüm vektörü: bu yazım anında her kaynak cihazdan kesintisiz alınmış son sıra.
+    const seenVector = {};
+    for (const source of [state.syncCheckpoints || {}, state.causalKnowledge || {}]) {
+      for (const [device, seq] of Object.entries(source)) if (Number(seq) > (seenVector[device] || 0)) seenVector[device] = Number(seq);
+    }
+    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
     state.journal.push(journalItem);
@@ -497,9 +608,19 @@ function createLocalDb(file) {
         delete state.records[key];
       }
     } else if (!tomb || Number(tomb.revision) <= revision) {
-      const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision);
+      const causal = delta.deviceId ? { writer: { d: String(delta.deviceId), s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen } : null;
+      const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key, causal);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
+      // Alan, çakışmayı görmüş daha yeni bir olayla çakışmasız güncellendi:
+      // o alandaki eski çakışmanın seçenekleri artık geçersiz, kayıt kapanır.
+      const conflictedFields = new Set(merged.conflicts.map(item => item.field));
+      const appliedFields = new Set(Object.keys(delta.patch || delta.value || {}).filter(field => !conflictedFields.has(field)));
+      for (const open of state.conflicts) {
+        if (!open.resolved && open.type === 'field' && open.id === key && appliedFields.has(open.field)) {
+          open.resolved = true; open.resolvedAt = at; open.resolution = 'superseded';
+        }
+      }
       for (const conflict of merged.conflicts) state.conflicts.push({ conflictId: nextConflictId(), eventId: eid, id: key, type: 'field', ...conflict, at, resolved: false });
     }
     state.revision = Math.max(Number(state.revision) || 0, revision);
@@ -876,8 +997,17 @@ function createLocalDb(file) {
     const state = await read();
     const conflict = state.conflicts.find(item => item.conflictId === id && !item.resolved);
     if (!conflict) throw new Error('Çakışma bulunamadı veya zaten çözüldü.');
+    /* Çözüm, çakışan İKİ revizyonu da aşan bir tabanla yayımlanır. Aksi hâlde
+       karşı değeri kabul etmiş cihazlar kararı yeni bir çakışma sayar ya da
+       ("benimkini koru" seçiminde) hiç duymaz ve cihazlar kalıcı olarak ayrışır. */
+    const incomingRevision = Number(state.events[conflict.eventId] && state.events[conflict.eventId].revision) || 0;
+    const resolutionBase = Math.max(Number(conflict.currentRevision) || 0, incomingRevision);
     if (choice === 'incoming' && conflict.type === 'field') {
-      await queuePatch({ id: conflict.id, patch: { [conflict.field]: customValue === undefined ? conflict.incoming : customValue }, baseRevision: conflict.currentRevision, origin: 'conflict-resolution' });
+      await queuePatch({ id: conflict.id, patch: { [conflict.field]: customValue === undefined ? conflict.incoming : customValue }, baseRevision: resolutionBase, origin: 'conflict-resolution' });
+    } else if (choice === 'current' && conflict.type === 'field') {
+      const record = state.records[conflict.id];
+      const kept = record && Object.prototype.hasOwnProperty.call(record, conflict.field) ? record[conflict.field] : conflict.current;
+      await queuePatch({ id: conflict.id, patch: { [conflict.field]: kept === undefined ? null : clone(kept) }, baseRevision: resolutionBase, origin: 'conflict-resolution' });
     } else if (choice === 'incoming' && conflict.type === 'delete') {
       await tombstone({ id: conflict.id, baseRevision: conflict.currentRevision, origin: 'conflict-resolution' });
     } else if (choice !== 'current' && choice !== 'incoming') {

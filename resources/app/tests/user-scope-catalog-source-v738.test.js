@@ -29,7 +29,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const UM = read('public/user-management.js');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 const ACCESS = read('server/lib/user-access.js');
 
 /* ------------------------------------------------------------------ */

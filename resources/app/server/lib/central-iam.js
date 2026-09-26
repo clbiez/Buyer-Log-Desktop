@@ -16,6 +16,18 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const profiles = store => [store && store.moderator, ...(store && store.users || [])].filter(Boolean);
 const normalizeUsername = value => String(value == null ? '' : value).trim().toLocaleLowerCase('tr-TR');
 const digest = value => crypto.createHash('sha256').update(typeof value === 'string' ? value : JSON.stringify(value)).digest('hex');
+/* Oturumu etkileyen etkin erişim: kişinin kendi erişim alanları, rol
+   matrisinden ve hiyerarşiden gelen etkin izinler ile ekibinin erişim alanları
+   (yönetici ekibin kapsamını/alanlarını devralır). */
+const ACCESS_FIELDS = ['status', 'enabled', 'systemRole', 'role', 'orgLevel', 'managerId', 'supervisorId', 'accessAreas', 'permissions', 'directPermissions', 'temporaryPermissions', 'dataScope', 'scopeMode', 'customScopes', 'autoScopes', 'mags', 'mmygs', 'buyingGroups', 'collectionAccess', 'external'];
+function accessFingerprint(user, store) {
+  const own = u => ACCESS_FIELDS.map(key => u && u[key] === undefined ? null : u && u[key]);
+  let effective = [];
+  try { effective = [...iam.effectivePermissionSet(user, store)].sort(); } catch (_) { effective = ['<unavailable>']; }
+  let team = [];
+  try { team = iam.descendants(store, user.id).map(child => [child.id, own(child)]).sort((x, y) => String(x[0]).localeCompare(String(y[0]))); } catch (_) { team = ['<unavailable>']; }
+  return digest({ own: own(user), effective, team });
+}
 function error(code, statusCode = 503) { return Object.assign(new Error(code), { code, statusCode }); }
 function stableUuid(id) {
   if (UUID.test(id)) return id;
@@ -326,9 +338,13 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
           const old = previous && profiles(previous).find(u => u.id === user.id);
           user.userId = old && old.userId || user.userId || stableUuid(user.id);
           user.credentialRevision = (old && old.credentialRevision || 1) + (old && (old.passwordHash !== user.passwordHash || old.pinHash !== user.pinHash) ? 1 : 0);
-          // A directory change can affect hierarchy/role/workspace inheritance.
-          // Securely invalidate every existing session on IAM access changes.
-          user.accessRevision = (old && old.accessRevision || 1) + (old ? 1 : 0);
+          // A directory change can affect hierarchy/role inheritance. Sessions
+          // are invalidated for every user whose EFFECTIVE access changed
+          // (own fields, role matrix, inherited team rights, data scope);
+          // unrelated edits (another user's title, a new account) no longer
+          // log the whole team out.
+          const accessChanged = !old || accessFingerprint(old, authority) !== accessFingerprint(user, next);
+          user.accessRevision = (old && old.accessRevision || 1) + (old && accessChanged ? 1 : 0);
           user.updatedAt = new Date().toISOString(); user.updatedBy = actorProfile.id;
         }
         const snapshot = snapshotFromStore(next, expectedRevision + 1, actorProfile); validateSnapshot(snapshot);

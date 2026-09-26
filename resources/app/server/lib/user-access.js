@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const { PROJECT_ROOT, SERVER_DATA_ROOT, APP_DATA_ROOT, LOCAL_DATA_ROOT, CONFIG_PATH, atomicWriteJson } = require('../user-data');
 const { AsyncLocalStorage } = require('node:async_hooks');
 const centralIam = require('./central-iam');
+const orderAuthorityShare = require('./order-authority-share');
 const iam = require('./iam-core');
 const userPreferences = require('./user-preferences');
 
@@ -32,14 +33,16 @@ try {
   const settings = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
   if (process.env.BUYER_LOG_CENTRAL_IAM_ENABLED == null) centralConfigured = settings.centralIamEnabled === true;
 } catch (_) {}
+async function defaultIamSharedRoot() {
+  if (process.env.BUYER_LOG_IAM_SHARED_ROOT) return process.env.BUYER_LOG_IAM_SHARED_ROOT;
+  const settings = JSON.parse(await fs.promises.readFile(path.join(LOCAL_DATA_ROOT, 'sync-settings.json'), 'utf8'));
+  return settings.sharedSyncRoot || settings.sharedSyncFolder || '';
+}
+let iamSharedRoot = defaultIamSharedRoot;
 function getCentralIam() {
   if (!centralConfigured) return null;
   if (!centralService) centralService = centralIam.createCentralIam({ cacheFile: ACCESS_FILE,
-    getSharedRoot: async () => {
-      if (process.env.BUYER_LOG_IAM_SHARED_ROOT) return process.env.BUYER_LOG_IAM_SHARED_ROOT;
-      const settings = JSON.parse(await fs.promises.readFile(path.join(LOCAL_DATA_ROOT, 'sync-settings.json'), 'utf8'));
-      return settings.sharedSyncRoot || settings.sharedSyncFolder || '';
-    }, onApply: cache => { storeCache = null; iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive,
+    getSharedRoot: defaultIamSharedRoot, onApply: cache => { storeCache = null; iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive,
   });
   return centralService;
 }
@@ -214,11 +217,14 @@ function roleBasePermissions(profile) {
   if (profile && normalizeRole(profile.role) === 'moderator') for (const key of PERMISSION_KEYS) out[key] = true;
   return out;
 }
+const SHARED_SETTINGS_PERMISSION_KEYS = new Set(['manageBusinessRules', 'manageModelConnections']);
 function effectivePermissions(profile, store = readStore()) {
   const out = roleBasePermissions(profile);
   for (const child of descendantProfiles(store, profile && profile.id)) {
     const childPermissions = roleBasePermissions(child);
-    for (const key of PERMISSION_KEYS) out[key] = out[key] || childPermissions[key];
+    // Ortak ayar yönetimi (kur, royalty, yol süresi, bağlantılar…) ekipten
+    // yöneticiye devrolmaz; yalnız Moderatörün kişiye verdiği izinle açılır.
+    for (const key of PERMISSION_KEYS) if (!SHARED_SETTINGS_PERMISSION_KEYS.has(key)) out[key] = out[key] || childPermissions[key];
   }
   const codes = iam.effectivePermissionSet(profile, store);
   if (codes.has('SYSTEM.MANAGE')) out.manageBackup = true;
@@ -686,10 +692,30 @@ function syncProfiles(orders, options = {}) {
   const orderAccessChanged = JSON.stringify(store.orderAccess || {}) !== JSON.stringify(orderAccess);
   const catalogChanged = JSON.stringify(store.scopeCatalog || {}) !== JSON.stringify(scopeCatalog);
   if (orderAccessChanged || catalogChanged) {
-    if (centralConfigured) { centralIam.writeLocalAtomic(path.join(AUTH_DATA_ROOT, 'iam-derived.json'), { orderAccess, scopeCatalog }); return { ...store, orderAccess, scopeCatalog }; }
+    if (centralConfigured) {
+      const generatedAt = new Date().toISOString();
+      centralIam.writeLocalAtomic(path.join(AUTH_DATA_ROOT, 'iam-derived.json'), { orderAccess, scopeCatalog, generatedAt });
+      publishOrderAuthority(orderAccess, scopeCatalog, generatedAt);
+      return { ...store, orderAccess, scopeCatalog };
+    }
     return saveStore({ ...store, orderAccess, scopeCatalog }, store._revision);
   }
+  // Değişmemiş olsa da hub'da eksikse (hub sonradan bağlandı) yayımlanır;
+  // yayın özet karşılaştırmasıyla idempotenttir.
+  if (centralConfigured) {
+    const local = orderAuthorityShare.readLocalSync(path.join(AUTH_DATA_ROOT, 'iam-derived.json'));
+    publishOrderAuthority(orderAccess, scopeCatalog, local && local.generatedAt || new Date().toISOString());
+  }
   return store;
+}
+/* Sipariş sahipliğini Shared Hub'a arka planda yayımlar (bkz.
+   order-authority-share.js). Hata yerel başarıyı geri almaz; bir sonraki
+   yetkili yenileme yeniden dener. */
+function publishOrderAuthority(orderAccess, scopeCatalog, generatedAt) {
+  void Promise.resolve().then(async () => {
+    const root = await iamSharedRoot();
+    return orderAuthorityShare.publishShared(root, { orderAccess, scopeCatalog, generatedBy: 'moderator', generatedAt });
+  }).catch(() => {});
 }
 function mergeScopes(a, b) {
   return {
@@ -844,6 +870,8 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
   if (typeof onIamApplied === 'function') iamApplied = onIamApplied;
   if (centralOptions) {
     centralConfigured = centralOptions.enabled === true;
+    if (typeof centralOptions.getSharedRoot === 'function') iamSharedRoot = centralOptions.getSharedRoot;
+    else if (centralOptions.sharedRoot) iamSharedRoot = async () => centralOptions.sharedRoot;
     centralService = centralConfigured ? centralIam.createCentralIam({ ...centralOptions, cacheFile: ACCESS_FILE, onApply: cache => { storeCache = null; iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive }) : null;
   }
   let authoritySnapshot = readStore().orderAccess || {};
@@ -904,6 +932,29 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     const code = String(Number(orderCode));
     return code === 'NaN' ? [] : (Array.isArray(authoritySnapshot[code]) ? authoritySnapshot[code] : []);
   }
+  /* Merkezi IAM kipinde Moderatörün hub'a yayımladığı sipariş sahipliğini
+     çeker. Yalnız doğrulanmış ve yerelden YENİ belge uygulanır; ağ yoksa son
+     yerel kopyayla devam edilir (düzenleme yetkisi çevrimdışında da tutarlı). */
+  let orderAuthorityPull = null;
+  function refreshOrderAuthority({ timeoutMs = 1500 } = {}) {
+    if (!centralConfigured || restoreActive) return Promise.resolve(false);
+    if (!orderAuthorityPull) {
+      orderAuthorityPull = (async () => {
+        const root = await iamSharedRoot();
+        const shared = await orderAuthorityShare.readShared(root);
+        const localFile = path.join(AUTH_DATA_ROOT, 'iam-derived.json');
+        const next = orderAuthorityShare.newerThanLocal(shared, orderAuthorityShare.readLocalSync(localFile));
+        if (!next) return false;
+        centralIam.writeLocalAtomic(localFile, { orderAccess: next.orderAccess, scopeCatalog: next.scopeCatalog, generatedAt: next.generatedAt });
+        storeCache = null; authoritySnapshot = next.orderAccess;
+        return true;
+      })().catch(() => false).finally(() => { orderAuthorityPull = null; });
+    }
+    let timer;
+    return Promise.race([orderAuthorityPull, new Promise(resolve => { timer = setTimeout(() => resolve(false), timeoutMs); })]).finally(() => clearTimeout(timer));
+  }
+  const orderAuthorityTimer = setInterval(() => { void refreshOrderAuthority({ timeoutMs: 15000 }); }, 60000);
+  if (orderAuthorityTimer.unref) orderAuthorityTimer.unref();
   // Login autocomplete must remain a tiny auth-directory operation. It must not
   // expose role/scope/permission data and must never touch Buyer Log datasets.
   // The index is revision-bound, so User Management changes are visible without
@@ -971,7 +1022,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
   function listHandler(req, res) { res.json({ profiles: suggestions(req.query && req.query.q), revision: readStore()._revision }); }
   async function loginHandler(req, res) {
     try {
-      if (centralConfigured) await getCentralIam().preflight();
+      if (centralConfigured) { await getCentralIam().preflight(); await refreshOrderAuthority(); }
       const store = loadStore();
       if (centralConfigured && !allProfiles(store).length) return res.status(503).json({ error: 'Merkezi kullanıcı dizini alınamadı ve geçerli yerel kullanıcı önbelleği yok.', code: 'IAM_NOT_INITIALIZED' });
       const username = clean(req.body && req.body.username);
@@ -1723,7 +1774,10 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     profileCopyHandler: centralMutation(profileCopyHandler, 'USER.PROFILE_COPY'), profileCopyPreviewHandler,
     temporaryGrantHandler: centralMutation(temporaryGrantHandler, 'USER.GRANT'), temporaryGrantRevokeHandler: centralMutation(temporaryGrantRevokeHandler, 'USER.GRANT'), auditListHandler,
     iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler,
-    refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured ? getCentralIam().preflight(Math.max(250, Number(options && options.timeoutMs) || 1500), options) : Promise.resolve(null),
+    refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured
+      ? getCentralIam().preflight(Math.max(250, Number(options && options.timeoutMs) || 1500), options).then(async result => { await refreshOrderAuthority(); return result; })
+      : Promise.resolve(null),
+    refreshOrderAuthority,
     // Shared Hub can be selected on the pre-login screen after the process has
     // already started. Central IAM therefore cannot be a boot-time-only flag.
     // Enabling it only swaps the directory transport; credentials remain in

@@ -130,6 +130,10 @@
        yüklenir (§11). */
     dataManagement:['data-management-picker.js?rev=1','data-management-filter.js?rev=2','data-management-source.js?rev=2','data-management-mapping.js?rev=1','data-management-cpcolumns.js?rev=1','data-management-matchrule.js?rev=1','data-management-query.js?rev=1','data-management-connection.js?rev=1','data-management.js?rev=8'],
   };
+  // Yüklenmesi TAMAMLANMIŞ özellikler: çağıran "ilk kez mi yüklendi" ayrımını
+  // yapabilsin (ör. sekmeye her girişte tabloyu yeniden çizmemek için).
+  const loadedFeatures=new Set();
+  function isFeatureLoaded(name){return loadedFeatures.has(String(name));}
   async function ensureFeature(name){
     const files=features[name];if(!files)throw new Error('Bilinmeyen özellik modülü: '+name);
     if(name==='versionHistory'&&Array.isArray(global.BL_VERSION_HISTORY))return;
@@ -143,7 +147,8 @@
     // hazır sayılır; yalnız objenin varlığı lazy yüklemeyi kısa devre etmemeli.
     if(name==='cpAssistant'&&global.BLCpAssistant&&typeof global.BLCpAssistant.computeDecisionsForRows==='function')return;
     const key='feature:'+name;
-    if(!pending.has(key))pending.set(key,(async()=>{for(const file of files)await loadScript(file);})().finally(()=>pending.delete(key)));
+    if(loadedFeatures.has(name))return;
+    if(!pending.has(key))pending.set(key,(async()=>{for(const file of files)await loadScript(file);})().then(()=>{loadedFeatures.add(name);}).finally(()=>pending.delete(key)));
     return pending.get(key);
   }
 
@@ -195,5 +200,5 @@
   mark('APP_BOOT_START');
   mark('FRONTEND_BOOT_START');
   mark('FRONTEND_BOOTSTRAP_START');
-  global.BLPerf={ensureLibrary,ensureFeature,begin,end,record,mark,timeline,snapshot,origin:()=>runtimeOrigin,createBoundedCache,throttle,debounce,_loadScript:loadScript};
+  global.BLPerf={ensureLibrary,ensureFeature,isFeatureLoaded,begin,end,record,mark,timeline,snapshot,origin:()=>runtimeOrigin,createBoundedCache,throttle,debounce,_loadScript:loadScript};
 })(window);

@@ -203,11 +203,12 @@ function applyPlmStyleLinksPayload(data){
 }
 
 let plmEnhanceScheduled=false;
-function enhanceModelNameCells(root=document){
+function enhanceModelNameCells(root=document,onlyTables=null){
   const modelAliases=new Set(['MODEL NAME','MODEL ADI','STYLE NAME','MODEL']);
   const orderAliases=new Set(['ORDER CODE','ORDER','ORDER NO','ORDER NUMBER','SIPARIS KOD','SIPARIS KODU']);
   const plmAliases=new Set(['PLM ID','PLM CODE','PLM KOD','PLM KODU']);
-  (root.querySelectorAll?root.querySelectorAll('table'):[]).forEach(table=>{
+  const tables=onlyTables?[...onlyTables].filter(table=>table&&table.isConnected!==false):(root.querySelectorAll?root.querySelectorAll('table'):[]);
+  tables.forEach(table=>{
     // Backlog raporları salt veri tablosudur. Bu ekranlarda sipariş/model
     // hücrelerini sonradan köprüye dönüştürme.
     if(table.matches('.backlogDetailTable'))return;
@@ -232,11 +233,33 @@ function enhanceModelNameCells(root=document){
     });
   });
 }
-function schedulePlmModelLinkEnhancement(){
-  if(plmEnhanceScheduled)return;plmEnhanceScheduled=true;
-  requestAnimationFrame(()=>{plmEnhanceScheduled=false;enhanceModelNameCells(document);});
+/* Eklenen düğümlerin ilgilendirdiği tablolar: düğüm tablonun içindeyse o
+   tablo, düğüm tablo içeriyorsa içerdikleri. Bildirim/ipucu gibi tablo dışı
+   eklemeler hiçbir tabloyu yeniden taratmaz. */
+function tablesForMutations(mutations){
+  const tables=new Set();
+  for(const mutation of mutations||[]){
+    for(const node of mutation.addedNodes||[]){
+      if(!node||node.nodeType!==1)continue;
+      if(node.tagName==='TABLE')tables.add(node);
+      const owner=node.closest&&node.closest('table');if(owner)tables.add(owner);
+      if(node.querySelectorAll)for(const inner of node.querySelectorAll('table'))tables.add(inner);
+    }
+  }
+  return tables;
 }
-new MutationObserver(mutations=>{if(mutations.some(item=>item.addedNodes&&item.addedNodes.length))schedulePlmModelLinkEnhancement();}).observe(document.documentElement,{subtree:true,childList:true});
+let plmEnhancePendingTables=new Set();
+function schedulePlmModelLinkEnhancement(tables=null){
+  if(tables){if(plmEnhancePendingTables)for(const table of tables)plmEnhancePendingTables.add(table);}
+  else plmEnhancePendingTables=null; // tam tarama istendi
+  if(plmEnhanceScheduled)return;plmEnhanceScheduled=true;
+  requestAnimationFrame(()=>{
+    plmEnhanceScheduled=false;
+    const pending=plmEnhancePendingTables;plmEnhancePendingTables=new Set();
+    enhanceModelNameCells(document,pending);
+  });
+}
+new MutationObserver(mutations=>{const tables=tablesForMutations(mutations);if(tables.size)schedulePlmModelLinkEnhancement(tables);}).observe(document.documentElement,{subtree:true,childList:true});
 async function loadPlmStyleLinks({rerender=true}={}){
   try{
     const res=await fetch('/api/plm-style-links',{cache:'no-store'}),data=await res.json().catch(()=>({}));
@@ -919,9 +942,12 @@ function applyFormulas(row){
 let _unifiedPriorityDataRevision=1;
 let _unifiedPriorityFeaturePromise=null;
 const _unifiedPriorityCache={cp:null,orders:null};
-function invalidateUnifiedPriorityDecisions(reason){
+// Tablo başına revizyon: bir tablonun verisi yüklenince diğerinin kararları
+// geçersiz sayılmaz (Siparişler yüklenince CP ≈1 sn boşuna yeniden hesaplanıyordu).
+const _unifiedPriorityTableRevision={cp:1,orders:1};
+function invalidateUnifiedPriorityDecisions(reason,tables=null){
   _unifiedPriorityDataRevision+=1;
-  _unifiedPriorityCache.cp=null;_unifiedPriorityCache.orders=null;
+  for(const key of Array.isArray(tables)&&tables.length?tables:['cp','orders']){_unifiedPriorityTableRevision[key]=(_unifiedPriorityTableRevision[key]||0)+1;_unifiedPriorityCache[key]=null;}
   window.BLPerf?.mark?.('UNIFIED_PRIORITY_INVALIDATED',{reason:reason||'data',revision:_unifiedPriorityDataRevision});
 }
 function unifiedPriorityRowActive(tableKey,row){
@@ -941,7 +967,7 @@ function syncUnifiedPrioritiesForTable(tableKey){
   if(!rows||!assistant||typeof assistant.computeDecisionsForRows!=='function')return false;
   const contextRevision=typeof assistant.decisionContextRevision==='function'?assistant.decisionContextRevision():0;
   const cached=_unifiedPriorityCache[tableKey];
-  if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityDataRevision&&cached.contextRevision===contextRevision)return true;
+  if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===contextRevision)return true;
   const activeRows=rows.filter(row=>unifiedPriorityRowActive(tableKey,row));
   const result=assistant.computeDecisionsForRows(activeRows);
   for(const row of rows){
@@ -975,7 +1001,7 @@ function syncUnifiedPrioritiesForTable(tableKey){
       }
     }
   }
-  _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityDataRevision,contextRevision};
+  _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision};
   return true;
 }
 function showUnifiedPriorityLoading(tableKey){
@@ -1281,8 +1307,10 @@ function restoreSharedTableActions(){
   ['view','filter'].forEach(kind=>{const node=vfProfileMenuNode(kind);if(node&&rowBreak)rowBreak.before(node);});
   const shipHome=document.getElementById('shipSecondaryToolbar'),shipAnchor=document.getElementById('shipCount');
   if(shipHome&&shipAnchor){['shipExportBtn','shipUpdateFxBtn','shipDeleteBtn'].forEach(id=>{const node=document.getElementById(id);if(node){node.classList.remove('navActionBtn');shipHome.insertBefore(node,shipAnchor);}});}
-document.getElementById('shipPlmSyncBtn')?.addEventListener('click',event=>openCurrentViewImageAction(event.currentTarget));
 }
+/* Tek bağlama: bu satır eskiden restoreSharedTableActions İÇİNDEYDİ ve her sekme
+   geçişinde yeni bir dinleyici ekleyip tek tıkta birden çok PLM senkronu başlatıyordu. */
+document.getElementById('shipPlmSyncBtn')?.addEventListener('click',event=>openCurrentViewImageAction(event.currentTarget));
 function appendSharedTableActions(targetId,ids){
   const target=document.getElementById(targetId); if(!target) return;
   ids.forEach(id=>{const node=sharedTableActionNode(id)||document.getElementById(id);if(node)target.appendChild(node);});
@@ -1787,7 +1815,7 @@ async function ensureCpLoaded(options={}){
       reviveServerDates(rows);
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
       overviewCpLoadState='ready';overviewCpLoadError='';
-      invalidateUnifiedPriorityDecisions('cp-projection-loaded');
+      invalidateUnifiedPriorityDecisions('cp-projection-loaded',['cp']);
       syncCpModelColumns(Array.isArray(data.cpModelColumns)?data.cpModelColumns:[]);
       buildCPFilters();applyCoreAutoFilterState();refreshSubmfrList();refreshLicenseList();refreshLicensorList();if(!options.deferRender)renderCP();
       window.BLPerf?.mark?.('CP_LOAD_READY',{reason:options.reason||'cp',rows:rows.length,revision:_unifiedPriorityDataRevision});
@@ -1847,7 +1875,7 @@ async function ensureOrdersLoaded(options={}){
       const sourceName=data.sources&&data.sources.asas?data.sources.asas:(appLang==='en'?'Server':'Sunucu');
       state.orders={fname:`Sunucu: ${sourceName}`,rows:rows.map(row=>({...row,_canEdit:false}))};
       state.ordersLogisticExpanded.clear();
-      invalidateUnifiedPriorityDecisions('orders-projection-loaded');
+      invalidateUnifiedPriorityDecisions('orders-projection-loaded',['orders']);
       // Sipariş projeksiyonu yenilemeden sonra belleğe alındığında, açık ekranda
       // tutulan lisans royalty kuralları da aynı satırlara yeniden uygulanmalı.
       // Çizim aşağıda tek kez yapılır; burada yalnız türetilmiş fiyatlar hesaplanır.
@@ -1878,6 +1906,7 @@ function switchTab(tab){
   if(previousTab==='cp'||previousTab==='orders') saveCoreAutoFilterState();
   if(typeof closeAllColumnPanels==='function') closeAllColumnPanels();
   document.body.dataset.activeTab = tab;
+  if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
   flushDeferredRenderForTab(tab);
   syncTableToolbarActions(tab);
   syncNavExcelButtonLabel(tab);
@@ -1933,8 +1962,11 @@ function switchTab(tab){
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
   if(['cp','orders','shipping'].includes(tab)){
+    // Özellik zaten yüklüyse değişmemiş tablo baştan çizilmez (30k satırda her
+    // girişte ≈1,3 sn donma). Veri değiştiyse ertelenmiş çizim zaten çalışır.
+    const deferredUiWasLoaded=window.BLPerf?.isFeatureLoaded?.('deferredUi')===true;
     void window.BLPerf.ensureFeature('deferredUi').then(()=>{
-      if(currentActiveTab()!==tab)return;
+      if(currentActiveTab()!==tab||deferredUiWasLoaded)return;
       // İlk girişte veri ve kullanıcı profili birlikte çözümleniyor; erken
       // çizim favori görünüm/filtre uygulanmadan yanlış bir tablo göstermemeli.
       if(profileFirstVisit)return;
@@ -1954,8 +1986,13 @@ function switchTab(tab){
   /* v9.48 — Genel Bakış'ın üretim öncelikleri paneli açılış kritik yolunda
      değil: sekmeye geçildiğinde yüklenir, yüklendiğinde mevcut satırlarla
      kendini çizer (Genel Bakış zaten çizilmiş olabilir). */
-  if(tab==='overview')void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve())
-    .then(()=>{try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready');syncUnifiedPrioritiesForTable('cp');renderOverview();}catch(_){}}).catch(()=>{});
+  if(tab==='overview'){
+    // Motor zaten yüklüyse "hazır" olayı yeniden işlenmez: her girişte kararları
+    // temizlemek CP/Siparişler önceliklerini ≈1 sn baştan hesaplatıyordu.
+    const decisionEngineWasReady=Boolean(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function');
+    void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve())
+      .then(()=>{if(decisionEngineWasReady)return;try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready');syncUnifiedPrioritiesForTable('cp');renderOverview();}catch(_){}}).catch(()=>{});
+  }
   document.querySelectorAll('.vfMenu.open').forEach(x=>x.classList.remove('open'));
   const bar=document.querySelector('.vfBar');
   const allowed=['cp','orders','shipping','koleksiyon'].includes(tab);
@@ -6471,12 +6508,24 @@ function buildHTMLTable(tableKey, rows, computeFn){
     },
   });
 }
+/* Kopyalama geri bildirimi düğmenin İÇERİĞİNİ değiştirmez: eskiden metin
+   "✓ Kopyalandı (N satır, biçimlendirmeli)" ile değiştiriliyordu; düğme
+   genişleyip komşu eylemleri itiyor ve geri yazılan düz metin SVG simgeyi
+   kalıcı olarak siliyordu. Artık yalnız kısa bir durum sınıfı + köşe bildirimi. */
 function flashCopyBtn(btnId, ok, n){
   const btn = document.getElementById(btnId);
-  const orig = btn.textContent;
-  btn.textContent = ok? `✓ Kopyalandı (${n} satır, biçimlendirmeli)` : 'Kopyalama başarısız';
-  btn.classList.toggle('copied', ok);
-  setTimeout(()=>{ btn.textContent = orig; btn.classList.remove('copied'); }, 2400);
+  const en = appLang==='en';
+  if(btn){
+    btn.classList.remove('copied','copyFailed');
+    void btn.offsetWidth;
+    btn.classList.add(ok?'copied':'copyFailed');
+    clearTimeout(btn._copyFlashTimer);
+    btn._copyFlashTimer = setTimeout(()=>btn.classList.remove('copied','copyFailed'), 1600);
+  }
+  showToast(ok
+    ? (en?`Copied ${n} row${n===1?'':'s'} with formatting`:`${n} satır biçimlendirmeyle kopyalandı`)
+    : (en?'Copy failed':'Kopyalama başarısız'),
+    {kind:ok?'success':'error'});
 }
 // ---- Panoya kopyalama: "Excel'e Aktar" ile AYNI hücre biçimi ----
 // Excel dışa aktarımı hücre renklerini/hizasını canlı DOM'dan (getComputedStyle) okur.
@@ -7658,6 +7707,33 @@ function cpRowsScoped(exclude){
   const ids = CP_MIRROR_IDS.filter(id=>!ex.includes(id));
   return state.cp.rows.filter(r=>cpRowPasses(r,ctx,ids));
 }
+/* Boş tablo yönlendirmesi: kaynakta hiç satır yoksa Veri Yönetimi'ne, filtreler
+   her şeyi eliyorsa filtre temizlemeye yönlendirir. Tablo başlığı ve araç
+   çubuğu görünür kalır; ipucu tablo kabının içinde yatayda sabit durur. */
+function renderTableEmptyHint(tableKey,visibleCount,totalCount){
+  const wrap=document.getElementById(tableKey==='cp'?'cpTableWrap':'ordersTableWrap');if(!wrap)return;
+  let hint=wrap.querySelector(':scope > .tableEmptyHint');
+  const mode=Number(totalCount)===0?'source':(Number(visibleCount)===0?'filter':'');
+  if(!mode){if(hint)hint.hidden=true;return;}
+  if(!hint){hint=document.createElement('div');hint.className='tableEmptyHint';wrap.appendChild(hint);}
+  hint.hidden=false;hint.dataset.mode=mode;
+  const en=appLang==='en',label=tableKey==='cp'?'CP':(en?'Orders':'Sipariş');
+  const opts=mode==='source'?{
+    kind:'empty',icon:'database-import',
+    title:en?`No ${label} data yet`:`Henüz ${label} verisi yok`,
+    detail:en?'Connect the ASAS source in Data Management, then refresh this table.':'ASAS kaynağını Veri Yönetimi’nden bağla, ardından bu tabloyu yenile.',
+    actionLabel:en?'Open Data Management':'Veri Yönetimi’ni aç',actionPrimary:true,
+    onAction:()=>document.querySelector('nav.tabs button[data-tab="source"]')?.click(),
+  }:{
+    kind:'info',icon:'eraser',
+    title:en?'No rows match the current filters':'Mevcut filtrelere uyan satır yok',
+    detail:en?`${Number(totalCount).toLocaleString('en-GB')} rows are hidden by filters.`:`${Number(totalCount).toLocaleString('tr-TR')} satır filtreler nedeniyle gizli.`,
+    actionLabel:en?'Clear filters':'Filtreleri temizle',
+    onAction:()=>document.getElementById('navClearFilters')?.click(),
+  };
+  if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(hint,opts);
+  else hint.textContent=opts.title;
+}
 function renderCPNow(){
   if(!state.cp) return;
   if(!ensureUnifiedPrioritiesForTable('cp'))return;
@@ -7676,6 +7752,7 @@ function renderCPNow(){
   const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon`;
   const cpScopeText=`${cpLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qtySumCP.toLocaleString('tr-TR')}`;
   document.getElementById('cpCount').textContent = cpScopeText;
+  renderTableEmptyHint('cp',rows.length,totalRowCount);
   const cpWorkspaceMeta=document.getElementById('cpWorkspaceMeta');
   if(cpWorkspaceMeta)cpWorkspaceMeta.textContent=cpScopeText;
   renderTableViewContext('cp');
@@ -7965,6 +8042,7 @@ function renderOrdersNow(){
   const ordersLabel=appLang==='en'?`${ordersStats.modelCount} Model${ordersStats.modelCount===1?'':'s'} · ${ordersStats.optionCount} Option${ordersStats.optionCount===1?'':'s'}`:`${ordersStats.modelCount} Model · ${ordersStats.optionCount} Opsiyon`;
   const ordersScopeText=`${ordersLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qty.toLocaleString('tr-TR')}`;
   document.getElementById('ordersCount').textContent=ordersScopeText;
+  renderTableEmptyHint('orders',rows.length,totalRowCount);
   const ordersWorkspaceMeta=document.getElementById('ordersWorkspaceMeta');
   if(ordersWorkspaceMeta)ordersWorkspaceMeta.textContent=ordersScopeText;
   renderTableViewContext('orders');
@@ -9030,6 +9108,7 @@ function overviewLayoutStored(){
 function overviewLayoutSave(value){try{BLStorage.setItem(OVERVIEW_LAYOUT_KEY,JSON.stringify(window.BLOverviewLayout.normalize(value)));}catch(_){} }
 function overviewLayoutWidgetLabel(key,scope='page'){
   const labels={
+    launchpad:appLang==='en'?'Today · Quick access':'Bugün · Hızlı erişim',
     notes:appLang==='en'?'CP Notes':'CP Notları',
     collectionSummary:appLang==='en'?'Collection Summary':'Koleksiyon Özeti',
     oab:'OAB',
@@ -9365,9 +9444,13 @@ function renderOverviewPriorityReminder(rows){
       event.preventDefault();event.stopPropagation();openOverviewNoteGroupInCp(groups[Number(node.dataset.noteGroupCount)]);
     }));
   }
-  method.textContent=appLang==='en'
+  /* Kullanım açıklaması her zaman görünen uzun paragraf değil; tek tıkla açılan
+     "Nasıl çalışır?" notu. Açık/kapalı tercihi oturum boyunca korunur. */
+  const methodText=appLang==='en'
     ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it, click an order to open it, or double-click the order count to open the whole note group.'
-    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine çift tıklayarak grubun tamamını aç.';
+    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine çift tıklayarak grubun tamamını aç.';;
+  const methodOpen=method.querySelector('details')?.open||false;
+  method.innerHTML=`<details class="ovHelp"${methodOpen?' open':''}><summary>${escapeHtml(appLang==='en'?'How does this work?':'Nasıl çalışır?')}</summary><span>${escapeHtml(methodText)}</span></details>`
 }
 
 let _overviewRefreshResult=null;
@@ -12265,7 +12348,9 @@ function endStartupStage(token,name,detail={}){
 }
 function renderStartupActiveModule(){
   const activeTab=currentActiveTab();
-  if(activeTab==='overview')renderOverview();
+  // Modül sekmesi (?module=…) Genel Bakış'ı çizmez: onun CP bağımlılığı ve
+  // projeksiyonu her yeni sekmede boşuna yükleniyordu. İlk girişte yüklenir.
+  if(activeTab==='overview'&&!window.BL_BOOT_MODULE)renderOverview();
   return activeTab;
 }
 async function loadFromServer(force, targets){
@@ -13829,6 +13914,7 @@ async function refreshSyncStatusBadge(){
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
   const requestedModule=new URLSearchParams(location.search).get('module');
+  if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
   await loadInitialBuyerLogData();
   // Workspace ile acilan yeni sekmelerde yetki/kullanici baglami yuklenmeden
   // modulu degistirmek Overview'da kalmis, fakat basligi hedef modul olmus bir
@@ -13842,7 +13928,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
     schedulePostUiStartupTasks();
     signalStartupReady();
-    if(state.overviewDeferred)void ensureOverviewLoaded();
+    if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
     const idle=window.requestIdleCallback||((fn)=>setTimeout(()=>fn({timeRemaining:()=>8}),40));
     idle(()=>{
       void loadPlmStyleLinks({rerender:false});
@@ -15436,6 +15522,7 @@ function openBacklogDetailShell(title,loadingText){
       <div class="backlogDetailActions">
         ${detailImageToggleHtml('backlogDetailImagesBtn')}
         ${detailModelImagesButtonHtml('backlogDetailModelImagesBtn')}
+        <button type="button" class="tbtn" id="backlogDetailColsBtn" aria-pressed="${backlogDetailCompact()?'false':'true'}" hidden></button>
         <button type="button" class="tbtn" id="backlogDetailExportBtn" disabled><svg class="ic"><use href="#i-file-export"/></svg><span>${escapeHtml(appLang==='en'?'Export to Excel':"Excel'e Aktar")}</span></button>
         <button type="button" class="backlogDetailClose" id="backlogDetailClose" title="${escapeHtml(appLang==='en'?'Close':'Kapat')}" aria-label="${escapeHtml(appLang==='en'?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
       </div>
@@ -15450,6 +15537,10 @@ function openBacklogDetailShell(title,loadingText){
   bindDetailImageToggle('backlogDetailImagesBtn',()=>renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders));
   // Ekrandan çıkmadan bu detayın eksik görsellerini tamamla.
   bindDetailModelImagesButton('backlogDetailModelImagesBtn');
+  modal.querySelector('#backlogDetailColsBtn')?.addEventListener('click',()=>{
+    try{BLStorage.setItem(BACKLOG_DETAIL_COMPACT_KEY,backlogDetailCompact()?'0':'1');}catch(_){}
+    renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders);
+  });
   modal.onclick=event=>{if(event.target===modal)closeBacklogDetailModal();};
   return modal;
 }
@@ -15922,6 +16013,17 @@ function backlogExpandDateDimensions(headers,rows){
   });
   return {headers:expandedHeaders,rows:expandedRows,sourceDateHeaders,derivedHeaders,derivedHeaderSources};
 }
+/* Detay ekranı kompakt açılır: BACKLOG.xlsx şablonunun türetilmiş tarih
+   parçaları (Ay/Hafta/Yıl-Ay), ikincil miktar kolonları ve özel kodlar ekranda
+   gizlenir. Excel'e Aktar tüm sütunları yazmaya devam eder. */
+const BACKLOG_DETAIL_COMPACT_KEY='buyerlog.backlog.detail.compact.v1';
+const BACKLOG_DETAIL_SECONDARY_RE=[/\((?:Ay|Hafta|Month|Week)\)\s*$/i,/\b(?:Yil|Yıl|Year)\s+(?:Ay|Hafta|Month|Week)\s*$/i,/Merch\s+Ay\s*$/i,/Merkez\s+Sevke\s+Hazır/i,/^Net\s+Gelen\s+Alım/i,/^Özel\s+Kod/i];
+function backlogDetailCompact(){try{return BLStorage.getItem(BACKLOG_DETAIL_COMPACT_KEY)!=='0';}catch(_){return true;}}
+function backlogDetailVisibleColumns(cols,compact){
+  if(!compact)return cols;
+  const kept=cols.filter(col=>!BACKLOG_DETAIL_SECONDARY_RE.some(re=>re.test(String(col))));
+  return kept.length?kept:cols;
+}
 function renderBacklogDetailTable(rows,headers){
   const wrap=document.getElementById('backlogDetailTableWrap');
   const meta=document.getElementById('backlogDetailMeta');
@@ -15940,12 +16042,24 @@ function renderBacklogDetailTable(rows,headers){
   }
   const baseCols=currentBacklogDetailHeaders.length?currentBacklogDetailHeaders:Object.keys(currentBacklogDetailRows[0]||{});
   const expanded=backlogExpandDateDimensions(baseCols,currentBacklogDetailRows);
-  const cols=expanded.headers,displayRows=expanded.rows;
+  const allCols=expanded.headers,displayRows=expanded.rows;
+  const compact=backlogDetailCompact();
+  const cols=backlogDetailVisibleColumns(allCols,compact);
+  const colsBtn=document.getElementById('backlogDetailColsBtn');
+  if(colsBtn){
+    const hiddenCount=allCols.length-cols.length;
+    colsBtn.hidden=!compact&&allCols.length===backlogDetailVisibleColumns(allCols,true).length;
+    colsBtn.setAttribute('aria-pressed',compact?'false':'true');
+    colsBtn.innerHTML=`<svg class="ic"><use href="#i-columns-3"/></svg><span>${escapeHtml(compact
+      ?(appLang==='en'?`All columns (+${hiddenCount})`:`Tüm sütunlar (+${hiddenCount})`)
+      :(appLang==='en'?'Compact view':'Kompakt görünüm'))}</span>`;
+    if(compact&&!hiddenCount)colsBtn.hidden=true;
+  }
   // Görsel sütunu isteğe bağlı ve EN SOLA eklenir; veri sütunlarının sırasını bozmaz.
-  const identity=detailShowImages?detailIdentityColumns(cols):null;
+  const identity=detailShowImages?detailIdentityColumns(allCols):null;
   const imageIndex=identity?buildDetailImageIndex():null;
   const imgHead=identity?`<th class="detailImgCell">${escapeHtml(appLang==='en'?'Image':'Görsel')}</th>`:'';
-  const thead=`<thead><tr>${imgHead}${cols.map(c=>`<th>${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
+  const thead=`<thead><tr>${imgHead}${cols.map(c=>`<th title="${escapeHtml(c)}">${escapeHtml(c)}</th>`).join('')}</tr></thead>`;
   const tbody='<tbody>'+displayRows.map((r,rowIndex)=>`<tr>${identity?detailImageCellHtml(currentBacklogDetailRows[rowIndex],identity,imageIndex):''}${cols.map(c=>{
     let v=r[c];
     if(expanded.sourceDateHeaders.has(c)&&v)v=fmtDate(v);
@@ -17801,9 +17915,22 @@ function renderShipDecision(){
   });
 }
 
+/* Nakliye boşken satır işlemleri şeridi gizlenir; düz metin yerine CP Tracker'a
+   yönlendiren ortak boş durum kartı çizilir. */
+function renderShipEmptyState(empty,isEmpty){
+  document.getElementById('view-shipping')?.classList.toggle('isShipEmpty',isEmpty);
+  if(!isEmpty||!empty||!window.BLUI||typeof window.BLUI.renderState!=='function')return;
+  const en=appLang==='en';
+  window.BLUI.renderState(empty,{kind:'empty',icon:'ship',
+    title:en?'No rows in the shipping comparison yet':'Nakliye kıyasında henüz satır yok',
+    detail:en?'Tick rows in CP Tracker and use “Send to shipping comparison” to compare freight options here.':'CP Tracker’da satırları işaretleyip “Nakliye kıyasına aktar” ile buraya gönder; navlun seçeneklerini burada karşılaştır.',
+    actionLabel:en?'Go to CP Tracker':'CP Tracker’a git',actionPrimary:true,actionOnce:false,
+    onAction:()=>document.querySelector('nav.tabs button[data-tab="cp"]')?.click()});
+}
 function renderShipTable(){
   applyFormulaColumns('ship');
   const empty = document.getElementById('shipEmpty'), content = document.getElementById('shipContent');
+  renderShipEmptyState(empty,!shipRows.length);
   if(!shipRows.length){ empty.style.display='block'; content.style.display='none'; document.getElementById('shipCount').textContent=''; updateShipSelectionActions(); return; }
   empty.style.display='none'; content.style.display='block';
   document.getElementById('shipCount').textContent = `${shipRows.length} satır`;
@@ -19414,6 +19541,10 @@ function kolRowEqual(a,b){
     const left=a[key],right=b[key];
     if(left===right)continue;
     if(left==null&&right==null)continue;
+    // Kayıt öncesi normalleştirme iç nesneleri (pricing, pricingSent,
+    // variantOverrides…) yeniden oluşturur: referans değil içerik karşılaştırılır,
+    // yoksa dokunulmamış bütün satırlar değişmiş sayılıp gönderiliyordu.
+    if(left&&right&&typeof left==='object'&&typeof right==='object'&&kolValueEqual(left,right))continue;
     return false;
   }
   return true;
@@ -19715,12 +19846,19 @@ function kolReportReplication(replication){
   if(!replication||typeof replication!=='object')return;
   const owner=String(replication.ownerId||kolWorkspaceOwnerId||'');
   const failed=replication.ok===false||replication.state==='conflict'||replication.state==='error';
-  if(!failed){if(owner)kolReplicationNoticeByOwner.delete(owner);return;}
-  const signature=[replication.state,replication.code,replication.localRevision,replication.remoteRevision,replication.updatedAt].join('|');
+  // Eşzamanlı düzenleme birleştirildi ama aynı alanda önce kaydedilen değer
+  // korundu: kullanıcının değeri Senkron çakışmalarında bekler, sessiz kalmaz.
+  const mergeConflicts=Number(replication.mergeConflicts)||0;
+  if(!failed&&!mergeConflicts){if(owner)kolReplicationNoticeByOwner.delete(owner);return;}
+  const signature=[replication.state,replication.code,replication.localRevision,replication.remoteRevision,replication.updatedAt,mergeConflicts].join('|');
   if(owner&&kolReplicationNoticeByOwner.get(owner)===signature)return;
   if(owner)kolReplicationNoticeByOwner.set(owner,signature);
   const detail=String(replication.message||'').trim();
-  const message=appLang==='en'
+  const message=!failed
+    ?(appLang==='en'
+      ?`Another user changed the same Collection fields at the same time; the value saved first was kept in ${mergeConflicts} field(s). Your values are waiting in Sync Conflicts.`
+      :`Başka bir kullanıcı aynı Koleksiyon alanlarını eşzamanlı değiştirdi; ${mergeConflicts} alanda önce kaydedilen değer korundu. Sizin değerleriniz Senkron çakışmalarında bekliyor.`)
+    :appLang==='en'
     ?`Saved locally, but Collection sharing needs attention.${detail?' '+detail:''}`
     :`Yerel kayıt tamamlandı; Koleksiyon paylaşımı ilgilenmenizi gerektiriyor.${detail?' '+detail:''}`;
   showToast(message);
@@ -21522,8 +21660,10 @@ function loadKolRows(){
       return;
     }
   }catch(e){}
-  // İlk çalıştırma: yüklenen NISAN AVRP PDF'inden çıkarılan 24 model örnek veri olarak gelir.
-  kolRows = kolNormalizeModelGroups((typeof KOLEKSIYON_SEED_ROWS!=='undefined') ? JSON.parse(JSON.stringify(KOLEKSIYON_SEED_ROWS)).map(migrateKolRow) : []);
+  // İlk çalıştırma BOŞ başlar. Örnek modeller (KOLEKSIYON_SEED_ROWS) burada
+  // yüklenirse, başlatılmamış sunucu çalışma alanı "eski yerel veri" diye
+  // kaydedilir ve sahte modeller gerçek koleksiyona ve yetkili herkese dağılır.
+  kolRows = [];
   kolNextId = 1 + kolRows.reduce((m,r)=>Math.max(m, r.id||0), 0);
   loadKolManufacturers();
   loadKolColState();
@@ -31972,14 +32112,20 @@ function refreshSharedMasterClient(area){
   }
   return Promise.resolve();
 }
+/* v20260926 — TEK CANLI BAĞLANTI, TÜM SEKMELER.
+   Her sekme kendi SSE bağlantısını açık tuttuğunda aynı bilgisayardaki sekmeler
+   (tarayıcı veya masaüstü çalışma alanı sekmeleri) HTTP/1.1'in kaynak başına 6
+   bağlantı sınırını dolduruyordu: kayıt istekleri kuyrukta bekliyor, canlı
+   güncelleme gelmiyor, 6. sekmeden sonra sayfa hiç yüklenmiyordu. Artık Web
+   Locks ile seçilen TEK sekme bağlantıyı açar ve olayları BroadcastChannel ile
+   diğer sekmelere dağıtır; o sekme kapanınca kilit bir sonrakine geçer.
+   Bağlantı kalıcı kapanırsa (401, sunucu yeniden başlatma) geri çekilmeli
+   yeniden kurulur; boşlukta kaçırılmış olabilecek değişiklikler için açık veri
+   hafif yoldan yeniden okunur. API yoksa eski davranış: sekme kendi bağlantısı. */
 function initLiveSync(){
-  if(typeof EventSource==='undefined'||!window.BL_CLIENT_ID)return;
+  if(!window.BL_CLIENT_ID)return;
   const url=`/api/live-events?clientId=${encodeURIComponent(window.BL_CLIENT_ID)}`;
-  const source=new EventSource(url);
-  source.onopen=()=>{liveSyncConnected=true;};
-  source.onmessage=event=>{
-    let payload=null;
-    try{payload=JSON.parse(event.data);}catch(_){return;}
+  const handle=payload=>{
     if(!payload||!payload.area)return;
     liveSyncConnected=true;
     if(payload.area==='iam'){window.dispatchEvent(new CustomEvent('bl:iam-revision-available'));return;}
@@ -32010,8 +32156,58 @@ function initLiveSync(){
       void initKolWorkspaces({permissionChanged:true}).catch(()=>{});
     }
   };
-  // Bağlantı hatasında EventSource kendiliğinden yeniden dener; ekstra kod gerekmez.
-  source.onerror=()=>{liveSyncConnected=false;};
+  const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('buyerlog-live-sync'):null;
+  const locks=typeof navigator!=='undefined'&&navigator.locks&&typeof navigator.locks.request==='function'?navigator.locks:null;
+  const shared=Boolean(channel&&locks);
+  let source=null,gap=false,retryMs=1000,retryTimer=0,followed=false;
+  const announce=message=>{if(shared)channel.postMessage(message);};
+  function connect(){
+    if(typeof EventSource==='undefined')return;
+    source=new EventSource(url);
+    source.onopen=()=>{
+      liveSyncConnected=true;retryMs=1000;announce({type:'status',connected:true});
+      if(gap){gap=false;announce({type:'resync'});liveSyncResyncAfterGap();}
+    };
+    source.onmessage=event=>{
+      let payload=null;
+      try{payload=JSON.parse(event.data);}catch(_){return;}
+      if(!payload||!payload.area)return;
+      announce({type:'event',payload});
+      handle(payload);
+    };
+    // Geçici hatada EventSource kendiliğinden yeniden dener; kalıcı kapanmada
+    // (readyState CLOSED, ör. 401) denemez: yeniden kurulur.
+    source.onerror=()=>{
+      liveSyncConnected=false;gap=true;announce({type:'status',connected:false});
+      if(source&&source.readyState===2){
+        clearTimeout(retryTimer);
+        retryTimer=setTimeout(connect,retryMs);
+        retryMs=Math.min(retryMs*2,30000);
+      }
+    };
+  }
+  if(!shared){connect();return;}
+  channel.onmessage=event=>{
+    const message=event&&event.data||{};
+    if(message.type==='event'&&message.payload)handle(message.payload);
+    else if(message.type==='status'){followed=true;liveSyncConnected=Boolean(message.connected);}
+    else if(message.type==='resync')liveSyncResyncAfterGap();
+    else if(message.type==='status?'&&source)announce({type:'status',connected:liveSyncConnected});
+  };
+  announce({type:'status?'});
+  // Kilit sekme açık kaldığı sürece tutulur (dönen söz hiç çözülmez).
+  locks.request('buyerlog-live-sync-leader',()=>new Promise(()=>{
+    // Önceki liderden devralındıysa arada kaçırılmış olay olabilir.
+    if(followed)gap=true;
+    connect();
+  }));
+}
+/* Canlı bağlantı boşluğundan sonra açık veriler hafif yoldan yeniden okunur
+   (tam kaynak yenilemesi değil). */
+function liveSyncResyncAfterGap(){
+  if(state.cp||state.orders)void loadFromServer(false).catch(()=>{});
+  if(kolWorkspaceOwnerId)void kolHandleRemoteChange(kolWorkspaceOwnerId,{mode:'reload'});
+  void window.BL_QUOTATIONS?.refresh?.();
 }
 initLiveSync();
 window.addEventListener('bl-shared-revision',event=>{

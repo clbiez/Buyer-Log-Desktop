@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 const PICKER = read('server/lib/ChooseFolder.ps1');
 const CP_ASSIST = read('public/cp-overview-assistant.js');
 const APP = read('public/app-main.js');

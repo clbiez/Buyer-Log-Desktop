@@ -7,7 +7,7 @@ const SPREADSHEET = fs.readFileSync('public/collection-spreadsheet.js', 'utf8');
 const CSS = fs.readFileSync('public/app.css', 'utf8');
 const HTML = fs.readFileSync('public/index.html', 'utf8');
 const DB = fs.readFileSync('server/db.js', 'utf8');
-const SERVER = fs.readFileSync('server/server.js', 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 function functionBlock(source, name, nextName) {
   const start = source.indexOf(`function ${name}`);

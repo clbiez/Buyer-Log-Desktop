@@ -323,17 +323,30 @@ function renderMetaValues(){
   document.querySelectorAll('[data-oc-meta]').forEach(el=>{const value=current.meta[el.dataset.ocMeta]??'';el.value=el.dataset.ocNumber?formatByKind(value,el.dataset.ocNumber):value;});
   autoGrowCostTextareas($('ocEditor')||document);
 }
+/* Seçili çalışma yokken sağ alan boş beyaz kalmasın: tek yönlendirme. */
+function renderWorkspaceEmpty(show){
+  const host=$('ocWorkspaceEmpty');if(!host)return;
+  host.hidden=!show;if(!show)return;
+  const view={kind:'empty',icon:'calculator',
+    title:tx('Bir maliyet çalışması seç','Select a costing sheet'),
+    detail:tx('Soldaki listeden bir çalışma aç ya da yeni bir ön maliyet başlat. Formüller ve kur dönüşümleri otomatik hesaplanır.','Open a sheet from the list or start a new preliminary costing. Formulas and FX conversions are calculated automatically.'),
+    actionLabel:tx('Yeni Maliyet','New Costing'),actionPrimary:true,actionOnce:false,
+    onAction:()=>$('ocNewBtn')?.click()};
+  if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(host,view);
+  else host.textContent=view.title;
+}
 function renderEditor(){
   syncStaticLanguage();
   ['ocDuplicateBtn','ocDeleteBtn','ocExportBtn'].forEach(id=>{const btn=$(id);if(btn)btn.disabled=!current;});
-  const editor=$('ocEditor');if(!current){if(editor)editor.hidden=true;renderRecordList();return;}
+  const editor=$('ocEditor');renderWorkspaceEmpty(!current);
+  if(!current){if(editor)editor.hidden=true;renderRecordList();return;}
   if(editor)editor.hidden=false;
   $('ocTitle').value=current.title||'';renderMetaValues();renderImagePanel();
   renderSections();renderSummary();updateCalculatedDom();renderRecordList();setDirty(dirty);buildSuggestions();
 }
 function canLeave(){return !dirty||confirm(tx('Kaydedilmemiş değişiklikler var. Devam edersen bu değişiklikler kaybolacak.','There are unsaved changes. They will be lost if you continue.'));}
 function selectRecord(id){if(current&&current.id===id)return;if(!canLeave())return;const hit=records.find(r=>r.id===id);if(!hit)return;current=normalizeRecord(hit);imagePasteActive=false;setDirty(false);renderEditor();}
-async function load(){if(loaded){buildSuggestions();return;}loaded=true;try{await BLFX.load();const data=await request('/api/open-costing');storeRevision=Number(data._revision)||0;records=(data.items||[]).map(normalizeRecord);renderRecordList();if(records.length){current=clone(records[0]);setDirty(false);renderEditor();}}catch(err){loaded=false;show(err.message);}}
+async function load(){if(loaded){buildSuggestions();return;}loaded=true;try{await BLFX.load();const data=await request('/api/open-costing');storeRevision=Number(data._revision)||0;records=(data.items||[]).map(normalizeRecord);renderRecordList();if(records.length){current=clone(records[0]);setDirty(false);renderEditor();}else renderWorkspaceEmpty(!current);}catch(err){loaded=false;show(err.message);}}
 function show(msg){if(typeof showToast==='function')showToast(msg);else alert(msg);}
 function addRow(section){if(!current)return;current.sections[section].push(emptyRow(current.meta.currency||'USD'));setDirty(true);renderSections();updateCalculatedDom();}
 function deleteRow(section,rowId){if(!current)return;current.sections[section]=current.sections[section].filter(r=>r.id!==rowId);setDirty(true);renderSections();updateCalculatedDom();}

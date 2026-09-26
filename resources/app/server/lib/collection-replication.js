@@ -124,12 +124,116 @@ async function quarantineLegacyCollectionDeltas({ localDb, workspaceFileForOwner
   return outcome;
 }
 
+/* ÜÇ YÖNLÜ KOLEKSİYON BİRLEŞİMİ.
+   Karşılıklı düzenleme yetkisi olan iki kullanıcı aynı Koleksiyonu iki cihazda
+   eşzamanlı değiştirdiğinde tüm belgeyi seçmek bir tarafın işini kaybettirir,
+   hiç seçmemek ise kopyaları kalıcı olarak ayırır. Cihazın gördüğü son uzak
+   kopya (taban) ile satır ve alan bazında birleştirilir:
+   - yalnız bir tarafın değiştirdiği alan o tarafın değerini alır;
+   - aynı alan iki tarafta farklı değiştiyse ÖNCE yayımlanan (uzak) değer kalır,
+     yerel değer sessizce kaybolmaz: çakışma olarak döner;
+   - bir tarafta silinip diğerinde değiştirilen satır korunur ve bildirilir;
+   - aynı yeni satır kimliği iki cihazda farklı model için kullanıldıysa yerel
+     satır yeni kimlik alır, ikisi de korunur. */
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (value && typeof value === 'object') return `{${Object.keys(value).sort().filter(key => value[key] !== undefined).map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(',')}}`;
+  return JSON.stringify(value === undefined ? null : value);
+}
+function sameValue(a, b) { return stableJson(a) === stableJson(b); }
+function mergeRowKey(row) { const id = row && row.id; return id == null || id === '' ? '' : String(id); }
+function mergeRowRevision(row) { return Math.max(0, Number(row && row._rev) || 0); }
+function rowContent(row) { const out = { ...(row || {}) }; delete out._rev; return out; }
+function rowsByKey(rows) {
+  const map = new Map();
+  for (const row of Array.isArray(rows) ? rows : []) { const key = mergeRowKey(row); if (key && !map.has(key)) map.set(key, row); }
+  return map;
+}
+function mergeRowFields(base, local, remote, rowId, conflicts) {
+  const out = {};
+  const keys = new Set([...Object.keys(local), ...Object.keys(remote), ...Object.keys(base || {})]);
+  for (const key of keys) {
+    const l = local[key], r = remote[key], b = base ? base[key] : undefined;
+    let value;
+    if (!base && (l === undefined || r === undefined)) value = l === undefined ? r : l;
+    else if (sameValue(l, r) || (base && sameValue(l, b))) value = r;
+    else if (base && sameValue(r, b)) value = l;
+    else { value = r; conflicts.push({ rowId, field: key, current: r === undefined ? null : r, incoming: l === undefined ? null : l }); }
+    if (value !== undefined) out[key] = value;
+  }
+  return out;
+}
+function mergeKeyedList(base, local, remote) {
+  if (sameValue(local, remote) || sameValue(local, base)) return remote;
+  if (sameValue(remote, base)) return local;
+  const keyOf = item => (item && typeof item === 'object' ? clean(item.k || item.id || item.name) : '') || stableJson(item);
+  const out = Array.isArray(remote) ? [...remote] : [];
+  const seen = new Set(out.map(keyOf));
+  for (const item of Array.isArray(local) ? local : []) { const key = keyOf(item); if (!seen.has(key)) { out.push(item); seen.add(key); } }
+  return out;
+}
+function mergeCollectionWorkspaces(base, local, remote) {
+  const conflicts = [];
+  // Taban yoksa (eski sürümden kalan ayrışma) hiçbir satır silinmiş sayılmaz ve
+  // aynı kimlik aynı model kabul edilir; farklı alanlar çakışma olarak döner.
+  const hasBase = Boolean(base);
+  const baseRows = rowsByKey(base && base.rows), localRows = rowsByKey(local && local.rows), remoteRows = rowsByKey(remote && remote.rows);
+  const numericIds = [...baseRows.keys(), ...localRows.keys(), ...remoteRows.keys()].map(Number).filter(Number.isFinite);
+  let nextId = Math.max(Number(local && local.nextId) || 1, Number(remote && remote.nextId) || 1, (numericIds.length ? Math.max(...numericIds) : 0) + 1);
+  const rows = [];
+  for (const r of Array.isArray(remote && remote.rows) ? remote.rows : []) {
+    const key = mergeRowKey(r);
+    const l = key ? localRows.get(key) : null, b = key ? baseRows.get(key) : null;
+    if (!key || !l) {
+      if (l == null && b && !sameValue(rowContent(b), rowContent(r))) {
+        conflicts.push({ rowId: key, field: '_deleted', current: 'uzakta değiştirildi', incoming: 'yerelde silindi' });
+        rows.push(r);
+      } else if (!(l == null && b)) rows.push(r);
+      continue;
+    }
+    if (hasBase && !b && !sameValue(rowContent(l), rowContent(r))) { rows.push(r); continue; } // kimlik çakışması: yerel satır aşağıda yeni kimlik alır
+    const merged = mergeRowFields(b ? rowContent(b) : null, rowContent(l), rowContent(r), key, conflicts);
+    merged._rev = sameValue(merged, rowContent(l)) ? mergeRowRevision(l) : Math.max(mergeRowRevision(l), mergeRowRevision(r)) + 1;
+    rows.push(merged);
+  }
+  for (const l of Array.isArray(local && local.rows) ? local.rows : []) {
+    const key = mergeRowKey(l);
+    if (!key) continue;
+    const r = remoteRows.get(key), b = baseRows.get(key);
+    if (r) {
+      if (hasBase && !b && !sameValue(rowContent(l), rowContent(r))) rows.push({ ...l, id: nextId++, _rev: mergeRowRevision(l) + 1 });
+      continue;
+    }
+    if (b) {
+      if (!sameValue(rowContent(b), rowContent(l))) {
+        conflicts.push({ rowId: key, field: '_deleted', current: 'uzakta silindi', incoming: 'yerelde değiştirildi' });
+        rows.push(l);
+      }
+      continue;
+    }
+    rows.push(l);
+  }
+  const workspace = {
+    ...(remote || {}),
+    rows,
+    manufacturers: mergeKeyedList(base && base.manufacturers, local && local.manufacturers, remote && remote.manufacturers),
+    customColumns: mergeKeyedList(base && base.customColumns, local && local.customColumns, remote && remote.customColumns),
+    statusCatalog: mergeKeyedList(base && base.statusCatalog, local && local.statusCatalog, remote && remote.statusCatalog),
+    nextId,
+    _revision: Math.max(Number(local && local._revision) || 0, Number(remote && remote._revision) || 0) + 1,
+    _updatedAt: new Date().toISOString(),
+  };
+  return { workspace, conflicts };
+}
+
 function createCollectionReplication({ workspaces, permissions, getSharedSyncRoot = async () => '', stateFile = '', onTrace = null } = {}) {
   if (!workspaces || typeof workspaces.loadWorkspace !== 'function' || typeof workspaces.replaceWorkspaceReplica !== 'function') throw new Error('Collection workspace store is required.');
   if (!permissions || typeof permissions.accessLevel !== 'function') throw new Error('Collection permission store is required.');
   const trace = (event, detail) => { try { if (typeof onTrace === 'function') onTrace(event, detail); } catch (_) {} };
   const statePath = clean(stateFile);
   let volatileState = { version: REPLICATION_STATE_VERSION, owners: {} };
+  const volatileBases = new Map();
+  const remoteStamps = new Map();
   function normalizeState(raw) {
     return {
       version: REPLICATION_STATE_VERSION,
@@ -145,7 +249,9 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const key = safeId(ownerId);
     const update = async () => {
       const state = await readState();
-      state.owners[key] = { ...(state.owners[key] || {}), ...patch, ownerId: clean(ownerId), updatedAt: new Date().toISOString() };
+      const current = state.owners[key] || {};
+      const next = typeof patch === 'function' ? patch(current) : patch;
+      state.owners[key] = { ...current, ...next, ownerId: clean(ownerId), updatedAt: new Date().toISOString() };
       if (statePath) await writeJson(statePath, state); else volatileState = state;
       return state.owners[key];
     };
@@ -164,7 +270,26 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       return null;
     }
   }
+  /* Taban: bu cihazın gördüğü son uzak kopya. Üç yönlü birleşim için içerik
+     saklanır; özet (baseWorkspaceSha256) tutmazsa taban yok sayılır. */
+  function baseFile(ownerId) { return statePath ? path.join(`${statePath}.bases`, `${safeId(ownerId)}.json`) : ''; }
+  async function readBaseSnapshot(ownerId, expectedSha256) {
+    if (!clean(expectedSha256)) return null;
+    let value = null;
+    const file = baseFile(ownerId);
+    if (!file) value = volatileBases.has(safeId(ownerId)) ? JSON.parse(volatileBases.get(safeId(ownerId))) : null;
+    else { try { value = JSON.parse(await fsp.readFile(file, 'utf8')); } catch (_) { value = null; } }
+    return value && checksum(value) === expectedSha256 ? value : null;
+  }
+  async function writeBaseSnapshot(ownerId, workspace) {
+    const file = baseFile(ownerId);
+    if (!file) { volatileBases.set(safeId(ownerId), JSON.stringify(workspace)); return; }
+    if (await readBaseSnapshot(ownerId, checksum(workspace))) return;
+    await writeJson(file, workspace);
+  }
   async function recordBase(ownerId, envelope, state = 'up-to-date', detail = {}) {
+    try { await writeBaseSnapshot(ownerId, envelope.workspace); }
+    catch (error) { trace('COLLECTION_REPLICA_BASE_FAILED', { ownerId: clean(ownerId), error: error && error.message }); }
     return updateOwnerState(ownerId, {
       state, code: null, message: null,
       baseEnvelopeSha256: envelopeIdentity(envelope),
@@ -181,14 +306,100 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const current = await ownerState(owner);
     if (!current) return { ok: true, ownerId: owner, state: 'unknown' };
     const conflict = current.state === 'conflict' || current.state === 'error';
+    const mergeConflicts = openMergeConflicts(current).length;
+    const mergeMessage = mergeConflicts
+      ? `Başka bir kullanıcı aynı alanları eşzamanlı değiştirdi; ${mergeConflicts} alanda önce kaydedilen değer korundu. Sizin değerleriniz Senkron çakışmalarında bekliyor.`
+      : null;
     return {
       ok: !conflict, ownerId: owner, state: current.state || 'unknown', code: current.code || null,
-      message: current.message || null, remoteRevision: Number(current.remoteRevision) || 0,
+      message: current.message || mergeMessage, mergeConflicts, remoteRevision: Number(current.remoteRevision) || 0,
       localRevision: Number(current.localRevision) || 0, updatedAt: current.updatedAt || null,
     };
   }
   async function root() { return clean(await getSharedSyncRoot()); }
+  function openMergeConflicts(ownerStateValue) {
+    return (ownerStateValue && Array.isArray(ownerStateValue.mergeConflicts) ? ownerStateValue.mergeConflicts : []).filter(item => item && !item.resolved);
+  }
+  async function recordMergeConflicts(owner, conflicts) {
+    if (!conflicts.length) return;
+    const at = new Date().toISOString();
+    const items = conflicts.map(item => ({
+      conflictId: `collection:${crypto.randomUUID()}`, type: 'collection-field', ownerId: owner,
+      id: `collection:${owner}:${item.rowId}`, rowId: item.rowId, field: item.field,
+      current: item.current, incoming: item.incoming, at, resolved: false,
+    }));
+    await updateOwnerState(owner, current => ({ mergeConflicts: [...openMergeConflicts(current), ...items].slice(-200) }));
+  }
+  async function listMergeConflicts(ownerIds) {
+    const state = await readState();
+    const allowed = new Set((Array.isArray(ownerIds) ? ownerIds : []).map(safeId));
+    return Object.entries(state.owners).filter(([key]) => allowed.has(key)).flatMap(([, value]) => openMergeConflicts(value));
+  }
+  /* choice 'incoming': kaybeden (bu cihazdaki) değer bilinçli olarak yeniden
+     yazılır; yazmayı çağıran yapar (yetki + satır revizyonu sunucuda denetlenir).
+     'current': korunmuş değer kalır. */
+  async function resolveMergeConflict(conflictId, choice, apply) {
+    const id = clean(conflictId);
+    const state = await readState();
+    const entry = Object.values(state.owners).find(value => openMergeConflicts(value).some(item => item.conflictId === id));
+    if (!entry) throw Object.assign(new Error('Koleksiyon çakışması bulunamadı.'), { code: 'COLLECTION_CONFLICT_NOT_FOUND', statusCode: 404 });
+    const conflict = openMergeConflicts(entry).find(item => item.conflictId === id);
+    if (choice === 'incoming' && typeof apply === 'function') await apply(conflict);
+    await updateOwnerState(entry.ownerId, current => ({
+      mergeConflicts: (Array.isArray(current.mergeConflicts) ? current.mergeConflicts : []).map(item => item.conflictId === id
+        ? { ...item, resolved: true, resolvedAt: new Date().toISOString(), resolution: choice === 'incoming' ? 'incoming' : 'current' }
+        : item).filter(item => !item.resolved || item.conflictId === id).slice(-200),
+    }));
+    return { ...conflict, resolved: true, resolution: choice === 'incoming' ? 'incoming' : 'current' };
+  }
+  /* Ayrışan kopyayı son ortak tabanla birleştirir, yerel olarak yazar (yerel
+     kopya bu arada değiştiyse yazmaz) ve birleşik kopyayı yayımlar. Taban
+     yoksa (eski sürümde ayrışmış kopya) iki yönlü birleşim yapılır: satırların
+     hiçbiri düşmez, farklı alanlarda uzak değer kalır ve yerel değer çakışma
+     olarak saklanır. Kopyalar kalıcı ayrışmada takılı kalmaz. */
+  async function reconcile(owner, envelope, { readOnly = false } = {}) {
+    if (!envelope) return null;
+    if (readOnly) {
+      // İzleyicinin meşru yerel değişikliği olamaz: ayrışan kopya önbellektir,
+      // uzak kopya benimsenir (birleştirip yayımlamak silinmiş satırları geri getirirdi).
+      const local = workspaces.loadWorkspace(owner);
+      const write = await workspaces.replaceWorkspaceReplica(owner, envelope.workspace, { expectedSha256: checksum(local), force: true });
+      if (!write || !write.applied) return { synced: false, merged: false, ownerId: owner, reason: 'LOCAL_CHANGED_DURING_MERGE', conflict: true };
+      await recordBase(owner, envelope);
+      return { synced: true, merged: false, ownerId: owner, revision: Number(envelope.workspace && envelope.workspace._revision) || 0, reason: 'READ_ONLY_ADOPTED' };
+    }
+    const state = await ownerState(owner);
+    const base = await readBaseSnapshot(owner, state && state.baseWorkspaceSha256);
+    const local = workspaces.loadWorkspace(owner);
+    const { workspace, conflicts } = mergeCollectionWorkspaces(base, local, envelope.workspace);
+    const write = await workspaces.replaceWorkspaceReplica(owner, workspace, { expectedSha256: checksum(local) });
+    if (!write || !write.applied) {
+      await recordConflict(owner, conflictError('COLLECTION_REPLICA_CONCURRENT_CHANGE', 'Koleksiyon birleştirilirken yerel kopya değişti; bir sonraki senkronda yeniden denenecek.'));
+      return { synced: false, merged: false, ownerId: owner, reason: 'LOCAL_CHANGED_DURING_MERGE', conflict: true };
+    }
+    await recordBase(owner, envelope);
+    await recordMergeConflicts(owner, conflicts);
+    trace('COLLECTION_REPLICA_MERGED', { ownerId: owner, revision: workspace._revision, conflicts: conflicts.length });
+    let publication = null, publishError = null;
+    try { publication = await publishOwnerCas(owner); }
+    catch (error) { publishError = error; }
+    return {
+      synced: true, merged: true, ownerId: owner, revision: workspace._revision, conflicts: conflicts.length,
+      published: Boolean(publication && publication.published), reason: publishError ? publishError.code || 'PUBLISH_FAILED' : 'MERGED',
+    };
+  }
   async function publishOwner(ownerId) {
+    try { return await publishOwnerCas(ownerId); }
+    catch (error) {
+      if (Number(error && error.statusCode) !== 409) throw error;
+      const owner = clean(ownerId), sharedRoot = await root();
+      const envelope = sharedRoot ? await readEnvelope(remoteWorkspaceFile(sharedRoot, owner), owner) : null;
+      const merged = await reconcile(owner, envelope);
+      if (!merged || !merged.merged) throw error;
+      return merged;
+    }
+  }
+  async function publishOwnerCas(ownerId) {
     const owner = clean(ownerId); if (!owner) throw Object.assign(new Error('Koleksiyon sahibi zorunludur.'), { code: 'COLLECTION_OWNER_REQUIRED' });
     const sharedRoot = await root();
     if (!sharedRoot) return { published: false, reason: 'not-configured' };
@@ -244,7 +455,9 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
   }
   async function syncOwner(userId, ownerId) {
     const user = clean(userId), owner = clean(ownerId);
-    if (!permissions.accessLevel(user, owner)) throw Object.assign(new Error('Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.'), { code: 'COLLECTION_ACCESS_DENIED', statusCode: 403 });
+    const level = permissions.accessLevel(user, owner);
+    const readOnly = user !== owner && level !== 'edit';
+    if (!level) throw Object.assign(new Error('Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.'), { code: 'COLLECTION_ACCESS_DENIED', statusCode: 403 });
     const sharedRoot = await root();
     if (!sharedRoot) return { synced: false, reason: 'not-configured' };
     const source = remoteWorkspaceFile(sharedRoot, owner);
@@ -266,6 +479,8 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
       // produce revision N with different edits. Replacing either copy here
       // silently loses data, so keep the local copy and surface a deterministic
       // conflict for recovery/merge tooling.
+      const merged = await reconcile(owner, envelope, { readOnly });
+      if (merged) return merged;
       trace('COLLECTION_REPLICA_CONFLICT', { ownerId: owner, userId: user, reason: 'EQUAL_REVISION_DIVERGED', revision: localRevision });
       await recordConflict(owner, conflictError('COLLECTION_REPLICA_CONFLICT', 'Aynı revizyonda farklı Koleksiyon kopyaları bulundu.'), { localRevision, remoteRevision });
       return { synced: false, ownerId: owner, revision: localRevision, reason: 'EQUAL_REVISION_DIVERGED', conflict: true };
@@ -278,6 +493,8 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
         const publication = await publishOwner(owner);
         return { synced: false, published: Boolean(publication.published), ownerId: owner, revision: localRevision, reason: publication.reason || 'LOCAL_NEWER_PUBLISHED' };
       }
+      const merged = await reconcile(owner, envelope, { readOnly });
+      if (merged) return merged;
       const error = conflictError('COLLECTION_REPLICA_ANCESTRY_CONFLICT', 'Daha yeni yerel Koleksiyon kopyasının uzak sürümden türediği doğrulanamadı.');
       trace('COLLECTION_REPLICA_CONFLICT', { ownerId: owner, userId: user, reason:'LOCAL_NEWER_DIVERGED', localRevision, remoteRevision });
       await recordConflict(owner, error, { localRevision, remoteRevision });
@@ -286,6 +503,8 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const pristineLocal = localRevision === 0 && local && local.initialized === false;
     const localUnchangedSinceBase = Boolean(base && base.baseWorkspaceSha256 === localWorkspaceSha256);
     if (!pristineLocal && !localUnchangedSinceBase) {
+      const merged = await reconcile(owner, envelope, { readOnly });
+      if (merged) return merged;
       const error = conflictError('COLLECTION_REPLICA_ANCESTRY_CONFLICT', 'Uzak Koleksiyon daha yeni ancak yerel kopyada da yayımlanmamış değişiklikler var.');
       trace('COLLECTION_REPLICA_CONFLICT', { ownerId: owner, userId: user, reason:'REMOTE_NEWER_LOCAL_DIRTY', localRevision, remoteRevision });
       await recordConflict(owner, error, { localRevision, remoteRevision });
@@ -300,6 +519,26 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     trace('COLLECTION_REPLICA_SYNCED', { ownerId: owner, userId: user, applied: result.applied, reason: result.reason || null });
     return { synced: Boolean(result.applied), ownerId: owner, revision: result.workspace && result.workspace._revision, reason: result.reason || null, conflict: result.reason === 'LOCAL_NEWER' };
   }
+  /* Canlı görünürlük: uzak kopya dosyası değişmediyse (mtime+boyut) okunmaz;
+     değiştiyse eşitlenir. Uygulanan/birleşen sahipler döner. */
+  async function pollOwners(userId, ownerIds) {
+    const sharedRoot = await root();
+    if (!sharedRoot) return [];
+    const changed = [];
+    for (const ownerId of Array.isArray(ownerIds) ? ownerIds : []) {
+      const owner = clean(ownerId);
+      let stat;
+      try { stat = await fsp.stat(remoteWorkspaceFile(sharedRoot, owner)); } catch (_) { continue; }
+      const stamp = `${stat.mtimeMs}:${stat.size}`;
+      if (remoteStamps.get(owner) === stamp) continue;
+      try {
+        const result = await syncOwner(userId, owner);
+        remoteStamps.set(owner, stamp);
+        if (result && (result.synced || result.merged)) changed.push({ ownerId: owner, revision: result.revision });
+      } catch (error) { trace('COLLECTION_REPLICA_POLL_FAILED', { ownerId: owner, error: error && (error.code || error.message) }); }
+    }
+    return changed;
+  }
   async function syncAuthorizedOwners(userId) {
     const user = clean(userId);
     const owners = permissions.effectiveOwners(user).map(item => item.ownerId);
@@ -310,7 +549,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     }
     return { ownerIds: owners, results };
   }
-  return { publishOwner, syncOwner, syncAuthorizedOwners, status, remoteWorkspaceFile };
+  return { publishOwner, syncOwner, syncAuthorizedOwners, pollOwners, status, remoteWorkspaceFile, listMergeConflicts, resolveMergeConflict };
 }
 
-module.exports = { REPLICATION_VERSION, REPLICATION_STATE_VERSION, LEGACY_DELTA_QUARANTINE_MARKER, collectionWorkspaceOwnerFromDelta, filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, createCollectionReplication };
+module.exports = { REPLICATION_VERSION, REPLICATION_STATE_VERSION, LEGACY_DELTA_QUARANTINE_MARKER, collectionWorkspaceOwnerFromDelta, filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, createCollectionReplication, mergeCollectionWorkspaces };

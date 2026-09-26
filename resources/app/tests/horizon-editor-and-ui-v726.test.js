@@ -44,7 +44,7 @@ const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const KPI = fs.readFileSync(path.join(ROOT, 'public', 'kpi-groups.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 /* ------------------------------- 1) ASAS BAŞLIK EŞLEMESİ DOĞRU MU? */
 

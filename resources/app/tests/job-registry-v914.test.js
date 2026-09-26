@@ -171,7 +171,7 @@ test('bilinmeyen iş kimliği çökertmez', () => {
 
 /* ---- sunucu tarafı bağlantısı (kaynak sözleşmesi) ---- */
 const fs = require('node:fs');
-const SERVER = fs.readFileSync(path.join(__dirname, '..', 'server/server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 test('iş uçları tanımlı ve kapsam süzgeci uyguluyor', () => {
   for (const route of ['/api/plm-jobs', '/api/plm-jobs/:id', '/api/plm-jobs/:id/cancel',

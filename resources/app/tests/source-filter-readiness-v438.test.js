@@ -65,7 +65,7 @@ test('v4.38 accepts legacy season horizon and bounded manual query', () => {
 test('v4.38 UI contains source-filter routing, timer and refresh animation hooks', () => {
   const html = (fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8'));
   const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.css'), 'utf8');
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
 
   assert.match(html, /openDataSourceAndFilters\(\{target(?::[^}]+)?\}\)/);
   assert.match(html, /data-source-timer/);

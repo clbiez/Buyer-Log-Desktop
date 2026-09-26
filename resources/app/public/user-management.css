@@ -171,14 +171,14 @@
 
 .umFacts{ margin:0; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
 .umFacts>div{ min-width:0; padding:7px 8px; border:1px solid var(--line); background:var(--card2); }
-.umFacts dt{ font-size:9.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.umFacts dt{ font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
 .umFacts dd{ margin:3px 0 0; font-size:11.5px; font-weight:600; word-break:break-word; }
 
 .umEffective{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
 .umEffective li{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; border-bottom:1px dashed var(--line); font-size:11.5px; }
 .umEffective li:last-child{ border-bottom:0; }
 .umEffectiveMore{ justify-content:flex-start; }
-.umSource{ flex:none; font-size:9.5px; font-weight:700; padding:2px 7px; border:1px solid var(--line2); background:var(--card2); color:var(--ink2); }
+.umSource{ flex:none; font-size:10px; font-weight:700; padding:2px 7px; border:1px solid var(--line2); background:var(--card2); color:var(--ink2); }
 .umSource.isrole{ border-color:var(--acc-lite); background:var(--acc-bg); color:var(--acc-ink); }
 .umSource.isdirect{ border-color:var(--orange); background:var(--orange-bg); color:var(--orange); }
 .umSource.ishierarchy{ border-color:#a6c8e0; background:#eef6ff; color:#2c455d; }
@@ -228,7 +228,7 @@
 .umGrant:hover{ border-color:var(--line2); }
 .umGrant.isSecurity{ background:color-mix(in srgb, var(--red) 5%, var(--card)); }
 .umGrant input{ width:14px; height:14px; flex:none; }
-.umGrant em{ font-style:normal; font-size:9.5px; color:var(--muted); }
+.umGrant em{ font-style:normal; font-size:10px; color:var(--muted); }
 
 /* ---------- Rol · Yetki matrisi ---------- */
 .umInlineField{ display:grid; gap:4px; font-size:10px; font-weight:600; color:var(--muted); }
@@ -246,7 +246,7 @@
   width:92px; box-sizing:border-box;
 }
 .umMatrix thead th span{ display:block; }
-.umColToggle{ font-size:9px; margin-top:2px; }
+.umColToggle{ font-size:10px; margin-top:2px; }
 /* İlk sütun her zaman görünür kalır; yatay kaydırmada başlık da yerinde durur. */
 .umMatrixModule{
   position:sticky; left:0; z-index:3; width:230px; box-sizing:border-box;
@@ -258,7 +258,7 @@
    yüksek özgüllükle geri alınır (bkz. v4.96 CSS katman notu). */
 .umMatrix th.umMatrixModule{ text-align:left; }
 .umMatrix thead .umMatrixModule{ z-index:6; }
-.umMatrixModule small{ display:block; margin-top:2px; font-size:9px; font-weight:600; color:var(--red); }
+.umMatrixModule small{ display:block; margin-top:2px; font-size:10px; font-weight:600; color:var(--red); }
 .umMatrix td{ padding:6px; text-align:center; border-bottom:1px solid var(--line); border-right:1px solid var(--line); }
 .umMatrix input[type=checkbox]{ width:15px; height:15px; cursor:pointer; }
 .umMatrixNa{ color:var(--muted); }
@@ -285,7 +285,7 @@
 .umNode.isDropTarget{ outline:2px solid var(--acc); outline-offset:2px; }
 .umNodeText{ min-width:0; display:flex; flex-direction:column; }
 .umNodeText b{ font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.umNodeText small{ font-size:9.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.umNodeText small{ font-size:10px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .umNodeStatus{ font-size:11px; }
 .umOrgPanel{ min-width:0; min-height:0; overflow:auto; align-self:start; max-height:100%; border:1px solid var(--line); background:var(--card); padding:12px; display:grid; gap:11px; }
 .umOrgPanelHead{ display:flex; align-items:center; gap:10px; }
@@ -302,13 +302,13 @@
 .umCopyTarget:hover{ border-color:var(--line2); }
 .umCopyTarget span{ min-width:0; display:flex; flex-direction:column; }
 .umCopyTarget b{ font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.umCopyTarget small{ font-size:9.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.umCopyTarget small{ font-size:10px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .umCopyCategories{ display:grid; gap:8px; margin:8px 0; }
 .umCopyCategories fieldset{ min-width:0; margin:0; padding:8px; border:1px solid var(--line); background:var(--card2); }
 .umCopyCategories legend{ padding:0 5px; color:var(--ink); font:600 11px var(--head); }
 .umCopyCategories .umCheck{ display:grid; grid-template-columns:auto minmax(0,1fr); align-items:start; gap:7px; padding:4px 2px; cursor:pointer; }
 .umCopyCategories .umCheck span{ display:flex; flex-direction:column; font-size:11px; }
-.umCopyCategories .umCheck small{ margin-top:2px; color:var(--muted); font-size:9.5px; line-height:1.35; }
+.umCopyCategories .umCheck small{ margin-top:2px; color:var(--muted); font-size:10px; line-height:1.35; }
 .umRadio{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:9px; align-items:start; padding:8px; border:1px solid var(--line); background:var(--card2); margin-top:6px; cursor:pointer; }
 .umRadio span{ display:flex; flex-direction:column; gap:2px; }
 .umRadio b{ font-size:11.5px; }

@@ -10,7 +10,7 @@ const ROOT = path.join(__dirname,'..');
 const { createOutlookLocalService } = require('../server/lib/outlook-local');
 const { createOutlookHybridService } = require('../server/lib/outlook-hybrid');
 const UI = fs.readFileSync(path.join(ROOT,'public','outlook-mail.js'),'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT,'server','server.js'),'utf8');
+const SERVER = require('./helpers/server-source')();
 const PS = fs.readFileSync(path.join(ROOT,'server','lib','OutlookLocal.ps1'),'utf8');
 
 function psRow(overrides={}){

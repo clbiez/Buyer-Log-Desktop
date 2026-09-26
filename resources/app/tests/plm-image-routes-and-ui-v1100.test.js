@@ -21,7 +21,7 @@ const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const codeOnly = source => String(source)
   .replace(/\/\*[\s\S]*?\*\//g, ' ')
   .split('\n').filter(line => !line.trim().startsWith('//')).join('\n');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 const INDEX = read('public/index.html');
 const APP = read('public/app-main.js');
 const PERF = read('public/perf-runtime.js');

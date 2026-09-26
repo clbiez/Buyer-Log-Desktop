@@ -19,7 +19,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-note-columns-'));
 process.env.BUYER_LOG_SERVER_DATA_ROOT = path.join(root, 'server');

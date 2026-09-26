@@ -8,7 +8,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const policy = require('../server/lib/shared-sync-policy');
 const { createDeltaStore } = require('../server/lib/delta-store');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 
 test('program-wide business rules are classified as Shared Hub Master data', () => {

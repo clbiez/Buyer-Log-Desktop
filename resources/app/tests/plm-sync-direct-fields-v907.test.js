@@ -31,7 +31,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const CONNECTOR_SOURCE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 const connector = require('../server/lib/agent-browser-connector');
 
 /* Kullanıcının kendi CoreNectum oturumunda görülen GERÇEK bir GetStyleList

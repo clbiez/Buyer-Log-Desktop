@@ -16,7 +16,7 @@ process.env.BUYER_LOG_CONFIG_PATH = path.join(tempRoot, 'config.json');
 
 const db = require('../server/db');
 const emailGroups = require('../server/lib/email-groups-store');
-const server = fs.readFileSync(path.join(ROOT, 'server/server.js'), 'utf8');
+const server = require('./helpers/server-source')();
 const app = fs.readFileSync(path.join(ROOT, 'public/app-main.js'), 'utf8');
 const fx = fs.readFileSync(path.join(ROOT, 'public/fx.js'), 'utf8');
 const emailGroupsClient = fs.readFileSync(path.join(ROOT, 'public/email-groups.js'), 'utf8');

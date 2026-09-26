@@ -134,19 +134,23 @@
     const field = fieldOf(column), label = labelOf(column), joined = `${field} ${label}`;
     const normalizedField = keyOf(field);
     if (CODE_HINT.test(joined) && values.some(value => /^0\d+$/.test(String(value).trim()))) return 'code/id';
-    const dates = values.map(strictDate);
     const dateHint = DATE_HINT.test(joined);
-    const dateEvidence = values.some(value => /[-\/]/.test(String(value).trim()) || /^\d{8}$/.test(String(value).trim()));
-    if ((dateHint && dateEvidence || dateEvidence && values.length > 1) && dates.every(Boolean)) {
+    const dateEvidence = values.some(value => { const text = String(value).trim(); return /[-\/]/.test(text) || /^\d{8}$/.test(text); });
+    // Tarih ayrıştırması yalnız tarih kanıtı olan sütunda (30k satırda pahalı).
+    if ((dateHint && dateEvidence || dateEvidence && values.length > 1) && values.every(value => Boolean(strictDate(value)))) {
       return values.some(value => /T|\s\d{1,2}:\d{2}/.test(String(value))) ? 'datetime' : 'date';
     }
     // A date-looking column with an invalid sample must not silently fall
     // through to integer/decimal inference (for example 20261345).
     if (dateHint && dateEvidence) return 'text';
     if (normalizedField && CODE_HINT.test(field) && values.some(value => /^[+-]?\d+$/.test(String(value).trim()))) return 'code/id';
-    const numbers = values.map(numeric);
-    if (numbers.every(value => value !== null)) return numbers.some(value => !Number.isInteger(value)) ? 'decimal' : 'integer';
-    return 'text';
+    let integer = true;
+    for (const value of values) {
+      const number = numeric(value);
+      if (number === null) return 'text';
+      if (!Number.isInteger(number)) integer = false;
+    }
+    return integer ? 'integer' : 'decimal';
   }
   function percentageScale(column, nested, metadata) {
     const scale = nested && (nested.scale || nested.percentageScale) || column && (column.scale || column.percentageScale) || metadata && (metadata.scale || metadata.percentageScale);

@@ -8,7 +8,7 @@
 <style id="blBootGuardStyle">
   #blBootGuard{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f6f7f9;color:#1f2937;font:500 14px/1.45 "Barlow",system-ui,-apple-system,sans-serif}
   #blBootGuard .blBootCard{min-width:250px;max-width:420px;margin:20px;padding:22px 24px;text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:0;box-shadow:none}
-  #blBootGuard .blBootDot{width:22px;height:22px;margin:0 auto 13px;border:2px solid #d1d5db;border-top-color:#374151;border-radius:50%;animation:blBootSpin .8s linear infinite}
+  #blBootGuard .blBootDot{width:34px;height:34px;margin:0 auto 14px;border-radius:50%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.9) 0 8%,rgba(255,255,255,.3) 18%,transparent 42%),conic-gradient(#356a96,#6f6fd8,#2f9f96,#356a96);box-shadow:inset 0 -3px 6px rgba(10,20,40,.22),0 6px 18px rgba(80,90,200,.28);animation:blBootSpin 2.4s linear infinite}
   #blBootGuard[data-failed="1"] .blBootDot{display:none}
   #blBootGuard button{margin-top:14px;padding:8px 14px;border:1px solid #3f6488;border-radius:0;background:#3f6488;color:#fff;cursor:pointer;font:inherit}
   @keyframes blBootSpin{to{transform:rotate(360deg)}}
@@ -149,7 +149,8 @@
   };
 })();
 </script>
-<link rel="stylesheet" href="app.css?v=__BL_ASSET_VERSION__&rev=8003">\n<link rel="stylesheet" href="table-search-help.css?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1">
+<link rel="stylesheet" href="app.css?v=__BL_ASSET_VERSION__&rev=8003">
+<link rel="stylesheet" href="table-search-help.css?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1">
 <link rel="stylesheet" href="open-costing.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="lfl.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="collection-analytics.css?v=__BL_ASSET_VERSION__&rev=7143">
@@ -165,7 +166,7 @@
 <link rel="stylesheet" href="user-management.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="copilot.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="outlook-mail.css?v=__BL_ASSET_VERSION__&rev=7160">
-<link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=1">
+<link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=2">
 </head>
 <body data-active-tab="overview">
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
@@ -174,7 +175,7 @@
   <symbol id="i-rosette-discount-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.2l2.4 2.4 4.6-5"/></symbol>
   <symbol id="i-chart-histogram" viewBox="0 0 24 24"><path d="M3 20h18M5.5 20v-6M10 20V8M14.5 20v-9M19 20V5"/></symbol>
   <symbol id="i-binary-tree-2" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1.2"/><rect x="3" y="16" width="6" height="5" rx="1.2"/><rect x="15" y="16" width="6" height="5" rx="1.2"/><path d="M12 8v4M12 12H6v4M12 12h6v4"/></symbol>
-  <symbol id="i-ship" viewBox="0 0 24 24"><path d="M4 13.5l1.6 4.5h12.8l1.6-4.5-8-2.6-8 2.6zM12 4v7M12 4l5 2.6L12 9"/><path d="M2.5 21c1.6 1 3.2 1 4.75 0s3.15-1 4.75 0 3.15 1 4.75 0 3.15-1 4.75 0"/></symbol>
+  <symbol id="i-ship" viewBox="0 0 24 24"><path d="M4 13.5l1.6 4.5h12.8l1.6-4.5-8-2.6z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M4 13.5l1.6 4.5h12.8l1.6-4.5-8-2.6-8 2.6zM12 4v7M12 4l5 2.6L12 9"/><path d="M2.5 21c1.6 1 3.2 1 4.75 0s3.15-1 4.75 0 3.15 1 4.75 0 3.15-1 4.75 0"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14A8.5 8.5 0 1 1 10 3.5a7 7 0 0 0 10.5 10.5z"/></symbol>
   <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></symbol>
   <symbol id="i-contrast" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17a8.5 8.5 0 0 0 0-17z" fill="currentColor" stroke="none"/></symbol>
@@ -191,14 +192,30 @@
   <symbol id="i-chevron-up" viewBox="0 0 24 24"><path d="M5.5 14.5L12 8l6.5 6.5"/></symbol>
   <symbol id="i-chevrons-left" viewBox="0 0 24 24"><path d="M11.5 6L6 12l5.5 6M18 6l-5.5 6 5.5 6"/></symbol>
   <symbol id="i-chevrons-right" viewBox="0 0 24 24"><path d="M6.5 6L12 12l-5.5 6M13 6l5.5 6-5.5 6"/></symbol>
-  <symbol id="i-arrow-back-up" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/></symbol>
-  <symbol id="i-arrow-forward-up" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H14"/></symbol>
-  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
-  <symbol id="i-copy-plus" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2M14 11v6M11 14h6"/></symbol>
+  <symbol id="i-bl-overview" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="9" height="9" rx="2.2" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><rect x="3.5" y="3.5" width="9" height="9" rx="2.2"/><rect x="14.5" y="3.5" width="6" height="6" rx="2"/><rect x="14.5" y="11.5" width="6" height="9" rx="2"/><rect x="3.5" y="14.5" width="9" height="6" rx="2"/></symbol>
+  <symbol id="i-bl-cp" viewBox="0 0 24 24"><path d="M5.5 4h13A2.5 2.5 0 0 1 21 6.5V9H3V6.5A2.5 2.5 0 0 1 5.5 4z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M3 9h18M7 13h5M7 16.5h3M14.5 16l1.7 1.7 3-3.4"/></symbol>
+  <symbol id="i-bl-orders" viewBox="0 0 24 24"><rect x="8" y="3" width="12" height="14.5" rx="2" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M8.5 3H18a2 2 0 0 1 2 2v10.5"/><rect x="4" y="6.5" width="12.5" height="14.5" rx="2"/><path d="M7.5 11h5.5M7.5 14.3h5.5M7.5 17.6h3"/></symbol>
+  <symbol id="i-bl-backlog" viewBox="0 0 24 24"><path d="M12 3.2l8.8 4.4L12 12 3.2 7.6z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M12 3.2l8.8 4.4L12 12 3.2 7.6z"/><path d="M3.2 12L12 16.4l8.8-4.4M3.2 16.4L12 20.8l8.8-4.4"/></symbol>
+  <symbol id="i-bl-collection" viewBox="0 0 24 24"><path d="M12 10.2 4 14.8a1.8 1.8 0 0 0 .9 3.4h14.2a1.8 1.8 0 0 0 .9-3.4z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M12 10.2V7.8a2.2 2.2 0 1 1 2.2 2.2"/><path d="M12 10.2 4 14.8a1.8 1.8 0 0 0 .9 3.4h14.2a1.8 1.8 0 0 0 .9-3.4z"/></symbol>
+  <symbol id="i-bl-quotes" viewBox="0 0 24 24"><path d="M3 11.8V5a2 2 0 0 1 2-2h6.8a2 2 0 0 1 1.4.6l7 7a2 2 0 0 1 0 2.8l-6.8 6.8a2 2 0 0 1-2.8 0l-7-7A2 2 0 0 1 3 11.8z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M3 11.8V5a2 2 0 0 1 2-2h6.8a2 2 0 0 1 1.4.6l7 7a2 2 0 0 1 0 2.8l-6.8 6.8a2 2 0 0 1-2.8 0l-7-7A2 2 0 0 1 3 11.8z"/><circle cx="7.6" cy="7.6" r="1.2"/><path d="M10.5 14.5l4-4"/></symbol>
+  <symbol id="i-bl-history" viewBox="0 0 24 24"><circle cx="12.5" cy="12" r="8" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M4.6 13.2A8 8 0 1 0 6.7 6.4"/><path d="M4.2 3.8v3.9h3.9"/><path d="M12.5 8v4.3l2.8 1.8"/></symbol>
+  <symbol id="i-bl-analysis" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.8" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><circle cx="10.5" cy="10.5" r="6.8"/><path d="M15.5 15.5 21 21M7.8 13v-2M10.5 13V8.5M13.2 13V10"/></symbol>
+  <symbol id="i-bl-lfl" viewBox="0 0 24 24"><path d="M12 7.3a5.6 5.6 0 0 1 0 9.4 5.6 5.6 0 0 1 0-9.4z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><circle cx="8.8" cy="12" r="5.6"/><circle cx="15.2" cy="12" r="5.6"/></symbol>
+  <symbol id="i-bl-costing" viewBox="0 0 24 24"><rect x="7.5" y="5.5" width="9" height="4" rx="1" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><rect x="4.5" y="2.5" width="15" height="19" rx="2.6"/><rect x="7.5" y="5.5" width="9" height="4" rx="1"/><path d="M8.5 13.5h.01M12 13.5h.01M15.5 13.5h.01M8.5 17h.01M12 17h.01M15.5 17h.01"/></symbol>
+  <symbol id="i-bl-automation" viewBox="0 0 24 24"><path d="M13.2 2.5 5.5 13h5.6l-1 8.5L18.5 11h-5.6z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M13.2 2.5 5.5 13h5.6l-1 8.5L18.5 11h-5.6z"/></symbol>
+  <symbol id="i-bl-source" viewBox="0 0 24 24"><ellipse cx="11" cy="5.6" rx="7" ry="2.6" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><ellipse cx="11" cy="5.6" rx="7" ry="2.6"/><path d="M4 5.6v12.8c0 1.4 3.1 2.6 7 2.6M18 5.6v5.2M4 12c0 1.4 3.1 2.6 7 2.6M14.5 17.5h6.5M18.5 15l2.5 2.5-2.5 2.5"/></symbol>
+  <symbol id="i-bl-recycle" viewBox="0 0 24 24"><path d="M6.3 7.5h11.4l-1 11.6a2 2 0 0 1-2 1.9H9.3a2 2 0 0 1-2-1.9z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M4 7.5h16M9.5 7.5V5a1.2 1.2 0 0 1 1.2-1.2h2.6A1.2 1.2 0 0 1 14.5 5v2.5"/><path d="M6.3 7.5l1 11.6a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9l1-11.6"/><path d="M10 13.6a2.2 2.2 0 0 1 3.9-1.3M14 15.7a2.2 2.2 0 0 1-3.9 1.3M13.9 10.9v1.5h-1.5M10.1 18.4v-1.5h1.5"/></symbol>
+  <symbol id="i-bl-sync" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.6" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><circle cx="12" cy="12" r="3.6"/><path d="M20 12a8 8 0 0 1-13.6 5.7M4 12a8 8 0 0 1 13.6-5.7"/><path d="M17.9 3.3v3.1h-3.1M6.1 20.7v-3.1h3.1"/></symbol>
+  <symbol id="i-bl-tools" viewBox="0 0 24 24"><path d="M16.8 2.8l1.2 2.5 2.5 1.2-2.5 1.2-1.2 2.5-1.2-2.5-2.5-1.2 2.5-1.2z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M16.8 2.8l1.2 2.5 2.5 1.2-2.5 1.2-1.2 2.5-1.2-2.5-2.5-1.2 2.5-1.2z"/><path d="M3.8 20.2l9.4-9.4M6.5 4.5v2.6M5.2 5.8h2.6M19.5 14v2.6M18.2 15.3h2.6"/></symbol>
+  <symbol id="i-bl-filter-clear" viewBox="0 0 24 24"><path d="M4 4.5h16l-6.2 7.6v6.3l-3.6 1.9v-8.2z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M4 4.5h16l-6.2 7.6v6.3l-3.6 1.9v-8.2z"/><path d="M16.6 15.6l4 4M20.6 15.6l-4 4"/></symbol>
+  <symbol id="i-arrow-back-up" viewBox="0 0 24 24"><circle cx="14.5" cy="14.5" r="5.5" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H10"/></symbol>
+  <symbol id="i-arrow-forward-up" viewBox="0 0 24 24"><circle cx="9.5" cy="14.5" r="5.5" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H14"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-copy-plus" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2M14 11v6M11 14h6"/></symbol>
   <symbol id="i-hanger" viewBox="0 0 24 24"><path d="M12 9V6a2 2 0 1 1 2 2"/><path d="M12 9 3.8 13.6A2 2 0 0 0 4.8 17.3h14.4a2 2 0 0 0 1-3.7L12 9z"/></symbol>
   <symbol id="i-checklist" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 5.5l1 1 2-2M4 11.5l1 1 2-2M4 17.5l1 1 2-2"/></symbol>
-  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v4.5l2 3H4l2-3V9z"/><path d="M9.5 19a2.7 2.7 0 0 0 5 0"/></symbol>
-  <symbol id="i-notebook" viewBox="0 0 24 24"><rect x="5" y="3" width="15" height="18" rx="2"/><path d="M9 3v18M3.5 7H7M3.5 12H7M3.5 17H7M12 8h5M12 12h5M12 16h4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0v4.5l2 3H4l2-3z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M6 9a6 6 0 0 1 12 0v4.5l2 3H4l2-3V9z"/><path d="M9.5 19a2.7 2.7 0 0 0 5 0"/></symbol>
+  <symbol id="i-notebook" viewBox="0 0 24 24"><path d="M9 3h9a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><rect x="5" y="3" width="15" height="18" rx="2"/><path d="M9 3v18M3.5 7H7M3.5 12H7M3.5 17H7M12 8h5M12 12h5M12 16h4"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.8 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.8-3.8-9S9.5 5.6 12 3z"/></symbol>
   <symbol id="i-cloud-off" viewBox="0 0 24 24"><path d="M7.5 18H6a4 4 0 0 1-.8-7.9A7 7 0 0 1 17.9 8a5 5 0 0 1 1.6 9.7"/><path d="M3 3l18 18"/></symbol>
   <symbol id="i-users-group" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19v-1.3A4.7 4.7 0 0 1 8.2 13h1.6a4.7 4.7 0 0 1 4.7 4.7V19"/><circle cx="17" cy="9" r="2.3"/><path d="M15.5 14.2h1.8a3.7 3.7 0 0 1 3.7 3.7V19"/></symbol>
@@ -220,12 +237,12 @@
   <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M19 20H8.6l-4.3-4.3a2 2 0 0 1 0-2.8l8.7-8.7a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L13 18.6"/><path d="M8.4 9.6l6 6"/></symbol>
   <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 .3 18c1.4 0 1.9-.9 1.9-1.9 0-.9-.6-1.4-.1-2 .6-.7 3.9.6 5.2-1.6C21.4 12.6 21 3 12 3z"/><circle cx="7.8" cy="10.5" r="1.1"/><circle cx="12" cy="7.6" r="1.1"/><circle cx="16.2" cy="10.5" r="1.1"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.2l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></symbol>
-  <symbol id="i-device-floppy" viewBox="0 0 24 24"><path d="M6 4h10l4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 4v5h7V4"/><circle cx="12" cy="15" r="2.4"/></symbol>
-  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></symbol>
+  <symbol id="i-device-floppy" viewBox="0 0 24 24"><path d="M8 4v5h7V4z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M6 4h10l4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><path d="M8 4v5h7V4"/><circle cx="12" cy="15" r="2.4"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M6.5 7h11l-1 13h-9z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M4 7h16M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2M6.5 7l1 13h9l1-13M10 11v5.5M14 11v5.5"/></symbol>
   <symbol id="i-columns-3" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></symbol>
   <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
-  <symbol id="i-file-export" viewBox="0 0 24 24"><path d="M13 3v5h5"/><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/><path d="M14 16h7M18.5 13.5L21 16l-2.5 2.5"/></symbol>
-  <symbol id="i-file-import" viewBox="0 0 24 24"><path d="M13 3v5h5"/><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/><path d="M21 16h-7M16.5 13.5L14 16l2.5 2.5"/></symbol>
+  <symbol id="i-file-export" viewBox="0 0 24 24"><path d="M7 3h6l5 5v4.5h-4V21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M13 3v5h5"/><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/><path d="M14 16h7M18.5 13.5 21 16l-2.5 2.5"/></symbol>
+  <symbol id="i-file-import" viewBox="0 0 24 24"><path d="M7 3h6l5 5v4.5h-4V21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" style="fill:var(--ic-tint,currentColor);fill-opacity:var(--ic-tint-o,.2);stroke:none"/><path d="M13 3v5h5"/><path d="M13 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5"/><path d="M21 16h-7M16.5 13.5 14 16l2.5 2.5"/></symbol>
   <symbol id="i-paperclip" viewBox="0 0 24 24"><path d="M8.5 12.5l6.8-6.8a3.2 3.2 0 0 1 4.5 4.5l-8.7 8.7a5 5 0 0 1-7.1-7.1l8.2-8.2"/><path d="M8.2 15.8l8.3-8.3"/></symbol>
   <symbol id="i-table-import" viewBox="0 0 24 24"><path d="M20 12V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6"/><path d="M4 10h16M10 4v16"/><path d="M21 17h-6M17.5 14.5L15 17l2.5 2.5"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11.5L12 16l4.5-4.5M5 20h14"/></symbol>
@@ -301,27 +318,27 @@
   </div>
   <nav class="tabs" aria-label="Ana modüller" data-i18n-aria-label-tr="Ana modüller" data-i18n-aria-label-en="Main modules">
     <span class="railGroupLabel" data-i18n-tr="Ana Sayfa" data-i18n-en="Home">Ana Sayfa</span>
-    <button data-tab="overview" class="active" title="Overview" aria-current="page"><svg class="ic"><use href="#i-layout-dashboard"/></svg><span data-i18n-tr="Overview" data-i18n-en="Overview">Overview</span></button>
+    <button data-tab="overview" class="active" title="Overview" aria-current="page"><svg class="ic"><use href="#i-bl-overview"/></svg><span data-i18n-tr="Overview" data-i18n-en="Overview">Overview</span></button>
 
     <span class="railGroupLabel" data-i18n-tr="Planla &amp; Yürüt" data-i18n-en="Plan &amp; Execute">Planla &amp; Yürüt</span>
-    <button data-tab="cp" title="CP Tracker"><svg class="ic"><use href="#i-table"/></svg><span data-i18n-tr="CP Tracker" data-i18n-en="CP Tracker">CP Tracker</span></button>
-    <button data-tab="orders" title="Siparişler" data-i18n-title-tr="Siparişler" data-i18n-title-en="Orders"><svg class="ic"><use href="#i-checklist"/></svg><span data-i18n-tr="Siparişler" data-i18n-en="Orders">Siparişler</span></button>
-    <button data-tab="backlog" title="Backlog"><svg class="ic"><use href="#i-binary-tree-2"/></svg><span data-i18n-tr="Backlog" data-i18n-en="Backlog">Backlog</span></button>
+    <button data-tab="cp" title="CP Tracker"><svg class="ic"><use href="#i-bl-cp"/></svg><span data-i18n-tr="CP Tracker" data-i18n-en="CP Tracker">CP Tracker</span></button>
+    <button data-tab="orders" title="Siparişler" data-i18n-title-tr="Siparişler" data-i18n-title-en="Orders"><svg class="ic"><use href="#i-bl-orders"/></svg><span data-i18n-tr="Siparişler" data-i18n-en="Orders">Siparişler</span></button>
+    <button data-tab="backlog" title="Backlog"><svg class="ic"><use href="#i-bl-backlog"/></svg><span data-i18n-tr="Backlog" data-i18n-en="Backlog">Backlog</span></button>
     <button data-tab="shipping" title="Nakliye Kıyaslama" data-i18n-title-tr="Nakliye Kıyaslama" data-i18n-title-en="Shipping Comparison"><svg class="ic"><use href="#i-ship"/></svg><span data-i18n-tr="Nakliye Kıyaslama" data-i18n-en="Shipping Comparison">Nakliye Kıyaslama</span></button>
 
     <span class="railGroupLabel" data-i18n-tr="Ticari" data-i18n-en="Commercial">Ticari</span>
-    <button data-tab="koleksiyon" title="Koleksiyon" data-i18n-title-tr="Koleksiyon" data-i18n-title-en="Collection"><svg class="ic"><use href="#i-hanger"/></svg><span data-i18n-tr="Koleksiyon" data-i18n-en="Collection">Koleksiyon</span></button>
-    <button data-tab="quotations" title="Quotations"><svg class="ic"><use href="#i-notebook"/></svg><span data-i18n-tr="Quotations" data-i18n-en="Quotations">Quotations</span></button>
-    <button data-tab="pricinghistory" title="Fiyat Geçmişi" data-i18n-title-tr="Fiyat Geçmişi" data-i18n-title-en="Pricing History"><svg class="ic"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="Fiyat Geçmişi" data-i18n-en="Pricing History">Fiyat Geçmişi</span></button>
-    <button data-tab="priceanalysis" title="Fiyat &amp; Üretici Analizi" data-i18n-title-tr="Fiyat &amp; Üretici Analizi" data-i18n-title-en="Price &amp; Supplier Analysis"><svg class="ic"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="Fiyat &amp; Üretici Analizi" data-i18n-en="Price &amp; Supplier Analysis">Fiyat &amp; Üretici Analizi</span></button>
-    <button data-tab="lfl" title="Like For Like"><svg class="ic"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="LFL Analizi" data-i18n-en="LFL Analysis">LFL Analizi</span></button>
-    <button data-tab="opencosting" title="Ön Maliyet" data-i18n-title-tr="Ön Maliyet" data-i18n-title-en="Open Costing"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="Ön Maliyet" data-i18n-en="Open Costing">Ön Maliyet</span></button>
+    <button data-tab="koleksiyon" title="Koleksiyon" data-i18n-title-tr="Koleksiyon" data-i18n-title-en="Collection"><svg class="ic"><use href="#i-bl-collection"/></svg><span data-i18n-tr="Koleksiyon" data-i18n-en="Collection">Koleksiyon</span></button>
+    <button data-tab="quotations" title="Quotations"><svg class="ic"><use href="#i-bl-quotes"/></svg><span data-i18n-tr="Quotations" data-i18n-en="Quotations">Quotations</span></button>
+    <button data-tab="pricinghistory" title="Fiyat Geçmişi" data-i18n-title-tr="Fiyat Geçmişi" data-i18n-title-en="Pricing History"><svg class="ic"><use href="#i-bl-history"/></svg><span data-i18n-tr="Fiyat Geçmişi" data-i18n-en="Pricing History">Fiyat Geçmişi</span></button>
+    <button data-tab="priceanalysis" title="Fiyat &amp; Üretici Analizi" data-i18n-title-tr="Fiyat &amp; Üretici Analizi" data-i18n-title-en="Price &amp; Supplier Analysis"><svg class="ic"><use href="#i-bl-analysis"/></svg><span data-i18n-tr="Fiyat &amp; Üretici Analizi" data-i18n-en="Price &amp; Supplier Analysis">Fiyat &amp; Üretici Analizi</span></button>
+    <button data-tab="lfl" title="Like For Like"><svg class="ic"><use href="#i-bl-lfl"/></svg><span data-i18n-tr="LFL Analizi" data-i18n-en="LFL Analysis">LFL Analizi</span></button>
+    <button data-tab="opencosting" title="Ön Maliyet" data-i18n-title-tr="Ön Maliyet" data-i18n-title-en="Open Costing"><svg class="ic"><use href="#i-bl-costing"/></svg><span data-i18n-tr="Ön Maliyet" data-i18n-en="Open Costing">Ön Maliyet</span></button>
 
     <span class="railGroupLabel" data-i18n-tr="Operasyonlar" data-i18n-en="Operations">Operasyonlar</span>
-    <button data-tab="automations" title="Otomasyonlar" data-i18n-title-tr="Otomasyonlar" data-i18n-title-en="Automations"><svg class="ic"><use href="#i-arrows-down-up"/></svg><span data-i18n-tr="Otomasyonlar" data-i18n-en="Automations">Otomasyonlar</span></button>
+    <button data-tab="automations" title="Otomasyonlar" data-i18n-title-tr="Otomasyonlar" data-i18n-title-en="Automations"><svg class="ic"><use href="#i-bl-automation"/></svg><span data-i18n-tr="Otomasyonlar" data-i18n-en="Automations">Otomasyonlar</span></button>
 
     <span class="railGroupLabel" data-i18n-tr="Sistem" data-i18n-en="System">Sistem</span>
-    <button data-tab="source" title="Veri Yönetimi" data-i18n-title-tr="Veri Yönetimi" data-i18n-title-en="Data Management"><svg class="ic"><use href="#i-database-import"/></svg><span data-i18n-tr="Veri Yönetimi" data-i18n-en="Data Management">Veri Yönetimi</span></button>
+    <button data-tab="source" title="Veri Yönetimi" data-i18n-title-tr="Veri Yönetimi" data-i18n-title-en="Data Management"><svg class="ic"><use href="#i-bl-source"/></svg><span data-i18n-tr="Veri Yönetimi" data-i18n-en="Data Management">Veri Yönetimi</span></button>
   </nav>
   <div class="railFoot">
     <button id="railLangBtn" title="Switch language / Dil değiştir"><svg class="ic"><use href="#i-globe"/></svg><span id="railLangLabel" data-i18n-tr="Dil: TR" data-i18n-en="Language: EN">Dil: TR</span></button>
@@ -393,7 +410,7 @@
   <button class="navActionBtn" id="navToShipping" title="Seçili (tikli) satırları Nakliye Tipine Göre Maliyet Kıyaslaması tablosuna aktar" disabled><svg class="ic"><use href="#i-ship"/></svg> <span data-i18n-tr="Nakliye Kıyaslama" data-i18n-en="Shipping Comparison">Nakliye Kıyaslama</span></button>
   <button class="navActionBtn" id="navFitColumnsBtn" title="Tüm sütunları en dar okunabilir genişliğe getir" data-i18n-title-tr="Tüm sütunları en dar okunabilir genişliğe getir" data-i18n-title-en="Fit all columns to the narrowest readable width"><svg class="ic"><use href="#i-columns-3"/></svg> <span data-i18n-tr="Sütunları Sığdır" data-i18n-en="Fit Column Width">Sütunları Sığdır</span></button>
   <button class="navActionBtn" id="navFreezeBtn" title="Sütun dondur (Excel'deki Bölmeleri Dondur gibi)"><svg class="ic"><use href="#i-snowflake"/></svg> <span data-i18n-tr="Sütunları Dondur" data-i18n-en="Freeze Columns">Sütunları Dondur</span></button>
-  <button class="navActionBtn toolbarFramedAction" id="navClearFilters" title="Tüm filtreleri temizle" data-tb-priority="utility" data-tb-compact="icon"><svg class="ic"><use href="#i-eraser"/></svg> <span data-i18n-tr="Filtreleri Temizle" data-i18n-en="Clear Filters">Filtreleri Temizle</span></button>
+  <button class="navActionBtn toolbarFramedAction" id="navClearFilters" title="Tüm filtreleri temizle" data-tb-priority="utility" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-filter-clear"/></svg> <span data-i18n-tr="Filtreleri Temizle" data-i18n-en="Clear Filters">Filtreleri Temizle</span></button>
   <div class="colPanelWrap navColsRight">
     <button class="navActionBtn" id="navColsBtn" title="Sütunları yönet" data-i18n-title-tr="Sütunları yönet" data-i18n-title-en="Manage columns" aria-haspopup="true" aria-expanded="false"><svg class="ic"><use href="#i-columns-3"/></svg> <span data-i18n-tr="Sütunlar" data-i18n-en="Columns">Sütunlar</span></button>
     <div class="colPanel" id="navColPanel"></div>
@@ -467,7 +484,7 @@
 
 <main>
   <section id="view-overview" class="active">
-    <div id="ovEmpty" class="empty"><div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner" aria-hidden="true"></span><div class="uiStateBody"><b data-i18n-tr="Veriler ekranlara yükleniyor." data-i18n-en="Loading data into the screens.">Veriler ekranlara yükleniyor.</b><span data-i18n-tr="Aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir." data-i18n-en="The wait may increase with the active filter scope and data volume.">Aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir.</span></div></div></div>
+    <div id="ovEmpty" class="empty"><div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span><div class="uiStateBody"><b data-i18n-tr="Veriler ekranlara yükleniyor." data-i18n-en="Loading data into the screens.">Veriler ekranlara yükleniyor.</b><span data-i18n-tr="Aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir." data-i18n-en="The wait may increase with the active filter scope and data volume.">Aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir.</span></div></div></div>
     <div class="ovDashboardToolbar">
       <button type="button" id="ovLayoutEditBtn" class="navActionBtn"><svg class="ic"><use href="#i-layout-dashboard"/></svg><span data-i18n-tr="Düzeni Düzenle" data-i18n-en="Edit Layout">Düzeni Düzenle</span></button>
       <div id="ovLayoutEditPanel" class="ovLayoutEditPanel" hidden>
@@ -479,6 +496,7 @@
       </div>
     </div>
     <div id="ovDashboardGrid" class="ovDashboardGrid">
+    <section id="ovLaunchpad" data-overview-widget="launchpad" class="ovLaunchpad" aria-label="Bugün" data-i18n-aria-label-tr="Bugün" data-i18n-aria-label-en="Today"></section>
     <section id="ovPriorityReminder" data-overview-widget="notes" class="ovPriorityReminder" aria-live="polite" style="display:none">
         <div class="ovPriorityHeader">
           <div>
@@ -526,10 +544,10 @@
          BAĞIMSIZ: CP verisi yüklenmemiş/hatalı olsa bile OAB kendi başına
          çalışabilmeli (test senaryosu: "Overview açıldığında OAB mevcut diğer
          Overview fonksiyonlarını bozmuyor" ve tersi). -->
-    <div id="oabSection" data-overview-widget="oab" class="cardBox oabSection" style="margin-top:16px">
+    <div id="oabSection" data-overview-widget="oab" class="cardBox oabSection">
       <div class="oabHeader">
         <div class="oabHeaderMain">
-          <p class="cardTitle" style="margin:0" data-i18n-tr="OAB" data-i18n-en="OAB">OAB</p>
+          <p class="cardTitle ovSectionTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="OAB" data-i18n-en="OAB">OAB</span></p>
         </div>
         <div class="oabHeaderActions">
           <button type="button" class="ovNotesCollapseBtn" id="oabCollapseBtn" data-overview-collapse="oab" aria-expanded="true" title="OAB'ı daralt" aria-label="OAB'ı daralt" data-i18n-title-tr="OAB'ı daralt" data-i18n-title-en="Collapse OAB"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg></button>
@@ -575,10 +593,10 @@
       </div>
     </div>
     <!-- INTAKE — OAB ile aynı Overview yüzeyinde, kendi veri/cache hata sınırıyla. -->
-    <div id="intakeSection" data-overview-widget="intake" class="cardBox intakeSection" style="margin-top:16px">
+    <div id="intakeSection" data-overview-widget="intake" class="cardBox intakeSection">
       <div class="intakeHeader">
         <div class="intakeHeaderMain">
-          <p class="cardTitle" style="margin:0" data-i18n-tr="INTAKE" data-i18n-en="INTAKE">INTAKE</p>
+          <p class="cardTitle ovSectionTitle"><svg class="ic" aria-hidden="true"><use href="#i-database-import"/></svg><span data-i18n-tr="INTAKE" data-i18n-en="INTAKE">INTAKE</span></p>
           <span id="intakeStateMeta" class="intakeStateMeta"></span>
         </div>
         <div class="intakeHeaderActions">
@@ -674,7 +692,7 @@
           <!-- PLM Sync: model linki + model görseli. Koleksiyon'dan FARKLI olarak
                burada tablo alanlarına (line/category/fabric…) DOKUNULMAZ. -->
           <div class="toolbarMoreWrap" id="cpPlmSyncWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn" id="cpPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-globe"/></svg> <span>PLM SYNC</span></button>
+            <button type="button" class="tbtn" id="cpPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-sync"/></svg> <span>PLM SYNC</span></button>
             <div class="toolbarMoreMenu" id="cpPlmSyncMenu" hidden>
               <div class="toolbarMoreLabel">PLM SYNC</div>
               <button type="button" class="tbtn" data-plm-sync-category="plm" data-plm-sync-page="cp"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="PLM Senkronizasyonu" data-i18n-en="PLM Synchronization">PLM Senkronizasyonu</span></button>
@@ -683,7 +701,7 @@
             </div>
           </div>
           <div class="toolbarMoreWrap" id="cpToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn" id="cpToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-checklist"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
+            <button type="button" class="tbtn" id="cpToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
             <div class="toolbarMoreMenu" id="cpToolsMenu" hidden>
               <button type="button" class="navActionBtn" id="cpLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Calculations" data-i18n-en="License Royalty Calculations">License Royalty Calculations</span></button>
               <button type="button" class="tbtn" id="cpCapacityRequestBtn" title="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected rows in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Create Capacity Request Excel" data-i18n-en="Create Capacity Request Excel">Create Capacity Request Excel</span></button>
@@ -735,7 +753,7 @@
           <!-- PLM Sync: model linki + model görseli. Koleksiyon'dan FARKLI olarak
                burada tablo alanlarına (line/category/fabric…) DOKUNULMAZ. -->
           <div class="toolbarMoreWrap" id="ordersPlmSyncWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn" id="ordersPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-globe"/></svg> <span>PLM SYNC</span></button>
+            <button type="button" class="tbtn" id="ordersPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-sync"/></svg> <span>PLM SYNC</span></button>
             <div class="toolbarMoreMenu" id="ordersPlmSyncMenu" hidden>
               <div class="toolbarMoreLabel">PLM SYNC</div>
               <button type="button" class="tbtn" data-plm-sync-category="plm" data-plm-sync-page="orders"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="PLM Senkronizasyonu" data-i18n-en="PLM Synchronization">PLM Senkronizasyonu</span></button>
@@ -744,7 +762,7 @@
             </div>
           </div>
           <div class="toolbarMoreWrap" id="ordersToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn" id="ordersToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-checklist"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
+            <button type="button" class="tbtn" id="ordersToolsBtn" title="Seçili satırlar için işlemler" data-i18n-title-tr="Seçili satırlar için işlemler" data-i18n-title-en="Actions for selected rows" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
             <div class="toolbarMoreMenu" id="ordersToolsMenu" hidden>
               <button type="button" class="navActionBtn" id="ordersLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Calculations" data-i18n-en="License Royalty Calculations">License Royalty Calculations</span></button>
               <button class="tbtn" id="ordersEndeksmatikBtn" title="Seçili siparişin 1 yıl sonraki Endeksmatik fiyatını hesapla" data-i18n-title-tr="Seçili siparişin 1 yıl sonraki Endeksmatik fiyatını hesapla" data-i18n-title-en="Calculate the selected order’s Endeksmatik price one year later" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
@@ -793,7 +811,7 @@
           <button class="navActionBtn" id="kolUndoBtn" data-action-role="ghost" title="Geri al (Ctrl+Z)" data-i18n-title-tr="Geri al (Ctrl+Z)" data-i18n-title-en="Undo (Ctrl+Z)" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-back-up"/></svg> <span data-i18n-tr="Geri" data-i18n-en="Undo">Geri</span></button>
           <button class="navActionBtn" id="kolRedoBtn" data-action-role="ghost" title="İleri al (Ctrl+Y)" data-i18n-title-tr="İleri al (Ctrl+Y)" data-i18n-title-en="Redo (Ctrl+Y)" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-forward-up"/></svg> <span data-i18n-tr="İleri" data-i18n-en="Redo">İleri</span></button>
           <button class="tbtn" id="kolSpreadsheetPasteBtn" title="Excel'den veya panodan aktif hücreye yapıştır" data-i18n-title-tr="Excel'den veya panodan aktif hücreye yapıştır" data-i18n-title-en="Paste from Excel or clipboard into the active cell" data-tb-priority="secondary" data-tb-compact="icon"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Yapıştır" data-i18n-en="Paste">Yapıştır</span></button>
-          <button class="tbtn" id="kolRecycleBinBtn" title="Silinen modeller 30 gün saklanır" data-i18n-title-tr="Silinen modeller 30 gün saklanır" data-i18n-title-en="Deleted models are kept for 30 days" data-tb-priority="utility" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-back-up"/></svg> <span data-i18n-tr="Geri Dönüşüm Kutusu" data-i18n-en="Recycle Bin">Geri Dönüşüm Kutusu</span></button>
+          <button class="tbtn" id="kolRecycleBinBtn" title="Silinen modeller 30 gün saklanır" data-i18n-title-tr="Silinen modeller 30 gün saklanır" data-i18n-title-en="Deleted models are kept for 30 days" data-tb-priority="utility" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-recycle"/></svg> <span data-i18n-tr="Geri Dönüşüm Kutusu" data-i18n-en="Recycle Bin">Geri Dönüşüm Kutusu</span></button>
           <button class="tbtn" id="kolExportImgBtn" title="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-tr="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-en="Export to Excel with model images" data-tb-priority="secondary" data-tb-compact="icon"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel'e Aktar" data-i18n-en="Export to Excel">Excel'e Aktar</span></button>
           <span class="kolSelectedGroupLabel" data-tb-priority="selection" data-tb-overflow="never" data-i18n-tr="Seçili modeller" data-i18n-en="Selected models">Seçili modeller</span>
           <button class="tbtn" id="kolCopySelectedBtn" title="Seçili satırları başlıkları ve biçimleriyle kopyala — Ctrl+C" data-i18n-title-tr="Seçili satırları başlıkları ve biçimleriyle kopyala — Ctrl+C" data-i18n-title-en="Copy selected rows with headers and formatting — Ctrl+C" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-copy"/></svg><span data-i18n-tr="Kopyala" data-i18n-en="Copy">Kopyala</span></button>
@@ -806,7 +824,7 @@
              taşındı (aynı id'ler, aynı işlev) — PLM erişimi geçici olarak
              kullanılamazsa yedek/offline yol olarak kalır (bkz. §28). -->
         <div class="toolbarMoreWrap" id="kolPlmSyncWrap" data-tb-priority="utility" data-tb-overflow="never">
-            <button type="button" class="tbtn" id="kolPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-globe"/></svg> <span>PLM SYNC</span></button>
+            <button type="button" class="tbtn" id="kolPlmSyncBtn" title="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-tr="PLM ve ASAS senkronizasyon işlemlerini aç" data-i18n-title-en="Open PLM and ASAS synchronization actions" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-sync"/></svg> <span>PLM SYNC</span></button>
             <div class="toolbarMoreMenu" id="kolPlmSyncMenu" hidden>
               <div class="toolbarMoreLabel">PLM SYNC</div>
               <button type="button" class="tbtn" data-plm-sync-category="plm" data-plm-sync-page="kol"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="PLM Senkronizasyonu" data-i18n-en="PLM Synchronization">PLM Senkronizasyonu</span></button>
@@ -817,7 +835,7 @@
         <!-- "Araçlar": seçime bağlı işlemler + model dosyaları ve fiyat çalışmaları. -->
         <input type="file" id="kolPlmImportFile" accept=".xlsx" hidden>
           <div class="toolbarMoreWrap" id="kolToolsWrap" data-tb-priority="utility" data-tb-overflow="never">
-          <button type="button" class="tbtn" id="kolToolsBtn" title="Koleksiyon araçları" data-i18n-title-tr="Koleksiyon araçları" data-i18n-title-en="Collection tools" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-checklist"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
+          <button type="button" class="tbtn" id="kolToolsBtn" title="Koleksiyon araçları" data-i18n-title-tr="Koleksiyon araçları" data-i18n-title-en="Collection tools" aria-haspopup="true" aria-expanded="false" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-tools"/></svg> <span data-i18n-tr="Araçlar" data-i18n-en="Tools">Araçlar</span></button>
           <div class="toolbarMoreMenu" id="kolToolsMenu" hidden>
             <button class="tbtn" id="kolSendPricingBtn" title="Seçili modelleri fiyatlamaya gönder" data-i18n-title-tr="Seçili modelleri fiyatlamaya gönder" data-i18n-title-en="Send selected models to pricing" disabled><svg class="ic"><use href="#i-mail-send"/></svg><span data-i18n-tr="Fiyatlamaya Gönder" data-i18n-en="Send to Pricing">Fiyatlamaya Gönder</span></button>
             <button class="tbtn" id="kolSendShippingBtn" title="Seçili modelleri Nakliye Kıyaslama'ya gönder" data-i18n-title-tr="Seçili modelleri Nakliye Kıyaslama'ya gönder" data-i18n-title-en="Send selected models to Shipping Comparison" disabled><svg class="ic"><use href="#i-ship"/></svg><span data-i18n-tr="Nakliye Kıyaslamaya Gönder" data-i18n-en="Send to Shipping Comparison">Nakliye Kıyaslamaya Gönder</span></button>
@@ -1000,6 +1018,7 @@
         <div class="ocRecordList" id="ocRecordList"></div>
       </aside>
       <div class="ocWorkspace">
+        <div class="ocWorkspaceEmpty" id="ocWorkspaceEmpty"></div>
         <div class="ocEditor" id="ocEditor" hidden>
           <div class="ocHeaderCard">
             <h3 class="ocSectionTitle"><svg class="ic"><use href="#i-notebook"/></svg><span data-i18n-tr="Model ve Teklif Bilgileri" data-i18n-en="Style and Quotation Information">Model ve Teklif Bilgileri</span></h3>
@@ -1185,23 +1204,28 @@
 </main>
 <div class="dropzone" id="dropzone" data-i18n-tr="Dosyayı buraya bırak" data-i18n-en="Drop the file here">Dosyayı buraya bırak</div>
 
-<script src="date-dimension.js?v=__BL_ASSET_VERSION__&rev=1"></script>\n<script src="column-schema.js?v=__BL_ASSET_VERSION__"></script>
+<script src="date-dimension.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="column-schema.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-layout.js?v=__BL_ASSET_VERSION__"></script>
 <script src="model-option-stats.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-status-catalog.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-summary.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-dashboard.js?v=__BL_ASSET_VERSION__"></script>
+<script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_SCRIPTS_START');</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_START');</script>
 <script src="plm-colour-utils.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="plm-licence-utils.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-model-groups.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="ui-primitives.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="ui-tooltip.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="layer-system.js?v=__BL_ASSET_VERSION__"></script>
-<script src="toolbar-responsive.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="toolbar-responsive.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="tab-system.js?v=__BL_ASSET_VERSION__"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
-<script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n<script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>\n<script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1"></script>
+<script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1"></script>
 <script src="table-toolbar-action-cleanup.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>

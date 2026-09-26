@@ -29,7 +29,7 @@ async function main(){
   const overview=data.orderSummaryAllowed?parse.buildOverviewSummaryRowsFromASAS(data.cpSource,data.overrides):[];
   projected.cp.forEach(row=>{row._canEdit=editable.has(String(row['Order Code']));});
   projected.orders.forEach(row=>{row._canEdit=false;});orderSummary.forEach(row=>{row._canEdit=editable.has(String(row['Order Code']));});
-  const values={cp:{rows:projected.cp,cpModelColumns:data.cpModelColumns||[]},overview:{rows:overview},orders:{rows:projected.orders,orderSummary},'collection-catalog':{catalogs:catalogs(projected.orders.length?projected.orders:overview),catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION}};
+  const values={cp:{rows:projected.cp,cpModelColumns:data.cpModelColumns||[]},overview:{rows:overview},orders:{rows:projected.orders},'order-summary':{rows:orderSummary},'collection-catalog':{catalogs:catalogs(projected.orders.length?projected.orders:overview),catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION}};
   const compressed={},transfer=[];
   for(const [module,value] of Object.entries(values)){
     const json=Buffer.from(JSON.stringify(value,dateSafeReplacer),'utf8'),gz=await gzip(json,{level:4}),copy=Uint8Array.from(gz);

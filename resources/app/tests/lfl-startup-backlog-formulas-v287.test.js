@@ -46,7 +46,7 @@ function overrides() {
 // kullanıcının ilk veri isteği model snapshot'ını on-demand okur. LFL Refresh ise
 // halen model katmanından geçer ve başka kullanıcının snapshot'ına düşmez.
 test('program startup keeps authentication light and model snapshots remain on-demand; LFL refresh still goes through the model layer', () => {
-  const server = fs.readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   assert.match(server, /async function loadInitialDataAndLfl\(value\)\{[\s\S]{0,760}?const snapshot = await hydrateModelSnapshotAsync\(id\);/);
   assert.doesNotMatch(server, /const snapshot = hydrateModelSnapshot\(id\) \|\| hydrateSharedModelSnapshot\(id\)/, 'kişiselleştirilmiş moderatör snapshotı başka kullanıcıya verilmemeli');
   assert.match(server, /app\.get\('\/api\/lfl',[\s\S]*await ensureDataLoaded\(id\)/);

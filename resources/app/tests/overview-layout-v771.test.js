@@ -8,16 +8,17 @@ const ROOT = require('node:path').join(__dirname, '..');
 const INDEX = fs.readFileSync(require('node:path').join(ROOT, 'public', 'index.html'), 'utf8');
 const APP = fs.readFileSync(require('node:path').join(ROOT, 'public', 'app-main.js'), 'utf8');
 
-test('Overview default layout keeps Collection Summary directly above OAB', () => {
+test('Overview default layout opens with Today launchpad and keeps Collection Summary directly above OAB', () => {
   const value = layout.normalize(null);
-  assert.deepEqual(value.order.slice(0, 4), ['notes', 'collectionSummary', 'oab', 'intake']);
+  assert.deepEqual(value.order.slice(0, 5), ['launchpad', 'notes', 'collectionSummary', 'oab', 'intake']);
   assert.equal(value.hidden.includes('collectionSummary'), false);
   assert.equal(value.widths.intake, 'full');
 });
 
 test('Overview layout drops unknown widgets and clamps widths', () => {
   const value = layout.normalize({ order: ['oab', 'unknown', 'collectionSummary'], hidden: ['notes', 'unknown'], widths: { oab: 'quarter', collectionSummary: 'half' } });
-  assert.deepEqual(value.order, ['oab', 'collectionSummary', 'notes', 'intake', 'overviewContent']);
+  // Kayıtlı eski düzende olmayan "Bugün" modülü en üste, diğer eksikler sona eklenir.
+  assert.deepEqual(value.order, ['launchpad', 'oab', 'collectionSummary', 'notes', 'intake', 'overviewContent']);
   assert.deepEqual(value.hidden, ['notes']);
   assert.equal(value.widths.oab, 'quarter');
   assert.equal(value.widths.collectionSummary, 'half');

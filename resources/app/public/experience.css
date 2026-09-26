@@ -66,14 +66,25 @@
   --head:var(--sans);
 }
 
+/* Kurşun = gerçek ara ton (arduvaz). Tüm metin/zemin çiftleri WCAG AA
+   (≥4.5) ölçülerek seçildi; durum renkleri bu zeminde koyulaştırıldı.
+   Dışa aktarılan thead renkleri (design.css) bilerek değişmez. */
 html[data-theme="grey"]{
-  --paper:#e9ecf0;--rail-bg:#e4e8ed;--card:#f7f8fa;
-  --card2:#f1f3f6;--card2-strong:#dfe5eb;
-  --ink:#19232e;--ink2:#405061;--muted:#5e6d7d;
-  --line:#d9dfe6;--line2:#c4cdd6;
+  --paper:#c3cad2;--rail-bg:#bcc4cd;--card:#d9dee4;
+  --card2:#cfd5dc;--card2-strong:#bec6cf;
+  --ink:#101820;--ink2:#2b3947;--muted:#414e5a;
+  --line:#b3bcc6;--line2:#9ca7b3;
   --hair:var(--line);--hair-2:var(--line2);
-  --acc:#315f87;--acc-hover:#244d70;--acc-bg:#dce9f3;
-  --acc-ink:#244e70;--pop:var(--card);--pop-blur:none;
+  --acc:#264f73;--acc-hover:#1c3e5b;--acc-bg:#bccfe0;
+  --acc-ink:#183a57;--on-acc:#f6f6f7;--pop:var(--card);--pop-blur:none;
+  --green:#0f6640;--green-lite:#0f6640;--green-bg:#c3d8cb;
+  --orange:#7a5000;--orange-lite:#7a5000;--yellow:#7a5000;--orange-bg:#ddd0b0;--yellow-bg:#ddd0b0;
+  --red:#a01d14;--red-lite:#a01d14;--red-bg:#e3c7c4;
+  --table-bg:var(--card);
+  --table-hover:color-mix(in srgb,#101820 6%,var(--card));
+  --shadow-1:0 1px 2px rgba(16,24,32,.14);
+  --shadow-2:0 4px 12px rgba(16,24,32,.18);
+  --shadow-3:0 16px 38px rgba(16,24,32,.26),0 2px 8px rgba(16,24,32,.12);
 }
 html[data-theme="dark"]{
   --paper:#171c22;--rail-bg:#14191f;--card:#20262e;
@@ -252,3 +263,361 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
   .spinner,.blBootDot,[data-loading] .ic{animation-duration:1.8s!important;}
 }
+
+/* =====================================================================
+   Premium ritim katmanı · 2026-09-25
+   Sakin, ferah ve tek dilli yüzey: modül dışı düğmeler, modül başlıkları,
+   KPI şeritleri ve Genel Bakış "Bugün" modülü aynı ölçü ve tipografiyi
+   paylaşır. Izgara geometrisi (--ctl-h, satır yüksekliği, thead renkleri)
+   değişmez; yalnız token tüketilir.
+   ===================================================================== */
+
+/* Form öğeleri tarayıcı yazı tipine düşmez (Arial/13.33px karışıklığı). */
+:where(button,input,select,textarea,optgroup){font-family:inherit;}
+
+/* Araç çubuğu dışındaki .tbtn için tek taban: modül başlıkları, paneller ve
+   diyaloglar tarayıcı varsayılanı 20px düğme yerine standart kontrol boyunu
+   kullanır. :where() özgüllüğü sıfırdır; özel kurallar kazanmaya devam eder. */
+:where(button.tbtn,label.tbtn,a.tbtn){
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:var(--ctl-h);padding:0 12px;border:1px solid var(--bl-stroke-subtle);
+  background:var(--bl-surface-panel);color:var(--ink2);
+  font-size:var(--fs-xs);font-weight:600;line-height:1.15;white-space:nowrap;cursor:pointer;text-decoration:none;
+}
+:where(.tbtn)>svg.ic{width:14px;height:14px;flex:0 0 auto;}
+:where(button.tbtn,label.tbtn,a.tbtn):hover:not(:disabled){background:var(--bl-surface-soft);border-color:var(--bl-stroke-strong);color:var(--ink);}
+
+/* Modül başlıkları: Quotations, Fiyat Geçmişi, Otomasyonlar, Veri Yönetimi. */
+.pricingWorkspaceHeader,.autoHeader{padding:18px 20px 16px;align-items:center;}
+.pricingWorkspaceHeader h1,.autoHeader h2,.dmTitle{
+  margin:0;font-family:var(--sans);font-size:calc(19px + var(--ui-font-add));font-weight:700;
+  line-height:1.2;letter-spacing:-.022em;color:var(--ink);
+}
+.pricingWorkspaceHeader p,.autoHeader p,.dmSub{
+  margin:4px 0 0;max-width:760px;font-size:var(--fs-sm);line-height:1.5;color:var(--ink2);
+}
+.autoEyebrow{margin-bottom:4px;font-size:10.5px;font-weight:700;letter-spacing:.09em;color:var(--acc-ink);}
+.pricingWorkspaceHeaderActions,.autoHeaderActions{gap:8px;}
+.autoBadge{height:var(--ctl-h);font-size:var(--fs-xs);font-weight:600;}
+.dmHead{margin-bottom:14px;}
+
+/* KPI şeritleri: okunur etiket, net rakam, taşmayan kolonlar. */
+.pricingWorkspaceKpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+.pricingMetric{min-height:64px;padding:10px 18px;column-gap:10px;}
+.pricingMetric span,.autoStats span{font-family:var(--sans);font-size:10.5px;font-weight:600;letter-spacing:.06em;color:var(--muted);}
+.pricingMetric b{font-family:var(--sans);font-size:calc(20px + var(--ui-font-add));font-weight:700;letter-spacing:-.02em;}
+.pricingMetric.isHistory b{font-size:calc(20px + var(--ui-font-add));}
+
+/* Çalışma alanı gövdesi: tek yazı ailesi, rahat filtre satırı, sakin paneller. */
+.pricingPaneTitle,.pricingHistoryTable th{font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.06em;}
+.pricingPaneTitle{padding:10px 14px;color:var(--ink2);}
+.pricingWorkspaceTabs{padding:10px 20px;}
+.pricingWorkspaceSearch,.pricingHistoryFilters{padding:10px 20px;gap:8px;}
+.pricingWorkspaceSearch input,.pricingHistoryFilters input,.pricingHistoryFilters select{height:var(--ctl-h);padding:0 10px;border-color:var(--bl-stroke-strong);}
+.pricingWorkspaceSearch span{font-size:var(--fs-xs);color:var(--muted);}
+.pricingHistoryTable{font-size:var(--fs-xs);}
+.pricingHistoryTable th,.pricingHistoryTable td{padding:8px 10px;}
+.pricingHistoryTableTitle .tbtn{min-height:24px;padding:0 9px;font-size:var(--fs-xs);}
+.pricingDecisionStats dt,.quotationWorkspaceShell .quotationNavMeta{font-size:var(--fs-xs);}
+.pricingEmptyState,.autoEmpty{padding:28px 18px;font-size:var(--fs-sm);line-height:1.55;color:var(--muted);}
+.quotationWorkspaceShell .quotationNavItem{padding:10px 12px;}
+
+/* Veri Yönetimi: kaynak modu anahtarı okunur. */
+.sourceModeBtn{height:26px;padding:0 11px;font-size:var(--fs-xs);font-weight:650;}
+
+/* Genel Bakış: modüller arası boşluğu yalnız ızgara boşluğu belirler. */
+main{padding-top:16px;}
+.ovDashboardGrid{gap:18px;}
+.ovDashboardGrid>[data-overview-widget]{margin-top:0;margin-bottom:0;}
+.ovPriorityMethod{font-size:var(--fs-xs);line-height:1.5;color:var(--muted);}
+
+/* Genel Bakış · Bugün */
+/* Görünümler <section> ile gizlenir (section{display:none}); modül açıkça görünür. */
+.ovLaunchpad{
+  display:block;padding:20px 22px;background:var(--bl-surface-panel);border:1px solid var(--bl-stroke-subtle);
+  border-radius:var(--bl-radius-panel);box-shadow:var(--shadow-1);
+}
+.ovLaunchBody{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:center;gap:18px 28px;}
+.ovLaunchpad>.ovWidgetEditControls{margin-bottom:12px;}
+.ovLaunchDate{margin:0 0 6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);}
+.ovLaunchTitle{margin:0;font-family:var(--sans);font-size:calc(22px + var(--ui-font-add));font-weight:700;line-height:1.15;letter-spacing:-.025em;color:var(--ink);}
+.ovLaunchSub{margin:6px 0 0;font-size:var(--fs-sm);line-height:1.5;color:var(--ink2);}
+.ovLaunchGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.ovLaunchTile{
+  display:grid;grid-template-columns:34px minmax(0,1fr) 14px;align-items:center;gap:12px;
+  min-height:58px;padding:10px 14px 10px 12px;text-align:left;cursor:pointer;
+  border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);color:var(--ink);
+  border-radius:var(--bl-radius-control);
+}
+.ovLaunchTile:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--bl-stroke-subtle));background:var(--bl-surface-panel);box-shadow:var(--shadow-1);}
+.ovLaunchIcon{display:grid;place-items:center;width:34px;height:34px;background:var(--acc-bg);color:var(--acc-ink);border-radius:var(--r-md);}
+.ovLaunchIcon .ic{width:17px;height:17px;}
+.ovLaunchText{display:grid;gap:2px;min-width:0;}
+.ovLaunchText b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-base);font-weight:650;}
+.ovLaunchText small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs);color:var(--muted);}
+.ovLaunchArrow{width:14px;height:14px;color:var(--muted);transition:transform var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast);}
+.ovLaunchTile:hover .ovLaunchArrow{color:var(--acc);transform:translateX(2px);}
+@media(max-width:1280px){.ovLaunchBody{grid-template-columns:1fr;}}
+@media(max-width:900px){.ovLaunchGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:560px){.ovLaunchGrid{grid-template-columns:1fr;}}
+/* Barlow'da kelime aralığı dar; negatif harf aralığı kelimeleri birleştiriyordu. */
+.cardTitle,.modalTitle,.appTop h1{letter-spacing:-.008em;}
+/* Otomasyonlar: sayaç şeridi başlıkla hizalı, yan panel başlıkları okunur. */
+.autoStatChips{gap:8px;margin:0;padding:12px 20px;border-bottom:1px solid var(--bl-stroke-subtle);}
+.autoStatChip{min-height:var(--ctl-h);padding:0 12px;font-size:var(--fs-xs);}
+.autoSideHead{height:auto;min-height:40px;padding:0 14px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);}
+.autoEditorEmpty{font-size:var(--fs-sm);color:var(--muted);}
+
+/* CP / Siparişler boş tablo yönlendirmesi: başlık görünür kalır, ipucu
+   yatay kaydırmada sabit durur. */
+.tableEmptyHint{position:sticky;left:0;display:flex;justify-content:center;padding:44px 16px 56px;}
+.tableEmptyHint[hidden]{display:none;}
+.tableEmptyHint .uiState{width:min(560px,100%);margin:0;}
+.tableEmptyHint .uiStateAction{margin-top:12px;}
+
+/* Genel Bakış kart başlıkları tek yapı: ikon + başlık (Not Hatırlatıcısı,
+   Koleksiyon, OAB, INTAKE aynı ölçüde). */
+.ovSectionTitle{display:flex;align-items:center;gap:7px;margin:0;color:var(--ink);font-size:var(--fs-md);letter-spacing:0;}
+.ovSectionTitle .ic{width:17px;height:17px;color:var(--acc-ink);}
+
+/* Hızlı filtre grupları: aralıklı BÜYÜK HARF yerine sakin, okunur etiket. */
+.kpiGroup>.kpiGroupLabel{min-height:28px;padding:0 10px;gap:6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.01em;text-transform:none;color:var(--ink2);}
+.kpiGroup>.kpiGroupLabel:hover{border-color:var(--bl-stroke-strong);color:var(--ink);}
+.kpiGroup.open>.kpiGroupLabel{background:var(--acc-bg);border-color:color-mix(in srgb,var(--acc) 40%,transparent);color:var(--acc-ink);}
+
+/* Nakliye Kıyaslama boşken satır işlemleri şeridi gizlenir; tek yönlendirme kalır. */
+#view-shipping.isShipEmpty #shipSecondaryToolbar{display:none;}
+#view-shipping #shipEmpty{min-height:0;padding:48px 16px;background:transparent;}
+#view-shipping #shipEmpty .uiState{margin:0 auto;}
+
+/* Ön Maliyet: seçim yokken çalışma alanı yönlendirmesi. */
+.ocWorkspaceEmpty{display:flex;justify-content:center;align-items:flex-start;padding:72px 20px;}
+.ocWorkspaceEmpty[hidden]{display:none;}
+.ocWorkspaceEmpty .uiState{width:min(560px,100%);margin:0;}
+.paV2Panel.paV2Empty{display:flex;justify-content:center;padding:56px 20px;}
+.paV2Panel.paV2Empty .uiState{width:min(560px,100%);margin:0;}
+
+/* Menüler: her öğe ayrı kutu değil, sakin satır. Seçim/hover tek zemin tonu. */
+.toolbarMoreMenu .navActionBtn,.toolbarMoreMenu :is(button,label).tbtn,.toolbarMoreMenu .vfMenuTrigger{
+  min-height:32px;border-color:transparent;background:transparent;box-shadow:none;color:var(--ink);font-weight:500;
+}
+.toolbarMoreMenu .navActionBtn:hover:not(:disabled),.toolbarMoreMenu :is(button,label).tbtn:hover:not(:disabled),.toolbarMoreMenu .vfMenuTrigger:hover{
+  border-color:transparent;background:var(--card2-strong);color:var(--ink);
+}
+.toolbarMoreMenu .navActionBtn>svg.ic,.toolbarMoreMenu .tbtn>svg.ic{color:var(--muted);}
+.toolbarMoreMenu{padding:6px;gap:1px;}
+.userMenu button .ic{width:15px;height:15px;flex:0 0 auto;color:var(--muted);}
+.userMenu button:hover .ic{color:var(--acc);}
+
+/* =====================================================================
+   Tabloya yer aç · CP / Siparişler / Koleksiyon
+   Tablo başlığından önceki beş şerit üçe iner: boş "Tablo filtreleri"
+   satırı yalnız filtre varken görünür, Horizon bilgisi filtre çiplerinin
+   satırına oturur, Koleksiyon'da seçim yokken seçim şeridi kapanır.
+   ===================================================================== */
+.activeFilterBar[data-active-count="0"]{display:none;}
+.kolSpreadsheetHelper[data-selected="0"]{display:none;}
+.workspaceContextBar{min-height:0;padding-top:4px;padding-bottom:4px;}
+@media(min-width:1180px){
+  #view-cp,#view-orders{position:relative;}
+  #view-cp>#cpHorizonBadge,#view-orders>#ordersHorizonBadge{
+    position:absolute;top:0;right:44px;z-index:2;height:28px;margin:0;padding:0 10px;
+    max-width:min(420px,34vw);overflow:hidden;white-space:nowrap;
+  }
+  #view-cp>#cpHorizonBadge:not([hidden])~#cpContent>.kpirow,
+  #view-orders>#ordersHorizonBadge:not([hidden])~#ordersContent>.kpirow{padding-right:min(440px,36vw);}
+}
+/* Grup başlığı (ör. 35 sütunluk "Order Info") hücrenin ortasında ekran dışına
+   düşüyordu; etiket sola yaslanır. */
+thead tr.groupRow th.draggableGroup{text-align:left;padding-left:12px;letter-spacing:.06em;}
+
+/* Tablo araç çubuğu: birincil eylem etiketli, diğer her şey tek bakışta
+   okunan simge. Etiket DOM'da kalır (erişilebilir ad + ipucu kaynağı). */
+/* Açılır menülerin (Araçlar, ⋯, PLM SYNC) İÇİ bu kuralın dışında: orada
+   etiket, eylemin kendisidir. */
+.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.tableSearchHelpButton):not(.toolbarMoreMenu *):not(.toolbarOverflowSlot *):has(>svg.ic){
+  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+}
+.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}
+.tableActionToolbar .toolbarMoreWrap>:is(.tbtn,.navActionBtn):has(>svg.ic){position:relative;}
+.tableActionToolbar .toolbarMoreWrap>:is(.tbtn,.navActionBtn):has(>svg.ic)::after{
+  content:"";position:absolute;right:4px;bottom:4px;width:4px;height:4px;
+  border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;opacity:.55;
+}
+.blTip{
+  position:fixed;z-index:10050;max-width:280px;padding:7px 10px;pointer-events:none;
+  display:grid;gap:2px;background:var(--ink);color:var(--card);
+  border-radius:var(--r-sm);box-shadow:var(--shadow-2);
+  font-size:var(--fs-xs);line-height:1.35;opacity:0;transform:translateY(-3px);
+  transition:opacity var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease);
+}
+.blTip.isVisible{opacity:1;transform:none;}
+.blTip b{font-weight:700;}
+.blTip span{opacity:.78;}
+
+/* =====================================================================
+   İkon dili · iki tonlu (çizgi + yumuşak vurgu dolgusu)
+   Sprite'taki tint katmanı fill:var(--ic-tint) okur; değişkenler <use>
+   gölge ağacına miras geçtiği için tema/durum buradan yönetilir.
+   ===================================================================== */
+:root{--ic-tint:var(--acc);--ic-tint-o:.2;}
+html[data-theme="dark"]{--ic-tint-o:.3;}
+.ic{stroke-width:1.8;}
+nav.tabs button .ic,.railFoot button .ic{--ic-tint:var(--muted);--ic-tint-o:.22;}
+nav.tabs button:hover .ic{--ic-tint:var(--acc);}
+nav.tabs button.active .ic{--ic-tint:var(--acc);--ic-tint-o:.34;}
+.primary .ic,button.primary .ic,.tbtn.primary .ic{--ic-tint:var(--on-acc);--ic-tint-o:.3;}
+.actionDanger .ic,.ocButton--danger .ic{--ic-tint:var(--danger,#b42318);}
+button:disabled .ic{--ic-tint-o:.08;}
+
+/* =====================================================================
+   Thinking Orbs · Buyer Log'un "düşünüyor / çalışıyor / sakin" göstergesi
+   Tek eleman (.blOrb) — konik renk akışı + nefes + ışık lekesi. Durum
+   data-state ile: idle (yavaş, sakin), thinking (akış hızlanır, nefes alır),
+   warn (amber, veri eski), done (kısa parıltı). Hareket azaltma tercihine uyar.
+   ===================================================================== */
+@property --orb-angle{syntax:'<angle>';inherits:false;initial-value:0deg;}
+:root{
+  --bl-orb-1:var(--acc);
+  --bl-orb-2:color-mix(in srgb,var(--acc) 45%,#7d6bff);
+  --bl-orb-3:color-mix(in srgb,var(--acc) 40%,#23b5a7);
+}
+.blOrb{
+  --orb-size:22px;
+  position:relative;display:inline-block;flex:0 0 auto;width:var(--orb-size);height:var(--orb-size);border-radius:50%;
+  background:
+    radial-gradient(circle at 32% 28%,rgba(255,255,255,.9) 0 8%,rgba(255,255,255,.35) 18%,transparent 42%),
+    conic-gradient(from var(--orb-angle),var(--bl-orb-1),var(--bl-orb-2),var(--bl-orb-3),var(--bl-orb-1));
+  box-shadow:inset 0 -3px 6px rgba(10,20,40,.22),0 0 0 1px color-mix(in srgb,var(--bl-orb-1) 30%,transparent),
+    0 4px 14px color-mix(in srgb,var(--bl-orb-2) 32%,transparent);
+  animation:blOrbFlow 9s linear infinite,blOrbBreath 5s ease-in-out infinite;
+}
+.blOrb::after{
+  content:"";position:absolute;inset:-35%;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,color-mix(in srgb,var(--bl-orb-2) 30%,transparent) 0,transparent 62%);
+  opacity:.55;animation:blOrbHalo 5s ease-in-out infinite;
+}
+.blOrb[data-state="thinking"]{animation-duration:2.4s,1.6s;}
+.blOrb[data-state="thinking"]::after{animation-duration:1.6s;opacity:.85;}
+.blOrb[data-state="warn"]{--bl-orb-1:#d98a1c;--bl-orb-2:#e8b44a;--bl-orb-3:#c2573a;}
+.blOrb[data-state="done"]{--bl-orb-2:color-mix(in srgb,var(--acc) 40%,#2fb67c);--bl-orb-3:#2fb67c;}
+.blOrb--sm{--orb-size:14px;}
+.blOrb--lg{--orb-size:40px;}
+@keyframes blOrbFlow{to{--orb-angle:360deg;}}
+@keyframes blOrbBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes blOrbHalo{0%,100%{transform:scale(.85);opacity:.35}50%{transform:scale(1.08);opacity:.8}}
+@media(prefers-reduced-motion:reduce){.blOrb,.blOrb::after{animation:none!important;}}
+
+/* Orb'un yaşadığı yerler */
+.uiState--loading .uiStateOrb{--orb-size:28px;margin-top:1px;}
+.bCpBusy{display:flex;align-items:center;gap:10px;}
+.ovLaunchHeading{position:relative;}
+.ovLaunchPulse{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:var(--fs-xs);color:var(--muted);}
+.uiStateSpinner.blOrb{border:0;}
+
+/* =====================================================================
+   Bildirimler sayfayı ezmez: sağ ÜST köşe sayfa başlığını, "Düzeni Düzenle"
+   ve araç çubuğu eylemlerini kapatıyordu. Bildirimler sağ altta, kompakt
+   ve en yenisi altta yığılır.
+   ===================================================================== */
+.uiFeedbackRegion--edge{top:auto;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));flex-direction:column-reverse;}
+.uiFeedback{padding:10px 12px;gap:10px;box-shadow:var(--shadow-3);border-radius:var(--r-md);}
+.uiFeedbackRegion--edge .uiFeedback.isLeaving{transform:translateY(6px);}
+/* Kopyalama anlık geri bildirimi: düğme boyutu değişmez. */
+@keyframes blCopyPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 55%,transparent)}100%{box-shadow:0 0 0 8px transparent}}
+:is(.tbtn,.navActionBtn).copied{color:var(--green)!important;border-color:color-mix(in srgb,var(--green) 55%,transparent)!important;animation:blCopyPulse .7s var(--bl-ease);}
+:is(.tbtn,.navActionBtn).copied .ic{--ic-tint:var(--green);--ic-tint-o:.4;}
+:is(.tbtn,.navActionBtn).copyFailed{color:var(--red)!important;border-color:color-mix(in srgb,var(--red) 55%,transparent)!important;}
+
+/* Açılış yüklemesi sayfayı itmez: "Veriler ekranlara yükleniyor" kartı akıştan
+   çıkıp üst ortada yüzen, orb'lu bir hap olur; bittiğinde hiçbir şey kaymaz. */
+#view-overview{position:relative;}
+#ovEmpty:has(>.uiState--loading){
+  position:absolute;top:6px;left:50%;z-index:30;transform:translateX(-50%);
+  width:auto;max-width:min(560px,calc(100% - 32px));min-height:0;padding:0;background:transparent;
+}
+#ovEmpty>.uiState--loading{
+  display:flex;align-items:center;gap:10px;padding:8px 14px 8px 10px;border:1px solid var(--bl-stroke-subtle);
+  border-radius:999px;background:var(--bl-surface-raised);box-shadow:var(--shadow-2);animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both;
+}
+#ovEmpty>.uiState--loading .uiStateOrb{--orb-size:20px;}
+#ovEmpty>.uiState--loading .uiStateBody{display:flex;flex-direction:row;align-items:baseline;gap:8px;}
+#ovEmpty>.uiState--loading .uiStateBody b{font-size:var(--fs-sm);white-space:nowrap;}
+#ovEmpty>.uiState--loading .uiStateBody span{font-size:var(--fs-xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* =====================================================================
+   Teslimat Riski Analizi · açılır/kapanır bölümler
+   Kapalı bölüm başlık + tek satırlık özet olarak durur; tercih saklanır.
+   ===================================================================== */
+.bdaFold{margin-top:0;border-top:1px solid var(--bl-stroke-subtle);}
+.bdaFoldHead{
+  display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:8px 2px;
+  border:0;background:transparent;color:var(--ink);text-align:left;cursor:pointer;
+}
+.bdaFoldHead:hover .bdaH{color:var(--acc-ink);}
+.bdaFoldHead .bdaH{margin:0;}
+.bdaFoldSummary{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs);color:var(--muted);}
+.bdaFoldChevron{flex:0 0 auto;margin-left:auto;width:8px;height:8px;margin-right:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform var(--bl-motion-fast) var(--bl-ease);}
+.bdaFold.is-open>.bdaFoldHead .bdaFoldChevron{transform:translateY(2px) rotate(-135deg);}
+.bdaFold:not(.is-open)>.bdaFoldBody{display:none;}
+.bdaFold.is-open>.bdaFoldBody{padding-bottom:14px;animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both;}
+.bdaFold.is-open>.bdaFoldHead .bdaFoldSummary{display:none;}
+.bdaSubH{margin:0 0 8px;font-size:var(--fs-xs);font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+.bdaAutomateToggle{opacity:.85;}
+.bdaTitle,.bdaH{font-family:var(--sans);letter-spacing:.04em;}
+.bdaTitle{letter-spacing:-.01em;font-weight:700;}
+/* Backlog detay tablosu: tek satır başlık, kısa hücreler; uzun başlık ipucuyla okunur. */
+.backlogDetailTable th{white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;}
+.backlogDetailTable td{white-space:nowrap;}
+.backlogDetailTable .detailImgCell img,.backlogDetailTable .detailImgCell .detailImgPlaceholder{max-height:30px;}
+.toolbarMoreMenu .vfMenuWrap{width:100%;}
+.toolbarMoreMenu .vfMenuWrap>.vfMenuTrigger{width:100%;justify-content:flex-start;padding-left:10px;text-align:left;}
+
+/* =====================================================================
+   Kullanıcı & Yetki Yönetimi
+   Tam genişlik tablo, SVG gezinme ikonları, rol rozetleri, kimliğe göre
+   renklenen avatarlar; satır eylemleri yalnız üzerine gelince/odakta.
+   ===================================================================== */
+.umMain>.umIamFields{flex:1 1 auto;min-width:0;display:flex;}
+.umMain>.umIamFields>.umSection{flex:1 1 auto;min-width:0;}
+.umNavIcon{display:inline-grid;place-items:center;width:18px;}
+.umNavIcon .ic{width:16px;height:16px;}
+.umAvatar{
+  --um-hue:210;border-radius:50%;
+  background:linear-gradient(135deg,hsl(var(--um-hue) 55% 88%),hsl(calc(var(--um-hue) + 40) 50% 80%));
+  color:hsl(var(--um-hue) 45% 26%);box-shadow:inset 0 0 0 1px hsl(var(--um-hue) 40% 70% / .45);
+}
+html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um-hue) 35% 32%),hsl(calc(var(--um-hue) + 40) 30% 26%));color:hsl(var(--um-hue) 60% 88%);}
+.umPill{gap:6px;border-radius:999px;padding:2px 9px 2px 7px;font-size:var(--fs-xs);font-weight:600;}
+.umPill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+.umPill.isActive::before{box-shadow:0 0 0 3px color-mix(in srgb,var(--green) 22%,transparent);}
+.umNodeStatus{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--muted);}
+.umNodeStatus.isActive{background:var(--green);}
+.umRole{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--r-sm);font-size:var(--fs-xs);font-weight:600;background:var(--card2);color:var(--ink2);white-space:nowrap;}
+.umRole.is-moderator{background:color-mix(in srgb,#7d6bff 16%,var(--card));color:color-mix(in srgb,#5a48d8 80%,var(--ink));}
+.umRole.is-senior_manager{background:var(--acc-bg);color:var(--acc-ink);}
+.umRole.is-manager{background:color-mix(in srgb,var(--green) 13%,var(--card));color:var(--green);}
+.umTable tbody tr .umColActions>*{opacity:0;transition:opacity var(--bl-motion-fast);}
+.umTable tbody tr:is(:hover,:focus-within,.isOpen) .umColActions>*{opacity:1;}
+@media(hover:none){.umTable tbody tr .umColActions>*{opacity:1;}}
+
+/* Kısa yardım notları: uzun açıklama paragrafı yerine tek satırlık açılır ipucu. */
+.ovHelp{margin-top:8px;font-size:var(--fs-xs);color:var(--muted);}
+.ovHelp>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;color:var(--acc-ink);font-weight:600;}
+.ovHelp>summary::-webkit-details-marker{display:none;}
+.ovHelp>summary::before{content:"?";display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--acc-bg);font-size:10px;font-weight:700;}
+.ovHelp[open]>span{display:block;margin-top:6px;max-width:880px;line-height:1.55;}
+/* Ön Maliyet diğer sayfalarla aynı hizadan başlar (fazladan 14px iç boşluk vardı). */
+#view-opencosting{padding-inline:0;}
+
+/* Nakliye Kıyaslama ikincil şeridi: tablo araç çubuğuyla aynı simge dili;
+   etiketler ipucuna geçer, şerit tek sakin satır olur. */
+#shipSecondaryToolbar{margin-bottom:8px!important;gap:6px;}
+#shipSecondaryToolbar>:is(.tbtn,.colPanelWrap>.tbtn):has(>svg.ic),#shipSecondaryToolbar>.colPanelWrap>.tbtn:has(>svg.ic){
+  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+}
+#shipSecondaryToolbar :is(.tbtn):has(>svg.ic)>svg.ic{width:16px;height:16px;}
+.vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic){
+  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+}
+.vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}

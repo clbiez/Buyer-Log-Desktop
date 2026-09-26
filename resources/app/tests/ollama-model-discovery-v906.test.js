@@ -268,7 +268,7 @@ test('frontend Ollama’a DOĞRUDAN gitmiyor; her fetch() Buyer Log backend uç 
 });
 
 test('/api/copilot/status backend üzerinden Ollama’ya gider (gateway → provider.listModels)', () => {
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   assert.match(server, /app\.get\('\/api\/copilot\/status'/);
   assert.match(server, /copilotLlm\.status\(/);
 });

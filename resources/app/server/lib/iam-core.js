@@ -63,6 +63,29 @@ const PERMISSION_REGISTRY = Object.freeze(Object.entries(RESOURCES).flatMap(([re
 const PERMISSION_CODES = new Set(PERMISSION_REGISTRY.map(item => item.code));
 const SECURITY_PERMISSIONS = new Set(PERMISSION_REGISTRY.filter(item => item.security).map(item => item.code));
 const SAFE_VIEW_PERMISSIONS = Object.freeze(['CP.VIEW', 'ORDERS.VIEW', 'COLLECTIONS.VIEW', 'BACKLOG.VIEW', 'OAB.VIEW', 'QUOTATIONS.VIEW', 'ANALYSIS.VIEW']);
+/* Buyer kendi ASAS kaynağını yeniler ve fiyat talebi açar/düzenler (kullanıcı
+   kararı). Ortak ayarları (kur, royalty, yol süreleri, DTR/non-DTR, e-posta
+   grupları, Endeksmatik, veri bağlantıları) değiştirme izni SOURCE_DATA.MANAGE
+   hiçbir rolde varsayılan DEĞİLDİR; yalnız Moderatör kişiye özel verir.
+   COLLECTIONS.EDIT tek başına başkasının koleksiyonunu açmaz: koleksiyon
+   sahibinin açık "düzenleme" grantiyle birlikte gerekir. Varsayılan olmadığında
+   sahibin verdiği düzenleme yetkisi buyer'da sessizce salt okunura düşüyordu. */
+const BUYER_DEFAULT_PERMISSIONS = Object.freeze([...SAFE_VIEW_PERMISSIONS, 'SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT', 'COLLECTIONS.EDIT']);
+const SHARED_SETTINGS_PERMISSION = 'SOURCE_DATA.MANAGE';
+/* Saklanmış rol matrisleri (merkezi IAM dahil) varsayılan değişikliğini bir
+   kez alır; rol nesnesindeki defaultsRevision işareti sonraki Moderatör
+   düzenlemelerinin geri alınmasını engeller. */
+const ROLE_DEFAULTS_REVISION = 3;
+const ROLE_DEFAULT_MIGRATIONS = Object.freeze({
+  2: Object.freeze({
+    buyer: { add: ['SOURCE_DATA.VIEW', 'QUOTATIONS.CREATE', 'QUOTATIONS.EDIT'], remove: [] },
+    manager: { add: [], remove: [SHARED_SETTINGS_PERMISSION] },
+    senior_manager: { add: [], remove: [SHARED_SETTINGS_PERMISSION] },
+  }),
+  3: Object.freeze({
+    buyer: { add: ['COLLECTIONS.EDIT'], remove: [] },
+  }),
+});
 const LEGACY_AREA_RESOURCE = Object.freeze({
   overview: 'OVERVIEW', cp: 'CP', orders: 'ORDERS', koleksiyon: 'COLLECTIONS', lfl: 'ANALYSIS',
   opencosting: 'OPEN_COSTING', backlog: 'BACKLOG', shipping: 'SHIPPING', agents: 'AGENTS',
@@ -185,10 +208,10 @@ function defaultRoles() {
   const business = PERMISSION_REGISTRY.filter(item => !item.security).map(item => item.code);
   const businessManage = PERMISSION_REGISTRY.filter(item => !item.security && ['VIEW', 'CREATE', 'EDIT', 'EXPORT', 'APPROVE', 'MANAGE'].includes(item.action)).map(item => item.code);
   return {
-    buyer: { id: 'buyer', nameTr: SYSTEM_ROLES.buyer, nameEn: 'Buyer', defaultDataScope: 'SELF', permissions: [...SAFE_VIEW_PERMISSIONS], system: true },
-    manager: { id: 'manager', nameTr: SYSTEM_ROLES.manager, nameEn: 'Manager', defaultDataScope: 'MMYG', permissions: [...businessManage], system: true },
-    senior_manager: { id: 'senior_manager', nameTr: SYSTEM_ROLES.senior_manager, nameEn: 'Senior Manager', defaultDataScope: 'MAG', permissions: [...business], system: true },
-    moderator: { id: 'moderator', nameTr: SYSTEM_ROLES.moderator, nameEn: 'Moderator', defaultDataScope: 'ALL', permissions: PERMISSION_REGISTRY.map(item => item.code), system: true },
+    buyer: { id: 'buyer', nameTr: SYSTEM_ROLES.buyer, nameEn: 'Buyer', defaultDataScope: 'SELF', permissions: [...BUYER_DEFAULT_PERMISSIONS], system: true, defaultsRevision: ROLE_DEFAULTS_REVISION },
+    manager: { id: 'manager', nameTr: SYSTEM_ROLES.manager, nameEn: 'Manager', defaultDataScope: 'MMYG', permissions: businessManage.filter(code => code !== SHARED_SETTINGS_PERMISSION), system: true, defaultsRevision: ROLE_DEFAULTS_REVISION },
+    senior_manager: { id: 'senior_manager', nameTr: SYSTEM_ROLES.senior_manager, nameEn: 'Senior Manager', defaultDataScope: 'MAG', permissions: business.filter(code => code !== SHARED_SETTINGS_PERMISSION), system: true, defaultsRevision: ROLE_DEFAULTS_REVISION },
+    moderator: { id: 'moderator', nameTr: SYSTEM_ROLES.moderator, nameEn: 'Moderator', defaultDataScope: 'ALL', permissions: PERMISSION_REGISTRY.map(item => item.code), system: true, defaultsRevision: ROLE_DEFAULTS_REVISION },
   };
 }
 // v7.16: normalizeRoles her profil için yeniden çağrılıyordu ve her çağrı dört
@@ -213,9 +236,17 @@ function computeNormalizedRoles(value) {
     const sourceId = aliases[id].find(alias => src[alias] && typeof src[alias] === 'object');
     const role = sourceId ? src[sourceId] : {};
     const explicitScope = clean(role.defaultDataScope).toLocaleUpperCase('tr-TR');
+    let permissions = uniq(role.permissions || base.permissions).map(normalized).filter(code => PERMISSION_CODES.has(code));
+    if (sourceId && Array.isArray(role.permissions)) {
+      for (let revision = (Number(role.defaultsRevision) || 1) + 1; revision <= ROLE_DEFAULTS_REVISION; revision += 1) {
+        const step = ROLE_DEFAULT_MIGRATIONS[revision] && ROLE_DEFAULT_MIGRATIONS[revision][id];
+        if (!step) continue;
+        permissions = uniq([...permissions.filter(code => !step.remove.includes(code)), ...step.add]);
+      }
+    }
     out[id] = { ...base, ...role, id, nameTr: base.nameTr, nameEn: base.nameEn,
       defaultDataScope: Object.prototype.hasOwnProperty.call(DATA_SCOPE_MODES, explicitScope) ? explicitScope : base.defaultDataScope,
-      permissions: uniq(role.permissions || base.permissions).map(normalized).filter(code => PERMISSION_CODES.has(code)) };
+      permissions, defaultsRevision: ROLE_DEFAULTS_REVISION };
   }
   return out;
 }
@@ -294,7 +325,8 @@ function effectivePermissionDetails(profile, store, now = Date.now()) {
   const out = assignedPermissionDetails(profile, store, now), seenHierarchy = new Set();
   for (const child of descendants(store, profile.id, childrenByManager(store))) {
     for (const item of assignedPermissionDetails(child, store, now)) {
-      if (SECURITY_PERMISSIONS.has(item.permission)) continue;
+      // Ortak ayar yetkisi kişiye özeldir: ekibin yöneticisine miras KALMAZ.
+      if (SECURITY_PERMISSIONS.has(item.permission) || item.permission === SHARED_SETTINGS_PERMISSION) continue;
       const key = `${child.id}|${item.permission}`; if (seenHierarchy.has(key)) continue; seenHierarchy.add(key);
       out.push({ permission: item.permission, source: 'HIERARCHY', sourceId: child.id, sourceLabel: child.displayName || child.username, inheritedFrom: child.id });
     }
@@ -358,7 +390,7 @@ function filterRows(profile, rows, store) { const scope = effectiveDataScope(pro
 
 module.exports = {
   ORG_LEVELS, ORG_LEVEL_RANK, SYSTEM_ROLES, ROLE_DEFAULT_SCOPE, USER_STATUSES, DATA_SCOPE_MODES, ACTIONS, OUTLOOK_MAIL_SEARCH, OUTLOOK_V2_PERMISSIONS, RESOURCES,
-  PERMISSION_REGISTRY, PERMISSION_CODES, SECURITY_PERMISSIONS, SAFE_VIEW_PERMISSIONS, LEGACY_AREA_RESOURCE,
+  PERMISSION_REGISTRY, PERMISSION_CODES, SECURITY_PERMISSIONS, SAFE_VIEW_PERMISSIONS, BUYER_DEFAULT_PERMISSIONS, SHARED_SETTINGS_PERMISSION, ROLE_DEFAULTS_REVISION, LEGACY_AREA_RESOURCE,
   normalizeProfileIam, normalizeRoles, normalizeWorkspaceTemplates, migrateStore, identityKeys, findDuplicate, descendants, validateHierarchy,
   assignedPermissionDetails, effectivePermissionDetails, effectivePermissionSet, hasPermission, isSecurityPermission,
   isPrivilegedRole, canAdminUsers, canGrant, effectiveDataScope, rowInScope, filterRows, normalizeGrant, clean, uniq,

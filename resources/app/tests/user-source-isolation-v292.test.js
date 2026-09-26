@@ -14,7 +14,7 @@ process.env.BUYER_LOG_CONFIG_PATH = path.join(root, 'config.json');
 
 const db = require('../server/db');
 const access = require('../server/lib/user-access');
-const server = fs.readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
+const server = require('./helpers/server-source')();
 const accessUi = fs.readFileSync(path.join(__dirname, '../public/user-access-ui.js'), 'utf8');
 const userStorage = fs.readFileSync(path.join(__dirname, '../public/user-storage.js'), 'utf8');
 

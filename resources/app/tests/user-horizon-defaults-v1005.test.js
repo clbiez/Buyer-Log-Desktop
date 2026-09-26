@@ -20,7 +20,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const USER_MANAGEMENT = fs.readFileSync(path.join(ROOT, 'public', 'user-management.js'), 'utf8');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 
 test('v1005 user Horizon administration exposes every source-driven screen', () => {
   assert.match(USER_MANAGEMENT, /const HORIZON_MODULES = \[/);

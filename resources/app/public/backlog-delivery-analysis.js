@@ -29,7 +29,10 @@
     insights: [],
     dim: 'buyer',
     measure: 'qty',            // 'qty' | 'orders'
-    insightLimit: 8,
+    insightLimit: 3,
+    // Rapor sade başlar: yalnız özet, aksiyon gerektirenler ve en riskli siparişler açık.
+    folds: { cause: false, insights: true, attention: true, performance: false, stage: false, dimension: false, topRisk: true, quality: false },
+    automate: false,
     showAllInsights: false,
     period: { mode: 'all', from: '', to: '' },
     periodRowCount: 0,
@@ -69,13 +72,14 @@
       if (saved.settings && typeof saved.settings === 'object') state.settings = { ...state.settings, ...saved.settings };
       if (Array.isArray(saved.customRules)) state.customRules = saved.customRules.map((rule, index) => Insights.normalizeRule(rule, index));
       if (typeof saved.open === 'boolean') state.open = saved.open;
+      if (saved.folds && typeof saved.folds === 'object') Object.keys(state.folds).forEach(key => { if (typeof saved.folds[key] === 'boolean') state.folds[key] = saved.folds[key]; });
     } catch (_) { /* bozuk tercih uygulamayı düşürmez */ }
   }
   function save() {
     try {
       BLStorage.setItem(STORAGE_KEY, JSON.stringify({
         dim: state.dim, measure: state.measure, insightLimit: state.insightLimit,
-        preferences: state.preferences, settings: state.settings, customRules: state.customRules, open: state.open,
+        preferences: state.preferences, settings: state.settings, customRules: state.customRules, open: state.open, folds: state.folds,
       }));
     } catch (_) {}
   }
@@ -197,6 +201,17 @@
   const ordersWhere = predicate => (state.model ? state.model.orders.filter(predicate) : []);
 
   /* ---------------------------------------------------------------- çizim */
+  /* Açılır/kapanır bölüm başlığı. Gövde her zaman çizilir (tıklama anında
+     yeniden hesap yok); kapalıyken CSS gizler. Özet, kapalı bölümün tek
+     satırlık cevabıdır. */
+  function foldHead(key, title, summary, extraClass) {
+    const open = state.folds[key] !== false;
+    return `<div class="bdaSection bdaFold${extraClass ? ` ${extraClass}` : ''}${open ? ' is-open' : ''}" data-fold="${esc(key)}">
+      <button type="button" class="bdaFoldHead" data-fold-toggle="${esc(key)}" aria-expanded="${open ? 'true' : 'false'}">
+        <span class="bdaH">${esc(title)}</span>${summary ? `<span class="bdaFoldSummary">${esc(summary)}</span>` : ''}<span class="bdaFoldChevron" aria-hidden="true"></span>
+      </button><div class="bdaFoldBody">`;
+  }
+
   function kpiCard(key, measure, total, tone) {
     const value = measureOf(measure);
     const share = total > 0 ? value / total * 100 : 0;
@@ -217,9 +232,9 @@
         <span class="bdaKpiMeta">${esc(int(model.totals.orders))} ${esc(L('sipariş', 'orders'))}</span></div>
       ${cards}
     </div>
-    <div class="bdaAutomateRow">${['ALREADY_LATE', 'EXPECTED_LATE', 'AT_RISK']
+    <div class="bdaAutomateRow"><button type="button" class="bdaLink bdaAutomateToggle" data-action="toggleAutomate" aria-expanded="${state.automate ? 'true' : 'false'}">✉ ${esc(state.automate ? L('Otomasyon bağlantılarını gizle', 'Hide automation shortcuts') : L('Bu sonuçlardan otomasyon kur', 'Create automation from these results'))}</button>${state.automate ? ['ALREADY_LATE', 'EXPECTED_LATE', 'AT_RISK']
       .filter(key => model.deliveryOutcome[key] && model.deliveryOutcome[key].rows)
-      .map(key => `<button type="button" class="bdaLink" data-automate-outcome="${esc(key)}">✉ ${esc(L('Otomasyon', 'Automation'))}: ${esc(outcomeLabel(key))}</button>`).join('')}</div>`;
+      .map(key => `<button type="button" class="bdaLink" data-automate-outcome="${esc(key)}">${esc(outcomeLabel(key))}</button>`).join('') : ''}</div>`;
   }
 
   function renderCauseRow(model) {
@@ -233,9 +248,11 @@
         <span class="bdaCauseMeta">${esc(pct(total > 0 ? (state.measure === 'orders' ? cause.orders : cause.qty) / total * 100 : 0))}</span>
       </button>`;
     }).join('');
-    return `<div class="bdaSection"><h4 class="bdaH">${esc(L('Neden riskli?', 'Why are orders at risk?'))}</h4><div class="bdaCauseRow">${cards}</div>
-      <div class="bdaAutomateRow">${model.rootCauses.slice(0, 6).map(cause =>
-        `<button type="button" class="bdaLink" data-automate-cause="${esc(cause.key)}">✉ ${esc(causeLabel(cause.key))}</button>`).join('')}</div></div>`;
+    const top = model.rootCauses[0];
+    const summary = top ? `${causeLabel(top.key)} · ${int(state.measure === 'orders' ? top.orders : top.qty)} ${measureWord()}` : '';
+    return `${foldHead('cause', L('Neden riskli?', 'Why are orders at risk?'), summary)}<div class="bdaCauseRow">${cards}</div>
+      ${state.automate ? `<div class="bdaAutomateRow">${model.rootCauses.slice(0, 6).map(cause =>
+        `<button type="button" class="bdaLink" data-automate-cause="${esc(cause.key)}">✉ ${esc(causeLabel(cause.key))}</button>`).join('')}</div>` : ''}</div></div>`;
   }
 
   /* Analiz ekranından otomasyon taslağı. Tarif KAPALI ve zamanlamasız
@@ -272,8 +289,8 @@
       ? `<button type="button" class="bdaLink" data-action="showAllInsights">${esc(L(`Tüm ${state.insights.length} yorumu gör`, `View all ${state.insights.length} insights`))}</button>`
       : (state.showAllInsights && state.insights.length > state.insightLimit
         ? `<button type="button" class="bdaLink" data-action="showFewerInsights">${esc(L('Daha az göster', 'Show fewer'))}</button>` : '');
-    return `<div class="bdaSection"><h4 class="bdaH">${esc(L('Otomatik Yorumlar', 'Automatic Insights'))}</h4>
-      <ul class="bdaInsightList">${items}</ul>${more}</div>`;
+    return `${foldHead('insights', L('Otomatik Yorumlar', 'Automatic Insights'), L(`${state.insights.length} yorum`, `${state.insights.length} insights`))}
+      <ul class="bdaInsightList">${items}</ul>${more}</div></div>`;
   }
 
   function renderNeedsAttention(model) {
@@ -288,7 +305,8 @@
         <span class="bdaAttentionLabel">${esc(labels[key])}</span>
         <span class="bdaAttentionValue">${esc(int(groups.counts[key]))}</span>
         <span class="bdaAttentionMeta">${esc(int(groups.quantities[key]))} ${esc(L('adet', 'units'))}</span></button>`).join('');
-    return `<div class="bdaSection"><h4 class="bdaH">${esc(L('Aksiyon Gerekenler', 'Needs Attention'))}</h4><div class="bdaAttentionRow">${cards}</div></div>`;
+    const urgent = (groups.counts.CRITICAL || 0) + (groups.counts.ACTION_TODAY || 0);
+    return `${foldHead('attention', L('Aksiyon Gerekenler', 'Needs Attention'), urgent ? L(`${int(urgent)} acil sipariş`, `${int(urgent)} urgent orders`) : L('Acil sipariş yok', 'No urgent orders'))}<div class="bdaAttentionRow">${cards}</div></div></div>`;
   }
 
   function renderPerformance(model) {
@@ -301,10 +319,10 @@
           <span>${esc(L('Zamanında yüklendi · transit aşıldı', 'Loaded on time · transit exceeded'))}</span>
           <b>${esc(int(measureOf(transit.loadedOnTimeButDelayed)))}</b></button>`
       : `<span class="bdaMuted">${esc(L('Transit planını aşan yükleme yok.', 'No shipment has exceeded its planned transit.'))}</span>`;
-    return `<div class="bdaSection bdaSplit">
-      <div><h4 class="bdaH">${esc(L('Yükleme Başarımı', 'Loading Performance'))}</h4><div class="bdaChipRow">${loadingCards || `<span class="bdaMuted">—</span>`}</div></div>
-      <div><h4 class="bdaH">${esc(L('Transit Başarımı', 'Transit Performance'))}</h4><div class="bdaChipRow">${transitCard}</div></div>
-    </div>`;
+    return `${foldHead('performance', L('Yükleme & Transit Başarımı', 'Loading & Transit Performance'), '')}<div class="bdaSplit">
+      <div><h5 class="bdaSubH">${esc(L('Yükleme', 'Loading'))}</h5><div class="bdaChipRow">${loadingCards || `<span class="bdaMuted">—</span>`}</div></div>
+      <div><h5 class="bdaSubH">${esc(L('Transit', 'Transit'))}</h5><div class="bdaChipRow">${transitCard}</div></div>
+    </div></div></div>`;
   }
 
   function renderStageMatrix(model) {
@@ -318,10 +336,10 @@
       }).join('');
       return `<tr><td>${esc(stageLabel(stage.key))}</td><td class="num">${esc(int(measureOf(stage.total)))}</td>${cells}</tr>`;
     }).join('');
-    return `<div class="bdaSection"><h4 class="bdaH">${esc(L('Güncel Durum × Teslimat Riski', 'Current Stage × Delivery Risk'))}</h4>
+    return `${foldHead('stage', L('Güncel Durum × Teslimat Riski', 'Current Stage × Delivery Risk'), L(`${model.stages.length} aşama`, `${model.stages.length} stages`))}
       <div class="bdaTableWrap"><table class="bdaTable"><thead><tr>
         <th>${esc(L('Aşama', 'Stage'))}</th><th class="num">${esc(L('Toplam', 'Total'))}</th>${head}
-      </tr></thead><tbody>${body}</tbody></table></div></div>`;
+      </tr></thead><tbody>${body}</tbody></table></div></div></div>`;
   }
 
   function renderDimension(model) {
@@ -337,11 +355,11 @@
       return `<tr><td>${esc(bucket.name)}</td><td class="num">${esc(int(measureOf(bucket.total)))}</td>${cells}<td class="num">${esc(pct(lateShare))}</td></tr>`;
     }).join('');
     const head = Engine.OUTCOMES.map(key => `<th class="num">${esc(outcomeLabel(key))}</th>`).join('');
-    return `<div class="bdaSection"><h4 class="bdaH">${esc(L('Kırılım Analizi', 'Dimension Analysis'))}</h4>
+    return `${foldHead('dimension', L('Kırılım Analizi', 'Dimension Analysis'), dimLabel(state.dim))}
       <div class="bdaTabs">${tabs}</div>
       <div class="bdaTableWrap"><table class="bdaTable"><thead><tr>
         <th>${esc(dimLabel(state.dim))}</th><th class="num">${esc(L('Toplam', 'Total'))}</th>${head}<th class="num">${esc(L('Gecikme %', 'Late %'))}</th>
-      </tr></thead><tbody>${body || `<tr><td colspan="8" class="bdaMuted">—</td></tr>`}</tbody></table></div></div>`;
+      </tr></thead><tbody>${body || `<tr><td colspan="8" class="bdaMuted">—</td></tr>`}</tbody></table></div></div></div>`;
   }
 
   function renderTopRisk(model) {
@@ -356,23 +374,23 @@
       <td>${esc(order.riskCause ? causeLabel(order.riskCause) : '—')}</td>
       <td>${esc(order.etaSource === 'ias' ? L('IAS antrepo tarihi', 'IAS warehouse date') : order.etaSource === 'calculated' ? L('Transit kuralından hesaplandı', 'Calculated from transit rule') : '—')}</td>
     </tr>`).join('');
-    return `<div class="bdaSection"><h4 class="bdaH">${esc(L('En Riskli Siparişler', 'Top Risk Orders'))}</h4>
+    return `${foldHead('topRisk', L('En Riskli Siparişler', 'Top Risk Orders'), L(`ilk ${list.length}`, `top ${list.length}`))}
       <div class="bdaTableWrap"><table class="bdaTable"><thead><tr>
         <th>${esc(L('Sipariş', 'Order'))}</th><th>${esc(L('Model', 'Model'))}</th><th>${esc(L('Aşama', 'Stage'))}</th>
         <th>${esc(L('Yükleme Tipi', 'Loading Type'))}</th><th class="num">${esc(L('Adet', 'Qty'))}</th>
         <th class="num">${esc(L('Tampon (gün)', 'Buffer (days)'))}</th><th>${esc(L('Sonuç', 'Outcome'))}</th>
         <th>${esc(L('Sebep', 'Cause'))}</th><th>${esc(L('ETA Kaynağı', 'ETA Source'))}</th>
-      </tr></thead><tbody>${rows}</tbody></table></div></div>`;
+      </tr></thead><tbody>${rows}</tbody></table></div></div></div>`;
   }
 
   function renderDataQuality(model) {
     const missing = model.dataQuality.missing.slice(0, 8);
     if (!missing.length) return '';
     const items = missing.map(item => `<li>${esc(int(item.rows))} ${esc(L('satırda eksik', 'rows missing'))}: <b>${esc(String(item.field).replace(/\n/g, ' '))}</b></li>`).join('');
-    return `<div class="bdaSection"><h4 class="bdaH">${esc(L('Veri Kalitesi', 'Data Quality'))}</h4>
+    return `${foldHead('quality', L('Veri Kalitesi', 'Data Quality'), L(`${missing.length} eksik alan`, `${missing.length} missing fields`))}
       <ul class="bdaMissing">${items}</ul>
       <p class="bdaMuted">${esc(L('Bu alanlar eksik olduğu için ilgili siparişler "Hesaplanamıyor" olarak sınıflandırıldı; tahmin üretilmedi.',
-        'These orders are classified as Unknown because a required field is missing; no prediction was fabricated.'))}</p></div>`;
+        'These orders are classified as Unknown because a required field is missing; no prediction was fabricated.'))}</p></div></div>`;
   }
 
   function renderParity() {
@@ -472,6 +490,17 @@
 
   /* --------------------------------------------------------------- olaylar */
   function bind(host) {
+    host.querySelectorAll('[data-fold-toggle]').forEach(button => {
+      button.addEventListener('click', () => {
+        const key = button.dataset.foldToggle;
+        const section = button.closest('[data-fold]');
+        const open = !(state.folds[key] !== false);
+        state.folds[key] = open;
+        if (section) section.classList.toggle('is-open', open);
+        button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        save();
+      });
+    });
     host.querySelectorAll('[data-control]').forEach(select => {
       select.addEventListener('change', () => {
         const key = select.dataset.control;
@@ -488,6 +517,7 @@
         const action = button.dataset.action;
         if (action === 'refresh') { void refresh(true); return; }
         if (action === 'showAllInsights') { state.showAllInsights = true; render(); return; }
+        if (action === 'toggleAutomate') { state.automate = !state.automate; render(); return; }
         if (action === 'showFewerInsights') { state.showAllInsights = false; render(); return; }
         if (action === 'copy') { copySummary(); return; }
         if (action === 'settings') { openSettings(); return; }

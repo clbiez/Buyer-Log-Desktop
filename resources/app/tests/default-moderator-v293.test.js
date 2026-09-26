@@ -14,7 +14,7 @@ process.env.BUYER_LOG_LOCAL_DATA_ROOT = path.join(root, 'local-data');
 process.env.BUYER_LOG_CONFIG_PATH = path.join(root, 'config.json');
 
 const access = require('../server/lib/user-access');
-const serverSource = fs.readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
+const serverSource = require('./helpers/server-source')();
 const uiSource = fs.readFileSync(path.join(__dirname, '../public/user-access-ui.js'), 'utf8');
 const storageSource = fs.readFileSync(path.join(__dirname, '../public/user-storage.js'), 'utf8');
 const stopScriptSource = fs.readFileSync(path.join(__dirname, '../server/lib/StopBuyerLog.ps1'), 'utf8')

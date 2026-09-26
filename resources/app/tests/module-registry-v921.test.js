@@ -24,7 +24,7 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const registry = require('../server/lib/module-registry');
-const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
+const SERVER = require('./helpers/server-source')();
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 
 /* Gerçek kaynaklardan okunan doğrular. Elle yazılmaz: kayıt defteri ile

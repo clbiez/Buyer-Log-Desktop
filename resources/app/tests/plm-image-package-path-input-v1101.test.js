@@ -82,7 +82,7 @@ test('gerçekten var olmayan klasörde ipucu uydurulmaz', () => {
 });
 
 test('sunucu rotası da aynı normalizasyonu uygular', () => {
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = require('./helpers/server-source')();
   const block = server.slice(server.indexOf('function plmPackageRootFrom('), server.indexOf('function plmPackageContext('));
   assert.match(block, /u200e/, 'görünmez yön işaretleri temizlenmeli');
   assert.match(block, /raw\.startsWith\('"'\) && raw\.endsWith\('"'\)/, 'tırnaklı yol kabul edilmeli');

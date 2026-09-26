@@ -20,7 +20,7 @@ const root = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
 const APP = read('public/app-main.js');
 const INDEX = read('public/index.html');
-const SERVER = read('server/server.js');
+const SERVER = require('./helpers/server-source')();
 const CONNECTOR = read('server/lib/agent-browser-connector.js');
 const connector = require(path.join(root, 'server/lib/agent-browser-connector.js'));
 
