@@ -53,3 +53,15 @@ test('CP priority radar bağımsız Overview modülü olarak eklenip çıkarıla
   assert.match(APP, /renderOverviewPriorityRadar\(cpRows\)/);
   assert.match(APP, /priorityRadar:appLang/);
 });
+
+
+test('Every Overview radar has an independent persisted filter and label-safe canvas', () => {
+  assert.equal(radar.FILTER_STORAGE_KEY, 'buyerlog.overview.radarFilters.v1');
+  assert.match(SOURCE, /config\.filterKey='overview:'\+def\.key/);
+  assert.match(SOURCE, /filterKey:'overview:priority'/);
+  assert.match(SOURCE, /data-radar-filter-axis/);
+  assert.match(SOURCE, /data-radar-filter-series/);
+  assert.match(SOURCE, /const width=760,height=400/);
+  assert.match(CSS, /\.ovRadarFilterPanel/);
+  assert.match(CSS, /\.ovRadarSvg\{[^}]*max-width:760px[^}]*overflow:visible/);
+});
