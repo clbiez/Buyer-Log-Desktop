@@ -75,7 +75,7 @@ const LAND=Object.freeze([
 function clean(value){return String(value==null?'':value).replace(/\s+/g,' ').trim();}
 function norm(value){
   return clean(value).toLocaleLowerCase('tr-TR')
-    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i')
     .replace(/[()]/g,' ').replace(/[_/\\-]+/g,' ').replace(/[^\p{L}\p{N}]+/gu,' ').replace(/\s+/g,' ').trim();
 }
 function toNumber(value){
@@ -307,10 +307,11 @@ function filterMatch(rec){
   if(state.transitOnly&&rec.state!=='transit')return false;
   return true;
 }
-function applyFilters(){
+function applyFilters(renderPanel=true){
   state.filtered=state.records.filter(filterMatch);
   state.groups=aggregateRecords(state.filtered);
-  renderFilters();renderKpis();renderMeta();scheduleDraw();
+  if(renderPanel!==false)renderFilters();
+  renderControls();renderKpis();renderMeta();scheduleDraw();
 }
 function sourceLabel(source){return ({cp:'CP',orders:'Orders',backlog:'Backlog',combined:L('Birleşik','Combined')})[source]||source;}
 function stateLabel(value){return ({
@@ -362,7 +363,7 @@ function renderFilters(){
     '<label class="gfCheck"><input type="checkbox" data-gf-flag="transitOnly"'+(state.transitOnly?' checked':'')+'><span>'+esc(L('Yalnız yoldakiler','In transit only'))+'</span></label>'+
     '<label class="gfCheck"><input type="checkbox" data-gf-flag="riskOnly"'+(state.riskOnly?' checked':'')+'><span>'+esc(L('Yalnız riskliler','Risk only'))+'</span></label>'+
     '<button type="button" class="tbtn" data-gf-clear>'+esc(L('Filtreleri temizle','Clear filters'))+'</button>';
-  panel.querySelector('[data-gf-search]')?.addEventListener('input',event=>{state.filters.search=event.target.value;savePrefs();applyFilters();});
+  panel.querySelector('[data-gf-search]')?.addEventListener('input',event=>{state.filters.search=event.target.value;savePrefs();applyFilters(false);});
   panel.querySelectorAll('[data-gf-filter]').forEach(select=>select.addEventListener('change',()=>{state.filters[select.dataset.gfFilter]=select.value;savePrefs();applyFilters();}));
   panel.querySelectorAll('[data-gf-flag]').forEach(input=>input.addEventListener('change',()=>{
     if(input.dataset.gfFlag==='riskOnly')state.riskOnly=input.checked;
