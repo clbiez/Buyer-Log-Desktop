@@ -12,7 +12,7 @@ const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
 const CPA_CSS=fs.readFileSync(path.join(ROOT,'public','cp-overview-assistant.css'),'utf8');
 const layout=require('../public/overview-layout.js');
 
-const DETAIL_KEYS=['productionFocus','attention','dataCoverage','country','subManufacturer','season','buyingGroup'];
+const DETAIL_KEYS=['productionFocus','priorityRadar','attention','dataCoverage','country','subManufacturer','season','buyingGroup'];
 
 test('v9.58 CP Overview detay modülleri merkezi Edit Layout registry içinde ayrı ayrı bulunur',()=>{
   assert.deepEqual(layout.detailWidgets,DETAIL_KEYS);
@@ -22,6 +22,7 @@ test('v9.58 CP Overview detay modülleri merkezi Edit Layout registry içinde ay
   assert.equal(state.details.widths.country,'half');
   assert.equal(state.details.widths.subManufacturer,'half');
   assert.equal(state.details.widths.productionFocus,'full');
+  assert.equal(state.details.widths.priorityRadar,'full');
   for(const key of DETAIL_KEYS)assert.match(INDEX,new RegExp(`data-overview-detail-widget="${key}"`));
 });
 
