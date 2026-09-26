@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.138",
-  "commit_sha": "34cf9a2ac537256275d0cd63acfa00821f190645",
-  "release_notes": "Buyer Log 7.0.138: Claude tarafından geliştirilen çok kullanıcılı Shared Hub senkron ve yetki iyileştirmeleri main'e eksiksiz alındı. Koleksiyon eşzamanlı düzenleme için alan bazlı üç yönlü birleştirme ve nedensel çakışma algılama, Buyer/Moderatör yetki düzeltmeleri, koleksiyon görsel paylaşımı, fiyat talebi ve ortak ayar görünürlüğü, çoklu sekmede tek canlı bağlantı ve veri kaybı önleme iyileştirmeleri eklendi. server.js route mimarisi modülerleştirildi. CP, Siparişler, Genel Bakış ve LFL geçişlerinde projection/cache ve yeniden çizim optimizasyonlarıyla performans iyileştirildi. Genel UI okunabilirliği, boş durumlar, tooltip/ikon dili, kullanıcı yönetimi ve Genel Bakış Bugün modülü güncellendi. Yeni çok kullanıcılı senkron, yetki, performans ve çekirdek hesap regression testleri dahil edildi."
+  "version": "7.0.139",
+  "commit_sha": "b4f29782432d8974a8ac737fcf662d2aec93229b",
+  "release_notes": "Buyer Log 7.0.139: Backlog sayfasına Planlanan & Gerçekleşen Analizi eklendi. Kullanıcı seçtiği iki tarih-saat arasındaki snapshotları karşılaştırarak yalnız değişen/sapan kayıtları görür; Ex-Factory revizyonları, planlanan ve gerçekleşen yükleme, gerçekleşmeyen plan açığı, geç yükleme, statü, tahmini antrepo giriş tarihi, miktar ve diğer tarih değişiklikleri analiz edilir. Ara revizyon trafiği ayrıca korunur; çoklu revizyon ve başlangıç değerine geri dönen değişiklikler görünür. Buyer, Buyer Group, üretici, sezon, MAG ve MMYG filtreleri ile gündem odaklı analiz desteklenir. Modül açılır/kapanır ve taşınabilir; kullanıcı konumu saklanır. Snapshot geçmişi tek sıkıştırılmış baz+delta dosyasında tutulur. Güncel Backlog radar/pivot geliştirmeleri korunmuş ve yeni regression testleri eklenmiştir."
 }
