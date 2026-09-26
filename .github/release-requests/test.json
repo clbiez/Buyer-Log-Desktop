@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.141",
-  "commit_sha": "68e77fcba67bc0b03daca6091b2b99caa4f30e60",
-  "release_notes": "Buyer Log 7.0.141: Overview ekranına Global Flow Map eklendi. Harita CP, Orders, Backlog veya Combined veri kaynağını kullanabilir; Combined görünüm aynı siparişi Backlog > Orders > CP önceliğiyle tekilleştirir. 2D dünya haritası ve 3D küre görünümü, açık/koyu tema desteği, sürükleme, yakınlaştırma, tam ekran, KPI ve detay filtreleri bulunur. Üretimde, sevke hazır, yolda ve İstanbul/depo durumları görselleştirilir; Gemi, Uçak, Tır ve Gemi+Uçak akışları animasyonlu rota çizgileriyle gösterilir. Harita üzerindeki akışlara çift tıklayarak sipariş detay drawer'ı açılabilir. Backlog verisi mevcut yetki ve aktif filtreleri koruyan /api/backlog-export hattından alınır. Global Flow Map mevcut Overview Edit Layout sistemine tam genişlik, taşınabilir ve daraltılabilir modül olarak entegre edilmiştir."
+  "version": "7.0.142",
+  "commit_sha": "075b9467bfc422ede2c484c419804f979a8b4c65",
+  "release_notes": "Buyer Log 7.0.142: Overview ekranındaki Global Flow Map görünürlük sorunu düzeltildi. Modül 7.0.141'de DOM ve layout durumuna doğru şekilde eklenmişti ancak uygulamanın genel section { display:none } kuralını override etmediği için ekranda görünmüyor, buna rağmen düzen yöneticisi modülü mevcut saydığı için Modül Ekle listesinde de çıkmıyordu. Global Flow Map artık Overview'da normal şekilde görünür; mevcut 2D/3D görünüm, CP/Orders/Backlog/Combined kaynakları, filtreler, animasyonlu rota akışları, tam ekran ve çift tık detay özellikleri korunur. Bu görünürlük davranışı için regresyon testi eklendi."
 }
