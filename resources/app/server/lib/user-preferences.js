@@ -42,6 +42,8 @@ const WORKSPACE_CATEGORY_PREFIXES = Object.freeze({
     'lcw.lfl.customCompare.', 'lcw.lfl.analysisSplit.', 'lcw.koleksiyon.scope.',
     'lcw.koleksiyon.analytics.', 'lcw.oab.', 'lcw.intake.', 'lcw_filter_favorite_',
     'bl.autoRefresh.',
+    // Global Flow Map kaynak, görünüm, çoklu filtre ve hızlı filtre seti.
+    'buyerlog.overview.globalFlow.',
   ]),
   columns: Object.freeze([
     'lcw.table.columnState.', 'lcw.freeze.', 'lcw.backlog.columnWidths.',

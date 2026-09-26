@@ -958,6 +958,8 @@ function invalidateUnifiedPriorityDecisions(reason,tables=null){
   _unifiedPriorityDataRevision+=1;
   for(const key of Array.isArray(tables)&&tables.length?tables:['cp','orders']){_unifiedPriorityTableRevision[key]=(_unifiedPriorityTableRevision[key]||0)+1;_unifiedPriorityCache[key]=null;}
   window.BLPerf?.mark?.('UNIFIED_PRIORITY_INVALIDATED',{reason:reason||'data',revision:_unifiedPriorityDataRevision});
+  // Global Flow Map CP/Orders verisini ızgara DOM'undan değil bu revizyondan izler.
+  try{window.dispatchEvent(new CustomEvent('bl:global-flow-data-changed',{detail:{reason:reason||'data',tables:Array.isArray(tables)&&tables.length?tables.slice():['cp','orders']}}));}catch(_){}
 }
 function unifiedPriorityRowActive(tableKey,row){
   return tableKey!=='orders'||norm(row&&row['Active/Inactive'])!=='Inactive';
@@ -1902,6 +1904,25 @@ async function ensureOrdersLoaded(options={}){
 }
 window.BLEnsureOrdersLoaded=ensureOrdersLoaded;
 window.BLEnsureCpLoaded=ensureCpLoaded;
+/* Global Flow Map veri kaynağı. Harita CP/Orders sayfasının görünür/filtreli
+   satırlarını veya son sayfa filtresini DEĞİL, kaynağın bütün veri kümesini
+   (state.cp.rows / state.orders.rows) kullanır; yalnız kendi filtreleri
+   daraltır. Critical, tek kanonik Unified Action Priority kodundan okunur;
+   karar motoru henüz yüklenmediyse yüklendiğinde harita yeniden beslenir. */
+function globalFlowSourceRows(tableKey){
+  const rows=state[tableKey]&&Array.isArray(state[tableKey].rows)?state[tableKey].rows:[];
+  if(rows.length&&!syncUnifiedPrioritiesForTable(tableKey)){
+    Promise.resolve(window.BLPerf?.ensureFeature?.('cpAssistant')).then(()=>{
+      if(syncUnifiedPrioritiesForTable(tableKey))window.dispatchEvent(new CustomEvent('bl:global-flow-data-changed',{detail:{reason:'priority-ready',tables:[tableKey]}}));
+    }).catch(()=>{});
+  }
+  return rows;
+}
+window.BLGlobalFlowDataProviders={
+  cp:async()=>{await ensureCpLoaded({reason:'overview'});return globalFlowSourceRows('cp');},
+  orders:async()=>{await ensureOrdersLoaded();return globalFlowSourceRows('orders');},
+  revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0),
+};
 window.BLEnsureCollectionCatalogLoaded=ensureCollectionCatalogLoaded;
 
 function switchTab(tab){
