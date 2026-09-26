@@ -350,23 +350,7 @@ body.bl-readonly [data-bl-frozen] .delTypeTrigger{
   opacity:.72;
 }
 body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
-/* Yenileme sürerken ekranın üstünde kalıcı bir şerit: kullanıcı düzenlemenin
-   neden çalışmadığını tahmin etmek zorunda kalmasın. */
-body.bl-readonly::before{
-  content:attr(data-readonly-label);
-  position:fixed;
-  inset:0 0 auto 0;
-  z-index:9998;
-  padding:4px 12px;
-  text-align:center;
-  font-size:11.5px;
-  font-weight:600;
-  letter-spacing:.02em;
-  color:#3b2f00;
-  background:var(--yellow-lite,#fdf3d0);
-  border-bottom:1px solid var(--line2,#d9d2b8);
-  pointer-events:none;
-}
+/* Yenileme kapsamı artık uygulamanın normal bildirim/toast sistemiyle gösterilir; global üst şerit kullanılmaz. */
 
 /* v6.34 — Sütun filtresi panelindeki revizyon bölümü (revize var / yok).
    .cfpRange ile aynı ölçüleri paylaşır; ayrı sınıf, aralık kutularının

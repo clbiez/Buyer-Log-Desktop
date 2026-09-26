@@ -93,6 +93,11 @@
     }).join('');
     const available = availableFor('filters', state.viewConfig).length;
     bar.innerHTML = `${filterFields}<button type="button" class="navActionBtn intakeFilterAdd" data-intake-add-filter${available ? '' : ' disabled'}>+ ${esc(text('Filtre ekle', 'Add filter'))}</button>`;
+    const filterButton = byId('intakeFiltersBtn');
+    if (filterButton) {
+      const active = filters.some(field => Array.isArray(query().filterValues && query().filterValues[field.id]) && query().filterValues[field.id].length > 0);
+      filterButton.classList.toggle('hasActiveFilters', active);
+    }
   }
 
   const INTAKE_AGGREGATES = ['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'FIRST'];
@@ -779,6 +784,21 @@
     return state.metadataPromise;
   }
 
+  function setFilterPanelOpen(open) {
+    const panel = byId('intakeFilterPanel');
+    const button = byId('intakeFiltersBtn');
+    if (!panel || !button) return;
+    const next = Boolean(open);
+    panel.hidden = !next;
+    button.setAttribute('aria-expanded', next ? 'true' : 'false');
+    if (next) {
+      const sectionRect = section.getBoundingClientRect();
+      const buttonRect = button.getBoundingClientRect();
+      panel.style.top = `${Math.max(44, buttonRect.bottom - sectionRect.top + 6)}px`;
+      panel.style.right = `${Math.max(8, sectionRect.right - buttonRect.right)}px`;
+    }
+  }
+
   function bind() {
     byId('intakeFieldsBtn')?.addEventListener('click', () => { void loadMetadata().finally(openFields); });
     byId('intakeResetBtn')?.addEventListener('click', async () => {
@@ -792,6 +812,11 @@
       } catch (error) { setStatus(error.message || String(error), 'error'); }
     });
     byId('intakeRefreshBtn')?.addEventListener('click', () => void refresh(true));
+    byId('intakeFiltersBtn')?.addEventListener('click', event => {
+      event.stopPropagation();
+      const panel = byId('intakeFilterPanel');
+      setFilterPanelOpen(Boolean(panel && panel.hidden));
+    });
     byId('intakeCollapseAllBtn')?.addEventListener('click', intakeCollapseAllGroups);
     byId('intakeExpandAllBtn')?.addEventListener('click', intakeExpandAllGroups);
     byId('intakeFilterBar')?.addEventListener('click', event => {
@@ -837,8 +862,12 @@
       void saveView(next);
     });
     byId('intakeTable')?.addEventListener('dblclick', event => { const header = event.target.closest('[data-intake-rename]'); if (header) renameHeader(header); });
-    document.addEventListener('click', event => { if (state.popover && !state.popover.contains(event.target) && !event.target.closest('[data-intake-filter],[data-intake-add-filter]')) closePopover(); });
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closePopover(); });
+    document.addEventListener('click', event => {
+      if (state.popover && !state.popover.contains(event.target) && !event.target.closest('[data-intake-filter],[data-intake-add-filter]')) closePopover();
+      const panel = byId('intakeFilterPanel');
+      if (panel && !panel.hidden && !panel.contains(event.target) && !event.target.closest('#intakeFiltersBtn,.intakeFilterPopover')) setFilterPanelOpen(false);
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { closePopover(); setFilterPanelOpen(false); } });
   }
 
   window.INTAKE_REPORT_API = window.INTAKE_REPORT_API || { updateDisplayLabel: (config, id, value) => {

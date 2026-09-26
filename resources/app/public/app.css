@@ -240,7 +240,8 @@ html[data-rail="min"] .railFoot button span{display:none;}
 .syncStatusBadge{display:inline-flex;align-items:center;justify-content:center;color:var(--muted);line-height:1;}
 .syncStatusBadge .ic{width:16px;height:16px;}
 .syncStatusBadge.is-syncing{color:var(--acc);}
-.syncStatusBadge.is-syncing .ic{animation:spinIc .8s linear infinite;}
+@keyframes syncCloudPulse{0%,100%{opacity:1}50%{opacity:.45}}
+.syncStatusBadge.is-syncing .ic{animation:syncCloudPulse .9s ease-in-out infinite;}
 .syncStatusBadge.is-pending{color:var(--orange);}
 .syncStatusBadge.is-synced{color:var(--green);}
 .syncStatusBadge.is-offline{color:var(--muted);}
@@ -4300,7 +4301,12 @@ tr.blRemoteChanged>td{animation:blRemoteChangedFade 5s ease-out 1;}
 .intakeStatus.warning{border-color:color-mix(in srgb,var(--orange) 45%,var(--line));color:var(--orange);background:var(--orange-bg);}
 .intakeStatus.error{border-color:color-mix(in srgb,var(--red) 45%,var(--line));color:var(--red);background:var(--red-bg);}
 .intakeStatus.loading{color:var(--acc-ink);background:var(--acc-bg);}
-.intakeFilterBar{display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.intakeSection{position:relative;}
+.intakeFiltersBtn{position:relative;}
+.intakeFiltersBtn.hasActiveFilters{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
+.intakeFilterPanel{position:absolute;top:48px;right:12px;z-index:70;width:min(780px,calc(100% - 24px));max-height:min(420px,70vh);overflow:auto;padding:10px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);box-shadow:var(--shadow-1);}
+.intakeFilterPanel[hidden]{display:none!important;}
+.intakeFilterBar{display:flex;align-items:flex-end;flex-wrap:wrap;gap:8px;margin:0;}
 .intakeFilterAdd{align-self:flex-end;}
 .intakeFilterField{display:flex;flex-direction:column;gap:3px;min-width:150px;color:var(--muted);font-size:var(--fs-xs);}
 .intakeFilterLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}

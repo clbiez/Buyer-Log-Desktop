@@ -12299,10 +12299,10 @@ function setReadOnlyMode(on, targets){
       if(next && areas.includes(area)) section.setAttribute('data-bl-frozen', '');
       else section.removeAttribute('data-bl-frozen');
     });
-    if(next) document.body.setAttribute('data-readonly-label', appLang==='en'
+    document.body.removeAttribute('data-readonly-label');
+    if(next) showToast(appLang==='en'
       ? `Refreshing ${areas.map(areaLabel).join(', ')} — editing is paused there so no entry is lost. Other screens stay editable.`
       : `${areas.map(areaLabel).join(', ')} yenileniyor — hiçbir giriş kaybolmasın diye YALNIZ bu alanlarda düzenleme duraklatıldı. Diğer ekranlar açık.`);
-    else document.body.removeAttribute('data-readonly-label');
   }catch(_){ }
   try{ document.body.setAttribute('aria-busy', next ? 'true' : 'false'); }catch(_){ }
 }
@@ -13528,10 +13528,10 @@ async function openSyncLocalDataModal(){
 function syncStatusText(s){if(s&&s.progress)return '↻ Syncing';const pending=Number(s&&s.pendingUpload||0)+Number(s&&s.pendingDownload||0);if(pending)return `● ${pending} Pending`;if(!s||!s.online)return '! Offline';return '✓ Synced';}
 function syncStatusBadgeView(s){
   const pending=Number(s&&s.pendingUpload||0)+Number(s&&s.pendingDownload||0),en=appLang==='en';
-  if(s&&s.progress)return {icon:'i-refresh',tone:'syncing',label:en?'Syncing':'Senkronize ediliyor',count:0};
-  if(pending)return {icon:'i-refresh',tone:'pending',label:en?`${pending} pending sync`:`${pending} bekleyen senkron`,count:pending};
+  if(s&&s.progress)return {icon:'i-cloud',tone:'syncing',label:en?'Syncing':'Senkronize ediliyor',count:0};
+  if(pending)return {icon:'i-cloud',tone:'pending',label:en?`${pending} pending sync`:`${pending} bekleyen senkron`,count:pending};
   if(!s||!s.online)return {icon:'i-cloud-off',tone:'offline',label:en?'Offline':'Çevrimdışı',count:0};
-  return {icon:'i-check',tone:'synced',label:en?'Synced':'Senkronize',count:0};
+  return {icon:'i-cloud',tone:'synced',label:en?'Synced':'Senkronize',count:0};
 }
 function renderSyncStatusBadge(s){
   const badge=document.getElementById('syncStatusBadge');if(!badge)return;
