@@ -455,6 +455,15 @@ function compareSnapshots(startRows, endRows, options = {}) {
         realizedPlannedQty = Math.min(plannedQty, loadedQty);
         summary.plannedQty = round(summary.plannedQty + plannedQty);
         summary.realizedPlannedQty = round(summary.realizedPlannedQty + realizedPlannedQty);
+        if (realizedPlannedQty < plannedQty) {
+          fields.push(fieldChange(
+            'Planlanan yükleme gerçekleşmesi',
+            'exfactory',
+            `Plan ${round(plannedQty)} adet`,
+            `Gerçekleşen ${round(realizedPlannedQty)} adet · Açık ${round(plannedQty - realizedPlannedQty)} adet`
+          ));
+          categories.add('exfactory');
+        }
       }
     }
 
