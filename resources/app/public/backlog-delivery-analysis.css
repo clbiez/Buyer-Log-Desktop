@@ -24,6 +24,9 @@
 
 /* --------------------------------------------------------------- KPI satırı */
 .bdaKpiRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.bdaRiskOverview{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:stretch;margin-bottom:12px;min-width:0}
+.bdaRiskOverview .bdaKpiRow{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:0;align-content:start;min-width:0}
+.bdaRiskOverview .bdaRadarCard{margin:0;min-width:0}
 .bdaKpi { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left;
   border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 8px 10px; cursor: pointer; }
 .bdaKpi.is-total { cursor: default; }
@@ -145,8 +148,8 @@
 .backlogRadarCard.is-collapsed .backlogRadarBody,.bdaRadarCard.is-collapsed .backlogRadarBody{display:none}
 .backlogPivotWorkspacePanel.is-collapsed,.backlogRadarCard.is-collapsed{align-self:start}
 .backlogRadarCard{border:1px solid var(--line);background:var(--card);overflow:hidden}
-.backlogRadarBody{display:flex;align-items:center;justify-content:center;min-height:310px;padding:8px;overflow:hidden}
-.blRadarSvg{display:block;width:min(100%,430px);height:auto;min-height:260px}
+.backlogRadarBody{display:flex;align-items:center;justify-content:center;min-height:310px;padding:14px 26px;overflow:visible}
+.blRadarSvg{display:block;width:min(100%,620px);height:auto;min-height:260px;overflow:visible}
 .blRadarGrid{fill:none;stroke:var(--line2);stroke-width:1}
 .blRadarAxis{stroke:var(--line);stroke-width:1}
 .blRadarArea{fill:color-mix(in srgb,var(--acc) 15%,transparent);stroke:var(--acc);stroke-width:1.7}
@@ -154,17 +157,26 @@
 .blRadarLabel{fill:var(--muted);font:600 9.5px var(--font,system-ui,sans-serif)}
 .blRadarValue{fill:var(--ink);font:700 9.5px var(--mono,ui-monospace,monospace)}
 .blRadarEmpty{padding:24px;color:var(--muted);font-size:10.5px;text-align:center}
-.bdaRadarCard{margin:8px 0;border:1px solid var(--line);background:var(--card2);overflow:hidden}
+.bdaRadarCard{margin:8px 0;border:1px solid var(--line);background:var(--card2);overflow:visible}
 .bdaRadarCard .backlogRadarBody{min-height:280px}
-.bdaRadarCard .blRadarSvg{width:min(100%,400px)}
+.bdaRadarCard .blRadarSvg{width:min(100%,560px)}
+.backlogRadarFilter{padding:8px 9px;border-bottom:1px solid var(--line);background:var(--card2)}
+.backlogRadarFilter[hidden]{display:none}
+.backlogRadarFilterHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;color:var(--ink);font-size:10.5px}
+.backlogRadarFilterList{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:5px 10px;max-height:150px;overflow:auto;overscroll-behavior:contain}
+.backlogRadarFilterList label{display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink);font-size:10.5px;cursor:pointer}
+.backlogRadarFilterList span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:1100px){
   .backlogPivotRadarWorkspace{grid-template-columns:1fr!important;gap:8px}
   .backlogWorkspaceSplitter{display:none!important}
   .backlogPivotWorkspacePanel,.backlogRadarCard{order:initial!important}
+  .bdaRiskOverview{grid-template-columns:1fr}
+  .bdaRiskOverview .bdaKpiRow{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:680px){
   .backlogWorkspaceCardHead{align-items:flex-start}
   .backlogWorkspaceCardHead>div:first-child{display:grid;gap:2px}
-  .backlogRadarBody{min-height:260px;padding:2px}
+  .backlogRadarBody{min-height:260px;padding:8px 14px}
+  .bdaRiskOverview .bdaKpiRow{grid-template-columns:repeat(2,minmax(0,1fr))}
   .blRadarSvg{min-height:230px}
 }
