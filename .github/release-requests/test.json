@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.139",
-  "commit_sha": "b4f29782432d8974a8ac737fcf662d2aec93229b",
-  "release_notes": "Buyer Log 7.0.139: Backlog sayfasına Planlanan & Gerçekleşen Analizi eklendi. Kullanıcı seçtiği iki tarih-saat arasındaki snapshotları karşılaştırarak yalnız değişen/sapan kayıtları görür; Ex-Factory revizyonları, planlanan ve gerçekleşen yükleme, gerçekleşmeyen plan açığı, geç yükleme, statü, tahmini antrepo giriş tarihi, miktar ve diğer tarih değişiklikleri analiz edilir. Ara revizyon trafiği ayrıca korunur; çoklu revizyon ve başlangıç değerine geri dönen değişiklikler görünür. Buyer, Buyer Group, üretici, sezon, MAG ve MMYG filtreleri ile gündem odaklı analiz desteklenir. Modül açılır/kapanır ve taşınabilir; kullanıcı konumu saklanır. Snapshot geçmişi tek sıkıştırılmış baz+delta dosyasında tutulur. Güncel Backlog radar/pivot geliştirmeleri korunmuş ve yeni regression testleri eklenmiştir."
+  "version": "7.0.140",
+  "commit_sha": "68692656830e37e4f97d01021f5e714eeaad59fc",
+  "release_notes": "Buyer Log 7.0.140: Backlog grafik navigasyonunda uzun hover listeleri kaydırılabilir hale getirildi ve Average çizgisi alt toplamların değil görünür veri noktalarının gerçek ortalamasını kullanacak şekilde düzeltildi. Tüm radar diyagramlarında sağ/sol etiket kırpılması giderildi ve her radara bağımsız filtreleme eklendi. Delivery Risk alanında KPI kartları ile risk radarı varsayılan 50/50 yan yana yerleşime alındı; KPI'lar 2 sıra x 3 kolon düzeninde gösteriliyor. Planlanan & Gerçekleşen Analizi karanlık tema tokenlarına bağlandı. Overview dünya saatlerine Dijital / Analog / Analog + Dijital görünüm seçimi ve tüm IANA saat dilimlerinden saat ekleme desteği eklendi; boşta görünen Workspace ready mesajı kaldırıldı."
 }
