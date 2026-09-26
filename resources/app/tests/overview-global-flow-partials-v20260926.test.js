@@ -197,3 +197,18 @@ test('IAS Gemi Ad, İthalat Dosya No ve Konteyner No CP segmentlerine ve Backlog
   const backlogRecords=flow.shipmentPartialsFromRows(backlog,'backlog');
   assert.equal(new Set(backlogRecords.map(r=>r.id)).size,backlogRecords.length,'her Backlog parsiyeli benzersiz kimlik taşır');
 });
+
+test('alan çözücüsü farklı ara sütunlara sahip aynı uzunluktaki satırları karıştırmaz',()=>{
+  const a={'Sipariş Kod':'1','Lisans':'X','Adet':5,'Z':1},b={'Sipariş Kod':'2','Siparişin Üretildiği Ülke':'India','Adet':5,'Z':1};
+  const [ra,rb]=flow.shipmentPartialsFromRows([a,b],'backlog');
+  assert.equal(ra.license,'X');assert.equal(rb.country,'India');assert.equal(rb.origin.name,'India');
+});
+
+test('harita sağlayıcıları Overview koruma yolunu kullanır; gizli ızgarayı çizmez, başarısızlıkta döngüye girmez',()=>{
+  const provider=APP.slice(APP.indexOf('const globalFlowLoadFailed'),APP.indexOf('window.BLGlobalFlowDataProviders=')+500);
+  assert.match(provider,/ensureOverviewCpDependency\(\)/);
+  assert.match(provider,/ensureOrdersLoaded\(\{deferRender:true\}\)/);
+  assert.match(provider,/BL_CP_SOURCE_FILTER_REQUIRED/);
+  assert.match(provider,/globalFlowLoadFailed\[tableKey\]&&!\(options&&options\.force\)/);
+  assert.doesNotMatch(provider,/ensureCpLoaded\(\{reason:'overview'\}\)/);
+});

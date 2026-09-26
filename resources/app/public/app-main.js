@@ -1918,9 +1918,22 @@ function globalFlowSourceRows(tableKey){
   }
   return rows;
 }
+/* Yükleme Overview'un koruma yolundan geçer: gizli ızgara çizilmez (deferRender),
+   kaynak filtresi zorunluyken/önbellek yokken istek atılmaz ve başarısız bir
+   yükleme yalnız kullanıcı haritayı elle yenilediğinde tekrar denenir. */
+const globalFlowLoadFailed={cp:false,orders:false};
+async function globalFlowEnsure(tableKey,options){
+  if(state[tableKey])return true;
+  if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return false;
+  if(globalFlowLoadFailed[tableKey]&&!(options&&options.force))return false;
+  const ok=tableKey==='cp'
+    ?(options&&options.force&&overviewCpLoadState==='error'?await ensureCpLoaded({deferRender:true,reason:'overview'}):await ensureOverviewCpDependency())
+    :await ensureOrdersLoaded({deferRender:true});
+  globalFlowLoadFailed[tableKey]=!ok;return Boolean(ok);
+}
 window.BLGlobalFlowDataProviders={
-  cp:async()=>{await ensureCpLoaded({reason:'overview'});return globalFlowSourceRows('cp');},
-  orders:async()=>{await ensureOrdersLoaded();return globalFlowSourceRows('orders');},
+  cp:async options=>(await globalFlowEnsure('cp',options))?globalFlowSourceRows('cp'):[],
+  orders:async options=>(await globalFlowEnsure('orders',options))?globalFlowSourceRows('orders'):[],
   revision:tableKey=>(_unifiedPriorityTableRevision[tableKey]||0)+':'+(_unifiedPriorityCache[tableKey]?1:0),
 };
 window.BLEnsureCollectionCatalogLoaded=ensureCollectionCatalogLoaded;

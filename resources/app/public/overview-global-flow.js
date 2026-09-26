@@ -171,7 +171,9 @@ function canonicalKeys(field,moduleId){
 function createFieldResolver(moduleId){
   const shapes=new Map();
   function mappingFor(row){
-    const keys=Object.keys(row||{}),shape=keys.length+'|'+(keys[0]||'')+'|'+(keys[keys.length-1]||'');
+    // Anahtar tam başlık listesidir: JSON undefined alanları düşürdüğü için aynı
+    // uzunluktaki iki satır farklı ara sütunlara sahip olabilir.
+    const keys=Object.keys(row||{}),shape=keys.join('\u0001');
     let mapping=shapes.get(shape);if(mapping)return mapping;
     const index=new Map();keys.forEach(key=>{const nk=norm(key);if(nk&&!index.has(nk))index.set(nk,key);});
     mapping={};
@@ -785,7 +787,7 @@ const state={
   frame:0,lastFrame:0,observers:[],inView:true,dirty:false,refreshTimer:0,savePrefsTimer:0,searchTimer:0,
   worldPolygons:[],worldLoading:true,worldError:'',worldRevision:0,transitRules:[],transitRulesLoaded:false,
   expandedNodeKey:'',lastDragMoved:false,orbHandle:null,paletteCache:null,paletteRevision:0,
-  base:null,scene:null,sourceCache:new Map(),lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0
+  base:null,scene:null,sourceCache:new Map(),sourceIncomplete:false,lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0
 };
 
 function prefStore(){return window.BLStorage||localStorage;}
@@ -827,9 +829,9 @@ function flushPrefs(){if(state.savePrefsTimer){clearTimeout(state.savePrefsTimer
    filtreleri veriyi daraltır. Parsiyel genişletmesi satır dizisi + veri
    revizyonu aynı kaldıkça yeniden yapılmaz. */
 function providers(){return window.BLGlobalFlowDataProviders||null;}
-async function providedPartials(source){
+async function providedPartials(source,force){
   const api=providers();if(!api||typeof api[source]!=='function')return [];
-  const rows=await api[source](),revision=typeof api.revision==='function'?api.revision(source):0;
+  const rows=await api[source]({force:Boolean(force)}),revision=typeof api.revision==='function'?api.revision(source):0;
   const cached=state.sourceCache.get(source);
   if(cached&&cached.rows===rows&&cached.revision===revision)return cached.records;
   const records=shipmentPartialsFromRows(rows,source);
@@ -856,9 +858,12 @@ async function backlogPartials(force){
   state.lastBacklogRows=records;state.lastBacklogSignature=signature;return records;
 }
 async function sourceRecords(source,force){
-  if(source==='cp'||source==='orders')return providedPartials(source);
+  state.sourceIncomplete=false;
+  if(source==='cp'||source==='orders')return providedPartials(source,force);
   if(source==='backlog')return backlogPartials(force);
-  const parts=await Promise.all([providedPartials('cp').catch(()=>[]),providedPartials('orders').catch(()=>[]),backlogPartials(force).catch(()=>[])]);
+  // Bir kaynak başarısız olursa harita kalanlarla çizilir ama kayıtlı filtreler budanmaz.
+  const soft=promise=>promise.catch(()=>{state.sourceIncomplete=true;return [];});
+  const parts=await Promise.all([soft(providedPartials('cp',force)),soft(providedPartials('orders',force)),soft(backlogPartials(force))]);
   return dedupeRecords(parts.flat());
 }
 async function loadWorldTopology(){
@@ -902,8 +907,8 @@ function scheduleRefresh(delay){
   state.refreshTimer=setTimeout(()=>{state.refreshTimer=0;void refresh(false);},delay==null?180:delay);
 }
 function hydrateFilterValidity(){
-  // Kaynak henüz boşken kalıcı seçimler silinmez.
-  if(!state.records.length)return;
+  // Kaynak henüz boşken veya birleşik kaynağın bir parçası alınamadıysa kalıcı seçimler silinmez.
+  if(!state.records.length||state.sourceIncomplete)return;
   let changed=false;
   FILTER_KEYS.forEach(key=>{
     if(!state.filters[key].length)return;const available=new Set(uniqueValues(state.records,key)),next=state.filters[key].filter(value=>available.has(value));
@@ -1427,6 +1432,8 @@ function init(){
   const widget=$('globalFlowMapWidget');if(!widget)return;loadPrefs();
   $('globalFlowCollapseBtn')?.addEventListener('click',()=>setCollapsed(!state.collapsed));
   bindControls();bindFilters();bindKpis();bindCanvas();bindObservers();renderAll();syncLoadingOverlay();
+  // Uygulama başka sekmede açıldıysa veri gözlemci görünür dediğinde yüklenir.
+  state.inView=widget.getClientRects().length>0;
   state.dirty=true;if(isLive())void refresh(false);
   // Yakalama evresinde çalışır: açık detay çekmecesi kendi Escape'iyle
   // kapanmadan önce durum okunur; Escape önce çekmeceyi, sonra tam ekranı kapatır.

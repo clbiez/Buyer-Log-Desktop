@@ -230,8 +230,9 @@ function render(){
   host.querySelectorAll('[data-bl-detail-close]').forEach(el=>el.addEventListener('click',close));
   // Arama kısa bir duraklamadan sonra uygulanır; hızlı yazımda tablo her tuşta yeniden kurulmaz.
   host.querySelector('[data-bl-detail-search]')?.addEventListener('input',event=>{
-    const value=event.target.value;if(active.searchTimer)clearTimeout(active.searchTimer);
-    active.searchTimer=setTimeout(()=>{if(!active)return;active.searchTimer=0;active.search=value;active.limit=RENDER_CHUNK;renderTable();},120);
+    // Sorgu hemen state'e yazılır (Excel/yeniden çizim aynı sorguyu görür); yalnız tablo çizimi gecikir.
+    active.search=event.target.value;active.limit=RENDER_CHUNK;if(active.searchTimer)clearTimeout(active.searchTimer);
+    active.searchTimer=setTimeout(()=>{if(!active)return;active.searchTimer=0;renderTable();},120);
   });
   host.querySelector('[data-bl-detail-table]')?.addEventListener('click',event=>{
     if(!event.target.closest('[data-bl-detail-more]')||!active)return;active.limit=(active.limit||RENDER_CHUNK)+RENDER_CHUNK;renderTable();
