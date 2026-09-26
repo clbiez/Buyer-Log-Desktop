@@ -238,6 +238,8 @@ test('v7.36 · CP ve Orders şeritleri bağlanmış ve düzenleme düğmesi ekle
   assert.match(APP, /qfgFinish\('orders','ordersKpi',renderOrders\)/);
   assert.match(QFG, /button\.dataset\.qfgOpen = moduleKey;/);
   assert.match(QFG, /host\.querySelector\('\[data-qfg-open\]'\)/, 'düğme iki kez eklenmemeli');
+  assert.match(QFG, /host\.prepend\(button\)/, 'ayar düğmesi hızlı filtrelerden önce DOM\'a eklenmeli');
+  assert.doesNotMatch(QFG, /host\.appendChild\(button\)/, 'ayar düğmesi şeridin sağına eklenmemeli');
 });
 
 test('v7.36 · betik, şeridi gruplara ayıran katmandan ÖNCE yüklenir', () => {
@@ -254,7 +256,7 @@ test('v7.36 · betik, şeridi gruplara ayıran katmandan ÖNCE yüklenir', () =>
 });
 
 test('v7.36 · düzenleme düğmesinin ve penceresinin biçimi tanımlı', () => {
-  assert.match(CSS, /\.kpiGroupEdit\{/);
+  assert.match(CSS, /\.kpiGroupEdit\{[^}]*order:-1000[^}]*margin:0 4px 0 0/);
   assert.match(CSS, /\.qfgCard\{/);
   assert.match(CSS, /\.qfgRow\{/);
   assert.match(QFG, /use href="#i-settings"/);
