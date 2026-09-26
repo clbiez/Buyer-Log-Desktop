@@ -309,7 +309,7 @@
     button.setAttribute('aria-label', button.title);
     button.innerHTML = '<svg class="ic"><use href="#i-settings"/></svg>';
     button.addEventListener('click', event => { event.stopPropagation(); open(moduleKey, rerender); });
-    host.appendChild(button);
+    host.prepend(button);
   }
 
   window.BLQuickFilterGroups = {
