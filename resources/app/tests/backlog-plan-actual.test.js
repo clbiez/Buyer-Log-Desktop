@@ -44,6 +44,15 @@ test('snapshot projection keeps plan dimensions and aggregates operational state
   assert.deepEqual(item.etaDates, {'2026-10-10':100});
 });
 
+test('snapshot excludes raw orders outside canonical Backlog and uses Backlog-computed remaining qty', () => {
+  const visible = order({kalan:999});
+  const outside = order({ocode:'9999',model:'OUTSIDE',ccode:'09',qty:500,kalan:500});
+  const snapshot = Engine.projectSnapshot([visible,outside], [row({'Kalan Alım Sipariş Miktarı':40})], {capturedAt:'2026-09-28T07:00:00.000Z'});
+  assert.equal(snapshot.rows.length, 1);
+  assert.equal(snapshot.rows[0].orderCode, '1001');
+  assert.equal(snapshot.rows[0].remainingQty, 40);
+});
+
 test('plan vs actual diff detects ex-factory drift, ETA drift, status and late actual load', () => {
   const start = Engine.projectSnapshot([order()], [row()], {capturedAt:'2026-09-28T07:00:00.000Z'});
   const endOrder = order({ex:new Date('2026-10-07T00:00:00'), kalan:0});
