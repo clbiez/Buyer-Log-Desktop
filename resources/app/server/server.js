@@ -239,7 +239,7 @@ const databaseCredentialStore = require('./lib/database-credential-store');
 const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
 const filterValueTypes = require('./lib/filter-value-types');
-const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes } = require('./lib/model-refresh');
+const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery } = require('./lib/model-refresh');
 const {
   POWER_BI_IMPORT_DASHBOARD_URL, PowerBiImportDashboardConnector,
   dashboardAntrepoMatchRule, normalizeDashboardRows, uniqueOrderCodes, createDashboardCheckpointStore,
@@ -10050,10 +10050,59 @@ app.get('/api/data-management/overview', userAccess.requireArea('source'), (req,
 
    This projection deliberately reuses Data Management, the per-user runtime
    cache and Automation recipes. It is diagnostic only: it owns no connection,
-   mapping or refresh configuration and cannot execute a destructive browser
-   action. A live source probe is performed only by the explicit inspect POST. */
-function integrationLabRowsForSource(source, runtime) {
-  if (!source || !runtime) return [];
+   mapping, refresh or automation configuration and cannot execute a destructive browser
+   action. A live source probe is performed only by the explicit inspect POST.
+
+   v10.91 — Live probe evidence is retained in-memory for a short diagnostic
+   window. Previously the POST returned the probe to the browser but the later
+   AI export rebuilt the snapshot with an empty probe list, so a genuinely
+   corporate test was exported as LOCAL_SIMULATION. */
+const INTEGRATION_LAB_PROBE_TTL_MS = 30 * 60 * 1000;
+const integrationLabProbeCache = new Map();
+
+function integrationLabProbeOwner(req) {
+  return String(req && req.currentUser && req.currentUser.id || sourceUserId(req) || 'anonymous');
+}
+function integrationLabProbeKey(req, sourceId) {
+  return `${integrationLabProbeOwner(req)}|${String(sourceId || '')}`;
+}
+function integrationLabPruneProbes() {
+  const now = Date.now();
+  for (const [key, probe] of integrationLabProbeCache) {
+    const at = Date.parse(probe && probe.at || 0);
+    if (!at || now - at > INTEGRATION_LAB_PROBE_TTL_MS) integrationLabProbeCache.delete(key);
+  }
+}
+function integrationLabRememberProbe(req, probe) {
+  if (!probe || !probe.sourceId) return;
+  integrationLabPruneProbes();
+  integrationLabProbeCache.set(integrationLabProbeKey(req, probe.sourceId), corporateIntegrationLab.redact(probe));
+}
+function integrationLabRememberedProbes(req) {
+  integrationLabPruneProbes();
+  const prefix = `${integrationLabProbeOwner(req)}|`;
+  return [...integrationLabProbeCache.entries()]
+    .filter(([key]) => key.startsWith(prefix))
+    .map(([, probe]) => probe);
+}
+function integrationLabEffectiveProbes(req, probes = []) {
+  const merged = new Map();
+  for (const probe of integrationLabRememberedProbes(req)) {
+    if (probe && probe.sourceId) merged.set(String(probe.sourceId), probe);
+  }
+  for (const probe of Array.isArray(probes) ? probes : []) {
+    if (probe && probe.sourceId) merged.set(String(probe.sourceId), corporateIntegrationLab.redact(probe));
+  }
+  return [...merged.values()];
+}
+
+function integrationLabRowsForSource(source, runtime, userId) {
+  if (!source) return [];
+  if (source.profileId === 'intake-budget') {
+    const snapshot = intakeStore.loadSnapshot(userId);
+    return snapshot && Array.isArray(snapshot.rows) ? snapshot.rows : [];
+  }
+  if (!runtime) return [];
   if (source.profileId === 'asas-orders') return Array.isArray(runtime.asasOrders) ? runtime.asasOrders : [];
   if (source.profileId === 'ias-warehouse') {
     const values = Object.values(runtime.antrepoMap && typeof runtime.antrepoMap === 'object' ? runtime.antrepoMap : {});
@@ -10064,8 +10113,6 @@ function integrationLabRowsForSource(source, runtime) {
     }
     return rows;
   }
-  // INTAKE keeps its report cache in its own service; only persisted row-count
-  // evidence is shown here until the report has been queried by the user.
   return [];
 }
 
@@ -10092,18 +10139,218 @@ function integrationLabSnapshot(req, probes = []) {
   const store = loadModelConnections();
   const language = String(req.query && req.query.language || req.body && req.body.language || 'tr') === 'en' ? 'en' : 'tr';
   const overview = dataManagementReadModel.build(store.items, { language });
-  const runtime = cacheForUser(sourceUserId(req));
+  const userId = sourceUserId(req);
+  const runtime = cacheForUser(userId);
   const sourceRows = {};
-  for (const source of overview.sources) sourceRows[source.id] = integrationLabRowsForSource(source, runtime);
-  const sourceAudits = integrationLabSourceAudits(overview, runtime, sourceUserId(req));
+  for (const source of overview.sources) sourceRows[source.id] = integrationLabRowsForSource(source, runtime, userId);
+  const sourceAudits = integrationLabSourceAudits(overview, runtime, userId);
   return corporateIntegrationLab.buildSnapshot({
     overview,
     support: modelSupportInfo(),
-    probes,
+    probes: integrationLabEffectiveProbes(req, probes),
     sourceRows,
     sourceAudits,
     automations: automationState(req.currentUser.id, req.currentUser),
   });
+}
+
+function integrationLabProbeError(error) {
+  return {
+    error: String(error && error.message || error || 'Unknown error'),
+    code: String(error && error.code || ''),
+    statusCode: Number(error && error.statusCode) || 0,
+  };
+}
+
+function integrationLabScopeDescriptor(scope) {
+  return {
+    id: String(scope && scope.id || ''),
+    name: String(scope && scope.name || ''),
+    targets: Array.isArray(scope && scope.targets) ? scope.targets.slice(0, 20) : [],
+  };
+}
+
+/* Execute the same generated/manual DAX shape as the real source, but keep the
+   returned row sample bounded. The query itself is preserved in the diagnostic
+   package so an AI can identify stale mappings/columns instead of seeing only
+   "connection successful". */
+async function integrationLabProbeTabularSource(req, source, storedItem, probe) {
+  const schema = await modelQuery.discoverSchema({
+    server: source.connection.server,
+    catalog: source.connection.catalog,
+  });
+  probe.schema = {
+    columnCount: Array.isArray(schema.columns) ? schema.columns.length : 0,
+    measureCount: Array.isArray(schema.measures) ? schema.measures.length : 0,
+    errors: Array.isArray(schema.errors) ? schema.errors.slice(0, 20) : [],
+    provider: String(schema.provider || probe.provider || ''),
+  };
+  const columnType = filterValueTypes.columnTypeIndex(schema);
+  const scopes = effectiveScopes(storedItem).filter(scope => scope && scope.enabled !== false);
+  if (!scopes.length) {
+    const error = new Error('Bu kaynak için çalıştırılabilir kapsam bulunamadı.');
+    error.code = 'MODEL_REFRESH_NO_SCOPE';
+    error.statusCode = 400;
+    throw error;
+  }
+  const uniqueScopes = [...new Map(scopes.map(scope => [String(scope.id || ''), scope])).values()];
+  const limitedScopes = uniqueScopes.slice(0, 12);
+  const overrides = effectiveOverridesForUser(sourceUserId(req));
+  const matchRule = overrides && overrides.antrepoMatchConfig;
+  const queryRuns = [];
+  let sample = [];
+  let sampledRows = 0;
+
+  for (const scope of limitedScopes) {
+    const descriptor = integrationLabScopeDescriptor(scope);
+    try {
+      const scoped = { ...storedItem, horizon: scope.horizon || {}, _scopeTargets: scope.targets || [] };
+      const built = buildConnectionQuery(scoped, { columnType, matchRule });
+      const result = await modelQuery.runModelRows({
+        server: storedItem.server,
+        catalog: storedItem.catalog,
+        query: built.query,
+        headerMap: built.headerMap,
+        generated: Boolean(built.generated),
+        maxRows: 250,
+        timeoutMs: 120000,
+      });
+      const rows = Array.isArray(result.rows) ? result.rows : [];
+      if (!sample.length && rows.length) sample = rows.slice(0, 5);
+      sampledRows += rows.length;
+      queryRuns.push({
+        ...descriptor,
+        ok: true,
+        mode: built.mode,
+        generated: Boolean(built.generated),
+        query: built.query,
+        rowCount: Number(result.rowCount) || rows.length,
+        sampledRows: rows.length,
+        truncated: Boolean(result.truncated),
+        elapsedMs: Number(result.elapsedMs) || 0,
+        provider: String(result.provider || ''),
+        warnings: (built.warnings || []).slice(0, 20),
+      });
+    } catch (error) {
+      queryRuns.push({ ...descriptor, ok: false, ...integrationLabProbeError(error) });
+    }
+  }
+  probe.queryRuns = queryRuns;
+  probe.queryOk = queryRuns.length > 0 && queryRuns.every(run => run.ok === true);
+  probe.queryRowCount = sampledRows;
+  probe.queryError = probe.queryOk ? '' : String((queryRuns.find(run => !run.ok) || {}).error || 'Live query failed.');
+  probe.queryCode = probe.queryOk ? '' : String((queryRuns.find(run => !run.ok) || {}).code || '');
+  probe.scopeCount = uniqueScopes.length;
+  probe.scopeProbeTruncated = Math.max(0, uniqueScopes.length - limitedScopes.length);
+  probe.sample = sample;
+  return sample;
+}
+
+async function integrationLabProbeIntake(req, source, storedItem, probe) {
+  const connection = {
+    id: storedItem && storedItem.id || source.id,
+    name: storedItem && storedItem.name || source.name || 'INTAKE',
+    server: storedItem && storedItem.server || source.connection.server,
+    catalog: storedItem && storedItem.catalog || source.connection.catalog,
+    model: 'Model',
+  };
+  const found = await intakeLiveFields(connection);
+  probe.schema = {
+    columnCount: Array.isArray(found.schema && found.schema.columns) ? found.schema.columns.length : 0,
+    measureCount: Array.isArray(found.schema && found.schema.measures) ? found.schema.measures.length : 0,
+    errors: Array.isArray(found.schema && found.schema.errors) ? found.schema.errors.slice(0, 20) : [],
+    provider: String(found.schema && found.schema.provider || probe.provider || ''),
+  };
+  const snapshot = intakeStore.loadSnapshot(req.currentUser.id);
+  const saved = intakeStoredView(req.currentUser.id);
+  const viewConfig = intakeReport.reconcileViewConfig(saved || (snapshot && snapshot.viewConfig) || null, found.fields);
+  const scopes = storedItem ? effectiveScopes(storedItem).filter(scope => scope && scope.enabled !== false) : [];
+  const intakeScope = scopes.find(scope => Array.isArray(scope.targets) && scope.targets.includes('intake')) || scopes[0] || null;
+  const horizon = intakeScope && intakeScope.horizon || intakeHorizon();
+  const built = intakeReport.buildIntakeQuery({ fields: found.fields, viewConfig, horizon, maxRows: 250 });
+  const started = Date.now();
+  const result = await modelQuery.runModelRows({
+    server: connection.server,
+    catalog: connection.catalog,
+    query: built.query,
+    headerMap: built.headerMap,
+    generated: true,
+    maxRows: built.maxRows,
+    timeoutMs: 180000,
+  });
+  const rows = intakeReport.normalizeRows(result.rows, built.viewConfig);
+  probe.queryOk = true;
+  probe.queryRowCount = rows.length;
+  probe.queryError = '';
+  probe.queryCode = '';
+  probe.queryRuns = [{
+    id: intakeScope && intakeScope.id || 'intake',
+    name: intakeScope && intakeScope.name || 'INTAKE',
+    targets: intakeScope && Array.isArray(intakeScope.targets) ? intakeScope.targets : ['intake'],
+    ok: true,
+    mode: 'generated',
+    generated: true,
+    query: built.query,
+    rowCount: Number(result.rowCount) || rows.length,
+    sampledRows: rows.length,
+    truncated: Boolean(result.truncated) || rows.length >= built.maxRows,
+    elapsedMs: Number(result.elapsedMs) || (Date.now() - started),
+    provider: String(result.provider || ''),
+    queryFields: built.queryFields,
+  }];
+  probe.sample = rows.slice(0, 5);
+  return rows;
+}
+
+async function integrationLabRunLiveProbe(req, source, storedItem) {
+  let probe = {
+    kind: 'live-connectivity',
+    sourceId: source.id,
+    sourceName: source.name,
+    profileId: source.profileId,
+    ok: false,
+    queryOk: null,
+    simulated: false,
+    at: new Date().toISOString(),
+    error: '',
+    code: '',
+  };
+  let liveRows = [];
+  try {
+    const discovered = await modelQuery.discoverTables({
+      server: source.connection.server,
+      catalog: source.connection.catalog,
+    });
+    probe = {
+      ...probe,
+      ok: true,
+      provider: discovered.provider || '',
+      method: discovered.method || '',
+      tableCount: Array.isArray(discovered.tables) ? discovered.tables.length : 0,
+      elapsedMs: Number(discovered.elapsedMs) || 0,
+      attempts: Array.isArray(discovered.attempts) ? discovered.attempts.slice(0, 10) : [],
+    };
+  } catch (error) {
+    Object.assign(probe, integrationLabProbeError(error));
+    logRuntimeFailure('integrationLabConnectivityProbe', error);
+    return { probe, liveRows };
+  }
+
+  try {
+    liveRows = source.profileId === 'intake-budget'
+      ? await integrationLabProbeIntake(req, source, storedItem, probe)
+      : await integrationLabProbeTabularSource(req, source, storedItem, probe);
+  } catch (error) {
+    const failure = integrationLabProbeError(error);
+    probe.queryOk = false;
+    probe.queryError = failure.error;
+    probe.queryCode = failure.code;
+    probe.queryRuns = Array.isArray(probe.queryRuns) && probe.queryRuns.length
+      ? probe.queryRuns
+      : [{ id: 'query', name: source.name, targets: [], ok: false, ...failure }];
+    logRuntimeFailure('integrationLabQueryProbe', error);
+  }
+  return { probe, liveRows };
 }
 
 app.get('/api/data-management/integration-lab', userAccess.requireArea('source'), (req, res) => {
@@ -10115,30 +10362,46 @@ app.get('/api/data-management/integration-lab', userAccess.requireArea('source')
 app.post('/api/data-management/integration-lab/inspect', userAccess.requireArea('source'), express.json({ limit: '32kb' }), async (req, res) => {
   try {
     const body = req.body || {};
+    const store = loadModelConnections();
     const base = integrationLabSnapshot(req);
     const overviewSource = base.inventory.find(item => item.id === String(body.sourceId || '') && item.kind === 'database');
-    const stored = dataManagementReadModel.build(loadModelConnections().items, { language: body.language === 'en' ? 'en' : 'tr' });
+    const stored = dataManagementReadModel.build(store.items, { language: body.language === 'en' ? 'en' : 'tr' });
     const source = stored.sources.find(item => item.id === String(body.sourceId || ''));
     if (!source || !overviewSource) return res.status(404).json({ error: 'Kaynak bulunamadı.', code: 'INTEGRATION_SOURCE_NOT_FOUND' });
 
-    let probe = { kind: 'live-connectivity', sourceId: source.id, ok: false, simulated: false, at: new Date().toISOString(), error: '' };
+    const rawSource = store.items.find(item => item && item.id === source.id) || {
+      id: source.id,
+      name: source.name,
+      role: source.profileId === 'intake-budget' ? 'intake' : (source.profileId === 'ias-warehouse' ? 'antrepo' : 'asas'),
+      server: source.connection.server,
+      catalog: source.connection.catalog,
+      mode: source.queryMode === 'manual' ? 'manual' : 'auto',
+      query: '',
+      mapping: {},
+      scopes: [],
+    };
+
+    let probe;
+    let liveRows = [];
     if (body.liveProbe !== false) {
-      try {
-        const discovered = await modelQuery.discoverTables({ server: source.connection.server, catalog: source.connection.catalog });
-        probe = { ...probe, ok: true, provider: discovered.provider, method: discovered.method, tableCount: discovered.tables.length, elapsedMs: discovered.elapsedMs };
-      } catch (error) {
-        probe.error = String(error && error.message || error);
-        logRuntimeFailure('integrationLabProbe', error);
-      }
+      const result = await integrationLabRunLiveProbe(req, source, rawSource);
+      probe = result.probe;
+      liveRows = result.liveRows;
     } else {
-      probe.simulated = true;
-      probe.error = 'Live probe was not requested.';
+      probe = {
+        kind: 'live-connectivity', sourceId: source.id, sourceName: source.name,
+        profileId: source.profileId, ok: false, queryOk: null, simulated: true,
+        at: new Date().toISOString(), error: 'Live probe was not requested.', code: '',
+      };
     }
+    integrationLabRememberProbe(req, probe);
 
     const snapshot = integrationLabSnapshot(req, [probe]);
-    const runtime = cacheForUser(sourceUserId(req));
-    const rows = integrationLabRowsForSource(source, runtime);
-    const sourceAudits = integrationLabSourceAudits(stored, runtime, sourceUserId(req));
+    const userId = sourceUserId(req);
+    const runtime = cacheForUser(userId);
+    const cachedRows = integrationLabRowsForSource(source, runtime, userId);
+    const rows = source.profileId === 'intake-budget' && liveRows.length ? liveRows : cachedRows;
+    const sourceAudits = integrationLabSourceAudits(stored, runtime, userId);
     const inspector = corporateIntegrationLab.inspectSource({
       source,
       rawRows: rows,
@@ -10146,8 +10409,14 @@ app.post('/api/data-management/integration-lab/inspect', userAccess.requireArea(
       modelRows: rows,
       traceValue: body.traceValue,
       joinAudit: sourceAudits[source.id],
+      liveProbe: probe,
     });
-    res.set('Cache-Control', 'no-store').json({ ok: true, environment: snapshot.environment, probe: corporateIntegrationLab.redact(probe), inspector });
+    res.set('Cache-Control', 'no-store').json({
+      ok: true,
+      environment: snapshot.environment,
+      probe: corporateIntegrationLab.redact(probe),
+      inspector,
+    });
   } catch (err) { apiError(res, err, 'Entegrasyon tanısı tamamlanamadı.'); }
 });
 
