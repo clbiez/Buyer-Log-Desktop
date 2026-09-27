@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "version": "7.0.150",
   "commit_sha": "7d46c0fae07e0553cffbf27b1348dcda787dfe25",
-  "release_notes": "Buyer Log 7.0.150: Data Inspector artık IAS/ASAS için gerçek kayıtlı DAX sorgularını ve INTAKE için gerçek canlı pivot sorgusunu şirket bilgisayarındaki VPN erişimi üzerinden test eder. Canlı bağlantı ile gerçek sorgu sonucu ayrı aşamalarda raporlanır; hata kodu, sorgu detayları, şema bilgisi, sorgu koşuları ve maskelenmiş örnekler AI Diagnostic JSON paketine eklenir. Son canlı probe sonucu kısa süreli bellekte tutulduğu için JSON export artık yanlışlıkla LOCAL_SIMULATION görünmez. İlgili regression testleri eklenmiş ve tam Windows Buyer Log test paketi başarıyla geçmiştir."
+  "release_notes": "Buyer Log 7.0.150: Data Inspector artık IAS/ASAS için gerçek kayıtlı DAX sorgularını ve INTAKE için gerçek canlı pivot sorgusunu şirket bilgisayarındaki VPN erişimi üzerinden test eder. Canlı bağlantı ile gerçek sorgu sonucu ayrı aşamalarda raporlanır; hata kodu, sorgu detayları, şema bilgisi, sorgu koşuları ve maskelenmiş örnekler AI Diagnostic JSON paketine eklenir. Son canlı probe sonucu kısa süreli bellekte tutulduğu için JSON export artık yanlışlıkla LOCAL_SIMULATION görünmez. İlgili regression testleri eklenmiş ve tam Windows Buyer Log test paketi başarıyla geçmiştir. TEST yayın denemesi yeniden tetiklenmiştir."
 }
