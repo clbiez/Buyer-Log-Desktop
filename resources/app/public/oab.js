@@ -509,12 +509,28 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
-    if (code === 'OAB_AUTH_REQUIRED') return oabT('OAB oturumu gerekli. Buyer Log giriş ekranını açacak.', 'OAB sign-in is required. Buyer Log will open the sign-in window.');
-    if (code === 'OAB_AUTH_EXPIRED') return oabT('OAB oturumu sona erdi. Buyer Log tekrar giriş isteyecek.', 'OAB session expired. Buyer Log will ask you to sign in again.');
-    if (code === 'OAB_AUTH_CANCELLED') return oabT('OAB kullanıcı girişi iptal edildi.', 'OAB sign-in was cancelled.');
-    if (code === 'OAB_AUTH_TIMEOUT') return oabT('OAB oturum açma işlemi zamanında tamamlanmadı.', 'OAB sign-in did not complete in time.');
-    if (code === 'OAB_AUTH_NAVIGATION_FAILED' || code === 'OAB_AUTH_RENDERER_FAILED') return oabT('OAB giriş ekranı açılamadı.', 'The OAB sign-in window could not be opened.');
-    if (code === 'OAB_AUTH_CAPTURE_UNAVAILABLE') return oabT('OAB oturumu doğrulanamadı.', 'The OAB session could not be validated.');
+    if (code === 'PASS_SESSION_EXPIRED' || code === 'OAB_AUTH_EXPIRED') return oabT(
+      'OAB oturumu sona erdi. Açık Edge/Chrome OAB sekmesi yeniden yakalanacak.',
+      'The OAB session expired. Buyer Log will reconnect to the open Edge/Chrome OAB tab.');
+    if (code === 'PASS_LOGIN_TIMEOUT') return oabT(
+      'OAB girişi tamamlanmadı. Açık Edge/Chrome sekmesinde PASS girişini tamamlayıp tekrar deneyin.',
+      'OAB sign-in was not completed. Finish PASS sign-in in the open Edge/Chrome tab and try again.');
+    if (code === 'PASS_AUTH_TIMEOUT' || code === 'PASS_AUTH_HEADER_MISSING') return oabT(
+      'Açık OAB sekmesinden yetkilendirme yakalanamadı. PASS sayfasının açık ve oturumun aktif olduğundan emin olun.',
+      'Authorization could not be captured from the open OAB tab. Make sure PASS is open and signed in.');
+    if (code === 'BROWSER_BINDING_NOT_READY' || code === 'BROWSER_INTEGRATION_NOT_READY'
+      || code === 'CORENECTUM_EXISTING_BROWSER_REQUIRED' || code === 'OAB_EXISTING_BROWSER_UNAVAILABLE') return oabT(
+      'Buyer Log açık Edge/Chrome oturumuna bağlanamadı. Browser & Remote Debugging bağlantısını kontrol edip tekrar deneyin.',
+      'Buyer Log could not connect to the open Edge/Chrome session. Check Browser & Remote Debugging and try again.');
+    if (code === 'BROWSER_DEFAULT_PROFILE_DEBUG_BLOCKED') return oabT(
+      'Tarayıcınız varsayılan profilde Remote Debugging bağlantısını engelliyor. Buyer Log Browser & Remote Debugging ayarındaki bağlı profili kullanın.',
+      'Your browser blocks Remote Debugging on the default profile. Use the profile configured in Buyer Log Browser & Remote Debugging.');
+    if (code === 'PASS_CAPTURE_ALREADY_RUNNING') return oabT(
+      'OAB bağlantısı zaten kuruluyor; aynı açık tarayıcı sekmesi kullanılacak.',
+      'OAB connection is already in progress; the same open browser tab will be reused.');
+    if (code === 'PASS_NOT_CONNECTED' || code === 'OAB_AUTH_REQUIRED') return oabT(
+      'OAB bağlantısı gerekli. Buyer Log açık Edge/Chrome OAB sekmesini bulacak; yoksa aynı tarayıcıda tek OAB sekmesi açacak.',
+      'OAB connection is required. Buyer Log will reuse the open Edge/Chrome OAB tab, or open one OAB tab in the same browser if none exists.');
     return String((err && err.message) || err || oabT('Bilinmeyen hata.', 'Unknown error.'));
   }
   function oabAuthProgressMessage(status) {
