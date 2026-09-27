@@ -55,3 +55,42 @@
 .gfFilterField .gfMultiSearch{box-sizing:border-box;width:100%;height:26px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);padding:0 6px;font-size:10.5px}
 .gfMultiList{max-height:210px;overflow:auto;display:grid;gap:1px}.gfMultiList label{display:flex;align-items:center;gap:6px;min-height:24px;padding:0 4px;border-radius:var(--r-sm);color:var(--ink);font-size:10.5px;cursor:pointer}.gfMultiList label[hidden]{display:none}.gfMultiList label:hover{background:var(--card2)}.gfFilterField .gfMultiList input{width:14px;min-width:14px;height:14px;margin:0;padding:0;border:0;accent-color:var(--acc)}.gfMultiList label span{flex:1;text-align:left}.gfMultiList small{color:var(--muted);padding:4px}
 .gfMultiClear{justify-self:start;border:0;background:transparent;color:var(--acc-ink);font:700 10px var(--font);cursor:pointer;padding:2px 4px}
+
+/* Earth 3D motoru (v4): aynı akış modeli, ikinci görünüm. Kontroller kompakt,
+   yarı saydam ve harita renklerini kapatmayacak kadar küçük tutulur. */
+.gfEngineSwitch button{min-width:66px;padding:0 8px}
+.globalFlowCanvasWrap canvas[hidden]{display:none!important}
+.globalFlowCanvasWrap.is-earth{cursor:default;background:var(--navy-deep)}
+.globalFlowEarthHost{position:absolute;inset:0;z-index:1;overflow:hidden;background:var(--navy-deep)}
+.globalFlowEarthHost[hidden],.globalFlowEarthFallback[hidden]{display:none!important}
+.gfEarthViewport{position:absolute;inset:0}.gfEarthViewport .cesium-widget,.gfEarthViewport canvas{width:100%;height:100%;display:block}
+.gfEarthViewport .cesium-widget-credits{left:auto!important;right:52px!important;bottom:4px!important;max-width:calc(100% - 330px);font:10px var(--sans,sans-serif)!important;text-align:right}
+.gfEarthViewport .cesium-credit-logoContainer img{height:16px;width:auto}
+.gfEarthControls{position:absolute;z-index:4;top:10px;right:10px;display:flex;flex-direction:column;gap:6px;pointer-events:none}
+.gfEarthGroup{display:flex;flex-direction:column;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 88%,transparent);box-shadow:var(--shadow-2);pointer-events:auto}
+.gfEarthGroup .gfEarthBtn{border:0;border-bottom:1px solid var(--line);box-shadow:none}.gfEarthGroup .gfEarthBtn:last-child{border-bottom:0}
+.gfEarthBtn{width:32px;height:32px;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 88%,transparent);color:var(--ink);box-shadow:var(--shadow-2);cursor:pointer;pointer-events:auto;backdrop-filter:blur(3px)}
+.gfEarthBtn svg{width:17px;height:17px}.gfEarthBtn:hover{color:var(--acc-ink);background:var(--card)}.gfEarthBtn.active{color:var(--acc-ink);background:var(--acc-bg)}
+.gfEarthBtn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.gfEarthCompass svg{width:22px;height:22px}
+.gfEarthPanel{position:absolute;z-index:5;top:10px;right:50px;width:250px;max-height:calc(100% - 20px);display:flex;flex-direction:column;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 95%,transparent);box-shadow:var(--shadow-3);color:var(--ink);font-size:10.5px}
+.gfEarthPanel[hidden],.gfEarthNotice[hidden],.gfEarthSelection[hidden],.gfEarthProgress[hidden]{display:none!important}
+.gfEarthPanelHead{display:flex;align-items:center;gap:8px;padding:7px 8px 7px 10px;border-bottom:1px solid var(--line);background:var(--card2)}.gfEarthPanelHead b{font-size:11px}
+.gfEarthPanelHead button{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;padding:0;border:0;background:transparent;color:var(--muted);cursor:pointer}.gfEarthPanelHead button svg{width:15px;height:15px}
+.gfEarthPanelBody{overflow:auto;padding:4px 10px 10px}.gfEarthPanelBody h4{margin:9px 0 4px;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.gfEarthOption{display:flex;align-items:flex-start;gap:7px;min-height:24px;padding:3px 2px;cursor:pointer}.gfEarthOption input{margin:1px 0 0;accent-color:var(--acc)}
+.gfEarthOption span{display:grid;gap:1px}.gfEarthOption small{color:var(--muted);font-size:10px}.gfEarthOption.is-disabled{opacity:.5;cursor:default}
+.gfEarthField{display:grid;gap:3px;margin:5px 0;color:var(--muted)}.gfEarthField select,.gfEarthField input{box-sizing:border-box;height:28px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:0 7px;font-size:10.5px}
+.gfEarthRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.gfEarthHint{margin:6px 0 0;color:var(--muted);font-size:10px;line-height:1.4}.gfEarthHint.is-warn{color:var(--orange)}
+.gfEarthNotice{position:absolute;z-index:6;left:50%;top:10px;transform:translateX(-50%);width:min(420px,calc(100% - 330px));min-width:240px;display:grid;gap:3px;padding:8px 10px;border:1px solid var(--line);border-left:3px solid var(--orange);background:color-mix(in srgb,var(--card) 96%,transparent);box-shadow:var(--shadow-3);font-size:10.5px;color:var(--ink)}
+.gfEarthNotice span{color:var(--muted)}.gfEarthNotice .gfEarthRow{align-items:center}.gfEarthNoticeClose{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;padding:0;border:0;background:transparent;color:var(--muted);cursor:pointer}.gfEarthNoticeClose svg{width:14px;height:14px}
+.gfEarthSelection{position:absolute;z-index:4;left:50%;bottom:30px;transform:translateX(-50%);max-width:min(520px,calc(100% - 40px));display:flex;align-items:center;gap:7px;padding:4px 4px 4px 10px;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 94%,transparent);box-shadow:var(--shadow-2);font-size:10.5px;color:var(--ink)}
+.gfEarthSelection b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}.gfEarthSelectionDot{width:8px;height:8px;flex:none;border:2px solid var(--acc);border-radius:50%}
+.gfEarthSelection button{height:26px;display:inline-flex;align-items:center;gap:4px;padding:0 7px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 10px var(--sans,sans-serif);cursor:pointer}.gfEarthSelection button svg{width:14px;height:14px}
+.gfEarthProgress{position:absolute;z-index:4;left:0;right:0;top:0;height:2px;overflow:hidden;pointer-events:none}.gfEarthProgress i{position:absolute;top:0;left:-30%;width:30%;height:100%;background:var(--acc);animation:gfEarthProgress 1.1s ease-in-out infinite}
+@keyframes gfEarthProgress{to{left:100%}}
+@media(prefers-reduced-motion:reduce){.gfEarthProgress i{animation:none;left:0;width:100%;opacity:.5}}
+.globalFlowEarthFallback{position:absolute;inset:0;z-index:11;display:grid;place-items:center;background:color-mix(in srgb,var(--card2) 92%,transparent)}
+.gfEarthFallbackCard{max-width:360px;text-align:center}.gfEarthFallbackCard span{line-height:1.4}.gfEarthFallbackActions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.globalFlowCanvasWrap.is-earth .globalFlowLegend{bottom:10px}
+@media(max-width:760px){.gfEarthPanel{right:48px;width:min(250px,calc(100% - 60px))}.gfEarthNotice{width:calc(100% - 70px);left:10px;transform:none}.gfEarthViewport .cesium-widget-credits{max-width:calc(100% - 60px)}}
