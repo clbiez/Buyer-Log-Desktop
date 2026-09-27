@@ -296,15 +296,24 @@
     const arity = operatorArity(condition.op);
     const showValues = arity === 'list' || arity === 'single';
     const showRange = arity === 'range' || arity === 'from' || arity === 'to';
+    const physicalField = meta && meta.dynamic && (meta.table || meta.name)
+      ? [meta.table, meta.name].filter(Boolean).join(' · ')
+      : '';
+    const stalePhysical = condition.field && !meta && (condition.table || condition.name)
+      ? [condition.table, condition.name].filter(Boolean).join(' · ')
+      : '';
 
     const values = (condition.values || []).map((value, valueIndex) =>
       `<button type="button" class="dmfChip" data-drop-value="${groupIndex}:${index}:${valueIndex}"
         title="${esc(T('Kaldır', 'Remove'))}">${esc(value)} ×</button>`).join('');
 
     return `<div class="dmfRow">
-      <button type="button" class="dmfField" data-pick-field="${groupIndex}:${index}">
-        ${condition.field ? esc(meta ? (en() ? meta.en : meta.tr) || condition.field : condition.field)
-          : `<em>${esc(T('alan seç', 'select field'))}</em>`}
+      <button type="button" class="dmfField" data-pick-field="${groupIndex}:${index}"
+        title="${esc(T('Canlı database alanını seç veya değiştir', 'Select or change the live database field'))}">
+        <span>${condition.field ? esc(meta ? (en() ? meta.en : meta.tr) || condition.field : condition.field)
+          : `<em>${esc(T('alan seç', 'select field'))}</em>`}</span>
+        ${physicalField ? `<span class="dmfFieldPhysical">${esc(physicalField)}</span>` : ''}
+        ${stalePhysical ? `<span class="dmfFieldPhysical is-warn">⚠ ${esc(stalePhysical)} · ${esc(T('canlı şemada doğrulanamadı', 'not verified in live schema'))}</span>` : ''}
       </button>
       <select class="dmfOp" data-op="${groupIndex}:${index}">
         ${OPERATORS.map(entry => `<option value="${esc(entry.id)}"${entry.id === condition.op ? ' selected' : ''}>${esc(entry.label)}</option>`).join('')}
@@ -544,6 +553,9 @@
       const entries = fieldsFor().map(entry => ({
         value: entry.header,
         label: (en() ? entry.en : entry.tr) || entry.header,
+        hint: entry.dynamic
+          ? [entry.table, entry.name].filter(Boolean).join(' · ')
+          : T('mantıksal alan', 'logical field'),
       }));
       openPicker(pickField, entries, value => {
         const meta = fieldsFor().find(entry => entry.header === value);
