@@ -779,6 +779,77 @@ function mapSurfacePalette(theme){
   return {water:'#DCE8F2',land:'#F7F2E7',line:'#9AAABC',acc:'#4A7198',green:'#347653',red:'#B04448',orange:'#A66517',cyan:'#087F9F',purple:'#6B52C7'};
 }
 
+/* Harita motoru: Buyer Log (canvas 2D/3D) ve Earth 3D (CesiumJS, lazy).
+   İki motor aynı akış modelini, filtreleri ve seçim kimliğini paylaşır;
+   yalnız çizim katmanı değişir. */
+const MAP_ENGINES=Object.freeze(['buyerlog','earth']);
+const EARTH_VIEW_MODES=Object.freeze(['photorealistic','satellite','terrain','offline']);
+const EARTH_QUALITIES=Object.freeze(['performance','balanced','high']);
+const EARTH_LAYER_KEYS=Object.freeze(['routes','vehicles','shipments','ports','airports','origins','labels','risk']);
+const EARTH_RADIUS_M=6378137;
+function normalizeEarthPrefs(raw){
+  const src=raw&&typeof raw==='object'?raw:{},layers={},num=value=>value==null||value===''||!Number.isFinite(Number(value))?null:Number(value);
+  EARTH_LAYER_KEYS.forEach(key=>{layers[key]=!(src.layers&&src.layers[key]===false);});
+  const cam=src.camera&&typeof src.camera==='object'?src.camera:null;
+  const camera=cam&&num(cam.lon)!=null&&num(cam.lat)!=null&&num(cam.height)!=null?{
+    lon:clamp(num(cam.lon),-180,180),lat:clamp(num(cam.lat),-90,90),height:clamp(num(cam.height),150,4.2e7),
+    heading:num(cam.heading)||0,pitch:clamp(num(cam.pitch)==null?-Math.PI/2:num(cam.pitch),-Math.PI/2,0)
+  }:null;
+  return {
+    // Boş görünüm modu = sağlayıcının (Moderatör) varsayılanı.
+    viewMode:EARTH_VIEW_MODES.includes(src.viewMode)?src.viewMode:'',
+    quality:EARTH_QUALITIES.includes(src.quality)?src.quality:'balanced',
+    cameraPreset:src.cameraPreset==='topdown'?'topdown':'perspective',
+    routeAnimation:src.routeAnimation!==false,
+    providerLabels:src.providerLabels!==false,
+    layers,camera
+  };
+}
+/* Ortak görünüm alanı: merkez (lon/lat) + dikey görünen enlem genişliği
+   (span, derece). Buyer Log 2D/3D ve Earth kamerası buna çevrilir; motor
+   değişince merkez ve yaklaşık ölçek korunur. */
+function viewportFrom2d(view,w,h){
+  const frame=fitWorld2dViewport(w,h),z=Number(view&&view.zoom2d)||1,cx=w/2,cy=h/2;
+  const baseX=cx-(Number(view&&view.panX)||0)/z,baseY=cy-(Number(view&&view.panY)||0)/z;
+  return {lon:clamp((baseX-frame.x)/frame.w*360-180,-180,180),lat:clamp(90-(baseY-frame.y)/frame.h*180,-85,85),span:clamp(180*h/(frame.h*z),.001,180)};
+}
+function view2dFromViewport(vp,w,h){
+  const frame=fitWorld2dViewport(w,h),span=Math.max(.001,Number(vp&&vp.span)||180),z=clamp(180*h/(frame.h*span),MIN_ZOOM,MAX_ZOOM_2D),cx=w/2,cy=h/2;
+  const baseX=frame.x+(clamp(Number(vp&&vp.lon)||0,-180,180)+180)/360*frame.w,baseY=frame.y+(90-clamp(Number(vp&&vp.lat)||0,-85,85))/180*frame.h;
+  return {panX:(cx-baseX)*z,panY:(cy-baseY)*z,zoom2d:z};
+}
+function viewportFrom3d(view,w,h){
+  const r=Math.min(w,h)*.42*(Number(view&&view.zoom3d)||1);
+  return {lon:wrapLongitude(view&&view.rotLon),lat:clamp(-(Number(view&&view.rotLat)||0),-85,85),span:clamp(180*h/(Math.PI*r),.001,180)};
+}
+function view3dFromViewport(vp,w,h){
+  const span=Math.max(.001,Number(vp&&vp.span)||180);
+  return {rotLon:wrapLongitude(vp&&vp.lon),rotLat:clamp(-(Number(vp&&vp.lat)||0),-85,85),zoom3d:clamp(180*h/(Math.PI*span*Math.min(w,h)*.42),MIN_ZOOM,MAX_ZOOM_3D)};
+}
+/* Yakında düz yaklaşım (görünen yükseklik = 2·H·tan(fovy/2)); küre dikey
+   görüşü doldurduğu yükseklikten sonra "tüm dünya" aralığı (span → 180°)
+   doğrusal olarak en fazla %35 daha uzağa eşlenir. İki yön birbirinin tersidir. */
+function earthSpanFrame(fovy){
+  const half=clamp((Number(fovy)||1)/2,.05,1.4),globe=EARTH_RADIUS_M/Math.sin(half)-EARTH_RADIUS_M,flatSpan=Math.min(179,2*globe*Math.tan(half)/EARTH_RADIUS_M*180/Math.PI);
+  return {half,globe,flatSpan};
+}
+function heightForSpan(span,fovy){
+  const f=earthSpanFrame(fovy),value=clamp(Number(span)||180,.001,180);
+  if(value<=f.flatSpan)return clamp(value*Math.PI/180*EARTH_RADIUS_M/(2*Math.tan(f.half)),150,4e7);
+  return clamp(f.globe*(1+.35*(value-f.flatSpan)/Math.max(1e-6,180-f.flatSpan)),150,4e7);
+}
+function spanForHeight(height,fovy){
+  const f=earthSpanFrame(fovy),h=Math.max(1,Number(height)||0);
+  if(h<=f.globe)return clamp(2*h*Math.tan(f.half)/EARTH_RADIUS_M*180/Math.PI,.001,180);
+  return clamp(f.flatSpan+(h/f.globe-1)/.35*(180-f.flatSpan),.001,180);
+}
+/* Seçim/hover kimliği: model yeniden kurulduğunda da aynı nesneyi gösterir
+   (araç, kenar ve düğüm kimlikleri deterministiktir). */
+function hitIdentity(hit){
+  if(!hit)return '';
+  return hit.type+':'+(hit.vehicle?hit.vehicle.id:hit.edge?hit.edge.key:hit.bundle?hit.bundle.key:hit.stage?hit.nodeKey+'/'+hit.stage:hit.hub?hit.hub.key:hit.rec?hit.rec.id:'');
+}
+
 if(typeof document==='undefined'){
   return {ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,
     clean,norm,toNumber,pick,createFieldResolver,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
@@ -786,7 +857,8 @@ if(typeof document==='undefined'){
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
     seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,pointAlongLeg,
     transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,pickHit,
-    normalizeQuickFilterItems,quickFilterMatch,normalizeFilters,createPanelFilter};
+    normalizeQuickFilterItems,quickFilterMatch,normalizeFilters,createPanelFilter,
+    MAP_ENGINES,EARTH_LAYER_KEYS,normalizeEarthPrefs,viewportFrom2d,view2dFromViewport,viewportFrom3d,view3dFromViewport,heightForSpan,spanForHeight,hitIdentity,edgeSamples,geoInterpolate};
 }
 
 const $=id=>document.getElementById(id);
@@ -804,7 +876,8 @@ const state={
   frame:0,lastFrame:0,observers:[],inView:true,dirty:false,refreshTimer:0,savePrefsTimer:0,searchTimer:0,
   worldPolygons:[],worldLoading:true,worldError:'',worldRevision:0,transitRules:[],transitRulesLoaded:false,
   expandedNodeKey:'',lastDragMoved:false,orbHandle:null,paletteCache:null,paletteRevision:0,
-  base:null,scene:null,sourceCache:new Map(),sourceIncomplete:false,lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0
+  base:null,scene:null,sourceCache:new Map(),sourceIncomplete:false,lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0,
+  engine:'buyerlog',earth:normalizeEarthPrefs(),selection:'',earthCtl:null,earthStarting:null,earthLoading:false,earthError:'',earthIdleTimer:0,earthPendingViewport:null
 };
 
 function prefStore(){return window.BLStorage||localStorage;}
@@ -828,12 +901,15 @@ function loadPrefs(){
     }
     state.quick={items,active:active.filter(id=>items.includes(id))};
     state.collapsed=Boolean(raw.collapsed);
+    if(MAP_ENGINES.includes(raw.engine))state.engine=raw.engine;
+    state.earth=normalizeEarthPrefs(raw.earth);
   }catch(_){}
 }
 function writePrefs(){
   state.savePrefsTimer=0;
   try{prefStore().setItem(STORAGE_KEY,JSON.stringify({
-    source:state.source,view:state.view,measure:state.measure,filters:state.filters,quick:state.quick,collapsed:state.collapsed
+    source:state.source,view:state.view,measure:state.measure,filters:state.filters,quick:state.quick,collapsed:state.collapsed,
+    engine:state.engine,earth:state.earth
   }));}catch(_){}
 }
 // Arama gibi hızlı değişen durumlarda depo her tuşta serileştirilmez.
@@ -916,7 +992,7 @@ async function refresh(force){
     if(state.worldError)state.warning=(state.warning?state.warning+' · ':'')+L('Detaylı dünya sınırı yüklenemedi; yedek harita kullanılıyor.','Detailed world outline could not be loaded; fallback map is in use.');
     if(!state.records.length)state.warning=L('Seçili kaynakta haritada gösterilebilir parsiyel yok. Kaynak verisinin yüklenmiş olduğundan emin olun.','No mappable partials are available in the selected source. Make sure the source data has loaded.');
     applyFilters();
-  }catch(error){if(seq!==state.refreshSeq)return;state.records=[];state.panelFiltered=[];state.filtered=[];state.model=null;state.modelRevision++;state.error=String(error&&error.message||error);}
+  }catch(error){if(seq!==state.refreshSeq)return;state.records=[];state.panelFiltered=[];state.filtered=[];state.model=null;state.modelRevision++;state.error=String(error&&error.message||error);notifyEarth('model');}
   finally{if(seq===state.refreshSeq){state.loading=false;renderControls();renderKpis();renderMeta();syncLoadingOverlay();scheduleDraw();}}
 }
 function scheduleRefresh(delay){
@@ -940,7 +1016,7 @@ function applyFilters(renderPanel=true){
   state.model=buildFlowModel(state.filtered,{rules:state.transitRules,now:Date.now()});state.modelRevision++;state.scene=null;
   if(state.hover&&state.hover.type!=='route')state.hover=null;
   if(renderPanel!==false)renderFilters();else updateFilterSummaries();
-  renderControls();renderKpis();renderMeta();scheduleDraw();
+  renderControls();renderKpis();renderMeta();scheduleDraw();notifyEarth('model');
 }
 function sourceLabel(source){return ({cp:'CP',orders:'Orders',backlog:'Backlog',combined:L('Birleşik','Combined')})[source]||source;}
 function stateLabel(value){return ({
@@ -957,7 +1033,8 @@ function renderControls(){
     '<label class="gfCompactField"><span>'+esc(L('Kaynak','Source'))+'</span><select id="globalFlowSource">'+
     [['backlog','Backlog'],['orders','Orders'],['cp','CP'],['combined',L('Birleşik','Combined')]].map(x=>'<option value="'+x[0]+'"'+(state.source===x[0]?' selected':'')+'>'+esc(x[1])+'</option>').join('')+
     '</select></label>'+
-    '<div class="gfSegment" role="group" aria-label="'+esc(L('Harita görünümü','Map view'))+'"><button type="button" data-gf-view="2d" class="'+(state.view==='2d'?'active':'')+'">2D</button><button type="button" data-gf-view="3d" class="'+(state.view==='3d'?'active':'')+'">3D</button></div>'+
+    '<div class="gfSegment gfEngineSwitch" role="group" aria-label="'+esc(L('Harita motoru','Map engine'))+'"><button type="button" data-gf-engine="buyerlog" aria-pressed="'+(state.engine==='buyerlog'?'true':'false')+'" class="'+(state.engine==='buyerlog'?'active':'')+'">Buyer Log</button><button type="button" data-gf-engine="earth" aria-pressed="'+(state.engine==='earth'?'true':'false')+'" class="'+(state.engine==='earth'?'active':'')+'" title="'+esc(L('Uydu / arazi / fotogerçekçi 3D dünya görünümü','Satellite / terrain / photorealistic 3D globe'))+'">Earth 3D</button></div>'+
+    (state.engine==='earth'?'':'<div class="gfSegment" role="group" aria-label="'+esc(L('Harita görünümü','Map view'))+'"><button type="button" data-gf-view="2d" class="'+(state.view==='2d'?'active':'')+'">2D</button><button type="button" data-gf-view="3d" class="'+(state.view==='3d'?'active':'')+'">3D</button></div>')+
     '<label class="gfCompactField"><span>'+esc(L('Ölçü','Measure'))+'</span><select id="globalFlowMeasure"><option value="qty"'+(state.measure==='qty'?' selected':'')+'>'+esc(L('Adet','Units'))+'</option><option value="orders"'+(state.measure==='orders'?' selected':'')+'>'+esc(L('Sipariş','Orders'))+'</option><option value="partials"'+(state.measure==='partials'?' selected':'')+'>'+esc(L('Parsiyel','Partials'))+'</option></select></label>'+
     '<button type="button" class="tbtn gfIconBtn'+(active?' hasActive':'')+'" id="globalFlowFilterBtn" aria-expanded="'+(state.filterOpen?'true':'false')+'" title="'+esc(L('Harita filtreleri','Map filters'))+'"><svg class="ic"><use href="#i-filter"/></svg><span>'+esc(L('Filtre','Filter'))+(active?' · '+active:'')+'</span></button>'+
     '<button type="button" class="tbtn gfIconBtn" id="globalFlowRefreshBtn" title="'+esc(L('Harita verisini yenile','Refresh map data'))+'"><svg class="ic"><use href="#i-refresh"/></svg></button>'+
@@ -973,6 +1050,8 @@ function bindControls(){
     else if(target.id==='globalFlowMeasure'){state.measure=target.value;savePrefs();renderKpis();renderMeta();}
   });
   host.addEventListener('click',event=>{
+    const engine=event.target.closest('[data-gf-engine]');
+    if(engine){setEngine(engine.dataset.gfEngine);return;}
     const view=event.target.closest('[data-gf-view]');
     if(view){state.view=view.dataset.gfView;state.drag=null;state.scene=null;savePrefs();renderControls();scheduleDraw();return;}
     const button=event.target.closest('button');if(!button)return;
@@ -1103,7 +1182,10 @@ function ensureLoadingOverlay(){
   return overlay;
 }
 function syncLoadingOverlay(){
-  const overlay=ensureLoadingOverlay();if(!overlay)return;const busy=Boolean(state.loading||state.worldLoading);
+  const overlay=ensureLoadingOverlay();if(!overlay)return;const earth=Boolean(state.earthLoading&&state.engine==='earth'),busy=Boolean(state.loading||state.worldLoading||earth);
+  const title=overlay.querySelector('.gfWorkingCard b'),text=overlay.querySelector('.gfWorkingCard span');
+  if(title)title.textContent=earth?L('Earth 3D hazırlanıyor','Preparing Earth 3D'):L('Harita hazırlanıyor','Preparing map');
+  if(text)text.textContent=earth?L('Küre motoru ve görüntü katmanları yükleniyor…','Loading the globe engine and imagery layers…'):L('Sevkiyatlar ve coğrafi katmanlar eşleştiriliyor…','Matching shipments and geographic layers…');
   overlay.hidden=!busy;overlay.setAttribute('aria-hidden',busy?'false':'true');
 }
 function setCollapsed(next){
@@ -1112,14 +1194,24 @@ function setCollapsed(next){
   if(body)body.hidden=state.collapsed;
   if(button){button.setAttribute('aria-expanded',state.collapsed?'false':'true');const use=button.querySelector('use');if(use)use.setAttribute('href',state.collapsed?'#i-chevron-down':'#i-chevron-up');}
   if(!state.collapsed){if(state.dirty)void refresh(false);scheduleDraw();}
+  syncEarthActivity();
+}
+/* Görünümün giriş animasyonu (transform, fill:both) bittikten sonra da
+   Chromium bölümü position:fixed öğeler için içeren blok sayar; tam ekran
+   viewport yerine bölüme hapsolur. Son karesi temel stil ile aynı olan bitmiş
+   animasyon iptal edilir (görsel fark yoktur, sekme değişince yeniden oynar). */
+function releaseFixedContainingBlock(widget){
+  const section=widget&&widget.closest('main>section');if(!section||typeof section.getAnimations!=='function')return;
+  section.getAnimations().forEach(animation=>{try{animation.finish();animation.cancel();}catch(_){}});
 }
 function toggleFullscreen(){
   state.fullscreen=!state.fullscreen;
-  const widget=$('globalFlowMapWidget');if(widget)widget.classList.toggle('is-fullscreen',state.fullscreen);
+  const widget=$('globalFlowMapWidget');if(widget){if(state.fullscreen)releaseFixedContainingBlock(widget);widget.classList.toggle('is-fullscreen',state.fullscreen);}
   document.body.classList.toggle('gfFullscreenOpen',state.fullscreen);
   renderControls();requestAnimationFrame(scheduleDraw);
 }
 function resetView(){
+  if(state.engine==='earth'){state.earthCtl?.home?.();return;}
   state.panX=0;state.panY=0;state.zoom2d=1;state.rotLon=18;state.rotLat=-12;state.zoom3d=1;state.globeInertia=null;scheduleDraw();
 }
 // Tema değişmedikçe getComputedStyle çağrılmaz.
@@ -1265,16 +1357,22 @@ function drawEdges(ctx,scene,now,animate){
     ctx.restore();
   });
 }
+/* Taşıma tipi simgesi (orijin merkezli, dolgu rengi çağırandan). Buyer Log
+   canvas'ı ve Earth billboard'ları aynı çizimi kullanır. Uçak +x yönüne bakar. */
+function drawModeGlyph(ctx,mode){
+  if(mode==='air'){ctx.beginPath();ctx.moveTo(6,0);ctx.lineTo(-4.5,-3.5);ctx.lineTo(-1.5,0);ctx.lineTo(-4.5,3.5);ctx.closePath();ctx.fill();}
+  else if(mode==='sea'){ctx.beginPath();ctx.moveTo(-5.5,-1);ctx.lineTo(5.5,-1);ctx.lineTo(3.2,4);ctx.lineTo(-3.8,4);ctx.closePath();ctx.fill();ctx.fillRect(-1,-5,2.4,4);}
+  else if(mode==='road'){ctx.fillRect(-5.5,-3,7.5,4.6);ctx.fillRect(2.3,-1.4,3.4,3);ctx.beginPath();ctx.arc(-3,2.6,1.5,0,Math.PI*2);ctx.arc(3.8,2.6,1.5,0,Math.PI*2);ctx.fill();}
+  else {ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();}
+}
 function drawVehicle(ctx,symbol,p){
   const vehicle=symbol.vehicle,color=modeColor(vehicle.mode,p),count=vehicle.records.length;
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.fillStyle=color;ctx.beginPath();ctx.arc(symbol.anchorX,symbol.anchorY,2,0,Math.PI*2);ctx.fill();ctx.restore();}
   ctx.save();ctx.translate(symbol.x,symbol.y);
   ctx.fillStyle=p.card;ctx.strokeStyle=vehicle.critical?p.red:color;ctx.lineWidth=vehicle.critical?2:1.2;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.fillStyle=color;
-  if(vehicle.mode==='air'){ctx.save();ctx.rotate(symbol.heading||0);ctx.beginPath();ctx.moveTo(6,0);ctx.lineTo(-4.5,-3.5);ctx.lineTo(-1.5,0);ctx.lineTo(-4.5,3.5);ctx.closePath();ctx.fill();ctx.restore();}
-  else if(vehicle.mode==='sea'){ctx.beginPath();ctx.moveTo(-5.5,-1);ctx.lineTo(5.5,-1);ctx.lineTo(3.2,4);ctx.lineTo(-3.8,4);ctx.closePath();ctx.fill();ctx.fillRect(-1,-5,2.4,4);}
-  else if(vehicle.mode==='road'){ctx.fillRect(-5.5,-3,7.5,4.6);ctx.fillRect(2.3,-1.4,3.4,3);ctx.beginPath();ctx.arc(-3,2.6,1.5,0,Math.PI*2);ctx.arc(3.8,2.6,1.5,0,Math.PI*2);ctx.fill();}
-  else {ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();}
+  if(vehicle.mode==='air'){ctx.save();ctx.rotate(symbol.heading||0);drawModeGlyph(ctx,'air');ctx.restore();}
+  else drawModeGlyph(ctx,vehicle.mode);
   if(count>1){const label=count>99?'99+':String(count);ctx.font='700 9px sans-serif';const bw=Math.max(13,ctx.measureText(label).width+6);ctx.fillStyle=vehicle.critical?p.red:color;ctx.beginPath();ctx.arc(8,-8,bw/2,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.card;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,8,-7.5);}
   ctx.restore();
 }
@@ -1300,7 +1398,21 @@ function drawHoverHighlight(ctx,hit,p){
   if(hit.type==='route'){ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.45;ctx.lineWidth=Math.max(3,Number(hit.r||8)/2);ctx.lineCap='round';ctx.setLineDash([]);strokePath(ctx,hit.points);ctx.restore();return;}
   ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(hit.x,hit.y,Math.min(24,Number(hit.r||10)+3),0,Math.PI*2);ctx.stroke();ctx.restore();
 }
-function hitIdentity(hit){if(!hit)return '';return hit.type+':'+(hit.vehicle?hit.vehicle.id:hit.edge?hit.edge.key:hit.bundle?hit.bundle.key:hit.stage?hit.nodeKey+'/'+hit.stage:'');}
+/* Seçim halkası: Earth'te seçilen parsiyel noktası, onu taşıyan araçta gösterilir. */
+function selectedTarget(){
+  if(!state.selection||!state.scene)return null;const id=state.selection,targets=state.scene.hitTargets;
+  const direct=targets.find(target=>hitIdentity(target)===id);if(direct)return direct;
+  if(id.startsWith('stage:')){const nodeKey=id.slice(6).split('/')[0];return targets.find(target=>target.type==='node'&&target.bundle&&target.bundle.key===nodeKey)||null;}
+  if(id.startsWith('shipment:')){const recId=id.slice(9);return targets.find(target=>target.type==='vehicle'&&target.vehicle.records.some(r=>r.id===recId))||null;}
+  return null;
+}
+function drawSelection(ctx,hit,p){
+  ctx.save();ctx.setLineDash([]);ctx.lineCap='round';
+  if(hit.type==='route'){ctx.strokeStyle=p.card;ctx.globalAlpha=.9;ctx.lineWidth=Math.max(6,Number(hit.r||8)/2+4);strokePath(ctx,hit.points);ctx.strokeStyle=p.acc;ctx.lineWidth=Math.max(3.5,Number(hit.r||8)/2+1);strokePath(ctx,hit.points);ctx.restore();return;}
+  const r=Math.min(26,Number(hit.type==='node'?hit.r:10)+5);
+  ctx.strokeStyle=p.card;ctx.lineWidth=4;ctx.beginPath();ctx.arc(hit.x,hit.y,r,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle=p.acc;ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(hit.x,hit.y,r,0,Math.PI*2);ctx.stroke();ctx.restore();
+}
 function currentHit(){
   // Sahne yeniden kurulduğunda hover nesnesi eski hedefi tutmasın.
   if(!state.hover||!state.scene)return null;const id=hitIdentity(state.hover);
@@ -1315,12 +1427,13 @@ function applyGlobeInertia(now){
   if(Math.hypot(inertia.vLon,inertia.vLat)<.012){state.globeInertia=null;return false;}return true;
 }
 function draw(now){
-  state.frame=0;if(!isLive())return;const info=canvasInfo();if(!info)return;
+  state.frame=0;if(!isLive()||state.engine!=='buyerlog')return;const info=canvasInfo();if(!info)return;
   const t=Number(now)||performance.now();applyGlobeInertia(t);const p=palette(),{ctx,w,h}=info,animate=wantsAnimation();
   ctx.clearRect(0,0,w,h);ctx.drawImage(baseLayer(info,p),0,0,w,h);
   const scene=buildScene(info,p);drawEdges(ctx,scene,t,animate);
   scene.symbols.forEach(symbol=>{if(symbol.kind==='node')drawNode(ctx,symbol,p);});
   scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p);});
+  const selected=selectedTarget();if(selected)drawSelection(ctx,selected,p);
   const hover=currentHit();if(hover)drawHoverHighlight(ctx,hover,p);
   if(animate||state.expandedNodeKey||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
 }
@@ -1353,7 +1466,19 @@ function showTooltip(hit,event){
     const edge=hit.edge;title=edgeTitle(edge);
     lines.push(modeLabel(edge.mode)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));lines.push(countSummary(edge.records));critical=edge.records.some(r=>r.critical);
   }else if(hit.type==='stage'){title=stageLabel(hit.stage);lines.push(countSummary(hit.records));if(hit.nodeKey==='arrival:istanbul')lines.push(ISTANBUL.name);critical=hit.records.some(r=>r.critical);}
+  else if(hit.type==='cluster'){
+    title=nf().format(hit.vehicles.length)+' '+L('araç','vehicles');
+    lines.push([...hit.byMode.entries()].map(entry=>modeLabel(entry[0])+' '+nf().format(entry[1])).join(' · '));
+    lines.push(countSummary(hit.records));lines.push(L('Yakınlaştırmak için tıklayın.','Click to zoom in.'));critical=hit.vehicles.some(v=>v.critical);
+  }else if(hit.type==='hub'){title=hitTitle(hit);lines.push(countSummary(hit.records));critical=hit.records.some(r=>r.critical);}
+  else if(hit.type==='shipment'){
+    const rec=hit.rec,p=hit.placement;title=hitTitle(hit);
+    if(p)lines.push(modeLabel(p.leg.mode)+' · '+p.leg.from+' → '+p.leg.to);
+    if(p)lines.push(Math.round(p.meta.progress*100)+'% '+L('rota ilerlemesi','route progress')+(p.meta.elapsedDays!=null?' · '+Math.floor(p.meta.elapsedDays)+' / '+Math.round(p.meta.leadDays)+' '+L('gün','days'):''));
+    lines.push(partialLabel(rec)+' · '+nf().format(Number(rec.qty)||0)+' '+L('adet','units')+(rec.vesselName?' · '+rec.vesselName:''));critical=Boolean(rec.critical);
+  }
   else if(hit.type==='node'){title=hit.bundle.kind==='arrival'?ISTANBUL.name:hit.bundle.location.name;const parts=[...hit.bundle.stages.entries()].map(entry=>stageLabel(entry[0])+' '+nf().format(entry[1].length));lines.push(parts.join(' · ')||countSummary(hit.records));lines.push(countSummary(hit.records));lines.push(L('Durum simgeleri için üzerinde kalın.','Keep hovering to reveal status icons.'));critical=hit.records.some(r=>r.critical);}
+  if(hit.type==='node'&&state.engine==='earth')lines.pop();
   tip.innerHTML='<b>'+esc(title||L('Detay','Detail'))+'</b>'+lines.map(line=>'<span>'+esc(line)+'</span>').join('')+(critical?'<em>'+esc(L('Kritik parsiyel var','Critical partial present'))+'</em>':'');
   const wrap=$('globalFlowCanvasWrap').getBoundingClientRect();tip.style.left=Math.min(wrap.width-240,Math.max(8,event.clientX-wrap.left+12))+'px';tip.style.top=Math.min(wrap.height-130,Math.max(8,event.clientY-wrap.top+12))+'px';tip.hidden=false;
 }
@@ -1429,19 +1554,185 @@ function openHitDetail(hit){
   if(hit.type==='vehicle'){const v=hit.vehicle,title=v.vesselName||(v.files.length===1?v.files[0]:L('Gruplanmış sevkiyatlar','Grouped shipments')+' · '+v.files.length);openRecordsDrawer(title,v.records,modeLabel(v.mode)+' · '+v.leg.from+' → '+v.leg.to+' · '+Math.round(v.progress*100)+'%');return;}
   if(hit.type==='route'){openRecordsDrawer(edgeTitle(hit.edge),hit.records,modeLabel(hit.edge.mode)+(hit.edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));return;}
   if(hit.type==='stage'){openRecordsDrawer(stageLabel(hit.stage),hit.records,hit.nodeKey==='arrival:istanbul'?ISTANBUL.name:'');return;}
-  if(hit.type==='node')openRecordsDrawer(hit.bundle.kind==='arrival'?ISTANBUL.name:hit.bundle.location.name,hit.records,L('Operasyon durumları','Operational stages'));
+  if(hit.type==='node'){openRecordsDrawer(hit.bundle.kind==='arrival'?ISTANBUL.name:hit.bundle.location.name,hit.records,L('Operasyon durumları','Operational stages'));return;}
+  if(hit.type==='hub'){openRecordsDrawer(hitTitle(hit),hit.records,L('Bu noktadan geçen yoldaki parsiyeller','Partials in transit via this point'));return;}
+  if(hit.type==='shipment'){const p=hit.placement;openRecordsDrawer(hitTitle(hit),[hit.rec],p?modeLabel(p.leg.mode)+' · '+p.leg.from+' → '+p.leg.to+' · '+Math.round(p.meta.progress*100)+'%':'');return;}
+  if(hit.type==='cluster')openRecordsDrawer(hitTitle(hit),hit.records,L('Kümelenmiş araçlar','Clustered vehicles'));
+}
+function hitTitle(hit){
+  if(!hit)return '';
+  if(hit.type==='vehicle')return vehicleTitle(hit.vehicle);
+  if(hit.type==='route')return edgeTitle(hit.edge);
+  if(hit.type==='node')return hit.bundle.kind==='arrival'?ISTANBUL.name:hit.bundle.location.name;
+  if(hit.type==='stage')return stageLabel(hit.stage);
+  if(hit.type==='hub')return hit.hub.name+' · '+(hit.hub.kind==='airport'?L('Havalimanı','Airport'):L('Liman','Port'));
+  if(hit.type==='shipment')return hit.rec.shipmentFile||hit.rec.orderCode||partialLabel(hit.rec);
+  if(hit.type==='cluster')return nf().format(hit.vehicles.length)+' '+L('araç','vehicles');
+  return '';
 }
 function closeDrawer(){const drawer=$('globalFlowDrawer');if(drawer){drawer.classList.remove('is-open');drawer.setAttribute('aria-hidden','true');}window.BLDetailDrawer?.close?.();}
 function jumpToSource(rec){
   if(!rec)return;const tab=document.querySelector('nav.tabs button[data-tab="'+rec.source+'"]');if(tab)tab.click();const searchId=rec.source==='cp'?'cpSearch':rec.source==='orders'?'ordersSearch':'';
   if(searchId&&rec.orderCode)setTimeout(()=>{const input=$(searchId);if(!input)return;input.value=rec.orderCode;input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();},80);closeDrawer();
 }
+/* ---------- Harita motoru: Buyer Log ⇄ Earth 3D ----------
+   Earth motoru yalnız kullanıcı Earth'e geçtiğinde yüklenir. Görünmezken
+   (Buyer Log seçili, widget ekran dışı, daraltılmış veya sekme gizli) render
+   döngüsü, animasyon ve karo istekleri durur; uzun süre görünmezse WebGL
+   bağlamı tamamen bırakılır. Buyer Log haritası Earth'ten bağımsız çalışır. */
+const EARTH_COLD_DESTROY_MS=120000;
+let earthRuntimeCache={at:0,promise:null};
+function wrapSize(){
+  const wrap=$('globalFlowCanvasWrap');if(!wrap)return null;const rect=wrap.getBoundingClientRect();if(!rect.width||!rect.height)return null;
+  return {w:Math.max(320,Math.round(rect.width)),h:Math.max(280,Math.round(rect.height))};
+}
+function currentBuyerViewport(){const size=wrapSize();if(!size)return null;return state.view==='3d'?viewportFrom3d(state,size.w,size.h):viewportFrom2d(state,size.w,size.h);}
+function applyBuyerViewport(vp){
+  const size=wrapSize();if(!vp||!size)return;
+  if(state.view==='3d'){Object.assign(state,view3dFromViewport(vp,size.w,size.h));state.globeInertia=null;}
+  else Object.assign(state,view2dFromViewport(vp,size.w,size.h));
+}
+function ensureEarthHost(){
+  const wrap=$('globalFlowCanvasWrap');if(!wrap)return null;let host=$('globalFlowEarthHost');if(host)return host;
+  host=document.createElement('div');host.id='globalFlowEarthHost';host.className='globalFlowEarthHost';host.hidden=true;
+  const fallback=document.createElement('div');fallback.id='globalFlowEarthFallback';fallback.className='globalFlowEarthFallback';fallback.hidden=true;fallback.setAttribute('role','alert');
+  const canvas=$('globalFlowCanvas');wrap.insertBefore(fallback,canvas?canvas.nextSibling:wrap.firstChild);wrap.insertBefore(host,fallback);
+  fallback.addEventListener('click',event=>{
+    const action=event.target.closest('[data-gf-earth-fallback]');if(!action)return;
+    if(action.dataset.gfEarthFallback==='retry'){state.earthError='';earthRuntimeCache={at:0,promise:null};renderEarthFallback();void activateEarth(null);}
+    else setEngine('buyerlog');
+  });
+  return host;
+}
+function syncEngineSurface(){
+  const earth=state.engine==='earth',canvas=$('globalFlowCanvas'),wrap=$('globalFlowCanvasWrap');
+  if(canvas)canvas.hidden=earth;if(wrap)wrap.classList.toggle('is-earth',earth);
+  const host=earth?ensureEarthHost():$('globalFlowEarthHost');if(host)host.hidden=!earth||Boolean(state.earthError);
+  renderEarthFallback();
+}
+function renderEarthFallback(){
+  const panel=$('globalFlowEarthFallback');if(!panel)return;
+  const show=state.engine==='earth'&&Boolean(state.earthError);panel.hidden=!show;
+  if(!show){panel.innerHTML='';return;}
+  panel.innerHTML='<div class="gfWorkingCard gfEarthFallbackCard"><b>'+esc(L('Earth görünümü kullanılamıyor','Earth view unavailable'))+'</b><span>'+esc(state.earthError)+'</span>'+
+    '<div class="gfEarthFallbackActions"><button type="button" class="tbtn" data-gf-earth-fallback="retry">'+esc(L('Tekrar dene','Retry'))+'</button><button type="button" class="tbtn" data-gf-earth-fallback="buyerlog">'+esc(L('Buyer Log haritasına geç','Switch to Buyer Log Map'))+'</button></div></div>';
+}
+function setEngine(next){
+  const engine=MAP_ENGINES.includes(next)?next:'buyerlog';if(engine===state.engine)return;
+  // Merkez ve yaklaşık ölçek, çıkılan motordan okunup girilen motora aktarılır.
+  const ctl=state.earthCtl,viewport=state.engine==='earth'?(ctl&&!ctl.isDestroyed()&&!ctl.isPaused()?ctl.getViewport():null):currentBuyerViewport();
+  state.engine=engine;state.drag=null;state.hover=null;state.expandedNodeKey='';showTooltip(null);savePrefs();
+  syncEngineSurface();renderControls();
+  if(engine==='earth'){if(state.frame){cancelAnimationFrame(state.frame);state.frame=0;}void activateEarth(viewport);}
+  else{state.earthError='';deactivateEarth();syncEngineSurface();applyBuyerViewport(viewport);state.scene=null;scheduleDraw();}
+}
+function fetchEarthRuntime(){
+  const now=Date.now();if(earthRuntimeCache.promise&&now-earthRuntimeCache.at<30000)return earthRuntimeCache.promise;
+  const promise=fetch('/api/global-flow/earth/runtime',{credentials:'same-origin',cache:'no-store'}).then(async response=>{if(!response.ok)throw new Error('HTTP '+response.status);return response.json();});
+  earthRuntimeCache={at:now,promise};promise.catch(()=>{if(earthRuntimeCache.promise===promise)earthRuntimeCache={at:0,promise:null};});
+  return promise;
+}
+async function fetchEarthStatus(){
+  const response=await fetch('/api/global-flow/earth/status',{credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);return response.json();
+}
+async function saveEarthProviderSettings(body){
+  const response=await fetch('/api/global-flow/earth/settings',{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+  const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data&&data.error||('HTTP '+response.status));
+  earthRuntimeCache={at:0,promise:null};return data;
+}
+function earthBridge(){
+  return {
+    L,esc,isEn,palette,drawModeGlyph,nodeRadius,edgeSamples,pointAlongLeg,geoInterpolate,heightForSpan,spanForHeight,hitIdentity,hitTitle,vehicleTitle,
+    angularDistanceDeg:(a,b)=>angularDistance(a,b)*180/Math.PI,
+    modeColor:mode=>modeColor(mode,palette()),
+    istanbul:()=>ISTANBUL,istanbulName:()=>ISTANBUL.name,
+    getModel:()=>state.model,modelRevision:()=>state.modelRevision,
+    getEarthPrefs:()=>state.earth,
+    saveEarthPrefs:patch=>{state.earth=normalizeEarthPrefs({...state.earth,...(patch||{})});savePrefs();},
+    tooltip:(hit,point)=>showTooltip(hit,point||null),
+    selection:()=>state.selection,
+    select:hit=>setSelection(hit?hitIdentity(hit):''),
+    open:hit=>openHitDetail(hit),
+    switchToBuyerLog:()=>setEngine('buyerlog'),
+    hardFail:earthHardFail,
+    fetchRuntime:fetchEarthRuntime,fetchStatus:fetchEarthStatus,saveProviderSettings:saveEarthProviderSettings
+  };
+}
+async function activateEarth(viewport){
+  if(state.earthIdleTimer){clearTimeout(state.earthIdleTimer);state.earthIdleTimer=0;}
+  if(state.engine!=='earth'||state.earthError)return;
+  if(!isLive()){state.earthPendingViewport=viewport||state.earthPendingViewport;return;}
+  const host=ensureEarthHost();if(!host)return;
+  const existing=state.earthCtl;
+  if(existing&&!existing.isDestroyed()){
+    if(state.earthStarting)return state.earthStarting;
+    existing.resume();if(viewport)existing.setViewport(viewport,true);return;
+  }
+  if(state.earthStarting)return state.earthStarting;
+  state.earthLoading=true;syncLoadingOverlay();
+  const pendingViewport=viewport||state.earthPendingViewport;state.earthPendingViewport=null;
+  const run=(async()=>{
+    let ctl=null;
+    try{
+      let runtime=null;try{runtime=await fetchEarthRuntime();}catch(_){/* ayar okunamazsa çevrimdışı küreyle devam edilir */}
+      if(runtime&&runtime.enabled===false)throw Object.assign(new Error(L('Earth 3D Moderatör tarafından kapatıldı.','Earth 3D has been disabled by a moderator.')),{code:'EARTH_DISABLED'});
+      if(!window.BLPerf||typeof window.BLPerf.ensureFeature!=='function')throw new Error(L('Modül yükleyici bulunamadı.','Module loader is unavailable.'));
+      await window.BLPerf.ensureFeature('globalFlowEarth');
+      if(!window.BLGlobalFlowEarth||typeof window.BLGlobalFlowEarth.create!=='function')throw new Error(L('Earth modülü yüklenemedi.','Earth module could not be loaded.'));
+      ctl=window.BLGlobalFlowEarth.create({container:host,host:earthBridge()});state.earthCtl=ctl;
+      await ctl.ready;
+      if(state.earthCtl!==ctl||ctl.isDestroyed())return;
+      if(state.engine==='earth'&&isLive()){
+        ctl.resume();if(pendingViewport)ctl.setViewport(pendingViewport,true);
+        // İlk kare çizilene kadar yükleme kartı kalır; karolar sonra kademeli gelir.
+        await Promise.race([ctl.firstFrame,new Promise(resolve=>setTimeout(resolve,5000))]);
+      }else{state.earthPendingViewport=pendingViewport;scheduleEarthColdDestroy();}
+    }catch(error){
+      if(ctl){try{ctl.destroy();}catch(_){}}
+      if(!ctl||state.earthCtl===ctl)earthHardFail(error);
+    }finally{
+      if(state.earthStarting===run)state.earthStarting=null;
+      state.earthLoading=false;syncLoadingOverlay();
+    }
+  })();
+  state.earthStarting=run;
+  return run;
+}
+function scheduleEarthColdDestroy(){
+  if(state.earthIdleTimer)clearTimeout(state.earthIdleTimer);
+  state.earthIdleTimer=setTimeout(()=>{state.earthIdleTimer=0;if(state.engine!=='earth'||!isLive())destroyEarth();},EARTH_COLD_DESTROY_MS);
+}
+function deactivateEarth(){
+  const ctl=state.earthCtl;if(!ctl||ctl.isDestroyed())return;
+  ctl.pause();scheduleEarthColdDestroy();
+}
+function destroyEarth(){
+  if(state.earthIdleTimer){clearTimeout(state.earthIdleTimer);state.earthIdleTimer=0;}
+  const ctl=state.earthCtl;state.earthCtl=null;
+  if(ctl&&!ctl.isDestroyed()){try{ctl.destroy();}catch(_){}}
+}
+function syncEarthActivity(){
+  if(state.engine!=='earth'){deactivateEarth();return;}
+  if(isLive())void activateEarth(null);
+  else deactivateEarth();
+}
+function earthHardFail(error){
+  state.earthError=String(error&&error.message||error||L('Bilinmeyen hata','Unknown error'));
+  const ctl=state.earthCtl;state.earthCtl=null;if(ctl&&!ctl.isDestroyed()){try{ctl.destroy();}catch(_){}}
+  showTooltip(null);syncEngineSurface();
+}
+function notifyEarth(reason){const ctl=state.earthCtl;if(ctl&&!ctl.isDestroyed())ctl.update(reason);}
+function setSelection(id){
+  const next=String(id||'');if(next===state.selection)return;state.selection=next;
+  if(state.engine==='buyerlog')scheduleDraw();
+  notifyEarth('selection');
+}
 function bindCanvas(){
   const canvas=$('globalFlowCanvas');if(!canvas||canvas.dataset.gfBound)return;canvas.dataset.gfBound='1';
   canvas.addEventListener('pointerdown',onPointerDown);canvas.addEventListener('pointermove',onPointerMove);canvas.addEventListener('pointerup',onPointerUp);canvas.addEventListener('pointercancel',onPointerUp);
   canvas.addEventListener('pointerleave',event=>{if(!state.drag){const had=Boolean(state.hover||state.expandedNodeKey);state.hover=null;state.expandedNodeKey='';showTooltip(null,event);if(had)scheduleDraw();}});
   canvas.addEventListener('wheel',onWheel,{passive:false});
-  canvas.addEventListener('click',event=>{if(state.lastDragMoved){state.lastDragMoved=false;return;}const p=canvasPoint(event),hit=nearestHit(p.x,p.y);if(hit)openHitDetail(hit);});
+  canvas.addEventListener('click',event=>{if(state.lastDragMoved){state.lastDragMoved=false;return;}const p=canvasPoint(event),hit=nearestHit(p.x,p.y);if(hit){setSelection(hitIdentity(hit));openHitDetail(hit);}else setSelection('');});
   canvas.addEventListener('dblclick',event=>event.preventDefault());
 }
 function bindObservers(){
@@ -1450,21 +1741,22 @@ function bindObservers(){
     const tables=event&&event.detail&&Array.isArray(event.detail.tables)?event.detail.tables:['cp','orders'];
     if(state.source==='combined'||tables.includes(state.source))scheduleRefresh(250);
   });
-  const themeObserver=new MutationObserver(()=>{state.paletteRevision++;state.scene=null;scheduleDraw();});themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang']});state.observers.push(themeObserver);
+  const themeObserver=new MutationObserver(()=>{state.paletteRevision++;state.scene=null;scheduleDraw();notifyEarth('theme');});themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang']});state.observers.push(themeObserver);
   const widget=$('globalFlowMapWidget');
   if(widget&&typeof IntersectionObserver==='function'){
     const io=new IntersectionObserver(entries=>{
       const visible=entries.some(entry=>entry.isIntersecting);if(visible===state.inView)return;state.inView=visible;
       if(visible){if(state.dirty)void refresh(false);scheduleDraw();}
       else if(state.frame){cancelAnimationFrame(state.frame);state.frame=0;}
+      syncEarthActivity();
     });io.observe(widget);state.observers.push(io);
   }
   window.addEventListener('resize',scheduleDraw,{passive:true});
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(state.dirty)void refresh(false);scheduleDraw();}});
-  window.addEventListener('pagehide',flushPrefs);
-  document.addEventListener('bl:language-changed',()=>{renderAll();});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(state.dirty)void refresh(false);scheduleDraw();}syncEarthActivity();});
+  window.addEventListener('pagehide',()=>{destroyEarth();flushPrefs();});
+  document.addEventListener('bl:language-changed',()=>{renderAll();notifyEarth('language');});
 }
-function renderAll(){renderControls();renderFilters();renderKpis();renderMeta();setCollapsed(state.collapsed);scheduleDraw();}
+function renderAll(){syncEngineSurface();renderControls();renderFilters();renderKpis();renderMeta();setCollapsed(state.collapsed);scheduleDraw();}
 function init(){
   const widget=$('globalFlowMapWidget');if(!widget)return;loadPrefs();
   $('globalFlowCollapseBtn')?.addEventListener('click',()=>setCollapsed(!state.collapsed));
@@ -1472,6 +1764,7 @@ function init(){
   // Uygulama başka sekmede açıldıysa veri gözlemci görünür dediğinde yüklenir.
   state.inView=widget.getClientRects().length>0;
   state.dirty=true;if(isLive())void refresh(false);
+  if(state.engine==='earth')syncEarthActivity();
   // Yakalama evresinde çalışır: açık detay çekmecesi kendi Escape'iyle
   // kapanmadan önce durum okunur; Escape önce çekmeceyi, sonra tam ekranı kapatır.
   document.addEventListener('keydown',event=>{
@@ -1479,6 +1772,8 @@ function init(){
     if(state.quickEditorOpen){state.quickEditorOpen=false;renderKpis();return;}
     const drawerOpen=Boolean(window.BLDetailDrawer&&window.BLDetailDrawer.isOpen&&window.BLDetailDrawer.isOpen())||Boolean($('globalFlowDrawer')?.classList.contains('is-open'));
     if(drawerOpen){if($('globalFlowDrawer')?.classList.contains('is-open'))closeDrawer();return;}
+    if(state.engine==='earth'&&state.earthCtl&&!state.earthCtl.isDestroyed()&&state.earthCtl.handleEscape())return;
+    if(state.selection&&state.inView&&!state.collapsed){setSelection('');return;}
     if(state.fullscreen)toggleFullscreen();
   },true);
 }
@@ -1488,6 +1783,11 @@ return {
   ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
   normalizeRecord,expandSourceRow,shipmentPartialsFromRows,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,
   distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,routeLegsFor,routeEdges,buildFlowModel,resolveSymbolCollisions,pickHit,
-  refresh:()=>refresh(true),resetView
+  MAP_ENGINES,EARTH_LAYER_KEYS,normalizeEarthPrefs,viewportFrom2d,view2dFromViewport,viewportFrom3d,view3dFromViewport,heightForSpan,spanForHeight,hitIdentity,
+  refresh:()=>refresh(true),resetView,setEngine,
+  engineState:()=>({engine:state.engine,selection:state.selection,earth:state.earthCtl&&!state.earthCtl.isDestroyed()?state.earthCtl.stats():null,earthError:state.earthError,earthLoading:state.earthLoading,view:state.view,panX:state.panX,panY:state.panY,zoom2d:state.zoom2d,rotLon:state.rotLon,rotLat:state.rotLat,zoom3d:state.zoom3d,filtered:state.filtered.length,quickActive:state.quick.active.slice(),filters:state.filters}),
+  earthInspect:()=>state.earthCtl&&!state.earthCtl.isDestroyed()?state.earthCtl.inspect():null,
+  earthViewport:()=>state.earthCtl&&!state.earthCtl.isDestroyed()&&!state.earthCtl.isPaused()?state.earthCtl.getViewport():null,
+  buyerViewport:()=>currentBuyerViewport()
 };
 });

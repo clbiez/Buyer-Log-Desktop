@@ -10569,6 +10569,8 @@ require('./routes/lfl-routes')(app, {
   withFabricDimensions,
 
 });
+// ---- Global Flow · Earth 3D sağlayıcı ayarları → server/routes/global-flow-earth-routes.js ----
+require('./routes/global-flow-earth-routes')(app, { express, userAccess });
 // ---- Octopus (Copilot) route'ları → server/routes/copilot-routes.js ----
 require('./routes/copilot-routes')(app, {
   APP_VERSION,

@@ -27,6 +27,9 @@
 **/thumbnails/
 **/thumbnail-cache/
 **/image-cache/
+# Vendored CesiumJS ships its own credit logos under Assets/Images; on
+# case-insensitive (Windows) checkouts the user-asset rule above would drop them.
+!/resources/app/public/vendor/cesium/Assets/Images/
 **/exports/
 **/backups/
 *.blgbackup
