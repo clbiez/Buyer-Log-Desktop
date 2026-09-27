@@ -23,10 +23,11 @@ function webRequest(url, authorization = '') {
   return { url, method: 'POST', requestHeaders };
 }
 
-test('user menu exposes manual OAB sign-in through the existing desktop auth bridge', () => {
+test('user menu reuses the same persistent OAB session through the desktop auth bridge', () => {
   assert.match(USER_ACCESS, /data-oab-user-login/);
   assert.match(USER_ACCESS, /OAB Kullanıcı Girişi/);
-  assert.match(USER_ACCESS, /ensureOabAuth\(\{ interactive:true, manual:true \}\)/);
+  assert.match(USER_ACCESS, /ensureOabAuth\(\{ interactive:true \}\)/);
+  assert.doesNotMatch(USER_ACCESS, /ensureOabAuth\(\{ interactive:true, manual:true \}\)/);
 });
 
 test('OAB desktop auth captures only the dedicated Electron session through webRequest, never debugger/CDP', () => {
@@ -67,7 +68,12 @@ test('persistent OAB probe stays hidden briefly, then escalates instead of waiti
   assert.match(body, /armSilentProbe\(\)/);
   assert.match(body, /recoverStaleSilentProbe/);
   assert.match(body, /resetForFreshViewer/);
-  assert.match(body, /resetOabBrowserAuthState\('stale-silent-probe'\)[\s\S]*?showInteractiveWindow\(\)[\s\S]*?loadLoginTarget\(targetViewerUrl\(\), false\)/);
+  const recoveryStart = body.indexOf('const recoverStaleSilentProbe');
+  const recoveryEnd = body.indexOf('const armSilentProbe', recoveryStart);
+  const recoveryBody = body.slice(recoveryStart, recoveryEnd);
+  assert.match(recoveryBody, /clearOabBackendAuthorization\(\)/);
+  assert.match(recoveryBody, /showInteractiveWindow\(\)/);
+  assert.doesNotMatch(recoveryBody, /resetOabBrowserAuthState|clearStorageData|clearCache/);
   assert.match(body, /resetOabBrowserAuthState[\s\S]*?clearStorageData[\s\S]*?clearCache/);
   assert.doesNotMatch(body, /once\('ready-to-show', showInteractiveWindow\)/);
   assert.match(body, /did-fail-load[\s\S]*?OAB_AUTH_NAVIGATION_FAILED/);
@@ -86,12 +92,12 @@ test('Microsoft SSO popup is kept inside the dedicated partition and allowlist',
   assert.match(body, /will-navigate/);
 });
 
-test('interactive OAB reveals the SSO child itself and manual sign-in does not expose the blank PASS parent', () => {
+test('interactive OAB reveals the SSO child itself without exposing the blank PASS parent', () => {
   const start = MAIN.indexOf('async function acquireOabAuthorization');
   const end = MAIN.indexOf('async function clearOabAuthSession', start);
   const body = MAIN.slice(start, end);
   assert.match(body, /authWindow\.once\('ready-to-show',[\s\S]*?if \(loginRequiredKnown\) showInteractiveWindow\(\)/);
-  assert.doesNotMatch(body, /if \(manual \|\| loginRequiredKnown\) showInteractiveWindow\(\)/);
+  assert.doesNotMatch(body, /if \(forceFresh \|\| loginRequiredKnown\) showInteractiveWindow\(\)/);
   assert.match(body, /popup\.once\('ready-to-show',[\s\S]*?flowState\.interactive[\s\S]*?showWindow\(popup\)/);
   assert.match(body, /popup\.webContents\.on\('did-finish-load',[\s\S]*?flowState\.interactive[\s\S]*?showWindow\(popup\)/);
 
@@ -101,13 +107,14 @@ test('interactive OAB reveals the SSO child itself and manual sign-in does not e
   assert.doesNotMatch(openHandler, /showInteractiveWindow\(\)/);
 });
 
-test('manual OAB sign-in clears only the dedicated browser auth state before navigation', () => {
+test('only explicit force-fresh OAB auth clears the dedicated persistent browser state', () => {
   const start = MAIN.indexOf('async function acquireOabAuthorization');
   const end = MAIN.indexOf('async function clearOabAuthSession', start);
   const body = MAIN.slice(start, end);
-  assert.match(body, /if \(manual\) await resetOabBrowserAuthState\('manual-login'\)/);
+  assert.match(body, /const forceFresh = options\.forceFresh === true/);
+  assert.match(body, /if \(forceFresh\) await resetOabBrowserAuthState\('force-fresh-login'\)/);
   assert.match(body, /resetOabBrowserAuthState[\s\S]*?oabAuthSession\(\)[\s\S]*?clearStorageData[\s\S]*?clearCache/);
-  assert.match(body, /if \(manual\)[\s\S]*?resetOabBrowserAuthState\('manual-login'\)[\s\S]*?loadLoginTarget\(targetViewerUrl\(\), true\)/);
+  assert.doesNotMatch(body, /options\.manual|manual-login|stale-silent-probe/);
 });
 
 

@@ -810,7 +810,7 @@ function oabViewerUrl(options = {}) {
 
 async function acquireOabAuthorization(options = {}) {
   const requestedInteractive = options.interactive !== false;
-  const manual = options.manual === true;
+  const forceFresh = options.forceFresh === true;
   const requestedViewerUrl = oabViewerUrl(options);
 
   if (oabAuthInFlight) {
@@ -998,7 +998,7 @@ async function acquireOabAuthorization(options = {}) {
         await lifecycle.observe({ url, signIn:false });
       };
       const recoverStaleSilentProbe = async () => {
-        if (settled || !flowState.interactive || manual || loginRequiredKnown) return;
+        if (settled || !flowState.interactive || forceFresh || loginRequiredKnown) return;
         const state = lifecycle && lifecycle.snapshot();
         if (state && state.candidateBusy) {
           silentProbeTimer = setTimeout(() => { void recoverStaleSilentProbe(); }, 1000);
@@ -1006,13 +1006,21 @@ async function acquireOabAuthorization(options = {}) {
           return;
         }
 
-        // No validated report request arrived during the bounded hidden probe.
-        // Treat the browser auth state as stale/unknown, not as permission to
-        // leave a user-triggered Get OAB hidden for the full interactive timeout.
-        log('OAB sessiz oturum kontrolü sonuçlanmadı; görünür SSO akışına geçiliyor.');
-        await resetOabBrowserAuthState('stale-silent-probe');
+        // A slow PASS viewer must never be interpreted as a reason to delete the
+        // persistent corporate session. Keep persist:oab intact, discard only a
+        // stale backend RAM token, reveal the current page and let the bounded
+        // viewer lifecycle retry once if authenticated API traffic is still absent.
+        log('OAB sessiz oturum kontrolü sonuçlanmadı; mevcut kalıcı OAB oturumu korunarak görünür akışa geçiliyor.');
+        await clearOabBackendAuthorization();
+        lifecycle?.resetForFreshViewer?.();
         showInteractiveWindow();
 
+        let currentUrl = '';
+        try { currentUrl = authWindow.webContents.getURL(); } catch (_) {}
+        if (currentUrl && isAllowedOabLoginUrl(currentUrl) && !isLikelyOabSignInUrl(currentUrl)) {
+          schedulePulse(80);
+          return;
+        }
         if (navigationBusy) {
           freshReloadPending = true;
           try { authWindow.webContents.stop(); } catch (_) {}
@@ -1021,7 +1029,7 @@ async function acquireOabAuthorization(options = {}) {
         await loadLoginTarget(targetViewerUrl(), false);
       };
       const armSilentProbe = () => {
-        if (!flowState.interactive || manual || settled || loginRequiredKnown || silentProbeTimer) return;
+        if (!flowState.interactive || forceFresh || settled || loginRequiredKnown || silentProbeTimer) return;
         silentProbeTimer = setTimeout(() => {
           silentProbeTimer = null;
           void recoverStaleSilentProbe();
@@ -1238,11 +1246,11 @@ async function acquireOabAuthorization(options = {}) {
       void Promise.resolve(networkReady)
         .then(async () => {
           if (settled) return false;
-          // The explicit user-menu command means "start a fresh sign-in", not
-          // "show whatever stale PASS shell is cached in the persistent
-          // partition". Get OAB keeps the fast silent-session probe; manual
-          // sign-in clears only the dedicated OAB browser partition.
-          if (manual) await resetOabBrowserAuthState('manual-login');
+          // Normal interactive authentication always reuses persist:oab.
+          // A destructive browser-session reset is reserved for an explicit
+          // forceFresh request; the ordinary user-menu action and Get OAB must
+          // see exactly the same corporate session.
+          if (forceFresh) await resetOabBrowserAuthState('force-fresh-login');
           if (settled) return false;
           armSilentProbe();
           return loadLoginTarget(targetViewerUrl(), true);
@@ -1809,7 +1817,7 @@ function registerIpc() {
     try {
       return await acquireOabAuthorization({
         interactive:options && options.interactive !== false,
-        manual:options && options.manual === true,
+        forceFresh:options && options.forceFresh === true,
         seasonRef:options && options.seasonRef,
         merchSubGroupRef:options && options.merchSubGroupRef,
         buyerGroupRef:options && options.buyerGroupRef,
