@@ -88,10 +88,14 @@ app.get('/api/horizon/fields', async (req, res) => {
   try {
     const profile = req.currentUser || null;
     const target = String(req.query && req.query.target || 'cp').trim().toLowerCase();
+    const sourceId = String(req.query && req.query.sourceId || '').trim();
+    const connections = loadModelConnections().items || [];
+    const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null : null;
     let fields = horizonFields.FIELDS;
     let schemaError = '';
-    const connection = selectConnection(loadModelConnections().items, target);
-    if (target === 'intake') {
+    const connection = explicitConnection || selectConnection(connections, target);
+    const intakeTarget = target === 'intake' || Boolean(connection && connection.role === 'intake');
+    if (intakeTarget) {
       try {
         const found = await intakeLiveFields(connection || undefined);
         fields = intakeHorizonFields(found.fields);
@@ -114,6 +118,8 @@ app.get('/api/horizon/fields', async (req, res) => {
       ok: true,
       fields,
       schemaError,
+      sourceId: connection && connection.id || '',
+      sourceRole: connection && connection.role || '',
       operators: Object.entries(horizonFields.OPERATORS).map(([id, item]) => ({ id, arity: item.arity, label: item.label })),
       // Kullanıcı kartındaki MAG / MMYG / Buying Group — "bilgilerimden doldur".
       profileScope: profile ? {
@@ -136,12 +142,23 @@ app.get('/api/horizon/values', async (req, res) => {
     const table = String(req.query && req.query.table || '').trim();
     const column = String(req.query && req.query.column || '').trim() || field;
     const target = String(req.query && req.query.target || 'cp').trim().toLowerCase();
+    const sourceId = String(req.query && req.query.sourceId || '').trim();
     if (!field) return res.status(400).json({ error: 'field zorunlu.', code: 'FIELD_REQUIRED' });
-    const connections = loadModelConnections().items;
+    const connections = loadModelConnections().items || [];
+    const explicitConnection = sourceId ? connections.find(item => item && String(item.id || '') === sourceId) || null : null;
+    if (sourceId && !explicitConnection) return res.status(404).json({ error: 'Kaynak bulunamadı.', code: 'SOURCE_NOT_FOUND' });
     let databaseSource = null;
     if (table) {
-      databaseSource = resolveDynamicHorizonValueSource(connections, target, table, column);
-      if (!databaseSource) return res.status(400).json({ error: 'Geçersiz Horizon alanı.', code: 'HORIZON_FIELD_INVALID' });
+      databaseSource = explicitConnection
+        ? {
+          connectionId: String(explicitConnection.id || ''),
+          server: String(explicitConnection.server || ''),
+          catalog: String(explicitConnection.catalog || ''),
+          table,
+          field: column,
+        }
+        : resolveDynamicHorizonValueSource(connections, target, table, column);
+      if (!databaseSource || !databaseSource.server || !databaseSource.catalog) return res.status(400).json({ error: 'Geçersiz Horizon alanı.', code: 'HORIZON_FIELD_INVALID' });
       const schema = await modelQuery.discoverSchema({ server: databaseSource.server, catalog: databaseSource.catalog });
       const valid = (schema.columns || []).some(item => String(item.table || '').trim().toLocaleLowerCase('tr-TR') === table.toLocaleLowerCase('tr-TR')
         && String(item.name || '').trim().toLocaleLowerCase('tr-TR') === column.toLocaleLowerCase('tr-TR'));
@@ -149,7 +166,27 @@ app.get('/api/horizon/values', async (req, res) => {
     } else if (!horizonFields.FIELDS.some(item => item.header === field)) {
       return res.status(400).json({ error: 'Geçersiz Horizon alanı.', code: 'HORIZON_FIELD_INVALID' });
     } else {
-      databaseSource = resolveHorizonValueSource(connections, target, field);
+      if (explicitConnection) {
+        const scope = (Array.isArray(explicitConnection.scopes) ? explicitConnection.scopes : []).find(item =>
+          item && item.enabled !== false
+          && (Array.isArray(item.targets) ? item.targets : []).some(value => String(value || '').trim().toLowerCase() === target));
+        const fallbackTable = String(scope && scope.horizon && scope.horizon.table
+          || explicitConnection.horizon && explicitConnection.horizon.table || '').trim();
+        const raw = explicitConnection.mapping && explicitConnection.mapping[field];
+        const entry = typeof raw === 'string' ? { name: raw, table: fallbackTable, kind: 'column' }
+          : (raw && typeof raw === 'object' ? raw : null);
+        if (entry && entry.kind !== 'measure' && String(entry.name || '').trim()) {
+          databaseSource = {
+            connectionId: String(explicitConnection.id || ''),
+            server: String(explicitConnection.server || ''),
+            catalog: String(explicitConnection.catalog || ''),
+            table: String(entry.table || fallbackTable || '').trim(),
+            field: String(entry.name || '').trim(),
+          };
+        }
+      } else {
+        databaseSource = resolveHorizonValueSource(connections, target, field);
+      }
     }
     let databaseError = '';
     if (databaseSource) {
@@ -173,7 +210,7 @@ app.get('/api/horizon/values', async (req, res) => {
       }
     }
 
-    if (target === 'intake') {
+    if (target === 'intake' || (explicitConnection && explicitConnection.role === 'intake')) {
       const snapshot = intakeStore.loadSnapshot(req.currentUser.id);
       const snapshotFields = Array.isArray(snapshot && snapshot.fields) ? snapshot.fields : [];
       const meta = snapshotFields.find(item => String(item.id) === field
@@ -187,6 +224,13 @@ app.get('/api/horizon/values', async (req, res) => {
         }
       }
       return res.set('Cache-Control', 'no-store').json({ok:true,field,target,values:[...seen].sort((a,b)=>a.localeCompare(b,'tr',{sensitivity:'base'})),rowCount:Array.isArray(snapshot&&snapshot.rows)?snapshot.rows.length:0,truncated:false,source:'intake-snapshot-fallback',warning:databaseError||'INTAKE canlı kaynağı kullanılamadı.'});
+    }
+    if (explicitConnection && explicitConnection.role === 'antrepo') {
+      return res.set('Cache-Control', 'no-store').json({
+        ok: true, field, target, values: [], rowCount: 0, truncated: false,
+        source: 'database-unavailable', connectionId: explicitConnection.id,
+        warning: databaseError || 'IAS canlı kaynağı kullanılamadı.',
+      });
     }
     const cache = cacheForUser(req);
     const rows = Array.isArray(cache && cache.asasOrders) ? cache.asasOrders : [];
