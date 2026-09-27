@@ -55,6 +55,11 @@
     return null;
   }
   function normalizeDisplayMode(value){return ['digital','analog','both'].includes(String(value||''))?String(value):DEFAULT_DISPLAY;}
+  function clockSearchKey(value){return String(value==null?'':value).toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').replace(/[_/.-]+/g,' ').replace(/\s+/g,' ').trim();}
+  function clockMatchesSearch(item,query,l='tr'){
+    if(!item)return false;const q=clockSearchKey(query);if(!q)return true;
+    return clockSearchKey([item.tr,item.en,item.timeZone,zoneLabel(item.timeZone),countryName(item,l)].join(' ')).includes(q);
+  }
 
   function greetingKey(hour){
     const h=Number(hour);
@@ -98,7 +103,7 @@
     return {hour:(hour+minute/60+second/3600)*30,minute:(minute+second/60)*6,second:second*6};
   }
 
-  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,clockParts,clockAngles,supportedTimeZones,clockFromId};
+  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
 
   const lang=()=>(document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -114,6 +119,13 @@
     return '<p class="ovLaunchPulse" data-pulse="thinking"><span class="blOrb blOrb--sm" data-state="thinking" aria-hidden="true"></span><span>'+esc(text)+'</span></p>';
   }
   function countryName(item,l){return item?(l==='en'?item.en:item.tr):'';}
+  function filterClockOptions(host,value){
+    const select=host&&host.querySelector('[data-clock-select]');if(!select)return;
+    const q=clockSearchKey(value),options=[...select.querySelectorAll('option')];let first=null;
+    options.forEach(option=>{const show=!q||clockSearchKey(option.dataset.clockSearchText||option.textContent).includes(q);option.hidden=!show;option.disabled=!show;if(show&&!first)first=option;});
+    select.querySelectorAll('optgroup').forEach(group=>{group.hidden=![...group.querySelectorAll('option')].some(option=>!option.hidden);});
+    const current=select.selectedOptions&&select.selectedOptions[0];if(first&&(!current||current.hidden||current.disabled))select.value=first.value;
+  }
   function analogHtml(parts){
     const a=clockAngles(parts);
     return '<div class="ovAnalogClock" data-clock-analog aria-hidden="true"><span class="ovAnalogDialMark ovAnalogDialMark--12">12</span><span class="ovAnalogDialMark ovAnalogDialMark--3">3</span><span class="ovAnalogDialMark ovAnalogDialMark--6">6</span><span class="ovAnalogDialMark ovAnalogDialMark--9">9</span><i class="ovAnalogHand ovAnalogHand--hour" data-clock-hand="hour" style="transform:translateX(-50%) rotate('+a.hour+'deg)"></i><i class="ovAnalogHand ovAnalogHand--minute" data-clock-hand="minute" style="transform:translateX(-50%) rotate('+a.minute+'deg)"></i><i class="ovAnalogHand ovAnalogHand--second" data-clock-hand="second" style="transform:translateX(-50%) rotate('+a.second+'deg)"></i><b class="ovAnalogPin"></b></div>';
@@ -159,11 +171,13 @@
     const selectedZones=new Set(selected.map(id=>clockFromId(id)?.timeZone).filter(Boolean));
     const available=CLOCKS.filter(item=>!selected.includes(item.id));
     const extraZones=supportedTimeZones().filter(zone=>!selectedZones.has(zone)&&!CLOCKS.some(item=>item.timeZone===zone));
+    const commonOptions=available.map(item=>'<option value="'+esc(item.id)+'" data-clock-search-text="'+esc([item.tr,item.en,item.timeZone,zoneLabel(item.timeZone)].join(' '))+'">'+esc(countryName(item,l))+'</option>').join('');
+    const zoneOptions=extraZones.map(zone=>'<option value="'+esc('TZ:'+zone)+'" data-clock-search-text="'+esc(zone+' '+zoneLabel(zone))+'">'+esc(zoneLabel(zone))+'</option>').join('');
     const controls=manageOpen
       ?'<div class="ovClockManageControls"><label class="ovClockModeControl"><span>'+esc(l==='en'?'Clock style':'Saat görünümü')+'</span><select data-clock-display-select><option value="digital"'+(displayMode==='digital'?' selected':'')+'>'+esc(l==='en'?'Digital':'Dijital')+'</option><option value="analog"'+(displayMode==='analog'?' selected':'')+'>'+esc(l==='en'?'Analog':'Analog')+'</option><option value="both"'+(displayMode==='both'?' selected':'')+'>'+esc(l==='en'?'Analog + digital':'Analog + dijital')+'</option></select></label>'+
-        '<div class="ovClockAddControls"><select data-clock-select aria-label="'+esc(l==='en'?'Country / time zone':'Ülke / saat dilimi')+'">'+
-        '<optgroup label="'+esc(l==='en'?'Common countries':'Sık kullanılan ülkeler')+'">'+available.map(item=>'<option value="'+esc(item.id)+'">'+esc(countryName(item,l))+'</option>').join('')+'</optgroup>'+
-        '<optgroup label="'+esc(l==='en'?'All world time zones':'Tüm dünya saat dilimleri')+'">'+extraZones.map(zone=>'<option value="'+esc('TZ:'+zone)+'">'+esc(zoneLabel(zone))+'</option>').join('')+'</optgroup>'+
+        '<div class="ovClockAddControls"><input type="search" data-clock-search autocomplete="off" placeholder="'+esc(l==='en'?'Search country or time zone':'Ülke veya saat dilimi ara')+'" aria-label="'+esc(l==='en'?'Search country or time zone':'Ülke veya saat dilimi ara')+'"><select data-clock-select aria-label="'+esc(l==='en'?'Country / time zone':'Ülke / saat dilimi')+'">'+
+        '<optgroup label="'+esc(l==='en'?'Common countries':'Sık kullanılan ülkeler')+'">'+commonOptions+'</optgroup>'+
+        '<optgroup label="'+esc(l==='en'?'All world time zones':'Tüm dünya saat dilimleri')+'">'+zoneOptions+'</optgroup>'+
         '</select><button type="button" class="ovClockAddBtn" data-clock-add'+((available.length||extraZones.length)?'':' disabled')+'>'+esc(l==='en'?'Add':'Ekle')+'</button></div></div>'
       :'';
     body.innerHTML='<div class="ovLaunchHead"><div class="ovLaunchHeading"><p class="ovLaunchDate">'+esc(date)+'</p>'+
@@ -171,7 +185,7 @@
       '<p class="ovLaunchSub">'+esc(l==='en'?'Live local times for the countries you work with.':'Çalıştığın ülkelerin canlı yerel saatleri.')+'</p>'+pulseHtml(l)+'</div></div>'+
       '<div class="ovClockPanel"><div class="ovClockToolbar"><button type="button" class="ovClockManageBtn" data-clock-manage aria-pressed="'+(manageOpen?'true':'false')+'">'+
       esc(manageOpen?(l==='en'?'Done':'Tamam'):(l==='en'?'Manage clocks':'Saatleri düzenle'))+'</button></div>'+controls+
-      (cards?'<div class="ovClockGrid">'+cards+'</div>':'<div class="ovClockEmpty">'+esc(l==='en'?'No clocks selected. Use Manage clocks to add one.':'Saat seçili değil. Eklemek için Saatleri düzenle seçeneğini kullan.')+'</div>')+'</div>';
+      (cards?'<div class="ovClockGrid is-'+esc(displayMode)+'" data-clock-count="'+selected.length+'">'+cards+'</div>':'<div class="ovClockEmpty">'+esc(l==='en'?'No clocks selected. Use Manage clocks to add one.':'Saat seçili değil. Eklemek için Saatleri düzenle seçeneğini kullan.')+'</div>')+'</div>';
     tick();
   }
   function bind(){
@@ -187,6 +201,9 @@
     host.addEventListener('change',event=>{
       const mode=event.target.closest('[data-clock-display-select]');if(mode){saveDisplayMode(mode.value);render();}
     });
+    host.addEventListener('input',event=>{
+      const search=event.target.closest('[data-clock-search]');if(search)filterClockOptions(host,search.value);
+    });
     new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
     window.addEventListener('bl:user-access-applied',render);
     const refreshBtn=document.getElementById('topRefreshBtn');
@@ -199,5 +216,5 @@
     window.addEventListener('beforeunload',()=>{if(timer)clearInterval(timer);},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-  return {STORAGE_KEY,DISPLAY_KEY,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,clockParts,clockAngles,supportedTimeZones,clockFromId,render};
+  return {STORAGE_KEY,DISPLAY_KEY,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch,render};
 });
