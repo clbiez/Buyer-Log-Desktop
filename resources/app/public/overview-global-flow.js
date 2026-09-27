@@ -728,9 +728,9 @@ function clusterVehicleSymbols(symbols,distance){
   return out.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
 }
 function routeRecordGroups(input){
-  const records=Array.isArray(input)?input:(input&&Array.isArray(input.records)?input.records:[]),groups=new Map();
+  const records=Array.isArray(input)?input:(input&&Array.isArray(input.records)?input.records:[]),edgeMode=Array.isArray(input)?'':clean(input&&input.mode),groups=new Map();
   uniqueRecords(records).forEach(rec=>{
-    const country=clean(rec&&((rec.origin&&rec.origin.name)||rec.country))||'—',mode=clean(rec&&rec.mode)||'unknown',key=country+'|'+mode;
+    const country=clean(rec&&((rec.origin&&rec.origin.name)||rec.country))||'—',mode=edgeMode||clean(rec&&rec.mode)||'unknown',key=country+'|'+mode;
     if(!groups.has(key))groups.set(key,{key,country,mode,records:[]});groups.get(key).records.push(rec);
   });
   return [...groups.values()].sort((a,b)=>a.country.localeCompare(b.country)||a.mode.localeCompare(b.mode));
@@ -1470,7 +1470,7 @@ function openRecordsDrawer(title,records,subtitle){
   drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('[data-gf-drawer-close]')?.addEventListener('click',closeDrawer);
 }
 function openRouteChoice(edge,records){
-  const groups=routeRecordGroups(records);
+  const groups=routeRecordGroups(edge);
   if(groups.length<=1){openRecordsDrawer(edgeTitle(edge),records,modeLabel(edge.mode)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));return;}
   const drawer=$('globalFlowDrawer');if(!drawer){openRecordsDrawer(edgeTitle(edge),records,modeLabel(edge.mode));return;}
   window.BLDetailDrawer?.close?.();
