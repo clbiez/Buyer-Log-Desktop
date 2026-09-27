@@ -632,7 +632,7 @@ function makeVehicle(leg,items,vessel){
   return {
     id:'veh:'+leg.key+'|'+(vessel?'v:'+vessel.key:'p:'+first.rec.id),leg,legKey:leg.key,mode:leg.mode,
     vesselName:vessel?vessel.name:'',vesselKey:vessel?vessel.key:'',progress,geo:pointAlongLeg(leg,progress),records,
-    qty:records.reduce((sum,r)=>sum+(Number(r.qty)||0),0),elapsedDays:elapsed.length?mean(elapsed):null,
+    qty:records.reduce((sum,r)=>sum+(Number(r.qty)||0),0),elapsedDays:elapsed.length?mean(elapsed):null,elapsedCount:elapsed.length,
     leadDays:mean(items.map(p=>p.meta.leadDays)),known:items.some(p=>p.meta.known),
     origins:[...new Set(records.map(r=>r.origin&&r.origin.name).filter(Boolean))],
     files:[...new Set(records.map(r=>r.shipmentFile||r.orderCode).filter(Boolean))],
@@ -730,7 +730,8 @@ function clusterVehicleSymbols(symbols,distance){
     if(members.length===1){out.push(members[0]);return;}
     members.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
     const vehicles=members.map(m=>m.vehicle).filter(Boolean),records=uniqueRecords(vehicles.flatMap(v=>v.records||[])),modes=[...new Set(vehicles.map(v=>v.mode).filter(Boolean))];
-    out.push({id:'vehicle-cluster:'+members.map(m=>m.id).join('|'),kind:'vehicleCluster',vehicles,records,x:members.reduce((sum,m)=>sum+m.x,0)/members.length,y:members.reduce((sum,m)=>sum+m.y,0)/members.length,r:12,mode:modes.length===1?modes[0]:'combined',critical:records.some(r=>r&&r.critical)});
+    const elapsedWeight=vehicles.reduce((sum,v)=>sum+(Number(v.elapsedCount)||0),0),avgElapsedDays=elapsedWeight?vehicles.reduce((sum,v)=>sum+(Number(v.elapsedDays)||0)*(Number(v.elapsedCount)||0),0)/elapsedWeight:null;
+    out.push({id:'vehicle-cluster:'+members.map(m=>m.id).join('|'),kind:'vehicleCluster',vehicles,records,x:members.reduce((sum,m)=>sum+m.x,0)/members.length,y:members.reduce((sum,m)=>sum+m.y,0)/members.length,r:12,mode:modes.length===1?modes[0]:'combined',critical:records.some(r=>r&&r.critical),avgElapsedDays,elapsedCount:elapsedWeight});
   });
   return out.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
 }
@@ -749,6 +750,12 @@ function pickHit(targets,x,y){
     const priority=Number(hit.priority)||0;if(priority>bestPriority||(priority===bestPriority&&distance<bestDistance)){best=hit;bestPriority=priority;bestDistance=distance;}
   });
   return best;
+}
+function routeHighlightEdges(scene,hit){
+  if(!scene||!hit||hit.type!=='route')return [];
+  const hoveredRecords=Array.isArray(hit.records)?hit.records:[],ids=new Set(hoveredRecords.map(rec=>rec&&rec.id!=null?String(rec.id):'').filter(Boolean));
+  if(!ids.size)return (scene.edges||[]).filter(item=>item&&item.edge&&hit.edge&&item.edge.key===hit.edge.key);
+  return (scene.edges||[]).filter(item=>Array.isArray(item&&item.edge&&item.edge.records)&&item.edge.records.some(rec=>rec&&rec.id!=null&&ids.has(String(rec.id))));
 }
 
 /* Hızlı filtreler. Varsayılan set: Üretimde, Sevke hazır, Yolda, Kritik.
@@ -825,7 +832,7 @@ if(typeof document==='undefined'){
     normalizeRecord,expandSourceRow,shipmentPartialsFromRows,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
     seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,routeCorridorKey,pointAlongLeg,
-    transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,
+    transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,routeHighlightEdges,
     normalizeQuickFilterItems,quickFilterMatch,normalizeFilters,createPanelFilter};
 }
 
@@ -1345,8 +1352,13 @@ function drawNode(ctx,symbol,p){
   ctx.restore();
   (symbol.stageIcons||[]).forEach(icon=>drawStageIcon(ctx,icon.x,icon.y,icon.stage,p));
 }
-function drawHoverHighlight(ctx,hit,p){
-  if(hit.type==='route'){ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.45;ctx.lineWidth=Math.max(3,Number(hit.r||8)/2);ctx.lineCap='round';ctx.setLineDash([]);strokePath(ctx,hit.points);ctx.restore();return;}
+function drawHoverHighlight(ctx,hit,p,scene){
+  if(hit.type==='route'){
+    const routeItems=routeHighlightEdges(scene,hit),items=routeItems.length?routeItems:[{points:hit.points,width:Number(hit.r||8)}];
+    ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.5;ctx.lineCap='round';ctx.lineJoin='round';ctx.setLineDash([]);
+    items.forEach(item=>{ctx.lineWidth=Math.max(3,Number(item.width||hit.r||8)*.9);strokePath(ctx,item.points||[]);});
+    ctx.restore();return;
+  }
   ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(hit.x,hit.y,Math.min(24,Number(hit.r||10)+3),0,Math.PI*2);ctx.stroke();ctx.restore();
 }
 function hitIdentity(hit){if(!hit)return '';return hit.type+':'+(hit.vehicle?hit.vehicle.id:hit.cluster?hit.cluster.id:hit.edge?hit.edge.key:hit.bundle?hit.bundle.key:hit.stage?hit.nodeKey+'/'+hit.stage:'');}
@@ -1370,7 +1382,7 @@ function draw(now){
   const scene=buildScene(info,p);drawEdges(ctx,scene,t,animate);
   scene.symbols.forEach(symbol=>{if(symbol.kind==='node')drawNode(ctx,symbol,p);});
   scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p);else if(symbol.kind==='vehicleCluster')drawVehicleCluster(ctx,symbol,p);});
-  const hover=currentHit();if(hover)drawHoverHighlight(ctx,hover,p);
+  const hover=currentHit();if(hover)drawHoverHighlight(ctx,hover,p,scene);
   if(animate||state.expandedNodeKey||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
 }
 function throttledDraw(now){const minGap=state.globeInertia?16:50;if(now-state.lastFrame<minGap){state.frame=requestAnimationFrame(throttledDraw);return;}state.lastFrame=now;draw(now);}
@@ -1394,7 +1406,9 @@ function showTooltip(hit,event){
   const tip=$('globalFlowTooltip');if(!tip)return;if(!hit){tip.hidden=true;return;}let title='',lines=[],critical=false;
   if(hit.type==='vehicleCluster'){
     const c=hit.cluster,modes=[...new Set((c.vehicles||[]).map(v=>modeLabel(v.mode)))];title=L('Gruplanmış araçlar','Grouped vehicles')+' · '+(c.vehicles||[]).length;
-    lines.push(modes.join(' · '));lines.push(countSummary(c.records));lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
+    lines.push(modes.join(' · '));
+    if(c.avgElapsedDays!=null)lines.push(L('Ortalama transit günü','Average transit day')+': '+(Math.round(c.avgElapsedDays*10)/10));
+    lines.push(countSummary(c.records));lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
   }else if(hit.type==='vehicle'){
     const v=hit.vehicle;title=vehicleTitle(v);
     lines.push(modeLabel(v.mode)+' · '+v.leg.from+' → '+v.leg.to);
@@ -1554,7 +1568,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 return {
   ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
   normalizeRecord,expandSourceRow,shipmentPartialsFromRows,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,
-  distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,routeLegsFor,routeEdges,routeCorridorKey,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,
+  distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,routeLegsFor,routeEdges,routeCorridorKey,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,routeHighlightEdges,
   refresh:()=>refresh(true),resetView
 };
 });

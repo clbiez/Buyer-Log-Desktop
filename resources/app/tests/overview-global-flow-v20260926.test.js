@@ -18,6 +18,19 @@ test('ülke merkezi ve grup toplaması rota metasını üretir',()=>{assert.equa
 test('Bangladesh deniz rotası Suez ve Çanakkale koridorundan İstanbul’a gelir',()=>{const route=flow.seaRouteCoordinates('Bangladesh');assert.ok(route.length>10);assert.ok(route.some(p=>Math.abs(p.lon-32.55)<.2&&Math.abs(p.lat-30)<.2));assert.ok(route.some(p=>Math.abs(p.lon-26.4)<.2&&Math.abs(p.lat-40.2)<.2));const last=route.at(-1);assert.ok(Math.abs(last.lon-flow.ISTANBUL.lon)<.01&&Math.abs(last.lat-flow.ISTANBUL.lat)<.01);});
 test('araç ilerlemesi Handover + yol süresi kuralından hesaplanır',()=>{const rec=flow.normalizeRecord({'Sipariş Kod':'BD-1','Country':'Bangladesh','Status':'In Transit','Shipment Mode':'Gemi','HANDOVER Tarihi':'2026-09-01'},'orders',0),rules=[{id:'bd-sea',delType:'Gemi',days:70,countries:['Bangladesh'],seasons:[],exfStart:'',exfEnd:''}],meta=flow.recordRouteProgress(rec,rules,Date.UTC(2026,8,21));assert.equal(meta.leadDays,70);assert.ok(Math.abs(meta.progress-(20/70))<.001);assert.ok(Math.abs(meta.elapsedDays-20)<.001);});
 test('rota hit testi örnekleme noktaları arasındaki tüm segmentte çalışır',()=>{const points=[{x:0,y:0,legIndex:0},{x:100,y:0,legIndex:0},{x:200,y:80,legIndex:0}];assert.ok(flow.distanceToPolyline(50,3,points)<4);assert.ok(flow.distanceToPolyline(150,39,points)<3);assert.ok(flow.distanceToPolyline(50,30,points)>20);});
+test('rota hover ortak koridorda yalnız segmenti değil ilişkili tam güzergâhı vurgular',()=>{
+  const bd={id:'bd1'},ind={id:'in1'},pk={id:'pk1'};
+  const scene={edges:[
+    {edge:{key:'bd',records:[bd]},points:[{x:0,y:0},{x:40,y:0}],width:3},
+    {edge:{key:'shared',records:[bd,ind]},points:[{x:40,y:0},{x:100,y:0}],width:4},
+    {edge:{key:'in',records:[ind]},points:[{x:40,y:20},{x:40,y:0}],width:3},
+    {edge:{key:'pk',records:[pk]},points:[{x:0,y:40},{x:100,y:40}],width:3},
+  ]};
+  const sharedHit={type:'route',edge:scene.edges[1].edge,records:[bd,ind],points:scene.edges[1].points};
+  assert.deepEqual(flow.routeHighlightEdges(scene,sharedHit).map(item=>item.edge.key),['bd','shared','in']);
+  const bdHit={type:'route',edge:scene.edges[0].edge,records:[bd],points:scene.edges[0].points};
+  assert.deepEqual(flow.routeHighlightEdges(scene,bdHit).map(item=>item.edge.key),['bd','shared']);
+});
 test('Natural Earth TopoJSON decoder gerçek polygon üretir',()=>{const topology=JSON.parse(fs.readFileSync(path.join(ROOT,'public','vendor','world-atlas-countries-110m.json'),'utf8')),polygons=flow.decodeWorldTopology(topology);assert.ok(polygons.length>100);assert.ok(polygons.some(poly=>poly.some(ring=>ring.length>20)));});
 test('Global Flow accurate world, working orb ve ortak detay çekmecesi ile bağlıdır',()=>{assert.match(INDEX,/data-overview-widget="globalFlowMap"/);assert.match(INDEX,/thinking-orb-working\.js/);assert.match(INDEX,/detail-drawer\.js/);assert.match(SOURCE,/vendor\/world-atlas-countries-110m\.json/);assert.match(SOURCE,/\/api\/transit-rules/);assert.match(SOURCE,/BLDetailDrawer/);assert.match(CSS,/\.globalFlowLoadingOverlay/);assert.ok(LAYOUT.widgets.includes('globalFlowMap'));assert.equal(LAYOUT.defaults().widths.globalFlowMap,'full');});
 test('Global Flow widget global section hidden kuralını override eder',()=>{assert.match(CSS,/\.globalFlowMapWidget\{display:block;/);assert.match(INDEX,/data-overview-widget="globalFlowMap"/);});
