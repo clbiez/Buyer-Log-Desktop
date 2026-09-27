@@ -1461,6 +1461,14 @@ const ANTREPO_COLUMN_RULES = {
     aliases: ['KONTEYNERNO', 'KONTEYNUMARASI', 'CONTAINERNO', 'CONTAINERNUMBER'],
     contains: ['KONTEYNER', 'CONTAINER'],
   },
+  // Gemi Ad, model-fields.js antrepo kataloğundaki 'IAS Parsiyel Kimliği'
+  // alanıdır (takma adlar aynı liste). Zorunlu değildir; yalnız parsiyelin
+  // hangi gemide taşındığını Global Flow gibi tüketicilere taşır.
+  vesselName: {
+    exact: ['Gemi Ad'],
+    aliases: ['GEMIAD', 'GEMIADI', 'VESSELNAME', 'SHIPNAME'],
+    contains: ['GEMIAD', 'VESSELNAME', 'SHIPNAME'],
+  },
   ocode: {
     exact: ['Sipariş Kod'],
     aliases: ['SIPARISKOD', 'SIPARISKODU', 'SIPARISNO', 'ORDERCODE', 'ORDERNO', 'ORDERNUMBER'],
@@ -1644,6 +1652,7 @@ function parseAntrepoMatrix(rows, ruleValue) {
     dataRows++;
     const importFile = norm(cell(row, 'importFile'));
     const containerNo = norm(cell(row, 'containerNo'));
+    const vesselName = norm(cell(row, 'vesselName'));
     const colour = norm(cell(row, 'colour'));
     const model = norm(cell(row, 'model'));
     const ccode = extractCcode(row);
@@ -1681,7 +1690,7 @@ function parseAntrepoMatrix(rows, ruleValue) {
     if (iasOrderQtyInvalid && blankIasOrderQtyRows.length < warningDetailLimit) blankIasOrderQtyRows.push(warningRow());
     const incoming = {
       ocode: orderCodeKey(oc), _matchOcode: exactOrderCodeKey(oc), colour, model, ccode,
-      importFile, containerNo,
+      importFile, containerNo, vesselName,
       statu, arr, vasita, handover,
       loadedQty: Number.isFinite(loadedQty) && loadedQty >= 0 ? loadedQty : null,
       iasOrderQty: Number.isFinite(iasOrderQty) && iasOrderQty > 0 ? iasOrderQty : null,
@@ -1887,6 +1896,18 @@ function cpLogisticPriority(segment) {
   if (statusKey === 'DEPODA' || statusKey === 'RETAILE AKTARIM BEKLENIYOR') return 3;
   return 2;
 }
+// Eski çalışma zamanı anlık görüntülerinde (vesselName alanı eklenmeden önce
+// parse edilmiş IAS satırları) gemi adı _sourceFields başlıklarından aynı
+// ANTREPO_COLUMN_RULES.vesselName kuralıyla çözülür; paralel eşleme yoktur.
+function antrepoVesselName(ias) {
+  if (!ias) return '';
+  if (ias.vesselName != null) return norm(ias.vesselName) || '';
+  const fields = ias._sourceFields && typeof ias._sourceFields === 'object' ? ias._sourceFields : null;
+  if (!fields) return '';
+  const headers = Object.keys(fields).map(name => norm(name));
+  const at = resolveAntrepoColumn(headers, ANTREPO_COLUMN_RULES.vesselName);
+  return at >= 0 ? (norm(fields[Object.keys(fields)[at]]) || '') : '';
+}
 function cpLogisticSegmentsForOrder(segments) {
   const source = Array.isArray(segments) ? segments : [];
   return source.slice().sort((a, b) => {
@@ -1912,6 +1933,12 @@ function cpLogisticSegmentsForOrder(segments) {
       delType: norm(segment && segment._delType),
       handover: ias ? (toDateOnly(ias.handover) || null) : null,
       sourceRow: ias && Number.isFinite(Number(ias._sourceRow)) ? Number(ias._sourceRow) : null,
+      // Parsiyel kimliği: aynı sipariş altındaki parsiyeller Global Flow'da
+      // ayrı sevkiyat birimi olarak konumlanır; gemi adı aynı gemideki
+      // parsiyelleri tek araçta toplar.
+      importFile: ias ? (norm(ias.importFile) || '') : '',
+      containerNo: ias ? (norm(ias.containerNo) || '') : '',
+      vesselName: antrepoVesselName(ias),
     };
   });
 }
@@ -2940,8 +2967,8 @@ function buildBacklogDetailRows(asasOrders, antrepoMap, overrides, selector, opt
   });
   return backlogTemplateRowsFromSegments(source, overrides, cpMap).map(row => {
     // _backlogExcel yalnız Excel yazıcısının işine yarar; yanıtı şişirmesin.
-    const { _backlogExcel, _plmId, _colourCode, _modelName, _imageRef, ...rest } = row;
-    if(options&&options.includeInternalMeta)return {...rest,_plmId,_colourCode,_modelName,_imageRef};
+    const { _backlogExcel, _plmId, _colourCode, _modelName, _imageRef, _partial, ...rest } = row;
+    if(options&&options.includeInternalMeta)return {...rest,_plmId,_colourCode,_modelName,_imageRef,_partial};
     return rest;
   });
 }
@@ -3177,6 +3204,15 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       _colourCode: order.ccode || '',
       _modelName: order.model || '',
       _imageRef: plmImageRef(overrides && overrides.imagemap, order) || '',
+      // Parsiyel kimliği (Global Flow). Excel başlıklarına eklenmez.
+      _partial: {
+        kind: isProduction ? 'production' : (segment._segmentKind === 'shortage' ? 'shortage' : 'partial'),
+        partialNo: segment._segmentKind === 'ias' ? (Number(segment._segmentIndex) || 0) + 1 : null,
+        importFile: ias ? (norm(ias.importFile) || '') : '',
+        containerNo: ias ? (norm(ias.containerNo) || '') : '',
+        vesselName: antrepoVesselName(ias),
+        sourceRow: ias && Number.isFinite(Number(ias._sourceRow)) ? Number(ias._sourceRow) : null,
+      },
       _backlogExcel: {
         transitDays: transitInfo.days,
         // Hangi Transfer Lead Time kuralının uygulandığı da taşınır: Excel'in

@@ -10,7 +10,7 @@
     'lcw.koleksiyon.rows.','lcw.koleksiyon.manufacturers.','lcw.koleksiyon.pricingExcelColumns.','lcw.koleksiyon.colState.','lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.prodstatus.mails.','lcw.mailTemplates.',
     'lcw.todo.','lcw.notifications.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.',
     'lcw_view_favorite_','lcw_filter_favorite_','buyerlog.fx.persist.v1','buyerlog.workspace.','buyerlog.dashboard.','buyerlog.favorites.','buyerlog.presetCache.v2.',
-    'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.'
+    'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.globalFlow.'
   ];
   function scoped(key){key=String(key);return prefixes.some(function(p){return key.indexOf(p)===0})}
   function actual(key){key=String(key);return scoped(key)?'bl.user.'+uid+'.'+key:key}
@@ -69,7 +69,7 @@
     'buyerlog.workspace.horizon.','buyerlog.workspace.applied-horizon.','buyerlog.dashboard.','lcw.dashboard.','buyerlog.favorites.','lcw.favorites.','bl.backlog.excelColumns.','bl.detailTables.showImages.',
     'bl.formulaColumns.', // v7.28 — hesaplanan sütun tanımları kullanıcıyla birlikte taşınır
     'bl.excelImport.profiles.', // Excel içe aktarma eşleme profilleri: kullanıcıya ve modüle ait YAPILANDIRMA (çalışma kitabı verisi değil)
-    'lcw.cp.imageSize.','lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.'
+    'lcw.cp.imageSize.','lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.globalFlow.'
   ];
   function synced(key){key=String(key);return SYNCED.some(function(p){return key.indexOf(p)===0})}
   var META_KEY='bl.user.'+uid+'.__syncMeta.v1';

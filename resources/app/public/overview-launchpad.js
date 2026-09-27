@@ -76,9 +76,16 @@
     value.forEach(id=>{id=String(id||'').trim();if(clockFromId(id)&&!seen.has(id)){seen.add(id);out.push(id);}});
     return out;
   }
+  // Intl.DateTimeFormat kurulumu pahalıdır; saniyelik tick her saat için yenisini kurmasın.
+  const formatterCache=new Map();
+  function clockFormatter(locale,timeZone){
+    const key=locale+'|'+timeZone;let formatter=formatterCache.get(key);
+    if(!formatter){formatter=new Intl.DateTimeFormat(locale,{timeZone,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23',weekday:'short',day:'2-digit',month:'short'});formatterCache.set(key,formatter);}
+    return formatter;
+  }
   function clockParts(date,timeZone,lang='tr'){
     const locale=lang==='en'?'en-GB':'tr-TR';
-    const parts=new Intl.DateTimeFormat(locale,{timeZone,hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23',weekday:'short',day:'2-digit',month:'short'}).formatToParts(date);
+    const parts=clockFormatter(locale,timeZone).formatToParts(date);
     const map=Object.fromEntries(parts.map(part=>[part.type,part.value]));
     return {
       time:[map.hour,map.minute,map.second].filter(Boolean).join(':'),
@@ -112,7 +119,10 @@
     return '<div class="ovAnalogClock" data-clock-analog aria-hidden="true"><span class="ovAnalogDialMark ovAnalogDialMark--12">12</span><span class="ovAnalogDialMark ovAnalogDialMark--3">3</span><span class="ovAnalogDialMark ovAnalogDialMark--6">6</span><span class="ovAnalogDialMark ovAnalogDialMark--9">9</span><i class="ovAnalogHand ovAnalogHand--hour" data-clock-hand="hour" style="transform:translateX(-50%) rotate('+a.hour+'deg)"></i><i class="ovAnalogHand ovAnalogHand--minute" data-clock-hand="minute" style="transform:translateX(-50%) rotate('+a.minute+'deg)"></i><i class="ovAnalogHand ovAnalogHand--second" data-clock-hand="second" style="transform:translateX(-50%) rotate('+a.second+'deg)"></i><b class="ovAnalogPin"></b></div>';
   }
   function tick(){
-    const host=document.getElementById('ovLaunchpad');if(!host)return;
+    // Sekme arka plandayken veya Genel Bakış görünmüyorken saatler DOM'a yazılmaz;
+    // görünür olunca ilk tick güncel saati hemen gösterir.
+    if(document.hidden)return;
+    const host=document.getElementById('ovLaunchpad');if(!host||!host.getClientRects().length)return;
     const now=new Date(),l=lang();
     host.querySelectorAll('[data-clock-zone]').forEach(card=>{
       try{
@@ -185,6 +195,7 @@
       if(refreshing()||pulse)render();
     }).observe(refreshBtn,{attributes:true,attributeFilter:['class']});
     render();timer=window.setInterval(tick,1000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
     window.addEventListener('beforeunload',()=>{if(timer)clearInterval(timer);},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
