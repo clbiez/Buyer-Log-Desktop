@@ -5690,14 +5690,17 @@ app.post('/api/backups/user-restore/start', (req, res) => {
     if ([...userRestoreJobs.values()].some(job => job.ownerId === req.currentUser.id && !job.done)) return res.status(409).json({ error: 'Bu kullanıcı için bir restore zaten çalışıyor.', code: 'USER_RESTORE_IN_PROGRESS' });
     const upload = userRestoreUploadFor(req, req.body && req.body.uploadId);
     if (!upload) return res.status(404).json({ error: 'Restore için yüklenmiş kişisel backup bulunamadı.', code: 'USER_RESTORE_UPLOAD_NOT_FOUND' });
+    const actor = req.currentUser;
+    const components = req.body && req.body.components;
     const id = crypto.randomUUID();
-    const job = { id, ownerId: req.currentUser.id, phase: 'Hazırlanıyor', current: 0, total: upload.inspected.info.fileCount || 0, item: '', bytesDone: 0, bytesTotal: upload.inspected.info.totalBytes || 0, error: null, result: null, done: false, createdAt: Date.now() };
+    const job = { id, ownerId: actor.id, phase: 'Hazırlanıyor', current: 0, total: upload.inspected.info.fileCount || 0, item: '', bytesDone: 0, bytesTotal: upload.inspected.info.totalBytes || 0, error: null, result: null, done: false, createdAt: Date.now() };
     userRestoreJobs.set(id, job);
     setImmediate(async () => {
       try {
         const restored = await userRestoreService.restore(upload.file, {
-          user: req.currentUser,
+          user: actor,
           preflight: upload.inspected,
+          components,
           onProgress: progress => Object.assign(job, progress),
         });
         sourceCaches.clear(); initialDataLoadPromises.clear();
@@ -5889,13 +5892,19 @@ app.post('/api/backups', express.json({ limit: '12mb' }), (req, res) => {
   if (mode === 'full' && req.currentUser.systemRole !== 'moderator') return res.status(403).json({ error: 'Tam Sistem Yedeği yalnız moderatör tarafından oluşturulabilir.' });
   const running = [...backupJobs.values()].find(job => job.ownerId === req.currentUser.id && !job.archive && !job.error);
   if (running) return res.status(409).json({ error: 'Bu kullanıcı için bir yedekleme zaten çalışıyor.', job: backupJobStatus(running) });
+  // Express request nesnesini arka plan işine taşımıyoruz; kullanıcı ve seçim
+  // başlangıç anında snapshot alınır. Böylece request tamamlandıktan sonra da
+  // backup aynı kapsamla deterministik biçimde devam eder.
+  const actor = req.currentUser;
+  const browserStorage = req.body && req.body.browserStorage || {};
+  const components = mode === 'user' ? (req.body && req.body.components) : null;
   const id = crypto.randomUUID();
-  const job = { id, mode, ownerId: req.currentUser.id, phase: 'Hazırlanıyor', current: 0, total: 0, item: '', error: null, archive: null, createdAt: Date.now() };
+  const job = { id, mode, ownerId: actor.id, phase: 'Hazırlanıyor', current: 0, total: 0, item: '', error: null, archive: null, createdAt: Date.now() };
   backupJobs.set(id, job);
   setImmediate(async () => {
     try {
       job.archive = await backupService.create({
-        mode, user: req.currentUser, browserStorage: req.body && req.body.browserStorage || {},
+        mode, user: actor, browserStorage, components,
         onProgress: progress => Object.assign(job, progress),
       });
     } catch (error) {
