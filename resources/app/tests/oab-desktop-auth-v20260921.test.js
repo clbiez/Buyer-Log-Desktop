@@ -8,6 +8,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
 const OAB = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
+const USER_ACCESS = fs.readFileSync(path.join(ROOT, 'public', 'user-access-ui.js'), 'utf8');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const {
   createOabAuthLifecycle,
@@ -21,6 +22,12 @@ function webRequest(url, authorization = '') {
   if (authorization) requestHeaders.Authorization = authorization;
   return { url, method: 'POST', requestHeaders };
 }
+
+test('user menu exposes manual OAB sign-in through the existing desktop auth bridge', () => {
+  assert.match(USER_ACCESS, /data-oab-user-login/);
+  assert.match(USER_ACCESS, /OAB Kullanıcı Girişi/);
+  assert.match(USER_ACCESS, /ensureOabAuth\(\{ interactive:true, manual:true \}\)/);
+});
 
 test('OAB desktop auth captures only the dedicated Electron session through webRequest, never debugger/CDP', () => {
   const start = MAIN.indexOf('async function acquireOabAuthorization');
