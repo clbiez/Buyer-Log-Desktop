@@ -877,7 +877,7 @@ const state={
   worldPolygons:[],worldLoading:true,worldError:'',worldRevision:0,transitRules:[],transitRulesLoaded:false,
   expandedNodeKey:'',lastDragMoved:false,orbHandle:null,paletteCache:null,paletteRevision:0,
   base:null,scene:null,sourceCache:new Map(),sourceIncomplete:false,lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0,
-  engine:'buyerlog',earth:normalizeEarthPrefs(),selection:'',earthCtl:null,earthStarting:null,earthLoading:false,earthError:'',earthIdleTimer:0,earthPendingViewport:null
+  engine:'buyerlog',earth:normalizeEarthPrefs(),selection:'',earthCtl:null,earthStarting:null,earthLoading:false,earthError:'',earthIdleTimer:0,earthPendingViewport:null,earthVisibilityKnown:false
 };
 
 function prefStore(){return window.BLStorage||localStorage;}
@@ -1599,7 +1599,7 @@ function ensureEarthHost(){
   const canvas=$('globalFlowCanvas');wrap.insertBefore(fallback,canvas?canvas.nextSibling:wrap.firstChild);wrap.insertBefore(host,fallback);
   fallback.addEventListener('click',event=>{
     const action=event.target.closest('[data-gf-earth-fallback]');if(!action)return;
-    if(action.dataset.gfEarthFallback==='retry'){state.earthError='';earthRuntimeCache={at:0,promise:null};renderEarthFallback();void activateEarth(null);}
+    if(action.dataset.gfEarthFallback==='retry'){state.earthError='';earthRuntimeCache={at:0,promise:null};syncEngineSurface();void activateEarth(null);}
     else setEngine('buyerlog');
   });
   return host;
@@ -1661,16 +1661,16 @@ function earthBridge(){
 async function activateEarth(viewport){
   if(state.earthIdleTimer){clearTimeout(state.earthIdleTimer);state.earthIdleTimer=0;}
   if(state.engine!=='earth'||state.earthError)return;
-  if(!isLive()){state.earthPendingViewport=viewport||state.earthPendingViewport;return;}
+  // Son istenen görünüm her durumda saklanır; başlatma sürerken gelen yenisi kaybolmaz.
+  if(viewport)state.earthPendingViewport=viewport;
+  if(!isLive())return;
   const host=ensureEarthHost();if(!host)return;
+  if(state.earthStarting)return state.earthStarting;
   const existing=state.earthCtl;
   if(existing&&!existing.isDestroyed()){
-    if(state.earthStarting)return state.earthStarting;
-    existing.resume();if(viewport)existing.setViewport(viewport,true);return;
+    existing.resume();const pending=state.earthPendingViewport;state.earthPendingViewport=null;if(pending)existing.setViewport(pending,true);return;
   }
-  if(state.earthStarting)return state.earthStarting;
   state.earthLoading=true;syncLoadingOverlay();
-  const pendingViewport=viewport||state.earthPendingViewport;state.earthPendingViewport=null;
   const run=(async()=>{
     let ctl=null;
     try{
@@ -1683,10 +1683,10 @@ async function activateEarth(viewport){
       await ctl.ready;
       if(state.earthCtl!==ctl||ctl.isDestroyed())return;
       if(state.engine==='earth'&&isLive()){
-        ctl.resume();if(pendingViewport)ctl.setViewport(pendingViewport,true);
+        ctl.resume();const pending=state.earthPendingViewport;state.earthPendingViewport=null;if(pending)ctl.setViewport(pending,true);
         // İlk kare çizilene kadar yükleme kartı kalır; karolar sonra kademeli gelir.
         await Promise.race([ctl.firstFrame,new Promise(resolve=>setTimeout(resolve,5000))]);
-      }else{state.earthPendingViewport=pendingViewport;scheduleEarthColdDestroy();}
+      }else scheduleEarthColdDestroy();
     }catch(error){
       if(ctl){try{ctl.destroy();}catch(_){}}
       if(!ctl||state.earthCtl===ctl)earthHardFail(error);
@@ -1699,7 +1699,8 @@ async function activateEarth(viewport){
   return run;
 }
 function scheduleEarthColdDestroy(){
-  if(state.earthIdleTimer)clearTimeout(state.earthIdleTimer);
+  // Zaten kurulmuş sayaç yeniden başlatılmaz: sık kaydırma/sekme değişimi WebGL bırakmayı ertelemez.
+  if(state.earthIdleTimer)return;
   state.earthIdleTimer=setTimeout(()=>{state.earthIdleTimer=0;if(state.engine!=='earth'||!isLive())destroyEarth();},EARTH_COLD_DESTROY_MS);
 }
 function deactivateEarth(){
@@ -1713,6 +1714,8 @@ function destroyEarth(){
 }
 function syncEarthActivity(){
   if(state.engine!=='earth'){deactivateEarth();return;}
+  // Görünürlük gözlemcisi ilk kez bildirmeden Earth yüklenmez (ekran dışı widget lazy kalır).
+  if(!state.earthVisibilityKnown&&typeof IntersectionObserver==='function')return;
   if(isLive())void activateEarth(null);
   else deactivateEarth();
 }
@@ -1745,7 +1748,8 @@ function bindObservers(){
   const widget=$('globalFlowMapWidget');
   if(widget&&typeof IntersectionObserver==='function'){
     const io=new IntersectionObserver(entries=>{
-      const visible=entries.some(entry=>entry.isIntersecting);if(visible===state.inView)return;state.inView=visible;
+      const visible=entries.some(entry=>entry.isIntersecting),first=!state.earthVisibilityKnown;state.earthVisibilityKnown=true;
+      if(visible===state.inView){if(first)syncEarthActivity();return;}state.inView=visible;
       if(visible){if(state.dirty)void refresh(false);scheduleDraw();}
       else if(state.frame){cancelAnimationFrame(state.frame);state.frame=0;}
       syncEarthActivity();
@@ -1773,8 +1777,10 @@ function init(){
     const drawerOpen=Boolean(window.BLDetailDrawer&&window.BLDetailDrawer.isOpen&&window.BLDetailDrawer.isOpen())||Boolean($('globalFlowDrawer')?.classList.contains('is-open'));
     if(drawerOpen){if($('globalFlowDrawer')?.classList.contains('is-open'))closeDrawer();return;}
     if(state.engine==='earth'&&state.earthCtl&&!state.earthCtl.isDestroyed()&&state.earthCtl.handleEscape())return;
-    if(state.selection&&state.inView&&!state.collapsed){setSelection('');return;}
-    if(state.fullscreen)toggleFullscreen();
+    if(state.fullscreen){toggleFullscreen();return;}
+    // Seçim yalnız harita içinden (veya odaksız sayfadan) gelen Escape ile temizlenir.
+    const target=event.target,fromMap=target===document.body||target===document.documentElement||Boolean(target&&target.closest&&target.closest('#globalFlowMapWidget'));
+    if(state.selection&&fromMap&&state.inView&&!state.collapsed)setSelection('');
   },true);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();

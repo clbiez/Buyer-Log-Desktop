@@ -124,6 +124,15 @@ test('sağlayıcı hatası çökme değil düşüştür: Retry + Buyer Log harit
   assert.match(CSS,/\.globalFlowEarthFallback\{/);assert.match(CSS,/\.gfEarthControls\{/);
 });
 
+test('review düzeltmeleri: retry Earth kabını açar, soğuk imha sayacı ertelenmez, ekran dışı Earth yüklenmez, render hatası ertelenir',()=>{
+  assert.match(SOURCE,/gfEarthFallback==='retry'\)\{state\.earthError='';earthRuntimeCache=\{at:0,promise:null\};syncEngineSurface\(\);/);
+  assert.match(SOURCE,/function scheduleEarthColdDestroy\(\)\{[^}]*?if\(state\.earthIdleTimer\)return;/);
+  assert.match(SOURCE,/if\(!state\.earthVisibilityKnown&&typeof IntersectionObserver==='function'\)return;/);
+  assert.match(SOURCE,/if\(state\.fullscreen\)\{toggleFullscreen\(\);return;\}/,'Escape önce tam ekrandan çıkar');
+  assert.match(EARTH,/renderError\.addEventListener\(\(_scene,error\)=>\{setTimeout\(/);
+  assert.match(EARTH,/destroyMaterials\(\);buildMaterials\(\);/);
+});
+
 test('tam ekran, bitmiş görünüm animasyonunun oluşturduğu içeren bloğu bırakır',()=>{
   assert.match(SOURCE,/function releaseFixedContainingBlock\(widget\)/);
   assert.match(SOURCE,/if\(state\.fullscreen\)releaseFixedContainingBlock\(widget\)/);

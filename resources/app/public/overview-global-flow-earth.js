@@ -263,6 +263,10 @@ function create(options){
     }});
   }
   function colorMaterial(cssColor){return C.Material.fromType('Color',{color:cssColor});}
+  function destroyMaterials(){
+    [...Object.values(flowMaterials||{}),...Object.values(baseMaterials||{}),selectMaterial].forEach(m=>{try{if(m&&!m.isDestroyed())m.destroy();}catch(_){}});
+    flowMaterials=null;baseMaterials=null;selectMaterial=null;
+  }
   function buildMaterials(){
     const modes=['sea','air','road','sea-air','unknown'];flowMaterials={};baseMaterials={};
     modes.forEach(mode=>{const css=host.modeColor(mode);flowMaterials[mode]=flowMaterial(css);baseMaterials[mode]=colorMaterial(imageryColor(css,.42));});
@@ -819,7 +823,8 @@ function create(options){
     billboards=scene.primitives.add(new C.BillboardCollection());
     clusterBoards=scene.primitives.add(new C.BillboardCollection());
     labels=scene.primitives.add(new C.LabelCollection());
-    scene.renderError.addEventListener((_scene,error)=>{host.hardFail(Object.assign(new Error(L('Earth çizim hatası: ','Earth render error: ')+String(error&&error.message||error)),{code:'EARTH_RENDER'}));});
+    // Scene.render içinde widget yok edilmez; hata bir sonraki görevde işlenir.
+    removers.push(scene.renderError.addEventListener((_scene,error)=>{setTimeout(()=>host.hardFail(Object.assign(new Error(L('Earth çizim hatası: ','Earth render error: ')+String(error&&error.message||error)),{code:'EARTH_RENDER'})));}));
     removers.push(camera.changed.addEventListener(()=>{scheduleRecluster(80);updateCompass();}));
     removers.push(camera.moveStart.addEventListener(()=>{setHover(null);}));
     removers.push(camera.moveEnd.addEventListener(()=>{scheduleRecluster(0);updateCompass();if(!paused)host.saveEarthPrefs({camera:cameraState()});}));
@@ -902,7 +907,7 @@ function create(options){
   };
   function buildMaterialsSafe(){
     // Tema değişince malzemeler yeni paletle yeniden kurulur; eski rotalar syncModel'de silinir.
-    if(!scene)return;[routesBase,routesFlow,routesSelect].forEach(c=>c&&c.removeAll());buildMaterials();
+    if(!scene)return;[routesBase,routesFlow,routesSelect].forEach(c=>c&&c.removeAll());destroyMaterials();buildMaterials();
   }
 }
 
