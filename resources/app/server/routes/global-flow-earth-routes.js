@@ -10,13 +10,13 @@ module.exports = function registerGlobalFlowEarthRoutes(app, deps) {
   const readGuard = userAccess.requireAnyArea('overview', 'source', 'cp', 'orders');
   const fail = (res, err) => res.status(err && err.statusCode || 500).json({ error: err && err.message || 'Earth ayarı kaydedilemedi.', code: err && err.code || 'EARTH_SETTINGS_FAILED' });
 
-  app.get('/api/global-flow/earth/status', readGuard, (req, res) => {
+app.get('/api/global-flow/earth/status', readGuard, (req, res) => {
     res.set('Cache-Control', 'no-store').json(earthSettings.publicStatus({ canConfigure: isModerator(req) }));
   });
-  app.get('/api/global-flow/earth/runtime', readGuard, (req, res) => {
+app.get('/api/global-flow/earth/runtime', readGuard, (req, res) => {
     res.set('Cache-Control', 'no-store').json(earthSettings.runtimeConfig());
   });
-  app.put('/api/global-flow/earth/settings', userAccess.requireModerator, express.json({ limit: '8kb' }), (req, res) => {
+app.put('/api/global-flow/earth/settings', userAccess.requireModerator, express.json({ limit: '8kb' }), (req, res) => {
     try {
       const body = req.body || {};
       earthSettings.saveSettings({
