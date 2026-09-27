@@ -22,7 +22,7 @@ test('Global Flow alan çözücüsü satır biçimini satır başına bir kez ta
 test('Global Flow görünmezken çizmez; kenar geometrisi ve dünya katmanı önbelleklidir',()=>{
   const src=read('overview-global-flow.js');
   assert.match(src,/new IntersectionObserver\(/);
-  assert.match(src,/function isLive\(\)\{return !document\.hidden&&!state\.collapsed&&state\.inView;\}/);
+  assert.match(src,/function isLive\(\)\{return state\.workspaceActive&&!document\.hidden&&!state\.collapsed&&state\.inView;\}/);
   assert.match(src,/if\(!rect\.width\|\|!rect\.height\)return null;/,'gizli sekmedeki tuval çizilmez');
   assert.match(src,/EDGE_SAMPLE_CACHE/);assert.match(src,/function baseLayer\(/);assert.match(src,/state\.paletteCache/);
   assert.doesNotMatch(src,/new MutationObserver\(\(\)=>\{\s*if\(state\.source===id/,'grid tablolarına MutationObserver bağlanmaz');
