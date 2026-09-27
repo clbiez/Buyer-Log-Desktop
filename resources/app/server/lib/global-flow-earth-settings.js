@@ -2,10 +2,11 @@
 
 /* Global Flow · Earth 3D sağlayıcı ayarları.
  *
- * Earth görünümü yerel CesiumJS ile çalışır; anahtarsız "Çevrimdışı küre"
- * her zaman kullanılabilir. Google Map Tiles API (Photorealistic 3D, uydu,
- * arazi) yalnız Moderatörün girdiği ya da BUYER_LOG_GOOGLE_MAPS_API_KEY ile
- * verilen anahtarla açılır.
+ * Earth görünümü yerel CesiumJS ile çalışır. Varsayılan sağlayıcı ücretsizdir:
+ * NASA GIBS Blue Marble / shaded-relief görüntüleri API anahtarı ve
+ * faturalandırma olmadan kullanılabilir; "Çevrimdışı küre" de her zaman
+ * kullanılabilir. Google Map Tiles API (Photorealistic 3D, uydu, arazi)
+ * yalnız Moderatör özellikle seçip anahtar tanımlarsa açılır.
  *
  * Anahtar diskte AES-256-GCM ile şifreli durur ve ayar yanıtlarında yalnız
  * maskeli görünür. Ancak tile istekleri Chromium'dan doğrudan Google'a gittiği
@@ -21,15 +22,15 @@ const { SERVER_DATA_ROOT, atomicWriteJson, atomicWriteBuffer } = require('../use
 
 const SETTINGS_FILE = path.join(SERVER_DATA_ROOT, 'global-flow-earth-settings.json');
 const SECRET_FILE = path.join(SERVER_DATA_ROOT, '.global-flow-earth-secret');
-const SCHEMA_VERSION = 1;
-const PROVIDERS = Object.freeze(['google', 'offline']);
-const VIEW_MODES = Object.freeze(['photorealistic', 'satellite', 'terrain', 'offline']);
+const SCHEMA_VERSION = 2;
+const PROVIDERS = Object.freeze(['free', 'google', 'offline']);
+const VIEW_MODES = Object.freeze(['nasa-blue-marble', 'nasa-relief', 'photorealistic', 'satellite', 'terrain', 'offline']);
 const KEY_PATTERN = /^[A-Za-z0-9_-]{20,128}$/;
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
 function envKey() { return clean(process.env.BUYER_LOG_GOOGLE_MAPS_API_KEY); }
 function defaultSettings() {
-  return { schemaVersion: SCHEMA_VERSION, enabled: true, provider: 'google', defaultMode: 'photorealistic', encryptedApiKey: null, updatedAt: null, updatedBy: '' };
+  return { schemaVersion: SCHEMA_VERSION, enabled: true, provider: 'free', defaultMode: 'nasa-relief', encryptedApiKey: null, updatedAt: null, updatedBy: '' };
 }
 function loadSettings() {
   try {
@@ -88,7 +89,7 @@ function publicStatus(options = {}) {
     enabled: settings.enabled,
     provider: settings.provider,
     defaultMode: settings.defaultMode,
-    configured: settings.provider === 'google' && Boolean(key),
+    configured: settings.provider === 'free' || (settings.provider === 'google' && Boolean(key)),
     keySource: source,
     maskedKey: canConfigure ? maskKey(key) : '',
     canConfigure,
@@ -99,13 +100,17 @@ function publicStatus(options = {}) {
    yalnız Google sağlayıcısı etkinken iner. */
 function runtimeConfig() {
   const settings = loadSettings(), { key } = resolvedKey(settings);
-  const google = settings.enabled && settings.provider === 'google' && Boolean(key);
-  return {
-    enabled: settings.enabled,
-    provider: google ? 'google' : 'offline',
-    defaultMode: google ? settings.defaultMode : 'offline',
-    googleKey: google ? key : ''
-  };
+  if (!settings.enabled || settings.provider === 'offline') {
+    return { enabled: settings.enabled, provider: 'offline', defaultMode: 'offline', googleKey: '' };
+  }
+  if (settings.provider === 'google' && Boolean(key)) {
+    const mode = ['photorealistic', 'satellite', 'terrain'].includes(settings.defaultMode) ? settings.defaultMode : 'photorealistic';
+    return { enabled: true, provider: 'google', defaultMode: mode, googleKey: key };
+  }
+  /* Eski kurulumlarda provider=google kalmış ama anahtar hiç girilmemiş
+     olabilir. Ücretli anahtar istemek yerine ücretsiz NASA görünümüne düş. */
+  const freeMode = ['nasa-blue-marble', 'nasa-relief'].includes(settings.defaultMode) ? settings.defaultMode : 'nasa-relief';
+  return { enabled: true, provider: 'free', defaultMode: freeMode, googleKey: '' };
 }
 function saveSettings(patch = {}, actor = '') {
   const current = loadSettings(), next = { ...current };

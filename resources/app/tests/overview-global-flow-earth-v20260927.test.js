@@ -149,11 +149,11 @@ test('Earth sağlayıcı ayarları: şifreli saklama, maskeli durum, yalnız Mod
     fs.rmSync(dir,{recursive:true,force:true});
   });
   const settings=require('../server/lib/global-flow-earth-settings');
-  assert.deepEqual(settings.runtimeConfig(),{enabled:true,provider:'offline',defaultMode:'offline',googleKey:''},'anahtarsız Earth çevrimdışı küreyle çalışır');
+  assert.deepEqual(settings.runtimeConfig(),{enabled:true,provider:'free',defaultMode:'nasa-relief',googleKey:''},'anahtarsız Earth ücretsiz NASA görünümüyle çalışır');
   assert.throws(()=>settings.saveSettings({apiKey:'kısa'}),/API anahtarı/);
   assert.throws(()=>settings.saveSettings({provider:'bing'}),/sağlayıcı/i);
   const key='AIzaSyTESTKEY_1234567890abcdefXYZ';
-  settings.saveSettings({apiKey:key,defaultMode:'satellite'},'moderator');
+  settings.saveSettings({provider:'google',apiKey:key,defaultMode:'satellite'},'moderator');
   const disk=fs.readFileSync(settings.SETTINGS_FILE,'utf8');
   assert.ok(!disk.includes(key),'anahtar diskte düz metin değildir');assert.match(disk,/aes-256-gcm/);
   const status=settings.publicStatus({canConfigure:true});assert.equal(status.configured,true);assert.equal(status.maskedKey,'••••••••fXYZ');
@@ -161,7 +161,7 @@ test('Earth sağlayıcı ayarları: şifreli saklama, maskeli durum, yalnız Mod
   assert.ok(!JSON.stringify(status).includes(key));
   assert.deepEqual(settings.runtimeConfig(),{enabled:true,provider:'google',defaultMode:'satellite',googleKey:key});
   settings.saveSettings({enabled:false});assert.equal(settings.runtimeConfig().googleKey,'','kapalıyken anahtar istemciye inmez');assert.equal(settings.runtimeConfig().enabled,false);
-  settings.saveSettings({enabled:true,clearApiKey:true});assert.equal(settings.runtimeConfig().provider,'offline');
+  settings.saveSettings({enabled:true,clearApiKey:true});assert.deepEqual(settings.runtimeConfig(),{enabled:true,provider:'free',defaultMode:'nasa-relief',googleKey:''},'Google anahtarı silinince ücretsiz NASA görünümüne düşer');
   process.env.BUYER_LOG_GOOGLE_MAPS_API_KEY='AIzaSyENVKEY_0000000000000000000';assert.equal(settings.publicStatus({canConfigure:true}).keySource,'env');
   // Route kayıt sözleşmesi: okuma Overview erişimi, yazma yalnız Moderatör.
   const routes=read('server/routes/global-flow-earth-routes.js');
