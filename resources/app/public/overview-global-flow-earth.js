@@ -12,11 +12,13 @@
  * seçim kimliğini paylaşır; yalnız çizim katmanı farklıdır.
  *
  * Görüntü sağlayıcıları:
- *   - offline        : Cesium ile gelen NaturalEarthII dokusu (anahtarsız, her zaman)
- *   - photorealistic : Google Photorealistic 3D Tiles (Map Tiles API anahtarı)
- *   - satellite      : Google 2D uydu (+ isteğe bağlı yer adı katmanı)
- *   - terrain        : Google 2D arazi/kabartma haritası
- * Google katmanı başarısız olursa görünüm çökmeden çevrimdışı küreye düşer. */
+ *   - nasa-blue-marble : NASA GIBS Blue Marble (anahtarsız / ücretsiz)
+ *   - nasa-relief      : NASA GIBS shaded relief (anahtarsız / ücretsiz)
+ *   - offline          : Cesium ile gelen NaturalEarthII dokusu (anahtarsız, her zaman)
+ *   - photorealistic   : Google Photorealistic 3D Tiles (opsiyonel Map Tiles API anahtarı)
+ *   - satellite        : Google 2D uydu (+ isteğe bağlı yer adı katmanı)
+ *   - terrain          : Google 2D arazi/kabartma haritası
+ * Harici görüntü katmanı başarısız olursa görünüm çökmeden çevrimdışı küreye düşer. */
 
 const EARTH_RADIUS=6378137;
 /* Hava rotasının kavis yüksekliği Buyer Log kürediki (yarıçap oranı) değerin
@@ -78,7 +80,7 @@ function create(options){
   if(!container||!host)throw new Error('Earth görünümü için kap ve host gerekir.');
   const L=host.L;
   let C=null,widget=null,scene=null,camera=null,handler=null,destroyed=false,paused=true,ready=false;
-  let runtime={provider:'offline',defaultMode:'offline',googleKey:''},provider={mode:'offline',status:'ok',message:''};
+  let runtime={provider:'free',defaultMode:'nasa-relief',googleKey:''},provider={mode:'offline',status:'ok',message:''};
   let tileset=null,providerToken=0,imageryFailures=0,tileFailures=0,tileSuccesses=0;
   let routesBase=null,routesFlow=null,routesSelect=null,billboards=null,clusterBoards=null,labels=null,points=null,occluder=null;
   let flowMaterials=null,baseMaterials=null,selectMaterial=null;
@@ -103,12 +105,17 @@ function create(options){
   function q(){return QUALITY[effectiveQuality]||QUALITY.balanced;}
 
   /* ---------- Sağlayıcı / görüntü ---------- */
+  const GOOGLE_MODES=Object.freeze(['photorealistic','satellite','terrain']);
+  const FREE_MODES=Object.freeze(['nasa-blue-marble','nasa-relief']);
   function googleAvailable(){return runtime.provider==='google'&&Boolean(runtime.googleKey);}
+  function freeAvailable(){return runtime.provider==='free'||runtime.provider==='google';}
   function resolvedMode(){
-    const wanted=prefs().viewMode||runtime.defaultMode||'photorealistic';
-    if(wanted==='offline'||!googleAvailable())return 'offline';
+    const wanted=prefs().viewMode||runtime.defaultMode||'nasa-relief';
+    if(wanted==='offline'||runtime.provider==='offline')return 'offline';
     if(typeof navigator!=='undefined'&&navigator.onLine===false)return 'offline';
-    return wanted;
+    if(GOOGLE_MODES.includes(wanted))return googleAvailable()?wanted:(freeAvailable()?'nasa-relief':'offline');
+    if(FREE_MODES.includes(wanted))return freeAvailable()?wanted:'offline';
+    return freeAvailable()?'nasa-relief':'offline';
   }
   function providerErrorText(error){
     const code=statusCodeOf(error);
@@ -126,6 +133,18 @@ function create(options){
   async function offlineImagery(){
     const url=C.buildModuleUrl('Assets/Textures/NaturalEarthII');
     return C.TileMapServiceImageryProvider.fromUrl(url,{fileExtension:'jpg'});
+  }
+  function nasaImagery(mode){
+    const layer=mode==='nasa-blue-marble'?'BlueMarble_NextGeneration':'BlueMarble_ShadedRelief';
+    return new C.WebMapTileServiceImageryProvider({
+      url:'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/'+layer+'/default/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.jpeg',
+      layer,
+      style:'default',
+      format:'image/jpeg',
+      tileMatrixSetID:'GoogleMapsCompatible_Level8',
+      maximumLevel:8,
+      credit:new C.Credit('NASA GIBS / EOSDIS')
+    });
   }
   function watchImagery(providerInstance,token){
     if(!providerInstance||!providerInstance.errorEvent)return;
@@ -154,6 +173,10 @@ function create(options){
         });
         tileset.tileLoad.addEventListener(()=>{tileSuccesses++;});
         tileset.loadProgress.addEventListener((pending,processing)=>setTileProgress(pending+processing));
+      }else if(mode==='nasa-blue-marble'||mode==='nasa-relief'){
+        const base=nasaImagery(mode);
+        if(token!==providerToken||destroyed)return;
+        scene.imageryLayers.addImageryProvider(base);watchImagery(base,token);
       }else if(mode==='satellite'||mode==='terrain'){
         const language=host.isEn()?'en-US':'tr-TR';
         const base=await withTimeout(C.Google2DImageryProvider.fromUrl({key:runtime.googleKey,mapType:mode,language,region:'TR'}),PROVIDER_TIMEOUT_MS,'Google 2D Tiles');
@@ -177,9 +200,9 @@ function create(options){
     }
     renderNotice();renderPanel();requestRender();
   }
-  /* Google katmanı çalışmazsa harita kapanmaz: aynı veri çevrimdışı küre
-     üzerinde kalır, kullanıcıya yeniden deneme ve Buyer Log haritasına geçiş
-     sunulur. */
+  /* Harici görüntü katmanı çalışmazsa harita kapanmaz: aynı veri çevrimdışı
+     küre üzerinde kalır, kullanıcıya yeniden deneme ve Buyer Log haritasına
+     geçiş sunulur. */
   async function degrade(error){
     if(destroyed||!scene)return;
     const message=providerErrorText(error),failedMode=provider.mode,token=++providerToken;
@@ -642,7 +665,7 @@ function create(options){
     compassHeading=NaN;updateCompass();
   }
   function qualityLabel(level){return ({performance:L('Performans','Performance'),balanced:L('Dengeli','Balanced'),high:L('Yüksek','High')})[level]||level;}
-  function modeLabel(mode){return ({photorealistic:L('Fotogerçekçi 3D','Photorealistic 3D'),satellite:L('Uydu','Satellite'),terrain:L('Arazi','Terrain'),offline:L('Çevrimdışı küre','Offline globe')})[mode]||mode;}
+  function modeLabel(mode){return ({'nasa-blue-marble':L('NASA Dünya','NASA Blue Marble'),'nasa-relief':L('NASA Kabartmalı Dünya','NASA Shaded Relief'),photorealistic:L('Google Fotogerçekçi 3D','Google Photorealistic 3D'),satellite:L('Google Uydu','Google Satellite'),terrain:L('Google Arazi','Google Terrain'),offline:L('Çevrimdışı küre','Offline globe')})[mode]||mode;}
   function radio(name,value,current,label,disabled,hint){
     return '<label class="gfEarthOption'+(disabled?' is-disabled':'')+'"><input type="radio" name="'+name+'" value="'+value+'"'+(current===value?' checked':'')+(disabled?' disabled':'')+'><span>'+host.esc(label)+(hint?'<small>'+host.esc(hint)+'</small>':'')+'</span></label>';
   }
@@ -650,13 +673,15 @@ function create(options){
     return '<label class="gfEarthOption"><input type="checkbox" data-gf-earth-layer="'+key+'"'+(checked?' checked':'')+'><span>'+host.esc(label)+(hint?'<small>'+host.esc(hint)+'</small>':'')+'</span></label>';
   }
   function viewPanelHtml(){
-    const google=googleAvailable(),wanted=prefs().viewMode||runtime.defaultMode,noKey=L('Google anahtarı gerekli','Requires Google key');
-    const current=provider.status==='degraded'?'offline':(wanted&&(google||wanted==='offline')?wanted:'offline');
-    return '<h4>'+host.esc(L('Görüntü','Imagery'))+'</h4>'+
+    const google=googleAvailable(),current=provider.status==='degraded'?'offline':resolvedMode(),noKey=L('Opsiyonel Google API anahtarı gerekli','Optional Google API key required');
+    return '<h4>'+host.esc(L('Ücretsiz görüntü','Free imagery'))+'</h4>'+
+      radio('gfEarthMode','nasa-relief',current,modeLabel('nasa-relief'),!freeAvailable(),L('Ücretsiz · API anahtarı yok · NASA GIBS','Free · no API key · NASA GIBS'))+
+      radio('gfEarthMode','nasa-blue-marble',current,modeLabel('nasa-blue-marble'),!freeAvailable(),L('Ücretsiz · API anahtarı yok · NASA GIBS','Free · no API key · NASA GIBS'))+
+      radio('gfEarthMode','offline',current,modeLabel('offline'),false,L('Tamamen yerel · internet gerekmez','Fully local · no internet required'))+
+      '<h4>'+host.esc(L('Google (opsiyonel)','Google (optional)'))+'</h4>'+
       radio('gfEarthMode','photorealistic',current,modeLabel('photorealistic'),!google,google?L('Google 3D şehir ve arazi','Google 3D cities and terrain'):noKey)+
       radio('gfEarthMode','satellite',current,modeLabel('satellite'),!google,google?'':noKey)+
       radio('gfEarthMode','terrain',current,modeLabel('terrain'),!google,google?L('Kabartmalı 2D harita','Shaded-relief 2D map'):noKey)+
-      radio('gfEarthMode','offline',current,modeLabel('offline'),false,L('Anahtarsız, düşük çözünürlük','No key, low resolution'))+
       (current==='satellite'?'<label class="gfEarthOption"><input type="checkbox" data-gf-earth-pref="providerLabels"'+(prefs().providerLabels!==false?' checked':'')+'><span>'+host.esc(L('Sağlayıcı yer adları','Provider place labels'))+'</span></label>':'')+
       '<h4>'+host.esc(L('Kamera','Camera'))+'</h4>'+
       radio('gfEarthCamera','perspective',prefs().cameraPreset==='topdown'?'topdown':'perspective',L('3D perspektif','3D perspective'))+
@@ -683,14 +708,14 @@ function create(options){
     if(status&&status.canConfigure){
       providerHtml='<h4>'+host.esc(L('Sağlayıcı (Moderatör)','Provider (Moderator)'))+'</h4>'+
         '<label class="gfEarthOption"><input type="checkbox" data-gf-earth-setting="enabled"'+(status.enabled?' checked':'')+'><span>'+host.esc(L('Earth 3D etkin','Earth 3D enabled'))+'</span></label>'+
-        '<label class="gfEarthField"><span>'+host.esc(L('Sağlayıcı','Provider'))+'</span><select data-gf-earth-setting="provider"><option value="google"'+(status.provider==='google'?' selected':'')+'>Google Map Tiles API</option><option value="offline"'+(status.provider==='offline'?' selected':'')+'>'+host.esc(modeLabel('offline'))+'</option></select></label>'+
-        '<label class="gfEarthField"><span>'+host.esc(L('Varsayılan görüntü','Default imagery'))+'</span><select data-gf-earth-setting="defaultMode">'+['photorealistic','satellite','terrain','offline'].map(m=>'<option value="'+m+'"'+(status.defaultMode===m?' selected':'')+'>'+host.esc(modeLabel(m))+'</option>').join('')+'</select></label>'+
-        '<label class="gfEarthField"><span>'+host.esc(L('API anahtarı','API key'))+(status.keySource==='env'?' · env':'')+'</span><input type="password" autocomplete="off" spellcheck="false" data-gf-earth-setting="apiKey" placeholder="'+host.esc(status.maskedKey||L('Tanımlı değil','Not set'))+'"></label>'+
+        '<label class="gfEarthField"><span>'+host.esc(L('Sağlayıcı','Provider'))+'</span><select data-gf-earth-setting="provider"><option value="free"'+(status.provider==='free'?' selected':'')+'>'+host.esc(L('Ücretsiz · NASA GIBS','Free · NASA GIBS'))+'</option><option value="offline"'+(status.provider==='offline'?' selected':'')+'>'+host.esc(L('Yalnız çevrimdışı','Offline only'))+'</option><option value="google"'+(status.provider==='google'?' selected':'')+'>'+host.esc(L('Google Map Tiles · opsiyonel','Google Map Tiles · optional'))+'</option></select></label>'+
+        '<label class="gfEarthField"><span>'+host.esc(L('Varsayılan görüntü','Default imagery'))+'</span><select data-gf-earth-setting="defaultMode">'+['nasa-relief','nasa-blue-marble','offline','photorealistic','satellite','terrain'].map(m=>'<option value="'+m+'"'+(status.defaultMode===m?' selected':'')+'>'+host.esc(modeLabel(m))+'</option>').join('')+'</select></label>'+
+        (status.provider==='google'?'<label class="gfEarthField"><span>'+host.esc(L('Google API anahtarı (opsiyonel)','Google API key (optional)'))+(status.keySource==='env'?' · env':'')+'</span><input type="password" autocomplete="off" spellcheck="false" data-gf-earth-setting="apiKey" placeholder="'+host.esc(status.maskedKey||L('Tanımlı değil','Not set'))+'"></label>':'')+
         '<div class="gfEarthRow"><button type="button" class="tbtn" data-gf-earth-action="save-provider">'+host.esc(L('Kaydet','Save'))+'</button>'+(status.keySource==='settings'?'<button type="button" class="tbtn" data-gf-earth-action="clear-key">'+host.esc(L('Anahtarı sil','Remove key'))+'</button>':'')+'</div>'+
-        '<p class="gfEarthHint">'+host.esc(L('Anahtar sunucuda şifreli saklanır ve yalnız maskeli gösterilir. Ancak karolar Google’dan doğrudan yüklendiği için Earth açıkken istemciye iner: Google Cloud’da anahtarı yalnız Map Tiles API ile sınırlayın ve kota/bütçe sınırı koyun.','The key is stored encrypted on the server and shown masked. Tiles load directly from Google, so the key reaches the client while Earth is open: restrict it to the Map Tiles API in Google Cloud and set a quota/budget cap.'))+'</p>'+
+        '<p class="gfEarthHint">'+host.esc(status.provider==='google'?L('Google ücretli/limitli bir sağlayıcıdır ve yalnız isteğe bağlıdır. Anahtar sunucuda şifreli saklanır; Google Cloud tarafında Map Tiles API ile sınırlandırın.','Google is an optional paid/limited provider. The key is stored encrypted; restrict it to the Map Tiles API in Google Cloud.'):L('Önerilen ücretsiz mod NASA GIBS kullanır; API anahtarı veya Google faturalandırması gerekmez. Çevrimdışı küre de her zaman kullanılabilir.','The recommended free mode uses NASA GIBS; no API key or Google billing is required. The offline globe is always available.'))+'</p>'+
         '<p class="gfEarthHint" data-gf-earth-provider-msg></p>';
     }else if(status){
-      providerHtml='<h4>'+host.esc(L('Sağlayıcı','Provider'))+'</h4><p class="gfEarthHint">'+host.esc(status.configured?'Google Map Tiles API · '+L('yapılandırılmış','configured'):L('Google anahtarı tanımlı değil; çevrimdışı küre kullanılır. Moderatör Ayarlar’dan ekleyebilir.','No Google key is configured; the offline globe is used. A moderator can add one in Settings.'))+'</p>';
+      providerHtml='<h4>'+host.esc(L('Sağlayıcı','Provider'))+'</h4><p class="gfEarthHint">'+host.esc(status.provider==='google'&&status.configured?'Google Map Tiles API · '+L('yapılandırılmış','configured'):status.provider==='offline'?L('Çevrimdışı küre · ücretsiz','Offline globe · free'):L('NASA GIBS · ücretsiz · API anahtarı gerekmez','NASA GIBS · free · no API key required'))+'</p>';
     }else if(statusLoading)providerHtml='<p class="gfEarthHint">'+host.esc(L('Sağlayıcı durumu okunuyor…','Reading provider status…'))+'</p>';
     return '<h4>'+host.esc(L('Kalite','Quality'))+'</h4>'+
       radio('gfEarthQuality','performance',quality,qualityLabel('performance'))+
@@ -795,7 +820,7 @@ function create(options){
   /* ---------- Yaşam döngüsü ---------- */
   async function init(){
     C=await loadCesium();if(destroyed)return;
-    try{runtime=await host.fetchRuntime();}catch(_){runtime={provider:'offline',defaultMode:'offline',googleKey:''};}
+    try{runtime=await host.fetchRuntime();}catch(_){runtime={provider:'free',defaultMode:'nasa-relief',googleKey:''};}
     if(destroyed)return;
     qualityLevel=QUALITY[prefs().quality]?prefs().quality:'balanced';effectiveQuality=qualityLevel;
     const cfg=q();
