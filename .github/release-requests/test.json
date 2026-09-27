@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.151",
-  "commit_sha": "5883ea051f4b8d217f737fb429b79f8e6bca021f",
-  "release_notes": "Buyer Log 7.0.151: IAS/ASAS Database yenilemelerinde Tabular modelde bulunamayan bir sütun artık onarılabilir hata olarak tanınır. Hata penceresindeki Onar düğmesi ilgili kaynağın Field Mapping ekranını ve problemli Buyer Log alanını doğrudan açar; kullanıcı gerçek database sütununu seçip kaydettiğinde eşleme kalıcı olarak güncellenir ve yalnız etkilenen yenileme kapsamları otomatik yeniden denenir. Buyer Grup (TR) senaryosu için backend hata eşlemesi, UI onarım zinciri ve regresyon koruması eklendi."
+  "version": "7.0.152",
+  "commit_sha": "e757d25fadb1fc1cfbf911f2b7b97d00b296e511",
+  "release_notes": "Buyer Log 7.0.152: IAS/ASAS Database yenilemelerinde bulunamayan Tabular sütunlar artık onarılabilir hata olarak tanınır; hata penceresindeki Onar düğmesi ilgili Field Mapping alanını doğrudan açar, kaydedilen gerçek database sütunu kalıcı olur ve yalnız etkilenen kapsam otomatik yeniden yenilenir. Ayrıca Data Inspector canlı IAS/INTAKE tanıları, seçilebilir Backup/Restore kapsamları, LFL özet tablo yüksekliği düzeltmesi ve LFL Trial fiyatının her zaman Collection FOB kaynağını kullanması bu sürümde birlikte yayınlanır."
 }
