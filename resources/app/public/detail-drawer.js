@@ -93,11 +93,17 @@ function fieldRefs(col){
   return [...new Set(refs.concat(extra).map(clean).filter(Boolean))];
 }
 function detailModule(){
-  const known=new Set(['overview','cp','orders','backlog','collection','lfl','logistics','antrepo','openCosting']);
-  const raw=clean(active&&active.moduleId||active&&active.pageScope||active&&active.source);
-  if(known.has(raw))return raw;
-  const lower=raw.toLowerCase();
-  for(const id of known)if(lower===String(id).toLowerCase()||lower.startsWith(String(id).toLowerCase()+'.'))return id;
+  const known=['overview','cp','orders','backlog','collection','lfl','logistics','antrepo','openCosting'];
+  const aliases={koleksiyon:'collection',collection:'collection',priceanalysis:'',shipping:'logistics'};
+  const candidates=[active&&active.moduleId,active&&active.pageScope,active&&active.scope,active&&active.source].map(clean).filter(Boolean);
+  for(const raw of candidates){
+    const lower=raw.toLowerCase();
+    if(Object.prototype.hasOwnProperty.call(aliases,lower)&&aliases[lower])return aliases[lower];
+    for(const id of known){
+      const canonical=String(id).toLowerCase();
+      if(lower===canonical||lower.startsWith(canonical+'.')||lower.includes('.'+canonical+'.'))return id;
+    }
+  }
   return '';
 }
 function lookupValue(col,row){
