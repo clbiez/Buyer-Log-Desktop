@@ -49,7 +49,7 @@ const FIELD_CATALOGUE = {
     { header: 'Ürün Klasman', aliases: ['KLASMAN', 'CLASSIFICATION'] },
     { header: 'Merch Alt Grup Kod', aliases: ['MAG'] },
     { header: 'Merch Marka Yaş Grup Kod', aliases: ['MMYG'] },
-    { header: 'Buyer Grup (TR)', aliases: ['BUYING GROUP', 'BUYER GROUP'] },
+    { header: 'Buyer Grup (TR)', aliases: ['BUYING GROUP', 'BUYER GROUP', 'BUYER GRUP TANIM', 'BUYER GRUP TANIMI'] },
     { header: 'Siparişin Üretildiği Ülke', aliases: ['URETIM ULKESI', 'COUNTRY OF ORIGIN'] },
     { header: 'Lisans', aliases: ['LICENSE'] },
     { header: 'Model Adı', required: true, aliases: ['MODEL NAME', 'STYLE NAME', 'ÜRÜN ADI', 'URUN ADI', 'PRODUCT NAME'] },
