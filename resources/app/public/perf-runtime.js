@@ -11,6 +11,8 @@
     xlsx:{global:'XLSX',files:['vendor/xlsx-style.js'],after(){if(global.BLExcelDates&&global.XLSX)global.BLExcelDates.installSheetJsHooks(global.XLSX);}},
     jszip:{global:'JSZip',files:['vendor/jszip.min.js']},
     exceljs:{global:'ExcelJS',files:['vendor/exceljs-shim.js','vendor/exceljs.min.js']},
+    // Global Flow · Earth 3D: yalnız Earth görünümü açıldığında yüklenir (CESIUM_BASE_URL çağıran tarafından ayarlanır).
+    cesium:{global:'Cesium',files:['vendor/cesium/Cesium.js']},
     pdf:{global:'pdfjsLib',files:['vendor/pdf.min.js','vendor/jspdf.umd.min.js'],after(){if(global.pdfjsLib)global.pdfjsLib.GlobalWorkerOptions.workerSrc=withVersion('vendor/pdf.worker.min.js');}},
   };
 
@@ -111,6 +113,7 @@
     /* backlog-delivery-engine.js BURADA ZORUNLU: CP hazırlık motoru teslimat
        sonucunu ondan okur (tek kanonik kaynak). Listede olmadığı sürüm canlıda
        her siparişi sessizce "Hesaplanamıyor" gösteriyordu. */
+    globalFlowEarth:['overview-global-flow-earth.js?rev=1'],
     cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','cp-overview-assistant.js?rev=attn1-ovcp1'],
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile
