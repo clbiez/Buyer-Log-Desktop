@@ -31,8 +31,30 @@ test('CP Attention satırı navigasyon yerine ortak detay çekmecesini açar',()
   assert.match(CP,/storageKey:'cp\.attention\.detail'/);
   assert.match(CP,/openAttentionDetail\(el\.dataset\.cpaOrderKey\)/);
 });
-test('Ortak drawer Excel export görünür sütunları kullanır',()=>{
+test('Ortak drawer Excel export için tüm veya görünen sütun seçimi sunar',()=>{
   const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
-  assert.ok(DRAWER.includes('const columns=currentColumns(),rows=filteredRows()'));
+  assert.ok(DRAWER.includes('data-bl-export-mode="all"'));
+  assert.ok(DRAWER.includes('data-bl-export-mode="visible"'));
+  assert.ok(DRAWER.includes("mode==='all'?active.columns:currentColumns()"));
   assert.ok(DRAWER.includes('moveAndSizeWithCells:true'));
+});
+test('Ortak drawer sütun tercihlerini aktif sayfa ile scope eder',()=>{
+  const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
+  assert.ok(DRAWER.includes('document.body.dataset.activeTab'));
+  assert.ok(DRAWER.includes('prefKey(scope,page)'));
+  assert.ok(DRAWER.includes('saveVisible(active.scope,active.pageScope,keys)'));
+});
+test('Ortak drawer boş hücrelerde canonical ve nested kaynak fallback uygular',()=>{
+  const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
+  assert.ok(DRAWER.includes('BLCanonicalFields'));
+  assert.ok(DRAWER.includes('canonical.canonicalValue'));
+  assert.ok(DRAWER.includes('row&&row.raw'));
+  assert.ok(DRAWER.includes('row&&row.row'));
+});
+test('Ortak drawer sol kenardan yeniden boyutlandırılabilir',()=>{
+  const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
+  const CSS=fs.readFileSync(path.join(ROOT,'public','detail-drawer.css'),'utf8');
+  assert.ok(DRAWER.includes('data-bl-detail-resize'));
+  assert.ok(DRAWER.includes('startWidth+(startX-ev.clientX)'));
+  assert.ok(CSS.includes('cursor:ew-resize'));
 });
