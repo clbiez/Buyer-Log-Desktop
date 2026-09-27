@@ -9503,12 +9503,12 @@ function mappedMatchColumns(item) {
   return out;
 }
 async function matchSchemaForConnection(item, options = {}) {
-  if (!item) return { columns: [], error: 'Bağlantı bulunamadı.', authoritative: false };
+  if (!item) return { columns: [], error: 'Bağlantı bulunamadı.', authoritative: false, loaded: false };
   const fallback = mappedMatchColumns(item);
   // Pencereyi açarken bütün modeli taramak dakikalar sürebiliyordu. Normal açılış
   // yalnız kayıtlı Field Mapping alanlarını kullanır. Kullanıcı özellikle tam
   // şemayı istediğinde ?full=1 ile metadata taraması yapılır ve sunucu cache'lenir.
-  if (!options.full) return { columns: fallback, error: '', authoritative: false };
+  if (!options.full) return { columns: fallback, error: '', authoritative: false, loaded: false };
   try {
     const schema = await modelQuery.discoverSchema({ server: item.server, catalog: item.catalog });
     const all = (schema.columns || []).filter(entry => entry && entry.kind === 'column');
@@ -9519,9 +9519,10 @@ async function matchSchemaForConnection(item, options = {}) {
       error: errors,
       // Tam şema OKUNDUYSA liste otoriterdir: içinde olmayan sütun gerçekten yok.
       authoritative: !errors && all.length > 0,
+      loaded: true,
     };
   } catch (err) {
-    return { columns: fallback, error: String(err && err.message || err), authoritative: false };
+    return { columns: fallback, error: String(err && err.message || err), authoritative: false, loaded: true };
   }
 }
 function excelAntrepoMatchSchema(runtime) {
@@ -9551,7 +9552,7 @@ function catalogueMatchSchema(role) {
 /* KAYNAK KATALOĞU. Eşleştirmede yer alabilecek bütün veri kaynakları — bugün
    iki tane, yarın daha fazla. Her giriş kendi şemasını taşır; koşul düzenleyici
    bu listeden okur, kaynak adı/rol bilgisi kod içinde geçmez. */
-async function matchRuleSourceCatalog(runtime, { full = false } = {}) {
+async function matchRuleSourceCatalog(runtime, { full = false, fullSourceId = '' } = {}) {
   const ov = loadOverrides();
   const antrepoMode = ['database', 'dashboard'].includes(ov.antrepoSourceMode) ? ov.antrepoSourceMode : 'excel';
   const asasMode = ov.asasSourceMode === 'database' ? 'database' : 'excel';
@@ -9565,6 +9566,7 @@ async function matchRuleSourceCatalog(runtime, { full = false } = {}) {
       entry.columns = schema.columns || [];
       entry.error = schema.error || '';
       entry.authoritative = Boolean(schema.authoritative);
+      entry.schemaLoaded = Boolean(schema.loaded);
     }));
   };
 
@@ -9588,7 +9590,7 @@ async function matchRuleSourceCatalog(runtime, { full = false } = {}) {
       aliases: primary && primary.id === item.id ? [parseLib.defaultMatchSourceId(role)] : [],
       item,
       columns: [], error: '', authoritative: false,
-    }, matchSchemaForConnection(item, { full }));
+    }, matchSchemaForConnection(item, { full: full || String(item.id) === String(fullSourceId || '') }));
   }
 
   if (asasMode !== 'database') {
@@ -9769,7 +9771,8 @@ app.get('/api/match-rule', userAccess.requireArea('source'), async (req, res) =>
     const ov = loadOverrides();
     const sourceMode = ['database', 'dashboard'].includes(ov.antrepoSourceMode) ? ov.antrepoSourceMode : 'excel';
     const full = String(req.query.full || '') === '1';
-    const catalog = await matchRuleSourceCatalog(runtime, { full });
+    const fullSourceId = String(req.query.fullSource || '').trim();
+    const catalog = await matchRuleSourceCatalog(runtime, { full, fullSourceId });
     const config = enrichMatchConfigForSources(ov.antrepoMatchConfig, catalog);
     res.json({
       config,
@@ -9778,11 +9781,12 @@ app.get('/api/match-rule', userAccess.requireArea('source'), async (req, res) =>
       sources: catalog.map(source => ({
         id: source.id, role: source.role, profileId: source.profileId, label: source.label,
         kind: source.kind, connection: source.connection, columns: source.columns,
-        error: source.error, authoritative: source.authoritative,
+        error: source.error, authoritative: source.authoritative, schemaLoaded: source.schemaLoaded,
       })),
       unresolved: parseLib.unresolvedMatchOperands(config),
       sourceMode,
       fullSchema: full,
+      fullSourceId,
       exactOnly: true,
     });
   } catch (err) { apiError(res, err, 'Eşleştirme kuralı okunamadı.'); }
