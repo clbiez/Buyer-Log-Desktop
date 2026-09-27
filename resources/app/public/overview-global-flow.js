@@ -633,14 +633,30 @@ function toggleFullscreen(){
 function resetView(){
   state.panX=0;state.panY=0;state.zoom2d=1;state.rotLon=18;state.rotLat=-12;state.zoom3d=1;state.globeInertia=null;scheduleDraw();
 }
+function mapSurfacePalette(theme){
+  const value=String(theme||'light').toLowerCase();
+  if(value==='dark')return null;
+  return {
+    water:'#DCE8F2',
+    land:'#F7F2E7',
+    line:'#9AAABC',
+    acc:'#4A7198',
+    green:'#347653',
+    red:'#B04448',
+    orange:'#A66517',
+    cyan:'#087F9F',
+    purple:'#6B52C7'
+  };
+}
 function palette(){
   const style=getComputedStyle(document.documentElement);
   const css=(name,fallback)=>clean(style.getPropertyValue(name))||fallback;
+  const vivid=mapSurfacePalette(document.documentElement.dataset.theme);
   return {
-    water:css('--card2','#edf2f7'),land:css('--card','#ffffff'),line:css('--line','#d8dee8'),
-    ink:css('--ink','#1f2937'),muted:css('--muted','#6b7280'),acc:css('--acc','#3f6488'),
-    green:css('--green','#16845b'),red:css('--red','#c04455'),orange:css('--orange','#c47a20'),
-    cyan:'#0891b2',purple:'#7c5ce0'
+    water:vivid?.water||css('--card2','#edf2f7'),land:vivid?.land||css('--card','#ffffff'),line:vivid?.line||css('--line','#d8dee8'),
+    ink:css('--ink','#1f2937'),muted:css('--muted','#6b7280'),acc:vivid?.acc||css('--acc','#3f6488'),
+    green:vivid?.green||css('--green','#16845b'),red:vivid?.red||css('--red','#c04455'),orange:vivid?.orange||css('--orange','#c47a20'),
+    cyan:vivid?.cyan||'#0891b2',purple:vivid?.purple||'#7c5ce0'
   };
 }
 function canvasInfo(){
@@ -965,7 +981,7 @@ function init(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
 return {
-  ISTANBUL,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,riskLevel,
+  ISTANBUL,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,riskLevel,
   normalizeRecord,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,
   distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,refresh:()=>refresh(true),resetView
 };
