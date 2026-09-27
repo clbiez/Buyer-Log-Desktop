@@ -537,8 +537,14 @@
     const state = status && status.status || status || {};
     if (state.loginRequired) {
       return oabT(
-        'OAB oturumu gerekli. Buyer Log gerekirse kendi giriş ekranını açacak ve giriş tamamlanınca otomatik devam edecek.',
-        'OAB sign-in is required. Buyer Log will open its own sign-in window if needed and continue automatically after sign-in.',
+        'OAB oturumu gerekli. Açık Edge/Chrome OAB sekmesinde girişi tamamlayın; Buyer Log aynı sekmeyi yakalayıp otomatik devam edecek.',
+        'OAB sign-in is required. Complete sign-in in the open Edge/Chrome OAB tab; Buyer Log will reuse that tab and continue automatically.',
+      );
+    }
+    if (state.captureInProgress) {
+      return oabT(
+        'Açık Edge/Chrome OAB sekmesi yakalanıyor…',
+        'Connecting to the open Edge/Chrome OAB tab…',
       );
     }
     return '';
