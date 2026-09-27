@@ -120,6 +120,18 @@ function createWorkspaceManager(options) {
     return Boolean(tab.view && isLiveContents(tabContents(tab)));
   }
 
+  function sendTabActivity(tab, active) {
+    const contents = tabContents(tab);
+    if (!tab || !isLiveContents(contents)) return;
+    try {
+      contents.send('buyerlog:workspace-tab-activity', {
+        active: Boolean(active),
+        tabId: String(tab.id || ''),
+        module: String(tab.module || ''),
+      });
+    } catch (_) {}
+  }
+
   function tabForContents(contents) {
     if (!isLiveContents(contents)) return null;
     const tabId = contentsToTab.get(contents.id);
@@ -293,9 +305,13 @@ function createWorkspaceManager(options) {
     }
     state.tabs.forEach(tabId => {
       const candidate = tabs.get(tabId);
-      if (candidate && candidate !== tab && candidate.view) detachView(state, candidate);
+      if (candidate && candidate !== tab && candidate.view) {
+        sendTabActivity(candidate, false);
+        detachView(state, candidate);
+      }
     });
     try { state.window.contentView.addChildView(tab.view); } catch (_) { return; }
+    sendTabActivity(tab, true);
     layout(state);
     state.window.setTitle('Buyer Log · ' + tab.title);
     if (focus) {
@@ -340,6 +356,7 @@ function createWorkspaceManager(options) {
         contextIsolation: true,
         sandbox: true,
         spellcheck: false,
+        backgroundThrottling: true,
       },
     });
     view.setBackgroundColor(currentWindowTheme().background);
@@ -395,8 +412,10 @@ function createWorkspaceManager(options) {
     });
     view.webContents.on('did-finish-load', () => {
       tab.loading = false;
+      const owner = stateForWindow(tab.windowId);
+      sendTabActivity(tab, Boolean(owner && owner.activeTabId === tab.id));
       log('Sekme yüklendi: ' + tab.module + ' · ' + view.webContents.getURL());
-      notify(stateForWindow(tab.windowId));
+      notify(owner);
       if (!rendererReadySignaled) {
         rendererReadySignaled = true;
         try { onFirstRendererReady?.(view.webContents); } catch (error) { log('Renderer ready bildirimi başarısız: ' + error.message); }
@@ -720,6 +739,30 @@ function createWorkspaceManager(options) {
     return state ? snapshot(state) : null;
   }
 
+  function diagnosticsSnapshot() {
+    const liveWindows = [...windows.values()].filter(isLiveWindowState);
+    const liveTabs = [...tabs.values()].filter(tab => isLiveTab(tab));
+    const osPid = contents => {
+      try { return Number(contents && contents.getOSProcessId && contents.getOSProcessId()) || 0; }
+      catch (_) { return 0; }
+    };
+    return {
+      windowCount: liveWindows.length,
+      tabCount: liveTabs.length,
+      windows: liveWindows.map(state => ({
+        windowId: state.window.id,
+        activeTabId: state.activeTabId,
+        shellPid: osPid(state.window.webContents),
+      })),
+      tabs: liveTabs.map(tab => ({
+        tabId: tab.id,
+        module: tab.module,
+        active: Boolean(stateForWindow(tab.windowId)?.activeTabId === tab.id),
+        pid: osPid(tabContents(tab)),
+      })),
+    };
+  }
+
   return {
     MODULES,
     WORKSPACE_BAR_HEIGHT,
@@ -742,6 +785,7 @@ function createWorkspaceManager(options) {
     windowForContents,
     windowForShellContents,
     shellSnapshot,
+    diagnosticsSnapshot,
     focusedWindow,
     activeContents,
     allWindows,
