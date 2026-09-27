@@ -241,7 +241,8 @@
     const rows = (mapping.proposals || []).map(item => `<tr>
       <td>${esc(item.sourceField)}</td>
       <td class="dmfMapArrow">→</td>
-      <td>${esc(item.targetField)}</td>
+      <td><span>${esc(item.targetField)}</span>
+        ${(item.table || item.column) ? `<span class="dmfMapPhysical">${esc([item.table, item.column].filter(Boolean).join(' · '))}</span>` : ''}</td>
       <td><span class="dmfMapTag is-${esc(item.confidence)}">${esc(CONFIDENCE[item.confidence] ? CONFIDENCE[item.confidence][en() ? 'en' : 'tr'] : item.confidence)}</span>
         ${item.typeMismatch ? `<span class="dmfMapTag is-warn">${esc(item.typeMismatch)}</span>` : ''}</td>
     </tr>`).join('');
