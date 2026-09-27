@@ -75,7 +75,8 @@
 
   async function loadFields() {
     if (fieldsCache.has(context.moduleId)) return;
-    const response = await fetch(`/api/horizon/fields?target=${encodeURIComponent(context.moduleId)}`, { cache: 'no-store' });
+    const fieldParams = new URLSearchParams({ target: context.moduleId, sourceId: context.sourceId });
+    const response = await fetch(`/api/horizon/fields?${fieldParams}`, { cache: 'no-store' });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.ok) throw new Error(payload.error || T('Alan listesi okunamadı.', 'Could not read the field list.'));
     OPERATORS = Array.isArray(payload.operators) ? payload.operators : [];
@@ -411,7 +412,7 @@
 
   async function pickValue(anchor, condition) {
     const meta = fieldMeta(condition);
-    const params = new URLSearchParams({ target: context.moduleId, field: condition.field, limit: '500' });
+    const params = new URLSearchParams({ target: context.moduleId, sourceId: context.sourceId, field: condition.field, limit: '500' });
     if (meta && meta.dynamic) { params.set('table', meta.table || ''); params.set('column', meta.name || ''); }
     let values = [];
     let note = '';
