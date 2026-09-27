@@ -124,3 +124,70 @@ test('iki operandlı koşulda operand silme kapalıdır', async () => {
   const first = html.slice(html.indexOf('data-drop-operand="0:0"'));
   assert.doesNotMatch(first.slice(0, 120), /disabled/);
 });
+
+
+test('veritabanı sütun seçicisi yalnız seçilen kaynağın canlı şemasını lazy yükler', async () => {
+  let html = '';
+  let clickHandler = null;
+  const fetchUrls = [];
+  const pickerCalls = [];
+  const initial = payload();
+  initial.sources[0].schemaLoaded = false;
+
+  const live = payload();
+  live.sources[0] = {
+    ...live.sources[0],
+    schemaLoaded: true,
+    authoritative: true,
+    columns: [
+      { table: 'Orders', name: 'Order Code' },
+      { table: 'Orders', name: 'Database Only Key' },
+    ],
+  };
+
+  const host = {
+    classList: { add() {}, remove() {} },
+    addEventListener(type, fn) { if (type === 'click') clickHandler = fn; },
+    removeEventListener() {},
+  };
+  Object.defineProperty(host, 'innerHTML', { get: () => html, set: value => { html = value; } });
+
+  const sandbox = {
+    window: {
+      BLDataPicker: {
+        open(_anchor, items) { pickerCalls.push(items); },
+        close() {},
+      },
+    },
+    appLang: 'tr',
+    escapeHtml: value => String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])),
+    renderMatchAudit: () => '<div>audit</div>',
+    fetch: async url => {
+      fetchUrls.push(String(url));
+      return { ok: true, json: async () => String(url).includes('fullSource=') ? live : initial };
+    },
+    console,
+  };
+  sandbox.globalThis = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(SOURCE, sandbox);
+  await sandbox.window.BLDataMatchRule.open(host, { canManage: true });
+
+  const anchor = {
+    dataset: { pick: '0:0' },
+    innerHTML: 'Sipariş Kod',
+    disabled: false,
+    isConnected: true,
+  };
+  const target = {
+    closest(selector) { return selector === '[data-pick]' ? anchor : null; },
+  };
+  clickHandler({ target });
+  await new Promise(resolve => setTimeout(resolve, 0));
+
+  assert.ok(fetchUrls.some(url => url.includes('/api/match-rule?fullSource=conn-asas')),
+    'seçilen ASAS kaynağının gerçek şeması istenmeli');
+  assert.strictEqual(pickerCalls.length, 1);
+  assert.ok(pickerCalls[0].some(entry => entry.label === 'Database Only Key'),
+    'Buyer Log Field Mapping dışında kalan gerçek database sütunu seçicide görünmeli');
+});

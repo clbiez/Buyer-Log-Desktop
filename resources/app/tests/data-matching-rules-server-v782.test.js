@@ -137,6 +137,30 @@ test('kaybolan sütun çözülemez işaretlenir ve kayıt reddedilir', async () 
   assert.throws(() => block.validateMatchConfig(config), error => error.code === 'MATCH_COLUMN_UNRESOLVED');
 });
 
+test('tek kaynak için tam şema istendiğinde yalnız o database gerçek sütunlarıyla genişler', async () => {
+  const block = loadMatchBlock({
+    overrides: DB_MODE,
+    connections: [asasConnection(), iasConnection()],
+    schema: {
+      columns: [
+        { table: 'Orders', name: 'Order Code', kind: 'column' },
+        { table: 'Orders', name: 'Database Only Key', kind: 'column' },
+      ],
+      errors: [],
+    },
+  });
+  const catalog = await block.matchRuleSourceCatalog({}, { full: false, fullSourceId: 'conn-asas' });
+
+  assert.strictEqual(catalog[0].schemaLoaded, true);
+  assert.strictEqual(catalog[0].authoritative, true);
+  assert.deepStrictEqual(catalog[0].columns.map(column => column.name), ['Order Code', 'Database Only Key']);
+
+  assert.strictEqual(catalog[1].schemaLoaded, false, 'IAS bu seçimde gereksiz yere taranmamalı');
+  assert.strictEqual(catalog[1].authoritative, false);
+  assert.ok(catalog[1].columns.some(column => column.name === 'Product'),
+    'taratılmayan kaynak mevcut Field Mapping fallback listesini korumalı');
+});
+
 test('tam şema okunduğunda modelde olmayan sütun çözülemez sayılır', async () => {
   const block = loadMatchBlock({
     overrides: DB_MODE,

@@ -23,9 +23,11 @@
    doğrulaması (validateMatchConfig) orada; burada yalnız ekran var.
    İkinci bir yazma yolu açmak, iki ayrı doğrulama demek olurdu (§9).
 
-   TAM ŞEMA İSTEĞE BAĞLI. Varsayılan açılış yalnız eşlenmiş alanları
-   listeler; bütün modeli taramak dakikalar sürebiliyor. "Tüm sütunlar"
-   kullanıcının bilinçli olarak ödediği bir bedeldir.
+   TAM ŞEMA LAZY YÜKLENİR. Varsayılan açılış hızlı kalır; bir veritabanı
+   sütun seçicisi ilk kez açıldığında yalnız O KAYNAĞIN gerçek model şeması
+   okunur. Böylece kullanıcı Buyer Log Field Mapping alanlarıyla sınırlanmaz,
+   ama ekran açılırken bütün bağlantıları tarama maliyeti de ödenmez. "Tüm
+   sütunları getir" düğmesi hâlâ bütün kaynakları tek seferde taramak içindir.
 
    ÇÖZÜLEMEYEN ALAN GİZLENMEZ. Yapılandırılmış sütun kaynakta yoksa
    sunucu onu `unresolved` işaretler; ekran kırmızı gösterir ve kayıt
@@ -89,6 +91,52 @@
       label: entry.name,
       hint: entry.table || '',
     }));
+  }
+
+  /* Veritabanı operandında yalnız Buyer Log Field Mapping başlıklarını göstermek
+     yeterli değildir. Kullanıcı eşleştirme anahtarını modeldeki HERHANGİ bir
+     gerçek sütundan seçebilmelidir. Tam şema ekran açılırken değil, ilk sütun
+     seçimi anında yalnız seçilen kaynak için istenir; böylece diğer bağlantılar
+     gereksiz yere taranmaz. */
+  async function ensureDatabaseColumns(source, anchor) {
+    if (!source || source.kind !== 'database' || fullSchema || source.schemaLoaded) return source;
+
+    const oldHtml = anchor && anchor.innerHTML;
+    const oldDisabled = anchor && anchor.disabled;
+    if (anchor) {
+      anchor.disabled = true;
+      anchor.innerHTML = `<em>${esc(T('veritabanı sütunları okunuyor…', 'loading database columns…'))}</em>`;
+    }
+
+    try {
+      const response = await fetch(`/api/match-rule?fullSource=${encodeURIComponent(source.id)}`, { cache: 'no-store' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || T('Veritabanı sütunları okunamadı.', 'Could not read database columns.'));
+
+      const fresh = (Array.isArray(payload.sources) ? payload.sources : []).find(entry => entry.id === source.id);
+      if (!fresh) throw new Error(T('Seçilen veri kaynağının şeması dönmedi.', 'The selected data source schema was not returned.'));
+
+      const index = sources().findIndex(entry => entry.id === source.id);
+      const merged = { ...source, ...fresh, schemaLoaded: true };
+      if (index >= 0) state.sources[index] = merged;
+
+      if (fresh.error) {
+        message = fresh.error;
+        messageTone = 'warn';
+      }
+      return merged;
+    } catch (error) {
+      message = String(error && error.message || error);
+      messageTone = 'warn';
+      if (typeof showToast === 'function') showToast(message);
+      // Şema okunamazsa mevcut Field Mapping listesi + serbest giriş korunur.
+      return source;
+    } finally {
+      if (anchor && anchor.isConnected !== false) {
+        anchor.disabled = Boolean(oldDisabled);
+        anchor.innerHTML = oldHtml;
+      }
+    }
   }
   function sourceEntries(condition, operandIndex) {
     // Aynı kaynak bir koşulda iki kez yer alamaz: kendisiyle karşılaştırma her
@@ -398,25 +446,30 @@
       const operand = condition && condition.operands[operandIndex];
       if (!operand) return;
       const source = sourceForOperand(operand);
-      window.BLDataPicker?.open?.(pick, columnEntries(source), value => {
-        const parts = String(value).split('|');
-        const table = parts.length >= 2 ? parts[0] : '';
-        const name = parts.length >= 2 ? parts.slice(1).join('|') : String(value);
-        condition.operands[operandIndex] = {
-          ...operand,
-          sourceId: source ? source.id : operand.sourceId,
-          role: source ? source.role : operand.role,
-          header: name, canonicalHeader: name, table, name, kind: 'column',
-          // Kullanıcı sütunu yeniden seçti; çözülememe işareti kalkar. Kaynak
-          // gerçekten tanımıyorsa sunucu kaydederken yine reddeder.
-          unresolved: '',
-        };
-        render();
-      }, {
-        placeholder: T('Sütun ara…', 'Search columns…'),
-        // Şema okunamadıysa kullanıcı kilitlenmemeli; sütun adını elle yazabilir.
-        allowFree: true,
-      });
+
+      void (async () => {
+        const resolvedSource = await ensureDatabaseColumns(source, pick);
+        window.BLDataPicker?.open?.(pick, columnEntries(resolvedSource), value => {
+          const parts = String(value).split('|');
+          const table = parts.length >= 2 ? parts[0] : '';
+          const name = parts.length >= 2 ? parts.slice(1).join('|') : String(value);
+          condition.operands[operandIndex] = {
+            ...operand,
+            sourceId: resolvedSource ? resolvedSource.id : operand.sourceId,
+            role: resolvedSource ? resolvedSource.role : operand.role,
+            header: name, canonicalHeader: name, table, name, kind: 'column',
+            // Kullanıcı sütunu yeniden seçti; çözülememe işareti kalkar. Kaynak
+            // gerçekten tanımıyorsa sunucu kaydederken yine reddeder.
+            unresolved: '',
+          };
+          render();
+        }, {
+          placeholder: T('Sütun ara…', 'Search columns…'),
+          // Şema okunamadıysa kullanıcı kilitlenmemeli; sütun adını elle yazabilir.
+          allowFree: true,
+        });
+      })();
+      return;
     }
   }
 
