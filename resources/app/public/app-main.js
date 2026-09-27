@@ -13973,7 +13973,7 @@ function ensureOverviewIntakeModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'intake',mode:'after-ui'});
-  overviewIntakeLoadPromise=loader('intake.js?rev=3')
+  overviewIntakeLoadPromise=loader('intake.js?rev=4')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui'});return window.BLINTAKE||null;})
     .catch(error=>{overviewIntakeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui',failed:true});console.warn('INTAKE modülü yüklenemedi:',error);return null;});
   return overviewIntakeLoadPromise;
