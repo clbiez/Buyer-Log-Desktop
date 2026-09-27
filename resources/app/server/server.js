@@ -5062,35 +5062,53 @@ require('./routes/plm-sync-routes')(app, {
    session/Authorization yalnız kullanıcı "Get OAB"/"Refresh OAB" dediğinde
    doğrulanır; Overview > OAB açılışında login penceresi açılmaz.
    =================================================================== */
-// OAB transport is owned by Buyer Log's internal Electron session.
-// The browser window captures a short-lived Authorization into backend RAM;
-// report traffic then goes directly through oabApiClient. No Edge/Chrome,
-// external debugging port, external browser profile or browser connector is used.
-function oabInternalAuthStatus() {
-  const current = oabAuthState.status();
+// OAB transport — restore the proven v7.0.80 existing-browser model.
+// Buyer Log attaches to the user's already-open Edge/Chrome CDP session.
+// capturePassAuthorization() first reuses an existing PASS/OAB tab; only when
+// no PASS tab exists does it open ONE viewer tab in the same browser context.
+// The captured Authorization remains process-memory-only inside the connector.
+async function ensurePassConnected(userId, params) {
+  const status = agentBrowserConnector.passAuthStatus(userId);
+  if (status.connected) return status;
+  return agentBrowserConnector.capturePassAuthorization(userId, params || {});
+}
+// Corporate SSO may expire while the in-memory request template still exists.
+// On the first 401/403, recapture in the SAME browser context and retry once.
+async function fetchOabReportWithLoginRecovery(userId, params) {
+  try {
+    return await agentBrowserConnector.fetchPassReportData(userId, params);
+  } catch (err) {
+    if (!err || err.code !== 'PASS_SESSION_EXPIRED') throw err;
+    await agentBrowserConnector.capturePassAuthorization(userId, params || {});
+    return agentBrowserConnector.fetchPassReportData(userId, params);
+  }
+}
+function oabBrowserAuthStatus(userId) {
+  const current = agentBrowserConnector.passAuthStatus(userId);
   return {
-    authenticated: Boolean(current && current.authenticated),
-    connected: Boolean(current && current.authenticated),
-    loginRequired: !Boolean(current && current.authenticated),
-    transport: 'electron-internal',
+    ...current,
+    authenticated: Boolean(current && current.connected),
+    transport: 'existing-browser-cdp',
   };
 }
-function requireOabInternalAuth() {
-  const status = oabInternalAuthStatus();
-  if (status.authenticated) return status;
-  const error = new Error('OAB oturumu gerekli.');
-  error.code = 'OAB_AUTH_REQUIRED';
-  error.statusCode = 401;
-  error.details = { loginRequired:true, transport:'electron-internal' };
-  throw error;
-}
-async function fetchOabReportFromInternalSession(params) {
-  requireOabInternalAuth();
-  return oabApiClient.fetchReportData(params || {});
-}
 app.get('/api/oab/auth/status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try { res.set('Cache-Control','no-store').json({ ok:true, status:oabInternalAuthStatus() }); }
+  try { res.set('Cache-Control','no-store').json({ ok:true, status:oabBrowserAuthStatus(req.currentUser.id) }); }
   catch (err) { automationError(res, err, 'PASS bağlantı durumu okunamadı.'); }
+});
+// Manual sign-in / reconnect uses the exact same browser path as Get OAB.
+// No Electron OAB window is created: existing PASS tab is reused, otherwise a
+// single PASS viewer tab is opened in the already connected browser context.
+app.post('/api/oab/auth/connect', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '8kb' }), async (req, res) => {
+  try {
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const params = {
+      seasonRef: body.seasonRef,
+      merchSubGroupRef: body.merchSubGroupRef,
+      buyerGroupRef: body.buyerGroupRef,
+    };
+    const status = await ensurePassConnected(req.currentUser.id, params);
+    res.set('Cache-Control','no-store').json({ ok:true, status:{ ...status, authenticated:Boolean(status && status.connected), transport:'existing-browser-cdp' } });
+  } catch (err) { automationError(res, err, 'PASS bağlantısı kurulamadı.'); }
 });
 app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
   try {
@@ -5173,7 +5191,8 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
         return res.json({ ok:true, rows:cached.rows, fields:cached.fields, fromCache:true, fetchedAt:cached.fetchedAt, ttlMinutes:cached.ttlMinutes });
       }
     }
-    const rows = await fetchOabReportFromInternalSession({ seasonRef, merchSubGroupRef, buyerGroupRef });
+    await ensurePassConnected(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef });
+    const rows = await fetchOabReportWithLoginRecovery(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef });
     // Alan listesi HARD-CODE EDİLMEZ: response'taki satırların birleşik anahtar
     // kümesinden dinamik üretilir (81 civarındaki alanın hepsi, hangi satırda
     // olursa olsun kaybolmadan taşınır).
@@ -5200,7 +5219,8 @@ require('./routes/oab-batch-routes')(app, {
   collectionSaveWorker,
   collectionWorkspaceEditAllowed,
   express,
-  fetchOabReportFromInternalSession,
+  ensurePassConnected,
+  fetchOabReportWithLoginRecovery,
   liveEvents,
   logRuntimeFailure,
   oabBatch,
@@ -5212,7 +5232,6 @@ require('./routes/oab-batch-routes')(app, {
   redactSecrets,
   refreshCollectionPermissionScope,
   requestClientId,
-  requireOabInternalAuth,
   sharedRevisionStore,
   userAccess,
 });

@@ -274,10 +274,10 @@ test('OAB: bütün API uçları overview yetki alanıyla korunuyor', () => {
   for (const route of ["app.get('/api/oab/auth/status'", "app.get('/api/oab/seasons'", "app.post('/api/oab/mag'", "app.post('/api/oab/buyer-groups'", "app.post('/api/oab/report'", "app.get('/api/oab/state'", "app.get('/api/oab/settings'", "app.put('/api/oab/settings'"]) {
     assert.ok(SERVER.includes(route), `${route} bulunmalı`);
   }
-  // v6.60 — /api/oab/auth/connect kaldırıldı: bağlantı artık ayrı bir uç
-  // değil, ensurePassConnected() ile metadata/rapor uçlarının İÇİNDEN
-  // şeffaf şekilde kurulur.
-  assert.doesNotMatch(SERVER, /app\.post\('\/api\/oab\/auth\/connect'/);
+  // OAB kullanıcı menüsü ve auth-retry yolu aynı browser-backed connect
+  // ucunu kullanır; bu uç yeni Electron penceresi değil mevcut Edge/Chrome
+  // PASS sekmesini yakalayan connector'a gider.
+  assert.match(SERVER, /app\.post\('\/api\/oab\/auth\/connect'/);
   // v7.20: uç sayısı sabit değil (çoklu seçim beş uç daha ekledi). Sayı
   // çivilemek yeni her uçta testi kırıyor ama KORUMAYI doğrulamıyordu.
   // Artık her OAB ucunun guard taşıdığı tek tek denetleniyor — özgün amaç
@@ -290,10 +290,10 @@ test('OAB: bütün API uçları overview yetki alanıyla korunuyor', () => {
   }
 });
 
-test('OAB: auth durumu internal Electron oturumunun RAM state bilgisinden raporlanır; credential renderer yanıtına çıkmaz', () => {
+test('OAB: auth durumu açık tarayıcı connector durumundan raporlanır; credential renderer yanıtına çıkmaz', () => {
   const body = SERVER.slice(SERVER.indexOf("app.get('/api/oab/auth/status'"), SERVER.indexOf("app.get('/api/oab/seasons'"));
-  assert.match(body, /oabInternalAuthStatus\(\)/);
-  assert.doesNotMatch(body, /agentBrowserConnector\.passAuthStatus/);
+  assert.match(body, /oabBrowserAuthStatus\(req\.currentUser\.id\)/);
+  assert.match(SERVER, /agentBrowserConnector\.passAuthStatus\(userId\)/);
   assert.doesNotMatch(body, /authorization|Bearer/i);
 });
 
@@ -311,10 +311,11 @@ test('OAB: metadata uçları paketlenmiş JSON kullanıyor; filtre seçiminde PA
   assert.doesNotMatch(bgBody, /ensurePassConnected|fetchPassBuyerGroupOptions|GetVariableWithData/);
 });
 
-test('OAB: /api/oab/report üç filtreyi internal auth sonrası doğrudan oabApiClient yoluna verir', () => {
+test('OAB: /api/oab/report üç filtreyi mevcut Edge/Chrome PASS oturumuna verir', () => {
   const body = SERVER.slice(SERVER.indexOf("app.post('/api/oab/report'"), SERVER.indexOf("app.get('/api/oab/settings'"));
-  assert.match(body, /fetchOabReportFromInternalSession\(\{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
-  assert.doesNotMatch(body, /agentBrowserConnector|ensurePassConnected|fetchOabReportWithLoginRecovery/);
+  assert.match(body, /ensurePassConnected\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
+  assert.match(body, /fetchOabReportWithLoginRecovery\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
+  assert.doesNotMatch(body, /fetchOabReportFromInternalSession/);
 });
 
 test('OAB: /api/oab/report cache\'i kontrol eder, forceRefresh bypass eder', () => {
