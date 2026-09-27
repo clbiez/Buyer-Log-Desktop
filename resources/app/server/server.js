@@ -8380,6 +8380,7 @@ function refreshJobState(id) {
     elapsedMs: job.running ? Date.now() - job.startedMs : (job.elapsedMs || 0),
     error: job.error || null,
     errorCode: job.errorCode || null,
+    repairAction: job.repairAction || null,
     summary: job.summary || null,
     sourceRequest:job.sourceRequest||null,
     connections: job.connections || null,
@@ -8771,6 +8772,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
       job.phase = 'error';
       job.error = String(err && (err.publicMessage || err.message) || 'Yenileme başarısız oldu.');
       job.errorCode = (err && err.code) || 'MODEL_REFRESH_FAILED';
+      job.repairAction = err && err.repairAction || null;
     }).finally(() => {
       job.running = false;
       job.finishedAt = new Date().toISOString();
@@ -8792,7 +8794,11 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   } catch (err) {
     logRuntimeFailure('modelRefresh', err);
     const message = err && (err.publicMessage || err.message) ? (err.publicMessage || err.message) : 'Yenileme başarısız oldu.';
-    res.status(Number(err && err.statusCode) || 500).json({ error: message, code: (err && err.code) || 'MODEL_REFRESH_FAILED' });
+    res.status(Number(err && err.statusCode) || 500).json({
+      error: message,
+      code: (err && err.code) || 'MODEL_REFRESH_FAILED',
+      repairAction: err && err.repairAction || null,
+    });
   } finally { refreshInFlight.delete(id); }
 });
 app.post('/api/refresh-cancel', userAccess.requireArea('source'), (req,res) => {
