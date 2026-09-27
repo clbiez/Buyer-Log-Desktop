@@ -226,6 +226,15 @@
     renderRadar(host,config);
   }
   function refreshAll(){SOURCE_TABLES.forEach(renderTableRadar);}
+  // Tablo mutasyonları ve pencere yeniden boyutlandırması kare başına tek çizime
+  // toplanır; sürükleyerek yeniden boyutlandırmada her olayda tüm radarlar kurulmaz.
+  const pendingRadars=new Set();let radarFrame=0;
+  function scheduleRadar(def){
+    pendingRadars.add(def);if(radarFrame)return;
+    const run=()=>{radarFrame=0;const list=[...pendingRadars];pendingRadars.clear();list.forEach(renderTableRadar);};
+    radarFrame=typeof requestAnimationFrame==='function'?requestAnimationFrame(run):setTimeout(run,16);
+  }
+  function scheduleAll(){SOURCE_TABLES.forEach(scheduleRadar);}
   function renderPriority(rows,options={}){
     const host=document.getElementById('ovPriorityRadar');if(!host)return;
     const codes=Array.isArray(options.codes)?options.codes:[];
@@ -249,12 +258,12 @@
       const table=document.getElementById(def.id);if(!table)return;
       if(!table.dataset.radarBound){
         table.dataset.radarBound='1';
-        new MutationObserver(()=>renderTableRadar(def)).observe(table,{childList:true,subtree:true,characterData:true});
+        new MutationObserver(()=>scheduleRadar(def)).observe(table,{childList:true,subtree:true,characterData:true});
       }
       renderTableRadar(def);
     });
-    new MutationObserver(refreshAll).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-theme']});
-    window.addEventListener('resize',refreshAll,{passive:true});
+    new MutationObserver(scheduleAll).observe(document.documentElement,{attributes:true,attributeFilter:['lang','data-theme']});
+    window.addEventListener('resize',scheduleAll,{passive:true});
   }
   if(typeof document!=='undefined'){
     if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
