@@ -362,15 +362,12 @@ function loadOverrides() {
     ? 'database' : 'excel';
   merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
-  // v6.33: License Royalty Calculations tekrar Licensor ile eşleşir.
-  // v6.31'de Manufacturer alanına taşınmış değerler kayıpsız biçimde Licensor'a
-  // geri alınır; sonraki kayıt işleminde eski Manufacturer anahtarı yazılmaz.
-  merged.pricingRules = (Array.isArray(merged.pricingRules) ? merged.pricingRules : []).map(rule => {
-    const current = rule && typeof rule === 'object' ? { ...rule } : {};
-    current.licensor = String(current.licensor != null ? current.licensor : (current.manufacturer || '')).trim();
-    delete current.manufacturer;
-    return current;
-  });
+  // License Royalty v2: eski TR / Non-TR kayıtları okunurken tek
+  // sözleşme kaydına dönüştürülür. Efektif ülke oranları ve varsa eski farklı
+  // hologram tutarları korunur.
+  merged.pricingRules = BLBusinessRules.migrateLicenseRoyaltyRules(
+    Array.isArray(merged.pricingRules) ? merged.pricingRules : []
+  );
   // Shared Hub modunda CP iş verisinin kanonik sahibi satır bazlı cp-order
   // kayıtlarıdır. Eski map şekli renderer/business logic için yalnız projection.
   cpSharedStore.overlay(merged);
@@ -812,8 +809,15 @@ function patchSuppFobOverrides(items, expectedRevision = null, options = null) {
     if (meta && meta.source === 'rule') {
       ov.suppfobmetamap[oc] = {
         source: 'rule', ruleId: meta.ruleId == null ? '' : String(meta.ruleId), opdStart: meta.opdStart == null ? '' : String(meta.opdStart), opdEnd: meta.opdEnd == null ? '' : String(meta.opdEnd),
-        seasons: Array.isArray(meta.seasons) ? meta.seasons.map(String).filter(Boolean) : (meta.season ? [String(meta.season)] : []), countryGroup: meta.countryGroup == null ? '' : String(meta.countryGroup),
-        licensor: meta.licensor == null ? '' : String(meta.licensor), license: meta.license == null ? '' : String(meta.license), royalty: Number(meta.royalty), hologramCost: Number(meta.hologramCost), applied: meta.applied === true, updatedAt: new Date().toISOString(),
+        seasons: Array.isArray(meta.seasons) ? meta.seasons.map(String).filter(Boolean) : (meta.season ? [String(meta.season)] : []),
+        licensor: meta.licensor == null ? '' : String(meta.licensor), license: meta.license == null ? '' : String(meta.license),
+        royalty: Number(meta.royalty),
+        trCommission: meta.trCommission == null || meta.trCommission === '' ? null : Number(meta.trCommission),
+        ydCommission: meta.ydCommission == null || meta.ydCommission === '' ? null : Number(meta.ydCommission),
+        commissionGroup: meta.commissionGroup == null ? '' : String(meta.commissionGroup),
+        commission: meta.commission == null || meta.commission === '' ? null : Number(meta.commission),
+        effectiveRoyalty: meta.effectiveRoyalty == null || meta.effectiveRoyalty === '' ? null : Number(meta.effectiveRoyalty),
+        hologramCost: Number(meta.hologramCost), applied: meta.applied === true, updatedAt: new Date().toISOString(),
       };
     } else ov.suppfobmetamap[oc] = { source: 'manual', updatedAt: new Date().toISOString() };
     touched.push(oc);
