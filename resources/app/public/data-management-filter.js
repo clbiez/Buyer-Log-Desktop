@@ -37,7 +37,7 @@
   /* Operatörlerin kaç değer aldığı. Sunucudaki model-conditions.OPERATORS ile
      aynı sözleşme; arity'yi oradan alıyoruz, burada ikinci bir liste tutmuyoruz. */
   let OPERATORS = [];
-  let fieldsCache = new Map();   // moduleId → {fields, operators, schemaError}
+  let fieldsCache = new Map();   // sourceId|moduleId → {fields, operators, schemaError}
 
   let host = null;
   let context = null;            // {sourceId, sourceName, moduleId, moduleLabel, revision, sharedWith, filterName}
@@ -65,8 +65,11 @@
     return found ? found.arity : 'list';
   }
 
+  function fieldsKey() {
+    return `${String(context && context.sourceId || '')}|${String(context && context.moduleId || '')}`;
+  }
   function fieldsFor() {
-    return (fieldsCache.get(context.moduleId) || {}).fields || [];
+    return (fieldsCache.get(fieldsKey()) || {}).fields || [];
   }
 
   function fieldMeta(condition) {
@@ -74,13 +77,14 @@
   }
 
   async function loadFields() {
-    if (fieldsCache.has(context.moduleId)) return;
+    const cacheKey = fieldsKey();
+    if (fieldsCache.has(cacheKey)) return;
     const fieldParams = new URLSearchParams({ target: context.moduleId, sourceId: context.sourceId });
     const response = await fetch(`/api/horizon/fields?${fieldParams}`, { cache: 'no-store' });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.ok) throw new Error(payload.error || T('Alan listesi okunamadı.', 'Could not read the field list.'));
     OPERATORS = Array.isArray(payload.operators) ? payload.operators : [];
-    fieldsCache.set(context.moduleId, {
+    fieldsCache.set(cacheKey, {
       fields: Array.isArray(payload.fields) ? payload.fields : [],
       schemaError: String(payload.schemaError || ''),
     });
