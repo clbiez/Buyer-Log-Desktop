@@ -43,17 +43,21 @@ app.get('/api/horizon/filter-mapping', userAccess.requireArea('source'), userAcc
     const target = String(req.query && req.query.target || '').trim().toLowerCase();
     const fromRole = String(req.query && req.query.from || 'asas').trim().toLowerCase();
     const toRole = String(req.query && req.query.to || 'intake').trim().toLowerCase();
+    const fromSourceId = String(req.query && req.query.fromSourceId || '').trim();
+    const toSourceId = String(req.query && req.query.toSourceId || '').trim();
     if (!target) return res.status(400).json({ error: 'target zorunlu.', code: 'TARGET_REQUIRED' });
 
     const items = loadModelConnections().items || [];
-    const scopeFor = role => {
-      const item = items.find(entry => entry && entry.role === role);
+    const scopeFor = (role, sourceId) => {
+      const item = sourceId
+        ? items.find(entry => entry && String(entry.id || '') === sourceId && entry.role === role)
+        : items.find(entry => entry && entry.role === role);
       if (!item || !Array.isArray(item.scopes)) return null;
       const scope = item.scopes.find(entry => entry && Array.isArray(entry.targets) && entry.targets.includes(target));
       return scope ? { item, scope } : null;
     };
-    const from = scopeFor(fromRole);
-    const to = scopeFor(toRole);
+    const from = scopeFor(fromRole, fromSourceId);
+    const to = scopeFor(toRole, toSourceId);
     /* Modül gerçekten İKİ kaynaktan beslenmiyorsa öneri üretmek anlamsız;
        sessiz boş liste yerine sebebi söylenir. */
     if (!from) return res.status(409).json({ error: 'Bu modülü besleyen bir ' + fromRole.toUpperCase() + ' kaynağı yok.', code: 'SOURCE_SCOPE_MISSING' });
