@@ -125,11 +125,11 @@ test('8 · aynı İstanbul koordinatındaki semboller birbirini kapatmaz ve tek 
 });
 
 test('8b · yakın araçlar düşük zoomda kümelenir, yüksek zoomda tekilleşir',()=>{
-  const make=(id,x,mode,country)=>({id,x,y:100,kind:'vehicle',vehicle:{id,mode,records:[{id:'r-'+id,country,mode,origin:{name:country}}]}});
-  const symbols=[make('a',100,'sea','Bangladesh'),make('b',122,'air','India'),make('c',190,'road','Pakistan')];
+  const make=(id,x,mode,country,elapsedDays,elapsedCount=1)=>({id,x,y:100,kind:'vehicle',vehicle:{id,mode,elapsedDays,elapsedCount,records:[{id:'r-'+id,country,mode,origin:{name:country}}]}});
+  const symbols=[make('a',100,'sea','Bangladesh',10),make('b',122,'air','India',20),make('c',190,'road','Pakistan',30)];
   const compact=flow.clusterVehicleSymbols(symbols,30);
   assert.equal(compact.length,2);
-  const cluster=compact.find(item=>item.kind==='vehicleCluster');assert.ok(cluster);assert.equal(cluster.vehicles.length,2);assert.equal(cluster.records.length,2);
+  const cluster=compact.find(item=>item.kind==='vehicleCluster');assert.ok(cluster);assert.equal(cluster.vehicles.length,2);assert.equal(cluster.records.length,2);assert.equal(cluster.avgElapsedDays,15);assert.equal(cluster.elapsedCount,2);
   const zoomed=flow.clusterVehicleSymbols(symbols,10);assert.equal(zoomed.length,3);assert.ok(zoomed.every(item=>item.kind==='vehicle'));
   assert.ok(flow.vehicleClusterDistanceForZoom(1)>flow.vehicleClusterDistanceForZoom(16),'zoom arttıkça cluster yarıçapı küçülmeli');
 });
