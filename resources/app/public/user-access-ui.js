@@ -95,12 +95,35 @@
     if (window.BLUserManagement && typeof window.BLUserManagement.open === 'function') { window.BLUserManagement.open(); return; }
     if (typeof showToast === 'function') showToast(tr('Kullanıcı yönetimi arayüzü yüklenemedi.', 'The user management screen could not be loaded.'));
   }
+  async function openOabUserLogin() {
+    const bridge = window.buyerLogDesktop;
+    if (!bridge || typeof bridge.ensureOabAuth !== 'function') {
+      const message = tr('OAB kullanıcı girişi Buyer Log masaüstü uygulamasında kullanılabilir.', 'OAB user sign-in is available in the Buyer Log desktop app.');
+      if (typeof showToast === 'function') showToast(message); else alert(message);
+      return;
+    }
+    try {
+      if (typeof showToast === 'function') showToast(tr('OAB giriş ekranı açılıyor…', 'Opening OAB sign-in…'));
+      const result = await bridge.ensureOabAuth({ interactive:true, manual:true });
+      if (result && result.ok && result.authenticated) {
+        if (typeof showToast === 'function') showToast(tr('OAB oturumu açıldı.', 'OAB session is ready.'));
+        return;
+      }
+      const message = result && result.code === 'OAB_AUTH_CANCELLED'
+        ? tr('OAB kullanıcı girişi iptal edildi.', 'OAB sign-in was cancelled.')
+        : (result && result.error) || tr('OAB kullanıcı girişi tamamlanmadı.', 'OAB sign-in was not completed.');
+      if (typeof showToast === 'function') showToast(message); else alert(message);
+    } catch (error) {
+      const message = error && error.message || tr('OAB kullanıcı girişi açılamadı.', 'OAB sign-in could not be opened.');
+      if (typeof showToast === 'function') showToast(message); else alert(message);
+    }
+  }
 
   function openMenu(anchor) {
     if (menu) return closeMenu();
     const profile = current(); if (!profile) return;
     menu = document.createElement('div'); menu.className = 'userMenu';
-    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar">${esc(initials(profile.displayName))}</span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div>${canManageUsers() ? `<button type="button" data-user-admin><svg class="ic" aria-hidden="true"><use href="#i-users-group"/></svg>${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}${hasCapability('OUTLOOK.SEARCH') ? `<button type="button" data-outlook-settings-menu><svg class="ic" aria-hidden="true"><use href="#i-mail-send"/></svg>${esc(tr('Microsoft 365 · Outlook', 'Microsoft 365 · Outlook'))}</button>` : ''}<button type="button" data-plm-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}</button>${profile.systemRole === 'moderator' ? `<button type="button" data-update-test><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>${esc(tr('Güncelleme Testi', 'Update Test'))}</button>` : ''}<button type="button" data-backup-settings><svg class="ic" aria-hidden="true"><use href="#i-database-import"/></svg>${esc(tr('Backup', 'Backup'))}</button><button type="button" data-reset-my-view><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg>${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
+    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar">${esc(initials(profile.displayName))}</span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div>${canManageUsers() ? `<button type="button" data-user-admin><svg class="ic" aria-hidden="true"><use href="#i-users-group"/></svg>${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}${hasCapability('OUTLOOK.SEARCH') ? `<button type="button" data-outlook-settings-menu><svg class="ic" aria-hidden="true"><use href="#i-mail-send"/></svg>${esc(tr('Microsoft 365 · Outlook', 'Microsoft 365 · Outlook'))}</button>` : ''}<button type="button" data-plm-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}</button><button type="button" data-oab-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('OAB Kullanıcı Girişi', 'OAB User Sign-In'))}</button>${profile.systemRole === 'moderator' ? `<button type="button" data-update-test><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>${esc(tr('Güncelleme Testi', 'Update Test'))}</button>` : ''}<button type="button" data-backup-settings><svg class="ic" aria-hidden="true"><use href="#i-database-import"/></svg>${esc(tr('Backup', 'Backup'))}</button><button type="button" data-reset-my-view><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg>${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
     document.body.appendChild(menu);
     const rect = anchor.getBoundingClientRect(), width = Math.min(380, window.innerWidth - 24); menu.style.width = `${width}px`; menu.style.left = `${Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12))}px`; menu.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - menu.offsetHeight - 12)}px`;
     menu.querySelector('[data-switch-user]').addEventListener('click', switchUser);
@@ -108,6 +131,7 @@
     menu.querySelector('[data-user-admin]')?.addEventListener('click', () => { closeMenu(); openUserManagement(); });
     menu.querySelector('[data-outlook-settings-menu]')?.addEventListener('click', () => { closeMenu(); if (window.BLOutlook) window.BLOutlook.openSettings(); });
     menu.querySelector('[data-plm-user-login]')?.addEventListener('click', () => { closeMenu(); window.openCoreNectumApiSettings?.({ required:false, manual:true }); });
+    menu.querySelector('[data-oab-user-login]')?.addEventListener('click', () => { closeMenu(); void openOabUserLogin(); });
     menu.querySelector('[data-update-test]')?.addEventListener('click', () => { closeMenu(); window.openBuyerLogUpdateTest?.(); });
     menu.querySelector('[data-backup-settings]')?.addEventListener('click', () => { closeMenu(); window.buyerLogBackupModal?.(); });
   }
