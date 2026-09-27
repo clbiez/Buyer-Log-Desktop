@@ -826,3 +826,11 @@ body.lflPortfolioModalOpen{overflow:hidden;}
   #view-lfl .lflPeriodDimWrap>.lflDimBtn{flex:1;min-width:0;}
 }
 
+/* 2026-09-27 — draggable saved LFL comparison cards */
+.lflScenarioCardDrag{display:flex;align-items:center;gap:8px;min-width:0;cursor:grab;user-select:none}
+.lflScenarioCardDrag:active{cursor:grabbing}
+.lflScenarioCardDrag::before{content:'⠿';flex:none;color:var(--muted);font-size:13px;line-height:1;opacity:.8}
+.lflScenarioCard.isDragging{opacity:.42;transform:scale(.985);box-shadow:none}
+.lflScenarioCard.isDragTarget{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 18%,transparent)}
+.lflScenarioCards.isScenarioDragging .lflScenarioCard:not(.isDragging){transition:border-color .12s var(--ease),box-shadow .12s var(--ease),transform .12s var(--ease)}
+

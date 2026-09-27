@@ -1934,15 +1934,58 @@
     const result=scenarioComparisonResult(state.rows,item,state.filters);lflScenarioCache.set(key,result);return result;
   }
   function comparisonScenarioResults(a){return ensureComparisonScenarios(a).map(item=>cachedScenarioComparisonResult(item));}
+  function reorderComparisonScenarios(scenarios,orderedIds){
+    const source=Array.isArray(scenarios)?scenarios:[],byId=new Map(source.filter(item=>item&&item.id).map(item=>[item.id,item])),next=[];
+    (Array.isArray(orderedIds)?orderedIds:[]).forEach(id=>{const item=byId.get(id);if(item){next.push(item);byId.delete(id);}});
+    source.forEach(item=>{if(item&&byId.has(item.id)){next.push(item);byId.delete(item.id);}});
+    return next;
+  }
+  function commitComparisonScenarioOrderFromDom(a){
+    const host=$('lflScenarioCards');if(!host)return false;
+    const ids=[...host.querySelectorAll('.lflScenarioCard[data-scenario-id]')].map(card=>card.dataset.scenarioId).filter(Boolean),current=state.customCompare.scenarios||[];
+    if(ids.length!==current.length)return false;
+    const before=current.map(item=>item.id).join('\u001f'),next=reorderComparisonScenarios(current,ids);
+    if(next.map(item=>item.id).join('\u001f')===before)return false;
+    state.customCompare.scenarios=next;state.customCompare.scenariosSeeded=true;
+    saveCustomCompare();lflScenarioCache.clear();renderCustomCompare(a||state.analysis||compute());
+    return true;
+  }
   function renderComparisonScenarioCards(a,results){
     const host=$('lflScenarioCards');if(!host)return;
     host.innerHTML=results.map((result,index)=>{
       const hasComparable=result.priceChange!=null,filters=scenarioScopeParts(result),periodCurrent=scenarioPeriodLabel(result.currentSeason,result.currentMonths,result.currentDateField),periodPrevious=scenarioPeriodLabel(result.compareSeason,result.compareMonths,result.compareDateField);
-      return `<article class="lflScenarioCard${hasComparable?'':' hasNoData'}" data-scenario-id="${esc(result.id)}"><div class="lflScenarioCardHead"><div><span class="lflScenarioIndex">${index+1}</span><strong>${esc(result.name)}</strong></div><div class="lflScenarioCardActions"><button type="button" class="lflScenarioIconBtn" data-scenario-edit="${esc(result.id)}" title="${esc(isEn()?'Edit comparison':'Karşılaştırmayı düzenle')}"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="lflScenarioIconBtn" data-scenario-clone="${esc(result.id)}" title="${esc(isEn()?'Duplicate':'Çoğalt')}"><svg class="ic"><use href="#i-copy"/></svg></button><button type="button" class="lflScenarioIconBtn isDanger" data-scenario-delete="${esc(result.id)}" title="${esc(isEn()?'Delete':'Sil')}"><svg class="ic"><use href="#i-trash"/></svg></button></div></div><div class="lflScenarioPeriods"><div><small>${esc(isEn()?'Current':'Güncel')}</small><span>${esc(periodCurrent)}</span></div><svg class="ic"><use href="#i-chevron-right"/></svg><div><small>${esc(isEn()?'Comparison':'Kıyas')}</small><span>${esc(periodPrevious)}</span></div></div><div class="lflScenarioScopeChips">${filters.map(text=>`<span>${esc(text)}</span>`).join('')}</div><div class="lflScenarioResult"><div><small>${esc(isEn()?'Current weighted FOB':'Güncel ağırlıklı FOB')}</small><strong>${moneySummary(result.current)}</strong><em>${integer(result.currentQty)} ${esc(isEn()?'units':'adet')}</em></div><div><small>${esc(isEn()?'Comparison weighted FOB':'Kıyas ağırlıklı FOB')}</small><strong>${moneySummary(result.previous)}</strong><em>${integer(result.previousQty)} ${esc(isEn()?'units':'adet')}</em></div><div class="lflScenarioDelta ${tablePriceClass(result.priceChange)}"><small>LFL</small><strong>${comparablePct(result.priceChange)}</strong><em>${hasComparable?esc(result.priceChange<0?(isEn()?'Improvement':'İyileşme'):(isEn()?'Increase':'Artış')):esc(isEn()?'No comparable data':'Kıyaslanacak veri yok')}</em></div></div></article>`;
+      return `<article class="lflScenarioCard${hasComparable?'':' hasNoData'}" data-scenario-id="${esc(result.id)}"><div class="lflScenarioCardHead"><div class="lflScenarioCardDrag" draggable="true" data-scenario-drag="${esc(result.id)}" title="${esc(isEn()?'Drag to reorder':'Sürükleyerek sırala')}"><span class="lflScenarioIndex">${index+1}</span><strong>${esc(result.name)}</strong></div><div class="lflScenarioCardActions"><button type="button" class="lflScenarioIconBtn" data-scenario-edit="${esc(result.id)}" title="${esc(isEn()?'Edit comparison':'Karşılaştırmayı düzenle')}"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="lflScenarioIconBtn" data-scenario-clone="${esc(result.id)}" title="${esc(isEn()?'Duplicate':'Çoğalt')}"><svg class="ic"><use href="#i-copy"/></svg></button><button type="button" class="lflScenarioIconBtn isDanger" data-scenario-delete="${esc(result.id)}" title="${esc(isEn()?'Delete':'Sil')}"><svg class="ic"><use href="#i-trash"/></svg></button></div></div><div class="lflScenarioPeriods"><div><small>${esc(isEn()?'Current':'Güncel')}</small><span>${esc(periodCurrent)}</span></div><svg class="ic"><use href="#i-chevron-right"/></svg><div><small>${esc(isEn()?'Comparison':'Kıyas')}</small><span>${esc(periodPrevious)}</span></div></div><div class="lflScenarioScopeChips">${filters.map(text=>`<span>${esc(text)}</span>`).join('')}</div><div class="lflScenarioResult"><div><small>${esc(isEn()?'Current weighted FOB':'Güncel ağırlıklı FOB')}</small><strong>${moneySummary(result.current)}</strong><em>${integer(result.currentQty)} ${esc(isEn()?'units':'adet')}</em></div><div><small>${esc(isEn()?'Comparison weighted FOB':'Kıyas ağırlıklı FOB')}</small><strong>${moneySummary(result.previous)}</strong><em>${integer(result.previousQty)} ${esc(isEn()?'units':'adet')}</em></div><div class="lflScenarioDelta ${tablePriceClass(result.priceChange)}"><small>LFL</small><strong>${comparablePct(result.priceChange)}</strong><em>${hasComparable?esc(result.priceChange<0?(isEn()?'Improvement':'İyileşme'):(isEn()?'Increase':'Artış')):esc(isEn()?'No comparable data':'Kıyaslanacak veri yok')}</em></div></div></article>`;
     }).join('');
     host.querySelectorAll('[data-scenario-edit]').forEach(btn=>btn.addEventListener('click',()=>openComparisonScenarioEditor(btn.dataset.scenarioEdit)));
     host.querySelectorAll('[data-scenario-clone]').forEach(btn=>btn.addEventListener('click',()=>cloneComparisonScenario(btn.dataset.scenarioClone,a)));
     host.querySelectorAll('[data-scenario-delete]').forEach(btn=>btn.addEventListener('click',()=>deleteComparisonScenario(btn.dataset.scenarioDelete,a)));
+    let draggedId='',dropCommitted=false;
+    host.querySelectorAll('[data-scenario-drag]').forEach(handle=>{
+      handle.addEventListener('dragstart',event=>{
+        draggedId=handle.dataset.scenarioDrag||'';dropCommitted=false;
+        handle.closest('.lflScenarioCard')?.classList.add('isDragging');host.classList.add('isScenarioDragging');
+        if(event.dataTransfer){event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',draggedId);}
+      });
+      handle.addEventListener('dragend',()=>{
+        host.classList.remove('isScenarioDragging');
+        host.querySelectorAll('.lflScenarioCard').forEach(card=>card.classList.remove('isDragging','isDragTarget'));
+        if(!dropCommitted)renderComparisonScenarioCards(a,results);
+        draggedId='';dropCommitted=false;
+      });
+    });
+    host.ondragover=event=>{
+      if(!draggedId)return;
+      event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect='move';
+      const target=event.target?.closest?.('.lflScenarioCard'),dragged=[...host.querySelectorAll('.lflScenarioCard')].find(card=>card.dataset.scenarioId===draggedId);
+      if(!target||!dragged||target===dragged)return;
+      host.querySelectorAll('.lflScenarioCard.isDragTarget').forEach(card=>card.classList.remove('isDragTarget'));target.classList.add('isDragTarget');
+      const rect=target.getBoundingClientRect(),midY=rect.top+rect.height/2,midX=rect.left+rect.width/2,useHorizontal=Math.abs(event.clientY-midY)<rect.height*.35,before=useHorizontal?event.clientX<midX:event.clientY<midY;
+      host.insertBefore(dragged,before?target:target.nextSibling);
+    };
+    host.ondrop=event=>{
+      if(!draggedId)return;
+      event.preventDefault();dropCommitted=true;host.classList.remove('isScenarioDragging');commitComparisonScenarioOrderFromDom(a);
+    };
   }
   function closeComparisonScenarioEditor(){const modal=$('lflScenarioEditor');if(modal){modal.hidden=true;modal.setAttribute('aria-hidden','true');}document.body.classList.remove('lflScenarioEditorOpen');state.customCompare.editingId='';state.customCompare.editorDraft=null;}
   function openComparisonScenarioEditor(id='',fallback=null){
