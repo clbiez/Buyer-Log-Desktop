@@ -124,6 +124,27 @@ test('8 · aynı İstanbul koordinatındaki semboller birbirini kapatmaz ve tek 
   assert.deepEqual(alone.map(s=>[s.x,s.y,s.displaced]),[[10,10,false],[200,200,false]]);
 });
 
+test('8b · yakın araçlar düşük zoomda kümelenir, yüksek zoomda tekilleşir',()=>{
+  const make=(id,x,mode,country)=>({id,x,y:100,kind:'vehicle',vehicle:{id,mode,records:[{id:'r-'+id,country,mode,origin:{name:country}}]}});
+  const symbols=[make('a',100,'sea','Bangladesh'),make('b',122,'air','India'),make('c',190,'road','Pakistan')];
+  const compact=flow.clusterVehicleSymbols(symbols,30);
+  assert.equal(compact.length,2);
+  const cluster=compact.find(item=>item.kind==='vehicleCluster');assert.ok(cluster);assert.equal(cluster.vehicles.length,2);assert.equal(cluster.records.length,2);
+  const zoomed=flow.clusterVehicleSymbols(symbols,10);assert.equal(zoomed.length,3);assert.ok(zoomed.every(item=>item.kind==='vehicle'));
+  assert.ok(flow.vehicleClusterDistanceForZoom(1)>flow.vehicleClusterDistanceForZoom(16),'zoom arttıkça cluster yarıçapı küçülmeli');
+});
+
+test('8c · ortak rota aynı koridoru tek anahtarda toplar ve ülke + taşıma seçeneklerini üretir',()=>{
+  const a={mode:'sea',a:{lon:10,lat:20},b:{lon:20,lat:30}},b={mode:'sea',a:{lon:20,lat:30},b:{lon:10,lat:20}};
+  assert.equal(flow.routeCorridorKey(a),flow.routeCorridorKey(b),'aynı koridor ters yönde gelse de tek görsel hat olmalı');
+  const groups=flow.routeRecordGroups([
+    {id:'bd1',country:'Bangladesh',mode:'sea',origin:{name:'Bangladesh'}},
+    {id:'bd2',country:'Bangladesh',mode:'sea',origin:{name:'Bangladesh'}},
+    {id:'in1',country:'India',mode:'sea',origin:{name:'India'}},
+  ]);
+  assert.deepEqual(groups.map(g=>[g.country,g.mode,g.records.length]),[['Bangladesh','sea',2],['India','sea',1]]);
+});
+
 test('9-10 · CP ve Orders haritası grid görünür satırlarından değil tüm veri kümesinden beslenir',()=>{
   assert.doesNotMatch(SOURCE,/cpTable|ordersTable|tableRows\(/,'harita grid DOM satırlarını okumamalı');
   assert.match(APP,/window\.BLGlobalFlowDataProviders=\{/);
