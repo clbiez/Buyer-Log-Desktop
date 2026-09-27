@@ -29,11 +29,11 @@ test('Get OAB reconnects through open Edge/Chrome and retries the failed request
 });
 
 test('OAB renderer progress text describes the external browser flow', () => {
-  const body = between(OAB, 'function oabAuthErrorMessage', 'function oabToast');
+  const body = between(OAB, 'function oabAuthErrorMessage', '/* ================================================================\n     v7.20');
   assert.match(body, /Edge\/Chrome/);
   assert.match(body, /Remote Debugging/);
   assert.match(body, /tek OAB sekmesi açacak/);
-  assert.doesNotMatch(body, /Buyer Log giriş ekranını açacak/);
+  assert.doesNotMatch(body, /kendi giriş ekranını açacak|Buyer Log giriş ekranını açacak/);
 });
 
 test('OAB auth status comes from the browser connector', () => {
