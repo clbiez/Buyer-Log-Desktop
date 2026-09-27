@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.148",
-  "commit_sha": "5acf17cebf14de2150d60e6d76e2ceaccb5dc401",
-  "release_notes": "Buyer Log 7.0.148: Earth 3D artık varsayılan olarak ücretsiz ve anahtarsız NASA GIBS görüntülerini kullanır. NASA Kabartmalı Dünya ve NASA Blue Marble modları eklendi; tamamen çevrimdışı yerel küre korunur. Google Map Tiles yalnız isteğe bağlı sağlayıcı olarak bırakıldı; Google anahtarı yoksa ücretli modlar API anahtarı istemek yerine ücretsiz NASA görünümüne düşer. Moderatör sağlayıcı ayarları Free / Offline / optional Google olarak güncellendi. Mevcut Global Flow rota, araç, clustering, hover ve seçim davranışları korunmuş, tam Buyer Log regression paketi başarıyla geçmiştir."
+  "version": "7.0.149",
+  "commit_sha": "e156e3b2370d952a3e217d5a01613118ab9b01ba",
+  "release_notes": "Buyer Log 7.0.149: Data Matching Rules alanında ASAS ve IAS veritabanı sütun seçicileri artık yalnız Buyer Log Field Mapping başlıklarıyla sınırlı değildir. Kullanıcı sütun alanını açtığında seçilen database kaynağının gerçek şeması lazy olarak okunur ve database’deki tüm erişilebilir sütunlar tablo adıyla birlikte seçilebilir. Gereksiz maliyeti önlemek için yalnız seçilen kaynak taranır; şema okunamazsa mevcut Field Mapping listesi ve manuel giriş desteği korunur. İlgili regresyon testleri eklenmiş ve tam Buyer Log test paketi başarıyla geçmiştir."
 }
