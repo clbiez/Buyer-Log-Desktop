@@ -37,4 +37,4 @@
 .gfWorkingCard canvas{width:64px;height:64px;color:var(--acc-ink)}
 .gfWorkingCard b{font-size:11px}.gfWorkingCard span{font-size:10px;color:var(--muted)}
 .globalFlowTooltip{width:230px;line-height:1.35}
-.globalFlowCanvasWrap{cursor:crosshair}.globalFlowCanvasWrap:active{cursor:grabbing}
+.globalFlowCanvasWrap{cursor:grab;overscroll-behavior:contain}.globalFlowCanvasWrap:active{cursor:grabbing}
