@@ -193,7 +193,8 @@
     mappingBusy = true; mappingMessage = ''; render();
     try {
       const url = `/api/horizon/filter-mapping?target=${encodeURIComponent(context.moduleId)}`
-        + `&from=${encodeURIComponent(context.mapFrom.role)}&to=${encodeURIComponent(context.mapFrom.toRole)}`;
+        + `&from=${encodeURIComponent(context.mapFrom.role)}&to=${encodeURIComponent(context.mapFrom.toRole)}`
+        + `&fromSourceId=${encodeURIComponent(context.mapFrom.sourceId || '')}&toSourceId=${encodeURIComponent(context.sourceId || '')}`;
       const response = await fetch(url, { cache: 'no-store' });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || T('Eşleme üretilemedi.', 'Could not build the mapping.'));
@@ -304,9 +305,11 @@
     const physicalField = meta && meta.dynamic && (meta.table || meta.name)
       ? [meta.table, meta.name].filter(Boolean).join(' · ')
       : '';
+    const livePhysicalAvailable = fieldsFor().some(entry => entry && entry.dynamic && entry.table && entry.name);
     const stalePhysical = condition.field && !meta && (condition.table || condition.name)
       ? [condition.table, condition.name].filter(Boolean).join(' · ')
       : '';
+    const logicalOnly = condition.field && meta && !meta.dynamic && livePhysicalAvailable;
 
     const values = (condition.values || []).map((value, valueIndex) =>
       `<button type="button" class="dmfChip" data-drop-value="${groupIndex}:${index}:${valueIndex}"
@@ -318,6 +321,7 @@
         <span>${condition.field ? esc(meta ? (en() ? meta.en : meta.tr) || condition.field : condition.field)
           : `<em>${esc(T('alan seç', 'select field'))}</em>`}</span>
         ${physicalField ? `<span class="dmfFieldPhysical">${esc(physicalField)}</span>` : ''}
+        ${logicalOnly ? `<span class="dmfFieldPhysical is-warn">⚠ ${esc(T('mantıksal alan · canlı database sütunu seçilmeli', 'logical field · select a live database column'))}</span>` : ''}
         ${stalePhysical ? `<span class="dmfFieldPhysical is-warn">⚠ ${esc(stalePhysical)} · ${esc(T('canlı şemada doğrulanamadı', 'not verified in live schema'))}</span>` : ''}
       </button>
       <select class="dmfOp" data-op="${groupIndex}:${index}">
@@ -554,8 +558,13 @@
     const pickField = event.target.closest('[data-pick-field]');
     if (pickField) {
       const condition = conditionAt(pickField.dataset.pickField);
-      /* TÜM şema sütunları listelenir, yalnız eşlenmiş alanlar değil (§17). */
-      const entries = fieldsFor().map(entry => ({
+      /* Canlı şema varsa yalnız GERÇEK fiziksel database sütunları seçilir.
+         Mantıksal Buyer Log alanını yeniden seçmek eski tablo/sütun hatasını
+         tekrar üretirdi. Şema yoksa geriye dönük olarak mantıksal liste kalır. */
+      const allFields = fieldsFor();
+      const physicalFields = allFields.filter(entry => entry && entry.dynamic && entry.table && entry.name);
+      const selectableFields = physicalFields.length ? physicalFields : allFields;
+      const entries = selectableFields.map(entry => ({
         value: entry.header,
         label: (en() ? entry.en : entry.tr) || entry.header,
         hint: entry.dynamic
