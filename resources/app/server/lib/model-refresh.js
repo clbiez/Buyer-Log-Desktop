@@ -103,6 +103,78 @@ function normalizedConnectionMapping(item) {
   return { mapping, invalidHeaders };
 }
 
+/* v10.14 — ÇALIŞMA ZAMANI FIELD MAPPING ONARIMI.
+ *
+ * Tabular model şeması, kaydedilmiş eşlemeden sonra değişebilir. Bu durumda
+ * DAX motoru "Column 'X' in table 'Y' cannot be found" der; eski davranış
+ * yalnız ham hatayı gösteriyordu. Burada hata, onu üreten GERÇEK bağlantı ve
+ * saklanmış Buyer Log alanıyla ilişkilendirilir. İstemci böylece doğru kaynağın
+ * Field Mapping düzenleyicisini tek tıkla açabilir.
+ *
+ * Tahmin yapılmaz: fiziksel sütun kayıtlı mapping/cpColumns içinde bulunamıyorsa
+ * veya rol kataloğunda birebir başlık/takma ad değilse onarım eylemi üretilmez.
+ */
+function fieldMappingRepairFromError(item, error) {
+  const message = String(error && (error.publicMessage || error.message) || error || '');
+  const match = message.match(/Column\s+['"]([^'"]+)['"]\s+in\s+table\s+['"]([^'"]+)['"]\s+cannot\s+be\s+found/i)
+    || message.match(/Column\s+['"]([^'"]+)['"][\s\S]{0,120}?table\s+['"]([^'"]+)['"]/i);
+  if (!match) return null;
+
+  const missingColumn = String(match[1] || '').trim();
+  const missingTable = String(match[2] || '').trim();
+  if (!missingColumn) return null;
+
+  const fold = value => String(value == null ? '' : value)
+    .trim().normalize('NFC').toLocaleUpperCase('tr-TR');
+  const role = normalizedRole(item);
+  const normalized = normalizedConnectionMapping(item);
+  const entries = Object.entries(normalized.mapping || {});
+  const samePhysical = ([, entry]) => entry && fold(entry.name) === fold(missingColumn)
+    && (!missingTable || !entry.table || fold(entry.table) === fold(missingTable));
+  const sameColumn = ([, entry]) => entry && fold(entry.name) === fold(missingColumn);
+
+  let matched = entries.find(samePhysical) || entries.find(sameColumn) || null;
+
+  // CP'ye taşınan ilave model sütunları da aynı DAX'a katılır. Bunlardan biri
+  // silindiyse kanonik mapping listesinde olmayabilir; yine doğru başlığı bul.
+  if (!matched) {
+    const extra = (Array.isArray(item && item.cpColumns) ? item.cpColumns : []).find(column =>
+      column && fold(column.name) === fold(missingColumn)
+      && (!missingTable || !column.table || fold(column.table) === fold(missingTable)));
+    if (extra && extra.header) {
+      matched = [String(extra.header), {
+        table: String(extra.table || missingTable || ''),
+        name: String(extra.name || missingColumn),
+        kind: extra.kind === 'measure' ? 'measure' : 'column',
+      }];
+    }
+  }
+
+  const fields = modelFields.fieldsForRole(role);
+  if (!matched) {
+    const field = fields.find(candidate =>
+      [candidate.header, ...(candidate.aliases || [])].some(name => fold(name) === fold(missingColumn)));
+    if (field) matched = [field.header, { table: missingTable, name: missingColumn, kind: 'column' }];
+  }
+  if (!matched) return null;
+
+  const [header, entry] = matched;
+  const field = fields.find(candidate => candidate.header === header) || null;
+  return {
+    kind: 'field-mapping',
+    reason: 'missing-column',
+    sourceId: String(item && item.id || ''),
+    sourceName: String(item && (item.name || item.catalog || item.server) || ''),
+    role,
+    header: String(header || ''),
+    table: String(entry && entry.table || missingTable || ''),
+    column: String(entry && entry.name || missingColumn || ''),
+    expected: field ? [field.header, ...(field.aliases || [])].slice(0, 6) : [String(header || '')],
+    required: Boolean(field && field.required),
+    targets: Array.isArray(item && item._scopeTargets) ? item._scopeTargets.slice() : [],
+  };
+}
+
 /**
  * v3.46'daki depolama hatası eşleme nesnelerini "[object Object]" metnine
  * çevirebildi. Refresh sırasında kullanıcıdan tekrar seçim istemek yerine model
@@ -470,6 +542,17 @@ async function queryConnectionRows(item, options = {}) {
       : await execute();
   } catch (error) {
     if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'model-query-failed', timestampMs:queryStartedMs, durationMs:Date.now() - queryStartedMs, error:String(error && error.message || error) });
+    const repairAction = fieldMappingRepairFromError(item, error);
+    if (repairAction && repairAction.sourceId && repairAction.header) {
+      throw new ModelRefreshError(
+        String(error && (error.publicMessage || error.message) || error),
+        'MODEL_REFRESH_FIELD_MAPPING_REQUIRED',
+        422,
+        {
+          repairAction,
+          originalCode: String(error && error.code || ''),
+        });
+    }
     throw error;
   }
   const providerMs = Number(result.elapsedMs) || 0;
@@ -994,6 +1077,7 @@ module.exports = {
   effectiveScopes,
   normalizedRole,
   normalizedConnectionMapping,
+  fieldMappingRepairFromError,
   ensureConnectionMapping,
   alignHorizonWithMapping,
   buildConnectionQuery, resolveColumnTypes,
