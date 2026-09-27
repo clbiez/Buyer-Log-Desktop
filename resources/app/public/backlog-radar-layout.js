@@ -6,12 +6,15 @@
   if(!root||!root.document)return;
 
   const STORAGE_KEY='lcw.backlog.radar.layout.v1';
+  const CHART_TYPES=['radar','bar','line'];
   const DEFAULTS={
     pivotShare:.5,
     radarFirst:false,
     pivotCollapsed:false,
     pivotRadarCollapsed:false,
     riskCollapsed:false,
+    pivotChartType:'radar',
+    riskChartType:'radar',
     pivotHidden:[],
     riskHidden:[],
   };
@@ -29,6 +32,8 @@
       state.pivotShare=Math.max(.28,Math.min(.72,Number(state.pivotShare)||.5));
       state.pivotHidden=Array.isArray(state.pivotHidden)?state.pivotHidden.map(String):[];
       state.riskHidden=Array.isArray(state.riskHidden)?state.riskHidden.map(String):[];
+      state.pivotChartType=CHART_TYPES.includes(state.pivotChartType)?state.pivotChartType:'radar';
+      state.riskChartType=CHART_TYPES.includes(state.riskChartType)?state.riskChartType:'radar';
     }catch(_){state={...DEFAULTS};}
   }
   function save(){try{store()?.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
@@ -47,6 +52,19 @@
   }
   function fmt(value){return Math.round(Number(value)||0).toLocaleString(lang()==='en'?'en-GB':'tr-TR');}
   function hiddenKey(kind){return kind==='risk'?'riskHidden':'pivotHidden';}
+  function chartTypeKey(kind){return kind==='risk'?'riskChartType':'pivotChartType';}
+  function chartTypeSwitch(kind){
+    const current=state[chartTypeKey(kind)]||'radar',labels=lang()==='en'?{radar:'Radar',bar:'Bar',line:'Line'}:{radar:'Radar',bar:'Sütun',line:'Çizgi'};
+    return '<div class="backlogChartTypeSwitch" role="group" aria-label="'+esc(L('Grafik tipi','Chart type'))+'">'
+      +CHART_TYPES.map(type=>'<button type="button" data-bl-chart-type="'+type+'" data-chart-kind="'+kind+'" class="'+(current===type?'is-active':'')+'" aria-pressed="'+(current===type?'true':'false')+'">'+esc(labels[type])+'</button>').join('')
+      +'</div>';
+  }
+  function syncChartTypeSwitch(card,kind){
+    const current=state[chartTypeKey(kind)]||'radar';
+    card?.querySelectorAll('[data-bl-chart-type][data-chart-kind="'+kind+'"]').forEach(button=>{
+      const active=button.dataset.blChartType===current;button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',String(active));
+    });
+  }
   function visibleItems(kind,items){
     const hidden=new Set(state[hiddenKey(kind)]||[]);
     return (items||[]).filter(item=>!hidden.has(String(item&&item.label||'')));
@@ -90,6 +108,40 @@
     return svg;
   }
 
+  function cartesianSvg(items,label,type){
+    const list=(items||[]).filter(item=>item&&String(item.label||'').trim()).slice(0,10);
+    if(!list.length)return '<div class="blRadarEmpty">'+esc(L('Grafik için veri yok.','No data for the chart.'))+'</div>';
+    const width=620,height=390,left=54,right=18,top=22,bottom=92,plotW=width-left-right,plotH=height-top-bottom,max=Math.max(1,...list.map(item=>Number(item.value)||0));
+    const x=index=>left+((index+.5)*plotW/list.length),y=value=>top+plotH-(Math.max(0,Number(value)||0)/max)*plotH;
+    let svg='<svg class="blRadarSvg blCartesianSvg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+esc(label)+'">';
+    for(let tick=0;tick<=4;tick++){
+      const ratio=tick/4,yy=top+plotH-(ratio*plotH),value=max*ratio;
+      svg+='<line class="blChartGrid" x1="'+left+'" y1="'+yy.toFixed(1)+'" x2="'+(width-right)+'" y2="'+yy.toFixed(1)+'"/>';
+      svg+='<text class="blChartYLabel" x="'+(left-8)+'" y="'+(yy+3).toFixed(1)+'" text-anchor="end">'+esc(fmt(value))+'</text>';
+    }
+    list.forEach((item,index)=>{
+      const xx=x(index),labelText=String(item.label||'').length>18?String(item.label).slice(0,17)+'…':String(item.label||'');
+      svg+='<text class="blChartXLabel" x="'+xx.toFixed(1)+'" y="'+(height-bottom+22)+'" text-anchor="end" transform="rotate(-28 '+xx.toFixed(1)+' '+(height-bottom+22)+')"><title>'+esc(item.label)+'</title>'+esc(labelText)+'</text>';
+    });
+    if(type==='bar'){
+      const groupW=plotW/list.length,barW=Math.max(8,Math.min(34,groupW*.54));
+      list.forEach((item,index)=>{
+        const raw=Number(item.value)||0,yy=y(raw),h=Math.max(0,top+plotH-yy),xx=x(index)-barW/2;
+        svg+='<rect class="blChartBar" x="'+xx.toFixed(1)+'" y="'+yy.toFixed(1)+'" width="'+barW.toFixed(1)+'" height="'+h.toFixed(1)+'"><title>'+esc(item.label+': '+fmt(raw))+'</title></rect>';
+      });
+    }else{
+      const pts=list.map((item,index)=>x(index).toFixed(1)+','+y(item.value).toFixed(1)).join(' ');
+      if(list.length>1)svg+='<polyline class="blChartLine" points="'+pts+'"/>';
+      list.forEach((item,index)=>{
+        const raw=Number(item.value)||0;
+        svg+='<circle class="blChartPoint" cx="'+x(index).toFixed(1)+'" cy="'+y(raw).toFixed(1)+'" r="4"><title>'+esc(item.label+': '+fmt(raw))+'</title></circle>';
+      });
+    }
+    svg+='</svg>';
+    return svg;
+  }
+  function chartSvg(items,label,type){return type==='radar'?radarSvg(items,label):cartesianSvg(items,label,type);}
+
   function pivotItems(){
     const table=root.document.getElementById('backlogTreeTable'),body=root.document.getElementById('backlogTreeBody');
     if(!table||!body)return [];
@@ -105,10 +157,11 @@
     const body=pivotRadarCard.querySelector('[data-pivot-radar-body]'),items=pivotItems();
     if(!body)return;
     syncRadarFilter(pivotRadarCard,'pivot',items);
-    const shown=visibleItems('pivot',items),signature=JSON.stringify({shown,hidden:state.pivotHidden});
+    syncChartTypeSwitch(pivotRadarCard,'pivot');
+    const chartType=state.pivotChartType,shown=visibleItems('pivot',items),signature=JSON.stringify({shown,hidden:state.pivotHidden,chartType});
     if(body.dataset.signature===signature)return;
     body.dataset.signature=signature;
-    body.innerHTML=radarSvg(shown,L('Backlog durum radarı','Backlog status radar'));
+    body.innerHTML=chartSvg(shown,L('Backlog durum grafiği','Backlog status chart'),chartType);
   }
   function schedulePivotRadar(){
     if(pivotScheduled)return;pivotScheduled=true;
@@ -147,6 +200,11 @@
   function swapPivot(){state.radarFirst=!state.radarFirst;save();applyPivotLayout();}
   function bindPivotControls(){
     pivotWorkspace?.addEventListener('click',event=>{
+      const typeButton=event.target.closest('[data-bl-chart-type][data-chart-kind="pivot"]');
+      if(typeButton){
+        const type=String(typeButton.dataset.blChartType||'');if(!CHART_TYPES.includes(type))return;
+        state.pivotChartType=type;save();syncChartTypeSwitch(pivotRadarCard,'pivot');schedulePivotRadar();return;
+      }
       const button=event.target.closest('[data-bl-layout]');if(!button)return;
       const action=button.dataset.blLayout;
       if(action==='pivot-collapse'){state.pivotCollapsed=!state.pivotCollapsed;save();applyPivotLayout();}
@@ -194,8 +252,9 @@
     panel.insertBefore(pivotHead,panel.firstChild);
 
     pivotRadarCard=root.document.createElement('div');pivotRadarCard.className='panel backlogRadarCard';pivotRadarCard.dataset.pivotRadarCard='1';
-    pivotRadarCard.innerHTML='<div class="backlogWorkspaceCardHead"><div><strong>'+esc(L('Durum Radarı','Status Radar'))+'</strong><span>'+esc(L('Yalnız ana başlıklar','Top-level groups only'))+'</span></div><div class="backlogWorkspaceCardActions">'
-      +iconButton('radar-filter',L('Radar filtresi','Radar filter'),'⌕')
+    pivotRadarCard.innerHTML='<div class="backlogWorkspaceCardHead"><div><strong>'+esc(L('Durum Grafiği','Status Chart'))+'</strong><span>'+esc(L('Yalnız ana başlıklar','Top-level groups only'))+'</span></div><div class="backlogWorkspaceCardActions">'
+      +chartTypeSwitch('pivot')
+      +iconButton('radar-filter',L('Grafik filtresi','Chart filter'),'⌕')
       +iconButton('swap',L('Pivot ile yer değiştir','Swap with pivot'),'⇄')
       +iconButton('radar-collapse',L('Radarı aç / kapat','Expand / collapse radar'),'▾')+'</div></div><div class="backlogRadarFilter" data-radar-filter-panel="pivot" hidden></div><div class="backlogRadarBody" data-pivot-radar-body></div>';
     pivotWorkspace.appendChild(pivotRadarCard);
@@ -231,10 +290,16 @@
     let card=host.querySelector('[data-risk-radar-card]');
     if(!card){
       card=root.document.createElement('div');card.className='bdaRadarCard';card.dataset.riskRadarCard='1';
-      card.innerHTML='<div class="backlogWorkspaceCardHead"><div><strong>'+esc(L('Teslimat Risk Radarı','Delivery Risk Radar'))+'</strong><span>'+esc(L('Ekrandaki risk etiketleri','Current risk labels'))+'</span></div><div class="backlogWorkspaceCardActions">'
-        +iconButton('risk-filter',L('Radar filtresi','Radar filter'),'⌕')
+      card.innerHTML='<div class="backlogWorkspaceCardHead"><div><strong>'+esc(L('Teslimat Risk Grafiği','Delivery Risk Chart'))+'</strong><span>'+esc(L('Ekrandaki risk etiketleri','Current risk labels'))+'</span></div><div class="backlogWorkspaceCardActions">'
+        +chartTypeSwitch('risk')
+        +iconButton('risk-filter',L('Grafik filtresi','Chart filter'),'⌕')
         +iconButton('risk-collapse',L('Radarı aç / kapat','Expand / collapse radar'),'▾')+'</div></div><div class="backlogRadarFilter" data-radar-filter-panel="risk" hidden></div><div class="backlogRadarBody" data-risk-radar-body></div>';
       card.addEventListener('click',event=>{
+        const typeButton=event.target.closest('[data-bl-chart-type][data-chart-kind="risk"]');
+        if(typeButton){
+          const type=String(typeButton.dataset.blChartType||'');if(!CHART_TYPES.includes(type))return;
+          state.riskChartType=type;save();syncChartTypeSwitch(card,'risk');renderRiskRadar();return;
+        }
         const button=event.target.closest('[data-bl-layout]');if(!button)return;
         const action=button.dataset.blLayout;
         if(action==='risk-collapse'){state.riskCollapsed=!state.riskCollapsed;save();renderRiskRadar();}
@@ -252,9 +317,9 @@
     card.classList.toggle('is-collapsed',!!state.riskCollapsed);
     card.querySelector('[data-bl-layout="risk-collapse"]')?.setAttribute('aria-expanded',String(!state.riskCollapsed));
     const body=card.querySelector('[data-risk-radar-body]'),items=riskItems(host);
-    syncRadarFilter(card,'risk',items);
-    const shown=visibleItems('risk',items),signature=JSON.stringify({shown,hidden:state.riskHidden});
-    if(body&&body.dataset.signature!==signature){body.dataset.signature=signature;body.innerHTML=radarSvg(shown,L('Teslimat risk radarı','Delivery risk radar'));}
+    syncRadarFilter(card,'risk',items);syncChartTypeSwitch(card,'risk');
+    const chartType=state.riskChartType,shown=visibleItems('risk',items),signature=JSON.stringify({shown,hidden:state.riskHidden,chartType});
+    if(body&&body.dataset.signature!==signature){body.dataset.signature=signature;body.innerHTML=chartSvg(shown,L('Teslimat risk grafiği','Delivery risk chart'),chartType);}
   }
   function scheduleRiskRadar(){
     if(riskScheduled)return;riskScheduled=true;

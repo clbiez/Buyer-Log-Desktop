@@ -63,3 +63,16 @@ test('Delivery Risk KPI labels and radar share a 50-50 workspace with a 3x2 KPI 
   assert.match(CSS,/\.bdaRadarCard\.is-collapsed \.backlogRadarBody/);
   assert.doesNotMatch(RADAR,/risk-up|risk-down/);
 });
+
+
+test('Backlog radars persist an independent radar, bar or line chart type',()=>{
+  assert.match(RADAR,/pivotChartType:'radar'/);
+  assert.match(RADAR,/riskChartType:'radar'/);
+  assert.match(RADAR,/data-bl-chart-type/);
+  assert.match(RADAR,/chartTypeSwitch\('pivot'\)/);
+  assert.match(RADAR,/chartTypeSwitch\('risk'\)/);
+  assert.match(RADAR,/chartSvg\(shown/);
+  assert.match(CSS,/\.backlogChartTypeSwitch/);
+  assert.match(CSS,/\.blChartBar/);
+  assert.match(CSS,/\.blChartLine/);
+});

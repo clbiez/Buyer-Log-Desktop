@@ -65,3 +65,14 @@ test('Every Overview radar has an independent persisted filter and label-safe ca
   assert.match(CSS, /\.ovRadarFilterPanel/);
   assert.match(CSS, /\.ovRadarSvg\{[^}]*max-width:760px[^}]*overflow:visible/);
 });
+
+
+test('Every Overview radar can switch independently between radar, bar and line', () => {
+  assert.deepEqual(radar.CHART_TYPES, ['radar','bar','line']);
+  assert.match(SOURCE, /data-radar-chart-type/);
+  assert.match(SOURCE, /renderCartesianSvg/);
+  assert.match(SOURCE, /chartType:CHART_TYPES\.includes\(saved\.chartType\)/);
+  assert.match(CSS, /\.ovChartTypeSwitch/);
+  assert.match(CSS, /\.ovRadarBar/);
+  assert.match(CSS, /\.ovRadarLine/);
+});

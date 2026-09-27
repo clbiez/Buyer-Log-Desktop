@@ -24,6 +24,18 @@
 .ovRadarPoint--f,.ovRadarLegendSwatch--f{fill:#0891b2;background:#0891b2;}
 .ovRadarPoint--g,.ovRadarLegendSwatch--g{fill:#64748b;background:#64748b;}
 .ovRadarSide{min-width:0;display:grid;gap:10px;align-content:center;overflow:visible;}
+.ovChartTypeSwitch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;padding:2px;border:1px solid var(--bl-stroke-subtle);border-radius:var(--bl-radius-control);background:var(--bl-surface-soft);}
+.ovChartTypeSwitch button{min-height:27px;padding:0 6px;border:0;border-radius:calc(var(--bl-radius-control) - 2px);background:transparent;color:var(--muted);font:600 var(--fs-xs)/1 var(--sans);cursor:pointer;}
+.ovChartTypeSwitch button:hover{background:var(--card2);color:var(--ink);}
+.ovChartTypeSwitch button.isActive{background:var(--bl-surface-panel);color:var(--acc-ink);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 32%,var(--bl-stroke-subtle));}
+.ovCartesianGrid{stroke:var(--bl-stroke-subtle);stroke-width:1;}
+.ovCartesianYAxisLabel{fill:var(--muted);font:500 10px/1 var(--mono);}
+.ovCartesianXAxisLabel{fill:var(--ink2);font:600 10px/1 var(--sans);}
+.ovRadarBar{stroke-width:1;vector-effect:non-scaling-stroke;opacity:.86;}
+.ovRadarBar.isClickable,.ovRadarPoint.isClickable{cursor:pointer;}
+.ovRadarBar--a{fill:var(--acc);stroke:var(--acc);}.ovRadarBar--b{fill:var(--green);stroke:var(--green);}.ovRadarBar--c{fill:#8b5cf6;stroke:#8b5cf6;}.ovRadarBar--d{fill:#d97706;stroke:#d97706;}.ovRadarBar--e{fill:#d14a61;stroke:#d14a61;}.ovRadarBar--f{fill:#0891b2;stroke:#0891b2;}.ovRadarBar--g{fill:#64748b;stroke:#64748b;}
+.ovRadarLine{fill:none;stroke-width:2;vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round;}
+.ovRadarLine--a{stroke:var(--acc);}.ovRadarLine--b{stroke:var(--green);}.ovRadarLine--c{stroke:#8b5cf6;}.ovRadarLine--d{stroke:#d97706;}.ovRadarLine--e{stroke:#d14a61;}.ovRadarLine--f{stroke:#0891b2;}.ovRadarLine--g{stroke:#64748b;}
 .ovRadarFilter{border:1px solid var(--bl-stroke-subtle);border-radius:var(--bl-radius-control);background:var(--bl-surface-soft);}
 .ovRadarFilter summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:30px;padding:5px 8px;color:var(--ink2);font:600 var(--fs-xs)/1.2 var(--sans);cursor:pointer;list-style:none;}
 .ovRadarFilter summary::-webkit-details-marker{display:none;}
