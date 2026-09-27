@@ -11,6 +11,8 @@
 
 const PREF_PREFIX='buyerlog.detailDrawer.columns.';
 const WIDTH_PREFIX='buyerlog.detailDrawer.width.';
+// Büyük detay kümelerinde tablo parça parça çizilir; Excel ve arama bütün satırlarla çalışır.
+const RENDER_CHUNK=300;
 const clean=value=>String(value==null?'':value).replace(/\s+/g,' ').trim();
 const safeFilePart=value=>clean(value).replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,90)||'BuyerLog_Detail';
 const escapeHtml=value=>clean(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -180,17 +182,25 @@ function imageCell(row,index){
     title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),allowEmpty:true
   });
 }
+function searchText(row,index){
+  if(!active.searchIndex)active.searchIndex=new Array(active.rows.length);
+  let text=active.searchIndex[index];
+  if(text==null){const locale=isEn()?'en-GB':'tr-TR';text=active.columns.map(col=>textValue(col,row).toLocaleLowerCase(locale)).join('\u0001');active.searchIndex[index]=text;}
+  return text;
+}
 function filteredRows(){
   if(!active)return[];
   const q=clean(active.search).toLocaleLowerCase(isEn()?'en-GB':'tr-TR');
   if(!q)return active.rows;
-  return active.rows.filter(row=>active.columns.some(col=>textValue(col,row).toLocaleLowerCase(isEn()?'en-GB':'tr-TR').includes(q)));
+  if(active.filterCache&&active.filterCache.q===q)return active.filterCache.rows;
+  const rows=active.rows.filter((row,index)=>searchText(row,index).includes(q));
+  active.filterCache={q,rows};return rows;
 }
 function currentColumns(){if(!active)return[];const set=new Set(active.visible);return active.columns.filter(col=>set.has(col.key));}
-function registerAssetScope(panel,rows){
+function registerAssetScope(panel,rows,imageIndex){
   const helper=root.BLDetailImages;if(!helper?.registerScope)return;
   try{
-    const index=helper.buildIndex?.();
+    const index=imageIndex||helper.buildIndex?.();
     helper.registerScope(panel,{
       contextType:'shared-detail-drawer',label:active.title,
       identities:rows.map((row,i)=>{
@@ -221,14 +231,16 @@ function renderTable(){
   const table=host.querySelector('[data-bl-detail-table]'),summary=host.querySelector('[data-bl-detail-summary]');
   if(!table)return;
   const rows=filteredRows(),columns=currentColumns(),helper=root.BLDetailImages;
-  const showImages=active.images&&Boolean(helper),imageIndex=showImages&&helper?.buildIndex?helper.buildIndex():null;
+  // Görsel indeksi bir kez kurulur ve varlık kapsamı kaydıyla paylaşılır.
+  const imageIndex=helper?.buildIndex?helper.buildIndex():null,showImages=active.images&&Boolean(helper);
+  const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,colspan=Math.max(1,columns.length+(showImages?1:0));
   table.querySelector('thead').innerHTML='<tr>'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>'<th>'+escapeHtml(col.label)+'</th>').join('')+'</tr>';
-  table.querySelector('tbody').innerHTML=rows.length?rows.map(row=>'<tr>'+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map(col=>{
+  table.querySelector('tbody').innerHTML=shown.length?shown.map(row=>'<tr>'+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map(col=>{
     if(typeof col.html==='function'){let html='';try{html=col.html(row)||'';}catch(_){}return '<td>'+html+'</td>';}
     const value=textValue(col,row);return '<td title="'+escapeHtml(value)+'">'+escapeHtml(value||'—')+'</td>';
-  }).join('')+'</tr>').join(''):'<tr><td class="blDetailEmpty" colspan="'+Math.max(1,columns.length+(showImages?1:0))+'">'+escapeHtml(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>';
+  }).join('')+'</tr>').join('')+(rest>0?'<tr><td class="blDetailMore" colspan="'+colspan+'"><button type="button" class="blDetailTool" data-bl-detail-more>'+escapeHtml(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+escapeHtml(L('satır kaldı','rows left'))+'</button></td></tr>':''):'<tr><td class="blDetailEmpty" colspan="'+colspan+'">'+escapeHtml(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>';
   if(summary)summary.textContent=(active.subtitle?active.subtitle+' · ':'')+rows.length.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+L('satır','rows');
-  registerAssetScope(host.querySelector('.blDetailDrawerPanel'),rows);
+  registerAssetScope(host.querySelector('.blDetailDrawerPanel'),rows,imageIndex);
 }
 function downloadBuffer(buffer,name,mime){
   const helper=root.BLDetailImages;
@@ -324,7 +336,14 @@ function render(){
   host.classList.add('is-open');host.setAttribute('aria-hidden','false');
   const panel=host.querySelector('.blDetailDrawerPanel');applyPanelWidth(panel);bindResize(panel);
   host.querySelectorAll('[data-bl-detail-close]').forEach(el=>el.addEventListener('click',close));
-  host.querySelector('[data-bl-detail-search]')?.addEventListener('input',event=>{active.search=event.target.value;renderTable();});
+  host.querySelector('[data-bl-detail-search]')?.addEventListener('input',event=>{
+    // Sorgu hemen state'e yazılır (Excel/yeniden çizim aynı sorguyu görür); yalnız tablo çizimi gecikir.
+    active.search=event.target.value;active.limit=RENDER_CHUNK;if(active.searchTimer)clearTimeout(active.searchTimer);
+    active.searchTimer=setTimeout(()=>{if(!active)return;active.searchTimer=0;renderTable();},120);
+  });
+  host.querySelector('[data-bl-detail-table]')?.addEventListener('click',event=>{
+    if(!event.target.closest('[data-bl-detail-more]')||!active)return;active.limit=(active.limit||RENDER_CHUNK)+RENDER_CHUNK;renderTable();
+  });
   host.querySelector('[data-bl-detail-images]')?.addEventListener('click',()=>{active.images=!active.images;render();});
   host.querySelector('[data-bl-detail-columns]')?.addEventListener('click',()=>{
     const panel=host.querySelector('[data-bl-detail-column-panel]');panel.hidden=!panel.hidden;if(!panel.hidden)renderColumnsPanel();
@@ -355,13 +374,13 @@ function open(options){
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
     rows,columns,visible:loadVisible(scope,page,columns),width:loadWidth(page),
-    images:input.images!==false,search:'',actions:Array.isArray(input.actions)?input.actions:[],
+    images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
   };
   render();
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
 }
-function close(){active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
+function close(){if(active&&active.searchTimer)clearTimeout(active.searchTimer);active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&active)close();});
 return {open,close,inferColumns,normalizeColumns,safeFilePart,isOpen:()=>Boolean(active)};
 });
