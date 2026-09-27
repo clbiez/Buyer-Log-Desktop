@@ -16,6 +16,35 @@ const {
 const SENSITIVE_KEY = /(?:password|pinHash|secret|token|session|cookie|credential|clientSecret|privateKey|loginFailures?|lockUntil)/i;
 const SENSITIVE_FILE = /(?:password|secret|token|session|cookie|credential|agent-ai-settings|agent-browser-settings|browser-debug-settings|browser-profiles|outlook-setup-settings|sync-settings|user-audit)/i;
 
+const USER_BACKUP_COMPONENTS = Object.freeze([
+  { id: 'preferences', labelTr: 'Arayüz ve kullanıcı tercihleri', labelEn: 'Interface & user preferences', paths: ['user/preferences.json', 'user/browser-storage.json'] },
+  { id: 'collection', labelTr: 'Collection', labelEn: 'Collection', paths: ['user/collection-workspace.json'] },
+  { id: 'views-filters', labelTr: 'Görünümler ve filtreler', labelEn: 'Views & filters', paths: ['user/views.json', 'user/filters.json'] },
+  { id: 'shipping', labelTr: 'Shipping Comparison', labelEn: 'Shipping Comparison', paths: ['user/shipping.json'] },
+  { id: 'refresh-history', labelTr: 'Yenileme geçmişi', labelEn: 'Refresh history', paths: ['user/refresh-history.json'] },
+  { id: 'source-data', labelTr: 'Kişisel kaynak dosyaları', labelEn: 'Personal source data', prefixes: ['user/source-data/', 'user/local-source-data/'] },
+  { id: 'cp-exfactory', labelTr: 'CP Tracker · Ex-Factory revizyonları', labelEn: 'CP Tracker · Ex-Factory revisions', paths: ['user/cp-ex-factory-revisions.json'], shared: true, moderatorOnly: true },
+]);
+const DEFAULT_USER_BACKUP_COMPONENTS = Object.freeze(USER_BACKUP_COMPONENTS.filter(item => !item.shared).map(item => item.id));
+
+function normalizeUserBackupSelection(selection, { allowShared = false } = {}) {
+  const source = Array.isArray(selection) ? selection : DEFAULT_USER_BACKUP_COMPONENTS;
+  const known = new Map(USER_BACKUP_COMPONENTS.map(item => [item.id, item]));
+  const normalized = [];
+  for (const raw of source) {
+    const id = String(raw || '').trim();
+    if (!id || normalized.includes(id)) continue;
+    const component = known.get(id);
+    if (!component) throw Object.assign(new Error('Bilinmeyen backup kapsamı: ' + id), { statusCode: 400, code: 'BACKUP_SCOPE_INVALID' });
+    if ((component.shared || component.moderatorOnly) && !allowShared) {
+      throw Object.assign(new Error(component.labelTr + ' yalnız moderatör tarafından yedeklenebilir.'), { statusCode: 403, code: 'BACKUP_SCOPE_FORBIDDEN' });
+    }
+    normalized.push(id);
+  }
+  if (!normalized.length) throw Object.assign(new Error('Backup için en az bir veri alanı seçin.'), { statusCode: 400, code: 'BACKUP_SCOPE_EMPTY' });
+  return normalized;
+}
+
 function safeId(value) { return String(value || 'user').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 80) || 'user'; }
 function dateStamp(value = new Date()) {
   const pad = n => String(n).padStart(2, '0');
@@ -68,21 +97,30 @@ function userProfile(snapshot, userId) {
   const all = [snapshot && snapshot.moderator, ...(Array.isArray(snapshot && snapshot.users) ? snapshot.users : [])].filter(Boolean);
   return all.find(item => String(item.id) === String(userId)) || { id: String(userId || '') };
 }
-async function userEntries({ user, browserStorage, accessSnapshot }) {
-  const id = safeId(user.id), entries = [
+async function userEntries({ user, browserStorage, accessSnapshot, components }) {
+  const id = safeId(user.id), selected = new Set(components), entries = [
+    // profile.json backup sahibini doğrulamak için her zaman bulunur; restore
+    // kapsamında seçilebilir bir sayfa verisi değildir.
     jsonEntry('user/profile.json', userProfile(accessSnapshot, user.id), 'data'),
-    jsonEntry('user/preferences.json', userPreferences.load(user.id), 'settings'),
-    jsonEntry('user/browser-storage.json', sanitizeBrowserStorage(browserStorage, user.id), 'settings'),
-    jsonEntry('user/collection-workspace.json', collectionWorkspaces.loadWorkspace(user.id), 'data'),
-    jsonEntry('user/views.json', db.loadViews(user.id), 'settings'),
-    jsonEntry('user/filters.json', db.loadFilterProfiles(user.id), 'settings'),
-    jsonEntry('user/shipping.json', db.loadShipping(user.id), 'data'),
-    // FX ortak iş verisidir; kişisel backup kullanıcının verisini geri yüklerken
-    // bütün kullanıcıların kur tablosunu değiştirmemelidir.
-    jsonEntry('user/refresh-history.json', db.loadRefreshHistory(user.id), 'data'),
   ];
-  await collectRoot(entries, path.join(SERVER_DATA_ROOT, 'user-source-data', id), 'user/source-data');
-  await collectRoot(entries, path.join(APP_DATA_ROOT, 'user-source-data', id), 'user/local-source-data');
+  if (selected.has('preferences')) {
+    entries.push(jsonEntry('user/preferences.json', userPreferences.load(user.id), 'settings'));
+    entries.push(jsonEntry('user/browser-storage.json', sanitizeBrowserStorage(browserStorage, user.id), 'settings'));
+  }
+  if (selected.has('collection')) entries.push(jsonEntry('user/collection-workspace.json', collectionWorkspaces.loadWorkspace(user.id), 'data'));
+  if (selected.has('views-filters')) {
+    entries.push(jsonEntry('user/views.json', db.loadViews(user.id), 'settings'));
+    entries.push(jsonEntry('user/filters.json', db.loadFilterProfiles(user.id), 'settings'));
+  }
+  if (selected.has('shipping')) entries.push(jsonEntry('user/shipping.json', db.loadShipping(user.id), 'data'));
+  // FX ortak iş verisidir; kişisel backup kullanıcının verisini geri yüklerken
+  // bütün kullanıcıların kur tablosunu değiştirmemelidir.
+  if (selected.has('refresh-history')) entries.push(jsonEntry('user/refresh-history.json', db.loadRefreshHistory(user.id), 'data'));
+  if (selected.has('source-data')) {
+    await collectRoot(entries, path.join(SERVER_DATA_ROOT, 'user-source-data', id), 'user/source-data');
+    await collectRoot(entries, path.join(APP_DATA_ROOT, 'user-source-data', id), 'user/local-source-data');
+  }
+  if (selected.has('cp-exfactory')) entries.push(jsonEntry('user/cp-ex-factory-revisions.json', db.cpExFactoryRevisionSnapshot(), 'data'));
   return entries;
 }
 async function fullEntries({ accessSnapshot, syncSettings, localDbFile }) {
@@ -102,12 +140,15 @@ async function fullEntries({ accessSnapshot, syncSettings, localDbFile }) {
   return entries;
 }
 function createBackupService({ appVersion, userAccess, syncSettings, localDb }) {
-  async function create({ mode = 'user', user, browserStorage = {}, onProgress = null }) {
+  async function create({ mode = 'user', user, browserStorage = {}, components = null, onProgress = null }) {
     const current = user || {}, full = mode === 'full';
     if (full && current.systemRole !== 'moderator') throw Object.assign(new Error('Tam Sistem Yedeği yalnız moderatör tarafından oluşturulabilir.'), { statusCode: 403, code: 'MODERATOR_REQUIRED' });
     const accessSnapshot = userAccess.backupSnapshot();
     const syncSnapshot = full ? await syncSettings.read() : null;
-    const entries = full ? await fullEntries({ accessSnapshot, syncSettings: syncSnapshot, localDbFile: localDb && (localDb.getFile ? localDb.getFile() : localDb.file) }) : await userEntries({ user: current, browserStorage, accessSnapshot });
+    const selectedComponents = full ? ['full-system'] : normalizeUserBackupSelection(components, { allowShared: current.systemRole === 'moderator' });
+    const entries = full
+      ? await fullEntries({ accessSnapshot, syncSettings: syncSnapshot, localDbFile: localDb && (localDb.getFile ? localDb.getFile() : localDb.file) })
+      : await userEntries({ user: current, browserStorage, accessSnapshot, components: selectedComponents });
     const stamp = dateStamp(), filename = full ? `BuyerLog_FullBackup_${stamp}.zip` : `BuyerLog_Backup_${safeId(current.username || current.displayName || current.id)}_${stamp}.zip`;
     return createBackupArchive({
       entries, filename, onProgress,
@@ -115,10 +156,11 @@ function createBackupService({ appVersion, userAccess, syncSettings, localDb }) 
         app_version: String(appVersion || ''), created_at: new Date().toISOString(), backup_type: full ? 'full' : 'user',
         user: sanitize({ id: current.id, username: current.username, displayName: current.displayName, systemRole: current.systemRole }),
         device: { hostname: os.hostname(), platform: process.platform, arch: process.arch },
+        scope_schema: 1, scope_components: selectedComponents,
       },
     });
   }
   return { create, sanitizeBrowserStorage };
 }
 
-module.exports = { createBackupService, sanitize, sanitizeBrowserStorage, dateStamp, safeId, skipBackupFile };
+module.exports = { createBackupService, sanitize, sanitizeBrowserStorage, dateStamp, safeId, skipBackupFile, USER_BACKUP_COMPONENTS, DEFAULT_USER_BACKUP_COMPONENTS, normalizeUserBackupSelection };
