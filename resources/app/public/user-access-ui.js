@@ -96,25 +96,22 @@
     if (typeof showToast === 'function') showToast(tr('Kullanıcı yönetimi arayüzü yüklenemedi.', 'The user management screen could not be loaded.'));
   }
   async function openOabUserLogin() {
-    const bridge = window.buyerLogDesktop;
-    if (!bridge || typeof bridge.ensureOabAuth !== 'function') {
-      const message = tr('OAB kullanıcı girişi Buyer Log masaüstü uygulamasında kullanılabilir.', 'OAB user sign-in is available in the Buyer Log desktop app.');
-      if (typeof showToast === 'function') showToast(message); else alert(message);
-      return;
-    }
     try {
-      if (typeof showToast === 'function') showToast(tr('OAB giriş ekranı açılıyor…', 'Opening OAB sign-in…'));
-      const result = await bridge.ensureOabAuth({ interactive:true });
-      if (result && result.ok && result.authenticated) {
-        if (typeof showToast === 'function') showToast(tr('OAB oturumu açıldı.', 'OAB session is ready.'));
+      if (typeof showToast === 'function') showToast(tr('Açık Edge/Chrome OAB oturumu aranıyor…', 'Looking for an open Edge/Chrome OAB session…'));
+      const response = await fetch('/api/oab/auth/connect', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:'{}',
+      });
+      const result = await response.json().catch(() => ({}));
+      if (response.ok && result && result.ok && result.status && (result.status.connected || result.status.authenticated)) {
+        if (typeof showToast === 'function') showToast(tr('OAB oturumu hazır.', 'OAB session is ready.'));
         return;
       }
-      const message = result && result.code === 'OAB_AUTH_CANCELLED'
-        ? tr('OAB kullanıcı girişi iptal edildi.', 'OAB sign-in was cancelled.')
-        : (result && result.error) || tr('OAB kullanıcı girişi tamamlanmadı.', 'OAB sign-in was not completed.');
+      const message = (result && result.error) || tr('OAB bağlantısı tamamlanmadı.', 'OAB connection was not completed.');
       if (typeof showToast === 'function') showToast(message); else alert(message);
     } catch (error) {
-      const message = error && error.message || tr('OAB kullanıcı girişi açılamadı.', 'OAB sign-in could not be opened.');
+      const message = error && error.message || tr('OAB bağlantısı kurulamadı.', 'OAB connection could not be established.');
       if (typeof showToast === 'function') showToast(message); else alert(message);
     }
   }
