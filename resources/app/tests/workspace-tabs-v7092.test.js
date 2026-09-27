@@ -16,6 +16,7 @@ const SHELL = read('electron/workspace.html');
 const SHELL_JS = read('electron/workspace-renderer.js');
 const SHELL_CSS = read('electron/workspace.css');
 const APP = read('public/app-main.js');
+const GLOBAL_FLOW = read('public/overview-global-flow.js');
 const { createWorkspaceManager, normalizeModule, normalizeWorkspaceTheme, clampIndex, MODULES } = require('../electron/workspace-manager');
 
 let nextContentsId = 1;
@@ -25,6 +26,7 @@ class MockContents extends EventEmitter {
   isDestroyed(){return this.destroyed;}
   loadURL(url){this.url=url;this.emit('did-finish-load');return Promise.resolve();}
   getURL(){return this.url;}
+  getOSProcessId(){return 10000+this.id;}
   setWindowOpenHandler(handler){this.openHandler=handler;}
   reload(){this.reloaded=(this.reloaded||0)+1;}
   toggleDevTools(){this.devtools=(this.devtools||0)+1;}
@@ -43,7 +45,7 @@ class MockContents extends EventEmitter {
   forcefullyCrashRenderer(){this.forceCrashCount+=1;this.hangClose=false;}
 }
 class MockView extends EventEmitter {
-  constructor(){super();this.webContents=new MockContents();}
+  constructor(options={}){super();this.options=options;this.webContents=new MockContents();}
   setBackgroundColor(color){this.color=color;}
   setBounds(bounds){this.bounds=bounds;}
 }
@@ -126,6 +128,38 @@ test('live manager moves one WebContentsView across windows without recreating i
   assert.equal(manager.windowCount(),1,'empty detached window closes after the transfer event stack completes');
   assert.equal(lfl.view.webContents,liveContents,'reattach preserves renderer identity and state');
   assert.equal(liveContents.isDestroyed(),false);
+});
+
+test('inactive native tabs are explicitly throttled and diagnostics maps tabs to renderer PIDs', () => {
+  const manager=mockManager();
+  const state=manager.createWindow({module:'overview'});
+  const overview=manager.tabForContents(manager.activeContents(state));
+  const cp=manager.openModule(state.window.id,'cp');
+
+  const activity = contents => contents.messages
+    .filter(item => item.channel === 'buyerlog:workspace-tab-activity')
+    .map(item => item.payload);
+  assert.equal(activity(overview.view.webContents).at(-1).active,false,'previous tab must be marked inactive');
+  assert.equal(activity(cp.view.webContents).at(-1).active,true,'new active tab must be marked active');
+  assert.equal(cp.view.options.webPreferences.backgroundThrottling,true);
+
+  manager.activateTab(state.window.id,overview.id);
+  assert.equal(activity(overview.view.webContents).at(-1).active,true);
+  assert.equal(activity(cp.view.webContents).at(-1).active,false);
+
+  const snapshot=manager.diagnosticsSnapshot();
+  assert.equal(snapshot.windowCount,1);
+  assert.equal(snapshot.tabCount,2);
+  assert.equal(snapshot.tabs.filter(tab => tab.active).length,1);
+  assert.ok(snapshot.tabs.every(tab => tab.pid > 0),'every live tab should expose its OS renderer PID');
+
+  assert.match(PRELOAD, /onTabActivity/);
+  assert.match(PRELOAD, /buyerlog:workspace-tab-activity/);
+  assert.match(MAIN, /app\.getAppMetrics\(\)/);
+  assert.match(MAIN, /workspace\.diagnosticsSnapshot\(\)/);
+  assert.match(GLOBAL_FLOW, /workspaceActive/);
+  assert.match(GLOBAL_FLOW, /onTabActivity/);
+  assert.match(GLOBAL_FLOW, /state\.workspaceActive&&!document\.hidden/);
 });
 
 test('workspace title bar stays within compact 28px geometry and preserves native interaction zones', () => {
