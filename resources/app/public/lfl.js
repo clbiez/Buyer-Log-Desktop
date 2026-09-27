@@ -1262,7 +1262,7 @@
   const TRIAL_REQUIRED=['mag','mmyg','classification','country','buyingGroup','buyer','inStoreMonth','quantity','fob'];
   const TRIAL_LABELS={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Marka Müdürlüğü',classification:'Klasman',productDescription:'Ürün Tanım',manufacturer:'Üretici',country:'Ülke',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Kumaş Kategorisi',fabricSupplierCountry:'Kumaşçı Ülkesi',fabricSupplier:'Kumaşçı',kumasTipi:'Kumaş Tipi',iplikNo:'İplik No',fabricWeight:'Gramaj',karisim:'Karışım',inStoreMonth:'In-Store Ayı',quantity:'Adet',fob:'LFL FOB'};
   const TRIAL_LABELS_EN={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Brand Directorate',classification:'Classification',productDescription:'Product Description',manufacturer:'Manufacturer',country:'Country',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Fabric Category',fabricSupplierCountry:'Fabric Supplier Country',fabricSupplier:'Fabric Supplier',kumasTipi:'Fabric Type',iplikNo:'Yarn Count',fabricWeight:'Weight (GSM)',karisim:'Composition',inStoreMonth:'In-Store Month',quantity:'Quantity',fob:'LFL FOB'};
-  const TRIAL_SOURCE_LABELS={confirmed:{tr:'Onaylı fiyat',en:'Approved price'},best:{tr:'Best price',en:'Best price'},target:{tr:'Hedef fiyat',en:'Target price'},manual:{tr:'Elle girildi',en:'Manual'}};
+  const TRIAL_SOURCE_LABELS={fob:{tr:'Koleksiyon FOB',en:'Collection FOB'},confirmed:{tr:'Onaylı fiyat',en:'Approved price'},best:{tr:'Best price',en:'Best price'},target:{tr:'Hedef fiyat',en:'Target price'},manual:{tr:'Elle girildi',en:'Manual'}};
   const TRIAL_TEXT_FIELDS=['mag','mmyg','brandDirectorate','classification','country','buyingGroup','buyer'];
   const TRIAL_CATALOG_FIELDS=[...TRIAL_TEXT_FIELDS];
   const TRIAL_MODEL_DIM_ALIASES=Object.freeze({
@@ -1324,7 +1324,7 @@
     // değiştirilmez. Filtre dışı kalma yalnız bilgilendirme olarak gösterilir.
     const month=(previous&&previous.inStoreMonth)||ownMonth||scope.months[0]||'';
     const previousQuantity=positiveNumber(previous&&previous.quantity),modelQuantity=positiveNumber(bridge?.quantityFor?.(model))??positiveNumber(model&&model.quantity);
-    const previousFob=positiveNumber(previous&&previous.fob),derivedFob=positiveNumber(priced.fob),dimensions={};
+    const derivedFob=positiveNumber(priced.fob),dimensions={};
     // Trial satırı, LFL'de filtrelenebilen bütün portföy boyutlarını Koleksiyon
     // modelinden taşır. Aksi halde örn. Product Description filtresi seçiliyken
     // model "Ready" görünse bile sentetik satır boş kimlik yüzünden rapordan düşer.
@@ -1339,7 +1339,8 @@
     return {
       id:trialModelId(model),modelName:norm(model&&model.modelKod)||norm(model&&model.plmId),plmId:norm(model&&model.plmId),
       season:scope.season,inStoreMonth:month,quantity:previousQuantity??modelQuantity,
-      fob:previousFob??derivedFob,priceSource:(previous&&previous.priceSource)||priced.source||'',
+      // Fiyat kullanıcı düzeltmesi / eski Trial snapshot'ı değil, canlı Collection FOB'dur.
+      fob:derivedFob,priceSource:priced.source||'fob',
       ...dimensions,
       license:norm(previous&&previous.license)||norm(model&&model.lisans),licensor:norm(previous&&previous.licensor)||norm(model&&model.licensor),
       collectionSeason:norm(model&&model.season),collectionMonth:ownMonth,image:norm(model&&model.img),
@@ -1414,8 +1415,20 @@
     state.analysisRevision=(state.analysisRevision||0)+1;
     const base=Array.isArray(state.serverRows)?state.serverRows:[];
     if(!state.trial.enabled||!state.trial.items.size){state.trial.rows=[];state.rows=base;return;}
-    const scope=state.trial.scope||trialScope(),rows=[];
-    state.trial.items.forEach(item=>{const built=trialRowFrom(item,scope);if(built.row)rows.push(built.row);});
+    const scope=state.trial.scope||trialScope(),rows=[],bridge=window.BLCollection;
+    const collectionById=new Map((bridge?.rows?.()||[]).map(model=>[trialModelId(model),model]).filter(([id])=>id));
+    const refreshed=new Map();
+    state.trial.items.forEach((item,id)=>{
+      const key=String(id),model=collectionById.get(key);
+      // Collection satırı yoksa eski fiyatı taşımak yerine FOB'u geçersiz kıl.
+      const draft=model?trialDraftFromModel(model,scope,item):{...trialClone(item),fob:null,priceSource:'fob',priceBase:null};
+      refreshed.set(key,draft);
+      const built=trialRowFrom(draft,scope);if(built.row)rows.push(built.row);
+    });
+    state.trial.items=refreshed;
+    // Eski sürümlerde Trial içinde FOB düzeltmesi yapılabiliyordu. Bu eski pending
+    // alanlarını da temizle ki Collection FOB kuralı hiçbir yoldan bypass edilmesin.
+    state.trial.pendingCorrections.forEach((fields,id)=>{if(fields&&typeof fields.delete==='function')fields.delete('fob');if(!fields||!fields.size)state.trial.pendingCorrections.delete(id);});
     state.trial.rows=rows;state.rows=rows.length?[...base,...rows]:base;
   }
   function trialConfiguredCount(){return state.trial.items.size;}
@@ -1570,7 +1583,9 @@
     return field==='quantity'?Math.max(1,Math.round(median)):Math.round(median*100)/100;
   }
   function trialSuggestionFor(draft,field,issue,scope,months){
-    if(field==='quantity'||field==='fob'){
+    // FOB Trial içinde tahmin/düzeltme konusu değildir; tek kaynak Collection FOB'dur.
+    if(field==='fob')return null;
+    if(field==='quantity'){
       const value=trialNumericSuggestion(draft,field,scope);return value==null?null:{value,reason:isEn()?'Median of the closest matching LFL rows':'En yakın eşleşen LFL satırlarının medyanı'};
     }
     const candidates=trialAllowedValues(field,scope,months);if(!candidates.length)return null;
@@ -1605,6 +1620,11 @@
   }
   function trialIssueEditor(draft,field,months,issue,scope,deferSuggestion=false){
     let editor='';
+    if(field==='fob'){
+      const value=positiveNumber(draft&&draft.fob);
+      editor=`<label><span>${esc(trialLabel(field))}</span><input type="number" step="0.01" min="0" value="${esc(value??'')}" readonly aria-readonly="true"></label><div class="lflTrialSuggestion isEmpty"><span>${esc(isEn()?'Source':'Kaynak')}</span><small>${esc(isEn()?'LFL Trial always uses the calculated FOB from Collection. Fix the Collection price/royalty calculation if FOB is empty.':'LFL Trial her zaman Koleksiyon’daki hesaplanmış FOB değerini kullanır. FOB boşsa Collection fiyat/royalty hesabını düzelt.')}</small></div>`;
+      return `<div class="lflTrialFieldEditor">${editor}</div>`;
+    }
     if(field==='inStoreMonth'){
       const options=unique([draft.inStoreMonth,...months].filter(Boolean));
       editor=`<label><span>${esc(trialLabel(field))}</span><select data-trial-field="inStoreMonth"><option value="">${esc(isEn()?'Select…':'Seç…')}</option>${options.map(value=>`<option value="${esc(value)}"${value===draft.inStoreMonth?' selected':''}>${esc(monthCodeLabel(value))}</option>`).join('')}</select></label>`;
@@ -1622,11 +1642,14 @@
     if(!scope.season){trialToast(en?'Select the current LFL season first.':'Önce güncel LFL sezonunu seç.');return;}
     const canEditCollection=bridge.canEdit?.()!==false;
     const candidates=trialCandidates(scope),byId=new Map([...candidates.available,...candidates.ordered].map(item=>[trialModelId(item.model),item]));
-    const working=new Map([...state.trial.items].map(([id,item])=>[String(id),trialClone(item)]));
+    const working=new Map([...state.trial.items].map(([id,item])=>{
+      const key=String(id),found=byId.get(key);
+      return [key,found?trialDraftFromModel(found.model,scope,item):{...trialClone(item),fob:null,priceSource:'fob',priceBase:null}];
+    }));
     const seeds=Array.isArray(options.seedIds)?options.seedIds.map(String):(working.size?[]:(bridge.selectedIds?.()||[]).map(String));
     let skipped=0;
     seeds.forEach(id=>{const found=byId.get(id);if(found&&!found.ordered&&!found.dropped){if(!working.has(id))working.set(id,trialDraftFromModel(found.model,scope));}else skipped++;});
-    const touched=new Map([...(state.trial.pendingCorrections||new Map())].filter(([id])=>working.has(String(id))).map(([id,fields])=>[String(id),new Set(fields||[])])),suggestionCache=new Map();
+    const touched=new Map([...(state.trial.pendingCorrections||new Map())].filter(([id])=>working.has(String(id))).map(([id,fields])=>[String(id),new Set([...(fields||[])].filter(field=>field!=='fob'))])),suggestionCache=new Map();
     const touch=(id,field)=>{id=String(id);if(!touched.has(id))touched.set(id,new Set());touched.get(id).add(field);};
     const touchedFieldCount=()=>[...touched.values()].reduce((sum,fields)=>sum+fields.size,0);
     const modal=document.createElement('div');modal.id='_lflTrialModal';modal.className='warnOverlay lflTrialOverlay';
@@ -1656,7 +1679,7 @@
     }
     function applySuggestion(draft,issue){
       const suggestion=suggestionForIssue(draft,issue);if(!suggestion)return false;
-      draft[issue.field]=suggestion.value;if(issue.field==='fob')draft.priceSource='manual';touch(draft.id,issue.field);return true;
+      draft[issue.field]=suggestion.value;touch(draft.id,issue.field);return true;
     }
     function groupedIssues(entries){
       const groups=new Map();
@@ -1764,11 +1787,13 @@
     statsHost.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;const tabs=[...statsHost.querySelectorAll('[data-trial-view]')],current=Math.max(0,tabs.indexOf(document.activeElement));let next=current;if(event.key==='ArrowLeft')next=(current-1+tabs.length)%tabs.length;if(event.key==='ArrowRight')next=(current+1)%tabs.length;if(event.key==='Home')next=0;if(event.key==='End')next=tabs.length-1;event.preventDefault();tabs[next]?.click();});
     draftHost.addEventListener('input',event=>{
       const card=event.target.closest('[data-trial-draft]'),field=event.target.dataset.trialField;if(!card||!field)return;const item=working.get(card.dataset.trialDraft);if(!item)return;
-      item[field]=(field==='quantity'||field==='fob')?(event.target.value===''?null:Number(event.target.value)):event.target.value;if(field==='fob')item.priceSource='manual';touch(item.id,field);
+      if(field==='fob')return;
+      item[field]=field==='quantity'?(event.target.value===''?null:Number(event.target.value)):event.target.value;touch(item.id,field);
     });
     draftHost.addEventListener('change',event=>{
       const card=event.target.closest('[data-trial-draft]'),field=event.target.dataset.trialField;if(!card||!field)return;const item=working.get(card.dataset.trialDraft);if(!item)return;
-      item[field]=(field==='quantity'||field==='fob')?(event.target.value===''?null:Number(event.target.value)):event.target.value;if(field==='fob')item.priceSource='manual';touch(item.id,field);renderIssues();
+      if(field==='fob')return;
+      item[field]=field==='quantity'?(event.target.value===''?null:Number(event.target.value)):event.target.value;touch(item.id,field);renderIssues();
     });
     draftHost.addEventListener('click',async event=>{
       const removeBtn=event.target.closest('[data-trial-remove-id]');if(removeBtn){working.delete(removeBtn.dataset.trialRemoveId);touched.delete(String(removeBtn.dataset.trialRemoveId));renderIssues();return;}

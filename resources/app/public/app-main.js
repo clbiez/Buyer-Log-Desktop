@@ -23939,7 +23939,7 @@ window.BLCollection={
     return set;
   },
   keyOf(row){ return turknorm(norm(row&&row.plmId))+'\u0000'+turknorm(norm(row&&row.modelKod)); },
-  // Trial fiyati: ONAYLI teklif → best price → hedef fiyat.
+  // Geriye dönük uyumluluk için baz fiyat seçici; LFL Trial bunu kullanmaz.
   priceFor(row){
     const pick=v=>{
       const raw=(v&&typeof v==='object')?(v.price??v.value??v.amount??v.fob):v;
@@ -23961,20 +23961,17 @@ window.BLCollection={
   quantityFor(row){ const n=kolParseQuantityNum(row&&row.quantity); return Number.isFinite(n)&&n>0?n:null; },
   // In Store Month sutunu "AY YIL" gosterir; LFL'in bekledigi YYYYAA kodu buradan uretilir.
   monthCodeFor(row){ return kolMonthCode(row&&row.inStoreMonth); },
-  // LFL ağırlıklı ortalaması FOB üzerinden hesaplanır. Hangi fiyat kullanılırsa
-  // kullanılsın (onaylı/best/hedef) royalty ve hologram maliyeti eklenmeden LFL'e
-  // girmemeli; Koleksiyon'un FOB sütunuyla AYNI formül uygulanır:
-  //   FOB = fiyat / (1 − royalty%) + hologram
+  // LFL Trial fiyatı HER ZAMAN Collection tablosunda kullanıcının gördüğü
+  // hesaplanmış FOB hücresinden gelir. Target / Best / Confirmed fiyatlarını burada
+  // yeniden seçip royalty hesabını ikinci kez kurma: Collection FOB zaten kanonik
+  // fiyat önceliğini ve royalty/hologram kuralını uygulamıştır.
   fobFor(row){
-    const picked=this.priceFor(row);
-    if(picked.price==null) return {fob:null,source:'',base:null};
+    const raw=typeof kolEffectiveValue==='function'?kolEffectiveValue(row,'fob'):(row&&row.fob);
+    const fob=kolParseMoneyNum(raw);
     const r=kolParseMoneyNum(row&&row.royalty),h=kolParseMoneyNum(row&&row.hologramCost),hNum=Number.isFinite(h)?h:0;
-    // Seçilen fiyat kaynağı (Confirmed → Best → Target), Koleksiyon'un merkezi
-    // FOB kuralıyla royalty ve hologram dahil edilerek LFL Trial'a aktarılır.
-    const calculated=kolComputeFobFromConfirmed(picked.price,Number.isFinite(r)?r:0,hNum),fob=kolParseMoneyNum(calculated);
     return Number.isFinite(fob)&&fob>0
-      ? {fob,source:picked.source,base:picked.price,royalty:Number.isFinite(r)?r:0,hologram:hNum}
-      : {fob:null,source:picked.source,base:picked.price,royalty:Number.isFinite(r)?r:0,hologram:hNum};
+      ? {fob,source:'fob',base:fob,royalty:Number.isFinite(r)?r:0,hologram:hNum}
+      : {fob:null,source:'fob',base:null,royalty:Number.isFinite(r)?r:0,hologram:hNum};
   },
   seasonFor(row){ return norm(row&&row.season); },
   canEdit(){ return !!kolWorkspaceCanEdit; },
