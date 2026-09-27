@@ -399,11 +399,14 @@ test('v7.81 tek alan yazılır — tam eşleme gönderilmez', () => {
   assert.doesNotMatch(MAPPING_UI, /body: JSON\.stringify\(\{[^}]*\bmapping:/);
 });
 
-test('v7.81 düzenleyici kaydettikten sonra AÇIK kalır', () => {
-  /* Kapanması, üç sorunlu alanı düzeltmek için paneli üç kez açtırırdı —
-     gözden geçirme akışının tam tersi. Ekran yeniden çizildiği için yuva
-     silinir; bu yüzden çağıran YENİDEN AÇAR. */
-  assert.match(UI, /onSaved: async \(\) => \{ await load\(\); openMappingEditor\(sourceId\); \}/);
+test('v7.81 düzenleyici normal kayıtta açık kalır; canlı onarım hedefi kaydedilince yenilemeyi tekrarlar', () => {
+  /* Normal gözden geçirmede kapanmak, üç sorunlu alanı düzeltmek için paneli
+     üç kez açtırırdı. Bu davranış korunur. Yalnız refresh hatasından gelen
+     TEK hedef alan başarıyla kaydedildiğinde editör kapanır ve aynı kapsam
+     otomatik yeniden denenir. */
+  assert.match(UI, /onSaved: async \(warnings, saved\) => \{/);
+  assert.match(UI, /openMappingEditor\(sourceId, repair\);/);
+  assert.match(UI, /if \(repairedTarget\)[\s\S]*BLRetryRefreshAfterFieldMapping/);
   const write = MAPPING_UI.match(/async function write\(header, entry\)[\s\S]*?\n  \}/);
   assert.ok(write);
   // Yazma sonrası kendi DOM'una çizmemeli: yuva o sırada yok edilmiş olur.
