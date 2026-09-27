@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.150",
-  "commit_sha": "7d46c0fae07e0553cffbf27b1348dcda787dfe25",
-  "release_notes": "Buyer Log 7.0.150: Data Inspector artık IAS/ASAS için gerçek kayıtlı DAX sorgularını ve INTAKE için gerçek canlı pivot sorgusunu şirket bilgisayarındaki VPN erişimi üzerinden test eder. Canlı bağlantı ile gerçek sorgu sonucu ayrı aşamalarda raporlanır; hata kodu, sorgu detayları, şema bilgisi, sorgu koşuları ve maskelenmiş örnekler AI Diagnostic JSON paketine eklenir. Son canlı probe sonucu kısa süreli bellekte tutulduğu için JSON export artık yanlışlıkla LOCAL_SIMULATION görünmez. İlgili regression testleri eklenmiş ve tam Windows Buyer Log test paketi başarıyla geçmiştir. TEST yayın denemesi yeniden tetiklenmiştir."
+  "version": "7.0.151",
+  "commit_sha": "5883ea051f4b8d217f737fb429b79f8e6bca021f",
+  "release_notes": "Buyer Log 7.0.151: IAS/ASAS Database yenilemelerinde Tabular modelde bulunamayan bir sütun artık onarılabilir hata olarak tanınır. Hata penceresindeki Onar düğmesi ilgili kaynağın Field Mapping ekranını ve problemli Buyer Log alanını doğrudan açar; kullanıcı gerçek database sütununu seçip kaydettiğinde eşleme kalıcı olarak güncellenir ve yalnız etkilenen yenileme kapsamları otomatik yeniden denenir. Buyer Grup (TR) senaryosu için backend hata eşlemesi, UI onarım zinciri ve regresyon koruması eklendi."
 }
