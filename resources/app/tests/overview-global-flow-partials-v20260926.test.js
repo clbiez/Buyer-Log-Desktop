@@ -137,11 +137,11 @@ test('8b · yakın araçlar düşük zoomda kümelenir, yüksek zoomda tekilleş
 test('8c · ortak rota aynı koridoru tek anahtarda toplar ve ülke + taşıma seçeneklerini üretir',()=>{
   const a={mode:'sea',a:{lon:10,lat:20},b:{lon:20,lat:30}},b={mode:'sea',a:{lon:20,lat:30},b:{lon:10,lat:20}};
   assert.equal(flow.routeCorridorKey(a),flow.routeCorridorKey(b),'aynı koridor ters yönde gelse de tek görsel hat olmalı');
-  const groups=flow.routeRecordGroups([
-    {id:'bd1',country:'Bangladesh',mode:'sea',origin:{name:'Bangladesh'}},
+  const groups=flow.routeRecordGroups({mode:'sea',records:[
+    {id:'bd1',country:'Bangladesh',mode:'sea-air',origin:{name:'Bangladesh'}},
     {id:'bd2',country:'Bangladesh',mode:'sea',origin:{name:'Bangladesh'}},
-    {id:'in1',country:'India',mode:'sea',origin:{name:'India'}},
-  ]);
+    {id:'in1',country:'India',mode:'sea-air',origin:{name:'India'}},
+  ]});
   assert.deepEqual(groups.map(g=>[g.country,g.mode,g.records.length]),[['Bangladesh','sea',2],['India','sea',1]]);
 });
 
