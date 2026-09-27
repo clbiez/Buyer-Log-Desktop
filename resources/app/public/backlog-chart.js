@@ -309,6 +309,14 @@
     const n=Number(value)||0;
     try{return Math.round(n).toLocaleString('tr-TR',{maximumFractionDigits:0});}catch(_){return String(Math.round(n));}
   }
+  function formatAxisValue(value) {
+    const n=Math.round(Number(value)||0),abs=Math.abs(n);
+    if(abs>=1000){
+      const k=Math.round(n/1000);
+      try{return k.toLocaleString('tr-TR',{maximumFractionDigits:0})+'k';}catch(_){return String(k)+'k';}
+    }
+    return String(n);
+  }
   function formatValue(value) { return formatWholeValue(value); }
   function niceStep(maxValue,targetTicks) {
     const max=Math.max(0,Number(maxValue)||0),target=Math.max(2,Number(targetTicks)||5);
@@ -388,7 +396,7 @@
     m.ticks.slice().reverse().forEach(val=>{
       const y=top+ph*(1-val/max);
       out+='<line x1="'+left+'" x2="'+plotRight+'" y1="'+y+'" y2="'+y+'" class="backlogChartGrid"/>';
-      out+='<text x="'+(plotRight+10)+'" y="'+(y+4)+'" text-anchor="start" class="backlogChartAxisText">'+esc(formatWholeValue(val))+'</text>';
+      out+='<text x="'+(plotRight+10)+'" y="'+(y+4)+'" text-anchor="start" class="backlogChartAxisText">'+esc(formatAxisValue(val))+'</text>';
     });
     const n=Math.max(1,model.categories.length),step=pw/n,minLabelPx=model.state.granularity==='week'?30:model.state.granularity==='month'?58:50;
     const maxLabels=Math.max(1,Math.floor(pw/minLabelPx)),labelStep=Math.max(1,Math.ceil(n/maxLabels));
@@ -872,7 +880,7 @@
     const series=baseSeries.map((serie,i)=>({name:serie.name,valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(i+2)+'$'+first+':$'+excelColumn(i+2)+'$'+last,dash:!!serie.dash,color:String(serie.color||'').replace('#',''),isAverage:false}));
     if(st.showAverage)series.push({name:tr('Ortalama','Average'),valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(avgIndex)+'$'+first+':$'+excelColumn(avgIndex)+'$'+last,dash:true,color:'64748B',isAverage:true});
     const metrics=chartMetrics(model);
-    return {model,viewRange:range,live:!!live,charts:[{sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',chartType:st.chartType,title:model.title,categoriesFormula:categories,series,majorUnit:metrics.tickStep,maxValue:metrics.max,anchor:{fromCol:0,fromRow:4,toCol:15,toRow:28}}],chartSheetName:chartName,dataSheetName:dataName};
+    return {model,viewRange:range,live:!!live,charts:[{sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',chartType:st.chartType,title:model.title,categoriesFormula:categories,series,majorUnit:metrics.tickStep,maxValue:metrics.max,axisFormatCode:metrics.max>=1000?'0,"k"':'#,##0',anchor:{fromCol:0,fromRow:4,toCol:15,toRow:28}}],chartSheetName:chartName,dataSheetName:dataName};
   }
   function titleXml(title) {
     return '<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/><a:t>'+xml(title)+'</a:t></a:r><a:endParaRPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/></a:p></c:rich></c:tx><c:layout/><c:overlay val="0"/></c:title>';
@@ -891,7 +899,7 @@
     }else chartBody='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(all,'line',0)+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
     const scaling='<c:scaling><c:orientation val="minMax"/><c:min val="0"/>'+(Number(spec.maxValue)>0?'<c:max val="'+Number(spec.maxValue)+'"/>':'')+'</c:scaling>';
     const major=Number(spec.majorUnit)>0?'<c:majorUnit val="'+Number(spec.majorUnit)+'"/>':'';
-    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:date1904 val="0"/><c:lang val="'+(lang()==='en'?'en-US':'tr-TR')+'"/><c:chart>'+titleXml(spec.title||'')+'<c:autoTitleDeleted val="0"/><c:plotArea><c:layout/>'+chartBody+'<c:catAx><c:axId val="'+catAx+'"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:tickLblPos val="nextTo"/><c:crossAx val="'+valAx+'"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/></c:catAx><c:valAx><c:axId val="'+valAx+'"/>'+scaling+'<c:delete val="0"/><c:axPos val="r"/><c:majorGridlines/><c:numFmt formatCode="#,##0" sourceLinked="0"/><c:tickLblPos val="nextTo"/>'+major+'<c:crossAx val="'+catAx+'"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx></c:plotArea><c:legend><c:legendPos val="b"/><c:layout/><c:overlay val="0"/></c:legend><c:plotVisOnly val="1"/><c:dispBlanksAs val="zero"/><c:showDLblsOverMax val="0"/></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b="0.75" l="0.7" r="0.7" t="0.75" header="0.3" footer="0.3"/><c:pageSetup/></c:printSettings></c:chartSpace>';
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><c:date1904 val="0"/><c:lang val="'+(lang()==='en'?'en-US':'tr-TR')+'"/><c:chart>'+titleXml(spec.title||'')+'<c:autoTitleDeleted val="0"/><c:plotArea><c:layout/>'+chartBody+'<c:catAx><c:axId val="'+catAx+'"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/><c:tickLblPos val="nextTo"/><c:crossAx val="'+valAx+'"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/></c:catAx><c:valAx><c:axId val="'+valAx+'"/>'+scaling+'<c:delete val="0"/><c:axPos val="r"/><c:majorGridlines/><c:numFmt formatCode="'+xml(spec.axisFormatCode||'#,##0')+'" sourceLinked="0"/><c:tickLblPos val="nextTo"/>'+major+'<c:crossAx val="'+catAx+'"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx></c:plotArea><c:legend><c:legendPos val="b"/><c:layout/><c:overlay val="0"/></c:legend><c:plotVisOnly val="1"/><c:dispBlanksAs val="zero"/><c:showDLblsOverMax val="0"/></c:chart><c:printSettings><c:headerFooter/><c:pageMargins b="0.75" l="0.7" r="0.7" t="0.75" header="0.3" footer="0.3"/><c:pageSetup/></c:printSettings></c:chartSpace>';
   }
   function drawingXml(chartRelId,spec,index) {
     const a=spec.anchor||{},fc=Number.isFinite(+a.fromCol)?+a.fromCol:0,fr=Number.isFinite(+a.fromRow)?+a.fromRow:2,tc=Number.isFinite(+a.toCol)?+a.toCol:15,trr=Number.isFinite(+a.toRow)?+a.toRow:27;
@@ -983,7 +991,7 @@
     init,onBacklogRendered,openSettings,render,invalidate,
     getState,getViewRange,saveState,sanitizeState,normalizeHeaders,detectDateHeaders,inferState,
     parseDate,parseNumber,bucketFor,buildModel,appendWorkbookSheets,
-    svgChart,todayKeyFor,todayPosition,axisTickLabel,chartMetrics,niceStep,niceTickScale,formatWholeValue,averageValue,clampChartRange,defaultVisibleSpan,defaultChartRange,rangeForPreset,zoomChartRange,shiftChartRange,panChartRange,sliceModel,
+    svgChart,todayKeyFor,todayPosition,axisTickLabel,chartMetrics,niceStep,niceTickScale,formatWholeValue,formatAxisValue,averageValue,clampChartRange,defaultVisibleSpan,defaultChartRange,rangeForPreset,zoomChartRange,shiftChartRange,panChartRange,sliceModel,
     chartXml,drawingXml,applyExcelCharts,
   });
 });

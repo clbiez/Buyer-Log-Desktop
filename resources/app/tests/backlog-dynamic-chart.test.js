@@ -286,3 +286,13 @@ test('native Excel chart package contains drawing relationships and reopens as X
   assert.ok(reopened.SheetNames.includes('Grafik'));
   assert.ok(reopened.SheetNames.includes('Grafik Verisi'));
 });
+
+
+test('Backlog chart uses compact k axis labels in app and Excel', () => {
+  assert.equal(chart.formatAxisValue(30000),'30k');
+  assert.equal(chart.formatAxisValue(150000),'150k');
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['BACKLOG']]),'BACKLOG');
+  const result=chart.appendWorkbookSheets(wb,rows,headers,{XLSX,state:state(),viewRange:{start:0,end:2}});
+  assert.match(chart.chartXml(result.charts[0],0),/formatCode="0,&quot;k&quot;"/);
+});
