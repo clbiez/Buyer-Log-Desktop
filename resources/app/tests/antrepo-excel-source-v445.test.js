@@ -64,17 +64,18 @@ test('v4.45 Antrepo ana kaynağı Excel, Database ise açıkça seçilen opsiyon
 test('v4.45 Source, Matching Rule ve Data Model ekranları pahalı şemayı açılışta taramaz', () => {
   const modelQuery = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'modelQuery.js'), 'utf8');
   const serverText = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
-  /* v7.81: eşleştirme kuralı ekranı eski bağlantı modalından Veri Yönetimi'ne
-     taşındı. Korunan kusur aynı — açılışta tam şema taranmamalı; "Tüm sütunları
-     getir" kullanıcının bilinçli olarak ödediği bir bedeldir. */
+  /* v7.81+: eşleştirme kuralı ekranı açılırken bütün model taranmaz.
+     v7.82 sonrası gerçek database başlıkları alan seçicisi açıldığı anda yalnız
+     seçilen kaynak için lazy yüklenir; "Tüm sütunları getir" ise bütün kaynakları
+     tek seferde tarayan isteğe bağlı toplu eylemdir. */
   const matchRule = fs.readFileSync(path.join(ROOT, 'public', 'data-management-matchrule.js'), 'utf8');
   assert.match(matchRule, /await fetchState\(\);/, 'açılış tam şema istemeden yüklemeli');
   assert.doesNotMatch(matchRule, /await fetchState\(\{ full: true \}\);\s*\r?\n\s*\}\s*\r?\n\s*async function open/, 'açılışta full taranmamalı');
-  assert.match(matchRule, /data-full/, 'tam şema ayrı ve isteğe bağlı bir eylem olmalı');
-  /* v7.82: dönüş şekli kaynak kataloğuna taşındı (connection artık katalog
-     girdisinde). KORUNAN KUSUR AYNI: options.full verilmedikçe discoverSchema
-     çağrılmaz, yalnız kayıtlı alan eşlemesi kullanılır. */
-  assert.match(serverText, /if \(!options\.full\) return \{ columns: fallback, error: '', authoritative: false \}/);
+  assert.match(matchRule, /data-full/, 'bütün kaynakların tam şeması ayrı ve isteğe bağlı bir eylem olmalı');
+  assert.match(matchRule, /fullSource=/, 'alan seçicisi yalnız seçilen database kaynağının canlı şemasını lazy istemeli');
+  /* Sunucu normal açılışta yalnız kayıtlı Field Mapping alanlarını döndürür.
+     fullSource/full isteği gelmedikçe discoverSchema çağrılmaz. */
+  assert.match(serverText, /if \(!options\.full\) return \{ columns: fallback, error: '', authoritative: false, loaded: false \}/);
   assert.match(modelQuery, /METADATA_CACHE_TTL_MS = 10 \* 60 \* 1000/);
   assert.match(serverText, /MODEL_DISTINCT_CACHE_TTL_MS = 5 \* 60 \* 1000/);
 });
