@@ -362,8 +362,20 @@ function seaAirRouteCoordinates(countryValue){
   return sea.map(point=>({lon:Number(point[0]),lat:Number(point[1])}));
 }
 
+const WORLD_ASPECT_2D=2;
+const MIN_ZOOM=.65;
+const MAX_ZOOM_2D=12;
+const MAX_ZOOM_3D=6;
+function fitWorld2dViewport(width,height){
+  const outerW=Math.max(1,Number(width)||1),outerH=Math.max(1,Number(height)||1);
+  const w=Math.min(outerW,outerH*WORLD_ASPECT_2D),h=w/WORLD_ASPECT_2D;
+  return {x:(outerW-w)/2,y:(outerH-h)/2,w,h};
+}
+function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
+function wrapLongitude(value){const n=Number(value)||0;return ((n+180)%360+360)%360-180;}
+
 if(typeof document==='undefined'){
-  return {ISTANBUL,FIELD_CANDIDATES,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,riskLevel,normalizeRecord,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates};
+  return {ISTANBUL,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,riskLevel,normalizeRecord,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates};
 }
 
 const $=id=>document.getElementById(id);
@@ -375,7 +387,7 @@ const state={
   source:'backlog',view:'2d',records:[],filtered:[],groups:[],loading:false,error:'',warning:'',
   filters:{search:'',season:'',mag:'',mmyg:'',buyer:'',buyingGroup:'',manufacturer:'',country:'',line:'',category:'',license:'',mode:'',status:''},
   phaseFilter:'',riskOnly:false,transitOnly:false,measure:'qty',collapsed:false,fullscreen:false,filterOpen:false,
-  panX:0,panY:0,zoom2d:1,rotLon:18,rotLat:-12,zoom3d:1,drag:null,hover:null,hitTargets:[],
+  panX:0,panY:0,zoom2d:1,rotLon:18,rotLat:-12,zoom3d:1,drag:null,globeInertia:null,hover:null,hitTargets:[],
   frame:0,lastFrame:0,lastBacklogRows:null,lastBacklogSignature:'',observers:[],
   worldPolygons:[],worldLoading:true,worldError:'',transitRules:[],transitRulesLoaded:false,
   expandedNodeKey:'',lastDragMoved:false,orbHandle:null
@@ -619,7 +631,7 @@ function toggleFullscreen(){
   renderControls();setTimeout(()=>{resizeCanvas();scheduleDraw();},0);
 }
 function resetView(){
-  state.panX=0;state.panY=0;state.zoom2d=1;state.rotLon=18;state.rotLat=-12;state.zoom3d=1;scheduleDraw();
+  state.panX=0;state.panY=0;state.zoom2d=1;state.rotLon=18;state.rotLat=-12;state.zoom3d=1;state.globeInertia=null;scheduleDraw();
 }
 function palette(){
   const style=getComputedStyle(document.documentElement);
@@ -640,7 +652,8 @@ function canvasInfo(){
 }
 function project2d(point,w,h){
   if(!point)return null;
-  const baseX=(Number(point.lon)+180)/360*w,baseY=(90-Number(point.lat))/180*h;
+  const frame=fitWorld2dViewport(w,h);
+  const baseX=frame.x+(Number(point.lon)+180)/360*frame.w,baseY=frame.y+(90-Number(point.lat))/180*frame.h;
   const cx=w/2,cy=h/2;
   return {x:(baseX-cx)*state.zoom2d+cx+state.panX,y:(baseY-cy)*state.zoom2d+cy+state.panY,visible:true};
 }
@@ -808,13 +821,27 @@ function drawRoutes(ctx,w,h,p,now){
   drawNodeBundles(ctx,w,h,p);
 }
 function hash(value){let h=0;for(const ch of String(value||''))h=((h<<5)-h)+ch.charCodeAt(0)|0;return h;}
+function applyGlobeInertia(now){
+  const inertia=state.globeInertia;if(!inertia||state.view!=='3d'||state.drag)return false;
+  const elapsed=clamp((Number(now)||performance.now())-inertia.last,0,40);if(elapsed<=0)return true;
+  const frames=elapsed/(1000/60);state.rotLon=wrapLongitude(state.rotLon+inertia.vLon*frames);state.rotLat=clamp(state.rotLat+inertia.vLat*frames,-85,85);
+  const decay=Math.pow(.9,frames);inertia.vLon*=decay;inertia.vLat*=decay;inertia.last=Number(now)||performance.now();
+  if(Math.hypot(inertia.vLon,inertia.vLat)<.012){state.globeInertia=null;return false;}return true;
+}
 function draw(now){
   state.frame=0;if(document.hidden||state.collapsed)return;const info=canvasInfo();if(!info)return;
+  const frameNow=Number(now)||performance.now();applyGlobeInertia(frameNow);
   const {ctx,w,h}=info,p=palette();ctx.clearRect(0,0,w,h);ctx.fillStyle=p.water;ctx.fillRect(0,0,w,h);
-  if(state.view==='3d')drawLand3d(ctx,w,h,p);else drawLand2d(ctx,w,h,p);drawRoutes(ctx,w,h,p,now||performance.now());if(state.hover)drawHoverHighlight(ctx,state.hover,p);
-  if(state.groups.some(g=>g.state==='transit')||state.expandedNodeKey)state.frame=requestAnimationFrame(throttledDraw);
+  if(state.view==='3d'){
+    drawLand3d(ctx,w,h,p);drawRoutes(ctx,w,h,p,frameNow);if(state.hover)drawHoverHighlight(ctx,state.hover,p);
+  }else{
+    const mapFrame=fitWorld2dViewport(w,h);ctx.save();ctx.beginPath();ctx.rect(mapFrame.x,mapFrame.y,mapFrame.w,mapFrame.h);ctx.clip();
+    drawLand2d(ctx,w,h,p);drawRoutes(ctx,w,h,p,frameNow);if(state.hover)drawHoverHighlight(ctx,state.hover,p);ctx.restore();
+    ctx.save();ctx.strokeStyle=p.line;ctx.globalAlpha=.7;ctx.lineWidth=1;ctx.strokeRect(mapFrame.x+.5,mapFrame.y+.5,Math.max(0,mapFrame.w-1),Math.max(0,mapFrame.h-1));ctx.restore();
+  }
+  if(state.groups.some(g=>g.state==='transit')||state.expandedNodeKey||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
 }
-function throttledDraw(now){if(now-state.lastFrame<50){state.frame=requestAnimationFrame(throttledDraw);return;}state.lastFrame=now;draw(now);}
+function throttledDraw(now){const minGap=state.globeInertia?16:50;if(now-state.lastFrame<minGap){state.frame=requestAnimationFrame(throttledDraw);return;}state.lastFrame=now;draw(now);}
 function scheduleDraw(){if(state.frame)cancelAnimationFrame(state.frame);state.frame=requestAnimationFrame(draw);}
 function resizeCanvas(){scheduleDraw();}
 function nearestHit(x,y){
@@ -843,16 +870,38 @@ function showTooltip(hit,event){
   const wrap=$('globalFlowCanvasWrap').getBoundingClientRect();tip.style.left=Math.min(wrap.width-240,Math.max(8,event.clientX-wrap.left+12))+'px';tip.style.top=Math.min(wrap.height-118,Math.max(8,event.clientY-wrap.top+12))+'px';tip.hidden=false;
 }
 function onPointerDown(event){
-  if(event.button!==0)return;const p=canvasPoint(event);state.lastDragMoved=false;state.drag={id:event.pointerId,x:p.x,y:p.y,panX:state.panX,panY:state.panY,rotLon:state.rotLon,rotLat:state.rotLat,moved:false};try{event.currentTarget.setPointerCapture(event.pointerId);}catch(_){}
+  if(event.button!==0)return;const p=canvasPoint(event),stamp=performance.now();state.lastDragMoved=false;state.globeInertia=null;
+  state.drag={id:event.pointerId,x:p.x,y:p.y,lastX:p.x,lastY:p.y,lastTime:stamp,panX:state.panX,panY:state.panY,rotLon:state.rotLon,rotLat:state.rotLat,vLon:0,vLat:0,moved:false};
+  try{event.currentTarget.setPointerCapture(event.pointerId);}catch(_){}
 }
 function onPointerMove(event){
   const p=canvasPoint(event);
-  if(state.drag&&state.drag.id===event.pointerId){const dx=p.x-state.drag.x,dy=p.y-state.drag.y;if(Math.hypot(dx,dy)>3)state.drag.moved=true;if(state.view==='3d'){state.rotLon=state.drag.rotLon+dx*.35;state.rotLat=Math.max(-78,Math.min(78,state.drag.rotLat-dy*.28));}else{state.panX=state.drag.panX+dx;state.panY=state.drag.panY+dy;}scheduleDraw();return;}
+  if(state.drag&&state.drag.id===event.pointerId){
+    const totalDx=p.x-state.drag.x,totalDy=p.y-state.drag.y;if(Math.hypot(totalDx,totalDy)>3)state.drag.moved=true;
+    if(state.view==='3d'){
+      const stamp=performance.now(),dt=clamp(stamp-state.drag.lastTime,8,48),dx=p.x-state.drag.lastX,dy=p.y-state.drag.lastY,sensitivity=.36/Math.max(1,Math.sqrt(state.zoom3d));
+      const dLon=dx*sensitivity,dLat=-dy*sensitivity*.82,sample=16/dt;state.rotLon=wrapLongitude(state.rotLon+dLon);state.rotLat=clamp(state.rotLat+dLat,-85,85);
+      state.drag.vLon=state.drag.vLon*.42+dLon*sample*.58;state.drag.vLat=state.drag.vLat*.42+dLat*sample*.58;state.drag.lastX=p.x;state.drag.lastY=p.y;state.drag.lastTime=stamp;
+    }else{state.panX=state.drag.panX+totalDx;state.panY=state.drag.panY+totalDy;}
+    scheduleDraw();return;
+  }
   const hit=nearestHit(p.x,p.y);if(hit&&hit.type==='node')state.expandedNodeKey=hit.bundle.key;else if(hit&&hit.nodeKey)state.expandedNodeKey=hit.nodeKey;else if(state.expandedNodeKey){const node=state.hitTargets.find(target=>target.type==='node'&&target.bundle&&target.bundle.key===state.expandedNodeKey);if(!node||Math.hypot(node.x-p.x,node.y-p.y)>48)state.expandedNodeKey='';}
   state.hover=hit;showTooltip(hit,event);scheduleDraw();
 }
-function onPointerUp(event){if(state.drag&&state.drag.id===event.pointerId){state.lastDragMoved=Boolean(state.drag.moved);state.drag=null;}}
-function onWheel(event){event.preventDefault();const factor=event.deltaY>0?.9:1.1;if(state.view==='3d')state.zoom3d=Math.max(.65,Math.min(2.2,state.zoom3d*factor));else state.zoom2d=Math.max(.65,Math.min(4.5,state.zoom2d*factor));scheduleDraw();}
+function onPointerUp(event){
+  if(!(state.drag&&state.drag.id===event.pointerId))return;const drag=state.drag;state.lastDragMoved=Boolean(drag.moved);
+  if(state.view==='3d'&&drag.moved&&Math.hypot(drag.vLon,drag.vLat)>.02)state.globeInertia={vLon:drag.vLon,vLat:drag.vLat,last:performance.now()};
+  state.drag=null;if(state.globeInertia)scheduleDraw();
+}
+function onWheel(event){
+  event.preventDefault();const delta=clamp(Number(event.deltaY)||0,-120,120),factor=Math.exp(-delta*.0012),p=canvasPoint(event);
+  if(state.view==='3d'){state.zoom3d=clamp(state.zoom3d*factor,MIN_ZOOM,MAX_ZOOM_3D);}
+  else{
+    const oldZoom=state.zoom2d,newZoom=clamp(oldZoom*factor,MIN_ZOOM,MAX_ZOOM_2D),cx=$('globalFlowCanvas').getBoundingClientRect().width/2,cy=$('globalFlowCanvas').getBoundingClientRect().height/2;
+    if(newZoom!==oldZoom){const ratio=newZoom/oldZoom;state.panX+=(p.x-cx-state.panX)*(1-ratio);state.panY+=(p.y-cy-state.panY)*(1-ratio);state.zoom2d=newZoom;}
+  }
+  scheduleDraw();
+}
 function detailColumns(records){
   const standard=[
     {key:'source',label:L('Kaynak','Source'),value:r=>sourceLabel(r.source)},{key:'shipmentFile',label:L('İhracat / İthalat Dosya No','Export / Import File No')},
@@ -916,7 +965,7 @@ function init(){
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
 return {
-  ISTANBUL,FIELD_CANDIDATES,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,riskLevel,
+  ISTANBUL,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,riskLevel,
   normalizeRecord,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,
   distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,refresh:()=>refresh(true),resetView
 };
