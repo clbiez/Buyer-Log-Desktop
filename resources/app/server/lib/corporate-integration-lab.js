@@ -108,7 +108,7 @@ function traceRows(rows, traceValue) {
   return { matches: matched.length, sample: redact(matched.slice(0, 3)) };
 }
 
-function inspectSource({ source = {}, rawRows = [], normalizedRows = null, modelRows = null, referenceRows = null, traceValue = '', joinAudit = null } = {}) {
+function inspectSource({ source = {}, rawRows = [], normalizedRows = null, modelRows = null, referenceRows = null, traceValue = '', joinAudit = null, liveProbe = null } = {}) {
   const raw = Array.isArray(rawRows) ? rawRows : [];
   const normalized = Array.isArray(normalizedRows) ? normalizedRows : raw;
   const modeled = Array.isArray(modelRows) ? modelRows : normalized;
@@ -118,6 +118,10 @@ function inspectSource({ source = {}, rawRows = [], normalizedRows = null, model
   const mapped = source.mapping || {};
   const mappingBlocked = finite(mapped.blocking) > 0;
   const configured = Boolean(source.connection && clean(source.connection.server) && clean(source.connection.catalog));
+  const hasLiveProbe = Boolean(liveProbe && liveProbe.kind === 'live-connectivity');
+  const liveConnectivityOk = hasLiveProbe && liveProbe.ok === true;
+  const liveQueryKnown = hasLiveProbe && typeof liveProbe.queryOk === 'boolean';
+  const liveQueryRows = hasLiveProbe ? finite(liveProbe.queryRowCount) : 0;
   const joinTotals = joinAudit && joinAudit.totals && typeof joinAudit.totals === 'object' ? joinAudit.totals : null;
   const hasJoinAudit = Boolean(joinTotals);
   const modelInputRows = hasJoinAudit ? finite(joinTotals.asasRows) : raw.length;
@@ -136,12 +140,40 @@ function inspectSource({ source = {}, rawRows = [], normalizedRows = null, model
     stage('source', 'Source', configured ? 'pass' : 'fail', null,
       configured ? `${clean(source.connection.server)} / ${clean(source.connection.catalog)}` : 'Connection is not configured',
       { sourceId: source.id, profileId: source.profileId, engine: source.engine, shape: source.shape }),
-    stage('query', 'Query', configured ? 'pass' : 'blocked', null,
-      source.queryMode === 'manual' ? 'Stored manual query' : 'Generated from registered source metadata',
-      { mode: source.queryMode || 'generated' }),
-    stage('raw', 'Raw Data', raw.length ? 'pass' : (source.lastRun && source.lastRun.ok ? 'warning' : 'blocked'), raw.length,
-      raw.length ? `${raw.length} cached rows available for inspection` : 'No cached rows available',
-      { duplicateRows: rawInfo.duplicateRows, missingOrderKeys: rawInfo.missingOrderKeys }),
+    stage('connectivity', 'Live Connectivity',
+      !hasLiveProbe ? 'optional' : (liveConnectivityOk ? 'pass' : 'fail'), null,
+      !hasLiveProbe
+        ? 'Live connection has not been tested in this diagnostic session'
+        : (liveConnectivityOk
+          ? `Live connection verified${liveProbe.provider ? ` via ${clean(liveProbe.provider)}` : ''}`
+          : clean(liveProbe.error) || 'Live connection failed'),
+      hasLiveProbe ? {
+        at: liveProbe.at, provider: liveProbe.provider, method: liveProbe.method,
+        tableCount: liveProbe.tableCount, elapsedMs: liveProbe.elapsedMs,
+        error: liveProbe.error, code: liveProbe.code,
+      } : {}),
+    stage('query', 'Query',
+      !configured ? 'blocked' : (liveQueryKnown ? (liveProbe.queryOk ? 'pass' : 'fail') : 'pass'), null,
+      liveQueryKnown
+        ? (liveProbe.queryOk
+          ? `Live query executed successfully${liveQueryRows ? ` · ${liveQueryRows} rows sampled` : ''}`
+          : clean(liveProbe.queryError) || 'Live query execution failed')
+        : (source.queryMode === 'manual' ? 'Stored manual query; live execution not tested' : 'Generated from registered source metadata; live execution not tested'),
+      liveQueryKnown ? {
+        mode: source.queryMode || 'generated',
+        queryOk: liveProbe.queryOk,
+        queryRowCount: liveProbe.queryRowCount,
+        queryCode: liveProbe.queryCode,
+        queryError: liveProbe.queryError,
+        queryRuns: liveProbe.queryRuns || [],
+      } : { mode: source.queryMode || 'generated' }),
+    stage('raw', 'Raw Data',
+      raw.length ? 'pass' : (liveQueryRows ? 'warning' : (source.lastRun && source.lastRun.ok ? 'warning' : 'blocked')),
+      raw.length || (liveQueryRows || 0),
+      raw.length
+        ? `${raw.length} cached rows available for inspection`
+        : (liveQueryRows ? `${liveQueryRows} live rows returned; runtime cache is not populated` : 'No cached rows available'),
+      { duplicateRows: rawInfo.duplicateRows, missingOrderKeys: rawInfo.missingOrderKeys, liveQueryRows }),
     stage('normalization', 'Normalization', rawInfo.duplicateRows || rawInfo.missingOrderKeys ? 'warning' : (normalized.length ? 'pass' : 'blocked'), normalized.length,
       `${rawInfo.duplicateRows} duplicate rows; ${rawInfo.missingOrderKeys} rows without order key`,
       { inputRows: raw.length, outputRows: normalized.length, duplicateRows: rawInfo.duplicateRows, missingOrderKeys: rawInfo.missingOrderKeys }),
@@ -163,7 +195,8 @@ function inspectSource({ source = {}, rawRows = [], normalizedRows = null, model
   return {
     sourceId: clean(source.id),
     sourceName: clean(source.name),
-    status: mappingBlocked ? 'fail' : pipeline.some(item => item.status === 'warning') ? 'warning' : 'pass',
+    status: pipeline.some(item => item.status === 'fail') ? 'fail'
+      : (pipeline.some(item => item.status === 'warning') ? 'warning' : 'pass'),
     metrics: {
       rawRows: raw.length,
       normalizedRows: normalized.length,
@@ -174,8 +207,10 @@ function inspectSource({ source = {}, rawRows = [], normalizedRows = null, model
       duplicateRows: rawInfo.duplicateRows,
       missingOrderKeys: rawInfo.missingOrderKeys,
       normalizedDuplicateRows: normalizedInfo.duplicateRows,
+      liveQueryRows,
     },
     pipeline,
+    liveProbe: redact(liveProbe),
     samples: redact(raw.slice(0, MAX_SAMPLE_ROWS)),
     join: redact(joinEvidence),
     trace: {
@@ -245,6 +280,7 @@ function buildSnapshot({ overview = {}, support = {}, probes = [], sourceRows = 
   const environment = deriveEnvironment({ supported: support.supported === true, probes });
   const describedAutomations = describeAutomations(automations);
   const inventory = integrationInventory(overview, describedAutomations, sourceRows);
+  const probeBySource = new Map((Array.isArray(probes) ? probes : []).filter(Boolean).map(probe => [clean(probe.sourceId), probe]));
   const ias = (overview.sources || []).find(source => source.profileId === 'ias-warehouse') || (overview.sources || [])[0] || {};
   const selectedInspector = inspectSource({
     source: ias,
@@ -252,6 +288,7 @@ function buildSnapshot({ overview = {}, support = {}, probes = [], sourceRows = 
     normalizedRows: normalizedRows[ias.id],
     modelRows: modelRows[ias.id],
     joinAudit: sourceAudits[ias.id],
+    liveProbe: probeBySource.get(clean(ias.id)) || null,
   });
   return redact({
     environment,
@@ -264,12 +301,14 @@ function buildSnapshot({ overview = {}, support = {}, probes = [], sourceRows = 
       attentionCount: inventory.filter(item => ['warning', 'failed', 'unavailable'].includes(item.status)).length,
     },
     inventory,
+    probes: redact(Array.isArray(probes) ? probes : []),
     inspectors: (overview.sources || []).map(source => inspectSource({
       source,
       rawRows: sourceRows[source.id] || [],
       normalizedRows: normalizedRows[source.id],
       modelRows: modelRows[source.id],
       joinAudit: sourceAudits[source.id],
+      liveProbe: probeBySource.get(clean(source.id)) || null,
     })),
     selectedInspector,
     automations: describedAutomations,
@@ -295,6 +334,12 @@ function textReport(value) {
   ];
   for (const item of snapshot.inventory || []) {
     lines.push(`- ${clean(item.name)} [${clean(item.kind)}] ${clean(item.status)} rows=${item.rowCount == null ? 'n/a' : item.rowCount}${item.note ? ` — ${clean(item.note)}` : ''}`);
+  }
+  if ((snapshot.probes || []).length) {
+    lines.push('', 'LIVE PROBES');
+    for (const probe of snapshot.probes || []) {
+      lines.push(`- ${clean(probe.sourceName || probe.sourceId)}: connectivity=${probe.ok === true ? 'pass' : 'fail'} query=${typeof probe.queryOk === 'boolean' ? (probe.queryOk ? 'pass' : 'fail') : 'not-run'}${probe.queryError ? ` — ${clean(probe.queryError)}` : ''}`);
+    }
   }
   const inspector = snapshot.selectedInspector || snapshot.inspector;
   if (inspector) {
