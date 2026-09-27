@@ -9,7 +9,8 @@ const { LOCAL_DATA_ROOT } = require('../user-data');
 
 const gzip = promisify(zlib.gzip);
 const gunzip = promisify(zlib.gunzip);
-const CACHE_SCHEMA_VERSION = 1;
+// v2: CP/Orders lojistik segmentleri parsiyel kimliği (dosya/konteyner/gemi) taşır.
+const CACHE_SCHEMA_VERSION = 2;
 const ROOT = path.join(LOCAL_DATA_ROOT, 'page-cache');
 // order-summary: CP tabanlı sipariş özeti. Siparişler ekranı okumaz; orders
 // projeksiyonuna gömülüyken her ilk girişte ~%35 fazla veri indiriliyordu.
