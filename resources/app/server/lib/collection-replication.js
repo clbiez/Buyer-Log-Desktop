@@ -23,7 +23,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
-const { withFileLeaseAsync } = require('./shared-file-transaction');
+const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
 
 const REPLICATION_VERSION = 1;
 const REPLICATION_STATE_VERSION = 1;
@@ -40,15 +40,38 @@ function envelopeChecksum(value) {
 function envelopeChainChecksum(value) { return checksum({ sha256:value.sha256, parentSha256:value.parentSha256 || null }); }
 function envelopeIdentity(value) { return clean(value && value.chainSha256) || clean(value && value.sha256); }
 
+const OPTIONAL_SYNC_ERROR_CODES = new Set(['EPERM', 'EINVAL', 'ENOSYS', 'ENOTSUP', 'EOPNOTSUPP']);
+
+async function syncFileHandleBestEffort(handle) {
+  try { await handle.sync(); }
+  catch (error) {
+    // Windows security filters / OneDrive-like providers can reject fsync even
+    // when the write itself is valid. Preserve real I/O failures.
+    if (!OPTIONAL_SYNC_ERROR_CODES.has(error && error.code)) throw error;
+  }
+}
+
 async function writeJson(file, value) {
   await fsp.mkdir(path.dirname(file), { recursive: true });
   const temporary = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
+  let handle = null;
   try {
-    const handle = await fsp.open(temporary, 'wx', 0o600);
-    try { await handle.writeFile(JSON.stringify(value), 'utf8'); await handle.sync(); }
-    finally { await handle.close(); }
-    await fsp.rename(temporary, file);
-  } finally { try { await fsp.unlink(temporary); } catch (_) {} }
+    handle = await fsp.open(temporary, 'wx', 0o600);
+    await handle.writeFile(JSON.stringify(value), 'utf8');
+    await syncFileHandleBestEffort(handle);
+    await handle.close();
+    handle = null;
+
+    // On Windows the destination can be held for a few milliseconds by
+    // Defender, indexing or backup software. A single rename used to surface
+    // EPERM to the UI even though the Collection itself was already saved.
+    // Retry the atomic replace with bounded exponential backoff; the lease
+    // above still serializes concurrent Buyer Log writers.
+    await replaceFileWithRetry(temporary, file, { attempts: 8, baseDelayMs: 20 });
+  } finally {
+    if (handle) { try { await handle.close(); } catch (_) {} }
+    try { await fsp.unlink(temporary); } catch (_) {}
+  }
 }
 
 async function readEnvelope(file, ownerId) {
