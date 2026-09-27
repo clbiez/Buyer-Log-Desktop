@@ -208,6 +208,8 @@ test('düzenleyici alan ekleme/çıkarma ve kaynak seçimini sunar', () => {
   assert.match(ui, /data-drop-operand/, 'koşuldan alan çıkarılabilmeli');
   assert.match(ui, /data-source=/, 'operandın veri kaynağı seçilebilmeli');
   assert.match(ui, /state\.sources/, 'kaynak listesi sunucudan gelmeli');
+  assert.match(ui, /fullSource=/, 'database sütun seçimi seçilen kaynağın canlı şemasını istemeli');
+  assert.match(ui, /ensureDatabaseColumns/, 'tam database şeması seçim anında lazy yüklenmeli');
   /* Yorumlar ELENİR: açıklama metni ASAS/IAS'ı anlatabilir, kodun kendisi
      kaynak adına dallanmamalı. */
   const code = ui.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
