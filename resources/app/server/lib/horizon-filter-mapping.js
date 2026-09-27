@@ -78,6 +78,7 @@ function indexTargetFields(targetFields) {
       key: fieldKey(label),
       nameKey: fieldKey(field.name || ''),
       concept: conceptOf(label) || conceptOf(field.name || ''),
+      physical: Boolean(field.dynamic || (String(field.table || '').trim() && String(field.name || '').trim())),
     };
   }).filter(entry => entry.key || entry.nameKey);
 }
@@ -91,20 +92,32 @@ function matchField(sourceName, indexed, taken) {
   if (!key) return null;
 
   const free = entry => !taken.has(entry.label);
+  const livePhysical = indexed.some(entry => entry.physical);
 
-  const exact = indexed.find(entry => free(entry) && (entry.key === key || entry.nameKey === key));
+  const chooseUniquePhysical = entries => {
+    const physical = entries.filter(entry => entry.physical);
+    if (physical.length === 1) return physical[0];
+    if (physical.length > 1) return null;
+    return livePhysical ? null : (entries.length === 1 ? entries[0] : null);
+  };
+
+  const exact = chooseUniquePhysical(indexed.filter(entry => free(entry) && (entry.key === key || entry.nameKey === key)));
   if (exact) return { entry: exact, confidence: 'exact', matchedBy: exact.label };
 
   const concept = conceptOf(sourceName);
   if (concept) {
-    const byAlias = indexed.find(entry => free(entry) && entry.concept === concept);
+    const byAlias = chooseUniquePhysical(indexed.filter(entry => free(entry) && entry.concept === concept));
     if (byAlias) return { entry: byAlias, confidence: 'alias', matchedBy: byAlias.label };
   }
 
   if (key.length >= 5) {
-    const fuzzy = indexed.find(entry => free(entry)
+    const fuzzyCandidates = indexed.filter(entry => free(entry)
+      && (!livePhysical || entry.physical)
       && (entry.key.includes(key) || key.includes(entry.key)));
-    if (fuzzy) return { entry: fuzzy, confidence: 'fuzzy', matchedBy: fuzzy.label };
+    if (fuzzyCandidates.length === 1) {
+      const fuzzy = fuzzyCandidates[0];
+      return { entry: fuzzy, confidence: 'fuzzy', matchedBy: fuzzy.label };
+    }
   }
 
   /* AYIRT EDİCİ ORTAK KELİME. İki model aynı kavramı farklı uzunlukta
@@ -191,6 +204,8 @@ function proposeMapping({ groups, targetFields } = {}) {
         sourceField: sourceName,
         targetField: mapped.field,
         table: mapped.table,
+        column: field.name || '',
+        physical: Boolean(hit.entry.physical),
         confidence: hit.confidence,
         matchedBy: hit.matchedBy,
         typeMismatch: typeNote(condition, field),
