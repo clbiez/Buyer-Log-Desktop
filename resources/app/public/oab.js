@@ -341,9 +341,10 @@
      bölüm hiçbir DOM işlemi yapmaz, yalnız fetch çağırıp JSON döndürür.
      ================================================================ */
   function oabIsAuthErrorCode(code) {
-    return code === 'OAB_AUTH_REQUIRED' || code === 'OAB_AUTH_EXPIRED';
+    return code === 'OAB_AUTH_REQUIRED' || code === 'OAB_AUTH_EXPIRED'
+      || code === 'PASS_NOT_CONNECTED' || code === 'PASS_SESSION_EXPIRED';
   }
-  let oabDesktopAuthInFlight = null;
+  let oabBrowserAuthInFlight = null;
   let oabLastAuthContext = {};
   function oabNormalizeAuthContext(source) {
     const input = source && typeof source === 'object' ? source : {};
@@ -366,28 +367,26 @@
     return { ...oabLastAuthContext };
   }
   async function oabEnsureAuthentication(authContext = {}) {
-    const bridge = global.buyerLogDesktop;
-    if (!bridge || typeof bridge.ensureOabAuth !== 'function') {
-      const err = new Error(oabT('OAB oturumu Buyer Log masaüstü uygulamasından açılmalıdır.', 'OAB sign-in must be opened from the Buyer Log desktop app.'));
-      err.code = 'OAB_DESKTOP_AUTH_UNAVAILABLE';
-      throw err;
-    }
-    if (!oabDesktopAuthInFlight) {
+    if (!oabBrowserAuthInFlight) {
       const nextContext = oabNormalizeAuthContext(authContext);
       if (Object.keys(nextContext).length) oabLastAuthContext = nextContext;
-      const request = Promise.resolve(bridge.ensureOabAuth({ interactive:true, ...oabLastAuthContext }))
-        .then(result => {
-          if (result && result.ok && result.authenticated) return result;
-          const err = new Error((result && result.error) || oabT('OAB kullanıcı girişi tamamlanmadı.', 'OAB sign-in was not completed.'));
-          err.code = (result && result.code) || 'OAB_AUTH_REQUIRED';
-          throw err;
-        })
-        .finally(() => {
-          if (oabDesktopAuthInFlight === request) oabDesktopAuthInFlight = null;
-        });
-      oabDesktopAuthInFlight = request;
+      const request = fetch('/api/oab/auth/connect', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify(oabLastAuthContext),
+      }).then(async response => {
+        const result = await response.json().catch(() => ({}));
+        if (response.ok && result && result.ok && result.status && (result.status.connected || result.status.authenticated)) return result;
+        const err = new Error((result && result.error) || oabT('OAB bağlantısı tamamlanmadı.', 'OAB connection was not completed.'));
+        err.code = (result && result.code) || 'PASS_NOT_CONNECTED';
+        err.details = result && result.details;
+        throw err;
+      }).finally(() => {
+        if (oabBrowserAuthInFlight === request) oabBrowserAuthInFlight = null;
+      });
+      oabBrowserAuthInFlight = request;
     }
-    return oabDesktopAuthInFlight;
+    return oabBrowserAuthInFlight;
   }
   async function oabJson(url, options, allowAuthRetry = true) {
     const res = await fetch(url, options);
