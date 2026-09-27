@@ -35,6 +35,16 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
     }),
     setModule: (moduleId) => ipcRenderer.invoke('buyerlog:workspace-set-module', String(moduleId || '')),
     setTheme: (theme) => ipcRenderer.invoke('buyerlog:workspace-theme', String(theme || '')),
+    onTabActivity: (callback) => {
+      if (typeof callback !== 'function') return () => {};
+      const listener = (_event, payload = {}) => callback({
+        active: Boolean(payload && payload.active),
+        tabId: String(payload && payload.tabId || ''),
+        module: String(payload && payload.module || ''),
+      });
+      ipcRenderer.on('buyerlog:workspace-tab-activity', listener);
+      return () => ipcRenderer.removeListener('buyerlog:workspace-tab-activity', listener);
+    },
   },
   /* Teşhis: kimlik bilgisi, token veya oturum anahtarı İÇERMEZ (bkz. main.js → diagnostics). */
   diagnostics: () => ipcRenderer.invoke('buyerlog:diagnostics'),
