@@ -14,7 +14,8 @@ module.exports = function registerOabBatchRoutes(app, deps) {
     collectionSaveWorker,
     collectionWorkspaceEditAllowed,
     express,
-    fetchOabReportFromInternalSession,
+    ensurePassConnected,
+    fetchOabReportWithLoginRecovery,
     liveEvents,
     logRuntimeFailure,
     oabBatch,
@@ -26,7 +27,6 @@ module.exports = function registerOabBatchRoutes(app, deps) {
     redactSecrets,
     refreshCollectionPermissionScope,
     requestClientId,
-    requireOabInternalAuth,
     sharedRevisionStore,
     userAccess,
   } = deps;
@@ -98,7 +98,8 @@ async function oabFetchOneCombination(userId, currentUser, item, forceRefresh) {
   const params = single
     ? { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRef }
     : { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRefs:item.buyerGroupRefs };
-  const rows = await fetchOabReportFromInternalSession(params);
+  await ensurePassConnected(userId, params);
+  const rows = await fetchOabReportWithLoginRecovery(userId, params);
   const fields = [...new Set(rows.flatMap(row => Object.keys(row || {})))];
   let fetchedAt = new Date().toISOString();
   if (single) {
@@ -304,9 +305,9 @@ app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.req
     if (built.combinationCount > OAB_BATCH_MAX_COMBINATIONS) {
       return res.status(400).json({ error:`Seçim ${built.combinationCount} kombinasyon üretiyor; üst sınır ${OAB_BATCH_MAX_COMBINATIONS}. Seçimi daraltın.`, code:'OAB_BATCH_TOO_LARGE', details:{ combinationCount: built.combinationCount, maxCombinations: OAB_BATCH_MAX_COMBINATIONS } });
     }
-    // Do not start a background job that is guaranteed to fail for lack of
-    // authentication. Cached-only plans remain usable without opening PASS.
-    if (built.pendingCount > 0 || Boolean(req.body && req.body.forceRefresh)) requireOabInternalAuth();
+    // v7.0.80 behavior: authentication is established by the first real
+    // browser-backed combination fetch. This keeps cached-only plans browser-free
+    // and prevents a separate Electron auth transport from opening another window.
     const job = {
       jobId: `oab_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
       userId: req.currentUser.id,
