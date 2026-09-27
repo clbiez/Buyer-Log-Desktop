@@ -5698,6 +5698,7 @@ app.post('/api/backups/user-restore/start', (req, res) => {
         const restored = await userRestoreService.restore(upload.file, {
           user: req.currentUser,
           preflight: upload.inspected,
+          components: req.body && req.body.components,
           onProgress: progress => Object.assign(job, progress),
         });
         sourceCaches.clear(); initialDataLoadPromises.clear();
@@ -5895,7 +5896,10 @@ app.post('/api/backups', express.json({ limit: '12mb' }), (req, res) => {
   setImmediate(async () => {
     try {
       job.archive = await backupService.create({
-        mode, user: req.currentUser, browserStorage: req.body && req.body.browserStorage || {},
+        mode,
+        user: req.currentUser,
+        browserStorage: req.body && req.body.browserStorage || {},
+        components: mode === 'user' ? (req.body && req.body.components) : null,
         onProgress: progress => Object.assign(job, progress),
       });
     } catch (error) {
