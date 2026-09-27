@@ -473,6 +473,140 @@
     };
   }
 
+  /* License Royalty v2: ülke artık kuralın eşleşme boyutu değil, aynı
+     Licensor + License sözleşmesinin komisyon varyantıdır. TR/YD komisyonu
+     Royalty'ye eklenir; hologram tutarı yüzde değildir. */
+  function pricingRuleCountryGroup(value) {
+    const raw = norm(value);
+    if (!raw) return '';
+    const key = turkNorm(raw).replace(/[\s_]+/g, '-');
+    if (key === 'TR' || key === 'TURKIYE' || key === 'TURKEY') return 'TR';
+    if (key === 'NON-TR' || key === 'NONTR' || key === 'YD' || key === 'YURT-DISI' || key === 'YURTDISI' || key === 'OVERSEAS') return 'YD';
+    return 'YD';
+  }
+
+  function pricingRuleCommissionForCountry(rule, countryOrGroup) {
+    if (!rule || typeof rule !== 'object') return null;
+    const group = pricingRuleCountryGroup(countryOrGroup);
+    if (!group) return null;
+    const key = group === 'TR' ? 'trCommission' : 'ydCommission';
+    if (Object.prototype.hasOwnProperty.call(rule, key)) {
+      const raw = rule[key];
+      if (raw == null || String(raw).trim() === '') return null;
+      const value = Number(raw);
+      return Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
+    }
+    const legacyGroup = rule.countryGroup ? pricingRuleCountryGroup(rule.countryGroup) : '';
+    if (legacyGroup) return legacyGroup === group ? 0 : null;
+    return 0;
+  }
+
+  function pricingRuleEffectiveRoyalty(rule, countryOrGroup) {
+    if (!rule || typeof rule !== 'object') return null;
+    const royalty = Number(rule.royalty);
+    if (!Number.isFinite(royalty) || royalty < 0 || royalty > 100) return null;
+    if (countryOrGroup == null || String(countryOrGroup).trim() === '') return royalty;
+    const commission = pricingRuleCommissionForCountry(rule, countryOrGroup);
+    if (commission == null) return null;
+    const total = royalty + commission;
+    return Number.isFinite(total) && total >= 0 && total <= 100 ? total : null;
+  }
+
+  function pricingRuleHologramForCountry(rule, countryOrGroup) {
+    if (!rule || typeof rule !== 'object') return null;
+    const group = pricingRuleCountryGroup(countryOrGroup);
+    const legacyKey = group === 'TR' ? 'legacyTrHologramCost' : group === 'YD' ? 'legacyYdHologramCost' : '';
+    if (legacyKey && Object.prototype.hasOwnProperty.call(rule, legacyKey)) {
+      const legacy = Number(rule[legacyKey]);
+      if (Number.isFinite(legacy) && legacy >= 0) return legacy;
+    }
+    const value = Number(rule.hologramCost);
+    return Number.isFinite(value) && value >= 0 ? value : null;
+  }
+
+  function normalizeRoyaltySeasons(value) {
+    const raw = Array.isArray(value) ? value : (value == null || value === '' ? [] : [value]);
+    const seen = new Set(), out = [];
+    for (const item of raw) {
+      const text = norm(item), key = turkNorm(text);
+      if (text && key && !seen.has(key)) { seen.add(key); out.push(text); }
+    }
+    return out.sort((a, b) => a.localeCompare(b, 'tr'));
+  }
+
+  function royaltyMigrationConditionKey(rule) {
+    return [
+      norm(rule && rule.opdStart),
+      norm(rule && rule.opdEnd),
+      normalizeRoyaltySeasons(rule && rule.seasons != null ? rule.seasons : rule && rule.season).map(turkNorm).join('~'),
+      turkNorm(rule && (rule.licensor != null ? rule.licensor : rule.manufacturer)),
+      turkNorm(rule && rule.license),
+    ].join('|');
+  }
+
+  function migrateLicenseRoyaltyRules(rules) {
+    const input = Array.isArray(rules) ? rules : [];
+    const modern = [];
+    const legacy = new Map();
+    input.forEach((raw, index) => {
+      if (!raw || typeof raw !== 'object') return;
+      const source = { ...raw };
+      source.licensor = norm(source.licensor != null ? source.licensor : source.manufacturer);
+      delete source.manufacturer;
+      source.license = norm(source.license);
+      source.seasons = normalizeRoyaltySeasons(source.seasons != null ? source.seasons : source.season);
+      delete source.season;
+      const hasModernCommission = Object.prototype.hasOwnProperty.call(source, 'trCommission')
+        || Object.prototype.hasOwnProperty.call(source, 'ydCommission');
+      const legacyGroup = source.countryGroup ? pricingRuleCountryGroup(source.countryGroup) : '';
+      if (hasModernCommission || !legacyGroup) {
+        delete source.countryGroup;
+        if (!hasModernCommission) {
+          source.trCommission = 0;
+          source.ydCommission = 0;
+        }
+        modern.push(source);
+        return;
+      }
+      const key = royaltyMigrationConditionKey(source);
+      if (!legacy.has(key)) legacy.set(key, []);
+      legacy.get(key).push({ source, group: legacyGroup, index });
+    });
+
+    for (const entries of legacy.values()) {
+      const tr = entries.find(item => item.group === 'TR');
+      const yd = entries.find(item => item.group === 'YD');
+      const samples = [tr, yd].filter(Boolean);
+      if (!samples.length) continue;
+      const effective = samples.map(item => Number(item.source.royalty)).filter(Number.isFinite);
+      const baseRoyalty = effective.length ? Math.min(...effective) : Number(samples[0].source.royalty);
+      const primary = (yd || tr).source;
+      const merged = { ...primary };
+      delete merged.countryGroup;
+      merged.royalty = baseRoyalty;
+      merged.trCommission = tr && Number.isFinite(Number(tr.source.royalty)) ? Number(tr.source.royalty) - baseRoyalty : null;
+      merged.ydCommission = yd && Number.isFinite(Number(yd.source.royalty)) ? Number(yd.source.royalty) - baseRoyalty : null;
+      const trHologram = tr ? Number(tr.source.hologramCost) : null;
+      const ydHologram = yd ? Number(yd.source.hologramCost) : null;
+      const validTrHologram = Number.isFinite(trHologram) && trHologram >= 0;
+      const validYdHologram = Number.isFinite(ydHologram) && ydHologram >= 0;
+      if (validTrHologram && validYdHologram && trHologram !== ydHologram) {
+        merged.hologramCost = ydHologram;
+        merged.legacyTrHologramCost = trHologram;
+        merged.legacyYdHologramCost = ydHologram;
+      } else {
+        const hologram = validYdHologram ? ydHologram : validTrHologram ? trHologram : Number(primary.hologramCost);
+        merged.hologramCost = hologram;
+        delete merged.legacyTrHologramCost;
+        delete merged.legacyYdHologramCost;
+      }
+      merged.legacyRuleIds = entries.map(item => String(item.source.id || '')).filter(Boolean);
+      merged.migratedFromCountrySplit = true;
+      modern.push(merged);
+    }
+    return modern;
+  }
+
   function decimalFraction(value) {
     if (value == null || value === '') return null;
     let text = String(value).trim().replace(',', '.');
@@ -499,12 +633,13 @@
     return Number(sign * quotient) / Number(scale);
   }
 
-  function calculateSuppFobWithRule(fob, rule) {
+  function calculateSuppFobWithRule(fob, rule, countryOrGroup) {
     const fobFraction = decimalFraction(fob);
-    const royaltyFraction = decimalFraction(rule && rule.royalty);
-    const hologramFraction = decimalFraction(rule && rule.hologramCost);
+    const royalty = pricingRuleEffectiveRoyalty(rule, countryOrGroup);
+    const hologram = pricingRuleHologramForCountry(rule, countryOrGroup);
+    const royaltyFraction = decimalFraction(royalty);
+    const hologramFraction = decimalFraction(hologram);
     if (!fobFraction || !royaltyFraction || !hologramFraction) return null;
-    const royalty = Number(rule.royalty);
     if (!Number.isFinite(royalty) || royalty < 0 || royalty > 100) return null;
     const baseNum = fobFraction.num * hologramFraction.den - hologramFraction.num * fobFraction.den;
     const baseDen = fobFraction.den * hologramFraction.den;
@@ -512,26 +647,18 @@
     return roundFractionHalfUp(baseNum * royaltyBase, baseDen * royaltyFraction.den * 100n, 2);
   }
 
-  /* Ters yön (v5.93): Supp. FOB → Final FOB.
-     İleri yön: Supp = (Final − Hologram) × (1 − Royalty%)
-     Ters yön:  Final = Supp ÷ (1 − Royalty%) + Hologram
-     Koleksiyon'daki Landed hesabı da yıllardır bu formülü kullanıyor; burada
-     yalnız tek yerden çağrılabilir hâle getiriliyor. Royalty %100 olduğunda
-     bölme geçersizdir ve null döner — sonsuz bir fiyat üretmek yerine hesabın
-     yapılamadığını söylemek doğrudur. */
-  function calculateFinalFobWithRule(suppFob, rule) {
+  function calculateFinalFobWithRule(suppFob, rule, countryOrGroup) {
     const suppFraction = decimalFraction(suppFob);
-    const royaltyFraction = decimalFraction(rule && rule.royalty);
-    const hologramFraction = decimalFraction(rule && rule.hologramCost);
+    const royalty = pricingRuleEffectiveRoyalty(rule, countryOrGroup);
+    const hologram = pricingRuleHologramForCountry(rule, countryOrGroup);
+    const royaltyFraction = decimalFraction(royalty);
+    const hologramFraction = decimalFraction(hologram);
     if (!suppFraction || !royaltyFraction || !hologramFraction) return null;
-    const royalty = Number(rule.royalty);
     if (!Number.isFinite(royalty) || royalty < 0 || royalty >= 100) return null;
-    // Supp ÷ ((100 − Royalty) / 100) = Supp × 100 / (100 − Royalty)
     const royaltyBase = 100n * royaltyFraction.den - royaltyFraction.num;
     if (royaltyBase === 0n) return null;
     const baseNum = suppFraction.num * 100n * royaltyFraction.den;
     const baseDen = suppFraction.den * royaltyBase;
-    // + Hologram
     const num = baseNum * hologramFraction.den + hologramFraction.num * baseDen;
     const den = baseDen * hologramFraction.den;
     return roundFractionHalfUp(num, den, 2);
@@ -633,6 +760,11 @@
     resolveTransitDays,
     roundHalfUp,
     computePriorityFlags,
+    pricingRuleCountryGroup,
+    pricingRuleCommissionForCountry,
+    pricingRuleEffectiveRoyalty,
+    pricingRuleHologramForCountry,
+    migrateLicenseRoyaltyRules,
     decimalFraction,
     roundFractionHalfUp,
     calculateSuppFobWithRule,
