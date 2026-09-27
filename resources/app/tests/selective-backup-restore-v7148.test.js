@@ -58,7 +58,6 @@ test('restore preflight reads explicit component manifest and supports legacy in
         { path:'user/filters.json' },
         { path:'user/shipping.json' },
         { path:'user/refresh-history.json' },
-        { path:'user/source-data/orders.xlsx' },
       ],
     },
   };
