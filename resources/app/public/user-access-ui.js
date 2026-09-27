@@ -104,7 +104,7 @@
     }
     try {
       if (typeof showToast === 'function') showToast(tr('OAB giriş ekranı açılıyor…', 'Opening OAB sign-in…'));
-      const result = await bridge.ensureOabAuth({ interactive:true, manual:true });
+      const result = await bridge.ensureOabAuth({ interactive:true });
       if (result && result.ok && result.authenticated) {
         if (typeof showToast === 'function') showToast(tr('OAB oturumu açıldı.', 'OAB session is ready.'));
         return;
