@@ -1594,8 +1594,63 @@ function restoreUserBackupStores(userId, snapshot = {}) {
   return result;
 }
 
+/* Seçilebilir backup/restore: CP Tracker Ex-Factory revizyonları datemap içindeki
+   yalnız "ex" alanıdır. Retail / In Store revizyonları ve diğer CP alanları
+   aynı kayıtta bulunsa bile bu kapsam onları değiştirmez. */
+function cpExFactoryRevisionSnapshot() {
+  const ov = loadOverrides(), dates = {};
+  for (const [key, record] of Object.entries(ov.datemap || {})) {
+    const value = record && record.ex != null ? String(record.ex).trim() : '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) dates[String(key)] = value;
+  }
+  return { schemaVersion: 1, dates };
+}
+async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
+  const source = snapshot && snapshot.dates && typeof snapshot.dates === 'object' ? snapshot.dates : {};
+  const incoming = {};
+  for (const [key, value] of Object.entries(source)) {
+    const text = value == null ? '' : String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text) && String(key).trim()) incoming[String(key)] = text;
+  }
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const ov = loadOverrides(), datemap = { ...(ov.datemap || {}) };
+    const currentKeys = Object.keys(datemap).filter(key => datemap[key] && datemap[key].ex != null && String(datemap[key].ex).trim());
+    const touched = new Set([...currentKeys, ...Object.keys(incoming)]);
+    let cleared = 0, restored = 0;
+
+    for (const key of touched) {
+      const current = datemap[key] && typeof datemap[key] === 'object' ? { ...datemap[key] } : {};
+      if (Object.prototype.hasOwnProperty.call(incoming, key)) {
+        if (current.ex !== incoming[key]) restored += 1;
+        current.ex = incoming[key];
+      } else if (Object.prototype.hasOwnProperty.call(current, 'ex')) {
+        delete current.ex; cleared += 1;
+      }
+      if (Object.keys(current).length) datemap[key] = current;
+      else delete datemap[key];
+    }
+
+    ov.datemap = datemap;
+    ov._revisions = { ...(ov._revisions || {}) };
+    ov._revisions.orders = (Number(ov._revisions.orders) || 0) + 1;
+    try {
+      const saved = saveOverrides(ov, ov._revision);
+      // Shared Hub'ın kanonik cp-order kayıtlarına da TAM dates kaydını yaz:
+      // böylece restore yalnız ex'i değiştirirken retail/mb alanları korunur.
+      for (const key of touched) {
+        await cpSharedStore.mirrorPatch(key, { dates: saved.datemap && saved.datemap[key] ? saved.datemap[key] : null }, { actor });
+      }
+      return { restored, cleared, total: Object.keys(incoming).length, revision: Number(saved._revisions && saved._revisions.orders) || 0 };
+    } catch (error) {
+      if (!(error instanceof RevisionConflictError) || attempt === 2) throw error;
+    }
+  }
+  throw new RevisionConflictError('CP Ex-Factory revizyonları', 0, 0, 'orders');
+}
+
 module.exports = {
-  attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores,
+  attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
