@@ -60,7 +60,7 @@ test('IAS inspector reports row loss, duplicates, mapping blockers and one-recor
     traceValue: '450123',
   });
 
-  assert.deepEqual(inspected.pipeline.map(stage => stage.id), ['source', 'query', 'raw', 'normalization', 'mapping', 'model', 'reference']);
+  assert.deepEqual(inspected.pipeline.map(stage => stage.id), ['source', 'connectivity', 'query', 'raw', 'normalization', 'mapping', 'model', 'reference']);
   assert.equal(inspected.metrics.rawRows, 4);
   assert.equal(inspected.metrics.normalizedRows, 3);
   assert.equal(inspected.metrics.modelRows, 2);
@@ -72,6 +72,31 @@ test('IAS inspector reports row loss, duplicates, mapping blockers and one-recor
   assert.equal(inspected.trace.stages.raw.matches, 2);
   assert.equal(inspected.trace.stages.model.matches, 2);
 });
+
+test('live probe evidence separates connectivity success from query failure', () => {
+  const inspected = lab.inspectSource({
+    source: { ...overview().sources[1], mapping: { ok: 3, review: 0, blocking: 0, needsAttention: 0, problems: [] } },
+    rawRows: [],
+    liveProbe: {
+      kind: 'live-connectivity',
+      sourceId: 'mc_ias',
+      ok: true,
+      provider: 'MSOLAP',
+      tableCount: 12,
+      elapsedMs: 42,
+      queryOk: false,
+      queryRowCount: 0,
+      queryCode: 'MODEL_QUERY_FAILED',
+      queryError: "Column 'Buyer Grup (TR)' cannot be found",
+      queryRuns: [{ id: 'cp', ok: false, code: 'MODEL_QUERY_FAILED' }],
+    },
+  });
+  assert.equal(inspected.pipeline.find(stage => stage.id === 'connectivity').status, 'pass');
+  assert.equal(inspected.pipeline.find(stage => stage.id === 'query').status, 'fail');
+  assert.equal(inspected.status, 'fail');
+  assert.equal(inspected.liveProbe.queryCode, 'MODEL_QUERY_FAILED');
+});
+
 
 test('IAS inspector uses the existing ASAS-IAS join audit as model-stage evidence', () => {
   const inspected = lab.inspectSource({
@@ -134,10 +159,33 @@ test('lab snapshot reuses registry read-model evidence and includes web integrat
     automations: { recipes: [{ id: 'troy', name: 'Troy', purpose: 'browser', url: 'https://troy.example', steps: [] }], runs: [] },
   });
   assert.equal(snapshot.environment.mode, 'LOCAL_SIMULATION');
+  assert.deepEqual(snapshot.probes, []);
   assert.ok(snapshot.inventory.some(item => item.id === 'mc_ias' && item.kind === 'database'));
   assert.ok(snapshot.inventory.some(item => item.id === 'automation:troy' && item.kind === 'web'));
   assert.equal(snapshot.selectedInspector.sourceId, 'mc_ias');
   assert.equal(snapshot.safety.destructiveAutomation, 'dry-run-only');
+});
+
+test('snapshot exports persisted live probe details for AI diagnostics', () => {
+  const snapshot = lab.buildSnapshot({
+    overview: overview(),
+    support: { supported: true, platformLabel: 'Windows' },
+    probes: [{
+      kind: 'live-connectivity', sourceId: 'mc_ias', sourceName: 'IAS',
+      ok: true, simulated: false, at: '2026-09-27T09:00:00.000Z',
+      provider: 'MSOLAP', queryOk: false, queryCode: 'MODEL_QUERY_FAILED',
+      queryError: "Column 'Buyer Grup (TR)' cannot be found",
+      queryRuns: [{ id: 'cp', ok: false, query: 'EVALUATE ...', error: 'bad query' }],
+    }],
+    sourceRows: { mc_asas: [], mc_ias: [] },
+  });
+  assert.equal(snapshot.environment.mode, 'CORPORATE_LIVE');
+  assert.equal(snapshot.probes.length, 1);
+  assert.equal(snapshot.probes[0].queryOk, false);
+  assert.equal(snapshot.inspectors.find(item => item.sourceId === 'mc_ias').pipeline.find(stage => stage.id === 'query').status, 'fail');
+  const pkg = lab.buildDiagnosticPackage(snapshot);
+  assert.match(pkg.text, /LIVE PROBES/);
+  assert.match(pkg.text, /query=fail/);
 });
 
 test('Corporate Integration Lab is wired lazily into the existing Data Management screen', () => {
@@ -159,6 +207,9 @@ test('Corporate Integration Lab is wired lazily into the existing Data Managemen
   assert.doesNotMatch(ui, /\/api\/automations\/recipes\/\$\{encodeURIComponent\(recipeId\)\}\/run/);
   assert.match(server, /app\.get\('\/api\/data-management\/integration-lab'/);
   assert.match(server, /app\.post\('\/api\/data-management\/integration-lab\/inspect'/);
+  assert.match(server, /integrationLabProbeCache/);
+  assert.match(server, /integrationLabProbeIntake/);
+  assert.match(server, /buildConnectionQuery\(scoped/);
   assert.match(css, /\.dmLabPipeline/);
   assert.match(perf, /data-management\.js/);
 });
