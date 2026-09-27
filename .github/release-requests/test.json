@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.143",
-  "commit_sha": "32ad0eec914c2b5d9e997a31a8a86609a81a05be",
-  "release_notes": "Buyer Log 7.0.143: Global Flow Map daha doğru Natural Earth ülke sınırlarıyla yenilendi; harita yüklenirken thinking-orbs Working görseli kullanılıyor. Deniz sevkiyatları Suez/Çanakkale gibi gerçekçi deniz koridorlarından geçirilir, rota hover alanı tüm çizgi boyunca kesintisiz çalışır. İhracat/ithalat dosya numarası bazında gemi, uçak ve tır simgeleri Handover tarihi ile ülke/yükleme yol süresi kurallarına göre rota ilerlemesine yerleştirilir ve yakın araçlar gruplanır. Araç tıklaması ilgili siparişleri, rota tıklaması tüm rota siparişlerini açar. İstanbul varışında Awaiting Retail Transfer, Customs Operation ve In Warehouse; kalkış ülkesinde Production ve Loading Operations ayrımları hover/click detaylarıyla gösterilir. Global Flow, LFL, Backlog, CP, Collection Analytics, Price & Supplier Analysis ve operasyonel uyarı detayları ortak sağ çekmece altyapısına taşındı. Çekmece model görsellerini, PLM Sync'i, kalıcı sütun seçimini, aramayı ve yalnız görünür sütunları görseller hücreye bağlı olacak şekilde Excel'e aktarmayı destekler. Regresyon testleri genişletildi."
+  "version": "7.0.144",
+  "commit_sha": "f562db17937a26caacf7e14743d8abf4422dc309",
+  "release_notes": "Buyer Log 7.0.144: kullanıcı menüsüne mevcut güvenli masaüstü OAB SSO akışını kullanan manuel OAB Kullanıcı Girişi eklendi. Global Flow haritasının aydınlık/gri temadaki deniz, kara ve ülke sınırı kontrastı artırıldı; koyu tema korunuyor. Ayrıca ortak alt detay çekmecesinde sütun tercihleri sayfa bazlı saklanıyor, Excel dışa aktarımında Tüm Sütunlar/Görünen Sütunlar seçilebiliyor, boş hücreler canonical/nested kaynak fallback ile tamamlanıyor ve panel sol kenardan sürüklenerek genişletilebiliyor."
 }
