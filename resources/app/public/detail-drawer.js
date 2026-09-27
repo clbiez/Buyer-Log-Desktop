@@ -10,6 +10,7 @@
 'use strict';
 
 const PREF_PREFIX='buyerlog.detailDrawer.columns.';
+const WIDTH_PREFIX='buyerlog.detailDrawer.width.';
 const clean=value=>String(value==null?'':value).replace(/\s+/g,' ').trim();
 const safeFilePart=value=>clean(value).replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,90)||'BuyerLog_Detail';
 const escapeHtml=value=>clean(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -39,17 +40,31 @@ const L=(tr,en)=>isEn()?en:tr;
 const store=()=>root.BLStorage||root.localStorage;
 let active=null;
 
-function prefKey(scope){return PREF_PREFIX+clean(scope||'generic').replace(/[^a-z0-9_.-]+/gi,'_');}
-function loadVisible(scope,columns){
+function storagePart(value){return clean(value||'generic').replace(/[^a-z0-9_.-]+/gi,'_');}
+function pageScope(input){
+  const explicit=clean(input&&input.pageScope);
+  if(explicit)return explicit;
+  return clean(document.body&&document.body.dataset&&document.body.dataset.activeTab)||'global';
+}
+function prefKey(scope,page){return PREF_PREFIX+storagePart(page)+'.'+storagePart(scope);}
+function loadVisible(scope,page,columns){
   try{
-    const raw=JSON.parse(store().getItem(prefKey(scope))||'null');
+    const raw=JSON.parse(store().getItem(prefKey(scope,page))||'null');
     const allowed=new Set(columns.map(c=>c.key));
     const selected=Array.isArray(raw)?raw.filter(key=>allowed.has(key)):[];
     if(selected.length)return selected;
   }catch(_){}
   return columns.map(c=>c.key);
 }
-function saveVisible(scope,keys){try{store().setItem(prefKey(scope),JSON.stringify(keys));}catch(_){}}
+function saveVisible(scope,page,keys){try{store().setItem(prefKey(scope,page),JSON.stringify(keys));}catch(_){}}
+function widthKey(page){return WIDTH_PREFIX+storagePart(page);}
+function loadWidth(page){
+  try{
+    const value=Number(store().getItem(widthKey(page)));
+    return Number.isFinite(value)&&value>=420?value:null;
+  }catch(_){return null;}
+}
+function saveWidth(page,width){try{store().setItem(widthKey(page),String(Math.round(width)));}catch(_){}}
 function ensureHost(){
   let host=document.getElementById('blSharedDetailDrawer');
   if(host)return host;
@@ -60,11 +75,68 @@ function ensureHost(){
   document.body.appendChild(host);
   return host;
 }
+function hasValue(value){return value!==undefined&&value!==null&&!(typeof value==='string'&&clean(value)==='');}
+function rowSources(row){
+  const sources=[row,row&&row.row,row&&row.raw,row&&row.source,row&&row.data].filter(item=>item&&typeof item==='object');
+  return [...new Set(sources)];
+}
+function fieldRefs(col){
+  const refs=[col&&col.key,col&&col.label].filter(Boolean),extra=[];
+  refs.forEach(ref=>{
+    const text=String(ref);
+    let match;
+    const rx=/\(([^)]+)\)/g;
+    while((match=rx.exec(text)))if(clean(match[1]))extra.push(clean(match[1]));
+    const without=clean(text.replace(/\([^)]+\)/g,' '));
+    if(without)extra.push(without);
+  });
+  return [...new Set(refs.concat(extra).map(clean).filter(Boolean))];
+}
+function detailModule(){
+  const known=new Set(['overview','cp','orders','backlog','collection','lfl','logistics','antrepo','openCosting']);
+  const raw=clean(active&&active.moduleId||active&&active.pageScope||active&&active.source);
+  if(known.has(raw))return raw;
+  const lower=raw.toLowerCase();
+  for(const id of known)if(lower===String(id).toLowerCase()||lower.startsWith(String(id).toLowerCase()+'.'))return id;
+  return '';
+}
+function lookupValue(col,row){
+  const refs=fieldRefs(col),sources=rowSources(row);
+  for(const source of sources){
+    for(const ref of refs){
+      if(Object.prototype.hasOwnProperty.call(source,ref)&&hasValue(source[ref]))return source[ref];
+    }
+  }
+  const canonical=root.BLCanonicalFields,moduleId=detailModule();
+  if(canonical&&moduleId){
+    for(const ref of refs){
+      const id=canonical.canonicalId?.(moduleId,ref);
+      if(!id)continue;
+      for(const source of sources){
+        const value=canonical.canonicalValue?.(source,moduleId,id);
+        if(hasValue(value))return value;
+      }
+    }
+  }
+  const token=canonical&&canonical.token?canonical.token:(value=>String(value==null?'':value).toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim());
+  const wanted=[...new Set(refs.map(token).filter(Boolean))];
+  for(const source of sources){
+    const keys=Object.keys(source);
+    for(const key of keys){
+      if(wanted.includes(token(key))&&hasValue(source[key]))return source[key];
+    }
+  }
+  return undefined;
+}
 function valueOf(col,row){
   try{
-    const value=typeof col.value==='function'?col.value(row):row&&row[col.key];
+    let value;
+    if(typeof col.value==='function'){
+      value=col.value(row);
+      if(!hasValue(value))value=lookupValue(col,row);
+    }else value=lookupValue(col,row);
     if(typeof col.format==='function')return col.format(value,row);
-    if(value==null||value==='')return '';
+    if(!hasValue(value))return '';
     if(value instanceof Date&&!Number.isNaN(value.getTime()))return value.toISOString().slice(0,10);
     if(typeof value==='object')return JSON.stringify(value);
     return value;
@@ -132,10 +204,10 @@ function renderColumnsPanel(){
   host.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener('change',()=>{
     const keys=[...host.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
     if(!keys.length){input.checked=true;return;}
-    active.visible=keys;saveVisible(active.scope,keys);renderTable();
+    active.visible=keys;saveVisible(active.scope,active.pageScope,keys);renderTable();
   }));
   host.querySelector('[data-bl-detail-column-all]')?.addEventListener('click',()=>{
-    active.visible=active.columns.map(c=>c.key);saveVisible(active.scope,active.visible);renderTable();renderColumnsPanel();
+    active.visible=active.columns.map(c=>c.key);saveVisible(active.scope,active.pageScope,active.visible);renderTable();renderColumnsPanel();
   });
 }
 function renderTable(){
@@ -178,12 +250,41 @@ async function exportExcelJsWithImages(columns,rows,fileName){
   downloadBuffer(buffer,fileName,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   return true;
 }
-async function exportExcel(){
+function applyPanelWidth(panel){
+  if(!panel||!active||root.innerWidth<=760)return;
+  const max=Math.max(420,root.innerWidth-24),width=Math.min(max,Math.max(420,Number(active.width)||panel.getBoundingClientRect().width||980));
+  panel.style.width=Math.round(width)+'px';
+}
+function bindResize(panel){
+  const handle=panel&&panel.querySelector('[data-bl-detail-resize]');
+  if(!handle||root.innerWidth<=760)return;
+  handle.addEventListener('pointerdown',event=>{
+    event.preventDefault();
+    const startX=event.clientX,startWidth=panel.getBoundingClientRect().width;
+    const move=ev=>{
+      const max=Math.max(420,root.innerWidth-24);
+      const next=Math.min(max,Math.max(420,startWidth+(startX-ev.clientX)));
+      active.width=next;panel.style.width=Math.round(next)+'px';
+    };
+    const end=()=>{
+      root.removeEventListener('pointermove',move);root.removeEventListener('pointerup',end);
+      if(active&&active.width)saveWidth(active.pageScope,active.width);
+      document.body.classList.remove('blDetailResizing');
+    };
+    document.body.classList.add('blDetailResizing');
+    root.addEventListener('pointermove',move);root.addEventListener('pointerup',end,{once:true});
+  });
+}
+function toggleExportMenu(){
+  const menu=document.querySelector('#blSharedDetailDrawer [data-bl-detail-export-menu]');
+  if(menu)menu.hidden=!menu.hidden;
+}
+async function exportExcel(mode='visible'){
   if(!active)return;
   const button=document.querySelector('#blSharedDetailDrawer [data-bl-detail-excel]'),old=button&&button.textContent;
   if(button){button.disabled=true;button.textContent=L('Hazırlanıyor…','Preparing…');}
   try{
-    const columns=currentColumns(),rows=filteredRows(),fileName=safeFilePart(active.fileName||active.title)+'.xlsx';
+    const columns=mode==='all'?active.columns:currentColumns(),rows=filteredRows(),fileName=safeFilePart(active.fileName||active.title)+'.xlsx';
     if(typeof active.exporter==='function'){
       await active.exporter({rows,columns,includeImages:active.images,fileName,title:active.title,source:active.source,valueOf});
     }else if(!(await exportExcelJsWithImages(columns,rows,fileName))){
@@ -196,30 +297,37 @@ async function exportExcel(){
       const wb=root.XLSX.utils.book_new();root.XLSX.utils.book_append_sheet(wb,ws,L('Detay','Detail'));
       root.XLSX.writeFile(wb,fileName);
     }
-    root.showToast?.(L('Görünen detay satırları ve seçili sütunlar Excel’e aktarıldı.','Visible detail rows and selected columns were exported to Excel.'));
+    root.showToast?.(mode==='all'?L('Detay satırları tüm sütunlarla Excel’e aktarıldı.','Detail rows were exported to Excel with all columns.'):L('Görünen detay satırları ve seçili sütunlar Excel’e aktarıldı.','Visible detail rows and selected columns were exported to Excel.'));
   }catch(err){root.showToast?.(err&&err.message?err.message:String(err));}
   finally{if(button){button.disabled=false;button.textContent=old||'⇩ Excel';}}
 }
 function render(){
   const host=ensureHost();if(!active){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');return;}
   host.innerHTML='<div class="blDetailDrawerBackdrop" data-bl-detail-close></div><section class="blDetailDrawerPanel" role="dialog" aria-modal="true" aria-labelledby="blDetailDrawerTitle">'+
+    '<div class="blDetailResizeHandle" data-bl-detail-resize title="'+escapeHtml(L('Genişliği değiştirmek için sürükleyin','Drag to resize'))+'"></div>'+
     '<header class="blDetailDrawerHead"><div class="blDetailDrawerTitle"><b id="blDetailDrawerTitle">'+escapeHtml(active.title)+'</b><span data-bl-detail-summary></span></div>'+
     '<div class="blDetailDrawerActions"><button type="button" class="blDetailTool" data-bl-detail-images aria-pressed="'+(active.images?'true':'false')+'">▧ '+escapeHtml(L('Görseller','Images'))+'</button>'+
     '<span data-bl-detail-plm></span><button type="button" class="blDetailTool" data-bl-detail-columns>☷ '+escapeHtml(L('Sütunlar','Columns'))+'</button>'+
     '<button type="button" class="blDetailTool" data-bl-detail-excel>⇩ Excel</button>'+
+    '<div class="blDetailExportMenu" data-bl-detail-export-menu hidden><button type="button" data-bl-export-mode="all">'+escapeHtml(L('Tüm Sütunlarla','All Columns'))+'</button><button type="button" data-bl-export-mode="visible">'+escapeHtml(L('Görünen Sütunlarla','Visible Columns'))+'</button></div>'+
     '<button type="button" class="blDetailClose" data-bl-detail-close aria-label="'+escapeHtml(L('Kapat','Close'))+'">×</button></div></header>'+
     '<div class="blDetailDrawerSubbar"><input type="search" data-bl-detail-search value="'+escapeHtml(active.search)+'" placeholder="'+escapeHtml(L('Detaylarda ara…','Search details…'))+'">'+
     '<div class="blDetailExtraActions" data-bl-detail-extra></div><div class="blDetailColumnPanel" data-bl-detail-column-panel hidden></div></div>'+
     (active.note?'<div class="blDetailDrawerNote">'+escapeHtml(active.note)+'</div>':'')+
     '<div class="blDetailTableWrap"><table class="blDetailTable" data-bl-detail-table><thead></thead><tbody></tbody></table></div></section>';
   host.classList.add('is-open');host.setAttribute('aria-hidden','false');
+  const panel=host.querySelector('.blDetailDrawerPanel');applyPanelWidth(panel);bindResize(panel);
   host.querySelectorAll('[data-bl-detail-close]').forEach(el=>el.addEventListener('click',close));
   host.querySelector('[data-bl-detail-search]')?.addEventListener('input',event=>{active.search=event.target.value;renderTable();});
   host.querySelector('[data-bl-detail-images]')?.addEventListener('click',()=>{active.images=!active.images;render();});
   host.querySelector('[data-bl-detail-columns]')?.addEventListener('click',()=>{
     const panel=host.querySelector('[data-bl-detail-column-panel]');panel.hidden=!panel.hidden;if(!panel.hidden)renderColumnsPanel();
   });
-  host.querySelector('[data-bl-detail-excel]')?.addEventListener('click',()=>void exportExcel());
+  host.querySelector('[data-bl-detail-excel]')?.addEventListener('click',toggleExportMenu);
+  host.querySelectorAll('[data-bl-export-mode]').forEach(button=>button.addEventListener('click',()=>{
+    const menu=host.querySelector('[data-bl-detail-export-menu]');if(menu)menu.hidden=true;
+    void exportExcel(button.dataset.blExportMode==='all'?'all':'visible');
+  }));
   const extra=host.querySelector('[data-bl-detail-extra]');
   (active.actions||[]).forEach(action=>{
     const button=document.createElement('button');button.type='button';button.className='blDetailTool';button.textContent=action.label||L('Aç','Open');
@@ -235,11 +343,12 @@ function open(options){
   const input=options&&typeof options==='object'?options:{};
   const rows=Array.isArray(input.rows)?input.rows.filter(Boolean):[];
   const columns=normalizeColumns(input.columns,rows);
+  const scope=input.storageKey||input.scope||input.source||'generic',page=pageScope(input);
   active={
-    scope:input.storageKey||input.scope||input.source||'generic',source:input.source||'shared-detail-drawer',
+    scope,pageScope:page,moduleId:input.moduleId||page,source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
-    rows,columns,visible:loadVisible(input.storageKey||input.scope||input.source||'generic',columns),
+    rows,columns,visible:loadVisible(scope,page,columns),width:loadWidth(page),
     images:input.images!==false,search:'',actions:Array.isArray(input.actions)?input.actions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
   };
