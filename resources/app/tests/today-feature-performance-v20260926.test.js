@@ -58,6 +58,7 @@ test('Ortak detay çekmecesi büyük kümeleri parça parça çizer, aramayı ge
   const render=src.slice(src.indexOf('function renderTable()'),src.indexOf('function downloadBuffer'));
   assert.equal((render.match(/buildIndex\(/g)||[]).length,1,'renderTable görsel indeksini bir kez kurmalı');
   assert.ok(render.includes(",rows,imageIndex);"),'varlık kapsamı aynı indeksi kullanmalı');
-  // Excel görünür sütunlar + TÜM filtreli satırlarla çalışmaya devam eder.
-  assert.ok(src.includes('const columns=currentColumns(),rows=filteredRows()'));
+  // Excel her iki sütun modunda da TÜM filtreli satırlarla çalışmaya devam eder.
+  assert.match(src,/const columns=mode==='all'\?active\.columns:currentColumns\(\),rows=filteredRows\(\)/);
+  assert.match(src,/data-bl-export-mode="all"/);assert.match(src,/data-bl-export-mode="visible"/);
 });
