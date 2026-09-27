@@ -924,7 +924,8 @@ const state={
   worldPolygons:[],worldLoading:true,worldError:'',worldRevision:0,transitRules:[],transitRulesLoaded:false,
   expandedNodeKey:'',lastDragMoved:false,orbHandle:null,paletteCache:null,paletteRevision:0,
   base:null,scene:null,sourceCache:new Map(),sourceIncomplete:false,lastBacklogRows:null,lastBacklogSignature:'',refreshSeq:0,
-  engine:'buyerlog',earth:normalizeEarthPrefs(),selection:'',earthCtl:null,earthStarting:null,earthLoading:false,earthError:'',earthIdleTimer:0,earthPendingViewport:null,earthVisibilityKnown:false
+  engine:'buyerlog',earth:normalizeEarthPrefs(),selection:'',earthCtl:null,earthStarting:null,earthLoading:false,earthError:'',earthIdleTimer:0,earthPendingViewport:null,earthVisibilityKnown:false,
+  workspaceActive:true
 };
 
 function prefStore(){return window.BLStorage||localStorage;}
@@ -1024,7 +1025,7 @@ async function loadTransitRules(force){
   }catch(_){}
   return state.transitRules;
 }
-function isLive(){return !document.hidden&&!state.collapsed&&state.inView;}
+function isLive(){return state.workspaceActive&&!document.hidden&&!state.collapsed&&state.inView;}
 async function refresh(force){
   // Daraltılmış veya görünmeyen harita veri çekmez; görünür olduğunda bir kez tazelenir.
   if(!force&&!isLive()){state.dirty=true;return;}
@@ -1838,6 +1839,21 @@ function bindObservers(){
   }
   window.addEventListener('resize',scheduleDraw,{passive:true});
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(state.dirty)void refresh(false);scheduleDraw();}syncEarthActivity();});
+  const desktopWorkspace=window.buyerLogDesktop&&window.buyerLogDesktop.workspace;
+  if(desktopWorkspace&&typeof desktopWorkspace.onTabActivity==='function'){
+    desktopWorkspace.onTabActivity(payload=>{
+      const active=Boolean(payload&&payload.active);
+      if(active===state.workspaceActive)return;
+      state.workspaceActive=active;
+      if(active){
+        if(state.dirty)void refresh(false);
+        scheduleDraw();
+      }else if(state.frame){
+        cancelAnimationFrame(state.frame);state.frame=0;
+      }
+      syncEarthActivity();
+    });
+  }
   window.addEventListener('pagehide',()=>{destroyEarth();flushPrefs();});
   document.addEventListener('bl:language-changed',()=>{renderAll();notifyEarth('language');});
 }

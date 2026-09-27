@@ -1517,6 +1517,20 @@ function diagnostics() {
   const migration = readMigrationState(paths);
   let dbBytes = 0;
   try { dbBytes = fs.statSync(paths.localDbPath).size; } catch (_) { dbBytes = 0; }
+  let electronProcesses = [];
+  try {
+    electronProcesses = app.getAppMetrics().map(metric => ({
+      pid: Number(metric && metric.pid) || 0,
+      type: String(metric && metric.type || 'Unknown'),
+      cpuPercent: Number(metric && metric.cpu && metric.cpu.percentCPUUsage) || 0,
+      idleWakeupsPerSecond: Number(metric && metric.cpu && metric.cpu.idleWakeupsPerSecond) || 0,
+      memoryWorkingSetKb: Number(metric && metric.memory && metric.memory.workingSetSize) || 0,
+      memoryPeakWorkingSetKb: Number(metric && metric.memory && metric.memory.peakWorkingSetSize) || 0,
+      memoryPrivateKb: Number(metric && metric.memory && metric.memory.privateBytes) || 0,
+    }));
+  } catch (_) {
+    electronProcesses = [];
+  }
   return {
     /* Kimlik bilgisi, oturum anahtarı veya token BURAYA KOYULMAZ. */
     buyerLogVersion: appVersion(),
@@ -1545,6 +1559,10 @@ function diagnostics() {
       kind: startupFailure.kind || '',
     } : null,
     uptimeSeconds: lastStartedAt ? Math.round((Date.now() - lastStartedAt) / 1000) : 0,
+    electronProcesses,
+    workspace: workspace && typeof workspace.diagnosticsSnapshot === 'function'
+      ? workspace.diagnosticsSnapshot()
+      : null,
     updater: updater ? updater.status(updaterBaseConfig()) : null,
     activeAppCoreRoot: APP_CORE_ROOT,
     bootstrapAppCoreRoot: String(process.env.BUYER_LOG_BOOTSTRAP_APP_CORE || ''),
