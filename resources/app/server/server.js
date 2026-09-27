@@ -9102,12 +9102,16 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
         opdStart: item.suppFobMeta.opdStart == null ? '' : String(item.suppFobMeta.opdStart),
         opdEnd: item.suppFobMeta.opdEnd == null ? '' : String(item.suppFobMeta.opdEnd),
         seasons: normalizePricingRuleSeasons(item.suppFobMeta.seasons != null ? item.suppFobMeta.seasons : item.suppFobMeta.season),
-        countryGroup: item.suppFobMeta.countryGroup == null ? '' : String(item.suppFobMeta.countryGroup),
         licensor: item.suppFobMeta.licensor == null
           ? (item.suppFobMeta.manufacturer == null ? '' : String(item.suppFobMeta.manufacturer))
           : String(item.suppFobMeta.licensor),
         license: item.suppFobMeta.license == null ? '' : String(item.suppFobMeta.license),
         royalty: Number(item.suppFobMeta.royalty),
+        trCommission: item.suppFobMeta.trCommission == null || item.suppFobMeta.trCommission === '' ? null : Number(item.suppFobMeta.trCommission),
+        ydCommission: item.suppFobMeta.ydCommission == null || item.suppFobMeta.ydCommission === '' ? null : Number(item.suppFobMeta.ydCommission),
+        commissionGroup: item.suppFobMeta.commissionGroup == null ? '' : String(item.suppFobMeta.commissionGroup),
+        commission: item.suppFobMeta.commission == null || item.suppFobMeta.commission === '' ? null : Number(item.suppFobMeta.commission),
+        effectiveRoyalty: item.suppFobMeta.effectiveRoyalty == null || item.suppFobMeta.effectiveRoyalty === '' ? null : Number(item.suppFobMeta.effectiveRoyalty),
         hologramCost: Number(item.suppFobMeta.hologramCost),
         applied: item.suppFobMeta.applied === true,
       } : { source: 'manual' },
@@ -9269,7 +9273,7 @@ app.post('/api/antrepo-source/upload', userAccess.requireArea('source'), userAcc
   }
 });
 
-// ---- OPD tarih aralığı + sezonlar + üretim ülkesi + Licensor + License bazlı royalty hesapları ----
+// ---- OPD + sezon + Licensor + License bazlı Royalty ve TR/YD komisyon hesapları ----
 function normalizePricingRuleDate(value) {
   const text = String(value == null ? '' : value).trim();
   if (!text) return '';
@@ -9387,23 +9391,55 @@ app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requi
   try {
     const incoming = (req.body || {}).rules;
     if (!Array.isArray(incoming)) return res.status(400).json({ error: 'rules (dizi) zorunlu.' });
-    const rules = incoming.map((r, i) => ({
+    const migrated = BLBusinessRules.migrateLicenseRoyaltyRules(incoming);
+    const nullablePercent = value => {
+      if (value == null || String(value).trim() === '') return null;
+      const number = Number(value);
+      return Number.isFinite(number) ? number : NaN;
+    };
+    const nullableMoney = value => {
+      if (value == null || String(value).trim() === '') return null;
+      const number = Number(value);
+      return Number.isFinite(number) ? number : NaN;
+    };
+    const rules = migrated.map((r, i) => ({
       id: String(r.id || ('rule-' + Date.now() + '-' + i)),
       opdStart: normalizePricingRuleDate(r.opdStart),
       opdEnd: normalizePricingRuleDate(r.opdEnd),
       seasons: normalizePricingRuleSeasons(r.seasons != null ? r.seasons : r.season),
-      countryGroup: normalizePricingCountryGroup(r.countryGroup),
       licensor: String(r.licensor != null ? r.licensor : (r.manufacturer || '')).trim(),
       license: String(r.license || '').trim(),
       royalty: Number(r.royalty),
+      trCommission: nullablePercent(r.trCommission),
+      ydCommission: nullablePercent(r.ydCommission),
       hologramCost: Number(r.hologramCost),
-    })).filter(r => (!r.opdStart || !r.opdEnd || r.opdStart <= r.opdEnd) && r.countryGroup && r.licensor && r.license && Number.isFinite(r.royalty) && r.royalty >= 0 && r.royalty <= 100 && Number.isFinite(r.hologramCost) && r.hologramCost >= 0);
+      legacyTrHologramCost: nullableMoney(r.legacyTrHologramCost),
+      legacyYdHologramCost: nullableMoney(r.legacyYdHologramCost),
+      legacyRuleIds: Array.isArray(r.legacyRuleIds) ? r.legacyRuleIds.map(String).filter(Boolean) : [],
+      migratedFromCountrySplit: r.migratedFromCountrySplit === true,
+    })).filter(r => {
+      const commissions = [r.trCommission, r.ydCommission].filter(value => value != null);
+      const commissionValid = commissions.length > 0 && commissions.every(value => Number.isFinite(value) && value >= 0 && value <= 100);
+      const totalValid = (r.trCommission == null || r.royalty + r.trCommission <= 100)
+        && (r.ydCommission == null || r.royalty + r.ydCommission <= 100);
+      const legacyHologramValid = (r.legacyTrHologramCost == null || (Number.isFinite(r.legacyTrHologramCost) && r.legacyTrHologramCost >= 0))
+        && (r.legacyYdHologramCost == null || (Number.isFinite(r.legacyYdHologramCost) && r.legacyYdHologramCost >= 0));
+      return (!r.opdStart || !r.opdEnd || r.opdStart <= r.opdEnd)
+        && r.licensor && r.license
+        && Number.isFinite(r.royalty) && r.royalty >= 0 && r.royalty <= 100
+        && commissionValid && totalValid
+        && Number.isFinite(r.hologramCost) && r.hologramCost >= 0
+        && legacyHologramValid;
+    });
     for (let i = 0; i < rules.length; i++) {
       for (let j = i + 1; j < rules.length; j++) {
         const a = rules[i], b = rules[j];
-        const sameKey = a.countryGroup === b.countryGroup && a.licensor.toLocaleUpperCase('tr-TR') === b.licensor.toLocaleUpperCase('tr-TR') && a.license.toLocaleUpperCase('tr-TR') === b.license.toLocaleUpperCase('tr-TR');
-        if (sameKey && pricingRuleSeasonSetsOverlap(a, b) && pricingRuleDateRangesOverlap(a, b)) {
-          return res.status(400).json({ error: 'Aynı ülke, Licensor, License ve ortak sezon için OPD tarih aralıkları çakışamaz.' });
+        const sameKey = a.licensor.toLocaleUpperCase('tr-TR') === b.licensor.toLocaleUpperCase('tr-TR')
+          && a.license.toLocaleUpperCase('tr-TR') === b.license.toLocaleUpperCase('tr-TR');
+        const sameCountrySide = (a.trCommission != null && b.trCommission != null)
+          || (a.ydCommission != null && b.ydCommission != null);
+        if (sameKey && sameCountrySide && pricingRuleSeasonSetsOverlap(a, b) && pricingRuleDateRangesOverlap(a, b)) {
+          return res.status(400).json({ error: 'Aynı Licensor, License, ülke kapsamı ve ortak sezon için OPD tarih aralıkları çakışamaz.' });
         }
       }
     }
