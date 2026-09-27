@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { fieldMappingRepairFromError } = require('../server/lib/model-refresh');
+const { fieldMappingRepairFromError, repairHorizonAgainstSchema } = require('../server/lib/model-refresh');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -54,4 +54,98 @@ test('refresh failure UI carries repair metadata into Data Management and retrie
   assert.match(management, /openMappingEditor\(sourceId, mappingRepair = null\)/);
   assert.match(management, /repairedTarget/);
   assert.match(mapping, /reopen\(payload\.warnings \|\| \[\], \{ header, entry \}\)/);
+});
+
+
+test('live IAS schema repairs stale Buyer Group horizon alias without user mapping', () => {
+  const item = {
+    id: 'ias-main',
+    name: 'IAS',
+    role: 'antrepo',
+    horizon: {
+      table: 'Siparis Bilgileri',
+      groups: [{
+        id: 'g1',
+        conditions: [{
+          id: 'c1',
+          table: 'Siparis Bilgileri',
+          field: 'Buyer Grup (TR)',
+          op: 'in',
+          valueType: 'text',
+          values: ['LİSANS'],
+        }],
+      }],
+    },
+  };
+  const repaired = repairHorizonAgainstSchema(item, {
+    columns: [
+      { table: 'Siparis Bilgileri', name: 'Buyer Grup Tanım', kind: 'column', dataType: 'String' },
+      { table: 'Siparis Bilgileri', name: 'Merch Alt Grup Kod', kind: 'column', dataType: 'String' },
+    ],
+  });
+  assert.equal(repaired.repaired, true);
+  const condition = item.horizon.groups[0].conditions[0];
+  assert.equal(condition.table, 'Siparis Bilgileri');
+  assert.equal(condition.name, 'Buyer Grup Tanım');
+  assert.match(repaired.warnings.join(' '), /Buyer Grup Tanım/);
+});
+
+test('live IAS schema repairs a removed horizon table when the condition has one exact current home', () => {
+  const item = {
+    id: 'ias-main',
+    name: 'IAS',
+    role: 'antrepo',
+    horizon: {
+      table: 'Model Özellikleri',
+      groups: [{
+        id: 'g1',
+        conditions: [{
+          id: 'c1',
+          table: 'Model Özellikleri',
+          field: 'Merch Alt Grup Kod',
+          name: 'Merch Alt Grup Kod',
+          op: 'in',
+          valueType: 'text',
+          values: ['CU4E'],
+        }],
+      }],
+    },
+  };
+  const repaired = repairHorizonAgainstSchema(item, {
+    columns: [
+      { table: 'Siparis Bilgileri', name: 'Merch Alt Grup Kod', kind: 'column', dataType: 'String' },
+      { table: 'Siparis Bilgileri', name: 'Sezon Kod', kind: 'column', dataType: 'String' },
+    ],
+  });
+  assert.equal(repaired.repaired, true);
+  assert.equal(item.horizon.table, 'Siparis Bilgileri');
+  assert.equal(item.horizon.groups[0].conditions[0].table, 'Siparis Bilgileri');
+});
+
+test('live horizon repair refuses ambiguous schema candidates', () => {
+  const item = {
+    id: 'ias-main',
+    role: 'antrepo',
+    horizon: {
+      table: 'Old Table',
+      groups: [{
+        conditions: [{
+          table: 'Old Table',
+          field: 'Buyer Grup (TR)',
+          op: 'in',
+          valueType: 'text',
+          values: ['LİSANS'],
+        }],
+      }],
+    },
+  };
+  const repaired = repairHorizonAgainstSchema(item, {
+    columns: [
+      { table: 'Table A', name: 'Buyer Grup Tanım', kind: 'column', dataType: 'String' },
+      { table: 'Table B', name: 'Buyer Grup Tanım', kind: 'column', dataType: 'String' },
+    ],
+  });
+  assert.equal(repaired.repaired, false);
+  assert.equal(item.horizon.table, 'Old Table');
+  assert.ok(repaired.unresolved);
 });
