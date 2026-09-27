@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.153",
-  "commit_sha": "0229936776e273fe7deb2b4baa279b72e32c3a70",
-  "release_notes": "Buyer Log 7.0.153: Bugünkü tüm aktif Buyer Log çalışmaları güncel main üzerinde birleştirildi. OAB oturumu artık GET OAB ve Kullanıcı Menüsü arasında aynı kalıcı persist:oab oturumunu kullanır ve sessiz toparlama cookie/storage silmez. License Royalty Calculations tek sözleşme modelinde Royalty + TR Komisyon % + YD Komisyon % + Hologram Cost yapısına geçirildi ve eski veriler efektif fiyatlar korunarak migrate edilir. LFL Trial Collection FOB kaynağını kullanır, kayıtlı Multi Dimensional Comparison özetleri aynı filtrelerle yenilenebilir; IAS/ASAS Field Mapping onarımı, Data Inspector canlı diagnostics, seçilebilir Backup/Restore, Backlog Planlanan & Gerçekleşen analizi, Global Flow/Earth ve son performans/arayüz düzeltmeleri dahildir."
+  "version": "7.0.154",
+  "commit_sha": "5c9e50a01594e27c3eb7bcf908f46417e6b6accd",
+  "release_notes": "Buyer Log 7.0.154: LFL Multi Dimensional Comparison kayıtları sürükle-bırak ile kalıcı olarak yeniden sıralanabilir. Radar diyagramları kullanıcı tercihine göre Radar, Sütun veya Çizgi grafik görünümüne çevrilebilir. Sürüm, 7.0.153 üzerindeki güncel main değişikliklerini içerir."
 }
