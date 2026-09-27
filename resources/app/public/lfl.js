@@ -1989,6 +1989,36 @@
     state.customCompare.scenariosSeeded=true;
     saveCustomCompare();renderCustomCompare(a);
   }
+  async function refreshComparisonScenarios(){
+    // Kayıtlı senaryo tanımlarını veri yenilemesinden tamamen bağımsız tut.
+    // Kaynak yenilenirken render/reconcile geçici olarak ay veya sezonları budasa bile
+    // yenileme bitince aynı dönem + aynı portföy filtreleriyle yeniden hesaplanır.
+    const snapshots=(state.customCompare.scenarios||[]).map((item,index)=>serializeComparisonScenario(item,index));
+    if(!snapshots.length){
+      if(window.showToast)showToast(isEn()?'There are no saved comparisons to refresh.':'Yenilenecek kayıtlı karşılaştırma yok.');
+      return false;
+    }
+    const btn=$('lflScenarioRefreshBtn'),label=btn?.querySelector('span');
+    if(btn)btn.disabled=true;if(label)label.textContent=isEn()?'Refreshing…':'Yenileniyor…';
+    let ok=false;
+    try{
+      ok=await load(true,{silent:true,preserveOnError:true});
+      state.customCompare.scenarios=snapshots.map((item,index)=>normalizeComparisonScenario(item,index));
+      state.customCompare.scenariosSeeded=true;
+      saveCustomCompare();lflScenarioCache.clear();
+      renderCustomCompare(state.analysis||compute());
+      if(window.showToast){
+        showToast(ok
+          ?(isEn()?(snapshots.length+' saved comparison(s) refreshed with the latest LFL data using the same filters.'):(snapshots.length+' kayıtlı karşılaştırma aynı filtrelerle güncel LFL verisine göre yenilendi.'))
+          :(isEn()?'Saved comparisons could not be refreshed; the previous results were kept.':'Kayıtlı karşılaştırmalar yenilenemedi; önceki sonuçlar korundu.'));
+      }
+      return ok;
+    }finally{
+      const current=$('lflScenarioRefreshBtn'),currentLabel=current?.querySelector('span');
+      if(currentLabel)currentLabel.textContent=isEn()?'Refresh summaries':'Özetleri Yenile';
+      if(current)current.disabled=state.loading||!state.customCompare.scenarios.length;
+    }
+  }
   function renderCustomCompare(a){
     const scenarios=ensureComparisonScenarios(a),results=comparisonScenarioResults(a);if(!$('lflScenarioCards'))return;
     $('lflCustomCompareTitle').textContent=isEn()?'Multi-dimensional Comparison · Independent Scenarios':'Çok Boyutlu Karşılaştırma · Bağımsız Senaryolar';
@@ -2009,6 +2039,7 @@
     ];
     renderCpTable({tableId:'lflCustomCompareTable',viewName:'customCompare',columns,sourceRows:results,title:()=>$('lflCustomCompareTitle')?.textContent||(isEn()?'Independent LFL Comparisons':'Bağımsız LFL Karşılaştırmaları'),drillKey:'name',onDrill:r=>openLflPortfolioModal({title:r.name,currentRows:r.currentRows,previousRows:r.previousRows,currentSeason:r.currentSeason,compareSeason:r.compareSeason}),emptyText:isEn()?'Add at least one comparison scenario.':'En az bir karşılaştırma senaryosu ekle.'});
     const add=$('lflScenarioAddBtn');if(add){add.disabled=scenarios.length>=12;add.title=scenarios.length>=12?(isEn()?'Maximum 12 comparisons':'En fazla 12 karşılaştırma'):'';}
+    const refresh=$('lflScenarioRefreshBtn');if(refresh){const label=refresh.querySelector('span');if(label)label.textContent=isEn()?'Refresh summaries':'Özetleri Yenile';refresh.disabled=state.loading||!scenarios.length;refresh.title=isEn()?'Reload the latest LFL data and recalculate every saved comparison with exactly the same periods and portfolio filters.':'En güncel LFL verisini yeniden yükle ve tüm kayıtlı karşılaştırmaları aynı dönem ve portföy filtreleriyle tekrar hesapla.';}
   }
   function fabricDetailColumns(){return [
     {key:'fabricCategory',label:isEn()?'Fabric Category':'Kumaş Kategorisi',value:r=>r.fabricCategory||'',type:'text'},
@@ -2098,10 +2129,29 @@
     const currentDetailRows=[detailHead,...a.currentRows.map(rowToExcel)],compareDetailRows=[detailHead,...a.compareRows.map(rowToExcel)];
     const wb=XLSX.utils.book_new(),ws1=XLSX.utils.aoa_to_sheet(summaryRows),ws2=XLSX.utils.aoa_to_sheet(groupRows),wsCustom=XLSX.utils.aoa_to_sheet(customRows),ws3=XLSX.utils.aoa_to_sheet(currentDetailRows),ws4=XLSX.utils.aoa_to_sheet(compareDetailRows);ws1['!cols']=[{wch:34},{wch:30},{wch:14}];ws2['!cols']=[{wch:30},...Array(5).fill({wch:18})];wsCustom['!cols']=[{wch:28},{wch:42},{wch:30},{wch:30},...Array(8).fill({wch:18})];const fabricDetailCols=state.showFabricDetails?[{wch:20},{wch:20},{wch:24},{wch:18},{wch:14},{wch:12},{wch:26}]:[];const detailCols=[{wch:10},{wch:15},{wch:28},{wch:13},{wch:13},{wch:18},{wch:10},{wch:13},{wch:13},{wch:13},{wch:25},{wch:16},{wch:18},{wch:18},...fabricDetailCols,{wch:12},{wch:12},{wch:12},{wch:16}];ws3['!cols']=detailCols;ws4['!cols']=detailCols;[ws3,ws4].forEach(ws=>{const range=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):null;if(!range)return;for(let r=1;r<=range.e.r;r++){const idCell=ws[XLSX.utils.encode_cell({r,c:1})];if(idCell){idCell.t='s';idCell.v=String(idCell.v??'');idCell.z='@';}for(const c of [7,8,9]){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell&&cell.t==='d')cell.z='dd.mm.yy';}}});XLSX.utils.book_append_sheet(wb,ws1,'Özet');XLSX.utils.book_append_sheet(wb,ws2,'Grup Analizi');XLSX.utils.book_append_sheet(wb,wsCustom,'Bağımsız Kıyaslar');XLSX.utils.book_append_sheet(wb,ws3,'Seçili Portföy');XLSX.utils.book_append_sheet(wb,ws4,'Kıyas Portföyü');const d=new Date(),p=n=>String(n).padStart(2,'0');XLSX.writeFile(wb,`LFL_Analizi_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.xlsx`);
   }
-  async function load(force=false){
-    if(state.loading)return;state.loading=true;const btn=$('lflRefreshBtn'),old=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML=`<span>${isEn()?'Refreshing…':'Yenileniyor…'}</span>`;}
+  async function load(force=false,options={}){
+    if(state.loading)return false;
+    const preserved=options.preserveOnError?{serverRows:state.serverRows,rows:state.rows,meta:state.meta,source:state.source,loadedAt:state.loadedAt,trialRows:state.trial.rows}:null;
+    state.loading=true;const btn=$('lflRefreshBtn'),old=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML='<span>'+(isEn()?'Refreshing…':'Yenileniyor…')+'</span>';}
     analysisDatasetRevision+=1;lflAnalysisCache.clear();lflScenarioCache.clear();
-    try{if(window.BLFX&&BLFX.load)await BLFX.load();const res=await fetch(force?'/api/lfl/refresh':'/api/lfl',{method:force?'POST':'GET'}),data=await res.json();if(!res.ok)throw new Error(data.error||'LFL verisi okunamadı.');if(data&&data.sourceFilterRequired&&typeof window.showSourceFilterRequiredNotice==='function')window.showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);state.serverRows=(Array.isArray(data.rows)?data.rows:[]).filter(r=>['mag','mmyg','classification','season','manufacturer','country','buyingGroup','buyer'].every(k=>isUsableValue(r[k]))&&['inStore','opd','retailDate'].some(k=>isUsableValue(r[k])));rebuildDimensionLabelIndex(state.serverRows);applyTrialRows();state.meta=data.meta||{};state.source=data.source||null;state.loadedAt=data.loadedAt||null;fillControls();render();if(force&&window.showToast)showToast(isEn()?`LFL refresh completed: ${state.rows.length.toLocaleString('en-GB')} rows.`:`LFL yenileme tamamlandı: ${state.rows.length.toLocaleString('tr-TR')} satır.`);}catch(err){state.serverRows=[];rebuildDimensionLabelIndex([]);state.trial.rows=[];state.rows=[];state.meta={warnings:[err.message],rowCount:0};state.source=null;render();if(window.showToast)showToast((isEn()?'LFL refresh failed: ':'LFL yenileme başarısız: ')+err.message);}finally{state.loading=false;if(btn){btn.disabled=false;btn.innerHTML=old;}}
+    try{
+      if(window.BLFX&&BLFX.load)await BLFX.load();
+      const res=await fetch(force?'/api/lfl/refresh':'/api/lfl',{method:force?'POST':'GET'}),data=await res.json();
+      if(!res.ok)throw new Error(data.error||'LFL verisi okunamadı.');
+      if(data&&data.sourceFilterRequired&&typeof window.showSourceFilterRequiredNotice==='function')window.showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);
+      state.serverRows=(Array.isArray(data.rows)?data.rows:[]).filter(r=>['mag','mmyg','classification','season','manufacturer','country','buyingGroup','buyer'].every(k=>isUsableValue(r[k]))&&['inStore','opd','retailDate'].some(k=>isUsableValue(r[k])));
+      rebuildDimensionLabelIndex(state.serverRows);applyTrialRows();state.meta=data.meta||{};state.source=data.source||null;state.loadedAt=data.loadedAt||null;fillControls();render();
+      if(force&&!options.silent&&window.showToast)showToast(isEn()?('LFL refresh completed: '+state.rows.length.toLocaleString('en-GB')+' rows.'):('LFL yenileme tamamlandı: '+state.rows.length.toLocaleString('tr-TR')+' satır.'));
+      return true;
+    }catch(err){
+      if(preserved){
+        state.serverRows=preserved.serverRows;state.rows=preserved.rows;state.meta=preserved.meta;state.source=preserved.source;state.loadedAt=preserved.loadedAt;state.trial.rows=preserved.trialRows;rebuildDimensionLabelIndex(state.serverRows);render();
+      }else{
+        state.serverRows=[];rebuildDimensionLabelIndex([]);state.trial.rows=[];state.rows=[];state.meta={warnings:[err.message],rowCount:0};state.source=null;render();
+      }
+      if(!options.silent&&window.showToast)showToast((isEn()?'LFL refresh failed: ':'LFL yenileme başarısız: ')+err.message);
+      return false;
+    }finally{state.loading=false;if(btn){btn.disabled=false;btn.innerHTML=old;}}
   }
   function copyPreviousYearMonths(){
     const seasons=unique((state.meta.dimensions&&state.meta.dimensions.seasons)||state.rows.map(r=>r.season));
@@ -2120,6 +2170,7 @@
     $('lflBreakdownBtn')?.addEventListener('click',event=>{event.stopPropagation();toggleBreakdownPanel();});
     for(let i=0;i<3;i++){$(`lflCustomCompareDimension${i}`)?.addEventListener('change',event=>updateCustomCompareDimension(i,event.target.value));$(`lflCustomCompareValueBtn${i}`)?.addEventListener('click',event=>{event.stopPropagation();toggleCustomComparePanel(i);});}
     $('lflCustomCompareReference')?.addEventListener('change',event=>{state.customCompare.reference=event.target.value;saveCustomCompare();renderCustomCompare(state.analysis||compute());});
+    $('lflScenarioRefreshBtn')?.addEventListener('click',refreshComparisonScenarios);
     $('lflScenarioAddBtn')?.addEventListener('click',()=>{if(state.customCompare.scenarios.length>=12)return;openComparisonScenarioEditor('',defaultComparisonScenario(state.customCompare.scenarios.length,state.analysis||compute()));});
     $('lflScenarioSaveBtn')?.addEventListener('click',saveComparisonScenarioEditor);
     document.querySelectorAll('[data-scenario-close]').forEach(btn=>btn.addEventListener('click',closeComparisonScenarioEditor));
@@ -2154,5 +2205,5 @@
     values(field){const rowKey=field==='category'?'classification':field==='inStoreMonth'?'inStoreMonth':field;return unique((state.serverRows||[]).map(row=>norm(row&&row[rowKey])).filter(isUsableValue)).sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));},
     async ensureLoaded(){if(!state.serverRows.length&&!state.loading)await load(false);return this.values('category');}
   };
-  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,pct,comparablePct,metricBetween,comparablePeriodRows,comparableMetricBetweenRows,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,scenarioDateField,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
+  window.__lflTest={countryCurrency,countryIdentity,dimensionIdentity,resolveDimensionLabel,normalizeDateField,rowPeriodMonth,comparisonColumnHeader,dateFieldLabel,filterRows,fxRateReport,selectedFxMonths,dtrTypeForRow,summary,dtrScopeText,manufacturerVolumes,customCompareValue,customCompareOptionsFromRows,customComparisonRows,multiComparisonRows,quantityTotal,uniqueOrderCount,groupValue,breakdownValue,breakdownDimLabel,breakdownDims:()=>[...BREAKDOWN_DIMS,...new Set(state.breakdown.filter(isAsasBreakdownDim))],filterDims:()=>[...FILTER_DIMS],fabricDetailColumns,detailColumns,showFabricDetails:()=>!!state.showFabricDetails,matchesSearch,pct,comparablePct,metricBetween,comparablePeriodRows,comparableMetricBetweenRows,normalizeComparisonScenario,freezeScenarioScope,scenarioComparisonResult,scenarioPeriodLabel,scenarioScopeLabel,scenarioDateField,refreshComparisonScenarios,trialScope,trialDraftFromModel,trialValidation,trialValidationDetails,trialScopeNotices,trialRowFrom,trialImpactFor,trialConfiguredCount,trialActiveCount,openTrialPanel};
 })();
