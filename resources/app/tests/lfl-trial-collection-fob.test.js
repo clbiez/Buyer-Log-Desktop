@@ -44,8 +44,7 @@ function loadApi(collectionBridge) {
 }
 
 test('Collection bridge gives LFL Trial the effective FOB cell directly', () => {
-  const bridge = between(APP, 'window.BLCollection={', '  seasonFor(row)');
-  const fobFor = between(bridge, '  fobFor(row){', '  seasonFor(row)');
+  const fobFor = between(APP, '  fobFor(row){', '  seasonFor(row)');
   assert.match(fobFor, /kolEffectiveValue\(row,'fob'\)/);
   assert.match(fobFor, /source:'fob'/);
   assert.doesNotMatch(fobFor, /this\.priceFor\(row\)/);
