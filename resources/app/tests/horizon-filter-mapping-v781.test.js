@@ -45,6 +45,21 @@ test('takma ad kataloğu farklı adlı aynı alanı eşler (MAG, Sezon)', () => 
   assert.equal(bySource['Sezon'].targetField, 'Season');
 });
 
+test('canlı şemada fiziksel sütun mantıksal etikete tercih edilir', () => {
+  const out = mapping.proposeMapping({
+    groups: [{ conditions: [condition('Buyer Grup (TR)', { values: ['LİSANS'] })] }],
+    targetFields: [
+      { header: 'Buyer Grup (TR)', tr: 'Buying Group', en: 'Buying Group', type: 'text' },
+      { header: 'Buyer Grup Tanım', name: 'Buyer Grup Tanım', table: 'Siparis Bilgileri', type: 'text', dynamic: true },
+    ],
+  });
+  assert.equal(out.proposals.length, 1);
+  assert.equal(out.proposals[0].physical, true);
+  assert.equal(out.proposals[0].table, 'Siparis Bilgileri');
+  assert.equal(out.proposals[0].column, 'Buyer Grup Tanım');
+  assert.equal(out.groups[0].conditions[0].name, 'Buyer Grup Tanım');
+});
+
 test('ayırt edici ortak kelime farklı uzunluktaki adları eşler', () => {
   /* 'Orijinal Exfactory Merch Tarih' ⇄ 'Exfactory Date': ne birebir ne içerme
      tutar. Ortak kelime yeterince uzun ve hedefte TEK olduğu için öneri
