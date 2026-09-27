@@ -14,14 +14,16 @@ const LFL = fs.readFileSync(path.join(ROOT, 'public', 'lfl.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'lfl.css'), 'utf8');
 const HTML = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 
-function loadApi() {
+function loadApi(collectionBridge = null) {
+  const windowApi = {
+    classifyDtrByManufacturer() { return 'DTR'; },
+    isNonDtrManufacturer() { return false; },
+  };
+  if (collectionBridge) windowApi.BLCollection = collectionBridge;
   const context = {
     BLTableSearch: createTableSearch(),
     BLBusinessRules: rules,
-    window: {
-      classifyDtrByManufacturer() { return 'DTR'; },
-      isNonDtrManufacturer() { return false; },
-    },
+    window: windowApi,
     document: {
       getElementById() { return null; },
       querySelectorAll() { return []; },
@@ -234,7 +236,11 @@ test('Bangladesh and Bangladeş share the same LFL country identity', () => {
 });
 
 test('LFL Trial carries Collection Product Description into the synthetic row', () => {
-  const api = loadApi();
+  const api = loadApi({
+    fobFor() { return { fob: 10, source: 'fob', base: 10, royalty: 0, hologram: 0 }; },
+    monthCodeFor() { return '2027-04'; },
+    quantityFor() { return 100; },
+  });
   const scope = {
     season: 'S7',
     months: ['2027-04'],
