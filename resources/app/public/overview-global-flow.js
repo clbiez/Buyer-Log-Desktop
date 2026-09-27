@@ -716,8 +716,15 @@ function uniqueRecords(records){
 function clusterVehicleSymbols(symbols,distance){
   const list=Array.isArray(symbols)?symbols:[],min=Number(distance)>0?Number(distance):VEHICLE_CLUSTER_DISTANCE,n=list.length;
   if(n<2)return list.slice();
-  const parent=list.map((_,i)=>i),find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
-  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.hypot(list[i].x-list[j].x,list[i].y-list[j].y)<min){const a=find(i),b=find(j);if(a!==b)parent[b]=a;}
+  const parent=list.map((_,i)=>i),find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;},grid=new Map();
+  const cell=(x,y)=>Math.floor(x/min)+':'+Math.floor(y/min);
+  list.forEach((symbol,index)=>{const key=cell(symbol.x,symbol.y);if(!grid.has(key))grid.set(key,[]);grid.get(key).push(index);});
+  list.forEach((symbol,index)=>{
+    const cx=Math.floor(symbol.x/min),cy=Math.floor(symbol.y/min);
+    for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++)(grid.get((cx+dx)+':'+(cy+dy))||[]).forEach(otherIndex=>{
+      if(otherIndex<=index)return;const other=list[otherIndex];if(Math.hypot(symbol.x-other.x,symbol.y-other.y)>=min)return;const a=find(index),b=find(otherIndex);if(a!==b)parent[b]=a;
+    });
+  });
   const grouped=new Map();for(let i=0;i<n;i++){const root=find(i);if(!grouped.has(root))grouped.set(root,[]);grouped.get(root).push(list[i]);}
   const out=[];grouped.forEach(members=>{
     if(members.length===1){out.push(members[0]);return;}
