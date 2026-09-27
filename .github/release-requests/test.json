@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.151",
-  "commit_sha": "5883ea051f4b8d217f737fb429b79f8e6bca021f",
-  "release_notes": "Buyer Log 7.0.151: IAS/ASAS Database yenilemelerinde Tabular modelde bulunamayan bir sütun artık onarılabilir hata olarak tanınır. Hata penceresindeki Onar düğmesi ilgili kaynağın Field Mapping ekranını ve problemli Buyer Log alanını doğrudan açar; kullanıcı gerçek database sütununu seçip kaydettiğinde eşleme kalıcı olarak güncellenir ve yalnız etkilenen yenileme kapsamları otomatik yeniden denenir. Buyer Grup (TR) senaryosu için backend hata eşlemesi, UI onarım zinciri ve regresyon koruması eklendi."
+  "version": "7.0.152",
+  "commit_sha": "d7fa744e48b0b8b580aee66d5b244b5b2dc5089a",
+  "release_notes": "Buyer Log 7.0.152: License Royalty Calculations tek sözleşme modeline geçirildi; eski TR / Non-TR kayıtları efektif fiyatlar korunarak Royalty + TR Komisyon % + YD Komisyon % + Hologram Cost yapısına migrate edilir. Fiyat Kontrolü Supp. FOB, Final FOB YD ve Final FOB TR sonuçlarını birlikte gösterir ve sipariş ülkesine göre doğru komisyonu uygular. OAB oturum kalıcılığı, LFL Trial FOB kaynağı, kayıtlı LFL özetlerini aynı filtrelerle yenileme, IAS/ASAS Field Mapping onarım akışı, seçilebilir Backup/Restore kapsamları, Backlog grafik/Excel canlı görünür aralık ve eksen iyileştirmeleri ile son bekleyen düzeltmeler aynı sürümde birleştirildi."
 }
