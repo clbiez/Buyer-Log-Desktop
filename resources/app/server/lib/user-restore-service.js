@@ -67,9 +67,16 @@ function componentsFromInfo(info) {
   if (Array.isArray(manifest.scope_components) && manifest.scope_components.length) {
     return [...new Set(manifest.scope_components.map(value => String(value || '').trim()).filter(id => componentDefinition(id)))];
   }
-  // v7.57-v7.116 kişisel yedekleri scope manifest'i taşımıyordu.
-  // İçerikten güvenli biçimde mevcut modülleri çıkar.
-  const paths = archivePaths(info), found = [];
+  // v7.57-v7.116 kişisel yedekleri scope manifest'i taşımıyordu ve "source-data"
+  // klasörü tamamen boş olduğunda ZIP'te bu klasöre ait entry bulunmuyordu.
+  // Zorunlu eski JSON seti tam ise eski davranışı birebir koru: tüm kişisel
+  // bileşenler backup'ın parçası sayılır ve boş source-data restore'da temizlenir.
+  const paths = archivePaths(info);
+  if (REQUIRED_JSON.every(name => paths.has(name))) {
+    return USER_BACKUP_COMPONENTS.filter(component => !component.shared).map(component => component.id);
+  }
+  // Daha eski/alışılmadık arşivlerde mevcut içerikten güvenli biçimde çıkar.
+  const found = [];
   for (const component of USER_BACKUP_COMPONENTS) {
     const exact = Array.isArray(component.paths) ? component.paths : [];
     const prefixes = Array.isArray(component.prefixes) ? component.prefixes : [];
