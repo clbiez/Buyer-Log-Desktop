@@ -53,5 +53,5 @@ test('refresh failure UI carries repair metadata into Data Management and retrie
   assert.match(app, /err\.repairAction=jobState\.repairAction\|\|null/);
   assert.match(management, /openMappingEditor\(sourceId, mappingRepair = null\)/);
   assert.match(management, /repairedTarget/);
-  assert.match(mapping, /onSaved\(payload\.warnings \|\| \[\], \{ header, entry \}\)/);
+  assert.match(mapping, /reopen\(payload\.warnings \|\| \[\], \{ header, entry \}\)/);
 });
