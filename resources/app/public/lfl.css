@@ -498,6 +498,7 @@ body.lflPortfolioModalOpen{overflow:hidden;}
 /* v3.84 — Independent multi-period LFL comparison scenarios */
 .lflScenarioCompareHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 16px 4px}
 .lflScenarioCompareHead>.lflSectionHead{margin:0;min-width:0}
+.lflScenarioCompareActions{display:flex;align-items:center;justify-content:flex-end;gap:6px;flex:none;flex-wrap:wrap}
 .lflScenarioCompareIntro{margin:0 16px 12px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--card2);color:var(--muted);font-size:10.5px;line-height:1.5}
 .lflScenarioCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px;padding:0 16px 14px}
 .lflScenarioCard{min-width:0;border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,color-mix(in srgb,var(--card) 96%,var(--primary) 4%),var(--card));padding:11px;box-shadow:0 1px 0 rgba(0,0,0,.02);transition:border-color .16s var(--ease),box-shadow .16s var(--ease),transform .16s var(--ease)}
