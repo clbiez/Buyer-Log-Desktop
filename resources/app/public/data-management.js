@@ -1561,10 +1561,30 @@
   /* Eşleme düzenleyicisi. Kaydetmeden sonra ekran baştan çizildiği için
      düzenleyici YENİDEN AÇILIR — aynı işlev, taze yuva ve taze veriyle.
      Şema önbellekli olduğundan bu ikinci bir sorgu üretmez. */
-  function openMappingEditor(sourceId) {
+  function openMappingEditor(sourceId, mappingRepair = null) {
     const source = (model.sources || []).find(entry => entry.id === sourceId);
     if (!source) return;
-    const problems = (source.mapping && source.mapping.problems) || [];
+    const baseProblems = (source.mapping && source.mapping.problems) || [];
+    const repair = mappingRepair
+      && mappingRepair.kind === 'field-mapping'
+      && String(mappingRepair.sourceId || '') === String(sourceId)
+      && String(mappingRepair.header || '').trim()
+      ? mappingRepair : null;
+    /* Canlı DAX hatası şema değişikliğini kanıtlar. mappingHealth yalnız
+       saklanmış eşlemeye baktığı için bu alan normalde "sorunsuz" görünebilir;
+       onarım akışında hatalı alanı zorla listenin başına ekliyoruz. */
+    const repairProblem = repair ? {
+      header: String(repair.header),
+      status: 'unmapped',
+      required: true,
+      identity: false,
+      column: String(repair.column || ''),
+      table: String(repair.table || ''),
+      expected: Array.isArray(repair.expected) ? repair.expected : [String(repair.header)],
+    } : null;
+    const problems = repairProblem
+      ? [repairProblem, ...baseProblems.filter(problem => String(problem && problem.header || '') !== repairProblem.header)]
+      : baseProblems;
     if (!problems.length) {
       mappingEditorSourceId = '';
       render();
@@ -1588,7 +1608,23 @@
       catalog: source.connection.catalog,
       revision: source.revision,
       problems,
-      onSaved: async () => { await load(); openMappingEditor(sourceId); },
+      onSaved: async (warnings, saved) => {
+        await load();
+        const repairedTarget = repair && saved && String(saved.header || '') === String(repair.header || '');
+        if (repairedTarget) {
+          mappingEditorSourceId = '';
+          render();
+          if (warnings && warnings.length && typeof showToast === 'function') showToast(warnings.join(' '));
+          if (typeof showToast === 'function') {
+            showToast(T('Eşleme kaydedildi; yenileme yeniden deneniyor.', 'Mapping saved; retrying the refresh.'));
+          }
+          if (typeof window.BLRetryRefreshAfterFieldMapping === 'function') {
+            void window.BLRetryRefreshAfterFieldMapping(repair);
+          }
+          return;
+        }
+        openMappingEditor(sourceId, repair);
+      },
       onClosed: () => { mappingEditorSourceId = ''; render(); },
     });
   }
@@ -1766,7 +1802,7 @@
       if (!model || !model.sources.some(entry => entry.id === wanted)) return;
       expandedSourceId = wanted;
       render();
-      if (options.openMapping) { openMappingEditor(wanted); return; }
+      if (options.openMapping) { openMappingEditor(wanted, options.mappingRepair || null); return; }
       const card = root.querySelector(`[data-source="${CSS.escape(wanted)}"]`);
       if (card) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
     };
