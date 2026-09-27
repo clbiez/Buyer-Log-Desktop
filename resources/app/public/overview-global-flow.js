@@ -632,7 +632,7 @@ function makeVehicle(leg,items,vessel){
   return {
     id:'veh:'+leg.key+'|'+(vessel?'v:'+vessel.key:'p:'+first.rec.id),leg,legKey:leg.key,mode:leg.mode,
     vesselName:vessel?vessel.name:'',vesselKey:vessel?vessel.key:'',progress,geo:pointAlongLeg(leg,progress),records,
-    qty:records.reduce((sum,r)=>sum+(Number(r.qty)||0),0),elapsedDays:elapsed.length?mean(elapsed):null,
+    qty:records.reduce((sum,r)=>sum+(Number(r.qty)||0),0),elapsedDays:elapsed.length?mean(elapsed):null,elapsedCount:elapsed.length,
     leadDays:mean(items.map(p=>p.meta.leadDays)),known:items.some(p=>p.meta.known),
     origins:[...new Set(records.map(r=>r.origin&&r.origin.name).filter(Boolean))],
     files:[...new Set(records.map(r=>r.shipmentFile||r.orderCode).filter(Boolean))],
@@ -730,7 +730,8 @@ function clusterVehicleSymbols(symbols,distance){
     if(members.length===1){out.push(members[0]);return;}
     members.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
     const vehicles=members.map(m=>m.vehicle).filter(Boolean),records=uniqueRecords(vehicles.flatMap(v=>v.records||[])),modes=[...new Set(vehicles.map(v=>v.mode).filter(Boolean))];
-    out.push({id:'vehicle-cluster:'+members.map(m=>m.id).join('|'),kind:'vehicleCluster',vehicles,records,x:members.reduce((sum,m)=>sum+m.x,0)/members.length,y:members.reduce((sum,m)=>sum+m.y,0)/members.length,r:12,mode:modes.length===1?modes[0]:'combined',critical:records.some(r=>r&&r.critical)});
+    const elapsedWeight=vehicles.reduce((sum,v)=>sum+(Number(v.elapsedCount)||0),0),avgElapsedDays=elapsedWeight?vehicles.reduce((sum,v)=>sum+(Number(v.elapsedDays)||0)*(Number(v.elapsedCount)||0),0)/elapsedWeight:null;
+    out.push({id:'vehicle-cluster:'+members.map(m=>m.id).join('|'),kind:'vehicleCluster',vehicles,records,x:members.reduce((sum,m)=>sum+m.x,0)/members.length,y:members.reduce((sum,m)=>sum+m.y,0)/members.length,r:12,mode:modes.length===1?modes[0]:'combined',critical:records.some(r=>r&&r.critical),avgElapsedDays,elapsedCount:elapsedWeight});
   });
   return out.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
 }
@@ -1405,7 +1406,9 @@ function showTooltip(hit,event){
   const tip=$('globalFlowTooltip');if(!tip)return;if(!hit){tip.hidden=true;return;}let title='',lines=[],critical=false;
   if(hit.type==='vehicleCluster'){
     const c=hit.cluster,modes=[...new Set((c.vehicles||[]).map(v=>modeLabel(v.mode)))];title=L('Gruplanmış araçlar','Grouped vehicles')+' · '+(c.vehicles||[]).length;
-    lines.push(modes.join(' · '));lines.push(countSummary(c.records));lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
+    lines.push(modes.join(' · '));
+    if(c.avgElapsedDays!=null)lines.push(L('Ortalama transit günü','Average transit day')+': '+(Math.round(c.avgElapsedDays*10)/10));
+    lines.push(countSummary(c.records));lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
   }else if(hit.type==='vehicle'){
     const v=hit.vehicle;title=vehicleTitle(v);
     lines.push(modeLabel(v.mode)+' · '+v.leg.from+' → '+v.leg.to);
