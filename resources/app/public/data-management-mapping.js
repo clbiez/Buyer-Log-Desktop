@@ -164,7 +164,10 @@
          ölçümde tam olarak bu oldu). Yeniden açmak çağıranın işi. */
       const reopen = typeof onSaved === 'function' ? onSaved : null;
       close({ notify: false });
-      if (reopen) await reopen();
+      // İkinci argüman geriye dönük uyumludur: eski çağıranlar yalnız ilk
+      // argümandaki warnings listesini okumaya devam eder. Onarım akışı ise
+      // gerçekten hedeflenen alanın kaydedildiğini buradan doğrular.
+      if (reopen) await reopen(payload.warnings || [], { header, entry });
       return;
     } catch (error) {
       say(String(error && error.message || error), 'bad');
