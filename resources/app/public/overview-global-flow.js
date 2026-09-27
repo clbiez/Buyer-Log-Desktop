@@ -29,6 +29,7 @@ const SEA_AIR_AIR_LEG_DAYS=3;
    (ayak ilerlemesinin oranı). 70 günlük deniz yolunda ≈3,5 gün. */
 const PROGRESS_BUCKET=0.05;
 const SYMBOL_MIN_DISTANCE=22;
+const VEHICLE_CLUSTER_DISTANCE=34;
 const FILTER_KEYS=Object.freeze(['season','mag','mmyg','buyer','buyingGroup','manufacturer','country','line','category','license','mode','status']);
 const FIELD_CANDIDATES=Object.freeze({
   orderCode:['Sipariş Kod','Sipariş Kodu','Order Code','Order No','Order','OCode'],
@@ -564,6 +565,10 @@ function routeEdges(legs){
   (legs||[]).forEach(leg=>{for(let i=1;i<leg.points.length;i++){const a=leg.points[i-1],b=leg.points[i];out.push({key:leg.mode+'|'+pointKey(a)+'>'+pointKey(b),mode:leg.mode,a,b,to:i===leg.points.length-1?leg.to:''});}});
   return out;
 }
+function routeCorridorKey(edge){
+  const a=pointKey(edge.a),b=pointKey(edge.b),pair=a<b?a+'>'+b:b+'>'+a;
+  return edge.mode+'|'+pair;
+}
 function xyz(point){
   const lat=Number(point.lat)*Math.PI/180,lon=Number(point.lon)*Math.PI/180;
   const c=Math.cos(lat);return {x:c*Math.sin(lon),y:Math.sin(lat),z:c*Math.cos(lon)};
@@ -666,8 +671,9 @@ function buildFlowModel(records,options){
   });
   const edges=new Map();
   placements.forEach(p=>routeEdges(p.legs).forEach(edge=>{
-    if(!edges.has(edge.key))edges.set(edge.key,{...edge,records:[],qty:0,origins:new Set(),destinations:new Set()});
-    const agg=edges.get(edge.key);agg.records.push(p.rec);agg.qty+=Number(p.rec.qty)||0;agg.origins.add(p.rec.origin.name);agg.destinations.add(p.legs[p.legs.length-1].to);
+    const corridorKey=routeCorridorKey(edge);
+    if(!edges.has(corridorKey))edges.set(corridorKey,{...edge,key:corridorKey,records:[],qty:0,origins:new Set(),destinations:new Set()});
+    const agg=edges.get(corridorKey);agg.records.push(p.rec);agg.qty+=Number(p.rec.qty)||0;agg.origins.add(p.rec.origin.name);agg.destinations.add(p.legs[p.legs.length-1].to);
   }));
   const nodes=[...origins.values()].sort((a,b)=>a.key<b.key?-1:1);if(arrival.records.length)nodes.push(arrival);
   const placementById=new Map(placements.map(p=>[p.rec.id,p]));
@@ -703,6 +709,31 @@ function resolveSymbolCollisions(symbols,minDistance){
     }
   });
   return list;
+}
+function uniqueRecords(records){
+  const seen=new Set(),out=[];(records||[]).forEach(rec=>{const key=rec&&rec.id!=null?String(rec.id):'row:'+out.length;if(seen.has(key))return;seen.add(key);out.push(rec);});return out;
+}
+function clusterVehicleSymbols(symbols,distance){
+  const list=Array.isArray(symbols)?symbols:[],min=Number(distance)>0?Number(distance):VEHICLE_CLUSTER_DISTANCE,n=list.length;
+  if(n<2)return list.slice();
+  const parent=list.map((_,i)=>i),find=i=>{while(parent[i]!==i){parent[i]=parent[parent[i]];i=parent[i];}return i;};
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)if(Math.hypot(list[i].x-list[j].x,list[i].y-list[j].y)<min){const a=find(i),b=find(j);if(a!==b)parent[b]=a;}
+  const grouped=new Map();for(let i=0;i<n;i++){const root=find(i);if(!grouped.has(root))grouped.set(root,[]);grouped.get(root).push(list[i]);}
+  const out=[];grouped.forEach(members=>{
+    if(members.length===1){out.push(members[0]);return;}
+    members.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+    const vehicles=members.map(m=>m.vehicle).filter(Boolean),records=uniqueRecords(vehicles.flatMap(v=>v.records||[])),modes=[...new Set(vehicles.map(v=>v.mode).filter(Boolean))];
+    out.push({id:'vehicle-cluster:'+members.map(m=>m.id).join('|'),kind:'vehicleCluster',vehicles,records,x:members.reduce((sum,m)=>sum+m.x,0)/members.length,y:members.reduce((sum,m)=>sum+m.y,0)/members.length,r:12,mode:modes.length===1?modes[0]:'combined',critical:records.some(r=>r&&r.critical)});
+  });
+  return out.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
+}
+function routeRecordGroups(input){
+  const records=Array.isArray(input)?input:(input&&Array.isArray(input.records)?input.records:[]),groups=new Map();
+  uniqueRecords(records).forEach(rec=>{
+    const country=clean(rec&&((rec.origin&&rec.origin.name)||rec.country))||'—',mode=clean(rec&&rec.mode)||'unknown',key=country+'|'+mode;
+    if(!groups.has(key))groups.set(key,{key,country,mode,records:[]});groups.get(key).records.push(rec);
+  });
+  return [...groups.values()].sort((a,b)=>a.country.localeCompare(b.country)||a.mode.localeCompare(b.mode));
 }
 function pickHit(targets,x,y){
   let best=null,bestPriority=-Infinity,bestDistance=Infinity;
@@ -764,14 +795,16 @@ function createPanelFilter(filters){
 
 const WORLD_ASPECT_2D=2;
 const MIN_ZOOM=.65;
-const MAX_ZOOM_2D=12;
-const MAX_ZOOM_3D=6;
+const MAX_ZOOM_2D=24;
+const MAX_ZOOM_3D=14;
 function fitWorld2dViewport(width,height){
   const outerW=Math.max(1,Number(width)||1),outerH=Math.max(1,Number(height)||1);
   const w=Math.min(outerW,outerH*WORLD_ASPECT_2D),h=w/WORLD_ASPECT_2D;
   return {x:(outerW-w)/2,y:(outerH-h)/2,w,h};
 }
 function clamp(value,min,max){return Math.max(min,Math.min(max,value));}
+function globeDragDelta(dx,dy,zoom){const sensitivity=.36/Math.max(1,Math.sqrt(Number(zoom)||1));return {lon:-(Number(dx)||0)*sensitivity,lat:-(Number(dy)||0)*sensitivity*.82};}
+function vehicleClusterDistanceForZoom(zoom){return clamp(VEHICLE_CLUSTER_DISTANCE/Math.sqrt(Math.max(1,Number(zoom)||1)),10,VEHICLE_CLUSTER_DISTANCE);}
 function wrapLongitude(value){const n=Number(value)||0;return ((n+180)%360+360)%360-180;}
 function mapSurfacePalette(theme){
   const value=String(theme||'light').toLowerCase();
@@ -780,12 +813,12 @@ function mapSurfacePalette(theme){
 }
 
 if(typeof document==='undefined'){
-  return {ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,
+  return {ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,VEHICLE_CLUSTER_DISTANCE,
     clean,norm,toNumber,pick,createFieldResolver,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
     normalizeRecord,expandSourceRow,shipmentPartialsFromRows,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
-    seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,pointAlongLeg,
-    transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,pickHit,
+    seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,routeCorridorKey,pointAlongLeg,
+    transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,
     normalizeQuickFilterItems,quickFilterMatch,normalizeFilters,createPanelFilter};
 }
 
@@ -1229,14 +1262,16 @@ function buildScene(info,p){
     if(points.length>1)hitTargets.push({type:'route',points,edge,records:edge.records,r:Math.max(7,width+4),priority:10});
     return {edge,points,width,color};
   }).filter(item=>item.points.length>1);
-  const symbols=[];
+  const symbols=[],vehicleSymbols=[];
   model.nodes.forEach(bundle=>{const q=screenPoint(bundle.location,w,h);if(q&&q.visible)symbols.push({id:'node:'+bundle.key,kind:'node',bundle,x:q.x,y:q.y,r:nodeRadius(bundle)});});
   model.vehicles.forEach(vehicle=>{
     if(!vehicle.geo)return;const q=screenPoint(vehicle.geo,w,h,vehicle.geo.alt);if(!q||!q.visible)return;
     const ahead=vehicle.geo.ahead?screenPoint(vehicle.geo.ahead,w,h,vehicle.geo.ahead.alt):null,behind=vehicle.geo.behind?screenPoint(vehicle.geo.behind,w,h,vehicle.geo.behind.alt):null;
     let heading=0;if(ahead&&Math.hypot(ahead.x-q.x,ahead.y-q.y)>.5)heading=Math.atan2(ahead.y-q.y,ahead.x-q.x);else if(behind)heading=Math.atan2(q.y-behind.y,q.x-behind.x);
-    symbols.push({id:vehicle.id,kind:'vehicle',vehicle,x:q.x,y:q.y,heading,r:9});
+    vehicleSymbols.push({id:vehicle.id,kind:'vehicle',vehicle,x:q.x,y:q.y,heading,r:9});
   });
+  const activeZoom=state.view==='3d'?state.zoom3d:state.zoom2d;
+  symbols.push(...clusterVehicleSymbols(vehicleSymbols,vehicleClusterDistanceForZoom(activeZoom)));
   resolveSymbolCollisions(symbols,SYMBOL_MIN_DISTANCE);
   symbols.forEach(symbol=>{
     if(symbol.kind==='node'){
@@ -1246,7 +1281,8 @@ function buildScene(info,p){
         const stages=symbol.bundle.kind==='arrival'?ARRIVAL_STAGES:ORIGIN_STAGES,available=stages.filter(stage=>(symbol.bundle.stages.get(stage)||[]).length),offsets=available.length===3?[[-28,-30],[0,-38],[28,-30]]:available.length===2?[[-18,-30],[18,-30]]:[[0,-32]];
         symbol.stageIcons=available.map((stage,index)=>{const offset=offsets[index]||[0,-32],x=symbol.x+offset[0],y=symbol.y+offset[1],records=symbol.bundle.stages.get(stage)||[];hitTargets.push({type:'stage',x,y,r:12,stage,nodeKey:symbol.bundle.key,records,priority:100});return {stage,x,y};});
       }
-    }else hitTargets.push({type:'vehicle',x:symbol.x,y:symbol.y,r:SYMBOL_MIN_DISTANCE/2,vehicle:symbol.vehicle,records:symbol.vehicle.records,priority:90});
+    }else if(symbol.kind==='vehicleCluster')hitTargets.push({type:'vehicleCluster',x:symbol.x,y:symbol.y,r:14,cluster:symbol,records:symbol.records,priority:90});
+    else hitTargets.push({type:'vehicle',x:symbol.x,y:symbol.y,r:SYMBOL_MIN_DISTANCE/2,vehicle:symbol.vehicle,records:symbol.vehicle.records,priority:90});
   });
   state.scene={key,edges,symbols,hitTargets};
   return state.scene;
@@ -1278,6 +1314,12 @@ function drawVehicle(ctx,symbol,p){
   if(count>1){const label=count>99?'99+':String(count);ctx.font='700 9px sans-serif';const bw=Math.max(13,ctx.measureText(label).width+6);ctx.fillStyle=vehicle.critical?p.red:color;ctx.beginPath();ctx.arc(8,-8,bw/2,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.card;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,8,-7.5);}
   ctx.restore();
 }
+function drawVehicleCluster(ctx,symbol,p){
+  const count=(symbol.vehicles||[]).length,color=symbol.mode==='combined'?p.acc:modeColor(symbol.mode,p);
+  if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.45;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
+  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.fillStyle=p.card;ctx.strokeStyle=symbol.critical?p.red:color;ctx.lineWidth=symbol.critical?2:1.5;ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle=color;ctx.globalAlpha=.16;ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=symbol.critical?p.red:color;ctx.font='800 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(count>99?'99+':String(count),0,.5);ctx.restore();
+}
 const STAGE_META={
   PRODUCTION:{tr:'Üretimde',en:'In production',glyph:'P'},LOADING:{tr:'Yükleme Operasyonları',en:'Loading Operations',glyph:'L'},
   CUSTOMS:{tr:'Gümrük Operasyonları',en:'Customs Operation',glyph:'C'},IN_WAREHOUSE:{tr:'Depoda',en:'In Warehouse',glyph:'W'},
@@ -1300,7 +1342,7 @@ function drawHoverHighlight(ctx,hit,p){
   if(hit.type==='route'){ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.45;ctx.lineWidth=Math.max(3,Number(hit.r||8)/2);ctx.lineCap='round';ctx.setLineDash([]);strokePath(ctx,hit.points);ctx.restore();return;}
   ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(hit.x,hit.y,Math.min(24,Number(hit.r||10)+3),0,Math.PI*2);ctx.stroke();ctx.restore();
 }
-function hitIdentity(hit){if(!hit)return '';return hit.type+':'+(hit.vehicle?hit.vehicle.id:hit.edge?hit.edge.key:hit.bundle?hit.bundle.key:hit.stage?hit.nodeKey+'/'+hit.stage:'');}
+function hitIdentity(hit){if(!hit)return '';return hit.type+':'+(hit.vehicle?hit.vehicle.id:hit.cluster?hit.cluster.id:hit.edge?hit.edge.key:hit.bundle?hit.bundle.key:hit.stage?hit.nodeKey+'/'+hit.stage:'');}
 function currentHit(){
   // Sahne yeniden kurulduğunda hover nesnesi eski hedefi tutmasın.
   if(!state.hover||!state.scene)return null;const id=hitIdentity(state.hover);
@@ -1320,7 +1362,7 @@ function draw(now){
   ctx.clearRect(0,0,w,h);ctx.drawImage(baseLayer(info,p),0,0,w,h);
   const scene=buildScene(info,p);drawEdges(ctx,scene,t,animate);
   scene.symbols.forEach(symbol=>{if(symbol.kind==='node')drawNode(ctx,symbol,p);});
-  scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p);});
+  scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p);else if(symbol.kind==='vehicleCluster')drawVehicleCluster(ctx,symbol,p);});
   const hover=currentHit();if(hover)drawHoverHighlight(ctx,hover,p);
   if(animate||state.expandedNodeKey||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
 }
@@ -1343,7 +1385,10 @@ function vehicleTitle(vehicle){
 }
 function showTooltip(hit,event){
   const tip=$('globalFlowTooltip');if(!tip)return;if(!hit){tip.hidden=true;return;}let title='',lines=[],critical=false;
-  if(hit.type==='vehicle'){
+  if(hit.type==='vehicleCluster'){
+    const c=hit.cluster,modes=[...new Set((c.vehicles||[]).map(v=>modeLabel(v.mode)))];title=L('Gruplanmış araçlar','Grouped vehicles')+' · '+(c.vehicles||[]).length;
+    lines.push(modes.join(' · '));lines.push(countSummary(c.records));lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
+  }else if(hit.type==='vehicle'){
     const v=hit.vehicle;title=vehicleTitle(v);
     lines.push(modeLabel(v.mode)+' · '+v.leg.from+' → '+v.leg.to);
     lines.push(Math.round(v.progress*100)+'% '+L('ayak ilerlemesi','leg progress')+(v.elapsedDays!=null&&v.leadDays!=null?' · '+Math.floor(v.elapsedDays)+' / '+Math.round(v.leadDays)+' '+L('gün','days'):''));
@@ -1367,8 +1412,8 @@ function onPointerMove(event){
   if(state.drag&&state.drag.id===event.pointerId){
     const totalDx=p.x-state.drag.x,totalDy=p.y-state.drag.y;if(Math.hypot(totalDx,totalDy)>3)state.drag.moved=true;
     if(state.view==='3d'){
-      const stamp=performance.now(),dt=clamp(stamp-state.drag.lastTime,8,48),dx=p.x-state.drag.lastX,dy=p.y-state.drag.lastY,sensitivity=.36/Math.max(1,Math.sqrt(state.zoom3d));
-      const dLon=dx*sensitivity,dLat=-dy*sensitivity*.82,sample=16/dt;state.rotLon=wrapLongitude(state.rotLon+dLon);state.rotLat=clamp(state.rotLat+dLat,-85,85);
+      const stamp=performance.now(),dt=clamp(stamp-state.drag.lastTime,8,48),dx=p.x-state.drag.lastX,dy=p.y-state.drag.lastY,delta=globeDragDelta(dx,dy,state.zoom3d);
+      const dLon=delta.lon,dLat=delta.lat,sample=16/dt;state.rotLon=wrapLongitude(state.rotLon+dLon);state.rotLat=clamp(state.rotLat+dLat,-85,85);
       state.drag.vLon=state.drag.vLon*.42+dLon*sample*.58;state.drag.vLat=state.drag.vLat*.42+dLat*sample*.58;state.drag.lastX=p.x;state.drag.lastY=p.y;state.drag.lastTime=stamp;
     }else{state.panX=state.drag.panX+totalDx;state.panY=state.drag.panY+totalDy;}
     scheduleDraw();return;
@@ -1424,10 +1469,25 @@ function openRecordsDrawer(title,records,subtitle){
   const drawer=$('globalFlowDrawer');if(!drawer)return;drawer.innerHTML='<div class="gfDrawerHead"><div><b>'+esc(title)+'</b><span>'+esc(subtitle||'')+'</span></div><button type="button" data-gf-drawer-close>×</button></div><div class="gfDrawerBody"><div class="gfDrawerTableWrap"><table class="gfDrawerTable"><thead><tr><th>'+esc(L('Sipariş','Order'))+'</th><th>'+esc(L('Parsiyel','Partial'))+'</th><th>'+esc(L('Model','Model'))+'</th><th>'+esc(L('Statü','Status'))+'</th><th>'+esc(L('Adet','Qty'))+'</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.orderCode||'—')+'</td><td>'+esc(partialLabel(r))+'</td><td>'+esc(r.model||'—')+'</td><td>'+esc(r.status||'—')+'</td><td class="num">'+nf().format(r.qty||0)+'</td></tr>').join('')+'</tbody></table></div></div>';
   drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('[data-gf-drawer-close]')?.addEventListener('click',closeDrawer);
 }
+function openRouteChoice(edge,records){
+  const groups=routeRecordGroups(records);
+  if(groups.length<=1){openRecordsDrawer(edgeTitle(edge),records,modeLabel(edge.mode)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));return;}
+  const drawer=$('globalFlowDrawer');if(!drawer){openRecordsDrawer(edgeTitle(edge),records,modeLabel(edge.mode));return;}
+  window.BLDetailDrawer?.close?.();
+  const buttons=groups.map((group,index)=>'<button type="button" class="gfRouteChoiceBtn" data-gf-route-choice="'+index+'"><b>'+esc(group.country+' · '+modeLabel(group.mode))+'</b><span>'+esc(countSummary(group.records))+'</span></button>').join('');
+  drawer.innerHTML='<div class="gfDrawerHead"><div><b>'+esc(edgeTitle(edge))+'</b><span>'+esc(L('Bu ortak koridorda görmek istediğin akışı seç.','Choose which flow to inspect on this shared corridor.'))+'</span></div><button type="button" data-gf-drawer-close>×</button></div><div class="gfDrawerBody"><div class="gfRouteChoices">'+buttons+'<button type="button" class="gfRouteChoiceBtn is-combined" data-gf-route-choice="combined"><b>'+esc(L('Birleşik','Combined'))+'</b><span>'+esc(countSummary(records))+'</span></button></div></div>';
+  drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');
+  drawer.querySelector('[data-gf-drawer-close]')?.addEventListener('click',closeDrawer);
+  drawer.querySelectorAll('[data-gf-route-choice]').forEach(button=>button.addEventListener('click',()=>{
+    const key=button.dataset.gfRouteChoice,group=key==='combined'?null:groups[Number(key)],rows=group?group.records:records,title=group?(group.country+' · '+modeLabel(group.mode)):L('Birleşik','Combined');
+    closeDrawer();openRecordsDrawer(title,rows,edgeTitle(edge));
+  }));
+}
 function openHitDetail(hit){
   if(!hit)return;
+  if(hit.type==='vehicleCluster'){openRecordsDrawer(L('Gruplanmış araçlar','Grouped vehicles')+' · '+hit.cluster.vehicles.length,hit.records,L('Yakınlaştırarak tekil araçlara ayrıştırabilirsin.','Zoom in to separate individual vehicles.'));return;}
   if(hit.type==='vehicle'){const v=hit.vehicle,title=v.vesselName||(v.files.length===1?v.files[0]:L('Gruplanmış sevkiyatlar','Grouped shipments')+' · '+v.files.length);openRecordsDrawer(title,v.records,modeLabel(v.mode)+' · '+v.leg.from+' → '+v.leg.to+' · '+Math.round(v.progress*100)+'%');return;}
-  if(hit.type==='route'){openRecordsDrawer(edgeTitle(hit.edge),hit.records,modeLabel(hit.edge.mode)+(hit.edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));return;}
+  if(hit.type==='route'){openRouteChoice(hit.edge,hit.records);return;}
   if(hit.type==='stage'){openRecordsDrawer(stageLabel(hit.stage),hit.records,hit.nodeKey==='arrival:istanbul'?ISTANBUL.name:'');return;}
   if(hit.type==='node')openRecordsDrawer(hit.bundle.kind==='arrival'?ISTANBUL.name:hit.bundle.location.name,hit.records,L('Operasyon durumları','Operational stages'));
 }
@@ -1487,7 +1547,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 return {
   ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
   normalizeRecord,expandSourceRow,shipmentPartialsFromRows,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,
-  distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,routeLegsFor,routeEdges,buildFlowModel,resolveSymbolCollisions,pickHit,
+  distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,routeLegsFor,routeEdges,routeCorridorKey,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,
   refresh:()=>refresh(true),resetView
 };
 });
