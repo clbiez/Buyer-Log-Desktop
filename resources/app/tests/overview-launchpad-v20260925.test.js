@@ -36,6 +36,12 @@ test('Saat seçimi bilinmeyen ve tekrar eden ülkeleri temizler; tüm IANA saat 
   assert.deepEqual(launchpad.normalizeSelection([]), []);
 });
 
+test('Saat ekleme araması ülke adı ve saat dilimine göre eşleşir', () => {
+  assert.equal(launchpad.clockMatchesSearch(launchpad.CLOCKS.find(item=>item.id==='BD'), 'bangla', 'en'), true);
+  assert.equal(launchpad.clockMatchesSearch(launchpad.CLOCKS.find(item=>item.id==='TR'), 'Istanbul', 'en'), true);
+  assert.equal(launchpad.clockMatchesSearch(launchpad.CLOCKS.find(item=>item.id==='IN'), 'tokyo', 'en'), false);
+});
+
 test('IANA saat dilimi canlı saat ve analog ibre açılarını deterministik yapar', () => {
   const at = new Date('2026-09-26T12:00:00Z');
   const ist=launchpad.clockParts(at, 'Europe/Istanbul', 'tr');
@@ -51,6 +57,8 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /data-clock-add/);
   assert.match(SOURCE, /data-clock-remove/);
   assert.match(SOURCE, /data-clock-display-select/);
+  assert.match(SOURCE, /data-clock-search/);
+  assert.match(SOURCE, /filterClockOptions/);
   assert.match(SOURCE, /Analog \+ dijital/);
   assert.match(SOURCE, /Intl\.supportedValuesOf\('timeZone'\)/);
   assert.match(SOURCE, /'TZ:'\+zone/);
@@ -60,6 +68,8 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.doesNotMatch(SOURCE, /data-launch-tab/);
   assert.doesNotMatch(SOURCE, /rankTabs/);
   assert.match(CSS, /\.ovClockGrid/);
+  assert.match(CSS, /repeat\(auto-fit,minmax\(128px,1fr\)\)/);
+  assert.match(CSS, /\.ovClockTime\{[^}]*white-space:nowrap/);
 });
 
 test('Premium ritim katmanı araç çubuğu dışı .tbtn için sıfır özgüllüklü ortak taban tanımlar', () => {
