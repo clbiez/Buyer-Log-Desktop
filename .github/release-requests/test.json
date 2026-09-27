@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "version": "7.0.152",
   "commit_sha": "e757d25fadb1fc1cfbf911f2b7b97d00b296e511",
-  "release_notes": "Buyer Log 7.0.152: IAS/ASAS Database yenilemelerinde bulunamayan Tabular sütunlar artık onarılabilir hata olarak tanınır; hata penceresindeki Onar düğmesi ilgili Field Mapping alanını doğrudan açar, kaydedilen gerçek database sütunu kalıcı olur ve yalnız etkilenen kapsam otomatik yeniden yenilenir. Ayrıca Data Inspector canlı IAS/INTAKE tanıları, seçilebilir Backup/Restore kapsamları, LFL özet tablo yüksekliği düzeltmesi ve LFL Trial fiyatının her zaman Collection FOB kaynağını kullanması bu sürümde birlikte yayınlanır."
+  "release_notes": "Buyer Log 7.0.152: IAS/ASAS Database yenilemelerinde bulunamayan Tabular sütunlar artık onarılabilir hata olarak tanınır; hata penceresindeki Onar düğmesi ilgili Field Mapping alanını doğrudan açar, kaydedilen gerçek database sütunu kalıcı olur ve yalnız etkilenen kapsam otomatik yeniden yenilenir. Ayrıca Data Inspector canlı IAS/INTAKE tanıları, seçilebilir Backup/Restore kapsamları, LFL özet tablo yüksekliği düzeltmesi ve LFL Trial fiyatının her zaman Collection FOB kaynağını kullanması bu sürümde birlikte yayınlanır. Tam Windows Buyer Log regression paketi release kapısı olarak zorunludur."
 }
