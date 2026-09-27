@@ -25,20 +25,11 @@ function assertAllowedUrl(value) {
 async function request(endpoint, body) {
   const url = assertAllowedUrl(`${OAB_API_ROOT}/${String(endpoint || '').replace(/^\/+/, '')}`);
   const authorization = authState.requireAuthorization();
-  const transportOrigin = String(process.env.BUYER_LOG_OAB_TRANSPORT_ORIGIN || '');
-  let transportUrl;
-  try {
-    transportUrl = new URL('/request', transportOrigin);
-    if (transportUrl.protocol !== 'http:' || transportUrl.hostname !== '127.0.0.1'
-        || !/^\d+$/.test(transportUrl.port) || !process.env.BUYER_LOG_DESKTOP_BRIDGE_SECRET) throw new Error('invalid transport');
-  } catch (_) {
-    throw clientError('OAB iç tarayıcı bağlantısı hazır değil.', 'OAB_DESKTOP_AUTH_UNAVAILABLE', 503);
-  }
   const controller = new AbortController();
   authState.registerController(controller);
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(transportUrl, {
+    const response = await fetch(url, {
       method: 'POST',
       redirect: 'manual',
       cache: 'no-store',
@@ -46,9 +37,11 @@ async function request(endpoint, body) {
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json',
-        'X-BuyerLog-Desktop-Bridge': process.env.BUYER_LOG_DESKTOP_BRIDGE_SECRET,
+        Origin: 'https://pass.lcwaikiki.com',
+        Referer: 'https://pass.lcwaikiki.com/',
+        Authorization: authorization,
       },
-      body: JSON.stringify({ endpoint, authorization, body:body || {} }),
+      body: JSON.stringify(body || {}),
     });
     if (response.status >= 300 && response.status < 400) {
       throw clientError('OAB servisi beklenmeyen bir yönlendirme döndürdü.', 'OAB_REDIRECT_BLOCKED', 502, { status: response.status });
@@ -58,8 +51,7 @@ async function request(endpoint, body) {
       throw clientError('OAB oturumunuzun süresi doldu. Lütfen tekrar giriş yapın.', 'OAB_AUTH_EXPIRED', response.status, { status: response.status });
     }
     if (!response.ok) {
-      throw clientError(`OAB verileri alınamadı: HTTP ${response.status}`, 'OAB_HTTP_ERROR', 502,
-        { status: response.status, endpoint:url.pathname });
+      throw clientError(`OAB verileri alınamadı: HTTP ${response.status}`, 'OAB_HTTP_ERROR', 502, { status: response.status });
     }
     const text = await response.text();
     try { return text ? JSON.parse(text) : {}; }
