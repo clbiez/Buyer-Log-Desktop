@@ -442,9 +442,11 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
   flex:none;
 }
 #view-lfl .lflAnalysisGrid .lflTableWrap.lflManualHeight{
-  height:var(--lfl-manual-height)!important;
+  /* Kullanıcının seçtiği değer zorunlu yükseklik değil, görünür alan üst sınırıdır.
+     Filtre/render sonrası az satır kaldığında tablo boş alan üretip pencere altına uzamaz. */
+  height:auto!important;
   max-height:var(--lfl-manual-height)!important;
-  min-height:120px;
+  min-height:0;
   flex:none;
 }
 #view-lfl .lflHeightHandle{

@@ -30,3 +30,9 @@ test('LFL tablo yükseklikleri kullanıcı bazında kalıcıdır ve sıfırlanab
   assert.match(JS, /handle\.addEventListener\('dblclick'/);
   assert.match(JS, /initAnalysisHeightResizers\(\);/);
 });
+
+
+test('LFL manuel yükseklik içerik azaldığında tabloyu pencere altına zorlamaz', () => {
+  assert.match(CSS, /\.lflAnalysisGrid \.lflTableWrap\.lflManualHeight\{[^}]*height:auto!important;[^}]*max-height:var\(--lfl-manual-height\)!important;[^}]*min-height:0;/s);
+  assert.doesNotMatch(CSS, /\.lflAnalysisGrid \.lflTableWrap\.lflManualHeight\{[^}]*height:var\(--lfl-manual-height\)!important/s);
+});
