@@ -1670,6 +1670,8 @@ function openDataSourceAndFilters(options={}){
   
   const connectionId=String(options&&options.connectionId||'');
   const openMapping=Boolean(options&&options.openMapping);
+  const mappingRepair=options&&options.mappingRepair&&typeof options.mappingRepair==='object'
+    ? options.mappingRepair : null;
   if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('source')){
     /* v7.81 — Kişisel ufuk kaldırıldı: ufku yalnız Veri Yönetimi yetkisi
        olan değiştirebilir. Eskiden burada kişisel düzenleyici açılırdı;
@@ -1685,8 +1687,11 @@ function openDataSourceAndFilters(options={}){
   void window.BLPerf.ensureFeature('dataManagement').then(()=>{
     const screen=window.BLDataManagement;
     if(!screen)return;
+    // Onarım bir modal içinden gelmiş olabilir; Veri Yönetimi lazy yüklendiğinde
+    // root'un hazır olduğundan emin ol ve aynı canlı hata bilgisini editöre taşı.
+    screen.mount?.(document.getElementById('dataManagementRoot'));
     // Belirli bir kaynak hedeflendiyse ona, yoksa sayfanın modülüne odaklan.
-    if(connectionId&&typeof screen.focusSource==='function')screen.focusSource(connectionId,{openMapping});
+    if(connectionId&&typeof screen.focusSource==='function')screen.focusSource(connectionId,{openMapping,mappingRepair});
     else if(typeof screen.focusModule==='function')screen.focusModule(target);
   }).catch(error=>{ if(typeof showToast==='function')showToast(error&&error.message||String(error)); });
 }
@@ -1720,6 +1725,23 @@ function showSourceFilterRequiredNotice(status,message){
 }
 window.openDataSourceAndFilters=openDataSourceAndFilters;
 window.showSourceFilterRequiredNotice=showSourceFilterRequiredNotice;
+
+/* Field Mapping onarımından sonra yalnız hatayı üreten kapsamları yeniden dene.
+   Hedef bilgisi yoksa güvenli geri dönüş tam yenilemedir. Başarısız olursa
+   loadFromServer aynı onarım modalını yeniden gösterir; sessiz başarısızlık yok. */
+async function retryRefreshAfterFieldMapping(repairAction={}){
+  const targets=Array.isArray(repairAction&&repairAction.targets)
+    ? [...new Set(repairAction.targets.map(value=>String(value||'').trim()).filter(Boolean))]
+    : [];
+  const ok=await loadFromServer(true,targets.length?targets:undefined);
+  if(ok&&typeof showToast==='function'){
+    showToast(appLang==='en'
+      ?'Field mapping repair was verified and the refresh completed.'
+      :'Alan eşleme onarımı doğrulandı ve yenileme tamamlandı.');
+  }
+  return ok;
+}
+window.BLRetryRefreshAfterFieldMapping=retryRefreshAfterFieldMapping;
 
 let ordersLoadPromise=null;
 let cpLoadPromise=null;
@@ -12233,28 +12255,48 @@ window.showSourceRefreshAdvisory=showSourceRefreshAdvisory;
 function setRefreshFailureState(failed){
   ['topRefreshBtn','serverRefreshBtn'].forEach(id=>document.getElementById(id)?.classList.toggle('refreshError',Boolean(failed)));
 }
-function showSourceRefreshFailureModal(detail){
+function showSourceRefreshFailureModal(detail,repairAction=null){
   document.getElementById('sourceRefreshFailureModal')?.remove();
   const en=appLang==='en';
+  const repair=repairAction&&repairAction.kind==='field-mapping'
+    && String(repairAction.sourceId||'').trim()
+    && String(repairAction.header||'').trim()
+    ? repairAction : null;
+  const brokenSource=repair
+    ? [String(repair.table||'').trim(),String(repair.column||'').trim()].filter(Boolean).join(' · ')
+    : '';
   const modal=document.createElement('div');
   modal.id='sourceRefreshFailureModal';modal.className='warnOverlay';
   modal.innerHTML=`<div class="modalCard refreshFailureCard" role="alertdialog" aria-modal="true">
     <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <span>${escapeHtml(en?'Data models could not be refreshed':'Veri modelleri güncellenemedi')}</span>
+      <span>${escapeHtml(repair?(en?'Field mapping needs repair':'Alan eşlemesi onarılmalı'):(en?'Data models could not be refreshed':'Veri modelleri güncellenemedi'))}</span>
       <button type="button" class="tbtn" data-refresh-failure-close aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="refreshFailureBody">
-      <p>${escapeHtml(en?'The ASAS and Bonded Warehouse data models could not be queried. Check your network connection and, outside the company network, make sure you are signed in to the VPN.':'ASAS ve Antrepo veri modelleri sorgulanamadı. Ağ bağlantınızı kontrol edin; şirket dışındaysanız VPN girişinin yapılmış olması gerekir.')}</p>
-      <p>${escapeHtml(en?'Also verify the active roles, horizon and field mappings in Data Model Connection, then try again.':'Data Model Connection ekranındaki aktif roller, ufuk ve alan eşlemelerini de kontrol edip yeniden deneyin.')}</p>
+      <p>${escapeHtml(repair
+        ?(en
+          ?`The database field mapped to "${repair.header}" can no longer be used${brokenSource?` (${brokenSource})`:''}.`
+          :`"${repair.header}" alanının bağlı olduğu database alanı artık kullanılamıyor${brokenSource?` (${brokenSource})`:''}.`)
+        :(en?'The ASAS and Bonded Warehouse data models could not be queried. Check your network connection and, outside the company network, make sure you are signed in to the VPN.':'ASAS ve Antrepo veri modelleri sorgulanamadı. Ağ bağlantınızı kontrol edin; şirket dışındaysanız VPN girişinin yapılmış olması gerekir.'))}</p>
+      <p>${escapeHtml(repair
+        ?(en?'Choose Repair to open this source directly in Field Mapping, select the current database column, save it, and Buyer Log will retry the refresh.':'Onar ile bu kaynağı doğrudan Field Mapping içinde açın, güncel database sütununu seçip kaydedin; Buyer Log yenilemeyi otomatik yeniden deneyecek.')
+        :(en?'Also verify the active roles, horizon and field mappings in Data Model Connection, then try again.':'Data Model Connection ekranındaki aktif roller, ufuk ve alan eşlemelerini de kontrol edip yeniden deneyin.'))}</p>
       ${detail?`<div class="refreshFailureDetail">${escapeHtml(detail)}</div>`:''}
     </div>
-    <div style="padding:12px 20px 16px;display:flex;justify-content:flex-end;"><button type="button" class="tbtn primary" data-refresh-failure-close>${escapeHtml(en?'Close':'Kapat')}</button></div>
+    <div style="padding:12px 20px 16px;display:flex;justify-content:flex-end;gap:8px;">
+      <button type="button" class="tbtn ${repair?'':'primary'}" data-refresh-failure-close>${escapeHtml(en?'Close':'Kapat')}</button>
+      ${repair?`<button type="button" class="tbtn primary" data-refresh-repair>${escapeHtml(en?'Repair':'Onar')}</button>`:''}
+    </div>
   </div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const close=()=>modal.remove();
   modal.querySelectorAll('[data-refresh-failure-close]').forEach(btn=>btn.addEventListener('click',close));
+  modal.querySelector('[data-refresh-repair]')?.addEventListener('click',()=>{
+    close();
+    openDataSourceAndFilters({connectionId:repair.sourceId,openMapping:true,mappingRepair:repair});
+  });
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
 }
 
@@ -12489,7 +12531,7 @@ async function waitForRefreshJob(expectedJob=null){
       btn.textContent=appLang==='en'?`⏳ Refreshing… ${elapsed}`:`⏳ Yenileniyor… ${elapsed}`;
     }
     if(jobState.running)continue;
-    if(jobState.phase==='error'||jobState.error){const err=new Error(jobState.error||'Yenileme başarısız oldu.');err.code=jobState.errorCode||'';throw err;}
+    if(jobState.phase==='error'||jobState.error){const err=new Error(jobState.error||'Yenileme başarısız oldu.');err.code=jobState.errorCode||'';err.repairAction=jobState.repairAction||null;throw err;}
     // idle/unknown bir durum başarılı yenileme değildir. Sadece DONE kabul edilir.
     if(jobState.phase!=='done'){
       if(Date.now()-started>timeoutMs)throw new Error(appLang==='en'?'Refresh did not reach a completed state.':'Yenileme tamamlanmış duruma ulaşmadı.');
@@ -12529,7 +12571,7 @@ async function waitForRefreshJob(expectedJob=null){
     if(!res.ok){
       const e = await res.json().catch(()=>({error:res.statusText}));
       if(e.code==='USER_SELECTION_REQUIRED'){ location.href='/select-user.html'; return; }
-      const err=new Error(e.error||res.statusText);err.code=e.code||'';err.sourceFilterStatus=e.sourceFilterStatus||null;err.sourceFilterRequired=Boolean(e.sourceFilterRequired);throw err;
+      const err=new Error(e.error||res.statusText);err.code=e.code||'';err.sourceFilterStatus=e.sourceFilterStatus||null;err.sourceFilterRequired=Boolean(e.sourceFilterRequired);err.repairAction=e.repairAction||null;throw err;
     }
     if(bootstrapFetchMetric)window.BLPerf?.end?.(bootstrapFetchMetric);
     if(initialScreenLoad)window.BLPerf?.mark?.('LOCAL_DB_READY');
@@ -12793,7 +12835,7 @@ async function waitForRefreshJob(expectedJob=null){
       setRefreshFailureState(true);
       _overviewRefreshResult=normalizeOverviewRefreshResult({status:'error',at:new Date().toISOString(),message:err.message});
       renderOverviewRefreshResult();
-      showSourceRefreshFailureModal(err.message);
+      showSourceRefreshFailureModal(err.message,err.repairAction||null);
       showToast((appLang==='en'?'Refresh failed: ':'Yenileme başarısız: ')+err.message);
     }
     console.warn('Sunucu veri hatası:', err);
