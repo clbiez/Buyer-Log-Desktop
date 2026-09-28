@@ -69,6 +69,23 @@ test('3 · Gemi Ad boşsa yakın ilerleme birlikte, belirgin farklı ilerleme ay
   assert.deepEqual(sizes,['B1,B2','B3']);
 });
 
+test('3b · ortalama yol süresi dolan ama hâlâ yolda olan sevkiyat sarı çerçeve durumu taşır',()=>{
+  const due=transitRec('B4',{handover:iso(NOW-70*DAY)});
+  const early=transitRec('B5',{handover:iso(NOW-69*DAY)});
+  const [arrived]=flow.shipmentPartialsFromRows([cpRow({'Order Code':'B6',_logisticSegments:[
+    segment({sourceRow:6,status:'Depoda',handover:iso(NOW-80*DAY)})
+  ]})],'cp');
+  const model=flow.buildFlowModel([due,early,arrived],{rules:SEA_RULES,now:NOW});
+  const dueVehicle=model.vehicles.find(v=>v.records.some(r=>r.orderCode==='B4'));
+  const earlyVehicle=model.vehicles.find(v=>v.records.some(r=>r.orderCode==='B5'));
+  assert.ok(dueVehicle);assert.equal(dueVehicle.overdue,true,'yol süresi sınırına ulaşınca overdue olmalı');
+  assert.ok(earlyVehicle);assert.equal(earlyVehicle.overdue,false,'ortalama yol süresi dolmadan sarı uyarı olmamalı');
+  assert.equal(arrived.state,'arrived');
+  assert.equal(model.vehicles.some(v=>v.records.some(r=>r.orderCode==='B6')),false,'Depoda/varış statüsü araç olarak yolda kalmamalı');
+  assert.match(SOURCE,/vehicle\.overdue\?p\.yellow/,'Buyer Log haritası overdue araç çerçevesini sarı çizmeli');
+  assert.match(SOURCE,/symbol\.overdue\?p\.yellow/,'Buyer Log araç kümeleri overdue ise sarı çerçeve taşımalı');
+});
+
 function assertColomboSeaAir(country){
   const legs=flow.routeLegsFor(country,'sea-air');
   assert.equal(legs.length,2);
