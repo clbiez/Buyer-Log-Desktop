@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.155",
-  "commit_sha": "afcedf13064e8f3870ab9cb7108c66ac35deb135",
-  "release_notes": "Buyer Log 7.0.155: Son iki gündeki başarısız/unmerged çalışmaların main'de eksik kalan parçaları güvenli biçimde geri alındı. Backlog Excel/grafik canlı senkron korumaları, IAS Horizon canlı şema/field mapping onarımı ve PLM Sync sırasında Royalty/Licensor bilgisinin korunması dahil edildi; mevcut OAB external browser ve INTAKE davranışları korunarak regression testleri güncellendi."
+  "version": "7.0.158",
+  "commit_sha": "da9eae22bb52ffd23a38fedb65fd77990369b7fe",
+  "release_notes": "Buyer Log 7.0.158: 7.0.155 sonrasındaki main güncellemeleri TEST kanalında yayınlandı. OAB pivot alt detayları ortak sağ detay çekmecesine taşındı ve kalıcı sütun seçimi eklendi; PLM görsel/kimlik eşleştirmeleri OAB için genişletildi. Focus/Extended görünüm tercihleri oturumlar arasında kalıcı hale getirildi, seçili model PLM SYNC kapsamı düzeltildi, hızlı CP veri girişinde arka plan yenilemesinden kaynaklanan veri kaybı riski giderildi, INTAKE ay sıralaması ve sıfır bütçe filtresi düzeltildi, Collection durum renkleri TR/EN ortak katalogla eşlendi ve Global Flow Map gecikmiş sevkiyat sarı çerçeve davranışı güvenli biçimde düzeltildi."
 }
