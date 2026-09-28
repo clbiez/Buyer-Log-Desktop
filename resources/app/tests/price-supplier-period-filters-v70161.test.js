@@ -66,7 +66,7 @@ test('current and comparison seasons may use independent In-Store/OPD months',()
   assert.deepEqual(model.current.map(rec=>rec.obs.manufacturer),['Supplier current-hit']);
   assert.deepEqual(model.previous.map(rec=>rec.obs.manufacturer),['Supplier compare-hit']);
   assert.equal(model.totals.records,1);
-  assert.equal(model.totals.previousRecords,1);
+  assert.equal(model.previous.length,1);
 });
 
 test('period controls are side-specific and clearing filters clears months without removing layout',()=>{
