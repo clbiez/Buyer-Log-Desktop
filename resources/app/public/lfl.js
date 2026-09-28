@@ -955,7 +955,13 @@
   const LFL_TABLE_EXPORTS=new Map();
   let lflPortfolioModalState=null;
   let lflDetailModalState=null;
-  function closeLflColumnPanel(){if(openLflColumnPanel){openLflColumnPanel.classList.remove('show','viewportFloating');openLflColumnPanel.style.cssText='';openLflColumnPanel=null;}}
+  function closeLflColumnPanel(){
+    if(!openLflColumnPanel)return;
+    openLflColumnPanel.classList.remove('show','viewportFloating');
+    openLflColumnPanel.style.cssText='';
+    openLflColumnPanel._buyerLogAnchor=null;
+    openLflColumnPanel=null;
+  }
   function safeFilePart(value){return norm(value).replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'LFL';}
   function columnLabel(col){return typeof col.label==='function'?col.label():col.label;}
   /* LFL PLM ID'yi ekranda göstermek zorunda değildir. Kaynak PLM ID
@@ -1138,7 +1144,20 @@
       tools.innerHTML=`<button type="button" class="lflCpTableTool" data-lfl-export title="${esc(isEn()?'Export this table to Excel':'Bu tabloyu Excel’e aktar')}"><svg class="ic"><use href="#i-file-export"/></svg><span>${esc(isEn()?'Export Excel':'Excel’e Aktar')}</span></button><button type="button" class="lflCpTableTool" data-lfl-columns title="${esc(isEn()?'Choose columns':'Sütun seç')}">☷ <span>${esc(isEn()?'Columns':'Sütunlar')}</span></button><button type="button" class="lflCpTableTool" data-lfl-freeze title="${esc(isEn()?'Freeze columns':'Sütunları dondur')}">❄ <span>${esc(isEn()?'Freeze':'Dondur')}</span></button><button type="button" class="lflCpTableTool" data-lfl-clear title="${esc(isEn()?'Clear column filters':'Sütun filtrelerini temizle')}">⌫ <span>${esc(isEn()?'Clear filters':'Filtreleri temizle')}</span></button><div class="colPanel lflGenericColPanel"></div>`;
       head.appendChild(tools);
       tools.querySelector('[data-lfl-export]').addEventListener('click',event=>{event.preventDefault();event.stopPropagation();exportLflTable(tableId);});
-      tools.querySelector('[data-lfl-columns]').addEventListener('click',event=>{event.preventDefault();event.stopPropagation();const panel=tools.querySelector('.lflGenericColPanel');if(openLflColumnPanel===panel){closeLflColumnPanel();return;}closeLflColumnPanel();window.BLTableFramework.renderColumnPanel(tableKey,panel,rerender);panel.classList.add('show');openLflColumnPanel=panel;requestAnimationFrame(()=>window.repositionVisiblePanels?.());});
+      tools.querySelector('[data-lfl-columns]').addEventListener('click',event=>{
+        event.preventDefault();event.stopPropagation();
+        const trigger=event.currentTarget,panel=tools.querySelector('.lflGenericColPanel');
+        if(openLflColumnPanel===panel){closeLflColumnPanel();return;}
+        closeLflColumnPanel();
+        window.BLTableFramework.renderColumnPanel(tableKey,panel,rerender);
+        panel._buyerLogAnchor=trigger;
+        panel.classList.add('show','viewportFloating');
+        openLflColumnPanel=panel;
+        requestAnimationFrame(()=>{
+          if(window.positionBuyerLogPopup)window.positionBuyerLogPopup(panel,trigger);
+          else window.repositionVisiblePanels?.();
+        });
+      });
       tools.querySelector('[data-lfl-freeze]').addEventListener('click',event=>{event.preventDefault();event.stopPropagation();closeLflColumnPanel();window.BLTableFramework.startFreeze(tableId,tableKey,event.currentTarget);});
       tools.querySelector('[data-lfl-clear]').addEventListener('click',event=>{event.preventDefault();event.stopPropagation();window.BLTableFramework.clearFilters(tableKey);rerender();if(window.showToast)showToast(isEn()?'Column filters cleared.':'Sütun filtreleri temizlendi.');});
     }
