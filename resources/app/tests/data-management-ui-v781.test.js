@@ -264,7 +264,8 @@ test('v7.81 paylaşım kararı kullanıcıya sorulur, varsayılan uydurulmaz', (
 
 test('v7.81 alan listesi TÜM şema sütunlarını sunar', () => {
   // §17: yalnız eşlenmiş alanlar değil. /api/horizon/fields bunu zaten döndürüyor.
-  assert.match(FILTER_UI, /\/api\/horizon\/fields\?target=/);
+  assert.match(FILTER_UI, /new URLSearchParams\(\{ target: context\.moduleId, sourceId: context\.sourceId \}\)/);
+  assert.match(FILTER_UI, /fetch\(\`\/api\/horizon\/fields\?\$\{fieldParams\}\`/);
   assert.match(
     FILTER_UI,
     /const pickField = event\.target\.closest\('\[data-pick-field\]'\);[\s\S]{0,1200}?fieldsFor\(\)\.map/,
