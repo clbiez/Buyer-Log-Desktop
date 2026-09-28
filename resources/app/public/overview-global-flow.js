@@ -628,6 +628,10 @@ function transitPlacement(rec,rules,now){
 function makeVehicle(leg,items,vessel){
   const records=items.map(p=>p.rec),mean=list=>list.length?list.reduce((a,b)=>a+b,0)/list.length:null;
   const progress=mean(items.map(p=>p.legProgress))||0,elapsed=items.map(p=>p.meta.elapsedDays).filter(v=>v!=null);
+  // Yalnız hâlâ transit durumunda olan placement'lar araç olur. Ortalama yol
+  // süresi dolduğu halde varış statüsü gelmemiş parsiyel, haritada sarı
+  // çerçeveyle operasyonel gecikme olarak görünür.
+  const overdue=items.some(p=>p.meta&&p.meta.known&&p.meta.elapsedDays!=null&&p.meta.leadDays!=null&&p.meta.elapsedDays>=p.meta.leadDays);
   const first=[...items].sort((a,b)=>a.rec.id<b.rec.id?-1:a.rec.id>b.rec.id?1:0)[0];
   return {
     id:'veh:'+leg.key+'|'+(vessel?'v:'+vessel.key:'p:'+first.rec.id),leg,legKey:leg.key,mode:leg.mode,
@@ -636,7 +640,7 @@ function makeVehicle(leg,items,vessel){
     leadDays:mean(items.map(p=>p.meta.leadDays)),known:items.some(p=>p.meta.known),
     origins:[...new Set(records.map(r=>r.origin&&r.origin.name).filter(Boolean))],
     files:[...new Set(records.map(r=>r.shipmentFile||r.orderCode).filter(Boolean))],
-    critical:records.some(r=>r.critical)
+    critical:records.some(r=>r.critical),overdue
   };
 }
 /* Araç gruplama: aynı rota ayağı + aynı normalize Gemi Ad → tek gemi. Gemi
@@ -731,7 +735,7 @@ function clusterVehicleSymbols(symbols,distance){
     members.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
     const vehicles=members.map(m=>m.vehicle).filter(Boolean),records=uniqueRecords(vehicles.flatMap(v=>v.records||[])),modes=[...new Set(vehicles.map(v=>v.mode).filter(Boolean))];
     const elapsedWeight=vehicles.reduce((sum,v)=>sum+(Number(v.elapsedCount)||0),0),avgElapsedDays=elapsedWeight?vehicles.reduce((sum,v)=>sum+(Number(v.elapsedDays)||0)*(Number(v.elapsedCount)||0),0)/elapsedWeight:null;
-    out.push({id:'vehicle-cluster:'+members.map(m=>m.id).join('|'),kind:'vehicleCluster',vehicles,records,x:members.reduce((sum,m)=>sum+m.x,0)/members.length,y:members.reduce((sum,m)=>sum+m.y,0)/members.length,r:12,mode:modes.length===1?modes[0]:'combined',critical:records.some(r=>r&&r.critical),avgElapsedDays,elapsedCount:elapsedWeight});
+    out.push({id:'vehicle-cluster:'+members.map(m=>m.id).join('|'),kind:'vehicleCluster',vehicles,records,x:members.reduce((sum,m)=>sum+m.x,0)/members.length,y:members.reduce((sum,m)=>sum+m.y,0)/members.length,r:12,mode:modes.length===1?modes[0]:'combined',critical:records.some(r=>r&&r.critical),overdue:vehicles.some(v=>v&&v.overdue),avgElapsedDays,elapsedCount:elapsedWeight});
   });
   return out.sort((a,b)=>String(a.id).localeCompare(String(b.id)));
 }
@@ -1273,7 +1277,7 @@ function palette(){
     water:vivid?.water||css('--card2','#edf2f7'),land:vivid?.land||css('--card','#ffffff'),card:css('--card','#ffffff'),line:vivid?.line||css('--line','#d8dee8'),
     ink:css('--ink','#1f2937'),muted:css('--muted','#6b7280'),acc:vivid?.acc||css('--acc','#3f6488'),
     green:vivid?.green||css('--green','#16845b'),red:vivid?.red||css('--red','#c04455'),orange:vivid?.orange||css('--orange','#c47a20'),
-    cyan:vivid?.cyan||'#0891b2',purple:vivid?.purple||'#7c5ce0'
+    yellow:css('--yellow','#b88700'),cyan:vivid?.cyan||'#0891b2',purple:vivid?.purple||'#7c5ce0'
   };
   return state.paletteCache;
 }
@@ -1420,7 +1424,8 @@ function drawVehicle(ctx,symbol,p){
   const vehicle=symbol.vehicle,color=modeColor(vehicle.mode,p),count=vehicle.records.length;
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.fillStyle=color;ctx.beginPath();ctx.arc(symbol.anchorX,symbol.anchorY,2,0,Math.PI*2);ctx.fill();ctx.restore();}
   ctx.save();ctx.translate(symbol.x,symbol.y);
-  ctx.fillStyle=p.card;ctx.strokeStyle=vehicle.critical?p.red:color;ctx.lineWidth=vehicle.critical?2:1.2;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.stroke();
+  const frameColor=vehicle.overdue?p.yellow:(vehicle.critical?p.red:color);
+  ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=vehicle.overdue||vehicle.critical?2:1.2;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.fillStyle=color;
   if(vehicle.mode==='air'){ctx.save();ctx.rotate(symbol.heading||0);drawModeGlyph(ctx,'air');ctx.restore();}
   else drawModeGlyph(ctx,vehicle.mode);
@@ -1430,7 +1435,8 @@ function drawVehicle(ctx,symbol,p){
 function drawVehicleCluster(ctx,symbol,p){
   const count=(symbol.vehicles||[]).length,color=symbol.mode==='combined'?p.acc:modeColor(symbol.mode,p);
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.45;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
-  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.fillStyle=p.card;ctx.strokeStyle=symbol.critical?p.red:color;ctx.lineWidth=symbol.critical?2:1.5;ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.stroke();
+  const frameColor=symbol.overdue?p.yellow:(symbol.critical?p.red:color);
+  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=symbol.overdue||symbol.critical?2:1.5;ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.fillStyle=color;ctx.globalAlpha=.16;ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=symbol.critical?p.red:color;ctx.font='800 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(count>99?'99+':String(count),0,.5);ctx.restore();
 }
 const STAGE_META={
@@ -1522,11 +1528,13 @@ function showTooltip(hit,event){
     const c=hit.cluster,modes=[...new Set((c.vehicles||[]).map(v=>modeLabel(v.mode)))];title=L('Gruplanmış araçlar','Grouped vehicles')+' · '+(c.vehicles||[]).length;
     lines.push(modes.join(' · '));
     if(c.avgElapsedDays!=null)lines.push(L('Ortalama transit günü','Average transit day')+': '+(Math.round(c.avgElapsedDays*10)/10));
+    if(c.overdue)lines.push(L('Ortalama yol süresi doldu; sevkiyat hâlâ yolda statüsünde.','Average transit time elapsed; shipment is still marked in transit.'));
     lines.push(countSummary(c.records));lines.push(L('Yakınlaştırdıkça araçlar ayrılır.','Vehicles separate as you zoom in.'));critical=c.critical;
   }else if(hit.type==='vehicle'){
     const v=hit.vehicle;title=vehicleTitle(v);
     lines.push(modeLabel(v.mode)+' · '+v.leg.from+' → '+v.leg.to);
     lines.push(Math.round(v.progress*100)+'% '+L('ayak ilerlemesi','leg progress')+(v.elapsedDays!=null&&v.leadDays!=null?' · '+Math.floor(v.elapsedDays)+' / '+Math.round(v.leadDays)+' '+L('gün','days'):''));
+    if(v.overdue)lines.push(L('Ortalama yol süresi doldu; sevkiyat hâlâ yolda statüsünde.','Average transit time elapsed; shipment is still marked in transit.'));
     if(v.vesselName)lines.push(L('Gemi','Vessel')+': '+v.vesselName);
     lines.push(countSummary(v.records));critical=v.critical;
   }else if(hit.type==='route'){
