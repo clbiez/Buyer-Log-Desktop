@@ -1691,7 +1691,7 @@
     if (!slot) return;
 
     void window.BLDataFilterEditor?.open?.(slot, {
-      sourceId, sourceName: feed.sourceName,
+      sourceId, sourceName: feed.sourceName, sourceRole: feed.sourceRole || '',
       /* v7.81 — ASAS→IAS eşleme teklifi. Bu modülü besleyen BAŞKA bir
          rolde, KOŞUL İÇEREN bir kaynak varsa düzenleyici "oradan eşle"
          teklifi gösterebilir. Teklif yoksa düğme de çıkmaz — boş bir
@@ -1702,7 +1702,7 @@
           && entry.sourceId !== sourceId
           && entry.sourceRole && entry.sourceRole !== mine
           && entry.conditionCount > 0);
-        return other && mine ? { role: other.sourceRole, name: other.sourceName, toRole: mine } : null;
+        return other && mine ? { role: other.sourceRole, sourceId: other.sourceId, name: other.sourceName, toRole: mine } : null;
       })(),
       moduleId, moduleLabel: module.label,
       revision: source.revision,

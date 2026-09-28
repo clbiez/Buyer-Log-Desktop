@@ -79,3 +79,17 @@ test('page Horizon value endpoint queries the database and selects scope by page
      sayfa hedefine göre doğru kapsamı seçmeli — korunan karar bu. */
   assert.match(route, /req\.query[\s\S]{0,80}target/, 'the endpoint must still select scope by page target');
 });
+
+
+test('shared filter editor scopes fields and values to the selected datasource', () => {
+  const ui = fs.readFileSync(path.join(ROOT, 'public', 'data-management-filter.js'), 'utf8');
+  assert.match(ui, /sourceId: context\.sourceId/);
+  assert.match(ui, /sourceId\|moduleId|fieldsKey\(\)/);
+  const fieldsRoute = SERVER.slice(SERVER.indexOf("app.get('/api/horizon/fields'"), SERVER.indexOf("app.get('/api/horizon/values'"));
+  const valuesRoute = SERVER.slice(SERVER.indexOf("app.get('/api/horizon/values'"), SERVER.indexOf("app.post('/api/horizon/preview'"));
+  assert.match(fieldsRoute, /req\.query\.sourceId/);
+  assert.match(fieldsRoute, /explicitConnection/);
+  assert.match(valuesRoute, /req\.query\.sourceId/);
+  assert.match(valuesRoute, /explicitConnection/);
+  assert.match(valuesRoute, /role === 'antrepo'/);
+});

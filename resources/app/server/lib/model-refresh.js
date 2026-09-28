@@ -4,6 +4,8 @@ const modelQuery = require('./modelQuery');
 const modelHorizon = require('./modelHorizon');
 const modelScopes = require('./model-scopes');
 const modelFields = require('./model-fields');
+const horizonFields = require('./horizon-fields');
+const horizonFilterMapping = require('./horizon-filter-mapping');
 const { createSourceQueryCoordinator } = require('./horizon-source-planner');
 
 const DEFAULT_REFRESH_TIMEOUT_MS = 5 * 60 * 1000;
@@ -173,6 +175,136 @@ function fieldMappingRepairFromError(item, error) {
     required: Boolean(field && field.required),
     targets: Array.isArray(item && item._scopeTargets) ? item._scopeTargets.slice() : [],
   };
+}
+
+
+/* v10.15 — CANLI ŞEMA İLE HORIZON/FİLTRE ONARIMI.
+ *
+ * Kaynak modelde tablo/sütun adı değiştiğinde saklanmış scope filtresi eski
+ * fiziksel referansı taşımaya devam edebilir. Yalnız exact/alias ve TEKİL
+ * eşleşmeler otomatik yazılır; fuzzy/belirsiz eşleşmeler kullanıcıya bırakılır.
+ */
+function schemaFold(value) {
+  return String(value == null ? '' : value).trim().normalize('NFC').toLocaleUpperCase('tr-TR');
+}
+function schemaColumnKey(table, name) {
+  return schemaFold(table) + '\u0000' + schemaFold(name);
+}
+function liveSchemaIndex(schema) {
+  const columns = (Array.isArray(schema && schema.columns) ? schema.columns : [])
+    .filter(entry => entry && entry.kind !== 'measure' && String(entry.name || '').trim());
+  const keys = new Set(columns.map(entry => schemaColumnKey(entry.table, entry.name)));
+  const tables = new Set(columns.map(entry => schemaFold(entry.table)).filter(Boolean));
+  const fields = horizonFields.fromSchema(schema).filter(field => field && field.dynamic && field.name && field.table);
+  const indexed = horizonFilterMapping._indexTargetFields(fields);
+  return { columns, keys, tables, fields, indexed };
+}
+function conditionSchemaRef(condition, fallbackTable) {
+  return {
+    table: String(condition && condition.table || fallbackTable || '').trim(),
+    name: String(condition && (condition.name || condition.field) || '').trim(),
+  };
+}
+function safeHorizonFieldMatch(sourceName, preferredTable, indexed, taken) {
+  const key = modelFields.fieldKey(sourceName);
+  if (!key) return null;
+  const tableKey = schemaFold(preferredTable);
+  const free = entry => !taken.has(schemaColumnKey(entry.field && entry.field.table, entry.field && entry.field.name));
+
+  const exactHits = indexed.filter(entry => free(entry) && (entry.key === key || entry.nameKey === key));
+  const exactSameTable = tableKey ? exactHits.filter(entry => schemaFold(entry.field && entry.field.table) === tableKey) : [];
+  if (exactSameTable.length === 1) return { entry: exactSameTable[0], confidence: 'exact' };
+  if (exactHits.length === 1) return { entry: exactHits[0], confidence: 'exact' };
+
+  const concept = horizonFilterMapping._conceptOf(sourceName);
+  if (!concept) return null;
+  const aliasHits = indexed.filter(entry => free(entry) && entry.concept === concept);
+  const aliasSameTable = tableKey ? aliasHits.filter(entry => schemaFold(entry.field && entry.field.table) === tableKey) : [];
+  if (aliasSameTable.length === 1) return { entry: aliasSameTable[0], confidence: 'alias' };
+  if (aliasHits.length === 1) return { entry: aliasHits[0], confidence: 'alias' };
+  return null;
+}
+function repairHorizonAgainstSchema(item, schema) {
+  const horizon = item && item.horizon && typeof item.horizon === 'object' ? item.horizon : null;
+  const groups = horizon && Array.isArray(horizon.groups) ? horizon.groups : [];
+  const active = groups.some(group => group && Array.isArray(group.conditions)
+    && group.conditions.some(condition => condition && String(condition.field || '').trim()));
+  if (!horizon || !active || !schema || !Array.isArray(schema.columns)) {
+    return { repaired: false, horizon, warnings: [] };
+  }
+
+  const index = liveSchemaIndex(schema);
+  if (!index.columns.length) return { repaired: false, horizon, warnings: [] };
+
+  const currentTableValid = !String(horizon.table || '').trim() || index.tables.has(schemaFold(horizon.table));
+  let changed = !currentTableValid;
+  const warnings = [];
+  const nextGroups = [];
+
+  for (const group of groups) {
+    if (!group || !Array.isArray(group.conditions)) {
+      nextGroups.push(group);
+      continue;
+    }
+    const taken = new Set();
+    const nextConditions = [];
+    for (const condition of group.conditions) {
+      if (!condition || !String(condition.field || '').trim()) {
+        nextConditions.push(condition);
+        continue;
+      }
+      const ref = conditionSchemaRef(condition, horizon.table);
+      const physicalKey = schemaColumnKey(ref.table, ref.name);
+      if (ref.table && ref.name && index.keys.has(physicalKey)) {
+        taken.add(physicalKey);
+        nextConditions.push(condition);
+        continue;
+      }
+
+      const hit = safeHorizonFieldMatch(ref.name || condition.field, ref.table || horizon.table, index.indexed, taken);
+      if (!hit || !hit.entry || !hit.entry.field) {
+        return {
+          repaired: false,
+          horizon,
+          warnings: [],
+          unresolved: { field: String(condition.field || ''), table: ref.table, name: ref.name },
+        };
+      }
+      const field = hit.entry.field;
+      const next = Object.assign({}, condition, {
+        field: field.header || field.name,
+        name: field.name,
+        table: field.table,
+      });
+      if (field.typeSource === 'schema' && field.type) {
+        next.valueType = field.type;
+        next.valueTypeSource = 'schema';
+      }
+      nextConditions.push(next);
+      taken.add(schemaColumnKey(field.table, field.name));
+      changed = true;
+      const before = ref.table ? ref.table + '[' + ref.name + ']' : ref.name;
+      const after = field.table + '[' + field.name + ']';
+      warnings.push(connectionLabel(item) + ' filtresi canlı şemaya göre onarıldı: ' + before + ' → ' + after + ' (' + hit.confidence + ').');
+    }
+    nextGroups.push(Object.assign({}, group, { conditions: nextConditions }));
+  }
+
+  if (!changed) return { repaired: false, horizon, warnings: [] };
+
+  const mappedTables = [...new Set(nextGroups.flatMap(group =>
+    (group && Array.isArray(group.conditions) ? group.conditions : [])
+      .filter(condition => condition && String(condition.field || '').trim())
+      .map(condition => String(condition.table || '').trim())
+      .filter(Boolean)))];
+
+  const nextHorizon = Object.assign({}, horizon, { groups: nextGroups });
+  if (mappedTables.length === 1) nextHorizon.table = mappedTables[0];
+  else if (mappedTables.length > 1) nextHorizon.table = '';
+
+  for (const key of Object.keys(horizon)) delete horizon[key];
+  Object.assign(horizon, nextHorizon);
+  return { repaired: true, horizon, warnings };
 }
 
 /**
@@ -424,7 +556,9 @@ async function resolveColumnTypes(item, options = {}) {
       server: item && item.server, catalog: item && item.catalog,
       timeoutMs: options.schemaTimeoutMs || 120000,
     }, options.queryOptions || {});
-    return filterValueTypes.columnTypeIndex(schema);
+    const resolver = filterValueTypes.columnTypeIndex(schema);
+    if (resolver && typeof resolver === 'function') resolver.schema = schema;
+    return resolver;
   } catch (_) {
     return null;
   }
@@ -438,7 +572,13 @@ function buildConnectionQuery(item, options = {}) {
     return { query, headerMap: null, warnings: [], role, mode, generated: false };
   }
   const horizon = item && item.horizon || {};
-  if (!String(horizon.table || '').trim()) {
+  const activeGroups = Array.isArray(horizon.groups)
+    ? horizon.groups.flatMap(group => group && Array.isArray(group.conditions) ? group.conditions : [])
+      .filter(condition => condition && String(condition.field || '').trim())
+    : [];
+  const fullyQualifiedGroups = activeGroups.length > 0
+    && activeGroups.every(condition => String(condition.table || '').trim() && String(condition.name || condition.field || '').trim());
+  if (!String(horizon.table || '').trim() && !(role === 'antrepo' && fullyQualifiedGroups)) {
     throw new ModelRefreshError(`${connectionLabel(item)} için otomatik sorgu tablosu seçilmedi.`, 'MODEL_REFRESH_TABLE_MISSING', 400);
   }
   const baseMapping = item && item.mapping && Object.keys(item.mapping).length ? item.mapping : null;
@@ -516,6 +656,7 @@ async function queryConnectionRows(item, options = {}) {
   const mappingMs = Date.now() - mappingStartedMs;
   if (telemetry) telemetry({ type:'end', category:'wait', connection:label, operation:'mapping-check', timestampMs:Date.now(), durationMs:mappingMs });
   const columnType = await resolveColumnTypes(item, options);
+  const liveHorizonRepair = repairHorizonAgainstSchema(item, columnType && columnType.schema);
   const built = buildConnectionQuery(item, { extraExpression: options.extraExpression, matchRule: options.matchRule, columnType });
   debugGeneratedDax(label, built.query, options);
   const runRows = options.runModelRows || modelQuery.runModelRows;
@@ -597,8 +738,8 @@ async function queryConnectionRows(item, options = {}) {
     rows,
     query: built.query,
     queryFingerprint: options.queryCoordinator ? options.queryCoordinator.fingerprint(queryPlan) : '',
-    warnings: [...(repair.warnings || []), ...(built.warnings || [])],
-    mappingRepaired: Boolean(repair.repaired || built.horizonRepaired),
+    warnings: [...(repair.warnings || []), ...(liveHorizonRepair.warnings || []), ...(built.warnings || [])],
+    mappingRepaired: Boolean(repair.repaired || liveHorizonRepair.repaired || built.horizonRepaired),
     repairedHeaders: repair.repairedHeaders || [],
     summary: {
       at: new Date().toISOString(),
@@ -1078,6 +1219,7 @@ module.exports = {
   normalizedRole,
   normalizedConnectionMapping,
   fieldMappingRepairFromError,
+  repairHorizonAgainstSchema,
   ensureConnectionMapping,
   alignHorizonWithMapping,
   buildConnectionQuery, resolveColumnTypes,

@@ -37,7 +37,7 @@
   /* Operatörlerin kaç değer aldığı. Sunucudaki model-conditions.OPERATORS ile
      aynı sözleşme; arity'yi oradan alıyoruz, burada ikinci bir liste tutmuyoruz. */
   let OPERATORS = [];
-  let fieldsCache = new Map();   // moduleId → {fields, operators, schemaError}
+  let fieldsCache = new Map();   // sourceId|moduleId → {fields, operators, schemaError}
 
   let host = null;
   let context = null;            // {sourceId, sourceName, moduleId, moduleLabel, revision, sharedWith, filterName}
@@ -65,8 +65,11 @@
     return found ? found.arity : 'list';
   }
 
+  function fieldsKey() {
+    return `${String(context && context.sourceId || '')}|${String(context && context.moduleId || '')}`;
+  }
   function fieldsFor() {
-    return (fieldsCache.get(context.moduleId) || {}).fields || [];
+    return (fieldsCache.get(fieldsKey()) || {}).fields || [];
   }
 
   function fieldMeta(condition) {
@@ -74,12 +77,14 @@
   }
 
   async function loadFields() {
-    if (fieldsCache.has(context.moduleId)) return;
-    const response = await fetch(`/api/horizon/fields?target=${encodeURIComponent(context.moduleId)}`, { cache: 'no-store' });
+    const cacheKey = fieldsKey();
+    if (fieldsCache.has(cacheKey)) return;
+    const fieldParams = new URLSearchParams({ target: context.moduleId, sourceId: context.sourceId });
+    const response = await fetch(`/api/horizon/fields?${fieldParams}`, { cache: 'no-store' });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.ok) throw new Error(payload.error || T('Alan listesi okunamadı.', 'Could not read the field list.'));
     OPERATORS = Array.isArray(payload.operators) ? payload.operators : [];
-    fieldsCache.set(context.moduleId, {
+    fieldsCache.set(cacheKey, {
       fields: Array.isArray(payload.fields) ? payload.fields : [],
       schemaError: String(payload.schemaError || ''),
     });
@@ -188,7 +193,8 @@
     mappingBusy = true; mappingMessage = ''; render();
     try {
       const url = `/api/horizon/filter-mapping?target=${encodeURIComponent(context.moduleId)}`
-        + `&from=${encodeURIComponent(context.mapFrom.role)}&to=${encodeURIComponent(context.mapFrom.toRole)}`;
+        + `&from=${encodeURIComponent(context.mapFrom.role)}&to=${encodeURIComponent(context.mapFrom.toRole)}`
+        + `&fromSourceId=${encodeURIComponent(context.mapFrom.sourceId || '')}&toSourceId=${encodeURIComponent(context.sourceId || '')}`;
       const response = await fetch(url, { cache: 'no-store' });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || T('Eşleme üretilemedi.', 'Could not build the mapping.'));
@@ -240,7 +246,8 @@
     const rows = (mapping.proposals || []).map(item => `<tr>
       <td>${esc(item.sourceField)}</td>
       <td class="dmfMapArrow">→</td>
-      <td>${esc(item.targetField)}</td>
+      <td><span>${esc(item.targetField)}</span>
+        ${(item.table || item.column) ? `<span class="dmfMapPhysical">${esc([item.table, item.column].filter(Boolean).join(' · '))}</span>` : ''}</td>
       <td><span class="dmfMapTag is-${esc(item.confidence)}">${esc(CONFIDENCE[item.confidence] ? CONFIDENCE[item.confidence][en() ? 'en' : 'tr'] : item.confidence)}</span>
         ${item.typeMismatch ? `<span class="dmfMapTag is-warn">${esc(item.typeMismatch)}</span>` : ''}</td>
     </tr>`).join('');
@@ -295,15 +302,27 @@
     const arity = operatorArity(condition.op);
     const showValues = arity === 'list' || arity === 'single';
     const showRange = arity === 'range' || arity === 'from' || arity === 'to';
+    const physicalField = meta && meta.dynamic && (meta.table || meta.name)
+      ? [meta.table, meta.name].filter(Boolean).join(' · ')
+      : '';
+    const livePhysicalAvailable = fieldsFor().some(entry => entry && entry.dynamic && entry.table && entry.name);
+    const stalePhysical = condition.field && !meta && (condition.table || condition.name)
+      ? [condition.table, condition.name].filter(Boolean).join(' · ')
+      : '';
+    const logicalOnly = condition.field && meta && !meta.dynamic && livePhysicalAvailable;
 
     const values = (condition.values || []).map((value, valueIndex) =>
       `<button type="button" class="dmfChip" data-drop-value="${groupIndex}:${index}:${valueIndex}"
         title="${esc(T('Kaldır', 'Remove'))}">${esc(value)} ×</button>`).join('');
 
     return `<div class="dmfRow">
-      <button type="button" class="dmfField" data-pick-field="${groupIndex}:${index}">
-        ${condition.field ? esc(meta ? (en() ? meta.en : meta.tr) || condition.field : condition.field)
-          : `<em>${esc(T('alan seç', 'select field'))}</em>`}
+      <button type="button" class="dmfField" data-pick-field="${groupIndex}:${index}"
+        title="${esc(T('Canlı database alanını seç veya değiştir', 'Select or change the live database field'))}">
+        <span>${condition.field ? esc(meta ? (en() ? meta.en : meta.tr) || condition.field : condition.field)
+          : `<em>${esc(T('alan seç', 'select field'))}</em>`}</span>
+        ${physicalField ? `<span class="dmfFieldPhysical">${esc(physicalField)}</span>` : ''}
+        ${logicalOnly ? `<span class="dmfFieldPhysical is-warn">⚠ ${esc(T('mantıksal alan · canlı database sütunu seçilmeli', 'logical field · select a live database column'))}</span>` : ''}
+        ${stalePhysical ? `<span class="dmfFieldPhysical is-warn">⚠ ${esc(stalePhysical)} · ${esc(T('canlı şemada doğrulanamadı', 'not verified in live schema'))}</span>` : ''}
       </button>
       <select class="dmfOp" data-op="${groupIndex}:${index}">
         ${OPERATORS.map(entry => `<option value="${esc(entry.id)}"${entry.id === condition.op ? ' selected' : ''}>${esc(entry.label)}</option>`).join('')}
@@ -411,7 +430,7 @@
 
   async function pickValue(anchor, condition) {
     const meta = fieldMeta(condition);
-    const params = new URLSearchParams({ target: context.moduleId, field: condition.field, limit: '500' });
+    const params = new URLSearchParams({ target: context.moduleId, sourceId: context.sourceId, field: condition.field, limit: '500' });
     if (meta && meta.dynamic) { params.set('table', meta.table || ''); params.set('column', meta.name || ''); }
     let values = [];
     let note = '';
@@ -539,10 +558,18 @@
     const pickField = event.target.closest('[data-pick-field]');
     if (pickField) {
       const condition = conditionAt(pickField.dataset.pickField);
-      /* TÜM şema sütunları listelenir, yalnız eşlenmiş alanlar değil (§17). */
-      const entries = fieldsFor().map(entry => ({
+      /* Canlı şema varsa yalnız GERÇEK fiziksel database sütunları seçilir.
+         Mantıksal Buyer Log alanını yeniden seçmek eski tablo/sütun hatasını
+         tekrar üretirdi. Şema yoksa geriye dönük olarak mantıksal liste kalır. */
+      const allFields = fieldsFor();
+      const physicalFields = allFields.filter(entry => entry && entry.dynamic && entry.table && entry.name);
+      const selectableFields = physicalFields.length ? physicalFields : allFields;
+      const entries = selectableFields.map(entry => ({
         value: entry.header,
         label: (en() ? entry.en : entry.tr) || entry.header,
+        hint: entry.dynamic
+          ? [entry.table, entry.name].filter(Boolean).join(' · ')
+          : T('mantıksal alan', 'logical field'),
       }));
       openPicker(pickField, entries, value => {
         const meta = fieldsFor().find(entry => entry.header === value);
