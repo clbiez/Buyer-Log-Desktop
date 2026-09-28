@@ -6971,6 +6971,25 @@ async function buildCollectionStyledCopy(selSet){
   // tek-satır sözleşmesini kullanır: hücre içi Enter fiziksel satıra dönüşmez.
   // Görsel sütunu aynı satırda gerçek <img> olarak kalır.
   const cellStyle='border:1px solid #B4B8BD;padding:3px 6px;text-align:left;vertical-align:top;';
+  const clipboardRows=records.map(kolCollectionProjectionSource);
+  const clipboardStyleFor=descriptor=>{
+    if(!descriptor)return cellStyle;
+    if(['best','confirmedPrice','price'].includes(descriptor.kind))return cellStyle+"text-align:right;mso-number-format:'\\$#,##0.00';";
+    const column=descriptor.col;if(!column)return cellStyle;
+    let format='',align='';
+    if(column.date){format='dd.mm.yy';align='right';}
+    else if(column.qty){format='#,##0';align='right';}
+    else if(column.percent){format='0.00%';align='right';}
+    else if(column.hologram){format='#,##0.######';align='right';}
+    else if(column.money){format='\\$#,##0.00';align='right';}
+    else if(column.k==='plmId'||column.k==='colourCode'){format='\\@';align='left';}
+    else if(column.custom){
+      const schema=columnSchemaFor(column,clipboardRows);
+      format=typeof schema?.excelNumberFormat==='function'?schema.excelNumberFormat():'';
+      if(format)align=['date','datetime','integer','decimal','quantity','currency','percentage'].includes(schema.dataType)?'right':'left';
+    }
+    return cellStyle+(align?'text-align:'+align+';':'')+(format?"mso-number-format:'"+format+"';":'');
+  };
   const htmlCellText=value=>escapeHtml(BLTableExport.normalizeCell(value));
   const html=BLTableExport.toHTML(matrix,{
     border:'1px solid #B4B8BD',
@@ -6981,7 +7000,8 @@ async function buildCollectionStyledCopy(selSet){
         return picked||{style:cellStyle};
       }
       const raw=matrix.rawRows?.[rowIndex]?.[colIndex];
-      return {style:cellStyle, html:htmlCellText(raw===undefined?text:raw)};
+      const descriptor=descriptors[colIndex-(pictureVisible?1:0)];
+      return {style:clipboardStyleFor(descriptor), html:htmlCellText(raw===undefined?text:raw)};
     },
   });
   return {html, plain:BLTableExport.toTSV(matrix), count:records.length};
@@ -22257,6 +22277,7 @@ function kolGroupSummaryFormatBaseValue(column,row,value){
   if(column.money)return `$${kolFormatMoneyDisplay(value)}`;
   if(column.percent)return kolFormatPercentDisplay(value);
   if(column.hologram)return kolFormatHologramDisplay(value);
+  if(column.status||column.k==='durum')return kolStatusDisplayLabel(value);
   if(column.k==='delType')return transitDelTypeDisplay(value);
   if(column.select)return L(value);
   if(column.custom&&schema)return schema.format(value,{row});
@@ -30563,7 +30584,7 @@ async function kolExportWithImages(rows,fileBase){
       else if(c.hologram&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='#,##0.######';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.money&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='"$"#,##0.00';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.custom&&schema){const value=typeof schema.excelValue==='function'?schema.excelValue(raw,{row:r}):schema.exportValue(raw);cell.value=typeof value==='string'?kolExportSingleLineText(value):value;const numFmt=typeof schema.excelNumberFormat==='function'?schema.excelNumberFormat(raw,{row:r}):'';if(numFmt)cell.numFmt=numFmt;else if(value instanceof Date)cell.numFmt='dd.mm.yy';else if(typeof value==='number')cell.numFmt=Number.isInteger(value)?'#,##0':'#,##0.##';cell.alignment={horizontal:(value instanceof Date||typeof value==='number')?'right':'left',vertical:'middle'};}
-      else if(c.status||c.k==='durum'){cell.value=kolExportSingleLineText(raw);cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kolStatusExcelArgb(raw)}};cell.font={bold:true,size:10,color:{argb:kolStatusExcelTextArgb(raw)}};cell.alignment={vertical:'middle',wrapText:true};}
+      else if(c.status||c.k==='durum'){cell.value=kolExportSingleLineText(kolStatusDisplayLabel(raw));cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kolStatusExcelArgb(raw)}};cell.font={bold:true,size:10,color:{argb:kolStatusExcelTextArgb(raw)}};cell.alignment={vertical:'middle',wrapText:true};}
       else{cell.value=kolExportSingleLineText(raw);cell.alignment={vertical:'middle',wrapText:true};if(c.k==='modelKod')cell.font={bold:true,size:10};}
     });
     const imgCell=row.getCell(1);imgCell.border=border;
