@@ -163,6 +163,33 @@ test('v6.34 yenileme, bekleyen yazmalar tamamlanmadan başlamıyor', () => {
   assert.match(SYNC, /window\.overrideMutationsSettled=overrideMutationsSettled/);
 });
 
+test('v7.0.156 hızlı CP girişi sırasında arka-plan reload yerel edit oturumunu korur', () => {
+  const fnBody=bodyOf(APP,'cpClientWorkInProgress');
+  const make=(state,pending,snapshot)=>new Function('state','pendingOverrideWriteCount','managedEditorSnapshot','document',`
+    function cpClientWorkInProgress(){${fnBody}}
+    return cpClientWorkInProgress;
+  `)(state,()=>pending,()=>snapshot,{activeElement:{}});
+
+  assert.equal(make({cp:{rows:[{_id:1}]},cpDirty:new Set([1])},0,null)(),true,'dirty CP satırı background reload tarafından atılmamalı');
+  assert.equal(make({cp:{rows:[{_id:1}]},cpDirty:new Set()},1,null)(),true,'sunucuya gitmeyi bekleyen override varken CP korunmalı');
+  assert.equal(make({cp:{rows:[{_id:1}]},cpDirty:new Set()},0,{route:'cp'})(),true,'kullanıcı hücrede yazarken CP korunmalı');
+  assert.equal(make({cp:{rows:[{_id:1}]},cpDirty:new Set()},0,{route:'kol'})(),false,'başka tablo editörü CP reloadunu gereksiz yere durdurmamalı');
+  assert.equal(make({cp:null,cpDirty:new Set([1])},1,{route:'cp'})(),false,'CP zaten yoksa eski projection varmış gibi davranılmamalı');
+
+  const load=bodyOf(APP,'loadFromServer');
+  assert.match(load,/const preserveCpClientState=!userVisibleRefresh&&cpClientWorkInProgress\(\);/);
+  assert.match(load,/if\(!preserveCpClientState\)state\.cp=null;/,'cpDeferred aktif edit sırasında state.cp yi null yapmamalı');
+  assert.match(load,/if\(!preserveCpClientState\)\{\s*state\.cpDirty = new Set\(\); state\.cpSelected = new Set\(\);\s*undoStack = \[\]; redoStack = \[\];/,'background reload dirty/undo bilgisini silmemeli');
+});
+
+test('v7.0.156 CP tarih editörü projection geçici olarak yoksa null.rows hatası üretmez', () => {
+  const edit=bodyOf(APP,'enterDateEdit');
+  assert.match(edit,/const rows=state\.cp&&Array\.isArray\(state\.cp\.rows\)\?state\.cp\.rows:null;/);
+  assert.match(edit,/if\(!rows\)return;/,'focusout kapanışında projection yoksa uydurma değerle editörü kapatmamalı');
+  const refresh=bodyOf(APP,'refreshCpRowOnly');
+  assert.match(refresh,/if\(!state\.cp\|\|!Array\.isArray\(state\.cp\.rows\)\)return;/);
+});
+
 /* v7.41 — GÜNCELLENDİ (§156). Korunan davranış aynı: yeniden ÇİZİLEN bir
    tabloya yenileme sırasında yazılamaz ve kip bırakılırken kapanır. Değişen,
    kipin KAPSAMI: artık tüm uygulamaya değil, yalnız çizilecek ekranlara
