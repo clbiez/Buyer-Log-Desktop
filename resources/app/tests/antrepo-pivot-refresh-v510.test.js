@@ -29,7 +29,7 @@ test('v5.10 Excel Antrepo refreshes workbook before parsing and fails closed on 
 });
 
 test('v5.10 uploaded Antrepo workbook is refreshed in Excel before application data is parsed', () => {
-  const upload = between(SERVER, "app.post('/api/antrepo-source/upload'", '// ---- OPD tarih aralığı');
+  const upload = between(SERVER, "app.post('/api/antrepo-source/upload'", '// ---- OPD + sezon + Licensor + License bazlı Royalty');
   const refreshAt = upload.indexOf('await refreshAntrepoExcelBeforeRead');
   const parseAt = upload.indexOf("runExcelTask('parseAntrepoFile'");
   assert.ok(refreshAt >= 0 && parseAt > refreshAt, 'pivot refresh parse işleminden önce olmalı');
