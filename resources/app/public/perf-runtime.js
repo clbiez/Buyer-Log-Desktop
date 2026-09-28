@@ -114,6 +114,8 @@
        sonucunu ondan okur (tek kanonik kaynak). Listede olmadığı sürüm canlıda
        her siparişi sessizce "Hesaplanamıyor" gösteriyordu. */
     globalFlowEarth:['overview-global-flow-earth.js?rev=1'],
+    // Kullanıcı menüsü → Ön Ayar Paylaşımı; yalnız ilk açılışta yüklenir.
+    presetShare:['preset-share.js?rev=1'],
     cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','cp-overview-assistant.js?rev=attn1-ovcp1'],
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile

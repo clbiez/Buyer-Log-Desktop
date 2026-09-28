@@ -53,6 +53,10 @@ const WORKSPACE_CATEGORY_PREFIXES = Object.freeze({
     // v7.28 — hesaplanan (formül) sütun tanımları. "columns" kategorisinde
     // olduğu için Profil Kopyalama panelinden başka kullanıcıya aktarılabilir.
     'bl.formulaColumns.',
+    // Sayfa bazlı Focus / Extended sütun ön ayarları. İstemci bu anahtarı
+    // hesaba bağlı senkron listesinde tutuyordu ama sunucu whitelist'inde
+    // yoktu; yazma 'not-synced' diye reddediliyor, ön ayar makineye kalıyordu.
+    'lcw.tableViewFocus.',
   ]),
   views: Object.freeze(['lcw_view_favorite_']),
   dashboard: Object.freeze(['buyerlog.dashboard.', 'lcw.dashboard.']),
@@ -248,6 +252,37 @@ function restoreSnapshot(userId, snapshot) {
   const deletions = {};
   for (const key of Object.keys(raw.deletions && typeof raw.deletions === 'object' ? raw.deletions : {})) {
     if (isSyncedKey(key) && !entries[key]) deletions[key] = now;
+  }
+  fs.mkdirSync(ROOT, { recursive: true });
+  const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
+  atomicWriteJson(prefsFile(userId), saved);
+  return { ...saved, rejected };
+}
+
+/* Seçili anahtarları TEK atomik yazmayla uygular: `set` değerleri kopyalama
+   anının zaman damgasıyla yazılır (snapshot semantiği, bkz.
+   replaceWorkspaceEntries), `remove` anahtarları mezar taşıyla kaldırılır.
+   Ön Ayar Paylaşımı ve onun geri alma yolu bu fonksiyonu kullanır. */
+function applyEntryChanges(userId, set = {}, remove = []) {
+  const current = load(userId), entries = { ...current.entries };
+  const deletions = { ...current.deletions };
+  const now = new Date().toISOString(), rejected = [];
+  for (const key of Array.isArray(remove) ? remove : []) {
+    const name = String(key);
+    if (!isSyncedKey(name)) continue;
+    delete entries[name];
+    deletions[name] = now;
+  }
+  for (const [key, raw] of Object.entries(set || {})) {
+    if (!isSyncedKey(key)) { rejected.push({ key, reason: 'not-synced' }); continue; }
+    const value = String(raw == null ? '' : raw);
+    if (Buffer.byteLength(value, 'utf8') > MAX_VALUE_BYTES) { rejected.push({ key, reason: 'too-large' }); continue; }
+    entries[key] = { value, updatedAt: now };
+    delete deletions[key];
+  }
+  if (totalBytes(entries) > MAX_TOTAL_BYTES) {
+    const error = new Error('Kişisel veri sınırı aşıldı.');
+    error.statusCode = 413; error.code = 'USER_PREFS_TOO_LARGE'; throw error;
   }
   fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
@@ -557,7 +592,7 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
 }
 
 module.exports = {
-  load, merge, removeKeys, restoreSnapshot, isSyncedKey, SYNCED_PREFIXES, MAX_VALUE_BYTES, MAX_TOTAL_BYTES, safeId,
+  load, merge, removeKeys, restoreSnapshot, applyEntryChanges, isSyncedKey, SYNCED_PREFIXES, MAX_VALUE_BYTES, MAX_TOTAL_BYTES, safeId,
   WORKSPACE_HORIZON_PREFIX, APPLIED_HORIZON_PREFIX, WORKSPACE_CATEGORY_PREFIXES, WORKSPACE_CATEGORIES,
   categoryForKey, normalizeCategories, workspaceEntries, replaceWorkspaceEntries,
   normalizeWorkspaceEntryMap, effectiveWorkspaceEntries, copyWorkspaceSnapshot, copyWorkspaceEntrySnapshot,
