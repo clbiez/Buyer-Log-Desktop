@@ -217,6 +217,31 @@
       const typed = parser(raw);
       return typed === null ? String(raw) : typed;
     };
+    /* Excel keeps the underlying value typed while the number format mirrors
+       Buyer Log's visible formatting. Clipboard/text paths continue to use
+       formatter(), so both routes share one schema instead of re-interpreting
+       raw database strings independently. */
+    const excelValue = raw => {
+      if (emptyValue(raw)) return '';
+      const typed = parser(raw);
+      if (typed === null) return String(raw);
+      if (dataType === 'percentage') {
+        if (scale === 'percent') return typed / 100;
+        return typed;
+      }
+      if (dataType === 'boolean') return format(raw);
+      return typed;
+    };
+    const excelNumberFormat = () => {
+      if (dataType === 'date') return 'dd.mm.yy';
+      if (dataType === 'datetime') return 'dd.mm.yy hh:mm';
+      if (dataType === 'integer' || dataType === 'quantity') return '#,##0';
+      if (dataType === 'decimal') return '#,##0.##';
+      if (dataType === 'currency') return '#,##0.00';
+      if (dataType === 'percentage' && (scale === 'percent' || scale === 'fraction')) return '0.00%';
+      if (dataType === 'code/id') return '@';
+      return '';
+    };
     const schema = {
       field: sourceField,
       displayName: labelOf(column),
@@ -242,9 +267,11 @@
         return parsed instanceof Date ? parsed.getTime() : parsed;
       },
       exportValue,
+      excelValue,
+      excelNumberFormat,
       isEmpty: emptyValue,
     };
-    return Object.assign(schema, nested, { field: sourceField, displayName: labelOf(column), dataType, percentageScale: scale, formatter: format, parser, exportFormatter: exportValue });
+    return Object.assign(schema, nested, { field: sourceField, displayName: labelOf(column), dataType, percentageScale: scale, formatter: format, parser, exportFormatter: exportValue, excelValue, excelNumberFormat });
   }
   function resolveColumnSchema(column, rows, metadata) {
     const source = column || {};
