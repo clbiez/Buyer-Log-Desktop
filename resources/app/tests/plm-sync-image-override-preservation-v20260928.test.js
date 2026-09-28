@@ -55,7 +55,9 @@ test('all image/link hydration paths merge partial overrides instead of replacin
 });
 
 test('PLM Sync still recalculates Collection Royalty/Licensor from retained rules on repaint', () => {
-  const render = between('function renderKol()', 'function renderKolQuickFilters');
+  const start = APP.indexOf('function renderKol(){');
+  assert.ok(start >= 0, 'renderKol bulunmalı');
+  const render = APP.slice(start, start + 1800);
   assert.match(render, /kolSyncLicensorsFromRules\\(\{save:false\}\)/);
   assert.match(render, /kolSyncRulePricing\\(\{save:true\}\)/);
 });
