@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.154",
-  "commit_sha": "5c9e50a01594e27c3eb7bcf908f46417e6b6accd",
-  "release_notes": "Buyer Log 7.0.154: LFL Multi Dimensional Comparison kayıtları sürükle-bırak ile kalıcı olarak yeniden sıralanabilir. Radar diyagramları kullanıcı tercihine göre Radar, Sütun veya Çizgi grafik görünümüne çevrilebilir. Sürüm, 7.0.153 üzerindeki güncel main değişikliklerini içerir."
+  "version": "7.0.155",
+  "commit_sha": "afcedf13064e8f3870ab9cb7108c66ac35deb135",
+  "release_notes": "Buyer Log 7.0.155: Son iki gündeki başarısız/unmerged çalışmaların main'de eksik kalan parçaları güvenli biçimde geri alındı. Backlog Excel/grafik canlı senkron korumaları, IAS Horizon canlı şema/field mapping onarımı ve PLM Sync sırasında Royalty/Licensor bilgisinin korunması dahil edildi; mevcut OAB external browser ve INTAKE davranışları korunarak regression testleri güncellendi."
 }
