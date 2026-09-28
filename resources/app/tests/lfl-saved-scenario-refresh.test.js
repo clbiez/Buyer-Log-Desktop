@@ -63,7 +63,11 @@ test('Multi-dimensional Comparison exposes a saved-summary refresh button', () =
 test('saved comparison refresh reloads source but restores the exact saved scenario definitions', () => {
   assert.match(LFL, /async function refreshComparisonScenarios\(\)/);
   assert.match(LFL, /serializeComparisonScenario\(item,index\)/);
-  assert.match(LFL, /await load\(true,\{silent:true,preserveOnError:true\}\)/);
+  // v20260928 — LFL ayrı yenilenmez: kayıtlı özetler bağlı ortak yenilemeyle
+  // (Siparişler · Backlog · LFL · Fiyat & Üretici) tazelenir; ortak akış yoksa
+  // eski LFL yenilemesi hata durumunda önceki veriyi koruyarak çalışır.
+  assert.match(LFL, /await refreshLinked\(\{silent:true,preserveOnError:true\}\)/);
+  assert.match(LFL, /async function refreshLinked\(options=\{\}\)\{\s*if\(typeof window\.BLRunLinkedRefresh==='function'\)return Boolean\(await window\.BLRunLinkedRefresh\(\)\);\s*return load\(true,options\);/);
   assert.match(LFL, /state\.customCompare\.scenarios=snapshots\.map\(\(item,index\)=>normalizeComparisonScenario\(item,index\)\)/);
   assert.match(LFL, /saveCustomCompare\(\);lflScenarioCache\.clear\(\)/);
   assert.match(LFL, /async function load\(force=false,options=\{\}\)/);

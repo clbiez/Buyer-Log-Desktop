@@ -59,7 +59,10 @@ test('v4.71 Orders ufku eski CP kapsamından ayrı bir scope olarak üretilir', 
   ], 'asas', horizon, normalizeHorizon);
   const orderScope = result.find(scope => scope.targets.includes('orders'));
   assert.ok(orderScope);
-  assert.deepEqual(orderScope.targets, ['orders']);
+  // v20260928 — ASAS'ta Orders bağlı grupla (Backlog · LFL · Price & Supplier)
+  // tek ufuk paylaşır; CP'den ayrı kalma kuralı korunur.
+  assert.deepEqual(orderScope.targets, ['orders', 'backlog', 'lfl', 'priceanalysis']);
+  assert.deepEqual(result.find(scope => scope.targets.includes('cp')).targets, ['cp']);
   assert.notEqual(orderScope.id, 'main');
   assert.deepEqual(orderScope.horizon, horizon);
   assert.ok(result.find(scope => scope.targets.includes('cp')));
@@ -83,6 +86,8 @@ test('v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenile
   assert.match(INDEX, /function toggleOrdersActiveQuick/);
   assert.match(INDEX, /state\.ordersQuickActive\.clear\(\);clearColumnFilters\('orders',mirrored\)/);
   assert.match(INDEX, /const MODEL_ROLE_TARGETS=\{asas:\['cp','orders','backlog','lfl'\]/);
-  assert.match(INDEX, /\['orders',appLang==='en'\?'Orders':'Siparişler'\]/);
+  // v20260928 — Orders yenilemesi bağlı grubun ortak yenilemesidir: menüde tek satır.
+  assert.match(INDEX, /\['linked',linkedRefreshLabel\(\)\]/);
+  assert.match(INDEX, /LINKED_REFRESH_TARGETS=Object\.freeze\(\['orders','backlog','lfl','priceanalysis'\]\)/);
   assert.match(SERVER, /orders: \{ rows: ordersRows \},\s*'order-summary': \{ rows: orderSummaryRows \}/);
 });

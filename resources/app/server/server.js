@@ -228,6 +228,9 @@ const { inspectSourceFilterReadiness, readinessMessage: sourceFilterReadinessMes
 const dataManagementReadModel = require('./lib/data-domain/read-model');
 const dataManagementBindingWriter = require('./lib/data-domain/binding-writer');
 const refreshGroupRules = require('./lib/data-domain/refresh-groups');
+// Bağlı modüller (Orders · Backlog · LFL · Price & Supplier) tek ufuk ve tek
+// yenileme paylaşır; kısmi yenileme hedefleri buradan genişletilir.
+const { withLinkedTargets } = require('./lib/model-scopes');
 // Kaynak başına yapılandırma sürümü: eşzamanlılık kontrolü bunu kullanır.
 const dataManagementAdapter = require('./lib/data-domain/legacy-adapter');
 const dataManagementFilterWriter = require('./lib/data-domain/filter-writer');
@@ -6931,6 +6934,11 @@ async function publishRefreshedRuntime(id, next) {
 
 async function loadFromModels(value, targets = null, options = {}) {
   const id = sourceUserId(value), runtime = cacheForUser(id);
+  /* Bağlı modüllerden biri istenirse hepsi yenilenir: aynı kapsamı (tek
+     sorguyu) paylaştıkları için maliyet aynıdır, ama yalnız birini yayınlamak
+     sayfaları farklı anlık görüntülerde bırakırdı. /api/lfl/refresh de
+     buradan geçer. */
+  if (Array.isArray(targets) && targets.length) targets = withLinkedTargets(targets);
   const markSourcePhase = typeof options.markPhase === 'function' ? options.markPhase : () => {};
   markSourcePhase('source-setup');
   throwIfRefreshSignalAborted(options.signal);
@@ -8430,6 +8438,8 @@ function markRefreshJobPhase(id,phase){
 }
 
 async function performRefresh(id, currentUser, targets = null, options = {}) {
+  // Otomasyon ve Octopus yolları da buradan geçer: bağlı modüller birlikte yenilenir.
+  if (Array.isArray(targets) && targets.length) targets = withLinkedTargets(targets);
   // Aşama işaretleri (v5.89): sayaca tıklandığında yenilemenin hangi adımda
   // olduğu ve her adımın kaç saniye sürdüğü gösterilebilsin diye her geçiş
   // zaman damgasıyla kaydedilir. Bağlantı bazlı süre dökümü (sunucu / yazma /
@@ -8476,6 +8486,9 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   const refreshedAt = new Date().toISOString();
   staged.lastRefreshResult = {
     at: refreshedAt,
+    // Hangi sayfaların bu yenilemeyle güncellendiği: ekran "son yenileme"
+    // saatini sayfa yeniden açıldığında da doğru gösterebilsin.
+    targets: requestedTargets.slice(),
     hasChanges: Boolean(summary.hasChanges),
     totalChanges: Number(summary.details && summary.details.length) || 0,
     asasChangeCount: Number(summary.asasChangeCount) || 0,
@@ -8749,7 +8762,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   const wantSync = Boolean(req.body && req.body.sync);
   // Yalnız belirli sayfaları yenile: ['cp'], ['orders'], ['backlog'], ['lfl'] veya birkaçı.
   const rawTargets = req.body && Array.isArray(req.body.targets) ? req.body.targets : null;
-  const targets = rawTargets ? rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t))) : null;
+  const targets = rawTargets ? withLinkedTargets(rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t)))) : null;
   const requestedTargets = targets && targets.length ? targets : ['cp','orders','backlog','lfl','priceanalysis'];
   const filterError = sourceFilterRequiredError(requestedTargets,req);
   if (filterError) {

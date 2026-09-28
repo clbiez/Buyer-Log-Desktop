@@ -239,8 +239,14 @@
     root.querySelectorAll('[data-heat-row]').forEach(cell=>cell.addEventListener('dblclick',()=>{const matrix=E.flexibleMatrix(analysis.records,state.heatmap.row,state.heatmap.column,state.metric),items=matrix.items(cell.dataset.heatRow,cell.dataset.heatColumn);window.BLPriceSupplierAnalysisBridge.openDrilldown(state.source,items,`${cell.dataset.heatRow} · ${cell.dataset.heatColumn}`);}));
     root.querySelector('[data-pa="addComparison"]')?.addEventListener('click',()=>{if(analysis&&comparisons.length<4){const cfg=config();comparisons.push({name:`${sourceName(cfg.source)} ${comparisons.length+1}`,config:cfg,result:analysis});persist();render();}});root.querySelectorAll('[data-comparison-remove]').forEach(button=>button.addEventListener('click',()=>{comparisons.splice(Number(button.dataset.comparisonRemove),1);persist();render();}));root.querySelectorAll('[data-pa="clearComparison"]').forEach(button=>button.addEventListener('click',()=>{comparisons=[];persist();render();}));
   }
-  async function init(){root=document.getElementById('priceSupplierAnalysis');if(!root)return;if(root.dataset.initialized){render();return;}root.dataset.initialized='1';render();await prepare();}
+  /* v20260928 — Bağlı yenileme (Siparişler · Backlog · LFL · Fiyat & Üretici)
+     bittiğinde hazırlanmış veri kümesi bayatlar. Ekran açıksa hemen yeniden
+     hazırlanır; değilse ilk girişte — görünmeyen modül boşuna çalışmaz. */
+  let datasetStale=false;
+  function isVisible(){return typeof window.currentActiveTab==='function'?window.currentActiveTab()==='priceanalysis':Boolean(root&&root.offsetParent);}
+  function invalidate(){if(!root||!root.dataset.initialized)return;datasetStale=true;if(isVisible()){datasetStale=false;void prepare();}}
+  async function init(){root=document.getElementById('priceSupplierAnalysis');if(!root)return;if(root.dataset.initialized){if(datasetStale){datasetStale=false;await prepare();return;}render();return;}root.dataset.initialized='1';render();await prepare();}
   window.initPriceSupplierAnalysis=init;
   window.renderPriceSupplierAnalysisLanguage=render;
-  window.BLPriceSupplierAnalysis={state,prepare,run:recalculate};
+  window.BLPriceSupplierAnalysis={state,prepare,run:recalculate,invalidate};
 })();

@@ -68,6 +68,8 @@ function normalizeTargets(raw, role) {
 // Orders/Siparişler ufku CP'den bağımsız düzenlenmelidir. Eski kayıtlarda
 // hedef henüz yoksa CP kapsamının bir kopyasıyla başlatılır; aynı kapsamda gelirse
 // diğer hedeflerden ayrılarak tek başına tutulur.
+// v20260928 — ASAS rolünde bu kural linkScopeTargets ile genişletildi; burada
+// kalan yol yalnız IAS (antrepo) içindir.
 function isolateOrdersScope(scopes, role, fallbackHorizon, normalizeHorizon, detached = null) {
   if (!allowedTargets(role).includes('orders')) return scopes;
   const list = Array.isArray(scopes) ? scopes.map(scope => ({
@@ -103,6 +105,122 @@ function isolateOrdersScope(scopes, role, fallbackHorizon, normalizeHorizon, det
   return dedupeTargets(out);
 }
 
+/* ===================================================================
+   BAĞLI MODÜLLER — TEK UFUK, TEK YENİLEME (v20260928)
+
+   Kullanıcı kararı: "Orders, Price & Supplier Analysis, LFL Analysis ve
+   Backlog sayfalarının yenileme komutu ve horizonları birbirine bağlansın;
+   tek yenilemeyle hepsine veri gitsin."
+
+   Bu dört sayfa aynı ASAS satır evreninin farklı görünümleridir. Ayrı
+   ufuklarla çalıştıklarında aynı sipariş bir sayfada var, ötekinde yok
+   görünüyordu ve her sayfa ayrı yenilenmek zorundaydı.
+
+   Kural (yalnız ASAS rolü): bağlı hedeflerin hepsi TEK bir kapsamda durur.
+   Tek kapsam = tek DAX sorgusu = tek sonuç; dördünü birlikte yenilemek
+   birini yenilemekle aynı sorguyu çalıştırır.
+
+   CP bu gruba GİRMEZ: Orders ufkunun CP'den bağımsız düzenlenmesi (v4.71)
+   bilinçli bir karardı ve korunur. IAS (antrepo) kapsamları yalnız ASAS
+   siparişlerini zenginleştirir; sayfanın satır evrenini belirlemedikleri
+   için eski Orders ayrıştırma kuralıyla devam eder.
+
+   Eski kayıtların birleşmesi: bağlı sayfaların EN ÇOĞUNUN kullandığı ufuk
+   kazanır (eşitlikte Orders → Backlog → LFL → Price & Supplier sırası).
+   Böylece en az sayıda sayfanın verisi değişir.
+   =================================================================== */
+const LINKED_TARGETS = Object.freeze(['orders', 'backlog', 'lfl', 'priceanalysis']);
+const LINKED_ROLES = new Set(['asas']);
+// normalizeScopes'un eski kayıtlarda kendiliğinden eklediği hedefler.
+const LINKED_AUTO_TARGETS = Object.freeze(['orders', 'priceanalysis']);
+
+function isLinkedTarget(target) { return LINKED_TARGETS.includes(String(target == null ? '' : target).trim()); }
+
+/** Hedef listesinde bağlı bir modül varsa grubun tamamı eklenir (yenileme hedefleri için). */
+function withLinkedTargets(targets) {
+  const list = (Array.isArray(targets) ? targets : [])
+    .map(value => String(value == null ? '' : value).trim()).filter(Boolean);
+  const out = [...new Set(list)];
+  if (out.some(isLinkedTarget)) for (const target of LINKED_TARGETS) if (!out.includes(target)) out.push(target);
+  return out;
+}
+
+function linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached = null) {
+  const linked = allowedTargets(role).filter(isLinkedTarget);
+  const skipped = detached instanceof Set ? detached : new Set();
+  const list = dedupeTargets((Array.isArray(scopes) ? scopes : []).map(scope => ({
+    ...scope,
+    targets: Array.isArray(scope.targets) ? scope.targets.slice() : [],
+    horizon: normalizeHorizon(scope.horizon),
+  })));
+  /* Oylama KAPSAM değil UFUK üzerindendir: aynı ufku taşıyan iki ayrı kapsam
+     (ör. CP+Backlog ile tek başına Orders) aynı ufka oy verir. Eşitlikte
+     LINKED_TARGETS sırasında önce gelen sayfanın ufku kazanır (Orders). */
+  const votes = new Map();
+  for (const scope of list) {
+    const members = scope.targets.filter(target => linked.includes(target));
+    if (!members.length) continue;
+    const signature = JSON.stringify(scope.horizon);
+    const entry = votes.get(signature) || { count: 0, rank: Infinity, scopes: [] };
+    entry.count += members.length;
+    entry.rank = Math.min(entry.rank, ...members.map(target => LINKED_TARGETS.indexOf(target)));
+    entry.scopes.push(scope);
+    votes.set(signature, entry);
+  }
+  let chosen = null;
+  for (const entry of votes.values()) {
+    if (!chosen || entry.count > chosen.count || (entry.count === chosen.count && entry.rank < chosen.rank)) chosen = entry;
+  }
+  // Aynı ufku taşıyanlar içinde yalnız bağlı sayfalardan oluşan kapsam tercih
+  // edilir: kimliği ve adı olduğu gibi korunabilir.
+  const winner = chosen
+    ? (chosen.scopes.find(scope => scope.targets.every(target => linked.includes(target))) || chosen.scopes[0])
+    : null;
+  const present = new Set(list.flatMap(scope => scope.targets).filter(target => linked.includes(target)));
+  // Kapatılmış (park edilmiş) bir besleme kendiliğinden geri gelmez.
+  const members = linked.filter(target => present.has(target)
+    || (LINKED_AUTO_TARGETS.includes(target) && !skipped.has(target)));
+  const out = [];
+  let linkedScope = null;
+  if (members.length) {
+    if (winner) {
+      const pure = winner.targets.every(target => linked.includes(target));
+      linkedScope = {
+        ...winner,
+        // Karışık kapsamdan ayrılan grup kaynak kapsamın kimliğini KOPYALAMAZ:
+        // aynı kimliği taşıyan iki kapsam önbellek ve FilterSet eşlemesini
+        // birbirine karıştırırdı.
+        id: pure ? winner.id : stableScopeId(['linked', role, winner.id]),
+        name: pure ? winner.name : '',
+        targets: members,
+      };
+    } else {
+      const source = list.find(scope => scope.targets.includes('cp')) || list[0] || null;
+      linkedScope = {
+        id: stableScopeId(['orders', role, source ? source.id : '']),
+        name: '',
+        targets: members,
+        enabled: source ? source.enabled !== false : true,
+        limitToCpOrders: false,
+        horizon: normalizeHorizon(source ? source.horizon : fallbackHorizon),
+      };
+    }
+  }
+  for (const scope of list) {
+    const rest = scope.targets.filter(target => !linked.includes(target));
+    if (rest.length) out.push({ ...scope, targets: rest });
+    if (linkedScope && scope === winner) out.push(linkedScope);
+  }
+  if (linkedScope && !winner) out.push(linkedScope);
+  return dedupeTargets(out);
+}
+
+function separateScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached = null) {
+  return LINKED_ROLES.has(role)
+    ? linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached)
+    : isolateOrdersScope(scopes, role, fallbackHorizon, normalizeHorizon, detached);
+}
+
 /**
  * Kapsam listesini normalleştirir.
  * Liste boşsa, bağlantının mevcut tek ufkundan izin verilen tüm hedefleri kapsayan
@@ -133,13 +251,11 @@ function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedT
   }).filter(scope => scope.targets.length).slice(0, 12);
 
   if (list.length) {
-    // Horizon, Price & Supplier Analysis için ayrı bir hedef olarak görünür;
-    // eski bağlantılarda ise ilk ASAS kapsamından güvenli bir başlangıç alır.
-    if (role === 'asas' && !detached.has('priceanalysis') && !list.some(scope => scope.targets.includes('priceanalysis'))) {
-      const index = list.findIndex(scope => scope.targets.length);
-      if (index >= 0) list[index] = { ...list[index], targets: [...list[index].targets, 'priceanalysis'] };
-    }
-    return isolateOrdersScope(dedupeTargets(list), role, fallbackHorizon, normalizeHorizon, detached);
+    // Price & Supplier Analysis eski ASAS kayıtlarında hedef olarak yoktur;
+    // bağlı grup onu kendiliğinden kapsar (bkz. LINKED_AUTO_TARGETS). Grubun
+    // ufkunu seçerken sayılmaz — sayılsaydı ilk kapsama eklenip oylamayı
+    // CP'nin ufku lehine bozardı.
+    return separateScopeTargets(dedupeTargets(list), role, fallbackHorizon, normalizeHorizon, detached);
   }
 
   const remaining = allowed.filter(target => !detached.has(target));
@@ -154,7 +270,7 @@ function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedT
     limitToCpOrders: false,
     horizon: normalizeHorizon(fallbackHorizon),
   }];
-  return isolateOrdersScope(fallback, role, fallbackHorizon, normalizeHorizon, detached);
+  return separateScopeTargets(fallback, role, fallbackHorizon, normalizeHorizon, detached);
 }
 
 // Bir hedef yalnız bir kapsama ait olabilir; aksi hâlde hangi sorgunun beslediği
@@ -187,4 +303,5 @@ function scopeLabel(scope) {
 module.exports = {
   SCOPE_TARGETS, ROLE_TARGETS, TARGET_LABELS,
   allowedTargets, normalizeTargets, normalizeScopes, isolateOrdersScope, dedupeTargets, scopeByTarget, scopeLabel,
+  LINKED_TARGETS, LINKED_ROLES, isLinkedTarget, withLinkedTargets, linkScopeTargets,
 };

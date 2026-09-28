@@ -26,6 +26,7 @@
    =================================================================== */
 
 const { SUPPORTED_TARGETS } = require('../source-filter-readiness');
+const { withLinkedTargets } = require('../model-scopes');
 
 const MAX_GROUPS = 12;
 const MAX_NAME = 60;
@@ -45,9 +46,12 @@ function normalizeModuleIds(raw) {
     seen.add(moduleId);
     out.push(moduleId);
   }
+  // Bağlı modüller (Orders · Backlog · LFL · Price & Supplier) tek yenilemedir:
+  // gruba biri konursa hepsi gelir; grup tanımı gerçekte ne yenilendiğini söyler.
+  const linked = withLinkedTargets(out);
   // Sıralama SUPPORTED_TARGETS'a göre sabitlenir: aynı grup her ekranda aynı
   // sırada görünsün, kullanıcı seçim sırasını hatırlamak zorunda kalmasın.
-  return SUPPORTED_TARGETS.filter(moduleId => out.includes(moduleId));
+  return SUPPORTED_TARGETS.filter(moduleId => linked.includes(moduleId));
 }
 
 function normalizeGroup(raw) {

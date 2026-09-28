@@ -20,6 +20,7 @@ const fs = require('fs');
 const path = require('path');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
+const modelScopes = require('./model-scopes');
 
 const ROOT = path.join(SERVER_DATA_ROOT, 'user-preferences');
 const MAX_VALUE_BYTES = 2 * 1024 * 1024;   // tek anahtar
@@ -514,7 +515,21 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
   };
   const inheritedFor = moduleName => clone(parseStoredJson(inheritedEntries[horizonKey(moduleName)]));
   const resolvedPreference = moduleName => preferenceFor(moduleName) || preferenceFor('default') || inheritedFor(moduleName) || inheritedFor('default');
+  /* v20260928 — BAĞLI MODÜLLER tek ufuk taşır. Modül başına eski bir kişisel
+     ya da rol ufku grubu yeniden bölseydi aynı yenileme iki sorguya ayrılır,
+     sayfalar farklı satır evrenleri gösterirdi. Grup için ilk bulunan kayıt
+     (Orders → Backlog → LFL → Price & Supplier sırasıyla) hepsine uygulanır. */
+  const linkedPreference = () => {
+    for (const moduleName of modelScopes.LINKED_TARGETS) { const pref = preferenceFor(moduleName); if (pref) return pref; }
+    if (preferenceFor('default')) return preferenceFor('default');
+    for (const moduleName of modelScopes.LINKED_TARGETS) { const pref = inheritedFor(moduleName); if (pref) return pref; }
+    return inheritedFor('default');
+  };
+  const linkedWanted = modelScopes.LINKED_TARGETS.some(target => wanted.has(target));
   return (Array.isArray(items) ? items : []).map(item => {
+    const linkedRole = modelScopes.LINKED_ROLES.has(String(item && item.role || '').toLowerCase());
+    const preferenceOf = target => (linkedRole && modelScopes.isLinkedTarget(target) ? linkedPreference() : resolvedPreference(target));
+    const isWanted = target => wanted.has(target) || (linkedRole && linkedWanted && modelScopes.isLinkedTarget(target));
     const next = clone(item || {}), baseScopes = Array.isArray(next.scopes) && next.scopes.length
       ? next.scopes : [{ id: `${next.id || 'connection'}-default`, name: '', targets: [], enabled: true, horizon: next.horizon || {} }];
     const scopes = [];
@@ -523,9 +538,9 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
       const groups = new Map();
       for (const target of targets) {
         const normalizedTarget = String(target || '').toLowerCase();
-        const horizon = wanted.has(normalizedTarget)
+        const horizon = isWanted(normalizedTarget)
           ? resolveHorizonValue(
-            resolvedPreference(normalizedTarget),
+            preferenceOf(normalizedTarget),
             scope.horizon || next.horizon || {},
             { connectionId: next.id, role: next.role },
           )
@@ -537,7 +552,7 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
       if (!targets.length) scopes.push(scope);
       else for (const [signature, group] of groups) {
         const personal = group.targets.some(target => {
-          const pref = resolvedPreference(target);
+          const pref = preferenceOf(String(target || '').toLowerCase());
           return Boolean(pref && ((pref.byConnection && pref.byConnection[next.id]) || (pref.byRole && pref.byRole[next.role]) || pref.horizon || pref.table || Array.isArray(pref.groups)));
         });
         scopes.push({

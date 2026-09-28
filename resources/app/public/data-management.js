@@ -1712,6 +1712,9 @@
       filterName: layerNote ? (feed.sharedFilterName || '') : feed.filterName,
       definition: feed.definition || {},
       sharedWith: (feed.sharedModuleIds || []),
+      // v20260928 — ASAS'ta Siparişler · Backlog · LFL · Fiyat & Üretici bağlıdır
+      // (tek ufuk); bu modüller için "yalnız bunu ayır" seçeneği sunulmaz.
+      canSplit: !(feed.sourceRole === 'asas' && ['orders', 'backlog', 'lfl', 'priceanalysis'].includes(moduleId)),
       layerNote,
       labelOf: id => {
         const found = (model.modules || []).find(entry => entry.id === id);
