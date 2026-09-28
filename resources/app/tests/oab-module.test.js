@@ -879,7 +879,9 @@ test('OAB istemci: oabInit hiçbir authStatus/connect çağrısı YAPMADAN doğr
   assert.match(initBody, /await oabRestoreLastSnapshot\(\)/);
   assert.doesNotMatch(initBody, /oabRenderAuthBar/);
   assert.doesNotMatch(OAB_JS, /oabConnectToPass/);
-  assert.doesNotMatch(OAB_JS, /\/api\/oab\/auth\/connect/);
+  assert.doesNotMatch(initBody, /\/api\/oab\/auth\/connect|oabEnsureAuthentication|authStatus/);
+  assert.match(OAB_JS, /fetch\('\/api\/oab\/auth\/connect'/);
+  assert.match(OAB_JS, /if \(allowAuthRetry && oabIsAuthErrorCode\(err\.code\)\)[\s\S]{0,220}?oabEnsureAuthentication/);
 });
 
 test('OAB istemci: açılışta son snapshot seçimlerini geri yükleyip PASS raporu çağırmadan render eder', () => {

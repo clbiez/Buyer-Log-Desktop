@@ -10,10 +10,12 @@ const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
 const DB = fs.readFileSync(path.join(ROOT, 'server', 'db.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
+const BUSINESS = fs.readFileSync(path.join(ROOT, 'public', 'business-rules.js'), 'utf8');
 
 test('v6.33 License Royalty Calculations stores rules by Licensor again', () => {
-  assert.match(DB, /current\.licensor = String\(current\.licensor != null \? current\.licensor : \(current\.manufacturer \|\| ''\)\)\.trim\(\);/);
-  assert.match(DB, /delete current\.manufacturer;/);
+  assert.match(DB, /merged\.pricingRules = BLBusinessRules\.migrateLicenseRoyaltyRules\(/);
+  assert.match(BUSINESS, /source\.licensor = norm\(source\.licensor != null \? source\.licensor : source\.manufacturer\);/);
+  assert.match(BUSINESS, /delete source\.manufacturer;/);
   assert.match(SERVER, /licensor: String\(r\.licensor != null \? r\.licensor : \(r\.manufacturer \|\| ''\)\)\.trim\(\)/);
   assert.doesNotMatch(SERVER, /manufacturer: String\(r\.manufacturer != null \? r\.manufacturer : \(r\.licensor \|\| ''\)\)\.trim\(\)/);
 });

@@ -319,11 +319,14 @@
 .dmfRow { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(120px, auto) minmax(180px, 2fr) 28px; gap: 7px; align-items: center; }
 .dmfField, .dmfOp, .dmfAddValue, .dmfAdd, .dmfChip, .dmfDrop { font: inherit; cursor: pointer; }
 .dmfField {
-  font-size: 12px; text-align: left; height: var(--ctl-h); padding: 0 8px;
+  font-size: 12px; text-align: left; min-height: var(--ctl-h); height: auto; padding: 4px 8px;
   border: 1px solid var(--line2); background: var(--card); color: var(--ink);
+  display: flex; flex-direction: column; justify-content: center; gap: 1px;
 }
 .dmfField:hover { border-color: var(--acc); }
 .dmfField em { color: var(--muted); }
+.dmfFieldPhysical { display: block; color: var(--muted); font-size: 10px; line-height: 1.2; }
+.dmfFieldPhysical.is-warn { color: var(--orange); }
 .dmfOp { font-size: 12px; height: var(--ctl-h); border: 1px solid var(--line2); background: var(--card); color: var(--ink); }
 .dmfValues { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .dmfChip { font-size: 11px; padding: 1px 6px; border: 1px solid var(--acc); background: var(--acc-bg); color: var(--acc-ink); }
@@ -607,6 +610,7 @@
 .dmfMapHead { margin: 0 0 6px; font-size: 11px; color: var(--ink2); }
 .dmfMapTable { width: 100%; border-collapse: collapse; font-size: 11px; }
 .dmfMapTable td { padding: 2px 6px 2px 0; color: var(--ink2); vertical-align: top; }
+.dmfMapPhysical { display: block; margin-top: 1px; color: var(--muted); font-size: 10px; }
 .dmfMapArrow { color: var(--muted); width: 1.5em; text-align: center; }
 .dmfMapTag {
   display: inline-block; margin-right: 4px; padding: 0 5px;

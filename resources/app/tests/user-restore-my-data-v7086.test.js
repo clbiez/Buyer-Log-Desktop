@@ -55,7 +55,7 @@ test('personal preference and profile stores have explicit restore entry points'
 
 test('personal Collection restore remains in the signed-in owner workspace', () => {
   assert.match(SERVICE, /collectionWorkspaces\.saveWorkspace\(currentUser\.id, incoming\.collection/);
-  assert.match(SERVICE, /collection: customCollectionRestore \? null : clone\(collectionWorkspaces\.loadWorkspace\(currentUser\.id\)\)/);
+  assert.match(SERVICE, /collection: selectedSet\.has\('collection'\) && !customCollectionRestore \? clone\(collectionWorkspaces\.loadWorkspace\(currentUser\.id\)\) : null/);
   assert.match(SERVER, /const userRestoreService = createUserRestoreService\(\);/);
   const serviceInit = SERVER.slice(SERVER.indexOf('const userRestoreService ='), SERVER.indexOf('const userRestoreUploads'));
   assert.doesNotMatch(serviceInit, /mergePersonalBackupIntoShared|SHARED_COLLECTION_OWNER|userRestoreSharedCollectionSync/);
