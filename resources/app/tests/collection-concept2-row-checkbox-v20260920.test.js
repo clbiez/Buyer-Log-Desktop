@@ -23,7 +23,8 @@ test('Concept 2 gutter hem hierarchy toggle hem görünür row checkbox taşır'
 
 test('Concept 2 checkbox yeni veri sütunu eklemez ve seçim olayı gerçek row id üzerinde kalır', () => {
   assert.match(APP, /tbody\.querySelectorAll\('\.rowChk'\)\.forEach/);
-  assert.match(APP, /const id=Number\(chk\.dataset\.id\)/);
-  assert.match(APP, /if\(chk\.checked\)kolSelected\.add\(id\);else kolSelected\.delete\(id\)/);
+  assert.match(APP, /const id=selectionActualId\(logicalRows,row=>row\.id,chk\.dataset\.id\)/);
+  assert.match(APP, /selectionSetId\(kolSelected,id,chk\.checked\)/);
+  assert.doesNotMatch(APP, /const id=Number\(chk\.dataset\.id\)/);
   assert.doesNotMatch(APP, /\{k:'(?:groupToggle|hierarchyToggle)'/);
 });
