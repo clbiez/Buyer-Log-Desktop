@@ -24,7 +24,6 @@ test('failed merge recovery keeps visible-range export bound to matching chart d
 test('failed merge recovery keeps blank Backlog series live in Excel formulas', () => {
   assert.match(chart, /const seriesCriterion=serie\.baseName===tr\('\(boş\)','\(blank\)'\)\?'':serie\.baseName/);
   assert.match(chart, /criteria\.push\(seriesRange,formulaText\(seriesCriterion\)\)/);
-  assert.match(chart, /predicates\.push\('\(' \+? /); // source contract checked below without relying on spacing
   assert.ok(chart.includes("if(hasSeries)predicates.push('('+seriesRange+'='+formulaText(seriesCriterion)+')');"));
 });
 
