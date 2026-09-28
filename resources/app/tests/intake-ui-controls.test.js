@@ -90,3 +90,20 @@ test('INTAKE UI OAB-parite pivot alanı, sürükleyerek sıralama, etiket ve fil
   assert.match(css, /\.oabConfigRow\[draggable="true"\]\{cursor:grab/);
   assert.match(css, /\.intakeFilterPopover/);
 });
+
+
+test('INTAKE Dönem Tanim gruplarını Ocak-Aralık takvim sırasına dizer ve sıfır bütçeyi UI tarafında da gizler', () => {
+  assert.match(ui, /const INTAKE_MONTH_ORDER = Object\.freeze\(\[/);
+  const expected = ['ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran', 'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık'];
+  let previous = -1;
+  for (const month of expected) {
+    const position = ui.indexOf(`'${month}'`, ui.indexOf('const INTAKE_MONTH_ORDER'));
+    assert.ok(position > previous, `INTAKE ay sırası hatalı/eksik: ${month}`);
+    previous = position;
+  }
+  assert.match(ui, /function intakeIsPeriodField\(field\)/);
+  assert.match(ui, /orderedGroups\.sort\(\(left, right\) => intakeCompareValues\(field, left\.value, right\.value\) \* direction\)/);
+  assert.match(ui, /sorted\.sort\(\(left, right\) => intakeCompareValues\(sortField,/);
+  assert.match(ui, /function intakeIsCurrentBudgetField\(field\)/);
+  assert.match(ui, /state\.rows\.filter\(row => intakeIsNonZeroBudgetRow\(row, currentBudgetField\)\)/);
+});

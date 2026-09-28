@@ -397,6 +397,19 @@ function buildIntakeQuery({ fields = [], viewConfig, horizon = null, maxRows = I
   });
   const groupExpressions = rows.map(daxRef);
   const measureExpressions = measures.flatMap(field => [`"${field.id}", ${daxRef(field)}`]);
+  const zeroBudgetTarget = sourceParts(INTAKE_ZERO_BUDGET_SOURCE);
+  const currentBudgetField = available.find(field => field && field.fieldType === 'measure' && (
+    keyOf(field.sourceUniqueName) === keyOf(INTAKE_ZERO_BUDGET_SOURCE)
+    || keyOf(field.name) === keyOf(zeroBudgetTarget.name)
+    || (keyOf(field.table) === keyOf(zeroBudgetTarget.table) && keyOf(field.name) === keyOf(zeroBudgetTarget.name))
+  ));
+  const hideZeroBudget = config.display.hideZeroCurrentBudget !== false && Boolean(currentBudgetField);
+  // Filtre SUMMARIZECOLUMNS satırında hesaplanan değeri doğrudan okur.
+  // CALCULATE([measure]) bazı Tabular modellerde dış filtre bağlamına dönerek
+  // grup satırındaki gerçek 0 değerini yeniden hesaplayabildiği için güvenilir değildi.
+  const zeroBudgetExpressions = hideZeroBudget
+    ? [`"__intake_current_budget", ${daxRef(currentBudgetField)}`]
+    : [];
   /* v7.81 — Data Management ufku. Kullanıcının kendi pivot filtreleriyle
      AYNI SUMMARIZECOLUMNS argüman listesine girer; ikisi VE ile birleşir.
      Argüman üretimi model yenilemesiyle ortak (summarizeFilterArgs):
@@ -418,11 +431,9 @@ function buildIntakeQuery({ fields = [], viewConfig, horizon = null, maxRows = I
   // The report is an aggregate/pivot, never a raw Intake DB dump. Put the cap
   // into DAX as well as the driver so the database does not serialize millions
   // of rows merely for the Node process to discard them afterwards.
-  const summarizedTable = `SUMMARIZECOLUMNS(\n    ${[...groupExpressions, ...horizonArgs, ...filterExpressions, ...measureExpressions].join(',\n    ')}\n  )`;
-  const currentBudgetField = available.find(field => keyOf(field.sourceUniqueName) === keyOf(INTAKE_ZERO_BUDGET_SOURCE));
-  const hideZeroBudget = config.display.hideZeroCurrentBudget !== false && currentBudgetField;
+  const summarizedTable = `SUMMARIZECOLUMNS(\n    ${[...groupExpressions, ...horizonArgs, ...filterExpressions, ...measureExpressions, ...zeroBudgetExpressions].join(',\n    ')}\n  )`;
   const reportTable = hideZeroBudget
-    ? `FILTER(\n    ${summarizedTable},\n    NOT ISBLANK(CALCULATE(${daxRef(currentBudgetField)})) && CALCULATE(${daxRef(currentBudgetField)}) <> 0\n  )`
+    ? `FILTER(\n    ${summarizedTable},\n    NOT ISBLANK([__intake_current_budget]) && [__intake_current_budget] <> 0\n  )`
     : summarizedTable;
   const query = `EVALUATE\nTOPN(${rowLimit},\n  ${reportTable}\n)`;
   const headerMap = {};

@@ -58,8 +58,9 @@ test('INTAKE Güncel Alım Bütçe 0 veya boş satırları varsayılan olarak DA
   const built = intake.buildIntakeQuery({ fields, viewConfig: view });
 
   assert.match(built.query, /FILTER\(/);
-  assert.match(built.query, /NOT ISBLANK\(CALCULATE\(\[Güncel Alım Bütçe\]\)\)/);
-  assert.match(built.query, /CALCULATE\(\[Güncel Alım Bütçe\]\) <> 0/);
+  assert.match(built.query, /"__intake_current_budget", \[Güncel Alım Bütçe\]/);
+  assert.match(built.query, /NOT ISBLANK\(\[__intake_current_budget\]\)/);
+  assert.match(built.query, /\[__intake_current_budget\] <> 0/);
 });
 
 test('INTAKE sıfır bütçe gizleme seçeneği kapatılırsa DAX ek filtresi uygulanmaz', () => {
@@ -77,7 +78,30 @@ test('INTAKE sıfır bütçe gizleme seçeneği kapatılırsa DAX ek filtresi uy
 
   const built = intake.buildIntakeQuery({ fields, viewConfig: view });
 
-  assert.doesNotMatch(built.query, /NOT ISBLANK\(CALCULATE\(\[Güncel Alım Bütçe\]\)\)/);
+  assert.doesNotMatch(built.query, /__intake_current_budget/);
+});
+
+test('INTAKE sıfır bütçe filtresi canlı şemadaki farklı measure sourceUniqueName biçimini de çözer', () => {
+  const fields = intake.normalizeSchema({
+    columns: [{ table: 'Phase', name: 'Dönem Tanim' }],
+    measures: [{
+      table: 'WSSI Measures',
+      name: 'Güncel Alım Bütçe',
+      sourceUniqueName: '[WSSI Measures].[Güncel Alım Bütçe].[Güncel Alım Bütçe]',
+      kind: 'measure',
+    }],
+  });
+  const row = fields.find(field => field.fieldType === 'dimension');
+  const budget = fields.find(field => field.fieldType === 'measure');
+  const view = intake.reconcileViewConfig({
+    version: 2,
+    query: { rows: [row], columns: [], measures: [budget], filters: [], filterValues: {} },
+  }, fields);
+
+  const built = intake.buildIntakeQuery({ fields, viewConfig: view });
+
+  assert.match(built.query, /"__intake_current_budget", \[Güncel Alım Bütçe\]/);
+  assert.match(built.query, /\[__intake_current_budget\] <> 0/);
 });
 
 const ORDER_FIELDS = intake.normalizeSchema({

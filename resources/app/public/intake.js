@@ -77,9 +77,55 @@
     return numeric.toLocaleString(isEnglish() ? 'en-GB' : 'tr-TR', { maximumFractionDigits: 2 });
   }
 
+  const INTAKE_MONTH_ORDER = Object.freeze([
+    'ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran',
+    'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık',
+  ]);
+
+  function intakeIsPeriodField(field) {
+    const identity = `${clean(field && field.sourceUniqueName)} ${clean(field && field.defaultLabel)} ${clean(field && field.name)}`
+      .toLocaleLowerCase('tr-TR');
+    return identity.includes('dönem tanim') || identity.includes('dönem tanım')
+      || (identity.includes('[phase]') && identity.includes('dönem'));
+  }
+
+  function intakeMonthRank(value) {
+    const normalized = clean(value).toLocaleLowerCase('tr-TR');
+    return INTAKE_MONTH_ORDER.findIndex(month => normalized.includes(month));
+  }
+
+  function intakeCompareValues(field, left, right) {
+    if (intakeIsPeriodField(field)) {
+      const leftMonth = intakeMonthRank(left);
+      const rightMonth = intakeMonthRank(right);
+      if (leftMonth >= 0 && rightMonth >= 0 && leftMonth !== rightMonth) return leftMonth - rightMonth;
+      if (leftMonth >= 0 && rightMonth < 0) return -1;
+      if (leftMonth < 0 && rightMonth >= 0) return 1;
+    }
+    return clean(left).localeCompare(clean(right), isEnglish() ? 'en' : 'tr', { numeric: true, sensitivity: 'base' });
+  }
+
+  function intakeIsCurrentBudgetField(field) {
+    if (!field || field.fieldType !== 'measure') return false;
+    const wanted = 'güncel alım bütçe';
+    return [field.name, field.sourceLabel, field.defaultLabel]
+      .map(value => clean(value).toLocaleLowerCase('tr-TR'))
+      .some(value => value === wanted);
+  }
+
+  function intakeIsNonZeroBudgetRow(row, field) {
+    if (!field) return true;
+    const value = row && row[field.id];
+    if (value === null || value === undefined || value === '') return false;
+    const numeric = typeof value === 'number'
+      ? value
+      : Number(String(value).replace(/\s/g, '').replace(',', '.'));
+    return !Number.isFinite(numeric) || numeric !== 0;
+  }
+
   function valuesFromRows(field) {
     return [...new Set(state.rows.map(row => clean(row && row[field.id])).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, isEnglish() ? 'en' : 'tr', { numeric: true }));
+      .sort((a, b) => intakeCompareValues(field, a, b));
   }
 
   function renderFilters() {
@@ -194,7 +240,12 @@
         if (!groups.has(key)) groups.set(key, { value, rows: [] });
         groups.get(key).rows.push(row);
       });
-      groups.forEach(group => {
+      const orderedGroups = [...groups.values()];
+      if (intakeIsPeriodField(field)) {
+        const direction = display().sort?.id === field.id && Number(display().sort?.dir) === -1 ? -1 : 1;
+        orderedGroups.sort((left, right) => intakeCompareValues(field, left.value, right.value) * direction);
+      }
+      orderedGroups.forEach(group => {
         const isLeafLevel = level === rowFields.length - 1 && columnFields.length === 0;
         if (isLeafLevel) {
           const leaf = { ...(group.rows[0] || {}) };
@@ -258,11 +309,16 @@
       table.innerHTML = `<tbody><tr><td class="intakeEmpty" colspan="1">${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>`;
       return;
     }
-    const sorted = state.rows.slice();
+    const currentBudgetField = (query().measures || []).find(intakeIsCurrentBudgetField);
+    const sorted = (display().hideZeroCurrentBudget !== false && currentBudgetField
+      ? state.rows.filter(row => intakeIsNonZeroBudgetRow(row, currentBudgetField))
+      : state.rows
+    ).slice();
     const sort = display().sort || {};
     if (sort.id) {
       const direction = Number(sort.dir) === -1 ? -1 : 1;
-      sorted.sort((left, right) => String(left && left[sort.id] == null ? '' : left && left[sort.id]).localeCompare(String(right && right[sort.id] == null ? '' : right && right[sort.id]), isEnglish() ? 'en' : 'tr', { numeric: true, sensitivity: 'base' }) * direction);
+      const sortField = fields.find(field => field.id === sort.id) || allFields().find(field => field.id === sort.id);
+      sorted.sort((left, right) => intakeCompareValues(sortField, left && left[sort.id], right && right[sort.id]) * direction);
     }
     intakeUpdateGroupButtons(sorted);
     const header = fields.map(field => {
