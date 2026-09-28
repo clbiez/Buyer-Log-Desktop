@@ -5,7 +5,7 @@
   var uid=String(ctx.id||'anonymous').replace(/[^A-Za-z0-9_-]/g,'_');
   var prefixes=[
     'lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step',
-    'lcw.corePageFilters.','lcw.table.columnState.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
+    'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.',
     'lcw.koleksiyon.rows.','lcw.koleksiyon.manufacturers.','lcw.koleksiyon.pricingExcelColumns.','lcw.koleksiyon.colState.','lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.prodstatus.mails.','lcw.mailTemplates.',
     'lcw.todo.','lcw.notifications.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.',
@@ -53,6 +53,18 @@
       native.setItem(migrationKey,'1');
     }catch(_){ }
   }
+  // Focus / Extended presetleri v10.68'den beri BLStorage ile yazılıyor ancak
+  // eski sürümlerde kullanıcı kapsamına alınmadığı için global localStorage'da
+  // kalabiliyordu. İlk açılışta bu eski kaydı kullanıcının kişisel alanına taşı.
+  try{
+    var tableViewPresetLegacyKey='lcw.tableViewFocus.v1';
+    var tableViewPresetPersonalKey=actual(tableViewPresetLegacyKey);
+    if(native.getItem(tableViewPresetPersonalKey)==null){
+      var tableViewPresetLegacyValue=native.getItem(tableViewPresetLegacyKey);
+      if(tableViewPresetLegacyValue!=null)native.setItem(tableViewPresetPersonalKey,tableViewPresetLegacyValue);
+    }
+  }catch(_){ }
+
   /* SUNUCU EŞİTLEMESİ (v7.02)
      localStorage TARAYICIYA özeldir: Edge'de yazılan not Chrome'da görünmez,
      tarayıcı verisi temizlenince kaybolur. Aşağıdaki önekler kullanıcı hesabına
@@ -61,7 +73,7 @@
      Collection satırları/notları gibi ortak iş verileri bu listede değildir. */
   var SYNCED=[
     'lcw.todo.','lcw.notifications.','lcw.mailTemplates.','lcw.prodstatus.mails.',
-    'lcw.corePageFilters.','lcw.table.columnState.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.dimFilters.','lcw.orders.dimFilters.',
+    'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.dimFilters.','lcw.orders.dimFilters.',
     'lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.',
     'lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.',
     'lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.koleksiyon.colState.','lcw.koleksiyon.pricingExcelColumns.',

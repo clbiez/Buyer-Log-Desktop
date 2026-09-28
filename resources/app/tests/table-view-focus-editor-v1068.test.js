@@ -9,6 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const HTML = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const USER_STORAGE = fs.readFileSync(path.join(ROOT, 'public', 'user-storage.js'), 'utf8');
 
 test('Focus ve Extended çift tıklaması ortak sütun seçici düzenleyicisini açar', () => {
   assert.match(APP, /const TABLE_VIEW_EDITABLE_PRESETS = Object\.freeze\(\['focus','extended'\]\);/,
@@ -29,6 +30,20 @@ test('Focus ve Extended seçimi kullanıcı başına kalıcı saklanır ve tekra
   assert.match(APP, /BLStorage\.setItem\(TABLE_VIEW_FOCUS_KEY,JSON\.stringify\(stored\)\)/);
   assert.match(APP, /const fallback=preset==='focus'\?tableViewFocusKeys\(tableKey\):preset==='extended'\?tableViewDefaultExtendedKeys\(tableKey\):\[\]/,
     'Focus ve Extended kendi fallback setlerini kullanmalı');
+});
+
+test('Focus ve Extended presetleri kullanıcıya özel saklanır ve oturumlar arasında senkronize edilir', () => {
+  assert.match(USER_STORAGE, /'lcw\.tableViewFocus\.'/,
+    'preset anahtarı BLStorage kullanıcı kapsamına girmeli');
+  const syncedStart = USER_STORAGE.indexOf('var SYNCED=[');
+  const syncedEnd = USER_STORAGE.indexOf('];', syncedStart);
+  assert.ok(syncedStart >= 0 && syncedEnd > syncedStart, 'SYNCED listesi bulunmalı');
+  assert.match(USER_STORAGE.slice(syncedStart, syncedEnd), /'lcw\.tableViewFocus\.'/,
+    'preset anahtarı kullanıcı tercihleri sunucu senkronuna girmeli');
+  assert.match(USER_STORAGE, /tableViewPresetLegacyKey='lcw\.tableViewFocus\.v1'/,
+    'eski global Focus\/Extended kaydı kişisel alana migrate edilmeli');
+  assert.match(USER_STORAGE, /native\.getItem\(tableViewPresetPersonalKey\)==null[\s\S]*?native\.setItem\(tableViewPresetPersonalKey,tableViewPresetLegacyValue\)/,
+    'migration mevcut kişisel ayarı ezmeden eski global değeri taşımalı');
 });
 
 test('preset düzenleyicisi boş seçimle görünümü bozmaz ve Uygula seçili preseti yeniler', () => {
