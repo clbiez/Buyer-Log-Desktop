@@ -305,6 +305,38 @@ window.addEventListener('beforeunload', e=>{
 });
 
 function norm(s){ return String(s==null?'':s).trim(); }
+
+/* Satır seçim kimliği tek tip olmak zorunda değildir. Shared/legacy
+   Collection kayıtları sayısal id'yi string olarak taşıyabilir; CP/Orders
+   kaynakları ise string/UUID benzeri _id kullanabilir. DOM dataset her zaman
+   string döndürdüğü için Number(dataset.id) yapmak seçimi ekranda işaretli
+   gösterip iş katmanında kaybetmeye yol açıyordu. Bütün tablo/PLM seçimleri
+   aynı eşdeğerlik kuralını kullanır. */
+function selectionIdKey(value){ return String(value==null?'':value).trim(); }
+function selectionHasId(selection,value){
+  if(!selection||typeof selection.has!=='function')return false;
+  if(selection.has(value))return true;
+  const key=selectionIdKey(value);if(!key)return false;
+  if(selection.has(key))return true;
+  const numeric=Number(key);
+  return Number.isFinite(numeric)&&selection.has(numeric);
+}
+function selectionActualId(rows,getId,rawId){
+  const key=selectionIdKey(rawId),resolve=typeof getId==='function'?getId:(row=>row&&row._id);
+  if(!key)return rawId;
+  const row=(Array.isArray(rows)?rows:[]).find(item=>selectionIdKey(resolve(item))===key);
+  return row?resolve(row):rawId;
+}
+function selectionSetId(selection,value,checked){
+  if(!selection||typeof selection.add!=='function'||typeof selection.delete!=='function')return;
+  const key=selectionIdKey(value);
+  selection.delete(value);
+  if(key){
+    selection.delete(key);
+    const numeric=Number(key);if(Number.isFinite(numeric))selection.delete(numeric);
+  }
+  if(checked)selection.add(value);
+}
 // Ortak tablo araması: giriş değiştiğinde bir kez parse edilir; satır eşleşmesi
 // yalnızca önceden hazırlanmış terimler üzerinden yapılır.
 function parseTableSearchTerms(value){
@@ -5692,7 +5724,7 @@ function tableVisibleSelectedCount(rows,selectedSet,getId){
   const resolve=typeof getId==='function'?getId:(row=>row&&row._id),seen=new Set();
   return (rows||[]).reduce((count,row)=>{
     const id=resolve(row);if(seen.has(id))return count;seen.add(id);
-    return count+(selectedSet.has(id)?1:0);
+    return count+(selectionHasId(selectedSet,id)?1:0);
   },0);
 }
 function selectionFooterCellHtml(count){
@@ -6277,10 +6309,10 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   });
   if(withChk){
     const selAll = document.getElementById(`${tableId}_selAll`);
-    const allChecked = rows.length>0 && rows.every(r=>selSet.has(r._id));
+    const allChecked = rows.length>0 && rows.every(r=>selectionHasId(selSet,r._id));
     selAll.checked = allChecked;
     selAll.addEventListener('change', ()=>{
-      if(selAll.checked) rows.forEach(r=>selSet.add(r._id)); else rows.forEach(r=>selSet.delete(r._id));
+      rows.forEach(r=>selectionSetId(selSet,r._id,selAll.checked));
       // Satır seçimi elle işaretlenince eski hücre/aralık seçimi otomatik geçersiz
       // sayılır: aksi halde Kopyala hâlâ bayat tek hücreyi kopyalar (bkz. clear()).
       if(selSet.size>0) window.BLGridClipboard?.clear?.(tableId);
@@ -6321,7 +6353,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     if(r._id!=null && opts.dirtySet && (typeof opts.isDirty==='function'?opts.isDirty(r):opts.dirtySet.has(r._id))) tr.classList.add('rowDirty');
     if(r._canEdit===false) tr.classList.add('rowViewOnly');
     if(r._id!=null) tr.dataset.id = r._id;
-    let rowHtml = withChk?`<td class="chkCell"><input type="checkbox" class="rowChk" ${selSet.has(r._id)?'checked':''} data-id="${r._id}"></td>`:'';
+    let rowHtml = withChk?`<td class="chkCell"><input type="checkbox" class="rowChk" ${selectionHasId(selSet,r._id)?'checked':''} data-id="${r._id}"></td>`:'';
     rowHtml += cols.map(c=>typeof opts.cellHtmlFn==='function'?opts.cellHtmlFn(c,r,cf,tableKey):cellHtml(c,r,cf,tableKey)).join('');
     tr.innerHTML = rowHtml;
     const tds=tr.children,offset=withChk?1:0;
@@ -6388,8 +6420,8 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         const chk = e.target;
         if(!chk.classList || !chk.classList.contains('rowChk')) return;
         const meta = tbody._chkMeta; if(!meta) return;
-        const id = Number(chk.dataset.id);
-        if(chk.checked) meta.selSet.add(id); else meta.selSet.delete(id);
+        const id = selectionActualId(meta.rows,meta.getId,chk.dataset.id);
+        selectionSetId(meta.selSet,id,chk.checked);
         // Kutuyla işaretleme, önceki hücre/aralık seçimini geçersiz kılar: satır
         // seçimi daha güçlü ve daha güncel niyettir — Kopyala bunu esas almalı.
         if(chk.checked && meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
@@ -21960,8 +21992,8 @@ function filteredKol(){
   const q = parseTableSearchTerms(document.getElementById('kolSearch').value);
   const checkMode = normalizeCheckFilterMode(kolCheckFilter);
   let rows = kolRows.filter(r=>{
-    if(checkMode==='checked' && !kolSelected.has(r.id)) return false;
-    if(checkMode==='unchecked' && kolSelected.has(r.id)) return false;
+    if(checkMode==='checked' && !selectionHasId(kolSelected,r.id)) return false;
+    if(checkMode==='unchecked' && selectionHasId(kolSelected,r.id)) return false;
     if(!passesKolColFilters(r)) return false;
     if(q.length){
       if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
@@ -23682,7 +23714,7 @@ function openKolCheckFilter(anchorEl){
   document.body.appendChild(panel);
   const en = appLang==='en';
   const active = normalizeCheckFilterMode(kolCheckFilter);
-  const selectedCount = kolRows.reduce((n,r)=>n+(kolSelected.has(r.id)?1:0),0);
+  const selectedCount = kolRows.reduce((n,r)=>n+(selectionHasId(kolSelected,r.id)?1:0),0);
   const uncheckedCount = Math.max(0, kolRows.length - selectedCount);
   const opt=(value,label,count)=>`<label class="cfpItem"><input type="radio" name="kolChkf" value="${value}" ${active===value?'checked':''}> ${escapeHtml(label)}${count==null?'':` (${count})`}</label>`;
   panel.innerHTML = `<div class="cfpList" style="padding:4px;">
@@ -23935,7 +23967,7 @@ async function kolPricingPreflight(rows){
 window.BLCollection={
   rows(){ return Array.isArray(kolRows)?kolRows:[]; },
   selectedIds(){ return [...kolSelected].map(String); },
-  selectedRows(){ return kolRows.filter(row=>kolSelected.has(row.id)); },
+  selectedRows(){ return kolRows.filter(row=>selectionHasId(kolSelected,row.id)); },
   pricingPreflight(rows){ return kolPricingPreflight(rows); },
   // Siparise donmus olmak: ayni PLM ID + Model Adi cifti CP satirlarinda var mi.
   // Uygulamanin baska yerlerinde (Koleksiyon ice aktarimi, Fiyat Gecmisi) kullanilan
@@ -24340,8 +24372,8 @@ function renderKol(){
     e.stopPropagation();openKolHeaderFilter(btn.dataset.kolFilter,e.currentTarget);
   }));
   const selAll=document.getElementById('kolSelAll');
-  selAll.checked=logicalRows.length>0&&logicalRows.every(r=>kolSelected.has(r.id));
-  selAll.addEventListener('change',()=>{if(selAll.checked)logicalRows.forEach(r=>kolSelected.add(r.id));else logicalRows.forEach(r=>kolSelected.delete(r.id));renderKol();});
+  selAll.checked=logicalRows.length>0&&logicalRows.every(r=>selectionHasId(kolSelected,r.id));
+  selAll.addEventListener('change',()=>{logicalRows.forEach(r=>selectionSetId(kolSelected,r.id,selAll.checked));renderKol();});
   // v6.34 — Koleksiyon işaret filtresi: ▾ paneli açar, sağ tık kipler arasında döner.
   const kolChkBtn=thead.querySelector('.kolChkFilterBtn');
   if(kolChkBtn) kolChkBtn.addEventListener('click',e=>{ e.stopPropagation(); openKolCheckFilter(kolChkBtn); });
@@ -24379,7 +24411,7 @@ function renderKol(){
     const groupToggle=isParent
       ?`<button type="button" class="kolModelGroupToggle" data-kol-group-toggle="${escapeHtml(r.modelGroupId)}" aria-expanded="${collapsed?'false':'true'}" title="${escapeHtml((collapsed?(appLang==='en'?'Expand colour variants':'Renk varyantlarını aç'):(appLang==='en'?'Collapse colour variants':'Renk varyantlarını daralt'))+` · ${groupMembers.length}`)}"><span aria-hidden="true">${collapsed?'›':'⌄'}</span></button>`
       :`<span class="kolModelGroupGutterSpacer${showAsVariant?' isVariant':''}" aria-hidden="true"></span>`;
-    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" data-id="${r.id}" ${kolSelected.has(r.id)?'checked':''}></td>`;
+    let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
     if(pictureVisible){
       const canonicalImageSource=canonicalModelImageSource(r.plmId,r.colourCode,r.colour);
       const sharedCollectionImageSource=String(r&&r._sharedCollectionImageUrl||'');
@@ -24553,7 +24585,7 @@ function renderKol(){
   tbody.querySelectorAll('[data-kol-group-toggle]').forEach(btn=>btn.addEventListener('click',event=>{
     event.preventDefault();event.stopPropagation();kolToggleModelGroup(btn.dataset.kolGroupToggle);
   }));
-  tbody.querySelectorAll('.rowChk').forEach(chk=>chk.addEventListener('change',()=>{const id=Number(chk.dataset.id);if(chk.checked)kolSelected.add(id);else kolSelected.delete(id);updateSelectionFooterCount(table,logicalRows,kolSelected,row=>row.id);updateKolSendBtnState();}));
+  tbody.querySelectorAll('.rowChk').forEach(chk=>chk.addEventListener('change',()=>{const id=selectionActualId(logicalRows,row=>row.id,chk.dataset.id);selectionSetId(kolSelected,id,chk.checked);updateSelectionFooterCount(table,logicalRows,kolSelected,row=>row.id);updateKolSendBtnState();}));
   tbody.querySelectorAll('.endeksmatikCellBtn[data-endeksmatik-id]').forEach(btn=>btn.addEventListener('click',event=>{
     event.preventDefault();event.stopPropagation();const row=kolRows.find(item=>Number(item.id)===Number(btn.dataset.endeksmatikId));if(!row)return;
     if(kolCellLinkedToModel(row,'endeksmatik')){showToast(appLang==='en'?'This field is linked to the model. Use right-click › Make this field colour-specific first.':'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');return;}
@@ -26591,7 +26623,7 @@ function kolPlmSyncMissingRows(){
   return kolPlmSyncCandidateRows().filter(row=>keys.some(key=>!kolImportReadField(row,key)));
 }
 function kolPlmSyncSelectedRows(){
-  return kolPlmSyncCandidateRows().filter(row=>kolSelected.has(row.id));
+  return kolPlmSyncCandidateRows().filter(row=>selectionHasId(kolSelected,row.id));
 }
 function kolPlmSyncTargetRows(mode){
   if(mode==='missing')return kolPlmSyncMissingRows();
@@ -27139,7 +27171,7 @@ function plmToolRows(source,scope='filtered'){
     rows=filteredCP();selected=state.cpSelected;idOf=row=>row&&row._id;
     mapRow=row=>({modelId:row&&row._id,plmId:row&&row['PLM ID'],styleName:row&&row['Model Name'],specialCode:row&&row['Special Code'],colourCode:row&&row['C.Code'],colour:row&&row.Colour||row&&row['Colour']||row&&row.Color||row&&row['Color']||''});
   }
-  if(scope==='selected')rows=rows.filter(row=>selected&&selected.has(idOf(row)));
+  if(scope==='selected')rows=rows.filter(row=>selectionHasId(selected,idOf(row)));
   return rows.map(mapRow);
 }
 window.BLGetPlmToolRows=plmToolRows;
@@ -28069,7 +28101,7 @@ function showPlmSyncLanguageChooser({trigger=null,title=''}={}){
 /* Seçim varsa seçili satırlar, yoksa filtrelenmiş tablonun tamamı —
    Koleksiyon'un "Dosyalar" ekranıyla (openKolModelFilesModal) AYNI kural. */
 function kolPlmSyncModelFileRows(){
-  const selected=kolRows.filter(row=>kolSelected.has(row.id));
+  const selected=kolRows.filter(row=>selectionHasId(kolSelected,row.id));
   return (selected.length?selected:filteredKol()).filter(row=>kolPlmNormalizeId(row&&row.plmId));
 }
 async function kolPlmSyncModelFilesRun(button, suppliedRows=null, options={}){
@@ -28139,6 +28171,13 @@ function plmSyncPageLabel(page){
   if(page==='kol')return appLang==='en'?'Collection':'Koleksiyon';
   if(page==='cp')return 'CP';
   return appLang==='en'?'Orders':'Orders';
+}
+function plmSyncPageProvider(page){return page==='kol'?'koleksiyon':page;}
+function plmSyncPageScope(page){
+  const api=modelAssetScopeApi();if(!api)return null;
+  /* Ana sayfadaki PLM SYNC, yüksek öncelikli bir detail/current-view
+     sağlayıcısı DOM'da kalmış olsa bile kendi tablosunun seçimini kullanır. */
+  return api.scopeForProvider?.(plmSyncPageProvider(page))||api.currentScope?.()||null;
 }
 function plmSyncScopeActions(scope,{collection=false}={}){
   const en=appLang==='en';
@@ -28345,7 +28384,7 @@ async function runPlmSelectedImportV10(root){
 }
 async function openPlmSyncCategoryPanel(page,category,trigger){
   plmSyncCloseRootMenu(page);
-  const root=plmSyncRootButton(page)||trigger,scope=modelAssetScopeApi()?.currentScope?.();
+  const root=plmSyncRootButton(page)||trigger,scope=plmSyncPageScope(page);
   const en=appLang==='en',back=()=>plmSyncReopenRootMenu(page);
   if(category==='asas'){
     const action=await plmSyncActionModal({
@@ -28697,7 +28736,7 @@ document.getElementById('kolAddRowBtn')?.addEventListener('click',addBlankKolRow
 function dropKolSelectedRows(){
   if(!kolRequireWorkspaceEdit())return;
   if(!kolSelected.size){ showToast(L('İptal etmek için önce model seç.')); return; }
-  const selected=kolRows.filter(r=>kolSelected.has(r.id));
+  const selected=kolRows.filter(r=>selectionHasId(kolSelected,r.id));
   const active=selected.filter(r=>!r.dropped);
   if(!active.length){ showToast(L('Seçili modeller zaten iptal edilmiş.')); return; }
   kolPushUndo();
@@ -28908,12 +28947,12 @@ async function deleteKolSelectedRows(){
 // o an filtrelenmiş/görünen tüm satırlar (uygulama genelindeki tutarlı davranış).
 function kolRawExportSelection(){
   const filtered=filteredKol();
-  const selected=filtered.filter(r=>kolSelected.has(r.id));
+  const selected=filtered.filter(r=>selectionHasId(kolSelected,r.id));
   return {rows:selected.length?selected:filtered,selectedOnly:selected.length>0};
 }
 function kolExportSelection(){
   const logical=filteredKol(),projected=kolCollectionExportProjection(logical);
-  const hasLogicalSelection=logical.some(row=>kolSelected.has(row.id)||kolSelected.has(Number(row.id))||kolSelected.has(String(row.id)));
+  const hasLogicalSelection=logical.some(row=>selectionHasId(kolSelected,row.id)||kolSelected.has(Number(row.id))||kolSelected.has(String(row.id)));
   const selected=hasLogicalSelection?projected.filter(record=>kolCollectionProjectionSelected(record,kolSelected)):[];
   return {rows:hasLogicalSelection?selected:projected,selectedOnly:hasLogicalSelection};
 }
@@ -30800,7 +30839,7 @@ function mbCurrentWorkspaceMeta(){
   return {ownerName:item&&item.ownerName||window.BL_USER_CONTEXT?.displayName||'',pblName:item&&item.supervisorName||''};
 }
 async function kolExportSelectedMb(){
-  const selected=kolRows.filter(row=>kolSelected.has(row.id));if(!selected.length){showToast(appLang==='en'?'Select Collection models first.':'Önce Koleksiyon modellerini seçin.');return;}
+  const selected=kolRows.filter(row=>selectionHasId(kolSelected,row.id));if(!selected.length){showToast(appLang==='en'?'Select Collection models first.':'Önce Koleksiyon modellerini seçin.');return;}
   const meta=mbCurrentWorkspaceMeta();
   const enriched=selected.map(row=>({...kolEffectiveProjection(row),_mbOwnerId:kolWorkspaceOwnerId,_mbOwnerName:meta.ownerName,_mbPblName:meta.pblName,_mbNote:''}));
   const name=await mbExportExcel(enriched,'7S_MB_Listesi_Selected');showToast(appLang==='en'?`${selected.length} selected model(s) exported as MB List.`:`${selected.length} seçili model MB Listesi formatında aktarıldı.`);return name;
@@ -30820,7 +30859,7 @@ function kolCapacityRequestRows(){
   // MB Listesi aktarımıyla aynı seçim kaynağı: Koleksiyon satırları + kolSelected.
   // Model-linked child values are projected to their effective values for export;
   // physical colour rows and their colour-specific fields stay one-to-one.
-  return kolRows.filter(row=>kolSelected.has(row.id)).map(kolEffectiveProjection);
+  return kolRows.filter(row=>selectionHasId(kolSelected,row.id)).map(kolEffectiveProjection);
 }
 function cpCapacityRequestRows(){
   // CP tarafında seçim çözümü zaten tek yerde: önce filtre, sonra seçim.
@@ -30958,7 +30997,7 @@ async function kolPurgeStoredModelFiles(rows){
   return data;
 }
 function openKolModelFilesModal(){
-  const selectedRows=kolRows.filter(r=>kolSelected.has(r.id));
+  const selectedRows=kolRows.filter(r=>selectionHasId(kolSelected,r.id));
   const selectionScoped=selectedRows.length>0;
   const rows=selectionScoped?selectedRows:kolRows.slice();
   if(!rows.length){ showToast(appLang==='en'?'There are no Collection models to show.':'Gösterilecek Koleksiyon modeli bulunmuyor.'); return; }
@@ -31068,7 +31107,7 @@ function openKolModelFilesModal(){
 document.getElementById('kolModelFilesBtn')?.addEventListener('click',openKolModelFilesModal);
 
 async function sendCollectionRowsToShipping(){
-  const selectedRows=filteredKol().filter(row=>kolSelected.has(row.id));
+  const selectedRows=filteredKol().filter(row=>selectionHasId(kolSelected,row.id));
   if(!selectedRows.length){showToast(appLang==='en'?'Select at least one Collection model first.':'Önce en az bir Koleksiyon modeli seç.');return;}
   const rows=mergeCollectionShippingRows(selectedRows.map(mapCollectionRowToShip).filter(Boolean));
   if(!rows.length){showToast(appLang==='en'?'The selected models do not have a usable model identifier.':'Seçili modellerde kullanılabilir model kimliği bulunamadı.');return;}
@@ -31335,7 +31374,7 @@ function renderKolMfrModal(ctx){
   // ONCE FILTRE, SONRA SECIM. Secim, filtre degisince korunuyor; eskiden burada tum
   // kolRows taraniyordu ve filtre yuzunden EKRANDA GORUNMEYEN isaretli satirlar da
   // e-postaya giriyordu. Artik yalnizca hem gorunen hem isaretli satirlar gelir.
-  const getRows = () => SRC.rows ? SRC.rows : filteredKol().filter(r=>kolSelected.has(r.id));
+  const getRows = () => SRC.rows ? SRC.rows : filteredKol().filter(r=>selectionHasId(kolSelected,r.id));
   // Seçili üretici indeksleri. ctx.preselect ile ön seçim yapılabilir
   // ctx.preselect verilirse ilgili üreticiler baştan işaretli gelir.
   _mfrPicked = new Set();
@@ -31903,7 +31942,7 @@ window.BLPrepareEmail={...(window.BLPrepareEmail||{}),openQuotationReminder:prep
 document.getElementById('kolSendPricingBtn')?.addEventListener('click', async ()=>{
   if(!kolSelected.size){ showToast('Önce en az bir model seç.'); return; }
   if(window.BL_QUOTATIONS?.openSendToPricing)return window.BL_QUOTATIONS.openSendToPricing({rows:null,count:kolSelected.size,btnId:'kolSendPricingBtn',persist:true});
-  const selected=kolRows.filter(row=>kolSelected.has(row.id));
+  const selected=kolRows.filter(row=>selectionHasId(kolSelected,row.id));
   const preflight=await kolPricingPreflight(selected);
   if(!preflight.proceed)return;
   renderKolMfrModal({rows:null,count:kolSelected.size,btnId:'kolSendPricingBtn',persist:true,defaultTopicKind:'pricing',title:'Send to Pricing'});
@@ -32836,7 +32875,7 @@ document.getElementById('cpCreateOcBtn')?.addEventListener('click', ()=>{
 });
 document.getElementById('kolCreateOcBtn')?.addEventListener('click', ()=>{
   if(!kolSelected || !kolSelected.size){ showToast('Önce en az bir model seç.'); return; }
-  const rows = kolRows.filter(r=>kolSelected.has(r.id));
+  const rows = kolRows.filter(r=>selectionHasId(kolSelected,r.id));
   runCreateOc(document.getElementById('kolCreateOcBtn'), rows.map(ocMetaFromKolRow), 'Koleksiyon satırından oluşturuldu');
 });
 
@@ -32858,7 +32897,7 @@ document.getElementById('kolLflTrialBtn')?.addEventListener('click',()=>{
 });
 
 document.getElementById('kolPriceHistoryBtn')?.addEventListener('click', ()=>{
-  const rows=filteredKol().filter(r=>kolSelected.has(r.id));
+  const rows=filteredKol().filter(r=>selectionHasId(kolSelected,r.id));
   if(!rows.length){ showToast(L('Önce model seç.')); return; }
   if(window.BL_QUOTATIONS?.openPricingHistoryWorkspace)return window.BL_QUOTATIONS.openPricingHistoryWorkspace(rows);
   window.BL_QUOTATIONS?.openPriceHistory(rows);
