@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.159",
-  "commit_sha": "37cab3ed1280f15cf1af8a64b7a6cb7e5d302973",
-  "release_notes": "Buyer Log 7.0.159 TEST: 7.0.158 sonrasındaki LFL düzeltmeleri yayınlandı. MAG · MMYG · Classification · Product Description Comparison ve Manufacturer Order Volumes analiz tablolarının yükseklikleri kullanıcı yeniden boyutlandırmadıkça sabit tutuluyor; veri/etkileşim sonrası ekranın altına uzama davranışı engellendi. Multi-dimensional Comparison · Independent Scenarios alanındaki Columns açılır penceresi kendi tetikleyici butonuna doğru şekilde sabitlendi. İlgili regresyon testleri eklendi."
+  "version": "7.0.160",
+  "commit_sha": "af0b02a01fafcceebc4cc605d677a0e35caf2cda",
+  "release_notes": "Buyer Log 7.0.160 TEST: Claude tarafından bekleyen aktif geliştirmeler güncel main üzerine güvenli şekilde entegre edildi. Price & Supplier Analysis yeniden inşa ve review düzeltmeleri; kullanıcı menüsünden self-service preset paylaşımı; IAS horizon mapping ve INTAKE filtre/yenileme tutarlılığı; Orders · Backlog · LFL · Price & Supplier için ortak horizon ve bağlı yenileme davranışı eklendi. Eski Global Flow/Earth Claude branchleri daha önce güncel main'e uyarlanarak merge edilmiş olduğundan tekrar uygulanmadı. Tüm birleşik değişiklikler final tam Buyer Log regresyon paketinden başarıyla geçti."
 }
