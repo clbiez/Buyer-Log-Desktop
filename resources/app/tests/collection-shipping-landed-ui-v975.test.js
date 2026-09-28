@@ -24,7 +24,7 @@ test('Collection shipping transfer uses stable model identity and existing inges
   assert.equal(key({ modelKod: 'A-100', season: '26' }), 'MODEL:A-100\u001f26');
   assert.equal(key({ modelKod: 'A-100', season: '27' }), 'MODEL:A-100\u001f27');
   assert.equal(key({ id: 99 }), '');
-  assert.match(APP, /filteredKol\(\)\.filter\(row=>kolSelected\.has\(row\.id\)\)/);
+  assert.match(APP, /filteredKol\(\)\.filter\(row=>selectionHasId\(kolSelected,row\.id\)\)/);
   assert.match(APP, /new Map\(\)/);
   assert.match(APP, /enqueueShipMutation\('\/api\/shipping-comparison'/);
   assert.match(APP, /kolSendShippingBtn/);
