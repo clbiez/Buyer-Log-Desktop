@@ -111,6 +111,11 @@ const FIELD_CATALOGUE = {
     { header: 'Merch Alt Grup Kod', usedBy: 'Ufuk', aliases: ['MAG'] },
     { header: 'Merch Marka Yaş Grup Kod', usedBy: 'Ufuk', aliases: ['MMYG'] },
     { header: 'Marka Müdürlükleri', usedBy: 'Ufuk', aliases: ['MARKA MUDURLUGU', 'BRAND DIRECTORATE', 'BRAND DIRECTORATES'] },
+    // Ufuk editörü ASAS başlığı 'Buyer Grup (TR)' ile koşul kurabiliyor. IAS'ta
+    // bu ad fiziksel bir sütun değildir; eşlenmezse DAX "Column 'Buyer Grup (TR)'
+    // ... cannot be found" ile düşer. Katalogda olması IAS Field Mapping'in bu
+    // alanı sunmasını ve hata onarım eyleminin doğru alanı açmasını sağlar.
+    { header: 'Buyer Grup (TR)', usedBy: 'Ufuk', aliases: ['BUYING GROUP', 'BUYER GROUP', 'BUYER GRUP', 'BUYER GRUP TANIM', 'BUYER GRUP TANIMI'] },
   ],
 };
 

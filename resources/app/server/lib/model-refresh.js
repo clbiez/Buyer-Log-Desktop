@@ -235,6 +235,14 @@ function repairHorizonAgainstSchema(item, schema) {
 
   const index = liveSchemaIndex(schema);
   if (!index.columns.length) return { repaired: false, horizon, warnings: [] };
+  // Field Mapping'de açıkça eşlenmiş başlık sorgu üretiminde o eşlemeden çözülür
+  // (modelHorizon.conditionColumnRef). Canlı onarım bu koşulu bayat sayıp başka
+  // bir sütuna taşımamalıdır.
+  const mapping = normalizedConnectionMapping(item).mapping;
+  const mappedColumn = condition => {
+    const entry = mapping[String(condition && condition.field || '').trim()];
+    return Boolean(entry && entry.name && entry.kind !== 'measure');
+  };
 
   const currentTableValid = !String(horizon.table || '').trim() || index.tables.has(schemaFold(horizon.table));
   let changed = !currentTableValid;
@@ -249,7 +257,7 @@ function repairHorizonAgainstSchema(item, schema) {
     const taken = new Set();
     const nextConditions = [];
     for (const condition of group.conditions) {
-      if (!condition || !String(condition.field || '').trim()) {
+      if (!condition || !String(condition.field || '').trim() || mappedColumn(condition)) {
         nextConditions.push(condition);
         continue;
       }
@@ -623,7 +631,10 @@ function buildConnectionQuery(item, options = {}) {
     // parsiyel olarak SELECTCOLUMNS ile projekte edilir; ölçüler o satırın
     // bağlamında hesaplanır. Böylece farklı sipariş/renk kombinasyonları çapraz
     // çoğalmaz ve aynı siparişin parsiyelleri tek satırda toplanmaz.
-    built = modelHorizon.buildFactRowQuery(horizonWithExtra, mapping, { grainTable, columnType: options.columnType });
+    // Ufuk alanları (Sezon, MAG, MMYG, Buyer Grup…) çıktıya projekte edilmez ama
+    // filtre koşulları onları Field Mapping'deki gerçek sütuna çözmelidir. Aksi
+    // halde ASAS başlığı IAS tablosunda sütun adı sanılıp DAX'a yazılıyordu.
+    built = modelHorizon.buildFactRowQuery(horizonWithExtra, mapping, { grainTable, columnType: options.columnType, filterMapping: fullMapping });
   } else {
     built = modelHorizon.buildMappedQuery(horizonWithExtra, mapping, { columnType: options.columnType });
   }
@@ -685,8 +696,9 @@ async function queryConnectionRows(item, options = {}) {
     if (telemetry) telemetry({ type:'measure', category:'query', connection:label, operation:'model-query-failed', timestampMs:queryStartedMs, durationMs:Date.now() - queryStartedMs, error:String(error && error.message || error) });
     const repairAction = fieldMappingRepairFromError(item, error);
     if (repairAction && repairAction.sourceId && repairAction.header) {
+      const raw = String(error && (error.publicMessage || error.message) || error);
       throw new ModelRefreshError(
-        String(error && (error.publicMessage || error.message) || error),
+        `${raw}\n→ ${label}: "${repairAction.header}" alanını Field Mapping'de bu modeldeki gerçek sütuna eşleyin.`,
         'MODEL_REFRESH_FIELD_MAPPING_REQUIRED',
         422,
         {
