@@ -59,6 +59,8 @@ test('Collection custom Excel columns use schema value and number format', () =>
   const block = APP.slice(start, end);
   assert.match(block, /schema\.excelValue/);
   assert.match(block, /schema\.excelNumberFormat/);
+  assert.match(APP, /if\(field\.date&&cell\.value instanceof Date\)cell\.numFmt='dd\.mm\.yy';/);
+  assert.doesNotMatch(APP, /numFmt='dd\.mm\.yyyy'/);
 });
 
 test('Collection rich clipboard carries Office formats and visible status labels', () => {
