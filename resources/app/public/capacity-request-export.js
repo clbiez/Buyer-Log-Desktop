@@ -273,7 +273,7 @@
   function buildWorkbook(result,ExcelJSCtor,dateFormat){
     if(!ExcelJSCtor||typeof ExcelJSCtor.Workbook!=='function')throw new Error('ExcelJS yuklenmedi.');
     const dates=excelDates();
-    const format=dateFormat||(dates&&dates.DATE_FORMAT)||'dd.mm.yyyy';
+    const format=dateFormat||(dates&&dates.DATE_FORMAT)||'dd.mm.yy';
     const wb=new ExcelJSCtor.Workbook();
     wb.creator='Buyer Log';wb.created=new Date();
     const ws=wb.addWorksheet('Jersey',{views:[{state:'frozen',ySplit:1}]});
