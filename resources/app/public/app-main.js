@@ -22398,12 +22398,11 @@ function kolCollectionRawCellText(col,row){
   if(c.ydLanded){ const k=kolLandedCalc(row); if(k.ydLanded==null) return '';
     const pr=k.profitPct==null?'':` · ${(k.profitPct>0?'+':'')}${(Math.round(k.profitPct*10)/10)}%`;
     return `$${kolMoney2(k.ydLanded)} ($${kolMoney2(k.supp.price)} ${k.supp.source} × ${kolMoney2(k.ydMult)})${pr}`; }
-  if(c.select) return c.k==='delType'?transitDelTypeDisplay(v):L(norm(v));
-  if(c.percent) return v!==''&&v!=null?kolFormatPercentDisplay(v):'';
-  if(c.hologram) return v!==''&&v!=null?kolFormatHologramDisplay(v):'';
-  if(c.money) return v!==''&&v!=null?('$'+kolFormatMoneyDisplay(v)):'';
-  if(c.custom){ const schema=columnSchemaFor(c); return schema?schema.format(v,{row}):String(v??''); }
-  return v==null?'':String(v);
+  // Standard fields (date, quantity, money, percentage, week/month,
+  // select and custom schema columns) must leave Buyer Log exactly as shown.
+  // Reuse the Collection display formatter instead of exposing raw ISO/database
+  // values to TSV/HTML clipboard consumers.
+  return kolGroupSummaryFormatBaseValue(c,row,v);
 }
 function kolCollectionExportCellText(col,record){
   const entry=kolCollectionProjectionSummaryEntry(record,col?.k);
@@ -30563,7 +30562,7 @@ async function kolExportWithImages(rows,fileBase){
       else if(c.percent&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw)/100;cell.numFmt='0.00%';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.hologram&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='#,##0.######';cell.alignment={horizontal:'right',vertical:'middle'};}
       else if(c.money&&raw!==''&&raw!=null&&Number.isFinite(kolParseMoneyNum(raw))){cell.value=kolParseMoneyNum(raw);cell.numFmt='"$"#,##0.00';cell.alignment={horizontal:'right',vertical:'middle'};}
-      else if(c.custom&&schema){const value=schema.exportValue(raw);cell.value=typeof value==='string'?kolExportSingleLineText(value):value;if(value instanceof Date)cell.numFmt='dd.mm.yy';else if(typeof value==='number')cell.numFmt=Number.isInteger(value)?'#,##0':'#,##0.00';cell.alignment={horizontal:typeof value==='number'?'right':'left',vertical:'middle'};}
+      else if(c.custom&&schema){const value=typeof schema.excelValue==='function'?schema.excelValue(raw,{row:r}):schema.exportValue(raw);cell.value=typeof value==='string'?kolExportSingleLineText(value):value;const numFmt=typeof schema.excelNumberFormat==='function'?schema.excelNumberFormat(raw,{row:r}):'';if(numFmt)cell.numFmt=numFmt;else if(value instanceof Date)cell.numFmt='dd.mm.yy';else if(typeof value==='number')cell.numFmt=Number.isInteger(value)?'#,##0':'#,##0.##';cell.alignment={horizontal:(value instanceof Date||typeof value==='number')?'right':'left',vertical:'middle'};}
       else if(c.status||c.k==='durum'){cell.value=kolExportSingleLineText(raw);cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:kolStatusExcelArgb(raw)}};cell.font={bold:true,size:10,color:{argb:kolStatusExcelTextArgb(raw)}};cell.alignment={vertical:'middle',wrapText:true};}
       else{cell.value=kolExportSingleLineText(raw);cell.alignment={vertical:'middle',wrapText:true};if(c.k==='modelKod')cell.font={bold:true,size:10};}
     });
