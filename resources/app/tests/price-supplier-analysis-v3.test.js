@@ -216,3 +216,49 @@ test('kayıt yoksa ortak boş durum gösterilir; kıyas sezonu yoksa fiyat harek
   const single=await mountScreen([obs('26Y','A','Kazak',10,100)],'tr',JSON.stringify({tab:'movement'}));
   assert.match(single.root.innerHTML,/kıyas sezonu seçin/);
 });
+
+test('örnek eşiği yalnız seçili para biriminde fiyatı olan modelleri sayar',()=>{
+  const data=E.prepare([obs('26Y','A','Kazak',10,100),{...obs('26Y','A','Kazak',0,100),price:null},obs('26Y','A','Kazak',9,100,{currency:'EUR'}),obs('26Y','B','Kazak',12,100),obs('26Y','B','Kazak',12,100)]);
+  const model=E.analyze(data,{currentSeason:'26Y',currency:'USD',minSample:2});
+  const kazak=model.groups[0];
+  assert.equal(kazak.suppliers.find(s=>s.name==='A').eligible,false,'tek USD fiyatlı üretici kazanan olamaz');
+  assert.equal(kazak.best,null);
+});
+
+test('adedi boş sipariş satırı üreticiyi yanlışlıkla ayrılan/yeni göstermez',()=>{
+  const data=E.prepare([{...obs('26Y','A','Kazak',10,0),quantity:null},obs('25Y','A','Kazak',10,100),obs('26Y','B','Kazak',12,100),obs('25Y','B','Kazak',12,100),obs('26Y','C','Kazak',11,100)]);
+  assert.equal(data.weighted,true);
+  const model=E.analyze(data,{currentSeason:'26Y',previousSeason:'25Y'});
+  const a=model.manufacturers.find(m=>m.name==='A');
+  assert.notEqual(a.status,'exit');assert.equal(a.records,1);
+  assert.deepEqual(E.leavers(model).map(m=>m.name),[]);
+  assert.ok(model.groups[0].suppliers.some(s=>s.name==='A'),'klasman listesinde görünür');
+});
+
+test('boş anahtarlı grup kendiliğinden açılmaz; ":" içeren anahtarlar detay açar; "Tüm sezonlar" korunur',async()=>{
+  const rows=[obs('26Y','ABC: LTD','',10,100),obs('26Y','ABC: LTD','',10,100),obs('26Y','B','',12,100),obs('26Y','B','',12,100),obs('25Y','B','',12,100)];
+  const {root,context,drills}=await mountScreen(rows,'tr',JSON.stringify({tab:'advantage'}));
+  assert.doesNotMatch(root.innerHTML,/psaGroup isOpen/,'hiçbir grup varsayılan olarak açık değildir');
+  root.listeners.click({target:{closest:selector=>selector==='[data-ps-drill]'?null:{dataset:{psDrill:'m:'+encodeURIComponent(E.keyOf('ABC: LTD'))}}}});
+  assert.equal(drills.length,1);assert.match(drills[0].title,/ABC: LTD/);
+  root.listeners.click({target:{closest:()=>({dataset:{psTab:'scorecard'}})}});
+  root.listeners.click({target:{closest:selector=>selector==='[data-ps-drill]'?null:{dataset:{psSelect:E.keyOf('ABC: LTD')}}}});
+  context.renderPriceSupplierAnalysisLanguage();
+  assert.match(root.innerHTML,/data-ps-drill="m:ABC%3A%20LTD"/);
+  root.listeners.change({target:{dataset:{ps:'currentSeason'},value:'*'}});
+  const api=context.BLPriceSupplierAnalysis;
+  assert.equal(api.state.currentSeason,'*');assert.equal(api.model.hasComparison,false);assert.equal(api.model.totals.records,5);
+  await api.prepare();
+  assert.equal(api.state.currentSeason,'*','yeniden yüklemede tüm sezonlar seçimi korunur');
+});
+
+test('LFL köprüsü süren yüklemeyi bekler, hatayı yüzeye çıkarır ve gizli LFL ekranını çizmez',()=>{
+  const lfl=read('public/lfl.js');
+  const bridge=lfl.slice(lfl.indexOf('window.BLPriceSupplierLFLBridge={'),lfl.indexOf('window.BLLFLCatalog='));
+  assert.match(bridge,/while\(state\.loading\)await new Promise/);
+  assert.match(bridge,/load\(false,\{silent:true\}\)/);
+  assert.match(bridge,/throw new Error/);
+  assert.match(bridge,/const analysis=scope==='filtered'\?\(state\.analysis\|\|compute\(\)\):null;/);
+  assert.match(lfl,/if\(state\.initialized\)\{fillControls\(\);render\(\);\}else state\.controlsPending=true;/);
+  assert.match(lfl,/if\(state\.controlsPending\)\{state\.controlsPending=false;fillControls\(\);\}render\(\);/);
+});

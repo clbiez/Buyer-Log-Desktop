@@ -12,6 +12,7 @@
   const TABS=['overview','advantage','scorecard','movement','relations'];
   const TAB_ICONS={overview:'layout-dashboard',advantage:'star',scorecard:'users-group',movement:'arrows-down-up',relations:'hierarchy'};
   const LIST_LIMIT=15;
+  const ALL_SEASONS='*';
   const BASE={source:'lfl',tab:'overview',currentSeason:'',previousSeason:'',filters:{buyingGroup:'',mag:'',mmyg:'',classification:''},priceType:'',currency:'',groupBy:'classification',relationDim:'buyingGroup',sort:'volume',movement:'price'};
   const TEXT={
     tr:{title:'Fiyat & Üretici Analizi',subtitle:'Hangi üretici nerede avantajlı, kim pahalandı, kim yeni — tek bakışta.',source:'Veri',src_lfl:'LFL siparişleri',src_orders:'Siparişler',src_cp:'CP',src_collection:'Koleksiyon teklifleri',src_horizon:'Horizon',
@@ -61,7 +62,7 @@
   };
 
   let state=JSON.parse(JSON.stringify(BASE)),root=null,data=null,dataset=null,seasonList=[],model=null,loading=false,error='',requestSeq=0;
-  const ui={search:'',selected:'',expanded:'',showAll:false};
+  const ui={search:'',selected:'',expanded:null,showAll:false};
   const analysisCache=window.BLAnalysisCache?.create?.(24)||new Map();
   try{const saved=JSON.parse((window.BLStorage||localStorage).getItem(STORAGE_KEY)||'{}');state={...state,...saved,filters:{...BASE.filters,...(saved.filters||{})}};}catch(_){state=JSON.parse(JSON.stringify(BASE));}
   if(!SOURCES.includes(state.source))state.source=BASE.source;
@@ -73,6 +74,8 @@
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const icon=name=>`<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>`;
   const nameOf=value=>value||t('unknown');
+  /* Detay anahtarları ':' içerebilir (ör. "T-SHIRT: BASIC"); parçalar ayrı kodlanır. */
+  const dk=value=>esc(encodeURIComponent(String(value==null?'':value)));
   const fmtInt=value=>Math.round(Number(value)||0).toLocaleString(locale());
   const fmtOne=value=>Math.abs(Number(value)||0).toLocaleString(locale(),{maximumFractionDigits:1});
   const fmtShare=value=>isEn()?`${fmtOne(value)}%`:`%${fmtOne(value)}`;
@@ -108,7 +111,7 @@
       const next=await window.BLPriceSupplierAnalysisBridge.get(state.source,'all',state.priceType||undefined);
       if(seq!==requestSeq)return;
       data=next;state.priceType=next.priceType||'';dataset=E.prepare(next.observations||[]);seasonList=E.seasons(dataset);analysisCache.clear();
-      if(state.currentSeason&&!seasonList.includes(state.currentSeason))state.currentSeason='';
+      if(state.currentSeason!==ALL_SEASONS&&state.currentSeason&&!seasonList.includes(state.currentSeason))state.currentSeason='';
       if(!state.currentSeason){const periods=E.defaultPeriods(seasonList);state.currentSeason=periods.currentSeason;state.previousSeason=periods.previousSeason;}
       if(state.previousSeason&&!seasonList.includes(state.previousSeason))state.previousSeason='';
       E.FILTER_DIMENSIONS.forEach(dim=>{if(state.filters[dim]&&!E.dimensionValues(dataset,dim).some(value=>E.keyOf(value)===E.keyOf(state.filters[dim])))state.filters[dim]='';});
@@ -118,7 +121,7 @@
   }
   function runAnalysis(){
     if(!dataset){model=null;return;}
-    const options={currentSeason:state.currentSeason,previousSeason:state.previousSeason,filters:state.filters,currency:state.currency,groupBy:state.groupBy};
+    const options={currentSeason:state.currentSeason===ALL_SEASONS?'':state.currentSeason,previousSeason:state.previousSeason,filters:state.filters,currency:state.currency,groupBy:state.groupBy};
     const datasetVersion=`${state.source}|${data?.version||''}|${state.priceType}`;
     const key=window.BLAnalysisCache?.key?window.BLAnalysisCache.key({datasetVersion,options}):`${datasetVersion}|${JSON.stringify(options)}`;
     model=analysisCache.get(key);
@@ -132,7 +135,7 @@
   function sourceOptions(){return SOURCES.map(key=>`<option value="${key}"${state.source===key?' selected':''}>${esc(t('src_'+key))}</option>`).join('');}
   function seasonSelect(kind){
     const value=kind==='current'?state.currentSeason:state.previousSeason;
-    const first=kind==='current'?`<option value="">${esc(t('allSeasons'))}</option>`:`<option value="">${esc(t('noCompare'))}</option>`;
+    const first=kind==='current'?`<option value="${ALL_SEASONS}"${value===ALL_SEASONS?' selected':''}>${esc(t('allSeasons'))}</option>`:`<option value="">${esc(t('noCompare'))}</option>`;
     return `<label class="psaField"><span>${esc(t(kind==='current'?'season':'compare'))}</span><select data-ps="${kind}Season">${first}${seasonList.slice().reverse().map(season=>`<option value="${esc(season)}"${season===value?' selected':''}>${esc(season)}</option>`).join('')}</select></label>`;
   }
   function filterSelect(dim){
@@ -144,7 +147,7 @@
     if(!dataset)return '';
     const priceTypes=data?.priceTypes||[],currencies=dataset.currencies||[],active=E.FILTER_DIMENSIONS.some(dim=>state.filters[dim]);
     return `<div class="psaBar">
-      <div class="psaPeriod">${seasonSelect('current')}<span class="psaVs" aria-hidden="true">↔</span>${seasonSelect('previous')}</div>
+      <div class="psaPeriod">${seasonSelect('current')}${state.currentSeason===ALL_SEASONS?'':`<span class="psaVs" aria-hidden="true">↔</span>${seasonSelect('previous')}`}</div>
       <div class="psaFilters">${E.FILTER_DIMENSIONS.map(filterSelect).join('')}
         ${priceTypes.length>1?`<label class="psaField"><span>${esc(t('price'))}</span><select data-ps="priceType">${priceTypes.map(item=>`<option value="${esc(item.key)}"${item.key===state.priceType?' selected':''}>${esc(item.label||item.key)}</option>`).join('')}</select></label>`:''}
         ${currencies.length>1?`<label class="psaField"><span>${esc(t('currency'))}</span><select data-ps="currency">${currencies.map(code=>`<option value="${esc(code)}"${code===model?.currency?' selected':''}>${esc(code)}</option>`).join('')}</select></label>`:''}
@@ -164,11 +167,11 @@
     if(!root)return;
     const head=`<div class="psaHead"><div class="psaTitle"><h2>${esc(t('title'))}</h2><p>${esc(t('subtitle'))}</p></div>
       <div class="psaHeadActions"><label class="psaField psaSource"><span>${esc(t('source'))}</span><select data-ps="source">${sourceOptions()}</select></label>
-      <button type="button" class="psaGhostBtn" data-ps="export"${model&&model.totals.volume>0?'':' disabled'}>${icon('file-export')}<span>${esc(t('excel'))}</span></button></div></div>`;
+      <button type="button" class="psaGhostBtn" data-ps="export"${model&&model.totals.records>0?'':' disabled'}>${icon('file-export')}<span>${esc(t('excel'))}</span></button></div></div>`;
     let body='';
     if(loading)body=stateBox({kind:'loading',title:t('loading')});
     else if(error)body=stateBox({kind:'error',title:t('failed'),detail:error});
-    else if(!model||!(model.totals.volume>0))body=stateBox({kind:'empty',icon:'chart-histogram',title:t('noData'),detail:t('noDataHint')});
+    else if(!model||!(model.totals.records>0))body=stateBox({kind:'empty',icon:'chart-histogram',title:t('noData'),detail:t('noDataHint')});
     else body=`${tabs()}<div class="psaPanel" id="psaPanel" role="tabpanel" aria-labelledby="psaTab-${state.tab}" tabindex="0"><p class="psaHint">${esc(t('hint_'+state.tab))}</p><div data-ps-tools>${tools()}</div><div data-ps-list>${content()}</div></div>`;
     root.innerHTML=`<div class="psa">${head}${loading||error?'':controls()}${body}</div>`;
   }
@@ -213,18 +216,18 @@
     return `${kpis}${assistant}<div class="psaGrid2">${topSupplierChart()}${countryChart()}</div>`;
   }
   function topSupplierChart(){
-    const rows=model.manufacturers.filter(m=>m.volume>0).slice(0,8),max=Math.max(1,...rows.map(m=>Math.max(m.volume,m.previousVolume)));
+    const rows=model.manufacturers.filter(m=>m.records>0).slice(0,8),max=Math.max(1,...rows.map(m=>Math.max(m.volume,m.previousVolume)));
     return `<div class="psaCard"><div class="psaCardHead"><h3>${esc(t('topSuppliers'))}</h3>${model.hasComparison?`<div class="psaLegend"><span class="isCur">${esc(model.currentSeason||t('current'))}</span><span class="isPrev">${esc(model.previousSeason)}</span></div>`:''}</div>
-      <div class="psaBars">${rows.map(m=>`<button type="button" class="psaBarRow" data-ps-drill="m:${esc(m.key)}" title="${esc(t('drillHint'))}"><span class="psaBarName">${esc(m.name)} ${statusBadge(m.status==='new'?'new':'')}</span><span class="psaBarTrack">${model.hasComparison?`<i class="isPrev" style="width:${(m.previousVolume/max*100).toFixed(1)}%"></i>`:''}<i class="isCur" style="width:${(m.volume/max*100).toFixed(1)}%"></i></span><b>${esc(fmtInt(m.volume))}</b><small>${esc(fmtShare(m.share))}</small></button>`).join('')}</div></div>`;
+      <div class="psaBars">${rows.map(m=>`<button type="button" class="psaBarRow" data-ps-drill="m:${dk(m.key)}" title="${esc(t('drillHint'))}"><span class="psaBarName">${esc(m.name)} ${statusBadge(m.status==='new'?'new':'')}</span><span class="psaBarTrack">${model.hasComparison?`<i class="isPrev" style="width:${(m.previousVolume/max*100).toFixed(1)}%"></i>`:''}<i class="isCur" style="width:${(m.volume/max*100).toFixed(1)}%"></i></span><b>${esc(fmtInt(m.volume))}</b><small>${esc(fmtShare(m.share))}</small></button>`).join('')}</div></div>`;
   }
   function countryChart(){
-    const list=model.countries.filter(c=>c.volume>0),head=list.slice(0,5),rest=list.slice(5),total=model.totals.volume||1;
+    const list=model.countries.filter(c=>c.records>0),head=list.slice(0,5),rest=list.slice(5),total=model.totals.volume||1;
     const slices=[...head.map((c,index)=>({name:c.name,share:c.share,shareChange:c.shareChange,cls:`psaC${index}`,key:c.key})),...(rest.length?[{name:t('other'),share:rest.reduce((s,c)=>s+c.volume,0)/total*100,shareChange:null,cls:'psaCother',key:''}]:[])];
     const r=46,circ=2*Math.PI*r;let offset=0;
     const arcs=slices.map(slice=>{const len=Math.max(0,slice.share/100*circ);const arc=`<circle class="${slice.cls}" r="${r}" cx="60" cy="60" stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}"><title>${esc(slice.name)} ${esc(fmtShare(slice.share))}</title></circle>`;offset+=len;return arc;}).join('');
     return `<div class="psaCard"><div class="psaCardHead"><h3>${esc(t('countryMix'))}</h3></div><div class="psaDonutWrap">
       <svg class="psaDonut" viewBox="0 0 120 120" role="img" aria-label="${esc(t('countryMix'))}"><g transform="rotate(-90 60 60)">${arcs}</g><text x="60" y="57" text-anchor="middle" class="psaDonutValue">${esc(fmtInt(list.length))}</text><text x="60" y="72" text-anchor="middle" class="psaDonutLabel">${esc(t('country').toLocaleLowerCase(locale()))}</text></svg>
-      <ul class="psaLegendList">${slices.map(slice=>`<li${slice.key?` data-ps-drill="c:${esc(slice.key)}" title="${esc(t('drillHint'))}"`:''}><i class="${slice.cls}"></i><span>${esc(slice.name)}</span><b>${esc(fmtShare(slice.share))}</b>${slice.shareChange!=null?`<small class="${slice.shareChange>0?'isUp':slice.shareChange<0?'isDown':''}">${slice.shareChange>=0?'+':'−'}${esc(fmtOne(slice.shareChange))} ${esc(t('pts'))}</small>`:''}</li>`).join('')}</ul>
+      <ul class="psaLegendList">${slices.map(slice=>`<li${slice.key?` data-ps-drill="c:${dk(slice.key)}" title="${esc(t('drillHint'))}"`:''}><i class="${slice.cls}"></i><span>${esc(slice.name)}</span><b>${esc(fmtShare(slice.share))}</b>${slice.shareChange!=null?`<small class="${slice.shareChange>0?'isUp':slice.shareChange<0?'isDown':''}">${slice.shareChange>=0?'+':'−'}${esc(fmtOne(slice.shareChange))} ${esc(t('pts'))}</small>`:''}</li>`).join('')}</ul>
     </div></div>`;
   }
 
@@ -251,7 +254,7 @@
   function groupDetail(g){
     const rows=g.suppliers.slice().sort((a,b)=>(a.eligible===b.eligible?0:a.eligible?-1:1)||(a.price??Infinity)-(b.price??Infinity));
     const maxIndex=Math.max(5,...rows.map(s=>Math.abs(s.index||0)));
-    return `<div class="psaGroupDetail"><div class="psaRank">${rows.map((s,index)=>`<button type="button" class="psaRankRow" data-ps-drill="g:${esc(g.key)}:${esc(s.key)}" title="${esc(t('drillHint'))}">
+    return `<div class="psaGroupDetail"><div class="psaRank">${rows.map((s,index)=>`<button type="button" class="psaRankRow" data-ps-drill="g:${dk(g.key)}:${dk(s.key)}" title="${esc(t('drillHint'))}">
       <span class="psaRankNo">${index+1}</span><span class="psaRankName">${esc(nameOf(s.name))}${s.eligible?'':` <em class="psaMuted">${esc(t('lowSample'))}</em>`}</span>
       <span class="psaRankPrice">${esc(fmtPrice(s.price))}</span>
       ${diverging(s.eligible?s.index:null,maxIndex,true)}
@@ -267,7 +270,7 @@
 
   /* ---------- Üretici karnesi ---------- */
   function sortedSuppliers(){
-    const list=model.manufacturers.filter(m=>(m.volume>0||m.status==='exit')&&searchMatch(m.name));
+    const list=model.manufacturers.filter(m=>(m.records>0||m.status==='exit')&&searchMatch(m.name));
     if(state.sort==='cheap')return list.sort((a,b)=>(a.priceLevel??Infinity)-(b.priceLevel??Infinity));
     if(state.sort==='rise')return list.sort((a,b)=>(b.priceChange??-Infinity)-(a.priceChange??-Infinity));
     if(state.sort==='name')return list.sort((a,b)=>a.name.localeCompare(b.name,locale()));
@@ -286,9 +289,9 @@
   }
   function supplierDetail(m){
     if(!m)return '';
-    const groups=m.groups.filter(g=>g.volume>0).slice(0,8),maxIndex=Math.max(5,...groups.map(g=>Math.abs(g.index||0)));
+    const groups=m.groups.filter(g=>g.records>0).slice(0,8),maxIndex=Math.max(5,...groups.map(g=>Math.abs(g.index||0)));
     const chips=list=>list.length?`<div class="psaChips">${list.slice(0,6).map(item=>`<span><b>${esc(nameOf(item.name))}</b> ${esc(fmtShare(item.share))}</span>`).join('')}</div>`:`<p class="psaMuted">${esc(t('none'))}</p>`;
-    return `<div class="psaCard psaDetail"><div class="psaDetailHead"><div><h3>${esc(m.name)}</h3>${statusBadge(m.status)}</div><button type="button" class="psaGhostBtn" data-ps-drill="m:${esc(m.key)}">${icon('table')}${esc(t('openOrders'))}</button></div>
+    return `<div class="psaCard psaDetail"><div class="psaDetailHead"><div><h3>${esc(m.name)}</h3>${statusBadge(m.status)}</div><button type="button" class="psaGhostBtn" data-ps-drill="m:${dk(m.key)}">${icon('table')}${esc(t('openOrders'))}</button></div>
       <div class="psaMiniKpis">
         <div><small>${esc(t('volume'))}</small><b>${esc(fmtInt(m.volume))}</b>${model.hasComparison?changeText(m.volumeChange):''}</div>
         <div><small>${esc(t('avgPrice'))}</small><b>${esc(fmtPrice(m.price))}</b></div>
@@ -296,7 +299,7 @@
         ${model.hasComparison?`<div><small>${esc(t('priceChange'))}</small><b>${changeText(m.priceChangeCoverage>=30?m.priceChange:null,{invert:true})}</b></div>`:''}
       </div>
       <h4>${esc(t('byCategory'))}</h4>
-      ${groups.length?`<div class="psaRank isCompact">${groups.map(g=>`<button type="button" class="psaRankRow" data-ps-drill="mg:${esc(m.key)}:${esc(g.key)}" title="${esc(t('drillHint'))}"><span class="psaRankName">${esc(nameOf(g.name))}</span><span class="psaRankPrice">${esc(fmtPrice(g.price))}</span>${diverging(g.index,maxIndex,true)}<span class="psaMuted">${esc(fmtShare(g.groupShare))}</span></button>`).join('')}</div>`:`<p class="psaMuted">${esc(t('noStrength'))}</p>`}
+      ${groups.length?`<div class="psaRank isCompact">${groups.map(g=>`<button type="button" class="psaRankRow" data-ps-drill="mg:${dk(m.key)}:${dk(g.key)}" title="${esc(t('drillHint'))}"><span class="psaRankName">${esc(nameOf(g.name))}</span><span class="psaRankPrice">${esc(fmtPrice(g.price))}</span>${diverging(g.index,maxIndex,true)}<span class="psaMuted">${esc(fmtShare(g.groupShare))}</span></button>`).join('')}</div>`:`<p class="psaMuted">${esc(t('noStrength'))}</p>`}
       <h4>${esc(t('workWith'))}</h4>${chips(m.buyingGroups)}
       <h4>${esc(t('madeIn'))}</h4>${chips(m.countries)}
     </div>`;
@@ -304,7 +307,7 @@
 
   /* ---------- Fiyat hareketi ---------- */
   function moverColumn(title,rows,value,max,tone,formatter){
-    return `<div class="psaCard"><div class="psaCardHead"><h3>${esc(title)}</h3></div>${rows.length?`<div class="psaMovers">${rows.map(m=>`<button type="button" class="psaMover${ui.selected===m.key?' isFocus':''}" data-ps-drill="m:${esc(m.key)}" title="${esc(t('drillHint'))}"><span class="psaMoverName">${esc(m.name)}</span><span class="psaMoverTrack"><i class="${tone}" style="width:${Math.min(100,Math.abs(value(m))/max*100).toFixed(1)}%"></i></span><b class="${tone}">${formatter(m)}</b></button>`).join('')}</div>`:`<p class="psaMuted">${esc(t('none'))}</p>`}</div>`;
+    return `<div class="psaCard"><div class="psaCardHead"><h3>${esc(title)}</h3></div>${rows.length?`<div class="psaMovers">${rows.map(m=>`<button type="button" class="psaMover${ui.selected===m.key?' isFocus':''}" data-ps-drill="m:${dk(m.key)}" title="${esc(t('drillHint'))}"><span class="psaMoverName">${esc(m.name)}</span><span class="psaMoverTrack"><i class="${tone}" style="width:${Math.min(100,Math.abs(value(m))/max*100).toFixed(1)}%"></i></span><b class="${tone}">${formatter(m)}</b></button>`).join('')}</div>`:`<p class="psaMuted">${esc(t('none'))}</p>`}</div>`;
   }
   function movementView(){
     if(!model.hasComparison)return stateBox({kind:'info',title:t('needCompare')});
@@ -320,8 +323,8 @@
         ${movers.count?`<div class="psaGrid2">${moverColumn(t('rising'),movers.up,m=>m.priceChange,max,'isBad',m=>esc(fmtSigned(m.priceChange)))}${moverColumn(t('falling'),movers.down,m=>m.priceChange,max,'isGood',m=>esc(fmtSigned(m.priceChange)))}</div>`:`<p class="psaMuted">${esc(t('notEnough'))}</p>`}`;
     }
     const fresh=E.newcomers(model),gone=E.leavers(model);
-    const freshList=fresh.length?`<ul class="psaPeople">${fresh.slice(0,12).map(m=>`<li data-ps-drill="m:${esc(m.key)}" title="${esc(t('drillHint'))}"><b>${esc(m.name)}</b><span class="psaMuted">${esc(vol(m.volume))}${m.groups[0]?` · ${esc(nameOf(m.groups[0].name))}`:''}</span>${levelPill(m.priceLevel)}</li>`).join('')}</ul>`:`<p class="psaMuted">${esc(t('none'))}</p>`;
-    const goneList=gone.length?`<ul class="psaPeople">${gone.slice(0,12).map(m=>`<li data-ps-drill="p:${esc(m.key)}" title="${esc(t('drillHint'))}"><b>${esc(m.name)}</b><span class="psaMuted">${esc(t('prevVolume'))}: ${esc(vol(m.previousVolume))}</span></li>`).join('')}</ul>`:`<p class="psaMuted">${esc(t('none'))}</p>`;
+    const freshList=fresh.length?`<ul class="psaPeople">${fresh.slice(0,12).map(m=>`<li data-ps-drill="m:${dk(m.key)}" title="${esc(t('drillHint'))}"><b>${esc(m.name)}</b><span class="psaMuted">${esc(vol(m.volume))}${m.groups[0]?` · ${esc(nameOf(m.groups[0].name))}`:''}</span>${levelPill(m.priceLevel)}</li>`).join('')}</ul>`:`<p class="psaMuted">${esc(t('none'))}</p>`;
+    const goneList=gone.length?`<ul class="psaPeople">${gone.slice(0,12).map(m=>`<li data-ps-drill="p:${dk(m.key)}" title="${esc(t('drillHint'))}"><b>${esc(m.name)}</b><span class="psaMuted">${esc(t('prevVolume'))}: ${esc(vol(m.previousVolume))}</span></li>`).join('')}</ul>`:`<p class="psaMuted">${esc(t('none'))}</p>`;
     return `${charts}<div class="psaGrid2"><div class="psaCard"><div class="psaCardHead"><h3>${icon('star')}${esc(t('newcomers'))} <span class="psaCount">${fresh.length}</span></h3></div>${freshList}</div><div class="psaCard"><div class="psaCardHead"><h3>${esc(t('leavers'))} <span class="psaCount">${gone.length}</span></h3></div>${goneList}</div></div>`;
   }
 
@@ -340,7 +343,7 @@
 
   /* ---------- drilldown ---------- */
   function openDrill(spec){
-    const [kind,a,b]=spec.split(':'),find=key=>model.manufacturers.find(m=>m.key===key);
+    const [kind,a,b]=spec.split(':').map(part=>decodeURIComponent(part)),find=key=>model.manufacturers.find(m=>m.key===key);
     if(kind==='m'){const m=find(a);if(m)drill(m.items,`${t('manufacturer')}: ${m.name}`);return;}
     if(kind==='p'){const m=find(a);if(m)drill(m.previousItems,`${t('manufacturer')}: ${m.name} · ${model.previousSeason}`);return;}
     if(kind==='c'){const c=model.countries.find(item=>item.key===a);if(c)drill(c.items,`${t('country')}: ${c.name}`);return;}
@@ -378,7 +381,7 @@
       if(target.dataset.psFilter){state.filters[target.dataset.psFilter]=target.value;ui.showAll=false;recalc();return;}
       if(key==='source'){state.source=target.value;state.priceType='';state.currency='';state.currentSeason='';state.previousSeason='';persist();prepare();return;}
       if(key==='priceType'){state.priceType=target.value;persist();prepare();return;}
-      if(key==='currentSeason'){state.currentSeason=target.value;state.previousSeason=target.value?E.previousSeason(target.value,seasonList):'';recalc();return;}
+      if(key==='currentSeason'){state.currentSeason=target.value;state.previousSeason=target.value!==ALL_SEASONS?E.previousSeason(target.value,seasonList):'';recalc();return;}
       if(key==='previousSeason'){state.previousSeason=target.value;recalc();return;}
       if(key==='currency'){state.currency=target.value;recalc();return;}
       if(key==='sort'){state.sort=target.value;persist();renderList();}
@@ -387,9 +390,9 @@
     root.addEventListener('click',event=>{
       const el=event.target.closest('button,[data-ps-drill],[data-ps-select]');if(!el||!root.contains(el))return;
       if(el.dataset.psTab){state.tab=el.dataset.psTab;ui.search='';ui.showAll=false;persist();render();return;}
-      if(el.dataset.psGo){state.tab=el.dataset.psGo;ui.search='';ui.showAll=false;const focus=el.dataset.psFocus||'';if(state.tab==='advantage')ui.expanded=focus;else if(focus)ui.selected=focus;persist();render();return;}
-      if(el.dataset.psSeg){state[el.dataset.psSeg]=el.dataset.value;ui.showAll=false;ui.expanded='';if(el.dataset.psSeg==='groupBy')recalc();else{persist();render();}return;}
-      if(el.dataset.psExpand!=null){ui.expanded=ui.expanded===el.dataset.psExpand?'':el.dataset.psExpand;renderList();return;}
+      if(el.dataset.psGo){state.tab=el.dataset.psGo;ui.search='';ui.showAll=false;const focus=el.dataset.psFocus||'';if(state.tab==='advantage')ui.expanded=focus||null;else if(focus)ui.selected=focus;persist();render();return;}
+      if(el.dataset.psSeg){state[el.dataset.psSeg]=el.dataset.value;ui.showAll=false;ui.expanded=null;if(el.dataset.psSeg==='groupBy')recalc();else{persist();render();}return;}
+      if(el.dataset.psExpand!=null){ui.expanded=ui.expanded===el.dataset.psExpand?null:el.dataset.psExpand;renderList();return;}
       if(el.dataset.psSelect!=null&&!event.target.closest('[data-ps-drill]')){ui.selected=el.dataset.psSelect;renderList();return;}
       if(el.dataset.psDrill){openDrill(el.dataset.psDrill);return;}
       const key=el.dataset.ps;
