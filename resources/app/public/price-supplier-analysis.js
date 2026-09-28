@@ -13,10 +13,13 @@
   const TAB_ICONS={overview:'layout-dashboard',advantage:'star',scorecard:'users-group',movement:'arrows-down-up',relations:'hierarchy'};
   const LIST_LIMIT=15;
   const ALL_SEASONS='*';
-  const BASE={source:'lfl',tab:'overview',currentSeason:'',previousSeason:'',filters:{buyingGroup:'',mag:'',mmyg:'',classification:''},priceType:'',currency:'',groupBy:'classification',relationDim:'buyingGroup',sort:'volume',movement:'price'};
+  const DEFAULT_FILTER_LAYOUT=['buyingGroup','mag','mmyg','classification'];
+  const PERIOD_KINDS=['current','previous'];
+  const MONTH_NAMES={tr:['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'],en:['January','February','March','April','May','June','July','August','September','October','November','December']};
+  const BASE={source:'lfl',tab:'overview',currentSeason:'',previousSeason:'',filters:Object.fromEntries(E.FILTER_DIMENSIONS.map(dim=>[dim,''])),filterLayout:[...DEFAULT_FILTER_LAYOUT],periods:{current:{dateField:'inStore',month:''},previous:{dateField:'inStore',month:''}},priceType:'',currency:'',groupBy:'classification',relationDim:'buyingGroup',sort:'volume',movement:'price'};
   const TEXT={
     tr:{title:'Fiyat & Üretici Analizi',subtitle:'Hangi üretici nerede avantajlı, kim pahalandı, kim yeni — tek bakışta.',source:'Veri',src_lfl:'LFL siparişleri',src_orders:'Siparişler',src_cp:'CP',src_collection:'Koleksiyon teklifleri',src_horizon:'Horizon',
-      season:'Sezon',compare:'Kıyas',noCompare:'Kıyas yok',allSeasons:'Tüm sezonlar',all:'Tümü',clear:'Temizle',excel:'Excel',price:'Fiyat',currency:'Para birimi',
+      season:'Sezon',compare:'Kıyas',noCompare:'Kıyas yok',allSeasons:'Tüm sezonlar',all:'Tümü',clear:'Temizle',excel:'Excel',price:'Fiyat',currency:'Para birimi',period:'Dönem',month:'Ay',allMonths:'Tüm aylar',inStore:'In-Store',opd:'OPD',filterConfig:'Filtre ekle/çıkar',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Klasman',productGroup:'Ürün Grubu',country:'Ülke',manufacturer:'Üretici',
       tab_overview:'Özet',tab_advantage:'Nerede avantajlı?',tab_scorecard:'Üretici karnesi',tab_movement:'Fiyat hareketi',tab_relations:'Kim kiminle?',
       hint_overview:'Seçili sezonun genel resmi ve sizin için öne çıkanlar.',
@@ -38,7 +41,7 @@
       notEnough:'Kıyaslanabilir fiyat verisi yok.',prevVolume:'Kıyas hacmi',suppliers:'üretici',pts:'puan',excelFail:'Excel dosyası hazırlanamadı.',
       summary:'Özet',sheetSuppliers:'Üreticiler',sheetAdvantage:'Nerede avantajlı',sheetRelations:'Kim kiminle',value:'Değer',status:'Durum',group:'Grup',drillHint:'Tıklayınca siparişler açılır'},
     en:{title:'Price & Supplier Analysis',subtitle:'Which supplier wins where, who got pricier, who is new — at a glance.',source:'Data',src_lfl:'LFL orders',src_orders:'Orders',src_cp:'CP',src_collection:'Collection quotes',src_horizon:'Horizon',
-      season:'Season',compare:'Compare',noCompare:'No comparison',allSeasons:'All seasons',all:'All',clear:'Clear',excel:'Excel',price:'Price',currency:'Currency',
+      season:'Season',compare:'Compare',noCompare:'No comparison',allSeasons:'All seasons',all:'All',clear:'Clear',excel:'Excel',price:'Price',currency:'Currency',period:'Period',month:'Month',allMonths:'All months',inStore:'In-Store',opd:'OPD',filterConfig:'Add/remove filters',
       buyingGroup:'Buying Group',buyer:'Buyer',mag:'MAG',mmyg:'MMYG',classification:'Category',productGroup:'Product Group',country:'Country',manufacturer:'Supplier',
       tab_overview:'Summary',tab_advantage:'Who wins where?',tab_scorecard:'Supplier scorecard',tab_movement:'Price movement',tab_relations:'Who works with whom?',
       hint_overview:'The big picture for the selected season and what stands out for you.',
@@ -64,9 +67,14 @@
   let state=JSON.parse(JSON.stringify(BASE)),root=null,data=null,dataset=null,seasonList=[],model=null,loading=false,error='',requestSeq=0;
   const ui={search:'',selected:'',expanded:null,showAll:false};
   const analysisCache=window.BLAnalysisCache?.create?.(24)||new Map();
-  try{const saved=JSON.parse((window.BLStorage||localStorage).getItem(STORAGE_KEY)||'{}');state={...state,...saved,filters:{...BASE.filters,...(saved.filters||{})}};}catch(_){state=JSON.parse(JSON.stringify(BASE));}
+  try{
+    const saved=JSON.parse((window.BLStorage||localStorage).getItem(STORAGE_KEY)||'{}');
+    state={...state,...saved,filters:{...BASE.filters,...(saved.filters||{})},periods:{current:{...BASE.periods.current,...(saved.periods&&saved.periods.current||{})},previous:{...BASE.periods.previous,...(saved.periods&&saved.periods.previous||{})}}};
+    state.filterLayout=Array.isArray(saved.filterLayout)?[...new Set(saved.filterLayout.filter(dim=>E.FILTER_DIMENSIONS.includes(dim)))]:[...DEFAULT_FILTER_LAYOUT];
+  }catch(_){state=JSON.parse(JSON.stringify(BASE));}
   if(!SOURCES.includes(state.source))state.source=BASE.source;
   if(!TABS.includes(state.tab))state.tab='overview';
+  if(!state.filterLayout.length)state.filterLayout=[...DEFAULT_FILTER_LAYOUT];
 
   const isEn=()=>typeof appLang!=='undefined'&&appLang==='en';
   const t=key=>TEXT[isEn()?'en':'tr'][key]??TEXT.tr[key]??key;
@@ -90,6 +98,18 @@
   const vol=value=>`${fmtInt(value)} ${unit()}`;
   function persist(){try{(window.BLStorage||localStorage).setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
   function dimLabel(dim){return TEXT[isEn()?'en':'tr'][dim]||window.BLCanonicalFields?.label?.(dim,isEn()?'en':'tr')||dim;}
+  function monthLabel(value){const m=/^(\d{4})-(\d{2})$/.exec(String(value||''));if(!m)return String(value||'');const index=Number(m[2])-1;return index>=0&&index<12?`${MONTH_NAMES[isEn()?'en':'tr'][index]} ${m[1]}`:String(value||'');}
+  function periodSeason(kind){return kind==='current'?(state.currentSeason===ALL_SEASONS?'':state.currentSeason):state.previousSeason;}
+  function normalizePeriods(){
+    if(!dataset)return;
+    for(const kind of PERIOD_KINDS){
+      const period=state.periods[kind]||(state.periods[kind]={...BASE.periods[kind]});
+      const season=periodSeason(kind),fields=Object.keys(E.PERIOD_FIELDS||{}).filter(field=>E.periodValues(dataset,field,season).length);
+      if(fields.length&&!fields.includes(period.dateField))period.dateField=fields[0];
+      const values=fields.length?E.periodValues(dataset,period.dateField,season):[];
+      if(period.month&&!values.includes(period.month))period.month='';
+    }
+  }
   function levelPill(value){
     if(value==null)return '<span class="psaPill">—</span>';
     if(value<=-3)return `<span class="psaPill isGood" title="${esc(t('priceLevel'))}">${fmtShare(value)} ${esc(t('cheaper'))}</span>`;
@@ -115,13 +135,14 @@
       if(!state.currentSeason){const periods=E.defaultPeriods(seasonList);state.currentSeason=periods.currentSeason;state.previousSeason=periods.previousSeason;}
       if(state.previousSeason&&!seasonList.includes(state.previousSeason))state.previousSeason='';
       E.FILTER_DIMENSIONS.forEach(dim=>{if(state.filters[dim]&&!E.dimensionValues(dataset,dim).some(value=>E.keyOf(value)===E.keyOf(state.filters[dim])))state.filters[dim]='';});
+      normalizePeriods();
       runAnalysis();
     }catch(err){if(seq!==requestSeq)return;error=err?.message||String(err);model=null;}
     finally{if(seq===requestSeq){loading=false;persist();render();}}
   }
   function runAnalysis(){
     if(!dataset){model=null;return;}
-    const options={currentSeason:state.currentSeason===ALL_SEASONS?'':state.currentSeason,previousSeason:state.previousSeason,filters:state.filters,currency:state.currency,groupBy:state.groupBy};
+    const options={currentSeason:state.currentSeason===ALL_SEASONS?'':state.currentSeason,previousSeason:state.previousSeason,filters:state.filters,currentPeriod:state.periods.current,previousPeriod:state.periods.previous,currency:state.currency,groupBy:state.groupBy};
     const datasetVersion=`${state.source}|${data?.version||''}|${state.priceType}`;
     const key=window.BLAnalysisCache?.key?window.BLAnalysisCache.key({datasetVersion,options}):`${datasetVersion}|${JSON.stringify(options)}`;
     model=analysisCache.get(key);
@@ -138,19 +159,31 @@
     const first=kind==='current'?`<option value="${ALL_SEASONS}"${value===ALL_SEASONS?' selected':''}>${esc(t('allSeasons'))}</option>`:`<option value="">${esc(t('noCompare'))}</option>`;
     return `<label class="psaField"><span>${esc(t(kind==='current'?'season':'compare'))}</span><select data-ps="${kind}Season">${first}${seasonList.slice().reverse().map(season=>`<option value="${esc(season)}"${season===value?' selected':''}>${esc(season)}</option>`).join('')}</select></label>`;
   }
+  function periodControls(kind){
+    if(!dataset)return '';
+    const period=state.periods[kind],season=periodSeason(kind),fields=Object.keys(E.PERIOD_FIELDS||{}).filter(field=>E.periodValues(dataset,field,season).length);
+    if(!fields.length)return '';
+    const field=fields.includes(period.dateField)?period.dateField:fields[0],values=E.periodValues(dataset,field,season);
+    return `<span class="psaPeriodFilters"><label class="psaField"><span>${esc(t('period'))}</span><select data-ps="${kind}DateField">${fields.map(item=>`<option value="${item}"${item===field?' selected':''}>${esc(t(item))}</option>`).join('')}</select></label><label class="psaField${period.month?' isActive':''}"><span>${esc(t('month'))}</span><select data-ps="${kind}Month"><option value="">${esc(t('allMonths'))}</option>${values.slice().reverse().map(value=>`<option value="${esc(value)}"${value===period.month?' selected':''}>${esc(monthLabel(value))}</option>`).join('')}</select></label></span>`;
+  }
   function filterSelect(dim){
     const values=dataset?E.dimensionValues(dataset,dim):[];if(!values.length)return '';
     const current=state.filters[dim]||'';
     return `<label class="psaField${current?' isActive':''}"><span>${esc(dimLabel(dim))}</span><select data-ps-filter="${dim}"><option value="">${esc(t('all'))}</option>${values.map(value=>`<option value="${esc(value)}"${E.keyOf(value)===E.keyOf(current)?' selected':''}>${esc(value)}</option>`).join('')}</select></label>`;
   }
+  function filterConfigurator(){
+    const available=E.FILTER_DIMENSIONS.filter(dim=>dataset&&E.dimensionValues(dataset,dim).length);if(!available.length)return '';
+    return `<details class="psaFilterConfig"><summary class="psaGhostBtn">${icon('filter')}${esc(t('filterConfig'))}</summary><div class="psaFilterConfigPanel">${available.map(dim=>`<label><input type="checkbox" data-ps-filter-toggle="${dim}"${state.filterLayout.includes(dim)?' checked':''}><span>${esc(dimLabel(dim))}</span></label>`).join('')}</div></details>`;
+  }
   function controls(){
     if(!dataset)return '';
-    const priceTypes=data?.priceTypes||[],currencies=dataset.currencies||[],active=E.FILTER_DIMENSIONS.some(dim=>state.filters[dim]);
+    const priceTypes=data?.priceTypes||[],currencies=dataset.currencies||[],active=E.FILTER_DIMENSIONS.some(dim=>state.filters[dim])||PERIOD_KINDS.some(kind=>state.periods[kind]&&state.periods[kind].month);
     return `<div class="psaBar">
-      <div class="psaPeriod">${seasonSelect('current')}${state.currentSeason===ALL_SEASONS?'':`<span class="psaVs" aria-hidden="true">↔</span>${seasonSelect('previous')}`}</div>
-      <div class="psaFilters">${E.FILTER_DIMENSIONS.map(filterSelect).join('')}
+      <div class="psaPeriod">${seasonSelect('current')}${periodControls('current')}${state.currentSeason===ALL_SEASONS?'':`<span class="psaVs" aria-hidden="true">↔</span>${seasonSelect('previous')}${state.previousSeason?periodControls('previous'):''}`}</div>
+      <div class="psaFilters">${state.filterLayout.map(filterSelect).join('')}
         ${priceTypes.length>1?`<label class="psaField"><span>${esc(t('price'))}</span><select data-ps="priceType">${priceTypes.map(item=>`<option value="${esc(item.key)}"${item.key===state.priceType?' selected':''}>${esc(item.label||item.key)}</option>`).join('')}</select></label>`:''}
         ${currencies.length>1?`<label class="psaField"><span>${esc(t('currency'))}</span><select data-ps="currency">${currencies.map(code=>`<option value="${esc(code)}"${code===model?.currency?' selected':''}>${esc(code)}</option>`).join('')}</select></label>`:''}
+        ${filterConfigurator()}
         ${active?`<button type="button" class="psaLinkBtn" data-ps="clear">${icon('x')}${esc(t('clear'))}</button>`:''}
       </div>
     </div>`;
@@ -379,10 +412,13 @@
     root.addEventListener('change',event=>{
       const target=event.target,key=target.dataset.ps;
       if(target.dataset.psFilter){state.filters[target.dataset.psFilter]=target.value;ui.showAll=false;recalc();return;}
-      if(key==='source'){state.source=target.value;state.priceType='';state.currency='';state.currentSeason='';state.previousSeason='';persist();prepare();return;}
+      if(target.dataset.psFilterToggle){const dim=target.dataset.psFilterToggle;if(target.checked){if(!state.filterLayout.includes(dim))state.filterLayout.push(dim);persist();render();}else{state.filterLayout=state.filterLayout.filter(item=>item!==dim);state.filters[dim]='';recalc();}return;}
+      if(key==='source'){state.source=target.value;state.priceType='';state.currency='';state.currentSeason='';state.previousSeason='';PERIOD_KINDS.forEach(kind=>state.periods[kind].month='');persist();prepare();return;}
       if(key==='priceType'){state.priceType=target.value;persist();prepare();return;}
-      if(key==='currentSeason'){state.currentSeason=target.value;state.previousSeason=target.value!==ALL_SEASONS?E.previousSeason(target.value,seasonList):'';recalc();return;}
-      if(key==='previousSeason'){state.previousSeason=target.value;recalc();return;}
+      if(key==='currentSeason'){state.currentSeason=target.value;state.previousSeason=target.value!==ALL_SEASONS?E.previousSeason(target.value,seasonList):'';state.periods.current.month='';state.periods.previous.month='';normalizePeriods();recalc();return;}
+      if(key==='previousSeason'){state.previousSeason=target.value;state.periods.previous.month='';normalizePeriods();recalc();return;}
+      if(key==='currentDateField'||key==='previousDateField'){const kind=key.startsWith('current')?'current':'previous';state.periods[kind].dateField=target.value;state.periods[kind].month='';normalizePeriods();recalc();return;}
+      if(key==='currentMonth'||key==='previousMonth'){const kind=key.startsWith('current')?'current':'previous';state.periods[kind].month=target.value;recalc();return;}
       if(key==='currency'){state.currency=target.value;recalc();return;}
       if(key==='sort'){state.sort=target.value;persist();renderList();}
     });
@@ -397,7 +433,7 @@
       if(el.dataset.psDrill){openDrill(el.dataset.psDrill);return;}
       const key=el.dataset.ps;
       if(key==='more'){ui.showAll=!ui.showAll;renderList();return;}
-      if(key==='clear'){E.FILTER_DIMENSIONS.forEach(dim=>{state.filters[dim]='';});recalc();return;}
+      if(key==='clear'){E.FILTER_DIMENSIONS.forEach(dim=>{state.filters[dim]='';});PERIOD_KINDS.forEach(kind=>{state.periods[kind].month='';});recalc();return;}
       if(key==='export')exportExcel();
     });
     root.addEventListener('keydown',event=>{const row=event.target.closest?.('[data-ps-select]');if(row&&(event.key==='Enter'||event.key===' ')){event.preventDefault();ui.selected=row.dataset.psSelect;renderList();}});
