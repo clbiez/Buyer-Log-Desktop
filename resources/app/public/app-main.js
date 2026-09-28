@@ -2807,6 +2807,17 @@ function cpImagePlaceholder(){
 function modelImageCacheKey(modelId,colourCode){
   return window.BLModelImageCache?.identity?.(modelId,colourCode)||`${String(modelId||'').trim().toUpperCase()}|${String(colourCode||'').trim().toUpperCase()}`;
 }
+function mergeImageOverridePayload(current,incoming){
+  const base=current&&typeof current==='object'&&!Array.isArray(current)?current:{};
+  const patch=incoming&&typeof incoming==='object'&&!Array.isArray(incoming)?incoming:{};
+  const baseImage=base.imagemap&&typeof base.imagemap==='object'&&!Array.isArray(base.imagemap)?base.imagemap:{};
+  const patchImage=patch.imagemap&&typeof patch.imagemap==='object'&&!Array.isArray(patch.imagemap)?patch.imagemap:null;
+  const baseRevisions=base._revisions&&typeof base._revisions==='object'&&!Array.isArray(base._revisions)?base._revisions:{};
+  const patchRevisions=patch._revisions&&typeof patch._revisions==='object'&&!Array.isArray(patch._revisions)?patch._revisions:{};
+  const merged={...base,...patch,imagemap:patchImage||baseImage};
+  if(Object.keys(baseRevisions).length||Object.keys(patchRevisions).length)merged._revisions={...baseRevisions,...patchRevisions};
+  return merged;
+}
 function syncModelImageRegistry(){
   window.BLModelImageCache?.setRegistryMap?.(state?.overrides?.imagemap||{});
 }
@@ -2884,7 +2895,7 @@ const BLImageRuntime=(()=>{
       const response=await fetch('/api/model-images/shared/hydrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})});
       const data=await response.json().catch(()=>({}));
       if(response.ok&&data&&data.ok){
-        if(data.overrides){state.overrides=data.overrides;state.overrides.imagemap=state.overrides.imagemap||{};syncModelImageRegistry();}
+        if(data.overrides){state.overrides=mergeImageOverridePayload(state.overrides,data.overrides);syncModelImageRegistry();}
         if(Array.isArray(data.images)&&data.images.length){
           applySyncedPlmImages(data);
           try{const scope=modelAssetScopeApi()?.currentScope?.();scope?.repaint?.();}catch(_){}
@@ -26984,7 +26995,7 @@ async function kolPlmLinkImageEverywhere(row,imageRef){
   const items=[{plmId,colourCode,colour,imageRef:imageRef==null?'':imageRef}];
   const res=await fetch('/api/plm-image-links',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,expectedRevision:state?.overrides?._revisions?.orders})});
   const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);
-  state.overrides=data.overrides||state.overrides;state.overrides.imagemap=state.overrides.imagemap||{};syncModelImageRegistry();
+  state.overrides=mergeImageOverridePayload(state.overrides,data.overrides);syncModelImageRegistry();
   [...(state.cp?.rows||[]),...(state.orders?.rows||[])].forEach(target=>{
     if(kolPlmNormalizeId(target&&target['PLM ID'])!==kolPlmNormalizeId(plmId))return;
     const oldUrl=target._imageUrl,ref=cpImageRefFromOverride(state.overrides,target['PLM ID'],target['C.Code'],target['Order Code'],target['Model Name'],target['C.Code'],target.Colour||target['Colour']||target.Color||target['Color']||'');
@@ -27159,7 +27170,7 @@ function versionedPlmImageUrl(url,version){
   return `${base}${base.includes('?')?'&':'?'}v=${encodeURIComponent(token)}`;
 }
 function applySyncedPlmImages(data){
-  if(data&&data.overrides){state.overrides=data.overrides;state.overrides.imagemap=state.overrides.imagemap||{};}
+  if(data&&data.overrides){state.overrides=mergeImageOverridePayload(state.overrides,data.overrides);}
   syncModelImageRegistry();
   const images=Array.isArray(data&&data.images)?data.images:[],replaceExisting=data&&data.mode==='all',byExact=new Map(),byCode=new Map(),byPlm=new Map(),imageKey=(plm,colourCode,colour='')=>`${plm}\u0000${turknorm(colourCode)}${colour?`\u0000${turknorm(colour)}`:''}`;
   images.forEach(item=>{const plm=normalizePlmLinkId(item&&item.plmId);if(!plm||!item?.imageRef)return;const colourCode=turknorm(item&&item.colourCode),colour=turknorm(item&&item.colour);if(colourCode){byCode.set(imageKey(plm,colourCode),item);if(colour)byExact.set(imageKey(plm,colourCode,colour),item);}else byPlm.set(plm,item);});
