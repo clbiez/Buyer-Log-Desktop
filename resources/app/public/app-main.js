@@ -14663,7 +14663,7 @@ function backlogSelectedDataHeaders(serverHeaders){
 function backlogChartSourceIds(){
   const chartState=window.BLBacklogChart?.getState?.();
   if(!chartState?.enabled)return [];
-  const wanted=new Set([chartState.timeField,chartState.metricField,chartState.seriesField]
+  const wanted=new Set([chartState.timeField,chartState.timeField2,chartState.metricField,chartState.seriesField]
     .map(value=>String(value||'').trim()).filter(value=>value&&value!=='__records'));
   if(!wanted.size)return [];
   return backlogExportSourceCatalog()
