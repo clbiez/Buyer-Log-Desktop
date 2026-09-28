@@ -485,6 +485,13 @@
     return 'YD';
   }
 
+  function pricingRuleNumber(value) {
+    if (value == null || String(value).trim() === '') return null;
+    const normalized = typeof value === 'string' ? value.trim().replace(',', '.') : value;
+    const number = Number(normalized);
+    return Number.isFinite(number) ? number : null;
+  }
+
   function pricingRuleCommissionForCountry(rule, countryOrGroup) {
     if (!rule || typeof rule !== 'object') return null;
     const group = pricingRuleCountryGroup(countryOrGroup);
@@ -493,8 +500,8 @@
     if (Object.prototype.hasOwnProperty.call(rule, key)) {
       const raw = rule[key];
       if (raw == null || String(raw).trim() === '') return null;
-      const value = Number(raw);
-      return Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
+      const value = pricingRuleNumber(raw);
+      return value != null && value >= 0 && value <= 100 ? value : null;
     }
     const legacyGroup = rule.countryGroup ? pricingRuleCountryGroup(rule.countryGroup) : '';
     if (legacyGroup) return legacyGroup === group ? 0 : null;
@@ -503,8 +510,8 @@
 
   function pricingRuleEffectiveRoyalty(rule, countryOrGroup) {
     if (!rule || typeof rule !== 'object') return null;
-    const royalty = Number(rule.royalty);
-    if (!Number.isFinite(royalty) || royalty < 0 || royalty > 100) return null;
+    const royalty = pricingRuleNumber(rule.royalty);
+    if (royalty == null || royalty < 0 || royalty > 100) return null;
     if (countryOrGroup == null || String(countryOrGroup).trim() === '') return royalty;
     const commission = pricingRuleCommissionForCountry(rule, countryOrGroup);
     if (commission == null) return null;
@@ -517,11 +524,11 @@
     const group = pricingRuleCountryGroup(countryOrGroup);
     const legacyKey = group === 'TR' ? 'legacyTrHologramCost' : group === 'YD' ? 'legacyYdHologramCost' : '';
     if (legacyKey && Object.prototype.hasOwnProperty.call(rule, legacyKey)) {
-      const legacy = Number(rule[legacyKey]);
-      if (Number.isFinite(legacy) && legacy >= 0) return legacy;
+      const legacy = pricingRuleNumber(rule[legacyKey]);
+      if (legacy != null && legacy >= 0) return legacy;
     }
-    const value = Number(rule.hologramCost);
-    return Number.isFinite(value) && value >= 0 ? value : null;
+    const value = pricingRuleNumber(rule.hologramCost);
+    return value != null && value >= 0 ? value : null;
   }
 
   function normalizeRoyaltySeasons(value) {
