@@ -431,25 +431,24 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 
-/* LFL analysis cards: the two primary analysis tables keep a stable viewport.
-   Renders, filters and toolbar actions must not change their height; only the
-   explicit horizontal resize handle may switch a table to a persisted size. */
+/* LFL analysis cards: these two table viewports are fixed by default.
+   Content, filters, sort, toolbar actions and rerenders cannot stretch them.
+   Only the explicit horizontal resize handles may change the persisted height. */
 #view-lfl .lflAnalysisGrid>.lflAnalysisResizableCard{
-  display:flex;flex-direction:column;align-self:start;height:auto;min-height:0;
+  display:flex;flex-direction:column;align-self:start!important;height:auto!important;min-height:0!important;
 }
-#view-lfl .lflAnalysisGrid .lflTableWrap:not(.lflManualHeight){
-  height:clamp(220px,34vh,360px)!important;
-  max-height:clamp(220px,34vh,360px)!important;
-  min-height:0;
-  overflow-y:auto;
-  flex:none;
+#view-lfl #lflGroupTableWrap,
+#view-lfl #lflManufacturerVolume{
+  height:360px!important;
+  max-height:360px!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  flex:none!important;
 }
-#view-lfl .lflAnalysisGrid .lflTableWrap.lflManualHeight{
-  height:var(--lfl-manual-height)!important;
-  max-height:var(--lfl-manual-height)!important;
-  min-height:0;
-  overflow-y:auto;
-  flex:none;
+#view-lfl #lflGroupTableWrap.lflManualHeight,
+#view-lfl #lflManufacturerVolume.lflManualHeight{
+  height:var(--lfl-manual-height,360px)!important;
+  max-height:var(--lfl-manual-height,360px)!important;
 }
 #view-lfl .lflHeightHandle{
   height:12px;min-height:12px;display:grid;place-items:center;flex:none;
