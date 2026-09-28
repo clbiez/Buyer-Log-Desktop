@@ -15,7 +15,8 @@
   'use strict';
 
   const DIMENSIONS=['manufacturer','country','classification','productGroup','mag','mmyg','buyingGroup','buyer'];
-  const FILTER_DIMENSIONS=['buyingGroup','mag','mmyg','classification'];
+  const FILTER_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','country','manufacturer'];
+  const PERIOD_FIELDS=Object.freeze({inStore:'inStoreMonth',opd:'opdMonth'});
   const GROUP_DIMENSIONS=['classification','productGroup','mag','mmyg'];
   const RELATION_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','country'];
   const VOLUME_STATUS_BAND=10;
@@ -26,6 +27,7 @@
   const keyOf=value=>clean(value).replace(/[ıİ]/g,'I').toUpperCase().replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' ');
   const positive=value=>{const n=Number(value);return Number.isFinite(n)&&n>0?n:0;};
   const round=(value,digits=1)=>value==null||!Number.isFinite(value)?null:Math.round(value*10**digits)/10**digits;
+  const monthValue=value=>{const raw=clean(value);const m=/^(\d{4})[-/]?(\d{2})/.exec(raw);return m&&Number(m[2])>=1&&Number(m[2])<=12?`${m[1]}-${m[2]}`:'';};
 
   function field(obs,name){
     if(!obs)return '';
@@ -39,7 +41,10 @@
     let withQty=0;
     for(const obs of observations||[]){
       if(!obs)continue;
-      const rec={obs,season:clean(field(obs,'season')),price:positive(obs.price)||null,currency:text(obs.currency).toUpperCase()||'USD',qty:positive(obs.quantity),model:text(obs.modelKey)||text(obs.model)||text(obs.rowId),k:{},l:{}};
+      const rec={obs,season:clean(field(obs,'season')),price:positive(obs.price)||null,currency:text(obs.currency).toUpperCase()||'USD',qty:positive(obs.quantity),model:text(obs.modelKey)||text(obs.model)||text(obs.rowId),k:{},l:{},periods:{
+        inStore:monthValue(field(obs,'inStoreMonth'))||monthValue(field(obs,'month')),
+        opd:monthValue(field(obs,'opdMonth')),
+      }};
       for(const dim of DIMENSIONS){
         const label=clean(field(obs,dim)),key=keyOf(label);rec.k[dim]=key;
         if(key&&!labels[dim].has(key))labels[dim].set(key,label);
@@ -78,6 +83,16 @@
     return [...map.values()].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
   }
   function availableDimensions(dataset,list){return list.filter(dim=>dataset.labels&&dataset.labels[dim]&&dataset.labels[dim].size>0);}
+  function periodValues(dataset,dateField,season=''){
+    const field=PERIOD_FIELDS[dateField]?dateField:'inStore',wantedSeason=clean(season),set=new Set();
+    for(const rec of dataset.records||[]){if(wantedSeason&&rec.season!==wantedSeason)continue;const value=rec.periods&&rec.periods[field];if(value)set.add(value);}
+    return [...set].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true}));
+  }
+  function periodMatches(rec,config){
+    if(!config||!config.month)return true;
+    const field=PERIOD_FIELDS[config.dateField]?config.dateField:'inStore';
+    return (rec.periods&&rec.periods[field]||'')===monthValue(config.month);
+  }
 
   function bucket(){return {volume:0,records:0,models:new Set(),pricedModels:new Set(),priceSum:0,priceWeight:0,items:[]};}
   function add(target,rec,currency){
@@ -120,6 +135,7 @@
       if(!matches(rec,options.filters))continue;
       const side=!currentSeason||rec.season===currentSeason?'cur':hasComparison&&rec.season===previousSeasonValue?'prev':'';
       if(!side)continue;
+      if(!periodMatches(rec,side==='cur'?options.currentPeriod:options.previousPeriod))continue;
       (side==='cur'?current:previous).push(rec);
       add(totals[side],rec,currency);
       const mKey=rec.k.manufacturer,gKey=rec.k[groupBy]||'';
@@ -253,5 +269,5 @@
     return out.slice(0,6);
   }
 
-  return {DIMENSIONS,FILTER_DIMENSIONS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,analyze,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
+  return {DIMENSIONS,FILTER_DIMENSIONS,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
 });
