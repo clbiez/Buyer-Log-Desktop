@@ -61,6 +61,19 @@ test('Collection custom Excel columns use schema value and number format', () =>
   assert.match(block, /schema\.excelNumberFormat/);
 });
 
+test('Collection rich clipboard carries Office formats and visible status labels', () => {
+  const copy = functionBlock(APP, 'buildCollectionStyledCopy');
+  assert.match(copy, /mso-number-format/);
+  assert.match(copy, /dd\.mm\.yy/);
+  assert.match(copy, /0\.00%/);
+  assert.match(copy, /#,##0/);
+  assert.match(APP, /if\(column\.status\|\|column\.k==='durum'\)return kolStatusDisplayLabel\(value\);/);
+  const start = APP.indexOf('async function kolExportWithImages');
+  const end = APP.indexOf('function kolStyleExportValue', start);
+  assert.match(APP.slice(start, end), /kolExportSingleLineText\(kolStatusDisplayLabel\(raw\)\)/);
+});
+
+
 test('shared detail drawer no longer serializes visible dates as ISO text', () => {
   const display = functionBlock(DETAIL, 'valueOf');
   assert.doesNotMatch(display, /toISOString\(\)\.slice\(0,10\)/);
