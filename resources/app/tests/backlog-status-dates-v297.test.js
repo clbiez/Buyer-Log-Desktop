@@ -51,14 +51,14 @@ test('SheetJS workbook date normalisation turns textual dates into real date cel
   // saat dilimlerinde gün bir geriye kayıyordu; seri numarası takvim günüdür ve
   // hiçbir saat dilimi dönüşümünden geçmez. Amaç aynı: metin tarihler gerçek
   // tarih hücresine dönüşür, ay/hafta metinleri dokunulmadan kalır.
-  assert.equal(ws.A2.t, 'n'); assert.equal(ws.A2.v, 46229); assert.equal(ws.A2.z, 'dd.mm.yyyy');
-  assert.equal(ws.A2.s.numFmt, 'dd.mm.yyyy');
+  assert.equal(ws.A2.t, 'n'); assert.equal(ws.A2.v, 46229); assert.equal(ws.A2.z, dates.DATE_FORMAT);
+  assert.equal(ws.A2.s.numFmt, dates.DATE_FORMAT);
   assert.equal(ws.A2.v % 1, 0, 'kesirli seri Excel’de bir gün kaymaya yol açar');
   assert.equal(dates.excelSerial(new Date(2026, 6, 26)), ws.A2.v, 'seri 26.07.2026 takvim gününe karşılık gelmeli');
   assert.equal(ws.B2.t, 's'); assert.equal(ws.B2.v, '2026-08');
   assert.equal(ws.C2.t, 's'); assert.equal(ws.C2.v, '2026-32');
   assert.equal(ws.D2.t, 'n'); assert.equal(ws.D2.v, 46229);
-  assert.equal(ws.E2.t, 'n'); assert.equal(ws.E2.z, 'dd.mm.yyyy');
+  assert.equal(ws.E2.t, 'n'); assert.equal(ws.E2.z, dates.DATE_FORMAT);
   assert.equal(ws.D3.v, 'not a date');
 });
 
@@ -71,7 +71,7 @@ test('SheetJS write hooks enforce date typing for every browser workbook write p
   // Yazma kancası metin tarihi tam sayı seri numarasına çevirir (bkz. v5.81).
   assert.equal(written.Sheets.S.A2.t, 'n');
   assert.equal(written.Sheets.S.A2.v, 46230);
-  assert.equal(written.Sheets.S.A2.z, 'dd.mm.yyyy');
+  assert.equal(written.Sheets.S.A2.z, dates.DATE_FORMAT);
   assert.equal(dates.installSheetJsHooks(fake), false, 'hook is idempotent');
 });
 

@@ -136,19 +136,64 @@ function lookupValue(col,row){
   }
   return undefined;
 }
-function valueOf(col,row){
+function rawValueOf(col,row){
   try{
     let value;
     if(typeof col.value==='function'){
       value=col.value(row);
       if(!hasValue(value))value=lookupValue(col,row);
     }else value=lookupValue(col,row);
+    return value;
+  }catch(_){return undefined;}
+}
+const columnSchemaCache=new WeakMap();
+function columnSchema(col,rows){
+  const resolver=root.BLColumnSchema&&root.BLColumnSchema.resolveColumnSchema;
+  if(typeof resolver!=='function'||!col)return null;
+  const sourceRows=Array.isArray(rows)?rows:[];
+  const cached=columnSchemaCache.get(col);
+  if(cached&&cached.rows===sourceRows)return cached.schema;
+  try{
+    const schema=resolver({...col,field:col.field||col.key},sourceRows,col.sourceMetadata||col.metadata);
+    columnSchemaCache.set(col,{rows:sourceRows,schema});
+    return schema;
+  }catch(_){return null;}
+}
+function fallbackDateText(value){
+  if(!(value instanceof Date)||Number.isNaN(value.getTime()))return '';
+  if(typeof root.fmtDate==='function')return root.fmtDate(value);
+  const p=n=>String(n).padStart(2,'0');
+  return p(value.getDate())+'.'+p(value.getMonth()+1)+'.'+String(value.getFullYear()).slice(-2);
+}
+function valueOf(col,row){
+  try{
+    const value=rawValueOf(col,row);
     if(typeof col.format==='function')return col.format(value,row);
     if(!hasValue(value))return '';
-    if(value instanceof Date&&!Number.isNaN(value.getTime()))return value.toISOString().slice(0,10);
+    const schema=columnSchema(col,active&&active.rows||[row]);
+    if(value instanceof Date&&!Number.isNaN(value.getTime())&&(!schema||!['date','datetime'].includes(schema.dataType)))return fallbackDateText(value);
+    if(schema&&typeof schema.format==='function')return schema.format(value,{row});
+    if(value instanceof Date&&!Number.isNaN(value.getTime()))return fallbackDateText(value);
     if(typeof value==='object')return JSON.stringify(value);
     return value;
   }catch(_){return '';}
+}
+function excelValueOf(col,row){
+  const raw=rawValueOf(col,row);
+  if(!hasValue(raw))return '';
+  const schema=columnSchema(col,active&&active.rows||[row]);
+  if(raw instanceof Date&&!Number.isNaN(raw.getTime())&&(!schema||!['date','datetime'].includes(schema.dataType)))return raw;
+  if(schema&&typeof schema.excelValue==='function')return schema.excelValue(raw,{row});
+  if(typeof col.exportValue==='function')return col.exportValue(raw,row);
+  if(typeof col.format==='function')return col.format(raw,row);
+  if(schema&&typeof schema.exportValue==='function')return schema.exportValue(raw,{row});
+  return typeof raw==='object'&&!(raw instanceof Date)?JSON.stringify(raw):raw;
+}
+function excelFormatOf(col,row){
+  const raw=rawValueOf(col,row),schema=columnSchema(col,active&&active.rows||[row]);
+  const format=schema&&typeof schema.excelNumberFormat==='function'?schema.excelNumberFormat(raw,{row}):'';
+  if(format)return format;
+  return raw instanceof Date&&!Number.isNaN(raw.getTime())?(root.BLExcelDates?.DATE_FORMAT||'dd.mm.yy'):'';
 }
 function textValue(col,row){const value=valueOf(col,row);return value==null?'':String(value);}
 function modelIdentity(row){
@@ -256,7 +301,7 @@ async function exportExcelJsWithImages(columns,rows,fileName){
   const wb=new root.ExcelJS.Workbook(),ws=wb.addWorksheet(L('Detay','Detail')),imageIndex=helper.buildIndex?.();
   ws.columns=[{header:L('Görsel','Image'),key:'__image',width:12},...columns.map((col,index)=>({header:col.label,key:'c'+index,width:Math.max(11,Math.min(40,Number(col.exportWidth)||18))}))];
   const head=ws.getRow(1);head.height=22;head.font={bold:true};head.alignment={vertical:'middle',wrapText:true};
-  rows.forEach(row=>{const excelRow=ws.addRow(['',...columns.map(col=>valueOf(col,row))]);excelRow.height=48;});
+  rows.forEach(row=>{const excelRow=ws.addRow(['',...columns.map(col=>excelValueOf(col,row))]);excelRow.height=48;columns.forEach((col,index)=>{const fmt=excelFormatOf(col,row);if(fmt)excelRow.getCell(index+2).numFmt=fmt;});});
   for(let start=0;start<rows.length;start+=8){
     const slice=rows.slice(start,start+8);
     const prepared=await Promise.all(slice.map(async row=>{const url=imageUrl(row,imageIndex);if(!url)return null;try{return await helper.prepareForExcel(url);}catch(_){return null;}}));
@@ -264,6 +309,7 @@ async function exportExcelJsWithImages(columns,rows,fileName){
   }
   ws.views=[{state:'frozen',ySplit:1}];
   if(rows.length)ws.autoFilter={from:{row:1,column:1},to:{row:rows.length+1,column:Math.max(1,columns.length+1)}};
+  root.BLExcelDates?.normalizeExcelJsWorkbookDateColumns?.(wb);
   const buffer=await wb.xlsx.writeBuffer();
   downloadBuffer(buffer,fileName,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   return true;
@@ -308,8 +354,9 @@ async function exportExcel(mode='visible'){
     }else if(!(await exportExcelJsWithImages(columns,rows,fileName))){
       if(!root.XLSX&&root.BLPerf?.ensureLibrary)await root.BLPerf.ensureLibrary('xlsx');
       if(!root.XLSX)throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
-      const data=[columns.map(c=>c.label),...rows.map(row=>columns.map(col=>valueOf(col,row)))];
+      const data=[columns.map(c=>c.label),...rows.map(row=>columns.map(col=>excelValueOf(col,row)))];
       const ws=root.XLSX.utils.aoa_to_sheet(data,{cellDates:true});
+      rows.forEach((row,rowIndex)=>columns.forEach((col,colIndex)=>{const fmt=excelFormatOf(col,row);if(!fmt)return;const ref=root.XLSX.utils.encode_cell({r:rowIndex+1,c:colIndex}),cell=ws[ref];if(cell)cell.z=fmt;}));
       if(data.length&&columns.length)ws['!autofilter']={ref:root.XLSX.utils.encode_range({r:0,c:0},{r:Math.max(0,data.length-1),c:columns.length-1})};
       ws['!cols']=columns.map(col=>({wch:Math.max(11,Math.min(40,Number(col.exportWidth)||18))}));
       const wb=root.XLSX.utils.book_new();root.XLSX.utils.book_append_sheet(wb,ws,L('Detay','Detail'));
