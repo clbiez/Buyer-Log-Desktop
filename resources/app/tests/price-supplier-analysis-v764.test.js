@@ -33,59 +33,14 @@ test('farklı para birimleri fiyat metriğini ve delta kıyasını kapatır',()=
 });
 
 test('bağımsız ekran yalnız seçilen kaynağı hazırlayan köprü ve kendi erişim alanını kullanır',()=>{
-  const html=read('public/index.html'),app=read('public/app-main.js'),access=read('public/user-access-ui.js'),ui=read('public/collection-analytics.js');
+  const html=read('public/index.html'),app=read('public/app-main.js'),access=read('public/user-access-ui.js'),ui=read('public/price-supplier-analysis.js');
   assert.match(html,/data-tab="priceanalysis"/);
   assert.match(html,/id="view-priceanalysis"/);
   assert.match(app,/if\(selected==='cp'\)await ensureCpLoaded\(\)/);
   assert.match(app,/else if\(selected==='orders'\)await ensureOrdersLoaded\(\)/);
   assert.doesNotMatch(access,/key === 'priceanalysis' \? 'lfl'/);
   assert.match(access,/areas && areas\[(key|mapped)\]/);
-  for(const marker of ['paV2Virtual','comparisonConfigs','data-sort','XLSX.utils.json_to_sheet'])assert.match(ui,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
-});
-
-test('V2 iç panelleri genel section gizleme kuralından muaftır',()=>{
-  const css=read('public/collection-analytics.css');
-  assert.match(css,/\.priceSupplierAnalysis>section,[^{]*\{display:block/);
-});
-
-test('boyut kataloğu ASAS gözlemlerindeki dinamik iş alanlarını da sunar',()=>{
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/const DIMENSION_ORDER=\[/);
-  assert.match(ui,/E\.availableDimensions\(dataset\?\.observations\|\|\[\],DIMENSION_ORDER\)/);
-  assert.doesNotMatch(ui,/\.filter\(key=>DIMENSION_ORDER\.includes\(key\)\)/);
-  assert.match(ui,/\.filter\(key=>!String\(key\)\.startsWith\('_'\)\)/);
-});
-
-test('fiyat matrisi seçilebilir satır ve sütun eksenlerini korur',()=>{
-  const matrix=engine.flexibleMatrix(sample,'classification','manufacturer','recordCount');
-  assert.ok(matrix.rows.includes('Tee'));
-  assert.ok(matrix.columns.includes('M1'));
-  assert.equal(matrix.value('Tee','M1').value,1);
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/data-heatmap="row"/);
-  assert.match(ui,/data-heatmap="column"/);
-});
-
-test('fiyat matrisi başlık ve hücre tıklamasıyla iki yönlü sıralanır',()=>{
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/function heatmapSortLabels\(/);
-  assert.match(ui,/data-heat-column-sort/);
-  assert.match(ui,/data-heat-row-sort/);
-  assert.match(ui,/querySelectorAll\('\[data-heat-column-sort\],\[data-heat-row-sort\]'\)/);
-  assert.match(ui,/state\.heatmap\.rowSort/);
-  assert.match(ui,/state\.heatmap\.columnSort/);
-});
-
-test('fiyat analizi tipografisi daha okunabilir ama kompakt kalır',()=>{
-  const css=read('public/collection-analytics.css');
-  assert.match(css,/\.paV2Toolbar label[^\{]*\{[^}]*font-size:11px/);
-  assert.match(css,/\.paV2Heatmap th[^\{]*\{[^}]*font-size:13px/);
-});
-
-test('V2 kaynak çubuğu Buyer Log ortak kontrol ölçülerini kullanır',()=>{
-  const css=read('public/collection-analytics.css');
-  assert.match(css,/\.paV2Toolbar select/);
-  assert.match(css,/\.paV2Toolbar \.tbtn/);
+  for(const marker of ['data-ps-tab','openDrilldown','BLPriceSupplierAnalysisBridge.get','json_to_sheet'])assert.match(ui,new RegExp(marker.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
 });
 
 test('CP ve Orders analizinde girilmiş Sub-Manufacturer canonical supplier olarak korunur',()=>{
@@ -100,7 +55,7 @@ test('CP ve Orders analizinde girilmiş Sub-Manufacturer canonical supplier olar
 test('Price & Supplier Analysis Product Group, Line ve Product Main Definition alanlarını ayırır',()=>{
   const fields=read('public/canonical-fields.js');
   const app=read('public/app-main.js');
-  const ui=read('public/collection-analytics.js');
+  const ui=read('public/price-supplier-insights-engine.js');
   assert.match(fields,/productGroup:\{label:\{en:'Product Group',tr:'Ürün Grubu'\}/);
   assert.doesNotMatch(fields,/line:\{label:\{en:'Line',tr:'Line'\},type:'text',role:'dimension',aliases:\[[^\]]*'Ürün Grubu'/);
   assert.equal(canonical.value({productGroup:'PG-1',line:'LINE-1'},'collection','productGroup'),'PG-1');
@@ -108,31 +63,19 @@ test('Price & Supplier Analysis Product Group, Line ve Product Main Definition a
   assert.match(app,/productMainDefinition=norm\(read\(moduleId==='collection'\?'productMainDefinition':'productDescription'\)\)/);
   assert.match(app,/productGroup:norm\(read\('productGroup'\)\)/);
   assert.doesNotMatch(app,/productGroup:norm\(read\('line'\)\)/);
-  assert.match(ui,/productMainDefinition/);
+  assert.match(ui,/'productGroup'/);
 });
 
 test('lowest/high price özetleri kullanıcı limitine kadar veri sağlayabilir',()=>{
   const rows=Array.from({length:14},(_,index)=>({rowId:index,modelKey:`M${index}`,classification:'Tee',manufacturer:`Supplier ${index}`,price:index+1,currency:'USD',quantity:1}));
   const result=engine.supplierIntelligence(rows,{dimensions:['classification','manufacturer'],metric:'average',includeOutliers:true,minSample:1});
   assert.equal(result.insights.lowest.length,14);
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/insightLimit/);
-  assert.match(ui,/state\.insightLimit/);
-});
-
-test('heatmap sıfır değerleri gizler ve düşük fiyatı yeşile yaklaştırır',()=>{
-  const ui=read('public/collection-analytics.js'),css=read('public/collection-analytics.css');
-  assert.match(ui,/Number\(cell\.value\)===0\?'':format/);
-  assert.match(ui,/columnRanges/);
-  assert.match(ui,/1-\(cell\.value-columnRange\.min\)\/\(columnRange\.max-columnRange\.min\)/);
-  assert.match(css,/var\(--green\) calc\(var\(--pa-heat\)\*28%\)/);
 });
 
 test('Price & Supplier Analysis Horizon kaynağını ve kendine ait horizon rozetini tanımlar',()=>{
   const html=read('public/index.html');
   const app=read('public/app-main.js');
-
-  const ui=read('public/collection-analytics.js');
+  const ui=read('public/price-supplier-analysis.js');
   const scopes=read('server/lib/model-scopes.js');
   const refresh=read('server/lib/model-refresh.js');
   const server=read('server/server.js');

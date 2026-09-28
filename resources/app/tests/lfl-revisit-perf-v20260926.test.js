@@ -5,7 +5,8 @@
    - bağımsız karşılaştırma senaryoları her çizimde tüm satırları yeniden
      süzüp özetliyordu (~0,4 sn),
    - Sipariş Hacmi Analizi filtre seçenekleri için her boyutta tüm güncel +
-     kıyas satırlarını tarayıp iki kez Türkçe büyük harfe çeviriyordu (~0,37 sn).
+     kıyas satırlarını tarayıp iki kez Türkçe büyük harfe çeviriyordu (~0,37 sn;
+     bu panel Fiyat & Üretici Analizi v3'e taşındı).
    İkisi de aynı veri/filtre/dil için aynı sonucu üretir; artık önbelleklenir.
    Veri yeniden yüklenince (analysisDatasetRevision) veya deneme satırları
    değişince (analysisRevision) anahtar değişir; önbellek bayat sonuç vermez. */
@@ -15,7 +16,6 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const LFL = fs.readFileSync(path.join(__dirname, '..', 'public', 'lfl.js'), 'utf8');
-const ANALYTICS = fs.readFileSync(path.join(__dirname, '..', 'public', 'lfl-order-analytics.js'), 'utf8');
 
 function body(src, name) {
   const start = src.indexOf(`function ${name}(`);
@@ -32,12 +32,4 @@ test('senaryo sonuçları veri sürümü + senaryo + genel filtre + kırılım +
   assert.match(LFL, /analysisDatasetRevision\+=1;lflAnalysisCache\.clear\(\);lflScenarioCache\.clear\(\);/);
   // Test kancası ham (önbelleksiz) hesaplamayı açığa vermeye devam eder.
   assert.match(LFL, /window\.__lflTest=\{[\s\S]*scenarioComparisonResult,/);
-});
-
-test('Sipariş Hacmi Analizi filtre seçenekleri analiz nesnesi + dil başına bir kez hesaplanır', () => {
-  const unique = body(ANALYTICS, 'uniqueValues');
-  assert.match(unique, /uniqueValuesCache/);
-  assert.match(unique, /locale\(\)/);
-  assert.match(ANALYTICS, /const uniqueValuesCache=new WeakMap\(\);/);
-  assert.doesNotMatch(unique, /seen\.has\(value\.toLocaleUpperCase\('tr-TR'\)\)\)seen\.set\(value\.toLocaleUpperCase/);
 });

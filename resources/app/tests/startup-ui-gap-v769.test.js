@@ -31,7 +31,7 @@ test('LOCAL_STATE_READY ile UI_FIRST_RENDER arasındaki bütün startup aşamala
 });
 
 test('Overview açılışında görünmeyen modül paketleri eager yüklenmez ve yalnız aktif modül render edilir', () => {
-  for (const file of ['automations.js', 'lfl.js', 'lfl-order-analytics.js', 'quotations.js', 'collection-analytics.js']) {
+  for (const file of ['automations.js', 'lfl.js', 'quotations.js', 'price-supplier-insights-engine.js', 'price-supplier-analysis.js']) {
     assert.doesNotMatch(INDEX, new RegExp(`<script[^>]+src=["']${file.replace('.', '\\.')}[?"']`));
     assert.ok(PERF.includes(file), `${file} lazy feature kaydında yok`);
   }

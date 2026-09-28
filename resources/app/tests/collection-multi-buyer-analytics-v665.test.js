@@ -62,7 +62,7 @@ test('v7.64 bağımsız analiz Collection kapsamını köprüden seçer',()=>{
   const start=app.indexOf('window.BLPriceSupplierAnalysisBridge=');const end=app.indexOf('function kolTableClipboardColumns',start);const block=app.slice(start,end);
   assert.match(block,/scope==='filtered'\?filteredKol\(\):kolRows/);
   assert.doesNotMatch(app,/BLCollectionAnalytics\?\.render\(rows\)/);
-  assert.doesNotMatch(read('public/collection-analytics.js'),/fetch\s*\(/);
+  assert.doesNotMatch(read('public/price-supplier-analysis.js'),/fetch\s*\(/);
 });
 
 test('v6.65 para türleri USD ile TRY değerlerini karıştırmaz',()=>{
@@ -73,19 +73,19 @@ test('v6.65 para türleri USD ile TRY değerlerini karıştırmaz',()=>{
 });
 
 test('v7.64 Collection görünümü, kullanıcı tercihi ve sahip-bazlı izin paneli bulunur',()=>{
-  const html=read('public/index.html'),app=read('public/app-main.js'),storage=read('public/user-storage.js'),ui=read('public/collection-analytics.js');
+  const html=read('public/index.html'),app=read('public/app-main.js'),storage=read('public/user-storage.js'),ui=read('public/price-supplier-analysis.js');
   assert.match(html,/Görünüm ve Yetkiler/);assert.doesNotMatch(html,/kolScopeMine|kolScopeAll/);
   assert.match(app,/\/api\/collection-permissions/);assert.match(app,/data-grant-add/);assert.match(app,/data-owner-id/);assert.match(app,/payload\.area==='collection-permissions'/);
-  assert.match(storage,/lcw\.koleksiyon\.scope\./);assert.match(ui,/lcw\.priceSupplierAnalysis\.v2/);
+  assert.match(storage,/lcw\.koleksiyon\.scope\./);assert.match(ui,/lcw\.priceSupplierAnalysis\.v3/);
 });
 
-test('v7.64 esnek analiz, drilldown, karşılaştırma ve dataset Excel export sunar',()=>{
-  const ui=read('public/collection-analytics.js');
-  // Liste kapalı değil: sonradan 'horizon' eklendi. İddia dört temel kaynağın
-  // VARLIĞINI çiviliyor, listenin tam eşitliğini değil.
-  const names=ui.match(/SOURCE_NAMES=\{[^}]*\}/);
-  assert.ok(names,'SOURCE_NAMES tanımlı olmalı');
-  for(const pair of ["collection:'Collection'","cp:'CP'","orders:'Orders'","lfl:'LFL'"]) assert.ok(names[0].includes(pair),`${pair} bulunmalı`);
-  for(const key of ['manufacturer','classification','flexibleMatrix'])assert.match(ui,new RegExp(key));
-  assert.match(ui,/openDrilldown/);assert.match(ui,/compareAnalyses/);assert.match(ui,/json_to_sheet\(out\)/);assert.doesNotMatch(ui,/table\.outerHTML|querySelectorAll\([^)]*tbody/);
+test('v7.64 analiz kaynak seçimi, drilldown ve dataset Excel export sunar',()=>{
+  // Fiyat & Üretici Analizi v3: ekran sade buyer asistanı olarak yeniden yazıldı; dört temel
+  // kaynak (Collection/CP/Orders/LFL) ve Horizon seçilebilir kalır.
+  const ui=read('public/price-supplier-analysis.js');
+  const sources=ui.match(/const SOURCES=\[[^\]]*\]/);
+  assert.ok(sources,'SOURCES tanımlı olmalı');
+  for(const key of ["'collection'","'cp'","'orders'","'lfl'","'horizon'"])assert.ok(sources[0].includes(key),`${key} bulunmalı`);
+  for(const key of ['manufacturer','classification','relations'])assert.match(ui,new RegExp(key));
+  assert.match(ui,/openDrilldown/);assert.match(ui,/json_to_sheet\(/);assert.doesNotMatch(ui,/table\.outerHTML|querySelectorAll\([^)]*tbody/);
 });

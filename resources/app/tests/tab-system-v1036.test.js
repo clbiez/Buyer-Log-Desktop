@@ -18,7 +18,7 @@ const TAB_FILES = [
   'public/formula-columns.js',
   'public/cp-overview-assistant.js',
   'public/lfl.js',
-  'public/lfl-order-analytics.js',
+  'public/price-supplier-analysis.js',
   'public/user-management.js',
 ].map(file => [file, read(file)]);
 
@@ -96,13 +96,13 @@ test('v10.36 sekme panelleri klavyeyle ulaşılabilir ve seçili sekmeyle ilişk
   const FC = read('public/formula-columns.js');
   const CPA = read('public/cp-overview-assistant.js');
   const LFL = read('public/lfl.js');
-  const LA = read('public/lfl-order-analytics.js');
+  const PSA = read('public/price-supplier-analysis.js');
   const UM = read('public/user-management.js');
   assert.match(DM, /id="dmLabPanel"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
   assert.match(FC, /data-fc-build[^>]*role="tabpanel"[^>]*tabindex="0"/);
   assert.match(CPA, /class="cpaRuleList"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
   assert.match(LFL, /id="lflTrialDraftList"[^>]*role="tabpanel"[^>]*tabindex="0"/);
-  assert.match(LA, /data-la-body[^>]*role="tabpanel"[^>]*aria-labelledby=/);
+  assert.match(PSA, /id="psaPanel"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
   assert.match(UM, /class="umMatrixWrap"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
   assert.match(UM, /class="umTemplateGrid"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
 });

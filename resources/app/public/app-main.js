@@ -25569,7 +25569,7 @@ function canonicalPriceObservation(row,moduleId,base={}){
   const plmId=norm(read('plmId')),model=norm(read('modelName')),classification=norm(read('category'))||'—',productMainDefinition=norm(read(moduleId==='collection'?'productMainDefinition':'productDescription'));
   const quantity=base.quantity!=null?base.quantity:toNum(read(moduleId==='collection'?'collectionQuantity':'orderQuantity'));
   return {...base,source:moduleId,row,raw:row,rowId:base.rowId??row.id??row._id,orderKey:norm(read('orderCode')),modelKey:plmId||model||String(base.rowId??row.id??row._id??''),model,classification,category:classification,
-    manufacturer:norm(base.manufacturer||manufacturer)||'—',subManufacturer,supplierFob:toNum(read('supplierFob')),country:country||'—',buyer:norm(read('buyer'))||'—',buyingGroup:norm(read('buyingGroup'))||'—',collection:norm(read('collectionName')),
+    manufacturer:norm(base.manufacturer||manufacturer)||'—',subManufacturer,supplierFob:toNum(read('supplierFob')),country:country||'—',buyer:norm(read('buyer'))||'—',buyingGroup:norm(read('buyingGroup'))||'—',mag:norm(read('mag'))||norm(base.mag)||'—',mmyg:norm(read('mmyg'))||norm(base.mmyg)||'—',collection:norm(read('collectionName')),
     productGroup:norm(read('productGroup')),productMainDefinition,season:norm(read('season'))||'—',status:norm(read('orderStatus')),colour:norm(read('colour')),month:inStore,planStartMonth:inStore,quantity:Number.isFinite(Number(quantity))&&Number(quantity)>0?Number(quantity):null};
 }
 window.BLPriceSupplierAnalysisBridge={

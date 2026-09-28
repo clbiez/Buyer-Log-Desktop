@@ -5,7 +5,6 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.join(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
-const ui=read('public/lfl-order-analytics.js');
 const css=read('public/lfl.css');
 const lfl=read('public/lfl.js');
 const html=read('public/index.html');
@@ -14,21 +13,6 @@ const parse=read('server/lib/parse.js');
 const lflServer=read('server/lib/lfl.js');
 const modelFields=read('server/lib/model-fields.js');
 const modelRefresh=read('server/lib/model-refresh.js');
-
-test('v6.66 LFL analytics chart/table modes work in distribution matrix and theme contrast is readable',()=>{
-  assert.match(ui,/function renderMatrixChart\(/);
-  assert.match(ui,/showTable=state\.view!==['"]chart['"]/);
-  assert.match(ui,/showChart=state\.view!==['"]table['"]/);
-  assert.match(ui,/return controls\+\(showChart\?renderMatrixChart\(data\)/);
-  assert.match(css,/\.lflOrderAnalyticsView button\.isActive\{[^}]*background:var\(--acc\)[^}]*color:var\(--on-acc/);
-  assert.match(css,/\.lflOrderTable,\.lflOrderMatrix\{width:max-content;min-width:100%/);
-  assert.match(css,/text-overflow:ellipsis/);
-});
-
-test('v6.66 LFL order analytics has Turkish and English UI strings',()=>{
-  for(const text of ['Üretici & Ülke Sipariş Analizi','Manufacturer & Country Order Analysis','SALT OKUNUR','READ ONLY','Dağılım Matrisi','Distribution Matrix','Grafik','Chart','İkisi','Both'])assert.ok(ui.includes(text),text);
-  assert.match(ui,/Engine\.insights\(model[^\n]+isEn\(\)\?['"]en['"]:['"]tr['"]/);
-});
 
 test('v6.66 Product Description is projected to CP and Orders and available as an LFL filter',()=>{
   assert.match(modelFields,/header:\s*['"]Ürün Tanım['"]/);

@@ -394,8 +394,7 @@ main{padding-top:16px;}
 .ocWorkspaceEmpty{display:flex;justify-content:center;align-items:flex-start;padding:72px 20px;}
 .ocWorkspaceEmpty[hidden]{display:none;}
 .ocWorkspaceEmpty .uiState{width:min(560px,100%);margin:0;}
-.paV2Panel.paV2Empty{display:flex;justify-content:center;padding:56px 20px;}
-.paV2Panel.paV2Empty .uiState{width:min(560px,100%);margin:0;}
+.psa>.uiState{width:min(560px,100%);margin:40px auto;}
 
 /* Menüler: her öğe ayrı kutu değil, sakin satır. Seçim/hover tek zemin tonu. */
 .toolbarMoreMenu .navActionBtn,.toolbarMoreMenu :is(button,label).tbtn,.toolbarMoreMenu .vfMenuTrigger{

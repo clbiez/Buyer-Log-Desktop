@@ -13,8 +13,9 @@ const perf=fs.readFileSync(path.join(ROOT,'public','perf-runtime.js'),'utf8');
 
 test('v6.66 LFL analiz modülü genel section görünürlük kuralına takılmaz',()=>{
   assert.match(css,/section\{display:none;\}\s*section\.active\{display:block;\}/);
-  assert.match(html,/<div class="lflCard lflOrderAnalytics" id="lflOrderAnalytics" role="region"/);
-  assert.doesNotMatch(html,/<section[^>]+id="lflOrderAnalytics"/);
+  // Fiyat & Üretici Analizi v3: Üretici & Ülke Sipariş Analizi LFL'den ayrılıp Fiyat & Üretici
+  // Analizi'ne taşındı; LFL görünümünde artık o panel yok.
+  assert.doesNotMatch(html,/id="lflOrderAnalytics"/);
 });
 
 test('v7.64 fiyat ve üretici analizi bağımsız ana navigasyon modülüdür',()=>{
@@ -24,8 +25,8 @@ test('v7.64 fiyat ve üretici analizi bağımsız ana navigasyon modülüdür',(
 });
 
 test('v6.66 analiz betikleri Overview açılışını bloklamadan lazy feature kaydından yüklenir',()=>{
-  assert.doesNotMatch(html,/<script[^>]+src=["'][^"']*lfl-order-analytics\.js/);
-  assert.doesNotMatch(html,/<script[^>]+src=["'][^"']*collection-analytics\.js/);
-  assert.match(perf,/lfl:\[[^\]]*'lfl-order-analytics\.js'/);
-  assert.match(perf,/collectionTools:\[[^\]]*'collection-analytics\.js'/);
+  assert.doesNotMatch(html,/<script[^>]+src=["'][^"']*lfl\.js/);
+  assert.doesNotMatch(html,/<script[^>]+src=["'][^"']*price-supplier-analysis\.js/);
+  assert.match(perf,/lfl:\[[^\]]*'lfl\.js/);
+  assert.match(perf,/collectionTools:\[[^\]]*'price-supplier-insights-engine\.js','price-supplier-analysis\.js'/);
 });

@@ -10,7 +10,7 @@ const read = name => fs.readFileSync(path.join(PUBLIC, name), 'utf8');
 const APP = read('app-main.js');
 const INDEX = read('index.html');
 const OC = read('open-costing.js');
-const PA = read('collection-analytics.js');
+const PA = read('price-supplier-analysis.js');
 const USER_UI = read('user-access-ui.js');
 const EXPERIENCE = read('experience.css');
 
@@ -46,7 +46,8 @@ test('Ön Maliyet seçim yokken çalışma alanı boş kalmaz', () => {
 });
 
 test('Fiyat & Üretici Analizi boş durumu ortak uiState bileşenini kullanır', () => {
-  assert.match(PA, /ui\.stateView\(\{kind:'empty',icon:'chart-histogram',title:t\('noData'\)/);
+  assert.match(PA, /stateBox\(\{kind:'empty',icon:'chart-histogram',title:t\('noData'\)/);
+  assert.match(PA, /window\.BLUI\?\.stateView/);
 });
 
 test('Kullanıcı menüsü metin simgesi değil ortak SVG ikon seti kullanır', () => {

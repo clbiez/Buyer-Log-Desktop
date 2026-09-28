@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 const cache = require('../public/analysis-cache.js');
-const analytics = fs.readFileSync(path.join(root, 'public', 'collection-analytics.js'), 'utf8');
+const analytics = fs.readFileSync(path.join(root, 'public', 'price-supplier-analysis.js'), 'utf8');
 const lfl = fs.readFileSync(path.join(root, 'public', 'lfl.js'), 'utf8');
 const oab = fs.readFileSync(path.join(root, 'public', 'oab.js'), 'utf8');
 const perf = fs.readFileSync(path.join(root, 'public', 'perf-runtime.js'), 'utf8');
