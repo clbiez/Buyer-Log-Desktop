@@ -17,8 +17,8 @@ test('LFL comparison ve manufacturer panellerinde yatay yükseklik ayırıcılar
   assert.match(HTML, /lflAnalysisResizableCard/);
 });
 
-test('LFL analiz tabloları manuel yükseklik yokken ekrana doğru gereksiz uzamaz', () => {
-  assert.match(CSS, /\.lflAnalysisGrid \.lflTableWrap:not\(\.lflManualHeight\)\{[^}]*height:auto!important;[^}]*max-height:clamp\(220px,34vh,360px\)!important/s);
+test('LFL ana analiz tabloları render ve toolbar işlemlerinde sabit yükseklikte kalır', () => {
+  assert.match(CSS, /\.lflAnalysisGrid \.lflTableWrap:not\(\.lflManualHeight\)\{[^}]*height:clamp\(220px,34vh,360px\)!important;[^}]*max-height:clamp\(220px,34vh,360px\)!important;[^}]*min-height:0;[^}]*overflow-y:auto;/s);
   assert.match(CSS, /\.lflAnalysisGrid>\.lflAnalysisResizableCard\{[^}]*align-self:start[^}]*height:auto/s);
 });
 
@@ -31,8 +31,23 @@ test('LFL tablo yükseklikleri kullanıcı bazında kalıcıdır ve sıfırlanab
   assert.match(JS, /initAnalysisHeightResizers\(\);/);
 });
 
+test('LFL manuel yükseklik gerçek viewport yüksekliğidir', () => {
+  assert.match(CSS, /\.lflAnalysisGrid \.lflTableWrap\.lflManualHeight\{[^}]*height:var\(--lfl-manual-height\)!important;[^}]*max-height:var\(--lfl-manual-height\)!important;[^}]*min-height:0;[^}]*overflow-y:auto;/s);
+});
 
-test('LFL manuel yükseklik içerik azaldığında tabloyu pencere altına zorlamaz', () => {
-  assert.match(CSS, /\.lflAnalysisGrid \.lflTableWrap\.lflManualHeight\{[^}]*height:auto!important;[^}]*max-height:var\(--lfl-manual-height\)!important;[^}]*min-height:0;/s);
-  assert.doesNotMatch(CSS, /\.lflAnalysisGrid \.lflTableWrap\.lflManualHeight\{[^}]*(?:^|[;{])\s*height\s*:\s*var\(--lfl-manual-height\)!important/s);
+test('LFL geç layout kuralı analiz tablolarının sabit yüksekliğini ezmez', () => {
+  const marker = '/* v3.98 — LFL layout consolidation.';
+  const start = CSS.indexOf(marker);
+  assert.notEqual(start, -1);
+  const block = CSS.slice(start, CSS.indexOf('.lflDetailAccessPanel', start));
+  assert.doesNotMatch(block, /height:auto;max-height:none/);
+  assert.doesNotMatch(block, /overflow-y:visible/);
+  assert.match(block, /overflow-x:auto;overflow-y:auto/);
+});
+
+test('LFL Columns paneli tıklanan Columns düğmesine sabitlenir', () => {
+  assert.match(JS, /const trigger=event\.currentTarget/);
+  assert.match(JS, /panel\._buyerLogAnchor=trigger/);
+  assert.match(JS, /positionBuyerLogPopup\(panel,trigger\)/);
+  assert.match(JS, /openLflColumnPanel\._buyerLogAnchor=null/);
 });
