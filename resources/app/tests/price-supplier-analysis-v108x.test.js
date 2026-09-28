@@ -20,21 +20,5 @@ test('ASAS kaynağındaki özel başlıklar analiz boyutu olarak kullanılabilir
   assert.ok(available.includes('customAsasTitle'));
   const result=engine.supplierIntelligence(asasRows,{dimensions:['customAsasTitle','manufacturer'],metric:'average',includeOutliers:true,minSample:1});
   assert.ok(result.rows.some(row=>row.path.join('/')==='Segment A/M1'));
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/\.filter\(key=>!String\(key\)\.startsWith\('_'\)\)/);
 });
 
-test('heatmap renklendirme formülü her sütunun kendi fiyat aralığını kullanır',()=>{
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/columnRanges/);
-  assert.match(ui,/columnRange\.max>columnRange\.min/);
-  assert.match(ui,/cell\.value-columnRange\.min/);
-  assert.doesNotMatch(ui,/const min=Math\.min\(\.\.\.values\),max=Math\.max\(\.\.\.values\)/);
-});
-
-test('Price & Supplier Analysis okunabilirlik ölçeğini genel olarak büyütür',()=>{
-  const css=read('public/collection-analytics.css');
-  assert.match(css,/\.priceSupplierAnalysis\{font-size:14px\}/);
-  assert.match(css,/\.paV2Virtual table,\.paV2Heatmap table,\.paV2Comparison table,\.priceAnalysisDrillBody table\{font-size:12px\}/);
-  assert.match(css,/\.paV2Heatmap th\{font-size:13px\}/);
-});

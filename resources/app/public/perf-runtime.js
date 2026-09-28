@@ -100,8 +100,8 @@
     versionHistory:['version-history.js'],
     openCosting:['open-costing.js'],
     automations:['automations.js','ai-automation-import.js'],
-    lfl:['lfl-order-analytics-engine.js','lfl-order-analytics.js','lfl.js?rev=1'],
-    collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=4','collection-analytics-engine.js','collection-analytics.js'],
+    lfl:['lfl.js?rev=2'],
+    collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=4','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
     // v9.46 — Backlog teslimat riski analizi. Sıra önemli: iki saf motor
     // görünüm katmanından ÖNCE yüklenir (görünüm ikisini de window'dan okur).
     // order-decision-engine.js index.html'de eager yüklenir; burada yeniden

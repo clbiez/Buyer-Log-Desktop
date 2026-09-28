@@ -5013,7 +5013,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
   .syncStatusBadge.is-syncing .ic{animation:spinIc 1.8s linear infinite!important;}
   #topRefreshBtn.spinning .ic{animation:spinIc 1.8s linear infinite!important;}
   #serverRefreshBtn.spinning .ic,.uiStateSpinner,.overviewDataNoticeSpinner,.uiFeedbackSpinner{animation:buyerLogRefreshSpin 1.8s linear infinite!important;}
-  .appBlockingSpinner,.paV2Busy span{animation:spin 1.8s linear infinite!important;}
+  .appBlockingSpinner{animation:spin 1.8s linear infinite!important;}
   .prepareEmailProgressSpinner{animation:prepareEmailSpin 1.8s linear infinite!important;}
   .outlookLoading>span{animation:outlookSpin 1.8s linear infinite!important;}
   .umSpinner{animation:umSpin 1.8s linear infinite!important;}

@@ -8,29 +8,6 @@ const vm=require('node:vm');
 const root=path.join(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 
-test('v6.69 Üretici ve Ülke analizi bütün çeviri anahtarlarını TR ve EN olarak karşılar',()=>{
-  const context={
-    appLang:'tr',
-    BLStorage:{getItem:()=>null,setItem:()=>{}},
-    BLLFLOrderAnalyticsEngine:{DIMENSIONS:['manufacturer','country','mag','classification']},
-  };
-  context.window=context;
-  vm.runInNewContext(read('public/lfl-order-analytics.js'),context,{filename:'lfl-order-analytics.js'});
-  const api=context.BLLFLOrderAnalytics;
-  assert.ok(api);
-  assert.deepEqual(Object.keys(api._i18n.tr).sort(),Object.keys(api._i18n.en).sort());
-  assert.equal(api._translate('title'),'Üretici & Ülke Sipariş Analizi');
-  assert.equal(api._translate('top'),'İlk');
-  assert.equal(api._translate('productDescription'),'Ürün Tanım');
-  context.appLang='en';
-  assert.equal(api._translate('title'),'Manufacturer & Country Order Analysis');
-  assert.equal(api._translate('top'),'Top');
-  assert.equal(api._translate('productDescription'),'Product Description');
-  const source=read('public/lfl-order-analytics.js');
-  assert.doesNotMatch(source,/· Top \$\{state\.topN\}/);
-  assert.match(source,/· \$\{esc\(T\('top'\)\)\} \$\{state\.topN\}/);
-});
-
 test('v6.69 ASAS Ürün Tanım değeri gerçek parser hattından CP ve Orders satırlarına taşınır',()=>{
   const parse=require(path.join(root,'server','lib','parse'));
   const source={
@@ -79,10 +56,4 @@ test('v6.69 Analysis Breakdown listesinin en sonunda Add From ASAS bulunur ve se
   assert.match(source,/\/api\/model-connections\/schema/);
   assert.match(source,/copy\.mapping\[outputHeader\]/);
   assert.match(source,/await load\(true\)/);
-});
-
-test('v6.69 LFL analiz detay Exceli Ürün Tanım alanını seçili dilde dışa aktarır',()=>{
-  const source=read('public/lfl-order-analytics.js');
-  assert.match(source,/T\('productDescription'\)/);
-  assert.match(source,/row\.productDescription/);
 });

@@ -53,8 +53,6 @@ test('V2 üç veya daha fazla kırılımda ara parent seviyelerini korur',()=>{
   assert.ok(alphaSummary);
   assert.equal(alphaSummary.parentBenchmark.value,16);
   assert.ok(result.hierarchyRows.some(row=>!row.isSummary&&row.path.join('/')==='Tee/Alpha/Buyer A'));
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/function appendHierarchy/);
 });
 
 test('V2 veri kalitesi eksik fiyatı ve çıkarılan outlierı açıkça raporlar',()=>{
@@ -83,48 +81,6 @@ test('V2 karışık para biriminde fiyat farkını hesaplamaz',()=>{
   assert.ok(result.dataQuality.mixedCurrencyGroups>0);
 });
 
-test('V2 ekranı otomatik hazır Collection dashboard sözleşmesini kullanır',()=>{
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/const STORAGE_KEY='lcw\.priceSupplierAnalysis\.v2'/);
-  assert.match(ui,/source:'collection'/);
-  assert.match(ui,/scope:'all'/);
-  assert.match(ui,/dimensions:\['classification','manufacturer'\]/);
-  assert.match(ui,/metric:'average'/);
-  assert.match(ui,/sort:\{key:'average',dir:'asc'\}/);
-  assert.doesNotMatch(ui,/data-pa="run"/);
-  for(const marker of ['paV2Toolbar','paV2Overview','paV2Ranking','paV2Opportunities','paV2Heatmap'])assert.match(ui,new RegExp(marker));
-});
-
-test('V2 tek filtre drawerı, esnek breakdown ve kullanıcıya özel saved view durumunu taşır',()=>{
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/data-pa="filters"/);
-  assert.match(ui,/data-pa="breakdown"/);
-  assert.match(ui,/openValueFilterPanel/);
-  assert.match(ui,/BLStorage/);
-  assert.match(ui,/dimensions:structuredClone/);
-  assert.match(ui,/thresholds:structuredClone/);
-  assert.match(ui,/includeOutliers/);
-});
-
-test('V2 ranking sanallaştırılır, drill-down ve dataset tabanlı Excel export korunur',()=>{
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/paV2Virtual/);
-  assert.match(ui,/requestAnimationFrame/);
-  assert.match(ui,/openDrilldown/);
-  assert.match(ui,/XLSX\.utils\.json_to_sheet/);
-  assert.match(ui,/Data Quality/);
-  assert.doesNotMatch(ui,/table\.outerHTML/);
-});
-
-test('V2 heatmap veri hücreleri sıralama yapmaz; sıralama yalnız başlık hücrelerinde kalır',()=>{
-  const ui=read('public/collection-analytics.js');
-  assert.match(ui,/paV2HeatmapRowSort/);
-  assert.match(ui,/data-heat-column-sort/);
-  assert.match(ui,/data-heat-row-sort/);
-  assert.match(ui,/querySelectorAll\('\[data-heat-row\]'\).*dblclick/s);
-  assert.doesNotMatch(ui,/<td[^>]*data-heat-row="[^"]*"[^>]*data-heat-row-sort=/);
-});
-
 test('V2 kaynak adaptörü ortak alanları canonical registry üzerinden okur',()=>{
   const app=read('public/app-main.js');
   const bridge=app.slice(app.indexOf('window.BLPriceSupplierAnalysisBridge='),app.indexOf('function kolTableClipboardColumns'));
@@ -133,8 +89,3 @@ test('V2 kaynak adaptörü ortak alanları canonical registry üzerinden okur',(
   assert.doesNotMatch(bridge,/row\['Sub-Manufacturer'\]\|\|row\['Sub Manufacturer'\]/);
 });
 
-test('V2 modül CSS’i Buyer Log tokenlarıyla kompakt drawer, ranking ve pozisyon durumlarını tanımlar',()=>{
-  const css=read('public/collection-analytics.css');
-  for(const marker of ['.paV2Toolbar','.paV2Drawer','.paV2Ranking','.paV2Position.is-below','.paV2Heatmap'])assert.match(css,new RegExp(marker.replace('.','\\.')));
-  assert.doesNotMatch(css.slice(css.indexOf('.priceSupplierAnalysis')),/#(?:[0-9a-fA-F]{3}){1,2}\b/);
-});

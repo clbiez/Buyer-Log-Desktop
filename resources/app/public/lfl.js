@@ -2155,15 +2155,6 @@
     initAnalysisSplitter();
     initAnalysisHeightResizers();
     const a=compute();state.analysis=a;updatePortfolioAccessButtons(a);renderTrialImpact(a);renderKpis(a);renderInsights(a);renderSource();renderGroupTable(a);renderManufacturerVolumes(a);renderCustomCompare(a);
-    // v6.64: Sipariş hacmi analizi mevcut LFL current/compare satırlarını doğrudan
-    // tüketir. Burada ikinci bir fetch/API çağrısı yoktur; drilldown da LFL'nin
-    // mevcut salt-okunur portföy penceresine geri bağlanır.
-    window.BLLFLOrderAnalytics?.render({
-      analysis:a,
-      seasons:unique((state.meta.dimensions&&state.meta.dimensions.seasons)||state.rows.map(row=>row.season)).sort(seasonSort),
-      source:state.source,
-      openDrilldown:openLflPortfolioModal,
-    });
     if(lflDetailModalState)renderLflDetailModal();saveFilters();
   }
   function exportAnalysis(){

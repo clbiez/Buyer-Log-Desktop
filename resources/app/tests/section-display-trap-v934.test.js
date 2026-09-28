@@ -24,8 +24,9 @@
  *
  *   1) Bir <section> birden fazla sınıf taşıyabiliyor; display'i vermek için
  *      BİRİNİN vermesi yeterli.
- *   2) Kapsayıcı kurallar da veriyor: `.priceSupplierAnalysis>section{display:block}`
- *      ve `.iamWizard>section{display:grid}` gibi.
+ *   2) Kapsayıcı kurallar da veriyor: `.iamWizard>section{display:grid}` gibi.
+ *      (Fiyat & Üretici Analizi v3 artık <section> üretmiyor; kendi
+ *      kapsayıcı kuralına gerek kalmadı.)
  *
  * Bunu statik CSS'ten güvenilir çıkarmak bir yerleşim motoru istiyor. Yalan
  * söyleyen bir test, olmayan bir testten kötüdür: ya silinir ya da gerçek bir
@@ -78,7 +79,6 @@ test('v9.34 <section>’a display veren kurallar biliniyor', () => {
     .map(match => match[1].trim());
   assert.deepEqual(granting.sort(), [
     '.iamWizard>section',
-    '.priceSupplierAnalysis>section,.priceSupplierAnalysis>.paV2Busy',
     'section',
     'section.active',
   ], 'section’a display veren kural kümesi değişti — CLAUDE.md’deki notu güncelleyin');
