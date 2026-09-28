@@ -91,6 +91,19 @@
       location.reload();
     } catch (error) { if (typeof showToast === 'function') showToast(error.message); else alert(error.message); }
   }
+  // Ön Ayar Paylaşımı açılış kritik yolunda değildir; ilk tıklamada yüklenir.
+  async function openPresetShare() {
+    try {
+      if (!window.BLPresetShare && window.BLPerf && typeof window.BLPerf.ensureFeature === 'function') await window.BLPerf.ensureFeature('presetShare');
+      if (!window.BLPresetShare) throw new Error(tr('Ön Ayar Paylaşımı yüklenemedi.', 'Preset Sharing could not be loaded.'));
+      await window.BLPresetShare.open();
+    } catch (error) { if (typeof showToast === 'function') showToast(error.message); else alert(error.message); }
+  }
+  // Aktarım sonrası sayfa yenilenir; sonucu bildiren mesaj yenilemeden sonra gösterilir.
+  try {
+    const notice = sessionStorage.getItem('bl.presetShare.notice');
+    if (notice) { sessionStorage.removeItem('bl.presetShare.notice'); setTimeout(() => { if (typeof showToast === 'function') showToast(notice); }, 300); }
+  } catch (_) {}
   function openUserManagement() {
     if (window.BLUserManagement && typeof window.BLUserManagement.open === 'function') { window.BLUserManagement.open(); return; }
     if (typeof showToast === 'function') showToast(tr('Kullanıcı yönetimi arayüzü yüklenemedi.', 'The user management screen could not be loaded.'));
@@ -120,11 +133,12 @@
     if (menu) return closeMenu();
     const profile = current(); if (!profile) return;
     menu = document.createElement('div'); menu.className = 'userMenu';
-    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar">${esc(initials(profile.displayName))}</span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div>${canManageUsers() ? `<button type="button" data-user-admin><svg class="ic" aria-hidden="true"><use href="#i-users-group"/></svg>${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}${hasCapability('OUTLOOK.SEARCH') ? `<button type="button" data-outlook-settings-menu><svg class="ic" aria-hidden="true"><use href="#i-mail-send"/></svg>${esc(tr('Microsoft 365 · Outlook', 'Microsoft 365 · Outlook'))}</button>` : ''}<button type="button" data-plm-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}</button><button type="button" data-oab-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('OAB Kullanıcı Girişi', 'OAB User Sign-In'))}</button>${profile.systemRole === 'moderator' ? `<button type="button" data-update-test><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>${esc(tr('Güncelleme Testi', 'Update Test'))}</button>` : ''}<button type="button" data-backup-settings><svg class="ic" aria-hidden="true"><use href="#i-database-import"/></svg>${esc(tr('Backup', 'Backup'))}</button><button type="button" data-reset-my-view><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg>${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
+    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar">${esc(initials(profile.displayName))}</span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div>${canManageUsers() ? `<button type="button" data-user-admin><svg class="ic" aria-hidden="true"><use href="#i-users-group"/></svg>${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}${hasCapability('OUTLOOK.SEARCH') ? `<button type="button" data-outlook-settings-menu><svg class="ic" aria-hidden="true"><use href="#i-mail-send"/></svg>${esc(tr('Microsoft 365 · Outlook', 'Microsoft 365 · Outlook'))}</button>` : ''}<button type="button" data-plm-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}</button><button type="button" data-oab-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('OAB Kullanıcı Girişi', 'OAB User Sign-In'))}</button>${profile.systemRole === 'moderator' ? `<button type="button" data-update-test><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>${esc(tr('Güncelleme Testi', 'Update Test'))}</button>` : ''}<button type="button" data-backup-settings><svg class="ic" aria-hidden="true"><use href="#i-database-import"/></svg>${esc(tr('Backup', 'Backup'))}</button><button type="button" data-preset-share><svg class="ic" aria-hidden="true"><use href="#i-copy-plus"/></svg>${esc(tr('Ön Ayar Paylaşımı', 'Preset Sharing'))}</button><button type="button" data-reset-my-view><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg>${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
     document.body.appendChild(menu);
     const rect = anchor.getBoundingClientRect(), width = Math.min(380, window.innerWidth - 24); menu.style.width = `${width}px`; menu.style.left = `${Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12))}px`; menu.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - menu.offsetHeight - 12)}px`;
     menu.querySelector('[data-switch-user]').addEventListener('click', switchUser);
     menu.querySelector('[data-reset-my-view]').addEventListener('click', () => { closeMenu(); resetMyView(); });
+    menu.querySelector('[data-preset-share]').addEventListener('click', () => { closeMenu(); void openPresetShare(); });
     menu.querySelector('[data-user-admin]')?.addEventListener('click', () => { closeMenu(); openUserManagement(); });
     menu.querySelector('[data-outlook-settings-menu]')?.addEventListener('click', () => { closeMenu(); if (window.BLOutlook) window.BLOutlook.openSettings(); });
     menu.querySelector('[data-plm-user-login]')?.addEventListener('click', () => { closeMenu(); window.openCoreNectumApiSettings?.({ required:false, manual:true }); });

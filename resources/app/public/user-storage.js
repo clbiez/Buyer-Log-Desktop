@@ -91,6 +91,10 @@
   function readMeta(){try{return JSON.parse(native.getItem(META_KEY)||'{}')||{}}catch(_){return{}}}
   function writeMeta(meta){try{native.setItem(META_KEY,JSON.stringify(meta))}catch(_){}}
   var pending={},pushTimer=null;
+  // Sunucuda başka bir akışla (Ön Ayar Paylaşımı) yazılmış ve sayfa yenilenene
+  // kadar yerelde KİLİTLİ tutulan anahtarlar. Kapanış sırasındaki otomatik
+  // kaydetmeler bellekteki eski değeri yeni damgayla geri itemez.
+  var adopted={};
   function schedulePush(){
     if(pushTimer&&typeof global.clearTimeout==='function')global.clearTimeout(pushTimer);
     // Yazma sırasında değil, kısa bir duraklamadan sonra gönderilir: not yazarken
@@ -117,6 +121,7 @@
   var api={
     getItem:function(key){var personal=native.getItem(actual(key));if(personal!=null)return personal;var inherited=roleDefaults[String(key)];return inherited&&inherited.value!=null?String(inherited.value):null;},
     setItem:function(key,value){
+      if(adopted[String(key)])return;
       var result=native.setItem(actual(key),String(value));
       if(synced(key)){
         var stamp=new Date().toISOString();
@@ -127,6 +132,7 @@
       return result;
     },
     removeItem:function(key){
+      if(adopted[String(key)])return;
       var result=native.removeItem(actual(key));
       if(synced(key)){
         try{fetch('/api/user-preferences/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:[String(key)]})}).catch(function(){});}catch(_){}
@@ -138,6 +144,23 @@
     actualKey:actual,
     native:native,
     isSynced:synced,
+    /* Sunucunun yazdığı değerleri kendi zaman damgasıyla yerel kopyaya işler ve
+       bu anahtarları sayfa yenilenene kadar kilitler. `removed` anahtarları
+       yerelden kaldırılır. Çağıran ardından sayfayı yeniler. */
+    adoptRemote:function(entries,removed){
+      var meta=readMeta();
+      Object.keys(entries||{}).forEach(function(key){
+        var item=entries[key]||{};if(!synced(key)||item.value==null)return;
+        native.setItem(actual(key),String(item.value));
+        meta[key]=String(item.updatedAt||new Date().toISOString());
+        delete pending[key];adopted[key]=true;
+      });
+      (Array.isArray(removed)?removed:[]).forEach(function(key){
+        key=String(key);if(!synced(key))return;
+        native.removeItem(actual(key));delete meta[key];delete pending[key];adopted[key]=true;
+      });
+      writeMeta(meta);
+    },
     /* Açılışta sunucudaki kopyayla birleştirir. Kural: hangi taraf daha YENİYSE
        o kazanır. Yerel taraf daha yeniyse sunucuya gönderilir, böylece bu
        tarayıcıda yazılmış notlar diğerlerine de geçer. */

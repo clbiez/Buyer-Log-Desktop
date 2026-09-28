@@ -3739,6 +3739,17 @@ app.put('/api/user-workspace/:module/horizon',express.json({limit:'2mb'}),(req,r
    Veri Yönetimi'ndeki ortak filtreyi eziyordu. Uç kaldırıldı; eski istemci
    çağrısı 404 alır ve sessizce boş liste sanmaz. Diskteki eski kayıt durur. */
 app.post('/api/user-workspace/:module/reset',express.json({limit:'256kb'}),(req,res)=>{try{const module=workspaceModule(req),categories=req.body&&req.body.categories||userPreferences.WORKSPACE_CATEGORIES;const saved=userPreferences.resetWorkspace(req.currentUser.id,module,categories);userAccess.appendAudit(req.currentUser,'USER_WORKSPACE_RESET',req.currentUser.id,{module,categories:userPreferences.normalizeCategories(categories)});res.json({ok:true,module,updatedAt:saved._updatedAt,removedKeys:saved.removedKeys||[]});}catch(err){apiError(res,err,'Kişisel görünüm sıfırlanamadı.');}});
+// ---- Ön Ayar Paylaşımı: başka kullanıcının kişisel görünüm ayarlarını kendi çalışma alanına alma → server/routes/preset-share-routes.js ----
+const presetShare = require('./lib/preset-share').createPresetShare({
+  loadProfiles: id => ({ views: loadViews(id), filters: loadFilterProfiles(id) }),
+  restoreProfiles: (id, stores) => require('./db').restoreUserBackupStores(id, stores),
+});
+require('./routes/preset-share-routes')(app, {
+  apiError,
+  express,
+  presetShare,
+  userAccess,
+});
 
 /* ===================================================================
    v7.26 — SAYFA UFKU EKRANININ UÇLARI
