@@ -12745,11 +12745,9 @@ async function waitForRefreshJob(expectedJob=null){
     // taşıyorsa mevcut satır nesneleri korunur. Kullanıcı-visible refresh bu
     // noktaya gelmeden önce editörü commit edip bekleyen yazmaları settle eder.
     const preserveCpClientState=!userVisibleRefresh&&cpClientWorkInProgress();
-    let cpProjectionReplaced=false;
     if(Array.isArray(data.cp)){
       if(!preserveCpClientState){
         state.cp = { fname: `Sunucu: ${sourceName}`, rows: data.cp }; state.cpLogisticExpanded.clear();
-        cpProjectionReplaced=true;
       }
       overviewCpLoadState='ready';overviewCpLoadError='';
       invalidateUnifiedPriorityDecisions(preserveCpClientState?'server-cp-hydrate-deferred-for-local-edit':'server-cp-hydrated');
