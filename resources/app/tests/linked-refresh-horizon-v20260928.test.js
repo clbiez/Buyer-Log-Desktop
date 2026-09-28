@@ -41,7 +41,7 @@ const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const APP = read('public/app-main.js');
 const LFL = read('public/lfl.js');
 const HTML = read('public/index.html');
-const ANALYTICS = read('public/collection-analytics.js');
+const ANALYTICS = read('public/price-supplier-analysis.js');
 const SERVER = read('server/server.js');
 
 test.after(() => fs.rmSync(root, { recursive: true, force: true }));
