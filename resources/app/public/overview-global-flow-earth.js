@@ -305,10 +305,10 @@ function create(options){
   }
   /* Simgeler 2x çözünürlükte çizilir; billboard'a CSS piksel boyutu verilir. */
   function board(collection,options){const image=options.image;return collection.add({...options,width:image.blSize,height:image.blSize,disableDepthTestDistance:Number.POSITIVE_INFINITY});}
-  function vehicleIcon(mode,critical,selected){
-    const p=host.palette(),stroke=critical?p.red:host.modeColor(mode);
-    return iconCanvas('veh|'+mode+'|'+(critical?1:0)+'|'+(selected?1:0),28,ctx=>{
-      ctx.fillStyle=p.card;ctx.strokeStyle=stroke;ctx.lineWidth=critical?2.2:1.6;
+  function vehicleIcon(mode,critical,overdue,selected){
+    const p=host.palette(),stroke=overdue?p.yellow:(critical?p.red:host.modeColor(mode));
+    return iconCanvas('veh|'+mode+'|'+(critical?1:0)+'|'+(overdue?1:0)+'|'+(selected?1:0),28,ctx=>{
+      ctx.fillStyle=p.card;ctx.strokeStyle=stroke;ctx.lineWidth=critical||overdue?2.2:1.6;
       ctx.beginPath();ctx.arc(0,0,10,0,Math.PI*2);ctx.fill();ctx.stroke();
       ctx.fillStyle=host.modeColor(mode);
       // Hava aracı yukarıyı gösterir; billboard alignedAxis ile rota yönüne döner.
@@ -323,12 +323,12 @@ function create(options){
       ctx.fillStyle='#fff';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,.5);
     });
   }
-  function clusterIcon(count,css,critical){
+  function clusterIcon(count,css,critical,overdue){
     const label=count>999?'999+':String(count),size=count>99?46:count>9?40:34;
-    return iconCanvas('cluster|'+label+'|'+css+'|'+(critical?1:0),size,ctx=>{
+    return iconCanvas('cluster|'+label+'|'+css+'|'+(critical?1:0)+'|'+(overdue?1:0),size,ctx=>{
       const p=host.palette(),r=size/2-3;
       ctx.fillStyle=css;ctx.globalAlpha=.28;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();
-      ctx.globalAlpha=1;ctx.fillStyle=p.card;ctx.strokeStyle=critical?p.red:css;ctx.lineWidth=critical?2.6:2;
+      ctx.globalAlpha=1;ctx.fillStyle=p.card;ctx.strokeStyle=overdue?p.yellow:(critical?p.red:css);ctx.lineWidth=critical||overdue?2.6:2;
       ctx.beginPath();ctx.arc(0,0,r-5,0,Math.PI*2);ctx.fill();ctx.stroke();
       ctx.fillStyle=p.ink;ctx.font='800 11px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,.5);
     });
@@ -430,7 +430,7 @@ function create(options){
         const ahead=vehicle.geo.ahead||vehicle.geo.behind;
         if(ahead){const dir=C.Cartesian3.subtract(cartesian(ahead,vehicle.mode),position,new C.Cartesian3());if(vehicle.geo.ahead==null)C.Cartesian3.negate(dir,dir);if(C.Cartesian3.magnitude(dir)>1)alignedAxis=C.Cartesian3.normalize(dir,dir);}
       }
-      const vehicleBoard=board(billboards,{position,image:vehicleIcon(vehicle.mode,vehicle.critical),id:hit,alignedAxis});
+      const vehicleBoard=board(billboards,{position,image:vehicleIcon(vehicle.mode,vehicle.critical,vehicle.overdue),id:hit,alignedAxis});
       const count=vehicle.records.length,badge=count>1?board(billboards,{position,image:badgeIcon(count>99?'99+':String(count),vehicle.critical?host.palette().red:host.modeColor(vehicle.mode)),pixelOffset:new C.Cartesian2(10,-10),id:hit}):null;
       const label=labels.add({position,text:host.vehicleTitle(vehicle),id:hit,font:'600 11px Barlow, "Segoe UI", sans-serif',fillColor:C.Color.WHITE,outlineColor:C.Color.BLACK.withAlpha(.85),outlineWidth:3,style:C.LabelStyle.FILL_AND_OUTLINE,pixelOffset:new C.Cartesian2(0,16),horizontalOrigin:C.HorizontalOrigin.CENTER,verticalOrigin:C.VerticalOrigin.TOP,disableDepthTestDistance:Number.POSITIVE_INFINITY,show:false});
       const halo=vehicle.critical?board(billboards,{position,image:haloIcon(),show:false}):null;
@@ -503,14 +503,14 @@ function create(options){
       item.label.show=showLabels&&near;
     });
     clusters.forEach(members=>{
-      const vehicles=members.map(m=>m.vehicle),records=vehicles.flatMap(v=>v.records),critical=vehicles.some(v=>v.critical);
+      const vehicles=members.map(m=>m.vehicle),records=vehicles.flatMap(v=>v.records),critical=vehicles.some(v=>v.critical),overdue=vehicles.some(v=>v.overdue);
       const byMode=new Map();vehicles.forEach(v=>byMode.set(v.mode,(byMode.get(v.mode)||0)+1));
       const dominant=[...byMode.entries()].sort((a,b)=>b[1]-a[1])[0][0];
       const sum=members.reduce((acc,m)=>C.Cartesian3.add(acc,m.position,acc),new C.Cartesian3());
       const surface=C.Ellipsoid.WGS84.scaleToGeodeticSurface(C.Cartesian3.divideByScalar(sum,members.length,sum));
       const position=surface||members[0].position;
       const hit={type:'cluster',vehicles,records,byMode,positions:members.map(m=>m.position)};
-      board(clusterBoards,{position,image:clusterIcon(vehicles.length,host.modeColor(dominant),critical&&showRisk),id:hit});
+      board(clusterBoards,{position,image:clusterIcon(vehicles.length,host.modeColor(dominant),critical&&showRisk,overdue),id:hit});
     });
     // Sabit noktalar: katman + ufuk arkası kontrolü.
     sceneData.nodes.forEach(n=>{const on=layerOn('origins')&&visible(n.position);n.board.show=on;n.label.show=on&&showLabels;});
