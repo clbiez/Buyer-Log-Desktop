@@ -2064,7 +2064,7 @@
     if(btn)btn.disabled=true;if(label)label.textContent=isEn()?'Refreshing…':'Yenileniyor…';
     let ok=false;
     try{
-      ok=await load(true,{silent:true,preserveOnError:true});
+      ok=await refreshLinked({silent:true,preserveOnError:true});
       state.customCompare.scenarios=snapshots.map((item,index)=>normalizeComparisonScenario(item,index));
       state.customCompare.scenariosSeeded=true;
       saveCustomCompare();lflScenarioCache.clear();
@@ -2209,6 +2209,15 @@
       return false;
     }finally{state.loading=false;if(btn){btn.disabled=false;btn.innerHTML=old;}}
   }
+  /* v20260928 — LFL'in AYRI yenilemesi yok. Siparişler · Backlog · LFL ·
+     Fiyat & Üretici aynı ufku paylaşır ve ortak yenilemeyle birlikte güncellenir
+     (app-main.js BLRunLinkedRefresh); bitince LFL reloadLflFromCache ile çizilir.
+     Ortak akış yüklenmemişse eski yol yedek olarak kalır. */
+  function linkedRefreshTitle(){return isEn()?'Refreshes Orders, Backlog, LFL and Price & Supplier Analysis together (shared horizon).':'Siparişler, Backlog, LFL ve Fiyat & Üretici Analizi birlikte yenilenir (ortak ufuk).';}
+  async function refreshLinked(options={}){
+    if(typeof window.BLRunLinkedRefresh==='function')return Boolean(await window.BLRunLinkedRefresh());
+    return load(true,options);
+  }
   function copyPreviousYearMonths(){
     const seasons=unique((state.meta.dimensions&&state.meta.dimensions.seasons)||state.rows.map(r=>r.season));
     const currentSeason=$('lflCurrentSeason').value,previous=previousSeason(currentSeason,seasons);if(previous)$('lflCompareSeason').value=previous;
@@ -2221,8 +2230,8 @@
   }
   function bind(){
     if(state.initialized)return;state.initialized=true;
-    const refreshButton=$('lflRefreshBtn');if(refreshButton)refreshButton.title=isEn()?'The source folder must contain the LFL KAYNAK Excel file.':'Kaynak klasörde LFL KAYNAK Excel dosyası bulunmalıdır.';
-    $('lflRefreshBtn')?.addEventListener('click',()=>load(true));$('lflCurrentPortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('current'));$('lflComparePortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('compare'));$('lflExportBtn')?.addEventListener('click',exportAnalysis);$('lflResetBtn')?.addEventListener('click',resetFilters);$('lflReadyFiltersBtn')?.addEventListener('click',e=>{e.stopPropagation();toggleReadyPanel();});$('lflShiftYear')?.addEventListener('click',copyPreviousYearMonths);$('lflFabricDetailsBtn')?.addEventListener('click',toggleFabricDetails);
+    const refreshButton=$('lflRefreshBtn');if(refreshButton)refreshButton.title=linkedRefreshTitle();
+    $('lflRefreshBtn')?.addEventListener('click',()=>{void refreshLinked();});$('lflCurrentPortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('current'));$('lflComparePortfolioBtn')?.addEventListener('click',()=>openLflDetailModal('compare'));$('lflExportBtn')?.addEventListener('click',exportAnalysis);$('lflResetBtn')?.addEventListener('click',resetFilters);$('lflReadyFiltersBtn')?.addEventListener('click',e=>{e.stopPropagation();toggleReadyPanel();});$('lflShiftYear')?.addEventListener('click',copyPreviousYearMonths);$('lflFabricDetailsBtn')?.addEventListener('click',toggleFabricDetails);
     $('lflBreakdownBtn')?.addEventListener('click',event=>{event.stopPropagation();toggleBreakdownPanel();});
     for(let i=0;i<3;i++){$(`lflCustomCompareDimension${i}`)?.addEventListener('change',event=>updateCustomCompareDimension(i,event.target.value));$(`lflCustomCompareValueBtn${i}`)?.addEventListener('click',event=>{event.stopPropagation();toggleCustomComparePanel(i);});}
     $('lflCustomCompareReference')?.addEventListener('change',event=>{state.customCompare.reference=event.target.value;saveCustomCompare();renderCustomCompare(state.analysis||compute());});
@@ -2246,7 +2255,7 @@
   // (yüklenmiş) veriyi GET ile çeker; load(true) diskten yeniden okuyup yüklenen
   // dosyanın üzerine yazacağı için burada bilerek kullanılmaz.
   window.reloadLflFromCache=function(){return load(false);};
-  window.renderLFLLanguage=function(){const btn=$('lflRefreshBtn');if(btn)btn.title=isEn()?'The source folder must contain the LFL KAYNAK Excel file.':'Kaynak klasörde LFL KAYNAK Excel dosyası bulunmalıdır.';render();if(!$('lflReadyFiltersPanel')?.hidden)renderReadyPanel();if(!$('lflScenarioEditor')?.hidden)renderComparisonScenarioEditor();if(lflDetailModalState)renderLflDetailModal();if(lflPortfolioModalState)renderLflPortfolioModal();};
+  window.renderLFLLanguage=function(){const btn=$('lflRefreshBtn');if(btn)btn.title=linkedRefreshTitle();render();if(!$('lflReadyFiltersPanel')?.hidden)renderReadyPanel();if(!$('lflScenarioEditor')?.hidden)renderComparisonScenarioEditor();if(lflDetailModalState)renderLflDetailModal();if(lflPortfolioModalState)renderLflPortfolioModal();};
   window.BLPriceSupplierLFLBridge={
     async get(scope='all'){
       // LFL sekmesinin kendi yüklemesi sürüyorsa boş sonuç dönmek yerine bitmesini bekle.

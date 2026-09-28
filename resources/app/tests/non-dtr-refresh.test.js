@@ -95,8 +95,9 @@ test('UI exposes Non-DTR management, non-blocking Refresh Stages and non-blockin
   assert.match(appMain, /Bu liste yalnız LFL sınıflandırmasında kullanılır/);
   assert.match(appMain, /CP Licensor değerleri değiştirilmez/);
   assert.doesNotMatch(html, /row\.Licensor='NON-DTR'/);
-  assert.match(lfl, /refreshButton\.title=isEn\(\).*LFL KAYNAK/s);
-  assert.match(lfl, /lflRefreshBtn'\)\?\.addEventListener\('click',\(\)=>load\(true\)\)/);
+  // v20260928 — LFL düğmesi bağlı ortak yenilemeyi çalıştırır (ayrı LFL yenilemesi yok).
+  assert.match(lfl, /refreshButton\.title=linkedRefreshTitle\(\)/);
+  assert.match(lfl, /lflRefreshBtn'\)\?\.addEventListener\('click',\(\)=>\{void refreshLinked\(\);\}\)/);
   assert.doesNotMatch(lfl, /showAppBlockingOperation\('lfl'\)/);
   assert.doesNotMatch(lfl, /Processing may take longer depending on the file size and complexity\. Continue\?/);
   const css = fs.readFileSync(path.join(__dirname, '../public/app.css'), 'utf8');

@@ -15,6 +15,11 @@
  * 3) normalizeScopes YAZILANI TAŞIYABİLİR. Orders ayrılması ve priceanalysis
  *    eklenmesi kapsamları yeniden düzenler; yazdığımız ufkun hedef modülde
  *    gerçekten geçerli olduğu DOĞRULANMALI, varsayılmamalı.
+ *
+ * v20260928 — ASAS'ta Orders · Backlog · LFL · Price & Supplier BAĞLI bir
+ * gruptur (tek ufuk). ASAS'ta CP dışında paylaşım kalmadığı için paylaş/ayır
+ * sözleşmesi IAS (antrepo) kaynağı üzerinde doğrulanır; bağlı grubun kendi
+ * sözleşmesi ayrıca korunur.
  */
 
 const test = require('node:test');
@@ -46,12 +51,18 @@ function setup() {
       { id: 'sc_core', name: 'Licensing Core', targets: ['cp', 'backlog'], enabled: true, horizon: horizonOf(['S7']) },
       { id: 'sc_lfl', name: 'LFL', targets: ['lfl'], enabled: true, horizon: horizonOf(['S6']) },
     ],
+  }, {
+    id: 'mc_ias', name: 'IAS', server: 's2', catalog: 'c2', role: 'antrepo', refreshEnabled: true,
+    scopes: [
+      { id: 'sc_ias_core', name: 'IAS Core', targets: ['cp', 'backlog'], enabled: true, horizon: horizonOf(['S7']) },
+      { id: 'sc_ias_orders', name: 'IAS Orders', targets: ['orders'], enabled: true, horizon: horizonOf(['S6']) },
+    ],
   }], null).items;
 }
 
 const save = plan => db.replaceModelConnections(plan.items, null).items;
-const horizonFor = (items, moduleId) => {
-  const scope = items.find(entry => entry.id === 'mc_asas').scopes.find(s => (s.targets || []).includes(moduleId));
+const horizonFor = (items, moduleId, sourceId = 'mc_asas') => {
+  const scope = items.find(entry => entry.id === sourceId).scopes.find(s => (s.targets || []).includes(moduleId));
   return scope ? scope.horizon.groups[0].conditions[0].values : null;
 };
 
@@ -60,33 +71,61 @@ const horizonFor = (items, moduleId) => {
 test('P3w paylaşılan filtreyi güncellemek TÜM paylaşanları etkiler ve bunu söyler', () => {
   const items = setup();
   const plan = writer.planFilterChange(items, {
-    sourceId: 'mc_asas', moduleId: 'cp', definition: horizonOf(['W9']), mode: 'shared',
+    sourceId: 'mc_ias', moduleId: 'cp', definition: horizonOf(['W9']), mode: 'shared',
   });
   assert.equal(plan.ok, true);
   assert.ok(plan.warnings.some(text => /paylaşılıyor/.test(text)), 'paylaşım uyarısı verilmedi');
 
   const next = save(plan);
-  assert.deepEqual(horizonFor(next, 'cp'), ['W9']);
-  assert.deepEqual(horizonFor(next, 'backlog'), ['W9'], 'aynı kapsamdaki modül de değişmeli');
+  assert.deepEqual(horizonFor(next, 'cp', 'mc_ias'), ['W9']);
+  assert.deepEqual(horizonFor(next, 'backlog', 'mc_ias'), ['W9'], 'aynı kapsamdaki modül de değişmeli');
   // Başka kapsam etkilenmemeli.
-  assert.deepEqual(horizonFor(next, 'lfl'), ['S6']);
+  assert.deepEqual(horizonFor(next, 'orders', 'mc_ias'), ['S6']);
 });
 
 test('P3w ayırmak diğer modülleri ESKİ filtrede bırakır', () => {
   const items = setup();
   const plan = writer.planFilterChange(items, {
-    sourceId: 'mc_asas', moduleId: 'cp', definition: horizonOf(['W9']), mode: 'split', name: 'CP Kendi Kapsamı',
+    sourceId: 'mc_ias', moduleId: 'cp', definition: horizonOf(['W9']), mode: 'split', name: 'CP Kendi Kapsamı',
   });
   assert.equal(plan.ok, true);
   assert.ok(plan.warnings.some(text => /kendi filtresine ayrıldı/.test(text)));
 
   const next = save(plan);
-  assert.deepEqual(horizonFor(next, 'cp'), ['W9']);
-  assert.deepEqual(horizonFor(next, 'backlog'), ['S7'], 'ayrılan modül diğerini de götürmemeli');
+  assert.deepEqual(horizonFor(next, 'cp', 'mc_ias'), ['W9']);
+  assert.deepEqual(horizonFor(next, 'backlog', 'mc_ias'), ['S7'], 'ayrılan modül diğerini de götürmemeli');
 
-  const cpScope = next.find(entry => entry.id === 'mc_asas').scopes.find(s => s.targets.includes('cp'));
+  const cpScope = next.find(entry => entry.id === 'mc_ias').scopes.find(s => s.targets.includes('cp'));
   assert.equal(cpScope.name, 'CP Kendi Kapsamı');
   assert.ok(!cpScope.targets.includes('backlog'));
+});
+
+test('P3w ASAS bağlı grubu tek ufuk taşır; eski ayrık kayıtlar tek kapsamda birleşir', () => {
+  const items = setup();
+  const asas = items.find(entry => entry.id === 'mc_asas');
+  const linked = asas.scopes.filter(s => s.targets.some(t => ['orders', 'backlog', 'lfl', 'priceanalysis'].includes(t)));
+  assert.equal(linked.length, 1, 'bağlı modüller tek kapsamda durmalı');
+  assert.deepEqual(linked[0].targets.slice().sort(), ['backlog', 'lfl', 'orders', 'priceanalysis']);
+  // CP bağlı gruba girmez; eski ufkunu korur.
+  assert.deepEqual(horizonFor(items, 'cp'), ['S7']);
+});
+
+test('P3w bağlı modülün filtresi grubun HEPSİNİ günceller; "ayır" grubu bölmez, CP etkilenmez', () => {
+  for (const mode of ['shared', 'split']) {
+    const items = setup();
+    const plan = writer.planFilterChange(items, {
+      sourceId: 'mc_asas', moduleId: 'lfl', definition: horizonOf(['W9']), mode,
+    });
+    assert.equal(plan.ok, true, `${mode}: ${plan.message}`);
+    assert.ok(plan.warnings.some(text => /bağlı 4 modülün ortak ufkudur/.test(text)), `${mode}: bağlı grup uyarısı verilmedi`);
+    const next = save(plan);
+    for (const moduleId of ['orders', 'backlog', 'lfl', 'priceanalysis']) {
+      assert.deepEqual(horizonFor(next, moduleId), ['W9'], `${mode}: ${moduleId} yeni ufku almalı`);
+    }
+    assert.deepEqual(horizonFor(next, 'cp'), ['S7'], `${mode}: CP bağlı gruba dahil değil`);
+    const linkedScopes = next.find(entry => entry.id === 'mc_asas').scopes.filter(s => s.targets.includes('lfl') || s.targets.includes('orders'));
+    assert.equal(linkedScopes.length, 1, `${mode}: grup bölünmemeli`);
+  }
 });
 
 test('P3w tek başına olan modülü "ayırmak" kapsam kimliğini boşuna değiştirmez', () => {
@@ -195,6 +234,9 @@ test('P3w kaydedilen ufuk DAX üretimine birebir girer', () => {
 
 test('P3w sharedModules paylaşanları listeler', () => {
   const items = setup();
-  assert.deepEqual(writer.sharedModules(items, 'mc_asas', 'cp').sort(), ['backlog', 'priceanalysis']);
-  assert.deepEqual(writer.sharedModules(items, 'mc_asas', 'lfl'), []);
+  assert.deepEqual(writer.sharedModules(items, 'mc_ias', 'cp').sort(), ['backlog']);
+  assert.deepEqual(writer.sharedModules(items, 'mc_ias', 'orders'), []);
+  // ASAS'ta bağlı grup üyeleri birbirinin ortağıdır; CP tek başınadır.
+  assert.deepEqual(writer.sharedModules(items, 'mc_asas', 'lfl').sort(), ['backlog', 'orders', 'priceanalysis']);
+  assert.deepEqual(writer.sharedModules(items, 'mc_asas', 'cp'), []);
 });

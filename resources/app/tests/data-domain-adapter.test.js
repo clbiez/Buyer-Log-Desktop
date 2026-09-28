@@ -160,20 +160,24 @@ test('P0 üretilen DAX filtresi birebir aynı kalır', () => {
 
 test('P0 aynı filtreyi kullanan modüller tek FilterSet paylaşır', () => {
   const domain = adapter.fromLegacy(normalized());
-  /* Licensing Core kapsamı CP + Backlog için kurulmuştu; normalizeScopes
-     buna priceanalysis'i de ekler (ASAS rolünde bu hedef ilk kapsama düşer).
-     Orders aynı TANIMI taşır ama isolateOrdersScope onu ayrı bir kapsama
-     çıkardığı için ayrı bir FilterSet olur — bu bilinçli, çünkü Orders ufku
-     CP'den bağımsız düzenlenebilmelidir. */
+  /* v20260928 — ASAS'ta Orders · Backlog · LFL · Price & Supplier BAĞLI bir
+     gruptur: tek kapsam, tek filtre. Fikstürde Backlog (Licensing Core) ve
+     Orders aynı ufku, LFL ayrı bir ufku taşıyordu; çoğunluğun ufku kazanır
+     ve dört modül tek FilterSet'e düşer. CP bağlı gruba girmez (v4.71: Orders
+     ufku CP'den bağımsız düzenlenir), kendi FilterSet'inde kalır. */
   const core = domain.filterSets.find(entry => entry.name === 'Licensing Core');
   assert.ok(core, 'Licensing Core filtresi bulunamadı');
-  const usage = adapter.filterUsage(domain, core.id);
-  assert.deepEqual(usage.slice().sort(), ['backlog', 'cp', 'priceanalysis']);
+  assert.deepEqual(adapter.filterUsage(domain, core.id), ['cp']);
+
+  const ordersBinding = domain.bindings.find(entry => entry.sourceId === 'mc_asas' && entry.moduleId === 'orders');
+  assert.ok(ordersBinding, 'Orders bağı bulunamadı');
+  const linked = adapter.filterUsage(domain, ordersBinding.filterSetId);
+  assert.deepEqual(linked.slice().sort(), ['backlog', 'lfl', 'orders', 'priceanalysis']);
 
   // Tek bir kaynakta aynı filtreyi paylaşan modüller gerçekten tek kayda düşer:
-  // üç modül, tek FilterSet kimliği.
-  const shared = domain.bindings.filter(entry => entry.filterSetId === core.id);
-  assert.equal(shared.length, 3);
+  // dört modül, tek FilterSet kimliği.
+  const shared = domain.bindings.filter(entry => entry.filterSetId === ordersBinding.filterSetId);
+  assert.equal(shared.length, 4);
 });
 
 test('P0 alan eşlemesi kaynağa aittir, bağlantıya değil', () => {

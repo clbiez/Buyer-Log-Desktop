@@ -403,12 +403,18 @@
     root.addEventListener('keydown',event=>{const row=event.target.closest?.('[data-ps-select]');if(row&&(event.key==='Enter'||event.key===' ')){event.preventDefault();ui.selected=row.dataset.psSelect;renderList();}});
   }
 
+  /* Linked Orders · Backlog · LFL · Price & Supplier refresh invalidates
+     the prepared analysis dataset. Refresh immediately only while this page is
+     visible; otherwise prepare once on the next visit. */
+  let datasetStale=false;
+  function isVisible(){return typeof window.currentActiveTab==='function'?window.currentActiveTab()==='priceanalysis':Boolean(root&&root.offsetParent);}
+  function invalidate(){if(!root||!root.dataset.initialized)return;datasetStale=true;if(isVisible()){datasetStale=false;void prepare();}}
   async function init(){
     root=document.getElementById('priceSupplierAnalysis');if(!root)return;
-    if(root.dataset.initialized){render();return;}
+    if(root.dataset.initialized){if(datasetStale){datasetStale=false;await prepare();return;}render();return;}
     root.dataset.initialized='1';bind();render();await prepare();
   }
   window.initPriceSupplierAnalysis=init;
   window.renderPriceSupplierAnalysisLanguage=render;
-  window.BLPriceSupplierAnalysis={state,prepare,run:recalc,get model(){return model;},_i18n:TEXT,_translate:t};
+  window.BLPriceSupplierAnalysis={state,prepare,run:recalc,invalidate,get model(){return model;},_i18n:TEXT,_translate:t};
 })();

@@ -51,7 +51,11 @@ function view(overrides = {}) {
       id: 'mc_asas', name: 'ASAS', server: 'lcwtabular_s30', catalog: 'ASAS_30', role: 'asas',
       refreshEnabled: true,
       scopes: [
-        { id: 'sc_core', name: 'Licensing Core', targets: ['cp', 'backlog'], enabled: true, horizon: seasonFilter('ASAS', ['S7', 'S8']) },
+        /* v20260928 — ASAS'ta Orders · Backlog · LFL · Price & Supplier bağlı
+           gruptur (tek ufuk) ve CP'den ayrı tutulur; paylaşılan filtre
+           senaryosu bu grup üzerinden kurulur. */
+        { id: 'sc_cp', name: '', targets: ['cp'], enabled: true, horizon: seasonFilter('ASAS', ['S7', 'S8']) },
+        { id: 'sc_core', name: 'Licensing Core', targets: ['backlog'], enabled: true, horizon: seasonFilter('ASAS', ['S7', 'S8']) },
       ],
       mapping: { 'Sipariş Kod': { table: 'ASAS', name: 'SK', kind: 'column', folder: '' } },
       ...(overrides.asas || {}),
@@ -125,12 +129,12 @@ test('P2 sınırsız filtre "yenilemeye hazır" sayılmaz', () => {
 test('P2 paylaşılan filtre kaç modül tarafından kullanıldığını söyler', () => {
   const model = view();
   const core = model.filterSets.find(entry => entry.name === 'Licensing Core');
-  // normalizeScopes priceanalysis'i ilk kapsama ekler; üç modül tek filtreyi paylaşır.
-  assert.deepEqual(core.moduleIds.slice().sort(), ['backlog', 'cp', 'priceanalysis']);
+  // normalizeScopes bağlı gruba Orders ve priceanalysis'i ekler; üç modül tek filtreyi paylaşır.
+  assert.deepEqual(core.moduleIds.slice().sort(), ['backlog', 'orders', 'priceanalysis']);
   assert.equal(core.usedByCount, 3);
 
-  const cp = model.modules.find(entry => entry.id === 'cp');
-  const asasFeed = cp.feeds.find(feed => feed.sourceId === 'mc_asas');
+  const backlog = model.modules.find(entry => entry.id === 'backlog');
+  const asasFeed = backlog.feeds.find(feed => feed.sourceId === 'mc_asas');
   assert.equal(asasFeed.filterName, 'Licensing Core');
   assert.equal(asasFeed.filterUsedByCount, 3);
 });
@@ -269,13 +273,13 @@ test('P3 ezilen filtre ortak adını taşımaz', () => {
 test('P3 paylaşım rozeti FİİLİ kullanımı sayar, bağ sayısını değil', () => {
   const items = db.replaceModelConnections([{
     id: 'mc_asas', name: 'ASAS', server: 's30', catalog: 'ASAS_30', role: 'asas', refreshEnabled: true,
-    scopes: [{ id: 'sc', name: 'Licensing Core', targets: ['cp', 'backlog'], enabled: true, horizon: seasonFilter('ASAS', ['S7']) }],
+    scopes: [{ id: 'sc', name: 'Licensing Core', targets: ['backlog'], enabled: true, horizon: seasonFilter('ASAS', ['S7']) }],
   }], null).items;
 
-  // cp kişisel ufukla ezilmiş; backlog ve priceanalysis ortak filtrede.
+  // orders kişisel ufukla ezilmiş; backlog ve priceanalysis ortak filtrede.
   const model = readModel.build(items, {
     language: 'tr',
-    resolveLayer: ({ moduleId, definition }) => moduleId === 'cp'
+    resolveLayer: ({ moduleId, definition }) => moduleId === 'orders'
       ? { horizon: seasonHorizon(['W9']), layer: 'personal', groupName: '' }
       : { horizon: definition, layer: 'source', groupName: '' },
   });
@@ -285,8 +289,8 @@ test('P3 paylaşım rozeti FİİLİ kullanımı sayar, bağ sayısını değil',
   assert.equal(backlogFeed.boundModuleCount, 3);
   assert.equal(backlogFeed.filterUsedByCount, 2);
 
-  const cpFeed = model.modules.find(entry => entry.id === 'cp').feeds[0];
-  assert.equal(cpFeed.filterUsedByCount, 0, 'kişisel ufuk kimseyle paylaşılmaz');
+  const ordersFeed = model.modules.find(entry => entry.id === 'orders').feeds[0];
+  assert.equal(ordersFeed.filterUsedByCount, 0, 'kişisel ufuk kimseyle paylaşılmaz');
 });
 
 /* ------------------------------------------------------------------ */
