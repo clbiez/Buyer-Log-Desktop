@@ -8269,6 +8269,7 @@ document.getElementById('cpDirtyRevert')?.addEventListener('click',()=>{
   renderCP();
 });
 function refreshCpRowOnly(id){
+  if(!state.cp||!Array.isArray(state.cp.rows))return;
   const row = state.cp.rows.find(r=>r._id===id);
   if(!row) return;
   const cf = computeFlags(row);
@@ -8744,7 +8745,8 @@ document.addEventListener('mousedown', e=>{
 });
 function enterDateEdit(span){
   const id = span.dataset.id, key = span.dataset.key, kind = span.dataset.kind;
-  const row = state.cp.rows.find(r=>r._id===Number(id));
+  const rows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:null;
+  const row = rows?rows.find(r=>r._id===Number(id)):null;
   if(!row) return;
   if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
   const input = document.createElement('input');
@@ -8774,7 +8776,9 @@ function enterDateEdit(span){
         visibleInput.removeAttribute('aria-invalid');
       }
       if(!host.isConnected) return; // change handler satırı yeniden çizmiş olabilir
-      const r2 = state.cp.rows.find(r=>r._id===Number(id));
+      const rows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:null;
+      if(!rows)return; // transient projection swap: editörü uydurma değerle kapatma
+      const r2 = rows.find(r=>r._id===Number(id));
       const newSpan = document.createElement('span');
       newSpan.className='exfDisplay'; newSpan.tabIndex=0;
       newSpan.dataset.id=id; newSpan.dataset.key=key; newSpan.dataset.kind=kind;
@@ -12512,6 +12516,20 @@ function renderStartupActiveModule(){
   if(activeTab==='overview'&&!window.BL_BOOT_MODULE)renderOverview();
   return activeTab;
 }
+/* Arka-plan/hafif yeniden yükleme, kullanıcı hücreye veri girerken CP'nin canlı
+   satır dizisini NULL/yenisiyle değiştirmemeli. Aksi halde focusout/change
+   callback'i eski editörden dönerken state.cp.rows artık yok olur ve daha
+   önemlisi henüz kaydedilmekte olan yerel değer/undo işareti kaybolabilir. */
+function cpClientWorkInProgress(){
+  if(!state.cp||!Array.isArray(state.cp.rows))return false;
+  if(state.cpDirty&&state.cpDirty.size>0)return true;
+  if(pendingOverrideWriteCount()>0)return true;
+  try{
+    const snap=managedEditorSnapshot(document.activeElement);
+    if(snap&&snap.route==='cp')return true;
+  }catch(_){}
+  return false;
+}
 async function loadFromServer(force, targets){
   if(Array.isArray(targets)&&targets.length===4&&['cp','orders','backlog','lfl'].every(target=>targets.includes(target)))targets=[...targets,'priceanalysis'];
   const refreshTimerKey=force?sourceRefreshTimerKey(targets):null;
@@ -12723,14 +12741,25 @@ async function waitForRefreshJob(expectedJob=null){
     state.modelScopes=(data.modelRefresh&&Array.isArray(data.modelRefresh.scopes))?data.modelRefresh.scopes:[];
     state.modelHorizons=(data.modelRefresh&&data.modelRefresh.appliedHorizons&&typeof data.modelRefresh.appliedHorizons==='object')?data.modelRefresh.appliedHorizons:{};
     renderHorizonBadges();
+    // Arka-plan reload yanıtı gelirken kullanıcı CP'de yazıyor/yerel değişiklik
+    // taşıyorsa mevcut satır nesneleri korunur. Kullanıcı-visible refresh bu
+    // noktaya gelmeden önce editörü commit edip bekleyen yazmaları settle eder.
+    const preserveCpClientState=!userVisibleRefresh&&cpClientWorkInProgress();
+    let cpProjectionReplaced=false;
     if(Array.isArray(data.cp)){
-      state.cp = { fname: `Sunucu: ${sourceName}`, rows: data.cp }; state.cpLogisticExpanded.clear();
+      if(!preserveCpClientState){
+        state.cp = { fname: `Sunucu: ${sourceName}`, rows: data.cp }; state.cpLogisticExpanded.clear();
+        cpProjectionReplaced=true;
+      }
       overviewCpLoadState='ready';overviewCpLoadError='';
-      invalidateUnifiedPriorityDecisions('server-cp-hydrated');
+      invalidateUnifiedPriorityDecisions(preserveCpClientState?'server-cp-hydrate-deferred-for-local-edit':'server-cp-hydrated');
       if(currentActiveTab()!=='overview')_deferredTabRenders.add('overview');
     }else if(data.cpDeferred){
-      state.cp=null;overviewCpLoadState='idle';overviewCpLoadError='';
-      invalidateUnifiedPriorityDecisions('server-cp-deferred');
+      // mode=initial CP'yi bilerek taşımaz. Önceden burada state.cp=null yapıp
+      // açık editörü boşa düşürüyorduk. Yerel iş varsa mevcut projection kalır.
+      if(!preserveCpClientState)state.cp=null;
+      overviewCpLoadState=preserveCpClientState?'ready':'idle';overviewCpLoadError='';
+      invalidateUnifiedPriorityDecisions(preserveCpClientState?'server-cp-deferred-preserved-local-edit':'server-cp-deferred');
       if(currentActiveTab()!=='overview')_deferredTabRenders.add('overview');
     }
     if(Array.isArray(data.orders)){
@@ -12786,8 +12815,16 @@ async function waitForRefreshJob(expectedJob=null){
       if(parts.length) showToast(parts.join('   |   '));
     }
     state.overviewDeferred=Boolean(data.overviewDeferred);
-    state.cpDirty = new Set(); state.cpSelected = new Set(); state.ordersSelected = new Set();
-  undoStack = []; redoStack = []; if(typeof updateUndoRedoButtons==='function') updateUndoRedoButtons();
+    // Hafif/araya giren reload sırasında yerel CP çalışması korunuyorsa dirty,
+    // selection ve undo/redo da aynı transaction'ın parçasıdır; bunları sıfırlamak
+    // ekrandaki değeri koruyup "kaydedilecek değişiklik" bilgisini kaybetmek olur.
+    if(!preserveCpClientState){
+      state.cpDirty = new Set(); state.cpSelected = new Set();
+      undoStack = []; redoStack = []; if(typeof updateUndoRedoButtons==='function') updateUndoRedoButtons();
+    }
+    // Orders seçimi yalnız gerçekten yeni bir orders projection'ı yüklendiğinde
+    // veya kullanıcı açıkça refresh istediğinde temizlenir.
+    if(userVisibleRefresh||initialScreenLoad||Array.isArray(data.orders))state.ordersSelected = new Set();
     if(datasourceMetric)endStartupStage(datasourceMetric,'DATASOURCE_PREPARATION');
     const filterMetric=initialScreenLoad?window.BLPerf?.begin?.('filterInitializationMs'):null;
     const filterPivotMetric=initialScreenLoad?beginStartupStage('FILTER_PIVOT_INIT'):null;
