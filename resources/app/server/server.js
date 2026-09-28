@@ -5260,6 +5260,17 @@ function intakeSaveView(userId, viewConfig) {
   });
   return saved.entries[INTAKE_VIEW_PREF_KEY] || null;
 }
+/* Rapor isteği görünümün SORGU kısmını kaydeder; görünüm (sıralama, etiket,
+   genişlik) ayrıca /api/intake/settings ile kaydedilir. Uzun süren bir rapor
+   yanıtı, o arada kaydedilmiş daha yeni görünüm ayarlarını ezmemelidir. */
+function intakeSaveReportView(userId, viewConfig, fields) {
+  const stored = intakeStoredView(userId);
+  const next = stored && stored.display && typeof stored.display === 'object'
+    ? intakeReport.reconcileViewConfig({ ...viewConfig, display: stored.display }, fields)
+    : viewConfig;
+  intakeSaveView(userId, next);
+  return next;
+}
 function intakeSafeSourceMessage() {
   return 'INTAKE verisine şu anda ulaşılamıyor. Şirket ağı veya VPN bağlantısını kontrol edin.';
 }
@@ -5312,10 +5323,23 @@ function intakeQueryKey(viewConfig, connection = intakeConnection(), horizon = i
     rows: (query.rows || []).map(intakeFieldToken),
     columns: (query.columns || []).map(intakeFieldToken),
     measures: (query.measures || []).map(intakeFieldToken),
-    filters: {
-      fields: (query.filters || []).map(intakeFieldToken),
-      values: query.filterValues || {},
-    },
+    /* Yalnız DEĞERİ seçilmiş filtreler DAX'a girer; değersiz filtre alanı
+       eklemek/çıkarmak aynı sorgudur. Değer sırası (tıklama sırası) sonucu
+       değiştirmez, anahtar da değiştirmemeli. */
+    filters: (() => {
+      const values = {};
+      const fields = [];
+      for (const field of query.filters || []) {
+        const list = Array.isArray(query.filterValues && query.filterValues[field.id]) ? query.filterValues[field.id] : [];
+        if (!list.length) continue;
+        fields.push(intakeFieldToken(field));
+        values[field.id] = [...new Set(list.map(value => String(value)))].sort();
+      }
+      return { fields, values };
+    })(),
+    /* Sıfır Güncel Alım Bütçe gizleme DAX'a FILTER olarak girer; anahtarda
+       olmazsa seçeneği değiştirmek 30 dk boyunca eski sonucu döndürürdü. */
+    options: { hideZeroCurrentBudget: !(viewConfig && viewConfig.display && viewConfig.display.hideZeroCurrentBudget === false) },
   });
 }
 function intakeStateResponse(req, snapshot = null, fields = null, offline = false, error = '', connection = intakeConnection()) {
@@ -5454,7 +5478,7 @@ app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess
     if (!(req.body && req.body.forceRefresh)) {
       const cached = intakeStore.get(queryKey);
       if (cached && cached.fresh) {
-        intakeSaveView(userId, built.viewConfig);
+        intakeSaveReportView(userId, built.viewConfig, found.fields);
         intakeStore.saveSnapshot(userId, { queryKey, rows: cached.rows, fields: cached.fields || found.fields, viewConfig: built.viewConfig, fetchedAt: cached.fetchedAt });
         return res.json({ ok: true, rows: cached.rows, fields: cached.fields || found.fields, viewConfig: built.viewConfig, queryKey, fromCache: true, offline: false, fetchedAt: cached.fetchedAt });
       }
@@ -5466,7 +5490,7 @@ app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess
     });
     const rows = intakeReport.normalizeRows(result.rows, built.viewConfig);
     const record = intakeStore.set(queryKey, { rows, fields: found.fields, viewConfig: built.viewConfig, fetchedAt: new Date().toISOString() });
-    intakeSaveView(userId, built.viewConfig);
+    intakeSaveReportView(userId, built.viewConfig, found.fields);
     intakeStore.saveSnapshot(userId, { queryKey, rows, fields: found.fields, viewConfig: built.viewConfig, fetchedAt: record.fetchedAt });
     userAccess.appendAudit(req.currentUser, 'INTAKE_REPORT_FETCH', queryKey, { rows: rows.length, fields: found.fields.length, forceRefresh: Boolean(req.body && req.body.forceRefresh) });
     res.json({ ok: true, rows, fields: found.fields, viewConfig: built.viewConfig, queryKey, fromCache: false, offline: false, fetchedAt: record.fetchedAt, provider: result.provider || '', rowLimit: built.maxRows, truncated: rows.length >= built.maxRows });
@@ -5474,7 +5498,9 @@ app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess
     const code = String(err && err.code || '');
     if (previous && Array.isArray(previous.rows) && INTAKE_RECOVERABLE_ERRORS.has(code)) {
       const fallback = intakeStateResponse(req, previous, previous.fields, true, intakeSafeSourceMessage());
-      return res.json({ ...fallback, source: 'snapshot', fromCache: true });
+      // İstemci tabloyu `rows` ile çizer; snapshot satırları üst düzeyde de verilir,
+      // yoksa bağlantı kesintisinde tablo boşalıyordu.
+      return res.json({ ...fallback, rows: previous.rows, fetchedAt: previous.fetchedAt, source: 'snapshot', fromCache: true });
     }
     const failure = intakeErrorResponse(err);
     res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE' });

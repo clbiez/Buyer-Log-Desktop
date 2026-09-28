@@ -19,7 +19,17 @@
     error: '',
     popover: null,
     drag: null,
-    globalFilterIds: new Set(),
+    fetchedAt: '',
+    /* Yarış koruması: her yerel görünüm değişikliği revizyonu artırır. Sunucu
+       yanıtı yalnız gönderildiği revizyon hâlâ güncelse görünümün üzerine
+       yazılır; aksi hâlde kullanıcının o arada yaptığı değişiklik geri alınırdı. */
+    viewRevision: 0,
+    rowsVersion: 0,
+    tableSignature: '',
+    refreshPromise: null,
+    refreshQueued: null,
+    saveInFlight: null,
+    savePending: false,
   };
 
   const byId = id => document.getElementById(id);
@@ -68,6 +78,34 @@
     const seen = new Set();
     return [...query().rows, ...query().columns, ...query().measures]
       .filter(field => field && field.id && !seen.has(field.id) && seen.add(field.id));
+  }
+
+  /* Veriyi değiştiren görünüm parçasının imzası. Etiket, genişlik, sıralama ve
+     özetleme (agg) istemcide uygulanır; bunlar değişince sorgu tekrarlanmaz.
+     Değeri seçilmemiş filtre alanı da DAX'a girmez. */
+  function intakeQuerySignature(config) {
+    const source = config && config.query || {};
+    const ids = list => (Array.isArray(list) ? list : []).map(field => clean(field && field.id)).filter(Boolean);
+    const values = {};
+    Object.keys(source.filterValues || {}).sort().forEach(id => {
+      const list = Array.isArray(source.filterValues[id]) ? source.filterValues[id].map(clean).filter(Boolean) : [];
+      if (list.length) values[id] = [...new Set(list)].sort();
+    });
+    return JSON.stringify({
+      rows: ids(source.rows), columns: ids(source.columns), measures: ids(source.measures).sort(), values,
+      hideZero: (config && config.display || {}).hideZeroCurrentBudget !== false,
+    });
+  }
+
+  function setRows(rows) {
+    state.rows = Array.isArray(rows) ? rows : [];
+    state.rowsVersion += 1;
+  }
+
+  function sameValues(left, right) {
+    const a = Array.isArray(left) ? left.map(clean).filter(Boolean).sort() : [];
+    const b = Array.isArray(right) ? right.map(clean).filter(Boolean).sort() : [];
+    return a.length === b.length && a.every((value, index) => value === b[index]);
   }
 
   function numberText(value) {
@@ -298,11 +336,28 @@
     return `<td class="${field.fieldType === 'measure' ? 'num' : ''}">${esc(field.fieldType === 'measure' ? numberText(value) : clean(value))}</td>`;
   }
 
-  function renderTable() {
+  /* Tablo yalnız gösterdiği veri veya düzen değişince yeniden çizilir. Filtre
+     seçimi, kayıt yanıtı ve yükleme durumu gibi tabloya dokunmayan olaylar
+     binlerce satırlık tabloyu baştan kurmaz. */
+  function intakeTableSignature() {
+    const current = display();
+    return JSON.stringify([
+      state.rowsVersion, isEnglish(),
+      activeColumns().map(field => [field.id, fieldLabel(field), field.fieldType, clean(field.agg)]),
+      (query().rows || []).map(fieldId), (query().columns || []).map(fieldId),
+      current.sort || {}, current.grouped !== false, current.showSubtotals !== false,
+      current.collapsedGroups || [], current.hideZeroCurrentBudget !== false,
+    ]);
+  }
+
+  function renderTable(options = {}) {
     const body = byId('intakeBody');
     const table = byId('intakeTable');
     if (!body || !table) return;
     body.hidden = false;
+    const signature = intakeTableSignature();
+    if (!options.force && signature === state.tableSignature && table.firstChild) return;
+    state.tableSignature = signature;
     const fields = activeColumns();
     if (!fields.length) {
       intakeUpdateGroupButtons([]);
@@ -350,13 +405,7 @@
      aksi hâlde sürükleme sonrası tablo altınızdan yenilenir. */
   function persistWidths() {
     clearTimeout(widthSaveTimer);
-    widthSaveTimer = setTimeout(() => {
-      void requestJson('/api/intake/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ viewConfig: state.viewConfig }),
-      }).then(result => { if (result.viewConfig) state.viewConfig = result.viewConfig; }).catch(() => {});
-    }, 600);
+    widthSaveTimer = setTimeout(() => { void persistView({ silent: true }); }, 600);
   }
 
   const widthStore = {
@@ -365,6 +414,7 @@
       const target = state.viewConfig.display || (state.viewConfig.display = {});
       if (!target.widths || typeof target.widths !== 'object') target.widths = {};
       target.widths[id] = Math.round(px);
+      state.viewRevision += 1;
     },
     save: persistWidths,
   };
@@ -378,33 +428,87 @@
     } catch (error) { console.warn('INTAKE sütun genişliği uygulanamadı:', error); }
   }
 
-  function render() {
+  /* Yükleme sırasında tablo yerinde kalır ve soluklaşır; durum satırı yalnız
+     ekranda henüz veri yokken gösterilir. Böylece her filtrede tablonun üstüne
+     bir satır girip çıkması (tüm alanın kayması) önlenir. */
+  function renderChrome() {
     renderFilters();
-    renderTable();
-    const refresh = byId('intakeRefreshBtn');
-    if (refresh) refresh.disabled = state.loading;
-    const fields = allFields().length;
-    setMeta(state.loaded ? `${state.rows.length.toLocaleString(isEnglish() ? 'en-GB' : 'tr-TR')} ${text('satır', 'rows')} · ${fields} ${text('alan', 'fields')}` : '');
+    const refreshButton = byId('intakeRefreshBtn');
+    if (refreshButton) refreshButton.disabled = state.loading;
+    const body = byId('intakeBody');
+    if (body) {
+      body.classList.toggle('isBusy', state.loading);
+      if (state.loading) body.setAttribute('aria-busy', 'true'); else body.removeAttribute('aria-busy');
+    }
+    const locale = isEnglish() ? 'en-GB' : 'tr-TR';
+    const parts = state.loaded ? [`${state.rows.length.toLocaleString(locale)} ${text('satır', 'rows')}`, `${allFields().length} ${text('alan', 'fields')}`] : [];
+    if (state.loaded && state.fetchedAt) parts.push(new Date(state.fetchedAt).toLocaleString(locale));
+    if (state.loading && state.loaded) parts.unshift(text('Güncelleniyor…', 'Updating…'));
+    setMeta(parts.join(' · '));
   }
 
-  async function saveView(next, closeModal) {
+  function render() {
+    renderChrome();
+    renderTable();
+  }
+
+  /* Görünüm kaydı sıralıdır ve birleştirilir: art arda gelen değişikliklerde
+     her zaman EN SON görünüm gönderilir, eski bir yanıt yeni seçimi ezmez. */
+  function persistView(options = {}) {
+    state.savePending = true;
+    if (state.saveInFlight) return state.saveInFlight;
+    state.saveInFlight = (async () => {
+      let ok = true;
+      while (state.savePending) {
+        state.savePending = false;
+        const revision = state.viewRevision;
+        try {
+          const result = await requestJson('/api/intake/settings', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ viewConfig: state.viewConfig }),
+          });
+          if (result.viewConfig && revision === state.viewRevision && !state.savePending) {
+            state.viewConfig = result.viewConfig;
+            render();
+          }
+          ok = true;
+        } catch (error) {
+          ok = false;
+          if (!options.silent) setStatus(error.message || String(error), 'error');
+        }
+      }
+      state.saveInFlight = null;
+      return ok;
+    })();
+    return state.saveInFlight;
+  }
+
+  /* Veriyi etkileyen değişiklikte sorgu kendiliğinden tekrarlanır; yalnız
+     görünüm (sıralama, etiket, gruplama) değiştiyse tablo yerelde yeniden
+     düzenlenir. options.refresh === false otomatik sorguyu kapatır. */
+  async function saveView(next, closeModal, options = {}) {
+    const queryChanged = intakeQuerySignature(next) !== intakeQuerySignature(state.viewConfig);
     state.viewConfig = next;
+    state.viewRevision += 1;
     render();
-    try {
-      const result = await requestJson('/api/intake/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ viewConfig: next }),
-      });
-      if (result.viewConfig) state.viewConfig = result.viewConfig;
-      render();
+    const refreshing = queryChanged && options.refresh !== false;
+    if (refreshing) void refresh(false);
+    const ok = await persistView();
+    if (!ok) return false;
+    if (options.message && !refreshing) {
       setStatus(text('INTAKE görünümü kaydedildi. Yenile ile veriyi bu düzene göre çekebilirsiniz.', 'INTAKE view saved. Refresh to query data with this layout.'), 'ok');
-      if (closeModal) closeModal();
-      return true;
-    } catch (error) {
-      setStatus(error.message || String(error), 'error');
-      return false;
     }
+    if (closeModal) closeModal();
+    return true;
+  }
+
+  function releaseOverviewFilter(config, fieldIdValue) {
+    const sync = config.display && config.display.overviewSync;
+    if (!sync || !sync.values || !Object.prototype.hasOwnProperty.call(sync.values, fieldIdValue)) return;
+    const values = { ...sync.values };
+    delete values[fieldIdValue];
+    config.display = { ...config.display, overviewSync: { ...sync, values } };
   }
 
   function overviewFilters() {
@@ -412,6 +516,13 @@
     try { return typeof getter === 'function' ? (getter() || {}) : {}; } catch (_) { return {}; }
   }
 
+  /* Genel Bakış filtreleri (MAG, Buyer Grup, Sezon) INTAKE filtrelerine
+     yansıtılır. Hangi değerlerin bu senkrondan geldiği görünümde
+     (display.overviewSync) SAKLANIR:
+       · senkron yalnız Genel Bakış filtresi gerçekten DEĞİŞİNCE çalışır;
+         Genel Bakış'ın her yeniden çiziminde kullanıcının elle seçimini ezmez,
+       · Genel Bakış filtresi kalkınca (uygulama yeniden açılsa da) yalnız
+         senkronun yazdığı ve kullanıcının dokunmadığı değerler geri alınır. */
   function syncOverviewFilters() {
     const mapping = {
       merch: '[Dim_Urun].[MerchAltGrupKod]',
@@ -419,21 +530,26 @@
       season: '[Dim_Sezon].[SezonKod]',
     };
     const globals = overviewFilters();
-    const next = clone(state.viewConfig);
-    next.query.filterValues = { ...(next.query.filterValues || {}) };
-    const before = JSON.stringify(next.query.filterValues);
-    for (const id of state.globalFilterIds) { if (Object.prototype.hasOwnProperty.call(next.query.filterValues, id)) delete next.query.filterValues[id]; }
-    state.globalFilterIds = new Set();
+    const applied = {};
     for (const [globalId, sourceUniqueName] of Object.entries(mapping)) {
       const values = Array.isArray(globals[globalId]) ? globals[globalId].map(clean).filter(Boolean) : [];
       if (!values.length) continue;
       const field = query().filters.find(item => clean(item.sourceUniqueName).toLocaleLowerCase('tr-TR') === sourceUniqueName.toLocaleLowerCase('tr-TR'));
       if (!field) continue;
-      next.query.filterValues[field.id] = [...new Set(values)].slice(0, 1000);
-      state.globalFilterIds.add(field.id);
+      applied[field.id] = [...new Set(values)].sort().slice(0, 1000);
     }
-    const changed = before !== JSON.stringify(next.query.filterValues);
-    if (changed) { state.viewConfig = next; render(); void saveView(next).then(() => refresh(false)); }
+    const appliedIds = Object.keys(applied).sort();
+    const signature = appliedIds.length ? JSON.stringify(appliedIds.map(id => [id, applied[id]])) : '';
+    const previous = display().overviewSync || {};
+    if (signature === clean(previous.signature)) return;
+    const next = clone(state.viewConfig);
+    next.query.filterValues = { ...(next.query.filterValues || {}) };
+    for (const [id, values] of Object.entries(previous.values || {})) {
+      if (sameValues(next.query.filterValues[id], values)) delete next.query.filterValues[id];
+    }
+    for (const id of appliedIds) next.query.filterValues[id] = applied[id];
+    next.display = { ...(next.display || {}), overviewSync: { signature, values: applied } };
+    void saveView(next);
   }
 
   function copyAxis(config, axis) { return Array.isArray(config.query && config.query[axis]) ? config.query[axis].map(clone) : []; }
@@ -646,14 +762,15 @@
       draft.display.showSubtotals = Boolean(modal.querySelector('#intakeShowSubtotalsInput')?.checked);
       draft.display.hideZeroCurrentBudget = Boolean(modal.querySelector('#intakeHideZeroBudgetInput')?.checked);
       draft.display.collapsedGroups = [];
-      await saveView(draft, close);
+      await saveView(draft, close, { message: true, refresh: state.loaded });
     });
 
     modal.querySelector('[data-intake-settings-reset]')?.addEventListener('click', async () => {
       try {
         const result = await requestJson('/api/intake/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reset: true }) });
         state.viewConfig = result.viewConfig || state.viewConfig;
-        state.rows = [];
+        state.viewRevision += 1;
+        setRows([]);
         state.loaded = false;
         close();
         render();
@@ -738,8 +855,10 @@
       const next = clone(state.viewConfig);
       next.query.filterValues = { ...(next.query.filterValues || {}) };
       if (selected.size) next.query.filterValues[field.id] = [...selected].slice(0, 1000); else delete next.query.filterValues[field.id];
+      // Kullanıcı bu filtreyi elle belirledi; artık Genel Bakış senkronuna ait değil.
+      releaseOverviewFilter(next, field.id);
       closePopover();
-      if (await saveView(next)) void refresh(false);
+      void saveView(next);
     });
     void requestJson('/api/intake/distinct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fieldId: field.id, limit: 500 }) })
       .then(result => { const values = Array.isArray(result.values) ? result.values : localValues; draw([...new Set([...values, ...selected])].sort((a, b) => a.localeCompare(b, isEnglish() ? 'en' : 'tr', { numeric: true }))); })
@@ -762,48 +881,82 @@
     const finish = save => {
       if (done) return;
       done = true;
-      if (!save) { renderTable(); return; }
+      if (!save) { renderTable({ force: true }); return; }
       const value = clean(input.value);
-      if (!value) { renderTable(); return; }
+      if (!value) { renderTable({ force: true }); return; }
       void saveView(window.INTAKE_REPORT_API.updateDisplayLabel(state.viewConfig, id, value));
     };
     input.addEventListener('keydown', event => { if (event.key === 'Enter') finish(true); if (event.key === 'Escape') finish(false); });
     input.addEventListener('blur', () => finish(true));
   }
 
-  async function refresh(forceRefresh) {
-    if (state.loading) return;
-    state.loading = true;
-    setStatus(text('INTAKE verileri getiriliyor…', 'Loading INTAKE data…'), 'loading');
-    render();
-    try {
-      const result = await requestJson('/api/intake/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ viewConfig: state.viewConfig, forceRefresh: Boolean(forceRefresh) }) });
-      state.rows = Array.isArray(result.rows) ? result.rows : [];
-      state.fields = Array.isArray(result.fields) && result.fields.length ? result.fields : state.fields;
-      state.viewConfig = result.viewConfig || state.viewConfig;
-      state.loaded = true;
-      state.offline = Boolean(result.offline);
-      state.error = '';
-      setStatus(result.offline ? text('Canlı kaynak kullanılamıyor; son başarılı INTAKE snapshot gösteriliyor.', 'Live source is unavailable; showing the last successful INTAKE snapshot.') : (result.truncated ? text(`Özet görünüm ilk ${(result.rowLimit||state.rows.length).toLocaleString('tr-TR')} satırla sınırlandı. Filtre ekleyerek daraltın.`, `The aggregate view is limited to the first ${(result.rowLimit||state.rows.length).toLocaleString('en-GB')} rows. Narrow it with filters.`) : (result.fromCache ? text('INTAKE önbellekten gösteriliyor.', 'INTAKE is shown from cache.') : '')), result.offline || result.truncated ? 'warning' : 'ok');
-      setMeta(`${state.rows.length.toLocaleString(isEnglish() ? 'en-GB' : 'tr-TR')} ${text('satır', 'rows')} · ${result.fetchedAt ? new Date(result.fetchedAt).toLocaleString(isEnglish() ? 'en-GB' : 'tr-TR') : ''}`);
-      render();
-    } catch (error) {
-      state.error = error.message || String(error);
-      setStatus(state.error, 'error');
-      render();
-    } finally {
-      state.loading = false;
-      render();
+  /* Tek bir rapor isteği. Yanıt geldiğinde kullanıcı sorguyu (filtre, alan)
+     değiştirmişse eski sonuç ekrana basılmaz; en güncel görünümle yeni sorgu
+     sıraya alınır. */
+  async function runReport(forceRefresh) {
+    const sent = clone(state.viewConfig);
+    const revision = state.viewRevision;
+    const signature = intakeQuerySignature(sent);
+    const result = await requestJson('/api/intake/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ viewConfig: sent, forceRefresh: Boolean(forceRefresh) }) });
+    if (intakeQuerySignature(state.viewConfig) !== signature) {
+      if (!state.refreshQueued) state.refreshQueued = { force: false };
+      return;
     }
+    // Canlı kaynak düştüğünde sunucu son snapshot'ı döndürür; satırlar yoksa
+    // ekrandaki veri korunur, tablo boşaltılmaz.
+    const rows = Array.isArray(result.rows) ? result.rows
+      : (result.snapshot && Array.isArray(result.snapshot.rows) ? result.snapshot.rows : null);
+    if (rows) setRows(rows);
+    state.fields = Array.isArray(result.fields) && result.fields.length ? result.fields : state.fields;
+    if (result.viewConfig && revision === state.viewRevision) state.viewConfig = result.viewConfig;
+    state.loaded = true;
+    state.offline = Boolean(result.offline);
+    state.fetchedAt = result.fetchedAt || (result.snapshot && result.snapshot.fetchedAt) || state.fetchedAt;
+    state.error = '';
+    setStatus(result.offline ? text('Canlı kaynak kullanılamıyor; son başarılı INTAKE snapshot gösteriliyor. Seçili filtreler bu veriye uygulanmamış olabilir.', 'Live source is unavailable; showing the last successful INTAKE snapshot. The selected filters may not be applied to this data.') : (result.truncated ? text(`Özet görünüm ilk ${(result.rowLimit||state.rows.length).toLocaleString('tr-TR')} satırla sınırlandı. Filtre ekleyerek daraltın.`, `The aggregate view is limited to the first ${(result.rowLimit||state.rows.length).toLocaleString('en-GB')} rows. Narrow it with filters.`) : ''), result.offline || result.truncated ? 'warning' : 'ok');
+  }
+
+  /* Yükleme sürerken gelen yenileme istekleri düşürülmez: sıraya alınır ve
+     mevcut istek bitince en güncel görünümle bir kez daha sorgulanır. */
+  function refresh(forceRefresh) {
+    if (state.loading) {
+      state.refreshQueued = { force: Boolean(forceRefresh) || Boolean(state.refreshQueued && state.refreshQueued.force) };
+      return state.refreshPromise;
+    }
+    state.loading = true;
+    if (!state.loaded) setStatus(text('INTAKE verileri getiriliyor…', 'Loading INTAKE data…'), 'loading');
+    renderChrome();
+    state.refreshPromise = (async () => {
+      let force = Boolean(forceRefresh);
+      try {
+        do {
+          state.refreshQueued = null;
+          try {
+            await runReport(force);
+          } catch (error) {
+            state.error = error.message || String(error);
+            setStatus(state.error, 'error');
+          }
+          force = Boolean(state.refreshQueued && state.refreshQueued.force);
+        } while (state.refreshQueued);
+      } finally {
+        state.loading = false;
+        state.refreshPromise = null;
+        render();
+      }
+    })();
+    return state.refreshPromise;
   }
 
   async function loadState() {
+    const revision = state.viewRevision;
     try {
       const result = await requestJson('/api/intake/state');
       state.fields = Array.isArray(result.fields) ? result.fields : [];
-      state.viewConfig = result.viewConfig || state.viewConfig;
-      if (result.snapshot) {
-        state.rows = Array.isArray(result.snapshot.rows) ? result.snapshot.rows : [];
+      if (revision === state.viewRevision) state.viewConfig = result.viewConfig || state.viewConfig;
+      if (result.snapshot && !state.loaded) {
+        state.fetchedAt = result.snapshot.fetchedAt || '';
+        setRows(result.snapshot.rows);
         state.loaded = true;
         state.offline = Boolean(result.offline);
         setStatus(result.offline ? text('Canlı kaynak kullanılamıyor; son başarılı snapshot gösteriliyor.', 'Live source is unavailable; showing the last successful snapshot.') : '', result.offline ? 'warning' : 'ok');
@@ -823,11 +976,12 @@
     if (state.metadataLoading) return state.metadataPromise || Promise.resolve();
     state.metadataLoading = true;
     setStatus(text('INTAKE alanları yükleniyor…', 'Loading INTAKE fields…'), 'loading');
+    const revision = state.viewRevision;
     state.metadataPromise = (async () => {
       try {
         const result = await requestJson('/api/intake/metadata');
         if (Array.isArray(result.fields) && result.fields.length) state.fields = result.fields;
-        if (result.viewConfig) state.viewConfig = result.viewConfig;
+        if (result.viewConfig && revision === state.viewRevision) state.viewConfig = result.viewConfig;
         setStatus('', '');
         render();
       } catch (error) {
@@ -861,7 +1015,8 @@
       try {
         const result = await requestJson('/api/intake/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reset: true }) });
         state.viewConfig = result.viewConfig || state.viewConfig;
-        state.rows = [];
+        state.viewRevision += 1;
+        setRows([]);
         state.loaded = false;
         render();
         setStatus(text('Varsayılan INTAKE görünümü geri yüklendi. Yenile ile veriyi çekin.', 'Default INTAKE view restored. Refresh to query data.'), 'ok');
@@ -889,7 +1044,8 @@
         const next = clone(state.viewConfig);
         next.query.filterValues = { ...(next.query.filterValues || {}) };
         delete next.query.filterValues[remove.dataset.intakeFilterRemove];
-        void saveView(next).then(() => refresh(false));
+        releaseOverviewFilter(next, remove.dataset.intakeFilterRemove);
+        void saveView(next);
         return;
       }
       const trigger = event.target.closest('[data-intake-filter]');

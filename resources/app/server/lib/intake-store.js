@@ -47,6 +47,8 @@ function createIntakeStore(options = {}) {
          değiştirir, önbellekten filtresiz eski satırlar döner ve filtre
          "yansımıyor" görünürdü — düzeltilen hatanın ta kendisi. */
       horizon: source.horizon || null,
+      // Sorgu seçenekleri (ör. sıfır bütçe gizleme) de sonucu değiştirir.
+      options: source.options || null,
     });
   }
   function cachePath(key) { return path.join(cacheDir, `${safeId(key, 'query')}.json.gz`); }

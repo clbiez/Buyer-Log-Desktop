@@ -4315,6 +4315,8 @@ tr.blRemoteChanged>td{animation:blRemoteChangedFade 5s ease-out 1;}
 .intakeFilterRemove{width:28px;height:var(--ctl-h);padding:0;border:1px solid var(--line);border-left-color:var(--line2);background:var(--card);color:var(--muted);font-size:16px;line-height:1;cursor:pointer;}
 .intakeFilterRemove:hover{border-color:var(--red);background:var(--red-bg);color:var(--red);}
 .intakeBody{min-width:0;}
+.intakeBody .intakeTableWrap{transition:opacity .12s ease;}
+.intakeBody.isBusy .intakeTableWrap{opacity:.6;}
 .intakeTableWrap{padding:0;overflow:auto;max-width:100%;}
 .intakeTableWrap .miniTable{min-width:720px;}
 .intakeTableWrap .miniTable th{position:sticky;top:0;z-index:1;background:var(--thead-bg);color:var(--thead-ink);cursor:pointer;white-space:nowrap;}
