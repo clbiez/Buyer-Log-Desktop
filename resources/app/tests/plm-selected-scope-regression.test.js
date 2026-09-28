@@ -37,6 +37,31 @@ test('checkbox selection keeps the source row id instead of coercing every id to
   assert.doesNotMatch(collection, /Number\(chk\.dataset\.id\)/);
 });
 
+
+test('selection identity helpers preserve numeric, numeric-string and UUID-like ids end to end', () => {
+  const start = APP.indexOf('function selectionIdKey');
+  const end = APP.indexOf('// Ortak tablo araması:', start);
+  assert.ok(start >= 0 && end > start, 'selection helper block bulunamadı');
+  const helpers = new Function(`${APP.slice(start, end)}; return { selectionHasId, selectionActualId, selectionSetId };`)();
+
+  const collectionSelection = new Set([2131745]);
+  assert.equal(helpers.selectionHasId(collectionSelection, '2131745'), true, 'Collection numeric/string id eşleşmeli');
+
+  const cpRows = [{ _id: 'cp:MAGIX-YI:Q6K' }, { _id: 'cp:OTHER' }];
+  const cpSelection = new Set();
+  const cpId = helpers.selectionActualId(cpRows, row => row._id, 'cp:MAGIX-YI:Q6K');
+  helpers.selectionSetId(cpSelection, cpId, true);
+  assert.equal(cpId, 'cp:MAGIX-YI:Q6K');
+  assert.equal(helpers.selectionHasId(cpSelection, cpRows[0]._id), true, 'CP string id Number/NaN dönüşümünde kaybolmamalı');
+
+  const orderRows = [{ _id: 'ORDER-2026-00017' }];
+  const orderSelection = new Set([Number.NaN]);
+  const orderId = helpers.selectionActualId(orderRows, row => row._id, 'ORDER-2026-00017');
+  helpers.selectionSetId(orderSelection, orderId, true);
+  assert.equal(helpers.selectionHasId(orderSelection, 'ORDER-2026-00017'), true, 'Orders string id gerçek kaynak kimliğiyle saklanmalı');
+  assert.equal(orderSelection.has(Number.NaN), true, 'başka/bayat seçim girdileri yeni seçimi bozmamalı');
+});
+
 test('page-root PLM Sync resolves its own provider even when a higher-priority view is active', () => {
   const offTable = scopeApi.registerProvider('test-plm-page', {
     priority: 1,
