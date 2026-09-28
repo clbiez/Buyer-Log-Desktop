@@ -148,6 +148,37 @@
   /* Etkin görünümün kapsamı. Hiçbir sağlayıcı etkin değilse null döner ve
      çağıran "bu ekranda model görseli yok" der — sessizce tüm veritabanına
      genişletmez. */
+  function resolveProviderScope(provider) {
+    if (!provider) return null;
+    let resolved = null;
+    try { resolved = provider.resolve(); } catch (_) { resolved = null; }
+    if (!resolved) return null;
+    const identities = dedupe(resolved.identities);
+    const selectedKeys = new Set(dedupe(resolved.selectedIdentities).map(item => item.canonicalImageKey || item.plmId));
+    return {
+      contextType: clean(resolved.contextType) || provider.id,
+      viewToken: clean(resolved.viewToken) || provider.id,
+      label: clean(resolved.label) || clean(resolved.contextType) || provider.id,
+      providerId: provider.id,
+      identities,
+      selectedIdentities: identities.filter(item => selectedKeys.has(item.canonicalImageKey || item.plmId)),
+      /* Görünüm hâlâ aynı mı? Uzak iş dönerken sayfa değişmiş olabilir. */
+      isStillCurrent: typeof resolved.isStillCurrent === 'function' ? resolved.isStillCurrent : null,
+      repaint: typeof resolved.repaint === 'function' ? resolved.repaint : null,
+      hasMissingImage: typeof resolved.hasMissingImage === 'function' ? resolved.hasMissingImage : null,
+    };
+  }
+
+  /* Ana sayfa eylemleri hangi sağlayıcıya ait olduklarını zaten bilir.
+     Örneğin Collection PLM SYNC, görünür bir drilldown/modal sağlayıcısı
+     daha yüksek öncelikli olsa bile Collection seçimini okumalıdır.
+     currentScope() bağlamsal eylemler için kalır; scopeForProvider() ise
+     sayfa-kökü eylemlerinin kapsamının yanlış sağlayıcı tarafından
+     gölgelenmesini engeller. */
+  function scopeForProvider(name) {
+    return resolveProviderScope(providers.get(clean(name)));
+  }
+
   function currentScope() {
     let best = null;
     for (const provider of providers.values()) {
@@ -156,24 +187,7 @@
       if (!active) continue;
       if (!best || provider.priority > best.priority) best = provider;
     }
-    if (!best) return null;
-    let resolved = null;
-    try { resolved = best.resolve(); } catch (_) { resolved = null; }
-    if (!resolved) return null;
-    const identities = dedupe(resolved.identities);
-    const selectedKeys = new Set(dedupe(resolved.selectedIdentities).map(item => item.canonicalImageKey || item.plmId));
-    return {
-      contextType: clean(resolved.contextType) || best.id,
-      viewToken: clean(resolved.viewToken) || best.id,
-      label: clean(resolved.label) || clean(resolved.contextType) || best.id,
-      providerId: best.id,
-      identities,
-      selectedIdentities: identities.filter(item => selectedKeys.has(item.canonicalImageKey || item.plmId)),
-      /* Görünüm hâlâ aynı mı? Uzak iş dönerken sayfa değişmiş olabilir. */
-      isStillCurrent: typeof resolved.isStillCurrent === 'function' ? resolved.isStillCurrent : null,
-      repaint: typeof resolved.repaint === 'function' ? resolved.repaint : null,
-      hasMissingImage: typeof resolved.hasMissingImage === 'function' ? resolved.hasMissingImage : null,
-    };
+    return resolveProviderScope(best);
   }
 
   /* İŞ KAPSAMININ ANLIK GÖRÜNTÜSÜ. Buradan sonra kapsam yeniden HESAPLANMAZ. */
@@ -239,7 +253,7 @@
   }
 
   return {
-    registerProvider, listProviders, currentScope, snapshot, isViewCurrent,
+    registerProvider, listProviders, currentScope, scopeForProvider, snapshot, isViewCurrent,
     missingIdentities, planAssetQueues, dedupe, normalizeIdentity, canonicalImageKey, identityKey, normalizePlmId,
   };
 });

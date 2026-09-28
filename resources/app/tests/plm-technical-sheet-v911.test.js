@@ -216,7 +216,7 @@ test('hedef satırlar Dosyalar ekranıyla aynı kuralı izler (seçim varsa seç
   const start = APP.indexOf('function kolPlmSyncModelFileRows');
   const end = APP.indexOf('async function kolPlmSyncModelFilesRun', start);
   const block = APP.slice(start, end);
-  assert.match(block, /kolRows\.filter\(row=>kolSelected\.has\(row\.id\)\)/);
+  assert.match(block, /kolRows\.filter\(row=>selectionHasId\(kolSelected,row\.id\)\)/);
   assert.match(block, /selected\.length\?selected:filteredKol\(\)/);
   // PLM ID'si olmayan satır hiç gönderilmez.
   assert.match(block, /filter\(row=>kolPlmNormalizeId\(row&&row\.plmId\)\)/);

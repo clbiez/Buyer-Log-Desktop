@@ -285,8 +285,8 @@ test('v6.34 işaretsiz kipi satırları ters yönde eliyor', () => {
   assert.match(APP, /if\(ctx\.checkFilter==='unchecked'&&state\.ordersSelected\.has\(row\._id\)\)return false;/);
   // Koleksiyon da aynı kipi kullanmalı.
   const kol = bodyOf(APP, 'filteredKol');
-  assert.match(kol, /checkMode==='checked' && !kolSelected\.has\(r\.id\)/);
-  assert.match(kol, /checkMode==='unchecked' && kolSelected\.has\(r\.id\)/);
+  assert.match(kol, /checkMode==='checked' && !selectionHasId\(kolSelected,r\.id\)/);
+  assert.match(kol, /checkMode==='unchecked' && selectionHasId\(kolSelected,r\.id\)/);
 });
 
 /* --------------------------------------------------- 5) SÜTUN BAĞIMSIZLAŞTIRMA */
