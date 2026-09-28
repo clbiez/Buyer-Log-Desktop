@@ -96,7 +96,8 @@ test('Collection Status keeps native select lifecycle while rendering shared cat
   assert.match(html,/else if\(c\.status\)/);
   assert.match(html,/class="editCell kolStatusNoArrow"/);
   assert.match(html,/kolStatusEntries\(\)/);
-  assert.match(html,/kolStatusColor\(val\)/);
+  assert.match(html,/statusValue=kolStatusCanonicalName\(val\)/);
+  assert.match(html,/kolStatusColor\(statusValue\)/);
   const css=fs.readFileSync(path.join(root,'public','app.css'),'utf8');
   assert.match(css,/#kolTable select\.kolStatusNoArrow/);
   assert.match(css,/appearance:none/);

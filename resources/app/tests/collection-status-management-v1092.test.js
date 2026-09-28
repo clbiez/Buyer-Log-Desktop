@@ -35,7 +35,8 @@ test('status color change is structural and does not rewrite Collection business
 
 test('status rename migrates existing string values before saving',()=>{
   const rename=fn('function kolRenameStatus(');
-  assert.match(rename,/kolRows\.forEach\(row=>\{if\(String\(row&&row\.durum\|\|''\)===String\(oldName\)\)row\.durum=clean;/);
+  assert.match(rename,/kolRows\.forEach\(row=>\{if\(KOL_STATUS_API\.key\(row&&row\.durum\)===oldKey\)row\.durum=clean;/,
+    'rename must migrate both Turkish and English aliases of the same status');
   assert.match(rename,/saveKolRows\(\)/);
   assert.match(rename,/builtin:false/);
 });

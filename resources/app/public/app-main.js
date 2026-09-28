@@ -20249,13 +20249,14 @@ const KOL_STATUS_API=window.BLCollectionStatusCatalog;
 let kolStatusCatalog=KOL_STATUS_API?KOL_STATUS_API.seed():[];
 function kolNormalizeStatusCatalog(value,rows){return KOL_STATUS_API?KOL_STATUS_API.normalize(value,{rowStatuses:(Array.isArray(rows)?rows:[]).map(row=>row&&row.durum)}):(Array.isArray(value)?value:[]);}
 function kolStatusEntries(){return KOL_STATUS_API?KOL_STATUS_API.normalize(kolStatusCatalog,{rowStatuses:(Array.isArray(kolRows)?kolRows:[]).map(row=>row&&row.durum)}):[];}
-function kolStatusEntry(name){return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),name):null;}
-function kolStatusColor(name){return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),name):'#667085';}
-function kolStatusDisplayLabel(name){const entry=kolStatusEntry(name);return entry&&entry.builtin?L(entry.name):String(name||'');}
+function kolStatusCanonicalName(name){return KOL_STATUS_API?.canonicalName?KOL_STATUS_API.canonicalName(name):String(name||'').trim();}
+function kolStatusEntry(name){return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),kolStatusCanonicalName(name)):null;}
+function kolStatusColor(name){return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),kolStatusCanonicalName(name)):'#667085';}
+function kolStatusDisplayLabel(name){const entry=kolStatusEntry(name);return entry&&entry.builtin?(KOL_STATUS_API?.label?KOL_STATUS_API.label(entry.name,appLang):L(entry.name)):String(name||'');}
 function kolStatusDefaultName(){return kolStatusEntries()[0]?.name||'Pending File';}
 function kolStatusExcelArgb(name){return KOL_STATUS_API?KOL_STATUS_API.toArgb(kolStatusColor(name)):'FF667085';}
 function kolStatusExcelTextArgb(name){return KOL_STATUS_API?KOL_STATUS_API.textArgb(kolStatusColor(name)):'FFFFFFFF';}
-function kolStatusUsageCount(name){return kolRows.reduce((count,row)=>count+(String(row&&row.durum||'')===String(name)?1:0),0);}
+function kolStatusUsageCount(name){const lookup=KOL_STATUS_API?KOL_STATUS_API.key(name):String(name||'');return kolRows.reduce((count,row)=>count+((KOL_STATUS_API?KOL_STATUS_API.key(row&&row.durum):String(row&&row.durum||''))===lookup?1:0),0);}
 function kolPersistCatalogOnly(){kolPersistPendingWorkspace('pending');kolQueueWorkspaceSave();renderKol();scheduleOverviewCollectionSummaryRender();}
 function kolAddStatus(name,color){
   if(!kolRequireWorkspaceEdit())throw new Error(appLang==='en'?'Collection is view-only.':'Koleksiyon yalnız görüntülenebilir.');
@@ -20274,7 +20275,7 @@ function kolRenameStatus(oldName,newName){
   if(clean===String(oldName||'').trim())return;
   if(KOL_STATUS_API.key(clean)!==oldKey&&kolStatusEntries().some(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(clean)))throw new Error(appLang==='en'?'This status already exists.':'Bu status zaten var.');
   const entries=kolStatusEntries();if(!entries.some(entry=>KOL_STATUS_API.key(entry.name)===oldKey))throw new Error(appLang==='en'?'Status not found.':'Status bulunamadı.');
-  kolRows.forEach(row=>{if(String(row&&row.durum||'')===String(oldName))row.durum=clean;});
+  kolRows.forEach(row=>{if(KOL_STATUS_API.key(row&&row.durum)===oldKey)row.durum=clean;});
   kolStatusCatalog=KOL_STATUS_API.normalize(entries.map(entry=>KOL_STATUS_API.key(entry.name)===oldKey?{name:clean,color:entry.color,builtin:false}:entry),{rowStatuses:kolRows.map(row=>row&&row.durum)});
   saveKolRows();renderKol();
 }
@@ -20285,7 +20286,7 @@ function kolRemoveStatus(name,replacement){
   if(usage){
     const target=entries.find(entry=>KOL_STATUS_API.key(entry.name)===KOL_STATUS_API.key(replacement));
     if(!target||KOL_STATUS_API.key(target.name)===key)throw new Error(appLang==='en'?'Choose a replacement status.':'Yerine geçecek statusu seç.');
-    kolRows.forEach(row=>{if(String(row&&row.durum||'')===String(name))row.durum=target.name;});
+    kolRows.forEach(row=>{if(KOL_STATUS_API.key(row&&row.durum)===key)row.durum=target.name;});
   }
   kolStatusCatalog=KOL_STATUS_API.normalize(entries.filter(entry=>KOL_STATUS_API.key(entry.name)!==key),{rowStatuses:kolRows.map(row=>row&&row.durum)});
   if(usage)saveKolRows();else kolPersistCatalogOnly();renderKol();
@@ -24441,8 +24442,8 @@ function renderKol(){
         else if(c.money&&val!=='') display='$'+kolFormatMoneyDisplay(val);
         html+=`<td class="num kolRuleReadonly${fobFallback?' kolFobFallback':''}${ruleMissing?' kolRuleMissing':''}"${rc} title="${escapeHtml(cellTitle)}" style="text-align:right;font-family:var(--mono);background:var(--card2);color:${ruleMissing?'var(--orange)':(fobFallback?'var(--muted)':'var(--ink2)')};">${ruleMissing?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}${escapeHtml(display)}</td>`;
       }else if(c.status){
-        const statusEntries=kolStatusEntries(),statusColor=kolStatusColor(val);
-        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${val===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
+        const statusEntries=kolStatusEntries(),statusValue=kolStatusCanonicalName(val),statusColor=kolStatusColor(statusValue);
+        html+=`<td class="editTd kolStatusTd"${rc} style="--kol-status-color:${escapeHtml(statusColor)}"><select class="editCell kolStatusNoArrow" data-id="${r.id}" data-k="${c.k}" style="--kol-status-color:${escapeHtml(statusColor)}">${statusEntries.map(entry=>`<option value="${escapeHtml(entry.name)}" ${statusValue===entry.name?'selected':''}>${escapeHtml(kolStatusDisplayLabel(entry.name))}</option>`).join('')}</select></td>`;
       }else if(c.select){
         html+=`<td class="editTd"${rc}><select class="editCell" data-id="${r.id}" data-k="${c.k}">${c.select.map(opt=>`<option value="${escapeHtml(opt)}" ${val===opt?'selected':''}>${escapeHtml(c.k==='delType'?transitDelTypeDisplay(opt):L(opt))}</option>`).join('')}</select></td>`;
       }else if(c.exToRetail){
