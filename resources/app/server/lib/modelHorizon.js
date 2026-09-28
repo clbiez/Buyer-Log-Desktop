@@ -320,7 +320,10 @@ function describeHorizon(horizonInput) {
   return { bounded: true, groups, text };
 }
 
-function buildHorizonFilter(horizonInput, mapping = null, options = {}) {
+function buildHorizonFilter(horizonInput, projectionMapping = null, options = {}) {
+  // Filtre koşulları projeksiyondan çıkarılmış (Ufuk) alanları da çözebilmeli:
+  // çağıran taraf tam eşlemeyi options.filterMapping olarak verebilir.
+  const mapping = options && options.filterMapping ? options.filterMapping : projectionMapping;
   const horizon = normalizeHorizon(horizonInput);
   const warnings = [];
 

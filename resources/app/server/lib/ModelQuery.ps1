@@ -344,7 +344,7 @@ catch {
   # Sık karşılaşılan hataları anlaşılır Türkçeye çevir; ham metin de korunur.
   $hint = ""
   if ($message -match "Cannot connect|bağlan|The connection either timed out") { $hint = "Sunucu adına veya ağ/VPN erişimine bak." }
-  elseif ($message -match "Cannot find table|Cannot find column|not found|bulunamadı|does not exist") { $hint = "Bu ad modelde yok. 'Tabloları Listele' ile gerçek tablo adlarını getirip listeden seç." }
+  elseif ($message -match "Cannot find table|Cannot find column|cannot be found|not found|bulunamadı|does not exist") { $hint = "Bu ad modelde yok. 'Tabloları Listele' ile gerçek tablo adlarını getirip listeden seç." }
   elseif ($message -match "permission|denied|yetki") { $hint = "Windows hesabının bu model için okuma yetkisi yok görünüyor." }
   elseif ($message -match "Query \(|syntax|sözdizim") { $hint = "DAX sorgusunda sözdizimi hatası var." }
   Write-Summary ([ordered]@{

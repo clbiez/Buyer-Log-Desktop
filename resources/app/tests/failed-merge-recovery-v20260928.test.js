@@ -31,5 +31,5 @@ test('previous Overview INTAKE recovery remains present', () => {
   assert.match(html, /id="intakeFiltersBtn"/);
   assert.match(html, /id="intakeFilterPanel"/);
   assert.match(intake, /function setFilterPanelOpen\(open\)/);
-  assert.match(app, /loader\('intake\.js\?rev=4'\)/);
+  assert.match(app, /loader\('intake\.js\?rev=\d+'\)/);
 });

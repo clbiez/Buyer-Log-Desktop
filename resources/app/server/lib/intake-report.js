@@ -285,10 +285,28 @@ function reconcileViewConfig(input, availableFields = []) {
   const showSubtotals = sourceDisplay.showSubtotals !== false;
   const collapsedGroups = Array.isArray(sourceDisplay.collapsedGroups) ? [...new Set(sourceDisplay.collapsedGroups.map(clean).filter(Boolean))].slice(0, 5000) : [];
   const hideZeroCurrentBudget = sourceDisplay.hideZeroCurrentBudget !== false;
+  /* Genel Bakış filtrelerinden gelen değerlerin kaydı (public/intake.js
+     syncOverviewFilters). Kalıcı olmazsa Genel Bakış filtresi kaldırıldığında
+     INTAKE'e yazılmış değerler hangisinin senkrondan geldiği bilinmeden
+     görünümde kalıyordu. */
+  const rawSync = sourceDisplay.overviewSync && typeof sourceDisplay.overviewSync === 'object' ? sourceDisplay.overviewSync : null;
+  let overviewSync = null;
+  if (rawSync) {
+    const filterIds = new Set(filters.map(field => field.id));
+    const syncValues = {};
+    const rawSyncValues = rawSync.values && typeof rawSync.values === 'object' ? rawSync.values : {};
+    for (const [id, values] of Object.entries(rawSyncValues)) {
+      if (!filterIds.has(id) || !Array.isArray(values)) continue;
+      const list = [...new Set(values.map(clean).filter(Boolean))].slice(0, 1000);
+      if (list.length) syncValues[id] = list;
+    }
+    const signature = clean(rawSync.signature).slice(0, 20000);
+    if (signature || Object.keys(syncValues).length) overviewSync = { signature, values: syncValues };
+  }
   return {
     version: INTAKE_VIEW_VERSION,
     query: { rows, columns, measures, filters, filterValues },
-    display: { labels, widths, sort, collapsed, grouped, showSubtotals, collapsedGroups, hideZeroCurrentBudget },
+    display: { labels, widths, sort, collapsed, grouped, showSubtotals, collapsedGroups, hideZeroCurrentBudget, ...(overviewSync ? { overviewSync } : {}) },
   };
 }
 
