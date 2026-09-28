@@ -70,8 +70,8 @@ test('current and comparison seasons may use independent In-Store/OPD months',()
 });
 
 test('period controls are side-specific and clearing filters clears months without removing layout',()=>{
-  assert.match(ui,/data-ps="${kind}DateField"/);
-  assert.match(ui,/data-ps="${kind}Month"/);
+  assert.match(ui,/data-ps="\\$\\{kind\\}DateField"/);
+  assert.match(ui,/data-ps="\\$\\{kind\\}Month"/);
   assert.match(ui,/currentPeriod:state\.periods\.current,previousPeriod:state\.periods\.previous/);
   assert.match(ui,/state\.periods\.current\.month='';state\.periods\.previous\.month=''/);
   assert.match(ui,/PERIOD_KINDS\.forEach\(kind=>\{state\.periods\[kind\]\.month='';\}\)/);
