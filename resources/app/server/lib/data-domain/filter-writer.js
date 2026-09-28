@@ -108,8 +108,36 @@ function planFilterChange(items, { sourceId, moduleId, definition, mode = 'share
 
   const owner = scopes[ownerIndex];
   const sharedWith = (owner.targets || []).filter(target => target !== wantedModule);
+  const linkedGroup = modelScopes.LINKED_ROLES.has(String(item.role || '').toLowerCase()) && modelScopes.isLinkedTarget(wantedModule);
 
-  if (mode === 'shared') {
+  if (linkedGroup) {
+    /* BAĞLI MODÜLLER (Orders · Backlog · LFL · Price & Supplier) tek ufuk
+       taşır; "yalnız bu modül için ayır" burada anlamsızdır — normalizasyon
+       ayrılan modülü gruba geri katar ve kullanıcının yazdığı ufuk sessizce
+       kaybolabilirdi. Bu yüzden iki biçim de aynı işi yapar: grubun bütün
+       üyeleri yeni ufku alır, gruba ait olmayan ortaklar (CP) eski ufkunda
+       kalır. */
+    const members = scopes.flatMap(scope => (scope.targets || []).filter(target => modelScopes.isLinkedTarget(target)));
+    const peers = members.filter(target => target !== wantedModule);
+    const outsiders = sharedWith.filter(target => !modelScopes.isLinkedTarget(target));
+    const pureOwner = !outsiders.length;
+    const next = scopes.map(scope => ({ ...scope, targets: (scope.targets || []).filter(target => !modelScopes.isLinkedTarget(target)) }))
+      .filter(scope => scope.targets.length);
+    const linkedScope = {
+      ...owner,
+      id: pureOwner ? owner.id : `sc_${Math.random().toString(36).slice(2, 9)}`,
+      name: name == null ? (pureOwner ? owner.name : '') : clean(name).slice(0, MAX_NAME),
+      targets: [...new Set(members)],
+      horizon: normalizedHorizon,
+    };
+    const at = next.findIndex(scope => scope.id === owner.id);
+    if (at >= 0) next.splice(at + 1, 0, linkedScope); else next.push(linkedScope);
+    scopes.length = 0;
+    scopes.push(...next);
+    if (peers.length) {
+      warnings.push(`Bu filtre bağlı ${peers.length + 1} modülün ortak ufkudur (${[wantedModule, ...peers].map(target => modelScopes.TARGET_LABELS[target] || target).join(', ')}); değişiklik hepsini birlikte etkiler.`);
+    }
+  } else if (mode === 'shared') {
     if (sharedWith.length) {
       warnings.push(`Bu filtre ${sharedWith.length + 1} modül tarafından paylaşılıyor; değişiklik hepsini etkiler.`);
     }
@@ -150,6 +178,11 @@ function planFilterChange(items, { sourceId, moduleId, definition, mode = 'share
   const applied = item.scopes.find(scope => (scope.targets || []).includes(wantedModule));
   if (!applied) {
     return { ok: false, code: 'FILTER_NOT_APPLIED', message: 'Filtre kaydedilemedi: modül normalleştirmeden sonra bu kapsamda bulunamadı.', items: list, warnings };
+  }
+  // Modül bulundu ama normalizasyon onu BAŞKA bir ufka taşıdıysa (ör. bağlı
+  // grubun birleşmesi) kaydedildi sanılmamalı.
+  if (JSON.stringify(modelHorizon.normalizeHorizon(applied.horizon)) !== JSON.stringify(normalizedHorizon)) {
+    return { ok: false, code: 'FILTER_NOT_APPLIED', message: 'Filtre kaydedilemedi: modül normalleştirmeden sonra farklı bir ufukla eşleşti.', items: list, warnings };
   }
 
   const next = list.slice();

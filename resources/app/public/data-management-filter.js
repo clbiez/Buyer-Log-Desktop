@@ -368,6 +368,9 @@
   function render() {
     if (!host) return;
     const shared = (context.sharedWith || []).length;
+    // Bağlı gruptaki (Siparişler · Backlog · LFL · Fiyat & Üretici) bir modül
+    // tek başına ayrılamaz; sunucu da ayırmayı grubun tamamına uygular.
+    const canSplit = context.canSplit !== false;
 
     host.innerHTML = `<div class="dmFilterEditor" role="region" aria-label="${esc(context.moduleLabel)}">
       <div class="dmfHead">
@@ -408,13 +411,17 @@
         <span class="dmfSpacer"></span>
         ${message ? `<span class="dmfMessage is-${esc(messageTone)}">${esc(message)}</span>` : ''}
         <button type="button" class="tbtn" data-cancel ${busy ? 'disabled' : ''}>${esc(T('İptal', 'Cancel'))}</button>
-        ${shared
+        ${shared && canSplit
           ? `<button type="button" class="tbtn" data-save="split" ${busy ? 'disabled' : ''}
                title="${esc(T('Diğer modüller eski filtreyi kullanmaya devam eder', 'Other modules keep the previous filter'))}">
                ${esc(T(`Yalnız ${context.moduleLabel} için ayır`, `Split for ${context.moduleLabel} only`))}</button>
              <button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}
                title="${esc(T(`${shared + 1} modülün hepsini etkiler`, `Affects all ${shared + 1} modules`))}">
                ${esc(T('Hepsini güncelle', 'Update all'))}</button>`
+          : shared
+          ? `<button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}
+               title="${esc(T('Bağlı modüller tek ufuk paylaşır; hepsi birlikte güncellenir', 'Linked modules share one horizon; all are updated together'))}">
+               ${esc(T('Bağlı modüllerin hepsini güncelle', 'Update all linked modules'))}</button>`
           : `<button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}>${esc(T('Kaydet', 'Save'))}</button>`}
       </div>
     </div>`;

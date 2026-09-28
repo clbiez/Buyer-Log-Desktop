@@ -798,7 +798,7 @@
         </div>
         <div class="toolbar tableActionToolbar" id="ordersTableToolbar" data-responsive-toolbar="orders" data-overflow-menu="ordersMoreMenu" data-overflow-trigger="ordersMoreWrap">
           <input type="search" id="ordersSearch" placeholder="PLM ID, model, lisans, üretici, alt üretici, özel kod, renk kodu, sipariş kodu ara…" aria-label="Siparişlerde ara" data-i18n-aria-label-tr="Siparişlerde ara" data-i18n-aria-label-en="Search Orders">
-          <button type="button" id="ordersRefreshBtn" class="tbtn primary" data-action-role="primary" data-i18n-title-tr="Yalnız Siparişler verisini yenile" data-i18n-title-en="Refresh Orders data only" title="Yalnız Siparişler verisini yenile" data-tb-priority="primary" data-tb-compact="icon"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Siparişleri Yenile" data-i18n-en="Refresh Orders">Siparişleri Yenile</span></button>
+          <button type="button" id="ordersRefreshBtn" class="tbtn primary" data-action-role="primary" data-i18n-title-tr="Siparişler, Backlog, LFL ve Fiyat &amp; Üretici Analizi'ni birlikte yenile (ortak ufuk)" data-i18n-title-en="Refresh Orders, Backlog, LFL and Price &amp; Supplier Analysis together (shared horizon)" title="Siparişler, Backlog, LFL ve Fiyat &amp; Üretici Analizi'ni birlikte yenile (ortak ufuk)" data-tb-priority="primary" data-tb-compact="icon"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
           <div class="tableToolbarActions" id="ordersTableActions" aria-label="Orders table actions"></div>
           <!-- PLM Sync: model linki + model görseli. Koleksiyon'dan FARKLI olarak
                burada tablo alanlarına (line/category/fabric…) DOKUNULMAZ. -->
@@ -932,7 +932,7 @@
   <section id="view-lfl">
     <div class="horizonBadge" id="lflHorizonBadge"><span class="horizonBadgeLabel">Model ufku</span><span class="horizonBadgeText">ortak/yerel horizon — tüm veri kaynağı</span></div>
     <div class="lflToolbar">
-      <button type="button" class="lflButton" id="lflRefreshBtn" title="LFL için tanımlanan ASAS veri modeli kapsamını yeniler." data-i18n-title-tr="LFL için tanımlanan ASAS veri modeli kapsamını yeniler." data-i18n-title-en="Refreshes the ASAS data-model scope defined for LFL."><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="LFL Verisini Yenile" data-i18n-en="Refresh LFL Data">LFL Verisini Yenile</span></button>
+      <button type="button" class="lflButton" id="lflRefreshBtn" title="Siparişler, Backlog, LFL ve Fiyat &amp; Üretici Analizi birlikte yenilenir (ortak ufuk)." data-i18n-title-tr="Siparişler, Backlog, LFL ve Fiyat &amp; Üretici Analizi birlikte yenilenir (ortak ufuk)." data-i18n-title-en="Refreshes Orders, Backlog, LFL and Price &amp; Supplier Analysis together (shared horizon)."><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Yenile" data-i18n-en="Refresh">Yenile</span></button>
       <button type="button" class="lflButton lflButton--tonal" id="lflCurrentPortfolioBtn" disabled><svg class="ic"><use href="#i-table"/></svg><span data-i18n-tr="Seçili Portföy" data-i18n-en="Selected Portfolio">Seçili Portföy</span></button>
       <button type="button" class="lflButton lflButton--tonal" id="lflComparePortfolioBtn" disabled><svg class="ic"><use href="#i-table"/></svg><span data-i18n-tr="Kıyaslanan Portföy" data-i18n-en="Compared Portfolio">Kıyaslanan Portföy</span></button>
       <button type="button" class="lflButton" id="lflExportBtn"><svg class="ic"><use href="#i-file-export"/></svg><span>Analizi Excel'e Aktar</span></button>
@@ -997,7 +997,7 @@
     <div id="lflEmpty" class="lflCard lflStatusEmpty" hidden>
       <svg class="ic"><use href="#i-chart-histogram"/></svg>
       <h3>LFL verisi bulunamadı</h3>
-      <p>Data Model Connection içindeki ana ASAS bağlantısında LFL kapsamını ve gerekli alan eşlemelerini tanımlayıp “LFL Verisini Yenile” butonuna bas.</p>
+      <p>Data Model Connection içindeki ana ASAS bağlantısında bağlı sayfaların (Siparişler · Backlog · LFL · Fiyat &amp; Üretici) ortak kapsamını ve gerekli alan eşlemelerini tanımlayıp “Yenile” butonuna bas.</p>
     </div>
 
     <div id="lflContent" hidden>
