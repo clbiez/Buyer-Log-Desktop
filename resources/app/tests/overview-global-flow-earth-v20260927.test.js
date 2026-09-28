@@ -79,6 +79,14 @@ test('Earth rotası aynı kenar örneklerini kullanır: rota hesabı kopyalanmaz
   assert.ok(earth.MAX_SAMPLE_STEP_DEG<=.5,'düz kiriş deniz seviyesinin altına inmeyecek kadar sık örneklenir');
 });
 
+test('Earth araç ve küme ikonları overdue transit durumunu sarı çerçeveyle taşır',()=>{
+  assert.match(EARTH,/function vehicleIcon\(mode,critical,overdue,selected\)/);
+  assert.match(EARTH,/stroke=overdue\?p\.yellow:\(critical\?p\.red:host\.modeColor\(mode\)\)/);
+  assert.match(EARTH,/vehicleIcon\(vehicle\.mode,vehicle\.critical,vehicle\.overdue\)/);
+  assert.match(EARTH,/function clusterIcon\(count,css,critical,overdue\)/);
+  assert.match(EARTH,/clusterIcon\(vehicles\.length,host\.modeColor\(dominant\),critical&&showRisk,overdue\)/);
+});
+
 test('Earth lazy yüklenir: index.html Cesium veya Earth modülünü eager yüklemez',()=>{
   assert.doesNotMatch(INDEX,/vendor\/cesium|overview-global-flow-earth\.js/);
   assert.match(PERF,/cesium:\{global:'Cesium',files:\['vendor\/cesium\/Cesium\.js'\]\}/);
