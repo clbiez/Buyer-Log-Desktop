@@ -30660,7 +30660,7 @@ async function kolExportStyleManagement(rows){
       cell.value=kolStyleExportValue(field,source);
       cell.alignment={vertical:'middle',wrapText:true};
       cell.border={bottom:{style:'hair',color:{argb:'FFD0D5DD'}}};
-      if(field.date&&cell.value instanceof Date)cell.numFmt='dd.mm.yyyy';
+      if(field.date&&cell.value instanceof Date)cell.numFmt='dd.mm.yy';
       else if(field.qty)cell.numFmt='#,##0';
       else if(field.moneyLocal)cell.numFmt='#,##0.00';
       else if(field.number)cell.numFmt='#,##0.######';
