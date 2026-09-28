@@ -655,7 +655,17 @@ function groupTransitPlacements(placements,bucket){
     [...vessels.keys()].sort().forEach(key=>{const items=vessels.get(key);out.push(makeVehicle(leg,items,{key,name:items[0].rec.vesselName}));});
     loose.sort((a,b)=>a.legProgress-b.legProgress||(a.rec.id<b.rec.id?-1:a.rec.id>b.rec.id?1:0));
     const buckets=[];let current=null;
-    loose.forEach(p=>{if(!current||p.legProgress-current.start>window){current={start:p.legProgress,items:[]};buckets.push(current);}current.items.push(p);});
+    // Gemi adı olmayan yakın parsiyeller yalnız aynı operasyonel gecikme
+    // durumundaysa tek sembolde birleşir. Aksi halde süresi henüz dolmamış bir
+    // sevkiyat, yanındaki overdue parsiyel yüzünden yanlışlıkla sarı görünürdü.
+    const placementOverdue=p=>Boolean(p&&p.meta&&p.meta.known&&p.meta.elapsedDays!=null&&p.meta.leadDays!=null&&p.meta.elapsedDays>=p.meta.leadDays);
+    loose.forEach(p=>{
+      const overdue=placementOverdue(p);
+      if(!current||p.legProgress-current.start>window||current.overdue!==overdue){
+        current={start:p.legProgress,overdue,items:[]};buckets.push(current);
+      }
+      current.items.push(p);
+    });
     buckets.forEach(b=>out.push(makeVehicle(leg,b.items,null)));
   });
   return out.sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
