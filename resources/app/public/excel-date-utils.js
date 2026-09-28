@@ -6,7 +6,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function createBuyerLogExcelDates() {
   'use strict';
 
-  const DATE_FORMAT = 'dd.mm.yyyy';
+  const DATE_FORMAT = 'dd.mm.yy';
   const ASCII_MAP = Object.freeze({ 'İ':'I','Ş':'S','Ç':'C','Ö':'O','Ü':'U','Ğ':'G' });
 
   function normalizedHeader(value) {
