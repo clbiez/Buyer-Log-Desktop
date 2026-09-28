@@ -41,23 +41,23 @@ test('PLM image override payload keeps Royalty/Licensor master state', () => {
 });
 
 test('all image/link hydration paths merge partial overrides instead of replacing state.overrides', () => {
-  assert.equal((APP.match(/state\\.overrides=data\\.overrides/g)||[]).length, 0,
+  assert.equal((APP.match(/state\.overrides=data\.overrides/g)||[]).length, 0,
     'partial image response must never wholesale-replace state.overrides');
 
   const sharedHydrate = between('const flushSharedHydrate=async()=>', 'const scheduleSharedHydrate=');
-  assert.match(sharedHydrate, /state\\.overrides=mergeImageOverridePayload\\(state\\.overrides,data\\.overrides\\)/);
+  assert.ok(sharedHydrate.includes('state.overrides=mergeImageOverridePayload(state.overrides,data.overrides)'));
 
   const linkedImage = between('async function kolPlmLinkImageEverywhere', 'async function kolPlmPersistImportedImage');
-  assert.match(linkedImage, /state\\.overrides=mergeImageOverridePayload\\(state\\.overrides,data\\.overrides\\)/);
+  assert.ok(linkedImage.includes('state.overrides=mergeImageOverridePayload(state.overrides,data.overrides)'));
 
   const syncedImages = between('function applySyncedPlmImages', 'function notifyPlmOperationStarted');
-  assert.match(syncedImages, /state\\.overrides=mergeImageOverridePayload\\(state\\.overrides,data\\.overrides\\)/);
+  assert.ok(syncedImages.includes('state.overrides=mergeImageOverridePayload(state.overrides,data.overrides)'));
 });
 
 test('PLM Sync still recalculates Collection Royalty/Licensor from retained rules on repaint', () => {
   const start = APP.indexOf('function renderKol(){');
   assert.ok(start >= 0, 'renderKol bulunmalı');
   const render = APP.slice(start, start + 1800);
-  assert.match(render, /kolSyncLicensorsFromRules\\(\{save:false\}\)/);
-  assert.match(render, /kolSyncRulePricing\\(\{save:true\}\)/);
+  assert.ok(render.includes('kolSyncLicensorsFromRules({save:false})'));
+  assert.ok(render.includes('kolSyncRulePricing({save:true})'));
 });
