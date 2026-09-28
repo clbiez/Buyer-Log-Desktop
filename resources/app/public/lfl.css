@@ -431,22 +431,24 @@ body.lflSplitDragging{cursor:col-resize;user-select:none;}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 
-/* LFL analysis cards: keep the default table viewport content-sized and compact,
-   while allowing each panel to be resized vertically and persisted by lfl.js. */
+/* LFL analysis cards: the two primary analysis tables keep a stable viewport.
+   Renders, filters and toolbar actions must not change their height; only the
+   explicit horizontal resize handle may switch a table to a persisted size. */
 #view-lfl .lflAnalysisGrid>.lflAnalysisResizableCard{
   display:flex;flex-direction:column;align-self:start;height:auto;min-height:0;
 }
 #view-lfl .lflAnalysisGrid .lflTableWrap:not(.lflManualHeight){
-  height:auto!important;
+  height:clamp(220px,34vh,360px)!important;
   max-height:clamp(220px,34vh,360px)!important;
+  min-height:0;
+  overflow-y:auto;
   flex:none;
 }
 #view-lfl .lflAnalysisGrid .lflTableWrap.lflManualHeight{
-  /* Kullanıcının seçtiği değer zorunlu yükseklik değil, görünür alan üst sınırıdır.
-     Filtre/render sonrası az satır kaldığında tablo boş alan üretip pencere altına uzamaz. */
-  height:auto!important;
+  height:var(--lfl-manual-height)!important;
   max-height:var(--lfl-manual-height)!important;
   min-height:0;
+  overflow-y:auto;
   flex:none;
 }
 #view-lfl .lflHeightHandle{
@@ -609,12 +611,14 @@ body.lflPortfolioModalOpen{overflow:hidden;}
 @media(max-width:700px){.lflTrialSuggestion{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"tag value" "reason reason" "button button"}.lflTrialSuggestion>button{width:100%}.lflTrialIssueCard>header{align-items:flex-start}.lflTrialIssueCard>header>div:first-child{display:grid;gap:2px}.lflTrialIssueCard>header .lflTrialIssueActions{align-items:flex-end;flex-direction:column}}
 
 
-/* v3.98 — LFL layout consolidation and content-driven analysis heights */
+/* v3.98 — LFL layout consolidation.
+   Analysis table heights are owned by the stable viewport rules above; this
+   block must never turn them back into content-driven containers. */
 #view-lfl .lflBottomInfoGrid{margin-top:12px;margin-bottom:0;}
 #view-lfl .lflAnalysisGrid{align-items:start;}
 #view-lfl .lflAnalysisGrid>.lflCard{align-self:start;height:auto;}
 #view-lfl .lflAnalysisGrid .lflTableWrap.tablewrap,
-#view-lfl .lflAnalysisGrid .lflManufacturerVolume{height:auto;max-height:none;overflow-x:auto;overflow-y:visible;}
+#view-lfl .lflAnalysisGrid .lflManufacturerVolume{overflow-x:auto;overflow-y:auto;}
 .lflDetailAccessPanel .lflPortfolioModalHead{margin-bottom:0;align-items:flex-start;}
 .lflDetailAccessPanel .lflCpTableTools{margin-left:auto;order:2;}
 .lflDetailAccessPanel .lflPortfolioModalActions{order:3;}
