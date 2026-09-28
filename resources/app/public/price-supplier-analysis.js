@@ -74,7 +74,6 @@
   }catch(_){state=JSON.parse(JSON.stringify(BASE));}
   if(!SOURCES.includes(state.source))state.source=BASE.source;
   if(!TABS.includes(state.tab))state.tab='overview';
-  if(!state.filterLayout.length)state.filterLayout=[...DEFAULT_FILTER_LAYOUT];
 
   const isEn=()=>typeof appLang!=='undefined'&&appLang==='en';
   const t=key=>TEXT[isEn()?'en':'tr'][key]??TEXT.tr[key]??key;
