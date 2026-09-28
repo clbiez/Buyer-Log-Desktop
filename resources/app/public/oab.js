@@ -2193,15 +2193,51 @@
   function oabOpenPivotDetail(row, descriptor, model) {
     const sourceRows = oabDrillSortRows(oabPivotCellSourceRows(row, descriptor, model), descriptor);
     if (!sourceRows.length) { oabToast(oabT('Bu pivot hücresi için alt detay bulunamadı.', 'No drill-down detail was found for this pivot cell.')); return; }
-    document.getElementById('_oabDrillModal')?.remove();
-    const modal = document.createElement('div');
-    modal.className = 'autoModalOverlay'; modal.id = '_oabDrillModal';
     const metricLabel = descriptor && descriptor.sourceField ? descriptor.sourceField : (descriptor && descriptor.label) || oabT('Pivot Detayı', 'Pivot Detail');
     const clickedValue = row ? row[descriptor.key] : null;
     const valueText = oabPivotPlainValue(clickedValue, descriptor && descriptor.label);
     const context = oabDrillContextText(row, descriptor, model);
     const summaryFields = oabDrillSummaryFields(sourceRows, descriptor, model);
     const allFields = OABDataUtils.deriveFieldList(sourceRows);
+
+    // OAB alt detayları, uygulamadaki diğer analiz detaylarıyla aynı sağ çekmeceyi
+    // kullanır. Sütun tercihleri bu OAB görünümüne özel ve kalıcıdır; ilk açılışta
+    // eski "Özet Alanlar" seti görünür, kullanıcı Sütunlar menüsünden dilediğini
+    // ekleyip çıkarabilir. Ortak çekmece arama, görsel, PLM SYNC, yeniden boyutlandırma
+    // ve tüm/görünen sütunlarla Excel davranışını tek yerde tutar.
+    if (global.BLDetailDrawer && typeof global.BLDetailDrawer.open === 'function') {
+      const columns = allFields.map(field => ({
+        key: field,
+        label: field,
+        format: value => oabDrillCellText(field, value),
+        exportValue: value => oabDrillExportCell(field, value),
+        html: oabIsOptionNameField(field) ? source => oabOptionPlmLinkHtml(source && source[field]) : undefined,
+      }));
+      const noteParts = [
+        `${oabT('Seçili değer', 'Selected value')}: ${valueText}`,
+        descriptor && descriptor.agg ? `${oabT('Hesap', 'Aggregate')}: ${descriptor.agg}` : '',
+      ].filter(Boolean);
+      global.BLDetailDrawer.open({
+        storageKey: 'oab.pivot.detail',
+        pageScope: 'overview.oab',
+        moduleId: 'overview',
+        source: 'oab',
+        title: `${oabT('OAB Alt Detay', 'OAB Drill-down')} · ${metricLabel}`,
+        subtitle: context,
+        note: noteParts.join(' · '),
+        rows: sourceRows,
+        columns,
+        defaultVisible: summaryFields,
+        images: true,
+        fileName: `OAB_Alt_Detay_${metricLabel}`,
+      });
+      return;
+    }
+
+    // Eski modal yalnız ortak çekmece yüklenemezse güvenli geri dönüş olarak kalır.
+    document.getElementById('_oabDrillModal')?.remove();
+    const modal = document.createElement('div');
+    modal.className = 'autoModalOverlay'; modal.id = '_oabDrillModal';
     modal.innerHTML = `<div class="autoModal oabDrillModal" role="dialog" aria-modal="true" aria-labelledby="_oabDrillTitle">
       <header><div class="oabDrillHeadText"><h3 id="_oabDrillTitle">${oabEsc(oabT('OAB Alt Detay', 'OAB Drill-down'))} · ${oabEsc(metricLabel)}</h3><p>${oabEsc(context)}</p></div><button type="button" data-oab-drill-close title="${oabEsc(oabT('Kapat', 'Close'))}">×</button></header>
       <div class="autoModalBody">

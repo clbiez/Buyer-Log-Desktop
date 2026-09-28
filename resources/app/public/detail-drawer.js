@@ -49,14 +49,15 @@ function pageScope(input){
   return clean(document.body&&document.body.dataset&&document.body.dataset.activeTab)||'global';
 }
 function prefKey(scope,page){return PREF_PREFIX+storagePart(page)+'.'+storagePart(scope);}
-function loadVisible(scope,page,columns){
+function loadVisible(scope,page,columns,defaults){
+  const allowed=new Set(columns.map(c=>c.key));
   try{
     const raw=JSON.parse(store().getItem(prefKey(scope,page))||'null');
-    const allowed=new Set(columns.map(c=>c.key));
     const selected=Array.isArray(raw)?raw.filter(key=>allowed.has(key)):[];
     if(selected.length)return selected;
   }catch(_){}
-  return columns.map(c=>c.key);
+  const preferred=Array.isArray(defaults)?defaults.filter(key=>allowed.has(key)):[];
+  return preferred.length?preferred:columns.map(c=>c.key);
 }
 function saveVisible(scope,page,keys){try{store().setItem(prefKey(scope,page),JSON.stringify(keys));}catch(_){}}
 function widthKey(page){return WIDTH_PREFIX+storagePart(page);}
@@ -205,11 +206,17 @@ function modelIdentity(row){
     }
     return '';
   };
+  const modelName=get('model','modelName','modelKod','Model Adı','Model Name','Style Name','Style','Option Adı','Option Name');
+  const rawPlmId=get('plmId','PLM ID','PLM Id','PLMID','Plm Kod','PLM Kod','PLM Code');
+  let plmId=rawPlmId;
+  try{
+    if(root.BLDetailImages?.resolvePlmId)plmId=root.BLDetailImages.resolvePlmId(rawPlmId,modelName)||rawPlmId;
+  }catch(_){}
   return {
-    plmId:get('plmId','PLM ID','PLM Id','PLMID'),
-    modelName:get('model','modelName','modelKod','Model Adı','Model Name','Style Name','Style'),
+    plmId,
+    modelName,
     colourCode:get('colourCode','colorCode','C.Code','Renk Kod','Renk Kodu','Colour Code','Color Code'),
-    colour:get('colour','color','Colour','Color','Renk','Renk Tanım'),
+    colour:get('colour','color','Colour','Color','Renk','Renk Tanım','Renk Adı'),
     orderCode:get('orderCode','orderKey','Sipariş Kod','Sipariş Kodu','Order Code','Order No')
   };
 }
@@ -420,7 +427,7 @@ function open(options){
     scope,pageScope:page,moduleId:input.moduleId||page,source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
-    rows,columns,visible:loadVisible(scope,page,columns),width:loadWidth(page),
+    rows,columns,visible:loadVisible(scope,page,columns,input.defaultVisible||input.initialVisible),width:loadWidth(page),
     images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
   };
