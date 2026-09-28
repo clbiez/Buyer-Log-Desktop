@@ -146,11 +146,18 @@ function rawValueOf(col,row){
     return value;
   }catch(_){return undefined;}
 }
+const columnSchemaCache=new WeakMap();
 function columnSchema(col,rows){
   const resolver=root.BLColumnSchema&&root.BLColumnSchema.resolveColumnSchema;
   if(typeof resolver!=='function'||!col)return null;
-  try{return resolver({...col,field:col.field||col.key},Array.isArray(rows)?rows:[],col.sourceMetadata||col.metadata);}
-  catch(_){return null;}
+  const sourceRows=Array.isArray(rows)?rows:[];
+  const cached=columnSchemaCache.get(col);
+  if(cached&&cached.rows===sourceRows)return cached.schema;
+  try{
+    const schema=resolver({...col,field:col.field||col.key},sourceRows,col.sourceMetadata||col.metadata);
+    columnSchemaCache.set(col,{rows:sourceRows,schema});
+    return schema;
+  }catch(_){return null;}
 }
 function fallbackDateText(value){
   if(!(value instanceof Date)||Number.isNaN(value.getTime()))return '';
@@ -164,6 +171,7 @@ function valueOf(col,row){
     if(typeof col.format==='function')return col.format(value,row);
     if(!hasValue(value))return '';
     const schema=columnSchema(col,active&&active.rows||[row]);
+    if(value instanceof Date&&!Number.isNaN(value.getTime())&&(!schema||!['date','datetime'].includes(schema.dataType)))return fallbackDateText(value);
     if(schema&&typeof schema.format==='function')return schema.format(value,{row});
     if(value instanceof Date&&!Number.isNaN(value.getTime()))return fallbackDateText(value);
     if(typeof value==='object')return JSON.stringify(value);
@@ -174,6 +182,7 @@ function excelValueOf(col,row){
   const raw=rawValueOf(col,row);
   if(!hasValue(raw))return '';
   const schema=columnSchema(col,active&&active.rows||[row]);
+  if(raw instanceof Date&&!Number.isNaN(raw.getTime())&&(!schema||!['date','datetime'].includes(schema.dataType)))return raw;
   if(schema&&typeof schema.excelValue==='function')return schema.excelValue(raw,{row});
   if(typeof col.exportValue==='function')return col.exportValue(raw,row);
   if(typeof col.format==='function')return col.format(raw,row);
@@ -181,8 +190,10 @@ function excelValueOf(col,row){
   return typeof raw==='object'&&!(raw instanceof Date)?JSON.stringify(raw):raw;
 }
 function excelFormatOf(col,row){
-  const schema=columnSchema(col,active&&active.rows||[row]);
-  return schema&&typeof schema.excelNumberFormat==='function'?schema.excelNumberFormat(rawValueOf(col,row),{row}):'';
+  const raw=rawValueOf(col,row),schema=columnSchema(col,active&&active.rows||[row]);
+  const format=schema&&typeof schema.excelNumberFormat==='function'?schema.excelNumberFormat(raw,{row}):'';
+  if(format)return format;
+  return raw instanceof Date&&!Number.isNaN(raw.getTime())?(root.BLExcelDates?.DATE_FORMAT||'dd.mm.yy'):'';
 }
 function textValue(col,row){const value=valueOf(col,row);return value==null?'':String(value);}
 function modelIdentity(row){
