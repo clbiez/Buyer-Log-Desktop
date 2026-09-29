@@ -18,8 +18,6 @@
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif}
 .workspaceBar{height:28px;display:flex;align-items:center;gap:2px;padding:0 144px 0 4px;background:var(--card2);border-bottom:1px solid var(--line);-webkit-app-region:drag;user-select:none}
-.brand{height:26px;display:flex;align-items:center;padding-right:2px;-webkit-app-region:no-drag}
-.brand img{width:22px;height:22px;display:block;object-fit:contain}
 .tabStrip{display:flex;align-items:center;gap:2px;min-width:80px;max-width:min(72vw,1040px);height:27px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-app-region:no-drag}
 .tabStrip::-webkit-scrollbar{display:none}
 .workspaceTab{position:relative;display:flex;align-items:center;min-width:132px;max-width:220px;height:26px;padding:0 3px 0 5px;border:1px solid transparent;border-bottom:0;background:transparent;color:var(--ink2);font:500 12px/1 "Segoe UI",Arial,sans-serif;cursor:default;-webkit-app-region:no-drag}
