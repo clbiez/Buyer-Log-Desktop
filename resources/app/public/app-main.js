@@ -1684,12 +1684,12 @@ function renderHorizonBadges(){
     // Bütün sayfalar tek yenilemeyi paylaşır; ortak filtreyi (bağlı grup)
     // kullananlar ayrıca "Bağlı" rozetini taşır — gruptan ayrılan sayfada yoktur.
     if(LINKED_REFRESH_TARGETS.includes(target)){
-      if(scope&&scope.linked){
+      if(scope&&scope.sharedFilter){
         const linkBadge=document.createElement('span');
         linkBadge.className='horizonSummaryLinked horizonBadgeSource';
         linkBadge.textContent=en?'Linked':'Bağlı';
         linkBadge.title=en
-          ?'This page uses the shared (linked) filter. Refresh is shared by all modules; unlink it in Data Management.'
+          ?'This page uses the shared group filter. Refresh is shared by all modules; unlink it in Data Management.'
           :'Bu sayfa ortak (bağlı) filtreyi kullanır. Yenileme bütün modüllerde ortaktır; Veri Yönetimi\'nden ayrılabilir.';
         el.appendChild(linkBadge);
       }

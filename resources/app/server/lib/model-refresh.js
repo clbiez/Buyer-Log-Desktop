@@ -1186,7 +1186,7 @@ async function loadFromModelConnections(items, options = {}) {
     horizon: modelHorizon.describeHorizon(entry.scope.horizon),
     personalHorizon: Boolean(entry.scope._personalHorizon),
     // v20260929 — Bu sayfa ASAS bağlı grubunun (ortak filtre) üyesi mi? Rozet söyler.
-    linked: modelScopes.linkedTargetsOf(entry.item).includes(target),
+    sharedFilter: modelScopes.linkedTargetsOf(entry.item).includes(target),
     orderCount: Array.isArray(asasOrdersByTarget[target]) ? asasOrdersByTarget[target].length : null,
   }));
   const appliedHorizons = Object.fromEntries([...asasByTarget.entries()].map(([target, entry]) => [target, entry.scope.horizon || {}]));

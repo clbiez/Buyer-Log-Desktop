@@ -180,7 +180,7 @@ test('istemci: ufuk rozeti bağlı grubu ve son yenileme saatini gösterir', () 
   const badge = APP.slice(APP.indexOf('function renderHorizonBadges(){'), APP.indexOf('function sourceFilterNoticeText'));
   assert.match(badge, /LINKED_REFRESH_TARGETS\.includes\(target\)/);
   // "Bağlı" rozeti yalnız ortak filtreyi kullanan sayfada çıkar (gruptan ayrılan sayfada yok).
-  assert.match(badge, /if\(scope&&scope\.linked\)\{/);
+  assert.match(badge, /if\(scope&&scope\.sharedFilter\)\{/);
   assert.match(badge, /linkedRefreshStamp\(\)/);
   assert.match(APP, /function seedSourceStatusFromServer\(result\)/);
   assert.match(APP, /try\{seedSourceStatusFromServer\(data\.lastRefreshResult\);\}catch\(_\)\{\}/);
