@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.169",
-  "commit_sha": "008e018075f4a13ec73e0100fa995df271378468",
-  "release_notes": "Buyer Log 7.0.169 TEST: Son Claude güncellemesi main'e merge edilerek yayınlandı. Collection alan önerileri artık ASAS master katalogdan License, Category, Country, Season, Line, Manufacturer ve Product Main Definition değerlerini kapsam/horizon filtresinden bağımsız okuyabiliyor; scoped katalog ile birleştiriliyor, eşleşmeyen değerler uyarılıyor ve kullanıcı katalog yenilemesi yapabiliyor. Önceki 7.0.168 kapsamındaki PLM Add as a New ve diğer güncel main değişiklikleri de dahildir. Full Buyer Log regression suite başarıyla geçti. STABLE kanalına terfi edilmedi."
+  "version": "7.0.170",
+  "commit_sha": "567d3594f0d0f0c3e076a9e8c6640ac7a75f4bad",
+  "release_notes": "Buyer Log 7.0.170 TEST: Açık Claude güncellemeleri main'e merge edilerek yayınlandı. Backlog: ASAS sipariş düzeyi Kalan Alım Sipariş Miktarı ve Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo değerleri artık parsiyel adetine kopyalanmıyor, siparişin satırlarına dağıtılıyor ve toplamları ASAS ile birebir eşleşiyor. Retaile Aktarım Bekleniyor kuralı artık Kalan_Merkez eksi Kalan Alım farkına bakıyor; yalnız eksik yüklemesi kalan siparişlerin Depoda parsiyelleri Depoda kalıyor. Sipariş Backlog Raporu penceresinden alınan Excel'de parsiyel Antrepo Giriş Tarihi, Antrepo-Retail, handover ve onay tarihleri artık dolu. CP Database/Horizon sütunları ASAS/IAS'ta verisi olduğu halde boş kalmıyor. Açılış ekranında yeni thinking animasyonu; CP, Orders ve Collection'da Columns butonu tekrar tıklanabilir. Full Buyer Log regression suite başarıyla geçti. STABLE kanalına terfi edilmedi."
 }
