@@ -1,3 +1,19 @@
+.tableActionToolbar>input[type=search].tableSearchInputExpandable{
+  transition:flex-basis .14s var(--ease),width .14s var(--ease),max-width .14s var(--ease),box-shadow .14s var(--ease),background .14s var(--ease);
+}
+.tableActionToolbar>input[type=search].tableSearchInputExpanded{
+  flex:0 0 var(--table-search-hover-width,var(--tb-search-width,230px))!important;
+  width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;
+  max-width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;
+  position:relative;
+  z-index:12;
+  background:var(--card);
+  box-shadow:0 6px 18px rgba(15,23,42,.14);
+}
+.tableActionToolbar>input[type=search].tableSearchInputExpanded:focus{
+  background:var(--card);
+}
+
 .tableSearchHelpButton{
   flex:0 0 24px;
   width:24px;
