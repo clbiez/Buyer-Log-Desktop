@@ -47,3 +47,111 @@ test('yeniden yerleşim düğümleri klonlamaz ve mevcut action handlerları kor
   assert.ok(UI.includes('parent.insertBefore(node, before || null)'));
   assert.ok(UI.includes("new MutationObserver(queueEnforce).observe(document.body"));
 });
+
+// Regresyon: Sütunlar sarmalayıcısı ⋯ menüsünün zaten ilk çocuğuyken
+// moveNode, insertBefore(node, node) ile düğümü söküp yeniden takıyordu.
+// Menüdeki MutationObserver bunu görüp her karede enforce'u yeniden
+// kuyruğa alıyor; basılı tutulan tıklamada düğüm DOM'dan ayrıldığı için
+// click olayı hiç oluşmuyor ve Sütunlar düğmesine basılamıyordu.
+function loadCleanupWithFakeDom(page) {
+  const vm = require('node:vm');
+  const byId = new Map();
+  let inserts = 0;
+  const rafQueue = [];
+  const observers = [];
+  function makeNode(id, className = '') {
+    const node = {
+      id, nodeType: 1, parentNode: null, children: [],
+      classes: new Set(className.split(/\s+/).filter(Boolean)),
+      attrs: {}, textContent: id,
+      get firstElementChild() { return this.children[0] || null; },
+      get nextSibling() {
+        const siblings = this.parentNode ? this.parentNode.children : [];
+        return siblings[siblings.indexOf(this) + 1] || null;
+      },
+      classList: null,
+      getAttribute(name) { return this.attrs[name] || null; },
+      setAttribute(name, value) { this.attrs[name] = String(value); },
+      closest(selector) {
+        const cls = selector.replace(/^\./, '');
+        for (let n = this; n; n = n.parentNode) if (n.classes && n.classes.has(cls)) return n;
+        return null;
+      },
+      insertBefore(child, before) {
+        inserts += 1;
+        const removed = [];
+        if (child.parentNode) {
+          const list = child.parentNode.children;
+          list.splice(list.indexOf(child), 1);
+          removed.push(child);
+        }
+        let ref = before === child ? child.nextSibling : before;
+        const idx = ref ? this.children.indexOf(ref) : -1;
+        if (idx >= 0) this.children.splice(idx, 0, child);
+        else this.children.push(child);
+        child.parentNode = this;
+        for (const o of observers) if (o.roots.includes(this)) o.cb([{ addedNodes: [child], removedNodes: removed }]);
+        return child;
+      },
+      appendChild(child) { return this.insertBefore(child, null); },
+    };
+    node.classList = { add: c => node.classes.add(c), contains: c => node.classes.has(c) };
+    if (id) byId.set(id, node);
+    return node;
+  }
+  const body = makeNode('', '');
+  body.dataset = { activeTab: page };
+  const moreId = { cp: 'cpMoreMenu', orders: 'ordersMoreMenu', koleksiyon: 'kolMoreMenu' }[page];
+  const toolsId = { cp: 'cpToolsMenu', orders: 'ordersToolsMenu', koleksiyon: 'kolToolsMenu' }[page];
+  const more = makeNode(moreId);
+  const tools = makeNode(toolsId);
+  const viewId = { cp: 'cpTableViewActions', orders: 'ordersTableViewActions', koleksiyon: 'kolTableViewActions' }[page];
+  const viewActions = makeNode(viewId);
+  body.appendChild(more); body.appendChild(tools); body.appendChild(viewActions);
+  more.appendChild(makeNode('navFitColumnsBtn'));
+  const wrap = makeNode('', 'colPanelWrap navColsRight');
+  const button = makeNode('navColsBtn');
+  wrap.appendChild(button);
+  body.appendChild(wrap);
+  const copy = makeNode('cpCopyToKolBtn');
+  body.appendChild(copy);
+  class FakeObserver {
+    constructor(cb) { this.cb = cb; this.roots = []; observers.push(this); }
+    observe(root) { this.roots.push(root); }
+  }
+  const global = {
+    requestAnimationFrame: fn => { rafQueue.push(fn); return rafQueue.length; },
+    addEventListener() {},
+    MutationObserver: FakeObserver,
+  };
+  global.document = {
+    readyState: 'complete', body,
+    getElementById: id => byId.get(id) || null,
+    querySelector: () => null,
+    addEventListener() {},
+  };
+  global.window = global;
+  vm.runInNewContext(UI, global);
+  const flushFrames = max => {
+    let frames = 0;
+    while (rafQueue.length && frames < max) { frames += 1; rafQueue.splice(0).forEach(fn => fn()); }
+    return frames;
+  };
+  return { more, tools, viewActions, wrap, copy, flushFrames, inserts: () => inserts };
+}
+
+for (const page of ['cp', 'orders', 'koleksiyon']) {
+  test(`${page}: yerleşmiş Sütunlar düğmesi her karede yeniden takılmaz`, () => {
+    const dom = loadCleanupWithFakeDom(page);
+    // Sekme geçişi: syncTableToolbarActions Sütunlar'ı görünüm eylemlerine taşır.
+    dom.viewActions.appendChild(dom.wrap);
+    dom.flushFrames(3);
+    assert.equal(dom.more.firstElementChild, dom.wrap, 'Sütunlar ⋯ menüsünün başında olmalı');
+    if (page !== 'koleksiyon') assert.equal(dom.tools.firstElementChild, dom.copy);
+    const before = dom.inserts();
+    const frames = dom.flushFrames(20);
+    assert.ok(frames < 20, 'enforce kendi DOM değişikliğiyle sonsuz rAF döngüsüne girmemeli');
+    assert.equal(dom.more.firstElementChild, dom.wrap);
+    assert.equal(dom.inserts(), before, 'zaten yerindeki düğüm yeniden takılmamalı');
+  });
+}

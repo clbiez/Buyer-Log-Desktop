@@ -31,7 +31,10 @@
 
   function moveNode(node, parent, before) {
     if (!node || !parent) return false;
-    if (node.parentNode === parent && (!before || node.nextSibling === before)) return false;
+    // before === node: düğüm zaten hedef konumda. insertBefore(node, node)
+    // düğümü söküp yeniden takar; gözlemci bunu yakalayıp her karede
+    // enforce'u tekrarlar ve basılı tıklama click üretmeden kaybolur.
+    if (node.parentNode === parent && (!before || before === node || node.nextSibling === before)) return false;
     parent.insertBefore(node, before || null);
     return true;
   }
