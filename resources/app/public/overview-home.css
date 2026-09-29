@@ -1,0 +1,311 @@
+/* =====================================================================
+   Genel Bakış · Ana ekran (Android ana ekranı modeli)
+   Hücre ızgarası, sayfa göstergesi, düzenleme kabuğu, widget çekmecesi,
+   Aktif Sipariş Kırılımı grafiği ve widget'ların boyuta uyumu.
+   Renkler yalnız token'lardan; yazı boyutları --fs-* ölçeğinden.
+   ===================================================================== */
+
+/* ---------- Üst çubuk: sayfa sekmeleri + düzen eylemleri ---------- */
+.ovDashboardToolbar{display:flex;align-items:center;justify-content:flex-end;gap:var(--sp-2);min-height:var(--ctl-h);margin-bottom:var(--sp-3);}
+.ovHomeBar .ovHomePager{margin-right:auto;}
+#ovLayoutEditBtn.active{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
+#ovLayoutEditBtn[hidden]{display:none!important;}
+.ovLayoutEditPanel{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:var(--ctl-h);padding:4px 6px;border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));border-radius:var(--r-md);background:var(--card);box-shadow:var(--shadow-1);color:var(--muted);font-size:var(--fs-xs);}
+.ovLayoutEditPanel[hidden]{display:none!important;}
+.ovLayoutEditPanel .tbtn{display:inline-flex;align-items:center;gap:6px;height:var(--ctl-h);min-height:var(--ctl-h);padding:4px 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink2);font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;}
+.ovLayoutEditPanel .tbtn .ic{width:14px;height:14px;}
+.ovLayoutEditPanel .tbtn:hover:not(:disabled){border-color:var(--acc-lite);background:var(--acc-bg);color:var(--acc-ink);}
+.ovLayoutEditPanel .tbtn:disabled{opacity:.45;cursor:default;}
+.ovLayoutEditPanel .tbtn.primary{border-color:var(--acc);background:var(--acc);color:var(--on-acc);}
+.ovLayoutEditPanel .tbtn.primary:hover{background:var(--acc-hover);color:var(--on-acc);}
+.ovHomePager{display:flex;align-items:center;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none;}
+.ovHomePager[hidden]{display:none;}
+.ovHomePageTab{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid transparent;border-radius:var(--r-full,999px);background:transparent;color:var(--muted);font:600 var(--fs-sm)/1 var(--sans);white-space:nowrap;cursor:pointer;}
+.ovHomePageTab small{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--card2);color:var(--muted);font:700 10px/1 var(--mono);}
+.ovHomePageTab:hover{color:var(--ink);background:var(--card2);}
+.ovHomePageTab.isActive{border-color:color-mix(in srgb,var(--acc) 35%,var(--line));background:var(--acc-bg);color:var(--acc-ink);}
+.ovHomePageTab.isActive small{background:var(--card);color:var(--acc-ink);}
+.ovHomePageTab:focus-visible,.ovHomeDot:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.ovHomeDots{display:flex;justify-content:center;gap:8px;padding:14px 0 4px;}
+.ovHomeDots[hidden]{display:none;}
+.ovHomeDot{width:8px;height:8px;padding:0;border:0;border-radius:999px;background:var(--line2);cursor:pointer;transition:width .18s ease,background .18s ease;}
+.ovHomeDot.isActive{width:22px;background:var(--acc);}
+
+/* ---------- Izgara ---------- */
+.ovHome{
+  --ov-row:60px;--ov-gap:14px;--ov-rows:12;
+  position:relative;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));
+  grid-template-rows:repeat(var(--ov-rows),var(--ov-row));grid-auto-rows:var(--ov-row);
+  gap:var(--ov-gap);align-items:stretch;min-height:calc(var(--ov-row) * 4);
+}
+.ovHome>[data-overview-widget]{
+  position:relative;min-width:0;min-height:0;margin:0!important;box-sizing:border-box;
+  display:flex;flex-direction:column;overflow:hidden;
+  container:ovw / size;
+  background:var(--card);border:1px solid var(--line);border-radius:var(--bl-radius-panel,var(--r-lg));box-shadow:var(--shadow-1);
+}
+.ovHome>[data-overview-widget].ovHomeOff{display:none!important;}
+.ovHome>[data-overview-widget]>*{flex:0 0 auto;min-width:0;}
+.ovHome.ovHomeSlideNext>[data-overview-widget]{animation:ovHomeSlideNext .24s cubic-bezier(.2,.8,.2,1);}
+.ovHome.ovHomeSlidePrev>[data-overview-widget]{animation:ovHomeSlidePrev .24s cubic-bezier(.2,.8,.2,1);}
+@keyframes ovHomeSlideNext{from{opacity:.2;transform:translateX(28px);}to{opacity:1;transform:none;}}
+@keyframes ovHomeSlidePrev{from{opacity:.2;transform:translateX(-28px);}to{opacity:1;transform:none;}}
+.ovHome>[data-overview-widget].ovHomePulse{animation:ovHomePulse 1.2s ease;}
+@keyframes ovHomePulse{0%,100%{box-shadow:var(--shadow-1);}30%{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 45%,transparent),var(--shadow-2);}}
+.ovHomeEmptyPage{grid-column:1/-1;grid-row:1/span 4;display:grid;place-content:center;justify-items:center;gap:8px;border:1px dashed var(--line2);border-radius:var(--bl-radius-panel,var(--r-lg));color:var(--muted);text-align:center;font-size:var(--fs-sm);}
+.ovHomeEmptyPage .ic{width:28px;height:28px;color:var(--acc-ink);}
+.ovHomeEmptyPage b{color:var(--ink);font-size:var(--fs-md);}
+.ovHomeEmptyPage .tbtn{margin-top:4px;height:var(--ctl-h);padding:0 12px;border:1px solid var(--acc);border-radius:var(--r-sm);background:var(--acc);color:var(--on-acc);font:600 var(--fs-sm) var(--sans);cursor:pointer;}
+
+/* ---------- Düzenleme modu ---------- */
+.ovHome.isEditing{
+  background-image:linear-gradient(to right,color-mix(in srgb,var(--acc) 4%,transparent) calc(100% - var(--ov-gap)),transparent 0);
+  background-size:calc((100% + var(--ov-gap)) / 12) 100%;
+  border-radius:var(--r-lg);
+}
+.ovHomeEditing #view-overview{user-select:none;-webkit-user-select:none;}
+.ovHome.isEditing>[data-overview-widget]{pointer-events:none;}
+.ovHome.isEditing>[data-overview-widget]>*{opacity:.92;}
+.ovHomeShield{
+  position:relative;z-index:6;min-width:0;min-height:0;box-sizing:border-box;cursor:grab;touch-action:none;
+  border:2px dashed color-mix(in srgb,var(--acc) 42%,transparent);border-radius:var(--bl-radius-panel,var(--r-lg));
+  background:color-mix(in srgb,var(--card) 18%,transparent);transition:border-color .15s ease,background .15s ease;
+}
+.ovHomeShield:hover{border-color:color-mix(in srgb,var(--acc) 70%,transparent);background:color-mix(in srgb,var(--acc-bg) 32%,transparent);}
+.ovHomeShield.isSelected,.ovHomeShield:focus-visible{outline:none;border-style:solid;border-color:var(--acc);background:color-mix(in srgb,var(--acc-bg) 28%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 16%,transparent);}
+.ovHomeShieldBar{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:6px;min-width:0;padding:5px 6px 5px 10px;border:1px solid var(--line);border-radius:var(--r-full,999px);background:var(--card);box-shadow:var(--shadow-2);color:var(--ink);font-size:var(--fs-xs);}
+.ovHomeShieldBar .ic{flex:0 0 auto;width:15px;height:15px;color:var(--acc-ink);}
+.ovHomeShieldBar b{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650;}
+.ovHomeSize{flex:0 0 auto;padding:2px 7px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font:700 10.5px/1.2 var(--mono);}
+.ovHomeShieldBar button{flex:0 0 auto;display:inline-grid;place-items:center;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--card2);color:var(--ink2);font:700 14px/1 var(--sans);cursor:pointer;}
+.ovHomeShieldBar button:hover:not(:disabled){border-color:var(--acc);color:var(--acc-ink);}
+.ovHomeShieldBar button:disabled{opacity:.35;cursor:default;}
+.ovHomeShieldBar .ovHomeRemoveBtn:hover{border-color:var(--red);background:var(--red-bg);color:var(--red);}
+.ovHomeHandle{position:absolute;z-index:2;display:none;width:14px;height:14px;border:2px solid var(--card);border-radius:50%;background:var(--acc);box-shadow:var(--shadow-1);}
+.ovHomeShield:hover .ovHomeHandle,.ovHomeShield.isSelected .ovHomeHandle,.ovHomeShield:focus-visible .ovHomeHandle{display:block;}
+.ovHomeHandle--n{top:-8px;left:calc(50% - 7px);cursor:ns-resize;}
+.ovHomeHandle--s{bottom:-8px;left:calc(50% - 7px);cursor:ns-resize;}
+.ovHomeHandle--e{right:-8px;top:calc(50% - 7px);cursor:ew-resize;}
+.ovHomeHandle--w{left:-8px;top:calc(50% - 7px);cursor:ew-resize;}
+.ovHomeHandle--ne{right:-8px;top:-8px;cursor:nesw-resize;}
+.ovHomeHandle--sw{left:-8px;bottom:-8px;cursor:nesw-resize;}
+.ovHomeHandle--nw{left:-8px;top:-8px;cursor:nwse-resize;}
+.ovHomeHandle--se{right:-8px;bottom:-8px;cursor:nwse-resize;}
+.ovHomeHandle--n,.ovHomeHandle--s{width:28px;left:calc(50% - 14px);border-radius:999px;height:10px;}
+.ovHomeHandle--n{top:-6px;}.ovHomeHandle--s{bottom:-6px;}
+.ovHomeHandle--e,.ovHomeHandle--w{height:28px;top:calc(50% - 14px);border-radius:999px;width:10px;}
+.ovHomeHandle--e{right:-6px;}.ovHomeHandle--w{left:-6px;}
+.ovHomeResizing,.ovHomeResizing *{cursor:grabbing!important;}
+.ovHome>[data-overview-widget].isLifted{z-index:40;box-shadow:var(--shadow-3);opacity:.94;transition:none;will-change:transform;}
+.ovHomeGhost{z-index:1;border:2px dashed var(--acc);border-radius:var(--bl-radius-panel,var(--r-lg));background:color-mix(in srgb,var(--acc) 10%,transparent);}
+.ovHomeGhost[hidden]{display:none;}
+.ovHomeDropRemove{position:fixed;z-index:50600;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:40px;padding:0 18px;border:1px solid var(--line);border-radius:999px;background:var(--card);box-shadow:var(--shadow-2);color:var(--ink2);font:600 var(--fs-sm) var(--sans);pointer-events:none;}
+.ovHomeDropRemove .ic{width:16px;height:16px;}
+.ovHomeDropRemove.isHot{border-color:var(--red);background:var(--red-bg);color:var(--red);transform:translateX(-50%) scale(1.06);}
+.ovHomeEdge{position:fixed;z-index:50500;width:28px;display:grid;place-items:center;border-radius:14px;background:color-mix(in srgb,var(--acc) 8%,transparent);color:var(--acc-ink);pointer-events:none;transition:background .15s ease;}
+.ovHomeEdge[hidden]{display:none;}
+.ovHomeEdge .ic{width:18px;height:18px;}
+.ovHomeEdge.isHot{background:color-mix(in srgb,var(--acc) 26%,transparent);}
+
+/* ---------- Widget çekmecesi ---------- */
+.ovHomeDrawerOverlay{position:fixed;inset:0;z-index:50700;display:flex;align-items:flex-end;justify-content:center;background:color-mix(in srgb,#000 22%,transparent);opacity:0;transition:opacity .18s ease;}
+.ovHomeDrawerOverlay.isOpen{opacity:1;}
+.ovHomeDrawer{width:min(960px,calc(100vw - 32px));max-height:min(78vh,760px);display:flex;flex-direction:column;border:1px solid var(--line);border-bottom:0;border-radius:var(--r-xl,18px) var(--r-xl,18px) 0 0;background:var(--card);box-shadow:var(--shadow-lg,var(--shadow-3));transform:translateY(24px);transition:transform .22s cubic-bezier(.2,.8,.2,1);}
+.ovHomeDrawerOverlay.isOpen .ovHomeDrawer{transform:none;}
+.ovHomeDrawer>header{display:flex;align-items:center;gap:12px;padding:16px 18px 12px;border-bottom:1px solid var(--line);}
+.ovHomeDrawer>header>div{display:grid;gap:2px;flex:1 1 auto;min-width:0;}
+.ovHomeDrawer>header b{font-size:var(--fs-lg);}
+.ovHomeDrawer>header small{color:var(--muted);font-size:var(--fs-xs);}
+.ovHomeDrawer>header input{width:min(260px,40vw);height:var(--ctl-h);padding:0 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink);font:500 var(--fs-sm) var(--sans);}
+.ovHomeDrawerClose{width:32px;height:32px;border:1px solid var(--line);border-radius:999px;background:var(--card2);color:var(--ink2);font-size:18px;line-height:1;cursor:pointer;}
+.ovHomeDrawerBody{overflow:auto;padding:6px 18px 20px;}
+.ovHomeDrawerBody h3{margin:14px 0 8px;color:var(--muted);font-size:var(--fs-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.ovHomeDrawerGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;}
+.ovHomeDrawerCard{display:grid;grid-template-columns:64px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);color:var(--ink);text-align:left;cursor:pointer;}
+.ovHomeDrawerCard:hover,.ovHomeDrawerCard:focus-visible{outline:none;border-color:var(--acc);box-shadow:var(--shadow-1);}
+.ovHomeDrawerCard.isPlaced{background:var(--card2);}
+.ovHomeDrawerPreview{display:grid;place-items:center;width:64px;height:52px;border-radius:var(--r-md);background:var(--card2);}
+.ovHomeDrawerPreview>span{display:block;width:calc(var(--pw) / 12 * 52px);height:calc(var(--ph) / 8 * 40px);min-width:10px;min-height:8px;border:1.5px solid var(--acc);border-radius:4px;background:var(--acc-bg);}
+.ovHomeDrawerText{display:grid;gap:3px;min-width:0;}
+.ovHomeDrawerText b{display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);}
+.ovHomeDrawerText b .ic{width:14px;height:14px;color:var(--acc-ink);}
+.ovHomeDrawerText small{color:var(--muted);font-size:var(--fs-xs);line-height:1.35;}
+.ovHomeDrawerMeta{display:flex;gap:8px;align-items:center;font-size:var(--fs-xs);color:var(--muted);}
+.ovHomeDrawerMeta em{font:700 10.5px/1.2 var(--mono);font-style:normal;color:var(--acc-ink);}
+.ovHomeDrawerMeta i{font-style:normal;}
+.ovHomeDrawerAction{padding:5px 10px;border-radius:999px;background:var(--acc);color:var(--on-acc);font:700 var(--fs-xs) var(--sans);}
+.ovHomeDrawerCard.isPlaced .ovHomeDrawerAction{background:var(--card);color:var(--acc-ink);border:1px solid var(--line);}
+.ovHomeDrawerEmpty{padding:24px;text-align:center;color:var(--muted);}
+.srOnly{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+
+/* ---------- Widget içerikleri: kaydırılan gövde ızgaradan gelen yüksekliği doldurur ---------- */
+/* Dünya Saatleri */
+.ovHome>#ovLaunchpad{overflow:auto;padding:16px 18px;}
+.ovLaunchBody{grid-template-columns:minmax(210px,290px) minmax(0,1fr);}
+@container ovw (max-width:860px){.ovLaunchBody{grid-template-columns:1fr;gap:12px;}}
+@container ovw (max-height:230px){.ovLaunchSub{display:none;}.ovLaunchTitle{font-size:calc(18px + var(--ui-font-add));}}
+@container ovw (max-width:420px){.ovClockGrid,.ovClockGrid.is-both,.ovClockGrid.is-analog{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));}.ovClockAddControls{min-width:0;grid-template-columns:1fr;}}
+
+/* CP'ye bağlı widget'lar veri gelene dek kendi boş durumunu gösterir */
+.ovHomeHostEmpty{display:none;margin:auto;padding:16px;color:var(--muted);font-size:var(--fs-sm);text-align:center;}
+.ovHome>.ovHomeHost>div:empty+.ovHomeHostEmpty{display:block;}
+.ovHome>.ovHomeHost>div:empty{display:none!important;}
+
+/* Üretim Odağı */
+.ovHome>#ovProductionFocus{padding:12px 14px;}
+.ovHome>#ovProductionFocus>#cpAssistant{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;margin:0;}
+.ovHome>#ovProductionFocus .cpaBar{flex:0 0 auto;}
+.ovHome>#ovProductionFocus .cpaGrid{flex:1 1 auto;min-height:0;overflow:auto;grid-auto-rows:max-content;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-content:start;}
+.ovHome>#ovProductionFocus .cpaGrid.is-single{grid-template-columns:minmax(0,1fr);}
+.ovHome>#ovProductionFocus>#cpAssistant>.cpaCard{flex:1 1 auto;}
+@container ovw (max-width:620px){.cpaBar{align-items:stretch;}.cpaBarActions{width:100%;}.cpaTitle small{display:none;}}
+
+/* Aksiyon Gerekenler / Veri Kapsamı: tek kart ızgara hücresini doldurur */
+.ovHome>.ovHomeHost:is(#ovAttention,#ovDataCoverage){padding:0;}
+.ovHome>.ovHomeHost:is(#ovAttention,#ovDataCoverage)>div{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;}
+.ovHome>.ovHomeHost:is(#ovAttention,#ovDataCoverage) .cpaCard{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;border:0;border-radius:0;background:transparent;}
+.ovHome>.ovHomeHost:is(#ovAttention,#ovDataCoverage) .cpaCard>header{flex:0 0 auto;}
+.ovHome>.ovHomeHost:is(#ovAttention,#ovDataCoverage) .cpaCardBody{flex:1 1 auto;min-height:0;overflow:auto;align-content:start;grid-auto-rows:max-content;}
+.ovHome>.ovHomeHost:is(#ovAttention,#ovDataCoverage) .cpaToggle{display:none;}
+.ovHome>#ovAttention .cpaAttentionScroll{max-height:none;}
+@container ovw (max-width:520px){.cpaAttentionToolbar{flex-direction:column;align-items:flex-start;}}
+
+/* Not Hatırlatıcısı */
+.ovHome>#ovPriorityReminder{padding:14px 16px 10px;}
+.ovHome>#ovPriorityReminder .ovPriorityList{flex:1 1 auto;min-height:0;overflow:auto;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));align-content:start;grid-auto-rows:max-content;padding-right:2px;}
+.ovHome>#ovPriorityReminder .ovPriorityMethod{margin:8px 0 0;}
+@container ovw (max-width:520px){.ovPriorityHeader{flex-direction:column;gap:8px;}.ovPriorityHeaderActions{justify-content:flex-start;}}
+@container ovw (max-height:300px){.ovPriorityIntro,.ovPriorityMethod{display:none;}}
+
+/* Koleksiyon */
+.ovHome>#ovCollectionSummary{padding:14px 16px;}
+.ovHome>#ovCollectionSummary .ovCollectionSummaryBody{flex:1 1 auto;min-height:0;overflow:auto;align-content:start;grid-auto-rows:max-content;}
+@container ovw (max-width:640px){.ovCollectionSummaryHeader{flex-direction:column;gap:8px;}.ovCollectionSummaryKpi{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
+@container ovw (max-height:300px){.ovCollectionSummaryIntro{display:none;}}
+
+/* OAB / INTAKE: tablo kalan yüksekliği doldurur, başlık satırı yapışık kalır */
+.ovHome>#oabSection,.ovHome>#intakeSection{padding:12px 14px;}
+.ovHome>#oabSection>.oabBody,.ovHome>#intakeSection>.intakeBody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
+.ovHome>#oabSection>.oabBody[hidden],.ovHome>#intakeSection>.intakeBody[hidden]{display:none;}
+.ovHome>#oabSection .oabTableWrap,.ovHome>#intakeSection .intakeTableWrap{flex:1 1 auto;min-height:0;overflow:auto;}
+.ovHome>#oabSection .oabFilterBar{flex-wrap:wrap;}
+@container ovw (max-width:760px){.oabTopActions{margin-left:0;}.intakeHeader{flex-direction:column;align-items:flex-start;}.intakeHeaderActions{flex-wrap:wrap;}}
+
+/* Global Flow Map: tuval hücre yüksekliğini doldurur */
+.ovHome>#globalFlowMapWidget{border-radius:var(--bl-radius-panel,var(--r-lg));}
+.ovHome>#globalFlowMapWidget>.globalFlowBody{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;}
+.ovHome>#globalFlowMapWidget .globalFlowStage{flex:1 1 auto;min-height:0;}
+.ovHome>#globalFlowMapWidget .globalFlowCanvasWrap{height:100%;min-height:200px;}
+.ovHome>#globalFlowMapWidget .globalFlowFilters{max-height:40%;overflow:auto;}
+@container ovw (max-width:760px){.globalFlowHead{display:grid;}.globalFlowControls{justify-content:flex-start;}.globalFlowLegend{display:none;}.globalFlowFoot span:not(.gfSpacer){display:none;}.gfKpi{min-width:70px;padding:5px 6px;}}
+@container ovw (max-height:420px){.globalFlowFoot,.globalFlowMeta{display:none;}}
+
+/* ---------- Aktif Sipariş Kırılımı ---------- */
+.ovBreakdown{padding:0;}
+.ovBreakdownHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px 8px;}
+.ovBreakdownTitle{display:flex;align-items:center;gap:7px;margin:0;min-width:0;font-size:var(--fs-md);}
+.ovBreakdownTitle .ic{width:17px;height:17px;color:var(--acc-ink);}
+.ovBreakdownTitle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ovBreakdownTools{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
+.ovBreakdownViewBtn{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink2);font:600 var(--fs-xs) var(--sans);cursor:pointer;}
+.ovBreakdownViewBtn .ic{width:14px;height:14px;}
+.ovBreakdownViewBtn:hover{border-color:var(--acc);color:var(--acc-ink);}
+.ovBreakdown[data-dim="buyingGroup"] .ovBreakdownFilterMain,.ovBreakdown:not([data-dim="buyingGroup"]) .ovBreakdownFilterBg{display:none;}
+.ovBreakdownDims{display:flex;gap:5px;padding:0 14px 10px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin;}
+.ovBreakdownDims button{flex:0 0 auto;height:28px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink2);font:600 var(--fs-xs) var(--sans);white-space:nowrap;cursor:pointer;}
+.ovBreakdownDims button:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));color:var(--ink);}
+.ovBreakdownDims button.isActive{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
+.ovBreakdownDims button:focus-visible,.ovBdRow:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.ovHome>.ovBreakdown>.ovBreakdownBody,.ovBreakdownBody{flex:1 1 auto;min-height:0;overflow:auto;padding:10px 14px 12px;}
+.ovBreakdown[data-view="chart"] .ovBreakdownTables,.ovBreakdown[data-view="table"] .ovBreakdownChart{display:none;}
+.ovBreakdownTables>[hidden]{display:none;}
+.ovBreakdownTables .miniTable{width:100%;}
+.ovBreakdownBadge{margin-top:10px;padding:8px 12px;border:1px solid var(--acc-lite);border-radius:var(--r-md);background:var(--acc-bg);color:var(--acc-ink);font-size:var(--fs-xs);}
+.ovBreakdown[data-dim="buyingGroup"] .ovBreakdownBadgeMain,.ovBreakdown:not([data-dim="buyingGroup"]) .ovBreakdownBadgeBg{display:none!important;}
+.ovBdSummary{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;margin:0 0 10px;}
+.ovBdSummary b{color:var(--ink);font:700 calc(20px + var(--ui-font-add))/1 var(--mono);letter-spacing:-.02em;}
+.ovBdSummary span{color:var(--muted);font-size:var(--fs-xs);}
+.ovBdLegend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0 0 8px;color:var(--ink2);font-size:var(--fs-xs);}
+.ovBdLegend span{display:inline-flex;align-items:center;gap:5px;}
+.ovBdLegend i{display:inline-block;width:10px;height:10px;border-radius:3px;}
+.ovBdList{display:grid;grid-template-columns:fit-content(34%) minmax(40px,1fr) max-content;gap:2px 0;}
+.ovBdRow{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:center;gap:10px;width:100%;min-height:32px;padding:4px 6px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;}
+.ovBdRow:hover{background:var(--table-hover,var(--card2));}
+.ovBdRow[data-bd-static]{cursor:default;}
+.ovBdLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm);}
+.ovBdTrack{position:relative;display:block;height:10px;}
+.ovBdFill{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--acc);}
+.ovBdStack{display:flex;gap:2px;width:var(--bd-w,100%);height:100%;}
+.ovBdSeg{display:block;min-width:3px;height:100%;}
+.ovBdSeg:last-child{border-radius:0 4px 4px 0;}
+.ovBdSeg:hover{filter:brightness(1.1);}
+.ovBdValue{display:flex;align-items:baseline;justify-content:flex-end;gap:6px;line-height:1.1;white-space:nowrap;}
+.ovBdValue b{font:700 var(--fs-sm) var(--mono);}
+.ovBdValue small{color:var(--muted);font-size:var(--fs-xs);white-space:nowrap;}
+.ovBdTone--critical{background:var(--red);}
+.ovBdTone--today{background:var(--orange);}
+.ovBdTone--week{background:color-mix(in srgb,var(--yellow) 52%,var(--card));} /* tasarım sisteminde sarı = turuncu; açıklıkla ayrışır */
+.ovBdTone--watch{background:var(--acc);}
+.ovBdTone--ok{background:var(--green);}
+.ovBdTone--unknown{background:var(--line2);}
+.ovBreakdownEmpty{display:grid;place-items:center;min-height:120px;color:var(--muted);font-size:var(--fs-sm);text-align:center;}
+.ovBdTip{position:absolute;z-index:8;max-width:300px;padding:6px 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);box-shadow:var(--shadow-2);color:var(--ink);font-size:var(--fs-xs);line-height:1.35;pointer-events:none;}
+.ovBdTip[hidden]{display:none;}
+@container ovw (max-width:440px){
+  .ovBdList{grid-template-columns:minmax(0,1fr) max-content;}
+  .ovBdRow{row-gap:4px;}
+  .ovBdTrack{grid-column:1/-1;grid-row:2;height:8px;}
+  .ovBreakdownViewBtn span{display:none;}
+}
+@container ovw (max-height:340px){.ovBdSummary{display:none;}}
+
+/* ---------- Dünya saatleri kartları (eski overview-radar.css'ten taşındı) ---------- */
+.ovClockPanel{display:grid;gap:10px;min-width:0;}
+.ovClockToolbar{display:flex;justify-content:flex-end;align-items:center;gap:6px;}
+.ovClockManageBtn,.ovClockAddBtn,.ovClockRemove{display:inline-grid;place-items:center;min-height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);color:var(--ink2);border-radius:var(--bl-radius-control);cursor:pointer;font:600 var(--fs-xs)/1 var(--sans);}
+.ovClockManageBtn{grid-auto-flow:column;gap:6px;padding:0 9px;}
+.ovClockManageControls{display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
+.ovClockModeControl{display:grid;gap:3px;color:var(--muted);font-size:var(--fs-xs);}
+.ovClockModeControl select{min-width:150px;height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink);border-radius:var(--bl-radius-control);font:500 var(--fs-xs)/1 var(--sans);}
+.ovClockAddControls{display:grid;grid-template-columns:minmax(170px,1fr) minmax(220px,1.35fr) auto;gap:6px;justify-content:flex-end;min-width:min(620px,100%);}
+.ovClockAddControls input[type="search"],.ovClockAddControls select{min-width:0;width:100%;height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink);border-radius:var(--bl-radius-control);font:500 var(--fs-xs)/1 var(--sans);padding:0 8px;}
+.ovClockAddControls input[type="search"]::placeholder{color:var(--muted);}
+.ovClockAddBtn{padding:0 10px;}
+.ovClockGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:8px;}
+.ovClockGrid.is-both,.ovClockGrid.is-analog{grid-template-columns:repeat(auto-fit,minmax(168px,1fr));}
+.ovClockCard{position:relative;min-width:0;overflow:hidden;padding:12px 12px 10px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);border-radius:var(--bl-radius-control);}
+.ovClockReadout{display:grid;align-items:center;gap:10px;margin-top:8px;min-width:0;}
+.ovClockReadout.is-both,.ovClockReadout.is-analog{grid-template-columns:64px minmax(0,1fr);}
+.ovClockReadout.is-digital{grid-template-columns:minmax(0,1fr);}
+.ovClockText{min-width:0;}
+.ovAnalogClock{position:relative;width:62px;height:62px;border:1px solid var(--bl-stroke-subtle);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--bl-surface-panel) 0 7%,transparent 8%),var(--bl-surface-panel);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bl-stroke-subtle) 35%,transparent);color:var(--muted);font:600 10px/1 var(--mono);}
+.ovAnalogDialMark{position:absolute;z-index:1;}
+.ovAnalogDialMark--12{top:4px;left:50%;transform:translateX(-50%);}
+.ovAnalogDialMark--3{right:4px;top:50%;transform:translateY(-50%);}
+.ovAnalogDialMark--6{bottom:4px;left:50%;transform:translateX(-50%);}
+.ovAnalogDialMark--9{left:4px;top:50%;transform:translateY(-50%);}
+.ovAnalogHand{position:absolute;left:50%;bottom:50%;display:block;transform-origin:50% 100%;border-radius:99px;z-index:2;}
+.ovAnalogHand--hour{width:3px;height:17px;background:var(--ink);}
+.ovAnalogHand--minute{width:2px;height:23px;background:var(--ink2);}
+.ovAnalogHand--second{width:1px;height:25px;background:var(--acc);}
+.ovAnalogPin{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--acc);transform:translate(-50%,-50%);z-index:3;}
+.ovClockCountry{display:flex;align-items:center;gap:7px;min-width:0;color:var(--ink2);font-size:var(--fs-xs);font-weight:650;}
+.ovClockCode{display:inline-grid;place-items:center;min-width:26px;height:20px;padding:0 5px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font:700 10px/1 var(--mono);}
+.ovClockCountry span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ovClockTime{margin-top:7px;color:var(--ink);font:700 clamp(18px,1.25vw,calc(22px + var(--ui-font-add)))/1 var(--mono);letter-spacing:-.035em;white-space:nowrap;}
+.ovClockDate{margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:var(--fs-xs);}
+.ovClockRemove{position:absolute;top:5px;right:5px;width:24px;min-height:24px;border-color:transparent;background:transparent;font-size:16px;line-height:1;}
+.ovClockRemove:hover{background:var(--card2);color:var(--red);}
+.ovClockEmpty{padding:22px;border:1px dashed var(--bl-stroke-subtle);color:var(--muted);text-align:center;font-size:var(--fs-sm);}
+
+/* ---------- Dar pencere: tek sütun, widget yüksekliği korunur, düzenleme kapalı ---------- */
+@media(max-width:900px){
+  .ovHome{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:auto;}
+  .ovHome>[data-overview-widget]{grid-column:1/-1!important;grid-row:auto!important;height:calc(var(--ov-h,6) * var(--ov-row) + (var(--ov-h,6) - 1) * var(--ov-gap));}
+  .ovHomeEmptyPage{grid-row:auto;min-height:220px;}
+  .ovHomeBar #ovLayoutEditBtn span{display:none;}
+}
+@media(prefers-reduced-motion:reduce){
+  .ovHome.ovHomeSlideNext>[data-overview-widget],.ovHome.ovHomeSlidePrev>[data-overview-widget],.ovHome>[data-overview-widget].ovHomePulse{animation:none;}
+  .ovHomeDrawer,.ovHomeDrawerOverlay,.ovHomeDot{transition:none;}
+}

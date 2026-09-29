@@ -26,9 +26,11 @@ test('INTAKE Overview yüzeyi kendi kontrolleri ve lazy loader ile bağlıdır',
   assert.match(ui, /state\.metadataPromise = \(async \(\) =>/);
   assert.match(html, /data-overview-widget="intake"/);
   const intakeHeader = html.slice(html.indexOf('<div class="intakeHeader">'), html.indexOf('<div id="intakeHorizonBadge"'));
-  const collapsePos = intakeHeader.indexOf('id="intakeCollapseBtn"');
+  // Ana ekran widget'ında daraltma oku yoktur; pivot kalemi başlığın son eylemidir.
+  const expandPos = intakeHeader.indexOf('id="intakeExpandAllBtn"');
   const settingsPos = intakeHeader.indexOf('id="intakeFieldsBtn"');
-  assert.ok(collapsePos >= 0 && settingsPos > collapsePos, 'Pivot ayarları kalemi daralt/genişlet okunun sağında olmalı');
+  assert.doesNotMatch(intakeHeader, /id="intakeCollapseBtn"/);
+  assert.ok(expandPos >= 0 && settingsPos > expandPos, 'Pivot ayarları kalemi başlık eylemlerinin sonunda olmalı');
   assert.match(intakeHeader.slice(settingsPos, settingsPos + 700), /i-pencil/);
 
   assert.match(app, /MODEL_TARGET_LABELS=\{[^}]*intake:'INTAKE'/);

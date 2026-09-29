@@ -9,7 +9,7 @@ const launchpad = require('../public/overview-launchpad.js');
 const ROOT = path.join(__dirname, '..');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const SOURCE = fs.readFileSync(path.join(ROOT, 'public', 'overview-launchpad.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(ROOT, 'public', 'overview-radar.css'), 'utf8');
+const CSS = fs.readFileSync(path.join(ROOT, 'public', 'overview-home.css'), 'utf8');
 
 test('Dünya saatleri modülü saate göre doğru selamlamayı seçer', () => {
   assert.equal(launchpad.greeting(8, 'tr'), 'Günaydın');

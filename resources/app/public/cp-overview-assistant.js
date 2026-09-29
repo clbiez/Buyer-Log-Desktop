@@ -254,6 +254,16 @@
       return `<button type="button" class="cpaChip tone-${tone[key]} ${state.activePriority === key ? 'is-on' : ''}" data-cpa-priority="${key}" ${measure.rows ? '' : 'disabled'}>
         <span class="n">${int(measure.rows)}</span><span class="l">${esc(priorityLabel(key))}</span><span class="q">${int(measure.qty)} ${esc(L('adet', 'units'))}</span></button>`;
     }).join('');
+    /* Öncelik dağılım çubuğu: eski CP Öncelik Radarı'nın yerini alır. Aynı
+       sipariş sayılarını tek eksende, pay olarak gösterir; renk yanında her
+       parçanın başlığı ve çiplerdeki metin etiketi vardır. */
+    const totalRows = order.reduce((sum, key) => sum + ((byKey.get(key) || { rows: 0 }).rows || 0), 0);
+    const mix = totalRows ? `<div class="cpaMix" role="img" aria-label="${esc(L('Öncelik dağılımı', 'Priority mix'))}">${order.map(key => {
+      const rows = (byKey.get(key) || { rows: 0 }).rows || 0;
+      if (!rows) return '';
+      const share = Math.round(rows / totalRows * 1000) / 10;
+      return `<button type="button" class="cpaMixSeg tone-${tone[key]}" style="flex:${rows} 0 0" data-cpa-priority="${key}" title="${esc(`${priorityLabel(key)} · ${int(rows)} · %${share}`)}" aria-label="${esc(`${priorityLabel(key)} ${int(rows)}`)}"></button>`;
+    }).join('')}</div>` : '';
     const reasons = model.riskReasons.slice(0, 6).map(item => {
       const label = reasonLabel(item.name);
       const automateLabel = L('Bu konu için e-mail otomasyonu oluştur', 'Create an email automation for this issue');
@@ -267,6 +277,7 @@
     const active = state.activePriority;
     const canAutomate = active !== 'ALL' && !active.startsWith('REASON:');
     return card('priorities', L('Öncelikler', 'Priorities'), `
+      ${mix}
       <div class="cpaChips">${chips}</div>
       ${canAutomate ? `<div class="cpaRowBetween"><span class="cpaNote">${esc(priorityLabel(active))} · ${int((byKey.get(active) || { rows: 0 }).rows)} ${esc(L('sipariş satırı', 'order rows'))}</span>
         <button type="button" class="cpaBtn sm" data-cpa-automate-priority="${esc(active)}">✉ ${esc(L('Otomasyon oluştur', 'Create automation'))}</button></div>` : ''}

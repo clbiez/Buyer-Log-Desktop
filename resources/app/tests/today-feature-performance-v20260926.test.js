@@ -44,11 +44,13 @@ test('World clocks Intl.DateTimeFormat nesnesini saat dilimi başına bir kez ku
   assert.match(src,/if\(document\.hidden\)return;/);assert.match(src,/getClientRects\(\)\.length/);
 });
 
-test('Overview radar mutasyon ve resize tetiklerini kare başına tek çizime toplar',()=>{
-  const src=read('overview-radar-charts.js');
-  assert.match(src,/window\.addEventListener\('resize',scheduleAll,\{passive:true\}\)/);
-  assert.match(src,/new MutationObserver\(\(\)=>scheduleRadar\(def\)\)/);
-  assert.doesNotMatch(src,/addEventListener\('resize',refreshAll/);
+test('Overview widget boyut değişimi senkron yeniden çizim yapmaz',()=>{
+  // Radarlar kaldırıldı; kırılım grafiği CSS ile uyum sağlar, yalnız veri
+  // değişince çizilir. Harita kabını izler ve çizimi kareye erteler.
+  const breakdown=read('overview-breakdown.js');
+  assert.doesNotMatch(breakdown,/addEventListener\('resize'/);
+  const flowSrc=read('overview-global-flow.js');
+  assert.match(flowSrc,/new ResizeObserver\(\(\)=>\{if\(state\.inView\)scheduleDraw\(\);\}\)/);
 });
 
 test('Ortak detay çekmecesi büyük kümeleri parça parça çizer, aramayı geciktirir ve görsel indeksini tek kurar',()=>{
