@@ -89,10 +89,25 @@ test('"X Toplam" biçimli ara toplamlar da okunur', () => {
   assert.ok(snap.records.some(r => r[0] === 1 && r[1] === 'CUW4'));
 });
 
-test('model değişti: antrepo ayı / yanlış pivot / düzeltmesiz hedef reddedilir', () => {
-  for (const breakFormula of ['depot', 'crossPivot', 'noAdjustment']) {
+test('model değişti: antrepo ayı / yanlış pivot reddedilir', () => {
+  for (const breakFormula of ['depot', 'crossPivot']) {
     assert.throws(() => model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ breakFormula }), 'x.xlsx'), e => e.code === 'MODEL_SIGNATURE_MISMATCH', breakFormula);
   }
+});
+
+test('v7.0.173 hedef hücreleri (E15..E18) farklı kurulmuşsa yükleme reddedilmez, uyarı kalır', () => {
+  // Gerçek dosyada görülen durum: E hücreleri B21'e ve C'ye bağlı değil.
+  const other = model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ breakFormula: 'targetsElsewhere' }), 'x.xlsx');
+  assert.ok(other.validation.signature.ok);
+  assert.equal(other.validation.reconciliation.targets.verified, false);
+  assert.equal(other.validation.reconciliation.checks.length, 5, 'yalnız 4 Δ + TOPLAM uzlaşır');
+  close(other.targetAdjustmentPct, 3, 1e-9);
+  assert.ok(other.validation.warnings.some(w => /hedef hücreleri/.test(w)));
+  // Hedef = Δ (düzeltmesiz): türetilen düzeltme %0 olarak raporlanır, varsayılan B21 kalır.
+  const flat = model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ breakFormula: 'noAdjustment' }), 'x.xlsx');
+  assert.equal(flat.validation.reconciliation.targets.derivedAdjustmentPct, 0);
+  close(flat.targetAdjustmentPct, 3, 1e-9);
+  // Δ zinciri hâlâ katı: antrepo ayı kullanan kitap reddedilir (yukarıdaki test).
 });
 
 test('uzlaştırma: Excel önbelleği yeniden hesapla tutmazsa reddedilir', () => {

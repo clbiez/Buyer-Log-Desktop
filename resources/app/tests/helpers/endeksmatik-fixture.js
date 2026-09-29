@@ -114,7 +114,9 @@ function screenSheet({ selection, previousOrderMonth, orderMonth, adjustment, br
     const other = breakFormula === 'crossPivot' && i === 0 ? COMPONENT_SHEETS[1] : sheet;
     put(`C${15 + i}`, r.deltas[i] + (cacheOffset && i === 0 ? cacheOffset : 0), `${pivot(other, current)}/${pivot(other, '$C$9')}-1`);
     put(`D${15 + i}`, r.weights[i], `VLOOKUP($C$4&"_"&$C$5&"_"&$C$6&"_"&$C$7&"_"&$C$8,'KLASMAN LİSTESİ ÖZET'!$A:$K,${7 + i},0)`);
-    put(`E${15 + i}`, r.targets[i], breakFormula === 'noAdjustment' ? `C${15 + i}` : `(1+C${15 + i})*(1-$B$21)-1`);
+    // 'targetsElsewhere': gerçek dosyada görülen durum — E hücreleri B21/C'ye bağlı değil.
+    if (breakFormula === 'targetsElsewhere') put(`E${15 + i}`, 0.5 + i, `D${15 + i}*2`);
+    else put(`E${15 + i}`, breakFormula === 'noAdjustment' ? r.deltas[i] : r.targets[i], breakFormula === 'noAdjustment' ? `C${15 + i}` : `(1+C${15 + i})*(1-$B$21)-1`);
   });
   put('C19', r.total, 'SUMPRODUCT(C15:C18,D15:D18)');
   ws['!ref'] = 'A1:F25';
