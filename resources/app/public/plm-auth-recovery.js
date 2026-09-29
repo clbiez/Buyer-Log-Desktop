@@ -23,7 +23,24 @@
     /^\/api\/model-images\/import-plm(?:\/|$)/,
   ];
 
+  /*
+   * Arka plan işleri (ör. açılışta eksik model görsellerinin otomatik
+   * tamamlanması) kullanıcıya login penceresi AÇTIRMAMALIDIR. Bu başlığı
+   * taşıyan istek yalnız sessiz SSO yenilemesi dener; olmazsa özgün yanıt
+   * döner ve login ekranı yalnız kullanıcının başlattığı işlerde açılır.
+   */
+  const SILENT_AUTH_HEADER = 'X-BuyerLog-Auth-Mode';
+
   let recoveryInFlight = null;
+  let silentRecoveryInFlight = null;
+
+  function silentAuthRequested(request) {
+    try {
+      return String(request && request.headers && request.headers.get(SILENT_AUTH_HEADER) || '').trim().toLowerCase() === 'silent';
+    } catch (_) {
+      return false;
+    }
+  }
 
   function authCodeFromPayload(payload) {
     if (!payload || typeof payload !== 'object') return '';
@@ -78,7 +95,9 @@
       : null;
   }
 
-  async function renewCoreNectumSession(root) {
+  async function renewCoreNectumSession(root, options = {}) {
+    const interactive = !(options && options.interactive === false);
+    if (!interactive) return renewCoreNectumSessionSilently(root);
     if (recoveryInFlight) return recoveryInFlight;
     const bridge = desktopBridge(root);
     if (!bridge) return { ok: false, code: 'CORENECTUM_DESKTOP_BRIDGE_UNAVAILABLE' };
@@ -113,6 +132,30 @@
     }
   }
 
+  /* Yalnız gizli, kalıcı CoreNectum oturumu denenir; pencere gösterilmez. */
+  async function renewCoreNectumSessionSilently(root) {
+    if (silentRecoveryInFlight) return silentRecoveryInFlight;
+    const bridge = desktopBridge(root);
+    if (!bridge) return { ok: false, code: 'CORENECTUM_DESKTOP_BRIDGE_UNAVAILABLE' };
+    const task = (async () => {
+      try {
+        return await bridge.ensureCoreNectumAuth({ interactive: false, reason: 'plm-background-silent' });
+      } catch (error) {
+        return {
+          ok: false,
+          code: error && error.code || 'CORENECTUM_AUTH_RECOVERY_FAILED',
+          error: error && error.message || String(error),
+        };
+      }
+    })();
+    silentRecoveryInFlight = task;
+    try {
+      return await task;
+    } finally {
+      if (silentRecoveryInFlight === task) silentRecoveryInFlight = null;
+    }
+  }
+
   function install(root) {
     if (!root || typeof root.fetch !== 'function' || root.__buyerLogPlmAuthRecoveryInstalled) return false;
     const rawFetch = root.fetch.bind(root);
@@ -136,6 +179,11 @@
       const authCode = await authCodeFromResponse(firstResponse);
       if (!authCode) return firstResponse;
 
+      if (silentAuthRequested(request)) {
+        const silentRecovered = await renewCoreNectumSession(root, { interactive: false });
+        return silentRecovered && silentRecovered.ok === true ? rawFetch(request.clone()) : firstResponse;
+      }
+
       const recovered = await renewCoreNectumSession(root);
       if (!recovered || recovered.ok !== true) {
         // Electron has already exposed the login screen when silent SSO was
@@ -154,6 +202,8 @@
 
   return {
     AUTH_CODES,
+    SILENT_AUTH_HEADER,
+    silentAuthRequested,
     authCodeFromPayload,
     authCodeFromResponse,
     isProtectedPlmPath,
