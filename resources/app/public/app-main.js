@@ -3899,13 +3899,14 @@ function computeWidths(tableKey){
   const cols = visibleCols(tableKey);
   return cols.map(c=>({col:c, px: colWidthPx(tableKey,c)}));
 }
+const MANAGED_CHECK_COLUMN_WIDTH=64;
 function tableTotalPx(tableKey, withChk){
-  return (withChk?30:0) + computeWidths(tableKey).reduce((s,w)=>s+w.px,0);
+  return (withChk?MANAGED_CHECK_COLUMN_WIDTH:0) + computeWidths(tableKey).reduce((s,w)=>s+w.px,0);
 }
 function buildColgroup(table, tableKey, withChk){
   const cg = table.querySelector('colgroup');
   const widths = computeWidths(tableKey);
-  let html = withChk ? `<col data-key="__chk" style="width:30px">` : '';
+  let html = withChk ? `<col data-key="__chk" style="width:${MANAGED_CHECK_COLUMN_WIDTH}px">` : '';
   html += widths.map(w=>`<col data-key="${w.col.k}" style="width:${w.px}px">`).join('');
   cg.innerHTML = html;
   const totalPx = tableTotalPx(tableKey, withChk);
