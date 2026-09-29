@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.161",
-  "source": "test-v7.0.161",
-  "requestedAt": "2026-09-28T23:30:00+03:00",
-  "reason": "verified-full-regression-price-supplier-period-filters"
+  "version": "7.0.162",
+  "source": "test-v7.0.162",
+  "requestedAt": "2026-09-29T05:25:50.708Z",
+  "reason": "verified-full-regression-claude-overview-lfl-stability"
 }
