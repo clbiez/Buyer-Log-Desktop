@@ -221,6 +221,7 @@ const { refreshExcelFile } = require('./lib/refreshExcel');
 const { refreshSourceWorkbooks, computeParseTimeoutMs, computeRefreshTimeoutMs } = require('./lib/source-refresh');
 const { chooseFolderDialog } = require('./lib/chooseFolder');
 const modelQuery = require('./lib/modelQuery');
+const collectionMasterCatalogLib = require('./lib/collection-master-catalog');
 const modelHorizon = require('./lib/modelHorizon');
 const { inspectSourceFilterReadiness, readinessMessage: sourceFilterReadinessMessage } = require('./lib/source-filter-readiness');
 // Veri Yönetimi ekranının okuduğu projeksiyon. Saf ve salt-okunur: modelConnections
@@ -7997,6 +7998,34 @@ app.get('/api/data/collection-catalog', userAccess.requireArea('koleksiyon'), as
     });
     sendDateSafeJson(res, value);
   } catch (err) { apiError(res, err, 'Koleksiyon filtre kataloğu yüklenemedi.'); }
+});
+
+/* Koleksiyon ana veri kataloğu: License/Category/Country/Season/Line/
+   Manufacturer/Product Main Definition seçenekleri ASAS veri modelinden
+   ufuk/kaynak filtresi uygulanmadan okunur (bkz. lib/collection-master-catalog).
+   GET yerel anlık görüntüyü hemen döner ve eskimişse arka planda tazeler;
+   POST beklenerek tazeler ve alan başına sonucu bildirir. */
+const collectionMasterCatalog = collectionMasterCatalogLib.createMasterCatalogStore({
+  file: path.join(SERVER_DATA_ROOT, 'collection-master-catalog.json'),
+  runModelRows: options => modelQuery.runModelRows(options),
+  loadConnections: () => loadModelConnections().items,
+  transforms: { country: parseLib.countryEN },
+  writeJson: atomicWriteJson,
+  logFailure: logRuntimeFailure,
+});
+app.get('/api/collection-master-catalog', userAccess.requireArea('koleksiyon'), (req, res) => {
+  try {
+    const snapshot = collectionMasterCatalog.load();
+    const refreshing = collectionMasterCatalog.refreshInBackgroundIfStale(snapshot) || collectionMasterCatalog.isRefreshing();
+    res.set('Cache-Control', 'no-store').json({ ok: true, ...snapshot, refreshing });
+  } catch (err) { apiError(res, err, 'Koleksiyon ana veri kataloğu okunamadı.'); }
+});
+app.post('/api/collection-master-catalog/refresh', userAccess.requireArea('koleksiyon'), express.json({ limit: '16kb' }), async (req, res) => {
+  try {
+    const snapshot = await collectionMasterCatalog.refresh();
+    userAccess.appendAudit(req.currentUser, 'COLLECTION_MASTER_CATALOG_REFRESH', 'asas', Object.fromEntries(snapshot.fields.map(field => [field.key, field.count])));
+    res.set('Cache-Control', 'no-store').json({ ok: true, ...snapshot, refreshing: false });
+  } catch (err) { apiError(res, err, 'Koleksiyon ana veri kataloğu ASAS’tan tazelenemedi.'); }
 });
 
 // Historical Orders is the largest projection. It is not needed on Overview or CP,

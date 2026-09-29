@@ -639,6 +639,15 @@ td .dateFieldWrap{display:flex;width:100%;}
    Bu sınıf, paneli modalın blur/backdrop katmanının kesin olarak önüne taşır. */
 .colFilterPanel.colFilterPanelModal{z-index:56010!important;}
 .submfrDrop{position:fixed;z-index:90;max-height:220px;overflow:auto;padding:4px;}
+/* Koleksiyon ASAS öneri listesi: kaynak bilgisi + ASAS'tan tazele + serbest metin notu. */
+.kolCatalogDrop{max-height:310px;}
+.kolCatalogDropFoot{position:sticky;bottom:-4px;margin:4px -4px -4px;padding:6px 8px;border-top:1px solid var(--line);background:var(--card);font-size:var(--fs-xs);color:var(--muted);display:flex;flex-direction:column;gap:4px;white-space:normal;}
+.kolCatalogDropNote{color:var(--orange);font-weight:600;}
+.kolCatalogDropSource{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.kolCatalogDropSource button{flex-shrink:0;border:1px solid var(--line2);border-radius:var(--r-xs);background:var(--card2-strong);color:var(--ink);font:inherit;font-weight:600;padding:2px 8px;cursor:pointer;}
+.kolCatalogDropSource button:hover:not(:disabled){border-color:var(--acc-lite);}
+.kolCatalogDropSource button:disabled{opacity:.55;cursor:progress;}
+td.kolCatalogUnknown .kolRuleMissingMark{color:var(--orange);}
 .filterSectionTitle{font-size:10px;color:var(--muted);letter-spacing:.5px;margin:4px 0 6px;font-weight:700;}
 .excelFilterTop{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
 .numFilterRow{display:flex;gap:6px;}
