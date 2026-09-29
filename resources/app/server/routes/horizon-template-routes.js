@@ -25,6 +25,8 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
     userAccess,
     userPreferences,
   } = deps;
+  // Saf yazma planlayıcısı (disk/ağ yok); enjeksiyon gerektirmez.
+  const dataManagementLinkWriter = require('../lib/data-domain/link-writer');
 
 
 /* ===================================================================
@@ -257,6 +259,48 @@ app.post('/api/data-management/binding', userAccess.requireArea('source'), userA
     publishSharedMasterChange('modelConnections', req);
     res.json({ ok: true, changed: true, revision: saved.revision });
   } catch (err) { apiError(res, err, 'Modül bağlantısı güncellenemedi.'); }
+});
+
+/* BAĞLI GRUBA EKLE / GRUPTAN AYIR (v20260929).
+
+   Bağlı grup = ASAS'ta tek ortak filtreyi (tek sorgu) paylaşan modüller.
+   Kullanıcı bir modülü gruptan ayırabilir (kendi filtresiyle ayrı sorgu olur)
+   ya da geri ekleyebilir (grubun filtresini kullanır; kendi filtresi saklanır).
+   Yenileme her iki durumda da TEKTİR. Eşzamanlılık kontrolü kaynak başınadır. */
+app.post('/api/data-management/link', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), (req, res) => {
+  try {
+    const body = req.body || {};
+    const sourceId = String(body.sourceId || '').trim();
+    const moduleId = String(body.moduleId || '').trim();
+    if (!sourceId || !moduleId) {
+      return res.status(400).json({ error: 'sourceId ve moduleId zorunlu.', code: 'VALIDATION_ERROR' });
+    }
+    if (typeof body.linked !== 'boolean') {
+      return res.status(400).json({ error: 'linked (boolean) zorunlu.', code: 'VALIDATION_ERROR' });
+    }
+    const store = loadModelConnections();
+    const expected = String(body.expectedSourceRevision || '').trim();
+    if (expected) {
+      const current = store.items.find(item => item && String(item.id) === sourceId);
+      const actual = current ? dataManagementAdapter.configRevision(current) : '';
+      if (actual && actual !== expected) {
+        return res.status(409).json({
+          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
+          code: 'SOURCE_CHANGED',
+        });
+      }
+    }
+    const plan = dataManagementLinkWriter.planLinkChange(store.items, { sourceId, moduleId, linked: body.linked });
+    if (!plan.ok) {
+      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : (plan.code === 'VALIDATION_ERROR' ? 400 : 409);
+      return res.status(status).json({ error: plan.message, code: plan.code });
+    }
+    if (plan.code === 'NO_CHANGE') return res.json({ ok: true, changed: false, revision: store.revision, warnings: [] });
+    const saved = replaceModelConnections(plan.items, null);
+    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_LINK_UPDATE', sourceId, { moduleId, linked: body.linked });
+    publishSharedMasterChange('modelConnections', req);
+    res.json({ ok: true, changed: true, revision: saved.revision, warnings: plan.warnings });
+  } catch (err) { apiError(res, err, 'Bağlı grup güncellenemedi.'); }
 });
 
 app.get('/api/model-connections', (_req, res) => {

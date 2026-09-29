@@ -368,9 +368,11 @@
   function render() {
     if (!host) return;
     const shared = (context.sharedWith || []).length;
-    // Bağlı gruptaki (Siparişler · Backlog · LFL · Fiyat & Üretici) bir modül
-    // tek başına ayrılamaz; sunucu da ayırmayı grubun tamamına uygular.
+    /* v20260929 — Bağlı gruptaki bir modül artık gruptan AYRILABİLİR: "ayır"
+       onu kendi filtresine çıkarır (sunucu üyelikten de düşürür). Yenileme
+       her durumda ortaktır. */
     const canSplit = context.canSplit !== false;
+    const linked = context.linked === true;
 
     host.innerHTML = `<div class="dmFilterEditor" role="region" aria-label="${esc(context.moduleLabel)}">
       <div class="dmfHead">
@@ -413,11 +415,15 @@
         <button type="button" class="tbtn" data-cancel ${busy ? 'disabled' : ''}>${esc(T('İptal', 'Cancel'))}</button>
         ${shared && canSplit
           ? `<button type="button" class="tbtn" data-save="split" ${busy ? 'disabled' : ''}
-               title="${esc(T('Diğer modüller eski filtreyi kullanmaya devam eder', 'Other modules keep the previous filter'))}">
-               ${esc(T(`Yalnız ${context.moduleLabel} için ayır`, `Split for ${context.moduleLabel} only`))}</button>
+               title="${esc(linked
+                 ? T('Bu modül bağlı gruptan ayrılır ve bu filtreyle çalışır; diğer bağlı modüller ortak filtrede kalır. Yenileme yine ortaktır.', 'This module leaves the linked group and runs with this filter; the other linked modules keep the shared filter. Refresh stays shared.')
+                 : T('Diğer modüller eski filtreyi kullanmaya devam eder', 'Other modules keep the previous filter'))}">
+               ${esc(linked
+                 ? T(`Yalnız ${context.moduleLabel} için ayır (gruptan çıkar)`, `Split ${context.moduleLabel} only (unlink)`)
+                 : T(`Yalnız ${context.moduleLabel} için ayır`, `Split for ${context.moduleLabel} only`))}</button>
              <button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}
                title="${esc(T(`${shared + 1} modülün hepsini etkiler`, `Affects all ${shared + 1} modules`))}">
-               ${esc(T('Hepsini güncelle', 'Update all'))}</button>`
+               ${esc(linked ? T('Bağlı modüllerin hepsini güncelle', 'Update all linked modules') : T('Hepsini güncelle', 'Update all'))}</button>`
           : shared
           ? `<button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}
                title="${esc(T('Bağlı modüller tek ufuk paylaşır; hepsi birlikte güncellenir', 'Linked modules share one horizon; all are updated together'))}">

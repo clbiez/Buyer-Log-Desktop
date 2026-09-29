@@ -129,24 +129,70 @@ function isolateOrdersScope(scopes, role, fallbackHorizon, normalizeHorizon, det
    kazanır (eşitlikte Orders → Backlog → LFL → Price & Supplier sırası).
    Böylece en az sayıda sayfanın verisi değişir.
    =================================================================== */
+/* v20260929 — BAĞ ARTIK DÜZENLENEBİLİR, YENİLEME TEKTİR.
+
+   Kullanıcı kararı: "Modüller birbirine bağlı olduğu için hepsini tek
+   filtreleme altına topla. Kullanıcı herhangi bir sayfayı bu linklemeden
+   ayırmak isterse bunu yapabilsin veya geri ekleyebilsin."
+
+   LINKED_TARGETS artık yalnız VARSAYILAN üyeliktir. Bağlantı kaydındaki
+   `linkedTargets` dizisi gerçek üyeliği taşır (bkz. normalizeLinkedTargets);
+   CP dahil ASAS'ın beslediği her modül gruba eklenebilir ya da gruptan
+   ayrılabilir. CP varsayılan olarak AYRIDIR: kullanıcının dar CP filtresi
+   (ör. yalnız kendi lisansları) eski kayıtlarda oylamayla ezilmemeli.
+
+   Yenileme ise filtre bağından bağımsız olarak TEKTİR (REFRESH_TARGETS):
+   hangi sayfadan istenirse istensin CP dahil bütün modüller aynı işte
+   yenilenir. Gruptan ayrılmış bir modül kendi filtresiyle ayrı sorgu olur
+   ama yine aynı yenilemede güncellenir. */
 const LINKED_TARGETS = Object.freeze(['orders', 'backlog', 'lfl', 'priceanalysis']);
 const LINKED_ROLES = new Set(['asas']);
 // normalizeScopes'un eski kayıtlarda kendiliğinden eklediği hedefler.
 const LINKED_AUTO_TARGETS = Object.freeze(['orders', 'priceanalysis']);
+// Ufuk oylamasında eşitlik sırası: CP gruba eklenmişse en son söz hakkı onundur.
+const LINK_VOTE_ORDER = Object.freeze(['orders', 'backlog', 'lfl', 'priceanalysis', 'cp']);
+// Tek yenileme motorunun kapsadığı modüller (INTAKE kendi bağlantısıyla ayrı çalışır).
+const REFRESH_TARGETS = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 
 function isLinkedTarget(target) { return LINKED_TARGETS.includes(String(target == null ? '' : target).trim()); }
 
-/** Hedef listesinde bağlı bir modül varsa grubun tamamı eklenir (yenileme hedefleri için). */
-function withLinkedTargets(targets) {
+/**
+ * Bağlı grubun GERÇEK üyeleri. Kayıtta dizi yoksa (eski kayıt) varsayılan
+ * grup döner; dizi varsa — boş bile olsa — kullanıcının kararıdır.
+ * Bağ kavramı olmayan rollerde null döner.
+ */
+function normalizeLinkedTargets(raw, role) {
+  if (!LINKED_ROLES.has(role)) return null;
+  const allowed = allowedTargets(role);
+  if (!Array.isArray(raw)) return LINKED_TARGETS.filter(target => allowed.includes(target));
+  const wanted = new Set(raw.map(value => String(value == null ? '' : value).trim()).filter(Boolean));
+  return allowed.filter(target => wanted.has(target));
+}
+
+/** Bir bağlantı kaydının bağlı modülleri (bağ kavramı yoksa boş dizi). */
+function linkedTargetsOf(item) {
+  const role = String(item && item.role || '').trim().toLowerCase();
+  return normalizeLinkedTargets(item && item.linkedTargets, role) || [];
+}
+
+/**
+ * Tek yenileme motoru: bir hedef bile istenirse CP dahil bütün modüller
+ * birlikte yenilenir. Boş liste boş kalır (çağıran "hepsi" varsayılanını uygular).
+ */
+function withRefreshTargets(targets) {
   const list = (Array.isArray(targets) ? targets : [])
     .map(value => String(value == null ? '' : value).trim()).filter(Boolean);
   const out = [...new Set(list)];
-  if (out.some(isLinkedTarget)) for (const target of LINKED_TARGETS) if (!out.includes(target)) out.push(target);
+  if (out.length) for (const target of REFRESH_TARGETS) if (!out.includes(target)) out.push(target);
   return out;
 }
+// Eski ad: otomasyon ve yenileme grupları bu adla çağırıyordu.
+const withLinkedTargets = withRefreshTargets;
 
-function linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached = null) {
-  const linked = allowedTargets(role).filter(isLinkedTarget);
+function linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached = null, linkedMembers = null) {
+  const linked = Array.isArray(linkedMembers)
+    ? allowedTargets(role).filter(target => linkedMembers.includes(target))
+    : allowedTargets(role).filter(isLinkedTarget);
   const skipped = detached instanceof Set ? detached : new Set();
   const list = dedupeTargets((Array.isArray(scopes) ? scopes : []).map(scope => ({
     ...scope,
@@ -163,7 +209,7 @@ function linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detac
     const signature = JSON.stringify(scope.horizon);
     const entry = votes.get(signature) || { count: 0, rank: Infinity, scopes: [] };
     entry.count += members.length;
-    entry.rank = Math.min(entry.rank, ...members.map(target => LINKED_TARGETS.indexOf(target)));
+    entry.rank = Math.min(entry.rank, ...members.map(target => LINK_VOTE_ORDER.indexOf(target)));
     entry.scopes.push(scope);
     votes.set(signature, entry);
   }
@@ -215,9 +261,9 @@ function linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detac
   return dedupeTargets(out);
 }
 
-function separateScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached = null) {
+function separateScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached = null, linkedMembers = null) {
   return LINKED_ROLES.has(role)
-    ? linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached)
+    ? linkScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, detached, linkedMembers)
     : isolateOrdersScope(scopes, role, fallbackHorizon, normalizeHorizon, detached);
 }
 
@@ -226,9 +272,11 @@ function separateScopeTargets(scopes, role, fallbackHorizon, normalizeHorizon, d
  * Liste boşsa, bağlantının mevcut tek ufkundan izin verilen tüm hedefleri kapsayan
  * bir kapsam üretilir — böylece eski kayıtlar davranış değiştirmeden çalışmaya devam eder.
  */
-function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedTargets = null) {
+function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedTargets = null, linkedTargets = undefined) {
   const allowed = allowedTargets(role);
   if (!allowed.length) return [];
+  // Bağlı grubun üyeleri kayıttan gelir; verilmezse varsayılan grup (eski kayıt).
+  const linkedMembers = normalizeLinkedTargets(linkedTargets, role);
   /* detachedTargets: kullanıcının Veri Yönetimi'nden bilerek kapattığı modüller
      (park edilmiş bağlantılar). Bu fonksiyonun "eski kayıt kurtarma" dalları
      yalnız bu küme dışındaki hedefler için çalışır. */
@@ -255,7 +303,7 @@ function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedT
     // bağlı grup onu kendiliğinden kapsar (bkz. LINKED_AUTO_TARGETS). Grubun
     // ufkunu seçerken sayılmaz — sayılsaydı ilk kapsama eklenip oylamayı
     // CP'nin ufku lehine bozardı.
-    return separateScopeTargets(dedupeTargets(list), role, fallbackHorizon, normalizeHorizon, detached);
+    return separateScopeTargets(dedupeTargets(list), role, fallbackHorizon, normalizeHorizon, detached, linkedMembers);
   }
 
   const remaining = allowed.filter(target => !detached.has(target));
@@ -270,7 +318,7 @@ function normalizeScopes(raw, role, fallbackHorizon, normalizeHorizon, detachedT
     limitToCpOrders: false,
     horizon: normalizeHorizon(fallbackHorizon),
   }];
-  return separateScopeTargets(fallback, role, fallbackHorizon, normalizeHorizon, detached);
+  return separateScopeTargets(fallback, role, fallbackHorizon, normalizeHorizon, detached, linkedMembers);
 }
 
 // Bir hedef yalnız bir kapsama ait olabilir; aksi hâlde hangi sorgunun beslediği
@@ -304,4 +352,5 @@ module.exports = {
   SCOPE_TARGETS, ROLE_TARGETS, TARGET_LABELS,
   allowedTargets, normalizeTargets, normalizeScopes, isolateOrdersScope, dedupeTargets, scopeByTarget, scopeLabel,
   LINKED_TARGETS, LINKED_ROLES, isLinkedTarget, withLinkedTargets, linkScopeTargets,
+  REFRESH_TARGETS, withRefreshTargets, normalizeLinkedTargets, linkedTargetsOf,
 };

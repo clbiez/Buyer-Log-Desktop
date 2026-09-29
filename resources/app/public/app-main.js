@@ -1523,20 +1523,22 @@ function renderOverview(){ deferRenderForTab('overview'); }
    listesinde hiç görünmez — "yok" ile "çekilmedi" ayırt edilemez. Rozet bu
    sınırı sürekli görünür kılar.
 --------------------------------------------------------------------------- */
-/* v20260928 — BAĞLI YENİLEME VE UFUK.
-   Siparişler, Backlog, LFL ve Fiyat & Üretici Analizi aynı ASAS satır
-   evreninin farklı görünümleridir: tek ufuk (sunucuda tek kapsam = tek sorgu)
-   ve tek yenileme paylaşırlar. Sayfaya özel ayrı yenileme yoktur; bu gruptan
-   hangi sayfa istenirse istensin dördü birlikte yenilenir. CP bağımsız kalır.
-   Sunucudaki karşılığı: server/lib/model-scopes.js LINKED_TARGETS. */
-const LINKED_REFRESH_TARGETS=Object.freeze(['orders','backlog','lfl','priceanalysis']);
+/* v20260929 — TEK YENİLEME MOTORU.
+   Kullanıcı kararı: "Diğer modülleri yenilemem CP'yi de yenilesin. Tek ortak
+   bir yenileme motoru istiyorum." CP, Siparişler, Backlog, LFL ve Fiyat &
+   Üretici Analizi hangi sayfadan istenirse istensin BİRLİKTE yenilenir; sayfaya
+   özel ayrı yenileme yoktur. Filtre bağı (ortak ufuk) ayrıdır ve Veri
+   Yönetimi'nde düzenlenir: gruptan ayrılan bir sayfa kendi filtresiyle ayrı
+   sorgu olur ama yine bu tek yenilemeyle güncellenir.
+   Sunucudaki karşılığı: server/lib/model-scopes.js REFRESH_TARGETS. */
+const LINKED_REFRESH_TARGETS=Object.freeze(['cp','orders','backlog','lfl','priceanalysis']);
 function withLinkedRefreshTargets(targets){
   const list=[...new Set((Array.isArray(targets)?targets:[]).map(value=>String(value||'').trim()).filter(Boolean))];
-  if(list.some(target=>LINKED_REFRESH_TARGETS.includes(target)))LINKED_REFRESH_TARGETS.forEach(target=>{if(!list.includes(target))list.push(target);});
+  if(list.length)LINKED_REFRESH_TARGETS.forEach(target=>{if(!list.includes(target))list.push(target);});
   return list;
 }
 function linkedRefreshLabel(){
-  return appLang==='en'?'Orders · Backlog · LFL · Price & Supplier':'Siparişler · Backlog · LFL · Fiyat & Üretici';
+  return appLang==='en'?'CP · Orders · Backlog · LFL · Price & Supplier':'CP · Siparişler · Backlog · LFL · Fiyat & Üretici';
 }
 // Bağlı grubun son yenileme saati. sourceStatus dosyanın ilerisinde tanımlanır;
 // rozet açılışta ondan önce çizilebildiği için erişim korunur.
@@ -1679,15 +1681,18 @@ function renderHorizonBadges(){
       ?(en?'Active source filter — change it in Data Management.':'Aktif kaynak filtresi — Veri Yönetimi ekranından değiştirilir.')
       :(en?'No filter on this source.':'Bu kaynakta filtre yok.');
 
-    // Bağlı sayfalar aynı ufku ve aynı yenilemeyi paylaşır; rozet bunu söyler.
+    // Bütün sayfalar tek yenilemeyi paylaşır; ortak filtreyi (bağlı grup)
+    // kullananlar ayrıca "Bağlı" rozetini taşır — gruptan ayrılan sayfada yoktur.
     if(LINKED_REFRESH_TARGETS.includes(target)){
-      const linkBadge=document.createElement('span');
-      linkBadge.className='horizonSummaryLinked horizonBadgeSource';
-      linkBadge.textContent=en?'Linked':'Bağlı';
-      linkBadge.title=en
-        ?`${linkedRefreshLabel()} share this horizon and refresh together.`
-        :`${linkedRefreshLabel()} bu ufku paylaşır ve birlikte yenilenir.`;
-      el.appendChild(linkBadge);
+      if(scope&&scope.linked){
+        const linkBadge=document.createElement('span');
+        linkBadge.className='horizonSummaryLinked horizonBadgeSource';
+        linkBadge.textContent=en?'Linked':'Bağlı';
+        linkBadge.title=en
+          ?'This page uses the shared (linked) filter. Refresh is shared by all modules; unlink it in Data Management.'
+          :'Bu sayfa ortak (bağlı) filtreyi kullanır. Yenileme bütün modüllerde ortaktır; Veri Yönetimi\'nden ayrılabilir.';
+        el.appendChild(linkBadge);
+      }
       const stamp=linkedRefreshStamp();
       if(stamp){
         const when=document.createElement('span');
@@ -12461,6 +12466,8 @@ async function loadFromServer(force, targets){
     try{ commitOpenCellEditors(targets); }catch(_){ }
     await settleOverrideWrites();
     refreshWatchCancelled=false; startSourceRefreshTimer(refreshTimerKey);
+    // Önceki yenilemenin arka plan ön-hazırlığı yarıda bırakılır; bu yenileme bitince yenisi başlar.
+    refreshPrewarmToken++;
     window.BL_REFRESH_BUSY=(Array.isArray(targets)&&targets.length===1)?targets[0]:'all';
     setReadOnlyMode(true,targets);
     try{ renderSourceTargets(); }catch(_){}
@@ -12801,6 +12808,13 @@ async function waitForRefreshJob(expectedJob=null){
     // yenilemeden sonra bayat kalmasın. Açıksa hemen, değilse ilk girişte hazırlanır.
     if(userVisibleRefresh&&(!Array.isArray(targets)||!targets.length||targets.includes('priceanalysis'))){
       try{window.BLPriceSupplierAnalysis?.invalidate?.();}catch(_){}
+    }
+    // v20260929 — Tek yenileme bitti: açık olmayan sayfaların verisi arka planda
+    // hazırlanır (sayfalar arası geçişte bekleme olmasın) ve genel filtre CP'yi
+    // kapsamıyorsa kullanıcı ayrıca uyarılır.
+    if(userVisibleRefresh){
+      scheduleRefreshPrewarm();
+      notifyCpCoverage(data.lastRefreshResult);
     }
     if(data.hasCachedData&&data.loadedAt){
       const t = new Date(data.loadedAt).toLocaleTimeString(appLang==='en'?'en-GB':'tr-TR');
@@ -13144,6 +13158,76 @@ function renderSourceTargets(){
   }));
 }
 
+/* v20260929 — YENİLEME SONRASI ARKA PLAN ÖN-HAZIRLIK.
+   Kullanıcı kararı: "Ortak yenilediğimde hepsine veri gitsin; sayfalar hiç
+   açılmamışsa bile veriyi alıp snapshot oluştursun. Sayfalar arasında gezerken
+   beklemeyi minimuma indirelim."
+   Sunucu yenilemenin sonunda sayfa projeksiyon önbelleğini (CP, Siparişler,
+   Genel Bakış) zaten yazar. Burada istemci, açık OLMAYAN sayfaların verisini
+   boşta kalan zamanda sırayla belleğe alır:
+     · CP ve Siparişler: projeksiyon yüklenir, çizim sekmeye girilene ertelenir.
+     · Backlog: pivot yanıtı önceden alınır, girişte beklemeden çizilir.
+     · LFL: satırlar yüklenir; kontroller sekme ilk açıldığında doldurulur.
+     · Fiyat & Üretici: analiz veri kümesi DOM çizilmeden hazırlanır.
+   Görünmeyen ekran ÇİZİLMEZ (perf-runtime lazy sözleşmesi korunur); yalnız veri
+   hazırlanır. Yeni bir yenileme başlarsa ya da kullanıcı o sekmeye geçerse ilgili
+   adım atlanır; bir adımın hatası diğerlerini durdurmaz. */
+let refreshPrewarmToken=0;
+function refreshPrewarmIdle(){
+  return new Promise(resolve=>{
+    if(typeof window.requestIdleCallback==='function')window.requestIdleCallback(()=>resolve(),{timeout:1500});
+    else setTimeout(resolve,150);
+  });
+}
+function scheduleRefreshPrewarm(){
+  const token=++refreshPrewarmToken;
+  const canAccess=area=>typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea(area);
+  const steps=[
+    ['cp',()=>state.cp?true:ensureCpLoaded({reason:'prewarm'})],
+    ['orders',()=>state.orders?true:ensureOrdersLoaded()],
+    ['backlog',()=>backlogLoadedOnce?true:prefetchBacklogForRefresh()],
+    ['lfl',async()=>{
+      // Özellik zaten yüklüyse LFL yenileme akışında tazelendi; yalnız hiç açılmamışsa yüklenir.
+      if(typeof window.reloadLflFromCache==='function')return true;
+      await window.BLPerf?.ensureFeature?.('lfl');
+      return typeof window.reloadLflFromCache==='function'?window.reloadLflFromCache():false;
+    }],
+    ['priceanalysis',async()=>{
+      await window.BLPerf?.ensureFeature?.('collectionTools');
+      return window.BLPriceSupplierAnalysis?.prepareInBackground?.();
+    }],
+  ];
+  void (async()=>{
+    // Biten yenilemenin kapanış adımları (düğme/kilit temizliği) önce tamamlansın.
+    const waitUntil=Date.now()+2*60*1000;
+    while(isRefreshRunning()&&Date.now()<waitUntil){
+      await new Promise(resolve=>setTimeout(resolve,400));
+      if(token!==refreshPrewarmToken)return;
+    }
+    for(const [area,run] of steps){
+      if(token!==refreshPrewarmToken||isRefreshRunning())return;
+      if(!canAccess(area)||currentActiveTab()===area)continue;
+      await refreshPrewarmIdle();
+      if(token!==refreshPrewarmToken||isRefreshRunning()||currentActiveTab()===area)continue;
+      try{await run();}catch(err){console.warn(`Yenileme sonrası ${area} ön-hazırlığı yapılamadı:`,err&&err.message||err);}
+    }
+  })();
+}
+/* Genel (bağlı) filtre CP filtresini kapsamıyorsa: sunucu iki sorgunun GERÇEK
+   sonucunu karşılaştırır (server/lib/cp-coverage.js). Uyarı ⚠ sayacında da durur;
+   burada yenileme bitince ayrıca açıkça söylenir. */
+function notifyCpCoverage(result){
+  const coverage=result&&result.cpCoverage;
+  if(!coverage||!Number(coverage.outsideCount))return;
+  const en=appLang==='en';
+  const codes=Array.isArray(coverage.sampleOrderCodes)?coverage.sampleOrderCodes.slice(0,5).join(', '):'';
+  const rows=Number(coverage.outsideCount).toLocaleString(en?'en-GB':'tr-TR');
+  const orders=Number(coverage.outsideOrderCount||0).toLocaleString(en?'en-GB':'tr-TR');
+  showToast(en
+    ?`Warning: the general filter does not cover your CP filter — ${rows} CP rows (${orders} orders${codes?`: ${codes}…`:''}) are not in Orders · Backlog · LFL · Price & Supplier. Widen the general filter in Data Management.`
+    :`Uyarı: genel filtre CP filtrenizi kapsamıyor — CP'deki ${rows} satır (${orders} sipariş${codes?`: ${codes}…`:''}) Siparişler · Backlog · LFL · Fiyat & Üretici'de yok. Veri Yönetimi'nde genel filtreyi genişletin.`);
+}
+
 function markSourceRefreshed(targets){
   const at=new Date().toISOString();
   (Array.isArray(targets)&&targets.length?targets:['cp','orders','backlog','lfl','priceanalysis']).forEach(key=>{
@@ -13164,86 +13248,42 @@ function seedSourceStatusFromServer(result){
 }
 
 let topRefreshMenuCleanup=null;
-/* Yenileme grupları AÇILIŞTA yüklenmez (§11): menü ilk açıldığında bir kez
-   okunur. Geldiğinde menü hâlâ açıksa yerine konur; kapandıysa bir sonraki
-   açılışta hazırdır. Veri Yönetimi grup kaydettiğinde bu önbelleği tazeler. */
-let refreshGroupsPromise=null;
-function ensureRefreshGroupsLoaded(){
-  if(Array.isArray(window.BL_REFRESH_GROUPS))return Promise.resolve(window.BL_REFRESH_GROUPS);
-  if(!refreshGroupsPromise){
-    refreshGroupsPromise=fetch('/api/data-management/refresh-groups',{cache:'no-store'})
-      .then(res=>res.ok?res.json():null)
-      .then(payload=>{ window.BL_REFRESH_GROUPS=payload&&payload.ok&&Array.isArray(payload.items)?payload.items:[]; return window.BL_REFRESH_GROUPS; })
-      // Grup okunamazsa Yenile menüsü çalışmaya devam eder; yalnız grup satırı çıkmaz.
-      .catch(()=>{ window.BL_REFRESH_GROUPS=[]; return []; })
-      .finally(()=>{ refreshGroupsPromise=null; });
-  }
-  return refreshGroupsPromise;
-}
+/* v20260929 — Tek yenileme motoru: yenileme grupları üst menüde ayrı satır
+   değildir (her grup CP dahil bütün modülleri yeniler). Veri Yönetimi grup
+   kaydettiğinde çağırdığı önbellek kancası uyumluluk için korunur. */
 window.BLInvalidateRefreshGroups=items=>{ window.BL_REFRESH_GROUPS=Array.isArray(items)?items:null; };
 function closeTopRefreshMenu(){ document.getElementById('_topRefreshMenu')?.remove(); if(topRefreshMenuCleanup){topRefreshMenuCleanup();topRefreshMenuCleanup=null;} }
 function openTopRefreshMenu(anchor){
   closeTopRefreshMenu();
   const menu=document.createElement('div'); menu.id='_topRefreshMenu'; menu.className='topRefreshMenu';
-  // Bağlı sayfalar menüde TEK satırdır: ayrı ayrı yenilenmezler.
-  const options=[['cp','CP'],['linked',linkedRefreshLabel()],['all',appLang==='en'?'All':'Tümü']];
+  /* v20260929 — TEK YENİLEME MOTORU: menüde tek satır vardır. CP, bağlı sayfalar
+     ve gruptan ayrılmış sayfalar aynı işte birlikte yenilenir; sayfa ya da grup
+     başına ayrı yenileme seçeneği kalmadı (hepsi aynı işi yapardı). */
+  const options=[['linked',linkedRefreshLabel()]];
   /* v7.26 — SAYFANIN SON GÜNCELLENME SAATİ MENÜDE YAZAR (kullanıcı talebi).
-     Hangi sayfanın ne zaman yenilendiği daha önce yalnız Kaynak Veri şeridinde
-     görünüyordu; yenileme kararını verdiğiniz yer ise bu menü. Hem "3 dk önce"
-     gibi okunur bir ifade hem de saatin kendisi yazılır — "az önce" ifadesi tek
-     başına, bir saat önce açılmış bir sekmede yanıltıcı olabilir. */
-  const stamp=key=>{
-    if(key==='all'||key==='linked'){
-      const times=(key==='linked'?LINKED_REFRESH_TARGETS:['cp',...LINKED_REFRESH_TARGETS]).map(item=>(sourceStatus[item]||{}).at).filter(Boolean);
-      if(!times.length) return appLang==='en'?'not refreshed yet':'henüz yenilenmedi';
-      const oldest=times.map(value=>new Date(value).getTime()).filter(Number.isFinite).sort((a,b)=>a-b)[0];
-      return (appLang==='en'?'oldest: ':'en eskisi: ')+sourceRelativeTime(new Date(oldest).toISOString());
-    }
-    const at=(sourceStatus[key]||{}).at;
-    if(!at) return appLang==='en'?'not refreshed yet':'henüz yenilenmedi';
-    const clock=new Date(at);
-    const time=Number.isFinite(clock.getTime())
-      ? clock.toLocaleTimeString(appLang==='en'?'en-GB':'tr-TR',{hour:'2-digit',minute:'2-digit'})
-      : '';
-    return `${sourceRelativeTime(at)}${time?` · ${time}`:''}`;
+     Hem "3 dk önce" gibi okunur bir ifade hem de en eski sayfanın saati yazılır. */
+  const stamp=()=>{
+    const times=LINKED_REFRESH_TARGETS.map(item=>(sourceStatus[item]||{}).at).filter(Boolean);
+    if(!times.length) return appLang==='en'?'not refreshed yet':'henüz yenilenmedi';
+    const oldest=times.map(value=>new Date(value).getTime()).filter(Number.isFinite).sort((a,b)=>a-b)[0];
+    const clock=new Date(oldest);
+    const time=Number.isFinite(clock.getTime())?clock.toLocaleTimeString(appLang==='en'?'en-GB':'tr-TR',{hour:'2-digit',minute:'2-digit'}):'';
+    return `${sourceRelativeTime(clock.toISOString())}${time?` · ${time}`:''}`;
   };
   if(window.BL_REFRESH_BUSY){ openRefreshStagesModal(); return; }
   const busy=Boolean(window.BL_REFRESH_BUSY);
-  /* v7.81 — YENİLEME GRUPLARI BU MENÜDE DE GÖRÜNÜR.
-     Gruplar Veri Yönetimi'nde TANIMLANIR ama yenileme kararı burada verilir.
-     Grupları yalnız Veri Yönetimi'ne koymak, "yenileme tek yerden yapılır"
-     kararını (bkz. index.html:355) bozup ikinci bir tetikleme noktası
-     yaratırdı — düzeltmeye çalıştığımız dağınıklığın ta kendisi. */
-  const groupButtons=(Array.isArray(window.BL_REFRESH_GROUPS)?window.BL_REFRESH_GROUPS:[])
-    .filter(group=>group&&group.name&&Array.isArray(group.moduleIds)&&group.moduleIds.length)
-    .map(group=>`<button type="button" data-refresh-group="${escapeHtml(group.id)}"${busy?' disabled':''}><span class="topRefreshLabel">${escapeHtml(group.name)}</span><span class="topRefreshWhen">${escapeHtml(group.moduleIds.map(id=>MODEL_TARGET_LABELS[id]||id).join(' · '))}</span><svg class="ic"><use href="#i-refresh"/></svg></button>`).join('');
-  menu.innerHTML=options.map(([key,label])=>`<button type="button" data-refresh-scope="${key}"${busy?' disabled':''}><span class="topRefreshLabel">${escapeHtml(label)}</span><span class="topRefreshWhen">${escapeHtml(stamp(key))}</span><svg class="ic"><use href="#i-refresh"/></svg></button>`).join('')
-    +(groupButtons?`<div class="topRefreshGroupHead">${escapeHtml(appLang==='en'?'Groups':'Gruplar')}</div>${groupButtons}`:'')
+  menu.innerHTML=options.map(([key,label])=>`<button type="button" data-refresh-scope="${key}"${busy?' disabled':''}><span class="topRefreshLabel">${escapeHtml(appLang==='en'?'Refresh all':'Tümünü yenile')}</span><span class="topRefreshWhen">${escapeHtml(label)} · ${escapeHtml(stamp())}</span><svg class="ic"><use href="#i-refresh"/></svg></button>`).join('')
     +`<button type="button" class="topRefreshStop" data-stop-refresh${busy?'':' disabled'}><span class="topRefreshLabel">${escapeHtml(appLang==='en'?'Stop Refresh':'Yenilemeyi Durdur')}</span><svg class="ic"><use href="#i-x"/></svg></button>`;
   document.body.appendChild(menu);
   const place=()=>{const r=anchor.getBoundingClientRect(),w=menu.offsetWidth||190;menu.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w))+'px';menu.style.top=Math.min(innerHeight-(menu.offsetHeight||260)-8,r.bottom+8)+'px';};
-  const run=async key=>{closeTopRefreshMenu();if(window.BL_REFRESH_BUSY)return;if(key==='all')return loadFromServer(true,['cp','orders','backlog','lfl']);if(key==='linked')return loadFromServer(true,[...LINKED_REFRESH_TARGETS]);return loadFromServer(true,[key]);};
-  menu.querySelectorAll('[data-refresh-scope]').forEach(btn=>btn.addEventListener('click',()=>run(btn.dataset.refreshScope)));
-  menu.querySelectorAll('[data-refresh-group]').forEach(btn=>btn.addEventListener('click',()=>{
-    closeTopRefreshMenu();
-    if(window.BL_REFRESH_BUSY)return;
-    const group=(window.BL_REFRESH_GROUPS||[]).find(item=>item&&item.id===btn.dataset.refreshGroup);
-    if(group)loadFromServer(true,group.moduleIds);
-  }));
+  const run=async()=>{closeTopRefreshMenu();if(window.BL_REFRESH_BUSY)return;return loadFromServer(true,[...LINKED_REFRESH_TARGETS]);};
+  menu.querySelectorAll('[data-refresh-scope]').forEach(btn=>btn.addEventListener('click',()=>run()));
   menu.querySelector('[data-stop-refresh]')?.addEventListener('click',()=>{requestRefreshCancel();closeTopRefreshMenu();});
   const outside=e=>{if(!menu.contains(e.target)&&e.target!==anchor&&!anchor.contains(e.target))closeTopRefreshMenu();}; const esc=e=>{if(e.key==='Escape')closeTopRefreshMenu();};
   document.addEventListener('pointerdown',outside,true);document.addEventListener('keydown',esc);window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
   topRefreshMenuCleanup=()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',esc);window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
-  // Açık sayfanın grubu odaklanır: Enter tek tuşla doğru yenilemeyi başlatır.
-  const focusKey=LINKED_REFRESH_TARGETS.includes(currentActiveTab())?'linked':(currentActiveTab()==='cp'?'cp':'');
-  place();requestAnimationFrame(()=>(focusKey&&menu.querySelector(`[data-refresh-scope="${focusKey}"]`)||menu.querySelector('button'))?.focus());
-  // Gruplar henüz okunmadıysa arka planda gelsin ve menü açıksa yeniden çizilsin.
-  if(!Array.isArray(window.BL_REFRESH_GROUPS)){
-    void ensureRefreshGroupsLoaded().then(items=>{
-      if(!items.length||!document.getElementById('_topRefreshMenu'))return;
-      openTopRefreshMenu(anchor);
-    });
-  }
+  // Tek seçenek odaklanır: Enter tek tuşla ortak yenilemeyi başlatır.
+  place();requestAnimationFrame(()=>menu.querySelector('[data-refresh-scope="linked"]')?.focus());
 }
 // Yenileme sürerken aynı düğmeye tekrar basmak Refresh Stages panelini gösterir.
 
@@ -13861,25 +13901,20 @@ document.addEventListener('pointerdown',e=>closeOtherToolbarAndColumnPopups(e.ta
     }
   });
 });
-// v20260928 — Siparişler düğmesi bağlı grubun ortak yenilemesidir:
-// loadFromServer 'orders' hedefini Backlog, LFL ve Fiyat & Üretici Analizi ile
-// genişletir; dördü tek sorguyla birlikte yenilenir.
-document.getElementById('ordersRefreshBtn')?.addEventListener('click',()=>{
-  if(isRefreshRunning()){openRefreshStagesModal();return;}
-  void loadFromServer(true,['orders']);
-});
-// LFL ve diğer bağlı ekranlar aynı yenilemeyi buradan çağırır (ayrı motor yok).
+// v20260929 — TEK YENİLEME MOTORU. Siparişler, CP ve LFL düğmeleri aynı
+// ortak yenilemeyi başlatır: loadFromServer hedefi CP · Siparişler · Backlog ·
+// LFL · Fiyat & Üretici'ye genişletir; hepsi tek işte birlikte yenilenir.
 window.BLRunLinkedRefresh=function(){
   if(isRefreshRunning()){openRefreshStagesModal();return Promise.resolve(false);}
   return loadFromServer(true,[...LINKED_REFRESH_TARGETS]);
 };
-// v10.12 — CP'nin kendi sayfa-kapsamlı yenileme düğmesi (Packet 12): Orders'ın
-// yukarıdaki düğmesiyle BİREBİR aynı desen, yalnız hedef 'cp'. Diğer modüller
-// (Orders, Backlog, LFL) tetiklenmez; çift tık isRefreshRunning() korumasıyla
-// zaten engellidir (Orders'la paylaşılan aynı akış).
+document.getElementById('ordersRefreshBtn')?.addEventListener('click',()=>{
+  if(isRefreshRunning()){openRefreshStagesModal();return;}
+  void loadFromServer(true,[...LINKED_REFRESH_TARGETS]);
+});
 document.getElementById('cpRefreshBtn')?.addEventListener('click',()=>{
   if(isRefreshRunning()){openRefreshStagesModal();return;}
-  void loadFromServer(true,['cp']);
+  void loadFromServer(true,[...LINKED_REFRESH_TARGETS]);
 });
 // İlk çizim bilerek ertelendi: bu satır betiğin ortasında çalışır ve
 // renderSourceTargets() dil değişkenini okur; o değişken çok daha aşağıda
@@ -16729,20 +16764,38 @@ async function exportBacklogToExcel(){
 document.getElementById('backlogExportBtn').addEventListener('click', exportBacklogToExcel);
 
 let backlogLoadedOnce=false;
+/* v20260929 — Tek yenileme sonrası Backlog sekmesi açık değilse pivot yanıtı
+   arka planda ÖNCEDEN alınır (çizilmez). Sekmeye ilk girişte aynı parametreli
+   hazır yanıt beklemeden çizilir. Yanıt yalnız aynı sorgu anahtarı için ve
+   kısa süre geçerlidir; yeni bir yenileme/yeniden yükleme onu düşürür. */
+let backlogPrefetch=null;
+const BACKLOG_PREFETCH_MAX_AGE_MS=10*60*1000;
+function backlogQueryString(params){ return new URLSearchParams(params||{}).toString(); }
+function applyBacklogData(data){
+  if(data&&data.sourceFilterRequired)showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);
+  // Filtre listeleri Backlog'un KENDİ veri kümesinden gelir (CP'den değil).
+  if(data && data.dimValues) backlogDimValues = data.dimValues;
+  if(data && data.dimValuesActive) backlogDimValuesActive = data.dimValuesActive;
+  renderBacklog(data);
+  backlogLoadedOnce=true;
+  renderBacklogDimOrder();
+  updateBacklogQuickDimLabels();
+  updateBacklogBuyerGrupBtnLabel();
+}
 async function fetchBacklog(params){
+  backlogPrefetch=null;
   try{
-    const qs = new URLSearchParams(params||{}).toString();
+    const qs = backlogQueryString(params);
     const data = await fetchJSON('/api/backlog' + (qs ? '?'+qs : ''));
-    if(data&&data.sourceFilterRequired)showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);
-    // Filtre listeleri Backlog'un KENDİ veri kümesinden gelir (CP'den değil).
-    if(data && data.dimValues) backlogDimValues = data.dimValues;
-    if(data && data.dimValuesActive) backlogDimValuesActive = data.dimValuesActive;
-    renderBacklog(data);
-    backlogLoadedOnce=true;
-    renderBacklogDimOrder();
-    updateBacklogQuickDimLabels();
-    updateBacklogBuyerGrupBtnLabel();
+    applyBacklogData(data);
   }catch(err){ console.warn('Backlog alınamadı:', err.message); }
+}
+async function prefetchBacklogForRefresh(){
+  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog'))return false;
+  const qs=backlogQueryString(buildBacklogParams());
+  const data=await fetchJSON('/api/backlog' + (qs ? '?'+qs : ''));
+  backlogPrefetch={key:qs,data,at:Date.now()};
+  return true;
 }
 // Pivot sorgusunun parametreleri tek yerden üretilir: hem /api/backlog hem de
 // /api/backlog-detail aynı filtreleri görmek zorunda, yoksa detay penceresi
@@ -16778,7 +16831,13 @@ function commitBacklogDateInputs(){
 }
 function fetchCurrentBacklog(){
   if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog')) return;
-  fetchBacklog(buildBacklogParams());
+  const params=buildBacklogParams();
+  const ready=backlogPrefetch;
+  if(ready&&ready.key===backlogQueryString(params)&&Date.now()-ready.at<BACKLOG_PREFETCH_MAX_AGE_MS){
+    backlogPrefetch=null;
+    try{applyBacklogData(ready.data);return;}catch(err){console.warn('Hazır Backlog yanıtı çizilemedi:',err&&err.message);}
+  }
+  fetchBacklog(params);
 }
 document.getElementById('backlogPivotSettingsBtn')?.addEventListener('click', openBacklogPivotSettings);
 (function initBacklogRetailRange(){

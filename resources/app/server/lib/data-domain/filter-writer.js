@@ -40,7 +40,7 @@ function normalizeScopesFor(item, scopes) {
   /* Park edilmiş modüller burada da geçirilir: bir filtreyi kaydetmek, kullanıcının
      kapattığı bir beslemeyi geri açmamalı. */
   return modelScopes.normalizeScopes(scopes, item.role, item.horizon, modelHorizon.normalizeHorizon,
-    bindingWriter.parkedModuleIds(item));
+    bindingWriter.parkedModuleIds(item), item.linkedTargets);
 }
 
 /** Filtrenin sorguyu gerçekten sınırlayıp sınırlamadığı; kaydetmeyi engellemez. */
@@ -108,20 +108,37 @@ function planFilterChange(items, { sourceId, moduleId, definition, mode = 'share
 
   const owner = scopes[ownerIndex];
   const sharedWith = (owner.targets || []).filter(target => target !== wantedModule);
-  const linkedGroup = modelScopes.LINKED_ROLES.has(String(item.role || '').toLowerCase()) && modelScopes.isLinkedTarget(wantedModule);
+  // Bağlı grubun GERÇEK üyeleri kayıttan okunur (v20260929: üyelik düzenlenebilir).
+  const linkMembers = modelScopes.linkedTargetsOf(item);
+  const isMember = target => linkMembers.includes(target);
+  const linkedGroup = linkMembers.length > 0 && isMember(wantedModule);
 
-  if (linkedGroup) {
-    /* BAĞLI MODÜLLER (Orders · Backlog · LFL · Price & Supplier) tek ufuk
-       taşır; "yalnız bu modül için ayır" burada anlamsızdır — normalizasyon
-       ayrılan modülü gruba geri katar ve kullanıcının yazdığı ufuk sessizce
-       kaybolabilirdi. Bu yüzden iki biçim de aynı işi yapar: grubun bütün
-       üyeleri yeni ufku alır, gruba ait olmayan ortaklar (CP) eski ufkunda
-       kalır. */
-    const members = scopes.flatMap(scope => (scope.targets || []).filter(target => modelScopes.isLinkedTarget(target)));
+  if (linkedGroup && mode === 'split' && linkMembers.length > 1) {
+    /* "Yalnız bu modül için ayır" = modülü BAĞLI GRUPTAN ÇIKAR ve kendi
+       filtresini ver. Üyelikten de çıkarılmazsa normalizasyon onu gruba geri
+       katar ve yazılan ufuk sessizce kaybolurdu. Yenileme yine ortaktır. */
+    item.linkedTargets = linkMembers.filter(target => target !== wantedModule);
+    item.linkRestore = bindingWriter.normalizeParked((item.linkRestore || []).filter(entry => entry && entry.moduleId !== wantedModule));
+    const rest = scopes.map(scope => ({ ...scope, targets: (scope.targets || []).filter(target => target !== wantedModule) }))
+      .filter(scope => scope.targets.length);
+    scopes.length = 0;
+    scopes.push(...rest, {
+      id: `sc_${Math.random().toString(36).slice(2, 9)}`,
+      name: name == null ? '' : clean(name).slice(0, MAX_NAME),
+      targets: [wantedModule],
+      enabled: owner.enabled !== false,
+      limitToCpOrders: false,
+      horizon: normalizedHorizon,
+    });
+    warnings.push(`"${modelScopes.TARGET_LABELS[wantedModule] || wantedModule}" bağlı gruptan ayrıldı ve kendi filtresini kullanıyor; diğer bağlı modüller ortak filtrede kaldı. Yenileme yine ortaktır.`);
+  } else if (linkedGroup) {
+    /* BAĞLI MODÜLLER tek ufuk taşır: grubun bütün üyeleri yeni ufku alır,
+       gruba ait olmayan ortaklar (ör. ayrı tutulan CP) eski ufkunda kalır. */
+    const members = scopes.flatMap(scope => (scope.targets || []).filter(isMember));
     const peers = members.filter(target => target !== wantedModule);
-    const outsiders = sharedWith.filter(target => !modelScopes.isLinkedTarget(target));
+    const outsiders = sharedWith.filter(target => !isMember(target));
     const pureOwner = !outsiders.length;
-    const next = scopes.map(scope => ({ ...scope, targets: (scope.targets || []).filter(target => !modelScopes.isLinkedTarget(target)) }))
+    const next = scopes.map(scope => ({ ...scope, targets: (scope.targets || []).filter(target => !isMember(target)) }))
       .filter(scope => scope.targets.length);
     const linkedScope = {
       ...owner,

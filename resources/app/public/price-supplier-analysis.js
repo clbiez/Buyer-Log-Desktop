@@ -443,13 +443,24 @@
      visible; otherwise prepare once on the next visit. */
   let datasetStale=false;
   function isVisible(){return typeof window.currentActiveTab==='function'?window.currentActiveTab()==='priceanalysis':Boolean(root&&root.offsetParent);}
-  function invalidate(){if(!root||!root.dataset.initialized)return;datasetStale=true;if(isVisible()){datasetStale=false;void prepare();}}
+  function invalidate(){prefetched=false;if(!root||!root.dataset.initialized)return;datasetStale=true;if(isVisible()){datasetStale=false;void prepare();}}
+  /* v20260929 — Tek yenileme bitince ekran HİÇ açılmamış olsa bile veri kümesi
+     arka planda hazırlanır (DOM çizilmez: kök yokken render() hiçbir şey yapmaz).
+     İlk girişte hazır küme kullanılır, kullanıcı "Veriler hazırlanıyor" beklemez.
+     Açılmış bir ekranda normal bayatlatma yolu (invalidate) geçerlidir. */
+  let prefetched=false;
+  async function prepareInBackground(){
+    if(root&&root.dataset.initialized){invalidate();return;}
+    prefetched=false;await prepare();prefetched=Boolean(dataset)&&!error;
+  }
   async function init(){
     root=document.getElementById('priceSupplierAnalysis');if(!root)return;
     if(root.dataset.initialized){if(datasetStale){datasetStale=false;await prepare();return;}render();return;}
-    root.dataset.initialized='1';bind();render();await prepare();
+    root.dataset.initialized='1';bind();
+    if(prefetched&&!loading){prefetched=false;render();return;}
+    render();await prepare();
   }
   window.initPriceSupplierAnalysis=init;
   window.renderPriceSupplierAnalysisLanguage=render;
-  window.BLPriceSupplierAnalysis={state,prepare,run:recalc,invalidate,get model(){return model;},_i18n:TEXT,_translate:t};
+  window.BLPriceSupplierAnalysis={state,prepare,run:recalc,invalidate,prepareInBackground,get model(){return model;},_i18n:TEXT,_translate:t};
 })();

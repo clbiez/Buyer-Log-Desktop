@@ -229,9 +229,11 @@ const { inspectSourceFilterReadiness, readinessMessage: sourceFilterReadinessMes
 const dataManagementReadModel = require('./lib/data-domain/read-model');
 const dataManagementBindingWriter = require('./lib/data-domain/binding-writer');
 const refreshGroupRules = require('./lib/data-domain/refresh-groups');
-// Bağlı modüller (Orders · Backlog · LFL · Price & Supplier) tek ufuk ve tek
-// yenileme paylaşır; kısmi yenileme hedefleri buradan genişletilir.
-const { withLinkedTargets } = require('./lib/model-scopes');
+// v20260929 — TEK YENİLEME MOTORU: hangi sayfadan istenirse istensin CP dahil
+// bütün modüller (CP · Orders · Backlog · LFL · Price & Supplier) aynı işte
+// yenilenir; kısmi yenileme hedefleri buradan genişletilir.
+const { withRefreshTargets, linkedTargetsOf } = require('./lib/model-scopes');
+const cpCoverage = require('./lib/cp-coverage');
 // Kaynak başına yapılandırma sürümü: eşzamanlılık kontrolü bunu kullanır.
 const dataManagementAdapter = require('./lib/data-domain/legacy-adapter');
 const dataManagementFilterWriter = require('./lib/data-domain/filter-writer');
@@ -6978,11 +6980,10 @@ async function publishRefreshedRuntime(id, next) {
 
 async function loadFromModels(value, targets = null, options = {}) {
   const id = sourceUserId(value), runtime = cacheForUser(id);
-  /* Bağlı modüllerden biri istenirse hepsi yenilenir: aynı kapsamı (tek
-     sorguyu) paylaştıkları için maliyet aynıdır, ama yalnız birini yayınlamak
-     sayfaları farklı anlık görüntülerde bırakırdı. /api/lfl/refresh de
-     buradan geçer. */
-  if (Array.isArray(targets) && targets.length) targets = withLinkedTargets(targets);
+  /* Tek yenileme motoru: bir modül istenirse CP dahil hepsi yenilenir. Yalnız
+     birini yayınlamak sayfaları farklı anlık görüntülerde bırakırdı.
+     /api/lfl/refresh de buradan geçer. */
+  if (Array.isArray(targets) && targets.length) targets = withRefreshTargets(targets);
   const markSourcePhase = typeof options.markPhase === 'function' ? options.markPhase : () => {};
   markSourcePhase('source-setup');
   throwIfRefreshSignalAborted(options.signal);
@@ -7171,7 +7172,20 @@ async function loadFromModels(value, targets = null, options = {}) {
       antrepoMapByTarget: antrepo,
     };
   })();
+  /* v20260929 — CP KAPSAM DENETİMİ. CP bağlı gruptan ayrı (daha dar) bir
+     filtreyle çalışıyorsa, CP'nin her satırı genel filtrenin verisinde de
+     olmalı. Olmayan satır varsa genel filtre CP'yi kapsamıyor demektir;
+     yenileme başarısız sayılmaz ama kullanıcı açıkça uyarılır. */
+  let cpCoverageResult = null;
+  try {
+    const asasItem = (store.items || []).find(item => item && String(item.role || '') === 'asas' && item.refreshEnabled !== false
+      && (item.scopes || []).some(scope => (scope.targets || []).includes('cp')));
+    cpCoverageResult = asasItem ? cpCoverage.assessRefresh(mergedOrders.asasOrdersByTarget, linkedTargetsOf(asasItem)) : null;
+    const coverageWarning = cpCoverage.warningText(cpCoverageResult);
+    if (coverageWarning) result.warnings = [...(result.warnings || []), coverageWarning];
+  } catch (coverageError) { logRuntimeFailure('cpCoverageCheck', coverageError); }
   const next = {
+    cpCoverage: cpCoverageResult,
     loadedAt: result.loadedAt,
     sources: {
       ...result.sources,
@@ -8510,8 +8524,8 @@ function markRefreshJobPhase(id,phase){
 }
 
 async function performRefresh(id, currentUser, targets = null, options = {}) {
-  // Otomasyon ve Octopus yolları da buradan geçer: bağlı modüller birlikte yenilenir.
-  if (Array.isArray(targets) && targets.length) targets = withLinkedTargets(targets);
+  // Otomasyon ve Octopus yolları da buradan geçer: tek motor, bütün modüller birlikte.
+  if (Array.isArray(targets) && targets.length) targets = withRefreshTargets(targets);
   // Aşama işaretleri (v5.89): sayaca tıklandığında yenilemenin hangi adımda
   // olduğu ve her adımın kaç saniye sürdüğü gösterilebilsin diye her geçiş
   // zaman damgasıyla kaydedilir. Bağlantı bazlı süre dökümü (sunucu / yazma /
@@ -8561,6 +8575,13 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
     // Hangi sayfaların bu yenilemeyle güncellendiği: ekran "son yenileme"
     // saatini sayfa yeniden açıldığında da doğru gösterebilsin.
     targets: requestedTargets.slice(),
+    // Genel filtre CP'yi kapsamıyorsa ekran yenileme bitince bunu ayrıca söyler.
+    cpCoverage: staged.cpCoverage && staged.cpCoverage.outsideCount ? {
+      outsideCount: staged.cpCoverage.outsideCount,
+      outsideOrderCount: staged.cpCoverage.outsideOrderCount,
+      sampleOrderCodes: (staged.cpCoverage.sampleOrderCodes || []).slice(0, 8),
+      generalTarget: staged.cpCoverage.generalTarget || '',
+    } : null,
     hasChanges: Boolean(summary.hasChanges),
     totalChanges: Number(summary.details && summary.details.length) || 0,
     asasChangeCount: Number(summary.asasChangeCount) || 0,
@@ -8834,7 +8855,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   const wantSync = Boolean(req.body && req.body.sync);
   // Yalnız belirli sayfaları yenile: ['cp'], ['orders'], ['backlog'], ['lfl'] veya birkaçı.
   const rawTargets = req.body && Array.isArray(req.body.targets) ? req.body.targets : null;
-  const targets = rawTargets ? withLinkedTargets(rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t)))) : null;
+  const targets = rawTargets ? withRefreshTargets(rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t)))) : null;
   const requestedTargets = targets && targets.length ? targets : ['cp','orders','backlog','lfl','priceanalysis'];
   const filterError = sourceFilterRequiredError(requestedTargets,req);
   if (filterError) {
