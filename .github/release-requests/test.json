@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.167",
-  "commit_sha": "556a45cb4968d4ad219a5a8986fd39fac45ecceb",
-  "release_notes": "Buyer Log 7.0.167 TEST: Güncel main dalından kesildi ve halihazırda merge edilmiş Claude güncellemelerinin tamamını içerir. Önceki 7.0.166 kapsamındaki Collection Status anlık renk yenilemesi, arama/info düzeltmeleri, yeni ikon revizyonu ve eksik model görsellerini açılışta sessiz tamamlama dahil mevcut main içeriği TEST kanalına taşındı. Full Buyer Log regression suite başarıyla geçti. STABLE kanalına terfi edilmedi."
+  "version": "7.0.168",
+  "commit_sha": "99a53ca0ed374e6e9f6e85a099866ccee2226bf6",
+  "release_notes": "Buyer Log 7.0.168 TEST: Existing Collection model karar ekranına Add as a New / Yeni olarak ekle seçeneği eklendi. Aynı PLM ID, farklı In Store dönemleri için mevcut satır değiştirilmeden ikinci bağımsız Collection satırı olarak yalnız açık kullanıcı seçimiyle eklenebilir. Excel PLM importu ve PLM'de Seçili Modelleri Aktar aynı güvenli oluşturma hattını kullanır; otomatik planner mevcut PLM ID'leri kendiliğinden çoğaltmaz. Full Buyer Log regression suite başarıyla geçti."
 }
