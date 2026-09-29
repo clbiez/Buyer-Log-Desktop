@@ -17161,6 +17161,13 @@ function updateShippingBtnVisibility(){
     oc.disabled = !hasActionSelection;
     oc.title = hasActionSelection ? `${count} satırdan ön maliyet oluştur` : 'Ön maliyet oluşturmak için önce satır seç';
   }
+  const capacityRequestBtn=document.getElementById('cpCapacityRequestBtn');
+  if(capacityRequestBtn){
+    capacityRequestBtn.disabled=!hasActionSelection;
+    capacityRequestBtn.title=hasActionSelection
+      ?(appLang==='en'?`Export ${count} selected row(s) in Capacity Request format`:`${count} seçili satırı Capacity Request formatında Excel'e aktar`)
+      :(appLang==='en'?'Select at least one row first':'Capacity Request için önce en az bir satır seç');
+  }
   const sp = document.getElementById('cpSendPricingBtn');
   if(sp){
     sp.hidden=true;
@@ -31393,7 +31400,12 @@ function bindCapacityRequestButton(id,rowsFn,source){
     btn.disabled=true;btn.textContent=appLang==='en'?'Preparing…':'Hazırlanıyor…';
     try{await capacityRequestExport(rowsFn(),source);}
     catch(err){showToast((appLang==='en'?'Capacity Request export failed: ':'Capacity Request aktarımı başarısız: ')+(err.message||err));}
-    finally{btn.disabled=false;btn.innerHTML=old;}
+    finally{
+      btn.innerHTML=old;
+      if(source==='cp')updateShippingBtnVisibility();
+      else if(source==='collection')updateKolSendBtnState();
+      else btn.disabled=false;
+    }
   });
 }
 bindCapacityRequestButton('kolCapacityRequestBtn',kolCapacityRequestRows,'collection');
@@ -31661,6 +31673,13 @@ function updateKolSendBtnState(){
   if(ocBtn){
     ocBtn.disabled = !hasSelection;
     ocBtn.title = hasSelection ? `${kolSelected.size} modelden ön maliyet oluştur` : 'Ön maliyet oluşturmak için önce model seç';
+  }
+  const capacityRequestBtn=document.getElementById('kolCapacityRequestBtn');
+  if(capacityRequestBtn){
+    capacityRequestBtn.disabled=!hasSelection;
+    capacityRequestBtn.title=hasSelection
+      ?(appLang==='en'?`Export ${validSelectionCount} selected model(s) in Capacity Request format`:`${validSelectionCount} seçili modeli Capacity Request formatında Excel'e aktar`)
+      :(appLang==='en'?'Select at least one Collection model first':'Capacity Request için önce en az bir Koleksiyon modeli seç');
   }
   const copyBtn=document.getElementById('kolCopySelectedBtn');
   if(copyBtn){ copyBtn.disabled=!hasSelection; copyBtn.title=hasSelection?(appLang==='en'?`Copy ${kolSelected.size} selected row(s) with headers and formatting`:`${kolSelected.size} satırı başlıkları ve biçimleriyle kopyala`):(appLang==='en'?'Select at least one model first':'Kopyalamak için önce satır seç'); }
