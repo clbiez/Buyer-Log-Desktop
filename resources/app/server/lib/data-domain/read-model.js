@@ -27,6 +27,7 @@ const moduleRegistry = require('../module-registry');
 const sourceProfiles = require('./source-profiles');
 const adapter = require('./legacy-adapter');
 const bindingWriter = require('./binding-writer');
+const modelScopes = require('../model-scopes');
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
@@ -109,10 +110,21 @@ function build(items, options = {}) {
      YALNIZ dokunulan kaynağı karşılaştırır; başka bir kaynakta çalışan ikinci
      bir yönetici artık engel değildir. */
   const revisionBySource = new Map();
+  /* Bağlı grup (v20260929): tek ortak filtreyi paylaşan modüller ve gruba
+     eklenebilecek modüller. Yalnız bağ kavramı olan rolde (ASAS) doludur. */
+  const linkBySource = new Map();
   for (const raw of Array.isArray(items) ? items : []) {
     if (!raw || sourceProfiles.isRetiredRole(raw.role)) continue;
     lockedBySource.set(clean(raw.id), new Set(bindingWriter.lockedTargets(raw)));
     revisionBySource.set(clean(raw.id), adapter.configRevision(raw));
+    const role = clean(raw.role).toLowerCase();
+    if (modelScopes.LINKED_ROLES.has(role)) {
+      linkBySource.set(clean(raw.id), {
+        members: modelScopes.linkedTargetsOf(raw),
+        linkable: modelScopes.allowedTargets(role),
+        restorable: bindingWriter.normalizeParked(raw.linkRestore).map(entry => entry.moduleId),
+      });
+    }
   }
 
   const filterById = new Map(domain.filterSets.map(entry => [entry.id, entry]));
@@ -175,6 +187,12 @@ function build(items, options = {}) {
       // Bu kaynağa yazarken geri gönderilir; eşzamanlılık kontrolü buna bakar.
       revision: revisionBySource.get(source.id) || '',
       lockedModules: [...(lockedBySource.get(source.id) || [])],
+      /* Bağlı grup: üyeler tek ortak filtreyi (tek sorgu) paylaşır. linkable
+         boşsa bu kaynakta bağ kavramı yoktur. restorable: gruba katılırken
+         kendi filtresi saklanan modüller — ayrılınca o filtre geri gelir. */
+      linkedModules: linkBySource.has(source.id) ? linkBySource.get(source.id).members.slice() : [],
+      linkableModules: linkBySource.has(source.id) ? linkBySource.get(source.id).linkable.slice() : [],
+      linkRestorable: linkBySource.has(source.id) ? linkBySource.get(source.id).restorable.slice() : [],
       /* Kapatılmış ama ayarları saklanan bağlantılar. Arayüz "tekrar bağlarsan
          eski filtren geri gelir" diyebilmeli; §11'in sözü ancak görünürse
          kullanıcı için bir güvence olur. */
@@ -281,6 +299,9 @@ function build(items, options = {}) {
           enabled: binding.enabled !== false,
           // Kapatılamayan bağlantıda "kopar" düğmesi gösterilmez.
           locked: (lockedBySource.get(binding.sourceId) || new Set()).has(moduleId),
+          // Bağlı grubun üyesi mi / gruba eklenebilir mi (v20260929).
+          linked: Boolean(linkBySource.get(binding.sourceId) && linkBySource.get(binding.sourceId).members.includes(moduleId)),
+          linkable: Boolean(linkBySource.get(binding.sourceId) && linkBySource.get(binding.sourceId).linkable.includes(moduleId)),
           filterSetId: binding.filterSetId,
           filterName: effective ? effective.name : '',
           filterText: effective ? effective.text : '',

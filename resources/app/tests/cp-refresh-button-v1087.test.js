@@ -43,12 +43,15 @@ test('cpRefreshBtn, ordersRefreshBtn ile aynı simge/erişilebilirlik desenini p
   }
 });
 
-test('cpRefreshBtn tıklaması yalnız CP verisini yeniler, global/çoklu-kaynak yenileme değil', () => {
+/* v20260929 — KARAR DEĞİŞTİ: tek yenileme motoru. Kullanıcı: "Diğer modülleri
+   yenilemem CP'yi de yenilesin. Tek ortak bir yenileme motoru istiyorum."
+   CP düğmesi artık yalnız CP'yi değil, CP dahil bütün modülleri birlikte yeniler. */
+test('cpRefreshBtn tıklaması tek ortak yenilemeyi (CP dahil bütün modüller) başlatır', () => {
   const start = APP.indexOf("document.getElementById('cpRefreshBtn')");
   assert.ok(start >= 0, 'cpRefreshBtn için click bağlayıcısı bulunmalı');
   const block = APP.slice(start, start + 220);
-  assert.match(block, /void loadFromServer\(true,\['cp'\]\);/);
-  assert.ok(!/loadFromServer\(true,\['cp','orders'/.test(block), 'yalnız CP hedeflenmeli, orders/backlog/lfl birlikte değil');
+  assert.match(block, /void loadFromServer\(true,\[\.\.\.LINKED_REFRESH_TARGETS\]\);/);
+  assert.match(APP, /const LINKED_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
 });
 
 test('çalışan bir yenileme sırasında ikinci tık ikinci isteği tetiklemez, aşama penceresini açar', () => {

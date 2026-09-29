@@ -649,3 +649,15 @@
   .dmsMethodChoices { grid-template-columns: 1fr; }
   .dmsExcelConnection { align-items: flex-start; flex-direction: column; }
 }
+
+/* --- Bağlı grup: tek ortak filtre (v20260929) ---
+   Grubun üyeleri tek filtreyi paylaşır; ayrılan modül kendi filtresiyle
+   çalışır. Yalnız tasarım sistemi token'ları kullanılır. */
+.dmLinkGroup { display: flex; flex-direction: column; gap: 6px; padding: 8px 11px; border-bottom: 1px solid var(--line); background: var(--card2); }
+.dmLinkRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; min-width: 0; }
+.dmLinkTitle { font-weight: 600; color: var(--ink); }
+.dmLinkHint { font-size: 11px; color: var(--muted); }
+.dmLinkChip { display: inline-flex; align-items: center; gap: 2px; font-size: 11px; padding: 0 2px 0 7px; border: 1px solid var(--acc); background: var(--acc-bg); color: var(--acc-ink); }
+.dmLinkOutside { font-size: 11px; color: var(--ink2); border: 1px dashed var(--line2); padding: 1px 7px; }
+.dmLinkOutsideLabel { margin-left: 8px; }
+.dmLinkMark { font-size: 10px; opacity: .7; cursor: help; }

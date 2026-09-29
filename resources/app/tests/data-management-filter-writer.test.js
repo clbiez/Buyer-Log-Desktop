@@ -110,32 +110,54 @@ test('P3w ASAS bağlı grubu tek ufuk taşır; eski ayrık kayıtlar tek kapsamd
   assert.deepEqual(horizonFor(items, 'cp'), ['S7']);
 });
 
-test('P3w bağlı modülün filtresi grubun HEPSİNİ günceller; "ayır" grubu bölmez, CP etkilenmez', () => {
-  for (const mode of ['shared', 'split']) {
-    const items = setup();
-    const plan = writer.planFilterChange(items, {
-      sourceId: 'mc_asas', moduleId: 'lfl', definition: horizonOf(['W9']), mode,
-    });
-    assert.equal(plan.ok, true, `${mode}: ${plan.message}`);
-    assert.ok(plan.warnings.some(text => /bağlı 4 modülün ortak ufkudur/.test(text)), `${mode}: bağlı grup uyarısı verilmedi`);
-    const next = save(plan);
-    for (const moduleId of ['orders', 'backlog', 'lfl', 'priceanalysis']) {
-      assert.deepEqual(horizonFor(next, moduleId), ['W9'], `${mode}: ${moduleId} yeni ufku almalı`);
-    }
-    assert.deepEqual(horizonFor(next, 'cp'), ['S7'], `${mode}: CP bağlı gruba dahil değil`);
-    const linkedScopes = next.find(entry => entry.id === 'mc_asas').scopes.filter(s => s.targets.includes('lfl') || s.targets.includes('orders'));
-    assert.equal(linkedScopes.length, 1, `${mode}: grup bölünmemeli`);
+test('P3w bağlı modülün ortak filtresi grubun HEPSİNİ günceller, CP etkilenmez', () => {
+  const items = setup();
+  const plan = writer.planFilterChange(items, {
+    sourceId: 'mc_asas', moduleId: 'lfl', definition: horizonOf(['W9']), mode: 'shared',
+  });
+  assert.equal(plan.ok, true, plan.message);
+  assert.ok(plan.warnings.some(text => /bağlı 4 modülün ortak ufkudur/.test(text)), 'bağlı grup uyarısı verilmedi');
+  const next = save(plan);
+  for (const moduleId of ['orders', 'backlog', 'lfl', 'priceanalysis']) {
+    assert.deepEqual(horizonFor(next, moduleId), ['W9'], `${moduleId} yeni ufku almalı`);
   }
+  assert.deepEqual(horizonFor(next, 'cp'), ['S7'], 'CP bağlı gruba dahil değil');
+  const linkedScopes = next.find(entry => entry.id === 'mc_asas').scopes.filter(s => s.targets.includes('lfl') || s.targets.includes('orders'));
+  assert.equal(linkedScopes.length, 1, 'grup bölünmemeli');
+});
+
+/* v20260929 — Kullanıcı kararı: bir sayfa bağlı gruptan ayrılabilmeli.
+   "Yalnız bunu ayır" artık modülü gruptan ÇIKARIR; üyelikten de çıkmazsa
+   normalizasyon onu gruba geri katar ve yazılan ufuk kaybolurdu. */
+test('P3w bağlı modülü "ayırmak" onu gruptan çıkarır; diğer üyeler ortak filtrede kalır', () => {
+  const items = setup();
+  const plan = writer.planFilterChange(items, {
+    sourceId: 'mc_asas', moduleId: 'lfl', definition: horizonOf(['W9']), mode: 'split', name: 'LFL Kendi',
+  });
+  assert.equal(plan.ok, true, plan.message);
+  assert.ok(plan.warnings.some(text => /bağlı gruptan ayrıldı/.test(text)));
+  const next = save(plan);
+  const asas = next.find(entry => entry.id === 'mc_asas');
+  assert.deepEqual(asas.linkedTargets, ['orders', 'backlog', 'priceanalysis'], 'LFL üyelikten çıkmalı');
+  assert.deepEqual(horizonFor(next, 'lfl'), ['W9']);
+  const lflScope = asas.scopes.find(s => s.targets.includes('lfl'));
+  assert.deepEqual(lflScope.targets, ['lfl']);
+  assert.equal(lflScope.name, 'LFL Kendi');
+  for (const moduleId of ['orders', 'backlog', 'priceanalysis']) assert.notDeepEqual(horizonFor(next, moduleId), ['W9']);
+  assert.deepEqual(horizonFor(next, 'cp'), ['S7']);
+  // Kararlılık: ikinci kayıt ayrılan modülü gruba geri katmaz.
+  assert.deepEqual(db.replaceModelConnections(next, null).items.find(entry => entry.id === 'mc_asas').scopes, asas.scopes);
 });
 
 test('P3w tek başına olan modülü "ayırmak" kapsam kimliğini boşuna değiştirmez', () => {
   const items = setup();
-  const before = items.find(entry => entry.id === 'mc_asas').scopes.find(s => s.targets.includes('lfl')).id;
+  const before = items.find(entry => entry.id === 'mc_asas').scopes.find(s => s.targets.includes('cp')).id;
   const plan = writer.planFilterChange(items, {
-    sourceId: 'mc_asas', moduleId: 'lfl', definition: horizonOf(['S8']), mode: 'split',
+    sourceId: 'mc_asas', moduleId: 'cp', definition: horizonOf(['S8']), mode: 'split',
   });
+  assert.equal(plan.ok, true, plan.message);
   const next = save(plan);
-  const after = next.find(entry => entry.id === 'mc_asas').scopes.find(s => s.targets.includes('lfl'));
+  const after = next.find(entry => entry.id === 'mc_asas').scopes.find(s => s.targets.includes('cp'));
   assert.equal(after.id, before, 'gereksiz yere yeni kapsam üretilmemeli');
   assert.deepEqual(after.horizon.groups[0].conditions[0].values, ['S8']);
 });

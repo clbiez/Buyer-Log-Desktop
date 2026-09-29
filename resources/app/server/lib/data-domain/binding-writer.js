@@ -48,7 +48,7 @@ function clone(value) { return value == null ? value : JSON.parse(JSON.stringify
 
 function normalizeScopesFor(item, scopes, detached = null) {
   return modelScopes.normalizeScopes(scopes, item.role, item.horizon, modelHorizon.normalizeHorizon,
-    detached || parkedModuleIds(item));
+    detached || parkedModuleIds(item), item.linkedTargets);
 }
 
 /** Kaydın "bilerek kapatılmış" modülleri — normalizasyonun geri ekleme dallarını susturur. */

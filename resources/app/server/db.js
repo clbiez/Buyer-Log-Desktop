@@ -1076,6 +1076,13 @@ function normalizeModelConnection(raw) {
      bilerek kapattığı modülü normalizeScopes'un "eski kayıt kurtarma" dalları
      geri yaratmasın (ör. IAS → Siparişler). */
   const parkedBindings = legacyFabricRole ? [] : bindingWriter.normalizeParked(item.parkedBindings);
+  /* v20260929 — Bağlı grubun üyeleri (ör. Orders · Backlog · LFL · Fiyat &
+     Üretici, istenirse CP). Yalnız bağ kavramı olan rolde (ASAS) saklanır;
+     eski kayıtta dizi yoksa varsayılan grup yazılır. Gruptan ayrılırken ya da
+     gruba katılırken modülün kendi filtresi linkRestore'da saklanır ki geri
+     ayrıldığında kaybolmasın. */
+  const linkedTargets = legacyFabricRole ? null : modelScopes.normalizeLinkedTargets(item.linkedTargets, role);
+  const linkRestore = linkedTargets ? bindingWriter.normalizeParked(item.linkRestore) : [];
   const defaultSeasonsApplied = item.defaultSeasonsApplied === true;
   if (role === 'asas' && !defaultSeasonsApplied && !horizon.seasons.length && !horizon.dateStart && !horizon.dateEnd) {
     horizon.seasons = [...MODEL_CONNECTION_DEFAULT_SEASONS];
@@ -1125,7 +1132,8 @@ function normalizeModelConnection(raw) {
     // Hedef başına ufuk. Boşsa mevcut tek ufuktan üretilir; eski kayıtlar aynen çalışır.
     scopes: legacyFabricRole ? [] : modelScopes.normalizeScopes(
       item.scopes, role, horizon, modelHorizon.normalizeHorizon,
-      parkedBindings.map(entry => entry.moduleId)),
+      parkedBindings.map(entry => entry.moduleId), linkedTargets || undefined),
+    ...(linkedTargets ? { linkedTargets, linkRestore } : {}),
     /* v7.81 — PARK EDİLMİŞ MODÜL BAĞLANTILARI.
        Bir modül bağlantısı ayrı bir kayıt değil, bir kapsamın targets[]
        dizisindeki eleman. Son hedefi de çıkarınca kapsam kayboluyor ve onunla

@@ -554,17 +554,21 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
      ya da rol ufku grubu yeniden bölseydi aynı yenileme iki sorguya ayrılır,
      sayfalar farklı satır evrenleri gösterirdi. Grup için ilk bulunan kayıt
      (Orders → Backlog → LFL → Price & Supplier sırasıyla) hepsine uygulanır. */
-  const linkedPreference = () => {
-    for (const moduleName of modelScopes.LINKED_TARGETS) { const pref = preferenceFor(moduleName); if (pref) return pref; }
+  /* v20260929 — Grubun üyeleri bağlantı kaydından okunur (üyelik düzenlenebilir;
+     gruptan ayrılan modül kendi kişisel ufkunu yeniden kullanabilir). */
+  const linkedPreference = members => {
+    for (const moduleName of members) { const pref = preferenceFor(moduleName); if (pref) return pref; }
     if (preferenceFor('default')) return preferenceFor('default');
-    for (const moduleName of modelScopes.LINKED_TARGETS) { const pref = inheritedFor(moduleName); if (pref) return pref; }
+    for (const moduleName of members) { const pref = inheritedFor(moduleName); if (pref) return pref; }
     return inheritedFor('default');
   };
-  const linkedWanted = modelScopes.LINKED_TARGETS.some(target => wanted.has(target));
   return (Array.isArray(items) ? items : []).map(item => {
-    const linkedRole = modelScopes.LINKED_ROLES.has(String(item && item.role || '').toLowerCase());
-    const preferenceOf = target => (linkedRole && modelScopes.isLinkedTarget(target) ? linkedPreference() : resolvedPreference(target));
-    const isWanted = target => wanted.has(target) || (linkedRole && linkedWanted && modelScopes.isLinkedTarget(target));
+    // CP gruba eklenmiş olsa bile grubun kişisel ufkunu CP'ninki belirlemez: en sona.
+    const members = modelScopes.linkedTargetsOf(item).sort((a, b) => (a === 'cp') - (b === 'cp'));
+    const linkedWanted = members.some(target => wanted.has(target));
+    const isMember = target => members.includes(target);
+    const preferenceOf = target => (isMember(target) ? linkedPreference(members) : resolvedPreference(target));
+    const isWanted = target => wanted.has(target) || (linkedWanted && isMember(target));
     const next = clone(item || {}), baseScopes = Array.isArray(next.scopes) && next.scopes.length
       ? next.scopes : [{ id: `${next.id || 'connection'}-default`, name: '', targets: [], enabled: true, horizon: next.horizon || {} }];
     const scopes = [];

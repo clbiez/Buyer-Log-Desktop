@@ -391,6 +391,60 @@
 
   /* ---------------------------------------------------------------- */
 
+  /* v20260929 — BAĞLI GRUP (tek ortak filtre).
+     Kullanıcı kararı: "Modüller birbirine bağlı olduğu için hepsini tek
+     filtreleme altına topla. Kullanıcı herhangi bir sayfayı bu linklemeden
+     ayırmak isterse bunu yapabilsin veya geri ekleyebilsin."
+     Grubun üyeleri tek filtreyi (tek sorgu) paylaşır; ayrılan modül kendi
+     filtresiyle ayrı sorgu olur. Yenileme HER DURUMDA ortaktır. Üyelik ve
+     filtre sunucudaki okuma modelinden gelir (linkedModules / linkableModules). */
+  function linkGroupPanels() {
+    return (model.sources || [])
+      .filter(source => (source.linkableModules || []).length)
+      .map(linkGroupPanel).join('');
+  }
+
+  function linkGroupPanel(source) {
+    const labelOf = id => ((model.modules || []).find(entry => entry.id === id) || {}).label || id;
+    const feedOf = id => {
+      const module = (model.modules || []).find(entry => entry.id === id);
+      return module ? module.feeds.find(feed => feed.sourceId === source.id) : null;
+    };
+    const members = (source.linkedModules || []).filter(id => feedOf(id));
+    const outside = (source.linkableModules || []).filter(id => !members.includes(id) && feedOf(id));
+    const lead = members[0] ? feedOf(members[0]) : null;
+    const busyKey = id => busyCell === `link:${source.id}:${id}`;
+    const filterName = lead ? (lead.filterName || (lead.filterBounded ? lead.filterText : T('Filtre yok', 'No filter'))) : '';
+    const memberChips = members.map(id => `<span class="dmLinkChip">${esc(labelOf(id))}${model.canManage && members.length > 1
+      ? `<button type="button" class="dmDisconnect" data-link="${esc(source.id)}:${esc(id)}" data-next="off" ${busyKey(id) ? 'disabled' : ''}
+          title="${esc(T(`${labelOf(id)} bağlı gruptan ayır — kendi filtresiyle çalışır, yenileme yine ortaktır`, `Unlink ${labelOf(id)} — it runs with its own filter, refresh stays shared`))}"
+          aria-label="${esc(T('Gruptan ayır', 'Unlink'))}">×</button>` : ''}</span>`).join('');
+    const outsideChips = outside.map(id => {
+      const own = feedOf(id);
+      return model.canManage
+        ? `<button type="button" class="dmConnect" data-link="${esc(source.id)}:${esc(id)}" data-next="on" ${busyKey(id) ? 'disabled' : ''}
+            title="${esc(T(`${labelOf(id)} gruba ekle — ortak filtreyi kullanır. Kendi filtresi${own && own.filterName ? ` ("${own.filterName}")` : ''} saklanır; gruptan ayrılırsa geri gelir.`, `Link ${labelOf(id)} — it uses the shared filter. Its own filter${own && own.filterName ? ` ("${own.filterName}")` : ''} is kept and returns if it is unlinked.`))}">+ ${esc(labelOf(id))}</button>`
+        : `<span class="dmLinkOutside">${esc(labelOf(id))}</span>`;
+    }).join('');
+    return `<div class="dmLinkGroup" data-link-group="${esc(source.id)}">
+      <div class="dmLinkRow">
+        <span class="dmLinkTitle">🔗 ${esc(T('Bağlı modüller', 'Linked modules'))} — ${esc(source.name)}</span>
+        <span class="dmLinkHint">${esc(T('Tek ortak filtre · yenileme bütün modüllerde ortaktır', 'One shared filter · refresh is shared by all modules'))}</span>
+      </div>
+      <div class="dmLinkRow">
+        <span class="dmLabel">${esc(T('Ortak filtre', 'Shared filter'))}</span>
+        ${lead ? `<button type="button" class="dmFeedFilter${lead.filterBounded ? '' : ' isUnbounded'}" data-open-filter="${esc(members[0])}:${esc(source.id)}"
+            title="${esc(lead.filterText || T('Filtre tanımlı değil', 'No filter defined'))}">${esc(filterName)}</button>`
+          : `<span class="dmModuleEmpty">${esc(T('Grupta modül yok', 'No module in the group'))}</span>`}
+      </div>
+      <div class="dmLinkRow">
+        <span class="dmLabel">${esc(T('Bağlı', 'Linked'))}</span>
+        ${memberChips || `<span class="dmModuleEmpty">—</span>`}
+        ${outside.length ? `<span class="dmLabel dmLinkOutsideLabel">${esc(T('Ayrı filtreli', 'Own filter'))}</span>${outsideChips}` : ''}
+      </div>
+    </div>`;
+  }
+
   function moduleRow(module) {
     if (!module.feeds.length) {
       /* Bağlanma yolu BURADA DA olmalı. Yalnız dolu satırlara koymak, tamamen
@@ -437,6 +491,7 @@
           title="${esc(T(`${feed.sourceName} bağlantısını kapat — filtre ve eşleme korunur`, `Disconnect ${feed.sourceName} — filter and mapping are preserved`))}"
           aria-label="${esc(T('Bağlantıyı kapat', 'Disconnect'))}">×</button>` : ''}
         ${feed.locked ? `<span class="dmLockMark" title="${esc(T('Bu bağlantı kapatılamaz', 'This connection cannot be turned off'))}" aria-hidden="true">🔒</span>` : ''}
+        ${feed.linked ? `<span class="dmLinkMark" title="${esc(T('Bağlı grubun ortak filtresini kullanır', 'Uses the linked group\'s shared filter'))}">🔗</span>` : ''}
       </span>`;
     }).join('');
     return `<div class="dmModuleRow${module.needsFilter ? ' hasWarning' : ''}">
@@ -1181,7 +1236,7 @@
           </div>
         </div>
         ${view === 'list'
-          ? `<div class="dmModules">${model.modules.map(moduleRow).join('')}</div>`
+          ? `${linkGroupPanels()}<div class="dmModules">${model.modules.map(moduleRow).join('')}</div>`
           : matrixTable()}
 
         ${model.localModules.length ? `<div class="dmLocalNote">
@@ -1246,6 +1301,39 @@
       busyCell = '';
       await load();
       if (writeError && typeof showToast === 'function') showToast(writeError);
+    }
+  }
+
+  /* Bağlı gruba ekle / gruptan ayır. toggleBinding ile aynı sözleşme: iyimser
+     güncelleme yok, kaynak başına sürüm gönderilir, bitince tazelenir. */
+  async function toggleLink(sourceId, moduleId, linked) {
+    const key = `link:${sourceId}:${moduleId}`;
+    if (busyCell) return;
+    busyCell = key;
+    writeError = '';
+    render();
+    let warnings = [];
+    try {
+      const source = (model.sources || []).find(entry => entry.id === sourceId);
+      const response = await fetch('/api/data-management/link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceId, moduleId, linked, expectedSourceRevision: source ? source.revision : '' }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error || T('Bağlı grup güncellenemedi.', 'Could not update the linked group.'));
+      }
+      warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+    } catch (error) {
+      writeError = String(error && error.message || error);
+    } finally {
+      busyCell = '';
+      await load();
+      if (typeof showToast === 'function') {
+        if (writeError) showToast(writeError);
+        else if (warnings.length) showToast(`${warnings.join(' ')} ${T('Yeni filtre bir sonraki yenilemede uygulanır.', 'The new filter applies on the next refresh.')}`);
+      }
     }
   }
 
@@ -1427,6 +1515,13 @@
       }
       if (window.BL_REFRESH_BUSY) { if (typeof showToast === 'function') showToast(T('Bir yenileme zaten sürüyor.', 'A refresh is already running.')); return; }
       void Promise.resolve(window.loadFromServer(true, group.moduleIds)).then(() => load());
+      return;
+    }
+
+    const link = event.target.closest('[data-link]');
+    if (link) {
+      const [sourceId, moduleId] = String(link.dataset.link).split(':');
+      void toggleLink(sourceId, moduleId, link.dataset.next === 'on');
       return;
     }
 
@@ -1712,9 +1807,10 @@
       filterName: layerNote ? (feed.sharedFilterName || '') : feed.filterName,
       definition: feed.definition || {},
       sharedWith: (feed.sharedModuleIds || []),
-      // v20260928 — ASAS'ta Siparişler · Backlog · LFL · Fiyat & Üretici bağlıdır
-      // (tek ufuk); bu modüller için "yalnız bunu ayır" seçeneği sunulmaz.
-      canSplit: !(feed.sourceRole === 'asas' && ['orders', 'backlog', 'lfl', 'priceanalysis'].includes(moduleId)),
+      /* v20260929 — Bağlı grubun üyesi de ayrılabilir: "yalnız bunu ayır"
+         modülü gruptan çıkarıp kendi filtresine taşır (sunucu üyeliği düşürür). */
+      canSplit: true,
+      linked: feed.linked === true,
       layerNote,
       labelOf: id => {
         const found = (model.modules || []).find(entry => entry.id === id);

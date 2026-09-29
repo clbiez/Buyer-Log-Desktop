@@ -187,6 +187,10 @@ function fromLegacy(items) {
          doğmazlar (çünkü hiçbir sorguyu beslemiyorlar) ama kaybolmazlar:
          arayüz "tekrar bağlarsan eski filtren geri gelir" diyebilmeli. */
       parkedBindings: clone(item.parkedBindings) || [],
+      /* Bağlı grup üyeliği ve ayrılan modüllerin saklanan filtreleri (v20260929).
+         Yalnız kayıtta varsa taşınır; gidiş-dönüş eşitliği bozulmasın. */
+      ...(Array.isArray(item.linkedTargets) ? { linkedTargets: clone(item.linkedTargets) } : {}),
+      ...(Array.isArray(item.linkRestore) ? { linkRestore: clone(item.linkRestore) } : {}),
       order,
     });
 
@@ -322,6 +326,8 @@ function toLegacy(domain) {
       horizon: clone(defaultFilter.definition) || {},
       scopes,
       parkedBindings: clone(source.parkedBindings) || [],
+      ...(Array.isArray(source.linkedTargets) ? { linkedTargets: clone(source.linkedTargets) } : {}),
+      ...(Array.isArray(source.linkRestore) ? { linkRestore: clone(source.linkRestore) } : {}),
       mapping: clone(mapping.entries) || {},
       customFields: clone(mapping.customFields) || [],
       cpColumns: clone(mapping.extraColumns) || [],
