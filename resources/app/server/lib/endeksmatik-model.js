@@ -581,7 +581,7 @@ function parseWorkbookBuffer(buffer, sourceFile = 'ENDEKSMATİK.xlsx', { now = n
     targetAdjustmentPct, months,
     fx: { TRY: tables.TRY, ...(localCurrency ? { local: tables[localCurrency], localCurrency } : {}) },
     records,
-    validation: { signature, reconciliation: null, warnings, budget: 'Bütçe Çalışma uzlaştırması 2. aşamada (Bütçe raporu) eklenecek.' },
+    validation: { signature, reconciliation: null, warnings },
   };
   const reconciliation = reconcile(snapshot, screen);
   snapshot.validation.reconciliation = reconciliation;
