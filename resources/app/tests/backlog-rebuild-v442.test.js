@@ -122,7 +122,9 @@ test('v4.48 merkez sevke hazır depo bakiyesi siparişin yüzde 5ini aşarsa Dep
   const { orders, map, overrides } = parsed([
     asas({
       'Net Alım Sipariş Miktarı': 5000,
-      'Kalan Alım Sipariş Miktarı': 2000,
+      // Parsiyellerin tamamı (5000) antrepoda: ASAS Kalan Alım 0; 251 adet
+      // henüz merkez sevke hazır depoya geçmemiş (retaile aktarım bekleyen).
+      'Kalan Alım Sipariş Miktarı': 0,
       'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': 251,
     }),
   ], [
@@ -152,6 +154,7 @@ test('v4.48 Backlog Excel statüsü aynı yüzde 5 kuralını kullanır', () => 
   const { orders, map, overrides } = parsed([
     asas({
       'Net Alım Sipariş Miktarı': 10000,
+      'Kalan Alım Sipariş Miktarı': 0,
       'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': 501,
     }),
   ], [ias({ 'Yükleme Toplam Adet': 10000, 'Supplier Portal Statü': 'Depoda' })]);
@@ -161,7 +164,8 @@ test('v4.48 Backlog Excel statüsü aynı yüzde 5 kuralını kullanır', () => 
 });
 
 test('v4.50 Backlog Excel net sipariş miktarını sabit, satır miktarını Adet sütununda dışa aktarır', () => {
-  const { orders, map, overrides } = parsed([asas()], [
+  // ASAS Kalan Alım = Net Alım - Antrepoya Giren (3000 Depoda) = 7000.
+  const { orders, map, overrides } = parsed([asas({ 'Kalan Alım Sipariş Miktarı': 7000, 'Antrepoya Giren Miktar': 3000 })], [
     ias({ 'Yükleme Toplam Adet': 3000, 'Supplier Portal Statü': 'Depoda' }),
     ias({ 'Yükleme Toplam Adet': 4000, 'Supplier Portal Statü': 'Yol Operasyonları' }),
   ]);
@@ -169,7 +173,9 @@ test('v4.50 Backlog Excel net sipariş miktarını sabit, satır miktarını Ade
   assert.strictEqual(rows.length, 3);
   assert.deepStrictEqual(rows.map(r => r['Net Alım Sipariş Miktarı']), [10000, 10000, 10000]);
   assert.deepStrictEqual(rows.map(r => r['Adet']), [3000, 3000, 4000]);
-  assert.deepStrictEqual(rows.map(r => r['Kalan Alım Sipariş Miktarı']), [3000, 0, 0]);
+  // ASAS sipariş düzeyi Kalan Alım (7000) satırlara dağıtılır: önce Üretimde
+  // bakiyesi (3000), sonra yoldaki parsiyel (4000); Depoda parsiyeli 0.
+  assert.deepStrictEqual(rows.map(r => r['Kalan Alım Sipariş Miktarı']), [3000, 0, 4000]);
   assert.deepStrictEqual(rows.map(r => r['Net Gelen Alım Sipariş Miktarı']), [0, 3000, 4000]);
   assert.strictEqual(rows.reduce((sum, row) => sum + row['Adet'], 0), 10000);
 });
@@ -361,4 +367,32 @@ test('v4.64 tüm parsiyeller Depoda ve bakiye Shortage ise sentetik durum Depoda
   ]);
   assert.equal(parse.isShortageStatus('Depoda - Eksik Yükleme'), true);
   assert.equal(parse.isWarehouseShortageStatus('Depoda - Eksik Yükleme'), true);
+});
+
+test('Retaile aktarım bekleyen miktar Kalan_Merkez eksi Kalan Alım: yalnız eksik yükleme kalan siparişte parsiyeller Depoda kalır', () => {
+  const { orders, map, overrides } = parsed([
+    asas({
+      'Net Alım Sipariş Miktarı': 8558,
+      'Kalan Alım Sipariş Miktarı': 465,
+      'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': 465,
+    }),
+  ], [
+    ias({ 'Yükleme Toplam Adet': 2928, 'Supplier Portal Statü': 'Depoda' }),
+    ias({ 'Yükleme Toplam Adet': 5165, 'Supplier Portal Statü': 'Depoda' }),
+  ]);
+  const rows = parse.buildBacklogOperationalRows(orders, map, overrides);
+  assert.deepStrictEqual(rows.map(r => r._status), ['Depoda - Eksik Yükleme', 'Depoda', 'Depoda']);
+  // 465 henüz antrepoda değil + 430 antrepoda bekleyen = 895; 430 > %5 (427,9).
+  const waiting = parsed([
+    asas({
+      'Net Alım Sipariş Miktarı': 8558,
+      'Kalan Alım Sipariş Miktarı': 465,
+      'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': 895,
+    }),
+  ], [
+    ias({ 'Yükleme Toplam Adet': 2928, 'Supplier Portal Statü': 'Depoda' }),
+    ias({ 'Yükleme Toplam Adet': 5165, 'Supplier Portal Statü': 'Depoda' }),
+  ]);
+  const waitingRows = parse.buildBacklogOperationalRows(waiting.orders, waiting.map, waiting.overrides);
+  assert.deepStrictEqual(waitingRows.slice(1).map(r => r._status), ['Retaile Aktarım Bekleniyor', 'Retaile Aktarım Bekleniyor']);
 });

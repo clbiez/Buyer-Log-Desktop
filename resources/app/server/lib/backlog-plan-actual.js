@@ -137,7 +137,8 @@ function projectSnapshot(orders, templateRows, meta = {}) {
     const qty = Math.max(0, number(row.Adet));
     item.subMfr = item.subMfr || clean(row['Alt Üretici']);
     item.orderQty = Math.max(item.orderQty, Math.max(0, number(row['Net Alım Sipariş Miktarı'])));
-    item.remainingQty = Math.max(item.remainingQty, Math.max(0, number(row['Kalan Alım Sipariş Miktarı'])));
+    // ASAS kalan miktarı siparişin satırlarına dağıtılmış paydır; toplamı ASAS değeridir.
+    item.remainingQty = round(item.remainingQty + Math.max(0, number(row['Kalan Alım Sipariş Miktarı'])));
     item.receivedQty = round(item.receivedQty + Math.max(0, number(row['Net Gelen Alım Sipariş Miktarı'])));
     item.warehouseQty = round(item.warehouseQty + Math.max(0, number(row['Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo'])));
     if (clean(row['RİSK\n(PRIORITY)']).toLocaleUpperCase('tr-TR') === 'VAR') item.riskQty = round(item.riskQty + qty);

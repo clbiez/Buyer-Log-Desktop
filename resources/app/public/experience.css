@@ -278,7 +278,7 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
-  .spinner,.blBootDot,[data-loading] .ic{animation-duration:1.8s!important;}
+  .spinner,[data-loading] .ic{animation-duration:1.8s!important;}
 }
 
 /* =====================================================================

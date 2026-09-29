@@ -5,11 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Buyer Log</title>
 <script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>
+<script src="thinking-orb-breathing.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <style id="blBootGuardStyle">
   #blBootGuard{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f6f7f9;color:#1f2937;font:500 14px/1.45 "Barlow",system-ui,-apple-system,sans-serif}
   #blBootGuard .blBootCard{min-width:250px;max-width:420px;margin:20px;padding:22px 24px;text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:0;box-shadow:none}
-  #blBootGuard .blBootDot{width:34px;height:34px;margin:0 auto 14px;border-radius:50%;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.9) 0 8%,rgba(255,255,255,.3) 18%,transparent 42%),conic-gradient(#356a96,#6f6fd8,#2f9f96,#356a96);box-shadow:inset 0 -3px 6px rgba(10,20,40,.22),0 6px 18px rgba(80,90,200,.28);animation:blBootSpin 2.4s linear infinite}
-  #blBootGuard[data-failed="1"] .blBootDot{display:none}
+  #blBootGuard .blBootOrb{display:block;width:64px;height:64px;margin:-8px auto 6px}
+  #blBootGuard[data-failed="1"] .blBootOrb{display:none}
   #blBootGuard button{margin-top:14px;padding:8px 14px;border:1px solid #3f6488;border-radius:0;background:#3f6488;color:#fff;cursor:pointer;font:inherit}
   @keyframes blBootSpin{to{transform:rotate(360deg)}}
   html[data-theme="dark"] #blBootGuard{background:#131417;color:#f3f4f6}
@@ -18,19 +19,21 @@
 <script>
 (function(){
   'use strict';
-  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,timer=null,lastFailure='';
+  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,timer=null,lastFailure='',orb=null;
   function guard(){return document.getElementById('blBootGuard');}
   function ensureGuard(){
     if(finished||guard()||!document.body)return;
     var el=document.createElement('div');el.id='blBootGuard';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
-    el.innerHTML='<div class="blBootCard"><div class="blBootDot"></div><div data-boot-message>Buyer Log hazırlanıyor…</div></div>';
+    el.innerHTML='<div class="blBootCard"><canvas class="blBootOrb" width="64" height="64" aria-hidden="true"></canvas><div data-boot-message>Buyer Log hazırlanıyor…</div></div>';
     document.body.appendChild(el);
+    try{if(window.BLThinkingOrbBreathing)orb=window.BLThinkingOrbBreathing.attach(el.querySelector('.blBootOrb'));}catch(_){}
   }
+  function stopOrb(){if(orb){try{orb.stop();}catch(_){}orb=null;}}
   function message(text,failed){
     ensureGuard();var el=guard();if(!el)return;
     var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=text;
     if(failed){
-      el.dataset.failed='1';
+      el.dataset.failed='1';stopOrb();
       var card=el.querySelector('.blBootCard');
       if(card&&!card.querySelector('button')){var b=document.createElement('button');b.type='button';b.textContent='Tekrar dene';b.onclick=function(){try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}location.replace('/?boot='+Date.now());};card.appendChild(b);}
     }
@@ -38,7 +41,7 @@
   function ready(){
     if(finished)return;finished=true;if(timer)clearTimeout(timer);
     try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}
-    var el=guard();if(el)el.remove();
+    stopOrb();var el=guard();if(el)el.remove();
   }
   async function recover(reason){
     if(finished)return;lastFailure=reason||lastFailure||'startup-timeout';

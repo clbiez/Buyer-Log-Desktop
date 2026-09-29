@@ -1,4 +1,5 @@
 Buyer Log thinking-orb-working.js is a dependency-free Canvas adaptation of the "working" visual state from Jakub Antalik's thinking-orbs project.
+Buyer Log thinking-orb-breathing.js is a dependency-free Canvas port of the "breathing" ("Thinking…") visual state from the same project.
 
 MIT License
 

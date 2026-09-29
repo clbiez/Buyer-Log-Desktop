@@ -2109,6 +2109,9 @@ function switchTab(tab){
   }
   if(tab==='koleksiyon'){
     void ensureCollectionCatalogLoaded();
+    // Ana veri kataloğu (ASAS modeli, filtresiz) yalnız Koleksiyon açıldığında,
+    // betik değerlendirmesi bittikten sonra bir kez çekilir.
+    setTimeout(()=>void ensureCollectionMasterCatalogLoaded(),0);
     void (window.BLPerf?.ensureFeature?.('deferredUi') || Promise.resolve()).catch(()=>{});
   }
   if(tab==='backlog'&&typeof fetchCurrentBacklog==='function'&&!backlogLoadedOnce)fetchCurrentBacklog();
@@ -11101,7 +11104,8 @@ const RETAIL_WAITING_THRESHOLD_RATE = 0.05;
 function deriveOperationalStatus(baseStatus, order){
   let status = baseStatus || '';
   const qty = Math.max(0, Number(order && order.qty) || 0);
-  const readyQty = Math.max(0, Number(order && order.merkezSevkeHazirKalan) || 0);
+  // Sunucu kuralıyla aynı: retaile aktarım bekleyen miktar = Kalan_Merkez − Kalan Alım.
+  const readyQty = Math.max(0, (Number(order && order.merkezSevkeHazirKalan) || 0) - Math.max(0, Number(order && order.kalan) || 0));
   if(turknorm(status)==='DEPODA' && qty>0 && readyQty>qty*RETAIL_WAITING_THRESHOLD_RATE){
     status='Retaile Aktarım Bekleniyor';
   }
@@ -21220,13 +21224,164 @@ function kolUniqueCatalogValues(values){
   });
   return out.sort((a,b)=>String(a).localeCompare(String(b),'tr-TR',{numeric:true,sensitivity:'base'}));
 }
+/* KOLEKSİYON ANA VERİ KATALOĞU (ASAS veri modeli, filtresiz).
+   state.collectionCatalogs yalnız kullanıcının OKUNMUŞ ve ufuk/kapsam
+   filtresinden geçmiş sipariş satırlarından kurulur; "ASAS'tan seç" yazan
+   License/Category/Country… hücrelerinde filtre dışındaki gerçek ASAS
+   değerleri hiç görünmüyordu. Ana katalog sunucuda veri modelinden DISTINCT
+   okunur ve yerelde saklanır; burada yalnız bir kez çekilir ve sipariş
+   kataloğuyla birleştirilir (ana kataloğun yazımı önceliklidir). */
+const KOL_MASTER_CATALOG_KINDS=new Set(['category','license','season','country','line','manufacturer','productMainDefinition']);
+let kolMasterCatalog={catalogs:{},fields:[],refreshedAt:null,refreshing:false,loaded:false,error:''};
+let kolMasterCatalogPromise=null,kolMasterCatalogPolls=0;
+const _kolMergedCatalogCache=new Map();
+function kolSetMasterCatalog(data){
+  const catalogs={};
+  const source=data&&data.catalogs&&typeof data.catalogs==='object'?data.catalogs:{};
+  KOL_MASTER_CATALOG_KINDS.forEach(kind=>{if(Array.isArray(source[kind]))catalogs[kind]=source[kind];});
+  kolMasterCatalog={catalogs,fields:Array.isArray(data&&data.fields)?data.fields:[],refreshedAt:data&&data.refreshedAt||null,refreshing:Boolean(data&&data.refreshing),loaded:true,error:''};
+  _kolMergedCatalogCache.clear();
+}
+function kolRenderAfterCatalogChange(){
+  const kolEditing=document.activeElement&&typeof document.activeElement.closest==='function'
+    &&document.activeElement.closest('#view-koleksiyon input,#view-koleksiyon textarea,#view-koleksiyon select,#view-koleksiyon [contenteditable="true"]');
+  if(document.body.dataset.activeTab==='koleksiyon'&&typeof renderKol==='function'&&!kolEditing)renderKol();
+}
+async function ensureCollectionMasterCatalogLoaded(options={}){
+  if(kolMasterCatalog.loaded&&!options.force&&!options.refresh)return kolMasterCatalog;
+  if(kolMasterCatalogPromise)return kolMasterCatalogPromise;
+  // Öğrenilmiş PLM → ASAS eşanlamları (PSG → Paris Saint Germain) elle girişte
+  // de kullanılır; sözlük yalnız PLM içe aktarımında yükleniyordu.
+  try{if(!kolPlmApprovedTranslationRevision)void kolPlmLoadApprovedTranslations();}catch(_){}
+  kolMasterCatalogPromise=(async()=>{
+    try{
+      const res=options.refresh
+        ?await fetch('/api/collection-master-catalog/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})
+        :await fetch('/api/collection-master-catalog',{cache:'no-store'});
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok)throw Object.assign(new Error(data.error||res.statusText),{code:data.code||''});
+      const before=JSON.stringify(kolMasterCatalog.fields.map(field=>[field.key,field.count,field.readAt]));
+      kolSetMasterCatalog(data);
+      // Sunucu eskimiş listeyi arka planda tazeliyor: sınırlı sayıda yeniden sor.
+      if(kolMasterCatalog.refreshing&&kolMasterCatalogPolls<4){kolMasterCatalogPolls+=1;setTimeout(()=>void ensureCollectionMasterCatalogLoaded({force:true}),45000);}
+      if(before!==JSON.stringify(kolMasterCatalog.fields.map(field=>[field.key,field.count,field.readAt])))kolRenderAfterCatalogChange();
+      return kolMasterCatalog;
+    }catch(err){
+      kolMasterCatalog={...kolMasterCatalog,loaded:true,error:err&&err.message||String(err)};
+      if(options.refresh)throw err;
+      console.warn('Collection master catalog could not be loaded:',err);
+      return kolMasterCatalog;
+    }finally{kolMasterCatalogPromise=null;}
+  })();
+  return kolMasterCatalogPromise;
+}
+async function refreshCollectionMasterCatalog(){
+  const en=appLang==='en';
+  showToast(en?'Reading option lists from the ASAS database…':'Seçim listeleri ASAS veri tabanından okunuyor…',{icon:false});
+  try{
+    const result=await ensureCollectionMasterCatalogLoaded({refresh:true});
+    const parts=(result.fields||[]).map(field=>field.error?`${field.label}: ${en?'not read':'okunamadı'}`:`${field.label}: ${field.count}`);
+    showToast((en?'ASAS option lists refreshed · ':'ASAS seçim listeleri tazelendi · ')+parts.join(' · '),{icon:false});
+    kolRenderAfterCatalogChange();
+  }catch(err){
+    const message=err&&err.code==='ASAS_CONNECTION_MISSING'
+      ?(en?'No ASAS Data Model connection is configured on this computer.':'Bu bilgisayarda ASAS Data Model bağlantısı tanımlı değil.')
+      :(err&&err.message||String(err));
+    showToast((en?'ASAS option lists could not be refreshed: ':'ASAS seçim listeleri tazelenemedi: ')+message);
+  }
+}
+function kolLicensorRuleValues(){
+  // Licensor ASAS'ta bir sütun değildir; License Royalty kuralları ve açık
+  // License → Licensor seçimleri onun ana veri kaynağıdır.
+  const overrides=state.overrides||{},values=[];
+  (overrides.pricingRules||[]).forEach(rule=>{if(norm(rule&&rule.licensor))values.push(norm(rule.licensor));});
+  Object.values(overrides.licensormap||{}).forEach(value=>{if(norm(value))values.push(norm(value));});
+  return values;
+}
+function kolCatalogKey(kind,value){
+  // Ülke kanonik ISO koduyla karşılaştırılır: "Çin", "CHINA" ve "China" aynı ülkedir.
+  if(kind==='country'&&window.BLCanonicalFields?.normalizedValue){
+    const code=window.BLCanonicalFields.normalizedValue({country:norm(value)},'collection','country');
+    if(code)return 'CC:'+code;
+  }
+  return kolCatalogIdentity(value);
+}
+function kolMergedAsasCatalog(kind,orderCatalogs=state.collectionCatalogs){
+  const scopedRaw=orderCatalogs&&orderCatalogs[kind];
+  const scoped=Array.isArray(scopedRaw)?scopedRaw:[];
+  const masterRaw=kolMasterCatalog.catalogs&&kolMasterCatalog.catalogs[kind];
+  const master=Array.isArray(masterRaw)?masterRaw:[];
+  const extra=kind==='licensor'?kolLicensorRuleValues():[];
+  const extraSig=extra.join('\u0001');
+  const hit=_kolMergedCatalogCache.get(kind);
+  if(hit&&hit.scoped===scoped&&hit.master===master&&hit.extraSig===extraSig)return hit;
+  const values=(master.length||extra.length)?kolUniqueCatalogValues([...master,...extra,...scoped]):scoped;
+  const byKey=new Map();
+  values.forEach(value=>{const key=kolCatalogKey(kind,value);if(key&&!byKey.has(key))byKey.set(key,value);});
+  const entry={scoped,master,extraSig,values,byKey,masterLoaded:master.length>0};
+  _kolMergedCatalogCache.set(kind,entry);
+  return entry;
+}
+// Değer ASAS veri tabanı kataloğunda yok mu? Yalnız ana katalog gerçekten
+// okunmuşsa karar verilir; çevrimdışı/bağlantısız kurulumda hiçbir hücre
+// yanlışlıkla işaretlenmez.
+function kolCatalogValueUnknown(kind,value){
+  if(!KOL_MASTER_CATALOG_KINDS.has(kind)||!norm(value))return false;
+  const entry=kolMergedAsasCatalog(kind);
+  return entry.masterLoaded&&!entry.byKey.has(kolCatalogKey(kind,value));
+}
+const KOL_LEARNED_ALIAS_FIELDS=new Set(['category','license','line']);
+function kolLearnedCatalogAlias(kind,value){
+  if(!KOL_LEARNED_ALIAS_FIELDS.has(kind))return '';
+  let target='';
+  try{const rules=kolPlmApprovedTranslationRules&&kolPlmApprovedTranslationRules[kind];target=rules&&rules.get?norm(rules.get(turknorm(norm(value)))):'';}catch(_){return '';}
+  return target?(kolCatalogMatch(kind,target)||target):'';
+}
+function kolNearestCatalogValue(kind,value){
+  const values=kolCatalogValues(kind);
+  if(!values.length||values.length>6000)return '';
+  // PLM skoru kelime/eşanlam ağırlıklıdır; tek harflik yazım hatalarını
+  // (Smileyy → Smiley) yakalamak için karakter benzerliği de hesaba katılır.
+  const key=kolCatalogIdentity(value);let best='',bestScore=0;
+  values.forEach(item=>{
+    const other=kolCatalogIdentity(item),maxLen=Math.max(key.length,other.length);
+    const charScore=maxLen?Math.round((1-kolPlmLevenshtein(key,other)/maxLen)*100):0;
+    const score=Math.max(kolPlmSimilarityScore(kind,value,item),charScore);
+    if(score>bestScore){bestScore=score;best=item;}
+  });
+  return bestScore>=70?best:'';
+}
+function kolCatalogUnknownText(kind,value){
+  const en=appLang==='en',nearest=kolNearestCatalogValue(kind,value);
+  return (en
+    ?`“${value}” is not in the ASAS database list. It is kept as free text, but formulas, rules and ASAS matching may not recognise it.`
+    :`“${value}” ASAS veri tabanı listesinde yok. Serbest metin olarak tutuluyor; formüller, kurallar ve ASAS eşleşmeleri bu değeri tanımayabilir.`)
+    +(nearest?(en?` Nearest ASAS value: ${nearest}`:` En yakın ASAS değeri: ${nearest}`):'');
+}
+function kolCatalogDropFooterHtml(kind,typed,matchCount){
+  if(!KOL_MASTER_CATALOG_KINDS.has(kind))return '';
+  const en=appLang==='en',entry=kolMergedAsasCatalog(kind),value=norm(typed);
+  const field=(kolMasterCatalog.fields||[]).find(item=>item&&item.key===kind);
+  const exact=value?kolCatalogMatch(kind,value):'';
+  let note='';
+  if(value&&!exact&&!matchCount)note=en?`“${value}” is not in the ASAS list; it will be saved as free text.`:`“${value}” ASAS listesinde yok; serbest metin olarak kaydedilir.`;
+  let source;
+  if(entry.masterLoaded){
+    const when=field&&field.readAt?fmtTsForTitle(field.readAt):'';
+    source=en?`ASAS database · ${entry.values.length} values${when?` · ${when}`:''}`:`ASAS veri tabanı · ${entry.values.length} değer${when?` · ${when}`:''}`;
+  }else{
+    source=en?`Loaded ASAS orders only · ${entry.values.length} values`:`Yalnız yüklü ASAS siparişleri · ${entry.values.length} değer`;
+  }
+  const busy=kolMasterCatalogPromise!==null||kolMasterCatalog.refreshing;
+  return `<div class="kolCatalogDropFoot">${note?`<div class="kolCatalogDropNote">${escapeHtml(note)}</div>`:''}<div class="kolCatalogDropSource"><span>${escapeHtml(source)}</span><button type="button" data-kol-catalog-refresh${busy?' disabled':''}>${escapeHtml(en?'Refresh from ASAS':'ASAS’tan tazele')}</button></div></div>`;
+}
 function kolCatalogValues(kind){
   // Category, MAG, MMYG, Buying Group, Buyer, Season ve diğer temel portföy
-  // boyutları doğrudan ASAS sipariş satırlarından sunucuda hazırlanır. Böylece
-  // hücre her odaklandığında LFL verisini yükleme/tarama maliyeti oluşmaz.
+  // boyutları ASAS'tan gelir: referans alanlar veri modelinin ana kataloğundan,
+  // kapsam alanları (MAG/MMYG/Buying Group/Buyer) kullanıcının sipariş
+  // kataloğundan. Hücre her odaklandığında sorgu/tarama yapılmaz (önbellekli).
   if(KOL_ASAS_CATALOG_KINDS.has(kind)){
-    const catalog=state.collectionCatalogs&&state.collectionCatalogs[kind];
-    return Array.isArray(catalog)?catalog:[];
+    return kolMergedAsasCatalog(kind,state.collectionCatalogs).values;
   }
   const values=[];
   const add=value=>{value=kind==='inStoreMonth'?kolMonthDisplay(value):norm(value);if(value)values.push(value);};
@@ -21246,6 +21401,10 @@ function kolCatalogValues(kind){
   return kolUniqueCatalogValues(values);
 }
 function kolCatalogMatch(kind,value){
+  if(KOL_ASAS_CATALOG_KINDS.has(kind)){
+    const key=kolCatalogKey(kind,value);
+    return key?(kolMergedAsasCatalog(kind).byKey.get(key)||''):'';
+  }
   const key=kolCatalogIdentity(value);
   if(!key)return '';
   return kolCatalogValues(kind).find(item=>kolCatalogIdentity(item)===key)||'';
@@ -21325,17 +21484,26 @@ function showKolCatalogDrop(input){
   const starts=[],contains=[];
   all.forEach(value=>{const key=turknorm(value);if(!query||key.startsWith(query))starts.push(value);else if(key.includes(query))contains.push(value);});
   const matches=[...starts,...contains].slice(0,18);
-  if(!matches.length){closeKolCatalogDrop();return;}
+  // Referans alanlarda (License, Category…) listenin kaynağı ve ASAS'tan
+  // tazeleme her zaman görünür; eşleşme yoksa girilen değerin serbest metin
+  // olarak kaydedileceği söylenir — liste sessizce kapanmaz.
+  const footer=kolCatalogDropFooterHtml(kind,input.value,matches.length);
+  if(!matches.length&&!footer){closeKolCatalogDrop();return;}
   if(!_kolCatalogDrop){_kolCatalogDrop=document.createElement('div');_kolCatalogDrop.id='kolCatalogDropSingleton';_kolCatalogDrop.className='submfrDrop kolCatalogDrop';document.body.appendChild(_kolCatalogDrop);}
   const activeDrop=_kolCatalogDrop;
   _kolCatalogAnchor=input;
   _kolCatalogActiveIndex=-1;
-  activeDrop.innerHTML=matches.map(value=>`<div class="submfrDropItem" data-value="${escapeHtml(value)}">${escapeHtml(value)}</div>`).join('');
+  activeDrop.innerHTML=matches.map(value=>`<div class="submfrDropItem" data-value="${escapeHtml(value)}">${escapeHtml(value)}</div>`).join('')+footer;
   positionKolCatalogDrop();
   // positionKolCatalogDrop, tablo yeniden çizilmiş veya hücre görünümün dışına
   // çıkmışsa paneli kapatıp global referansı null yapabilir. Kapatılan panele
   // querySelectorAll uygulamadan önce aynı bağlı panelin hâlâ aktif olduğunu doğrula.
   if(_kolCatalogDrop!==activeDrop||!activeDrop.isConnected)return;
+  activeDrop.querySelector('[data-kol-catalog-refresh]')?.addEventListener('mousedown',event=>{
+    event.preventDefault();event.stopPropagation();
+    const button=event.currentTarget;if(button.disabled)return;button.disabled=true;
+    void refreshCollectionMasterCatalog().finally(()=>{if(input.isConnected&&document.activeElement===input)showKolCatalogDrop(input);});
+  });
   activeDrop.querySelectorAll('.submfrDropItem').forEach((item,index)=>{
     item.addEventListener('mouseenter',()=>setKolCatalogActiveIndex(index));
     item.addEventListener('mousedown',event=>{
@@ -24160,6 +24328,17 @@ function commitKolEditor(el, options={}){
     // kullanıcının Excel benzeri serbest metin girişi aynen korunur.
     const matched=kolCatalogMatch(el.dataset.kind,val);
     if(matched){val=matched;el.value=matched;}
+    else{
+      // Kullanıcının daha önce onayladığı PLM → ASAS eşanlamı (PSG → Paris
+      // Saint Germain) elle girişte de kanonik ASAS değerine çevrilir.
+      const learned=kolLearnedCatalogAlias(el.dataset.kind,val);
+      if(learned){val=learned;el.value=learned;}
+      // Elle giriş serbesttir; ama ASAS veri tabanında olmayan değer formül/
+      // kural eşleşmesini bozabileceği için ekrandaki tek düzenlemede uyarılır.
+      // Toplu yapıştırma (bağlı olmayan sentetik editör) her hücre için
+      // uyarı üretmez; hücrelerdeki ⚠ işareti yeterlidir.
+      else if(el.isConnected&&kolCatalogValueUnknown(el.dataset.kind,val))showToast(kolCatalogUnknownText(el.dataset.kind,val));
+    }
   }
   if(editableValuesEqual(kolEffectiveValue(row,k),val)) return false;
   releaseKolTransientTopRow(id);
@@ -24586,7 +24765,14 @@ function renderKol(){
         // seçenekler Sub-Mfr alanındaki hafif öneri penceresiyle sunulur.
         const cur=String(val||'');
         const placeholder=KOL_ASAS_CATALOG_KINDS.has(c.suggest)?(appLang==='en'?'Type or choose from ASAS…':'Yaz veya ASAS’tan seç…'):L('Yaz veya seç…');
-        html+=`<td class="editTd${cur?' submfr-fill':''}"${rc}><input type="text" autocomplete="off" class="editCell kolSuggestCell" data-id="${r.id}" data-k="${c.k}" data-kind="${escapeHtml(c.suggest)}" value="${escapeHtml(cur)}" placeholder="${escapeHtml(placeholder)}"></td>`;
+        // ASAS veri tabanı listesinde olmayan serbest metin görünür şekilde işaretlenir.
+        const unknown=Boolean(cur)&&kolCatalogValueUnknown(c.suggest,cur);
+        const unknownTitle=unknown?(appLang==='en'?`“${cur}” is not in the ASAS database list; formulas and rules may not recognise it.`:`“${cur}” ASAS veri tabanı listesinde yok; formüller ve kurallar bu değeri tanımayabilir.`):'';
+        const suggestInput=`<input type="text" autocomplete="off" class="editCell kolSuggestCell" data-id="${r.id}" data-k="${c.k}" data-kind="${escapeHtml(c.suggest)}" value="${escapeHtml(cur)}" placeholder="${escapeHtml(placeholder)}"${unknown?` aria-description="${escapeHtml(unknownTitle)}"`:''}>`;
+        // Licensor kural uyarısıyla aynı ⚠ + input düzeni (licensorDependencyCell) kullanılır.
+        html+=unknown
+          ?`<td class="editTd submfr-fill kolRuleMissing kolCatalogUnknown"${rc} title="${escapeHtml(unknownTitle)}"><div class="licensorDependencyCell"><span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ${suggestInput}</div></td>`
+          :`<td class="editTd${cur?' submfr-fill':''}"${rc}>${suggestInput}</td>`;
       }else if(c.date){html+=`<td class="kolDateTd"${rc}><span class="exfDisplay kolDateDisplay" tabindex="0" data-id="${r.id}" data-k="${c.k}" title="${escapeHtml(L('Tarihi düzenle'))}">${escapeHtml(fmtDate(val)||'—')}</span></td>`;
       }else if(c.qty){html+=`<td class="editTd num"${rc}><input type="text" inputmode="numeric" class="editCell kolQtyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatQuantityDisplay(val))}" style="text-align:right;"></td>`;
       }else if(c.money){html+=`<td class="editTd money"${rc}><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:10.5px;flex-shrink:0;">$</span><input type="text" inputmode="decimal" class="editCell kolMoneyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatMoneyDisplay(val))}" placeholder="0,00" style="flex:1;min-width:0;"></div></td>`;
@@ -26453,6 +26639,8 @@ function kolPlmNormalizeDirectRecord(record){
 async function kolPlmNormalizeAndTranslate(records){
   const expanded=window.BLPlmColourUtils?.expandDirectRecords?.(records||[])||(records||[]);
   const rows=expanded.map(kolPlmNormalizeDirectRecord);
+  // Çeviri adayları ASAS veri tabanının ana kataloğundan sıralanır.
+  await ensureCollectionMasterCatalogLoaded();
   await kolPlmLoadApprovedTranslations();
   const inferred=kolPlmInferTranslationSuggestions(rows);
   const translationInfo=kolPlmApplyAsasTranslations(rows,inferred);
@@ -26547,7 +26735,7 @@ function showKolPlmImportPreview(plan,parsedInfo,translationInfo,imageCount,sour
         <div class="kolPlanStat"><span>${escapeHtml(en?'Approved PLM→ASAS rules':'Onaylı PLM→ASAS kuralları')}</span><strong>${translationInfo.approvedRuleApplied||0}</strong></div>
       </div>
       <div class="plmImportBody">
-        ${plan.existing.length?`<div class="plmExistingNotice">${escapeHtml(en?`${plan.existing.length} PLM ID already exist in Collection. After this screen, Buyer Log will ask you one by one whether each model should be updated. No duplicate will be created for an existing PLM ID.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut. Bu ekrandan sonra Buyer Log her modeli tek tek soracak. Mevcut bir PLM ID için ikinci model oluşturulmayacak.`)}</div>`:''}
+        ${plan.existing.length?`<div class="plmExistingNotice">${escapeHtml(en?`${plan.existing.length} PLM ID already exist in Collection. After this screen, Buyer Log will ask you one by one whether each model should be updated, kept, or added as a new row. “Add as a New” deliberately creates a second independent Collection row for another In Store period.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut. Bu ekrandan sonra Buyer Log her modeli tek tek soracak: güncelle, mevcut bırak veya yeni satır olarak ekle. “Yeni olarak ekle” farklı bir In Store dönemi için bilinçli olarak ikinci, bağımsız bir Koleksiyon satırı oluşturur.`)}</div>`:''}
         ${(plan.ambiguous.length||plan.inputDuplicates.length)?`<div class="plmExistingWarning">${escapeHtml(en?`${plan.ambiguous.length} ambiguous existing PLM ID(s) and ${plan.inputDuplicates.length} duplicate PLM row(s) in the Excel will be skipped; no duplicate Collection model will be created.`:`Koleksiyon'da ${plan.ambiguous.length} belirsiz mevcut PLM ID ve Excel içinde ${plan.inputDuplicates.length} tekrar PLM satırı atlanacak; ikinci Koleksiyon modeli oluşturulmayacak.`)}</div>`:''}
         <h4>${escapeHtml(en?'Direct field mapping':'Doğrudan alan eşlemesi')}</h4>
         <div class="plmImportTableWrap"><table class="plmImportTable"><thead><tr><th>PLM</th><th></th><th>Buyer Log</th><th>${escapeHtml(en?'Status':'Durum')}</th></tr></thead><tbody>${directRows}</tbody></table></div>
@@ -26594,7 +26782,7 @@ function showKolPlmExistingDecision(item,index,total){
         <div class="plmImportTableWrap"><table class="plmImportTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'Current':'Mevcut')}</th><th></th><th>PLM</th></tr></thead><tbody>${changeRows}</tbody></table></div>
         ${item.hasImage?`<div class="muted">${escapeHtml(en?'The PLM picture will also replace/update this model picture only if you choose Update.':'Yalnız Güncelle seçerseniz PLM görseli de bu modelin görselini güncelleyecek.')}</div>`:''}
       </div>
-      <div class="verHistFoot"><button type="button" class="tbtn" data-plmdecision="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn" data-plmdecision="skip">${escapeHtml(en?'Keep current / Skip':'Mevcut kalsın / Atla')}</button><button type="button" class="tbtn primary" data-plmdecision="update">${escapeHtml(en?'Update this model':'Bu modeli güncelle')}</button></div>
+      <div class="verHistFoot"><button type="button" class="tbtn" data-plmdecision="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn" data-plmdecision="skip">${escapeHtml(en?'Keep current / Skip':'Mevcut kalsın / Atla')}</button><button type="button" class="tbtn" data-plmdecision="add-new" title="${escapeHtml(en?'Create a second independent Collection row with the same PLM ID.':'Aynı PLM ID ile ikinci, bağımsız bir Koleksiyon satırı oluştur.')}">${escapeHtml(en?'Add as a New':'Yeni olarak ekle')}</button><button type="button" class="tbtn primary" data-plmdecision="update">${escapeHtml(en?'Update this model':'Bu modeli güncelle')}</button></div>
     </div>`;
     document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
@@ -26607,13 +26795,15 @@ function showKolPlmExistingDecision(item,index,total){
   });
 }
 async function kolResolvePlmExistingDecisions(existing){
-  const approved=[],skipped=[];
+  const approved=[],skipped=[],added=[];
   for(let index=0;index<(existing||[]).length;index++){
     const item=existing[index],decision=await showKolPlmExistingDecision(item,index,existing.length);
-    if(decision==='cancel')return {cancelled:true,approved:[],skipped:[]};
-    if(decision==='update')approved.push(item);else skipped.push(item);
+    if(decision==='cancel')return {cancelled:true,approved:[],skipped:[],added:[]};
+    if(decision==='update')approved.push(item);
+    else if(decision==='add-new')added.push(item);
+    else skipped.push(item);
   }
-  return {cancelled:false,approved,skipped};
+  return {cancelled:false,approved,skipped,added};
 }
 function kolApplyApprovedPlmUpdate(item){
   // Yalnız PLM'nin açıkça yönettiği alanlar yazılır. pricing, pricingSent, not,
@@ -26704,7 +26894,8 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     const decisions=await kolResolvePlmExistingDecisions(plan.existing);if(decisions.cancelled)return {ok:true,applied:0,cancelled:true};
     kolPushUndo();
     decisions.approved.forEach(kolApplyApprovedPlmUpdate);
-    let created=plan.creates.map(row=>{row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;return kolApplyNewModelDefaults(migrateKolRow(row));});
+    const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
+    let created=createInputs.map(row=>{row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;return kolApplyNewModelDefaults(migrateKolRow(row));});
     created=kolLinkImportedColourVariants(created);
     if(created.length)kolRows=[...created,...kolRows];
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
@@ -26732,8 +26923,8 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
         ?(appLang==='en'?' · images already available':' · görseller zaten mevcut')
         :(appLang==='en'?` · images synchronized${imageSaved?` ${imageSaved}`:''}${imageFailed?` (${imageFailed} unavailable)`:''}`:` · görseller senkronize edildi${imageSaved?` ${imageSaved}`:''}${imageFailed?` (${imageFailed} bulunamadı)`:''}`);
     const message=appLang==='en'
-      ?`${created.length} new · ${decisions.approved.length} updated · ${skipped} kept/skipped${imageSummary}${downloadFile?` · model files ${Number(files?.saved)||0}`:''}. Existing PLM IDs were never duplicated.`
-      :`${created.length} yeni · ${decisions.approved.length} güncellendi · ${skipped} mevcut kaldı/atlandı${imageSummary}${downloadFile?` · model dosyaları ${Number(files?.saved)||0}`:''}. Mevcut PLM ID’ler hiçbir zaman çoğaltılmadı.`;
+      ?`${created.length} new · ${decisions.approved.length} updated · ${skipped} kept/skipped${imageSummary}${downloadFile?` · model files ${Number(files?.saved)||0}`:''}. Existing PLM IDs are duplicated only when “Add as a New” is explicitly chosen.`
+      :`${created.length} yeni · ${decisions.approved.length} güncellendi · ${skipped} mevcut kaldı/atlandı${imageSummary}${downloadFile?` · model dosyaları ${Number(files?.saved)||0}`:''}. Mevcut PLM ID yalnız “Yeni olarak ekle” açıkça seçildiğinde ikinci ayrı satır olarak oluşturulur.`;
     showToast(message,{icon:false});
     return {ok:true,applied:created.length+decisions.approved.length,images,files};
   }catch(err){
@@ -27090,6 +27281,7 @@ async function importKolPlmExcelFile(file){
     for(let ri=0;ri<Math.min(20,matrix.length)&&imageCol<0;ri++)(matrix[ri]||[]).forEach((value,ci)=>{if(aliases[kolPlmHeaderKey(value)]==='image')imageCol=ci;});
     const images=await kolPlmExtractEmbeddedImages(buffer,imageCol),parsed=kolPlmParseWorkbook(wb,matrix,images);
     if(!parsed.rows.length)throw new Error(appLang==='en'?'No PLM models were found.':'PLM model satırı bulunamadı.');
+    await ensureCollectionMasterCatalogLoaded();
     await kolPlmLoadApprovedTranslations();
     const inferredTranslations=kolPlmInferTranslationSuggestions(parsed.rows);
     const translationInfo=kolPlmApplyAsasTranslations(parsed.rows,inferredTranslations);
@@ -27103,7 +27295,8 @@ async function importKolPlmExcelFile(file){
     const decisions=await kolResolvePlmExistingDecisions(plan.existing);if(decisions.cancelled)return;
     kolPushUndo();
     decisions.approved.forEach(kolApplyApprovedPlmUpdate);
-    let created=plan.creates.map(row=>{
+    const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
+    let created=createInputs.map(row=>{
       row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;
       return kolApplyNewModelDefaults(migrateKolRow(row));
     });
@@ -27131,8 +27324,8 @@ async function importKolPlmExcelFile(file){
     const skippedCount=decisions.skipped.length+plan.ambiguous.length+plan.inputDuplicates.length;
     const learnedText=teachableMappings.length?(appLang==='en'?` · ${learnedSaved} translation rule(s) learned`:` · ${learnedSaved} çeviri kuralı öğrenildi`):'';
     const message=appLang==='en'
-      ? `${created.length} new · ${decisions.approved.length} updated · ${skippedCount} kept/skipped · ${imageSaved} image(s)${learnedText}. Existing PLM IDs were never duplicated.${learnWarning}`
-      : `${created.length} yeni · ${decisions.approved.length} güncellendi · ${skippedCount} mevcut kaldı/atlandı · ${imageSaved} görsel${learnedText}. Mevcut PLM ID'ler hiçbir zaman çoğaltılmadı.${learnWarning}`;
+      ? `${created.length} new · ${decisions.approved.length} updated · ${skippedCount} kept/skipped · ${imageSaved} image(s)${learnedText}. Existing PLM IDs are duplicated only when “Add as a New” is explicitly chosen.${learnWarning}`
+      : `${created.length} yeni · ${decisions.approved.length} güncellendi · ${skippedCount} mevcut kaldı/atlandı · ${imageSaved} görsel${learnedText}. Mevcut PLM ID yalnız “Yeni olarak ekle” açıkça seçildiğinde ikinci ayrı satır olarak oluşturulur.${learnWarning}`;
     showToast(message,{icon:false});
   }catch(err){showToast((appLang==='en'?'PLM import failed: ':'PLM içe aktarımı başarısız: ')+(err?.message||String(err)));}
   finally{if(input)input.value='';if(label){label.style.pointerEvents='';label.removeAttribute('aria-busy');}if(labelText)labelText.textContent=oldText;}
@@ -28643,6 +28836,7 @@ async function importKolExcelFile(file){
   if(label){ label.style.pointerEvents='none'; label.setAttribute('aria-busy','true'); }
   if(labelText) labelText.textContent=L('İçe aktarılıyor…');
   try{
+    await ensureCollectionMasterCatalogLoaded();
     const buffer=await file.arrayBuffer();
     const wb=XLSX.read(buffer,{type:'array',cellDates:true,cellNF:true,cellComments:true});
     const sheetName=wb.SheetNames.find(n=>/koleksiyon|collection/i.test(n))||wb.SheetNames[0];
@@ -28707,6 +28901,16 @@ async function importKolExcelFile(file){
         if(matched)row.urunTipi=matched;
       });
     }
+    // Excel'den gelen diğer ASAS katalog alanları da (License, Season, Country…)
+    // aynı kanonik yazıma çekilir; yazım farkı formül/kural eşleşmesini
+    // bozmasın. Eşleşme yoksa değer serbest metin olarak aynen korunur.
+    KOL_COLS.filter(col=>col&&col.suggest&&col.k!=='urunTipi'&&KOL_ASAS_CATALOG_KINDS.has(col.suggest)&&touchedKeys.includes(col.k)).forEach(col=>{
+      imported.forEach(row=>{
+        if(!norm(row[col.k]))return;
+        const matched=kolCatalogMatch(col.suggest,row[col.k])||kolLearnedCatalogAlias(col.suggest,row[col.k]);
+        if(matched)row[col.k]=matched;
+      });
+    });
 
     const plan=kolBuildImportPlan(imported,touchedKeys,knownByKey);
     // Category dahil tüm serbest giriş alanları Excel'deki metin gibi kabul edilir.
