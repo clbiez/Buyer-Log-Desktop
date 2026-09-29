@@ -20237,6 +20237,13 @@ function kolStatusEntries(){return KOL_STATUS_API?KOL_STATUS_API.normalize(kolSt
 function kolStatusCanonicalName(name){return KOL_STATUS_API?.canonicalName?KOL_STATUS_API.canonicalName(name):String(name||'').trim();}
 function kolStatusEntry(name){return KOL_STATUS_API?KOL_STATUS_API.find(kolStatusEntries(),kolStatusCanonicalName(name)):null;}
 function kolStatusColor(name){return KOL_STATUS_API?KOL_STATUS_API.color(kolStatusEntries(),kolStatusCanonicalName(name)):'#667085';}
+function kolApplyStatusCellAppearance(el,name){
+  if(!el)return;
+  const color=kolStatusColor(kolStatusCanonicalName(name));
+  el.style?.setProperty?.('--kol-status-color',color);
+  const td=el.closest?.('td.kolStatusTd');
+  td?.style?.setProperty?.('--kol-status-color',color);
+}
 function kolStatusDisplayLabel(name){const entry=kolStatusEntry(name);return entry&&entry.builtin?(KOL_STATUS_API?.label?KOL_STATUS_API.label(entry.name,appLang):L(entry.name)):String(name||'');}
 function kolStatusDefaultName(){return kolStatusEntries()[0]?.name||'Pending File';}
 function kolStatusExcelArgb(name){return KOL_STATUS_API?KOL_STATUS_API.toArgb(kolStatusColor(name)):'FF667085';}
@@ -22851,6 +22858,7 @@ function kolHandleSpreadsheetKey(e,el,snap){
     if(Object.prototype.hasOwnProperty.call(el.dataset,'kolOriginalValue')){
       el.value=el.dataset.kolOriginalValue;
       if(el.select)el.select();
+      if(el.dataset.k==='durum'||el.dataset.k==='status')kolApplyStatusCellAppearance(el,el.value);
     }
     closeKolCatalogDrop();e.preventDefault();el.blur?.();window.BLCollectionSpreadsheet?.endEdit?.();return true;
   }
@@ -22909,6 +22917,11 @@ function kolPasteMatrix(startEl,text){
 document.addEventListener('focusin',e=>{
   const editor=e.target?.closest?.('#kolTable .editCell');if(!editor)return;
   editor.dataset.kolOriginalValue=String(editor.value??'');kolMarkActiveGridCell(editor);
+},true);
+document.addEventListener('change',e=>{
+  const status=e.target?.closest?.('#kolTable select.editCell.kolStatusNoArrow[data-k="durum"],#kolTable select.editCell.kolStatusNoArrow[data-k="status"]');
+  if(!status)return;
+  kolApplyStatusCellAppearance(status,status.value);
 },true);
 document.addEventListener('pointerover',e=>{
   const td=e.target?.closest?.('#kolTable tbody td');if(!td||td===_kolTextPreviewCell)return;kolShowTextPreview(td,e);
@@ -24107,6 +24120,7 @@ function commitKolEditor(el, options={}){
      colour field writes the row itself. This keeps render/refresh/restart from
      resurrecting the pre-edit override value. */
   row=kolWriteGroupedStorageValue(row,k,val);
+  if(k==='durum'||k==='status')kolApplyStatusCellAppearance(el,val);
   if(k==='not'&&!variantOverrideEdit){
     const plmKey=kolPlmNormalizeId(row.plmId);
     if(plmKey){
