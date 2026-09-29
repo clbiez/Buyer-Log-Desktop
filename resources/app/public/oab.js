@@ -1057,7 +1057,7 @@
     return true;
   }
 
-  async function oabFetchReport(forceRefresh) {
+  async function oabFetchReport(forceRefresh, authRetried = false) {
     if (S.busy) return;
     S.busy = true;
     S.busyStartedAt = performance.now();
@@ -1094,7 +1094,9 @@
         await oabRunBatch(forceRefresh);
       }
     } catch (err) {
-      if (oabIsAuthErrorCode(err && err.code)) {
+      // Kimlik doğrulama sonrası rapor en fazla BİR KEZ yeniden istenir; aksi
+      // hâlde reddedilen token her turda PASS sekmesini yeniden açtırıyordu.
+      if (!authRetried && oabIsAuthErrorCode(err && err.code)) {
         try {
           await oabEnsureAuthentication();
           retryAfterAuth = true;
@@ -1113,7 +1115,7 @@
       S.busyStatusKind = '';
       oabUpdateActionButtons();
     }
-    if (retryAfterAuth) return oabFetchReport(forceRefresh);
+    if (retryAfterAuth) return oabFetchReport(forceRefresh, true);
   }
 
   /* ================================================================
