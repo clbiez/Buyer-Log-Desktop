@@ -23287,11 +23287,18 @@ function kolManualManufacturerSuggestions(){
 async function openKolManualPriceModal(row,{confirm=false}={}){
   if(!row)return;
   if(!kolRequireWorkspaceEdit())return;
+  // Katalog beklenirken gelen ikinci çağrı ayrı bir pencere eklemesin.
+  if(openKolManualPriceModal._kolManualPriceOpening)return;
   document.getElementById('_kolManualPrice')?.remove();
   // Manufacturer suggestions are an ASAS-backed Collection catalog. On a cold
   // Collection visit, wait for that lightweight projection before opening the
   // dialog so a model with no local quotations still gets the full directory.
-  if(!collectionCatalogsReady(state.collectionCatalogs))await ensureCollectionCatalogLoaded({deferRender:true});
+  if(!collectionCatalogsReady(state.collectionCatalogs)){
+    openKolManualPriceModal._kolManualPriceOpening=true;
+    try{await ensureCollectionCatalogLoaded({deferRender:true});}
+    finally{openKolManualPriceModal._kolManualPriceOpening=false;}
+  }
+  document.getElementById('_kolManualPrice')?.remove();
   const en=appLang==='en';
   const best=kolBestPricing(row);
   const manualManufacturers=kolManualManufacturerSuggestions();
@@ -24863,7 +24870,10 @@ function renderKol(){
   }));
   tbody.querySelectorAll('.kolPriceCell').forEach(el=>el.addEventListener('change',()=>kolApplyCollectionCellChange({rowId:Number(el.dataset.id),key:`pricing:${el.dataset.mfr}`,editor:el,source:'manual'},{rerender:true})));
   // Elle giriş düğmeleri (v6.01). Tek dinleyici; satırlar yeniden çizildiğinde
-  // tekrar bağlanmaya gerek kalmasın diye tbody üzerinde.
+  // tekrar bağlanmaya gerek kalmasın diye tbody üzerinde. tbody kalıcıdır (yalnız
+  // innerHTML yenilenir); korumasız bağlama her renderKol'da dinleyici biriktirip
+  // tek tıkta pencereyi defalarca açıyordu — bu yüzden yalnız bir kez bağlanır.
+  if(!tbody.__kolManualDelegated){tbody.__kolManualDelegated=true;
   tbody.addEventListener('click',event=>{
     const btn=event.target.closest('[data-kol-manual]');
     if(!btn)return;
@@ -24871,7 +24881,7 @@ function renderKol(){
     event.preventDefault();event.stopPropagation();
     const row=kolRows.find(item=>String(item.id)===String(btn.dataset.kolManual));
     if(row)openKolManualPriceModal(row,{confirm:btn.dataset.kolManualConfirm==='1'});
-  });
+  });}
   tbody.querySelectorAll('.kolBestHistoryCell[data-kol-price-history-id]').forEach(cell=>cell.addEventListener('dblclick',event=>{
     event.preventDefault();
     event.stopPropagation();
