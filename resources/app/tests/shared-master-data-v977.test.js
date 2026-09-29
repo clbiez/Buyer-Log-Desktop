@@ -84,7 +84,8 @@ test('Endeksmatik upload returns the snapshot it just accepted when delta storag
 test('Endeksmatik upload waits for an authoritative delta write before it acknowledges success', () => {
   assert.match(deltaStore, /return Promise\.resolve\(store\.mirror\(collection, \{ \[id\]: toDocumentRecord\(value\) \}, options\)\)/);
   assert.match(endeksmatik, /const mirrored=await documents\.mirror\(DOCUMENT_ID, toSharedDocument\(snapshot\)\);/);
-  assert.match(server, /const status = await endeksmatik\.importWorkbookBuffer\(buffer, filename\);/);
+  // v7.0.172: üçüncü argüman (set etiketi/yükleyen) eklendi; await korunur.
+  assert.match(server, /const status = await endeksmatik\.importWorkbookBuffer\(buffer, filename(?:, \{ label, actor \})?\);/);
 });
 
 test('Endeksmatik cannot acknowledge a delta-only snapshot before its journal write resolves', async () => {

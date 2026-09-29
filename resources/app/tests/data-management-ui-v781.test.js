@@ -491,7 +491,8 @@ test('v7.81 her araç NE YAPTIĞINI yazar — iki dilde', () => {
      Etiket tek başına yetmez: "Yol Süreleri" neyi etkiler? */
   const groups = loadToolGroups();
   const tools = groups.flatMap(group => group.tools);
-  assert.equal(tools.length, 13, `13 araç beklenir, bulunan: ${tools.length}`);
+  // v7.0.172: + Endeksmatik Setleri (çoklu set yöneticisi).
+  assert.equal(tools.length, 14, `14 araç beklenir, bulunan: ${tools.length}`);
 
   for (const item of groups.concat(tools)) {
     const name = item.id;
