@@ -24,7 +24,7 @@ const crypto = require('crypto');
 const path = require('path');
 
 const MODEL_ID = 'endeksmatik-usd-v1';
-const PARSER_VERSION = 1;
+const PARSER_VERSION = 2;
 const SCHEMA_VERSION = 2;
 const COMPONENTS = Object.freeze(['fabric', 'cmt', 'accessory', 'extra']);
 const COMPONENT_LABELS = Object.freeze({ fabric: 'Kumaş', cmt: 'CMT', accessory: 'Aksesuar', extra: 'Ek İşlem' });
@@ -255,7 +255,7 @@ function traceFormula(ws, address, definedNames, depth = 5) {
   return { hasFormula, sheets, cells, formula: ws[address] && ws[address].f || '' };
 }
 function checkSignature(ws, definedNames) {
-  const L = SCREEN_LAYOUT, failures = [];
+  const L = SCREEN_LAYOUT, failures = [], notes = [];
   const pivotNames = COMPONENTS.map(c => norm(SHEETS[c]));
   COMPONENTS.forEach((component, i) => {
     const addr = L.componentIndex[i], t = traceFormula(ws, addr, definedNames), label = COMPONENT_LABELS[component];
@@ -265,11 +265,14 @@ function checkSignature(ws, definedNames) {
     if (!t.cells.has(L.previousOrderMonth) || !t.cells.has(L.orderMonth)) failures.push(`${addr} (${label} Δ) geçen/bu yıl sipariş ayına (${L.previousOrderMonth}/${L.orderMonth}) bağlı değil`);
     if (t.cells.has(L.previousDepotMonth) || t.cells.has(L.depotMonth)) failures.push(`${addr} (${label} Δ) antrepo/depo ayını (${L.previousDepotMonth}/${L.depotMonth}) kullanıyor — bu Buyer Log'un tanıdığı model değil`);
     L.selection.forEach(sel => { if (!t.cells.has(sel)) failures.push(`${addr} (${label} Δ) seçim hücresi ${sel}'e bağlı değil`); });
+    /* Hedef hücreleri (E15..E18) fiyatı belirleyen Δ zincirinin parçası değildir;
+       gerçek dosyalarda farklı kurulabildikleri görüldü (v7.0.173). Bu yüzden
+       yapıları RED sebebi değil, bilgi notudur; sayısal kontrol uzlaştırmada yapılır. */
     const tt = traceFormula(ws, L.componentTarget[i], definedNames);
-    if (!tt.hasFormula) failures.push(`${L.componentTarget[i]} (${label} hedef) formül değil`);
+    if (!tt.hasFormula) notes.push(`${L.componentTarget[i]} (${label} hedef) formül değil`);
     else {
-      if (!tt.cells.has(L.adjustment)) failures.push(`${L.componentTarget[i]} (${label} hedef) düzeltme hücresi ${L.adjustment}'e bağlı değil`);
-      if (!tt.cells.has(addr)) failures.push(`${L.componentTarget[i]} (${label} hedef) ${addr}'e bağlı değil`);
+      if (!tt.cells.has(L.adjustment)) notes.push(`${L.componentTarget[i]} (${label} hedef) ${L.adjustment}'e bağlı değil`);
+      if (!tt.cells.has(addr)) notes.push(`${L.componentTarget[i]} (${label} hedef) ${addr}'e bağlı değil`);
     }
   });
   const total = traceFormula(ws, L.totalIndex, definedNames);
@@ -278,7 +281,7 @@ function checkSignature(ws, definedNames) {
     L.componentIndex.forEach(addr => { if (!total.cells.has(addr)) failures.push(`${L.totalIndex} (TOPLAM) ${addr}'e bağlı değil`); });
     if (!total.sheets.has(norm(SHEETS.summary))) failures.push(`${L.totalIndex} (TOPLAM) ${SHEETS.summary} paylarına bağlı değil`);
   }
-  return { ok: !failures.length, model: MODEL_ID, failures };
+  return { ok: !failures.length, model: MODEL_ID, failures, notes };
 }
 
 /* ------------------------------------------------------------------ çalışma alanı */
@@ -476,13 +479,22 @@ function reconcile(snapshot, screenValues) {
     const ok = Number.isFinite(expected) && Number.isFinite(actual) && Math.abs(expected - actual) <= RECONCILE_TOLERANCE * Math.max(1, Math.abs(expected));
     checks.push({ label, cell, excel: Number.isFinite(expected) ? expected : null, buyerLog: actual, ok });
   };
-  result.components.forEach((item, i) => {
-    compare(`${item.label} Δ`, L.componentIndex[i], screenValues.componentIndex[i], item.index);
-    compare(`${item.label} hedef`, L.componentTarget[i], screenValues.componentTarget[i], item.targetIndex);
-  });
+  result.components.forEach((item, i) => compare(`${item.label} Δ`, L.componentIndex[i], screenValues.componentIndex[i], item.index));
   compare('TOPLAM', L.totalIndex, screenValues.totalIndex, result.indexes.usd);
+  /* Hedefler: E15..E18, B21 düzeltmesiyle (1+Δ)(1−düzeltme)−1 ise ayrıca
+     doğrulanır. Değilse yükleme REDDEDİLMEZ (fiyat Δ + düzeltmeden hesaplanır ve
+     düzeltme hesapta değiştirilebilir); durum uyarı olarak kaydedilir. */
+  const tolerant = (a, b) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= RECONCILE_TOLERANCE * Math.max(1, Math.abs(a));
+  const excelTargets = screenValues.componentTarget || [];
+  const targetsMatch = result.components.every((item, i) => tolerant(excelTargets[i], item.targetIndex));
+  let targets = { verified: targetsMatch, derivedAdjustmentPct: null };
+  if (targetsMatch) result.components.forEach((item, i) => compare(`${item.label} hedef`, L.componentTarget[i], excelTargets[i], item.targetIndex));
+  else if (result.components.every((item, i) => Number.isFinite(excelTargets[i]) && 1 + item.index !== 0)) {
+    const derived = result.components.map((item, i) => 1 - (1 + excelTargets[i]) / (1 + item.index));
+    if (Math.max(...derived) - Math.min(...derived) <= 1e-7) targets.derivedAdjustmentPct = Math.round(derived[0] * 1e11) / 1e9;
+  }
   const failed = checks.filter(c => !c.ok);
-  return { ok: !failed.length, level, selection: sel.slice(0, level), previousOrderMonth: screenValues.previousOrderMonth, orderMonth: screenValues.orderMonth, tolerance: RECONCILE_TOLERANCE, checks };
+  return { ok: !failed.length, level, selection: sel.slice(0, level), previousOrderMonth: screenValues.previousOrderMonth, orderMonth: screenValues.orderMonth, tolerance: RECONCILE_TOLERANCE, checks, targets };
 }
 
 /* ---------------------------------------------------------------- ayrıştırma */
@@ -585,11 +597,30 @@ function parseWorkbookBuffer(buffer, sourceFile = 'ENDEKSMATİK.xlsx', { now = n
   };
   const reconciliation = reconcile(snapshot, screen);
   snapshot.validation.reconciliation = reconciliation;
+  if (!reconciliation.targets.verified) {
+    const derived = reconciliation.targets.derivedAdjustmentPct;
+    warnings.push(`ENDEKSMATİK hedef hücreleri (${SCREEN_LAYOUT.componentTarget.join(', ')}) ${SCREEN_LAYOUT.adjustment} düzeltmesiyle (%${targetAdjustmentPct}) doğrulanamadı${derived != null ? `; Excel hedefleri %${derived} düzeltmeye karşılık geliyor` : ''}. Varsayılan düzeltme ${SCREEN_LAYOUT.adjustment}'den alındı; hesapta değiştirilebilir.`);
+  }
+  (signature.notes || []).forEach(note => warnings.push(`İmza notu: ${note}`));
   if (!reconciliation.ok) {
     const bad = reconciliation.checks.filter(c => !c.ok).map(c => `${c.label} (${c.cell}) Excel ${c.excel == null ? '—' : c.excel} ≠ Buyer Log ${c.buyerLog}`);
     throw modelError(`Endeksmatik uzlaştırması başarısız: Excel'in önbellekli sonuçları Buyer Log'un yeniden hesabıyla tutmuyor. ${bad.slice(0, 3).join('; ')}`, 'MODEL_RECONCILE_MISMATCH', { checks: reconciliation.checks });
   }
   return snapshot;
+}
+/* Yerel inceleme için ENDEKSMATİK ekranının kontrol bölgesini (değer + formül)
+   döndürür. Yükleme yolunda kullanılmaz. */
+function describeScreen(buffer, range = 'A1:G25') {
+  const XLSX = getXLSX();
+  const names = XLSX.read(buffer, { type: 'buffer', bookSheets: true }).SheetNames || [];
+  const name = findSheetName(names, SHEETS.screen); if (!name) return [];
+  const ws = XLSX.read(buffer, { type: 'buffer', sheets: [name], cellFormula: true }).Sheets[name];
+  const r = XLSX.utils.decode_range(range), out = [];
+  for (let row = r.s.r; row <= r.e.r; row++) for (let col = r.s.c; col <= r.e.c; col++) {
+    const addr = XLSX.utils.encode_cell({ r: row, c: col }), cell = ws[addr];
+    if (cell && (cell.f || (cell.v != null && cell.v !== ''))) out.push({ cell: addr, value: cell.v, formula: cell.f || '' });
+  }
+  return out;
 }
 function publicMeta(snapshot) {
   const levels = [0, 0, 0, 0, 0, 0]; (snapshot.records || []).forEach(r => { levels[r[0]] = (levels[r[0]] || 0) + 1; });
@@ -623,5 +654,5 @@ module.exports = {
   MODEL_ID, PARSER_VERSION, SCHEMA_VERSION, COMPONENTS, COMPONENT_LABELS, LEVEL_LABELS, SHEETS, SCREEN_LAYOUT,
   RECONCILE_TOLERANCE, DEFAULT_LANDED_FACTOR, DEFAULT_TARGET_ADVANTAGE_PCT,
   text, norm, keyOf, levelKey, numberValue, monthCodeOf, formulaRefs, traceFormula, checkSignature,
-  looksLikeModel, parseWorkbookBuffer, buildIndex, resolveRecord, calculate, singOffDecision, reconcile, publicMeta, lookup,
+  looksLikeModel, parseWorkbookBuffer, describeScreen, buildIndex, resolveRecord, calculate, singOffDecision, reconcile, publicMeta, lookup,
 };

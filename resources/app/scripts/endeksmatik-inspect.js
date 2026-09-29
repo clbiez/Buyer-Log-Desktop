@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const model = require('../server/lib/endeksmatik-model');
 
-const files = process.argv.slice(2);
+const files = process.argv.slice(2).filter(a => a !== '--screen');
 if (!files.length) { console.error('Kullanım: node scripts/endeksmatik-inspect.js <dosya.xlsx> [...]'); process.exit(2); }
 let failed = 0;
 for (const file of files) {
@@ -23,12 +23,18 @@ for (const file of files) {
     console.log(`  klasman=${meta.recordCount} seviyeler=${JSON.stringify(meta.levelCounts)} aylar=${meta.firstMonth}→${meta.lastMonth} düzeltme=%${meta.targetAdjustmentPct}`);
     snap.validation.reconciliation.checks.forEach(c => console.log(`  ${c.ok ? '=' : '≠'} ${c.label.padEnd(16)} ${c.cell.padEnd(4)} Excel ${c.excel}  Buyer Log ${c.buyerLog}`));
     (snap.validation.warnings || []).forEach(w => console.log(`  ! ${w}`));
+    if (process.argv.includes('--screen')) model.describeScreen(fs.readFileSync(file)).forEach(c => console.log(`    ${c.cell.padEnd(4)} = ${String(c.value).slice(0, 40)}${c.formula ? `  | =${c.formula}` : ''}`));
   } catch (err) {
     failed++;
     console.log(`\n✘ ${name}\n  ${err.code || 'ERROR'}: ${err.message}`);
     const d = err.details || {};
     (d.failures || []).forEach(f => console.log(`  - ${f}`));
     (d.checks || []).filter(c => !c.ok).forEach(c => console.log(`  ≠ ${c.label} ${c.cell}: Excel ${c.excel}  Buyer Log ${c.buyerLog}`));
+    // Red durumunda ekranın kontrol bölgesi dökülür: modelin nerede değiştiği görülsün.
+    try {
+      console.log('  ENDEKSMATİK A1:G25 (hücre = değer | formül):');
+      model.describeScreen(fs.readFileSync(file)).forEach(c => console.log(`    ${c.cell.padEnd(4)} = ${String(c.value).slice(0, 40)}${c.formula ? `  | =${c.formula}` : ''}`));
+    } catch (_) {}
   }
 }
 process.exit(failed ? 1 : 0);
