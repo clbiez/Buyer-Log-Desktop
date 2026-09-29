@@ -20,7 +20,9 @@ test('Kopyalama geri bildirimi düğme içeriğini değiştirmez (simge kaybolma
   const body = APP.slice(APP.indexOf('function flashCopyBtn('), APP.indexOf('// ---- Panoya kopyalama'));
   assert.doesNotMatch(body, /\.textContent\s*=/);
   assert.match(body, /classList\.add\(ok\?'copied':'copyFailed'\)/);
-  assert.match(body, /showToast\(/);
+  assert.match(body, /BLTableToolbarActionCleanup\?\.finish/);
+  assert.match(body, /if\(!ok\)showToast/);
+  assert.doesNotMatch(body, /Copied .*with formatting|biçimlendirmeyle kopyalandı/);
 });
 
 test('Açılış yükleme kartı sayfayı itmez; bildirimler sağ altta', () => {

@@ -16,9 +16,8 @@ function openingButton(id) {
   return match[0];
 }
 
-test('v10.42 Collection selected-row actions compact visually before they overflow the desktop toolbar', () => {
-  assert.match(CSS, /#kolTableToolbar\[data-toolbar-compact\] \.kolSelectedGroupLabel\{display:none!important;\}/);
-  assert.match(INDEX, /<span class="kolSelectedGroupLabel"[^>]*data-i18n-en="Selected models"[^>]*>Seçili modeller<\/span>/);
+test('v10.42 Collection selected-row actions stay compact without a redundant Selected Models label', () => {
+  assert.doesNotMatch(INDEX, /kolSelectedGroupLabel/);
   assert.match(CSS, /#kolTableActions>:is\(#kolCopySelectedBtn,#kolDuplicateBtn,#kolDropSelectedBtn,#kolDelRowBtn\)\{[\s\S]*width:var\(--ctl-h\)/);
   assert.match(CSS, /#kolTableActions>:is\(#kolCopySelectedBtn,#kolDuplicateBtn,#kolDropSelectedBtn,#kolDelRowBtn\)>span\{display:none!important;\}/);
 });

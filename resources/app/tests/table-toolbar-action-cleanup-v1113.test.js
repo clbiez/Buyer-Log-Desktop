@@ -27,12 +27,20 @@ test('CP ve Orders Koleksiyona Kopyala eylemini Araçlar menüsünde tutar', () 
 });
 
 test('Kopyala ve Excel export CP Orders Collection üzerinde ikon-only olur', () => {
-  for (const id of ['navCopy', 'navExcelBtn', 'kolCopySelectedBtn', 'kolExportImgBtn']) {
+  for (const id of ['navCopy', 'navExcelBtn', 'kolCopySelectedBtn', 'kolExportImgBtn', 'kolAddRowBtn']) {
     assert.ok(UI.includes(`'${id}'`), `icon-only target missing: ${id}`);
   }
   assert.match(CSS, /\.tableActionIconOnly\{[\s\S]*?width:var\(--ctl-h\)!important;/);
   assert.match(CSS, /\.tableActionIconOnly>span\{display:none!important;\}/);
   assert.ok(UI.includes("button.setAttribute('aria-label', label)"), 'icon buttons must keep an accessible name');
+});
+
+test('icon actions keep their SVG and use in-place working feedback', () => {
+  assert.match(UI, /function begin\(buttonOrId, options\)/);
+  assert.match(UI, /classList\.add\('isActionWorking'\)/);
+  assert.match(UI, /function finish\(buttonOrId, ok = null\)/);
+  assert.match(INDEX, /id="kolAddRowBtn"[^>]*aria-label="Yeni Model Ekle"[^>]*><svg/);
+  assert.doesNotMatch(INDEX, /id="kolAddRowBtn"[^>]*>[\s\S]{0,160}<span[^>]*>Yeni Model Ekle/);
 });
 
 test('Sütunlar kontrolü CP Orders Collection ⋯ menüsüne taşınır', () => {

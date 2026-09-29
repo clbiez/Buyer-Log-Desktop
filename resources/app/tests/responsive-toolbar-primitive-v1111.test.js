@@ -35,13 +35,12 @@ function collectionEntries(scale = 1) {
   return [
     { id: 'kolSearch', priority: 'pinned', container: '__root__', overflowable: false,
       flexible: true, width: 230, minWidth: 150, compactMinWidth: 120 },
-    item('kolAddRowBtn', 'primary', 150, 150, { overflowable: false }),
+    item('kolAddRowBtn', 'primary', 34, 34, { overflowable: false }),
     item('kolUndoBtn', 'selection', 74, 34),
     item('kolRedoBtn', 'selection', 74, 34),
     item('kolSpreadsheetPasteBtn', 'secondary', 92, 34),
     item('kolRecycleBinBtn', 'utility', 160, 34),
     item('kolExportImgBtn', 'secondary', 110, 34),
-    item('kolSelectedGroupLabel', 'selection', 96, 0, { overflowable: false }),
     item('kolCopySelectedBtn', 'selection', 90, 34),
     item('kolDuplicateBtn', 'selection', 84, 34),
     item('kolDropSelectedBtn', 'selection', 82, 34),
@@ -73,10 +72,9 @@ test('v11.11 geniş alanda araç çubuğu tam yerleşimde kalır, hiçbir eylem 
   assert.deepEqual(plan, { compact: false, overflow: [], wrap: false });
 });
 
-test('v11.11 Collection compact kademesinde Selected Models etiketi yer ayırmadan gizlenir', () => {
-  assert.match(CSS, /#kolTableToolbar\[data-toolbar-compact\] \.kolSelectedGroupLabel\{display:none!important;\}/);
-  const label = collectionEntries().find(entry => entry.id === 'kolSelectedGroupLabel');
-  assert.equal(label.compactWidth, 0);
+test('v11.11 Collection toolbar no longer budgets a redundant Selected Models label', () => {
+  assert.doesNotMatch(INDEX, /kolSelectedGroupLabel/);
+  assert.equal(collectionEntries().some(entry => entry.id === 'kolSelectedGroupLabel'), false);
 });
 
 test('v11.11 ikincil eylemler taşma menüsüne girmeden ÖNCE kompakt kademe denenir', () => {
@@ -164,7 +162,6 @@ test('v11.11 birincil ve sabitlenmiş eylemler taşma adayı bile olmaz', () => 
   assert.equal(ids.includes('kolAddRowBtn'), false);
   assert.equal(ids.includes('kolSearch'), false);
   assert.equal(ids.includes('kolMoreWrap'), false);
-  assert.equal(ids.includes('kolSelectedGroupLabel'), false);
   /* Sıra: utility → secondary → selection. */
   const rank = id => ({ utility: 3, secondary: 2, selection: 1 })[
     collectionEntries().find(entry => entry.id === id).priority];

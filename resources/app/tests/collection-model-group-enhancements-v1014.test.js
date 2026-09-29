@@ -8,6 +8,8 @@ const Groups = require('../public/collection-model-groups.js');
 const Spreadsheet = require('../public/collection-spreadsheet-engine.js');
 const appSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
 const spreadsheetSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'collection-spreadsheet.js'), 'utf8');
+const spreadsheetCssSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'collection-spreadsheet.css'), 'utf8');
+const indexSource = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
 const rows = [
   { id: 1, plmId: '2105001', modelKod: 'MINECRAFT-14-YD', inStoreMonth: 'JUNE 2027', colourCode: 'WHT', colour: 'WHITE', fabric: 'Single Jersey' },
@@ -77,4 +79,21 @@ test('Concept 2 keeps model-group toggle in the row gutter, not inside the model
   const end = appSource.indexOf("}else if(c.inStorePeriod)", start);
   const modelCell = appSource.slice(start, end);
   assert.doesNotMatch(modelCell, /groupBadge|plmModelLinkHtml/);
+});
+
+
+test('Collection View controls can show or hide all colour variants at once', () => {
+  assert.match(indexSource, /id="kolAllVariantsToggle"/);
+  assert.match(indexSource, /#i-arrows-down-up/);
+  assert.match(appSource, /function kolSetAllVariantsVisible\(visible\)/);
+  assert.match(appSource, /function kolAllVariantsVisible\(\)/);
+  assert.match(appSource, /kolAllVariantsToggle[^\n]*addEventListener/);
+});
+
+test('row-gutter colour hierarchy is theme-safe and visually explicit', () => {
+  assert.match(appSource, /#i-chevron-right/);
+  assert.match(appSource, /#i-chevron-down/);
+  assert.doesNotMatch(spreadsheetCssSource, /kolSpreadsheetRowNumber:hover[^\n]*blue-soft/);
+  assert.match(spreadsheetCssSource, /border-left:2px solid color-mix/);
+  assert.match(spreadsheetCssSource, /kolModelGroupGutterSpacer\.isVariant::after/);
 });

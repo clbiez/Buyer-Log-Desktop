@@ -36,8 +36,8 @@ test('v10.32 Orders birincil yenileme eylemi gerçek Orders yenilemesini çalı�
 test('v10.32 Collection birincil eylemi önde, seçili kapsamı açık ve silme eylemi ayrıdır', () => {
   const actions = sliceBetween(INDEX, 'id="kolTableActions"', 'id="kolIoWrap"');
   assert.ok(actions.indexOf('id="kolAddRowBtn"') < actions.indexOf('id="kolUndoBtn"'));
-  assert.match(actions, /id="kolAddRowBtn"[^>]*class="tbtn primary"[^>]*data-action-role="primary"/);
-  assert.match(actions, /class="kolSelectedGroupLabel"/);
+  assert.match(actions, /id="kolAddRowBtn"[^>]*class="tbtn primary"[^>]*data-action-role="primary"[^>]*data-tb-compact="icon"/);
+  assert.doesNotMatch(actions, /kolSelectedGroupLabel/);
   assert.match(actions, /id="kolDelRowBtn"[^>]*class="tbtn actionDanger"[^>]*data-action-role="danger"/);
 });
 
