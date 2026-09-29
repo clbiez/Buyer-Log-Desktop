@@ -259,6 +259,28 @@ test('20 · Tools menuleri komutu tasir ve mevcut Tools butonlari korunur', () =
   assert.match(indexHtml, /id="cpExcelImportBtn"/);
 });
 
+test('Capacity Request secime baglidir ve secim yokken pasif kalir', () => {
+  assert.match(indexHtml, /id="cpCapacityRequestBtn"[^>]*\bdisabled\b/);
+  assert.match(indexHtml, /id="kolCapacityRequestBtn"[^>]*\bdisabled\b/);
+
+  const cpStateStart = appMain.indexOf('function updateShippingBtnVisibility()');
+  assert.ok(cpStateStart > 0, 'CP secim durumu senkronlayicisi bulunmali');
+  const cpState = appMain.slice(cpStateStart, cpStateStart + 7000);
+  assert.match(cpState, /getElementById\('cpCapacityRequestBtn'\)/);
+  assert.match(cpState, /capacityRequestBtn\.disabled\s*=\s*!hasActionSelection/);
+
+  const kolStateStart = appMain.indexOf('function updateKolSendBtnState()');
+  assert.ok(kolStateStart > 0, 'Collection secim durumu senkronlayicisi bulunmali');
+  const kolState = appMain.slice(kolStateStart, kolStateStart + 5000);
+  assert.match(kolState, /getElementById\('kolCapacityRequestBtn'\)/);
+  assert.match(kolState, /capacityRequestBtn\.disabled\s*=\s*!hasSelection/);
+
+  const bindStart = appMain.indexOf('function bindCapacityRequestButton');
+  const bind = appMain.slice(bindStart, bindStart + 1400);
+  assert.match(bind, /source==='cp'\)updateShippingBtnVisibility\(\)/);
+  assert.match(bind, /source==='collection'\)updateKolSendBtnState\(\)/);
+});
+
 test('export yolu mevcut secim state ve indirme altyapisini kullanir', () => {
   const start = appMain.indexOf('async function capacityRequestExport');
   assert.ok(start > 0, 'capacityRequestExport tanimli olmali');
