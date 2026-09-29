@@ -490,6 +490,7 @@ app.use(auth.requireAuth);
 // Dış parola geçidi (varsa) aşıldıktan sonra kullanıcı adı ve şifreyle giriş yapılır.
 // Kullanıcı hesapları kaynak dosyadan türetilmez; yetkili yöneticiler tarafından oluşturulur.
 const { buildUserAccess, ACCESS_FILE } = require('./lib/user-access');
+const { initials: userInitials } = require('../public/user-initials.js');
 const collectionWorkspaces = require('./lib/collection-workspaces');
 const cpSharedStore = require('./lib/cp-shared-store');
 const { loadWorkspace, saveWorkspace, saveWorkspaceAsync } = collectionWorkspaces;
@@ -1990,7 +1991,7 @@ app.post('/api/shared-hub/publish-master', userAccess.requireModerator, express.
 });
 app.get('/user-context.js', (req, res) => {
   const profile = userAccess.publicProfile(req.currentUser);
-  const initials = String(profile.displayName || '?').trim().split(/\s+/).slice(0,2).map(v=>v[0]).join('').toLocaleUpperCase('tr-TR');
+  const initials = userInitials(profile.displayName);
   res.type('application/javascript').set('Cache-Control','no-store').send(`window.BL_USER_CONTEXT=${JSON.stringify({ ...profile, initials })};`);
 });
 app.get('/api/users/admin', userAccess.requireUserAdmin, userAccess.adminListHandler);

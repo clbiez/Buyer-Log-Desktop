@@ -77,14 +77,14 @@ test('giriş ekranı büyük simgeyi, sol menü ve sekme çubuğu küçük boyut
   assert.ok(route > 0 && route < server.indexOf('createStaticGzip('), 'simge rotası statik katmandan önce olmalı');
 });
 
-test('sağ üst kullanıcı avatarı uygulama simgesiyle aynı malzemede, adın baş harfleriyle', () => {
+test('sağ üst kullanıcı avatarı uygulama simgesiyle aynı malzemede (çelik plaka), adın baş harfleriyle', () => {
   const index = read('public/index.html').toString('utf8');
   assert.match(index, /<span id="currentUserInitials" class="blSteelInitials">/);
   const ui = read('public/user-access-ui.js').toString('utf8');
   assert.match(ui, /avatar\.textContent = initials\(profile\.displayName\)/);
   assert.match(ui, /<span class="userMenuAvatar"><span class="blSteelInitials">\$\{esc\(initials\(profile\.displayName\)\)\}<\/span><\/span>/);
   const css = read('public/experience.css').toString('utf8');
-  assert.match(css, /\.userAvatarBtn,\[data-theme\] \.userAvatarBtn,\.userMenuAvatar,\[data-theme\] \.userMenuAvatar\{\s*background:#2a2c31 url\("icons\/avatar-patch\.png"\)/);
+  assert.match(css, /\.userAvatarBtn,\[data-theme\] \.userAvatarBtn,\.userMenuAvatar,\[data-theme\] \.userMenuAvatar\{\s*background:#c8cdd2 url\("icons\/avatar-patch\.png"\)/);
   assert.match(css, /\.blSteelInitials\{[^}]*background-clip:text;color:transparent;/);
 });
 
