@@ -53,6 +53,7 @@ const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
 const { createWorkspaceManager } = require('./workspace-manager');
+const { syncShortcutIcons } = require('./shortcut-icon');
 
 const APP_CORE_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_BOUNDS = { width: 1600, height: 1000 };
@@ -1855,6 +1856,31 @@ function registerIpc() {
   });
 }
 
+/*
+ * Kısayol simgesi (bkz. shortcut-icon.js): BuyerLog.exe'nin gömülü simgesi
+ * app-core güncellemesiyle değişmediği için mevcut Buyer Log kısayolları
+ * buyerlog.ico'ya yönlendirilir. Açılışı geciktirmemesi için arka planda çalışır.
+ */
+function scheduleShortcutIconSync() {
+  if (process.platform !== 'win32' || !app.isPackaged) return;
+  const timer = setTimeout(() => {
+    try {
+      const result = syncShortcutIcons({
+        shell,
+        getPath: name => app.getPath(name),
+        exePath: process.execPath,
+        sourceIcon: path.join(APP_CORE_ROOT, 'buyerlog.ico'),
+        iconDir: path.join(paths.localDataRoot, 'branding'),
+        log,
+      });
+      if (result.updated.length) log('Kısayol simgesi güncellendi: ' + result.updated.length + ' kısayol');
+    } catch (error) {
+      log('Kısayol simgesi eşitlenemedi: ' + error.message);
+    }
+  }, 8000);
+  if (timer.unref) timer.unref();
+}
+
 /* ------------------------------------------------------------ uygulama */
 
 function bootstrap() {
@@ -1948,6 +1974,7 @@ function bootstrap() {
     // Güncelleme kontrolü backend/login akışından bağımsızdır. Böylece kullanıcı
     // giriş ekranını görmeden önce bile STABLE manifest kontrolü başlamış olur.
     scheduleUpdateChecks();
+    scheduleShortcutIconSync();
 
     const started = await startBuyerLog();
     if (!started) log('Başlatma tamamlanamadı; hata ekranı gösteriliyor.');

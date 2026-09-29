@@ -107,6 +107,9 @@ body{background:var(--bl-surface-page);color:var(--bl-text-primary);transition:p
 .railTop{padding:1px 3px 15px;margin-bottom:9px;border-bottom:1px solid var(--bl-stroke-subtle);}
 .rail .brandMark{border-radius:var(--r-md);box-shadow:none;}
 .rail .brandMark::after{content:none;}
+/* Uygulama simgesi (denim + çelik BL) kendi zeminini taşır; vurgu dolgusu kapanır. */
+.rail .brandMark.brandMark--image,[data-theme] .rail .brandMark.brandMark--image{background:transparent;border-radius:0;overflow:visible;}
+.rail .brandMarkImage{width:34px;height:34px;display:block;object-fit:contain;}
 .brandName{font-family:var(--sans);font-size:13.5px;font-weight:700;letter-spacing:-.015em;}
 .brandName small{font-family:var(--sans);font-size:10px;letter-spacing:.025em;text-transform:none;}
 .railCollapse{border-radius:var(--bl-radius-control);}

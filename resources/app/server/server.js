@@ -393,6 +393,12 @@ app.get('/giris.css', (_req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.type('text/css').sendFile(path.join(__dirname, '..', 'public', 'giris.css'));
 });
+// Uygulama simgesi giriş/kullanıcı seçimi ekranında ve favicon'da oturumdan önce
+// görünür; iş verisi taşımayan bu iki sabit görsel aynı gerekçeyle açıktır.
+app.get(['/icons/icon-192.png', '/icons/icon-512.png'], (req, res) => {
+  res.set('Cache-Control', 'no-cache');
+  res.type('image/png').sendFile(path.join(__dirname, '..', 'public', 'icons', path.basename(req.path)));
+});
 
 /* Desktop-only CoreNectum credential bridge.
  * Electron main captures the Bearer from its dedicated, sandboxed corporate
