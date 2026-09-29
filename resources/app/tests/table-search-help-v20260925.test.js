@@ -15,8 +15,12 @@ test('table search help assets are loaded by the main page', () => {
   assert.match(INDEX, /table-search-help\.js\?v=__BL_ASSET_VERSION__/);
 });
 
-test('CP, Orders and Collection main searches receive an adjacent information button', () => {
+test('CP, Orders and Collection main searches receive exactly one pinned adjacent information button', () => {
   assert.match(JS, /TARGET_IDS=\['cpSearch','ordersSearch','kolSearch'\]/);
+  assert.match(JS, /document\.querySelectorAll\(selector\)/);
+  assert.match(JS, /extra\.remove\(\)/);
+  assert.match(JS, /button\.dataset\.tbPriority='pinned'/);
+  assert.match(JS, /button\.dataset\.tbOverflow='never'/);
   assert.match(JS, /input\.insertAdjacentElement\('afterend',button\)/);
   assert.match(JS, /button\.textContent='i'/);
   assert.match(JS, /aria-expanded/);
@@ -41,4 +45,16 @@ test('search help uses a compact themed fixed popover', () => {
   assert.match(CSS, /position:fixed/);
   assert.match(CSS, /background:var\(--card\)/);
   assert.match(CSS, /border:1px solid var\(--line2\)/);
+});
+
+test('overflowing table search stays editable and expands on hover or focus', () => {
+  assert.match(JS, /function inputContentWidth\(input\)/);
+  assert.match(JS, /measureContext\.measureText\(value\)\.width/);
+  assert.match(JS, /input\.addEventListener\('pointerenter',\(\)=>setInputExpanded\(input,true\)\)/);
+  assert.match(JS, /input\.addEventListener\('pointerleave'/);
+  assert.match(JS, /input\.addEventListener\('focus',\(\)=>setInputExpanded\(input,true\)\)/);
+  assert.match(JS, /--table-search-hover-width/);
+  assert.match(CSS, /\.tableActionToolbar>input\[type=search\]\.tableSearchInputExpanded\{/);
+  assert.match(CSS, /flex:0 0 var\(--table-search-hover-width/);
+  assert.match(CSS, /max-width:var\(--table-search-hover-width/);
 });
