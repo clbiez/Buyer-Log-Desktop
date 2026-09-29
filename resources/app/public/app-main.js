@@ -11104,7 +11104,8 @@ const RETAIL_WAITING_THRESHOLD_RATE = 0.05;
 function deriveOperationalStatus(baseStatus, order){
   let status = baseStatus || '';
   const qty = Math.max(0, Number(order && order.qty) || 0);
-  const readyQty = Math.max(0, Number(order && order.merkezSevkeHazirKalan) || 0);
+  // Sunucu kuralıyla aynı: retaile aktarım bekleyen miktar = Kalan_Merkez − Kalan Alım.
+  const readyQty = Math.max(0, (Number(order && order.merkezSevkeHazirKalan) || 0) - Math.max(0, Number(order && order.kalan) || 0));
   if(turknorm(status)==='DEPODA' && qty>0 && readyQty>qty*RETAIL_WAITING_THRESHOLD_RATE){
     status='Retaile Aktarım Bekleniyor';
   }

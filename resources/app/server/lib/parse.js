@@ -1914,16 +1914,27 @@ function applyFormulas(row, transitRules) {
 
 const RETAIL_WAITING_THRESHOLD_RATE = 0.05;
 
+// "Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo" henüz antrepoya hiç
+// girmemiş miktarı ("Kalan Alım Sipariş Miktarı": üretim / eksik yükleme) da
+// içerir. Retaile aktarım bekleyen miktar yalnız antrepoya girmiş ama merkez
+// sevke hazır depoya geçmemiş kısımdır: Kalan_Merkez − Kalan Alım. Aksi halde
+// yalnız eksik yüklemesi kalan bir siparişin (ör. 1289816: 465 − 465 = 0)
+// Depoda parsiyelleri yanlışlıkla Retaile Aktarım Bekleniyor oluyordu.
+function retailWaitingQty(order) {
+  const readyDepotRemainingQty = Math.max(0, Number(order && order.merkezSevkeHazirKalan) || 0);
+  const notArrivedQty = Math.max(0, Number(order && order.kalan) || 0);
+  return Math.max(0, readyDepotRemainingQty - notArrivedQty);
+}
+
 function shouldWaitForRetail(order) {
   const orderQty = Math.max(0, Number(order && order.qty) || 0);
-  const readyDepotRemainingQty = Math.max(0, Number(order && order.merkezSevkeHazirKalan) || 0);
-  return orderQty > 0 && readyDepotRemainingQty > orderQty * RETAIL_WAITING_THRESHOLD_RATE;
+  return orderQty > 0 && retailWaitingQty(order) > orderQty * RETAIL_WAITING_THRESHOLD_RATE;
 }
 
 function deriveOperationalStatus(baseStatus, order) {
   let status = baseStatus || '';
   // Yalnız IAS'ta Depoda görünen siparişler için ASAS database alanı değerlendirilir.
-  // "Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo" sipariş toplamının
+  // Retaile aktarım bekleyen miktar (Kalan_Merkez − Kalan Alım) sipariş toplamının
   // %5'inden BÜYÜKSE sipariş henüz retaile aktarılamamıştır. Eşik tam %5 ise
   // Depoda statüsü korunur. Bu kural sentetik Üretimde satırı oluşturmaz.
   if (turknorm(status) === 'DEPODA' && shouldWaitForRetail(order)) {
