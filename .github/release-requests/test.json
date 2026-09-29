@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.166",
-  "commit_sha": "7d2d4ea81393091419197ffaa470f59afdfc8205",
-  "release_notes": "Buyer Log 7.0.166 TEST: Collection Status hücre rengi seçim anında yenilenir; arama kutusu info butonu çoklama hatası giderildi ve uzun aramalar hover/focus ile genişler; yeni Buyer Log ikon seti dahil edildi; eksik model görselleri açılışta sessiz ve kontrollü şekilde otomatik tamamlanır. Güncel main üzerindeki tüm değişiklikler dahil edildi. Full Buyer Log regression suite başarıyla geçti."
+  "version": "7.0.167",
+  "commit_sha": "556a45cb4968d4ad219a5a8986fd39fac45ecceb",
+  "release_notes": "Buyer Log 7.0.167 TEST: Güncel main dalından kesildi ve halihazırda merge edilmiş Claude güncellemelerinin tamamını içerir. Önceki 7.0.166 kapsamındaki Collection Status anlık renk yenilemesi, arama/info düzeltmeleri, yeni ikon revizyonu ve eksik model görsellerini açılışta sessiz tamamlama dahil mevcut main içeriği TEST kanalına taşındı. Full Buyer Log regression suite başarıyla geçti. STABLE kanalına terfi edilmedi."
 }
