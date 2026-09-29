@@ -310,9 +310,6 @@ button:hover,.navActionBtn:hover,.tbtn:hover,.lflButton:hover,.ocButton:hover:no
   background:transparent;border:1px solid var(--line2);border-radius:0;
   box-shadow:none;padding:26px 30px;
 }
-#blBootGuard .blBootDot{
-  border:2px solid var(--line2);border-top-color:var(--acc);border-radius:50%;
-}
 #blBootGuard button{
   border:1px solid var(--line2);border-radius:0;background:transparent;color:var(--ink);
   height:var(--ctl-h);padding:0 14px;
@@ -440,7 +437,7 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
     transition:none!important;
     animation:none!important;
   }
-  .spinner,.blBootDot,[data-loading] .ic{
+  .spinner,[data-loading] .ic{
     animation:blBootSpin 1.8s linear infinite!important;
   }
 }
