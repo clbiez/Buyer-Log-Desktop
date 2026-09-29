@@ -5091,9 +5091,13 @@ require('./routes/plm-sync-routes')(app, {
 // capturePassAuthorization() first reuses an existing PASS/OAB tab; only when
 // no PASS tab exists does it open ONE viewer tab in the same browser context.
 // The captured Authorization remains process-memory-only inside the connector.
+// PLM Sync ile aynı model: açık PASS sekmesinde access_token varsa istekler onu
+// kullanır; sekme yeniden açılmaz/yüklenmez. Yalnız token yoksa yakalamaya düşülür.
 async function ensurePassConnected(userId, params) {
   const status = agentBrowserConnector.passAuthStatus(userId);
   if (status.connected) return status;
+  const storage = await agentBrowserConnector.passStorageAuthStatus(userId).catch(() => null);
+  if (storage && storage.connected) return storage;
   return agentBrowserConnector.capturePassAuthorization(userId, params || {});
 }
 // Corporate SSO may expire while the in-memory request template still exists.

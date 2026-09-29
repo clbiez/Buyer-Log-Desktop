@@ -2879,9 +2879,40 @@ async function passPageLooksLikeLogin(page){
     return Boolean(await page._evaluateValue(`Boolean(document.querySelector('input[type="password"], input[name*="password" i], input[id*="password" i], form[action*="login" i], form[action*="signin" i]'))`));
   }catch(_){return false;}
 }
+// Yalnız PASS'in KABUL ettiği (2xx) report-API isteğinin header'ları yakalanır.
+// Viewer açılışta tarayıcıda saklı ESKİ token'la istek atabilir; eskiden bu ilk
+// istek yanıtına bakılmadan alınıyordu → replay 401 → yeniden yakalama → PASS
+// sekmesi defalarca açılıp yükleniyordu. 401/403 alan aday atılır ve viewer'ın
+// yenilenmiş token'la attığı istek aynı çağrı içinde beklenir.
+function createPassAuthCaptureTracker(){
+  const pending=new Map();
+  let captured=null,rejectedAt=0;
+  return {
+    captured:()=>captured,
+    rejectedAt:()=>rejectedAt,
+    onRequest(params){
+      if(captured)return;
+      const request=params&&params.request||{},url=clean(request.url),method=clean(request.method).toUpperCase()||'POST',requestId=clean(params&&params.requestId);
+      if(!requestId||method==='OPTIONS'||!url.toLowerCase().includes('/pass/common/report/api/'))return;
+      const headers={...(request.headers||{})};
+      if(!Object.keys(headers).some(name=>/^authorization$/i.test(name)))return;
+      pending.set(requestId,{url,method,headers});
+    },
+    onResponse(params){
+      if(captured)return;
+      const requestId=clean(params&&params.requestId),candidate=pending.get(requestId);
+      if(!candidate)return;
+      pending.delete(requestId);
+      const status=Number(params&&params.response&&params.response.status)||0;
+      if(status>=200&&status<300)captured=candidate;
+      else rejectedAt=Date.now();
+    },
+    onFailed(params){pending.delete(clean(params&&params.requestId));},
+  };
+}
 // PASS viewer'ını (mümkünse seçili filtrelerle önceden doldurulmuş olarak)
-// açar ve oluşan ilk rapor-API isteğinin header'larını (Authorization dahil)
-// yakalar. PASS oturumu açılmamışsa login ekranı kullanıcıya bırakılır: Buyer
+// açar ve PASS'in kabul ettiği ilk rapor-API isteğinin header'larını
+// (Authorization dahil) yakalar. PASS oturumu açılmamışsa login ekranı kullanıcıya bırakılır: Buyer
 // Log kullanıcı adı/parola alanlarını OKUMAZ, doldurmaz ve kaydetmez. Kullanıcı
 // Edge'de oturum açtığında capture aynı çağrı içinde otomatik devam eder.
 async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merchSubGroupRef,buyerGroupRef}={}){
@@ -2893,22 +2924,22 @@ async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merc
   const progress={phase:'opening',startedAt:new Date().toISOString(),loginRequired:false};
   passAuthProgress.set(key,progress);
   const attachedClients=new Map();
-  let captured=null;
-  const onRequest=params=>{
-    if(captured)return;
-    const request=params&&params.request||{},url=clean(request.url);
-    if(!url.toLowerCase().includes('/pass/common/report/api/'))return;
-    captured={url,method:clean(request.method)||'POST',headers:{...(request.headers||{})}};
+  const tracker=createPassAuthCaptureTracker();
+  const listeners={
+    'Network.requestWillBeSent':params=>tracker.onRequest(params),
+    'Network.responseReceived':params=>tracker.onResponse(params),
+    'Network.loadingFailed':params=>tracker.onFailed(params),
   };
+  let captured=null;
   const detachAll=()=>{
-    for(const client of attachedClients.keys())try{client.off('Network.requestWillBeSent',onRequest);}catch(_){}
+    for(const client of attachedClients.keys())for(const [event,listener] of Object.entries(listeners))try{client.off(event,listener);}catch(_){}
     attachedClients.clear();
   };
   try{
     const {context}=await ensureContext(ownerId);await context.syncPages().catch(()=>{});
     const attachPage=async candidate=>{
       if(!candidate||candidate.isClosed()||attachedClients.has(candidate.client))return;
-      candidate.client.on('Network.requestWillBeSent',onRequest);
+      for(const [event,listener] of Object.entries(listeners))candidate.client.on(event,listener);
       attachedClients.set(candidate.client,true);
       await candidate.client.send('Network.enable',{},10000).catch(()=>{});
     };
@@ -2922,8 +2953,8 @@ async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merc
     if(page.url()!==targetUrl)await page.goto(targetUrl,{waitUntil:'domcontentloaded',timeout:45000}).catch(()=>{});
     progress.phase='waiting-request';
     const deadline=Date.now()+Math.max(30000,Number(timeoutMs)||300000);
-    let lastViewerKick=0;
-    while(!captured&&Date.now()<deadline){
+    let lastViewerKick=0,rejectedKicks=0;
+    while(!(captured=tracker.captured())&&Date.now()<deadline){
       await context.syncPages().catch(()=>{});
       const pages=context.pages().filter(candidate=>!candidate.isClosed());
       for(const candidate of pages)await attachPage(candidate);
@@ -2944,8 +2975,20 @@ async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merc
           await attachPage(passPage);
           if(passPage.url()!==targetUrl)await passPage.goto(targetUrl,{waitUntil:'domcontentloaded',timeout:45000}).catch(()=>{});
         }
-      }else progress.phase='waiting-request';
-      if(!captured)await sleep(250);
+      }else{
+        progress.phase='waiting-request';
+        // PASS eski token'ı reddettiyse viewer çoğu zaman yenilenmiş token'la
+        // kendisi tekrar dener. Denemezse YENİ sekme açılmaz; aynı PASS sekmesi
+        // en fazla iki kez yeniden yüklenir.
+        const rejectedAt=tracker.rejectedAt();
+        const passPage=rejectedAt>lastViewerKick&&Date.now()-rejectedAt>4000&&rejectedKicks<2?pages.find(isPassUiPage):null;
+        if(passPage){
+          lastViewerKick=Date.now();rejectedKicks+=1;
+          await attachPage(passPage);
+          await passPage.goto(targetUrl,{waitUntil:'domcontentloaded',timeout:45000}).catch(()=>{});
+        }
+      }
+      if(!tracker.captured())await sleep(250);
     }
     if(!captured){
       if(progress.loginRequired)throw connectorError('PASS oturum açma işlemi tamamlanmadı. Edge üzerindeki PASS girişini tamamlayıp tekrar deneyin.','PASS_LOGIN_TIMEOUT',408);
@@ -2971,10 +3014,26 @@ function requirePassAuth(ownerId){
 // isteği yapar ve JSON yanıtı Node.js'e döndürür. Authorization header'ı
 // yalnız bu ifadenin İÇİNDE (page context'ine gönderilen JS metninde) yer
 // alır; fonksiyonun kendisi token'ı bir DEĞER olarak GERİ DÖNDÜRMEZ.
+// PLM Sync ile AYNI model: PASS SPA access token'ı kendi web storage'ında
+// (access_token) tutar. İstek her seferinde açık PASS sekmesindeki GÜNCEL
+// token'la atılır; değer sayfanın içinde kalır, Node'a dönmez. Yakalanmış
+// template yalnız diğer başlıklar ve storage'da token bulunmayan durum içindir.
+const PASS_STORED_TOKEN_READER=`const readStoredPassToken=()=>{
+    const extract=value=>{let text=String(value==null?'':value).trim();if(!text)return '';
+      if(text[0]==='"'||text[0]==='{'){try{const parsed=JSON.parse(text);text=typeof parsed==='string'?parsed:String(parsed&&(parsed.access_token||parsed.accessToken)||'');}catch(_){return '';}}
+      text=text.trim().replace(/^bearer\\s+/i,'');return text.length>=20&&!/\\s/.test(text)?'Bearer '+text:'';};
+    const stores=[];try{if(typeof localStorage!=='undefined'&&localStorage)stores.push(localStorage);}catch(_){}try{if(typeof sessionStorage!=='undefined'&&sessionStorage)stores.push(sessionStorage);}catch(_){}
+    for(const store of stores)for(const key of ['access_token','accessToken']){try{const value=extract(store.getItem(key));if(value)return value;}catch(_){}}
+    return '';
+  };`;
+function passStoredTokenPresentExpression(){
+  return `(()=>{${PASS_STORED_TOKEN_READER}return Boolean(readStoredPassToken());})()`;
+}
 function passRequestExpression(url,method,headers,body){
-  const config=JSON.stringify({url,method:method||'POST',headers,body:body===undefined?null:body});
+  const config=JSON.stringify({url,method:method||'POST',headers:headers||{},body:body===undefined?null:body});
   return `(async()=>{
     const cfg=${config};
+    ${PASS_STORED_TOKEN_READER}
     // PASS bağlantısı kurulurken yakalanan ilk report API isteği bir metadata
     // GET/POST çağrısı olabilir ve Content-Type taşımayabilir. String body ile
     // fetch() böyle bir header olmadan çalışırsa tarayıcı text/plain;charset=UTF-8
@@ -2985,9 +3044,20 @@ function passRequestExpression(url,method,headers,body){
     const requestHeaders=new Headers(cfg.headers||{});
     requestHeaders.set('Accept','application/json');
     if(cfg.body!=null)requestHeaders.set('Content-Type','application/json');
+    const templateAuthorization=requestHeaders.get('Authorization')||'';
+    const storedAuthorization=readStoredPassToken();
+    if(storedAuthorization)requestHeaders.set('Authorization',storedAuthorization);
+    if(!requestHeaders.get('Authorization'))return {ok:false,status:0,code:'PASS_TOKEN_MISSING'};
     // Kullanıcı notu: credentials:'include' PASS'te CORS hatası veriyor;
     // çalışan model credentials:'omit' + Authorization header.
-    const response=await fetch(cfg.url,{method:cfg.method,headers:requestHeaders,credentials:'omit',cache:'no-store',body:cfg.body==null?undefined:JSON.stringify(cfg.body)});
+    const send=()=>fetch(cfg.url,{method:cfg.method,headers:requestHeaders,credentials:'omit',cache:'no-store',body:cfg.body==null?undefined:JSON.stringify(cfg.body)});
+    let response=await send();
+    // Storage'daki token reddedildiyse ve PASS'in kabul ettiği yakalanmış token
+    // farklıysa istek bir kez onunla tekrarlanır.
+    if((response.status===401||response.status===403)&&storedAuthorization&&templateAuthorization&&templateAuthorization!==storedAuthorization){
+      requestHeaders.set('Authorization',templateAuthorization);
+      response=await send();
+    }
     const text=await response.text();
     let parsed=null;try{parsed=JSON.parse(text);}catch(_){/* JSON değilse ham metin döner */}
     return {ok:response.ok,status:response.status,statusText:String(response.statusText||''),json:parsed,text:parsed?null:text.slice(0,2000)};
@@ -3007,10 +3077,21 @@ async function passPageForRequest(context){
   if(!page)page=await pageForCurrentBuyerLogProfile(context,PASS_VIEWER_BASE);
   return page;
 }
-async function passRequest(ownerId,url,method,body){
-  const template=requirePassAuth(ownerId);
+// Token açık PASS sekmesinin storage'ından okunur; yakalanmış template
+// zorunlu değildir (bkz. PASS_STORED_TOKEN_READER).
+async function passStorageAuthStatus(ownerId){
+  const status=passAuthStatus(ownerId);
   const {context}=await ensureContext(ownerId);
-  const expression=passRequestExpression(url,method,template.headers,body);
+  await context.syncPages().catch(()=>{});
+  const page=context.pages().find(candidate=>{try{const u=new URL(candidate.url());return !candidate.isClosed()&&u.hostname.toLowerCase()===PASS_UI_HOST;}catch(_){return false;}});
+  if(!page)return status;
+  const present=await page._evaluateValue(passStoredTokenPresentExpression()).catch(()=>false);
+  return present?{...status,connected:true,hasAuthorization:true,source:'page-storage'}:status;
+}
+async function passRequest(ownerId,url,method,body){
+  const template=passAuthTemplates.get(safeOwner(ownerId));
+  const {context}=await ensureContext(ownerId);
+  const expression=passRequestExpression(url,method,template&&template.headers,body);
   let result=null,lastError=null;
   // PASS viewer bazen ilk rapor çağrısından sonra kendi navigation/render
   // döngüsünü tamamlar. Tam o sırada Refresh OAB çalıştırılırsa CDP,
@@ -3042,6 +3123,7 @@ async function passRequest(ownerId,url,method,body){
   }
   if(lastError&&!result)throw connectorError(`PASS isteği çalıştırılamadı: ${clean(lastError&&lastError.message||lastError)}`,'PASS_CDP_FAILED',409);
   if(!result)throw connectorError('PASS isteğinden yanıt alınamadı.','PASS_NO_RESPONSE',502);
+  if(result.code==='PASS_TOKEN_MISSING')throw connectorError('PASS bağlantısı hazır değil. Önce PASS\'e bağlanın.','PASS_NOT_CONNECTED',409);
   if(result.status===401||result.status===403){passAuthTemplates.delete(safeOwner(ownerId));throw connectorError('PASS oturumu sona ermiş görünüyor.','PASS_SESSION_EXPIRED',401);}
   if(!result.ok)throw connectorError(`PASS HTTP ${result.status} ${result.statusText}`.trim(),'PASS_HTTP_ERROR',502,{status:result.status,body:result.text||result.json,url,method});
   if(result.json==null)throw connectorError('PASS yanıtı JSON olarak ayrıştırılamadı.','PASS_INVALID_JSON',502);
@@ -3203,7 +3285,7 @@ async function status(ownerId=''){
 }
 
 module.exports={status,diagnose,cdpProbe,cdpReady,cdpWebSocketReady,looksLikeDevTools,tcpOpen,edgeUserDataDirCandidates,openConnection,openPowerBiImportDashboardSession,isPowerBiNavigationAbort,isPowerBiSessionRedirectUrl,isPowerBiDashboardUrl,sanitizePowerBiUrl,powerBiNavigationFailure,CORENECTUM_STYLE_LIST_URL,startRecording,recordingState,stopRecording,run,collectCoreNectumStyleLinks,coreNectumSelectedStyleRows,coreNectumRestoreSelectedStyleRows,collectAsasTechnicalImages,CORENECTUM_SCAN_PAGE_BUDGET,coreNectumScanExpression,powerBiSchemaWaitDecision,POWERBI_SCHEMA_QUIET_MS,downloadCoreNectumTechnicalSheets,coreNectumTechnicalSheetExpression,coreNectumTechnicalSheetLanguageId,CORENECTUM_TECHNICAL_SHEET_LANGUAGES,coreNectumId,coreNectumColourImageKey,coreNectumResolveRequestedImage,coreNectumImageRecordPlan,coreNectumImageSelectionPlan,pimTechnicalImageUrl,pimTechnicalImageFetchExpression,downloadUmbrellaQtx,umbrellaQtxDownloadExpression,coreNectumRecordsOf,coreNectumColourVariants,coreNectumMergeColourVariants,coreNectumStyleListRows,coreNectumAttachmentUrl,coreNectumRefreshImageUrl,coreNectumListCapture,coreNectumImageMime,coreNectumDirectApiScan,coreNectumUnfilteredRequestBody,coreNectumBulkApiScan,coreNectumBulkImages,coreNectumImageFetchExpression,coreNectumImageFromUrl,coreNectumWaitCapturedImage,coreNectumStyleListRowImage,coreNectumNextListPage,assertAllowedUrl,appendRecordedStep,normalizeStep,recorderInstaller,managedCdpPort,managedProfileDir,edgeUserDataDir,readDevToolsActivePort,connectExistingEdge,discoverExistingEdge,connectPreferredEdge,remoteDebuggingListening,cachedEndpointIfAlive,forgetEndpoint,rememberEndpoint,resetDiscoveryCooldown,discoveryCoolingDown,DISCOVERY_COOLDOWN_MS,browserOperationStatus,BROWSER_OPERATION_TIMEOUTS,USER_APPROVAL_MESSAGE,openExistingEdgeDebugSetup,pageForCurrentBuyerLogProfile,dashboardTemplateScore,managedFallbackEnabled,interpolateItem,itemValue,
-  passAuthStatus,capturePassAuthorization,captureExistingPassAuthorization,captureExistingPassAuthorizationFromContext,fetchPassSeasons,fetchPassMagOptions,fetchPassBuyerGroupOptions,fetchPassReportData,passBuyerGroupParam,passReplayHeaders,passAuthorizationHeader,oabExtractOptionList,passRequestExpression,passViewerUrl,PASS_API_ROOT,PASS_VIEWER_BASE,PASS_UI_HOST,PASS_API_HOST,
+  passAuthStatus,passStorageAuthStatus,capturePassAuthorization,createPassAuthCaptureTracker,passStoredTokenPresentExpression,captureExistingPassAuthorization,captureExistingPassAuthorizationFromContext,fetchPassSeasons,fetchPassMagOptions,fetchPassBuyerGroupOptions,fetchPassReportData,passBuyerGroupParam,passReplayHeaders,passAuthorizationHeader,oabExtractOptionList,passRequestExpression,passViewerUrl,PASS_API_ROOT,PASS_VIEWER_BASE,PASS_UI_HOST,PASS_API_HOST,
   CORENECTUM_EXTRA_FIELDS,coreNectumExtraFields,CORENECTUM_EXTRA_FIELDS_JS,
   coreNectumFetchOptimizeExpression,coreNectumFetchOptimizedImage,imageTargetBytes,IMAGE_TARGET_BYTES,IMAGE_DIMENSION_CAP,IMAGE_QUALITY_FLOOR,
   ensureContext,ensureExistingContext,connectorError,safeOwner,sleep};
