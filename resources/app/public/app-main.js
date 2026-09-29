@@ -26547,7 +26547,7 @@ function showKolPlmImportPreview(plan,parsedInfo,translationInfo,imageCount,sour
         <div class="kolPlanStat"><span>${escapeHtml(en?'Approved PLM→ASAS rules':'Onaylı PLM→ASAS kuralları')}</span><strong>${translationInfo.approvedRuleApplied||0}</strong></div>
       </div>
       <div class="plmImportBody">
-        ${plan.existing.length?`<div class="plmExistingNotice">${escapeHtml(en?`${plan.existing.length} PLM ID already exist in Collection. After this screen, Buyer Log will ask you one by one whether each model should be updated. No duplicate will be created for an existing PLM ID.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut. Bu ekrandan sonra Buyer Log her modeli tek tek soracak. Mevcut bir PLM ID için ikinci model oluşturulmayacak.`)}</div>`:''}
+        ${plan.existing.length?`<div class="plmExistingNotice">${escapeHtml(en?`${plan.existing.length} PLM ID already exist in Collection. After this screen, Buyer Log will ask you one by one whether each model should be updated, kept, or added as a new row. “Add as a New” deliberately creates a second independent Collection row for another In Store period.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut. Bu ekrandan sonra Buyer Log her modeli tek tek soracak: güncelle, mevcut bırak veya yeni satır olarak ekle. “Yeni olarak ekle” farklı bir In Store dönemi için bilinçli olarak ikinci, bağımsız bir Koleksiyon satırı oluşturur.`)}</div>`:''}
         ${(plan.ambiguous.length||plan.inputDuplicates.length)?`<div class="plmExistingWarning">${escapeHtml(en?`${plan.ambiguous.length} ambiguous existing PLM ID(s) and ${plan.inputDuplicates.length} duplicate PLM row(s) in the Excel will be skipped; no duplicate Collection model will be created.`:`Koleksiyon'da ${plan.ambiguous.length} belirsiz mevcut PLM ID ve Excel içinde ${plan.inputDuplicates.length} tekrar PLM satırı atlanacak; ikinci Koleksiyon modeli oluşturulmayacak.`)}</div>`:''}
         <h4>${escapeHtml(en?'Direct field mapping':'Doğrudan alan eşlemesi')}</h4>
         <div class="plmImportTableWrap"><table class="plmImportTable"><thead><tr><th>PLM</th><th></th><th>Buyer Log</th><th>${escapeHtml(en?'Status':'Durum')}</th></tr></thead><tbody>${directRows}</tbody></table></div>
@@ -26594,7 +26594,7 @@ function showKolPlmExistingDecision(item,index,total){
         <div class="plmImportTableWrap"><table class="plmImportTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'Current':'Mevcut')}</th><th></th><th>PLM</th></tr></thead><tbody>${changeRows}</tbody></table></div>
         ${item.hasImage?`<div class="muted">${escapeHtml(en?'The PLM picture will also replace/update this model picture only if you choose Update.':'Yalnız Güncelle seçerseniz PLM görseli de bu modelin görselini güncelleyecek.')}</div>`:''}
       </div>
-      <div class="verHistFoot"><button type="button" class="tbtn" data-plmdecision="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn" data-plmdecision="skip">${escapeHtml(en?'Keep current / Skip':'Mevcut kalsın / Atla')}</button><button type="button" class="tbtn primary" data-plmdecision="update">${escapeHtml(en?'Update this model':'Bu modeli güncelle')}</button></div>
+      <div class="verHistFoot"><button type="button" class="tbtn" data-plmdecision="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn" data-plmdecision="skip">${escapeHtml(en?'Keep current / Skip':'Mevcut kalsın / Atla')}</button><button type="button" class="tbtn" data-plmdecision="add-new" title="${escapeHtml(en?'Create a second independent Collection row with the same PLM ID.':'Aynı PLM ID ile ikinci, bağımsız bir Koleksiyon satırı oluştur.')}">${escapeHtml(en?'Add as a New':'Yeni olarak ekle')}</button><button type="button" class="tbtn primary" data-plmdecision="update">${escapeHtml(en?'Update this model':'Bu modeli güncelle')}</button></div>
     </div>`;
     document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
@@ -26607,13 +26607,15 @@ function showKolPlmExistingDecision(item,index,total){
   });
 }
 async function kolResolvePlmExistingDecisions(existing){
-  const approved=[],skipped=[];
+  const approved=[],skipped=[],added=[];
   for(let index=0;index<(existing||[]).length;index++){
     const item=existing[index],decision=await showKolPlmExistingDecision(item,index,existing.length);
-    if(decision==='cancel')return {cancelled:true,approved:[],skipped:[]};
-    if(decision==='update')approved.push(item);else skipped.push(item);
+    if(decision==='cancel')return {cancelled:true,approved:[],skipped:[],added:[]};
+    if(decision==='update')approved.push(item);
+    else if(decision==='add-new')added.push(item);
+    else skipped.push(item);
   }
-  return {cancelled:false,approved,skipped};
+  return {cancelled:false,approved,skipped,added};
 }
 function kolApplyApprovedPlmUpdate(item){
   // Yalnız PLM'nin açıkça yönettiği alanlar yazılır. pricing, pricingSent, not,
@@ -26704,7 +26706,8 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     const decisions=await kolResolvePlmExistingDecisions(plan.existing);if(decisions.cancelled)return {ok:true,applied:0,cancelled:true};
     kolPushUndo();
     decisions.approved.forEach(kolApplyApprovedPlmUpdate);
-    let created=plan.creates.map(row=>{row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;return kolApplyNewModelDefaults(migrateKolRow(row));});
+    const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
+    let created=createInputs.map(row=>{row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;return kolApplyNewModelDefaults(migrateKolRow(row));});
     created=kolLinkImportedColourVariants(created);
     if(created.length)kolRows=[...created,...kolRows];
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
@@ -26732,8 +26735,8 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
         ?(appLang==='en'?' · images already available':' · görseller zaten mevcut')
         :(appLang==='en'?` · images synchronized${imageSaved?` ${imageSaved}`:''}${imageFailed?` (${imageFailed} unavailable)`:''}`:` · görseller senkronize edildi${imageSaved?` ${imageSaved}`:''}${imageFailed?` (${imageFailed} bulunamadı)`:''}`);
     const message=appLang==='en'
-      ?`${created.length} new · ${decisions.approved.length} updated · ${skipped} kept/skipped${imageSummary}${downloadFile?` · model files ${Number(files?.saved)||0}`:''}. Existing PLM IDs were never duplicated.`
-      :`${created.length} yeni · ${decisions.approved.length} güncellendi · ${skipped} mevcut kaldı/atlandı${imageSummary}${downloadFile?` · model dosyaları ${Number(files?.saved)||0}`:''}. Mevcut PLM ID’ler hiçbir zaman çoğaltılmadı.`;
+      ?`${created.length} new · ${decisions.approved.length} updated · ${skipped} kept/skipped${imageSummary}${downloadFile?` · model files ${Number(files?.saved)||0}`:''}. Existing PLM IDs are duplicated only when “Add as a New” is explicitly chosen.`
+      :`${created.length} yeni · ${decisions.approved.length} güncellendi · ${skipped} mevcut kaldı/atlandı${imageSummary}${downloadFile?` · model dosyaları ${Number(files?.saved)||0}`:''}. Mevcut PLM ID yalnız “Yeni olarak ekle” açıkça seçildiğinde ikinci ayrı satır olarak oluşturulur.`;
     showToast(message,{icon:false});
     return {ok:true,applied:created.length+decisions.approved.length,images,files};
   }catch(err){
@@ -27103,7 +27106,8 @@ async function importKolPlmExcelFile(file){
     const decisions=await kolResolvePlmExistingDecisions(plan.existing);if(decisions.cancelled)return;
     kolPushUndo();
     decisions.approved.forEach(kolApplyApprovedPlmUpdate);
-    let created=plan.creates.map(row=>{
+    const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
+    let created=createInputs.map(row=>{
       row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;
       return kolApplyNewModelDefaults(migrateKolRow(row));
     });
@@ -27131,8 +27135,8 @@ async function importKolPlmExcelFile(file){
     const skippedCount=decisions.skipped.length+plan.ambiguous.length+plan.inputDuplicates.length;
     const learnedText=teachableMappings.length?(appLang==='en'?` · ${learnedSaved} translation rule(s) learned`:` · ${learnedSaved} çeviri kuralı öğrenildi`):'';
     const message=appLang==='en'
-      ? `${created.length} new · ${decisions.approved.length} updated · ${skippedCount} kept/skipped · ${imageSaved} image(s)${learnedText}. Existing PLM IDs were never duplicated.${learnWarning}`
-      : `${created.length} yeni · ${decisions.approved.length} güncellendi · ${skippedCount} mevcut kaldı/atlandı · ${imageSaved} görsel${learnedText}. Mevcut PLM ID'ler hiçbir zaman çoğaltılmadı.${learnWarning}`;
+      ? `${created.length} new · ${decisions.approved.length} updated · ${skippedCount} kept/skipped · ${imageSaved} image(s)${learnedText}. Existing PLM IDs are duplicated only when “Add as a New” is explicitly chosen.${learnWarning}`
+      : `${created.length} yeni · ${decisions.approved.length} güncellendi · ${skippedCount} mevcut kaldı/atlandı · ${imageSaved} görsel${learnedText}. Mevcut PLM ID yalnız “Yeni olarak ekle” açıkça seçildiğinde ikinci ayrı satır olarak oluşturulur.${learnWarning}`;
     showToast(message,{icon:false});
   }catch(err){showToast((appLang==='en'?'PLM import failed: ':'PLM içe aktarımı başarısız: ')+(err?.message||String(err)));}
   finally{if(input)input.value='';if(label){label.style.pointerEvents='';label.removeAttribute('aria-busy');}if(labelText)labelText.textContent=oldText;}
