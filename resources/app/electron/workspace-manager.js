@@ -54,7 +54,7 @@ function clampIndex(value, length) {
 function createWorkspaceManager(options) {
   const {
     BrowserWindow, WebContentsView, dialog, screen, path, crypto, origin, nativeTheme,
-    shellFile, shellPreload, contentPreload, iconPath,
+    shellFile, shellPreload, contentPreload, iconPath, appDetails,
     loadWindowState, saveWindowState, applyNavigationPolicy, log,
     onFirstRendererReady,
   } = options;
@@ -459,6 +459,11 @@ function createWorkspaceManager(options) {
   function createWindow({ module = 'overview', bounds = null, empty = false } = {}) {
     const initial = bounds || loadWindowState();
     const window = new BrowserWindow(windowOptions(initial));
+    // Windows görev çubuğu düğmesi ve sabitleme simgesi exe'nin gömülü simgesi
+    // yerine uygulama simgesinden gelsin (bkz. shortcut-icon.js).
+    if (appDetails && typeof window.setAppDetails === 'function') {
+      try { window.setAppDetails(appDetails); } catch (error) { log('Görev çubuğu simge bilgisi ayarlanamadı: ' + error.message); }
+    }
     const shellContentsId = window.webContents.id;
     applyWindowTheme(window);
     const state = {

@@ -132,6 +132,20 @@ html[data-rail="min"] nav.tabs button,html[data-rail="min"] .railFoot button{wid
 .gsearch:hover,.gsearch:focus-visible{border-color:var(--acc);background:var(--card);}
 .iconbtn{border-radius:var(--bl-radius-control);}
 .userAvatar,.userMenuAvatar{border-radius:var(--r-md);}
+/* Kullanıcı avatarı uygulama simgesinin malzemesini taşır: siyah denim yama +
+   çelik baş harfler. Baş harfler kullanıcının adından üretilir (user-access-ui.js). */
+.userAvatarBtn,[data-theme] .userAvatarBtn,.userMenuAvatar,[data-theme] .userMenuAvatar{
+  background:#2a2c31 url("icons/avatar-patch.png") center/cover no-repeat;border-radius:7px;
+  box-shadow:0 1px 2px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.userAvatarBtn:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent),0 1px 2px rgba(0,0,0,.35);}
+.blSteelInitials{
+  font-family:var(--sans);font-weight:800;font-size:12.5px;letter-spacing:.03em;line-height:1;
+  background:linear-gradient(172deg,#ffffff 0%,#e3e7eb 38%,#aeb6be 50%,#dde2e6 62%,#f4f6f8 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 1px 0 rgba(0,0,0,.9)) drop-shadow(0 0 1.5px rgba(0,0,0,.55));
+}
+.userMenuAvatar .blSteelInitials{font-size:15px;}
 main{padding:12px clamp(12px,1.4vw,22px) 36px;}
 main>section.active{animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both;}
 

@@ -62,7 +62,7 @@ button{touch-action:manipulation}
   border-radius:0;background:rgba(255,255,255,.10);
   font-size:18px;font-weight:700;letter-spacing:.01em;
 }
-.logoMark--image{border:0;background:none}
+.logoMark--image{width:112px;height:112px;margin:-8px 0 0 -8px;border:0;background:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.28))}
 .logoMark--image img{width:100%;height:100%;display:block;object-fit:contain}
 .brandTitle,.formHeading h1{font-family:"Barlow Condensed",var(--login-font)}
 .brandTitle{margin:28px 0 8px;font-size:34px;line-height:1.12;font-weight:600;letter-spacing:.01em}
@@ -175,6 +175,8 @@ button{touch-action:manipulation}
   .brandPane{min-height:auto;padding:24px 28px;display:block}
   .brandContent{max-width:none;display:grid;grid-template-columns:44px 1fr;column-gap:14px;align-items:center}
   .logoMark{width:44px;height:44px;grid-row:1 / span 2}
+  .logoMark--image{width:64px;height:64px;margin:0}
+  .brandContent:has(.logoMark--image){grid-template-columns:64px 1fr}
   .brandTitle{margin:0;font-size:25px}
   .brandText{margin-top:4px;font-size:12px;line-height:1.45}
   .brandFoot{display:none}

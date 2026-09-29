@@ -24,33 +24,68 @@ function icoSizes(buffer) {
   return sizes.sort((a, b) => a - b);
 }
 
+function icoEntries(buffer) {
+  assert.equal(buffer.readUInt16LE(0), 0);
+  assert.equal(buffer.readUInt16LE(2), 1);
+  const entries = [];
+  for (let i = 0; i < buffer.readUInt16LE(4); i++) {
+    const at = 6 + i * 16;
+    const offset = buffer.readUInt32LE(at + 12);
+    entries.push({ size: buffer[at] || 256, png: buffer.subarray(offset + 1, offset + 4).toString('latin1') === 'PNG' });
+  }
+  return entries.sort((a, b) => a.size - b.size);
+}
+
 test('uygulama simgesi dosyaları doğru boyutlarda ve tek kaynaktan', () => {
   assert.deepEqual(pngSize(read('public/icons/icon-512.png')), [512, 512]);
   assert.deepEqual(pngSize(read('public/icons/icon-192.png')), [192, 192]);
-  const sizes = icoSizes(read('buyerlog.ico'));
+  assert.deepEqual(pngSize(read('public/icons/icon-mark.png')), [128, 128]);
+  assert.deepEqual(pngSize(read('public/icons/avatar-patch.png')), [96, 96]);
+  const entries = icoEntries(read('buyerlog.ico'));
+  const sizes = entries.map(entry => entry.size);
   for (const size of [16, 24, 32, 48, 256]) assert.ok(sizes.includes(size), 'buyerlog.ico ' + size + 'px içermeli');
+  // Görev çubuğu/pencere simgesi yükleyen eski Windows API'leri küçük boyutlarda
+  // PNG sıkıştırmalı girdiyi okuyamayabilir; yalnız 256px PNG olabilir.
+  assert.deepEqual(entries.filter(entry => entry.png).map(entry => entry.size), [256]);
 });
 
 test('favicon, PWA manifest ve Electron pencereleri aynı simgeyi gösterir', () => {
   const index = read('public/index.html').toString('utf8');
-  assert.match(index, /<link rel="icon" type="image\/png" sizes="192x192" href="icons\/icon-192\.png/);
+  assert.match(index, /<link rel="icon" type="image\/png" sizes="128x128" href="icons\/icon-mark\.png/);
   const manifest = JSON.parse(read('public/manifest.webmanifest').toString('utf8'));
   assert.deepEqual(manifest.icons.map(icon => icon.src), ['icons/icon-192.png', 'icons/icon-512.png']);
   const main = read('electron/main.js').toString('utf8');
-  assert.match(main, /iconPath: path\.join\(APP_CORE_ROOT, 'buyerlog\.ico'\)/);
+  assert.match(main, /const APP_ICON_SOURCE = path\.join\(APP_CORE_ROOT, 'buyerlog\.ico'\)/);
+  assert.match(main, /iconPath: APP_ICON_SOURCE,\s*appDetails: taskbarAppDetails\(\),/);
   assert.match(main, /syncShortcutIcons\(/);
+  assert.match(main, /runExeIconPatch\(/);
+  const workspace = read('electron/workspace-manager.js').toString('utf8');
+  assert.match(workspace, /window\.setAppDetails\(appDetails\)/);
 });
 
-test('giriş ekranı ve Electron sekme çubuğu BL metni yerine uygulama simgesini gösterir', () => {
+test('giriş ekranı büyük simgeyi, sol menü ve sekme çubuğu küçük boyut simgesini gösterir', () => {
   const login = read('public/select-user.html').toString('utf8');
-  assert.match(login, /class="logoMark logoMark--image"[^>]*><img src="\/icons\/icon-192\.png"/);
+  assert.match(login, /class="logoMark logoMark--image"[^>]*><img src="\/icons\/icon-512\.png" alt="" width="112" height="112"/);
+  assert.match(read('public/giris.css').toString('utf8'), /\.logoMark--image\{width:112px;height:112px/);
+  const index = read('public/index.html').toString('utf8');
+  assert.match(index, /<img class="brandMarkImage" src="icons\/icon-mark\.png/);
   const shell = read('electron/workspace.html').toString('utf8');
-  assert.match(shell, /class="brand"[^>]*><img src="\.\.\/public\/icons\/icon-192\.png"/);
-  assert.ok(fs.existsSync(path.join(root, 'electron', '..', 'public', 'icons', 'icon-192.png')));
-  // Kullanıcı seçimi oturumdan önce açılır; simge güvenlik geçidine takılmamalı.
+  assert.match(shell, /class="brand"[^>]*><img src="\.\.\/public\/icons\/icon-mark\.png"/);
+  // Kullanıcı seçimi oturumdan önce açılır; simgeler güvenlik geçidine takılmamalı.
   const server = read('server/server.js').toString('utf8');
-  const route = server.indexOf("app.get(['/icons/icon-192.png', '/icons/icon-512.png']");
+  const route = server.indexOf("app.get(['/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-mark.png']");
   assert.ok(route > 0 && route < server.indexOf('createStaticGzip('), 'simge rotası statik katmandan önce olmalı');
+});
+
+test('sağ üst kullanıcı avatarı uygulama simgesiyle aynı malzemede, adın baş harfleriyle', () => {
+  const index = read('public/index.html').toString('utf8');
+  assert.match(index, /<span id="currentUserInitials" class="blSteelInitials">/);
+  const ui = read('public/user-access-ui.js').toString('utf8');
+  assert.match(ui, /avatar\.textContent = initials\(profile\.displayName\)/);
+  assert.match(ui, /<span class="userMenuAvatar"><span class="blSteelInitials">\$\{esc\(initials\(profile\.displayName\)\)\}<\/span><\/span>/);
+  const css = read('public/experience.css').toString('utf8');
+  assert.match(css, /\.userAvatarBtn,\[data-theme\] \.userAvatarBtn,\.userMenuAvatar,\[data-theme\] \.userMenuAvatar\{\s*background:#2a2c31 url\("icons\/avatar-patch\.png"\)/);
+  assert.match(css, /\.blSteelInitials\{[^}]*background-clip:text;color:transparent;/);
 });
 
 function fixture() {

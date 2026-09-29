@@ -53,7 +53,8 @@ const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
 const { createWorkspaceManager } = require('./workspace-manager');
-const { syncShortcutIcons } = require('./shortcut-icon');
+const { syncShortcutIcons, ensureStableIcon, refreshShellIcons } = require('./shortcut-icon');
+const { runExeIconPatch } = require('./exe-icon');
 
 const APP_CORE_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_BOUNDS = { width: 1600, height: 1000 };
@@ -1308,7 +1309,8 @@ function createMainWindow(origin) {
     shellFile: path.join(__dirname, 'workspace.html'),
     shellPreload: path.join(__dirname, 'workspace-preload.js'),
     contentPreload: path.join(__dirname, 'preload.js'),
-    iconPath: path.join(APP_CORE_ROOT, 'buyerlog.ico'),
+    iconPath: APP_ICON_SOURCE,
+    appDetails: taskbarAppDetails(),
     loadWindowState,
     saveWindowState,
     applyNavigationPolicy,
@@ -1857,10 +1859,36 @@ function registerIpc() {
 }
 
 /*
- * Kısayol simgesi (bkz. shortcut-icon.js): BuyerLog.exe'nin gömülü simgesi
- * app-core güncellemesiyle değişmediği için mevcut Buyer Log kısayolları
- * buyerlog.ico'ya yönlendirilir. Açılışı geciktirmemesi için arka planda çalışır.
+ * Uygulama simgesi Windows'ta (bkz. shortcut-icon.js, exe-icon.js): BuyerLog.exe'nin
+ * gömülü simgesi app-core güncellemesiyle değişmez. Pencereler görev çubuğu
+ * kimliği/simgesiyle açılır; mevcut kısayollar buyerlog.ico'ya yönlendirilir ve
+ * exe'nin simgesi ayrı bir süreçte güncellenir. Açılışı geciktirmemesi için
+ * kısayol/exe işleri arka planda çalışır.
  */
+const APP_USER_MODEL_ID = 'com.lcw.buyerlog';
+const APP_ICON_SOURCE = path.join(APP_CORE_ROOT, 'buyerlog.ico');
+
+function brandingDir() {
+  return path.join(paths.localDataRoot, 'branding');
+}
+
+function taskbarAppDetails() {
+  if (process.platform !== 'win32' || !app.isPackaged) return null;
+  try {
+    const icon = ensureStableIcon({ sourceIcon: APP_ICON_SOURCE, iconDir: brandingDir() });
+    return {
+      appId: APP_USER_MODEL_ID,
+      appIconPath: icon,
+      appIconIndex: 0,
+      relaunchCommand: '"' + process.execPath + '"',
+      relaunchDisplayName: 'Buyer Log',
+    };
+  } catch (error) {
+    log('Görev çubuğu simgesi hazırlanamadı: ' + error.message);
+    return null;
+  }
+}
+
 function scheduleShortcutIconSync() {
   if (process.platform !== 'win32' || !app.isPackaged) return;
   const timer = setTimeout(() => {
@@ -1869,15 +1897,25 @@ function scheduleShortcutIconSync() {
         shell,
         getPath: name => app.getPath(name),
         exePath: process.execPath,
-        sourceIcon: path.join(APP_CORE_ROOT, 'buyerlog.ico'),
-        iconDir: path.join(paths.localDataRoot, 'branding'),
+        sourceIcon: APP_ICON_SOURCE,
+        iconDir: brandingDir(),
         log,
       });
-      if (result.updated.length) log('Kısayol simgesi güncellendi: ' + result.updated.length + ' kısayol');
+      if (result.updated.length) {
+        log('Kısayol simgesi güncellendi: ' + result.updated.length + ' kısayol');
+        refreshShellIcons();
+      }
     } catch (error) {
       log('Kısayol simgesi eşitlenemedi: ' + error.message);
     }
-  }, 8000);
+    runExeIconPatch({
+      exePath: process.execPath,
+      sourceIcon: APP_ICON_SOURCE,
+      stateFile: path.join(brandingDir(), 'exe-icon.json'),
+      log,
+      onApplied: () => refreshShellIcons(),
+    }).catch(error => log('BuyerLog.exe simgesi güncellenemedi: ' + error.message));
+  }, 15000);
   if (timer.unref) timer.unref();
 }
 
@@ -1885,7 +1923,7 @@ function scheduleShortcutIconSync() {
 
 function bootstrap() {
   app.setName('Buyer Log');
-  app.setAppUserModelId('com.lcw.buyerlog');
+  app.setAppUserModelId(APP_USER_MODEL_ID);
 
   paths = desktopPaths(resolvePortableRoot({
     packaged: app.isPackaged,
