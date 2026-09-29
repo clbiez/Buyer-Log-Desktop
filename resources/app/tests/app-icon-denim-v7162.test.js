@@ -63,14 +63,15 @@ test('favicon, PWA manifest ve Electron pencereleri aynı simgeyi gösterir', ()
   assert.match(workspace, /window\.setAppDetails\(appDetails\)/);
 });
 
-test('giriş ekranı büyük simgeyi, sol menü ve sekme çubuğu küçük boyut simgesini gösterir', () => {
+test('giriş ekranı büyük simgeyi, sol menü küçük boyut simgesini gösterir ve sekme çubuğu logosuzdur', () => {
   const login = read('public/select-user.html').toString('utf8');
   assert.match(login, /class="logoMark logoMark--image"[^>]*><img src="\/icons\/icon-512\.png" alt="" width="112" height="112"/);
   assert.match(read('public/giris.css').toString('utf8'), /\.logoMark--image\{width:112px;height:112px/);
   const index = read('public/index.html').toString('utf8');
   assert.match(index, /<img class="brandMarkImage" src="icons\/icon-mark\.png/);
   const shell = read('electron/workspace.html').toString('utf8');
-  assert.match(shell, /class="brand"[^>]*><img src="\.\.\/public\/icons\/icon-mark\.png"/);
+  assert.doesNotMatch(shell, /class="brand"/);
+  assert.doesNotMatch(shell, /\.\.\/public\/icons\/icon-mark\.png/);
   // Kullanıcı seçimi oturumdan önce açılır; simgeler güvenlik geçidine takılmamalı.
   const server = read('server/server.js').toString('utf8');
   const route = server.indexOf("app.get(['/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-mark.png']");
