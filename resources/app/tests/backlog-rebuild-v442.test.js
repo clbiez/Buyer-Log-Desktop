@@ -161,7 +161,8 @@ test('v4.48 Backlog Excel statüsü aynı yüzde 5 kuralını kullanır', () => 
 });
 
 test('v4.50 Backlog Excel net sipariş miktarını sabit, satır miktarını Adet sütununda dışa aktarır', () => {
-  const { orders, map, overrides } = parsed([asas()], [
+  // ASAS Kalan Alım = Net Alım - Antrepoya Giren (3000 Depoda) = 7000.
+  const { orders, map, overrides } = parsed([asas({ 'Kalan Alım Sipariş Miktarı': 7000, 'Antrepoya Giren Miktar': 3000 })], [
     ias({ 'Yükleme Toplam Adet': 3000, 'Supplier Portal Statü': 'Depoda' }),
     ias({ 'Yükleme Toplam Adet': 4000, 'Supplier Portal Statü': 'Yol Operasyonları' }),
   ]);
@@ -169,7 +170,9 @@ test('v4.50 Backlog Excel net sipariş miktarını sabit, satır miktarını Ade
   assert.strictEqual(rows.length, 3);
   assert.deepStrictEqual(rows.map(r => r['Net Alım Sipariş Miktarı']), [10000, 10000, 10000]);
   assert.deepStrictEqual(rows.map(r => r['Adet']), [3000, 3000, 4000]);
-  assert.deepStrictEqual(rows.map(r => r['Kalan Alım Sipariş Miktarı']), [3000, 0, 0]);
+  // ASAS sipariş düzeyi Kalan Alım (7000) satırlara dağıtılır: önce Üretimde
+  // bakiyesi (3000), sonra yoldaki parsiyel (4000); Depoda parsiyeli 0.
+  assert.deepStrictEqual(rows.map(r => r['Kalan Alım Sipariş Miktarı']), [3000, 0, 4000]);
   assert.deepStrictEqual(rows.map(r => r['Net Gelen Alım Sipariş Miktarı']), [0, 3000, 4000]);
   assert.strictEqual(rows.reduce((sum, row) => sum + row['Adet'], 0), 10000);
 });
