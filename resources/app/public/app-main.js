@@ -9178,7 +9178,8 @@ function overviewCollectionSummaryDashboardContext(){
 function renderOverviewCollectionSummary(){
   const root=document.getElementById('ovCollectionSummary'),dashboard=window.BLOverviewCollectionDashboard;
   if(!root||!dashboard||!window.BLOverviewCollectionSummary)return;
-  root.style.display='block';
+  /* Ana ekran widget'ı flex kabuktur; satır içi display gövde kaydırmasını bozar. */
+  root.style.display='';
   dashboard.render(overviewCollectionSummaryDashboardContext());
 }
 function scheduleOverviewCollectionSummaryRender(){
@@ -9314,7 +9315,7 @@ function renderOverviewPriorityReminder(rows){
   const list=document.getElementById('ovPriorityList');
   const method=document.getElementById('ovPriorityMethod');
   if(!root||!intro||!stats||!list||!method)return;
-  root.style.display='block';
+  root.style.display='';
   updateOverviewNotesSortButton();
   if(!state.cp){
     const loading=overviewCpLoadState!=='error';
@@ -13854,6 +13855,7 @@ function hydrateUserPreferencesAfterUi(){
     window.BLPerf?.mark?.('AUTH_USER_LOAD_READY',{mode:'after-ui',applied:Number(sync&&sync.applied)||0,pushed:Number(sync&&sync.pushed)||0});
     window.BLPerf?.mark?.('AUTH_READY',{mode:'after-ui'});
     if(sync&&Number(sync.applied)>0){
+      window.BLOverviewHome?.reload?.();
       coreFilterAutoReady=false;
       applyCoreAutoFilterState();
       if(state.cp)renderCP();

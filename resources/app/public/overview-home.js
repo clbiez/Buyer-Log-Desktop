@@ -202,7 +202,7 @@
     const el=widgetEl(key),m=metrics();if(!el||!m)return;
     const rect=el.getBoundingClientRect(),found=L.locate(state,key);if(!found)return;
     selectedKey=key;
-    session={kind:'move',key,el,startX:clientX,startY:clientY,offsetX:clientX-rect.left,offsetY:clientY-rect.top,base:L.normalize(state),preview:null,target:null,started:true,overRemove:false,edgeSide:'',edgeTimer:0};
+    session={kind:'move',key,el,originPage:state.page,lastX:clientX,lastY:clientY,startX:clientX,startY:clientY,offsetX:clientX-rect.left,offsetY:clientY-rect.top,base:L.normalize(state),preview:null,target:null,started:true,overRemove:false,edgeSide:'',edgeTimer:0};
     el.classList.add('isLifted');
     dropZones(true);
     apply({preview:session.base,skipKey:key});
@@ -210,6 +210,7 @@
   }
   function updateMove(clientX,clientY){
     const s=session;if(!s||s.kind!=='move')return;
+    s.lastX=clientX;s.lastY=clientY;
     s.el.style.transform=`translate(${clientX-s.startX}px,${clientY-s.startY}px) scale(1.02)`;
     const remove=document.querySelector('.ovHomeDropRemove');
     s.overRemove=hit(remove,clientX,clientY);remove?.classList.toggle('isHot',s.overRemove);
@@ -239,14 +240,18 @@
       if(!session||session!==s)return;
       let base=s.base,target=base.page+(side==='next'?1:-1);
       if(target>=base.pages.length){
-        if(base.pages.length>=L.MAX_PAGES)return;
+        /* Tek başına duran widget için yeni boş sayfa açılmaz (boş sayfa bırakırdı). */
+        if(base.pages.length>=L.MAX_PAGES||(base.pages[base.page]?.items.length||0)<=1)return;
         base=L.addPage(base);target=base.pages.length-1;
       }
       if(target<0)return;
       base=L.sendToPage(base,s.key,target);base.page=target;
-      s.base=L.normalize(base);s.target=null;s.edgeSide='';
+      /* Kenarda kalındıkça tekrar sayfa çevrilmez; kenardan çıkıp yeniden girmek gerekir. */
+      s.base=L.normalize(base);s.target=null;s.preview=null;s.edgeSide=side;
       state=L.setPage(state,target);
       apply({preview:s.base,skipKey:s.key});dropZones(true);
+      /* İşaretçi hareket etmeden bırakılırsa da yeni sayfadaki önizleme kullanılır. */
+      updateMove(s.lastX,s.lastY);
     },EDGE_DWELL_MS);
   }
   function finishMove(cancel){
@@ -255,7 +260,7 @@
     s.el.classList.remove('isLifted');s.el.style.transform='';
     grid()?.querySelector(':scope > .ovHomeGhost')?.remove();
     dropZones(false);session=null;
-    if(cancel||!s.preview){state=L.normalize({...state,page:s.base.page});apply({animate:true});return;}
+    if(cancel||!s.preview){state=L.setPage(state,s.originPage);apply({animate:true});return;}
     const removed=s.overRemove;
     commit(s.preview,{animate:true});
     if(removed){selectedKey='';announce(T(`${widgetName(s.key)} kaldırıldı. Widget ekle ile geri getirebilirsiniz.`,`${widgetName(s.key)} removed. Bring it back from Add widget.`));}
@@ -436,7 +441,11 @@
     g.addEventListener('pointerdown',onPointerDown);
     window.addEventListener('pointermove',onPointerMove,{passive:false});
     window.addEventListener('pointerup',onPointerUp);
-    window.addEventListener('pointercancel',()=>endSession(true));
+    window.addEventListener('pointercancel',()=>{
+      if(longPress){clearTimeout(longPress.timer);longPress=null;}
+      if(session&&session.kind==='pending')session=null;
+      endSession(true);
+    });
     g.addEventListener('keydown',onShieldKey);
     g.addEventListener('contextmenu',event=>{if(editing&&event.target.closest('[data-home-shield]'))event.preventDefault();});
     g.addEventListener('click',event=>{
@@ -501,8 +510,15 @@
     button.disabled=isNarrow();
     if(isNarrow())button.title=T('Düzenlemek için pencereyi genişletin.','Widen the window to edit the layout.');
   }
+  /* Yükleme sırasında kaydedilmez: senkron tercihlerde yerel yazma zaman
+     damgası alır ve sunucudaki (başka cihazdaki) düzenin önüne geçerdi.
+     Yalnız kullanıcı eylemi kaydeder; sunucudan gelen düzen reload ile alınır. */
   function init(){
-    state=load();persist();bind();apply();
+    state=load();bind();apply();
+  }
+  function reload(){
+    if(session||editing)return;
+    state=load();apply();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
   window.BLOverviewHome={
@@ -510,5 +526,6 @@
     state:()=>L.normalize(state),
     setEditing,isEditing:()=>editing,goToPage,openDrawer,
     reset:()=>commit(L.defaults()),
+    reload,
   };
 })();

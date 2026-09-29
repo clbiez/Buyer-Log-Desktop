@@ -29,8 +29,9 @@
   /* Öncelik = durum paleti; kategorik renklerle karıştırılmaz. */
   const PRIORITY_TONES=Object.freeze({CRITICAL:'critical',ACTION_TODAY:'today',ACTION_THIS_WEEK:'week',WATCH:'watch',ON_TRACK:'ok',UNKNOWN:'unknown'});
 
-  const clean=value=>String(value==null?'':value).replace(/\s+/g,' ').trim();
-  const esc=value=>clean(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  /* Etiket ham tutulur: drill, tablo ve CP filtresiyle birebir aynı değeri kullanır. */
+  const raw=value=>String(value==null?'':value).trim();
+  const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const num=value=>{const n=Number(value);return Number.isFinite(n)?n:0;};
   function lang(){try{return (document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';}catch(_){return 'tr';}}
   function fmt(value,l){return Math.round(num(value)).toLocaleString(l==='en'?'en-GB':'tr-TR');}
@@ -44,14 +45,14 @@
 
   /* ---- saf model yardımcıları (testlenir) ---- */
   function singleSeries(entries){
-    const rows=(Array.isArray(entries)?entries:[]).map(entry=>Array.isArray(entry)?{label:clean(entry[0])||'—',value:num(entry[1])}:{label:clean(entry&&entry.label)||'—',value:num(entry&&entry.value)})
+    const rows=(Array.isArray(entries)?entries:[]).map(entry=>Array.isArray(entry)?{label:raw(entry[0])||'—',value:num(entry[1])}:{label:raw(entry&&entry.label)||'—',value:num(entry&&entry.value)})
       .filter(row=>row.value>0).sort((a,b)=>b.value-a.value);
     const total=rows.reduce((sum,row)=>sum+row.value,0),max=rows.reduce((m,row)=>Math.max(m,row.value),0);
     return {rows:rows.map(row=>({...row,share:pct(row.value,total),ratio:max?row.value/max:0})),total,max};
   }
   function stackedSeries(rows,codes){
     const list=(Array.isArray(rows)?rows:[]).map(row=>({
-      label:clean(row&&row.label)||'—',count:num(row&&row.count),qty:num(row&&row.qty),
+      label:raw(row&&row.label)||'—',count:num(row&&row.count),qty:num(row&&row.qty),
       parts:(Array.isArray(codes)?codes:[]).map(code=>({code,value:num(row&&row.priorities&&row.priorities[code])})),
     })).filter(row=>row.count>0).sort((a,b)=>b.count-a.count);
     const max=list.reduce((m,row)=>Math.max(m,row.count),0);
@@ -59,7 +60,7 @@
   }
   function groupSeries(rows){
     const list=(Array.isArray(rows)?rows:[]).map(row=>({
-      label:clean(row&&row.label)||'—',active:num(row&&row.active),total:num(row&&row.total),remaining:num(row&&row.remaining),totalQty:num(row&&row.totalQty),
+      label:raw(row&&row.label)||'—',active:num(row&&row.active),total:num(row&&row.total),remaining:num(row&&row.remaining),totalQty:num(row&&row.totalQty),
       fobUsd:num(row&&row.fobUsd),fobTry:num(row&&row.fobTry),
     })).filter(row=>row.total>0).sort((a,b)=>b.active-a.active||b.total-a.total);
     const max=list.reduce((m,row)=>Math.max(m,row.active),0);

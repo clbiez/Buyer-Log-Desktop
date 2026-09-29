@@ -154,3 +154,19 @@ test('widget\'lar boyutlarına uyar: boyut kapsayıcısı, kaydırılan gövde v
   // Dünya saati kartları kaldırılan radar stil sayfasından buraya taşındı.
   assert.match(CSS, /\.ovClockCard\{/);
 });
+
+test('senkron düzen kaydı yüklemede damgalanmaz; sunucudan gelen düzen yeniden okunur', () => {
+  const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+  const init = HOME.slice(HOME.indexOf('function init(){'), HOME.indexOf('function reload(){'));
+  assert.doesNotMatch(init, /persist\(\)/);
+  assert.match(HOME, /reload,\n/);
+  assert.match(APP, /if\(sync&&Number\(sync\.applied\)>0\)\{\n\s*window\.BLOverviewHome\?\.reload\?\.\(\);/);
+  // Widget kabuğu flex'tir; satır içi display:block gövde kaydırmasını bozar.
+  assert.doesNotMatch(APP, /getElementById\('ovCollectionSummary'\)[\s\S]{0,200}root\.style\.display='block'/);
+});
+
+test('sayfa kenarı taşıması hareketsiz bırakılsa da korunur; iptal başlangıç sayfasına döner; pointercancel uzun basmayı iptal eder', () => {
+  assert.match(HOME, /updateMove\(s\.lastX,s\.lastY\);/);
+  assert.match(HOME, /state=L\.setPage\(state,s\.originPage\)/);
+  assert.match(HOME, /pointercancel',\(\)=>\{\n\s*if\(longPress\)\{clearTimeout\(longPress\.timer\);longPress=null;\}/);
+});

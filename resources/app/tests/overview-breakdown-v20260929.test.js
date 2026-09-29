@@ -67,3 +67,7 @@ test('app-main grafik modelini tablolarla aynı toplamlardan kurar ve drill\'i C
   // Ad sütunu kaynak verisinden gelir; HTML olarak yorumlanmaz.
   assert.match(APP, /entries\.map\(\(\[k,v\]\)=>`<tr><td>\$\{escapeHtml\(k\)\}<\/td>/);
 });
+
+test('drill etiketi ham kalır: iç boşluk daraltılmaz (CP filtresi tablo değeriyle aynı)', () => {
+  assert.equal(B.singleSeries([['A  B', 2]]).rows[0].label, 'A  B');
+});
