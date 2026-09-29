@@ -117,7 +117,9 @@ test('v4.50 CP Logistic 700lük parsiyelin yanında ASAS kaynaklı 1300 Üretimd
 test('v4.48 CP Logistic merkez sevke hazır depo bakiyesi yüzde 5i aşan Depoda parsiyelini Retaile Aktarım Bekleniyor gösterir', () => {
   const rows = build([asas({
     'Net Alım Sipariş Miktarı': 10000,
-    'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': 501,
+    // Aktif sipariş (Kalan 1); retaile aktarım bekleyen = 502 − 1 = 501 > %5.
+    'Kalan Alım Sipariş Miktarı': 1,
+    'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': 502,
   })], [ias({
     'Supplier Portal Statü': 'Depoda',
     'Yükleme Toplam Adet': 10000,

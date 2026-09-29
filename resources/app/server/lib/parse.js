@@ -1098,6 +1098,23 @@ function parseASASMatrix(rows, ruleValue) {
     };
   };
   const fabricValueFields = ['fabricCategory', 'fabricSupplierCountry', 'fabricSupplier', 'kumasTipi', 'iplikNo', 'fabricWeight', 'karisim'];
+  // Aynı sipariş kimliğinin tekrar eden satırlarını ayırt etmek için kullanılan
+  // boyut imzası: bilinen ASAS boyut alanları + kumaş alanları. Miktarlar ve
+  // CP'ye eklenen Database/Horizon sütunları (__CPX_) imzaya girmez.
+  const dimensionSignatureFields = ['season', 'model', 'ccode', 'colour', 'manufacturer', 'category', 'merch', 'ageGroup',
+    'buyerGrup', 'countryRaw', 'license', 'productDescription', 'buyer', 'line', 'ozel', 'plm',
+    'ex', 'retail', 'mb', 'opd', 'shipConf', ...fabricValueFields, '_isMainFabric'];
+  const dimensionSignature = order => JSON.stringify(dimensionSignatureFields.map(field => {
+    const value = order[field];
+    return value instanceof Date ? value.getTime() : (value == null ? '' : String(value));
+  }));
+  const quantityFields = ['qty', 'kalan', 'antrepo', 'merkezSevkeHazirKalan'];
+  const quantityHeaders = {
+    qty: 'Net Alım Sipariş Miktarı', kalan: 'Kalan Alım Sipariş Miktarı',
+    antrepo: 'Antrepoya Giren Miktar', merkezSevkeHazirKalan: merkezSevkeHazirHeader,
+  };
+  const blankSourceValue = value => value == null || (typeof value === 'string' && value.trim() === '');
+  const signatureByOrder = new Map();
   const seen = new Map();
   const duplicateMainDetailByKey = new Map();
   let mainFabricRows = 0, ignoredNonMainRows = 0, duplicateMainRows = 0;
@@ -1117,7 +1134,30 @@ function parseASASMatrix(rows, ruleValue) {
     const current = seen.get(key);
     if (!current) {
       seen.set(key, order);
+      signatureByOrder.set(order, dimensionSignature(order));
       continue;
+    }
+    // CP'ye eklenen Database/Horizon sütunu (__CPX_), SUMMARIZECOLUMNS'ta gruplama
+    // sütunu olduğu için aynı siparişi değer bazında birden fazla satıra bölebilir
+    // (ör. boş değerli satır + dolu satır). Bilinen boyutları birebir aynı, yalnız
+    // __CPX_ değeri ve miktarları farklı olan satırlar aynı siparişin PARÇALARIDIR:
+    // miktarlar toplanır. Miktarları birebir aynı olan tekrarlar sipariş miktarını
+    // tekrar eder; __CPX_ farkı olmayan birebir kimlik tekrarlarında ilk kayıt korunur.
+    const cpExtraDiffers = cpExtraHeaders.some(name => {
+      const a = current._cpExtra && current._cpExtra[name], b = order._cpExtra && order._cpExtra[name];
+      const text = value => value instanceof Date ? String(value.getTime()) : (value == null ? '' : String(value).trim());
+      return text(a) !== text(b);
+    });
+    if (cpExtraDiffers && signatureByOrder.get(current) === dimensionSignature(order)
+      && quantityFields.some(field => (Number(current[field]) || 0) !== (Number(order[field]) || 0))) {
+      quantityFields.forEach(field => {
+        current[field] = (Number(current[field]) || 0) + (Number(order[field]) || 0);
+        const header = quantityHeaders[field];
+        if (header && current._sourceFields && Object.prototype.hasOwnProperty.call(current._sourceFields, header)) {
+          current._sourceFields[header] = current[field];
+        }
+      });
+      if (!Number.isFinite(current.fob) && Number.isFinite(order.fob)) current.fob = order.fob;
     }
     if (order._isMainFabric) {
       if (current._isMainFabric) {
@@ -1143,6 +1183,16 @@ function parseASASMatrix(rows, ruleValue) {
     // Resim bağlantısı yalnız sonraki satırda dolu olabilir. İlk dolu ASAS
     // bağlantısını sipariş kimliğinde koru.
     if (!current.technicalImageUrl && order.technicalImageUrl) current.technicalImageUrl = order.technicalImageUrl;
+    // Database/Horizon sütunlarının (__CPX_) ve ham kaynak alanlarının değeri de
+    // yalnız sonraki tekrar satırında dolu olabilir; ilk satır boşsa ilk dolu
+    // değer korunur. Aksi halde ASAS'ta verisi olan sütun CP'de boş görünüyordu.
+    for (const bag of ['_cpExtra', '_sourceFields']) {
+      const target = current[bag], incoming = order[bag];
+      if (!target || !incoming) continue;
+      for (const [name, value] of Object.entries(incoming)) {
+        if (blankSourceValue(target[name]) && !blankSourceValue(value)) target[name] = value;
+      }
+    }
   }
   const orders = [...seen.values()].map(order => {
     const out = { ...order };
@@ -1864,16 +1914,27 @@ function applyFormulas(row, transitRules) {
 
 const RETAIL_WAITING_THRESHOLD_RATE = 0.05;
 
+// "Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo" henüz antrepoya hiç
+// girmemiş miktarı ("Kalan Alım Sipariş Miktarı": üretim / eksik yükleme) da
+// içerir. Retaile aktarım bekleyen miktar yalnız antrepoya girmiş ama merkez
+// sevke hazır depoya geçmemiş kısımdır: Kalan_Merkez − Kalan Alım. Aksi halde
+// yalnız eksik yüklemesi kalan bir siparişin (ör. 1289816: 465 − 465 = 0)
+// Depoda parsiyelleri yanlışlıkla Retaile Aktarım Bekleniyor oluyordu.
+function retailWaitingQty(order) {
+  const readyDepotRemainingQty = Math.max(0, Number(order && order.merkezSevkeHazirKalan) || 0);
+  const notArrivedQty = Math.max(0, Number(order && order.kalan) || 0);
+  return Math.max(0, readyDepotRemainingQty - notArrivedQty);
+}
+
 function shouldWaitForRetail(order) {
   const orderQty = Math.max(0, Number(order && order.qty) || 0);
-  const readyDepotRemainingQty = Math.max(0, Number(order && order.merkezSevkeHazirKalan) || 0);
-  return orderQty > 0 && readyDepotRemainingQty > orderQty * RETAIL_WAITING_THRESHOLD_RATE;
+  return orderQty > 0 && retailWaitingQty(order) > orderQty * RETAIL_WAITING_THRESHOLD_RATE;
 }
 
 function deriveOperationalStatus(baseStatus, order) {
   let status = baseStatus || '';
   // Yalnız IAS'ta Depoda görünen siparişler için ASAS database alanı değerlendirilir.
-  // "Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo" sipariş toplamının
+  // Retaile aktarım bekleyen miktar (Kalan_Merkez − Kalan Alım) sipariş toplamının
   // %5'inden BÜYÜKSE sipariş henüz retaile aktarılamamıştır. Eşik tam %5 ise
   // Depoda statüsü korunur. Bu kural sentetik Üretimde satırı oluşturmaz.
   if (turknorm(status) === 'DEPODA' && shouldWaitForRetail(order)) {
@@ -2089,7 +2150,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       'Buyer': o.buyer, 'Buyer Grup (TR)': o.buyerGrup, 'Line': o.line,
       'Kumaş Kategorisi': o.fabricCategory, 'Kumaşçı Ülkesi': o.fabricSupplierCountry, 'Kumaşçı': o.fabricSupplier,
       'Kumaş Tipi': o.kumasTipi, 'İplik No': o.iplikNo, 'Gramaj': o.fabricWeight, 'Karışım': o.karisim,
-      ...(o._cpExtra || {}), ...(primaryIas && primaryIas._cpExtra || {}),
+      ...(o._cpExtra || {}), ...cpIasExtraValues(primaryIas, orderLogisticSegments),
     };
     // Kullanıcı tanımlı boş not sütunları (Packet 9): değerler notesmap gibi
     // sipariş+model+renk anahtarıyla saklanır, ham ASAS satırına yazılmaz.
@@ -2102,6 +2163,24 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     if (!isActive) row.Priority = '';
     return attachSourceOrderRef(row, o);
   });
+}
+
+// IAS bağlantısından CP'ye eklenen Database/Horizon sütunları (__CPX_) önce CP
+// ana satırını belirleyen parsiyelden okunur. Ana satır Üretimde bakiyesi ise
+// (IAS satırı yoktur) veya o parsiyelde değer boşsa, siparişin diğer IAS
+// parsiyellerindeki ilk dolu değer kullanılır; kaynakta verisi olan sütun boş kalmaz.
+function cpIasExtraValues(primaryIas, segments) {
+  const out = { ...(primaryIas && primaryIas._cpExtra || {}) };
+  const blank = value => value == null || (typeof value === 'string' && value.trim() === '');
+  (Array.isArray(segments) ? segments : []).forEach(segment => {
+    const extra = segment && segment._iasRow && segment._iasRow._cpExtra;
+    if (!extra) return;
+    for (const [name, value] of Object.entries(extra)) {
+      if (blank(out[name]) && !blank(value)) out[name] = value;
+      else if (!Object.prototype.hasOwnProperty.call(out, name)) out[name] = value;
+    }
+  });
+  return out;
 }
 
 function buildCPRowsFromASAS(asasOrders, antrepoMap, overrides) {
@@ -2473,10 +2552,49 @@ function backlogProductionRemainder(orderQty, hits) {
 //   sentetik satır Eksik Yükleme; %10'dan büyükse Üretimde olur.
 // - IAS kaydı yoksa ASAS toplamının tamamı Üretimde kabul edilir.
 // CP ana satırı tek kalır ve parsiyeller açılır lojistik detayı olarak gösterilir.
+// ASAS bir siparişi TEK satırda verir; Backlog aynı siparişi IAS parsiyelleri ve
+// sentetik bakiye satırı olarak böler. "Kalan Alım Sipariş Miktarı" ve
+// "Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo" ASAS'ın sipariş düzeyindeki
+// değerleridir: satırlara parsiyel adedi olarak KOPYALANMAZ, siparişin bütün
+// satırlarına dağıtılır ve sütun toplamı her zaman ASAS değerine eşit kalır.
+// Dağıtım henüz merkez depoya ulaşmamış miktardan başlar (Üretimde / Eksik
+// Yükleme bakiyesi → yoldaki parsiyeller → Retaile Aktarım Bekleniyor → Depoda);
+// her satır kendi Adet'i kadar pay alır. Dağıtım, filtrelemeden ÖNCE siparişin
+// tam segment kümesi üzerinde yapılır; filtrelenmiş/önizleme listeleri aynı
+// payları gösterir.
+function asasAllocationRank(segment) {
+  if (!segment || segment._segmentKind !== 'ias') return 0;
+  const statusKey = antrepoStatusKey(segment._status);
+  if (statusKey === 'RETAILE AKTARIM BEKLENIYOR') return 2;
+  if (statusKey === 'DEPODA') return 3;
+  return 1;
+}
+function allocateAsasOrderQuantity(segments, total, field) {
+  let left = Math.max(0, Number(total) || 0);
+  const ordered = segments
+    .map((segment, index) => ({ segment, index, rank: asasAllocationRank(segment) }))
+    .sort((a, b) => a.rank - b.rank || a.index - b.index)
+    .map(item => item.segment);
+  ordered.forEach(segment => {
+    const take = Math.min(left, Math.max(0, Number(segment.qty) || 0));
+    segment[field] = take;
+    left -= take;
+  });
+  // ASAS değeri satır adetlerinin toplamını aşıyorsa fark kaybolmaz; toplamın
+  // ASAS ile birebir kalması için ilk dağıtım satırına yazılır.
+  if (left > 0 && ordered.length) ordered[0][field] += left;
+}
+function allocateAsasOrderQuantities(segments, order) {
+  if (!Array.isArray(segments) || !segments.length) return;
+  allocateAsasOrderQuantity(segments, order && order.kalan, '_asasRemainingQty');
+  allocateAsasOrderQuantity(segments, order && order.merkezSevkeHazirKalan, '_asasReadyDepotRemainingQty');
+}
+
 function buildBacklogOperationalRows(asasOrders, antrepoMap, overrides) {
   const config = matchRuleOf(overrides);
   const out = [];
   for (const order of Array.isArray(asasOrders) ? asasOrders : []) {
+    const orderStart = out.length;
     const hits = findAntrepoHits(antrepoMap, order, { config });
     const orderQty = backlogOrderQuantityFromAntrepo(order, hits);
     if (!(orderQty > 0)) continue;
@@ -2555,6 +2673,7 @@ function buildBacklogOperationalRows(asasOrders, antrepoMap, overrides) {
         orderQty,
       }));
     });
+    allocateAsasOrderQuantities(out.slice(orderStart), order);
   }
   return out;
 }
@@ -2966,9 +3085,13 @@ function buildBacklogDetailRows(asasOrders, antrepoMap, overrides, selector, opt
     if (ref) cpMap.set(ref, row);
   });
   return backlogTemplateRowsFromSegments(source, overrides, cpMap).map(row => {
-    // _backlogExcel yalnız Excel yazıcısının işine yarar; yanıtı şişirmesin.
+    // _backlogExcel yalnız Excel yazıcısının işine yarar; iç meta istenmediyse
+    // yanıtı şişirmesin. Rapor penceresi (includeInternalMeta) aynı satırları
+    // standart Backlog Excel'ine aktarır: meta olmadan _BL_ACTUAL_ANTREPO /
+    // _BL_HANDOVER_DATE / _BL_SHIP_CONFIRMATION_DATE boş kalıyor ve parsiyel
+    // satırlarının ANTREPO GİRİŞ TARİHİ ile ANTREPO-RETAIL formülleri boş çıkıyordu.
     const { _backlogExcel, _plmId, _colourCode, _modelName, _imageRef, _partial, ...rest } = row;
-    if(options&&options.includeInternalMeta)return {...rest,_plmId,_colourCode,_modelName,_imageRef,_partial};
+    if(options&&options.includeInternalMeta)return {...rest,_plmId,_colourCode,_modelName,_imageRef,_partial,_backlogExcel};
     return rest;
   });
 }
@@ -3150,8 +3273,16 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
     const cpRow = cp.get(order) || {};
 
     const receivedQty = (isProduction || isShortage) ? 0 : segmentQty;
-    const productionQty = isProduction ? segmentQty : 0;
     const warehouseQty = (isInWarehouse || isRetailWaiting) ? segmentQty : 0;
+    // ASAS sipariş düzeyi kalan miktarlarının bu satıra düşen payı
+    // (bkz. allocateAsasOrderQuantities). Pay bilgisi taşımayan eski segmentlerde
+    // önceki davranış korunur.
+    const asasRemainingQty = segment._asasRemainingQty != null
+      ? segment._asasRemainingQty
+      : (isProduction ? segmentQty : 0);
+    const asasReadyDepotRemainingQty = segment._asasReadyDepotRemainingQty != null
+      ? segment._asasReadyDepotRemainingQty
+      : (isRetailWaiting ? segmentQty : 0);
 
     const result = {
       'Sezon': order.season,
@@ -3184,10 +3315,10 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       'Net Alım Sipariş Miktarı': Math.max(0, Number(segment._orderQty) || Number(order.qty) || 0),
       'Adet': segmentQty,
       'Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo': warehouseQty,
-      'Kalan Alım Sipariş Miktarı': productionQty,
+      'Kalan Alım Sipariş Miktarı': asasRemainingQty,
       'FOB Fiyatı': isFinite(order.fob) ? roundHalfUp(order.fob, 2) : null,
       'Net Gelen Alım Sipariş Miktarı': receivedQty,
-      'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': isRetailWaiting ? segmentQty : 0,
+      'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': asasReadyDepotRemainingQty,
       'GÜNCEL DURUM\n(STATUS)': segment._status,
       'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)': revisedLoadDate,
       'RİSK\n(PRIORITY)': riskValue,
