@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.161",
-  "commit_sha": "f84b80500c1e09886c5e0204be5f504da2eccbe0",
-  "release_notes": "Buyer Log 7.0.161 TEST: Price & Supplier Analysis filtre alanı özelleştirilebilir hale getirildi. Kullanıcı Buying Group, Buyer, MAG, MMYG, Klasman, Ürün Grubu, Ülke ve Üretici filtrelerini ekleyip çıkarabilir; filtre düzeni kalıcıdır. Güncel ve kıyas sezonları için birbirinden bağımsız In-Store / OPD dönem alanı ve ay filtresi eklendi; farklı sezon ve aylar doğru şekilde karşılaştırılabilir. Tam Buyer Log regresyon paketi başarıyla geçti."
+  "version": "7.0.162",
+  "commit_sha": "e57e76284e90bab6c74f2d76644334541a555cb1",
+  "release_notes": "Buyer Log 7.0.162 TEST: Claude tarafından hazırlanan Android-style Overview ana ekranı ve review düzeltmeleri entegre edildi; widget yerleşimi, çoklu sayfa, sürükle-bırak, yeniden boyutlandırma, Active Order Breakdown ve senkron layout davranışları güncellendi. LFL ana analiz tablolarının yükseklikleri sabitlendi ve kullanıcı resize ayarı kalıcı hale getirildi. Tam Buyer Log regresyon paketi başarıyla geçti."
 }
