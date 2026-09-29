@@ -339,9 +339,9 @@
     // Çift tıklama varsayılana döndürür.
     handle.addEventListener('dblclick',()=>{applyAnalysisSplit(ANALYSIS_SPLIT_DEFAULT);saveAnalysisSplit(ANALYSIS_SPLIT_DEFAULT);});
   }
-  const ANALYSIS_HEIGHT_MIN=120, ANALYSIS_HEIGHT_MAX=760;
+  const ANALYSIS_HEIGHT_MIN=120, ANALYSIS_HEIGHT_MAX=760, ANALYSIS_HEIGHT_DEFAULT=360;
   const ANALYSIS_HEIGHT_TARGETS={
-    group:{tableId:'lflGroupTable',handleId:'lflGroupHeightHandle'},
+    group:{wrapId:'lflGroupTableWrap',handleId:'lflGroupHeightHandle'},
     manufacturer:{wrapId:'lflManufacturerVolume',handleId:'lflManufacturerHeightHandle'},
   };
   function analysisHeightWrap(key){
@@ -362,13 +362,27 @@
   function applyAnalysisHeight(key,value){
     const wrap=analysisHeightWrap(key),meta=ANALYSIS_HEIGHT_TARGETS[key],handle=meta?$(meta.handleId):null;
     if(!wrap)return;
-    const height=clampAnalysisHeight(value);
-    if(height==null){
-      wrap.classList.remove('lflManualHeight');wrap.style.removeProperty('--lfl-manual-height');delete wrap.dataset.lflHeight;
-      handle?.removeAttribute('aria-valuenow');return;
+    const manualHeight=clampAnalysisHeight(value),height=manualHeight??clampAnalysisHeight(ANALYSIS_HEIGHT_DEFAULT);
+    if(height==null)return;
+    const isManual=manualHeight!=null;
+    wrap.classList.toggle('lflManualHeight',isManual);
+    wrap.style.setProperty('--lfl-manual-height',`${height}px`);
+    // Height is deliberately owned here, not by content/flex layout. The
+    // !important inline declaration prevents toolbar/filter renders from
+    // stretching the viewport; only this resize controller may change it.
+    wrap.style.setProperty('height',`${height}px`,'important');
+    wrap.style.setProperty('max-height',`${height}px`,'important');
+    wrap.style.setProperty('min-height','0','important');
+    wrap.style.setProperty('overflow-y','auto','important');
+    if(isManual){
+      wrap.dataset.lflHeight=String(height);handle?.setAttribute('aria-valuenow',String(height));
+    }else{
+      delete wrap.dataset.lflHeight;handle?.removeAttribute('aria-valuenow');
     }
-    wrap.classList.add('lflManualHeight');wrap.style.setProperty('--lfl-manual-height',`${height}px`);wrap.dataset.lflHeight=String(height);
-    handle?.setAttribute('aria-valuenow',String(height));
+  }
+  function syncAnalysisHeights(){
+    const saved=loadAnalysisHeights();
+    Object.keys(ANALYSIS_HEIGHT_TARGETS).forEach(key=>applyAnalysisHeight(key,saved[key]));
   }
   function saveAnalysisHeight(key,value){
     const saved=loadAnalysisHeights(),height=clampAnalysisHeight(value);
@@ -2154,7 +2168,7 @@
     // (dataset.splitBound) olduğu için her çizimde çağrılması güvenli.
     initAnalysisSplitter();
     initAnalysisHeightResizers();
-    const a=compute();state.analysis=a;updatePortfolioAccessButtons(a);renderTrialImpact(a);renderKpis(a);renderInsights(a);renderSource();renderGroupTable(a);renderManufacturerVolumes(a);renderCustomCompare(a);
+    const a=compute();state.analysis=a;updatePortfolioAccessButtons(a);renderTrialImpact(a);renderKpis(a);renderInsights(a);renderSource();renderGroupTable(a);renderManufacturerVolumes(a);renderCustomCompare(a);syncAnalysisHeights();
     if(lflDetailModalState)renderLflDetailModal();saveFilters();
   }
   function exportAnalysis(){

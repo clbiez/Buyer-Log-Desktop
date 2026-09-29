@@ -11,15 +11,21 @@ const JS = read('lfl.js');
 const CSS = read('lfl.css');
 const HTML = read('index.html');
 
-test('LFL comparison ve manufacturer panellerinde yatay yükseklik ayırıcıları bulunur', () => {
+test('LFL comparison ve manufacturer panelleri sabit wrapper kimlikleri ve yatay yükseklik ayırıcıları kullanır', () => {
+  assert.match(HTML, /id="lflGroupTableWrap"/);
+  assert.match(HTML, /id="lflManufacturerVolume"/);
   assert.match(HTML, /id="lflGroupHeightHandle"[^>]*aria-orientation="horizontal"/);
   assert.match(HTML, /id="lflManufacturerHeightHandle"[^>]*aria-orientation="horizontal"/);
   assert.match(HTML, /lflAnalysisResizableCard/);
 });
 
 test('LFL ana analiz tabloları render ve toolbar işlemlerinde sabit yükseklikte kalır', () => {
-  assert.match(CSS, /\.lflAnalysisGrid \.lflTableWrap:not\(\.lflManualHeight\)\{[^}]*height:clamp\(220px,34vh,360px\)!important;[^}]*max-height:clamp\(220px,34vh,360px\)!important;[^}]*min-height:0;[^}]*overflow-y:auto;/s);
-  assert.match(CSS, /\.lflAnalysisGrid>\.lflAnalysisResizableCard\{[^}]*align-self:start[^}]*height:auto/s);
+  assert.match(CSS, /#view-lfl #lflGroupTableWrap,[\s\S]*#view-lfl #lflManufacturerVolume\{[^}]*height:360px!important;[^}]*max-height:360px!important;[^}]*overflow-y:auto!important;/);
+  assert.match(CSS, /\.lflAnalysisGrid>\.lflAnalysisResizableCard\{[^}]*align-self:start!important[^}]*height:auto!important/s);
+  assert.match(JS, /ANALYSIS_HEIGHT_DEFAULT=360/);
+  assert.match(JS, /style\.setProperty\('height',`\$\{height\}px`,'important'\)/);
+  assert.match(JS, /style\.setProperty\('max-height',`\$\{height\}px`,'important'\)/);
+  assert.match(JS, /renderGroupTable\(a\);renderManufacturerVolumes\(a\);renderCustomCompare\(a\);syncAnalysisHeights\(\);/);
 });
 
 test('LFL tablo yükseklikleri kullanıcı bazında kalıcıdır ve sıfırlanabilir', () => {
@@ -31,8 +37,10 @@ test('LFL tablo yükseklikleri kullanıcı bazında kalıcıdır ve sıfırlanab
   assert.match(JS, /initAnalysisHeightResizers\(\);/);
 });
 
-test('LFL manuel yükseklik gerçek viewport yüksekliğidir', () => {
-  assert.match(CSS, /\.lflAnalysisGrid \.lflTableWrap\.lflManualHeight\{[^}]*height:var\(--lfl-manual-height\)!important;[^}]*max-height:var\(--lfl-manual-height\)!important;[^}]*min-height:0;[^}]*overflow-y:auto;/s);
+test('LFL manuel yükseklik yalnız kullanıcı resize state’i ile sabit viewport değerini değiştirir', () => {
+  assert.match(CSS, /#view-lfl #lflGroupTableWrap\.lflManualHeight,[\s\S]*#view-lfl #lflManufacturerVolume\.lflManualHeight\{[^}]*height:var\(--lfl-manual-height,360px\)!important;[^}]*max-height:var\(--lfl-manual-height,360px\)!important;/);
+  assert.match(JS, /wrap\.classList\.toggle\('lflManualHeight',isManual\)/);
+  assert.match(JS, /function syncAnalysisHeights\(\)/);
 });
 
 test('LFL geç layout kuralı analiz tablolarının sabit yüksekliğini ezmez', () => {
