@@ -52,6 +52,7 @@ test('v6.67 Koleksiyon öneri paneli konumlandırma sırasında kapanırsa null 
     cancelAnimationFrame(){},
     closeSubmfrDrop(){},
     kolCatalogValues(){return ['Category A'];},
+    kolCatalogDropFooterHtml(){return '';},
     turknorm(value){return String(value||'').toLowerCase();},
     norm(value){return String(value||'').trim();},
     escapeHtml(value){return String(value);},
