@@ -83,6 +83,7 @@
 <script>(function(){try{var t=BLStorage.getItem('lcw_theme');if(!t)t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.dataset.theme=(t==='dark'||t==='grey')?t:'light';var r=BLStorage.getItem('lcw_rail');document.documentElement.dataset.rail=(r==='min')?'min':'max';var f=Number(BLStorage.getItem('lcw_font_step')||0);f=f>=0&&f<=3?Math.trunc(f):0;document.documentElement.dataset.fontStep=String(f);document.documentElement.dataset.uiScale=['standard','large','xl','compact'][f];}catch(e){document.documentElement.dataset.fontStep='0';document.documentElement.dataset.uiScale='standard';}})();</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY');</script>
 <script src="business-rules.js?v=__BL_ASSET_VERSION__"></script>
+<script src="user-initials.js?v=__BL_ASSET_VERSION__"></script>
 <script src="order-decision-engine.js?v=__BL_ASSET_VERSION__"></script>
 <script src="revision-display.js?v=__BL_ASSET_VERSION__"></script>
 <script src="backlog-excel-formulas.js?v=__BL_ASSET_VERSION__"></script>

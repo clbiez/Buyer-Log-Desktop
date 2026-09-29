@@ -1,4 +1,5 @@
 'use strict';
+const { initials: userInitials } = require('../../public/user-initials.js');
 
 const fs = require('fs');
 const path = require('path');
@@ -813,7 +814,7 @@ function verify(secret, token) {
   if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) return null;
   try { const parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')); return parsed.exp > Date.now() ? parsed : null; } catch (_) { return null; }
 }
-function initials(name) { return clean(name).split(/\s+/).filter(Boolean).slice(0, 2).map(value => value[0]).join('').toLocaleUpperCase('tr-TR') || '?'; }
+function initials(name) { return userInitials(clean(name)); }
 function appendAudit(profile, action, target, details, requestMeta) {
   const transaction = iamTransaction.getStore();
   if (transaction) { transaction.audit.push({ action, target }); return true; }

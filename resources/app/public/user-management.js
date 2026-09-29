@@ -32,7 +32,8 @@
   const list = values => Array.isArray(values) ? values.filter(Boolean) : [];
   const joinText = values => list(values).join(', ');
   const dash = value => clean(value) || '—';
-  const initials = name => clean(name).split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toLocaleUpperCase('tr-TR') || '?';
+  // TR/EN/JA/ZH adlar için ortak kural: public/user-initials.js
+  const initials = name => (window.BLUserInitials ? window.BLUserInitials.initials(clean(name)) : '?');
   const sortTr = (a, b) => String(a).localeCompare(String(b), 'tr', { sensitivity: 'base' });
   const toast = message => { try { if (typeof showToast === 'function') return showToast(message); } catch (_) {} console.log('[Buyer Log]', message); };
 

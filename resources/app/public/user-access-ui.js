@@ -17,7 +17,8 @@
   const esc = value => typeof escapeHtml === 'function' ? escapeHtml(String(value == null ? '' : value)) : String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
   const tr = (a, b) => (typeof appLang !== 'undefined' && appLang === 'en') ? b : a;
   const current = () => { try { if (typeof state !== 'undefined' && state.currentUser) return state.currentUser; } catch (_) {} return window.BL_USER_CONTEXT || null; };
-  const initials = name => String(name || '?').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(value => value[0]).join('').toLocaleUpperCase('tr-TR') || '?';
+  // TR/EN/JA/ZH adlar için ortak kural: public/user-initials.js
+  const initials = name => (window.BLUserInitials ? window.BLUserInitials.initials(name) : '?');
   const roleLabels = { buyer: 'Buyer', manager: 'Manager', senior_manager: 'Senior Manager', moderator: tr('Moderatör', 'Moderator') };
   const scopeLabels = { SELF: tr('Kendi Kayıtları', 'Own Records'), TEAM: tr('Ekibi', 'Their Team'), MMYG: 'MMYG', MAG: 'MAG', ALL: tr('Tüm Veriler', 'All Data'), CUSTOM: tr('Özel', 'Custom') };
   const areaLabels = { overview: 'Overview', cp: 'CP', quotations:'Quotations', pricinghistory:tr('Fiyat Geçmişi','Pricing History'), orders: tr('Siparişler', 'Orders'), koleksiyon: tr('Koleksiyon', 'Collections'), priceanalysis: tr('Fiyat & Üretici Analizi', 'Price & Supplier Analysis'), lfl: tr('Analizler', 'Analysis'), opencosting: tr('Ön Maliyet', 'Open Costing'), backlog: 'Backlog', shipping: tr('Nakliye', 'Shipping'), agents: 'Agent Studio', automations: tr('Otomasyonlar', 'Automations'), source: tr('Kaynak Veri', 'Source Data') };
