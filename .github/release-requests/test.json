@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.172",
-  "commit_sha": "77e817da2ac10d86c1a19e7c4eb5f4f2c09c937e",
-  "release_notes": "Buyer Log 7.0.172 TEST: Endeksmatik yenilendi. Koleksiyon › Araçlar › Endeksmatik Setleri ile birden çok ülke/bölge Endeksmatik dosyası (Bangladeş, Hindistan Kuzey/Güney, Myanmar, Çin) yüklenip saklanır; varsayılan set seçilir, setler adlandırılır/silinir. Yeni USD modeli dosyadan başlığa göre okunur; ENDEKSMATİK formül mantığı (imza) ve Excel önbellekli sonuçları Buyer Log yeniden hesabıyla karşılaştırılır, tutmazsa dosya \"model değişti\" diye reddedilir. Hesap penceresinde set ve hesap seviyesi (Klasman…MMYG) seçilir; TR fiyatı korunur; SING OFF bölümü FOB/landed avantaj ve gerekli fiyatı verir. Sonuç set sürümünü taşır, yeni set gelince \"Yeni veri var\" görünür. Eski TL şablonu çalışmaya devam eder. Ayrıca main'deki satin çelik ikon ve TR/EN/JA/ZH avatar baş harfleri dahildir. Node regression suite (765 dosya) başarıyla geçti. STABLE kanalına terfi edilmedi."
+  "version": "7.0.173",
+  "commit_sha": "6cccbf9588b9649f39adabbc535047b0862275e9",
+  "release_notes": "Buyer Log 7.0.173 TEST: Endeksmatik yüklemesi, ENDEKSMATİK ekranındaki hedef hücreleri (E15..E18) farklı kurulmuş gerçek ülke dosyalarını artık reddetmiyor. Fiyatı belirleyen bileşen Δ ve TOPLAM hücreleri (C15..C19) hâlâ imza ve Excel sonuç karşılaştırmasından geçmek zorunda; hedef hücreleri yalnız uyarı olarak raporlanır ve varsayılan düzeltme B21'den alınır (hesapta değiştirilebilir). Endeksmatik Setleri listesinde uyarı sayısı görünür. 7.0.172'deki çoklu Endeksmatik seti, USD modeli, TR fiyatı ve SING OFF özellikleri dahildir. Node regression suite (765 dosya) başarıyla geçti. STABLE kanalına terfi edilmedi."
 }
