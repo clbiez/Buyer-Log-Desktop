@@ -91,4 +91,21 @@ function syncShortcutIcons({ shell, getPath, exePath, sourceIcon, iconDir, log =
   return result;
 }
 
-module.exports = { syncShortcutIcons, ensureStableIcon, shortcutDirs };
+/*
+ * Explorer ve görev çubuğu simgeleri önbellekten gösterir; kısayol veya exe simgesi
+ * değiştiğinde Windows'un kendi aracıyla simge önbelleği yenilenir (Windows 10+).
+ */
+function refreshShellIcons({ spawn = require('child_process').spawn, env = process.env } = {}) {
+  const tool = path.join(env.SystemRoot || env.windir || 'C:\\Windows', 'System32', 'ie4uinit.exe');
+  if (!fs.existsSync(tool)) return false;
+  try {
+    const child = spawn(tool, ['-show'], { detached: true, stdio: 'ignore', windowsHide: true });
+    if (child && typeof child.on === 'function') child.on('error', () => {});
+    if (child && typeof child.unref === 'function') child.unref();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+module.exports = { syncShortcutIcons, ensureStableIcon, shortcutDirs, refreshShellIcons };
