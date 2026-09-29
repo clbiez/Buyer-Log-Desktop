@@ -101,3 +101,81 @@ test('oabFetchReport kimlik doğrulama sonrası en fazla bir kez yeniden dener',
   assert.match(body, /return oabFetchReport\(forceRefresh, true\)/);
   assert.doesNotMatch(body, /return oabFetchReport\(forceRefresh\);/);
 });
+
+/*
+ * PLM Sync modeli: PASS token'ı açık PASS sekmesinin web storage'ında
+ * (access_token) duruyor. OAB isteği her seferinde token'ı SAYFADAN okur;
+ * token Node'a dönmez. Token yoksa ve yakalanmış template da yoksa istek
+ * atılmaz, PASS_TOKEN_MISSING döner (bağlantı akışı devreye girer).
+ */
+function memoryStorage(entries) {
+  return { getItem: key => (Object.prototype.hasOwnProperty.call(entries, key) ? entries[key] : null) };
+}
+async function runPassExpression(headers, storages = {}) {
+  const expr = connector.passRequestExpression(REPORT_URL, 'POST', headers, { a: 1 });
+  const calls = [];
+  const fakeFetch = async (url, opts) => { calls.push(opts); return { ok: true, status: 200, statusText: 'OK', text: async () => '{"Data":[]}' }; };
+  const runner = new Function('fetch', 'Headers', 'localStorage', 'sessionStorage', `return ${expr};`);
+  const result = await runner(fakeFetch, Headers, storages.local, storages.session);
+  return { result, calls };
+}
+
+test('passRequestExpression token\'ı açık PASS sekmesinin localStorage\'ından okur (template\'e tercih edilir)', async () => {
+  const token = 'eyJ' + 'a'.repeat(40);
+  const { result, calls } = await runPassExpression({ Authorization: STALE, 'X-Custom': '1' }, { local: memoryStorage({ access_token: token }) });
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].headers.get('Authorization'), 'Bearer ' + token);
+  assert.equal(calls[0].headers.get('X-Custom'), '1', 'template\'teki diğer başlıklar korunur');
+  assert.equal(calls[0].credentials, 'omit');
+  assert.doesNotMatch(JSON.stringify(result), new RegExp(token), 'token Node\'a geri dönmez');
+});
+
+test('passRequestExpression JSON/tırnaklı saklanan token\'ı ve sessionStorage\'ı da okur', async () => {
+  const token = 'eyJ' + 'b'.repeat(40);
+  let run = await runPassExpression({}, { session: memoryStorage({ access_token: JSON.stringify(token) }) });
+  assert.equal(run.calls[0].headers.get('Authorization'), 'Bearer ' + token);
+  run = await runPassExpression({}, { local: memoryStorage({ access_token: JSON.stringify({ access_token: token }) }) });
+  assert.equal(run.calls[0].headers.get('Authorization'), 'Bearer ' + token);
+});
+
+test('passRequestExpression: ne sayfada token ne template varsa istek atılmaz', async () => {
+  const { result, calls } = await runPassExpression({}, { local: memoryStorage({}) });
+  assert.equal(calls.length, 0);
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'PASS_TOKEN_MISSING');
+});
+
+test('passRequest yakalanmış template zorunlu değil; token yoksa PASS_NOT_CONNECTED', () => {
+  const start = CONNECTOR.indexOf('async function passRequest(');
+  const body = CONNECTOR.slice(start, CONNECTOR.indexOf('// Rapor metadata servisi', start));
+  assert.doesNotMatch(body, /requirePassAuth\(ownerId\)/);
+  assert.match(body, /PASS_TOKEN_MISSING/);
+  assert.match(body, /PASS_NOT_CONNECTED/);
+});
+
+test('ensurePassConnected önce açık PASS sekmesindeki token\'ı kullanır, yoksa yakalamaya düşer', () => {
+  const SERVER = require('./helpers/server-source')();
+  const start = SERVER.indexOf('async function ensurePassConnected');
+  const body = SERVER.slice(start, SERVER.indexOf('\n}\n', start));
+  assert.match(body, /passStorageAuthStatus\(userId\)/);
+  assert.ok(body.indexOf('passStorageAuthStatus') < body.indexOf('capturePassAuthorization'));
+  const status = CONNECTOR.slice(CONNECTOR.indexOf('async function passStorageAuthStatus'), CONNECTOR.indexOf('async function passStorageAuthStatus') + 1200);
+  assert.doesNotMatch(status, /pageForCurrentBuyerLogProfile/, 'durum kontrolü yeni sekme açmaz');
+});
+
+test('passRequestExpression: storage token reddedilirse yakalanmış kabul görmüş token ile bir kez tekrarlar', async () => {
+  const token = 'eyJ' + 'c'.repeat(40);
+  const expr = connector.passRequestExpression(REPORT_URL, 'POST', { Authorization: FRESH }, { a: 1 });
+  const used = [];
+  const fakeFetch = async (url, opts) => {
+    const auth = opts.headers.get('Authorization');
+    used.push(auth);
+    return auth === FRESH
+      ? { ok: true, status: 200, statusText: 'OK', text: async () => '{"Data":[]}' }
+      : { ok: false, status: 401, statusText: 'Unauthorized', text: async () => '' };
+  };
+  const runner = new Function('fetch', 'Headers', 'localStorage', `return ${expr};`);
+  const result = await runner(fakeFetch, Headers, memoryStorage({ access_token: token }));
+  assert.deepEqual(used, ['Bearer ' + token, FRESH]);
+  assert.equal(result.ok, true);
+});

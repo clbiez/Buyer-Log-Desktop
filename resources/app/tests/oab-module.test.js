@@ -189,7 +189,7 @@ test('OAB: passRequestExpression credentials:"omit" kullanıyor (kullanıcı do�
   assert.match(expr, /credentials:'omit'/);
   // Yalnız GERÇEK fetch() çağrısındaki credentials değerini kontrol et — bu
   // dosyadaki açıklayıcı yorum satırı da 'include' kelimesini içeriyor.
-  const fetchCallLine = expr.split('\n').find(line => line.includes('await fetch(cfg.url'));
+  const fetchCallLine = expr.split('\n').find(line => line.includes('fetch(cfg.url'));
   assert.ok(fetchCallLine, 'fetch çağrısı bulunmalı');
   assert.doesNotMatch(fetchCallLine, /credentials:'include'/);
 });
