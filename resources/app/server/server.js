@@ -5874,11 +5874,47 @@ app.post('/api/endeksmatik/upload', userAccess.requirePermission('manageModelCon
     const buffer = Buffer.from(dataBase64, 'base64');
     if (!buffer.length || buffer.length > 80 * 1024 * 1024) return res.status(400).json({ error: 'Endeksmatik Excel dosyası boş veya 80 MB sınırını aşıyor.', code: 'VALIDATION_ERROR' });
     const filename = path.basename(String(req.body && req.body.name || 'ENDEKSMATİK.xlsx')).replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').slice(0, 180) || 'ENDEKSMATİK.xlsx';
-    const status = await endeksmatik.importWorkbookBuffer(buffer, filename);
+    const actor = req.currentUser && (req.currentUser.displayName || req.currentUser.name || req.currentUser.id) || '';
+    const label = String(req.body && req.body.label || '').slice(0, 80);
+    const status = await endeksmatik.importWorkbookBuffer(buffer, filename, { label, actor });
     publishSharedMasterChange('endeksmatik', req);
-    userAccess.appendAudit(req.currentUser, 'ENDEKSMATIK_EXCEL_UPLOAD', filename, { recordCount: status.recordCount, sourceUpdatedAt: status.sourceUpdatedAt, season: status.season });
+    userAccess.appendAudit(req.currentUser, 'ENDEKSMATIK_EXCEL_UPLOAD', filename, { recordCount: status.recordCount, sourceUpdatedAt: status.sourceUpdatedAt, season: status.season, model: status.model || '', setId: status.uploaded && status.uploaded.id || status.setId || '', region: status.region || '' });
     res.json(status);
   } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik Excel dosyası yüklenemedi.'); }
+});
+// Çoklu set yönetimi (v7.0.172). Listeleme/hesap herkese açık; varsayılan
+// seçimi, ad ve silme Endeksmatik yükleme yetkisiyle aynı izne bağlıdır.
+app.get('/api/endeksmatik/sets', (_req, res) => {
+  try { const status = endeksmatik.publicStatus(); res.json({ ok: true, activeSetId: status.activeSetId, sets: status.sets }); }
+  catch (err) { apiError(res, err, 'Endeksmatik setleri okunamadı.'); }
+});
+app.post('/api/endeksmatik/lookup', (req, res) => {
+  try { res.json(endeksmatik.lookup(req.body || {})); }
+  catch (err) { endeksmatikApiError(res, err, 'Endeksmatik seçenekleri okunamadı.'); }
+});
+app.post('/api/endeksmatik/sets/active', userAccess.requirePermission('manageModelConnections'), async (req, res) => {
+  try {
+    const setId = String(req.body && req.body.setId || '');
+    const status = await endeksmatik.setActiveSet(setId, req.currentUser && req.currentUser.id || '');
+    publishSharedMasterChange('endeksmatik', req);
+    userAccess.appendAudit(req.currentUser, 'ENDEKSMATIK_SET_ACTIVATE', setId, {});
+    res.json(status);
+  } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik seti seçilemedi.'); }
+});
+app.patch('/api/endeksmatik/sets/:id', userAccess.requirePermission('manageModelConnections'), async (req, res) => {
+  try {
+    const meta = await endeksmatik.renameSet(req.params.id, req.body && req.body.label);
+    publishSharedMasterChange('endeksmatik', req);
+    res.json({ ok: true, set: meta });
+  } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik seti güncellenemedi.'); }
+});
+app.delete('/api/endeksmatik/sets/:id', userAccess.requirePermission('manageModelConnections'), async (req, res) => {
+  try {
+    const status = await endeksmatik.deleteSet(req.params.id);
+    publishSharedMasterChange('endeksmatik', req);
+    userAccess.appendAudit(req.currentUser, 'ENDEKSMATIK_SET_DELETE', req.params.id, {});
+    res.json(status);
+  } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik seti silinemedi.'); }
 });
 
 app.get('/api/user-data/inventory', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), (_req, res) => {
