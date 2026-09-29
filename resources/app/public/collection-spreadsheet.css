@@ -32,7 +32,7 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetterActive{color:var(--acc)!important;background:var(--card2)!important}
 .kolSpreadsheetRowGutter{padding:0 3px!important;white-space:nowrap;text-align:center}
 .kolSpreadsheetRowNumber{display:inline-grid;place-items:center;width:25px;height:22px;margin-right:3px;padding:0;border:0;background:transparent;color:var(--muted);font:600 9px/1 var(--mono,monospace);cursor:pointer;border-radius:2px}
-.kolSpreadsheetRowNumber:hover,.kolSpreadsheetRowNumber.isActive{background:var(--blue-soft,#eaf3fb);color:var(--acc)}
+.kolSpreadsheetRowNumber:hover,.kolSpreadsheetRowNumber.isActive{background:color-mix(in srgb,var(--acc) 14%,var(--card2));color:var(--acc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 28%,var(--line))}
 .kolSpreadsheetRowGutter .rowChk{width:14px;height:14px;margin:0;vertical-align:middle;box-sizing:border-box;}
 .kolSpreadsheetStatusBar{display:flex;align-items:center;gap:14px;min-height:25px;padding:3px 8px;border:1px solid var(--line);border-top:0;background:var(--card2);color:var(--ink2);font-size:10px;white-space:nowrap;overflow:auto}
 .kolSpreadsheetStatusBar b{color:var(--ink);font-weight:700}
@@ -89,21 +89,28 @@
   height:var(--kol-variant-row-h,27px)!important;
 }
 .kolModelGroupToggle,.kolModelGroupGutterSpacer{
-  display:inline-grid;place-items:center;width:14px;height:22px;margin-right:1px;
+  display:inline-grid;place-items:center;width:18px;height:22px;margin-right:2px;
   vertical-align:middle;box-sizing:border-box;
 }
 .kolModelGroupToggle{
-  padding:0;border:0;border-radius:3px;background:transparent;color:var(--muted);
-  font:700 14px/1 var(--sans);cursor:pointer;
+  padding:0;border:1px solid color-mix(in srgb,var(--acc) 34%,var(--line));
+  border-radius:4px;background:color-mix(in srgb,var(--acc) 8%,var(--card));color:var(--acc);
+  cursor:pointer;transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease),transform .12s var(--ease);
 }
-.kolModelGroupToggle:hover{background:var(--card2);color:var(--ink);}
-.kolModelGroupToggle:focus-visible{outline:none;box-shadow:var(--focus-ring);color:var(--ink);}
+.kolModelGroupToggle .ic{width:12px;height:12px;stroke-width:2.3;}
+.kolModelGroupToggle[aria-expanded="true"]{background:color-mix(in srgb,var(--acc) 14%,var(--card));border-color:color-mix(in srgb,var(--acc) 52%,var(--line));}
+.kolModelGroupToggle:hover{background:color-mix(in srgb,var(--acc) 18%,var(--card));border-color:var(--acc);color:var(--acc);transform:scale(1.04);}
+.kolModelGroupToggle:focus-visible{outline:none;box-shadow:var(--focus-ring);color:var(--acc);}
 .kolModelGroupGutterSpacer.isVariant{position:relative;}
 .kolModelGroupGutterSpacer.isVariant::before{
-  content:"";width:8px;height:12px;align-self:start;margin-top:1px;
-  border-left:1px solid color-mix(in srgb,var(--line2) 78%,transparent);
-  border-bottom:1px solid color-mix(in srgb,var(--line2) 78%,transparent);
-  border-radius:0 0 0 3px;
+  content:"";width:10px;height:15px;align-self:start;margin-top:0;
+  border-left:2px solid color-mix(in srgb,var(--acc) 55%,var(--line2));
+  border-bottom:2px solid color-mix(in srgb,var(--acc) 55%,var(--line2));
+  border-radius:0 0 0 4px;
+}
+.kolModelGroupGutterSpacer.isVariant::after{
+  content:"";position:absolute;right:1px;bottom:4px;width:4px;height:4px;border-radius:50%;
+  background:color-mix(in srgb,var(--acc) 74%,var(--ink));opacity:.78;
 }
 /* Legacy in-cell hierarchy marks are intentionally suppressed: hierarchy now lives
    in the row gutter and never changes spreadsheet column coordinates. */
@@ -206,3 +213,20 @@
   justify-items:start;
 }
 
+
+
+/* v20260929 — compact Collection controls and colour-variant master toggle. */
+#kolAddRowBtn{
+  width:var(--ctl-h)!important;min-width:var(--ctl-h)!important;padding:0!important;
+  border-color:transparent!important;background:transparent!important;color:var(--acc)!important;
+  box-shadow:none!important;justify-content:center!important;
+}
+#kolAddRowBtn:hover:not(:disabled){background:color-mix(in srgb,var(--acc) 12%,var(--card))!important;color:var(--acc)!important;}
+#kolAddRowBtn:focus-visible{box-shadow:var(--focus-ring)!important;}
+.kolAllVariantsToggle{
+  width:var(--control-sm);min-width:var(--control-sm);padding:0!important;margin-left:var(--sp-1);
+  display:inline-grid;place-items:center;border-color:var(--line2);
+}
+.kolAllVariantsToggle .ic{width:14px;height:14px;}
+.kolAllVariantsToggle[aria-pressed="true"]{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:color-mix(in srgb,var(--acc) 11%,var(--card));color:var(--acc);}
+.kolAllVariantsToggle:disabled{opacity:.42;cursor:not-allowed;}

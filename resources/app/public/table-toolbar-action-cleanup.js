@@ -12,6 +12,7 @@
     'navExcelBtn',
     'kolCopySelectedBtn',
     'kolExportImgBtn',
+    'kolAddRowBtn',
   ]);
 
   function el(id) { return document.getElementById(id); }
@@ -27,6 +28,56 @@
       const label = button.getAttribute('title') || button.textContent.trim();
       if (label) button.setAttribute('aria-label', label);
     }
+  }
+
+  function resolveButton(buttonOrId) {
+    return typeof buttonOrId === 'string' ? el(buttonOrId) : buttonOrId;
+  }
+
+  function finish(buttonOrId, ok = null) {
+    const button = resolveButton(buttonOrId);
+    if (!button) return;
+    clearTimeout(button._blActionAutoTimer);
+    clearTimeout(button._blActionFinishTimer);
+    button.classList.remove('isActionWorking', 'isActionDone', 'isActionFailed');
+    button.removeAttribute('aria-busy');
+    if (ok === true || ok === false) {
+      void button.offsetWidth;
+      button.classList.add(ok ? 'isActionDone' : 'isActionFailed');
+      button._blActionFinishTimer = setTimeout(() => {
+        if (button.isConnected) button.classList.remove('isActionDone', 'isActionFailed');
+      }, 850);
+    }
+  }
+
+  function begin(buttonOrId, options) {
+    const button = resolveButton(buttonOrId);
+    if (!button) return null;
+    clearTimeout(button._blActionAutoTimer);
+    clearTimeout(button._blActionFinishTimer);
+    button.classList.remove('isActionDone', 'isActionFailed');
+    button.classList.add('isActionWorking');
+    button.setAttribute('aria-busy', 'true');
+    if (options && options.auto) button._blActionAutoTimer = setTimeout(() => finish(button, null), 650);
+    return button;
+  }
+
+  function animatedActionButton(target) {
+    const button = target && target.closest ? target.closest('button') : null;
+    if (!button || button.disabled || !button.querySelector('svg.ic')) return null;
+    const root = button.closest(
+      '#cpTableToolbar,#ordersTableToolbar,#kolTableToolbar,' +
+      '#cpToolsMenu,#ordersToolsMenu,#kolToolsMenu,' +
+      '#cpMoreMenu,#ordersMoreMenu,#kolMoreMenu'
+    );
+    return root ? button : null;
+  }
+
+  function bindActionAnimations() {
+    document.addEventListener('click', event => {
+      const button = animatedActionButton(event.target);
+      if (button) begin(button, { auto: true });
+    }, true);
   }
 
   function moveNode(node, parent, before) {
@@ -116,6 +167,7 @@
     ICON_ONLY_IDS.forEach(id => makeIconOnly(el(id)));
     enforce();
     observePlacementRoots();
+    bindActionAnimations();
 
     if (document.body) {
       new MutationObserver(queueEnforce).observe(document.body, {
@@ -131,6 +183,8 @@
     activePage,
     PAGE_MAP,
     ICON_ONLY_IDS,
+    begin,
+    finish,
   });
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });

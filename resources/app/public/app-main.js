@@ -2376,6 +2376,7 @@ document.addEventListener('keydown', event=>{
 });
 document.getElementById('navCopy').addEventListener('click', event=>{
   const info = activeTableInfo(); if(!info){ showToast('Önce bir sekme seç'); return; }
+  if(info.tableKey==='cp'||info.tableKey==='orders')window.BLTableToolbarActionCleanup?.begin?.(event.currentTarget);
   if((info.tableKey==='cp'||info.tableKey==='orders')&&!managedTableHasCheckedRows(info.tableKey)&&managedGridHasRange(info.tableKey)){void window.BLGridClipboard.copyActive(event,{includeHeaders:true});return;}
   // Shipping Comparison'da üstteki karar tablosu asıl kullanıcı görünümüdür.
   // Genel Copy düğmesi alt ham Excel/grid tablosunu değil, bu görünümün güncel
@@ -6723,16 +6724,14 @@ function flashCopyBtn(btnId, ok, n){
   const btn = document.getElementById(btnId);
   const en = appLang==='en';
   if(btn){
+    window.BLTableToolbarActionCleanup?.finish?.(btn,ok);
     btn.classList.remove('copied','copyFailed');
     void btn.offsetWidth;
     btn.classList.add(ok?'copied':'copyFailed');
     clearTimeout(btn._copyFlashTimer);
     btn._copyFlashTimer = setTimeout(()=>btn.classList.remove('copied','copyFailed'), 1600);
   }
-  showToast(ok
-    ? (en?`Copied ${n} row${n===1?'':'s'} with formatting`:`${n} satır biçimlendirmeyle kopyalandı`)
-    : (en?'Copy failed':'Kopyalama başarısız'),
-    {kind:ok?'success':'error'});
+  if(!ok)showToast(en?'Copy failed':'Kopyalama başarısız',{kind:'error'});
 }
 // ---- Panoya kopyalama: "Excel'e Aktar" ile AYNI hücre biçimi ----
 // Excel dışa aktarımı hücre renklerini/hizasını canlı DOM'dan (getComputedStyle) okur.
@@ -12019,9 +12018,8 @@ function registerManagedGridClipboard(tableId,tableKey){
       const payload=window.BLGridClipboard.serialize(matrix,BLTableExport,options),plain=payload.plain,html=payload.html;
       const ok=await copyRichToClipboard(html,plain);
       window.BLGridClipboard.diagnostics.record({module:tableKey,operation:'copy',selection:window.BLGridClipboard.selectionSize(range),includeHeaders:payload.includeHeaders,transport:'rich',ok});
-      showToast(ok
-        ? `${matrix.recordCount}×${matrix.columnCount} ${appLang==='en'?(payload.includeHeaders?'cells copied with headers':'cells copied without headers'):(payload.includeHeaders?'hücre başlıklarıyla kopyalandı':'hücre başlıksız kopyalandı')}`
-        : (appLang==='en'?'Copy failed.':'Kopyalama başarısız.'));
+      window.BLTableToolbarActionCleanup?.finish?.('navCopy',ok);
+      if(!ok)showToast(appLang==='en'?'Copy failed.':'Kopyalama başarısız.',{kind:'error'});
       return ok;
     },
   });
@@ -19124,7 +19122,7 @@ async function exportStyledDomTable(tableSel, opts){
   const imageNote=imagesRequested
     ? ` · ${imagesEmbedded}/${imagesRequested} model görseli eklendi${missing?` (${missing} görsel alınamadı)`:''}`
     : '';
-  showToast(`${exported} satır Excel'e aktarıldı${hasVisibleSelection?' (yalnızca işaretliler)':' (mevcut filtre)'}${imageNote}.`);
+  if(opts.tableKey!=='cp'&&opts.tableKey!=='orders')showToast(`${exported} satır Excel'e aktarıldı${hasVisibleSelection?' (yalnızca işaretliler)':' (mevcut filtre)'}${imageNote}.`);
   }finally{
     releaseFullLayout();
   }
@@ -21846,6 +21844,33 @@ function kolLoadCollapsedGroups(){
   return kolCollapsedGroups;
 }
 function kolSaveCollapsedGroups(){try{BLStorage.setItem(KOL_GROUP_VIEW_KEY,JSON.stringify([...kolLoadCollapsedGroups()]));}catch(_){} }
+function kolGroupedModelIds(rows=kolRows){
+  const counts=new Map();
+  (Array.isArray(rows)?rows:[]).forEach(row=>{
+    const id=String(row&&row.modelGroupId||'');
+    if(id)counts.set(id,(counts.get(id)||0)+1);
+  });
+  return [...counts.entries()].filter(([,count])=>count>1).map(([id])=>id);
+}
+function kolAllVariantsVisible(){
+  const collapsed=kolLoadCollapsedGroups();
+  return kolGroupedModelIds().every(id=>!collapsed.has(id));
+}
+function updateKolAllVariantsToggle(){
+  const btn=document.getElementById('kolAllVariantsToggle');if(!btn)return;
+  const ids=kolGroupedModelIds(),visible=ids.length?ids.every(id=>!kolLoadCollapsedGroups().has(id)):true;
+  btn.disabled=!ids.length;
+  btn.setAttribute('aria-pressed',visible?'true':'false');
+  const label=ids.length
+    ?(visible?(appLang==='en'?'Hide all colour variants':'Tüm alt renkleri gizle'):(appLang==='en'?'Show all colour variants':'Tüm alt renkleri göster'))
+    :(appLang==='en'?'No colour variants in this view':'Bu görünümde alt renk yok');
+  btn.title=label;btn.setAttribute('aria-label',label);
+}
+function kolSetAllVariantsVisible(visible){
+  const collapsed=kolLoadCollapsedGroups();
+  kolGroupedModelIds().forEach(id=>{if(visible)collapsed.delete(id);else collapsed.add(id);});
+  kolSaveCollapsedGroups();renderKol();return Boolean(visible);
+}
 function kolToggleModelGroup(groupId){
   const id=String(groupId||'');if(!id)return false;
   const collapsed=kolLoadCollapsedGroups();if(collapsed.has(id))collapsed.delete(id);else collapsed.add(id);
@@ -24771,6 +24796,7 @@ function renderKol(){
   const kolWorkspaceMeta=document.getElementById('kolWorkspaceMeta');
   if(kolWorkspaceMeta)kolWorkspaceMeta.textContent=kolScopeText;
   renderTableViewContext('koleksiyon');
+  updateKolAllVariantsToggle();
   renderActiveFilterContext('koleksiyon');
   const table=document.getElementById('kolTable');
   const thead=table.querySelector('thead'),tbody=table.querySelector('tbody'),colgroup=table.querySelector('colgroup');
@@ -24874,7 +24900,7 @@ function renderKol(){
     if(isParent)tr.classList.add('kolModelGroupParent');else if(showAsVariant)tr.classList.add('kolModelGroupVariant');
     if(r.dropped){tr.classList.add('kolDroppedRow');tr.dataset.dropped='true';}
     const groupToggle=isParent
-      ?`<button type="button" class="kolModelGroupToggle" data-kol-group-toggle="${escapeHtml(r.modelGroupId)}" aria-expanded="${collapsed?'false':'true'}" title="${escapeHtml((collapsed?(appLang==='en'?'Expand colour variants':'Renk varyantlarını aç'):(appLang==='en'?'Collapse colour variants':'Renk varyantlarını daralt'))+` · ${groupMembers.length}`)}"><span aria-hidden="true">${collapsed?'›':'⌄'}</span></button>`
+      ?`<button type="button" class="kolModelGroupToggle" data-kol-group-toggle="${escapeHtml(r.modelGroupId)}" aria-expanded="${collapsed?'false':'true'}" title="${escapeHtml((collapsed?(appLang==='en'?'Expand colour variants':'Renk varyantlarını aç'):(appLang==='en'?'Collapse colour variants':'Renk varyantlarını daralt'))+` · ${groupMembers.length}`)}"><svg class="ic" aria-hidden="true"><use href="${collapsed?'#i-chevron-right':'#i-chevron-down'}"/></svg></button>`
       :`<span class="kolModelGroupGutterSpacer${showAsVariant?' isVariant':''}" aria-hidden="true"></span>`;
     let html=`<td class="chkCell kolSpreadsheetRowGutter" data-r="${ri}" data-c="0">${groupToggle}<button type="button" class="kolSpreadsheetRowNumber" data-kol-row-number="${ri+1}" data-row-id="${r.id}" title="${escapeHtml(appLang==='en'?'Select spreadsheet row':'Tablo satırını seç')}">${ri+1}</button><input type="checkbox" class="rowChk" data-id="${r.id}" ${selectionHasId(kolSelected,r.id)?'checked':''}></td>`;
     if(pictureVisible){
@@ -26082,18 +26108,12 @@ async function copyKolSelectedRows(){
   commitActiveTableEditor({refresh:false});
   const rows=kolCollectionExportProjection(filteredKol()).filter(record=>kolCollectionProjectionSelected(record,kolSelected));
   if(!rows.length){ showToast(L('Kopyalamak için önce satır seç.')); return; }
-  // Tema değiştirilmeden canlı tablodan kopyalanır; Koleksiyon tablosu işlem
-  // öncesi/sonrası yeniden çizilmez.
-  const built=await buildStyledCopyFromDom('#kolTable', kolSelected, 'data-id', { leafHeadersOnly:true });
-  if(!built){ showToast(L('Kopyalamak için önce satır seç.')); return; }
-  const html=built.html, plain=built.plain;
-  const ok=await copyRichToClipboard(html,plain);
+  const built=await buildStyledCopyFromDom('#kolTable',kolSelected,'data-id',{leafHeadersOnly:true});
+  if(!built){showToast(L('Kopyalamak için önce satır seç.'));return;}
   const btn=document.getElementById('kolCopySelectedBtn');
-  if(btn){
-    const old=btn.innerHTML; btn.innerHTML=ok?`<svg class="ic"><use href="#i-copy"/></svg>${rows.length} ${L('satır kopyalandı')}`:`<svg class="ic"><use href="#i-x"/></svg>${L('Kopyalama başarısız')}`;
-    setTimeout(()=>{ if(btn.isConnected) btn.innerHTML=old; },2200);
-  }
-  if(ok) showToast(`${rows.length} ${L('satır başlıklarıyla kopyalandı.')}`);
+  window.BLTableToolbarActionCleanup?.begin?.(btn);
+  const ok=await copyRichToClipboard(built.html,built.plain);
+  flashCopyBtn('kolCopySelectedBtn',ok,rows.length);
 }
 function kolClearDuplicateCommercialHistory(row){
   if(!row)return row;
@@ -29228,9 +29248,13 @@ function addBlankKolRow(){
     const input=document.querySelector(`#kolTable input[data-id="${row.id}"][data-k="modelKod"]`);
     if(input){input.focus();input.select?.();}
   },0);
-  showToast(appLang==='en'?'A blank model row was added.':'Boş bir model satırı eklendi.',{icon:false});
+
 }
 document.getElementById('kolCopySelectedBtn')?.addEventListener('click',copyKolSelectedRows);
+document.getElementById('kolAllVariantsToggle')?.addEventListener('click',event=>{
+  event.preventDefault();
+  kolSetAllVariantsVisible(!kolAllVariantsVisible());
+});
 document.getElementById('kolDuplicateBtn')?.addEventListener('click',duplicateKolSelectedRows);
 document.getElementById('kolImportFile')?.addEventListener('change',e=>importKolExcelFile(e.target.files&&e.target.files[0]));
 document.getElementById('kolAddRowBtn')?.addEventListener('click',addBlankKolRow);
@@ -31211,25 +31235,18 @@ async function kolExportStyleManagement(rows){
 }
 document.getElementById('kolStyleMgmtExportBtn')?.addEventListener('click',async()=>{
   const selection=kolRawExportSelection(),btn=document.getElementById('kolStyleMgmtExportBtn');
-  const old=btn?.innerHTML;
-  if(btn){btn.disabled=true;btn.textContent=appLang==='en'?'Preparing…':'Hazırlanıyor…';}
-  try{
-    const name=await kolExportStyleManagement(selection.rows);
-    showToast(appLang==='en'
-      ? `${name} was created with editable fields only. Add new rows or edit existing models, then use Import Excel.`
-      : `${name} yalnız düzenlenebilir alanlarla oluşturuldu. Yeni satır ekleyebilir veya mevcut modelleri düzenleyip Excel İçe Aktar ile geri alabilirsiniz.`);
-  }catch(error){showToast((appLang==='en'?'Style Management export failed: ':'Style Management aktarımı başarısız: ')+(error?.message||String(error)));}
-  finally{if(btn){btn.disabled=false;if(old!=null)btn.innerHTML=old;}}
+  if(btn){btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);}
+  try{await kolExportStyleManagement(selection.rows);window.BLTableToolbarActionCleanup?.finish?.(btn,true);}
+  catch(error){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast((appLang==='en'?'Style Management export failed: ':'Style Management aktarımı başarısız: ')+(error?.message||String(error)));}
+  finally{if(btn)btn.disabled=false;}
 });
-document.getElementById('kolExportImgBtn')?.addEventListener('click', async ()=>{
+document.getElementById('kolExportImgBtn')?.addEventListener('click',async()=>{
   const exportSelection=kolExportSelection(),rows=exportSelection.rows;
-  if(!rows.length){ showToast('Aktarılacak model yok.'); return; }
-  const btn = document.getElementById('kolExportImgBtn'); const old = btn.innerHTML; btn.disabled=true; btn.textContent='Hazırlanıyor…';
-  try{
-    const name = await kolExportWithImages(rows, 'Koleksiyon');
-    if(name) showToast(`Koleksiyon Excel'e aktarıldı (${rows.length} model)${exportSelection.selectedOnly?' (yalnızca işaretliler)':' (mevcut filtre)'}.`);
-  }catch(err){ showToast('Görsel aktarım hatası: '+err.message); }
-  finally{ btn.disabled=false; btn.innerHTML=old; }
+  if(!rows.length){showToast('Aktarılacak model yok.');return;}
+  const btn=document.getElementById('kolExportImgBtn');btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);
+  try{await kolExportWithImages(rows,'Koleksiyon');window.BLTableToolbarActionCleanup?.finish?.(btn,true);}
+  catch(err){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast('Görsel aktarım hatası: '+err.message);}
+  finally{btn.disabled=false;}
 });
 
 
@@ -31343,9 +31360,14 @@ async function kolExportSelectedMb(){
   const selected=kolRows.filter(row=>selectionHasId(kolSelected,row.id));if(!selected.length){showToast(appLang==='en'?'Select Collection models first.':'Önce Koleksiyon modellerini seçin.');return;}
   const meta=mbCurrentWorkspaceMeta();
   const enriched=selected.map(row=>({...kolEffectiveProjection(row),_mbOwnerId:kolWorkspaceOwnerId,_mbOwnerName:meta.ownerName,_mbPblName:meta.pblName,_mbNote:''}));
-  const name=await mbExportExcel(enriched,'7S_MB_Listesi_Selected');showToast(appLang==='en'?`${selected.length} selected model(s) exported as MB List.`:`${selected.length} seçili model MB Listesi formatında aktarıldı.`);return name;
+  return await mbExportExcel(enriched,'7S_MB_Listesi_Selected');
 }
-document.getElementById('kolMbExportBtn')?.addEventListener('click',async()=>{const btn=document.getElementById('kolMbExportBtn'),old=btn.innerHTML;btn.disabled=true;btn.textContent=appLang==='en'?'Preparing…':'Hazırlanıyor…';try{await kolExportSelectedMb();}catch(err){showToast((appLang==='en'?'MB Excel export failed: ':'MB Excel aktarımı başarısız: ')+(err.message||err));}finally{btn.disabled=false;btn.innerHTML=old;}});
+document.getElementById('kolMbExportBtn')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('kolMbExportBtn');btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);
+  try{await kolExportSelectedMb();window.BLTableToolbarActionCleanup?.finish?.(btn,true);}
+  catch(err){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast((appLang==='en'?'MB Excel export failed: ':'MB Excel aktarımı başarısız: ')+(err.message||err));}
+  finally{btn.disabled=false;}
+});
 /* ===================================================================
    CAPACITY REQUEST EXCEL — Koleksiyon ve CP ortak dışa aktarımı
 
@@ -31392,17 +31414,15 @@ async function capacityRequestExport(rows,source){
   const wb=engine.buildWorkbook(result,ExcelJS,window.BLExcelDates?.DATE_FORMAT);
   const buffer=await wb.xlsx.writeBuffer(),name=engine.fileName(result.today);
   kolDownloadBuffer(buffer,name,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  showToast(capacityRequestReport(result));
+  if(result.rejected.length)showToast(capacityRequestReport(result),{kind:'warning'});
   return name;
 }
 function bindCapacityRequestButton(id,rowsFn,source){
   document.getElementById(id)?.addEventListener('click',async()=>{
-    const btn=document.getElementById(id),old=btn.innerHTML;
-    btn.disabled=true;btn.textContent=appLang==='en'?'Preparing…':'Hazırlanıyor…';
-    try{await capacityRequestExport(rowsFn(),source);}
-    catch(err){showToast((appLang==='en'?'Capacity Request export failed: ':'Capacity Request aktarımı başarısız: ')+(err.message||err));}
+    const btn=document.getElementById(id);btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);
+    try{await capacityRequestExport(rowsFn(),source);window.BLTableToolbarActionCleanup?.finish?.(btn,true);}
+    catch(err){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast((appLang==='en'?'Capacity Request export failed: ':'Capacity Request aktarımı başarısız: ')+(err.message||err));}
     finally{
-      btn.innerHTML=old;
       if(source==='cp')updateShippingBtnVisibility();
       else if(source==='collection')updateKolSendBtnState();
       else btn.disabled=false;
@@ -32291,8 +32311,8 @@ function renderKolMfrModal(ctx){
     const topicContent=mailTopicContentOptions(topicForDraft.kind,topicForDraft.id,topicSourceKind);
     const pricingFilesForDraft=pricingModelFiles.filter(entry=>!entry.stored||topicContent.tps).map(entry=>({file:entry.file,modelLabel:entry.modelLabel||pricingMatchFileToRow(entry.file,selRows)}));
     close(); if(SRC.persist) renderKol();
-    const btn=document.getElementById(SRC.btnId), old=btn?btn.innerHTML:null;
-    if(btn){ btn.disabled=true; btn.textContent=L('Hazırlanıyor…'); }
+    const btn=document.getElementById(SRC.btnId);
+    if(btn){btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);}
     const prepareProgress=prepareEmailProgressStart(btn,{
       rows:selRows.length,
       manufacturers:checked.length,
@@ -32345,7 +32365,7 @@ function renderKolMfrModal(ctx){
         showToast((en?'E-mail preparation error: ':'E-posta hazırlama hatası: ')+(err?.message||String(err)));
       }finally{
         prepareProgress.stop();
-        if(btn){btn.disabled=false;btn.innerHTML=old;}
+        if(btn){btn.disabled=false;window.BLTableToolbarActionCleanup?.finish?.(btn,null);}
         if(SRC.persist)updateKolSendBtnState();else if(typeof updateShippingBtnVisibility==='function')updateShippingBtnVisibility();
       }
       return;
@@ -32410,7 +32430,7 @@ function renderKolMfrModal(ctx){
       showToast('Send to Pricing hatası: '+(err?.message||String(err)));
     }finally{
       prepareProgress.stop();
-      if(btn){ btn.disabled=false; btn.innerHTML=old; }
+      if(btn){btn.disabled=false;window.BLTableToolbarActionCleanup?.finish?.(btn,null);}
       if(SRC.persist) updateKolSendBtnState(); else if(typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
     }
   });
@@ -33428,22 +33448,21 @@ document.getElementById('cpSendPricingBtn')?.addEventListener('click', ()=>{
 });
 
 // CP "Koleksiyona Kopyala": seçili CP satırlarını Koleksiyon sayfasına kopyalar.
-document.getElementById('cpCopyToKolBtn')?.addEventListener('click', ()=>{
-  const rows=selectedCpRowsForAction();
-  if(rows===null)return;
-  if(!rows.length){ showToast("Önce CP'de en az bir sipariş seç."); return; }
-  const existingCodes = new Set(kolRows.map(r=>r._sourceOrderCode).filter(Boolean));
-  let added = 0, skipped = 0;
+document.getElementById('cpCopyToKolBtn')?.addEventListener('click',event=>{
+  const btn=event.currentTarget,rows=selectedCpRowsForAction();
+  if(rows===null){window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;}
+  if(!rows.length){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast("Önce CP'de en az bir sipariş seç.");return;}
+  window.BLTableToolbarActionCleanup?.begin?.(btn);
+  const existingCodes=new Set(kolRows.map(r=>r._sourceOrderCode).filter(Boolean));
   rows.forEach(r=>{
-    const code = norm(r['Order Code'])||'';
-    if(code && existingCodes.has(code)){ skipped++; return; }
+    const code=norm(r['Order Code'])||'';
+    if(code&&existingCodes.has(code))return;
     kolRows.unshift(cpRowToKolRow(r));
-    if(code) existingCodes.add(code);
-    added++;
+    if(code)existingCodes.add(code);
   });
   saveKolRows();
-  if(document.body.dataset.activeTab==='koleksiyon') renderKol();
-  showToast(`${added} sipariş Koleksiyon'a kopyalandı${skipped?`, ${skipped} tanesi zaten Koleksiyon'da vardı`:''}. CP'de hiçbir değişiklik yapılmadı.`);
+  if(document.body.dataset.activeTab==='koleksiyon')renderKol();
+  window.BLTableToolbarActionCleanup?.finish?.(btn,true);
 });
 
 

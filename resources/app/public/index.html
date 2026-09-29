@@ -859,6 +859,7 @@
           <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
           <button type="button" class="tableViewPreset" data-table-view-preset="extended" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Extended" data-i18n-en="Extended">Extended</span></button>
           <button type="button" class="tableViewPreset" data-table-view-preset="all" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Tümü" data-i18n-en="All">Tümü</span></button>
+          <button type="button" class="tableViewPreset kolAllVariantsToggle" id="kolAllVariantsToggle" aria-pressed="true" title="Tüm alt renkleri gizle" aria-label="Tüm alt renkleri gizle"><svg class="ic" aria-hidden="true"><use href="#i-arrows-down-up"/></svg></button>
         </div>
       </div>
       <div class="activeFilterBar" id="kolActiveFilters" role="region" aria-label="Active table filters" data-i18n-aria-label-tr="Aktif tablo filtreleri" data-i18n-aria-label-en="Active table filters">
@@ -869,13 +870,12 @@
       <div class="toolbar tableActionToolbar" id="kolTableToolbar" data-responsive-toolbar="collection" data-overflow-menu="kolMoreMenu" data-overflow-trigger="kolMoreWrap">
         <input type="search" id="kolSearch" placeholder="Model adı, lisans, kategori, licensor ara…" aria-label="Koleksiyonda ara" data-i18n-aria-label-tr="Koleksiyonda ara" data-i18n-aria-label-en="Search Collection">
         <div class="tableToolbarActions" id="kolTableActions" aria-label="Collection table actions">
-          <button id="kolAddRowBtn" class="tbtn primary" data-action-role="primary" data-tb-priority="primary"><svg class="ic"><use href="#i-copy-plus"/></svg> <span data-i18n-tr="Yeni Model Ekle" data-i18n-en="Add New Model">Yeni Model Ekle</span></button>
+          <button id="kolAddRowBtn" class="tbtn primary" data-action-role="primary" data-tb-priority="primary" data-tb-compact="icon" title="Yeni Model Ekle" aria-label="Yeni Model Ekle" data-i18n-title-tr="Yeni Model Ekle" data-i18n-title-en="Add New Model"><svg class="ic"><use href="#i-copy-plus"/></svg></button>
           <button class="navActionBtn" id="kolUndoBtn" data-action-role="ghost" title="Geri al (Ctrl+Z)" data-i18n-title-tr="Geri al (Ctrl+Z)" data-i18n-title-en="Undo (Ctrl+Z)" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-back-up"/></svg> <span data-i18n-tr="Geri" data-i18n-en="Undo">Geri</span></button>
           <button class="navActionBtn" id="kolRedoBtn" data-action-role="ghost" title="İleri al (Ctrl+Y)" data-i18n-title-tr="İleri al (Ctrl+Y)" data-i18n-title-en="Redo (Ctrl+Y)" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-forward-up"/></svg> <span data-i18n-tr="İleri" data-i18n-en="Redo">İleri</span></button>
           <button class="tbtn" id="kolSpreadsheetPasteBtn" title="Excel'den veya panodan aktif hücreye yapıştır" data-i18n-title-tr="Excel'den veya panodan aktif hücreye yapıştır" data-i18n-title-en="Paste from Excel or clipboard into the active cell" data-tb-priority="secondary" data-tb-compact="icon"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Yapıştır" data-i18n-en="Paste">Yapıştır</span></button>
           <button class="tbtn" id="kolRecycleBinBtn" title="Silinen modeller 30 gün saklanır" data-i18n-title-tr="Silinen modeller 30 gün saklanır" data-i18n-title-en="Deleted models are kept for 30 days" data-tb-priority="utility" data-tb-compact="icon"><svg class="ic"><use href="#i-bl-recycle"/></svg> <span data-i18n-tr="Geri Dönüşüm Kutusu" data-i18n-en="Recycle Bin">Geri Dönüşüm Kutusu</span></button>
           <button class="tbtn" id="kolExportImgBtn" title="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-tr="Model görselleriyle birlikte Excel'e aktar" data-i18n-title-en="Export to Excel with model images" data-tb-priority="secondary" data-tb-compact="icon"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Excel'e Aktar" data-i18n-en="Export to Excel">Excel'e Aktar</span></button>
-          <span class="kolSelectedGroupLabel" data-tb-priority="selection" data-tb-overflow="never" data-i18n-tr="Seçili modeller" data-i18n-en="Selected models">Seçili modeller</span>
           <button class="tbtn" id="kolCopySelectedBtn" title="Seçili satırları başlıkları ve biçimleriyle kopyala — Ctrl+C" data-i18n-title-tr="Seçili satırları başlıkları ve biçimleriyle kopyala — Ctrl+C" data-i18n-title-en="Copy selected rows with headers and formatting — Ctrl+C" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-copy"/></svg><span data-i18n-tr="Kopyala" data-i18n-en="Copy">Kopyala</span></button>
           <button class="tbtn" id="kolDuplicateBtn" title="Seçili satırların kopyalarını koleksiyona ekle" data-i18n-title-tr="Seçili satırların kopyalarını koleksiyona ekle" data-i18n-title-en="Duplicate selected rows in Collection" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-copy-plus"/></svg><span data-i18n-tr="Çoğalt" data-i18n-en="Duplicate">Çoğalt</span></button>
           <button class="tbtn" id="kolDropSelectedBtn" title="Seçili modelleri iptal edilmiş olarak işaretle" data-i18n-title-tr="Seçili modelleri iptal edilmiş olarak işaretle" data-i18n-title-en="Mark selected models as dropped" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-x"/></svg> <span data-i18n-tr="İptal Et" data-i18n-en="Drop">İptal Et</span></button>
@@ -1384,11 +1384,19 @@
   });
 
   /* --- Biçimli Excel dışa aktarımları --- */
-  document.getElementById('navExcelBtn')?.addEventListener('click',async()=>{ try{
-    if(window.BLPerf?.ensureLibrary) await window.BLPerf.ensureLibrary('xlsx');
-    if(document.body.dataset.activeTab==='cp') await exportCpTableWithLightTheme();
-    else await exportActiveTableStyled();
-  }catch(e){ showToast('Dışa aktarım hatası: '+e.message); } });
+  document.getElementById('navExcelBtn')?.addEventListener('click',async event=>{
+    const btn=event.currentTarget;
+    window.BLTableToolbarActionCleanup?.begin?.(btn);
+    try{
+      if(window.BLPerf?.ensureLibrary) await window.BLPerf.ensureLibrary('xlsx');
+      if(document.body.dataset.activeTab==='cp') await exportCpTableWithLightTheme();
+      else await exportActiveTableStyled();
+      window.BLTableToolbarActionCleanup?.finish?.(btn,true);
+    }catch(e){
+      window.BLTableToolbarActionCleanup?.finish?.(btn,false);
+      showToast('Dışa aktarım hatası: '+e.message);
+    }
+  });
 })();
 
 </script>

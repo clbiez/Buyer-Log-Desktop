@@ -543,6 +543,22 @@ button:disabled .ic{--ic-tint-o:.08;}
 :is(.tbtn,.navActionBtn).copied .ic{--ic-tint:var(--green);--ic-tint-o:.4;}
 :is(.tbtn,.navActionBtn).copyFailed{color:var(--red)!important;border-color:color-mix(in srgb,var(--red) 55%,transparent)!important;}
 
+/* Icon actions never turn into status text; a small ring communicates work in place. */
+@keyframes blActionSpin{to{transform:rotate(360deg)}}
+@keyframes blActionDonePulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 42%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+:is(.tbtn,.navActionBtn).isActionWorking{position:relative;}
+:is(.tbtn,.navActionBtn).isActionWorking::after{
+  content:"";position:absolute;inset:3px;border:1.5px solid color-mix(in srgb,var(--acc) 24%,transparent);
+  border-top-color:var(--acc);border-radius:999px;pointer-events:none;animation:blActionSpin .72s linear infinite;
+}
+:is(.tbtn,.navActionBtn).isActionWorking>.ic{opacity:.62;}
+:is(.tbtn,.navActionBtn).isActionDone{animation:blActionDonePulse .7s var(--bl-ease);}
+:is(.tbtn,.navActionBtn).isActionDone>.ic{--ic-tint:var(--green);--ic-tint-o:.35;}
+:is(.tbtn,.navActionBtn).isActionFailed>.ic{--ic-tint:var(--red);--ic-tint-o:.35;}
+@media(prefers-reduced-motion:reduce){
+  :is(.tbtn,.navActionBtn).isActionWorking::after,:is(.tbtn,.navActionBtn).isActionDone{animation:none!important;}
+}
+
 /* Açılış yüklemesi sayfayı itmez: "Veriler ekranlara yükleniyor" kartı akıştan
    çıkıp üst ortada yüzen, orb'lu bir hap olur; bittiğinde hiçbir şey kaymaz. */
 #view-overview{position:relative;}
