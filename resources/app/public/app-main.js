@@ -2900,10 +2900,19 @@ function canonicalModelImageKnown(plmId,colourCode,colour=''){
 // aynı görsel için yarışan Image nesneleri oluşmaz.
 const BLImageRuntime=(()=>{
   const IMAGE_HOVER_DELAY=140,IMAGE_REQUEST_CONCURRENCY=4,NEGATIVE_CACHE_TTL=30000,MAX_LOADED_KEYS=128;
-  const SHARED_HYDRATE_BATCH_MAX=80,SHARED_HYDRATE_DELAY=90,SHARED_HYDRATE_COOLDOWN=30000;
+  /* AÇILIŞTA EKSİK GÖRSEL TAMAMLAMA. Görünür bir hücrede model görseli yoksa
+     (ya da kayıtlı dosya açılamıyorsa) kimlik sessizce "Eksikleri tamamla"
+     kuyruğuna girer; sunucu LOCAL → PLM sırasını uygular ve yalnız gerçekten
+     eksik olanı indirir. Kullanıcının PLM Sync'e basıp "Remote added" ile
+     görselleri bir anda görmesi gerekmez.
+       · Yalnız GÖRÜNÜR hücreler istenir; lazy mimari korunur.
+       · Login penceresi AÇILMAZ: yalnız gizli SSO yenilemesi denenir.
+       · Elle başlatılan görsel işiyle çakışmaz (sunucu kilidi 409 vermez). */
+  const AUTO_IMAGE_BATCH_MAX=80,AUTO_IMAGE_DELAY=250,AUTO_IMAGE_COOLDOWN=10*60*1000,AUTO_IMAGE_RETRY=15000,AUTO_IMAGE_MAX_ATTEMPTS=3,AUTO_IMAGE_AUTH_PAUSE=10*60*1000;
+  const AUTO_IMAGE_AUTH_CODES=new Set(['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_TOKEN_REQUIRED','CORENECTUM_LOGIN_REQUIRED','CORENECTUM_SIGNIN_REQUIRED','CORENECTUM_AUTH_REQUIRED','ACCESS_AREA_REQUIRED','PERMISSION_REQUIRED']);
   const inFlight=new Map(),failed=new Map(),loaded=new Map();
   const queue=[];let active=0,observer=null,hoverTimer=0,hoverToken=0;
-  const sharedHydratePending=new Map(),sharedHydrateCooldown=new Map();let sharedHydrateTimer=0,sharedHydrateInFlight=false;
+  const autoImagePending=new Map(),autoImageCooldown=new Map();let autoImageTimer=0,autoImageInFlight=null,autoImagePausedUntil=0,autoImageHolds=0;
   const key=src=>String(src||'').trim();
   const isImageSource=src=>{const value=key(src);return value&&!/^data:image\/svg\+xml/i.test(value);};
   const isCacheableSource=src=>isImageSource(src)&&!/^data:/i.test(key(src));
@@ -2940,61 +2949,107 @@ const BLImageRuntime=(()=>{
   const tableImageSource=img=>key(img?.dataset?.src||img?.currentSrc||img?.src);
   const loadTableImage=img=>{
     const src=key(img?.dataset?.src);if(!img||!isImageSource(src)||img.dataset.blImageLoaded==='1'||img.dataset.blImageFailed==='1')return;
-    if(window.BLModelImageCache){void window.BLModelImageCache.bind(img).catch(()=>{if(img.isConnected&&img.dataset.src===src)img.dataset.blImageFailed='1';});return;}
-    void load(src).then(()=>{if(img.isConnected&&img.dataset.src===src){img.src=src;img.dataset.blImageLoaded='1';}}).catch(()=>{if(img.isConnected&&img.dataset.src===src)img.dataset.blImageFailed='1';});
+    // Kayıtlı ama açılamayan görsel de eksiktir: sunucu dosya yoksa yeniden indirir.
+    const markFailed=()=>{if(img.isConnected&&img.dataset.src===src){img.dataset.blImageFailed='1';scheduleAutoImageComplete(img);}};
+    if(window.BLModelImageCache){void window.BLModelImageCache.bind(img).catch(markFailed);return;}
+    void load(src).then(()=>{if(img.isConnected&&img.dataset.src===src){img.src=src;img.dataset.blImageLoaded='1';}}).catch(markFailed);
   };
-  const sharedIdentityFromImage=img=>{
+  const autoIdentityFromImage=img=>{
     if(!img)return null;
     const modelId=key(img.dataset.plmId||img.dataset.modelId),explicitName=key(img.dataset.modelName);
     const direct=normalizePlmLinkId(modelId),styleName=explicitName||(!direct?modelId:'');
     if(!direct&&!styleName)return null;
     return {plmId:direct||'',styleName,colourCode:key(img.dataset.colourCode),colour:key(img.dataset.colourName)};
   };
-  const sharedIdentityKey=item=>`${item.plmId||`name:${String(item.styleName||'').toUpperCase()}`}|${String(item.colourCode||'').toUpperCase()}|${String(item.colour||'').toUpperCase()}`;
-  const flushSharedHydrate=async()=>{
-    if(sharedHydrateInFlight||!sharedHydratePending.size)return;
-    sharedHydrateInFlight=true;
-    let items=[];
+  const autoIdentityKey=item=>`${item.plmId||`name:${String(item.styleName||'').toUpperCase()}`}|${String(item.colourCode||'').toUpperCase()}|${String(item.colour||'').toUpperCase()}`;
+  const autoImageScope=img=>{
+    const scoped=key(img?.closest?.('[data-bl-model-asset-scope]')?.dataset?.blModelAssetScope);
+    if(scoped)return scoped;
+    const tab=document.body?.dataset?.activeTab||'';
+    return ['cp','orders','koleksiyon'].includes(tab)?tab:'';
+  };
+  const armAutoImageComplete=(delay=AUTO_IMAGE_DELAY)=>{
+    if(autoImageTimer||autoImageInFlight||autoImageHolds||!autoImagePending.size)return;
+    autoImageTimer=setTimeout(()=>{autoImageTimer=0;void flushAutoImageComplete();},delay);
+  };
+  const flushAutoImageComplete=async()=>{
+    if(autoImageInFlight||autoImageHolds||!autoImagePending.size)return;
+    if(autoImagePausedUntil>Date.now()){autoImagePending.clear();return;}
+    const scope=autoImagePending.values().next().value.scope;
+    const entries=[...autoImagePending.entries()].filter(([,item])=>item.scope===scope).slice(0,AUTO_IMAGE_BATCH_MAX);
+    entries.forEach(([id])=>autoImagePending.delete(id));
+    const items=entries.map(([,item])=>({plmId:item.plmId,colourCode:item.colourCode,colour:item.colour,styleName:item.styleName}));
+    const settle=ms=>{const until=Date.now()+ms;entries.forEach(([id])=>autoImageCooldown.set(id,until));};
+    const retry=()=>{
+      entries.forEach(([id,item])=>{
+        const attempts=(item.attempts||0)+1;
+        if(attempts<AUTO_IMAGE_MAX_ATTEMPTS&&!autoImagePending.has(id))autoImagePending.set(id,{...item,attempts});
+        else autoImageCooldown.set(id,Date.now()+AUTO_IMAGE_COOLDOWN);
+      });
+    };
+    let release=()=>{};autoImageInFlight=new Promise(resolve=>{release=resolve;});
+    let retryDelay=AUTO_IMAGE_DELAY;
     try{
-      const entries=[...sharedHydratePending.entries()].slice(0,SHARED_HYDRATE_BATCH_MAX);
-      entries.forEach(([id])=>sharedHydratePending.delete(id));
-      items=entries.map(([,item])=>item);
-      const response=await fetch('/api/model-images/shared/hydrate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items})});
+      /* Düz fetch + sessiz yetki başlığı: notifyPlmOperationStarted paneli
+         açılmaz, plmJsonRequest'in etkileşimli login denemesi çalışmaz. */
+      const response=await fetch('/api/model-images/import-plm',{method:'POST',headers:{'Content-Type':'application/json','X-BuyerLog-Auth-Mode':'silent'},body:JSON.stringify({items,mode:'missing',scope})});
       const data=await response.json().catch(()=>({}));
-      if(response.ok&&data&&data.ok){
+      if(response.ok&&data){
+        // Kısmi görsel yanıtı state.overrides'ı DEĞİŞTİRMEZ, birleştirir.
         if(data.overrides){state.overrides=mergeImageOverridePayload(state.overrides,data.overrides);syncModelImageRegistry();}
         if(Array.isArray(data.images)&&data.images.length){
           applySyncedPlmImages(data);
-          try{const scope=modelAssetScopeApi()?.currentScope?.();scope?.repaint?.();}catch(_){}
+          try{const current=modelAssetScopeApi()?.currentScope?.();if(current?.repaint)current.repaint();else plmSyncRepaintAll();}catch(_){}
         }
-        const until=Date.now()+SHARED_HYDRATE_COOLDOWN;items.forEach(item=>sharedHydrateCooldown.set(sharedIdentityKey(item),until));
+        settle(AUTO_IMAGE_COOLDOWN);
+      }else if(AUTO_IMAGE_AUTH_CODES.has(String(data&&data.code||''))||response.status===401||response.status===403){
+        // Oturum/yetki yok: login penceresi açılmaz, otomatik iş bir süre bekler.
+        autoImagePausedUntil=Date.now()+AUTO_IMAGE_AUTH_PAUSE;autoImagePending.clear();settle(AUTO_IMAGE_AUTH_PAUSE);
       }else{
-        const until=Date.now()+10000;items.forEach(item=>sharedHydrateCooldown.set(sharedIdentityKey(item),until));
+        retry();retryDelay=AUTO_IMAGE_RETRY;
       }
     }catch(_){
-      const until=Date.now()+10000;for(const item of items)sharedHydrateCooldown.set(sharedIdentityKey(item),until);
+      retry();retryDelay=AUTO_IMAGE_RETRY;
     }finally{
-      sharedHydrateInFlight=false;
-      if(sharedHydratePending.size){clearTimeout(sharedHydrateTimer);sharedHydrateTimer=setTimeout(flushSharedHydrate,SHARED_HYDRATE_DELAY);}
+      autoImageInFlight=null;release();
+      armAutoImageComplete(retryDelay);
     }
   };
-  const scheduleSharedHydrate=img=>{
-    const item=sharedIdentityFromImage(img);if(!item)return;
-    const id=sharedIdentityKey(item),until=sharedHydrateCooldown.get(id)||0;if(until>Date.now())return;
-    if(until)sharedHydrateCooldown.delete(id);
-    sharedHydratePending.set(id,item);
-    if(!sharedHydrateTimer&&!sharedHydrateInFlight){sharedHydrateTimer=setTimeout(()=>{sharedHydrateTimer=0;void flushSharedHydrate();},SHARED_HYDRATE_DELAY);}
+  const scheduleAutoImageComplete=img=>{
+    if(autoImagePausedUntil>Date.now())return;
+    const item=autoIdentityFromImage(img);if(!item)return;
+    const id=autoIdentityKey(item),until=autoImageCooldown.get(id)||0;if(until>Date.now()||autoImagePending.has(id))return;
+    if(until)autoImageCooldown.delete(id);
+    autoImagePending.set(id,{...item,scope:autoImageScope(img),attempts:0});
+    armAutoImageComplete();
+  };
+  /* Elle başlatılan görsel işi (PLM/ASAS) önce otomatik işin bitmesini bekler,
+     sürdüğü sürece otomatik iş istek göndermez. Başarılı elle iş oturumun
+     kurulduğunu gösterdiği için otomatik bekleme kaldırılır. */
+  const holdAutoImageComplete=()=>{
+    autoImageHolds++;
+    if(autoImageTimer){clearTimeout(autoImageTimer);autoImageTimer=0;}
+    let released=false;
+    return {
+      ready:(autoImageInFlight||Promise.resolve()).catch(()=>{}),
+      release:({ok=false}={})=>{
+        if(released)return;released=true;
+        autoImageHolds=Math.max(0,autoImageHolds-1);
+        if(ok){autoImagePausedUntil=0;autoImageCooldown.clear();}
+        armAutoImageComplete();
+      },
+    };
   };
   const ensureObserver=()=>{
     if(observer||typeof IntersectionObserver==='undefined')return;
-    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const img=entry.target;if(isImageSource(img.dataset.src))loadTableImage(img);else scheduleSharedHydrate(img);observer.unobserve(img);}}),{root:null,rootMargin:'160px 0px'});
+    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const img=entry.target;if(isImageSource(img.dataset.src))loadTableImage(img);else scheduleAutoImageComplete(img);observer.unobserve(img);}}),{root:null,rootMargin:'160px 0px'});
   };
   const observe=img=>{
     if(!img||img.dataset.blImageObserved==='1')return;
-    const hasSource=isImageSource(img.dataset.src),hasIdentity=Boolean(sharedIdentityFromImage(img));
+    const hasSource=isImageSource(img.dataset.src),hasIdentity=Boolean(autoIdentityFromImage(img));
     if(!hasSource&&!hasIdentity)return;
     img.dataset.blImageObserved='1';ensureObserver();
-    if(observer)observer.observe(img);else if(hasSource)loadTableImage(img);else scheduleSharedHydrate(img);
+    if(observer)observer.observe(img);else if(hasSource)loadTableImage(img);else scheduleAutoImageComplete(img);
   };
   const cancelHover=()=>{if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=0;}hoverToken++;};
   const scheduleHover=(img,event)=>{
@@ -3019,7 +3074,7 @@ const BLImageRuntime=(()=>{
     try{await window.BLModelImageCache?.clearAll?.();}catch(_){}
     return true;
   };
-  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,inFlight,failed,observe,load,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource,scheduleSharedHydrate};
+  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,inFlight,failed,observe,load,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource,scheduleAutoImageComplete,holdAutoImageComplete};
 })();
 window.BLImageRuntime=BLImageRuntime;
 function cpImageCellHtml(row){
@@ -27201,19 +27256,27 @@ function notifyPlmOperationStarted(url,options){
     window.dispatchEvent(new CustomEvent('bl:plm-operation-started',{detail:{kind,url:String(url)}}));
   }catch(_){ }
 }
+const MODEL_IMAGE_IMPORT_ENDPOINTS=new Set(['/api/model-images/import-plm','/api/model-images/import-asas']);
 async function plmJsonRequest(url,options){
   notifyPlmOperationStarted(url,options);
+  /* Elle görsel işi, açılıştaki otomatik eksik-görsel tamamlamasının bitmesini
+     bekler; aksi hâlde sunucunun kullanıcı başına görsel kilidi 409 verirdi. */
+  const autoHold=MODEL_IMAGE_IMPORT_ENDPOINTS.has(String(url||''))?BLImageRuntime.holdAutoImageComplete():null;
+  let succeeded=false;
   const execute=async()=>{const res=await fetch(url,options),data=await res.json().catch(()=>({}));
     if(!res.ok){const error=new Error(data.error||res.statusText);error.code=data.code||'PLM_REQUEST_FAILED';error.details=data.details;throw error;}return data;};
-  try{return await execute();}
+  try{
+    if(autoHold)await autoHold.ready;
+    const data=await execute();succeeded=true;return data;
+  }
   catch(error){
     const code=String(error&&error.code||'');
     if((code==='CORENECTUM_API_TOKEN_REQUIRED'||code==='CORENECTUM_API_TOKEN_INVALID')&&window.buyerLogDesktop?.ensureCoreNectumAuth){
       await runCoreNectumAutoAuth({interactive:true,force:true});
-      return await execute();
+      const data=await execute();succeeded=true;return data;
     }
     throw error;
-  }
+  }finally{autoHold?.release({ok:succeeded});}
 }
 let coreNectumApiSettingsInFlight=null,coreNectumAutoAuthInFlight=null;
 async function coreNectumApiRaw(url,options){
