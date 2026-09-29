@@ -169,7 +169,7 @@
 <link rel="stylesheet" href="copilot.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="outlook-mail.css?v=__BL_ASSET_VERSION__&rev=7160">
 <link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=2">
-<link rel="stylesheet" href="overview-radar.css?v=__BL_ASSET_VERSION__&rev=1">
+<link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=5">
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=3">
 </head>
@@ -254,6 +254,12 @@
   <symbol id="i-table-import" viewBox="0 0 24 24"><path d="M20 12V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6"/><path d="M4 10h16M10 4v16"/><path d="M21 17h-6M17.5 14.5L15 17l2.5 2.5"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11.5L12 16l4.5-4.5M5 20h14"/></symbol>
   <symbol id="i-database-import" viewBox="0 0 24 24"><ellipse cx="11" cy="6" rx="7" ry="3"/><path d="M4 6v6c0 1.6 3.1 3 7 3 .7 0 1.4 0 2-.1M4 12v6c0 1.6 3.1 3 7 3 .8 0 1.6-.1 2.3-.2"/><path d="M22 15h-6M18.5 12.5L16 15l2.5 2.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-chart-bar" viewBox="0 0 24 24"><path d="M4 20h16"/><rect x="5" y="11" width="3.5" height="6.5" rx="1"/><rect x="10.25" y="6" width="3.5" height="11.5" rx="1"/><rect x="15.5" y="13" width="3.5" height="4.5" rx="1"/></symbol>
+  <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M10.3 4.2 3 17a2 2 0 0 0 1.7 3h14.6a2 2 0 0 0 1.7-3L13.7 4.2a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4M12 16.8v.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-apps" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.6"/><rect x="14" y="4" width="6" height="6" rx="1.6"/><rect x="4" y="14" width="6" height="6" rx="1.6"/><path d="M17 14v6M14 17h6"/></symbol>
+  <symbol id="i-layout-align-top" viewBox="0 0 24 24"><path d="M4 4h16"/><rect x="6" y="7.5" width="5" height="12" rx="1.4"/><rect x="13" y="7.5" width="5" height="7" rx="1.4"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 6.5"/></symbol>
   <symbol id="i-snowflake" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M12 6.6l2.2-2.2M12 6.6L9.8 4.4M12 17.4l2.2 2.2M12 17.4l-2.2 2.2"/><path d="M6.9 9.1l-3-.8M6.9 9.1l-.8-3M17.1 14.9l3 .8M17.1 14.9l.8 3"/><path d="M17.1 9.1l3-.8M17.1 9.1l.8-3M6.9 14.9l-3 .8M6.9 14.9l-.8 3"/></symbol>
@@ -492,18 +498,78 @@
 <main>
   <section id="view-overview" class="active">
     <div id="ovEmpty" class="empty"><div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span><div class="uiStateBody"><b data-i18n-tr="Veriler ekranlara yükleniyor." data-i18n-en="Loading data into the screens.">Veriler ekranlara yükleniyor.</b><span data-i18n-tr="Aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir." data-i18n-en="The wait may increase with the active filter scope and data volume.">Aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir.</span></div></div></div>
-    <div class="ovDashboardToolbar">
-      <button type="button" id="ovLayoutEditBtn" class="navActionBtn"><svg class="ic"><use href="#i-layout-dashboard"/></svg><span data-i18n-tr="Düzeni Düzenle" data-i18n-en="Edit Layout">Düzeni Düzenle</span></button>
+    <section id="ovRefreshResult" class="ovRefreshResult" aria-live="polite" hidden></section>
+    <div class="ovDashboardToolbar ovHomeBar">
+      <nav id="ovHomePager" class="ovHomePager" aria-label="Genel Bakış sayfaları" data-i18n-aria-label-tr="Genel Bakış sayfaları" data-i18n-aria-label-en="Overview pages"></nav>
       <div id="ovLayoutEditPanel" class="ovLayoutEditPanel" hidden>
-        <span data-i18n-tr="Modül ekle" data-i18n-en="Add module">Modül ekle</span>
-        <select id="ovLayoutAddSelect" aria-label="Add Overview module"></select>
-        <button type="button" id="ovLayoutAddBtn" class="tbtn" data-i18n-tr="Ekle" data-i18n-en="Add">Ekle</button>
+        <button type="button" id="ovHomeAddWidgetBtn" class="tbtn"><svg class="ic" aria-hidden="true"><use href="#i-apps"/></svg><span data-i18n-tr="Widget ekle" data-i18n-en="Add widget">Widget ekle</span></button>
+        <button type="button" id="ovHomeCompactBtn" class="tbtn" title="Widget'ları yukarı hizala, boşlukları kapat" data-i18n-title-tr="Widget'ları yukarı hizala, boşlukları kapat" data-i18n-title-en="Align widgets up and close gaps"><svg class="ic" aria-hidden="true"><use href="#i-layout-align-top"/></svg><span data-i18n-tr="Boşlukları kapat" data-i18n-en="Close gaps">Boşlukları kapat</span></button>
+        <button type="button" id="ovHomeAddPageBtn" class="tbtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg><span data-i18n-tr="Sayfa ekle" data-i18n-en="Add page">Sayfa ekle</span></button>
+        <button type="button" id="ovHomeRemovePageBtn" class="tbtn" data-i18n-tr="Boş sayfayı sil" data-i18n-en="Delete empty page">Boş sayfayı sil</button>
         <button type="button" id="ovLayoutResetBtn" class="tbtn" data-i18n-tr="Varsayılan düzen" data-i18n-en="Reset layout">Varsayılan düzen</button>
-        <button type="button" id="ovLayoutDoneBtn" class="tbtn primary" data-i18n-tr="Tamam" data-i18n-en="Done">Tamam</button>
+        <button type="button" id="ovLayoutDoneBtn" class="tbtn primary" data-i18n-tr="Bitti" data-i18n-en="Done">Bitti</button>
       </div>
+      <button type="button" id="ovLayoutEditBtn" class="navActionBtn" aria-pressed="false" title="Ana ekranı düzenle (bir widget başlığına veya boş alana basılı tut)" data-i18n-title-tr="Ana ekranı düzenle (bir widget başlığına veya boş alana basılı tut)" data-i18n-title-en="Edit home screen (or press and hold a widget header or empty space)"><svg class="ic"><use href="#i-layout-dashboard"/></svg><span data-i18n-tr="Düzenle" data-i18n-en="Edit">Düzenle</span></button>
     </div>
-    <div id="ovDashboardGrid" class="ovDashboardGrid">
+    <div id="ovDashboardGrid" class="ovDashboardGrid ovHome" data-page="0">
     <section id="ovLaunchpad" data-overview-widget="launchpad" class="ovLaunchpad" aria-label="Dünya Saatleri" data-i18n-aria-label-tr="Dünya Saatleri" data-i18n-aria-label-en="World Clocks"></section>
+    <section id="ovProductionFocus" data-overview-widget="productionFocus" class="ovHomeHost" aria-label="Üretim Odağı" data-i18n-aria-label-tr="Üretim Odağı" data-i18n-aria-label-en="Production Focus">
+      <div id="cpAssistant"></div>
+      <p class="ovHomeHostEmpty" data-i18n-tr="CP verisi yüklendiğinde burada görünür." data-i18n-en="Appears here once CP data is loaded.">CP verisi yüklendiğinde burada görünür.</p>
+    </section>
+    <section id="ovAttention" data-overview-widget="attention" class="ovHomeHost" aria-label="Aksiyon Gerekenler" data-i18n-aria-label-tr="Aksiyon Gerekenler" data-i18n-aria-label-en="Orders Requiring Attention">
+      <div id="cpAssistantAttention"></div>
+      <p class="ovHomeHostEmpty" data-i18n-tr="CP verisi yüklendiğinde burada görünür." data-i18n-en="Appears here once CP data is loaded.">CP verisi yüklendiğinde burada görünür.</p>
+    </section>
+    <section id="ovDataCoverage" data-overview-widget="dataCoverage" class="ovHomeHost" aria-label="Veri Kapsamı" data-i18n-aria-label-tr="Veri Kapsamı" data-i18n-aria-label-en="Data Coverage">
+      <div id="cpAssistantCoverage"></div>
+      <p class="ovHomeHostEmpty" data-i18n-tr="CP verisi yüklendiğinde burada görünür." data-i18n-en="Appears here once CP data is loaded.">CP verisi yüklendiğinde burada görünür.</p>
+    </section>
+    <!-- Aktif Sipariş Kırılımı: eski Ülke / Alt Üretici / Sezon / Buying Group
+         modülleri ve radarları tek widget. Tablolar drill kaynağı olarak kalır. -->
+    <section id="ovBreakdown" data-overview-widget="breakdown" class="cardBox ovBreakdown" data-dim="country" data-view="chart">
+      <div class="ovBreakdownHead">
+        <p class="cardTitle ovBreakdownTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-bar"/></svg><span data-i18n-tr="Aktif Sipariş Kırılımı" data-i18n-en="Active Order Breakdown">Aktif Sipariş Kırılımı</span></p>
+        <div class="ovBreakdownTools">
+          <button type="button" class="ovEditBtn ovBreakdownFilterMain" data-ovfilter-trigger title="Filtreler" data-i18n-title-tr="Filtreler" data-i18n-title-en="Filters"><svg class="ic"><use href="#i-pencil"/></svg></button>
+          <button type="button" class="ovEditBtn ovBreakdownFilterBg" data-ovfilter-trigger="bg" title="Buying Group filtreleri" data-i18n-title-tr="Buying Group filtreleri" data-i18n-title-en="Buying Group filters"><svg class="ic"><use href="#i-pencil"/></svg></button>
+          <button type="button" class="ovBreakdownViewBtn" data-breakdown-view aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span>Tablo</span></button>
+        </div>
+      </div>
+      <div class="ovBreakdownDims" role="tablist" aria-label="Kırılım boyutu" data-i18n-aria-label-tr="Kırılım boyutu" data-i18n-aria-label-en="Breakdown dimension">
+        <button type="button" role="tab" data-breakdown-dim="country" aria-selected="true">Ülke</button>
+        <button type="button" role="tab" data-breakdown-dim="subManufacturer" aria-selected="false">Alt Üretici</button>
+        <button type="button" role="tab" data-breakdown-dim="season" aria-selected="false">Sezon</button>
+        <button type="button" role="tab" data-breakdown-dim="buyingGroup" aria-selected="false">Buying Group</button>
+      </div>
+      <div class="ovBreakdownBody">
+        <div id="ovBreakdownChart" class="ovBreakdownChart" aria-live="polite"></div>
+        <div class="ovBreakdownTables">
+          <div data-breakdown-pane="country"><table class="miniTable" id="tblCountry"></table></div>
+          <div data-breakdown-pane="subManufacturer" hidden><table class="miniTable" id="tblLicense"></table></div>
+          <div data-breakdown-pane="season" hidden><table class="miniTable" id="tblSeason"></table></div>
+          <div data-breakdown-pane="buyingGroup" hidden><table class="miniTable" id="tblBuyingGroup"></table></div>
+        </div>
+        <div id="ovFilterBadge" class="ovBreakdownBadge ovBreakdownBadgeMain" style="display:none"></div>
+        <div id="ovFilterBadgeBg" class="ovBreakdownBadge ovBreakdownBadgeBg" style="display:none"></div>
+      </div>
+    </section>
+    <section id="ovPriorityReminder" data-overview-widget="notes" class="ovPriorityReminder" aria-live="polite">
+        <div class="ovPriorityHeader">
+          <div>
+            <p class="cardTitle ovPriorityTitle"><svg class="ic" aria-hidden="true"><use href="#i-notebook"/></svg><span data-i18n-tr="Not Hatırlatıcısı" data-i18n-en="Notes Reminder">Not Hatırlatıcısı</span></p>
+            <p id="ovPriorityIntro" class="ovPriorityIntro"></p>
+          </div>
+          <div class="ovPriorityHeaderActions">
+            <button type="button" id="ovNotesSortBtn" class="ovNotesSortBtn" title="Notları eskiden yeniye sırala" data-i18n-title-tr="Notları eskiden yeniye sırala" data-i18n-title-en="Sort notes oldest to newest" aria-label="Not sıralaması">
+              <svg class="ic" aria-hidden="true"><use href="#i-arrows-down-up"/></svg><span>Eski → Yeni</span>
+            </button>
+            <div id="ovPriorityStats" class="ovPriorityStats"></div>
+          </div>
+        </div>
+        <div id="ovPriorityList" class="ovPriorityList"></div>
+        <p id="ovPriorityMethod" class="ovPriorityMethod"></p>
+    </section>
     <section id="globalFlowMapWidget" data-overview-widget="globalFlowMap" class="globalFlowMapWidget" aria-label="Global Flow Map">
       <div class="globalFlowHead">
         <p class="globalFlowTitle">
@@ -511,7 +577,6 @@
           <span class="globalFlowTitleText"><span>Global Flow Map</span><small data-i18n-tr="Siparişlerin global üretim ve sevkiyat akışı" data-i18n-en="Global production and shipment flow">Siparişlerin global üretim ve sevkiyat akışı</small></span>
         </p>
         <div id="globalFlowControls" class="globalFlowControls"></div>
-        <button type="button" class="ovNotesCollapseBtn" id="globalFlowCollapseBtn" aria-expanded="true" title="Global Flow Map'i daralt" data-i18n-title-tr="Global Flow Map'i daralt" data-i18n-title-en="Collapse Global Flow Map"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
       </div>
       <div id="globalFlowBody" class="globalFlowBody">
         <div id="globalFlowMeta" class="globalFlowMeta" role="status" aria-live="polite"></div>
@@ -539,25 +604,6 @@
       </div>
       <aside id="globalFlowDrawer" class="globalFlowDrawer" aria-hidden="true"></aside>
     </section>
-    <section id="ovPriorityReminder" data-overview-widget="notes" class="ovPriorityReminder" aria-live="polite" style="display:none">
-        <div class="ovPriorityHeader">
-          <div>
-            <p class="cardTitle ovPriorityTitle"><svg class="ic" aria-hidden="true"><use href="#i-notebook"/></svg><span data-i18n-tr="Not Hatırlatıcısı" data-i18n-en="Notes Reminder">Not Hatırlatıcısı</span></p>
-            <p id="ovPriorityIntro" class="ovPriorityIntro"></p>
-          </div>
-          <div class="ovPriorityHeaderActions">
-            <button type="button" id="ovNotesSortBtn" class="ovNotesSortBtn" title="Notları eskiden yeniye sırala" data-i18n-title-tr="Notları eskiden yeniye sırala" data-i18n-title-en="Sort notes oldest to newest" aria-label="Not sıralaması">
-              <svg class="ic" aria-hidden="true"><use href="#i-arrows-down-up"/></svg><span>Eski → Yeni</span>
-            </button>
-            <button type="button" id="ovNotesCollapseBtn" class="ovNotesCollapseBtn" title="Not Hatırlatıcısını daralt" aria-label="Not Hatırlatıcısını daralt" aria-expanded="true">
-              <svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg>
-            </button>
-            <div id="ovPriorityStats" class="ovPriorityStats"></div>
-          </div>
-        </div>
-        <div id="ovPriorityList" class="ovPriorityList"></div>
-        <p id="ovPriorityMethod" class="ovPriorityMethod"></p>
-    </section>
     <section id="ovCollectionSummary" data-overview-widget="collectionSummary" class="ovCollectionSummary" aria-live="polite">
       <div class="ovCollectionSummaryHeader">
         <div class="ovCollectionSummaryHeading">
@@ -570,7 +616,6 @@
             <button type="button" id="ovCollectionSummaryScopeTrigger" class="ovCollectionSummaryScopeTrigger" aria-haspopup="listbox" aria-expanded="false"><span id="ovCollectionSummaryScopeValue">Tümü</span><span class="ovCollectionScopeChevron" aria-hidden="true">▾</span></button>
             <div id="ovCollectionSummaryScopePopover" class="ovCollectionSummaryScopePopover" hidden></div>
           </div>
-          <button type="button" id="ovCollectionSummaryCollapseBtn" class="ovNotesCollapseBtn" title="Koleksiyon Özetini daralt" aria-label="Koleksiyon Özetini daralt" aria-expanded="true"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg></button>
         </div>
       </div>
       <div class="ovCollectionSummaryBody">
@@ -582,7 +627,7 @@
         </div>
       </div>
     </section>
-    <!-- OAB (Order-Assortment-Budget) — kasıtlı olarak ovEmpty/ovContent'ten
+    <!-- OAB (Order-Assortment-Budget) — kasıtlı olarak CP verisinden
          BAĞIMSIZ: CP verisi yüklenmemiş/hatalı olsa bile OAB kendi başına
          çalışabilmeli (test senaryosu: "Overview açıldığında OAB mevcut diğer
          Overview fonksiyonlarını bozmuyor" ve tersi). -->
@@ -592,7 +637,6 @@
           <p class="cardTitle ovSectionTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="OAB" data-i18n-en="OAB">OAB</span></p>
         </div>
         <div class="oabHeaderActions">
-          <button type="button" class="ovNotesCollapseBtn" id="oabCollapseBtn" data-overview-collapse="oab" aria-expanded="true" title="OAB'ı daralt" aria-label="OAB'ı daralt" data-i18n-title-tr="OAB'ı daralt" data-i18n-title-en="Collapse OAB"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg></button>
           <button type="button" class="navActionBtn" id="oabSettingsBtn" title="OAB Ayarları" data-i18n-title-tr="OAB Ayarları" data-i18n-title-en="OAB Settings"><svg class="ic"><use href="#i-pencil"/></svg></button>
         </div>
       </div>
@@ -647,7 +691,6 @@
           <button type="button" class="navActionBtn intakeFiltersBtn" id="intakeFiltersBtn" aria-expanded="false" aria-controls="intakeFilterPanel" title="INTAKE filtreleri" data-i18n-title-tr="INTAKE filtreleri" data-i18n-title-en="INTAKE filters"><svg class="ic" aria-hidden="true"><use href="#i-filter"/></svg></button>
           <button type="button" class="navActionBtn oabGroupAction" id="intakeCollapseAllBtn" hidden title="Tüm grupları daralt" data-i18n-title-tr="Tüm grupları daralt" data-i18n-title-en="Collapse all groups"><svg class="ic"><use href="#i-chevrons-left"/></svg></button>
           <button type="button" class="navActionBtn oabGroupAction" id="intakeExpandAllBtn" hidden title="Tüm grupları genişlet" data-i18n-title-tr="Tüm grupları genişlet" data-i18n-title-en="Expand all groups"><svg class="ic"><use href="#i-chevrons-right"/></svg></button>
-          <button type="button" class="ovNotesCollapseBtn" id="intakeCollapseBtn" data-overview-collapse="intake" aria-expanded="true" title="INTAKE'i daralt" aria-label="INTAKE'i daralt" data-i18n-title-tr="INTAKE'i daralt" data-i18n-title-en="Collapse INTAKE"><svg class="ic" aria-hidden="true"><use href="#i-chevron-up"/></svg></button>
           <button type="button" class="navActionBtn" id="intakeFieldsBtn" title="INTAKE pivot satır, sütun, ölçü ve filtre alanlarını düzenle" aria-label="Pivot ayarları" data-i18n-title-tr="INTAKE pivot satır, sütun, ölçü ve filtre alanlarını düzenle" data-i18n-title-en="Edit INTAKE pivot rows, columns, measures and filters"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></button>
         </div>
       </div>
@@ -658,58 +701,9 @@
         <div class="cardBox intakeTableWrap"><table class="miniTable" id="intakeTable"></table></div>
       </div>
     </div>
-    <div id="ovContent" data-overview-widget="overviewContent" style="display:none">
-      <section id="ovRefreshResult" class="ovRefreshResult" aria-live="polite" hidden></section>
-      <div id="ovDetailGrid" class="ovDetailGrid">
-        <div class="ovDetailWidget" data-overview-detail-widget="productionFocus">
-          <div id="cpAssistant"></div>
-        </div>
-        <div class="cardBox ovDetailWidget" data-overview-detail-widget="priorityRadar">
-          <div class="ovDetailHeader">
-            <p class="cardTitle"><svg class="ic" aria-hidden="true"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="CP Öncelik Radarı" data-i18n-en="CP Priority Radar">CP Öncelik Radarı</span></p>
-            <button type="button" class="ovDetailCollapseBtn" data-ov-detail-collapse="priorityRadar" aria-expanded="true" title="Daralt"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
-          </div>
-          <div class="ovDetailWidgetBody"><div id="ovPriorityRadar" class="ovRadarHost" aria-live="polite"></div></div>
-        </div>
-        <div class="ovDetailWidget" data-overview-detail-widget="attention">
-          <div id="cpAssistantAttention"></div>
-        </div>
-        <div class="ovDetailWidget" data-overview-detail-widget="dataCoverage">
-          <div id="cpAssistantCoverage"></div>
-        </div>
-        <div class="cardBox ovDetailWidget" data-overview-detail-widget="country">
-          <div class="ovDetailHeader">
-            <p class="cardTitle" data-i18n-tr="Ülke Bazlı Aktif Siparişler" data-i18n-en="Active Orders by Country">Ülke Bazlı Aktif Siparişler</p>
-            <button type="button" class="ovDetailCollapseBtn" data-ov-detail-collapse="country" aria-expanded="true" title="Daralt"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
-          </div>
-          <div class="ovDetailWidgetBody"><table class="miniTable" id="tblCountry"></table></div>
-        </div>
-        <div class="cardBox ovDetailWidget" data-overview-detail-widget="subManufacturer">
-          <div class="ovDetailHeader">
-            <p class="cardTitle" data-i18n-tr="Alt Üreticiye Göre Aktif Siparişler" data-i18n-en="Active Orders by Sub-Manufacturer">Alt Üreticiye Göre Aktif Siparişler</p>
-            <button type="button" class="ovDetailCollapseBtn" data-ov-detail-collapse="subManufacturer" aria-expanded="true" title="Daralt"><svg class="ic"><use href="#i-chevron-up"/></svg></button>
-          </div>
-          <div class="ovDetailWidgetBody"><table class="miniTable" id="tblLicense"></table></div>
-        </div>
-        <div class="cardBox ovDetailWidget" data-overview-detail-widget="season">
-          <div class="ovDetailHeader">
-            <p class="cardTitle"><span data-i18n-tr="Sezon Bazlı Aktif Sipariş Özeti" data-i18n-en="Active Orders by Season">Sezon Bazlı Aktif Sipariş Özeti</span></p>
-            <div class="ovDetailHeaderActions"><button type="button" class="ovEditBtn" data-ovfilter-trigger title="Filtreler"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="ovDetailCollapseBtn" data-ov-detail-collapse="season" aria-expanded="true" title="Daralt"><svg class="ic"><use href="#i-chevron-up"/></svg></button></div>
-          </div>
-          <div class="ovDetailWidgetBody"><table class="miniTable" id="tblSeason"></table></div>
-        </div>
-        <div class="cardBox ovDetailWidget" data-overview-detail-widget="buyingGroup">
-          <div class="ovDetailHeader">
-            <p class="cardTitle"><span data-i18n-tr="Group Bazlı Özet" data-i18n-en="Overview per Buying Group">Group Bazlı Özet</span></p>
-            <div class="ovDetailHeaderActions"><button type="button" class="ovEditBtn" data-ovfilter-trigger="bg" title="Filtreler"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="ovDetailCollapseBtn" data-ov-detail-collapse="buyingGroup" aria-expanded="true" title="Daralt"><svg class="ic"><use href="#i-chevron-up"/></svg></button></div>
-          </div>
-          <div class="ovDetailWidgetBody"><table class="miniTable" id="tblBuyingGroup"></table><div id="ovFilterBadgeBg" style="display:none;margin-top:8px;font-size:11.5px;color:var(--acc-ink);background:var(--acc-bg);border:1px solid var(--acc-lite);border-radius:8px;padding:8px 12px;"></div></div>
-        </div>
-      </div>
-      <div class="kpirow" id="kpiOrders" hidden aria-hidden="true" style="display:none!important"></div>
-      <div id="ovFilterBadge" style="display:none;margin-top:10px;font-size:11.5px;color:var(--acc-ink);background:var(--acc-bg);border:1px solid var(--acc-lite);border-radius:8px;padding:8px 12px;"></div>
     </div>
-    </div>
+    <div id="ovHomeDots" class="ovHomeDots" aria-hidden="true"></div>
+    <div class="kpirow" id="kpiOrders" hidden aria-hidden="true" style="display:none!important"></div>
   </section>
 
   <section id="view-cp">
@@ -1269,13 +1263,14 @@
 
 <script src="date-dimension.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="column-schema.js?v=__BL_ASSET_VERSION__"></script>
-<script src="overview-layout.js?v=__BL_ASSET_VERSION__"></script>
+<script src="overview-layout.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="model-option-stats.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-status-catalog.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-summary.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-dashboard.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=3"></script>
-<script src="overview-radar-charts.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="overview-breakdown.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="overview-home.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="detail-drawer.js?v=__BL_ASSET_VERSION__&rev=4"></script>
 <script src="thinking-orb-working.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="overview-global-flow.js?v=__BL_ASSET_VERSION__&rev=5"></script>

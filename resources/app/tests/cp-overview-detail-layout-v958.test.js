@@ -1,41 +1,40 @@
 'use strict';
 
+/* v9.58'de CP Overview detay modülleri ayrı bir iç ızgarada yönetiliyordu.
+   Ana ekran (v2) modelinde her modül doğrudan bir widget'tır; dört kırılım
+   tek "Aktif Sipariş Kırılımı" widget'ında birleşti, CP Öncelik Radarı
+   Üretim Odağı'ndaki öncelik dağılım çubuğuna katıldı. Bu dosya o geçişin
+   kullanıcı kaydını kaybetmediğini korur. */
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const ROOT=path.join(__dirname,'..');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
-const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
 const VIEW=fs.readFileSync(path.join(ROOT,'public','cp-overview-assistant.js'),'utf8');
-const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
 const CPA_CSS=fs.readFileSync(path.join(ROOT,'public','cp-overview-assistant.css'),'utf8');
 const layout=require('../public/overview-layout.js');
 
-const DETAIL_KEYS=['productionFocus','priorityRadar','attention','dataCoverage','country','subManufacturer','season','buyingGroup'];
-
-test('v9.58 CP Overview detay modülleri merkezi Edit Layout registry içinde ayrı ayrı bulunur',()=>{
-  assert.deepEqual(layout.detailWidgets,DETAIL_KEYS);
-  const state=layout.normalize(null);
-  assert.deepEqual(state.details.order,DETAIL_KEYS);
-  assert.deepEqual(state.details.hidden,[]);
-  assert.equal(state.details.widths.country,'half');
-  assert.equal(state.details.widths.subManufacturer,'half');
-  assert.equal(state.details.widths.productionFocus,'full');
-  assert.equal(state.details.widths.priorityRadar,'full');
-  for(const key of DETAIL_KEYS)assert.match(INDEX,new RegExp(`data-overview-detail-widget="${key}"`));
+test('CP modülleri ana ekranda bağımsız widget olarak bulunur',()=>{
+  for(const key of ['productionFocus','attention','dataCoverage','breakdown']){
+    assert.ok(layout.widgets.includes(key),key);
+    assert.match(INDEX,new RegExp(`data-overview-widget="${key}"`));
+  }
+  assert.doesNotMatch(INDEX,/data-overview-detail-widget|id="ovDetailGrid"|id="ovContent"/);
+  assert.ok(!layout.widgets.includes('priorityRadar'));
 });
 
-test('v9.58 eski Overview layout kaydı yeni detay varsayılanlarına güvenle yükselir',()=>{
-  const state=layout.normalize({order:['oab','overviewContent'],hidden:['notes']});
-  assert.deepEqual(state.details.order,DETAIL_KEYS);
-  assert.deepEqual(state.details.hidden,[]);
-  const custom=layout.normalize({details:{order:['season','country'],hidden:['attention','bad'],widths:{country:'third',season:'bad'}}});
-  assert.equal(custom.details.order[0],'season');
-  assert.equal(custom.details.order[1],'country');
-  assert.deepEqual(custom.details.hidden,['attention']);
-  assert.equal(custom.details.widths.country,'third');
-  assert.equal(custom.details.widths.season,'full');
+test('v1 detay kaydı ana ekrana taşınır: gizlenenler gizli kalır, dört kırılım tek widget olur',()=>{
+  const migrated=layout.normalize({order:['oab','overviewContent'],hidden:['notes'],details:{order:['season','country','attention'],hidden:['dataCoverage','priorityRadar'],widths:{country:'third'}}});
+  assert.equal(migrated.version,2);
+  const placed=migrated.pages.flatMap(page=>page.items.map(item=>item.key));
+  assert.ok(placed.includes('breakdown'));
+  assert.ok(!placed.includes('notes'),'v1 gizli modül gizli kalır');
+  assert.ok(!placed.includes('dataCoverage'),'v1 gizli detay modülü gizli kalır');
+  assert.equal(placed.filter(key=>key==='breakdown').length,1);
+  assert.ok(placed.indexOf('oab')<placed.indexOf('breakdown'),'v1 sırası korunur');
+  const allHidden=layout.normalize({details:{hidden:['country','subManufacturer','season','buyingGroup']}});
+  assert.ok(!allHidden.pages.some(page=>page.items.some(item=>item.key==='breakdown')),'dört kırılım da gizliyse birleşik widget da gizli');
 });
 
 test('v9.58 Today Production Focus, Attention ve Data Coverage bağımsız hostlara çizilir',()=>{
@@ -49,26 +48,14 @@ test('v9.58 Today Production Focus, Attention ve Data Coverage bağımsız hostl
   assert.match(VIEW,/coverage\.innerHTML = coverageCard\(\)/);
 });
 
-test('v9.58 Priorities ve Checklist masaüstünde iki eşit sütun, tek kartta tam genişlik kullanır',()=>{
+test('v9.58 Priorities ve Checklist iki eşit sütun, tek kartta tam genişlik kullanır',()=>{
   assert.match(CPA_CSS,/\.cpaGrid\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(CPA_CSS,/\.cpaGrid\.is-single\{[^}]*grid-template-columns:minmax\(0,1fr\)/);
-  assert.match(CPA_CSS,/@media\(max-width:1100px\)\{\.cpaGrid\{grid-template-columns:1fr\}/);
 });
 
-test('v9.58 dört breakdown başlığı kendi collapse kontrolüne sahiptir',()=>{
-  for(const key of ['country','subManufacturer','season','buyingGroup']){
-    assert.match(INDEX,new RegExp(`data-ov-detail-collapse="${key}"`));
-  }
-  assert.match(APP,/next\.details\.collapsed\[key\]=!next\.details\.collapsed\[key\]/);
-  assert.match(CSS,/\.ovDetailWidget\.ovDetailWidgetCollapsed>\.ovDetailWidgetBody\{display:none!important;\}/);
-});
-
-test('v9.58 Edit Layout detay modüllerini gizler, ekler, sıralar ve genişliklerini saklar',()=>{
-  assert.match(APP,/overviewLayoutBucket\(state,scope\)/);
-  assert.match(APP,/data-overview-detail-widget/);
-  assert.match(APP,/detailWidgets\.filter\(key=>state\.details\.hidden\.includes\(key\)\)/);
-  assert.match(APP,/bucket\.hidden=bucket\.hidden\.filter\(item=>item!==key\)/);
-  assert.match(APP,/bucket\.order=\[\.\.\.container\.children\]/);
-  assert.match(CSS,/\.ovDetailGrid\{[^}]*repeat\(12,minmax\(0,1fr\)\)/);
-  assert.match(CSS,/data-ov-detail-width="half"[^}]*grid-column:span 6/);
+test('CP Öncelik Radarı yerine Öncelikler kartında tıklanabilir dağılım çubuğu vardır',()=>{
+  assert.match(VIEW,/class="cpaMix"/);
+  assert.match(VIEW,/class="cpaMixSeg tone-\$\{tone\[key\]\}"[^`]*data-cpa-priority="\$\{key\}"/);
+  assert.match(CPA_CSS,/\.cpaMix\{/);
+  assert.doesNotMatch(INDEX,/id="ovPriorityRadar"/);
 });

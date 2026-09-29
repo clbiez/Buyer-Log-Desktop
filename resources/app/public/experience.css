@@ -327,8 +327,6 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 
 /* Genel Bakış: modüller arası boşluğu yalnız ızgara boşluğu belirler. */
 main{padding-top:16px;}
-.ovDashboardGrid{gap:18px;}
-.ovDashboardGrid>[data-overview-widget]{margin-top:0;margin-bottom:0;}
 .ovPriorityMethod{font-size:var(--fs-xs);line-height:1.5;color:var(--muted);}
 
 /* Genel Bakış · Bugün */
@@ -338,7 +336,6 @@ main{padding-top:16px;}
   border-radius:var(--bl-radius-panel);box-shadow:var(--shadow-1);
 }
 .ovLaunchBody{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:center;gap:18px 28px;}
-.ovLaunchpad>.ovWidgetEditControls{margin-bottom:12px;}
 .ovLaunchDate{margin:0 0 6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);}
 .ovLaunchTitle{margin:0;font-family:var(--sans);font-size:calc(22px + var(--ui-font-add));font-weight:700;line-height:1.15;letter-spacing:-.025em;color:var(--ink);}
 .ovLaunchSub{margin:6px 0 0;font-size:var(--fs-sm);line-height:1.5;color:var(--ink2);}
@@ -357,7 +354,6 @@ main{padding-top:16px;}
 .ovLaunchText small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs);color:var(--muted);}
 .ovLaunchArrow{width:14px;height:14px;color:var(--muted);transition:transform var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast);}
 .ovLaunchTile:hover .ovLaunchArrow{color:var(--acc);transform:translateX(2px);}
-@media(max-width:1280px){.ovLaunchBody{grid-template-columns:1fr;}}
 @media(max-width:900px){.ovLaunchGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:560px){.ovLaunchGrid{grid-template-columns:1fr;}}
 /* Barlow'da kelime aralığı dar; negatif harf aralığı kelimeleri birleştiriyordu. */

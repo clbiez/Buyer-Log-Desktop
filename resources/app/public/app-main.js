@@ -882,15 +882,6 @@ function actionPriorityCode(value){
   }
   return '';
 }
-function renderOverviewPriorityRadar(rows){
-  const codes=actionPriorityCodes();
-  const labels=Object.fromEntries(codes.map(code=>[code,priorityDisplay(code)]));
-  const points=(Array.isArray(rows)?rows:[]).map(row=>({
-    priority:actionPriorityCode(row&&row['Priority']),
-    units:toNum(row&&row['Order Quantity'])||0,
-  }));
-  window.BLOverviewRadar?.renderPriority?.(points,{codes,labels,lang:appLang});
-}
 function actionPriorityCodes(){
   const OD=window.BLOrderDecisionEngine;
   return OD&&Array.isArray(OD.ACTION_PRIORITIES)?OD.ACTION_PRIORITIES.slice():[];
@@ -9163,31 +9154,12 @@ document.getElementById('ovNotesSortBtn')?.addEventListener('click',()=>{
   renderOverview();
 });
 
-const OVERVIEW_NOTES_COLLAPSE_KEY='buyerlog.overview.notesReminderCollapsed';
-function overviewNotesStoredCollapsed(){
-  try{return BLStorage.getItem(OVERVIEW_NOTES_COLLAPSE_KEY)==='1';}catch(_){return false;}
-}
-function applyOverviewNotesCollapsed(collapsed,{persist=true}={}){
-  const section=document.getElementById('ovPriorityReminder');
-  const btn=document.getElementById('ovNotesCollapseBtn');
-  const isCollapsed=Boolean(collapsed);
-  section?.classList.toggle('isCollapsed',isCollapsed);
-  if(btn){
-    btn.setAttribute('aria-expanded',isCollapsed?'false':'true');
-    const title=appLang==='en'?(isCollapsed?'Expand Notes Reminder':'Collapse Notes Reminder'):(isCollapsed?'Not Hatırlatıcısını genişlet':'Not Hatırlatıcısını daralt');
-    btn.title=title;btn.setAttribute('aria-label',title);
-    const use=btn.querySelector('use');if(use)use.setAttribute('href',isCollapsed?'#i-chevron-down':'#i-chevron-up');
-  }
-  if(persist){try{BLStorage.setItem(OVERVIEW_NOTES_COLLAPSE_KEY,isCollapsed?'1':'0');}catch(_){}}
-}
-document.getElementById('ovNotesCollapseBtn')?.addEventListener('click',()=>{
-  const section=document.getElementById('ovPriorityReminder');
-  applyOverviewNotesCollapsed(!(section?.classList.contains('isCollapsed')));
-});
-applyOverviewNotesCollapsed(overviewNotesStoredCollapsed(),{persist:false});
+/* Not Hatırlatıcısı ana ekran widget'ıdır: boyutu ızgaradan gelir, daraltma
+   yoktur. Eski daraltma kaydı widget içeriğini gizlemesin diye temizlenir. */
+try{BLStorage.removeItem('buyerlog.overview.notesReminderCollapsed');}catch(_){}
+document.getElementById('ovPriorityReminder')?.classList.remove('isCollapsed');
 
 const OVERVIEW_COLLECTION_SUMMARY_KEY='buyerlog.overview.collectionSummary.v1';
-const OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY=OVERVIEW_COLLECTION_SUMMARY_KEY+'.collapsed';
 let overviewCollectionSummaryRenderFrame=0;
 function overviewCollectionSummaryStored(){
   try{return JSON.parse(BLStorage.getItem(OVERVIEW_COLLECTION_SUMMARY_KEY)||'{}')||{};}catch(_){return {};}
@@ -9208,17 +9180,6 @@ function overviewCollectionSummaryColumnValue(row,key){
 function overviewCollectionSummaryConfirmed(row){
   try{return typeof kolConfirmedPricing==='function'&&Boolean(kolConfirmedPricing(row));}catch(_){return false;}
 }
-function overviewCollectionSummaryApplyCollapsed(collapsed,{persist=true}={}){
-  const root=document.getElementById('ovCollectionSummary'),button=document.getElementById('ovCollectionSummaryCollapseBtn');
-  const value=Boolean(collapsed);root?.classList.toggle('isCollapsed',value);
-  if(button){
-    const title=appLang==='en'?(value?'Expand Collection Summary':'Collapse Collection Summary'):(value?'Koleksiyon Özetini genişlet':'Koleksiyon Özetini daralt');
-    button.setAttribute('aria-expanded',value?'false':'true');button.title=title;button.setAttribute('aria-label',title);
-    const use=button.querySelector('use');if(use)use.setAttribute('href',value?'#i-chevron-down':'#i-chevron-up');
-  }
-  if(persist){try{BLStorage.setItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY,value?'1':'0');}catch(_){}}
-}
-function overviewCollectionSummaryStoredCollapsed(){try{return BLStorage.getItem(OVERVIEW_COLLECTION_SUMMARY_COLLAPSE_KEY)==='1';}catch(_){return false;}}
 function overviewCollectionSummaryDrill({month,status,model,season,scopeColumn,scopeValues,kpi}={}){
   try{
     if(typeof kolColFilters==='undefined')return;
@@ -9261,174 +9222,21 @@ function overviewCollectionSummaryDashboardContext(){
 function renderOverviewCollectionSummary(){
   const root=document.getElementById('ovCollectionSummary'),dashboard=window.BLOverviewCollectionDashboard;
   if(!root||!dashboard||!window.BLOverviewCollectionSummary)return;
-  root.style.display='block';
+  /* Ana ekran widget'ı flex kabuktur; satır içi display gövde kaydırmasını bozar. */
+  root.style.display='';
   dashboard.render(overviewCollectionSummaryDashboardContext());
-  overviewCollectionSummaryApplyCollapsed(overviewCollectionSummaryStoredCollapsed(),{persist:false});
 }
 function scheduleOverviewCollectionSummaryRender(){
   if(overviewCollectionSummaryRenderFrame)return;
   const run=()=>{overviewCollectionSummaryRenderFrame=0;renderOverviewCollectionSummary();};
   if(typeof requestAnimationFrame==='function')overviewCollectionSummaryRenderFrame=requestAnimationFrame(run);else overviewCollectionSummaryRenderFrame=setTimeout(run,0);
 }
-document.getElementById('ovCollectionSummaryCollapseBtn')?.addEventListener('click',()=>{
-  const root=document.getElementById('ovCollectionSummary');overviewCollectionSummaryApplyCollapsed(!root?.classList.contains('isCollapsed'));
-});
-overviewCollectionSummaryApplyCollapsed(overviewCollectionSummaryStoredCollapsed(),{persist:false});
+try{BLStorage.removeItem(OVERVIEW_COLLECTION_SUMMARY_KEY+'.collapsed');}catch(_){}
 setTimeout(renderOverviewCollectionSummary,0);
 
-const OVERVIEW_LAYOUT_KEY='buyerlog.overview.layout.v1';
-let overviewLayoutEditing=false,overviewLayoutDragKey='';
-function overviewLayoutStored(){
-  try{return window.BLOverviewLayout.normalize(JSON.parse(BLStorage.getItem(OVERVIEW_LAYOUT_KEY)||'null'));}catch(_){return window.BLOverviewLayout.normalize(null);}
-}
-function overviewLayoutSave(value){try{BLStorage.setItem(OVERVIEW_LAYOUT_KEY,JSON.stringify(window.BLOverviewLayout.normalize(value)));}catch(_){} }
-function overviewLayoutWidgetLabel(key,scope='page'){
-  const labels={
-    launchpad:appLang==='en'?'World Clocks':'Dünya Saatleri',
-    globalFlowMap:'Global Flow Map',
-    notes:appLang==='en'?'CP Notes':'CP Notları',
-    collectionSummary:appLang==='en'?'Collection Summary':'Koleksiyon Özeti',
-    oab:'OAB',
-    intake:'INTAKE',
-    overviewContent:appLang==='en'?'Overview details':'Genel Bakış detayları',
-    productionFocus:appLang==='en'?"Today's Production Focus":'Bugünün Üretim Odağı',
-    priorityRadar:appLang==='en'?'CP Priority Radar':'CP Öncelik Radarı',
-    attention:appLang==='en'?'Orders Requiring Attention':'Aksiyon Gereken Siparişler',
-    dataCoverage:appLang==='en'?'Data Coverage':'Veri Kapsamı',
-    country:appLang==='en'?'Active Orders by Country':'Ülke Bazlı Aktif Siparişler',
-    subManufacturer:appLang==='en'?'Active Orders by Sub-Manufacturer':'Alt Üreticiye Göre Aktif Siparişler',
-    season:appLang==='en'?'Active Orders by Season':'Sezon Bazlı Aktif Sipariş Özeti',
-    buyingGroup:appLang==='en'?'Overview per Buying Group':'Group Bazlı Özet',
-  };
-  return labels[key]||key;
-}
-function overviewLayoutBucket(state,scope){return scope==='detail'?state.details:state;}
-function overviewLayoutRenderControls(widget,state,scope='page'){
-  widget.querySelector(':scope > .ovWidgetEditControls')?.remove();
-  widget.querySelector(':scope > .ovWidgetResizeHandle')?.remove();
-  if(!overviewLayoutEditing)return;
-  const key=scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget;
-  const bucket=overviewLayoutBucket(state,scope),widths=window.BLOverviewLayout.widths;
-  const canCollapse=scope==='page'||['priorityRadar','country','subManufacturer','season','buyingGroup'].includes(key);
-  const collapseControl=canCollapse?`<button type="button" data-layout-collapse>${escapeHtml(bucket.collapsed[key]?(appLang==='en'?'Expand':'Aç'):(appLang==='en'?'Collapse':'Kapat'))}</button>`:'';
-  const control=document.createElement('div');control.className='ovWidgetEditControls';control.innerHTML=`<span>${escapeHtml(overviewLayoutWidgetLabel(key,scope))}</span><button type="button" data-layout-move="-1" title="${escapeHtml(appLang==='en'?'Move up':'Yukarı taşı')}">↑</button><button type="button" data-layout-move="1" title="${escapeHtml(appLang==='en'?'Move down':'Aşağı taşı')}">↓</button><select data-layout-width aria-label="${escapeHtml(appLang==='en'?'Widget width':'Widget genişliği')}">${widths.map(width=>`<option value="${width}"${bucket.widths[key]===width?' selected':''}>${escapeHtml(({full:appLang==='en'?'Full width':'Tam genişlik',threeQuarter:'¾',twoThirds:'⅔',half:'½',third:'⅓',quarter:'¼'})[width]||width)}</option>`).join('')}</select>${collapseControl}<button type="button" data-layout-remove title="${escapeHtml(appLang==='en'?'Hide module':'Modülü gizle')}">×</button>`;
-  widget.prepend(control);
-  const resize=document.createElement('div');resize.className='ovWidgetResizeHandle';resize.setAttribute('role','separator');resize.setAttribute('aria-label',appLang==='en'?'Resize module':'Modülü yeniden boyutlandır');widget.appendChild(resize);
-  resize.addEventListener('pointerdown',event=>{
-    if(event.button!==0)return;event.preventDefault();event.stopPropagation();
-    const startX=event.clientX,startY=event.clientY,startWidth=widget.getBoundingClientRect().width,startHeight=widget.getBoundingClientRect().height,containerWidth=widget.parentElement?.getBoundingClientRect().width||startWidth;
-    const nearestWidth=pixels=>{const ratios={full:1,threeQuarter:.75,twoThirds:2/3,half:.5,third:1/3,quarter:.25};return widths.reduce((best,item)=>Math.abs(ratios[item]-pixels/containerWidth)<Math.abs(ratios[best]-pixels/containerWidth)?item:best,'full');};
-    const widthDataKey=scope==='detail'?'ovDetailWidth':'ovWidth';
-    const move=pointer=>{widget.style.minHeight=`${Math.max(120,Math.min(1600,startHeight+pointer.clientY-startY))}px`;widget.dataset[widthDataKey]=nearestWidth(Math.max(220,startWidth+pointer.clientX-startX));};
-    const end=pointer=>{move(pointer);document.removeEventListener('pointermove',move,true);document.removeEventListener('pointerup',end,true);const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);nextBucket.widths[key]=widget.dataset[widthDataKey]||nextBucket.widths[key];nextBucket.heights[key]=Math.round(widget.getBoundingClientRect().height);overviewLayoutSave(next);renderOverviewLayout();};
-    document.addEventListener('pointermove',move,true);document.addEventListener('pointerup',end,true);
-  });
-  control.querySelectorAll('[data-layout-move]').forEach(button=>button.addEventListener('click',()=>{
-    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);
-    nextBucket.order=window.BLOverviewLayout.move(nextBucket.order,key,Number(button.dataset.layoutMove));overviewLayoutSave(next);renderOverviewLayout();
-  }));
-  control.querySelector('[data-layout-width]')?.addEventListener('change',event=>{
-    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);nextBucket.widths[key]=event.target.value;overviewLayoutSave(next);renderOverviewLayout();
-  });
-  control.querySelector('[data-layout-collapse]')?.addEventListener('click',()=>{
-    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);nextBucket.collapsed[key]=!nextBucket.collapsed[key];overviewLayoutSave(next);renderOverviewLayout();
-  });
-  control.querySelector('[data-layout-remove]')?.addEventListener('click',()=>{
-    const next=overviewLayoutStored(),nextBucket=overviewLayoutBucket(next,scope);if(!nextBucket.hidden.includes(key))nextBucket.hidden.push(key);overviewLayoutSave(next);renderOverviewLayout();
-  });
-}
-function overviewLayoutApplyDetailState(widget,state){
-  const key=widget.dataset.overviewDetailWidget,detail=state.details,hidden=new Set(detail.hidden);
-  widget.draggable=overviewLayoutEditing;widget.classList.toggle('ovDetailLayoutHidden',hidden.has(key));widget.dataset.ovDetailWidth=detail.widths[key]||'full';widget.style.minHeight=detail.heights[key]?`${detail.heights[key]}px`:'';widget.classList.toggle('ovDetailWidgetCollapsed',Boolean(detail.collapsed[key]));overviewLayoutRenderControls(widget,state,'detail');
-  const button=widget.querySelector(`[data-ov-detail-collapse="${key}"]`);
-  if(button){
-    const collapsed=Boolean(detail.collapsed[key]);button.setAttribute('aria-expanded',collapsed?'false':'true');
-    button.title=appLang==='en'?(collapsed?'Expand':'Collapse'):(collapsed?'Genişlet':'Daralt');
-    const use=button.querySelector('use');if(use)use.setAttribute('href',collapsed?'#i-chevron-down':'#i-chevron-up');
-  }
-}
-function overviewLayoutApplyPageState(widget,state){
-  const key=widget.dataset.overviewWidget,collapsed=Boolean(state.collapsed[key]);
-  widget.classList.toggle('ovWidgetCollapsed',collapsed);
-  const button=widget.querySelector('[data-overview-collapse]');
-  if(!button)return;
-  const label=key==='intake'?'INTAKE':'OAB';
-  const title=appLang==='en'?(collapsed?`Expand ${label}`:`Collapse ${label}`):(collapsed?`${label}${key==='intake'?'\'i':'\'ı'} genişlet`:`${label}${key==='intake'?'\'i':'\'ı'} daralt`);
-  button.setAttribute('aria-expanded',collapsed?'false':'true');button.title=title;button.setAttribute('aria-label',title);
-  const use=button.querySelector('use');if(use)use.setAttribute('href',collapsed?'#i-chevron-down':'#i-chevron-up');
-}
-function renderOverviewLayout(){
-  const grid=document.getElementById('ovDashboardGrid'),helper=window.BLOverviewLayout;if(!grid||!helper)return;
-  const state=overviewLayoutStored();grid.classList.toggle('isEditing',overviewLayoutEditing);
-  const widgets=[...grid.children].filter(widget=>widget.hasAttribute('data-overview-widget')),byKey=new Map(widgets.map(widget=>[widget.dataset.overviewWidget,widget]));
-  state.order.forEach(key=>{const widget=byKey.get(key);if(widget)grid.appendChild(widget);});
-  const hidden=new Set(state.hidden);
-  widgets.forEach(widget=>{
-    const key=widget.dataset.overviewWidget;widget.draggable=overviewLayoutEditing;widget.classList.toggle('ovLayoutHidden',hidden.has(key));widget.dataset.ovWidth=state.widths[key]||'full';widget.style.minHeight=state.heights[key]?`${state.heights[key]}px`:'';overviewLayoutApplyPageState(widget,state);overviewLayoutRenderControls(widget,state,'page');
-  });
-  const detailGrid=document.getElementById('ovDetailGrid');
-  if(detailGrid){
-    detailGrid.classList.toggle('isEditing',overviewLayoutEditing);
-    const details=[...detailGrid.children].filter(widget=>widget.hasAttribute('data-overview-detail-widget')),detailByKey=new Map(details.map(widget=>[widget.dataset.overviewDetailWidget,widget]));
-    state.details.order.forEach(key=>{const widget=detailByKey.get(key);if(widget)detailGrid.appendChild(widget);});
-    details.forEach(widget=>overviewLayoutApplyDetailState(widget,state));
-  }
-  if(typeof applyOverviewNotesCollapsed==='function')applyOverviewNotesCollapsed(Boolean(state.collapsed.notes),{persist:false});
-  if(typeof overviewCollectionSummaryApplyCollapsed==='function')overviewCollectionSummaryApplyCollapsed(Boolean(state.collapsed.collectionSummary),{persist:false});
-  const select=document.getElementById('ovLayoutAddSelect');if(select){
-    const pageHidden=helper.widgets.filter(key=>hidden.has(key));
-    const detailHidden=helper.detailWidgets.filter(key=>state.details.hidden.includes(key));
-    const group=(label,scope,keys)=>keys.length?`<optgroup label="${escapeHtml(label)}">${keys.map(key=>`<option value="${scope}:${key}">${escapeHtml(overviewLayoutWidgetLabel(key,scope))}</option>`).join('')}</optgroup>`:'';
-    select.innerHTML=`<option value="">${escapeHtml(appLang==='en'?'Choose a module':'Modül seçin')}</option>`+group(appLang==='en'?'Page sections':'Sayfa bölümleri','page',pageHidden)+group(appLang==='en'?'CP Overview modules':'CP Overview modülleri','detail',detailHidden);
-  }
-}
-function overviewLayoutSetEditing(value){
-  overviewLayoutEditing=Boolean(value);const panel=document.getElementById('ovLayoutEditPanel'),button=document.getElementById('ovLayoutEditBtn');
-  if(panel)panel.hidden=!overviewLayoutEditing;if(button){button.setAttribute('aria-pressed',overviewLayoutEditing?'true':'false');button.classList.toggle('active',overviewLayoutEditing);}
-  renderOverviewLayout();
-}
-function overviewLayoutBindDrag(container,attribute,scope){
-  if(!container||container.dataset.layoutDragBound)return;container.dataset.layoutDragBound='1';
-  const selector=`[${attribute}]`;
-  container.addEventListener('dragstart',event=>{
-    if(!overviewLayoutEditing)return event.preventDefault();
-    if(scope==='page'&&event.target.closest('[data-overview-detail-widget]'))return;
-    const widget=event.target.closest(selector);if(!widget)return;
-    overviewLayoutDragKey=scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget;widget.classList.add('isDragging');event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',overviewLayoutDragKey);
-  });
-  container.addEventListener('dragover',event=>{if(overviewLayoutEditing&&event.target.closest(selector)){if(scope==='page'&&event.target.closest('[data-overview-detail-widget]'))return;event.preventDefault();event.dataTransfer.dropEffect='move';}});
-  container.addEventListener('drop',event=>{
-    if(!overviewLayoutEditing)return;if(scope==='page'&&event.target.closest('[data-overview-detail-widget]'))return;
-    const target=event.target.closest(selector),key=overviewLayoutDragKey||event.dataTransfer.getData('text/plain');if(!target||!key)return;
-    const targetKey=scope==='detail'?target.dataset.overviewDetailWidget:target.dataset.overviewWidget;if(targetKey===key)return;
-    event.preventDefault();const children=[...container.children].filter(widget=>widget.hasAttribute(attribute));const dragged=children.find(widget=>(scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget)===key);if(!dragged)return;
-    const rect=target.getBoundingClientRect(),after=event.clientX>rect.left+rect.width/2||event.clientY>rect.top+rect.height/2;after?target.after(dragged):target.before(dragged);
-    const next=overviewLayoutStored(),bucket=overviewLayoutBucket(next,scope);bucket.order=[...container.children].filter(widget=>widget.hasAttribute(attribute)).map(widget=>scope==='detail'?widget.dataset.overviewDetailWidget:widget.dataset.overviewWidget);overviewLayoutSave(next);renderOverviewLayout();
-  });
-  container.addEventListener('dragend',()=>{container.querySelector('.isDragging')?.classList.remove('isDragging');overviewLayoutDragKey='';});
-}
-function overviewLayoutBind(){
-  const grid=document.getElementById('ovDashboardGrid');if(!grid||grid.dataset.layoutBound)return;grid.dataset.layoutBound='1';
-  overviewLayoutBindDrag(grid,'data-overview-widget','page');overviewLayoutBindDrag(document.getElementById('ovDetailGrid'),'data-overview-detail-widget','detail');
-  grid.addEventListener('click',event=>{
-    const button=event.target.closest('[data-overview-collapse]');if(!button)return;
-    const key=button.dataset.overviewCollapse,next=overviewLayoutStored();
-    if(!window.BLOverviewLayout.widgets.includes(key))return;
-    next.collapsed[key]=!next.collapsed[key];overviewLayoutSave(next);renderOverviewLayout();
-  });
-  document.getElementById('ovDetailGrid')?.addEventListener('click',event=>{
-    const button=event.target.closest('[data-ov-detail-collapse]');if(!button)return;
-    const key=button.dataset.ovDetailCollapse,next=overviewLayoutStored();if(!window.BLOverviewLayout.detailWidgets.includes(key))return;
-    next.details.collapsed[key]=!next.details.collapsed[key];overviewLayoutSave(next);renderOverviewLayout();
-  });
-  document.getElementById('ovLayoutEditBtn')?.addEventListener('click',()=>overviewLayoutSetEditing(!overviewLayoutEditing));
-  document.getElementById('ovLayoutDoneBtn')?.addEventListener('click',()=>overviewLayoutSetEditing(false));
-  document.getElementById('ovLayoutAddBtn')?.addEventListener('click',()=>{
-    const raw=document.getElementById('ovLayoutAddSelect')?.value;if(!raw)return;const [scope,key]=raw.split(':');const next=overviewLayoutStored(),bucket=overviewLayoutBucket(next,scope==='detail'?'detail':'page');bucket.hidden=bucket.hidden.filter(item=>item!==key);overviewLayoutSave(next);renderOverviewLayout();
-  });
-  document.getElementById('ovLayoutResetBtn')?.addEventListener('click',()=>{if(!confirm(appLang==='en'?'Restore the default Overview layout?':'Varsayılan Overview düzeni geri yüklensin mi?'))return;overviewLayoutSave(null);renderOverviewLayout();});
-}
-overviewLayoutBind();renderOverviewLayout();
+/* Genel Bakış yerleşimi (Android ana ekranı modeli) overview-home.js'tedir:
+   hücre ızgarası, sayfalar, sürükle-bırak, kenardan boyutlandırma ve widget
+   çekmecesi. Kayıt anahtarı ve v1→v2 taşıması orada tutulur. */
 
 function overviewNoteCanonical(value){
   return norm(value).replace(/\s+/g,' ').toLocaleLowerCase('tr-TR');
@@ -9551,7 +9359,7 @@ function renderOverviewPriorityReminder(rows){
   const list=document.getElementById('ovPriorityList');
   const method=document.getElementById('ovPriorityMethod');
   if(!root||!intro||!stats||!list||!method)return;
-  root.style.display='block';
+  root.style.display='';
   updateOverviewNotesSortButton();
   if(!state.cp){
     const loading=overviewCpLoadState!=='error';
@@ -9696,21 +9504,21 @@ function renderOverviewState(options){
 function renderOverviewNow(){
   renderOverviewCollectionSummary();
   if(!state.cp && !state.orderSummary && !state.overviewSummary) return;
-  const empty=document.getElementById('ovEmpty'),content=document.getElementById('ovContent'),notesReminder=document.getElementById('ovPriorityReminder');
+  const empty=document.getElementById('ovEmpty');
+  /* Ana ekran widget'ları konumlarını korur; veri yokken her widget kendi boş
+     durumunu gösterir, üstteki durum kartı nedenini ve aksiyonu söyler. */
   if(window.BL_CP_SOURCE_FILTER_REQUIRED){
     const text=sourceFilterNoticeText(window.BL_CP_SOURCE_FILTER_STATUS,window.BL_CP_SOURCE_FILTER_MESSAGE);
     renderOverviewState({kind:'warning',icon:'binary-tree-2',title:text.title,detail:text.detail,actionLabel:text.action,onAction:()=>openDataSourceAndFilters({target:'cp'})});
-    empty.style.display='flex';content.style.display='none';if(notesReminder)notesReminder.style.display='none';
+    empty.style.display='flex';
     return;
   }
   if(window.BL_HAS_CACHED_MODEL_DATA===false){
     const en=appLang==='en';
     renderOverviewState({kind:'empty',icon:'database-import',title:en?'No data has been loaded yet.':'Henüz veri yüklenmedi.',detail:en?'The source filter is ready. Run Refresh to load data; the wait may increase with the active filter scope and data volume.':'Kaynak filtresi hazır. Verileri almak için Yenile\'yi çalıştırın; aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir.',actionLabel:en?'Refresh data':'Veriyi yenile',actionPrimary:true,onAction:()=>document.getElementById('topRefreshBtn')?.click()});
-    empty.style.display='flex';content.style.display='none';if(notesReminder)notesReminder.style.display='none';return;
+    empty.style.display='flex';return;
   }
   empty.style.display='none';
-  content.style.display='block';
-  if(notesReminder)notesReminder.style.display='block';
   renderOverviewRefreshResult();
   updateOvFilterBadge('main');
   updateOvFilterBadge('bg');
@@ -9719,7 +9527,6 @@ function renderOverviewNow(){
   const orderRowsF = ovFilteredOrderRows();
   renderOverviewPriorityReminder(cpRows);
   if(!state.cp){
-    renderOverviewPriorityRadar([]);
     const mode=overviewCpLoadState==='error'?'error':'loading';
     renderOverviewCpDependencyState(mode,overviewCpLoadError);
     // Overview kabuğunu bloklamadan CP projection'ı arka planda hazırla.
@@ -9741,11 +9548,19 @@ function renderOverviewNow(){
         .then(()=>{try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready');syncUnifiedPrioritiesForTable('cp');scheduleOverviewRender('overview-decision-engine-ready');}catch(_){}}).catch(()=>{});
     }
   }
+  /* Aktif Sipariş Kırılımı widget'ının grafik modeli tablolarla aynı toplamlardan
+     kurulur; drill, tablo satırlarıyla aynı CP filtresini uygular. */
+  const breakdown={country:[],subManufacturer:[],season:{codes:actionPriorityCodes(),labels:{},rows:[]},buyingGroup:[],drill:{
+    country:v=>{clearCpQuickFilters();setSelectValue('cpFCountry',v);switchTab('cp');renderCP();},
+    subManufacturer:v=>{clearCpQuickFilters();state.colFilters.cp['Sub-Manufacturer']={values:new Set([v])};switchTab('cp');renderCP();},
+    season:(v,pri)=>{clearCpQuickFilters();setSelectValue('cpFSeason',v);if(pri)setSelectValue('cpFPriority',pri);switchTab('cp');renderCP();},
+  }};
   if(state.cp){
     if(window.BLCpAssistant?.computeDecisionsForRows)syncUnifiedPrioritiesForTable('cp');
-    renderOverviewPriorityRadar(cpRows);
-    fillMiniTable('tblCountry', groupCount(cpRows,'Country'));
-    fillMiniTable('tblLicense', groupCount(cpRows,'Sub-Manufacturer'));
+    breakdown.country=groupCount(cpRows,'Country');
+    breakdown.subManufacturer=groupCount(cpRows,'Sub-Manufacturer');
+    fillMiniTable('tblCountry', breakdown.country);
+    fillMiniTable('tblLicense', breakdown.subManufacturer);
     bindMiniDrill('tblCountry', v=>{ clearCpQuickFilters(); setSelectValue('cpFCountry', v); });
     bindMiniDrill('tblLicense', v=>{ clearCpQuickFilters(); state.colFilters.cp['Sub-Manufacturer'] = {values:new Set([v])}; });
 
@@ -9761,6 +9576,7 @@ function renderOverviewNow(){
       seasonMap[season].count++;
     });
     const seasonRows = Object.entries(seasonMap).sort((a,b)=>b[1].count-a[1].count);
+    breakdown.season={codes:actionPriorityCodes(),labels:Object.fromEntries(actionPriorityCodes().map(code=>[code,priorityDisplay(code)])),rows:seasonRows.map(([label,data])=>({label,count:data.count,qty:data.qty,priorities:data.priorities}))};
     const tblSeason = document.getElementById('tblSeason');
     const seasonQtyTotal=seasonRows.reduce((sum,[,d])=>sum+(Number(d.qty)||0),0);
     const priorityHeaders=actionPriorityCodes().map(code=>`<th style="text-align:right">${escapeHtml(priorityDisplay(code))}</th>`).join('');
@@ -9812,6 +9628,7 @@ function renderOverviewNow(){
       }
     });
     const bgRows = Object.entries(bgMap).sort((a,b)=>b[1].active-a[1].active);
+    breakdown.buyingGroup=bgRows.map(([label,d])=>({label,active:d.active,total:d.total,remaining:d.remaining,totalQty:d.totalQty,fobUsd:d.fobValueUsd,fobTry:d.fobValueTry}));
     const tblBG = document.getElementById('tblBuyingGroup');
     const bgRemainingTotal=bgRows.reduce((sum,[,d])=>sum+(Number(d.remaining)||0),0),bgQtyTotal=bgRows.reduce((sum,[,d])=>sum+(Number(d.totalQty)||0),0);
     tblBG.innerHTML = `<tr><th>${appLang==='en'?'Buying Group':'Buying Grup'}</th><th style="text-align:right">${appLang==='en'?'Active':'Aktif'}</th><th style="text-align:right">${appLang==='en'?'Total Orders':'Toplam Sipariş Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Remaining Quantity':'Kalan Adet'}</th><th style="text-align:right">${appLang==='en'?'Total Quantity':'Toplam Adet Sayısı'}</th><th style="text-align:right">${appLang==='en'?'Active Total FOB':'Aktif Toplam FOB'}</th><th style="text-align:right">${appLang==='en'?'Total FOB':'Toplam FOB'}</th></tr>` +
@@ -9828,6 +9645,7 @@ function renderOverviewNow(){
     document.getElementById('kpiOrders').innerHTML='';
     document.getElementById('tblBuyingGroup').innerHTML='';
   }
+  window.BLOverviewBreakdown?.update?.(breakdown);
 }
 function groupCount(rows,key){
   const m={}; rows.forEach(r=>{ const k=norm(r[key])||'—'; m[k]=(m[k]||0)+1; });
@@ -9836,7 +9654,7 @@ function groupCount(rows,key){
 function fillMiniTable(id, entries){
   const el = document.getElementById(id);
   el.innerHTML = `<tr><th>${appLang==='en'?'NAME':'Ad'}</th><th style="text-align:right">${appLang==='en'?'ORDER':'Sipariş'}</th></tr>` +
-    entries.map(([k,v])=>`<tr><td>${k}</td><td style="text-align:right;font-family:var(--mono)">${v}</td></tr>`).join('');
+    entries.map(([k,v])=>`<tr><td>${escapeHtml(k)}</td><td style="text-align:right;font-family:var(--mono)">${v}</td></tr>`).join('');
 }
 // ================= ASAS + ANTREPO INTEGRATION ENGINE =================
 const LICMAP = {};
@@ -14116,6 +13934,7 @@ function hydrateUserPreferencesAfterUi(){
     window.BLPerf?.mark?.('AUTH_USER_LOAD_READY',{mode:'after-ui',applied:Number(sync&&sync.applied)||0,pushed:Number(sync&&sync.pushed)||0});
     window.BLPerf?.mark?.('AUTH_READY',{mode:'after-ui'});
     if(sync&&Number(sync.applied)>0){
+      window.BLOverviewHome?.reload?.();
       coreFilterAutoReady=false;
       applyCoreAutoFilterState();
       if(state.cp)renderCP();

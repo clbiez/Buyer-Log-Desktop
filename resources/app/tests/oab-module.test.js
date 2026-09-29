@@ -1141,14 +1141,12 @@ test('Overview: OAB, Notes Reminder alanının hemen altında yer alır', () => 
   assert.doesNotMatch(between, /id="kpiCP"|id="tblCountry"|id="tblSeason"/);
 });
 
-test('Overview: Notes Reminder açılıp kapanabilir ve tercih kişisel workspace ile hatırlanır', () => {
+test('Overview: Notes Reminder ana ekran widget\'ıdır; boyutu ızgaradan gelir, eski daraltma kaydı içeriği gizlemez', () => {
   const APP_MAIN = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
-  const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
-  assert.match(INDEX, /id="ovNotesCollapseBtn"/);
-  assert.match(APP_MAIN, /OVERVIEW_NOTES_COLLAPSE_KEY/);
-  assert.match(APP_MAIN, /applyOverviewNotesCollapsed/);
-  assert.match(APP_MAIN, /BLStorage\.setItem\(OVERVIEW_NOTES_COLLAPSE_KEY/);
-  assert.match(CSS, /\.ovPriorityReminder\.isCollapsed \.ovPriorityList/);
+  assert.doesNotMatch(INDEX, /id="ovNotesCollapseBtn"/);
+  assert.match(INDEX, /id="ovPriorityReminder" data-overview-widget="notes"/);
+  assert.match(APP_MAIN, /BLStorage\.removeItem\('buyerlog\.overview\.notesReminderCollapsed'\)/);
+  assert.match(APP_MAIN, /getElementById\('ovPriorityReminder'\)\?\.classList\.remove\('isCollapsed'\)/);
 });
 
 /* -------------------------------------- 17) OAB DRILL-DOWN TABLE UX */

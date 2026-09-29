@@ -1856,6 +1856,10 @@ function bindObservers(){
     });io.observe(widget);state.observers.push(io);
   }
   window.addEventListener('resize',scheduleDraw,{passive:true});
+  /* Widget ana ekranda yeniden boyutlandırıldığında pencere boyutu değişmez;
+     tuval kendi kabının boyutunu izler. */
+  const canvasWrap=$('globalFlowCanvasWrap');
+  if(canvasWrap&&typeof ResizeObserver==='function'){const ro=new ResizeObserver(()=>{if(state.inView)scheduleDraw();});ro.observe(canvasWrap);state.observers.push(ro);}
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(state.dirty)void refresh(false);scheduleDraw();}syncEarthActivity();});
   const desktopWorkspace=window.buyerLogDesktop&&window.buyerLogDesktop.workspace;
   if(desktopWorkspace&&typeof desktopWorkspace.onTabActivity==='function'){
@@ -1878,7 +1882,9 @@ function bindObservers(){
 function renderAll(){syncEngineSurface();renderControls();renderFilters();renderKpis();renderMeta();setCollapsed(state.collapsed);scheduleDraw();}
 function init(){
   const widget=$('globalFlowMapWidget');if(!widget)return;loadPrefs();
-  $('globalFlowCollapseBtn')?.addEventListener('click',()=>setCollapsed(!state.collapsed));
+  /* Harita ana ekran widget'ıdır: boyutu ızgaradan gelir, daraltılmaz. Eski
+     kayıttaki daraltma durumu gövdeyi gizlemesin. */
+  state.collapsed=false;
   bindControls();bindFilters();bindKpis();bindCanvas();bindObservers();renderAll();syncLoadingOverlay();
   // Uygulama başka sekmede açıldıysa veri gözlemci görünür dediğinde yüklenir.
   state.inView=widget.getClientRects().length>0;

@@ -2011,39 +2011,7 @@ td.viewOnlyCell{color:var(--ink2);background:color-mix(in srgb,var(--muted-bg) 3
 @media(prefers-reduced-motion:reduce){.uiStateSpinner{animation-duration:1.8s}}
 
 /* ===================== OVERVIEW — NOTES REMINDER ===================== */
-  .ovDashboardToolbar{display:flex;justify-content:flex-end;align-items:center;min-height:var(--ctl-h);margin-bottom:var(--sp-2);}
-  #ovLayoutEditBtn{position:relative;z-index:1;}
-  #ovLayoutEditBtn.active{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
-  .ovLayoutEditPanel{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:var(--ctl-h);padding:0 6px;border:1px solid var(--line);border-left:0;background:var(--card);color:var(--muted);font-size:var(--fs-xs);}
-  .ovLayoutEditPanel[hidden]{display:none!important;}
-  .ovLayoutEditPanel select{height:var(--ctl-h);min-height:var(--ctl-h);max-width:180px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink2);font:inherit;padding:4px 7px;}
-  .ovLayoutEditPanel .tbtn{height:var(--ctl-h);min-height:var(--ctl-h);padding:4px 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink2);font:inherit;cursor:pointer;white-space:nowrap;}
-  .ovLayoutEditPanel .tbtn:hover{border-color:var(--acc-lite);background:var(--acc-bg);color:var(--acc-ink);}
-  .ovLayoutEditPanel .tbtn.primary{border-color:var(--acc);background:var(--acc);color:var(--on-acc);}
-  .ovLayoutEditPanel .tbtn.primary:hover{background:var(--acc-hover);}
-  .ovDashboardGrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--sp-4);align-items:start;}
-  .ovDashboardGrid>[data-overview-widget]{grid-column:span 12;min-width:0;position:relative;}
-  .ovDashboardGrid>[data-overview-widget][data-ov-width="threeQuarter"]{grid-column:span 9;}.ovDashboardGrid>[data-overview-widget][data-ov-width="twoThirds"]{grid-column:span 8;}.ovDashboardGrid>[data-overview-widget][data-ov-width="half"]{grid-column:span 6;}.ovDashboardGrid>[data-overview-widget][data-ov-width="third"]{grid-column:span 4;}.ovDashboardGrid>[data-overview-widget][data-ov-width="quarter"]{grid-column:span 3;}
-  .ovDashboardGrid.isEditing>[data-overview-widget]{outline:1px dashed color-mix(in srgb,var(--acc) 50%,var(--line));outline-offset:3px;}
-  .ovDashboardGrid>[data-overview-widget].ovLayoutHidden{display:none!important;}
-  .ovWidgetEditControls{display:flex;align-items:center;gap:4px;position:absolute;z-index:9;top:5px;right:5px;padding:3px 4px;border:1px solid var(--line2);background:var(--card);box-shadow:var(--shadow-1);font-size:10px;}
-  .ovWidgetEditControls span{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);}
-  .ovWidgetEditControls button,.ovWidgetEditControls select{min-height:22px;padding:2px 5px;border:1px solid var(--line);background:var(--card2);color:var(--ink2);font:600 10px/1 var(--sans);cursor:pointer;}.ovWidgetEditControls button:hover{border-color:var(--acc);color:var(--acc-ink);}
-  .ovWidgetResizeHandle{position:absolute;right:-4px;bottom:-4px;width:18px;height:18px;z-index:10;cursor:nwse-resize;touch-action:none;border-right:3px solid var(--acc);border-bottom:3px solid var(--acc);border-radius:0 0 3px 0}
-  .ovDashboardGrid>[data-overview-widget].ovWidgetCollapsed> :not(.ovWidgetEditControls):not(.ovPriorityHeader):not(.ovCollectionSummaryHeader):not(.oabHeader):not(.intakeHeader){display:none!important;}
-  .ovDetailGrid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--sp-3);align-items:start;margin-top:var(--sp-3);}
-  .ovDetailGrid>[data-overview-detail-widget]{grid-column:span 12;min-width:0;position:relative;}
-  .ovDetailGrid>[data-overview-detail-widget][data-ov-detail-width="threeQuarter"]{grid-column:span 9;}.ovDetailGrid>[data-overview-detail-widget][data-ov-detail-width="twoThirds"]{grid-column:span 8;}.ovDetailGrid>[data-overview-detail-widget][data-ov-detail-width="half"]{grid-column:span 6;}.ovDetailGrid>[data-overview-detail-widget][data-ov-detail-width="third"]{grid-column:span 4;}.ovDetailGrid>[data-overview-detail-widget][data-ov-detail-width="quarter"]{grid-column:span 3;}
-  .ovDetailGrid.isEditing>[data-overview-detail-widget]{outline:1px dashed color-mix(in srgb,var(--acc) 50%,var(--line));outline-offset:3px;}
-  .ovDetailGrid>[data-overview-detail-widget].ovDetailLayoutHidden{display:none!important;}
-  .ovDetailHeader{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-2);}
-  .ovDetailHeader .cardTitle{margin:0;min-width:0;}
-  .ovDetailHeaderActions{display:flex;align-items:center;gap:6px;flex:0 0 auto;}
-  .ovDetailCollapseBtn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink2);cursor:pointer;}
-  .ovDetailCollapseBtn:hover{border-color:var(--acc);color:var(--acc-ink);}.ovDetailCollapseBtn:focus-visible{outline:none;box-shadow:var(--focus-ring);}
-  .ovDetailCollapseBtn .ic{width:14px;height:14px;}
-  .ovDetailWidget.ovDetailWidgetCollapsed>.ovDetailWidgetBody{display:none!important;}
-  .ovDetailGrid .ovWidgetEditControls{top:5px;right:5px;}
+  /* Genel Bakış ana ekran ızgarası, düzen çubuğu ve widget kabuğu: overview-home.css */
   #ovCollectionSummaryHeaderActions{display:flex;gap:5px;}
   .ovCollectionSummaryHeaderActions{display:flex;align-items:center;gap:5px;}
   .ovCollectionSummary{margin-bottom:var(--sp-4);padding:var(--sp-4);background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-1);}
@@ -2104,7 +2072,7 @@ td.viewOnlyCell{color:var(--ink2);background:color-mix(in srgb,var(--muted-bg) 3
   .ovCollectionSummaryTable tbody tr:last-child td{border-bottom:0;}.ovCollectionSummaryDrill{appearance:none;border:0;background:none;padding:0;color:var(--acc-ink);font:inherit;cursor:pointer;text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--acc) 35%,transparent);text-underline-offset:2px;}.ovCollectionSummaryDrill:hover{color:var(--ink);}
   .ovCollectionSummaryEmpty{color:var(--muted)!important;text-align:center!important;font-family:var(--sans)!important;}
   .ovCollectionSummary.isCollapsed{padding-bottom:var(--sp-3);}.ovCollectionSummary.isCollapsed .ovCollectionSummaryHeader{margin-bottom:0;align-items:center;}.ovCollectionSummary.isCollapsed .ovCollectionSummaryIntro,.ovCollectionSummary.isCollapsed .ovCollectionSummaryFilters,.ovCollectionSummary.isCollapsed .ovCollectionSummaryKpi,.ovCollectionSummary.isCollapsed .ovCollectionSummaryTableWrap{display:none!important;}
-  @media(max-width:700px){.ovDashboardGrid{display:block;}.ovDashboardGrid>[data-overview-widget]{margin-bottom:var(--sp-4);}.ovCollectionSummaryHeader{align-items:center;}.ovCollectionSummaryFilters{align-items:stretch;flex-direction:column;}.ovCollectionSummaryFilter,.ovCollectionSummaryConfirmation,.ovCollectionSummaryColumnFilterBar select,.ovCollectionSummaryColumnFilter{width:100%;max-width:none;}.ovCollectionSummaryOptions,.ovCollectionSummaryColumnFilter .ovCollectionSummaryOptions{position:relative;top:auto;min-width:0;}.ovCollectionSummaryConfirmation{align-items:flex-start;flex-direction:column;}.ovCollectionSummaryPivotGrid{grid-template-columns:1fr;}}
+  @media(max-width:700px){.ovCollectionSummaryHeader{align-items:center;}.ovCollectionSummaryFilters{align-items:stretch;flex-direction:column;}.ovCollectionSummaryFilter,.ovCollectionSummaryConfirmation,.ovCollectionSummaryColumnFilterBar select,.ovCollectionSummaryColumnFilter{width:100%;max-width:none;}.ovCollectionSummaryOptions,.ovCollectionSummaryColumnFilter .ovCollectionSummaryOptions{position:relative;top:auto;min-width:0;}.ovCollectionSummaryConfirmation{align-items:flex-start;flex-direction:column;}.ovCollectionSummaryPivotGrid{grid-template-columns:1fr;}}
 
 .ovPriorityReminder{margin-bottom:var(--sp-4);padding:var(--sp-4);background:linear-gradient(135deg,color-mix(in srgb,var(--card) 94%,var(--acc-bg)),var(--card));border:1px solid color-mix(in srgb,var(--acc) 22%,var(--line));border-radius:var(--r-lg);box-shadow:var(--shadow-1);}
 .ovPriorityHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-4);margin-bottom:var(--sp-3);}
@@ -4319,7 +4287,6 @@ tr.blRemoteChanged>td{animation:blRemoteChangedFade 5s ease-out 1;}
 .oabLocalFilterAddEmpty{padding:8px 7px;color:var(--muted);font-size:11px;line-height:1.35;}
 .oabLocalFilterAddPopover button{display:block;width:100%;padding:6px 7px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:11px;text-align:left;cursor:pointer;}
 .oabLocalFilterAddPopover button:hover,.oabLocalFilterAddPopover button:focus-visible{background:var(--acc-bg);color:var(--acc-ink);outline:none;}
-.ovDashboardGrid>.intakeSection{min-width:0;position:relative;}
 .intakeSection{padding:var(--sp-3) var(--sp-4);}
 .intakeHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;margin-bottom:10px;}
 .intakeHeaderMain{display:flex;align-items:center;gap:10px;min-width:0;}
@@ -4810,7 +4777,7 @@ td.formulaCell.isError{color:var(--muted);}
   .plmOpsStrip{left:12px;right:12px;max-width:none;}
 }
 
-@media(max-width:900px){.ovDetailGrid{grid-template-columns:1fr}.ovDetailGrid>[data-overview-detail-widget]{grid-column:1/-1!important}}
+
 
 /* ===================================================================
    E-MAIL GROUPS V2 — central directory + master/detail recipient editor

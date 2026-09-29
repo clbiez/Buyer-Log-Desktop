@@ -120,10 +120,12 @@ test('v9.48 teslimat motoru yoksa panel SESSİZCE UNKNOWN göstermez, uyarır', 
 test('v9.48 panel kabuğu Genel Bakış içeriğinde ve stil sayfası kayıtlı', () => {
   assert.match(HTML, /<div id="cpAssistant"><\/div>/);
   assert.match(HTML, /cp-overview-assistant\.css/);
-  // Kabuk ovContent İÇİNDE olmalı: dışarıda kalırsa veri yokken de görünürdü.
-  const contentIndex = HTML.indexOf('<div id="ovContent"');
+  // Kabuk artık kendi ana ekran widget'ının içindedir; veri yokken boş kart
+  // yerine açıklayıcı boş durum görünür (ovContent sarmalayıcısı kaldırıldı).
+  const widgetIndex = HTML.indexOf('data-overview-widget="productionFocus"');
   const hostIndex = HTML.indexOf('<div id="cpAssistant">');
-  assert.ok(contentIndex > 0 && hostIndex > contentIndex);
+  assert.ok(widgetIndex > 0 && hostIndex > widgetIndex);
+  assert.match(HTML.slice(hostIndex, hostIndex + 300), /class="ovHomeHostEmpty"/);
 });
 
 test('v9.48 kullanıcı tercihleri hesapla birlikte taşınır (iki listeye de kayıtlı)', () => {
