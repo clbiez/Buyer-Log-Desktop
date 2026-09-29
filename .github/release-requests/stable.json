@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.162",
-  "source": "test-v7.0.162",
-  "requestedAt": "2026-09-29T05:25:50.708Z",
-  "reason": "verified-full-regression-claude-overview-lfl-stability"
+  "version": "7.0.163",
+  "source": "test-v7.0.163",
+  "requestedAt": "2026-09-29T06:12:44.700Z",
+  "reason": "verified-full-regression-minimal-icon-library-v3"
 }
