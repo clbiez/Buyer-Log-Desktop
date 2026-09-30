@@ -7,7 +7,7 @@ const { APP_ROOT,PORTABLE_ROOT,readPackage,atomicWriteJson }=require('./release-
 function sha256(file){const h=crypto.createHash('sha256');h.update(fs.readFileSync(file));return h.digest('hex');}
 function excluded(rel){
   const r=String(rel||'').replace(/\\/g,'/');
-  return r==='dist-updates'||r.startsWith('dist-updates/')||r==='.release-pending.json'||r==='.desktop-dev'||r.startsWith('.desktop-dev/')||r==='server/data'||r.startsWith('server/data/');
+  return r==='dist-updates'||r.startsWith('dist-updates/')||r==='dist-installer'||r.startsWith('dist-installer/')||r==='.release-pending.json'||r==='.desktop-dev'||r.startsWith('.desktop-dev/')||r==='server/data'||r.startsWith('server/data/');
 }
 function walk(root){
   const out=[];
@@ -21,19 +21,22 @@ function walk(root){
   }
   visit(root);return out;
 }
-function main(){
-  const pkg=readPackage();
-  const electronVersion=String(fs.readFileSync(path.join(PORTABLE_ROOT,'version'),'utf8')).trim();
-  const manifest={
+function buildManifest(appRoot=APP_ROOT,portableRoot=PORTABLE_ROOT){
+  const pkg=appRoot===APP_ROOT?readPackage():JSON.parse(fs.readFileSync(path.join(appRoot,'package.json'),'utf8'));
+  const electronVersion=String(fs.readFileSync(path.join(portableRoot,'version'),'utf8')).trim();
+  return {
     format:'buyer-log-desktop-portable',schemaVersion:1,appVersion:pkg.version,electronVersion,
     chromiumFrom:`electron ${electronVersion}`,createdAt:new Date().toISOString(),distributionMode:'same-pc',
     adminRequired:false,installerRequired:false,runtimeEmbedded:true,runtimeDownloadRequired:false,asar:false,
     bind:'127.0.0.1:6194',mutableDataRoot:'data/',appCoreRoot:'resources/app/',
     excluded:['server/data (çalışma verisi)','kullanıcı veritabanı ve cihaz kimliği (ilk açılışta oluşur veya taşınır)','Edge/Chrome kurumsal tarayıcı profilleri','dist-updates ve release-pending (geliştirici build çıktıları)'],
-    appCoreFiles:walk(APP_ROOT)
+    appCoreFiles:walk(appRoot)
   };
+}
+function main(){
+  const manifest=buildManifest();
   atomicWriteJson(path.join(PORTABLE_ROOT,'manifest.json'),manifest);
   console.log(JSON.stringify({appVersion:manifest.appVersion,electronVersion:manifest.electronVersion,files:manifest.appCoreFiles.length,manifest:path.join(PORTABLE_ROOT,'manifest.json')},null,2));
 }
 if(require.main===module){try{main();}catch(error){console.error(error&&error.stack||error);process.exitCode=1;}}
-module.exports={main,walk,excluded};
+module.exports={main,buildManifest,walk,excluded};

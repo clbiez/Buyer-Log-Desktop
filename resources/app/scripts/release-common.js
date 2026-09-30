@@ -28,7 +28,7 @@ function baseConfig(){const outer=readJson(path.join(PORTABLE_ROOT,'config.json'
 function releaseSource(cli=''){return String(cli||process.env.BUYER_LOG_RELEASE_SOURCE||baseConfig().releaseSource||'').trim();}
 function excludeRuntime(rel,entry){
   const r=String(rel||'').replace(/\\/g,'/');
-  if(r==='.release-pending.json'||r.startsWith('dist-updates/'))return true;
+  if(r==='.release-pending.json'||r.startsWith('dist-updates/')||r.startsWith('dist-installer/'))return true;
   if(r.startsWith('tests/'))return true;
   if(r==='server/data'||r.startsWith('server/data/'))return true;
   if(r.startsWith('.desktop-dev/'))return true;

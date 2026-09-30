@@ -33,6 +33,20 @@ function emptyState(deviceId = crypto.randomUUID()) {
   };
 }
 
+/* Kopyalanmış kurulum koruması (7.0.178). Bir kurulumun data klasörü başka
+   bir bilgisayara/kullanıcıya kopyalanırsa deviceId de kopyalanır; iki kurulum
+   Shared Hub'da aynı cihaz klasörüne yazar, birbirinin klasörünü "kendi
+   klasörüm" diye okumaz ve aynı cihaz sıra numaralarını paylaşır. Emekli
+   edilen kimlikler burada tutulur. */
+const CLONE_WRITER_SUFFIX = '#clone';
+function retiredDeviceIds(state) {
+  return Array.isArray(state && state.retiredDeviceIds) ? state.retiredDeviceIds.filter(item => item && item.deviceId) : [];
+}
+function isRetiredDeviceId(state, id) {
+  const wanted = String(id || '');
+  return Boolean(wanted) && retiredDeviceIds(state).some(item => String(item.deviceId) === wanted);
+}
+
 function dataIntegrityError(file, errors = []) {
   const details = errors.map(item => `${path.basename(item.file)}: ${item.error && item.error.message || item.error}`).join('; ');
   return Object.assign(new Error(`BuyerLogLocal.db okunamadı; mevcut veri korunuyor. ${details}`), {
@@ -608,7 +622,11 @@ function createLocalDb(file) {
         delete state.records[key];
       }
     } else if (!tomb || Number(tomb.revision) <= revision) {
-      const causal = delta.deviceId ? { writer: { d: String(delta.deviceId), s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen } : null;
+      // Bu cihazın emekli kimliğiyle gelen ve yerelde olmayan olay, klasörü
+      // kopyalanmış bir kardeş kurulumdan gelir: "aynı cihazın eski olayı"
+      // kuralıyla sessizce atlanmamalı, ayrı yazar olarak değerlendirilmeli.
+      const writerDevice = delta.deviceId && isRetiredDeviceId(state, delta.deviceId) ? `${delta.deviceId}${CLONE_WRITER_SUFFIX}` : String(delta.deviceId || '');
+      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen } : null;
       const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key, causal);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
@@ -1036,7 +1054,90 @@ function createLocalDb(file) {
     if (!normalized.length) return { count: 0 };
     return transaction(async state => { for (const item of normalized) state.assets[item.id] = item; return { count: normalized.length }; });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, resolveConflict, putAsset, putAssets };
+  /* CİHAZ KİMLİĞİNİ YENİLE (kopya kurulum onarımı).
+
+     Yeni bir deviceId üretilir ve bu kurulumun journal'ında duran bütün yerel
+     olaylar AYNI eventId ile, yeni kimlik altında 1'den başlayan kesintisiz
+     sırayla yeniden yayımlanmak üzere kuyruğa alınır:
+     - olayı zaten almış cihazlar eventId ile duplicate sayar, iki kez uygulamaz;
+     - kardeş kopya (eski ortak klasörü "kendi klasörü" sandığı için) hiç
+       almadığı olayları bu yolla alır.
+     Eski kimliğe kadar kendi yazdıklarımız nedensel olarak "görülmüş" kalır;
+     böylece önceki kendi düzenlemelerimiz diğer cihazlarda sahte çakışma
+     üretmez. Eski kimliğin sıkıştırılmış (yeniden yayımlanamayan) olaylarının
+     ACK borcu kapatılır; sıra alanı yeni kimlikle sıfırdan başlar.
+     İş kaydı (records) değişmez. */
+  async function rotateDeviceId({ reason = 'manual', fingerprint = '' } = {}) {
+    return withFileLeaseAsync(dbFile, async () => {
+      recoverPendingWrites();
+      await fsp.mkdir(path.dirname(dbFile), { recursive: true });
+      if (!fs.existsSync(dbFile) && !fs.existsSync(`${dbFile}.bak`)) await writeState(dbFile, emptyState(loadDeviceId()));
+      const state = await loadState();
+      const at = now();
+      const previous = String(state.deviceId || '');
+      const previousSequence = Number(state.localSequence) || 0;
+      let next = crypto.randomUUID();
+      while (next === previous || isRetiredDeviceId(state, next)) next = crypto.randomUUID();
+      if (previous) {
+        state.causalKnowledge = state.causalKnowledge && typeof state.causalKnowledge === 'object' ? state.causalKnowledge : {};
+        state.causalKnowledge[previous] = Math.max(Number(state.causalKnowledge[previous]) || 0, previousSequence);
+        state.retiredDeviceIds = retiredDeviceIds(state).concat([{ deviceId: previous, lastSequence: previousSequence, retiredAt: at, reason: String(reason || '').slice(0, 80) }]).slice(-20);
+      }
+      const inJournal = new Set();
+      let sequence = 0;
+      for (const item of state.journal) {
+        if (!item || !item.eventId) continue;
+        sequence += 1;
+        inJournal.add(item.eventId);
+        item.deviceId = next;
+        item.localSequence = sequence;
+        item.uploaded = false; item.synced = false; item.acknowledged = false;
+        delete item.uploadedAt; delete item.acknowledgedAt;
+        item.reissuedFrom = previous;
+        item.sha256 = sha256(Buffer.from(JSON.stringify({ ...item, sha256: undefined }), 'utf8'));
+        if (state.events[item.eventId]) state.events[item.eventId] = { ...state.events[item.eventId], deviceId: next, localSequence: sequence };
+      }
+      const ledger = state.syncLedger;
+      for (const id of Object.keys(ledger.eventIds || {})) {
+        if (!inJournal.has(id) && !ledger.acknowledgedEventIds[id]) ledger.acknowledgedEventIds[id] = at;
+      }
+      ledger.acknowledgedThrough = 0;
+      ledger.compactedThrough = 0;
+      state.localSequence = sequence;
+      state.deviceId = next;
+      state.deviceBinding = { fingerprint: String(fingerprint || (state.deviceBinding && state.deviceBinding.fingerprint) || ''), deviceId: next, boundAt: at };
+      await writeSnapshot(state);
+      // Eski WAL'lar emekli kimliğin "yüklendi" işaretlerini taşır; oynatılırsa
+      // yeniden kuyruğa alınan olaylar tekrar "yüklendi" sayılırdı.
+      const folder = path.dirname(dbFile);
+      const recovery = createDurableFileRecovery({ recoveryRoot: path.join(folder, '.buyerlog-db-recovery'), allowedRoots: [folder] });
+      await recovery.replace(walFile(), Buffer.alloc(0));
+      await recovery.replace(`${walFile()}.bak`, Buffer.alloc(0));
+      try { await fsp.unlink(`${walFile()}.bak.bak`); } catch (_) {}
+      deviceId = next;
+      cachedState = state; cachedTags = await currentTags();
+      return { rotated: true, previousDeviceId: previous, deviceId: next, reissued: sequence, reason: String(reason || '') };
+    });
+  }
+  /* Kurulum parmak izi (bilgisayar + Windows kullanıcısı) DB'ye mühürlenir.
+     Mühürsüz eski DB bu kurulumu sahiplenir; mühür başka bir kuruluma aitse
+     veri klasörü kopyalanmış demektir ve kimlik yenilenir. */
+  async function ensureDeviceBinding(fingerprint) {
+    const fp = String(fingerprint || '').trim();
+    if (!fp) return { status: 'skipped', deviceId: loadDeviceId() };
+    const state = await read();
+    const binding = state.deviceBinding && typeof state.deviceBinding === 'object' ? state.deviceBinding : null;
+    if (binding && binding.fingerprint && binding.fingerprint !== fp) {
+      return { status: 'rotated', ...(await rotateDeviceId({ reason: 'installation-copied', fingerprint: fp })) };
+    }
+    if (binding && binding.fingerprint === fp && binding.deviceId === state.deviceId) return { status: 'bound', deviceId: state.deviceId };
+    const status = binding && binding.fingerprint === fp ? 'bound' : 'adopted';
+    return transaction(async current => {
+      current.deviceBinding = { fingerprint: fp, deviceId: current.deviceId, boundAt: now() };
+      return { status, deviceId: current.deviceId };
+    });
+  }
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================
