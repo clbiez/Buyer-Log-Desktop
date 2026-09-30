@@ -23738,9 +23738,10 @@ function kolPriceGradientHex(price, validPrices){
    üretirdi.
 
    Bunun yerine elle giriş, ARKADAKİ KAYDI oluşturur: üretici + fiyat alınır,
-   satırın fiyat haritasına yazılır ve aynı verilerle bir Quotations kaydı
-   açılır. Böylece Best Price kendiliğinden doğru değeri gösterir ve fiyatın
-   nereden geldiği Quotations'ta izlenebilir kalır.
+   satırın fiyat haritasına yazılır. Aynı model + üretici gerçek bir Quotations
+   kaydında zaten varsa o kayıt yerinde güncellenir; yoksa bütün manuel fiyatlar
+   tek bir ortak "Elle Girilen Fiyatlar" quotation kaydı altında toplanır.
+   Böylece Best Price doğru değeri gösterirken Quotations listesi de parçalanmaz.
    =================================================================== */
 function kolManualManufacturerSuggestions(){
   const values=[...kolCatalogValues('manufacturer')];
@@ -23786,8 +23787,8 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
       </label>
       <label class="kolManualCheck"><input type="checkbox" id="_kolManualConfirm" ${confirm?'checked':''}><span>${escapeHtml(en?'Mark this manufacturer as confirmed':'Bu üreticiyi onaylı üretici yap')}</span></label>
       <div class="kolManualNote">${escapeHtml(en
-        ? 'A Quotations record is created with this manufacturer and price, so the entry stays traceable.'
-        : 'Bu üretici ve fiyatla bir Quotations kaydı açılır; giriş izlenebilir kalır.')}</div>
+        ? 'Manual Collection prices are collected under one Quotations record so entries stay traceable without creating separate records.'
+        : 'Koleksiyonda elle girilen fiyatlar ayrı kayıtlar açmadan tek bir Quotations kaydı altında toplanır ve izlenebilir kalır.')}</div>
     </div>
     <div class="kolManualFoot"><span id="_kolManualStatus"></span>
       <button type="button" class="tbtn" data-overlay-close>${escapeHtml(en?'Cancel':'Vazgeç')}</button>
@@ -23830,25 +23831,26 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
       if(!known)kolManufacturers.push({name:mfr,email:''});
       if(typeof kolApplyRulePricing==='function')kolApplyRulePricing(row);
       saveKolRows();renderKol();
-      /* Fiyat zaten bir Quotations kaydından geliyorsa o kayıt YERİNDE güncellenir.
-         Eskiden burada koşulsuz recordRequest() çağrılıyor, yani kaynak kayda hiç
-         dokunulmadan İKİNCİ bir kayıt açılıyordu — kullanıcı düzenlediğini sanıp
-         yeni bir kayıt görüyordu. Yalnız eşleşen satır yoksa yeni kayıt açılır. */
+      /* Mevcut gerçek quotation satırı varsa onu yerinde güncelle; yoksa
+         tüm manuel Koleksiyon fiyatlarını kullanıcının TEK ortak quotation
+         kaydı altında topla. Böylece her elle giriş Quotations listesinde
+         ayrı bir kayıt üretmez. */
       const api=window.BL_QUOTATIONS||null;
-      let updated=false;
-      if(api&&typeof api.updateCollectionLine==='function'){
-        try{ updated=api.updateCollectionLine(row.id,mfr,{price:kolFormatMoneyDisplay(String(price)),approved:wantConfirmed}); }
-        catch(err){ console.warn('Quotations kaydı güncellenemedi:',err&&err.message); }
-      }
-      const created=updated?null:await (api&&api.recordRequest
-        ?api.recordRequest('collection',[row],[{name:mfr,email:(known&&known.email)||''}])
+      const manualResult=await (api&&typeof api.recordManualCollectionPrice==='function'
+        ?api.recordManualCollectionPrice(
+          row,
+          {name:mfr,email:(known&&known.email)||''},
+          {price:kolFormatMoneyDisplay(String(price)),approved:wantConfirmed}
+        )
         :Promise.resolve(null));
       close();
-      showToast(updated
-        ?(en?`Price updated on the existing Quotations record for ${mfr}.`:`Fiyat, ${mfr} için mevcut Quotations kaydında güncellendi.`)
-        :created
-        ?(en?`Price saved and a Quotations record was created for ${mfr}.`:`Fiyat kaydedildi ve ${mfr} için Quotations kaydı açıldı.`)
-        :(en?'Price saved, but the Quotations record could not be created.':'Fiyat kaydedildi ancak Quotations kaydı açılamadı.'));
+      showToast(manualResult
+        ?manualResult.updatedExisting
+          ?(en?`Price updated on the existing Quotations record for ${mfr}.`:`Fiyat, ${mfr} için mevcut Quotations kaydında güncellendi.`)
+          :manualResult.created
+            ?(en?'Price saved; the shared Manual Prices quotation was created.':'Fiyat kaydedildi; ortak Elle Girilen Fiyatlar quotation kaydı oluşturuldu.')
+            :(en?'Price saved to the shared Manual Prices quotation.':'Fiyat, ortak Elle Girilen Fiyatlar quotation kaydına eklendi.')
+        :(en?'Price saved, but the shared manual Quotations record could not be updated.':'Fiyat kaydedildi ancak ortak manuel Quotations kaydı güncellenemedi.'));
     }catch(err){status.textContent=err&&err.message||String(err);btn.disabled=false;}
   });
 }
