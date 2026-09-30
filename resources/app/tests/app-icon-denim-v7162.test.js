@@ -85,7 +85,7 @@ test('sağ üst kullanıcı avatarı uygulama simgesiyle aynı malzemede (çelik
   assert.match(ui, /avatar\.textContent = initials\(profile\.displayName\)/);
   assert.match(ui, /<span class="userMenuAvatar"><span class="blSteelInitials">\$\{esc\(initials\(profile\.displayName\)\)\}<\/span><\/span>/);
   const css = read('public/experience.css').toString('utf8');
-  assert.match(css, /\.userAvatarBtn,\[data-theme\] \.userAvatarBtn,\.userMenuAvatar,\[data-theme\] \.userMenuAvatar\{\s*background:#c8cdd2 url\("icons\/avatar-patch\.png"\)/);
+  assert.match(css, /\.userAvatarBtn,\[data-theme\] \.userAvatarBtn,\.userMenuAvatar,\[data-theme\] \.userMenuAvatar\{\s*background:#e6e9ec url\("icons\/avatar-patch\.png"\)/);
   assert.match(css, /\.blSteelInitials\{[^}]*background-clip:text;color:transparent;/);
 });
 

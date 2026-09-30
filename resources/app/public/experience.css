@@ -136,7 +136,7 @@ html[data-rail="min"] nav.tabs button,html[data-rail="min"] .railFoot button{wid
    siyah lazer işareti baş harfler. Baş harfler kullanıcının adından üretilir
    (public/user-initials.js; Türkçe, İngilizce, Japonca, Çince). */
 .userAvatarBtn,[data-theme] .userAvatarBtn,.userMenuAvatar,[data-theme] .userMenuAvatar{
-  background:#c8cdd2 url("icons/avatar-patch.png") center/cover no-repeat;border-radius:7px;
+  background:#e6e9ec url("icons/avatar-patch.png") center/cover no-repeat;border-radius:7px;
   box-shadow:0 1px 2px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.35);
 }
 .userAvatarBtn:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent),0 1px 2px rgba(0,0,0,.35);}

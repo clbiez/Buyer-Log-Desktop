@@ -13,6 +13,14 @@ const WORKSPACE_BAR_HEIGHT = 28;
 const MIN_WINDOW_WIDTH = 800;
 const MIN_WINDOW_HEIGHT = 600;
 const CLOSE_FORCE_DELAY_MS = 250;
+// Arayüz px tabanlı ve ~1600×900 DIP çalışma alanına göre tasarlandı. Windows
+// ölçeklendirmesi yüksek (%125/%150) küçük/orta ekranlarda CSS görünür alanı
+// ~1280×650'ye düşüyor; tablo alanları sıkışıyor. Sekme içeriğini bu referansa
+// göre küçültüyoruz, ama fiziksel yazı boyutu hiçbir zaman %100 ölçekteki
+// halinden ve MIN_AUTO_ZOOM'dan küçük olmuyor.
+const ZOOM_REFERENCE_WIDTH = 1600;
+const ZOOM_REFERENCE_HEIGHT = 900;
+const MIN_AUTO_ZOOM = 0.75;
 const WINDOW_THEME = Object.freeze({
   light: { background:'#F6F7F9', overlay:'#FBFBFC', symbol:'#101828' },
   grey: { background:'#DFE1E4', overlay:'#E3E5E8', symbol:'#22262B' },
@@ -49,6 +57,18 @@ function clampIndex(value, length) {
   const index = Number(value);
   if (!Number.isFinite(index)) return length;
   return Math.max(0, Math.min(length, Math.trunc(index)));
+}
+
+function adaptiveZoomFactor(display) {
+  const area = display && (display.workArea || display.bounds);
+  const width = Number(area && area.width);
+  const height = Number(area && area.height);
+  if (!(width > 0) || !(height > 0)) return 1;
+  const scale = Number(display.scaleFactor) > 0 ? Number(display.scaleFactor) : 1;
+  const fit = Math.min(width / ZOOM_REFERENCE_WIDTH, height / ZOOM_REFERENCE_HEIGHT);
+  const floor = Math.max(MIN_AUTO_ZOOM, 1 / scale);
+  const factor = Math.min(1, Math.max(floor, fit));
+  return Math.round(factor * 100) / 100;
 }
 
 function createWorkspaceManager(options) {
@@ -273,8 +293,35 @@ function createWorkspaceManager(options) {
     try { state.window.webContents.send('buyerlog:workspace-state', snapshot(state)); } catch (_) {}
   }
 
+  // Windows ölçeklendirmesi/çözünürlük uygulama açıkken değişirse zoom'u yenile.
+  if (screen && typeof screen.on === 'function') {
+    try { screen.on('display-metrics-changed', () => windows.forEach(layout)); } catch (_) {}
+  }
+
   function notifyAll() {
     windows.forEach(notify);
+  }
+
+  function displayForWindow(window) {
+    try {
+      if (screen && typeof screen.getDisplayMatching === 'function') return screen.getDisplayMatching(window.getBounds());
+      if (screen && typeof screen.getDisplayNearestPoint === 'function') {
+        const bounds = window.getBounds();
+        return screen.getDisplayNearestPoint({ x: bounds.x + Math.round(bounds.width / 2), y: bounds.y + Math.round(bounds.height / 2) });
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  // Otomatik zoom yalnız hesaplanan değer değiştiğinde uygulanır; kullanıcının
+  // Ctrl+tekerlek ile yaptığı elle ayar, ekran değişmedikçe ezilmez.
+  function applyAutoZoom(state, tab) {
+    const contents = tabContents(tab);
+    if (!contents || typeof contents.setZoomFactor !== 'function') return;
+    const factor = adaptiveZoomFactor(displayForWindow(state.window));
+    if (tab.autoZoomFactor === factor) return;
+    tab.autoZoomFactor = factor;
+    try { contents.setZoomFactor(factor); } catch (_) {}
   }
 
   function layout(state) {
@@ -288,6 +335,7 @@ function createWorkspaceManager(options) {
       width: Math.max(1, bounds.width),
       height: Math.max(1, bounds.height - WORKSPACE_BAR_HEIGHT),
     });
+    applyAutoZoom(state, active);
   }
 
   function detachView(state, tab) {
@@ -378,6 +426,11 @@ function createWorkspaceManager(options) {
     bindInputShortcuts(view.webContents);
     view.webContents.on('did-start-loading', () => { tab.loading = true; notify(stateForWindow(tab.windowId)); });
     view.webContents.on('did-stop-loading', () => { tab.loading = false; notify(stateForWindow(tab.windowId)); });
+    view.webContents.on('did-finish-load', () => {
+      tab.autoZoomFactor = null;
+      const owner = stateForWindow(tab.windowId);
+      if (owner && owner.activeTabId === tab.id) layout(owner);
+    });
     view.webContents.on('render-process-gone', (_event, details) => {
       log('Sekme renderer süreci sonlandı (' + tab.module + '): ' + JSON.stringify(details));
     });
@@ -495,6 +548,7 @@ function createWorkspaceManager(options) {
     });
     window.on('focus', () => { lastFocusedWindowId = window.id; });
     window.on('resize', () => layout(state));
+    window.on('moved', () => layout(state));
     window.on('maximize', () => { layout(state); notify(state); });
     window.on('unmaximize', () => { layout(state); notify(state); });
     window.on('close', event => {
@@ -802,4 +856,4 @@ function createWorkspaceManager(options) {
   };
 }
 
-module.exports = { createWorkspaceManager, MODULES, WORKSPACE_BAR_HEIGHT, normalizeModule, normalizeWorkspaceTheme, clampIndex };
+module.exports = { createWorkspaceManager, adaptiveZoomFactor, MODULES, WORKSPACE_BAR_HEIGHT, normalizeModule, normalizeWorkspaceTheme, clampIndex };
