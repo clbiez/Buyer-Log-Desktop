@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.179",
-  "commit_sha": "250a813eab54d77a39f0773699924912379949bb",
-  "release_notes": "Buyer Log 7.0.179: Klasör kopyalanarak kurulan bilgisayarlar otomatik onarılır — her kurulum kendi cihaz kimliğini alır, kopyalar arasında kaçırılan senkron değişiklikleri gelir, aynı alandaki farklı düzenlemeler sessizce ezilmez, çakışma olarak gösterilir. Başka bilgisayardan kopyalanan sürüm işaretçisi düzeltilir; eski sürüme düşen kullanıcılar güncel özellikleri (ör. PLM → Koleksiyon sürükle-bırak) geri alır. Eksik paketle açılışta anlaşılır hata ve kurulum yönlendirmesi; yeni kullanıcılar için tek parça kurulum paketi. Hesaplanan sütun \"Koşula göre yaz\" birden çok kural (değilse eğer) destekler. Kullanıcı menüsünden herkes STABLE uygulama güncellemesini kontrol edip kurabilir; kanal seçimi yalnız moderatörde. Tam regresyon paketi yerelde ve Windows CI'da geçti."
+  "version": "7.0.180",
+  "commit_sha": "17a19643fa32595773c1998710d18a9935b5043c",
+  "release_notes": "Buyer Log 7.0.180: Açılışta kullanıcı bilgileri ve ana ekran hazır olana kadar dinamik hazırlık ekranı; 66 konuluk TR/EN görselli kullanım rehberi ve F1 erişimi. Horizon filtrelerinde pencereyi kapatmadan çoklu seçim. Koleksiyon/ASAS eşleşmesinde katalogda olmayan değerler için hücre üzerinde kalıcı görünür uyarı işareti. Global Flow Map'te Gemi + Uçak gibi çoklu taşıma tiplerinde rota hover ve detay başlıklarında tam nakliye tipi gösterimi. 7.0.179 sonrasındaki bekleyen ana dal değişikliklerinin tamamı dahil edilmiştir."
 }
