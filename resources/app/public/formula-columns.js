@@ -1003,7 +1003,6 @@
         <div class="fcEcho" data-fc-echo hidden></div>
         <div class="fcPreview" data-fc-preview></div>
         <div class="fcStep"><span class="fcStepNo">3</span>${esc(T('Sütuna bir ad verin', 'Name the column'))}</div>
-        <!-- Başlık iki dilde girilir; formül referanslarının kimliği TR (yoksa EN) başlıktır. -->
         <div class="fcFormatRow">
           <label class="fcField">${esc(T('İngilizce başlık (EN)', 'English heading (EN)'))}
             <input type="text" data-fc-label-en maxlength="60" value="${esc(draft.labelEn || draft.label)}" placeholder="${esc(T('Örn. Lead time (days)', 'e.g. Lead time (days)'))}" autocomplete="off">
@@ -1386,8 +1385,8 @@
       return {
         ...draft,
         label: (clean(labelInput.value) || clean(labelEnInput.value)).replace(/[\[\]]/g, ''),
-        labelTr: clean(labelInput.value).replace(/[\[\]]/g, ''),
-        labelEn: clean(labelEnInput.value).replace(/[\[\]]/g, ''),
+        labelTr: clean(labelInput.value),
+        labelEn: clean(labelEnInput.value),
         formula: stored.formula,
         refs: stored.refs,
         format: formatInput.value,
@@ -1496,10 +1495,7 @@
         target.classList.add('active');
         renderPreview(); return;
       }
-      if (target.matches('[data-fc-label],[data-fc-label-en]')) {
-        labelTouched = Boolean(clean(labelInput.value) || clean(labelEnInput.value));
-        return;
-      }
+      if (target.matches('[data-fc-label],[data-fc-label-en]')) { labelTouched = Boolean(clean(target.value)); return; }
       if (target.closest('[data-fc-decimals]')) renderPreview();
     });
     modal.addEventListener('change', event => {
@@ -1692,10 +1688,7 @@
     renderBuild();
     renderPreview();
     renderSourceAdd();
-    setTimeout(() => {
-      const preferredLabel = en() ? labelEnInput : labelInput;
-      (existing ? preferredLabel : modal.querySelector('.fcRecipe.active') || preferredLabel).focus();
-    }, 0);
+    setTimeout(() => (existing ? (en() ? labelEnInput : labelInput) : modal.querySelector('.fcRecipe.active') || (en() ? labelEnInput : labelInput)).focus(), 0);
   }
 
   function rowLabel(tableKey, row, index) {
