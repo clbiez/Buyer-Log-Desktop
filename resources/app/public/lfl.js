@@ -2227,7 +2227,7 @@
      Fiyat & Üretici aynı ufku paylaşır ve ortak yenilemeyle birlikte güncellenir
      (app-main.js BLRunLinkedRefresh); bitince LFL reloadLflFromCache ile çizilir.
      Ortak akış yüklenmemişse eski yol yedek olarak kalır. */
-  function linkedRefreshTitle(){return isEn()?'Refreshes CP, Orders, Backlog, LFL and Price & Supplier Analysis together (single refresh).':'CP, Siparişler, Backlog, LFL ve Fiyat & Üretici Analizi birlikte yenilenir (tek yenileme).';}
+  function linkedRefreshTitle(){return isEn()?'Refreshes LFL data; pages sharing the filter refresh together.':'LFL verisini yeniler; ortak filtreyi paylaşan sayfalar birlikte yenilenir.';}
   async function refreshLinked(options={}){
     if(typeof window.BLRunLinkedRefresh==='function')return Boolean(await window.BLRunLinkedRefresh());
     return load(true,options);

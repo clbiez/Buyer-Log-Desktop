@@ -102,28 +102,40 @@ test('IAS (antrepo) eski Orders ayrıştırma kuralıyla devam eder', () => {
   assert.deepEqual(out.find(scope => scope.targets.includes('cp')).targets, ['cp', 'backlog']);
 });
 
-/* v20260929 — TEK YENİLEME MOTORU: CP de artık aynı yenilemenin parçasıdır.
-   Hangi sayfadan istenirse istensin beş modül birlikte yenilenir. */
-test('yenileme hedefleri: tek motor — bir modül istenirse CP dahil hepsi eklenir', () => {
+/* v20260930 — TEK MOTOR GERİ ALINDI. Kullanıcı: "CP yenilemek 40 sn sürerken
+   şimdi 200'e yanaştı." Yenileme filtre bağını izler: bağlı gruptaki bir sayfa
+   grubu (tek sorgu) birlikte yeniler; gruptan ayrı sayfa (varsayılan CP) yalnız
+   kendini. En geniş filtre dar CP yenilemesinin süresini belirlememeli. */
+test('yenileme hedefleri: bağlı grup birlikte, gruptan ayrı CP tek başına', () => {
   const ALL = ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'];
-  assert.deepEqual(scopes.withRefreshTargets(['lfl']).slice().sort(), ALL.slice().sort());
-  assert.deepEqual(scopes.withRefreshTargets(['cp']).slice().sort(), ALL.slice().sort());
+  assert.deepEqual(scopes.withRefreshTargets(['lfl']).slice().sort(), LINKED.slice().sort());
+  assert.deepEqual(scopes.withRefreshTargets(['cp']), ['cp'], 'dar CP yenilemesi geniş grubu çalıştırmaz');
   assert.deepEqual(scopes.withRefreshTargets(['cp', 'orders', 'cp']).slice().sort(), ALL.slice().sort());
   assert.deepEqual(scopes.withRefreshTargets([]), [], 'boş liste boş kalır; varsayılanı çağıran uygular');
-  assert.equal(scopes.withLinkedTargets, scopes.withRefreshTargets, 'eski ad aynı motoru çağırır');
-  assert.deepEqual(refreshGroups.targetsFor([{ id: 'g', name: 'G', moduleIds: ['backlog'] }], 'g'), ALL);
+  // Üyelik düzenlenebilir: kayıttaki gerçek grup esas alınır.
+  assert.deepEqual(scopes.withRefreshTargets(['cp'], ['cp', 'orders']).slice().sort(), ['cp', 'orders']);
+  assert.deepEqual(scopes.withRefreshTargets(['backlog'], ['orders', 'lfl']), ['backlog'], 'gruptan ayrılan sayfa tek başına');
+  assert.equal(scopes.withLinkedTargets, scopes.withRefreshTargets, 'eski ad aynı kuralı çağırır');
+  assert.deepEqual(refreshGroups.targetsFor([{ id: 'g', name: 'G', moduleIds: ['backlog'] }], 'g'), LINKED);
+  assert.deepEqual(scopes.REFRESH_TARGETS, ALL, '"Tümünü yenile" kapsamı');
 });
 
-test('sunucu: /api/refresh, performRefresh ve loadFromModels (LFL yolu dahil) tek motorla genişletir', () => {
+test('sunucu: /api/refresh, performRefresh ve loadFromModels (LFL yolu dahil) kayıttaki bağlı grupla genişletir', () => {
   assert.match(SERVER, /const \{ withRefreshTargets, linkedTargetsOf \} = require\('\.\/lib\/model-scopes'\);/);
-  assert.match(SERVER, /const targets = rawTargets \? withRefreshTargets\(/);
+  const helper = SERVER.slice(SERVER.indexOf('function refreshTargetsFor(targets) {'), SERVER.indexOf('function refreshTargetsFor(targets) {') + 500);
+  assert.match(helper, /members = linkedTargetsOf\(asasItem\)/);
+  assert.match(helper, /return withRefreshTargets\(targets, members\);/);
+  assert.match(SERVER, /const targets = rawTargets \? refreshTargetsFor\(/);
   const perform = SERVER.slice(SERVER.indexOf('async function performRefresh('), SERVER.indexOf('async function performRefresh(') + 400);
-  assert.match(perform, /targets = withRefreshTargets\(targets\)/);
+  assert.match(perform, /targets = refreshTargetsFor\(targets\)/);
   const load = SERVER.slice(SERVER.indexOf('async function loadFromModels('), SERVER.indexOf('async function loadFromModels(') + 800);
-  assert.match(load, /targets = withRefreshTargets\(targets\)/);
+  assert.match(load, /targets = refreshTargetsFor\(targets\)/);
   assert.doesNotMatch(SERVER, /withLinkedTargets/);
   // Son yenilemenin kapsadığı sayfalar saklanır: "son yenileme" saati sekme açılışında da görünür.
   assert.match(SERVER, /targets: requestedTargets\.slice\(\),/);
+  // Kısmi yenilemede dokunulmayan sayfaların kapsam/ufuk rozeti boşalmaz.
+  assert.match(SERVER, /const kept = previous\.filter\(entry => entry && entry\.target && !requestedTargets\.includes\(entry\.target\)\);/);
+  assert.match(SERVER, /\.\.\.\(result\.partialTargets && runtime\.modelRefresh && runtime\.modelRefresh\.appliedHorizons/);
 });
 
 test('kişisel/rol ufku bağlı grubu yeniden bölmez', () => {
@@ -142,24 +154,28 @@ test('kişisel/rol ufku bağlı grubu yeniden bölmez', () => {
   assert.deepEqual(valuesOf(items[0].scopes.find(scope => scope.targets.includes('cp'))), ['S7']);
 });
 
-test('istemci: tek yenileme — sayfa düğmeleri ve menü CP dahil bütün modülleri birlikte yeniler', () => {
-  assert.match(APP, /const LINKED_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
+test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre bağına göre satır üretir', () => {
+  assert.match(APP, /const ALL_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
+  assert.match(APP, /const DEFAULT_LINKED_REFRESH_TARGETS=Object\.freeze\(\['orders','backlog','lfl','priceanalysis'\]\);/);
+  // Grup üyeliği son yenilemenin sharedFilter bilgisinden okunur.
+  assert.match(APP, /typeof entry\.sharedFilter==='boolean'/);
   const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 300);
   assert.match(load, /targets=withLinkedRefreshTargets\(targets\)/);
-  // Menüde TEK satır vardır; sayfa ya da grup başına ayrı yenileme seçeneği yok.
+  // Menü: ayrı sayfa kendi satırı, bağlı grup tek satır, ayrıca "Tümünü yenile".
   const menu = APP.slice(APP.indexOf('function openTopRefreshMenu'), APP.indexOf('// Yenileme sürerken aynı düğmeye tekrar basmak'));
-  assert.match(menu, /const options=\[\['linked',linkedRefreshLabel\(\)\]\];/);
-  assert.doesNotMatch(menu, /\['cp','CP'\]|\['lfl','LFL'\]|\['backlog','Backlog'\]|\['priceanalysis',|\['all',/);
-  assert.match(menu, /return loadFromServer\(true,\[\.\.\.LINKED_REFRESH_TARGETS\]\)/);
-  // CP, Siparişler ve LFL düğmeleri aynı ortak yenilemeyi çağırır.
-  for (const id of ['cpRefreshBtn', 'ordersRefreshBtn']) {
+  assert.match(menu, /options\.push\(\['linked',refreshTargetsLabel\(members\),members\.slice\(\)\]\)/);
+  assert.match(menu, /else options\.push\(\[target,refreshTargetsLabel\(\[target\]\),\[target\]\]\);/);
+  assert.match(menu, /options\.push\(\['all',appLang==='en'\?'Refresh all':'Tümünü yenile',ALL_REFRESH_TARGETS\.slice\(\)\]\);/);
+  assert.match(menu, /if\(option\)return loadFromServer\(true,option\[2\]\.slice\(\)\);/);
+  // CP düğmesi yalnız CP'yi, Siparişler düğmesi Siparişler'i ister (grup sunucuda eklenir).
+  for (const [id, target] of [['cpRefreshBtn', 'cp'], ['ordersRefreshBtn', 'orders']]) {
     const at = APP.indexOf(`document.getElementById('${id}')?.addEventListener('click'`);
     assert.ok(at > 0, id);
-    assert.match(APP.slice(at, at + 220), /loadFromServer\(true,\[\.\.\.LINKED_REFRESH_TARGETS\]\)/);
+    assert.match(APP.slice(at, at + 220), new RegExp(`void loadFromServer\\(true,\\['${target}'\\]\\);`));
   }
-  assert.match(APP, /window\.BLRunLinkedRefresh=function\(\)\{[\s\S]{0,160}loadFromServer\(true,\[\.\.\.LINKED_REFRESH_TARGETS\]\)/);
+  assert.match(APP, /window\.BLRunLinkedRefresh=function\(\)\{[\s\S]{0,160}loadFromServer\(true,\['lfl'\]\)/);
   assert.match(LFL, /lflRefreshBtn'\)\?\.addEventListener\('click',\(\)=>\{void refreshLinked\(\);\}\)/);
-  assert.doesNotMatch(HTML, /LFL Verisini Yenile|Siparişleri Yenile|CP'yi Yenile|Yalnız CP Tracker verisini yenile/);
+  assert.doesNotMatch(HTML, /tek yenileme|single refresh/);
   // Backlog ve Fiyat & Üretici'ye ayrı yenileme düğmesi eklenmedi.
   const backlog = HTML.slice(HTML.indexOf('id="view-backlog"'), HTML.indexOf('id="view-backlog"') + 4000);
   assert.doesNotMatch(backlog, /RefreshBtn/);
@@ -171,17 +187,20 @@ test('istemci: yenileme açık olmayan sayfaları bayat bırakmaz ve verilerini 
   const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('let sharedRevisionSnapshot'));
   assert.match(load, /backlogLoadedOnce=false;/);
   assert.match(load, /window\.BLPriceSupplierAnalysis\?\.invalidate\?\.\(\)/);
-  assert.match(load, /if\(userVisibleRefresh\)\{\s*scheduleRefreshPrewarm\(\);\s*notifyCpCoverage\(data\.lastRefreshResult\);\s*\}/);
+  assert.match(load, /if\(userVisibleRefresh\)\{\s*scheduleRefreshPrewarm\(targets\);\s*notifyCpCoverage\(data\.lastRefreshResult\);\s*\}/);
+  // Sunucunun gerçek hedef listesi (düzenlenmiş grup) istemcinin tahminine eklenir.
+  assert.match(load, /targets=\[\.\.\.new Set\(\[\.\.\.targets,\.\.\.serverRefreshTargets\.filter\(/);
   assert.match(ANALYTICS, /function invalidate\(\)\{prefetched=false;if\(!root\|\|!root\.dataset\.initialized\)return;datasetStale=true;if\(isVisible\(\)\)\{datasetStale=false;void prepare\(\);\}\}/);
   assert.match(ANALYTICS, /if\(root\.dataset\.initialized\)\{if\(datasetStale\)\{datasetStale=false;await prepare\(\);return;\}render\(\);return;\}/);
 });
 
 test('istemci: ufuk rozeti bağlı grubu ve son yenileme saatini gösterir', () => {
   const badge = APP.slice(APP.indexOf('function renderHorizonBadges(){'), APP.indexOf('function sourceFilterNoticeText'));
-  assert.match(badge, /LINKED_REFRESH_TARGETS\.includes\(target\)/);
+  assert.match(badge, /ALL_REFRESH_TARGETS\.includes\(target\)/);
   // "Bağlı" rozeti yalnız ortak filtreyi kullanan sayfada çıkar (gruptan ayrılan sayfada yok).
   assert.match(badge, /if\(scope&&scope\.sharedFilter\)\{/);
-  assert.match(badge, /linkedRefreshStamp\(\)/);
+  // Saat, sayfanın kendi yenileme kümesinin (grup ya da tek sayfa) en eskisidir.
+  assert.match(badge, /refreshTargetsStamp\(withLinkedRefreshTargets\(\[target\]\)\)/);
   assert.match(APP, /function seedSourceStatusFromServer\(result\)/);
   assert.match(APP, /try\{seedSourceStatusFromServer\(data\.lastRefreshResult\);\}catch\(_\)\{\}/);
 });

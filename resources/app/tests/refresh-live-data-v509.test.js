@@ -50,10 +50,11 @@ test('v5.09 Source Refresh All explicitly refreshes every live target', () => {
   // yapmaz). Testin AMACI değişmedi: "tümünü yenile" yolu HÂLÂ dört hedefin
   // dördünü de açıkça yeniliyor olmalı — bir hedefin sessizce düşmemesi için.
   assert.match(APP, /serverRefreshBtn['"]\)\?\.addEventListener\(['"]click['"],\s*\(\)=>\{[\s\S]{0,240}?loadFromServer\(true,\['cp','orders','backlog','lfl'\]\)/);
-  // v20260929 — Başlıktaki Yenile menüsü tek satırdır ve CP dahil bütün hedefleri yeniler.
+  // v20260930 — Başlıktaki Yenile menüsünün "Tümünü yenile" satırı CP dahil bütün hedefleri yeniler.
   const menu = APP.slice(APP.indexOf('function openTopRefreshMenu'), APP.indexOf('// Yenile sürerken aynı düğmeye'));
-  assert.match(menu, /return loadFromServer\(true,\[\.\.\.LINKED_REFRESH_TARGETS\]\)/);
-  assert.match(APP, /const LINKED_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
+  assert.match(menu, /options\.push\(\['all',appLang==='en'\?'Refresh all':'Tümünü yenile',ALL_REFRESH_TARGETS\.slice\(\)\]\);/);
+  assert.match(menu, /return loadFromServer\(true,option\[2\]\.slice\(\)\)/);
+  assert.match(APP, /const ALL_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
 });
 
 test('v5.09 top/source LFL refresh reloads the LFL module from the new server cache', () => {

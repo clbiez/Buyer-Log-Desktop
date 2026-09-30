@@ -83,10 +83,12 @@ test('v7.81 modül sırası sabittir — seçim sırası hatırlanmak zorunda de
 
 /* v20260929 — Tek yenileme motoru: gruba hangi modül konursa konsun (CP dahil)
    beş modül birlikte yenilenir; grup tanımı gerçekte ne yenilendiğini söyler. */
-test('v20260929 tek motor: gruba bir modül konursa CP dahil hepsi yenilenir', () => {
-  const ALL = ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'];
-  assert.deepEqual(groups.normalizeGroups([{ name: 'L', moduleIds: ['lfl'] }])[0].moduleIds, ALL);
-  assert.deepEqual(groups.normalizeGroups([{ name: 'C', moduleIds: ['cp'] }])[0].moduleIds, ALL);
+/* v20260930 — Tek motor geri alındı: bağlı gruptan bir modül konursa grup gelir;
+   gruptan ayrı CP yalnız açıkça seçilirse (dar CP yenilemesi geniş grubu beklemez). */
+test('v20260930 gruba bağlı bir modül konursa bağlı grup gelir; CP tek başına kalır', () => {
+  const LINKED = ['orders', 'backlog', 'lfl', 'priceanalysis'];
+  assert.deepEqual(groups.normalizeGroups([{ name: 'L', moduleIds: ['lfl'] }])[0].moduleIds, LINKED);
+  assert.deepEqual(groups.normalizeGroups([{ name: 'C', moduleIds: ['cp'] }])[0].moduleIds, ['cp']);
 });
 
 test('v7.81 tekrarlanan modül tek sayılır', () => {
@@ -122,7 +124,7 @@ test('v7.81 kimlikler kalıcıdır — kaydetmek grubun kimliğini değiştirmez
 
 test('v7.81 targetsFor grubun hedeflerini verir', () => {
   const list = groups.normalizeGroups([{ id: 'rg_a', name: 'A', moduleIds: ['cp', 'lfl'] }]);
-  assert.deepEqual(groups.targetsFor(list, 'rg_a'), ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+  assert.deepEqual(groups.targetsFor(list, 'rg_a'), ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'], 'CP + bağlı bir modül = CP + grup');
   assert.deepEqual(groups.targetsFor(list, 'yok'), []);
 });
 
@@ -139,14 +141,13 @@ test('v7.81 ikinci bir yenileme motoru yazılmadı', () => {
   assert.doesNotMatch(ui, /fetch\(\s*['"`]\/api\/refresh/);
 });
 
-/* v20260929 — Tek yenileme motoru: her grup CP dahil bütün modülleri yenilediği
-   için gruplar üst menüde ayrı satır olarak GÖSTERİLMEZ (hepsi aynı işi yapardı).
-   Menü tek tetikleme noktası olarak kalır: tek satır + durdur. */
-test('v20260929 üst Yenile menüsü tek satırdır; grup satırı yoktur', () => {
+/* v20260929 — Gruplar üst menüde ayrı satır olarak GÖSTERİLMEZ; v20260930'dan
+   beri menü satırları filtre bağından üretilir (bağlı grup · ayrı sayfalar · Tümü). */
+test('v20260929 üst Yenile menüsünde grup satırı yoktur; satırlar filtre bağından gelir', () => {
   const appMain = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
   const menu = appMain.slice(appMain.indexOf('function openTopRefreshMenu'), appMain.indexOf('// Yenileme sürerken aynı düğmeye tekrar basmak'));
   assert.doesNotMatch(menu, /data-refresh-group="/);
-  assert.match(menu, /const options=\[\['linked',linkedRefreshLabel\(\)\]\];/);
+  assert.match(menu, /const members=linkedRefreshMembers\(\);/);
   // Grup listesi menü için okunmaz; Veri Yönetimi kaydı önbellek kancasını çağırmaya devam eder.
   assert.doesNotMatch(appMain, /ensureRefreshGroupsLoaded/);
   assert.match(appMain, /window\.BLInvalidateRefreshGroups=/);
