@@ -182,9 +182,12 @@ function loadClientCatalog({ scoped = {}, overrides = {}, learned = {} } = {}) {
 test('istemci kataloğu ASAS ana kataloğunu sipariş kataloğuyla birleştirir; ana yazım önceliklidir', () => {
   const scopedLicense = ['DRAGONBALL', 'Liverpool', 'Marvel'];
   const { api } = loadClientCatalog({ scoped: { license: scopedLicense, mag: ['M1'] } });
-  // Ana katalog yokken bugünkü davranış aynen korunur.
+  // Tam ana katalog henüz gelmemişse yüklü ASAS sipariş kataloğu görünür
+  // doğrulama için fallback olur; hiç katalog yoksa yanlış pozitif üretilmez.
   assert.equal(api.kolCatalogValues('license'), scopedLicense);
-  assert.equal(api.kolCatalogValueUnknown('license', 'Smiley'), false, 'ana katalog okunmadan hiçbir değer işaretlenmez');
+  assert.equal(api.kolCatalogValueUnknown('license', 'Smiley'), true, 'yüklü ASAS sipariş listesinde olmayan değer hücrede işaretlenir');
+  const emptyCatalog = loadClientCatalog();
+  assert.equal(emptyCatalog.api.kolCatalogValueUnknown('license', 'Smiley'), false, 'hiç ASAS katalog verisi yoksa uyarı üretilmez');
 
   api.kolSetMasterCatalog({ catalogs: { license: ['Dragon Ball', 'Garfield', 'Liverpool', 'One Piece'], country: ['China', 'Turkey'], mag: ['X'] }, fields: [{ key: 'license', count: 4 }], refreshedAt: '2026-09-29T08:00:00Z' });
   assert.deepEqual(api.kolCatalogValues('license'), ['Dragon Ball', 'Garfield', 'Liverpool', 'Marvel', 'One Piece']);
@@ -230,6 +233,8 @@ test('hücre kaydı, çizim, sekme açılışı ve içe aktarmalar ana kataloğa
 
   assert.match(APP, /const unknown=Boolean\(cur\)&&kolCatalogValueUnknown\(c\.suggest,cur\)/);
   assert.match(APP, /kolRuleMissing kolCatalogUnknown/);
+  assert.match(APP, /kolCatalogWarningMark/, 'ASAS dışı değer hücrede odak beklemeden görünür uyarı işareti taşır');
+  assert.match(APP, /return entry\.masterLoaded\|\|entry\.values\.length>0;/, 'tam katalog yokken yüklü ASAS sipariş kataloğu fallback doğrulama sağlar');
   assert.match(APP, /setTimeout\(\(\)=>void ensureCollectionMasterCatalogLoaded\(\),0\)/);
   assert.equal((APP.match(/await ensureCollectionMasterCatalogLoaded\(\);\n\s*await kolPlmLoadApprovedTranslations\(\);/g) || []).length, 2, 'Excel ve Direct PLM çeviri adımları ana katalogla sıralanır');
   const importBlock = extractBetween(APP, 'async function importKolExcelFile', 'const plan=kolBuildImportPlan');
@@ -237,4 +242,6 @@ test('hücre kaydı, çizim, sekme açılışı ve içe aktarmalar ana kataloğa
   assert.match(importBlock, /kolCatalogMatch\(col\.suggest,row\[col\.k\]\)\|\|kolLearnedCatalogAlias\(col\.suggest,row\[col\.k\]\)/);
   assert.match(APP, /\/api\/collection-master-catalog\/refresh/);
   assert.match(CSS, /\.kolCatalogDropFoot\{/);
+  assert.match(CSS, /\.kolCatalogWarningMark\{/, 'uyarı işareti görünür hücre affordance stiline sahip olmalı');
+  assert.match(CSS, /td\.kolCatalogUnknown \.kolSuggestCell\{padding-inline-end:24px!important;\}/);
 });

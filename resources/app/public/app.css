@@ -648,6 +648,9 @@ td .dateFieldWrap{display:flex;width:100%;}
 .kolCatalogDropSource button:hover:not(:disabled){border-color:var(--acc-lite);}
 .kolCatalogDropSource button:disabled{opacity:.55;cursor:progress;}
 td.kolCatalogUnknown .kolRuleMissingMark{color:var(--orange);}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolCatalogUnknown .licensorDependencyCell{position:relative;width:100%;min-width:0;}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolCatalogUnknown .kolCatalogWarningMark{position:absolute;inset-inline-end:5px;top:50%;transform:translateY(-50%);z-index:3;display:inline-grid;place-items:center;width:16px;height:16px;color:var(--orange);font-size:12px;line-height:1;pointer-events:none;opacity:1;visibility:visible;}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolCatalogUnknown .kolSuggestCell{padding-inline-end:24px!important;}
 .filterSectionTitle{font-size:10px;color:var(--muted);letter-spacing:.5px;margin:4px 0 6px;font-weight:700;}
 .excelFilterTop{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
 .numFilterRow{display:flex;gap:6px;}
