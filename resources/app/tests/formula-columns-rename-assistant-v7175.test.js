@@ -411,3 +411,52 @@ test('v7.177 · Koşula göre yaz birden çok sütunun durumunu VE / VEYA ile ba
   assert.match(FC_SOURCE, /data-fc-if-drop="\$\{index\}"/);
   assert.match(FC_SOURCE, /data-fc-if-join/);
 });
+
+test('v7.178 · Koşula göre yaz: birden çok kural ("değilse eğer") — kullanıcının örneği', () => {
+  /* Kullanıcı talebi (birebir): "label by condition alanında çoklu eğer koşulu
+     koyamıyorum. Mesela X = 0 veya X = "" ise "N/A", X = 1 ve Y = 0 ise
+     "Pending", X = 1 ve Y = 1 ise "OK" yazdırmak istiyorum." */
+  const { api } = setup({ cols: BASE });
+  const builder = {
+    mode: 'ifelse',
+    ifelse: {
+      left: 'X', cmp: 'eq', right: { kind: 'value', value: '0' },
+      more: [{ left: 'X', cmp: 'blank', right: {} }], join: 'or', then: 'N/A',
+      cases: [
+        { left: 'X', cmp: 'eq', right: { kind: 'value', value: '1' }, more: [{ left: 'Y', cmp: 'eq', right: { kind: 'value', value: '0' } }], join: 'and', then: 'Pending' },
+        { left: 'X', cmp: 'eq', right: { kind: 'value', value: '1' }, more: [{ left: 'Y', cmp: 'eq', right: { kind: 'value', value: '1' } }], join: 'and', then: 'OK' },
+      ],
+      else: '',
+    },
+  };
+  const formula = 'IFS(OR([X] = 0, ISBLANK([X])), "N/A", AND([X] = 1, [Y] = 0), "Pending", AND([X] = 1, [Y] = 1), "OK", TRUE, "")';
+  assert.equal(api.builderFormula(builder), formula);
+  const run = row => engine.compile(formula).evaluate(row, { strictColumns: true }).value;
+  assert.equal(run({ X: 0, Y: 5 }), 'N/A');
+  assert.equal(run({ X: '', Y: 1 }), 'N/A', 'boş X de N/A');
+  assert.equal(run({ X: 1, Y: 0 }), 'Pending');
+  assert.equal(run({ X: 1, Y: 1 }), 'OK');
+  assert.equal(run({ X: 2, Y: 1 }), '', 'hiçbiri tutmazsa "değilse" değeri');
+  // Kaydedilen formül düzenlemede AYNI kurallarla karta döner.
+  const back = api.builderFromFormula(formula);
+  assert.equal(back.mode, 'ifelse');
+  assert.equal(back.ifelse.cases.length, 2);
+  assert.equal(back.ifelse.join, 'or');
+  assert.equal(back.ifelse.cases[0].then, 'Pending');
+  assert.equal(api.builderFormula(back), formula);
+  // Eksik bir kural formül üretmez; tek kural eski IF biçiminde kalır.
+  assert.equal(api.builderFormula({ mode: 'ifelse', ifelse: { ...builder.ifelse, cases: [{ left: 'X', cmp: 'eq', right: { kind: 'value', value: '' }, more: [], then: 'x' }] } }), '');
+  assert.equal(api.builderFormula({ mode: 'ifelse', ifelse: { ...builder.ifelse, cases: [] } }), 'IF(OR([X] = 0, ISBLANK([X])), "N/A", "")');
+  // AI/Excel alışkanlığı: iç içe IF de kurallara açılır.
+  const nested = api.builderFromFormula('IF([X] = 0, "N/A", IF(AND([X] = 1, [Y] = 0), "Pending", "OK"))');
+  assert.equal(nested.mode, 'ifelse');
+  assert.equal(nested.ifelse.cases.length, 1);
+  assert.equal(nested.ifelse.else, 'OK');
+  assert.equal(api.builderFromFormula('IFS([X] = 0, "N/A", [X] = 1, [Y] * 2, TRUE, "")'), null, 'hesaplı sonuç karta sığmaz');
+  // Arayüz: kural ekle/kaldır, kurala özel satırlar, sıralama açıklaması.
+  assert.match(FC_SOURCE, /data-fc-case-add/);
+  assert.match(FC_SOURCE, /data-fc-case-drop=/);
+  assert.match(FC_SOURCE, /data-fc-case="\$\{caseIndex\}"/);
+  assert.match(FC_SOURCE, /Kurallar YUKARIDAN AŞAĞI denenir/);
+  assert.match(CSS, /\.fcCase\.isMany\{/);
+});

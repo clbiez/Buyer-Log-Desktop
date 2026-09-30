@@ -11,10 +11,18 @@ const updateUi = fs.readFileSync(path.join(ROOT,'public','update-test-ui.js'),'u
 const perf = fs.readFileSync(path.join(ROOT,'public','perf-runtime.js'),'utf8');
 const css = fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
 
-test('moderator user menu always exposes Update Test; runtime availability is checked when opened', () => {
-  assert.match(ui, /profile\.systemRole === 'moderator'[\s\S]*?data-update-test/);
+test('user menu exposes App Update for every user; runtime availability is checked when opened', () => {
+  assert.doesNotMatch(ui, /profile\.systemRole === 'moderator' \? `<button type="button" data-update-test>/);
+  assert.match(ui, /<button type="button" data-update-test>[\s\S]*?Uygulama Güncellemesi/);
   assert.doesNotMatch(ui, /profile\.systemRole === 'moderator'\s*&&\s*window\.buyerLogDesktop/);
   assert.match(ui, /data-update-test[\s\S]*?openBuyerLogUpdateTest/);
+  assert.doesNotMatch(updateUi, /user\.systemRole !== 'moderator'\) return/);
+});
+
+test('only moderators can pick the update channel; other users check STABLE without configure', () => {
+  assert.match(updateUi, /moderator \? '<select data-update-channel>/);
+  assert.match(updateUi, /if \(moderator && channel\) \{\s*const configured = await api\.configure/);
+  assert.match(updateUi, /isModerator\(\) \? String\(status\.channel[\s\S]*?: 'STABLE'/);
 });
 
 test('Update Test UI uses the existing updater bridge and shows decisive status fields', () => {
@@ -28,7 +36,7 @@ test('Update Test UI uses the existing updater bridge and shows decisive status 
 });
 
 test('Update Test UI is loaded before the user menu module in deferred UI', () => {
-  assert.match(perf, /update-test-ui\.js\?rev=1','user-access-ui\.js\?rev=UPDATE-TEST-V1/);
+  assert.match(perf, /update-test-ui\.js\?rev=2','user-access-ui\.js\?rev=APP-UPDATE-V2/);
 });
 
 
