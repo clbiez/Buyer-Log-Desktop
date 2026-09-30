@@ -1,4 +1,4 @@
-/* Buyer Log — Moderator Update Test UI */
+/* Buyer Log — App Update UI (moderator: TEST/STABLE, others: STABLE only) */
 (() => {
   'use strict';
 
@@ -33,6 +33,11 @@
   function userId() {
     const user = profile() || {};
     return String(user.id || user.userId || user.username || '');
+  }
+
+  function isModerator() {
+    const user = profile() || {};
+    return user.systemRole === 'moderator';
   }
 
   function updatesApi() {
@@ -75,7 +80,7 @@
   function render(status) {
     if (!overlay || !status) return;
     setValue('current',status.currentVersion);
-    setValue('channel',String(status.channel || status.configuredChannel || 'stable').toUpperCase());
+    setValue('channel',isModerator() ? String(status.channel || status.configuredChannel || 'stable').toUpperCase() : 'STABLE');
     setValue('latest',status.latestVersion);
     setValue('pending',status.pendingVersion);
     setValue('state',stateLabel(status.state));
@@ -94,10 +99,13 @@
   async function open() {
     close();
     const user = profile();
-    if (!user || user.systemRole !== 'moderator') return;
+    if (!user) return;
+    // Kanal seçimi yalnız moderatördedir; diğer kullanıcılar yalnız STABLE
+    // indirir. Backend de moderatör olmayan için efektif kanalı stable'a sabitler.
+    const moderator = isModerator();
     const api = updatesApi();
     if (!api || typeof api.status !== 'function') {
-      const msg = tr('Güncelleme Testi yalnız masaüstü Buyer Log uygulamasında kullanılabilir.','Update Test is available only in the Buyer Log desktop app.');
+      const msg = tr('Uygulama güncellemesi yalnız masaüstü Buyer Log uygulamasında kullanılabilir.','App update is available only in the Buyer Log desktop app.');
       if (typeof showToast === 'function') showToast(msg); else alert(msg);
       return;
     }
@@ -107,8 +115,10 @@
     overlay.innerHTML = [
       '<section class="modalCard updateTestCard" role="dialog" aria-modal="true" aria-labelledby="updateTestTitle">',
       '<div class="updateTestHead"><div>',
-      '<h2 class="modalTitle" id="updateTestTitle">' + esc(tr('Güncelleme Testi','Update Test')) + '</h2>',
-      '<p>' + esc(tr('TEST sürümünü kontrol et, indir ve hazır olduğunda yeniden başlatıp kur.','Check and download the TEST build, then restart to install when ready.')) + '</p>',
+      '<h2 class="modalTitle" id="updateTestTitle">' + esc(moderator ? tr('Güncelleme Testi','Update Test') : tr('Uygulama Güncellemesi','App Update')) + '</h2>',
+      '<p>' + esc(moderator
+        ? tr('TEST sürümünü kontrol et, indir ve hazır olduğunda yeniden başlatıp kur.','Check and download the TEST build, then restart to install when ready.')
+        : tr('STABLE sürümü kontrol et, indir ve hazır olduğunda yeniden başlatıp kur.','Check and download the STABLE build, then restart to install when ready.')) + '</p>',
       '</div><button type="button" class="iconbtn updateTestClose" data-update-close aria-label="' + esc(tr('Kapat','Close')) + '">×</button></div>',
       '<div class="updateTestFacts">',
       '<div><span>' + esc(tr('Mevcut sürüm','Current version')) + '</span><b data-update-value="current">—</b></div>',
@@ -117,8 +127,8 @@
       '<div><span>' + esc(tr('Hazırlanan','Pending')) + '</span><b data-update-value="pending">—</b></div>',
       '<div class="updateTestStateRow"><span>' + esc(tr('Durum','Status')) + '</span><b data-update-value="state">—</b></div>',
       '</div>',
-      '<div class="updateTestControls"><label><span>' + esc(tr('Güncelleme kanalı','Update channel')) + '</span>',
-      '<select data-update-channel><option value="test">TEST</option><option value="stable">STABLE</option></select></label></div>',
+      moderator ? '<div class="updateTestControls"><label><span>' + esc(tr('Güncelleme kanalı','Update channel')) + '</span>' : '',
+      moderator ? '<select data-update-channel><option value="test">TEST</option><option value="stable">STABLE</option></select></label></div>' : '',
       '<div class="updateTestMessage" data-update-message role="status" aria-live="polite"></div>',
       '<div class="updateTestActions">',
       '<button type="button" class="navActionBtn primary" data-update-check>' + esc(tr('Güncellemeyi Kontrol Et','Check for Update')) + '</button>',
@@ -144,7 +154,7 @@
       if (channel) channel.disabled = busy;
     };
 
-    channel.addEventListener('change',async() => {
+    if (channel) channel.addEventListener('change',async() => {
       setBusy(true);
       try {
         const result = await api.configure({userId:userId(),enabled:true,channel:channel.value});
@@ -161,9 +171,11 @@
     check.addEventListener('click',async() => {
       setBusy(true);
       try {
-        const configured = await api.configure({userId:userId(),enabled:true,channel:channel.value});
-        if (!configured || configured.ok === false) throw new Error(configured && configured.error || tr('Güncelleme kanalı ayarlanamadı.','Update channel could not be configured.'));
-        render(configured);
+        if (moderator && channel) {
+          const configured = await api.configure({userId:userId(),enabled:true,channel:channel.value});
+          if (!configured || configured.ok === false) throw new Error(configured && configured.error || tr('Güncelleme kanalı ayarlanamadı.','Update channel could not be configured.'));
+          render(configured);
+        }
         const result = await api.check({userId:userId()});
         render(result);
       } catch (error) {
