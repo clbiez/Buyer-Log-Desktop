@@ -30,6 +30,8 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow{height:18px}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{height:18px!important;min-height:18px!important;padding:0 4px!important;text-align:center!important;font:600 9px/18px var(--mono,monospace)!important;color:var(--muted)!important;background:var(--paper)!important;border-bottom:1px solid var(--line)!important;user-select:none}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetterActive{color:var(--acc)!important;background:var(--card2)!important}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}
 .kolSpreadsheetRowGutter{padding:0 3px!important;white-space:nowrap;text-align:center}
 .kolSpreadsheetRowNumber{display:inline-grid;place-items:center;width:25px;height:22px;margin-right:3px;padding:0;border:0;background:transparent;color:var(--muted);font:600 9px/1 var(--mono,monospace);cursor:pointer;border-radius:2px}
 .kolSpreadsheetRowNumber:hover,.kolSpreadsheetRowNumber.isActive{background:color-mix(in srgb,var(--acc) 14%,var(--card2));color:var(--acc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 28%,var(--line))}
