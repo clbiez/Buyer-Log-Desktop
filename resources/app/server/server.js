@@ -229,11 +229,34 @@ const { inspectSourceFilterReadiness, readinessMessage: sourceFilterReadinessMes
 const dataManagementReadModel = require('./lib/data-domain/read-model');
 const dataManagementBindingWriter = require('./lib/data-domain/binding-writer');
 const refreshGroupRules = require('./lib/data-domain/refresh-groups');
-// v20260929 — TEK YENİLEME MOTORU: hangi sayfadan istenirse istensin CP dahil
-// bütün modüller (CP · Orders · Backlog · LFL · Price & Supplier) aynı işte
-// yenilenir; kısmi yenileme hedefleri buradan genişletilir.
+// v20260930 — Yenileme filtre bağını izler: bağlı gruptaki bir sayfa grubu
+// (tek sorgu) birlikte yeniler, gruptan ayrı sayfa (ör. CP) yalnız kendini.
+// Kısmi yenileme hedefleri refreshTargetsFor ile genişletilir.
 const { withRefreshTargets, linkedTargetsOf } = require('./lib/model-scopes');
+/** Bağlı grubun GERÇEK üyeleri ASAS bağlantı kaydından okunur (düzenlenebilir). */
+function refreshTargetsFor(targets) {
+  let members;
+  try {
+    const asasItem = (loadModelConnections().items || []).find(item => item && String(item.role || '') === 'asas' && item.refreshEnabled !== false);
+    if (asasItem) members = linkedTargetsOf(asasItem);
+  } catch (_) { /* kayıt okunamazsa varsayılan grup */ }
+  return withRefreshTargets(targets, members);
+}
 const cpCoverage = require('./lib/cp-coverage');
+/* v20260930 — Kaynak değişiklik sinyali: ASAS modelinin son işlenme zamanı
+   okunur; yeni veri varsa istemci mevcut yenileme akışını arka planda başlatır
+   (ikinci bir yenileme motoru yok). Ayrıntı: server/lib/source-change-watch.js */
+const { createSourceChangeWatch } = require('./lib/source-change-watch');
+const sourceChangeWatch = createSourceChangeWatch({
+  runModelRows: input => modelQuery.runModelRows(input),
+  stateFile: path.join(LOCAL_DATA_ROOT, 'source-watch', 'baseline.json'),
+});
+/** Değişiklik sinyali yalnız ASAS Database modunda anlamlıdır (Excel modunda model sorgulanmaz). */
+function sourceWatchConnection(asasMode) {
+  if (asasMode !== 'database') return null;
+  try { return sourceChangeWatch.selectAsasConnection(loadModelConnections().items); }
+  catch (_) { return null; }
+}
 // Kaynak başına yapılandırma sürümü: eşzamanlılık kontrolü bunu kullanır.
 const dataManagementAdapter = require('./lib/data-domain/legacy-adapter');
 const dataManagementFilterWriter = require('./lib/data-domain/filter-writer');
@@ -7038,10 +7061,9 @@ async function publishRefreshedRuntime(id, next) {
 
 async function loadFromModels(value, targets = null, options = {}) {
   const id = sourceUserId(value), runtime = cacheForUser(id);
-  /* Tek yenileme motoru: bir modül istenirse CP dahil hepsi yenilenir. Yalnız
-     birini yayınlamak sayfaları farklı anlık görüntülerde bırakırdı.
-     /api/lfl/refresh de buradan geçer. */
-  if (Array.isArray(targets) && targets.length) targets = withRefreshTargets(targets);
+  /* Bağlı grubun bir üyesi istenirse grubun tamamı yenilenir (tek sorgu);
+     gruptan ayrı modüller yalnız istendiğinde. /api/lfl/refresh de buradan geçer. */
+  if (Array.isArray(targets) && targets.length) targets = refreshTargetsFor(targets);
   const markSourcePhase = typeof options.markPhase === 'function' ? options.markPhase : () => {};
   markSourcePhase('source-setup');
   throwIfRefreshSignalAborted(options.signal);
@@ -7276,8 +7298,18 @@ async function loadFromModels(value, targets = null, options = {}) {
       dashboard: result._antrepoDashboardRefresh || null,
       asasSourceMode: asasMode,
       lflSourceMode: lflMode,
-      scopes: Array.isArray(result.scopes) ? result.scopes : [],
-      appliedHorizons: result.appliedHorizons && typeof result.appliedHorizons === 'object' ? result.appliedHorizons : {},
+      // v20260930 — Kısmi yenilemede (ör. yalnız CP) dokunulmayan sayfaların
+      // kapsam/ufuk bilgisi korunur; aksi hâlde rozetleri boşalırdı.
+      scopes: (() => {
+        const fresh = Array.isArray(result.scopes) ? result.scopes : [];
+        const previous = result.partialTargets && runtime.modelRefresh && Array.isArray(runtime.modelRefresh.scopes) ? runtime.modelRefresh.scopes : [];
+        const kept = previous.filter(entry => entry && entry.target && !requestedTargets.includes(entry.target));
+        return [...fresh, ...kept];
+      })(),
+      appliedHorizons: {
+        ...(result.partialTargets && runtime.modelRefresh && runtime.modelRefresh.appliedHorizons && typeof runtime.modelRefresh.appliedHorizons === 'object' ? runtime.modelRefresh.appliedHorizons : {}),
+        ...(result.appliedHorizons && typeof result.appliedHorizons === 'object' ? result.appliedHorizons : {}),
+      },
       connections: (result.runs || []).map(run => ({
         id: run.item.id, role: run.item.role, name: run.item.name || run.item.catalog,
         server: run.item.server, catalog: run.item.catalog,
@@ -8582,8 +8614,8 @@ function markRefreshJobPhase(id,phase){
 }
 
 async function performRefresh(id, currentUser, targets = null, options = {}) {
-  // Otomasyon ve Octopus yolları da buradan geçer: tek motor, bütün modüller birlikte.
-  if (Array.isArray(targets) && targets.length) targets = withRefreshTargets(targets);
+  // Otomasyon ve Octopus yolları da buradan geçer: bağlı grup birlikte yenilenir.
+  if (Array.isArray(targets) && targets.length) targets = refreshTargetsFor(targets);
   // Aşama işaretleri (v5.89): sayaca tıklandığında yenilemenin hangi adımda
   // olduğu ve her adımın kaç saniye sürdüğü gösterilebilsin diye her geçiş
   // zaman damgasıyla kaydedilir. Bağlantı bazlı süre dökümü (sunucu / yazma /
@@ -8604,6 +8636,12 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   const sourcePolicy = options && options.sourcePolicy && typeof options.sourcePolicy === 'object' ? options.sourcePolicy : {};
   const refreshOverrides = loadOverrides();
   const antrepoMode = sourcePolicy.antrepoMode || (['database', 'dashboard'].includes(refreshOverrides.antrepoSourceMode) ? refreshOverrides.antrepoSourceMode : 'excel');
+  /* v20260930 — Modelin son işlenme damgası yenilemenin BAŞINDA okunur (ağır
+     sorguyla paralel, milisaniyelik). Yenileme başarıyla biterse bu damga
+     yenilenen sayfaların temel çizgisi olur; sorgu sırasında model işlenirse
+     bir sonraki kontrol farkı görür. Damga okunamazsa yenileme etkilenmez. */
+  const watchItem = sourceWatchConnection(sourcePolicy.asasMode || (refreshOverrides.asasSourceMode === 'database' ? 'database' : 'excel'));
+  const watchProbe = watchItem ? sourceChangeWatch.probe(watchItem, { force: true }).catch(() => null) : null;
   const needsDashboard = antrepoMode === 'dashboard' && requestedTargets.some(target => target === 'cp' || target === 'orders' || target === 'backlog');
   let dashboardSession = null;
   if (needsDashboard) {
@@ -8659,6 +8697,12 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   markPhase('saving');
   if (job) job.commitStarted = true;
   await runRefreshTelemetry(telemetry, 'Local storage', 'snapshot-save', 'save', () => publishRefreshedRuntime(id, staged));
+  // Veri yayınlandı: başta okunan damga bu sayfaların temel çizgisi olur (beklemeden).
+  if (watchProbe) {
+    watchProbe.then(probed => {
+      if (probed && probed.ok) sourceChangeWatch.recordRefresh(id, watchItem, probed.stamp, requestedTargets);
+    }).catch(() => {});
+  }
   // Applied Horizon only advances after the new runtime snapshot is safely
   // published. A failed/cancelled refresh therefore cannot move this state.
   try {
@@ -8729,6 +8773,24 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   userAccess.appendAudit(currentUser, 'MODEL_REFRESH', 'Data Model Connection', { hasChanges: summary.hasChanges, totalChanges: summary.details.length });
   return { summary, historyItem, modelRefresh: active.modelRefresh || null, lastRefreshResult: active.lastRefreshResult, metrics };
 }
+
+/* v20260930 — "Yeni veri var mı?" İstemci birkaç dakikada bir sorar; model
+   metadata'sı en fazla MIN_PROBE_INTERVAL_MS'de bir gerçekten sorgulanır.
+   changedTargets boş değilse istemci yalnız o sayfaları arka planda yeniler. */
+app.get('/api/source-watch', userAccess.requireArea('source'), async (req, res) => {
+  const id = sourceUserId(req);
+  const overrides = loadOverrides();
+  const asasMode = overrides.asasSourceMode === 'database' ? 'database' : 'excel';
+  if (asasMode !== 'database') {
+    return res.json({ ok: true, supported: false, changed: false, changedTargets: [], reason: 'asas-excel' });
+  }
+  try {
+    const status = await sourceChangeWatch.status(id, loadModelConnections().items);
+    return res.json({ ok: true, refreshRunning: refreshInFlight.has(id), ...status });
+  } catch (error) {
+    return res.json({ ok: true, supported: false, changed: false, changedTargets: [], reason: 'probe-failed', error: String(error && error.message || error).slice(0, 300) });
+  }
+});
 
 app.get('/api/refresh-status', userAccess.requireArea('source'), (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -8913,7 +8975,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   const wantSync = Boolean(req.body && req.body.sync);
   // Yalnız belirli sayfaları yenile: ['cp'], ['orders'], ['backlog'], ['lfl'] veya birkaçı.
   const rawTargets = req.body && Array.isArray(req.body.targets) ? req.body.targets : null;
-  const targets = rawTargets ? withRefreshTargets(rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t)))) : null;
+  const targets = rawTargets ? refreshTargetsFor(rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t)))) : null;
   const requestedTargets = targets && targets.length ? targets : ['cp','orders','backlog','lfl','priceanalysis'];
   const filterError = sourceFilterRequiredError(requestedTargets,req);
   if (filterError) {

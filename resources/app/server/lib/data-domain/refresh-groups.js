@@ -46,8 +46,9 @@ function normalizeModuleIds(raw) {
     seen.add(moduleId);
     out.push(moduleId);
   }
-  // v20260929 — Tek yenileme motoru: CP dahil bütün modüller birlikte yenilenir.
-  // Gruba biri konursa hepsi gelir; grup tanımı gerçekte ne yenilendiğini söyler.
+  // Bağlı modüller (varsayılan: Orders · Backlog · LFL · Price & Supplier) tek
+  // yenilemedir: gruba biri konursa hepsi gelir; grup tanımı gerçekte ne
+  // yenilendiğini söyler. Gruptan ayrı CP yalnız açıkça seçilirse gelir (v20260930).
   const linked = withRefreshTargets(out);
   // Sıralama SUPPORTED_TARGETS'a göre sabitlenir: aynı grup her ekranda aynı
   // sırada görünsün, kullanıcı seçim sırasını hatırlamak zorunda kalmasın.

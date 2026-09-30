@@ -28,9 +28,9 @@ test('v10.32 Orders birincil yenileme eylemi gerçek Orders yenilemesini çalı�
   const orders = sliceBetween(INDEX, 'id="ordersTableToolbar"', 'id="ordersTableWrap"');
   assert.match(orders, /id="ordersRefreshBtn"[^>]*class="tbtn primary"[^>]*data-action-role="primary"/);
   assert.match(APP, /document\.getElementById\('ordersRefreshBtn'\)\?\.addEventListener\('click'/);
-  // v20260929 — tek yenileme motoru: Orders düğmesi CP dahil bütün modülleri yeniler.
+  // v20260930 — Orders düğmesi yalnız Orders'ı ister; bağlı grup (tek sorgu) birlikte gelir, CP gelmez.
   const click = APP.slice(APP.indexOf("document.getElementById('ordersRefreshBtn')?.addEventListener('click'"), APP.indexOf("document.getElementById('ordersRefreshBtn')?.addEventListener('click'") + 220);
-  assert.match(click, /loadFromServer\(true,\[\.\.\.LINKED_REFRESH_TARGETS\]\)/);
+  assert.match(click, /loadFromServer\(true,\['orders'\]\)/);
 });
 
 test('v10.32 Collection birincil eylemi önde, seçili kapsamı açık ve silme eylemi ayrıdır', () => {

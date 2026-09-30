@@ -210,8 +210,8 @@ test('v7.26 Güncelleme geçmişi bildirimler penceresinin içinde', () => {
 
 test('v7.26 Yenile menüsü sayfaların son güncellenme saatini gösteriyor', () => {
   const menu = APP.slice(APP.indexOf('function openTopRefreshMenu'), APP.indexOf('// Yenile sürerken aynı düğmeye'));
-  // v20260929 — tek yenileme motoru: menüde tek satır; damga en eski sayfanın saatidir.
-  assert.ok(menu.includes('const stamp=()=>'), 'yenileme satırı için zaman damgası hesaplanmalı');
+  // v20260930 — her satırın damgası o satırın kapsadığı en eski sayfanın saatidir.
+  assert.ok(menu.includes('const stamp=targets=>'), 'yenileme satırı için zaman damgası hesaplanmalı');
   assert.ok(menu.includes('sourceRelativeTime'), 'okunur ifade kullanılmalı');
   assert.ok(menu.includes('toLocaleTimeString'), 'saatin kendisi de yazılmalı');
   assert.ok(menu.includes('topRefreshWhen'), 'menüde ayrı bir alan olmalı');

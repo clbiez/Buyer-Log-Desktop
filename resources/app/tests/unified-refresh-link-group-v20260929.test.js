@@ -12,6 +12,11 @@
  *   · "Hepsini tek filtreleme altına topla. Kullanıcı herhangi bir sayfayı bu
  *     linklemeden ayırmak isterse bunu yapabilsin. Veya geri ekleyebilsin."
  *
+ * v20260930 — "Tek yenileme motoru" kararı GERİ ALINDI: CP yenilemesi 40 sn'den
+ * ~200 sn'ye çıktı (en geniş filtre her yenilemenin süresini belirliyordu).
+ * Yenileme artık filtre bağını izler (bkz. linked-refresh-horizon testi);
+ * bağlı grup, CP kapsam denetimi ve ön-hazırlık bu dosyada korunur.
+ *
  * Korunan kusurlar:
  *  1) Ayrılan modül normalizasyonda gruba GERİ DÖNMEMELİ; gruba eklenen modül
  *     grubun filtresini gerçekten kullanmalı.
@@ -159,13 +164,15 @@ test('sunucu: yenileme CP kapsamını denetler, sonucu yeniler ve bağlı grup u
 });
 
 test('istemci: yenileme sonrası açık olmayan sayfalar çizilmeden arka planda hazırlanır', () => {
-  const prewarm = APP.slice(APP.indexOf('function scheduleRefreshPrewarm(){'), APP.indexOf('function notifyCpCoverage('));
+  const prewarm = APP.slice(APP.indexOf('function scheduleRefreshPrewarm(targets){'), APP.indexOf('function notifyCpCoverage('));
   assert.match(prewarm, /\['cp',\(\)=>state\.cp\?true:ensureCpLoaded\(\{reason:'prewarm'\}\)\]/);
   assert.match(prewarm, /\['orders',\(\)=>state\.orders\?true:ensureOrdersLoaded\(\)\]/);
   assert.match(prewarm, /\['backlog',\(\)=>backlogLoadedOnce\?true:prefetchBacklogForRefresh\(\)\]/);
   assert.match(prewarm, /window\.BLPriceSupplierAnalysis\?\.prepareInBackground\?\.\(\)/);
   // Açık sekme ve yetkisiz alan atlanır; yeni bir yenileme ön-hazırlığı keser.
-  assert.match(prewarm, /if\(!canAccess\(area\)\|\|currentActiveTab\(\)===area\)continue;/);
+  assert.match(prewarm, /if\(!refreshed\.includes\(area\)\|\|!canAccess\(area\)\|\|currentActiveTab\(\)===area\)continue;/);
+  // v20260930 — Yalnız bu yenilemenin kapsadığı sayfalar hazırlanır (CP yenilemesi LFL'i belleğe almaz).
+  assert.match(prewarm, /const refreshed=Array\.isArray\(targets\)&&targets\.length\?targets:ALL_REFRESH_TARGETS;/);
   assert.match(prewarm, /token!==refreshPrewarmToken\|\|isRefreshRunning\(\)/);
   assert.match(APP, /refreshPrewarmToken\+\+;/);
   // Görünmeyen CP/Siparişler çizilmez: renderCP/renderOrders ertelenmiş çizimdir.

@@ -141,17 +141,21 @@ function isolateOrdersScope(scopes, role, fallbackHorizon, normalizeHorizon, det
    ayrılabilir. CP varsayılan olarak AYRIDIR: kullanıcının dar CP filtresi
    (ör. yalnız kendi lisansları) eski kayıtlarda oylamayla ezilmemeli.
 
-   Yenileme ise filtre bağından bağımsız olarak TEKTİR (REFRESH_TARGETS):
-   hangi sayfadan istenirse istensin CP dahil bütün modüller aynı işte
-   yenilenir. Gruptan ayrılmış bir modül kendi filtresiyle ayrı sorgu olur
-   ama yine aynı yenilemede güncellenir. */
+   v20260930 — YENİLEME FİLTREYİ İZLER (tek motor geri alındı).
+   Kullanıcı: "Tüm yenileme işini merkezi yaparak hata yaptık. CP yenilemek
+   40 sn sürerken şimdi 200'e yanaştı." Tek motorda en geniş filtre (LFL ·
+   Fiyat & Üretici) her yenilemenin süresini belirliyordu. Artık bir sayfanın
+   yenilemesi yalnız KENDİ sorgusunu çalıştırır: bağlı gruptaki bir sayfa
+   grubu (tek sorgu, maliyet aynı) birlikte yeniler; gruptan ayrı bir sayfa
+   (varsayılan olarak CP) yalnız kendini yeniler. REFRESH_TARGETS yalnız
+   "Tümünü yenile"nin kapsamıdır. */
 const LINKED_TARGETS = Object.freeze(['orders', 'backlog', 'lfl', 'priceanalysis']);
 const LINKED_ROLES = new Set(['asas']);
 // normalizeScopes'un eski kayıtlarda kendiliğinden eklediği hedefler.
 const LINKED_AUTO_TARGETS = Object.freeze(['orders', 'priceanalysis']);
 // Ufuk oylamasında eşitlik sırası: CP gruba eklenmişse en son söz hakkı onundur.
 const LINK_VOTE_ORDER = Object.freeze(['orders', 'backlog', 'lfl', 'priceanalysis', 'cp']);
-// Tek yenileme motorunun kapsadığı modüller (INTAKE kendi bağlantısıyla ayrı çalışır).
+// "Tümünü yenile"nin kapsadığı modüller (INTAKE kendi bağlantısıyla ayrı çalışır).
 const REFRESH_TARGETS = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 
 function isLinkedTarget(target) { return LINKED_TARGETS.includes(String(target == null ? '' : target).trim()); }
@@ -176,14 +180,19 @@ function linkedTargetsOf(item) {
 }
 
 /**
- * Tek yenileme motoru: bir hedef bile istenirse CP dahil bütün modüller
- * birlikte yenilenir. Boş liste boş kalır (çağıran "hepsi" varsayılanını uygular).
+ * Yenileme hedefleri filtre bağını izler: istenen hedeflerden biri bağlı
+ * grubun üyesiyse grubun tamamı eklenir (aynı sorguyu paylaşırlar, yalnız
+ * birini yayınlamak grubu farklı anlık görüntülerde bırakırdı). Gruptan ayrı
+ * modüller (ör. dar filtreli CP) yalnız istendiklerinde yenilenir.
+ * linkedMembers verilmezse varsayılan grup kullanılır (eski kayıt).
+ * Boş liste boş kalır (çağıran "hepsi" varsayılanını uygular).
  */
-function withRefreshTargets(targets) {
+function withRefreshTargets(targets, linkedMembers = LINKED_TARGETS) {
   const list = (Array.isArray(targets) ? targets : [])
     .map(value => String(value == null ? '' : value).trim()).filter(Boolean);
   const out = [...new Set(list)];
-  if (out.length) for (const target of REFRESH_TARGETS) if (!out.includes(target)) out.push(target);
+  const members = Array.isArray(linkedMembers) ? linkedMembers : LINKED_TARGETS;
+  if (out.some(target => members.includes(target))) for (const target of members) if (!out.includes(target)) out.push(target);
   return out;
 }
 // Eski ad: otomasyon ve yenileme grupları bu adla çağırıyordu.

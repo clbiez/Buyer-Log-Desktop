@@ -922,6 +922,17 @@
         </select>
       </div>` : ''}
 
+      <div class="dmModeRow dmSourceWatch">
+        <span class="dmModeText">
+          <span class="dmToolName">${esc(T('Kaynak değişince otomatik güncelle', 'Update automatically when the source changes'))}</span>
+          <span class="dmToolHint" id="sourceWatchNote"></span>
+        </span>
+        <label class="dmCheck">
+          <input type="checkbox" id="sourceWatchToggle" aria-label="${esc(T('Kaynak değişince otomatik güncelle', 'Update automatically when the source changes'))}">
+          <span>${esc(T('Açık', 'On'))}</span>
+        </label>
+      </div>
+
       <div class="dmModeRow dmRefreshTiming">
         <span class="dmModeText">
           <span class="dmToolName">${esc(T('Son yenileme süresi', 'Last refresh duration'))}</span>
@@ -1836,6 +1847,19 @@
     /* Otomatik yenileme. Değer ve zamanlayıcı app-main.js'te yaşıyor;
        burada yalnız seçim iletiliyor — ikinci bir zamanlayıcı yazmak iki ayrı
        yenileme turu demek olurdu (§9). */
+    /* v20260930 — Kaynak değişince otomatik güncelleme kişisel tercihtir (her
+       kullanıcı kendi verisini yeniler); izleyici app-main.js'te yaşar. */
+    if (event.target && event.target.id === 'sourceWatchToggle') {
+      if (typeof setSourceWatchEnabled !== 'function') return;
+      const on = setSourceWatchEnabled(event.target.checked);
+      if (typeof showToast === 'function') {
+        showToast(on
+          ? T('ASAS modeli güncellendiğinde ekranlar arka planda kendiliğinden yenilenecek.', 'Screens will refresh in the background when the ASAS model is updated.')
+          : T('Kaynak değişince otomatik güncelleme kapatıldı.', 'Automatic update on source change turned off.'));
+      }
+      syncSourceModes();
+      return;
+    }
     if (event.target && event.target.id === 'autoRefreshSelect') {
       if (!model.canManage || typeof setAutoRefreshMinutes !== 'function') return;
       const value = setAutoRefreshMinutes(event.target.value);
