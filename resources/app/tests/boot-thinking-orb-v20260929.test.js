@@ -17,7 +17,8 @@ test('Açılış perdesi thinking-orbs "breathing" (Thinking…) orb kullanır',
   assert.match(head,/BLThinkingOrbBreathing\.attach\(el\.querySelector\('\.blBootOrb'\)\)/);
   assert.match(head,/#blBootGuard\[data-failed="1"\] \.blBootOrb\{display:none\}/);
   assert.doesNotMatch(INDEX,/blBootDot/);
-  assert.match(head,/function ready\(\)\{[\s\S]*?stopOrb\(\);var el=guard\(\);if\(el\)el\.remove\(\);/);
+  // ready now accepts a prerequisite; orb cleanup still occurs on completion.
+  assert.match(head,/function ready\(stage\)\{[\s\S]*?stopOrb\(\);var el=guard\(\);var refocus=[^;]+;if\(el\)el\.remove\(\);/);
 });
 
 test('breathing orb geometrisi upstream golden vektörleriyle eşleşir',()=>{
@@ -48,3 +49,4 @@ test('inline Thinking orb 20px upstream presetini kullanır',()=>{
   assert.equal(dots.length,120);
   for(let i=1;i<dots.length;i++)assert.ok(dots[i-1].z<=dots[i].z,'20px noktaları uzaktan yakına sıralı olmalı');
 });
+

@@ -6,6 +6,9 @@
 <title>Buyer Log</title>
 <script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>
 <script src="thinking-orb-breathing.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=1">
+<script src="buyerlog-guide-data.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="buyerlog-guide.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <style id="blBootGuardStyle">
   #blBootGuard{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f6f7f9;color:#1f2937;font:500 14px/1.45 "Barlow",system-ui,-apple-system,sans-serif}
   #blBootGuard .blBootCard{min-width:250px;max-width:420px;margin:20px;padding:22px 24px;text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:0;box-shadow:none}
@@ -19,13 +22,19 @@
 <script>
 (function(){
   'use strict';
-  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,timer=null,lastFailure='',orb=null;
+  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
+  // Core markup alone is insufficient: keep the curtain until initial data,
+  // the first usable render AND the actual top-right profile have been applied.
+  var gates={core:false,data:false,ui:false,profile:false};
   function guard(){return document.getElementById('blBootGuard');}
   function ensureGuard(){
     if(finished||guard()||!document.body)return;
-    var el=document.createElement('div');el.id='blBootGuard';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
-    el.innerHTML='<div class="blBootCard"><canvas class="blBootOrb" width="64" height="64" aria-hidden="true"></canvas><div data-boot-message>Buyer Log hazırlanıyor…</div></div>';
+    var el=document.createElement('div');el.id='blBootGuard';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','blBootTitle');el.tabIndex=-1;
+    el.innerHTML='<div class="blBootCard"><canvas class="blBootOrb" width="64" height="64" aria-hidden="true"></canvas><div id="blBootTitle" data-boot-message role="status" aria-live="polite">Buyer Log hazırlanıyor…</div></div>';
     document.body.appendChild(el);
+    window.BLGuide?.mountStartup(el);
+    Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});
+    el.focus({preventScroll:true});
     try{if(window.BLThinkingOrbBreathing)orb=window.BLThinkingOrbBreathing.attach(el.querySelector('.blBootOrb'));}catch(_){}
   }
   function stopOrb(){if(orb){try{orb.stop();}catch(_){}orb=null;}}
@@ -35,27 +44,36 @@
     if(failed){
       el.dataset.failed='1';stopOrb();
       var card=el.querySelector('.blBootCard');
-      if(card&&!card.querySelector('button')){var b=document.createElement('button');b.type='button';b.textContent='Tekrar dene';b.onclick=function(){try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}location.replace('/?boot='+Date.now());};card.appendChild(b);}
+      if(card&&!card.querySelector('[data-boot-retry]')){var b=document.createElement('button');b.type='button';b.dataset.bootRetry='1';b.textContent=english()?'Retry':'Tekrar dene';b.onclick=function(){try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}location.replace('/?boot='+Date.now());};card.appendChild(b);}
     }
   }
-  function ready(){
-    if(finished)return;finished=true;if(timer)clearTimeout(timer);
+  function english(){try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return false;}}
+  function ready(stage){
+    if(finished)return;
+    if(stage&&Object.prototype.hasOwnProperty.call(gates,stage))gates[stage]=true;else gates.core=true;
+    window.BLGuide?.stage(stage||'core');
+    if(!Object.keys(gates).every(function(key){return gates[key];}))return;
+    finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);
     try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}
-    stopOrb();var el=guard();if(el)el.remove();
+    stopOrb();var el=guard();var refocus=el&&el.contains(document.activeElement);if(el)el.remove();
+    window.dispatchEvent(new CustomEvent('bl:startup-complete'));
+    if(refocus)document.getElementById('buyerLogGuideBtn')?.focus({preventScroll:true});
   }
   async function recover(reason){
-    if(finished)return;lastFailure=reason||lastFailure||'startup-timeout';
+    if(finished||recovering)return;recovering=true;lastFailure=reason||lastFailure||'startup-timeout';
     message('Açılış tamamlanamadı, bağlantı yeniden kontrol ediliyor…',false);
     var count=0;try{count=Number(sessionStorage.getItem(RETRY_KEY)||0)||0;}catch(_){}
     try{
-      var res=await fetch('/api/status?boot='+Date.now(),{cache:'no-store',credentials:'same-origin'});
+      var res=await fetch('/api/status?boot='+Date.now(),{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(10000)});
       var data=await res.json();
+      if(finished)return;
       if(res.ok&&data&&data.app==='Buyer Log'&&count<1){
         try{sessionStorage.setItem(RETRY_KEY,String(count+1));}catch(_){}
         location.replace('/?boot='+Date.now());return;
       }
     }catch(_){}
-    message('Buyer Log açılamadı. Yeniden denemek için düğmeye basın.',true);
+    if(finished)return;recovering=false;
+    message(english()?'Buyer Log could not finish preparing. Press Retry.':'Buyer Log hazırlığı tamamlanamadı. Yeniden denemek için düğmeye basın.',true);
     try{console.error('Buyer Log boot recovery failed:',lastFailure);}catch(_){}
   }
   window.addEventListener('error',function(ev){try{
@@ -69,10 +87,27 @@
     if(!box){box=document.createElement('div');box.id='blErrBox';box.style.cssText='position:fixed;left:8px;bottom:8px;z-index:2147483647;max-width:60vw;background:#7f1d1d;color:#fff;font:12px/1.5 monospace;padding:8px 12px;white-space:pre-wrap;';document.documentElement.appendChild(box);}
     box.textContent+='PROMISE HATA: '+String(ev.reason&&ev.reason.message||ev.reason)+'\n';
   }catch(_){}});
-  window.BLBootGuard={ready:ready,recover:recover,noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
+  window.addEventListener('bl:user-access-applied',function(ev){
+    var p=ev.detail,avatar=document.getElementById('currentUserInitials'),badge=document.getElementById('accessModeBadge');
+    if(p&&(p.id||p.username)&&(p.displayName||p.username)&&avatar&&badge&&badge.textContent.trim())ready('profile');
+  });
+  document.addEventListener('keydown',function(ev){
+    var el=guard();if(!el||document.getElementById('buyerLogGuide')?.open)return;
+    if(ev.key==='F1'){ev.preventDefault();ev.stopImmediatePropagation();window.BLGuide?.open();return;}
+    if(ev.key!=='Tab'){ev.stopImmediatePropagation();return;}
+    var buttons=Array.from(el.querySelectorAll('button:not(:disabled)')).filter(function(b){return b.getClientRects().length;});
+    if(!buttons.length){ev.preventDefault();el.focus();return;}
+    var first=buttons[0],last=buttons[buttons.length-1];
+    if(ev.shiftKey&&(document.activeElement===first||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();last.focus();}
+    else if(!ev.shiftKey&&(document.activeElement===last||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();first.focus();}
+  },true);
+  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,fail:function(reason){lastFailure=String(reason||'initial-data-failed');message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
-  timer=setTimeout(function(){recover(lastFailure||'core-not-ready');},12000);
+  slowTimer=setTimeout(function(){if(finished)return;ensureGuard();if(guard())guard().dataset.slow='1';var hint=guard()?.querySelector('[data-boot-hint]');if(hint)hint.textContent=english()?'Preparation is taking longer. Data volume and source access can affect the wait.':'Hazırlık biraz uzun sürüyor. Veri hacmi ve kaynak erişimi bekleme süresini etkileyebilir.';},15000);
+  // Normal slow starts must not be reloaded at 12 seconds. A bounded failure
+  // screen still offers Retry if preparation stalls, without a reload loop.
+  timer=setTimeout(function(){if(!finished)message(english()?'Preparation has not completed. You can retry.':'Hazırlık tamamlanmadı. Yeniden deneyebilirsiniz.',true);},120000);
 })();
 </script>
 <script src="perf-runtime.js?v=__BL_ASSET_VERSION__&rev=8"></script>
@@ -404,6 +439,7 @@
   <button class="iconbtn" id="saveAllBtn" title="Tüm değişiklikleri şimdi kaydet" data-i18n-title-tr="Tüm değişiklikleri şimdi kaydet" data-i18n-title-en="Save all changes now"><svg class="ic"><use href="#i-device-floppy"/></svg></button>
   <button class="iconbtn" id="topRefreshBtn" title="Veri Modelinden Güncelle" data-i18n-title-tr="Veri Modelinden Güncelle" data-i18n-title-en="Refresh from data model"><svg class="ic"><use href="#i-reload"/></svg></button>
   <button class="iconbtn syncStatusBtn" id="syncStatusBtn" title="Offline" aria-label="Offline"><span class="syncStatusBadge is-offline" id="syncStatusBadge"><svg class="ic" aria-hidden="true"><use href="#i-cloud-off"/></svg></span></button>
+  <button type="button" class="navActionBtn" id="buyerLogGuideBtn" title="Kullanım Rehberi (F1)" aria-label="Kullanım Rehberi (F1)" data-i18n-title-tr="Kullanım Rehberi (F1)" data-i18n-title-en="User Guide (F1)" data-i18n-aria-label-tr="Kullanım Rehberi (F1)" data-i18n-aria-label-en="User Guide (F1)"><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg></button>
   <span class="accessModeBadge" id="accessModeBadge"></span><button type="button" class="userAvatar userAvatarBtn" id="currentUserBtn" title="Kullanıcı menüsü" data-i18n-title-tr="Kullanıcı menüsü" data-i18n-title-en="User menu"><span id="currentUserInitials" class="blSteelInitials">?</span></button>
 </header>
 
@@ -2055,3 +2091,4 @@
 
 </body>
 </html>
+

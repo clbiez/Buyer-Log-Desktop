@@ -2427,6 +2427,7 @@ document.getElementById('navCopy').addEventListener('click', event=>{
    .appBlockingOverlay bilerek listede yok: işlem sürerken kapatılamamalı.
    =================================================================== */
 const BL_OVERLAY_SELECTOR = [
+  '#buyerLogGuide[open]', '#blBootGuard',
   '.warnOverlay', '.backlogDetailOverlay', '.backlogDimAddOverlay',
   '.accessAdminOverlay', '.autoModalOverlay', '.awModalOverlay',
   '.globalSearchOverlay', '.quotationAccessOverlay', '.uaOverlay',
@@ -14248,11 +14249,23 @@ function schedulePostUiStartupTasks(){
 async function refreshSyncStatusBadge(){
   try{const s=await fetchJSON('/api/sync-status');renderSyncStatusBadge(s.status);}catch(_){renderSyncStatusBadge(null);}
 }
+// Await only the primary projection of the opening screen. Secondary Overview
+// widgets, off-screen modules, images and Excel engines remain on demand.
+async function waitForStartupPrimaryScreen(){
+  const tab=currentActiveTab();
+  if(tab==='overview'&&state.overviewDeferred)return ensureOverviewLoaded();
+  if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return true;
+  if(tab==='cp'&&!state.cp)return ensureCpLoaded();
+  if(tab==='orders'&&!state.orders)return ensureOrdersLoaded();
+  return true;
+}
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
   const requestedModule=new URLSearchParams(location.search).get('module');
   if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
-  await loadInitialBuyerLogData();
+  const initialDataLoaded=await loadInitialBuyerLogData();
+  if(initialDataLoaded)window.BLBootGuard?.ready('data');
+  else window.BLBootGuard?.fail('initial-data-failed');
   // Workspace ile acilan yeni sekmelerde yetki/kullanici baglami yuklenmeden
   // modulu degistirmek Overview'da kalmis, fakat basligi hedef modul olmus bir
   // sekme uretebiliyordu. Ilk veri/yetki hidrasyonu bittikten sonra hedefi uygula.
@@ -14260,8 +14273,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     const switched=switchTab(requestedModule);
     if(switched===false&&requestedModule!=='overview')switchTab('overview');
   }
+  schedulePostUiStartupTasks();
+  const primaryScreenReady=initialDataLoaded&&await waitForStartupPrimaryScreen();
+  if(!primaryScreenReady)window.BLBootGuard?.fail('initial-screen-failed');
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     window.BLPerf?.mark?.('UI_READY');
+    if(primaryScreenReady)window.BLBootGuard?.ready('ui');
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
     schedulePostUiStartupTasks();
     signalStartupReady();
@@ -34142,6 +34159,7 @@ function syncVfMenuLanguage(){
 }
 function applyLanguage(lang){
   appLang = (lang==='en') ? 'en' : 'tr';
+  window.BLGuide?.refreshLanguage();
   // CSS text-transform:uppercase follows the document language. Keep English
   // headers (e.g. LICENSE) from receiving Turkish dotted İ casing.
   if(document.documentElement) document.documentElement.lang = appLang;
@@ -34199,3 +34217,4 @@ loadLang();
 applyLanguage(appLang);
 syncTableToolbarActions(document.body.dataset.activeTab||'overview');
 setTimeout(()=>void loadModelImageSettings(),1200);
+
