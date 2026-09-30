@@ -6,6 +6,8 @@ const path=require('node:path');
 const orb=require('../public/thinking-orb-breathing.js');
 const ROOT=path.join(__dirname,'..');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
+const EXP=fs.readFileSync(path.join(ROOT,'public','experience.css'),'utf8');
+const ORB_SRC=fs.readFileSync(path.join(ROOT,'public','thinking-orb-breathing.js'),'utf8');
 
 test('Açılış perdesi thinking-orbs "breathing" (Thinking…) orb kullanır',()=>{
   const head=INDEX.slice(0,INDEX.indexOf('</head>'));
@@ -25,4 +27,24 @@ test('breathing orb geometrisi upstream golden vektörleriyle eşleşir',()=>{
   const golden=[[41.791591,53.440594,-8.838984,0.467922,0.557908,0.593762],[9.532055,25.402816,-8.781179,0.46848,0.557398,0.594457]];
   golden.forEach((g,i)=>{const d=dots[i];[d.x,d.y,d.z,d.r,d.white,d.a].forEach((v,j)=>assert.ok(Math.abs(v-g[j])<1e-4,`nokta ${i} alan ${j}: ${v} ≠ ${g[j]}`));});
   for(let i=1;i<dots.length;i++)assert.ok(dots[i-1].z<=dots[i].z,'noktalar uzaktan yakına sıralı olmalı');
+});
+
+
+test('bekleme uyarıları eski mavi küre yerine Thinking canvas ile yükseltilir',()=>{
+  assert.match(ORB_SRC,/\.blOrb\[data-state="thinking"\]/);
+  assert.match(ORB_SRC,/querySelectorAll\('\.blOrb\[data-state="thinking"\]'\)/);
+  assert.match(ORB_SRC,/className='blOrbCanvas'/);
+  assert.match(EXP,/\.blOrb\[data-state="thinking"\]\.blOrb--thinkingCanvas\{/);
+  assert.match(EXP,/\.blOrb--thinkingCanvas \.blOrbCanvas\{/);
+  assert.match(INDEX,/thinking-orb-breathing\.js\?v=__BL_ASSET_VERSION__&rev=2/);
+});
+
+test('inline Thinking orb 20px upstream presetini kullanır',()=>{
+  const p=orb.PRESETS[20];
+  assert.equal(p.speed,3.78);
+  assert.equal(p.opts.lanes,2);
+  assert.equal(p.opts.segs,15);
+  const dots=orb.frame(20,0.6,p.opts);
+  assert.equal(dots.length,120);
+  for(let i=1;i<dots.length;i++)assert.ok(dots[i-1].z<=dots[i].z,'20px noktaları uzaktan yakına sıralı olmalı');
 });
