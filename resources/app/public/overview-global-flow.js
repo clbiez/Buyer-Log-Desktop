@@ -910,6 +910,15 @@ function hitIdentity(hit){
   if(!hit)return '';
   return hit.type+':'+(hit.vehicle?hit.vehicle.id:hit.cluster?hit.cluster.id:hit.edge?hit.edge.key:hit.bundle?hit.bundle.key:hit.stage?hit.nodeKey+'/'+hit.stage:hit.hub?hit.hub.key:hit.rec?hit.rec.id:'');
 }
+/* Bir koridorun geometrik ayağı "sea" veya "air" olabilir; tooltip ve rota
+   detayı ise parsiyelin TAM yükleme tipini göstermelidir. Böylece Gemi + Uçak
+   akışının hem deniz hem hava ayağı kullanıcıya "Gemi + Uçak" olarak görünür. */
+function routeTransportModes(edge){
+  const records=edge&&Array.isArray(edge.records)?edge.records:[];
+  const modes=[...new Set(records.map(rec=>clean(rec&&rec.mode)).filter(Boolean))];
+  if(modes.length)return modes;
+  return [clean(edge&&edge.mode)||'unknown'];
+}
 
 if(typeof document==='undefined'){
   return {ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,VEHICLE_CLUSTER_DISTANCE,
@@ -917,7 +926,7 @@ if(typeof document==='undefined'){
     normalizeRecord,expandSourceRow,shipmentPartialsFromRows,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
     seaRouteCoordinates,seaAirRouteCoordinates,colomboSeaCoordinates,usesColomboTransit,routeLegsFor,routeEdges,routeCorridorKey,pointAlongLeg,
-    transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,routeHighlightEdges,
+    transitPlacement,groupTransitPlacements,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,routeTransportModes,globeDragDelta,pickHit,routeHighlightEdges,
     normalizeQuickFilterItems,quickFilterMatch,normalizeFilters,createPanelFilter,
     MAP_ENGINES,EARTH_LAYER_KEYS,normalizeEarthPrefs,viewportFrom2d,view2dFromViewport,viewportFrom3d,view3dFromViewport,heightForSpan,spanForHeight,hitIdentity,edgeSamples,geoInterpolate};
 }
@@ -1087,6 +1096,7 @@ function stateLabel(value){return ({
 function modeLabel(value){return ({
   sea:L('Gemi','Sea'),air:L('Uçak','Air'),road:L('Tır','Road'), 'sea-air':L('Gemi + Uçak','Sea + Air'),unknown:L('Belirsiz','Unknown')
 })[value]||value;}
+function routeTransportLabel(edge){return routeTransportModes(edge).map(modeLabel).join(' · ');}
 function quickLabel(id){const def=QUICK_FILTERS[id];return def?(isEn()?def.en:def.tr):id;}
 function renderControls(){
   const host=$('globalFlowControls');if(!host)return;
@@ -1549,7 +1559,7 @@ function showTooltip(hit,event){
     lines.push(countSummary(v.records));critical=v.critical;
   }else if(hit.type==='route'){
     const edge=hit.edge;title=edgeTitle(edge);
-    lines.push(modeLabel(edge.mode)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));lines.push(countSummary(edge.records));critical=edge.records.some(r=>r.critical);
+    lines.push(routeTransportLabel(edge)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));lines.push(countSummary(edge.records));critical=edge.records.some(r=>r.critical);
   }else if(hit.type==='stage'){title=stageLabel(hit.stage);lines.push(countSummary(hit.records));if(hit.nodeKey==='arrival:istanbul')lines.push(ISTANBUL.name);critical=hit.records.some(r=>r.critical);}
   else if(hit.type==='cluster'){
     title=nf().format(hit.vehicles.length)+' '+L('araç','vehicles');
@@ -1636,8 +1646,8 @@ function openRecordsDrawer(title,records,subtitle){
 }
 function openRouteChoice(edge,records){
   const groups=routeRecordGroups(edge);
-  if(groups.length<=1){openRecordsDrawer(edgeTitle(edge),records,modeLabel(edge.mode)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));return;}
-  const drawer=$('globalFlowDrawer');if(!drawer){openRecordsDrawer(edgeTitle(edge),records,modeLabel(edge.mode));return;}
+  if(groups.length<=1){openRecordsDrawer(edgeTitle(edge),records,routeTransportLabel(edge)+(edge.origins.size>1?' · '+L('Ortak koridor','Shared corridor'):''));return;}
+  const drawer=$('globalFlowDrawer');if(!drawer){openRecordsDrawer(edgeTitle(edge),records,routeTransportLabel(edge));return;}
   window.BLDetailDrawer?.close?.();
   const buttons=groups.map((group,index)=>'<button type="button" class="gfRouteChoiceBtn" data-gf-route-choice="'+index+'"><b>'+esc(group.country+' · '+modeLabel(group.mode))+'</b><span>'+esc(countSummary(group.records))+'</span></button>').join('');
   drawer.innerHTML='<div class="gfDrawerHead"><div><b>'+esc(edgeTitle(edge))+'</b><span>'+esc(L('Bu ortak koridorda görmek istediğin akışı seç.','Choose which flow to inspect on this shared corridor.'))+'</span></div><button type="button" data-gf-drawer-close>×</button></div><div class="gfDrawerBody"><div class="gfRouteChoices">'+buttons+'<button type="button" class="gfRouteChoiceBtn is-combined" data-gf-route-choice="combined"><b>'+esc(L('Birleşik','Combined'))+'</b><span>'+esc(countSummary(records))+'</span></button></div></div>';
@@ -1909,7 +1919,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 return {
   ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,clean,norm,toNumber,pick,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
   normalizeRecord,expandSourceRow,shipmentPartialsFromRows,recordKey,dedupeRecords,aggregateRecords,uniqueValues,parseDateMs,resolveRecordTransitDays,recordRouteProgress,
-  distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,routeLegsFor,routeEdges,routeCorridorKey,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,globeDragDelta,pickHit,routeHighlightEdges,
+  distancePointToSegment,distanceToPolyline,decodeWorldTopology,seaRouteCoordinates,seaAirRouteCoordinates,routeLegsFor,routeEdges,routeCorridorKey,buildFlowModel,resolveSymbolCollisions,clusterVehicleSymbols,vehicleClusterDistanceForZoom,routeRecordGroups,routeTransportModes,globeDragDelta,pickHit,routeHighlightEdges,
   MAP_ENGINES,EARTH_LAYER_KEYS,normalizeEarthPrefs,viewportFrom2d,view2dFromViewport,viewportFrom3d,view3dFromViewport,heightForSpan,spanForHeight,hitIdentity,
   refresh:()=>refresh(true),resetView,setEngine,
   engineState:()=>({engine:state.engine,selection:state.selection,earth:state.earthCtl&&!state.earthCtl.isDestroyed()?state.earthCtl.stats():null,earthError:state.earthError,earthLoading:state.earthLoading,view:state.view,panX:state.panX,panY:state.panY,zoom2d:state.zoom2d,rotLon:state.rotLon,rotLat:state.rotLat,zoom3d:state.zoom3d,filtered:state.filtered.length,quickActive:state.quick.active.slice(),filters:state.filters}),
