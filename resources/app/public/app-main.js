@@ -21753,8 +21753,13 @@ function kolMergedAsasCatalog(kind,orderCatalogs=state.collectionCatalogs){
 // yanlışlıkla işaretlenmez.
 function kolCatalogValueUnknown(kind,value){
   if(!KOL_MASTER_CATALOG_KINDS.has(kind)||!norm(value))return false;
-  const entry=kolMergedAsasCatalog(kind);
-  return entry.masterLoaded&&!entry.byKey.has(kolCatalogKey(kind,value));
+  const entry=kolMergedAsasCatalog(kind),key=kolCatalogKey(kind,value);
+  if(!key||entry.byKey.has(key))return false;
+  // Tam ASAS ana kataloğu henüz okunmamış olsa bile yüklü ASAS sipariş
+  // kataloğu varsa hücreyi sessiz bırakma. Öneri penceresi aynı durumda
+  // "ASAS listesinde yok" diyordu; tablo görünümü de aynı uyarıyı taşımalı.
+  // Hiçbir ASAS katalog değeri yoksa yanlış pozitif üretmemek için beklenir.
+  return entry.masterLoaded||entry.values.length>0;
 }
 const KOL_LEARNED_ALIAS_FIELDS=new Set(['category','license','line']);
 function kolLearnedCatalogAlias(kind,value){
@@ -25250,7 +25255,7 @@ function renderKol(){
         const suggestInput=`<input type="text" autocomplete="off" class="editCell kolSuggestCell" data-id="${r.id}" data-k="${c.k}" data-kind="${escapeHtml(c.suggest)}" value="${escapeHtml(cur)}" placeholder="${escapeHtml(placeholder)}"${unknown?` aria-description="${escapeHtml(unknownTitle)}"`:''}>`;
         // Licensor kural uyarısıyla aynı ⚠ + input düzeni (licensorDependencyCell) kullanılır.
         html+=unknown
-          ?`<td class="editTd submfr-fill kolRuleMissing kolCatalogUnknown"${rc} title="${escapeHtml(unknownTitle)}"><div class="licensorDependencyCell"><span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ${suggestInput}</div></td>`
+          ?`<td class="editTd submfr-fill kolRuleMissing kolCatalogUnknown"${rc} title="${escapeHtml(unknownTitle)}"><div class="licensorDependencyCell"><span class="kolCatalogWarningMark" aria-hidden="true">⚠</span>${suggestInput}</div></td>`
           :`<td class="editTd${cur?' submfr-fill':''}"${rc}>${suggestInput}</td>`;
       }else if(c.date){html+=`<td class="kolDateTd"${rc}><span class="exfDisplay kolDateDisplay" tabindex="0" data-id="${r.id}" data-k="${c.k}" title="${escapeHtml(L('Tarihi düzenle'))}">${escapeHtml(fmtDate(val)||'—')}</span></td>`;
       }else if(c.qty){html+=`<td class="editTd num"${rc}><input type="text" inputmode="numeric" class="editCell kolQtyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatQuantityDisplay(val))}" style="text-align:right;"></td>`;
