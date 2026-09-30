@@ -67,6 +67,7 @@ function normalizeRequest(value, defaults = {}) {
   return {
     id: cleanId(src.id) || `quotation-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     source: src.source === 'cp' ? 'cp' : 'collection',
+    origin: src.origin === 'manual-collection' ? 'manual-collection' : '',
     createdAt,
     updatedAt: clean(src.updatedAt, 80) || createdAt,
     status,
@@ -261,6 +262,7 @@ function updateRequest(profile, id, payload) {
   incoming.ownerId = current.ownerId;
   incoming.ownerName = current.ownerName;
   incoming.source = current.source;
+  incoming.origin = current.origin;
   incoming.editorIds = current.editorIds;
   incoming.createdAt = current.createdAt;
   incoming.status = current.status;
