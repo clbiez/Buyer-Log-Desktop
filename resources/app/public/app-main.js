@@ -27545,11 +27545,11 @@ function kolPlmSyncColumnStats(summary){
   return [...byKey.values()].sort((a,b)=>b.models-a.models||String(a.label).localeCompare(String(b.label),'tr-TR'));
 }
 function kolPlmSyncLoadColumnChoice(){
-  try{const raw=localStorage.getItem(KOL_PLM_SYNC_COLUMN_CHOICE_KEY);const list=raw?JSON.parse(raw):null;return Array.isArray(list)?list.map(String):null;}
+  try{const raw=BLStorage.getItem(KOL_PLM_SYNC_COLUMN_CHOICE_KEY);const list=raw?JSON.parse(raw):null;return Array.isArray(list)?list.map(String):null;}
   catch(_){return null;}
 }
 function kolPlmSyncSaveColumnChoice(keys){
-  try{localStorage.setItem(KOL_PLM_SYNC_COLUMN_CHOICE_KEY,JSON.stringify([...keys]));}catch(_){}
+  try{BLStorage.setItem(KOL_PLM_SYNC_COLUMN_CHOICE_KEY,JSON.stringify([...keys]));}catch(_){}
 }
 function showPlmSyncColumnChooser(mode,stats){
   const en=appLang==='en';

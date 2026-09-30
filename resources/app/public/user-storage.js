@@ -12,6 +12,21 @@
     'lcw_view_favorite_','lcw_filter_favorite_','buyerlog.fx.persist.v1','buyerlog.workspace.','buyerlog.dashboard.','buyerlog.favorites.','buyerlog.presetCache.v2.',
     'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.refreshHistory.','bl.autoRefresh.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.'
   ];
+  /* AYNI BİLGİSAYARDA BİRDEN FAZLA KULLANICI.
+     Aşağıdaki kişisel filtre/görünüm anahtarları eskiden kullanıcı önekine
+     alınmıyordu; cihazdaki bütün profiller aynı değeri okuyup yazıyor ve
+     filtreler birbirine karışıyordu. Artık her profil kendi kopyasını tutar.
+     Eşitlenen (SYNCED) önekler sunucuda zaten kullanıcıya bağlıdır; yerel
+     aynaları da mutlaka burada kapsanmalıdır. */
+  var formerlyDeviceWide=[
+    'bl.quickFilterGroups.','lcw.collection.quickDims.','bl.formulaColumns.','bl.excelImport.profiles.','lcw.dashboard.','lcw.favorites.',
+    'lcw.tableColWidth.','lcw.priceSupplierAnalysis.','lcw.pricingHistory.columns.','lcw.priceHistory.mfrOrder.',
+    'lcw.orders.imageSize.','lcw.koleksiyon.imageSize.','lcw.koleksiyon.modelGroups.view.','lcw.lfl.analysisHeights.',
+    'lcw.backlog.radar.layout.','lcw.backlog.chart.','bl.backlog.excelFormulas.','buyerlog.shipCompare.','buyerlog.overview.worldClocks.',
+    'buyerlog.detailDrawer.','buyerlog.backlog.detail.compact.','buyerlog.outlook.notifications.seen.','buyerlog.endeksmatikClipboard.',
+    'buyerlog.fx.pending.','blPlmSyncColumnChoice'
+  ];
+  prefixes=prefixes.concat(formerlyDeviceWide);
   function scoped(key){key=String(key);return prefixes.some(function(p){return key.indexOf(p)===0})}
   function actual(key){key=String(key);return scoped(key)?'bl.user.'+uid+'.'+key:key}
   // v4.73: Approvals page and its client-side preferences were removed.
@@ -51,6 +66,23 @@
       }
       legacy.forEach(function(item){var destination=actual(item.key);if(native.getItem(destination)==null){var value=native.getItem(item.source);if(value!=null)native.setItem(destination,value)}});
       native.setItem(migrationKey,'1');
+    }catch(_){ }
+  }
+  // Eski ortak (cihaz geneli) kayıt yalnız İLK açan profile taşınır ve ortak
+  // kopya silinir; böylece sonraki profiller başkasının filtresini devralmaz.
+  // Kullanıcı kimliği yoksa hiçbir şey sahiplenilmez.
+  if(uid!=='anonymous'){
+    try{
+      var deviceWide=[];
+      for(var dw=0;dw<native.length;dw++){
+        var deviceKey=native.key(dw);
+        if(deviceKey&&deviceKey.indexOf('bl.user.')!==0&&formerlyDeviceWide.some(function(p){return deviceKey.indexOf(p)===0}))deviceWide.push(deviceKey);
+      }
+      deviceWide.forEach(function(deviceKey){
+        var personalKey=actual(deviceKey);
+        if(native.getItem(personalKey)==null){var deviceValue=native.getItem(deviceKey);if(deviceValue!=null)native.setItem(personalKey,deviceValue);}
+        native.removeItem(deviceKey);
+      });
     }catch(_){ }
   }
   // Focus / Extended presetleri v10.68'den beri BLStorage ile yazılıyor ancak
@@ -144,6 +176,8 @@
     actualKey:actual,
     native:native,
     isSynced:synced,
+    isUserScoped:scoped,
+    syncedPrefixes:SYNCED.slice(),
     /* Sunucunun yazdığı değerleri kendi zaman damgasıyla yerel kopyaya işler ve
        bu anahtarları sayfa yenilenene kadar kilitler. `removed` anahtarları
        yerelden kaldırılır. Çağıran ardından sayfayı yeniler. */
