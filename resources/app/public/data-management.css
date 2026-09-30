@@ -366,6 +366,10 @@
   background: none; border: none; color: var(--ink);
 }
 .dmfPickerItem:hover, .dmfPickerItem:focus-visible { background: var(--acc-bg); outline: none; }
+.dmfPickerItem.isSelected, .dmfPickerItem[aria-selected="true"] {
+  background: var(--acc-bg); color: var(--acc-ink); font-weight: 600; cursor: default;
+}
+.dmfPickerItem:disabled { opacity: 1; }
 .dmfPickerEmpty { margin: 0; padding: 9px; font-size: 11px; color: var(--muted); }
 
 @media (max-width: 900px) {
