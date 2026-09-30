@@ -18,6 +18,10 @@ test('Concept 2 gutter hem hierarchy toggle hem görünür row checkbox taşır'
   assert.match(block, /data-kol-group-toggle/);
   assert.match(block, /kolSpreadsheetRowGutter/);
   assert.match(CSS, /\.kolSpreadsheetRowGutter \.rowChk\{[^}]*width:14px;[^}]*height:14px;[^}]*margin:0;[^}]*box-sizing:border-box;/s);
+  assert.match(block, /kolSpreadsheetGutterCol\" style=\"width:72px;/,
+    'expanded hierarchy toggle must leave enough gutter width for the row checkbox');
+  assert.match(CSS, /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable \.chkTh,[\s\S]*?#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable td\.kolSpreadsheetRowGutter\{width:72px!important;min-width:72px!important;\}/,
+    'Collection gutter width must override the shared 64px checkbox-column width');
   assert.match(INDEX, /collection-spreadsheet\.css\?v=__BL_ASSET_VERSION__&rev=7/);
 });
 
