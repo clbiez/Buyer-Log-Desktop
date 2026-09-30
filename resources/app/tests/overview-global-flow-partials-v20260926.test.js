@@ -120,6 +120,12 @@ test('7 · Bangladesh + India Colombo → İstanbul ortak segmenti tek shared tr
   assert.equal(air.length,1,'ortak hava ayağı tek kenar olmalı');
   assert.deepEqual([...air[0].origins].sort(),['Bangladesh','India']);
   assert.equal(air[0].records.length,2);
+  assert.deepEqual(flow.routeTransportModes(air[0]),['sea-air'],'hava ayağının etiketi tam yükleme tipini korumalı');
+  const seaAirSeaEdge=model.edges.find(e=>e.mode==='sea'&&e.records.some(r=>r.orderCode==='D1'));
+  assert.ok(seaAirSeaEdge,'Gemi+Uçak deniz ayağı bulunmalı');
+  assert.deepEqual(flow.routeTransportModes(seaAirSeaEdge),['sea-air'],'deniz ayağının etiketi de tam yükleme tipini korumalı');
+  assert.match(SOURCE,/lines\.push\(routeTransportLabel\(edge\)/,'rota hover tooltipi tam yükleme tipini kullanmalı');
+  assert.match(SOURCE,/openRecordsDrawer\(edgeTitle\(edge\),records,routeTransportLabel\(edge\)/,'rota detay başlığı da tam yükleme tipini kullanmalı');
   const keys=model.edges.map(e=>e.key);assert.equal(new Set(keys).size,keys.length,'hiçbir kenar iki kez çizilmemeli');
   // Aynı koridoru paylaşan saf deniz rotaları da ortak kenarlarda birleşir.
   const seaBd=transitRec('D3',{handover:iso(NOW-5*DAY)}),seaIn=flow.shipmentPartialsFromRows([cpRow({'Order Code':'D4','Country':'India',_logisticSegments:[segment({sourceRow:9,handover:iso(NOW-5*DAY)})]})],'cp')[0];
