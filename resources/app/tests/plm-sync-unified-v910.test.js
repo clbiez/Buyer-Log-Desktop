@@ -252,6 +252,6 @@ test('category ve license çeviriye tabi kalmaya devam eder', () => {
   assert.match(APP, /category:\{source:'categoryRaw',target:'urunTipi',asas:'category'\}/);
   assert.match(APP, /license:\{source:'brandToken',target:'lisans',asas:'license'\}/);
   // Excel importer'ın soru adımı Direct PLM'de de duruyor (v9.07 kök neden düzeltmesi).
-  assert.match(APP, /const questions=kolPlmTranslationQuestions\(rows\);/);
+  assert.match(APP, /const questions=kolPlmTranslationQuestions\(rows[,)]/);
   assert.match(APP, /showKolPlmTranslationReview\(questions\)/);
 });

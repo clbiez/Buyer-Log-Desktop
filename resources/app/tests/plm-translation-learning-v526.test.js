@@ -51,9 +51,11 @@ test('v5.26 candidate suggestion is never silently applied and user may leave it
   assert.match(review,/Nothing is applied automatically/);
   assert.match(review,/leave blank/);
   assert.match(review,/const exact=item\.catalog\.find/,'approval must resolve to an exact current ASAS catalog value');
-  assert.match(review,/if\(!typed\)continue/,'blank selection must remain unresolved');
+  assert.match(review,/if\(!typed\)\{if\(item\.remembered\)mappings\.push\(\{field:item\.field,source:item\.source,clear:true\}\);continue;\}/,'blank selection must remain unresolved (a remembered choice is cleared for this import)');
   const apply=between(APP,'function kolPlmApplyReviewedMappings','function kolPlmUniqueAsasValues');
-  assert.match(apply,/\['unresolved','conflict'\]\.includes\(tr\.mode\)/,'review must not overwrite exact/approved translations');
+  // Hatırlanan kural (approved-rule) kullanıcı onayıyla değişebilir; ASAS'taki birebir değerler (exact-*) asla.
+  assert.match(apply,/\['unresolved','conflict','approved-rule'\]\.includes\(tr\.mode\)/,'review must not overwrite exact ASAS translations');
+  assert.doesNotMatch(apply,/'exact-plm'|'exact-model'/);
   assert.match(apply,/mode:'user-approved-pending'/);
 });
 

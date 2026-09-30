@@ -304,7 +304,8 @@
       saveKolRows();
       renderKol();
 
-      const teachable = (translated.translationInfo && translated.translationInfo.reviewedMappings || []).filter(item => !item.keepAsIs);
+      // "Olduğu gibi taşı" dahil tüm seçimler kaydedilir; bir sonraki eklemede işaretli gelir.
+      const teachable = translated.translationInfo && translated.translationInfo.reviewedMappings || [];
       if (teachable.length) {
         try { await kolPlmSaveApprovedTranslations(teachable); }
         catch (error) { console.warn('PLM drag translation save failed:', error); }
