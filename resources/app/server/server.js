@@ -243,6 +243,20 @@ function refreshTargetsFor(targets) {
   return withRefreshTargets(targets, members);
 }
 const cpCoverage = require('./lib/cp-coverage');
+/* v20260930 — Kaynak değişiklik sinyali: ASAS modelinin son işlenme zamanı
+   okunur; yeni veri varsa istemci mevcut yenileme akışını arka planda başlatır
+   (ikinci bir yenileme motoru yok). Ayrıntı: server/lib/source-change-watch.js */
+const { createSourceChangeWatch } = require('./lib/source-change-watch');
+const sourceChangeWatch = createSourceChangeWatch({
+  runModelRows: input => modelQuery.runModelRows(input),
+  stateFile: path.join(LOCAL_DATA_ROOT, 'source-watch', 'baseline.json'),
+});
+/** Değişiklik sinyali yalnız ASAS Database modunda anlamlıdır (Excel modunda model sorgulanmaz). */
+function sourceWatchConnection(asasMode) {
+  if (asasMode !== 'database') return null;
+  try { return sourceChangeWatch.selectAsasConnection(loadModelConnections().items); }
+  catch (_) { return null; }
+}
 // Kaynak başına yapılandırma sürümü: eşzamanlılık kontrolü bunu kullanır.
 const dataManagementAdapter = require('./lib/data-domain/legacy-adapter');
 const dataManagementFilterWriter = require('./lib/data-domain/filter-writer');
@@ -8622,6 +8636,12 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   const sourcePolicy = options && options.sourcePolicy && typeof options.sourcePolicy === 'object' ? options.sourcePolicy : {};
   const refreshOverrides = loadOverrides();
   const antrepoMode = sourcePolicy.antrepoMode || (['database', 'dashboard'].includes(refreshOverrides.antrepoSourceMode) ? refreshOverrides.antrepoSourceMode : 'excel');
+  /* v20260930 — Modelin son işlenme damgası yenilemenin BAŞINDA okunur (ağır
+     sorguyla paralel, milisaniyelik). Yenileme başarıyla biterse bu damga
+     yenilenen sayfaların temel çizgisi olur; sorgu sırasında model işlenirse
+     bir sonraki kontrol farkı görür. Damga okunamazsa yenileme etkilenmez. */
+  const watchItem = sourceWatchConnection(sourcePolicy.asasMode || (refreshOverrides.asasSourceMode === 'database' ? 'database' : 'excel'));
+  const watchProbe = watchItem ? sourceChangeWatch.probe(watchItem, { force: true }).catch(() => null) : null;
   const needsDashboard = antrepoMode === 'dashboard' && requestedTargets.some(target => target === 'cp' || target === 'orders' || target === 'backlog');
   let dashboardSession = null;
   if (needsDashboard) {
@@ -8677,6 +8697,12 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   markPhase('saving');
   if (job) job.commitStarted = true;
   await runRefreshTelemetry(telemetry, 'Local storage', 'snapshot-save', 'save', () => publishRefreshedRuntime(id, staged));
+  // Veri yayınlandı: başta okunan damga bu sayfaların temel çizgisi olur (beklemeden).
+  if (watchProbe) {
+    watchProbe.then(probed => {
+      if (probed && probed.ok) sourceChangeWatch.recordRefresh(id, watchItem, probed.stamp, requestedTargets);
+    }).catch(() => {});
+  }
   // Applied Horizon only advances after the new runtime snapshot is safely
   // published. A failed/cancelled refresh therefore cannot move this state.
   try {
@@ -8747,6 +8773,24 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   userAccess.appendAudit(currentUser, 'MODEL_REFRESH', 'Data Model Connection', { hasChanges: summary.hasChanges, totalChanges: summary.details.length });
   return { summary, historyItem, modelRefresh: active.modelRefresh || null, lastRefreshResult: active.lastRefreshResult, metrics };
 }
+
+/* v20260930 — "Yeni veri var mı?" İstemci birkaç dakikada bir sorar; model
+   metadata'sı en fazla MIN_PROBE_INTERVAL_MS'de bir gerçekten sorgulanır.
+   changedTargets boş değilse istemci yalnız o sayfaları arka planda yeniler. */
+app.get('/api/source-watch', userAccess.requireArea('source'), async (req, res) => {
+  const id = sourceUserId(req);
+  const overrides = loadOverrides();
+  const asasMode = overrides.asasSourceMode === 'database' ? 'database' : 'excel';
+  if (asasMode !== 'database') {
+    return res.json({ ok: true, supported: false, changed: false, changedTargets: [], reason: 'asas-excel' });
+  }
+  try {
+    const status = await sourceChangeWatch.status(id, loadModelConnections().items);
+    return res.json({ ok: true, refreshRunning: refreshInFlight.has(id), ...status });
+  } catch (error) {
+    return res.json({ ok: true, supported: false, changed: false, changedTargets: [], reason: 'probe-failed', error: String(error && error.message || error).slice(0, 300) });
+  }
+});
 
 app.get('/api/refresh-status', userAccess.requireArea('source'), (req, res) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate');

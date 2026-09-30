@@ -13550,6 +13550,10 @@ function renderAutoRefreshState(){
   if(select&&String(select.value)!==String(autoRefreshMinutes()))select.value=String(autoRefreshMinutes());
   const note=document.getElementById('autoRefreshNote');
   if(note)note.textContent=autoRefreshLabel();
+  const watchToggle=document.getElementById('sourceWatchToggle');
+  if(watchToggle)watchToggle.checked=sourceWatchEnabled();
+  const watchNote=document.getElementById('sourceWatchNote');
+  if(watchNote)watchNote.textContent=sourceWatchLabel();
   const btn=document.getElementById('serverRefreshBtn');
   if(btn)btn.title=autoRefreshMinutes()?autoRefreshLabel():(btn.dataset.baseTitle||btn.title);
 }
@@ -13563,6 +13567,97 @@ function renderAutoRefreshState(){
 // hemen ardından otomatik bir tur daha görmemeli.
 window.addEventListener('bl-refresh-finished',()=>scheduleAutoRefresh());
 setTimeout(scheduleAutoRefresh,4000);
+
+/* v20260930 — KAYNAK DEĞİŞİNCE OTOMATİK GÜNCELLEME.
+   Kullanıcı: "Program sürekli database'i tarasın, yeni veri varsa getirsin;
+   buyer refresh yapmak veya refresh beklemek zorunda kalmasın." ASAS modeli
+   günde birkaç kez (≈9/12/15) işleniyor. Ağır sorguyu periyodik atmak yerine
+   sunucu modelin son işlenme zamanını okur (/api/source-watch, milisaniyelik
+   metadata sorgusu). Damga, bir sayfanın son yenilemesindeki damgadan farklıysa
+   o sayfa arka planda MEVCUT yenileme akışıyla (loadFromServer) güncellenir:
+   önce CP (dar, hızlı), sonra bağlı grup ve diğerleri. İkinci bir yenileme
+   motoru yoktur. Hücre düzenlenirken, pencere açıkken ya da başka bir yenileme
+   sürerken beklenir. IAS (Antrepo) CP/Siparişler/Backlog yenilemesiyle birlikte
+   gelir; sabit periyot isteyen yukarıdaki "Otomatik yenileme" süresini kullanır.
+   Varsayılan AÇIKTIR; Veri Yönetimi › Yenileme'den kapatılabilir. */
+const SOURCE_WATCH_KEY='bl.autoRefresh.sourceWatch.v1';
+const SOURCE_WATCH_INTERVAL_MS=5*60*1000;
+let sourceWatchTimer=null;
+let sourceWatchState={supported:null,checkedAt:'',reason:'',error:'',lastUpdateAt:''};
+function sourceWatchEnabled(){
+  try{ return BLStorage.getItem(SOURCE_WATCH_KEY)!=='0'; }catch(_){ return true; }
+}
+function setSourceWatchEnabled(on){
+  try{ BLStorage.setItem(SOURCE_WATCH_KEY,on?'1':'0'); }catch(_){}
+  scheduleSourceWatch(on?2000:0);
+  return Boolean(on);
+}
+function scheduleSourceWatch(delay=SOURCE_WATCH_INTERVAL_MS){
+  if(sourceWatchTimer){ clearTimeout(sourceWatchTimer); sourceWatchTimer=null; }
+  renderAutoRefreshState();
+  if(!sourceWatchEnabled())return;
+  sourceWatchTimer=setTimeout(runSourceWatch,Math.max(1000,Number(delay)||SOURCE_WATCH_INTERVAL_MS));
+}
+// Değişen sayfalar yenileme birimlerine bölünür: bağlı gruptaki sayfa grubun
+// tamamıyla (tek sorgu), gruptan ayrı sayfa tek başına. CP'nin birimi önce çalışır.
+function sourceWatchUnits(changed){
+  const members=linkedRefreshMembers();
+  const ordered=[...changed].sort((a,b)=>(a==='cp'?-1:0)-(b==='cp'?-1:0));
+  const units=[];
+  ordered.forEach(target=>{
+    if(units.some(unit=>unit.includes(target)))return;
+    units.push(members.includes(target)?members.slice():[target]);
+  });
+  return units;
+}
+async function runSourceWatch(){
+  sourceWatchTimer=null;
+  if(!sourceWatchEnabled())return;
+  let status=null;
+  try{ status=await fetchJSON('/api/source-watch',{cache:'no-store'}); }
+  catch(err){
+    sourceWatchState={...sourceWatchState,supported:false,reason:'request-failed',error:String(err&&err.message||err)};
+    scheduleSourceWatch(3*SOURCE_WATCH_INTERVAL_MS);
+    return;
+  }
+  sourceWatchState={...sourceWatchState,supported:Boolean(status.supported),checkedAt:status.checkedAt||new Date().toISOString(),reason:status.reason||'',error:status.error||''};
+  // ASAS Excel modunda model sorgulanmaz; yetki yoksa metadata okunamaz. İkisinde
+  // de uygulama eskisi gibi çalışır, yalnız seyrek tekrar denenir.
+  if(!status.supported){ scheduleSourceWatch(status.reason==='asas-excel'?30*60*1000:3*SOURCE_WATCH_INTERVAL_MS); return; }
+  const canAccess=area=>typeof window.BLCanAccessArea!=='function'||window.BLCanAccessArea(area);
+  const changed=(Array.isArray(status.changedTargets)?status.changedTargets:[]).filter(target=>ALL_REFRESH_TARGETS.includes(target)&&canAccess(target));
+  if(!changed.length||status.refreshRunning){ scheduleSourceWatch(); return; }
+  const blocked=autoRefreshBlockedReason();
+  if(blocked){
+    // Kullanıcının işini bölmez; kısa süre sonra yeniden dener.
+    console.info('Kaynak güncellemesi ertelendi:',blocked);
+    scheduleSourceWatch(60*1000);
+    return;
+  }
+  try{
+    for(const unit of sourceWatchUnits(changed)){
+      if(autoRefreshBlockedReason())break;
+      const ok=await loadFromServer(true,unit);
+      if(!ok)break;
+      sourceWatchState={...sourceWatchState,lastUpdateAt:new Date().toISOString()};
+    }
+  }catch(err){ console.warn('Kaynak güncellemesi yapılamadı:',err); }
+  finally{ scheduleSourceWatch(); }
+}
+function sourceWatchLabel(){
+  const en=appLang==='en';
+  if(!sourceWatchEnabled())return en?'Update when source changes: off':'Kaynak değişince güncelle: kapalı';
+  const time=value=>{const d=new Date(value);return Number.isFinite(d.getTime())?d.toLocaleTimeString(en?'en-GB':'tr-TR',{hour:'2-digit',minute:'2-digit'}):'';};
+  if(sourceWatchState.supported===false){
+    if(sourceWatchState.reason==='asas-excel')return en?'Update when source changes: needs ASAS Database mode':'Kaynak değişince güncelle: ASAS Database modu gerekir';
+    return en?'Update when source changes: model update time is not readable; use manual or periodic refresh':'Kaynak değişince güncelle: modelin güncellenme zamanı okunamıyor; elle ya da periyodik yenileyin';
+  }
+  const checked=sourceWatchState.checkedAt?time(sourceWatchState.checkedAt):'';
+  const updated=sourceWatchState.lastUpdateAt?time(sourceWatchState.lastUpdateAt):'';
+  const base=en?'Update when source changes: on':'Kaynak değişince güncelle: açık';
+  return base+(checked?(en?` · checked ${checked}`:` · son kontrol ${checked}`):'')+(updated?(en?` · updated ${updated}`:` · güncellendi ${updated}`):'');
+}
+setTimeout(()=>scheduleSourceWatch(20*1000),0);
 
 // v7.26 — Kaynak Veri şeridindeki yenileme düğmeleri kaldırıldı. Dinleyici
 // yine de KORUNUYOR (isteğe bağlı bağlama): düğme yoksa hiçbir şey yapmaz,

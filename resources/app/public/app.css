@@ -2354,14 +2354,17 @@ td.viewOnlyCell{color:var(--ink2);background:color-mix(in srgb,var(--muted-bg) 3
    değildir, bu yüzden tbtn değil kendi düşük vurgulu tipografisini kullanır. */
 .toolbarMoreLabel{flex:none;padding:6px 9px 2px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3,var(--ink2));user-select:none;}
 @keyframes sourceBackdropIn{from{opacity:0}to{opacity:1}}
-.topRefreshMenu{position:fixed;z-index:52000;width:238px;padding:5px;border:1px solid var(--line2);border-radius:var(--r-lg);background:var(--pop);box-shadow:var(--shadow-3);backdrop-filter:var(--pop-blur);-webkit-backdrop-filter:var(--pop-blur);display:flex;flex-direction:column;gap:2px;}
+.topRefreshMenu{position:fixed;z-index:52000;width:272px;padding:5px;border:1px solid var(--line2);border-radius:var(--r-lg);background:var(--pop);box-shadow:var(--shadow-3);backdrop-filter:var(--pop-blur);-webkit-backdrop-filter:var(--pop-blur);display:flex;flex-direction:column;gap:2px;}
 .topRefreshMenu button{height:32px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 9px;font-size:11.5px;font-weight:650;cursor:pointer;text-align:left;}
 .topRefreshMenu button:hover,.topRefreshMenu button:focus-visible{background:var(--hover);outline:none;}
 .topRefreshMenu button:disabled{opacity:.48;cursor:default;}
 /* v7.26 — sayfa adı solda, son güncellenme saati onun sağında. */
 .topRefreshMenu button{height:auto;min-height:34px;padding-top:4px;padding-bottom:4px;}
-.topRefreshLabel{flex:0 0 auto;}
-.topRefreshWhen{flex:1 1 auto;text-align:right;font-size:10.5px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* v20260930 — Bağlı grup satırı uzun olabilir ("Siparişler · Backlog · LFL ·
+   Fiyat & Üretici"): etiket sarar, saat ve simge menü içinde kalır. */
+.topRefreshLabel{flex:1 1 auto;min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.3;}
+.topRefreshWhen{flex:0 0 auto;max-width:48%;text-align:right;font-size:10.5px;font-weight:500;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topRefreshMenu button>svg{flex:0 0 auto;}
 .topRefreshMenu button:last-child{margin-top:3px;border-top:1px solid var(--line);border-radius:0 0 var(--r-sm) var(--r-sm);padding-top:6px;height:36px;color:var(--acc);}
 /* v7.81 — Yenileme grupları aynı menüde, kendi başlığı altında. Gruplar Veri
    Yönetimi'nde tanımlanır ama yenileme kararı burada verilir; ikinci bir
