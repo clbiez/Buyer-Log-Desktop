@@ -470,7 +470,12 @@
       render();
       /* allowFree: liste erişilemezse ya da aranan değer listede yoksa
          kullanıcı kilitlenmemeli — Enter ile elle yazabilir (§18). */
-    }, { placeholder: T('Değer ara veya yaz…', 'Search or type a value…'), allowFree: true });
+    }, {
+      placeholder: T('Değer ara veya yaz…', 'Search or type a value…'),
+      allowFree: true,
+      keepOpen: true,
+      selectedValues: condition.values,
+    });
 
   }
 

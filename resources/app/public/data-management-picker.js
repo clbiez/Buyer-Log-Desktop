@@ -33,13 +33,18 @@
    * @param {Object} options
    *   placeholder  arama kutusu metni
    *   search       false ise arama kutusu çizilmez
-   *   allowFree    true ise Enter ile yazılan metin değer olarak döner
-   *   limit        listede gösterilecek azami satır (varsayılan 300)
+   *   allowFree     true ise Enter ile yazılan metin değer olarak döner
+   *   keepOpen      true ise seçimden sonra pencere açık kalır (çoklu seçim)
+   *   selectedValues önceden seçili değerler; keepOpen ile tekrar seçimi engeller
+   *   limit         listede gösterilecek azami satır (varsayılan 300)
    */
   function open(anchor, items, onPick, options = {}) {
     close();
     const list = Array.isArray(items) ? items : [];
     const search = options.search !== false;
+    const keepOpen = options.keepOpen === true;
+    const selected = new Set((Array.isArray(options.selectedValues) ? options.selectedValues : [])
+      .map(value => String(value)));
     const limit = Number(options.limit) > 0 ? Number(options.limit) : 300;
 
     const picker = document.createElement('div');
@@ -56,9 +61,14 @@
          kullanıcının aradığı sütunu "yok" sanmasına yol açardı. */
       const shown = entries.slice(0, limit);
       listEl.innerHTML = shown.length
-        ? shown.map(entry => `<button type="button" class="dmfPickerItem" data-value="${esc(entry.value)}">
-            ${esc(entry.label)}${entry.hint ? `<span class="dmfPickerHint">${esc(entry.hint)}</span>` : ''}
-          </button>`).join('')
+        ? shown.map(entry => {
+            const value = String(entry.value == null ? '' : entry.value);
+            const isSelected = selected.has(value);
+            return `<button type="button" class="dmfPickerItem${isSelected ? ' isSelected' : ''}" data-value="${esc(value)}"
+              aria-selected="${isSelected ? 'true' : 'false'}"${isSelected && keepOpen ? ' disabled' : ''}>
+              ${esc(entry.label)}${entry.hint ? `<span class="dmfPickerHint">${esc(entry.hint)}</span>` : ''}
+            </button>`;
+          }).join('')
           + (entries.length > shown.length
             ? `<p class="dmfPickerEmpty">${esc(T(`${entries.length - shown.length} sonuç daha var — aramayı daraltın.`, `${entries.length - shown.length} more results — narrow your search.`))}</p>`
             : '')
@@ -81,6 +91,15 @@
           if (event.key !== 'Enter') return;
           const typed = field.value.trim();
           if (!typed) return;
+          if (keepOpen) {
+            if (selected.has(typed)) return;
+            selected.add(typed);
+            onPick(typed);
+            field.value = '';
+            draw(list);
+            requestAnimationFrame(() => field.focus());
+            return;
+          }
           close();
           onPick(typed);
         });
@@ -91,8 +110,19 @@
     picker.addEventListener('click', event => {
       const button = event.target.closest('[data-value]');
       if (!button) return;
+      const value = String(button.dataset.value || '');
+      if (keepOpen) {
+        if (selected.has(value)) return;
+        selected.add(value);
+        button.classList.add('isSelected');
+        button.setAttribute('aria-selected', 'true');
+        button.disabled = true;
+        onPick(value);
+        requestAnimationFrame(() => field?.focus());
+        return;
+      }
       close();
-      onPick(button.dataset.value);
+      onPick(value);
     });
 
     const outside = event => { if (!picker.contains(event.target) && event.target !== anchor) close(); };
