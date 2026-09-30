@@ -48,6 +48,7 @@
     return {
       id:qNorm(req?.id)||qId('quotation'),
       source:req?.source==='cp'?'cp':'collection',
+      origin:req?.origin==='manual-collection'?'manual-collection':'',
       createdAt:created,updatedAt:req?.updatedAt||created,
       status:req?.status==='closed'?'closed':'active',closedAt:req?.status==='closed'?qNorm(req?.closedAt||req?.updatedAt||created):'',
       ownerId,ownerName:qNorm(req?.ownerName)||qNorm(current?.displayName||current?.username||ownerId),
@@ -189,12 +190,14 @@
   function qValidPrice(value){ const n=qMoneyNumber(value); return Number.isFinite(n)&&n>0; }
 
   function qRequestTitle(req){
+    if(req?.origin==='manual-collection')return qLang('Koleksiyon · Elle Girilen Fiyatlar','Collection · Manual Prices');
     const names=[...new Set(req.manufacturers.map(m=>m.name).filter(Boolean))];
     const first=names.slice(0,2).join(', '), more=names.length>2?` +${names.length-2}`:'';
     return `${qSourceLabel(req.source)} · ${first||qLang('Üretici yok','No manufacturer')}${more}`;
   }
   function qModelCount(req){ return new Set(req.items.map(x=>x.modelKey)).size; }
   function qWorkspaceRequestTitle(req){
+    if(req?.origin==='manual-collection')return qLang('Elle Girilen Fiyatlar','Manual Prices');
     const models=[...new Set((req?.items||[]).map(item=>qNorm(item.modelCode||item.plmId||item.orderCode)).filter(Boolean))];
     if(models.length===1)return models[0];
     if(models.length>1)return `${models[0]} +${models.length-1}`;
@@ -504,6 +507,99 @@
       const saved=qReplaceRequest(data.request||req);qActiveSource=src;qActiveId=saved.id;return saved;
     }catch(err){
       if(typeof showToast==='function')showToast(qLang('Quotation kaydı oluşturulamadı: ','Quotation could not be created: ')+(err?.message||String(err)));
+      return null;
+    }
+  }
+
+
+  /* Koleksiyon'da elle girilen fiyatlar ayrı ayrı quotation oluşturmaz.
+     Kullanıcının tek "manual-collection" quotation'ı altında toplanır.
+     Mevcut gerçek quotation satırı varsa v6.34 davranışı korunur ve o satır
+     yerinde güncellenir; yalnız hiçbir mevcut satır yoksa manuel kovaya eklenir. */
+  async function recordManualCollectionPrice(row,manufacturer,{price,approved=false,_retried=false}={}){
+    await qReady;
+    if(!row)return null;
+    const raw=manufacturer&&typeof manufacturer==='object'?manufacturer:{name:manufacturer};
+    const m={name:qNorm(raw?.name),email:qNorm(raw?.email)};
+    if(!m.name)return null;
+    const rowId=Number(row.id);
+    if(!Number.isFinite(rowId))return null;
+    const displayPrice=qValidPrice(price)?qMoneyDisplay(price):(qValidPrice(row.pricing?.[m.name])?qMoneyDisplay(row.pricing[m.name]):'');
+    if(!displayPrice)return null;
+
+    // Başka bir quotation içinde bu model + üretici zaten varsa yeni manuel
+    // satır açma; kullanıcının düzenlediği gerçek kaydı yerinde güncelle.
+    const existing=findCollectionLine(rowId,m.name);
+    if(existing){
+      const updated=updateCollectionLine(rowId,m.name,{price:displayPrice,approved:Boolean(approved)});
+      if(updated){
+        await qFlushSaves();
+        const req=qLoad().requests.find(r=>r.id===existing.requestId)||null;
+        return {request:req,created:false,added:false,updatedExisting:true};
+      }
+    }
+
+    // Çoklu pencere / cihazda mümkün olduğunca güncel ortak durumu gör.
+    await qHydrateShared(true);
+    let bucket=qLoad().requests.find(req=>req?.source==='collection'
+      &&req?.origin==='manual-collection'
+      &&req?.ownerId===qCurrentUserId()
+      &&qCanEditRequest(req));
+
+    const buildItem=()=>({
+      id:qId('manual-price'),modelKey:`kol:${rowId}`,rowId,
+      orderCode:qNorm(row._sourceOrderCode||row['Order Code']),plmId:qNorm(row.plmId||row['PLM ID']),modelCode:qNorm(row.modelKod||row['Model Name']),license:qNorm(row.lisans||row['License']),
+      category:qNorm(row.urunTipi||row['Category']),colour:qNorm(row.colour||row['Colour']),colourCode:qNorm(row.colourCode||row['C.Code']||row['Colour Code']),fabric:qFabricValue(row),season:qNorm(row.season||row['Season']),
+      picture:qCollectionImageSrc(row),inStoreMonth:qNorm(row.inStoreMonth||row['In Store Month']||row['In-Store (Model Budget)']||row.inStore),quantity:Number.isFinite(qMoneyNumber(row.quantity!=null?row.quantity:row['Order Quantity']))?qMoneyNumber(row.quantity!=null?row.quantity:row['Order Quantity']):null,targetPrice:qNorm(row.targetPrice||row['Supp. FOB']),
+      manufacturer:m.name,manufacturerEmail:m.email,price:displayPrice,approved:Boolean(approved),dropped:false,
+    });
+
+    if(!bucket){
+      const created=qNow(),user=qCurrentUser();
+      const req={
+        id:qId('quotation-manual'),source:'collection',origin:'manual-collection',
+        createdAt:created,updatedAt:created,status:'active',closedAt:'',
+        ownerId:qCurrentUserId(),ownerName:qNorm(user?.displayName||user?.username),
+        editorIds:[],note:'',capacityConfirmed:false,manufacturers:[m],
+        items:[buildItem()],sortOrder:Date.now()
+      };
+      try{
+        const data=await qQueue(()=>qApi('/api/quotations',{method:'POST',body:JSON.stringify(req)}));
+        const saved=qReplaceRequest(data.request||req);qActiveSource='collection';qActiveId=saved.id;
+        return {request:saved,created:true,added:true,updatedExisting:false};
+      }catch(err){
+        if(err?.status===409&&!_retried){
+          await qHydrateShared(true);
+          return recordManualCollectionPrice(row,m,{price:displayPrice,approved,_retried:true});
+        }
+        if(typeof showToast==='function')showToast(qLang('Manuel quotation kaydı oluşturulamadı: ','Manual quotation could not be created: ')+(err?.message||String(err)));
+        return null;
+      }
+    }
+
+    const sameName=(a,b)=>qNorm(a).toLocaleLowerCase('tr-TR')===qNorm(b).toLocaleLowerCase('tr-TR');
+    const mfr=bucket.manufacturers.find(item=>sameName(item?.name,m.name));
+    if(!mfr)bucket.manufacturers.push(m);
+    else if(!qNorm(mfr.email)&&m.email)mfr.email=m.email;
+
+    let line=(bucket.items||[]).find(item=>Number(item?.rowId)===rowId&&sameName(item?.manufacturer,m.name));
+    if(line){
+      const fresh=buildItem(),keepId=line.id;
+      Object.assign(line,fresh,{id:keepId,dropped:false});
+    }else{
+      line=buildItem();bucket.items.push(line);
+    }
+    bucket.updatedAt=qNow();
+    try{
+      const data=await qQueue(()=>qApi(`/api/quotations/${encodeURIComponent(bucket.id)}`,{method:'PUT',body:JSON.stringify(bucket)}));
+      const saved=qReplaceRequest(data.request||bucket);qActiveSource='collection';qActiveId=saved.id;
+      return {request:saved,created:false,added:true,updatedExisting:false};
+    }catch(err){
+      if(err?.status===409&&!_retried){
+        await qHydrateShared(true);
+        return recordManualCollectionPrice(row,m,{price:displayPrice,approved,_retried:true});
+      }
+      if(typeof showToast==='function')showToast(qLang('Manuel quotation kaydı güncellenemedi: ','Manual quotation could not be updated: ')+(err?.message||String(err)));
       return null;
     }
   }
@@ -2364,5 +2460,5 @@
     return true;
   }
 
-  window.BL_QUOTATIONS={openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
+  window.BL_QUOTATIONS={openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
 })();
