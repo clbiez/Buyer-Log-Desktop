@@ -396,6 +396,15 @@ app.get('/giris.css', (_req, res) => {
   res.set('Cache-Control', 'no-cache');
   res.type('text/css').sendFile(path.join(__dirname, '..', 'public', 'giris.css'));
 });
+// Kullanıcı seçimi ekranı da TR/EN dil bütünlüğü katmanını kullanır (sunucudan gelen
+// Shared Sync / giriş mesajları seçili dilde gösterilir). Yalnız arayüz sözlüğü ve
+// çeviri motorudur; iş verisi taşımaz.
+for (const file of ['i18n-dictionary.js', 'i18n-runtime.js']) {
+  app.get('/' + file, (_req, res) => {
+    res.set('Cache-Control', 'no-cache');
+    res.type('application/javascript').sendFile(path.join(__dirname, '..', 'public', file));
+  });
+}
 // Uygulama simgesi giriş/kullanıcı seçimi ekranında ve favicon'da oturumdan önce
 // görünür; iş verisi taşımayan bu iki sabit görsel aynı gerekçeyle açıktır.
 app.get(['/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-mark.png'], (req, res) => {

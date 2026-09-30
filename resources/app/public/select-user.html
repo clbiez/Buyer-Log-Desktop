@@ -6,6 +6,8 @@
 <meta name="color-scheme" content="light">
 <title>Buyer Log — Giriş</title>
 <link rel="stylesheet" href="/giris.css">
+<script src="/i18n-dictionary.js"></script>
+<script src="/i18n-runtime.js"></script>
 <link rel="icon" type="image/png" sizes="128x128" href="/icons/icon-mark.png">
 </head>
 <body>
@@ -185,6 +187,8 @@
 
   function translate() {
     document.documentElement.lang = lang;
+    // Sunucudan gelen Shared Sync / giriş mesajları da seçili dile tamamlanır.
+    try { window.BLI18n && window.BLI18n.setLanguage(lang); } catch (_) {}
     $('loginTitle').textContent = tr('Hesabınıza giriş yapın', 'Sign in to your account');
     $('subtitle').textContent = tr('Buyer Log çalışma alanınıza devam etmek için kullanıcı hesabınızı seçin.', 'Select your user account to continue to your Buyer Log workspace.');
     $('brandText').textContent = tr('Sipariş, fiyat, onay ve koleksiyon süreçleri için tek çalışma alanı.', 'One workspace for order, pricing, approval and collection workflows.');
@@ -687,7 +691,7 @@
         label:tr('Koleksiyon görselleri', 'Collection images'),
         detail:data.offline
           ? tr('Çevrimdışı', 'Offline')
-          : missing ? `${completed}/${Number(images.requested)||0} · ${missing} bekliyor` : `${completed}/${Number(images.requested)||0}`,
+          : missing ? `${completed}/${Number(images.requested)||0} · ${missing} ${tr('bekliyor', 'pending')}` : `${completed}/${Number(images.requested)||0}`,
       };
       hubStatus = {
         ...(hubStatus || {}), status:data.offline ? 'offline' : 'ready', loginAllowed:true,
