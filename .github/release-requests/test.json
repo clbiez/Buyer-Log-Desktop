@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.175",
-  "commit_sha": "cb3520506e38af0e30c59e9837b44a98d981b418",
-  "release_notes": "Buyer Log 7.0.175 TEST: Claude ve ChatGPT güncellemeleri birleştirildi. Hesaplanan sütunlar yeniden adlandırmalara dayanıklı kalıcı referanslar kullanıyor; Calculated Column akışı sadeleştirildi, formül sözlüğü/analizi ve AI handoff eklendi; EN/TR sütun adları korunuyor. PLM translation remembered-choice ve sütun display-name/persistence iyileştirmeleri dahil. Çalışma alanı sekme çubuğundaki BL logosu kaldırıldı; Capacity Request Excel seçim yokken disabled/soluk; CP/Orders seçim filtresi ve Collection toolbar/hiyerarşi düzenlemeleri dahil. Full Buyer Log regression suite GitHub Actions üzerinden başarıyla geçti. STABLE kanalına terfi edilmedi."
+  "version": "7.0.176",
+  "commit_sha": "4663b83198a5c73c1a38fb7ee826eb7ac53ea90b",
+  "release_notes": "Buyer Log 7.0.176: EN/TR dil bütünlüğü — EN kipinde Türkçe, TR kipinde İngilizce kalan arayüz metinleri, tarih seçici, sunucu hata/durum mesajları ve giriş ekranı mesajları seçili dile çevrildi; dil değiştirince eski dilde kalan ekranlar düzeltildi. Otomasyonlar: hazır senaryolar, Hazır mı? paneli, alan denetimi ve AI ile yaz. Manuel fiyat regresyon testi yeni ortak Quotations davranışına hizalandı. Tam regresyon paketi yerelde geçti."
 }
