@@ -198,7 +198,8 @@ test('Automations UI exposes the AI guide, analysis, preview and disabled-draft 
   const runtime = fs.readFileSync(path.join(__dirname, '..', 'public', 'perf-runtime.js'), 'utf8');
   const app = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
   for (const endpoint of ['/api/automations/ai/guide', '/api/automations/ai/analyze', '/api/automations/ai/preview', '/api/automations/ai/import']) assert.match(ui + runtime, new RegExp(endpoint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  assert.match(runtime, /automations:\['automations\.js','ai-automation-import\.js'\]/);
+  // v7.175 — saf asistan modülü iki görünüm dosyasından ÖNCE yüklenir.
+  assert.match(runtime, /automations:\['automation-assistant\.js','automations\.js','ai-automation-import\.js'\]/);
   assert.match(app, /initAiAutomationImport/);
   assert.match(ui, /Create disabled draft|Kapalı taslak oluştur/);
 });

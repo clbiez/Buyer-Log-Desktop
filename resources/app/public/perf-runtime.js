@@ -99,7 +99,9 @@
   const features={
     versionHistory:['version-history.js'],
     openCosting:['open-costing.js'],
-    automations:['automations.js','ai-automation-import.js'],
+    // v7.175 — otomasyon asistanı (şablonlar, "Hazır mı?", AI yönergesi) saf
+    // yardımcıdır; iki görünüm dosyası da onu window'dan okur, bu yüzden önce.
+    automations:['automation-assistant.js','automations.js','ai-automation-import.js'],
     lfl:['lfl.js?rev=2'],
     collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=4','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
     // v9.46 — Backlog teslimat riski analizi. Sıra önemli: iki saf motor
