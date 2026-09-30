@@ -322,7 +322,7 @@
   const DSL_DICTIONARY = [
     { cat: 'structure', tr: 'İskelet', en: 'Skeleton', items: [
       { syntax: 'BUYERLOG_AUTOMATION 1.0', tr: 'Dil sürümü — ilk satır.', en: 'Language version — first line.' },
-      { syntax: 'NAME "Geciken siparişler"', tr: 'Otomasyonun adı.', en: 'Automation name.' },
+      { syntax: 'NAME "Geciken siparişler"', syntaxEn: 'NAME "Late orders"', tr: 'Otomasyonun adı.', en: 'Automation name.' },
       { syntax: 'SOURCE "backlog"', tr: 'Hangi veri: cp, orders, backlog, lfl, collection, asas, ias, intake.', en: 'Which data: cp, orders, backlog, lfl, collection, asas, ias, intake.' },
     ] },
     { cat: 'trigger', tr: 'Ne zaman? (TRIGGER … END)', en: 'When? (TRIGGER … END)', items: [
@@ -332,17 +332,17 @@
       { syntax: 'INTERVAL 4 HOURS', tr: 'Her N saatte bir.', en: 'Every N hours.' },
     ] },
     { cat: 'condition', tr: 'Hangi kayıtlar? (WHEN … END)', en: 'Which records? (WHEN … END)', items: [
-      { syntax: '[Üretici] = "ABC Tekstil"', tr: 'Eşittir (= ya da !=, eşit değil).', en: 'Equals (= or != for not equal).' },
-      { syntax: '[Sipariş Adedi] >= 1000', tr: 'Sayı karşılaştırma: > >= < <=.', en: 'Number comparison: > >= < <=.' },
-      { syntax: '[Model Adı] CONTAINS "ELBİSE"', tr: 'İçerir (NOT_CONTAINS: içermez). Büyük/küçük harf fark etmez.', en: 'Contains (NOT_CONTAINS: does not). Case-insensitive.' },
-      { syntax: '[Sezon] IN ("SS26", "AW26")', tr: 'Listedekilerden biri.', en: 'One of the list.' },
-      { syntax: '[Sipariş Adedi] BETWEEN 100 AND 500', tr: 'İki sayı arasında (sınırlar dâhil).', en: 'Between two numbers (inclusive).' },
-      { syntax: 'IS_BLANK([Retail Tarihi])', tr: 'Boş (IS_NOT_BLANK: dolu).', en: 'Empty (IS_NOT_BLANK: not empty).' },
+      { syntax: '[Üretici] = "ABC Tekstil"', syntaxEn: '[Manufacturer] = "ABC Textile"', tr: 'Eşittir (= ya da !=, eşit değil).', en: 'Equals (= or != for not equal).' },
+      { syntax: '[Sipariş Adedi] >= 1000', syntaxEn: '[Order Quantity] >= 1000', tr: 'Sayı karşılaştırma: > >= < <=.', en: 'Number comparison: > >= < <=.' },
+      { syntax: '[Model Adı] CONTAINS "ELBİSE"', syntaxEn: '[Model Name] CONTAINS "DRESS"', tr: 'İçerir (NOT_CONTAINS: içermez). Büyük/küçük harf fark etmez.', en: 'Contains (NOT_CONTAINS: does not). Case-insensitive.' },
+      { syntax: '[Sezon] IN ("SS26", "AW26")', syntaxEn: '[Season] IN ("SS26", "AW26")', tr: 'Listedekilerden biri.', en: 'One of the list.' },
+      { syntax: '[Sipariş Adedi] BETWEEN 100 AND 500', syntaxEn: '[Order Quantity] BETWEEN 100 AND 500', tr: 'İki sayı arasında (sınırlar dâhil).', en: 'Between two numbers (inclusive).' },
+      { syntax: 'IS_BLANK([Retail Tarihi])', syntaxEn: 'IS_BLANK([Retail Date])', tr: 'Boş (IS_NOT_BLANK: dolu).', en: 'Empty (IS_NOT_BLANK: not empty).' },
       { syntax: 'DAYS_UNTIL([Ex-Factory]) BETWEEN 0 AND 7', tr: 'Tarihe bugünden kaç gün kaldı; her çalışmada yeniden hesaplanır.', en: 'Days from today until the date; recalculated on every run.' },
     ] },
     { cat: 'action', tr: 'Ne yapılsın? (ACTIONS … END)', en: 'What to do? (ACTIONS … END)', items: [
-      { syntax: 'SEND_EMAIL\n  RECIPIENT_GROUP ASK_USER\n  SUBJECT "Riskli siparişler"\n  INCLUDE_MATCHING_ROWS TRUE\nEND', tr: 'E-posta (taslak). Alıcı grubu Buyer Log’da seçilir.', en: 'Email (draft). The recipient group is chosen in Buyer Log.' },
-      { syntax: 'SHOW_REPORT\n  TITLE "Özet"\nEND', tr: 'Sonucu Buyer Log içinde rapor olarak göster.', en: 'Show the result as a report inside Buyer Log.' },
+      { syntax: 'SEND_EMAIL\n  RECIPIENT_GROUP ASK_USER\n  SUBJECT "Riskli siparişler"\n  INCLUDE_MATCHING_ROWS TRUE\nEND', syntaxEn: 'SEND_EMAIL\n  RECIPIENT_GROUP ASK_USER\n  SUBJECT "Orders at risk"\n  INCLUDE_MATCHING_ROWS TRUE\nEND', tr: 'E-posta (taslak). Alıcı grubu Buyer Log’da seçilir.', en: 'Email (draft). The recipient group is chosen in Buyer Log.' },
+      { syntax: 'SHOW_REPORT\n  TITLE "Özet"\nEND', syntaxEn: 'SHOW_REPORT\n  TITLE "Summary"\nEND', tr: 'Sonucu Buyer Log içinde rapor olarak göster.', en: 'Show the result as a report inside Buyer Log.' },
       { syntax: 'OPEN_PAGE\n  MODULE cp\nEND', tr: 'Bir Buyer Log sayfasını aç.', en: 'Open a Buyer Log page.' },
       { syntax: 'REFRESH_SOURCE\n  SOURCE cp\nEND', tr: 'Veriyi yenile (cp, orders, backlog, lfl).', en: 'Refresh data (cp, orders, backlog, lfl).' },
     ] },
@@ -366,6 +366,14 @@
     '  END',
     'END',
   ].join('\n');
+  // EN kipinde yönerge ve sözlük aynı örneği İngilizce alan adlarıyla gösterir
+  // (alanların EN etiketleri de sunucu doğrulamasından geçer).
+  const DSL_EXAMPLE_EN = DSL_EXAMPLE
+    .replace('NAME "Ex-factory’si yaklaşanlar"', 'NAME "Ex-factory coming up"')
+    .replace('[Durum] != "Yüklendi"', '[Status] != "Shipped"')
+    .replace('SUBJECT "Önümüzdeki 7 gün yüklenecekler"', 'SUBJECT "Shipping in the next 7 days"');
+  const dslSyntax = (item, lang) => (lang === 'en' && item.syntaxEn) || item.syntax;
+  const dslExample = lang => (lang === 'en' ? DSL_EXAMPLE_EN : DSL_EXAMPLE);
 
   /* ---------------- AI cevabını okuma ---------------- */
 
@@ -478,10 +486,10 @@
     lines.push('', pick(lang, 'SÖZLÜK', 'DICTIONARY'));
     DSL_DICTIONARY.forEach(section => {
       lines.push(`# ${pick(lang, section.tr, section.en)}`);
-      section.items.forEach(item => lines.push(`- ${item.syntax.replace(/\n\s*/g, ' / ')} — ${pick(lang, item.tr, item.en)}`));
+      section.items.forEach(item => lines.push(`- ${dslSyntax(item, lang).replace(/\n\s*/g, ' / ')} — ${pick(lang, item.tr, item.en)}`));
     });
     if ((model.actions || []).length) lines.push(`- ${pick(lang, 'Geçerli eylemler', 'Valid actions')}: ${(model.actions || []).map(item => `${item.id} (${(item.parameters || []).join(', ')})`).join('; ')}`);
-    lines.push('', pick(lang, 'ÖRNEK', 'EXAMPLE'), '```', DSL_EXAMPLE, '```');
+    lines.push('', pick(lang, 'ÖRNEK', 'EXAMPLE'), '```', dslExample(lang), '```');
     const fields = fieldsForSource(model, source);
     if (source) {
       lines.push('', pick(lang, `KULLANILACAK VERİ: SOURCE "${source}" — ALANLAR (köşeli parantezle, aynen böyle yaz)`, `DATA TO USE: SOURCE "${source}" — FIELDS (write exactly like this, in brackets)`));
@@ -502,7 +510,7 @@
   }
 
   return {
-    TEMPLATES, OPERATOR_WORDS, NO_VALUE_OPERATORS, DSL_RULES, DSL_DICTIONARY, DSL_EXAMPLE,
+    TEMPLATES, OPERATOR_WORDS, NO_VALUE_OPERATORS, DSL_RULES, DSL_DICTIONARY, DSL_EXAMPLE, DSL_EXAMPLE_EN, dslSyntax, dslExample,
     closest, valueLabel, describeFilter, describeSchedule, summarize, readiness,
     extractAutomationCode, autoFixCode, explainDslError, fieldsForSource, buildAutomationPrompt,
   };

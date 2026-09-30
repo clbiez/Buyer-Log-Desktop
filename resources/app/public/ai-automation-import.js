@@ -256,8 +256,8 @@
     const item = (syntax, text) => `<div class="fcDictItem" data-ai-dict-item="${esc(`${syntax} ${text}`.toLocaleLowerCase('tr-TR'))}"><div class="fcDictTop"><code>${esc(syntax)}</code></div><div class="fcDictText">${esc(text)}</div></div>`;
     return `<input type="search" class="fcDictSearch" data-ai-dict-search placeholder="${esc(tr('Ara: tarih, e-posta, içerir, haftalık…', 'Search: date, email, contains, weekly…'))}" autocomplete="off">
       <div class="fcDictGroup"><div class="fcDictHead">${esc(tr('Nasıl çalışır?', 'How does it work?'))}</div><ol class="fcRules">${A.DSL_RULES.map(rule => `<li>${esc(tr(rule.tr, rule.en))}</li>`).join('')}</ol></div>
-      <div class="fcDictGroup"><div class="fcDictHead">${esc(tr('Tam örnek', 'Complete example'))}</div><pre class="aiDictExample">${esc(A.DSL_EXAMPLE)}</pre></div>
-      ${A.DSL_DICTIONARY.map(section => `<div class="fcDictGroup"><div class="fcDictHead">${esc(tr(section.tr, section.en))}</div>${section.items.map(entry => item(entry.syntax, tr(entry.tr, entry.en))).join('')}</div>`).join('')}
+      <div class="fcDictGroup"><div class="fcDictHead">${esc(tr('Tam örnek', 'Complete example'))}</div><pre class="aiDictExample">${esc(A.dslExample ? A.dslExample(lang()) : A.DSL_EXAMPLE)}</pre></div>
+      ${A.DSL_DICTIONARY.map(section => `<div class="fcDictGroup"><div class="fcDictHead">${esc(tr(section.tr, section.en))}</div>${section.items.map(entry => item(A.dslSyntax ? A.dslSyntax(entry, lang()) : entry.syntax, tr(entry.tr, entry.en))).join('')}</div>`).join('')}
       <div class="fcDictGroup"><div class="fcDictHead">${esc(tr(`Alanlar — ${source || 'cp'}`, `Fields — ${source || 'cp'}`))}</div>${fields.length ? fields.map(field => item(`[${(field.label && (lang() === 'en' ? field.label.en : field.label.tr)) || field.id}]`, `${field.type || ''} · id: ${field.id}`)).join('') : `<p class="aiNote">${esc(tr('Alan listesi yüklenemedi.', 'The field list could not be loaded.'))}</p>`}</div>`;
   }
   function renderDictionary(modal) {

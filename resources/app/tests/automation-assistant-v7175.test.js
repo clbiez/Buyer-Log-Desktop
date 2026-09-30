@@ -278,3 +278,21 @@ test('v7.175 · AI penceresi: yaz → yönergeyi kopyala → yapıştır; kod ay
   assert.match(AI_UI, /window\.BLAiAutomationImport = \{ open: openModal \}/);
   assert.match(AI_UI, /hiçbir sipariş, fiyat, tedarikçi ya da e-posta adresi eklenmez/);
 });
+
+test('v7.176 · EN kipinde sözlük ve örnek kod İngilizce alan adlarıyla gelir ve sunucu doğrulamasından geçer', () => {
+  const model = registry.getCapabilityModel();
+  assert.deepEqual(language.validate(language.parse(A.DSL_EXAMPLE_EN), model).errors, []);
+  assert.doesNotMatch(A.DSL_EXAMPLE_EN, /[çğıİöşüÇĞŞÜÖ]/);
+  const conditions = A.DSL_DICTIONARY.find(section => section.cat === 'condition').items;
+  for (const item of conditions) {
+    const syntax = A.dslSyntax(item, 'en');
+    assert.doesNotMatch(syntax, /[çğıİöşüÇĞŞÜÖ]/, syntax);
+    const code = A.DSL_EXAMPLE_EN.replace(/WHEN\n[\s\S]*?\nEND/, `WHEN\n  ${syntax}\nEND`);
+    assert.deepEqual(language.validate(language.parse(code), model).errors, [], syntax);
+  }
+  for (const section of A.DSL_DICTIONARY) for (const item of section.items) assert.doesNotMatch(A.dslSyntax(item, 'en'), /[çğıİöşüÇĞŞÜÖ]/, item.syntax);
+  const prompt = A.buildAutomationPrompt({ lang: 'en', model, source: 'cp', request: 'Send late orders every Monday' });
+  assert.match(prompt, /\[Status\] != "Shipped"/);
+  assert.doesNotMatch(prompt, /Geciken siparişler|Yüklendi|Riskli siparişler/);
+  assert.match(AI_UI, /A\.dslExample\(lang\(\)\)/);
+});
