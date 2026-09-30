@@ -644,9 +644,15 @@
         <button type="button" class="pricingRuleIconBtn" data-fc-close aria-label="${esc(T('Kapat', 'Close'))}">✕</button>
       </div>
       <div class="fcBody">
-        <label class="fcField">${esc(T('Sütun başlığı', 'Column heading'))}
-          <input type="text" data-fc-label maxlength="60" value="${esc(draft.label)}" placeholder="${esc(T('Örn. Üretim Süresi (gün)', 'e.g. Lead time (days)'))}" autocomplete="off">
-        </label>
+        <!-- Başlık iki dilde girilir; formül referansları için kimlik TR (yoksa EN) başlıktır. -->
+        <div class="fcFormatRow">
+          <label class="fcField">${esc(T('İngilizce başlık (EN)', 'English heading (EN)'))}
+            <input type="text" data-fc-label-en maxlength="60" value="${esc(draft.labelEn || draft.label)}" placeholder="${esc(T('Örn. Lead time (days)', 'e.g. Lead time (days)'))}" autocomplete="off">
+          </label>
+          <label class="fcField">${esc(T('Türkçe başlık (TR)', 'Turkish heading (TR)'))}
+            <input type="text" data-fc-label maxlength="60" value="${esc(draft.labelTr || draft.label)}" placeholder="${esc(T('Örn. Üretim Süresi (gün)', 'e.g. Üretim Süresi (gün)'))}" autocomplete="off">
+          </label>
+        </div>
         <!-- v7.42 — ÜST BAŞLIK (BANT) SEÇİMİ. Sütun, seçilen grubun sonuna
              taşınır; bant birleşmesi bitişikliğe bağlı olduğu için taşımadan
              "Order Info" demek ikinci bir Order Info bandı üretirdi. -->
@@ -702,6 +708,7 @@
     document.body.appendChild(modal);
 
     const labelInput = modal.querySelector('[data-fc-label]');
+    const labelEnInput = modal.querySelector('[data-fc-label-en]');
     const formatInput = modal.querySelector('[data-fc-format]');
     const decimalsInput = modal.querySelector('[data-fc-decimals]');
     const groupInput = modal.querySelector('[data-fc-group]');
@@ -829,7 +836,9 @@
 
     const currentDraft = () => ({
       ...draft,
-      label: clean(labelInput.value),
+      label: clean(labelInput.value) || clean(labelEnInput.value),
+      labelTr: clean(labelInput.value),
+      labelEn: clean(labelEnInput.value),
       formula: builderFormula(builder),
       format: formatInput.value,
       decimals: clean(decimalsInput.value),
@@ -890,7 +899,7 @@
         target.classList.add('active');
         renderPreview(); return;
       }
-      if (target.closest('[data-fc-label],[data-fc-decimals]')) renderPreview();
+      if (target.closest('[data-fc-label],[data-fc-label-en],[data-fc-decimals]')) renderPreview();
     });
     modal.addEventListener('change', event => {
       const target = event.target;
@@ -1026,7 +1035,7 @@
     renderBuild();
     renderPreview();
     renderSourceAdd();
-    setTimeout(() => labelInput.focus(), 0);
+    setTimeout(() => (en() ? labelEnInput : labelInput).focus(), 0);
   }
 
   function rowLabel(tableKey, row, index) {

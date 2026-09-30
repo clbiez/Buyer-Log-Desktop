@@ -211,6 +211,8 @@ function build(items, options = {}) {
       cpColumns: ((mappingSet && mappingSet.extraColumns) || []).map(column => ({
         id: column.id,
         label: column.label,
+        labelEn: column.labelEn || '',
+        labelTr: column.labelTr || '',
         column: column.name,
         table: column.table || '',
         kind: column.kind || 'column',

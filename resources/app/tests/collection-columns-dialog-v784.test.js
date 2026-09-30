@@ -8,10 +8,17 @@ const path = require('node:path');
 const app = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
 const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
 
+function extractOpenColumnNameDialog() {
+  const start = app.indexOf('function openColumnNameDialog(');
+  return app.slice(start, app.indexOf('async function columnSourceRows(', start));
+}
+
 test('Koleksiyon özel sütun adları uygulama içi metin penceresinden alınır', () => {
   const section = app.slice(app.indexOf('async function kolAddCustomColumn'), app.indexOf('let kolActiveImgRowId'));
-  assert.match(section, /openHorizonTextInput\(\{[\s\S]*?title:appLang==='en'\?'Add column':'Sütun ekle'/);
-  assert.match(section, /openHorizonTextInput\(\{[\s\S]*?title:appLang==='en'\?'Rename column':'Sütunu yeniden adlandır'/);
+  // v7.0.175: ad EN/TR olarak aynı uygulama içi pencere ailesinden (openColumnNameDialog) alınır.
+  assert.match(section, /promptBilingualColumnName\(\{[\s\S]*?title:appLang==='en'\?'Add column':'Sütun ekle'/);
+  assert.match(section, /promptBilingualColumnName\(\{[\s\S]*?title:appLang==='en'\?'Rename column':'Sütunu yeniden adlandır'/);
+  assert.doesNotMatch(extractOpenColumnNameDialog(), /prompt\(/);
   assert.doesNotMatch(section, /prompt\(/, 'Sütunlar akışı Electron desteklemeyen prompt kullanmamalı');
   assert.match(section, /void kolAddCustomColumn\(panelEl\)/, 'Ekle düğmesi asenkron giriş akışını başlatmalı');
 });

@@ -138,7 +138,8 @@ test('addCpNoteColumn/renameCpNoteColumn/removeCpNoteColumn mevcut PUT akışın
   assert.match(APP, /fetch\('\/api\/note-columns',\{method:'PUT'/);
   const add = extractFunction(APP, 'addCpNoteColumn');
   assert.doesNotMatch(add, /\b(?:window\.)?prompt\s*\(/);
-  assert.match(add, /await openHorizonTextInput\(/);
+  // v7.0.175: EN/TR başlık diyaloğu da uygulama içi modaldır (yerel prompt yok).
+  assert.match(add, /await promptBilingualColumnName\(/);
   assert.match(add, /saveCpNoteColumnDefs\(/);
   const remove = extractFunction(APP, 'removeCpNoteColumn');
   assert.match(remove, /Values entered in this column will be lost/);

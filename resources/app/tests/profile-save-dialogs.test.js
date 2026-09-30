@@ -34,8 +34,9 @@ test('CP/Orders note-column naming also avoids prompt()', () => {
   const rename = block('async function renameCpNoteColumn', 'async function removeCpNoteColumn');
   assert.doesNotMatch(add, /\b(?:window\.)?prompt\s*\(/);
   assert.doesNotMatch(rename, /\b(?:window\.)?prompt\s*\(/);
-  assert.match(add, /await openHorizonTextInput\(/);
-  assert.match(rename, /await openHorizonTextInput\(/);
+  // v7.0.175: not sütunu adı EN/TR uygulama içi pencereden (openColumnNameDialog) alınır.
+  assert.match(add, /await promptBilingualColumnName\(/);
+  assert.match(rename, /await promptBilingualColumnName\(/);
 });
 
 test('main CP/Collection/Orders runtime contains no prompt() calls', () => {

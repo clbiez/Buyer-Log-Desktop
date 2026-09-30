@@ -2218,6 +2218,23 @@ td.viewOnlyCell{color:var(--ink2);background:color-mix(in srgb,var(--muted-bg) 3
 .colPanelDrop:hover{border-color:var(--danger);color:var(--danger);}
 .colPanelAdd{display:block;width:100%;margin-top:6px;padding:6px 8px;border:1px dashed var(--line2);border-radius:var(--r-sm);background:transparent;color:var(--muted);font-size:11.5px;cursor:pointer;}
 .colPanelAdd:hover{border-color:var(--acc);color:var(--ink);}
+/* Sütun EN/TR adı: sistem sütunlarında kalem düğmesi; kişisel ad verilmiş
+   sütunda düğme sürekli görünür ve ad vurgulanır. */
+.colPanelEdit{display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--muted);width:20px;height:20px;flex:0 0 20px;padding:0;cursor:pointer;opacity:0;margin-left:auto;}
+.colPanelEdit .ic{width:12px;height:12px;}
+.colPanelItem:hover .colPanelEdit,.colPanelEdit:focus-visible,.colPanelItem.hasUserLabel .colPanelEdit{opacity:1;}
+.colPanelEdit:hover{border-color:var(--acc);color:var(--acc-ink);background:var(--card);}
+.colPanelItem.hasUserLabel .colPanelName{color:var(--acc-ink);}
+.columnNameCard{width:min(500px,calc(100vw - 28px));}
+.columnNameBody input+label{margin-top:6px;}
+.columnNameHint{margin:4px 0 0;font-size:11px;color:var(--muted);}
+.columnNameSource{margin-top:10px;padding:10px 12px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--acc-bg);display:flex;flex-direction:column;gap:5px;}
+.columnNameSourceTitle{display:flex;align-items:center;gap:6px;font-size:11.4px;font-weight:650;color:var(--ink);}
+.columnNameSourceTitle .ic{width:14px;height:14px;color:var(--muted);}
+.columnNameSourceRow{display:grid;grid-template-columns:minmax(96px,auto) 1fr;gap:8px;font-size:11.3px;color:var(--muted);align-items:baseline;}
+.columnNameSourceRow b{font-weight:600;color:var(--ink);}
+.columnNameSourceRow code{font:500 11px/1.4 var(--mono);color:var(--ink);word-break:break-word;}
+.columnNameStatus{font-size:11.3px;color:var(--danger);}
 
 /* v3.59 — hedef başına kapsamlar */
 .modelConnScope{border:1px solid var(--line2);border-radius:var(--r-sm);padding:9px;display:flex;flex-direction:column;gap:8px;}

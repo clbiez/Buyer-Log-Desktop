@@ -532,6 +532,16 @@ function replaceFreightRates(value, expectedRevision = null) {
 }
 // Kullanıcı tanımlı boş not sütunları (Packet 9). normalizeCpModelColumns ile
 // aynı desen: id temizlenir, ad ve id çakışması elenir, dizi sınırlanır.
+// Sonradan eklenen sütunların isteğe bağlı EN/TR görünen adları. `label`
+// kimlik olarak kalır; boş dil alanı kaydedilmez.
+function bilingualColumnLabels(item, max) {
+  const out = {};
+  for (const key of ['labelEn', 'labelTr']) {
+    const value = String(item && item[key] != null ? item[key] : '').replace(/\s+/g, ' ').trim().slice(0, max);
+    if (value) out[key] = value;
+  }
+  return out;
+}
 function normalizeNoteColumnDefs(raw) {
   const seen = new Set(), labels = new Set(), out = [];
   for (const value of Array.isArray(raw) ? raw : []) {
@@ -542,7 +552,7 @@ function normalizeNoteColumnDefs(raw) {
     const key = id.toLowerCase(), labelKey = label.toLocaleLowerCase('tr');
     if (!label || seen.has(key) || labels.has(labelKey)) continue;
     seen.add(key); labels.add(labelKey);
-    out.push({ id, label, group: String(item.group == null ? '' : item.group).replace(/\s+/g, ' ').trim().slice(0, 40) });
+    out.push({ id, label, ...bilingualColumnLabels(item, 80), group: String(item.group == null ? '' : item.group).replace(/\s+/g, ' ').trim().slice(0, 40) });
     if (out.length >= 40) break;
   }
   return out;
@@ -1032,7 +1042,7 @@ function normalizeCpModelColumns(raw) {
     if (!label || !entry || !entry.name || seen.has(key) || labels.has(labelKey)) continue;
     seen.add(key); labels.add(labelKey);
     out.push({
-      id, label, header: `__CPX_${id}`,
+      id, label, ...bilingualColumnLabels(item, 120), header: `__CPX_${id}`,
       table: entry.table || '', name: entry.name, kind: entry.kind === 'measure' ? 'measure' : 'column',
       folder: entry.folder || '',
       // v7.42: tablo üstündeki başlık bandı (kullanıcı seçer). Boşsa arayüz eski
