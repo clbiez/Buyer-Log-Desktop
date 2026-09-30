@@ -5427,3 +5427,10 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .aiFound{display:flex;flex-direction:column;gap:2px;font-size:10.3px;color:var(--green);}
 .aiDict [data-ai-dict-item][hidden]{display:none;}
 @media(max-width:820px){.autoGuide{grid-template-columns:1fr;}.autoTemplateMore .autoPurposeGrid{grid-template-columns:1fr;}}
+
+/* v7.178 — Koşula göre yaz: birden çok kural ("değilse eğer"). Her kural ayrı
+   bir kutu; kurallar yukarıdan aşağı denenir. */
+.fcCase{display:flex;flex-direction:column;gap:7px;}
+.fcCase.isMany{padding:9px 10px;border:1px solid var(--line2);border-left:3px solid var(--acc);border-radius:var(--r-sm);background:var(--card);}
+.fcCaseHead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10.5px;font-weight:700;color:var(--acc-ink);text-transform:uppercase;letter-spacing:.3px;}
+.fcElseRow{padding-top:2px;}

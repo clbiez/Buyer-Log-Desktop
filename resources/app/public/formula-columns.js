@@ -741,16 +741,35 @@
   /* v7.177 — Birden çok sütunun durumu birbirine bağlanabilir: ilk koşul
      rule.left/cmp/right'ta (eski kayıtlarla uyumlu), ek koşullar rule.more
      listesinde. rule.join "and" ise HEPSİ, "or" ise EN AZ BİRİ sağlanmalı. */
-  function conditionFormula(builder) {
-    const rule = builder.ifelse || {};
+  // Bir kuralın koşul grubu → formül parçası; eksik satır varsa ''.
+  function caseCondition(rule) {
     const parts = [];
     for (const cond of [rule, ...(Array.isArray(rule.more) ? rule.more : [])]) {
       const part = singleCondition(cond);
       if (!part) return '';
       parts.push(part);
     }
-    const condition = parts.length > 1 ? `${rule.join === 'or' ? 'OR' : 'AND'}(${parts.join(', ')})` : parts[0];
-    return `IF(${condition}, ${literal(rule.then)}, ${literal(rule.else)})`;
+    return parts.length > 1 ? `${rule.join === 'or' ? 'OR' : 'AND'}(${parts.join(', ')})` : parts[0];
+  }
+  /* v7.178 — BİRDEN ÇOK KURAL ("değilse eğer").
+
+     Kullanıcı talebi (birebir): "label by condition alanında çoklu eğer koşulu
+     koyamıyorum. Mesela X = 0 veya X = "" ise "N/A", X = 1 ve Y = 0 ise
+     "Pending", X = 1 ve Y = 1 ise "OK" yazdırmak istiyorum."
+
+     İlk kural eski yerinde durur (rule.left/cmp/right/more/join/then — eski
+     kayıtlar aynen açılır); ek kurallar rule.cases listesindedir, her birinin
+     kendi koşul grubu ve kendi sonucu vardır. Tek kuralda formül eskisi gibi
+     IF(...) olur; birden çok kuralda IFS(k1, s1, k2, s2, …, TRUE, değilse).
+     Kurallar YUKARIDAN AŞAĞI denenir ve İLK uyan kuralın sonucu yazılır —
+     Excel'deki iç içe EĞER ile aynı anlam. */
+  function conditionFormula(builder) {
+    const rule = builder.ifelse || {};
+    const cases = [rule, ...(Array.isArray(rule.cases) ? rule.cases : [])];
+    const conditions = cases.map(caseCondition);
+    if (conditions.some(item => !item)) return '';
+    if (cases.length === 1) return `IF(${conditions[0]}, ${literal(rule.then)}, ${literal(rule.else)})`;
+    return `IFS(${cases.map((item, index) => `${conditions[index]}, ${literal(item.then)}`).join(', ')}, TRUE, ${literal(rule.else)})`;
   }
   function builderFormula(builder) {
     if (!builder) return '';
@@ -810,29 +829,58 @@
       }
       return null;
     }
-    if (call(ast, 'IF', 3) && isLiteral(ast.args[1]) && isLiteral(ast.args[2])) {
-      const [condition, whenTrue, whenFalse] = ast.args;
-      const readCondition = node => {
-        const cond = { left: '', cmp: 'gt', right: { kind: 'value', column: '', value: '' } };
-        if (call(node, 'ISBLANK', 1) && isCol(node.args[0])) { cond.left = node.args[0].name; cond.cmp = 'blank'; return cond; }
-        if (call(node, 'NOT', 1) && call(node.args[0], 'ISBLANK', 1) && isCol(node.args[0].args[0])) { cond.left = node.args[0].args[0].name; cond.cmp = 'notblank'; return cond; }
-        if (call(node, 'CONTAINS', 2) && isCol(node.args[0]) && node.args[1].kind === 'string') {
-          cond.left = node.args[0].name; cond.cmp = 'contains'; cond.right.value = node.args[1].value; return cond;
-        }
-        const compare = node && node.kind === 'binary' && COMPARISONS.find(item => item.op === node.op || (node.op === '==' && item.op === '=') || (node.op === '!=' && item.op === '<>'));
-        if (compare && isCol(node.left) && (isCol(node.right) || isLiteral(node.right))) {
-          cond.left = node.left.name;
-          cond.cmp = compare.id;
-          cond.right = isCol(node.right) ? { kind: 'column', column: node.right.name, value: '' } : { kind: 'value', column: '', value: String(node.right.value) };
-          return cond;
-        }
-        return null;
-      };
+    const readCondition = node => {
+      const cond = { left: '', cmp: 'gt', right: { kind: 'value', column: '', value: '' } };
+      if (call(node, 'ISBLANK', 1) && isCol(node.args[0])) { cond.left = node.args[0].name; cond.cmp = 'blank'; return cond; }
+      if (call(node, 'NOT', 1) && call(node.args[0], 'ISBLANK', 1) && isCol(node.args[0].args[0])) { cond.left = node.args[0].args[0].name; cond.cmp = 'notblank'; return cond; }
+      if (call(node, 'CONTAINS', 2) && isCol(node.args[0]) && node.args[1].kind === 'string') {
+        cond.left = node.args[0].name; cond.cmp = 'contains'; cond.right.value = node.args[1].value; return cond;
+      }
+      const compare = node && node.kind === 'binary' && COMPARISONS.find(item => item.op === node.op || (node.op === '==' && item.op === '=') || (node.op === '!=' && item.op === '<>'));
+      if (compare && isCol(node.left) && (isCol(node.right) || isLiteral(node.right))) {
+        cond.left = node.left.name;
+        cond.cmp = compare.id;
+        cond.right = isCol(node.right) ? { kind: 'column', column: node.right.name, value: '' } : { kind: 'value', column: '', value: String(node.right.value) };
+        return cond;
+      }
+      return null;
+    };
+    // Bir koşul grubu (tek koşul ya da AND/OR) → { ...ilk, more, join }.
+    const readCase = (condition, result) => {
+      if (!isLiteral(result)) return null;
       const grouped = condition && condition.kind === 'call' && (condition.name === 'AND' || condition.name === 'OR') && condition.args.length >= 2;
       const conditions = (grouped ? condition.args : [condition]).map(readCondition);
       if (conditions.some(item => !item)) return null;
       const [first, ...more] = conditions;
-      return { mode: 'ifelse', ifelse: { ...first, more, join: grouped && condition.name === 'OR' ? 'or' : 'and', then: String(whenTrue.value), else: String(whenFalse.value) } };
+      return { ...first, more, join: grouped && condition.name === 'OR' ? 'or' : 'and', then: String(result.value) };
+    };
+    if (call(ast, 'IF', 3)) {
+      /* Tek kural: IF(k, s, değilse). İç içe IF(k1, s1, IF(k2, s2, …)) de
+         kurallara açılır (AI ya da Excel alışkanlığı bu biçimi üretir); karta
+         dönüşte IFS olarak yazılır, anlamı aynıdır. */
+      const cases = [];
+      let node = ast;
+      while (call(node, 'IF', 3)) {
+        const item = readCase(node.args[0], node.args[1]);
+        if (!item) return null;
+        cases.push(item);
+        node = node.args[2];
+      }
+      if (!isLiteral(node)) return null;
+      const [first, ...rest] = cases;
+      return { mode: 'ifelse', ifelse: { ...first, cases: rest, else: String(node.value) } };
+    }
+    if (ast.kind === 'call' && ast.name === 'IFS' && ast.args.length >= 4 && !(ast.args.length % 2)) {
+      const last = ast.args[ast.args.length - 2];
+      if (!(last && last.kind === 'boolean' && last.value === true) || !isLiteral(ast.args[ast.args.length - 1])) return null;
+      const cases = [];
+      for (let index = 0; index < ast.args.length - 2; index += 2) {
+        const item = readCase(ast.args[index], ast.args[index + 1]);
+        if (!item) return null;
+        cases.push(item);
+      }
+      const [first, ...rest] = cases;
+      return { mode: 'ifelse', ifelse: { ...first, cases: rest, else: String(ast.args[ast.args.length - 1].value) } };
     }
 
     const operands = [];
@@ -927,7 +975,7 @@
       days: { start: '', end: '' },
       percent: { kind: 'ratio', a: '', b: '' },
       adddays: { date: '', days: '30', dir: '+' },
-      ifelse: { left: '', cmp: 'gt', right: { kind: 'value', column: '', value: '' }, more: [], join: 'and', then: '', else: '' },
+      ifelse: { left: '', cmp: 'gt', right: { kind: 'value', column: '', value: '' }, more: [], join: 'and', then: '', else: '', cases: [] },
       ai: { request: '', answer: '', formula: '' },
     };
   }
@@ -966,7 +1014,9 @@
       if (restored.percent) { restored.percent.a = toRef(restored.percent.a); restored.percent.b = toRef(restored.percent.b); }
       if (restored.adddays) restored.adddays.date = toRef(restored.adddays.date);
       if (restored.ifelse) {
-        [restored.ifelse, ...(restored.ifelse.more || [])].forEach(cond => { cond.left = toRef(cond.left); cond.right.column = toRef(cond.right.column); });
+        [restored.ifelse, ...(restored.ifelse.cases || [])].forEach(item => {
+          [item, ...(item.more || [])].forEach(cond => { cond.left = toRef(cond.left); cond.right.column = toRef(cond.right.column); });
+        });
       }
       Object.assign(builder, restored);
     } else if (existing) {
@@ -1139,9 +1189,17 @@
         + (kind === 'column-only' ? '' : `<option value="${NUMBER_OPERAND}"${kind === 'number' ? ' selected' : ''}>${esc(T('— sabit sayı yaz —', '— type a fixed number —'))}</option>`);
     };
     const pick = (attr, selected, placeholder) => `<select class="fcPick" ${attr}>${columnOptions(selected, 'column-only', placeholder)}</select>`;
-    // Koşul kartı: 0 ilk koşul (rule.left/cmp/right), 1+ ek koşullar (rule.more).
-    const ifCondition = index => {
+    /* Koşul kartı: kural 0 builder.ifelse'in kendisi, 1+ builder.ifelse.cases.
+       Bir kuralda koşul 0 kuralın kendisi (left/cmp/right), 1+ kural.more. */
+    const ifCase = caseIndex => {
       const rule = builder.ifelse;
+      if (!Array.isArray(rule.cases)) rule.cases = [];
+      const c = Number(caseIndex) || 0;
+      return c ? rule.cases[c - 1] || rule : rule;
+    };
+    const caseOf = el => Number(el && el.closest && el.closest('[data-fc-case]') ? el.closest('[data-fc-case]').dataset.fcCase : 0) || 0;
+    const ifCondition = (index, caseIndex) => {
+      const rule = ifCase(caseIndex);
       const i = Number(index) || 0;
       if (!i) return rule;
       if (!Array.isArray(rule.more)) rule.more = [];
@@ -1235,50 +1293,66 @@
           <p class="fcNote">${esc(T('Sonuç bir TARİHTİR ve tablodaki diğer tarihler gibi gösterilir. Ör. Ex-factory’den 30 gün öncesi için “çıkar”ı seçin.', 'The result is a DATE shown like the other dates. For 30 days before Ex-factory pick “subtract”.'))}</p>`;
       } else if (builder.mode === 'ifelse') {
         const rule = builder.ifelse;
-        if (!Array.isArray(rule.more)) rule.more = [];
-        const conditions = [rule, ...rule.more];
-        const joinWord = rule.join === 'or' ? T('veya', 'or') : T('ve', 'and');
+        if (!Array.isArray(rule.cases)) rule.cases = [];
+        const cases = [rule, ...rule.cases];
+        const many = cases.length > 1;
         // Türkçede yüklem sonda ("Adet 1000'den büyükse"), İngilizcede ortada.
-        const conditionRow = (cond, index) => {
-          const needsRight = cond.cmp !== 'blank' && cond.cmp !== 'notblank';
-          const rightKind = cond.right && cond.right.kind === 'column' ? 'column' : 'value';
-          const right = cond.right || { kind: 'value', column: '', value: '' };
-          const leftHtml = pick(`data-fc-if-left="${index}"`, cond.left, T('Sütun…', 'Column…'));
-          const cmpHtml = `<select class="fcPick" data-fc-if-cmp="${index}" aria-label="${esc(T('Koşul', 'Condition'))}">${COMPARISONS.map(item => `<option value="${item.id}"${cond.cmp === item.id ? ' selected' : ''}>${esc(en() ? item.en : item.tr)}</option>`).join('')}</select>`;
-          const rightHtml = needsRight ? `<select class="fcPick fcPickShort" data-fc-if-right-kind="${index}" aria-label="${esc(T('Neyle karşılaştırılsın?', 'Compare with'))}">
-                <option value="value"${rightKind === 'value' ? ' selected' : ''}>${esc(T('şu değer:', 'this value:'))}</option>
-                <option value="column"${rightKind === 'column' ? ' selected' : ''}>${esc(T('şu sütun:', 'this column:'))}</option>
-              </select>
-              ${rightKind === 'column'
-                ? pick(`data-fc-if-right-column="${index}"`, right.column, T('Sütun…', 'Column…'))
-                : `<input type="text" class="fcSentenceInput" data-fc-if-right-value="${index}" value="${esc(right.value)}" placeholder="${esc(T('ör. 1000 ya da ELBİSE', 'e.g. 1000 or DRESS'))}" autocomplete="off">`}` : '';
-          // İlk satır "Eğer", sonrakiler ortak "ve / veya" seçimiyle bağlanır.
-          const lead = index === 0
-            ? `<span>${esc(T('Eğer', 'If'))}</span>`
-            : `<select class="fcPick fcPickShort" data-fc-if-join aria-label="${esc(T('Koşullar nasıl bağlansın?', 'How are the conditions combined?'))}">
-                <option value="and"${rule.join === 'or' ? '' : ' selected'}>${esc(T('ve', 'and'))}</option>
-                <option value="or"${rule.join === 'or' ? ' selected' : ''}>${esc(T('veya', 'or'))}</option>
-              </select>`;
-          const drop = index > 0 ? `<button type="button" class="fcMini fcMiniDrop" data-fc-if-drop="${index}" title="${esc(T('Koşulu kaldır', 'Remove condition'))}">×</button>` : '';
-          return `<div class="fcSentence" data-fc-if-row="${index}">${lead}${leftHtml}${en() ? cmpHtml + rightHtml : rightHtml + cmpHtml}${drop}</div>`;
+        const caseHtml = (item, caseIndex) => {
+          if (!Array.isArray(item.more)) item.more = [];
+          const conditions = [item, ...item.more];
+          const joinWord = item.join === 'or' ? T('veya', 'or') : T('ve', 'and');
+          const conditionRow = (cond, index) => {
+            const needsRight = cond.cmp !== 'blank' && cond.cmp !== 'notblank';
+            const rightKind = cond.right && cond.right.kind === 'column' ? 'column' : 'value';
+            const right = cond.right || { kind: 'value', column: '', value: '' };
+            const leftHtml = pick(`data-fc-if-left="${index}"`, cond.left, T('Sütun…', 'Column…'));
+            const cmpHtml = `<select class="fcPick" data-fc-if-cmp="${index}" aria-label="${esc(T('Koşul', 'Condition'))}">${COMPARISONS.map(entry => `<option value="${entry.id}"${cond.cmp === entry.id ? ' selected' : ''}>${esc(en() ? entry.en : entry.tr)}</option>`).join('')}</select>`;
+            const rightHtml = needsRight ? `<select class="fcPick fcPickShort" data-fc-if-right-kind="${index}" aria-label="${esc(T('Neyle karşılaştırılsın?', 'Compare with'))}">
+                  <option value="value"${rightKind === 'value' ? ' selected' : ''}>${esc(T('şu değer:', 'this value:'))}</option>
+                  <option value="column"${rightKind === 'column' ? ' selected' : ''}>${esc(T('şu sütun:', 'this column:'))}</option>
+                </select>
+                ${rightKind === 'column'
+                  ? pick(`data-fc-if-right-column="${index}"`, right.column, T('Sütun…', 'Column…'))
+                  : `<input type="text" class="fcSentenceInput" data-fc-if-right-value="${index}" value="${esc(right.value)}" placeholder="${esc(T('ör. 1000 ya da ELBİSE', 'e.g. 1000 or DRESS'))}" autocomplete="off">`}` : '';
+            // İlk satır "Eğer" (sonraki kurallarda "Değilse, eğer"), sonrakiler kuralın "ve / veya" seçimiyle bağlanır.
+            const lead = index === 0
+              ? `<span>${esc(caseIndex ? T('Değilse, eğer', 'Otherwise, if') : T('Eğer', 'If'))}</span>`
+              : `<select class="fcPick fcPickShort" data-fc-if-join aria-label="${esc(T('Koşullar nasıl bağlansın?', 'How are the conditions combined?'))}">
+                  <option value="and"${item.join === 'or' ? '' : ' selected'}>${esc(T('ve', 'and'))}</option>
+                  <option value="or"${item.join === 'or' ? ' selected' : ''}>${esc(T('veya', 'or'))}</option>
+                </select>`;
+            const drop = index > 0 ? `<button type="button" class="fcMini fcMiniDrop" data-fc-if-drop="${index}" title="${esc(T('Koşulu kaldır', 'Remove condition'))}">×</button>` : '';
+            return `<div class="fcSentence" data-fc-if-row="${index}">${lead}${leftHtml}${en() ? cmpHtml + rightHtml : rightHtml + cmpHtml}${drop}</div>`;
+          };
+          const summary = conditions.length > 1
+            ? (item.join === 'or'
+              ? T(`${conditions.length} koşuldan EN AZ BİRİ sağlanırsa`, `If AT LEAST ONE of the ${conditions.length} conditions is met`)
+              : T(`${conditions.length} koşulun HEPSİ sağlanırsa`, `If ALL ${conditions.length} conditions are met`))
+            : '';
+          return `<div class="fcCase${many ? ' isMany' : ''}" data-fc-case="${caseIndex}">
+            ${many ? `<div class="fcCaseHead"><span>${esc(T(`Kural ${caseIndex + 1}`, `Rule ${caseIndex + 1}`))}</span>${caseIndex ? `<button type="button" class="fcMini fcMiniDrop" data-fc-case-drop="${caseIndex}" title="${esc(T('Kuralı kaldır', 'Remove rule'))}">×</button>` : ''}</div>` : ''}
+            ${conditions.map(conditionRow).join('')}
+            <div class="fcSentence">
+              <button type="button" class="fcMini fcMiniAdd" data-fc-if-add>+ ${esc(T(`koşul ekle (${joinWord})`, `add condition (${joinWord})`))}</button>
+              ${summary ? `<span class="fcNote">${esc(summary)}</span>` : ''}
+            </div>
+            <div class="fcSentence">
+              <span>${esc(T('→ şunu yaz:', '→ write:'))}</span>
+              <input type="text" class="fcSentenceInput" data-fc-if-then value="${esc(item.then)}" placeholder="${esc(T('ör. Gecikmeli', 'e.g. Late'))}" autocomplete="off">
+            </div>
+          </div>`;
         };
-        const summary = conditions.length > 1
-          ? (rule.join === 'or'
-            ? T(`${conditions.length} koşuldan EN AZ BİRİ sağlanırsa`, `If AT LEAST ONE of the ${conditions.length} conditions is met`)
-            : T(`${conditions.length} koşulun HEPSİ sağlanırsa`, `If ALL ${conditions.length} conditions are met`))
-          : '';
-        build.innerHTML = `${conditions.map(conditionRow).join('')}
+        build.innerHTML = `${cases.map(caseHtml).join('')}
           <div class="fcSentence">
-            <button type="button" class="fcMini fcMiniAdd" data-fc-if-add>+ ${esc(T(`koşul ekle (${joinWord})`, `add condition (${joinWord})`))}</button>
-            ${summary ? `<span class="fcNote">${esc(summary)}</span>` : ''}
+            <button type="button" class="fcMini fcMiniAdd" data-fc-case-add>+ ${esc(T('başka bir kural ekle (değilse eğer…)', 'add another rule (otherwise if…)'))}</button>
           </div>
-          <div class="fcSentence">
-            <span>${esc(T('→ şunu yaz:', '→ write:'))}</span>
-            <input type="text" class="fcSentenceInput" data-fc-if-then value="${esc(rule.then)}" placeholder="${esc(T('ör. Gecikmeli', 'e.g. Late'))}" autocomplete="off">
-            <span>${esc(T('değilse:', 'otherwise:'))}</span>
-            <input type="text" class="fcSentenceInput" data-fc-if-else value="${esc(rule.else)}" placeholder="${esc(T('ör. Zamanında', 'e.g. On time'))}" autocomplete="off">
+          <div class="fcSentence fcElseRow">
+            <span>${esc(many ? T('Hiçbir kural tutmazsa şunu yaz:', 'If no rule matches, write:') : T('değilse:', 'otherwise:'))}</span>
+            <input type="text" class="fcSentenceInput" data-fc-if-else value="${esc(rule.else)}" placeholder="${esc(T('ör. Zamanında (boş bırakılabilir)', 'e.g. On time (may be left empty)'))}" autocomplete="off">
           </div>
-          <p class="fcNote">${esc(T('Tarihleri, sayıları ve metinleri karşılaştırabilirsiniz; büyük/küçük harf fark etmez. Birden çok sütunu “+ koşul ekle” ile bağlayın: “ve” hepsinin, “veya” en az birinin sağlanmasını ister (ör. A = 1 ve B = 0 ise “TEST”). Koşula göre farklı sonuçlar için “AI ile yaz” ya da “Gelişmiş” kartındaki IFS() kullanılabilir.', 'You can compare dates, numbers and text; case does not matter. Link several columns with “+ add condition”: “and” needs all of them, “or” needs at least one (e.g. if A = 1 and B = 0 write “TEST”). For different results per condition use “Write with AI” or IFS() in “Advanced”.'))}</p>`;
+          <p class="fcNote">${esc(many
+            ? T('Kurallar YUKARIDAN AŞAĞI denenir; bir satıra İLK uyan kuralın sonucu yazılır (Excel’deki iç içe EĞER gibi). Bu yüzden daha özel kuralı üste koyun. Boş hücre için “boşsa” seçin.', 'Rules are tried FROM TOP TO BOTTOM; a row gets the result of the FIRST rule it matches (like nested IF in Excel). Put the more specific rule first. For an empty cell pick “is blank”.')
+            : T('Tarihleri, sayıları ve metinleri karşılaştırabilirsiniz; büyük/küçük harf fark etmez. Birden çok sütunu “+ koşul ekle” ile bağlayın: “ve” hepsinin, “veya” en az birinin sağlanmasını ister. Duruma göre FARKLI sonuçlar için “+ başka bir kural ekle” (ör. X = 0 ise “N/A”, X = 1 ve Y = 0 ise “Pending”, X = 1 ve Y = 1 ise “OK”).', 'You can compare dates, numbers and text; case does not matter. Link several columns with “+ add condition”: “and” needs all, “or” needs at least one. For DIFFERENT results per situation use “+ add another rule” (e.g. X = 0 → “N/A”, X = 1 and Y = 0 → “Pending”, X = 1 and Y = 1 → “OK”).'))}</p>`;
       } else if (builder.mode === 'ai') {
         build.innerHTML = aiPanelHtml();
         renderAiPrompt();
@@ -1534,8 +1608,8 @@
         renderPreview(); return;
       }
       if (target.matches('[data-fc-adddays-days]')) { builder.adddays.days = target.value; renderPreview(); return; }
-      if (target.matches('[data-fc-if-right-value]')) { ifCondition(target.dataset.fcIfRightValue).right.value = target.value; renderPreview(); return; }
-      if (target.matches('[data-fc-if-then]')) { builder.ifelse.then = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-right-value]')) { ifCondition(target.dataset.fcIfRightValue, caseOf(target)).right.value = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-then]')) { ifCase(caseOf(target)).then = target.value; renderPreview(); return; }
       if (target.matches('[data-fc-if-else]')) { builder.ifelse.else = target.value; renderPreview(); return; }
       if (target.matches('[data-fc-separator-custom]')) {
         builder.separator = target.value;
@@ -1579,11 +1653,11 @@
       if (target.matches('[data-fc-percent]')) { builder.percent[target.dataset.fcPercent] = target.value; renderPreview(); return; }
       if (target.matches('[data-fc-adddays-date]')) { builder.adddays.date = target.value; renderPreview(); return; }
       if (target.matches('[data-fc-adddays-dir]')) { builder.adddays.dir = target.value; renderPreview(); return; }
-      if (target.matches('[data-fc-if-left]')) { ifCondition(target.dataset.fcIfLeft).left = target.value; renderPreview(); return; }
-      if (target.matches('[data-fc-if-cmp]')) { ifCondition(target.dataset.fcIfCmp).cmp = target.value; renderBuild(); renderPreview(); return; }
-      if (target.matches('[data-fc-if-right-kind]')) { ifCondition(target.dataset.fcIfRightKind).right.kind = target.value; renderBuild(); renderPreview(); return; }
-      if (target.matches('[data-fc-if-right-column]')) { ifCondition(target.dataset.fcIfRightColumn).right.column = target.value; renderPreview(); return; }
-      if (target.matches('[data-fc-if-join]')) { builder.ifelse.join = target.value === 'or' ? 'or' : 'and'; renderBuild(); renderPreview(); return; }
+      if (target.matches('[data-fc-if-left]')) { ifCondition(target.dataset.fcIfLeft, caseOf(target)).left = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-cmp]')) { ifCondition(target.dataset.fcIfCmp, caseOf(target)).cmp = target.value; renderBuild(); renderPreview(); return; }
+      if (target.matches('[data-fc-if-right-kind]')) { ifCondition(target.dataset.fcIfRightKind, caseOf(target)).right.kind = target.value; renderBuild(); renderPreview(); return; }
+      if (target.matches('[data-fc-if-right-column]')) { ifCondition(target.dataset.fcIfRightColumn, caseOf(target)).right.column = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-join]')) { ifCase(caseOf(target)).join = target.value === 'or' ? 'or' : 'and'; renderBuild(); renderPreview(); return; }
       const insert = target.closest('[data-fc-insert]');
       if (insert && insert.value) {
         const field = modal.querySelector('[data-fc-formula]');
@@ -1601,8 +1675,24 @@
       if (jump) { setMode(jump.dataset.fcModeJump); modal.querySelector('[data-fc-formula]')?.focus(); return; }
       const separator = event.target.closest('[data-fc-separator]');
       if (separator) { builder.separator = separator.dataset.fcSeparator; renderBuild(); renderPreview(); return; }
-      if (event.target.closest('[data-fc-if-add]')) {
+      if (event.target.closest('[data-fc-case-add]')) {
         const rule = builder.ifelse;
+        if (!Array.isArray(rule.cases)) rule.cases = [];
+        if (rule.cases.length >= 19) { toast(T('En fazla 20 kural eklenebilir.', 'At most 20 rules can be added.')); return; }
+        rule.cases.push({ left: '', cmp: 'eq', right: { kind: 'value', column: '', value: '' }, more: [], join: 'and', then: '' });
+        renderBuild(); renderPreview();
+        modal.querySelector(`[data-fc-case="${rule.cases.length}"] [data-fc-if-left]`)?.focus();
+        return;
+      }
+      const dropCase = event.target.closest('[data-fc-case-drop]');
+      if (dropCase) {
+        const index = Number(dropCase.dataset.fcCaseDrop);
+        if (index > 0) builder.ifelse.cases.splice(index - 1, 1);
+        renderBuild(); renderPreview(); return;
+      }
+      const addCondition = event.target.closest('[data-fc-if-add]');
+      if (addCondition) {
+        const rule = ifCase(caseOf(addCondition));
         if (!Array.isArray(rule.more)) rule.more = [];
         if (rule.more.length >= 9) { toast(T('En fazla 10 koşul bağlanabilir.', 'At most 10 conditions can be linked.')); return; }
         rule.more.push({ left: '', cmp: 'eq', right: { kind: 'value', column: '', value: '' } });
@@ -1611,7 +1701,7 @@
       const dropCondition = event.target.closest('[data-fc-if-drop]');
       if (dropCondition) {
         const index = Number(dropCondition.dataset.fcIfDrop);
-        if (index > 0) builder.ifelse.more.splice(index - 1, 1);
+        if (index > 0) ifCase(caseOf(dropCondition)).more.splice(index - 1, 1);
         renderBuild(); renderPreview(); return;
       }
       if (event.target.closest('[data-fc-operand-add]')) {
