@@ -351,13 +351,15 @@ test('v6.34 tam çizim gerekmeyen düzenlemede özet satırı tazeleniyor', () =
 
 /* ------------------------------------- 7) MEVCUT QUOTATIONS KAYDINI GÜNCELLEME */
 
-test('v6.34 elle fiyat girişi mevcut Quotations satırını yerinde güncelliyor', () => {
+test('v6.34/v2026-09-30 elle fiyat girişi tek ortak quotation API yolunu kullanıyor', () => {
   const block = APP.slice(APP.indexOf('function openKolManualPriceModal'), APP.indexOf('function kolBestPricing'));
-  // Önce yerinde güncelleme denenir; yalnız eşleşme yoksa yeni kayıt açılır.
-  const updateAt = block.indexOf('api.updateCollectionLine');
-  const recordAt = block.indexOf('api.recordRequest');
-  assert.ok(updateAt >= 0 && recordAt > updateAt, 'yerinde güncelleme yeni kayıttan ÖNCE denenmeli');
-  assert.match(block, /const created=updated\?null:await/);
+  assert.match(block, /api\.recordManualCollectionPrice\(/);
+  assert.doesNotMatch(block, /api\.recordRequest\('collection'/);
+  const manual = bodyOf(QUOTES, 'recordManualCollectionPrice');
+  // Önce gerçek quotation satırı aranır; yoksa owner bazlı tek manuel kova kullanılır.
+  assert.match(manual, /findCollectionLine\(rowId,m\.name\)/);
+  assert.match(manual, /req\?\.origin==='manual-collection'/);
+  assert.match(manual, /req\?\.ownerId===qCurrentUserId\(\)/);
 });
 
 test('v6.34 onay kutusu iki yönlü: boş bırakılınca onay kaldırılıyor', () => {
