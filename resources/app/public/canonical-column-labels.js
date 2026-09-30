@@ -81,6 +81,8 @@
   var HEADER_SELECTOR='th,[role="columnheader"],.thLabel,.column-label,.col-label,.column-name,.colPanelName';
   function rewriteHeader(header){
     if(!header||header.nodeType!==1)return 0;
+    // Kullanıcının verdiği EN/TR sütun adı (data-bl-user-label) kanonik etiketle ezilmez.
+    if(typeof header.closest==='function'&&header.closest('[data-bl-user-label]'))return 0;
     var doc=header.ownerDocument||global.document;if(!doc||typeof doc.createTreeWalker!=='function')return 0;
     var walker=doc.createTreeWalker(header,global.NodeFilter&&global.NodeFilter.SHOW_TEXT||4),collectionKey=collectionKeyForHeader(header),collectionLabel=collectionKey?collectionLabelForKey(collectionKey):null,changed=0,node;
     while((node=walker.nextNode())){var next=collectionLabel&&isCollectionLabelNode(node,header)?replaceCore(node.nodeValue,collectionLabel):canonicalize(node.nodeValue);if(next!==node.nodeValue){node.nodeValue=next;changed++;}}

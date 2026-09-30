@@ -297,7 +297,7 @@ function planSourceDelete(items, { sourceId, expectedName = null } = {}) {
  * @param op    'add' | 'update' | 'remove'
  * @returns {{ok, code, message, items, warnings, columnId}}
  */
-function planCpColumn(items, { sourceId, op, id, label, group, entry } = {}) {
+function planCpColumn(items, { sourceId, op, id, label, labelEn, labelTr, group, entry } = {}) {
   const list = Array.isArray(items) ? items : [];
   const warnings = [];
   const index = list.findIndex(item => item && clean(item.id) === clean(sourceId));
@@ -352,6 +352,10 @@ function planCpColumn(items, { sourceId, op, id, label, group, entry } = {}) {
     const record = {
       id: existing ? existing.id : `cpx_${Math.random().toString(36).slice(2, 10)}`,
       label: cleanLabel,
+      // İsteğe bağlı EN/TR görünen adlar; gönderilmezse mevcut kayıttaki korunur.
+      ...Object.fromEntries([['labelEn', labelEn], ['labelTr', labelTr]]
+        .map(([key, value]) => [key, clean(value !== undefined ? value : (existing ? existing[key] : '')).slice(0, 120)])
+        .filter(([, value]) => value)),
       table: clean(source.table),
       name: clean(source.name),
       kind: clean(source.kind) === 'measure' ? 'measure' : 'column',

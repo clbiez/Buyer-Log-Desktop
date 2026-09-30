@@ -3402,7 +3402,7 @@ function syncCpModelColumns(defs){
   const previousGroup=new Map(CP_MODEL_COLUMN_DEFS.map(d=>[d.header,d.group||DEFAULT_MODEL_COLUMN_GROUP]));
   CP_MODEL_COLUMN_DEFS=clean;
   const base=CP_COLS.filter(c=>!c.modelCustom);
-  const dynamic=clean.map(d=>({k:d.header,label:d.label,type:'ro',weight:10,group:String(d.group||'').trim()||DEFAULT_MODEL_COLUMN_GROUP,modelCustom:true,modelColumnId:d.id,connectionId:d.connectionId,role:d.role,sourceTable:d.table,sourceName:d.name,dataType:d.dataType||d.data_type,sourceMetadata:d.sourceMetadata||d.metadata||d.dbMetadata,percentageScale:d.percentageScale||d.scale}));
+  const dynamic=clean.map(d=>({k:d.header,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'ro',weight:10,group:String(d.group||'').trim()||DEFAULT_MODEL_COLUMN_GROUP,modelCustom:true,modelColumnId:d.id,connectionId:d.connectionId,role:d.role,sourceTable:d.table,sourceName:d.name,dataType:d.dataType||d.data_type,sourceMetadata:d.sourceMetadata||d.metadata||d.dbMetadata,percentageScale:d.percentageScale||d.scale}));
   CP_COLS.splice(0,CP_COLS.length,...base,...dynamic);
   invalidateColumnIndex('cp');
   const cs=colmgr.cp; const valid=CP_COLS.map(c=>c.k);
@@ -3435,7 +3435,7 @@ let CP_NOTE_COLUMN_DEFS_REVISION=0;
 function syncCpNoteColumns(defs){
   CP_NOTE_COLUMN_DEFS=(Array.isArray(defs)?defs:[]).filter(d=>d&&d.id&&d.label).map(d=>({...d}));
   const base=CP_COLS.filter(c=>!c.noteCustom);
-  const dynamic=CP_NOTE_COLUMN_DEFS.map(d=>({k:d.id,label:d.label,type:'text',weight:12,group:String(d.group||'').trim()||(appLang==='en'?'Notes':'Notlar'),noteCustom:true,noteColumnId:d.id}));
+  const dynamic=CP_NOTE_COLUMN_DEFS.map(d=>({k:d.id,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'text',weight:12,group:String(d.group||'').trim()||(appLang==='en'?'Notes':'Notlar'),noteCustom:true,noteColumnId:d.id}));
   CP_COLS.splice(0,CP_COLS.length,...base,...dynamic);
   invalidateColumnIndex('cp');
   const cs=colmgr.cp; const valid=CP_COLS.map(c=>c.k);
@@ -3455,16 +3455,18 @@ async function saveCpNoteColumnDefs(nextDefs){
   CP_NOTE_COLUMN_DEFS_REVISION=Number(data.revision)||CP_NOTE_COLUMN_DEFS_REVISION;
   syncCpNoteColumns(data.columns||nextDefs);
 }
+// Not sütunu adı: EN/TR iki dilde; kimlik olan `label` diğer sütunlarla çakışmamalı.
+function cpNoteColumnNameClash(pair,exceptKey){
+  const label=(pair.tr||pair.en||'').toLocaleLowerCase('tr');
+  return CP_COLS.some(c=>c.k!==exceptKey&&String(c.label).toLocaleLowerCase('tr')===label)
+    ?(appLang==='en'?'A column with that name already exists.':'Bu adda bir sütun zaten var.'):'';
+}
 async function addCpNoteColumn(rerenderFn){
-  const name=await openHorizonTextInput({title:appLang==='en'?'Add note column':'Not sütunu ekle',label:appLang==='en'?'Name of the new note column':'Yeni not sütununun adı',confirmLabel:appLang==='en'?'Add':'Ekle'});
-  if(!name)return false;
-  if(CP_COLS.some(c=>String(c.label).toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))){
-    showToast(appLang==='en'?'A column with that name already exists.':'Bu adda bir sütun zaten var.');
-    return false;
-  }
+  const pair=await promptBilingualColumnName({title:appLang==='en'?'Add note column':'Not sütunu ekle',confirmLabel:appLang==='en'?'Add':'Ekle',validate:value=>cpNoteColumnNameClash(value,null)});
+  if(!pair)return false;
   const id='note_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
   try{
-    await saveCpNoteColumnDefs([...CP_NOTE_COLUMN_DEFS,{id,label:name}]);
+    await saveCpNoteColumnDefs([...CP_NOTE_COLUMN_DEFS,BLColumnNames.withDefinitionLabels({id},pair)]);
     if(typeof rerenderFn==='function')rerenderFn(); else renderCP();
     showToast(appLang==='en'?'Column added.':'Sütun eklendi.');
     return true;
@@ -3472,10 +3474,14 @@ async function addCpNoteColumn(rerenderFn){
 }
 async function renameCpNoteColumn(id,rerenderFn){
   const def=CP_NOTE_COLUMN_DEFS.find(d=>d.id===id); if(!def)return;
-  const name=await openHorizonTextInput({title:appLang==='en'?'Rename note column':'Not sütununu yeniden adlandır',label:appLang==='en'?'New name':'Yeni ad',initial:def.label,confirmLabel:appLang==='en'?'Rename':'Yeniden adlandır'});
-  if(!name||name===def.label)return;
+  const column=CP_COLS.find(c=>c.noteCustom&&c.noteColumnId===id);
+  const pair=await promptBilingualColumnName({title:appLang==='en'?'Rename note column':'Not sütununu yeniden adlandır',confirmLabel:appLang==='en'?'Save':'Kaydet',definition:def,
+    sourceRows:column?BLColumnNames.describeSource(BLColumnNames.sourceFor('cp',column),appLang):[],validate:value=>cpNoteColumnNameClash(value,id)});
+  if(!pair)return;
+  const current=BLColumnNames.definitionLabels(def);
+  if(pair.en===current.en&&pair.tr===current.tr)return;
   try{
-    await saveCpNoteColumnDefs(CP_NOTE_COLUMN_DEFS.map(d=>d.id===id?{...d,label:name}:d));
+    await saveCpNoteColumnDefs(CP_NOTE_COLUMN_DEFS.map(d=>d.id===id?BLColumnNames.withDefinitionLabels(d,pair):d));
     if(typeof rerenderFn==='function')rerenderFn(); else renderCP();
   }catch(err){ showToast((appLang==='en'?'Column could not be renamed: ':'Sütun yeniden adlandırılamadı: ')+(err.message||err)); }
 }
@@ -4242,13 +4248,142 @@ const CP_TR_HEADER_LABELS = {
   'Notes':'Notlar',
   'Ek Not':'Ek Notlar'
 };
-function tableColumnLabel(tableKey,c){
+/* Sütunun kullanıcı adı verilmemiş (sistem / ortak tanım) etiketi. Sonradan
+   eklenen DB, not ve hesaplanan sütunlar ortak tanımdaki labelEn/labelTr'yi
+   kullanır; `label` bunların geriye dönük kimliğidir. */
+function tableColumnDefaultLabel(tableKey,c){
   if(tableKey==='cp'||tableKey==='orders'){
-    if(c.modelCustom) return c.label||c.k;
+    if(c.modelCustom||c.noteCustom||c.formulaCustom){
+      const def=c.formulaCustom?(c.formulaDef||c):c;
+      return window.BLColumnNames?BLColumnNames.definitionLabel(def,appLang)||c.k:(c.label||c.k);
+    }
     const labels=appLang==='en'?CP_EN_HEADER_LABELS:CP_TR_HEADER_LABELS;
     return labels[c.k] || L(c.label||c.k);
   }
   return L(c.label||c.k);
+}
+// Kullanıcının kişisel EN/TR adı (varsa) sistem etiketinin önüne geçer.
+function tableColumnLabel(tableKey,c){
+  const fallback=tableColumnDefaultLabel(tableKey,c);
+  return window.BLColumnNames?BLColumnNames.resolve(tableKey,c.k,appLang,fallback):fallback;
+}
+/* Başlık kullanıcı tarafından adlandırıldıysa DOM'daki kanonik etiket katmanı
+   (canonical-column-labels.js) onu yeniden yazmamalı: kişisel ad veya
+   sonradan eklenen sütunun ortak EN/TR adı. */
+function tableColumnHasUserLabel(tableKey,c){
+  if(!c||!window.BLColumnNames)return false;
+  if(BLColumnNames.has(tableKey,c.k))return true;
+  const def=c.formulaCustom?(c.formulaDef||c):c;
+  return !!((c.modelCustom||c.noteCustom||c.formulaCustom||c.custom)&&(def.labelEn||def.labelTr));
+}
+/* Aynı etiket fonksiyonunu diğer dil için çalıştırır (diyalogdaki EN/TR
+   varsayılanları). appLang yalnız senkron çağrı süresince değişir. */
+function withAppLang(lang,fn){
+  const previous=appLang;
+  appLang=lang==='en'?'en':'tr';
+  try{return fn();}finally{appLang=previous;}
+}
+
+/* SÜTUN ADI DİYALOĞU — EN ve TR başlık, isteğe bağlı veri kaynağı bilgisi ve
+   "sistem adına dön". Sistem sütunlarında kişisel adı, sonradan eklenen
+   sütunlarda ortak tanımı düzenlemek için aynı pencere kullanılır.
+   Sonuç: {en,tr} | {reset:true} | null (vazgeç). */
+function openColumnNameDialog(options={}){
+  const en=appLang==='en';
+  const msg=(tr,e)=>en?e:tr;
+  const defaults=options.defaults||{en:'',tr:''};
+  const initial=options.initial||{en:'',tr:''};
+  const maxLength=Number(options.maxLength)||80;
+  const sourceRows=Array.isArray(options.sourceRows)?options.sourceRows:[];
+  document.getElementById('_columnNameModal')?.remove();
+  const modal=document.createElement('div');
+  modal.id='_columnNameModal';
+  modal.className='warnOverlay horizonTextInputOverlay';
+  const field=(lang,label)=>`<label for="_columnName_${lang}">${escapeHtml(label)}</label><input id="_columnName_${lang}" data-column-name="${lang}" type="text" maxlength="${maxLength}" autocomplete="off" value="${escapeHtml(initial[lang]||'')}" placeholder="${escapeHtml(defaults[lang]||'')}">`;
+  const sourceHtml=sourceRows.length?`<div class="columnNameSource" data-column-name-source><div class="columnNameSourceTitle"><svg class="ic"><use href="#i-database-import"/></svg>${escapeHtml(msg('Veri nereden geliyor?','Where does the data come from?'))}</div>${sourceRows.map(row=>`<div class="columnNameSourceRow"><span>${escapeHtml(row.label)}</span>${row.code?`<code>${escapeHtml(row.value)}</code>`:`<b>${escapeHtml(row.value)}</b>`}</div>`).join('')}</div>`:'';
+  const hint=options.hint?`<p class="columnNameHint">${escapeHtml(options.hint)}</p>`:'';
+  modal.innerHTML=`<div class="modalCard horizonTextInputCard columnNameCard" role="dialog" aria-modal="true" aria-labelledby="_columnNameTitle">
+    <div class="modelConnHead"><div><div class="modalTitle" id="_columnNameTitle">${escapeHtml(options.title||msg('Sütun adı','Column name'))}</div>${options.subtitle?`<p>${escapeHtml(options.subtitle)}</p>`:''}</div>
+      <button type="button" class="pricingRuleIconBtn" data-column-name-cancel aria-label="${escapeHtml(msg('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="horizonTextInputBody columnNameBody">${field('en',msg('İngilizce başlık (EN)','English heading (EN)'))}${field('tr',msg('Türkçe başlık (TR)','Turkish heading (TR)'))}${hint}${sourceHtml}</div>
+    <div class="modelConnFoot"><span class="columnNameStatus" data-column-name-status></span><span style="flex:1"></span>${options.allowReset?`<button type="button" class="tbtn" data-column-name-reset title="${escapeHtml(msg('Kişisel adı sil, sistem adını göster','Remove your name and show the system name'))}"><svg class="ic"><use href="#i-arrow-back-up"/></svg>${escapeHtml(msg('Sistem adına dön','Restore system name'))}</button>`:''}<button type="button" class="tbtn" data-column-name-cancel>${escapeHtml(msg('Vazgeç','Cancel'))}</button><button type="button" class="navActionBtn" data-column-name-confirm>${escapeHtml(options.confirmLabel||msg('Kaydet','Save'))}</button></div>
+  </div>`;
+  document.body.appendChild(modal);
+  const inputs={en:modal.querySelector('[data-column-name="en"]'),tr:modal.querySelector('[data-column-name="tr"]')};
+  const status=modal.querySelector('[data-column-name-status]');
+  return new Promise(resolve=>{
+    let settled=false;
+    const finish=value=>{if(settled)return;settled=true;modal.remove();resolve(value);};
+    const submit=()=>{
+      const value={en:String(inputs.en?.value||'').replace(/\s+/g,' ').trim(),tr:String(inputs.tr?.value||'').replace(/\s+/g,' ').trim()};
+      if(options.requireBoth&&(!value.en||!value.tr)){status.textContent=msg('EN ve TR başlıklarının ikisini de girin.','Enter both the EN and TR headings.');(value.en?inputs.tr:inputs.en)?.focus();return;}
+      if(!value.en&&!value.tr&&!options.allowEmpty){status.textContent=msg('Bir başlık girin.','Enter a heading.');inputs[appLang==='en'?'en':'tr']?.focus();return;}
+      const error=typeof options.validate==='function'?options.validate(value):'';
+      if(error){status.textContent=error;return;}
+      finish(value);
+    };
+    modal.querySelectorAll('[data-column-name-cancel]').forEach(button=>button.addEventListener('click',()=>finish(null)));
+    modal.querySelector('[data-column-name-reset]')?.addEventListener('click',()=>finish({reset:true}));
+    modal.querySelector('[data-column-name-confirm]')?.addEventListener('click',submit);
+    modal.addEventListener('click',event=>{if(event.target===modal)finish(null);});
+    modal.addEventListener('keydown',event=>{
+      if(event.key==='Escape'){event.preventDefault();finish(null);}
+      else if(event.key==='Enter'&&event.target&&event.target.matches('input')){event.preventDefault();submit();}
+    });
+    setTimeout(()=>{const first=inputs[appLang==='en'?'en':'tr'];first?.focus();first?.select();},0);
+  });
+}
+/* Veri kaynağı satırları; ASAS alanları için Veri Yönetimi eşlemesindeki
+   fiziksel tablo/sütun da eklenir. Eşleme okunamazsa mantıksal alan yeter. */
+async function columnSourceRows(tableKey,c){
+  const api=window.BLColumnNames; if(!api)return [];
+  const info=api.sourceFor(tableKey,c);
+  let mapping=null;
+  if(info.kind==='asas'){
+    try{
+      if(!modelConnState.loaded)await modelConnLoad();
+      const asasItem=(modelConnState.items||[]).find(item=>item&&item.role==='asas'&&item.enabled!==false)||(modelConnState.items||[]).find(item=>item&&item.role==='asas');
+      mapping=asasItem&&asasItem.mapping||null;
+    }catch(_){mapping=null;}
+  }
+  return api.describeSource(info,appLang,{mapping});
+}
+function columnSourceTooltip(tableKey,c){
+  const api=window.BLColumnNames; if(!api)return '';
+  return api.sourceSummary(api.sourceFor(tableKey,c),appLang);
+}
+/* Sistem sütununun kişisel adını düzenler (CP / Orders / Koleksiyon). */
+async function editSystemColumnLabel(tableKey,c,options={}){
+  const api=window.BLColumnNames; if(!api||!c)return false;
+  const defaultIn=typeof options.defaultLabel==='function'?options.defaultLabel:(lang=>withAppLang(lang,()=>tableColumnDefaultLabel(tableKey,c)));
+  const defaults={en:defaultIn('en'),tr:defaultIn('tr')};
+  const saved=api.get(tableKey,c.k)||{en:'',tr:''};
+  const sourceRows=await columnSourceRows(tableKey,c);
+  const en=appLang==='en';
+  const result=await openColumnNameDialog({
+    title:en?'Rename column':'Sütun adını değiştir',
+    subtitle:en?`System name: ${defaults.en} / ${defaults.tr}. Only your view changes; data, filters and formulas keep working.`:`Sistem adı: ${defaults.tr} / ${defaults.en}. Yalnız sizin görünümünüz değişir; veri, filtre ve formüller aynı çalışır.`,
+    initial:{en:saved.en||defaults.en,tr:saved.tr||defaults.tr},
+    defaults,sourceRows,allowReset:api.has(tableKey,c.k),allowEmpty:true,
+    hint:en?'Leave a field empty to keep the system name in that language.':'Bir alanı boş bırakırsanız o dilde sistem adı görünür.',
+  });
+  if(!result)return false;
+  if(result.reset)api.clear(tableKey,c.k);
+  else api.set(tableKey,c.k,result,defaults);
+  if(typeof options.onChange==='function')options.onChange();
+  showToast(result.reset?(en?'System name restored.':'Sistem adı geri yüklendi.'):(en?'Column name saved.':'Sütun adı kaydedildi.'));
+  return true;
+}
+/* Sonradan eklenen sütunun ortak EN/TR adını sorar. */
+function promptBilingualColumnName(options={}){
+  const en=appLang==='en';
+  const current=options.definition?BLColumnNames.definitionLabels(options.definition):{en:'',tr:''};
+  return openColumnNameDialog({
+    title:options.title,subtitle:options.subtitle,confirmLabel:options.confirmLabel,
+    initial:current,requireBoth:false,sourceRows:options.sourceRows||[],validate:options.validate,
+    hint:options.hint||(en?'Enter the heading in both languages; an empty language shows the other one.':'Başlığı iki dilde girin; boş bırakılan dilde diğer dildeki başlık görünür.'),
+  });
 }
 
 /* v9.51 — CP Overview / Orders Requiring Attention sütun köprüsü.
@@ -4313,6 +4448,7 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
     .map(k=>{ const c = cols.find(x=>x.k===k); return c ? {key:k, col:c, label:tableColumnLabel(tableKey,c)} : null; })
     .filter(Boolean));
   const formulaTable = FORMULA_COLUMN_TABLES.has(tableKey) && !!window.BLFormulaColumns;
+  const labelEditable = !!window.BLColumnNames && BLColumnNames.TABLES.includes(tableKey);
   panelEl.innerHTML = entries.map(({col:c})=>{
     // v7.28 — hesaplanan sütun: başlığa tıklayınca formül penceresi açılır.
     if(c.formulaCustom) return `<div class="colPanelItem isCustomCol isFormulaCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName" data-formula-edit="${escapeHtml(c.formulaId)}" title="${escapeHtml(formulaColumnTooltip(c))}"><span class="colPanelFx">fx</span>${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-formula-drop="${escapeHtml(c.formulaId)}" title="${escapeHtml(appLang==='en'?'Remove column':'Sütunu kaldır')}">×</button></div>`;
@@ -4322,6 +4458,8 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
     if((tableKey==='cp'||tableKey==='orders')&&c.modelCustom) return `<div class="colPanelItem isCustomCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName cpModelColEdit" data-cp-model-edit="${escapeHtml(c.modelColumnId)}" title="${escapeHtml(appLang==='en'?'Edit column':'Sütunu düzenle')}">${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-cp-model-drop="${escapeHtml(c.modelColumnId)}" title="${escapeHtml(appLang==='en'?'Remove column':'Sütunu kaldır')}">×</button></div>`;
     // v10.9 — kullanıcı tanımlı boş not sütunu: rename/delete aynı desende.
     if((tableKey==='cp'||tableKey==='orders')&&c.noteCustom) return `<div class="colPanelItem isCustomCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName" data-note-col-edit="${escapeHtml(c.noteColumnId)}" title="${escapeHtml(appLang==='en'?'Rename column':'Sütunu yeniden adlandır')}">${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-note-col-drop="${escapeHtml(c.noteColumnId)}" title="${escapeHtml(appLang==='en'?'Remove column':'Sütunu kaldır')}">×</button></div>`;
+    // Sistem sütunu: kalem düğmesi kişisel EN/TR adı ve veri kaynağını açar.
+    if(labelEditable) return `<label class="colPanelItem${tableColumnHasUserLabel(tableKey,c)?' hasUserLabel':''}"${tableColumnHasUserLabel(tableKey,c)?' data-bl-user-label="1"':''} title="${escapeHtml(columnSourceTooltip(tableKey,c))}"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}> <span class="colPanelName">${escapeHtml(tableColumnLabel(tableKey,c))}</span><button type="button" class="colPanelEdit" data-col-label-edit="${escapeHtml(c.k)}" title="${escapeHtml(appLang==='en'?'Rename column / show data source':'Sütun adını değiştir / veri kaynağını gör')}" aria-label="${escapeHtml(appLang==='en'?'Rename column':'Sütun adını değiştir')}"><svg class="ic"><use href="#i-pencil"/></svg></button></label>`;
     return `<label class="colPanelItem"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}> ${escapeHtml(tableColumnLabel(tableKey,c))}</label>`;
   }).join('')
     +((tableKey==='cp'||tableKey==='orders')?`<button type="button" class="colPanelAdd" id="cpAddModelColumnBtn">+ ${escapeHtml(appLang==='en'?'Add Column':'Sütun Ekle')}</button>`:'')
@@ -4343,6 +4481,11 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
   panelEl.querySelector('#cpAddNoteColumnBtn')?.addEventListener('click',()=>void addCpNoteColumn(refreshCpPanel));
   panelEl.querySelectorAll('[data-note-col-edit]').forEach(btn=>btn.addEventListener('click',()=>void renameCpNoteColumn(btn.dataset.noteColEdit,refreshCpPanel)));
   panelEl.querySelectorAll('[data-note-col-drop]').forEach(btn=>btn.addEventListener('click',()=>void removeCpNoteColumn(btn.dataset.noteColDrop,refreshCpPanel)));
+  panelEl.querySelectorAll('[data-col-label-edit]').forEach(btn=>btn.addEventListener('click',event=>{
+    event.preventDefault(); event.stopPropagation();
+    const c=cols.find(x=>x.k===btn.dataset.colLabelEdit); if(!c)return;
+    void editSystemColumnLabel(tableKey,c,{onChange:refreshCpPanel});
+  }));
 }
 /* v7.81 — CP SÜTUNU TEK İŞLEM OLARAK YAZILIR.
 
@@ -4385,6 +4528,7 @@ async function openCpModelColumnModal(editId,rerenderFn){
   document.getElementById('_cpModelColumnModal')?.remove();
   try{await modelConnLoad();}catch(err){showToast(err.message||String(err));return;}
   const existing=editId?CP_MODEL_COLUMN_DEFS.find(d=>d.id===editId):null;
+  const existingLabels=existing?BLColumnNames.definitionLabels(existing):{en:'',tr:''};
   const connections=(modelConnState.items||[]).filter(item=>['asas','antrepo'].includes(item.role));
   if(!connections.length){showToast(appLang==='en'?'Create an ASAS or IAS Data Model Connection first.':'Önce ASAS veya IAS Data Model Connection oluşturun.');return;}
   let selectedConnectionId=existing&&existing.connectionId&&connections.some(c=>c.id===existing.connectionId)?existing.connectionId:connections[0].id;
@@ -4401,7 +4545,7 @@ async function openCpModelColumnModal(editId,rerenderFn){
   const groupIsNew=!groupChoices.some(g=>groupKey(g)===groupKey(currentGroup));
   const groupFieldHtml=`<label>${escapeHtml(appLang==='en'?'Heading group':'Üst başlık (grup)')}<select id="_cpModelGroup">${groupChoices.map(g=>`<option value="${escapeHtml(g)}"${groupKey(g)===groupKey(currentGroup)?' selected':''}>${escapeHtml(g)}</option>`).join('')}<option value="${NEW_GROUP_OPTION}"${groupIsNew?' selected':''}>${escapeHtml(appLang==='en'?'＋ Create a new heading…':'＋ Yeni başlık oluştur…')}</option></select></label><label id="_cpModelGroupNewWrap"${groupIsNew?'':' hidden'}>${escapeHtml(appLang==='en'?'New heading name':'Yeni başlık adı')}<input id="_cpModelGroupNew" maxlength="40" value="${escapeHtml(groupIsNew?currentGroup:'')}" placeholder="${escapeHtml(appLang==='en'?'e.g. Production':'Örn. Üretim Takibi')}" autocomplete="off"></label>`;
   const modal=document.createElement('div'); modal.id='_cpModelColumnModal'; modal.className='warnOverlay';
-  modal.innerHTML=`<div class="modalCard cpModelColumnCard" role="dialog" aria-modal="true"><div class="modelConnHead"><div><div class="modalTitle">${escapeHtml(appLang==='en'?(existing?'Edit Database Column':'Add Database Column'):(existing?'Veri Tabanı Sütununu Düzenle':'Veri Tabanından Sütun Ekle'))}</div><p>${escapeHtml(appLang==='en'?'Set the visible header, then search and select a source table column from ASAS or IAS. Shared by CP and Orders.':'Görünecek başlığı yazın; ardından ASAS veya IAS içindeki tablo sütununu arayıp seçin. CP ve Siparişler ile paylaşılır.')}</p></div><button type="button" class="pricingRuleIconBtn cpModelClose"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="cpModelColumnBody"><label>${escapeHtml(appLang==='en'?'Column heading':'Sütun başlığı')}<input id="_cpModelLabel" value="${escapeHtml(existing&&existing.label||'')}" maxlength="80" autocomplete="off"></label>${groupFieldHtml}<label>${escapeHtml(appLang==='en'?'Data source':'Veri kaynağı')}<select id="_cpModelConnection">${connections.map(c=>`<option value="${escapeHtml(c.id)}"${c.id===selectedConnectionId?' selected':''}>${escapeHtml((c.role==='antrepo'?'IAS · ':'ASAS · ')+(c.name||c.catalog||c.server))}</option>`).join('')}</select></label><label class="cpModelWide">${escapeHtml(appLang==='en'?'Search source columns':'Kaynak sütunlarda ara')}<input id="_cpModelSearch" type="search" placeholder="${escapeHtml(appLang==='en'?'Table or column name…':'Tablo veya sütun adı…')}" autocomplete="off"></label><div class="cpModelColumnList" id="_cpModelColumnList"><div class="modelConnHint">${escapeHtml(appLang==='en'?'Loading columns…':'Sütunlar yükleniyor…')}</div></div></div><div class="modelConnFoot"><span id="_cpModelStatus"></span><span style="flex:1"></span><button type="button" class="tbtn cpModelClose">${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="navActionBtn" id="_cpModelSave"><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(appLang==='en'?'Save column':'Sütunu Kaydet')}</button></div></div>`;
+  modal.innerHTML=`<div class="modalCard cpModelColumnCard" role="dialog" aria-modal="true"><div class="modelConnHead"><div><div class="modalTitle">${escapeHtml(appLang==='en'?(existing?'Edit Database Column':'Add Database Column'):(existing?'Veri Tabanı Sütununu Düzenle':'Veri Tabanından Sütun Ekle'))}</div><p>${escapeHtml(appLang==='en'?'Set the visible header, then search and select a source table column from ASAS or IAS. Shared by CP and Orders.':'Görünecek başlığı yazın; ardından ASAS veya IAS içindeki tablo sütununu arayıp seçin. CP ve Siparişler ile paylaşılır.')}</p></div><button type="button" class="pricingRuleIconBtn cpModelClose"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="cpModelColumnBody"><label>${escapeHtml(appLang==='en'?'English heading (EN)':'İngilizce başlık (EN)')}<input id="_cpModelLabelEn" value="${escapeHtml(existingLabels.en)}" maxlength="80" autocomplete="off"></label><label>${escapeHtml(appLang==='en'?'Turkish heading (TR)':'Türkçe başlık (TR)')}<input id="_cpModelLabelTr" value="${escapeHtml(existingLabels.tr)}" maxlength="80" autocomplete="off"></label>${groupFieldHtml}<label>${escapeHtml(appLang==='en'?'Data source':'Veri kaynağı')}<select id="_cpModelConnection">${connections.map(c=>`<option value="${escapeHtml(c.id)}"${c.id===selectedConnectionId?' selected':''}>${escapeHtml((c.role==='antrepo'?'IAS · ':'ASAS · ')+(c.name||c.catalog||c.server))}</option>`).join('')}</select></label><label class="cpModelWide">${escapeHtml(appLang==='en'?'Search source columns':'Kaynak sütunlarda ara')}<input id="_cpModelSearch" type="search" placeholder="${escapeHtml(appLang==='en'?'Table or column name…':'Tablo veya sütun adı…')}" autocomplete="off"></label><div class="cpModelColumnList" id="_cpModelColumnList"><div class="modelConnHint">${escapeHtml(appLang==='en'?'Loading columns…':'Sütunlar yükleniyor…')}</div></div></div><div class="modelConnFoot"><span id="_cpModelStatus"></span><span style="flex:1"></span><button type="button" class="tbtn cpModelClose">${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="navActionBtn" id="_cpModelSave"><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(appLang==='en'?'Save column':'Sütunu Kaydet')}</button></div></div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
@@ -4414,7 +4558,7 @@ async function openCpModelColumnModal(editId,rerenderFn){
   const chosenGroup=()=>(groupSelect.value===NEW_GROUP_OPTION?groupNew.value:groupSelect.value).replace(/\s+/g,' ').trim();
   groupSelect.addEventListener('change',()=>{const wantsNew=groupSelect.value===NEW_GROUP_OPTION;groupNewWrap.hidden=!wantsNew;if(wantsNew)groupNew.focus();});
   modal.querySelectorAll('.cpModelClose').forEach(btn=>btn.addEventListener('click',()=>modal.remove()));modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
-  modal.querySelector('#_cpModelSave').addEventListener('click',async e=>{const label=modal.querySelector('#_cpModelLabel').value.trim();if(!label){status.textContent=appLang==='en'?'Enter a column heading.':'Sütun başlığı girin.';return;}if(!selectedField){status.textContent=appLang==='en'?'Select a source column.':'Bir kaynak sütun seçin.';return;}const group=chosenGroup();if(groupSelect.value===NEW_GROUP_OPTION&&!group){status.textContent=appLang==='en'?'Enter a new heading name.':'Yeni başlık adı girin.';groupNew.focus();return;}const btn=e.currentTarget;btn.disabled=true;status.textContent=appLang==='en'?'Saving…':'Kaydediliyor…';try{
+  modal.querySelector('#_cpModelSave').addEventListener('click',async e=>{const labelEn=modal.querySelector('#_cpModelLabelEn').value.replace(/\s+/g,' ').trim(),labelTr=modal.querySelector('#_cpModelLabelTr').value.replace(/\s+/g,' ').trim(),label=labelTr||labelEn;if(!label){status.textContent=appLang==='en'?'Enter a column heading.':'Sütun başlığı girin.';return;}if(!selectedField){status.textContent=appLang==='en'?'Select a source column.':'Bir kaynak sütun seçin.';return;}const group=chosenGroup();if(groupSelect.value===NEW_GROUP_OPTION&&!group){status.textContent=appLang==='en'?'Enter a new heading name.':'Yeni başlık adı girin.';groupNew.focus();return;}const btn=e.currentTarget;btn.disabled=true;status.textContent=appLang==='en'?'Saving…':'Kaydediliyor…';try{
       /* Sütunu BAŞKA bir kaynağa taşımak iki yazma gerektirir. SIRA ÖNEMLİ:
          ÖNCE EKLE, SONRA KALDIR. Ters sırada, ekleme başarısız olursa sütun
          hiçbir kaynakta kalmaz — sessiz kayıp. Bu sırayla en kötü durum
@@ -4426,11 +4570,11 @@ async function openCpModelColumnModal(editId,rerenderFn){
       const movingSource=Boolean(previous&&previous.connectionId&&previous.connectionId!==selectedConnectionId);
       const entry={kind:'column',table:selectedField.table,name:selectedField.name};
       const saved=movingSource||!editId
-        ?await writeCpModelColumn(selectedConnectionId,{op:'add',label,group,entry})
-        :await writeCpModelColumn(selectedConnectionId,{op:'update',id:editId,label,group,entry});
+        ?await writeCpModelColumn(selectedConnectionId,{op:'add',label,labelEn,labelTr,group,entry})
+        :await writeCpModelColumn(selectedConnectionId,{op:'update',id:editId,label,labelEn,labelTr,group,entry});
       if(movingSource)await writeCpModelColumn(previous.connectionId,{op:'remove',id:editId});
       syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));modal.remove();if(typeof rerenderFn==='function')rerenderFn();else renderCP();showToast(appLang==='en'?'Column saved. Refresh CP to load its values.':'Sütun kaydedildi. Değerlerini almak için CP’yi yenileyin.');}catch(err){btn.disabled=false;status.textContent=err.message||String(err);}});
-  loadSchema(); setTimeout(()=>modal.querySelector('#_cpModelLabel').focus(),0);
+  loadSchema(); setTimeout(()=>modal.querySelector(appLang==='en'?'#_cpModelLabelEn':'#_cpModelLabelTr').focus(),0);
 }
 /* v7.33 — Hesaplanan sütun penceresi de bu pencereyi açar (ASAS / IAS-Antrepo
    sütununu formülde kullanabilmek için). Aynı akış tek yerde durur. */
@@ -6375,7 +6519,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
       const columnLabel=tableColumnLabel(tableKey,c);
       const filterLabel=appLang==='en'?`Filter: ${columnLabel}`:`Filtrele: ${columnLabel}`;
       const filterButton=c.type==='cpImage'?'':`<button type="button" class="thFilterBtn${active}" data-fk="${c.k}" aria-label="${escapeHtml(filterLabel)}" title="${escapeHtml(filterLabel)}">▾</button>`;
-      return `<th data-k="${c.k}" class="${c.type==='cpImage'?'cpPictureTh ':''}${isHeaderFiltered?'columnFilterActive ':''}${groupBoundaryKeys.has(c.k)?'groupBoundary':''}"${imageTitle?` title="${escapeHtml(imageTitle)}"`:''}><div class="thInner"><span class="thLabel">${escapeHtml(columnLabel)}<span class="arrow">${arrow}</span></span>${filterButton}</div></th>`;
+      return `<th data-k="${c.k}" class="${c.type==='cpImage'?'cpPictureTh ':''}${isHeaderFiltered?'columnFilterActive ':''}${groupBoundaryKeys.has(c.k)?'groupBoundary':''}"${tableColumnHasUserLabel(tableKey,c)?' data-bl-user-label="1"':''}${imageTitle?` title="${escapeHtml(imageTitle)}"`:''}><div class="thInner"><span class="thLabel">${escapeHtml(columnLabel)}<span class="arrow">${arrow}</span></span>${filterButton}</div></th>`;
     }).join('') + '</tr>';
   thead.innerHTML = theadHtml;
   const groupRowEl = thead.querySelector('tr.groupRow');
@@ -20475,11 +20619,29 @@ window.BLCollectionColumns={
     }))];
   },
   label(key){
-    const column=this.catalog().find(item=>item.key===key);
-    return column?(typeof L==='function'?L(column.label):column.label):String(key||'');
+    const column=kolColDefs().find(item=>item.k===key);
+    if(column)return kolColumnLabel(column);
+    return key==='picture'?(typeof L==='function'?L('Picture'):'Picture'):String(key||'');
   }
 };
 function kolIsCustomCol(key){ return kolCustomCols.some(c=>c.k===key); }
+/* Koleksiyon sütun etiketi: kişisel EN/TR ad > özel sütunun ortak EN/TR adı >
+   sistem etiketi. Sistem etiketinin kanonik biçimi DOM katmanında
+   (canonical-column-labels.js) uygulanır; kullanıcı adı o katmandan korunur. */
+function kolColumnDefaultLabel(c){
+  if(c&&c.custom)return window.BLColumnNames?BLColumnNames.definitionLabel(c,appLang)||c.k:c.label;
+  return L(c.label);
+}
+function kolColumnLabel(c){
+  const fallback=kolColumnDefaultLabel(c);
+  return window.BLColumnNames?BLColumnNames.resolve('koleksiyon',c.k,appLang,fallback):fallback;
+}
+function kolColumnHasUserLabel(c){return tableColumnHasUserLabel('koleksiyon',c);}
+// Diyalogda gösterilen sistem adı: ekranda görünen kanonik etiketle aynı olmalı.
+function kolColumnSystemLabelIn(c,lang){
+  const canonical=window.BLColumnLabels&&typeof BLColumnLabels.collectionLabelForKey==='function'?BLColumnLabels.collectionLabelForKey(c.k,lang,null):null;
+  return canonical||withAppLang(lang,()=>kolColumnDefaultLabel(c));
+}
 function kolNewCustomColKey(){
   let key;
   do { key = 'cx_'+Math.random().toString(36).slice(2,8); }
@@ -20493,6 +20655,7 @@ function kolNormalizeCustomCols(list){
     if(!k||!label||reserved.has(k)||seen.has(k)) return;
     seen.add(k);
     out.push({k,label,w:Math.max(64,Math.min(600,Number(entry.w)||140)),custom:true,
+      ...(entry.labelEn?{labelEn:String(entry.labelEn).trim().slice(0,80)}:{}),...(entry.labelTr?{labelTr:String(entry.labelTr).trim().slice(0,80)}:{}),
       dataType:entry.dataType||entry.data_type||'', percentageScale:entry.percentageScale||entry.scale||'',
       sourceMetadata:entry.sourceMetadata||entry.metadata||entry.dbMetadata||null});
   });
@@ -22133,7 +22296,7 @@ function kolAllOrderedCols(){
 }
 function kolOrderedCols(){ return kolAllOrderedCols().filter(c=>!kolHiddenCols.has(c.k)); }
 function kolColMinWidth(c){
-  const readableHeaderPx=tableHeaderTextWidth(L(c.label))+54;
+  const readableHeaderPx=tableHeaderTextWidth(kolColumnLabel(c))+54;
   if(c.k==='not') return Math.max(220,readableHeaderPx);
   return Math.max(64,readableHeaderPx);
 }
@@ -22145,20 +22308,21 @@ function kolColWidth(c){
 /* v7.81 — Koleksiyon'a boş (serbest metin) sütun ekler. Hem Sütunlar
    panelindeki "+ Sütun ekle" hem de ⋯ menüsündeki "Sütun Ekle" buraya
    gelir; mantık tek yerde durur. panelEl verilirse panel de tazelenir. */
+// Özel sütunun kimlik etiketi (`label`) diğer sütunlarla çakışmamalı.
+function kolCustomColumnNameClash(pair,exceptKey){
+  const name=(pair.tr||pair.en||'').toLocaleLowerCase('tr');
+  return kolColDefs().some(c=>c.k!==exceptKey&&String(c.label).toLocaleLowerCase('tr')===name)
+    ?(appLang==='en'?'A column with that name already exists.':'Bu adda bir sütun zaten var.'):'';
+}
 async function kolAddCustomColumn(panelEl){
   if(!kolRequireWorkspaceEdit())return false;
-  const name = String(await openHorizonTextInput({
+  const pair = await promptBilingualColumnName({
     title:appLang==='en'?'Add column':'Sütun ekle',
-    label:appLang==='en'?'Name of the new column':'Yeni sütunun adı',
     confirmLabel:appLang==='en'?'Add':'Ekle',
-    maxLength:80
-  })||'').trim();
-  if(!name) return false;
-  if(kolColDefs().some(c=>String(c.label).toLocaleLowerCase('tr')===name.toLocaleLowerCase('tr'))){
-    showToast(appLang==='en'?'A column with that name already exists.':'Bu adda bir sütun zaten var.');
-    return false;
-  }
-  kolCustomCols.push({k:kolNewCustomColKey(), label:name, w:140, custom:true});
+    validate:value=>kolCustomColumnNameClash(value,null)
+  });
+  if(!pair) return false;
+  kolCustomCols.push(BLColumnNames.withDefinitionLabels({k:kolNewCustomColKey(), w:140, custom:true},pair));
   // Yeni sütun sona eklenir; kullanıcının belirlediği sıra korunur.
   if(Array.isArray(kolColOrder)) kolColOrder.push(kolCustomCols[kolCustomCols.length-1].k);
   saveKolColState(); kolQueueWorkspaceSave();
@@ -22172,12 +22336,16 @@ function renderKolColumnPanel(panelEl){
   const renameTitle = appLang==='en' ? 'Rename' : 'Yeniden adlandır';
   const deleteTitle = appLang==='en' ? 'Delete column' : 'Sütunu sil';
   // Picture en üstte kalır (sabit sütun, sıralamaya girmez); diğerleri A→Z.
+  const labelTitle = appLang==='en' ? 'Rename column / show data source' : 'Sütun adını değiştir / veri kaynağını gör';
   panelEl.innerHTML = `<label class="colPanelItem"><input type="checkbox" data-key="__picture" ${kolPictureHidden?'':'checked'}> ${escapeHtml(L('Picture'))}</label>`
     + sortColumnPanelEntries(cols.concat(KOL_SYNTHETIC_COL_KEYS.map(key=>({k:key,label:KOL_SYNTHETIC_COL_META[key].label})))
-        .map(c=>({col:c,label:kolIsCustomCol(c.k)?c.label:L(c.label)}))).map(({col:c})=>{
+        .map(c=>({col:c,label:KOL_SYNTHETIC_COL_META[c.k]?L(c.label):kolColumnLabel(c)}))).map(({col:c,label})=>{
         // Özel sütun yapısı çalışma alanı verisidir; görüntüleme yetkisinde yalnız görünürlük değiştirilebilir.
         const custom = kolIsCustomCol(c.k),editableCustom=custom&&canEdit;
-        return `<label class="colPanelItem${custom?' isCustomCol':''}"><input type="checkbox" data-key="${c.k}" ${kolHiddenCols.has(c.k)?'':'checked'}> <span class="colPanelName"${editableCustom?` data-rename="${escapeHtml(c.k)}" title="${escapeHtml(renameTitle)}"`:''}>${escapeHtml(custom?c.label:L(c.label))}</span>${editableCustom?`<button type="button" class="colPanelDrop" data-drop="${escapeHtml(c.k)}" title="${escapeHtml(deleteTitle)}">×</button>`:''}</label>`;
+        // Sistem sütunu (ve düzenleme yetkisi olmayan özel sütun): kişisel EN/TR ad.
+        const personal = !editableCustom && !KOL_SYNTHETIC_COL_META[c.k] && !!window.BLColumnNames;
+        const userLabel = !KOL_SYNTHETIC_COL_META[c.k] && kolColumnHasUserLabel(c);
+        return `<label class="colPanelItem${custom?' isCustomCol':''}${userLabel?' hasUserLabel':''}"${userLabel?' data-bl-user-label="1"':''}${personal?` title="${escapeHtml(columnSourceTooltip('koleksiyon',c))}"`:''}><input type="checkbox" data-key="${c.k}" ${kolHiddenCols.has(c.k)?'':'checked'}> <span class="colPanelName"${editableCustom?` data-rename="${escapeHtml(c.k)}" title="${escapeHtml(renameTitle)}"`:''}>${escapeHtml(label)}</span>${personal?`<button type="button" class="colPanelEdit" data-label-edit="${escapeHtml(c.k)}" title="${escapeHtml(labelTitle)}" aria-label="${escapeHtml(labelTitle)}"><svg class="ic"><use href="#i-pencil"/></svg></button>`:''}${editableCustom?`<button type="button" class="colPanelDrop" data-drop="${escapeHtml(c.k)}" title="${escapeHtml(deleteTitle)}">×</button>`:''}</label>`;
       }).join('')
     + (canEdit?`<button type="button" class="colPanelAdd" id="kolAddColBtn">+ ${escapeHtml(addLabel)}</button>`:'');
   panelEl.querySelectorAll('input[data-key]').forEach(inp=>inp.addEventListener('change',()=>{
@@ -22191,16 +22359,26 @@ function renderKolColumnPanel(panelEl){
   panelEl.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click', async e=>{
     e.preventDefault(); e.stopPropagation(); if(!kolRequireWorkspaceEdit())return;
     const col = kolCustomCols.find(c=>c.k===el.dataset.rename); if(!col) return;
-    const name = String(await openHorizonTextInput({
+    const pair = await promptBilingualColumnName({
       title:appLang==='en'?'Rename column':'Sütunu yeniden adlandır',
-      label:appLang==='en'?'New name':'Yeni ad',
-      initial:col.label,
       confirmLabel:appLang==='en'?'Save':'Kaydet',
-      maxLength:80
-    })||'').trim();
-    if(!name) return;
-    col.label = name;
-    saveKolColState(); renderKolColumnPanel(panelEl); renderKol();
+      definition:col,
+      sourceRows:BLColumnNames.describeSource(BLColumnNames.sourceFor('koleksiyon',col),appLang),
+      validate:value=>kolCustomColumnNameClash(value,col.k)
+    });
+    if(!pair) return;
+    Object.assign(col,BLColumnNames.withDefinitionLabels(col,pair));
+    if(!col.labelEn)delete col.labelEn;
+    if(!col.labelTr)delete col.labelTr;
+    saveKolColState(); kolQueueWorkspaceSave(); renderKolColumnPanel(panelEl); renderKol();
+  }));
+  panelEl.querySelectorAll('[data-label-edit]').forEach(btn=>btn.addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    const col = kolColDefs().find(c=>c.k===btn.dataset.labelEdit); if(!col) return;
+    void editSystemColumnLabel('koleksiyon',col,{
+      defaultLabel:lang=>kolColumnSystemLabelIn(col,lang),
+      onChange:()=>{ if(panelEl.isConnected) renderKolColumnPanel(panelEl); renderKol(); }
+    });
   }));
   panelEl.querySelectorAll('[data-drop]').forEach(btn=>btn.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation();
@@ -23959,7 +24137,7 @@ function kolSyncRulePricing(options={}){
 function kolDescriptorCatalog(){
   const map=new Map();
   kolAllOrderedCols().forEach(c=>{
-    if(!kolHiddenCols.has(c.k))map.set(c.k,{kind:'base',k:c.k,label:L(c.label),col:c});
+    if(!kolHiddenCols.has(c.k))map.set(c.k,{kind:'base',k:c.k,label:kolColumnLabel(c),col:c});
   });
   /* v6.34 — Best Price, Conf. Manufacturer ve Conf. FOB eskiden TEK bir koşulun
      içindeydi: !kolHiddenCols.has('targetPrice'). Yani sütun seçicide Target
@@ -24815,10 +24993,11 @@ function renderKol(){
   const confirmedPriceFilterHint=appLang==='en'?'Set with the approval check in the price cell':'Fiyat hücresindeki onay tikiyle belirlenir';
   const headers=descriptors.map(d=>{
     if(d.kind==='base'){
-      if(d.col.noFilter)return `<th data-kcol="${d.k}" class="kolComputedHeader"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
+      const userLabelAttr=kolColumnHasUserLabel(d.col)?' data-bl-user-label="1"':'';
+      if(d.col.noFilter)return `<th data-kcol="${d.k}" class="kolComputedHeader"${userLabelAttr}><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
       const isFiltered=!!(kolColFilters[d.k]&&kolColFilters[d.k].size),active=isFiltered?' filterActive':'',arrow=kolSort.key===d.k?(kolSort.dir===1?'▲':'▼'):'';
       const filterLabel=appLang==='en'?`Filter: ${d.label}`:`Filtrele: ${d.label}`;
-      return `<th data-kcol="${d.k}" class="${isFiltered?'columnFilterActive':''}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}<span class="arrow">${arrow}</span></span><button type="button" class="thFilterBtn kolThFilterBtn${active}" data-kcol="${d.k}" title="${escapeHtml(filterLabel)}" aria-label="${escapeHtml(filterLabel)}">▾</button></div></th>`;
+      return `<th data-kcol="${d.k}" class="${isFiltered?'columnFilterActive':''}"${userLabelAttr}><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}<span class="arrow">${arrow}</span></span><button type="button" class="thFilterBtn kolThFilterBtn${active}" data-kcol="${d.k}" title="${escapeHtml(filterLabel)}" aria-label="${escapeHtml(filterLabel)}">▾</button></div></th>`;
     }
     if(d.kind==='best') return `<th data-kcol="${d.k}" title="${escapeHtml(appLang==='en'?'Lowest valid quotation; hover the cell to see the manufacturer':'En düşük geçerli teklif; üreticiyi görmek için hücrenin üzerinde bekle')}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
     if(d.kind==='confirmedName'){
@@ -26102,7 +26281,7 @@ window.BLPriceSupplierAnalysisBridge={
 
 function kolTableClipboardColumns(){
   const meta=TABLE_META.kolTable;
-  return meta&&meta.colsFn?meta.colsFn():kolOrderedCols().map(c=>({k:c.k,label:L(c.label),kol:c}));
+  return meta&&meta.colsFn?meta.colsFn():kolOrderedCols().map(c=>({k:c.k,label:kolColumnLabel(c),kol:c}));
 }
 async function copyKolSelectedRows(){
   commitActiveTableEditor({refresh:false});
@@ -26223,7 +26402,13 @@ function kolImportHeaderKey(value){
 function kolImportHeaderAliases(){
   const aliases={};
   const add=(key,...values)=>values.filter(v=>v!=null&&String(v).trim()).forEach(v=>aliases[kolImportHeaderKey(v)]=key);
-  kolColDefs().forEach(c=>{if(!c.endeksmatik)add(c.k,c.k,c.label,KOL_EN_TR_DICT[c.label],L(c.label));});
+  kolColDefs().forEach(c=>{
+    if(c.endeksmatik)return;
+    add(c.k,c.k,c.label,KOL_EN_TR_DICT[c.label],L(c.label));
+    // Kişisel/ortak EN-TR adlarla dışa aktarılmış dosya geri içe alınabilsin.
+    const own=window.BLColumnNames&&BLColumnNames.get('koleksiyon',c.k);
+    add(c.k,c.labelEn,c.labelTr,own&&own.en,own&&own.tr);
+  });
   KOL_STYLE_EXTRA_FIELDS.forEach(field=>add(field.k,field.k,field.label,field.labelTr,kolStyleFieldLabel(field)));
   add('plmId','PLM','PLM ID');
   add('modelKod','MODEL','MODEL NAME','MODEL ADI','STYLE','STYLE NAME');
@@ -29681,7 +29866,7 @@ function kolLoadPricingImage(src){
 }
 async function kolBuildPricingPreviewImages(rows){
   const exportCols=kolPricingExcelCols();
-  const defs=[{label:'Görsel',width:108,image:true},...exportCols.map(c=>({label:L(c.label),width:Math.max(90,Math.min(185,Math.round((kolColWidth(c)||110)*0.9))),col:c}))];
+  const defs=[{label:'Görsel',width:108,image:true},...exportCols.map(c=>({label:kolColumnLabel(c),width:Math.max(90,Math.min(185,Math.round((kolColWidth(c)||110)*0.9))),col:c}))];
   const rawWidth=defs.reduce((sum,d)=>sum+d.width,0);
   const maxWidth=1900, scale=Math.min(1,maxWidth/rawWidth), width=Math.max(720,Math.round(rawWidth*scale));
   const headerH=Math.round(44*scale), rowH=Math.max(58,Math.round(86*scale));

@@ -10908,6 +10908,8 @@ app.patch('/api/data-management/source/:id', userAccess.requireArea('source'), u
         op: body.cpColumn.op,
         id: body.cpColumn.id,
         label: body.cpColumn.label,
+        labelEn: body.cpColumn.labelEn,
+        labelTr: body.cpColumn.labelTr,
         group: body.cpColumn.group,
         entry: body.cpColumn.entry,
       });
