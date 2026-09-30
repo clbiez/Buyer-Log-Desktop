@@ -365,3 +365,49 @@ test('v7.175 · gizli formül satırı ve önizleme kutusu tarayıcıda gerçekt
   assert.match(CSS, /\.fcEcho\[hidden\]\{display:none;\}/);
   assert.match(CSS, /\.fcBody>\*\{flex-shrink:0;\}/);
 });
+
+test('v7.177 · Koşula göre yaz birden çok sütunun durumunu VE / VEYA ile bağlar', () => {
+  const { api } = setup({ cols: BASE });
+  const multi = {
+    mode: 'ifelse',
+    ifelse: {
+      left: 'A', cmp: 'eq', right: { kind: 'value', value: '1' },
+      more: [{ left: 'B', cmp: 'eq', right: { kind: 'value', value: '0' } }],
+      join: 'and', then: 'TEST', else: '',
+    },
+  };
+  const formula = 'IF(AND([A] = 1, [B] = 0), "TEST", "")';
+  assert.equal(api.builderFormula(multi), formula);
+  assert.equal(engine.compile(formula).ok, true);
+  const run = (builder, row) => engine.compile(api.builderFormula(builder)).evaluate(row, { strictColumns: true }).value;
+  assert.equal(run(multi, { A: 1, B: 0 }), 'TEST');
+  assert.equal(run(multi, { A: 1, B: 5 }), '');
+  // Üç sütun ve VEYA; sütunla karşılaştırma ve boşluk kontrolü karışık.
+  const orRule = {
+    mode: 'ifelse',
+    ifelse: {
+      left: 'A', cmp: 'gt', right: { kind: 'column', column: 'B' },
+      more: [
+        { left: 'B', cmp: 'blank', right: {} },
+        { left: 'A', cmp: 'contains', right: { kind: 'value', value: 'ELBİSE' } },
+      ],
+      join: 'or', then: 'Kontrol', else: 'Tamam',
+    },
+  };
+  const orFormula = 'IF(OR([A] > [B], ISBLANK([B]), CONTAINS([A], "ELBİSE")), "Kontrol", "Tamam")';
+  assert.equal(api.builderFormula(orRule), orFormula);
+  for (const text of [formula, orFormula]) {
+    const back = api.builderFromFormula(text);
+    assert.equal(back && back.mode, 'ifelse', `${text} Koşul kartına dönmeli`);
+    assert.equal(api.builderFormula(back), text, `${text} geri çözülüp aynı metni üretmeli`);
+  }
+  assert.equal(api.builderFromFormula(orFormula).ifelse.more.length, 2);
+  assert.equal(api.builderFromFormula(orFormula).ifelse.join, 'or');
+  // Eksik ek koşul formül üretmez; tek koşullu eski kayıtlar değişmez.
+  assert.equal(api.builderFormula({ mode: 'ifelse', ifelse: { ...multi.ifelse, more: [{ left: 'B', cmp: 'eq', right: { kind: 'value', value: '' } }] } }), '');
+  assert.equal(api.builderFormula({ mode: 'ifelse', ifelse: { left: 'A', cmp: 'ge', right: { kind: 'value', value: '1000' }, then: 'Büyük', else: '' } }), 'IF([A] >= 1000, "Büyük", "")');
+  // Arayüz: koşul ekle/kaldır ve ortak ve/veya seçimi.
+  assert.match(FC_SOURCE, /data-fc-if-add/);
+  assert.match(FC_SOURCE, /data-fc-if-drop="\$\{index\}"/);
+  assert.match(FC_SOURCE, /data-fc-if-join/);
+});
