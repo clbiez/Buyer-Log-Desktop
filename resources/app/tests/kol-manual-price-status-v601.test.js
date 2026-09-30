@@ -57,15 +57,12 @@ test('v6.01 elle giriş türetilmiş hücreye yazmıyor, arkadaki kaydı kuruyor
   // Best Price fiyat haritasının en düşüğüdür; hücreye metin yazmak bir sonraki
   // hesapta ezilecek sahte bir değer üretirdi.
   assert.match(block, /row\.pricing\[mfr\]=kolFormatMoneyDisplay\(String\(price\)\)/);
-  /* v6.34 — İDDİA TERSİNE ÇEVRİLDİ. Eski test recordRequest'in KOŞULSUZ
-     çağrılmasını çiviliyordu; çivilenen davranışın kendisi hataydı: fiyat mevcut
-     bir Quotations kaydından gelse bile kaynağa dokunulmadan İKİNCİ bir kayıt
-     açılıyordu. Artık önce yerinde güncelleme denenir, yalnız eşleşen satır
-     yoksa yeni kayıt açılır. Testin asıl niyeti (elle giriş arkada bir Quotations
-     kaydına bağlanır) korunuyor. */
-  assert.match(block, /api\.updateCollectionLine\(row\.id,mfr/);
-  assert.match(block, /updated\?null:await \(api&&api\.recordRequest/);
-  assert.match(block, /api\.recordRequest\('collection',\[row\],\[\{name:mfr/);
+  /* v2026-09-30 — Manuel fiyatlar artık tek ortak quotation altında toplanır.
+     Mevcut gerçek quotation satırını yerinde güncelleme kararı quotations.js
+     içindeki recordManualCollectionPrice tarafından verilir; app-main her yeni
+     fiyat için doğrudan recordRequest() çağırmaz. */
+  assert.match(block, /api\.recordManualCollectionPrice\(/);
+  assert.doesNotMatch(block, /api\.recordRequest\('collection'/);
   // Onay kutusu işaretliyse onaylı üretici yazılmalı, işaretsizse KALDIRILMALI.
   assert.match(block, /if\(wantConfirmed\)row\.confirmedManufacturer=mfr;/);
   assert.match(block, /else if\(norm\(row\.confirmedManufacturer\)===norm\(mfr\)\)row\.confirmedManufacturer='';/);
