@@ -24992,7 +24992,7 @@ function renderKol(){
   table.style.setProperty('--kol-row-h',`${collectionRowHeight}px`);
   table.style.setProperty('--kol-variant-row-h',`${kolVariantRowHeight(collectionRowHeight)}px`);
   table.style.setProperty('--kol-text-h',`${Math.max(24,collectionRowHeight-4)}px`);
-  colgroup.innerHTML='<col class="kolSpreadsheetGutterCol" style="width:64px;">'+(pictureVisible?`<col style="width:${_imgDim.col}px;">`:'')+descriptors.map(d=>`<col data-kcol="${d.k}" style="width:${kolDescriptorWidth(d)}px;">`).join('');
+  colgroup.innerHTML='<col class="kolSpreadsheetGutterCol" style="width:72px;">'+(pictureVisible?`<col style="width:${_imgDim.col}px;">`:'')+descriptors.map(d=>`<col data-kcol="${d.k}" style="width:${kolDescriptorWidth(d)}px;">`).join('');
   const confirmedPriceFilterHint=appLang==='en'?'Set with the approval check in the price cell':'Fiyat hücresindeki onay tikiyle belirlenir';
   const headers=descriptors.map(d=>{
     if(d.kind==='base'){
