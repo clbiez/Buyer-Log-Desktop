@@ -650,6 +650,8 @@ function commitEnhancedDateDisplay(display, notify=true){
 
 const DATE_CAL_MONTHS=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 const DATE_CAL_DAYS=['Pt','Sa','Ça','Pe','Cu','Ct','Pz'];
+const DATE_CAL_MONTHS_EN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DATE_CAL_DAYS_EN=['Mo','Tu','We','Th','Fr','Sa','Su'];
 let _dateCalendarPopup=null;
 let _dateCalendarDisplay=null;
 let _dateCalendarMonth=null;
@@ -717,13 +719,14 @@ function renderDateCalendarPopup(){
   const selected=dateFromISOInput(native.value);
   const today=toDateOnly(new Date());
   const firstDow=(view.getDay()+6)%7; // Pazartesi = 0
+  const calEn=appLang==='en';
   const gridStart=new Date(view); gridStart.setDate(1-firstDow);
-  let html=`<div class="dateCalendarHead"><button type="button" class="dateCalendarNav" data-cal-nav="-1" aria-label="Önceki ay">‹</button><div class="dateCalendarTitle">${DATE_CAL_MONTHS[view.getMonth()]} ${view.getFullYear()}</div><button type="button" class="dateCalendarNav" data-cal-nav="1" aria-label="Sonraki ay">›</button></div>`;
-  html+='<div class="dateCalendarGrid"><div class="dateCalendarWeekHead" title="Yılın haftası">Hf</div>';
-  html+=DATE_CAL_DAYS.map(d=>`<div class="dateCalendarDow">${d}</div>`).join('');
+  let html=`<div class="dateCalendarHead"><button type="button" class="dateCalendarNav" data-cal-nav="-1" aria-label="${calEn?'Previous month':'Önceki ay'}">‹</button><div class="dateCalendarTitle">${(calEn?DATE_CAL_MONTHS_EN:DATE_CAL_MONTHS)[view.getMonth()]} ${view.getFullYear()}</div><button type="button" class="dateCalendarNav" data-cal-nav="1" aria-label="${calEn?'Next month':'Sonraki ay'}">›</button></div>`;
+  html+=`<div class="dateCalendarGrid"><div class="dateCalendarWeekHead" title="${calEn?'Week of year':'Yılın haftası'}">${calEn?'Wk':'Hf'}</div>`;
+  html+=(calEn?DATE_CAL_DAYS_EN:DATE_CAL_DAYS).map(d=>`<div class="dateCalendarDow">${d}</div>`).join('');
   for(let row=0;row<6;row++){
     const monday=new Date(gridStart); monday.setDate(gridStart.getDate()+row*7);
-    html+=`<div class="dateCalendarWeek" title="Yılın ${isoWeekNumber(monday)}. haftası">${isoWeekNumber(monday)}.</div>`;
+    html+=`<div class="dateCalendarWeek" title="${calEn?`Week ${isoWeekNumber(monday)} of the year`:`Yılın ${isoWeekNumber(monday)}. haftası`}">${isoWeekNumber(monday)}.</div>`;
     for(let col=0;col<7;col++){
       const day=new Date(monday); day.setDate(monday.getDate()+col);
       const iso=toISODate(day);
@@ -3792,7 +3795,7 @@ function openTableViewFocusEditor(tableKey,preset='focus'){
   document.getElementById('_tableViewFocusModal')?.remove();
   const catalog=tableViewFocusCatalog(tableKey),selected=new Set(tableViewPresetKeys(tableKey,preset)),previousFocus=document.activeElement;
   const modal=document.createElement('div');modal.id='_tableViewFocusModal';modal.className='warnOverlay';
-  const presetName=preset==='extended'?'Extended':(appLang==='en'?'Focus':'Odak');
+  const presetName=preset==='extended'?(appLang==='en'?'Extended':'Genişletilmiş'):(appLang==='en'?'Focus':'Odak');
   const title=appLang==='en'?`${presetName} columns`:`${presetName} sütunları`;
   const help=appLang==='en'?`Choose which columns remain visible when ${presetName} is selected.`:`${presetName} seçildiğinde görünür kalacak sütunları seçin.`;
   modal.innerHTML=`<div class="modalCard quickFilterEditorCard tableViewFocusEditorCard" role="dialog" aria-modal="true" aria-labelledby="_tableViewFocusTitle"><div class="modalTitle" id="_tableViewFocusTitle">${escapeHtml(title)}</div><div class="muted quickFilterEditorHelp">${escapeHtml(help)}</div><div class="quickFilterEditorList">${catalog.map(column=>`<label class="quickFilterEditorItem"><input type="checkbox" data-table-view-focus-key="${escapeHtml(column.key)}" ${selected.has(column.key)?'checked':''}> <span>${escapeHtml(L(column.label))}</span></label>`).join('')}</div><div class="modalFoot"><span></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-apply>${escapeHtml(appLang==='en'?'Apply':'Uygula')}</button></div></div>`;
@@ -34150,8 +34153,9 @@ function applyLanguage(lang){
   try{
     // Aktif olmayan CP/Overview sayfaları da işaretlenir; o sayfaya geçildiğinde
     // yeni dille yeniden çizilirler.
-    ['cp','overview'].forEach(t=>{ if(t!==tab) _deferredTabRenders.add(t); });
+    ['cp','orders','overview'].forEach(t=>{ if(t!==tab) _deferredTabRenders.add(t); });
     if(tab==='cp' && typeof renderCP==='function') renderCP();
+    else if(tab==='orders' && typeof renderOrders==='function') renderOrders();
     else if(tab==='koleksiyon' && typeof renderKol==='function') renderKol();
     else if(tab==='overview' && typeof renderOverview==='function') renderOverview();
     else if(tab==='backlog' && typeof renderBacklogDimOrder==='function') renderBacklogDimOrder();
@@ -34175,6 +34179,9 @@ function applyLanguage(lang){
   if(document.getElementById('_refreshSummaryModal')) renderSourceRefreshHistoryModal(_sourceRefreshHistoryState.items,_sourceRefreshHistoryState.selectedId);
   try{if(window.BLFX)renderSourceFxFreshness(BLFX.store);}catch(_){}
   try{if(typeof refreshFieldMappingReadinessUI==='function')void refreshFieldMappingReadinessUI();}catch(_){}
+  // Modüllerde tek dilde kalan veya yeniden çizilmeyen metinleri sözlükten aktif
+  // dile tamamlar (bkz. i18n-runtime.js). Yeniden çizimlerden SONRA çalışır.
+  try{window.BLI18n?.absorbLegacy?.();window.BLI18n?.setLanguage?.(appLang);}catch(_){}
   // TR/EN etiket genişlikleri farklı: duyarlı araç çubukları yeniden ölçülür.
   window.BLToolbarResponsive?.refresh?.(null,{remeasure:true});
 }
