@@ -76,8 +76,9 @@ test('v6.01 elle giriş doğrulama yapıyor', () => {
   assert.match(block, /if\(!Number\.isFinite\(price\)\|\|price<=0\)/);
   // Üretici listede yoksa eklenmeli; yoksa Quotations kaydı boş üreticiyle açılır.
   assert.match(block, /if\(!known\)kolManufacturers\.push\(\{name:mfr,email:''\}\)/);
-  // Quotations kaydı açılamazsa kullanıcı bunu bilmeli.
-  assert.match(block, /Quotations kaydı açılamadı/);
+  // Ortak manuel Quotations kaydı yazılamazsa kullanıcı bunu bilmeli (v2026-09-30:
+  // her fiyat için yeni kayıt açılmaz, tek ortak kayıt güncellenir).
+  assert.match(block, /ortak manuel Quotations kaydı güncellenemedi/);
 });
 
 test('elle fiyat üretici önerileri ASAS kataloğundan gelir', () => {
