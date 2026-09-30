@@ -120,7 +120,12 @@ test('v11.11 ⋯ tetikleyicisi görünür bir yuva değilse genişliği taşmada
 });
 
 test('v11.11 taşacak eylem kalmadığında araç çubuğu üst üste binmek yerine satır sarar', () => {
-  const plan = planAt(320);
+  /* Eşik sabit değil, taşamayan eylemlerin kompakt genişliğinden türetilir:
+     araç çubuğu küçüldükçe (ör. 7.0.174'te Yeni satır ikona indi) sabit 320px
+     artık "her şey sığıyor" genişliği olabiliyordu. */
+  const pinned = collectionEntries().filter(entry => !entry.overflowable);
+  const minimum = layoutWidth(pinned, { compact: true, gaps: GAPS });
+  const plan = planAt(minimum - 40);
   assert.equal(plan.wrap, true);
   assert.equal(plan.compact, true);
   for (const entry of collectionEntries()) {
