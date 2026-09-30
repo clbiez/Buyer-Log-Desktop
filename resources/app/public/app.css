@@ -4602,10 +4602,86 @@ td.formulaCell.isError{color:var(--muted);}
 #cpTable thead th.fcJustAdded,#ordersTable thead th.fcJustAdded,#shipTable thead th.fcJustAdded{box-shadow:inset 0 -3px 0 var(--acc);transition:box-shadow .25s ease;}
 
 /* v7.28 — hesaplanan sütun KURUCUSU (kip sekmeleri + kutular) */
-.fcModes{display:flex;gap:4px;padding:3px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--bg);}
-.fcMode{flex:1;height:28px;border:0;border-radius:var(--r-xs);background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;}
-.fcMode:hover{color:var(--ink);}
-.fcMode.active{background:var(--card);color:var(--ink);box-shadow:var(--shadow-1,0 1px 2px rgba(0,0,0,.12));}
+/* v7.175 — "Ne yapmak istiyorsunuz?" kartları. Ortak segment sekmesinin
+   (data-bl-tabs="segment") klavye/erişilebilirlik sözleşmesi korunur; yalnız
+   yerleşim ızgaraya, yazı iki satıra (ad + kısa cümle) açılır. */
+.fcModes[data-bl-tabs][role="tablist"]{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:0;border:0;background:transparent;overflow:visible;}
+.fcModes[data-bl-tabs]>.fcMode{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:2px;min-height:54px;height:auto;padding:7px 9px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);text-align:left;white-space:normal;cursor:pointer;}
+.fcModes[data-bl-tabs]>.fcMode b{font-size:12.2px;font-weight:700;line-height:1.25;}
+.fcModes[data-bl-tabs]>.fcMode small{font-size:10.6px;font-weight:400;line-height:1.35;color:var(--muted);}
+.fcModes[data-bl-tabs]>.fcMode:hover{border-color:var(--acc);background:var(--card);}
+.fcModes[data-bl-tabs]>.fcMode[aria-selected="true"]{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);box-shadow:inset 0 0 0 1px var(--acc);}
+.fcModes[data-bl-tabs]>.fcMode[aria-selected="true"] small{color:var(--acc-ink);}
+.fcModes[data-bl-tabs]>.fcRecipeAi{border-style:dashed;}
+.fcStep{display:flex;align-items:center;gap:8px;margin-top:2px;font-size:12.5px;font-weight:700;color:var(--ink);}
+.fcStep:empty{display:none;}
+.fcStepNo{display:inline-flex;align-items:center;justify-content:center;flex:0 0 20px;width:20px;height:20px;border-radius:var(--r-full);background:var(--acc-bg);color:var(--acc-ink);font-size:11px;font-weight:700;}
+.fcSentence{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12.5px;color:var(--ink);}
+.fcPick,.fcSentenceInput{height:var(--ctl-h);max-width:260px;min-width:0;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-size:12.3px;padding:0 7px;}
+.fcPickShort{max-width:130px;}
+.fcSentenceInput{width:150px;}
+.fcPick:focus,.fcSentenceInput:focus{outline:none;border-color:var(--acc);}
+.fcChoiceRow{display:flex;flex-wrap:wrap;gap:6px 16px;}
+.fcChoice{display:flex;align-items:center;gap:6px;font-size:12.2px;color:var(--ink);cursor:pointer;}
+.fcMore{border:1px solid var(--line2);border-radius:var(--r-sm);padding:8px 11px;font-size:11.6px;color:var(--muted);}
+.fcMore>summary{cursor:pointer;font-weight:650;color:var(--ink);}
+.fcMore>.fcFormatRow{margin-top:9px;}
+.fcEcho .fcMini{flex:0 0 auto;}
+/* Kaydırılan gövdede kutular sıkışmasın (önizleme alttaki başlığın üstüne
+   biniyordu) ve [hidden] display:flex tarafından ezilmesin (AI kipinde eski
+   kartın formülü görünüyordu — tarayıcıda ölçüldü). */
+.fcBody>*{flex-shrink:0;}
+.fcEcho[hidden]{display:none;}
+.fcBuild .fcNote{font-size:11.5px;color:var(--muted);}
+.fcInsertNote{margin:0;flex:1;min-width:180px;font-size:11.4px;color:var(--muted);}
+/* Canlı formül analizi (Gelişmiş ve AI) */
+.fcIssues{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;}
+.fcIssue{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;border:1px solid var(--line2);border-left:3px solid var(--line2);border-radius:var(--r-sm);background:var(--bg);font-size:11.8px;line-height:1.5;color:var(--ink);}
+.fcIssue b{font-weight:650;}
+.fcIssue.is-error{border-left-color:var(--red);}
+.fcIssue.is-warn{border-left-color:var(--orange);}
+.fcIssue.is-info{border-left-color:var(--acc);}
+.fcIssue.is-ok{border-left-color:var(--green);}
+.fcIssueIcon{flex:0 0 18px;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r-full);font-size:10.5px;font-weight:700;background:var(--card2);color:var(--ink2);}
+.fcIssue.is-error .fcIssueIcon{background:var(--red-bg);color:var(--red);}
+.fcIssue.is-warn .fcIssueIcon{background:var(--orange-bg);color:var(--orange);}
+.fcIssue.is-ok .fcIssueIcon{background:var(--green-bg);color:var(--green);}
+.fcIssue .fcMini{margin-left:4px;}
+.fcCaret{font-family:var(--mono);font-size:11px;color:var(--ink2);white-space:pre-wrap;word-break:break-word;}
+/* Formül sözlüğü */
+.fcDict{border:1px solid var(--line2);border-radius:var(--r-sm);padding:8px 11px;font-size:11.6px;color:var(--muted);}
+.fcDict>summary{cursor:pointer;font-weight:650;color:var(--ink);}
+.fcDict[open]>summary{margin-bottom:8px;}
+.fcDictSearch{width:100%;height:var(--ctl-h);border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-size:12.3px;padding:0 9px;margin-bottom:8px;}
+.fcDictSearch:focus{outline:none;border-color:var(--acc);}
+.fcDictGroup{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.fcDictGroup[hidden],.fcDictItem[hidden]{display:none;}
+.fcDictHead{font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.fcDictItem{display:flex;flex-direction:column;gap:3px;padding:6px 8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);}
+.fcDictTop{display:flex;align-items:center;gap:8px;min-width:0;}
+.fcDictTop code{flex:1;min-width:0;font-family:var(--mono);font-size:11.3px;color:var(--acc-ink);overflow-wrap:anywhere;}
+.fcDictText{font-size:11.6px;color:var(--ink);line-height:1.45;}
+.fcDictExample{font-size:11px;color:var(--muted);overflow-wrap:anywhere;}
+.fcDictExample code{font-family:var(--mono);font-size:10.8px;color:var(--ink2);}
+.fcRules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;color:var(--ink);line-height:1.5;}
+/* AI ile yaz */
+.fcAiSteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:12px;font-size:12.2px;color:var(--ink);}
+.fcAiSteps>li{display:flex;flex-direction:column;gap:6px;}
+.fcAiSteps>li::marker{font-weight:700;color:var(--acc-ink);}
+.fcAiSteps textarea{border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-size:12.3px;line-height:1.5;padding:7px 9px;resize:vertical;min-width:0;}
+.fcAiSteps textarea[data-fc-ai-answer]{font-family:var(--mono);font-size:11.8px;}
+.fcAiSteps textarea:focus{outline:none;border-color:var(--acc);}
+.fcAiSteps .fcNote{margin:0;font-size:11.3px;color:var(--muted);}
+.fcAiRow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;}
+.fcAiPromptWrap{flex:1;min-width:180px;font-size:11.5px;color:var(--muted);}
+.fcAiPromptWrap>summary{cursor:pointer;}
+.fcAiPrompt{max-height:220px;overflow:auto;margin:6px 0 0;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:10.8px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.fcAiResult{display:flex;flex-direction:column;gap:6px;}
+.fcAiResult:empty{display:none;}
+.fcAiFound{display:flex;align-items:baseline;gap:8px;padding:6px 10px;border:1px dashed var(--line2);border-radius:var(--r-sm);background:var(--bg);min-width:0;}
+.fcAiFound span{flex:0 0 auto;font-size:10.5px;font-weight:650;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;}
+.fcAiFound code{flex:1;min-width:0;overflow-wrap:anywhere;font-family:var(--mono);font-size:11.5px;color:var(--ink);}
+@media (max-width:640px){.fcModes[data-bl-tabs][role="tablist"]{grid-template-columns:repeat(2,minmax(0,1fr));}.fcPick,.fcSentenceInput{max-width:100%;flex:1 1 100%;}}
 .fcBuild{display:flex;flex-direction:column;gap:9px;}
 .fcCalcRow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}
 .fcOperand{display:inline-flex;align-items:center;gap:4px;min-width:0;}

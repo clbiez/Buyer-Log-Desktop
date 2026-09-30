@@ -97,7 +97,10 @@
     const E = engine();
     if (value == null || value === '') return '';
     const format = definition && definition.format ? definition.format : 'auto';
-    const decimals = Number.isFinite(Number(definition && definition.decimals)) ? Math.max(0, Math.min(6, Number(definition.decimals))) : null;
+    /* Boş "Ondalık basamak" OTOMATİK demektir. Number('') 0 verdiği için boş
+       kutu eskiden 0 basamak sayılıyor, %12,5 "13%" görünüyordu. */
+    const rawDecimals = definition ? definition.decimals : null;
+    const decimals = rawDecimals !== '' && rawDecimals != null && Number.isFinite(Number(rawDecimals)) ? Math.max(0, Math.min(6, Number(rawDecimals))) : null;
     if (format === 'text') return E ? E.toText(value) : String(value);
     if (format === 'date') return dateDisplay(value) || (E ? E.toText(value) : String(value));
     if (value instanceof Date) return dateDisplay(value);
@@ -154,6 +157,7 @@
     const cols = window.COLS_BY_TABLE && window.COLS_BY_TABLE[tableKey];
     const manager = window.colmgr && window.colmgr[tableKey];
     if (!cols || !manager) return [];
+    migrateReferences(tableKey);
     const defs = definitions(tableKey);
     const base = cols.filter(col => !col.formulaCustom);
     const dynamic = defs.map(definition => {
@@ -254,6 +258,7 @@
       if (aliasedKey && row && Object.prototype.hasOwnProperty.call(row, aliasedKey)) return row[aliasedKey];
       return undefined;
     };
+    const index = columnIndex(tableKey);
     for (const definition of ordered) {
       const program = compiled(definition);
       const key = columnKey(definition);
@@ -276,7 +281,7 @@
         } else {
           row[key] = null;
           failed++;
-          if (!firstError) firstError = result.error;
+          if (!firstError) firstError = friendlyError(result, index, definition.refs);
         }
       }
       if (failed) {
@@ -331,7 +336,7 @@
         const name = String(col.label || '').trim();
         if (!name || seen.has(name)) continue;
         seen.add(name);
-        out.push({ key: name, label: name, calculated: true });
+        out.push({ key: name, label: name, calculated: true, ref: col.k });
         continue;
       }
       /* v7.33 — "SÜTUN EKLE" İLE EKLENEN VERİ TABANI SÜTUNLARI DA LİSTEDE.
@@ -347,14 +352,14 @@
         const name = String(col.label || '').trim();
         if (!name || seen.has(nameKey(name))) continue;
         seen.add(nameKey(name));
-        out.push({ key: name, label: name, model: true, source: modelSourceLabel(col) });
+        out.push({ key: name, label: name, model: true, source: modelSourceLabel(col), ref: col.k });
         continue;
       }
       if (String(col.k).startsWith('__')) continue;
       if (seen.has(col.k)) continue;
       seen.add(col.k);
       const label = typeof window.tableColumnLabel === 'function' ? window.tableColumnLabel(tableKey, col) : (col.label || col.k);
-      out.push({ key: col.k, label: label || col.k });
+      out.push({ key: col.k, label: label || col.k, ref: col.k });
     }
     return out.sort((a, b) => String(a.label).localeCompare(String(b.label), 'tr', { sensitivity: 'base' }));
   }
@@ -441,6 +446,146 @@
     return { ordered: ordered.filter(item => item && !cyclic.has(item.id)), cyclic };
   }
 
+  /* ---------------- KALICI SÜTUN BAŞVURUSU ----------------
+
+     Kullanıcı sorusu (birebir): "Calculated column ile oluşturulan bir sütun;
+     eğer formülün içerdiği diğer sütunların isimlerinde değişiklik olursa,
+     formülü bozulur mu? Bozulmamasını sağlayalım."
+
+     BOZULUYORDU. Formül, hesaplanan ve veri tabanı sütunlarına ADIYLA
+     başvuruyordu ([Üretim Süresi], [Üretici Kodu]) ve ad düz metin olarak
+     saklanıyordu. Sütun yeniden adlandırılınca eski ad hiçbir şeye çözülmüyor,
+     sütun "Sütun bulunamadı" ile boş kalıyordu.
+
+     ÇÖZÜM: formül DEPODA değişmeyen anahtarlarla tutulur, EKRANDA güncel
+     adlarla gösterilir.
+       · hesaplanan sütun → [__f_<id>]   (tanımın kimliği)
+       · veri tabanı sütunu → [__CPX_<id>] (sunucudaki sütun kimliği)
+       · not sütunu / temel sütun → satırdaki kendi anahtarı (zaten sabit)
+     Satırda bu anahtarlar doğrudan durduğu için hesaplama bir çeviri
+     katmanına ihtiyaç duymaz. Kullanıcı formülü her zaman okunur adlarla görür
+     ve yazar; kaydederken adlar anahtara, açarken anahtarlar o anki adlara
+     çevrilir. `refs` son bilinen adı saklar: başvurulan sütun silinirse hata
+     iç anahtarı değil kullanıcının tanıdığı adı söyler.
+
+     Eski (ad ile saklanmış) formüller syncColumns sırasında AYNI öncelikle
+     (satırın kendi alanı > hesaplanan > veri tabanı) anahtara taşınır;
+     çözülemeyen ad olduğu gibi kalır ve eski davranış sürer. */
+  function columnIndex(tableKey) {
+    const cols = (window.COLS_BY_TABLE && window.COLS_BY_TABLE[tableKey]) || [];
+    const byKey = new Map();
+    const calculated = new Map(), model = new Map(), base = new Map();
+    const remember = (map, name, key) => { const k = nameKey(name); if (k && !map.has(k)) map.set(k, key); };
+    for (const definition of definitions(tableKey)) {
+      const key = columnKey(definition);
+      byKey.set(key, { key, name: clean(definition.label) || key, kind: 'calculated' });
+      remember(calculated, definition.label, key);
+    }
+    for (const col of cols) {
+      if (!col || !col.k || col.formulaCustom) continue;
+      if (col.modelCustom) {
+        byKey.set(col.k, { key: col.k, name: clean(col.label) || col.k, kind: 'model' });
+        remember(model, col.label, col.k);
+        continue;
+      }
+      if (String(col.k).startsWith('__')) continue;
+      const label = clean(typeof window.tableColumnLabel === 'function' ? window.tableColumnLabel(tableKey, col) : (col.label || col.k)) || col.k;
+      byKey.set(col.k, { key: col.k, name: label, kind: 'base' });
+      remember(base, label, col.k);
+      remember(base, col.label, col.k);
+      remember(base, col.k, col.k);
+    }
+    return { byKey, calculated, model, base };
+  }
+  /* Bir adı (ya da anahtarı) kalıcı anahtara çözer. `legacy` yalnız eski
+     çalışma zamanının tanıdığı yolları kullanır: taşıma, formülün ANLAMINI
+     değiştirmemelidir. Kullanıcının yeni yazdığı adda ise ekrandaki başlık
+     (Türkçe/İngilizce) da tanınır. */
+  function resolveRef(index, name, legacy) {
+    const raw = String(name == null ? '' : name).trim();
+    if (!raw) return null;
+    if (index.byKey.has(raw)) return raw;
+    const key = nameKey(raw);
+    return index.calculated.get(key) || index.model.get(key) || (legacy ? null : index.base.get(key)) || null;
+  }
+  // Anahtarın EKRANDA görünen adı. Temel sütunda başlık yalnız geri aynı
+  // anahtara çözülüyorsa kullanılır; yoksa belirsizlik olmasın diye anahtar.
+  function refName(index, key, refs) {
+    const entry = index.byKey.get(key);
+    if (entry) {
+      if (entry.kind !== 'base') return entry.name;
+      return resolveRef(index, entry.name, false) === key ? entry.name : key;
+    }
+    return (refs && refs[key]) || key;
+  }
+  function refsFor(index, formula, previous) {
+    const E = engine();
+    const out = {};
+    const program = E ? E.compile(formula) : null;
+    for (const key of (program && program.ok ? program.columns : [])) {
+      if (index.byKey.has(key)) { if (index.byKey.get(key).kind !== 'base') out[key] = index.byKey.get(key).name; }
+      else if (previous && previous[key]) out[key] = previous[key];
+    }
+    return out;
+  }
+  // Ekranda yazılan formül → depodaki formül (+ son bilinen adlar).
+  function toStorage(tableKey, text, previousRefs) {
+    const E = engine();
+    const source = clean(text);
+    if (!E || !source) return { formula: source, refs: {} };
+    const index = columnIndex(tableKey);
+    const previous = previousRefs || {};
+    const formula = E.rewriteColumns(source, name => {
+      const key = resolveRef(index, name, false);
+      if (key) return key;
+      // Silinmiş bir sütunun eski adı: kimliği korunur, geri gelirse çalışır.
+      const kept = Object.keys(previous).find(item => nameKey(previous[item]) === nameKey(name));
+      return kept || null;
+    });
+    return { formula, refs: refsFor(index, formula, previous) };
+  }
+  // Depodaki formül → ekranda gösterilen formül.
+  function displayFormula(tableKey, definitionOrFormula, refs) {
+    const E = engine();
+    const definition = typeof definitionOrFormula === 'string' ? { formula: definitionOrFormula, refs } : (definitionOrFormula || {});
+    const source = String(definition.formula == null ? '' : definition.formula);
+    if (!E || !source) return source;
+    const index = columnIndex(tableKey);
+    return E.rewriteColumns(source, key => refName(index, key, definition.refs));
+  }
+  // Eski, ad ile saklanmış başvuruları kalıcı anahtara taşır; adları tazeler.
+  function migrateReferences(tableKey) {
+    const E = engine();
+    if (!E) return false;
+    const list = definitions(tableKey);
+    if (!list.length) return false;
+    const index = columnIndex(tableKey);
+    const sample = tableRows(tableKey).slice(0, 50);
+    const rowsHave = name => sample.some(row => row && Object.prototype.hasOwnProperty.call(row, name));
+    let changed = false;
+    for (const definition of list) {
+      if (!definition.formula) continue;
+      const formula = E.rewriteColumns(definition.formula, name => {
+        if (index.byKey.has(name) || rowsHave(name)) return null;
+        return resolveRef(index, name, true);
+      });
+      const refs = refsFor(index, formula, definition.refs);
+      if (formula !== definition.formula || JSON.stringify(refs) !== JSON.stringify(definition.refs || {})) {
+        definition.formula = formula;
+        definition.refs = refs;
+        changed = true;
+      }
+    }
+    if (changed) { save(tableKey, list); compiledCache.clear(); }
+    return changed;
+  }
+  // "Sütun bulunamadı: __f_fc_x" yerine kullanıcının tanıdığı ad.
+  function friendlyError(result, index, refs) {
+    if (!result || !Array.isArray(result.missing) || !result.missing.length || !/Sütun bulunamadı/.test(result.error || '')) return result && result.error;
+    const names = result.missing.map(key => refName(index, key, refs)).join(', ');
+    return T(`Sütun bulunamadı: ${names}`, `Column not found: ${names}`);
+  }
+
   /* Önizleme satırları. Tabloların satır dizileri app-main.js içinde farklı
      yerlerde durur (state.cp.rows / state.orders.rows / shipRows). Tek tek
      erişmek yerine app-main.js orada window.BLFormulaRows sağlayıcısını
@@ -462,20 +607,30 @@
      kullanıcı dostu değil, exceldeki gibi matematik işlemleri ile belirtmek
      daha basit olacak."
 
-     Bu yüzden pencere artık ÜÇ kipte açılır ve varsayılan kip formül yazmayı
-     hiç gerektirmez:
+     v7.175 — Kullanıcı talebi (birebir): "Calculated Column modülünü uçtan uca
+     elden geçirmeni istiyorum. Hiç excel bilmeyen biri bile kolaylıkla
+     kullanabilsin. Çok basitleştir. İsteyen advanced modda formül de yazsın,
+     formül yazmak için bir sözlük de sun ... karmaşıksa AI'a formül yazma
+     kurallarını anlatıp istediklerini söylesinler ve çıktıyı buyer loga
+     kopyalasınlar, buyer log da analiz edip varsa hata söylesin."
 
-       · HESAPLAMA  — [sütun] [işlem] [sütun] [işlem] … kutuları. İşlem
-         listesi + − × ÷; operandlar sütun ya da elle yazılan sabit sayı.
-       · BİRLEŞTİRME — seçilen sütunları araya AYRAÇ koyarak birleştirir.
-       · GELİŞMİŞ    — eski formül kutusu; fonksiyonların tamamı burada.
+     Pencere artık "hangi araç?" değil "NE YAPMAK İSTİYORSUNUZ?" sorusuyla
+     açılır. Her kart düz bir cümledir ("iki tarih arasında kaç gün var?");
+     kullanıcı yalnız cümledeki boşlukları sütun seçerek doldurur:
 
-     Depoda saklanan şey yine FORMÜL METNİDİR. Kurucu yalnız o metni üretir.
-     Sebebi: tek bir hesaplama yolu kalsın. İki ayrı yürütücü (biri kurucu
-     için, biri formül için) olsaydı ikisi zamanla birbirinden ayrılır ve aynı
-     sütun iki farklı sonuç verirdi. Düzenlemeye açarken metin geri
-     ÇÖZÜMLENİR (motorun kendi ayrıştırıcısıyla, tahminle değil); kurucuya
-     sığmayan bir formül Gelişmiş kipte açılır. */
+       · GÜN FARKI     — [tarih] ile [tarih] arasında kaç gün
+       · HESAPLAMA     — [sütun] [işlem] [sütun] … kutuları (+ − × ÷)
+       · YÜZDE         — A, B'nin yüzde kaçı / yüzde değişim
+       · TARİHE GÜN EKLE
+       · BİRLEŞTİRME   — sütunları ayraçla tek hücrede toplar
+       · KOŞUL         — "Eğer … ise … yaz, değilse … yaz"
+       · GELİŞMİŞ      — formülü elle yazma + sözlük + canlı analiz
+       · AI İLE YAZ    — AI'a kuralları anlatan yönerge + cevabı analiz
+
+     Depoda saklanan şey yine TEK bir FORMÜL METNİDİR; kartlar yalnız o metni
+     üretir. Sebebi: tek bir hesaplama yolu kalsın. Düzenlemeye açarken metin
+     motorun kendi ayrıştırıcısıyla geri çözülür; hiçbir karta sığmayan formül
+     Gelişmiş kipte açılır. */
 
   const OPERATORS = [
     { op: '+', sign: '+', tr: 'topla', en: 'add' },
@@ -491,11 +646,30 @@
     { value: ', ', tr: 'virgül', en: 'comma' },
     { value: ' | ', tr: 'dik çizgi', en: 'pipe' },
   ];
+  // Koşul kartındaki karşılaştırmalar — düz cümle olarak.
+  const COMPARISONS = [
+    { id: 'gt', op: '>', tr: 'büyükse', en: 'is greater than' },
+    { id: 'ge', op: '>=', tr: 'büyük ya da eşitse', en: 'is at least' },
+    { id: 'lt', op: '<', tr: 'küçükse', en: 'is less than' },
+    { id: 'le', op: '<=', tr: 'küçük ya da eşitse', en: 'is at most' },
+    { id: 'eq', op: '=', tr: 'eşitse', en: 'equals' },
+    { id: 'ne', op: '<>', tr: 'eşit değilse', en: 'does not equal' },
+    { id: 'contains', op: null, tr: 'içeriyorsa', en: 'contains' },
+    { id: 'blank', op: null, tr: 'boşsa', en: 'is blank' },
+    { id: 'notblank', op: null, tr: 'doluysa', en: 'is not blank' },
+  ];
   const NUMBER_OPERAND = '__fc_number__';
   // v7.42 — "yeni başlık" seçeneği; bir grup adıyla çakışmasın diye eğik yazım.
   const NEW_GROUP = '__fc_new_group__';
 
   function quoteText(text) { return `"${String(text == null ? '' : text).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`; }
+  // Kullanıcının kutuya yazdığı değer: sayıya benziyorsa sayı, değilse metin.
+  function literal(value) {
+    const text = String(value == null ? '' : value);
+    const trimmed = text.trim();
+    if (/^-?\d+(?:[.,]\d+)?$/.test(trimmed)) return String(Number(trimmed.replace(',', '.')));
+    return quoteText(text);
+  }
   function operandExpression(operand) {
     if (!operand) return '';
     if (operand.kind === 'number') {
@@ -531,16 +705,60 @@
     if (columns.length === 1) return `TEXT([${columns[0]}])`;
     return `TEXTJOIN(${quoteText(separator)}, ${builder.skipEmpty === false ? 'false' : 'true'}, ${args})`;
   }
+  function daysFormula(builder) {
+    const days = builder.days || {};
+    return days.start && days.end ? `DAYS([${days.start}], [${days.end}])` : '';
+  }
+  /* Yüzde kartı ×100 üretir ve biçimi "Yüzde" yapar (biçim yalnız "%" ekler,
+     çarpmaz). Tek ondalık, ekrandaki diğer yüzde sütunlarıyla aynıdır. */
+  function percentFormula(builder) {
+    const percent = builder.percent || {};
+    if (!percent.a || !percent.b) return '';
+    return percent.kind === 'change'
+      ? `ROUND(([${percent.a}] - [${percent.b}]) / [${percent.b}] * 100, 1)`
+      : `ROUND([${percent.a}] / [${percent.b}] * 100, 1)`;
+  }
+  function addDaysFormula(builder) {
+    const add = builder.adddays || {};
+    const raw = clean(add.days).replace(',', '.');
+    if (!add.date || raw === '' || !Number.isFinite(Number(raw))) return '';
+    const amount = Math.abs(Number(raw));
+    return `ADDDAYS([${add.date}], ${add.dir === '-' ? -amount : amount})`;
+  }
+  function conditionFormula(builder) {
+    const rule = builder.ifelse || {};
+    if (!rule.left) return '';
+    const left = `[${rule.left}]`;
+    const right = rule.right || {};
+    let condition = '';
+    if (rule.cmp === 'blank') condition = `ISBLANK(${left})`;
+    else if (rule.cmp === 'notblank') condition = `NOT(ISBLANK(${left}))`;
+    else {
+      let value = '';
+      if (right.kind === 'column') { if (!right.column) return ''; value = `[${right.column}]`; }
+      else { if (clean(right.value) === '') return ''; value = rule.cmp === 'contains' ? quoteText(right.value) : literal(right.value); }
+      const compare = COMPARISONS.find(item => item.id === rule.cmp) || COMPARISONS[0];
+      condition = rule.cmp === 'contains' ? `CONTAINS(${left}, ${value})` : `${left} ${compare.op} ${value}`;
+    }
+    return `IF(${condition}, ${literal(rule.then)}, ${literal(rule.else)})`;
+  }
   function builderFormula(builder) {
     if (!builder) return '';
     if (builder.mode === 'calc') return calcFormula(builder);
     if (builder.mode === 'join') return joinFormula(builder);
+    if (builder.mode === 'days') return daysFormula(builder);
+    if (builder.mode === 'percent') return percentFormula(builder);
+    if (builder.mode === 'adddays') return addDaysFormula(builder);
+    if (builder.mode === 'ifelse') return conditionFormula(builder);
+    if (builder.mode === 'ai') return clean(builder.ai && builder.ai.formula);
     return clean(builder.advanced);
   }
 
-  /* Formül metnini kutulara geri çözer. Motorun kendi ayrıştırıcısı kullanılır;
+  /* Formül metnini karta geri çözer. Motorun kendi ayrıştırıcısı kullanılır;
      düzenli ifadeyle tahmin etmek, kullanıcının formülünü sessizce yanlış
-     göstermenin en kolay yoludur. Sığmıyorsa null döner → Gelişmiş kip. */
+     göstermenin en kolay yoludur. Hiçbir karta BİREBİR sığmıyorsa null döner →
+     Gelişmiş kip. Birebir: kartın yeniden ürettiği metin aynı hesaplamayı
+     yapmalıdır; "neredeyse" uyan bir formül karta düşürülmez. */
   function builderFromFormula(source) {
     const text = clean(source);
     if (!text) return null;
@@ -549,6 +767,11 @@
     const program = E.compile(text);
     if (!program.ok || !program.ast) return null;
     const ast = program.ast;
+    const isCol = node => node && node.kind === 'column';
+    const isNum = (node, value) => node && node.kind === 'number' && (value == null || node.value === value);
+    const isLiteral = node => node && (node.kind === 'string' || node.kind === 'number');
+    const bin = (node, op) => node && node.kind === 'binary' && node.op === op;
+    const call = (node, name, count) => node && node.kind === 'call' && node.name === name && node.args.length === count;
 
     if (ast.kind === 'call' && (ast.name === 'TEXTJOIN' || ast.name === 'BIRLESTIR') && ast.args.length >= 3) {
       const [separator, skip, ...rest] = ast.args;
@@ -558,6 +781,42 @@
     }
     if (ast.kind === 'call' && ast.name === 'TEXT' && ast.args.length === 1 && ast.args[0].kind === 'column') {
       return { mode: 'join', columns: [ast.args[0].name], separator: ' - ', skipEmpty: true };
+    }
+    if (call(ast, 'DAYS', 2) && isCol(ast.args[0]) && isCol(ast.args[1])) {
+      return { mode: 'days', days: { start: ast.args[0].name, end: ast.args[1].name } };
+    }
+    if (call(ast, 'ADDDAYS', 2) && isCol(ast.args[0])) {
+      const amount = ast.args[1];
+      if (isNum(amount)) return { mode: 'adddays', adddays: { date: ast.args[0].name, days: String(amount.value), dir: '+' } };
+      if (amount.kind === 'unary' && isNum(amount.argument)) return { mode: 'adddays', adddays: { date: ast.args[0].name, days: String(amount.argument.value), dir: '-' } };
+      return null;
+    }
+    if (call(ast, 'ROUND', 2) && isNum(ast.args[1], 1) && bin(ast.args[0], '*') && isNum(ast.args[0].right, 100) && bin(ast.args[0].left, '/')) {
+      const division = ast.args[0].left;
+      if (isCol(division.left) && isCol(division.right)) return { mode: 'percent', percent: { kind: 'ratio', a: division.left.name, b: division.right.name } };
+      if (bin(division.left, '-') && isCol(division.left.left) && isCol(division.left.right) && isCol(division.right)
+        && division.left.right.name === division.right.name) {
+        return { mode: 'percent', percent: { kind: 'change', a: division.left.left.name, b: division.right.name } };
+      }
+      return null;
+    }
+    if (call(ast, 'IF', 3) && isLiteral(ast.args[1]) && isLiteral(ast.args[2])) {
+      const [condition, whenTrue, whenFalse] = ast.args;
+      const out = { mode: 'ifelse', ifelse: { left: '', cmp: 'gt', right: { kind: 'value', column: '', value: '' }, then: String(whenTrue.value), else: String(whenFalse.value) } };
+      const rule = out.ifelse;
+      if (call(condition, 'ISBLANK', 1) && isCol(condition.args[0])) { rule.left = condition.args[0].name; rule.cmp = 'blank'; return out; }
+      if (call(condition, 'NOT', 1) && call(condition.args[0], 'ISBLANK', 1) && isCol(condition.args[0].args[0])) { rule.left = condition.args[0].args[0].name; rule.cmp = 'notblank'; return out; }
+      if (call(condition, 'CONTAINS', 2) && isCol(condition.args[0]) && condition.args[1].kind === 'string') {
+        rule.left = condition.args[0].name; rule.cmp = 'contains'; rule.right.value = condition.args[1].value; return out;
+      }
+      const compare = condition.kind === 'binary' && COMPARISONS.find(item => item.op === condition.op || (condition.op === '==' && item.op === '=') || (condition.op === '!=' && item.op === '<>'));
+      if (compare && isCol(condition.left) && (isCol(condition.right) || isLiteral(condition.right))) {
+        rule.left = condition.left.name;
+        rule.cmp = compare.id;
+        rule.right = isCol(condition.right) ? { kind: 'column', column: condition.right.name, value: '' } : { kind: 'value', column: '', value: String(condition.right.value) };
+        return out;
+      }
+      return null;
     }
 
     const operands = [];
@@ -585,6 +844,51 @@
     return { mode: 'calc', operands, operators };
   }
 
+  // Kartın ürettiği sütuna uygun görünüm; kullanıcı biçimi elle seçtiyse dokunulmaz.
+  const SUGGESTED_FORMAT = { days: 'integer', percent: 'percent', adddays: 'date', join: 'text', ifelse: 'text' };
+
+  /* Sütun türü tahmini — yalnız AI yönergesine "tarih / sayı / metin" yazmak
+     için. Değerin kendisi yönergeye girmez. */
+  function columnType(tableKey, ref) {
+    const cols = (window.COLS_BY_TABLE && window.COLS_BY_TABLE[tableKey]) || [];
+    const col = cols.find(item => item && item.k === ref);
+    const declared = String((col && (col.dataType || (col._blSchema && col._blSchema.dataType))) || '').toLowerCase();
+    if (/date/.test(declared)) return 'date';
+    if (/int|num|dec|float|money|curr|perc/.test(declared)) return 'number';
+    if (/text|string|char/.test(declared)) return 'text';
+    const E = engine();
+    const values = [];
+    for (const row of tableRows(tableKey)) {
+      const value = row ? row[ref] : null;
+      if (value != null && value !== '') values.push(value);
+      if (values.length >= 30) break;
+    }
+    if (!E || !values.length) return '';
+    if (values.filter(value => E.looksLikeDate(value)).length >= values.length * 0.8) return 'date';
+    if (values.filter(value => E.toNumber(value) != null).length >= values.length * 0.8) return 'number';
+    return 'text';
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      return navigator.clipboard.writeText(text).then(() => true, () => fallbackCopy(text));
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+  function fallbackCopy(text) {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
+    area.remove();
+    return ok;
+  }
+
   /* ---------------- pencere ---------------- */
 
   let modal = null;
@@ -595,10 +899,28 @@
     close();
   }
 
+  function emptyBuilder() {
+    return {
+      mode: 'days',
+      operands: [{ kind: 'column', column: '', number: '' }, { kind: 'column', column: '', number: '' }],
+      operators: ['-'],
+      columns: [],
+      separator: ' - ',
+      skipEmpty: true,
+      advanced: '',
+      days: { start: '', end: '' },
+      percent: { kind: 'ratio', a: '', b: '' },
+      adddays: { date: '', days: '30', dir: '+' },
+      ifelse: { left: '', cmp: 'gt', right: { kind: 'value', column: '', value: '' }, then: '', else: '' },
+      ai: { request: '', answer: '', formula: '' },
+    };
+  }
+
   function open(tableKey, editId, onDone) {
     if (!TABLES[tableKey]) return;
     if (!engine()) { toast(T('Formül motoru yüklenemedi.', 'The formula engine could not be loaded.')); return; }
     close();
+    const E = engine();
     const defs = definitions(tableKey);
     const existing = editId ? defs.find(item => item.id === editId) : null;
     const draft = existing ? { ...existing } : {
@@ -607,16 +929,35 @@
     };
     // Düzenlenen sütun kendi listesinde görünmez: kendine gönderme çevrimdir.
     let columns = sourceColumns(tableKey, existing ? existing.id : null);
+    const shown = formula => displayFormula(tableKey, formula, draft.refs);
+    const nameOfRef = ref => {
+      const col = columns.find(item => item.ref === ref);
+      return col ? col.label : refName(columnIndex(tableKey), ref, draft.refs);
+    };
 
-    /* Açılış kipi: yeni sütunda HESAPLAMA, düzenlemede formülün geri çözülmüş
-       hâli, çözülemiyorsa GELİŞMİŞ. */
+    /* Açılış kipi: yeni sütunda GÜN FARKI (en sık istenen iş), düzenlemede
+       formülün geri çözüldüğü kart, çözülemiyorsa GELİŞMİŞ. Kartlar kalıcı
+       anahtarlarla (ref) çalışır; eski, ad ile saklanmış başvurular burada
+       anahtara çevrilir ki açılır kutuda doğru sütun seçili gelsin. */
+    const builder = emptyBuilder();
+    const index = columnIndex(tableKey);
+    const toRef = name => (name ? resolveRef(index, name, false) || name : name);
     const restored = existing ? builderFromFormula(existing.formula) : null;
-    const builder = restored || (existing
-      ? { mode: 'advanced', advanced: existing.formula }
-      : { mode: 'calc', operands: [{ kind: 'column', column: '', number: '' }, { kind: 'column', column: '', number: '' }], operators: ['-'] });
-    if (builder.mode === 'calc' && !builder.operands.length) builder.operands = [{ kind: 'column', column: '', number: '' }];
-    builder.advanced = builder.advanced != null ? builder.advanced : (existing ? existing.formula : '');
-    if (builder.mode === 'join' && builder.separator == null) builder.separator = ' - ';
+    if (restored) {
+      if (restored.operands) restored.operands.forEach(operand => { operand.column = toRef(operand.column); });
+      if (restored.columns) restored.columns = restored.columns.map(toRef);
+      if (restored.days) { restored.days.start = toRef(restored.days.start); restored.days.end = toRef(restored.days.end); }
+      if (restored.percent) { restored.percent.a = toRef(restored.percent.a); restored.percent.b = toRef(restored.percent.b); }
+      if (restored.adddays) restored.adddays.date = toRef(restored.adddays.date);
+      if (restored.ifelse) { restored.ifelse.left = toRef(restored.ifelse.left); restored.ifelse.right.column = toRef(restored.ifelse.right.column); }
+      Object.assign(builder, restored);
+    } else if (existing) {
+      builder.mode = 'advanced';
+    }
+    if (!builder.operands.length) builder.operands = [{ kind: 'column', column: '', number: '' }];
+    builder.advanced = existing ? shown(existing.formula) : '';
+    let labelTouched = Boolean(existing);
+    let formatTouched = Boolean(existing);
 
     /* v7.42 — üst başlık seçenekleri. Tabloda var olan gruplar EKRANDAKİ sırayla
        listelenir; varsayılan "Hesaplanan" listede yoksa eklenir ki yeni sütun
@@ -637,14 +978,32 @@
         <div>
           <div class="modalTitle" id="_fcTitle">${esc(existing ? T('Hesaplanan sütunu düzenle', 'Edit calculated column') : T('Hesaplanan sütun ekle', 'Add calculated column'))}</div>
           <p class="fcSub">${esc(T(
-            `${en() ? TABLES[tableKey].en : TABLES[tableKey].tr} tablosuna, diğer sütunlardan hesaplanan yeni bir sütun ekler. Yalnız sizin ekranınızda görünür.`,
-            `Adds a column to the ${TABLES[tableKey].en} table, calculated from other columns. It appears only on your screen.`,
+            `${en() ? TABLES[tableKey].en : TABLES[tableKey].tr} tablosuna, diğer sütunlardan hesaplanan yeni bir sütun ekler. Yalnız sizin ekranınızda görünür; kaynak veriye dokunmaz.`,
+            `Adds a column to the ${TABLES[tableKey].en} table, calculated from other columns. It appears only on your screen and never changes the source data.`,
           ))}</p>
         </div>
         <button type="button" class="pricingRuleIconBtn" data-fc-close aria-label="${esc(T('Kapat', 'Close'))}">✕</button>
       </div>
       <div class="fcBody">
-        <!-- Başlık iki dilde girilir; formül referansları için kimlik TR (yoksa EN) başlıktır. -->
+        <div class="fcStep"><span class="fcStepNo">1</span>${esc(T('Ne yapmak istiyorsunuz?', 'What do you want to do?'))}</div>
+        <div class="fcModes" data-bl-tabs="segment" role="tablist" aria-label="${esc(T('Hesaplama türü', 'Calculation type'))}">
+          ${[['days', T('Gün farkı', 'Days between'), T('İki tarih arasında kaç gün var?', 'How many days between two dates?')],
+             ['calc', T('Hesaplama', 'Calculation'), T('Topla, çıkar, çarp, böl', 'Add, subtract, multiply, divide')],
+             ['percent', T('Yüzde', 'Percent'), T('Yüzde kaçı / yüzde değişim', 'Share or change in percent')],
+             ['adddays', T('Tarihe gün ekle', 'Add days'), T('Ör. Ex-factory + 30 gün', 'e.g. Ex-factory + 30 days')],
+             ['join', T('Birleştirme', 'Join'), T('Sütunları tek hücrede birleştir', 'Put several columns in one cell')],
+             ['ifelse', T('Koşula göre yaz', 'Label by condition'), T('Eğer … ise “…” yaz', 'If … then write “…”')],
+             ['advanced', T('Gelişmiş', 'Advanced'), T('Formülü kendim yazarım (sözlüklü)', 'I will type the formula (with dictionary)')],
+             ['ai', T('AI ile yaz', 'Write with AI'), T('Karmaşık iş: AI yazsın, Buyer Log denetlesin', 'Complex: AI writes, Buyer Log checks')]]
+            .map(([id, label, tip]) => `<button type="button" id="fcMode-${id}" role="tab" class="fcMode fcRecipe${id === 'ai' ? ' fcRecipeAi' : ''}${builder.mode === id ? ' active' : ''}" data-fc-mode="${id}" title="${esc(tip)}" aria-controls="fcModePanel" aria-selected="${builder.mode === id}" tabindex="${builder.mode === id ? '0' : '-1'}"><b>${esc(label)}</b><small>${esc(tip)}</small></button>`).join('')}
+        </div>
+        <div class="fcStep" data-fc-step2></div>
+        <div class="fcBuild" id="fcModePanel" data-fc-build role="tabpanel" aria-labelledby="fcMode-${builder.mode}" tabindex="0"></div>
+        <div class="fcSourceAdd" data-fc-source-add></div>
+        <div class="fcEcho" data-fc-echo hidden></div>
+        <div class="fcPreview" data-fc-preview></div>
+        <div class="fcStep"><span class="fcStepNo">3</span>${esc(T('Sütuna bir ad verin', 'Name the column'))}</div>
+        <!-- Başlık iki dilde girilir; formül referanslarının kimliği TR (yoksa EN) başlıktır. -->
         <div class="fcFormatRow">
           <label class="fcField">${esc(T('İngilizce başlık (EN)', 'English heading (EN)'))}
             <input type="text" data-fc-label-en maxlength="60" value="${esc(draft.labelEn || draft.label)}" placeholder="${esc(T('Örn. Lead time (days)', 'e.g. Lead time (days)'))}" autocomplete="off">
@@ -667,35 +1026,20 @@
             <input type="text" data-fc-group-new maxlength="40" value="${esc(isNewGroup ? draftGroup : '')}" placeholder="${esc(T('Örn. Üretim Takibi', 'e.g. Production'))}" autocomplete="off">
           </label>
         </div>
-        <p class="fcNote">${esc(T(
-          'Sütun, seçtiğiniz başlığın en sonuna yerleştirilir; böylece tablo üstünde o başlığın altında görünür.',
-          'The column is placed at the end of the heading you pick, so it appears under that heading in the table.',
-        ))}</p>
-        <div class="fcModes" data-bl-tabs="segment" role="tablist" aria-label="${esc(T('Formül oluşturma yöntemi', 'Formula building method'))}">
-          ${[['calc', T('Hesaplama', 'Calculation'), T('+ − × ÷ ile sütunlar arası işlem', 'Arithmetic across columns with + − × ÷')],
-             ['join', T('Birleştirme', 'Join'), T('Sütunları ayraçla tek hücrede toplar', 'Joins columns into one cell with a separator')],
-             ['advanced', T('Gelişmiş', 'Advanced'), T('Formülü elle yazın (tüm fonksiyonlar)', 'Type the formula yourself (all functions)')]]
-            .map(([id, label, tip]) => `<button type="button" id="fcMode-${id}" role="tab" class="fcMode${builder.mode === id ? ' active' : ''}" data-fc-mode="${id}" title="${esc(tip)}" aria-controls="fcModePanel" aria-selected="${builder.mode === id}" tabindex="${builder.mode === id ? '0' : '-1'}">${esc(label)}</button>`).join('')}
-        </div>
-        <div class="fcBuild" id="fcModePanel" data-fc-build role="tabpanel" aria-labelledby="fcMode-${builder.mode}" tabindex="0"></div>
-        <div class="fcSourceAdd" data-fc-source-add></div>
-        <div class="fcFormatRow">
-          <label class="fcField">${esc(T('Biçim', 'Format'))}
-            <select data-fc-format>${Object.entries(FORMATS).map(([id, item]) => `<option value="${id}"${draft.format === id ? ' selected' : ''}>${esc(en() ? item.en : item.tr)}</option>`).join('')}</select>
-          </label>
-          <label class="fcField">${esc(T('Ondalık basamak', 'Decimals'))}
-            <input type="number" min="0" max="6" data-fc-decimals value="${esc(draft.decimals)}" placeholder="${esc(T('otomatik', 'auto'))}">
-          </label>
-        </div>
-        <div class="fcEcho" data-fc-echo hidden></div>
-        <div class="fcPreview" data-fc-preview></div>
-        <details class="fcHelp">
-          <summary>${esc(T('Kullanılabilir fonksiyonlar', 'Available functions'))}</summary>
+        <details class="fcMore">
+          <summary>${esc(T('Görünüm ayarları (isteğe bağlı)', 'Display settings (optional)'))}</summary>
+          <div class="fcFormatRow">
+            <label class="fcField">${esc(T('Biçim', 'Format'))}
+              <select data-fc-format>${Object.entries(FORMATS).map(([id, item]) => `<option value="${id}"${draft.format === id ? ' selected' : ''}>${esc(en() ? item.en : item.tr)}</option>`).join('')}</select>
+            </label>
+            <label class="fcField">${esc(T('Ondalık basamak', 'Decimals'))}
+              <input type="number" min="0" max="6" data-fc-decimals value="${esc(draft.decimals)}" placeholder="${esc(T('otomatik', 'auto'))}">
+            </label>
+          </div>
           <p class="fcNote">${esc(T(
-            'Bunları bilmeniz gerekmez — Hesaplama ve Birleştirme kipleri formülü sizin yerinize kurar. Elle yazmak isterseniz: sütun adları köşeli parantez içinde yazılır ([Ex-factory]), ondalık ayırıcı noktadır (virgül argümanları ayırır), iki tarih sütununu çıkarınca sonuç GÜN farkı olur.',
-            'You do not need these — the Calculation and Join modes build the formula for you. If you would rather type it: column names go in square brackets ([Ex-factory]), the decimal separator is a dot (a comma separates arguments), and subtracting two date columns gives a DAY difference.',
+            'Sütun, seçtiğiniz üst başlığın en sonuna yerleşir. Biçim yalnız görünümü değiştirir; hesaplanan değer aynı kalır.',
+            'The column is placed at the end of the heading you pick. The format only changes how the value looks.',
           ))}</p>
-          <ul class="fcHelpList">${(engine().FUNCTION_HELP || []).map(item => `<li><code>${esc(item.name)}</code> — ${esc(en() ? item.en : item.tr)}</li>`).join('')}</ul>
         </details>
       </div>
       <div class="fcFoot">
@@ -718,6 +1062,7 @@
     const chosenGroup = () => (groupInput.value === NEW_GROUP ? clean(groupNewInput.value) : clean(groupInput.value));
     const preview = modal.querySelector('[data-fc-preview]');
     const build = modal.querySelector('[data-fc-build]');
+    const step2 = modal.querySelector('[data-fc-step2]');
     const sourceAdd = modal.querySelector('[data-fc-source-add]');
 
     /* v7.33 — TABLONUN DIŞINDAN SÜTUN GETİRME.
@@ -764,11 +1109,33 @@
     // v7.33 — sütunun nereden geldiği yazılır: hesaplanan mı, ASAS/IAS'tan mı.
     const optionLabel = col => (col.calculated ? `${col.label} (${T('hesaplanan', 'calculated')})`
       : col.model ? `${col.label} (${col.source})` : col.label);
-    const columnOptions = (selected, kind) => `<option value="">${esc(T('Sütun seçin…', 'Pick a column…'))}</option>`
-      + columns.map(col => `<option value="${esc(col.key)}"${kind !== 'number' && selected === col.key ? ' selected' : ''}>${esc(optionLabel(col))}</option>`).join('')
-      + `<option value="${NUMBER_OPERAND}"${kind === 'number' ? ' selected' : ''}>${esc(T('— sabit sayı yaz —', '— type a fixed number —'))}</option>`;
+    /* Açılır kutunun DEĞERİ kalıcı anahtardır (ref), YAZISI güncel addır.
+       Kayıtlı formülün başvurduğu sütun artık yoksa seçili bir "bulunamadı"
+       seçeneği gösterilir: boş kutu, kullanıcının seçimini sessizce silmiş
+       gibi görünürdü. */
+    const columnOptions = (selected, kind, placeholder) => {
+      const missing = selected && kind !== 'number' && !columns.some(col => col.ref === selected)
+        ? `<option value="${esc(selected)}" selected>${esc(`${nameOfRef(selected)} (${T('bulunamadı', 'not found')})`)}</option>` : '';
+      return `<option value="">${esc(placeholder || T('Sütun seçin…', 'Pick a column…'))}</option>${missing}`
+        + columns.map(col => `<option value="${esc(col.ref)}"${kind !== 'number' && selected === col.ref ? ' selected' : ''}>${esc(optionLabel(col))}</option>`).join('')
+        + (kind === 'column-only' ? '' : `<option value="${NUMBER_OPERAND}"${kind === 'number' ? ' selected' : ''}>${esc(T('— sabit sayı yaz —', '— type a fixed number —'))}</option>`);
+    };
+    const pick = (attr, selected, placeholder) => `<select class="fcPick" ${attr}>${columnOptions(selected, 'column-only', placeholder)}</select>`;
+
+    const STEP2 = {
+      days: T('Hangi iki tarih?', 'Which two dates?'),
+      calc: T('Sütunları ve işlemleri seçin', 'Pick the columns and operations'),
+      percent: T('Hangi sayılar?', 'Which numbers?'),
+      adddays: T('Hangi tarihe kaç gün?', 'Which date, how many days?'),
+      join: T('Hangi sütunlar, hangi sırayla?', 'Which columns, in which order?'),
+      ifelse: T('Koşulu cümle gibi kurun', 'Build the condition like a sentence'),
+      advanced: T('Formülü yazın', 'Type the formula'),
+      ai: T('AI ile formül yazın', 'Write the formula with AI'),
+    };
 
     function renderBuild() {
+      step2.innerHTML = `<span class="fcStepNo">2</span>${esc(STEP2[builder.mode] || '')}`;
+      build.setAttribute('aria-labelledby', `fcMode-${builder.mode}`);
       if (builder.mode === 'calc') {
         const rows = builder.operands.map((operand, index) => `
           ${index ? `<select class="fcOpSel" data-fc-operator="${index - 1}" aria-label="${esc(T('İşlem', 'Operation'))}">${OPERATORS.map(item => `<option value="${item.op}"${(builder.operators[index - 1] || '+') === item.op ? ' selected' : ''}>${item.sign}</option>`).join('')}</select>` : ''}
@@ -781,24 +1148,24 @@
             <button type="button" class="fcMini fcMiniAdd" data-fc-operand-add>+ ${esc(T('işlem', 'operation'))}</button>
           </div>
           <p class="fcNote">${esc(T(
-            'İşlemler soldan sağa uygulanır. İki TARİH sütununu − ile çıkarırsanız sonuç GÜN farkıdır. Yüzde için: [A] ÷ [B] × 100.',
-            'Operations apply left to right. Subtracting two DATE columns with − gives a DAY difference. For a percentage: [A] ÷ [B] × 100.',
+            'İşlemler soldan sağa, gördüğünüz sırayla uygulanır. İki TARİH sütununu − ile çıkarırsanız sonuç GÜN farkıdır. Sabit bir sayı için listeden “sabit sayı yaz”ı seçin.',
+            'Operations apply left to right, in the order you see. Subtracting two DATE columns with − gives a DAY difference. For a fixed number pick “type a fixed number”.',
           ))}</p>`;
       } else if (builder.mode === 'join') {
         const list = builder.columns.length
           ? builder.columns.map((key, index) => `<div class="fcJoinRow">
               <span class="fcJoinNo">${index + 1}</span>
-              <select data-fc-join="${index}">${columnOptions(key, 'column')}</select>
+              <select data-fc-join="${index}">${columnOptions(key, 'column-only')}</select>
               <button type="button" class="fcMini" data-fc-join-up="${index}"${index === 0 ? ' disabled' : ''} title="${esc(T('Yukarı', 'Move up'))}">↑</button>
               <button type="button" class="fcMini" data-fc-join-down="${index}"${index === builder.columns.length - 1 ? ' disabled' : ''} title="${esc(T('Aşağı', 'Move down'))}">↓</button>
               <button type="button" class="fcMini fcMiniDrop" data-fc-join-drop="${index}" title="${esc(T('Kaldır', 'Remove'))}">×</button>
             </div>`).join('')
-          : `<p class="fcNote">${esc(T('Henüz sütun eklenmedi.', 'No columns added yet.'))}</p>`;
+          : `<p class="fcNote">${esc(T('Henüz sütun eklenmedi. “+ sütun ekle” ile başlayın.', 'No columns yet. Start with “+ add column”.'))}</p>`;
         const custom = SEPARATORS.every(item => item.value !== builder.separator);
         build.innerHTML = `<div class="fcJoinList">${list}</div>
           <button type="button" class="fcMini fcMiniAdd" data-fc-join-add>+ ${esc(T('sütun ekle', 'add column'))}</button>
           <div class="fcSepRow">
-            <span class="fcSepLabel">${esc(T('Ayraç', 'Separator'))}</span>
+            <span class="fcSepLabel">${esc(T('Araya ne gelsin?', 'What goes between?'))}</span>
             ${SEPARATORS.map(item => `<button type="button" class="fcChip${builder.separator === item.value ? ' active' : ''}" data-fc-separator="${esc(item.value)}">${esc(item.value.trim() || '␣')}<small>${esc(en() ? item.en : item.tr)}</small></button>`).join('')}
             <input type="text" class="fcSepCustom${custom ? ' active' : ''}" data-fc-separator-custom value="${esc(custom ? builder.separator : '')}" maxlength="12" placeholder="${esc(T('özel…', 'custom…'))}" autocomplete="off">
           </div>
@@ -807,57 +1174,258 @@
             'Boş hücreleri atlamak açıkken aradaki bir sütun boşsa ayraç çift kalmaz. Kapalıyken boş hücre de bir alan olarak yerini korur.',
             'With skip-blanks on, a blank column in the middle does not leave a doubled separator. With it off, a blank cell keeps its place.',
           ))}</p>`;
+      } else if (builder.mode === 'days') {
+        build.innerHTML = `<div class="fcSentence">
+            ${pick('data-fc-days="start"', builder.days.start, T('Başlangıç tarihi…', 'Start date…'))}
+            <span>${esc(T('ile', 'and'))}</span>
+            ${pick('data-fc-days="end"', builder.days.end, T('Bitiş tarihi…', 'End date…'))}
+            <span>${esc(T('arasında kaç gün var?', '— how many days apart?'))}</span>
+          </div>
+          <p class="fcNote">${esc(T('Sonuç “bitiş − başlangıç” gün sayısıdır. Bitiş daha erkense sonuç eksi çıkar (ör. −5 = 5 gün önce).', 'The result is “end − start” in days. When the end is earlier the result is negative (e.g. −5 = 5 days before).'))}</p>`;
+      } else if (builder.mode === 'percent') {
+        const change = builder.percent.kind === 'change';
+        build.innerHTML = `<div class="fcChoiceRow" role="radiogroup" aria-label="${esc(T('Yüzde türü', 'Percent type'))}">
+            <label class="fcChoice"><input type="radio" name="fcPercentKind" value="ratio" data-fc-percent-kind${change ? '' : ' checked'}> ${esc(T('A, B’nin yüzde kaçı?', 'A is what percent of B?'))}</label>
+            <label class="fcChoice"><input type="radio" name="fcPercentKind" value="change" data-fc-percent-kind${change ? ' checked' : ''}> ${esc(T('Yüzde kaç değişti? (eski → yeni)', 'Percent change (old → new)'))}</label>
+          </div>
+          <div class="fcSentence">${change
+            ? `${pick('data-fc-percent="a"', builder.percent.a, T('Yeni değer…', 'New value…'))}<span>${esc(T('değeri,', 'compared with'))}</span>${pick('data-fc-percent="b"', builder.percent.b, T('Eski değer…', 'Old value…'))}<span>${esc(T('değerine göre yüzde kaç değişti?', '— percent change?'))}</span>`
+            : `${pick('data-fc-percent="a"', builder.percent.a, T('Parça (A)…', 'Part (A)…'))}<span>${esc(T('sayısı,', 'is what percent of'))}</span>${pick('data-fc-percent="b"', builder.percent.b, T('Bütün (B)…', 'Whole (B)…'))}<span>${esc(T('sayısının yüzde kaçı?', ''))}</span>`}
+          </div>
+          <p class="fcNote">${esc(change
+            ? T('Örnek: eski 80, yeni 100 → %25 artış. Azalış eksi çıkar. Eski değer 0 ise o satır hesaplanamaz (sıfıra bölme).', 'Example: old 80, new 100 → 25% increase. A decrease is negative. When the old value is 0 that row cannot be calculated (divide by zero).')
+            : T('Örnek: 25, 200’ün %12,5’idir. Sonuç bir ondalıkla yuvarlanır. B 0 ise o satır hesaplanamaz (sıfıra bölme).', 'Example: 25 is 12.5% of 200. Rounded to one decimal. When B is 0 that row cannot be calculated (divide by zero).'))}</p>`;
+      } else if (builder.mode === 'adddays') {
+        build.innerHTML = `<div class="fcSentence">
+            ${pick('data-fc-adddays-date', builder.adddays.date, T('Tarih…', 'Date…'))}
+            <span>${esc(T('tarihine', 'plus / minus'))}</span>
+            <input type="text" class="fcOperandNum" data-fc-adddays-days value="${esc(builder.adddays.days)}" inputmode="numeric" autocomplete="off" aria-label="${esc(T('Gün sayısı', 'Number of days'))}">
+            <span>${esc(T('gün', 'days'))}</span>
+            <select class="fcPick fcPickShort" data-fc-adddays-dir aria-label="${esc(T('Yön', 'Direction'))}">
+              <option value="+"${builder.adddays.dir === '-' ? '' : ' selected'}>${esc(T('ekle', 'add'))}</option>
+              <option value="-"${builder.adddays.dir === '-' ? ' selected' : ''}>${esc(T('çıkar', 'subtract'))}</option>
+            </select>
+          </div>
+          <p class="fcNote">${esc(T('Sonuç bir TARİHTİR ve tablodaki diğer tarihler gibi gösterilir. Ör. Ex-factory’den 30 gün öncesi için “çıkar”ı seçin.', 'The result is a DATE shown like the other dates. For 30 days before Ex-factory pick “subtract”.'))}</p>`;
+      } else if (builder.mode === 'ifelse') {
+        const rule = builder.ifelse;
+        const needsRight = rule.cmp !== 'blank' && rule.cmp !== 'notblank';
+        const rightKind = rule.right.kind === 'column' ? 'column' : 'value';
+        const leftHtml = pick('data-fc-if-left', rule.left, T('Sütun…', 'Column…'));
+        const cmpHtml = `<select class="fcPick" data-fc-if-cmp aria-label="${esc(T('Koşul', 'Condition'))}">${COMPARISONS.map(item => `<option value="${item.id}"${rule.cmp === item.id ? ' selected' : ''}>${esc(en() ? item.en : item.tr)}</option>`).join('')}</select>`;
+        const rightHtml = needsRight ? `<select class="fcPick fcPickShort" data-fc-if-right-kind aria-label="${esc(T('Neyle karşılaştırılsın?', 'Compare with'))}">
+              <option value="value"${rightKind === 'value' ? ' selected' : ''}>${esc(T('şu değer:', 'this value:'))}</option>
+              <option value="column"${rightKind === 'column' ? ' selected' : ''}>${esc(T('şu sütun:', 'this column:'))}</option>
+            </select>
+            ${rightKind === 'column'
+              ? pick('data-fc-if-right-column', rule.right.column, T('Sütun…', 'Column…'))
+              : `<input type="text" class="fcSentenceInput" data-fc-if-right-value value="${esc(rule.right.value)}" placeholder="${esc(T('ör. 1000 ya da ELBİSE', 'e.g. 1000 or DRESS'))}" autocomplete="off">`}` : '';
+        // Türkçede yüklem sonda ("Adet 1000'den büyükse"), İngilizcede ortada.
+        build.innerHTML = `<div class="fcSentence">
+            <span>${esc(T('Eğer', 'If'))}</span>
+            ${leftHtml}${en() ? cmpHtml + rightHtml : rightHtml + cmpHtml}
+          </div>
+          <div class="fcSentence">
+            <span>${esc(T('→ şunu yaz:', '→ write:'))}</span>
+            <input type="text" class="fcSentenceInput" data-fc-if-then value="${esc(rule.then)}" placeholder="${esc(T('ör. Gecikmeli', 'e.g. Late'))}" autocomplete="off">
+            <span>${esc(T('değilse:', 'otherwise:'))}</span>
+            <input type="text" class="fcSentenceInput" data-fc-if-else value="${esc(rule.else)}" placeholder="${esc(T('ör. Zamanında', 'e.g. On time'))}" autocomplete="off">
+          </div>
+          <p class="fcNote">${esc(T('Tarihleri, sayıları ve metinleri karşılaştırabilirsiniz; büyük/küçük harf fark etmez. Birden çok koşul gerekiyorsa “AI ile yaz” ya da “Gelişmiş” kartındaki IFS() tam size göre.', 'You can compare dates, numbers and text; case does not matter. For several conditions, “Write with AI” or IFS() in “Advanced” fits best.'))}</p>`;
+      } else if (builder.mode === 'ai') {
+        build.innerHTML = aiPanelHtml();
+        renderAiPrompt();
+        renderAiResult();
       } else {
         build.innerHTML = `<label class="fcField">${esc(T('Formül', 'Formula'))}
             <textarea data-fc-formula rows="3" spellcheck="false" placeholder="${esc('DAYS([Ex-factory], [Retail Date])')}">${esc(builder.advanced)}</textarea>
           </label>
           <div class="fcInsertRow">
             <label class="fcField fcInsertField">${esc(T('Sütun ekle', 'Insert column'))}
-              <select data-fc-insert><option value="">${esc(T('Sütun seçin…', 'Pick a column…'))}</option>${columns.map(col => `<option value="${esc(col.key)}">${esc(col.calculated ? `${col.label} (${T('hesaplanan', 'calculated')})` : col.label)}</option>`).join('')}</select>
+              <select data-fc-insert><option value="">${esc(T('Sütun seçin…', 'Pick a column…'))}</option>${columns.map(col => `<option value="${esc(col.label)}">${esc(optionLabel(col))}</option>`).join('')}</select>
             </label>
-            <div class="fcQuick">
-              ${[['DAYS([A], [B])', T('Gün farkı', 'Day difference')], ['TEXTJOIN(" - ", true, [A], [B])', T('Birleştir', 'Join')], ['ROUND([A] / [B] * 100, 1)', T('Yüzde', 'Percent')], ['IF([A] > [B], "EVET", "HAYIR")', T('Koşul', 'Condition')], ['IFERROR([A] / [B], 0)', T('Hataya karşı', 'Guard errors')]]
-                .map(([snippet, label]) => `<button type="button" class="fcChip" data-fc-snippet="${esc(snippet)}">${esc(label)}</button>`).join('')}
-            </div>
-          </div>`;
+            <p class="fcNote fcInsertNote">${esc(T('Sütunlar ADIYLA yazılır; sütunun adını sonradan değiştirseniz de formül bozulmaz.', 'Columns are written by NAME; renaming a column later does not break the formula.'))}</p>
+          </div>
+          <div class="fcAnalysis" data-fc-analysis aria-live="polite"></div>
+          ${dictionaryHtml()}`;
+        renderAnalysis();
       }
       renderFormulaEcho();
     }
 
-    /* Üretilen formül HER ZAMAN gösterilir: kutuların ne ürettiği sır kalmaz,
+    /* ---- sözlük ---- */
+    function dictionaryHtml() {
+      const docs = E.FUNCTION_DOCS || [];
+      const categories = (E.CATEGORIES || []).map(category => {
+        const items = docs.filter(item => item.cat === category.id);
+        return `<div class="fcDictGroup"><div class="fcDictHead">${esc(en() ? category.en : category.tr)}</div>${items.map(item => `
+          <div class="fcDictItem" data-fc-dict-item="${esc(`${item.name} ${(item.also || []).join(' ')} ${item.tr} ${item.en}`.toLocaleLowerCase('tr-TR'))}">
+            <div class="fcDictTop"><code>${esc(en() ? item.syntaxEn : item.syntax)}</code><button type="button" class="fcMini" data-fc-dict-insert="${esc(item.name)}" title="${esc(T('Formüle ekle', 'Insert into formula'))}">${esc(T('Ekle', 'Insert'))}</button></div>
+            <div class="fcDictText">${esc(en() ? item.en : item.tr)}</div>
+            <div class="fcDictExample"><code>${esc(item.example)}</code> → ${esc(en() ? item.resultEn : item.resultTr)}</div>
+          </div>`).join('')}</div>`;
+      }).join('');
+      return `<details class="fcDict" data-fc-dict>
+          <summary>${esc(T('📖 Formül sözlüğü — nasıl çalışır, hangi iş için hangi formül', '📖 Formula dictionary — how it works, which formula for which job'))}</summary>
+          <input type="search" class="fcDictSearch" data-fc-dict-search placeholder="${esc(T('Ara: gün, yüzde, koşul, birleştir…', 'Search: days, percent, condition, join…'))}" autocomplete="off">
+          <div class="fcDictGroup" data-fc-dict-block>
+            <div class="fcDictHead">${esc(T('Nasıl çalışır?', 'How does it work?'))}</div>
+            <ol class="fcRules">${(E.RULES || []).map(rule => `<li>${esc(en() ? rule.en : rule.tr)}</li>`).join('')}</ol>
+          </div>
+          <div class="fcDictGroup">
+            <div class="fcDictHead">${esc(T('Hangi iş için hangi formül?', 'Which formula for which job?'))}</div>
+            ${(E.RECIPE_DOCS || []).map(item => `<div class="fcDictItem fcDictRecipe" data-fc-dict-item="${esc(`${item.tr} ${item.en} ${item.formula}`.toLocaleLowerCase('tr-TR'))}">
+              <div class="fcDictText">${esc(en() ? item.en : item.tr)}</div>
+              <div class="fcDictTop"><code>${esc(item.formula)}</code><button type="button" class="fcMini" data-fc-dict-use="${esc(item.formula)}" title="${esc(T('Örneği formül kutusuna ekler; köşeli parantezdeki adları kendi sütunlarınızla değiştirin.', 'Inserts the example; replace the names in brackets with your own columns.'))}">${esc(T('Kullan', 'Use'))}</button></div>
+            </div>`).join('')}
+          </div>
+          <div class="fcDictGroup">
+            <div class="fcDictHead">${esc(T('İşlem işaretleri', 'Operators'))}</div>
+            ${(E.OPERATOR_DOCS || []).map(item => `<div class="fcDictItem" data-fc-dict-item="${esc(`${item.sign} ${item.tr} ${item.en}`.toLocaleLowerCase('tr-TR'))}">
+              <div class="fcDictTop"><code>${esc(item.sign)}</code><span class="fcDictText">${esc(en() ? item.en : item.tr)}</span></div>
+              <div class="fcDictExample"><code>${esc(item.example)}</code></div>
+            </div>`).join('')}
+          </div>
+          ${categories}
+        </details>`;
+    }
+
+    /* ---- analiz (Gelişmiş ve AI) ---- */
+    const resolvable = name => Boolean(resolveRef(columnIndex(tableKey), name, false));
+    const knownNames = () => columns.map(col => col.label);
+    function analyzeText(text) {
+      return E.analyze(text, { columns: knownNames(), resolve: resolvable });
+    }
+    function issuesHtml(result, options = {}) {
+      if (!result) return '';
+      const icon = level => (level === 'error' ? '✕' : level === 'warn' ? '!' : 'i');
+      const rows = result.issues.map(item => `<li class="fcIssue is-${item.level}"><span class="fcIssueIcon" aria-hidden="true">${icon(item.level)}</span><span><b>${esc(en() ? item.en : item.tr)}</b>${(en() ? item.hintEn : item.hintTr) ? `<br>${esc(en() ? item.hintEn : item.hintTr)}` : ''}${item.position != null && options.caret !== false ? `<br><code class="fcCaret">${esc(caretSnippet(result.formula, item.position))}</code>` : ''}${item.suggestion ? ` <button type="button" class="fcMini" data-fc-fix-column="${esc(item.column)}" data-fc-fix-to="${esc(item.suggestion)}">${esc(T(`[${item.suggestion}] yap`, `Use [${item.suggestion}]`))}</button>` : ''}</span></li>`).join('');
+      const fixes = result.fixes.length && options.fixes !== false
+        ? `<li class="fcIssue is-info"><span class="fcIssueIcon" aria-hidden="true">✓</span><span><b>${esc(options.applied ? T('Otomatik düzeltildi:', 'Fixed automatically:') : T('Otomatik düzeltilebilir:', 'Can be fixed automatically:'))}</b> ${esc(result.fixes.map(item => (en() ? item.en : item.tr)).join(' '))}${options.applied ? '' : ` <button type="button" class="fcMini" data-fc-autofix>${esc(T('Düzelt', 'Fix'))}</button>`}</span></li>` : '';
+      const ok = result.ok && !result.issues.some(item => item.level === 'warn')
+        ? `<li class="fcIssue is-ok"><span class="fcIssueIcon" aria-hidden="true">✓</span><span><b>${esc(T('Formül geçerli.', 'The formula is valid.'))}</b> ${esc(T('Sonucu aşağıdaki önizlemede kontrol edin.', 'Check the result in the preview below.'))}</span></li>` : '';
+      return `<ul class="fcIssues">${fixes}${rows}${ok}</ul>`;
+    }
+    function caretSnippet(text, position) {
+      const start = Math.max(0, position - 18);
+      return `${start ? '…' : ''}${text.slice(start, position)} ⟶ ${text.slice(position, position + 18)}${position + 18 < text.length ? '…' : ''}`;
+    }
+    function renderAnalysis() {
+      const box = modal.querySelector('[data-fc-analysis]');
+      if (!box) return;
+      const text = clean(builder.advanced);
+      box.innerHTML = text ? issuesHtml(analyzeText(text)) : `<p class="fcNote">${esc(T('Yazdıkça formül burada denetlenir: eksik parantez, olmayan sütun, yanlış fonksiyon adı…', 'The formula is checked here as you type: missing brackets, unknown columns, wrong function names…'))}</p>`;
+    }
+
+    /* ---- AI ile yaz ---- */
+    function aiPanelHtml() {
+      return `<ol class="fcAiSteps">
+          <li>
+            <b>${esc(T('Ne istediğinizi kendi cümlenizle yazın', 'Describe what you want in your own words'))}</b>
+            <textarea data-fc-ai-request rows="3" placeholder="${esc(T('Örn. Ex-factory, Retail Date’ten sonraysa “Gecikmeli”, 7 günden az fark varsa “Riskli”, değilse “Zamanında” yazsın.', 'e.g. If Ex-factory is after Retail Date write “Late”, if they are less than 7 days apart write “At risk”, otherwise “On time”.'))}">${esc(builder.ai.request)}</textarea>
+          </li>
+          <li>
+            <b>${esc(T('Yönergeyi kopyalayın ve kullandığınız AI aracına yapıştırın', 'Copy the instructions and paste them into your AI tool'))}</b>
+            <div class="fcAiRow">
+              <button type="button" class="fcBtn fcPrimary" data-fc-ai-copy>${esc(T('AI yönergesini kopyala', 'Copy AI instructions'))}</button>
+              <details class="fcAiPromptWrap"><summary>${esc(T('Yönergeyi göster', 'Show instructions'))}</summary><pre class="fcAiPrompt" data-fc-ai-prompt></pre></details>
+            </div>
+            <p class="fcNote">${esc(T('Yönerge formül kurallarını, fonksiyon sözlüğünü ve bu tablonun yalnız sütun ADLARINI içerir; hiçbir satır verisi (sipariş, fiyat, tedarikçi) eklenmez. Şirketinizin izin verdiği bir AI aracını kullanın.', 'The instructions contain the formula rules, the dictionary and only the column NAMES of this table; no row data (orders, prices, suppliers) is included. Use an AI tool your company allows.'))}</p>
+          </li>
+          <li>
+            <b>${esc(T('AI’ın cevabını buraya yapıştırın', 'Paste the AI’s answer here'))}</b>
+            <textarea data-fc-ai-answer rows="4" spellcheck="false" placeholder="${esc(T('Cevabın tamamını yapıştırabilirsiniz; formül kendiliğinden bulunur ve denetlenir.', 'You can paste the whole answer; the formula is found and checked automatically.'))}">${esc(builder.ai.answer)}</textarea>
+            <div class="fcAiResult" data-fc-ai-result aria-live="polite"></div>
+          </li>
+        </ol>`;
+    }
+    function aiPrompt() {
+      const request = clean(builder.ai.request);
+      return E.buildAiPrompt({
+        lang: en() ? 'en' : 'tr',
+        tableName: en() ? TABLES[tableKey].en : TABLES[tableKey].tr,
+        columns: columns.map(col => ({ name: col.label, type: columnType(tableKey, col.ref) })),
+        request,
+      });
+    }
+    function renderAiPrompt() {
+      const box = modal.querySelector('[data-fc-ai-prompt]');
+      if (box) box.textContent = aiPrompt();
+    }
+    function renderAiResult() {
+      const box = modal.querySelector('[data-fc-ai-result]');
+      if (!box) return;
+      const answer = clean(builder.ai.answer);
+      if (!answer) { builder.ai.formula = ''; box.innerHTML = ''; return; }
+      const extracted = E.extractFormula(answer);
+      const result = analyzeText(extracted);
+      // Otomatik düzeltmeler (EĞER → IF, kıvrık tırnak…) AI çıktısında hemen uygulanır.
+      builder.ai.formula = result.ok ? result.formula : '';
+      box.innerHTML = `<div class="fcAiFound"><span>${esc(T('Bulunan formül', 'Formula found'))}</span><code>${esc(result.formula || extracted)}</code></div>
+        ${issuesHtml(result, { applied: true })}
+        <div class="fcAiRow">
+          <button type="button" class="fcMini" data-fc-ai-edit>${esc(T('Gelişmiş kipte düzenle', 'Edit in Advanced'))}</button>
+          ${result.ok ? '' : `<span class="fcNote">${esc(T('Hatayı AI’a da söyleyebilirsiniz: yukarıdaki mesajı kopyalayıp “bunu düzelt” deyin.', 'You can also tell the AI: copy the message above and say “fix this”.'))}</span>`}
+        </div>`;
+    }
+
+    /* Üretilen formül HER ZAMAN gösterilir: kartların ne ürettiği sır kalmaz,
        kullanıcı isterse Gelişmiş kipe geçip aynı yerden devam eder. */
     function renderFormulaEcho() {
       const echo = modal.querySelector('[data-fc-echo]');
       if (!echo) return;
       const formula = builderFormula(builder);
-      echo.hidden = builder.mode === 'advanced' || !formula;
-      if (!echo.hidden) echo.innerHTML = `<span>${esc(T('Formül', 'Formula'))}</span><code>${esc(formula)}</code>`;
+      echo.hidden = builder.mode === 'advanced' || builder.mode === 'ai' || !formula;
+      if (!echo.hidden) echo.innerHTML = `<span>${esc(T('Formül', 'Formula'))}</span><code>${esc(shown(formula))}</code><button type="button" class="fcMini" data-fc-mode-jump="advanced">${esc(T('Elle düzenle', 'Edit by hand'))}</button>`;
     }
 
-    const currentDraft = () => ({
-      ...draft,
-      label: clean(labelInput.value) || clean(labelEnInput.value),
-      labelTr: clean(labelInput.value),
-      labelEn: clean(labelEnInput.value),
-      formula: builderFormula(builder),
-      format: formatInput.value,
-      decimals: clean(decimalsInput.value),
-      group: chosenGroup(),
-    });
+    // Kaydedilecek biçim: ekrandaki adlar kalıcı anahtara çevrilir.
+    const storedFormula = () => toStorage(tableKey, builderFormula(builder), draft.refs);
+    const currentDraft = () => {
+      const stored = storedFormula();
+      return {
+        ...draft,
+        label: (clean(labelInput.value) || clean(labelEnInput.value)).replace(/[\[\]]/g, ''),
+        labelTr: clean(labelInput.value).replace(/[\[\]]/g, ''),
+        labelEn: clean(labelEnInput.value).replace(/[\[\]]/g, ''),
+        formula: stored.formula,
+        refs: stored.refs,
+        format: formatInput.value,
+        decimals: clean(decimalsInput.value),
+        group: chosenGroup(),
+      };
+    };
+
+    /* Ad önerisi: kullanıcı başlığa henüz dokunmadıysa kart doldukça anlamlı
+       bir ad yazılır. Boş başlık yüzünden "Kaydet" hata vermesin. */
+    function suggestedLabel() {
+      const n = ref => (ref ? nameOfRef(ref) : '');
+      if (builder.mode === 'days' && builder.days.start && builder.days.end) return T(`${n(builder.days.start)} → ${n(builder.days.end)} (gün)`, `${n(builder.days.start)} → ${n(builder.days.end)} (days)`);
+      if (builder.mode === 'percent' && builder.percent.a && builder.percent.b) return builder.percent.kind === 'change' ? T(`${n(builder.percent.a)} değişim %`, `${n(builder.percent.a)} change %`) : `${n(builder.percent.a)} / ${n(builder.percent.b)} %`;
+      if (builder.mode === 'adddays' && builder.adddays.date && clean(builder.adddays.days)) return `${n(builder.adddays.date)} ${builder.adddays.dir === '-' ? '−' : '+'} ${clean(builder.adddays.days)} ${T('gün', 'days')}`;
+      if (builder.mode === 'join' && builder.columns.filter(Boolean).length) return builder.columns.filter(Boolean).map(n).join(' + ');
+      if (builder.mode === 'ifelse' && builder.ifelse.left) return T(`${n(builder.ifelse.left)} kontrolü`, `${n(builder.ifelse.left)} check`);
+      if (builder.mode === 'calc' && builder.operands.every(operand => operandExpression(operand))) {
+        return builder.operands.map((operand, index) => `${index ? ` ${(OPERATORS.find(item => item.op === builder.operators[index - 1]) || OPERATORS[0]).sign} ` : ''}${operand.kind === 'number' ? operand.number : n(operand.column)}`).join('');
+      }
+      return '';
+    }
 
     function renderPreview() {
       renderFormulaEcho();
+      if (!labelTouched) (en() ? labelEnInput : labelInput).value = suggestedLabel().slice(0, 60);
+      if (!formatTouched) formatInput.value = SUGGESTED_FORMAT[builder.mode] || 'auto';
       const item = currentDraft();
       if (!item.formula) {
         preview.className = 'fcPreview';
-        preview.textContent = builder.mode === 'join'
-          ? T('Birleştirilecek sütunları seçin; sonucu burada göreceksiniz.', 'Pick the columns to join; you will see the result here.')
-          : builder.mode === 'calc'
-            ? T('Sütunları ve işlemi seçin; sonucu burada göreceksiniz.', 'Pick the columns and the operation; you will see the result here.')
-            : T('Formülü yazdıkça sonucu burada göreceksiniz.', 'You will see the result here as you type.');
+        preview.textContent = builder.mode === 'advanced'
+          ? T('Formülü yazdıkça sonucu burada göreceksiniz.', 'You will see the result here as you type.')
+          : builder.mode === 'ai'
+            ? T('AI’ın cevabını yapıştırınca sonucu burada göreceksiniz.', 'Paste the AI’s answer to see the result here.')
+            : T('Kutuları doldurun; sonucu ilk satırlarda burada göreceksiniz.', 'Fill in the boxes; you will see the result on the first rows here.');
         return;
       }
-      const program = engine().compile(item.formula);
+      const program = E.compile(item.formula);
       if (!program.ok) {
         preview.className = 'fcPreview isError';
         preview.textContent = `${T('Formül hatası', 'Formula error')}: ${program.error.message}`;
@@ -869,41 +1437,74 @@
         preview.textContent = T('Önizleme için bu tabloda henüz satır yok; formül geçerli görünüyor.', 'There are no rows in this table yet; the formula looks valid.');
         return;
       }
+      const refIndex = columnIndex(tableKey);
       const results = rows.map(row => program.evaluate(row, { strictColumns: true }));
       const failed = results.find(result => !result.ok);
-      const lines = results.map((result, index) => {
-        const label = rowLabel(tableKey, rows[index], index);
+      const lines = results.map((result, rowIndex) => {
+        const label = rowLabel(tableKey, rows[rowIndex], rowIndex);
         const value = result.ok ? formatValue(result.value, item) : '—';
         return `<div class="fcPreviewRow"><span>${esc(label)}</span><b>${esc(value || '—')}</b></div>`;
       }).join('');
       preview.className = failed ? 'fcPreview isWarn' : 'fcPreview isOk';
-      preview.innerHTML = `<div class="fcPreviewHead">${esc(T('İlk satırlarda sonuç', 'Result on the first rows'))}${failed ? ` · ${esc(failed.error)}` : ''}</div>${lines}`;
+      preview.innerHTML = `<div class="fcPreviewHead">${esc(T('İlk satırlarda sonuç', 'Result on the first rows'))}${failed ? ` · ${esc(friendlyError(failed, refIndex, item.refs))}` : ''}</div>${lines}`;
     }
 
     const firstFreeColumn = () => {
       const used = new Set(builder.mode === 'join' ? builder.columns : []);
-      const free = columns.find(col => !used.has(col.key));
-      return free ? free.key : (columns[0] ? columns[0].key : '');
+      const free = columns.find(col => !used.has(col.ref));
+      return free ? free.ref : (columns[0] ? columns[0].ref : '');
+    };
+    const setMode = next => {
+      if (next === builder.mode) return;
+      // Gelişmiş kipe geçerken kartın ürettiği formül taşınır: kullanıcı
+      // kurduğu şeyi kaybetmeden elle geliştirmeye devam edebilsin.
+      if (next === 'advanced') builder.advanced = shown(builderFormula(builder)) || builder.advanced;
+      builder.mode = next;
+      modal.querySelectorAll('[data-fc-mode]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.fcMode === next);
+        btn.setAttribute('aria-selected', String(btn.dataset.fcMode === next));
+        btn.setAttribute('tabindex', btn.dataset.fcMode === next ? '0' : '-1');
+      });
+      renderBuild(); renderPreview();
     };
 
     modal.addEventListener('input', event => {
       const target = event.target;
-      if (target.matches('[data-fc-formula]')) { builder.advanced = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-formula]')) { builder.advanced = target.value; renderAnalysis(); renderPreview(); return; }
+      if (target.matches('[data-fc-ai-request]')) { builder.ai.request = target.value; renderAiPrompt(); return; }
+      if (target.matches('[data-fc-ai-answer]')) { builder.ai.answer = target.value; renderAiResult(); renderPreview(); return; }
+      if (target.matches('[data-fc-dict-search]')) {
+        const query = clean(target.value).toLocaleLowerCase('tr-TR');
+        modal.querySelectorAll('[data-fc-dict-item]').forEach(item => { item.hidden = Boolean(query) && !item.dataset.fcDictItem.includes(query); });
+        modal.querySelectorAll('.fcDictGroup').forEach(group => {
+          const items = group.querySelectorAll('[data-fc-dict-item]');
+          group.hidden = Boolean(query) && (items.length ? [...items].every(item => item.hidden) : true);
+        });
+        return;
+      }
       if (target.matches('[data-fc-operand-number]')) {
         builder.operands[Number(target.dataset.fcOperandNumber)].number = target.value;
         renderPreview(); return;
       }
+      if (target.matches('[data-fc-adddays-days]')) { builder.adddays.days = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-right-value]')) { builder.ifelse.right.value = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-then]')) { builder.ifelse.then = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-else]')) { builder.ifelse.else = target.value; renderPreview(); return; }
       if (target.matches('[data-fc-separator-custom]')) {
         builder.separator = target.value;
         modal.querySelectorAll('[data-fc-separator]').forEach(chip => chip.classList.toggle('active', chip.dataset.fcSeparator === builder.separator));
         target.classList.add('active');
         renderPreview(); return;
       }
-      if (target.closest('[data-fc-label],[data-fc-label-en],[data-fc-decimals]')) renderPreview();
+      if (target.matches('[data-fc-label],[data-fc-label-en]')) {
+        labelTouched = Boolean(clean(labelInput.value) || clean(labelEnInput.value));
+        return;
+      }
+      if (target.closest('[data-fc-decimals]')) renderPreview();
     });
     modal.addEventListener('change', event => {
       const target = event.target;
-      if (target.matches('[data-fc-format]')) { renderPreview(); return; }
+      if (target.matches('[data-fc-format]')) { formatTouched = true; renderPreview(); return; }
       if (target.matches('[data-fc-group]')) {
         // Yeni başlık seçilince ad kutusu açılır ve odak oraya gider.
         const wantsNew = target.value === NEW_GROUP;
@@ -926,37 +1527,30 @@
         builder.columns[index] = target.value;
         renderBuild(); renderPreview(); return;
       }
+      if (target.matches('[data-fc-days]')) { builder.days[target.dataset.fcDays] = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-percent-kind]')) { builder.percent.kind = target.value; renderBuild(); renderPreview(); return; }
+      if (target.matches('[data-fc-percent]')) { builder.percent[target.dataset.fcPercent] = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-adddays-date]')) { builder.adddays.date = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-adddays-dir]')) { builder.adddays.dir = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-left]')) { builder.ifelse.left = target.value; renderPreview(); return; }
+      if (target.matches('[data-fc-if-cmp]')) { builder.ifelse.cmp = target.value; renderBuild(); renderPreview(); return; }
+      if (target.matches('[data-fc-if-right-kind]')) { builder.ifelse.right.kind = target.value; renderBuild(); renderPreview(); return; }
+      if (target.matches('[data-fc-if-right-column]')) { builder.ifelse.right.column = target.value; renderPreview(); return; }
       const insert = target.closest('[data-fc-insert]');
       if (insert && insert.value) {
         const field = modal.querySelector('[data-fc-formula]');
         if (field) { insertAtCursor(field, `[${insert.value}]`); builder.advanced = field.value; }
         insert.value = '';
+        renderAnalysis();
         renderPreview();
       }
     });
     modal.addEventListener('click', event => {
       if (event.target === modal || event.target.closest('[data-fc-close]')) { close(); return; }
       const mode = event.target.closest('[data-fc-mode]');
-      if (mode) {
-        const next = mode.dataset.fcMode;
-        if (next !== builder.mode) {
-          // Gelişmiş kipe geçerken kutuların ürettiği formül taşınır: kullanıcı
-          // kurduğu şeyi kaybetmeden elle geliştirmeye devam edebilsin.
-          if (next === 'advanced') builder.advanced = builderFormula(builder) || builder.advanced;
-          if (next === 'calc' && !builder.operands) builder.operands = [{ kind: 'column', column: '', number: '' }, { kind: 'column', column: '', number: '' }];
-          if (next === 'calc' && !builder.operators) builder.operators = ['-'];
-          if (next === 'join' && !builder.columns) builder.columns = [];
-          if (next === 'join' && builder.separator == null) builder.separator = ' - ';
-          if (next === 'join' && formatInput.value === 'auto') formatInput.value = 'text';
-          builder.mode = next;
-          modal.querySelectorAll('[data-fc-mode]').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.fcMode === next);
-            btn.setAttribute('aria-selected', String(btn.dataset.fcMode === next));
-          });
-          renderBuild(); renderPreview();
-        }
-        return;
-      }
+      if (mode) { setMode(mode.dataset.fcMode); return; }
+      const jump = event.target.closest('[data-fc-mode-jump]');
+      if (jump) { setMode(jump.dataset.fcModeJump); modal.querySelector('[data-fc-formula]')?.focus(); return; }
       const separator = event.target.closest('[data-fc-separator]');
       if (separator) { builder.separator = separator.dataset.fcSeparator; renderBuild(); renderPreview(); return; }
       if (event.target.closest('[data-fc-operand-add]')) {
@@ -982,11 +1576,53 @@
       if (joinDown) { const i = Number(joinDown.dataset.fcJoinDown); if (i < builder.columns.length - 1) { const [item] = builder.columns.splice(i, 1); builder.columns.splice(i + 1, 0, item); renderBuild(); renderPreview(); } return; }
       const joinDrop = event.target.closest('[data-fc-join-drop]');
       if (joinDrop) { builder.columns.splice(Number(joinDrop.dataset.fcJoinDrop), 1); renderBuild(); renderPreview(); return; }
-      const snippet = event.target.closest('[data-fc-snippet]');
-      if (snippet) {
+      const dictInsert = event.target.closest('[data-fc-dict-insert],[data-fc-dict-use]');
+      if (dictInsert) {
         const field = modal.querySelector('[data-fc-formula]');
-        if (field) { insertAtCursor(field, snippet.dataset.fcSnippet); builder.advanced = field.value; }
+        if (field) {
+          if (dictInsert.dataset.fcDictUse) insertAtCursor(field, dictInsert.dataset.fcDictUse);
+          else { insertAtCursor(field, `${dictInsert.dataset.fcDictInsert}()`); try { field.setSelectionRange(field.selectionStart - 1, field.selectionStart - 1); } catch (_) { /* imleç taşınamazsa sorun değil */ } }
+          builder.advanced = field.value;
+        }
+        renderAnalysis(); renderPreview();
+        return;
+      }
+      if (event.target.closest('[data-fc-autofix]')) {
+        const field = modal.querySelector('[data-fc-formula]');
+        builder.advanced = E.autoFix(builder.advanced).formula;
+        if (field) field.value = builder.advanced;
+        renderAnalysis(); renderPreview();
+        return;
+      }
+      const fixColumn = event.target.closest('[data-fc-fix-column]');
+      if (fixColumn) {
+        const from = fixColumn.dataset.fcFixColumn, to = fixColumn.dataset.fcFixTo;
+        const rename = text => E.rewriteColumns(text, name => (nameKey(name) === nameKey(from) ? to : null));
+        if (builder.mode === 'ai') {
+          builder.ai.answer = rename(E.autoFix(E.extractFormula(builder.ai.answer)).formula);
+          const answer = modal.querySelector('[data-fc-ai-answer]');
+          if (answer) answer.value = builder.ai.answer;
+          renderAiResult();
+        } else {
+          builder.advanced = rename(builder.advanced);
+          const field = modal.querySelector('[data-fc-formula]');
+          if (field) field.value = builder.advanced;
+          renderAnalysis();
+        }
         renderPreview();
+        return;
+      }
+      if (event.target.closest('[data-fc-ai-copy]')) {
+        const text = aiPrompt();
+        copyText(text).then(ok => toast(ok
+          ? T('AI yönergesi kopyalandı. AI aracınıza yapıştırın, cevabı 3. adıma geri getirin.', 'AI instructions copied. Paste them into your AI tool and bring the answer back to step 3.')
+          : T('Kopyalanamadı; “Yönergeyi göster”den seçip kopyalayın.', 'Could not copy; select it under “Show instructions” and copy.')));
+        return;
+      }
+      if (event.target.closest('[data-fc-ai-edit]')) {
+        const found = builder.ai.formula || E.autoFix(E.extractFormula(builder.ai.answer)).formula;
+        builder.advanced = found;
+        setMode('advanced');
         return;
       }
       if (event.target.closest('[data-fc-delete]')) {
@@ -998,7 +1634,7 @@
       }
       if (event.target.closest('[data-fc-save]')) {
         const item = currentDraft();
-        if (!item.label) { toast(T('Sütun başlığı gerekli.', 'A column heading is required.')); labelInput.focus(); return; }
+        if (!item.label) { toast(T('Sütun başlığı gerekli.', 'A column heading is required.')); (en() ? labelEnInput : labelInput).focus(); return; }
         if (groupInput.value === NEW_GROUP && !item.group) {
           toast(T('Yeni başlık adı gerekli.', 'A new heading name is required.'));
           groupNewInput.focus();
@@ -1007,18 +1643,39 @@
         if (!item.formula) {
           toast(builder.mode === 'join'
             ? T('Birleştirilecek en az bir sütun seçin.', 'Pick at least one column to join.')
-            : builder.mode === 'calc'
-              ? T('Her kutuda bir sütun ya da sayı seçin.', 'Choose a column or a number in every box.')
-              : T('Formül gerekli.', 'A formula is required.'));
-          modal.querySelector('[data-fc-formula],[data-fc-operand],[data-fc-join-add]')?.focus();
+            : builder.mode === 'advanced'
+              ? T('Formül gerekli.', 'A formula is required.')
+              : builder.mode === 'ai'
+                ? T('Önce AI’ın cevabını 3. adıma yapıştırın; formülde hata varsa düzeltin.', 'First paste the AI’s answer into step 3 and fix any error.')
+                : T('Kutuların hepsini doldurun.', 'Fill in all the boxes.'));
+          modal.querySelector('[data-fc-formula],[data-fc-ai-answer],.fcBuild select')?.focus();
           return;
         }
-        const program = engine().compile(item.formula);
+        const program = E.compile(item.formula);
         if (!program.ok) {
           toast(`${T('Formül hatası', 'Formula error')}: ${program.error.message}`);
           modal.querySelector('[data-fc-formula]')?.focus();
           return;
         }
+        if (program.columns.includes(columnKey(item))) {
+          toast(T('Sütun kendi değerini kullanamaz; formülden kendi adını çıkarın.', 'A column cannot use its own value; remove its own name from the formula.'));
+          return;
+        }
+        /* Analiz HATA buluyorsa kayıt durur: bilinmeyen fonksiyon ya da yanlış
+           argüman sayısı hiçbir satırda çalışmaz. Tabloda olmayan bir sütun ise
+           geçici olabilir (veri tabanı sütunu henüz yüklenmemiş); kullanıcıya
+           sorulur. */
+        const analysis = analyzeText(shown(item.formula));
+        const blocking = analysis.issues.filter(entry => entry.level === 'error' && entry.code !== 'UNKNOWN_COLUMN');
+        if (blocking.length) { toast(`${T('Formülde hata var', 'The formula has an error')}: ${en() ? blocking[0].en : blocking[0].tr}`); return; }
+        const missing = analysis.issues.filter(entry => entry.code === 'UNKNOWN_COLUMN').map(entry => `[${entry.column}]`);
+        if (missing.length && !confirm(T(`Bu tabloda bulunamayan sütun var: ${missing.join(', ')}. Bu sütun hesaplanamaz ve “—” gösterir. Yine de kaydedilsin mi?`, `Some columns were not found in this table: ${missing.join(', ')}. The column cannot be calculated and shows “—”. Save anyway?`))) return;
+        /* Aynı adda iki sütun, formülde [ad] yazıldığında hangisinin kastedildiğini
+           belirsizleştirir. Yeni ya da yeniden adlandırılan sütunda engellenir. */
+        const renamed = !existing || nameKey(existing.label) !== nameKey(item.label);
+        const clash = renamed && (definitions(tableKey).some(entry => entry.id !== item.id && nameKey(entry.label) === nameKey(item.label))
+          || sourceColumns(tableKey, item.id).some(col => !col.calculated && nameKey(col.label) === nameKey(item.label)));
+        if (clash) { toast(T('Bu tabloda aynı adda bir sütun zaten var; farklı bir ad verin.', 'This table already has a column with that name; pick another name.')); (en() ? labelEnInput : labelInput).focus(); return; }
         const list = definitions(tableKey);
         const index = list.findIndex(entry => entry.id === item.id);
         if (index >= 0) list[index] = item; else list.push(item);
@@ -1035,7 +1692,10 @@
     renderBuild();
     renderPreview();
     renderSourceAdd();
-    setTimeout(() => (en() ? labelEnInput : labelInput).focus(), 0);
+    setTimeout(() => {
+      const preferredLabel = en() ? labelEnInput : labelInput;
+      (existing ? preferredLabel : modal.querySelector('.fcRecipe.active') || preferredLabel).focus();
+    }, 0);
   }
 
   function rowLabel(tableKey, row, index) {
@@ -1114,7 +1774,9 @@
     open, close, init, columnKey, sourceColumns, tableRows, storageKey, remove, save, dateDisplay,
     aliasMap, dependenciesOf, orderedDefinitions,
     // Kurucu — sınanabilmesi için dışa açılır.
-    calcFormula, joinFormula, builderFormula, builderFromFormula, OPERATORS, SEPARATORS,
+    calcFormula, joinFormula, builderFormula, builderFromFormula, OPERATORS, SEPARATORS, COMPARISONS,
+    // v7.175 — yeniden adlandırmaya dayanıklı başvuru katmanı.
+    columnIndex, resolveRef, toStorage, displayFormula, migrateReferences,
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();

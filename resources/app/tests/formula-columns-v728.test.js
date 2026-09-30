@@ -495,8 +495,17 @@ test('DÜZENLEMEDE kutular geri gelir — formül motorun ayrıştırıcısıyla
 
 test('kutuya SIĞMAYAN formül kutu gibi gösterilmez — Gelişmiş kipte açılır', () => {
   // Yanlış kutu göstermek, kullanıcının formülünü sessizce değiştirmek olurdu.
-  assert.equal(FC.builderFromFormula('DAYS([A], [B])'), null);
-  assert.equal(FC.builderFromFormula('IF([A] > 1000, "BÜYÜK", "KÜÇÜK")'), null);
+  /* v7.175 — DAYS ve basit IF artık kendi kartlarına (Gün farkı / Koşula göre
+     yaz) BİREBİR sığıyor; kart aynı metni geri üretmelidir. Sığmayanlar hâlâ
+     Gelişmiş kipte açılır. */
+  const days = FC.builderFromFormula('DAYS([A], [B])');
+  assert.equal(days.mode, 'days');
+  assert.equal(FC.builderFormula(days), 'DAYS([A], [B])');
+  const condition = FC.builderFromFormula('IF([A] > 1000, "BÜYÜK", "KÜÇÜK")');
+  assert.equal(condition.mode, 'ifelse');
+  assert.equal(FC.builderFormula(condition), 'IF([A] > 1000, "BÜYÜK", "KÜÇÜK")');
+  assert.equal(FC.builderFromFormula('IF([A] > 1000, [B] * 2, "KÜÇÜK")'), null, 'hesaplı dal karta sığmaz');
+  assert.equal(FC.builderFromFormula('DAYS([A], TODAY())'), null, 'sütun olmayan tarih karta sığmaz');
   assert.equal(FC.builderFromFormula('[A] - [B] * 2'), null, 'sağa yaslı öncelik kutulara sığmaz');
   assert.equal(FC.builderFromFormula(''), null);
 });
@@ -504,7 +513,8 @@ test('kutuya SIĞMAYAN formül kutu gibi gösterilmez — Gelişmiş kipte açı
 test('kurucu ile Gelişmiş kip arasında geçişte kurulan formül taşınır', () => {
   const start = formulaColumns.indexOf("if (next === 'advanced')");
   assert.ok(start > 0);
-  assert.match(formulaColumns.slice(start, start + 140), /builder\.advanced = builderFormula\(builder\)/);
+  // v7.175 — formül ekranda güncel sütun ADLARIYLA gösterilir (shown).
+  assert.match(formulaColumns.slice(start, start + 140), /builder\.advanced = shown\(builderFormula\(builder\)\)/);
 });
 
 test('üretilen formül kullanıcıya AÇIKÇA gösterilir', () => {
@@ -515,7 +525,9 @@ test('üretilen formül kullanıcıya AÇIKÇA gösterilir', () => {
 
 test('kurucu ile formül tek yürütücüden geçer — ikinci bir hesaplama yolu yok', () => {
   // Depoda saklanan alan yine formül metnidir; kurucu yalnız onu üretir.
-  assert.match(formulaColumns, /formula: builderFormula\(builder\)/);
+  // v7.175 — kaydedilen metin kurucunun ürettiğidir; yalnız adlar kalıcı anahtara çevrilir.
+  assert.match(formulaColumns, /const storedFormula = \(\) => toStorage\(tableKey, builderFormula\(builder\), draft\.refs\);/);
+  assert.match(formulaColumns, /formula: stored\.formula,/);
   assert.equal(/row\[key\]\s*=\s*builder/.test(formulaColumns), false, 'kurucu satırlara doğrudan yazmamalı');
 });
 

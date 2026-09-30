@@ -164,7 +164,7 @@
       if (ch === '[') {
         const end = text.indexOf(']', i + 1);
         if (end < 0) throw new FormulaError('Sütun adı kapatılmamış: "]" eksik.', 'UNCLOSED_COLUMN', i);
-        tokens.push({ type: 'column', value: text.slice(i + 1, end).trim(), position: i });
+        tokens.push({ type: 'column', value: text.slice(i + 1, end).trim(), position: i, end: end + 1 });
         i = end + 1;
         continue;
       }
@@ -189,27 +189,27 @@
           index++;
         }
         if (!closed) throw new FormulaError('Metin tırnağı kapatılmamış.', 'UNCLOSED_STRING', i);
-        tokens.push({ type: 'string', value, position: i });
+        tokens.push({ type: 'string', value, position: i, end: index + 1 });
         i = index + 1;
         continue;
       }
       if (/[0-9]/.test(ch) || (ch === '.' && /[0-9]/.test(text[i + 1] || ''))) {
         const match = /^[0-9]*\.?[0-9]+/.exec(text.slice(i));
-        tokens.push({ type: 'number', value: Number(match[0]), position: i });
+        tokens.push({ type: 'number', value: Number(match[0]), position: i, end: i + match[0].length });
         i += match[0].length;
         continue;
       }
       if (/[A-Za-zÇĞİÖŞÜçğıöşü_]/.test(ch)) {
         const match = /^[A-Za-zÇĞİÖŞÜçğıöşü_][A-Za-zÇĞİÖŞÜçğıöşü0-9_.]*/.exec(text.slice(i));
-        tokens.push({ type: 'name', value: match[0], position: i });
+        tokens.push({ type: 'name', value: match[0], position: i, end: i + match[0].length });
         i += match[0].length;
         continue;
       }
       const punct = PUNCT.find(item => text.startsWith(item, i));
-      if (punct) { tokens.push({ type: 'punct', value: punct, position: i }); i += punct.length; continue; }
+      if (punct) { tokens.push({ type: 'punct', value: punct, position: i, end: i + punct.length }); i += punct.length; continue; }
       throw new FormulaError(`Anlaşılmayan karakter: "${ch}"`, 'BAD_CHARACTER', i);
     }
-    tokens.push({ type: 'end', value: '', position: text.length });
+    tokens.push({ type: 'end', value: '', position: text.length, end: text.length });
     return tokens;
   }
 
@@ -315,7 +315,24 @@
   const FUNCTIONS = {
     // --- tarih ---
     DAYS: { min: 2, max: 2, fn: args => Math.round((needDate(args[1], 'DAYS').getTime() - needDate(args[0], 'DAYS').getTime()) / DAY_MS) },
-    DATEDIF: { min: 2, max: 2, fn: args => FUNCTIONS.DAYS.fn(args) },
+    /* DATEDIF(a, b, "d" | "m" | "y") — Excel'deki adıyla. Üçüncü argüman
+       verilmezse gün farkıdır (eski davranış). "m" / "y" TAMAMLANMIŞ ay / yıl
+       sayısını verir; AI araçları bu biçimi sık üretir. */
+    DATEDIF: {
+      min: 2, max: 3,
+      fn: args => {
+        const unit = args.length > 2 ? toText(args[2]).trim().toLocaleLowerCase('en') : 'd';
+        if (unit === 'd' || unit === '') return FUNCTIONS.DAYS.fn(args);
+        const a = needDate(args[0], 'DATEDIF'), b = needDate(args[1], 'DATEDIF');
+        const sign = b.getTime() >= a.getTime() ? 1 : -1;
+        const [from, to] = sign > 0 ? [a, b] : [b, a];
+        let months = (to.getUTCFullYear() - from.getUTCFullYear()) * 12 + (to.getUTCMonth() - from.getUTCMonth());
+        if (to.getUTCDate() < from.getUTCDate()) months -= 1;
+        if (unit === 'm') return sign * months;
+        if (unit === 'y') return sign * Math.floor(months / 12);
+        throw new FormulaError('DATEDIF birimi "d", "m" ya da "y" olmalı.', 'BAD_ARGUMENT');
+      },
+    },
     TODAY: { min: 0, max: 0, fn: () => { const now = new Date(); return makeDate(now.getFullYear(), now.getMonth() + 1, now.getDate()); } },
     DATE: { min: 3, max: 3, fn: args => makeDate(Number(toNumber(args[0])), Number(toNumber(args[1])), Number(toNumber(args[2]))) },
     ADDDAYS: { min: 2, max: 2, fn: args => new Date(needDate(args[0], 'ADDDAYS').getTime() + (toNumber(args[1]) || 0) * DAY_MS) },
@@ -338,6 +355,9 @@
     // --- matematik ---
     ABS: { min: 1, max: 1, fn: args => { const n = numberOrNull(args[0]); return n == null ? null : Math.abs(n); } },
     ROUND: { min: 1, max: 2, fn: args => { const n = numberOrNull(args[0]); if (n == null) return null; const d = args.length > 1 ? Math.trunc(toNumber(args[1]) || 0) : 0; const f = Math.pow(10, d); return Math.round(n * f) / f; } },
+    // Excel'deki gibi: ROUNDUP sıfırdan UZAĞA, ROUNDDOWN sıfıra DOĞRU yuvarlar.
+    ROUNDUP: { min: 1, max: 2, fn: args => { const n = numberOrNull(args[0]); if (n == null) return null; const d = args.length > 1 ? Math.trunc(toNumber(args[1]) || 0) : 0; const f = Math.pow(10, d); return Math.sign(n) * Math.ceil(Math.abs(n) * f - 1e-9) / f; } },
+    ROUNDDOWN: { min: 1, max: 2, fn: args => { const n = numberOrNull(args[0]); if (n == null) return null; const d = args.length > 1 ? Math.trunc(toNumber(args[1]) || 0) : 0; const f = Math.pow(10, d); return Math.sign(n) * Math.floor(Math.abs(n) * f + 1e-9) / f; } },
     CEIL: { min: 1, max: 1, fn: args => { const n = numberOrNull(args[0]); return n == null ? null : Math.ceil(n); } },
     FLOOR: { min: 1, max: 1, fn: args => { const n = numberOrNull(args[0]); return n == null ? null : Math.floor(n); } },
     MIN: { min: 1, max: 50, fn: args => { const list = numbersOf(args); return list.length ? Math.min(...list) : null; } },
@@ -351,6 +371,20 @@
     NUMBER: { min: 1, max: 1, fn: args => numberOrNull(args[0]) },
     // --- mantık ---
     IF: { min: 2, max: 3, lazy: true, fn: (args, evaluate) => (toBool(evaluate(args[0])) ? evaluate(args[1]) : (args.length > 2 ? evaluate(args[2]) : null)) },
+    /* IFS(koşul1, değer1, koşul2, değer2, …) — ilk doğru koşulun değeri.
+       Hiçbiri tutmazsa BOŞ döner (Excel #N/A verir; boş, "bilinmiyor"u
+       yanlış bir değer göstermeden anlatır). Son koşul olarak TRUE yazmak
+       "değilse" dalıdır. */
+    IFS: {
+      min: 2, max: 50, lazy: true,
+      fn: (args, evaluate) => {
+        if (args.length % 2) throw new FormulaError('IFS() koşul/değer çiftleri ister (çift sayıda argüman).', 'BAD_ARITY');
+        for (let index = 0; index < args.length; index += 2) {
+          if (toBool(evaluate(args[index]))) return evaluate(args[index + 1]);
+        }
+        return null;
+      },
+    },
     AND: { min: 1, max: 50, fn: args => args.every(toBool) },
     OR: { min: 1, max: 50, fn: args => args.some(toBool) },
     NOT: { min: 1, max: 1, fn: args => !toBool(args[0]) },
@@ -511,26 +545,399 @@
     };
   }
 
-  const FUNCTION_HELP = [
-    { name: 'DAYS(a, b)', tr: 'İki tarih arasındaki gün farkı (b − a)', en: 'Days between two dates (b − a)' },
-    { name: 'TODAY()', tr: 'Bugünün tarihi', en: 'Today’s date' },
-    { name: 'ADDDAYS(tarih, n)', tr: 'Tarihe gün ekler', en: 'Adds days to a date' },
-    { name: 'YEAR / MONTH / DAY / WEEKNUM(tarih)', tr: 'Tarihin yılı / ayı / günü / hafta numarası', en: 'Year / month / day / ISO week' },
-    { name: 'IF(koşul, a, b)', tr: 'Koşul doğruysa a, değilse b', en: 'a when the condition holds, otherwise b' },
-    { name: 'ROUND(sayı, basamak)', tr: 'Yuvarlar', en: 'Rounds' },
-    { name: 'MIN / MAX / SUM / AVG(...)', tr: 'En küçük / en büyük / toplam / ortalama', en: 'Min / max / sum / average' },
-    { name: 'ABS / SQRT / POWER / MOD', tr: 'Mutlak değer, karekök, üs, kalan', en: 'Absolute, square root, power, remainder' },
-    { name: 'COALESCE(...)', tr: 'İlk dolu değeri verir', en: 'First non-empty value' },
-    { name: 'ISBLANK(x)', tr: 'Hücre boş mu', en: 'Is the cell empty' },
-    { name: 'TEXTJOIN(ayraç; boşları atla; a; b; …)', tr: 'Sütunları ayraçla birleştirir; boş hücreleri atlayabilir', en: 'Joins columns with a separator, optionally skipping blanks' },
-    { name: 'CONCAT(...) veya a & b', tr: 'Metinleri birleştirir', en: 'Joins text' },
-    { name: 'UPPER / LOWER / TRIM / LEN / LEFT / RIGHT / MID', tr: 'Metin işlemleri', en: 'Text helpers' },
-    { name: 'CONTAINS(metin, aranan)', tr: 'İçeriyor mu', en: 'Contains' },
+  /* ---------------- SÖZLÜK ----------------
+
+     Kullanıcı talebi (birebir): "İsteyen advanced modda formül de yazsın,
+     formül yazmak için bir sözlük de sun, nasıl çalışır / hangi işlem için
+     hangi formül v.s."
+
+     Sözlük MOTORUN YANINDA durur: pencere, AI yönergesi ve analiz aynı listeyi
+     okur. Ayrı bir yardım metni yazılsaydı, motora eklenen bir fonksiyon
+     sözlükte eksik kalır ya da AI'a olmayan bir fonksiyon öğretilirdi. Test,
+     FUNCTIONS içindeki her ana fonksiyonun burada anlatıldığını denetler. */
+  const CATEGORIES = [
+    { id: 'date', tr: 'Tarih', en: 'Dates' },
+    { id: 'math', tr: 'Sayı ve hesap', en: 'Numbers & maths' },
+    { id: 'logic', tr: 'Koşul ve kontrol', en: 'Conditions & checks' },
+    { id: 'text', tr: 'Metin', en: 'Text' },
   ];
+  const FUNCTION_DOCS = [
+    { name: 'DAYS', cat: 'date', syntax: 'DAYS([başlangıç], [bitiş])', syntaxEn: 'DAYS([start], [end])', tr: 'İki tarih arasındaki gün sayısı (bitiş − başlangıç). Bitiş önceyse sonuç eksi çıkar.', en: 'Days between two dates (end − start). Negative when the end is earlier.', example: 'DAYS([Ex-factory], [Retail Date])', resultTr: '14 gün', resultEn: '14 days' },
+    { name: 'DATEDIF', cat: 'date', syntax: 'DATEDIF([başlangıç], [bitiş], "m")', syntaxEn: 'DATEDIF([start], [end], "m")', tr: 'Tarih farkını "d" gün, "m" tam ay, "y" tam yıl olarak verir.', en: 'Date difference in "d" days, "m" whole months or "y" whole years.', example: 'DATEDIF([Order Date], [Ex-factory], "m")', resultTr: '3 ay', resultEn: '3 months' },
+    { name: 'ADDDAYS', cat: 'date', syntax: 'ADDDAYS([tarih], gün)', syntaxEn: 'ADDDAYS([date], days)', tr: 'Tarihe gün ekler; eksi sayı gün çıkarır.', en: 'Adds days to a date; a negative number subtracts.', example: 'ADDDAYS([Ex-factory], 30)', resultTr: '30 gün sonrası', resultEn: '30 days later' },
+    { name: 'TODAY', cat: 'date', syntax: 'TODAY()', syntaxEn: 'TODAY()', tr: 'Bugünün tarihi. Her gün kendiliğinden değişir.', en: 'Today’s date. Changes every day by itself.', example: 'DAYS(TODAY(), [Ex-factory])', resultTr: 'ex-factory’ye kalan gün', resultEn: 'days left to ex-factory' },
+    { name: 'DATE', cat: 'date', syntax: 'DATE(yıl, ay, gün)', syntaxEn: 'DATE(year, month, day)', tr: 'Sabit bir tarih üretir.', en: 'Builds a fixed date.', example: 'DAYS(DATE(2026, 1, 1), [Ex-factory])', resultTr: 'yılbaşından bu yana gün', resultEn: 'days since new year' },
+    { name: 'YEAR', cat: 'date', syntax: 'YEAR([tarih]) · MONTH · DAY · WEEKNUM', syntaxEn: 'YEAR([date]) · MONTH · DAY · WEEKNUM', tr: 'Tarihin yılı, ayı, günü ya da ISO hafta numarası.', en: 'Year, month, day or ISO week number of a date.', example: 'WEEKNUM([Ex-factory])', resultTr: '12. hafta', resultEn: 'week 12', also: ['MONTH', 'DAY', 'WEEKNUM'] },
+    { name: 'ROUND', cat: 'math', syntax: 'ROUND(sayı, basamak)', syntaxEn: 'ROUND(number, digits)', tr: 'Yuvarlar. ROUNDUP her zaman yukarı, ROUNDDOWN her zaman aşağı yuvarlar.', en: 'Rounds. ROUNDUP always rounds up, ROUNDDOWN always down.', example: 'ROUND([Price] * 1.2, 2)', resultTr: '12,35', resultEn: '12.35', also: ['ROUNDUP', 'ROUNDDOWN', 'CEIL', 'FLOOR'] },
+    { name: 'SUM', cat: 'math', syntax: 'SUM(a, b, …) · AVG · MIN · MAX', syntaxEn: 'SUM(a, b, …) · AVG · MIN · MAX', tr: 'Toplam, ortalama, en küçük, en büyük. Boş hücreleri atlar.', en: 'Sum, average, smallest, largest. Skips blank cells.', example: 'MAX([Qty 1], [Qty 2], [Qty 3])', resultTr: 'en büyük adet', resultEn: 'largest quantity', also: ['AVG', 'AVERAGE', 'MIN', 'MAX'] },
+    { name: 'ABS', cat: 'math', syntax: 'ABS(sayı)', syntaxEn: 'ABS(number)', tr: 'Mutlak değer: eksi işaretini kaldırır.', en: 'Absolute value: drops the minus sign.', example: 'ABS([Retail Date] - [Ex-factory])', resultTr: 'yönsüz gün farkı', resultEn: 'day gap without direction' },
+    { name: 'POWER', cat: 'math', syntax: 'POWER(a, b) · SQRT(a) · MOD(a, b)', syntaxEn: 'POWER(a, b) · SQRT(a) · MOD(a, b)', tr: 'Üs, karekök ve bölümden kalan.', en: 'Power, square root and remainder.', example: 'MOD([Qty], 12)', resultTr: 'düzineden artan', resultEn: 'left over after dozens', also: ['SQRT', 'MOD'] },
+    { name: 'NUMBER', cat: 'math', syntax: 'NUMBER([metin])', syntaxEn: 'NUMBER([text])', tr: 'Metni sayıya çevirir ("1.234,56" dâhil).', en: 'Turns text into a number ("1.234,56" included).', example: 'NUMBER([Size]) * 2', resultTr: 'sayı', resultEn: 'number' },
+    { name: 'IF', cat: 'logic', syntax: 'IF(koşul, doğruysa, değilse)', syntaxEn: 'IF(condition, if true, otherwise)', tr: 'Koşul doğruysa ikinci, değilse üçüncü değeri yazar.', en: 'Writes the second value when the condition holds, otherwise the third.', example: 'IF([Ex-factory] > [Retail Date], "Gecikmeli", "Zamanında")', resultTr: 'Gecikmeli / Zamanında', resultEn: 'Late / On time' },
+    { name: 'IFS', cat: 'logic', syntax: 'IFS(koşul1, değer1, koşul2, değer2, TRUE, diğer)', syntaxEn: 'IFS(cond1, value1, cond2, value2, TRUE, other)', tr: 'Birden çok koşul: ilk doğru koşulun değerini yazar. Son koşul TRUE ise "değilse" dalıdır.', en: 'Several conditions: writes the value of the first one that holds. A final TRUE is the “otherwise” branch.', example: 'IFS([Margin] < 20, "Düşük", [Margin] < 40, "Orta", TRUE, "Yüksek")', resultTr: 'Düşük / Orta / Yüksek', resultEn: 'Low / Mid / High' },
+    { name: 'AND', cat: 'logic', syntax: 'AND(a, b) · OR(a, b) · NOT(a)', syntaxEn: 'AND(a, b) · OR(a, b) · NOT(a)', tr: 'Koşulları birleştirir: hepsi / en az biri / tersi.', en: 'Combines conditions: all / at least one / the opposite.', example: 'IF(AND([Qty] > 0, [Price] > 0), "Tamam", "Eksik")', resultTr: 'Tamam / Eksik', resultEn: 'OK / Missing', also: ['OR', 'NOT'] },
+    { name: 'IFERROR', cat: 'logic', syntax: 'IFERROR(hesap, yedek)', syntaxEn: 'IFERROR(calculation, fallback)', tr: 'Hesap hata verirse (ör. sıfıra bölme) ya da boş kalırsa yedek değeri yazar.', en: 'Writes the fallback when the calculation fails (e.g. divide by zero) or is blank.', example: 'IFERROR([Cost] / [Qty], 0)', resultTr: 'birim maliyet ya da 0', resultEn: 'unit cost or 0' },
+    { name: 'ISBLANK', cat: 'logic', syntax: 'ISBLANK([sütun])', syntaxEn: 'ISBLANK([column])', tr: 'Hücre boş mu? Doğru / yanlış verir.', en: 'Is the cell empty? Returns true / false.', example: 'IF(ISBLANK([Retail Date]), "Tarih yok", "Var")', resultTr: 'Tarih yok / Var', resultEn: 'No date / Present' },
+    { name: 'COALESCE', cat: 'logic', syntax: 'COALESCE(a, b, …)', syntaxEn: 'COALESCE(a, b, …)', tr: 'İlk DOLU değeri verir.', en: 'Returns the first non-empty value.', example: 'COALESCE([Revised Date], [Ex-factory])', resultTr: 'revize varsa o, yoksa ex-factory', resultEn: 'revised date if any, else ex-factory' },
+    { name: 'CONTAINS', cat: 'logic', syntax: 'CONTAINS([metin], "aranan")', syntaxEn: 'CONTAINS([text], "search")', tr: 'Metin, aranan parçayı içeriyor mu (büyük/küçük harf fark etmez)?', en: 'Does the text contain the search part (case-insensitive)?', example: 'IF(CONTAINS([Model], "ELBİSE"), "Elbise", "Diğer")', resultTr: 'Elbise / Diğer', resultEn: 'Dress / Other' },
+    { name: 'TEXTJOIN', cat: 'text', syntax: 'TEXTJOIN("ayraç", TRUE, [a], [b], …)', syntaxEn: 'TEXTJOIN("separator", TRUE, [a], [b], …)', tr: 'Sütunları ayraçla birleştirir; TRUE boş hücreleri atlar.', en: 'Joins columns with a separator; TRUE skips blank cells.', example: 'TEXTJOIN(" - ", TRUE, [Model], [Color])', resultTr: 'ELBİSE - MAVİ', resultEn: 'DRESS - BLUE' },
+    { name: 'CONCAT', cat: 'text', syntax: 'CONCAT(a, b, …) veya a & b', syntaxEn: 'CONCAT(a, b, …) or a & b', tr: 'Metinleri aralarına bir şey koymadan birleştirir.', en: 'Joins text with nothing in between.', example: '[Season] & "-" & [Order Code]', resultTr: 'SS26-12345', resultEn: 'SS26-12345' },
+    { name: 'UPPER', cat: 'text', syntax: 'UPPER · LOWER · TRIM([metin])', syntaxEn: 'UPPER · LOWER · TRIM([text])', tr: 'Büyük harf, küçük harf, baştaki/sondaki boşlukları silme.', en: 'Upper case, lower case, trim spaces.', example: 'UPPER([Color])', resultTr: 'MAVİ', resultEn: 'BLUE', also: ['LOWER', 'TRIM'] },
+    { name: 'LEFT', cat: 'text', syntax: 'LEFT([metin], n) · RIGHT · MID([metin], başla, n)', syntaxEn: 'LEFT([text], n) · RIGHT · MID([text], start, n)', tr: 'Metnin soldan / sağdan / ortasından parça alır.', en: 'Takes a part from the left / right / middle of the text.', example: 'LEFT([Order Code], 4)', resultTr: 'ilk 4 karakter', resultEn: 'first 4 characters', also: ['RIGHT', 'MID'] },
+    { name: 'LEN', cat: 'text', syntax: 'LEN([metin]) · FIND("aranan", [metin])', syntaxEn: 'LEN([text]) · FIND("search", [text])', tr: 'Karakter sayısı; aranan parçanın kaçıncı karakterde başladığı (yoksa 0).', en: 'Character count; where the search part starts (0 if missing).', example: 'LEN([Model])', resultTr: '12', resultEn: '12', also: ['FIND'] },
+    { name: 'TEXT', cat: 'text', syntax: 'TEXT(değer)', syntaxEn: 'TEXT(value)', tr: 'Değeri metne çevirir. Görünüm (ondalık, yüzde, tarih) için pencerenin Biçim ayarını kullanın.', en: 'Turns a value into text. Use the window’s Format setting for decimals, percent or dates.', example: 'TEXT([Qty]) & " adet"', resultTr: '120 adet', resultEn: '120 pcs' },
+  ];
+  // İşlemler — sözlüğün ilk bölümü; "hangi işlem için hangi işaret".
+  const OPERATOR_DOCS = [
+    { sign: '+  −  *  /', tr: 'Topla, çıkar, çarp, böl', en: 'Add, subtract, multiply, divide', example: '([Price] - [Cost]) / [Price] * 100' },
+    { sign: '^', tr: 'Üs alma', en: 'Power', example: '[A] ^ 2' },
+    { sign: '&', tr: 'Metin birleştirme', en: 'Join text', example: '[Model] & " / " & [Color]' },
+    { sign: '=  <>  >  <  >=  <=', tr: 'Karşılaştırma: eşit, eşit değil, büyük, küçük…', en: 'Compare: equal, not equal, greater, less…', example: '[Qty] >= 1000' },
+    { sign: '( )', tr: 'Önce yapılacak işlemi gruplar', en: 'Groups what is calculated first', example: '([A] + [B]) * 2' },
+  ];
+  // "Hangi iş için hangi formül" — düz Türkçe ihtiyaçtan formüle.
+  const RECIPE_DOCS = [
+    { tr: 'İki tarih arasında kaç gün var?', en: 'How many days between two dates?', formula: 'DAYS([Ex-factory], [Retail Date])' },
+    { tr: 'Bugüne göre kaç gün kaldı / geçti?', en: 'Days left / passed until today?', formula: 'DAYS(TODAY(), [Ex-factory])' },
+    { tr: 'Tarihe 30 gün ekle', en: 'Add 30 days to a date', formula: 'ADDDAYS([Ex-factory], 30)' },
+    { tr: 'A, B’nin yüzde kaçı?', en: 'A is what percent of B?', formula: 'ROUND([A] / [B] * 100, 1)' },
+    { tr: 'Yüzde değişim (eski → yeni)', en: 'Percent change (old → new)', formula: 'ROUND(([New] - [Old]) / [Old] * 100, 1)' },
+    { tr: 'Kâr marjı %', en: 'Profit margin %', formula: 'ROUND(([Price] - [Cost]) / [Price] * 100, 1)' },
+    { tr: 'Sıfıra bölünce hata değil 0 yaz', en: 'Write 0 instead of a divide-by-zero error', formula: 'IFERROR([Cost] / [Qty], 0)' },
+    { tr: 'Gecikmeli mi? (koşula göre yazı)', en: 'Late or not? (text by condition)', formula: 'IF([Ex-factory] > [Retail Date], "Gecikmeli", "Zamanında")' },
+    { tr: 'Aralığa göre sınıf (düşük/orta/yüksek)', en: 'Band by range (low/mid/high)', formula: 'IFS([Margin] < 20, "Düşük", [Margin] < 40, "Orta", TRUE, "Yüksek")' },
+    { tr: 'Boşsa başka sütunu kullan', en: 'Use another column when blank', formula: 'COALESCE([Revised Date], [Ex-factory])' },
+    { tr: 'Sütunları ayraçla birleştir', en: 'Join columns with a separator', formula: 'TEXTJOIN(" - ", TRUE, [Model], [Color])' },
+  ];
+  // Formül yazmanın kuralları — pencerede "Nasıl çalışır" ve AI yönergesi AYNI listeyi kullanır.
+  const RULES = [
+    { tr: 'Sütun adı köşeli parantez içinde, tablodaki başlığıyla yazılır: [Ex-factory]. Büyük/küçük harf fark etmez.', en: 'Write a column by its table heading in square brackets: [Ex-factory]. Case does not matter.' },
+    { tr: 'Metin çift tırnak içinde yazılır: "Gecikmeli".', en: 'Text goes in double quotes: "Late".' },
+    { tr: 'Ondalık ayırıcı NOKTADIR (1.5). Argümanlar virgül ya da noktalı virgülle ayrılır.', en: 'The decimal separator is a DOT (1.5). Arguments are separated by a comma or semicolon.' },
+    { tr: 'Başa "=" koymak gerekmez.', en: 'No leading "=" is needed.' },
+    { tr: 'İki tarih sütununu birbirinden çıkarmak GÜN farkını verir.', en: 'Subtracting one date column from another gives the DAY difference.' },
+    { tr: 'Boş hücreyle yapılan hesap BOŞ kalır, 0 sayılmaz. Boşları yönetmek için ISBLANK / COALESCE kullanın.', en: 'A calculation with a blank cell stays BLANK, it is not treated as 0. Use ISBLANK / COALESCE for blanks.' },
+    { tr: 'Sıfıra bölme hata verir; IFERROR(hesap, 0) ile yakalanır.', en: 'Dividing by zero is an error; catch it with IFERROR(calculation, 0).' },
+    { tr: 'Her formül YALNIZ aynı satırın değerleriyle çalışır: hücre adresi (A1), aralık (A1:A10), başka satır ya da sayfa (VLOOKUP, SUMIF…) yoktur.', en: 'Each formula works ONLY with the values of the same row: no cell addresses (A1), ranges (A1:A10), other rows or sheets (VLOOKUP, SUMIF…).' },
+    { tr: 'Yalnız sözlükteki fonksiyonlar kullanılabilir; adları İngilizcedir (IF, ROUND…). Türkçe Excel adları (EĞER, YUVARLA…) otomatik düzeltilir.', en: 'Only the functions in the dictionary exist; names are English (IF, ROUND…). Turkish Excel names (EĞER, YUVARLA…) are fixed automatically.' },
+  ];
+  // Geriye dönük uyumluluk: eski kısa liste sözlükten türetilir (tek kaynak).
+  const FUNCTION_HELP = FUNCTION_DOCS.map(item => ({ name: item.syntax, tr: item.tr, en: item.en }));
+
+  /* ---------------- belirteç düzeyinde yeniden yazma ----------------
+
+     Formül metnindeki [sütun] başvurularını ve fonksiyon adlarını, metnin geri
+     kalanına (boşluk, tırnak içindeki yazı, parantez düzeni) DOKUNMADAN
+     değiştirir. Düzenli ifade ile "[" aramak, "…[x]…" gibi tırnak içindeki
+     bir yazıyı da sütun sanardı; motorun kendi sözcük çözümleyicisi bu ayrımı
+     zaten yapıyor. Metin çözümlenemiyorsa olduğu gibi döner. */
+  function rewriteTokens(source, replace) {
+    const text = String(source == null ? '' : source);
+    let tokens;
+    try { tokens = tokenize(text); } catch (_) { return text; }
+    let out = '';
+    let last = 0;
+    tokens.forEach((token, index) => {
+      if (token.type === 'end') return;
+      const next = replace(token, tokens[index + 1] || null);
+      if (next == null) return;
+      out += text.slice(last, token.position) + next;
+      last = token.end;
+    });
+    return out + text.slice(last);
+  }
+  // Her [ad] için map(ad) çağrılır; farklı bir ad dönerse yerine yazılır.
+  function rewriteColumns(source, map) {
+    return rewriteTokens(source, token => {
+      if (token.type !== 'column') return null;
+      const next = map(token.value);
+      if (next == null || next === token.value) return null;
+      const name = String(next);
+      return /[\[\]]/.test(name) ? null : `[${name}]`;
+    });
+  }
+
+  /* ---------------- AI çıktısını okuma ve otomatik düzeltme ---------------- */
+
+  const fold = value => String(value == null ? '' : value)
+    .replace(/[İIı]/g, 'I').replace(/i/g, 'I')
+    .toLocaleUpperCase('en')
+    .replace(/Ş/g, 'S').replace(/Ğ/g, 'G').replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C');
+  /* Türkçe Excel ve sık görülen başka adlar → motorun adı. AI araçları ve
+     Excel alışkanlığı en çok bunları üretir; kullanıcıya "bilinmeyen
+     fonksiyon" demek yerine düzeltilir ve NE düzeltildiği söylenir. */
+  const FUNCTION_ALIASES = {
+    EGER: 'IF', VE: 'AND', YADA: 'OR', DEGIL: 'NOT', COKEGER: 'IFS', EGERHATA: 'IFERROR', EBOSSA: 'ISBLANK',
+    TOPLA: 'SUM', ORTALAMA: 'AVERAGE', MAK: 'MAX', YUVARLA: 'ROUND', YUKARIYUVARLA: 'ROUNDUP', ASAGIYUVARLA: 'ROUNDDOWN',
+    MUTLAK: 'ABS', KAREKOK: 'SQRT', KUVVET: 'POWER', TAMSAYI: 'FLOOR', INT: 'FLOOR', CEILING: 'CEIL', TAVANAYUVARLA: 'CEIL', TABANAYUVARLA: 'FLOOR',
+    BUGUN: 'TODAY', NOW: 'TODAY', SIMDI: 'TODAY', TARIH: 'DATE', YIL: 'YEAR', AY: 'MONTH', GUN: 'DAY', HAFTASAY: 'WEEKNUM', ISOWEEKNUM: 'WEEKNUM', ISOHAFTASAY: 'WEEKNUM',
+    GUNSAY: 'DAYS', ETARIHLI: 'DATEDIF',
+    BIRLESTIR: 'CONCAT', CONCATENATE: 'CONCAT', METINBIRLESTIR: 'TEXTJOIN', BUYUKHARF: 'UPPER', KUCUKHARF: 'LOWER', KIRP: 'TRIM',
+    UZUNLUK: 'LEN', SOLDAN: 'LEFT', SAGDAN: 'RIGHT', PARCAAL: 'MID', BUL: 'FIND', MBUL: 'FIND', SEARCH: 'FIND',
+    SAYIYACEVIR: 'NUMBER', VALUE: 'NUMBER', METNECEVIR: 'TEXT',
+  };
+  function canonicalFunctionName(name) {
+    const upper = String(name || '').toLocaleUpperCase('en');
+    if (Object.prototype.hasOwnProperty.call(FUNCTIONS, upper)) return upper;
+    const folded = fold(name);
+    if (Object.prototype.hasOwnProperty.call(FUNCTIONS, folded)) return folded;
+    return FUNCTION_ALIASES[folded] || null;
+  }
+
+  /* AI cevabından formülü çıkarır. Cevap çoğu zaman açıklama + kod bloğu
+     olarak gelir; kullanıcıdan "yalnız formülü seç" beklemek, kopyalamayı
+     zorlaştırmak demekti. Sıra: ``` kod bloğu → `satır içi kod` → metnin
+     tamamı → çözümlenebilen ilk satır. */
+  function extractFormula(input) {
+    const raw = String(input == null ? '' : input).replace(/\r\n?/g, '\n').trim();
+    if (!raw) return '';
+    const strip = text => String(text || '').trim()
+      .replace(/^(?:formül|formula|formul)\s*[:：]\s*/i, '')
+      .replace(/^=\s*/, '')
+      .replace(/[;\s]+$/, '')
+      .trim();
+    const fence = /```[a-zA-Z]*\n?([\s\S]*?)```/.exec(raw);
+    if (fence && strip(fence[1])) return strip(fence[1]);
+    const inline = [...raw.matchAll(/`([^`\n]+)`/g)].map(match => strip(match[1])).find(text => /[\[(]/.test(text));
+    if (inline) return inline;
+    const whole = strip(raw);
+    if (compile(autoFix(whole).formula).ok) return whole;
+    const lines = raw.split('\n').map(strip).filter(Boolean);
+    const parsed = lines.find(line => /[\[(]/.test(line) && compile(autoFix(line).formula).ok);
+    if (parsed) return parsed;
+    return lines.find(line => /[\[(]/.test(line)) || whole;
+  }
+
+  /* Metni motorun anlayacağı biçime getirir ve NE değiştiğini listeler.
+     Anlamı değiştirebilecek hiçbir şeye (ondalık virgül, hücre adresi)
+     dokunulmaz — onlar analizde HATA olarak bildirilir. */
+  function autoFix(input) {
+    const fixes = [];
+    const note = (tr, en) => { if (!fixes.some(item => item.tr === tr)) fixes.push({ tr, en }); };
+    let text = String(input == null ? '' : input).trim();
+    if (/^=/.test(text)) { text = text.replace(/^=\s*/, ''); note('Baştaki "=" kaldırıldı.', 'Removed the leading "=".'); }
+    const quoted = text.replace(/[“”„‟″]/g, '"').replace(/[‘’‚‛′]/g, "'");
+    if (quoted !== text) { text = quoted; note('Kıvrık tırnaklar düz tırnağa çevrildi.', 'Curly quotes were turned into straight quotes.'); }
+    // İşaretler yalnız tırnak DIŞINDA değişir; ayraç olarak yazılan "–" korunur.
+    const SIGNS = { '×': '*', '÷': '/', '−': '-', '–': '-', '—': '-', '≠': '<>', '≤': '<=', '≥': '>=' };
+    let out = '', quote = null, changedSign = false;
+    for (let index = 0; index < text.length; index++) {
+      const ch = text[index];
+      if (quote) {
+        out += ch;
+        if (ch === '\\' && index + 1 < text.length) { out += text[++index]; continue; }
+        if (ch === quote) quote = null;
+        continue;
+      }
+      if (ch === '"' || ch === "'") { quote = ch; out += ch; continue; }
+      if (SIGNS[ch]) { out += SIGNS[ch]; changedSign = true; continue; }
+      out += ch;
+    }
+    if (changedSign) note('× ÷ − ≠ ≤ ≥ işaretleri formül işaretlerine (* / - <> <= >=) çevrildi.', 'The × ÷ − ≠ ≤ ≥ signs were turned into formula signs (* / - <> <= >=).');
+    text = out;
+    const renamed = [];
+    text = rewriteTokens(text, (token, next) => {
+      if (token.type !== 'name') return null;
+      const isCall = next && next.type === 'punct' && next.value === '(';
+      if (!isCall) {
+        const folded = fold(token.value);
+        if ((folded === 'DOGRU' || folded === 'YANLIS') && token.value !== folded) return folded === 'DOGRU' ? 'TRUE' : 'FALSE';
+        return null;
+      }
+      const canonical = canonicalFunctionName(token.value);
+      if (!canonical || canonical === token.value) return null;
+      if (canonical !== token.value.toLocaleUpperCase('en')) renamed.push(`${token.value} → ${canonical}`);
+      return canonical;
+    });
+    if (renamed.length) note(`Fonksiyon adları düzeltildi: ${[...new Set(renamed)].join(', ')}.`, `Function names fixed: ${[...new Set(renamed)].join(', ')}.`);
+    return { formula: text, fixes };
+  }
+
+  /* ---------------- ANALİZ ----------------
+
+     Kullanıcı talebi: "... çıktıyı buyer loga kopyalasınlar, buyer log da
+     analiz edip varsa hata söylesin."
+
+     Motorun derleme hatası tek satırlık teknik bir cümledir ("")" bekleniyordu").
+     Analiz aynı hatayı DÜZ DİLLE ve NEREDE olduğunu göstererek söyler, üstüne
+     derlemenin göremediklerini de denetler: tabloda olmayan sütun (en yakın
+     adı önererek), yanlış argüman sayısı (doğru yazımı göstererek), sütun
+     adının tırnakla yazılması. Sonuç { ok, formula, fixes, issues } olur;
+     ok yalnız HATA düzeyinde sorun yoksa doğrudur. */
+  function distance(a, b) {
+    const s = String(a), t = String(b);
+    if (s === t) return 0;
+    const row = Array.from({ length: t.length + 1 }, (_, index) => index);
+    for (let i = 1; i <= s.length; i++) {
+      let previous = row[0];
+      row[0] = i;
+      for (let j = 1; j <= t.length; j++) {
+        const current = row[j];
+        row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (s[i - 1] === t[j - 1] ? 0 : 1));
+        previous = current;
+      }
+    }
+    return row[t.length];
+  }
+  const lowerTr = value => String(value == null ? '' : value).trim().toLocaleLowerCase('tr-TR');
+  function closest(name, candidates) {
+    const target = lowerTr(name);
+    if (!target) return null;
+    let best = null, bestScore = Infinity;
+    for (const candidate of candidates) {
+      const value = lowerTr(candidate);
+      if (!value) continue;
+      let score = distance(target, value);
+      if (value.includes(target) || target.includes(value)) score = Math.min(score, Math.abs(value.length - target.length) * 0.5 + 0.5);
+      if (score < bestScore) { bestScore = score; best = candidate; }
+    }
+    return best != null && bestScore <= Math.max(2, Math.floor(target.length / 3)) ? best : null;
+  }
+  function docFor(name) {
+    return FUNCTION_DOCS.find(item => item.name === name || (item.also || []).includes(name)) || null;
+  }
+  function issue(level, code, tr, en, extra) { return { level, code, tr, en, ...(extra || {}) }; }
+
+  function analyze(source, options = {}) {
+    const input = String(source == null ? '' : source);
+    const fixed = options.autoFix === false ? { formula: input.trim(), fixes: [] } : autoFix(input);
+    const formula = fixed.formula;
+    const issues = [];
+    const columnNames = (options.columns || []).map(item => (typeof item === 'string' ? item : item && item.name)).filter(Boolean);
+    const resolve = typeof options.resolve === 'function'
+      ? options.resolve
+      : name => columnNames.some(item => lowerTr(item) === lowerTr(name));
+    if (!formula.trim()) {
+      issues.push(issue('error', 'EMPTY', 'Formül boş.', 'The formula is empty.'));
+      return { ok: false, formula, fixes: fixed.fixes, issues, columns: [] };
+    }
+    const program = compile(formula);
+    if (!program.ok) {
+      const error = program.error || {};
+      const position = Number.isFinite(error.position) ? error.position : null;
+      const at = position != null ? formula[position] || '' : '';
+      let tr = error.message || 'Formül çözümlenemedi.', en = 'The formula could not be read.';
+      let hintTr = '', hintEn = '';
+      if (error.code === 'UNCLOSED_COLUMN') { tr = 'Bir sütun adının kapanış köşeli parantezi "]" eksik.'; en = 'A column name is missing its closing "]".'; }
+      else if (error.code === 'UNCLOSED_STRING') { tr = 'Bir metnin kapanış tırnağı eksik.'; en = 'A piece of text is missing its closing quote.'; }
+      else if (error.code === 'EXPECTED_TOKEN') { tr = 'Parantezler dengeli değil ya da iki değer arasında virgül eksik.'; en = 'The brackets are unbalanced, or a comma is missing between two values.'; }
+      else if (error.code === 'UNEXPECTED_END') { tr = 'Formül yarım kalmış: bir işaretten ya da virgülden sonra değer eksik.'; en = 'The formula is unfinished: a value is missing after a sign or comma.'; }
+      else if (error.code === 'TRAILING_INPUT') { tr = `Fazladan bir parça var ("${at}"). Arada bir işlem işareti (+ − * /) eksik ya da fazladan parantez olabilir.`; en = `There is an extra piece ("${at}"). A sign (+ − * /) may be missing, or there is an extra bracket.`; }
+      else if (error.code === 'BAD_CHARACTER') {
+        tr = `Formülde kullanılamayan bir işaret var: "${at}".`; en = `The formula has a sign that cannot be used: "${at}".`;
+        if (at === ':') { hintTr = 'Aralık (A1:A10) yoktur; formül tek satırın değerleriyle çalışır.'; hintEn = 'Ranges (A1:A10) do not exist; a formula works on one row’s values.'; }
+        if (at === '{' || at === '}') { hintTr = 'Sütun adları süslü değil KÖŞELİ parantezle yazılır: [Sütun].'; hintEn = 'Column names use SQUARE brackets, not braces: [Column].'; }
+      } else if (error.code === 'UNKNOWN_NAME') {
+        const bare = /"([^"]+)"/.exec(error.message || '');
+        const name = bare ? bare[1] : '';
+        tr = `"${name}" tanınmadı.`; en = `"${name}" is not recognised.`;
+        if (/^[A-Za-z]{1,3}\d+$/.test(name)) { hintTr = 'Hücre adresi (A1, B2) yoktur; sütunu adıyla köşeli parantez içinde yazın: [Sütun Adı].'; hintEn = 'There are no cell addresses (A1, B2); write the column by name in square brackets: [Column Name].'; }
+        else {
+          const match = columnNames.find(item => lowerTr(item) === lowerTr(name)) || closest(name, columnNames);
+          hintTr = match ? `Sütunsa köşeli parantezle yazın: [${match}]. Metinse tırnağa alın: "${name}".` : `Sütunsa köşeli parantezle ([${name}]), metinse tırnakla ("${name}") yazın.`;
+          hintEn = match ? `If it is a column, use square brackets: [${match}]. If it is text, quote it: "${name}".` : `Use square brackets for a column ([${name}]) or quotes for text ("${name}").`;
+        }
+      }
+      issues.push(issue('error', error.code || 'PARSE', tr, en, { position, hintTr, hintEn }));
+      return { ok: false, formula, fixes: fixed.fixes, issues, columns: [] };
+    }
+    const seenColumns = new Set();
+    const visit = node => {
+      if (!node || typeof node !== 'object') return;
+      if (node.kind === 'column' && !seenColumns.has(lowerTr(node.name))) {
+        seenColumns.add(lowerTr(node.name));
+        if (!resolve(node.name)) {
+          const suggestion = closest(node.name, columnNames);
+          issues.push(issue('error', 'UNKNOWN_COLUMN',
+            `Bu tabloda [${node.name}] adlı bir sütun yok.`, `This table has no column named [${node.name}].`,
+            { column: node.name, suggestion, hintTr: suggestion ? `Bunu mu demek istediniz: [${suggestion}]?` : 'Sütun adını “Sütun ekle” listesinden seçerek yazın.', hintEn: suggestion ? `Did you mean [${suggestion}]?` : 'Pick the name from the “Insert column” list.' }));
+        }
+      }
+      if (node.kind === 'string' && columnNames.some(item => lowerTr(item) === lowerTr(node.value))) {
+        issues.push(issue('warn', 'QUOTED_COLUMN',
+          `"${node.value}" tırnak içinde: bu bir METİN olarak okunur, sütunun değeri değil.`, `"${node.value}" is in quotes: it is read as TEXT, not the column value.`,
+          { hintTr: `Sütunun değerini kullanmak için [${node.value}] yazın.`, hintEn: `Write [${node.value}] to use the column value.` }));
+      }
+      if (node.kind === 'call') {
+        const definition = FUNCTIONS[node.name];
+        if (!definition) {
+          const suggestion = FUNCTION_ALIASES[fold(node.name)] || closest(node.name, Object.keys(FUNCTIONS));
+          issues.push(issue('error', 'UNKNOWN_FUNCTION', `${node.name}() diye bir fonksiyon yok.`, `There is no ${node.name}() function.`,
+            { position: node.position, hintTr: suggestion ? `Bunu mu demek istediniz: ${suggestion}()? Tam liste sözlükte.` : 'Kullanılabilir fonksiyonlar sözlükte listelenir.', hintEn: suggestion ? `Did you mean ${suggestion}()? The full list is in the dictionary.` : 'The available functions are listed in the dictionary.' }));
+        } else if (node.args.length < definition.min || node.args.length > definition.max) {
+          const doc = docFor(node.name);
+          const expected = definition.min === definition.max ? String(definition.min) : definition.max >= 50 ? `${definition.min}+` : `${definition.min}-${definition.max}`;
+          issues.push(issue('error', 'BAD_ARITY', `${node.name}() ${expected} değer ister, formülde ${node.args.length} tane var.`, `${node.name}() takes ${expected} value(s); the formula gives ${node.args.length}.`,
+            { position: node.position, hintTr: doc ? `Doğru yazım: ${doc.syntax}` : '', hintEn: doc ? `Correct form: ${doc.syntaxEn}` : '' }));
+        } else if (node.name === 'IFS' && node.args.length % 2) {
+          issues.push(issue('error', 'BAD_ARITY', 'IFS() koşul/değer ÇİFTLERİ ister; bir değer eksik.', 'IFS() takes condition/value PAIRS; a value is missing.', { position: node.position }));
+        }
+        if (node.name === 'TODAY') {
+          issues.push(issue('info', 'VOLATILE', 'TODAY() her gün değişir; sütunun değeri de her gün kendiliğinden güncellenir.', 'TODAY() changes every day, so the column updates by itself each day.'));
+        }
+      }
+      ['left', 'right', 'argument'].forEach(key => visit(node[key]));
+      (node.args || []).forEach(visit);
+    };
+    visit(program.ast);
+    // Aynı bilgi notu birden çok kez yazılmasın.
+    const unique = issues.filter((item, index) => issues.findIndex(other => other.code === item.code && other.tr === item.tr) === index);
+    return { ok: !unique.some(item => item.level === 'error'), formula, fixes: fixed.fixes, issues: unique, columns: program.columns };
+  }
+
+  /* ---------------- AI YÖNERGESİ ----------------
+
+     Kullanıcı talebi: "oluşturmak istenilen formül karmaşıksa AI'a formül
+     yazma kurallarını anlatıp istediklerini söylesinler ve çıktıyı buyer
+     loga kopyalasınlar."
+
+     Yönerge kuralları, fonksiyon listesini, tablonun sütun ADLARINI (ve tahmini
+     türlerini) ve kullanıcının isteğini tek metinde toplar. Hiçbir satır
+     DEĞERİ eklenmez: sipariş, fiyat ya da tedarikçi verisi kullanıcının
+     seçtiği dış bir araca gitmez (CLAUDE.md §4). */
+  function buildAiPrompt(options = {}) {
+    const english = options.lang === 'en';
+    const pick = item => (english ? item.en : item.tr);
+    const typeName = type => ({
+      date: english ? 'date' : 'tarih', number: english ? 'number' : 'sayı', text: english ? 'text' : 'metin',
+    }[type] || (english ? 'unknown' : 'bilinmiyor'));
+    const columns = (options.columns || []).map(item => (typeof item === 'string' ? { name: item } : item)).filter(item => item && item.name);
+    const request = String(options.request || '').trim();
+    const lines = [];
+    if (english) {
+      lines.push('You are helping me write ONE formula for a calculated column in the Buyer Log app. It is NOT Excel: follow these rules exactly.');
+    } else {
+      lines.push('Buyer Log uygulamasında hesaplanan bir sütun için TEK bir formül yazmama yardım et. Bu Excel DEĞİL: aşağıdaki kurallara birebir uy.');
+    }
+    lines.push('', english ? 'RULES' : 'KURALLAR');
+    RULES.forEach((rule, index) => lines.push(`${index + 1}. ${pick(rule)}`));
+    lines.push('', english ? 'OPERATORS' : 'İŞLEMLER');
+    OPERATOR_DOCS.forEach(item => lines.push(`- ${item.sign.replace(/\s+/g, ' ')} : ${pick(item)}`));
+    lines.push('', english ? 'FUNCTIONS (only these exist)' : 'FONKSİYONLAR (yalnız bunlar var)');
+    FUNCTION_DOCS.forEach(item => lines.push(`- ${english ? item.syntaxEn : item.syntax} — ${pick(item)}`));
+    lines.push('', english ? `COLUMNS OF THE ${String(options.tableName || '').toUpperCase()} TABLE (name — type)` : `${String(options.tableName || '').toLocaleUpperCase('tr-TR')} TABLOSUNUN SÜTUNLARI (ad — tür)`);
+    columns.forEach(item => lines.push(`- [${item.name}]${item.type ? ` — ${typeName(item.type)}` : ''}`));
+    lines.push('', english ? 'WHAT I WANT' : 'İSTEDİĞİM');
+    lines.push(request || (english ? '(describe what the column should show here)' : '(sütunun ne göstermesini istediğinizi buraya yazın)'));
+    lines.push('', english ? 'ANSWER FORMAT' : 'CEVAP BİÇİMİ');
+    if (english) {
+      lines.push('- Put the formula inside ONE code block (```), on a single line, with no leading "=".');
+      lines.push('- Under it, explain in one or two sentences what it does.');
+      lines.push('- If what I want cannot be done with these rules (e.g. it needs other rows), say so plainly instead of inventing a function.');
+    } else {
+      lines.push('- Formülü TEK bir kod bloğu (```) içinde, tek satır ve başında "=" olmadan ver.');
+      lines.push('- Altına ne yaptığını bir iki cümleyle açıkla.');
+      lines.push('- İstediğim şey bu kurallarla yapılamıyorsa (ör. başka satırlara bakmak gerekiyorsa) fonksiyon uydurmak yerine bunu açıkça söyle.');
+    }
+    return lines.join('\n');
+  }
 
   const api = {
     compile, parse, tokenize, FUNCTIONS, FUNCTION_HELP, FormulaError,
     toNumber, toDate, toText, toBool, isBlank, dateText, looksLikeDate, DAY_MS,
+    // Sözlük, analiz ve AI yardımcıları (v7.175).
+    CATEGORIES, FUNCTION_DOCS, OPERATOR_DOCS, RECIPE_DOCS, RULES, FUNCTION_ALIASES,
+    rewriteTokens, rewriteColumns, extractFormula, autoFix, analyze, buildAiPrompt, canonicalFunctionName,
   };
 
   global.BLFormulaEngine = api;
