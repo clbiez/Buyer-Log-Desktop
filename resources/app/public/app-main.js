@@ -26438,13 +26438,17 @@ const KOL_PLM_TRANSLATION_RULES=Object.freeze({
 });
 let kolPlmApprovedTranslationRules={category:new Map(),line:new Map(),license:new Map()};
 let kolPlmApprovedTranslationRevision=0;
+// "Olduğu gibi taşı" seçimleri çeviri kuralı değildir (otomatik uygulanmaz);
+// yalnız eşleme ekranında son seçim olarak işaretli gelmek için hatırlanır.
+let kolPlmRememberedKeepAsIs={category:new Set(),line:new Set(),license:new Set()};
 function kolPlmSetApprovedTranslationRules(payload){
-  const next={category:new Map(),line:new Map(),license:new Map()};
+  const next={category:new Map(),line:new Map(),license:new Map()},keep={category:new Set(),line:new Set(),license:new Set()};
   const rules=payload&&payload.rules&&typeof payload.rules==='object'?payload.rules:{};
   Object.keys(next).forEach(field=>(Array.isArray(rules[field])?rules[field]:[]).forEach(item=>{
-    const source=norm(item&&item.source),target=norm(item&&item.target);if(source&&target)next[field].set(turknorm(source),target);
+    const source=norm(item&&item.source),target=norm(item&&item.target);if(!source||!target)return;
+    if(item.keepAsIs)keep[field].add(turknorm(source));else next[field].set(turknorm(source),target);
   }));
-  kolPlmApprovedTranslationRules=next;kolPlmApprovedTranslationRevision=Math.max(0,Number(payload&&payload.revision)||0);
+  kolPlmApprovedTranslationRules=next;kolPlmRememberedKeepAsIs=keep;kolPlmApprovedTranslationRevision=Math.max(0,Number(payload&&payload.revision)||0);
 }
 async function kolPlmLoadApprovedTranslations(){
   try{
@@ -26509,6 +26513,14 @@ function kolPlmTranslate(field,sourceValue){
   if(saved)return saved;
   const found=Object.entries(rules).find(([from])=>turknorm(from)===key);
   return found?found[1]:'';
+}
+// Kullanıcının bu PLM değeri için son onayladığı seçim (yalnız kalıcı sözlük;
+// statik kurallar kullanıcı seçimi sayılmaz).
+function kolPlmRememberedChoice(field,sourceValue){
+  const raw=norm(sourceValue),key=turknorm(raw);if(!key)return null;
+  if(kolPlmRememberedKeepAsIs[field]&&kolPlmRememberedKeepAsIs[field].has(key))return {keepAsIs:true,target:raw};
+  const target=norm(kolPlmApprovedTranslationRules[field]&&kolPlmApprovedTranslationRules[field].get(key));
+  return target?{keepAsIs:false,target}:null;
 }
 function kolPlmNormalizeId(value){return cpNormalizePlmImageId(value);}
 function kolPlmAsasIndex(){
@@ -26616,17 +26628,32 @@ function kolPlmRankAsasCandidates(field,source,limit=5){
   return catalog.map(target=>({target,score:kolPlmSimilarityScore(field,source,target)}))
     .sort((a,b)=>b.score-a.score||String(a.target).localeCompare(String(b.target),'tr-TR',{numeric:true,sensitivity:'base'})).slice(0,Math.max(1,limit||5));
 }
-function kolPlmTranslationQuestions(rows){
-  const grouped=new Map();
+/* includeRemembered: model eklerken kullanıcının daha önce onayladığı
+   Category/License seçimleri de ekrana gelir; son seçim işaretli ve ilk aday
+   olarak gösterilir, kullanıcı değiştirebilir. PLM senkronu (mevcut modelleri
+   güncelleme) bunu kapatır; onaylı kurallar orada sessizce uygulanmaya devam eder. */
+function kolPlmTranslationQuestions(rows,{includeRemembered=true}={}){
+  const grouped=new Map(),modes=includeRemembered?['unresolved','conflict','approved-rule']:['unresolved','conflict'];
   (rows||[]).forEach(row=>Object.entries(KOL_PLM_TRANSLATION_FIELD_META).forEach(([field,meta])=>{
     if(kolPlmIsDirectField(field))return; // line: PLM doğru kabul edilir, soru sorulmaz.
-    const tr=row&&row._plmTranslations&&row._plmTranslations[field];if(!tr||!['unresolved','conflict'].includes(tr.mode))return;
+    const tr=row&&row._plmTranslations&&row._plmTranslations[field];if(!tr||!modes.includes(tr.mode))return;
     const source=norm(row._plmSource&&row._plmSource[meta.source]);if(!source)return;
-    const key=`${field}\u0000${turknorm(source)}`;if(grouped.has(key))return;
-    const candidates=kolPlmRankAsasCandidates(field,source,5),catalog=kolPlmAsasCatalogForField(field);
-    grouped.set(key,{field,label:meta.label,source,candidates,catalog,conflict:tr.mode==='conflict'});
+    const key=`${field}\u0000${turknorm(source)}`;
+    if(grouped.has(key)){if(tr.mode==='conflict')grouped.get(key).conflict=true;return;}
+    const catalog=kolPlmAsasCatalogForField(field),saved=kolPlmRememberedChoice(field,source);
+    // Son seçim yalnız güncel ASAS kataloğunda birebir varsa (veya "olduğu gibi
+    // taşı" ise) işaretlenir; katalogdan düşmüş bir hedef onaylanamaz.
+    const exact=saved&&!saved.keepAsIs?catalog.find(value=>turknorm(value)===turknorm(saved.target)):'';
+    const remembered=saved&&(saved.keepAsIs||exact)?{keepAsIs:saved.keepAsIs,target:saved.keepAsIs?saved.target:exact}:null;
+    if(tr.mode==='approved-rule'&&!remembered)return; // statik kural veya katalog dışı hedef: eskisi gibi uygulanır.
+    let candidates=kolPlmRankAsasCandidates(field,source,5);
+    if(remembered&&!remembered.keepAsIs){
+      const hit=candidates.find(c=>turknorm(c.target)===turknorm(remembered.target))||{target:remembered.target,score:kolPlmSimilarityScore(field,source,remembered.target)};
+      candidates=[hit,...candidates.filter(c=>c!==hit)].slice(0,Math.max(5,candidates.length));
+    }
+    grouped.set(key,{field,label:meta.label,source,candidates,catalog,conflict:tr.mode==='conflict',mode:tr.mode,remembered});
   }));
-  return [...grouped.values()].sort((a,b)=>a.label.localeCompare(b.label,'en')||a.source.localeCompare(b.source,'tr-TR'));
+  return [...grouped.values()].sort((a,b)=>(a.remembered?1:0)-(b.remembered?1:0)||a.label.localeCompare(b.label,'en')||a.source.localeCompare(b.source,'tr-TR'));
 }
 function kolPlmConfidenceLabel(score){
   const en=appLang==='en',n=Math.max(0,Number(score)||0);return n>=88?(en?'High':'Yüksek'):n>=70?(en?'Medium':'Orta'):(en?'Low':'Düşük');
@@ -26643,9 +26670,9 @@ function showKolPlmTranslationReview(questions){
     const rows=list.map((item,index)=>{
       const best=item.candidates[0],candidateHtml=item.candidates.length?item.candidates.map(candidate=>`<button type="button" class="plmCandidateBtn" data-plm-candidate-index="${index}" data-plm-candidate-value="${escapeHtml(candidate.target)}"><span>${escapeHtml(candidate.target)}</span><b>${candidate.score}%</b></button>`).join(''):`<span class="muted">${escapeHtml(en?'No ASAS candidate found':'ASAS adayı bulunamadı')}</span>`;
       const bestText=best?`${best.score}% · ${kolPlmConfidenceLabel(best.score)}`:(en?'No score':'Skor yok');
-      return `<tr data-plm-question="${index}"><td><strong>${escapeHtml(item.label)}</strong>${item.conflict?`<div class="plmConflictTag">${escapeHtml(en?'ASAS conflict':'ASAS çelişkisi')}</div>`:''}</td><td>${escapeHtml(item.source)}</td><td><div class="plmCandidateList">${candidateHtml}<button type="button" class="plmCandidateBtn isKeepAsIs" data-plm-keep-index="${index}"><span>${escapeHtml(en?'Keep as is':'Olduğu gibi taşı')}</span><b>${escapeHtml(en?'PLM':'PLM')}</b></button></div><div class="muted" style="margin-top:5px">${escapeHtml((en?'Best similarity: ':'En iyi benzerlik: ')+bestText)}</div></td><td><input class="plmAsasChoice" data-plm-choice="${index}" list="_plmAsas_${item.field}" placeholder="${escapeHtml(en?'Choose an ASAS value, use Keep as is, or leave blank':'Bir ASAS değeri seçin, Olduğu gibi taşı kullanın veya boş bırakın')}"><div class="plmChoiceMeta"><span class="muted">${escapeHtml(en?'Only an exact value from the current ASAS catalog can be learned.':'Yalnız güncel ASAS kataloğundaki birebir bir değer öğrenilebilir.')}</span><span class="muted plmKeepHint">${escapeHtml(en?'“Keep as is” uses the PLM text only for this import and does not teach a rule.':'“Olduğu gibi taşı” yalnız bu aktarımda PLM metnini kullanır ve yeni bir kural öğretmez.')}</span></div></td></tr>`;
+      return `<tr data-plm-question="${index}"><td><strong>${escapeHtml(item.label)}</strong>${item.conflict?`<div class="plmConflictTag">${escapeHtml(en?'ASAS conflict':'ASAS çelişkisi')}</div>`:''}${item.remembered?`<div class="plmRememberedTag">${escapeHtml(en?'Your last choice':'Son seçiminiz')}</div>`:''}</td><td>${escapeHtml(item.source)}</td><td><div class="plmCandidateList">${candidateHtml}<button type="button" class="plmCandidateBtn isKeepAsIs" data-plm-keep-index="${index}"><span>${escapeHtml(en?'Keep as is':'Olduğu gibi taşı')}</span><b>${escapeHtml(en?'PLM':'PLM')}</b></button></div><div class="muted" style="margin-top:5px">${escapeHtml((en?'Best similarity: ':'En iyi benzerlik: ')+bestText)}</div></td><td><input class="plmAsasChoice" data-plm-choice="${index}" list="_plmAsas_${item.field}" placeholder="${escapeHtml(en?'Choose an ASAS value, use Keep as is, or leave blank':'Bir ASAS değeri seçin, Olduğu gibi taşı kullanın veya boş bırakın')}"><div class="plmChoiceMeta"><span class="muted">${escapeHtml(en?'Only an exact value from the current ASAS catalog can be learned.':'Yalnız güncel ASAS kataloğundaki birebir bir değer öğrenilebilir.')}</span><span class="muted plmKeepHint">${escapeHtml(en?'“Keep as is” uses the PLM text and does not teach a translation rule; it is only preselected next time.':'“Olduğu gibi taşı” PLM metnini kullanır ve çeviri kuralı öğretmez; yalnız bir sonraki aktarımda işaretli gelir.')}</span></div></td></tr>`;
     }).join('');
-    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmTranslationCard"><div class="verHistHead"><div><strong>${escapeHtml(en?'Teach PLM → ASAS translations':'PLM → ASAS çevirilerini öğret')}</strong><div class="muted">${escapeHtml(en?'Buyer Log found PLM values it has never safely mapped before. The current ASAS database was scanned and the nearest candidates are ranked below. Nothing is applied automatically: choose the correct ASAS value once and Buyer Log will remember it for future imports.':'Buyer Log daha önce güvenle eşleştirmediği PLM değerleri buldu. Güncel ASAS database tarandı ve en yakın adaylar aşağıda sıralandı. Hiçbir tahmin otomatik uygulanmaz: doğru ASAS değerini bir kez seçin; Buyer Log sonraki aktarımlarda bunu hatırlar.')}</div></div></div><div class="plmImportBody"><div class="plmLearningNotice">${escapeHtml(en?'High similarity is only a suggestion, not an automatic decision. Leaving a row blank keeps that PLM field unresolved for this import and it will not overwrite an existing Collection value.':'Yüksek benzerlik yalnız öneridir, otomatik karar değildir. Bir satırı boş bırakırsanız o PLM alanı bu aktarımda çözümsüz kalır ve Koleksiyon’daki mevcut değerin üzerine yazılmaz.')}</div><div class="plmTranslationActions"><button type="button" class="tbtn" data-plmreview="keepall">${escapeHtml(en?'Move all as in PLM':'PLM’de olduğu gibi taşı')}</button><button type="button" class="tbtn" data-plmreview="autofill">${escapeHtml(en?'Auto-match all suggestions':'Önerilerin tamamını otomatik eşleştir')}</button></div><div class="plmImportTableWrap"><table class="plmImportTable plmTranslationTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'New PLM value':'Yeni PLM değeri')}</th><th>${escapeHtml(en?'Nearest ASAS candidates':'En yakın ASAS adayları')}</th><th>${escapeHtml(en?'Your approved mapping':'Onayladığınız eşleme')}</th></tr></thead><tbody>${rows}</tbody></table></div>${dataLists}</div><div class="verHistFoot"><button type="button" class="tbtn" data-plmreview="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn primary" data-plmreview="apply">${escapeHtml(en?'Continue with my choices':'Seçimlerimle devam et')}</button></div></div>`;
+    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmTranslationCard"><div class="verHistHead"><div><strong>${escapeHtml(en?'Teach PLM → ASAS translations':'PLM → ASAS çevirilerini öğret')}</strong><div class="muted">${escapeHtml(en?'Buyer Log found PLM values it has never safely mapped before. The current ASAS database was scanned and the nearest candidates are ranked below. Nothing is applied automatically: choose the correct ASAS value once and Buyer Log will remember it for future imports. Your previous choices come preselected; you can still change them.':'Buyer Log daha önce güvenle eşleştirmediği PLM değerleri buldu. Güncel ASAS database tarandı ve en yakın adaylar aşağıda sıralandı. Hiçbir tahmin otomatik uygulanmaz: doğru ASAS değerini bir kez seçin; Buyer Log sonraki aktarımlarda bunu hatırlar. Önceki seçimleriniz işaretli gelir; isterseniz değiştirebilirsiniz.')}</div></div></div><div class="plmImportBody"><div class="plmLearningNotice">${escapeHtml(en?'High similarity is only a suggestion, not an automatic decision. Leaving a row blank keeps that PLM field unresolved for this import and it will not overwrite an existing Collection value.':'Yüksek benzerlik yalnız öneridir, otomatik karar değildir. Bir satırı boş bırakırsanız o PLM alanı bu aktarımda çözümsüz kalır ve Koleksiyon’daki mevcut değerin üzerine yazılmaz.')}</div><div class="plmTranslationActions"><button type="button" class="tbtn" data-plmreview="keepall">${escapeHtml(en?'Move all as in PLM':'PLM’de olduğu gibi taşı')}</button><button type="button" class="tbtn" data-plmreview="autofill">${escapeHtml(en?'Auto-match all suggestions':'Önerilerin tamamını otomatik eşleştir')}</button></div><div class="plmImportTableWrap"><table class="plmImportTable plmTranslationTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'New PLM value':'Yeni PLM değeri')}</th><th>${escapeHtml(en?'Nearest ASAS candidates':'En yakın ASAS adayları')}</th><th>${escapeHtml(en?'Your approved mapping':'Onayladığınız eşleme')}</th></tr></thead><tbody>${rows}</tbody></table></div>${dataLists}</div><div class="verHistFoot"><button type="button" class="tbtn" data-plmreview="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn primary" data-plmreview="apply">${escapeHtml(en?'Continue with my choices':'Seçimlerimle devam et')}</button></div></div>`;
     document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
@@ -26654,12 +26681,18 @@ function showKolPlmTranslationReview(questions){
       if(mode==='keep'){input.dataset.plmMode='keep';input.value=list[index]?.source||'';}
       else input.dataset.plmMode='';
       rowEl.dataset.plmMode=mode||'';
-      rowEl.querySelectorAll('[data-plm-candidate-index],[data-plm-keep-index]').forEach(btn=>btn.classList.toggle('isActive',mode==='keep'?btn.hasAttribute('data-plm-keep-index'):(btn.dataset.plmCandidateValue&&turknorm(btn.dataset.plmCandidateValue)===turknorm(input.value))));
+      rowEl.querySelectorAll('[data-plm-candidate-index],[data-plm-keep-index]').forEach(btn=>btn.classList.toggle('isActive',mode==='keep'?btn.hasAttribute('data-plm-keep-index'):!!(btn.dataset.plmCandidateValue&&turknorm(btn.dataset.plmCandidateValue)===turknorm(input.value))));
     };
     modal.querySelectorAll('[data-plm-candidate-index]').forEach(button=>button.addEventListener('click',()=>{
       const index=Number(button.dataset.plmCandidateIndex),input=modal.querySelector(`[data-plm-choice="${index}"]`);if(input){input.dataset.plmMode='';input.value=button.dataset.plmCandidateValue||'';setChoiceMode(index,'catalog');input.focus();}
     }));
     modal.querySelectorAll('[data-plm-keep-index]').forEach(button=>button.addEventListener('click',()=>{setChoiceMode(Number(button.dataset.plmKeepIndex),'keep');}));
+    // Son seçimler işaretli gelir; kullanıcı başka aday, "olduğu gibi taşı" veya boş bırakarak değiştirebilir.
+    list.forEach((item,index)=>{
+      const last=item&&item.remembered,input=modal.querySelector(`[data-plm-choice="${index}"]`);if(!last||!input)return;
+      if(last.keepAsIs){setChoiceMode(index,'keep');return;}
+      input.dataset.plmMode='';input.value=last.target;setChoiceMode(index,'catalog');
+    });
     modal.querySelectorAll('.plmAsasChoice').forEach(input=>{
       input.addEventListener('input',()=>setChoiceMode(Number(input.dataset.plmChoice),'catalog'));
       input.addEventListener('focus',()=>setChoiceMode(Number(input.dataset.plmChoice),input.dataset.plmMode==='keep'?'keep':'catalog'));
@@ -26678,13 +26711,15 @@ function showKolPlmTranslationReview(questions){
       if(action.dataset.plmreview==='autofill'){
         const ok=confirm(en?'Buyer Log will fill every row with the best current suggestion. This may be wrong; please review the results before continuing. Continue?':'Buyer Log her satırı şu anki en güçlü öneriyle dolduracak. Hata yapabilir; lütfen devam etmeden önce sonuçları kontrol edin. Devam edilsin mi?');
         if(!ok)return;
-        list.forEach((item,index)=>{const best=item&&item.candidates&&item.candidates[0];if(!best||!best.target)return;const input=modal.querySelector(`[data-plm-choice="${index}"]`);if(!input)return;input.dataset.plmMode='';input.value=best.target;setChoiceMode(index,'catalog');});
+        list.forEach((item,index)=>{if(item&&item.remembered)return;const best=item&&item.candidates&&item.candidates[0];if(!best||!best.target)return;const input=modal.querySelector(`[data-plm-choice="${index}"]`);if(!input)return;input.dataset.plmMode='';input.value=best.target;setChoiceMode(index,'catalog');});
         showToast(en?'Suggestions were filled automatically. Please review them.':'Öneriler otomatik dolduruldu. Lütfen kontrol edin.');
         return;
       }
       const mappings=[];
       for(let index=0;index<list.length;index++){
-        const item=list[index],input=modal.querySelector(`[data-plm-choice="${index}"]`),typed=norm(input&&input.value),mode=input&&input.dataset&&input.dataset.plmMode==='keep'?'keep':'catalog';if(!typed)continue;
+        const item=list[index],input=modal.querySelector(`[data-plm-choice="${index}"]`),typed=norm(input&&input.value),mode=input&&input.dataset&&input.dataset.plmMode==='keep'?'keep':'catalog';
+        // Hatırlanan seçimi boşaltmak: bu aktarımda çözümsüz bırak (kayıtlı seçim silinmez).
+        if(!typed){if(item.remembered)mappings.push({field:item.field,source:item.source,clear:true});continue;}
         if(mode==='keep'){mappings.push({field:item.field,source:item.source,target:item.source,score:0,keepAsIs:true});continue;}
         const exact=item.catalog.find(value=>turknorm(value)===turknorm(typed));
         if(!exact){input?.focus();showToast(en?'Choose an exact value from the current ASAS list or use Keep as is.':'Güncel ASAS listesinden birebir bir değer seçin veya Olduğu gibi taşı seçin.');return;}
@@ -26700,9 +26735,12 @@ function kolPlmApplyReviewedMappings(rows,mappings,translationInfo){
   const list=Array.isArray(mappings)?mappings:[];
   (rows||[]).forEach(row=>list.forEach(mapping=>{
     if(kolPlmIsDirectField(mapping.field))return; // line asla çeviri onayıyla ezilmez.
-    const spec=specs[mapping.field],tr=row&&row._plmTranslations&&row._plmTranslations[mapping.field];if(!spec||!tr||!['unresolved','conflict'].includes(tr.mode))return;
+    // exact-plm / exact-model ASAS gerçeği asla ezilmez; hatırlanan kural (approved-rule) kullanıcı onayıyla değişebilir.
+    const spec=specs[mapping.field],tr=row&&row._plmTranslations&&row._plmTranslations[mapping.field];if(!spec||!tr||!['unresolved','conflict','approved-rule'].includes(tr.mode))return;
     const source=norm(row._plmSource&&row._plmSource[spec.source]);if(turknorm(source)!==turknorm(mapping.source))return;
-    if(mapping.keepAsIs){
+    if(mapping.clear){
+      if(tr.mode==='approved-rule'){row[spec.target]='';row._plmTranslations[mapping.field]={source,target:'',mode:'unresolved'};}
+    }else if(mapping.keepAsIs){
       row[spec.target]=source;
       row._plmTranslations[mapping.field]={source,target:source,mode:'keep-as-is'};
     }else{
@@ -26710,7 +26748,7 @@ function kolPlmApplyReviewedMappings(rows,mappings,translationInfo){
       row._plmTranslations[mapping.field]={source,target:mapping.target,mode:'user-approved-pending'};
     }
   }));
-  if(translationInfo)translationInfo.reviewedMappings=list.map(item=>({...item,conflict:false,userApproved:!item.keepAsIs,keptAsIs:!!item.keepAsIs,evidence:1,support:1,total:1,alternatives:[]}));
+  if(translationInfo)translationInfo.reviewedMappings=list.filter(item=>!item.clear).map(item=>({...item,conflict:false,userApproved:!item.keepAsIs,keptAsIs:!!item.keepAsIs,evidence:1,support:1,total:1,alternatives:[]}));
   return list.length;
 }
 
@@ -26923,7 +26961,7 @@ function kolPlmNormalizeDirectRecord(record){
    ekranı görürdü, Direct PLM'de görmüyordu. İki adapter AYNI normalize
    edilmiş modeli üretmeli VE AYNI onay adımlarından geçmeli (mimari
    gereği) — eksik olan tam olarak buydu. */
-async function kolPlmNormalizeAndTranslate(records){
+async function kolPlmNormalizeAndTranslate(records,{reviewRemembered=true}={}){
   const expanded=window.BLPlmColourUtils?.expandDirectRecords?.(records||[])||(records||[]);
   const rows=expanded.map(kolPlmNormalizeDirectRecord);
   // Çeviri adayları ASAS veri tabanının ana kataloğundan sıralanır.
@@ -26931,7 +26969,7 @@ async function kolPlmNormalizeAndTranslate(records){
   await kolPlmLoadApprovedTranslations();
   const inferred=kolPlmInferTranslationSuggestions(rows);
   const translationInfo=kolPlmApplyAsasTranslations(rows,inferred);
-  const questions=kolPlmTranslationQuestions(rows);
+  const questions=kolPlmTranslationQuestions(rows,{includeRemembered:reviewRemembered});
   if(questions.length){
     const review=await showKolPlmTranslationReview(questions);
     if(review.cancelled)return {rows:null,cancelled:true};
@@ -27187,7 +27225,7 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     if(created.length)kolRows=[...created,...kolRows];
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
     saveKolRows();renderKol();renderCP();renderOrders();
-    const teachable=(translated.translationInfo?.reviewedMappings||[]).filter(item=>!item.keepAsIs);
+    const teachable=translated.translationInfo?.reviewedMappings||[];
     if(teachable.length){try{await kolPlmSaveApprovedTranslations(teachable);}catch(err){console.warn('PLM selected translation save failed:',err);}}
     const fileRows=[...created,...decisions.approved.map(item=>item.target)];
     /* Selected-import görseli ayrı bir downloader ile çekmez. İçe aktarılan
@@ -27453,7 +27491,7 @@ async function kolPlmSyncRun(mode,button,options={}){
     return {ok:false,reason:'fetch-failed',error:err};
   }
   if(!fetchResult)return {ok:false,reason:'api-not-configured'}; // kullanıcıya bağlantı penceresi zaten gösterildi.
-  const translated=await kolPlmNormalizeAndTranslate(fetchResult.records);
+  const translated=await kolPlmNormalizeAndTranslate(fetchResult.records,{reviewRemembered:false});
   // Excel'deki "Aktarımı iptal et" ile AYNI davranış: çeviri ekranında
   // vazgeçilirse Koleksiyon'a HİÇBİR ŞEY yazılmaz, kısmi bir güncelleme
   // oluşmaz.
@@ -27603,13 +27641,13 @@ async function importKolPlmExcelFile(file){
     saveKolRows();renderKol();renderCP();renderOrders();
     // Legacy test anchor: await kolPlmSaveApprovedTranslations(translationReview.mappings)
     let learnedSaved=0,learnWarning='';
-    const teachableMappings=(translationReview.mappings||[]).filter(item=>!item.keepAsIs);
+    const teachableMappings=(translationReview.mappings||[]).filter(item=>!item.clear);
     if(teachableMappings.length){
       try{const learned=await kolPlmSaveApprovedTranslations(teachableMappings);learnedSaved=Number(learned&&learned.updated)||0;}
       catch(err){learnWarning=appLang==='en'?' Translation choices were used for this import but could not be saved for future imports.':' Çeviri seçimleri bu aktarımda kullanıldı ancak sonraki aktarımlar için kaydedilemedi.';console.warn('PLM translation save failed:',err);}
     }
     const skippedCount=decisions.skipped.length+plan.ambiguous.length+plan.inputDuplicates.length;
-    const learnedText=teachableMappings.length?(appLang==='en'?` · ${learnedSaved} translation rule(s) learned`:` · ${learnedSaved} çeviri kuralı öğrenildi`):'';
+    const learnedText=teachableMappings.length?(appLang==='en'?` · ${learnedSaved} mapping choice(s) saved`:` · ${learnedSaved} eşleme seçimi kaydedildi`):'';
     const message=appLang==='en'
       ? `${created.length} new · ${decisions.approved.length} updated · ${skippedCount} kept/skipped · ${imageSaved} image(s)${learnedText}. Existing PLM IDs are duplicated only when “Add as a New” is explicitly chosen.${learnWarning}`
       : `${created.length} yeni · ${decisions.approved.length} güncellendi · ${skippedCount} mevcut kaldı/atlandı · ${imageSaved} görsel${learnedText}. Mevcut PLM ID yalnız “Yeni olarak ekle” açıkça seçildiğinde ikinci ayrı satır olarak oluşturulur.${learnWarning}`;

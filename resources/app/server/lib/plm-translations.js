@@ -31,12 +31,16 @@ function normalizeStore(raw) {
     const src = raw.fields && raw.fields[field] && typeof raw.fields[field] === 'object' && !Array.isArray(raw.fields[field]) ? raw.fields[field] : {};
     const entries = Object.entries(src).slice(0, MAX_RULES_PER_FIELD);
     for (const [storedKey, item] of entries) {
-      const source = clean(item && item.source || storedKey), target = clean(item && item.target);
+      const source = clean(item && item.source || storedKey), keepAsIs = !!(item && item.keepAsIs);
+      // "Olduğu gibi taşı" seçimi çeviri kuralı değildir; yalnız son seçim
+      // olarak hatırlanır ve hedef her zaman PLM metninin kendisidir.
+      const target = keepAsIs ? source : clean(item && item.target);
       const key = keyOf(source);
       if (!key || !target) continue;
       out.fields[field][key] = {
         source,
         target,
+        keepAsIs,
         approvedAt: clean(item && item.approvedAt, 80) || null,
         approvedBy: clean(item && item.approvedBy, 160),
         approvedById: clean(item && item.approvedById, 120),
@@ -67,13 +71,15 @@ function upsertPlmTranslations(items, actor, expectedRevision = null) {
   for (const raw of Array.isArray(items) ? items : []) {
     const field = clean(raw && raw.field, 30).toLowerCase();
     if (!FIELDS.has(field)) continue;
-    const source = clean(raw && raw.source), target = clean(raw && raw.target), key = keyOf(source);
+    const source = clean(raw && raw.source), keepAsIs = !!(raw && raw.keepAsIs);
+    const target = keepAsIs ? source : clean(raw && raw.target), key = keyOf(source);
     if (!source || !target || !key) continue;
     const current = store.fields[field][key];
-    if (current && current.target === target && current.source === source) continue;
+    if (current && current.target === target && current.source === source && !!current.keepAsIs === keepAsIs) continue;
     store.fields[field][key] = {
       source,
       target,
+      keepAsIs,
       approvedAt: new Date().toISOString(),
       approvedBy: clean(actor && (actor.displayName || actor.username || actor.id), 160),
       approvedById: clean(actor && actor.id, 120),
