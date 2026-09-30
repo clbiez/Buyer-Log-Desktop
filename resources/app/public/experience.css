@@ -513,6 +513,16 @@ button:disabled .ic{--ic-tint-o:.08;}
 }
 .blOrb[data-state="thinking"]{animation-duration:2.4s,1.6s;}
 .blOrb[data-state="thinking"]::after{animation-duration:1.6s;opacity:.85;}
+/* The real thinking-orbs "Thinking…" canvas replaces the old blue gradient
+   only after JS mounts successfully; the gradient stays as a safe fallback. */
+.blOrb[data-state="thinking"].blOrb--thinkingCanvas{
+  background:none;box-shadow:none;animation:none;overflow:visible;
+}
+.blOrb[data-state="thinking"].blOrb--thinkingCanvas::after{display:none;animation:none;}
+.blOrb--thinkingCanvas .blOrbCanvas{
+  display:block;width:100%;height:100%;pointer-events:none;
+}
+
 .blOrb[data-state="warn"]{--bl-orb-1:#d98a1c;--bl-orb-2:#e8b44a;--bl-orb-3:#c2573a;}
 .blOrb[data-state="done"]{--bl-orb-2:color-mix(in srgb,var(--acc) 40%,#2fb67c);--bl-orb-3:#2fb67c;}
 .blOrb--sm{--orb-size:14px;}
