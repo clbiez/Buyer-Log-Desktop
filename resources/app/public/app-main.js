@@ -4429,11 +4429,14 @@ function sortColumnPanelEntries(entries){
    registerGenericTable üzerinden türetiyor; oralarda satır dizisi her çizimde
    yeniden üretildiği için formül değeri yazacak kalıcı bir satır yok. */
 const FORMULA_COLUMN_TABLES = new Set(['cp','orders','ship']);
-function formulaColumnTooltip(c){
+function formulaColumnTooltip(c,tableKey){
   const def=c.formulaDef||{};
-  const err=window.BLFormulaColumns?.errorFor(c.formulaId)||'';
+  const fc=window.BLFormulaColumns;
+  const err=fc?.errorFor(c.formulaId)||'';
   const head=appLang==='en'?'Edit formula':'Formülü düzenle';
-  return `${head}: ${def.formula||''}${err?`\n⚠ ${err}`:''}`;
+  // Formül depoda kalıcı anahtarlarla durur; kullanıcıya güncel sütun adlarıyla gösterilir.
+  const shown=fc&&typeof fc.displayFormula==='function'?fc.displayFormula(tableKey,def):(def.formula||'');
+  return `${head}: ${shown||''}${err?`\n⚠ ${err}`:''}`;
 }
 function removeFormulaColumn(tableKey,id,rerenderFn){
   const fc=window.BLFormulaColumns; if(!fc)return;
@@ -4451,7 +4454,7 @@ function renderColPanel(tableKey, panelEl, rerenderFn){
   const labelEditable = !!window.BLColumnNames && BLColumnNames.TABLES.includes(tableKey);
   panelEl.innerHTML = entries.map(({col:c})=>{
     // v7.28 — hesaplanan sütun: başlığa tıklayınca formül penceresi açılır.
-    if(c.formulaCustom) return `<div class="colPanelItem isCustomCol isFormulaCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName" data-formula-edit="${escapeHtml(c.formulaId)}" title="${escapeHtml(formulaColumnTooltip(c))}"><span class="colPanelFx">fx</span>${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-formula-drop="${escapeHtml(c.formulaId)}" title="${escapeHtml(appLang==='en'?'Remove column':'Sütunu kaldır')}">×</button></div>`;
+    if(c.formulaCustom) return `<div class="colPanelItem isCustomCol isFormulaCol"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${cs.hidden.has(c.k)?'':'checked'}><button type="button" class="colPanelName" data-formula-edit="${escapeHtml(c.formulaId)}" title="${escapeHtml(formulaColumnTooltip(c,tableKey))}"><span class="colPanelFx">fx</span>${escapeHtml(tableColumnLabel(tableKey,c))}</button><button type="button" class="colPanelDrop" data-formula-drop="${escapeHtml(c.formulaId)}" title="${escapeHtml(appLang==='en'?'Remove column':'Sütunu kaldır')}">×</button></div>`;
     // v10.8 — Orders'ın sütun şeması CP_COLS'un kopyasıdır (ORDERS_COLS,
     // syncOrdersColumnsFromCp); DB-bağlı özel sütunlar da aynı yoldan miras
     // kalır. Bu yüzden düzenle/kaldır aynı panel deneyimini Orders'ta da açar.
