@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.166",
-  "source": "test-v7.0.166",
-  "requestedAt": "2026-09-29T07:25:30Z",
-  "reason": "verified-full-regression-v7.0.166"
+  "version": "7.0.176",
+  "source": "test-v7.0.176",
+  "requestedAt": "2026-09-30T08:50:29Z",
+  "reason": "verified-full-regression-v7.0.176"
 }
