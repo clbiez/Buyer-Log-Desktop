@@ -1472,7 +1472,11 @@ async function startBuyerLog() {
     showStartupError({
       message: 'Buyer Log sunucusu başlatılamadı.',
       detail: error.message,
-      hint: 'Paket eksik kopyalanmış olabilir. Klasörün tamamını yeniden çıkarın.',
+      hint: error && error.code === 'BACKEND_DEPENDENCIES_MISSING'
+        ? 'Bu klasör GitHub kaynak kodundan (Code → Download ZIP) oluşturulmuş görünüyor; kaynak kod çalıştırılabilir paket değildir. '
+          + 'GitHub Releases sayfasındaki BuyerLog-Kurulum-<sürüm>.zip dosyasını indirip boş bir klasöre çıkarın ve oradaki BuyerLog.exe\'yi çalıştırın. '
+          + 'Başka bir kullanıcının Buyer Log klasörünü kopyalamayın.'
+        : 'Paket eksik kopyalanmış olabilir. Klasörün tamamını yeniden çıkarın.',
     });
     return false;
   }

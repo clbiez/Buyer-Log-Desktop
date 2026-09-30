@@ -129,6 +129,21 @@ function probeOrigin(origin, timeoutMs = PROBE_TIMEOUT_MS) {
   });
 }
 
+/*
+ * ÇALIŞMA ZAMANI BAĞIMLILIKLARI VAR MI? (7.0.178)
+ *
+ * GitHub'daki kaynak ZIP'i node_modules taşımaz. Kaynak klasör BuyerLog.exe
+ * ile birleştirilip çalıştırılınca sunucu `express` bulamadan kapanıyor,
+ * gözetmen 20 kez yeniden deniyor ve kullanıcı 90 saniye sonra anlamsız bir
+ * "yanıt vermedi" ekranı görüyordu. Sunucu başlatılmadan önce package.json
+ * bağımlılıkları çekirdekte aranır; eksikse ne yapılacağı açıkça söylenir.
+ */
+function missingRuntimeDependencies(appCoreRoot) {
+  const pkg = readJson(path.join(appCoreRoot, 'package.json'), null);
+  const names = Object.keys(pkg && pkg.dependencies && typeof pkg.dependencies === 'object' ? pkg.dependencies : {});
+  return names.filter(name => !fs.existsSync(path.join(appCoreRoot, 'node_modules', ...name.split('/'), 'package.json')));
+}
+
 class BackendProcess {
   constructor(options = {}) {
     this.paths = options.paths;
@@ -165,6 +180,10 @@ class BackendProcess {
     const watchdog = path.join(this.appCoreRoot, 'server', 'watchdog.js');
     if (!fs.existsSync(watchdog)) {
       throw Object.assign(new Error('server\\watchdog.js bulunamadı: ' + watchdog), { code: 'BACKEND_MISSING' });
+    }
+    const missing = missingRuntimeDependencies(this.appCoreRoot);
+    if (missing.length) {
+      throw Object.assign(new Error('Uygulama paketi eksik: çalışma zamanı bileşenleri bulunamadı (' + missing.join(', ') + '). Klasör: ' + path.join(this.appCoreRoot, 'node_modules')), { code: 'BACKEND_DEPENDENCIES_MISSING', missing });
     }
     ensureDataTree(this.paths);
     const config = ensureConfig(this.paths, this.appCoreRoot);
@@ -258,5 +277,5 @@ class BackendProcess {
 }
 
 module.exports = {
-  BackendProcess, waitForServer, probeOrigin, ensureConfig, ensureDataTree, READY_TIMEOUT_MS,
+  BackendProcess, waitForServer, probeOrigin, ensureConfig, ensureDataTree, missingRuntimeDependencies, READY_TIMEOUT_MS,
 };

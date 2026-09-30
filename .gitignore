@@ -48,6 +48,7 @@
 *.tmp
 npm-debug.log*
 /resources/app/dist-updates/
+/resources/app/dist-installer/
 /resources/app/.release-pending.json
 /coverage/
 /.desktop-dev/
@@ -62,6 +63,12 @@ npm-debug.log*
 /.UPDATE_CODEBASE_MEMORY_*.cmd
 /install.ps1
 /Buyer Log Desktop Test/
+
+# Updater-managed app-core versions and the generated portable manifest are
+# per-installation runtime state. Committing them shipped stale 7.0.84/7.0.115
+# artifacts to anyone who downloaded the source ZIP (7.0.178 field incident).
+/.buyerlog-versions/
+/manifest.json
 
 # Build/release outputs are distributed through GitHub Releases, not source Git.
 /BuyerLog.exe

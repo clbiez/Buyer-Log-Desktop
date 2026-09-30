@@ -1,0 +1,108 @@
+name: Buyer Log new-user installer
+# Builds BuyerLog-Kurulum-<version>.zip for NEW users after a STABLE promotion.
+# The app core is the exact STABLE update artifact (no rebuild); the Electron
+# runtime comes from this repository root plus the SHA-pinned BuyerLog.exe.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: STABLE semantic version to package (empty = .github/release-requests/stable.json)
+        required: false
+        type: string
+  workflow_run:
+    workflows: ['Buyer Log promote STABLE']
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-installer
+  cancel-in-progress: false
+jobs:
+  installer:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Resolve version and pinned runtime
+        shell: bash
+        env:
+          DISPATCH_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          VERSION="${DISPATCH_VERSION:-}"
+          if [[ -z "$VERSION" ]]; then
+            VERSION="$(node -e "process.stdout.write(String(require('./.github/release-requests/stable.json').version||''))")"
+          fi
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          node -e "const r=require('./.github/installer/runtime.json');for(const k of ['releaseTag','asset','sha256'])if(!r[k])process.exit(1);console.log('RUNTIME_TAG='+r.releaseTag);console.log('RUNTIME_ASSET='+r.asset);console.log('RUNTIME_SHA256='+r.sha256);" >> "$GITHUB_ENV"
+      - name: Download exact STABLE app artifact and verify SHA-256
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/in"
+          gh release download "stable-v$VERSION" --repo "$RELEASE_REPO" --pattern "BuyerLog-$VERSION.zip" --pattern "BuyerLog-$VERSION.json" --dir "$RUNNER_TEMP/in" --clobber
+          node -e "
+            const fs=require('fs'),c=require('crypto'),d=process.argv[1],v=process.argv[2];
+            const m=JSON.parse(fs.readFileSync(d+'/BuyerLog-'+v+'.json','utf8'));
+            const b=fs.readFileSync(d+'/BuyerLog-'+v+'.zip');
+            const h=c.createHash('sha256').update(b).digest('hex');
+            if(m.version!==v||m.channel!=='stable'||h!==m.sha256||b.length!==m.size){console.error('STABLE artifact doğrulanamadı');process.exit(1);}
+            fs.appendFileSync(process.env.GITHUB_ENV,'PUBLISHED_AT='+m.publishedAt+'\n');
+          " "$RUNNER_TEMP/in" "$VERSION"
+      - name: Download SHA-pinned BuyerLog.exe runtime
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release download "$RUNTIME_TAG" --repo "${{ github.repository }}" --pattern "$RUNTIME_ASSET" --dir "$RUNNER_TEMP/in" --clobber
+      - name: Build and verify installer
+        working-directory: resources/app
+        run: >-
+          node scripts/build-installer.js
+          --app-zip "$RUNNER_TEMP/in/BuyerLog-$VERSION.zip"
+          --exe "$RUNNER_TEMP/in/$RUNTIME_ASSET"
+          --exe-sha256 "$RUNTIME_SHA256"
+          --runtime-root "$GITHUB_WORKSPACE"
+          --version "$VERSION"
+          --created-at "$PUBLISHED_AT"
+          --out "$RUNNER_TEMP/out"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: BuyerLog-Kurulum-${{ env.VERSION }}
+          path: |
+            ${{ runner.temp }}/out/BuyerLog-Kurulum-*.zip
+            ${{ runner.temp }}/out/BuyerLog-Kurulum-*.zip.sha256
+          if-no-files-found: error
+      - name: Attach installer to the public STABLE release (never overwrite)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+        run: |
+          set -euo pipefail
+          NAME="BuyerLog-Kurulum-$VERSION.zip"
+          EXISTING="$(gh release view "stable-v$VERSION" --repo "$RELEASE_REPO" --json assets --jq '.assets[].name')"
+          if grep -qx "$NAME" <<< "$EXISTING"; then
+            mkdir -p "$RUNNER_TEMP/remote"
+            gh release download "stable-v$VERSION" --repo "$RELEASE_REPO" --pattern "$NAME.sha256" --dir "$RUNNER_TEMP/remote" --clobber
+            if ! cmp -s "$RUNNER_TEMP/remote/$NAME.sha256" "$RUNNER_TEMP/out/$NAME.sha256"; then
+              echo "Aynı sürüm için farklı kurulum paketi zaten yayımlanmış; üzerine yazılmadı." >&2
+              exit 1
+            fi
+            echo "Kurulum paketi zaten yayımlanmış ve aynı: $NAME"
+          else
+            gh release upload "stable-v$VERSION" --repo "$RELEASE_REPO" "$RUNNER_TEMP/out/$NAME" "$RUNNER_TEMP/out/$NAME.sha256"
+          fi
+          echo "Kurulum paketi: https://github.com/$RELEASE_REPO/releases/tag/stable-v$VERSION" >> "$GITHUB_STEP_SUMMARY"

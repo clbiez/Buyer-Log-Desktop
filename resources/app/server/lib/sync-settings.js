@@ -10,6 +10,7 @@ const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
 const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
 const { isNetworkPath } = require('./local-path-policy');
+const { installationFingerprint: defaultInstallationFingerprint } = require('./installation-fingerprint');
 const {
   SYNC_PACKAGE_VERSION, SYNC_PACKAGE_MAX_EVENTS, SYNC_PACKAGE_MAX_BYTES, SYNC_PACKAGE_DIR,
   buildSyncPackages, validateSyncPackage, bundleFileName, gzipBundleFileName, sequenceFromBundleFile, isBundleFile, SYNC_GZIP_SUFFIX,
@@ -134,8 +135,9 @@ async function readSyncJson(file) {
   return { payload: JSON.parse(raw), bytes: Buffer.byteLength(raw, 'utf8'), compressed: false };
 }
 
-function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChange = null, networkTimeoutMs = 15000, filterIncomingDeltas = null, filterOutgoingDeltas = null }) {
+function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChange = null, networkTimeoutMs = 15000, filterIncomingDeltas = null, filterOutgoingDeltas = null, installationFingerprint = defaultInstallationFingerprint }) {
   const file = path.join(localDataRoot, 'sync-settings.json');
+  const resolveInstallation = () => { try { return String((typeof installationFingerprint === 'function' ? installationFingerprint() : installationFingerprint) || '').trim(); } catch (_) { return ''; } };
   let syncInFlight = null;
   let paused = false;
   let pauseReason = '';
@@ -345,7 +347,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
 
   async function writeHead(deviceRoot, deviceId, latestSequence, packageFormatVersion) {
     return net(() => writeValidatedJson(path.join(deviceRoot, NETWORK_HEAD_FILE), {
-      deviceId, latestSequence: Number(latestSequence) || 0, updatedAt: new Date().toISOString(),
+      deviceId, latestSequence: Number(latestSequence) || 0, updatedAt: new Date().toISOString(), installation: resolveInstallation() || undefined,
       supportsBundleV2: true, supportsGzipBundles: true, checkpointAckSupport: true, protocolVersion: 2, packageFormatVersion: Number(packageFormatVersion) || SYNC_PACKAGE_VERSION,
     }), 'Checkpoint head yazma');
   }
@@ -353,7 +355,8 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
   async function ensureCapabilityHead(deviceRoot, deviceId) {
     let head = null;
     try { head = await net(() => readJson(path.join(deviceRoot, NETWORK_HEAD_FILE)), 'Capability head okuma'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    if (head && head.supportsBundleV2 === true && head.supportsGzipBundles === true && head.checkpointAckSupport === true) return 0;
+    const installation = resolveInstallation();
+    if (head && head.supportsBundleV2 === true && head.supportsGzipBundles === true && head.checkpointAckSupport === true && (!installation || head.installation === installation)) return 0;
     return writeHead(deviceRoot, deviceId, Number(head && head.latestSequence) || 0, Number(head && head.packageFormatVersion) || 1);
   }
 
@@ -429,7 +432,29 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
       emit('NETWORK_FIRST_ACCESS', { root });
       await checkSyncRoot(root);
       const syncRoot = path.join(root, 'BUYER_LOG_SYNC'), changesRoot = path.join(syncRoot, 'changes'), ackRoot = path.join(syncRoot, 'acks');
-      const deviceId = localDb.getDeviceId ? localDb.getDeviceId() : current.deviceId, deviceRoot = path.join(changesRoot, encode(deviceId));
+      /* Kopyalanmış kurulum koruması (7.0.178). Veri klasörü başka bir
+         bilgisayara/kullanıcıya kopyalandıysa iki kurulum aynı deviceId ile
+         aynı cihaz klasörüne yazar ve birbirinin değişikliğini hiç okumaz.
+         (1) DB'deki kurulum mührü başka kuruluma aitse, (2) mühürsüz eski
+         kopyalarda ise bu cihaz klasörünün head'ini başka bir kurulum
+         sahiplenmişse kimlik yenilenir; yerel olaylar yeni kimlikle yeniden
+         yayımlanır ve eski ortak klasör yabancı cihaz olarak okunur. */
+      const installation = resolveInstallation();
+      if (installation && typeof localDb.ensureDeviceBinding === 'function') {
+        const binding = await localDb.ensureDeviceBinding(installation);
+        if (binding && binding.status === 'rotated') emit('SYNC_DEVICE_ID_ROTATED', { reason: binding.reason, previousDeviceId: binding.previousDeviceId, deviceId: binding.deviceId, reissued: binding.reissued });
+      }
+      let deviceId = localDb.getDeviceId ? localDb.getDeviceId() : current.deviceId, deviceRoot = path.join(changesRoot, encode(deviceId));
+      if (installation && typeof localDb.rotateDeviceId === 'function') {
+        let ownHead = null;
+        try { ownHead = await net(() => readJson(path.join(deviceRoot, NETWORK_HEAD_FILE)), 'Cihaz klasörü sahipliği okuma'); }
+        catch (error) { if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error; }
+        if (ownHead && ownHead.installation && ownHead.installation !== installation) {
+          const rotated = await localDb.rotateDeviceId({ reason: 'shared-hub-device-collision', fingerprint: installation });
+          emit('SYNC_DEVICE_ID_ROTATED', { reason: rotated.reason, previousDeviceId: rotated.previousDeviceId, deviceId: rotated.deviceId, reissued: rotated.reissued });
+          deviceId = rotated.deviceId; deviceRoot = path.join(changesRoot, encode(deviceId));
+        }
+      }
       await net(() => fsp.mkdir(deviceRoot, { recursive: true }), 'Cihaz klasörü oluşturma');
 
       const pendingAll = await localDb.pending(10000);

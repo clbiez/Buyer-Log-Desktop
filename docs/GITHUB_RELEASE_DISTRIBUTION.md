@@ -44,3 +44,7 @@ to different content; bump the version for the next update.
 It is useful only while the current `updates/vX.Y.Z` branch does not yet exist.
 GitHub Actions also verifies every `main` push and creates the version branch if
 the local sync command was not used.
+
+## Yeni kullanıcı kurulum paketi
+
+STABLE promotion başarıyla bitince `buyerlog-installer.yml` aynı STABLE artifact'i indirir, SHA-256 doğrular ve Electron çalışma zamanı + sabitlenmiş `BuyerLog.exe` ile `BuyerLog-Kurulum-<sürüm>.zip` paketini üretir. Paket aynı `stable-v<sürüm>` release'ine eklenir; mevcut bir paketin üzerine asla yazılmaz. Ayrıntı: `docs/YENI_KULLANICI_KURULUMU.md`.

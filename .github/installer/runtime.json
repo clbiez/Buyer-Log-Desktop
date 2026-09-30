@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "electronVersion": "44.3.0",
+  "releaseTag": "BuyerLog",
+  "asset": "BuyerLog.exe",
+  "sha256": "63843580a999d8024ffa402583fc3d74125b334c8681ab9075dac5ce9e32a3b4"
+}
