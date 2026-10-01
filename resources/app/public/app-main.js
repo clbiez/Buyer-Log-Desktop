@@ -3806,6 +3806,50 @@ function applyTableViewPreset(tableKey,preset){
   else renderTableViewContext(tableKey);
   return true;
 }
+
+/* v7.0.188 — Alt detay çekmeceleri ana tablo görünümünü gerçekten miras alır.
+   Bu salt-okunur köprü CP/Orders Focus · Extended · All presetlerini, kullanıcının
+   sütun sırasını ve genişliklerini ikinci bir katalog oluşturmadan paylaşır. */
+function detailTableViewSnapshot(tableKey='cp'){
+  if(tableKey!=='cp'&&tableKey!=='orders')return null;
+  const all=tableViewAllKeys(tableKey),state=colmgr[tableKey];
+  if(!all.length||!state)return null;
+  const byKey=new Map((COLS_BY_TABLE[tableKey]||[]).map(column=>[column.k,column]));
+  const order=normalizedColumnOrder(tableKey,state.order).filter(key=>key!=='__picture'&&byKey.has(key));
+  const makeColumn=key=>{
+    const column=byKey.get(key);if(!column)return null;
+    return {
+      key,
+      label:tableColumnLabel(tableKey,column),
+      group:String(column.group||''),
+      type:column.type||'ro',
+      weight:Number(column.weight)||10,
+      widthPx:colWidthPx(tableKey,column),
+      dataType:column.dataType,
+      percentageScale:column.percentageScale,
+      sourceMetadata:column.sourceMetadata||column.metadata,
+      format:(_value,row)=>{
+        const raw=row&&row.raw&&typeof row.raw==='object'?row.raw:null;
+        const merged=raw?Object.assign({},raw,row):row;
+        return cellPlainText(column,merged||{},null);
+      }
+    };
+  };
+  const withoutPicture=keys=>(keys||[]).filter(key=>key!=='__picture'&&byKey.has(key));
+  return {
+    tableKey,
+    activePreset:tableViewPresetState(tableKey),
+    order:order.slice(),
+    visible:withoutPicture(all.filter(key=>!state.hidden.has(key))),
+    presets:{
+      focus:withoutPicture(tableViewPresetKeys(tableKey,'focus')),
+      extended:withoutPicture(tableViewPresetKeys(tableKey,'extended')),
+      all:order.slice()
+    },
+    columns:order.map(makeColumn).filter(Boolean)
+  };
+}
+window.BLTableViewSetup=Object.freeze({snapshot:detailTableViewSnapshot});
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button)return;
   applyTableViewPreset(button.dataset.tableKey,button.dataset.tableViewPreset);
