@@ -207,6 +207,63 @@ function planFilterChange(items, { sourceId, moduleId, definition, mode = 'share
   return { ok: true, code: 'OK', message: '', items: next, warnings, appliedScopeId: applied.id };
 }
 
+/* ===================================================================
+   KİŞİSEL FİLTRE (v7.0.183 — kullanıcı kararı: Horizon kullanıcı bazlı)
+
+   Ortak filtre settings.json › modelConnections içinde durur ve Sync
+   klasörü üzerinden HER MAKİNEYE dağıtılır. Başka bir bilgisayarda yapılan
+   bir Horizon değişikliği bu yüzden herkesin filtresini eziyordu (sahada
+   yaşandı: X kullanıcısında ayarlanan filtre ana bilgisayardaki filtreyi
+   bozdu).
+
+   Kişisel kayıt kullanıcının kendi tercih deposuna yazılır
+   (user-preferences › buyerlog.workspace.horizon.<modül>) ve yenileme onu
+   applyHorizonOverrides ile ortak filtrenin ÜSTÜNE uygular. Ortak kayıt
+   değişmez; başka kullanıcı etkilenmez.
+
+   Bu fonksiyon yalnız doğrular ve neyin yazılacağını söyler (SAF). Bağlı
+   gruptaki bir modül için grubun BÜTÜN üyeleri döner: grup tek ufuk taşır ve
+   yenileme grubun ilk kişisel kaydını hepsine uygular; tek üyeye yazmak,
+   başka bir üyedeki eski kişisel kaydın kazanması demek olurdu.
+   =================================================================== */
+function planPersonalFilter(items, { sourceId, moduleId, definition } = {}) {
+  const list = Array.isArray(items) ? items : [];
+  const wantedSource = clean(sourceId);
+  const wantedModule = clean(moduleId);
+  const warnings = [];
+  const fail = (code, message) => ({ ok: false, code, message, warnings });
+
+  const item = list.find(entry => entry && clean(entry.id) === wantedSource);
+  if (!item) return fail('SOURCE_NOT_FOUND', 'Kaynak bulunamadı.');
+  const profile = sourceProfiles.fromLegacyRole(item.role);
+  if (!profile) return fail('SOURCE_PROFILE_UNKNOWN', 'Bu kaynağın türü tanınmıyor; filtresi bu ekrandan düzenlenemez.');
+  if (!profile.feedableModules.includes(wantedModule)) {
+    return fail('MODULE_NOT_FEEDABLE', `${item.name || item.id} kaynağı "${wantedModule}" modülünü besleyemez.`);
+  }
+  const owner = (item.scopes || []).find(scope => (scope.targets || []).includes(wantedModule));
+  if (!owner) {
+    return fail('BINDING_NOT_FOUND', `"${wantedModule}" şu an ${item.name || item.id} kaynağına bağlı değil. Önce bağlantıyı açın.`);
+  }
+
+  let horizon;
+  try { horizon = modelHorizon.normalizeHorizon(definition); }
+  catch (error) { return fail('FILTER_INVALID', String(error && error.message || error)); }
+
+  const bounds = describeBounds(horizon);
+  if (!bounds.bounded) {
+    warnings.push(bounds.error
+      ? `Filtre tamamlanmamış: ${bounds.error} Bu hâliyle yenileme çalışmaz.`
+      : 'Bu filtre sorguyu sınırlamıyor; bu hâliyle yenileme çalışmaz.');
+  }
+
+  const members = modelScopes.linkedTargetsOf(item);
+  const modules = members.includes(wantedModule) ? [...new Set(members)] : [wantedModule];
+  if (modules.length > 1) {
+    warnings.push(`Kişisel filtreniz bağlı ${modules.length} modülün hepsine uygulandı (${modules.map(target => modelScopes.TARGET_LABELS[target] || target).join(', ')}).`);
+  }
+  return { ok: true, code: 'OK', message: '', warnings, horizon, modules, connectionId: clean(item.id), role: clean(item.role) };
+}
+
 /** Bir modülün ortak filtresini paylaşan diğer modüller — uyarı metni için. */
 function sharedModules(items, sourceId, moduleId) {
   const item = (Array.isArray(items) ? items : []).find(entry => entry && clean(entry.id) === clean(sourceId));
@@ -215,4 +272,4 @@ function sharedModules(items, sourceId, moduleId) {
   return owner ? (owner.targets || []).filter(target => target !== clean(moduleId)) : [];
 }
 
-module.exports = { MODES, planFilterChange, sharedModules, describeBounds };
+module.exports = { MODES, planFilterChange, planPersonalFilter, sharedModules, describeBounds };

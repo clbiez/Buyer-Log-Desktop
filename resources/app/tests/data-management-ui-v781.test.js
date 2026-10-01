@@ -219,8 +219,11 @@ test('v7.81 ezilmiş katman ÇIKMAZ değil: düzenleyici açılır ve durumu sö
   assert.doesNotMatch(code, /if \(feed\.layer !== 'source'\) \{\s*\r?\n?\s*if \(typeof showToast/);
   assert.match(code, /layerNote/);
   assert.match(fn[0], /removable: Boolean\(feed\.layerRemovable\)/);
-  // Yetki kontrolü kalkmadı.
-  assert.match(fn[0], /if \(!model\.canManage\)/);
+  /* v7.0.183 — Horizon kullanıcı bazlı: düzenleyici herkese açılır ve
+     varsayılan kaydetme kişiseldir. Yetki kontrolü KALKMADI, yer değiştirdi:
+     ortak ("herkes için") kaydetme yalnız canManage ile görünür ve sunucu
+     onu ayrıca manageModelConnections ile doğrular. */
+  assert.match(fn[0], /canShare: Boolean\(model\.canManage\)/);
   // Düzenleyici uyarıyı gerçekten çiziyor ve kaldırma düğmesini bağlıyor.
   assert.match(FILTER_UI, /function layerBanner\(\)/);
   assert.match(FILTER_UI, /data-clear-layer/);
@@ -256,7 +259,7 @@ test('v7.81 paylaşım kararı kullanıcıya sorulur, varsayılan uydurulmaz', (
   /* "Ayır" seçeneği YALNIZ paylaşım varken çıkmalı; paylaşılmayan bir filtrede
      iki düğme göstermek olmayan bir karar sordurur. `shared` koşulunun içinde
      olduğu doğrulanır (şablonda satır sonu olabilir). */
-  const savePart = FILTER_UI.match(/\$\{shared[\s\S]{0,600}?data-save="split"/);
+  const savePart = FILTER_UI.match(/\(shared && canSplit[\s\S]{0,600}?data-save="split"/);
   assert.ok(savePart, '"ayır" düğmesi shared koşuluna bağlı değil');
   // Ve mod sunucuya AÇIKÇA gider; istemci varsayılan uydurmaz.
   assert.match(FILTER_UI, /body: JSON\.stringify\(\{[\s\S]{0,200}?mode,/);

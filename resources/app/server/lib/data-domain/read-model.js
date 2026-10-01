@@ -271,6 +271,9 @@ function build(items, options = {}) {
         /* Ezen katmanın HANGİ KAYITTA durduğu — ekran "bunu kaldır"
            diyebilmek için silinecek kaydı bilmek zorunda. */
         let layerKey = '';
+        // Ezen katmanın HAM tanımı: kişisel kaydetme, kullanıcının gördüğü
+        // (çalışan) filtreden başlar (v7.0.183).
+        let effectiveDefinition = null;
         if (resolveLayer && shared) {
           const resolved = resolveLayer({
             moduleId,
@@ -288,6 +291,7 @@ function build(items, options = {}) {
                  çalıştığımız yanlış anlamanın daha kötü bir hâli. Ezen
                  katmanların hiçbirinin kendi adı yoktur. */
               effective = { ...shared, name: '', ...describeFilter(resolved.horizon) };
+              effectiveDefinition = clone(resolved.horizon || {});
             }
           }
         }
@@ -332,6 +336,7 @@ function build(items, options = {}) {
              (ezen) filtre ile düzenlenen (ortak) filtre farklıdır ve ekran
              bunu açıkça söyler. */
           definition: stored ? clone(stored.definition) : null,
+          effectiveDefinition,
           // Aynı ortak filtreyi paylaşan diğer modüller — "hepsini güncelle mi,
           // ayır mı?" kararı bunlara bakılarak verilir (§19). Ezen katman bu
           // kararı değiştirmez: ortak filtreyi yazmak yine hepsini etkiler.

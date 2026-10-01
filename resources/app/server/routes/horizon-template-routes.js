@@ -119,7 +119,17 @@ app.post('/api/horizon-templates/:id/share', userAccess.requireArea('source'), u
     res.json({ ok: true });
   } catch (err) { apiError(res, err, 'Horizon şablonu paylaşılamadı.'); }
 });
-app.post('/api/data-management/filter', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), (req, res) => {
+/* v7.0.183 — HORIZON KULLANICI BAZLI (kullanıcı kararı).
+
+   mode 'personal' filtreyi KULLANICININ KENDİ tercih deposuna yazar; ortak
+   bağlantı kaydına (settings.json › modelConnections) dokunmaz ve Sync'e
+   yayın yapmaz. Ortak kayıt Sync klasörü üzerinden her makineye gittiği için
+   eskiden bir bilgisayarda yapılan Horizon değişikliği herkesinkini eziyordu.
+
+   Kişisel kaydetme 'source' alanına erişen herkese açıktır (yalnız kendi
+   ayarını değiştirir). Ortak varsayılanı ('shared' / 'split') yazmak yine
+   manageModelConnections yetkisi ister. */
+app.post('/api/data-management/filter', userAccess.requireArea('source'), express.json({ limit: '256kb' }), (req, res) => {
   try {
     const body = req.body || {};
     const sourceId = String(body.sourceId || '').trim();
@@ -129,6 +139,29 @@ app.post('/api/data-management/filter', userAccess.requireArea('source'), userAc
     }
 
     const store = loadModelConnections();
+
+    if (body.mode === 'personal') {
+      const personal = dataManagementFilterWriter.planPersonalFilter(store.items, {
+        sourceId, moduleId, definition: body.definition,
+      });
+      if (!personal.ok) {
+        const status = personal.code === 'SOURCE_NOT_FOUND' ? 404 : (personal.code === 'FILTER_INVALID' ? 400 : 409);
+        return res.status(status).json({ error: personal.message, code: personal.code, warnings: personal.warnings });
+      }
+      const userId = sourceUserId(req);
+      for (const target of personal.modules) {
+        userPreferences.saveHorizon(userId, target, personal.horizon, { connectionId: personal.connectionId, role: personal.role });
+      }
+      userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_PERSONAL_FILTER_UPDATE', userId, { sourceId, moduleId, modules: personal.modules });
+      return res.json({ ok: true, personal: true, modules: personal.modules, warnings: personal.warnings });
+    }
+
+    if (!userAccess.hasPermission(req.currentUser, 'manageModelConnections')) {
+      return res.status(403).json({
+        error: 'Herkes için ortak filtreyi değiştirmek Kaynak Veri yönetim yetkisi gerektirir. Kendi filtrenizi "Kaydet (yalnız benim için)" ile kaydedebilirsiniz.',
+        code: 'PERMISSION_REQUIRED',
+      });
+    }
     // Eşzamanlılık kontrolü kaynak başınadır (P9 ile aynı sözleşme).
     const expected = String(body.expectedSourceRevision || '').trim();
     if (expected) {
