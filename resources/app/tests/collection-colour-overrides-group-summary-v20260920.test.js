@@ -33,6 +33,7 @@ function loadOverrideSpec() {
     KOL_LANDED_INPUT_COLS:{trPrice:{k:'trPrice'},trLandedMult:{k:'trLandedMult'},trFx:{k:'trFx'},ydLandedMult:{k:'ydLandedMult'}},
     kolIsColorSpecific:key=>['quantity','img','imgRef','colour','colourCode','durum','status'].includes(key),
     kolDescriptorByKey:key=>descriptors.get(key)||{kind:'synthetic',k:key,label:key},
+    kolFieldDescriptorByKey:key=>descriptors.get(key)||{kind:'synthetic',k:key,label:key},
   };
   vm.createContext(ctx);
   vm.runInContext(`${block}\nglobalThis.__spec=kolColourOverrideSpec;`, ctx);

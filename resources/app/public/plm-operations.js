@@ -25,6 +25,7 @@
     'plm-links': { tr: 'Model linki', en: 'Model links' },
     'plm-images': { tr: 'Model görseli', en: 'Model images' },
     'plm-files': { tr: 'Teknik föy', en: 'Technical sheets' },
+    'plm-requests': { tr: 'Numune talepleri', en: 'Sample requests' },
   };
   const STATUS_LABEL = {
     running: { tr: 'Çalışıyor', en: 'Running' },

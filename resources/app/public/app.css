@@ -5441,3 +5441,8 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .fcCase.isMany{padding:9px 10px;border:1px solid var(--line2);border-left:3px solid var(--acc);border-radius:var(--r-sm);background:var(--card);}
 .fcCaseHead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10.5px;font-weight:700;color:var(--acc-ink);text-transform:uppercase;letter-spacing:.3px;}
 .fcElseRow{padding-top:2px;}
+
+/* PLM Numune sütunu (CP / Siparişler) — PLM numune talebi durumları. */
+#cpTable td.plmSampleCell,#ordersTable td.plmSampleCell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+td.plmSampleCell .badge+.badge{margin-left:2px}
+td.plmSampleCell .plmSampleEmpty{color:var(--muted)}

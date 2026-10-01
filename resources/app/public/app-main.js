@@ -3314,6 +3314,9 @@ function cpCycleImageSize(){
 const CP_COLS = [
   {k:'__picture', label:'Picture', type:'cpImage', weight:8, group:'Order Info'},
   {k:'Priority', label:'Priority', type:'priority', weight:9, group:'Order Info'},
+  /* PLM numune talepleri (CoreNectum Requests) — salt okunur, satıra YAZILMAZ;
+     değer plm-sample-requests.js'ten okunur (bkz. ensurePlmSampleAccessors). */
+  {k:'PLM Numune', label:'PLM Numune', type:'plmSample', weight:14, group:'Order Info'},
   {k:'Season', label:'Season', type:'ro', weight:6, group:'Order Info'},
   {k:'Country', label:'Country', type:'ro', weight:8, group:'Order Info'},
   {k:'Merch Marka Yaş Grup Kod', label:'Yaş Grup', type:'ro', weight:8, group:'Order Info'},
@@ -4980,6 +4983,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       return `<td class="${numeric?'num ':''}formulaCell" title="${escapeHtml(String(text))}">${escapeHtml(String(text))}</td>`;
     }
     case 'cpImage': return cpImageCellHtml(r);
+    case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
       const reason=priorityReasonText(r),title=reason?` title="${escapeHtml(reason)}"`:'';
       if(rev) return `<td${title}>${revisionHtml(c.k, rev, value=>badge(priorityDisplay(value)||'—', priorityTone(value)))}</td>`;
@@ -5112,6 +5116,7 @@ function cellPlainText(c,r,cf){
   if(cpLogisticHasDetails(r)&&c.k==='Ant. Arrival') return cpLogisticArrivalPlainText(r);
   if(cpLogisticHasDetails(r)&&(c.type==='deltype'||c.k==='Del. Type')) return cpLogisticDelTypePlainText(r);
   if(c.type==='priority') return priorityDisplay(v);
+  if(c.type==='plmSample') return norm(v);
   if(c.type==='status') return statusDisplay(v);
   if(c.type==='deltype'||c.k==='Del. Type') return transitDelTypeDisplay(v);
   if(c.type==='ordercode') return fmtOC(v);
@@ -8056,6 +8061,34 @@ function cpPassesGroup(r,ctx,id){
   }
   return true;
 }
+/* ===================================================================
+   PLM NUMUNE SÜTUNU (CP / Siparişler)
+   Değer satıra yazılmaz: numaralandırılamayan (enumerable:false) bir okuyucu
+   ile her okumada plm-sample-requests.js'ten hesaplanır. Böylece sıralama,
+   sütun filtresi, kopyala/Excel aynı r[k] yolunu kullanır; ama değer JSON'a,
+   kayda veya ASAS satırına hiç girmez ve PLM senkronundan sonra hep günceldir.
+   =================================================================== */
+const PLM_SAMPLE_COL_KEY='PLM Numune';
+function ensurePlmSampleAccessors(rows){
+  if(!Array.isArray(rows))return rows;
+  for(const row of rows){
+    if(!row||typeof row!=='object'||Object.prototype.hasOwnProperty.call(row,PLM_SAMPLE_COL_KEY))continue;
+    Object.defineProperty(row,PLM_SAMPLE_COL_KEY,{configurable:true,enumerable:false,get(){const api=window.BLPlmSampleRequests;return api?api.columnText(this,'cp'):'';}});
+  }
+  return rows;
+}
+function plmSampleCellHtml(r,tableKey){
+  const api=window.BLPlmSampleRequests,value=api?api.columnParts(r,tableKey==='orders'?'orders':'cp'):null;
+  if(!value)return '<td></td>';
+  if(!value.parts.length)return `<td class="plmSampleCell" title="${escapeHtml(appLang==='en'?'No sample request in PLM':'PLM\'de numune talebi yok')}"><span class="plmSampleEmpty">${escapeHtml(appLang==='en'?'No request':'Talep yok')}</span></td>`;
+  const tone=state=>state==='approved'?'green':state==='rejected'?'red':'orange';
+  const title=value.parts.map(part=>`${part.text} — ${part.title}`).join('\n');
+  return `<td class="plmSampleCell" title="${escapeHtml(title)}">${value.parts.map(part=>badge(escapeHtml(part.text),tone(part.state))).join(' ')}</td>`;
+}
+window.addEventListener('bl:plm-requests-changed',()=>{
+  if(currentActiveTab()==='cp')renderCP();
+  if(currentActiveTab()==='orders')renderOrders();
+});
 function cpRowPasses(r,ctx,ids){
   if(!cpPassesBase(r,ctx)) return false;
   for(let i=0;i<ids.length;i++) if(!cpPassesGroup(r,ctx,ids[i])) return false;
@@ -8068,7 +8101,7 @@ function filteredCP(){
   // final user decision used by the visible CP table.
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const ctx=cpBuildFilterContext();
-  const source=partialViewRows('cp',state.cp.rows);
+  const source=ensurePlmSampleAccessors(partialViewRows('cp',ensurePlmSampleAccessors(state.cp.rows)));
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
   return rows;
@@ -8419,7 +8452,7 @@ function filteredOrders(){
   if(!state.orders)return [];
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('orders');
   const ctx=ordersBuildFilterContext();
-  const source=partialViewRows('orders',state.orders.rows);
+  const source=ensurePlmSampleAccessors(partialViewRows('orders',ensurePlmSampleAccessors(state.orders.rows)));
   let rows=source.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
@@ -22281,7 +22314,7 @@ function kolColourOverrideSpec(key){
   // Internal editable inputs inside a projected cell participate directly in
   // the same inheritance system even though they are not top-level columns.
   if(KOL_LANDED_INPUT_COLS[visibleKey])return {visibleKey,storageKeys:[visibleKey],eligible:!kolIsColorSpecific(visibleKey),projected:false};
-  const descriptor=kolDescriptorByKey(visibleKey);
+  const descriptor=kolFieldDescriptorByKey(visibleKey);
   if(!descriptor||descriptor.kind!=='base')return null; // synthetic/display-only columns
   const column=descriptor.col;
   if(!column)return null;
@@ -24395,6 +24428,15 @@ function kolDescriptorWidth(d){
 function kolDescriptorByKey(key){
   return kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
 }
+// Görünüm (gizli/görünür sütun) yalnız ÇİZİMİ belirler. Yazma kuralları, düzenlenebilirlik,
+// modele bağlılık ve bağımlı alan (örn. In Store Week → In Store → Retail) kararları
+// sütun gizli olsa bile aynı alan tanımını kullanmalıdır; aksi halde gizli alan sessizce
+// salt okunur sayılır ve bağımlı değer eski kalır.
+function kolFieldDescriptorByKey(key){
+  const visible=kolDescriptorCatalog().get(key);if(visible)return visible;
+  const base=kolAllOrderedCols().find(c=>c.k===key);
+  return base?{kind:'base',k:base.k,label:kolColumnLabel(base),col:base}:kolDescriptorByKey(key);
+}
 function kolWeightedAverage(rows,getPrice,getQty){
   // getQty isteğe bağlı: verilmezse Koleksiyon'un kendi adet alanı (row.quantity)
   // kullanılır — mevcut çağıranların davranışı DEĞİŞMEZ. CP/Orders 'Order
@@ -25631,7 +25673,7 @@ function kolSpreadsheetFormulaInfo(key){
   if(key==='__bestPrice__')return 'Calculated from current valid quotations';
   if(key==='__confirmedName__')return 'Approved quotation manufacturer';
   if(key==='__confirmedPrice__')return 'Approved quotation price';
-  const d=kolDescriptorByKey(key),c=d?.col;if(!c)return '';
+  const d=kolFieldDescriptorByKey(key),c=d?.col;if(!c)return '';
   if(c.k==='royalty'||c.k==='hologramCost')return 'Resolved from current pricing rule';
   if(c.k==='fob')return 'Confirmed / Best / Target price ÷ (1 − Royalty %) + Hologram Cost';
   if(c.exToRetail)return 'Retail date − Ex-Factory date';
@@ -25645,7 +25687,7 @@ function kolSpreadsheetColumnMeta(key){
   if(String(key||'').startsWith('pricing:'))return {key,label:String(key).slice(8),type:'money',access:'editable',editable:true,calculated:false,inheritance:'model',overrideable:true,formula:''};
   const landedInput=KOL_LANDED_INPUT_COLS[key];
   if(landedInput)return {key,label:kolStyleFieldLabel(landedInput),type:key==='trPrice'?'money':'number',access:'editable',editable:true,formula:'',col:landedInput};
-  const d=kolDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
+  const d=kolFieldDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
   if(d.kind!=='base')return {key,label:d.label,type:d.kind==='confirmedName'?'text':'money',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   const c=d.col;
   const calculated=Boolean(c.ruleReadonly||c.formulaReadonly||c.exToRetail||c.endeksmatik||c.ydLanded||c.trLanded);
@@ -28171,7 +28213,8 @@ function notifyPlmOperationStarted(url,options){
     '/api/plm-sync/fetch':'plm-sync',
     '/api/plm-style-links/sync-links':'plm-links',
     '/api/model-images/import-plm':'plm-images',
-    '/api/plm-sync/model-files':'plm-files'
+    '/api/plm-sync/model-files':'plm-files',
+    '/api/plm-requests/sync':'plm-requests'
   };
   const kind=kindByUrl[String(url||'')];if(!kind)return;
   try{
@@ -31905,6 +31948,33 @@ function bindCapacityRequestButton(id,rowsFn,source){
 }
 bindCapacityRequestButton('kolCapacityRequestBtn',kolCapacityRequestRows,'collection');
 bindCapacityRequestButton('cpCapacityRequestBtn',cpCapacityRequestRows,'cp');
+/* PLM NUMUNE TALEPLERİ (CoreNectum Requests) — CP aşamasında takip edilir
+   (kullanıcı kararı: koleksiyon aşamasında numune çalışılmaz, bu yüzden
+   Koleksiyon PLM Sync numune çekmez). Seçili satır varsa yalnız onlar,
+   yoksa CP'de filtreyle görünen satırların modelleri PLM'den tazelenir.
+   Sonuç CP kontrol listesine ve Priority'ye PLM kanıtı olarak akar. */
+async function cpPlmSampleRequestsRun(button){
+  const span=button&&button.querySelector('span'),old=span&&span.textContent;
+  if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
+  try{
+    if(!window.BLPlmSampleRequests&&window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('deferredUi');
+    const api=window.BLPlmSampleRequests;
+    if(!api)return;
+    const selected=selectedCpRowsForAction();
+    const rows=selected.length?selected:filteredCP();
+    const plmIds=[...new Set(rows.map(row=>api.plmIdOfRow(row,'cp')).filter(Boolean))];
+    if(!plmIds.length){showToast(appLang==='en'?'No CP rows with a PLM ID were found.':'PLM ID’si olan CP satırı bulunamadı.',{icon:false});return;}
+    if(span)span.textContent=appLang==='en'?`Fetching ${plmIds.length} style(s) from PLM…`:`${plmIds.length} model PLM'den alınıyor…`;
+    const result=await api.sync(plmIds,{scope:'cp'});
+    if(result.ok)showToast((appLang==='en'?'PLM sample status updated: ':'PLM numune durumu güncellendi: ')+api.summaryText(result),{icon:false,duration:9000});
+  }catch(err){
+    showToast((appLang==='en'?'PLM sample requests could not be retrieved: ':'PLM numune talepleri alınamadı: ')+plmSyncErrorMessage(err),{icon:false,duration:12000});
+  }finally{
+    if(span)span.textContent=old;
+    if(button){button.disabled=false;button.removeAttribute('aria-busy');}
+  }
+}
+document.getElementById('cpPlmSampleRequestsBtn')?.addEventListener('click',event=>{document.getElementById('cpPlmSyncMenu')?.setAttribute('hidden','');void cpPlmSampleRequestsRun(event.currentTarget);});
 document.getElementById('kolPricingExcelColsBtn')?.addEventListener('click',openKolPricingExcelColumnsModal);
 loadKolPricingExcelColumns();
 

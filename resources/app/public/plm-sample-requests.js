@@ -1,0 +1,278 @@
+/* Buyer Log — PLM NUMUNE TALEPLERİ (istemci)
+ *
+ * CoreNectum style-overview → Requests sekmesindeki numune talepleri
+ * (Artwork / Fit Sample / Perfect Sign Off …) PLM Sync ile sunucuya alınır
+ * (/api/plm-requests/sync) ve burada iki yerde kullanılır:
+ *
+ *   1) CP KONTROL LİSTESİ — PPS / S-Off / Kritik numune / Artwork soruları
+ *      PLM'de onaylı talep varsa kendiliğinden kapanır (cp-checklist-engine
+ *      ctx.plmEvidence). Kanıt yoksa soru eskisi gibi sorulur.
+ *   2) MODEL NUMUNE PENCERESİ — model adına sağ tık → "PLM numune talepleri":
+ *      PLM'deki tablonun aynısı + kilometre taşı özeti.
+ *
+ * Sınıflandırma kuralları plm-sample-requests-engine.js'tedir (sunucu ile
+ * ortak); bu dosya yalnız veri taşır ve çizer.
+ */
+(function () {
+  'use strict';
+  const Engine = window.BLPlmSampleRequestsEngine;
+  if (!Engine || window.BLPlmSampleRequests) return;
+
+  const STYLE_OVERVIEW_URL = 'https://corenectum.lcwaikiki.com/models-options/style-overview';
+  const state = { models: {}, updatedAt: null, revision: 0, loaded: false, loading: null, milestoneCache: new Map() };
+
+  const isEn = () => typeof appLang !== 'undefined' && appLang === 'en';
+  const L = (tr, en) => (isEn() ? en : tr);
+  const esc = value => (typeof escapeHtml === 'function' ? escapeHtml(String(value == null ? '' : value))
+    : String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])));
+  const toast = (message, options) => { if (typeof showToast === 'function') showToast(message, { icon: false, duration: 9000, ...(options || {}) }); };
+  const errorText = err => (typeof plmSyncErrorMessage === 'function' ? plmSyncErrorMessage(err) : String(err && err.message || err || ''));
+
+  function dateText(iso) {
+    if (!iso) return '—';
+    const date = new Date(iso);
+    return isNaN(date) ? '—' : date.toLocaleDateString(isEn() ? 'en-GB' : 'tr-TR');
+  }
+
+  /* --------------------------------------------------------------- veri */
+  function applyPayload(payload) {
+    state.models = payload && payload.models && typeof payload.models === 'object' ? payload.models : {};
+    state.updatedAt = (payload && payload.updatedAt) || null;
+    state.revision = Number(payload && payload.revision) || 0;
+    state.loaded = true;
+    state.milestoneCache.clear();
+  }
+
+  function load(force) {
+    if (state.loaded && !force) return Promise.resolve(state);
+    if (state.loading) return state.loading;
+    state.loading = fetch('/api/plm-requests', { cache: 'no-store' })
+      .then(res => (res.ok ? res.json() : null))
+      .then(payload => { if (payload) applyPayload(payload); return state; })
+      .catch(() => state)
+      .finally(() => { state.loading = null; });
+    return state.loading;
+  }
+
+  function plmIdOfRow(row, moduleId) {
+    if (!row) return '';
+    const canonical = window.BLCanonicalFields;
+    let value = '';
+    try { value = canonical && canonical.normalizedValue ? canonical.normalizedValue(row, moduleId || 'cp', 'plmId') : ''; } catch (_) { value = ''; }
+    return Engine.numericId(value || row['PLM ID'] || row.plmId || row._plmId);
+  }
+
+  function entryFor(plmId) { return state.models[Engine.numericId(plmId)] || null; }
+
+  function milestonesFor(plmId) {
+    const id = Engine.numericId(plmId);
+    if (!id) return null;
+    if (state.milestoneCache.has(id)) return state.milestoneCache.get(id);
+    const entry = state.models[id];
+    const value = entry ? Engine.summarizeMilestones(entry.requests) : null;
+    state.milestoneCache.set(id, value);
+    return value;
+  }
+
+  /* CP kontrol listesi kanıt sağlayıcısı (cp-checklist-engine ctx.plmEvidence). */
+  function evidenceForAnalysis(analysis, itemId) {
+    const row = analysis && analysis.sourceRow;
+    const plmId = plmIdOfRow(row, 'cp');
+    return plmId ? Engine.evidenceFor(milestonesFor(plmId), itemId) : null;
+  }
+
+  /* CP / Siparişler "PLM Numune" sütunu. Kalem sırası sabit; PLM'de talebi
+     olmayan kalem yazılmaz (yok ≠ eksik). Hiç senkron yapılmamış model boş,
+     senkronu yapılmış ama talebi olmayan model "Talep yok" gösterir. */
+  const COLUMN_SHORT = {
+    pps: { tr: 'PPS', en: 'PPS' },
+    soff: { tr: 'S/Off', en: 'S/Off' },
+    criticalSample: { tr: 'FIT/SIZE', en: 'Fit/Size' }, // TR büyük harf dönüşümü 'i'yi 'İ' yapmasın
+    artwork: { tr: 'Artwork', en: 'Artwork' },
+  };
+  const STATE_SHORT = {
+    tr: { approved: 'Onaylı', open: 'Açık', rejected: 'Red' },
+    en: { approved: 'Approved', open: 'Open', rejected: 'Rejected' },
+  };
+  function columnParts(row, moduleId) {
+    const plmId = plmIdOfRow(row, moduleId);
+    const entry = plmId ? entryFor(plmId) : null;
+    if (!entry) return null;
+    const milestones = milestonesFor(plmId) || {};
+    const lang = isEn() ? 'en' : 'tr';
+    const parts = Engine.MILESTONES.filter(key => milestones[key]).map(key => {
+      const item = milestones[key];
+      return {
+        key, state: item.state,
+        text: `${COLUMN_SHORT[key][lang]}: ${STATE_SHORT[lang][item.state] || item.state}`,
+        title: `${item.subTypeName} · ${item.statusName} · ${item.requestCode}`,
+      };
+    });
+    return { plmId, parts };
+  }
+  function columnText(row, moduleId) {
+    const value = columnParts(row, moduleId);
+    if (!value) return '';
+    return value.parts.length ? value.parts.map(part => part.text).join(' · ') : L('Talep yok', 'No request');
+  }
+
+  /* PLM'den çek. Yetki/bağlantı akışı Collection PLM Sync ile AYNIDIR. */
+  async function sync(plmIds, options) {
+    const ids = [...new Set((Array.isArray(plmIds) ? plmIds : []).map(Engine.numericId).filter(Boolean))];
+    if (!ids.length) return { ok: false, reason: 'no-targets' };
+    const opts = options || {};
+    if (opts.ensureConnection !== false && typeof ensureCoreNectumApiConnection === 'function') {
+      if (!await ensureCoreNectumApiConnection()) return { ok: false, reason: 'api-not-configured' };
+    }
+    const request = typeof plmJsonRequest === 'function' ? plmJsonRequest : async (url, init) => {
+      const res = await fetch(url, init); const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { code: data.code });
+      return data;
+    };
+    const result = await request('/api/plm-requests/sync', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plmIds: ids, scope: opts.scope === 'cp' ? 'cp' : 'koleksiyon' }),
+    });
+    await load(true);
+    try { window.dispatchEvent(new CustomEvent('bl:plm-requests-changed', { detail: { revision: state.revision } })); } catch (_) { /* eski tarayıcı */ }
+    return { ok: true, ...result };
+  }
+
+  function summaryText(result) {
+    if (!result || !result.ok) return '';
+    const parts = [L(`${result.synced}/${result.checked} model`, `${result.synced}/${result.checked} styles`),
+      L(`${result.requestCount} numune talebi`, `${result.requestCount} sample requests`)];
+    if (result.notFound && result.notFound.length) parts.push(L(`${result.notFound.length} PLM'de bulunamadı`, `${result.notFound.length} not found in PLM`));
+    if (result.failed && result.failed.length) parts.push(L(`${result.failed.length} hata`, `${result.failed.length} error(s)`));
+    return parts.join(' · ');
+  }
+
+  /* Collection PLM Sync'in numune adımı. Görsel adımı gibi İKİNCİL bir
+     adımdır: hatası alan güncellemesini geri aldırmaz, yalnız raporlanır. */
+  async function syncStep(plmIds) {
+    try { return await sync(plmIds, { ensureConnection: false }); }
+    catch (err) { return { ok: false, error: err }; }
+  }
+  function syncStepSuffix(result) {
+    if (!result) return '';
+    if (result.error) return L(` · numune talepleri alınamadı: ${errorText(result.error)}`, ` · sample requests failed: ${errorText(result.error)}`);
+    if (!result.ok) return '';
+    return L(` · numune talepleri ${result.requestCount}`, ` · sample requests ${result.requestCount}`);
+  }
+
+  /* --------------------------------------------------------- görünüm */
+  const MILESTONE_LABELS = {
+    pps: { tr: 'PPS', en: 'PPS' },
+    soff: { tr: 'S/Off', en: 'S/Off' },
+    criticalSample: { tr: 'Kritik numune', en: 'Critical sample' },
+    artwork: { tr: 'Artwork', en: 'Artwork' },
+  };
+  function statusBadge(status, text) {
+    const tone = status === 'approved' ? 'ok' : status === 'rejected' ? 'bad' : status === 'cancelled' ? 'off' : 'wait';
+    const label = text || Engine.STATUS_LABELS[isEn() ? 'en' : 'tr'][status] || status;
+    return `<span class="cpaPlm tone-${tone}">${esc(label)}</span>`;
+  }
+  function evidenceBadge(evidence) {
+    if (!evidence) return '';
+    const label = Engine.STATUS_LABELS[isEn() ? 'en' : 'tr'][evidence.state] || evidence.state;
+    return `<span class="cpaPlm tone-${evidence.state === 'approved' ? 'ok' : evidence.state === 'rejected' ? 'bad' : 'wait'}" title="${esc(`${evidence.subTypeName} · ${evidence.statusName} · ${evidence.requestCode}`)}">PLM · ${esc(label)}</span>`;
+  }
+
+  function openForPlm(plmId, title) {
+    const id = Engine.numericId(plmId);
+    const modal = document.createElement('div');
+    modal.className = 'cpaModalOverlay';
+    const close = () => modal.remove();
+    const draw = () => {
+      const entry = entryFor(id);
+      const milestones = milestonesFor(id) || {};
+      const requests = (entry && Array.isArray(entry.requests) ? entry.requests.slice() : [])
+        .sort((a, b) => String(b.createdDate || '').localeCompare(String(a.createdDate || '')));
+      const chips = Engine.MILESTONES.map(key => {
+        const item = milestones[key];
+        const label = MILESTONE_LABELS[key][isEn() ? 'en' : 'tr'];
+        return `<div class="cpaChip is-static"><span class="l">${esc(label)}</span>${item ? statusBadge(item.state) : `<span class="q">${esc(L('PLM\'de talep yok', 'No request in PLM'))}</span>`}</div>`;
+      }).join('');
+      const styleLink = entry && entry.styleId ? `${STYLE_OVERVIEW_URL}?styleId=${encodeURIComponent(entry.styleId)}&m=2` : '';
+      const rows = requests.map(item => `<tr>
+          <td>${styleLink ? `<a href="${esc(styleLink)}" target="_blank" rel="noopener">${esc(item.requestCode)}</a>` : esc(item.requestCode)}</td>
+          <td>${statusBadge(item.status, item.statusName)}</td>
+          <td>${esc(item.typeName)}</td>
+          <td>${esc(item.subTypeName)}${item.iteration > 1 ? ` <small>#${esc(item.iteration)}</small>` : ''}</td>
+          <td>${esc(item.supplierName)}</td>
+          <td>${esc(item.responsibleUserName)}</td>
+          <td>${esc(dateText(item.createdDate))}</td>
+          <td>${esc(dateText(item.modifiedDate || item.approvedDate))}</td>
+        </tr>`).join('');
+      const body = !id
+        ? `<p class="cpaEmpty">${esc(L('Bu satırda PLM ID yok.', 'This row has no PLM ID.'))}</p>`
+        : !entry
+          ? `<p class="cpaEmpty">${esc(L('Bu model için henüz PLM numune senkronu yapılmadı.', 'Sample requests have not been synced from PLM for this style yet.'))}</p>`
+          : rows
+            ? `<div class="cpaScroll"><table class="cpaTable"><thead><tr>
+                <th>${esc(L('Talep Kodu', 'Request Code'))}</th><th>${esc(L('Durum', 'Status'))}</th><th>${esc(L('Tip', 'Type'))}</th>
+                <th>${esc(L('Alt Tip', 'Sub Type'))}</th><th>${esc(L('Tedarikçi', 'Supplier'))}</th><th>${esc(L('Sorumlu', 'Responsible'))}</th>
+                <th>${esc(L('Oluşturma', 'Created'))}</th><th>${esc(L('Son Değişiklik', 'Modified'))}</th></tr></thead><tbody>${rows}</tbody></table></div>`
+            : `<p class="cpaEmpty">${esc(L('PLM\'de bu model için numune talebi yok.', 'There are no sample requests for this style in PLM.'))}</p>`;
+      modal.innerHTML = `<div class="cpaModal"><header>
+          <div><b>${esc(L('PLM Numune Talepleri', 'PLM Sample Requests'))}</b><small>${esc([id && `PLM ${id}`, title].filter(Boolean).join(' · '))}${entry && entry.fetchedAt ? ` · ${esc(L('Son senkron', 'Last sync'))}: ${esc(dateText(entry.fetchedAt))}` : ''}</small></div>
+          <button type="button" data-plmr-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
+        <div class="cpaModalBody">
+          ${id && entry ? `<div class="cpaChips">${chips}</div>` : ''}
+          ${body}
+        </div>
+        <footer>
+          ${id ? `<button type="button" class="cpaBtn" data-plmr-sync>${esc(L('PLM\'den yenile', 'Refresh from PLM'))}</button>` : ''}
+          <button type="button" class="cpaBtn ghost" data-plmr-close>${esc(L('Kapat', 'Close'))}</button>
+        </footer></div>`;
+      modal.querySelectorAll('[data-plmr-close]').forEach(el => { el.onclick = close; });
+      const syncBtn = modal.querySelector('[data-plmr-sync]');
+      if (syncBtn) syncBtn.onclick = async () => {
+        syncBtn.disabled = true;
+        syncBtn.textContent = L('PLM\'den alınıyor…', 'Fetching from PLM…');
+        try {
+          const result = await sync([id]);
+          if (result.ok) toast(summaryText(result));
+        } catch (err) {
+          toast(L('PLM numune talepleri alınamadı: ', 'PLM sample requests could not be retrieved: ') + errorText(err), { duration: 12000 });
+        }
+        if (modal.isConnected) draw();
+      };
+    };
+    modal.addEventListener('click', event => { if (event.target === modal) close(); });
+    modal.addEventListener('keydown', event => { if (event.key === 'Escape') close(); });
+    document.body.appendChild(modal);
+    draw();
+    load().then(() => { if (modal.isConnected) draw(); });
+  }
+
+  function openForRow(row, moduleId) {
+    const title = String((row && (row['Model Name'] || row.modelName || row.model || row.modelKod)) || '').trim();
+    openForPlm(plmIdOfRow(row, moduleId), title);
+  }
+
+  /* PLM İşlemleri paneli → "Başarısızları yeniden dene": aynı senkron akışı. */
+  window.BLPlmOpsRetry = window.BLPlmOpsRetry || {};
+  window.BLPlmOpsRetry['plm-requests'] = async ({ plmIds, scope }) => {
+    try {
+      const result = await sync(plmIds, { scope });
+      if (result.ok) toast(summaryText(result));
+    } catch (err) {
+      toast(L('PLM numune talepleri alınamadı: ', 'PLM sample requests could not be retrieved: ') + errorText(err), { duration: 12000 });
+    }
+  };
+
+  /* Saklı veri ilk yüklemede CP/Siparişler tablosuna ve kontrol listesine
+     haber verilir (sütun ve Priority aynı olayla yeniden çizilir). */
+  load().then(() => {
+    if (!Object.keys(state.models).length) return;
+    try { window.dispatchEvent(new CustomEvent('bl:plm-requests-changed', { detail: { revision: state.revision } })); } catch (_) { /* eski tarayıcı */ }
+  });
+
+  window.BLPlmSampleRequests = {
+    load, sync, syncStep, syncStepSuffix, summaryText,
+    entryFor, milestonesFor, evidenceForAnalysis, plmIdOfRow,
+    openForPlm, openForRow, evidenceBadge, columnParts, columnText,
+    get loaded() { return state.loaded; },
+    get updatedAt() { return state.updatedAt; },
+  };
+})();
