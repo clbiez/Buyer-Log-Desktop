@@ -52,14 +52,16 @@ test('Resmi tatil tercihi ve kullanıcı seçilebilir aylık periyot doğru norm
   assert.equal(launchpad.addMonthsISO('2026-10-01', 3), '2027-01-01');
   assert.equal(launchpad.addMonthsISO('2026-01-31', 1), '2026-02-28');
   const rows = [
-    { date: '2026-10-01', name: 'National Day', global: true },
-    { date: '2026-10-29', name: 'Republic Day', global: true },
-    { date: '2027-01-01', name: 'New Year', global: true },
-    { date: '2027-02-01', name: 'Outside three months', global: true },
-    { date: '2026-10-05', name: 'Regional', global: false },
+    { date: '2026-10-01', name: 'National Day', nationalHoliday: true, holidayTypes: ['Public'] },
+    { date: '2026-10-29', name: 'Republic Day', nationalHoliday: true, holidayTypes: ['Public'] },
+    { date: '2027-01-01', name: 'New Year', nationalHoliday: true, holidayTypes: ['Public'] },
+    { date: '2027-02-01', name: 'Outside three months', nationalHoliday: true, holidayTypes: ['Public'] },
+    { date: '2026-10-05', name: 'Regional', nationalHoliday: false, subdivisionCodes: ['US-NY'], holidayTypes: ['Public'] },
+    { date: '2026-10-06', name: 'Observance', nationalHoliday: true, holidayTypes: ['Observance'] },
   ];
   assert.deepEqual(launchpad.upcomingHolidays(rows, '2026-10-01', 3).map(item => item.name), ['National Day', 'Republic Day', 'New Year']);
   assert.deepEqual(launchpad.upcomingHolidays(rows, '2026-10-01', 1).map(item => item.name), ['National Day', 'Republic Day']);
+  assert.deepEqual(launchpad.upcomingHolidays(rows, '2026-10-01', 1, 50, 'US-NY').map(item => item.name), ['National Day', 'Regional', 'Republic Day']);
   assert.equal(launchpad.isoDayDiff('2026-10-01', '2026-10-29'), 28);
 });
 
@@ -89,7 +91,16 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /data-clock-holiday-period/);
   assert.match(SOURCE, /buyerlog\.overview\.worldClocks\.holidayMonths\.v1/);
   assert.match(SOURCE, /data-clock-holidays/);
-  assert.match(SOURCE, /date\.nager\.at\/api\/v3\/PublicHolidays/);
+  assert.match(SOURCE, /nagerholidays\.com\/api\/v4\/Holidays/);
+  assert.match(SOURCE, /nagerholidays\.com\/api\/v3\/PublicHolidays/);
+  assert.equal(launchpad.HOLIDAY_API, 'https://nagerholidays.com/api/v4/Holidays');
+  const india2026=launchpad.officialHolidayOverride(2026,'IN');
+  const india2027=launchpad.officialHolidayOverride(2027,'IN');
+  assert.equal(india2026.length,17,'India 2026 DoPT gazetted list must not collapse to zero');
+  assert.equal(india2027.length,17,'India 2027 DoPT gazetted list must be available for 12-month look-ahead');
+  assert.ok(india2026.some(item=>item.date==='2026-11-08'&&/Diwali/.test(item.name)));
+  assert.ok(india2027.some(item=>item.date==='2027-10-29'&&/Diwali/.test(item.name)));
+  assert.equal(launchpad.normalizeHolidayRows([{date:'2026-01-26',name:'Republic Day',nationalHoliday:true,holidayTypes:['Public']}])[0].name, 'Republic Day');
   assert.match(SOURCE, /filterClockOptions/);
   assert.match(SOURCE, /Analog \+ dijital/);
   assert.match(SOURCE, /Intl\.supportedValuesOf\('timeZone'\)/);
@@ -105,6 +116,8 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.doesNotMatch(SOURCE, /rankTabs/);
   assert.match(CSS, /\.ovClockGrid/);
   assert.match(CSS, /repeat\(auto-fit,minmax\(128px,1fr\)\)/);
+  assert.match(CSS, /\.ovLaunchBody\{grid-template-columns:minmax\(120px,150px\) minmax\(0,1fr\);gap:18px 18px;\}/);
+  assert.match(SOURCE, /ovClockHolidayName\" title=/);
   assert.match(CSS, /\.ovClockTime\{[^}]*white-space:nowrap/);
 });
 
