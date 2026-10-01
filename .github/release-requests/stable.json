@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.185",
-  "source": "test-v7.0.185",
-  "requestedAt": "2026-10-01T07:16:09Z",
-  "reason": "one-time-install-repair-integrity-v7.0.185"
+  "version": "7.0.188",
+  "source": "test-v7.0.188",
+  "requestedAt": "2026-10-01T08:54:10Z",
+  "reason": "cp-style-global-flow-detail-drawers-v7.0.188"
 }
