@@ -1069,7 +1069,7 @@
     const noteLabel=notePreview||qLang('Quotation notu ekle…','Add quotation note…');
     const reminderItems=qReminderItems(req),reminderManufacturers=qReminderRecipients(req,reminderItems).length;
     const reminderDisabled=!requestCanEdit||req.status==='closed'||reminderManufacturers===0;
-    const reopenDraftOwner=req.source==='collection'&&req.origin!=='manual-collection'&&req.ownerId===qCurrentUserId();
+    const reopenDraftOwner=req.origin!=='manual-collection'&&req.ownerId===qCurrentUserId();
     const reopenDraftCount=reopenDraftOwner?Number(window.BLPrepareEmail?.pricingDraftCount?.(req.id)||0):0;
     const reopenDraftAction=reopenDraftOwner?`<button type="button" class="tbtn quotationReopenDraftBtn" data-q-reopen-draft ${reopenDraftCount?'':'disabled'} title="${qEsc(reopenDraftCount?qLang('Bu fiyat talebinin Outlook taslağını yeniden aç','Re-open the Outlook draft for this pricing request'):qLang('Yeniden açılabilir taslak yok veya retry süresi doldu','No reopenable draft is available or the retry window has expired'))}"><svg class="ic"><use href="#i-mail"/></svg>${qEsc(qLang('Taslak E-Postayı Yeniden Aç','Re-open Draft E-Mail'))}${reopenDraftCount>1?` <span class="quotationActionCount">${reopenDraftCount}</span>`:''}</button>`:'';
     const plmSyncAction=req.source==='collection'&&window.BLDetailImages?.modelImagesButtonHtml?window.BLDetailImages.modelImagesButtonHtml('quotationDetailPlmSync'):'';
