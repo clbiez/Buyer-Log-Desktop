@@ -34167,6 +34167,25 @@ function buyerLogUpdateDate(value){
   if(!value)return '—';
   try{return new Intl.DateTimeFormat(appLang==='en'?'en-GB':'tr-TR',{dateStyle:'short',timeStyle:'short'}).format(new Date(value));}catch(_){return String(value);}
 }
+/* 7.0.184 tek seferlik kurulum onarımının sonucu: kullanıcı bu bilgisayarda
+   neyin düzeltildiğini ve çekirdek dosyalarının doğrulanıp doğrulanmadığını görür. */
+function buyerLogRepairLine(repair){
+  if(!repair)return '';
+  const en=appLang==='en',parts=[];
+  if(repair.cacheCleared)parts.push(en?'old screen cache cleared':'eski ekran önbelleği temizlendi');
+  if(repair.stateFixes)parts.push(en?`${repair.stateFixes} update record(s) fixed`:`${repair.stateFixes} güncelleme kaydı düzeltildi`);
+  let cls='verHistUpdateNotes';
+  if(repair.integrity==='ok')parts.push(en?'all app files verified':'tüm uygulama dosyaları doğrulandı');
+  else if(repair.integrity==='pending')parts.push(en?'verifying app files…':'uygulama dosyaları doğrulanıyor…');
+  else if(repair.integrity==='damaged'){
+    cls='verHistUpdateError';
+    parts.push(repair.restaged
+      ?(en?`${repair.damagedFiles} damaged file(s) found; a clean copy is ready and will be applied after restart`:`${repair.damagedFiles} bozuk dosya bulundu; temiz kopya hazır, yeniden başlatınca uygulanacak`)
+      :(en?`${repair.damagedFiles} damaged file(s) found; reinstall Buyer Log with the setup package`:`${repair.damagedFiles} bozuk dosya bulundu; Buyer Log'u kurulum paketiyle yeniden kurun`));
+  }
+  if(!parts.length)return '';
+  return `<div class="${cls}" data-update-repair><b>${escapeHtml(en?'Install repair':'Kurulum onarımı')}:</b> ${escapeHtml(parts.join(' · '))}</div>`;
+}
 async function refreshBuyerLogUpdatePanel(statusArg){
   const host=document.getElementById('verHistUpdatePanel');if(!host)return;
   const bridge=buyerLogUpdateBridge();
@@ -34188,6 +34207,7 @@ async function refreshBuyerLogUpdatePanel(statusArg){
     </div>
     ${status.releaseNotes?`<div class="verHistUpdateNotes">${escapeHtml(status.releaseNotes)}</div>`:''}
     ${lastError?`<div class="verHistUpdateError">${escapeHtml(lastError)}</div>`:''}
+    ${buyerLogRepairLine(status.repair)}
     <div class="verHistUpdateActions">
       <button type="button" class="tbtn" data-update-check>${escapeHtml(en?'Check for Updates':'Güncellemeleri Kontrol Et')}</button>
       ${status.pendingReady?`<button type="button" class="tbtn primary" data-update-restart>${escapeHtml(en?'Restart and Update Now':'Şimdi Yeniden Başlat')}</button>`:''}

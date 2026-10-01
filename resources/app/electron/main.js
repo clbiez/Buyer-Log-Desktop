@@ -51,6 +51,7 @@ const { BackendProcess, probeOrigin, ensureConfig, ensureDataTree } = require('.
 const { runFirstRunMigration, healPortableSettings, readMigrationState } = require('./first-run-migration');
 const { inspectPortOwner, closePortOwner } = require('./port-owner');
 const { BuyerLogUpdater } = require('./update/updater');
+const { runInstallRepair, readRepairReport } = require('./install-repair');
 const { createOabAuthLifecycle } = require('./oab-auth-lifecycle');
 const { createWorkspaceManager } = require('./workspace-manager');
 const { syncShortcutIcons, ensureStableIcon, refreshShellIcons } = require('./shortcut-icon');
@@ -177,6 +178,34 @@ function appVersion() {
   return String(pkg.version || 'bilinmiyor');
 }
 
+/* Yeni sürüm deneme (trial) açılışında launcher'a sağlık onayı verilir. İlk sekme
+ * yüklendiği an yerel DB veya backend henüz hazır değilse launcher onayı reddeder;
+ * tek atışlık bildirimde bu durum 60 sn sonra sessiz geri almaya dönüşüyor ve
+ * kullanıcı yeni sürümün özellikleri olmadan eski sürümde kalıyordu. Onay, launcher
+ * zaman aşımının içinde kalacak şekilde sınırlı sayıda yeniden denenir. */
+const HEALTH_CONFIRM_RETRY_MS = 2000;
+const HEALTH_CONFIRM_MAX_ATTEMPTS = 20;
+function confirmLauncherHealth(attempt = 0) {
+  if (!process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN || typeof global.__buyerLogLauncherHealthReady !== 'function') return;
+  let ok = false;
+  try {
+    ok = global.__buyerLogLauncherHealthReady({
+      version: appVersion(),
+      backendReady: Boolean(backend && backend.running),
+      localDbPath: paths && paths.localDbPath || '',
+      localDbReady: Boolean(paths && paths.localDbPath && fs.existsSync(paths.localDbPath)),
+      rendererReady: true,
+    }) === true;
+  } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
+  if (ok) { log('Updater health onaylandı: ' + appVersion()); return; }
+  if (attempt < HEALTH_CONFIRM_MAX_ATTEMPTS) {
+    const timer = setTimeout(() => confirmLauncherHealth(attempt + 1), HEALTH_CONFIRM_RETRY_MS);
+    if (timer && timer.unref) timer.unref();
+    return;
+  }
+  log('Updater health onaylanamadı (backend/DB hazır değil): ' + appVersion());
+}
+
 function updaterBaseConfig() {
   const config = paths ? readJson(paths.configPath, {}) : {};
   return config && typeof config.updates === 'object' && config.updates ? config.updates : {};
@@ -215,12 +244,30 @@ function emitUpdateStatus(payload) {
   if(mainWindow&&!mainWindow.isDestroyed())try{mainWindow.webContents.send('buyerlog:update-status-changed',payload);}catch(_){}
 }
 
+function repairSummary() {
+  try {
+    const report = paths ? readRepairReport(paths.localDataRoot) : null;
+    if (!report || report.version !== appVersion()) return null;
+    const integrity = report.steps && report.steps.integrity || null;
+    const state = report.steps && report.steps.updaterState || null;
+    return {
+      version: report.version,
+      finishedAt: report.finishedAt || null,
+      cacheCleared: Boolean(report.steps && report.steps.rendererCache && report.steps.rendererCache.ok),
+      stateFixes: state && Array.isArray(state.actions) ? state.actions.length : 0,
+      integrity: integrity ? integrity.status : 'pending',
+      damagedFiles: integrity ? (integrity.missingCount || 0) + (integrity.changedCount || 0) : 0,
+      restaged: Boolean(integrity && integrity.restage && integrity.restage.restaged),
+    };
+  } catch (_) { return null; }
+}
+
 async function updateStatusFor(userId='') {
   if(!updater)return {enabled:false,state:'IDLE',currentVersion:appVersion(),channel:'stable',moderator:false};
   const moderator=await verifyUpdateModerator(userId);
   const configured=updater.config(updaterBaseConfig());
   const channel=(configured.channel==='test'&&moderator)?'test':'stable';
-  return {...updater.status(updaterBaseConfig(),channel),moderator,configuredChannel:configured.channel};
+  return {...updater.status(updaterBaseConfig(),channel),moderator,configuredChannel:configured.channel,repair:repairSummary()};
 }
 
 async function runUpdateCheck(options={}) {
@@ -1316,17 +1363,7 @@ function createMainWindow(origin) {
     applyNavigationPolicy,
     log,
     onFirstRendererReady: () => {
-      try {
-        if (typeof global.__buyerLogLauncherHealthReady === 'function') {
-          global.__buyerLogLauncherHealthReady({
-            version: appVersion(),
-            backendReady: Boolean(backend && backend.running),
-            localDbPath: paths && paths.localDbPath || '',
-            localDbReady: Boolean(paths && paths.localDbPath && fs.existsSync(paths.localDbPath)),
-            rendererReady: true,
-          });
-        }
-      } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
+      confirmLauncherHealth();
     },
   });
   log('Çoklu sekme çalışma alanı yükleniyor: ' + origin);
@@ -2011,6 +2048,26 @@ function bootstrap() {
       ensureConfig(paths, APP_CORE_ROOT);
     } catch (error) {
       log('config.json hazırlanamadı: ' + error.message);
+    }
+
+    // Tek seferlik kurulum onarımı: yeni sürümün ilk açılışında eski arayüz
+    // önbelleği ve güncellemeyi engelleyen kalıntılar pencere açılmadan temizlenir.
+    try {
+      const repair = await runInstallRepair({
+        localDataRoot: paths.localDataRoot,
+        appCoreRoot: APP_CORE_ROOT,
+        currentVersion: appVersion(),
+        updater,
+        session,
+        packaged: app.isPackaged,
+        log,
+      });
+      if (!repair.skipped) {
+        log('Kurulum onarımı çalıştı: ' + appVersion());
+        repair.integrity.then(() => updateStatusFor('').then(emitUpdateStatus)).catch(() => {});
+      }
+    } catch (error) {
+      log('Kurulum onarımı atlandı: ' + error.message);
     }
 
     // Güncelleme kontrolü backend/login akışından bağımsızdır. Böylece kullanıcı
