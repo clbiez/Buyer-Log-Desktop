@@ -1041,11 +1041,23 @@ function syncUnifiedPrioritiesForTable(tableKey){
   _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision};
   return true;
 }
-function showUnifiedPriorityLoading(tableKey){
+function renderCorePageLoadingState(tableKey,message){
   const empty=document.getElementById(tableKey==='cp'?'cpEmpty':'ordersEmpty');
   const content=document.getElementById(tableKey==='cp'?'cpContent':'ordersContent');
-  if(empty){empty.textContent=appLang==='en'?'Preparing unified priorities…':'Ortak öncelikler hazırlanıyor…';empty.style.display='flex';}
-  if(content)content.style.display='none';
+  if(!empty||!content)return;
+  const title=message||(tableKey==='cp'
+    ?(appLang==='en'?'Loading CP on demand…':'CP gerektiğinde yükleniyor…')
+    :(appLang==='en'?'Loading Orders on demand…':'Siparişler gerektiğinde yükleniyor…'));
+  if(window.BLUI&&typeof window.BLUI.renderState==='function'){
+    window.BLUI.renderState(empty,{kind:'loading',title});
+  }else{
+    empty.innerHTML='<div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span><div class="uiStateBody"><b>'+escapeHtml(title)+'</b></div></div>';
+    empty.setAttribute('aria-busy','true');
+  }
+  empty.style.display='flex';content.style.display='none';
+}
+function showUnifiedPriorityLoading(tableKey){
+  renderCorePageLoadingState(tableKey,appLang==='en'?'Preparing unified priorities…':'Ortak öncelikler hazırlanıyor…');
 }
 function ensureUnifiedPrioritiesForTable(tableKey){
   if(syncUnifiedPrioritiesForTable(tableKey))return true;
@@ -1928,6 +1940,7 @@ async function ensureOverviewLoaded(){
 async function ensureCpLoaded(options={}){
   if(state.cp&&!options.force){overviewCpLoadState='ready';overviewCpLoadError='';return true;}
   if(cpLoadPromise)return cpLoadPromise;
+  if(currentActiveTab()==='cp')renderCorePageLoadingState('cp');
   if(options.reason==='overview'){overviewCpLoadState='loading';overviewCpLoadError='';}
   cpLoadPromise=(async()=>{
     try{
@@ -1978,8 +1991,10 @@ async function ensureCollectionCatalogLoaded(options={}){
 function setOrdersLoadingState(loading,message){
   const empty=document.getElementById('ordersEmpty'),content=document.getElementById('ordersContent');
   if(!empty||!content)return;
-  if(loading){
-    empty.textContent=message||(appLang==='en'?'Loading Orders on demand…':'Siparişler gerektiğinde yükleniyor…');
+  if(loading){renderCorePageLoadingState('orders',message);return;}
+  if(message){
+    if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(empty,{kind:'error',title:message});
+    else{empty.textContent=message;empty.removeAttribute('aria-busy');}
     empty.style.display='flex';content.style.display='none';
   }
 }
@@ -2007,7 +2022,7 @@ async function ensureOrdersLoaded(options={}){
       return true;
     }catch(err){
       const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(err&&err.message||err);
-      setOrdersLoadingState(true,message);showToast(message);return false;
+      setOrdersLoadingState(false,message);showToast(message);return false;
     }finally{ordersLoadPromise=null;}
   })();
   return ordersLoadPromise;
