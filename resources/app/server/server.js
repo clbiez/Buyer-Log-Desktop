@@ -26,6 +26,9 @@ const {
   getModelImageSettings, saveModelImageSettings,
   getCollectionImage, deleteCollectionImage, deleteAllCollectionImages, purgeExpiredModelFiles, resolveStoredFile, atomicWriteJson, atomicWriteBuffer,
 } = require('./user-data');
+const holidayService = require('./lib/holiday-service').createHolidayService({
+  cacheFile: path.join(LOCAL_DATA_ROOT, 'holidays', 'world-clock.json'),
+});
 const { createLocalDb, offloadLegacyAssets, sweepWriteDebris } = require('./lib/local-db');
 const { createSyncSettings } = require('./lib/sync-settings');
 const { createSharedHub } = require('./lib/shared-hub');
@@ -11651,6 +11654,12 @@ app.post('/api/email-drafts/pricing', (req, res) => {
 // Eski sürüm bağlantılarının kalıcı taslak deposuna dönüşmesini engelle.
 app.get('/api/email-drafts/:filename', (_req, res) => {
   res.status(410).json({ error: 'Taslaklar kalıcı olarak saklanmaz. Yeni bir taslak oluşturun.' });
+});
+
+// ---- Dünya saatleri resmi tatil sağlayıcıları ----
+require('./routes/holiday-routes')(app, {
+  holidayService,
+  userAccess,
 });
 
 // ---- Ön Maliyet, Aylık Döviz Kurları ve Nakliye Kıyaslaması route'ları → server/routes/costing-fx-shipping-routes.js ----

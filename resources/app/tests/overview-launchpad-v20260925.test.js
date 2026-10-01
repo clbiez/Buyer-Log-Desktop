@@ -93,7 +93,9 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /data-clock-holidays/);
   assert.match(SOURCE, /nagerholidays\.com\/api\/v4\/Holidays/);
   assert.match(SOURCE, /nagerholidays\.com\/api\/v3\/PublicHolidays/);
+  assert.match(SOURCE, /\/api\/world-clock-holidays/);
   assert.equal(launchpad.HOLIDAY_API, 'https://nagerholidays.com/api/v4/Holidays');
+  assert.equal(launchpad.HOLIDAY_LOCAL_API, '/api/world-clock-holidays');
   const india2026=launchpad.officialHolidayOverride(2026,'IN');
   const india2027=launchpad.officialHolidayOverride(2027,'IN');
   assert.equal(india2026.length,17,'India 2026 DoPT gazetted list must not collapse to zero');
