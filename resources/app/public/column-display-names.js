@@ -182,6 +182,7 @@
     'Del. Type':ias({tr:'IAS parsiyelinin teslim tipi; yoksa Buyer Log kuralı',en:'Delivery type of the IAS partial; otherwise the Buyer Log rule'}),
     'Notes':buyerlog({tr:'Buyer Log not alanı',en:'Buyer Log note field'}),
     'Ek Not':buyerlog({tr:'Buyer Log ek not alanı',en:'Buyer Log additional note field'}),
+    'PLM Numune':buyerlog({tr:'PLM numune talepleri (PLM ID ile eşlenir)',en:'PLM sample requests (matched by PLM ID)'}),
   };
 
   // Koleksiyon verisi Buyer Log'un kendi Koleksiyon çalışma alanında tutulur.
