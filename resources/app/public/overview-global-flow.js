@@ -1635,11 +1635,29 @@ function detailColumns(records){
   (records||[]).slice(0,40).forEach(rec=>Object.keys(rec&&rec.raw||{}).forEach(rawKey=>{const label=clean(rawKey),keyNorm=norm(label);if(!label||label.startsWith('_')||labels.has(keyNorm)||seen.has(keyNorm))return;seen.add(keyNorm);extras.push({key:'raw:'+rawKey,label,value:r=>r&&r.raw?r.raw[rawKey]:''});}));
   return standard.concat(extras);
 }
+function cpDetailRow(rec){
+  const raw=rec&&rec.raw&&typeof rec.raw==='object'?rec.raw:{},row={...raw};
+  const put=(key,value,{force=false}={})=>{
+    if(value==null||clean(value)==='')return;
+    if(force||row[key]==null||clean(row[key])==='')row[key]=value;
+  };
+  put('Season',rec&&rec.season);put('Country',rec&&rec.country);put('Buyer Grup (TR)',rec&&rec.buyingGroup);
+  put('Buyer',rec&&rec.buyer);put('Manufacturer',rec&&rec.manufacturer);put('License',rec&&rec.license);
+  put('Category',rec&&rec.category);put('PLM ID',rec&&rec.plmId);put('Model Name',rec&&rec.model);
+  put('C.Code',rec&&rec.colourCode);put('Colour',rec&&rec.colour);put('Order Code',rec&&rec.orderCode);
+  put('Ex-factory',rec&&rec.exFactory);
+  // Parsiyel satırında lojistik alanlar o parsiyelin gerçek bilgisini taşımalı.
+  put('STATUS',rec&&rec.status,{force:true});put('HANDOVER Tarihi',rec&&rec.handover,{force:true});
+  put('Ant. Arrival',rec&&rec.eta,{force:true});put('Del. Type',rec&&(rec.modeRaw||rec.mode),{force:true});
+  if(rec&&Number.isFinite(Number(rec.qty)))row['Shipment Quantity']=Number(rec.qty);
+  if((row['Order Quantity']==null||row['Order Quantity']==='')&&rec&&Number.isFinite(Number(rec.qty)))row['Order Quantity']=Number(rec.qty);
+  return row;
+}
 function openRecordsDrawer(title,records,subtitle){
   const rows=(records||[]).filter(Boolean);if(!rows.length)return;
   if(window.BLDetailDrawer&&typeof window.BLDetailDrawer.open==='function'){
     const actions=rows.length===1?[{label:L('Kaynakta Aç','Open source'),run:()=>jumpToSource(rows[0])}]:[];
-    window.BLDetailDrawer.open({storageKey:'overview.globalFlow.detail',source:'global-flow',title,subtitle:subtitle||'',rows,columns:detailColumns(rows),images:true,fileName:'Global_Flow_'+title,actions,note:L('Araç konumu canlı GPS/AIS değildir; parsiyel Handover tarihi ve ülke/yükleme yol süresi kuralından hesaplanan operasyonel ilerlemedir. Aynı Gemi Ad taşıyan parsiyeller tek araçta gösterilir.','Vehicle position is not live GPS/AIS; it is operational progress calculated from the partial Handover date and the country/transport lead-time rule. Partials with the same vessel name are shown as one vehicle.')});return;
+    window.BLDetailDrawer.open({storageKey:'overview.globalFlow.detail',source:'global-flow',title,subtitle:subtitle||'',rows,columns:detailColumns(rows),images:true,referenceTable:'cp',referenceRow:cpDetailRow,fileName:'Global_Flow_'+title,actions,note:L('Araç konumu canlı GPS/AIS değildir; parsiyel Handover tarihi ve ülke/yükleme yol süresi kuralından hesaplanan operasyonel ilerlemedir. Aynı Gemi Ad taşıyan parsiyeller tek araçta gösterilir.','Vehicle position is not live GPS/AIS; it is operational progress calculated from the partial Handover date and the country/transport lead-time rule. Partials with the same vessel name are shown as one vehicle.')});return;
   }
   const drawer=$('globalFlowDrawer');if(!drawer)return;drawer.innerHTML='<div class="gfDrawerHead"><div><b>'+esc(title)+'</b><span>'+esc(subtitle||'')+'</span></div><button type="button" data-gf-drawer-close>×</button></div><div class="gfDrawerBody"><div class="gfDrawerTableWrap"><table class="gfDrawerTable"><thead><tr><th>'+esc(L('Sipariş','Order'))+'</th><th>'+esc(L('Parsiyel','Partial'))+'</th><th>'+esc(L('Model','Model'))+'</th><th>'+esc(L('Statü','Status'))+'</th><th>'+esc(L('Adet','Qty'))+'</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.orderCode||'—')+'</td><td>'+esc(partialLabel(r))+'</td><td>'+esc(r.model||'—')+'</td><td>'+esc(r.status||'—')+'</td><td class="num">'+nf().format(r.qty||0)+'</td></tr>').join('')+'</tbody></table></div></div>';
   drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('[data-gf-drawer-close]')?.addEventListener('click',closeDrawer);
