@@ -17,6 +17,31 @@
   const DEFAULT_HOLIDAY_MONTHS=3;
   const HOLIDAY_MONTH_OPTIONS=Object.freeze([1,3,6,12]);
   const HOLIDAY_MAX_ITEMS=50;
+  // Bazı küresel tatil API'leri Hindistan'ı hiç sunmuyor. Buyer Log'un Hindistan
+  // saat kartı için DoPT'nin Central Government Gazetted Holiday takvimi kanonik
+  // fallback'tir. 2026/2027 listeleri yayımlanmış resmi yıllık takvimlerle aynıdır.
+  // Yeni yıllar yayımlandıkça bu küçük, denetlenebilir tablo genişletilebilir;
+  // diğer ülkeler güncel Nager Holidays API'sinden okunmaya devam eder.
+  const OFFICIAL_HOLIDAY_OVERRIDES=Object.freeze({
+    'IN|2026':Object.freeze([
+      ['2026-01-26','Republic Day'],['2026-03-04','Holi'],['2026-03-21','Id-ul-Fitr'],
+      ['2026-03-26','Ram Navami'],['2026-03-31','Mahavir Jayanti'],['2026-04-03','Good Friday'],
+      ['2026-05-01','Buddha Purnima'],['2026-05-27','Id-ul-Zuha (Bakrid)'],['2026-06-26','Muharram'],
+      ['2026-08-15','Independence Day'],['2026-08-26','Milad-un-Nabi / Id-e-Milad'],
+      ['2026-09-04','Janmashtami (Vaishnava)'],['2026-10-02',"Mahatma Gandhi's Birthday"],
+      ['2026-10-20','Dussehra'],['2026-11-08','Diwali (Deepavali)'],
+      ['2026-11-24',"Guru Nanak's Birthday"],['2026-12-25','Christmas Day'],
+    ]),
+    'IN|2027':Object.freeze([
+      ['2027-01-26','Republic Day'],['2027-03-10','Id-ul-Fitr'],['2027-03-23','Holi'],
+      ['2027-03-26','Good Friday'],['2027-04-15','Ram Navami'],['2027-04-19','Mahavir Jayanti'],
+      ['2027-05-17','Id-ul-Zuha (Bakrid)'],['2027-05-20','Buddha Purnima'],['2027-06-16','Muharram'],
+      ['2027-08-15','Independence Day'],['2027-08-15','Milad-un-Nabi / Id-e-Milad'],
+      ['2027-08-25','Janmashtami (Vaishnava)'],['2027-10-02',"Mahatma Gandhi's Birthday"],
+      ['2027-10-09','Dussehra (Vijaya Dashami)'],['2027-10-29','Diwali (Deepavali)'],
+      ['2027-11-14',"Guru Nanak's Birthday"],['2027-12-25','Christmas Day'],
+    ]),
+  });
   const DEFAULT_CLOCKS=Object.freeze(['TR','BD','IN','CN','EG']);
   const DEFAULT_DISPLAY='digital';
   const CLOCKS=Object.freeze([
@@ -163,7 +188,7 @@
     return {hour:(hour+minute/60+second/3600)*30,minute:(minute+second/60)*6,second:second*6};
   }
 
-  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
+  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,OFFICIAL_HOLIDAY_OVERRIDES,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,officialHolidayOverride,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
 
   const lang=()=>(document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -190,6 +215,10 @@
     select.querySelectorAll('optgroup').forEach(group=>{group.hidden=![...group.querySelectorAll('option')].some(option=>!option.hidden);});
     const current=select.selectedOptions&&select.selectedOptions[0];if(first&&(!current||current.hidden||current.disabled))select.value=first.value;
   }
+  function officialHolidayOverride(year,countryCode){
+    const rows=OFFICIAL_HOLIDAY_OVERRIDES[String(countryCode||'').toUpperCase()+'|'+String(year)]||null;
+    return rows?rows.map(([date,name])=>({date,name,localName:name,nationalHoliday:true,global:true,subdivisionCodes:null,holidayTypes:['Public'],source:'official-override'})):null;
+  }
   const holidayCache=new Map();
   function fetchHolidayJson(url){
     return fetch(url,{headers:{Accept:'application/json'}}).then(response=>{
@@ -201,6 +230,7 @@
   function fetchHolidayYear(year,countryCode){
     const code=String(countryCode||'').toUpperCase(),key=code+'|'+year;
     if(!code)return Promise.resolve([]);
+    const official=officialHolidayOverride(year,code);if(official)return Promise.resolve(official);
     if(holidayCache.has(key))return holidayCache.get(key);
     const currentUrl=HOLIDAY_API+'/'+encodeURIComponent(code)+'/'+encodeURIComponent(year);
     const fallbackUrl=HOLIDAY_API_FALLBACK+'/'+encodeURIComponent(year)+'/'+encodeURIComponent(code);
@@ -338,5 +368,5 @@
     window.addEventListener('beforeunload',()=>{if(timer)clearInterval(timer);},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-  return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch,render};
+  return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,OFFICIAL_HOLIDAY_OVERRIDES,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch,render};
 });
