@@ -21689,6 +21689,7 @@ async function importEndeksmatikWorkbook(file){
     // testinde hangi hücrenin tutmadığı buradan okunur.
     const lines=err&&err.details&&(Array.isArray(err.details.failures)?err.details.failures:Array.isArray(err.details.checks)?err.details.checks.filter(c=>!c.ok).map(c=>`${c.label} (${c.cell}): Excel ${c.excel} ≠ Buyer Log ${c.buyerLog}`):null);
     if(lines&&lines.length)console.warn('[Endeksmatik] yükleme reddedildi',err.code,lines);
+    if(err&&err.details&&err.details.diagnostics)console.warn('[Endeksmatik] anahtar tanısı',err.details.diagnostics);
     showToast((appLang==='en'?'Endeksmatik workbook could not be loaded: ':'Endeksmatik Excel yüklenemedi: ')+(err?.message||String(err)));
   }
   finally{if(input)input.value='';if(label){label.style.pointerEvents='';label.removeAttribute('aria-busy');}if(span)span.textContent=old;}

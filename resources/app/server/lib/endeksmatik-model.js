@@ -115,8 +115,12 @@ function sheetRows(ws) { return getXLSX().utils.sheet_to_json(ws, { header: 1, r
 function locateDimHeader(rows, sheetName) {
   for (let r = 0; r < Math.min(rows.length, 40); r++) {
     const row = rows[r] || [], cols = DIM_HEADERS.map(() => -1);
-    row.forEach((value, col) => { const n = norm(value); const i = DIM_HEADERS.findIndex(h => n === h || n.startsWith(`${h} `)); if (i >= 0 && cols[i] < 0) cols[i] = col; });
-    if (cols.every(c => c >= 0)) return { row: r, cols };
+    /* Önce TAM başlık eşleşmesi aranır; yoksa önek ("Klasman Kodu" gibi) kabul
+       edilir. Aksi halde "Klasman Kodu" sütunu "Klasman"dan önce geliyorsa yanlış
+       sütun okunur ve özet ile pivot anahtarları hiç eşleşmezdi (v7.0.184). */
+    row.forEach((value, col) => { const n = norm(value); const i = DIM_HEADERS.indexOf(n); if (i >= 0 && cols[i] < 0) cols[i] = col; });
+    row.forEach((value, col) => { const n = norm(value); const i = DIM_HEADERS.findIndex(h => n.startsWith(`${h} `)); if (i >= 0 && cols[i] < 0) cols[i] = col; });
+    if (cols.every(c => c >= 0)) return { row: r, cols, labels: cols.map(c => text(row[c])) };
   }
   throw modelError(`${sheetName}: MMYG / MAG / Tedarik Grup / Buyer Grup / Klasman başlık satırı bulunamadı. Excel modeli değişmiş olabilir.`, 'MODEL_HEADER_MISSING', { sheet: sheetName });
 }
@@ -166,7 +170,7 @@ function parsePivot(ws, sheetName) {
     if (kind === 'grand') grand = series; if (kind === 'detail') detailCount++;
   });
   if (!detailCount) throw modelError(`${sheetName}: klasman satırı bulunamadı.`, 'MODEL_EMPTY_PIVOT', { sheet: sheetName });
-  return { months: monthCols.map(x => x.month), data, grand };
+  return { months: monthCols.map(x => x.month), data, grand, header: { sheet: sheetName, row: header.row + 1, labels: header.labels } };
 }
 const WEIGHT_PATTERNS = Object.freeze({ fabric: /\bKUMAS\b/, cmt: /\bCMT\b/, accessory: /\bAKSESUAR\b/, extra: /\bEK ISLEM\b/ });
 function parseSummary(ws, sheetName) {
@@ -189,6 +193,7 @@ function parseSummary(ws, sheetName) {
     const key = levelKey(level, dims); if (!data.has(key)) data.set(key, { level, dims, weights });
   });
   if (!data.size) throw modelError(`${sheetName}: maliyet payı kaydı bulunamadı.`, 'NO_RECORDS', { sheet: sheetName });
+  data.header = { sheet: sheetName, row: header.row + 1, labels: header.labels };
   return data;
 }
 
@@ -572,7 +577,19 @@ function parseWorkbookBuffer(buffer, sourceFile = 'ENDEKSMATİK.xlsx', { now = n
     const sum = item.weights.reduce((a, b) => a + b, 0); if (Math.abs(sum - 1) > 0.03) weightAnomalies++;
     records.push([item.level, ...item.dims, ...item.weights, ...series]);
   }
-  if (!records.some(r => r[0] === 5)) throw modelError('Endeksmatik klasman kaydı bulunamadı (pay ve pivot anahtarları eşleşmiyor).', 'NO_RECORDS');
+  if (!records.some(r => r[0] === 5)) {
+    /* Tanı: hangi sütunlar okundu, kaç klasman anahtarı var, kaçı eşleşti ve
+       örnek anahtarlar. Yerel kabul testinde farkın nerede olduğu buradan görülür. */
+    const detailKeys = map => [...map.entries()].filter(([, v]) => v.level === 5);
+    const sample = map => detailKeys(map).slice(0, 3).map(([, v]) => v.dims.join(' / '));
+    const summaryKeys = new Set(detailKeys(summary).map(([k]) => k));
+    const diagnostics = {
+      summary: { ...summary.header, detailKeys: summaryKeys.size, samples: sample(summary) },
+      pivots: COMPONENTS.map(c => ({ ...pivots[c].header, detailKeys: detailKeys(pivots[c].data).length, matched: detailKeys(pivots[c].data).filter(([k]) => summaryKeys.has(k)).length, samples: sample(pivots[c].data) })),
+    };
+    const fmt = d => `${d.sheet} (satır ${d.row}: ${d.labels.join(' | ')}) ${d.detailKeys} klasman, örn. "${d.samples[0] || '—'}"`;
+    throw modelError(`Endeksmatik klasman kaydı bulunamadı (pay ve pivot anahtarları eşleşmiyor). ${fmt(diagnostics.summary)} ↔ ${fmt(diagnostics.pivots[0])}; eşleşen: ${diagnostics.pivots.map(p => p.matched).join('/')}.`, 'NO_RECORDS', { diagnostics });
+  }
   if (missingSeries) warnings.push(`${missingSeries} pay kaydının pivot serisi yok; bu kayıtlar alınmadı.`);
   if (weightAnomalies) warnings.push(`${weightAnomalies} kaydın maliyet payı toplamı %100'den sapıyor.`);
 

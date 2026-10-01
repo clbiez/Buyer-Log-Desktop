@@ -110,6 +110,25 @@ test('v7.0.173 hedef hücreleri (E15..E18) farklı kurulmuşsa yükleme reddedil
   // Δ zinciri hâlâ katı: antrepo ayı kullanan kitap reddedilir (yukarıdaki test).
 });
 
+test('v7.0.184 başlıkta tam eşleşme önceliklidir ("Klasman Kodu" önce gelse de "Klasman" okunur)', () => {
+  const snap = model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ klasmanCodeFirst: true }), 'x.xlsx');
+  assert.equal(snap.records.filter(r => r[0] === 5).length, fixture.CLASSES.length);
+});
+
+test('v7.0.184 anahtarlar eşleşmezse hata hangi sütunların okunduğunu ve örnek anahtarları söyler', () => {
+  assert.throws(() => model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ summaryMismatch: true }), 'x.xlsx'), e => {
+    assert.equal(e.code, 'NO_RECORDS');
+    const d = e.details.diagnostics;
+    assert.equal(d.summary.sheet, 'KLASMAN LİSTESİ ÖZET');
+    assert.deepEqual(d.summary.labels, ['Merch Marka Yaş Grup', 'Merch Alt Grup', 'Tedarik Grup', 'Buyer Grup', 'Klasman']);
+    assert.equal(d.pivots.length, 4);
+    assert.ok(d.pivots.every(p => p.matched === 0 && p.detailKeys === fixture.CLASSES.length));
+    assert.match(d.summary.samples[0], / X$/);
+    assert.match(e.message, /eşleşen: 0\/0\/0\/0/);
+    return true;
+  });
+});
+
 test('uzlaştırma: Excel önbelleği yeniden hesapla tutmazsa reddedilir', () => {
   assert.throws(() => model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ cacheOffset: 0.001 }), 'x.xlsx'),
     e => e.code === 'MODEL_RECONCILE_MISMATCH' && e.details.checks.some(c => !c.ok && c.cell === 'C15'));
