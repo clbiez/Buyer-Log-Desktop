@@ -1932,23 +1932,31 @@ function taskbarAppDetails() {
 
 function scheduleShortcutIconSync() {
   if (process.platform !== 'win32' || !app.isPackaged) return;
-  const timer = setTimeout(() => {
-    try {
-      const result = syncShortcutIcons({
-        shell,
-        getPath: name => app.getPath(name),
-        exePath: process.execPath,
-        sourceIcon: APP_ICON_SOURCE,
-        iconDir: brandingDir(),
-        log,
-      });
-      if (result.updated.length) {
-        log('Kısayol simgesi güncellendi: ' + result.updated.length + ' kısayol');
-        refreshShellIcons();
-      }
-    } catch (error) {
-      log('Kısayol simgesi eşitlenemedi: ' + error.message);
+
+  // Görev çubuğu gruplaması BrowserWindow açılırken çözülür. Kısayolun
+  // AppUserModelID'si eksik/eski ise 15 sn sonraki düzeltme o ilk gruplamayı
+  // kaçırır ve Windows genel "dosya" simgesine düşebilir. Bu yüzden yalnız
+  // hafif kısayol kimliği/simge eşitlemesi ilk pencere açılmadan önce yapılır.
+  try {
+    const result = syncShortcutIcons({
+      shell,
+      getPath: name => app.getPath(name),
+      exePath: process.execPath,
+      sourceIcon: APP_ICON_SOURCE,
+      iconDir: brandingDir(),
+      appUserModelId: APP_USER_MODEL_ID,
+      log,
+    });
+    if (result.updated.length) {
+      log('Kısayol simgesi/AppUserModelID güncellendi: ' + result.updated.length + ' kısayol');
+      refreshShellIcons();
     }
+  } catch (error) {
+    log('Kısayol simgesi/AppUserModelID eşitlenemedi: ' + error.message);
+  }
+
+  // EXE kaynak yaması daha ağırdır; açılışı geciktirmemek için arka planda kalır.
+  const timer = setTimeout(() => {
     runExeIconPatch({
       exePath: process.execPath,
       sourceIcon: APP_ICON_SOURCE,
