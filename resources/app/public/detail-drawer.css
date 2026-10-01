@@ -38,4 +38,5 @@
 .blDetailTable.hasReferenceSetup .blDetailColumnHead th{top:24px;z-index:3}
 .blDetailTable.hasReferenceSetup td.num{text-align:right;font-variant-numeric:tabular-nums}
 .blDetailTable.hasReferenceSetup th,.blDetailTable.hasReferenceSetup td{box-sizing:border-box}
+.blDetailTable.hasReferenceSetup .blDetailImageHead,.blDetailTable.hasReferenceSetup .blDetailImageCell{width:auto;min-width:0}
 @media(max-width:760px){.blDetailPresetGroup{order:2;width:100%;overflow-x:auto}.blDetailPresetLabel{padding-left:0}}
