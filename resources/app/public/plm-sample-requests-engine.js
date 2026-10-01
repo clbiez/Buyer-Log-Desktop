@@ -153,7 +153,8 @@
   /* Üretimi bitmiş siparişin aşamaları. Onaysız yükleme yapılmadığı için bu
      aşamalardaki siparişin numuneleri PLM kaydına bakılmadan onaylı sayılır
      (kullanıcı kararı). UNKNOWN ve PRODUCTION bu kümede DEĞİLDİR. */
-  const POST_PRODUCTION_STAGES = Object.freeze(['LOADING', 'SHORTAGE', 'IN_TRANSIT', 'CUSTOMS', 'IN_WAREHOUSE', 'AWAITING_RETAIL_TRANSFER']);
+  // SHIPPED: STATUS tanınmasa da siparişten sevk edilmiş miktar var.
+  const POST_PRODUCTION_STAGES = Object.freeze(['LOADING', 'SHORTAGE', 'IN_TRANSIT', 'CUSTOMS', 'IN_WAREHOUSE', 'AWAITING_RETAIL_TRANSFER', 'SHIPPED']);
   function isPostProductionStage(stage) { return POST_PRODUCTION_STAGES.includes(String(stage || '').toUpperCase()); }
 
   function compactRequest(item) {

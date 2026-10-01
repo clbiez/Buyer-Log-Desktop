@@ -435,3 +435,66 @@ test('v7.0.193 istemci: aşama kanonik business-rules’tan okunur, üretim sonr
   assert.match(src, /if \(Engine\.isPostProductionStage\(stage\)\) \{/);
   assert.match(src, /Engine\.evidenceFor\(orderMilestones\(plmId, stage\), itemId\)/);
 });
+
+/* v7.0.193 — Kullanıcı: "Üretim statüsünde olmayan bir sipariş yükleme ve
+   depo işlemlerine geçmişse tüm numuneleri onaylıdır; onaysız üretim aşaması
+   bitmez." Canlı ekranda gümrükteki siparişler yanlış göründü: kaynak
+   "Customs & Port Operations" gönderiyordu ve kanonik aşama kuralı bunu
+   UNKNOWN sınıflıyordu. Bu test GERÇEK istemci modülünü (vm) ekran
+   görüntüsündeki satırlarla çalıştırır. */
+function loadClientModule(models) {
+  const vm = require('node:vm');
+  const BR = require('../public/business-rules.js');
+  const window = {
+    BLPlmSampleRequestsEngine: Engine, BLBusinessRules: BR,
+    addEventListener() {}, dispatchEvent() {},
+  };
+  const context = vm.createContext({
+    window, appLang: 'tr', console, CustomEvent: class {},
+    fetch: async () => ({ ok: true, json: async () => ({ models, revision: 1 }) }),
+  });
+  vm.runInContext(read('public/plm-sample-requests.js'), context);
+  return window.BLPlmSampleRequests;
+}
+
+test('v7.0.193 kanonik aşama: "Customs & Port Operations" ve boşluklu tire gümrük sayılır', () => {
+  const BR = require('../public/business-rules.js');
+  assert.equal(BR.operationalStageOf('Customs & Port Operations 10.616'), 'CUSTOMS');
+  assert.equal(BR.operationalStageOf('CUSTOMS & PORT OPERATIONS'), 'CUSTOMS');
+  assert.equal(BR.operationalStageOf('Gümrük - Liman Operasyonları'), 'CUSTOMS');
+  assert.equal(BR.operationalStageOf('Customs & Port Operations 2.031 | In Transit 2.716'), 'CUSTOMS');
+});
+
+test('v7.0.193 ekran örnekleri: üretim sonrası/sevk edilmiş sipariş tek "Onaylı" rozeti; üretimdeki sipariş PLM’e göre', async () => {
+  const toReq = (code, st, sub, it = 1) => Engine.normalizeRequest({ requestCode: code, styleId: 1, requestStatusId: /Approved/.test(st) ? 14 : 0, requestStatusName: st, requestSubTypeName: sub, iteration: it });
+  const models = {
+    1165835: { plmId: '1165835', styleId: '1', fetchedAt: '2026-10-01T00:00:00Z', requests: grinchRequests() },
+    1205431: { plmId: '1205431', styleId: '2', fetchedAt: '2026-10-01T00:00:00Z', requests: [toReq(1, 'Received', 'Perfect Pre Production Fitting'), toReq(2, 'Approved / Completed', 'Perfect Sign Off Fitting')] },
+  };
+  const api = loadClientModule(models);
+  await api.load();
+  const cases = [
+    ['In Transit 1.234', 1165835],
+    ['Customs & Port Operations 10.616', 1165835],
+    ['Customs & Port Operations 1.761 | Awaiting Retail Transfer 3.186', 1165835],
+    ['In Warehouse 3.572', 1165835],
+    ['Loading Operations 1.378', 1165835],
+    ['In Transit 3.277 | In Warehouse 1.588', 1165835],
+    ['Gümrük-Liman Operasyonları', 9999999],
+  ];
+  for (const [status, plm] of cases) {
+    assert.equal(api.columnText({ 'PLM ID': plm, STATUS: status }, 'cp'), 'Onaylı · Üretim sonrası', status);
+  }
+  // STATUS tanınmasa da sevk edilmiş miktar varsa onaylı.
+  assert.equal(api.columnText({ 'PLM ID': 1205431, STATUS: '???', 'Shipment Quantity': 1200 }, 'cp'), 'Onaylı · Üretim sonrası');
+  assert.equal(api.columnText({ 'PLM ID': 1205431, STATUS: '???', 'Shipment Quantity': '1.200' }, 'cp'), 'Onaylı · Üretim sonrası');
+  // Üretimdeki sipariş: PLM’e göre (FORMULA-3-YD benzeri: PPS açık, S/Off onaylı → Artwork S/Off’tan onaylı).
+  assert.equal(api.columnText({ 'PLM ID': 1205431, STATUS: 'In Production 5.012', 'Shipment Quantity': 0 }, 'cp'), 'PPS: Açık · S/Off: Onaylı · Artwork: Onaylı');
+  // Üretimdeki GRINCH: tüm kalemler PLM onayı/zinciriyle onaylı.
+  assert.equal(api.columnText({ 'PLM ID': 1165835, STATUS: 'Üretimde' }, 'cp'), 'PPS: Onaylı · S/Off: Onaylı · FIT/SIZE: Onaylı · Artwork: Onaylı');
+  // Kontrol listesi: gümrükteki sipariş numune sorusu sormaz.
+  const evidence = api.evidenceForAnalysis({ stage: 'UNKNOWN', sourceRow: { 'PLM ID': 9999999, STATUS: 'Customs & Port Operations 10.616' } }, 'pps');
+  assert.equal(evidence && evidence.state, 'approved');
+  // Otomatik tazeleme yalnız üretimdeki siparişleri hedefler.
+  assert.deepEqual([...api.staleProductionPlmIds([{ 'PLM ID': 1, STATUS: 'Üretimde' }, { 'PLM ID': 2, STATUS: 'In Transit' }, { 'PLM ID': 3, STATUS: 'Üretimde', 'Shipment Quantity': 50 }])], ['1']);
+});

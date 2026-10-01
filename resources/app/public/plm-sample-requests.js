@@ -76,10 +76,25 @@
 
   /* Siparişin operasyon aşaması (CP satırı STATUS). Kanonik aşama kuralı
      business-rules.js'tedir; burada ikinci bir eşleme yazılmaz. */
+  function shippedQuantity(row) {
+    const raw = row && row['Shipment Quantity'];
+    if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0;
+    const text = String(raw == null ? '' : raw).replace(/\s/g, '');
+    if (!text) return 0;
+    const value = Number(/^\d{1,3}(\.\d{3})+$/.test(text) ? text.replace(/\./g, '') : text.replace(',', '.'));
+    return Number.isFinite(value) ? value : 0;
+  }
+  /* Kullanıcı kuralı: onaysız üretim aşaması bitmez. STATUS üretim sonrası
+     bir aşama gösteriyorsa ya da siparişten sevk edilmiş miktar varsa
+     numuneler onaylıdır. STATUS metni tanınmasa (UNKNOWN) bile sevk miktarı
+     yedek kanıttır. */
   function rowStage(row) {
     const rules = window.BLBusinessRules;
-    try { return rules && rules.operationalStageOf ? rules.operationalStageOf(row && row.STATUS) : 'UNKNOWN'; }
-    catch (_) { return 'UNKNOWN'; }
+    let stage = 'UNKNOWN';
+    try { stage = rules && rules.operationalStageOf ? rules.operationalStageOf(row && row.STATUS) : 'UNKNOWN'; }
+    catch (_) { stage = 'UNKNOWN'; }
+    if (!Engine.isPostProductionStage(stage) && shippedQuantity(row) > 0) return 'SHIPPED';
+    return stage;
   }
 
   /* Sipariş bazında kilometre taşları: PLM özeti + aşama kuralı (üretimi
@@ -92,7 +107,7 @@
   function evidenceForAnalysis(analysis, itemId) {
     const row = analysis && analysis.sourceRow;
     const plmId = plmIdOfRow(row, 'cp');
-    const stage = (analysis && analysis.stage) || rowStage(row);
+    const stage = analysis && Engine.isPostProductionStage(analysis.stage) ? analysis.stage : rowStage(row);
     return Engine.evidenceFor(orderMilestones(plmId, stage), itemId);
   }
 
