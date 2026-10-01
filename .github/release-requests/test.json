@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.189",
-  "commit_sha": "c1e0b1ed5f95a7ca2132505c182645f0b8f4e3cc",
-  "release_notes": "Buyer Log 7.0.189 TEST: World Clock holidays now use a resilient live provider chain. Nager remains primary, unsupported countries can fall back to a live ICS feed, India keeps verified central-government fallback data, and the last-known-good holiday calendar is cached locally so outages do not erase holidays. Full Buyer Log regression suite passed."
+  "version": "7.0.190",
+  "commit_sha": "e3212d102d3f02884d33269f853d6d3a6d997064",
+  "release_notes": "Buyer Log 7.0.190 TEST: PLM SYNC now resolves category-prefixed OAB option names (e.g. KK.BDY,GARFIELD-1-YD) and not-yet-ordered options via Collection model codes. Backlog detail tables now render images saved by PLM SYNC by reading each row's internal PLM/colour identity."
 }
