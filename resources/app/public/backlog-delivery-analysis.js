@@ -197,7 +197,9 @@
       window.BLDetailDrawer.open({
         storageKey:'backlog.analysis.detail',source:'backlog',title,
         subtitle:`${int(rows.length)} ${L('satır', 'rows')}`,rows,
-        columns:headers.map(key=>({key,label:key})),images:true,fileName:`Backlog_${title}`
+        columns:headers.map(key=>({key,label:key})),
+        viewPresets:typeof window.BLBacklogDetailViewPresets === 'function' ? window.BLBacklogDetailViewPresets(headers) : undefined,
+        images:true,fileName:`Backlog_${title}`
       });
       return;
     }
