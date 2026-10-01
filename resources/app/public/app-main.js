@@ -34420,3 +34420,76 @@ applyLanguage(appLang);
 syncTableToolbarActions(document.body.dataset.activeTab||'overview');
 setTimeout(()=>void loadModelImageSettings(),1200);
 
+
+
+/* v7.0.188 — Shared detail drawers can consume the live CP table setup.
+   This keeps detail tables on the same user-defined column order, widths,
+   labels and Focus / Extended / All presets without changing the CP table. */
+(function exposeDetailTableSetup(){
+  function detailBaseRow(row){
+    return row&&row.raw&&typeof row.raw==='object'?row.raw:(row&&row.row&&typeof row.row==='object'?row.row:row||{});
+  }
+  function detailValue(tableKey,column,row){
+    const base=detailBaseRow(row),key=column&&column.k;
+    if(tableKey==='cp'&&row&&row.raw){
+      if(key==='STATUS'&&row.status!=null&&String(row.status).trim())return row.status;
+      if(key==='Del. Type'&&(row.modeRaw||row.mode))return row.modeRaw||row.mode;
+      if(key==='HANDOVER Tarihi'&&row.handover)return row.handover;
+      if(key==='Ant. Arrival'&&row.eta)return row.eta;
+      if(key==='Order Code'&&row.orderCode)return row.orderCode;
+      if(key==='PLM ID'&&row.plmId)return row.plmId;
+      if(key==='Model Name'&&row.model)return row.model;
+      if(key==='C.Code'&&row.colourCode)return row.colourCode;
+      if(key==='Colour'&&row.colour)return row.colour;
+      if(key==='Season'&&row.season)return row.season;
+      if(key==='Buyer'&&row.buyer)return row.buyer;
+      if(key==='Buyer Grup (TR)'&&row.buyingGroup)return row.buyingGroup;
+      if(key==='Manufacturer'&&row.manufacturer)return row.manufacturer;
+      if(key==='Country'&&row.country)return row.country;
+    }
+    return base?base[key]:undefined;
+  }
+  function detailDisplay(tableKey,column,value,row){
+    if(tableKey!=='cp'&&tableKey!=='orders')return value==null?'':String(value);
+    try{
+      const base=detailBaseRow(row),view={...base,[column.k]:value};
+      // A map/drill-down row represents one partial. Do not let the source row's
+      // aggregate logistic segments replace that selected partial in the drawer.
+      if(row&&row.raw){
+        view._logisticSegments=[];
+        view._partialViewActive=false;
+      }
+      return cellPlainText(column,view,null);
+    }catch(_){return value==null?'':String(value);}
+  }
+  function detailSetup(tableKey='cp'){
+    if(!COLS_BY_TABLE[tableKey]||!colmgr[tableKey])return null;
+    const all=tableViewAllKeys(tableKey),allSet=new Set(all);
+    const order=normalizedColumnOrder(tableKey,colmgr[tableKey].order).filter(key=>allSet.has(key));
+    const byKey=new Map((COLS_BY_TABLE[tableKey]||[]).map(column=>[column.k,column]));
+    const isPicture=key=>key==='__picture'||key==='__picture__';
+    const columns=order.filter(key=>!isPicture(key)).map(key=>{
+      const column=byKey.get(key);if(!column)return null;
+      return {
+        key,
+        label:typeof tableColumnLabel==='function'?tableColumnLabel(tableKey,column):(column.label||column.k),
+        group:column.group||'',
+        width:typeof colWidthPx==='function'?colWidthPx(tableKey,column):null,
+        value:row=>detailValue(tableKey,column,row),
+        format:(value,row)=>detailDisplay(tableKey,column,value,row),
+        exportWidth:Math.max(11,Math.min(40,Math.round(((typeof colWidthPx==='function'?colWidthPx(tableKey,column):150)||150)/7)))
+      };
+    }).filter(Boolean);
+    const allowed=new Set(columns.map(column=>column.key));
+    const preset=kind=>tableViewPresetKeys(tableKey,kind).filter(key=>allowed.has(key));
+    const current=tableViewPresetState(tableKey);
+    return {
+      tableKey,
+      columns,
+      presets:{focus:preset('focus'),extended:preset('extended'),all:preset('all')},
+      currentPreset:['focus','extended','all'].includes(current)?current:'focus',
+      showImages:true
+    };
+  }
+  window.BLTableViewSetup={...(window.BLTableViewSetup||{}),detailSetup};
+})();
