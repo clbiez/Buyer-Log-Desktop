@@ -69,6 +69,9 @@ function normalizeItem(raw) {
     imageRole: ['main', 'option'].includes(clean(raw && raw.imageRole, 20).toLowerCase()) ? clean(raw && raw.imageRole, 20).toLowerCase() : 'auto',
     styleId: clean(raw && raw.styleId, 40),
     styleName: clean(raw && raw.styleName, 300),
+    groupRole: clean(raw && raw.groupRole, 20).toLowerCase(),
+    roleProbe: Boolean(raw && raw.roleProbe === true),
+    roleDemote: Boolean(raw && raw.roleDemote === true),
   };
 }
 

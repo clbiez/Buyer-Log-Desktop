@@ -221,6 +221,11 @@ async function runPlmImageSync(input = {}) {
   const resolution = await resolveStyleRows(decided.map(item => item.plmId), {
     ...input, isCancelled, onProgress: progress => onProgress({ ...progress, stage: 'resolving' }),
   });
+  /* PLM renk kodları kalıcı ana renk çözümleyicisine bildirilir (tek
+     renkli model = ana renk). Kayıt hatası görsel işini düşürmez. */
+  if (typeof input.onStyleRows === 'function') {
+    try { input.onStyleRows(resolution.rows); } catch (_) { /* yalnız ipucu */ }
+  }
   counts.resolved = resolution.rows.size;
   counts.unresolved = resolution.errors.size;
   if (checkpoint) checkpoint.set({ resolved: counts.resolved, unresolved: counts.unresolved });
@@ -235,7 +240,13 @@ async function runPlmImageSync(input = {}) {
     }
     // Style ID istemciden değil, GetStyleList yanıtından (veya kayıtlı
     // linkten) gelir: istemcinin gönderdiği bir styleId'ye güvenilmez.
-    pending.push({ ...item, styleId: row.styleId || item.styleId, styleName: item.styleName || row.styleName, styleListImageUrl: row.imageUrl, colors: row.colors });
+    /* Rol, GetStyleList renkleri öğrenildikten sonra yeniden çözülür:
+       renkleri ilk kez görülen tek renkli modelin rengi ana renktir. */
+    let imageRole = item.imageRole;
+    if (typeof input.resolveImageRole === 'function') {
+      try { imageRole = input.resolveImageRole(item, row) || imageRole; } catch (_) { imageRole = item.imageRole; }
+    }
+    pending.push({ ...item, imageRole, styleId: row.styleId || item.styleId, styleName: item.styleName || row.styleName, styleListImageUrl: row.imageUrl, colors: row.colors });
   }
   if (!pending.length) {
     phase(jobStore.STATUS_PARTIAL, '');

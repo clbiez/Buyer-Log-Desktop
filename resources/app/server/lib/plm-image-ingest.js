@@ -74,8 +74,10 @@ function currentRefFor(imagemap, { plmId, colourCode, colour } = {}) {
 function imageRoleNeedsRefresh(raw, currentRef, { store, ownership = ownershipStore } = {}) {
   const item = normalizeRequest(raw);
   const ref = clean(currentRef, 120);
-  if (!ref || item.imageRole !== 'main' || !ownership || typeof ownership.ownershipOf !== 'function') return false;
+  if (!ref || !ownership || typeof ownership.ownershipOf !== 'function') return false;
+  if (item.imageRole !== 'main' && !item.roleProbe && !item.roleDemote) return false;
   const current = ownership.ownershipOf(store, item.key, ref);
+  if (current.state !== ownership.OWNERSHIP_AUTOMATIC || !current.record) return false;
   /* 7.0.115 öncesinde/ilk 7.0.115 turunda ana renk Option Image ile
      yazılmış olabilir. Paylaşılan Collection görseli başka bir cihazdan
      kurulduğunda eski kayıtlarda sourceType yalnız "PLM" olarak kalabiliyor;
@@ -88,9 +90,15 @@ function imageRoleNeedsRefresh(raw, currentRef, { store, ownership = ownershipSt
   const optionSource = sourceType === 'OPTION'
     || sourceIdentity.startsWith('option:')
     || sourceIdentity.startsWith('option-url:');
-  return current.state === ownership.OWNERSHIP_AUTOMATIC
-    && current.record
-    && optionSource;
+  const mainSource = sourceType === 'STYLE_LIST' || sourceType === 'STYLE_DEFAULT'
+    || sourceIdentity.startsWith('stylelist:')
+    || sourceIdentity.startsWith('styledefault:');
+  /* PLM ana renk çözümü (plm-main-colour.js): renkleri henüz bilinmeyen
+     model bir kez GetStyleList ile doğrulanır; ana renk OLMADIĞI kesinleşen
+     renk, geçmişte yazılmış ön+arka ana görselden kendi görseline döner. */
+  if (item.roleProbe && (optionSource || mainSource)) return true;
+  if (item.imageRole !== 'main') return Boolean(item.roleDemote && mainSource);
+  return optionSource;
 }
 
 function normalizeRequest(raw) {
@@ -105,6 +113,9 @@ function normalizeRequest(raw) {
     imageRole: ['main', 'option'].includes(clean(raw && raw.imageRole, 20).toLowerCase()) ? clean(raw && raw.imageRole, 20).toLowerCase() : 'auto',
     styleId: clean(raw && raw.styleId, 40),
     styleName: clean(raw && raw.styleName, 300),
+    groupRole: clean(raw && raw.groupRole, 20).toLowerCase(),
+    roleProbe: raw && raw.roleProbe === true,
+    roleDemote: raw && raw.roleDemote === true,
     key,
   };
 }

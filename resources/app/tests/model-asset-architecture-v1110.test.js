@@ -126,7 +126,10 @@ test('PLM ve ASAS kendi cihazında LOCAL → UPSTREAM çalışır; Shared Hub ya
   for (const route of ["'/api/model-images/import-plm'", "'/api/model-images/import-asas'"]) {
     const start = SERVER.indexOf(`app.post(${route}`);
     assert.ok(start > 0, `${route} bulunamadı`);
-    const block = SERVER.slice(start, start + 7000);
+    // Blok route'un kendi sınırında kesilir (sonraki üst düzey app.* kaydı);
+    // sabit karakter penceresi route büyüdükçe yanlış kırmızı veriyordu.
+    const end = SERVER.indexOf('\napp.', start + 10);
+    const block = SERVER.slice(start, end > start ? end : SERVER.length);
     const first = block.indexOf('resolveModelImagesLocalFirst');
     const lease = block.indexOf('leaseUpstreamImageIdentities');
     assert.ok(first > 0, `${route}: yerel ön geçiş yok`);
