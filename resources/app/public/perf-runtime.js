@@ -124,7 +124,7 @@
     // bekler; böylece işlevler kaybolmaz, yalnız açılış kritik yolundan çıkar.
     deferredUi:[
       'formula-engine.js','formula-columns.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
-      'quick-filter-groups.js','kpi-groups.js','update-test-ui.js?rev=2','user-access-ui.js?rev=APP-UPDATE-V2','user-management.js',
+      'quick-filter-groups.js','kpi-groups.js','update-test-ui.js?rev=3','user-access-ui.js?rev=APP-UPDATE-V3','user-management.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
          artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */
       'outlook-mail.js','override-sync.js','backup-manager.js','fx.js',

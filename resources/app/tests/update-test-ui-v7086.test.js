@@ -13,10 +13,13 @@ const css = fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
 
 test('user menu exposes App Update for every user; runtime availability is checked when opened', () => {
   assert.doesNotMatch(ui, /profile\.systemRole === 'moderator' \? `<button type="button" data-update-test>/);
-  assert.match(ui, /<button type="button" data-update-test>[\s\S]*?Uygulama Güncellemesi/);
+  assert.match(ui, /<button type="button" data-update-test><svg[^>]*><use href="#i-download"\/><\/svg>\$\{esc\(tr\('Güncellemeleri Kontrol Et', 'Check for Updates'\)\)\}<\/button>/);
+  assert.doesNotMatch(ui, /tr\('Güncelleme Testi', 'Update Test'\)/);
   assert.doesNotMatch(ui, /profile\.systemRole === 'moderator'\s*&&\s*window\.buyerLogDesktop/);
   assert.match(ui, /data-update-test[\s\S]*?openBuyerLogUpdateTest/);
   assert.doesNotMatch(updateUi, /user\.systemRole !== 'moderator'\) return/);
+  assert.match(updateUi, /id="updateTestTitle">' \+ esc\(tr\('Güncellemeleri Kontrol Et','Check for Updates'\)\)/);
+  assert.doesNotMatch(updateUi, /tr\('Güncelleme Testi','Update Test'\)/);
 });
 
 test('only moderators can pick the update channel; other users check STABLE without configure', () => {
@@ -36,7 +39,7 @@ test('Update Test UI uses the existing updater bridge and shows decisive status 
 });
 
 test('Update Test UI is loaded before the user menu module in deferred UI', () => {
-  assert.match(perf, /update-test-ui\.js\?rev=2','user-access-ui\.js\?rev=APP-UPDATE-V2/);
+  assert.match(perf, /update-test-ui\.js\?rev=3','user-access-ui\.js\?rev=APP-UPDATE-V3/);
 });
 
 
