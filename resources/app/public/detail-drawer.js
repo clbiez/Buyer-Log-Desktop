@@ -60,6 +60,24 @@ function loadVisible(scope,page,columns,defaults){
   return preferred.length?preferred:columns.map(c=>c.key);
 }
 function saveVisible(scope,page,keys){try{store().setItem(prefKey(scope,page),JSON.stringify(keys));}catch(_){}}
+
+function tableSetupSnapshot(input){
+  const tableKey=clean(input&&input.tableSetup);
+  if(!tableKey||!root.BLTableViewSetup||typeof root.BLTableViewSetup.snapshot!=='function')return null;
+  try{
+    const snapshot=root.BLTableViewSetup.snapshot(tableKey);
+    return snapshot&&Array.isArray(snapshot.columns)&&snapshot.columns.length?snapshot:null;
+  }catch(err){console.warn('Detay çekmecesi tablo görünümü alınamadı:',err);return null;}
+}
+function setupPresetKeys(snapshot,preset){
+  if(!snapshot||!snapshot.presets)return[];
+  const keys=snapshot.presets[preset];
+  return Array.isArray(keys)?keys.slice():[];
+}
+function setupInitialPreset(snapshot){
+  const preset=clean(snapshot&&snapshot.activePreset).toLowerCase();
+  return ['focus','extended','all'].includes(preset)?preset:'custom';
+}
 function widthKey(page){return WIDTH_PREFIX+storagePart(page);}
 function loadWidth(page){
   try{
@@ -249,6 +267,40 @@ function filteredRows(){
   active.filterCache={q,rows};return rows;
 }
 function currentColumns(){if(!active)return[];const set=new Set(active.visible);return active.columns.filter(col=>set.has(col.key));}
+
+function setupVisibleKeys(snapshot,preset,contextKeys){
+  const base=preset==='custom'&&Array.isArray(snapshot&&snapshot.visible)?snapshot.visible:setupPresetKeys(snapshot,preset);
+  return [...new Set([...(base||[]),...(contextKeys||[])])];
+}
+function applyViewPreset(preset){
+  if(!active||!active.tableSetup||!['focus','extended','all'].includes(preset))return false;
+  const allowed=new Set(active.columns.map(col=>col.key));
+  active.preset=preset;
+  active.visible=setupVisibleKeys(active.tableSetup,preset,active.contextKeys).filter(key=>allowed.has(key));
+  if(!active.visible.length)return false;
+  return true;
+}
+function syncViewPresetButtons(){
+  const host=document.getElementById('blSharedDetailDrawer');if(!host||!active)return;
+  host.querySelectorAll('[data-bl-detail-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.blDetailViewPreset===active.preset)));
+}
+function viewPresetHtml(){
+  if(!active||!active.tableSetup)return'';
+  return '<div class="blDetailViewActions" role="group" aria-label="'+escapeHtml(L('Tablo görünümü','Table view'))+'">'+
+    '<span class="blDetailViewLabel">'+escapeHtml(L('GÖRÜNÜM','VIEW'))+'</span>'+
+    ['focus','extended','all'].map(preset=>{
+      const label=preset==='focus'?L('Odak','Focus'):preset==='extended'?L('Genişletilmiş','Extended'):L('Tümü','All');
+      return '<button type="button" class="blDetailViewPreset" data-bl-detail-view-preset="'+preset+'" aria-pressed="'+String(active.preset===preset)+'">'+escapeHtml(label)+'</button>';
+    }).join('')+'</div>';
+}
+function groupHeaderHtml(columns,showImages){
+  if(!columns.some(col=>clean(col.group)))return'';
+  const cells=[];let last='',count=0;
+  const flush=()=>{if(count)cells.push('<th colspan="'+count+'" data-group="'+escapeHtml(last)+'">'+escapeHtml(last||L('Detay','Detail'))+'</th>');};
+  columns.forEach(col=>{const group=clean(col.group)||L('Detay','Detail');if(count&&group!==last){flush();count=0;}last=group;count++;});
+  flush();
+  return '<tr class="blDetailGroupRow">'+(showImages?'<th class="blDetailImageHead" aria-hidden="true"></th>':'')+cells.join('')+'</tr>';
+}
 function registerAssetScope(panel,rows,imageIndex){
   const helper=root.BLDetailImages;if(!helper?.registerScope)return;
   try{
@@ -272,10 +324,10 @@ function renderColumnsPanel(){
   host.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener('change',()=>{
     const keys=[...host.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
     if(!keys.length){input.checked=true;return;}
-    active.visible=keys;saveVisible(active.scope,active.pageScope,keys);renderTable();
+    active.visible=keys;active.preset='custom';saveVisible(active.scope,active.pageScope,keys);renderTable();syncViewPresetButtons();
   }));
   host.querySelector('[data-bl-detail-column-all]')?.addEventListener('click',()=>{
-    active.visible=active.columns.map(c=>c.key);saveVisible(active.scope,active.pageScope,active.visible);renderTable();renderColumnsPanel();
+    active.visible=active.columns.map(c=>c.key);active.preset=active.tableSetup?'all':'custom';saveVisible(active.scope,active.pageScope,active.visible);renderTable();renderColumnsPanel();syncViewPresetButtons();
   });
 }
 function renderTable(){
@@ -286,7 +338,9 @@ function renderTable(){
   // Görsel indeksi bir kez kurulur ve varlık kapsamı kaydıyla paylaşılır.
   const imageIndex=helper?.buildIndex?helper.buildIndex():null,showImages=active.images&&Boolean(helper);
   const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,colspan=Math.max(1,columns.length+(showImages?1:0));
-  table.querySelector('thead').innerHTML='<tr>'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>'<th>'+escapeHtml(col.label)+'</th>').join('')+'</tr>';
+  const colgroup=table.querySelector('colgroup');
+  if(colgroup)colgroup.innerHTML=(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>{const width=Number(col.widthPx)||0;return '<col'+(width?' style="width:'+Math.round(width)+'px"':'')+'>';}).join('');
+  table.querySelector('thead').innerHTML=groupHeaderHtml(columns,showImages)+'<tr class="blDetailColumnRow">'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>'<th>'+escapeHtml(col.label)+'</th>').join('')+'</tr>';
   table.querySelector('tbody').innerHTML=shown.length?shown.map(row=>'<tr>'+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map(col=>{
     if(typeof col.html==='function'){let html='';try{html=col.html(row)||'';}catch(_){}return '<td>'+html+'</td>';}
     const value=textValue(col,row);return '<td title="'+escapeHtml(value)+'">'+escapeHtml(value||'—')+'</td>';
@@ -383,10 +437,10 @@ function render(){
     '<button type="button" class="blDetailTool" data-bl-detail-excel>⇩ Excel</button>'+
     '<div class="blDetailExportMenu" data-bl-detail-export-menu hidden><button type="button" data-bl-export-mode="all">'+escapeHtml(L('Tüm Sütunlarla','All Columns'))+'</button><button type="button" data-bl-export-mode="visible">'+escapeHtml(L('Görünen Sütunlarla','Visible Columns'))+'</button></div>'+
     '<button type="button" class="blDetailClose" data-bl-detail-close aria-label="'+escapeHtml(L('Kapat','Close'))+'">×</button></div></header>'+
-    '<div class="blDetailDrawerSubbar"><input type="search" data-bl-detail-search value="'+escapeHtml(active.search)+'" placeholder="'+escapeHtml(L('Detaylarda ara…','Search details…'))+'">'+
+    '<div class="blDetailDrawerSubbar">'+viewPresetHtml()+'<input type="search" data-bl-detail-search value="'+escapeHtml(active.search)+'" placeholder="'+escapeHtml(L('Detaylarda ara…','Search details…'))+'">'+
     '<div class="blDetailExtraActions" data-bl-detail-extra></div><div class="blDetailColumnPanel" data-bl-detail-column-panel hidden></div></div>'+
     (active.note?'<div class="blDetailDrawerNote">'+escapeHtml(active.note)+'</div>':'')+
-    '<div class="blDetailTableWrap"><table class="blDetailTable" data-bl-detail-table><thead></thead><tbody></tbody></table></div></section>';
+    '<div class="blDetailTableWrap"><table class="blDetailTable" data-bl-detail-table><colgroup></colgroup><thead></thead><tbody></tbody></table></div></section>';
   host.classList.add('is-open');host.setAttribute('aria-hidden','false');
   const panel=host.querySelector('.blDetailDrawerPanel');applyPanelWidth(panel);bindResize(panel);
   host.querySelectorAll('[data-bl-detail-close]').forEach(el=>el.addEventListener('click',close));
@@ -402,6 +456,9 @@ function render(){
   host.querySelector('[data-bl-detail-columns]')?.addEventListener('click',()=>{
     const panel=host.querySelector('[data-bl-detail-column-panel]');panel.hidden=!panel.hidden;if(!panel.hidden)renderColumnsPanel();
   });
+  host.querySelectorAll('[data-bl-detail-view-preset]').forEach(button=>button.addEventListener('click',()=>{
+    if(applyViewPreset(button.dataset.blDetailViewPreset)){render();syncViewPresetButtons();}
+  }));
   host.querySelector('[data-bl-detail-excel]')?.addEventListener('click',toggleExportMenu);
   host.querySelectorAll('[data-bl-export-mode]').forEach(button=>button.addEventListener('click',()=>{
     const menu=host.querySelector('[data-bl-detail-export-menu]');if(menu)menu.hidden=true;
@@ -421,13 +478,21 @@ function render(){
 function open(options){
   const input=options&&typeof options==='object'?options:{};
   const rows=Array.isArray(input.rows)?input.rows.filter(Boolean):[];
-  const columns=normalizeColumns(input.columns,rows);
+  const setup=tableSetupSnapshot(input);
+  const contextColumns=normalizeColumns(input.columns,rows);
+  const setupColumns=setup?normalizeColumns(setup.columns,rows):[];
+  const contextKeys=contextColumns.map(col=>col.key).filter(key=>!setupColumns.some(col=>col.key===key));
+  const columns=setup?normalizeColumns([...setupColumns,...contextColumns.filter(col=>!setupColumns.some(base=>base.key===col.key))],rows):contextColumns;
   const scope=input.storageKey||input.scope||input.source||'generic',page=pageScope(input);
+  const preset=setup?setupInitialPreset(setup):'custom';
+  const initialVisible=setup?setupVisibleKeys(setup,preset,contextKeys):loadVisible(scope,page,columns,input.defaultVisible||input.initialVisible);
+  const allowed=new Set(columns.map(col=>col.key));
   active={
     scope,pageScope:page,moduleId:input.moduleId||page,source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
-    rows,columns,visible:loadVisible(scope,page,columns,input.defaultVisible||input.initialVisible),width:loadWidth(page),
+    rows,columns,visible:initialVisible.filter(key=>allowed.has(key)),width:loadWidth(page),
+    tableSetup:setup,contextKeys,preset,
     images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
   };

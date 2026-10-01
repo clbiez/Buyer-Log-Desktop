@@ -1635,11 +1635,51 @@ function detailColumns(records){
   (records||[]).slice(0,40).forEach(rec=>Object.keys(rec&&rec.raw||{}).forEach(rawKey=>{const label=clean(rawKey),keyNorm=norm(label);if(!label||label.startsWith('_')||labels.has(keyNorm)||seen.has(keyNorm))return;seen.add(keyNorm);extras.push({key:'raw:'+rawKey,label,value:r=>r&&r.raw?r.raw[rawKey]:''});}));
   return standard.concat(extras);
 }
+function cpDetailRows(records){
+  return (records||[]).map(rec=>{
+    const row={...rec};
+    // Parsiyel seviyesinde değişen alanlar ham CP/Orders satırının üzerine yazılır.
+    // Böylece detay tablosu CP sütun kataloğunu kullanırken yanlış sipariş-seviyesi
+    // STATUS / Handover / Shipment Quantity göstermez.
+    Object.assign(row,{
+      'Priority':rec.priority||rec.actionPriority||'',
+      'Season':rec.season||'',
+      'Country':rec.country||'',
+      'Buyer Grup (TR)':rec.buyingGroup||'',
+      'Buyer':rec.buyer||'',
+      'Manufacturer':rec.manufacturer||'',
+      'PLM ID':rec.plmId||'',
+      'Model Name':rec.model||'',
+      'C.Code':rec.colourCode||'',
+      'Colour':rec.colour||'',
+      'Order Code':rec.orderCode||'',
+      'Ex-factory':rec.exFactory||'',
+      'HANDOVER Tarihi':rec.handover||'',
+      'Shipment Quantity':rec.qty,
+      'STATUS':rec.status||'',
+      'Ant. Arrival':rec.eta||'',
+      'Del. Type':rec.modeRaw||modeLabel(rec.mode)
+    });
+    return row;
+  });
+}
+function detailContextColumns(){
+  return [
+    {key:'source',label:L('Kaynak','Source'),group:L('Detay','Detail'),widthPx:72,value:r=>sourceLabel(r.source)},
+    {key:'partial',label:L('Parsiyel','Partial'),group:L('Detay','Detail'),widthPx:72,value:partialLabel},
+    {key:'shipmentFile',label:L('İhracat / İthalat Dosya No','Export / Import File No'),group:L('Detay','Detail'),widthPx:150},
+    {key:'containerNo',label:L('Konteyner No','Container No'),group:L('Detay','Detail'),widthPx:120},
+    {key:'vesselName',label:L('Gemi Ad','Vessel Name'),group:L('Detay','Detail'),widthPx:130},
+    {key:'routeProgress',label:L('Rota ilerlemesi','Route progress'),group:L('Detay','Detail'),widthPx:105,value:r=>{const p=placementOf(r);return p?Math.round(p.meta.progress*100)+'%'+(p.meta.known?'':' ~'):'';}},
+    {key:'transitDays',label:L('Geçen / yol süresi (gün)','Elapsed / lead days'),group:L('Detay','Detail'),widthPx:150,value:r=>{const p=placementOf(r);return p&&p.meta.elapsedDays!=null?Math.floor(p.meta.elapsedDays)+' / '+Math.round(p.meta.leadDays):'';}}
+  ];
+}
+
 function openRecordsDrawer(title,records,subtitle){
   const rows=(records||[]).filter(Boolean);if(!rows.length)return;
   if(window.BLDetailDrawer&&typeof window.BLDetailDrawer.open==='function'){
     const actions=rows.length===1?[{label:L('Kaynakta Aç','Open source'),run:()=>jumpToSource(rows[0])}]:[];
-    window.BLDetailDrawer.open({storageKey:'overview.globalFlow.detail',source:'global-flow',title,subtitle:subtitle||'',rows,columns:detailColumns(rows),images:true,fileName:'Global_Flow_'+title,actions,note:L('Araç konumu canlı GPS/AIS değildir; parsiyel Handover tarihi ve ülke/yükleme yol süresi kuralından hesaplanan operasyonel ilerlemedir. Aynı Gemi Ad taşıyan parsiyeller tek araçta gösterilir.','Vehicle position is not live GPS/AIS; it is operational progress calculated from the partial Handover date and the country/transport lead-time rule. Partials with the same vessel name are shown as one vehicle.')});return;
+    window.BLDetailDrawer.open({storageKey:'overview.globalFlow.detail',pageScope:'overview.globalFlow',moduleId:'cp',source:'global-flow',tableSetup:'cp',title,subtitle:subtitle||'',rows:cpDetailRows(rows),columns:detailContextColumns(),images:true,fileName:'Global_Flow_'+title,actions,note:L('Araç konumu canlı GPS/AIS değildir; parsiyel Handover tarihi ve ülke/yükleme yol süresi kuralından hesaplanan operasyonel ilerlemedir. Aynı Gemi Ad taşıyan parsiyeller tek araçta gösterilir.','Vehicle position is not live GPS/AIS; it is operational progress calculated from the partial Handover date and the country/transport lead-time rule. Partials with the same vessel name are shown as one vehicle.')});return;
   }
   const drawer=$('globalFlowDrawer');if(!drawer)return;drawer.innerHTML='<div class="gfDrawerHead"><div><b>'+esc(title)+'</b><span>'+esc(subtitle||'')+'</span></div><button type="button" data-gf-drawer-close>×</button></div><div class="gfDrawerBody"><div class="gfDrawerTableWrap"><table class="gfDrawerTable"><thead><tr><th>'+esc(L('Sipariş','Order'))+'</th><th>'+esc(L('Parsiyel','Partial'))+'</th><th>'+esc(L('Model','Model'))+'</th><th>'+esc(L('Statü','Status'))+'</th><th>'+esc(L('Adet','Qty'))+'</th></tr></thead><tbody>'+rows.map(r=>'<tr><td>'+esc(r.orderCode||'—')+'</td><td>'+esc(partialLabel(r))+'</td><td>'+esc(r.model||'—')+'</td><td>'+esc(r.status||'—')+'</td><td class="num">'+nf().format(r.qty||0)+'</td></tr>').join('')+'</tbody></table></div></div>';
   drawer.classList.add('is-open');drawer.setAttribute('aria-hidden','false');drawer.querySelector('[data-gf-drawer-close]')?.addEventListener('click',closeDrawer);
