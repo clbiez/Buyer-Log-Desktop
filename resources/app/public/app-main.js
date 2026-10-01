@@ -28193,14 +28193,23 @@ async function plmJsonRequest(url,options){
     const data=await execute();succeeded=true;return data;
   }
   catch(error){
-    const code=String(error&&error.code||'');
-    if((code==='CORENECTUM_API_TOKEN_REQUIRED'||code==='CORENECTUM_API_TOKEN_INVALID')&&window.buyerLogDesktop?.ensureCoreNectumAuth){
-      await runCoreNectumAutoAuth({interactive:true,force:true});
-      const data=await execute();succeeded=true;return data;
+    if(!coreNectumAuthenticationError(error))throw error;
+    /* Korunan PLM uçlarında plm-auth-recovery fetch katmanı oturumu zaten
+       sessizce yenilemeyi denedi, olmayınca login penceresini gösterdi ve
+       isteği bir kez tekrarladı. Burada ikinci bir login penceresi açılmaz. */
+    const recoveredByFetch=Boolean(window.__buyerLogPlmAuthRecoveryInstalled&&window.BLPlmAuthRecovery?.isProtectedPlmRequest?.(url,location.href,location.origin));
+    if(!recoveredByFetch&&coreNectumDesktopAuthAvailable()){
+      try{await runCoreNectumAutoAuth({interactive:true,force:true});}
+      catch(_){openPlmSignInAfterAuthFailure();throw error;}
+      try{const data=await execute();succeeded=true;return data;}
+      catch(retryError){if(coreNectumAuthenticationError(retryError))openPlmSignInAfterAuthFailure();throw retryError;}
     }
+    // Oturum otomatik yenilenemedi: kullanıcı PLM Kullanıcı Girişi ekranına yönlenir.
+    openPlmSignInAfterAuthFailure();
     throw error;
   }finally{autoHold?.release({ok:succeeded});}
 }
+function openPlmSignInAfterAuthFailure(){try{void openCoreNectumApiSettings();}catch(_){}}
 let coreNectumApiSettingsInFlight=null,coreNectumAutoAuthInFlight=null;
 async function coreNectumApiRaw(url,options){
   const response=await fetch(url,options),data=await response.json().catch(()=>({}));
