@@ -31552,39 +31552,33 @@ function kolTriggerPricingDownload(url,filename,delayMs=0){
   };
   if(delayMs>0) setTimeout(run,delayMs); else run();
 }
-const PREPARE_EMAIL_PRICING_REOPEN_KEY='buyerlog.pricingDraftReopen.v1';
-function prepareEmailPricingDraftStore(){
-  try{
-    const raw=JSON.parse(window.sessionStorage?.getItem(PREPARE_EMAIL_PRICING_REOPEN_KEY)||'{}');
-    return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
-  }catch(_){return {};}
-}
-function prepareEmailSavePricingDraftStore(store){
-  try{window.sessionStorage?.setItem(PREPARE_EMAIL_PRICING_REOPEN_KEY,JSON.stringify(store||{}));return true;}catch(_){return false;}
-}
+// Retry references are intentionally process/renderer-memory only. The .eml itself
+// remains a bounded temporary server file; no recipient/attachment draft metadata is
+// persisted into browser storage or the shared Quotations store.
+const prepareEmailPricingDraftRegistry=new Map();
 function prepareEmailPricingDraftExpiry(ref){
   const value=Date.parse(String(ref?.reopenUntil||''));
   return Number.isFinite(value)?value:0;
 }
 function prepareEmailPricingDraftRefs(requestId){
   const id=String(requestId||'').trim();if(!id)return [];
-  const store=prepareEmailPricingDraftStore(),raw=Array.isArray(store[id])?store[id]:[],now=Date.now();
+  const raw=Array.isArray(prepareEmailPricingDraftRegistry.get(id))?prepareEmailPricingDraftRegistry.get(id):[],now=Date.now();
   const live=raw.filter(ref=>{const expires=prepareEmailPricingDraftExpiry(ref);return ref&&String(ref.draftId||'').trim()&&(!expires||expires>now);});
-  if(live.length!==raw.length){if(live.length)store[id]=live;else delete store[id];prepareEmailSavePricingDraftStore(store);}
+  if(live.length)prepareEmailPricingDraftRegistry.set(id,live);else prepareEmailPricingDraftRegistry.delete(id);
   return live;
 }
 function prepareEmailRememberPricingDraft(requestId,ref){
   const id=String(requestId||'').trim(),draftId=String(ref?.draftId||'').trim();if(!id||!draftId)return null;
-  const store=prepareEmailPricingDraftStore(),refs=(Array.isArray(store[id])?store[id]:[]).filter(item=>item&&String(item.draftId||'').trim());
+  const refs=(Array.isArray(prepareEmailPricingDraftRegistry.get(id))?prepareEmailPricingDraftRegistry.get(id):[]).filter(item=>item&&String(item.draftId||'').trim());
   const next={draftId,manufacturer:String(ref?.manufacturer||''),filename:String(ref?.filename||''),reopenUntil:String(ref?.reopenUntil||'')};
   const index=refs.findIndex(item=>String(item.draftId||'')===draftId);
   if(index>=0)refs[index]={...refs[index],...next};else refs.push(next);
-  store[id]=refs.slice(-40);prepareEmailSavePricingDraftStore(store);return next;
+  prepareEmailPricingDraftRegistry.set(id,refs.slice(-40));return next;
 }
 function prepareEmailForgetPricingDraft(requestId,draftId){
   const id=String(requestId||'').trim(),token=String(draftId||'').trim();if(!id||!token)return;
-  const store=prepareEmailPricingDraftStore(),refs=(Array.isArray(store[id])?store[id]:[]).filter(item=>String(item?.draftId||'')!==token);
-  if(refs.length)store[id]=refs;else delete store[id];prepareEmailSavePricingDraftStore(store);
+  const refs=(Array.isArray(prepareEmailPricingDraftRegistry.get(id))?prepareEmailPricingDraftRegistry.get(id):[]).filter(item=>String(item?.draftId||'')!==token);
+  if(refs.length)prepareEmailPricingDraftRegistry.set(id,refs);else prepareEmailPricingDraftRegistry.delete(id);
 }
 function prepareEmailPricingDraftCount(requestId){return prepareEmailPricingDraftRefs(requestId).length;}
 async function prepareEmailReopenDraftRef(ref){
@@ -31655,7 +31649,7 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   const multiDownloadNote=unopenedCount>1
     ?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:8px;color:var(--ink);font-size:12px;">${escapeHtml(appLang==='en'?`${unopenedCount} draft e-mails were downloaded automatically. If your browser blocked some of them, click the links below one by one.`:`${unopenedCount} taslak e-posta otomatik indirildi. Tarayıcınız bir kısmını engellediyse aşağıdaki bağlantılara tek tek tıklayın.`)}</div>`
     :'';
-  const rows=results.map((r,resultIndex)=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const reopenLink=r.ok&&r.draftId?`<button type="button" class="tbtn" data-reopen-pricing-draft="${resultIndex}"><svg class="ic"><use href="#i-mail"/></svg>${escapeHtml(appLang==='en'?'Re-open Draft E-Mail':'Taslak E-Postayı Yeniden Aç')}</button>`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+  const rows=results.map((r,resultIndex)=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const reopenLink=r.ok&&r.draftId?`<button type="button" class="tbtn" data-reopen-pricing-draft="${resultIndex}"><svg class="ic"><use href="#i-mail-send"/></svg>${escapeHtml(appLang==='en'?'Re-open Draft E-Mail':'Taslak E-Postayı Yeniden Aç')}</button>`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
     <div><div style="font-weight:700;color:var(--ink);">${escapeHtml(r.manufacturer)}</div><div style="font-size:11.5px;color:${r.ok?'var(--success, #177a4c)':'var(--danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${reopenLink}${emlLink}${excelLink}</div>
   </div>`; }).join('');
