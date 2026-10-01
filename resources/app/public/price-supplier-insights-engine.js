@@ -111,7 +111,7 @@
     return change>VOLUME_STATUS_BAND?'growing':change<-VOLUME_STATUS_BAND?'declining':'stable';
   }
   function matches(rec,filters){
-    for(const dim of FILTER_DIMENSIONS){const wanted=keyOf(filters&&filters[dim]);if(wanted&&rec.k[dim]!==wanted)return false;}
+    for(const dim of FILTER_DIMENSIONS){const raw=filters&&filters[dim],wanted=(Array.isArray(raw)?raw:[raw]).map(keyOf).filter(Boolean);if(wanted.length&&!wanted.includes(rec.k[dim]))return false;}
     return true;
   }
   function weightedMean(parts){let sum=0,weight=0;for(const part of parts){if(part.value==null||!(part.weight>0))continue;sum+=part.value*part.weight;weight+=part.weight;}return weight>0?{value:sum/weight,weight}:null;}

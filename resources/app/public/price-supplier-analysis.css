@@ -39,6 +39,24 @@
 .psaFilterConfigPanel label{display:flex;align-items:center;gap:8px;min-height:30px;padding:3px 6px;color:var(--ink2);font-size:13px;cursor:pointer}
 .psaFilterConfigPanel label:hover{background:var(--hover)}
 .psaFilterConfigPanel input{margin:0;accent-color:var(--acc)}
+.psaMultiFilter{position:relative}
+.psaMultiFilter>summary{display:flex;flex-direction:column;gap:3px;list-style:none;cursor:pointer;user-select:none}
+.psaMultiFilter>summary::-webkit-details-marker{display:none}
+.psaMultiCaption{font-size:11px;font-weight:600;color:var(--muted)}
+.psaMultiTrigger{display:flex;align-items:center;justify-content:space-between;gap:8px;height:32px;min-width:110px;max-width:220px;box-sizing:border-box;padding:0 8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:13px;font-weight:500}
+.psaMultiLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.psaMultiChevron{flex:none;color:var(--muted)}
+.psaMultiFilter[open] .psaMultiTrigger,.psaMultiFilter.isActive .psaMultiTrigger{border-color:var(--acc)}
+.psaMultiFilter.isActive .psaMultiTrigger{background:var(--acc-bg);color:var(--acc-ink)}
+.psaMultiPanel{position:absolute;z-index:35;left:0;top:calc(100% + 6px);width:max(240px,100%);max-width:320px;padding:8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);box-shadow:var(--shadow-2)}
+.psaMultiSearch{width:100%;height:32px;box-sizing:border-box;padding:0 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper);color:var(--ink);font:inherit;font-size:13px}
+.psaMultiSearch:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.psaMultiList{max-height:250px;margin-top:7px;overflow:auto}
+.psaMultiOption{display:flex;align-items:center;gap:8px;min-height:30px;padding:3px 6px;color:var(--ink2);font-size:13px;cursor:pointer}
+.psaMultiOption:hover{background:var(--hover)}
+.psaMultiOption input{margin:0;accent-color:var(--acc)}
+.psaMultiAll{border-bottom:1px solid var(--line);font-weight:600}
+.psaMultiEmpty{margin:8px 6px;color:var(--muted);font-size:12px}
 
 .psaTabs>[role="tab"]{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;font-size:14px}
 .psaPanel{display:flex;flex-direction:column;gap:12px;min-width:0}
