@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.180",
-  "source": "test-v7.0.180",
-  "requestedAt": "2026-09-30T19:31:00Z",
-  "reason": "all-pending-main-stable-v7.0.180"
+  "version": "7.0.181",
+  "source": "test-v7.0.181",
+  "requestedAt": "2026-10-01T03:48:26Z",
+  "reason": "page-scoped-refresh-and-source-change-auto-update-v7.0.181"
 }
