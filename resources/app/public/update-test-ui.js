@@ -94,6 +94,16 @@
     }
     const restart = overlay.querySelector('[data-update-restart]');
     if (restart) restart.hidden = !status.pendingReady;
+    // Health check'te geri alınan sürüm aynı paketle tekrar indirilmez; yalnız
+    // moderatör bu engeli kaldırıp sürümü yeniden deneyebilir.
+    const retry = overlay.querySelector('[data-update-retry]');
+    if (retry) retry.hidden = !canRetry(status);
+  }
+
+  function canRetry(status) {
+    if (!isModerator() || !status || status.pendingReady || !status.latestVersion) return false;
+    const code = String(status.lastError && status.lastError.code || '');
+    return code === 'UPDATE_FAILED_VERSION_BLOCKED' || code === 'UPDATE_HEALTH_FAILED';
   }
 
   async function open() {
@@ -131,6 +141,7 @@
       moderator ? '<select data-update-channel><option value="test">TEST</option><option value="stable">STABLE</option></select></label></div>' : '',
       '<div class="updateTestMessage" data-update-message role="status" aria-live="polite"></div>',
       '<div class="updateTestActions">',
+      '<button type="button" class="navActionBtn" data-update-retry hidden>' + esc(tr('Tekrar Dene','Retry')) + '</button>',
       '<button type="button" class="navActionBtn primary" data-update-check>' + esc(tr('Güncellemeyi Kontrol Et','Check for Update')) + '</button>',
       '<button type="button" class="navActionBtn primary" data-update-restart hidden>' + esc(tr('Yeniden Başlat ve Kur','Restart and Install')) + '</button>',
       '</div></section>'
@@ -140,6 +151,7 @@
     const channel = overlay.querySelector('[data-update-channel]');
     const check = overlay.querySelector('[data-update-check]');
     const restart = overlay.querySelector('[data-update-restart]');
+    const retry = overlay.querySelector('[data-update-retry]');
     overlay.querySelector('[data-update-close]').addEventListener('click',close);
     overlay.addEventListener('mousedown',event => { if (event.target === overlay) close(); });
 
@@ -151,6 +163,7 @@
     const setBusy = value => {
       busy = Boolean(value);
       if (check) check.disabled = busy;
+      if (retry) retry.disabled = busy;
       if (channel) channel.disabled = busy;
     };
 
@@ -182,6 +195,27 @@
         const message = overlay && overlay.querySelector('[data-update-message]');
         if (message) {
           message.textContent = error.message || tr('Güncelleme kontrolü başarısız oldu.','Update check failed.');
+          message.classList.add('isError');
+        }
+      } finally {
+        setBusy(false);
+        await refresh().catch(()=>{});
+      }
+    });
+
+    if (retry) retry.addEventListener('click',async() => {
+      if (typeof api.retry !== 'function') return;
+      setBusy(true);
+      try {
+        const latest = overlay && overlay.querySelector('[data-update-value="latest"]');
+        const version = latest && /^\d+\.\d+\.\d+$/.test(latest.textContent.trim()) ? latest.textContent.trim() : '';
+        const result = await api.retry({userId:userId(),version});
+        if (!result || result.ok === false) throw new Error(result && (result.error || result.code) || tr('Sürüm yeniden denenemedi.','The version could not be retried.'));
+        render(result);
+      } catch (error) {
+        const message = overlay && overlay.querySelector('[data-update-message]');
+        if (message) {
+          message.textContent = error.message || tr('Sürüm yeniden denenemedi.','The version could not be retried.');
           message.classList.add('isError');
         }
       } finally {
