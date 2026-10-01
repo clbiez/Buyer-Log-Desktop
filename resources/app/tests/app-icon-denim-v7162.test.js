@@ -58,6 +58,7 @@ test('favicon, PWA manifest ve Electron pencereleri aynı simgeyi gösterir', ()
   assert.match(main, /const APP_ICON_SOURCE = path\.join\(APP_CORE_ROOT, 'buyerlog\.ico'\)/);
   assert.match(main, /iconPath: APP_ICON_SOURCE,\s*appDetails: taskbarAppDetails\(\),/);
   assert.match(main, /syncShortcutIcons\(/);
+  assert.match(main, /appUserModelId: APP_USER_MODEL_ID/);
   assert.match(main, /runExeIconPatch\(/);
   const workspace = read('electron/workspace-manager.js').toString('utf8');
   assert.match(workspace, /window\.setAppDetails\(appDetails\)/);
@@ -115,7 +116,7 @@ function fixture() {
   return { base, desktop, programs, taskbar, exePath, sourceIcon, links, addLink, writes, shell, getPath, iconDir: path.join(base, 'Portable', 'data', 'local', 'branding') };
 }
 
-test('yalnız BuyerLog.exe kısayollarının simgesi sabit kopyaya yönlenir', () => {
+test('yalnız BuyerLog.exe kısayollarının simgesi ve AppUserModelID kimliği eşitlenir', () => {
   const f = fixture();
   try {
     const desktopLink = path.join(f.desktop, 'Buyer Log.lnk');
@@ -128,20 +129,43 @@ test('yalnız BuyerLog.exe kısayollarının simgesi sabit kopyaya yönlenir', (
     f.addLink(otherLink, { target: path.join(f.base, 'excel.exe'), icon: '' });
     fs.writeFileSync(path.join(f.desktop, 'Bozuk.lnk'), '');
 
-    const result = syncShortcutIcons({ shell: f.shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir });
+    const result = syncShortcutIcons({ shell: f.shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir, appUserModelId: 'com.lcw.buyerlog' });
 
     assert.ok(result.icon.startsWith(f.iconDir + path.sep));
     assert.equal(fs.readFileSync(result.icon, 'utf8'), 'ICON-V2');
     assert.deepEqual(result.updated.sort(), [desktopLink, pinnedLink, startLink].sort());
-    assert.ok(f.writes.every(w => w.operation === 'update' && w.options.icon === result.icon && w.options.iconIndex === 0));
+    assert.ok(f.writes.every(w => w.operation === 'update' && w.options.icon === result.icon && w.options.iconIndex === 0 && w.options.appUserModelId === 'com.lcw.buyerlog'));
     assert.equal(f.links.get(otherLink).icon, '');
 
     // İkinci açılışta aynı simge için kısayollar yeniden yazılmaz.
     f.writes.length = 0;
-    const again = syncShortcutIcons({ shell: f.shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir });
+    const again = syncShortcutIcons({ shell: f.shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir, appUserModelId: 'com.lcw.buyerlog' });
     assert.equal(again.updated.length, 0);
     assert.equal(again.skipped, 3);
     assert.equal(f.writes.length, 0);
+  } finally {
+    fs.rmSync(f.base, { recursive: true, force: true });
+  }
+});
+
+test('simge doğru olsa bile AppUserModelID eksikse kısayol yeniden yazılır', () => {
+  const f = fixture();
+  try {
+    const desktopLink = path.join(f.desktop, 'Buyer Log.lnk');
+    const icon = require('../electron/shortcut-icon').ensureStableIcon({ sourceIcon: f.sourceIcon, iconDir: f.iconDir });
+    f.addLink(desktopLink, { target: f.exePath, icon, iconIndex: 0, appUserModelId: '' });
+
+    const result = syncShortcutIcons({
+      shell: f.shell,
+      getPath: f.getPath,
+      exePath: f.exePath,
+      sourceIcon: f.sourceIcon,
+      iconDir: f.iconDir,
+      appUserModelId: 'com.lcw.buyerlog',
+    });
+
+    assert.deepEqual(result.updated, [desktopLink]);
+    assert.equal(f.links.get(desktopLink).appUserModelId, 'com.lcw.buyerlog');
   } finally {
     fs.rmSync(f.base, { recursive: true, force: true });
   }

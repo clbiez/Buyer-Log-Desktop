@@ -14,8 +14,12 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
 
-  const DIMENSIONS=['manufacturer','country','classification','productGroup','mag','mmyg','buyingGroup','buyer'];
-  const FILTER_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','country','manufacturer'];
+  const DIMENSIONS=['manufacturer','country','classification','productGroup','productMainDefinition','mag','mmyg','buyingGroup','buyer'];
+  const FILTER_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','productMainDefinition','country','manufacturer'];
+  /* Kanonik boyutların dışında, kaynağın ham satırındaki HERHANGİ bir sütun
+     "col:<başlık>" anahtarıyla filtre olarak kullanılabilir. Değerler ilk
+     istekte tembel hesaplanır ve veri setinde önbelleklenir. */
+  const COLUMN_PREFIX='col:';
   const PERIOD_FIELDS=Object.freeze({inStore:'inStoreMonth',opd:'opdMonth'});
   const GROUP_DIMENSIONS=['classification','productGroup','mag','mmyg'];
   const RELATION_DIMENSIONS=['buyingGroup','buyer','mag','mmyg','classification','productGroup','country'];
@@ -78,8 +82,52 @@
     const index=list.indexOf(current);return index>0?list[index-1]:'';
   }
   function defaultPeriods(list){const current=list[list.length-1]||'';return {currentSeason:current,previousSeason:current?previousSeason(current,list):''};}
+  const isColumnDim=dim=>typeof dim==='string'&&dim.startsWith(COLUMN_PREFIX)&&dim.length>COLUMN_PREFIX.length;
+  const columnName=dim=>isColumnDim(dim)?dim.slice(COLUMN_PREFIX.length):'';
+  const isFilterDim=dim=>FILTER_DIMENSIONS.includes(dim)||isColumnDim(dim);
+  function rawRow(obs){const row=obs&&(obs.row||obs.raw);return row&&typeof row==='object'?row:null;}
+  function cellText(value){
+    if(value==null)return '';
+    if(value instanceof Date)return Number.isNaN(value.getTime())?'':value.toISOString().slice(0,10);
+    if(typeof value==='object')return '';
+    return clean(value);
+  }
+  /* Ham satırlarda en az bir dolu değeri olan sütun başlıkları ('_' ile
+     başlayan iç alanlar hariç). */
+  function columnKeys(dataset){
+    if(!dataset)return [];
+    if(dataset.columnCache)return dataset.columnCache;
+    const set=new Set();
+    for(const rec of dataset.records||[]){
+      const row=rawRow(rec.obs);if(!row)continue;
+      for(const key of Object.keys(row)){if(!key||key[0]==='_'||set.has(key))continue;if(cellText(row[key]))set.add(key);}
+    }
+    const list=[...set].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
+    Object.defineProperty(dataset,'columnCache',{value:list,configurable:true});
+    return list;
+  }
+  function columnLabels(dataset,column){
+    if(!dataset.columnLabels)Object.defineProperty(dataset,'columnLabels',{value:new Map(),configurable:true});
+    let map=dataset.columnLabels.get(column);if(map)return map;
+    map=new Map();
+    for(const rec of dataset.records||[]){
+      const row=rawRow(rec.obs),label=row?cellText(row[column]):'',key=keyOf(label);
+      (rec.c||(rec.c={}))[column]=key;
+      if(key&&!map.has(key))map.set(key,label);
+    }
+    dataset.columnLabels.set(column,map);
+    return map;
+  }
+  function recordKey(rec,dim){
+    if(!isColumnDim(dim))return rec.k[dim];
+    const column=columnName(dim);
+    if(rec.c&&rec.c[column]!==undefined)return rec.c[column];
+    const row=rawRow(rec.obs),key=keyOf(row?cellText(row[column]):'');
+    (rec.c||(rec.c={}))[column]=key;
+    return key;
+  }
   function dimensionValues(dataset,dim){
-    const map=dataset.labels&&dataset.labels[dim];if(!map)return [];
+    const map=isColumnDim(dim)?columnLabels(dataset,columnName(dim)):dataset.labels&&dataset.labels[dim];if(!map)return [];
     return [...map.values()].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
   }
   function availableDimensions(dataset,list){return list.filter(dim=>dataset.labels&&dataset.labels[dim]&&dataset.labels[dim].size>0);}
@@ -111,7 +159,8 @@
     return change>VOLUME_STATUS_BAND?'growing':change<-VOLUME_STATUS_BAND?'declining':'stable';
   }
   function matches(rec,filters){
-    for(const dim of FILTER_DIMENSIONS){const wanted=keyOf(filters&&filters[dim]);if(wanted&&rec.k[dim]!==wanted)return false;}
+    if(!filters)return true;
+    for(const dim of Object.keys(filters)){if(!isFilterDim(dim))continue;const raw=filters[dim],wanted=(Array.isArray(raw)?raw:[raw]).map(keyOf).filter(Boolean);if(wanted.length&&!wanted.includes(recordKey(rec,dim)))return false;}
     return true;
   }
   function weightedMean(parts){let sum=0,weight=0;for(const part of parts){if(part.value==null||!(part.weight>0))continue;sum+=part.value*part.weight;weight+=part.weight;}return weight>0?{value:sum/weight,weight}:null;}
@@ -269,5 +318,5 @@
     return out.slice(0,6);
   }
 
-  return {DIMENSIONS,FILTER_DIMENSIONS,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
+  return {DIMENSIONS,FILTER_DIMENSIONS,COLUMN_PREFIX,isColumnDim,columnName,isFilterDim,columnKeys,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
 });

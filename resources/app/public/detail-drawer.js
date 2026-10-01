@@ -11,6 +11,10 @@
 
 const PREF_PREFIX='buyerlog.detailDrawer.columns.';
 const WIDTH_PREFIX='buyerlog.detailDrawer.width.';
+const COL_WIDTH_PREFIX='buyerlog.detailDrawer.colWidths.';
+const PRESET_PREFIX='buyerlog.detailDrawer.preset.';
+// Sütun genişliği sınırları: uzun başlık sarılır, sütunu genişletmez.
+const COL_MIN=56,COL_MAX=640,COL_FIT_MAX=360,COL_DEFAULT_MAX=240;
 // Büyük detay kümelerinde tablo parça parça çizilir; Excel ve arama bütün satırlarla çalışır.
 const RENDER_CHUNK=300;
 const clean=value=>String(value==null?'':value).replace(/\s+/g,' ').trim();
@@ -60,6 +64,38 @@ function loadVisible(scope,page,columns,defaults){
   return preferred.length?preferred:columns.map(c=>c.key);
 }
 function saveVisible(scope,page,keys){try{store().setItem(prefKey(scope,page),JSON.stringify(keys));}catch(_){}}
+function colWidthKey(scope,page){return COL_WIDTH_PREFIX+storagePart(page)+'.'+storagePart(scope);}
+function loadColWidths(scope,page){
+  try{
+    const raw=JSON.parse(store().getItem(colWidthKey(scope,page))||'null');
+    return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  }catch(_){return {};}
+}
+function saveColWidths(){if(!active)return;try{store().setItem(colWidthKey(active.scope,active.pageScope),JSON.stringify(active.colWidths||{}));}catch(_){}}
+function presetKey(scope,page){return PRESET_PREFIX+storagePart(page)+'.'+storagePart(scope);}
+function loadPreset(scope,page){try{const v=clean(store().getItem(presetKey(scope,page))).toLowerCase();return ['focus','extended','all','custom'].includes(v)?v:'';}catch(_){return '';}}
+function savePreset(){if(!active||active.tableSetup||!active.viewPresets)return;try{store().setItem(presetKey(active.scope,active.pageScope),active.preset);}catch(_){}}
+// Bağlama özel (tableSetup olmayan) Odak/Genişletilmiş görünüm listeleri.
+// Tümü her zaman bütün sütunlardır.
+function normalizeViewPresets(input,columns){
+  const raw=input&&input.viewPresets;
+  if(!raw||typeof raw!=='object')return null;
+  const allowed=new Set(columns.map(col=>col.key)),out={};
+  ['focus','extended'].forEach(name=>{
+    const keys=(Array.isArray(raw[name])?raw[name]:[]).map(clean).filter(key=>allowed.has(key));
+    if(keys.length)out[name]=[...new Set(keys)];
+  });
+  if(!out.focus&&!out.extended)return null;
+  if(!out.focus)out.focus=out.extended.slice();
+  if(!out.extended)out.extended=out.focus.slice();
+  return out;
+}
+function viewPresetVisible(preset){
+  if(!active)return[];
+  if(preset==='all')return active.columns.map(col=>col.key);
+  if(active.tableSetup)return setupVisibleKeys(active.tableSetup,preset,active.contextKeys);
+  return active.viewPresets&&active.viewPresets[preset]?active.viewPresets[preset].slice():[];
+}
 
 function tableSetupSnapshot(input){
   const tableKey=clean(input&&input.tableSetup);
@@ -264,13 +300,143 @@ function searchText(row,index){
   if(text==null){const locale=isEn()?'en-GB':'tr-TR';text=active.columns.map(col=>textValue(col,row).toLocaleLowerCase(locale)).join('\u0001');active.searchIndex[index]=text;}
   return text;
 }
+/* Sütun filtresi CP başlık filtresiyle aynı değer kümesi mantığını kullanır:
+   değerler ekranda görünen (biçimlendirilmiş) metindir, boş küme = filtre yok. */
+function cellFilterValue(col,row){return clean(textValue(col,row));}
+function columnByKey(key){return active&&active.columns.find(col=>col.key===key)||null;}
+function rowPassesFilters(row,skipKey){
+  if(!active||!active.filters)return true;
+  for(const [key,set] of active.filters){
+    if(key===skipKey||!set||!set.size)continue;
+    const col=columnByKey(key);if(!col)continue;
+    if(!set.has(cellFilterValue(col,row)))return false;
+  }
+  return true;
+}
 function filteredRows(){
   if(!active)return[];
   const q=clean(active.search).toLocaleLowerCase(isEn()?'en-GB':'tr-TR');
-  if(!q)return active.rows;
-  if(active.filterCache&&active.filterCache.q===q)return active.filterCache.rows;
-  const rows=active.rows.filter((row,index)=>searchText(row,index).includes(q));
-  active.filterCache={q,rows};return rows;
+  const sig=q+'\u0002'+(active.filterVersion||0);
+  if(!q&&!(active.filters&&active.filters.size))return active.rows;
+  if(active.filterCache&&active.filterCache.sig===sig)return active.filterCache.rows;
+  const rows=active.rows.filter((row,index)=>(!q||searchText(row,index).includes(q))&&rowPassesFilters(row));
+  active.filterCache={sig,rows};return rows;
+}
+function filterValueSort(a,b){
+  if(a==='')return 1;if(b==='')return -1;
+  return a.localeCompare(b,isEn()?'en-GB':'tr-TR',{numeric:true,sensitivity:'base'});
+}
+function openColumnFilter(key,anchor){
+  const col=columnByKey(key),openPanel=root.openValueFilterPanel;
+  if(!col||typeof openPanel!=='function')return;
+  const values=new Set(),activeValues=new Set();
+  active.rows.forEach(row=>{
+    const value=cellFilterValue(col,row);values.add(value);
+    if(rowPassesFilters(row,key))activeValues.add(value);
+  });
+  openPanel({
+    anchorEl:anchor,title:col.label,values:[...values].sort(filterValueSort),activeValues,
+    selected:new Set(active.filters.get(key)||[]),
+    labelFor:value=>value===''?L('(boş)','(blank)'):value,
+    onApply:selected=>setColumnFilter(key,selected),
+    onRemove:()=>setColumnFilter(key,null)
+  });
+}
+function setColumnFilter(key,selected){
+  if(!active)return;
+  if(selected&&selected.size)active.filters.set(key,new Set(selected));else active.filters.delete(key);
+  active.filterVersion=(active.filterVersion||0)+1;active.limit=RENDER_CHUNK;
+  renderTable();
+}
+function clearColumnFilters(){
+  if(!active||!active.filters.size)return;
+  active.filters.clear();active.filterVersion=(active.filterVersion||0)+1;active.limit=RENDER_CHUNK;renderTable();
+}
+function syncFilterTools(){
+  const host=document.getElementById('blSharedDetailDrawer');if(!host||!active)return;
+  const button=host.querySelector('[data-bl-detail-clear-filters]');if(!button)return;
+  const count=active.filters.size;
+  button.hidden=!count;
+  button.textContent='✕ '+L('Filtreleri Temizle','Clear Filters')+(count?' ('+count+')':'');
+}
+
+/* ----- Sütun genişliği: sürükle, çift tıkla sığdır, Sütunları Sığdır ----- */
+let measureCtx=null;
+function measureText(text,font){
+  try{
+    if(!measureCtx)measureCtx=document.createElement('canvas').getContext('2d');
+    if(measureCtx){measureCtx.font=font;return Math.ceil(measureCtx.measureText(String(text)).width);}
+  }catch(_){}
+  return Math.ceil(String(text).length*6.4);
+}
+function tableFonts(){
+  const table=document.querySelector('#blSharedDetailDrawer [data-bl-detail-table]');
+  let family='Arial, sans-serif',size='11px';
+  try{if(table){const cs=root.getComputedStyle(table);family=cs.fontFamily||family;size=cs.fontSize||size;}}catch(_){}
+  return {cell:'400 '+size+' '+family,head:'600 11px '+family};
+}
+// En dar okunabilir genişlik: hücre içeriği tek satır sığar, başlık ise
+// kelime kelime sarılır (en uzun kelime + en fazla `lines` satır).
+function fitWidthOf(col,maxPx,lines){
+  const fonts=tableFonts(),visibleRows=filteredRows(),rows=visibleRows.length?visibleRows:active.rows;
+  let data=0;
+  const sample=rows.length>600?rows.slice(0,600):rows;
+  sample.forEach(row=>{const text=textValue(col,row);if(text)data=Math.max(data,measureText(text,fonts.cell));});
+  const label=clean(col.label),longestWord=label.split(' ').reduce((max,word)=>Math.max(max,measureText(word,fonts.head)),0);
+  const header=Math.max(longestWord,Math.ceil(measureText(label,fonts.head)/(lines||3)))+22+18;
+  return Math.max(COL_MIN,Math.min(maxPx||COL_FIT_MAX,Math.max(data+22,header)));
+}
+function columnWidth(col){
+  const saved=Number(active.colWidths&&active.colWidths[col.key]);
+  if(Number.isFinite(saved)&&saved>=COL_MIN)return Math.min(COL_MAX,Math.round(saved));
+  if(!active.autoWidths)active.autoWidths={};
+  if(active.autoWidths[col.key])return active.autoWidths[col.key];
+  const inherited=Number(col.widthPx)||0;
+  const px=inherited?Math.max(COL_MIN,Math.min(COL_MAX,Math.round(inherited))):fitWidthOf(col,COL_DEFAULT_MAX,2);
+  active.autoWidths[col.key]=px;return px;
+}
+function applyTableWidth(table,columns,showImages){
+  const total=columns.reduce((sum,col)=>sum+columnWidth(col),showImages?74:0);
+  table.style.width=total+'px';
+}
+function fitAllColumns(){
+  if(!active)return;
+  if(!active.colWidths)active.colWidths={};
+  currentColumns().forEach(col=>{active.colWidths[col.key]=fitWidthOf(col);});
+  saveColWidths();renderTable();
+  root.showToast?.(L('Sütunlar en dar okunabilir genişliğe getirildi.','Columns were fitted to their narrowest readable width.'));
+}
+function bindColumnResize(table){
+  table.querySelectorAll('[data-bl-detail-col-resize]').forEach(grip=>{
+    grip.addEventListener('click',event=>{event.preventDefault();event.stopPropagation();});
+    grip.addEventListener('dblclick',event=>{
+      event.preventDefault();event.stopPropagation();
+      const col=columnByKey(grip.dataset.blDetailColResize);if(!col)return;
+      active.colWidths[col.key]=fitWidthOf(col);saveColWidths();renderTable();
+    });
+    grip.addEventListener('pointerdown',event=>{
+      if(event.button!==0)return;
+      event.preventDefault();event.stopPropagation();
+      const key=grip.dataset.blDetailColResize,col=columnByKey(key),th=grip.closest('th');
+      if(!col||!th)return;
+      const index=[...th.parentElement.children].indexOf(th),colEl=table.querySelectorAll('colgroup col')[index];
+      const startX=event.clientX,startPx=Math.round(th.getBoundingClientRect().width)||columnWidth(col);
+      const showImages=Boolean(table.querySelector('.blDetailImageCol'));
+      const move=ev=>{
+        const next=Math.max(COL_MIN,Math.min(COL_MAX,Math.round(startPx+(ev.clientX-startX))));
+        active.colWidths[key]=next;
+        if(colEl)colEl.style.width=next+'px';
+        applyTableWidth(table,currentColumns(),showImages);
+      };
+      const end=()=>{
+        root.removeEventListener('pointermove',move);root.removeEventListener('pointerup',end);
+        document.body.classList.remove('blColResizing');
+        if(active)saveColWidths();
+      };
+      document.body.classList.add('blColResizing');
+      root.addEventListener('pointermove',move);root.addEventListener('pointerup',end);
+    });
+  });
 }
 function currentColumns(){if(!active)return[];const set=new Set(active.visible);return active.columns.filter(col=>set.has(col.key));}
 
@@ -279,11 +445,11 @@ function setupVisibleKeys(snapshot,preset,contextKeys){
   return [...new Set([...(base||[]),...(contextKeys||[])])];
 }
 function applyViewPreset(preset){
-  if(!active||!active.tableSetup||!['focus','extended','all'].includes(preset))return false;
+  if(!active||!(active.tableSetup||active.viewPresets)||!['focus','extended','all'].includes(preset))return false;
   const allowed=new Set(active.columns.map(col=>col.key));
-  active.preset=preset;
-  active.visible=setupVisibleKeys(active.tableSetup,preset,active.contextKeys).filter(key=>allowed.has(key));
-  if(!active.visible.length)return false;
+  const next=(active.tableSetup?setupVisibleKeys(active.tableSetup,preset,active.contextKeys):viewPresetVisible(preset)).filter(key=>allowed.has(key));
+  if(!next.length)return false;
+  active.preset=preset;active.visible=next;savePreset();
   return true;
 }
 function syncViewPresetButtons(){
@@ -291,7 +457,7 @@ function syncViewPresetButtons(){
   host.querySelectorAll('[data-bl-detail-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.blDetailViewPreset===active.preset)));
 }
 function viewPresetHtml(){
-  if(!active||!active.tableSetup)return'';
+  if(!active||!(active.tableSetup||active.viewPresets))return'';
   return '<div class="blDetailViewActions" role="group" aria-label="'+escapeHtml(L('Tablo görünümü','Table view'))+'">'+
     '<span class="blDetailViewLabel">'+escapeHtml(L('GÖRÜNÜM','VIEW'))+'</span>'+
     ['focus','extended','all'].map(preset=>{
@@ -330,10 +496,10 @@ function renderColumnsPanel(){
   host.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener('change',()=>{
     const keys=[...host.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
     if(!keys.length){input.checked=true;return;}
-    active.visible=keys;active.preset='custom';saveVisible(active.scope,active.pageScope,keys);renderTable();syncViewPresetButtons();
+    active.visible=keys;active.preset='custom';saveVisible(active.scope,active.pageScope,keys);savePreset();renderTable();syncViewPresetButtons();
   }));
   host.querySelector('[data-bl-detail-column-all]')?.addEventListener('click',()=>{
-    active.visible=active.columns.map(c=>c.key);active.preset=active.tableSetup?'all':'custom';saveVisible(active.scope,active.pageScope,active.visible);renderTable();renderColumnsPanel();syncViewPresetButtons();
+    active.visible=active.columns.map(c=>c.key);active.preset=active.tableSetup||active.viewPresets?'all':'custom';saveVisible(active.scope,active.pageScope,active.visible);savePreset();renderTable();renderColumnsPanel();syncViewPresetButtons();
   });
 }
 function renderTable(){
@@ -345,13 +511,23 @@ function renderTable(){
   const imageIndex=helper?.buildIndex?helper.buildIndex():null,showImages=active.images&&Boolean(helper);
   const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,colspan=Math.max(1,columns.length+(showImages?1:0));
   const colgroup=table.querySelector('colgroup');
-  if(colgroup)colgroup.innerHTML=(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>{const width=Number(col.widthPx)||0;return '<col'+(width?' style="width:'+Math.round(width)+'px"':'')+'>';}).join('');
-  table.querySelector('thead').innerHTML=groupHeaderHtml(columns,showImages)+'<tr class="blDetailColumnRow">'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>'<th>'+escapeHtml(col.label)+'</th>').join('')+'</tr>';
+  if(colgroup)colgroup.innerHTML=(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>'<col style="width:'+columnWidth(col)+'px">').join('');
+  applyTableWidth(table,columns,showImages);
+  // CP başlık yapısı: thInner > thLabel + ▾ filtre düğmesi + sağ kenarda genişlik tutamağı.
+  const filterLabel=L('Filtrele','Filter');
+  table.querySelector('thead').innerHTML=groupHeaderHtml(columns,showImages)+'<tr class="blDetailColumnRow">'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
+    const key=escapeHtml(col.key),filtered=active.filters.has(col.key);
+    return '<th data-key="'+key+'" title="'+escapeHtml(col.label)+'"'+(filtered?' class="columnFilterActive"':'')+'><div class="thInner"><span class="thLabel">'+escapeHtml(col.label)+'</span>'+
+      '<button type="button" class="thFilterBtn'+(filtered?' filterActive':'')+'" data-bl-detail-filter="'+key+'" aria-label="'+escapeHtml(filterLabel+': '+col.label)+'" title="'+escapeHtml(filterLabel)+'">▾</button></div>'+
+      '<span class="colResizer" data-bl-detail-col-resize="'+key+'" title="'+escapeHtml(L('Sürükleyerek genişliği ayarla · çift tıklayarak sığdır','Drag to resize · double-click to fit'))+'"></span></th>';
+  }).join('')+'</tr>';
+  bindColumnResize(table);
   table.querySelector('tbody').innerHTML=shown.length?shown.map(row=>'<tr>'+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map(col=>{
     if(typeof col.html==='function'){let html='';try{html=col.html(row)||'';}catch(_){}return '<td>'+html+'</td>';}
     const value=textValue(col,row);return '<td title="'+escapeHtml(value)+'">'+escapeHtml(value||'—')+'</td>';
   }).join('')+'</tr>').join('')+(rest>0?'<tr><td class="blDetailMore" colspan="'+colspan+'"><button type="button" class="blDetailTool" data-bl-detail-more>'+escapeHtml(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+escapeHtml(L('satır kaldı','rows left'))+'</button></td></tr>':''):'<tr><td class="blDetailEmpty" colspan="'+colspan+'">'+escapeHtml(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>';
   if(summary)summary.textContent=(active.subtitle?active.subtitle+' · ':'')+rows.length.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+L('satır','rows');
+  syncFilterTools();
   registerAssetScope(host.querySelector('.blDetailDrawerPanel'),rows,imageIndex);
 }
 function downloadBuffer(buffer,name,mime){
@@ -444,6 +620,8 @@ function render(){
     '<div class="blDetailExportMenu" data-bl-detail-export-menu hidden><button type="button" data-bl-export-mode="all">'+escapeHtml(L('Tüm Sütunlarla','All Columns'))+'</button><button type="button" data-bl-export-mode="visible">'+escapeHtml(L('Görünen Sütunlarla','Visible Columns'))+'</button></div>'+
     '<button type="button" class="blDetailClose" data-bl-detail-close aria-label="'+escapeHtml(L('Kapat','Close'))+'">×</button></div></header>'+
     '<div class="blDetailDrawerSubbar">'+viewPresetHtml()+'<input type="search" data-bl-detail-search value="'+escapeHtml(active.search)+'" placeholder="'+escapeHtml(L('Detaylarda ara…','Search details…'))+'">'+
+    '<button type="button" class="blDetailTool" data-bl-detail-fit title="'+escapeHtml(L('Tüm sütunları en dar okunabilir genişliğe getir','Fit all columns to the narrowest readable width'))+'">⇔ '+escapeHtml(L('Sütunları Sığdır','Fit Column Width'))+'</button>'+
+    '<button type="button" class="blDetailTool" data-bl-detail-clear-filters hidden></button>'+
     '<div class="blDetailExtraActions" data-bl-detail-extra></div><div class="blDetailColumnPanel" data-bl-detail-column-panel hidden></div></div>'+
     (active.note?'<div class="blDetailDrawerNote">'+escapeHtml(active.note)+'</div>':'')+
     '<div class="blDetailTableWrap"><table class="blDetailTable" data-bl-detail-table><colgroup></colgroup><thead></thead><tbody></tbody></table></div></section>';
@@ -456,8 +634,13 @@ function render(){
     active.searchTimer=setTimeout(()=>{if(!active)return;active.searchTimer=0;renderTable();},120);
   });
   host.querySelector('[data-bl-detail-table]')?.addEventListener('click',event=>{
-    if(!event.target.closest('[data-bl-detail-more]')||!active)return;active.limit=(active.limit||RENDER_CHUNK)+RENDER_CHUNK;renderTable();
+    if(!active)return;
+    const filterButton=event.target.closest('[data-bl-detail-filter]');
+    if(filterButton){event.preventDefault();event.stopPropagation();openColumnFilter(filterButton.dataset.blDetailFilter,filterButton);return;}
+    if(!event.target.closest('[data-bl-detail-more]'))return;active.limit=(active.limit||RENDER_CHUNK)+RENDER_CHUNK;renderTable();
   });
+  host.querySelector('[data-bl-detail-fit]')?.addEventListener('click',fitAllColumns);
+  host.querySelector('[data-bl-detail-clear-filters]')?.addEventListener('click',clearColumnFilters);
   host.querySelector('[data-bl-detail-images]')?.addEventListener('click',()=>{active.images=!active.images;render();});
   host.querySelector('[data-bl-detail-columns]')?.addEventListener('click',()=>{
     const panel=host.querySelector('[data-bl-detail-column-panel]');panel.hidden=!panel.hidden;if(!panel.hidden)renderColumnsPanel();
@@ -490,22 +673,35 @@ function open(options){
   const contextKeys=contextColumns.map(col=>col.key).filter(key=>!setupColumns.some(col=>col.key===key));
   const columns=setup?normalizeColumns([...setupColumns,...contextColumns.filter(col=>!setupColumns.some(base=>base.key===col.key))],rows):contextColumns;
   const scope=input.storageKey||input.scope||input.source||'generic',page=pageScope(input);
-  const preset=setup?setupInitialPreset(setup):'custom';
-  const initialVisible=setup?setupVisibleKeys(setup,preset,contextKeys):loadVisible(scope,page,columns,input.defaultVisible||input.initialVisible);
+  const viewPresets=setup?null:normalizeViewPresets(input,columns);
+  let preset=setup?setupInitialPreset(setup):'custom';
+  if(viewPresets){
+    const saved=loadPreset(scope,page),fallback=['focus','extended','all'].includes(input.defaultPreset)?input.defaultPreset:'focus';
+    preset=saved||fallback;
+  }
+  const initialVisible=setup?setupVisibleKeys(setup,preset,contextKeys)
+    :viewPresets&&preset!=='custom'?(preset==='all'?columns.map(col=>col.key):viewPresets[preset])
+    :loadVisible(scope,page,columns,input.defaultVisible||input.initialVisible);
   const allowed=new Set(columns.map(col=>col.key));
   active={
     scope,pageScope:page,moduleId:input.moduleId||page,source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
     rows,columns,visible:initialVisible.filter(key=>allowed.has(key)),width:loadWidth(page),
-    tableSetup:setup,contextKeys,preset,
+    tableSetup:setup,viewPresets,contextKeys,preset,
+    colWidths:loadColWidths(scope,page),autoWidths:null,filters:new Map(),filterVersion:0,
     images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
   };
   render();
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
 }
-function close(){if(active&&active.searchTimer)clearTimeout(active.searchTimer);active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&active)close();});
+function close(){if(active&&active.searchTimer)clearTimeout(active.searchTimer);if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape'||!active)return;
+  // Açık sütun filtresi paneli önce kapanır; çekmece ikinci Escape ile kapanır.
+  if(document.querySelector('.colFilterPanel')){if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();return;}
+  close();
+});
 return {open,close,inferColumns,normalizeColumns,safeFilePart,isOpen:()=>Boolean(active)};
 });

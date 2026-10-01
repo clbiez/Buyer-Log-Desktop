@@ -99,6 +99,17 @@ test('filtreler büyük/küçük harf ve Türkçe karakterden bağımsız uygula
   assert.deepEqual(E.dimensionValues(data,'buyingGroup'),['Erkek','Kız Çocuk']);
 });
 
+test('çoklu filtreler aynı alan içinde OR, farklı alanlar arasında AND çalışır',()=>{
+  const data=E.prepare([
+    obs('26Y','A','Kazak',10,100,{country:'Türkiye',buyingGroup:'Erkek'}),
+    obs('26Y','B','Kazak',10,100,{country:'Mısır',buyingGroup:'Erkek'}),
+    obs('26Y','C','Kazak',10,100,{country:'China',buyingGroup:'Erkek'}),
+    obs('26Y','D','Kazak',10,100,{country:'Türkiye',buyingGroup:'Kadın'}),
+  ]);
+  const model=E.analyze(data,{currentSeason:'26Y',filters:{country:['Türkiye','Mısır'],buyingGroup:['Erkek']}});
+  assert.deepEqual(model.manufacturers.map(m=>m.name).sort(),['A','B']);
+});
+
 test('kim kiminle: her grup için ilk üç üretici + diğer payı %100 eder ve detay kayıtlarını taşır',()=>{
   const rows=['A','B','C','D','E'].map((m,i)=>obs('26Y',m,'Kazak',10,10*(5-i),{buyingGroup:'Kadın'}));
   const model=E.analyze(E.prepare(rows),{currentSeason:'26Y'});
@@ -187,6 +198,25 @@ test('ekran TR/EN çeviri anahtarlarını eksiksiz karşılar',async()=>{
   assert.equal(api._translate('tab_advantage'),'Who wins where?');
 });
 
+test('filtre menüsü arama ve çoklu seçim sunar; eski tekli kayıtlar diziye taşınır',async()=>{
+  const rows=[
+    obs('26Y','A','Kazak',10,100,{country:'Mısır'}),
+    obs('26Y','B','Kazak',10,100,{country:'Türkiye'}),
+    obs('26Y','C','Kazak',10,100,{country:'China'}),
+  ];
+  const saved=JSON.stringify({filterLayout:['country'],filters:{country:'Mısır'}});
+  const {root,context}=await mountScreen(rows,'tr',saved);
+  const api=context.BLPriceSupplierAnalysis;
+  assert.equal(JSON.stringify(api.state.filters.country),JSON.stringify(['Mısır']));
+  assert.match(root.innerHTML,/data-ps-filter-search="country"/);
+  assert.match(root.innerHTML,/data-ps-filter-value="country"/);
+  assert.match(root.innerHTML,/Filtrede ara/);
+  root.listeners.change({target:{dataset:{psFilterValue:'country'},value:'Türkiye',checked:true}});
+  assert.equal(JSON.stringify(api.state.filters.country),JSON.stringify(['Mısır','Türkiye']));
+  assert.equal(api.model.totals.records,2);
+  assert.match(root.innerHTML,/2 seçim/);
+});
+
 test('beş sekmenin tamamı gerçek veriyle hatasız çizilir ve tıklama detay açar',async()=>{
   const rows=[
     obs('25Y','A','Kazak',10,100),obs('25Y','A','Kazak',10,100),obs('25Y','GONE','Hırka',9,40),obs('25Y','GONE','Hırka',9,40),
@@ -261,4 +291,34 @@ test('LFL köprüsü süren yüklemeyi bekler, hatayı yüzeye çıkarır ve giz
   assert.match(bridge,/const analysis=scope==='filtered'\?\(state\.analysis\|\|compute\(\)\):null;/);
   assert.match(lfl,/if\(state\.initialized\)\{fillControls\(\);render\(\);\}else state\.controlsPending=true;/);
   assert.match(lfl,/if\(state\.controlsPending\)\{state\.controlsPending=false;fillControls\(\);\}render\(\);/);
+});
+
+test('herhangi bir ham sütun ve Ürün Ana Tanım filtre olarak eklenebilir; veri olmayan kanonik alanlar gizlenmez',async()=>{
+  const rows=[
+    obs('26Y','A','Kazak',10,100,{buyingGroup:'',productMainDefinition:'Örme Kazak',row:{'Product Main Definition':'Örme Kazak','Sezon Kodu':'S7',_id:1}}),
+    obs('26Y','B','Kazak',12,100,{buyingGroup:'',productMainDefinition:'Hırka',row:{'Product Main Definition':'Hırka','Sezon Kodu':'S7',_id:2}}),
+    obs('26Y','C','Kazak',14,100,{buyingGroup:'',productMainDefinition:'Hırka',row:{'Product Main Definition':'Hırka','Sezon Kodu':'',_id:3}}),
+  ];
+  const data=E.prepare(rows);
+  assert.deepEqual(E.columnKeys(data),['Product Main Definition','Sezon Kodu'],'iç alanlar ve tamamen boş sütunlar listelenmez');
+  assert.deepEqual(E.dimensionValues(data,'col:Product Main Definition'),['Hırka','Örme Kazak']);
+  assert.deepEqual(E.dimensionValues(data,'productMainDefinition'),['Hırka','Örme Kazak']);
+  assert.equal(E.analyze(data,{currentSeason:'26Y',filters:{'col:Product Main Definition':['HIRKA']}}).totals.records,2);
+  assert.equal(E.analyze(data,{currentSeason:'26Y',filters:{productMainDefinition:['Örme Kazak']}}).totals.records,1);
+
+  const saved=JSON.stringify({filterLayout:['buyingGroup','col:Product Main Definition','bogus'],filters:{'col:Product Main Definition':['Hırka'],bogus:['x']}});
+  const {root,context}=await mountScreen(rows,'tr',saved);
+  const api=context.BLPriceSupplierAnalysis;
+  assert.deepEqual([...api.state.filterLayout],['buyingGroup','col:Product Main Definition'],'geçersiz anahtarlar atılır');
+  assert.equal(api.model.totals.records,2,'kayıtlı sütun filtresi uygulanır');
+  assert.match(root.innerHTML,/data-ps-filter-menu="col:Product Main Definition"/);
+  assert.match(root.innerHTML,/psaField isEmpty[\s\S]*Bu kaynakta veri yok/,'verisi olmayan seçili alan gizlenmez');
+  assert.match(root.innerHTML,/data-ps-filter-toggle="col:Sezon Kodu"/,'ham sütunlar filtre ekle listesinde');
+  assert.match(root.innerHTML,/data-ps-filter-toggle="manufacturer"/);
+  root.listeners.change({target:{dataset:{psFilterToggle:'col:Sezon Kodu'},checked:true}});
+  assert.ok(api.state.filterLayout.includes('col:Sezon Kodu'));
+  assert.match(root.innerHTML,/data-ps-filter-config open/,'panel ekleme sonrası açık kalır');
+  root.listeners.click({target:{closest:()=>({dataset:{ps:'clear'}})}});
+  assert.equal(JSON.stringify(api.state.filters['col:Product Main Definition']),'[]','temizle sütun filtrelerini de boşaltır');
+  assert.equal(api.model.totals.records,3);
 });

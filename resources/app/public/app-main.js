@@ -1041,11 +1041,23 @@ function syncUnifiedPrioritiesForTable(tableKey){
   _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision};
   return true;
 }
-function showUnifiedPriorityLoading(tableKey){
+function renderCorePageLoadingState(tableKey,message){
   const empty=document.getElementById(tableKey==='cp'?'cpEmpty':'ordersEmpty');
   const content=document.getElementById(tableKey==='cp'?'cpContent':'ordersContent');
-  if(empty){empty.textContent=appLang==='en'?'Preparing unified priorities…':'Ortak öncelikler hazırlanıyor…';empty.style.display='flex';}
-  if(content)content.style.display='none';
+  if(!empty||!content)return;
+  const title=message||(tableKey==='cp'
+    ?(appLang==='en'?'Loading CP on demand…':'CP gerektiğinde yükleniyor…')
+    :(appLang==='en'?'Loading Orders on demand…':'Siparişler gerektiğinde yükleniyor…'));
+  if(window.BLUI&&typeof window.BLUI.renderState==='function'){
+    window.BLUI.renderState(empty,{kind:'loading',title});
+  }else{
+    empty.innerHTML='<div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span><div class="uiStateBody"><b>'+escapeHtml(title)+'</b></div></div>';
+    empty.setAttribute('aria-busy','true');
+  }
+  empty.style.display='flex';content.style.display='none';
+}
+function showUnifiedPriorityLoading(tableKey){
+  renderCorePageLoadingState(tableKey,appLang==='en'?'Preparing unified priorities…':'Ortak öncelikler hazırlanıyor…');
 }
 function ensureUnifiedPrioritiesForTable(tableKey){
   if(syncUnifiedPrioritiesForTable(tableKey))return true;
@@ -1804,7 +1816,7 @@ function showSourceFilterRequiredNotice(status,message){
   bindBuyerLogUpdatePanel(modal);
   void refreshBuyerLogUpdatePanel();
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
-  modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
+  modal.addEventListener('click',event=>{const reopen=event.target.closest('[data-reopen-pricing-draft]');if(reopen){event.preventDefault();const row=results[Number(reopen.dataset.reopenPricingDraft)];if(row?.draftId)void prepareEmailReopenSingleDraft({draftId:row.draftId,manufacturer:row.manufacturer,filename:row.emlFilename,reopenUntil:row.reopenUntil},row.quotationRequestId||'',reopen);return;}const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const close=()=>modal.remove();
   modal.querySelectorAll('[data-source-filter-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.querySelector('[data-source-filter-open]')?.addEventListener('click',()=>{close();openDataSourceAndFilters({target:preferredTarget});});
@@ -1928,6 +1940,7 @@ async function ensureOverviewLoaded(){
 async function ensureCpLoaded(options={}){
   if(state.cp&&!options.force){overviewCpLoadState='ready';overviewCpLoadError='';return true;}
   if(cpLoadPromise)return cpLoadPromise;
+  if(currentActiveTab()==='cp')renderCorePageLoadingState('cp');
   if(options.reason==='overview'){overviewCpLoadState='loading';overviewCpLoadError='';}
   cpLoadPromise=(async()=>{
     try{
@@ -1978,8 +1991,10 @@ async function ensureCollectionCatalogLoaded(options={}){
 function setOrdersLoadingState(loading,message){
   const empty=document.getElementById('ordersEmpty'),content=document.getElementById('ordersContent');
   if(!empty||!content)return;
-  if(loading){
-    empty.textContent=message||(appLang==='en'?'Loading Orders on demand…':'Siparişler gerektiğinde yükleniyor…');
+  if(loading){renderCorePageLoadingState('orders',message);return;}
+  if(message){
+    if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(empty,{kind:'error',title:message});
+    else{empty.textContent=message;empty.removeAttribute('aria-busy');}
     empty.style.display='flex';content.style.display='none';
   }
 }
@@ -2007,7 +2022,7 @@ async function ensureOrdersLoaded(options={}){
       return true;
     }catch(err){
       const message=(appLang==='en'?'Orders could not be loaded: ':'Siparişler yüklenemedi: ')+(err&&err.message||err);
-      setOrdersLoadingState(true,message);showToast(message);return false;
+      setOrdersLoadingState(false,message);showToast(message);return false;
     }finally{ordersLoadPromise=null;}
   })();
   return ordersLoadPromise;
@@ -3194,6 +3209,15 @@ async function loadModelImageSettings(){
   catch(err){if(err&&![401,403,404].includes(err.status))console.warn('Model image settings:',err.message||err);return {maxKb:Math.ceil(MODEL_IMAGE_MAX_BYTES/1024),maxBytes:MODEL_IMAGE_MAX_BYTES};}
 }
 function modelImageDataUrlPayload(dataUrl){const payload=kolDataUrlPayload(dataUrl);if(!payload)throw new Error(appLang==='en'?'Select a valid image.':'Geçerli bir görsel seçin.');return {...payload,dataUrl:String(dataUrl),size:Math.floor(payload.base64.length*3/4)};}
+// Sunucudaki applyOrderPatch ile aynı kural: renk adlı (…|name:X) kayıtlar da
+// aynı ref'e çekilir; aksi hâlde gösterim eski PLM görselini okumaya devam eder.
+function cpWriteImageIdentityRef(map,imageKey,ref){
+  // Dönüş: adlı kayıtların önceki ref'leri. Bunlar PLM/Koleksiyon görselidir;
+  // çağıran taraf bu dosyaları CP deposundan silmez, yalnız eşlemeyi değiştirir.
+  const previous=new Set();if(!map||!imageKey)return previous;map[imageKey]=ref;
+  const prefix=`${imageKey}|name:`;Object.keys(map).forEach(key=>{if(key.startsWith(prefix)){if(norm(map[key]))previous.add(norm(map[key]));map[key]=ref;}});
+  return previous;
+}
 async function cpSaveRowImage(row,file){
   if(!row||!file)return;
   if(row._canEdit===false){showToast(appLang==='en'?'You only have view access to this order.':'Bu sipariş için yalnız görüntüleme yetkiniz var.');return;}
@@ -3219,8 +3243,8 @@ async function cpSaveRowImage(row,file){
   const linkedRows=cpRowsForImageIdentity(row['PLM ID'],row['C.Code']);
   (linkedRows.length?linkedRows:[row]).forEach(item=>{item._imageKey=imageKey;item._imageRef=newRef;item._imageUrl=imageUrl;});
   state.overrides.imagemap=state.overrides.imagemap||{};
-  state.overrides.imagemap[imageKey]=newRef;syncModelImageRegistry();
-  if(oldRef&&oldRef!==newRef&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);
+  const namedRefs=cpWriteImageIdentityRef(state.overrides.imagemap,imageKey,newRef);syncModelImageRegistry();
+  if(oldRef&&oldRef!==newRef&&!namedRefs.has(oldRef)&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);
   cpActiveImageRowId=row._id;
   renderCP();renderOrders();
   showToast(appLang==='en'?'CP image saved.':'CP görseli kaydedildi.');
@@ -3238,8 +3262,8 @@ async function cpRemoveRowImage(row,{allowReadOnlyImageEdit=false}={}){
   const linkedRows=cpRowsForImageIdentity(row['PLM ID'],row['C.Code']);
   BLImageRuntime.invalidate([oldRef,oldUrl,`${CP_IMAGE_API}/${encodeURIComponent(oldRef)}`]);
   (linkedRows.length?linkedRows:[row]).forEach(item=>{item._imageKey=imageKey;item._imageRef='';item._imageUrl='';});
-  state.overrides.imagemap=state.overrides.imagemap||{};state.overrides.imagemap[imageKey]='';syncModelImageRegistry();
-  if(oldRef&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);renderCP();renderOrders();
+  state.overrides.imagemap=state.overrides.imagemap||{};const namedRefs=cpWriteImageIdentityRef(state.overrides.imagemap,imageKey,'');syncModelImageRegistry();
+  if(oldRef&&!namedRefs.has(oldRef)&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);renderCP();renderOrders();
   showToast(appLang==='en'?'CP image removed.':'CP görseli kaldırıldı.');
 }
 function cpApplyImageRowHeight(img){
@@ -8102,7 +8126,8 @@ function filteredCP(){
   // final user decision used by the visible CP table.
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const ctx=cpBuildFilterContext();
-  const source=ensurePlmSampleAccessors(partialViewRows('cp',ensurePlmSampleAccessors(state.cp.rows)));
+  ensurePlmSampleAccessors(state.cp.rows);
+  const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
   return rows;
@@ -8453,7 +8478,8 @@ function filteredOrders(){
   if(!state.orders)return [];
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('orders');
   const ctx=ordersBuildFilterContext();
-  const source=ensurePlmSampleAccessors(partialViewRows('orders',ensurePlmSampleAccessors(state.orders.rows)));
+  ensurePlmSampleAccessors(state.orders.rows);
+  const source=partialViewRows('orders',state.orders.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
@@ -16208,7 +16234,7 @@ async function showBacklogDetail(nodeLabel,nodePath,rowCount){
       const sharedData=await fetchJSON('/api/backlog-detail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({path:nodePath},buildBacklogParams()))});
       const sharedRows=sharedData.rows||[],sharedHeaders=(sharedData.headers&&sharedData.headers.length?sharedData.headers:Object.keys(sharedRows[0]||{}));
       currentBacklogDetailRows=sharedRows;currentBacklogDetailHeaders=sharedHeaders.slice();currentBacklogDetailTitle=sharedTitle;
-      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),images:true,fileName:sharedTitle});
+      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),viewPresets:backlogDetailViewPresets(sharedHeaders),images:true,fileName:sharedTitle});
     }catch(err){showToast((appLang==='en'?'Details could not be loaded: ':'Detay alınamadı: ')+(err&&err.message||String(err)));}
     return;
   }
@@ -16300,7 +16326,7 @@ async function showBacklogReportForRows(tab,rows,{selectedMode=false}={}){
       const sharedData=await fetchJSON('/api/backlog-detail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sourceTarget:tab,identities:sharedIdentities})});
       const sharedRows=sharedData.rows||[],sharedHeaders=(sharedData.headers&&sharedData.headers.length?sharedData.headers:Object.keys(sharedRows[0]||{}));
       currentBacklogDetailRows=sharedRows;currentBacklogDetailHeaders=sharedHeaders.slice();currentBacklogDetailTitle=sharedTitle;
-      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),images:true,fileName:sharedTitle});
+      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),viewPresets:backlogDetailViewPresets(sharedHeaders),images:true,fileName:sharedTitle});
     }catch(err){showToast((appLang==='en'?'Backlog report could not be loaded: ':'Backlog raporu alınamadı: ')+(err&&err.message||String(err)));}
     return;
   }
@@ -16624,6 +16650,21 @@ function backlogDetailVisibleColumns(cols,compact){
   const kept=cols.filter(col=>!BACKLOG_DETAIL_SECONDARY_RE.some(re=>re.test(String(col))));
   return kept.length?kept:cols;
 }
+/* Backlog alt detay çekmecesi CP gibi Odak · Genişletilmiş · Tümü görünümü sunar.
+   Odak: günlük takipte bakılan kimlik + miktar + durum alanları. Genişletilmiş:
+   kompakt görünüm (türetilmiş Ay/Hafta parçaları ve ikincil miktarlar hariç).
+   Tümü: bütün sütunlar. Excel'e Aktar seçimi bu görünümden bağımsızdır. */
+const BACKLOG_DETAIL_FOCUS_HEADERS=[
+  'Sezon','Üretici','Sipariş Kod','Model Adı','Renk Kod','Renk','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün',
+  'Adet','Kalan Alım Sipariş Miktarı','FOB Fiyatı','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','RİSK\n(PRIORITY)'
+];
+function backlogDetailViewPresets(headers){
+  const list=(Array.isArray(headers)?headers:[]).filter(Boolean);
+  const present=new Set(list);
+  const focus=BACKLOG_DETAIL_FOCUS_HEADERS.filter(header=>present.has(header));
+  return {focus:focus.length?focus:backlogDetailVisibleColumns(list,true),extended:backlogDetailVisibleColumns(list,true)};
+}
+window.BLBacklogDetailViewPresets=backlogDetailViewPresets;
 function renderBacklogDetailTable(rows,headers){
   const wrap=document.getElementById('backlogDetailTableWrap');
   const meta=document.getElementById('backlogDetailMeta');
@@ -28237,14 +28278,23 @@ async function plmJsonRequest(url,options){
     const data=await execute();succeeded=true;return data;
   }
   catch(error){
-    const code=String(error&&error.code||'');
-    if((code==='CORENECTUM_API_TOKEN_REQUIRED'||code==='CORENECTUM_API_TOKEN_INVALID')&&window.buyerLogDesktop?.ensureCoreNectumAuth){
-      await runCoreNectumAutoAuth({interactive:true,force:true});
-      const data=await execute();succeeded=true;return data;
+    if(!coreNectumAuthenticationError(error))throw error;
+    /* Korunan PLM uçlarında plm-auth-recovery fetch katmanı oturumu zaten
+       sessizce yenilemeyi denedi, olmayınca login penceresini gösterdi ve
+       isteği bir kez tekrarladı. Burada ikinci bir login penceresi açılmaz. */
+    const recoveredByFetch=Boolean(window.__buyerLogPlmAuthRecoveryInstalled&&window.BLPlmAuthRecovery?.isProtectedPlmRequest?.(url,location.href,location.origin));
+    if(!recoveredByFetch&&coreNectumDesktopAuthAvailable()){
+      try{await runCoreNectumAutoAuth({interactive:true,force:true});}
+      catch(_){openPlmSignInAfterAuthFailure();throw error;}
+      try{const data=await execute();succeeded=true;return data;}
+      catch(retryError){if(coreNectumAuthenticationError(retryError))openPlmSignInAfterAuthFailure();throw retryError;}
     }
+    // Oturum otomatik yenilenemedi: kullanıcı PLM Kullanıcı Girişi ekranına yönlenir.
+    openPlmSignInAfterAuthFailure();
     throw error;
   }finally{autoHold?.release({ok:succeeded});}
 }
+function openPlmSignInAfterAuthFailure(){try{void openCoreNectumApiSettings();}catch(_){}}
 let coreNectumApiSettingsInFlight=null,coreNectumAutoAuthInFlight=null;
 async function coreNectumApiRaw(url,options){
   const response=await fetch(url,options),data=await response.json().catch(()=>({}));
@@ -31533,6 +31583,91 @@ function kolTriggerPricingDownload(url,filename,delayMs=0){
   };
   if(delayMs>0) setTimeout(run,delayMs); else run();
 }
+// Retry references are intentionally process/renderer-memory only. The .eml itself
+// remains a bounded temporary server file; no recipient/attachment draft metadata is
+// persisted into browser storage or the shared Quotations store.
+const prepareEmailPricingDraftRegistry=new Map();
+function prepareEmailPricingDraftExpiry(ref){
+  const value=Date.parse(String(ref?.reopenUntil||''));
+  return Number.isFinite(value)?value:0;
+}
+function prepareEmailPricingDraftRefs(requestId){
+  const id=String(requestId||'').trim();if(!id)return [];
+  const raw=Array.isArray(prepareEmailPricingDraftRegistry.get(id))?prepareEmailPricingDraftRegistry.get(id):[],now=Date.now();
+  const live=raw.filter(ref=>{const expires=prepareEmailPricingDraftExpiry(ref);return ref&&String(ref.draftId||'').trim()&&(!expires||expires>now);});
+  if(live.length)prepareEmailPricingDraftRegistry.set(id,live);else prepareEmailPricingDraftRegistry.delete(id);
+  return live;
+}
+function prepareEmailRememberPricingDraft(requestId,ref){
+  const id=String(requestId||'').trim(),draftId=String(ref?.draftId||'').trim();if(!id||!draftId)return null;
+  const refs=(Array.isArray(prepareEmailPricingDraftRegistry.get(id))?prepareEmailPricingDraftRegistry.get(id):[]).filter(item=>item&&String(item.draftId||'').trim());
+  const next={draftId,manufacturer:String(ref?.manufacturer||''),filename:String(ref?.filename||''),reopenUntil:String(ref?.reopenUntil||'')};
+  const index=refs.findIndex(item=>String(item.draftId||'')===draftId);
+  if(index>=0)refs[index]={...refs[index],...next};else refs.push(next);
+  prepareEmailPricingDraftRegistry.set(id,refs.slice(-40));return next;
+}
+function prepareEmailForgetPricingDraft(requestId,draftId){
+  const id=String(requestId||'').trim(),token=String(draftId||'').trim();if(!id||!token)return;
+  const refs=(Array.isArray(prepareEmailPricingDraftRegistry.get(id))?prepareEmailPricingDraftRegistry.get(id):[]).filter(item=>String(item?.draftId||'')!==token);
+  if(refs.length)prepareEmailPricingDraftRegistry.set(id,refs);else prepareEmailPricingDraftRegistry.delete(id);
+}
+function prepareEmailPricingDraftCount(requestId){return prepareEmailPricingDraftRefs(requestId).length;}
+async function prepareEmailReopenDraftRef(ref){
+  const draftId=String(ref?.draftId||'').trim();if(!draftId)throw new Error(appLang==='en'?'Draft reference is unavailable.':'Taslak referansı kullanılamıyor.');
+  const resp=await fetch('/api/email-drafts/pricing/reopen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({draftId})});
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok){const err=new Error(data.error||(appLang==='en'?'The draft e-mail could not be reopened.':'Taslak e-posta yeniden açılamadı.'));err.status=resp.status;throw err;}
+  if(!data.opened&&data.emlBase64){
+    const url=kolBase64ObjectUrl(data.emlBase64,'message/rfc822');
+    kolTriggerPricingDownload(url,data.filename||ref?.filename||'Pricing_Draft.eml');
+    setTimeout(()=>kolRevokeTransientUrls([url]),30000);
+  }
+  return data;
+}
+function prepareEmailSetReopenBusy(button,busy){
+  if(!button)return;
+  if(busy){if(button.dataset.reopenDraftOldHtml==null)button.dataset.reopenDraftOldHtml=button.innerHTML;button.disabled=true;button.innerHTML='<span class="thinkingOrbInline" aria-hidden="true"></span>'+escapeHtml(appLang==='en'?'Opening…':'Açılıyor…');}
+  else{if(button.dataset.reopenDraftOldHtml!=null){button.innerHTML=button.dataset.reopenDraftOldHtml;delete button.dataset.reopenDraftOldHtml;}button.disabled=false;}
+}
+async function prepareEmailReopenSingleDraft(ref,requestId='',button=null){
+  prepareEmailSetReopenBusy(button,true);
+  try{
+    const data=await prepareEmailReopenDraftRef(ref);
+    if(requestId&&data.draftId)prepareEmailRememberPricingDraft(requestId,{...ref,...data});
+    if(typeof showToast==='function')showToast(data.opened?(appLang==='en'?'Draft e-mail reopened in Outlook.':'Taslak e-posta Outlook’ta yeniden açıldı.'):(appLang==='en'?'Outlook could not reopen the draft; the .eml file was downloaded instead.':'Outlook taslağı yeniden açamadı; .eml dosyası indirildi.'));
+    return true;
+  }catch(err){
+    if(Number(err?.status)===410&&requestId)prepareEmailForgetPricingDraft(requestId,ref?.draftId);
+    if(typeof showToast==='function')showToast(err?.message||(appLang==='en'?'The draft e-mail could not be reopened.':'Taslak e-posta yeniden açılamadı.'));
+    return false;
+  }finally{prepareEmailSetReopenBusy(button,false);}
+}
+async function prepareEmailReopenPricingRequest(requestId,button=null){
+  const refs=prepareEmailPricingDraftRefs(requestId);
+  if(!refs.length){if(typeof showToast==='function')showToast(appLang==='en'?'No reopenable draft is available for this quotation, or the retry window has expired.':'Bu quotation için yeniden açılabilir taslak yok veya yeniden açma süresi doldu.');return false;}
+  if(refs.length>1&&typeof confirm==='function'){
+    const question=appLang==='en'?`${refs.length} draft e-mails will be reopened. Continue?`:`${refs.length} taslak e-posta yeniden açılacak. Devam edilsin mi?`;
+    if(!confirm(question))return false;
+  }
+  prepareEmailSetReopenBusy(button,true);
+  let opened=0,downloaded=0,failed=0;
+  try{
+    for(const ref of refs){
+      try{
+        const data=await prepareEmailReopenDraftRef(ref);
+        if(data.draftId)prepareEmailRememberPricingDraft(requestId,{...ref,...data});
+        if(data.opened)opened++;else downloaded++;
+      }catch(err){if(Number(err?.status)===410)prepareEmailForgetPricingDraft(requestId,ref?.draftId);failed++;}
+    }
+    if(typeof showToast==='function'){
+      const message=appLang==='en'
+        ?`${opened} draft(s) reopened${downloaded?`, ${downloaded} downloaded as .eml`:''}${failed?`, ${failed} failed`:''}.`
+        :`${opened} taslak yeniden açıldı${downloaded?`, ${downloaded} taslak .eml olarak indirildi`:''}${failed?`, ${failed} başarısız`:''}.`;
+      showToast(message);
+    }
+    return opened+downloaded>0;
+  }finally{prepareEmailSetReopenBusy(button,false);}
+}
 function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   const pricingResult=/send to pricing|fiyat talebi/i.test(String(resultTitle||''));
   const oldModal=document.getElementById('kolPricingResultModal');
@@ -31545,9 +31680,9 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   const multiDownloadNote=unopenedCount>1
     ?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:8px;color:var(--ink);font-size:12px;">${escapeHtml(appLang==='en'?`${unopenedCount} draft e-mails were downloaded automatically. If your browser blocked some of them, click the links below one by one.`:`${unopenedCount} taslak e-posta otomatik indirildi. Tarayıcınız bir kısmını engellediyse aşağıdaki bağlantılara tek tek tıklayın.`)}</div>`
     :'';
-  const rows=results.map(r=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+  const rows=results.map((r,resultIndex)=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const reopenLink=r.ok&&r.draftId?`<button type="button" class="tbtn" data-reopen-pricing-draft="${resultIndex}"><svg class="ic"><use href="#i-mail-send"/></svg>${escapeHtml(appLang==='en'?'Re-open Draft E-Mail':'Taslak E-Postayı Yeniden Aç')}</button>`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
     <div><div style="font-weight:700;color:var(--ink);">${escapeHtml(r.manufacturer)}</div><div style="font-size:11.5px;color:${r.ok?'var(--success, #177a4c)':'var(--danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${emlLink}${excelLink}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${reopenLink}${emlLink}${excelLink}</div>
   </div>`; }).join('');
   const modal=document.createElement('div'); modal.id='kolPricingResultModal'; modal.className='warnOverlay';
   modal.innerHTML=`<div class="modalCard" style="max-width:650px;width:94%;max-height:82vh;display:flex;flex-direction:column;padding:0;">
@@ -32920,7 +33055,8 @@ function renderKolMfrModal(ctx){
     // Her Send to Pricing onayı, e-posta istemcisi sonucu ne olursa olsun tek bir
     // tarihsel Fiyat Çalışması kaydı oluşturur. Böylece başarısız taslak denemeleri
     // dahi takip ekranında ve Not Defteri'nde görünür kalır.
-    if(window.BL_QUOTATIONS?.recordRequest) window.BL_QUOTATIONS.recordRequest(SRC.persist?'collection':'cp',selRows,checked);
+    const quotationRequest=window.BL_QUOTATIONS?.recordRequest?await window.BL_QUOTATIONS.recordRequest(SRC.persist?'collection':'cp',selRows,checked):null;
+    const quotationRequestId=String(quotationRequest?.id||'');
     const results=[]; let previews=[], previewWarning=''; let changed=false;
     let downloadDelay=0; // v6.43 — art arda indirmeler arasına gecikme
     try{
@@ -32948,7 +33084,10 @@ function renderKolMfrModal(ctx){
             const subject=attachmentPlans.length>1?`${baseSubject} (${pi+1}/${attachmentPlans.length})`:baseSubject;
             prepareProgress.setStage(appLang==='en'?'Creating draft e-mail…':'Taslak e-posta oluşturuluyor…');
             const data=await kolCreatePricingEmailDraft({email:m.email,subject,workbook:pi===0?workbook:null,previews:pi===0?previews:[],attachmentPlan,body:topicForDraft.body,tableHtml,tablePlain,inlineImages:tableContent.inlineImages});
-            results.push({manufacturer:attachmentPlans.length>1?`${m.name} (${pi+1}/${attachmentPlans.length})`:m.name,ok:true,opened:Boolean(data.opened),emlUrl:data.downloadUrl,emlFilename:data.filename,excelUrl:data.excelDownloadUrl,excelFilename:data.excelFilename,cleanupUrls:data._transientUrls||[],attachmentPlan});
+            const resultManufacturer=attachmentPlans.length>1?`${m.name} (${pi+1}/${attachmentPlans.length})`:m.name;
+            const draftRef=data.draftId?{draftId:data.draftId,manufacturer:resultManufacturer,filename:data.filename,reopenUntil:data.reopenUntil}:null;
+            if(quotationRequestId&&draftRef)prepareEmailRememberPricingDraft(quotationRequestId,draftRef);
+            results.push({manufacturer:resultManufacturer,ok:true,opened:Boolean(data.opened),emlUrl:data.downloadUrl,emlFilename:data.filename,excelUrl:data.excelDownloadUrl,excelFilename:data.excelFilename,cleanupUrls:data._transientUrls||[],attachmentPlan,draftId:data.draftId||'',reopenUntil:data.reopenUntil||'',quotationRequestId});
             // v6.43 — Otomatik açma başarısızsa taslağı doğrudan indir; eskiden bu
             // yalnız TEK üretici seçiliyken oluyordu, birden fazla üretici seçiliyken
             // hiçbir taslak otomatik inmiyordu — sonuç penceresindeki bağlantılar her
@@ -33015,7 +33154,7 @@ function prepareEmailOpenQuotationReminder({rows,recipients,requestId='',count=0
   });
   return true;
 }
-window.BLPrepareEmail={...(window.BLPrepareEmail||{}),openQuotationReminder:prepareEmailOpenQuotationReminder};
+window.BLPrepareEmail={...(window.BLPrepareEmail||{}),openQuotationReminder:prepareEmailOpenQuotationReminder,pricingDraftCount:prepareEmailPricingDraftCount,reopenPricingRequest:prepareEmailReopenPricingRequest};
 
 document.getElementById('kolSendPricingBtn')?.addEventListener('click', async ()=>{
   if(!kolSelected.size){ showToast('Önce en az bir model seç.'); return; }

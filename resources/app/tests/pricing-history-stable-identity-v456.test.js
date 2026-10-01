@@ -10,14 +10,14 @@ const SRC = fs.readFileSync(path.join(__dirname, '..', 'public', 'quotations.js'
 function loadIdentityHelpers() {
   const names = [
     'qhModelKeys', 'qhItemKey', 'qhStableRowKeys', 'qhStableItemKeys',
-    'qhRowMeta', 'qhSelectionIndex', 'qhSelectedMeta',
+    'qhRowMeta', 'qhSelectionIndex', 'qIdentityCompatible', 'qhStableMatchValid', 'qhSelectedMeta',
   ];
   const blocks = names.map((name) => {
     const match = SRC.match(new RegExp(`function ${name}\\([^)]*\\)\\{[\\s\\S]*?\\n  \\}`));
     assert.ok(match, `${name} bulunamadı`);
     return match[0];
   }).join('\n');
-  const factory = new Function('qNorm', 'qMoneyNumber', `${blocks}\nreturn {${names.join(',')}};`);
+  const factory = new Function('qNorm', 'qMoneyNumber', 'qCurrentUserId', `${blocks}\nreturn {${names.join(',')}};`);
   return factory(
     value => String(value == null ? '' : value).trim(),
     value => {
@@ -25,12 +25,17 @@ function loadIdentityHelpers() {
       const n = Number(value);
       return Number.isFinite(n) ? n : NaN;
     },
+    () => '',
   );
 }
 
+// Model kartının tek kimlik alanı (model adı, kategori vb.) revize edilse de
+// geçmiş stable rowId ile bulunur. PLM ID ve Model adı İKİSİ BİRDEN farklıysa
+// rowId yeniden kullanılmış (veri taşıma / yeniden import) sayılır; bkz.
+// quotations-best-price.test.js.
 test('v4.56 model kartı alanları değişse de Pricing History stable rowId ile bulunur', () => {
   const { qhSelectionIndex, qhSelectedMeta } = loadIdentityHelpers();
-  const currentRow = { id: 41, plmId: 'NEW-PLM', modelKod: 'NEW MODEL', urunTipi: 'NEW CATEGORY' };
+  const currentRow = { id: 41, plmId: 'OLD-PLM', modelKod: 'NEW MODEL', urunTipi: 'NEW CATEGORY' };
   const oldQuotationItem = {
     rowId: 41,
     modelKey: 'kol:41',
@@ -41,8 +46,19 @@ test('v4.56 model kartı alanları değişse de Pricing History stable rowId ile
   const meta = qhSelectedMeta({ source: 'collection' }, oldQuotationItem, index);
   assert.ok(meta, 'eski quotation satırı güncel model kartına bağlanmalı');
   assert.equal(meta.model, 'NEW MODEL');
-  assert.equal(meta.plmId, 'NEW-PLM');
+  assert.equal(meta.plmId, 'OLD-PLM');
   assert.equal(meta.identityKey, 'row:41');
+});
+
+test('Pricing History yeniden kullanılan rowId ile başka modelin geçmişini bağlamaz', () => {
+  const { qhSelectionIndex, qhSelectedMeta } = loadIdentityHelpers();
+  const reimportedRow = { id: 41, plmId: 'NEW-PLM', modelKod: 'NEW MODEL' };
+  const staleItem = { rowId: 41, modelKey: 'kol:41', plmId: 'OLD-PLM', modelCode: 'OLD MODEL' };
+  const index = qhSelectionIndex([reimportedRow]);
+  assert.equal(qhSelectedMeta({ source: 'collection' }, staleItem, index), null);
+  assert.equal(qhSelectedMeta({ source: 'collection', ownerId: 'other-user' },
+    { ...staleItem, plmId: 'NEW-PLM', modelCode: 'NEW MODEL' }, index), null,
+    'başka kullanıcının aynı rowId taşıyan kalemi bağlanmamalı');
 });
 
 test('v4.56 Duplicate Model eski modelin fiyat geçmişini devralmaz', () => {

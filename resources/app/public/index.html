@@ -212,7 +212,7 @@
 <link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=3">
 <link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=5">
-<link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=3">
+<link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=5">
 </head>
 <body data-active-tab="overview">
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
@@ -1313,7 +1313,7 @@
        bulamayan her section'ı sessizce yok eder. Kapsayıcılar <div>. -->
   <section id="view-source">
     <div id="dataManagementRoot" class="dataMgmt" aria-live="polite">
-      <div class="dataMgmtBooting empty" data-i18n-tr="Veri Yönetimi yükleniyor…" data-i18n-en="Loading Data Management…">Veri Yönetimi yükleniyor…</div>
+      <div class="dataMgmtBooting empty"><div class="uiState uiState--loading" role="status" aria-live="polite" aria-atomic="true" aria-busy="true"><span class="uiStateSpinner blOrb uiStateOrb" data-state="thinking" aria-hidden="true"></span><div class="uiStateBody"><b data-i18n-tr="Veri Yönetimi yükleniyor…" data-i18n-en="Loading Data Management…">Veri Yönetimi yükleniyor…</b></div></div></div>
     </div>
   </section>
 </main>
@@ -1329,7 +1329,7 @@
 <script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <script src="overview-breakdown.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="overview-home.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="detail-drawer.js?v=__BL_ASSET_VERSION__&rev=4"></script>
+<script src="detail-drawer.js?v=__BL_ASSET_VERSION__&rev=5"></script>
 <script src="thinking-orb-working.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="overview-global-flow.js?v=__BL_ASSET_VERSION__&rev=5"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_SCRIPTS_START');</script>

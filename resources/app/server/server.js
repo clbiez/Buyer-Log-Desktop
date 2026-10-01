@@ -5169,6 +5169,8 @@ require('./routes/plm-sync-routes')(app, {
   getModelImageSettings,
 });
 /* PLM numune talepleri (CoreNectum Requests sekmesi) → CP kontrol listesi. */
+const sampleRequestStore = require('./lib/plm-sample-requests-store');
+const sampleRequestSync = require('./lib/plm-sample-request-sync');
 require('./routes/plm-request-routes')(app, {
   automationError,
   clearModelOperationProgress,
@@ -5176,8 +5178,8 @@ require('./routes/plm-request-routes')(app, {
   express,
   loadPlmStyleLinks,
   normalizePlmId,
-  sampleRequestStore: require('./lib/plm-sample-requests-store'),
-  sampleRequestSync: require('./lib/plm-sample-request-sync'),
+  sampleRequestStore,
+  sampleRequestSync,
   setModelOperationProgress,
   upsertPlmStyleLinks,
   userAccess,
@@ -11563,8 +11565,9 @@ require('./routes/cp-image-routes')(app, {
 });
 // ---- Fiyatlama e-posta taslakları (.eml) ----
 // Model dosyaları kalıcı MODEL_FILES_ROOT altında saklanır. E-posta taslakları ise
-// kalıcı veri değildir: yalnız Outlook/varsayılan istemciye açma komutu verilene
-// kadar işletim sisteminin geçici klasöründe tutulur ve hemen ardından temizlenir.
+// kalıcı veri değildir: Outlook/varsayılan istemci açılışında hata olursa kullanıcı
+// aynı taslağı yeniden açabilsin diye yalnız sınırlı bir retry penceresi boyunca
+// işletim sisteminin geçici klasöründe tutulur; süre bitince otomatik temizlenir.
 const EMAIL_DRAFT_DIR = EMAIL_DRAFT_ROOT;
 const LEGACY_EMAIL_DRAFT_DIR = path.join(__dirname, 'data', 'email-drafts');
 function removeDirectoryContents(dir){
@@ -11592,10 +11595,45 @@ function deleteTransientDraft(fullPath, attempt=0){
     else logRuntimeFailure('emailDraftCleanup',err);
   }
 }
-function scheduleTransientDraftCleanup(fullPath){
-  // Açma komutunun dosyayı okuyabilmesi için kısa bir pencere bırak; sonrasında
-  // dosya ve tüm MIME ekleriyle birlikte tek .eml silinir.
-  setTimeout(()=>deleteTransientDraft(fullPath),12000).unref();
+const EMAIL_DRAFT_REOPEN_TTL_MS = 30 * 60 * 1000;
+const EMAIL_DRAFT_REOPEN_MAX = 80;
+const emailDraftReopenRegistry = new Map();
+function expireTransientDraft(draftId){
+  const id=String(draftId||'');const item=emailDraftReopenRegistry.get(id);
+  if(!item)return false;
+  emailDraftReopenRegistry.delete(id);
+  if(item.timer)clearTimeout(item.timer);
+  deleteTransientDraft(item.fullPath);
+  return true;
+}
+function scheduleTransientDraftCleanup(draftId){
+  const id=String(draftId||'');const item=emailDraftReopenRegistry.get(id);if(!item)return;
+  if(item.timer)clearTimeout(item.timer);
+  const wait=Math.max(1000,Number(item.expiresAt||0)-Date.now()+250);
+  item.timer=setTimeout(()=>expireTransientDraft(id),wait);
+  item.timer.unref?.();
+}
+function pruneTransientDrafts(){
+  const now=Date.now();
+  for(const [id,item] of emailDraftReopenRegistry){
+    if(Number(item?.expiresAt||0)<=now||!item?.fullPath||!fs.existsSync(item.fullPath))expireTransientDraft(id);
+  }
+  if(emailDraftReopenRegistry.size<EMAIL_DRAFT_REOPEN_MAX)return;
+  const excess=emailDraftReopenRegistry.size-EMAIL_DRAFT_REOPEN_MAX+1;
+  [...emailDraftReopenRegistry.entries()].sort((a,b)=>Number(a[1]?.createdAt||0)-Number(b[1]?.createdAt||0)).slice(0,excess).forEach(([id])=>expireTransientDraft(id));
+}
+function registerTransientDraft(fullPath,filename){
+  pruneTransientDrafts();
+  const draftId=crypto.randomBytes(16).toString('hex'),createdAt=Date.now(),expiresAt=createdAt+EMAIL_DRAFT_REOPEN_TTL_MS;
+  emailDraftReopenRegistry.set(draftId,{draftId,fullPath,filename:String(filename||''),createdAt,expiresAt,timer:null});
+  scheduleTransientDraftCleanup(draftId);
+  return {draftId,reopenUntil:new Date(expiresAt).toISOString()};
+}
+function touchTransientDraft(draftId){
+  const item=emailDraftReopenRegistry.get(String(draftId||''));if(!item)return null;
+  item.expiresAt=Date.now()+EMAIL_DRAFT_REOPEN_TTL_MS;
+  scheduleTransientDraftCleanup(item.draftId);
+  return {draftId:item.draftId,reopenUntil:new Date(item.expiresAt).toISOString()};
 }
 function mimeBase64(value) {
   const raw = Buffer.isBuffer(value) ? value.toString('base64') : Buffer.from(String(value || ''), 'utf8').toString('base64');
@@ -11694,7 +11732,7 @@ function openEmailDraft(fullPath) {
   return platform.openPathExternally(fullPath);
 }
 app.post('/api/email-drafts/pricing', (req, res) => {
-  let fullPath='';
+  let fullPath='',draftId='';
   try {
     const body = req.body || {};
     if (!body.subject) return res.status(400).json({ error: 'E-posta konusu zorunlu.' });
@@ -11710,21 +11748,38 @@ app.post('/api/email-drafts/pricing', (req, res) => {
     ensureEmailDraftDir();
     fullPath = path.join(EMAIL_DRAFT_DIR, filename);
     fs.writeFileSync(fullPath, emlText, 'utf8');
+    const draftRef=registerTransientDraft(fullPath,filename);draftId=draftRef.draftId;
     const opened = openEmailDraft(fullPath);
     if(opened){
-      scheduleTransientDraftCleanup(fullPath);
-      return res.json({ok:true,filename,opened:true,transient:true,attachmentBytes});
+      return res.json({ok:true,filename,opened:true,transient:true,attachmentBytes,...draftRef});
     }
-    // İstemci otomatik açılamadıysa indirme için içerik cevaba konur; sunucudaki
-    // geçici dosya aynı istekte silinir. Tarayıcı bağlantısı pencere kapanınca yok edilir.
-    deleteTransientDraft(fullPath);
-    fullPath='';
-    return res.json({ok:true,filename,opened:false,transient:true,emlBase64:Buffer.from(emlText,'utf8').toString('base64'),attachmentBytes});
+    // Varsayılan istemci açılamadıysa kullanıcı yine .eml dosyasını indirebilir.
+    // Aynı geçici dosya retry penceresi boyunca korunur; böylece Outlook hazır
+    // olduğunda sonuç ekranından veya Quotations'tan yeniden açma denenebilir.
+    return res.json({ok:true,filename,opened:false,transient:true,emlBase64:Buffer.from(emlText,'utf8').toString('base64'),attachmentBytes,...draftRef});
   } catch (err) {
-    if(fullPath) deleteTransientDraft(fullPath);
+    if(draftId)expireTransientDraft(draftId);else if(fullPath)deleteTransientDraft(fullPath);
     apiError(res, err, 'E-posta taslağı oluşturulamadı.');
   }
 });
+// Outlook ilk açılışta hata verirse aynı, henüz süresi dolmamış .eml taslağını
+// tekrar işletim sistemi e-posta istemcisine gönder. Taslak kimliği rastgele ve
+// yalnız bu çalışan Buyer Log sürecinin RAM'indeki kayıtla eşleşir.
+app.post('/api/email-drafts/pricing/reopen', (req, res) => {
+  try{
+    pruneTransientDrafts();
+    const draftId=String(req.body&&req.body.draftId||'').trim();
+    if(!/^[a-f0-9]{32}$/.test(draftId))return res.status(400).json({error:'Geçersiz taslak referansı.'});
+    const item=emailDraftReopenRegistry.get(draftId);
+    if(!item||!item.fullPath||!fs.existsSync(item.fullPath)){if(item)expireTransientDraft(draftId);return res.status(410).json({error:'Taslak yeniden açma süresi doldu. Send to Pricing ile yeni bir taslak hazırlayın.'});}
+    const opened=openEmailDraft(item.fullPath);
+    const refreshed=touchTransientDraft(draftId)||{draftId,reopenUntil:new Date(item.expiresAt).toISOString()};
+    const payload={ok:true,opened:Boolean(opened),filename:item.filename,transient:true,...refreshed};
+    if(!opened)payload.emlBase64=fs.readFileSync(item.fullPath).toString('base64');
+    return res.json(payload);
+  }catch(err){apiError(res,err,'Taslak e-posta yeniden açılamadı.');}
+});
+
 // Eski sürüm bağlantılarının kalıcı taslak deposuna dönüşmesini engelle.
 app.get('/api/email-drafts/:filename', (_req, res) => {
   res.status(410).json({ error: 'Taslaklar kalıcı olarak saklanmaz. Yeni bir taslak oluşturun.' });

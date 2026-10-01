@@ -6,7 +6,9 @@
  * simgesi BrowserWindow üzerinden buyerlog.ico'dan gelir. Masaüstü, Başlat menüsü
  * ve sabitlenmiş görev çubuğu kısayolları ise exe simgesini gösterdiği için,
  * BuyerLog.exe'yi hedefleyen mevcut kısayollar portable kökteki sabit bir
- * buyerlog.ico kopyasına yönlendirilir. Yeni kısayol oluşturulmaz, başka
+ * buyerlog.ico kopyasına yönlendirilir ve AppUserModelID ana süreçteki kimlikle
+ * eşitlenir. Böylece Windows 10/11 görev çubuğu çalışan pencereyi yanlış/genel
+ * bir dosya simgesi altında gruplamaz. Yeni kısayol oluşturulmaz, başka
  * uygulamanın kısayoluna dokunulmaz.
  */
 const crypto = require('crypto');
@@ -62,7 +64,7 @@ function shortcutDirs(getPath) {
   return dirs;
 }
 
-function syncShortcutIcons({ shell, getPath, exePath, sourceIcon, iconDir, log = () => {} }) {
+function syncShortcutIcons({ shell, getPath, exePath, sourceIcon, iconDir, appUserModelId = '', log = () => {} }) {
   const result = { icon: '', updated: [], skipped: 0 };
   if (!shell || typeof shell.readShortcutLink !== 'function' || typeof shell.writeShortcutLink !== 'function') return result;
   if (!exePath || !sourceIcon || !fs.existsSync(sourceIcon)) return result;
@@ -73,9 +75,13 @@ function syncShortcutIcons({ shell, getPath, exePath, sourceIcon, iconDir, log =
       let link;
       try { link = shell.readShortcutLink(file); } catch (_) { continue; }
       if (!link || !samePath(link.target, exePath)) continue;
-      if (link.icon && samePath(link.icon, icon)) { result.skipped += 1; continue; }
+      const iconMatches = Boolean(link.icon && samePath(link.icon, icon));
+      const appIdMatches = !appUserModelId || String(link.appUserModelId || '').trim().toLowerCase() === String(appUserModelId).trim().toLowerCase();
+      if (iconMatches && appIdMatches) { result.skipped += 1; continue; }
       try {
-        if (shell.writeShortcutLink(file, 'update', { icon, iconIndex: 0 })) result.updated.push(file);
+        const patch = { icon, iconIndex: 0 };
+        if (appUserModelId) patch.appUserModelId = appUserModelId;
+        if (shell.writeShortcutLink(file, 'update', patch)) result.updated.push(file);
       } catch (error) {
         log('Kısayol simgesi güncellenemedi: ' + file + ' · ' + error.message);
       }

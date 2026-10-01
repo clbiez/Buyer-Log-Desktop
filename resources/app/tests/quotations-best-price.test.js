@@ -323,3 +323,46 @@ test('same-model quotation cells update Best Price manufacturer and Target delta
   assert.equal(rows[0].delta.classList.has('isAboveTarget'), true);
   assert.equal(rows[1].delta.classList.has('isAtOrBelowTarget'), true);
 });
+
+// Koleksiyon rowId'leri kullanıcı başına 1'den başlar ve veri taşıma / yeniden
+// import sonrası yeniden dağıtılır. İlk kez fiyatlamaya çıkan bir model, aynı
+// `kol:<rowId>` anahtarını taşıyan başka kullanıcının ya da artık başka bir
+// modele ait eski quotation satırından Best Price / Mfr devralmamalıdır.
+test('Best Price / Mfr ignores reused Collection rowIds from other owners or other models', async () => {
+  const api = loadQuotationTestApi();
+  const foreign = await api.recordRequest('collection', [
+    { id: 7, plmId: 'PLM-7', modelKod: 'KMODEL' },
+  ], [{ name: 'Foreign Factory' }]);
+  foreign.ownerId = 'other-user';
+  foreign.items[0].price = '1.23';
+
+  const stale = await api.recordRequest('collection', [
+    { id: 7, plmId: 'OLD-PLM', modelKod: 'OLD-MODEL' },
+  ], [{ name: 'Stale Factory' }]);
+  stale.items[0].price = '1.40';
+
+  const fresh = await api.recordRequest('collection', [
+    { id: 7, plmId: 'PLM-7', modelKod: 'KMODEL' },
+  ], [{ name: 'Factory A' }]);
+  assert.equal(api._test.qBestForModel(fresh, fresh.items[0]), null);
+  assert.equal(api._test.qTableCols.find(col => col.key === 'best').value(fresh, fresh.items[0]), '');
+
+  // Yalnız model adı revize edilmiş aynı model (PLM ID aynı) geçmişini korur.
+  const renamed = await api.recordRequest('collection', [
+    { id: 7, plmId: 'PLM-7', modelKod: 'KMODEL-OLDNAME' },
+  ], [{ name: 'Factory R' }]);
+  renamed.items[0].price = '2.10';
+  assert.deepEqual(
+    JSON.parse(JSON.stringify(api._test.qBestForModel(fresh, fresh.items[0]))),
+    { price: 2.1, manufacturer: 'Factory R', lineId: renamed.items[0].id }
+  );
+});
+
+test('Pricing History stable rowId match is guarded by owner and model identity', () => {
+  const source = fs.readFileSync(path.join(root, 'public', 'quotations.js'), 'utf8');
+  const start = source.indexOf('function qhSelectedMeta(req,item,index)');
+  const end = source.indexOf('function qhCollect(rows)', start);
+  assert.ok(start >= 0 && end > start);
+  assert.match(source.slice(start, end), /if\(meta&&qhStableMatchValid\(req,item,meta\)\)return meta;/);
+  assert.match(source, /function qhStableMatchValid\(req,item,meta\)\{[\s\S]*?_collectionOwnerId[\s\S]*?qIdentityCompatible\(/);
+});

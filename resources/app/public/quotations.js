@@ -352,6 +352,23 @@
     return {target,price,percent:rounded,meetsTarget:price<=target,text:rounded===0?'0%':`${rounded<0?'−':'+'}${amount}%`};
   }
 
+  // `kol:<rowId>` yalnız TEK kullanıcının Koleksiyon çalışma alanında anlamlıdır:
+  // rowId'ler kullanıcı başına 1'den başlar ve veri taşıma / yeniden import /
+  // reset sonrası yeniden dağıtılır. Bu yüzden aynı modelKey tek başına "aynı
+  // model" demek değildir. Eşleşme için (1) Koleksiyon kayıtlarında aynı
+  // quotation sahibi ve (2) kayıt anındaki PLM ID / Model adı anlık
+  // görüntülerinden en az birinin uyuşması gerekir. Tek alanın (ör. yalnız
+  // model adı) revize edilmesi eşleşmeyi bozmaz; ikisi de farklıysa bu artık
+  // başka bir modeldir ve eski fiyat ona taşınmaz.
+  function qIdentityCompatible(a,b){
+    const pairs=[[a?.plmId,b?.plmId],[a?.modelCode,b?.modelCode]]
+      .map(([x,y])=>[qNorm(x).toLocaleLowerCase('tr-TR'),qNorm(y).toLocaleLowerCase('tr-TR')])
+      .filter(([x,y])=>x&&y);
+    return !pairs.length||pairs.some(([x,y])=>x===y);
+  }
+  function qSameCollectionOwner(reqA,reqB){
+    return qNorm(reqA?.ownerId)===qNorm(reqB?.ownerId);
+  }
   function qBestForModel(req,item){
     let best=null;
     const source=req?.source==='cp'?'cp':'collection';
@@ -362,8 +379,10 @@
     // Best Price / Mfr view is global.
     qLoad().requests.forEach(otherReq=>{
       if(otherReq.source!==source)return;
+      if(source==='collection'&&!qSameCollectionOwner(req,otherReq))return;
       (otherReq.items||[]).forEach(line=>{
         if(qNorm(line.modelKey)!==modelKey||!qValidPrice(line.price))return;
+        if(!qIdentityCompatible(item,line))return;
         const price=qMoneyNumber(line.price);
         if(!best||price<best.price){
           best={price,manufacturer:qNorm(line.manufacturer),lineId:line.id};
@@ -1069,11 +1088,14 @@
     const noteLabel=notePreview||qLang('Quotation notu ekle…','Add quotation note…');
     const reminderItems=qReminderItems(req),reminderManufacturers=qReminderRecipients(req,reminderItems).length;
     const reminderDisabled=!requestCanEdit||req.status==='closed'||reminderManufacturers===0;
+    const reopenDraftOwner=req.origin!=='manual-collection'&&req.ownerId===qCurrentUserId();
+    const reopenDraftCount=reopenDraftOwner?Number(window.BLPrepareEmail?.pricingDraftCount?.(req.id)||0):0;
+    const reopenDraftAction=reopenDraftOwner?`<button type="button" class="tbtn quotationReopenDraftBtn" data-q-reopen-draft ${reopenDraftCount?'':'disabled'} title="${qEsc(reopenDraftCount?qLang('Bu fiyat talebinin Outlook taslağını yeniden aç','Re-open the Outlook draft for this pricing request'):qLang('Yeniden açılabilir taslak yok veya retry süresi doldu','No reopenable draft is available or the retry window has expired'))}"><svg class="ic"><use href="#i-mail"/></svg>${qEsc(qLang('Taslak E-Postayı Yeniden Aç','Re-open Draft E-Mail'))}${reopenDraftCount>1?` <span class="quotationActionCount">${reopenDraftCount}</span>`:''}</button>`:'';
     const plmSyncAction=req.source==='collection'&&window.BLDetailImages?.modelImagesButtonHtml?window.BLDetailImages.modelImagesButtonHtml('quotationDetailPlmSync'):'';
     const workspaceActions=qWorkspaceMounted&&req.source==='collection'?`<button type="button" class="tbtn quotationReminderBtn" data-q-send-reminder ${reminderDisabled?'disabled':''} title="${qEsc(reminderManufacturers?qLang(`${reminderManufacturers} üreticiden fiyat bekleniyor`,`${reminderManufacturers} manufacturer(s) are awaiting quotation`):qLang('Fiyatı beklenen üretici yok','No manufacturer is awaiting quotation'))}"><svg class="ic"><use href="#i-mail"/></svg>${qEsc(qLang('Hatırlatma Gönder','Send Reminder'))}${reminderManufacturers?` <span class="quotationActionCount">${reminderManufacturers}</span>`:''}</button><button type="button" class="tbtn" data-q-open-collection><svg class="ic"><use href="#i-hanger"/></svg>${qEsc(qLang('Koleksiyonda Aç','Open in Collection'))}</button><button type="button" class="tbtn" data-q-open-history><svg class="ic"><use href="#i-chart-histogram"/></svg>${qEsc(qLang('Fiyat Geçmişi','Pricing History'))}</button>`:'';
     host.innerHTML=`<div class="quotationDetailHead">
         <div class="quotationDetailIdentity"><div class="quotationTitleLine"><h3>${qEsc(qRequestTitle(req))}</h3>${statusControl}</div><p>${qEsc(qDate(req.createdAt))} · ${qEsc(req.manufacturers.map(m=>m.name).join(', '))}</p><p class="quotationOwnership"><strong>${qEsc(qLang('Kayıt sahibi','Owner'))}:</strong> ${qEsc(qOwnerLabel(req))} · ${qEsc(permissionText)}</p></div>
-        <div class="quotationHeadActions"><div class="quotationSummary"><span class="quotationSummaryChip">${qEsc(qLang(`${qModelCount(req)} model`,`${qModelCount(req)} models`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${supplierCount} üretici`,`${supplierCount} manufacturers`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${approvedCount} onay`,`${approvedCount} approvals`))}</span>${visibleItems.length!==req.items.length?`<span class="quotationSummaryChip">${qEsc(qLang(`${visibleItems.length}/${req.items.length} satır`,`${visibleItems.length}/${req.items.length} rows`))}</span>`:''}</div>${plmSyncAction}${workspaceActions}${canManageAccess?`<button type="button" class="tbtn quotationAccessBtn" data-manage-quotation-access title="${qEsc(qLang('Bu quotation için düzenleme yetkisi ver','Grant editing permission for this quotation'))}"><svg class="ic"><use href="#i-users-group"/></svg>${qEsc(qLang('Düzenleme Yetkisi','Editing Permission'))}</button>`:''}<button type="button" class="tbtn quotationExportBtn" data-export-quotation="${qEsc(req.id)}" title="${qEsc(qLang('Bu fiyat çalışmasını Excel’e aktar','Export this quotation request to Excel'))}"><svg class="ic"><use href="#i-file-export"/></svg>${qEsc(qLang('Excel’e Aktar','Export to Excel'))}</button>${activeFilterCount?`<button type="button" class="tbtn quotationClearFilters" title="${qEsc(qLang('Tüm tablo filtrelerini kaldır','Remove all table filters'))}">${qEsc(qLang('Filtreleri Temizle','Clear Filters'))}</button>`:''}<button type="button" class="todoDeleteBtn quotationDeleteBtn" data-delete-quotation="${qEsc(req.id)}" ${canDelete?'':'disabled'} title="${qEsc(canDelete?qLang('Fiyat çalışmasını sil','Delete quotation request'):qLang('Yalnız kayıt sahibi silebilir','Only the owner can delete'))}" aria-label="${qEsc(qLang('Fiyat çalışmasını sil','Delete quotation request'))}"><svg class="ic"><use href="#i-trash"/></svg></button></div>
+        <div class="quotationHeadActions"><div class="quotationSummary"><span class="quotationSummaryChip">${qEsc(qLang(`${qModelCount(req)} model`,`${qModelCount(req)} models`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${supplierCount} üretici`,`${supplierCount} manufacturers`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${approvedCount} onay`,`${approvedCount} approvals`))}</span>${visibleItems.length!==req.items.length?`<span class="quotationSummaryChip">${qEsc(qLang(`${visibleItems.length}/${req.items.length} satır`,`${visibleItems.length}/${req.items.length} rows`))}</span>`:''}</div>${reopenDraftAction}${plmSyncAction}${workspaceActions}${canManageAccess?`<button type="button" class="tbtn quotationAccessBtn" data-manage-quotation-access title="${qEsc(qLang('Bu quotation için düzenleme yetkisi ver','Grant editing permission for this quotation'))}"><svg class="ic"><use href="#i-users-group"/></svg>${qEsc(qLang('Düzenleme Yetkisi','Editing Permission'))}</button>`:''}<button type="button" class="tbtn quotationExportBtn" data-export-quotation="${qEsc(req.id)}" title="${qEsc(qLang('Bu fiyat çalışmasını Excel’e aktar','Export this quotation request to Excel'))}"><svg class="ic"><use href="#i-file-export"/></svg>${qEsc(qLang('Excel’e Aktar','Export to Excel'))}</button>${activeFilterCount?`<button type="button" class="tbtn quotationClearFilters" title="${qEsc(qLang('Tüm tablo filtrelerini kaldır','Remove all table filters'))}">${qEsc(qLang('Filtreleri Temizle','Clear Filters'))}</button>`:''}<button type="button" class="todoDeleteBtn quotationDeleteBtn" data-delete-quotation="${qEsc(req.id)}" ${canDelete?'':'disabled'} title="${qEsc(canDelete?qLang('Fiyat çalışmasını sil','Delete quotation request'):qLang('Yalnız kayıt sahibi silebilir','Only the owner can delete'))}" aria-label="${qEsc(qLang('Fiyat çalışmasını sil','Delete quotation request'))}"><svg class="ic"><use href="#i-trash"/></svg></button></div>
       </div>
       <div class="quotationMetaStrip">
         <button type="button" class="quotationNoteTrigger${noteValue?' hasValue':''}" data-quotation-note title="${qEsc(qLang('Quotation notunu aç','Open quotation note'))}">
@@ -1246,6 +1268,11 @@
     host.querySelector('[data-manage-quotation-access]')?.addEventListener('click',()=>qOpenAccessModal(req));
     host.querySelector('[data-quotation-note]')?.addEventListener('click',()=>qOpenQuotationNote(req));
     host.querySelector('[data-q-send-reminder]')?.addEventListener('click',()=>qOpenReminder(req));
+    host.querySelector('[data-q-reopen-draft]')?.addEventListener('click',event=>{
+      const reopen=window.BLPrepareEmail?.reopenPricingRequest;
+      if(typeof reopen!=='function'){if(typeof showToast==='function')showToast(qLang('Taslak yeniden açma özelliği hazır değil.','Draft reopen is not available.'));return;}
+      void Promise.resolve(reopen(req.id,event.currentTarget)).finally(()=>{if(document.getElementById('quotationDetail'))qRenderDetail();});
+    });
     host.querySelector('[data-q-open-collection]')?.addEventListener('click',()=>qOpenRequestInCollection(req));
     host.querySelector('[data-q-open-history]')?.addEventListener('click',()=>openPricingHistoryWorkspace(qCollectionRowsForRequest(req),{requestId:req.id}));
     host.querySelector('[data-quotation-capacity]')?.addEventListener('change',event=>{
@@ -1715,11 +1742,18 @@
     });
     return {stable,legacy,all};
   }
+  function qhStableMatchValid(req,item,meta){
+    const rowOwner=qNorm(meta?.row?._collectionOwnerId)||qCurrentUserId();
+    if(qNorm(req?.ownerId)!==qNorm(rowOwner))return false;
+    return qIdentityCompatible(item,{plmId:meta?.plmId,modelCode:meta?.model});
+  }
   function qhSelectedMeta(req,item,index){
     const stableKeys=qhStableItemKeys(req,item);
     for(const key of stableKeys){
       const meta=index.stable.get(key);
-      if(meta)return meta;
+      // rowId kullanıcı başına ve yeniden import sonrası tekrar kullanılabilir;
+      // başka sahibin ya da artık başka modele ait eski bir kalemi bu satıra bağlama.
+      if(meta&&qhStableMatchValid(req,item,meta))return meta;
     }
     // Stable Koleksiyon kimliği bulunan bir quotation satırını PLM + Model
     // benzerliğiyle başka bir satıra bağlama. Bu özellikle Duplicate Model'in
