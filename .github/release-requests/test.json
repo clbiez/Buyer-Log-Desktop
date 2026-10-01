@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.188",
-  "commit_sha": "2908d1901a055e5186a94230fdeb17fb4281c36e",
-  "release_notes": "Buyer Log 7.0.188 TEST: Global Flow detail drawers now mirror the CP column order, widths and Focus / Extended / All presets. Partial-specific status, handover, shipment quantity and transport values are preserved. Full Buyer Log regression suite passed."
+  "version": "7.0.189",
+  "commit_sha": "c1e0b1ed5f95a7ca2132505c182645f0b8f4e3cc",
+  "release_notes": "Buyer Log 7.0.189 TEST: World Clock holidays now use a resilient live provider chain. Nager remains primary, unsupported countries can fall back to a live ICS feed, India keeps verified central-government fallback data, and the last-known-good holiday calendar is cached locally so outages do not erase holidays. Full Buyer Log regression suite passed."
 }
