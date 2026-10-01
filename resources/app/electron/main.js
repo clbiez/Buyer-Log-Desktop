@@ -177,6 +177,34 @@ function appVersion() {
   return String(pkg.version || 'bilinmiyor');
 }
 
+/* Yeni sürüm deneme (trial) açılışında launcher'a sağlık onayı verilir. İlk sekme
+ * yüklendiği an yerel DB veya backend henüz hazır değilse launcher onayı reddeder;
+ * tek atışlık bildirimde bu durum 60 sn sonra sessiz geri almaya dönüşüyor ve
+ * kullanıcı yeni sürümün özellikleri olmadan eski sürümde kalıyordu. Onay, launcher
+ * zaman aşımının içinde kalacak şekilde sınırlı sayıda yeniden denenir. */
+const HEALTH_CONFIRM_RETRY_MS = 2000;
+const HEALTH_CONFIRM_MAX_ATTEMPTS = 20;
+function confirmLauncherHealth(attempt = 0) {
+  if (!process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN || typeof global.__buyerLogLauncherHealthReady !== 'function') return;
+  let ok = false;
+  try {
+    ok = global.__buyerLogLauncherHealthReady({
+      version: appVersion(),
+      backendReady: Boolean(backend && backend.running),
+      localDbPath: paths && paths.localDbPath || '',
+      localDbReady: Boolean(paths && paths.localDbPath && fs.existsSync(paths.localDbPath)),
+      rendererReady: true,
+    }) === true;
+  } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
+  if (ok) { log('Updater health onaylandı: ' + appVersion()); return; }
+  if (attempt < HEALTH_CONFIRM_MAX_ATTEMPTS) {
+    const timer = setTimeout(() => confirmLauncherHealth(attempt + 1), HEALTH_CONFIRM_RETRY_MS);
+    if (timer && timer.unref) timer.unref();
+    return;
+  }
+  log('Updater health onaylanamadı (backend/DB hazır değil): ' + appVersion());
+}
+
 function updaterBaseConfig() {
   const config = paths ? readJson(paths.configPath, {}) : {};
   return config && typeof config.updates === 'object' && config.updates ? config.updates : {};
@@ -1316,17 +1344,7 @@ function createMainWindow(origin) {
     applyNavigationPolicy,
     log,
     onFirstRendererReady: () => {
-      try {
-        if (typeof global.__buyerLogLauncherHealthReady === 'function') {
-          global.__buyerLogLauncherHealthReady({
-            version: appVersion(),
-            backendReady: Boolean(backend && backend.running),
-            localDbPath: paths && paths.localDbPath || '',
-            localDbReady: Boolean(paths && paths.localDbPath && fs.existsSync(paths.localDbPath)),
-            rendererReady: true,
-          });
-        }
-      } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
+      confirmLauncherHealth();
     },
   });
   log('Çoklu sekme çalışma alanı yükleniyor: ' + origin);
