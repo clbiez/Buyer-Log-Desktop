@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.181",
-  "source": "test-v7.0.181",
-  "requestedAt": "2026-10-01T03:48:26Z",
-  "reason": "page-scoped-refresh-and-source-change-auto-update-v7.0.181"
+  "version": "7.0.182",
+  "source": "test-v7.0.182",
+  "requestedAt": "2026-10-01T04:24:15Z",
+  "reason": "single-browser-launch-oab-tab-image-cache-v7.0.182"
 }
