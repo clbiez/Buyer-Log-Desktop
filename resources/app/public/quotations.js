@@ -352,6 +352,23 @@
     return {target,price,percent:rounded,meetsTarget:price<=target,text:rounded===0?'0%':`${rounded<0?'−':'+'}${amount}%`};
   }
 
+  // `kol:<rowId>` yalnız TEK kullanıcının Koleksiyon çalışma alanında anlamlıdır:
+  // rowId'ler kullanıcı başına 1'den başlar ve veri taşıma / yeniden import /
+  // reset sonrası yeniden dağıtılır. Bu yüzden aynı modelKey tek başına "aynı
+  // model" demek değildir. Eşleşme için (1) Koleksiyon kayıtlarında aynı
+  // quotation sahibi ve (2) kayıt anındaki PLM ID / Model adı anlık
+  // görüntülerinden en az birinin uyuşması gerekir. Tek alanın (ör. yalnız
+  // model adı) revize edilmesi eşleşmeyi bozmaz; ikisi de farklıysa bu artık
+  // başka bir modeldir ve eski fiyat ona taşınmaz.
+  function qIdentityCompatible(a,b){
+    const pairs=[[a?.plmId,b?.plmId],[a?.modelCode,b?.modelCode]]
+      .map(([x,y])=>[qNorm(x).toLocaleLowerCase('tr-TR'),qNorm(y).toLocaleLowerCase('tr-TR')])
+      .filter(([x,y])=>x&&y);
+    return !pairs.length||pairs.some(([x,y])=>x===y);
+  }
+  function qSameCollectionOwner(reqA,reqB){
+    return qNorm(reqA?.ownerId)===qNorm(reqB?.ownerId);
+  }
   function qBestForModel(req,item){
     let best=null;
     const source=req?.source==='cp'?'cp':'collection';
@@ -362,8 +379,10 @@
     // Best Price / Mfr view is global.
     qLoad().requests.forEach(otherReq=>{
       if(otherReq.source!==source)return;
+      if(source==='collection'&&!qSameCollectionOwner(req,otherReq))return;
       (otherReq.items||[]).forEach(line=>{
         if(qNorm(line.modelKey)!==modelKey||!qValidPrice(line.price))return;
+        if(!qIdentityCompatible(item,line))return;
         const price=qMoneyNumber(line.price);
         if(!best||price<best.price){
           best={price,manufacturer:qNorm(line.manufacturer),lineId:line.id};
@@ -1715,11 +1734,18 @@
     });
     return {stable,legacy,all};
   }
+  function qhStableMatchValid(req,item,meta){
+    const rowOwner=qNorm(meta?.row?._collectionOwnerId)||qCurrentUserId();
+    if(qNorm(req?.ownerId)!==qNorm(rowOwner))return false;
+    return qIdentityCompatible(item,{plmId:meta?.plmId,modelCode:meta?.model});
+  }
   function qhSelectedMeta(req,item,index){
     const stableKeys=qhStableItemKeys(req,item);
     for(const key of stableKeys){
       const meta=index.stable.get(key);
-      if(meta)return meta;
+      // rowId kullanıcı başına ve yeniden import sonrası tekrar kullanılabilir;
+      // başka sahibin ya da artık başka modele ait eski bir kalemi bu satıra bağlama.
+      if(meta&&qhStableMatchValid(req,item,meta))return meta;
     }
     // Stable Koleksiyon kimliği bulunan bir quotation satırını PLM + Model
     // benzerliğiyle başka bir satıra bağlama. Bu özellikle Duplicate Model'in
