@@ -8101,7 +8101,8 @@ function filteredCP(){
   // final user decision used by the visible CP table.
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const ctx=cpBuildFilterContext();
-  const source=ensurePlmSampleAccessors(partialViewRows('cp',ensurePlmSampleAccessors(state.cp.rows)));
+  ensurePlmSampleAccessors(state.cp.rows);
+  const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
   return rows;
@@ -8452,7 +8453,8 @@ function filteredOrders(){
   if(!state.orders)return [];
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('orders');
   const ctx=ordersBuildFilterContext();
-  const source=ensurePlmSampleAccessors(partialViewRows('orders',ensurePlmSampleAccessors(state.orders.rows)));
+  ensurePlmSampleAccessors(state.orders.rows);
+  const source=partialViewRows('orders',state.orders.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
