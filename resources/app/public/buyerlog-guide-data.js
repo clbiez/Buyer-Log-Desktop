@@ -352,8 +352,8 @@
         "en": "Keep the guide within reach"
       },
       "summary": {
-        "tr": "Açılışta gördüğünüz ipuçları bu rehberde modül bazında bulunur. Başlık, özellik adı veya düğme adıyla arayabilirsiniz.",
-        "en": "Startup tips also live in this guide, grouped by module. Search by topic, feature or button name."
+        "tr": "Tüm kullanım ipuçları bu rehberde modül bazında bulunur. Başlık, özellik adı veya düğme adıyla arayabilirsiniz.",
+        "en": "All how-to tips live in this guide, grouped by module. Search by topic, feature or button name."
       },
       "path": {
         "tr": "Üst çubuk → Kullanım Rehberi / F1",
