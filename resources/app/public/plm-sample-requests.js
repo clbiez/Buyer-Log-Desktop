@@ -81,6 +81,41 @@
     return plmId ? Engine.evidenceFor(milestonesFor(plmId), itemId) : null;
   }
 
+  /* CP / Siparişler "PLM Numune" sütunu. Kalem sırası sabit; PLM'de talebi
+     olmayan kalem yazılmaz (yok ≠ eksik). Hiç senkron yapılmamış model boş,
+     senkronu yapılmış ama talebi olmayan model "Talep yok" gösterir. */
+  const COLUMN_SHORT = {
+    pps: { tr: 'PPS', en: 'PPS' },
+    soff: { tr: 'S/Off', en: 'S/Off' },
+    criticalSample: { tr: 'FIT/SIZE', en: 'Fit/Size' }, // TR büyük harf dönüşümü 'i'yi 'İ' yapmasın
+    artwork: { tr: 'Artwork', en: 'Artwork' },
+  };
+  const STATE_SHORT = {
+    tr: { approved: 'Onaylı', open: 'Açık', rejected: 'Red' },
+    en: { approved: 'Approved', open: 'Open', rejected: 'Rejected' },
+  };
+  function columnParts(row, moduleId) {
+    const plmId = plmIdOfRow(row, moduleId);
+    const entry = plmId ? entryFor(plmId) : null;
+    if (!entry) return null;
+    const milestones = milestonesFor(plmId) || {};
+    const lang = isEn() ? 'en' : 'tr';
+    const parts = Engine.MILESTONES.filter(key => milestones[key]).map(key => {
+      const item = milestones[key];
+      return {
+        key, state: item.state,
+        text: `${COLUMN_SHORT[key][lang]}: ${STATE_SHORT[lang][item.state] || item.state}`,
+        title: `${item.subTypeName} · ${item.statusName} · ${item.requestCode}`,
+      };
+    });
+    return { plmId, parts };
+  }
+  function columnText(row, moduleId) {
+    const value = columnParts(row, moduleId);
+    if (!value) return '';
+    return value.parts.length ? value.parts.map(part => part.text).join(' · ') : L('Talep yok', 'No request');
+  }
+
   /* PLM'den çek. Yetki/bağlantı akışı Collection PLM Sync ile AYNIDIR. */
   async function sync(plmIds, options) {
     const ids = [...new Set((Array.isArray(plmIds) ? plmIds : []).map(Engine.numericId).filter(Boolean))];
@@ -226,10 +261,17 @@
     }
   };
 
+  /* Saklı veri ilk yüklemede CP/Siparişler tablosuna ve kontrol listesine
+     haber verilir (sütun ve Priority aynı olayla yeniden çizilir). */
+  load().then(() => {
+    if (!Object.keys(state.models).length) return;
+    try { window.dispatchEvent(new CustomEvent('bl:plm-requests-changed', { detail: { revision: state.revision } })); } catch (_) { /* eski tarayıcı */ }
+  });
+
   window.BLPlmSampleRequests = {
     load, sync, syncStep, syncStepSuffix, summaryText,
     entryFor, milestonesFor, evidenceForAnalysis, plmIdOfRow,
-    openForPlm, openForRow, evidenceBadge,
+    openForPlm, openForRow, evidenceBadge, columnParts, columnText,
     get loaded() { return state.loaded; },
     get updatedAt() { return state.updatedAt; },
   };

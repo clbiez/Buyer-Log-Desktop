@@ -278,3 +278,36 @@ test('v7.0.192 kablolama: PLM Sync, CP, sağ tık menüsü, lazy yükleme ve sun
   assert.match(perf, /'plm-sample-requests-engine\.js','plm-sample-requests\.js','row-context-menu\.js'/);
   assert.match(read('public/plm-operations.js'), /'plm-requests':/);
 });
+
+/* Kullanıcı talebi: "CP'ye PLM Numune sütunu ekle". Sütun salt okunurdur ve
+   değeri satıra YAZILMAZ (ASAS satırı/kayıt kirlenmez); PLM senkronundan sonra
+   aynı satır nesnesi yeni değeri okur. */
+test('v7.0.192 CP PLM Numune sütunu: tanımlı, salt okunur ve kayda girmeyen erişimci', () => {
+  const app = read('public/app-main.js');
+  assert.match(app, /\{k:'Priority', label:'Priority', type:'priority'[^\n]*\n[^\n]*\n[^\n]*\n  \{k:'PLM Numune', label:'PLM Numune', type:'plmSample'/);
+  assert.match(app, /case 'plmSample': return plmSampleCellHtml\(r,tableKey\);/);
+  assert.match(app, /if\(c\.type==='plmSample'\) return norm\(v\);/);
+  assert.match(app, /const source=ensurePlmSampleAccessors\(partialViewRows\('cp',ensurePlmSampleAccessors\(state\.cp\.rows\)\)\);/);
+  assert.match(app, /const source=ensurePlmSampleAccessors\(partialViewRows\('orders',ensurePlmSampleAccessors\(state\.orders\.rows\)\)\);/);
+  assert.match(app, /window\.addEventListener\('bl:plm-requests-changed'/);
+
+  // Erişimci davranışı: kaynak koddaki fonksiyon izole çalıştırılır.
+  const start = app.indexOf("const PLM_SAMPLE_COL_KEY='PLM Numune';");
+  const end = app.indexOf('function plmSampleCellHtml(');
+  const window = { BLPlmSampleRequests: { columnText: row => (row['PLM ID'] === 2081327 ? 'S/Off: Açık · Artwork: Onaylı' : '') } };
+  const ensure = new Function('window', `${app.slice(start, end)}; return ensurePlmSampleAccessors;`)(window);
+  const row = { 'PLM ID': 2081327, 'Order Code': 1 };
+  ensure([row]);
+  assert.equal(row['PLM Numune'], 'S/Off: Açık · Artwork: Onaylı');
+  assert.ok(!Object.keys(row).includes('PLM Numune'), 'değer satırın kendi alanı olmamalı');
+  assert.equal(JSON.stringify(row).includes('PLM Numune'), false, 'kayda/JSON’a girmemeli');
+  window.BLPlmSampleRequests.columnText = () => 'S/Off: Onaylı';
+  assert.equal(row['PLM Numune'], 'S/Off: Onaylı', 'senkron sonrası aynı satır güncel değeri okur');
+});
+
+test('v7.0.192 PLM Numune sütun metni: talep yoksa "Talep yok", senkron yoksa boş', () => {
+  const src = read('public/plm-sample-requests.js');
+  assert.match(src, /function columnParts\(row, moduleId\)/);
+  assert.match(src, /if \(!entry\) return null;/, 'senkron yapılmamış model boş görünür');
+  assert.match(src, /value\.parts\.length \? value\.parts\.map\(part => part\.text\)\.join\(' · '\) : L\('Talep yok', 'No request'\)/);
+});

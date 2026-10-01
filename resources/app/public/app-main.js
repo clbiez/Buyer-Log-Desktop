@@ -3308,6 +3308,9 @@ function cpCycleImageSize(){
 const CP_COLS = [
   {k:'__picture', label:'Picture', type:'cpImage', weight:8, group:'Order Info'},
   {k:'Priority', label:'Priority', type:'priority', weight:9, group:'Order Info'},
+  /* PLM numune talepleri (CoreNectum Requests) — salt okunur, satıra YAZILMAZ;
+     değer plm-sample-requests.js'ten okunur (bkz. ensurePlmSampleAccessors). */
+  {k:'PLM Numune', label:'PLM Numune', type:'plmSample', weight:14, group:'Order Info'},
   {k:'Season', label:'Season', type:'ro', weight:6, group:'Order Info'},
   {k:'Country', label:'Country', type:'ro', weight:8, group:'Order Info'},
   {k:'Merch Marka Yaş Grup Kod', label:'Yaş Grup', type:'ro', weight:8, group:'Order Info'},
@@ -4974,6 +4977,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       return `<td class="${numeric?'num ':''}formulaCell" title="${escapeHtml(String(text))}">${escapeHtml(String(text))}</td>`;
     }
     case 'cpImage': return cpImageCellHtml(r);
+    case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
       const reason=priorityReasonText(r),title=reason?` title="${escapeHtml(reason)}"`:'';
       if(rev) return `<td${title}>${revisionHtml(c.k, rev, value=>badge(priorityDisplay(value)||'—', priorityTone(value)))}</td>`;
@@ -5106,6 +5110,7 @@ function cellPlainText(c,r,cf){
   if(cpLogisticHasDetails(r)&&c.k==='Ant. Arrival') return cpLogisticArrivalPlainText(r);
   if(cpLogisticHasDetails(r)&&(c.type==='deltype'||c.k==='Del. Type')) return cpLogisticDelTypePlainText(r);
   if(c.type==='priority') return priorityDisplay(v);
+  if(c.type==='plmSample') return norm(v);
   if(c.type==='status') return statusDisplay(v);
   if(c.type==='deltype'||c.k==='Del. Type') return transitDelTypeDisplay(v);
   if(c.type==='ordercode') return fmtOC(v);
@@ -8050,6 +8055,34 @@ function cpPassesGroup(r,ctx,id){
   }
   return true;
 }
+/* ===================================================================
+   PLM NUMUNE SÜTUNU (CP / Siparişler)
+   Değer satıra yazılmaz: numaralandırılamayan (enumerable:false) bir okuyucu
+   ile her okumada plm-sample-requests.js'ten hesaplanır. Böylece sıralama,
+   sütun filtresi, kopyala/Excel aynı r[k] yolunu kullanır; ama değer JSON'a,
+   kayda veya ASAS satırına hiç girmez ve PLM senkronundan sonra hep günceldir.
+   =================================================================== */
+const PLM_SAMPLE_COL_KEY='PLM Numune';
+function ensurePlmSampleAccessors(rows){
+  if(!Array.isArray(rows))return rows;
+  for(const row of rows){
+    if(!row||typeof row!=='object'||Object.prototype.hasOwnProperty.call(row,PLM_SAMPLE_COL_KEY))continue;
+    Object.defineProperty(row,PLM_SAMPLE_COL_KEY,{configurable:true,enumerable:false,get(){const api=window.BLPlmSampleRequests;return api?api.columnText(this,'cp'):'';}});
+  }
+  return rows;
+}
+function plmSampleCellHtml(r,tableKey){
+  const api=window.BLPlmSampleRequests,value=api?api.columnParts(r,tableKey==='orders'?'orders':'cp'):null;
+  if(!value)return '<td></td>';
+  if(!value.parts.length)return `<td class="plmSampleCell" title="${escapeHtml(appLang==='en'?'No sample request in PLM':'PLM\'de numune talebi yok')}"><span class="plmSampleEmpty">${escapeHtml(appLang==='en'?'No request':'Talep yok')}</span></td>`;
+  const tone=state=>state==='approved'?'green':state==='rejected'?'red':'orange';
+  const title=value.parts.map(part=>`${part.text} — ${part.title}`).join('\n');
+  return `<td class="plmSampleCell" title="${escapeHtml(title)}">${value.parts.map(part=>badge(escapeHtml(part.text),tone(part.state))).join(' ')}</td>`;
+}
+window.addEventListener('bl:plm-requests-changed',()=>{
+  if(currentActiveTab()==='cp')renderCP();
+  if(currentActiveTab()==='orders')renderOrders();
+});
 function cpRowPasses(r,ctx,ids){
   if(!cpPassesBase(r,ctx)) return false;
   for(let i=0;i<ids.length;i++) if(!cpPassesGroup(r,ctx,ids[i])) return false;
@@ -8062,7 +8095,7 @@ function filteredCP(){
   // final user decision used by the visible CP table.
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const ctx=cpBuildFilterContext();
-  const source=partialViewRows('cp',state.cp.rows);
+  const source=ensurePlmSampleAccessors(partialViewRows('cp',ensurePlmSampleAccessors(state.cp.rows)));
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
   return rows;
@@ -8413,7 +8446,7 @@ function filteredOrders(){
   if(!state.orders)return [];
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('orders');
   const ctx=ordersBuildFilterContext();
-  const source=partialViewRows('orders',state.orders.rows);
+  const source=ensurePlmSampleAccessors(partialViewRows('orders',ensurePlmSampleAccessors(state.orders.rows)));
   let rows=source.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
