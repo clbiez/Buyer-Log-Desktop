@@ -2910,6 +2910,25 @@ function createPassAuthCaptureTracker(){
     onFailed(params){pending.delete(clean(params&&params.requestId));},
   };
 }
+/* PLM ile AYNI model: veri isteği açık PASS sekmesinin İÇİNDEN, sekmenin kendi
+   token'ıyla atılır; sekme yeniden yüklenmez. Sekmedeki token PASS tarafından
+   kabul ediliyorsa (küçük metadata isteği 2xx) bağlantı hazırdır — rapor
+   isteği yakalamak için siteyi gezmeye gerek yoktur. Token Node'a dönmez. */
+const PASS_TOKEN_PROBE_URL=`${PASS_API_ROOT}/Report/GetReportVariablesWithData`;
+const PASS_TOKEN_PROBE_BODY={reportRef:'OrderBudget_List_Report',languageRef:2,variableRef:534,reportVariableRef:454};
+async function passPageTokenAccepted(page){
+  if(!page||page.isClosed())return false;
+  const result=await page._evaluateValue(passRequestExpression(PASS_TOKEN_PROBE_URL,'POST',{},PASS_TOKEN_PROBE_BODY)).catch(()=>null);
+  return Boolean(result&&result.ok);
+}
+/* Buyer Log tarayıcıyı kendisi başlattığında Chromium bir başlangıç sekmesi
+   (about:blank / yeni sekme) açar. PASS için İKİNCİ bir sekme açmak yerine bu
+   boş sekme kullanılır: tarayıcı tek kez açılır ve doğrudan PASS'e gider.
+   Yalnız bağlanılan profildeki boş sekme seçilir; başka profile düşülmez. */
+function passReusableStartupPage(context){
+  const binding=coreNectumProfileBinding(context);
+  return binding.bound?reusableBlankPageInBoundProfile(context,binding):null;
+}
 // PASS viewer'ını (mümkünse seçili filtrelerle önceden doldurulmuş olarak)
 // açar ve PASS'in kabul ettiği ilk rapor-API isteğinin header'larını
 // (Authorization dahil) yakalar. PASS oturumu açılmamışsa login ekranı kullanıcıya bırakılır: Buyer
@@ -2917,7 +2936,12 @@ function createPassAuthCaptureTracker(){
 // Edge'de oturum açtığında capture aynı çağrı içinde otomatik devam eder.
 async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merchSubGroupRef,buyerGroupRef}={}){
   const key=safeOwner(ownerId);
-  const targetUrl=passViewerUrl({seasonRef,merchSubGroupRef,buyerGroupRef});
+  // Filtreli viewer adresi yalnız sayfa zaten o rapordaysa yeniden yüklemeyi
+  // önlemek için tanınır. Gezinme FİLTRESİZ viewer'a yapılır: filtreli adres
+  // PASS'in raporu sitede kendisinin çalıştırmasına yol açıyordu (ağır ve
+  // gereksiz); veri zaten sekmenin içinden doğrudan API ile çekilir.
+  const selectedViewerUrl=passViewerUrl({seasonRef,merchSubGroupRef,buyerGroupRef});
+  const targetUrl=passViewerUrl({});
   const isPassUiPage=candidate=>{try{const url=new URL(candidate.url());return !candidate.isClosed()&&url.hostname.toLowerCase()===PASS_UI_HOST;}catch(_){return false;}};
   if(passCaptureLocks.has(key))throw connectorError('PASS bağlantı yakalaması zaten sürüyor.','PASS_CAPTURE_ALREADY_RUNNING',409);
   passCaptureLocks.add(key);
@@ -2945,15 +2969,22 @@ async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merc
     };
     for(const candidate of context.pages())await attachPage(candidate);
     let page=context.pages().find(isPassUiPage);
+    // Açık PASS sekmesinin token'ı geçerliyse sekmeye DOKUNULMAZ (yeniden
+    // yükleme/gezinme yok); istekler o sekmenin içinden atılır.
+    if(page&&!await passPageLooksLikeLogin(page)&&await passPageTokenAccepted(page)){
+      progress.phase='captured';
+      return {...passAuthStatus(ownerId),connected:true,hasAuthorization:true,source:'page-storage'};
+    }
+    if(!page)page=passReusableStartupPage(context);
     if(!page)page=await pageForCurrentBuyerLogProfile(context,targetUrl);
     await attachPage(page);
     // Listener navigation'dan ÖNCE bağlıdır; viewer doğrudan report isteği atarsa
     // çok hızlı çağrılar da kaçırılmaz. SSO/login redirect'i olursa aynı client
     // ve sonradan açılan target'lar polling döngüsünde yeniden izlenir.
-    if(page.url()!==targetUrl)await page.goto(targetUrl,{waitUntil:'domcontentloaded',timeout:45000}).catch(()=>{});
+    if(page.url()!==targetUrl&&page.url()!==selectedViewerUrl)await page.goto(targetUrl,{waitUntil:'domcontentloaded',timeout:45000}).catch(()=>{});
     progress.phase='waiting-request';
     const deadline=Date.now()+Math.max(30000,Number(timeoutMs)||300000);
-    let lastViewerKick=0,rejectedKicks=0;
+    let lastViewerKick=0,rejectedKicks=0,lastTokenProbe=Date.now(),storageAccepted=false;
     while(!(captured=tracker.captured())&&Date.now()<deadline){
       await context.syncPages().catch(()=>{});
       const pages=context.pages().filter(candidate=>!candidate.isClosed());
@@ -2977,6 +3008,13 @@ async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merc
         }
       }else{
         progress.phase='waiting-request';
+        // Viewer bir rapor-API isteği atmasa da sekmedeki token geçerli hâle
+        // geldiyse bağlantı hazırdır; siteyi daha fazla gezmeye gerek yok.
+        const probePage=Date.now()-lastTokenProbe>2000?pages.find(isPassUiPage):null;
+        if(probePage){
+          lastTokenProbe=Date.now();
+          if(await passPageTokenAccepted(probePage)){storageAccepted=true;break;}
+        }
         // PASS eski token'ı reddettiyse viewer çoğu zaman yenilenmiş token'la
         // kendisi tekrar dener. Denemezse YENİ sekme açılmaz; aynı PASS sekmesi
         // en fazla iki kez yeniden yüklenir.
@@ -2989,6 +3027,10 @@ async function capturePassAuthorization(ownerId,{timeoutMs=300000,seasonRef,merc
         }
       }
       if(!tracker.captured())await sleep(250);
+    }
+    if(!captured&&storageAccepted){
+      progress.phase='captured';
+      return {...passAuthStatus(ownerId),connected:true,hasAuthorization:true,source:'page-storage'};
     }
     if(!captured){
       if(progress.loginRequired)throw connectorError('PASS oturum açma işlemi tamamlanmadı. Edge üzerindeki PASS girişini tamamlayıp tekrar deneyin.','PASS_LOGIN_TIMEOUT',408);
@@ -3074,6 +3116,10 @@ function passTransientCdpTargetError(error){
 async function passPageForRequest(context){
   await context.syncPages().catch(()=>{});
   let page=context.pages().find(candidate=>{try{const u=new URL(candidate.url());return !candidate.isClosed()&&u.hostname.toLowerCase()===PASS_UI_HOST;}catch(_){return false;}});
+  if(!page){
+    page=passReusableStartupPage(context);
+    if(page)await page.goto(PASS_VIEWER_BASE,{waitUntil:'domcontentloaded',timeout:45000}).catch(()=>{});
+  }
   if(!page)page=await pageForCurrentBuyerLogProfile(context,PASS_VIEWER_BASE);
   return page;
 }

@@ -492,34 +492,42 @@ function createBrowserDebugService(options = {}) {
       : ['Google\\Chrome\\Application\\chrome.exe'];
     return [...new Set(roots.flatMap(root => relative.map(item => path.join(root, item))))];
   }
-  /* SÜRÜM, KURULUM KLASÖRÜNDEN OKUNUR.
-     `msedge.exe --version` Windows'ta bir GUI uygulaması olduğu için stdout'a
-     çoğu zaman HİÇBİR ŞEY yazmaz; sürüme oradan bakmak sessizce boş döner.
+  /* SÜRÜM, KURULUM KLASÖRÜNDEN OKUNUR — TARAYICI ASLA ÇALIŞTIRILMAZ.
      Kurulum klasörünün yanında sürüm adlı bir alt klasör vardır
-     (…\Edge\Application\153.0.4234.32\) ve bu kaynak güvenilirdir. */
-  function browserMajorVersion(executablePath, versionText = '') {
-    const fromText = /(\d+)\.\d+\.\d+\.\d+/.exec(clean(versionText));
-    let major = fromText ? Number(fromText[1]) : 0;
+     (…\Edge\Application\153.0.4234.32\) ve bu kaynak güvenilirdir.
+
+     Eskiden sürüm için `msedge.exe --version` / `chrome.exe --version`
+     çalıştırılıyordu. Windows'ta Edge/Chrome bu bayrağı DESTEKLEMEZ: stdout'a
+     hiçbir şey yazmaz, gerçek bir tarayıcı penceresi açar ve 2,5 sn sonra
+     zaman aşımıyla öldürülür. Tarayıcı zaten açıksa iş singleton'a devredilir
+     ve kullanıcının Edge'inde yeni pencere belirir. Her durum/bağlantı
+     kontrolü bunu 2–4 kez yaptığı için "Get OAB" ve "Remote Debugging"
+     düğmelerinde 3–4 tarayıcı açılıp kapanıyordu. */
+  function installedBrowserVersion(executablePath) {
+    let best = '';
+    let bestParts = null;
     try {
       const root = path.dirname(clean(executablePath));
-      if (root) {
+      if (root && clean(executablePath)) {
         for (const entry of fsImpl.readdirSync(root)) {
-          const match = /^(\d+)\.\d+\.\d+\.\d+$/.exec(String(entry));
-          if (match) major = Math.max(major, Number(match[1]));
+          const name = String(entry && typeof entry === 'object' && 'name' in entry ? entry.name : entry);
+          if (!/^\d+\.\d+\.\d+\.\d+$/.test(name)) continue;
+          const parts = name.split('.').map(Number);
+          const diff = bestParts ? parts.map((value, index) => value - bestParts[index]).find(value => value !== 0) : 1;
+          if (diff > 0) { best = name; bestParts = parts; }
         }
       }
-    } catch (_) { /* sürüm okunamazsa 0 kalır ve eski davranış sürer */ }
+    } catch (_) { /* sürüm okunamazsa boş kalır ve eski davranış sürer */ }
+    return best;
+  }
+  function browserMajorVersion(executablePath, versionText = '') {
+    const fromText = /(\d+)\.\d+\.\d+\.\d+/.exec(clean(versionText) || installedBrowserVersion(executablePath));
+    const major = fromText ? Number(fromText[1]) : 0;
     return Number.isFinite(major) ? major : 0;
   }
   function detectBrowser(browser) {
     const executablePath = browserCandidates(browser).find(item => { try { return fsImpl.existsSync(item); } catch (_) { return false; } }) || '';
-    let version = '';
-    if (executablePath) {
-      try {
-        const result = spawnSyncImpl(executablePath, ['--version'], { encoding: 'utf8', windowsHide: true, timeout: 2500, shell: false });
-        version = clean(result.stdout || result.stderr).slice(0, 120);
-      } catch (_) {}
-    }
+    const version = executablePath ? installedBrowserVersion(executablePath) : '';
     return { installed: Boolean(executablePath), browser, executablePath: executablePath || undefined, version: version || undefined, majorVersion: browserMajorVersion(executablePath, version) };
   }
   function detectInstalledBrowsers() { return BROWSERS.map(detectBrowser); }
