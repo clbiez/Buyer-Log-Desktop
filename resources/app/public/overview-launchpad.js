@@ -8,31 +8,35 @@
   'use strict';
   const STORAGE_KEY='buyerlog.overview.worldClocks.v1';
   const DISPLAY_KEY='buyerlog.overview.worldClocks.display.v1';
+  const HOLIDAY_KEY='buyerlog.overview.worldClocks.holidays.v1';
+  const HOLIDAY_API='https://date.nager.at/api/v3/PublicHolidays';
+  const HOLIDAY_WINDOW_DAYS=45;
+  const HOLIDAY_LIMIT=2;
   const DEFAULT_CLOCKS=Object.freeze(['TR','BD','IN','CN','EG']);
   const DEFAULT_DISPLAY='digital';
   const CLOCKS=Object.freeze([
-    {id:'TR',tr:'Türkiye',en:'Türkiye',timeZone:'Europe/Istanbul'},
-    {id:'BD',tr:'Bangladeş',en:'Bangladesh',timeZone:'Asia/Dhaka'},
-    {id:'IN',tr:'Hindistan',en:'India',timeZone:'Asia/Kolkata'},
-    {id:'CN',tr:'Çin',en:'China',timeZone:'Asia/Shanghai'},
-    {id:'EG',tr:'Mısır',en:'Egypt',timeZone:'Africa/Cairo'},
-    {id:'PK',tr:'Pakistan',en:'Pakistan',timeZone:'Asia/Karachi'},
-    {id:'VN',tr:'Vietnam',en:'Vietnam',timeZone:'Asia/Ho_Chi_Minh'},
-    {id:'ID',tr:'Endonezya',en:'Indonesia',timeZone:'Asia/Jakarta'},
-    {id:'GB',tr:'Birleşik Krallık',en:'United Kingdom',timeZone:'Europe/London'},
-    {id:'DE',tr:'Almanya',en:'Germany',timeZone:'Europe/Berlin'},
-    {id:'IT',tr:'İtalya',en:'Italy',timeZone:'Europe/Rome'},
-    {id:'ES',tr:'İspanya',en:'Spain',timeZone:'Europe/Madrid'},
-    {id:'US-NY',tr:'ABD · New York',en:'USA · New York',timeZone:'America/New_York'},
-    {id:'US-LA',tr:'ABD · Los Angeles',en:'USA · Los Angeles',timeZone:'America/Los_Angeles'},
-    {id:'BR',tr:'Brezilya',en:'Brazil',timeZone:'America/Sao_Paulo'},
-    {id:'MX',tr:'Meksika',en:'Mexico',timeZone:'America/Mexico_City'},
-    {id:'ZA',tr:'Güney Afrika',en:'South Africa',timeZone:'Africa/Johannesburg'},
-    {id:'AE',tr:'BAE',en:'UAE',timeZone:'Asia/Dubai'},
-    {id:'SA',tr:'Suudi Arabistan',en:'Saudi Arabia',timeZone:'Asia/Riyadh'},
-    {id:'JP',tr:'Japonya',en:'Japan',timeZone:'Asia/Tokyo'},
-    {id:'KR',tr:'Güney Kore',en:'South Korea',timeZone:'Asia/Seoul'},
-    {id:'AU',tr:'Avustralya · Sidney',en:'Australia · Sydney',timeZone:'Australia/Sydney'},
+    {id:'TR',tr:'Türkiye',en:'Türkiye',timeZone:'Europe/Istanbul',countryCode:'TR'},
+    {id:'BD',tr:'Bangladeş',en:'Bangladesh',timeZone:'Asia/Dhaka',countryCode:'BD'},
+    {id:'IN',tr:'Hindistan',en:'India',timeZone:'Asia/Kolkata',countryCode:'IN'},
+    {id:'CN',tr:'Çin',en:'China',timeZone:'Asia/Shanghai',countryCode:'CN'},
+    {id:'EG',tr:'Mısır',en:'Egypt',timeZone:'Africa/Cairo',countryCode:'EG'},
+    {id:'PK',tr:'Pakistan',en:'Pakistan',timeZone:'Asia/Karachi',countryCode:'PK'},
+    {id:'VN',tr:'Vietnam',en:'Vietnam',timeZone:'Asia/Ho_Chi_Minh',countryCode:'VN'},
+    {id:'ID',tr:'Endonezya',en:'Indonesia',timeZone:'Asia/Jakarta',countryCode:'ID'},
+    {id:'GB',tr:'Birleşik Krallık',en:'United Kingdom',timeZone:'Europe/London',countryCode:'GB'},
+    {id:'DE',tr:'Almanya',en:'Germany',timeZone:'Europe/Berlin',countryCode:'DE'},
+    {id:'IT',tr:'İtalya',en:'Italy',timeZone:'Europe/Rome',countryCode:'IT'},
+    {id:'ES',tr:'İspanya',en:'Spain',timeZone:'Europe/Madrid',countryCode:'ES'},
+    {id:'US-NY',tr:'ABD · New York',en:'USA · New York',timeZone:'America/New_York',countryCode:'US'},
+    {id:'US-LA',tr:'ABD · Los Angeles',en:'USA · Los Angeles',timeZone:'America/Los_Angeles',countryCode:'US'},
+    {id:'BR',tr:'Brezilya',en:'Brazil',timeZone:'America/Sao_Paulo',countryCode:'BR'},
+    {id:'MX',tr:'Meksika',en:'Mexico',timeZone:'America/Mexico_City',countryCode:'MX'},
+    {id:'ZA',tr:'Güney Afrika',en:'South Africa',timeZone:'Africa/Johannesburg',countryCode:'ZA'},
+    {id:'AE',tr:'BAE',en:'UAE',timeZone:'Asia/Dubai',countryCode:'AE'},
+    {id:'SA',tr:'Suudi Arabistan',en:'Saudi Arabia',timeZone:'Asia/Riyadh',countryCode:'SA'},
+    {id:'JP',tr:'Japonya',en:'Japan',timeZone:'Asia/Tokyo',countryCode:'JP'},
+    {id:'KR',tr:'Güney Kore',en:'South Korea',timeZone:'Asia/Seoul',countryCode:'KR'},
+    {id:'AU',tr:'Avustralya · Sidney',en:'Australia · Sydney',timeZone:'Australia/Sydney',countryCode:'AU'},
   ]);
   const BY_ID=new Map(CLOCKS.map(item=>[item.id,item]));
   function supportedTimeZones(){
@@ -55,6 +59,19 @@
     return null;
   }
   function normalizeDisplayMode(value){return ['digital','analog','both'].includes(String(value||''))?String(value):DEFAULT_DISPLAY;}
+  function normalizeHolidayPref(value){return value==null?true:!['0','false','off','no'].includes(String(value).trim().toLowerCase());}
+  function zonedISODate(date,timeZone){
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+    const map=Object.fromEntries(parts.map(part=>[part.type,part.value]));
+    return [map.year,map.month,map.day].join('-');
+  }
+  function isoDayDiff(fromISO,toISO){
+    const a=Date.parse(String(fromISO||'')+'T00:00:00Z'),b=Date.parse(String(toISO||'')+'T00:00:00Z');
+    return Number.isFinite(a)&&Number.isFinite(b)?Math.round((b-a)/86400000):NaN;
+  }
+  function upcomingHolidays(holidays,localISO,windowDays=HOLIDAY_WINDOW_DAYS,limit=HOLIDAY_LIMIT){
+    return (Array.isArray(holidays)?holidays:[]).filter(item=>item&&item.date&&item.global!==false).map(item=>({item,diff:isoDayDiff(localISO,item.date)})).filter(entry=>Number.isFinite(entry.diff)&&entry.diff>=0&&entry.diff<=windowDays).sort((a,b)=>a.diff-b.diff||String(a.item.date).localeCompare(String(b.item.date))).slice(0,limit).map(entry=>entry.item);
+  }
   function clockSearchKey(value){return String(value==null?'':value).toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').replace(/[_/.-]+/g,' ').replace(/\s+/g,' ').trim();}
   function clockMatchesSearch(item,query,l='tr'){
     if(!item)return false;const q=clockSearchKey(query);if(!q)return true;
@@ -103,7 +120,7 @@
     return {hour:(hour+minute/60+second/3600)*30,minute:(minute+second/60)*6,second:second*6};
   }
 
-  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
+  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_WINDOW_DAYS,HOLIDAY_LIMIT,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,zonedISODate,isoDayDiff,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
 
   const lang=()=>(document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -112,6 +129,8 @@
   function saveSelection(value){try{store()?.setItem(STORAGE_KEY,JSON.stringify(normalizeSelection(value)));}catch(_){}}
   function loadDisplayMode(){try{return normalizeDisplayMode(store()?.getItem(DISPLAY_KEY));}catch(_){return DEFAULT_DISPLAY;}}
   function saveDisplayMode(value){try{store()?.setItem(DISPLAY_KEY,normalizeDisplayMode(value));}catch(_){}}
+  function loadHolidayEnabled(){try{return normalizeHolidayPref(store()?.getItem(HOLIDAY_KEY));}catch(_){return true;}}
+  function saveHolidayEnabled(value){try{store()?.setItem(HOLIDAY_KEY,value?'1':'0');}catch(_){}}
   function refreshing(){return Boolean(document.getElementById('topRefreshBtn')?.classList.contains('spinning'));}
   function pulseHtml(l){
     if(!refreshing())return '';
@@ -125,6 +144,47 @@
     options.forEach(option=>{const show=!q||clockSearchKey(option.dataset.clockSearchText||option.textContent).includes(q);option.hidden=!show;option.disabled=!show;if(show&&!first)first=option;});
     select.querySelectorAll('optgroup').forEach(group=>{group.hidden=![...group.querySelectorAll('option')].some(option=>!option.hidden);});
     const current=select.selectedOptions&&select.selectedOptions[0];if(first&&(!current||current.hidden||current.disabled))select.value=first.value;
+  }
+  const holidayCache=new Map();
+  function fetchHolidayYear(year,countryCode){
+    const code=String(countryCode||'').toUpperCase(),key=code+'|'+year;
+    if(!code)return Promise.resolve([]);
+    if(holidayCache.has(key))return holidayCache.get(key);
+    const request=fetch(HOLIDAY_API+'/'+encodeURIComponent(year)+'/'+encodeURIComponent(code),{headers:{Accept:'application/json'}})
+      .then(response=>response.ok?response.json():Promise.reject(new Error('holiday '+response.status)))
+      .then(rows=>Array.isArray(rows)?rows:[]).catch(()=>[]);
+    holidayCache.set(key,request);return request;
+  }
+  function holidayDateLabel(iso,l){
+    const date=new Date(String(iso||'')+'T12:00:00Z');
+    if(!Number.isFinite(date.getTime()))return '';
+    return new Intl.DateTimeFormat(l==='en'?'en-GB':'tr-TR',{day:'numeric',month:'short'}).format(date);
+  }
+  function holidayWhenLabel(diff,l){
+    if(diff===0)return l==='en'?'Today':'Bugün';
+    if(diff===1)return l==='en'?'Tomorrow':'Yarın';
+    return l==='en'?diff+' days':diff+' gün';
+  }
+  function holidayMarkup(rows,localISO,l){
+    if(!rows.length)return '';
+    return '<div class="ovClockHolidayTitle">'+esc(l==='en'?'Upcoming public holidays':'Yakındaki resmi tatiller')+'</div>'+rows.map(item=>{
+      const diff=isoDayDiff(localISO,item.date),name=String(item.name||item.localName||'').trim();
+      return '<div class="ovClockHoliday"><span class="ovClockHolidayWhen">'+esc(holidayWhenLabel(diff,l))+'</span><span class="ovClockHolidayName">'+esc(name)+'</span><span class="ovClockHolidayDate">'+esc(holidayDateLabel(item.date,l))+'</span></div>';
+    }).join('');
+  }
+  let holidayRenderSeq=0;
+  async function refreshHolidayNotes(){
+    const seq=++holidayRenderSeq,host=document.getElementById('ovLaunchpad');if(!host||!loadHolidayEnabled())return;
+    const now=new Date(),l=lang(),nodes=[...host.querySelectorAll('[data-clock-holidays][data-clock-country]')];
+    await Promise.all(nodes.map(async node=>{
+      const code=String(node.dataset.clockCountry||''),zone=String(node.dataset.clockZone||'');if(!code||!zone)return;
+      let localISO='';try{localISO=zonedISODate(now,zone);}catch(_){return;}
+      const year=Number(localISO.slice(0,4));if(!year)return;
+      const sets=await Promise.all([fetchHolidayYear(year,code),fetchHolidayYear(year+1,code)]);
+      if(seq!==holidayRenderSeq||!node.isConnected)return;
+      const rows=upcomingHolidays(sets.flat(),localISO);
+      node.innerHTML=holidayMarkup(rows,localISO,l);node.hidden=!rows.length;
+    }));
   }
   function analogHtml(parts){
     const a=clockAngles(parts);
@@ -152,7 +212,7 @@
     const host=document.getElementById('ovLaunchpad');if(!host)return;
     let body=host.querySelector(':scope > .ovLaunchBody');
     if(!body){body=document.createElement('div');body.className='ovLaunchBody';host.appendChild(body);}
-    const l=lang(),now=new Date(),selected=loadSelection(),displayMode=loadDisplayMode(),user=window.BL_USER_CONTEXT||{};
+    const l=lang(),now=new Date(),selected=loadSelection(),displayMode=loadDisplayMode(),holidayEnabled=loadHolidayEnabled(),user=window.BL_USER_CONTEXT||{};
     const name=String(user.displayName||user.username||'').trim().split(/\s+/)[0]||'';
     const locale=l==='en'?'en-GB':'tr-TR';
     const date=now.toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -165,6 +225,7 @@
         '<div class="ovClockCountry"><span class="ovClockCode">'+esc(code)+'</span><span>'+esc(countryName(item,l))+'</span></div>'+
         '<div class="ovClockReadout is-'+esc(displayMode)+'">'+(showAnalog?analogHtml(parts):'')+'<div class="ovClockText">'+
           (showDigital?'<div class="ovClockTime" data-clock-time>'+esc(parts.time)+'</div>':'')+'<div class="ovClockDate" data-clock-date>'+esc(parts.date)+'</div></div></div>'+
+        (holidayEnabled&&item.countryCode?'<div class="ovClockHolidays" data-clock-holidays data-clock-country="'+esc(item.countryCode)+'" data-clock-zone="'+esc(item.timeZone)+'" hidden></div>':'')+
         (manageOpen?'<button type="button" class="ovClockRemove" data-clock-remove="'+esc(item.id)+'" title="'+esc(l==='en'?'Remove clock':'Saati kaldır')+'">×</button>':'')+
       '</div>';
     }).join('');
@@ -175,6 +236,7 @@
     const zoneOptions=extraZones.map(zone=>'<option value="'+esc('TZ:'+zone)+'" data-clock-search-text="'+esc(zone+' '+zoneLabel(zone))+'">'+esc(zoneLabel(zone))+'</option>').join('');
     const controls=manageOpen
       ?'<div class="ovClockManageControls"><label class="ovClockModeControl"><span>'+esc(l==='en'?'Clock style':'Saat görünümü')+'</span><select data-clock-display-select><option value="digital"'+(displayMode==='digital'?' selected':'')+'>'+esc(l==='en'?'Digital':'Dijital')+'</option><option value="analog"'+(displayMode==='analog'?' selected':'')+'>'+esc(l==='en'?'Analog':'Analog')+'</option><option value="both"'+(displayMode==='both'?' selected':'')+'>'+esc(l==='en'?'Analog + digital':'Analog + dijital')+'</option></select></label>'+
+        '<label class="ovClockHolidayToggle"><input type="checkbox" data-clock-holiday-toggle'+(holidayEnabled?' checked':'')+'><span>'+esc(l==='en'?'Show upcoming public holidays':'Yakındaki resmi tatilleri göster')+'</span></label>'+
         '<div class="ovClockAddControls"><input type="search" data-clock-search autocomplete="off" placeholder="'+esc(l==='en'?'Search country or time zone':'Ülke veya saat dilimi ara')+'" aria-label="'+esc(l==='en'?'Search country or time zone':'Ülke veya saat dilimi ara')+'"><select data-clock-select aria-label="'+esc(l==='en'?'Country / time zone':'Ülke / saat dilimi')+'">'+
         '<optgroup label="'+esc(l==='en'?'Common countries':'Sık kullanılan ülkeler')+'">'+commonOptions+'</optgroup>'+
         '<optgroup label="'+esc(l==='en'?'All world time zones':'Tüm dünya saat dilimleri')+'">'+zoneOptions+'</optgroup>'+
@@ -186,7 +248,7 @@
       '<div class="ovClockPanel"><div class="ovClockToolbar"><button type="button" class="ovClockManageBtn" data-clock-manage aria-pressed="'+(manageOpen?'true':'false')+'">'+
       esc(manageOpen?(l==='en'?'Done':'Tamam'):(l==='en'?'Manage clocks':'Saatleri düzenle'))+'</button></div>'+controls+
       (cards?'<div class="ovClockGrid is-'+esc(displayMode)+'" data-clock-count="'+selected.length+'">'+cards+'</div>':'<div class="ovClockEmpty">'+esc(l==='en'?'No clocks selected. Use Manage clocks to add one.':'Saat seçili değil. Eklemek için Saatleri düzenle seçeneğini kullan.')+'</div>')+'</div>';
-    tick();
+    tick();if(holidayEnabled)refreshHolidayNotes();else holidayRenderSeq++;
   }
   function bind(){
     const host=document.getElementById('ovLaunchpad');if(!host||host.dataset.bound)return;host.dataset.bound='1';
@@ -199,7 +261,8 @@
       }
     });
     host.addEventListener('change',event=>{
-      const mode=event.target.closest('[data-clock-display-select]');if(mode){saveDisplayMode(mode.value);render();}
+      const mode=event.target.closest('[data-clock-display-select]');if(mode){saveDisplayMode(mode.value);render();return;}
+      const holidays=event.target.closest('[data-clock-holiday-toggle]');if(holidays){saveHolidayEnabled(Boolean(holidays.checked));render();}
     });
     host.addEventListener('input',event=>{
       const search=event.target.closest('[data-clock-search]');if(search)filterClockOptions(host,search.value);
@@ -216,5 +279,5 @@
     window.addEventListener('beforeunload',()=>{if(timer)clearInterval(timer);},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-  return {STORAGE_KEY,DISPLAY_KEY,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch,render};
+  return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_WINDOW_DAYS,HOLIDAY_LIMIT,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,zonedISODate,isoDayDiff,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch,render};
 });

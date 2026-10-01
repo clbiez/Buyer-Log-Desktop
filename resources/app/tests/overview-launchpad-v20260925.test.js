@@ -26,6 +26,10 @@ test('Varsayılan dünya saatleri Türkiye, Bangladeş, Hindistan, Çin ve Mıs�
   assert.equal(zones.IN, 'Asia/Kolkata');
   assert.equal(zones.CN, 'Asia/Shanghai');
   assert.equal(zones.EG, 'Africa/Cairo');
+  const countries = Object.fromEntries(launchpad.CLOCKS.map(item => [item.id, item.countryCode]));
+  assert.equal(countries.TR, 'TR');
+  assert.equal(countries.BD, 'BD');
+  assert.equal(countries['US-NY'], 'US');
 });
 
 test('Saat seçimi bilinmeyen ve tekrar eden ülkeleri temizler; tüm IANA saat dilimlerini kabul eder', () => {
@@ -34,6 +38,21 @@ test('Saat seçimi bilinmeyen ve tekrar eden ülkeleri temizler; tüm IANA saat 
   assert.ok(launchpad.supportedTimeZones().includes('Europe/Paris'));
   assert.deepEqual(launchpad.normalizeSelection(null), launchpad.DEFAULT_CLOCKS);
   assert.deepEqual(launchpad.normalizeSelection([]), []);
+});
+
+test('Resmi tatil tercihi varsayılan açık gelir ve yaklaşan ulusal tatilleri sınırlar', () => {
+  assert.equal(launchpad.normalizeHolidayPref(null), true);
+  assert.equal(launchpad.normalizeHolidayPref('0'), false);
+  assert.equal(launchpad.normalizeHolidayPref('false'), false);
+  assert.equal(launchpad.normalizeHolidayPref('1'), true);
+  const rows = [
+    { date: '2026-10-01', name: 'National Day', global: true },
+    { date: '2026-10-29', name: 'Republic Day', global: true },
+    { date: '2026-11-20', name: 'Too far', global: true },
+    { date: '2026-10-05', name: 'Regional', global: false },
+  ];
+  assert.deepEqual(launchpad.upcomingHolidays(rows, '2026-10-01', 45, 2).map(item => item.name), ['National Day', 'Republic Day']);
+  assert.equal(launchpad.isoDayDiff('2026-10-01', '2026-10-29'), 28);
 });
 
 test('Saat ekleme araması ülke adı ve saat dilimine göre eşleşir', () => {
@@ -58,12 +77,17 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /data-clock-remove/);
   assert.match(SOURCE, /data-clock-display-select/);
   assert.match(SOURCE, /data-clock-search/);
+  assert.match(SOURCE, /data-clock-holiday-toggle/);
+  assert.match(SOURCE, /data-clock-holidays/);
+  assert.match(SOURCE, /date\.nager\.at\/api\/v3\/PublicHolidays/);
   assert.match(SOURCE, /filterClockOptions/);
   assert.match(SOURCE, /Analog \+ dijital/);
   assert.match(SOURCE, /Intl\.supportedValuesOf\('timeZone'\)/);
   assert.match(SOURCE, /'TZ:'\+zone/);
   assert.match(SOURCE, /window\.BLStorage/);
   assert.match(CSS, /\.ovAnalogClock/);
+  assert.match(CSS, /\.ovClockHolidayToggle/);
+  assert.match(CSS, /\.ovClockHolidays/);
   assert.doesNotMatch(SOURCE, /Workspace ready|Çalışma alanı hazır/);
   assert.doesNotMatch(SOURCE, /data-launch-tab/);
   assert.doesNotMatch(SOURCE, /rankTabs/);
