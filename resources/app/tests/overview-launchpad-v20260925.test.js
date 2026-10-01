@@ -94,6 +94,12 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /nagerholidays\.com\/api\/v4\/Holidays/);
   assert.match(SOURCE, /nagerholidays\.com\/api\/v3\/PublicHolidays/);
   assert.equal(launchpad.HOLIDAY_API, 'https://nagerholidays.com/api/v4/Holidays');
+  const india2026=launchpad.officialHolidayOverride(2026,'IN');
+  const india2027=launchpad.officialHolidayOverride(2027,'IN');
+  assert.equal(india2026.length,17,'India 2026 DoPT gazetted list must not collapse to zero');
+  assert.equal(india2027.length,17,'India 2027 DoPT gazetted list must be available for 12-month look-ahead');
+  assert.ok(india2026.some(item=>item.date==='2026-11-08'&&/Diwali/.test(item.name)));
+  assert.ok(india2027.some(item=>item.date==='2027-10-29'&&/Diwali/.test(item.name)));
   assert.equal(launchpad.normalizeHolidayRows([{date:'2026-01-26',name:'Republic Day',nationalHoliday:true,holidayTypes:['Public']}])[0].name, 'Republic Day');
   assert.match(SOURCE, /filterClockOptions/);
   assert.match(SOURCE, /Analog \+ dijital/);
