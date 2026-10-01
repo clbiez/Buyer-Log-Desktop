@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.186",
-  "commit_sha": "9865c161d1f110e08093e9a7c6199ad22a0ca66f",
-  "release_notes": "Buyer Log 7.0.186 TEST: Overview dünya saatlerine isteğe bağlı resmi tatil bilgisi eklendi. Saatleri düzenle alanındaki ayarla özellik açılıp kapatılabilir; desteklenen ülke saatlerinde önümüzdeki 45 gün içindeki en yakın 2 ulusal resmi tatil, Bugün/Yarın/X gün bilgisiyle saatin altında gösterilir. Tatil servisi erişilemezse saatler normal çalışmaya devam eder. Dünya saatleri resmi tatil kontrolleri ve regresyon testleri dahildir."
+  "version": "7.0.187",
+  "commit_sha": "8903a0c142c318150e39267c74a1c80c3f5930c9",
+  "release_notes": "Buyer Log 7.0.187 TEST: Overview dünya saatlerindeki resmi tatil görünümü için kullanıcı seçilebilir periyot eklendi. Saatleri düzenle alanından Önümüzdeki 1, 3, 6 veya 12 ay seçilebilir; varsayılan 3 aydır ve tercih kullanıcı bazında saklanır. Seçilen periyottaki ulusal resmi tatiller listelenir; uzun listeler saat kartını büyütmek yerine kendi içinde kaydırılır. Takvim ayı sınırları ve ay sonu tarihleri güvenli şekilde hesaplanır. Tam Buyer Log regresyon testi geçti."
 }
