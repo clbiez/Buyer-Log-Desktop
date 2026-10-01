@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "version": "7.0.193",
-  "commit_sha": "89018d46d0288232f806be34c8f138367f64b02b",
-  "release_notes": "Buyer Log 7.0.193 TEST: PLM sample status is now robust to confusing PLM entries. If a sample type has an approved request, later unapproved re-entries (Evaluated / Received) are ignored. Sample stage chain: S/Off approval also approves PPS and Fit; PPS approval also approves Fit. Orders that have finished production (loading, shortage, in transit, customs, warehouse, awaiting retail transfer) are treated as sample-approved: the CP PLM Numune column shows a single \"Approved · Post-production\" badge and checklist sample questions close. Inferred approvals are explained in the tooltip."
+  "commit_sha": "ba8c25c585342f0e3ff6a689e9023a69de32c47b",
+  "release_notes": "Buyer Log 7.0.193 TEST: PLM sample status is robust to confusing PLM entries — if a sample type has an approved request, later unapproved re-entries (Evaluated / Received) are ignored, and an approved Sample Evaluation Status also counts as approval. Sample stage order: Fit and S/Off run independently; S/Off (artwork print/embroidery approval) also approves Artwork; PPS is the final stage and also approves Fit, S/Off and Artwork. Orders that have finished production (loading, shortage, in transit, customs, warehouse, awaiting retail transfer) are treated as sample-approved (single \"Approved · Post-production\" badge in the CP PLM Numune column; checklist sample questions close). New built-in Priority rule: PPS not approved within 21 days of Ex-factory (threshold editable in the rule editor). Opening CP refreshes stale (24h+) sample data for in-production orders in the background."
 }
