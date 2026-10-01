@@ -5,6 +5,7 @@ const fs=require('fs');
 const path=require('path');
 const { app }=require('electron');
 const { createLauncherState }=require('./update/launcher-state');
+const { resolvePortableRoot,desktopPaths }=require('./portable-paths');
 
 const UPDATER_VERSION='1.0.0';
 const BOOTSTRAP_CORE=path.resolve(__dirname,'..');
@@ -13,6 +14,28 @@ const LOG_FILE=path.join(PORTABLE_ROOT,'data','local','updater','updater.log');
 const HEALTH_TIMEOUT_MS=60000;
 function log(event,meta={}){try{fs.mkdirSync(path.dirname(LOG_FILE),{recursive:true});fs.appendFileSync(LOG_FILE,JSON.stringify({at:new Date().toISOString(),event,...meta})+'\n','utf8');}catch(_){} }
 
+/* TEK KOPYA KİLİDİ güncelleme durumuna dokunmadan ÖNCE alınır. Deneme (trial)
+ * sürümü açılırken başlatılan ikinci bir BuyerLog.exe, kilit main.js'te alındığı
+ * için önce rollbackExistingTrial() çalıştırıyor, çalışan denemeyi "onaylanmamış"
+ * sayıp eski sürüme dönüyor, DB checkpointini çalışan backend'in altına geri
+ * yüklüyor ve ancak sonra kapanıyordu (7.0.195 TEST). Kilit main.js ile AYNI
+ * userData (data\electron-profile) üzerinden alınır; main.js'teki ikinci çağrı
+ * aynı süreçte zaten tutulan kilidi döndürür. */
+function acquireLaunchLock(){
+  if(!app.isPackaged)return true;
+  try{
+    const paths=desktopPaths(resolvePortableRoot({packaged:true,execPath:process.execPath}));
+    fs.mkdirSync(paths.electronProfileRoot,{recursive:true});
+    app.setPath('userData',paths.electronProfileRoot);
+  }catch(error){log('launch-lock-path-failed',{message:String(error&&error.message||error).slice(0,200)});return true;}
+  return app.requestSingleInstanceLock();
+}
+const primaryInstance=acquireLaunchLock();
+if(!primaryInstance){
+  // Çalışan kopya 'second-instance' olayıyla penceresini öne getirir.
+  log('second-instance-exit',{});
+  app.exit(0);
+}else{
 const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
 const recovered=app.isPackaged?lifecycle.rollbackExistingTrial():null;
 if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.version,restoredVersion:recovered.restored.version});
@@ -47,4 +70,5 @@ try{
   log('active-core-load-failed',{version:selected.version,code:error&&error.code||'',message:String(error&&error.message||error).slice(0,500)});
   if(activation){const restored=lifecycle.rollbackNow(activation,'main-load-failed');log('rollback',{failedVersion:activation.version,restoredVersion:restored.version,reason:'main-load-failed'});try{app.relaunch();}catch(_){};try{app.exit(32);}catch(_){process.exit(32);}}
   else throw error;
+}
 }
