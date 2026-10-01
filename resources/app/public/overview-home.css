@@ -265,8 +265,9 @@
 .ovClockManageBtn,.ovClockAddBtn,.ovClockRemove{display:inline-grid;place-items:center;min-height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);color:var(--ink2);border-radius:var(--bl-radius-control);cursor:pointer;font:600 var(--fs-xs)/1 var(--sans);}
 .ovClockManageBtn{grid-auto-flow:column;gap:6px;padding:0 9px;}
 .ovClockManageControls{display:flex;align-items:flex-end;justify-content:flex-end;gap:8px;flex-wrap:wrap;}
-.ovClockModeControl{display:grid;gap:3px;color:var(--muted);font-size:var(--fs-xs);}
-.ovClockModeControl select{min-width:150px;height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink);border-radius:var(--bl-radius-control);font:500 var(--fs-xs)/1 var(--sans);}
+.ovClockModeControl,.ovClockHolidayPeriod{display:grid;gap:3px;color:var(--muted);font-size:var(--fs-xs);}
+.ovClockModeControl select,.ovClockHolidayPeriod select{min-width:150px;height:28px;border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink);border-radius:var(--bl-radius-control);font:500 var(--fs-xs)/1 var(--sans);padding:0 7px;}
+.ovClockHolidayPeriod select:disabled{opacity:.5;cursor:not-allowed;}
 .ovClockHolidayToggle{display:inline-flex;align-items:center;gap:7px;min-height:28px;padding:0 9px;border:1px solid var(--bl-stroke-subtle);border-radius:var(--bl-radius-control);background:var(--bl-surface-panel);color:var(--ink2);font:600 var(--fs-xs)/1.2 var(--sans);cursor:pointer;white-space:nowrap;}
 .ovClockHolidayToggle input{margin:0;accent-color:var(--acc);}
 .ovClockAddControls{display:grid;grid-template-columns:minmax(170px,1fr) minmax(220px,1.35fr) auto;gap:6px;justify-content:flex-end;min-width:min(620px,100%);}
@@ -296,9 +297,11 @@
 .ovClockCountry span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ovClockTime{margin-top:7px;color:var(--ink);font:700 clamp(18px,1.25vw,calc(22px + var(--ui-font-add)))/1 var(--mono);letter-spacing:-.035em;white-space:nowrap;}
 .ovClockDate{margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:var(--fs-xs);}
-.ovClockHolidays{display:grid;gap:5px;margin-top:9px;padding-top:8px;border-top:1px solid var(--bl-stroke-subtle);}
+.ovClockHolidays{display:grid;gap:5px;margin-top:9px;padding-top:8px;border-top:1px solid var(--bl-stroke-subtle);max-height:154px;overflow:auto;scrollbar-width:thin;}
 .ovClockHolidays[hidden]{display:none;}
-.ovClockHolidayTitle{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:var(--fs-xs);font-weight:700;}
+.ovClockHolidayTitle{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0;padding-bottom:2px;background:var(--bl-surface-soft);color:var(--muted);font-size:var(--fs-xs);font-weight:700;}
+.ovClockHolidayTitle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ovClockHolidayTitle small{flex:0 0 auto;color:var(--muted);font-size:var(--fs-xs);font-weight:600;white-space:nowrap;}
 .ovClockHoliday{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:5px;min-width:0;font-size:var(--fs-xs);line-height:1.2;}
 .ovClockHolidayWhen{padding:2px 5px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font-weight:700;white-space:nowrap;}
 .ovClockHolidayName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2);}

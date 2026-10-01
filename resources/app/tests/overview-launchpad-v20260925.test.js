@@ -40,18 +40,26 @@ test('Saat seçimi bilinmeyen ve tekrar eden ülkeleri temizler; tüm IANA saat 
   assert.deepEqual(launchpad.normalizeSelection([]), []);
 });
 
-test('Resmi tatil tercihi varsayılan açık gelir ve yaklaşan ulusal tatilleri sınırlar', () => {
+test('Resmi tatil tercihi ve kullanıcı seçilebilir aylık periyot doğru normalize edilir', () => {
   assert.equal(launchpad.normalizeHolidayPref(null), true);
   assert.equal(launchpad.normalizeHolidayPref('0'), false);
   assert.equal(launchpad.normalizeHolidayPref('false'), false);
   assert.equal(launchpad.normalizeHolidayPref('1'), true);
+  assert.equal(launchpad.DEFAULT_HOLIDAY_MONTHS, 3);
+  assert.deepEqual(launchpad.HOLIDAY_MONTH_OPTIONS, [1, 3, 6, 12]);
+  assert.equal(launchpad.normalizeHolidayMonths('12'), 12);
+  assert.equal(launchpad.normalizeHolidayMonths('5'), 3);
+  assert.equal(launchpad.addMonthsISO('2026-10-01', 3), '2027-01-01');
+  assert.equal(launchpad.addMonthsISO('2026-01-31', 1), '2026-02-28');
   const rows = [
     { date: '2026-10-01', name: 'National Day', global: true },
     { date: '2026-10-29', name: 'Republic Day', global: true },
-    { date: '2026-11-20', name: 'Too far', global: true },
+    { date: '2027-01-01', name: 'New Year', global: true },
+    { date: '2027-02-01', name: 'Outside three months', global: true },
     { date: '2026-10-05', name: 'Regional', global: false },
   ];
-  assert.deepEqual(launchpad.upcomingHolidays(rows, '2026-10-01', 45, 2).map(item => item.name), ['National Day', 'Republic Day']);
+  assert.deepEqual(launchpad.upcomingHolidays(rows, '2026-10-01', 3).map(item => item.name), ['National Day', 'Republic Day', 'New Year']);
+  assert.deepEqual(launchpad.upcomingHolidays(rows, '2026-10-01', 1).map(item => item.name), ['National Day', 'Republic Day']);
   assert.equal(launchpad.isoDayDiff('2026-10-01', '2026-10-29'), 28);
 });
 
@@ -78,6 +86,8 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /data-clock-display-select/);
   assert.match(SOURCE, /data-clock-search/);
   assert.match(SOURCE, /data-clock-holiday-toggle/);
+  assert.match(SOURCE, /data-clock-holiday-period/);
+  assert.match(SOURCE, /buyerlog\.overview\.worldClocks\.holidayMonths\.v1/);
   assert.match(SOURCE, /data-clock-holidays/);
   assert.match(SOURCE, /date\.nager\.at\/api\/v3\/PublicHolidays/);
   assert.match(SOURCE, /filterClockOptions/);
@@ -87,7 +97,9 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.match(SOURCE, /window\.BLStorage/);
   assert.match(CSS, /\.ovAnalogClock/);
   assert.match(CSS, /\.ovClockHolidayToggle/);
+  assert.match(CSS, /\.ovClockHolidayPeriod/);
   assert.match(CSS, /\.ovClockHolidays/);
+  assert.match(CSS, /max-height:154px/);
   assert.doesNotMatch(SOURCE, /Workspace ready|Çalışma alanı hazır/);
   assert.doesNotMatch(SOURCE, /data-launch-tab/);
   assert.doesNotMatch(SOURCE, /rankTabs/);

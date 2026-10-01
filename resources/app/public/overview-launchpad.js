@@ -9,9 +9,11 @@
   const STORAGE_KEY='buyerlog.overview.worldClocks.v1';
   const DISPLAY_KEY='buyerlog.overview.worldClocks.display.v1';
   const HOLIDAY_KEY='buyerlog.overview.worldClocks.holidays.v1';
+  const HOLIDAY_PERIOD_KEY='buyerlog.overview.worldClocks.holidayMonths.v1';
   const HOLIDAY_API='https://date.nager.at/api/v3/PublicHolidays';
-  const HOLIDAY_WINDOW_DAYS=45;
-  const HOLIDAY_LIMIT=2;
+  const DEFAULT_HOLIDAY_MONTHS=3;
+  const HOLIDAY_MONTH_OPTIONS=Object.freeze([1,3,6,12]);
+  const HOLIDAY_MAX_ITEMS=50;
   const DEFAULT_CLOCKS=Object.freeze(['TR','BD','IN','CN','EG']);
   const DEFAULT_DISPLAY='digital';
   const CLOCKS=Object.freeze([
@@ -60,6 +62,14 @@
   }
   function normalizeDisplayMode(value){return ['digital','analog','both'].includes(String(value||''))?String(value):DEFAULT_DISPLAY;}
   function normalizeHolidayPref(value){return value==null?true:!['0','false','off','no'].includes(String(value).trim().toLowerCase());}
+  function normalizeHolidayMonths(value){const n=Math.round(Number(value));return HOLIDAY_MONTH_OPTIONS.includes(n)?n:DEFAULT_HOLIDAY_MONTHS;}
+  function addMonthsISO(localISO,months){
+    const match=/^(\d{4})-(\d{2})-(\d{2})$/.exec(String(localISO||''));if(!match)return '';
+    const year=Number(match[1]),month=Number(match[2]),day=Number(match[3]),count=normalizeHolidayMonths(months);
+    const first=new Date(Date.UTC(year,month-1+count,1)),targetYear=first.getUTCFullYear(),targetMonth=first.getUTCMonth();
+    const lastDay=new Date(Date.UTC(targetYear,targetMonth+1,0)).getUTCDate(),targetDay=Math.min(day,lastDay);
+    return [targetYear,String(targetMonth+1).padStart(2,'0'),String(targetDay).padStart(2,'0')].join('-');
+  }
   function zonedISODate(date,timeZone){
     const parts=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
     const map=Object.fromEntries(parts.map(part=>[part.type,part.value]));
@@ -69,8 +79,9 @@
     const a=Date.parse(String(fromISO||'')+'T00:00:00Z'),b=Date.parse(String(toISO||'')+'T00:00:00Z');
     return Number.isFinite(a)&&Number.isFinite(b)?Math.round((b-a)/86400000):NaN;
   }
-  function upcomingHolidays(holidays,localISO,windowDays=HOLIDAY_WINDOW_DAYS,limit=HOLIDAY_LIMIT){
-    return (Array.isArray(holidays)?holidays:[]).filter(item=>item&&item.date&&item.global!==false).map(item=>({item,diff:isoDayDiff(localISO,item.date)})).filter(entry=>Number.isFinite(entry.diff)&&entry.diff>=0&&entry.diff<=windowDays).sort((a,b)=>a.diff-b.diff||String(a.item.date).localeCompare(String(b.item.date))).slice(0,limit).map(entry=>entry.item);
+  function upcomingHolidays(holidays,localISO,months=DEFAULT_HOLIDAY_MONTHS,limit=HOLIDAY_MAX_ITEMS){
+    const cutoff=addMonthsISO(localISO,months);if(!cutoff)return [];
+    return (Array.isArray(holidays)?holidays:[]).filter(item=>item&&item.date&&item.global!==false).map(item=>({item,diff:isoDayDiff(localISO,item.date)})).filter(entry=>Number.isFinite(entry.diff)&&entry.diff>=0&&String(entry.item.date)<=cutoff).sort((a,b)=>a.diff-b.diff||String(a.item.date).localeCompare(String(b.item.date))).slice(0,Math.max(1,Number(limit)||HOLIDAY_MAX_ITEMS)).map(entry=>entry.item);
   }
   function clockSearchKey(value){return String(value==null?'':value).toLocaleLowerCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').replace(/[_/.-]+/g,' ').replace(/\s+/g,' ').trim();}
   function clockMatchesSearch(item,query,l='tr'){
@@ -120,7 +131,7 @@
     return {hour:(hour+minute/60+second/3600)*30,minute:(minute+second/60)*6,second:second*6};
   }
 
-  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_WINDOW_DAYS,HOLIDAY_LIMIT,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,zonedISODate,isoDayDiff,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
+  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
 
   const lang=()=>(document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -131,6 +142,8 @@
   function saveDisplayMode(value){try{store()?.setItem(DISPLAY_KEY,normalizeDisplayMode(value));}catch(_){}}
   function loadHolidayEnabled(){try{return normalizeHolidayPref(store()?.getItem(HOLIDAY_KEY));}catch(_){return true;}}
   function saveHolidayEnabled(value){try{store()?.setItem(HOLIDAY_KEY,value?'1':'0');}catch(_){}}
+  function loadHolidayMonths(){try{return normalizeHolidayMonths(store()?.getItem(HOLIDAY_PERIOD_KEY));}catch(_){return DEFAULT_HOLIDAY_MONTHS;}}
+  function saveHolidayMonths(value){try{store()?.setItem(HOLIDAY_PERIOD_KEY,String(normalizeHolidayMonths(value)));}catch(_){}}
   function refreshing(){return Boolean(document.getElementById('topRefreshBtn')?.classList.contains('spinning'));}
   function pulseHtml(l){
     if(!refreshing())return '';
@@ -165,9 +178,12 @@
     if(diff===1)return l==='en'?'Tomorrow':'Yarın';
     return l==='en'?diff+' days':diff+' gün';
   }
-  function holidayMarkup(rows,localISO,l){
+  function holidayPeriodLabel(months,l){
+    const n=normalizeHolidayMonths(months);return l==='en'?'Next '+n+' '+(n===1?'month':'months'):'Önümüzdeki '+n+' ay';
+  }
+  function holidayMarkup(rows,localISO,l,months){
     if(!rows.length)return '';
-    return '<div class="ovClockHolidayTitle">'+esc(l==='en'?'Upcoming public holidays':'Yakındaki resmi tatiller')+'</div>'+rows.map(item=>{
+    return '<div class="ovClockHolidayTitle"><span>'+esc(l==='en'?'Upcoming public holidays':'Yakındaki resmi tatiller')+'</span><small>'+esc(holidayPeriodLabel(months,l))+'</small></div>'+rows.map(item=>{
       const diff=isoDayDiff(localISO,item.date),name=String(item.name||item.localName||'').trim();
       return '<div class="ovClockHoliday"><span class="ovClockHolidayWhen">'+esc(holidayWhenLabel(diff,l))+'</span><span class="ovClockHolidayName">'+esc(name)+'</span><span class="ovClockHolidayDate">'+esc(holidayDateLabel(item.date,l))+'</span></div>';
     }).join('');
@@ -175,15 +191,15 @@
   let holidayRenderSeq=0;
   async function refreshHolidayNotes(){
     const seq=++holidayRenderSeq,host=document.getElementById('ovLaunchpad');if(!host||!loadHolidayEnabled())return;
-    const now=new Date(),l=lang(),nodes=[...host.querySelectorAll('[data-clock-holidays][data-clock-country]')];
+    const now=new Date(),l=lang(),holidayMonths=loadHolidayMonths(),nodes=[...host.querySelectorAll('[data-clock-holidays][data-clock-country]')];
     await Promise.all(nodes.map(async node=>{
       const code=String(node.dataset.clockCountry||''),zone=String(node.dataset.clockZone||'');if(!code||!zone)return;
       let localISO='';try{localISO=zonedISODate(now,zone);}catch(_){return;}
       const year=Number(localISO.slice(0,4));if(!year)return;
       const sets=await Promise.all([fetchHolidayYear(year,code),fetchHolidayYear(year+1,code)]);
       if(seq!==holidayRenderSeq||!node.isConnected)return;
-      const rows=upcomingHolidays(sets.flat(),localISO);
-      node.innerHTML=holidayMarkup(rows,localISO,l);node.hidden=!rows.length;
+      const rows=upcomingHolidays(sets.flat(),localISO,holidayMonths);
+      node.innerHTML=holidayMarkup(rows,localISO,l,holidayMonths);node.hidden=!rows.length;
     }));
   }
   function analogHtml(parts){
@@ -212,7 +228,7 @@
     const host=document.getElementById('ovLaunchpad');if(!host)return;
     let body=host.querySelector(':scope > .ovLaunchBody');
     if(!body){body=document.createElement('div');body.className='ovLaunchBody';host.appendChild(body);}
-    const l=lang(),now=new Date(),selected=loadSelection(),displayMode=loadDisplayMode(),holidayEnabled=loadHolidayEnabled(),user=window.BL_USER_CONTEXT||{};
+    const l=lang(),now=new Date(),selected=loadSelection(),displayMode=loadDisplayMode(),holidayEnabled=loadHolidayEnabled(),holidayMonths=loadHolidayMonths(),user=window.BL_USER_CONTEXT||{};
     const name=String(user.displayName||user.username||'').trim().split(/\s+/)[0]||'';
     const locale=l==='en'?'en-GB':'tr-TR';
     const date=now.toLocaleDateString(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -234,9 +250,11 @@
     const extraZones=supportedTimeZones().filter(zone=>!selectedZones.has(zone)&&!CLOCKS.some(item=>item.timeZone===zone));
     const commonOptions=available.map(item=>'<option value="'+esc(item.id)+'" data-clock-search-text="'+esc([item.tr,item.en,item.timeZone,zoneLabel(item.timeZone)].join(' '))+'">'+esc(countryName(item,l))+'</option>').join('');
     const zoneOptions=extraZones.map(zone=>'<option value="'+esc('TZ:'+zone)+'" data-clock-search-text="'+esc(zone+' '+zoneLabel(zone))+'">'+esc(zoneLabel(zone))+'</option>').join('');
+    const holidayPeriodOptions=HOLIDAY_MONTH_OPTIONS.map(months=>'<option value="'+months+'"'+(holidayMonths===months?' selected':'')+'>'+esc(holidayPeriodLabel(months,l))+'</option>').join('');
     const controls=manageOpen
       ?'<div class="ovClockManageControls"><label class="ovClockModeControl"><span>'+esc(l==='en'?'Clock style':'Saat görünümü')+'</span><select data-clock-display-select><option value="digital"'+(displayMode==='digital'?' selected':'')+'>'+esc(l==='en'?'Digital':'Dijital')+'</option><option value="analog"'+(displayMode==='analog'?' selected':'')+'>'+esc(l==='en'?'Analog':'Analog')+'</option><option value="both"'+(displayMode==='both'?' selected':'')+'>'+esc(l==='en'?'Analog + digital':'Analog + dijital')+'</option></select></label>'+
         '<label class="ovClockHolidayToggle"><input type="checkbox" data-clock-holiday-toggle'+(holidayEnabled?' checked':'')+'><span>'+esc(l==='en'?'Show upcoming public holidays':'Yakındaki resmi tatilleri göster')+'</span></label>'+
+        '<label class="ovClockHolidayPeriod"><span>'+esc(l==='en'?'Holiday period':'Tatil periyodu')+'</span><select data-clock-holiday-period'+(holidayEnabled?'':' disabled')+'>'+holidayPeriodOptions+'</select></label>'+
         '<div class="ovClockAddControls"><input type="search" data-clock-search autocomplete="off" placeholder="'+esc(l==='en'?'Search country or time zone':'Ülke veya saat dilimi ara')+'" aria-label="'+esc(l==='en'?'Search country or time zone':'Ülke veya saat dilimi ara')+'"><select data-clock-select aria-label="'+esc(l==='en'?'Country / time zone':'Ülke / saat dilimi')+'">'+
         '<optgroup label="'+esc(l==='en'?'Common countries':'Sık kullanılan ülkeler')+'">'+commonOptions+'</optgroup>'+
         '<optgroup label="'+esc(l==='en'?'All world time zones':'Tüm dünya saat dilimleri')+'">'+zoneOptions+'</optgroup>'+
@@ -262,6 +280,7 @@
     });
     host.addEventListener('change',event=>{
       const mode=event.target.closest('[data-clock-display-select]');if(mode){saveDisplayMode(mode.value);render();return;}
+      const period=event.target.closest('[data-clock-holiday-period]');if(period){saveHolidayMonths(period.value);render();return;}
       const holidays=event.target.closest('[data-clock-holiday-toggle]');if(holidays){saveHolidayEnabled(Boolean(holidays.checked));render();}
     });
     host.addEventListener('input',event=>{
@@ -279,5 +298,5 @@
     window.addEventListener('beforeunload',()=>{if(timer)clearInterval(timer);},{once:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
-  return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_WINDOW_DAYS,HOLIDAY_LIMIT,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,zonedISODate,isoDayDiff,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch,render};
+  return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch,render};
 });
