@@ -141,7 +141,7 @@
 /* ---------- Widget içerikleri: kaydırılan gövde ızgaradan gelen yüksekliği doldurur ---------- */
 /* Dünya Saatleri */
 .ovHome>#ovLaunchpad{overflow:auto;padding:16px 18px;}
-.ovLaunchBody{grid-template-columns:minmax(210px,290px) minmax(0,1fr);}
+.ovLaunchBody{grid-template-columns:minmax(120px,150px) minmax(0,1fr);gap:18px 18px;}
 @container ovw (max-width:860px){.ovLaunchBody{grid-template-columns:1fr;gap:12px;}}
 @container ovw (max-height:230px){.ovLaunchSub{display:none;}.ovLaunchTitle{font-size:calc(18px + var(--ui-font-add));}}
 @container ovw (max-width:420px){.ovClockGrid,.ovClockGrid.is-both,.ovClockGrid.is-analog{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));}.ovClockAddControls{min-width:0;grid-template-columns:1fr;}}
@@ -304,7 +304,7 @@
 .ovClockHolidayTitle small{flex:0 0 auto;color:var(--muted);font-size:var(--fs-xs);font-weight:600;white-space:nowrap;}
 .ovClockHoliday{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:5px;min-width:0;font-size:var(--fs-xs);line-height:1.2;}
 .ovClockHolidayWhen{padding:2px 5px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font-weight:700;white-space:nowrap;}
-.ovClockHolidayName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2);}
+.ovClockHolidayName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2);cursor:default;}
 .ovClockHolidayDate{color:var(--muted);white-space:nowrap;}
 .ovClockRemove{position:absolute;top:5px;right:5px;width:24px;min-height:24px;border-color:transparent;background:transparent;font-size:16px;line-height:1;}
 .ovClockRemove:hover{background:var(--card2);color:var(--red);}
