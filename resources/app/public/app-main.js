@@ -16233,7 +16233,7 @@ async function showBacklogDetail(nodeLabel,nodePath,rowCount){
       const sharedData=await fetchJSON('/api/backlog-detail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({path:nodePath},buildBacklogParams()))});
       const sharedRows=sharedData.rows||[],sharedHeaders=(sharedData.headers&&sharedData.headers.length?sharedData.headers:Object.keys(sharedRows[0]||{}));
       currentBacklogDetailRows=sharedRows;currentBacklogDetailHeaders=sharedHeaders.slice();currentBacklogDetailTitle=sharedTitle;
-      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),images:true,fileName:sharedTitle});
+      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),viewPresets:backlogDetailViewPresets(sharedHeaders),images:true,fileName:sharedTitle});
     }catch(err){showToast((appLang==='en'?'Details could not be loaded: ':'Detay alınamadı: ')+(err&&err.message||String(err)));}
     return;
   }
@@ -16325,7 +16325,7 @@ async function showBacklogReportForRows(tab,rows,{selectedMode=false}={}){
       const sharedData=await fetchJSON('/api/backlog-detail',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sourceTarget:tab,identities:sharedIdentities})});
       const sharedRows=sharedData.rows||[],sharedHeaders=(sharedData.headers&&sharedData.headers.length?sharedData.headers:Object.keys(sharedRows[0]||{}));
       currentBacklogDetailRows=sharedRows;currentBacklogDetailHeaders=sharedHeaders.slice();currentBacklogDetailTitle=sharedTitle;
-      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),images:true,fileName:sharedTitle});
+      window.BLDetailDrawer.open({storageKey:'backlog.report.detail',source:'backlog',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'rows':'satır'),rows:sharedRows,columns:sharedHeaders.map(key=>({key,label:key})),viewPresets:backlogDetailViewPresets(sharedHeaders),images:true,fileName:sharedTitle});
     }catch(err){showToast((appLang==='en'?'Backlog report could not be loaded: ':'Backlog raporu alınamadı: ')+(err&&err.message||String(err)));}
     return;
   }
@@ -16649,6 +16649,21 @@ function backlogDetailVisibleColumns(cols,compact){
   const kept=cols.filter(col=>!BACKLOG_DETAIL_SECONDARY_RE.some(re=>re.test(String(col))));
   return kept.length?kept:cols;
 }
+/* Backlog alt detay çekmecesi CP gibi Odak · Genişletilmiş · Tümü görünümü sunar.
+   Odak: günlük takipte bakılan kimlik + miktar + durum alanları. Genişletilmiş:
+   kompakt görünüm (türetilmiş Ay/Hafta parçaları ve ikincil miktarlar hariç).
+   Tümü: bütün sütunlar. Excel'e Aktar seçimi bu görünümden bağımsızdır. */
+const BACKLOG_DETAIL_FOCUS_HEADERS=[
+  'Sezon','Üretici','Sipariş Kod','Model Adı','Renk Kod','Renk','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün',
+  'Adet','Kalan Alım Sipariş Miktarı','FOB Fiyatı','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','RİSK\n(PRIORITY)'
+];
+function backlogDetailViewPresets(headers){
+  const list=(Array.isArray(headers)?headers:[]).filter(Boolean);
+  const present=new Set(list);
+  const focus=BACKLOG_DETAIL_FOCUS_HEADERS.filter(header=>present.has(header));
+  return {focus:focus.length?focus:backlogDetailVisibleColumns(list,true),extended:backlogDetailVisibleColumns(list,true)};
+}
+window.BLBacklogDetailViewPresets=backlogDetailViewPresets;
 function renderBacklogDetailTable(rows,headers){
   const wrap=document.getElementById('backlogDetailTableWrap');
   const meta=document.getElementById('backlogDetailMeta');
