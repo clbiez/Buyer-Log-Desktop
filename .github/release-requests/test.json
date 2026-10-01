@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.187",
-  "commit_sha": "8903a0c142c318150e39267c74a1c80c3f5930c9",
-  "release_notes": "Buyer Log 7.0.187 TEST: Overview dünya saatlerindeki resmi tatil görünümü için kullanıcı seçilebilir periyot eklendi. Saatleri düzenle alanından Önümüzdeki 1, 3, 6 veya 12 ay seçilebilir; varsayılan 3 aydır ve tercih kullanıcı bazında saklanır. Seçilen periyottaki ulusal resmi tatiller listelenir; uzun listeler saat kartını büyütmek yerine kendi içinde kaydırılır. Takvim ayı sınırları ve ay sonu tarihleri güvenli şekilde hesaplanır. Tam Buyer Log regresyon testi geçti."
+  "version": "7.0.188",
+  "commit_sha": "2908d1901a055e5186a94230fdeb17fb4281c36e",
+  "release_notes": "Buyer Log 7.0.188 TEST: Global Flow detail drawers now mirror the CP column order, widths and Focus / Extended / All presets. Partial-specific status, handover, shipment quantity and transport values are preserved. Full Buyer Log regression suite passed."
 }
