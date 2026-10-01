@@ -26,3 +26,16 @@
 .blDetailImageHead,.blDetailImageCell{width:74px;min-width:74px;text-align:center!important}.blDetailImageCell img{display:block;max-width:58px;max-height:58px;margin:auto;object-fit:contain}.blDetailNoImage,.blDetailEmpty{color:var(--muted)}
 @media(max-width:760px){.blDetailDrawerPanel{width:100vw!important}.blDetailResizeHandle{display:none}.blDetailDrawerHead{display:grid}.blDetailDrawerActions{justify-content:flex-start}.blDetailDrawerSubbar{align-items:flex-start;flex-wrap:wrap}.blDetailDrawerSubbar>input{width:100%}.blDetailExtraActions{margin-left:0}.blDetailColumnList{grid-template-columns:1fr}}
 .blDetailTable td.blDetailMore{padding:8px;text-align:center;background:var(--card2)}
+
+
+/* CP ile aynı görünüm presetleri ve iki seviyeli sütun başlığı. */
+.blDetailPresetGroup{display:flex;align-items:center;gap:4px;min-width:max-content}
+.blDetailPresetLabel{padding:0 3px;color:var(--muted);font:800 9px var(--font);letter-spacing:.06em}
+.blDetailPreset{height:28px;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--ink2);font:700 10px var(--font);padding:0 8px;cursor:pointer}
+.blDetailPreset:hover{background:var(--card2);border-color:var(--line)}
+.blDetailPreset[aria-pressed="true"]{background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink)}
+.blDetailTable.hasReferenceSetup .blDetailGroupRow th{top:0;z-index:4;height:24px;padding:4px 8px;background:var(--card);font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-top:2px solid var(--line)}
+.blDetailTable.hasReferenceSetup .blDetailColumnHead th{top:24px;z-index:3}
+.blDetailTable.hasReferenceSetup td.num{text-align:right;font-variant-numeric:tabular-nums}
+.blDetailTable.hasReferenceSetup th,.blDetailTable.hasReferenceSetup td{box-sizing:border-box}
+@media(max-width:760px){.blDetailPresetGroup{order:2;width:100%;overflow-x:auto}.blDetailPresetLabel{padding-left:0}}
