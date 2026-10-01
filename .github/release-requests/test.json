@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.180",
-  "commit_sha": "17a19643fa32595773c1998710d18a9935b5043c",
-  "release_notes": "Buyer Log 7.0.180: Açılışta kullanıcı bilgileri ve ana ekran hazır olana kadar dinamik hazırlık ekranı; 66 konuluk TR/EN görselli kullanım rehberi ve F1 erişimi. Horizon filtrelerinde pencereyi kapatmadan çoklu seçim. Koleksiyon/ASAS eşleşmesinde katalogda olmayan değerler için hücre üzerinde kalıcı görünür uyarı işareti. Global Flow Map'te Gemi + Uçak gibi çoklu taşıma tiplerinde rota hover ve detay başlıklarında tam nakliye tipi gösterimi. 7.0.179 sonrasındaki bekleyen ana dal değişikliklerinin tamamı dahil edilmiştir."
+  "version": "7.0.181",
+  "commit_sha": "ec6c9c1354bfb43618a4cce54031769e4ec5f37d",
+  "release_notes": "Buyer Log 7.0.181: Yenileme artık sayfa bazlı — CP yenilemesi yalnız CP sorgusunu çalıştırır, en geniş filtreyi (LFL · Fiyat & Üretici) beklemez; ortak filtreyi paylaşan sayfalar birlikte yenilenir, \"Tümünü yenile\" hepsini kapsar. Yeni: Kaynak değişince otomatik güncelleme — ASAS modeli işlendiğinde (son işlenme zamanı metadata ile okunur, ağır sorgu periyodik atılmaz) ekranlar arka planda kendiliğinden yenilenir, önce CP; hücre düzenlenirken veya pencere açıkken beklenir. Veri Yönetimi › Yenileme’den kapatılabilir (varsayılan açık). Kısmi yenilemede Horizon rozetleri korunur; yenileme sonrası ön-hazırlık yalnız yenilenen sayfaları yükler. Tam regresyon paketi yerelde ve Windows CI’da geçti."
 }
