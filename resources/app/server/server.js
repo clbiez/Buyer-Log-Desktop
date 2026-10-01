@@ -5169,6 +5169,8 @@ require('./routes/plm-sync-routes')(app, {
   getModelImageSettings,
 });
 /* PLM numune talepleri (CoreNectum Requests sekmesi) → CP kontrol listesi. */
+const sampleRequestStore = require('./lib/plm-sample-requests-store');
+const sampleRequestSync = require('./lib/plm-sample-request-sync');
 require('./routes/plm-request-routes')(app, {
   automationError,
   clearModelOperationProgress,
@@ -5176,8 +5178,8 @@ require('./routes/plm-request-routes')(app, {
   express,
   loadPlmStyleLinks,
   normalizePlmId,
-  sampleRequestStore: require('./lib/plm-sample-requests-store'),
-  sampleRequestSync: require('./lib/plm-sample-request-sync'),
+  sampleRequestStore,
+  sampleRequestSync,
   setModelOperationProgress,
   upsertPlmStyleLinks,
   userAccess,

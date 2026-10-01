@@ -3193,6 +3193,15 @@ async function loadModelImageSettings(){
   catch(err){if(err&&![401,403,404].includes(err.status))console.warn('Model image settings:',err.message||err);return {maxKb:Math.ceil(MODEL_IMAGE_MAX_BYTES/1024),maxBytes:MODEL_IMAGE_MAX_BYTES};}
 }
 function modelImageDataUrlPayload(dataUrl){const payload=kolDataUrlPayload(dataUrl);if(!payload)throw new Error(appLang==='en'?'Select a valid image.':'Geçerli bir görsel seçin.');return {...payload,dataUrl:String(dataUrl),size:Math.floor(payload.base64.length*3/4)};}
+// Sunucudaki applyOrderPatch ile aynı kural: renk adlı (…|name:X) kayıtlar da
+// aynı ref'e çekilir; aksi hâlde gösterim eski PLM görselini okumaya devam eder.
+function cpWriteImageIdentityRef(map,imageKey,ref){
+  // Dönüş: adlı kayıtların önceki ref'leri. Bunlar PLM/Koleksiyon görselidir;
+  // çağıran taraf bu dosyaları CP deposundan silmez, yalnız eşlemeyi değiştirir.
+  const previous=new Set();if(!map||!imageKey)return previous;map[imageKey]=ref;
+  const prefix=`${imageKey}|name:`;Object.keys(map).forEach(key=>{if(key.startsWith(prefix)){if(norm(map[key]))previous.add(norm(map[key]));map[key]=ref;}});
+  return previous;
+}
 async function cpSaveRowImage(row,file){
   if(!row||!file)return;
   if(row._canEdit===false){showToast(appLang==='en'?'You only have view access to this order.':'Bu sipariş için yalnız görüntüleme yetkiniz var.');return;}
@@ -3218,8 +3227,8 @@ async function cpSaveRowImage(row,file){
   const linkedRows=cpRowsForImageIdentity(row['PLM ID'],row['C.Code']);
   (linkedRows.length?linkedRows:[row]).forEach(item=>{item._imageKey=imageKey;item._imageRef=newRef;item._imageUrl=imageUrl;});
   state.overrides.imagemap=state.overrides.imagemap||{};
-  state.overrides.imagemap[imageKey]=newRef;syncModelImageRegistry();
-  if(oldRef&&oldRef!==newRef&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);
+  const namedRefs=cpWriteImageIdentityRef(state.overrides.imagemap,imageKey,newRef);syncModelImageRegistry();
+  if(oldRef&&oldRef!==newRef&&!namedRefs.has(oldRef)&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);
   cpActiveImageRowId=row._id;
   renderCP();renderOrders();
   showToast(appLang==='en'?'CP image saved.':'CP görseli kaydedildi.');
@@ -3237,8 +3246,8 @@ async function cpRemoveRowImage(row,{allowReadOnlyImageEdit=false}={}){
   const linkedRows=cpRowsForImageIdentity(row['PLM ID'],row['C.Code']);
   BLImageRuntime.invalidate([oldRef,oldUrl,`${CP_IMAGE_API}/${encodeURIComponent(oldRef)}`]);
   (linkedRows.length?linkedRows:[row]).forEach(item=>{item._imageKey=imageKey;item._imageRef='';item._imageUrl='';});
-  state.overrides.imagemap=state.overrides.imagemap||{};state.overrides.imagemap[imageKey]='';syncModelImageRegistry();
-  if(oldRef&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);renderCP();renderOrders();
+  state.overrides.imagemap=state.overrides.imagemap||{};const namedRefs=cpWriteImageIdentityRef(state.overrides.imagemap,imageKey,'');syncModelImageRegistry();
+  if(oldRef&&!namedRefs.has(oldRef)&&!Object.values(state.overrides.imagemap).includes(oldRef))void cpDeleteImageRef(oldRef);renderCP();renderOrders();
   showToast(appLang==='en'?'CP image removed.':'CP görseli kaldırıldı.');
 }
 function cpApplyImageRowHeight(img){
