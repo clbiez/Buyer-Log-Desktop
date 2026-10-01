@@ -106,7 +106,7 @@ test('INTAKE v1 boş eski varsayılan filtreleri v2 görünümüne taşırken te
   const resolved = intake.reconcileViewConfig(saved, [...intake.defaultFields(), ...legacyFields]);
   const sources = new Set(resolved.query.filters.map(field => field.sourceUniqueName));
 
-  assert.equal(resolved.version, 2);
+  assert.equal(resolved.version, 3);
   assert.equal(sources.has('[Dim_Urun].[MerchAltGrupTanim]'), false);
   assert.equal(sources.has('[Dim_Tarih].[Son Guncelleme Tarihi]'), false);
   assert.equal(sources.has('[Dim_Urun].[UrunKlasmanKod]'), false);

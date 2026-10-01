@@ -1,4 +1,4 @@
-/* Buyer Log — App Update UI (moderator: TEST/STABLE, others: STABLE only) */
+/* Buyer Log — Check for Updates UI (moderator: TEST/STABLE, others: STABLE only) */
 (() => {
   'use strict';
 
@@ -115,9 +115,9 @@
     overlay.innerHTML = [
       '<section class="modalCard updateTestCard" role="dialog" aria-modal="true" aria-labelledby="updateTestTitle">',
       '<div class="updateTestHead"><div>',
-      '<h2 class="modalTitle" id="updateTestTitle">' + esc(moderator ? tr('Güncelleme Testi','Update Test') : tr('Uygulama Güncellemesi','App Update')) + '</h2>',
+      '<h2 class="modalTitle" id="updateTestTitle">' + esc(tr('Güncellemeleri Kontrol Et','Check for Updates')) + '</h2>',
       '<p>' + esc(moderator
-        ? tr('TEST sürümünü kontrol et, indir ve hazır olduğunda yeniden başlatıp kur.','Check and download the TEST build, then restart to install when ready.')
+        ? tr('Kanalı seç (TEST/STABLE), sürümü kontrol et, indir ve hazır olduğunda yeniden başlatıp kur.','Pick the channel (TEST/STABLE), check and download the build, then restart to install when ready.')
         : tr('STABLE sürümü kontrol et, indir ve hazır olduğunda yeniden başlatıp kur.','Check and download the STABLE build, then restart to install when ready.')) + '</p>',
       '</div><button type="button" class="iconbtn updateTestClose" data-update-close aria-label="' + esc(tr('Kapat','Close')) + '">×</button></div>',
       '<div class="updateTestFacts">',
