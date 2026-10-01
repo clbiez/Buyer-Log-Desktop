@@ -27866,6 +27866,20 @@ async function kolPlmSyncImageStep(mode,button){
   try{ return await plmSyncImagesStep('koleksiyon',mode,'plm',text=>{const span=button&&button.querySelector('span');if(span)span.textContent=text;}); }
   catch(err){ return {saved:0,requested:0,failed:0,skipped:false,error:err}; }
 }
+/* Koleksiyon PLM Sync'in NUMUNE TALEBİ adımı (CoreNectum Requests sekmesi).
+   Görsel adımı gibi ikincildir: hatası alan güncellemesini geri aldırmaz.
+   Model linkleri /api/plm-sync/fetch ile tazelendiği için styleId çoğunlukla
+   sunucuda hazırdır. Sonuç CP kontrol listesine PLM kanıtı olarak akar. */
+async function kolPlmSyncSampleRequestStep(plmIds){
+  try{
+    if(!window.BLPlmSampleRequests&&window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('deferredUi');
+    const api=window.BLPlmSampleRequests;
+    return api?await api.syncStep(plmIds):null;
+  }catch(err){return {ok:false,error:err};}
+}
+function kolPlmSyncSampleRequestSuffix(result){
+  return window.BLPlmSampleRequests?window.BLPlmSampleRequests.syncStepSuffix(result):'';
+}
 function kolPlmSyncImageSuffix(images){
   if(!images||images.skipped)return '';
   if(images.error)return appLang==='en'?` Images failed: ${plmSyncErrorMessage(images.error)}`:` Görseller alınamadı: ${plmSyncErrorMessage(images.error)}`;
@@ -27914,11 +27928,12 @@ async function kolPlmSyncRun(mode,button,options={}){
     // Alan değişikliği olmasa bile görseller eksik olabilir — tek buton
     // vaadi gereği görsel adımı yine de çalışır.
     const images=options.includeImages===false?{saved:0,requested:0,failed:0,skipped:true}:await kolPlmSyncImageStep(mode,button);
+    const samples=options.includeSampleRequests===false?null:await kolPlmSyncSampleRequestStep(plmIds);
     const message=appLang==='en'
       ?`${summary.checked} checked · all up to date${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
       :`${summary.checked} kontrol edildi · hepsi güncel${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-    showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
-    return {ok:true,applied:0,summary,images};
+    showToast(message+kolPlmSyncImageSuffix(images)+kolPlmSyncSampleRequestSuffix(samples),{icon:false,duration:9000});
+    return {ok:true,applied:0,summary,images,samples};
   }
   const approved=await showPlmSyncPreview(mode,summary);
   if(!approved){kolPlmSyncStampStatus(targetRows,summary,{applied:false});return {ok:true,applied:0,summary,cancelled:true};}
@@ -27933,11 +27948,12 @@ async function kolPlmSyncRun(mode,button,options={}){
   // (kolPushUndo) iken görsel indirme uzun sürebilir; kullanıcı tabloyu
   // güncellenmiş halde görürken indirme devam eder.
   const images=options.includeImages===false?{saved:0,requested:0,failed:0,skipped:true}:await kolPlmSyncImageStep(mode,button);
+  const samples=options.includeSampleRequests===false?null:await kolPlmSyncSampleRequestStep(plmIds);
   const message=appLang==='en'
     ?`${summary.checked} checked · ${summary.changed.length} updated · ${summary.unchanged.length} unchanged${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
     :`${summary.checked} kontrol edildi · ${summary.changed.length} güncellendi · ${summary.unchanged.length} değişmedi${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-  showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
-  return {ok:true,applied:summary.changed.length,summary,images};
+  showToast(message+kolPlmSyncImageSuffix(images)+kolPlmSyncSampleRequestSuffix(samples),{icon:false,duration:12000});
+  return {ok:true,applied:summary.changed.length,summary,images,samples};
 }
 async function kolPlmSyncButtonRun(mode,button){
   if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
@@ -28165,7 +28181,8 @@ function notifyPlmOperationStarted(url,options){
     '/api/plm-sync/fetch':'plm-sync',
     '/api/plm-style-links/sync-links':'plm-links',
     '/api/model-images/import-plm':'plm-images',
-    '/api/plm-sync/model-files':'plm-files'
+    '/api/plm-sync/model-files':'plm-files',
+    '/api/plm-requests/sync':'plm-requests'
   };
   const kind=kindByUrl[String(url||'')];if(!kind)return;
   try{

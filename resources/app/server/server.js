@@ -5124,6 +5124,21 @@ require('./routes/plm-sync-routes')(app, {
   writeModelFilesIndex,
   getModelImageSettings,
 });
+/* PLM numune talepleri (CoreNectum Requests sekmesi) → CP kontrol listesi. */
+require('./routes/plm-request-routes')(app, {
+  automationError,
+  clearModelOperationProgress,
+  coreNectumApiClient,
+  express,
+  loadPlmStyleLinks,
+  normalizePlmId,
+  sampleRequestStore: require('./lib/plm-sample-requests-store'),
+  sampleRequestSync: require('./lib/plm-sample-request-sync'),
+  setModelOperationProgress,
+  upsertPlmStyleLinks,
+  userAccess,
+  withPlmJob,
+});
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
    PASS'e (LC Waikiki intranet raporlama sistemi) bağlanıp

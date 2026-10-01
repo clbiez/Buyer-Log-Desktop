@@ -178,6 +178,14 @@
         run: () => outlook.openRow(row, config.module),
       });
     }
+    // PLM numune talepleri (CoreNectum Requests): yalnız PLM ID'si olan satırda.
+    const sampleRequests = window.BLPlmSampleRequests;
+    if (sampleRequests && row && sampleRequests.plmIdOfRow(row, config.module)) {
+      items.push({
+        label: T('PLM numune talepleri', 'PLM sample requests'),
+        run: () => sampleRequests.openForRow(row, config.module),
+      });
+    }
     const tools = toolEntries(config.tools);
     if (items.length && tools.length) items.push({ separator: true });
     items.push(...tools);
