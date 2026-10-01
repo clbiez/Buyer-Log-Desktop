@@ -1,10 +1,14 @@
 /* ===================================================================
    ORTAK MODÜL FİLTRESİ DÜZENLEYİCİSİ (v7.81, P3-yazma)
 
-   Veri Yönetimi ekranındaki modül satırından açılır. YALNIZ ortak katmanı
-   düzenler; kişisel Horizon sayfa rozetindeki düzenleyiciyle yönetilmeye
-   devam eder. İkisini tek yüzeye sıkıştırmak "hangi katmanı düzenliyorum?"
-   belirsizliğini —düzeltmeye çalıştığımız sorunu— yeniden üretirdi.
+   Veri Yönetimi ekranındaki modül satırından açılır.
+
+   v7.0.183 — HORIZON KULLANICI BAZLI (kullanıcı kararı). Varsayılan kaydetme
+   (mode 'personal') kullanıcının KENDİ filtresini yazar; başka kullanıcıyı
+   etkilemez. Ortak filtre Sync klasörü üzerinden her makineye dağıtıldığı
+   için eskiden bir bilgisayardaki değişiklik herkesinkini eziyordu. Ortak
+   varsayılanı ('shared' / 'split') yalnız yönetim yetkisi olan görür ve bu
+   düğmeler "Herkes için" diye açıkça etiketlenir.
 
    TASARIM KARARLARI
 
@@ -355,10 +359,10 @@
   function layerBanner() {
     const note = context.layerNote;
     if (!note) return '';
-    return `<p class="dmfMessage is-warn dmfLayerNote">
+    return `<p class="dmfMessage is-info dmfLayerNote">
       ${esc(T(
-        `Bu modülde şu an "${note.label}" katmanı çalışıyor${note.text ? ` (${note.text})` : ''}. Burada düzenlediğiniz ORTAK filtre kayıtlı kalır ama bu modülün sonucunu o katman kaldırılana kadar değiştirmez.`,
-        `The "${note.label}" layer is currently in effect for this module${note.text ? ` (${note.text})` : ''}. The SHARED filter you edit here is saved, but it will not change this module's result until that layer is removed.`))}
+        `Bu modülde şu an "${note.label}" filtreniz çalışıyor${note.text ? ` (${note.text})` : ''}. "Kaydet (yalnız benim için)" onu günceller; kaldırırsanız ortak filtre geçerli olur.`,
+        `Your "${note.label}" filter is currently in effect for this module${note.text ? ` (${note.text})` : ''}. "Save (just for me)" updates it; removing it brings back the shared filter.`))}
       ${note.removable
         ? `<button type="button" class="tbtn dmfClearLayer" data-clear-layer ${busy ? 'disabled' : ''}>${esc(T('Kişisel ayarı kaldır', 'Remove personal setting'))}</button>`
         : `<span class="dmfLayerFixed">${esc(T('Bu katman çalışma alanı tarafından atanmış; buradan kaldırılamaz.', 'This layer is assigned by the workspace and cannot be removed here.'))}</span>`}
@@ -373,20 +377,22 @@
        her durumda ortaktır. */
     const canSplit = context.canSplit !== false;
     const linked = context.linked === true;
+    // Ortak varsayılanı yazmak herkesi etkiler; yalnız yönetim yetkisiyle görünür.
+    const canShare = context.canShare === true;
 
     host.innerHTML = `<div class="dmFilterEditor" role="region" aria-label="${esc(context.moduleLabel)}">
       <div class="dmfHead">
         <span class="dmfTitle">${esc(context.moduleLabel)} — ${esc(context.sourceName)}</span>
-        <label class="dmfNameField">
-          <span class="dmLabel">${esc(T('Filtre adı', 'Filter name'))}</span>
+        ${canShare ? `<label class="dmfNameField">
+          <span class="dmLabel">${esc(T('Ortak filtre adı', 'Shared filter name'))}</span>
           <input type="text" id="_dmfName" value="${esc(filterName)}" maxlength="80"
             placeholder="${esc(T('adsız', 'unnamed'))}" autocomplete="off">
-        </label>
+        </label>` : ''}
       </div>
 
       ${layerBanner()}
 
-      ${templateBar()}
+      ${canShare ? templateBar() : ''}
 
       ${mappingPanel()}
 
@@ -413,22 +419,26 @@
         <span class="dmfSpacer"></span>
         ${message ? `<span class="dmfMessage is-${esc(messageTone)}">${esc(message)}</span>` : ''}
         <button type="button" class="tbtn" data-cancel ${busy ? 'disabled' : ''}>${esc(T('İptal', 'Cancel'))}</button>
-        ${shared && canSplit
+        ${canShare ? (shared && canSplit
           ? `<button type="button" class="tbtn" data-save="split" ${busy ? 'disabled' : ''}
                title="${esc(linked
-                 ? T('Bu modül bağlı gruptan ayrılır ve bu filtreyle çalışır; diğer bağlı modüller ortak filtrede kalır. Yenileme yine ortaktır.', 'This module leaves the linked group and runs with this filter; the other linked modules keep the shared filter. Refresh stays shared.')
-                 : T('Diğer modüller eski filtreyi kullanmaya devam eder', 'Other modules keep the previous filter'))}">
+                 ? T('HERKES İÇİN: bu modül bağlı gruptan ayrılır ve bu filtreyle çalışır; diğer bağlı modüller ortak filtrede kalır. Yenileme yine ortaktır.', 'FOR EVERYONE: this module leaves the linked group and runs with this filter; the other linked modules keep the shared filter. Refresh stays shared.')
+                 : T('HERKES İÇİN: diğer modüller eski ortak filtreyi kullanmaya devam eder', 'FOR EVERYONE: other modules keep the previous shared filter'))}">
                ${esc(linked
-                 ? T(`Yalnız ${context.moduleLabel} için ayır (gruptan çıkar)`, `Split ${context.moduleLabel} only (unlink)`)
-                 : T(`Yalnız ${context.moduleLabel} için ayır`, `Split for ${context.moduleLabel} only`))}</button>
-             <button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}
-               title="${esc(T(`${shared + 1} modülün hepsini etkiler`, `Affects all ${shared + 1} modules`))}">
-               ${esc(linked ? T('Bağlı modüllerin hepsini güncelle', 'Update all linked modules') : T('Hepsini güncelle', 'Update all'))}</button>`
+                 ? T(`Herkes için — Yalnız ${context.moduleLabel} için ayır (gruptan çıkar)`, `For everyone — split ${context.moduleLabel} only (unlink)`)
+                 : T(`Herkes için — Yalnız ${context.moduleLabel} için ayır`, `For everyone — split for ${context.moduleLabel} only`))}</button>
+             <button type="button" class="tbtn" data-save="shared" ${busy ? 'disabled' : ''}
+               title="${esc(T(`HERKES İÇİN ortak filtre: ${shared + 1} modülün hepsini etkiler`, `SHARED filter for EVERYONE: affects all ${shared + 1} modules`))}">
+               ${esc(linked ? T('Herkes için: bağlı modüllerin hepsini güncelle', 'For everyone: update all linked modules') : T('Herkes için: hepsini güncelle', 'For everyone: update all'))}</button>`
           : shared
-          ? `<button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}
-               title="${esc(T('Bağlı modüller tek ufuk paylaşır; hepsi birlikte güncellenir', 'Linked modules share one horizon; all are updated together'))}">
-               ${esc(T('Bağlı modüllerin hepsini güncelle', 'Update all linked modules'))}</button>`
-          : `<button type="button" class="navActionBtn" data-save="shared" ${busy ? 'disabled' : ''}>${esc(T('Kaydet', 'Save'))}</button>`}
+          ? `<button type="button" class="tbtn" data-save="shared" ${busy ? 'disabled' : ''}
+               title="${esc(T('HERKES İÇİN: bağlı modüller tek ufuk paylaşır; hepsi birlikte güncellenir', 'FOR EVERYONE: linked modules share one horizon; all are updated together'))}">
+               ${esc(T('Herkes için: bağlı modüllerin hepsini güncelle', 'For everyone: update all linked modules'))}</button>`
+          : `<button type="button" class="tbtn" data-save="shared" ${busy ? 'disabled' : ''}
+               title="${esc(T('Tüm kullanıcıların ortak varsayılan filtresini değiştirir', 'Changes the shared default filter for all users'))}">${esc(T('Herkes için kaydet', 'Save for everyone'))}</button>`) : ''}
+        <button type="button" class="navActionBtn" data-save="personal" ${busy ? 'disabled' : ''}
+          title="${esc(T('Yalnız sizin filtrenizi değiştirir; diğer kullanıcılar ve bilgisayarlar etkilenmez', 'Changes only your filter; other users and computers are not affected'))}">
+          ${esc(T('Kaydet (yalnız benim için)', 'Save (just for me)'))}</button>
       </div>
     </div>`;
   }
@@ -504,7 +514,7 @@
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || T('Filtre kaydedilemedi.', 'Could not save the filter.'));
       close();
-      if (typeof onSaved === 'function') onSaved(payload.warnings || []);
+      if (typeof onSaved === 'function') onSaved(payload.warnings || [], payload);
     } catch (error) {
       message = String(error && error.message || error);
       messageTone = 'bad';
@@ -672,7 +682,8 @@
     host.innerHTML = `<p class="dmfEmpty">${esc(T('Alanlar yükleniyor…', 'Loading fields…'))}</p>`;
 
     templateMessage = '';
-    void loadTemplates().then(render);
+    // Şablon uçları yönetim yetkisi ister; yetkisiz kullanıcıda istek atılmaz.
+    if (context.canShare === true) void loadTemplates().then(render);
     try { await loadFields(); }
     catch (error) {
       message = String(error && error.message || error);

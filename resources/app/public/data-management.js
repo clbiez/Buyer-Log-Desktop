@@ -1774,13 +1774,10 @@
     const source = (model.sources || []).find(entry => entry.id === sourceId);
     if (!module || !feed || !source) return;
 
-    if (!model.canManage) {
-      if (typeof showToast === 'function') {
-        showToast(T('Ortak filtreyi değiştirmek için Kaynak Veri yönetim yetkisi gerekir.',
-          'Changing the shared filter requires Source Data management permission.'));
-      }
-      return;
-    }
+    /* v7.0.183 — Horizon KULLANICI BAZLI. Düzenleyici herkese açılır:
+       varsayılan kaydetme kullanıcının KENDİ filtresini yazar. Ortak
+       varsayılanı (herkesi etkiler) yalnız yönetim yetkisi olan görür
+       (canShare: model.canManage). */
     /* EZEN KATMAN ARTIK ÇIKMAZ DEĞİL.
 
        Eskiden burada "önce onu kaldırın" denip düzenleyici hiç açılmıyordu.
@@ -1808,6 +1805,8 @@
          teklifi gösterebilir. Teklif yoksa düğme de çıkmaz — boş bir
          düğme, kullanıcıya olmayan bir yetenek vaat ederdi. */
       mapFrom: (() => {
+        // Eşleme ucu yönetim yetkisi ister; yetkisiz kullanıcıya düğme gösterilmez.
+        if (!model.canManage) return null;
         const mine = feed.sourceRole || '';
         const other = module.feeds.find(entry => entry
           && entry.sourceId !== sourceId
@@ -1821,7 +1820,10 @@
          katmandır. Bu yüzden düzenleyiciye ortak olanın adı ve tanımı verilir —
          yoksa kullanıcı kişisel ufkunu ortak filtrenin üstüne yazardı. */
       filterName: layerNote ? (feed.sharedFilterName || '') : feed.filterName,
-      definition: feed.definition || {},
+      /* Düzenleyici kullanıcının GÖRDÜĞÜ (çalışan) filtreden başlar: varsayılan
+         kaydetme onun kişisel filtresidir (v7.0.183). */
+      definition: feed.effectiveDefinition || feed.definition || {},
+      canShare: Boolean(model.canManage),
       sharedWith: (feed.sharedModuleIds || []),
       /* v20260929 — Bağlı grubun üyesi de ayrılabilir: "yalnız bunu ayır"
          modülü gruptan çıkarıp kendi filtresine taşır (sunucu üyeliği düşürür). */
@@ -1832,8 +1834,15 @@
         const found = (model.modules || []).find(entry => entry.id === id);
         return found ? found.label : id;
       },
-      onSaved: warnings => {
+      onSaved: (warnings, result) => {
+        /* Kişisel kayıttan sonra tarayıcıdaki eski kişisel ufuk aynası
+           unutulur; açılıştaki birleştirme onu sunucuya geri yazmasın. */
+        if (result && result.personal) (result.modules || [moduleId]).forEach(forgetLocalHorizonMirror);
         if (warnings && warnings.length && typeof showToast === 'function') showToast(warnings.join(' '));
+        else if (result && result.personal && typeof showToast === 'function') {
+          showToast(T('Filtreniz yalnız sizin için kaydedildi; diğer kullanıcılar etkilenmez.',
+            'Your filter was saved for you only; other users are not affected.'));
+        }
         void load();
       },
     });

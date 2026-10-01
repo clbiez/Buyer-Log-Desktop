@@ -162,7 +162,8 @@ test('şablonlar yüklenemezse editör çalışmaya devam eder', () => {
 });
 
 test('şerit filtre editörünün içinde çiziliyor', () => {
-  assert.match(EDITOR, /\$\{templateBar\(\)\}/, 'şerit render edilmiyor');
+  // v7.0.183: şablon uçları yönetim yetkisi istediği için şerit yalnız yetkiliye çizilir.
+  assert.match(EDITOR, /\$\{canShare \? templateBar\(\) : ''\}/, 'şerit render edilmiyor');
   for (const hook of ['data-apply-template', 'data-share-template', 'data-delete-template', 'data-save-template']) {
     assert.ok(EDITOR.includes(hook), `${hook} kancası yok`);
   }
