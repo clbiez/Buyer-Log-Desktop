@@ -4467,6 +4467,14 @@ function resolveModelImageItemIdentities(rawItems, context = {}) {
 function modelImageIdentityOrders(runtime) {
   return modelImageIdentityResolver.ordersFromRuntime(runtime);
 }
+/* Kullanıcının kendi Koleksiyon satırları: sipariş geçilmemiş (ASAS'ta
+   olmayan) opsiyonlar için model kodu → PLM ID köprüsü. Yalnız PLM ID
+   taşımayan kalem varsa okunur. */
+function modelImageIdentityCollectionRows(userId, rawItems) {
+  const list = Array.isArray(rawItems) ? rawItems : [];
+  if (!list.some(item => !parseLib.normalizePlmImageId(item && (item.plmId ?? item.plm ?? item['PLM ID'])))) return [];
+  try { return loadWorkspace(String(userId || '')).rows || []; } catch (_) { return []; }
+}
 
 async function resolveModelImagesLocalFirst(requests, options = {}) {
   const source = options.source === sharedImageStoreLib.SOURCE_ASAS ? sharedImageStoreLib.SOURCE_ASAS : sharedImageStoreLib.SOURCE_PLM;
@@ -4696,7 +4704,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       /* PLM ID taşımayan alt detay kalemleri önce model adı üzerinden çözülür;
          çözülemeyenler SESSİZCE ATILMAZ, hata kalemi olarak raporlanır. */
       let cachedOrders=[];try{cachedOrders=modelImageIdentityOrders(cacheForUser(req.currentUser.id));}catch(_){cachedOrders=[];}
-      const identity=resolveModelImageItemIdentities(raw,{orders:cachedOrders,styleLinks});
+      const identity=resolveModelImageItemIdentities(raw,{orders:cachedOrders,styleLinks,collectionRows:modelImageIdentityCollectionRows(req.currentUser.id,raw)});
       const seen=new Set(),requests=[];
       for(const item of identity.resolved){
         const plmId=String(item&&item.plmId||'').trim();
@@ -4835,7 +4843,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
       await ensureDataLoaded(req.currentUser.id);const runtime=cacheForUser(req.currentUser.id),overrides=loadOverrides();
       /* Kimlik önce ÇÖZÜLÜR: PLM ID taşımayan alt detay kalemleri model adı
          üzerinden ASAS kaydına bağlanır. Çözülemeyenler sessizce düşmez. */
-      const identity = resolveModelImageItemIdentities(raw, { orders: modelImageIdentityOrders(runtime), styleLinks: loadPlmStyleLinks().links || {} });
+      const identity = resolveModelImageItemIdentities(raw, { orders: modelImageIdentityOrders(runtime), styleLinks: loadPlmStyleLinks().links || {}, collectionRows: modelImageIdentityCollectionRows(req.currentUser.id, raw) });
       const items = identity.resolved;
       if (!items.length) {
         return { mode, candidates: [], requested: raw.length, saved: 0,

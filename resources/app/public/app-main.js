@@ -28506,7 +28506,14 @@ function modelAssetCanonicalPlmId(value,modelName=''){
   const direct=normalizePlmLinkId(value);
   if(direct)return direct;
   const map=modelAssetNameToPlmMap();
-  return map.get(normalizePlmModelName(modelName))||map.get(normalizePlmModelName(value))||'';
+  const hit=name=>{
+    const key=normalizePlmModelName(name);if(!key)return '';
+    /* OAB "Option Adı" kategori önekli gelir ("KK.BDY,GARFIELD-1-YD");
+       Koleksiyon/ASAS/PLM yalın adı tutar. Tam ad önce, sonra öneksiz ad. */
+    const bare=key.replace(/^[^\s,]{1,16},\s*(?=\S)/,'');
+    return map.get(key)||(bare!==key?map.get(bare):'')||'';
+  };
+  return hit(modelName)||hit(value)||'';
 }
 
 /* ORTAK KAPSAM KAYDI — modül başına ayrı çözümleyici YAZILMAZ.
