@@ -343,21 +343,68 @@ test('v7.0.193 onaylı giriş varsa sonradan açılan onaysız girişler dikkate
   assert.equal(m.artwork.requests.length, 4, 'tüm girişler pencerede görünmeye devam eder');
 });
 
-test('v7.0.193 PPS onayı Fit’i, S/Off onayı PPS ve Fit’i onaylar (aşama zinciri)', () => {
+/* Kullanıcı tanımı: Fit (ölçü/kalıp/işçilik) ve S/Off (Artwork'ün baskı/nakış
+   onayı) ayrı yürür; PPS hem Fit'i hem Artwork'ü içerir ve SON aşamadır. */
+test('v7.0.193 aşama zinciri: PPS → Fit + S/Off + Artwork; S/Off → Artwork; Fit ile S/Off bağımsız', () => {
   const m = Engine.summarizeMilestones(grinchRequests());
   assert.equal(m.criticalSample.state, 'approved', 'PPS onaylıysa Fit onaylı kabul edilir');
   assert.equal(m.criticalSample.inferredFrom, 'pps');
   assert.equal(m.criticalSample.requests[0].requestCode, '4573869', 'Fit’in kendi PLM girişi korunur');
+  assert.equal(m.soff.state, 'approved');
+  assert.equal(m.soff.inferredFrom, 'pps');
 
-  const soffOnly = Engine.summarizeMilestones([{ requestCode: '9', status: 'approved', statusName: 'Approved / Completed', subTypeName: 'Perfect Sign Off Fitting', subTypeId: '39', milestone: 'soff', iteration: 1 }]);
-  assert.equal(soffOnly.pps.state, 'approved');
-  assert.equal(soffOnly.pps.inferredFrom, 'soff');
-  assert.equal(soffOnly.criticalSample.inferredFrom, 'soff');
-  assert.equal(soffOnly.artwork, undefined, 'Artwork zincirin dışında');
+  const one = (milestone, subTypeName, status) => Engine.summarizeMilestones([{ requestCode: '9', status, statusName: status, subTypeName, subTypeId: '0', milestone, iteration: 1 }]);
+  const soffOnly = one('soff', 'Perfect Sign Off Fitting', 'approved');
+  assert.equal(soffOnly.artwork.state, 'approved', 'S/Off Artwork’ün baskı/nakış onayıdır');
+  assert.equal(soffOnly.artwork.inferredFrom, 'soff');
+  assert.equal(soffOnly.pps, undefined, 'S/Off PPS’i onaylamaz (PPS son aşama)');
+  assert.equal(soffOnly.criticalSample, undefined, 'S/Off Fit’ten bağımsız');
 
-  // Onaysız üst aşama alt aşamayı ETKİLEMEZ.
-  const openPps = Engine.summarizeMilestones([{ requestCode: '8', status: 'open', statusName: 'Received', subTypeName: 'PPS', subTypeId: '0', milestone: 'pps', iteration: 1 }]);
-  assert.equal(openPps.criticalSample, undefined);
+  const fitOnly = one('criticalSample', 'Fit Sample Fitting', 'approved');
+  assert.deepEqual(Object.keys(fitOnly), ['criticalSample'], 'Fit onayı başka kalemi onaylamaz');
+
+  assert.equal(one('pps', 'PPS', 'open').criticalSample, undefined, 'onaysız PPS alt aşamaları etkilemez');
+});
+
+test('v7.0.193 Sample Evaluation Status onaylıysa talep onaylı sayılır', () => {
+  const base = record({ requestStatusId: 9, requestStatusName: 'In Progress' });
+  assert.equal(Engine.normalizeRequest(base).status, 'open');
+  assert.equal(Engine.normalizeRequest({ ...base, styleSampleEvaluationStatusName: 'Approved / Completed' }).status, 'approved');
+  assert.equal(Engine.normalizeRequest({ ...base, styleSampleEvaluationStatusName: 'In Process' }).status, 'open');
+  assert.equal(Engine.normalizeRequest({ ...base, styleSampleEvaluationStatusName: 'Rejected' }).status, 'open', 'değerlendirme reddi talep durumunu ezmez');
+  assert.equal(Engine.normalizeRequest({ ...record(), styleSampleEvaluationStatusName: 'Approved / Completed' }).evaluationStatusName, 'Approved / Completed');
+  // Saklı kayıt yeniden sınıflanırken değerlendirme de okunur.
+  assert.match(read('server/lib/plm-sample-requests-store.js'), /engine\.requestStatus\(item\.statusId, item\.statusName, item\.evaluationStatusName\)/);
+});
+
+test('v7.0.193 Priority: Ex-factory’ye 21 gün kala PPS onayı yoksa ayrı sebep; eşik düzenlenebilir', () => {
+  const Rules = require('../public/cp-rules-engine.js');
+  const rule = Rules.DEFAULT_RULES.find(item => item.id === 'builtin_action_pps_exfactory');
+  assert.ok(rule && rule.builtIn && rule.kind === 'priority');
+  assert.equal(rule.reasonTr, 'Ex-factory yaklaşıyor, PPS onayı yok');
+  const days = rule.conditions.find(c => c.field === '@daysToLoad' && c.operator === 'lte');
+  assert.equal(days.value, 21);
+  assert.ok(rule.conditions.some(c => c.field === '@checklist:pps' && c.value === 'open'));
+  const a = analysis({ daysToLoad: 18 });
+  assert.ok(Rules.applyPriorityRules(a, [rule], { pps: 'open' }).matched.length, 'PPS açık → kural eşleşir');
+  assert.equal(Rules.applyPriorityRules(a, [rule], { pps: 'answered' }).matched.length, 0, 'PPS onaylı → eşleşmez');
+  // Kullanıcı eşiği değiştirirse (kural düzenleyici) kaydı kazanır.
+  const edited = JSON.parse(JSON.stringify(rule));
+  const editedDays = edited.conditions.find(c => c.field === '@daysToLoad' && c.operator === 'lte');
+  editedDays.value = 10; editedDays.right.value = 10; // kural düzenleyici sağ tarafı yazar
+  const merged = Rules.mergeWithDefaults([edited]).find(item => item.id === rule.id);
+  assert.equal(merged.conditions.find(c => c.operator === 'lte').value, 10);
+  assert.equal(Rules.applyPriorityRules(a, [merged], { pps: 'open' }).matched.length, 0);
+});
+
+test('v7.0.193 CP açılınca yalnız üretimdeki ve 24 saatten eski/hiç çekilmemiş modeller tazelenir', () => {
+  const src = read('public/plm-sample-requests.js');
+  assert.match(src, /const AUTO_REFRESH_MAX_AGE_MS = 24 \* 3600 \* 1000;/);
+  assert.match(src, /if \(rowStage\(row\) !== 'PRODUCTION'\) continue;/);
+  assert.match(src, /sync\(ids, \{ scope: 'cp', ensureConnection: false, silent: true \}\)/);
+  assert.match(src, /typeof plmJsonRequest === 'function' && !opts\.silent \? plmJsonRequest/, 'sessiz tazeleme yetki penceresi açmaz');
+  const app = read('public/app-main.js');
+  assert.match(app, /if\(tab==='cp'\)void cpPlmSampleAutoRefresh\(\);/);
 });
 
 test('v7.0.193 üretimi bitmiş sipariş: tüm numune kalemleri onaylı; üretimdeki sipariş PLM’e göre', () => {

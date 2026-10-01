@@ -157,7 +157,9 @@
     if (opts.ensureConnection !== false && typeof ensureCoreNectumApiConnection === 'function') {
       if (!await ensureCoreNectumApiConnection()) return { ok: false, reason: 'api-not-configured' };
     }
-    const request = typeof plmJsonRequest === 'function' ? plmJsonRequest : async (url, init) => {
+    /* silent: arka plan tazelemesi. PLM İşlemleri panelini açmaz ve yetki
+       yenileme penceresi göstermez (plmJsonRequest bunları yapar). */
+    const request = typeof plmJsonRequest === 'function' && !opts.silent ? plmJsonRequest : async (url, init) => {
       const res = await fetch(url, init); const data = await res.json().catch(() => ({}));
       if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { code: data.code });
       return data;
@@ -168,6 +170,50 @@
     await load(true);
     try { window.dispatchEvent(new CustomEvent('bl:plm-requests-changed', { detail: { revision: state.revision } })); } catch (_) { /* eski tarayıcı */ }
     return { ok: true, ...result };
+  }
+
+  /* ESKİYEN VERİ OTOMATİK TAZELEME (kullanıcı onaylı öneri). CP açılınca
+     ÜRETİMDEKİ siparişlerin modelleri, numune verisi hiç yoksa ya da 24
+     saatten eskiyse arka planda PLM'den çekilir. Üretim sonrası siparişler
+     zaten onaylı sayıldığı için çekilmez. Sessizdir: oturum yoksa ya da
+     hata olursa kullanıcıyı rahatsız etmez; aynı oturumda saatte en fazla
+     bir kez denenir. */
+  const AUTO_REFRESH_MAX_AGE_MS = 24 * 3600 * 1000;
+  const AUTO_REFRESH_RETRY_MS = 3600 * 1000;
+  const AUTO_REFRESH_KEY = 'lcw.cp.plmSamples.autoRefreshAt';
+  let autoRefreshRunning = false;
+  function storageGet(key) { try { return (window.BLStorage || localStorage).getItem(key); } catch (_) { return null; } }
+  function storageSet(key, value) { try { (window.BLStorage || localStorage).setItem(key, value); } catch (_) { /* kota */ } }
+  function staleProductionPlmIds(rows, now = Date.now()) {
+    const ids = new Set();
+    for (const row of Array.isArray(rows) ? rows : []) {
+      if (rowStage(row) !== 'PRODUCTION') continue;
+      const plmId = plmIdOfRow(row, 'cp');
+      if (!plmId || ids.has(plmId)) continue;
+      const entry = entryFor(plmId);
+      const fetched = entry && entry.fetchedAt ? Date.parse(entry.fetchedAt) : NaN;
+      if (!Number.isFinite(fetched) || now - fetched > AUTO_REFRESH_MAX_AGE_MS) ids.add(plmId);
+    }
+    return [...ids];
+  }
+  async function autoRefreshStale(rows) {
+    if (autoRefreshRunning) return { ok: false, reason: 'running' };
+    const last = Number(storageGet(AUTO_REFRESH_KEY)) || 0;
+    if (Date.now() - last < AUTO_REFRESH_RETRY_MS) return { ok: false, reason: 'throttled' };
+    autoRefreshRunning = true;
+    try {
+      await load();
+      const ids = staleProductionPlmIds(rows);
+      if (!ids.length) return { ok: true, synced: 0 };
+      storageSet(AUTO_REFRESH_KEY, String(Date.now()));
+      const result = await sync(ids, { scope: 'cp', ensureConnection: false, silent: true });
+      if (result.ok && result.synced) toast(L(`PLM numune durumu arka planda güncellendi: ${summaryText(result)}`, `PLM sample status refreshed in the background: ${summaryText(result)}`), { duration: 6000 });
+      return result;
+    } catch (_) {
+      return { ok: false, reason: 'failed' };
+    } finally {
+      autoRefreshRunning = false;
+    }
   }
 
   function summaryText(result) {
@@ -229,6 +275,7 @@
       const rows = requests.map(item => `<tr>
           <td>${styleLink ? `<a href="${esc(styleLink)}" target="_blank" rel="noopener">${esc(item.requestCode)}</a>` : esc(item.requestCode)}</td>
           <td>${statusBadge(item.status, item.statusName)}</td>
+          <td>${item.evaluationStatusName ? esc(item.evaluationStatusName) : '—'}</td>
           <td>${esc(item.typeName)}</td>
           <td>${esc(item.subTypeName)}${item.iteration > 1 ? ` <small>#${esc(item.iteration)}</small>` : ''}</td>
           <td>${esc(item.supplierName)}</td>
@@ -242,7 +289,7 @@
           ? `<p class="cpaEmpty">${esc(L('Bu model için henüz PLM numune senkronu yapılmadı.', 'Sample requests have not been synced from PLM for this style yet.'))}</p>`
           : rows
             ? `<div class="cpaScroll"><table class="cpaTable"><thead><tr>
-                <th>${esc(L('Talep Kodu', 'Request Code'))}</th><th>${esc(L('Durum', 'Status'))}</th><th>${esc(L('Tip', 'Type'))}</th>
+                <th>${esc(L('Talep Kodu', 'Request Code'))}</th><th>${esc(L('Durum', 'Status'))}</th><th>${esc(L('Numune Değerlendirme', 'Sample Evaluation'))}</th><th>${esc(L('Tip', 'Type'))}</th>
                 <th>${esc(L('Alt Tip', 'Sub Type'))}</th><th>${esc(L('Tedarikçi', 'Supplier'))}</th><th>${esc(L('Sorumlu', 'Responsible'))}</th>
                 <th>${esc(L('Oluşturma', 'Created'))}</th><th>${esc(L('Son Değişiklik', 'Modified'))}</th></tr></thead><tbody>${rows}</tbody></table></div>`
             : `<p class="cpaEmpty">${esc(L('PLM\'de bu model için numune talebi yok.', 'There are no sample requests for this style in PLM.'))}</p>`;
@@ -302,7 +349,7 @@
   });
 
   window.BLPlmSampleRequests = {
-    load, sync, syncStep, syncStepSuffix, summaryText,
+    load, sync, syncStep, syncStepSuffix, summaryText, autoRefreshStale, staleProductionPlmIds,
     entryFor, milestonesFor, orderMilestones, rowStage, evidenceForAnalysis, plmIdOfRow,
     openForPlm, openForRow, evidenceBadge, columnParts, columnText,
     get loaded() { return state.loaded; },

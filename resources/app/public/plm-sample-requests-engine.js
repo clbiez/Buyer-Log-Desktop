@@ -65,6 +65,20 @@
     return STATUS.OPEN;
   }
 
+  /* Talebin etkin durumu: talep durumu + "Sample Evaluation Status".
+     Talep durumu açık kalmış ama numune değerlendirmesi onaylıysa talep
+     onaylı sayılır (kullanıcı kararı). Değerlendirme reddi talebi
+     reddetmez; talep durumu esas kalır. */
+  function evaluationApproves(evaluationName) {
+    const name = clean(evaluationName, 120).toLowerCase();
+    return Boolean(name) && !/reject|red edil|reddedil|cancel|iptal/.test(name) && /approv|complet|onay|tamamlan/.test(name);
+  }
+  function requestStatus(statusId, statusName, evaluationName) {
+    const base = classifyStatus(statusId, statusName);
+    if (base !== STATUS.APPROVED && base !== STATUS.CANCELLED && evaluationApproves(evaluationName)) return STATUS.APPROVED;
+    return base;
+  }
+
   /* Alt tip → kontrol listesi kalemi. Sıra önemli: "Perfect Sign Off
      Fitting" içinde "Fitting" de geçer, bu yüzden S/Off önce denenir. */
   function classifyMilestone(subTypeId, subTypeName) {
@@ -86,6 +100,7 @@
     if (!requestCode && !requestId) return null;
     const statusName = clean(record.requestStatusName, 120);
     const subTypeName = clean(record.requestSubTypeName, 160);
+    const evaluationStatusName = clean(record.styleSampleEvaluationStatusName, 120);
     return {
       requestId,
       requestCode: requestCode || requestId,
@@ -93,7 +108,8 @@
       plmId: numericId(record.itemCode),
       statusId: numericId(record.requestStatusId),
       statusName,
-      status: classifyStatus(record.requestStatusId, statusName),
+      evaluationStatusName,
+      status: requestStatus(record.requestStatusId, statusName, evaluationStatusName),
       typeId: numericId(record.requestTypeId),
       typeName: clean(record.requestTypeName, 160),
       subTypeId: numericId(record.requestSubTypeId),
@@ -123,11 +139,16 @@
       || (Number(b.requestCode) || 0) - (Number(a.requestCode) || 0);
   }
 
-  /* NUMUNE AŞAMA SIRASI: Fit/Size Set/Seal → PPS → S/Off. Üst aşama onayı,
-     alt aşamaların da onaylandığını kanıtlar (PPS onaylıysa Fit'e dönülmez).
-     Kullanıcı kararı: "bir modelin PPS onayı varsa Fit Sample onayı da
-     otomatik gelmeli". Artwork bu zincirin dışındadır. */
-  const IMPLIES = Object.freeze({ soff: Object.freeze(['pps', 'criticalSample']), pps: Object.freeze(['criticalSample']) });
+  /* NUMUNE AŞAMA SIRASI (kullanıcı tanımı):
+       Fit (ölçü, kalıp, işçilik)  ─┐
+       Artwork → S/Off (baskı/nakış) ┴→ PPS (hem Fit'i hem Artwork'ü içerir)
+     Fit ve S/Off birbirinden bağımsız yürür. PPS son aşamadır: PPS onayı
+     Fit, S/Off ve Artwork'ün de onaylandığını kanıtlar. S/Off, Artwork'ün
+     baskı/nakış onayı olduğu için S/Off onayı Artwork'ü de onaylar. */
+  const IMPLIES = Object.freeze({
+    pps: Object.freeze(['criticalSample', 'soff', 'artwork']),
+    soff: Object.freeze(['artwork']),
+  });
 
   /* Üretimi bitmiş siparişin aşamaları. Onaysız yükleme yapılmadığı için bu
      aşamalardaki siparişin numuneleri PLM kaydına bakılmadan onaylı sayılır
@@ -186,8 +207,8 @@
         requests: all.map(compactRequest),
       };
     }
-    // Üst aşama onayı → alt aşamalar onaylı (zincir: S/Off → PPS → Fit).
-    for (const upper of ['soff', 'pps']) {
+    // Üst aşama onayı → alt aşamalar onaylı (PPS → Fit/S-Off/Artwork, S/Off → Artwork).
+    for (const upper of ['pps', 'soff']) {
       const source = out[upper];
       if (!source || source.state !== STATUS.APPROVED) continue;
       for (const lower of IMPLIES[upper]) {
@@ -246,7 +267,7 @@
   return {
     STATUS, STATUS_BY_ID, MILESTONES, MILESTONE_BY_SUBTYPE_ID, STATUS_LABELS,
     IMPLIES, POST_PRODUCTION_STAGES,
-    numericId, classifyStatus, classifyMilestone, normalizeRequest, statusDate,
+    numericId, classifyStatus, requestStatus, evaluationApproves, classifyMilestone, normalizeRequest, statusDate,
     summarizeMilestones, applyOrderStage, isPostProductionStage, evidenceFor,
   };
 });
