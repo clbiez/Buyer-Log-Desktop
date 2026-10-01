@@ -3788,6 +3788,57 @@ function renderTableViewContext(tableKey){
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
   root.querySelectorAll('[data-partial-view-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(partialViewEnabled(button.dataset.partialViewToggle))));
 }
+function tableViewOrderedKeys(tableKey){
+  const all=tableViewAllKeys(tableKey);
+  if(tableKey==='koleksiyon')return all.slice();
+  const current=colmgr[tableKey]?.order;
+  return normalizedColumnOrder(tableKey,Array.isArray(current)?current:all);
+}
+/* Alt detay tabloları ana tabloyu kopyalamak yerine aynı read-only setup'ı
+   tüketir. Böylece CP sütun sırası, genişliği ve kullanıcıya özel
+   Focus / Extended presetleri tek kaynaktan okunur. */
+function tableViewReadonlySnapshot(tableKey='cp'){
+  const all=tableViewAllKeys(tableKey),order=tableViewOrderedKeys(tableKey),hidden=tableViewHiddenKeys(tableKey);
+  const presetKeys=preset=>{
+    const selected=new Set(tableViewPresetKeys(tableKey,preset));
+    return order.filter(key=>selected.has(key));
+  };
+  return {
+    tableKey,
+    preset:tableViewPresetState(tableKey),
+    order:order.slice(),
+    visible:order.filter(key=>!hidden.has(key)),
+    presets:{focus:presetKeys('focus'),extended:presetKeys('extended'),all:presetKeys('all')},
+    columns:order.map(key=>{
+      const meta=tableViewColumnMeta(tableKey,key)||{k:key,label:key,type:'ro',weight:10,group:''};
+      let widthPx=null;
+      try{if(tableKey!=='koleksiyon'&&colmgr[tableKey])widthPx=colWidthPx(tableKey,meta);}catch(_){}
+      const label=tableKey==='koleksiyon'?L(meta.label||key):tableColumnLabel(tableKey,meta);
+      return {
+        key,
+        label:label||key,
+        group:String(meta.group||''),
+        type:String(meta.type||'ro'),
+        weight:Number(meta.weight)||10,
+        widthPx:Number.isFinite(Number(widthPx))?Number(widthPx):null
+      };
+    })
+  };
+}
+window.BLTableViewSetup=Object.freeze({
+  snapshot:(tableKey='cp')=>tableViewReadonlySnapshot(tableKey),
+  text:(tableKey,key,row)=>{
+    const meta=tableViewColumnMeta(tableKey,key);
+    if(!meta||!row||typeof row!=='object')return '';
+    try{
+      if(tableKey==='cp'||tableKey==='orders')return cellPlainText(meta,row,null);
+      const value=row[key];return value==null?'':String(value);
+    }catch(_){
+      const value=row[key];return value==null?'':String(value);
+    }
+  }
+});
+
 function applyTableViewPreset(tableKey,preset){
   const all=tableViewAllKeys(tableKey);if(!all.length||!TABLE_VIEW_PRESETS[tableKey]||!['focus','extended','all'].includes(preset))return false;
   const visible=new Set(tableViewPresetKeys(tableKey,preset));
