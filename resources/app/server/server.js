@@ -5394,7 +5394,9 @@ function intakeErrorResponse(err) {
   return { status: Number(err && err.statusCode) >= 500 ? Number(err.statusCode) : 502, code: 'INTAKE_SOURCE_UNAVAILABLE', message: intakeSafeSourceMessage() };
 }
 function intakeFieldToken(field) {
-  return { id: field.id, sourceUniqueName: field.sourceUniqueName, fieldType: field.fieldType };
+  // WAVG ağırlığı sorguya ek measure olarak girer; anahtarda olmazsa eski
+  // önbellek ağırlık sütunu olmadan dönerdi.
+  return { id: field.id, sourceUniqueName: field.sourceUniqueName, fieldType: field.fieldType, ...(field.agg === 'WAVG' && field.weightSource ? { weightSource: field.weightSource } : {}) };
 }
 function intakeConnection() {
   // refreshEnabled controls scheduled/global refresh participation, not the
@@ -5471,7 +5473,7 @@ function intakeStateResponse(req, snapshot = null, fields = null, offline = fals
     viewConfig,
     fields: sourceFields,
     snapshot: snapshot ? {
-      rows: snapshot.rows,
+      rows: intakeReport.remapRows(snapshot.rows, snapshot.viewConfig, viewConfig),
       fields: snapshot.fields,
       fetchedAt: snapshot.fetchedAt,
       queryKey: snapshot.queryKey,
@@ -5547,8 +5549,13 @@ app.get('/api/intake/metadata', userAccess.requireAnyArea('overview'), userAcces
 app.post('/api/intake/distinct', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
     const found = await intakeLiveFields();
-    const wanted = String(req.body && (req.body.fieldId || req.body.sourceUniqueName) || '').trim();
-    const field = found.fields.find(item => item.id === wanted || item.sourceUniqueName === wanted);
+    const wantedId = String(req.body && req.body.fieldId || '').trim();
+    const wantedSource = String(req.body && req.body.sourceUniqueName || '').trim();
+    // Kayıtlı görünüm alanı varsayılan (üç parçalı) kimlik taşıyabilir; canlı
+    // sütun kaynak anahtarıyla bulunur, aksi hâlde filtre değerleri hiç gelmez.
+    const field = found.fields.find(item => item.id === wantedId)
+      || [wantedSource, wantedId].filter(Boolean).map(intakeReport.sourceKey)
+        .map(key => found.fields.find(item => intakeReport.sourceKey(item.sourceUniqueName) === key)).find(Boolean);
     if (!field || field.fieldType !== 'dimension') {
       const error = new Error('INTAKE filtresi için geçerli bir dimension seçilmedi.'); error.code = 'INTAKE_FIELD_INVALID'; error.statusCode = 400; throw error;
     }
@@ -5612,7 +5619,7 @@ app.post('/api/intake/report', userAccess.requireAnyArea('overview'), userAccess
       const fallback = intakeStateResponse(req, previous, previous.fields, true, intakeSafeSourceMessage());
       // İstemci tabloyu `rows` ile çizer; snapshot satırları üst düzeyde de verilir,
       // yoksa bağlantı kesintisinde tablo boşalıyordu.
-      return res.json({ ...fallback, rows: previous.rows, fetchedAt: previous.fetchedAt, source: 'snapshot', fromCache: true });
+      return res.json({ ...fallback, rows: fallback.snapshot.rows, fetchedAt: previous.fetchedAt, source: 'snapshot', fromCache: true });
     }
     const failure = intakeErrorResponse(err);
     res.status(failure.status).json({ error: failure.message, code: failure.code, offline: failure.code === 'INTAKE_SOURCE_UNAVAILABLE' });

@@ -9,7 +9,7 @@
 
   const state = {
     fields: [],
-    viewConfig: { version: 2, query: { rows: [], columns: [], measures: [], filters: [], filterValues: {} }, display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [], grouped: true, showSubtotals: true, collapsedGroups: [], hideZeroCurrentBudget: true } },
+    viewConfig: { version: 3, query: { rows: [], columns: [], measures: [], filters: [], filterValues: {} }, display: { labels: {}, widths: {}, sort: { id: '', dir: 1 }, collapsed: [], grouped: true, showSubtotals: true, collapsedGroups: [], hideZeroCurrentBudget: true } },
     rows: [],
     loaded: false,
     loading: false,
@@ -93,8 +93,17 @@
     });
     return JSON.stringify({
       rows: ids(source.rows), columns: ids(source.columns), measures: ids(source.measures).sort(), values,
+      weights: intakeWeightSignature(source.measures),
       hideZero: (config && config.display || {}).hideZeroCurrentBudget !== false,
     });
+  }
+
+  /* WAVG ağırlığı sorguya ek measure olarak girer; ağırlık seçimi değişince
+     veri yeniden çekilmelidir. Diğer özetlemeler istemcide uygulanır. */
+  function intakeWeightSignature(measures) {
+    return (Array.isArray(measures) ? measures : [])
+      .filter(field => field && clean(field.agg).toUpperCase() === 'WAVG' && clean(field.weightSource))
+      .map(field => `${clean(field.id)}:${clean(field.weightSource)}`).sort();
   }
 
   function setRows(rows) {
@@ -184,7 +193,20 @@
     }
   }
 
-  const INTAKE_AGGREGATES = ['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'FIRST'];
+  const INTAKE_AGGREGATES = ['SUM', 'AVG', 'WAVG', 'COUNT', 'MIN', 'MAX', 'FIRST'];
+  const INTAKE_AGG_LABELS = { WAVG: ['Ağırlıklı ort.', 'Weighted avg.'] };
+  const INTAKE_DEFAULT_WEIGHT_SOURCE = '[Measures].[Güncel Alım Bütçe]';
+  const intakeNumber = value => typeof value === 'number' ? value : Number(String(value == null ? '' : value).replace(/\s/g, '').replace(',', '.'));
+  const intakeSourceKey = value => clean(value).toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ');
+
+  /* Ağırlık sütunu: görünümde aynı measure varsa onun sütunu, yoksa sunucunun
+     eklediği gizli ağırlık sütunu (weightId). */
+  function intakeWeightId(field) {
+    const key = intakeSourceKey(field && field.weightSource);
+    if (!key) return '';
+    const present = (query().measures || []).find(item => item && intakeSourceKey(item.sourceUniqueName) === key);
+    return present ? present.id : clean(field.weightId);
+  }
 
   function intakeAggregateRows(rows, field) {
     const source = Array.isArray(rows) ? rows : [];
@@ -192,9 +214,23 @@
     const agg = INTAKE_AGGREGATES.includes(clean(field && field.agg).toUpperCase()) ? clean(field.agg).toUpperCase() : 'SUM';
     if (agg === 'FIRST') return values.length ? values[0] : '';
     if (agg === 'COUNT') return values.length;
-    const numbers = values.map(value => typeof value === 'number' ? value : Number(String(value).replace(/\s/g, '').replace(',', '.'))).filter(Number.isFinite);
+    if (agg === 'WAVG') {
+      /* Oran alt toplamı: Σ(oran × ağırlık) / Σ ağırlık. Oran = pay / ağırlık
+         olduğunda bu, alt toplam payının alt toplam paydasına oranına eşittir. */
+      const weightId = intakeWeightId(field);
+      let weighted = 0, weightSum = 0;
+      if (weightId) source.forEach(row => {
+        const value = intakeNumber(row && row[field.id]);
+        const weight = intakeNumber(row && row[weightId]);
+        if (!Number.isFinite(value) || !Number.isFinite(weight)) return;
+        weighted += value * weight;
+        weightSum += weight;
+      });
+      if (weightSum) return weighted / weightSum;
+    }
+    const numbers = values.map(intakeNumber).filter(Number.isFinite);
     if (!numbers.length) return values.length ? values[0] : '';
-    if (agg === 'AVG') return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+    if (agg === 'AVG' || agg === 'WAVG') return numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
     if (agg === 'MIN') return Math.min(...numbers);
     if (agg === 'MAX') return Math.max(...numbers);
     return numbers.reduce((sum, value) => sum + value, 0);
@@ -343,7 +379,7 @@
     const current = display();
     return JSON.stringify([
       state.rowsVersion, isEnglish(),
-      activeColumns().map(field => [field.id, fieldLabel(field), field.fieldType, clean(field.agg)]),
+      activeColumns().map(field => [field.id, fieldLabel(field), field.fieldType, clean(field.agg), clean(field.weightSource)]),
       (query().rows || []).map(fieldId), (query().columns || []).map(fieldId),
       current.sort || {}, current.grouped !== false, current.showSubtotals !== false,
       current.collapsedGroups || [], current.hideZeroCurrentBudget !== false,
@@ -583,14 +619,21 @@
 
   function intakeAggOptionsHtml(selected) {
     const preferred = INTAKE_AGGREGATES.includes(clean(selected).toUpperCase()) ? clean(selected).toUpperCase() : 'SUM';
-    return INTAKE_AGGREGATES.map(agg => `<option value="${agg}"${agg === preferred ? ' selected' : ''}>${agg}</option>`).join('');
+    return INTAKE_AGGREGATES.map(agg => `<option value="${agg}"${agg === preferred ? ' selected' : ''}>${esc(INTAKE_AGG_LABELS[agg] ? text(...INTAKE_AGG_LABELS[agg]) : agg)}</option>`).join('');
+  }
+
+  function intakeWeightOptionsHtml(fields, selectedSource) {
+    const key = intakeSourceKey(selectedSource || INTAKE_DEFAULT_WEIGHT_SOURCE);
+    return (Array.isArray(fields) ? fields : []).map(field => `<option value="${esc(field.sourceUniqueName)}"${intakeSourceKey(field.sourceUniqueName) === key ? ' selected' : ''}>${esc(fieldLabel(field))}</option>`).join('');
   }
 
   function intakePivotValueRowHtml(field, fields) {
+    const weighted = clean(field && field.agg).toUpperCase() === 'WAVG';
     return `<div class="oabPivotValueRow oabConfigRow intakeConfigRow" draggable="true">
       <span class="oabConfigDrag" aria-hidden="true">⋮⋮</span>
       <select class="intakePivotValueField">${intakeFieldOptionsHtml(fields, field && field.id)}</select>
       <select class="intakePivotValueAgg">${intakeAggOptionsHtml(field && field.agg)}</select>
+      <select class="intakePivotValueWeight" title="${esc(text('Ağırlık', 'Weight'))}" aria-label="${esc(text('Ağırlık', 'Weight'))}"${weighted ? '' : ' hidden'}>${intakeWeightOptionsHtml(fields, field && field.weightSource)}</select>
       ${intakeConfigActionsHtml()}
     </div>`;
   }
@@ -659,7 +702,7 @@
           <div class="oabPivotConfigList" id="intakePivotValuesList">${(draft.query.measures || []).map(field => intakePivotValueRowHtml(field, valuePool)).join('')}</div>
         </div>
 
-        <p class="oabSettingsHint">${esc(text('Satırları tutup sürükleyerek veya oklarla sıralayabilirsiniz. Pivot Values için SUM, AVG, COUNT, MIN, MAX ve FIRST özetleme seçenekleri kullanılabilir.', 'Drag rows to reorder them or use the arrows. Pivot Values support SUM, AVG, COUNT, MIN, MAX and FIRST summarization.'))}</p>
+        <p class="oabSettingsHint">${esc(text('Satırları tutup sürükleyerek veya oklarla sıralayabilirsiniz. Pivot Values için SUM, AVG, Ağırlıklı ort., COUNT, MIN, MAX ve FIRST özetleme seçenekleri kullanılabilir. Oran/% sütunlarında Ağırlıklı ort. ile paydayı (ör. Güncel Alım Bütçe) seçin; alt toplam oranı doğru hesaplanır.', 'Drag rows to reorder them or use the arrows. Pivot Values support SUM, AVG, Weighted avg., COUNT, MIN, MAX and FIRST summarization. For ratio/% columns choose Weighted avg. with the denominator (e.g. Current Purchase Budget) so subtotals stay correct.'))}</p>
       </div>
       <footer><button type="button" class="tbtn" data-intake-settings-reset>${esc(text('Pivot Varsayılanına Dön', 'Reset Pivot'))}</button><button type="button" class="tbtn" data-intake-close>${esc(text('Vazgeç', 'Cancel'))}</button><button type="button" class="tbtn primary" data-intake-save>${esc(text('Kaydet', 'Save'))}</button></footer>
     </div>`;
@@ -699,6 +742,11 @@
       refreshOrderButtons();
     });
 
+    modal.addEventListener('change', event => {
+      const agg = event.target.closest?.('.intakePivotValueAgg');
+      const weight = agg && agg.closest('.oabPivotValueRow')?.querySelector('.intakePivotValueWeight');
+      if (weight) weight.hidden = clean(agg.value).toUpperCase() !== 'WAVG';
+    });
     modal.addEventListener('click', event => {
       const remove = event.target.closest && event.target.closest('[data-intake-config-remove]');
       if (remove && modal.contains(remove)) {
@@ -756,7 +804,11 @@
       draft.query.measures = [...valueList.querySelectorAll('.oabPivotValueRow')].map(row => {
         const field = valuePool.find(item => item.id === row.querySelector('.intakePivotValueField')?.value);
         const agg = clean(row.querySelector('.intakePivotValueAgg')?.value).toUpperCase();
-        return field ? { ...clone(field), agg: INTAKE_AGGREGATES.includes(agg) ? agg : 'SUM' } : null;
+        if (!field) return null;
+        const next = { ...clone(field), agg: INTAKE_AGGREGATES.includes(agg) ? agg : 'SUM' };
+        delete next.weightSource; delete next.weightId;
+        if (next.agg === 'WAVG') next.weightSource = clean(row.querySelector('.intakePivotValueWeight')?.value) || INTAKE_DEFAULT_WEIGHT_SOURCE;
+        return next;
       }).filter(Boolean);
       draft.display.grouped = Boolean(modal.querySelector('#intakeGroupedViewInput')?.checked);
       draft.display.showSubtotals = Boolean(modal.querySelector('#intakeShowSubtotalsInput')?.checked);
@@ -860,9 +912,17 @@
       closePopover();
       void saveView(next);
     });
-    void requestJson('/api/intake/distinct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fieldId: field.id, limit: 500 }) })
+    void requestJson('/api/intake/distinct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fieldId: field.id, sourceUniqueName: field.sourceUniqueName, limit: 500 }) })
       .then(result => { const values = Array.isArray(result.values) ? result.values : localValues; draw([...new Set([...values, ...selected])].sort((a, b) => a.localeCompare(b, isEnglish() ? 'en' : 'tr', { numeric: true }))); })
-      .catch(() => { if (!localValues.length) list.innerHTML = `<div class="intakeConfigEmpty">${esc(text('Canlı kaynak kullanılamıyor; filtre değerleri yalnızca yüklenmiş snapshot üzerinden gösterilebilir.', 'Live source is unavailable; filter values can only be shown from a loaded snapshot.'))}</div>`; });
+      .catch(error => {
+        if (localValues.length) return;
+        // Yalnız gerçek kaynak kesintisi "canlı kaynak yok" olarak anlatılır;
+        // alan/tip hatası kendi mesajıyla görünür.
+        const message = /ulaşılamıyor|VPN/i.test(error && error.message || '') || !(error && error.message)
+          ? text('Canlı kaynak kullanılamıyor; filtre değerleri yalnızca yüklenmiş snapshot üzerinden gösterilebilir.', 'Live source is unavailable; filter values can only be shown from a loaded snapshot.')
+          : error.message;
+        list.innerHTML = `<div class="intakeConfigEmpty">${esc(message)}</div>`;
+      });
   }
 
   function renameHeader(header) {
