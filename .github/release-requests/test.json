@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.191",
-  "commit_sha": "d264f4fe5869ec05882c0ae6087e45a39a6a01c6",
-  "release_notes": "Buyer Log 7.0.191 TEST: INTAKE no longer loses dimension values (blank Dönem Tanım / UrunKlasmanTanım rows) after saving the view; saved field identities, filter values and labels are preserved and snapshots are remapped to current field IDs. Filter value lists no longer report a misleading 'live source unavailable' message. New weighted-average summarization: SEZON OTB (REZERV DAHİL) subtotals and grand total are weighted by Güncel Alım Bütçe. 'Check for Updates' menu label is unified for all users."
+  "version": "7.0.192",
+  "commit_sha": "e5d34281e1cedd1f1b889155c3b48618b21edbcf",
+  "release_notes": "Buyer Log 7.0.192 TEST: PLM sample requests (CoreNectum Requests tab: Artwork, Fit Sample, Perfect Sign Off, PPS) are tracked in CP. New CP › PLM SYNC › Update PLM Sample Status fetches requests for selected (or filtered) CP rows. Checklist PPS / S/Off / critical sample / new Artwork questions close automatically when PLM has an approved request; open or rejected requests are shown with their PLM status; questions without a PLM request are still asked. Right-click a style in CP/Orders › PLM sample requests shows the PLM request table. Collection PLM Sync does not fetch sample requests."
 }
