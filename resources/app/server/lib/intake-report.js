@@ -55,8 +55,10 @@ const DEFAULT_MEASURE_DEFINITIONS = Object.freeze([
   ['Yedek Bütçe Sipariş', '[Measures].[Yedek Bütçe Sipariş]'],
   ['Sezon Öncesi Güncel Alım Bütçe OTB Miktar', '[Measures].[Sezon Öncesi Güncel Alım Bütçe OTB Miktar]'],
   ['Sezon Öncesi Güncel Alım Bütçe OTB Miktar ( Terminal )', '[Measures].[Sezon Öncesi Güncel Alım Bütçe OTB Miktar ( Terminal )]'],
-  ['SEZON OTB (REZERV DAHİL)', '[Measures].[Güncel Alım Bütçe OTB Oranı]'],
-].map(([defaultLabel, sourceUniqueName]) => ({ defaultLabel, sourceUniqueName, fieldType: 'measure' })));
+  // Oran measure'ı satırlarda toplanamaz: alt toplam, paydası olan Güncel Alım
+  // Bütçe ile ağırlıklı ortalamadır (Σ oran×bütçe / Σ bütçe = Σ pay / Σ payda).
+  ['SEZON OTB (REZERV DAHİL)', '[Measures].[Güncel Alım Bütçe OTB Oranı]', { agg: 'WAVG', weightSource: '[Measures].[Güncel Alım Bütçe]' }],
+].map(([defaultLabel, sourceUniqueName, options]) => ({ defaultLabel, sourceUniqueName, fieldType: 'measure', ...(options || {}) })));
 
 const DEFAULT_FIELD_DEFINITIONS = Object.freeze([
   ...DEFAULT_FILTER_DEFINITIONS,
@@ -70,7 +72,7 @@ function keyOf(value) {
   return clean(value).replace(/\s+/g, ' ').toLocaleLowerCase('tr-TR');
 }
 
-const INTAKE_VIEW_VERSION = 2;
+const INTAKE_VIEW_VERSION = 3;
 const INTAKE_ZERO_BUDGET_SOURCE = '[Measures].[Güncel Alım Bütçe]';
 const INTAKE_LEGACY_DEFAULT_FILTERS_TO_REMOVE = new Set([
   '[Dim_Urun].[MerchAltGrupTanim]',
@@ -79,7 +81,8 @@ const INTAKE_LEGACY_DEFAULT_FILTERS_TO_REMOVE = new Set([
 ].map(keyOf));
 
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
-const INTAKE_AGGREGATES = Object.freeze(['SUM', 'AVG', 'COUNT', 'MIN', 'MAX', 'FIRST']);
+const INTAKE_AGGREGATES = Object.freeze(['SUM', 'AVG', 'WAVG', 'COUNT', 'MIN', 'MAX', 'FIRST']);
+const INTAKE_RATIO_SOURCE = '[Measures].[Güncel Alım Bütçe OTB Oranı]';
 function normalizeAggregate(value, fallback = 'SUM') {
   const agg = clean(value).toUpperCase();
   return INTAKE_AGGREGATES.includes(agg) ? agg : fallback;
@@ -94,6 +97,15 @@ function sourceParts(sourceUniqueName) {
   const parts = [...clean(sourceUniqueName).matchAll(/\[([^\]]*)\]/g)].map(match => match[1]);
   if (parts[0] && keyOf(parts[0]) === 'measures') return { table: 'Measures', name: parts[parts.length - 1] || '' };
   return { table: parts[0] || '', name: parts[parts.length - 1] || '' };
+}
+
+/* Kaynak karşılaştırma anahtarı. Canlı şema sütunu [Tablo].[Sütun], varsayılan
+   tanım ve eski kayıtlar ise hiyerarşi seviyesi [Tablo].[Sütun].[Sütun]
+   biçiminde gelir; ikisi aynı sütundur ve aynı anahtara iner. */
+function sourceKey(sourceUniqueName) {
+  const parts = [...clean(sourceUniqueName).matchAll(/\[([^\]]*)\]/g)].map(match => keyOf(match[1]));
+  if (parts.length === 3 && parts[1] === parts[2]) parts.pop();
+  return parts.length ? parts.join('\u0000') : keyOf(sourceUniqueName);
 }
 
 function createField(definition = {}) {
@@ -120,8 +132,16 @@ function createField(definition = {}) {
     name,
     folder: clean(definition.folder),
     dataType: clean(definition.dataType || definition.data_type || definition.DATA_TYPE || definition.type),
-    ...(fieldType === 'measure' ? { agg: normalizeAggregate(definition.agg || definition.aggregate, 'SUM') } : {}),
+    ...(fieldType === 'measure' ? measureSummary(definition.agg || definition.aggregate, definition.weightSource) : {}),
   };
+}
+
+function measureSummary(aggValue, weightValue, fallback = 'SUM') {
+  const agg = normalizeAggregate(aggValue, fallback);
+  const weightSource = clean(weightValue);
+  return agg === 'WAVG' && weightSource
+    ? { agg, weightSource, weightId: stableFieldId(weightSource) }
+    : { agg: agg === 'WAVG' ? 'AVG' : agg };
 }
 
 function defaultFields() { return DEFAULT_FIELD_DEFINITIONS.map(createField).filter(Boolean); }
@@ -146,7 +166,7 @@ function fieldMap(fields) {
     const field = createField(raw);
     if (!field) continue;
     byId.set(field.id, field);
-    bySource.set(keyOf(field.sourceUniqueName), field);
+    bySource.set(sourceKey(field.sourceUniqueName), field);
     if (!byLabel.has(keyOf(field.defaultLabel))) byLabel.set(keyOf(field.defaultLabel), field);
   }
   return { byId, bySource, byLabel };
@@ -154,14 +174,18 @@ function fieldMap(fields) {
 
 function resolveDefaultField(definition, maps) {
   const parsed = sourceParts(definition.sourceUniqueName);
-  const source = maps.bySource.get(keyOf(definition.sourceUniqueName))
+  const source = maps.bySource.get(sourceKey(definition.sourceUniqueName))
     || [...maps.byId.values()].find(field => keyOf(field.table) === keyOf(parsed.table)
       && keyOf(field.name) === keyOf(parsed.name)
       && field.fieldType === definition.fieldType);
   if (!source) return null;
   // OTB oranı modelde teknik bir measure adı taşır; ilk görünüm yine Excel'deki
   // business başlığını kullanır. SourceLabel ise gerçek model adını korur.
-  return { ...source, defaultLabel: definition.defaultLabel };
+  return {
+    ...source,
+    defaultLabel: definition.defaultLabel,
+    ...(source.fieldType === 'measure' && definition.agg ? measureSummary(definition.agg, definition.weightSource) : {}),
+  };
 }
 
 function defaultViewConfig() {
@@ -187,21 +211,22 @@ function defaultViewConfig() {
 
 function refFromInput(raw, maps, allowDefault = true) {
   if (raw && typeof raw === 'object') {
-    if (raw.id && maps.byId.has(clean(raw.id))) {
-      const live = maps.byId.get(clean(raw.id));
-      return { ...live, defaultLabel: clean(raw.defaultLabel) || live.defaultLabel, ...(live.fieldType === 'measure' ? { agg: normalizeAggregate(raw.agg || raw.aggregate || live.agg, 'SUM') } : {}) };
-    }
-    if (raw.sourceUniqueName && maps.bySource.has(keyOf(raw.sourceUniqueName))) {
-      const live = maps.bySource.get(keyOf(raw.sourceUniqueName));
-      return { ...live, defaultLabel: clean(raw.defaultLabel) || live.defaultLabel, ...(live.fieldType === 'measure' ? { agg: normalizeAggregate(raw.agg || raw.aggregate || live.agg, 'SUM') } : {}) };
-    }
+    const withSaved = live => ({
+      ...live,
+      defaultLabel: clean(raw.defaultLabel) || live.defaultLabel,
+      ...(live.fieldType === 'measure'
+        ? measureSummary(raw.agg || raw.aggregate || live.agg, raw.agg || raw.aggregate ? raw.weightSource : live.weightSource)
+        : {}),
+    });
+    if (raw.id && maps.byId.has(clean(raw.id))) return withSaved(maps.byId.get(clean(raw.id)));
+    if (raw.sourceUniqueName && maps.bySource.has(sourceKey(raw.sourceUniqueName))) return withSaved(maps.bySource.get(sourceKey(raw.sourceUniqueName)));
     if (raw.defaultLabel && maps.byLabel.has(keyOf(raw.defaultLabel))) return maps.byLabel.get(keyOf(raw.defaultLabel));
     if (!maps.byId.size && allowDefault) return createField(raw);
     return null;
   }
   const value = clean(raw);
   if (!value) return null;
-  return maps.byId.get(value) || maps.bySource.get(keyOf(value)) || (allowDefault ? maps.byLabel.get(keyOf(value)) : null) || null;
+  return maps.byId.get(value) || maps.bySource.get(sourceKey(value)) || (allowDefault ? maps.byLabel.get(keyOf(value)) : null) || null;
 }
 
 function distinctFields(list) {
@@ -226,20 +251,51 @@ function reconcileViewConfig(input, availableFields = []) {
     const resolved = resolveDefaultField(def, maps.byId.size ? maps : fallbackMap);
     return resolved ? clone(resolved) : null;
   }).filter(Boolean);
+  const idAliases = new Map();
+  const byFieldId = (record, id) => {
+    if (!record || typeof record !== 'object') return undefined;
+    if (Object.prototype.hasOwnProperty.call(record, id)) return record[id];
+    const alias = idAliases.get(id);
+    return alias ? record[alias] : undefined;
+  };
+  const resolveRaw = raw => {
+    // Live schema is authoritative when available. When it is unavailable,
+    // retain explicit saved field objects so a VPN/network outage cannot
+    // silently erase a user's custom INTAKE columns.
+    if (hasLiveFields) return refFromInput(raw, maps, false);
+    // Kaynak kimliği taşıyan kayıtlı alan olduğu gibi korunur. Etiketle
+    // varsayılana eşlemek alan id'sini değiştiriyor; snapshot satırları,
+    // filtre değerleri ve özel etiketler eski id'de kaldığı için tablo
+    // boyutları "(boş)" görünüyordu.
+    if (raw && typeof raw === 'object' && clean(raw.sourceUniqueName)) {
+      return createField(raw);
+    }
+    return refFromInput(raw, fallbackMap, false) || refFromInput(raw, maps, true);
+  };
   const listFor = (key, definitions) => {
     if (!sourceQuery || !Object.prototype.hasOwnProperty.call(sourceQuery, key)) return defaultsFor(definitions);
     const values = Array.isArray(sourceQuery[key]) ? sourceQuery[key] : [];
     return distinctFields(values.map(raw => {
-      // Live schema is authoritative when available. When it is unavailable,
-      // retain explicit saved field objects so a VPN/network outage cannot
-      // silently erase a user's custom INTAKE columns.
-      if (hasLiveFields) return refFromInput(raw, maps, false);
-      return refFromInput(raw, fallbackMap, false) || refFromInput(raw, maps, true);
+      const resolved = resolveRaw(raw);
+      // Kayıtlı id canlı id'den farklıysa (eski üç parçalı kimlik) id'ye bağlı
+      // filtre değeri, etiket, genişlik ve sıralama eski id'den taşınır.
+      const savedId = raw && typeof raw === 'object' ? clean(raw.id) : '';
+      if (resolved && savedId && savedId !== resolved.id) idAliases.set(resolved.id, savedId);
+      return resolved;
     }).filter(Boolean));
   };
   const rows = listFor('rows', DEFAULT_ROW_DEFINITIONS).filter(field => field.fieldType === 'dimension');
   const columns = listFor('columns', []).filter(field => field.fieldType === 'dimension');
-  const measures = listFor('measures', DEFAULT_MEASURE_DEFINITIONS).filter(field => field.fieldType === 'measure');
+  let measures = listFor('measures', DEFAULT_MEASURE_DEFINITIONS).filter(field => field.fieldType === 'measure');
+  /* v3 — OTB oranı eski varsayılanında SUM ile özetleniyordu; oranların
+     toplamı anlamsız olduğundan bir kez ağırlıklı ortalamaya taşınır.
+     Kullanıcının bilinçli seçtiği başka özetleme (AVG, MAX…) korunur. */
+  if (source && Number(source.version || 0) < 3) {
+    const ratio = DEFAULT_MEASURE_DEFINITIONS.find(def => sourceKey(def.sourceUniqueName) === sourceKey(INTAKE_RATIO_SOURCE));
+    measures = measures.map(field => sourceKey(field.sourceUniqueName) === sourceKey(INTAKE_RATIO_SOURCE) && field.agg === 'SUM'
+      ? { ...field, ...measureSummary(ratio.agg, ratio.weightSource) }
+      : field);
+  }
   let filters = listFor('filters', DEFAULT_FILTER_DEFINITIONS).filter(field => field.fieldType === 'dimension');
   const rawValues = sourceQuery && sourceQuery.filterValues && typeof sourceQuery.filterValues === 'object' ? sourceQuery.filterValues : {};
 
@@ -248,7 +304,7 @@ function reconcileViewConfig(input, availableFields = []) {
      davranışı sessizce değiştirmemek için filtre korunur; boş/All durumundaki
      eski varsayılanlar bir kez temizlenir. Alanlar şemada kalır ve + Filtre
      ekle üzerinden yeniden seçilebilir. */
-  if (source && Number(source.version || 0) < INTAKE_VIEW_VERSION) {
+  if (source && Number(source.version || 0) < 2) {
     filters = filters.filter(field => {
       if (!INTAKE_LEGACY_DEFAULT_FILTERS_TO_REMOVE.has(keyOf(field.sourceUniqueName))) return true;
       const candidates = [rawValues[field.id], rawValues[field.sourceUniqueName], rawValues[field.defaultLabel]];
@@ -261,7 +317,7 @@ function reconcileViewConfig(input, availableFields = []) {
   const activeIds = new Set(active.map(field => field.id));
   const filterValues = {};
   for (const field of filters) {
-    const candidates = [rawValues[field.id], rawValues[field.sourceUniqueName], rawValues[field.defaultLabel]];
+    const candidates = [byFieldId(rawValues, field.id), rawValues[field.sourceUniqueName], rawValues[field.defaultLabel]];
     const values = candidates.find(item => Array.isArray(item)) || [];
     const cleanValues = [...new Set(values.map(clean).filter(Boolean))].slice(0, 1000);
     if (cleanValues.length) filterValues[field.id] = cleanValues;
@@ -269,17 +325,19 @@ function reconcileViewConfig(input, availableFields = []) {
   const labels = {};
   const rawLabels = sourceDisplay.labels && typeof sourceDisplay.labels === 'object' ? sourceDisplay.labels : {};
   for (const field of active) {
-    const label = clean(rawLabels[field.id]);
+    const label = clean(byFieldId(rawLabels, field.id));
     if (label && keyOf(label) !== keyOf(field.defaultLabel)) labels[field.id] = label.slice(0, 160);
   }
   const widths = {};
   const rawWidths = sourceDisplay.widths && typeof sourceDisplay.widths === 'object' ? sourceDisplay.widths : {};
   for (const field of active) {
-    const width = Number(rawWidths[field.id]);
+    const width = Number(byFieldId(rawWidths, field.id));
     if (Number.isFinite(width)) widths[field.id] = Math.max(60, Math.min(1000, Math.round(width)));
   }
   const rawSort = sourceDisplay.sort && typeof sourceDisplay.sort === 'object' ? sourceDisplay.sort : {};
-  const sort = activeIds.has(clean(rawSort.id)) ? { id: clean(rawSort.id), dir: Number(rawSort.dir) === -1 ? -1 : 1 } : { id: '', dir: 1 };
+  const sortId = activeIds.has(clean(rawSort.id)) ? clean(rawSort.id)
+    : ([...idAliases].find(([, alias]) => alias === clean(rawSort.id)) || [''])[0];
+  const sort = sortId ? { id: sortId, dir: Number(rawSort.dir) === -1 ? -1 : 1 } : { id: '', dir: 1 };
   const collapsed = Array.isArray(sourceDisplay.collapsed) ? sourceDisplay.collapsed.map(clean).filter(id => activeIds.has(id)) : [];
   const grouped = sourceDisplay.grouped !== false;
   const showSubtotals = sourceDisplay.showSubtotals !== false;
@@ -295,8 +353,10 @@ function reconcileViewConfig(input, availableFields = []) {
     const filterIds = new Set(filters.map(field => field.id));
     const syncValues = {};
     const rawSyncValues = rawSync.values && typeof rawSync.values === 'object' ? rawSync.values : {};
-    for (const [id, values] of Object.entries(rawSyncValues)) {
-      if (!filterIds.has(id) || !Array.isArray(values)) continue;
+    const syncIdFor = id => filterIds.has(id) ? id : ([...idAliases].find(([to, alias]) => alias === id && filterIds.has(to)) || [''])[0];
+    for (const [rawId, values] of Object.entries(rawSyncValues)) {
+      const id = syncIdFor(rawId);
+      if (!id || !Array.isArray(values)) continue;
       const list = [...new Set(values.map(clean).filter(Boolean))].slice(0, 1000);
       if (list.length) syncValues[id] = list;
     }
@@ -414,7 +474,8 @@ function buildIntakeQuery({ fields = [], viewConfig, horizon = null, maxRows = I
     return [`TREATAS({ ${intakeFilterValues(field, values).join(', ')} }, ${daxRef(field)})`];
   });
   const groupExpressions = rows.map(daxRef);
-  const measureExpressions = measures.flatMap(field => [`"${field.id}", ${daxRef(field)}`]);
+  const weights = intakeWeightFields(config, available);
+  const measureExpressions = [...measures, ...weights].flatMap(field => [`"${field.id}", ${daxRef(field)}`]);
   const zeroBudgetTarget = sourceParts(INTAKE_ZERO_BUDGET_SOURCE);
   const currentBudgetField = available.find(field => field && field.fieldType === 'measure' && (
     keyOf(field.sourceUniqueName) === keyOf(INTAKE_ZERO_BUDGET_SOURCE)
@@ -456,7 +517,7 @@ function buildIntakeQuery({ fields = [], viewConfig, horizon = null, maxRows = I
   const query = `EVALUATE\nTOPN(${rowLimit},\n  ${reportTable}\n)`;
   const headerMap = {};
   rows.forEach(field => outputAliases(field).forEach(alias => { headerMap[alias] = field.id; }));
-  measures.forEach(field => { headerMap[field.id] = field.id; });
+  [...measures, ...weights].forEach(field => { headerMap[field.id] = field.id; });
   return {
     query,
     maxRows: rowLimit,
@@ -471,9 +532,30 @@ function buildIntakeQuery({ fields = [], viewConfig, horizon = null, maxRows = I
   };
 }
 
+/* WAVG özetlemesinin ağırlık measure'ları. Görünümde zaten olan measure tekrar
+   istenmez; olmayan, yalnız satır verisinde taşınan gizli bir sütun olur. */
+function intakeWeightFields(config, available) {
+  const measures = config && config.query && Array.isArray(config.query.measures) ? config.query.measures : [];
+  const present = new Set(measures.map(field => sourceKey(field.sourceUniqueName)));
+  const pool = Array.isArray(available) && available.length ? available : null;
+  const out = [], seen = new Set();
+  for (const field of measures) {
+    if (field.agg !== 'WAVG' || !field.weightSource) continue;
+    const key = sourceKey(field.weightSource);
+    if (present.has(key) || seen.has(key)) continue;
+    const weight = pool
+      ? pool.find(item => item && item.fieldType === 'measure' && sourceKey(item.sourceUniqueName) === key)
+      : createField({ sourceUniqueName: field.weightSource, fieldType: 'measure' });
+    if (!weight) continue;
+    seen.add(key);
+    out.push(createField({ ...weight, id: stableFieldId(field.weightSource), agg: 'SUM', weightSource: '' }));
+  }
+  return out;
+}
+
 function normalizeRows(rows, viewConfig) {
   const config = viewConfig || defaultViewConfig();
-  const fields = [...config.query.rows, ...config.query.columns, ...config.query.measures];
+  const fields = [...config.query.rows, ...config.query.columns, ...config.query.measures, ...intakeWeightFields(config, null)];
   return (Array.isArray(rows) ? rows : []).map(row => {
     const output = {};
     for (const field of fields) {
@@ -481,6 +563,31 @@ function normalizeRows(rows, viewConfig) {
       const key = aliases.find(candidate => Object.prototype.hasOwnProperty.call(row || {}, candidate));
       output[field.id] = key ? row[key] : '';
     }
+    return output;
+  });
+}
+
+/* Snapshot satırları kaydedildikleri görünümün id'leriyle tutulur. Görünüm
+   sonradan farklı id'lerle uzlaştırılmışsa (eski sürüm, şema biçimi değişimi)
+   satırlar kaynak adıyla güncel id'lere taşınır; aksi hâlde boyutlar boş görünür. */
+function remapRows(rows, fromConfig, toConfig) {
+  const list = Array.isArray(rows) ? rows : [];
+  if (!fromConfig || !fromConfig.query || !toConfig || !toConfig.query) return list;
+  const fieldsOf = config => [
+    ...(config.query.rows || []), ...(config.query.columns || []), ...(config.query.measures || []),
+    ...intakeWeightFields(config, null),
+  ];
+  const fromByKey = new Map();
+  fieldsOf(fromConfig).forEach(field => { if (field && field.id) fromByKey.set(sourceKey(field.sourceUniqueName), field.id); });
+  const moves = fieldsOf(toConfig)
+    .map(field => [field.id, fromByKey.get(sourceKey(field.sourceUniqueName))])
+    .filter(([to, from]) => to && from && to !== from);
+  if (!moves.length) return list;
+  return list.map(row => {
+    const output = { ...(row || {}) };
+    moves.forEach(([to, from]) => {
+      if (!Object.prototype.hasOwnProperty.call(output, to) && Object.prototype.hasOwnProperty.call(output, from)) output[to] = output[from];
+    });
     return output;
   });
 }
@@ -499,6 +606,7 @@ module.exports = {
   intakeReportRowLimit,
   stableFieldId,
   sourceParts,
+  sourceKey,
   createField,
   defaultFields,
   defaultViewConfig,
@@ -513,4 +621,6 @@ module.exports = {
   INTAKE_AGGREGATES, normalizeAggregate,
   buildIntakeQuery,
   normalizeRows,
+  remapRows,
+  intakeWeightFields,
 };

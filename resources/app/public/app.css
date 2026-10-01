@@ -4395,6 +4395,7 @@ tr.blRemoteChanged>td{animation:blRemoteChangedFade 5s ease-out 1;}
 .intakeConfigList{display:grid;gap:4px;min-height:28px;}
 .intakeConfigRow{display:flex;align-items:center;gap:5px;min-width:0;padding:5px 6px;border:1px solid var(--line);background:var(--card);cursor:grab;}
 .intakeConfigRow:active{cursor:grabbing;}
+.intakeConfigRow .intakePivotValueWeight{flex:0 1 170px;min-width:0;}
 .intakeDrag{flex:none;color:var(--muted);font-size:14px;letter-spacing:-3px;}
 .intakeConfigName{display:flex;flex:1;flex-direction:column;min-width:0;color:var(--ink);font-size:var(--fs-sm);font-weight:650;}
 .intakeConfigName small{margin-top:2px;color:var(--muted);font:var(--fs-xs) var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
