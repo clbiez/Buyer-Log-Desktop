@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.189",
-  "source": "test-v7.0.189",
-  "requestedAt": "2026-10-01T10:23:00Z",
-  "reason": "promote-latest-tested-build-v7.0.189"
+  "version": "7.0.190",
+  "source": "test-v7.0.190",
+  "requestedAt": "2026-10-01T12:01:48Z",
+  "reason": "plm-sync-image-identity-oab-backlog-v7.0.190"
 }
