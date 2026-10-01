@@ -22281,7 +22281,7 @@ function kolColourOverrideSpec(key){
   // Internal editable inputs inside a projected cell participate directly in
   // the same inheritance system even though they are not top-level columns.
   if(KOL_LANDED_INPUT_COLS[visibleKey])return {visibleKey,storageKeys:[visibleKey],eligible:!kolIsColorSpecific(visibleKey),projected:false};
-  const descriptor=kolDescriptorByKey(visibleKey);
+  const descriptor=kolFieldDescriptorByKey(visibleKey);
   if(!descriptor||descriptor.kind!=='base')return null; // synthetic/display-only columns
   const column=descriptor.col;
   if(!column)return null;
@@ -24395,6 +24395,15 @@ function kolDescriptorWidth(d){
 function kolDescriptorByKey(key){
   return kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
 }
+// Görünüm (gizli/görünür sütun) yalnız ÇİZİMİ belirler. Yazma kuralları, düzenlenebilirlik,
+// modele bağlılık ve bağımlı alan (örn. In Store Week → In Store → Retail) kararları
+// sütun gizli olsa bile aynı alan tanımını kullanmalıdır; aksi halde gizli alan sessizce
+// salt okunur sayılır ve bağımlı değer eski kalır.
+function kolFieldDescriptorByKey(key){
+  const visible=kolDescriptorCatalog().get(key);if(visible)return visible;
+  const base=kolAllOrderedCols().find(c=>c.k===key);
+  return base?{kind:'base',k:base.k,label:kolColumnLabel(base),col:base}:kolDescriptorByKey(key);
+}
 function kolWeightedAverage(rows,getPrice,getQty){
   // getQty isteğe bağlı: verilmezse Koleksiyon'un kendi adet alanı (row.quantity)
   // kullanılır — mevcut çağıranların davranışı DEĞİŞMEZ. CP/Orders 'Order
@@ -25631,7 +25640,7 @@ function kolSpreadsheetFormulaInfo(key){
   if(key==='__bestPrice__')return 'Calculated from current valid quotations';
   if(key==='__confirmedName__')return 'Approved quotation manufacturer';
   if(key==='__confirmedPrice__')return 'Approved quotation price';
-  const d=kolDescriptorByKey(key),c=d?.col;if(!c)return '';
+  const d=kolFieldDescriptorByKey(key),c=d?.col;if(!c)return '';
   if(c.k==='royalty'||c.k==='hologramCost')return 'Resolved from current pricing rule';
   if(c.k==='fob')return 'Confirmed / Best / Target price ÷ (1 − Royalty %) + Hologram Cost';
   if(c.exToRetail)return 'Retail date − Ex-Factory date';
@@ -25645,7 +25654,7 @@ function kolSpreadsheetColumnMeta(key){
   if(String(key||'').startsWith('pricing:'))return {key,label:String(key).slice(8),type:'money',access:'editable',editable:true,calculated:false,inheritance:'model',overrideable:true,formula:''};
   const landedInput=KOL_LANDED_INPUT_COLS[key];
   if(landedInput)return {key,label:kolStyleFieldLabel(landedInput),type:key==='trPrice'?'money':'number',access:'editable',editable:true,formula:'',col:landedInput};
-  const d=kolDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
+  const d=kolFieldDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
   if(d.kind!=='base')return {key,label:d.label,type:d.kind==='confirmedName'?'text':'money',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   const c=d.col;
   const calculated=Boolean(c.ruleReadonly||c.formulaReadonly||c.exToRetail||c.endeksmatik||c.ydLanded||c.trLanded);

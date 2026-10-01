@@ -81,7 +81,8 @@ test('manufacturer price projection joins the same persisted pricing override',(
 test('Endeksmatik and custom/formatted cells remain metadata-driven override candidates',()=>{
   const spec=between(APP,'function kolColourOverrideSpec(key){','function kolColourOverrideStorageKeys(');
   assert.match(APP,/endeksmatik:\['endeksmatikData'\]/);
-  assert.match(spec,/const descriptor=kolDescriptorByKey\(visibleKey\)/);
+  // Gizli sütun da aynı alan tanımıyla çözülür (görünüm yalnız çizimi belirler).
+  assert.match(spec,/const descriptor=kolFieldDescriptorByKey\(visibleKey\)/);
   assert.match(spec,/descriptor\.kind!=='base'/);
   assert.match(spec,/KOL_COLOUR_OVERRIDE_PROJECTION_KEYS\[column\.k\]\|\|\[column\.k\]/);
 });
