@@ -6,7 +6,7 @@ module.exports = function registerHolidayRoutes(app, deps) {
     userAccess,
   } = deps;
 
-  app.get('/api/world-clock-holidays', userAccess.requireAnyArea('overview'), async (req, res) => {
+app.get('/api/world-clock-holidays', userAccess.requireAnyArea('overview'), async (req, res) => {
     try {
       const countryCode = String(req.query.country || '').trim().toUpperCase();
       const year = Number(req.query.year);
