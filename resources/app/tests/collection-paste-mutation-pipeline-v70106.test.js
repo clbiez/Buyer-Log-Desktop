@@ -161,3 +161,38 @@ test('batch transaction still has one undo, one persistence cycle and one final 
   assert.match(batch,/pushUndo:false,save:false,syncQuotations:false,deferDependencies:true/);
   assert.match(batch,/kolRows=before/);
 });
+
+test('hidden In Store column stays writable so a picked week moves the In Store date',()=>{
+  // Regression: görünümde In Store sütunu gizliyken hafta seçimi tarihi
+  // güncellemiyordu. Gizli sütun descriptor kataloğunda olmadığı için meta
+  // editable:false dönüyor, inStore yazımı düşüyor ve ay sürücüsü tarihi
+  // ayın ilk haftasına (örn. 26.04.27) geri çekiyordu.
+  const source=between(APP,'function kolFieldDescriptorByKey(key){','function kolWeightedAverage(').trim()+'\n'+between(APP,'function kolSpreadsheetColumnMeta(key){','function kolSpreadsheetRawValue(').trim();
+  const col={k:'inStore',label:'In Store',date:true};
+  const meta=new Function('deps',`
+    const L=v=>v,KOL_LANDED_INPUT_COLS={},kolHiddenCols=new Set(['inStore']);
+    const kolAllOrderedCols=()=>[deps.col];
+    const kolColumnLabel=c=>c.label;
+    const kolDescriptorCatalog=()=>new Map();
+    const kolDescriptorByKey=key=>kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
+    const kolSpreadsheetFormulaInfo=()=>'';
+    const kolFieldMetadata=()=>({inheritance:'model'});
+    ${source}
+    return kolSpreadsheetColumnMeta;
+  `)({col});
+  const result=meta('inStore');
+  assert.equal(result.editable,true);
+  assert.equal(result.type,'date');
+  assert.equal(result.col,col);
+});
+
+test('write-side Collection lookups resolve hidden columns; only rendering follows visibility',()=>{
+  const spec=between(APP,'function kolColourOverrideSpec(key){','function kolCellLinkedToModel(');
+  assert.match(spec,/kolFieldDescriptorByKey\(visibleKey\)/);
+  assert.doesNotMatch(spec,/kolDescriptorByKey\(/);
+  const meta=between(APP,'function kolSpreadsheetColumnMeta(key){','function kolSpreadsheetRawValue(');
+  assert.match(meta,/kolFieldDescriptorByKey\(key\)/);
+  assert.doesNotMatch(meta,/kolDescriptorByKey\(/);
+  const formula=between(APP,'function kolSpreadsheetFormulaInfo(key){','function kolSpreadsheetColumnMeta(key){');
+  assert.match(formula,/kolFieldDescriptorByKey\(key\)/);
+});
