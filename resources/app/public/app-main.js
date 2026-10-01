@@ -27866,20 +27866,6 @@ async function kolPlmSyncImageStep(mode,button){
   try{ return await plmSyncImagesStep('koleksiyon',mode,'plm',text=>{const span=button&&button.querySelector('span');if(span)span.textContent=text;}); }
   catch(err){ return {saved:0,requested:0,failed:0,skipped:false,error:err}; }
 }
-/* Koleksiyon PLM Sync'in NUMUNE TALEBİ adımı (CoreNectum Requests sekmesi).
-   Görsel adımı gibi ikincildir: hatası alan güncellemesini geri aldırmaz.
-   Model linkleri /api/plm-sync/fetch ile tazelendiği için styleId çoğunlukla
-   sunucuda hazırdır. Sonuç CP kontrol listesine PLM kanıtı olarak akar. */
-async function kolPlmSyncSampleRequestStep(plmIds){
-  try{
-    if(!window.BLPlmSampleRequests&&window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('deferredUi');
-    const api=window.BLPlmSampleRequests;
-    return api?await api.syncStep(plmIds):null;
-  }catch(err){return {ok:false,error:err};}
-}
-function kolPlmSyncSampleRequestSuffix(result){
-  return window.BLPlmSampleRequests?window.BLPlmSampleRequests.syncStepSuffix(result):'';
-}
 function kolPlmSyncImageSuffix(images){
   if(!images||images.skipped)return '';
   if(images.error)return appLang==='en'?` Images failed: ${plmSyncErrorMessage(images.error)}`:` Görseller alınamadı: ${plmSyncErrorMessage(images.error)}`;
@@ -27928,12 +27914,11 @@ async function kolPlmSyncRun(mode,button,options={}){
     // Alan değişikliği olmasa bile görseller eksik olabilir — tek buton
     // vaadi gereği görsel adımı yine de çalışır.
     const images=options.includeImages===false?{saved:0,requested:0,failed:0,skipped:true}:await kolPlmSyncImageStep(mode,button);
-    const samples=options.includeSampleRequests===false?null:await kolPlmSyncSampleRequestStep(plmIds);
     const message=appLang==='en'
       ?`${summary.checked} checked · all up to date${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
       :`${summary.checked} kontrol edildi · hepsi güncel${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-    showToast(message+kolPlmSyncImageSuffix(images)+kolPlmSyncSampleRequestSuffix(samples),{icon:false,duration:9000});
-    return {ok:true,applied:0,summary,images,samples};
+    showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
+    return {ok:true,applied:0,summary,images};
   }
   const approved=await showPlmSyncPreview(mode,summary);
   if(!approved){kolPlmSyncStampStatus(targetRows,summary,{applied:false});return {ok:true,applied:0,summary,cancelled:true};}
@@ -27948,12 +27933,11 @@ async function kolPlmSyncRun(mode,button,options={}){
   // (kolPushUndo) iken görsel indirme uzun sürebilir; kullanıcı tabloyu
   // güncellenmiş halde görürken indirme devam eder.
   const images=options.includeImages===false?{saved:0,requested:0,failed:0,skipped:true}:await kolPlmSyncImageStep(mode,button);
-  const samples=options.includeSampleRequests===false?null:await kolPlmSyncSampleRequestStep(plmIds);
   const message=appLang==='en'
     ?`${summary.checked} checked · ${summary.changed.length} updated · ${summary.unchanged.length} unchanged${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
     :`${summary.checked} kontrol edildi · ${summary.changed.length} güncellendi · ${summary.unchanged.length} değişmedi${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-  showToast(message+kolPlmSyncImageSuffix(images)+kolPlmSyncSampleRequestSuffix(samples),{icon:false,duration:12000});
-  return {ok:true,applied:summary.changed.length,summary,images,samples};
+  showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
+  return {ok:true,applied:summary.changed.length,summary,images};
 }
 async function kolPlmSyncButtonRun(mode,button){
   if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
@@ -31892,6 +31876,33 @@ function bindCapacityRequestButton(id,rowsFn,source){
 }
 bindCapacityRequestButton('kolCapacityRequestBtn',kolCapacityRequestRows,'collection');
 bindCapacityRequestButton('cpCapacityRequestBtn',cpCapacityRequestRows,'cp');
+/* PLM NUMUNE TALEPLERİ (CoreNectum Requests) — CP aşamasında takip edilir
+   (kullanıcı kararı: koleksiyon aşamasında numune çalışılmaz, bu yüzden
+   Koleksiyon PLM Sync numune çekmez). Seçili satır varsa yalnız onlar,
+   yoksa CP'de filtreyle görünen satırların modelleri PLM'den tazelenir.
+   Sonuç CP kontrol listesine ve Priority'ye PLM kanıtı olarak akar. */
+async function cpPlmSampleRequestsRun(button){
+  const span=button&&button.querySelector('span'),old=span&&span.textContent;
+  if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
+  try{
+    if(!window.BLPlmSampleRequests&&window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('deferredUi');
+    const api=window.BLPlmSampleRequests;
+    if(!api)return;
+    const selected=selectedCpRowsForAction();
+    const rows=selected.length?selected:filteredCP();
+    const plmIds=[...new Set(rows.map(row=>api.plmIdOfRow(row,'cp')).filter(Boolean))];
+    if(!plmIds.length){showToast(appLang==='en'?'No CP rows with a PLM ID were found.':'PLM ID’si olan CP satırı bulunamadı.',{icon:false});return;}
+    if(span)span.textContent=appLang==='en'?`Fetching ${plmIds.length} style(s) from PLM…`:`${plmIds.length} model PLM'den alınıyor…`;
+    const result=await api.sync(plmIds,{scope:'cp'});
+    if(result.ok)showToast((appLang==='en'?'PLM sample status updated: ':'PLM numune durumu güncellendi: ')+api.summaryText(result),{icon:false,duration:9000});
+  }catch(err){
+    showToast((appLang==='en'?'PLM sample requests could not be retrieved: ':'PLM numune talepleri alınamadı: ')+plmSyncErrorMessage(err),{icon:false,duration:12000});
+  }finally{
+    if(span)span.textContent=old;
+    if(button){button.disabled=false;button.removeAttribute('aria-busy');}
+  }
+}
+document.getElementById('cpPlmSampleRequestsBtn')?.addEventListener('click',event=>{document.getElementById('cpPlmSyncMenu')?.setAttribute('hidden','');void cpPlmSampleRequestsRun(event.currentTarget);});
 document.getElementById('kolPricingExcelColsBtn')?.addEventListener('click',openKolPricingExcelColumnsModal);
 loadKolPricingExcelColumns();
 

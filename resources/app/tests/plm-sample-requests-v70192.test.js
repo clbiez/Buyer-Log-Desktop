@@ -248,16 +248,32 @@ test('v7.0.192 kablolama: PLM Sync, CP, sağ tık menüsü, lazy yükleme ve sun
   assert.match(routes, /app\.post\('\/api\/plm-requests\/sync'/);
   assert.match(routes, /withPlmJob\(req/);
 
+  /* Kullanıcı kararı: numune CP aşamasında takip edilir; koleksiyon
+     aşamasında numune çalışılmaz. Koleksiyon PLM Sync numune ÇEKMEZ,
+     tetikleme CP PLM SYNC menüsündedir. */
   const app = read('public/app-main.js');
-  assert.match(app, /async function kolPlmSyncSampleRequestStep\(plmIds\)/);
-  assert.equal((app.match(/await kolPlmSyncSampleRequestStep\(plmIds\)/g) || []).length, 2, 'iki PLM Sync dalında da numune adımı çalışır');
+  const kolSync = app.slice(app.indexOf('async function kolPlmSyncRun('), app.indexOf('async function kolPlmSyncButtonRun('));
+  assert.ok(kolSync.length > 100);
+  assert.doesNotMatch(kolSync, /BLPlmSampleRequests|SampleRequest/, 'Koleksiyon PLM Sync numune talebi çekmemeli');
+  assert.match(app, /async function cpPlmSampleRequestsRun\(button\)/);
+  assert.match(app, /const rows=selected\.length\?selected:filteredCP\(\);/);
+  assert.match(app, /api\.sync\(plmIds,\{scope:'cp'\}\)/);
+  const html = read('public/index.html');
+  const menuOf = id => (html.match(new RegExp(`id="${id}"[\\s\\S]*?\\n\\s*</div>\\s*\\n\\s*</div>`)) || [''])[0];
+  const cpMenu = menuOf('cpPlmSyncMenu');
+  assert.match(cpMenu, /id="cpPlmSampleRequestsBtn"/, 'buton CP PLM SYNC menüsünde');
+  const kolMenu = menuOf('kolPlmSyncMenu');
+  assert.ok(kolMenu.length > 50);
+  assert.doesNotMatch(kolMenu, /SampleRequests/);
 
   const view = read('public/cp-overview-assistant.js');
   assert.equal((view.match(/plmEvidence\b/g) || []).length >= 3, true);
   assert.match(view, /addEventListener\('bl:plm-requests-changed'/);
   assert.match(view, /data-cpa-plm-requests-sync/);
 
-  assert.match(read('public/row-context-menu.js'), /sampleRequests\.openForRow\(row, config\.module\)/);
+  const ctxMenu = read('public/row-context-menu.js');
+  assert.match(ctxMenu, /sampleRequests\.openForRow\(row, config\.module\)/);
+  assert.match(ctxMenu, /config\.module !== 'collection' && sampleRequests\.plmIdOfRow/, 'sağ tık penceresi koleksiyonda gösterilmez');
   const perf = read('public/perf-runtime.js');
   assert.match(perf, /'plm-sample-requests-engine\.js','plm-sample-requests\.js','row-context-menu\.js'/);
   assert.match(read('public/plm-operations.js'), /'plm-requests':/);
