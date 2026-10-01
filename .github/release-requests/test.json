@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "version": "7.0.184",
-  "commit_sha": "26a3afd59f3a2275c0cdbfee76ff5edd503330bc",
-  "release_notes": "Buyer Log 7.0.184 TEST: Endeksmatik yüklemesinde KLASMAN LİSTESİ ÖZET ve pivot sütunları artık önce tam başlıkla bulunuyor (\"Klasman Kodu\" gibi bir sütun \"Klasman\"dan önce gelse de doğru sütun okunur). Anahtarlar yine eşleşmezse hata mesajı okunan sütunları, klasman sayılarını, eşleşen sayısını ve örnek anahtarları gösterir. Node regression suite (785 dosya) başarıyla geçti. STABLE kanalına terfi edilmedi."
+  "commit_sha": "b918bc60f273688f9b4b6f0098018881716912ab",
+  "release_notes": "Buyer Log 7.0.184: tüm özellikleri gerçekten bilgisayara getiren son güncelleme. İlk açılışta tek seferlik kurulum onarımı çalışır: eski ekran önbelleği temizlenir (filtreler, ayarlar ve oturumlar korunur), güncellemeyi engelleyen eski geri alma kayıtları silinir ve uygulama dosyaları paket içindeki SHA-256 listesiyle tek tek doğrulanır; bozuk dosya varsa temiz kopya hazırlanıp sonraki açılışta uygulanır. Sonuç Sürüm Geçmişi › Güncellemeler panelinde 'Kurulum onarımı' satırında görünür. Yeni sürümün açılış onayı artık yeniden denenir; böylece sürüm sessizce geri alınmaz. F1 rehberi/ipuçları ve Horizon çoklu seçim dahil tüm özellikler bu pakettedir. Tam regresyon paketi geçti."
 }
