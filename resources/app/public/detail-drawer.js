@@ -299,7 +299,7 @@ function groupHeaderHtml(columns,showImages){
   const flush=()=>{if(count)cells.push('<th colspan="'+count+'" data-group="'+escapeHtml(last)+'">'+escapeHtml(last||L('Detay','Detail'))+'</th>');};
   columns.forEach(col=>{const group=clean(col.group)||L('Detay','Detail');if(count&&group!==last){flush();count=0;}last=group;count++;});
   flush();
-  return '<tr class="blDetailGroupRow">'+(showImages?'<th class="blDetailImageHead" rowspan="1">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+cells.join('')+'</tr>';
+  return '<tr class="blDetailGroupRow">'+(showImages?'<th class="blDetailImageHead" aria-hidden="true"></th>':'')+cells.join('')+'</tr>';
 }
 function registerAssetScope(panel,rows,imageIndex){
   const helper=root.BLDetailImages;if(!helper?.registerScope)return;
