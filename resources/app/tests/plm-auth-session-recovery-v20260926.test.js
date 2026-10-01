@@ -64,3 +64,18 @@ test('recovery katmanı app-main yüklenmeden önce kuruludur', () => {
   assert.ok(appAt >= 0, 'app-main.js bulunmalı');
   assert.ok(recoveryAt < appAt, 'fetch recovery app-main.js öncesinde kurulmalı');
 });
+
+test('plmJsonRequest: yenileme başarısızsa PLM oturum açma ekranı açılır, ikinci login penceresi açılmaz', () => {
+  const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+  const start = APP.indexOf('async function plmJsonRequest');
+  const block = APP.slice(start, APP.indexOf('let coreNectumApiSettingsInFlight', start));
+  assert.ok(start >= 0);
+  // Tüm CoreNectum auth kodları (LOGIN_REQUIRED dahil) aynı yoldan geçer.
+  assert.match(block, /coreNectumAuthenticationError\(error\)/);
+  // Korunan uçta fetch katmanı zaten yeniledi; interaktif auth tekrar koşmaz.
+  assert.match(block, /BLPlmAuthRecovery\?\.isProtectedPlmRequest\?\.\(url,location\.href,location\.origin\)/);
+  assert.match(block, /if\(!recoveredByFetch&&coreNectumDesktopAuthAvailable\(\)\)/);
+  // Yenilenemeyen oturumda kullanıcı PLM Kullanıcı Girişi ekranına yönlenir.
+  assert.match(APP, /function openPlmSignInAfterAuthFailure\(\)\{[^}]*openCoreNectumApiSettings\(/);
+  assert.ok((block.match(/openPlmSignInAfterAuthFailure\(\)/g) || []).length >= 2);
+});

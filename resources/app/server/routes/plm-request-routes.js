@@ -4,20 +4,20 @@
    İş mantığı lib/plm-sample-request-sync.js ve lib/plm-sample-requests-store.js
    içindedir; burada yalnız yetki, girdi ve yanıt vardır. */
 module.exports = function registerPlmRequestRoutes(app, deps) {
-  const {
-    automationError,
-    clearModelOperationProgress,
-    coreNectumApiClient,
-    express,
-    loadPlmStyleLinks,
-    normalizePlmId,
-    sampleRequestStore,
-    sampleRequestSync,
-    setModelOperationProgress,
-    upsertPlmStyleLinks,
-    userAccess,
-    withPlmJob,
-  } = deps;
+const {
+  automationError,
+  clearModelOperationProgress,
+  coreNectumApiClient,
+  express,
+  loadPlmStyleLinks,
+  normalizePlmId,
+  sampleRequestStore,
+  sampleRequestSync,
+  setModelOperationProgress,
+  upsertPlmStyleLinks,
+  userAccess,
+  withPlmJob,
+} = deps;
 
 app.get('/api/plm-requests', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders', 'overview'), (_req, res) => {
   try { res.set('Cache-Control', 'no-store').json(sampleRequestStore.publicPayload()); }

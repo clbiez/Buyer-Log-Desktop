@@ -288,6 +288,32 @@ test('401/403 CoreNectum’u yeniden denemelerle dövmez, iş temiz durur', asyn
   assert.equal(calls, 1, 'yetki hatasında parti bölünmemeli / yeniden denenmemeli');
 });
 
+/* Ekran görüntüsündeki hata: API token yokken (409 CORENECTUM_API_TOKEN_REQUIRED)
+   her model ayrı başarısız kalem oldu, iş 200 ile "tamamlandı" ve istemcinin
+   otomatik oturum yenilemesi hiç tetiklenmedi. Token hatası işi auth hatası
+   olarak durdurmalı ve özgün kodu korumalı ki istemci oturumu yenilesin. */
+for (const code of ['CORENECTUM_API_TOKEN_REQUIRED', 'CORENECTUM_API_TOKEN_INVALID']) {
+  test(`${code} GetStyleList'te kalem kalem hata olmaz, auth hatası olarak yükselir`, async () => {
+    let calls = 0;
+    await assert.rejects(
+      () => service.resolveStyleRows(['1', '2', '3'], {
+        styleListLookup: async () => { calls += 1; throw Object.assign(new Error('token'), { code, statusCode: 409 }); },
+      }),
+      error => error.code === code && error.statusCode === 409,
+    );
+    assert.equal(calls, 1);
+  });
+
+  test(`${code} GetStyleImages'ta auth hatası olarak yükselir`, async () => {
+    await assert.rejects(
+      () => service.fetchStyleImageMetadata(['11', '12'], {
+        styleImagesLookup: async () => { throw Object.assign(new Error('token'), { code, statusCode: 409 }); },
+      }),
+      error => error.code === code,
+    );
+  });
+}
+
 test('yetki bilgisi yalnız direct API RAM/env state içinde tutulur; dosyaya veya renderer storageına yazılmaz', () => {
   const settingsSource = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'corenectum-api-settings.js'), 'utf8');
   const clientSource = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'corenectum-api-client.js'), 'utf8');

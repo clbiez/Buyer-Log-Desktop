@@ -8110,7 +8110,8 @@ function filteredCP(){
   // final user decision used by the visible CP table.
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   const ctx=cpBuildFilterContext();
-  const source=ensurePlmSampleAccessors(partialViewRows('cp',ensurePlmSampleAccessors(state.cp.rows)));
+  ensurePlmSampleAccessors(state.cp.rows);
+  const source=partialViewRows('cp',state.cp.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(r=>cpRowPasses(r,ctx,CP_MIRROR_IDS));
   if(state.cpSort.key) rows = sortRows(rows, state.cpSort.key, state.cpSort.dir);
   return rows;
@@ -8461,7 +8462,8 @@ function filteredOrders(){
   if(!state.orders)return [];
   if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('orders');
   const ctx=ordersBuildFilterContext();
-  const source=ensurePlmSampleAccessors(partialViewRows('orders',ensurePlmSampleAccessors(state.orders.rows)));
+  ensurePlmSampleAccessors(state.orders.rows);
+  const source=partialViewRows('orders',state.orders.rows);ensurePlmSampleAccessors(source);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
@@ -28245,14 +28247,23 @@ async function plmJsonRequest(url,options){
     const data=await execute();succeeded=true;return data;
   }
   catch(error){
-    const code=String(error&&error.code||'');
-    if((code==='CORENECTUM_API_TOKEN_REQUIRED'||code==='CORENECTUM_API_TOKEN_INVALID')&&window.buyerLogDesktop?.ensureCoreNectumAuth){
-      await runCoreNectumAutoAuth({interactive:true,force:true});
-      const data=await execute();succeeded=true;return data;
+    if(!coreNectumAuthenticationError(error))throw error;
+    /* Korunan PLM uçlarında plm-auth-recovery fetch katmanı oturumu zaten
+       sessizce yenilemeyi denedi, olmayınca login penceresini gösterdi ve
+       isteği bir kez tekrarladı. Burada ikinci bir login penceresi açılmaz. */
+    const recoveredByFetch=Boolean(window.__buyerLogPlmAuthRecoveryInstalled&&window.BLPlmAuthRecovery?.isProtectedPlmRequest?.(url,location.href,location.origin));
+    if(!recoveredByFetch&&coreNectumDesktopAuthAvailable()){
+      try{await runCoreNectumAutoAuth({interactive:true,force:true});}
+      catch(_){openPlmSignInAfterAuthFailure();throw error;}
+      try{const data=await execute();succeeded=true;return data;}
+      catch(retryError){if(coreNectumAuthenticationError(retryError))openPlmSignInAfterAuthFailure();throw retryError;}
     }
+    // Oturum otomatik yenilenemedi: kullanıcı PLM Kullanıcı Girişi ekranına yönlenir.
+    openPlmSignInAfterAuthFailure();
     throw error;
   }finally{autoHold?.release({ok:succeeded});}
 }
+function openPlmSignInAfterAuthFailure(){try{void openCoreNectumApiSettings();}catch(_){}}
 let coreNectumApiSettingsInFlight=null,coreNectumAutoAuthInFlight=null;
 async function coreNectumApiRaw(url,options){
   const response=await fetch(url,options),data=await response.json().catch(()=>({}));

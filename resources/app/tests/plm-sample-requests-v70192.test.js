@@ -287,8 +287,9 @@ test('v7.0.192 CP PLM Numune sütunu: tanımlı, salt okunur ve kayda girmeyen e
   assert.match(app, /\{k:'Priority', label:'Priority', type:'priority'[^\n]*\n[^\n]*\n[^\n]*\n  \{k:'PLM Numune', label:'PLM Numune', type:'plmSample'/);
   assert.match(app, /case 'plmSample': return plmSampleCellHtml\(r,tableKey\);/);
   assert.match(app, /if\(c\.type==='plmSample'\) return norm\(v\);/);
-  assert.match(app, /const source=ensurePlmSampleAccessors\(partialViewRows\('cp',ensurePlmSampleAccessors\(state\.cp\.rows\)\)\);/);
-  assert.match(app, /const source=ensurePlmSampleAccessors\(partialViewRows\('orders',ensurePlmSampleAccessors\(state\.orders\.rows\)\)\);/);
+  // Hem ham satırlar hem Partial View kopyaları erişimciyi taşır.
+  assert.match(app, /ensurePlmSampleAccessors\(state\.cp\.rows\);\n  const source=partialViewRows\('cp',state\.cp\.rows\);ensurePlmSampleAccessors\(source\);/);
+  assert.match(app, /ensurePlmSampleAccessors\(state\.orders\.rows\);\n  const source=partialViewRows\('orders',state\.orders\.rows\);ensurePlmSampleAccessors\(source\);/);
   assert.match(app, /window\.addEventListener\('bl:plm-requests-changed'/);
 
   // Erişimci davranışı: kaynak koddaki fonksiyon izole çalıştırılır.

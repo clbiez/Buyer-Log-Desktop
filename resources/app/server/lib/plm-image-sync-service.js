@@ -28,7 +28,11 @@ const jobStore = require('./plm-image-job-store');
 const { runBounded } = require('./plm-image-download-queue');
 const ingestLib = require('./plm-image-ingest');
 
-const AUTH_CODES = new Set(['CORENECTUM_LOGIN_REQUIRED', 'PLM_IMAGE_AUTH', 'CORENECTUM_AUTH_REQUIRED']);
+const AUTH_CODES = new Set(['CORENECTUM_LOGIN_REQUIRED', 'PLM_IMAGE_AUTH', 'CORENECTUM_AUTH_REQUIRED', 'CORENECTUM_API_TOKEN_REQUIRED', 'CORENECTUM_API_TOKEN_INVALID']);
+/* API token hatası (409) da yetki hatasıdır. Özgün kod korunur: istemcideki
+   plm-auth-recovery bu kodla otomatik SSO yenilemesi yapar, olmazsa PLM
+   oturum açma penceresini gösterir ve isteği bir kez tekrarlar. */
+const API_TOKEN_CODES = new Set(['CORENECTUM_API_TOKEN_REQUIRED', 'CORENECTUM_API_TOKEN_INVALID']);
 
 function clean(value, max = 300) {
   return String(value == null ? '' : value).replace(/\u0000/g, '').trim().slice(0, max);
@@ -46,6 +50,11 @@ function isAuthFailure(error) {
   if (AUTH_CODES.has(clean(error.code, 60))) return true;
   const status = Number(error.status || error.statusCode);
   return status === 401 || status === 403;
+}
+
+function authSyncError(error) {
+  const code = clean(error && error.code, 60);
+  return syncError('CoreNectum PLM oturumu gerekli. Buyer Log oturumu otomatik yenilemeyi dener; olmazsa PLM oturum açma ekranı açılır.', API_TOKEN_CODES.has(code) ? code : 'CORENECTUM_LOGIN_REQUIRED', 409);
 }
 
 function isCancellation(error) {
@@ -99,7 +108,7 @@ async function resolveStyleRows(plmIds, options = {}) {
         if (isCancellation(error)) throw error;
         // Yetki hatasında parti bölmek anlamsız: hepsi aynı hatayı verir ve
         // CoreNectum boşuna dövülür.
-        if (isAuthFailure(error)) throw syncError('CoreNectum PLM oturumu gerekli. Edge sekmesinde CoreNectum girişini tazeleyip tekrar deneyin.', 'CORENECTUM_LOGIN_REQUIRED', 409);
+        if (isAuthFailure(error)) throw authSyncError(error);
         const next = api.nextFallbackBatchSize(pending.length);
         batchLog.push({ size: pending.length, returned: 0, ms: Date.now() - startedAt, error: clean(error && error.message, 200) });
         if (next > 0 && pending.length > next) { await attempt(pending, next); continue; }
@@ -145,7 +154,7 @@ async function fetchStyleImageMetadata(styleIds, options = {}) {
     } catch (error) {
       if (isCancellation(error)) throw error;
       if (isAuthFailure(error)) {
-        authError = syncError('CoreNectum PLM oturumu gerekli. Edge sekmesinde CoreNectum girişini tazeleyip tekrar deneyin.', 'CORENECTUM_LOGIN_REQUIRED', 409);
+        authError = authSyncError(error);
         throw authError;
       }
       errors.set(styleId, { code: clean(error && error.code, 60) || 'CORENECTUM_STYLE_IMAGES_FAILED', error: clean(error && error.message, 300) });
