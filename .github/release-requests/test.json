@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.185",
-  "commit_sha": "f21911bd4158ef2d57665a3827e820b4dacdce47",
-  "release_notes": "Buyer Log 7.0.185: tüm özellikleri gerçekten bilgisayara getiren son güncelleme. İlk açılışta tek seferlik kurulum onarımı çalışır: eski ekran önbelleği temizlenir (filtreler, ayarlar ve oturumlar korunur), güncellemeyi engelleyen eski geri alma kayıtları silinir ve uygulama dosyaları paket içindeki SHA-256 listesiyle tek tek doğrulanır; bozuk dosya varsa temiz kopya hazırlanıp sonraki açılışta uygulanır. Sonuç Sürüm Geçmişi › Güncellemeler panelinde 'Kurulum onarımı' satırında görünür. Yeni sürümün açılış onayı artık yeniden denenir; böylece sürüm sessizce geri alınmaz. 7.0.184 Endeksmatik başlık eşleşmesi düzeltmesi, F1 rehberi/ipuçları ve Horizon çoklu seçim dahil tüm özellikler bu pakettedir. Tam regresyon paketi geçti."
+  "version": "7.0.186",
+  "commit_sha": "9865c161d1f110e08093e9a7c6199ad22a0ca66f",
+  "release_notes": "Buyer Log 7.0.186 TEST: Overview dünya saatlerine isteğe bağlı resmi tatil bilgisi eklendi. Saatleri düzenle alanındaki ayarla özellik açılıp kapatılabilir; desteklenen ülke saatlerinde önümüzdeki 45 gün içindeki en yakın 2 ulusal resmi tatil, Bugün/Yarın/X gün bilgisiyle saatin altında gösterilir. Tatil servisi erişilemezse saatler normal çalışmaya devam eder. Dünya saatleri resmi tatil kontrolleri ve regresyon testleri dahildir."
 }
