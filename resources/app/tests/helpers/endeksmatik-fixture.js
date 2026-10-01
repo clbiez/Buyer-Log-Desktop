@@ -66,8 +66,15 @@ function pivotSheet(component, opts) {
   return XLSX.utils.aoa_to_sheet(aoa);
 }
 function summarySheet(opts) {
-  const aoa = [['KLASMAN LİSTESİ ÖZET'], [], [], [], [], [null, ...DIM_HEADER, 'Kumaş Pay', 'CMT Pay', 'Aksesuar Pay', 'Ek İşlem Pay', 'Adet']];
-  hierarchyRows(members => [...groupWeights(members), members.length * 100], opts).forEach(row => aoa.push([null, ...row]));
+  // 'klasmanCodeFirst': "Klasman Kodu" sütunu "Klasman"dan ÖNCE gelir (önek tuzağı).
+  // 'summaryMismatch': özetteki klasman adları pivotlardan farklıdır.
+  const code = Boolean(opts.klasmanCodeFirst);
+  const aoa = [['KLASMAN LİSTESİ ÖZET'], [], [], [], [], [null, ...(code ? ['Klasman Kodu'] : []), ...DIM_HEADER, 'Kumaş Pay', 'CMT Pay', 'Aksesuar Pay', 'Ek İşlem Pay', 'Adet']];
+  hierarchyRows(members => [...groupWeights(members), members.length * 100], opts).forEach(row => {
+    const dims = row.slice(0, 5);
+    if (opts.summaryMismatch && dims[4] && !/toplam/i.test(dims[4])) dims[4] = `${dims[4]} X`;
+    aoa.push([null, ...(code ? [dims[4] ? `K-${dims[4].length}` : ''] : []), ...dims, ...row.slice(5)]);
+  });
   return XLSX.utils.aoa_to_sheet(aoa);
 }
 function fxSheet() {

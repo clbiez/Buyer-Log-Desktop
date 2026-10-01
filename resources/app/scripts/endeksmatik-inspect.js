@@ -30,6 +30,7 @@ for (const file of files) {
     const d = err.details || {};
     (d.failures || []).forEach(f => console.log(`  - ${f}`));
     (d.checks || []).filter(c => !c.ok).forEach(c => console.log(`  ≠ ${c.label} ${c.cell}: Excel ${c.excel}  Buyer Log ${c.buyerLog}`));
+    if (d.diagnostics) [d.diagnostics.summary, ...d.diagnostics.pivots].forEach(x => console.log(`  · ${x.sheet} satır ${x.row}: [${x.labels.join(' | ')}] klasman=${x.detailKeys}${x.matched != null ? ` eşleşen=${x.matched}` : ''}\n      örnek: ${x.samples.join('  ||  ')}`));
     // Red durumunda ekranın kontrol bölgesi dökülür: modelin nerede değiştiği görülsün.
     try {
       console.log('  ENDEKSMATİK A1:G25 (hücre = değer | formül):');
