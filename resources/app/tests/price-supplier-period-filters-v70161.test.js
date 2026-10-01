@@ -75,5 +75,5 @@ test('period controls are side-specific and clearing filters clears months witho
   assert.match(ui,/currentPeriod:state\.periods\.current,previousPeriod:state\.periods\.previous/);
   assert.match(ui,/state\.periods\.current\.month='';state\.periods\.previous\.month=''/);
   assert.match(ui,/PERIOD_KINDS\.forEach\(kind=>\{state\.periods\[kind\]\.month='';\}\)/);
-  assert.match(ui,/state\.filterLayout=state\.filterLayout\.filter\(item=>item!==dim\);state\.filters\[dim\]='';recalc\(\)/);
+  assert.match(ui,/state\.filterLayout=state\.filterLayout\.filter\(item=>item!==dim\);state\.filters\[dim\]=\[\]/);
 });
