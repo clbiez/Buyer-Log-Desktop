@@ -3128,14 +3128,14 @@ function closeImageDeleteConfirm(){
   if(_imageDeleteConfirmPopover)_imageDeleteConfirmPopover.remove();
   _imageDeleteConfirmPopover=null;
 }
-function openImageDeleteConfirm(anchorEl,{message,onConfirm}={}){
+function openImageDeleteConfirm(anchorEl,{message,onConfirm,onFetch,onMainColour}={}){
   closeImageDeleteConfirm();
   if(!anchorEl||!anchorEl.isConnected||typeof onConfirm!=='function')return;
   const pop=document.createElement('div');
   pop.className='imageDeleteConfirmPopover';
   pop.setAttribute('role','dialog');
   pop.setAttribute('aria-label',appLang==='en'?'Remove image confirmation':'Görsel kaldırma onayı');
-  pop.innerHTML=`<div class="imageDeleteConfirmText">${escapeHtml(message||(appLang==='en'?'Remove this image?':'Bu görsel kaldırılsın mı?'))}</div><div class="imageDeleteConfirmActions">${typeof onFetch==='function'?`<button type="button" class="imageFetchPlm">${escapeHtml(appLang==='en'?'Fetch from PLM':'PLM\'den Çağır')}</button>`:''}<button type="button" class="imageDeleteCancel">${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="imageDeleteApprove">${escapeHtml(appLang==='en'?'Remove':'Kaldır')}</button></div>`;
+  pop.innerHTML=`<div class="imageDeleteConfirmText">${escapeHtml(message||(appLang==='en'?'Remove this image?':'Bu görsel kaldırılsın mı?'))}</div><div class="imageDeleteConfirmActions">${typeof onMainColour==='function'?`<button type="button" class="imageSetMainColour" title="${escapeHtml(appLang==='en'?'Use the PLM front+back model image for this colour':'Bu renk için PLM ön+arka model görseli kullanılsın')}">${escapeHtml(appLang==='en'?'Make main colour':'Ana renk yap')}</button>`:''}${typeof onFetch==='function'?`<button type="button" class="imageFetchPlm">${escapeHtml(appLang==='en'?'Fetch from PLM':'PLM\'den Çağır')}</button>`:''}<button type="button" class="imageDeleteCancel">${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="imageDeleteApprove">${escapeHtml(appLang==='en'?'Remove':'Kaldır')}</button></div>`;
   document.body.appendChild(pop);_imageDeleteConfirmPopover=pop;
   const place=()=>{
     if(!anchorEl.isConnected){closeImageDeleteConfirm();return;}
@@ -3158,6 +3158,12 @@ function openImageDeleteConfirm(anchorEl,{message,onConfirm}={}){
     const label=btn.textContent;btn.textContent=appLang==='en'?'Fetching…':'Çağrılıyor…';
     try{await onFetch();closeImageDeleteConfirm();}
     catch(err){btn.disabled=false;btn.textContent=label;showToast((appLang==='en'?'Image could not be fetched: ':'Görsel çağrılamadı: ')+(err&&err.message||err));}
+  });
+  pop.querySelector('.imageSetMainColour')?.addEventListener('click',async event=>{
+    const btn=event.currentTarget;btn.disabled=true;
+    const label=btn.textContent;btn.textContent=appLang==='en'?'Updating…':'Güncelleniyor…';
+    try{await onMainColour();closeImageDeleteConfirm();}
+    catch(err){btn.disabled=false;btn.textContent=label;showToast((appLang==='en'?'Main colour could not be set: ':'Ana renk ayarlanamadı: ')+(err&&err.message||err));}
   });
   pop.querySelector('.imageDeleteApprove')?.addEventListener('click',async event=>{
     const btn=event.currentTarget;btn.disabled=true;
@@ -22308,7 +22314,7 @@ function kolColourOverrideSpec(key){
   // Internal editable inputs inside a projected cell participate directly in
   // the same inheritance system even though they are not top-level columns.
   if(KOL_LANDED_INPUT_COLS[visibleKey])return {visibleKey,storageKeys:[visibleKey],eligible:!kolIsColorSpecific(visibleKey),projected:false};
-  const descriptor=kolDescriptorByKey(visibleKey);
+  const descriptor=kolFieldDescriptorByKey(visibleKey);
   if(!descriptor||descriptor.kind!=='base')return null; // synthetic/display-only columns
   const column=descriptor.col;
   if(!column)return null;
@@ -24422,6 +24428,15 @@ function kolDescriptorWidth(d){
 function kolDescriptorByKey(key){
   return kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
 }
+// Görünüm (gizli/görünür sütun) yalnız ÇİZİMİ belirler. Yazma kuralları, düzenlenebilirlik,
+// modele bağlılık ve bağımlı alan (örn. In Store Week → In Store → Retail) kararları
+// sütun gizli olsa bile aynı alan tanımını kullanmalıdır; aksi halde gizli alan sessizce
+// salt okunur sayılır ve bağımlı değer eski kalır.
+function kolFieldDescriptorByKey(key){
+  const visible=kolDescriptorCatalog().get(key);if(visible)return visible;
+  const base=kolAllOrderedCols().find(c=>c.k===key);
+  return base?{kind:'base',k:base.k,label:kolColumnLabel(base),col:base}:kolDescriptorByKey(key);
+}
 function kolWeightedAverage(rows,getPrice,getQty){
   // getQty isteğe bağlı: verilmezse Koleksiyon'un kendi adet alanı (row.quantity)
   // kullanılır — mevcut çağıranların davranışı DEĞİŞMEZ. CP/Orders 'Order
@@ -25635,7 +25650,7 @@ function renderKol(){
         event.preventDefault();event.stopPropagation();
         try{kolHideImgPopup();}catch(_){}
         const row=kolRows.find(r=>r.id===Number(img.dataset.id));
-        if(row&&(row.img||row.imgRef||canonicalModelImageKnown(row.plmId,row.colourCode,row.colour)))openImageDeleteConfirm(img,{message:appLang==='en'?'Remove this Collection image?':'Bu Koleksiyon görseli kaldırılsın mı?',onConfirm:()=>kolRemoveRowImage(row),onFetch:()=>fetchPlmImageForModel({plmId:row.plmId,colourCode:row.colourCode,colour:row.colour,styleName:row.modelKod}).then(()=>renderKol())});
+        if(row&&(row.img||row.imgRef||canonicalModelImageKnown(row.plmId,row.colourCode,row.colour)))openImageDeleteConfirm(img,{message:appLang==='en'?'Remove this Collection image?':'Bu Koleksiyon görseli kaldırılsın mı?',onConfirm:()=>kolRemoveRowImage(row),onFetch:()=>fetchPlmImageForModel({plmId:row.plmId,colourCode:row.colourCode,colour:row.colour,styleName:row.modelKod}).then(()=>renderKol()),onMainColour:normalizePlmLinkId(row.plmId)&&norm(row.colourCode)?()=>kolSetPlmMainColour(row):undefined});
       });
     }
     // Büyük görsel önizleme bir okuma davranışıdır; Edit ve View modlarında daima
@@ -25658,7 +25673,7 @@ function kolSpreadsheetFormulaInfo(key){
   if(key==='__bestPrice__')return 'Calculated from current valid quotations';
   if(key==='__confirmedName__')return 'Approved quotation manufacturer';
   if(key==='__confirmedPrice__')return 'Approved quotation price';
-  const d=kolDescriptorByKey(key),c=d?.col;if(!c)return '';
+  const d=kolFieldDescriptorByKey(key),c=d?.col;if(!c)return '';
   if(c.k==='royalty'||c.k==='hologramCost')return 'Resolved from current pricing rule';
   if(c.k==='fob')return 'Confirmed / Best / Target price ÷ (1 − Royalty %) + Hologram Cost';
   if(c.exToRetail)return 'Retail date − Ex-Factory date';
@@ -25672,7 +25687,7 @@ function kolSpreadsheetColumnMeta(key){
   if(String(key||'').startsWith('pricing:'))return {key,label:String(key).slice(8),type:'money',access:'editable',editable:true,calculated:false,inheritance:'model',overrideable:true,formula:''};
   const landedInput=KOL_LANDED_INPUT_COLS[key];
   if(landedInput)return {key,label:kolStyleFieldLabel(landedInput),type:key==='trPrice'?'money':'number',access:'editable',editable:true,formula:'',col:landedInput};
-  const d=kolDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
+  const d=kolFieldDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
   if(d.kind!=='base')return {key,label:d.label,type:d.kind==='confirmedName'?'text':'money',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   const c=d.col;
   const calculated=Boolean(c.ruleReadonly||c.formulaReadonly||c.exToRetail||c.endeksmatik||c.ydLanded||c.trLanded);
@@ -28163,9 +28178,9 @@ function modelImageItems(source,imageSource,scope='filtered'){
     const colourCode=norm(row&&row.colourCode),colour=norm(row&&row.colour),styleName=norm(row&&row.styleName),groupRole=norm(row&&row.modelGroupRole).toLowerCase();
     const imageRole=groupRole==='parent'||groupRole==='single'?'main':groupRole==='variant'?'option':'auto';
     const key=imageSource==='plm'&&colourCode?`${plmId}\u0000${turknorm(colourCode)}${colour?`\u0000${turknorm(colour)}`:''}`:plmId;
-    const current=unique.get(key),next={plmId,styleName,colourCode,colour,imageRole};
+    const current=unique.get(key),next={plmId,styleName,colourCode,colour,imageRole,groupRole};
     if(!current)unique.set(key,next);
-    else if((roleRank[imageRole]||0)>(roleRank[current.imageRole]||0))unique.set(key,{...current,imageRole});
+    else if((roleRank[imageRole]||0)>(roleRank[current.imageRole]||0))unique.set(key,{...current,imageRole,groupRole});
   });
   return [...unique.values()];
 }
@@ -28436,6 +28451,21 @@ function watchModelOperationProgress(button){
   const read=async()=>{try{const q=await plmJsonRequest('/api/model-operation-status');if(!stopped&&q&&q.total){span.textContent=`${q.phase||'İşleniyor'} • ${q.current||0}/${q.total} • ${q.model||'—'}`;}}catch(_) {}};
   void read(); timer=setInterval(read,700);
   return ()=>{stopped=true;if(timer){clearInterval(timer);timer=null;}span.textContent=original;};
+}
+/* PLM ana renk elle düzeltmesi: ön+arka model görseli bu renge, Options
+   görseli aynı PLM'in diğer renklerine. Kural sunucuda plm-main-colour.js;
+   burada yalnız seçim kaydedilir ve o PLM'in Koleksiyon satırları yenilenir.
+   Elle konmuş görseller korunur (overwriteManual kapalı). */
+async function kolSetPlmMainColour(row){
+  const plmId=normalizePlmLinkId(row&&row.plmId),colourCode=norm(row&&row.colourCode);
+  if(!plmId||!colourCode)throw new Error(appLang==='en'?'PLM ID and colour code are required.':'PLM ID ve renk kodu gerekli.');
+  if(!await ensureCoreNectumApiConnection())throw new Error(appLang==='en'?'PLM API connection is not configured.':'PLM API bağlantısı ayarlı değil.');
+  await fetchJSON('/api/plm-main-colours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plmId,colourCode})});
+  const seen=new Set(),items=[];
+  kolRows.forEach(item=>{if(normalizePlmLinkId(item&&item.plmId)!==plmId)return;const code=norm(item&&item.colourCode),colour=norm(item&&item.colour),key=`${turknorm(code)}\u0000${turknorm(colour)}`;if(seen.has(key))return;seen.add(key);items.push({plmId,colourCode:code,colour,styleName:norm(item&&item.modelKod)});});
+  const data=await plmJsonRequest('/api/model-images/import-plm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'all',scope:'koleksiyon',items})});
+  applySyncedPlmImages(data);renderKol();
+  showToast(appLang==='en'?`Main colour set: ${colourCode}`:`Ana renk ayarlandı: ${colourCode}`);
 }
 async function fetchPlmImageForModel({plmId,colourCode,colour,styleName}={}){
   const id=normalizePlmLinkId(plmId);if(!id)throw new Error(appLang==='en'?'This row has no PLM ID.':'Bu satırda PLM ID yok.');

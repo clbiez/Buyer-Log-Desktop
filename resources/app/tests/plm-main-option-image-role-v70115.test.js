@@ -15,7 +15,7 @@ const sync = fs.readFileSync(path.join(root, 'server', 'lib', 'plm-image-sync-se
 test('collection parent/single ve variant rolleri PLM görsel isteğine taşınır', () => {
   assert.match(app, /modelGroupRole:row&&row\.modelGroupRole/);
   assert.match(app, /groupRole==='parent'\|\|groupRole==='single'\?'main':groupRole==='variant'\?'option':'auto'/);
-  assert.match(app, /next=\{plmId,styleName,colourCode,colour,imageRole\}/);
+  assert.match(app, /next=\{plmId,styleName,colourCode,colour,imageRole,groupRole\}/);
 });
 
 test('imageRole server ve checkpoint\/ingest katmanlarında kaybolmaz', () => {

@@ -100,7 +100,7 @@ test('Landed manual input metadata is editable while calculated output metadata 
   const metaBlock = functionBlock(APP, 'kolSpreadsheetColumnMeta', 'kolSpreadsheetRawValue');
   const landedCols = Object.fromEntries(['trPrice', 'trLandedMult', 'trFx', 'ydLandedMult'].map(key => [key, { k: key, label: key }]));
   const metadata = new Function(
-    'L', 'KOL_LANDED_INPUT_COLS', 'kolDescriptorByKey', 'kolStyleFieldLabel', 'kolSpreadsheetFormulaInfo', 'kolFieldMetadata',
+    'L', 'KOL_LANDED_INPUT_COLS', 'kolFieldDescriptorByKey', 'kolStyleFieldLabel', 'kolSpreadsheetFormulaInfo', 'kolFieldMetadata',
     `${metaBlock};return kolSpreadsheetColumnMeta;`,
   )(
     value => value,
