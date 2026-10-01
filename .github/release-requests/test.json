@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.181",
-  "commit_sha": "ec6c9c1354bfb43618a4cce54031769e4ec5f37d",
-  "release_notes": "Buyer Log 7.0.181: Yenileme artık sayfa bazlı — CP yenilemesi yalnız CP sorgusunu çalıştırır, en geniş filtreyi (LFL · Fiyat & Üretici) beklemez; ortak filtreyi paylaşan sayfalar birlikte yenilenir, \"Tümünü yenile\" hepsini kapsar. Yeni: Kaynak değişince otomatik güncelleme — ASAS modeli işlendiğinde (son işlenme zamanı metadata ile okunur, ağır sorgu periyodik atılmaz) ekranlar arka planda kendiliğinden yenilenir, önce CP; hücre düzenlenirken veya pencere açıkken beklenir. Veri Yönetimi › Yenileme’den kapatılabilir (varsayılan açık). Kısmi yenilemede Horizon rozetleri korunur; yenileme sonrası ön-hazırlık yalnız yenilenen sayfaları yükler. Tam regresyon paketi yerelde ve Windows CI’da geçti."
+  "version": "7.0.182",
+  "commit_sha": "cf4e065ea0cbc858487839ea4776843a1f75bc0e",
+  "release_notes": "Buyer Log 7.0.182: Get OAB ve Veri Yönetimi › Browser & Remote Debugging artık 3–4 tarayıcıyı açıp kapatmaz — tarayıcı sürümü pencere açmadan kurulum klasöründen okunur, tarayıcı tek kez açılır. OAB: açık PASS sekmesi oturumu geçerliyse sekme yenilenmeden kullanılır; sekme yoksa tarayıcının boş başlangıç sekmesi doğrudan PASS'e gider; site raporu kendisi çalıştırmaz, veri sekmenin içinden doğrudan API ile çekilir. Model görselleri tarayıcı önbelleğinde gerçekten kalır: ilk açılış hızlanır, sayfalar arası geçişte görseller kaybolmaz. Tam regresyon paketi yerelde ve Windows CI'da geçti."
 }
