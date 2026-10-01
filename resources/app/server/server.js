@@ -4495,6 +4495,29 @@ function modelImageIdentityCollectionRows(userId, rawItems) {
   try { return loadWorkspace(String(userId || '')).rows || []; } catch (_) { return []; }
 }
 
+/* ANA RENK: ön+arka model görseli yalnız ana renge, Options görseli alt
+   renklere. Elle seçim > PLM tek renk > Koleksiyon grup başı (CP /
+   Siparişler / Backlog da aynı PLM için kullanır). Kural plm-main-colour.js
+   içindedir; burada istekler işaretlenir ve senkron kancaları kurulur. */
+function plmMainColourRoles(userId, requests) {
+  const store = plmMainColour.loadStore();
+  let collectionMain = new Map();
+  try { collectionMain = plmMainColour.collectionMainColours(loadWorkspace(String(userId || '')).rows || []); } catch (_) { collectionMain = new Map(); }
+  const resolve = (request, colourCodes) => {
+    const entry = { ...plmMainColour.entryFor(store, request.plmId) };
+    if (Array.isArray(colourCodes) && colourCodes.length) entry.colourCodes = colourCodes;
+    return plmMainColour.resolveImageRole(request, { entry, collectionMainColour: collectionMain.get(plmMainColour.plmKey(request.plmId)) || '' });
+  };
+  for (const request of Array.isArray(requests) ? requests : []) {
+    const role = resolve(request);
+    request.imageRole = role.imageRole; request.roleProbe = role.roleProbe; request.roleDemote = role.roleDemote;
+  }
+  return {
+    onStyleRows: rows => { if (plmMainColour.rememberStyleColours(store, rows)) plmMainColour.saveStore(store); },
+    resolveImageRole: (item, row) => resolve(item, (Array.isArray(row && row.colors) ? row.colors : []).map(colour => colour && colour.colourCode).filter(Boolean)).imageRole,
+  };
+}
+
 async function resolveModelImagesLocalFirst(requests, options = {}) {
   const source = options.source === sharedImageStoreLib.SOURCE_ASAS ? sharedImageStoreLib.SOURCE_ASAS : sharedImageStoreLib.SOURCE_PLM;
   const overrides = options.overrides || loadOverrides();
@@ -4734,20 +4757,9 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         // Style ID istemciden DEĞİL kalıcı PLM link deposundan gelir; yoksa
         // GetStyleList zaten çözer.
         const styleLink=styleLinks[plmStyleLinks.normalizeNumericId(plmId)];
-        requests.push({plmId,colourCode,colour,imageRole:coreNectumStyleApi.normalizeImageRole(item&&item.imageRole),groupRole:String(item&&item.groupRole||'').trim().toLowerCase(),styleName:String(item&&item.styleName||'').trim(),styleId:String(styleLink&&styleLink.styleId||'')});
+        requests.push({plmId,colourCode,colour,imageRole:coreNectumStyleApi.normalizeImageRole(item&&item.imageRole),groupRole:item&&item.groupRole,styleName:String(item&&item.styleName||'').trim(),styleId:String(styleLink&&styleLink.styleId||'')});
       }
-      /* ANA RENK: ön+arka model görseli yalnız ana renge, Options görseli alt
-         renklere. Elle seçim > PLM tek renk > Koleksiyon grup başı (CP /
-         Siparişler / Backlog da aynı PLM için kullanır). */
-      const mainColourStore=plmMainColour.loadStore();
-      let collectionMainColours=new Map();
-      try{collectionMainColours=plmMainColour.collectionMainColours(loadWorkspace(String(req.currentUser.id)).rows||[]);}catch(_){collectionMainColours=new Map();}
-      const resolveMainColourRole=(request,colourCodes)=>{
-        const entry={...plmMainColour.entryFor(mainColourStore,request.plmId)};
-        if(Array.isArray(colourCodes)&&colourCodes.length)entry.colourCodes=colourCodes;
-        return plmMainColour.resolveImageRole(request,{entry,collectionMainColour:collectionMainColours.get(plmMainColour.plmKey(request.plmId))||''});
-      };
-      for(const request of requests){const role=resolveMainColourRole(request);request.imageRole=role.imageRole;request.roleProbe=role.roleProbe;request.roleDemote=role.roleDemote;}
+      const mainColourRoles=plmMainColourRoles(req.currentUser.id,requests);
       if(!requests.length)return {overrides:before,requested:0,images:[],imagesSaved:0,failedItems:identity.unresolved,imageFailedItems:identity.unresolved,mode,counts:plmImageJobCounts({}),status:plmImageJobStore.STATUS_COMPLETED};
 
       /* LOCAL → SHARED → PLM. Üst kaynağa yalnız hiçbir yerde bulunamayan
@@ -4797,8 +4809,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         ingest: canonicalPlmImageIngest(plmImageOwnership.OWNER_PLM),
         styleListLookup: codes => apiSession.styleListLookup(codes),
         styleImagesLookup: styleId => apiSession.styleImagesLookup(styleId),
-        onStyleRows: rows => { if (plmMainColour.rememberStyleColours(mainColourStore, rows)) plmMainColour.saveStore(mainColourStore); },
-        resolveImageRole: (item, row) => resolveMainColourRole(item, (Array.isArray(row && row.colors) ? row.colors : []).map(colour => colour && colour.colourCode).filter(Boolean)).imageRole,
+        ...mainColourRoles,
         downloadImage: (url, options) => agentBrowserConnector.downloadCoreNectumAttachment(url, options),
         styleImagesConcurrency: coreNectumStyleApi.STYLE_IMAGES_CONCURRENCY,
         downloadConcurrency: coreNectumStyleApi.IMAGE_DOWNLOAD_CONCURRENCY,

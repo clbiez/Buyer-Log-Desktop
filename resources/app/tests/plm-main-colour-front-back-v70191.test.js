@@ -155,8 +155,11 @@ test('eski kayıtlar yeni role göre kendini onarır; manuel görsel korunur', (
 });
 
 test('sunucu, senkron ve istemci ana renk çözümüne bağlı', () => {
-  assert.match(server, /plmMainColour\.resolveImageRole\(request,\{entry,collectionMainColour/);
-  assert.match(server, /onStyleRows: rows => \{ if \(plmMainColour\.rememberStyleColours\(mainColourStore, rows\)\)/);
+  assert.match(server, /plmMainColour\.resolveImageRole\(request, \{ entry, collectionMainColour/);
+  assert.match(server, /onStyleRows: rows => \{ if \(plmMainColour\.rememberStyleColours\(store, rows\)\)/);
+  assert.match(server, /const mainColourRoles=plmMainColourRoles\(req\.currentUser\.id,requests\);/);
+  assert.match(server, /resolveImageRole: \(item, row\) => resolve\(item,/);
+  assert.match(server, /\.\.\.mainColourRoles,\n\s+downloadImage:/);
   assert.match(server, /app\.post\('\/api\/plm-main-colours', userAccess\.requireAnyArea\('koleksiyon'\)/);
   assert.match(sync, /input\.onStyleRows\(resolution\.rows\)/);
   assert.match(sync, /imageRole = input\.resolveImageRole\(item, row\) \|\| imageRole/);
