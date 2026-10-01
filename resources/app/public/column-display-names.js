@@ -136,6 +136,7 @@
   var CP_SOURCES={
     'Active/Inactive':computed({tr:'ASAS "Kalan Alım Sipariş Miktarı" > 0 ise Active',en:'Active when ASAS "Kalan Alım Sipariş Miktarı" > 0'}),
     '__picture':buyerlog({tr:'Buyer Log görsel kütüphanesi (PLM + renk kodu); yoksa ASAS "Teknik Görsel"',en:'Buyer Log image library (PLM + colour code); falls back to ASAS "Teknik Görsel"'}),
+    'PLM Numune':computed({tr:'PLM numune talepleri (PLM ID + renk); her okumada yeniden hesaplanır, kaydedilmez',en:'PLM sample requests (PLM ID + colour); recomputed on every read, never stored'}),
     'Priority':buyerlog({tr:'Buyer Log içinde kullanıcı tarafından girilir',en:'Entered by users in Buyer Log'}),
     'Season':asas('Sezon'),
     'Country':asas('Siparişin Üretildiği Ülke',{tr:'İngilizce ülke adına çevrilir',en:'Converted to the English country name'}),
