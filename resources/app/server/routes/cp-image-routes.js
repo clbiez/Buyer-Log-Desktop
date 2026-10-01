@@ -35,6 +35,13 @@ app.get('/api/cp-images/:id', userAccess.requireAnyArea('cp','orders','backlog',
     res.setHeader('Content-Type', found.item.mimeType || 'application/octet-stream');
     res.setHeader('Content-Length', String(fs.statSync(found.full).size));
     res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    /* /api katmanı her yanıta Pragma: no-cache + Expires: 0 ekler. Chromium
+       yanıttaki Pragma: no-cache'i Cache-Control: no-cache gibi yorumlar:
+       immutable YOK SAYILIR ve her görsel her render'da sunucuya yeniden
+       doğrulatılır. Görseller bu yüzden geç geliyor, sayfa değişince
+       kaybolup bir süre sonra geri geliyordu. Görsel kimliği değişmez. */
+    res.removeHeader('Pragma');
+    res.removeHeader('Expires');
     res.sendFile(found.full);
   } catch (err) { apiError(res, err, 'CP görseli okunamadı.'); }
 });

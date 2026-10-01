@@ -2925,7 +2925,7 @@ function canonicalModelImageKnown(plmId,colourCode,colour=''){
 // Hover önizlemesi aynı yükleme kuyruğunu paylaşır, böylece hızlı geçişlerde
 // aynı görsel için yarışan Image nesneleri oluşmaz.
 const BLImageRuntime=(()=>{
-  const IMAGE_HOVER_DELAY=140,IMAGE_REQUEST_CONCURRENCY=4,NEGATIVE_CACHE_TTL=30000,MAX_LOADED_KEYS=128;
+  const IMAGE_HOVER_DELAY=140,IMAGE_REQUEST_CONCURRENCY=4,NEGATIVE_CACHE_TTL=30000,MAX_LOADED_KEYS=2048;
   /* AÇILIŞTA EKSİK GÖRSEL TAMAMLAMA. Görünür bir hücrede model görseli yoksa
      (ya da kayıtlı dosya açılamıyorsa) kimlik sessizce "Eksikleri tamamla"
      kuyruğuna girer; sunucu LOCAL → PLM sırasını uygular ve yalnız gerçekten
@@ -2977,6 +2977,14 @@ const BLImageRuntime=(()=>{
     const src=key(img?.dataset?.src);if(!img||!isImageSource(src)||img.dataset.blImageLoaded==='1'||img.dataset.blImageFailed==='1')return;
     // Kayıtlı ama açılamayan görsel de eksiktir: sunucu dosya yoksa yeniden indirir.
     const markFailed=()=>{if(img.isConnected&&img.dataset.src===src){img.dataset.blImageFailed='1';scheduleAutoImageComplete(img);}};
+    /* Bu oturumda zaten yüklenmiş görsel, sayfa/sekme değişip tablo yeniden
+       çizildiğinde yer tutucuyla beklemez: kaynak hemen bağlanır ve tarayıcı
+       önbelleğinden gelir. Eskiden her yeniden çizimde görseller bir an
+       kayboluyordu. */
+    if(loaded.has(src)){img.src=src;img.dataset.blImageLoaded='1';img.dataset.blImageFailed='0';return;}
+    // Yer tutucunun (data: SVG) load olayı sayılmaz; yalnız gerçek kaynak.
+    let absolute=src;try{absolute=new URL(src,location.href).href;}catch(_){}
+    img.addEventListener('load',()=>{if(img.dataset.src===src&&img.naturalWidth>0&&(img.currentSrc===absolute||img.src===absolute))rememberLoaded(src);});
     if(window.BLModelImageCache){void window.BLModelImageCache.bind(img).catch(markFailed);return;}
     void load(src).then(()=>{if(img.isConnected&&img.dataset.src===src){img.src=src;img.dataset.blImageLoaded='1';}}).catch(markFailed);
   };
@@ -3074,7 +3082,10 @@ const BLImageRuntime=(()=>{
     if(!img||img.dataset.blImageObserved==='1')return;
     const hasSource=isImageSource(img.dataset.src),hasIdentity=Boolean(autoIdentityFromImage(img));
     if(!hasSource&&!hasIdentity)return;
-    img.dataset.blImageObserved='1';ensureObserver();
+    img.dataset.blImageObserved='1';
+    // Daha önce yüklenmiş kaynak için görünürlük beklenmez (bkz. loadTableImage).
+    if(hasSource&&loaded.has(key(img.dataset.src))){loadTableImage(img);return;}
+    ensureObserver();
     if(observer)observer.observe(img);else if(hasSource)loadTableImage(img);else scheduleAutoImageComplete(img);
   };
   const cancelHover=()=>{if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=0;}hoverToken++;};

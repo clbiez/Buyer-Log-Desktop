@@ -71,7 +71,14 @@ function makeService({ profiles = ['Default'], info = {}, devtools = null, confi
       existsSync: item => String(item).endsWith('msedge.exe') || files.has(String(item)),
       // Profil klasörleri yalnız gerçek kullanıcı veri kökünde durur; kurulum
       // klasörü boştur, böylece sürüm 0 kalır ve "mevcut profil" yolu sınanır.
-      readdirSync: (dir, opts) => (String(dir) === USER_DATA && opts ? profiles.map(name => ({ name, isDirectory: () => true })) : []),
+      // Sürüm, kurulum klasöründeki sürüm adlı alt klasörden okunur
+      // (msedge.exe --version ÇALIŞTIRILMAZ; Windows'ta pencere açar).
+      readdirSync: (dir, opts) => {
+        if (String(dir) === USER_DATA && opts) return profiles.map(name => ({ name, isDirectory: () => true }));
+        const folder = /\d+\.\d+\.\d+\.\d+/.exec(String(version || ''));
+        if (/Application$/i.test(String(dir)) && folder) return [folder[0]];
+        return [];
+      },
       readFileSync: file => { const value = files.get(String(file)); if (value == null) throw new Error('missing'); return value; },
       mkdirSync: () => {},
     },
