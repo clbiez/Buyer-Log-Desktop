@@ -1804,7 +1804,7 @@ function showSourceFilterRequiredNotice(status,message){
   bindBuyerLogUpdatePanel(modal);
   void refreshBuyerLogUpdatePanel();
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
-  modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
+  modal.addEventListener('click',event=>{const reopen=event.target.closest('[data-reopen-pricing-draft]');if(reopen){event.preventDefault();const row=results[Number(reopen.dataset.reopenPricingDraft)];if(row?.draftId)void prepareEmailReopenSingleDraft({draftId:row.draftId,manufacturer:row.manufacturer,filename:row.emlFilename,reopenUntil:row.reopenUntil},row.quotationRequestId||'',reopen);return;}const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const close=()=>modal.remove();
   modal.querySelectorAll('[data-source-filter-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.querySelector('[data-source-filter-open]')?.addEventListener('click',()=>{close();openDataSourceAndFilters({target:preferredTarget});});
@@ -31552,6 +31552,97 @@ function kolTriggerPricingDownload(url,filename,delayMs=0){
   };
   if(delayMs>0) setTimeout(run,delayMs); else run();
 }
+const PREPARE_EMAIL_PRICING_REOPEN_KEY='buyerlog.pricingDraftReopen.v1';
+function prepareEmailPricingDraftStore(){
+  try{
+    const raw=JSON.parse(window.sessionStorage?.getItem(PREPARE_EMAIL_PRICING_REOPEN_KEY)||'{}');
+    return raw&&typeof raw==='object'&&!Array.isArray(raw)?raw:{};
+  }catch(_){return {};}
+}
+function prepareEmailSavePricingDraftStore(store){
+  try{window.sessionStorage?.setItem(PREPARE_EMAIL_PRICING_REOPEN_KEY,JSON.stringify(store||{}));return true;}catch(_){return false;}
+}
+function prepareEmailPricingDraftExpiry(ref){
+  const value=Date.parse(String(ref?.reopenUntil||''));
+  return Number.isFinite(value)?value:0;
+}
+function prepareEmailPricingDraftRefs(requestId){
+  const id=String(requestId||'').trim();if(!id)return [];
+  const store=prepareEmailPricingDraftStore(),raw=Array.isArray(store[id])?store[id]:[],now=Date.now();
+  const live=raw.filter(ref=>{const expires=prepareEmailPricingDraftExpiry(ref);return ref&&String(ref.draftId||'').trim()&&(!expires||expires>now);});
+  if(live.length!==raw.length){if(live.length)store[id]=live;else delete store[id];prepareEmailSavePricingDraftStore(store);}
+  return live;
+}
+function prepareEmailRememberPricingDraft(requestId,ref){
+  const id=String(requestId||'').trim(),draftId=String(ref?.draftId||'').trim();if(!id||!draftId)return null;
+  const store=prepareEmailPricingDraftStore(),refs=(Array.isArray(store[id])?store[id]:[]).filter(item=>item&&String(item.draftId||'').trim());
+  const next={draftId,manufacturer:String(ref?.manufacturer||''),filename:String(ref?.filename||''),reopenUntil:String(ref?.reopenUntil||'')};
+  const index=refs.findIndex(item=>String(item.draftId||'')===draftId);
+  if(index>=0)refs[index]={...refs[index],...next};else refs.push(next);
+  store[id]=refs.slice(-40);prepareEmailSavePricingDraftStore(store);return next;
+}
+function prepareEmailForgetPricingDraft(requestId,draftId){
+  const id=String(requestId||'').trim(),token=String(draftId||'').trim();if(!id||!token)return;
+  const store=prepareEmailPricingDraftStore(),refs=(Array.isArray(store[id])?store[id]:[]).filter(item=>String(item?.draftId||'')!==token);
+  if(refs.length)store[id]=refs;else delete store[id];prepareEmailSavePricingDraftStore(store);
+}
+function prepareEmailPricingDraftCount(requestId){return prepareEmailPricingDraftRefs(requestId).length;}
+async function prepareEmailReopenDraftRef(ref){
+  const draftId=String(ref?.draftId||'').trim();if(!draftId)throw new Error(appLang==='en'?'Draft reference is unavailable.':'Taslak referansı kullanılamıyor.');
+  const resp=await fetch('/api/email-drafts/pricing/reopen',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({draftId})});
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok){const err=new Error(data.error||(appLang==='en'?'The draft e-mail could not be reopened.':'Taslak e-posta yeniden açılamadı.'));err.status=resp.status;throw err;}
+  if(!data.opened&&data.emlBase64){
+    const url=kolBase64ObjectUrl(data.emlBase64,'message/rfc822');
+    kolTriggerPricingDownload(url,data.filename||ref?.filename||'Pricing_Draft.eml');
+    setTimeout(()=>kolRevokeTransientUrls([url]),30000);
+  }
+  return data;
+}
+function prepareEmailSetReopenBusy(button,busy){
+  if(!button)return;
+  if(busy){if(button.dataset.reopenDraftOldHtml==null)button.dataset.reopenDraftOldHtml=button.innerHTML;button.disabled=true;button.innerHTML='<span class="thinkingOrbInline" aria-hidden="true"></span>'+escapeHtml(appLang==='en'?'Opening…':'Açılıyor…');}
+  else{if(button.dataset.reopenDraftOldHtml!=null){button.innerHTML=button.dataset.reopenDraftOldHtml;delete button.dataset.reopenDraftOldHtml;}button.disabled=false;}
+}
+async function prepareEmailReopenSingleDraft(ref,requestId='',button=null){
+  prepareEmailSetReopenBusy(button,true);
+  try{
+    const data=await prepareEmailReopenDraftRef(ref);
+    if(requestId&&data.draftId)prepareEmailRememberPricingDraft(requestId,{...ref,...data});
+    if(typeof showToast==='function')showToast(data.opened?(appLang==='en'?'Draft e-mail reopened in Outlook.':'Taslak e-posta Outlook’ta yeniden açıldı.'):(appLang==='en'?'Outlook could not reopen the draft; the .eml file was downloaded instead.':'Outlook taslağı yeniden açamadı; .eml dosyası indirildi.'));
+    return true;
+  }catch(err){
+    if(Number(err?.status)===410&&requestId)prepareEmailForgetPricingDraft(requestId,ref?.draftId);
+    if(typeof showToast==='function')showToast(err?.message||(appLang==='en'?'The draft e-mail could not be reopened.':'Taslak e-posta yeniden açılamadı.'));
+    return false;
+  }finally{prepareEmailSetReopenBusy(button,false);}
+}
+async function prepareEmailReopenPricingRequest(requestId,button=null){
+  const refs=prepareEmailPricingDraftRefs(requestId);
+  if(!refs.length){if(typeof showToast==='function')showToast(appLang==='en'?'No reopenable draft is available for this quotation, or the retry window has expired.':'Bu quotation için yeniden açılabilir taslak yok veya yeniden açma süresi doldu.');return false;}
+  if(refs.length>1&&typeof confirm==='function'){
+    const question=appLang==='en'?`${refs.length} draft e-mails will be reopened. Continue?`:`${refs.length} taslak e-posta yeniden açılacak. Devam edilsin mi?`;
+    if(!confirm(question))return false;
+  }
+  prepareEmailSetReopenBusy(button,true);
+  let opened=0,downloaded=0,failed=0;
+  try{
+    for(const ref of refs){
+      try{
+        const data=await prepareEmailReopenDraftRef(ref);
+        if(data.draftId)prepareEmailRememberPricingDraft(requestId,{...ref,...data});
+        if(data.opened)opened++;else downloaded++;
+      }catch(err){if(Number(err?.status)===410)prepareEmailForgetPricingDraft(requestId,ref?.draftId);failed++;}
+    }
+    if(typeof showToast==='function'){
+      const message=appLang==='en'
+        ?`${opened} draft(s) reopened${downloaded?`, ${downloaded} downloaded as .eml`:''}${failed?`, ${failed} failed`:''}.`
+        :`${opened} taslak yeniden açıldı${downloaded?`, ${downloaded} taslak .eml olarak indirildi`:''}${failed?`, ${failed} başarısız`:''}.`;
+      showToast(message);
+    }
+    return opened+downloaded>0;
+  }finally{prepareEmailSetReopenBusy(button,false);}
+}
 function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   const pricingResult=/send to pricing|fiyat talebi/i.test(String(resultTitle||''));
   const oldModal=document.getElementById('kolPricingResultModal');
@@ -31564,9 +31655,9 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   const multiDownloadNote=unopenedCount>1
     ?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:8px;color:var(--ink);font-size:12px;">${escapeHtml(appLang==='en'?`${unopenedCount} draft e-mails were downloaded automatically. If your browser blocked some of them, click the links below one by one.`:`${unopenedCount} taslak e-posta otomatik indirildi. Tarayıcınız bir kısmını engellediyse aşağıdaki bağlantılara tek tek tıklayın.`)}</div>`
     :'';
-  const rows=results.map(r=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+  const rows=results.map((r,resultIndex)=>{ const resized=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.compressed&&!x.archive).length:0; const archived=r.ok&&r.attachmentPlan?(r.attachmentPlan.included||[]).filter(x=>x.archive).length:0; const attachNote=r.ok&&r.attachmentPlan?`${pricingFormatBytes(r.attachmentPlan.totalBytes)}${r.attachmentPlan.multiPart?` · ${(appLang==='en'?'part':'parça')} ${r.attachmentPlan.partIndex}/${r.attachmentPlan.partCount}`:''} · ${r.attachmentPlan.included.length} ${appLang==='en'?'attachment(s) included':'dosya eki dahil'}${resized?` · ${resized} ${appLang==='en'?'resized':'yeniden boyutlandırıldı'}`:''}${archived?` · ${archived} ${appLang==='en'?'losslessly compressed':'kayıpsız sıkıştırıldı'}`:''}`:''; const reopenLink=r.ok&&r.draftId?`<button type="button" class="tbtn" data-reopen-pricing-draft="${resultIndex}"><svg class="ic"><use href="#i-mail"/></svg>${escapeHtml(appLang==='en'?'Re-open Draft E-Mail':'Taslak E-Postayı Yeniden Aç')}</button>`:''; const emlLink=r.ok&&r.emlUrl?`<a class="tbtn" href="${escapeHtml(r.emlUrl)}" download="${escapeHtml(r.emlFilename||'Pricing_Draft.eml')}"><svg class="ic"><use href="#i-mail-send"/></svg> E-Posta Taslağı</a>`:''; const excelLink=r.ok&&r.excelUrl?`<a class="tbtn" href="${escapeHtml(r.excelUrl)}" download="${escapeHtml(r.excelFilename||'Quotation_Request.xlsx')}"><svg class="ic"><use href="#i-file-export"/></svg> Excel</a>`:''; return `<div style="display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
     <div><div style="font-weight:700;color:var(--ink);">${escapeHtml(r.manufacturer)}</div><div style="font-size:11.5px;color:${r.ok?'var(--success, #177a4c)':'var(--danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${emlLink}${excelLink}</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${reopenLink}${emlLink}${excelLink}</div>
   </div>`; }).join('');
   const modal=document.createElement('div'); modal.id='kolPricingResultModal'; modal.className='warnOverlay';
   modal.innerHTML=`<div class="modalCard" style="max-width:650px;width:94%;max-height:82vh;display:flex;flex-direction:column;padding:0;">
@@ -32930,7 +33021,8 @@ function renderKolMfrModal(ctx){
     // Her Send to Pricing onayı, e-posta istemcisi sonucu ne olursa olsun tek bir
     // tarihsel Fiyat Çalışması kaydı oluşturur. Böylece başarısız taslak denemeleri
     // dahi takip ekranında ve Not Defteri'nde görünür kalır.
-    if(window.BL_QUOTATIONS?.recordRequest) window.BL_QUOTATIONS.recordRequest(SRC.persist?'collection':'cp',selRows,checked);
+    const quotationRequest=window.BL_QUOTATIONS?.recordRequest?await window.BL_QUOTATIONS.recordRequest(SRC.persist?'collection':'cp',selRows,checked):null;
+    const quotationRequestId=String(quotationRequest?.id||'');
     const results=[]; let previews=[], previewWarning=''; let changed=false;
     let downloadDelay=0; // v6.43 — art arda indirmeler arasına gecikme
     try{
@@ -32958,7 +33050,10 @@ function renderKolMfrModal(ctx){
             const subject=attachmentPlans.length>1?`${baseSubject} (${pi+1}/${attachmentPlans.length})`:baseSubject;
             prepareProgress.setStage(appLang==='en'?'Creating draft e-mail…':'Taslak e-posta oluşturuluyor…');
             const data=await kolCreatePricingEmailDraft({email:m.email,subject,workbook:pi===0?workbook:null,previews:pi===0?previews:[],attachmentPlan,body:topicForDraft.body,tableHtml,tablePlain,inlineImages:tableContent.inlineImages});
-            results.push({manufacturer:attachmentPlans.length>1?`${m.name} (${pi+1}/${attachmentPlans.length})`:m.name,ok:true,opened:Boolean(data.opened),emlUrl:data.downloadUrl,emlFilename:data.filename,excelUrl:data.excelDownloadUrl,excelFilename:data.excelFilename,cleanupUrls:data._transientUrls||[],attachmentPlan});
+            const resultManufacturer=attachmentPlans.length>1?`${m.name} (${pi+1}/${attachmentPlans.length})`:m.name;
+            const draftRef=data.draftId?{draftId:data.draftId,manufacturer:resultManufacturer,filename:data.filename,reopenUntil:data.reopenUntil}:null;
+            if(quotationRequestId&&draftRef)prepareEmailRememberPricingDraft(quotationRequestId,draftRef);
+            results.push({manufacturer:resultManufacturer,ok:true,opened:Boolean(data.opened),emlUrl:data.downloadUrl,emlFilename:data.filename,excelUrl:data.excelDownloadUrl,excelFilename:data.excelFilename,cleanupUrls:data._transientUrls||[],attachmentPlan,draftId:data.draftId||'',reopenUntil:data.reopenUntil||'',quotationRequestId});
             // v6.43 — Otomatik açma başarısızsa taslağı doğrudan indir; eskiden bu
             // yalnız TEK üretici seçiliyken oluyordu, birden fazla üretici seçiliyken
             // hiçbir taslak otomatik inmiyordu — sonuç penceresindeki bağlantılar her
@@ -33025,7 +33120,7 @@ function prepareEmailOpenQuotationReminder({rows,recipients,requestId='',count=0
   });
   return true;
 }
-window.BLPrepareEmail={...(window.BLPrepareEmail||{}),openQuotationReminder:prepareEmailOpenQuotationReminder};
+window.BLPrepareEmail={...(window.BLPrepareEmail||{}),openQuotationReminder:prepareEmailOpenQuotationReminder,pricingDraftCount:prepareEmailPricingDraftCount,reopenPricingRequest:prepareEmailReopenPricingRequest};
 
 document.getElementById('kolSendPricingBtn')?.addEventListener('click', async ()=>{
   if(!kolSelected.size){ showToast('Önce en az bir model seç.'); return; }
