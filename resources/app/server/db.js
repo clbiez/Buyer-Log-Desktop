@@ -676,6 +676,11 @@ function applyOrderPatch(ov, orderCode, patch, options = null) {
     }
     const ref = patch.imageRef == null ? '' : String(patch.imageRef).trim();
     ov.imagemap[imageKey] = ref;
+    // PLM ingest aynı kimliği renk adlı anahtara (…|name:X) yazar ve gösterim o
+    // anahtarı önce okur. CP'den yapılan silme/güncelleme onları da revize
+    // etmezse eski görsel yeni seçimi gölgeler.
+    const namedPrefix = `${imageKey}|name:`;
+    for (const key of Object.keys(ov.imagemap)) if (key.startsWith(namedPrefix)) ov.imagemap[key] = ref;
   }
   if (patch.dates && typeof patch.dates === 'object') applyDatePatch(ov, oc, patch.dates, orderCode);
 }
