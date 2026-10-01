@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.183",
-  "commit_sha": "1c4542f66eff799c8e484e7511b3dbb38a40ebd2",
-  "release_notes": "Buyer Log 7.0.183: Horizon (Veri Yönetimi kaynak filtresi) artık kullanıcı bazlı. \"Kaydet (yalnız benim için)\" filtreyi yalnız sizin kaydınıza yazar; Sync klasörü üzerinden başka bilgisayarlara gitmez, başka bir kullanıcının değişikliği sizin filtrenizi bozmaz. Bağlı modüllerde (Orders · Backlog · LFL · Price) kişisel filtre grubun hepsine uygulanır. Ortak varsayılan filtreyi yalnız yönetim yetkisi olanlar \"Herkes için\" düğmesiyle değiştirebilir; kişisel filtre \"Kişisel ×\" rozetinden kaldırılabilir. Tam regresyon paketi yerelde ve Windows CI'da geçti."
+  "version": "7.0.184",
+  "commit_sha": "26a3afd59f3a2275c0cdbfee76ff5edd503330bc",
+  "release_notes": "Buyer Log 7.0.184 TEST: Endeksmatik yüklemesinde KLASMAN LİSTESİ ÖZET ve pivot sütunları artık önce tam başlıkla bulunuyor (\"Klasman Kodu\" gibi bir sütun \"Klasman\"dan önce gelse de doğru sütun okunur). Anahtarlar yine eşleşmezse hata mesajı okunan sütunları, klasman sayılarını, eşleşen sayısını ve örnek anahtarları gösterir. Node regression suite (785 dosya) başarıyla geçti. STABLE kanalına terfi edilmedi."
 }
