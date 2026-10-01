@@ -90,9 +90,9 @@ test('Partial View tüm lojistik segmentlerini status bazında tek satıra topla
 test('CP ve Orders filtreleri Partial View açıkken çoğaltılmış satırlar üzerinde çalışır', () => {
   const cp = extractFunction(APP, 'filteredCP');
   const orders = extractFunction(APP, 'filteredOrders');
-  assert.match(cp, /const source=partialViewRows\('cp',state\.cp\.rows\)/);
+  assert.match(cp, /const source=(?:ensurePlmSampleAccessors\()?partialViewRows\('cp',(?:ensurePlmSampleAccessors\()?state\.cp\.rows\)/);
   assert.match(cp, /source\.filter\(r=>cpRowPasses/);
-  assert.match(orders, /const source=partialViewRows\('orders',state\.orders\.rows\)/);
+  assert.match(orders, /const source=(?:ensurePlmSampleAccessors\()?partialViewRows\('orders',(?:ensurePlmSampleAccessors\()?state\.orders\.rows\)/);
   assert.match(orders, /source\.filter\(row=>ordersRowPasses/);
   assert.match(APP, /key==='STATUS'&&r&&r\._partialViewActive\) vals\.add\(norm\(r\.STATUS\)\)/);
 });
