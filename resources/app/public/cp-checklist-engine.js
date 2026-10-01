@@ -28,6 +28,13 @@
  *    Ocak'ta "evet" denen bir kontrol, Nisan'a ertelenmiş sipariş için sonsuza
  *    kadar onaylı görünürdü.
  *
+ * 5) PLM KANITI SORUYU KENDİSİ CEVAPLAR. CoreNectum Requests sekmesinden
+ *    gelen numune talebi (plm-sample-requests-engine) onaylıysa soru
+ *    sorulmaz; açık/reddedilmiş talep varsa soru açık kalır ama PLM durumu
+ *    yanında gösterilir. PLM'de talep YOKSA kanıt da yoktur — soru eskisi
+ *    gibi kullanıcıya sorulur (cevapsız ≠ eksik kuralı korunur). Kullanıcının
+ *    kendi cevabı her zaman önceliklidir.
+ *
  * SAF: DOM yok, fetch yok, AI yok.
  */
 (function (root, factory) {
@@ -54,6 +61,9 @@
     Object.freeze({ id: 'criticalSample', group: 'sample', defaultEnabled: false, maxDaysToLoad: 56, stages: PRE_LOAD,
       tr: 'Kritik numune onayları', en: 'Critical sample approvals',
       questionTr: 'Kritik numune onayları (Fit, Size Set, Seal) tamam mı?', questionEn: 'Are the critical sample approvals (Fit, Size Set, Seal) complete?' }),
+    Object.freeze({ id: 'artwork', group: 'approval', defaultEnabled: true, maxDaysToLoad: 56, stages: PRE_LOAD,
+      tr: 'Artwork onayı', en: 'Artwork approval',
+      questionTr: 'Artwork onayı alındı mı?', questionEn: 'Has the artwork been approved?' }),
     Object.freeze({ id: 'tests', group: 'test', defaultEnabled: true, maxDaysToLoad: 28, stages: PRE_LOAD,
       tr: 'Testler', en: 'Tests',
       questionTr: 'Gerekli testler tamamlandı mı?', questionEn: 'Are the required tests complete?' }),
@@ -135,6 +145,18 @@
 
   function answerKey(orderKey, itemId) { return `${orderKey}::${itemId}`; }
 
+  /* PLM kanıtı: ctx.plmEvidence(analysis, itemId) → { state:'approved'|'open'|
+     'rejected', requestCode, statusName, subTypeName, date } ya da null.
+     Yalnız 'approved' soruyu susturur. */
+  function plmEvidenceOf(context, analysis, itemId) {
+    if (!context || typeof context.plmEvidence !== 'function') return null;
+    try {
+      const evidence = context.plmEvidence(analysis, itemId);
+      return evidence && typeof evidence === 'object' && evidence.state ? evidence : null;
+    } catch (_) { return null; }
+  }
+  function plmApproved(evidence) { return Boolean(evidence && evidence.state === 'approved'); }
+
   /* Cevap, verildiği andaki yükleme tarihine bağlanır. Tarih sonradan
      kayarsa cevap eskir ve soru yeniden sorulur (§4). */
   function makeAnswer(state, analysis, meta) {
@@ -192,6 +214,8 @@
       const answer = answers[answerKey(analysis.orderKey, item.id)];
       const stale = answerIsStale(answer, analysis);
       if (answer && !stale) continue;
+      const plm = plmEvidenceOf(context, analysis, item.id);
+      if (plmApproved(plm)) continue;
       open.push({
         id: item.id, group: item.group,
         tr: item.tr, en: item.en, questionTr: item.questionTr, questionEn: item.questionEn,
@@ -199,6 +223,7 @@
         // Cevabı eskiyen kontrol, hiç sorulmamış olandan ayrı gösterilir.
         reopened: Boolean(stale),
         previousAnswer: stale ? answer : null,
+        plm,
       });
     }
     return open;
@@ -218,7 +243,7 @@
     const mark = (id, applicable) => {
       if (!applicable) { state[id] = 'notApplicable'; return; }
       const answer = answers[answerKey(analysis.orderKey, id)];
-      state[id] = answer && !answerIsStale(answer, analysis) ? 'answered' : 'open';
+      state[id] = (answer && !answerIsStale(answer, analysis)) || plmApproved(plmEvidenceOf(context, analysis, id)) ? 'answered' : 'open';
     };
     for (const item of ITEMS) mark(item.id, settings.enabled && itemApplies(item, settings.items[item.id], analysis, settings));
     for (const item of (Array.isArray(context.customItems) ? context.customItems : [])) mark(item.id, settings.enabled);
@@ -235,19 +260,22 @@
     const buckets = new Map();
     let openTotal = 0;
     let answeredTotal = 0;
+    let plmAnsweredTotal = 0;
     const answers = context.answers || {};
 
     // Özel kontroller sipariş bazında değişir (kapsam koşulu): çağıran her
     // sipariş için hangilerinin geçerli olduğunu verir.
     const customFor = typeof context.customItemsFor === 'function' ? context.customItemsFor : () => [];
     for (const analysis of list) {
-      const open = openItems(analysis, { settings, answers, customItems: customFor(analysis) });
+      const open = openItems(analysis, { settings, answers, customItems: customFor(analysis), plmEvidence: context.plmEvidence });
       for (const entry of open) {
-        if (!buckets.has(entry.id)) buckets.set(entry.id, { id: entry.id, group: entry.group, tr: entry.tr, en: entry.en, questionTr: entry.questionTr, questionEn: entry.questionEn, rows: 0, qty: 0, reopened: 0, orders: [] });
+        if (!buckets.has(entry.id)) buckets.set(entry.id, { id: entry.id, group: entry.group, tr: entry.tr, en: entry.en, questionTr: entry.questionTr, questionEn: entry.questionEn, rows: 0, qty: 0, reopened: 0, plmOpen: 0, plmRejected: 0, orders: [] });
         const bucket = buckets.get(entry.id);
         bucket.rows += 1;
         bucket.qty += Number(analysis.qty) || 0;
         if (entry.reopened) bucket.reopened += 1;
+        if (entry.plm && entry.plm.state === 'open') bucket.plmOpen += 1;
+        if (entry.plm && entry.plm.state === 'rejected') bucket.plmRejected += 1;
         bucket.orders.push(analysis);
         openTotal += 1;
       }
@@ -257,6 +285,7 @@
         if (!itemApplies(item, config, analysis, settings)) continue;
         const answer = answers[answerKey(analysis.orderKey, item.id)];
         if (answer && !answerIsStale(answer, analysis)) answeredTotal += 1;
+        else if (plmApproved(plmEvidenceOf(context, analysis, item.id))) { answeredTotal += 1; plmAnsweredTotal += 1; }
       }
     }
 
@@ -270,6 +299,8 @@
       items,
       openTotal,
       answeredTotal,
+      // answeredTotal içinde, kullanıcı değil PLM onayıyla kapananlar.
+      plmAnsweredTotal,
       // Kapalı kontroller: kullanıcı bunları takip etmemeyi SEÇTİ. Eksik değil.
       disabled: ITEMS.filter(item => !settings.items[item.id].enabled).map(item => ({ id: item.id, tr: item.tr, en: item.en })),
     };

@@ -118,12 +118,15 @@
     globalFlowEarth:['overview-global-flow-earth.js?rev=1'],
     // Kullanıcı menüsü → Ön Ayar Paylaşımı; yalnız ilk açılışta yüklenir.
     presetShare:['preset-share.js?rev=1'],
-    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','cp-overview-assistant.js?rev=attn1-ovcp1'],
+    /* PLM numune talepleri (CoreNectum Requests) kontrol listesine kanıt verir;
+       iki dosya görünümden ÖNCE yüklenir. deferredUi'de de listelidir (sağ tık
+       penceresi); loadScript aynı dosyayı tek kez yükler. */
+    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-overview-assistant.js?rev=attn1-ovcp1'],
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile
     // bekler; böylece işlevler kaybolmaz, yalnız açılış kritik yolundan çıkar.
     deferredUi:[
-      'formula-engine.js','formula-columns.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
+      'formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
       'quick-filter-groups.js','kpi-groups.js','update-test-ui.js?rev=3','user-access-ui.js?rev=APP-UPDATE-V3','user-management.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
          artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */

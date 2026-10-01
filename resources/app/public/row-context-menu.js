@@ -178,6 +178,15 @@
         run: () => outlook.openRow(row, config.module),
       });
     }
+    // PLM numune talepleri (CoreNectum Requests): CP aşamasında takip edilir,
+    // koleksiyonda numune çalışılmaz. Yalnız PLM ID'si olan CP/Sipariş satırı.
+    const sampleRequests = window.BLPlmSampleRequests;
+    if (sampleRequests && row && config.module !== 'collection' && sampleRequests.plmIdOfRow(row, config.module)) {
+      items.push({
+        label: T('PLM numune talepleri', 'PLM sample requests'),
+        run: () => sampleRequests.openForRow(row, config.module),
+      });
+    }
     const tools = toolEntries(config.tools);
     if (items.length && tools.length) items.push({ separator: true });
     items.push(...tools);

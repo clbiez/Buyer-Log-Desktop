@@ -297,17 +297,19 @@
     }
     const items = summary.items.map(item => `<tr>
       <td><b>${esc(itemLabel(item))}</b><small>${esc(questionOf(item))}</small></td>
-      <td class="num">${int(item.rows)}</td>
+      <td class="num">${int(item.rows)}${item.plmOpen ? ` <span class="cpaPlm tone-wait" title="${esc(L('PLM\'de açık numune talebi olan sipariş', 'Orders with an open sample request in PLM'))}">PLM ${int(item.plmOpen)}</span>` : ''}${item.plmRejected ? ` <span class="cpaPlm tone-bad" title="${esc(L('PLM\'de reddedilmiş numune talebi olan sipariş', 'Orders with a rejected sample request in PLM'))}">PLM ${int(item.plmRejected)}</span>` : ''}</td>
       <td class="num">${item.reopened ? `<span class="cpaFlag" title="${esc(L('Yükleme tarihi değiştiği için yeniden soruldu', 'Re-asked because the load date changed'))}">${int(item.reopened)}</span>` : ''}</td>
       <td class="act"><button type="button" class="cpaBtn sm" data-cpa-open-checklist="${esc(item.id)}">${esc(L('Aç', 'Open'))}</button></td>
     </tr>`).join('');
     const disabled = summary.disabled.length
       ? `<p class="cpaNote">${esc(L('Takip edilmeyen kontroller', 'Not tracked'))}: ${summary.disabled.map(item => esc(itemLabel(item))).join(', ')}</p>` : '';
     return card('checklist', L('Kontrol Listesi', 'Checklist'), `
-      <p class="cpaNote">${esc(L('Bu bilgiler Buyer Log\'da sütun olarak tutulmuyor; soru olarak sorulur. İşaretlediğiniz soru tekrar sorulmaz.', 'These are not stored as columns in Buyer Log; they are asked as questions. A question you mark is not asked again.'))}</p>
+      <p class="cpaNote">${esc(L('Bu bilgiler Buyer Log\'da sütun olarak tutulmuyor; soru olarak sorulur. İşaretlediğiniz soru tekrar sorulmaz. PPS, S/Off, kritik numune ve Artwork soruları PLM\'de onaylı numune talebi varsa kendiliğinden kapanır.', 'These are not stored as columns in Buyer Log; they are asked as questions. A question you mark is not asked again. PPS, S/Off, critical sample and artwork questions close automatically when PLM has an approved sample request.'))}</p>
       ${items ? `<table class="cpaTable"><thead><tr><th>${esc(L('Kontrol', 'Check'))}</th><th class="num">${esc(L('Açık', 'Open'))}</th><th class="num">${esc(L('Yeniden', 'Re-asked'))}</th><th></th></tr></thead><tbody>${items}</tbody></table>`
     : `<p class="cpaEmpty">${esc(L('Şu an açık kontrol yok.', 'No open checks right now.'))}</p>`}
-      ${summary.answeredTotal ? `<p class="cpaNote">${esc(L('Tamamlanan kontrol', 'Completed checks'))}: <b>${int(summary.answeredTotal)}</b></p>` : ''}
+      ${summary.answeredTotal ? `<p class="cpaNote">${esc(L('Tamamlanan kontrol', 'Completed checks'))}: <b>${int(summary.answeredTotal)}</b>${summary.plmAnsweredTotal ? ` · ${esc(L('PLM onayıyla', 'via PLM approval'))}: <b>${int(summary.plmAnsweredTotal)}</b>` : ''}</p>` : ''}
+      ${sampleRequests() ? `<div class="cpaRowBetween"><span class="cpaNote">${esc(L('PLM numune senkronu', 'PLM sample sync'))}: ${esc(sampleRequests().updatedAt ? new Date(sampleRequests().updatedAt).toLocaleString(locale()) : L('henüz yapılmadı', 'not run yet'))}</span>
+        <button type="button" class="cpaBtn sm" data-cpa-plm-requests-sync>${esc(L('PLM numune durumunu güncelle', 'Update PLM sample status'))}</button></div>` : ''}
       ${disabled}`);
   }
 
@@ -633,6 +635,8 @@
       openAttentionDetail(el.dataset.cpaOrderKey);
     });
     container.querySelectorAll('[data-cpa-open-checklist]').forEach(el => el.onclick = () => openChecklist(el.dataset.cpaOpenChecklist));
+    const plmSyncBtn = container.querySelector('[data-cpa-plm-requests-sync]');
+    if (plmSyncBtn) plmSyncBtn.onclick = () => syncPlmSampleRequests(plmSyncBtn);
     const settings = container.querySelector('[data-cpa-settings]');
     if (settings) settings.onclick = openSettings;
     const rulesBtn = container.querySelector('[data-cpa-rules]');
@@ -1160,6 +1164,46 @@
   }
 
   /* --------------------------------------------------------- kontrol listesi */
+  function plmCell(analysis, itemId) {
+    const api = sampleRequests();
+    if (!api) return '';
+    const plmId = api.plmIdOfRow(analysis.sourceRow, 'cp');
+    if (!plmId) return '';
+    const badge = api.evidenceBadge(api.evidenceForAnalysis(analysis, itemId));
+    return `<button type="button" class="cpaBtn sm ghost" data-cpa-plm-open="${esc(plmId)}" data-cpa-plm-title="${esc(analysis.modelName)}" title="${esc(L('PLM numune taleplerini göster', 'Show PLM sample requests'))}">${badge || esc(L('Talep yok', 'No request'))}</button>`;
+  }
+
+  /* Açık numune sorusu olan siparişlerin PLM ID'leri PLM'den tazelenir.
+     Onaylı olanlar zaten listeden düşer; tekrar sormaya gerek yok. */
+  const PLM_SAMPLE_ITEMS = ['pps', 'soff', 'criticalSample', 'artwork'];
+  async function syncPlmSampleRequests(button) {
+    const api = sampleRequests();
+    if (!api || !state.checklist) return;
+    const ids = new Set();
+    for (const bucket of state.checklist.items) {
+      if (!PLM_SAMPLE_ITEMS.includes(bucket.id)) continue;
+      for (const analysis of (bucket.allOrders || bucket.orders)) {
+        const plmId = api.plmIdOfRow(analysis.sourceRow, 'cp');
+        if (plmId) ids.add(plmId);
+      }
+    }
+    if (!ids.size) {
+      if (typeof showToast === 'function') showToast(L('PLM numune sorusu açık, PLM ID\'si olan sipariş yok.', 'No orders with a PLM ID have open sample questions.'), { icon: false });
+      return;
+    }
+    const old = button.textContent;
+    button.disabled = true;
+    button.textContent = L(`${ids.size} model PLM'den alınıyor…`, `Fetching ${ids.size} styles from PLM…`);
+    try {
+      const result = await api.sync([...ids], { scope: 'cp' });
+      if (result.ok && typeof showToast === 'function') showToast(api.summaryText(result), { icon: false, duration: 9000 });
+    } catch (err) {
+      if (typeof showToast === 'function') showToast(L('PLM numune talepleri alınamadı: ', 'PLM sample requests could not be retrieved: ') + (typeof plmSyncErrorMessage === 'function' ? plmSyncErrorMessage(err) : String(err && err.message || err)), { icon: false, duration: 12000 });
+    } finally {
+      if (button.isConnected) { button.disabled = false; button.textContent = old; }
+    }
+  }
+
   function openChecklist(itemId) {
     const bucket = state.checklist.items.find(item => item.id === itemId);
     if (!bucket) return;
@@ -1169,6 +1213,7 @@
       <td>${esc(analysis.modelName)} <small>${esc(analysis.colourCode)}</small></td>
       <td>${esc(analysis.dims.manufacturer)}</td>
       <td class="num">${analysis.daysToLoad == null ? '—' : int(analysis.daysToLoad)}</td>
+      <td>${plmCell(analysis, itemId)}</td>
       <td class="act">
         <button type="button" class="cpaBtn sm" data-cpa-answer="done" data-cpa-key="${esc(analysis.orderKey)}">${esc(Checklist.ANSWER_LABELS[lang()].done)}</button>
         <button type="button" class="cpaBtn sm ghost" data-cpa-answer="notRequired" data-cpa-key="${esc(analysis.orderKey)}">${esc(Checklist.ANSWER_LABELS[lang()].notRequired)}</button>
@@ -1182,13 +1227,17 @@
         <p class="cpaNote">${esc(L('İşaretlediğiniz sipariş için bu soru bir daha sorulmaz. Yükleme tarihi değişirse soru yeniden gelir.', 'The question is not asked again for an order you mark. If the load date changes, it comes back.'))}</p>
         <div class="cpaScroll"><table class="cpaTable"><thead><tr>
           <th>${esc(L('Sipariş', 'Order'))}</th><th>${esc(L('Model', 'Style'))}</th><th>${esc(L('Üretici', 'Supplier'))}</th>
-          <th class="num">${esc(L('Yükleme', 'To load'))}</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
+          <th class="num">${esc(L('Yükleme', 'To load'))}</th><th>PLM</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
       </div>
       <footer><button type="button" class="cpaBtn" data-cpa-close>${esc(L('Kapat', 'Close'))}</button></footer></div>`;
     document.body.appendChild(modal);
     const close = () => { modal.remove(); recompute(); render(); };
     modal.querySelectorAll('[data-cpa-close]').forEach(el => el.onclick = close);
     modal.onclick = event => { if (event.target === modal) close(); };
+    modal.querySelectorAll('[data-cpa-plm-open]').forEach(el => el.onclick = () => {
+      const api = sampleRequests();
+      if (api) api.openForPlm(el.dataset.cpaPlmOpen, el.dataset.cpaPlmTitle || '');
+    });
     modal.querySelectorAll('[data-cpa-answer]').forEach(el => el.onclick = () => {
       const analysis = orders.find(item => item.orderKey === el.dataset.cpaKey);
       if (!analysis) return;
@@ -2241,6 +2290,13 @@
 
   /* ------------------------------------------------------------- hesaplama */
   let lastRows = null;
+  /* PLM numune talepleri (CoreNectum Requests) kontrol listesine kanıt verir.
+     Modül yüklenmediyse kanıt yoktur ve sorular eskisi gibi sorulur. */
+  const sampleRequests = () => window.BLPlmSampleRequests || null;
+  function plmEvidence(analysis, itemId) {
+    const api = sampleRequests();
+    return api ? api.evidenceForAnalysis(analysis, itemId) : null;
+  }
   function analyzeRowsWithPersonalRules(rows, options) {
     const list = Array.isArray(rows) ? rows : [];
     const opts = options || {};
@@ -2255,7 +2311,7 @@
       const custom = Rules.customChecklistItems(analysis, state.rules, {});
       customItems.set(analysis.orderKey, custom);
       checklistState.set(analysis.orderKey, Checklist.stateFor(analysis, {
-        settings: state.checklistSettings, answers: state.answers, customItems: custom,
+        settings: state.checklistSettings, answers: state.answers, customItems: custom, plmEvidence,
       }));
     }
     for (const analysis of model.orders) {
@@ -2291,7 +2347,7 @@
     if (opts.commit === true) {
       state.model = model;
       state.checklist = Checklist.summarize(model.orders, {
-        settings: state.checklistSettings, answers: state.answers, limit: 5000,
+        settings: state.checklistSettings, answers: state.answers, limit: 5000, plmEvidence,
         customItemsFor: analysis => customItems.get(analysis.orderKey) || [],
       });
       const liveColumnCatalog = liveRuleColumnCatalog();
@@ -2349,5 +2405,14 @@
 
   loadPrefs();
   state.moduleLayout = normalizeModuleLayouts(state.moduleLayout);
+  /* PLM numune verisi gelince karar bağlamı değişir: kontrol listesi ve
+     CP öncelik hücreleri aynı olayla yeniden hesaplanır. */
+  function onPlmSampleRequestsChanged() {
+    notifyDecisionContextChanged('plm-sample-requests');
+    recompute();
+    render();
+  }
+  window.addEventListener('bl:plm-requests-changed', onPlmSampleRequestsChanged);
+  if (sampleRequests()) sampleRequests().load().then(data => { if (data && data.loaded && Object.keys(data.models || {}).length) onPlmSampleRequestsChanged(); });
   window.BLCpAssistant = { onOverviewRendered, render, computeDecisionsForRows, decisionContextRevision: () => decisionContextRevision, _state: state };
 })();
