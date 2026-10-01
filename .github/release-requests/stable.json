@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.193",
-  "source": "test-v7.0.193",
-  "requestedAt": "2026-10-01T20:49:45Z",
-  "reason": "plm-auth-auto-renew-cp-image-key-v7.0.193"
+  "version": "7.0.194",
+  "source": "test-v7.0.194",
+  "requestedAt": "2026-10-01T21:16:00Z",
+  "reason": "windows-taskbar-appusermodelid-v7.0.194"
 }
