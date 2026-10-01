@@ -14,14 +14,13 @@
   // Community API v4 on the current nagerholidays.com domain is the primary source.
   const HOLIDAY_API='https://nagerholidays.com/api/v4/Holidays';
   const HOLIDAY_API_FALLBACK='https://nagerholidays.com/api/v3/PublicHolidays';
+  const HOLIDAY_LOCAL_API='/api/world-clock-holidays';
   const DEFAULT_HOLIDAY_MONTHS=3;
   const HOLIDAY_MONTH_OPTIONS=Object.freeze([1,3,6,12]);
   const HOLIDAY_MAX_ITEMS=50;
-  // Bazı küresel tatil API'leri Hindistan'ı hiç sunmuyor. Buyer Log'un Hindistan
-  // saat kartı için DoPT'nin Central Government Gazetted Holiday takvimi kanonik
-  // fallback'tir. 2026/2027 listeleri yayımlanmış resmi yıllık takvimlerle aynıdır.
-  // Yeni yıllar yayımlandıkça bu küçük, denetlenebilir tablo genişletilebilir;
-  // diğer ülkeler güncel Nager Holidays API'sinden okunmaya devam eder.
+  // Sunucu artık canlı çok-kaynaklı holiday provider zincirini yönetir. Bu tablo
+  // yalnız sunucu/harici ağ tamamen kullanılamazsa 2026/2027 Hindistan için son
+  // güvenli istemci fallback'idir; yeni yılların ana güncelleme yolu değildir.
   const OFFICIAL_HOLIDAY_OVERRIDES=Object.freeze({
     'IN|2026':Object.freeze([
       ['2026-01-26','Republic Day'],['2026-03-04','Holi'],['2026-03-21','Id-ul-Fitr'],
@@ -188,7 +187,7 @@
     return {hour:(hour+minute/60+second/3600)*30,minute:(minute+second/60)*6,second:second*6};
   }
 
-  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,OFFICIAL_HOLIDAY_OVERRIDES,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,officialHolidayOverride,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
+  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,HOLIDAY_LOCAL_API,OFFICIAL_HOLIDAY_OVERRIDES,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,officialHolidayOverride,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
 
   const lang=()=>(document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -227,14 +226,29 @@
       return response.json();
     }).then(normalizeHolidayRows);
   }
+  function fetchHolidayServiceYear(year,countryCode){
+    const code=String(countryCode||'').toUpperCase();
+    const url=HOLIDAY_LOCAL_API+'?country='+encodeURIComponent(code)+'&year='+encodeURIComponent(year);
+    return fetch(url,{headers:{Accept:'application/json'}}).then(response=>{
+      if(!response.ok)throw new Error('holiday service '+response.status);
+      return response.json();
+    }).then(payload=>normalizeHolidayRows(payload&&payload.rows));
+  }
   function fetchHolidayYear(year,countryCode){
     const code=String(countryCode||'').toUpperCase(),key=code+'|'+year;
     if(!code)return Promise.resolve([]);
-    const official=officialHolidayOverride(year,code);if(official)return Promise.resolve(official);
     if(holidayCache.has(key))return holidayCache.get(key);
     const currentUrl=HOLIDAY_API+'/'+encodeURIComponent(code)+'/'+encodeURIComponent(year);
     const fallbackUrl=HOLIDAY_API_FALLBACK+'/'+encodeURIComponent(year)+'/'+encodeURIComponent(code);
-    const request=fetchHolidayJson(currentUrl).then(rows=>rows.length?rows:fetchHolidayJson(fallbackUrl)).catch(()=>fetchHolidayJson(fallbackUrl)).catch(()=>[]);
+    const direct=()=>fetchHolidayJson(currentUrl)
+      .then(rows=>rows.length?rows:fetchHolidayJson(fallbackUrl))
+      .catch(()=>fetchHolidayJson(fallbackUrl));
+    const official=()=>officialHolidayOverride(year,code)||[];
+    const request=fetchHolidayServiceYear(year,code)
+      .then(rows=>rows.length?rows:direct())
+      .catch(()=>direct())
+      .then(rows=>rows.length?rows:official())
+      .catch(()=>official());
     holidayCache.set(key,request);return request;
   }
   function holidayDateLabel(iso,l){
