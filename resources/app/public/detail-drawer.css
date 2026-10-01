@@ -30,11 +30,11 @@
 
 /* CP ile aynı görünüm presetleri ve iki seviyeli sütun başlığı. */
 .blDetailPresetGroup{display:flex;align-items:center;gap:4px;min-width:max-content}
-.blDetailPresetLabel{padding:0 3px;color:var(--muted);font:800 9px var(--font);letter-spacing:.06em}
+.blDetailPresetLabel{padding:0 3px;color:var(--muted);font:800 10px var(--font);letter-spacing:.06em}
 .blDetailPreset{height:28px;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--ink2);font:700 10px var(--font);padding:0 8px;cursor:pointer}
 .blDetailPreset:hover{background:var(--card2);border-color:var(--line)}
 .blDetailPreset[aria-pressed="true"]{background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink)}
-.blDetailTable.hasReferenceSetup .blDetailGroupRow th{top:0;z-index:4;height:24px;padding:4px 8px;background:var(--card);font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-top:2px solid var(--line)}
+.blDetailTable.hasReferenceSetup .blDetailGroupRow th{top:0;z-index:4;height:24px;padding:4px 8px;background:var(--card);font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border-top:2px solid var(--line)}
 .blDetailTable.hasReferenceSetup .blDetailColumnHead th{top:24px;z-index:3}
 .blDetailTable.hasReferenceSetup td.num{text-align:right;font-variant-numeric:tabular-nums}
 .blDetailTable.hasReferenceSetup th,.blDetailTable.hasReferenceSetup td{box-sizing:border-box}
