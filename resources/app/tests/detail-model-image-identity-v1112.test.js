@@ -85,3 +85,32 @@ test('sunucu boş ASAS dizisini yüklenmiş authoritative snapshot sanmaz', () =
   assert.match(SERVER, /if\(runtime\.loadedAt && Array\.isArray\(runtime\.asasOrders\) && runtime\.lflLoadedAt\) return runtime;/);
   assert.match(SERVER, /modelImageIdentityOrders\(runtime\)/);
 });
+
+test('OAB kategori önekli Option Adı yalın ASAS model adına çözülür', () => {
+  const orders = [{ ocode: 1004, model: 'BARRY-YD', ccode: 'BLK', plm: 444 }];
+  const result = resolver.resolveItems([{ styleName: 'PNT,BARRY-YD', colourCode: 'BLK' }], { orders });
+  assert.equal(result.unresolved.length, 0);
+  assert.equal(result.resolved[0].plmId, '444');
+  assert.deepEqual(resolver.modelKeys('KK.BDY,GARFIELD-1-YD'), ['KK.BDY,GARFIELD-1-YD', 'GARFIELD-1-YD']);
+  assert.deepEqual(resolver.modelKeys('GARFIELD-1-YD'), ['GARFIELD-1-YD']);
+});
+
+test('sipariş geçilmemiş opsiyon PLM ID’yi Koleksiyon satırından alır', () => {
+  const collectionRows = [{ modelKod: 'GARFIELD-1-YD', plmId: '2112907' }];
+  const result = resolver.resolveItems([{ styleName: 'KK.BDY,GARFIELD-1-YD', colourCode: 'ECRU' }], { orders: [], collectionRows });
+  assert.equal(result.unresolved.length, 0);
+  assert.equal(result.resolved[0].plmId, '2112907');
+  assert.match(SERVER, /collectionRows:\s*modelImageIdentityCollectionRows\(req\.currentUser\.id,\s*raw\)/);
+});
+
+test('istemci kanonik PLM çözümü önekli adı da dener', () => {
+  assert.match(APP, /const bare=key\.replace\(\/\^\[\^\\s,\]\{1,16\},\\s\*\(\?=\\S\)\/,''\)/);
+});
+
+test('ortak detay çekmecesi Backlog iç meta kimliğini (_plmId/_colourCode/_imageRef) okur', () => {
+  const DRAWER = fs.readFileSync(path.join(ROOT, 'public', 'detail-drawer.js'), 'utf8');
+  assert.match(DRAWER, /const rawPlmId=get\('plmId','_plmId'/);
+  assert.match(DRAWER, /colourCode:get\('colourCode','_colourCode'/);
+  assert.match(DRAWER, /'Option Name','_modelName'\)/);
+  assert.match(DRAWER, /directRef\?'\/api\/cp-images\/'\+encodeURIComponent\(directRef\)/);
+});

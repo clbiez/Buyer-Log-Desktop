@@ -14,6 +14,17 @@ function orderCodeKey(value) {
   if (/^\d+(?:\.0+)?$/.test(text)) text = text.replace(/\.0+$/, '').replace(/^0+(?=\d)/, '');
   return textKey(text);
 }
+/* OAB "Option Adı" ve bazı alt raporlar model adını kategori önekiyle verir
+   ("KK.BDY,GARFIELD-1-YD", "PNT,BARRY-YD"). ASAS, Koleksiyon ve PLM link
+   kayıtları yalın adı ("GARFIELD-1-YD") taşır. Önce tam ad, eşleşmezse
+   öneksiz ad denenir; uydurma/benzerlik eşleşmesi yapılmaz. */
+const OPTION_PREFIX_RE = /^[^\s,]{1,16},\s*(?=\S)/;
+function modelKeys(value) {
+  const full = textKey(value);
+  if (!full) return [];
+  const bare = OPTION_PREFIX_RE.test(full) ? full.replace(OPTION_PREFIX_RE, '') : '';
+  return bare && bare !== full ? [full, bare] : [full];
+}
 function colourCodeKey(value) { return parse.normalizeCpImageColourCode(value); }
 function styleNameOf(value) { return clean(value && (value.styleName ?? value.modelName ?? value.model)); }
 function orderCodeOf(value) { return clean(value && (value.orderCode ?? value.ocode ?? value['Order Code'] ?? value['Sipariş Kod'] ?? value['Sipariş Kodu'])); }
@@ -32,7 +43,7 @@ function candidate(map, key) {
   return hit && !hit.conflict ? hit.plmId : '';
 }
 
-function buildIdentityIndex({ orders = [], styleLinks = {} } = {}) {
+function buildIdentityIndex({ orders = [], styleLinks = {}, collectionRows = [] } = {}) {
   const byOrderModelColour = new Map();
   const byModelColour = new Map();
   const byModel = new Map();
@@ -53,19 +64,31 @@ function buildIdentityIndex({ orders = [], styleLinks = {} } = {}) {
     const plmId = plmIdOf(link);
     if (model && plmId) addCandidate(byModel, model, plmId);
   }
+
+  /* Koleksiyon satırı model kodu ile PLM ID'yi AYNI kayıtta tutar. OAB
+     "Sipariş Geçilmemiş" opsiyonlarının ASAS siparişi henüz yoktur; tek
+     güvenilir köprü burasıdır. */
+  for (const row of Array.isArray(collectionRows) ? collectionRows : []) {
+    const model = textKey(row && (row.modelKod ?? row.modelCode ?? row.modelName ?? row['Model Name']));
+    const plmId = plmIdOf(row);
+    if (!model || !plmId) continue;
+    addCandidate(byModel, model, plmId);
+    const colour = colourCodeKey(colourCodeOf(row));
+    if (colour) addCandidate(byModelColour, `${model}\u0000${colour}`, plmId);
+  }
   return { byOrderModelColour, byModelColour, byModel };
 }
 
-function resolveItems(rawItems, { orders = [], styleLinks = {} } = {}) {
+function resolveItems(rawItems, { orders = [], styleLinks = {}, collectionRows = [] } = {}) {
   const list = Array.isArray(rawItems) ? rawItems : [];
   const needsLookup = list.some(item => !plmIdOf(item));
-  const index = needsLookup ? buildIdentityIndex({ orders, styleLinks }) : null;
+  const index = needsLookup ? buildIdentityIndex({ orders, styleLinks, collectionRows }) : null;
   const resolved = [], unresolved = [];
 
   for (const raw of list) {
     const item = raw && typeof raw === 'object' ? { ...raw } : {};
     const styleName = styleNameOf(item);
-    const model = textKey(styleName);
+    const keys = modelKeys(styleName);
     const colourCode = colourCodeOf(item);
     const colour = colourCodeKey(colourCode);
     const orderCode = orderCodeOf(item);
@@ -73,9 +96,12 @@ function resolveItems(rawItems, { orders = [], styleLinks = {} } = {}) {
     let plmId = plmIdOf(item);
 
     if (!plmId && index) {
-      plmId = candidate(index.byOrderModelColour, order && model && colour ? `${order}\u0000${model}\u0000${colour}` : '');
-      if (!plmId) plmId = candidate(index.byModelColour, model && colour ? `${model}\u0000${colour}` : '');
-      if (!plmId) plmId = candidate(index.byModel, model);
+      for (const model of keys) {
+        plmId = candidate(index.byOrderModelColour, order && colour ? `${order}\u0000${model}\u0000${colour}` : '');
+        if (!plmId) plmId = candidate(index.byModelColour, colour ? `${model}\u0000${colour}` : '');
+        if (!plmId) plmId = candidate(index.byModel, model);
+        if (plmId) break;
+      }
     }
 
     if (plmId) {
@@ -122,5 +148,5 @@ function ordersFromRuntime(runtime) {
 }
 
 module.exports = {
-  textKey, orderCodeKey, buildIdentityIndex, resolveItems, ordersFromRuntime,
+  textKey, modelKeys, orderCodeKey, buildIdentityIndex, resolveItems, ordersFromRuntime,
 };
