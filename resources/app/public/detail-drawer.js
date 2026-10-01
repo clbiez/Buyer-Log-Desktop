@@ -372,11 +372,16 @@ function referenceGroupHeader(columns,showImages){
 }
 function referenceColgroup(table,columns,showImages){
   const existing=table.querySelector('colgroup');
-  if(!active||!active.referenceSetup){existing?.remove();return;}
+  if(!active||!active.referenceSetup){
+    existing?.remove();table.style.minWidth='';table.style.width='';return;
+  }
+  const widths=columns.map(col=>Number.isFinite(Number(col.widthPx))?Math.max(44,Math.round(Number(col.widthPx))):120);
   const colgroup=existing||document.createElement('colgroup');
   colgroup.innerHTML=(showImages?'<col data-key="__picture" style="width:74px">':'')+
-    columns.map(col=>'<col data-key="'+escapeHtml(col.key)+'"'+(Number.isFinite(Number(col.widthPx))?' style="width:'+Math.max(44,Math.round(Number(col.widthPx)))+'px"':'')+'>').join('');
+    columns.map((col,index)=>'<col data-key="'+escapeHtml(col.key)+'" style="width:'+widths[index]+'px">').join('');
   if(!existing)table.insertBefore(colgroup,table.firstChild);
+  const total=(showImages?74:0)+widths.reduce((sum,width)=>sum+width,0);
+  table.style.minWidth=total+'px';table.style.width='max(100%, '+total+'px)';
 }
 function referenceCellClass(col){
   return ['int','num','pct','money','moneyEdit','plm'].includes(String(col&&col.type||''))?'num':'';
