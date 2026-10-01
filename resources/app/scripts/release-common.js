@@ -7,6 +7,7 @@ const { createZipFromDirectory, extractZipSafe }=require('../electron/update/zip
 const { sha256File }=require('../electron/update/crypto');
 const { parseReleaseManifest }=require('../electron/update/manifest');
 const { readJson, atomicWriteJson, ensureDir }=require('../electron/update/json-store');
+const { MANIFEST_REL, writeIntegrityManifest }=require('../electron/update/integrity');
 
 const APP_ROOT=path.resolve(__dirname,'..');
 const PORTABLE_ROOT=path.resolve(APP_ROOT,'..','..');
@@ -47,13 +48,14 @@ async function buildArtifact(version,notes=''){
     fs.writeFileSync(sourceFile,JSON.stringify({githubSource:`github:${githubRepo}`})+'\n');
   }
   try{fs.rmSync(artifactFile,{force:true});}catch(_){}
-  try{createZipFromDirectory(APP_ROOT,artifactFile,{rootPrefix:'app',exclude:excludeRuntime});}
-  finally{if(githubRepo){if(originalSource)fs.writeFileSync(sourceFile,originalSource);else fs.rmSync(sourceFile,{force:true});}}
+  const integrityFile=path.join(APP_ROOT,...MANIFEST_REL.split('/'));
+  try{writeIntegrityManifest(APP_ROOT,{version,exclude:excludeRuntime});createZipFromDirectory(APP_ROOT,artifactFile,{rootPrefix:'app',exclude:excludeRuntime});}
+  finally{fs.rmSync(integrityFile,{force:true});if(githubRepo){if(originalSource)fs.writeFileSync(sourceFile,originalSource);else fs.rmSync(sourceFile,{force:true});}}
   const sha256=await sha256File(artifactFile),size=fs.statSync(artifactFile).size;
   const manifest={schemaVersion:1,channel:'test',version,publishedAt:new Date().toISOString(),artifact:`releases/${artifactName}`,sha256,size,mandatory:false,releaseNotes:String(notes||'').slice(0,8000),minimumUpdaterVersion:UPDATER_VERSION};
   parseReleaseManifest(manifest,'test');
   const verifyRoot=path.join(DIST_ROOT,`.verify-${process.pid}-${Date.now()}`);
-  try{extractZipSafe(artifactFile,verifyRoot,{maxFiles:30000,maxBytes:1024*1024*1024});const packed=readJson(path.join(verifyRoot,'app','package.json'),null);if(!packed||packed.version!==version)fail('Artifact içindeki package.json version yanlış.','RELEASE_ARTIFACT_ASSERT');for(const required of ['electron/launcher.js','electron/main.js','server/server.js','public/index.html'])if(!fs.existsSync(path.join(verifyRoot,'app',...required.split('/'))))fail('Artifact eksik: '+required,'RELEASE_ARTIFACT_ASSERT');if(fs.existsSync(path.join(verifyRoot,'app','server','data')))fail('Artifact server/data runtime verisi içeremez.','RELEASE_ARTIFACT_DATA_LEAK');if(githubRepo){const packedSource=readJson(path.join(verifyRoot,'app','electron','update','release-source.json'),null);if(!packedSource||packedSource.githubSource!==`github:${githubRepo}`)fail('Artifact public GitHub update kaynağını içermiyor.','RELEASE_ARTIFACT_UPDATE_SOURCE');}}finally{try{fs.rmSync(verifyRoot,{recursive:true,force:true});}catch(_){}}
+  try{extractZipSafe(artifactFile,verifyRoot,{maxFiles:30000,maxBytes:1024*1024*1024});const packed=readJson(path.join(verifyRoot,'app','package.json'),null);if(!packed||packed.version!==version)fail('Artifact içindeki package.json version yanlış.','RELEASE_ARTIFACT_ASSERT');for(const required of ['electron/launcher.js','electron/main.js','server/server.js','public/index.html',MANIFEST_REL])if(!fs.existsSync(path.join(verifyRoot,'app',...required.split('/'))))fail('Artifact eksik: '+required,'RELEASE_ARTIFACT_ASSERT');if(fs.existsSync(path.join(verifyRoot,'app','server','data')))fail('Artifact server/data runtime verisi içeremez.','RELEASE_ARTIFACT_DATA_LEAK');if(githubRepo){const packedSource=readJson(path.join(verifyRoot,'app','electron','update','release-source.json'),null);if(!packedSource||packedSource.githubSource!==`github:${githubRepo}`)fail('Artifact public GitHub update kaynağını içermiyor.','RELEASE_ARTIFACT_UPDATE_SOURCE');}}finally{try{fs.rmSync(verifyRoot,{recursive:true,force:true});}catch(_){}}
   atomicWriteJson(path.join(DIST_ROOT,'latest.test.json'),manifest);
   fs.writeFileSync(path.join(DIST_ROOT,artifactName+'.sha256'),`${sha256}  ${artifactName}\n`,'utf8');
   return {artifactName,artifactFile,sha256,size,manifest};

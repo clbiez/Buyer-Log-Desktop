@@ -122,4 +122,4 @@ function extractZipSafe(archiveFile,destination,limits={}) {
   } finally { fs.closeSync(fd); }
   return { files:listing.entries.length, bytes:listing.totalBytes };
 }
-module.exports={ crc32, createZipFromDirectory, listZipEntries, extractZipSafe, safeEntryName };
+module.exports={ crc32, walkFiles, createZipFromDirectory, listZipEntries, extractZipSafe, safeEntryName };
