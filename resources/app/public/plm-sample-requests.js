@@ -74,11 +74,26 @@
     return value;
   }
 
+  /* Siparişin operasyon aşaması (CP satırı STATUS). Kanonik aşama kuralı
+     business-rules.js'tedir; burada ikinci bir eşleme yazılmaz. */
+  function rowStage(row) {
+    const rules = window.BLBusinessRules;
+    try { return rules && rules.operationalStageOf ? rules.operationalStageOf(row && row.STATUS) : 'UNKNOWN'; }
+    catch (_) { return 'UNKNOWN'; }
+  }
+
+  /* Sipariş bazında kilometre taşları: PLM özeti + aşama kuralı (üretimi
+     bitmiş siparişte numuneler onaylı kabul edilir). */
+  function orderMilestones(plmId, stage) {
+    return Engine.applyOrderStage(plmId ? milestonesFor(plmId) : null, stage);
+  }
+
   /* CP kontrol listesi kanıt sağlayıcısı (cp-checklist-engine ctx.plmEvidence). */
   function evidenceForAnalysis(analysis, itemId) {
     const row = analysis && analysis.sourceRow;
     const plmId = plmIdOfRow(row, 'cp');
-    return plmId ? Engine.evidenceFor(milestonesFor(plmId), itemId) : null;
+    const stage = (analysis && analysis.stage) || rowStage(row);
+    return Engine.evidenceFor(orderMilestones(plmId, stage), itemId);
   }
 
   /* CP / Siparişler "PLM Numune" sütunu. Kalem sırası sabit; PLM'de talebi
@@ -94,18 +109,36 @@
     tr: { approved: 'Onaylı', open: 'Açık', rejected: 'Red' },
     en: { approved: 'Approved', open: 'Open', rejected: 'Rejected' },
   };
+  function inferenceText(item) {
+    if (!item || !item.inferredFrom) return '';
+    if (item.inferredFrom === 'stage') return L('Üretim sonrası sipariş: onaysız yükleme yapılmaz, onaylı kabul edildi', 'Post-production order: shipments require approval, treated as approved');
+    const from = COLUMN_SHORT[item.inferredFrom] ? COLUMN_SHORT[item.inferredFrom][isEn() ? 'en' : 'tr'] : item.inferredFrom;
+    return L(`${from} onaylı olduğu için onaylı kabul edildi`, `Treated as approved because ${from} is approved`);
+  }
+
+  /* Üretim sonrası siparişte tek rozet: "Onaylı · Üretim sonrası". Dört
+     ayrı yeşil rozet bilgi katmaz, yalnız sütunu kalabalıklaştırır. */
   function columnParts(row, moduleId) {
     const plmId = plmIdOfRow(row, moduleId);
     const entry = plmId ? entryFor(plmId) : null;
-    if (!entry) return null;
-    const milestones = milestonesFor(plmId) || {};
+    const stage = rowStage(row);
     const lang = isEn() ? 'en' : 'tr';
+    if (Engine.isPostProductionStage(stage)) {
+      return { plmId, stageApproved: true, parts: [{
+        key: 'stage', state: 'approved',
+        text: L('Onaylı · Üretim sonrası', 'Approved · Post-production'),
+        title: inferenceText({ inferredFrom: 'stage' }),
+      }] };
+    }
+    if (!entry) return null;
+    const milestones = orderMilestones(plmId, stage) || {};
     const parts = Engine.MILESTONES.filter(key => milestones[key]).map(key => {
       const item = milestones[key];
+      const source = item.requestCode ? `${item.subTypeName} · ${item.statusName} · ${item.requestCode}` : '';
       return {
-        key, state: item.state,
+        key, state: item.state, inferred: Boolean(item.inferredFrom),
         text: `${COLUMN_SHORT[key][lang]}: ${STATE_SHORT[lang][item.state] || item.state}`,
-        title: `${item.subTypeName} · ${item.statusName} · ${item.requestCode}`,
+        title: [inferenceText(item), source].filter(Boolean).join(' — '),
       };
     });
     return { plmId, parts };
@@ -174,7 +207,7 @@
   function evidenceBadge(evidence) {
     if (!evidence) return '';
     const label = Engine.STATUS_LABELS[isEn() ? 'en' : 'tr'][evidence.state] || evidence.state;
-    return `<span class="cpaPlm tone-${evidence.state === 'approved' ? 'ok' : evidence.state === 'rejected' ? 'bad' : 'wait'}" title="${esc(`${evidence.subTypeName} · ${evidence.statusName} · ${evidence.requestCode}`)}">PLM · ${esc(label)}</span>`;
+    return `<span class="cpaPlm tone-${evidence.state === 'approved' ? 'ok' : evidence.state === 'rejected' ? 'bad' : 'wait'}" title="${esc([inferenceText(evidence), evidence.requestCode ? `${evidence.subTypeName} · ${evidence.statusName} · ${evidence.requestCode}` : ''].filter(Boolean).join(' — '))}">${evidence.inferredFrom === 'stage' ? esc(L('Üretim sonrası', 'Post-production')) : 'PLM'} · ${esc(label)}</span>`;
   }
 
   function openForPlm(plmId, title) {
@@ -190,7 +223,7 @@
       const chips = Engine.MILESTONES.map(key => {
         const item = milestones[key];
         const label = MILESTONE_LABELS[key][isEn() ? 'en' : 'tr'];
-        return `<div class="cpaChip is-static"><span class="l">${esc(label)}</span>${item ? statusBadge(item.state) : `<span class="q">${esc(L('PLM\'de talep yok', 'No request in PLM'))}</span>`}</div>`;
+        return `<div class="cpaChip is-static"${item && item.inferredFrom ? ` title="${esc(inferenceText(item))}"` : ''}><span class="l">${esc(label)}</span>${item ? statusBadge(item.state) : `<span class="q">${esc(L('PLM\'de talep yok', 'No request in PLM'))}</span>`}${item && item.inferredFrom ? `<span class="q">${esc(inferenceText(item))}</span>` : ''}</div>`;
       }).join('');
       const styleLink = entry && entry.styleId ? `${STYLE_OVERVIEW_URL}?styleId=${encodeURIComponent(entry.styleId)}&m=2` : '';
       const rows = requests.map(item => `<tr>
@@ -270,7 +303,7 @@
 
   window.BLPlmSampleRequests = {
     load, sync, syncStep, syncStepSuffix, summaryText,
-    entryFor, milestonesFor, evidenceForAnalysis, plmIdOfRow,
+    entryFor, milestonesFor, orderMilestones, rowStage, evidenceForAnalysis, plmIdOfRow,
     openForPlm, openForRow, evidenceBadge, columnParts, columnText,
     get loaded() { return state.loaded; },
     get updatedAt() { return state.updatedAt; },

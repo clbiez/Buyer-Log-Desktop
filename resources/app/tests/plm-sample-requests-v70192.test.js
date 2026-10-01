@@ -311,3 +311,80 @@ test('v7.0.192 PLM Numune sütun metni: talep yoksa "Talep yok", senkron yoksa b
   assert.match(src, /if \(!entry\) return null;/, 'senkron yapılmamış model boş görünür');
   assert.match(src, /value\.parts\.length \? value\.parts\.map\(part => part\.text\)\.join\(' · '\) : L\('Talep yok', 'No request'\)/);
 });
+
+/* v7.0.193 — PLM KAYIT KARIŞIKLIĞINA DAYANIKLILIK (kullanıcının canlı örneği:
+   1165835 GRINCH-3-NY). Hata: Artwork 4609404 onaylıyken sonradan açılan
+   "Evaluated" girişler Artwork'ü açık gösterdi; Perfect Pre Production
+   Fitting 4614452 onaylıyken iterasyon 2 "Received" PPS'i açık gösterdi; PPS
+   onaylıyken Fit Sample 4573869 "Received" kaldığı için Fit açık göründü. */
+function grinchRequests() {
+  const r = (requestCode, status, statusName, subTypeName, subTypeId, iteration, createdDate) => ({
+    requestCode, status, statusName, subTypeName, subTypeId, iteration, createdDate,
+    milestone: Engine.classifyMilestone(subTypeId, subTypeName),
+  });
+  return [
+    r('4614717', 'open', 'Evaluated', 'Artwork', '146', 4, '2026-09-20T00:00:00.000Z'),
+    r('4614454', 'open', 'Received', 'Perfect Pre Production Fitting', '0', 2, '2026-09-19T00:00:00.000Z'),
+    r('4614452', 'approved', 'Approved / Completed', 'Perfect Pre Production Fitting', '0', 1, '2026-09-18T00:00:00.000Z'),
+    r('4611322', 'open', 'Evaluated', 'Artwork', '146', 3, '2026-09-10T00:00:00.000Z'),
+    r('4609804', 'open', 'Evaluated', 'Artwork', '146', 2, '2026-09-05T00:00:00.000Z'),
+    r('4609404', 'approved', 'Approved / Completed', 'Artwork', '146', 1, '2026-09-01T00:00:00.000Z'),
+    r('4573869', 'open', 'Received', 'Fit Sample Fitting', '12', 1, '2026-08-01T00:00:00.000Z'),
+  ];
+}
+
+test('v7.0.193 onaylı giriş varsa sonradan açılan onaysız girişler dikkate alınmaz', () => {
+  assert.equal(Engine.classifyMilestone('0', 'Perfect Pre Production Fitting'), 'pps');
+  const m = Engine.summarizeMilestones(grinchRequests());
+  assert.equal(m.artwork.state, 'approved');
+  assert.equal(m.artwork.requestCode, '4609404');
+  assert.equal(m.pps.state, 'approved');
+  assert.equal(m.pps.requestCode, '4614452');
+  assert.equal(m.artwork.requests.length, 4, 'tüm girişler pencerede görünmeye devam eder');
+});
+
+test('v7.0.193 PPS onayı Fit’i, S/Off onayı PPS ve Fit’i onaylar (aşama zinciri)', () => {
+  const m = Engine.summarizeMilestones(grinchRequests());
+  assert.equal(m.criticalSample.state, 'approved', 'PPS onaylıysa Fit onaylı kabul edilir');
+  assert.equal(m.criticalSample.inferredFrom, 'pps');
+  assert.equal(m.criticalSample.requests[0].requestCode, '4573869', 'Fit’in kendi PLM girişi korunur');
+
+  const soffOnly = Engine.summarizeMilestones([{ requestCode: '9', status: 'approved', statusName: 'Approved / Completed', subTypeName: 'Perfect Sign Off Fitting', subTypeId: '39', milestone: 'soff', iteration: 1 }]);
+  assert.equal(soffOnly.pps.state, 'approved');
+  assert.equal(soffOnly.pps.inferredFrom, 'soff');
+  assert.equal(soffOnly.criticalSample.inferredFrom, 'soff');
+  assert.equal(soffOnly.artwork, undefined, 'Artwork zincirin dışında');
+
+  // Onaysız üst aşama alt aşamayı ETKİLEMEZ.
+  const openPps = Engine.summarizeMilestones([{ requestCode: '8', status: 'open', statusName: 'Received', subTypeName: 'PPS', subTypeId: '0', milestone: 'pps', iteration: 1 }]);
+  assert.equal(openPps.criticalSample, undefined);
+});
+
+test('v7.0.193 üretimi bitmiş sipariş: tüm numune kalemleri onaylı; üretimdeki sipariş PLM’e göre', () => {
+  const m = Engine.summarizeMilestones([{ requestCode: '7', status: 'open', statusName: 'Received', subTypeName: 'Artwork', subTypeId: '146', milestone: 'artwork', iteration: 1 }]);
+  for (const stage of ['LOADING', 'SHORTAGE', 'IN_TRANSIT', 'CUSTOMS', 'IN_WAREHOUSE', 'AWAITING_RETAIL_TRANSFER']) {
+    const out = Engine.applyOrderStage(m, stage);
+    assert.ok(Engine.MILESTONES.every(key => out[key].state === 'approved'), stage);
+    assert.equal(out.artwork.inferredFrom, 'stage');
+    assert.equal(out.artwork.requestCode, '7', 'PLM girişi korunur');
+  }
+  assert.equal(Engine.applyOrderStage(null, 'IN_TRANSIT').pps.state, 'approved', 'PLM senkronu olmasa da');
+  assert.equal(Engine.applyOrderStage(m, 'PRODUCTION'), m);
+  assert.equal(Engine.applyOrderStage(m, 'UNKNOWN'), m, 'aşaması bilinmeyen sipariş onaylı sayılmaz');
+  assert.equal(Engine.applyOrderStage(null, 'PRODUCTION'), null);
+
+  // Kontrol listesi: yükleme aşamasındaki siparişte numune soruları kapanır.
+  const evidence = (a, id) => Engine.evidenceFor(Engine.applyOrderStage(null, a.stage), id);
+  const settings = Checklist.normalizeSettings(null);
+  const ids = Checklist.openItems(analysis({ stage: 'LOADING' }), { settings, answers: {}, plmEvidence: evidence }).map(item => item.id);
+  assert.ok(!['pps', 'soff', 'criticalSample', 'artwork'].some(id => ids.includes(id)));
+  const prodIds = Checklist.openItems(analysis({ stage: 'PRODUCTION' }), { settings, answers: {}, plmEvidence: evidence }).map(item => item.id);
+  assert.ok(prodIds.includes('pps'), 'üretimdeki siparişte soru sorulmaya devam eder');
+});
+
+test('v7.0.193 istemci: aşama kanonik business-rules’tan okunur, üretim sonrası tek rozet', () => {
+  const src = read('public/plm-sample-requests.js');
+  assert.match(src, /rules\.operationalStageOf\(row && row\.STATUS\)/);
+  assert.match(src, /if \(Engine\.isPostProductionStage\(stage\)\) \{/);
+  assert.match(src, /Engine\.evidenceFor\(orderMilestones\(plmId, stage\), itemId\)/);
+});

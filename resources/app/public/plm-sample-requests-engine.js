@@ -123,31 +123,58 @@
       || (Number(b.requestCode) || 0) - (Number(a.requestCode) || 0);
   }
 
+  /* NUMUNE AŞAMA SIRASI: Fit/Size Set/Seal → PPS → S/Off. Üst aşama onayı,
+     alt aşamaların da onaylandığını kanıtlar (PPS onaylıysa Fit'e dönülmez).
+     Kullanıcı kararı: "bir modelin PPS onayı varsa Fit Sample onayı da
+     otomatik gelmeli". Artwork bu zincirin dışındadır. */
+  const IMPLIES = Object.freeze({ soff: Object.freeze(['pps', 'criticalSample']), pps: Object.freeze(['criticalSample']) });
+
+  /* Üretimi bitmiş siparişin aşamaları. Onaysız yükleme yapılmadığı için bu
+     aşamalardaki siparişin numuneleri PLM kaydına bakılmadan onaylı sayılır
+     (kullanıcı kararı). UNKNOWN ve PRODUCTION bu kümede DEĞİLDİR. */
+  const POST_PRODUCTION_STAGES = Object.freeze(['LOADING', 'SHORTAGE', 'IN_TRANSIT', 'CUSTOMS', 'IN_WAREHOUSE', 'AWAITING_RETAIL_TRANSFER']);
+  function isPostProductionStage(stage) { return POST_PRODUCTION_STAGES.includes(String(stage || '').toUpperCase()); }
+
+  function compactRequest(item) {
+    return { requestCode: item.requestCode, subTypeName: item.subTypeName, status: item.status, statusName: item.statusName, iteration: item.iteration };
+  }
+
   /* Bir modelin talepleri → kilometre taşı özeti.
-     Her alt tip için YALNIZ en güncel talep (iterasyon/oluşturma) sayılır:
-     reddedilip ikinci iterasyonda açılan Fit, "açık"tır. İptal edilen talep
-     hiçbir şey kanıtlamaz ve yok sayılır.
-       open      → alt tiplerden biri hâlâ açık
-       rejected  → açık yok, en az biri reddedilmiş
-       approved  → hepsi onaylı */
+
+     PLM'deki kullanıcı karışıklığına dayanıklı kural (canlı örnek: Artwork
+     4609404 onaylı, sonra 4609804/4611322/4614717 "Evaluated" açılmış):
+       1) Bir alt tipte (ör. Artwork, Perfect Pre Production Fitting) ONAYLI
+          bir giriş varsa o alt tip onaylıdır; sonradan açılan onaysız
+          girişler dikkate alınmaz.
+       2) Onaylı giriş yoksa en güncel giriş (iterasyon/oluşturma) belirler:
+          reddedilip yeni iterasyonda açılan talep "açık"tır.
+       3) İptal edilen talep hiçbir şey kanıtlamaz.
+       4) Kalem: tüm alt tipleri onaylıysa onaylı; değilse açık alt tip varsa
+          açık, yoksa reddedildi.
+       5) Üst aşama onayı alt aşamaları onaylar (IMPLIES); bu çıkarım
+          `inferredFrom` ile işaretlenir. */
   function summarizeMilestones(requests) {
     const byMilestone = {};
     for (const request of Array.isArray(requests) ? requests : []) {
       if (!request || !request.milestone || request.status === STATUS.CANCELLED) continue;
-      const subKey = request.subTypeId || request.subTypeName.toLowerCase();
-      const bucket = byMilestone[request.milestone] || (byMilestone[request.milestone] = new Map());
-      const current = bucket.get(subKey);
-      if (!current || newerFirst(request, current) < 0) bucket.set(subKey, request);
+      const subKey = request.subTypeId || String(request.subTypeName || '').toLowerCase();
+      const buckets = byMilestone[request.milestone] || (byMilestone[request.milestone] = new Map());
+      if (!buckets.has(subKey)) buckets.set(subKey, []);
+      buckets.get(subKey).push(request);
     }
     const out = {};
     for (const milestone of MILESTONES) {
-      const bucket = byMilestone[milestone];
-      if (!bucket || !bucket.size) continue;
-      const latest = [...bucket.values()].sort(newerFirst);
-      const open = latest.filter(item => item.status === STATUS.OPEN);
-      const rejected = latest.filter(item => item.status === STATUS.REJECTED);
+      const buckets = byMilestone[milestone];
+      if (!buckets || !buckets.size) continue;
+      const decided = [...buckets.values()].map(list => {
+        const sorted = list.slice().sort(newerFirst);
+        return sorted.find(item => item.status === STATUS.APPROVED) || sorted[0];
+      }).sort(newerFirst);
+      const open = decided.filter(item => item.status === STATUS.OPEN);
+      const rejected = decided.filter(item => item.status === STATUS.REJECTED);
       const state = open.length ? STATUS.OPEN : rejected.length ? STATUS.REJECTED : STATUS.APPROVED;
-      const lead = (open[0] || rejected[0] || latest[0]);
+      const lead = open[0] || rejected[0] || decided[0];
+      const all = [].concat(...[...buckets.values()]).sort(newerFirst);
       out[milestone] = {
         milestone,
         state,
@@ -155,13 +182,57 @@
         statusName: lead.statusName,
         subTypeName: lead.subTypeName,
         date: statusDate(lead),
-        requests: latest.map(item => ({ requestCode: item.requestCode, subTypeName: item.subTypeName, status: item.status, statusName: item.statusName })),
+        inferredFrom: '',
+        requests: all.map(compactRequest),
+      };
+    }
+    // Üst aşama onayı → alt aşamalar onaylı (zincir: S/Off → PPS → Fit).
+    for (const upper of ['soff', 'pps']) {
+      const source = out[upper];
+      if (!source || source.state !== STATUS.APPROVED) continue;
+      for (const lower of IMPLIES[upper]) {
+        const current = out[lower];
+        if (current && current.state === STATUS.APPROVED) continue;
+        out[lower] = {
+          milestone: lower,
+          state: STATUS.APPROVED,
+          requestCode: source.requestCode,
+          statusName: source.statusName,
+          subTypeName: source.subTypeName,
+          date: source.date,
+          inferredFrom: source.inferredFrom || upper,
+          requests: current ? current.requests : [],
+        };
+      }
+    }
+    return out;
+  }
+
+  /* Sipariş aşaması üretim sonrasıysa (yükleme, yol, gümrük, depo…) tüm
+     numune kalemleri onaylı kabul edilir; PLM kaydı varsa korunur, yalnız
+     durum ve çıkarım kaynağı değişir. */
+  function applyOrderStage(milestones, stage) {
+    if (!isPostProductionStage(stage)) return milestones || null;
+    const out = {};
+    for (const milestone of MILESTONES) {
+      const current = milestones && milestones[milestone];
+      out[milestone] = current && current.state === STATUS.APPROVED ? current : {
+        milestone,
+        state: STATUS.APPROVED,
+        requestCode: current ? current.requestCode : '',
+        statusName: current ? current.statusName : '',
+        subTypeName: current ? current.subTypeName : '',
+        date: current ? current.date : null,
+        inferredFrom: 'stage',
+        stage: String(stage).toUpperCase(),
+        requests: current ? current.requests : [],
       };
     }
     return out;
   }
 
-  /* CP kontrol listesi için kanıt. Yalnız PLM'de gerçekten talep varsa döner. */
+  /* CP kontrol listesi için kanıt. PLM talebi, aşama zinciri ya da üretim
+     sonrası sipariş aşaması yoksa kanıt yoktur (soru sorulur). */
   function evidenceFor(milestones, itemId) {
     if (!milestones || !MILESTONES.includes(itemId)) return null;
     return milestones[itemId] || null;
@@ -174,7 +245,8 @@
 
   return {
     STATUS, STATUS_BY_ID, MILESTONES, MILESTONE_BY_SUBTYPE_ID, STATUS_LABELS,
+    IMPLIES, POST_PRODUCTION_STAGES,
     numericId, classifyStatus, classifyMilestone, normalizeRequest, statusDate,
-    summarizeMilestones, evidenceFor,
+    summarizeMilestones, applyOrderStage, isPostProductionStage, evidenceFor,
   };
 });
