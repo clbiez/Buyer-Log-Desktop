@@ -401,6 +401,17 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
   background:var(--acc-bg,rgba(89,128,166,.1));
 }
 .imageDeleteConfirmPopover .imageFetchPlm:disabled{opacity:.6;cursor:progress;}
+/* Ana renk yap: PLM ön+arka model görseli bu renge. Yapıcı eylem, aynı stil. */
+.imageDeleteConfirmPopover .imageSetMainColour{
+  border:1px solid var(--acc,#5980a6);
+  color:var(--acc,#5980a6);
+  background:transparent;
+}
+.imageDeleteConfirmPopover .imageSetMainColour:hover:not(:disabled){
+  background:var(--acc-bg,rgba(89,128,166,.1));
+}
+.imageDeleteConfirmPopover .imageSetMainColour:disabled{opacity:.6;cursor:progress;}
+.imageDeleteConfirmPopover .imageDeleteConfirmActions{flex-wrap:wrap;}
 
 /* v6.41 — Yerleşik web betikleri düzenleyicisi. */
 .autoWebScriptsBtn{margin-left:auto;height:24px;padding:0 10px;font-size:11px;}
