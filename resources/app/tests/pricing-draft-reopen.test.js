@@ -34,7 +34,8 @@ test('quotation request captures retry refs only after its record id is known', 
   assert.match(APP, /prepareEmailRememberPricingDraft\(quotationRequestId,draftRef\)/);
   assert.match(APP, /pricingDraftCount:prepareEmailPricingDraftCount/);
   assert.match(APP, /reopenPricingRequest:prepareEmailReopenPricingRequest/);
-  assert.match(APP, /window\.sessionStorage/);
+  assert.match(APP, /const prepareEmailPricingDraftRegistry=new Map\(\)/);
+  assert.doesNotMatch(APP, /buyerlog\.pricingDraftReopen/);
 });
 
 test('Quotations exposes the retry action to the request owner and binds it to the mail bridge', () => {
