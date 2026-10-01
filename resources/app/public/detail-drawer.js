@@ -346,8 +346,10 @@ function renderColumnsPanel(){
     const keys=[...host.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
     if(!keys.length){input.checked=true;return;}
     active.visible=keys;
-    if(active.referenceSetup)active.referencePreset=referencePresetState(active.referenceSetup,active.visible,active.images);
-    else saveVisible(active.scope,active.pageScope,keys);
+    if(active.referenceSetup){
+      active.referencePreset=referencePresetState(active.referenceSetup,active.visible,active.images);
+      document.querySelectorAll('#blSharedDetailDrawer [data-bl-detail-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.blDetailPreset===active.referencePreset)));
+    }else saveVisible(active.scope,active.pageScope,keys);
     renderTable();
   }));
   host.querySelector('[data-bl-detail-column-all]')?.addEventListener('click',()=>{
@@ -376,11 +378,13 @@ function referenceColgroup(table,columns,showImages){
     existing?.remove();table.style.minWidth='';table.style.width='';return;
   }
   const widths=columns.map(col=>Number.isFinite(Number(col.widthPx))?Math.max(44,Math.round(Number(col.widthPx))):120);
+  const pictureMeta=(active.referenceSetup.columns||[]).find(meta=>isReferencePictureKey(meta.key));
+  const pictureWidth=Number.isFinite(Number(pictureMeta&&pictureMeta.widthPx))?Math.max(44,Math.round(Number(pictureMeta.widthPx))):74;
   const colgroup=existing||document.createElement('colgroup');
-  colgroup.innerHTML=(showImages?'<col data-key="__picture" style="width:74px">':'')+
+  colgroup.innerHTML=(showImages?'<col data-key="__picture" style="width:'+pictureWidth+'px">':'')+
     columns.map((col,index)=>'<col data-key="'+escapeHtml(col.key)+'" style="width:'+widths[index]+'px">').join('');
   if(!existing)table.insertBefore(colgroup,table.firstChild);
-  const total=(showImages?74:0)+widths.reduce((sum,width)=>sum+width,0);
+  const total=(showImages?pictureWidth:0)+widths.reduce((sum,width)=>sum+width,0);
   table.style.minWidth=total+'px';table.style.width='max(100%, '+total+'px)';
 }
 function referenceCellClass(col){
