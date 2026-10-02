@@ -401,6 +401,7 @@
       err.details = data.details;
       if (allowAuthRetry && oabIsAuthErrorCode(err.code)) {
         await oabEnsureAuthentication(oabAuthContextFromRequest(url, options));
+        if (typeof oabActivitySignal === 'function') oabActivitySignal('fetch');
         return oabJson(url, options, false);
       }
       throw err;
