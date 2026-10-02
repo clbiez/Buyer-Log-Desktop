@@ -8713,6 +8713,12 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   const signal = options.signal || (job && job.controller && job.controller.signal) || null;
   const throwIfRefreshCancelled=()=>{const current=refreshJobs.get(id);if((current&&current.cancelRequested)||(signal&&signal.aborted)){const error=new Error('Yenileme kullanıcı tarafından durduruldu.');error.code='REFRESH_CANCELLED';throw error;}};
   const totalStarted = Date.now();
+  // v7.205 — Kısmi yenileme dokunulmayan hedefleri (ör. Orders/LFL yenilenirken CP)
+  // RAM'deki runtime'dan korur. Moderatör dışı kullanıcıların ham verisi açılışta
+  // RAM'e alınmaz (yalnız page-projection okunur); soğuk runtime ile birleştirme CP'yi
+  // boş yayınlıyor ve snapshot'a yazıyordu. Önce snapshot'tan hydrate edilir; sıcak
+  // runtime (snapshot'a henüz yazılmamış bellek içi durum) ezilmez.
+  { const warm = cacheForUser(id); if (!warm.loadedAt || !Array.isArray(warm.asasOrders)) { try { await ensureDataLoaded(id); } catch (hydrateError) { logRuntimeFailure('refreshRuntimeHydrate', hydrateError); } } }
   let active = cacheForUser(id);
   const oldOrders = Array.isArray(active.asasOrders) ? active.asasOrders : [];
   const oldAntrepoMap = active.antrepoMap || {};

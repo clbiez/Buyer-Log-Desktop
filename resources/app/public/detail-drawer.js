@@ -630,7 +630,7 @@ function render(){
   host.querySelectorAll('[data-bl-detail-close]').forEach(el=>el.addEventListener('click',close));
   host.querySelector('[data-bl-detail-search]')?.addEventListener('input',event=>{
     // Sorgu hemen state'e yazılır (Excel/yeniden çizim aynı sorguyu görür); yalnız tablo çizimi gecikir.
-    active.search=event.target.value;active.limit=RENDER_CHUNK;if(active.searchTimer)clearTimeout(active.searchTimer);
+    if(!active)return;active.search=event.target.value;active.limit=RENDER_CHUNK;if(active.searchTimer)clearTimeout(active.searchTimer);
     active.searchTimer=setTimeout(()=>{if(!active)return;active.searchTimer=0;renderTable();},120);
   });
   host.querySelector('[data-bl-detail-table]')?.addEventListener('click',event=>{
