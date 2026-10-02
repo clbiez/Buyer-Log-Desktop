@@ -4439,6 +4439,46 @@ tr.blRemoteChanged>td{animation:blRemoteChangedFade 5s ease-out 1;}
 .oabProgressText{flex-shrink:0;color:var(--muted);}
 .oabCancelBtn{border-color:var(--warn,#c47f17);}
 
+/* OAB işlem rehberi — normal akışta, yalnız OAB kartı içinde.
+   position:fixed/absolute kullanılmaz; overflow kendi çizimini kartta tutar. */
+.oabActivityGuide{box-sizing:border-box;display:grid;grid-template-columns:minmax(132px,176px) minmax(0,1fr);gap:14px;align-items:center;width:100%;max-width:100%;margin:-2px 0 10px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--acc) 30%,var(--line));border-left:3px solid var(--acc);border-radius:var(--r-sm);background:linear-gradient(135deg,color-mix(in srgb,var(--acc-bg) 66%,var(--card)),var(--card));overflow:hidden;position:relative;}
+.oabActivityGuide[hidden]{display:none!important;}
+.oabActivityGuide[data-stage="login"]{border-left-color:var(--warn,#c47f17);}
+.oabActivityGuide[data-stage="error"]{border-color:color-mix(in srgb,var(--red) 42%,var(--line));border-left-color:var(--red);background:color-mix(in srgb,var(--red) 7%,var(--card));}
+.oabActivityGuide[data-stage="done"]{border-left-color:var(--green);}
+.oabActivityVisual{display:flex;align-items:center;justify-content:center;gap:7px;min-width:0;padding:3px 0;}
+.oabMiniBrowser{width:74px;height:54px;border:1px solid color-mix(in srgb,var(--acc) 44%,var(--line));border-radius:8px;background:var(--card);box-shadow:0 4px 14px color-mix(in srgb,var(--ink) 8%,transparent);overflow:hidden;flex:none;}
+.oabMiniBrowserTop{display:flex;align-items:center;gap:3px;height:11px;padding:0 5px;background:var(--card2);border-bottom:1px solid var(--line);}
+.oabMiniBrowserTop i{display:block;width:3px;height:3px;border-radius:50%;background:var(--muted);opacity:.7;}
+.oabMiniBrowserBody{height:42px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.oabMiniBrowserBadge{font-size:9px;font-weight:800;letter-spacing:.06em;color:var(--acc-ink);}
+.oabMiniBrowserPulse{width:8px;height:8px;border:2px solid color-mix(in srgb,var(--acc) 45%,transparent);border-top-color:var(--acc);border-radius:50%;animation:oabActivitySpin .9s linear infinite;}
+.oabActivityGuide[data-stage="done"] .oabMiniBrowserPulse{animation:none;border-color:var(--green);background:color-mix(in srgb,var(--green) 18%,transparent);}
+.oabActivityGuide[data-stage="error"] .oabMiniBrowserPulse{animation:none;border-color:var(--red);background:color-mix(in srgb,var(--red) 15%,transparent);}
+.oabActivityFlow{display:flex;align-items:center;gap:3px;flex:none;}
+.oabActivityFlow span{width:5px;height:5px;border-radius:50%;background:var(--acc);opacity:.25;animation:oabActivityDot 1.15s ease-in-out infinite;}
+.oabActivityFlow span:nth-child(2){animation-delay:.16s}.oabActivityFlow span:nth-child(3){animation-delay:.32s}
+.oabMiniData{width:34px;display:grid;gap:4px;flex:none;}
+.oabMiniData i{display:block;height:5px;border-radius:3px;background:color-mix(in srgb,var(--acc) 30%,var(--line));}
+.oabMiniData i:nth-child(2){width:78%}.oabMiniData i:nth-child(3){width:58%}
+.oabActivityContent{min-width:0;}
+.oabActivityEyebrow{margin-bottom:2px;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
+.oabActivityTitle{color:var(--ink);font-size:13px;font-weight:800;line-height:1.25;}
+.oabActivityDetail{margin-top:3px;color:var(--ink2);font-size:11px;line-height:1.42;}
+.oabActivitySteps{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:9px;}
+.oabActivitySteps>span{display:inline-flex;align-items:center;gap:4px;min-width:0;padding:3px 6px;border:1px solid var(--line);border-radius:var(--r-full);background:var(--card);color:var(--muted);font-size:9.5px;}
+.oabActivitySteps b{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--card2);font:700 9px/1 var(--mono);}
+.oabActivitySteps em{font-style:normal;white-space:nowrap;}
+.oabActivitySteps>span.isActive{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:var(--acc-bg);color:var(--acc-ink);font-weight:700;}
+.oabActivitySteps>span.isActive b{background:var(--acc);color:white;}
+.oabActivitySteps>span.isDone{color:var(--green);border-color:color-mix(in srgb,var(--green) 34%,var(--line));}
+.oabActivitySteps>span.isDone b{background:color-mix(in srgb,var(--green) 16%,var(--card));color:var(--green);}
+.oabActivityWarning{margin-top:8px;padding:6px 8px;border:1px solid color-mix(in srgb,var(--warn,#c47f17) 40%,var(--line));border-radius:var(--r-xs);background:color-mix(in srgb,var(--warn,#c47f17) 9%,var(--card));color:var(--ink);font-size:10.5px;font-weight:650;line-height:1.35;}
+@keyframes oabActivitySpin{to{transform:rotate(360deg)}}
+@keyframes oabActivityDot{0%,100%{opacity:.2;transform:translateY(0)}50%{opacity:1;transform:translateY(-2px)}}
+@media(max-width:680px){.oabActivityGuide{grid-template-columns:1fr}.oabActivityVisual{justify-content:flex-start}.oabActivitySteps{gap:4px}}
+@media(prefers-reduced-motion:reduce){.oabMiniBrowserPulse,.oabActivityFlow span{animation:none!important}.oabActivityFlow span{opacity:.65}}
+
 /* ===================================================================
    v7.26 — SAYFA UFKU (HORIZON) EKRANI
 
