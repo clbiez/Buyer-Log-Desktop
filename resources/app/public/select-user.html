@@ -768,6 +768,11 @@
       // Authentication success is enough to enter Buyer Log. Shared Sync and
       // Collection image bootstrap continue best-effort in the background.
       void runUserBootstrap();
+      // Fade the sign-in card out; the next page's curtain fades in from the same background.
+      document.documentElement.classList.add('blLeaving');
+      let reduceMotion = false;
+      try { reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
+      if (!reduceMotion) await new Promise(resolve => setTimeout(resolve, 280));
       location.replace('/');
       return;
     } catch (error) {

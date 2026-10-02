@@ -26,7 +26,7 @@
   function available(){return data.lessons.filter(allowed);}
   function shuffle(list){const out=list.slice();for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;}
   // Ordered deck within a startup: no repeated tip before all available cards.
-  let trivia=null,deck=[],tipIndex=0,tipTimer=null,bootRoot=null,paused=false,dialog=null,lastFocus=null,currentId='',moduleId='all',query='',navGeneration=0;
+  let trivia=null,triviaCtl=null,deck=[],tipIndex=0,tipTimer=null,bootRoot=null,paused=false,dialog=null,lastFocus=null,currentId='',moduleId='all',query='',navGeneration=0;
   function cardList(){const text=normal(query);return available().filter(c=>(moduleId==='all'||c.module===moduleId)&&(!text||normal([field(c,'title'),field(c,'summary'),field(c,'path'),field(moduleFor(c.module),'label'),...c.steps[lang()]].join(' ')).includes(text)));}
   function illustration(item){
     const title=esc(item.example||field(item,'title'));
@@ -43,13 +43,15 @@
     return `<figure class="blGuideVisual"><div class="blGuideVisualTop"><span>BUYER LOG</span><span>${esc(field(moduleFor(item.module),'label'))}</span></div><div class="blGuideVisualBody">${body}</div><figcaption>${t('Örnek görünüm • aşağıdaki yol gerçek arayüz adımlarını gösterir.','Illustrative view • the path below refers to the real interface.')}</figcaption></figure>`;
   }
   function content(item,full=false){return `${illustration(item)}<div class="blGuideCopy"><div class="blGuideEyebrow">${esc(field(moduleFor(item.module),'label'))}</div><h2>${esc(field(item,'title'))}</h2><p>${esc(field(item,'summary'))}</p><div class="blGuidePath">${esc(field(item,'path'))}</div><ol class="blGuideSteps">${item.steps[lang()].map((s,i)=>`<li><span>${i+1}</span><div>${esc(s)}</div></li>`).join('')}</ol>${full&&field(item,'note')?`<p class="blGuideNote">${esc(field(item,'note'))}</p>`:''}</div>`;}
+  // The curtain no longer opens on its own: a Continue button appears when ready.
+  function startupHint(){return bootRoot?.dataset?.ready?t('Okumanızı bitirdiğinizde devam edebilirsiniz.','Continue whenever you have finished reading.'):t('Kullanıcı bilgileriniz ve başlangıç ekranı hazır olduğunda Devam düğmesi görünecek.','A Continue button appears when your user information and initial screen are ready.');}
   function startupHeading(){return trivia?t('BİLİYOR MUYDUNUZ?','DID YOU KNOW?'):t('BEKLERKEN KEŞFEDİN','DISCOVER WHILE YOU WAIT');}
   // Trivia is not access-scoped, so its deck is built once per startup.
-  function refreshDeck(){if(trivia){if(!deck.length)deck=trivia.deck();return;}const current=deck[tipIndex]?.id,eligible=available(),ids=new Set(eligible.map(c=>c.id)),existing=new Set(deck.map(c=>c.id));deck=deck.filter(c=>ids.has(c.id)).concat(shuffle(eligible.filter(c=>!existing.has(c.id))));tipIndex=Math.max(0,deck.findIndex(c=>c.id===current));}
+  function refreshDeck(){if(trivia)return;const current=deck[tipIndex]?.id,eligible=available(),ids=new Set(eligible.map(c=>c.id)),existing=new Set(deck.map(c=>c.id));deck=deck.filter(c=>ids.has(c.id)).concat(shuffle(eligible.filter(c=>!existing.has(c.id))));tipIndex=Math.max(0,deck.findIndex(c=>c.id===current));}
   function renderTip(){
+    if(trivia){triviaCtl?.refresh();return;}
     if(!bootRoot?.isConnected||!deck.length)return;
-    const host=bootRoot.querySelector('[data-boot-tip]');if(host)host.innerHTML=trivia?trivia.render(deck[tipIndex],lang()):content(deck[tipIndex]);
-    if(trivia)trivia.markSeen(deck[tipIndex]?.id);
+    const host=bootRoot.querySelector('[data-boot-tip]');if(host)host.innerHTML=content(deck[tipIndex]);
     const count=bootRoot.querySelector('[data-tip-count]');if(count)count.textContent=`${tipIndex+1} / ${deck.length}`;
     bootRoot.querySelector('[data-tip-pause]')?.setAttribute('aria-pressed',String(paused));
     const pause=bootRoot.querySelector('[data-tip-pause]');if(pause)pause.textContent=paused?t('Devam et','Resume'):t('Duraklat','Pause');
@@ -61,25 +63,34 @@
     bootRoot=root;root.classList.add('blBootWithGuide');trivia=global.BLTrivia||null;if(trivia)root.classList.add('blBootWithTrivia');refreshDeck();
     const card=root.querySelector('.blBootCard');if(!card)return;
     card.insertAdjacentHTML('afterbegin',`<div class="blBootBrand">BUYER LOG <span>${t('Çalışma alanınız hazırlanıyor','Preparing your workspace')}</span></div>`);
-    card.insertAdjacentHTML('beforeend',`<p class="blBootHint" data-boot-hint>${t('Kullanıcı bilgileriniz ve başlangıç ekranı tamamlandığında otomatik açılacak.','Opens automatically when your user information and initial screen are ready.')}</p><div class="blBootStages" aria-label="${esc(t('Hazırlık adımları','Startup stages'))}"><span data-boot-stage="data">${t('Başlangıç verisi','Initial data')}</span><span data-boot-stage="ui">${t('Ekran','Screen')}</span><span data-boot-stage="profile">${t('Kullanıcı bilgileri','User information')}</span></div><div class="blBootTipHeading"><span>${startupHeading()}</span><span data-tip-count></span></div><div class="blBootTip" data-boot-tip></div><div class="blBootTipFooter"><div><button type="button" data-tip-prev aria-label="${esc(trivia?t('Önceki bilgi','Previous fact'):t('Önceki ipucu','Previous tip'))}">←</button><button type="button" data-tip-pause aria-pressed="false">${t('Duraklat','Pause')}</button><button type="button" data-tip-next aria-label="${esc(trivia?t('Sonraki bilgi','Next fact'):t('Sonraki ipucu','Next tip'))}">→</button></div><button type="button" data-tip-guide>${t('Kullanım Rehberi','User Guide')} ↗</button></div>`);
+    const stages=`<p class="blBootHint" data-boot-hint>${startupHint()}</p><div class="blBootStages" aria-label="${esc(t('Hazırlık adımları','Startup stages'))}"><span data-boot-stage="data">${t('Başlangıç verisi','Initial data')}</span><span data-boot-stage="ui">${t('Ekran','Screen')}</span><span data-boot-stage="profile">${t('Kullanıcı bilgileri','User information')}</span></div>`;
+    if(trivia){
+      // Trivia cards carry their own navigation; the footer keeps only the guide link and the Continue slot.
+      card.insertAdjacentHTML('beforeend',`${stages}<div class="blBootTipHeading"><span>${startupHeading()}</span></div><div class="blBootTip" data-boot-tip></div><div class="blBootTipFooter"><button type="button" class="blBootLink" data-tip-guide>${t('Kullanım Rehberi','User Guide')} ↗</button><span class="blBootContinueSlot" data-boot-continue-slot></span></div>`);
+      root.querySelector('[data-tip-guide]').addEventListener('click',()=>open());
+      triviaCtl=trivia.mount(root.querySelector('[data-boot-tip]'),{lang,blocked:()=>Boolean(dialog?.open)});
+      return;
+    }
+    card.insertAdjacentHTML('beforeend',`${stages}<div class="blBootTipHeading"><span>${startupHeading()}</span><span data-tip-count></span></div><div class="blBootTip" data-boot-tip></div><div class="blBootTipFooter"><div><button type="button" data-tip-prev aria-label="${esc(trivia?t('Önceki bilgi','Previous fact'):t('Önceki ipucu','Previous tip'))}">←</button><button type="button" data-tip-pause aria-pressed="false">${t('Duraklat','Pause')}</button><button type="button" data-tip-next aria-label="${esc(trivia?t('Sonraki bilgi','Next fact'):t('Sonraki ipucu','Next tip'))}">→</button></div><button type="button" data-tip-guide>${t('Kullanım Rehberi','User Guide')} ↗</button><span class="blBootContinueSlot" data-boot-continue-slot></span></div>`);
     root.querySelector('[data-tip-prev]').addEventListener('click',()=>rotate(-1));
     root.querySelector('[data-tip-next]').addEventListener('click',()=>rotate(1));
     root.querySelector('[data-tip-pause]').addEventListener('click',()=>{paused=!paused;renderTip();});
-    root.querySelector('[data-tip-guide]').addEventListener('click',()=>open(trivia?undefined:deck[tipIndex]?.id));
+    root.querySelector('[data-tip-guide]').addEventListener('click',()=>open(deck[tipIndex]?.id));
     renderTip();schedule();
   }
   function refreshStartupText(){
     if(!bootRoot)return;
     const set=(selector,value)=>{const el=bootRoot.querySelector(selector);if(el)el.textContent=value;};
-    set('.blBootBrand span',t('Çalışma alanınız hazırlanıyor','Preparing your workspace'));
-    if(!bootRoot.dataset.failed)set('[data-boot-message]',t('Buyer Log hazırlanıyor…','Buyer Log is preparing…'));
+    set('.blBootBrand span',bootRoot.dataset.ready?t('Çalışma alanınız hazır','Your workspace is ready'):t('Çalışma alanınız hazırlanıyor','Preparing your workspace'));
+    if(bootRoot.dataset.ready){set('[data-boot-message]',t('Buyer Log hazır','Buyer Log is ready'));set('[data-boot-continue]',t('Buyer Log\'a devam et','Continue to Buyer Log')+' →');}
+    else if(!bootRoot.dataset.failed)set('[data-boot-message]',t('Buyer Log hazırlanıyor…','Buyer Log is preparing…'));
     set('[data-boot-stage="data"]',t('Başlangıç verisi','Initial data'));
     set('[data-boot-stage="ui"]',t('Ekran','Screen'));
     set('[data-boot-stage="profile"]',t('Kullanıcı bilgileri','User information'));
     set('.blBootTipHeading > span',startupHeading());
     set('[data-tip-guide]',t('Kullanım Rehberi','User Guide')+' ↗');
     set('[data-boot-retry]',t('Tekrar dene','Retry'));
-    if(!bootRoot.dataset.slow)set('[data-boot-hint]',t('Kullanıcı bilgileriniz ve başlangıç ekranı tamamlandığında otomatik açılacak.','Opens automatically when your user information and initial screen are ready.'));
+    if(bootRoot.dataset.ready||!bootRoot.dataset.slow)set('[data-boot-hint]',startupHint());
     renderTip();
   }
   function refreshLanguage(){
@@ -87,7 +98,7 @@
     if(dialog?.open){const id=currentId,filter=moduleId,search=query;close();open(id);moduleId=filter;query=search;dialog.querySelector('[data-guide-search]').value=query;changed();}
   }
   function stage(name){if(bootRoot)bootRoot.querySelector(`[data-boot-stage="${name}"]`)?.setAttribute('data-done','true');}
-  function stopStartup(){if(tipTimer)clearInterval(tipTimer);tipTimer=null;bootRoot=null;trivia=null;deck=[];tipIndex=0;}
+  function stopStartup(){if(tipTimer)clearInterval(tipTimer);tipTimer=null;triviaCtl?.destroy();triviaCtl=null;bootRoot=null;trivia=null;deck=[];tipIndex=0;}
   function select(id){currentId=id;renderArticle();renderList();}
   function renderArticle(){
     const item=cardList().find(c=>c.id===currentId);const host=dialog?.querySelector('[data-guide-article]');if(!host)return;
@@ -146,5 +157,5 @@
   document.addEventListener('keydown',ev=>{if(ev.key==='F1'){ev.preventDefault();open();}});
   global.addEventListener('bl:user-access-applied',()=>{if(bootRoot){refreshDeck();refreshStartupText();}if(dialog?.open)changed();});
   global.addEventListener('bl:startup-complete',()=>{stopStartup();if(dialog?.open)renderArticle();});
-  global.BLGuide={open,mountStartup,stage,stopStartup,available,illustration,refreshLanguage};
+  global.BLGuide={open,mountStartup,stage,stopStartup,available,illustration,refreshLanguage,refreshStartup:refreshStartupText};
 })(window);

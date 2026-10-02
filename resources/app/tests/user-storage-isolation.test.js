@@ -136,6 +136,8 @@ test('BLStorage ile okunan her ön ek ya kullanıcıya ayrılır ya da bilinçli
     'buyerlog.lastSuccessfulUsername', 'buyerlog.bootRetry.',
     // Açılış perdesi kullanıcı bilinmeden çalışır: görülen bilgi kartları cihaz düzeyindedir.
     'bl.trivia.',
+    // Ortak PLM numune verisinin arka plan tazeleme zamanı (24 saat kısıtı); tercih değil.
+    'lcw.cp.plmSamples.autoRefreshAt',
     // Koleksiyon SAHİBİNİN kimliğiyle anahtarlanan ortak iş verisi önbelleği.
     'bl.collection.workspace.', 'bl.collection.pending.',
   ];
