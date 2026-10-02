@@ -13,7 +13,10 @@
     {
       "id": "visual-release-archive",
       "type": "feature",
-      "module": {"tr":"Sürüm Geçmişi","en":"Version History"},
+      "module": {
+        "tr": "Sürüm Geçmişi",
+        "en": "Version History"
+      },
       "title": {
         "tr": "Sürüm notları artık görsel bir Buyer Log arşivi",
         "en": "Release notes are now a visual Buyer Log archive"
@@ -38,7 +41,10 @@
     {
       "id": "cumulative-updates",
       "type": "feature",
-      "module": {"tr":"Güncelleme","en":"Update"},
+      "module": {
+        "tr": "Güncelleme",
+        "en": "Update"
+      },
       "title": {
         "tr": "Birkaç sürüm geriden gelen kullanıcı tüm yenilikleri birlikte görür",
         "en": "Users updating across several versions see every missed change together"
@@ -60,5 +66,6 @@
         }
       }
     }
-  ]
+  ],
+  "publishedAt": "2026-10-03"
 }
