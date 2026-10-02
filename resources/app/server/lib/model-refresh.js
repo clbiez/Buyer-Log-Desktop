@@ -535,13 +535,37 @@ function antrepoProjectionMapping(mapping, ruleValue) {
 // IAS sorgusunun başlayacağı gerçek parsiyel fact/grain tablosu. İthalat
 // Dosya No ve Konteyner No gibi alanlar ölçü değil, fact satırının normal
 // sütunlarıdır. SUMMARIZECOLUMNS yerine bu tablo satır satır projekte edilir.
-function antrepoGrainTable(mapping, fallbackTable = '') {
-  const headers = ['İthalat Dosya No', 'Konteyner No'];
-  for (const header of headers) {
-    const entry = modelFields.normalizeMappingEntry(mapping && mapping[header], fallbackTable);
-    if (entry && entry.kind === 'column' && entry.table) return entry.table;
+/* IAS satır granülü yükleme (parsiyel) fact tablosudur. İthalat Dosya No bir
+   boyut tablosuna (ör. Dim_Ithalat) bağlanmış olabilir; dosya düzeyindeki bu
+   tablo bir dosyadaki birden çok siparişi tek satırda taşır ve sipariş alanları
+   SELECTEDVALUE ile BLANK döner. Bu yüzden ufuk tablosu dışında en çok eşlenmiş
+   sütunu taşıyan tablo seçilir; eşitlikte İthalat Dosya No / Konteyner No
+   tablosu kazanır. */
+function antrepoGrainTable(mapping, fallbackTable = '', horizonTable = '') {
+  const key = name => String(name || '').toLocaleUpperCase('tr-TR');
+  const horizonKey = key(horizonTable);
+  const counts = new Map();
+  for (const value of Object.values(mapping && typeof mapping === 'object' ? mapping : {})) {
+    const entry = modelFields.normalizeMappingEntry(value, fallbackTable);
+    if (!entry || entry.kind !== 'column' || !entry.table || key(entry.table) === horizonKey) continue;
+    const current = counts.get(key(entry.table)) || { table: entry.table, count: 0 };
+    current.count += 1;
+    counts.set(key(entry.table), current);
   }
-  return '';
+  const preferred = [];
+  for (const header of ['İthalat Dosya No', 'Konteyner No']) {
+    const entry = modelFields.normalizeMappingEntry(mapping && mapping[header], fallbackTable);
+    if (entry && entry.kind === 'column' && entry.table) preferred.push(entry.table);
+  }
+  if (!preferred.length) return '';
+  let best = null;
+  for (const candidate of counts.values()) {
+    if (!best || candidate.count > best.count) best = candidate;
+  }
+  const preferredBest = preferred
+    .map(table => counts.get(key(table)) || { table, count: 0 })
+    .reduce((a, b) => (b.count > a.count ? b : a));
+  return best && best.count > preferredBest.count ? best.table : preferredBest.table;
 }
 
 /* v7.83 — FİLTRE DEĞERLERİNİN TİPİ KAYNAĞIN ŞEMASINDAN ÇÖZÜLÜR.
@@ -620,7 +644,7 @@ function buildConnectionQuery(item, options = {}) {
     : aligned.horizon;
   let built;
   if (role === 'antrepo') {
-    const grainTable = antrepoGrainTable(mapping, aligned.horizon.table);
+    const grainTable = antrepoGrainTable(mapping, aligned.horizon.table, aligned.horizon.table);
     if (!grainTable) {
       throw new ModelRefreshError(
         `${connectionLabel(item)} için IAS parsiyel fact tablosu belirlenemedi. Field Mapping içinde İthalat Dosya No alanını gerçek bir model sütununa bağlayın.`,
