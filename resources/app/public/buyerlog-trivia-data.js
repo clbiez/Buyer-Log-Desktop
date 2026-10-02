@@ -17,7 +17,14 @@ const categories=[
   {id:'art',tone:'purple',label:{tr:'Sanat ve müzik',en:'Art and music'}},
   {id:'tech',tone:'acc',label:{tr:'İcatlar ve teknoloji',en:'Inventions and technology'}},
   {id:'math',tone:'purple',label:{tr:'Matematik',en:'Mathematics'}},
-  {id:'textile',tone:'red',label:{tr:'Tekstil ve moda',en:'Textiles and fashion'}}
+  {id:'textile',tone:'red',label:{tr:'Tekstil ve moda',en:'Textiles and fashion'}},
+  // Paketlerle gelen kategoriler mevcut çizimlerden birini (scene) kullanabilir.
+  {id:'literature',tone:'purple',scene:'language',label:{tr:'Edebiyat',en:'Literature'}},
+  {id:'mythology',tone:'orange',scene:'history',label:{tr:'Mitoloji ve efsaneler',en:'Myths and legends'}},
+  {id:'sports',tone:'green',scene:'sports',label:{tr:'Spor',en:'Sports'}},
+  {id:'cinema',tone:'purple',scene:'art',label:{tr:'Sinema ve sahne',en:'Film and stage'}},
+  {id:'earth',tone:'teal',scene:'geography',label:{tr:'Yer bilimi ve hava',en:'Earth and weather'}},
+  {id:'turkiye',tone:'red',scene:'history',label:{tr:'Türkiye',en:'Türkiye'}}
 ];
 const rows=[
 // ── Uzay ──
@@ -228,7 +235,9 @@ const rows=[
 ['cashmere-yield','textile','🧣','Bir keçiden bir avuç kaşmir','Bir kaşmir keçisinden yılda yalnızca 150 gram civarında ince alt tüy elde edilir. Tek bir kazak için birkaç keçinin yıllık verimi gerekir.','A handful of cashmere per goat','A cashmere goat yields only around 150 grams of fine undercoat per year. A single sweater needs several goats\' annual harvest.']
 ];
 const items=rows.map(([id,category,icon,trTitle,trText,enTitle,enText])=>({id,category,icon,title:{tr:trTitle,en:enTitle},text:{tr:trText,en:enText}}));
-const data={version:1,categories,items};
+// Büyük arşiv paketleri arka planda yüklenir (buyerlog-trivia.js → loadPacks).
+const packs=['trivia/space.js','trivia/ocean.js','trivia/animals.js','trivia/animals-2.js','trivia/plants.js','trivia/history.js','trivia/history-2.js','trivia/turkiye.js','trivia/language.js','trivia/science.js','trivia/body.js','trivia/geography.js','trivia/food.js','trivia/art.js','trivia/tech.js','trivia/math.js','trivia/textile.js','trivia/literature.js','trivia/mythology.js','trivia/sports.js','trivia/cinema.js','trivia/earth.js'];
+const data={version:2,categories,items,packs};
 root.BLTriviaData=data;
 if(typeof module!=='undefined'&&module.exports)module.exports=data;
 })(typeof window!=='undefined'?window:globalThis);

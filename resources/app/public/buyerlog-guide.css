@@ -144,8 +144,7 @@
 .blTriviaNav{display:grid;gap:10px}
 .blTriviaProgress{height:3px;overflow:hidden;background:color-mix(in srgb,var(--tone) 14%,var(--line,#e5e7eb))}
 .blTriviaProgress i{display:block;height:100%;background:var(--tone);transform-origin:left center;transform:scaleX(0);transition:transform .25s linear}
-.blTriviaNavRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.blTriviaSeen{font-size:11px;letter-spacing:.04em;color:var(--muted,#7a7a7d);font-variant-numeric:tabular-nums}
+.blTriviaNavRow{display:flex;align-items:center;justify-content:flex-end;gap:12px}
 .blTriviaBtns{display:flex;gap:6px}
 .blTriviaBtn,#blBootGuard.blBootWithGuide .blTriviaBtn{width:36px;height:36px;display:grid;place-items:center;margin:0;padding:0;border-radius:50%;border:1px solid var(--line,#d4d4d7);background:var(--card,#fff);color:var(--ink,#1d1f20);font:600 19px/1 var(--sans,system-ui);cursor:pointer;transition:background .15s,border-color .15s,color .15s,transform .15s}
 .blTriviaBtn[data-trivia-pause],#blBootGuard.blBootWithGuide .blTriviaBtn[data-trivia-pause]{font-size:10px;letter-spacing:-1px}
@@ -172,3 +171,19 @@
 @media(max-width:900px){.blTriviaCard,.blTriviaCard--compact{grid-template-columns:1fr;gap:16px}.blTriviaFigure{max-width:560px}}
 @media(max-width:760px){.blTriviaIcon{width:44px;height:44px;font-size:24px}.blTriviaCopy h2{font-size:22px}.blTriviaCopy p{font-size:14px}}
 @media(prefers-reduced-motion:reduce){.blTriviaVisual,.blTriviaVisual *,.blTriviaIcon,.blTriviaCopy,.blBootContinue{animation:none!important}.blTriviaProgress i{transition:none}.blTriviaVisual .draw{stroke-dashoffset:0}}
+/* Modül hazır: kart bir anda kapanmaz, "<Modül> ekranına devam et" ile kapanır. */
+.blTriviaHold{position:fixed;z-index:900;display:flex;justify-content:center;align-items:flex-start;overflow:auto;padding:28px 16px;box-sizing:border-box;background:var(--paper,#f6f7f9);animation:blTriviaHoldIn .25s ease-out both}
+.blTriviaHold[hidden]{display:none}
+.blTriviaHold[data-leaving="1"]{opacity:0;transition:opacity .3s ease;pointer-events:none}
+.blTriviaHoldCard{width:min(1040px,100%);background:var(--card,#fff);border:1px solid var(--line2,#d4d4d7);box-shadow:var(--shadow-1);padding:22px 24px;display:grid;gap:18px}
+.blTriviaHoldHead{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;padding-bottom:14px;border-bottom:1px solid var(--line,#e5e7eb)}
+.blTriviaHoldReady{font:600 22px/1.2 var(--head,system-ui);color:var(--ink,#1d1f20)}
+.blTriviaHoldReady::before{content:'✓ ';color:var(--green,#177A4C)}
+.blTriviaHoldHint{font-size:13px;color:var(--ink2,#5d5d60)}
+.blTriviaHold .blTriviaPanel{margin:0;padding:0;border:0}
+.blTriviaHoldFoot{display:flex;justify-content:flex-end;padding-top:14px;border-top:1px solid var(--line,#e5e7eb)}
+.blTriviaHoldContinue{background:var(--acc,#3f6488);border:1px solid var(--acc,#3f6488);color:var(--on-acc,#fff);padding:11px 22px;font:600 15px/1.2 var(--sans,system-ui);cursor:pointer;display:inline-flex;align-items:center;gap:8px;animation:blTriviaPop .5s cubic-bezier(.2,1.4,.4,1) both}
+.blTriviaHoldContinue:hover{background:var(--acc-hover,#2f4d6b);border-color:var(--acc-hover,#2f4d6b)}
+.blTriviaHoldContinue:focus-visible{outline:2px solid var(--acc,#3f6488);outline-offset:3px}
+@keyframes blTriviaHoldIn{from{opacity:.6}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.blTriviaHold,.blTriviaHoldContinue{animation:none}.blTriviaHold[data-leaving="1"]{transition:none}}

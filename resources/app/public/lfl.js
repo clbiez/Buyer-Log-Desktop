@@ -2196,11 +2196,26 @@
     const currentDetailRows=[detailHead,...a.currentRows.map(rowToExcel)],compareDetailRows=[detailHead,...a.compareRows.map(rowToExcel)];
     const wb=XLSX.utils.book_new(),ws1=XLSX.utils.aoa_to_sheet(summaryRows),ws2=XLSX.utils.aoa_to_sheet(groupRows),wsCustom=XLSX.utils.aoa_to_sheet(customRows),ws3=XLSX.utils.aoa_to_sheet(currentDetailRows),ws4=XLSX.utils.aoa_to_sheet(compareDetailRows);ws1['!cols']=[{wch:34},{wch:30},{wch:14}];ws2['!cols']=[{wch:30},...Array(5).fill({wch:18})];wsCustom['!cols']=[{wch:28},{wch:42},{wch:30},{wch:30},...Array(8).fill({wch:18})];const fabricDetailCols=state.showFabricDetails?[{wch:20},{wch:20},{wch:24},{wch:18},{wch:14},{wch:12},{wch:26}]:[];const detailCols=[{wch:10},{wch:15},{wch:28},{wch:13},{wch:13},{wch:18},{wch:10},{wch:13},{wch:13},{wch:13},{wch:25},{wch:16},{wch:18},{wch:18},...fabricDetailCols,{wch:12},{wch:12},{wch:12},{wch:16}];ws3['!cols']=detailCols;ws4['!cols']=detailCols;[ws3,ws4].forEach(ws=>{const range=ws['!ref']?XLSX.utils.decode_range(ws['!ref']):null;if(!range)return;for(let r=1;r<=range.e.r;r++){const idCell=ws[XLSX.utils.encode_cell({r,c:1})];if(idCell){idCell.t='s';idCell.v=String(idCell.v??'');idCell.z='@';}for(const c of [7,8,9]){const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell&&cell.t==='d')cell.z='dd.mm.yy';}}});XLSX.utils.book_append_sheet(wb,ws1,'Özet');XLSX.utils.book_append_sheet(wb,ws2,'Grup Analizi');XLSX.utils.book_append_sheet(wb,wsCustom,'Bağımsız Kıyaslar');XLSX.utils.book_append_sheet(wb,ws3,'Seçili Portföy');XLSX.utils.book_append_sheet(wb,ws4,'Kıyas Portföyü');const d=new Date(),p=n=>String(n).padStart(2,'0');XLSX.writeFile(wb,`LFL_Analizi_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.xlsx`);
   }
+  /* İlk yükleme sırasında LFL ekranı boş kontrollerle açılmaz: ortak bekleme
+     durumu (Biliyor muydunuz? kartlarıyla) gösterilir; veri gelince ekran çizilir. */
+  function setLoadingView(on){
+    const view=document.getElementById('view-lfl'),host=$('lflLoadingState');if(!view||!host)return;
+    if(on){
+      if(view.classList.contains('lflIsLoading'))return;
+      view.classList.add('lflIsLoading');host.hidden=false;
+      const title=isEn()?'LFL data is loading to the screen…':'LFL verisi ekrana yükleniyor…',detail=isEn()?'Depending on data volume this can take a few seconds.':'Veri hacmine göre bu birkaç saniye sürebilir.';
+      if(window.BLUI&&typeof BLUI.renderState==='function')BLUI.renderState(host,{kind:'loading',title,detail});else host.textContent=title;
+    }else{
+      if(!view.classList.contains('lflIsLoading'))return;
+      view.classList.remove('lflIsLoading');host.hidden=true;host.replaceChildren();
+    }
+  }
   async function load(force=false,options={}){
     if(state.loading)return false;
     const preserved=options.preserveOnError?{serverRows:state.serverRows,rows:state.rows,meta:state.meta,source:state.source,loadedAt:state.loadedAt,trialRows:state.trial.rows}:null;
     state.loading=true;const btn=$('lflRefreshBtn'),old=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML='<span>'+(isEn()?'Refreshing…':'Yenileniyor…')+'</span>';}
     analysisDatasetRevision+=1;lflAnalysisCache.clear();lflScenarioCache.clear();
+    if(state.initialized&&!state.serverRows.length)setLoadingView(true);
     try{
       if(window.BLFX&&BLFX.load)await BLFX.load();
       const res=await fetch(force?'/api/lfl/refresh':'/api/lfl',{method:force?'POST':'GET'}),data=await res.json();
@@ -2210,10 +2225,12 @@
       rebuildDimensionLabelIndex(state.serverRows);applyTrialRows();state.meta=data.meta||{};state.source=data.source||null;state.loadedAt=data.loadedAt||null;
       // Fiyat & Üretici Analizi LFL verisini sekme hiç açılmadan isteyebilir:
       // görünmeyen LFL ekranı çizilmez, kontroller sekme ilk açıldığında doldurulur.
+      setLoadingView(false);
       if(state.initialized){fillControls();render();}else state.controlsPending=true;
       if(force&&!options.silent&&window.showToast)showToast(isEn()?('LFL refresh completed: '+state.rows.length.toLocaleString('en-GB')+' rows.'):('LFL yenileme tamamlandı: '+state.rows.length.toLocaleString('tr-TR')+' satır.'));
       return true;
     }catch(err){
+      setLoadingView(false);
       if(preserved){
         state.serverRows=preserved.serverRows;state.rows=preserved.rows;state.meta=preserved.meta;state.source=preserved.source;state.loadedAt=preserved.loadedAt;state.trial.rows=preserved.trialRows;rebuildDimensionLabelIndex(state.serverRows);render();
       }else{
@@ -2221,7 +2238,7 @@
       }
       if(!options.silent&&window.showToast)showToast((isEn()?'LFL refresh failed: ':'LFL yenileme başarısız: ')+err.message);
       return false;
-    }finally{state.loading=false;if(btn){btn.disabled=false;btn.innerHTML=old;}}
+    }finally{state.loading=false;setLoadingView(false);if(btn){btn.disabled=false;btn.innerHTML=old;}}
   }
   /* v20260928 — LFL'in AYRI yenilemesi yok. Siparişler · Backlog · LFL ·
      Fiyat & Üretici aynı ufku paylaşır ve ortak yenilemeyle birlikte güncellenir
@@ -2264,7 +2281,7 @@
     // baglamalarinin hicbiri etkilenmemeli.
     try{ mountTrialButton(); }catch(err){ console.warn('LFL Trial düğmesi bağlanamadı:', err); }
   }
-  window.initLFL=function(){bind();if(!state.rows.length&&!state.loading)load(false);else{if(state.controlsPending){state.controlsPending=false;fillControls();}render();}};
+  window.initLFL=function(){bind();if(!state.rows.length&&!state.loading)load(false);else if(state.loading&&!state.serverRows.length)setLoadingView(true);else{if(state.controlsPending){state.controlsPending=false;fillControls();}render();}};
   // v2.20: "LFL İçin ASAS Yükle" sonrası kullanılır. load(false) sunucudaki GÜNCEL
   // (yüklenmiş) veriyi GET ile çeker; load(true) diskten yeniden okuyup yüklenen
   // dosyanın üzerine yazacağı için burada bilerek kullanılmaz.
