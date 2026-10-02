@@ -229,6 +229,7 @@
 <link rel="stylesheet" href="data-management.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="backlog-delivery-analysis.css?v=__BL_ASSET_VERSION__&rev=20260926-1">
 <link rel="stylesheet" href="backlog-plan-actual.css?v=__BL_ASSET_VERSION__&rev=2">
+<link rel="stylesheet" href="backlog-overview.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="cp-overview-assistant.css?v=__BL_ASSET_VERSION__&rev=7143">
 <link rel="stylesheet" href="design.css?v=__BL_ASSET_VERSION__&rev=7181">
 <link rel="stylesheet" href="design-butunluk.css?v=__BL_ASSET_VERSION__">
@@ -1283,6 +1284,17 @@
     <div id="backlogDetailModal" class="backlogDetailOverlay" hidden></div>
     <div id="backlogContent" style="display:none">
       <div class="kpirow" id="backlogKpi"></div>
+      <div id="backlogOverview" class="panel blvModule is-open">
+        <div class="blvModuleHead">
+          <button type="button" class="blvModuleToggle" id="backlogOverviewToggle" aria-expanded="true" aria-controls="backlogOverviewBody">
+            <svg class="ic"><use href="#i-chart-bar"/></svg>
+            <span class="blvModuleTitle" data-i18n-tr="Backlog Genel Bakış" data-i18n-en="Backlog Overview">Backlog Genel Bakış</span>
+            <span class="blvModuleHint" data-i18n-tr="Operasyon aşamaları · kırılımlar · zaman akışı" data-i18n-en="Operational stages · breakdowns · timeline">Operasyon aşamaları · kırılımlar · zaman akışı</span>
+          </button>
+          <button type="button" class="tbtn bpaMoveBtn" id="backlogOverviewRefresh" title="Genel bakışı yenile" data-i18n-title-tr="Genel bakışı yenile" data-i18n-title-en="Refresh overview"><svg class="ic"><use href="#i-refresh"/></svg></button>
+        </div>
+        <div id="backlogOverviewBody"></div>
+      </div>
       <div id="backlogChartPanel" class="panel backlogChartPanel" hidden></div>
       <div id="backlogPlanActualModule" class="panel bpaModule">
         <div id="backlogPlanActualHead" class="bpaModuleHead">
@@ -1313,7 +1325,16 @@
           <button class="tbtn" id="backlogPivotSettingsBtn" title="Backlog pivot ve ön filtre ayarları" data-i18n-title-tr="Backlog pivot ve ön filtre ayarları" data-i18n-title-en="Backlog pivot and pre-filter settings"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Pivot ayarları" data-i18n-en="Pivot settings">Pivot ayarları</span></button>
           <button class="tbtn" id="backlogChartBtn" title="Adet / zaman grafiğini oluştur veya düzenle" data-i18n-title-tr="Adet / zaman grafiğini oluştur veya düzenle" data-i18n-title-en="Create or edit quantity / time chart"><svg class="ic"><use href="#i-chart-histogram"/></svg> <span data-i18n-tr="Grafik" data-i18n-en="Chart">Grafik</span></button>
           <button class="tbtn" id="backlogExcelOptionsBtn" title="Excel sütun ve formül seçenekleri"><svg class="ic"><use href="#i-settings"/></svg> <span data-i18n-tr="Excel seçenekleri" data-i18n-en="Excel options">Excel seçenekleri</span></button>
-          <button class="tbtn" id="backlogExportBtn" title="Mevcut Backlog pivot raporunu Excel olarak indir"><svg class="ic"><use href="#i-download"/></svg> <span data-i18n-tr="Excel'e aktar" data-i18n-en="Export to Excel">Excel'e aktar</span></button>
+          <button class="tbtn" id="backlogExportBtn" title="Mevcut Backlog raporunu klasik (Legacy) Excel düzeninde indir" data-i18n-title-tr="Mevcut Backlog raporunu klasik (Legacy) Excel düzeninde indir" data-i18n-title-en="Download the current Backlog report in the classic (Legacy) Excel layout"><svg class="ic"><use href="#i-download"/></svg> <span data-i18n-tr="Excel Legacy" data-i18n-en="Excel Legacy">Excel Legacy</span></button>
+          <span class="backlogExportGroup">
+            <button class="tbtn" id="backlogExportV3Btn" title="Grafikli Backlog V3 Excel raporunu indir" data-i18n-title-tr="Grafikli Backlog V3 Excel raporunu indir" data-i18n-title-en="Download the Backlog V3 Excel report with charts"><svg class="ic"><use href="#i-download"/></svg> <span data-i18n-tr="Excel Backlog V3" data-i18n-en="Excel Backlog V3">Excel Backlog V3</span></button>
+            <button class="tbtn" id="backlogExportV3MenuBtn" aria-haspopup="true" aria-expanded="false" aria-controls="backlogExportV3Menu" title="Backlog V3 içeriği" data-i18n-title-tr="Backlog V3 içeriği" data-i18n-title-en="Backlog V3 contents"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
+            <div class="blvExportMenu" id="backlogExportV3Menu" hidden>
+              <h4 data-i18n-tr="Backlog V3 içeriği" data-i18n-en="Backlog V3 contents">Backlog V3 içeriği</h4>
+              <label><input type="checkbox" data-blv-export="includePlanActual" checked><span><span data-i18n-tr="Planlanan &amp; Gerçekleşen raporu" data-i18n-en="Planned vs Actual report">Planlanan &amp; Gerçekleşen raporu</span><small data-i18n-tr="Panelin seçili dönemi ve plan penceresiyle P&amp;A sayfaları" data-i18n-en="P&amp;A sheets for the panel's selected period and plan window">Panelin seçili dönemi ve plan penceresiyle P&amp;A sayfaları</small></span></label>
+              <label><input type="checkbox" data-blv-export="includeLegacy" checked><span><span data-i18n-tr="Legacy BACKLOG tablosu" data-i18n-en="Legacy BACKLOG table">Legacy BACKLOG tablosu</span><small data-i18n-tr="Klasik BACKLOG ve Ayarlar sayfaları formülleriyle sonda" data-i18n-en="Classic BACKLOG and Settings sheets with formulas, at the end">Klasik BACKLOG ve Ayarlar sayfaları formülleriyle sonda</small></span></label>
+            </div>
+          </span>
         </div>
         <div class="tablewrap"><table id="backlogTreeTable" class="backlogTreeTable"><colgroup>
           <col id="backlogColGroup"><col id="backlogColQty"><col id="backlogColOrders"><col class="backlogColDetail">
@@ -1404,8 +1425,10 @@
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
 <script src="license-royalty-commissions.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=3"></script>
-<script src="backlog-plan-actual-report.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="backlog-plan-actual.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="backlog-plan-actual-report.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="backlog-plan-actual.js?v=__BL_ASSET_VERSION__&rev=3"></script>
+<script src="backlog-v3-report.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="backlog-overview.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-radar-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1"></script>

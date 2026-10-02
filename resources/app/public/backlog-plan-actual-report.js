@@ -269,8 +269,14 @@
     const total = summarize(planRows);
     const dimKey = report.groupBy || 'buyer';
     const dim = DIMENSIONS.find(d => d.key === dimKey) || DIMENSIONS[0];
-    const wb = new ExcelJS.Workbook();
-    wb.creator = 'Buyer Log'; wb.created = new Date();
+    // Backlog V3 aynı sayfaları kendi çalışma kitabına ekler: options.workbook +
+    // options.prefix ile sayfa adları çakışmadan (ör. "P&A Özet") yazılır.
+    const wb = opts.workbook || new ExcelJS.Workbook();
+    if (!opts.workbook) { wb.creator = 'Buyer Log'; wb.created = new Date(); }
+    const prefix = String(opts.prefix || '');
+    const sheetName = name => (prefix + name).slice(0, 31);
+    const added = [];
+    const addSheet = (name, config) => { const ws = wb.addWorksheet(sheetName(name), config); added.push(ws); return ws; };
     const charts = [];
     const subtitle = [
       L('Analiz dönemi', 'Analysis period') + ': ' + (report.periodText || '—'),
@@ -280,7 +286,7 @@
     ].filter(Boolean).join('   ·   ');
 
     /* ---- 1) Özet / Dashboard ---- */
-    const dash = wb.addWorksheet(L('Özet', 'Summary'), { views:[{ showGridLines:false, zoomScale:90 }], properties:{ tabColor:{ argb:C.navy } } });
+    const dash = addSheet(L('Özet', 'Summary'), { views:[{ showGridLines:false, zoomScale:90 }], properties:{ tabColor:{ argb:C.navy } } });
     dash.getColumn(1).width = 2;
     for (let c = 2; c <= 17; c += 1) dash.getColumn(c).width = 11.5;
     sheetTitle(dash, L('Planlanan & Gerçekleşen Analizi', 'Planned vs Actual Analysis'), subtitle, 17);
@@ -334,7 +340,7 @@
 
     /* ---- Günlük plan sayfası (grafik kaynağı da budur) ---- */
     const days = dailySeries(planRows);
-    const daily = wb.addWorksheet(L('Günlük Plan', 'Daily Plan'), { views:[{ state:'frozen', ySplit:4, showGridLines:false }], properties:{ tabColor:{ argb:C.acc } } });
+    const daily = addSheet(L('Günlük Plan', 'Daily Plan'), { views:[{ state:'frozen', ySplit:4, showGridLines:false }], properties:{ tabColor:{ argb:C.acc } } });
     daily.getColumn(1).width = 2;
     daily.getColumn(2).width = 14;
     for (let c = 3; c <= 3 + SEGMENTS.length + 3; c += 1) daily.getColumn(c).width = 15;
@@ -381,7 +387,7 @@
     }
 
     /* ---- Kırılımlar: Buyer / Buying Group / MAG / MMYG / Ürün Ana Tanım ---- */
-    const br = wb.addWorksheet(L('Kırılımlar', 'Breakdowns'), { views:[{ showGridLines:false }], properties:{ tabColor:{ argb:C.green } } });
+    const br = addSheet(L('Kırılımlar', 'Breakdowns'), { views:[{ showGridLines:false }], properties:{ tabColor:{ argb:C.green } } });
     br.getColumn(1).width = 2; br.getColumn(2).width = 18; br.getColumn(3).width = 18;
     for (let c = 4; c <= 4 + groupColumns(L).length; c += 1) br.getColumn(c).width = 14;
     sheetTitle(br, L('Kırılım bazında plan gerçekleşme', 'Plan realisation by dimension'), subtitle, 3 + groupColumns(L).length);
@@ -394,7 +400,7 @@
     });
 
     /* ---- Plan gerçekleşme detayı ---- */
-    const pd = wb.addWorksheet(L('Plan Gerçekleşme', 'Plan Realisation'), { views:[{ state:'frozen', ySplit:1, xSplit:3 }], properties:{ tabColor:{ argb:C.red } } });
+    const pd = addSheet(L('Plan Gerçekleşme', 'Plan Realisation'), { views:[{ state:'frozen', ySplit:1, xSplit:3 }], properties:{ tabColor:{ argb:C.red } } });
     const pdCols = [
       [L('Sonuç', 'Outcome'), 22, r => pick(lang, OUTCOMES[r.outcome] || { tr:r.outcome, en:r.outcome })],
       [L('Sipariş', 'Order'), 16, r => r.orderCode], [L('Model', 'Model'), 26, r => r.modelName], [L('Renk Kod', 'Colour Code'), 10, r => r.colourCode], [L('Renk', 'Colour'), 16, r => r.colour],
@@ -418,7 +424,7 @@
     }
 
     /* ---- Net değişiklikler (alan başına bir satır) ---- */
-    const nc = wb.addWorksheet(L('Net Değişiklikler', 'Net Changes'), { views:[{ state:'frozen', ySplit:1, xSplit:2 }], properties:{ tabColor:{ argb:C.gold } } });
+    const nc = addSheet(L('Net Değişiklikler', 'Net Changes'), { views:[{ state:'frozen', ySplit:1, xSplit:2 }], properties:{ tabColor:{ argb:C.gold } } });
     const flat = [];
     changes.forEach((change, ci) => {
       const fields = change.fields && change.fields.length ? change.fields : [{ label:L('Net fark yok · dönem içi revizyon', 'No net difference · revised during period'), before:'', after:'' }];
@@ -439,7 +445,7 @@
     }, item => item.band === 1);
 
     /* ---- Dönem içi değişiklik trafiği ---- */
-    const at = wb.addWorksheet(L('Değişiklik Trafiği', 'Change Activity'), { views:[{ state:'frozen', ySplit:1 }], properties:{ tabColor:{ argb:C.muted } } });
+    const at = addSheet(L('Değişiklik Trafiği', 'Change Activity'), { views:[{ state:'frozen', ySplit:1 }], properties:{ tabColor:{ argb:C.muted } } });
     const atCols = [
       [L('Sipariş', 'Order'), 16, r => r.orderCode], [L('Model', 'Model'), 26, r => r.modelName], [L('Renk Kod', 'Colour Code'), 10, r => r.colourCode],
       ['Buyer', 18, r => r.buyer], [L('Alan', 'Field'), 24, r => r.field], [L('Revizyon', 'Revisions'), 10, r => r.eventCount, 'qty'],
@@ -449,8 +455,8 @@
     ];
     writeTable(at, atCols, activity, (row, item) => { if (item.repeated) row.getCell(6).font = { name:FONT, size:9.5, bold:true, color:{ argb:C.red } }; });
 
-    wb.worksheets.forEach(ws => { ws.pageSetup = Object.assign({}, ws.pageSetup, { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0 }); });
-    return { workbook:wb, charts };
+    added.forEach(ws => { ws.pageSetup = Object.assign({}, ws.pageSetup, { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0 }); });
+    return { workbook:wb, charts, worksheets:added };
   }
 
   function fmtStamp(value) {
@@ -486,8 +492,10 @@
   /* ExcelJS sayfa dosyası adı, çalışma kitabındaki sırasıyla eşleşir. */
   function chartSpecsFor(workbook, charts) {
     return (charts || []).map(item => {
-      const index = workbook.worksheets.indexOf(item.worksheet);
-      return { sheetPath:'xl/worksheets/sheet' + (index + 1) + '.xml', anchor:item.anchor, xml:item.xml };
+      // ExcelJS sayfa dosyasını kimliğiyle (sheet<id>.xml) adlandırır; sekme
+      // sırası (orderNo) değişse de dosya adı değişmez.
+      const id = item.worksheet && item.worksheet.id ? item.worksheet.id : workbook.worksheets.indexOf(item.worksheet) + 1;
+      return { sheetPath:'xl/worksheets/sheet' + id + '.xml', anchor:item.anchor, xml:item.xml };
     });
   }
 
@@ -574,5 +582,7 @@
     SEGMENTS, OUTCOMES, DIMENSIONS, REVISION_BUCKETS,
     rowSegments, rowHasSegment, summarize, groupBy, dailySeries, exFactoryRevisions,
     buildWorkbook, buildXlsx, chartSpecsFor, injectCharts, barChartXml, doughnutXml, excelSerial, fileName,
+    // Ortak Excel stil kiti: Backlog V3 aynı görsel dili buradan kullanır.
+    excelKit:Object.freeze({ FONT, COLORS:C, styleHeader, styleBody, dataBar, sheetTitle, sectionTitle, setDate, colName, quoteSheet, writeTable, thin }),
   });
 });

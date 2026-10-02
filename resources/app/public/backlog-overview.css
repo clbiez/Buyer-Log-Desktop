@@ -1,0 +1,52 @@
+/* Backlog Genel Bakış (V3) — Planlanan & Gerçekleşen paneliyle aynı görsel dil.
+   Aşama renkleri tema tokenlarından türetilir; açık/koyu tema otomatik izlenir. */
+#backlogContent,.blvDrawerRoot,.blvTipBox{
+  --blv-SHORTAGE:var(--red);--blv-PRODUCTION:var(--acc);--blv-LOADING:var(--orange);--blv-IN_TRANSIT:var(--purple);
+  --blv-CUSTOMS:color-mix(in srgb,var(--orange) 42%,var(--card));--blv-AWAITING_RETAIL_TRANSFER:var(--teal);--blv-IN_WAREHOUSE:var(--green);--blv-UNKNOWN:var(--muted)}
+#backlogContent [data-stage="SHORTAGE"],.blvDrawerRoot [data-stage="SHORTAGE"],.blvTipBox [data-stage="SHORTAGE"]{--seg:var(--blv-SHORTAGE)}
+#backlogContent [data-stage="PRODUCTION"],.blvDrawerRoot [data-stage="PRODUCTION"],.blvTipBox [data-stage="PRODUCTION"]{--seg:var(--blv-PRODUCTION)}
+#backlogContent [data-stage="LOADING"],.blvDrawerRoot [data-stage="LOADING"],.blvTipBox [data-stage="LOADING"]{--seg:var(--blv-LOADING)}
+#backlogContent [data-stage="IN_TRANSIT"],.blvDrawerRoot [data-stage="IN_TRANSIT"],.blvTipBox [data-stage="IN_TRANSIT"]{--seg:var(--blv-IN_TRANSIT)}
+#backlogContent [data-stage="CUSTOMS"],.blvDrawerRoot [data-stage="CUSTOMS"],.blvTipBox [data-stage="CUSTOMS"]{--seg:var(--blv-CUSTOMS)}
+#backlogContent [data-stage="AWAITING_RETAIL_TRANSFER"],.blvDrawerRoot [data-stage="AWAITING_RETAIL_TRANSFER"],.blvTipBox [data-stage="AWAITING_RETAIL_TRANSFER"]{--seg:var(--blv-AWAITING_RETAIL_TRANSFER)}
+#backlogContent [data-stage="IN_WAREHOUSE"],.blvDrawerRoot [data-stage="IN_WAREHOUSE"],.blvTipBox [data-stage="IN_WAREHOUSE"]{--seg:var(--blv-IN_WAREHOUSE)}
+#backlogContent [data-stage="UNKNOWN"],.blvDrawerRoot [data-stage="UNKNOWN"],.blvTipBox [data-stage="UNKNOWN"]{--seg:var(--blv-UNKNOWN)}
+.blvTipBox .blvTipVal{color:var(--seg)}
+.blvTile[data-stage]{--tile:var(--seg)}
+.blvTile[data-stage=""] .bpaTileValue{color:var(--ink)}
+.blvBadge[data-stage="CUSTOMS"]{color:var(--orange)}
+.blvOver{font-style:normal;color:var(--red);font-weight:700}
+.blvGap{height:12px}
+.blvCols{height:240px}
+.blvCols .bpaCol{flex:1 0 48px;max-width:96px}
+.blvCols .bpaCol.is-past .bpaColLabel{color:var(--ink2);font-weight:650}
+
+/* Panel kabuğu */
+.blvModule{margin:0 0 10px;overflow:hidden;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.blvModuleHead{display:flex;align-items:center;gap:8px;min-height:46px;padding:8px 10px;background:var(--card2);border-bottom:1px solid transparent}
+.blvModule.is-open .blvModuleHead{border-bottom-color:var(--line)}
+.blvModuleToggle{display:flex;align-items:center;gap:8px;min-width:0;flex:1;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.blvModuleToggle .ic{width:18px;height:18px}
+.blvModuleTitle{font-weight:700}
+.blvModuleHint{font-size:12px;color:var(--muted);margin-left:4px}
+#backlogOverviewBody{padding:12px}
+
+/* Backlog ekranının genel görünümü: Plan & Actual ile aynı yüzey dili.
+   Genel bakış paneli KPI'ları daha zengin gösterdiği için eski iki KPI
+   rozeti, panel bağlandıktan sonra gizlenir. */
+#backlogContent.has-blv #backlogKpi{display:none}
+#backlogContent>.panel{border-radius:0;box-shadow:none;margin-bottom:10px}
+#backlogContent .backlogTreeToolbar{background:var(--card2);padding:8px 10px;margin-bottom:0}
+#backlogContent .backlogTh{font-weight:650;border-bottom:1px solid var(--line)}
+#backlogContent .backlogExportGroup{display:inline-flex;align-items:center;gap:0;position:relative}
+#backlogContent .backlogExportGroup>.tbtn+.tbtn{border-left:0}
+#backlogExportV3Btn{background:var(--green);color:var(--on-acc);border-color:var(--green)}
+#backlogExportV3Btn:hover:not(:disabled){background:color-mix(in srgb,var(--green) 86%,var(--ink))}
+#backlogExportV3Btn:disabled{opacity:.6}
+.blvExportMenu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;min-width:290px;padding:10px 12px;background:var(--pop,var(--card));backdrop-filter:var(--pop-blur);border:1px solid var(--line2);box-shadow:var(--shadow-3);color:var(--ink);font-size:12px}
+.blvExportMenu[hidden]{display:none}
+.blvExportMenu h4{margin:0 0 8px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+.blvExportMenu label{display:flex;align-items:flex-start;gap:8px;padding:6px 0;cursor:pointer}
+.blvExportMenu label small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+@media(max-width:900px){.blvModuleHint{display:none}}
+.blvModule .bpaGRow{grid-template-columns:minmax(140px,220px) 1fr 190px}.blvModule .bpaGStats span{white-space:nowrap}

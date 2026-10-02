@@ -15991,6 +15991,8 @@ function renderBacklog(data){
 
   // Grafik pivot ağacından bağımsızdır; aktif Backlog filtresini birebir izler.
   window.BLBacklogChart?.onBacklogRendered?.(data);
+  // Backlog Genel Bakış (V3) aynı filtreyle satır detayını kendisi toplar.
+  window.BLBacklogOverview?.onBacklogRendered?.(data);
 
   backlogPivotCols = [];
   const body = document.getElementById('backlogTreeBody');
@@ -17139,7 +17141,7 @@ window.BLBacklogChartContext={
   language:()=>appLang,
 };
 
-async function exportBacklogToExcel(){
+async function exportBacklogToExcel(_event,options={}){
   if(!lastBacklogData || !lastBacklogFlat || !lastBacklogFlat.length){ showToast('Aktarılacak Backlog verisi yok.'); return; }
   if(!commitBacklogDateInputs())return;
   await fetchBacklogSourceColumns();
@@ -17149,7 +17151,7 @@ async function exportBacklogToExcel(){
   const chartSourceColumns=backlogExportSourceCatalog().map(item=>item.id);
   if(chartSourceColumns.length)params.sourceColumns=[...new Set(chartSourceColumns)].join(',');
   const qs=new URLSearchParams(Object.entries(params).filter(([,v])=>v!=null&&v!=='')).toString();
-  const btn=document.getElementById('backlogExportBtn'); const old=btn.innerHTML; btn.disabled=true; btn.textContent='Hazırlanıyor…';
+  const btn=document.getElementById(options.buttonId||'backlogExportBtn'); const old=btn.innerHTML; btn.disabled=true; btn.textContent='Hazırlanıyor…';
   const d0=new Date(); const p=x=>String(x).padStart(2,'0');
   const stamp=`${d0.getFullYear()}${p(d0.getMonth()+1)}${p(d0.getDate())}_${p(d0.getHours())}${p(d0.getMinutes())}`;
   try{
@@ -17174,7 +17176,8 @@ async function exportBacklogToExcel(){
     const chartState=window.BLBacklogChart?.getState?.()||null;
     const detailSheet=buildBacklogDetailSheet(expanded.headers,expanded.rows,transitPlan,{includeImages,dateDimensionSources:expanded.derivedHeaderSources,chartState});
     XLSX.utils.book_append_sheet(wb,detailSheet,'BACKLOG');
-    const chartExport=window.BLBacklogChart?.appendWorkbookSheets?.(
+    // Excel Backlog V3 legacy sayfaları yerel grafik eklemeden alır (V3 kendi grafiklerini yazar).
+    const chartExport=options.onLegacyWorkbook?null:window.BLBacklogChart?.appendWorkbookSheets?.(
       wb,data.rows||[],data.headers||[],{
         XLSX,
         state:chartState,
@@ -17187,6 +17190,7 @@ async function exportBacklogToExcel(){
     const backlogHeaders=includeImages?['Görsel',...expanded.headers]:expanded.headers,backlogRows=expanded.rows;
     const rules=backlogWorkbookGuardConfig(backlogHeaders,backlogRows);
     const chartSpecs=chartExport&&Array.isArray(chartExport.charts)?chartExport.charts:[];
+    if(typeof options.onLegacyWorkbook==='function'){await options.onLegacyWorkbook({wb,rules,data,headers:exportHeaders,stamp});return;}
     await saveWorkbookWithValidations(wb,`Backlog_Report_${stamp}.xlsx`,
       rules.validations,rules.conditionalFormats,rules.protections,
       {freezePanes:rules.freezePanes,charts:chartSpecs});
@@ -17199,6 +17203,58 @@ async function exportBacklogToExcel(){
   }
 }
 document.getElementById('backlogExportBtn').addEventListener('click', exportBacklogToExcel);
+/* ===================================================================
+   EXCEL BACKLOG V3 — görsel özet + kırılımlar + haftalık akış + V3 detay,
+   isteğe bağlı Planlanan & Gerçekleşen raporu ve Legacy BACKLOG/Ayarlar.
+
+   Legacy sayfaları exportBacklogToExcel ile BİREBİR aynı motorla üretilir
+   (onLegacyWorkbook kancası); ExcelJS ile açılıp V3 sayfaları öne eklenir.
+   Legacy BACKLOG dosyası sheet1.xml olarak kalır, bu yüzden doğrulama /
+   koşullu biçim / dondurma kuralları yazımdan sonra aynen uygulanır.
+   =================================================================== */
+function backlogV3FilterText(){
+  const en=appLang==='en',raw=buildBacklogParams(),parts=[];
+  const range=(label,a,b)=>{if(a||b)parts.push(`${label}: ${dateDisplayFromISO(a)||'…'} → ${dateDisplayFromISO(b)||'…'}`);};
+  range('Retail',raw.retailFrom,raw.retailTo);range('In Store',raw.inStoreFrom,raw.inStoreTo);range(en?'Warehouse':'Antrepo',raw.antrepoFrom,raw.antrepoTo);
+  if(raw.buyerGrup)parts.push('Buyer Grup: '+raw.buyerGrup);
+  if(raw.dimFilters){try{Object.entries(JSON.parse(raw.dimFilters)).forEach(([dim,values])=>{parts.push(`${dim}: ${Array.isArray(values)?values.join(', '):(values&&values.values||[]).join(', ')}`);});}catch(_){}}
+  return parts.join(' · ');
+}
+async function exportBacklogV3(){
+  const en=appLang==='en';
+  if(!window.BLBacklogV3Report){showToast(en?'Backlog V3 report engine is not loaded.':'Backlog V3 rapor motoru yüklenmedi.');return;}
+  const opts=window.BLBacklogOverview?.exportOptions?.()||{includePlanActual:true,includeLegacy:true,groupBy:'buyer'};
+  await exportBacklogToExcel(null,{buttonId:'backlogExportV3Btn',onLegacyWorkbook:async({wb,rules,data,headers,stamp})=>{
+    if(window.BLPerf){
+      await window.BLPerf.ensureLibrary('exceljs');await window.BLPerf.ensureLibrary('jszip');
+      await window.BLPerf.ensureFeature?.('backlogAnalysis')?.catch?.(()=>null);
+    }
+    if(typeof ExcelJS==='undefined')throw new Error(en?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
+    const book=new ExcelJS.Workbook();book.creator='Buyer Log';book.created=new Date();
+    if(opts.includeLegacy)await book.xlsx.load(XLSX.write(wb,{type:'array',bookType:'xlsx',cellStyles:true}));
+    const planActual=opts.includePlanActual?await Promise.resolve(window.BLBacklogPlanActual?.exportReport?.()).catch(()=>null):null;
+    const guards=opts.includeLegacy&&window.BLExcelWorkbookGuards&&typeof JSZip!=='undefined'
+      ?buffer=>BLExcelWorkbookGuards.applyWorkbookGuards(buffer,{validations:rules.validations,conditionalFormats:rules.conditionalFormats,protections:rules.protections,freezePanes:rules.freezePanes},JSZip,'uint8array')
+      :null;
+    const out=await window.BLBacklogV3Report.buildXlsx({rows:data.rows||[],headers,groupBy:opts.groupBy,filterText:backlogV3FilterText(),planActual},{
+      ExcelJS,JSZip:typeof JSZip!=='undefined'?JSZip:null,lang:appLang,workbook:book,outputType:'uint8array',afterWrite:guards,
+      onChartError:err=>console.warn('[Backlog V3] Excel grafikleri eklenemedi',err),
+    });
+    const name=`Backlog_V3_${stamp}.xlsx`;
+    kolDownloadBuffer(out.data,name,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    const extras=[planActual?(en?'Plan & Actual':'Plan & Actual'):'',opts.includeLegacy?'Legacy':''].filter(Boolean).join(' + ');
+    showToast(en?`Backlog V3 exported: ${data.rows?.length||0} rows${extras?' + '+extras:''}.`:`Backlog V3 aktarıldı: ${data.rows?.length||0} satır${extras?' + '+extras:''}.`);
+  }});
+}
+document.getElementById('backlogExportV3Btn')?.addEventListener('click',()=>void exportBacklogV3());
+(function bindBacklogV3Menu(){
+  const toggle=document.getElementById('backlogExportV3MenuBtn'),menu=document.getElementById('backlogExportV3Menu');
+  if(!toggle||!menu)return;
+  const sync=()=>{const o=window.BLBacklogOverview?.exportOptions?.()||{};menu.querySelectorAll('[data-blv-export]').forEach(box=>{box.checked=o[box.dataset.blvExport]!==false;});};
+  toggle.addEventListener('click',e=>{e.stopPropagation();sync();menu.hidden=!menu.hidden;toggle.setAttribute('aria-expanded',menu.hidden?'false':'true');});
+  menu.addEventListener('change',e=>{const box=e.target.closest('[data-blv-export]');if(box)window.BLBacklogOverview?.setExportOption?.(box.dataset.blvExport,box.checked);});
+  document.addEventListener('click',e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==toggle){menu.hidden=true;toggle.setAttribute('aria-expanded','false');}});
+})();
 
 let backlogLoadedOnce=false;
 /* v20260929 — Tek yenileme sonrası Backlog sekmesi açık değilse pivot yanıtı
