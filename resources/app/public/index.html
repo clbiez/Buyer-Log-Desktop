@@ -6,29 +6,39 @@
 <title>Buyer Log</title>
 <script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>
 <script src="thinking-orb-breathing.js?v=__BL_ASSET_VERSION__&rev=2"></script>
-<link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=2">
+<link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=3">
 <script src="buyerlog-guide-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="buyerlog-trivia-data.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="buyerlog-trivia.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="buyerlog-guide.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="buyerlog-trivia.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="buyerlog-guide.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <style id="blBootGuardStyle">
   #blBootGuard{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f6f7f9;color:#1f2937;font:500 14px/1.45 "Barlow",system-ui,-apple-system,sans-serif}
   #blBootGuard .blBootCard{min-width:250px;max-width:420px;margin:20px;padding:22px 24px;text-align:center;background:#fff;border:1px solid #e5e7eb;border-radius:0;box-shadow:none}
   #blBootGuard .blBootOrb{display:block;width:64px;height:64px;margin:-8px auto 6px}
   #blBootGuard[data-failed="1"] .blBootOrb{display:none}
+  #blBootGuard[data-ready="1"] .blBootOrb{display:none}
   #blBootGuard button{margin-top:14px;padding:8px 14px;border:1px solid #3f6488;border-radius:0;background:#3f6488;color:#fff;cursor:pointer;font:inherit}
   @keyframes blBootSpin{to{transform:rotate(360deg)}}
   html[data-theme="dark"] #blBootGuard{background:#131417;color:#f3f4f6}
   html[data-theme="dark"] #blBootGuard .blBootCard{background:#1d1f23;border-color:#34373d}
+  /* Soft hand-off from the sign-in screen: the curtain is opaque from the first
+     frame (the app never shows through), its colour eases in from the sign-in
+     background and the card fades up. Continue fades the curtain out. */
+  #blBootGuard{animation:blBootBgIn .5s ease-out both}
+  #blBootGuard .blBootCard{animation:blBootCardIn .55s .08s cubic-bezier(.2,.7,.2,1) both}
+  #blBootGuard[data-leaving="1"]{opacity:0;transition:opacity .32s ease;pointer-events:none}
+  @keyframes blBootBgIn{from{background-color:#eef1f4}}
+  @keyframes blBootCardIn{from{opacity:0;transform:translateY(10px) scale(.99)}}
+  @media(prefers-reduced-motion:reduce){#blBootGuard,#blBootGuard .blBootCard{animation:none}#blBootGuard[data-leaving="1"]{transition:none}}
 </style>
 <script>
 (function(){
   'use strict';
-  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
+  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,dismissed=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
   // Core markup alone is insufficient: keep the curtain until initial data,
   // the first usable render AND the actual top-right profile have been applied.
   var gates={core:false,data:false,ui:false,profile:false};
-  function guard(){return document.getElementById('blBootGuard');}
+  function guard(){var el=document.getElementById('blBootGuard');return el&&!el.dataset.leaving?el:null;}
   function ensureGuard(){
     if(finished||guard()||!document.body)return;
     var el=document.createElement('div');el.id='blBootGuard';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','blBootTitle');el.tabIndex=-1;
@@ -57,7 +67,23 @@
     if(!Object.keys(gates).every(function(key){return gates[key];}))return;
     finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);
     try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}
-    stopOrb();var el=guard();var refocus=el&&el.contains(document.activeElement);if(el)el.remove();
+    stopOrb();var el=guard();if(!el){dismiss();return;}
+    // Ready no longer yanks the curtain away mid-sentence: the user continues explicitly.
+    el.dataset.ready='1';delete el.dataset.failed;el.querySelector('[data-boot-retry]')?.remove();
+    var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=english()?'Buyer Log is ready':'Buyer Log hazır';
+    var slot=el.querySelector('[data-boot-continue-slot]')||el.querySelector('.blBootCard');
+    if(slot&&!el.querySelector('[data-boot-continue]')){var b=document.createElement('button');b.type='button';b.className='blBootContinue';b.dataset.bootContinue='1';b.textContent=(english()?'Continue to Buyer Log':'Buyer Log\'a devam et')+' →';b.onclick=dismiss;slot.appendChild(b);try{b.focus({preventScroll:true});}catch(_){}}
+    window.BLGuide?.refreshStartup?.();
+    window.dispatchEvent(new CustomEvent('bl:startup-ready'));
+  }
+  function dismiss(){
+    if(dismissed)return;dismissed=true;
+    var el=guard();var refocus=el&&el.contains(document.activeElement);
+    if(el){
+      el.dataset.leaving='1';el.setAttribute('aria-hidden','true');
+      var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}
+      if(reduce)el.remove();else setTimeout(function(){el.remove();},340);
+    }
     window.dispatchEvent(new CustomEvent('bl:startup-complete'));
     if(refocus)document.getElementById('buyerLogGuideBtn')?.focus({preventScroll:true});
   }
@@ -103,7 +129,7 @@
     if(ev.shiftKey&&(document.activeElement===first||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&(document.activeElement===last||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();first.focus();}
   },true);
-  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,fail:function(reason){lastFailure=String(reason||'initial-data-failed');message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
+  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(){if(finished)dismiss();},fail:function(reason){lastFailure=String(reason||'initial-data-failed');message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
   slowTimer=setTimeout(function(){if(finished)return;ensureGuard();if(guard())guard().dataset.slow='1';var hint=guard()?.querySelector('[data-boot-hint]');if(hint)hint.textContent=english()?'Preparation is taking longer. Data volume and source access can affect the wait.':'Hazırlık biraz uzun sürüyor. Veri hacmi ve kaynak erişimi bekleme süresini etkileyebilir.';},15000);
@@ -217,6 +243,7 @@
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=5">
 </head>
 <body data-active-tab="overview">
+<script>window.BLBootGuard?.mount();</script>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="i-layout-dashboard" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="7" rx="1.5"/><rect x="4" y="15" width="6" height="5" rx="1.5"/><rect x="14" y="4" width="6" height="5" rx="1.5"/><rect x="14" y="13" width="6" height="7" rx="1.5"/></symbol>
   <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></symbol>
@@ -799,8 +826,12 @@
               <div class="toolbarMoreLabel">PLM SYNC</div>
               <button type="button" class="tbtn" data-plm-sync-category="plm" data-plm-sync-page="cp"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="PLM Senkronizasyonu" data-i18n-en="PLM Synchronization">PLM Senkronizasyonu</span></button>
               <button type="button" class="tbtn" data-plm-sync-category="asas" data-plm-sync-page="cp"><svg class="ic"><use href="#i-picture"/></svg><span data-i18n-tr="ASAS Senkronizasyonu" data-i18n-en="ASAS Synchronization">ASAS Senkronizasyonu</span></button>
-              <button type="button" class="tbtn" id="cpPlmSampleRequestsBtn" title="Seçili (yoksa filtrelenmiş) CP satırlarının numune taleplerini PLM'den güncelle" data-i18n-title-tr="Seçili (yoksa filtrelenmiş) CP satırlarının numune taleplerini PLM'den güncelle" data-i18n-title-en="Update sample requests from PLM for the selected (or filtered) CP rows"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="PLM Numune Durumunu Güncelle" data-i18n-en="Update PLM Sample Status">PLM Numune Durumunu Güncelle</span></button>
               <button type="button" class="tbtn" data-plmops-open><svg class="ic"><use href="#i-checklist"/></svg><span data-i18n-tr="Operasyon Merkezi" data-i18n-en="Operations Center">Operasyon Merkezi</span></button>
+              <div class="toolbarMoreLabel" data-i18n-tr="PLM NUMUNE" data-i18n-en="PLM SAMPLES">PLM NUMUNE</div>
+              <button type="button" class="tbtn" data-cp-plm-samples="selected" title="Yalnız CP'de seçili satırların modelleri" data-i18n-title-tr="Yalnız CP'de seçili satırların modelleri" data-i18n-title-en="Only the styles of the selected CP rows"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Seçilenlerin Numunelerini Güncelle" data-i18n-en="Update Selected Samples">Seçilenlerin Numunelerini Güncelle</span></button>
+              <button type="button" class="tbtn" data-cp-plm-samples="missing" title="CP'deki tüm modellerden numune verisi hiç çekilmemiş olanlar (tablo filtresi uygulanmaz)" data-i18n-title-tr="CP'deki tüm modellerden numune verisi hiç çekilmemiş olanlar (tablo filtresi uygulanmaz)" data-i18n-title-en="All CP styles that have never been synced (table filters are not applied)"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Eksik Numune Verilerini Getir" data-i18n-en="Fetch Missing Sample Data">Eksik Numune Verilerini Getir</span></button>
+              <button type="button" class="tbtn" data-cp-plm-samples="production" title="CP'de lojistik statüsü Üretimde olan tüm siparişlerin modelleri (tablo filtresi uygulanmaz)" data-i18n-title-tr="CP'de lojistik statüsü Üretimde olan tüm siparişlerin modelleri (tablo filtresi uygulanmaz)" data-i18n-title-en="Styles of all CP orders whose logistics status is In Production (table filters are not applied)"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Üretimdekilerin Numunelerini Güncelle" data-i18n-en="Update In-Production Samples">Üretimdekilerin Numunelerini Güncelle</span></button>
+              <button type="button" class="tbtn" data-cp-plm-samples="all" title="CP'deki tüm modeller (tablo filtresi uygulanmaz)" data-i18n-title-tr="CP'deki tüm modeller (tablo filtresi uygulanmaz)" data-i18n-title-en="All CP styles (table filters are not applied)"><svg class="ic"><use href="#i-refresh"/></svg><span data-i18n-tr="Tüm Numuneleri Güncelle" data-i18n-en="Update All Samples">Tüm Numuneleri Güncelle</span></button>
             </div>
           </div>
           <div class="toolbarMoreWrap" id="cpToolsWrap" data-tb-priority="utility" data-tb-overflow="never">

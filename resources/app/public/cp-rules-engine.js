@@ -613,6 +613,22 @@
         { field: '@checklist:pps', operator: 'eq', value: 'open' },
       ],
     })),
+    /* PLM numune talepleri (CoreNectum Requests): Ex-factory yaklaşırken PPS
+       hâlâ onaysız. Eşik (21 gün) kural düzenleyicisinden değiştirilebilir.
+       PPS sorusu PLM onayı, aşama zinciri veya üretim sonrası sipariş
+       aşamasıyla kapanır; açık kalması gerçekten onay olmadığı demektir. */
+    Object.freeze(normalizeRule({
+      id: 'builtin_action_pps_exfactory', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
+      name: "Ex-factory'ye 21 gün kala PPS onayı yok",
+      reasonTr: "Ex-factory yaklaşıyor, PPS onayı yok",
+      reasonEn: 'Ex-factory is approaching without PPS approval',
+      match: 'all',
+      conditions: [
+        { field: '@daysToLoad', operator: 'gte', value: 0 },
+        { field: '@daysToLoad', operator: 'lte', value: 21 },
+        { field: '@checklist:pps', operator: 'eq', value: 'open' },
+      ],
+    })),
     Object.freeze(normalizeRule({
       id: 'builtin_action_tests', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
       name: 'Gelecek hafta yüklenecek, test onayı işaretlenmemiş',

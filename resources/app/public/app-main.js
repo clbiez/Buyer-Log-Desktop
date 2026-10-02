@@ -2076,6 +2076,7 @@ function switchTab(tab){
   document.body.dataset.activeTab = tab;
   if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
   flushDeferredRenderForTab(tab);
+  if(tab==='cp')void cpPlmSampleAutoRefresh();
   syncTableToolbarActions(tab);
   syncNavExcelButtonLabel(tab);
   syncActivePageTitle();
@@ -32079,28 +32080,58 @@ bindCapacityRequestButton('cpCapacityRequestBtn',cpCapacityRequestRows,'cp');
    Koleksiyon PLM Sync numune çekmez). Seçili satır varsa yalnız onlar,
    yoksa CP'de filtreyle görünen satırların modelleri PLM'den tazelenir.
    Sonuç CP kontrol listesine ve Priority'ye PLM kanıtı olarak akar. */
-async function cpPlmSampleRequestsRun(button){
+/* Kapsam (kullanıcı kararı): tablo filtresi örtük olarak UYGULANMAZ.
+   selected   → yalnız seçili CP satırları
+   missing    → CP'deki tüm satırlardan numune verisi hiç çekilmemiş modeller
+   production → CP'de lojistik statüsü Üretimde olan tüm siparişler
+   all        → CP'deki tüm modeller
+   Üretim sonrası siparişler numune verisinden bağımsız onaylıdır; yine de
+   "tümü" onları da çeker (pencerede PLM kaydı güncel görünsün). */
+function cpPlmSampleTargetRows(mode,api){
+  const all=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:[];
+  if(mode==='selected')return selectedCpRowsForAction();
+  if(mode==='missing')return all.filter(row=>{const id=api.plmIdOfRow(row,'cp');return id&&!api.entryFor(id);});
+  if(mode==='production')return all.filter(row=>api.rowStage(row)==='PRODUCTION');
+  return all;
+}
+async function cpPlmSampleRequestsRun(button,mode='all'){
+  const en=appLang==='en';
   const span=button&&button.querySelector('span'),old=span&&span.textContent;
   if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
   try{
     if(!window.BLPlmSampleRequests&&window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('deferredUi');
     const api=window.BLPlmSampleRequests;
     if(!api)return;
-    const selected=selectedCpRowsForAction();
-    const rows=selected.length?selected:filteredCP();
+    await api.load();
+    const rows=cpPlmSampleTargetRows(mode,api);
     const plmIds=[...new Set(rows.map(row=>api.plmIdOfRow(row,'cp')).filter(Boolean))];
-    if(!plmIds.length){showToast(appLang==='en'?'No CP rows with a PLM ID were found.':'PLM ID’si olan CP satırı bulunamadı.',{icon:false});return;}
-    if(span)span.textContent=appLang==='en'?`Fetching ${plmIds.length} style(s) from PLM…`:`${plmIds.length} model PLM'den alınıyor…`;
+    if(!plmIds.length){
+      const msg=mode==='selected'?(en?'Select at least one CP row with a PLM ID first.':'Önce PLM ID’si olan en az bir CP satırı seçin.')
+        :mode==='missing'?(en?'Every CP style already has sample data.':'CP’deki tüm modellerin numune verisi zaten var.')
+        :mode==='production'?(en?'No in-production CP orders with a PLM ID.':'Üretimde olan, PLM ID’si olan CP siparişi yok.')
+        :(en?'No CP rows with a PLM ID were found.':'PLM ID’si olan CP satırı bulunamadı.');
+      showToast(msg,{icon:false});return;
+    }
+    if(span)span.textContent=en?`Fetching ${plmIds.length} style(s) from PLM…`:`${plmIds.length} model PLM'den alınıyor…`;
     const result=await api.sync(plmIds,{scope:'cp'});
-    if(result.ok)showToast((appLang==='en'?'PLM sample status updated: ':'PLM numune durumu güncellendi: ')+api.summaryText(result),{icon:false,duration:9000});
+    if(result.ok)showToast((en?'PLM sample status updated: ':'PLM numune durumu güncellendi: ')+api.summaryText(result),{icon:false,duration:9000});
   }catch(err){
-    showToast((appLang==='en'?'PLM sample requests could not be retrieved: ':'PLM numune talepleri alınamadı: ')+plmSyncErrorMessage(err),{icon:false,duration:12000});
+    showToast((en?'PLM sample requests could not be retrieved: ':'PLM numune talepleri alınamadı: ')+plmSyncErrorMessage(err),{icon:false,duration:12000});
   }finally{
     if(span)span.textContent=old;
     if(button){button.disabled=false;button.removeAttribute('aria-busy');}
   }
 }
-document.getElementById('cpPlmSampleRequestsBtn')?.addEventListener('click',event=>{document.getElementById('cpPlmSyncMenu')?.setAttribute('hidden','');void cpPlmSampleRequestsRun(event.currentTarget);});
+/* CP açılınca üretimdeki siparişlerin eskiyen (24 saat) PLM numune verisi
+   arka planda tazelenir; ayrıntı ve sınırlar plm-sample-requests.js'te. */
+async function cpPlmSampleAutoRefresh(){
+  try{
+    if(!state.cp||!Array.isArray(state.cp.rows)||!state.cp.rows.length)return;
+    if(!window.BLPlmSampleRequests&&window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('deferredUi');
+    await window.BLPlmSampleRequests?.autoRefreshStale?.(state.cp.rows);
+  }catch(_){}
+}
+document.querySelectorAll('[data-cp-plm-samples]').forEach(button=>button.addEventListener('click',event=>{document.getElementById('cpPlmSyncMenu')?.setAttribute('hidden','');void cpPlmSampleRequestsRun(event.currentTarget,event.currentTarget.dataset.cpPlmSamples);}));
 document.getElementById('kolPricingExcelColsBtn')?.addEventListener('click',openKolPricingExcelColumnsModal);
 loadKolPricingExcelColumns();
 
