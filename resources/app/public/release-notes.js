@@ -98,8 +98,10 @@ function waitForBoot(){return new Promise(resolve=>{if(bootReady())return setTim
 async function showUnseen(){
   const current=ver(),last=readSeen(),entries=(await loadIndex()).releases;
   if(!current||!entries.length)return;
-  let candidates=entries.filter(e=>cmp(e.version,current)<=0&&(last?cmp(e.version,last)>0:e.version===current)).sort((a,b)=>cmp(a.version,b.version));
-  if(!last&&candidates.length===0){const exact=entries.find(e=>e.version===current);if(exact)candidates=[exact];}
+  let candidates=entries.filter(e=>cmp(e.version,current)<=0&&(!last||cmp(e.version,last)>0)).sort((a,b)=>cmp(a.version,b.version));
+  // İlk kez görsel arşiv kullanan cihazda önceki sürüm anahtarı olmayabilir.
+  // Bu durumda mevcut sürüme kadarki tüm görsel stable arşivi gösterilir; böylece
+  // birkaç sürüm atlayarak güncelleyen kullanıcı ara sürümleri kaçırmaz.
   if(!candidates.length)return;
   const releases=(await Promise.all(candidates.map(loadRelease))).filter(Boolean);if(!releases.length)return;
   await waitForBoot();ensureDialog();state={auto:true,releases,index:0};await renderState();if(!dialog.open)dialog.showModal();
