@@ -255,13 +255,21 @@ test('v7.0.192 kablolama: PLM Sync, CP, sağ tık menüsü, lazy yükleme ve sun
   const kolSync = app.slice(app.indexOf('async function kolPlmSyncRun('), app.indexOf('async function kolPlmSyncButtonRun('));
   assert.ok(kolSync.length > 100);
   assert.doesNotMatch(kolSync, /BLPlmSampleRequests|SampleRequest/, 'Koleksiyon PLM Sync numune talebi çekmemeli');
-  assert.match(app, /async function cpPlmSampleRequestsRun\(button\)/);
-  assert.match(app, /const rows=selected\.length\?selected:filteredCP\(\);/);
+  assert.match(app, /async function cpPlmSampleRequestsRun\(button,mode='all'\)/);
+  /* v7.0.198 kullanıcı kararı: tablo filtresi örtük UYGULANMAZ; kapsam
+     açık seçeneklerle seçilir (seçili / eksik / üretimdeki / tümü). */
+  const target = app.slice(app.indexOf('function cpPlmSampleTargetRows('), app.indexOf('async function cpPlmSampleRequestsRun('));
+  assert.doesNotMatch(target, /filteredCP\(/, 'filtrelenmiş tablo örtük kapsam olmamalı');
+  assert.match(target, /if\(mode==='selected'\)return selectedCpRowsForAction\(\);/);
+  assert.match(target, /if\(mode==='missing'\)return all\.filter\(row=>\{const id=api\.plmIdOfRow\(row,'cp'\);return id&&!api\.entryFor\(id\);\}\);/);
+  assert.match(target, /if\(mode==='production'\)return all\.filter\(row=>api\.rowStage\(row\)==='PRODUCTION'\);/);
   assert.match(app, /api\.sync\(plmIds,\{scope:'cp'\}\)/);
   const html = read('public/index.html');
   const menuOf = id => (html.match(new RegExp(`id="${id}"[\\s\\S]*?\\n\\s*</div>\\s*\\n\\s*</div>`)) || [''])[0];
   const cpMenu = menuOf('cpPlmSyncMenu');
-  assert.match(cpMenu, /id="cpPlmSampleRequestsBtn"/, 'buton CP PLM SYNC menüsünde');
+  for (const mode of ['selected', 'missing', 'production', 'all']) {
+    assert.match(cpMenu, new RegExp(`data-cp-plm-samples="${mode}"`), `${mode} seçeneği CP PLM SYNC menüsünde`);
+  }
   const kolMenu = menuOf('kolPlmSyncMenu');
   assert.ok(kolMenu.length > 50);
   assert.doesNotMatch(kolMenu, /SampleRequests/);
