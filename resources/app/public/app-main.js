@@ -4989,10 +4989,14 @@ function cellHtml(c,r,cf,tableKey='cp'){
   const rev = revisionInfo(r, c.k, cf);
   // Kesilen (truncate) hücrelerde hover ile tam değeri görebilmek için tooltip
   // öncelikle gerçek hücre değerini gösterir; değer yoksa yetki açıklamasına döner.
-  const viewOnly = value => {
+  // Salt-okunur ekip satırlarında da revizyon geçmişi görünür kalmalı.
+  // renderedHtml yalnız bu renderer'ın kendi güvenli çıktısı (revisionHtml) için
+  // kullanılır; normal view-only değerler önceki gibi escape edilir.
+  const viewOnly = (value, renderedHtml) => {
     const text = value == null || value === '' ? '—' : String(value);
     const tip = text === '—' ? L('Bu sipariş için yalnız görüntüleme yetkiniz var.') : text;
-    return `<td class="viewOnlyCell" title="${escapeHtml(tip)}"><span class="viewOnlyValue"><span class="viewOnlyLock">🔒</span><span>${escapeHtml(text)}</span></span></td>`;
+    const body = renderedHtml == null ? escapeHtml(text) : String(renderedHtml);
+    return `<td class="viewOnlyCell" title="${escapeHtml(tip)}"><span class="viewOnlyValue"><span class="viewOnlyLock">🔒</span><span>${body}</span></span></td>`;
   };
   switch(c.type){
     /* v7.28 — hesaplanan sütun. Değer satıra HAM yazıldığı için burada yalnız
@@ -5020,20 +5024,23 @@ function cellHtml(c,r,cf,tableKey='cp'){
     case 'retail': return `<td>${(v&&oc)?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${SHIP_URL(oc)}">${fmtDate(v)}</a>`:fmtDate(v)}</td>`;
     case 'date': return `<td>${fmtDate(v)}</td>`;
     case 'exfactory': {
-      if(!canEdit) return viewOnly(fmtDate(v));
+      const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
+      // Orders'ta ekip arkadaşlarının satırları salt-okunur olabilir. Düzenleme
+      // yetkisi olmaması revizyon kaynağını gizlememeli: orijinal → revize tarih
+      // yine gösterilir, yalnız hücre düzenlenemez.
+      if(!canEdit) return viewOnly(fmtDate(v), body);
       const st = cf ? cf.exfState : null;
       const cls = st==='past'?'exf-past':st==='this'?'exf-this':st==='next'?'exf-next':'';
       const tt = st==='past'?'Üretimde · Ex-Factory tarihi geçmiş':st==='this'?'Üretimde · Ex-Factory tarihi bu hafta':st==='next'?'Üretimde · Ex-Factory tarihi gelecek hafta':'';
-      const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
       return `<td class="${cls}"${tt?` title="${tt}"`:''}><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="exfactory">${body}</span></td>`;
     }
     case 'retailEdit': {
       const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
-      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="retail">${body}</span></td>` : viewOnly(fmtDate(v));
+      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="retail">${body}</span></td>` : viewOnly(fmtDate(v), body);
     }
     case 'instoreEdit': {
       const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
-      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="instore">${body}</span></td>` : viewOnly(fmtDate(v));
+      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="instore">${body}</span></td>` : viewOnly(fmtDate(v), body);
     }
     case 'money': {
       const cls = '';
