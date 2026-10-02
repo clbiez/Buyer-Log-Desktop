@@ -346,6 +346,9 @@
   }
   let oabBrowserAuthInFlight = null;
   let oabLastAuthContext = {};
+  // API katmanı DOM'a dokunmaz. Gerekirse yalnızca UI katmanına semantik
+  // bir aşama sinyali yollar; UI görünür değilse bu callback boş kalabilir.
+  let oabActivitySignal = null;
   function oabNormalizeAuthContext(source) {
     const input = source && typeof source === 'object' ? source : {};
     const cleanRef = value => String(value == null ? '' : value).replace(/[\u0000\r\n]/g, '').trim().slice(0, 200);
@@ -370,6 +373,7 @@
     if (!oabBrowserAuthInFlight) {
       const nextContext = oabNormalizeAuthContext(authContext);
       if (Object.keys(nextContext).length) oabLastAuthContext = nextContext;
+      if (typeof oabActivitySignal === 'function') oabActivitySignal('browser');
       const request = fetch('/api/oab/auth/connect', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
@@ -438,6 +442,7 @@
     settings: { ttlMinutes: 30 },
     metadataInfo: null,
     busy: false,
+    activityStage: 'idle', activityHideTimer: 0,
     pivotSort: { key: '', dir: 1 },
     pivotFilters: {},
     hiddenColumns: { raw: new Set(), pivot: new Set() },
@@ -465,6 +470,106 @@
     return key ? opt[key] : '';
   }
   function oabEl(id) { return document.getElementById(id); }
+
+  /* ------------------------------------------------------- OAB İŞLEM REHBERİ
+     Genel Kültür açılış ekranındaki "ne oluyor / ne yapmalıyım" mantığının
+     yalnız OAB kartına ait küçük karşılığıdır. Fixed/overlay değildir; OAB
+     kartının normal akışında kalır ve başka Overview widget'larını örtmez. */
+  const OAB_ACTIVITY_STEPS = ['prepare', 'browser', 'login', 'fetch', 'done'];
+  function oabActivityCopy(stage) {
+    const copies = {
+      prepare: {
+        title: oabT('OAB isteği hazırlanıyor', 'Preparing OAB request'),
+        detail: oabT('Seçimler kontrol ediliyor ve OAB bağlantısı hazırlanıyor.', 'Checking your selections and preparing the OAB connection.'),
+        keepBrowser: false,
+      },
+      browser: {
+        title: oabT('Tarayıcı hazırlanıyor', 'Preparing browser'),
+        detail: oabT('Edge/Chrome içindeki OAB sekmesi bulunuyor veya açılıyor.', 'Finding or opening the OAB tab in Edge/Chrome.'),
+        keepBrowser: true,
+      },
+      login: {
+        title: oabT('OAB girişi bekleniyor', 'Waiting for OAB sign-in'),
+        detail: oabT('Açılan OAB sekmesinde PASS girişini tamamlayın. Buyer Log giriş tamamlanınca otomatik devam eder.', 'Complete PASS sign-in in the opened OAB tab. Buyer Log continues automatically after sign-in.'),
+        keepBrowser: true,
+      },
+      fetch: {
+        title: oabT('OAB verisi çekiliyor', 'Fetching OAB data'),
+        detail: oabT('OAB rapor verisi tarayıcı üzerinden alınıyor.', 'OAB report data is being retrieved through the browser.'),
+        keepBrowser: true,
+      },
+      process: {
+        title: oabT('Veri hazırlanıyor', 'Preparing data'),
+        detail: oabT('Alınan veri Buyer Log tablosu ve pivot görünümüne hazırlanıyor.', 'Preparing the retrieved data for the Buyer Log table and pivot view.'),
+        keepBrowser: false,
+      },
+      done: {
+        title: oabT('OAB hazır', 'OAB is ready'),
+        detail: oabT('Veri başarıyla alındı ve görünüm güncellendi.', 'Data was retrieved successfully and the view is updated.'),
+        keepBrowser: false,
+      },
+      error: {
+        title: oabT('OAB işlemi tamamlanamadı', 'OAB operation could not be completed'),
+        detail: oabT('Aşağıdaki uyarıyı kontrol edip tekrar deneyin.', 'Check the message below and try again.'),
+        keepBrowser: false,
+      },
+    };
+    return copies[stage] || copies.prepare;
+  }
+  function oabActivityStepIndex(stage) {
+    if (stage === 'process') return OAB_ACTIVITY_STEPS.indexOf('fetch');
+    if (stage === 'error') return -1;
+    return OAB_ACTIVITY_STEPS.indexOf(stage);
+  }
+  function oabSetActivity(stage, detail) {
+    const guide = oabEl('oabActivityGuide');
+    if (!guide) return;
+    clearTimeout(S.activityHideTimer);
+    S.activityHideTimer = 0;
+    if (!stage || stage === 'idle') {
+      S.activityStage = 'idle';
+      guide.hidden = true;
+      delete guide.dataset.stage;
+      return;
+    }
+    const copy = oabActivityCopy(stage);
+    S.activityStage = stage;
+    guide.hidden = false;
+    guide.dataset.stage = stage;
+    const title = oabEl('oabActivityTitle'), detailEl = oabEl('oabActivityDetail'), warning = oabEl('oabActivityWarning');
+    if (title) title.textContent = copy.title;
+    if (detailEl) detailEl.textContent = detail || copy.detail;
+    if (warning) {
+      warning.hidden = !copy.keepBrowser;
+      warning.textContent = copy.keepBrowser
+        ? oabT('Önemli: OAB verisi tamamlanana kadar Buyer Log tarafından kullanılan Edge/Chrome sekmesini kapatmayın.', 'Important: do not close the Edge/Chrome tab used by Buyer Log until OAB data retrieval is complete.')
+        : '';
+    }
+    const activeIndex = oabActivityStepIndex(stage);
+    guide.querySelectorAll('[data-oab-activity-step]').forEach((step, index) => {
+      step.classList.toggle('isDone', stage === 'done' || (activeIndex >= 0 && index < activeIndex));
+      step.classList.toggle('isActive', activeIndex >= 0 && index === activeIndex && stage !== 'done');
+      step.classList.toggle('isError', stage === 'error' && index === Math.max(0, OAB_ACTIVITY_STEPS.indexOf(S.activityStage)));
+    });
+  }
+  function oabFinishActivity(detail) {
+    oabSetActivity('done', detail);
+    S.activityHideTimer = setTimeout(() => {
+      if (S.activityStage === 'done') oabSetActivity('idle');
+    }, 2200);
+  }
+  function oabFailActivity(message) {
+    oabSetActivity('error', message || '');
+  }
+  function oabActivityFromAuthStatus(status) {
+    const state = status && status.status || status || {};
+    if (state.loginRequired) {
+      oabSetActivity('login');
+      return;
+    }
+    if (state.captureInProgress) oabSetActivity('browser');
+  }
+  oabActivitySignal = (stage, detail) => oabSetActivity(stage, detail);
 
   /* Her durum mesajı, ŞERİDİN TIKLANABİLİRLİĞİNİ SIFIRLAR.
 
@@ -786,6 +891,7 @@
   // deneyebileceği bir şerit. "PASS'e Bağlan" artık AYRI bir ön adım değil —
   // yalnızca bir işlem PASS bağlantısı gerektirip başarısız olduğunda çıkar.
   function oabShowRetry(message, retryFn) {
+    oabFailActivity(message);
     const bar = oabEl('oabAuthBar');
     if (!bar) { oabSetStatus(message, 'error'); return; }
     bar.innerHTML = `<span>${oabEsc(message)}</span><button type="button" class="navActionBtn" id="oabRetryBtn">${oabEsc(oabT('Tekrar Dene', 'Retry'))}</button>`;
@@ -1068,6 +1174,9 @@
     // is missing/expired, oabJson opens Buyer Log's internal Chromium sign-in
     // and automatically retries the original request after successful login.
     oabSetBusyStatus(forceRefresh ? oabT('OAB yenileniyor', 'Refreshing OAB') : oabT('OAB getiriliyor', 'Getting OAB'));
+    oabSetActivity('prepare', forceRefresh
+      ? oabT('Mevcut OAB verisi yenileme için hazırlanıyor.', 'Preparing the current OAB data for refresh.')
+      : oabT('Seçimler kontrol ediliyor ve OAB isteği hazırlanıyor.', 'Checking selections and preparing the OAB request.'));
     if (!S.rows.length) oabEl('oabBody').hidden = true;
     let authPollBusy = false;
     const elapsedTimer = setInterval(() => {
@@ -1079,6 +1188,7 @@
       try {
         const status = await OABApi.authStatus();
         const message = oabAuthProgressMessage(status);
+        oabActivityFromAuthStatus(status);
         if (message) oabSetBusyStatus(message, status && status.status && status.status.loginRequired ? 'warning' : '');
       } catch (_) { /* progress polling ana rapor isteğini asla bozmaz */ }
       finally { authPollBusy = false; }
@@ -1087,9 +1197,12 @@
     try {
       const single = S.seasonRefs.length === 1 && S.magRefs.length === 1 && !S.allBuyerGroups && S.buyerGroupRefs.length === 1;
       if (single) {
+        oabSetActivity('fetch');
         const data = await OABApi.report(S.seasonRefs[0], S.magRefs[0], S.buyerGroupRefs[0], forceRefresh);
+        oabSetActivity('process');
         await oabApplyReportData(data, { fromSnapshot: false });
         oabSetStatus('');
+        oabFinishActivity();
       } else {
         await oabRunBatch(forceRefresh);
       }
@@ -1142,6 +1255,12 @@
     if (job.fromCache) parts.push(oabT(`${job.fromCache} önbellekten`, `${job.fromCache} from cache`));
     if (job.failures && job.failures.length) parts.push(oabT(`${job.failures.length} başarısız`, `${job.failures.length} failed`));
     text.textContent = parts.join(' · ');
+    if (job.running) {
+      const activityDetail = job.currentLabel
+        ? oabT(`OAB verisi çekiliyor: ${job.currentLabel} · ${done}/${total}`, `Fetching OAB data: ${job.currentLabel} · ${done}/${total}`)
+        : oabT(`OAB verisi çekiliyor · ${done}/${total}`, `Fetching OAB data · ${done}/${total}`);
+      oabSetActivity('fetch', activityDetail);
+    }
   }
   async function oabConfirmHeavyRun(plan) {
     return new Promise(resolve => {
@@ -1181,6 +1300,7 @@
       oabSetStatus('');
       return;
     }
+    oabSetActivity('fetch', oabT('OAB kombinasyonları sırayla tarayıcı üzerinden alınıyor.', 'OAB combinations are being retrieved through the browser one by one.'));
     const started = await OABApi.batchStart(oabCurrentSelection(forceRefresh));
     S.batchJob = started.job;
     oabRenderProgress(S.batchJob);
@@ -1194,8 +1314,12 @@
       oabSetStatus(oabT('OAB toplu çekme sonuç döndürmedi.', 'The OAB batch fetch returned no result.'), 'error');
       return;
     }
+    oabSetActivity('process');
     await oabApplyReportData({ rows: finished.rows, fields: finished.fields, fetchedAt: finished.fetchedAt, fromCache: false }, { fromSnapshot: false });
     oabReportBatchOutcome(finished);
+    oabFinishActivity(finished.job && finished.job.cancelled
+      ? oabT('İşlem iptal edildi; o ana kadar çekilen veriler korundu.', 'The job was cancelled; data fetched up to that point was kept.')
+      : '');
   }
   function oabPollBatch() {
     return new Promise((resolve, reject) => {
@@ -1321,17 +1445,21 @@
     S.busy = true; S.busyStartedAt = performance.now();
     oabUpdateActionButtons();
     oabSetBusyStatus(oabT(`${combinations.length} kombinasyon yeniden deneniyor`, `Retrying ${combinations.length} combinations`));
+    oabSetActivity('prepare', oabT(`${combinations.length} başarısız kombinasyon yeniden hazırlanıyor.`, `Preparing ${combinations.length} failed combinations for retry.`));
     let retryAfterAuth = false;
     try {
+      oabSetActivity('fetch');
       const started = await OABApi.batchStart({ combinations, forceRefresh: true });
       S.batchJob = started.job;
       oabRenderProgress(S.batchJob);
       const finished = await oabPollBatch();
       S.batchJob = finished.job;
       oabRenderProgress(S.batchJob);
-      if (!finished.rows) { oabSetStatus(oabT('Yeniden deneme sonuç döndürmedi.', 'The retry returned no result.'), 'error'); return; }
+      if (!finished.rows) { oabSetStatus(oabT('Yeniden deneme sonuç döndürmedi.', 'The retry returned no result.'), 'error'); oabFailActivity(oabT('Yeniden deneme sonuç döndürmedi.', 'The retry returned no result.')); return; }
+      oabSetActivity('process');
       await oabMergeRetryRows(finished);
       oabReportBatchOutcome(finished, { merged: true });
+      oabFinishActivity(oabT('Eksik kombinasyonlar rapora eklendi.', 'Missing combinations were added to the report.'));
     } catch (error) {
       if (oabIsAuthErrorCode(error && error.code)) {
         try {
@@ -1386,7 +1514,11 @@
   const OAB_MAG_FIELD = 'Merch Alt Grup';
   const OAB_BUYER_GROUP_FIELD = 'Buyer Grup Tanımı';
   async function oabCancelBatch() {
-    try { await OABApi.batchCancel(); oabSetBusyStatus(oabT('İptal ediliyor; eldeki veriler korunacak…', 'Cancelling; data fetched so far will be kept…'), 'warning'); }
+    try {
+      oabSetActivity('fetch', oabT('İşlem güvenli biçimde durduruluyor; çekilmiş veriler korunacak.', 'Stopping safely; data already fetched will be kept.'));
+      await OABApi.batchCancel();
+      oabSetBusyStatus(oabT('İptal ediliyor; eldeki veriler korunacak…', 'Cancelling; data fetched so far will be kept…'), 'warning');
+    }
     catch (error) { oabToast(oabAuthErrorMessage(error)); }
   }
   function defaultPivotConfigClient() {
