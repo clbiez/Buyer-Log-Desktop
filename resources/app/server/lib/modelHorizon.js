@@ -639,9 +639,11 @@ function buildFactRowQuery(horizonInput, mapping, options = {}) {
     if (String(entry.table || '').toLocaleUpperCase('tr-TR') === grainTable.toLocaleUpperCase('tr-TR')) {
       return column;
     }
-    // Fact satırının expanded-table bağlamı ilişki üzerinden tek bir değer
-    // vermiyorsa SELECTEDVALUE BLANK üretir; ilk/yakın değeri seçmez.
-    return `CALCULATE(SELECTEDVALUE(${column}))`;
+    // Context transition yalnız fact sütunlarını filtreler; çoka-bir ilişkideki
+    // tabloya (ör. Siparis Bilgileri) filtre akmaz ve SELECTEDVALUE BLANK döner.
+    // Geçerli fact satırı tablo filtresi olarak verildiğinde genişletilmiş tablo
+    // filtrelenir. Tek değer yoksa yine BLANK üretir; ilk/yakın değeri seçmez.
+    return `CALCULATE(SELECTEDVALUE(${column}), CALCULATETABLE(${grain}))`;
   };
 
   const projection = entries

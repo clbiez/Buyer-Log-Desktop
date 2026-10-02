@@ -125,7 +125,7 @@ test('v4.44 IAS otomatik sorgusu SUMMARIZECOLUMNS yerine gerçek fact satırlar�
   assert.doesNotMatch(built.query, /SUMMARIZECOLUMNS/);
   assert.doesNotMatch(built.query, new RegExp(modelHorizon.BLANK_ROW_GUARD));
   assert.match(built.query, /"İthalat Dosya No", 'Ithalat'\[İthalat Dosya No\]/);
-  assert.match(built.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\)\)/);
+  assert.match(built.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\), CALCULATETABLE\('Ithalat'\)\)/);
   assert.match(built.query, /"Yükleme Toplam Adet", CALCULATE\(\[Yükleme Toplam Adet\]\)/);
   assert.doesNotMatch(built.query, /"Net Alım Sipariş Miktarı"/);
   assert.match(built.query, /"HANDOVER Tarihi", CALCULATE\(\[Handover Tarihi - CutOff Tarihi\]\)/);
@@ -234,4 +234,26 @@ test('v4.44 IAS sonucu tamamen boşsa bütün siparişler üretimde kabul edileb
   assert.doesNotThrow(() => modelRefresh.validateAntrepoIntegrity('backlog', map, [
     { ocode: 'A', model: 'MODEL', ccode: 'C', qty: 300 },
   ]));
+});
+
+test('v7.0.209 İthalat Dosya No boyut tablosuna bağlıysa grain yine yükleme fact tablosudur', () => {
+  const connection = iasConnection();
+  connection.mapping = {
+    ...iasMapping(),
+    'İthalat Dosya No': { table: 'Dim_Ithalat', name: 'İthalat Dosya No', kind: 'column' },
+    'Antrepo Firma': { table: 'Dim_Ithalat', name: 'Antrepo Firma', kind: 'column' },
+  };
+  const built = modelRefresh.buildConnectionQuery(connection);
+  assert.match(built.query, /CALCULATETABLE\(\s*'Ithalat'/);
+  assert.doesNotMatch(built.query, /CALCULATETABLE\(\s*'Dim_Ithalat'/);
+  assert.match(built.query, /"Konteyner No", 'Ithalat'\[Konteyner No\]/);
+  assert.match(built.query, /"İthalat Dosya No", CALCULATE\(SELECTEDVALUE\('Dim_Ithalat'\[İthalat Dosya No\]\), CALCULATETABLE\('Ithalat'\)\)/);
+});
+
+test('v7.0.209 grain dışı sütunlar fact satırının genişletilmiş tablosu üzerinden okunur', () => {
+  const built = modelRefresh.buildConnectionQuery(iasConnection());
+  // Context transition yalnız fact sütunlarını filtreler; çoka-bir ilişkideki
+  // tabloya (Siparis Bilgileri) filtre akmaz ve SELECTEDVALUE boş döner. Fact
+  // satırını tablo filtresi olarak vermek genişletilmiş tabloyu filtreler.
+  assert.match(built.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\), CALCULATETABLE\('Ithalat'\)\)/);
 });
