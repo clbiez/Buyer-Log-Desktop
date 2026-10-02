@@ -25,3 +25,21 @@ test('rehber uygulama kabuğunda yüklenir ve stil dosyası bağlıdır',()=>{
   assert.match(index,/plm-sync-guide\.css\?v=__BL_ASSET_VERSION__/);
   assert.match(index,/plm-sync-guide\.js\?v=__BL_ASSET_VERSION__/);
 });
+
+
+test('PLM/ASAS işlem bildirimi Buyer Log standart notification yüzeyini kullanır ve aynı kartı günceller',()=>{
+  const ui=read('plm-sync-guide.js');
+  const primitives=read('ui-primitives.js');
+  const ops=read('plm-operations.js');
+  const experience=read('experience.css');
+  const css=read('plm-sync-guide.css');
+  assert.match(ui,/window\.showToast\(message,\{kind:'info'/);
+  assert.match(ui,/kindLabel:t\('BİLGİLENDİRME','INFORMATION'\)/);
+  assert.match(ui,/close\.update\?\./);
+  assert.match(ui,/if\(watched\)panel=progressFor\(path\)/);
+  assert.doesNotMatch(ui,/blSyncGuideProgress/);
+  assert.doesNotMatch(css,/\.blSyncGuideProgress/);
+  assert.match(primitives,/close\.update=update/);
+  assert.match(ops,/--plm-ops-strip-offset/);
+  assert.match(experience,/bottom:calc\(18px \+ var\(--plm-ops-strip-offset,0px\)\)/);
+});
