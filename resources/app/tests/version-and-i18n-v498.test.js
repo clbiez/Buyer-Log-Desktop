@@ -1,8 +1,8 @@
 'use strict';
 
 // v7.0.82 — canonical version source regression guard.
-// package.json tek SemVer kaynağıdır; UI/cache/version history runtime placeholder
-// üzerinden server/lib/app-version.js tarafından türetilir.
+// package.json tek SemVer kaynağıdır; UI/cache sürümü runtime placeholder üzerinden
+// türetilir. Sürüm geçmişi ise append-only gerçek sürüm numaraları taşır.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -31,10 +31,11 @@ test('v7.0.82 görünür sürüm ve boot anahtarı hard-coded değildir', () => 
   assert.doesNotMatch(html, new RegExp(`>Version ${shortVersion.replace('.', '\\.')}<`));
 });
 
-test('v7.0.82 version-history current kaydı runtime display version kullanır', () => {
+test('version-history current kaydı gerçek ve değişmez display version taşır', () => {
   const src = fs.readFileSync(path.join(ROOT, 'public', 'version-history.js'), 'utf8');
-  assert.match(src, /window\.BL_VERSION_HISTORY\s*=\s*\[\s*\{\s*v:\s*'__CURRENT__'/);
-  assert.match(appMain, /record&&record\.v==='__CURRENT__'/);
+  const escaped = shortVersion.replace(/\\./g, '\\\\.');
+  assert.match(src, new RegExp(`window\\.BL_VERSION_HISTORY\\s*=\\s*\\[\\s*\\{\\s*v:\\s*['"]${escaped}['"]`));
+  assert.doesNotMatch(src, /\bv:\s*['"]__CURRENT__['"]/);
 });
 
 
