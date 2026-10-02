@@ -4,13 +4,14 @@
    pencerenin verisi. Her kaydın Türkçe (tr) ve İngilizce (en)
    karşılığı bulunur; pencere aktif dile göre gösterir.
 
-   Yeni sürüm eklerken: listenin BAŞINA yeni bir nesne ekle.
-   { v:'2.25', date:'2026-07-23',
+   Yeni sürüm eklerken: listenin BAŞINA GERÇEK sürüm numarasıyla yeni bir nesne ekle.
+   __CURRENT__ gibi hareketli placeholder KULLANMA; geçmiş kayıtlarını değiştirme/silme.
+   { v:'7.211', date:'2026-10-03',
      title:{tr:'...', en:'...'},
      items:[ {tr:'...', en:'...'}, ... ] }
    =================================================================== */
 window.BL_VERSION_HISTORY = [
-  { v: '__CURRENT__', date: '2026-09-26', title: { tr: 'Daha hızlı sayfa geçişleri', en: 'Faster page switching' }, items: [
+  { v: '7.138', date: '2026-09-26', title: { tr: 'Daha hızlı sayfa geçişleri', en: 'Faster page switching' }, items: [
     { tr: 'Hazır ekran önbelleği artık gerçekten kullanılıyor: CP ilk açılışı ~8 sn yerine ~1 sn, Siparişler ilk açılışı ~24 sn yerine ~3,5 sn (30 bin satırlık veride).', en: 'The prepared-screen cache is now actually used: CP opens in ~1 s instead of ~8 s and Orders in ~3.5 s instead of ~24 s (30k-row data).' },
     { tr: 'Açılmış bir sayfaya geri dönmek anlıktır (CP, Siparişler, Genel Bakış ~0,1 sn; LFL ~0,8 sn yerine ~0,25 sn); veri değişmediyse sayfa yeniden hesaplanmaz.', en: 'Returning to an already opened page is instant (CP, Orders, Overview ~0.1 s; LFL ~0.25 s instead of ~0.8 s); pages are not recomputed when data has not changed.' },
     { tr: 'Siparişler ekranı kullanmadığı sipariş özetini artık indirmez (~%35 daha az veri); LFL ziyareti CP/Siparişler/Genel Bakış önbelleğini geçersiz kılmaz.', en: 'The Orders screen no longer downloads the order summary it does not use (~35% less data); visiting LFL no longer invalidates the CP/Orders/Overview cache.' },
