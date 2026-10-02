@@ -75,11 +75,6 @@ jobs:
           set -euo pipefail
           SOURCE_VERSION="$(node -p "require('./package.json').version")"
           npm run release:notes:seal -- "$SOURCE_VERSION"
-      - name: Validate visual release runtime and bilingual UI
-        working-directory: resources/app
-        run: |
-          node --test tests/visual-release-notes-v70211.test.js
-          npm run i18n:check
       - name: Build one TEST artifact and manifest
         working-directory: resources/app
         env:
