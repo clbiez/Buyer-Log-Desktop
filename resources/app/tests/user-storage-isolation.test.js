@@ -134,6 +134,8 @@ test('BLStorage ile okunan her ön ek ya kullanıcıya ayrılır ya da bilinçli
     'lcw.transitRules.', 'lcw.suppFobPricingRules.', 'lcw.nonDtrManufacturers.',
     'lcw.emailGroups.centralMigration.', 'lcw.appr.dimFilters.',
     'buyerlog.lastSuccessfulUsername', 'buyerlog.bootRetry.',
+    // Açılış perdesi kullanıcı bilinmeden çalışır: görülen bilgi kartları cihaz düzeyindedir.
+    'bl.trivia.',
     // Koleksiyon SAHİBİNİN kimliğiyle anahtarlanan ortak iş verisi önbelleği.
     'bl.collection.workspace.', 'bl.collection.pending.',
   ];
