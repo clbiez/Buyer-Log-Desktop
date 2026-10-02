@@ -160,9 +160,9 @@
      rowspan koyarsa sessizce geçmesin. */
   function assertFlat(html,expectedRows){
     const problems=[];
-    if(/rowspan/i.test(html))problems.push('HTML rowspan içeriyor');
+    if(/rowspan/i.test(html))problems.push('HTML rowspan içeriyor'); // i18n-ignore — geliştirici düzlük doğrulaması, UI metni değil
     if(/<br\b/i.test(html)&&html.indexOf(SAME_CELL)<0){
-      problems.push('Çok satırlı hücre var ama mso-data-placement:same-cell yok');
+      problems.push('Çok satırlı hücre var ama mso-data-placement:same-cell yok'); // i18n-ignore — geliştirici düzlük doğrulaması, UI metni değil
     }
     const rowCount=(html.match(/<tr>/gi)||[]).length-(/<th\b/i.test(html)?1:0);
     if(expectedRows!=null&&rowCount!==expectedRows){

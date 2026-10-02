@@ -96,6 +96,31 @@ Test runner: `npm test` → `node --test tests/*.test.js`.
   çalışmaya devam eder.
 - Secret, credential, şirket verisi, private ağ bilgisi veya kaynak kodunu dış
   servislere gönderme.
+- **TR/EN dil desteği zorunludur** (ayrıntı: §4.1).
+
+### 4.1 · TR/EN dil desteği
+
+Eklenen/değişen her modül, özellik ve kullanıcıya görünen metin (etiket, buton,
+başlık, toast, `alert`/`confirm`, tooltip, placeholder, boş durum, hata mesajı,
+rehber/sürüm notu) **aynı committe** hem Türkçe hem İngilizce yazılır. Yalnız tek
+dilde metin içeren iş bitmiş sayılmaz.
+
+- Asıl yol modülün kendi TR/EN çiftidir: `L('Kaydet','Save')` / `T(tr,en)`
+  yardımcıları, `isEn() ? 'Save' : 'Kaydet'` veya `{ tr: '…', en: '…' }`.
+  Statik HTML'de `data-i18n-tr="…" data-i18n-en="…"`.
+- Dil değişiminde (`appLang`) yeniden çizilmeyen metin bırakma; render anında
+  aktif dili oku.
+- `public/i18n-dictionary.js` yalnız güvenlik ağıdır; yeni özelliğin birincil
+  çeviri yeri değildir. Eklenen çiftlerde `{0}` yer tutucuları iki tarafta eşleşir.
+- Veri anahtarı, ASAS/PLM/Excel kaynak başlığı, regex kaynağı gibi UI olmayan
+  Türkçe literal'lar satır sonuna `// i18n-ignore` ile işaretlenir; görünen metni
+  bu işaretle susturmak yasaktır.
+- Bekçi: `tests/i18n-coverage-guard.test.js` (`npm test` ve CI içinde koşar).
+  `public/*.js` ve `public/*.html` içindeki İngilizce karşılığı olmayan Türkçe
+  metni dosya:satır olarak raporlar. Hızlı rapor: `npm run i18n:check`.
+- Mevcut tüm eksikler düzeltildi; `tests/fixtures/i18n-coverage-baseline.json`
+  **boştur ve boş kalır**. Baseline'a kayıt/dosya eklemek, test sınırlarını
+  (`MAX_ENTRIES = 0`, `FROZEN_FILES`) yükseltmek veya testi gevşetmek yasaktır.
 
 ## 5 · Token, süre ve iletişim disiplini
 

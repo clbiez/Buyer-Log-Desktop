@@ -27,18 +27,35 @@
   const BASES = Object.freeze(['loading', 'warehouse']);
   const GRANULARITIES = Object.freeze(['month', 'week']);
   const MAIN_METRICS = Object.freeze(['loading', 'transit', 'customs', 'endToEnd']);
-  const METRIC_LABELS = Object.freeze({
-    loading: 'Yükleme Süresi', transit: 'Yol Süresi', customs: 'Gümrük Süresi (Antrepo)', endToEnd: 'Uçtan Uca Yol Süresi',
+  // Etiketler [Türkçe, English] çiftidir; *_LABELS / RULE_* sabitleri Türkçe
+  // (geriye uyumlu) kalır, labels(lang) aktif dilin karşılığını verir.
+  const TEXT = Object.freeze({
+    metric: {
+      loading: ['Yükleme Süresi', 'Loading Time'], transit: ['Yol Süresi', 'Transit Time'],
+      customs: ['Gümrük Süresi (Antrepo)', 'Customs Time (Bonded Warehouse)'], endToEnd: ['Uçtan Uca Yol Süresi', 'End-to-End Lead Time'],
+    },
+    basis: { loading: ['Fiili Yükleme bazlı', 'Based on actual loading'], warehouse: ['Tema Depo Giriş bazlı', 'Based on Tema warehouse entry'] },
+    /* Kural gün sayısı Ex-Factory'ye eklenir (Tahmini Antrepo = Ex-Factory + gün).
+       Hangi analiz aralığının bu güne karşılık geleceği kullanıcı seçimidir. */
+    ruleMetric: {
+      endToEnd: ['Uçtan Uca (Yükleme Talep → Antrepo)', 'End-to-end (Loading Request → Antrepo)'],
+      handoverToWarehouse: ['Handover → Antrepo (Uçtan Uca − Üretici teslim)', 'Handover → Antrepo (end-to-end − supplier handover)'],
+      loadingToWarehouse: ['Fiili Yükleme → Antrepo (Yol + Gümrük)', 'Actual Loading → Antrepo (transit + customs)'],
+    },
+    ruleStat: { mean: ['Adet ağırlıklı ortalama', 'Quantity-weighted average'], p80: ['P80 (temkinli)', 'P80 (conservative)'] },
   });
-  const BASIS_LABELS = Object.freeze({ loading: 'Fiili Yükleme bazlı', warehouse: 'Tema Depo Giriş bazlı' });
-  /* Kural gün sayısı Ex-Factory'ye eklenir (Tahmini Antrepo = Ex-Factory + gün).
-     Hangi analiz aralığının bu güne karşılık geleceği kullanıcı seçimidir. */
-  const RULE_METRICS = Object.freeze({
-    endToEnd: 'Uçtan Uca (Yükleme Talep → Antrepo)',
-    handoverToWarehouse: 'Handover → Antrepo (Uçtan Uca − Üretici teslim)',
-    loadingToWarehouse: 'Fiili Yükleme → Antrepo (Yol + Gümrük)',
-  });
-  const RULE_STATS = Object.freeze({ mean: 'Adet ağırlıklı ortalama', p80: 'P80 (temkinli)' });
+  const langIndex = lang => (lang === 'en' ? 1 : 0);
+  function pickText(map, lang) {
+    const i = langIndex(lang);
+    return Object.freeze(Object.fromEntries(Object.entries(map).map(([key, pair]) => [key, pair[i]])));
+  }
+  function labels(lang) {
+    return { metric: pickText(TEXT.metric, lang), basis: pickText(TEXT.basis, lang), ruleMetric: pickText(TEXT.ruleMetric, lang), ruleStat: pickText(TEXT.ruleStat, lang) };
+  }
+  const METRIC_LABELS = pickText(TEXT.metric, 'tr');
+  const BASIS_LABELS = pickText(TEXT.basis, 'tr');
+  const RULE_METRICS = pickText(TEXT.ruleMetric, 'tr');
+  const RULE_STATS = pickText(TEXT.ruleStat, 'tr');
   const LOW_SAMPLE_QTY = 50000;
   const LOW_SAMPLE_PERIODS = 3;
   const LOW_SAMPLE_SHIPMENTS = 5;
@@ -279,12 +296,19 @@
      shipment: { country, vehicle, qty, loadingRequest, handover, actualLoading?,
                  eta, warehouseEntry, arrived }  — tarihler 'YYYY-MM-DD'. */
   const SHIPMENT_STEPS = Object.freeze([
-    { code: '1', label: 'Yükleme Talep → Handover (üretici teslim)', group: 'loading' },
-    { code: '2', label: 'Handover → ETA (yükleme + deniz/hava yolu)', group: 'transit' },
-    { code: '2.1', label: 'Handover → Fiili Yükleme', group: 'loading', informational: true },
-    { code: '2.2', label: 'Fiili Yükleme → ETA', group: 'transit', informational: true },
-    { code: '3', label: 'ETA → Antrepo Giriş (gümrük + iç nakliye)', group: 'customs' },
+    { code: '1', label: 'Yükleme Talep → Handover (üretici teslim)', labelEn: 'Loading Request → Handover (supplier handover)', group: 'loading' },
+    { code: '2', label: 'Handover → ETA (yükleme + deniz/hava yolu)', labelEn: 'Handover → ETA (loading + sea/air transit)', group: 'transit' },
+    { code: '2.1', label: 'Handover → Fiili Yükleme', labelEn: 'Handover → Actual Loading', group: 'loading', informational: true },
+    { code: '2.2', label: 'Fiili Yükleme → ETA', labelEn: 'Actual Loading → ETA', group: 'transit', informational: true },
+    { code: '3', label: 'ETA → Antrepo Giriş (gümrük + iç nakliye)', labelEn: 'ETA → Antrepo Entry (customs + inland haulage)', group: 'customs' },
   ]);
+  /* Buyer Log verisinden üretilen adımların etiketi aktif dilde gösterilir;
+     Excel raporundan gelen adım adları kaynak verisidir, olduğu gibi kalır. */
+  function stepLabel(step, analysis, lang) {
+    if (lang !== 'en' || !step || !analysis || analysis.source !== 'database') return step ? step.label : '';
+    const def = SHIPMENT_STEPS.find(s => s.code === step.code && s.label === step.label);
+    return def ? def.labelEn : step.label;
+  }
   const MIN_SPAN = -60;
   const MAX_SPAN = 365;
   function dayOrdinal(value) {
@@ -387,23 +411,27 @@
   }
 
   /* Kaynağa göre süre tanımları: rapor (Excel) ile IAS parsiyelinin kesitleri farklıdır. */
-  function metricLabels(analysis) {
+  function metricLabels(analysis, lang) {
+    const i = langIndex(lang);
     if (analysis && analysis.source === 'database') {
       return {
-        loading: 'Yükleme Talep → Handover/Fiili Yükleme',
-        transit: 'Handover/Fiili Yükleme → ETA',
-        customs: 'ETA → Antrepo Giriş',
-        endToEnd: 'Yükleme Talep → Antrepo Giriş',
+        loading: ['Yükleme Talep → Handover/Fiili Yükleme', 'Loading Request → Handover/Actual Loading'][i],
+        transit: ['Handover/Fiili Yükleme → ETA', 'Handover/Actual Loading → ETA'][i],
+        customs: ['ETA → Antrepo Giriş', 'ETA → Antrepo Entry'][i],
+        endToEnd: ['Yükleme Talep → Antrepo Giriş', 'Loading Request → Antrepo Entry'][i],
         rule: {
-          endToEnd: 'Uçtan Uca (Yükleme Talep → Antrepo)',
-          handoverToWarehouse: 'Handover → Antrepo (Uçtan Uca − Üretici teslim)',
-          loadingToWarehouse: 'Handover/Fiili Yükleme → Antrepo',
+          endToEnd: TEXT.ruleMetric.endToEnd[i],
+          handoverToWarehouse: TEXT.ruleMetric.handoverToWarehouse[i],
+          loadingToWarehouse: ['Handover/Fiili Yükleme → Antrepo', 'Handover/Actual Loading → Antrepo'][i],
         },
       };
     }
     return {
-      loading: 'Yükleme Talep → Fiili Yükleme', transit: 'Fiili Yükleme → Özet Beyan',
-      customs: 'Özet Beyan → Antrepo', endToEnd: 'Yükleme Talep → Tema Depo/Antrepo Giriş', rule: { ...RULE_METRICS },
+      loading: ['Yükleme Talep → Fiili Yükleme', 'Loading Request → Actual Loading'][i],
+      transit: ['Fiili Yükleme → Özet Beyan', 'Actual Loading → Summary Declaration'][i],
+      customs: ['Özet Beyan → Antrepo', 'Summary Declaration → Antrepo'][i],
+      endToEnd: ['Yükleme Talep → Tema Depo/Antrepo Giriş', 'Loading Request → Tema Warehouse/Antrepo Entry'][i],
+      rule: { ...pickText(TEXT.ruleMetric, lang) },
     };
   }
 
@@ -623,7 +651,7 @@
 
   return {
     VERSION, BASES, BASIS_LABELS, METRIC_LABELS, RULE_METRICS, RULE_STATS, LOW_SAMPLE_QTY, LOW_SAMPLE_PERIODS, LOW_SAMPLE_SHIPMENTS,
-    headerKind, parseSheet, parseWorkbook, buildFromShipments, metricLabels, normalizeAnalysis, options, summarize,
+    headerKind, parseSheet, parseWorkbook, buildFromShipments, labels, metricLabels, stepLabel, normalizeAnalysis, options, summarize,
     ruleDays, suggestRules, applySuggestions, currentRuleDays, countryRuleName, vehicleType,
   };
 });

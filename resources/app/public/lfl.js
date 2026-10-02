@@ -1301,9 +1301,9 @@
   const TRIAL_MODEL_DIM_ALIASES=Object.freeze({
     mag:['mag'],mmyg:['mmyg'],brandDirectorate:['brandDirectorate','markaMudurlugu','markaMudurluk'],
     classification:['classification','urunTipi','klasman'],
-    productDescription:['productDescription','productMainDefinition','urunAnaTanim','urunAnaTanım','urunTanim','urunTanım','productDesc'],
+    productDescription:['productDescription','productMainDefinition','urunAnaTanim','urunAnaTanım','urunTanim','urunTanım','productDesc'], // i18n-ignore — kaynak alan adı eşleştirmesi (veri)
     manufacturer:['manufacturer','uretici','nihaiUretici','finalManufacturer'],
-    country:['country','ulke','ülke'],buyingGroup:['buyingGroup','buyerGroup'],buyer:['buyer'],
+    country:['country','ulke','ülke'],buyingGroup:['buyingGroup','buyerGroup'],buyer:['buyer'], // i18n-ignore — kaynak alan adı eşleştirmesi (veri)
     fabricCategory:['fabricCategory','kumasKategorisi','kumasKategori'],
     fabricSupplierCountry:['fabricSupplierCountry','kumasciUlkesi','kumasciUlke','fabricCountry'],
     fabricSupplier:['fabricSupplier','kumasci','fabricManufacturer'],
