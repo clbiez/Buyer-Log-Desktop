@@ -90,6 +90,8 @@
 
   async function fetchRows() {
     const params = backlogExportQueryParams();
+    // Backlog Genel Bakış aynı imzalı isteği zaten yaptıysa yeniden çekilmez.
+    if (window.BLBacklogRows && typeof window.BLBacklogRows.load === 'function') return window.BLBacklogRows.load(params);
     const qs = new URLSearchParams(params).toString();
     const response = await fetch(`/api/backlog-export?${qs}`, { credentials: 'same-origin' });
     const data = await response.json().catch(() => ({}));

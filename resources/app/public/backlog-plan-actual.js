@@ -95,8 +95,8 @@ function moduleEl(){return $('backlogPlanActualModule')}
 function positionModule(){
   const mod=moduleEl(),parent=$('backlogContent');if(!mod||!parent)return;
   const pos=Math.max(0,Math.min(POSITIONS-1,Number(state.position)||0));
-  const kpi=$('backlogKpi'),chart=$('backlogChartPanel'),delivery=$('backlogAnalysis');
-  const tree=[...parent.children].find(el=>el.classList&&el.classList.contains('panel')&&el!==mod&&el.id!=='backlogChartPanel');
+  const kpi=$('backlogOverview')||$('backlogKpi'),chart=$('backlogChartPanel'),delivery=$('backlogAnalysis');
+  const tree=[...parent.children].find(el=>el.classList&&el.classList.contains('panel')&&el!==mod&&el.id!=='backlogChartPanel'&&el.id!=='backlogOverview');
   if(pos===0&&kpi)kpi.insertAdjacentElement('afterend',mod);
   else if(pos===1&&chart)chart.insertAdjacentElement('afterend',mod);
   else if(pos===2&&delivery)delivery.insertAdjacentElement('afterend',mod);
@@ -528,6 +528,24 @@ function download(data,name){
   setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
 function toast(message,opts){if(typeof window.showToast==='function')window.showToast(message,opts);}
+function buildReport(){
+  if(!data||!data.resolved||!data.resolved.start)return null;
+  const win=data.plan&&data.plan.window||planWindow();
+  return {
+    planRows:visiblePlan(),changes:visibleChanges(),activity:visibleActivity(),groupBy:state.groupBy,
+    planFrom:win.from,planTo:win.to,
+    periodText:`${fmtDate((data.requested||{}).from)} → ${fmtDate((data.requested||{}).to)}`,
+    planWindowText:`${fmtDay(win.from)} → ${fmtDay(win.to)}`,
+    snapshotText:`${fmtDate(data.resolved.start.capturedAt)} → ${fmtDate(data.resolved.end.capturedAt)}`,
+    filterText:filterText(),
+  };
+}
+/* Backlog V3 Excel'i bu raporu kendi çalışma kitabına ekler. Panel hiç
+   açılmadıysa veri mevcut dönem/plan penceresi tercihleriyle yüklenir. */
+async function exportReport(){
+  if(!data&&!loading)await refresh();
+  return buildReport();
+}
 async function exportExcel(){
   if(exporting||!data||!data.resolved||!data.resolved.start)return;
   const R=Report();if(!R)return;
@@ -535,15 +553,7 @@ async function exportExcel(){
   try{
     if(window.BLPerf){await window.BLPerf.ensureLibrary('exceljs');await window.BLPerf.ensureLibrary('jszip').catch(()=>null);}
     if(typeof window.ExcelJS==='undefined')throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
-    const win=data.plan&&data.plan.window||planWindow();
-    const report={
-      planRows:visiblePlan(),changes:visibleChanges(),activity:visibleActivity(),groupBy:state.groupBy,
-      planFrom:win.from,planTo:win.to,
-      periodText:`${fmtDate((data.requested||{}).from)} → ${fmtDate((data.requested||{}).to)}`,
-      planWindowText:`${fmtDay(win.from)} → ${fmtDay(win.to)}`,
-      snapshotText:`${fmtDate(data.resolved.start.capturedAt)} → ${fmtDate(data.resolved.end.capturedAt)}`,
-      filterText:filterText(),
-    };
+    const report=buildReport();
     const out=await R.buildXlsx(report,{ExcelJS:window.ExcelJS,JSZip:window.JSZip,lang:lang(),outputType:'blob',onChartError:err=>console.warn('[plan-actual] Excel grafikleri eklenemedi',err)});
     const name=R.fileName(report);
     download(out,name);
@@ -617,5 +627,5 @@ function init(){
   document.addEventListener('bl:language-changed',()=>{if(state.open)render()});
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-window.BLBacklogPlanActual={refresh:()=>refresh(),open:()=>openModule(true),close:()=>openModule(false),exportExcel:()=>exportExcel()};
+window.BLBacklogPlanActual={refresh:()=>refresh(),open:()=>openModule(true),close:()=>openModule(false),exportExcel:()=>exportExcel(),exportReport:()=>exportReport()};
 })();
