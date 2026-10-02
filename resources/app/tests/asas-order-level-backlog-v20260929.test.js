@@ -146,3 +146,49 @@ test('Planlanan & Gerçekleşen kalan miktarı dağıtılmış ASAS paylarının
     { capturedAt: '2026-09-29T07:00:00.000Z' });
   assert.equal(snapshot.rows[0].remainingQty, 7000);
 });
+
+
+test('ASAS kalan dağıtımı IAS kaynak satır sırasından bağımsız ve deterministiktir', () => {
+  const sourceOrder = asas({
+    'Net Alım Sipariş Miktarı': 5759,
+    'Kalan Alım Sipariş Miktarı': 5714,
+    'Antrepoya Giren Miktar': 0,
+    'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': 5714,
+  });
+  const early = ias({
+    'Supplier Portal Statü': 'Yol Operasyonları',
+    'Tahmini Antrepo Giriş Tarihi': '2026-10-15',
+    'Yükleme Toplam Adet': 1586,
+    'İthalat Dosya No': '2026.038174.T',
+    'Konteyner No': 'EARLY-1',
+  });
+  const late = ias({
+    'Supplier Portal Statü': 'Yol Operasyonları',
+    'Tahmini Antrepo Giriş Tarihi': '2026-10-22',
+    'Yükleme Toplam Adet': 4173,
+    'İthalat Dosya No': '2026.038175.T',
+    'Konteyner No': 'LATE-1',
+  });
+
+  const build = iasRows => {
+    const { orders, map, overrides } = parsed([sourceOrder], iasRows);
+    return parse.buildBacklogTemplateRows(orders, map, overrides, {})
+      .map(row => ({
+        importFile: row._partial && row._partial.importFile,
+        qty: row.Adet,
+        kalan: row[KALAN],
+        kalanMerkez: row[KALAN_MERKEZ],
+      }))
+      .sort((a, b) => a.importFile.localeCompare(b.importFile));
+  };
+
+  const databaseOrder = build([early, late]);
+  const excelOrder = build([late, early]);
+  assert.deepEqual(databaseOrder, excelOrder);
+  assert.deepEqual(databaseOrder, [
+    { importFile: '2026.038174.T', qty: 1586, kalan: 1541, kalanMerkez: 1541 },
+    { importFile: '2026.038175.T', qty: 4173, kalan: 4173, kalanMerkez: 4173 },
+  ]);
+  assert.equal(sum(databaseOrder, 'kalan'), 5714);
+  assert.equal(sum(databaseOrder, 'kalanMerkez'), 5714);
+});
