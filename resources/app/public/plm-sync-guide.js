@@ -70,7 +70,11 @@
     return browser==='chrome'?'chrome://inspect/#devices':'edge://inspect/#devices';
   }
   function closeExisting(){document.getElementById('_syncGuideOverlay')?.remove();}
-  function closeProgress(){if(activeProgress){activeProgress.remove();activeProgress=null;}}
+  function closeProgress({immediate=true}={}){
+    if(!activeProgress)return;
+    try{if(typeof activeProgress.close==='function')activeProgress.close({immediate});}catch(_){}
+    activeProgress=null;
+  }
 
   function visualBrowser(status){
     const url=inspectUrl(status);
@@ -191,12 +195,23 @@
     const isAsas=String(url).includes('import-asas');
     const source=isAsas?'ASAS':'PLM';
     closeProgress();
-    const panel=document.createElement('div');
-    panel.className='blSyncGuideProgress';
-    panel.setAttribute('role','status');panel.setAttribute('aria-live','polite');
-    panel.innerHTML='<div class="blSyncGuideProgressArt"><span></span><i></i><b></b></div><div><strong>'+source+' · '+esc(t('Senkronizasyon çalışıyor','Synchronization in progress'))+'</strong><small>'+esc(t('Açılan tarayıcı penceresini kapatmayın. “Allow Remote Debugging?” bildirimi görünürse Allow seçin.','Keep the opened browser window open. If “Allow Remote Debugging?” appears, choose Allow.'))+'</small></div><button type="button" aria-label="'+esc(t('Kapat','Close'))+'">×</button>';
-    panel.querySelector('button')?.addEventListener('click',closeProgress);
-    document.body.appendChild(panel);activeProgress=panel;return panel;
+    const message=source+' · '+t('Senkronizasyon devam ediyor','Synchronization in progress');
+    const detail=t(
+      'Açılan tarayıcı penceresini kapatmayın. “Allow Remote Debugging?” görünürse Allow seçin.',
+      'Keep the opened browser window open. If “Allow Remote Debugging?” appears, choose Allow.'
+    );
+    let close=null;
+    try{
+      if(typeof window.showToast==='function'){
+        close=window.showToast(message,{kind:'info',kindLabel:t('BİLGİLENDİRME','INFORMATION'),detail,duration:0});
+      }else if(typeof window.BLUI?.notify==='function'){
+        close=window.BLUI.notify(message,{kind:'info',kindLabel:t('BİLGİLENDİRME','INFORMATION'),detail,duration:0,placement:'edge',language:en()?'en':'tr'});
+      }
+    }catch(_){close=null;}
+    if(typeof close!=='function')return null;
+    const progress={source,close,update(messageText,options){try{close.update?.(messageText,options);}catch(_){}}};
+    activeProgress=progress;
+    return progress;
   }
 
   const originalFetch=window.fetch.bind(window);
@@ -208,24 +223,33 @@
     const watched=method==='POST'&&syncEndpoints.has(path);
     const category=path==='/api/model-images/import-asas'?'asas':'plm';
     let panel=null;
-    if(watched&&!isDismissed(category))panel=progressFor(path);
+    if(watched)panel=progressFor(path);
     const promise=originalFetch(input,init);
     if(!watched)return promise;
     return promise.then(response=>{
-      if(panel&&panel.isConnected){
-        panel.classList.add(response.ok?'isDone':'isError');
-        const strong=panel.querySelector('strong'),small=panel.querySelector('small');
-        if(strong)strong.textContent=response.ok?t('İşlem tamamlandı','Operation completed'):t('İşlem tamamlanamadı','Operation failed');
-        if(small)small.textContent=response.ok?t('Buyer Log veriyi aldı.','Buyer Log received the data.'):t('Tarayıcı bağlantısını ve Allow onayını kontrol edin.','Check the browser connection and the Allow approval.');
-        setTimeout(()=>{if(panel===activeProgress)closeProgress();else panel.remove();},response.ok?3500:9000);
+      if(panel){
+        const ok=response.ok;
+        panel.update(
+          panel.source+' · '+(ok?t('Senkronizasyon tamamlandı','Synchronization completed'):t('Senkronizasyon tamamlanamadı','Synchronization failed')),
+          {
+            kind:ok?'success':'error',
+            kindLabel:ok?t('TAMAMLANDI','COMPLETED'):t('HATA','ERROR'),
+            detail:ok?t('Buyer Log veriyi aldı.','Buyer Log received the data.'):t('Tarayıcı bağlantısını ve Allow onayını kontrol edin.','Check the browser connection and the Allow approval.')
+          }
+        );
+        setTimeout(()=>{if(panel===activeProgress)closeProgress({immediate:false});},ok?3500:9000);
       }
       return response;
     },error=>{
-      if(panel&&panel.isConnected){
-        panel.classList.add('isError');
-        const strong=panel.querySelector('strong'),small=panel.querySelector('small');
-        if(strong)strong.textContent=t('Senkronizasyon kesildi','Synchronization interrupted');
-        if(small)small.textContent=t('Tarayıcıyı kapatmadığınızdan ve Remote Debugging iznini verdiğinizden emin olun.','Make sure the browser stayed open and Remote Debugging permission was allowed.');
+      if(panel){
+        panel.update(
+          panel.source+' · '+t('Senkronizasyon kesildi','Synchronization interrupted'),
+          {
+            kind:'error',
+            kindLabel:t('HATA','ERROR'),
+            detail:t('Tarayıcıyı kapatmadığınızdan ve Remote Debugging iznini verdiğinizden emin olun.','Make sure the browser stayed open and Remote Debugging permission was allowed.')
+          }
+        );
       }
       throw error;
     });

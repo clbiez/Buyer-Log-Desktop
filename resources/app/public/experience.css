@@ -545,6 +545,7 @@ button:disabled .ic{--ic-tint-o:.08;}
    ve en yenisi altta yığılır.
    ===================================================================== */
 .uiFeedbackRegion--edge{top:auto;bottom:18px;right:18px;width:min(360px,calc(100vw - 36px));flex-direction:column-reverse;}
+.uiFeedbackRegion--edge{bottom:calc(18px + var(--plm-ops-strip-offset,0px));transition:bottom .16s var(--bl-ease);}
 .uiFeedback{padding:10px 12px;gap:10px;box-shadow:var(--shadow-3);border-radius:var(--r-md);}
 .uiFeedbackRegion--edge .uiFeedback.isLeaving{transform:translateY(6px);}
 /* Kopyalama anlık geri bildirimi: düğme boyutu değişmez. */

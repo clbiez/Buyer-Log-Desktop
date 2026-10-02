@@ -99,8 +99,10 @@
     const placement=options.placement==='center'?'center':'edge';
     const host=feedbackHost(placement);
     if(!host)return function closeFeedback(){};
+    let liveOptions={...options,kind};
+    let liveMessage=message;
     const template=document.createElement('template');
-    template.innerHTML=feedbackView(message,{...options,kind});
+    template.innerHTML=feedbackView(liveMessage,liveOptions);
     const item=template.content.firstElementChild;
     if(!item)return function closeFeedback(){};
 
@@ -147,14 +149,15 @@
       if(placement==='center'&&event.key==='Escape'&&host.lastElementChild===item)close();
     };
 
-    item.querySelector('[data-ui-feedback-close]')?.addEventListener('click',()=>close());
     item.addEventListener('click',event=>{
+      const closer=event.target.closest('[data-ui-feedback-close]');
+      if(closer&&item.contains(closer)){close();return;}
       const btn=event.target.closest('[data-ui-feedback-action]');
       if(!btn||!item.contains(btn)||btn.disabled)return;
-      if(typeof options.onAction!=='function')return;
+      if(typeof liveOptions.onAction!=='function')return;
       const id=btn.dataset.uiFeedbackAction;
       btn.disabled=true;
-      Promise.resolve().then(()=>options.onAction(id,{close}))
+      Promise.resolve().then(()=>liveOptions.onAction(id,{close}))
         .catch(err=>{console.warn('uiFeedback action failed:',err);})
         .finally(()=>{btn.disabled=false;});
     });
@@ -171,6 +174,27 @@
       if(typeof oldest._uiFeedbackClose==='function')oldest._uiFeedbackClose({immediate:true});
       else oldest.remove();
     }
+    const update=(nextMessage,nextOptions={})=>{
+      if(closed)return close;
+      liveMessage=nextMessage;
+      liveOptions={...liveOptions,...nextOptions};
+      liveOptions.kind=normalizeKind(liveOptions.kind);
+      const nextTemplate=document.createElement('template');
+      nextTemplate.innerHTML=feedbackView(liveMessage,liveOptions);
+      const fresh=nextTemplate.content.firstElementChild;
+      if(!fresh)return close;
+      const wasIn=item.classList.contains('isIn');
+      item.className=fresh.className;
+      if(wasIn)item.classList.add('isIn');
+      ['data-kind','role','aria-live','aria-atomic','aria-busy'].forEach(name=>{
+        if(fresh.hasAttribute(name))item.setAttribute(name,fresh.getAttribute(name));
+        else item.removeAttribute(name);
+      });
+      item.innerHTML=fresh.innerHTML;
+      return close;
+    };
+    close.update=update;
+    close.element=item;
     item._uiFeedbackClose=close;
     if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>item.classList.add('isIn'));
     else item.classList.add('isIn');
