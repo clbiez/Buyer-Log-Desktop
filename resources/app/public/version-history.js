@@ -405,6 +405,22 @@ window.BL_VERSION_HISTORY = [
     { tr: "Buyer Log 7.0.100: OAB legacy PASS/Edge veri çekimi geri getirildi; merkezi E-Mail Groups ve Send to Pricing alıcı kurtarma/senkronizasyonu düzeltildi; INTAKE ve OAB pivot ayarları hizalandı; çalışma alanı sekme navigasyonu, kompakt üst bar, Overview filtre katmanı ve Endeksmatik Adjustment Rate görünürlüğü iyileştirildi.", en: "Buyer Log 7.0.100: OAB legacy PASS/Edge veri çekimi geri getirildi; merkezi E-Mail Groups ve Send to Pricing alıcı kurtarma/senkronizasyonu düzeltildi; INTAKE ve OAB pivot ayarları hizalandı; çalışma alanı sekme navigasyonu, kompakt üst bar, Overview filtre katmanı ve Endeksmatik Adjustment Rate görünürlüğü iyileştirildi." },
   ] },
 
+  { v: "7.95", date: "2026-09-22", title: { tr: "Sürüm 7.95 arşiv kaydı", en: "Sürüm 7.95 arşiv kaydı" }, items: [
+    { tr: "Buyer Log 7.0.95 TEST sürümünün yayın kaydı doğrulandı. Bu eski sürümün ayrıntılı yayın notu korunmuş arşiv kaynağında bulunamadı.", en: "Buyer Log 7.0.95 TEST sürümünün yayın kaydı doğrulandı. Bu eski sürümün ayrıntılı yayın notu korunmuş arşiv kaynağında bulunamadı." },
+  ] },
+
+  { v: "7.94", date: "2026-09-22", title: { tr: "Collection Summary generic multi-value filter, angular cards, Edit removal, status-colored Collection cells, regression updates", en: "Collection Summary generic multi-value filter, angular cards, Edit removal, status-colored Collection cells, regression updates" }, items: [
+    { tr: "Collection Summary generic multi-value filter, angular cards, Edit removal, status-colored Collection cells, regression updates.", en: "Collection Summary generic multi-value filter, angular cards, Edit removal, status-colored Collection cells, regression updates." },
+  ] },
+
+  { v: "7.88", date: "2026-09-21", title: { tr: "Sürüm 7.88 arşiv kaydı", en: "Sürüm 7.88 arşiv kaydı" }, items: [
+    { tr: "Buyer Log 7.0.88 TEST sürümünün yayın kaydı doğrulandı. Bu eski sürümün ayrıntılı yayın notu korunmuş arşiv kaynağında bulunamadı.", en: "Buyer Log 7.0.88 TEST sürümünün yayın kaydı doğrulandı. Bu eski sürümün ayrıntılı yayın notu korunmuş arşiv kaynağında bulunamadı." },
+  ] },
+
+  { v: "7.85", date: "2026-09-20", title: { tr: "Sürüm 7.85 arşiv kaydı", en: "Sürüm 7.85 arşiv kaydı" }, items: [
+    { tr: "Buyer Log 7.0.85 TEST sürümünün yayın kaydı doğrulandı. Bu eski sürümün ayrıntılı yayın notu korunmuş arşiv kaynağında bulunamadı.", en: "Buyer Log 7.0.85 TEST sürümünün yayın kaydı doğrulandı. Bu eski sürümün ayrıntılı yayın notu korunmuş arşiv kaynağında bulunamadı." },
+  ] },
+
   { v: '7.82', date: '2026-09-20', title: { tr: 'Güvenli otomatik güncelleme', en: 'Safe self-update' }, items: [
     { tr: 'TEST/STABLE kanallı, SHA-256 doğrulamalı, staged ve rollback destekli otomatik güncelleme altyapısı eklendi.', en: 'Added TEST/STABLE self-update with SHA-256 verification, staging and automatic rollback.' },
     { tr: 'Uygulama sürümü tek canonical SemVer kaynağından üretilir; arayüzdeki sürüm artık elle tutulmaz.', en: 'Application version now comes from one canonical SemVer source; the UI version is no longer maintained manually.' },
