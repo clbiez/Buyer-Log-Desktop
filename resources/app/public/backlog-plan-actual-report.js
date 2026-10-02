@@ -123,6 +123,18 @@
     return buckets;
   }
 
+  /* Sunucu kovaları "2026-03-14 · 39641 | Depoda · 9959" biçiminde yazar
+     (tarih/statü · adet). Ekranda ve Excel'de okunur biçime çevrilir:
+     "14.03.2026 · 39.641 adet". Metin dışı değerler aynen döner. */
+  function formatFieldText(value, lang) {
+    if (value == null || value === '') return value;
+    const unit = lang === 'en' ? 'pcs' : 'adet';
+    const nf = n => Number(n).toLocaleString(lang === 'en' ? 'en-GB' : 'tr-TR', { maximumFractionDigits:2 });
+    return String(value)
+      .replace(/(\d{4})-(\d{2})-(\d{2})(?![\d:T])/g, '$3.$2.$1')
+      .replace(/ · (\d+(?:\.\d+)?)(?= \||$)/g, (m, q) => ' · ' + nf(q) + ' ' + unit);
+  }
+
   /* -------------------------------------------------------------- Excel */
   const FONT = 'Segoe UI';
   const C = {
@@ -433,7 +445,7 @@
     const ncCols = [
       [L('Sipariş', 'Order'), 16, x => x.change.orderCode], [L('Model', 'Model'), 26, x => x.change.modelName], [L('Renk', 'Colour'), 16, x => [x.change.colourCode, x.change.colour].filter(Boolean).join(' · ')],
       ['Buyer', 18, x => x.change.buyer], ['Buying Group', 14, x => x.change.buyingGroup], [L('Üretici', 'Manufacturer'), 24, x => x.change.manufacturer], [L('Sezon', 'Season'), 8, x => x.change.season],
-      [L('Alan', 'Field'), 24, x => x.field.label], [L('Başlangıç', 'Start'), 30, x => x.field.before], [L('Bitiş', 'End'), 30, x => x.field.after],
+      [L('Alan', 'Field'), 24, x => x.field.label], [L('Başlangıç', 'Start'), 30, x => formatFieldText(x.field.before, lang)], [L('Bitiş', 'End'), 30, x => formatFieldText(x.field.after, lang)],
       [L('Gün farkı', 'Day delta'), 10, x => (Number.isFinite(Number(x.field.days)) && x.field.days !== null ? Number(x.field.days) : null), 'days'],
       [L('Sinyal', 'Signal'), 22, x => [x.change.repeatedRevision ? L('çoklu revizyon', 'multiple revisions') : '', x.change.revertedRevision ? L('geri alındı', 'reverted') : '', x.change.lateQty > 0 ? L('geç yükleme', 'late load') : ''].filter(Boolean).join(' · ')],
     ];
@@ -580,7 +592,7 @@
 
   return Object.freeze({
     SEGMENTS, OUTCOMES, DIMENSIONS, REVISION_BUCKETS,
-    rowSegments, rowHasSegment, summarize, groupBy, dailySeries, exFactoryRevisions,
+    rowSegments, rowHasSegment, summarize, groupBy, dailySeries, exFactoryRevisions, formatFieldText,
     buildWorkbook, buildXlsx, chartSpecsFor, injectCharts, barChartXml, doughnutXml, excelSerial, fileName,
     // Ortak Excel stil kiti: Backlog V3 aynı görsel dili buradan kullanır.
     excelKit:Object.freeze({ FONT, COLORS:C, styleHeader, styleBody, dataBar, sheetTitle, sectionTitle, setDate, colName, quoteSheet, writeTable, thin }),

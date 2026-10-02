@@ -226,6 +226,7 @@ function snapshotBar(){
     <span class="bpaSnapshotPoint">${esc(fmtDate(end.capturedAt)+offset(driftEnd))}</span>
     <span>· ${esc(L('kapsam','coverage'))}: ${esc(coverage.from?fmtDate(coverage.from):'—')} → ${esc(coverage.to?fmtDate(coverage.to):'—')} · ${n(coverage.snapshotCount||0)} snapshot</span>
     ${win.from?`<span class="bpaPlanPill">${esc(L('Plan penceresi','Plan window'))}: ${esc(fmtDay(win.from))} → ${esc(fmtDay(win.to))}</span>`:''}
+    ${start.dateRepair||end.dateRepair?`<span class="bpaPlanPill" title="${esc(L('Soğuk açılıştan sonra alınan snapshotlarda tarihler bir gün geri yazılmıştı; analiz bu snapshotları otomatik düzeltilmiş tarihlerle karşılaştırır.','Snapshots taken after a cold start stored dates one day early; the analysis compares them with automatically corrected dates.'))}">${esc(L('Tarih kayması düzeltildi','Date shift corrected'))}</span>`:''}
     ${warn?`<span class="bpaCoverageWarn">${esc(L('Seçilen saate birebir snapshot yok; en yakın mevcut zaman işareti kullanıldı.','No exact snapshot exists for the selected time; the nearest available marker was used.'))}</span>`:''}
   </div>`;
 }
@@ -381,8 +382,9 @@ function dayBadge(field){
   return `<span class="bpaDayDelta ${cls}">${d>0?'+':''}${d} ${esc(L('gün','days'))}</span>`;
 }
 function fieldHtml(field){
-  const before=field.category==='exfactory'||field.category==='dates'?fmtDay(field.before):field.before;
-  const after=field.category==='exfactory'||field.category==='dates'?fmtDay(field.after):field.after;
+  // Tarih ve "tarih/statü · adet" kovaları okunur biçimde gösterilir (14.03.2026 · 39.641 adet).
+  const fmt=value=>Report()?Report().formatFieldText(value,lang()):fmtDay(value);
+  const before=fmt(field.before),after=fmt(field.after);
   return `<div class="bpaField"><span class="bpaFieldName">${esc(field.label)}${dayBadge(field)}</span><span class="bpaBefore">${esc(before||'—')}</span><span class="bpaArrow">→</span><span class="bpaAfter">${esc(after||'—')}</span></div>`;
 }
 function changeRowsHtml(rows){

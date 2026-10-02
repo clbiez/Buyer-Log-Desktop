@@ -108,7 +108,12 @@
       return d[0] + '-' + String(d[1]).padStart(2, '0') + '-' + String(d[2]).padStart(2, '0');
     }
     const raw = text(value);
+    // JSON zaman damgası ("2026-03-09T21:00:00.000Z" = TR'de 10.03) önce Date'e
+    // çevrilir; ilk 10 karakter UTC günüdür ve UTC+X'te bir gün geride kalır.
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(raw)) { const parsed = new Date(raw); if (!Number.isNaN(parsed.getTime())) return dayIso(parsed); }
     let m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return m[1] + '-' + m[2] + '-' + m[3];
+    m = raw.match(/^(\d{4})(\d{2})(\d{2})$/);
     if (m) return m[1] + '-' + m[2] + '-' + m[3];
     m = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
     if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
@@ -137,6 +142,9 @@
       transitOverdue:meta.transitOverdue === true,
     };
     DIMENSIONS.forEach(id => { item[id] = canon(row, id); });
+    item.season = canon(row, 'season');
+    // Sunucu tarihleri gün metni olarak gönderir; saatli ham değer bir veri yolu hatasıdır.
+    item.rawTimestampFields = Object.keys(row || {}).filter(key => key[0] !== '_' && typeof row[key] === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(row[key]));
     item.lineId = [item.orderCode, item.modelName, item.colourCode].join('\u001f');
     const today = ordinal(ctx.today || todayIso());
     const exOrd = ordinal(exFactory);
@@ -213,6 +221,23 @@
       past:v.bucket ? ordinal(v.bucket.start) + (granularity === 'month' ? 27 : 6) < today : false,
       items:v.items, ...summarize(v.items),
     }));
+  }
+
+  /* Veri kalitesi: rapora girmeden önce yakalanması gereken hatalı kayıtlar.
+     Her kontrol satır listesini taşır; panel tıklanınca bu satırları açar,
+     Excel'de "Veri Kalitesi" sayfası olarak yazılır. */
+  const QUALITY_CHECKS = Object.freeze([
+    { key:'blankSeason', tr:'Sezon boş', en:'Season blank', test:it => !text(it.season) },
+    { key:'blankExFactory', tr:'Ex-Factory tarihi yok', en:'Ex-Factory date missing', test:it => !it.exFactory },
+    { key:'blankRetail', tr:'Retail Depo tarihi yok', en:'Retail warehouse date missing', test:it => !it.retail },
+    { key:'retailBeforeEx', tr:'Retail tarihi Ex-Factory\'den önce', en:'Retail date before Ex-Factory', test:it => it.retail && it.exFactory && it.retail < it.exFactory },
+    { key:'rawTimestamp', tr:'Tarih alanında saatli ham değer', en:'Raw timestamp in a date field', test:it => it.rawTimestampFields && it.rawTimestampFields.length > 0 },
+  ]);
+  function dataQuality(items) {
+    return QUALITY_CHECKS.map(check => {
+      const rows = (items || []).filter(check.test);
+      return { key:check.key, tr:check.tr, en:check.en, count:rows.length, qty:round(rows.reduce((t, it) => t + it.qty, 0)), items:rows };
+    }).filter(issue => issue.count > 0);
   }
 
   /* -------------------------------------------------------------- Excel */
@@ -409,7 +434,8 @@
         else if (kind === 'qty') { cell.value = raw; cell.numFmt = '#,##0'; }
         else if (typeof raw === 'number') { cell.value = raw; cell.numFmt = Number.isInteger(raw) ? '#,##0' : '#,##0.00'; }
         else if (raw instanceof Date) K.setDate(cell, dayIso(raw));
-        else if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(raw)) K.setDate(cell, dayIso(raw));
+        // Sunucu tarihleri gün metni (YYYY-MM-DD) olarak gönderir; ham zaman damgaları da tarih yazılır.
+        else if (typeof raw === 'string' && /^\d{4}-\d{2}-\d{2}(?:$|[T ]\d{2}:\d{2})/.test(raw)) K.setDate(cell, dayIso(raw));
         else cell.value = raw == null || raw === '' ? null : (typeof raw === 'object' ? JSON.stringify(raw) : raw);
         cell.font = { name:FONT, size:9.5, color:{ argb:C.ink } };
         cell.border = { bottom:K.thin };
@@ -424,6 +450,21 @@
       detail.autoFilter = { from:{ row:1, column:1 }, to:{ row:items.length + 1, column:cols.length } };
       const qtyIndex = headers.indexOf(F.qty);
       if (qtyIndex >= 0) { const col = K.colName(qtyIndex + 3); K.dataBar(detail, col + '2:' + col + (items.length + 1), C.acc); }
+    }
+
+    /* ---- Veri Kalitesi (yalnız sorun varsa) ---- */
+    const quality = dataQuality(items);
+    if (quality.length) {
+      const dq = addSheet(L('Veri Kalitesi', 'Data Quality'), { views:[{ state:'frozen', ySplit:1 }], properties:{ tabColor:{ argb:C.red } } });
+      const qRows = [];
+      quality.forEach(issue => issue.items.forEach(it => qRows.push({ issue, it })));
+      K.writeTable(dq, [
+        [L('Sorun', 'Issue'), 30, x => pick(lang, x.issue)],
+        [L('Sipariş', 'Order'), 14, x => x.it.orderCode], [L('Model', 'Model'), 24, x => x.it.modelName], [L('Renk Kod', 'Colour Code'), 10, x => x.it.colourCode],
+        ['Buyer', 18, x => x.it.buyer], [L('Üretici', 'Manufacturer'), 22, x => x.it.manufacturer], [L('Sezon', 'Season'), 8, x => x.it.season],
+        ['Ex-Factory', 12, x => x.it.exFactory, 'date'], ['Retail', 12, x => x.it.retail, 'date'], [L('Adet', 'Qty'), 10, x => x.it.qty, 'qty'],
+        [L('Saatli alanlar', 'Timestamp fields'), 30, x => (x.it.rawTimestampFields || []).map(f => f.replace(/\n/g, ' ')).join(', ')],
+      ], qRows, (row, x) => { row.getCell(1).font = { name:FONT, size:9.5, bold:true, color:{ argb:C.red } }; });
     }
 
     v3Sheets.forEach(ws => { ws.pageSetup = Object.assign({}, ws.pageSetup, { orientation:'landscape', fitToPage:true, fitToWidth:1, fitToHeight:0 }); });
@@ -463,6 +504,7 @@
   return Object.freeze({
     STAGES, DIMENSIONS, TIMELINE_FIELDS, PRE_LOAD,
     stageOf, stageLabel, dimLabel, dayIso, normalizeRow, normalizeRows, summarize, groupBy, timeline, isoWeekNo,
+    QUALITY_CHECKS, dataQuality,
     buildWorkbook, buildXlsx, fileName,
   });
 });

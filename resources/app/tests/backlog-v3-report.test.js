@@ -110,3 +110,29 @@ test('Backlog screen wiring: overview panel, Excel Legacy + Excel Backlog V3 wit
   assert.equal((STORAGE.match(/'lcw\.backlog\.overview\.'/g) || []).length, 2);
   assert.doesNotMatch(CSS, /#fff|var\(--bad\)|var\(--ok\)/);
 });
+
+test('data quality flags blank season, missing dates, retail before Ex-Factory and raw timestamps', () => {
+  const items = V3.normalizeRows([
+    row({ 'Sezon':'' }),
+    row({ 'Sipariş Kod':'2001', 'Retail Depo Tarih Yıl Ay Gün':'2026-09-01T00:00:00.000Z' }),
+    row({ 'Sipariş Kod':'2002', 'Sipariş Yerleştirme MerchTarih':'2026-04-14T21:00:00.000Z' }),
+  ], { today:TODAY });
+  const byKey = Object.fromEntries(V3.dataQuality(items).map(issue => [issue.key, issue.count]));
+  assert.equal(byKey.blankSeason, 1);
+  assert.equal(byKey.retailBeforeEx, 1);
+  // Fikstür tarihleri saatli ISO metnidir; sunucu ise gün metni gönderir. Hepsi işaretlenmeli.
+  assert.equal(byKey.rawTimestamp, 3, 'ISO timestamps in date fields are a data-path defect');
+  assert.ok(items[2].rawTimestampFields.includes('Sipariş Yerleştirme MerchTarih'));
+  const clean = V3.normalizeRows([{ 'Sipariş Kod':'1', 'Sezon':'W6', 'Adet':1, 'Retail Depo Tarih Yıl Ay Gün':'2026-11-16', 'Orijinal Exfactory Merch Tarih':'2026-07-25' }], { today:TODAY });
+  assert.deepEqual(V3.dataQuality(clean).map(issue => issue.key), [], 'day strings from the server are clean');
+});
+
+test('V3 detail writes day strings (e.g. order placement date) as real Excel dates', async () => {
+  const out = await V3.buildXlsx({ rows:[row({ 'Sipariş Yerleştirme MerchTarih':'2026-04-15' })], headers:['Sipariş Kod', 'Sipariş Yerleştirme MerchTarih'] }, { ExcelJS, lang:'tr', today:TODAY });
+  const book = new ExcelJS.Workbook();
+  await book.xlsx.load(out.data);
+  const cell = book.getWorksheet('Backlog V3').getCell('D2');
+  assert.ok(cell.value instanceof Date, 'not a text cell');
+  assert.equal(cell.value.toISOString().slice(0, 10), '2026-04-15');
+  assert.equal(cell.numFmt, 'dd.mm.yyyy');
+});

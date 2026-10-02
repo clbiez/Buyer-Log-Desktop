@@ -40,21 +40,40 @@ function upper(value) { return clean(value).toLocaleUpperCase('tr-TR'); }
 function lineId(orderCode, modelName, colourCode) {
   return [upper(orderCode), upper(modelName), upper(colourCode)].join('\u001f');
 }
+/* Takvim günü (YYYY-MM-DD). server.js dateOnlyISO ile aynı kural:
+   yerel gece yarısı → yerel gün; yalnız UTC gece yarısı → UTC gün.
+   ISO zaman damgası METNİ (ör. model snapshot'ından JSON ile dönen
+   "2026-03-09T21:00:00.000Z" = TR'de 10.03 gece yarısı) önce Date'e çevrilir.
+   Eskiden metnin ilk 10 karakteri alınıyordu; UTC+3'te bu, soğuk açılıştan
+   sonra alınan snapshot'larda bütün tarihleri bir gün geri kaydırıyordu. */
+function calendarDay(date) {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+  const localMidnight = date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0 && date.getMilliseconds() === 0;
+  const utcMidnight = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
+  const useUtc = utcMidnight && !localMidnight;
+  const p = n => String(n).padStart(2, '0');
+  return useUtc
+    ? `${date.getUTCFullYear()}-${p(date.getUTCMonth() + 1)}-${p(date.getUTCDate())}`
+    : `${date.getFullYear()}-${p(date.getMonth() + 1)}-${p(date.getDate())}`;
+}
 function dateIso(value) {
   if (!value) return '';
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    const p = n => String(n).padStart(2, '0');
-    return `${value.getFullYear()}-${p(value.getMonth() + 1)}-${p(value.getDate())}`;
-  }
+  if (value instanceof Date) return calendarDay(value);
   const raw = clean(value);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(raw)) {
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) return calendarDay(parsed);
+  }
   const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+  const compact = raw.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if (compact) return `${compact[1]}-${compact[2]}-${compact[3]}`;
   const tr = raw.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})$/);
   if (tr) return `${tr[3]}-${String(tr[2]).padStart(2, '0')}-${String(tr[1]).padStart(2, '0')}`;
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return raw;
-  const p = n => String(n).padStart(2, '0');
-  return `${parsed.getFullYear()}-${p(parsed.getMonth() + 1)}-${p(parsed.getDate())}`;
+  return calendarDay(parsed);
 }
 function dayOrdinal(value) {
   const iso = dateIso(value);
@@ -297,14 +316,101 @@ function resolveMarker(archive, requestedAt, side) {
   if (before) return before;
   return markers[0];
 }
+/* -------------------------------------------------------------------------
+   Geçmiş arşiv onarımı (okuma anında, diske yazmadan).
+   7.0.204 ve öncesinde soğuk açılıştan (model snapshot'ı) sonra alınan
+   snapshot'larda ASAS/IAS kaynaklı bütün tarihler bir gün geri yazıldı.
+   Böyle bir delta, satırların büyük çoğunluğunda Retail ve In Store'un AYNI
+   ANDA tam ±1 gün kaymasıyla tanınır (gerçek iş değişikliği bu ikisini toplu
+   ve birlikte bir gün oynatmaz). Kayma adımları zincirlenir; en yüksek ofset
+   doğru kabul edilir ve kaymış snapshot satırları okunurken düzeltilir. */
+const SHIFT_FIELDS = ['planExFactory', 'originalExFactory', 'retail', 'inStore'];
+const SHIFT_BUCKETS = ['handoverDates', 'loadDates'];
+function addDays(iso, days) {
+  const ord = dayOrdinal(iso);
+  return ord == null ? iso : new Date((ord + days) * 86400000).toISOString().slice(0, 10);
+}
+function shiftBuckets(buckets, days) {
+  const out = {};
+  for (const [key, qty] of Object.entries(buckets || {})) { const k = addDays(key, days); out[k] = round(number(out[k]) + number(qty)); }
+  return sortedObject(out);
+}
+function deltaShiftStep(prevState, delta) {
+  let total = 0, minus = 0, plus = 0;
+  for (const row of Array.isArray(delta && delta.upserts) ? delta.upserts : []) {
+    const old = row && prevState.get(row.id);
+    if (!old) continue;
+    let diff = null, consistent = true;
+    for (const field of ['retail', 'inStore']) {
+      const a = dayOrdinal(old[field]), b = dayOrdinal(row[field]);
+      if (a == null || b == null) continue;
+      if (diff == null) diff = b - a; else if (diff !== b - a) consistent = false;
+    }
+    if (diff == null) continue;
+    total += 1;
+    if (!consistent) continue;
+    if (diff === -1) minus += 1; else if (diff === 1) plus += 1;
+  }
+  if (total < Math.max(20, prevState.size * 0.3)) return 0;
+  if (minus / total >= 0.6) return -1;
+  if (plus / total >= 0.6) return 1;
+  return 0;
+}
+function markerDayOffsets(archive) {
+  const markers = markerList(archive), offsets = new Array(markers.length).fill(0);
+  if (!archive || !archive.base) return offsets;
+  const state = rowsMap(archive.base.rows);
+  let current = 0;
+  (archive.deltas || []).forEach((delta, index) => {
+    current += deltaShiftStep(state, delta);
+    offsets[index + 1] = current;
+    applyDeltaToMap(state, delta);
+  });
+  const max = Math.max(...offsets);
+  return offsets.map(offset => offset - max);
+}
+function repairRow(row, offset, previous) {
+  if (!offset || !row) return row;
+  const shift = -offset, out = { ...row };
+  for (const field of SHIFT_FIELDS) if (out[field]) out[field] = addDays(out[field], shift);
+  for (const field of SHIFT_BUCKETS) if (out[field]) out[field] = shiftBuckets(out[field], shift);
+  // Antrepo girişinin bir kısmı hesaplanmış (kaymamış) tarihtir. Yalnız önceki
+  // doğru durumda karşılığı olan anahtarlar düzeltilir.
+  if (out.etaDates && previous && previous.etaDates) {
+    const fixed = {}, prev = previous.etaDates, has = key => Object.prototype.hasOwnProperty.call(prev, key);
+    for (const [key, qty] of Object.entries(out.etaDates)) {
+      const moved = addDays(key, shift), target = has(moved) && !has(key) ? moved : key;
+      fixed[target] = round(number(fixed[target]) + number(qty));
+    }
+    out.etaDates = sortedObject(fixed);
+  }
+  return out;
+}
+function repairedRowsAtMarker(archive, markerIndex, offsets) {
+  if (!archive || !archive.base || markerIndex < 0) return [];
+  const list = offsets || markerDayOffsets(archive);
+  const fixed = new Map();
+  for (const row of archive.base.rows || []) if (row && row.id) fixed.set(row.id, repairRow(row, list[0], null));
+  const last = Math.min((archive.deltas || []).length, markerIndex);
+  for (let index = 0; index < last; index += 1) {
+    const delta = archive.deltas[index], offset = list[index + 1];
+    for (const id of Array.isArray(delta && delta.removed) ? delta.removed : []) fixed.delete(id);
+    for (const row of Array.isArray(delta && delta.upserts) ? delta.upserts : []) if (row && row.id) fixed.set(row.id, repairRow(row, offset, fixed.get(row.id)));
+  }
+  return [...fixed.values()];
+}
+
 function resolveRange(archive, from, to) {
   if (!archive || !archive.base) return { start: null, end: null, coverage: null };
   const start = resolveMarker(archive, from, 'start');
   const end = resolveMarker(archive, to, 'end');
   const markers = markerList(archive);
+  const offsets = markerDayOffsets(archive);
+  const repairedMarkers = offsets.filter(offset => offset !== 0).length;
   return {
-    start: start ? { ...start, rows: rowsAtMarker(archive, start.index) } : null,
-    end: end ? { ...end, rows: rowsAtMarker(archive, end.index) } : null,
+    start: start ? { ...start, rows: repairedRowsAtMarker(archive, start.index, offsets), dateRepair: offsets[start.index] || 0 } : null,
+    end: end ? { ...end, rows: repairedRowsAtMarker(archive, end.index, offsets), dateRepair: offsets[end.index] || 0 } : null,
+    repairedMarkers,
     coverage: markers.length ? { from: markers[0].capturedAt, to: markers[markers.length - 1].capturedAt, snapshotCount: markers.length } : null,
   };
 }
@@ -637,5 +743,5 @@ module.exports = {
   readArchive, writeArchive, appendSnapshot, markerList, rowsAtMarker, resolveRange,
   collapseHistory, compareSnapshots, catalogsFromRows, categoryForField,
   PLAN_OUTCOMES, summarizePlan,
-  _test: { deltaBetween, latestRows, pruneArchive, rowsMap, bucketAdded, mapText, openQty, periodLoads },
+  _test: { deltaBetween, latestRows, pruneArchive, rowsMap, bucketAdded, mapText, openQty, periodLoads, markerDayOffsets, repairedRowsAtMarker, calendarDay },
 };

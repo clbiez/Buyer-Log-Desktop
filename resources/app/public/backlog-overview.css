@@ -50,3 +50,9 @@
 .blvExportMenu label small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
 @media(max-width:900px){.blvModuleHint{display:none}}
 .blvModule .bpaGRow{grid-template-columns:minmax(140px,220px) 1fr 190px}.blvModule .bpaGStats span{white-space:nowrap}
+.blvQuality{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--red) 40%,var(--line));border-left:4px solid var(--red);background:var(--red-bg)}
+.blvQualityTitle{font-weight:700;color:var(--red);font-size:12px}
+.blvQualityChip{border:1px solid color-mix(in srgb,var(--red) 35%,var(--line));background:var(--card);color:var(--ink);padding:3px 9px;border-radius:var(--r-full);font:inherit;font-size:12px;cursor:pointer}
+.blvQualityChip:hover{border-color:var(--red)}
+.blvQualityChip b{color:var(--red)}
+.blvQualityHint{font-size:11px;color:var(--ink2);margin-left:auto}

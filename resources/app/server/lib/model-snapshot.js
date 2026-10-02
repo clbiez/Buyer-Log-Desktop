@@ -87,6 +87,48 @@ function encodeSnapshot(payload) {
   return { json: Buffer.from(json, 'utf8'), savedAt: body.savedAt, aliasCount: compacted.aliasCount };
 }
 
+/* Model snapshot'ı düz JSON'dur: Date alanları "2026-03-09T21:00:00.000Z"
+   metnine dönüşür (TR'de 10.03 gece yarısı). Canlı yenilemede ise aynı alanlar
+   Date nesnesidir. Bazı tüketiciler (ör. Sipariş Yerleştirme tarihi, P&A
+   snapshot'ı) metni olduğu gibi taşıyor ya da ilk 10 karakterini UTC günü
+   olarak okuyordu; soğuk açılıştan sonra tarihler bir gün geri ve saat
+   kısmıyla görünüyordu. Sipariş ve IAS verisindeki tam Date#toJSON biçimli
+   metinler burada yeniden Date'e çevrilir; böylece hydrate edilen veri canlı
+   yenilemeyle aynı tiptedir. Yalnız tam ISO-Z biçimi dönüştürülür. */
+const DATE_JSON = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+function reviveDatesIn(root, seen = new WeakSet()) {
+  let revived = 0;
+  const visit = node => {
+    if (!node || typeof node !== 'object' || node instanceof Date || seen.has(node)) return;
+    seen.add(node);
+    if (Array.isArray(node)) {
+      for (let i = 0; i < node.length; i += 1) {
+        const v = node[i];
+        if (typeof v === 'string') { if (v.length === 24 && v.charCodeAt(10) === 84 && v.charCodeAt(23) === 90 && DATE_JSON.test(v)) { node[i] = new Date(v); revived += 1; } }
+        else if (v && typeof v === 'object') visit(v);
+      }
+      return;
+    }
+    for (const key of Object.keys(node)) {
+      const v = node[key];
+      if (typeof v === 'string') { if (v.length === 24 && v.charCodeAt(10) === 84 && v.charCodeAt(23) === 90 && DATE_JSON.test(v)) { node[key] = new Date(v); revived += 1; } }
+      else if (v && typeof v === 'object') visit(v);
+    }
+  };
+  visit(root);
+  return revived;
+}
+function reviveSnapshotDates(value) {
+  if (!value || typeof value !== 'object') return 0;
+  let total = 0;
+  const seen = new WeakSet(); // hedef takma adları aynı diziyi paylaşır; bir kez gezilir
+  for (const [baseKey, groupKey] of TARGET_GROUPS) {
+    total += reviveDatesIn(value[baseKey], seen);
+    total += reviveDatesIn(value[groupKey], seen);
+  }
+  return total;
+}
+
 function decodeSnapshotText(text) {
   const parsed = JSON.parse(text);
   let value;
@@ -102,6 +144,7 @@ function decodeSnapshotText(text) {
     throw new Error('Snapshot schema sürümü desteklenmiyor.');
   }
   if (!value || !Array.isArray(value.asasOrders)) throw new Error('Snapshot ana sipariş verisi eksik.');
+  reviveSnapshotDates(value);
   return value;
 }
 
@@ -174,6 +217,6 @@ async function loadModelSnapshotAsync(userId) {
 
 module.exports = {
   SNAPSHOT_ROOT, SNAPSHOT_SCHEMA_VERSION, snapshotPath,
-  compactSnapshotPayload, expandSnapshotPayload,
+  compactSnapshotPayload, expandSnapshotPayload, reviveSnapshotDates,
   saveModelSnapshot, saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync,
 };

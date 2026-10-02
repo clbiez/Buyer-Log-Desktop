@@ -8586,8 +8586,9 @@ app.get('/api/backlog-plan-actual', userAccess.requireArea('backlog'), async (re
       requested:{ from, to },
       coverage:resolved.coverage,
       resolved:{
-        start:{ capturedAt:resolved.start.capturedAt, sourceGenerationId:resolved.start.sourceGenerationId || '' },
-        end:{ capturedAt:resolved.end.capturedAt, sourceGenerationId:resolved.end.sourceGenerationId || '' },
+        start:{ capturedAt:resolved.start.capturedAt, sourceGenerationId:resolved.start.sourceGenerationId || '', dateRepair:resolved.start.dateRepair || 0 },
+        end:{ capturedAt:resolved.end.capturedAt, sourceGenerationId:resolved.end.sourceGenerationId || '', dateRepair:resolved.end.dateRepair || 0 },
+        repairedMarkers:resolved.repairedMarkers || 0,
       },
       summary:comparison.summary,
       changes:comparison.changes,

@@ -103,6 +103,16 @@ function hero(s){
     </div>
   </div>`;
 }
+/* Veri kalitesi şeridi: hatalı/eksik kaynak verisi rapora sessizce girmesin. */
+function qualityStrip(){
+  const issues=R().dataQuality?R().dataQuality(items):[];
+  if(!issues.length)return '';
+  const chips=issues.map(issue=>{
+    const o=opener({title:lang()==='en'?issue.en:issue.tr,subtitle:L('Veri kalitesi','Data quality'),items:issue.items});
+    return `<button type="button" class="blvQualityChip" data-blv-open="${o}"><b>${n(issue.count)}</b> ${esc(L('satır','lines'))} · ${esc(lang()==='en'?issue.en:issue.tr)}</button>`;
+  }).join('');
+  return `<div class="blvQuality" role="status"><span class="blvQualityTitle">${esc(L('Veri kalitesi uyarısı','Data quality warning'))}</span>${chips}<span class="blvQualityHint">${esc(L('Satırlar Excel Backlog V3 › Veri Kalitesi sayfasında da listelenir.','Rows are also listed in Excel Backlog V3 › Data Quality.'))}</span></div>`;
+}
 function legend(){return `<div class="bpaLegend">${R().STAGES.map(s=>`<span><i class="bpaDot" data-stage="${s.key}"></i>${esc(stageLabel(s.key))}</span>`).join('')}</div>`}
 function bar(name,g,scaleMax,subtitle){
   const width=state.barScale==='qty'&&scaleMax>0?Math.max(2,g.qty/scaleMax*100):100;
@@ -156,7 +166,7 @@ function render(){
   if(!items||!R()){host.innerHTML=`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
   if(!items.length){host.innerHTML=`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
   const total=R().summarize(items);
-  host.innerHTML=hero(total)+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
+  host.innerHTML=hero(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
 }
 
 /* --------------------------------------------------------- tooltip/panel */
