@@ -2,5 +2,6 @@
   "schemaVersion": 1,
   "version": "7.0.211",
   "commit_sha": "f03544c70c49f3def3b8a091706553d68439856b",
-  "release_notes": "Buyer Log 7.0.211: Görsel ve iki dilli stable sürüm arşivi eklendi. Güncelleme sonrası kullanıcı kaçırdığı stable sürümlerdeki değişiklikleri kümülatif tek akışta görür; aynı içerikler Version History üzerinden tekrar açılabilir. Bundan sonraki stable yayınlarda kullanıcıya görünen her değişiklik TR/EN ve gerçek Buyer Log ekran görüntüsü ile release paketine eklenmeden yayın doğrulamasını geçemez."
+  "release_notes": "Buyer Log 7.0.211: Görsel ve iki dilli stable sürüm arşivi eklendi. Güncelleme sonrası kullanıcı kaçırdığı stable sürümlerdeki değişiklikleri kümülatif tek akışta görür; aynı içerikler Version History üzerinden tekrar açılabilir. Bundan sonraki stable yayınlarda kullanıcıya görünen her değişiklik TR/EN ve gerçek Buyer Log ekran görüntüsü ile release paketine eklenmeden yayın doğrulamasını geçemez.",
+  "request_id": "7.0.211-r2"
 }
