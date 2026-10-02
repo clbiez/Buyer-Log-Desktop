@@ -140,6 +140,7 @@
       antrepo:dayIso(row && row[F.antrepo]), retail:dayIso(row && row[F.retail]), inStore:dayIso(row && row[F.inStore]),
       risk:turk(row && row[RISK_HEADER]) === 'VAR',
       transitOverdue:meta.transitOverdue === true,
+      exInheritedFrom:text(meta.exFactoryInheritedFrom),
     };
     DIMENSIONS.forEach(id => { item[id] = canon(row, id); });
     item.season = canon(row, 'season');
@@ -229,6 +230,7 @@
   const QUALITY_CHECKS = Object.freeze([
     { key:'blankSeason', tr:'Sezon boş', en:'Season blank', test:it => !text(it.season) },
     { key:'blankExFactory', tr:'Ex-Factory tarihi yok', en:'Ex-Factory date missing', test:it => !it.exFactory },
+    { key:'exInherited', tr:'ASAS\'ta Ex-Factory yok · aynı PO\'nun diğer renginden alındı', en:'No Ex-Factory in ASAS · taken from another colour of the PO', test:it => Boolean(it.exInheritedFrom) },
     { key:'blankRetail', tr:'Retail Depo tarihi yok', en:'Retail warehouse date missing', test:it => !it.retail },
     { key:'retailBeforeEx', tr:'Retail tarihi Ex-Factory\'den önce', en:'Retail date before Ex-Factory', test:it => it.retail && it.exFactory && it.retail < it.exFactory },
     { key:'rawTimestamp', tr:'Tarih alanında saatli ham değer', en:'Raw timestamp in a date field', test:it => it.rawTimestampFields && it.rawTimestampFields.length > 0 },

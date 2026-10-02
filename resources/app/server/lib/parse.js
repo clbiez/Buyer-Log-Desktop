@@ -1262,9 +1262,11 @@ function parseASASMatrix(rows, ruleValue) {
   }
   // Sipariş adeti 0 olan satırlar iptal/pasif veri olarak CP/Backlog'dan elenir.
   const filteredOrders = orders.filter(o => o.qty > 0 && turknorm(o.buyerGrup) !== 'YARDIM');
+  const exFactoryInherited = inheritMissingExFactory(filteredOrders);
   return {
     header,
     orders: filteredOrders,
+    exFactoryInherited,
     fabricHeaderInfo: {
       source: 'ASAS',
       matchingRule: 'Sipariş Kod + Model Adı + Renk Kod; yalnız Ana Kumaş Mı = 1',
@@ -1280,6 +1282,32 @@ function parseASASMatrix(rows, ruleValue) {
   };
 }
 
+
+/* ASAS bazen aynı PO'nun bir renginde yükleme terminini (Orijinal Exfactory)
+   boş verir. Aynı Sipariş Kodu altında tarihi olan renk varsa boş renk o
+   tarihi alır (birden çok farklı tarih varsa en erken olanı). Kaynak veri
+   sorunu görünür kalsın diye sipariş _exInheritedFrom taşır ve liste döner;
+   ASAS'ın kendi değeri (_asasEx) boş bırakılmaz, yerine bu tarih yazılır ki
+   revizyon/plan karşılaştırmaları tutarlı kalsın. */
+function inheritMissingExFactory(orders) {
+  const byCode = new Map();
+  for (const o of orders) {
+    if (!(o.ex instanceof Date) || Number.isNaN(o.ex.getTime())) continue;
+    const key = String(o.ocode);
+    const prev = byCode.get(key);
+    if (!prev || o.ex < prev.ex) byCode.set(key, o);
+  }
+  const inherited = [];
+  for (const o of orders) {
+    if (o.ex instanceof Date && !Number.isNaN(o.ex.getTime())) continue;
+    const donor = byCode.get(String(o.ocode));
+    if (!donor) continue;
+    o.ex = new Date(donor.ex.getTime());
+    o._exInheritedFrom = { ccode: donor.ccode, colour: donor.colour };
+    inherited.push({ ocode: o.ocode, model: o.model, ccode: o.ccode, fromCcode: donor.ccode, ex: o.ex });
+  }
+  return inherited;
+}
 
 function parseASASWorkbook(wb, ruleValue) {
   const sheet = wb.Sheets[wb.SheetNames[0]];
@@ -3399,6 +3427,8 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         transitOverdue: transitOverdue.overdue === true,
         transitOverdueDays: transitOverdue.overdueDays,
         shipConfirmationDate: order.shipConf || null,
+        // ASAS'ta bu rengin Ex-Factory'si boştu; aynı PO'nun diğer renginden alındı.
+        exFactoryInheritedFrom: order._exInheritedFrom ? (order._exInheritedFrom.ccode || '') : '',
         originalDelType: effectiveDelType,
         segmentKind: segment._segmentKind,
         sourceOrderQty: segment._orderQty,
