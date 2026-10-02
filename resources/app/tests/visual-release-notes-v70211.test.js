@@ -29,7 +29,7 @@ test('release archive reuses Buyer Log guide and trivia component language',()=>
 });
 
 test('users several stable versions behind receive cumulative chronological changes',()=>{
-  assert.match(JS,/cmp\(e\.version,last\)>0/);
+  assert.match(JS,/!last\|\|cmp\(e\.version,last\)>0/);
   assert.match(JS,/sort\(\(a,b\)=>cmp\(a\.version,b\.version\)\)/);
   assert.match(JS,/lastSeenStable/);
 });
