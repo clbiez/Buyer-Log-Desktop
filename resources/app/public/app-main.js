@@ -12970,7 +12970,16 @@ async function waitForRefreshJob(expectedJob=null){
     // Arka-plan reload yanıtı gelirken kullanıcı CP'de yazıyor/yerel değişiklik
     // taşıyorsa mevcut satır nesneleri korunur. Kullanıcı-visible refresh bu
     // noktaya gelmeden önce editörü commit edip bekleyen yazmaları settle eder.
-    const preserveCpClientState=!userVisibleRefresh&&cpClientWorkInProgress();
+    // v7.206 — Kısmi yenileme (ör. yalnız Orders & LFL grubu) yenilenmeyen
+    // sayfanın yüklü verisini silmez. mode=initial yanıtı CP/Siparişler taşımadığı
+    // için önceden her yenilemede state.cp=null oluyor; CP kaybolup yeniden
+    // yüklenmek zorunda kalıyor, kaydedilmemiş CP düzenlemeleri de sıfırlanıyordu.
+    const partialRefreshTargets=userVisibleRefresh&&Array.isArray(targets)&&targets.length
+      ?[...new Set([...targets,...(data.lastRefreshResult&&Array.isArray(data.lastRefreshResult.targets)?data.lastRefreshResult.targets:[])])]
+      :null;
+    const keepCpForPartialRefresh=Boolean(partialRefreshTargets&&!partialRefreshTargets.includes('cp')&&state.cp&&Array.isArray(state.cp.rows));
+    const keepOrdersForPartialRefresh=Boolean(partialRefreshTargets&&!partialRefreshTargets.includes('orders')&&state.orders&&Array.isArray(state.orders.rows));
+    const preserveCpClientState=(!userVisibleRefresh&&cpClientWorkInProgress())||keepCpForPartialRefresh;
     if(Array.isArray(data.cp)){
       if(!preserveCpClientState){
         state.cp = { fname: `Sunucu: ${sourceName}`, rows: data.cp }; state.cpLogisticExpanded.clear();
@@ -12991,7 +13000,7 @@ async function waitForRefreshJob(expectedJob=null){
       state.ordersLogisticExpanded.clear();
       invalidateUnifiedPriorityDecisions('server-orders-hydrated');
     }else if((force||leanReload)&&data.orderSummaryDeferred){
-      state.orders=null;state.orderSummary=null;
+      if(!keepOrdersForPartialRefresh)state.orders=null;state.orderSummary=null;
       invalidateUnifiedPriorityDecisions('server-orders-deferred');
     }
     if(Array.isArray(data.orderSummary)){
@@ -13052,7 +13061,7 @@ async function waitForRefreshJob(expectedJob=null){
     }
     // Orders seçimi yalnız gerçekten yeni bir orders projection'ı yüklendiğinde
     // veya kullanıcı açıkça refresh istediğinde temizlenir.
-    if(userVisibleRefresh||initialScreenLoad||Array.isArray(data.orders))state.ordersSelected = new Set();
+    if((userVisibleRefresh&&!keepOrdersForPartialRefresh)||initialScreenLoad||Array.isArray(data.orders))state.ordersSelected = new Set();
     if(datasourceMetric)endStartupStage(datasourceMetric,'DATASOURCE_PREPARATION');
     const filterMetric=initialScreenLoad?window.BLPerf?.begin?.('filterInitializationMs'):null;
     const filterPivotMetric=initialScreenLoad?beginStartupStage('FILTER_PIVOT_INIT'):null;

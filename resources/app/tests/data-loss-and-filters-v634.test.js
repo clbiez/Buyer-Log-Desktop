@@ -177,7 +177,7 @@ test('v7.0.156 hızlı CP girişi sırasında arka-plan reload yerel edit oturum
   assert.equal(make({cp:null,cpDirty:new Set([1])},1,{route:'cp'})(),false,'CP zaten yoksa eski projection varmış gibi davranılmamalı');
 
   const load=bodyOf(APP,'loadFromServer');
-  assert.match(load,/const preserveCpClientState=!userVisibleRefresh&&cpClientWorkInProgress\(\);/);
+  assert.match(load,/const preserveCpClientState=\(!userVisibleRefresh&&cpClientWorkInProgress\(\)\)(\|\|keepCpForPartialRefresh)?;/);
   assert.match(load,/if\(!preserveCpClientState\)state\.cp=null;/,'cpDeferred aktif edit sırasında state.cp yi null yapmamalı');
   assert.match(load,/if\(!preserveCpClientState\)\{\s*state\.cpDirty = new Set\(\); state\.cpSelected = new Set\(\);\s*undoStack = \[\]; redoStack = \[\];/,'background reload dirty/undo bilgisini silmemeli');
 });
