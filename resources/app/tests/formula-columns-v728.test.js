@@ -363,8 +363,9 @@ test('sürüm numarası tek canonical runtime kaynaktan yayılır', () => {
   assert.equal(indexHtml.includes(`Version ${CURRENT_DISPLAY_VERSION}`), false, 'görünür sürüm statik HTML içinde hard-code edilmemeli');
   assert.equal(indexHtml.includes(`?v=${CURRENT_DISPLAY_VERSION}`), false, 'cache sürümü statik HTML içinde hard-code edilmemeli');
   const history = read('public/version-history.js');
-  assert.match(history, /window\.BL_VERSION_HISTORY = \[\s*\{ v: '__CURRENT__'/, 'sürüm geçmişinin ilk kaydı runtime current placeholder olmalı');
-  assert.match(read('public/app-main.js'), /record&&record\.v==='__CURRENT__'/, 'history current kaydı runtime sürümle çözülmeli');
+  const escapedDisplay = CURRENT_DISPLAY_VERSION.replace(/\\./g, '\\\\.');
+  assert.match(history, new RegExp(`window\\.BL_VERSION_HISTORY = \\[\\s*\\{ v: ['"]${escapedDisplay}['"]`), 'sürüm geçmişinin ilk kaydı gerçek current display version olmalı');
+  assert.doesNotMatch(history, /\bv:\s*['"]__CURRENT__['"]/, 'hareketli current placeholder geçmiş kaydı olarak kullanılamaz');
 });
 
 test('formül betikleri canonical asset etiketiyle yüklenir (önbellek yenilensin)', () => {
