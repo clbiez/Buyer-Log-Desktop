@@ -143,6 +143,13 @@ function flowCard(){
   const fields=R().TIMELINE_FIELDS,field=fields.find(f=>f.key===state.timeField)||fields[0];
   const series=R().timeline(items,field.key,{granularity:state.granularity,lang:lang()}),max=series.reduce((m,b)=>Math.max(m,b.qty),0);
   const fLabel=lang()==='en'?field.en:field.tr;
+  const today=R().dayIso(new Date()),todayMs=Date.parse(today+'T00:00:00Z');
+  const bucketIsToday=b=>{
+    if(!b||!b.start)return false;
+    if(state.granularity==='month')return b.start.slice(0,7)===today.slice(0,7);
+    const startMs=Date.parse(b.start+'T00:00:00Z');
+    return Number.isFinite(startMs)&&Number.isFinite(todayMs)&&todayMs>=startMs&&todayMs<startMs+7*86400000;
+  };
   const cols=series.map(b=>{
     const segs=R().STAGES.filter(s=>b.stages[s.key]>0).map(s=>{
       const qty=b.stages[s.key],list=b.items.filter(it=>it.stage===s.key);
@@ -150,12 +157,32 @@ function flowCard(){
       const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),items:list,stage:s.key});
       return `<span class="bpaSeg" data-stage="${s.key}" style="flex-grow:${qty}" data-blv-tip="${t}" data-blv-open="${o}"></span>`;
     }).join('');
-    return `<div class="bpaCol${b.past?' is-past':''}"><div class="bpaColValue">${b.overdueQty?`<span class="blvOver">${n(b.overdueQty)}</span>`:n(b.qty)}</div><div class="bpaColTrack"><div class="bpaColBar" style="height:${max?Math.max(3,b.qty/max*100).toFixed(1):0}%">${segs}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
+    const isToday=bucketIsToday(b);
+    return `<div class="bpaCol${b.past?' is-past':''}${isToday?' is-today':''}" data-blv-start="${esc(b.start||'')}"${isToday?' data-blv-today="1"':''}><div class="bpaColValue">${b.overdueQty?`<span class="blvOver">${n(b.overdueQty)}</span>`:n(b.qty)}</div><div class="bpaColTrack"><div class="bpaColBar" style="height:${max?Math.max(3,b.qty/max*100).toFixed(1):0}%">${segs}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
   }).join('');
-  return `<div class="bpaCardBox"><div class="bpaSectionHead"><span class="bpaSectionTitle">${esc(L('Zaman akışı','Timeline'))}</span><span class="bpaSectionSub">${esc(L('Sütun üstünde kırmızı sayı: Ex-F tarihi geçmiş ama yüklenmemiş adet.','Red figure above a column: Ex-F passed but not loaded.'))}</span><span class="bpaSectionSpacer"></span>
+  return `<div class="bpaCardBox"><div class="bpaSectionHead"><button type="button" class="bpaTodayBtn" data-blv-action="today" title="${esc(L('Bugünün dönemine git','Go to the current period'))}">${esc(L('Bugün','Today'))}</button><span class="bpaSectionTitle">${esc(L('Zaman akışı','Timeline'))}</span><span class="bpaSectionSub">${esc(L('Sütun üstünde kırmızı sayı: Ex-F tarihi geçmiş ama yüklenmemiş adet.','Red figure above a column: Ex-F passed but not loaded.'))}</span><span class="bpaSectionSpacer"></span>
     <div class="bpaSeg2" role="group">${fields.map(f=>`<button type="button" class="${f.key===field.key?'is-active':''}" data-blv-time="${f.key}">${esc(lang()==='en'?f.en:f.tr)}</button>`).join('')}</div>
     <div class="bpaSeg2" role="group"><button type="button" class="${state.granularity!=='month'?'is-active':''}" data-blv-gran="week">${esc(L('Hafta','Week'))}</button><button type="button" class="${state.granularity==='month'?'is-active':''}" data-blv-gran="month">${esc(L('Ay','Month'))}</button></div></div>
     ${series.length?`<div class="bpaCols blvCols">${cols}</div>`:`<div class="bpaEmpty">${esc(L('Bu tarih alanında veri yok.','No data for this date field.'))}</div>`}</div>`;
+}
+function scrollTimelineToToday(){
+  const host=$('backlogOverviewBody'),scroller=host&&host.querySelector('.blvCols');
+  if(!scroller)return;
+  const cols=[...scroller.querySelectorAll('.bpaCol[data-blv-start]')];
+  let target=scroller.querySelector('[data-blv-today="1"]');
+  if(!target&&cols.length){
+    const today=R().dayIso(new Date()),todayMs=Date.parse(today+'T00:00:00Z');
+    target=cols.reduce((best,col)=>{
+      const ms=Date.parse((col.dataset.blvStart||'')+'T00:00:00Z');
+      if(!Number.isFinite(ms))return best;
+      const dist=Math.abs(ms-todayMs);
+      return !best||dist<best.dist?{col,dist}:best;
+    },null)?.col||null;
+  }
+  if(!target){scroller.scrollTo({left:0,behavior:'smooth'});return;}
+  const sRect=scroller.getBoundingClientRect(),tRect=target.getBoundingClientRect();
+  const left=scroller.scrollLeft+(tRect.left-sRect.left)-(scroller.clientWidth-target.offsetWidth)/2;
+  scroller.scrollTo({left:Math.max(0,left),behavior:'smooth'});
 }
 function render(){
   const host=$('backlogOverviewBody');if(!host)return;
@@ -242,6 +269,7 @@ function bind(){
     if(t.dataset.blvScale){state.barScale=t.dataset.blvScale;saveState();return render();}
     if(t.dataset.blvTime){state.timeField=t.dataset.blvTime;saveState();return render();}
     if(t.dataset.blvGran){state.granularity=t.dataset.blvGran;saveState();return render();}
+    if(t.dataset.blvAction==='today'){scrollTimelineToToday();return;}
     if(t.dataset.blvAction==='toggleAll'){state.showAll=!state.showAll;saveState();return render();}
     if(t.dataset.blvOpen)openDrawer(openers.get(t.dataset.blvOpen));
   });
