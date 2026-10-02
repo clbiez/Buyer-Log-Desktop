@@ -120,9 +120,9 @@ function projectSnapshot(orders, templateRows, meta = {}) {
         line: clean(order ? order.line : row.Line),
         specialCode: clean(order ? order.ozel : row['Özel Kod 1']),
         originalExFactory: dateIso(order ? (order._asasEx || order.ex) : row['Orijinal Exfactory Merch Tarih']),
-        // Planlanan Ex-Factory yalnız kaynak siparişten alınır. Parsiyel Backlog
-        // satırındaki REVİZE YÜKLEME TARİHİ gerçekleşen Handover olabilir ve plan
-        // olarak geri okunmamalıdır.
+        // Planlanan Ex-Factory kaynak siparişin etkin Buyer Log tarihidir.
+        // Parsiyelin gerçekleşen yüklemesi ayrı handover/loadDates alanlarında
+        // tutulur; görünür Revised Shipment Date alanıyla karıştırılmaz.
         planExFactory: order ? dateIso(order.ex) : '',
         retail: dateIso(order ? order.retail : row['Retail Depo Tarih Yıl Ay Gün']),
         inStore: dateIso(order ? order.mb : row['Model Bütçe Tarih Yıl Ay Gün']),
