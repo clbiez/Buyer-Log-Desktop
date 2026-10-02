@@ -19,7 +19,7 @@ test('Açılış perdesi thinking-orbs "breathing" (Thinking…) orb kullanır',
   assert.doesNotMatch(INDEX,/blBootDot/);
   // ready accepts a prerequisite and stops the orb; the curtain is removed only by an explicit Continue.
   assert.match(head,/function ready\(stage\)\{[\s\S]*?stopOrb\(\);var el=guard\(\);/);
-  assert.match(head,/function dismiss\(\)\{\s*var el=guard\(\);var refocus=[^;]+;if\(el\)el\.remove\(\);/);
+  assert.match(head,/function dismiss\(\)\{[\s\S]*?var el=guard\(\);[\s\S]*?el\.dataset\.leaving='1';[\s\S]*?el\.remove\(\)/);
 });
 
 test('breathing orb geometrisi upstream golden vektörleriyle eşleşir',()=>{

@@ -8,6 +8,8 @@ const ROOT=path.join(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(ROOT,'public',name),'utf8');
 const INDEX=read('index.html'),APP=read('app-main.js'),GUIDE=read('buyerlog-guide.js');
 const DATA=require('../public/buyerlog-guide-data.js');
+// Continue fades the curtain out, then removes it.
+function finishFade(h){const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.leaving,'1');assert.equal(g.isConnected,true);for(const [id,t] of [...h.timers])if(t.ms===340){h.timers.delete(id);t.fn();}}
 function guardHarness(){
   const listeners={},nodes=new Map(),timers=new Map();let tick=0,stops=0,reloads=0;
   function node(id=''){
@@ -40,7 +42,8 @@ test('core markup and data never release the curtain before the applied top-righ
   const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.message.textContent,'Buyer Log hazır');
   const button=g.card.children.find(c=>c.dataset.bootContinue);assert.ok(button);assert.equal(h.doc.activeElement,button);
   let completed=0;h.win.addEventListener('bl:startup-complete',()=>completed++);assert.equal(completed,0);
-  button.onclick();assert.ok(!h.nodes.has('blBootGuard'));assert.equal(completed,1);
+  button.onclick();assert.equal(completed,1);finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
+  h.win.BLBootGuard.continue();assert.equal(completed,1,'a second Continue during the fade is ignored');
 });
 test('Continue does nothing until preparation is complete',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');h.win.BLBootGuard.continue();
@@ -49,7 +52,7 @@ test('Continue does nothing until preparation is complete',()=>{
 test('readiness works regardless of prerequisite arrival order and completion is idempotent',()=>{
   for(const order of [['profile','ui','data','core'],['ui','core','profile','data'],['data','ui','core','profile']]){
     const h=guardHarness();order.forEach((key,i)=>{if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);assert.equal(h.nodes.get('blBootGuard').dataset.ready,i<3?undefined:'1');});h.win.BLBootGuard.ready();assert.equal(h.stops,1);
-    assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();assert.ok(!h.nodes.has('blBootGuard'));
+    assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));
   }
 });
 test('an absent/incomplete profile cannot release the curtain',()=>{
@@ -63,7 +66,7 @@ test('slow startup shows information without an automatic 12-second reload; boun
 });
 test('late successful preparation recovers from the timed-out curtain without reloading',()=>{
   const h=guardHarness();[...h.timers.values()].find(t=>t.ms===120000).fn();h.profile();['core','data','ui'].forEach(k=>h.win.BLBootGuard.ready(k));
-  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.dataset.failed,undefined);h.win.BLBootGuard.continue();assert.ok(!h.nodes.has('blBootGuard'));assert.equal(h.reloads,0);
+  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.dataset.failed,undefined);h.win.BLBootGuard.continue();finishFade(h);assert.ok(!h.nodes.has('blBootGuard'));assert.equal(h.reloads,0);
 });
 test('recovery response cannot reload an already-ready app',async()=>{
   const h=guardHarness();const recovering=h.win.BLBootGuard.recover('missing-core');h.profile();['core','data','ui'].forEach(k=>h.win.BLBootGuard.ready(k));await recovering;assert.equal(h.reloads,0);
@@ -98,7 +101,10 @@ test('opening screen projection and failure gate are awaited, while background f
   const startup=APP.slice(APP.indexOf("window.addEventListener('DOMContentLoaded', async () => {"),APP.indexOf('async function refreshFolderLabel()'));
   assert.match(startup,/primaryScreenReady=initialDataLoaded&&await waitForStartupPrimaryScreen\(\)/);assert.match(startup,/if\(primaryScreenReady\)window\.BLBootGuard\?\.ready\('ui'\)/);
   const helper=APP.slice(APP.indexOf('async function waitForStartupPrimaryScreen()'),APP.indexOf("window.addEventListener('DOMContentLoaded', async () => {"));assert.match(helper,/ensureOverviewLoaded/);assert.match(helper,/ensureCpLoaded/);assert.match(helper,/ensureOrdersLoaded/);assert.doesNotMatch(helper,/ensureFeature|ensureLibrary|ensureCollectionMaster/);
-  assert.ok(INDEX.indexOf('window.BLBootGuard?.mount();')<INDEX.indexOf('<aside'));assert.match(APP,/'#buyerLogGuide\[open\]', '#blBootGuard'/);
+  // The curtain is the first thing in <body>: nothing of the app can paint before it.
+  const bodyAt=INDEX.indexOf('<body'),mountAt=INDEX.indexOf('<script>window.BLBootGuard?.mount();</script>');
+  assert.ok(mountAt>bodyAt&&mountAt<INDEX.indexOf('<svg',bodyAt)&&mountAt<INDEX.indexOf('<aside'));
+  assert.match(INDEX,/#blBootGuard\{animation:blBootBgIn[^}]+\}/);assert.match(INDEX,/@media\(prefers-reduced-motion:reduce\)\{#blBootGuard,#blBootGuard \.blBootCard\{animation:none\}/);assert.match(APP,/'#buyerLogGuide\[open\]', '#blBootGuard'/);
 });
 test('guide keys are isolated at capture phase before legacy mutation shortcuts',()=>{
   assert.match(GUIDE,/document\.addEventListener\('keydown',ev=>\{if\(dialog\?\.open\)\{ev\.stopImmediatePropagation\(\)/);assert.match(GUIDE,/\}\},true\);/);

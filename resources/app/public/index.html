@@ -21,15 +21,24 @@
   @keyframes blBootSpin{to{transform:rotate(360deg)}}
   html[data-theme="dark"] #blBootGuard{background:#131417;color:#f3f4f6}
   html[data-theme="dark"] #blBootGuard .blBootCard{background:#1d1f23;border-color:#34373d}
+  /* Soft hand-off from the sign-in screen: the curtain is opaque from the first
+     frame (the app never shows through), its colour eases in from the sign-in
+     background and the card fades up. Continue fades the curtain out. */
+  #blBootGuard{animation:blBootBgIn .5s ease-out both}
+  #blBootGuard .blBootCard{animation:blBootCardIn .55s .08s cubic-bezier(.2,.7,.2,1) both}
+  #blBootGuard[data-leaving="1"]{opacity:0;transition:opacity .32s ease;pointer-events:none}
+  @keyframes blBootBgIn{from{background-color:#eef1f4}}
+  @keyframes blBootCardIn{from{opacity:0;transform:translateY(10px) scale(.99)}}
+  @media(prefers-reduced-motion:reduce){#blBootGuard,#blBootGuard .blBootCard{animation:none}#blBootGuard[data-leaving="1"]{transition:none}}
 </style>
 <script>
 (function(){
   'use strict';
-  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
+  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,dismissed=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
   // Core markup alone is insufficient: keep the curtain until initial data,
   // the first usable render AND the actual top-right profile have been applied.
   var gates={core:false,data:false,ui:false,profile:false};
-  function guard(){return document.getElementById('blBootGuard');}
+  function guard(){var el=document.getElementById('blBootGuard');return el&&!el.dataset.leaving?el:null;}
   function ensureGuard(){
     if(finished||guard()||!document.body)return;
     var el=document.createElement('div');el.id='blBootGuard';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','blBootTitle');el.tabIndex=-1;
@@ -68,7 +77,13 @@
     window.dispatchEvent(new CustomEvent('bl:startup-ready'));
   }
   function dismiss(){
-    var el=guard();var refocus=el&&el.contains(document.activeElement);if(el)el.remove();
+    if(dismissed)return;dismissed=true;
+    var el=guard();var refocus=el&&el.contains(document.activeElement);
+    if(el){
+      el.dataset.leaving='1';el.setAttribute('aria-hidden','true');
+      var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}
+      if(reduce)el.remove();else setTimeout(function(){el.remove();},340);
+    }
     window.dispatchEvent(new CustomEvent('bl:startup-complete'));
     if(refocus)document.getElementById('buyerLogGuideBtn')?.focus({preventScroll:true});
   }
@@ -228,6 +243,7 @@
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=5">
 </head>
 <body data-active-tab="overview">
+<script>window.BLBootGuard?.mount();</script>
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
   <symbol id="i-layout-dashboard" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="7" rx="1.5"/><rect x="4" y="15" width="6" height="5" rx="1.5"/><rect x="14" y="4" width="6" height="5" rx="1.5"/><rect x="14" y="13" width="6" height="7" rx="1.5"/></symbol>
   <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></symbol>

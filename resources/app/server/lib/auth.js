@@ -116,7 +116,7 @@ button:disabled{opacity:.6;cursor:default}
 const f=document.getElementById('f'),pw=document.getElementById('pw'),b=document.getElementById('b'),e=document.getElementById('e');
 f.addEventListener('submit',async ev=>{ev.preventDefault();e.textContent='';b.disabled=true;
  try{const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:pw.value})});
-   if(r.ok){location.href='/';return;}
+   if(r.ok){document.body.style.transition='opacity .28s ease';document.body.style.opacity='0';setTimeout(()=>{location.href='/';},matchMedia('(prefers-reduced-motion: reduce)').matches?0:280);return;}
    const d=await r.json().catch(()=>({}));
    e.textContent=r.status===429?'Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.':(d.error||'Giriş başarısız.');
  }catch(_){e.textContent='Sunucuya ulaşılamadı.';}
