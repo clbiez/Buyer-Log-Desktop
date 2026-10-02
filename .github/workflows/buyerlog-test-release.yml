@@ -68,6 +68,13 @@ jobs:
         run: |
           npm ci --ignore-scripts
           npm run version:assert
+      - name: Seal and validate visual release presentation
+        working-directory: resources/app
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_VERSION="$(node -p "require('./package.json').version")"
+          npm run release:notes:seal -- "$SOURCE_VERSION"
       - name: Build one TEST artifact and manifest
         working-directory: resources/app
         env:
