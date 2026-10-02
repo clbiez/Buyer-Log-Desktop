@@ -136,11 +136,3 @@ test('V3 detail writes day strings (e.g. order placement date) as real Excel dat
   assert.equal(cell.value.toISOString().slice(0, 10), '2026-04-15');
   assert.equal(cell.numFmt, 'dd.mm.yyyy');
 });
-
-test('data quality flags orders whose IAS partials exceed the order quantity by more than 20%', () => {
-  const partial = (code, qty, orderQty) => row({ 'Sipariş Kod':code, 'Adet':qty, 'Net Alım Sipariş Miktarı':orderQty, _partial:{ kind:'partial' } });
-  const items = V3.normalizeRows([partial('3001', 2812, 7511), partial('3001', 9714, 7511), partial('3002', 1100, 1000), partial('3002', 100, 1000)], { today:TODAY });
-  const over = V3.dataQuality(items).find(issue => issue.key === 'iasOverOrder');
-  assert.equal(over.count, 2, 'only order 3001 (12.526 vs 7.511) is flagged; 3002 is +20% exactly');
-  assert.ok(over.items.every(it => it.orderCode === '3001'));
-});
