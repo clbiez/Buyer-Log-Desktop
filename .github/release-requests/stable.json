@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.199",
-  "commit_sha": "eabeea4c8181b876737c7029b02d3d421accde1e",
-  "release_notes": "Buyer Log 7.0.199: Backlog › Planlanan & Gerçekleşen — plan penceresi (yüklenmesi planlanıp yüklenmeyen / tarihi geçmiş / geç / zamanında / kısmi), Buyer · Buying Group · MAG · MMYG · Ürün Ana Tanım · Üretici · Sezon bazında yatay yığılmış barlar (fareyle bilgi, tıklayınca sağdan sipariş listesi), plan günü ve Ex-Factory revizyon grafikleri, grafikli ve biçimli Excel dışa aktarımı; Handover tarihi boş yüklemeler artık gerçekleşen sayılıyor. Genel kültür arşivi 2.379 bilgiye çıktı; modül hazır olunca \"… ekranına devam et\"; LFL ve Backlog sayfalarında da bekleme ekranı. CP numune senkronu PLM SYNC gibi adımlı pencerede; açılıştaki Devam düğmesi hizası düzeltildi."
+  "version": "7.0.200",
+  "commit_sha": "c7b352b4c423003ec7942f4ac723d7bdf07247e6",
+  "release_notes": "Buyer Log 7.0.200: Orders ekranında ekip arkadaşlarına ait salt-okunur siparişlerde Ex-Factory revizyon geçmişi artık orijinal tarih → revize tarih olarak gösteriliyor. Aynı davranış Retail Date ve In-Store tarih revizyonlarında da salt-okunur satırlar için tutarlı hale getirildi; LT ve Ex→Retail mevcut revizyon karşılaştırması korundu."
 }
