@@ -16663,7 +16663,7 @@ function backlogDetailVisibleColumns(cols,compact){
    Tümü: bütün sütunlar. Excel'e Aktar seçimi bu görünümden bağımsızdır. */
 const BACKLOG_DETAIL_FOCUS_HEADERS=[
   'Sezon','Üretici','Sipariş Kod','Model Adı','Renk Kod','Renk','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün',
-  'Adet','Kalan Alım Sipariş Miktarı','FOB Fiyatı','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','RİSK\n(PRIORITY)'
+  'Adet','Kalan Alım Sipariş Miktarı','FOB Fiyatı','GÜNCEL DURUM\n(STATUS)','Orijinal Exfactory Merch Tarih','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','RİSK\n(PRIORITY)'
 ];
 function backlogDetailViewPresets(headers){
   const list=(Array.isArray(headers)?headers:[]).filter(Boolean);
