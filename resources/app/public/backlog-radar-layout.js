@@ -12,14 +12,11 @@
     radarFirst:false,
     pivotCollapsed:false,
     pivotRadarCollapsed:false,
-    riskCollapsed:false,
     pivotChartType:'radar',
-    riskChartType:'radar',
     pivotHidden:[],
-    riskHidden:[],
   };
   let state={...DEFAULTS},pivotWorkspace=null,pivotPanel=null,pivotRadarCard=null,splitter=null;
-  let riskScheduled=false,pivotScheduled=false;
+  let pivotScheduled=false;
 
   const lang=()=>root.document.documentElement.lang==='en'?'en':'tr';
   const L=(tr,en)=>lang()==='en'?en:tr;
@@ -31,9 +28,7 @@
       state={...DEFAULTS,...saved};
       state.pivotShare=Math.max(.28,Math.min(.72,Number(state.pivotShare)||.5));
       state.pivotHidden=Array.isArray(state.pivotHidden)?state.pivotHidden.map(String):[];
-      state.riskHidden=Array.isArray(state.riskHidden)?state.riskHidden.map(String):[];
       state.pivotChartType=CHART_TYPES.includes(state.pivotChartType)?state.pivotChartType:'radar';
-      state.riskChartType=CHART_TYPES.includes(state.riskChartType)?state.riskChartType:'radar';
     }catch(_){state={...DEFAULTS};}
   }
   function save(){try{store()?.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}}
@@ -268,70 +263,9 @@
     root.addEventListener('resize',schedulePivotRadar);
   }
 
-  function riskItems(host){
-    return [...host.querySelectorAll('.bdaKpiRow .bdaKpi:not(.is-total)')].map(card=>({
-      label:card.querySelector('.bdaKpiLabel')?.textContent?.trim()||'—',
-      value:parseNumber(card.querySelector('.bdaKpiValue')?.textContent),
-    })).filter(item=>item.label);
-  }
-  function ensureRiskOverview(host,kpi,card){
-    let overview=host.querySelector('[data-risk-overview]');
-    if(!overview){
-      overview=root.document.createElement('div');overview.className='bdaRiskOverview';overview.dataset.riskOverview='1';
-      kpi.parentNode.insertBefore(overview,kpi);overview.appendChild(kpi);
-    }
-    if(card.parentNode!==overview)overview.appendChild(card);
-    overview.classList.toggle('is-radar-collapsed',!!state.riskCollapsed);
-    return overview;
-  }
-  function renderRiskRadar(){
-    const host=root.document.getElementById('backlogAnalysis');if(!host)return;
-    const kpi=host.querySelector('.bdaKpiRow');if(!kpi)return;
-    let card=host.querySelector('[data-risk-radar-card]');
-    if(!card){
-      card=root.document.createElement('div');card.className='bdaRadarCard';card.dataset.riskRadarCard='1';
-      card.innerHTML='<div class="backlogWorkspaceCardHead"><div><strong>'+esc(L('Teslimat Risk Grafiği','Delivery Risk Chart'))+'</strong><span>'+esc(L('Ekrandaki risk etiketleri','Current risk labels'))+'</span></div><div class="backlogWorkspaceCardActions">'
-        +chartTypeSwitch('risk')
-        +iconButton('risk-filter',L('Grafik filtresi','Chart filter'),'⌕')
-        +iconButton('risk-collapse',L('Radarı aç / kapat','Expand / collapse radar'),'▾')+'</div></div><div class="backlogRadarFilter" data-radar-filter-panel="risk" hidden></div><div class="backlogRadarBody" data-risk-radar-body></div>';
-      card.addEventListener('click',event=>{
-        const typeButton=event.target.closest('[data-bl-chart-type][data-chart-kind="risk"]');
-        if(typeButton){
-          const type=String(typeButton.dataset.blChartType||'');if(!CHART_TYPES.includes(type))return;
-          state.riskChartType=type;save();syncChartTypeSwitch(card,'risk');renderRiskRadar();return;
-        }
-        const button=event.target.closest('[data-bl-layout]');if(!button)return;
-        const action=button.dataset.blLayout;
-        if(action==='risk-collapse'){state.riskCollapsed=!state.riskCollapsed;save();renderRiskRadar();}
-        else if(action==='risk-filter'){const panel=card.querySelector('[data-radar-filter-panel="risk"]');if(panel)panel.hidden=!panel.hidden;}
-        else if(action==='risk-filter-clear'){state.riskHidden=[];save();renderRiskRadar();}
-      });
-      card.addEventListener('change',event=>{
-        const input=event.target.closest('[data-radar-filter-kind="risk"]');if(!input)return;
-        const label=String(input.dataset.radarFilterValue||''),hidden=new Set(state.riskHidden||[]);
-        if(input.checked)hidden.delete(label);else hidden.add(label);
-        state.riskHidden=[...hidden];save();renderRiskRadar();
-      });
-    }
-    ensureRiskOverview(host,kpi,card);
-    card.classList.toggle('is-collapsed',!!state.riskCollapsed);
-    card.querySelector('[data-bl-layout="risk-collapse"]')?.setAttribute('aria-expanded',String(!state.riskCollapsed));
-    const body=card.querySelector('[data-risk-radar-body]'),items=riskItems(host);
-    syncRadarFilter(card,'risk',items);syncChartTypeSwitch(card,'risk');
-    const chartType=state.riskChartType,shown=visibleItems('risk',items),signature=JSON.stringify({shown,hidden:state.riskHidden,chartType});
-    if(body&&body.dataset.signature!==signature){body.dataset.signature=signature;body.innerHTML=chartSvg(shown,L('Teslimat risk grafiği','Delivery risk chart'),chartType);}
-  }
-  function scheduleRiskRadar(){
-    if(riskScheduled)return;riskScheduled=true;
-    root.requestAnimationFrame(()=>{riskScheduled=false;renderRiskRadar();});
-  }
-
   function init(){
     load();ensurePivotWorkspace();
-    const analysis=root.document.getElementById('backlogAnalysis');
-    if(analysis)new MutationObserver(scheduleRiskRadar).observe(analysis,{childList:true,subtree:true});
-    scheduleRiskRadar();
   }
   if(root.document.readyState==='loading')root.document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  root.BLBacklogRadarLayout={refreshPivot:schedulePivotRadar,refreshRisk:scheduleRiskRadar,_state:state};
+  root.BLBacklogRadarLayout={refreshPivot:schedulePivotRadar,_state:state};
 })(window);
