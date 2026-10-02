@@ -568,6 +568,113 @@ function antrepoGrainTable(mapping, fallbackTable = '', horizonTable = '') {
   return best && best.count > preferredBest.count ? best.table : preferredBest.table;
 }
 
+/* IAS DATABASE İŞ GRANÜLÜ NORMALİZASYONU
+ *
+ * Otomatik IAS sorgusu gerçek 'Ithalat' fact tablosunu satır satır okur. Bu
+ * bilinçli seçim sipariş/renk alanlarının BLANK kalmasını ve çapraz çarpımı
+ * önler; fakat IASv2'de tek iş parsiyeli birden fazla teknik fact satırına
+ * ayrılabilir. Yükleme Toplam Adet ölçüsü bu alt satırlarda parçalı döner.
+ * Antrepo Excel / Power BI iş görünümü ise bu parçaları tek parsiyelde toplar.
+ *
+ * Ayrıca teknik fact tablosunda Supplier Portal Statü boş olan hazırlık
+ * satırları bulunur. Antrepo Excel bunları operasyon satırı olarak yayınlamaz;
+ * Buyer Log bunları daha önce "Durum Belirsiz" (çoğunlukla Tır) diye gerçek
+ * sevkiyat sanıyordu.
+ *
+ * Bu katman DAX'ı tekrar SUMMARIZECOLUMNS'a çevirmeden aynı iş semantiğini
+ * uygular:
+ *   1) statüsüz teknik satırları dışarıda bırakır,
+ *   2) projekte edilen bütün iş alanları aynı olan satırları tek parsiyelde
+ *      birleştirir,
+ *   3) yalnız Yükleme Toplam Adet'i toplar.
+ *
+ * İthalat Dosya No, Konteyner No, tarih, taşıt, statü vb. projekte edilen
+ * alanların tamamı kimlikte kaldığı için gerçek farklı parsiyeller birleşmez.
+ */
+const ANTREPO_DATABASE_QTY_HEADER = 'Yükleme Toplam Adet';
+const ANTREPO_DATABASE_STATUS_HEADER = 'Supplier Portal Statü';
+
+function antrepoDatabaseIdentityValue(value) {
+  if (value == null) return '';
+  return typeof value === 'string' ? value.trim() : value;
+}
+
+function antrepoDatabaseQuantity(value) {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  const text = String(value == null ? '' : value).trim();
+  if (!text) return null;
+  const direct = Number(text);
+  if (Number.isFinite(direct)) return direct;
+  // Model sağlayıcısı bazı makinelerde ondalığı virgülle metin olarak döndürebilir.
+  // Miktar normalde tam sayıdır; bu fallback yalnız açıkça sayısal metni kurtarır.
+  if (/^-?\d+,\d+$/.test(text)) {
+    const comma = Number(text.replace(',', '.'));
+    if (Number.isFinite(comma)) return comma;
+  }
+  return null;
+}
+
+function normalizeAntrepoDatabaseRows(rows) {
+  const input = Array.isArray(rows) ? rows : [];
+  const output = [];
+  const byBusinessGrain = new Map();
+  let blankStatusRows = 0;
+  let retainedInputRows = 0;
+
+  for (const sourceRow of input) {
+    if (!sourceRow || typeof sourceRow !== 'object' || Array.isArray(sourceRow)) {
+      // Sağlayıcı normalde yalnız nesne satırı döndürür. Beklenmeyen bir değer
+      // varsa sessiz veri kaybı yaratmamak için olduğu gibi koru.
+      output.push(sourceRow);
+      continue;
+    }
+
+    const status = String(sourceRow[ANTREPO_DATABASE_STATUS_HEADER] == null
+      ? '' : sourceRow[ANTREPO_DATABASE_STATUS_HEADER]).trim();
+    if (!status) {
+      blankStatusRows += 1;
+      continue;
+    }
+    retainedInputRows += 1;
+
+    const quantity = antrepoDatabaseQuantity(sourceRow[ANTREPO_DATABASE_QTY_HEADER]);
+    const keyFields = Object.keys(sourceRow)
+      .filter(key => key !== ANTREPO_DATABASE_QTY_HEADER && key !== modelHorizon.BLANK_ROW_GUARD)
+      .sort();
+    const keyParts = keyFields.map(key => [key, antrepoDatabaseIdentityValue(sourceRow[key])]);
+    // Sayısal olmayan dolu miktarı yanlışlıkla başka satırla toplamayalım.
+    if (quantity == null && String(sourceRow[ANTREPO_DATABASE_QTY_HEADER] == null
+      ? '' : sourceRow[ANTREPO_DATABASE_QTY_HEADER]).trim()) {
+      keyParts.push(['__RAW_QTY__', String(sourceRow[ANTREPO_DATABASE_QTY_HEADER]).trim()]);
+    }
+    const identity = JSON.stringify(keyParts);
+
+    const existingIndex = byBusinessGrain.get(identity);
+    if (existingIndex == null) {
+      const row = { ...sourceRow };
+      output.push(row);
+      byBusinessGrain.set(identity, output.length - 1);
+      continue;
+    }
+
+    const target = output[existingIndex];
+    const current = antrepoDatabaseQuantity(target && target[ANTREPO_DATABASE_QTY_HEADER]);
+    if (quantity != null) {
+      target[ANTREPO_DATABASE_QTY_HEADER] = (current == null ? 0 : current) + quantity;
+    }
+  }
+
+  return {
+    rows: output,
+    stats: {
+      inputRows: input.length,
+      outputRows: output.length,
+      blankStatusRows,
+      collapsedRows: Math.max(0, retainedInputRows - byBusinessGrain.size),
+    },
+  };
+}
+
 /* v7.83 — FİLTRE DEĞERLERİNİN TİPİ KAYNAĞIN ŞEMASINDAN ÇÖZÜLÜR.
 
    Kaydedilmiş bir koşul, kurulduğu andaki arayüz tahminini (`valueType`)
@@ -651,10 +758,12 @@ function buildConnectionQuery(item, options = {}) {
         'MODEL_REFRESH_ANTREPO_GRAIN_MISSING', 422,
         { requiredField: 'İthalat Dosya No' });
     }
-    // IAS satırları artık gruplanmaz. Gerçek fact tablosunun her satırı ayrı bir
-    // parsiyel olarak SELECTCOLUMNS ile projekte edilir; ölçüler o satırın
-    // bağlamında hesaplanır. Böylece farklı sipariş/renk kombinasyonları çapraz
-    // çoğalmaz ve aynı siparişin parsiyelleri tek satırda toplanmaz.
+    // DAX katmanında gerçek fact tablosu satır satır SELECTCOLUMNS ile
+    // projekte edilir; bu, farklı tablolardan gelen alanların çapraz çoğalmasını
+    // ve sipariş/model/renk alanlarının BLANK kalmasını önler. IASv2'nin aynı iş
+    // parsiyelini birden fazla teknik fact satırına bölmesi ise sorgu sonucundan
+    // sonra normalizeAntrepoDatabaseRows() ile Antrepo Excel iş granülüne
+    // indirilir. Gerçek farklı parsiyellerin kimlik alanları korunur.
     // Ufuk alanları (Sezon, MAG, MMYG, Buyer Grup…) çıktıya projekte edilmez ama
     // filtre koşulları onları Field Mapping'deki gerçek sütuna çözmelidir. Aksi
     // halde ASAS başlığı IAS tablosunda sütun adı sanılıp DAX'a yazılıyordu.
@@ -763,12 +872,22 @@ async function queryConnectionRows(item, options = {}) {
   // Boş-ölçü satırı eleme koruması yalnız DAX'ı ayakta tutmak için vardır; sonuçta
   // görünmesi gerekmez. Ayrıştırıcılar zaten yok sayıyor, ama önizleme ve sütun
   // listelerinde kafa karıştırmasın diye burada temizlenir.
-  const rows = Array.isArray(result.rows) ? result.rows : [];
+  let rows = Array.isArray(result.rows) ? result.rows : [];
   for (const row of rows) {
     if (row && typeof row === 'object' && Object.prototype.hasOwnProperty.call(row, modelHorizon.BLANK_ROW_GUARD)) {
       delete row[modelHorizon.BLANK_ROW_GUARD];
     }
   }
+
+  // Yalnız Buyer Log'un ürettiği otomatik IAS Database sorgusunda uygulanır.
+  // Manuel sorgu kullanan kullanıcı kendi satır semantiğini tanımladığı için
+  // burada yeniden gruplandırılmaz.
+  let databaseNormalization = null;
+  if (built.generated && built.role === 'antrepo') {
+    databaseNormalization = normalizeAntrepoDatabaseRows(rows);
+    rows = databaseNormalization.rows;
+  }
+
   return {
     item,
     rows,
@@ -780,7 +899,11 @@ async function queryConnectionRows(item, options = {}) {
     summary: {
       at: new Date().toISOString(),
       ok: true,
-      rowCount: Number(result.rowCount) || (Array.isArray(result.rows) ? result.rows.length : 0),
+      // Tüketicilerin gördüğü satır sayısı iş granülüne normalize edilmiş
+      // satır sayısıdır; sağlayıcının ham fact satır sayısı ayrıca tutulur.
+      rowCount: rows.length,
+      rawRowCount: Number(result.rowCount) || (Array.isArray(result.rows) ? result.rows.length : 0),
+      normalization: databaseNormalization ? databaseNormalization.stats : null,
       elapsedMs: Number(result.elapsedMs) || 0,
       provider: String(result.provider || ''),
       outFile: '',
@@ -1263,6 +1386,7 @@ module.exports = {
   buildConnectionQuery, resolveColumnTypes,
   antrepoProjectionMapping,
   antrepoGrainTable,
+  normalizeAntrepoDatabaseRows,
   validateAntrepoIntegrity,
   queryConnectionRows,
   mapWithConcurrency,

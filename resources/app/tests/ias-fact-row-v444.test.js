@@ -257,3 +257,86 @@ test('v7.0.209 grain dışı sütunlar fact satırının genişletilmiş tablosu
   // satırını tablo filtresi olarak vermek genişletilmiş tabloyu filtreler.
   assert.match(built.query, /"Sipariş Kod", CALCULATE\(SELECTEDVALUE\('Siparis Bilgileri'\[Sipariş Kod\]\), CALCULATETABLE\('Ithalat'\)\)/);
 });
+
+
+test('IAS Database teknik fact parçalarını Antrepo Excel iş granülünde birleştirir ve statüsüz satırları dışlar', () => {
+  const normalized = modelRefresh.normalizeAntrepoDatabaseRows([
+    // Aynı ithalat dosyasının teknik alt satırları: Excel'de 5.558 tek parsiyel.
+    iasRow({
+      'İthalat Dosya No': '2025.033596.T',
+      'Konteyner No': 'XXXX0000000 /',
+      'Supplier Portal Statü': 'Depoda',
+      'Supplier Portal Statü Detay': 'Depoya Sevk Edildi',
+      'Vasita Tanim': 'Uçak',
+      'Yükleme Toplam Adet': '4860',
+    }),
+    iasRow({
+      'İthalat Dosya No': '2025.033596.T',
+      'Konteyner No': 'XXXX0000000 /',
+      'Supplier Portal Statü': 'Depoda',
+      'Supplier Portal Statü Detay': 'Depoya Sevk Edildi',
+      'Vasita Tanim': 'Uçak',
+      'Yükleme Toplam Adet': '698',
+    }),
+    // IASv2 teknik hazırlık satırı: Antrepo Excel'de operasyon satırı değildir.
+    iasRow({
+      'İthalat Dosya No': '2025.033596.T',
+      'Konteyner No': 'XXXX0000000 /',
+      'Supplier Portal Statü': '',
+      'Vasita Tanim': 'Tır',
+      'Yükleme Toplam Adet': '698',
+    }),
+    // İkinci ithalat dosyası gerçek ayrı parsiyeldir; birinciyle birleşmemeli.
+    iasRow({
+      'İthalat Dosya No': '2025.033597.T',
+      'Konteyner No': 'XXXX0000000 /',
+      'Supplier Portal Statü': 'Depoda',
+      'Supplier Portal Statü Detay': 'Depoya Sevk Edildi',
+      'Vasita Tanim': 'Uçak',
+      'Yükleme Toplam Adet': '2268',
+    }),
+    iasRow({
+      'İthalat Dosya No': '2025.033597.T',
+      'Konteyner No': 'XXXX0000000 /',
+      'Supplier Portal Statü': 'Depoda',
+      'Supplier Portal Statü Detay': 'Depoya Sevk Edildi',
+      'Vasita Tanim': 'Uçak',
+      'Yükleme Toplam Adet': '292',
+    }),
+    iasRow({
+      'İthalat Dosya No': '2025.033597.T',
+      'Konteyner No': 'XXXX0000000 /',
+      'Supplier Portal Statü': '   ',
+      'Vasita Tanim': 'Tır',
+      'Yükleme Toplam Adet': '292',
+    }),
+  ]);
+
+  assert.deepStrictEqual(normalized.rows.map(row => [
+    row['İthalat Dosya No'],
+    row['Supplier Portal Statü'],
+    row['Vasita Tanim'],
+    Number(row['Yükleme Toplam Adet']),
+  ]), [
+    ['2025.033596.T', 'Depoda', 'Uçak', 5558],
+    ['2025.033597.T', 'Depoda', 'Uçak', 2560],
+  ]);
+  assert.deepStrictEqual(normalized.stats, {
+    inputRows: 6,
+    outputRows: 2,
+    blankStatusRows: 2,
+    collapsedRows: 2,
+  });
+});
+
+test('IAS Database normalizasyonu gerçek farklı parsiyel alanlarını korur', () => {
+  const normalized = modelRefresh.normalizeAntrepoDatabaseRows([
+    iasRow({ 'Yükleme Toplam Adet': 100, 'Konteyner No': 'CONT-1' }),
+    iasRow({ 'Yükleme Toplam Adet': 200, 'Konteyner No': 'CONT-2' }),
+    iasRow({ 'Yükleme Toplam Adet': 300, 'Konteyner No': 'CONT-1', 'Supplier Portal Statü': 'Gümrük-Liman Operasyonları' }),
+    iasRow({ 'Yükleme Toplam Adet': 400, 'Konteyner No': 'CONT-1', 'Tahmini Antrepo Giriş Tarihi': '2026-09-11' }),
+  ]);
+  assert.strictEqual(normalized.rows.length, 4);
+  assert.deepStrictEqual(normalized.rows.map(row => Number(row['Yükleme Toplam Adet'])), [100, 200, 300, 400]);
+  assert.strictEqual(normalized.stats.collapsedRows, 0);
+});
