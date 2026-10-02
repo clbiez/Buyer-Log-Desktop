@@ -118,11 +118,9 @@ dilde metin içeren iş bitmiş sayılmaz.
 - Bekçi: `tests/i18n-coverage-guard.test.js` (`npm test` ve CI içinde koşar).
   `public/*.js` ve `public/*.html` içindeki İngilizce karşılığı olmayan Türkçe
   metni dosya:satır olarak raporlar. Hızlı rapor: `npm run i18n:check`.
-- `tests/fixtures/i18n-coverage-baseline.json` eski eksikleri dondurur ve
-  **yalnız küçülür**. Yeni kayıt/dosya eklemek, test sınırlarını (`MAX_ENTRIES`,
-  `FROZEN_FILES`) yükseltmek veya testi gevşetmek yasaktır. Eski bir eksiği
-  düzelttiğinde `npm run i18n:baseline` ile baseline'ı küçült ve `MAX_ENTRIES`'i
-  yeni toplama indir.
+- Mevcut tüm eksikler düzeltildi; `tests/fixtures/i18n-coverage-baseline.json`
+  **boştur ve boş kalır**. Baseline'a kayıt/dosya eklemek, test sınırlarını
+  (`MAX_ENTRIES = 0`, `FROZEN_FILES`) yükseltmek veya testi gevşetmek yasaktır.
 
 ## 5 · Token, süre ve iletişim disiplini
 

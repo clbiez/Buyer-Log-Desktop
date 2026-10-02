@@ -17,7 +17,7 @@
  * yoksa yakın ilerlemedeki parsiyeller kümelenir.
  */
 
-const ISTANBUL=Object.freeze({name:'İstanbul',lat:41.0082,lon:28.9784});
+const ISTANBUL=Object.freeze({name:'İstanbul',lat:41.0082,lon:28.9784}); // i18n-ignore — ülke adı eşleştirmesi / özel ad (veri)
 const COLOMBO=Object.freeze({name:'Colombo',lat:6.93,lon:79.85});
 const STORAGE_KEY='buyerlog.overview.globalFlow.v1';
 const SOURCE_PRIORITY=Object.freeze({cp:1,orders:2,backlog:3});
@@ -73,11 +73,11 @@ const CANONICAL_FIELD_IDS=Object.freeze({
 const RECORD_FIELDS=Object.freeze(Object.keys(FIELD_CANDIDATES));
 
 const COUNTRY_POINTS=Object.freeze({
-  'turkey':ISTANBUL,'turkiye':ISTANBUL,'türkiye':ISTANBUL,'tr':ISTANBUL,
+  'turkey':ISTANBUL,'turkiye':ISTANBUL,'türkiye':ISTANBUL,'tr':ISTANBUL, // i18n-ignore — ülke adı eşleştirmesi / özel ad (veri)
   'bangladesh':{name:'Bangladesh',lat:23.685,lon:90.3563},'bd':{name:'Bangladesh',lat:23.685,lon:90.3563},
   'india':{name:'India',lat:20.5937,lon:78.9629},'in':{name:'India',lat:20.5937,lon:78.9629},
   'china':{name:'China',lat:35.8617,lon:104.1954},'cn':{name:'China',lat:35.8617,lon:104.1954},
-  'egypt':{name:'Egypt',lat:26.8206,lon:30.8025},'misir':{name:'Egypt',lat:26.8206,lon:30.8025},'mısır':{name:'Egypt',lat:26.8206,lon:30.8025},
+  'egypt':{name:'Egypt',lat:26.8206,lon:30.8025},'misir':{name:'Egypt',lat:26.8206,lon:30.8025},'mısır':{name:'Egypt',lat:26.8206,lon:30.8025}, // i18n-ignore — ülke adı eşleştirmesi / özel ad (veri)
   'pakistan':{name:'Pakistan',lat:30.3753,lon:69.3451},
   'vietnam':{name:'Vietnam',lat:14.0583,lon:108.2772},'viet nam':{name:'Vietnam',lat:14.0583,lon:108.2772},
   'indonesia':{name:'Indonesia',lat:-0.7893,lon:113.9213},
@@ -93,7 +93,7 @@ const COUNTRY_POINTS=Object.freeze({
   'united kingdom':{name:'United Kingdom',lat:55.3781,lon:-3.436},'uk':{name:'United Kingdom',lat:55.3781,lon:-3.436},
   'bulgaria':{name:'Bulgaria',lat:42.7339,lon:25.4858},'bulgaristan':{name:'Bulgaria',lat:42.7339,lon:25.4858},
   'romania':{name:'Romania',lat:45.9432,lon:24.9668},'romanya':{name:'Romania',lat:45.9432,lon:24.9668},
-  'serbia':{name:'Serbia',lat:44.0165,lon:21.0059},'sirbistan':{name:'Serbia',lat:44.0165,lon:21.0059},'sırbistan':{name:'Serbia',lat:44.0165,lon:21.0059},
+  'serbia':{name:'Serbia',lat:44.0165,lon:21.0059},'sirbistan':{name:'Serbia',lat:44.0165,lon:21.0059},'sırbistan':{name:'Serbia',lat:44.0165,lon:21.0059}, // i18n-ignore — ülke adı eşleştirmesi / özel ad (veri)
   'north macedonia':{name:'North Macedonia',lat:41.6086,lon:21.7453},'macedonia':{name:'North Macedonia',lat:41.6086,lon:21.7453},
   'greece':{name:'Greece',lat:39.0742,lon:21.8243},'yunanistan':{name:'Greece',lat:39.0742,lon:21.8243},
   'uae':{name:'UAE',lat:23.4241,lon:53.8478},'united arab emirates':{name:'UAE',lat:23.4241,lon:53.8478},'bae':{name:'UAE',lat:23.4241,lon:53.8478},

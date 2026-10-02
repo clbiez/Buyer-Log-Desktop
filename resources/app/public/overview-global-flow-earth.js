@@ -58,7 +58,7 @@ function ensureStylesheet(href,id){
 function reducedMotion(){try{return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}}
 function withTimeout(promise,ms,label){
   let timer=0;
-  return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error(label+' zaman aşımı'),{code:'EARTH_TIMEOUT'})),ms);})]).finally(()=>clearTimeout(timer));
+  return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error(label+((typeof appLang!=='undefined'&&appLang==='en')?' timed out':' zaman aşımı')),{code:'EARTH_TIMEOUT'})),ms);})]).finally(()=>clearTimeout(timer));
 }
 function statusCodeOf(error){
   const direct=Number(error&&(error.statusCode||error.status));if(direct)return direct;

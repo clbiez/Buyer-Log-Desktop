@@ -1,7 +1,7 @@
 'use strict';
 /* TR/EN dil desteği bekçisi: arayüze eklenen her Türkçe metnin İngilizce
-   karşılığı olmalıdır. Mevcut eksikler tests/fixtures/i18n-coverage-baseline.json
-   içinde dondurulmuştur; yeni modül/özellik bu listeye eklenemez. */
+   karşılığı olmalıdır. Eski eksiklerin tamamı düzeltildi;
+   tests/fixtures/i18n-coverage-baseline.json boştur ve boş kalmalıdır. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -61,18 +61,10 @@ test('i18n bekçisi: baseline yalnız küçülür (düzeltilen kayıtlar silinme
 });
 
 test('i18n bekçisi: baseline donmuş üst sınırı aşamaz ve yeni dosya içeremez', () => {
-  // Bu sınırlar yalnız AŞAĞI çekilebilir. Yeni modül için baseline'a kayıt
-  // eklemek kural ihlalidir; metnin TR/EN çiftini yazın.
-  const MAX_ENTRIES = 152;
-  const FROZEN_FILES = new Set([
-    'public/app-main.js', 'public/automation-assistant.js', 'public/backlog-chart.js',
-    'public/backlog-excel-formulas.js', 'public/backlog-plan-actual-report.js', 'public/backlog-v3-report.js',
-    'public/buyerlog-guide-data.js', 'public/collection-status-ui.js', 'public/copilot-ui-commands.js',
-    'public/copilot.js', 'public/formula-engine.js', 'public/index.html', 'public/intake.js', 'public/lfl.js',
-    'public/license-royalty-commissions.js', 'public/oab.js', 'public/overview-global-flow-earth.js',
-    'public/overview-global-flow.js', 'public/overview-launchpad.js', 'public/perf-runtime.js',
-    'public/plm-sync-guide.js', 'public/price-supplier-analysis.js', 'public/table-export.js',
-  ]);
+  // Eski eksiklerin tamamı düzeltildi; baseline'a kayıt eklemek kural
+  // ihlalidir — metnin TR/EN çiftini yazın.
+  const MAX_ENTRIES = 0;
+  const FROZEN_FILES = new Set([]);
   const baseline = coverage.readBaseline();
   const total = Object.values(baseline).reduce((sum, list) => sum + list.length, 0);
   assert.ok(total <= MAX_ENTRIES, `i18n baseline büyüdü (${total} > ${MAX_ENTRIES}). Yeni eksik baseline'a eklenemez.\n${HOW_TO_FIX}`);

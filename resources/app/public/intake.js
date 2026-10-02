@@ -125,15 +125,15 @@
   }
 
   const INTAKE_MONTH_ORDER = Object.freeze([
-    'ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran',
-    'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık',
+    'ocak', 'şubat', 'mart', 'nisan', 'mayıs', 'haziran', // i18n-ignore — kaynak alan/ay adı eşleştirmesi (veri)
+    'temmuz', 'ağustos', 'eylül', 'ekim', 'kasım', 'aralık', // i18n-ignore — kaynak alan/ay adı eşleştirmesi (veri)
   ]);
 
   function intakeIsPeriodField(field) {
     const identity = `${clean(field && field.sourceUniqueName)} ${clean(field && field.defaultLabel)} ${clean(field && field.name)}`
       .toLocaleLowerCase('tr-TR');
-    return identity.includes('dönem tanim') || identity.includes('dönem tanım')
-      || (identity.includes('[phase]') && identity.includes('dönem'));
+    return identity.includes('dönem tanim') || identity.includes('dönem tanım') // i18n-ignore — kaynak alan/ay adı eşleştirmesi (veri)
+      || (identity.includes('[phase]') && identity.includes('dönem')); // i18n-ignore — kaynak alan/ay adı eşleştirmesi (veri)
   }
 
   function intakeMonthRank(value) {
@@ -154,7 +154,7 @@
 
   function intakeIsCurrentBudgetField(field) {
     if (!field || field.fieldType !== 'measure') return false;
-    const wanted = 'güncel alım bütçe';
+    const wanted = 'güncel alım bütçe'; // i18n-ignore — kaynak alan/ay adı eşleştirmesi (veri)
     return [field.name, field.sourceLabel, field.defaultLabel]
       .map(value => clean(value).toLocaleLowerCase('tr-TR'))
       .some(value => value === wanted);
@@ -195,7 +195,7 @@
 
   const INTAKE_AGGREGATES = ['SUM', 'AVG', 'WAVG', 'COUNT', 'MIN', 'MAX', 'FIRST'];
   const INTAKE_AGG_LABELS = { WAVG: ['Ağırlıklı ort.', 'Weighted avg.'] };
-  const INTAKE_DEFAULT_WEIGHT_SOURCE = '[Measures].[Güncel Alım Bütçe]';
+  const INTAKE_DEFAULT_WEIGHT_SOURCE = '[Measures].[Güncel Alım Bütçe]'; // i18n-ignore — kaynak alan/ay adı eşleştirmesi (veri)
   const intakeNumber = value => typeof value === 'number' ? value : Number(String(value == null ? '' : value).replace(/\s/g, '').replace(',', '.'));
   const intakeSourceKey = value => clean(value).toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ');
 

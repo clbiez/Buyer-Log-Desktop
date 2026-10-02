@@ -1739,7 +1739,7 @@
   }
 
   const OAB_MONTHS = Object.freeze({
-    'ocak':1,'şubat':2,'subat':2,'mart':3,'nisan':4,'mayıs':5,'mayis':5,'haziran':6,'temmuz':7,'ağustos':8,'agustos':8,'eylül':9,'eylul':9,'ekim':10,'kasım':11,'kasim':11,'aralık':12,'aralik':12,
+    'ocak':1,'şubat':2,'subat':2,'mart':3,'nisan':4,'mayıs':5,'mayis':5,'haziran':6,'temmuz':7,'ağustos':8,'agustos':8,'eylül':9,'eylul':9,'ekim':10,'kasım':11,'kasim':11,'aralık':12,'aralik':12, // i18n-ignore — kaynak ay/alan adı eşleştirmesi (veri)
     'january':1,'jan':1,'february':2,'feb':2,'march':3,'mar':3,'april':4,'apr':4,'may':5,'june':6,'jun':6,'july':7,'jul':7,'august':8,'aug':8,'september':9,'sep':9,'october':10,'oct':10,'november':11,'nov':11,'december':12,'dec':12,
   });
   function oabTemporalSortKey(value) {
@@ -1821,7 +1821,7 @@
   }
 
   function oabIsOptionNameField(field) {
-    return String(field || '').trim().toLocaleLowerCase('tr-TR') === 'option adı';
+    return String(field || '').trim().toLocaleLowerCase('tr-TR') === 'option adı'; // i18n-ignore — kaynak ay/alan adı eşleştirmesi (veri)
   }
   function oabOptionPlmLinkHtml(value) {
     const modelName = String(value == null ? '' : value).trim();

@@ -10,7 +10,7 @@
      3. Satırda bilinçli muafiyet işareti var: `i18n-ignore` (veri anahtarı,
         Excel başlığı, regex kaynağı vb. — görünen UI metni değil).
    Karşılığı olmayan literal'lar "eksik" sayılır. Mevcut eksikler
-   tests/fixtures/i18n-coverage-baseline.json içinde dondurulur; yeni eksik
+   tests/fixtures/i18n-coverage-baseline.json içinde tutulur (şu an boş); yeni eksik
    eklenemez (ratchet).
    =================================================================== */
 const fs = require('node:fs');
@@ -195,21 +195,68 @@ function loadRuntime() {
 
 const norm = value => String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
 
-// Aynı iç içelik düzeyindeki literal'lar yalnız çift ayraçlarıyla (',' ':'
-// '?' '||' '??', isteğe bağlı "en:" / "tr": anahtarı ya da "+ ifade")
-// ayrılmışsa bir "dizi" oluşturur: L('tr','en'), isEn()?'en':'tr',
+// Aynı iç içelik düzeyindeki literal'lar önce "+" birleştirme zincirlerine
+// ('Toplam '+n+' satır') toplanır; zincirler yalnız çift ayracıyla (',' ':'
+// '?' '||' '??', isteğe bağlı "en:" / "tr": anahtarı, parantez) ayrılmışsa bir
+// "dizi" oluşturur: L('tr','en'), isEn()?'en':'tr', en?('x '+a):('y '+a),
 // {tr:'..',en:'..'}, ['id',trBaşlık,trMetin,enBaşlık,enMetin] gibi.
 // Template ${...} içindeki literal'lar dıştaki dizinin üyesi sayılmaz.
-const PAIR_GAP = /^(?:\s*\+[^;'"`{}\n]{0,80}?)?\s*(?:,|:|\?|\|\||\?\?)\s*(?:["']?[A-Za-z_$][\w$]*["']?\s*:\s*)?$/;
 // tr = '…'; en = '…'; (hintTr/hintEn gibi dil adlı değişkenlere art arda atama)
 const ASSIGN_GAP = /^\s*[;,]\s*(?:(?:let|const|var)\s+)?[\w$]*(?:en|En|EN|tr|Tr|TR)[\w$]*\s*=\s*$/;
+
+// İki literal arasındaki kodu tırnak duyarlı tarar: üst düzey ayraçların
+// konumlarını ve deyim sınırı (; { }) olup olmadığını döndürür.
+function analyzeGap(gap) {
+  const seps = [];
+  let depth = 0;
+  let stop = false;
+  for (let k = 0; k < gap.length; k++) {
+    const c = gap[k];
+    if (c === '\'' || c === '"' || c === '`') {
+      const close = gap.indexOf(c, k + 1);
+      k = close < 0 ? gap.length : close;
+      continue;
+    }
+    if (c === '(' || c === '[') depth++;
+    else if (c === ')' || c === ']') depth--;
+    else if (c === ';' || c === '{' || c === '}') stop = true;
+    else if (depth <= 0 && (c === ',' || c === '?' || c === ':' || ((c === '|' || c === '?') && gap[k + 1] === c))) {
+      if (gap[k + 1] === c && (c === '|' || c === '?')) { seps.push([k, k + 2]); k++; continue; }
+      if (c === '?' && gap[k + 1] === '.') continue; // ?. isteğe bağlı zincir
+      seps.push([k, k + 1]);
+    }
+  }
+  return { seps, depth, stop };
+}
+
+function isConcatGap(gap) {
+  const t = gap.trim();
+  if (!t.startsWith('+') || !t.endsWith('+')) return false;
+  const info = analyzeGap(gap);
+  return !info.stop && !info.seps.length && info.depth === 0;
+}
+
+function isPairGap(gap) {
+  // Sondaki nesne anahtarı (", en:" / ', "tr": ') ayraç sayılmaz.
+  gap = gap.replace(/(,\s*)["']?[A-Za-z_$][\w$]*["']?\s*:\s*$/, '$1');
+  const info = analyzeGap(gap);
+  if (info.stop || info.seps.length !== 1) return false;
+  const [from, to] = info.seps[0];
+  const before = gap.slice(0, from).trim();
+  const after = gap.slice(to).trim();
+  const beforeOk = !before || /^\)+$/.test(before) || before.startsWith('+');
+  const afterOk = /^\(*\s*(?:["']?[A-Za-z_$][\w$]*["']?\s*:\s*)?$/.test(after) || after.endsWith('+');
+  return beforeOk && afterOk;
+}
 
 // İngilizce metin: harf içerir, cümle/etiket biçimindedir ve kelimelerinin
 // çoğu Türkçe karakter içermez (ASAS "Üretici" gibi alan adları serbest).
 function looksEnglish(value) {
   const text = norm(value);
   if (!text || !/[A-Za-z]/.test(text)) return false;
-  if (!/\s|\{\d+\}/.test(text) && !/^[A-Z]/.test(text)) return false;
+  // Birleştirme parçası ('opened ') baştaki/sondaki boşluğuyla tanınır.
+  const fragment = /^\s|\s$/.test(String(value)) && !TR_CHAR.test(text);
+  if (!fragment && !/\s|\{\d+\}/.test(text) && !/^[A-Z]/.test(text)) return false;
   // Tırnak içindeki kaynak alan adları ("Ürün Tanım") sayılmaz.
   const words = text.replace(/"[^"]*"|“[^”]*”|'[^']*'/g, ' ').split(/\s+/).filter(Boolean);
   if (!words.length) return false;
@@ -252,9 +299,12 @@ function pairedLiterals(src, lits) {
     if (open.length) parent[index] = open[open.length - 1];
     open.push(index);
   });
+  // Ne Türkçe metin ne İngilizce metin olan literal'lar (anahtar, ayraç,
+  // 'en'/'tr' dil kodu) diziyi bölmez; aradaki kodun parçası sayılır.
+  const meaningful = lits.map(lit => isCandidate(lit.value) || looksEnglish(lit.value));
   const siblings = new Map();
   lits.forEach((lit, index) => {
-    if (isObjectKey(src, lit)) return;
+    if (!meaningful[index] || isObjectKey(src, lit)) return;
     const key = parent[index];
     if (!siblings.has(key)) siblings.set(key, []);
     siblings.get(key).push(index);
@@ -262,25 +312,33 @@ function pairedLiterals(src, lits) {
   const paired = new Array(lits.length).fill(false);
   const closeRun = run => {
     let tr = 0, en = 0;
-    for (const index of run) {
-      const value = lits[index].value;
-      if (looksEnglish(value)) en++;
-      else if (isCandidate(value)) tr++;
+    const raws = run.map(chain => chain.map(index => lits[index].value).join(' {x} '));
+    const values = raws.map(norm);
+    for (const raw of raws) {
+      if (looksEnglish(raw)) en++;
+      else if (isCandidate(raw)) tr++;
     }
     // Bilinçli olarak iki dilde aynı kalan çift ('Türkiye','Türkiye').
-    const values = run.map(index => norm(lits[index].value));
     const dup = values.length - new Set(values).size;
     en += dup;
     tr -= dup;
-    if (en && en >= tr) run.forEach(index => { paired[index] = true; });
+    if (en && en >= tr) run.forEach(chain => chain.forEach(index => { paired[index] = true; }));
   };
   for (const group of siblings.values()) {
-    let run = [group[0]];
+    // 1) "+" zincirleri
+    const chains = [[group[0]]];
     for (let k = 1; k < group.length; k++) {
-      const a = lits[group[k - 1]], b = lits[group[k]];
-      const gap = src.slice(a.end, b.start);
-      if (PAIR_GAP.test(gap) || ASSIGN_GAP.test(gap)) run.push(group[k]);
-      else { closeRun(run); run = [group[k]]; }
+      const gap = src.slice(lits[group[k - 1]].end, lits[group[k]].start);
+      if (isConcatGap(gap)) chains[chains.length - 1].push(group[k]);
+      else chains.push([group[k]]);
+    }
+    // 2) çift ayracıyla bağlı zincir dizileri
+    let run = [chains[0]];
+    for (let k = 1; k < chains.length; k++) {
+      const prev = chains[k - 1], cur = chains[k];
+      const gap = src.slice(lits[prev[prev.length - 1]].end, lits[cur[0]].start);
+      if (isPairGap(gap) || ASSIGN_GAP.test(gap)) run.push(cur);
+      else { closeRun(run); run = [cur]; }
     }
     closeRun(run);
   }
@@ -340,6 +398,69 @@ function translates(runtime, text) {
   return out !== t && (!TR_CHAR.test(out) || looksEnglish(out));
 }
 
+// İki elemanlı dil çifti: L('geri alındı','reverted') ya da ['değişti','changed'].
+// İkinci eleman tek kelimelik küçük harfli İngilizce olabilir.
+function isTwoSlotPair(src, lit) {
+  let k = lit.start - 1;
+  while (k >= 0 && /\s/.test(src[k])) k--;
+  if (src[k] !== '(' && src[k] !== '[') return false;
+  const close = src[k] === '(' ? ')' : ']';
+  const m = /^\s*,\s*(['"`])((?:\\.|(?!\1)[^\\\n])*)\1\s*([)\]])/.exec(src.slice(lit.end, lit.end + 400));
+  if (!m || m[3] !== close || !/[A-Za-z]/.test(m[2]) || TR_CHAR.test(m[2])) return false;
+  // showToast('…','warn') gibi ikinci argümanı teknik anahtar olan çağrılar çift değildir.
+  if (TECH_TOKENS.has(m[2].trim().toLowerCase())) return false;
+  if (close === ')') {
+    // Çağrı yalnız kısa adlı dil yardımcısıysa (L, T, t, tr, tx, lt…) çift sayılır.
+    const callee = /([A-Za-z_$][\w$]*)\s*$/.exec(src.slice(Math.max(0, k - 40), k));
+    if (!callee || !/^(?:L|T|t|tr|tx|txt|lt|_t|bi|lang|i18n|pickLang|trEn)$/.test(callee[1])) return false;
+  }
+  return true;
+}
+const TECH_TOKENS = new Set(['warn', 'warning', 'error', 'err', 'success', 'ok', 'info', 'danger', 'neutral', 'muted', 'primary', 'secondary', 'good', 'bad', 'notice', 'debug']);
+
+// Dil adlı slotlar: hintTr = …; hintEn = …  /  titleTr: …, titleEn: …
+// Literal "…Tr"/"tr" adlı bir atama ya da anahtara yazılıyorsa ve aynı adın
+// "En" karşılığı yakınında tanımlıysa çift sayılır.
+function languageSlotCovered(src, lit) {
+  const before = src.slice(Math.max(0, lit.start - 300), lit.start);
+  const re = /\b([A-Za-z_$][\w$]*?(?:Tr|TR|_tr)|tr)\s*(?:=(?!=)|:)/g;
+  let m, last = null;
+  while ((m = re.exec(before))) last = m;
+  if (!last) return false;
+  const between = before.slice(last.index + last[0].length);
+  if (/[;{}]/.test(between.replace(/(['"`])(?:\\.|(?!\1)[^\\])*\1/g, ''))) return false;
+  const name = last[1];
+  const enName = name === 'tr' ? 'en' : name.replace(/(Tr|TR|_tr)$/, s => ({ Tr: 'En', TR: 'EN', _tr: '_en' })[s]);
+  const around = src.slice(Math.max(0, lit.start - 1500), lit.end + 1500);
+  return new RegExp('\\b' + enName.replace(/\$/g, '\\$') + '\\s*(?:=(?!=)|:)').test(around);
+}
+
+// tr:{ key:'…' } … en:{ key:'…' } biçimindeki dil sözlüğü nesneleri.
+function trObjectCovered(src, lit) {
+  const keyM = /([A-Za-z_$][\w$]*)\s*:\s*$/.exec(src.slice(Math.max(0, lit.start - 80), lit.start));
+  if (!keyM) return false;
+  let depth = 0;
+  for (let k = lit.start - 1, stop = Math.max(0, lit.start - 20000); k >= stop; k--) {
+    const c = src[k];
+    if (c === '}') depth++;
+    else if (c === '{') {
+      if (depth > 0) { depth--; continue; }
+      if (!/\btr\s*:\s*$|["']tr["']\s*:\s*$/.test(src.slice(Math.max(0, k - 20), k))) return false;
+      const rest = src.slice(k, k + 40000);
+      const enAt = rest.search(/\ben\s*:\s*\{|["']en["']\s*:\s*\{/);
+      if (enAt < 0) return false;
+      return new RegExp('\\b' + keyM[1].replace(/\$/g, '\\$') + '\\s*:').test(rest.slice(enAt, enAt + 20000));
+    }
+  }
+  return false;
+}
+
+// "Araçlar / Tools" gibi iki dili birlikte taşıyan tek metin.
+function selfBilingual(value) {
+  const parts = norm(value).split(/\s+\/\s+/);
+  return parts.length === 2 && parts.some(part => looksEnglish(part)) && parts.some(part => TR_CHAR.test(part));
+}
+
 function scanSource(src, file) {
   const runtime = loadRuntime();
   const lits = extractLiterals(src);
@@ -350,6 +471,10 @@ function scanSource(src, file) {
     if (paired[index]) return;
     if (looksEnglish(lit.value)) return;
     if (insideTrArray(src, lit)) return;
+    if (isTwoSlotPair(src, lit)) return;
+    if (selfBilingual(lit.value)) return;
+    if (languageSlotCovered(src, lit)) return;
+    if (trObjectCovered(src, lit)) return;
     if (lineAt(src, lit.start).includes(IGNORE_MARK)) return;
     if (insideConsoleCall(src, lit.start)) return;
     for (const seg of visibleSegments(lit.value)) {
@@ -393,7 +518,12 @@ function scanHtml(src, file) {
     if (closing) { if (!VOID.has(name)) skipStack.pop(); continue; }
     const bilingual = /data-i18n-tr=/.test(attrs) || /data-no-i18n/.test(attrs);
     if (!bilingual) {
-      for (const a of attrs.matchAll(/\b(title|placeholder|aria-label|alt)="([^"]*)"/g)) check(a[2], m.index);
+      for (const a of attrs.matchAll(/(?:^|\s)(title|placeholder|aria-label|alt)="([^"]*)"/g)) {
+        if (attrs.includes(`data-i18n-${a[1]}-tr=`)) continue;
+        // app-main: data-i18n-title-tr/en çifti aria-label'ı da aynı metinle yazar.
+        if (a[1] === 'aria-label' && attrs.includes('data-i18n-title-tr=')) continue;
+        check(a[2], m.index);
+      }
     }
     if (!VOID.has(name) && !attrs.trim().endsWith('/')) skipStack.push(bilingual);
   }

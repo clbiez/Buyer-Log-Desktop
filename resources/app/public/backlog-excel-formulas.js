@@ -192,8 +192,8 @@
   // Serbest metin yükleme tipini varsayılan tablo anahtarına indirger.
   function normalizeDelTypeKey(value) {
     const key = String(value == null ? '' : value).toLocaleUpperCase('tr').replace(/\s+/g, '');
-    const ship = key.includes('GEMI') || key.includes('GEMİ') || key.includes('SEA');
-    const air = key.includes('UCAK') || key.includes('UÇAK') || key.includes('AIR');
+    const ship = key.includes('GEMI') || key.includes('GEMİ') || key.includes('SEA'); // i18n-ignore — kaynak taşıma tipi eşleştirmesi (veri)
+    const air = key.includes('UCAK') || key.includes('UÇAK') || key.includes('AIR'); // i18n-ignore — kaynak taşıma tipi eşleştirmesi (veri)
     const truck = key.includes('TIR') || key.includes('TRUCK');
     if (ship && air) return 'Gemi+Uçak';
     if (ship && truck) return 'Gemi+Tır';

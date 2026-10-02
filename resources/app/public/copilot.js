@@ -324,14 +324,14 @@
      yanlış tablodan rapor üretirdi. Genel isimler ("sipariş", "bekleyen") ekran
      adı değildir; ekran açıkça söylenmediyse SORULUR.
      Türkçe ek alan adlar için: cp, cpdeki, cp'den … hepsi aynı ekrandır. */
-  const SUFFIX="(?:['’]?(?:d[ae]ki|d[ae]n|[dt][ae]|y[ae]|n[iı]n|[iı]n|ler|lar))?";
+  const SUFFIX="(?:['’]?(?:d[ae]ki|d[ae]n|[dt][ae]|y[ae]|n[iı]n|[iı]n|ler|lar))?"; // i18n-ignore — Türkçe komut tanıma regex kaynağı
   const SOURCES=[
     {key:'lfl',pattern:`lfl${SUFFIX}`},
     {key:'backlog',pattern:`backlog${SUFFIX}`},
     {key:'collection',pattern:`(?:koleksiyon|collection)${SUFFIX}`},
     // "ekranından" iki ek üst üste alır; çapa kelime zaten "ekran" olduğu için
     // sonrasındaki harfleri serbest bırakmak yanlış eşleşme üretmez.
-    {key:'orders',pattern:'orders|sipari[sş](?:ler)?\\s+ekran\\p{L}*'},
+    {key:'orders',pattern:'orders|sipari[sş](?:ler)?\\s+ekran\\p{L}*'}, // i18n-ignore — Türkçe komut tanıma regex kaynağı
     {key:'cp',pattern:`cp${SUFFIX}`},
   ].map(item=>({key:item.key,re:new RegExp(`(?<![\\p{L}\\d])(?:${item.pattern})(?![\\p{L}\\d])`,'iu')}));
 

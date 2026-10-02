@@ -40,7 +40,7 @@ if (shrink) {
     if (kept.length) next[file] = kept;
   }
   const payload = {
-    note: 'Dondurulmuş TR/EN eksikleri. Yalnız küçülebilir: yeni kayıt eklenmez, yeni metin TR/EN çiftiyle yazılır. Bkz. CLAUDE.md "TR/EN dil desteği".',
+    note: 'TR/EN eksik listesi: tüm eski eksikler düzeltildi, liste boş kalmalıdır. Yeni kayıt eklenmez; yeni metin TR/EN çiftiyle yazılır. Bkz. CLAUDE.md "TR/EN dil desteği".',
     files: next,
   };
   fs.writeFileSync(coverage.BASELINE_FILE, JSON.stringify(payload, null, 2) + '\n');
