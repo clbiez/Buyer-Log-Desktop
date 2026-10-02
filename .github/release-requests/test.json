@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.207",
-  "commit_sha": "0e1bfddedb97502eea37905df43cc1e7416d310c",
-  "release_notes": "Buyer Log 7.0.207: IAS kaynağı DATABASE seçildiğinde veri gelmemesi düzeltildi (köşeli parantezli sütun başlıkları artık doğru okunuyor; okunamayan sonuç sessizce boş veri yerine hata veriyor). Backlog Overview’a CP, ASAS ve IAS filtreleri eklendi; Backlog teslim riski analizi sadeleştirildi. Yol Süreleri: İthalat Yol Süresi Raporu analizi ve kural önerisi, Excel’siz doğrudan IAS verisinden. Timeline sütun hizalama ve Bugün’e dön; segment oranları düzeltildi. ASAS: Ex-Factory’si boş renk aynı PO’nun diğer renginden tarih alır. Dil göstergesi düzeltildi."
+  "version": "7.0.208",
+  "commit_sha": "879cecf6ab77b9fd9446db8fadfa99ea58428c80",
+  "release_notes": "Buyer Log 7.0.208: TEST kanalındaki güncellemeler artık girişten sonra otomatik kontrol ediliyor (açılış kontrolü giriş öncesi STABLE kanalına düşüyordu). 7.0.207 içeriği dahil: IAS kaynağı DATABASE seçildiğinde veri gelmemesi düzeltildi; Backlog Overview’a CP, ASAS ve IAS filtreleri; Yol Süreleri analizi doğrudan IAS verisinden; timeline düzeltmeleri; ASAS Ex-Factory tarih tamamlama; dil göstergesi düzeltmesi."
 }
