@@ -17,9 +17,18 @@
 .blvBadge[data-stage="CUSTOMS"]{color:var(--orange)}
 .blvOver{font-style:normal;color:var(--red);font-weight:700}
 .blvGap{height:12px}
-.blvCols{height:240px}
+.blvTimelineLegend .bpaLegend{padding:8px 12px 0}
+.blvCols{height:300px}
 .blvCols .bpaCol{flex:1 0 48px;max-width:96px}
 .blvCols .bpaCol.is-past .bpaColLabel{color:var(--ink2);font-weight:650}
+.blvCols.is-grouped .bpaCol{flex-basis:64px;max-width:112px}
+.blvGroupTrack{padding:0 3px}
+.blvGroupBars{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.blvGroupBar{display:block;flex:1 1 0;min-width:3px;max-width:11px;background:var(--seg);cursor:pointer;transform-origin:center bottom;transition:height .4s var(--ease),filter .12s var(--ease),transform .12s var(--ease)}
+.blvGroupBar:hover{filter:brightness(1.12) saturate(1.1);transform:scaleX(1.16)}
+.blvChartMode button{min-width:64px}
+@media(max-width:900px){.blvCols{height:270px}.blvCols.is-grouped .bpaCol{flex-basis:58px}.blvChartMode button{min-width:0}}
+@media(prefers-reduced-motion:reduce){.blvGroupBar{transition:none}}
 
 /* Panel kabuğu */
 .blvModule{margin:0 0 10px;overflow:hidden;border:1px solid var(--line);background:var(--card);color:var(--ink)}
