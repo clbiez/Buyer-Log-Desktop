@@ -4451,7 +4451,7 @@ tr.blRemoteChanged>td{animation:blRemoteChangedFade 5s ease-out 1;}
 .oabMiniBrowserTop{display:flex;align-items:center;gap:3px;height:11px;padding:0 5px;background:var(--card2);border-bottom:1px solid var(--line);}
 .oabMiniBrowserTop i{display:block;width:3px;height:3px;border-radius:50%;background:var(--muted);opacity:.7;}
 .oabMiniBrowserBody{height:42px;display:flex;align-items:center;justify-content:center;gap:6px;}
-.oabMiniBrowserBadge{font-size:9px;font-weight:800;letter-spacing:.06em;color:var(--acc-ink);}
+.oabMiniBrowserBadge{font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--acc-ink);}
 .oabMiniBrowserPulse{width:8px;height:8px;border:2px solid color-mix(in srgb,var(--acc) 45%,transparent);border-top-color:var(--acc);border-radius:50%;animation:oabActivitySpin .9s linear infinite;}
 .oabActivityGuide[data-stage="done"] .oabMiniBrowserPulse{animation:none;border-color:var(--green);background:color-mix(in srgb,var(--green) 18%,transparent);}
 .oabActivityGuide[data-stage="error"] .oabMiniBrowserPulse{animation:none;border-color:var(--red);background:color-mix(in srgb,var(--red) 15%,transparent);}
