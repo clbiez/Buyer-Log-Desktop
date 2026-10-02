@@ -138,6 +138,8 @@
       orderCode:canon(row, 'orderCode'), modelName:canon(row, 'modelName'), colourCode:canon(row, 'colourCode'), colour:canon(row, 'colour'),
       exFactory, plannedExFactory:dayIso(row && row[F.plannedLoad]),
       antrepo:dayIso(row && row[F.antrepo]), retail:dayIso(row && row[F.retail]), inStore:dayIso(row && row[F.inStore]),
+      orderQty:Math.max(0, num(row && row['Net Alım Sipariş Miktarı'])),
+      partialKind:row && row._partial && row._partial.kind || '',
       risk:turk(row && row[RISK_HEADER]) === 'VAR',
       transitOverdue:meta.transitOverdue === true,
     };
@@ -231,11 +233,27 @@
     { key:'blankExFactory', tr:'Ex-Factory tarihi yok', en:'Ex-Factory date missing', test:it => !it.exFactory },
     { key:'blankRetail', tr:'Retail Depo tarihi yok', en:'Retail warehouse date missing', test:it => !it.retail },
     { key:'retailBeforeEx', tr:'Retail tarihi Ex-Factory\'den önce', en:'Retail date before Ex-Factory', test:it => it.retail && it.exFactory && it.retail < it.exFactory },
+    // IAS parsiyel toplamı ASAS sipariş adedini %20'den fazla aşıyor: kaynak veri tutarsızlığı
+    // (yanlış eşleşen parsiyel ya da IAS'ta fazla/çift adet). Sentetik bakiye satırı açılmaz,
+    // ama Backlog toplamı şişer; rapora sessizce girmesin.
+    { key:'iasOverOrder', tr:'IAS parsiyel toplamı sipariş adedini %20 aşıyor', en:'IAS partials exceed order qty by 20%+', test:(it, ctx) => ctx.overLines.has(it.lineId) },
     { key:'rawTimestamp', tr:'Tarih alanında saatli ham değer', en:'Raw timestamp in a date field', test:it => it.rawTimestampFields && it.rawTimestampFields.length > 0 },
   ]);
+  function overshippedLines(items) {
+    const sums = new Map();
+    (items || []).forEach(it => {
+      if (it.partialKind !== 'partial') return;
+      const cur = sums.get(it.lineId) || { qty:0, orderQty:it.orderQty };
+      cur.qty += it.qty; sums.set(it.lineId, cur);
+    });
+    const out = new Set();
+    sums.forEach((v, key) => { if (v.orderQty > 0 && v.qty > v.orderQty * 1.2) out.add(key); });
+    return out;
+  }
   function dataQuality(items) {
+    const ctx = { overLines:overshippedLines(items) };
     return QUALITY_CHECKS.map(check => {
-      const rows = (items || []).filter(check.test);
+      const rows = (items || []).filter(it => check.test(it, ctx));
       return { key:check.key, tr:check.tr, en:check.en, count:rows.length, qty:round(rows.reduce((t, it) => t + it.qty, 0)), items:rows };
     }).filter(issue => issue.count > 0);
   }
