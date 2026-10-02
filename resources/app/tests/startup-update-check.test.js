@@ -46,3 +46,17 @@ test('login screen surfaces update availability before authentication', () => {
   assert.match(LOGIN_CSS, /\.startupUpdateNotice\{/);
   assert.match(LOGIN_CSS, /\.startupUpdateNotice\[hidden\]/);
 });
+
+test('TEST channel is re-checked once a user is signed in (startup check runs before login as STABLE)', () => {
+  const scheduleStart = MAIN.indexOf('function scheduleUpdateChecks()');
+  const scheduleEnd = MAIN.indexOf('/* --------------------------------------------------------- pencere durumu */', scheduleStart);
+  const schedule = MAIN.slice(scheduleStart, scheduleEnd);
+  assert.match(schedule, /watchSignedInTestChannel\(\)/);
+  const watchStart = MAIN.indexOf('function watchSignedInTestChannel()');
+  assert.ok(watchStart >= 0);
+  const watch = MAIN.slice(watchStart, MAIN.indexOf('\n}\n', watchStart));
+  assert.match(watch, /cfg\.channel!=='test'/);
+  assert.match(watch, /currentRendererUserId\(\)/);
+  assert.match(watch, /runUpdateCheck\(\{manual:false,userId\}\)/);
+  assert.match(watch, /clearInterval\(updateSignInTimer\)/);
+});
