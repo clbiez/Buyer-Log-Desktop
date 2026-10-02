@@ -1,0 +1,203 @@
+{
+  "note": "Dondurulmuş TR/EN eksikleri. Yalnız küçülebilir: yeni kayıt eklenmez, yeni metin TR/EN çiftiyle yazılır. Bkz. CLAUDE.md \"TR/EN dil desteği\".",
+  "files": {
+    "public/app-main.js": [
+      "Ad değiştirilemedi:",
+      "Aktarılamadı:",
+      "Aynı koşullara sahip başka bir kural var. Mevcut kuralı düzenleyin.",
+      "Aynı koşullara sahip bir License Royalty hesabı zaten bulunuyor. Mevcut hesabı düzenleyin.",
+      "Aynı ülke, Licensor, License ve ortak sezon kapsamındaki tarih aralığı {0} hesabıyla çakışıyor.",
+      "Bu görünüm aktif sayfaya ait değil.",
+      "Bu görünümü silmek istediğine emin misin?",
+      "Bu sayfanın favori görünümü kaydedildi.",
+      "Bu özellik yalnızca sunucu senin bilgisayarında (localhost) çalışırken kullanılabilir.",
+      "CP satırından oluşturuldu",
+      "Dışa aktarım hatası:",
+      "En az bir üretici seç.",
+      "Ex-Factory bitiş tarihi başlangıç tarihinden önce olamaz.",
+      "Filtre güncellendi.",
+      "Fiyatlama Excel’i için en az bir sütun seç.",
+      "Görsel aktarım hatası:",
+      "Görünüm güncellendi.",
+      "Hologram masrafı geçerli bir sayı olmalıdır.",
+      "KEY ORME PANTOLON-LİSANS",
+      "KEY ORME SWEAT-LİSANS",
+      "KEY ORME TAKIM-LİSANS",
+      "KUMAŞ",
+      "Klasör seçilemedi:",
+      "Koleksiyon kaydedilemedi (tarayıcı depolama sınırı dolmuş olabilir):",
+      "Koleksiyon satırından oluşturuldu",
+      "Kur dosyası okunamadı:",
+      "Kur modülü yüklenmedi.",
+      "Kuralı Güncelle",
+      "LOJİSTİK",
+      "Nakliye kıyaslaması Excel'e aktarıldı ({0} satır, tüm sütunlar).",
+      "OPD bitiş tarihi başlangıç tarihinden önce olamaz.",
+      "Onaylamak için önce bu üreticiye geçerli bir fiyat gir.",
+      "Royalty % değeri 0–100 arasında olmalıdır.",
+      "Seçili modeller bulunamadı.",
+      "Sürükle-bırak ile {0} dosya işlendi: {1}. Otomatik oluşturuluyor…",
+      "Tüm kurallar kaydediliyor ve uygulanıyor…",
+      "Tümüne Uygula tamamlandı: {0} siparişin Supp. FOB değeri güncellendi.",
+      "Uygulanamadı:",
+      "Yol süresi 0–3650 arasında tam gün olmalıdır.",
+      "satır gösteriliyor.",
+      "satır yükleniyor…",
+      "siparişin tüm parsiyelleri yükleniyor…",
+      "{0} nakliye yol süresi kuralı kaydedildi.",
+      "{0} nihai üretici olarak onaylandı.",
+      "{0} satır Nakliye Kıyaslama tablosuna eklendi.",
+      "{0} siparişin Supp. FOB değeri güncellendi · Koleksiyon {1} hücre/satır güncellendi.",
+      "{0} üretici için e-posta taslağı ve Excel eki hazırlandı.",
+      "{0}×{1} hücre kopyalandı",
+      "Ön maliyet oluşturulamadı:",
+      "Önce CP'de en az bir satır seç.",
+      "Önce CP'de en az bir sipariş seç.",
+      "Önce bir filtre seç.",
+      "Önce bir görünüm seç.",
+      "Önce bir sekme seç",
+      "Önce model seç.",
+      "Önce silinecek satırları işaretle.",
+      "Üretici onayı kaldırıldı.",
+      "Üretim ülkesi, Licensor ve License alanları zorunludur.",
+      "Üzerine kaydedilecek bir filtre seçili değil. \"Farklı Kaydet\" ile yeni bir filtre oluşturabilirsin.",
+      "Üzerine kaydedilecek bir görünüm seçili değil. \"Farklı Kaydet\" ile yeni bir görünüm oluşturabilirsin."
+    ],
+    "public/automation-assistant.js": [
+      "Bugün aksiyon gereken siparişler",
+      "Değişen siparişler",
+      "Haftalık sipariş raporu",
+      "değişti",
+      "ortalaması alınır",
+      "sayılır",
+      "toplanır",
+      "Önümüzdeki 7 günün siparişleri"
+    ],
+    "public/backlog-chart.js": [
+      "Okunabilirlik için en yüksek",
+      "seri gösteriliyor;"
+    ],
+    "public/backlog-excel-formulas.js": [
+      "GEMİ",
+      "UÇAK"
+    ],
+    "public/backlog-plan-actual-report.js": [
+      "ExcelJS yüklenmedi.",
+      "geri alındı",
+      "kırılımı"
+    ],
+    "public/backlog-v3-report.js": [
+      "ExcelJS yüklenmedi.",
+      "Planlanan & Gerçekleşen Excel kiti yüklenmedi.",
+      "kırılımı",
+      "operasyon satırı"
+    ],
+    "public/buyerlog-guide-data.js": [
+      "Araçlar / Tools",
+      "Extended / Genişletilmiş"
+    ],
+    "public/collection-status-ui.js": [
+      "kayıt “",
+      "” durumunu kullanıyor. Silmeden önce yerine geçecek statusu seç."
+    ],
+    "public/copilot-ui-commands.js": [
+      "ekranı açıldı",
+      "görselleri ·",
+      "işlem uygulanamadı"
+    ],
+    "public/copilot.js": [
+      "(?:['’]?(?:d[ae]ki|d[ae]n|[dt][ae]|y[ae]|n[iı]n|[iı]n|ler|lar))?",
+      "orders|sipari[sş](?:ler)?\\s+ekran\\p{L}*"
+    ],
+    "public/formula-engine.js": [
+      "- Altına ne yaptığını bir iki cümleyle açıkla.",
+      "- Formülü TEK bir kod bloğu (```) içinde, tek satır ve başında \"=\" olmadan ver.",
+      "- İstediğim şey bu kurallarla yapılamıyorsa (ör. başka satırlara bakmak gerekiyorsa) fonksiyon uydurmak yerine bunu açıkça söyle.",
+      "Buyer Log uygulamasında hesaplanan bir sütun için TEK bir formül yazmama yardım et. Bu Excel DEĞİL: aşağıdaki kurallara birebir uy.",
+      "Doğru yazım: {0}",
+      "Sütunsa köşeli parantezle ([{0}]), metinse tırnakla (\"{1}\") yazın.",
+      "Sütunsa köşeli parantezle yazın: [{0}]. Metinse tırnağa alın: \"{1}\".",
+      "hayır",
+      "yanlış"
+    ],
+    "public/index.html": [
+      "Kullanım Rehberi (F1)",
+      "Not sıralaması",
+      "PLM numune onay durumlarını güncelle",
+      "Panel genişliğini ayarla"
+    ],
+    "public/intake.js": [
+      "[Measures].[Güncel Alım Bütçe]",
+      "aralık",
+      "ağustos",
+      "dönem",
+      "dönem tanim",
+      "dönem tanım",
+      "eylül",
+      "güncel alım bütçe",
+      "kasım",
+      "mayıs",
+      "şubat"
+    ],
+    "public/lfl.js": [
+      "LFL yenileme tamamlandı:",
+      "kayıtlı karşılaştırma aynı filtrelerle güncel LFL verisine göre yenilendi.",
+      "urunAnaTanım",
+      "urunTanım",
+      "ülke"
+    ],
+    "public/license-royalty-commissions.js": [
+      "Aynı koşullara sahip bir kayıt zaten var.",
+      "Hologram Cost geçerli bir sayı olmalıdır.",
+      "Komisyon değerleri % cinsinden 0–100 arasında olmalıdır.",
+      "Kuralı Güncelle",
+      "OPD bitiş tarihi başlangıç tarihinden önce olamaz.",
+      "Royalty % 0–100 arasında olmalıdır.",
+      "Royalty + Komisyon toplamı %100’ü geçemez.",
+      "TR Royalty çözülemiyor: bu satırda",
+      "Tarih/sezon kapsamı",
+      "Uygulanamadı:",
+      "boş. TR Landed hesaplanmadı.",
+      "hesabıyla çakışıyor.",
+      "sipariş güncellendi."
+    ],
+    "public/oab.js": [
+      "aralık",
+      "ağustos",
+      "eylül",
+      "kasım",
+      "mayıs",
+      "option adı",
+      "şubat"
+    ],
+    "public/overview-global-flow-earth.js": [
+      "zaman aşımı"
+    ],
+    "public/overview-global-flow.js": [
+      "mısır",
+      "parsiyelde üretim ülkesi haritada eşleşmedi.",
+      "sırbistan",
+      "türkiye",
+      "İstanbul"
+    ],
+    "public/overview-launchpad.js": [
+      "Önümüzdeki"
+    ],
+    "public/perf-runtime.js": [
+      "Bilinmeyen performans modülü:",
+      "Bilinmeyen özellik modülü:",
+      "kütüphanesi başlatılamadı.",
+      "yüklenemedi."
+    ],
+    "public/plm-sync-guide.js": [
+      "işlemi tarayıcı kullanır"
+    ],
+    "public/price-supplier-analysis.js": [
+      "Eşleşen sütun yok."
+    ],
+    "public/table-export.js": [
+      "HTML rowspan içeriyor",
+      "Çok satırlı hücre var ama mso-data-placement:same-cell yok"
+    ]
+  }
+}
