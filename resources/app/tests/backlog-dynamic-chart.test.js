@@ -174,6 +174,10 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(chartSource,/data-backlog-chart-crosshair/);
   assert.match(chartSource,/data-backlog-chart-legend-name/);
   assert.match(chartSource,/addEventListener\('wheel'/);
+  assert.match(chartSource,/setWheelZoomActive\(true,canvas\)/);
+  assert.match(chartSource,/if\(!wheelZoomActive\|\|total<=1\)return/);
+  assert.match(chartSource,/target\.closest\('\.backlogChartCanvas'\)/);
+  assert.match(chartSource,/setWheelZoomActive\(false\)/);
   assert.match(chartSource,/addEventListener\('pointerdown'/);
   assert.match(chartSource,/addEventListener\('pointermove'/);
   assert.match(chartSource,/addEventListener\('dblclick'/);

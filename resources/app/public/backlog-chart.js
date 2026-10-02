@@ -33,6 +33,14 @@
   let initialized = false;
   let cache = { signature:'', headers:[], rows:[] };
   let chartView = { signature:'', start:0, end:0 };
+  let wheelZoomActive = false;
+
+  function setWheelZoomActive(active, canvas) {
+    wheelZoomActive=!!active;
+    if(!root.document)return;
+    root.document.querySelectorAll('.backlogChartCanvas.is-wheel-active').forEach(el=>el.classList.remove('is-wheel-active'));
+    if(wheelZoomActive&&canvas)canvas.classList.add('is-wheel-active');
+  }
 
   function esc(value) {
     return String(value == null ? '' : value)
@@ -586,9 +594,9 @@
     const filterPanel=available.length>1?'<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden><div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'"><div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button><button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div><div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>':'';
     target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets">'+presetButtons+'</div><div class="backlogChartInlineActions"><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button><button type="button" class="tbtn'+(model.state.showSubtotal?' is-active':'')+'" data-backlog-chart-subtotal>'+esc(tr('Alt Toplam','Subtotal'))+'</button>'+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
       +filterPanel
-      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek ile zoom, sürükleyerek yatay kaydırma yapabilirsiniz.','Backlog chart. Use the wheel to zoom and drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div></div>'
+      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek zoomunu etkinleştirmek için grafiğe tıklayın; sürükleyerek yatay kaydırabilirsiniz.','Backlog chart. Click the chart to enable wheel zoom; drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div></div>'
       +legendHtml(model)
-      +'<div class="backlogChartGestureHint">'+esc(tr('Tekerlek: zoom · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Wheel: zoom · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
+      +'<div class="backlogChartGestureHint">'+esc(tr('Grafiğe tıkla: tekerlek zoomunu etkinleştir · Grafik dışına tıkla: sayfa kaydırmaya dön · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Click chart: enable wheel zoom · Click outside: return wheel to page scrolling · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
     const updateRange=next=>{
       const safe=clampChartRange(next,total);chartView={signature:chartViewSignature(model),start:safe.start,end:safe.end};mountInteractiveChart(host,model,detail);
     };
@@ -598,6 +606,7 @@
     target.querySelector('[data-backlog-chart-today]')?.addEventListener('click',()=>{if(moveViewToToday(model))mountInteractiveChart(host,model,detail);});
     target.querySelectorAll('[data-backlog-chart-export]').forEach(button=>button.addEventListener('click',()=>void exportChartGraphic(host,button.getAttribute('data-backlog-chart-export'),visible)));
     const canvas=target.querySelector('.backlogChartCanvas'),viewport=target.querySelector('[data-backlog-chart-viewport]'),svg=viewport&&viewport.querySelector('svg'),panLayer=svg&&svg.querySelector('[data-backlog-chart-pan-layer]');
+    if(wheelZoomActive&&canvas)canvas.classList.add('is-wheel-active');
     const metrics=chartMetrics(visible),cross=viewport&&viewport.querySelector('[data-backlog-chart-crosshair]');
     let pinnedIndex=null,drag=null,suppressClickUntil=0,dragFrame=0;
     function hideCrosshair(){if(cross&&pinnedIndex==null)cross.hidden=true;}
@@ -675,8 +684,9 @@
       pinnedIndex=pinnedIndex===index?null:index;if(pinnedIndex==null)crosshairAt(event.clientX,event.clientY,null);else crosshairAt(event.clientX,event.clientY,pinnedIndex);
     });
     viewport?.addEventListener('dblclick',event=>{event.preventDefault();updateRange(defaultChartRange(model,new Date()));});
+    canvas?.addEventListener('click',()=>setWheelZoomActive(true,canvas));
     canvas?.addEventListener('wheel',event=>{
-      if(total<=1)return;event.preventDefault();
+      if(!wheelZoomActive||total<=1)return;event.preventDefault();
       const rect=viewport?viewport.getBoundingClientRect():canvas.getBoundingClientRect(),ratio=rect.width?Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)):.5;
       if(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)){animatedPan(panChartRange(range,total,(event.deltaX||event.deltaY)>0?1:-1));return;}
       updateRange(zoomChartRange(range,total,event.deltaY,ratio));
@@ -982,6 +992,10 @@
 
   function init() {
     if(initialized||!root.document)return; initialized=true; loadState();
+    root.document.addEventListener('pointerdown',event=>{
+      const target=event&&event.target;
+      if(wheelZoomActive&&!(target&&typeof target.closest==='function'&&target.closest('.backlogChartCanvas')))setWheelZoomActive(false);
+    });
     root.document.getElementById('backlogChartBtn')?.addEventListener('click',openSettings);
     const host=panel(); if(host&&state.enabled)host.hidden=false;
   }
