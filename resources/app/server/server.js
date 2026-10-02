@@ -13,6 +13,7 @@ const { once } = require('events');
 const BLBusinessRules = require('../public/business-rules');
 const BLFreight = require('../public/freight-calc');
 const BLTransitAnalysis = require('../public/transit-analysis');
+const transitAnalysisSource = require('./lib/transit-analysis-source');
 const canonicalFields = require('./lib/canonical-fields');
 // Excel tarih kancaları süreç açılışında kurulur: tembel getXLSX() çağrılarını
 // beklemeden, xlsx modülünü hangi yol kullanırsa kullansın okuma ve yazma aynı
@@ -10249,6 +10250,28 @@ app.get('/api/transit-analysis', (req, res) => {
   const revision = Number(ov._revisions && ov._revisions.transitAnalysis) || 0;
   res.set('ETag', `"${revision}"`);
   res.json({ analysis: ov.transitAnalysis || null, revision });
+});
+// Excel'siz yol: Backlog'un kanonik ASAS + IAS veri kümesinden canlı hesap.
+// Kullanıcının kaynak ufku ve yetki kapsamı Backlog ile aynı uygulanır.
+app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backlog'), async (req, res) => {
+  try {
+    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['backlog'], req);
+    if (!filterStatus.ready) {
+      return res.json({ analysis: null, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr') });
+    }
+    const runtime = cacheForUser(id);
+    if (!runtime.asasOrders) await ensureDataLoaded(id);
+    await ensureBacklogSourceFields(id);
+    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
+    const orders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser, 'backlog', ordersForTarget(active, 'backlog', overrides)));
+    const mode = ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel';
+    const label = { database: 'Database', dashboard: 'Power BI Dashboard', excel: 'Excel' }[mode];
+    const analysis = transitAnalysisSource.buildLiveAnalysis({
+      orders, antrepoMap: antrepoForTarget(active, 'backlog'), overrides,
+      sourceLabel: `Buyer Log IAS (Antrepo · ${label}) parsiyelleri`,
+    });
+    res.json({ analysis, antrepoSourceMode: mode, orderCount: orders.length });
+  } catch (err) { apiError(res, err, 'Yol süresi analizi Buyer Log verisinden hesaplanamadı.'); }
 });
 app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
   try {

@@ -41,6 +41,7 @@
   const RULE_STATS = Object.freeze({ mean: 'Adet ağırlıklı ortalama', p80: 'P80 (temkinli)' });
   const LOW_SAMPLE_QTY = 50000;
   const LOW_SAMPLE_PERIODS = 3;
+  const LOW_SAMPLE_SHIPMENTS = 5;
 
   // Excel'deki Türkçe ülke adı → Buyer Log CP "Country" görünen adı.
   const COUNTRY_NAMES = Object.freeze({
@@ -270,6 +271,142 @@
     });
   }
 
+  /* ---------- Buyer Log IAS (Antrepo) parsiyellerinden doğrudan analiz ----------
+     Excel gerekmez: Buyer Log'un ASAS + IAS kaynağından (Database / Dashboard /
+     Excel) zaten okuduğu her parsiyel bir sevkiyattır. Antrepoya girmiş
+     parsiyellerin tarih farkları ülke (ASAS üretim ülkesi) × taşıt (Vasita
+     Tanim) × antrepo giriş ayı kırılımında adet ağırlıklı toplanır.
+     shipment: { country, vehicle, qty, loadingRequest, handover, actualLoading?,
+                 eta, warehouseEntry, arrived }  — tarihler 'YYYY-MM-DD'. */
+  const SHIPMENT_STEPS = Object.freeze([
+    { code: '1', label: 'Yükleme Talep → Handover (üretici teslim)', group: 'loading' },
+    { code: '2', label: 'Handover → ETA (yükleme + deniz/hava yolu)', group: 'transit' },
+    { code: '2.1', label: 'Handover → Fiili Yükleme', group: 'loading', informational: true },
+    { code: '2.2', label: 'Fiili Yükleme → ETA', group: 'transit', informational: true },
+    { code: '3', label: 'ETA → Antrepo Giriş (gümrük + iç nakliye)', group: 'customs' },
+  ]);
+  const MIN_SPAN = -60;
+  const MAX_SPAN = 365;
+  function dayOrdinal(value) {
+    const m = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000) : null;
+  }
+  function span(from, to) {
+    const a = dayOrdinal(from), b = dayOrdinal(to);
+    if (a == null || b == null) return null;
+    const d = b - a;
+    return d < MIN_SPAN || d > MAX_SPAN ? null : d;
+  }
+  function monthOf(value) { const m = String(value || '').match(/^(\d{4})-(\d{2})/); return m ? m[1] + m[2] : ''; }
+
+  function buildFromShipments(shipments, meta = {}) {
+    const today = dayOrdinal(meta.today || new Date().toISOString().slice(0, 10));
+    const stats = { total: 0, used: 0, notArrived: 0, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0 };
+    const groups = new Map();
+    const stepGroups = new Map();
+    const add = (map, id, seed) => { if (!map.has(id)) map.set(id, { ...seed, items: [] }); return map.get(id); };
+    for (const raw of Array.isArray(shipments) ? shipments : []) {
+      stats.total += 1;
+      const s = raw || {};
+      if (!s.arrived) { stats.notArrived += 1; continue; }
+      const country = clip(s.country, 60);
+      if (!country) { stats.missingCountry += 1; continue; }
+      const vehicle = vehicleType(s.vehicle);
+      if (!vehicle) stats.missingVehicle += 1;
+      const entry = dayOrdinal(s.warehouseEntry);
+      if (entry == null || dayOrdinal(s.loadingRequest) == null) { stats.missingDates += 1; continue; }
+      if (today != null && entry > today) { stats.notArrived += 1; continue; }
+      const endToEnd = span(s.loadingRequest, s.warehouseEntry);
+      if (endToEnd == null || endToEnd < 0) { stats.outOfRange += 1; continue; }
+      const departure = s.actualLoading || s.handover;
+      const item = {
+        qty: Math.max(0, Math.round(num(s.qty) || 0)),
+        endToEnd,
+        loading: span(s.loadingRequest, departure),
+        transit: span(departure, s.eta),
+        customs: span(s.eta, s.warehouseEntry),
+        steps: {
+          1: span(s.loadingRequest, s.handover),
+          2: span(s.handover, s.eta),
+          2.1: s.actualLoading ? span(s.handover, s.actualLoading) : null,
+          2.2: s.actualLoading ? span(s.actualLoading, s.eta) : null,
+          3: span(s.eta, s.warehouseEntry),
+        },
+      };
+      stats.used += 1;
+      const period = monthOf(s.warehouseEntry);
+      add(groups, ['warehouse', vehicle, country, period].join('|'), { basis: 'warehouse', vehicle, country, period }).items.push(item);
+      add(stepGroups, ['warehouse', vehicle, country, period.slice(0, 4)].join('|'), { basis: 'warehouse', vehicle, country, year: period.slice(0, 4) }).items.push(item);
+      if (s.actualLoading && dayOrdinal(s.actualLoading) != null) {
+        const lp = monthOf(s.actualLoading);
+        add(groups, ['loading', vehicle, country, lp].join('|'), { basis: 'loading', vehicle, country, period: lp }).items.push(item);
+        add(stepGroups, ['loading', vehicle, country, lp.slice(0, 4)].join('|'), { basis: 'loading', vehicle, country, year: lp.slice(0, 4) }).items.push(item);
+      }
+    }
+    const records = [...groups.values()].map(g => {
+      const out = { basis: g.basis, vehicle: g.vehicle, year: g.period.slice(0, 4), granularity: 'month', period: g.period, country: g.country,
+        qty: g.items.reduce((sum, it) => sum + it.qty, 0), shipments: g.items.length };
+      MAIN_METRICS.forEach(m => { out[m] = round(weightedMean(g.items, it => it[m]), 2); });
+      return out;
+    });
+    const steps = [];
+    for (const g of stepGroups.values()) {
+      for (const def of SHIPMENT_STEPS) {
+        const mean = weightedMean(g.items, it => it.steps[def.code]);
+        if (mean == null) continue;
+        steps.push({ basis: g.basis, vehicle: g.vehicle, year: g.year, country: g.country, code: def.code, label: def.label,
+          group: def.group, informational: !!def.informational, days: round(mean, 2),
+          qty: g.items.reduce((sum, it) => sum + (it.steps[def.code] != null ? it.qty : 0), 0) });
+      }
+    }
+    const sources = [];
+    const seen = new Set();
+    records.forEach(r => {
+      const id = [r.basis, r.vehicle, r.year].join('|');
+      if (seen.has(id)) return; seen.add(id);
+      sources.push({ sheet: meta.sourceLabel || 'Buyer Log IAS parsiyelleri', role: 'main', basis: r.basis, vehicle: r.vehicle,
+        vehicleLabel: r.vehicle || 'Belirsiz', year: r.year, granularity: 'month',
+        rows: records.filter(x => x.basis === r.basis && x.vehicle === r.vehicle && x.year === r.year).length });
+    });
+    const analysis = normalizeAnalysis({
+      version: VERSION, source: 'database', fileName: meta.sourceLabel || 'Buyer Log IAS (Antrepo) verisi',
+      importedAt: meta.generatedAt || new Date().toISOString(), importedBy: '', sheetCount: 0, parsedSheets: [],
+      sources, records, steps, stats,
+    });
+    return analysis || { version: VERSION, source: 'database', records: [], steps: [], sources: [], stats: normalizeStats(stats),
+      fileName: meta.sourceLabel || 'Buyer Log IAS (Antrepo) verisi', importedAt: new Date().toISOString(), importedBy: '', sheetCount: 0, parsedSheets: [] };
+  }
+
+  function normalizeStats(input) {
+    if (!input || typeof input !== 'object') return null;
+    const out = {};
+    ['total', 'used', 'notArrived', 'missingDates', 'outOfRange', 'missingVehicle', 'missingCountry'].forEach(k => {
+      out[k] = Math.max(0, Math.round(num(input[k]) || 0));
+    });
+    return out;
+  }
+
+  /* Kaynağa göre süre tanımları: rapor (Excel) ile IAS parsiyelinin kesitleri farklıdır. */
+  function metricLabels(analysis) {
+    if (analysis && analysis.source === 'database') {
+      return {
+        loading: 'Yükleme Talep → Handover/Fiili Yükleme',
+        transit: 'Handover/Fiili Yükleme → ETA',
+        customs: 'ETA → Antrepo Giriş',
+        endToEnd: 'Yükleme Talep → Antrepo Giriş',
+        rule: {
+          endToEnd: 'Uçtan Uca (Yükleme Talep → Antrepo)',
+          handoverToWarehouse: 'Handover → Antrepo (Uçtan Uca − Üretici teslim)',
+          loadingToWarehouse: 'Handover/Fiili Yükleme → Antrepo',
+        },
+      };
+    }
+    return {
+      loading: 'Yükleme Talep → Fiili Yükleme', transit: 'Fiili Yükleme → Özet Beyan',
+      customs: 'Özet Beyan → Antrepo', endToEnd: 'Yükleme Talep → Tema Depo/Antrepo Giriş', rule: { ...RULE_METRICS },
+    };
+  }
+
   /* ---------- Kalıcı şekil (sunucu ve istemci aynı doğrulamayı kullanır) ---------- */
   function cleanMetric(value) {
     const n = num(value);
@@ -285,6 +422,7 @@
       if (!basis || !granularity || !country || !/^\d{6}$/.test(period)) return null;
       const out = { basis, vehicle: vehicleType(rec.vehicle), year: period.slice(0, 4), granularity, period, country,
         qty: Math.max(0, Math.round(num(rec.qty) || 0)) };
+      if (rec.shipments != null) out.shipments = Math.max(0, Math.round(num(rec.shipments) || 0));
       MAIN_METRICS.forEach(m => { out[m] = cleanMetric(rec[m]); });
       return MAIN_METRICS.some(m => out[m] != null) ? out : null;
     }).filter(Boolean);
@@ -309,6 +447,8 @@
     const importedAt = text(input.importedAt);
     return {
       version: VERSION,
+      source: input.source === 'database' ? 'database' : 'excel',
+      stats: normalizeStats(input.stats),
       fileName: clip(input.fileName, 200),
       importedAt: Number.isFinite(Date.parse(importedAt)) ? new Date(importedAt).toISOString() : new Date().toISOString(),
       importedBy: clip(input.importedBy, 120),
@@ -379,6 +519,7 @@
         ruleCountry: countryRuleName(first.country),
         qty,
         periods: ordered.length,
+        shipments: list.some(r => r.shipments != null) ? list.reduce((s, r) => s + (Number(r.shipments) || 0), 0) : null,
         granularity: first.granularity,
         ...metrics,
         p50: round(weightedPercentile(list, r => r.endToEnd, 0.5), 1),
@@ -390,7 +531,10 @@
         producerDays: producerStep ? round(producerStep.days, 1) : null,
         lastMean: round(lastMean, 1),
         trend: lastMean != null && metrics.endToEnd != null ? round(lastMean - metrics.endToEnd, 1) : null,
-        lowSample: qty < LOW_SAMPLE_QTY || ordered.length < LOW_SAMPLE_PERIODS,
+        // IAS kaynağında örneklem sevkiyat (parsiyel) sayısıdır; raporda adet/dönem.
+        lowSample: list.some(r => r.shipments != null)
+          ? list.reduce((s, r) => s + (Number(r.shipments) || 0), 0) < LOW_SAMPLE_SHIPMENTS
+          : (qty < LOW_SAMPLE_QTY || ordered.length < LOW_SAMPLE_PERIODS),
         // Negatif ana süre, kaynak tarihlerinde tutarsızlık demektir (ör. ETA < fiili yükleme).
         anomaly: ['loading', 'transit', 'customs'].some(m => metrics[m] != null && metrics[m] < 0),
         series: ordered.map(r => ({ period: r.period, endToEnd: r.endToEnd, loading: r.loading, transit: r.transit, customs: r.customs, qty: r.qty })),
@@ -478,8 +622,8 @@
   }
 
   return {
-    VERSION, BASES, BASIS_LABELS, METRIC_LABELS, RULE_METRICS, RULE_STATS, LOW_SAMPLE_QTY, LOW_SAMPLE_PERIODS,
-    headerKind, parseSheet, parseWorkbook, normalizeAnalysis, options, summarize,
+    VERSION, BASES, BASIS_LABELS, METRIC_LABELS, RULE_METRICS, RULE_STATS, LOW_SAMPLE_QTY, LOW_SAMPLE_PERIODS, LOW_SAMPLE_SHIPMENTS,
+    headerKind, parseSheet, parseWorkbook, buildFromShipments, metricLabels, normalizeAnalysis, options, summarize,
     ruleDays, suggestRules, applySuggestions, currentRuleDays, countryRuleName, vehicleType,
   };
 });

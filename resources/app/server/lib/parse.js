@@ -3468,4 +3468,5 @@ module.exports = {
   auditAntrepoMatching,
   applyDateOverrides, asasBaseline, backlogTemplateRowsFromSegments,
   findTransitRule, resolveTransitDays, defaultTransitDays, normalizeTransitDelType, roundHalfUp, backlogRiskFromSignals,
+  parseDateOnly, antrepoStatusKey,
 };
