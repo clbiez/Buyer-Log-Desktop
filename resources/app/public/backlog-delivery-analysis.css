@@ -23,10 +23,7 @@
 .bdaParity.is-warn { color: var(--warn, #b26a00); border-color: currentColor; }
 
 /* --------------------------------------------------------------- KPI satırı */
-.bdaKpiRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
-.bdaRiskOverview{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:stretch;margin-bottom:12px;min-width:0}
-.bdaRiskOverview .bdaKpiRow{grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:0;align-content:start;min-width:0}
-.bdaRiskOverview .bdaRadarCard{margin:0;min-width:0}
+.bdaKpiRow { display: grid; grid-template-columns: repeat(6, minmax(132px, 1fr)); gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
 .bdaKpi { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left;
   border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 8px 10px; cursor: pointer; }
 .bdaKpi.is-total { cursor: default; }
@@ -170,14 +167,11 @@
   .backlogPivotRadarWorkspace{grid-template-columns:1fr!important;gap:8px}
   .backlogWorkspaceSplitter{display:none!important}
   .backlogPivotWorkspacePanel,.backlogRadarCard{order:initial!important}
-  .bdaRiskOverview{grid-template-columns:1fr}
-  .bdaRiskOverview .bdaKpiRow{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media(max-width:680px){
   .backlogWorkspaceCardHead{align-items:flex-start}
   .backlogWorkspaceCardHead>div:first-child{display:grid;gap:2px}
   .backlogRadarBody{min-height:260px;padding:8px 14px}
-  .bdaRiskOverview .bdaKpiRow{grid-template-columns:repeat(2,minmax(0,1fr))}
   .blRadarSvg{min-height:230px}
 }
 

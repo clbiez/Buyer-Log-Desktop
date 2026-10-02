@@ -30,8 +30,9 @@
     dim: 'buyer',
     measure: 'qty',            // 'qty' | 'orders'
     insightLimit: 3,
-    // Rapor sade başlar: yalnız özet, aksiyon gerektirenler ve en riskli siparişler açık.
-    folds: { cause: false, insights: true, attention: true, performance: false, stage: false, dimension: false, topRisk: true, quality: false },
+    // Kullanıcı isterse tüm analiz gövdesini daraltabilir; tercih oturumlar arasında saklanır.
+    collapsed: false,
+    folds: { cause: false, attention: true, stage: false, dimension: false, quality: false },
     automate: false,
     showAllInsights: false,
     period: { mode: 'all', from: '', to: '' },
@@ -67,6 +68,7 @@
       const saved = JSON.parse(BLStorage.getItem(STORAGE_KEY) || '{}') || {};
       if (DIM_TABS.includes(saved.dim)) state.dim = saved.dim;
       if (saved.measure === 'orders' || saved.measure === 'qty') state.measure = saved.measure;
+      if (typeof saved.collapsed === 'boolean') state.collapsed = saved.collapsed;
       if (Number.isFinite(Number(saved.insightLimit))) state.insightLimit = Math.max(3, Math.min(40, Number(saved.insightLimit)));
       if (saved.preferences && typeof saved.preferences === 'object') state.preferences = { ...state.preferences, ...saved.preferences };
       if (saved.settings && typeof saved.settings === 'object') state.settings = { ...state.settings, ...saved.settings };
@@ -77,7 +79,7 @@
   function save() {
     try {
       BLStorage.setItem(STORAGE_KEY, JSON.stringify({
-        dim: state.dim, measure: state.measure, insightLimit: state.insightLimit,
+        dim: state.dim, measure: state.measure, insightLimit: state.insightLimit, collapsed: state.collapsed,
         preferences: state.preferences, settings: state.settings, customRules: state.customRules, folds: state.folds,
       }));
     } catch (_) {}
@@ -287,23 +289,6 @@
     }
   }
 
-  function renderInsights() {
-    if (!state.insights.length) return '';
-    const shown = state.showAllInsights ? state.insights : state.insights.slice(0, state.insightLimit);
-    const items = shown.map((insight, index) => `<li class="bdaInsight is-${esc(insight.severity)}">
-      <button type="button" class="bdaInsightBtn" data-insight="${index}">
-        <span class="bdaInsightDot" aria-hidden="true"></span>
-        <span class="bdaInsightText">${esc(insight.message)}</span>
-        <span class="bdaInsightMeta">${esc(int(insight.orderCount))} ${esc(L('sipariş', 'orders'))} · ${esc(int(insight.qty))} ${esc(L('adet', 'units'))}</span>
-      </button></li>`).join('');
-    const more = state.insights.length > shown.length
-      ? `<button type="button" class="bdaLink" data-action="showAllInsights">${esc(L(`Tüm ${state.insights.length} yorumu gör`, `View all ${state.insights.length} insights`))}</button>`
-      : (state.showAllInsights && state.insights.length > state.insightLimit
-        ? `<button type="button" class="bdaLink" data-action="showFewerInsights">${esc(L('Daha az göster', 'Show fewer'))}</button>` : '');
-    return `${foldHead('insights', L('Otomatik Yorumlar', 'Automatic Insights'), L(`${state.insights.length} yorum`, `${state.insights.length} insights`))}
-      <ul class="bdaInsightList">${items}</ul>${more}</div></div>`;
-  }
-
   function renderNeedsAttention(model) {
     // Sayılar tam kümeden (groups.counts); liste görüntüsü kısıtlanır.
     const groups = Engine.needsAttention(model, { limit: 500 });
@@ -318,22 +303,6 @@
         <span class="bdaAttentionMeta">${esc(int(groups.quantities[key]))} ${esc(L('adet', 'units'))}</span></button>`).join('');
     const urgent = (groups.counts.CRITICAL || 0) + (groups.counts.ACTION_TODAY || 0);
     return `${foldHead('attention', L('Aksiyon Gerekenler', 'Needs Attention'), urgent ? L(`${int(urgent)} acil sipariş`, `${int(urgent)} urgent orders`) : L('Acil sipariş yok', 'No urgent orders'))}<div class="bdaAttentionRow">${cards}</div></div></div>`;
-  }
-
-  function renderPerformance(model) {
-    const loadingCards = Engine.LOADING_OUTCOMES.filter(key => model.loadingPerformance[key].rows)
-      .map(key => `<button type="button" class="bdaChip" data-loading="${esc(key)}">
-        <span>${esc(loadingLabel(key))}</span><b>${esc(int(measureOf(model.loadingPerformance[key])))}</b></button>`).join('');
-    const transit = model.transitPerformance;
-    const transitCard = transit.loadedOnTimeButDelayed.rows
-      ? `<button type="button" class="bdaChip is-warn" data-action="transitDelayed">
-          <span>${esc(L('Zamanında yüklendi · transit aşıldı', 'Loaded on time · transit exceeded'))}</span>
-          <b>${esc(int(measureOf(transit.loadedOnTimeButDelayed)))}</b></button>`
-      : `<span class="bdaMuted">${esc(L('Transit planını aşan yükleme yok.', 'No shipment has exceeded its planned transit.'))}</span>`;
-    return `${foldHead('performance', L('Yükleme & Transit Başarımı', 'Loading & Transit Performance'), '')}<div class="bdaSplit">
-      <div><h5 class="bdaSubH">${esc(L('Yükleme', 'Loading'))}</h5><div class="bdaChipRow">${loadingCards || `<span class="bdaMuted">—</span>`}</div></div>
-      <div><h5 class="bdaSubH">${esc(L('Transit', 'Transit'))}</h5><div class="bdaChipRow">${transitCard}</div></div>
-    </div></div></div>`;
   }
 
   function renderStageMatrix(model) {
@@ -371,27 +340,6 @@
       <div class="bdaTableWrap"><table class="bdaTable"><thead><tr>
         <th>${esc(dimLabel(state.dim))}</th><th class="num">${esc(L('Toplam', 'Total'))}</th>${head}<th class="num">${esc(L('Gecikme %', 'Late %'))}</th>
       </tr></thead><tbody>${body || `<tr><td colspan="8" class="bdaMuted">—</td></tr>`}</tbody></table></div></div></div>`;
-  }
-
-  function renderTopRisk(model) {
-    const list = model.topRiskOrders.slice(0, 20);
-    if (!list.length) return '';
-    const rows = list.map(order => `<tr>
-      <td>${esc(order.orderCode)}</td><td>${esc(order.modelName)}</td>
-      <td>${esc(stageLabel(order.stage))}</td><td>${esc(order.loadingType || '—')}</td>
-      <td class="num">${esc(int(order.qty))}</td>
-      <td class="num">${order.scheduleBufferDays == null ? '—' : esc(int(order.scheduleBufferDays))}</td>
-      <td>${esc(outcomeLabel(order.deliveryOutcome))}</td>
-      <td>${esc(order.riskCause ? causeLabel(order.riskCause) : '—')}</td>
-      <td>${esc(order.etaSource === 'ias' ? L('IAS antrepo tarihi', 'IAS warehouse date') : order.etaSource === 'calculated' ? L('Transit kuralından hesaplandı', 'Calculated from transit rule') : '—')}</td>
-    </tr>`).join('');
-    return `${foldHead('topRisk', L('En Riskli Siparişler', 'Top Risk Orders'), L(`ilk ${list.length}`, `top ${list.length}`))}
-      <div class="bdaTableWrap"><table class="bdaTable"><thead><tr>
-        <th>${esc(L('Sipariş', 'Order'))}</th><th>${esc(L('Model', 'Model'))}</th><th>${esc(L('Aşama', 'Stage'))}</th>
-        <th>${esc(L('Yükleme Tipi', 'Loading Type'))}</th><th class="num">${esc(L('Adet', 'Qty'))}</th>
-        <th class="num">${esc(L('Tampon (gün)', 'Buffer (days)'))}</th><th>${esc(L('Sonuç', 'Outcome'))}</th>
-        <th>${esc(L('Sebep', 'Cause'))}</th><th>${esc(L('ETA Kaynağı', 'ETA Source'))}</th>
-      </tr></thead><tbody>${rows}</tbody></table></div></div></div>`;
   }
 
   function renderDataQuality(model) {
@@ -466,6 +414,7 @@
           <input type="date" data-control="periodFrom" value="${esc(state.period.from || '')}"></label>
         <label class="bdaControl"><span>${esc(L('Bitiş', 'To'))}</span>
           <input type="date" data-control="periodTo" value="${esc(state.period.to || '')}"></label>` : ''}
+        <button type="button" class="tbtn bdaAnalysisToggle" data-action="toggleAnalysis" aria-expanded="${state.collapsed ? 'false' : 'true'}">${esc(state.collapsed ? L('Analizi Göster', 'Show Analysis') : L('Analizi Gizle', 'Hide Analysis'))}</button>
         <button type="button" class="tbtn" data-action="settings">${esc(L('Yorum Ayarları', 'Insight Settings'))}</button>
         <button type="button" class="tbtn" data-action="copy">${esc(L('Özeti Kopyala', 'Copy Summary'))}</button>
         <button type="button" class="tbtn" data-action="refresh">${esc(L('Yenile', 'Refresh'))}</button>
@@ -476,9 +425,9 @@
   function render() {
     const host = document.getElementById('backlogAnalysis');
     if (!host) return;
-    // Backlog açıldığında analiz her zaman görünür; ayrı aç/kapat düğmesi yoktur.
     state.open = true;
     host.hidden = false;
+    if (state.collapsed) { host.innerHTML = renderHeader(); bind(host); return; }
     if (state.loading) { host.innerHTML = `${renderHeader()}<div class="bdaMuted bdaPad">${esc(L('Analiz hesaplanıyor…', 'Calculating analysis…'))}</div>`; bind(host); return; }
     if (state.error) { host.innerHTML = `${renderHeader()}<div class="bdaError">${esc(state.error)}</div>`; bind(host); return; }
     const model = state.model;
@@ -490,12 +439,9 @@
       ${renderTransitRuleWarning(model)}
       ${renderOutcomeRow(model)}
       ${renderCauseRow(model)}
-      ${renderInsights()}
       ${renderNeedsAttention(model)}
-      ${renderPerformance(model)}
       ${renderStageMatrix(model)}
       ${renderDimension(model)}
-      ${renderTopRisk(model)}
       ${renderDataQuality(model)}`;
     bind(host);
   }
@@ -528,9 +474,8 @@
       button.addEventListener('click', () => {
         const action = button.dataset.action;
         if (action === 'refresh') { void refresh(true); return; }
-        if (action === 'showAllInsights') { state.showAllInsights = true; render(); return; }
+        if (action === 'toggleAnalysis') { state.collapsed = !state.collapsed; save(); render(); return; }
         if (action === 'toggleAutomate') { state.automate = !state.automate; render(); return; }
-        if (action === 'showFewerInsights') { state.showAllInsights = false; render(); return; }
         if (action === 'copy') { copySummary(); return; }
         if (action === 'settings') { openSettings(); return; }
         if (action === 'openTransitRules') {
@@ -539,10 +484,6 @@
           if (trigger) trigger.click();
           else if (typeof showToast === 'function') showToast(L('Yol süreleri ekranı Kaynak Ayarları altında açılabilir.', 'Transit times can be opened from Source Settings.'));
           return;
-        }
-        if (action === 'transitDelayed') {
-          openOrders(L('Zamanında yüklendi · transit aşıldı', 'Loaded on time · transit exceeded'),
-            ordersWhere(order => order.loadingPerformance === 'LOADED_ON_TIME' && order.transitVarianceDays != null && order.transitVarianceDays > 0));
         }
       });
     });
@@ -577,17 +518,9 @@
       const key = button.dataset.cause;
       openOrders(causeLabel(key), ordersWhere(order => order.riskReasons.includes(key)));
     }));
-    host.querySelectorAll('[data-loading]').forEach(button => button.addEventListener('click', () => {
-      const key = button.dataset.loading;
-      openOrders(loadingLabel(key), ordersWhere(order => order.loadingPerformance === key));
-    }));
     host.querySelectorAll('[data-attention]').forEach(button => button.addEventListener('click', () => {
       const groups = Engine.needsAttention(state.model, { limit: 500 });
       openOrders(button.querySelector('.bdaAttentionLabel').textContent, groups[button.dataset.attention] || []);
-    }));
-    host.querySelectorAll('[data-insight]').forEach(button => button.addEventListener('click', () => {
-      const insight = state.insights[Number(button.dataset.insight)];
-      if (insight) openOrders(insight.message.slice(0, 80), insight.orders);
     }));
     host.querySelectorAll('[data-dim]').forEach(button => button.addEventListener('click', () => {
       state.dim = button.dataset.dim; save(); render();

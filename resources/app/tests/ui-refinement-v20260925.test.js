@@ -54,7 +54,7 @@ test('Thinking Orb bileşeni durum değerini doğrular ve yükleme durumunda kul
 });
 
 test('Teslimat riski analizi bölümleri açılır/kapanır ve tercih saklanır', () => {
-  for (const key of ['cause', 'insights', 'attention', 'performance', 'stage', 'dimension', 'topRisk', 'quality']) {
+  for (const key of ['cause', 'attention', 'stage', 'dimension', 'quality']) {
     assert.match(BDA, new RegExp(`foldHead\\('${key}'`), `${key} bölümü katlanabilir değil`);
   }
   assert.match(BDA, /folds: state\.folds/);
