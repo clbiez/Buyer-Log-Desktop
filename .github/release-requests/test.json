@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.196",
-  "commit_sha": "f9bbefb076612648e11e795372f3e52a3807542f",
-  "release_notes": "Buyer Log 7.0.196: Yeni sürüm açılırken ikinci kez başlatılan Buyer Log artık çalışan güncelleme denemesini geri almıyor; tek kopya kilidi güncelleme işlemlerinden önce alınıyor. Check for Updates penceresine, health check sonrası engellenen sürüm için moderatöre özel Tekrar Dene düğmesi eklendi."
+  "version": "7.0.197",
+  "commit_sha": "a4113a7c7ebc99b61a0b58a5f70c98b24a085630",
+  "release_notes": "Buyer Log 7.0.197: Açılış bekleme ekranında kullanım ipuçları yerine 'Biliyor muydunuz?' kartları gösteriliyor: 14 kategoride 179 az bilinen genel kültür bilgisi, her kategoriye özgü hareketli çizimlerle. Görülmemiş bilgiler önce gelir; kullanım ipuçları F1 Kullanım Rehberi'nde kalmaya devam ediyor. 7.0.196 düzeltmelerini de içerir: ikinci kez başlatılan Buyer Log çalışan güncelleme denemesini geri almıyor; Check for Updates penceresine moderatöre özel Tekrar Dene düğmesi eklendi."
 }
