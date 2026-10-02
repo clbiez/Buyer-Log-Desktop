@@ -3217,14 +3217,17 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
        Yeni kaynaklar:
        · Orijinal  → her zaman ASAS'ın kendi tarihi (asasBaseline; revizyon yoksa
          zaten geçerli değerin kendisidir).
-       · Revize    → PARSİYEL satırda ANTREPO'nun o parsiyele ait gerçek yükleme
-         (HANDOVER) tarihi; üretim/eksik yükleme satırında CP revizyonu varsa o,
-         yoksa ASAS tarihi. Parsiyelde handover boşsa sütun boş bırakılmaz,
-         siparişin geçerli Ex-Factory tarihine düşülür. */
+       · Revize    → her satırda Buyer Log'un geçerli Ex-Factory tarihi. Kullanıcı
+         revizyonu varsa applyDateOverrides sonrası order.ex bunu taşır; yoksa
+         ASAS tarihine eşittir.
+       · Gerçek yükleme → IAS parsiyelinde HANDOVER ayrı bir operasyonel kaynaktır.
+         Revised Shipment Date alanını ezmez; transit gecikmesi ve Excel iç
+         metadatasında actualLoadDate olarak kullanılmaya devam eder. */
     const asasExDate = asasBaseline(order, 'ex', '_asasEx');
     const isPartial = !isProduction && !isShortage;
     const partialLoadDate = isPartial && ias ? toDateOnly(ias.handover) : null;
-    const revisedLoadDate = partialLoadDate || toDateOnly(order.ex) || asasExDate || null;
+    const revisedExFactoryDate = toDateOnly(order.ex) || asasExDate || null;
+    const actualLoadDate = isPartial ? (partialLoadDate || revisedExFactoryDate) : revisedExFactoryDate;
 
     // Üretim sonrası parsiyellerde de ülke/sezon/yükleme tipine göre tanımlanmış
     // Transfer Lead Time kuralını çöz. Önceki davranış non-production satırlarda
@@ -3232,7 +3235,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
     // kuralı transit gecikmesi hesabında görünmez kılıyordu.
     const transitInfo = resolveTransitDays({
       delType: effectiveDelType,
-      exFactory: revisedLoadDate || order.ex,
+      exFactory: actualLoadDate || revisedExFactoryDate || order.ex,
       season: order.season,
       country: order.countryRaw,
       status: segment._status,
@@ -3247,7 +3250,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       isPartial,
       isInWarehouse,
       isRetailWaiting,
-      loadDate: revisedLoadDate,
+      loadDate: actualLoadDate,
       transitDays: transitInfo.days,
     });
 
@@ -3320,7 +3323,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       'Net Gelen Alım Sipariş Miktarı': receivedQty,
       'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo': asasReadyDepotRemainingQty,
       'GÜNCEL DURUM\n(STATUS)': segment._status,
-      'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)': revisedLoadDate,
+      'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)': revisedExFactoryDate,
       'RİSK\n(PRIORITY)': riskValue,
       'ANTREPO GİRİŞ TARİHİ': backlogAntrepoDate || null,
       'YÜKLEME TİPİ': effectiveDelType,
@@ -3359,7 +3362,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         } : null,
         actualAntrepoDate: (isProduction || isShortage) ? null : (backlogAntrepoDate || null),
         handoverDate: ias ? (ias.handover || null) : null,
-        actualLoadDate: isPartial ? (revisedLoadDate || null) : null,
+        actualLoadDate: isPartial ? (actualLoadDate || null) : null,
         expectedTransitArrival: transitOverdue.expectedArrival || null,
         transitOverdue: transitOverdue.overdue === true,
         transitOverdueDays: transitOverdue.overdueDays,

@@ -106,30 +106,50 @@ test('v6.35 revizyon yoksa her iki sütun da ASAS tarihini veriyor', () => {
   assert.equal(iso(row['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-01');
 });
 
-test('v6.35 parsiyel satırında revize sütunu ANTREPO handover tarihinden geliyor', () => {
+test('v7.0.201 parsiyel satırında Revised Shipment Date Buyer Log Ex-Factory revizyonunu gösterir', () => {
   const order = fixtureOrder();
   const partial = segmentFor(order, 'ias', {
     _iasRow: { handover: D('2026-03-20'), arr: D('2026-04-10') },
     _arr: D('2026-04-10'),
   });
   const [row] = buildRows([partial], order);
-  // Parsiyelin kendi yükleme tarihi; ne ASAS ne de CP revizyonu.
-  assert.equal(iso(row['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-20');
+  // HANDOVER gerçekleşen yükleme kaynağıdır; kullanıcı Ex-Factory revizyonunu
+  // Revised Shipment Date alanında ezmemelidir.
+  assert.equal(iso(row['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-15');
   assert.equal(iso(row['Orijinal Exfactory Merch Tarih']), '2026-03-01');
+  assert.equal(iso(row._backlogExcel.actualLoadDate), '2026-03-20');
 });
 
-test('v6.35 aynı siparişin parsiyeli ve üretim kalanı AYRI tarih alıyor', () => {
+test('v7.0.201 aynı siparişin tüm Backlog segmentleri aynı kullanıcı Ex-Factory revizyonunu gösterir', () => {
   const order = fixtureOrder();
   const partial = segmentFor(order, 'ias', {
     _iasRow: { handover: D('2026-03-20'), arr: D('2026-04-10') }, _arr: D('2026-04-10'),
   });
   const production = segmentFor(order, 'production');
   const rows = buildRows([partial, production], order);
-  assert.equal(iso(rows[0]['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-20', 'parsiyel → ANTREPO');
-  assert.equal(iso(rows[1]['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-15', 'üretim → CP revizyonu');
+  assert.equal(iso(rows[0]['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-15', 'parsiyel → Buyer Log revizyonu');
+  assert.equal(iso(rows[1]['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-15', 'üretim → Buyer Log revizyonu');
+  assert.equal(iso(rows[0]._backlogExcel.actualLoadDate), '2026-03-20', 'parsiyelin gerçek yüklemesi HANDOVER olarak korunmalı');
   // Orijinal ikisinde de aynı ve ASAS kaynaklı olmalı.
   assert.equal(iso(rows[0]['Orijinal Exfactory Merch Tarih']), '2026-03-01');
   assert.equal(iso(rows[1]['Orijinal Exfactory Merch Tarih']), '2026-03-01');
+});
+
+test('v7.0.201 kaydedilmiş kullanıcı Ex-Factory revizyonu IAS HANDOVER eski kalsa da Backlog Revised Shipment Date alanına taşınır', () => {
+  const raw = fixtureOrder();
+  raw.ex = D('2026-03-01');
+  delete raw._asasEx;
+  const key = parse.orderLineKey(raw.ocode, raw.model, raw.ccode);
+  const overrides = { datemap: { [key]: { ex: '2026-03-15' } } };
+  const [order] = parse.applyDateOverrides([raw], overrides);
+  const partial = segmentFor(order, 'ias', {
+    _iasRow: { handover: D('2026-03-01'), arr: D('2026-04-10') },
+    _arr: D('2026-04-10'),
+  });
+  const [row] = parse.backlogTemplateRowsFromSegments([partial], overrides, new Map(), []);
+  assert.equal(iso(row['Orijinal Exfactory Merch Tarih']), '2026-03-01');
+  assert.equal(iso(row['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-15');
+  assert.equal(iso(row._backlogExcel.actualLoadDate), '2026-03-01');
 });
 
 test('v6.35 handover boş parsiyelde sütun boş kalmıyor', () => {
