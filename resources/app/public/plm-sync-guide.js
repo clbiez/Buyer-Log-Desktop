@@ -1,0 +1,238 @@
+(function(){
+  'use strict';
+
+  const STORAGE_KEY='buyerlog.syncGuide.dismissed.v1';
+  const GUIDE_VERSION=1;
+  const guardedCategories=new Set(['plm','asas']);
+  const syncEndpoints=new Set([
+    '/api/plm-sync/fetch',
+    '/api/plm-style-links/sync-links',
+    '/api/model-images/import-plm',
+    '/api/model-images/import-asas',
+    '/api/plm-sync/model-files',
+    '/api/plm-requests/sync'
+  ]);
+  let bypassEntry=null;
+  let statusCache=null;
+  let statusCacheAt=0;
+  let activeProgress=null;
+
+  function en(){return String(window.appLang||document.documentElement.lang||'tr').toLowerCase().startsWith('en');}
+  function t(tr,eng){return en()?eng:tr;}
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+  function readDismissed(){
+    try{
+      const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+      return raw&&raw.version===GUIDE_VERSION?raw:{version:GUIDE_VERSION,plm:false,asas:false};
+    }catch(_){return {version:GUIDE_VERSION,plm:false,asas:false};}
+  }
+  function writeDismissed(category,value){
+    const state=readDismissed();state[category]=Boolean(value);
+    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}catch(_){}
+  }
+  function isDismissed(category){return Boolean(readDismissed()[category]);}
+
+  async function browserStatus(force=false){
+    if(!force&&statusCache&&Date.now()-statusCacheAt<5000)return statusCache;
+    try{
+      const response=await fetch('/api/browser-debug/status',{credentials:'same-origin'});
+      const data=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(data.error||response.statusText);
+      statusCache=data.status||{};
+    }catch(error){
+      statusCache={connectionState:'ERROR',error:(error&&error.message)||String(error)};
+    }
+    statusCacheAt=Date.now();return statusCache;
+  }
+  function stateText(state){
+    const map={
+      READY:t('Hazır','Ready'),
+      DISABLED:t('Kapalı','Disabled'),
+      REMOTE_DEBUG_DISABLED:t('Remote Debugging kapalı','Remote Debugging disabled'),
+      PROFILE_REQUIRED:t('Profil seçilmeli','Profile required'),
+      PROFILE_NOT_FOUND:t('Profil bulunamadı','Profile not found'),
+      PORT_CONFLICT:t('Port çakışması','Port conflict'),
+      ENDPOINT_UNVERIFIED:t('Bağlantı doğrulanamadı','Endpoint unverified'),
+      CONTEXT_MISMATCH:t('Tarayıcı profili eşleşmiyor','Browser profile mismatch'),
+      DISCOVERING:t('Tarayıcı aranıyor','Discovering browser'),
+      ERROR:t('Bağlantı kontrol edilemedi','Connection check failed')
+    };
+    return map[state]||state||t('Hazır değil','Not ready');
+  }
+  function browserLabel(status){
+    const resolved=status&&status.resolved||{};
+    const browser=resolved.resolvedBrowser||(resolved.detected&&resolved.detected.browser)||status&&status.configuration&&status.configuration.preferredBrowser||'';
+    return browser==='chrome'?'Google Chrome':browser==='edge'?'Microsoft Edge':t('Chrome / Edge','Chrome / Edge');
+  }
+  function inspectUrl(status){
+    const resolved=status&&status.resolved||{};
+    const browser=resolved.resolvedBrowser||(resolved.detected&&resolved.detected.browser)||status&&status.configuration&&status.configuration.preferredBrowser||'';
+    return browser==='chrome'?'chrome://inspect/#devices':'edge://inspect/#devices';
+  }
+  function closeExisting(){document.getElementById('_syncGuideOverlay')?.remove();}
+  function closeProgress(){if(activeProgress){activeProgress.remove();activeProgress=null;}}
+
+  function visualBrowser(status){
+    const url=inspectUrl(status);
+    return '<div class="blSyncGuideBrowser" aria-hidden="true">'+
+      '<div class="blSyncGuideBrowserTop"><i></i><i></i><i></i><span>'+esc(browserLabel(status))+'</span></div>'+
+      '<div class="blSyncGuideAddress">'+esc(url)+'</div>'+
+      '<div class="blSyncGuideBrowserBody"><div class="blSyncGuideToggleRow"><span>Remote Debugging</span><b><i></i></b></div>'+
+      '<div class="blSyncGuideAllow"><strong>'+esc(t('Allow Remote Debugging','Allow Remote Debugging'))+'</strong><small>'+esc(t('Tarayıcı bu onayı gösterirse Allow seçin.','If the browser asks, choose Allow.'))+'</small><button type="button" tabindex="-1">Allow</button></div></div></div>';
+  }
+
+  function guideSteps(category,status){
+    const isAsas=category==='asas';
+    const source=isAsas?'ASAS':'PLM';
+    return [
+      {
+        icon:'1',
+        title:t(source+' işlemi tarayıcı kullanır',source+' uses your browser'),
+        body:t('Buyer Log gerekli sayfayı sizin için açabilir. İşlem bitene kadar açılan Chrome/Edge penceresini kapatmayın.','Buyer Log may open the required page for you. Keep the Chrome/Edge window open until the operation finishes.'),
+        visual:'<div class="blSyncGuideMiniFlow"><span>Buyer Log</span><b>→</b><span>'+esc(browserLabel(status))+'</span><b>→</b><span>'+source+'</span></div>'
+      },
+      {
+        icon:'2',
+        title:t('Tarayıcı onayını kaçırmayın','Do not miss the browser approval'),
+        body:isAsas
+          ?t('ASAS görselleri çekilirken tarayıcı arka planda çalışabilir. Açılan Remote Debugging onayı varsa Allow seçin.','While ASAS images are collected, the browser may work in the background. If a Remote Debugging prompt appears, choose Allow.')
+          :t('Özellikle “PLM’de Seçili Olan Modelleri Al” gibi işlemlerde tarayıcı bir onay gösterebilir. Allow seçilmezse veri Buyer Log’a gelmez.','Especially for actions such as “Import PLM-selected models”, the browser may ask for approval. If Allow is not selected, data will not reach Buyer Log.'),
+        visual:'<div class="blSyncGuidePrompt" aria-hidden="true"><span>'+esc(t('Tarayıcı bildirimi','Browser prompt'))+'</span><strong>Allow Remote Debugging?</strong><em>Allow</em></div>'
+      },
+      {
+        icon:'3',
+        title:t('Remote Debugging açık olmalı','Remote Debugging must be enabled'),
+        body:t('Buyer Log bağlantıyı hazır görmüyorsa önce Browser ve Remote Debugging ayarını açın. Manuel kontrol gerekirse aşağıdaki inspect adresini kullanın.','If Buyer Log does not see a ready connection, open Browser & Remote Debugging settings first. If a manual check is needed, use the inspect address below.'),
+        visual:visualBrowser(status)
+      }
+    ];
+  }
+
+  function renderGuide(category,status,{blocking=false}={}){
+    closeExisting();
+    const state=status&&status.connectionState||'';
+    const ready=state==='READY';
+    const source=category==='asas'?'ASAS':'PLM';
+    const overlay=document.createElement('div');
+    overlay.id='_syncGuideOverlay';
+    overlay.className='warnOverlay blSyncGuideOverlay';
+    const steps=guideSteps(category,status).map(step=>'<article class="blSyncGuideStep"><div class="blSyncGuideStepNo">'+step.icon+'</div><div class="blSyncGuideStepCopy"><h3>'+esc(step.title)+'</h3><p>'+esc(step.body)+'</p>'+step.visual+'</div></article>').join('');
+    overlay.innerHTML='<div class="modalCard blSyncGuideCard" role="dialog" aria-modal="true" aria-labelledby="_syncGuideTitle">'+
+      '<div class="blSyncGuideHead"><div><span class="blSyncGuideEyebrow">'+source+' SYNC</span><h2 id="_syncGuideTitle">'+esc(blocking?t('Önce tarayıcı bağlantısını hazırlayın','Prepare the browser connection first'):t('Başlamadan önce 20 saniyelik rehber','A quick guide before you start'))+'</h2>'+
+      '<p>'+esc(blocking?t('Bu işlem tarayıcı bağlantısı hazır olmadan çalışmaz.','This operation cannot run until the browser connection is ready.'):t('Aşağıdaki üç noktayı bilirseniz PLM ve ASAS senkronları kesintisiz ilerler.','These three points help PLM and ASAS syncs complete without interruption.'))+'</p></div>'+
+      '<button type="button" class="pricingRuleIconBtn" data-syncguide-close aria-label="'+esc(t('Kapat','Close'))+'"><svg class="ic"><use href="#i-x"/></svg></button></div>'+
+      '<div class="blSyncGuideStatus '+(ready?'isReady':'isBlocked')+'"><span></span><div><strong>'+esc(t('Tarayıcı bağlantısı: ','Browser connection: ')+stateText(state))+'</strong><small>'+esc(ready?t('Buyer Log tarayıcı bağlantısını doğruladı.','Buyer Log verified the browser connection.'):t('Senkronu başlatmadan önce bu durumu düzeltin.','Fix this before starting the sync.'))+'</small></div></div>'+
+      '<div class="blSyncGuideSteps">'+steps+'</div>'+
+      '<div class="blSyncGuideManual"><strong>'+esc(t('Manuel kontrol','Manual check'))+'</strong><code>'+esc(inspectUrl(status))+'</code><span>→ Remote Debugging → Allow Remote Debugging</span></div>'+
+      '<div class="blSyncGuideFoot">'+
+        (!blocking?'<label class="blSyncGuideNever"><input type="checkbox" data-syncguide-never> <span>'+esc(t('Bu rehberi bir daha gösterme','Do not show this guide again'))+'</span></label>':'<span></span>')+
+        '<div class="blSyncGuideActions"><button type="button" class="tbtn" data-syncguide-settings>'+esc(t('Browser ayarlarını aç','Open browser settings'))+'</button>'+
+        '<button type="button" class="tbtn" data-syncguide-recheck>'+esc(t('Tekrar kontrol et','Check again'))+'</button>'+
+        '<button type="button" class="tbtn primary" data-syncguide-continue '+(!ready?'disabled':'')+'>'+esc(t('Anladım, devam et','Continue'))+'</button></div></div></div>';
+    document.body.appendChild(overlay);
+
+    const close=()=>overlay.remove();
+    overlay.querySelector('[data-syncguide-close]')?.addEventListener('click',close);
+    overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
+    overlay.querySelector('[data-syncguide-settings]')?.addEventListener('click',()=>{
+      try{
+        if(typeof window.openBrowserDebugSettingsModal==='function')window.openBrowserDebugSettingsModal();
+        else document.querySelector('[data-browser-debug-settings]')?.click();
+      }catch(_){}
+    });
+    overlay.querySelector('[data-syncguide-recheck]')?.addEventListener('click',async event=>{
+      const btn=event.currentTarget;btn.disabled=true;btn.textContent=t('Kontrol ediliyor…','Checking…');
+      const next=await browserStatus(true);btn.disabled=false;
+      renderGuide(category,next,{blocking:next.connectionState!=='READY'});
+    });
+    overlay.querySelector('[data-syncguide-continue]')?.addEventListener('click',()=>{
+      if((status&&status.connectionState)!=='READY')return;
+      const never=overlay.querySelector('[data-syncguide-never]');
+      if(never&&never.checked)writeDismissed(category,true);
+      overlay.remove();
+      const entry=bypassEntry;bypassEntry=null;
+      if(entry&&entry.isConnected){entry.dataset.syncGuideBypass='1';entry.click();}
+    });
+    try{window.BLLayerSystem?.openDialog?.(overlay,{initialFocus:'[data-syncguide-continue]:not(:disabled),[data-syncguide-settings]'});}catch(_){}
+  }
+
+  async function interceptEntry(event){
+    const entry=event.target&&event.target.closest&&event.target.closest('[data-plm-sync-category]');
+    if(!entry)return;
+    const category=String(entry.dataset.plmSyncCategory||'');
+    if(!guardedCategories.has(category))return;
+    if(entry.dataset.syncGuideBypass==='1'){delete entry.dataset.syncGuideBypass;return;}
+    const status=await browserStatus(false);
+    const ready=status.connectionState==='READY';
+    if(ready&&isDismissed(category))return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    bypassEntry=entry;
+    renderGuide(category,status,{blocking:!ready});
+  }
+
+  document.addEventListener('click',event=>{
+    const entry=event.target&&event.target.closest&&event.target.closest('[data-plm-sync-category]');
+    if(!entry||!guardedCategories.has(String(entry.dataset.plmSyncCategory||'')))return;
+    if(entry.dataset.syncGuideBypass==='1'){delete entry.dataset.syncGuideBypass;return;}
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void (async()=>{
+      const category=String(entry.dataset.plmSyncCategory||'');
+      const status=await browserStatus(false),ready=status.connectionState==='READY';
+      if(ready&&isDismissed(category)){
+        entry.dataset.syncGuideBypass='1';entry.click();return;
+      }
+      bypassEntry=entry;renderGuide(category,status,{blocking:!ready});
+    })();
+  },true);
+
+  function progressFor(url){
+    const isAsas=String(url).includes('import-asas');
+    const source=isAsas?'ASAS':'PLM';
+    closeProgress();
+    const panel=document.createElement('div');
+    panel.className='blSyncGuideProgress';
+    panel.setAttribute('role','status');panel.setAttribute('aria-live','polite');
+    panel.innerHTML='<div class="blSyncGuideProgressArt"><span></span><i></i><b></b></div><div><strong>'+source+' · '+esc(t('Senkronizasyon çalışıyor','Synchronization in progress'))+'</strong><small>'+esc(t('Açılan tarayıcı penceresini kapatmayın. “Allow Remote Debugging?” bildirimi görünürse Allow seçin.','Keep the opened browser window open. If “Allow Remote Debugging?” appears, choose Allow.'))+'</small></div><button type="button" aria-label="'+esc(t('Kapat','Close'))+'">×</button>';
+    panel.querySelector('button')?.addEventListener('click',closeProgress);
+    document.body.appendChild(panel);activeProgress=panel;return panel;
+  }
+
+  const originalFetch=window.fetch.bind(window);
+  window.fetch=function(input,init){
+    const raw=typeof input==='string'?input:(input&&input.url)||'';
+    let path=raw;
+    try{path=new URL(raw,location.href).pathname;}catch(_){}
+    const method=String((init&&init.method)||(input&&input.method)||'GET').toUpperCase();
+    const watched=method==='POST'&&syncEndpoints.has(path);
+    const category=path==='/api/model-images/import-asas'?'asas':'plm';
+    let panel=null;
+    if(watched&&!isDismissed(category))panel=progressFor(path);
+    const promise=originalFetch(input,init);
+    if(!watched)return promise;
+    return promise.then(response=>{
+      if(panel&&panel.isConnected){
+        panel.classList.add(response.ok?'isDone':'isError');
+        const strong=panel.querySelector('strong'),small=panel.querySelector('small');
+        if(strong)strong.textContent=response.ok?t('İşlem tamamlandı','Operation completed'):t('İşlem tamamlanamadı','Operation failed');
+        if(small)small.textContent=response.ok?t('Buyer Log veriyi aldı.','Buyer Log received the data.'):t('Tarayıcı bağlantısını ve Allow onayını kontrol edin.','Check the browser connection and the Allow approval.');
+        setTimeout(()=>{if(panel===activeProgress)closeProgress();else panel.remove();},response.ok?3500:9000);
+      }
+      return response;
+    },error=>{
+      if(panel&&panel.isConnected){
+        panel.classList.add('isError');
+        const strong=panel.querySelector('strong'),small=panel.querySelector('small');
+        if(strong)strong.textContent=t('Senkronizasyon kesildi','Synchronization interrupted');
+        if(small)small.textContent=t('Tarayıcıyı kapatmadığınızdan ve Remote Debugging iznini verdiğinizden emin olun.','Make sure the browser stayed open and Remote Debugging permission was allowed.');
+      }
+      throw error;
+    });
+  };
+
+  window.BLSyncGuide={
+    reset(){try{localStorage.removeItem(STORAGE_KEY);}catch(_){}},
+    show(category='plm'){void browserStatus(true).then(status=>renderGuide(category,status,{blocking:status.connectionState!=='READY'}));}
+  };
+})();
