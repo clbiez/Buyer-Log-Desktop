@@ -166,7 +166,7 @@
 #blBootGuard.blBootWithGuide .blBootLink{background:none;border:0;padding:4px 0;color:var(--acc,#3f6488);font-weight:600;cursor:pointer}
 #blBootGuard.blBootWithGuide .blBootLink:hover{background:none;text-decoration:underline}
 .blBootContinueSlot{display:flex;justify-content:flex-end}
-#blBootGuard.blBootWithGuide .blBootContinue{background:var(--acc,#3f6488);border:1px solid var(--acc,#3f6488);color:var(--on-acc,#fff);padding:11px 22px;font-weight:600;font-size:15px;animation:blTriviaPop .5s cubic-bezier(.2,1.4,.4,1) both}
+#blBootGuard.blBootWithGuide .blBootContinue{display:inline-flex;align-items:center;justify-content:center;text-align:center;line-height:1.2;background:var(--acc,#3f6488);border:1px solid var(--acc,#3f6488);color:var(--on-acc,#fff);padding:11px 22px;font-weight:600;font-size:15px;animation:blTriviaPop .5s cubic-bezier(.2,1.4,.4,1) both}
 #blBootGuard.blBootWithGuide .blBootContinue:hover{background:var(--acc-hover,#2f4d6b);border-color:var(--acc-hover,#2f4d6b)}
 #blBootGuard[data-ready="1"] [data-boot-message]::before{content:'✓ ';color:var(--green,#177A4C)}
 @media(max-width:900px){.blTriviaCard,.blTriviaCard--compact{grid-template-columns:1fr;gap:16px}.blTriviaFigure{max-width:560px}}
