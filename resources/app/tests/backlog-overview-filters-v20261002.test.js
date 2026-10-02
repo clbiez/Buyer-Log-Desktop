@@ -43,6 +43,13 @@ test('overview filters support date ranges and multi-value filters locally',()=>
   assert.match(OVERVIEW,/items=applyOverviewFilters\(baseItems/);
 });
 
+test('filter editor is not hidden by the global section display rule',()=>{
+  assert.doesNotMatch(OVERVIEW,/<section class="blvFilterCatalogue"/);
+  assert.doesNotMatch(OVERVIEW,/<section class="blvFilterEditor"/);
+  assert.match(OVERVIEW,/<div class="blvFilterCatalogue"/);
+  assert.match(OVERVIEW,/<div class="blvFilterEditor">\$\{renderFilterEditor\(editor\)\}<\/div>/);
+});
+
 test('filter drawer styling exists',()=>{
   assert.match(CSS,/\.blvFilterRoot/);
   assert.match(CSS,/\.blvFilterDrawer/);
