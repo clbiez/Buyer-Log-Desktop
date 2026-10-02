@@ -29,5 +29,7 @@ test('v7.0.201 Backlog Focus görünümünde Ex-Factory revizyonunun eski ve yen
 
 test('v7.0.201 Backlog veri katmanı orijinal ve revize Ex-Factory kaynaklarını ayrı tutar', () => {
   assert.match(PARSE, /'Orijinal Exfactory Merch Tarih': asasExDate/);
-  assert.match(PARSE, /const revisedExFactoryDate = toDateOnly\(order\.ex\) \|\| asasExDate \|\| null/);\n  assert.match(PARSE, /'REVİZE YÜKLEME TARİHİ\\n\(EX-FACTORY\)': revisedExFactoryDate/);\n  assert.match(PARSE, /actualLoadDate: isPartial \? \(actualLoadDate \|\| null\) : null/);
+  assert.match(PARSE, /const revisedExFactoryDate = toDateOnly\(order\.ex\) \|\| asasExDate \|\| null/);
+  assert.match(PARSE, /'REVİZE YÜKLEME TARİHİ\\n\(EX-FACTORY\)': revisedExFactoryDate/);
+  assert.match(PARSE, /actualLoadDate: isPartial \? \(actualLoadDate \|\| null\) : null/);
 });
