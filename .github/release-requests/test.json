@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.210",
-  "commit_sha": "b3e87520da06d5e61fcc130fb817a34a40b1fafd",
-  "release_notes": "Buyer Log 7.0.210: IAS Database kaynağında teknik fact satırları Antrepo Excel iş granülüne normalize edildi. Supplier Portal Statü boş teknik satırlar artık gerçek sevkiyat gibi Backlog'a girmiyor; aynı gerçek parsiyelin teknik alt satırları birleştirilerek Yükleme Toplam Adet toplanıyor, gerçek farklı parsiyeller ayrı kalıyor. Mevcut ASAS–IAS eşleştirme kuralı korunuyor."
+  "version": "7.0.211",
+  "commit_sha": "f03544c70c49f3def3b8a091706553d68439856b",
+  "release_notes": "Buyer Log 7.0.211: Görsel ve iki dilli stable sürüm arşivi eklendi. Güncelleme sonrası kullanıcı kaçırdığı stable sürümlerdeki değişiklikleri kümülatif tek akışta görür; aynı içerikler Version History üzerinden tekrar açılabilir. Bundan sonraki stable yayınlarda kullanıcıya görünen her değişiklik TR/EN ve gerçek Buyer Log ekran görüntüsü ile release paketine eklenmeden yayın doğrulamasını geçemez."
 }
