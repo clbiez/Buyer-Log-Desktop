@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.200",
-  "commit_sha": "c7b352b4c423003ec7942f4ac723d7bdf07247e6",
-  "release_notes": "Buyer Log 7.0.200: Orders ekranında ekip arkadaşlarına ait salt-okunur siparişlerde Ex-Factory revizyon geçmişi artık orijinal tarih → revize tarih olarak gösteriliyor. Aynı davranış Retail Date ve In-Store tarih revizyonlarında da salt-okunur satırlar için tutarlı hale getirildi; LT ve Ex→Retail mevcut revizyon karşılaştırması korundu."
+  "version": "7.0.201",
+  "commit_sha": "c19a7514bba54aad7f5c95baf74e7aed2e0f8b91",
+  "release_notes": "Buyer Log 7.0.201: Ex-Factory revizyonları Backlog’da tüm segmentlerde kullanıcı revizyonunu tutarlı gösteriyor; Orijinal Ex-Factory tarihi Focus görünümünde revize tarihinin yanında yer alıyor. IAS/HANDOVER gerçek yükleme ve transit hesabı için ayrı korunuyor. Orders salt-okunur revizyon geçmişi dahil 7.0.200 düzeltmeleri korunmuştur."
 }
