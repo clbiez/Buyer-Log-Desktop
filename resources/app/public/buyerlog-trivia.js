@@ -85,6 +85,12 @@
       const syms=['π','∑','∞','√','φ','≈'];let floats='';for(let i=0;i<3;i++)floats+=`<text class="float" style="animation-delay:${n(i*.7)}s" x="${n(40+r()*200)}" y="${n(40+r()*60+i*60)}">${syms[Math.floor(r()*syms.length)]}</text>`;
       return `${hex}<path class="s draw" d="M170 150a8 8 0 0 1 8 8 16 16 0 0 1-16 16 24 24 0 0 1-24-24 40 40 0 0 1 40-40 64 64 0 0 1 64 64 104 104 0 0 1-104 104"/>${floats}`;
     },
+    sports(r){
+      // Koşu pisti, top ve bayrak: ortak spor sahnesi.
+      let lanes='';for(let i=0;i<4;i++)lanes+=`<ellipse class="s thin" cx="260" cy="150" rx="${200-i*26}" ry="${92-i*18}"/>`;
+      const bx=150+r()*220,by=200+r()*20;
+      return `<path class="f2" d="M60 150a200 92 0 0 1 400 0a200 92 0 0 1-400 0zM164 150a96 38 0 0 0 192 0a96 38 0 0 0-192 0z" fill-rule="evenodd"/>${lanes}<path class="s thin dash" d="M260 58v184"/><g class="bounce"><circle class="f2 s" cx="${n(bx)}" cy="${n(by)}" r="20"/><path class="f" d="M${n(bx)} ${n(by-8)}l7.6 5.5-2.9 9h-9.4l-2.9-9z"/></g><path class="s" d="M420 40v70"/><path class="f s float" d="M420 40h46l-10 13 10 13h-46z"/>`;
+    },
     textile(r){
       // Örme (süprem) ilmekleri: her ilmek iki eğik yapraktan oluşur.
       let knit='';const ox=250,oy=40;for(let row=0;row<7;row++)for(let col=0;col<9;col++){const x=ox+col*28,y=oy+row*28,on=r()<.18;knit+=`<g class="knit" style="animation-delay:${n((row*9+col)*.03)}s"><path class="s thin${on?' f2':''}" d="M${x} ${y}q-12 4-12 16 10 2 12-4zM${x} ${y}q12 4 12 16-10 2-12-4z"/></g>`;}
@@ -94,32 +100,69 @@
 
   function visual(item,lang){
     const cat=categoryFor(item.category),r=rng(seedOf(item.id));
-    const scene=(scenes[cat.id]||scenes.space)(r);
+    const scene=(scenes[cat.scene||cat.id]||scenes.space)(r);
     const label=lang==='en'?'Illustration':'Görsel';
-    return `<figure class="blTriviaVisual" data-tone="${esc(cat.tone)}" data-category="${esc(cat.id)}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label+': '+pick(cat.label,lang))}" preserveAspectRatio="xMidYMid slice">${scene}</svg><span class="blTriviaIcon" aria-hidden="true">${esc(item.icon)}</span><figcaption><span>${esc(pick(cat.label,lang))}</span><span>${esc(lang==='en'?'Archive':'Arşiv')} № ${String(data.items.indexOf(item)+1).padStart(3,'0')}</span></figcaption></figure>`;
+    return `<figure class="blTriviaVisual" data-tone="${esc(cat.tone)}" data-category="${esc(cat.id)}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label+': '+pick(cat.label,lang))}" preserveAspectRatio="xMidYMid slice">${scene}</svg><span class="blTriviaIcon" aria-hidden="true">${esc(item.icon)}</span><figcaption><span>${esc(pick(cat.label,lang))}</span></figcaption></figure>`;
   }
   function render(item,lang='tr'){
     if(!item)return '';
     const cat=categoryFor(item.category);
     return `${visual(item,lang)}<div class="blGuideCopy blTriviaCopy" data-tone="${esc(cat.tone)}"><div class="blGuideEyebrow">${esc(pick(cat.label,lang))}</div><h2>${esc(pick(item.title,lang))}</h2><p>${esc(pick(item.text,lang))}</p></div>`;
   }
+
+  // ── Arşiv paketleri ──
+  // Çekirdek arşiv açılış perdesi için hemen hazırdır; büyük arşiv paketleri
+  // arka planda, ayrıştırmayı bloklamadan yüklenir ve havuza katılır.
+  const PACKS=Array.isArray(data.packs)?data.packs:[];
+  let pendingPacks=0;
+  const knownIds=new Set(data.items.map(i=>i.id));
+  function addPack(pack){
+    if(!pack||!Array.isArray(pack.rows))return 0;
+    for(const c of pack.categories||[])if(c&&c.id&&!data.categories.some(x=>x.id===c.id))data.categories.push(c);
+    let added=0;
+    for(const row of pack.rows){
+      if(!Array.isArray(row)||row.length<7)continue;
+      const [id,category,icon,trTitle,trText,enTitle,enText]=row;
+      if(!id||knownIds.has(id)||!data.categories.some(c=>c.id===category))continue;
+      knownIds.add(id);data.items.push({id,category,icon,title:{tr:trTitle,en:enTitle},text:{tr:trText,en:enText}});added++;
+    }
+    return added;
+  }
+  function loadPacks(){
+    const doc=global.document;if(!doc||!PACKS.length)return;
+    const version=encodeURIComponent(String(global.BL_ASSET_VERSION||''));
+    for(const file of PACKS){
+      pendingPacks++;
+      const script=doc.createElement('script');script.async=true;script.src=`${file}?v=${version}`;
+      script.onload=script.onerror=()=>{pendingPacks=Math.max(0,pendingPacks-1);};
+      (doc.head||doc.documentElement).appendChild(script);
+    }
+  }
+  global.BLTriviaAddPack=addPack;
+  for(const pack of global.BLTriviaPacks||[])addPack(pack);
+  global.BLTriviaPacks={push:addPack};
+
   // ── "Her bilgi bir kez" seçimi ──
   // Görülen kimlikler cihazda tutulur (açılış perdesi kullanıcı bilinmeden çalışır).
   // Arşivin tamamı görülmeden hiçbir bilgi tekrar seçilmez; liste dolunca yeni tur başlar.
-  // Depolama kapalıysa aynı kural oturum belleğiyle sürer.
+  // Henüz yüklenmemiş paketlerin kimlikleri silinmez. Depolama kapalıysa oturum belleği kullanılır.
   let memorySeen=[];
-  const validIds=new Set(data.items.map(i=>i.id));
   function readSeen(){
-    try{const raw=global.localStorage?.getItem(SEEN_KEY);if(raw!=null){const v=JSON.parse(raw);if(Array.isArray(v))return v.filter(x=>typeof x==='string'&&validIds.has(x));}}catch(_){}
+    try{const raw=global.localStorage?.getItem(SEEN_KEY);if(raw!=null){const v=JSON.parse(raw);if(Array.isArray(v))return v.filter(x=>typeof x==='string');}}catch(_){}
     return memorySeen.slice();
   }
   function writeSeen(list){memorySeen=list.slice();try{global.localStorage?.setItem(SEEN_KEY,JSON.stringify(list));}catch(_){}}
-  function markSeen(id){if(!validIds.has(id))return;const seen=readSeen();if(seen.includes(id))return;seen.push(id);writeSeen(seen);}
-  function seenCount(){return Math.min(readSeen().length,data.items.length);}
+  function markSeen(id){if(!knownIds.has(id))return;const seen=readSeen();if(seen.includes(id))return;seen.push(id);writeSeen(seen);}
   function nextUnseen(previousCategory,random=Math.random){
-    let seen=readSeen();
-    if(seen.length>=data.items.length){seen=[];writeSeen(seen);}
-    const seenSet=new Set(seen),unseen=data.items.filter(i=>!seenSet.has(i.id));
+    let seen=readSeen(),seenSet=new Set(seen),unseen=data.items.filter(i=>!seenSet.has(i.id));
+    if(!unseen.length){
+      if(pendingPacks>0){
+        // Paketler gelmeden çekirdek biterse turu sıfırlamadan en eski görüleni geçici olarak kullan.
+        const oldest=seen.find(id=>knownIds.has(id));const item=data.items.find(i=>i.id===oldest)||data.items[0];
+        writeSeen(seen.filter(id=>id!==item.id).concat(item.id));return item;
+      }
+      seen=[];seenSet=new Set();unseen=data.items.slice();
+    }
     let pool=unseen.filter(i=>i.category!==previousCategory);if(!pool.length)pool=unseen;
     const item=pool[Math.floor(random()*pool.length)];
     seen.push(item.id);writeSeen(seen);
@@ -127,6 +170,7 @@
   }
 
   // ── Kart bileşeni: açılış perdesi ve sayfa bekleme durumları aynı bileşeni kullanır ──
+  // Kullanıcıya arşivin büyüklüğü veya kaç bilgi gördüğü gösterilmez.
   const currentLang=()=>{try{if(typeof appLang!=='undefined')return appLang==='en'?'en':'tr';}catch(_){}return global.document?.documentElement?.lang==='en'?'en':'tr';};
   const TICK=250;
   // Okuma süresi metin uzunluğuna göre: kısa bilgiler daha hızlı geçer.
@@ -138,16 +182,16 @@
   function mount(host,options={}){
     if(!host)return null;
     const doc=host.ownerDocument||global.document,lang=options.lang||currentLang,tt=(tr,en)=>lang()==='en'?en:tr;
-    const history=[];let index=-1,elapsed=0,paused=false,timer=null,destroyed=false;
+    const history=[];let index=-1,elapsed=0,paused=false,timer=null,destroyed=false,detached=0;
     host.classList.add('blTriviaHost');
-    host.innerHTML=`<div class="blTriviaCard${options.compact?' blTriviaCard--compact':''}">${options.heading?`<div class="blTriviaHeading" data-trivia-heading></div>`:''}<div class="blTriviaFigure" data-trivia-visual></div><div class="blTriviaSide"><div class="blGuideCopy blTriviaCopy" data-trivia-copy></div><div class="blTriviaNav"><div class="blTriviaProgress" aria-hidden="true"><i data-trivia-progress></i></div><div class="blTriviaNavRow"><span class="blTriviaSeen" data-trivia-seen></span><div class="blTriviaBtns"><button type="button" class="blTriviaBtn" data-trivia-prev>‹</button><button type="button" class="blTriviaBtn" data-trivia-pause aria-pressed="false">❚❚</button><button type="button" class="blTriviaBtn blTriviaBtn--next" data-trivia-next>›</button></div></div></div></div></div>`;
+    host.innerHTML=`<div class="blTriviaCard${options.compact?' blTriviaCard--compact':''}">${options.heading?`<div class="blTriviaHeading" data-trivia-heading></div>`:''}<div class="blTriviaFigure" data-trivia-visual></div><div class="blTriviaSide"><div class="blGuideCopy blTriviaCopy" data-trivia-copy></div><div class="blTriviaNav"><div class="blTriviaProgress" aria-hidden="true"><i data-trivia-progress></i></div><div class="blTriviaNavRow"><div class="blTriviaBtns"><button type="button" class="blTriviaBtn" data-trivia-prev>‹</button><button type="button" class="blTriviaBtn" data-trivia-pause aria-pressed="false">❚❚</button><button type="button" class="blTriviaBtn blTriviaBtn--next" data-trivia-next>›</button></div></div></div></div></div>`;
     const q=sel=>host.querySelector(sel),card=q('.blTriviaCard');
     function labels(){
       const set=(sel,label)=>{const b=q(sel);if(b){b.setAttribute('aria-label',label);b.title=label;}};
       set('[data-trivia-prev]',tt('Önceki bilgi','Previous fact'));set('[data-trivia-next]',tt('Sonraki bilgi','Next fact'));
       set('[data-trivia-pause]',paused?tt('Otomatik geçişi sürdür','Resume auto-advance'):tt('Otomatik geçişi duraklat','Pause auto-advance'));
       const pause=q('[data-trivia-pause]');if(pause){pause.textContent=paused?'▶':'❚❚';pause.setAttribute('aria-pressed',String(paused));}
-      const head=q('[data-trivia-heading]');if(head)head.textContent=tt('BEKLERKEN · BİLİYOR MUYDUNUZ?','WHILE YOU WAIT · DID YOU KNOW?');
+      const head=q('[data-trivia-heading]');if(head)head.textContent=typeof options.heading==='function'?options.heading():tt('BEKLERKEN · BİLİYOR MUYDUNUZ?','WHILE YOU WAIT · DID YOU KNOW?');
       const prev=q('[data-trivia-prev]');if(prev)prev.disabled=index<=0;
     }
     function progress(){const bar=q('[data-trivia-progress]'),item=history[index];if(bar&&item)bar.style.transform=`scaleX(${Math.min(1,elapsed/readingMs(item,lang()))})`;}
@@ -156,7 +200,6 @@
       const cat=categoryFor(item.category);card.dataset.tone=cat.tone;
       q('[data-trivia-visual]').innerHTML=visual(item,lang());
       q('[data-trivia-copy]').innerHTML=copyHtml(item,lang());
-      const seen=q('[data-trivia-seen]');if(seen){seen.textContent=tt(`${seenCount()} / ${data.items.length} bilgi görüldü`,`${seenCount()} / ${data.items.length} facts seen`);}
       labels();progress();options.onChange?.(item);
     }
     function next(){if(index<history.length-1)index++;else{history.push(nextUnseen(history[index]?.category));index=history.length-1;}elapsed=0;paint();}
@@ -165,8 +208,11 @@
     function reading(){const active=doc.activeElement;return Boolean(card.matches?.(':hover')||(active&&active!==host&&host.contains(active)&&!active.matches?.('button')));}
     function tick(){
       if(destroyed)return;
-      if(!host.isConnected){destroy();return;}
-      if(paused||doc.hidden||options.blocked?.()||reading())return;
+      // Kart sayfadan sayfaya taşınırken kısa süre bağlantısız kalabilir.
+      if(!host.isConnected){if(++detached>12)destroy();return;}
+      detached=0;
+      // Görünmeyen kart (başka sekme) ilerlemez; kimsenin görmediği bilgi harcanmaz.
+      if(paused||doc.hidden||options.blocked?.()||reading()||(host.getClientRects&&!host.getClientRects().length))return;
       elapsed+=TICK;if(elapsed>=readingMs(history[index],lang()))next();else progress();
     }
     function destroy(){destroyed=true;if(timer)clearInterval(timer);timer=null;}
@@ -174,42 +220,110 @@
     q('[data-trivia-next]').addEventListener('click',next);
     q('[data-trivia-pause]').addEventListener('click',toggle);
     next();timer=setInterval(tick,TICK);
-    return {next,prev,toggle,destroy,tick,refresh:paint,current:()=>history[index],get paused(){return paused;}};
+    return {next,prev,toggle,destroy,tick,refresh:paint,labels,current:()=>history[index],get paused(){return paused;},get destroyed(){return destroyed;}};
   }
 
   // ── Sayfa bekleme durumları ──
-  // Ortak .uiState--loading kutusu yeterince genişse ve kısa sürede bitmemişse altına
-  // bir bilgi kartı eklenir. Kart kutunun içinde yaşar: modül durumu değiştirdiğinde
-  // kutuyla birlikte kaldırılır. Dar/satır içi göstergeler ve diyaloglar etkilenmez.
-  const PAGE_DELAY=650,EXCLUDED='#ovEmpty,dialog,[role="menu"],[role="listbox"],.uiFeedback,#blBootGuard,[data-trivia="off"]';
+  // Ortak .uiState--loading kutusu yeterince genişse ve kısa sürede bitmemişse içine
+  // bir bilgi kartı eklenir. Yükleme bitince kart bir anda kapanmaz: modülün üzerinde
+  // "<Modül> hazır · <Modül> ekranına devam et" görünür. Dar/satır içi göstergeler,
+  // diyaloglar ve açılış perdesi altındaki yüklemeler etkilenmez.
+  const PAGE_DELAY=650,HOLD_MIN_MS=2500,END_SETTLE_MS=400,CHECK_MS=300;
+  const EXCLUDED='#ovEmpty,dialog,[role="menu"],[role="listbox"],.uiFeedback,#blBootGuard,.blTriviaHold,[data-trivia="off"]';
+  const watching=new Map(),tracked=new Set(),holds=new Map();let checkTimer=null;
+  const doc=()=>global.document;
+  const tl=(tr,en)=>currentLang()==='en'?en:tr;
+  const bootActive=()=>Boolean(doc()?.getElementById?.('blBootGuard'));
+  const visible=el=>Boolean(el&&el.isConnected&&el.getClientRects().length);
+  const isLoading=el=>el.isConnected&&el.classList.contains('uiState--loading');
   function eligible(state){
-    if(!state.isConnected||!state.classList.contains('uiState--loading')||state.closest(EXCLUDED))return false;
+    if(!isLoading(state)||state.closest(EXCLUDED)||bootActive())return false;
     const parent=state.parentElement;if(!parent)return false;
-    const rect=parent.getBoundingClientRect();return rect.width>=480&&state.getClientRects().length>0;
+    return parent.getBoundingClientRect().width>=480&&visible(state);
   }
-  function attachToLoading(state){
-    if(state.dataset.blTrivia)return;state.dataset.blTrivia='pending';
-    setTimeout(()=>{
-      if(!eligible(state)||state.querySelector('.blTriviaPanel'))return;
-      state.dataset.blTrivia='on';state.classList.add('hasTrivia');
-      const panel=global.document.createElement('div');panel.className='blTriviaPanel';panel.setAttribute('role','group');panel.setAttribute('aria-live','off');
-      panel.setAttribute('aria-label',currentLang()==='en'?'Did you know?':'Biliyor muydunuz?');
-      state.appendChild(panel);mount(panel,{heading:true,compact:true});
-    },PAGE_DELAY);
+  const sectionOf=el=>el.closest?.('section[id^="view-"]')||null;
+  function moduleLabel(section){
+    const tab=String(section?.id||'').replace(/^view-/,'');
+    const node=tab&&doc().querySelector(`.rail [data-tab="${tab}"] span`);
+    return String(node?.textContent||'').trim();
+  }
+  function watch(state){if(state.dataset.blTrivia||watching.has(state))return;state.dataset.blTrivia='pending';watching.set(state,Date.now());schedule();}
+  function schedule(){if(!checkTimer&&(watching.size||tracked.size||holds.size))checkTimer=setInterval(check,CHECK_MS);}
+  function check(){
+    const now=Date.now();
+    for(const [state,since] of watching){
+      if(!isLoading(state)){watching.delete(state);continue;}
+      if(now-since<PAGE_DELAY||!eligible(state))continue;
+      watching.delete(state);if(state.querySelector('.blTriviaPanel'))continue;
+      const panel=doc().createElement('div');panel.className='blTriviaPanel';panel.setAttribute('role','group');panel.setAttribute('aria-live','off');
+      panel.setAttribute('aria-label',tl('Biliyor muydunuz?','Did you know?'));
+      state.dataset.blTrivia='on';state.classList.add('hasTrivia');state.appendChild(panel);
+      const info={state,panel,section:sectionOf(state),shownAt:now,holding:false};
+      info.ctl=mount(panel,{compact:true,heading:()=>info.holding?tl('BİLİYOR MUYDUNUZ?','DID YOU KNOW?'):tl('BEKLERKEN · BİLİYOR MUYDUNUZ?','WHILE YOU WAIT · DID YOU KNOW?')});
+      tracked.add(info);
+    }
+    for(const info of [...tracked]){
+      // Bitti: kutu değişti/kaldırıldı ya da modül görünürken kutu gizlendi.
+      const finished=!isLoading(info.state)||(!visible(info.state)&&visible(info.section));
+      if(finished){tracked.delete(info);setTimeout(()=>settle(info),END_SETTLE_MS);}
+    }
+    for(const hold of holds.values())hold.position();
+    if(!watching.size&&!tracked.size&&!holds.size){clearInterval(checkTimer);checkTimer=null;}
+  }
+  function settle(info){
+    // Çok aşamalı yüklemede kart bir sonraki bekleme kutusuna taşınır.
+    const nextState=info.section&&[...info.section.querySelectorAll('.uiState--loading')].find(s=>eligible(s)&&!s.querySelector('.blTriviaPanel'));
+    if(nextState){watching.delete(nextState);nextState.dataset.blTrivia='on';nextState.classList.add('hasTrivia');nextState.appendChild(info.panel);info.state=nextState;tracked.add(info);schedule();return;}
+    if(Date.now()-info.shownAt<HOLD_MIN_MS||!visible(info.section)||holds.has(info.section)||bootActive()){info.ctl.destroy();info.panel.remove();return;}
+    showHold(info);
+  }
+  function showHold(info){
+    const section=info.section,label=moduleLabel(section)||tl('Ekran','Screen');
+    info.holding=true;
+    const hold=doc().createElement('div');hold.className='blTriviaHold';hold.setAttribute('role','dialog');hold.setAttribute('aria-modal','false');
+    hold.setAttribute('aria-label',tl(`${label} hazır`,`${label} is ready`));
+    hold.innerHTML=`<div class="blTriviaHoldCard"><div class="blTriviaHoldHead"><span class="blTriviaHoldReady">${esc(tl(`${label} hazır`,`${label} is ready`))}</span><span class="blTriviaHoldHint">${esc(tl('Okumanızı bitirdiğinizde devam edebilirsiniz.','Continue whenever you have finished reading.'))}</span></div><div data-hold-slot></div><div class="blTriviaHoldFoot"><button type="button" class="blTriviaHoldContinue" data-hold-continue>${esc(tl(`${label} ekranına devam et`,`Continue to ${label}`))} →</button></div></div>`;
+    hold.querySelector('[data-hold-slot]').appendChild(info.panel);info.ctl.labels();
+    doc().body.appendChild(hold);
+    let closed=false;
+    const entry={position(){
+      if(closed)return;
+      if(!section.isConnected){close(true);return;}
+      const r=section.getBoundingClientRect(),vw=global.innerWidth||0,vh=global.innerHeight||0;
+      const top=Math.max(r.top,0),left=Math.max(r.left,0),bottom=Math.min(r.bottom,vh),right=Math.min(r.right,vw);
+      // Modül sekmesi görünmüyorsa (başka sekme açık) beklet; geri dönünce yine gösterilir.
+      if(!visible(section)||bottom-top<80||right-left<200){hold.hidden=true;return;}
+      hold.hidden=false;hold.style.top=top+'px';hold.style.left=left+'px';hold.style.width=(right-left)+'px';hold.style.height=(bottom-top)+'px';
+    }};
+    function close(immediate){
+      if(closed)return;closed=true;holds.delete(section);info.ctl.destroy();
+      global.removeEventListener?.('resize',entry.position);global.removeEventListener?.('scroll',entry.position,true);
+      let reduce=false;try{reduce=global.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}
+      hold.dataset.leaving='1';setTimeout(()=>hold.remove(),immediate||reduce?0:300);
+    }
+    entry.close=close;holds.set(section,entry);
+    hold.querySelector('[data-hold-continue]').addEventListener('click',()=>close(false));
+    hold.addEventListener('keydown',ev=>{if(ev.key==='Escape'){ev.stopPropagation();close(false);}});
+    global.addEventListener?.('resize',entry.position);global.addEventListener?.('scroll',entry.position,true);
+    entry.position();schedule();
   }
   function scan(node){
     if(!node||node.nodeType!==1)return;
-    if(node.matches('.uiState--loading'))attachToLoading(node);
-    node.querySelectorAll?.('.uiState--loading').forEach(attachToLoading);
+    if(node.matches('.uiState--loading'))watch(node);
+    node.querySelectorAll?.('.uiState--loading').forEach(watch);
   }
   function watchLoadingStates(){
-    const doc=global.document;if(!doc?.body||typeof global.MutationObserver!=='function')return null;
-    scan(doc.body);
+    const d=doc();if(!d?.body||typeof global.MutationObserver!=='function')return null;
+    scan(d.body);
     const observer=new global.MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)scan(n);});
-    observer.observe(doc.body,{childList:true,subtree:true});
+    observer.observe(d.body,{childList:true,subtree:true});
     return observer;
   }
-  if(global.document){if(global.document.readyState==='loading')global.document.addEventListener('DOMContentLoaded',watchLoadingStates,{once:true});else watchLoadingStates();}
+  if(global.document){
+    loadPacks();
+    if(global.document.readyState==='loading')global.document.addEventListener('DOMContentLoaded',watchLoadingStates,{once:true});else watchLoadingStates();
+  }
 
-  global.BLTrivia={data,render,visual,mount,nextUnseen,markSeen,seenCount,readSeen,watchLoadingStates,count:data.items.length};
+  global.BLTrivia={data,render,visual,mount,nextUnseen,markSeen,readSeen,addPack,watchLoadingStates,check,
+    get pendingPacks(){return pendingPacks;},_holds:holds};
 })(window);

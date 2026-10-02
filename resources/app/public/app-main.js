@@ -17201,7 +17201,25 @@ let backlogLoadedOnce=false;
 let backlogPrefetch=null;
 const BACKLOG_PREFETCH_MAX_AGE_MS=10*60*1000;
 function backlogQueryString(params){ return new URLSearchParams(params||{}).toString(); }
+/* İlk Backlog yüklemesinde rapor yerine ortak bekleme durumu gösterilir;
+   içerik veri gelmeden açılmaz. Boş durum metni sonradan geri yüklenir. */
+let backlogEmptyDefaultHtml=null;
+function showBacklogLoadingState(){
+  const empty=document.getElementById('backlogEmpty'),content=document.getElementById('backlogContent');
+  if(!empty||!content||backlogLoadedOnce)return;
+  if(backlogEmptyDefaultHtml===null)backlogEmptyDefaultHtml=empty.innerHTML;
+  const title=appLang==='en'?'Backlog data is loading to the screen…':'Backlog verisi ekrana yükleniyor…';
+  const detail=appLang==='en'?'The report opens when the data is ready.':'Rapor, veri hazır olduğunda açılacak.';
+  if(window.BLUI&&typeof window.BLUI.renderState==='function')window.BLUI.renderState(empty,{kind:'loading',title,detail});else empty.textContent=title;
+  empty.style.display='block';content.style.display='none';
+}
+function restoreBacklogEmptyState(){
+  const empty=document.getElementById('backlogEmpty');
+  if(!empty||backlogEmptyDefaultHtml===null)return;
+  empty.innerHTML=backlogEmptyDefaultHtml;empty.removeAttribute('aria-busy');delete empty.dataset.uiState;
+}
 function applyBacklogData(data){
+  restoreBacklogEmptyState();
   if(data&&data.sourceFilterRequired)showSourceFilterRequiredNotice(data.sourceFilterStatus,data.sourceFilterMessage);
   // Filtre listeleri Backlog'un KENDİ veri kümesinden gelir (CP'den değil).
   if(data && data.dimValues) backlogDimValues = data.dimValues;
@@ -17214,11 +17232,18 @@ function applyBacklogData(data){
 }
 async function fetchBacklog(params){
   backlogPrefetch=null;
+  showBacklogLoadingState();
   try{
     const qs = backlogQueryString(params);
     const data = await fetchJSON('/api/backlog' + (qs ? '?'+qs : ''));
     applyBacklogData(data);
-  }catch(err){ console.warn('Backlog alınamadı:', err.message); }
+  }catch(err){
+    console.warn('Backlog alınamadı:', err.message);
+    const empty=document.getElementById('backlogEmpty');
+    if(!backlogLoadedOnce&&empty&&window.BLUI&&typeof window.BLUI.renderState==='function'){
+      window.BLUI.renderState(empty,{kind:'error',title:appLang==='en'?'Backlog could not be loaded':'Backlog yüklenemedi',detail:err.message});
+    }
+  }
 }
 async function prefetchBacklogForRefresh(){
   if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('backlog'))return false;

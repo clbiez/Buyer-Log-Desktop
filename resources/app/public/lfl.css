@@ -806,4 +806,6 @@ body.lflPortfolioModalOpen{overflow:hidden;}
 .lflScenarioCard.isDragging{opacity:.42;transform:scale(.985);box-shadow:none}
 .lflScenarioCard.isDragTarget{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 18%,transparent)}
 .lflScenarioCards.isScenarioDragging .lflScenarioCard:not(.isDragging){transition:border-color .12s var(--ease),box-shadow .12s var(--ease),transform .12s var(--ease)}
-
+/* İlk yükleme: yalnız ortak bekleme durumu görünür, boş kontroller gizlenir. */
+#view-lfl.lflIsLoading>:not(#lflLoadingState){display:none!important}
+.lflLoadingState{display:flex;justify-content:center;padding:24px 0}
