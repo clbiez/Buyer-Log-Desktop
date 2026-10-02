@@ -37,7 +37,7 @@ function normalizeEntry(raw, fallbackPlmId) {
    yeniden sınıflanır; böylece eski senkron yeni kuralla okunur. */
 function reclassify(item) {
   return {
-    status: engine.classifyStatus(item.statusId, item.statusName),
+    status: engine.requestStatus(item.statusId, item.statusName, item.evaluationStatusName),
     milestone: engine.classifyMilestone(item.subTypeId, item.subTypeName),
   };
 }
