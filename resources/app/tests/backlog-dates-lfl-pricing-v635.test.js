@@ -135,6 +135,23 @@ test('v7.0.201 aynı siparişin tüm Backlog segmentleri aynı kullanıcı Ex-Fa
   assert.equal(iso(rows[1]['Orijinal Exfactory Merch Tarih']), '2026-03-01');
 });
 
+test('v7.0.201 kaydedilmiş kullanıcı Ex-Factory revizyonu IAS HANDOVER eski kalsa da Backlog Revised Shipment Date alanına taşınır', () => {
+  const raw = fixtureOrder();
+  raw.ex = D('2026-03-01');
+  delete raw._asasEx;
+  const key = parse.orderLineKey(raw.ocode, raw.model, raw.ccode);
+  const overrides = { datemap: { [key]: { ex: '2026-03-15' } } };
+  const [order] = parse.applyDateOverrides([raw], overrides);
+  const partial = segmentFor(order, 'ias', {
+    _iasRow: { handover: D('2026-03-01'), arr: D('2026-04-10') },
+    _arr: D('2026-04-10'),
+  });
+  const [row] = parse.backlogTemplateRowsFromSegments([partial], overrides, new Map(), []);
+  assert.equal(iso(row['Orijinal Exfactory Merch Tarih']), '2026-03-01');
+  assert.equal(iso(row['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)']), '2026-03-15');
+  assert.equal(iso(row._backlogExcel.actualLoadDate), '2026-03-01');
+});
+
 test('v6.35 handover boş parsiyelde sütun boş kalmıyor', () => {
   // Boş bırakmak "yükleme tarihi yok" izlenimi verirdi; siparişin geçerli
   // Ex-Factory tarihine düşülür.
