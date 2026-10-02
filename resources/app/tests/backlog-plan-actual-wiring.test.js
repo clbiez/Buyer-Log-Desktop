@@ -63,3 +63,20 @@ test('plan actual module uses shared theme tokens without light-theme fallbacks'
   assert.match(CSS,/background:var\(--paper,var\(--card2\)\)/);
   assert.doesNotMatch(CSS,/#fff|#f8fafc|#111827/);
 });
+
+test('plan realisation view: plan window, grouped bars with tooltip + drawer, Excel export',()=>{
+  const REPORT=read('public/backlog-plan-actual-report.js');
+  assert.ok(HTML.indexOf('backlog-plan-actual-report.js')>0&&HTML.indexOf('backlog-plan-actual-report.js')<HTML.indexOf('backlog-plan-actual.js?'),'report engine loads before the panel');
+  assert.match(SERVER,/planFrom:dayParam\(req\.query\.planFrom\)/);
+  assert.match(SERVER,/plan:comparison\.plan/);
+  assert.match(UI,/data-bpa-control="planMode"/);
+  assert.match(UI,/data-bpa-group="\$\{d\.key\}"/);
+  assert.match(UI,/data-bpa-tip="\$\{t\}" data-bpa-open="\$\{o\}"/);
+  assert.match(UI,/function openDrawer\(spec\)/);
+  assert.match(UI,/data-bpa-action="export"/);
+  assert.match(UI,/ensureLibrary\('exceljs'\)/);
+  assert.match(UI,/data-bpa-filter="productMainDefinition"/);
+  assert.match(REPORT,/key:'productMainDefinition'/);
+  assert.match(CSS,/\.bpaDrawer\{/);
+  assert.doesNotMatch(CSS,/var\(--bad\)|var\(--ok\)|var\(--warn\)/,'undefined tone tokens must not be used');
+});

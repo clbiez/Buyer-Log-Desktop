@@ -111,6 +111,10 @@ function projectSnapshot(orders, templateRows, meta = {}) {
         season: clean(order ? order.season : row.Sezon),
         mag: clean(order && order.merch),
         mmyg: clean(order && order.ageGroup),
+        // Product Main Definition, ASAS kanonik productDescription alanından okunur
+        // (canonical-fields: productMainDefinition ↔ asasProductDescription).
+        productMainDefinition: clean(order && order.productDescription),
+        category: clean(order ? order.category : row['Ürün Klasman']),
         country: clean(order ? order.countryRaw : row['Siparişin Üretildiği Ülke']),
         license: clean(order ? order.license : row.Lisans),
         line: clean(order ? order.line : row.Line),
@@ -130,6 +134,9 @@ function projectSnapshot(orders, templateRows, meta = {}) {
         statuses: {},
         etaDates: {},
         handoverDates: {},
+        // Gerçekleşen yükleme günü: parsiyelin fiili yükleme tarihi, yoksa
+        // Handover. Handover boş gelen IAS'larda yüklemenin "0 adet" görünmesini önler.
+        loadDates: {},
         deliveryTypes: {},
       };
       map.set(id, item);
@@ -148,6 +155,8 @@ function projectSnapshot(orders, templateRows, meta = {}) {
     const internal = row._backlogExcel && typeof row._backlogExcel === 'object' ? row._backlogExcel : {};
     const handover = dateIso(internal.handoverDate);
     if (handover) addBucket(item.handoverDates, handover, qty);
+    const loaded = dateIso(internal.actualLoadDate) || handover;
+    if (loaded) addBucket(item.loadDates, loaded, qty);
     const delType = clean(row['YÜKLEME TİPİ']);
     if (delType) addBucket(item.deliveryTypes, delType, qty);
   }
@@ -157,6 +166,7 @@ function projectSnapshot(orders, templateRows, meta = {}) {
     statuses: sortedObject(item.statuses),
     etaDates: sortedObject(item.etaDates),
     handoverDates: sortedObject(item.handoverDates),
+    loadDates: sortedObject(item.loadDates),
     deliveryTypes: sortedObject(item.deliveryTypes),
     receivedQty: round(item.receivedQty),
     warehouseQty: round(item.warehouseQty),
@@ -364,6 +374,102 @@ function collapseHistory(items, from, to) {
   return { activity, rawEvents: raw };
 }
 
+function dayIso(ordinal) {
+  if (ordinal == null) return '';
+  return new Date(ordinal * 86400000).toISOString().slice(0, 10);
+}
+function bucketTotal(map) {
+  return round(Object.values(map || {}).reduce((total, value) => total + number(value), 0));
+}
+// Satırın henüz yüklenmemiş adedi: operasyon satırlarının toplamından IAS'a
+// bağlanmış (yüklenmiş) adet düşülür. ASAS "Kalan" değeri depoya girişe kadar
+// düşmediği için yükleme açığını ölçmekte kullanılamaz; yalnız eski/boş
+// statü kovası olan snapshotlarda yedek olarak okunur.
+function openQty(row) {
+  if (!row) return 0;
+  const total = bucketTotal(row.statuses);
+  if (total > 0) return round(Math.max(0, total - number(row.receivedQty)));
+  return round(Math.max(0, number(row.remainingQty)));
+}
+// İki snapshot arasında gerçekleşen yükleme. Tarihli kısım loadDates
+// kovalarından gelir; IAS'ı olup tarihi olmayan yükleme receivedQty artışıyla
+// yakalanır ve "tarihsiz" sayılır. loadDates alanı olmayan eski snapshotlarda
+// önceki Handover davranışı korunur.
+function periodLoads(a, b) {
+  if (!b) return { dated: [], loadedQty: 0, undatedQty: 0 };
+  const legacy = Boolean(a) && a.loadDates === undefined;
+  const beforeBuckets = !a ? {} : (legacy ? a.handoverDates : a.loadDates);
+  const afterBuckets = legacy ? b.handoverDates : (b.loadDates || b.handoverDates);
+  const added = bucketAdded(beforeBuckets, afterBuckets).sort((x, y) => String(x.value).localeCompare(String(y.value)));
+  const addedQty = round(added.reduce((total, item) => total + item.qty, 0));
+  let loadedQty = addedQty;
+  if (a && !legacy) {
+    // Tarihi düzeltilen parsiyel yeni yükleme sayılmaz: net artış ve IAS artışı esas alınır.
+    const netDated = Math.max(0, bucketTotal(afterBuckets) - bucketTotal(beforeBuckets));
+    const received = Math.max(0, number(b.receivedQty) - number(a.receivedQty));
+    loadedQty = round(Math.max(netDated, received));
+  } else if (a) {
+    loadedQty = round(Math.max(addedQty, Math.max(0, number(b.receivedQty) - number(a.receivedQty))));
+  }
+  const dated = [];
+  let left = loadedQty;
+  for (const item of added) {
+    if (left <= 0) break;
+    const qty = round(Math.min(item.qty, left));
+    dated.push({ value: item.value, qty });
+    left = round(left - qty);
+  }
+  return { dated, loadedQty, undatedQty: round(Math.max(0, left)) };
+}
+const PLAN_OUTCOMES = Object.freeze(['notLoaded', 'partial', 'late', 'pending', 'onTime', 'removed']);
+const PLAN_OUTCOME_ORDER = Object.freeze(Object.fromEntries(PLAN_OUTCOMES.map((key, index) => [key, index])));
+function planRowFor(id, a, b, ctx) {
+  const preferred = b || a;
+  const planned = ctx.plannedQty, realized = ctx.realizedPlannedQty;
+  const onTime = round(Math.min(ctx.onTimeQty, realized));
+  const late = round(Math.min(ctx.lateQty, realized - onTime));
+  const undated = round(Math.max(0, realized - onTime - late));
+  const open = round(Math.max(0, planned - realized));
+  const overdue = Boolean(b) && open > 0 && ctx.planDay != null && ctx.asOfDay != null && ctx.planDay < ctx.asOfDay;
+  let outcome;
+  if (!b) outcome = 'removed';
+  else if (open > 0) outcome = realized > 0 ? 'partial' : (overdue ? 'notLoaded' : 'pending');
+  else outcome = late > 0 ? 'late' : 'onTime';
+  const currentPlan = b ? b.planExFactory : '';
+  const d0 = dayOrdinal(a.planExFactory), d1 = dayOrdinal(currentPlan);
+  return {
+    id,
+    orderCode: preferred.orderCode || '', modelName: preferred.modelName || '', colourCode: preferred.colourCode || '', colour: preferred.colour || '',
+    buyer: preferred.buyer || '', buyingGroup: preferred.buyingGroup || '', manufacturer: preferred.manufacturer || '', subMfr: preferred.subMfr || '',
+    season: preferred.season || '', mag: preferred.mag || '', mmyg: preferred.mmyg || '', country: preferred.country || '',
+    productMainDefinition: preferred.productMainDefinition || '', category: preferred.category || '',
+    planDate: a.planExFactory || '', currentPlanDate: currentPlan || '',
+    planShiftDays: d0 != null && d1 != null ? d1 - d0 : null,
+    plannedQty: planned, loadedQty: realized, onTimeQty: onTime, lateQty: late, undatedQty: undated,
+    openQty: outcome === 'removed' ? 0 : open, removedQty: outcome === 'removed' ? open : 0,
+    overdue, overdueDays: overdue ? ctx.asOfDay - ctx.planDay : 0,
+    lateDays: late > 0 ? ctx.maxLateDays : 0,
+    lastLoadDate: ctx.lastLoad || '',
+    status: b ? mapText(b.statuses) : '',
+    eta: b ? firstDateBucket(b.etaDates) : '',
+    outcome,
+  };
+}
+function summarizePlan(rows) {
+  const out = { lines: 0, plannedQty: 0, loadedQty: 0, onTimeQty: 0, lateQty: 0, undatedQty: 0, openQty: 0, overdueOpenQty: 0, pendingOpenQty: 0, removedQty: 0, overdueLines: 0, outcomes: {} };
+  for (const key of PLAN_OUTCOMES) out.outcomes[key] = 0;
+  for (const row of rows || []) {
+    out.lines += 1;
+    out.outcomes[row.outcome] = (out.outcomes[row.outcome] || 0) + 1;
+    for (const key of ['plannedQty', 'loadedQty', 'onTimeQty', 'lateQty', 'undatedQty', 'openQty', 'removedQty']) out[key] = round(out[key] + number(row[key]));
+    if (row.overdue) { out.overdueOpenQty = round(out.overdueOpenQty + number(row.openQty)); out.overdueLines += 1; }
+    else out.pendingOpenQty = round(out.pendingOpenQty + number(row.openQty));
+  }
+  out.realisationPct = out.plannedQty > 0 ? Math.round((out.loadedQty / out.plannedQty) * 1000) / 10 : null;
+  out.onTimePct = out.plannedQty > 0 ? Math.round((out.onTimeQty / out.plannedQty) * 1000) / 10 : null;
+  return out;
+}
+
 function fieldChange(label, category, before, after, days) {
   return { label, category, before: before == null ? '' : before, after: after == null ? '' : after, days: Number.isFinite(days) ? days : null };
 }
@@ -386,6 +492,13 @@ function compareSnapshots(startRows, endRows, options = {}) {
     revertedRevisionGroups: activity.filter(item => item.reverted).length,
   };
   const fromDay = dayOrdinal(options.from), toDay = dayOrdinal(options.to);
+  // Plan penceresi analiz döneminden bağımsız seçilebilir (ör. "1-15 Ekim'de
+  // yüklenmesi planlananlar"). Verilmezse analiz dönemiyle aynıdır.
+  const planFromDay = dayOrdinal(options.planFrom) != null ? dayOrdinal(options.planFrom) : fromDay;
+  const planToDay = dayOrdinal(options.planTo) != null ? dayOrdinal(options.planTo) : toDay;
+  // "Tarihi geçmiş" kararı bitiş snapshotının günü (veya verilen asOf) ile yapılır.
+  const asOfDay = dayOrdinal(options.asOf) != null ? dayOrdinal(options.asOf) : toDay;
+  const planRows = [];
 
   for (const id of ids) {
     const a = before.get(id), b = after.get(id), preferred = b || a;
@@ -423,31 +536,35 @@ function compareSnapshots(startRows, endRows, options = {}) {
       if (a.manufacturer !== b.manufacturer) fields.push(fieldChange('Üretici', 'commercial', a.manufacturer, b.manufacturer)), categories.add('commercial');
     }
 
-    const startPlan = a && a.planExFactory;
-    const addedLoads = bucketAdded(a && a.handoverDates, b && b.handoverDates);
-    let loadedQty = 0, onTimeQty = 0, lateQty = 0;
-    for (const load of addedLoads) {
-      loadedQty += load.qty;
-      const planDay = dayOrdinal(startPlan), actualDay = dayOrdinal(load.value);
-      if (planDay != null && actualDay != null) {
-        if (actualDay <= planDay) onTimeQty += load.qty;
-        else lateQty += load.qty;
-      }
+    const loads = periodLoads(a, b);
+    const planDay = dayOrdinal(a ? a.planExFactory : b && b.planExFactory);
+    let onTimeQty = 0, lateQty = 0, maxLateDays = 0, lastLoad = '';
+    for (const load of loads.dated) {
+      const actualDay = dayOrdinal(load.value);
+      if (!lastLoad || load.value > lastLoad) lastLoad = load.value;
+      if (planDay == null || actualDay == null) continue;
+      if (actualDay <= planDay) onTimeQty += load.qty;
+      else { lateQty += load.qty; maxLateDays = Math.max(maxLateDays, actualDay - planDay); }
     }
-    loadedQty = round(loadedQty); onTimeQty = round(onTimeQty); lateQty = round(lateQty);
+    const loadedQty = loads.loadedQty;
+    onTimeQty = round(onTimeQty); lateQty = round(lateQty);
     summary.actualLoadedQty = round(summary.actualLoadedQty + loadedQty);
     summary.onTimeLoadedQty = round(summary.onTimeLoadedQty + onTimeQty);
     summary.lateLoadedQty = round(summary.lateLoadedQty + lateQty);
 
+    const inPlanWindow = planDay != null && planFromDay != null && planToDay != null && planDay >= planFromDay && planDay <= planToDay;
     let plannedQty = 0, realizedPlannedQty = 0;
-    if (a) {
-      const planDay = dayOrdinal(a.planExFactory);
-      if (planDay != null && fromDay != null && toDay != null && planDay >= fromDay && planDay <= toDay) {
-        plannedQty = Math.max(0, number(a.remainingQty));
-        realizedPlannedQty = Math.min(plannedQty, loadedQty);
+    if (a && inPlanWindow) {
+      plannedQty = openQty(a);
+      if (plannedQty > 0) {
+        realizedPlannedQty = round(Math.min(plannedQty, b ? loadedQty : 0));
         summary.plannedQty = round(summary.plannedQty + plannedQty);
         summary.realizedPlannedQty = round(summary.realizedPlannedQty + realizedPlannedQty);
-        if (realizedPlannedQty < plannedQty) {
+        const planRow = planRowFor(id, a, b, {
+          plannedQty, realizedPlannedQty, onTimeQty, lateQty, maxLateDays, lastLoad, planDay, asOfDay,
+        });
+        planRows.push(planRow);
+        if (b && realizedPlannedQty < plannedQty) {
           fields.push(fieldChange(
             'Planlanan yükleme gerçekleşmesi',
             'exfactory',
@@ -479,10 +596,14 @@ function compareSnapshots(startRows, endRows, options = {}) {
       mag: preferred && preferred.mag || '',
       mmyg: preferred && preferred.mmyg || '',
       country: preferred && preferred.country || '',
+      productMainDefinition: preferred && preferred.productMainDefinition || '',
+      category: preferred && preferred.category || '',
       fields,
       categories: [...categories],
-      actualLoads: addedLoads,
-      loadedQty, onTimeQty, lateQty, plannedQty, realizedPlannedQty,
+      actualLoads: loads.dated,
+      planDate: (a ? a.planExFactory : b && b.planExFactory) || '',
+      inPlanWindow,
+      loadedQty, onTimeQty, lateQty, undatedLoadedQty: loads.undatedQty, plannedQty, realizedPlannedQty,
       activityCount: lineActivity.reduce((total, item) => total + item.eventCount, 0),
       repeatedRevision: lineActivity.some(item => item.repeated),
       revertedRevision: lineActivity.some(item => item.reverted),
@@ -490,11 +611,20 @@ function compareSnapshots(startRows, endRows, options = {}) {
   }
   summary.planGapQty = round(Math.max(0, summary.plannedQty - summary.realizedPlannedQty));
   changes.sort((a, b) => (b.lateQty - a.lateQty) || (b.activityCount - a.activityCount) || a.orderCode.localeCompare(b.orderCode, 'tr', { numeric: true }));
-  return { summary, changes };
+  planRows.sort((a, b) => (PLAN_OUTCOME_ORDER[a.outcome] - PLAN_OUTCOME_ORDER[b.outcome]) || (b.overdueDays - a.overdueDays) || (b.openQty - a.openQty) || a.orderCode.localeCompare(b.orderCode, 'tr', { numeric: true }));
+  return {
+    summary,
+    changes,
+    plan: {
+      window: { from: dayIso(planFromDay), to: dayIso(planToDay), asOf: dayIso(asOfDay) },
+      summary: summarizePlan(planRows),
+      rows: planRows,
+    },
+  };
 }
 
 function catalogsFromRows(rows) {
-  const keys = ['buyer','buyingGroup','manufacturer','subMfr','season','mag','mmyg','country'];
+  const keys = ['buyer','buyingGroup','manufacturer','subMfr','season','mag','mmyg','country','productMainDefinition','category'];
   const out = {};
   for (const key of keys) out[key] = [...new Set((rows || []).map(row => clean(row && row[key])).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, 'tr', { numeric: true, sensitivity: 'base' }));
@@ -506,5 +636,6 @@ module.exports = {
   archivePath, lineId, dateIso, dayOrdinal, projectSnapshot,
   readArchive, writeArchive, appendSnapshot, markerList, rowsAtMarker, resolveRange,
   collapseHistory, compareSnapshots, catalogsFromRows, categoryForField,
-  _test: { deltaBetween, latestRows, pruneArchive, rowsMap, bucketAdded, mapText },
+  PLAN_OUTCOMES, summarizePlan,
+  _test: { deltaBetween, latestRows, pruneArchive, rowsMap, bucketAdded, mapText, openQty, periodLoads },
 };

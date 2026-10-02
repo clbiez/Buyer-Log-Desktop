@@ -8546,7 +8546,7 @@ app.get('/api/backlog-plan-actual', userAccess.requireArea('backlog'), async (re
     if (!resolved.start || !resolved.end) {
       return sendDateSafeJson(res, {
         requested:{ from, to }, coverage:resolved.coverage || null, resolved:{ start:null, end:null },
-        summary:null, changes:[], activity:[], catalogs:{}, message:'Henüz karşılaştırılabilir Backlog snapshotı yok.'
+        summary:null, changes:[], plan:null, activity:[], catalogs:{}, message:'Henüz karşılaştırılabilir Backlog snapshotı yok.'
       });
     }
 
@@ -8570,11 +8570,16 @@ app.get('/api/backlog-plan-actual', userAccess.requireArea('backlog'), async (re
       resolved.start.capturedAt,
       resolved.end.capturedAt
     );
+    // Plan penceresi ve "tarihi geçmiş" referans günü istemcinin yerel takvim
+    // günleri olarak gelir; yoksa analiz dönemi kullanılır.
+    const dayParam = value => /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? String(value) : '';
     const comparison = backlogPlanActual.compareSnapshots(startRows, endRows, {
       from, to, activity:activityResult.activity,
+      planFrom:dayParam(req.query.planFrom), planTo:dayParam(req.query.planTo), asOf:dayParam(req.query.asOf),
     });
     const catalogRows = [
       ...comparison.changes,
+      ...comparison.plan.rows,
       ...activityResult.activity,
     ];
     return sendDateSafeJson(res, {
@@ -8586,6 +8591,7 @@ app.get('/api/backlog-plan-actual', userAccess.requireArea('backlog'), async (re
       },
       summary:comparison.summary,
       changes:comparison.changes,
+      plan:comparison.plan,
       activity:activityResult.activity,
       catalogs:backlogPlanActual.catalogsFromRows(catalogRows),
     });

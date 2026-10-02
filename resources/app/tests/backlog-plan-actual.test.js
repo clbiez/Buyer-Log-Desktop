@@ -134,3 +134,97 @@ test('delta archive resolves requested boundaries without duplicating unchanged 
   assert.equal(resolved.coverage.snapshotCount,3);
   assert.equal(resolved.end.rows[0].planExFactory,'2026-10-06');
 });
+
+function planLine(code, exIso, rowOverrides = {}, orderOverrides = {}) {
+  return {
+    order: order({ ocode:code, ex:new Date(exIso + 'T00:00:00'), _asasEx:new Date(exIso + 'T00:00:00'), ...orderOverrides }),
+    row: row({ 'Sipariş Kod':code, ...rowOverrides }),
+  };
+}
+function loaded(dateIso, extra = {}) {
+  return {
+    'Net Gelen Alım Sipariş Miktarı':100,
+    'GÜNCEL DURUM\n(STATUS)':'Yolda',
+    _backlogExcel:{handoverDate:null, actualLoadDate:new Date(dateIso + 'T00:00:00')},
+    ...extra,
+  };
+}
+
+test('plan window classifies on-time, late, overdue, pending, partial and removed lines', () => {
+  const startLines = [
+    planLine('A', '2026-10-01'),
+    planLine('B', '2026-10-01'),
+    planLine('C', '2026-10-02'),
+    planLine('D', '2026-10-09'),
+    planLine('E', '2026-10-03'),
+    planLine('F', '2026-10-04'),
+    planLine('Z', '2026-11-20'),
+  ];
+  const endLines = [
+    planLine('A', '2026-10-01', loaded('2026-09-30')),
+    planLine('B', '2026-10-01', loaded('2026-10-04')),
+    planLine('C', '2026-10-02'),
+    planLine('D', '2026-10-09'),
+    { order:order({ ocode:'E', ex:new Date('2026-10-03T00:00:00') }), rows:[
+      row({ 'Sipariş Kod':'E', 'Adet':40, ...loaded('2026-10-03', { 'Net Gelen Alım Sipariş Miktarı':40 }) }),
+      row({ 'Sipariş Kod':'E', 'Adet':60 }),
+    ] },
+    planLine('Z', '2026-11-20'),
+  ];
+  const start = Engine.projectSnapshot(startLines.map(x => x.order), startLines.map(x => x.row), { capturedAt:'2026-09-28T07:00:00.000Z' });
+  const end = Engine.projectSnapshot(endLines.map(x => x.order), endLines.flatMap(x => x.rows || [x.row]), { capturedAt:'2026-10-06T07:00:00.000Z' });
+  const result = Engine.compareSnapshots(start.rows, end.rows, {
+    from:'2026-09-28T07:00:00.000Z', to:'2026-10-06T07:00:00.000Z',
+    planFrom:'2026-10-01', planTo:'2026-10-10', asOf:'2026-10-06', activity:[],
+  });
+  const byCode = Object.fromEntries(result.plan.rows.map(item => [item.orderCode, item]));
+  assert.deepEqual(Object.keys(byCode).sort(), ['A','B','C','D','E','F']);
+  assert.equal(byCode.A.outcome, 'onTime');
+  assert.equal(byCode.A.onTimeQty, 100);
+  assert.equal(byCode.B.outcome, 'late');
+  assert.equal(byCode.B.lateDays, 3);
+  assert.equal(byCode.C.outcome, 'notLoaded');
+  assert.equal(byCode.C.overdue, true);
+  assert.equal(byCode.C.overdueDays, 4);
+  assert.equal(byCode.D.outcome, 'pending');
+  assert.equal(byCode.D.overdue, false);
+  assert.equal(byCode.E.outcome, 'partial');
+  assert.equal(byCode.E.loadedQty, 40);
+  assert.equal(byCode.E.openQty, 60);
+  assert.equal(byCode.F.outcome, 'removed');
+  assert.equal(result.plan.window.from, '2026-10-01');
+  assert.equal(result.plan.summary.plannedQty, 600);
+  assert.equal(result.plan.summary.loadedQty, 240);
+  assert.equal(result.plan.summary.overdueOpenQty, 160);
+  assert.equal(result.plan.summary.pendingOpenQty, 100);
+  const outside = result.changes.find(change => change.orderCode === 'Z');
+  assert.equal(outside, undefined, 'unchanged line outside the plan window stays hidden');
+  assert.ok(result.changes.filter(change => change.inPlanWindow).every(change => change.orderCode !== 'Z'));
+});
+
+test('IAS load without handover date still realises the plan through the actual load date', () => {
+  const start = Engine.projectSnapshot([order()], [row()], { capturedAt:'2026-09-28T07:00:00.000Z' });
+  const end = Engine.projectSnapshot([order()], [row(loaded('2026-10-05'))], { capturedAt:'2026-10-06T07:00:00.000Z' });
+  const result = Engine.compareSnapshots(start.rows, end.rows, {
+    from:'2026-09-28T07:00:00.000Z', to:'2026-10-06T07:00:00.000Z', activity:[],
+  });
+  assert.equal(result.summary.realizedPlannedQty, 100);
+  assert.equal(result.plan.rows[0].outcome, 'onTime');
+  assert.ok(!result.changes[0].fields.some(field => field.label === 'Planlanan yükleme gerçekleşmesi'));
+});
+
+test('legacy start snapshot without loadDates does not count existing loads as new', () => {
+  const start = Engine.projectSnapshot([order()], [row(loaded('2026-09-20'))], { capturedAt:'2026-09-28T07:00:00.000Z' });
+  delete start.rows[0].loadDates;
+  const end = Engine.projectSnapshot([order()], [row(loaded('2026-09-20'))], { capturedAt:'2026-10-06T07:00:00.000Z' });
+  const loads = Engine._test.periodLoads(start.rows[0], end.rows[0]);
+  assert.equal(loads.loadedQty, 0);
+  assert.deepEqual(loads.dated, []);
+});
+
+test('re-dating an existing partial is not counted as a new load', () => {
+  const start = Engine.projectSnapshot([order()], [row(loaded('2026-10-01'))], { capturedAt:'2026-09-28T07:00:00.000Z' });
+  const end = Engine.projectSnapshot([order()], [row(loaded('2026-10-03'))], { capturedAt:'2026-10-06T07:00:00.000Z' });
+  const loads = Engine._test.periodLoads(start.rows[0], end.rows[0]);
+  assert.equal(loads.loadedQty, 0);
+});

@@ -8286,6 +8286,7 @@ pairs:[
 ["Kurları Kaydet","Save Rates"],
 ["Planlanan & Gerçekleşen Analizi","Planned vs Actual Analysis"],
 ["Snapshot farkları · yalnız değişenler","Snapshot differences · changes only"],
+["Plan gerçekleşme · snapshot farkları · Excel","Plan realisation · snapshot differences · Excel"],
 ["Paneli yukarı taşı","Move panel up"],
 ["Paneli aşağı taşı","Move panel down"],
 ["Backlog pivot ve ön filtre ayarları","Backlog pivot and pre-filter settings"],
