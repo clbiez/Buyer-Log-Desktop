@@ -12,6 +12,8 @@ const { spawnSync } = require('child_process');
 const { once } = require('events');
 const BLBusinessRules = require('../public/business-rules');
 const BLFreight = require('../public/freight-calc');
+const BLTransitAnalysis = require('../public/transit-analysis');
+const transitAnalysisSource = require('./lib/transit-analysis-source');
 const canonicalFields = require('./lib/canonical-fields');
 // Excel tarih kancaları süreç açılışında kurulur: tembel getXLSX() çağrılarını
 // beklemeden, xlsx modülünü hangi yol kullanırsa kullansın okuma ve yazma aynı
@@ -315,7 +317,7 @@ const octopusExports = createExportStore();
 // Eylem listesi istemciyle TEK kaynaktan paylaşılır (bkz. agent-tool-registry).
 const copilotActions = require('../public/copilot-actions.js');
 const {
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
   loadViews, addView, updateView, deleteView, setFavoriteView, markUsedView,
   loadFilterProfiles, addFilterProfile, updateFilterProfile, deleteFilterProfile, setFavoriteFilterProfile, markUsedFilterProfile,
   loadShipping, addShippingRows, patchShippingRow, deleteShippingRows,
@@ -772,7 +774,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
   for (const id of Array.isArray(ids) ? ids : []) {
     const before = local[id], after = remote[id];
     if (id === 'store:overrides.json') {
-      for (const field of ['pricingRules','transitRules','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs']) {
+      for (const field of ['pricingRules','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
       if (
@@ -10238,6 +10240,59 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ok: true, rules: saved.rules, revision: saved.revision });
   } catch (err) { apiError(res, err, 'Transit kuralları kaydedilemedi.'); }
+});
+
+// İthalat Yol Süresi Raporu analizi. Excel istemcide okunur; sunucu aynı
+// paylaşılan normalize kuralıyla doğrular ve tek merkezde saklar. Kural motoru
+// bunu okumaz: öneriler kullanıcı onayıyla /api/transit-rules'a yazılır.
+app.get('/api/transit-analysis', (req, res) => {
+  const ov = loadOverrides();
+  const revision = Number(ov._revisions && ov._revisions.transitAnalysis) || 0;
+  res.set('ETag', `"${revision}"`);
+  res.json({ analysis: ov.transitAnalysis || null, revision });
+});
+// Excel'siz yol: Backlog'un kanonik ASAS + IAS veri kümesinden canlı hesap.
+// Kullanıcının kaynak ufku ve yetki kapsamı Backlog ile aynı uygulanır.
+app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backlog'), async (req, res) => {
+  try {
+    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['backlog'], req);
+    if (!filterStatus.ready) {
+      return res.json({ analysis: null, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr') });
+    }
+    const runtime = cacheForUser(id);
+    if (!runtime.asasOrders) await ensureDataLoaded(id);
+    await ensureBacklogSourceFields(id);
+    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
+    const orders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser, 'backlog', ordersForTarget(active, 'backlog', overrides)));
+    const mode = ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel';
+    const label = { database: 'Database', dashboard: 'Power BI Dashboard', excel: 'Excel' }[mode];
+    const analysis = transitAnalysisSource.buildLiveAnalysis({
+      orders, antrepoMap: antrepoForTarget(active, 'backlog'), overrides,
+      sourceLabel: `Buyer Log IAS (Antrepo · ${label}) parsiyelleri`,
+    });
+    res.json({ analysis, antrepoSourceMode: mode, orderCount: orders.length });
+  } catch (err) { apiError(res, err, 'Yol süresi analizi Buyer Log verisinden hesaplanamadı.'); }
+});
+app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
+  try {
+    const raw = req.body && Object.prototype.hasOwnProperty.call(req.body, 'analysis') ? req.body.analysis : undefined;
+    if (raw === undefined) return res.status(400).json({ error: 'analysis alanı zorunlu (temizlemek için null).' });
+    let analysis = null;
+    if (raw !== null) {
+      analysis = BLTransitAnalysis.normalizeAnalysis(raw);
+      if (!analysis) return res.status(400).json({ error: 'Analizde okunabilir ülke/dönem kaydı bulunamadı.' });
+      if (JSON.stringify(analysis).length > 4 * 1024 * 1024) return res.status(413).json({ error: 'Yol süresi analizi çok büyük (en fazla 4 MB).' });
+      const actor = req.currentUser && (req.currentUser.displayName || req.currentUser.name || req.currentUser.id) || '';
+      analysis.importedBy = String(actor).slice(0, 120);
+    }
+    const saved = replaceTransitAnalysis(analysis, requestRevision(req));
+    userAccess.appendAudit(req.currentUser, 'TRANSIT_ANALYSIS_UPDATE', 'source', {
+      records: saved.analysis ? saved.analysis.records.length : 0, revision: saved.revision,
+    });
+    publishSharedMasterChange('transitAnalysis', req);
+    res.set('ETag', `"${saved.revision}"`);
+    res.json(saved);
+  } catch (err) { apiError(res, err, 'Yol süresi analizi kaydedilemedi.'); }
 });
 
 app.get('/api/non-dtr-manufacturers', (_req, res) => {

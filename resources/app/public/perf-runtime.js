@@ -110,6 +110,8 @@
     // listelemek geçmiş `load` event'ine takılabilen duplicate-script beklemesi
     // yaratıyordu. Lazy grup yalnız gerçekten lazy bağımlılıkları içerir.
     backlogAnalysis:['backlog-delivery-engine.js','backlog-delivery-insights.js','backlog-delivery-analysis.js'],
+    // Yol Süreleri › İthalat Yol Süresi Analizi: saf motor görünümden ÖNCE yüklenir.
+    transitAnalysis:['transit-analysis.js','transit-analysis-ui.js'],
     /* v9.48 — CP üretim öncelikleri. Sıra önemli: iki saf motor görünümden
        ÖNCE yüklenir; görünüm ikisini de window'dan okur. */
     /* backlog-delivery-engine.js BURADA ZORUNLU: CP hazırlık motoru teslimat
@@ -152,6 +154,7 @@
     if(name==='lfl'&&typeof global.initLFL==='function')return;
     if(name==='collectionTools'&&typeof global.initPriceSupplierAnalysis==='function')return;
     if(name==='backlogAnalysis'&&global.BLBacklogAnalysis)return;
+    if(name==='transitAnalysis'&&global.BLTransitAnalysis&&global.BLTransitAnalysisUI)return;
     // Eski/yarım bir BLCpAssistant objesi cache'ten kalmış olabilir. Unified
     // Priority tablosu ancak computeDecisionsForRows API'si gerçekten varsa
     // hazır sayılır; yalnız objenin varlığı lazy yüklemeyi kısa devre etmemeli.

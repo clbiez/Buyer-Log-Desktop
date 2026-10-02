@@ -7,7 +7,7 @@
 
 const MASTER_OVERRIDE_FIELDS = new Set([
   'pricingRules', 'transitRules', 'nonDtrManufacturers', 'landedMultipliers',
-  'freightRates', 'antrepoMatchRule', 'antrepoMatchConfig', 'antrepoSourceMode',
+  'freightRates', 'transitAnalysis', 'antrepoMatchRule', 'antrepoMatchConfig', 'antrepoSourceMode',
   'asasSourceMode', 'lflSourceMode', 'antrepoMatchConfigVersion', 'noteColumnDefs',
   'storeRevisionMeta',
 ]);
