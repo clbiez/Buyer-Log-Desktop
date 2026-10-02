@@ -13,7 +13,7 @@ const MASTER_OVERRIDE_FIELDS = new Set([
 ]);
 const CP_OVERRIDE_FIELDS = new Set([
   'notesmap', 'submap', 'suppfobmap', 'suppfobmetamap', 'delmap', 'licensormap',
-  'noteColumnValues', 'datemap',
+  'noteColumnValues', 'datemap', 'shortagemap',
 ]);
 const DEVICE_SETTING_FIELDS = new Set(['sourceFolder', 'sourceFolders']);
 const SECRET_KEY = /(password|passphrase|secret|token|authorization|cookie|credential|private.?key|client.?secret|api.?key)/i;

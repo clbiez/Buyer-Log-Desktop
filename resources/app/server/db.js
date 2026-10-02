@@ -248,6 +248,10 @@ function defaultOverrides() {
     // Elle revize edilen CP tarihleri. { [ocode]: { ex?: 'YYYY-MM-DD', retail?: ..., mb?: ... } }
     // Alan yoksa o tarih için revizyon yok demektir; model yenilemesi bunları ezmez.
     datemap: {},
+    // Buyer Log'un ASAS bakiyesi için açtığı "Üretimde" satırını kullanıcı "Eksik
+    // Adet" olarak işaretleyebilir (bakiye yüklenmeyecek). { [satırAnahtarı]:
+    // { markedAt, by, byName, qty } }. Kayıt yoksa normal kural uygulanır.
+    shortagemap: {},
     pricingRules: [], transitRules: [], nonDtrManufacturers: [],
     // Koleksiyon Landed hesaplarında satır bazlı değer girilmezse kullanılan ortak varsayılanlar.
     landedMultipliers: { tr: 1.05, overseas: 1.11 },
@@ -683,6 +687,22 @@ function applyOrderPatch(ov, orderCode, patch, options = null) {
     for (const key of Object.keys(ov.imagemap)) if (key.startsWith(namedPrefix)) ov.imagemap[key] = ref;
   }
   if (patch.dates && typeof patch.dates === 'object') applyDatePatch(ov, oc, patch.dates, orderCode);
+  if (Object.prototype.hasOwnProperty.call(patch, 'shortage')) applyShortagePatch(ov, oc, patch.shortage, options);
+}
+
+// "Eksik Adet" işareti: truthy → kaydet (yazar oturumdan), null/false → kaldır.
+function applyShortagePatch(ov, oc, value, options) {
+  ov.shortagemap = ov.shortagemap && typeof ov.shortagemap === 'object' ? ov.shortagemap : {};
+  const marked = value === true || (value && typeof value === 'object' && value.marked !== false);
+  if (!marked) { delete ov.shortagemap[oc]; return; }
+  const actor = options && options.actor && typeof options.actor === 'object' ? options.actor : null;
+  const qty = value && typeof value === 'object' && Number.isFinite(Number(value.qty)) ? Math.max(0, Number(value.qty)) : null;
+  ov.shortagemap[oc] = {
+    markedAt: new Date().toISOString(),
+    by: actor && actor.id != null ? String(actor.id) : '',
+    byName: actor && actor.name != null ? String(actor.name) : '',
+    ...(qty != null ? { qty } : {}),
+  };
 }
 
 // Tarih revizyonu: 'YYYY-MM-DD' kaydeder, null gelirse revizyonu KALDIRIR

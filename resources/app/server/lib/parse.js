@@ -1987,6 +1987,11 @@ function cpLogisticSegmentsForOrder(segments) {
       id: `${segment && segment._segmentKind === 'production' ? 'production' : (segment && segment._segmentKind === 'shortage' ? 'shortage' : 'partial')}-${Number(segment && segment._segmentIndex) || 0}`,
       kind: segment && segment._segmentKind === 'production' ? 'production' : (segment && segment._segmentKind === 'shortage' ? 'shortage' : 'partial'),
       partialNo: segment && segment._segmentKind === 'ias' ? (Number(segment._segmentIndex) || 0) + 1 : null,
+      // Buyer Log'un IAS kaydı olmadan açtığı bakiye satırı. 'warehouse' (ASAS'ta
+      // kapanmış bakiye) adet hesaplarında depoya ulaşmış sayılır, bu yüzden kind
+      // 'partial' kalır; ama bir IAS parsiyeli DEĞİLDİR ve öyle etiketlenmemelidir.
+      synthetic: syntheticSegmentKind(segment),
+      userShortage: Boolean(segment && segment._userShortage),
       priority: cpLogisticPriority(segment),
       quantity: Math.max(0, Number(segment && segment.qty) || 0),
       status: norm(segment && segment._status) || 'Durum Belirsiz',
@@ -2469,6 +2474,12 @@ function backlogPartialStatus(entry, order) {
   return deriveOperationalStatus(sourceStatus, order);
 }
 
+// IAS kaydı olmayan, Buyer Log'un ASAS bakiyesi için açtığı satır türü ('' = gerçek IAS parsiyeli).
+function syntheticSegmentKind(segment) {
+  const kind = segment && segment._segmentKind;
+  return kind === 'production' || kind === 'shortage' || kind === 'warehouse' ? kind : '';
+}
+
 function backlogSegment(order, values) {
   const quantity = Math.max(0, Number(values && values.quantity) || 0);
   const requestedKind = values && values.kind;
@@ -2497,6 +2508,8 @@ function backlogSegment(order, values) {
     _orderQty: Math.max(0, Number(values && values.orderQty) || Number(order && order.qty) || 0),
     _asasKalan: Math.max(0, Number(order && order.kalan) || 0),
     _loadedQty: kind === 'ias' ? quantity : 0,
+    // Kullanıcının CP'de "Eksik Adet" olarak işaretlediği Buyer Log bakiyesi.
+    _userShortage: Boolean(values && values.userShortage),
   };
   return attachSourceOrderRef(result, order);
 }
@@ -2513,6 +2526,13 @@ function isShortageStatus(value) {
 
 function isWarehouseShortageStatus(value) {
   return BLBusinessRules.isWarehouseShortageStatus(value);
+}
+
+function userMarkedShortage(order, overrides) {
+  const map = overrides && overrides.shortagemap;
+  if (!map || typeof map !== 'object') return false;
+  const record = overrideGet(map, order);
+  return Boolean(record && typeof record === 'object');
 }
 
 function backlogRemainderStatus(orderQty, remainder, hasHits) {
@@ -2635,6 +2655,15 @@ function buildBacklogOperationalRows(asasOrders, antrepoMap, overrides) {
         if (isPassiveOrder && isProductionStatus(remainderStatus)) {
           remainderStatus = deriveOperationalStatus(WAREHOUSE_STATUS, order);
         }
+        // Kullanıcı bu siparişin bakiyesini "Eksik Adet" olarak işaretlediyse
+        // (yüklenmeyecek) Üretimde yerine Eksik Yükleme olur; parsiyellerin
+        // tamamı depodaysa Depoda - Eksik Yükleme. İşaret yalnız Buyer Log'un
+        // açtığı Üretimde bakiyesini değiştirir; gerçek IAS satırlarına dokunmaz.
+        let userShortage = false;
+        if (isProductionStatus(remainderStatus) && userMarkedShortage(order, overrides)) {
+          remainderStatus = allPartialsInWarehouse ? WAREHOUSE_SHORTAGE_STATUS : SHORTAGE_STATUS;
+          userShortage = true;
+        }
         const segmentKind = isShortageStatus(remainderStatus) ? 'shortage'
           : (isProductionStatus(remainderStatus) ? 'production' : 'warehouse');
         const delType = backlogProductionDelType(order, overrides);
@@ -2656,6 +2685,7 @@ function buildBacklogOperationalRows(asasOrders, antrepoMap, overrides) {
           arrival,
           delType,
           orderQty,
+          userShortage,
         }));
       }
     }
@@ -3342,6 +3372,8 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       _partial: {
         kind: isProduction ? 'production' : (segment._segmentKind === 'shortage' ? 'shortage' : 'partial'),
         partialNo: segment._segmentKind === 'ias' ? (Number(segment._segmentIndex) || 0) + 1 : null,
+        synthetic: syntheticSegmentKind(segment),
+        userShortage: Boolean(segment._userShortage),
         importFile: ias ? (norm(ias.importFile) || '') : '',
         containerNo: ias ? (norm(ias.containerNo) || '') : '',
         vesselName: antrepoVesselName(ias),
