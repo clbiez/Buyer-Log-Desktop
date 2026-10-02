@@ -131,7 +131,7 @@ test('BLStorage ile okunan her ön ek ya kullanıcıya ayrılır ya da bilinçli
   const SHARED_ON_PURPOSE = [
     'bl.user.', 'bl.presetShare.notice',
     'lcw.quotations.v1', 'lcw.quotations.serverMigrated.', 'lcw.quotations.dropDetached.', 'lcw.quotations.notebookDetached.',
-    'lcw.transitRules.', 'lcw.suppFobPricingRules.', 'lcw.nonDtrManufacturers.',
+    'lcw.transitRules.', 'lcw.transitAnalysis.v1', 'lcw.suppFobPricingRules.', 'lcw.nonDtrManufacturers.',
     'lcw.emailGroups.centralMigration.', 'lcw.appr.dimFilters.',
     'buyerlog.lastSuccessfulUsername', 'buyerlog.bootRetry.',
     // Açılış perdesi kullanıcı bilinmeden çalışır: görülen bilgi kartları cihaz düzeyindedir.
