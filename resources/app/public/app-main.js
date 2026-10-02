@@ -4888,6 +4888,8 @@ function cpLogisticPriorityText(priority){
 function cpLogisticSegmentTitle(segment){
   if(segment.kind==='production') return appLang==='en'?'Remaining in production':'Üretimde kalan';
   if(segment.kind==='shortage') return appLang==='en'?'Loading shortage':'Eksik yükleme';
+  // ASAS siparişi kapatmış ama IAS'ta karşılığı olmayan bakiye: Buyer Log'un açtığı satırdır, parsiyel değildir.
+  if(segment.synthetic==='warehouse') return appLang==='en'?'Closed in ASAS · no IAS record':'ASAS\'ta kapanmış bakiye · IAS kaydı yok';
   return `${appLang==='en'?'Partial':'Parsiyel'} ${segment.partialNo||''}`.trim();
 }
 function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){

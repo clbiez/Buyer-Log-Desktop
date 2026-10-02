@@ -1987,6 +1987,10 @@ function cpLogisticSegmentsForOrder(segments) {
       id: `${segment && segment._segmentKind === 'production' ? 'production' : (segment && segment._segmentKind === 'shortage' ? 'shortage' : 'partial')}-${Number(segment && segment._segmentIndex) || 0}`,
       kind: segment && segment._segmentKind === 'production' ? 'production' : (segment && segment._segmentKind === 'shortage' ? 'shortage' : 'partial'),
       partialNo: segment && segment._segmentKind === 'ias' ? (Number(segment._segmentIndex) || 0) + 1 : null,
+      // Buyer Log'un IAS kaydı olmadan açtığı bakiye satırı. 'warehouse' (ASAS'ta
+      // kapanmış bakiye) adet hesaplarında depoya ulaşmış sayılır, bu yüzden kind
+      // 'partial' kalır; ama bir IAS parsiyeli DEĞİLDİR ve öyle etiketlenmemelidir.
+      synthetic: syntheticSegmentKind(segment),
       priority: cpLogisticPriority(segment),
       quantity: Math.max(0, Number(segment && segment.qty) || 0),
       status: norm(segment && segment._status) || 'Durum Belirsiz',
@@ -2467,6 +2471,12 @@ function backlogPartialStatus(entry, order) {
   // sipariş toplamının %5'ini aşıyorsa Retaile Aktarım Bekleniyor olur.
   // Diğer IAS statüleri aynen korunur.
   return deriveOperationalStatus(sourceStatus, order);
+}
+
+// IAS kaydı olmayan, Buyer Log'un ASAS bakiyesi için açtığı satır türü ('' = gerçek IAS parsiyeli).
+function syntheticSegmentKind(segment) {
+  const kind = segment && segment._segmentKind;
+  return kind === 'production' || kind === 'shortage' || kind === 'warehouse' ? kind : '';
 }
 
 function backlogSegment(order, values) {
@@ -3342,6 +3352,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       _partial: {
         kind: isProduction ? 'production' : (segment._segmentKind === 'shortage' ? 'shortage' : 'partial'),
         partialNo: segment._segmentKind === 'ias' ? (Number(segment._segmentIndex) || 0) + 1 : null,
+        synthetic: syntheticSegmentKind(segment),
         importFile: ias ? (norm(ias.importFile) || '') : '',
         containerNo: ias ? (norm(ias.containerNo) || '') : '',
         vesselName: antrepoVesselName(ias),
