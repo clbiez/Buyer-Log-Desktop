@@ -103,21 +103,113 @@
     const cat=categoryFor(item.category);
     return `${visual(item,lang)}<div class="blGuideCopy blTriviaCopy" data-tone="${esc(cat.tone)}"><div class="blGuideEyebrow">${esc(pick(cat.label,lang))}</div><h2>${esc(pick(item.title,lang))}</h2><p>${esc(pick(item.text,lang))}</p></div>`;
   }
-  function readSeen(){try{const v=JSON.parse(global.localStorage?.getItem(SEEN_KEY)||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string'):[];}catch(_){return [];}}
-  function markSeen(id){
-    if(!id)return;
-    try{const seen=readSeen().filter(x=>x!==id);seen.push(id);
-      // Tüm arşiv görüldüğünde liste sıfırlanır; böylece yeni tur yine karışık başlar.
-      global.localStorage?.setItem(SEEN_KEY,JSON.stringify(seen.length>=data.items.length?[id]:seen));}catch(_){}
+  // ── "Her bilgi bir kez" seçimi ──
+  // Görülen kimlikler cihazda tutulur (açılış perdesi kullanıcı bilinmeden çalışır).
+  // Arşivin tamamı görülmeden hiçbir bilgi tekrar seçilmez; liste dolunca yeni tur başlar.
+  // Depolama kapalıysa aynı kural oturum belleğiyle sürer.
+  let memorySeen=[];
+  const validIds=new Set(data.items.map(i=>i.id));
+  function readSeen(){
+    try{const raw=global.localStorage?.getItem(SEEN_KEY);if(raw!=null){const v=JSON.parse(raw);if(Array.isArray(v))return v.filter(x=>typeof x==='string'&&validIds.has(x));}}catch(_){}
+    return memorySeen.slice();
   }
-  function shuffle(list,random=Math.random){const out=list.slice();for(let i=out.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[out[i],out[j]]=[out[j],out[i]];}return out;}
-  // Daha önce görülmeyen bilgiler önce gelir; ardışık iki kart aynı kategoriden olmaz (mümkünse).
-  function deck(random=Math.random){
-    const seen=new Set(readSeen());
-    const fresh=shuffle(data.items.filter(i=>!seen.has(i.id)),random),old=shuffle(data.items.filter(i=>seen.has(i.id)),random);
-    const ordered=fresh.concat(old),out=[];
-    while(ordered.length){const prev=out[out.length-1]?.category;let k=ordered.findIndex(i=>i.category!==prev);if(k<0)k=0;out.push(ordered.splice(k,1)[0]);}
-    return out;
+  function writeSeen(list){memorySeen=list.slice();try{global.localStorage?.setItem(SEEN_KEY,JSON.stringify(list));}catch(_){}}
+  function markSeen(id){if(!validIds.has(id))return;const seen=readSeen();if(seen.includes(id))return;seen.push(id);writeSeen(seen);}
+  function seenCount(){return Math.min(readSeen().length,data.items.length);}
+  function nextUnseen(previousCategory,random=Math.random){
+    let seen=readSeen();
+    if(seen.length>=data.items.length){seen=[];writeSeen(seen);}
+    const seenSet=new Set(seen),unseen=data.items.filter(i=>!seenSet.has(i.id));
+    let pool=unseen.filter(i=>i.category!==previousCategory);if(!pool.length)pool=unseen;
+    const item=pool[Math.floor(random()*pool.length)];
+    seen.push(item.id);writeSeen(seen);
+    return item;
   }
-  global.BLTrivia={data,deck,render,visual,markSeen,count:data.items.length};
+
+  // ── Kart bileşeni: açılış perdesi ve sayfa bekleme durumları aynı bileşeni kullanır ──
+  const currentLang=()=>{try{if(typeof appLang!=='undefined')return appLang==='en'?'en':'tr';}catch(_){}return global.document?.documentElement?.lang==='en'?'en':'tr';};
+  const TICK=250;
+  // Okuma süresi metin uzunluğuna göre: kısa bilgiler daha hızlı geçer.
+  function readingMs(item,lang){const len=pick(item.text,lang).length+pick(item.title,lang).length;return Math.max(11000,Math.min(22000,7000+len*55));}
+  function copyHtml(item,lang){
+    const cat=categoryFor(item.category);
+    return `<div class="blGuideEyebrow">${esc(pick(cat.label,lang))}</div><h2>${esc(pick(item.title,lang))}</h2><p>${esc(pick(item.text,lang))}</p>`;
+  }
+  function mount(host,options={}){
+    if(!host)return null;
+    const doc=host.ownerDocument||global.document,lang=options.lang||currentLang,tt=(tr,en)=>lang()==='en'?en:tr;
+    const history=[];let index=-1,elapsed=0,paused=false,timer=null,destroyed=false;
+    host.classList.add('blTriviaHost');
+    host.innerHTML=`<div class="blTriviaCard${options.compact?' blTriviaCard--compact':''}">${options.heading?`<div class="blTriviaHeading" data-trivia-heading></div>`:''}<div class="blTriviaFigure" data-trivia-visual></div><div class="blTriviaSide"><div class="blGuideCopy blTriviaCopy" data-trivia-copy></div><div class="blTriviaNav"><div class="blTriviaProgress" aria-hidden="true"><i data-trivia-progress></i></div><div class="blTriviaNavRow"><span class="blTriviaSeen" data-trivia-seen></span><div class="blTriviaBtns"><button type="button" class="blTriviaBtn" data-trivia-prev>‹</button><button type="button" class="blTriviaBtn" data-trivia-pause aria-pressed="false">❚❚</button><button type="button" class="blTriviaBtn blTriviaBtn--next" data-trivia-next>›</button></div></div></div></div></div>`;
+    const q=sel=>host.querySelector(sel),card=q('.blTriviaCard');
+    function labels(){
+      const set=(sel,label)=>{const b=q(sel);if(b){b.setAttribute('aria-label',label);b.title=label;}};
+      set('[data-trivia-prev]',tt('Önceki bilgi','Previous fact'));set('[data-trivia-next]',tt('Sonraki bilgi','Next fact'));
+      set('[data-trivia-pause]',paused?tt('Otomatik geçişi sürdür','Resume auto-advance'):tt('Otomatik geçişi duraklat','Pause auto-advance'));
+      const pause=q('[data-trivia-pause]');if(pause){pause.textContent=paused?'▶':'❚❚';pause.setAttribute('aria-pressed',String(paused));}
+      const head=q('[data-trivia-heading]');if(head)head.textContent=tt('BEKLERKEN · BİLİYOR MUYDUNUZ?','WHILE YOU WAIT · DID YOU KNOW?');
+      const prev=q('[data-trivia-prev]');if(prev)prev.disabled=index<=0;
+    }
+    function progress(){const bar=q('[data-trivia-progress]'),item=history[index];if(bar&&item)bar.style.transform=`scaleX(${Math.min(1,elapsed/readingMs(item,lang()))})`;}
+    function paint(){
+      const item=history[index];if(!item)return;
+      const cat=categoryFor(item.category);card.dataset.tone=cat.tone;
+      q('[data-trivia-visual]').innerHTML=visual(item,lang());
+      q('[data-trivia-copy]').innerHTML=copyHtml(item,lang());
+      const seen=q('[data-trivia-seen]');if(seen){seen.textContent=tt(`${seenCount()} / ${data.items.length} bilgi görüldü`,`${seenCount()} / ${data.items.length} facts seen`);}
+      labels();progress();options.onChange?.(item);
+    }
+    function next(){if(index<history.length-1)index++;else{history.push(nextUnseen(history[index]?.category));index=history.length-1;}elapsed=0;paint();}
+    function prev(){if(index>0){index--;elapsed=0;paint();}}
+    function toggle(){paused=!paused;labels();}
+    function reading(){const active=doc.activeElement;return Boolean(card.matches?.(':hover')||(active&&active!==host&&host.contains(active)&&!active.matches?.('button')));}
+    function tick(){
+      if(destroyed)return;
+      if(!host.isConnected){destroy();return;}
+      if(paused||doc.hidden||options.blocked?.()||reading())return;
+      elapsed+=TICK;if(elapsed>=readingMs(history[index],lang()))next();else progress();
+    }
+    function destroy(){destroyed=true;if(timer)clearInterval(timer);timer=null;}
+    q('[data-trivia-prev]').addEventListener('click',prev);
+    q('[data-trivia-next]').addEventListener('click',next);
+    q('[data-trivia-pause]').addEventListener('click',toggle);
+    next();timer=setInterval(tick,TICK);
+    return {next,prev,toggle,destroy,tick,refresh:paint,current:()=>history[index],get paused(){return paused;}};
+  }
+
+  // ── Sayfa bekleme durumları ──
+  // Ortak .uiState--loading kutusu yeterince genişse ve kısa sürede bitmemişse altına
+  // bir bilgi kartı eklenir. Kart kutunun içinde yaşar: modül durumu değiştirdiğinde
+  // kutuyla birlikte kaldırılır. Dar/satır içi göstergeler ve diyaloglar etkilenmez.
+  const PAGE_DELAY=650,EXCLUDED='#ovEmpty,dialog,[role="menu"],[role="listbox"],.uiFeedback,#blBootGuard,[data-trivia="off"]';
+  function eligible(state){
+    if(!state.isConnected||!state.classList.contains('uiState--loading')||state.closest(EXCLUDED))return false;
+    const parent=state.parentElement;if(!parent)return false;
+    const rect=parent.getBoundingClientRect();return rect.width>=480&&state.getClientRects().length>0;
+  }
+  function attachToLoading(state){
+    if(state.dataset.blTrivia)return;state.dataset.blTrivia='pending';
+    setTimeout(()=>{
+      if(!eligible(state)||state.querySelector('.blTriviaPanel'))return;
+      state.dataset.blTrivia='on';state.classList.add('hasTrivia');
+      const panel=global.document.createElement('div');panel.className='blTriviaPanel';panel.setAttribute('role','group');panel.setAttribute('aria-live','off');
+      panel.setAttribute('aria-label',currentLang()==='en'?'Did you know?':'Biliyor muydunuz?');
+      state.appendChild(panel);mount(panel,{heading:true,compact:true});
+    },PAGE_DELAY);
+  }
+  function scan(node){
+    if(!node||node.nodeType!==1)return;
+    if(node.matches('.uiState--loading'))attachToLoading(node);
+    node.querySelectorAll?.('.uiState--loading').forEach(attachToLoading);
+  }
+  function watchLoadingStates(){
+    const doc=global.document;if(!doc?.body||typeof global.MutationObserver!=='function')return null;
+    scan(doc.body);
+    const observer=new global.MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)scan(n);});
+    observer.observe(doc.body,{childList:true,subtree:true});
+    return observer;
+  }
+  if(global.document){if(global.document.readyState==='loading')global.document.addEventListener('DOMContentLoaded',watchLoadingStates,{once:true});else watchLoadingStates();}
+
+  global.BLTrivia={data,render,visual,mount,nextUnseen,markSeen,seenCount,readSeen,watchLoadingStates,count:data.items.length};
 })(window);

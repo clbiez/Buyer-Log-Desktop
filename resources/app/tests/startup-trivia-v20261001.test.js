@@ -39,34 +39,91 @@ test('cards render escaped local SVG art with no remote assets or script',()=>{
   assert.match(win.BLTrivia.render(DATA.items[0],'en'),/Archive № 001/);assert.match(win.BLTrivia.render(DATA.items[0],'en'),/>Space</);
 });
 
-test('a deck covers the whole archive, avoids back-to-back categories and shows unseen facts first',()=>{
-  const {win,storage}=triviaHarness();
-  const deck=win.BLTrivia.deck();assert.equal(deck.length,DATA.items.length);assert.equal(new Set(deck.map(i=>i.id)).size,DATA.items.length);
-  const repeats=deck.slice(1).filter((item,i)=>item.category===deck[i].category).length;assert.ok(repeats<=2,`${repeats} repeats`);
-  const seen=deck.slice(0,20).map(i=>i.id);seen.forEach(id=>win.BLTrivia.markSeen(id));
-  const next=win.BLTrivia.deck();assert.ok(next.slice(0,DATA.items.length-20).every(i=>!seen.includes(i.id)));
-  DATA.items.forEach(i=>win.BLTrivia.markSeen(i.id));assert.equal(JSON.parse(storage.get('bl.trivia.seen.v1')).length,1);
+// Minimal DOM double: each selector maps to one stable fake element.
+function fakeDom(){
+  const doc={hidden:false,activeElement:null};
+  function el(){
+    const handlers={},children=new Map();
+    const e={dataset:{},style:{},textContent:'',innerHTML:'',disabled:false,title:'',isConnected:true,ownerDocument:doc,attrs:{},hovered:false,
+      classList:{add(){},contains(){return false;}},setAttribute(k,v){e.attrs[k]=String(v);},addEventListener(name,fn){(handlers[name]??=[]).push(fn);},
+      click(){for(const fn of handlers.click||[])fn();},matches(sel){return sel===':hover'?e.hovered:sel==='button'?Boolean(e.isButton):false;},
+      contains(o){return o===e||[...children.values()].includes(o);},
+      querySelector(sel){if(!children.has(sel)){const c=el();c.isButton=/data-trivia-(prev|next|pause)/.test(sel);children.set(sel,c);}return children.get(sel);}};
+    return e;
+  }
+  return {doc,host:el()};
+}
+function engine(storage=new Map()){
+  const timers=[];
+  const win={BLTriviaData:DATA,localStorage:{getItem:k=>storage.has(k)?storage.get(k):null,setItem:(k,v)=>storage.set(k,String(v))}};
+  vm.runInNewContext(TRIVIA,{window:win,setInterval:fn=>{timers.push(fn);return timers.length;},clearInterval(){},setTimeout(){}});
+  return {win,storage,timers};
+}
+
+test('every fact is shown exactly once before any repeats, and a new round starts only after the whole archive',()=>{
+  const {win,storage}=engine();const seen=new Set();let prev='';let sameCategory=0;
+  for(let i=0;i<DATA.items.length;i++){const item=win.BLTrivia.nextUnseen(prev);assert.ok(!seen.has(item.id),`repeat ${item.id} at ${i}`);seen.add(item.id);if(item.category===prev)sameCategory++;prev=item.category;}
+  assert.equal(seen.size,DATA.items.length);assert.ok(sameCategory<=3,`${sameCategory} back-to-back categories`);
+  assert.equal(win.BLTrivia.seenCount(),DATA.items.length);
+  win.BLTrivia.nextUnseen(prev);assert.equal(JSON.parse(storage.get('bl.trivia.seen.v1')).length,1,'new round restarts the list');
 });
 
-test('blocked storage never breaks the deck',()=>{
+test('seen facts persist across startups and windows sharing the device storage',()=>{
+  const storage=new Map();const first=engine(storage),ids=new Set();
+  for(let i=0;i<40;i++)ids.add(first.win.BLTrivia.nextUnseen().id);
+  const second=engine(storage);for(let i=0;i<DATA.items.length-40;i++)assert.ok(!ids.has(second.win.BLTrivia.nextUnseen().id));
+});
+
+test('blocked storage still never repeats within the session',()=>{
   const win={BLTriviaData:DATA,localStorage:{getItem(){throw new Error('blocked');},setItem(){throw new Error('blocked');}}};
-  vm.runInNewContext(TRIVIA,{window:win});
-  assert.equal(win.BLTrivia.deck().length,DATA.items.length);assert.doesNotThrow(()=>win.BLTrivia.markSeen(DATA.items[0].id));
+  vm.runInNewContext(TRIVIA,{window:win,setInterval(){},clearInterval(){},setTimeout(){}});
+  const ids=new Set();for(let i=0;i<DATA.items.length;i++)ids.add(win.BLTrivia.nextUnseen().id);assert.equal(ids.size,DATA.items.length);
 });
 
-test('the startup curtain shows trivia, while the F1 guide keeps the how-to lessons',()=>{
-  const {win}=triviaHarness();win.BLGuideData=GUIDE_DATA;win.addEventListener=()=>{};
-  const timers=[],doc={documentElement:{lang:'tr'},addEventListener(){},getElementById:()=>null};
-  vm.runInNewContext(GUIDE,{window:win,document:doc,setInterval:fn=>{timers.push(fn);return timers.length;},clearInterval(){},setTimeout(){}});
-  let html='',heading='',mounted=false;
-  const tip={matches:()=>false,set innerHTML(v){html=v;}},count={textContent:''},pause={setAttribute(){},addEventListener(){},textContent:''};
-  const root={isConnected:true,classList:{add(){}},contains:()=>false,querySelector:s=>{
-    if(s==='.blBootCard')return {insertAdjacentHTML(_,markup){if(markup.includes('blBootTipHeading')){mounted=true;heading=markup;}}};
-    if(s==='[data-boot-tip]')return mounted?tip:null;if(s==='[data-tip-count]')return count;if(s==='[data-tip-pause]')return pause;return {addEventListener(){}};}};
+test('the card component navigates history, pauses while read, and auto-advances only to unseen facts',()=>{
+  const {win,timers}=engine(),{doc,host}=fakeDom();
+  const ctl=win.BLTrivia.mount(host,{lang:()=>'tr'});const first=ctl.current();
+  const next=host.querySelector('[data-trivia-next]'),prev=host.querySelector('[data-trivia-prev]'),pause=host.querySelector('[data-trivia-pause]');
+  assert.equal(prev.disabled,true);assert.match(host.querySelector('[data-trivia-seen]').textContent,/^1 \/ \d+ bilgi görüldü$/);
+  next.click();const second=ctl.current();assert.notEqual(second.id,first.id);
+  prev.click();assert.equal(ctl.current().id,first.id,'Previous returns to the same fact');
+  next.click();assert.equal(ctl.current().id,second.id,'Next walks forward through history before picking new facts');
+  assert.equal(win.BLTrivia.seenCount(),2,'revisiting history does not consume new facts');
+  const tick=timers[0];host.querySelector('.blTriviaCard').hovered=true;for(let i=0;i<200;i++)tick();assert.equal(ctl.current().id,second.id,'hover pauses');
+  host.querySelector('.blTriviaCard').hovered=false;pause.click();for(let i=0;i<200;i++)tick();assert.equal(ctl.current().id,second.id,'pause button pauses');
+  pause.click();for(let i=0;i<100;i++)tick();assert.notEqual(ctl.current().id,second.id,'auto-advance resumes');assert.equal(win.BLTrivia.seenCount(),3);
+  host.isConnected=false;const at=ctl.current().id;for(let i=0;i<200;i++)tick();assert.equal(ctl.current().id,at,'disconnected cards stop');
+});
+
+test('the startup curtain delegates to the trivia card, while the F1 guide keeps the how-to lessons',()=>{
+  const {win}=engine();win.BLGuideData=GUIDE_DATA;win.addEventListener=()=>{};
+  const calls=[];win.BLTrivia={...win.BLTrivia,mount:(host,options)=>{calls.push({host,options});return {refresh(){},destroy(){}};}};
+  const doc={documentElement:{lang:'tr'},addEventListener(){},getElementById:()=>null};
+  vm.runInNewContext(GUIDE,{window:win,document:doc,setInterval:()=>1,clearInterval(){},setTimeout(){}});
+  let markup='',mounted=false;const tip={id:'tip'},handlers={};
+  const root={isConnected:true,dataset:{},classList:{add(){}},contains:()=>false,querySelector:s=>{
+    if(s==='.blBootCard')return {insertAdjacentHTML(_,html){markup+=html;if(html.includes('data-boot-tip'))mounted=true;}};
+    if(s==='[data-boot-tip]')return mounted?tip:null;return {addEventListener(name,fn){handlers[s]=fn;}};}};
   win.BLGuide.mountStartup(root);
-  assert.match(heading,/BİLİYOR MUYDUNUZ\?/);assert.match(html,/blTriviaVisual/);assert.match(count.textContent,new RegExp(`^1 / ${DATA.items.length}$`));
-  const first=html;timers[0]();assert.notEqual(html,first);assert.match(html,/blTriviaVisual/);
+  assert.equal(calls.length,1);assert.equal(calls[0].host,tip);assert.equal(typeof calls[0].options.blocked,'function');
+  assert.match(markup,/BİLİYOR MUYDUNUZ\?/);assert.match(markup,/data-boot-continue-slot/);assert.match(markup,/Devam düğmesi görünecek/);
+  assert.doesNotMatch(markup,/data-tip-prev|data-tip-next/,'legacy footer arrows are gone in trivia mode');
   assert.equal(win.BLGuide.available().length,GUIDE_DATA.lessons.filter(c=>!c.areas.length&&!c.capability).length);
+});
+
+test('page loading states get a delayed trivia panel, but compact and dialog indicators are left alone',()=>{
+  const delayed=[];const added=[];
+  const win={BLTriviaData:DATA,localStorage:{getItem:()=>null,setItem(){}},MutationObserver:class{constructor(fn){this.fn=fn;}observe(){}},
+    document:{readyState:'complete',body:null,addEventListener(){},createElement:()=>{const p=fakeDom().host;added.push(p);return p;}}};
+  function state(opts){return {isConnected:true,dataset:{},classList:{list:new Set(['uiState','uiState--loading']),contains(c){return this.list.has(c);},add(c){this.list.add(c);}},
+    closest:sel=>opts.excluded&&sel.includes(opts.excluded)?{}:null,parentElement:{getBoundingClientRect:()=>({width:opts.width})},getClientRects:()=>[{}],
+    querySelector:()=>null,appendChild(child){this.child=child;},matches:sel=>sel==='.uiState--loading'};}
+  vm.runInNewContext(TRIVIA,{window:win,setInterval:()=>1,clearInterval(){},setTimeout:(fn,ms)=>{delayed.push({fn,ms});}});
+  const wide=state({width:1100}),narrow=state({width:300}),inDialog=state({width:1100,excluded:'dialog'});
+  const scan=s=>{const body={nodeType:1,matches:()=>false,querySelectorAll:()=>[s]};win.document.body=body;win.BLTrivia.watchLoadingStates();};
+  [wide,narrow,inDialog].forEach(scan);
+  assert.ok(delayed.every(d=>d.ms>=500),'quick loads never flash a card');delayed.forEach(d=>d.fn());
+  assert.ok(wide.child);assert.ok(wide.classList.contains('hasTrivia'));assert.ok(!narrow.child);assert.ok(!inDialog.child);
 });
 
 test('trivia scripts load before the guide and motion respects reduced-motion',()=>{

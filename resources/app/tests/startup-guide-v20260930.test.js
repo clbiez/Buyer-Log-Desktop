@@ -35,11 +35,21 @@ function guideHarness(profile=null){
 test('core markup and data never release the curtain before the applied top-right profile and usable render',()=>{
   const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
   assert.ok(h.nodes.has('blBootGuard'));h.profile();assert.ok(h.nodes.has('blBootGuard'));
-  h.win.BLBootGuard.ready('ui');assert.ok(!h.nodes.has('blBootGuard'));assert.equal(h.stops,1);assert.equal(h.timers.size,0);
+  h.win.BLBootGuard.ready('ui');assert.equal(h.stops,1);assert.equal(h.timers.size,0);
+  // Ready never yanks the curtain away: it waits for an explicit Continue.
+  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.message.textContent,'Buyer Log hazır');
+  const button=g.card.children.find(c=>c.dataset.bootContinue);assert.ok(button);assert.equal(h.doc.activeElement,button);
+  let completed=0;h.win.addEventListener('bl:startup-complete',()=>completed++);assert.equal(completed,0);
+  button.onclick();assert.ok(!h.nodes.has('blBootGuard'));assert.equal(completed,1);
+});
+test('Continue does nothing until preparation is complete',()=>{
+  const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');h.win.BLBootGuard.continue();
+  assert.ok(h.nodes.has('blBootGuard'));assert.equal(h.nodes.get('blBootGuard').dataset.ready,undefined);
 });
 test('readiness works regardless of prerequisite arrival order and completion is idempotent',()=>{
   for(const order of [['profile','ui','data','core'],['ui','core','profile','data'],['data','ui','core','profile']]){
-    const h=guardHarness();order.forEach((key,i)=>{if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);assert.equal(h.nodes.has('blBootGuard'),i<3);});h.win.BLBootGuard.ready();assert.equal(h.stops,1);
+    const h=guardHarness();order.forEach((key,i)=>{if(key==='profile')h.profile();else h.win.BLBootGuard.ready(key==='core'?undefined:key);assert.equal(h.nodes.get('blBootGuard').dataset.ready,i<3?undefined:'1');});h.win.BLBootGuard.ready();assert.equal(h.stops,1);
+    assert.equal(h.nodes.get('blBootGuard').card.children.filter(c=>c.dataset.bootContinue).length,1);h.win.BLBootGuard.continue();assert.ok(!h.nodes.has('blBootGuard'));
   }
 });
 test('an absent/incomplete profile cannot release the curtain',()=>{
@@ -52,7 +62,8 @@ test('slow startup shows information without an automatic 12-second reload; boun
   h.win.BLBootGuard.fail();h.win.BLBootGuard.fail();assert.equal(h.nodes.get('blBootGuard').card.children.length,1);
 });
 test('late successful preparation recovers from the timed-out curtain without reloading',()=>{
-  const h=guardHarness();[...h.timers.values()].find(t=>t.ms===120000).fn();h.profile();['core','data','ui'].forEach(k=>h.win.BLBootGuard.ready(k));assert.ok(!h.nodes.has('blBootGuard'));assert.equal(h.reloads,0);
+  const h=guardHarness();[...h.timers.values()].find(t=>t.ms===120000).fn();h.profile();['core','data','ui'].forEach(k=>h.win.BLBootGuard.ready(k));
+  const g=h.nodes.get('blBootGuard');assert.equal(g.dataset.ready,'1');assert.equal(g.dataset.failed,undefined);h.win.BLBootGuard.continue();assert.ok(!h.nodes.has('blBootGuard'));assert.equal(h.reloads,0);
 });
 test('recovery response cannot reload an already-ready app',async()=>{
   const h=guardHarness();const recovering=h.win.BLBootGuard.recover('missing-core');h.profile();['core','data','ui'].forEach(k=>h.win.BLBootGuard.ready(k));await recovering;assert.equal(h.reloads,0);
