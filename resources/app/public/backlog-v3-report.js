@@ -245,14 +245,14 @@
   /* -------------------------------------------------------------- Excel */
   function kit() {
     const pa = planActualApi();
-    if (!pa || !pa.excelKit) throw new Error('Planlanan & Gerçekleşen Excel kiti yüklenmedi.');
+    if (!pa || !pa.excelKit) throw new Error((typeof appLang!=='undefined'&&appLang==='en') ? 'The Plan vs Actual Excel kit is not loaded.' : 'Planlanan & Gerçekleşen Excel kiti yüklenmedi.');
     return pa;
   }
   function buildWorkbook(input, ExcelJS, options) {
-    if (!ExcelJS || typeof ExcelJS.Workbook !== 'function') throw new Error('ExcelJS yüklenmedi.');
-    const PA = kit(), K = PA.excelKit, C = K.COLORS, FONT = K.FONT;
     const opts = options || {}, lang = opts.lang === 'en' ? 'en' : 'tr';
     const L = (tr, en) => (lang === 'en' ? en : tr);
+    if (!ExcelJS || typeof ExcelJS.Workbook !== 'function') throw new Error(L('ExcelJS yüklenmedi.', 'ExcelJS is not loaded.'));
+    const PA = kit(), K = PA.excelKit, C = K.COLORS, FONT = K.FONT;
     const today = opts.today || todayIso();
     const items = normalizeRows(input.rows, { today });
     const total = summarize(items);

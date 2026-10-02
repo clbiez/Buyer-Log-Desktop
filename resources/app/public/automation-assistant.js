@@ -94,7 +94,7 @@
       patch: {
         source: 'cp',
         filters: [{ field: 'Aksiyon Önceliği Kodu', operator: 'in', value: 'CRITICAL, ACTION_TODAY' }],
-        email: { recipientMode: 'group', subject: 'Bugün aksiyon gereken siparişler', reportFields: ['Order Code', 'Aksiyon Önceliği', 'Teslimat Sonucu', 'Risk Sebepleri', 'Yüklemeye Kalan Gün'] },
+        email: { recipientMode: 'group', subject: 'Bugün aksiyon gereken siparişler', subjectEn: 'Orders needing action today', reportFields: ['Order Code', 'Aksiyon Önceliği', 'Teslimat Sonucu', 'Risk Sebepleri', 'Yüklemeye Kalan Gün'] },
         schedule: { enabled: true, mode: 'weekly', time: '09:00', weekdays: [1, 2, 3, 4, 5] },
       },
     },
@@ -106,7 +106,7 @@
       descEn: 'A report from the data you choose (optionally filtered) is prepared for an email group every Monday at 09:00.',
       patch: {
         source: 'cp',
-        email: { recipientMode: 'group', subject: 'Haftalık sipariş raporu' },
+        email: { recipientMode: 'group', subject: 'Haftalık sipariş raporu', subjectEn: 'Weekly order report' },
         schedule: { enabled: true, mode: 'weekly', time: '09:00', weekdays: [1] },
       },
     },
@@ -119,7 +119,7 @@
       patch: {
         source: 'cp',
         filters: [{ field: '', operator: 'changed', value: '' }],
-        email: { recipientMode: 'group', subject: 'Değişen siparişler' },
+        email: { recipientMode: 'group', subject: 'Değişen siparişler', subjectEn: 'Changed orders' },
         schedule: { enabled: true, mode: 'daily', time: '09:00', weekdays: [1] },
       },
     },
@@ -132,7 +132,7 @@
       patch: {
         source: 'cp',
         filters: [{ field: '', operator: 'gte', value: '@today' }, { field: '', operator: 'lte', value: '@today+7d' }],
-        email: { recipientMode: 'group', subject: 'Önümüzdeki 7 günün siparişleri' },
+        email: { recipientMode: 'group', subject: 'Önümüzdeki 7 günün siparişleri', subjectEn: 'Orders for the next 7 days' },
       },
     },
     {

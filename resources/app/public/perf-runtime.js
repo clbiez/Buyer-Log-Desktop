@@ -1,6 +1,8 @@
 (function(global){
   'use strict';
 
+  // Hata mesajları aktif arayüz dilinde üretilir (app-main appLang).
+  const uiEn=()=>typeof appLang!=='undefined'&&appLang==='en';
   const pending=new Map();
   const scriptStates=new Map();
   const documentBootAt=Number(global.__BL_DOCUMENT_BOOT_AT);
@@ -63,7 +65,7 @@
     const promise=new Promise((resolve,reject)=>{
       const cleanup=()=>{el.removeEventListener('load',onLoad);el.removeEventListener('error',onError);};
       const onLoad=()=>{cleanup();markLoaded(el,key);resolve(el);};
-      const onError=()=>{cleanup();const error=new Error(rawSrc+' yüklenemedi.');markFailed(el,key,error);reject(error);};
+      const onError=()=>{cleanup();const error=new Error(rawSrc+(uiEn()?' could not be loaded.':' yüklenemedi.'));markFailed(el,key,error);reject(error);};
       el.addEventListener('load',onLoad,{once:true});
       el.addEventListener('error',onError,{once:true});
       if(!existing){
@@ -85,12 +87,12 @@
   }
 
   async function ensureLibrary(name){
-    const spec=specs[name];if(!spec)throw new Error('Bilinmeyen performans modülü: '+name);
+    const spec=specs[name];if(!spec)throw new Error((uiEn()?'Unknown performance module: ':'Bilinmeyen performans modülü: ')+name);
     if(global[spec.global] && (name!=='pdf'||global.jspdf?.jsPDF)){spec.after?.();return global[spec.global];}
     if(!pending.has(name))pending.set(name,(async()=>{
       for(const file of spec.files)await loadScript(file);
       spec.after?.();
-      if(!global[spec.global] || (name==='pdf'&&!global.jspdf?.jsPDF))throw new Error(name+' kütüphanesi başlatılamadı.');
+      if(!global[spec.global] || (name==='pdf'&&!global.jspdf?.jsPDF))throw new Error(name+(uiEn()?' library could not be started.':' kütüphanesi başlatılamadı.'));
       return global[spec.global];
     })().finally(()=>pending.delete(name)));
     return pending.get(name);
@@ -147,7 +149,7 @@
   const loadedFeatures=new Set();
   function isFeatureLoaded(name){return loadedFeatures.has(String(name));}
   async function ensureFeature(name){
-    const files=features[name];if(!files)throw new Error('Bilinmeyen özellik modülü: '+name);
+    const files=features[name];if(!files)throw new Error((uiEn()?'Unknown feature module: ':'Bilinmeyen özellik modülü: ')+name);
     if(name==='versionHistory'&&Array.isArray(global.BL_VERSION_HISTORY))return;
     if(name==='openCosting'&&typeof global.initOpenCosting==='function')return;
     if(name==='automations'&&typeof global.initAutomationStudio==='function'&&typeof global.initAiAutomationImport==='function')return;

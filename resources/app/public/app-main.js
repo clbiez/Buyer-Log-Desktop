@@ -1247,7 +1247,7 @@ window.addEventListener('drop', e=>{
       pending--;
       if(pending===0){
         if(asasFound || state.asasOrders){
-          updSourceHint(`Sürükle-bırak ile ${results.length} dosya işlendi: ${results.join(', ')}. Otomatik oluşturuluyor…`);
+          updSourceHint(appLang==='en'?`Processed ${results.length} file(s) via drag and drop: ${results.join(', ')}. Building automatically…`:`Sürükle-bırak ile ${results.length} dosya işlendi: ${results.join(', ')}. Otomatik oluşturuluyor…`);
           generateCPFromASAS();
         }
       }
@@ -2407,7 +2407,7 @@ document.addEventListener('keydown', event=>{
   node.click();
 });
 document.getElementById('navCopy').addEventListener('click', event=>{
-  const info = activeTableInfo(); if(!info){ showToast('Önce bir sekme seç'); return; }
+  const info = activeTableInfo(); if(!info){ showToast(appLang==='en'?'Select a tab first':'Önce bir sekme seç'); return; }
   if(info.tableKey==='cp'||info.tableKey==='orders')window.BLTableToolbarActionCleanup?.begin?.(event.currentTarget);
   if((info.tableKey==='cp'||info.tableKey==='orders')&&!managedTableHasCheckedRows(info.tableKey)&&managedGridHasRange(info.tableKey)){void window.BLGridClipboard.copyActive(event,{includeHeaders:true});return;}
   // Shipping Comparison'da üstteki karar tablosu asıl kullanıcı görünümüdür.
@@ -3393,7 +3393,7 @@ const ORDERS_COLS = [ORDERS_STATUS_COL, ...CP_COLS.map(c=>({...c}))];
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
    okunurluğu bozulmaz). Renkler CSS'te .groupRow th[data-grp] ile uygulanır. */
-const GROUP_ACCENTS = {'ORDER INFO':'var(--acc)','ONAY':'var(--green)','LOJİSTİK':'var(--purple)','NOTLAR':'var(--ink2)','PRE-PROD':'var(--teal)','PRE-SHIP':'var(--acc)','KUMAŞ':'var(--orange)','Hesaplanan':'var(--pink,var(--purple))'};
+const GROUP_ACCENTS = {'ORDER INFO':'var(--acc)','ONAY':'var(--green)','LOJİSTİK':'var(--purple)','NOTLAR':'var(--ink2)','PRE-PROD':'var(--teal)','PRE-SHIP':'var(--acc)','KUMAŞ':'var(--orange)','Hesaplanan':'var(--pink,var(--purple))'}; // i18n-ignore — sütun grubu anahtarları (veri)
 
 function initColState(cols){ return { order: cols.map(c=>c.k), hidden:new Set(), widthPx:{} }; }
 const colmgr = { cp: initColState(CP_COLS), orders:initColState(ORDERS_COLS), ship: initColState(SHIP_COLS) };
@@ -10694,15 +10694,15 @@ function openSuppFobRulesModal(){
         const current=working.find(x=>x.id===id)||r;
         const count=await applySuppFobRuleToMatchingOrders(current);
         btn.textContent='Uygulandı';
-        $('_rulesStatus').textContent=`${count} siparişin Supp. FOB değeri güncellendi · Koleksiyon ${sync.collectionChanged||0} hücre/satır güncellendi.`;
+        $('_rulesStatus').textContent=appLang==='en'?`Supp. FOB updated on ${count} order(s) · Collection: ${sync.collectionChanged||0} cell(s)/row(s) updated.`:`${count} siparişin Supp. FOB değeri güncellendi · Koleksiyon ${sync.collectionChanged||0} hücre/satır güncellendi.`;
         setTimeout(()=>{ if(btn.isConnected){ btn.disabled=false; btn.innerHTML=oldHtml; } },1200);
       }
-      catch(err){ btn.disabled=false; btn.innerHTML=oldHtml; $('_rulesStatus').textContent='Uygulanamadı: '+err.message; }
+      catch(err){ btn.disabled=false; btn.innerHTML=oldHtml; $('_rulesStatus').textContent=(appLang==='en'?'Could not apply: ':'Uygulanamadı: ')+err.message; }
     }));
     body.querySelectorAll('.editRule').forEach(btn=>btn.addEventListener('click',()=>{
       const id=btn.closest('tr').dataset.id, r=working.find(x=>x.id===id); if(!r)return;
       editingId=id; opdStart.value=r.opdStart||''; opdEnd.value=r.opdEnd||''; setSelectedSeasons(r.seasons||[]); country.value=r.countryGroup; licensor.value=r.licensor; license.value=r.license; royalty.value=String(r.royalty).replace('.',','); hologram.value=String(r.hologramCost).replace('.',',');
-      modal.querySelector('#_ruleAdd span').textContent='Kuralı Güncelle'; opdStart.focus();
+      modal.querySelector('#_ruleAdd span').textContent=appLang==='en'?'Update Rule':'Kuralı Güncelle'; opdStart.focus();
     }));
     body.querySelectorAll('.deleteRule').forEach(btn=>btn.addEventListener('click',()=>{ const id=btn.closest('tr').dataset.id; working=working.filter(x=>x.id!==id); if(editingId===id) clearForm(); renderRules(); }));
     const totalMatches=working.reduce((n,r)=>n+(matchCounts.get(r.id)||0),0);
@@ -10726,14 +10726,14 @@ function openSuppFobRulesModal(){
   });
   $('_ruleAdd').addEventListener('click',()=>{
     const r={id:editingId||('rule-'+Date.now()+'-'+Math.round(Math.random()*10000)),opdStart:normalizePricingRuleDate(opdStart.value),opdEnd:normalizePricingRuleDate(opdEnd.value),seasons:normalizePricingRuleSeasons([...selectedSeasons]),countryGroup:normalizePricingCountryGroup(country.value),licensor:norm(licensor.value),license:norm(license.value),royalty:Number(royalty.value.replace(',','.')),hologramCost:Number(hologram.value.replace(',','.'))};
-    if(r.opdStart&&r.opdEnd&&dateOrdinal(r.opdStart)>dateOrdinal(r.opdEnd)){ showToast('OPD bitiş tarihi başlangıç tarihinden önce olamaz.'); return; }
-    if(!r.countryGroup||!r.licensor||!r.license){ showToast('Üretim ülkesi, Licensor ve License alanları zorunludur.'); return; }
-    if(!Number.isFinite(r.royalty)||r.royalty<0||r.royalty>100){ showToast('Royalty % değeri 0–100 arasında olmalıdır.'); return; }
-    if(!Number.isFinite(r.hologramCost)||r.hologramCost<0){ showToast('Hologram masrafı geçerli bir sayı olmalıdır.'); return; }
+    if(r.opdStart&&r.opdEnd&&dateOrdinal(r.opdStart)>dateOrdinal(r.opdEnd)){ showToast(appLang==='en'?'OPD end date cannot be before the start date.':'OPD bitiş tarihi başlangıç tarihinden önce olamaz.'); return; }
+    if(!r.countryGroup||!r.licensor||!r.license){ showToast(appLang==='en'?'Production country, Licensor and License are required.':'Üretim ülkesi, Licensor ve License alanları zorunludur.'); return; }
+    if(!Number.isFinite(r.royalty)||r.royalty<0||r.royalty>100){ showToast(appLang==='en'?'Royalty % must be between 0 and 100.':'Royalty % değeri 0–100 arasında olmalıdır.'); return; }
+    if(!Number.isFinite(r.hologramCost)||r.hologramCost<0){ showToast(appLang==='en'?'Hologram cost must be a valid number.':'Hologram masrafı geçerli bir sayı olmalıdır.'); return; }
     const duplicate=working.find(x=>x.id!==editingId&&pricingRulesSameCondition(x,r));
-    if(duplicate){ showToast('Aynı koşullara sahip bir License Royalty hesabı zaten bulunuyor. Mevcut hesabı düzenleyin.'); return; }
+    if(duplicate){ showToast(appLang==='en'?'A License Royalty calculation with the same conditions already exists. Edit the existing one.':'Aynı koşullara sahip bir License Royalty hesabı zaten bulunuyor. Mevcut hesabı düzenleyin.'); return; }
     const overlap=working.find(x=>x.id!==editingId&&pricingRulesOverlap(x,r));
-    if(overlap){ showToast(`Aynı ülke, Licensor, License ve ortak sezon kapsamındaki tarih aralığı ${pricingRuleDateRangeLabel(overlap)} hesabıyla çakışıyor.`); return; }
+    if(overlap){ showToast(appLang==='en'?`The date range overlaps the ${pricingRuleDateRangeLabel(overlap)} calculation for the same country, Licensor, License and shared seasons.`:`Aynı ülke, Licensor, License ve ortak sezon kapsamındaki tarih aralığı ${pricingRuleDateRangeLabel(overlap)} hesabıyla çakışıyor.`); return; }
     const idx=working.findIndex(x=>x.id===r.id); if(idx>=0) working[idx]=r; else working.push(r);
     working=normalizePricingRules(working); clearForm(); renderRules();
   });
@@ -10821,13 +10821,13 @@ function openSuppFobRulesModal(){
     const btn=$('_rulesApplyAll');
     const clean=normalizePricingRules(working);
     if(!clean.length){ showToast('Uygulanacak License Royalty hesabı bulunmuyor.'); return; }
-    btn.disabled=true; $('_rulesStatus').textContent='Tüm kurallar kaydediliyor ve uygulanıyor…';
+    btn.disabled=true; $('_rulesStatus').textContent=appLang==='en'?'Saving and applying all rules…':'Tüm kurallar kaydediliyor ve uygulanıyor…';
     try{
       await persistPricingRules(clean);
       working=clean.map(r=>({...r,seasons:[...(r.seasons||[])]}));
       const count=await applyAllSuppFobRules(clean);
       renderRules();
-      $('_rulesStatus').textContent=`Tümüne Uygula tamamlandı: ${count} siparişin Supp. FOB değeri güncellendi.`;
+      $('_rulesStatus').textContent=appLang==='en'?`Apply to All completed: Supp. FOB updated on ${count} order(s).`:`Tümüne Uygula tamamlandı: ${count} siparişin Supp. FOB değeri güncellendi.`;
     }catch(err){ $('_rulesStatus').textContent='Tümüne Uygula başarısız: '+err.message; }
     finally{ btn.disabled=false; }
   });
@@ -11257,23 +11257,23 @@ function openTransitRulesModal(){
     const body=$('_transitBody'),empty=$('_transitEmpty');
     body.innerHTML=working.map(r=>`<tr data-id="${escapeHtml(r.id)}"><td>${escapeHtml(transitRuleDateLabel(r))}</td><td>${escapeHtml(transitRuleListLabel(r.seasons,'Tüm Sezonlar'))}</td><td>${escapeHtml(transitRuleListLabel(r.countries,'Tüm Ülkeler'))}</td><td>${escapeHtml(transitDelTypeDisplay(r.delType))}</td><td class="num"><strong>${Number(r.days).toLocaleString('tr-TR',{maximumFractionDigits:0})}</strong></td><td class="num">${transitRuleMatchCount(r)}</td><td><div class="pricingRuleActions"><button class="pricingRuleIconBtn editTransit" title="Düzenle"><svg class="ic"><use href="#i-pencil"/></svg></button><button class="pricingRuleIconBtn danger deleteTransit" title="Sil"><svg class="ic"><use href="#i-trash"/></svg></button></div></td></tr>`).join('');
     empty.style.display=working.length?'none':'block';
-    body.querySelectorAll('.editTransit').forEach(btn=>btn.addEventListener('click',()=>{const r=working.find(x=>x.id===btn.closest('tr').dataset.id);if(!r)return;editingId=r.id;start.value=r.exfStart||'';end.value=r.exfEnd||'';type.value=r.delType;days.value=String(r.days);setSeasons(r.seasons);setCountries(r.countries);modal.querySelector('#_transitAdd span').textContent='Kuralı Güncelle';start.focus();}));
+    body.querySelectorAll('.editTransit').forEach(btn=>btn.addEventListener('click',()=>{const r=working.find(x=>x.id===btn.closest('tr').dataset.id);if(!r)return;editingId=r.id;start.value=r.exfStart||'';end.value=r.exfEnd||'';type.value=r.delType;days.value=String(r.days);setSeasons(r.seasons);setCountries(r.countries);modal.querySelector('#_transitAdd span').textContent=appLang==='en'?'Update Rule':'Kuralı Güncelle';start.focus();}));
     body.querySelectorAll('.deleteTransit').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.closest('tr').dataset.id;working=working.filter(x=>x.id!==id);if(editingId===id)clearForm();renderRules();}));
     $('_transitStatus').textContent=`${working.length} kural · özel koşullar yalnız Üretimde siparişlerde çalışır`;
   }
   $('_transitAdd').addEventListener('click',()=>{
     const rule={id:editingId||('transit-rule-'+Date.now()+'-'+Math.round(Math.random()*10000)),exfStart:toISODate(start.value),exfEnd:toISODate(end.value),seasons:normalizeTransitList([...selectedSeasons]),countries:normalizeTransitList([...selectedCountries],transitCountryKey),delType:normalizeTransitDelType(type.value),days:Number(days.value)};
-    if(rule.exfStart&&rule.exfEnd&&dateOrdinal(rule.exfStart)>dateOrdinal(rule.exfEnd)){showToast('Ex-Factory bitiş tarihi başlangıç tarihinden önce olamaz.');return;}
-    if(!rule.delType||!Number.isFinite(rule.days)||rule.days<0||rule.days>3650||!Number.isInteger(rule.days)){showToast('Yol süresi 0–3650 arasında tam gün olmalıdır.');return;}
+    if(rule.exfStart&&rule.exfEnd&&dateOrdinal(rule.exfStart)>dateOrdinal(rule.exfEnd)){showToast(appLang==='en'?'Ex-Factory end date cannot be before the start date.':'Ex-Factory bitiş tarihi başlangıç tarihinden önce olamaz.');return;}
+    if(!rule.delType||!Number.isFinite(rule.days)||rule.days<0||rule.days>3650||!Number.isInteger(rule.days)){showToast(appLang==='en'?'Transit time must be a whole number of days between 0 and 3650.':'Yol süresi 0–3650 arasında tam gün olmalıdır.');return;}
     const duplicate=working.find(x=>x.id!==editingId&&x.exfStart===rule.exfStart&&x.exfEnd===rule.exfEnd&&normalizeTransitDelType(x.delType)===rule.delType&&normalizeTransitList(x.seasons).map(turknorm).join('|')===rule.seasons.map(turknorm).join('|')&&normalizeTransitList(x.countries,transitCountryKey).map(transitCountryKey).join('|')===rule.countries.map(transitCountryKey).join('|'));
-    if(duplicate){showToast('Aynı koşullara sahip başka bir kural var. Mevcut kuralı düzenleyin.');return;}
+    if(duplicate){showToast(appLang==='en'?'Another rule with the same conditions exists. Edit the existing rule.':'Aynı koşullara sahip başka bir kural var. Mevcut kuralı düzenleyin.');return;}
     const idx=working.findIndex(x=>x.id===rule.id);if(idx>=0)working[idx]=rule;else working.push(rule);working=normalizeTransitRules(working);clearForm();renderRules();
   });
   $('_transitClear').addEventListener('click',clearForm);
   modal.querySelectorAll('._transitClose').forEach(btn=>btn.addEventListener('click',()=>modal.remove()));
   modal.addEventListener('click',e=>{if(!e.target.closest('.pricingRuleSeasonPicker')){seasonPanel.classList.remove('open');countryPanel.classList.remove('open');}if(e.target===modal)modal.remove();});
   modal.addEventListener('keydown',e=>{if(e.key==='Escape'){if(seasonPanel.classList.contains('open')||countryPanel.classList.contains('open')){e.preventDefault();seasonPanel.classList.remove('open');countryPanel.classList.remove('open');}else{e.preventDefault();modal.remove();}}});
-  $('_transitSave').addEventListener('click',async()=>{const btn=$('_transitSave');btn.disabled=true;$('_transitStatus').textContent='Kaydediliyor ve hesaplamalar yenileniyor…';try{const clean=await persistTransitRules(working);modal.remove();showToast(`${clean.length} nakliye yol süresi kuralı kaydedildi.`);}catch(err){btn.disabled=false;$('_transitStatus').textContent='Kaydedilemedi: '+err.message;}});
+  $('_transitSave').addEventListener('click',async()=>{const btn=$('_transitSave');btn.disabled=true;$('_transitStatus').textContent=appLang==='en'?'Saving and refreshing calculations…':'Kaydediliyor ve hesaplamalar yenileniyor…';try{const clean=await persistTransitRules(working);modal.remove();showToast(appLang==='en'?`${clean.length} transit time rule(s) saved.`:`${clean.length} nakliye yol süresi kuralı kaydedildi.`);}catch(err){btn.disabled=false;$('_transitStatus').textContent=(appLang==='en'?'Could not save: ':'Kaydedilemedi: ')+err.message;}});
   setSeasons([]);setCountries([]);renderRules();clearForm();
   // İthalat Yol Süresi Analizi paneli lazy yüklenir; öneriler yalnız bu
   // penceredeki çalışma listesine aktarılır, kalıcılık "Kuralları Kaydet" ile.
@@ -12413,7 +12413,7 @@ document.addEventListener('copy', e=>{
   e.preventDefault();
   e.clipboardData.setData('text/plain', BLTableExport.toTSV(matrix));
   e.clipboardData.setData('text/html', html);
-  showToast(`${matrix.recordCount}×${matrix.columnCount} hücre kopyalandı`);
+  showToast(appLang==='en'?`${matrix.recordCount}×${matrix.columnCount} cells copied`:`${matrix.recordCount}×${matrix.columnCount} hücre kopyalandı`);
 });
 
 // ================= SUNUCUDAN OTOMATİK VERİ ÇEKME (backend: doğrudan Data Model Connection) =================
@@ -14455,7 +14455,7 @@ document.getElementById('sourceFxFile')?.addEventListener('change', async e=>{
   const prev=label?label.textContent:'';
   if(label) label.textContent='Okunuyor…';
   try{
-    if(!window.BLFX) throw new Error('Kur modülü yüklenmedi.');
+    if(!window.BLFX) throw new Error(appLang==='en'?'The FX module is not loaded.':'Kur modülü yüklenmedi.');
     const parsed=await BLFX.importFile(file);
     await BLFX.save({...parsed.data,sourceType:'UPLOAD',sourceModifiedAt:file.lastModified?new Date(file.lastModified).toISOString():null});
     const st=parsed.stats;
@@ -14465,7 +14465,7 @@ document.getElementById('sourceFxFile')?.addEventListener('change', async e=>{
     try{ if(typeof window.renderOpenCostingLanguage==='function' && document.body.dataset.activeTab==='opencosting') window.renderOpenCostingLanguage(); }catch(_){}
     renderSourceFxFreshness(BLFX.store);
   }catch(err){
-    showToast('Kur dosyası okunamadı: '+err.message);
+    showToast((appLang==='en'?'Could not read the FX file: ':'Kur dosyası okunamadı: ')+err.message);
   }finally{
     if(label) label.textContent=prev;
   }
@@ -14646,7 +14646,7 @@ async function chooseSourceFolder(){
     await refreshFolderLabel();
     await loadFromServer(true);
   }catch(err){
-    alert('Klasör seçilemedi: ' + err.message + '\n\nBu özellik yalnızca sunucu senin bilgisayarında (localhost) çalışırken kullanılabilir.');
+    alert(appLang==='en'?('Could not select the folder: ' + err.message + '\n\nThis feature only works while the server runs on your computer (localhost).'):('Klasör seçilemedi: ' + err.message + '\n\nBu özellik yalnızca sunucu senin bilgisayarında (localhost) çalışırken kullanılabilir.'));
   }finally{
     if (btn) {
       btn.disabled = false;
@@ -14934,10 +14934,10 @@ function rememberProfileUse(kind,id,page=activeProfilePage()){
 
 document.getElementById('viewSaveBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('viewSelect').value;
-  if(!id){ alert('Üzerine kaydedilecek bir görünüm seçili değil. "Farklı Kaydet" ile yeni bir görünüm oluşturabilirsin.'); return; }
+  if(!id){ alert(appLang==='en'?'No view is selected to overwrite. Use "Save As" to create a new view.':'Üzerine kaydedilecek bir görünüm seçili değil. "Farklı Kaydet" ile yeni bir görünüm oluşturabilirsin.'); return; }
   const page=activeProfilePage();
   const selected=viewStore.items.find(it=>it.id===id&&it.data?.__page===page);
-  if(!selected){ alert('Bu görünüm aktif sayfaya ait değil.'); return; }
+  if(!selected){ alert(appLang==='en'?'This view does not belong to the active page.':'Bu görünüm aktif sayfaya ait değil.'); return; }
   const data=collectViewState();
   try{
     const saved=await enqueueProfileMutation('view',()=>fetchJSON(`/api/views/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data}),expectedRevision:viewStore._revision}));
@@ -14946,7 +14946,7 @@ document.getElementById('viewSaveBtn').addEventListener('click', async ()=>{
       fillProfileSelect(document.getElementById('viewSelect'),viewStore,'view');
       document.getElementById('viewSelect').value=id;window.syncProfilePicker?.(document.getElementById('viewSelect'));
     }
-    showToast('Görünüm güncellendi.');
+    showToast(appLang==='en'?'View updated.':'Görünüm güncellendi.');
   }catch(err){ alert('Kaydedilemedi: '+err.message); }
 });
 document.getElementById('viewSaveAsBtn').addEventListener('click', async ()=>{
@@ -14968,23 +14968,23 @@ document.getElementById('viewSelect').addEventListener('change', e=>{
   if(item){ applyViewState(item.data); rememberProfileUse('view',item.id,page); }
 });
 document.getElementById('viewFavBtn').addEventListener('click',async()=>{
-  const id=document.getElementById('viewSelect').value;if(!id){alert('Önce bir görünüm seç.');return;}
+  const id=document.getElementById('viewSelect').value;if(!id){alert(appLang==='en'?'Select a view first.':'Önce bir görünüm seç.');return;}
   const page=activeProfilePage();
-  if(!viewStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert('Bu görünüm aktif sayfaya ait değil.');return;}
+  if(!viewStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert(appLang==='en'?'This view does not belong to the active page.':'Bu görünüm aktif sayfaya ait değil.');return;}
   const button=document.getElementById('viewFavBtn');if(button)button.disabled=true;
   try{
     const saved=await enqueueProfileMutation('view',()=>fetchJSON(`/api/views/${encodeURIComponent(id)}/favorite`,{method:'POST',expectedRevision:viewStore._revision}));
     viewStore=setProfileStore('view',saved,page);
     if(activeProfilePage()===page){fillProfileSelect(document.getElementById('viewSelect'),viewStore,'view');document.getElementById('viewSelect').value=id;window.syncProfilePicker?.(document.getElementById('viewSelect'));}
     BLStorage.setItem(`lcw_view_favorite_${page}`,id);
-    showToast('Bu sayfanın favori görünümü kaydedildi.');
+    showToast(appLang==='en'?'Saved as the favourite view for this page.':'Bu sayfanın favori görünümü kaydedildi.');
   }catch(err){alert('Favori kaydedilemedi: '+err.message);}finally{if(button)button.disabled=false;}
 });
 document.getElementById('viewDeleteBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('viewSelect').value; if(!id) return;
   const page=activeProfilePage();
-  if(!viewStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert('Bu görünüm aktif sayfaya ait değil.');return;}
-  if(!confirm('Bu görünümü silmek istediğine emin misin?')) return;
+  if(!viewStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert(appLang==='en'?'This view does not belong to the active page.':'Bu görünüm aktif sayfaya ait değil.');return;}
+  if(!confirm(appLang==='en'?'Are you sure you want to delete this view?':'Bu görünümü silmek istediğine emin misin?')) return;
   const oldFavorite=pageFavoriteId('view',page,viewStore);
   try{
     const saved=await enqueueProfileMutation('view',()=>fetchJSON(`/api/views/${id}`,{method:'DELETE',expectedRevision:viewStore._revision}));
@@ -15011,7 +15011,7 @@ async function renameProfile(kind){
     setProfileStore(kind,saved,page);
     if(activeProfilePage()===page){fillProfileSelect(select,kind==='view'?viewStore:filterStore,kind);select.value=id;window.syncProfilePicker?.(select);}
     showToast(kind==='view'?'Görünüm yeniden adlandırıldı.':'Filtre yeniden adlandırıldı.');
-  }catch(err){alert('Ad değiştirilemedi: '+err.message);}
+  }catch(err){alert((appLang==='en'?'Could not rename: ':'Ad değiştirilemedi: ')+err.message);}
 }
 document.getElementById('viewRenameBtn')?.addEventListener('click',()=>renameProfile('view'));
 
@@ -15060,10 +15060,10 @@ document.getElementById('viewResetBtn')?.addEventListener('click',resetViewToSys
 
 document.getElementById('filterSaveBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('filterSelect').value;
-  if(!id){ alert('Üzerine kaydedilecek bir filtre seçili değil. "Farklı Kaydet" ile yeni bir filtre oluşturabilirsin.'); return; }
+  if(!id){ alert(appLang==='en'?'No filter is selected to overwrite. Use "Save As" to create a new filter.':'Üzerine kaydedilecek bir filtre seçili değil. "Farklı Kaydet" ile yeni bir filtre oluşturabilirsin.'); return; }
   const page=activeProfilePage();
   const selected=filterStore.items.find(it=>it.id===id&&it.data?.__page===page);
-  if(!selected){ alert('Bu filtre aktif sayfaya ait değil.'); return; }
+  if(!selected){ alert(appLang==='en'?'This filter does not belong to the active page.':'Bu filtre aktif sayfaya ait değil.'); return; }
   const data=collectFilterState();
   try{
     const saved=await enqueueProfileMutation('filter',()=>fetchJSON(`/api/filter-profiles/${encodeURIComponent(id)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({data}),expectedRevision:filterStore._revision}));
@@ -15072,7 +15072,7 @@ document.getElementById('filterSaveBtn').addEventListener('click', async ()=>{
       fillProfileSelect(document.getElementById('filterSelect'),filterStore,'filter');
       document.getElementById('filterSelect').value=id;window.syncProfilePicker?.(document.getElementById('filterSelect'));
     }
-    showToast('Filtre güncellendi.');
+    showToast(appLang==='en'?'Filter updated.':'Filtre güncellendi.');
   }catch(err){ alert('Kaydedilemedi: '+err.message); }
 });
 document.getElementById('filterSaveAsBtn').addEventListener('click', async ()=>{
@@ -15094,23 +15094,23 @@ document.getElementById('filterSelect').addEventListener('change', e=>{
   if(item){ applyFilterState(item.data); rememberProfileUse('filter',item.id,page); }
 });
 document.getElementById('filterFavBtn').addEventListener('click',async()=>{
-  const id=document.getElementById('filterSelect').value;if(!id){alert('Önce bir filtre seç.');return;}
+  const id=document.getElementById('filterSelect').value;if(!id){alert(appLang==='en'?'Select a filter first.':'Önce bir filtre seç.');return;}
   const page=activeProfilePage();
-  if(!filterStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert('Bu filtre aktif sayfaya ait değil.');return;}
+  if(!filterStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert(appLang==='en'?'This filter does not belong to the active page.':'Bu filtre aktif sayfaya ait değil.');return;}
   const button=document.getElementById('filterFavBtn');if(button)button.disabled=true;
   try{
     const saved=await enqueueProfileMutation('filter',()=>fetchJSON(`/api/filter-profiles/${encodeURIComponent(id)}/favorite`,{method:'POST',expectedRevision:filterStore._revision}));
     filterStore=setProfileStore('filter',saved,page);
     if(activeProfilePage()===page){fillProfileSelect(document.getElementById('filterSelect'),filterStore,'filter');document.getElementById('filterSelect').value=id;window.syncProfilePicker?.(document.getElementById('filterSelect'));}
     BLStorage.setItem(`lcw_filter_favorite_${page}`,id);
-    showToast('Bu sayfanın favori filtresi kaydedildi.');
+    showToast(appLang==='en'?'Saved as the favourite filter for this page.':'Bu sayfanın favori filtresi kaydedildi.');
   }catch(err){alert('Favori kaydedilemedi: '+err.message);}finally{if(button)button.disabled=false;}
 });
 document.getElementById('filterDeleteBtn').addEventListener('click', async ()=>{
   const id = document.getElementById('filterSelect').value; if(!id) return;
   const page=activeProfilePage();
-  if(!filterStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert('Bu filtre aktif sayfaya ait değil.');return;}
-  if(!confirm('Bu filtreyi silmek istediğine emin misin?')) return;
+  if(!filterStore.items.some(it=>it.id===id&&it.data?.__page===page)){alert(appLang==='en'?'This filter does not belong to the active page.':'Bu filtre aktif sayfaya ait değil.');return;}
+  if(!confirm(appLang==='en'?'Are you sure you want to delete this filter?':'Bu filtreyi silmek istediğine emin misin?')) return;
   const oldFavorite=pageFavoriteId('filter',page,filterStore);
   try{
     const saved=await enqueueProfileMutation('filter',()=>fetchJSON(`/api/filter-profiles/${id}`,{method:'DELETE',expectedRevision:filterStore._revision}));
@@ -17260,7 +17260,7 @@ async function exportBacklogToExcel(_event,options={}){
     const chartSuffix=chartSpecs.length?' + Grafik + Grafik Verisi':'';
     showToast(`Backlog raporu aktarıldı: BACKLOG ${data.rows?.length||0} satır + Ayarlar${chartSuffix}.`);
   }catch(err){
-    showToast('Dışa aktarım hatası: '+err.message);
+    showToast((appLang==='en'?'Export error: ':'Dışa aktarım hatası: ')+err.message);
   }finally{
     btn.disabled=false; btn.innerHTML=old;
   }
@@ -18894,13 +18894,13 @@ document.getElementById('navToShipping').addEventListener('click', async ()=>{
   try{
     const saved=await enqueueShipMutation('/api/shipping-comparison', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({rows:newRows})});
     shipRows=saved.rows||shipRows;
-    showToast(`${newRows.length} satır Nakliye Kıyaslama tablosuna eklendi.`);
+    showToast(appLang==='en'?`${newRows.length} row(s) added to the Freight Comparison table.`:`${newRows.length} satır Nakliye Kıyaslama tablosuna eklendi.`);
     state.cpSelected.clear();
     updateShippingBtnVisibility();
     renderCP();
     await loadShipRows();
     switchTab('shipping');
-  }catch(err){ alert('Aktarılamadı: '+err.message); }
+  }catch(err){ alert((appLang==='en'?'Could not transfer: ':'Aktarılamadı: ')+err.message); }
 });
 
 document.getElementById('shipUpdateFxBtn')?.addEventListener('click', async ()=>{
@@ -18917,7 +18917,7 @@ document.getElementById('shipUpdateFxBtn')?.addEventListener('click', async ()=>
 });
 
 document.getElementById('shipDeleteBtn').addEventListener('click', async ()=>{
-  if(!shipSelected.size){ showToast('Önce silinecek satırları işaretle.'); return; }
+  if(!shipSelected.size){ showToast(appLang==='en'?'Mark the rows to delete first.':'Önce silinecek satırları işaretle.'); return; }
   const selectedRows=shipRows.filter(r=>shipSelected.has(r._shipId));
   if(selectedRows.some(r=>r._canEdit===false)){showToast(appLang==='en'?'The selection contains view-only orders. Remove them before deleting.':'Seçimde yalnız görüntülenebilen siparişler var. Silmeden önce seçimden çıkarın.');return;}
   if(!confirm(`${shipSelected.size} satır silinecek. Emin misin?`)) return;
@@ -19401,7 +19401,7 @@ document.getElementById('shipExportBtn').addEventListener('click', ()=>{
   XLSX.utils.book_append_sheet(wb, ws, 'Nakliye Kıyaslama');
   const d = new Date(); const p=x=>String(x).padStart(2,'0');
   XLSX.writeFile(wb, `Nakliye_Tipine_Gore_Maliyet_Kiyaslamasi_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.xlsx`);
-  showToast(`Nakliye kıyaslaması Excel'e aktarıldı (${shipRows.length} satır, tüm sütunlar).`);
+  showToast(appLang==='en'?`Freight comparison exported to Excel (${shipRows.length} rows, all columns).`:`Nakliye kıyaslaması Excel'e aktarıldı (${shipRows.length} satır, tüm sütunlar).`);
 });
 
 // ================= BİÇİMLİ EXCEL DIŞA AKTARIM (xlsx-js-style) =================
@@ -21222,7 +21222,7 @@ function openKolPricingExcelColumnsModal(){
   modal.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); close(); } });
   modal.querySelector('#kolPricingColsSave').addEventListener('click',()=>{
     const keys=boxes().filter(x=>x.checked).map(x=>x.dataset.key);
-    if(!keys.length){ showToast('Fiyatlama Excel’i için en az bir sütun seç.'); return; }
+    if(!keys.length){ showToast(appLang==='en'?'Select at least one column for the Pricing Excel.':'Fiyatlama Excel’i için en az bir sütun seç.'); return; }
     kolPricingExcelColKeys=normalizeKolPricingExcelColKeys(keys); saveKolPricingExcelColumns(); close();
     showToast(`Pricing Excel Columns kaydedildi (${kolPricingExcelColKeys.length} sütun + görsel).`);
   });
@@ -22950,7 +22950,7 @@ function saveKolRows(){
     scheduleOverviewCollectionSummaryRender();
     return true;
   }catch(e){
-    showToast('Koleksiyon kaydedilemedi (tarayıcı depolama sınırı dolmuş olabilir): '+e.message);
+    showToast((appLang==='en'?'Could not save the collection (browser storage may be full): ':'Koleksiyon kaydedilemedi (tarayıcı depolama sınırı dolmuş olabilir): ')+e.message);
     return false;
   }
 }
@@ -25779,11 +25779,11 @@ function renderKol(){
     }
     const effectivePricing=kolEffectivePricing(row);const priceInput=btn.closest('td')?.querySelector('.kolPriceCell');let raw=priceInput?priceInput.value:effectivePricing[m],n=kolParseMoneyNum(raw);
     if(raw!==''&&Number.isFinite(n))raw=kolFormatMoneyDisplay(raw);
-    if(!Number.isFinite(n)||n<=0){showToast('Onaylamak için önce bu üreticiye geçerli bir fiyat gir.');if(priceInput){priceInput.focus();priceInput.select();}return;}
+    if(!Number.isFinite(n)||n<=0){showToast(appLang==='en'?'Enter a valid price for this manufacturer before confirming.':'Onaylamak için önce bu üreticiye geçerli bir fiyat gir.');if(priceInput){priceInput.focus();priceInput.select();}return;}
     kolPushUndo();
     row=kolWriteGroupedStorageValue(row,'pricing',{...effectivePricing,[m]:raw});
     row.confirmedManufacturer=norm(row.confirmedManufacturer)===norm(m)?'':m;
-    kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?`${m} nihai üretici olarak onaylandı.`:'Üretici onayı kaldırıldı.');
+    kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?(appLang==='en'?`${m} confirmed as the final manufacturer.`:`${m} nihai üretici olarak onaylandı.`):(appLang==='en'?'Manufacturer confirmation removed.':'Üretici onayı kaldırıldı.'));
   }));
   tbody.querySelectorAll('.kolPriceCell').forEach(el=>el.addEventListener('change',()=>kolApplyCollectionCellChange({rowId:Number(el.dataset.id),key:`pricing:${el.dataset.mfr}`,editor:el,source:'manual'},{rerender:true})));
   // Elle giriş düğmeleri (v6.01). Tek dinleyici; satırlar yeniden çizildiğinde
@@ -27069,9 +27069,9 @@ const KOL_PLM_TRANSLATION_RULES=Object.freeze({
   license:Object.freeze({}),
   category:Object.freeze({
     '2639 - KEY JERSEY BODY SHORT SLEEVED-LICENSE':'KEY ORME BODY K.KOL-LİSANS',
-    '2642 - KEY JERSEY SET-LICENSE':'KEY ORME TAKIM-LİSANS',
-    '2634 - KEY ORME PANTOLON-LICENSE':'KEY ORME PANTOLON-LİSANS',
-    '2637 - KEY JERSEY SWEATSHIRT-LICENSE':'KEY ORME SWEAT-LİSANS',
+    '2642 - KEY JERSEY SET-LICENSE':'KEY ORME TAKIM-LİSANS', // i18n-ignore — PLM → ASAS kategori değeri (veri)
+    '2634 - KEY ORME PANTOLON-LICENSE':'KEY ORME PANTOLON-LİSANS', // i18n-ignore — PLM → ASAS kategori değeri (veri)
+    '2637 - KEY JERSEY SWEATSHIRT-LICENSE':'KEY ORME SWEAT-LİSANS', // i18n-ignore — PLM → ASAS kategori değeri (veri)
     '2638 - KEY JERSEY BODY LONG SLEEVED-LICENSE':'KEY ORME BODY U.KOL-LİSANS',
   }),
   line:Object.freeze({}),
@@ -32058,7 +32058,7 @@ document.getElementById('kolExportImgBtn')?.addEventListener('click',async()=>{
   if(!rows.length){showToast('Aktarılacak model yok.');return;}
   const btn=document.getElementById('kolExportImgBtn');btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);
   try{await kolExportWithImages(rows,'Koleksiyon');window.BLTableToolbarActionCleanup?.finish?.(btn,true);}
-  catch(err){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast('Görsel aktarım hatası: '+err.message);}
+  catch(err){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast((appLang==='en'?'Image export error: ':'Görsel aktarım hatası: ')+err.message);}
   finally{btn.disabled=false;}
 });
 
@@ -33170,11 +33170,11 @@ function renderKolMfrModal(ctx){
     if(editingMfrIndex>=0 && !commitInlineMfrEdit(editingMfrIndex)) return;
     prepareEmailFillFromShared();
     const checked=[..._mfrPicked].sort((a,b)=>a-b).map(i=>kolManufacturers[i]).filter(Boolean);
-    if(!checked.length){ showToast(L('En az bir üretici seç.')); return; }
+    if(!checked.length){ showToast(appLang==='en'?'Select at least one manufacturer.':'En az bir üretici seç.'); return; }
     const missing=checked.filter(m=>!String(m.email||'').trim());
     if(missing.length){ showToast(appLang==='en'?`${missing[0].name} has no valid e-mail in Settings > E-Mail Groups.`:`${missing[0].name} için Ayarlar > E-Mail Grupları alanında geçerli e-posta yok.`); return; }
     const selRows=getRows();
-    if(!selRows.length){ showToast(L('Seçili modeller bulunamadı.')); return; }
+    if(!selRows.length){ showToast(appLang==='en'?'The selected models could not be found.':'Seçili modeller bulunamadı.'); return; }
     const topicForDraft={...selectedTopic};
     const topicColumns=mailTopicSelectedColumns(topicForDraft.kind,topicForDraft.id,topicSourceKind);
     const topicContent=mailTopicContentOptions(topicForDraft.kind,topicForDraft.id,topicSourceKind);
@@ -33297,8 +33297,8 @@ function renderKolMfrModal(ctx){
       if(changed && SRC.persist){ saveKolRows(); renderKol(); }
       kolShowPricingDraftResults(results,previewWarning,pricingTaskV2?(appLang==='en'?'Send to Pricing Result':'Fiyat Talebi Sonucu'):(appLang==='en'?'Prepaire E-Mail Result':'E-Posta Hazırlama Sonucu'));
       const okCount=results.filter(r=>r.ok).length;
-      if(okCount) showToast(`${okCount} üretici için e-posta taslağı ve Excel eki hazırlandı.`);
-      else showToast('Send to Pricing tamamlanamadı. Sonuç penceresindeki hata açıklamasını kontrol et.');
+      if(okCount) showToast(appLang==='en'?`Email draft and Excel attachment prepared for ${okCount} manufacturer(s).`:`${okCount} üretici için e-posta taslağı ve Excel eki hazırlandı.`);
+      else showToast(appLang==='en'?'Send to Pricing could not be completed. Check the error details in the result window.':'Send to Pricing tamamlanamadı. Sonuç penceresindeki hata açıklamasını kontrol et.');
     }catch(err){
       showToast('Send to Pricing hatası: '+(err?.message||String(err)));
     }finally{
@@ -34273,7 +34273,7 @@ async function runCreateOc(btn, metas, sourceLabel){
     showToast(`${res.created} ön maliyet oluşturuldu. Ön Maliyet sekmesine geçiliyor…`);
     document.querySelector('nav.tabs button[data-tab="opencosting"]')?.click();
   }catch(err){
-    showToast('Ön maliyet oluşturulamadı: '+err.message);
+    showToast((appLang==='en'?'Preliminary costing could not be created: ':'Ön maliyet oluşturulamadı: ')+err.message);
   }finally{
     if(btn){ btn.innerHTML=old; btn.disabled=false; }
   }
@@ -34281,13 +34281,13 @@ async function runCreateOc(btn, metas, sourceLabel){
 document.getElementById('cpCreateOcBtn')?.addEventListener('click', ()=>{
   const rows=selectedCpRowsForAction();
   if(rows===null)return;
-  if(!rows.length){ showToast("Önce CP'de en az bir satır seç."); return; }
-  runCreateOc(document.getElementById('cpCreateOcBtn'), rows.map(ocMetaFromCpRow), 'CP satırından oluşturuldu');
+  if(!rows.length){ showToast(appLang==='en'?'Select at least one row in CP first.':"Önce CP'de en az bir satır seç."); return; }
+  runCreateOc(document.getElementById('cpCreateOcBtn'), rows.map(ocMetaFromCpRow), appLang==='en'?'Created from CP row':'CP satırından oluşturuldu');
 });
 document.getElementById('kolCreateOcBtn')?.addEventListener('click', ()=>{
   if(!kolSelected || !kolSelected.size){ showToast('Önce en az bir model seç.'); return; }
   const rows = kolRows.filter(r=>selectionHasId(kolSelected,r.id));
-  runCreateOc(document.getElementById('kolCreateOcBtn'), rows.map(ocMetaFromKolRow), 'Koleksiyon satırından oluşturuldu');
+  runCreateOc(document.getElementById('kolCreateOcBtn'), rows.map(ocMetaFromKolRow), appLang==='en'?'Created from Collection row':'Koleksiyon satırından oluşturuldu');
 });
 
 // CP "Fiyatlamaya Gönder": Koleksiyon'daki akışın AYNISI (üretici seç → taslak e-posta
@@ -34309,7 +34309,7 @@ document.getElementById('kolLflTrialBtn')?.addEventListener('click',()=>{
 
 document.getElementById('kolPriceHistoryBtn')?.addEventListener('click', ()=>{
   const rows=filteredKol().filter(r=>selectionHasId(kolSelected,r.id));
-  if(!rows.length){ showToast(L('Önce model seç.')); return; }
+  if(!rows.length){ showToast(appLang==='en'?'Select a model first.':'Önce model seç.'); return; }
   if(window.BL_QUOTATIONS?.openPricingHistoryWorkspace)return window.BL_QUOTATIONS.openPricingHistoryWorkspace(rows);
   window.BL_QUOTATIONS?.openPriceHistory(rows);
 });
@@ -34329,7 +34329,7 @@ document.getElementById('cpSendPricingBtn')?.addEventListener('click', ()=>{
 document.getElementById('cpCopyToKolBtn')?.addEventListener('click',event=>{
   const btn=event.currentTarget,rows=selectedCpRowsForAction();
   if(rows===null){window.BLTableToolbarActionCleanup?.finish?.(btn,false);return;}
-  if(!rows.length){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast("Önce CP'de en az bir sipariş seç.");return;}
+  if(!rows.length){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast(appLang==='en'?'Select at least one order in CP first.':"Önce CP'de en az bir sipariş seç.");return;}
   window.BLTableToolbarActionCleanup?.begin?.(btn);
   const existingCodes=new Set(kolRows.map(r=>r._sourceOrderCode).filter(Boolean));
   rows.forEach(r=>{

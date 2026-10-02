@@ -274,9 +274,9 @@
   }
 
   function buildWorkbook(report, ExcelJS, options) {
-    if (!ExcelJS || typeof ExcelJS.Workbook !== 'function') throw new Error('ExcelJS yüklenmedi.');
     const opts = options || {}, lang = opts.lang === 'en' ? 'en' : 'tr';
     const L = (tr, en) => (lang === 'en' ? en : tr); L.lang = lang;
+    if (!ExcelJS || typeof ExcelJS.Workbook !== 'function') throw new Error(L('ExcelJS yüklenmedi.', 'ExcelJS is not loaded.'));
     const planRows = report.planRows || [], changes = report.changes || [], activity = report.activity || [];
     const total = summarize(planRows);
     const dimKey = report.groupBy || 'buyer';

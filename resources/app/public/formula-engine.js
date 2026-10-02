@@ -146,7 +146,7 @@
     const number = toNumber(value);
     if (number != null) return number !== 0;
     const text = String(value).trim().toLocaleLowerCase('tr-TR');
-    return !['', 'hayır', 'hayir', 'no', 'false', 'yanlış', 'yanlis', '0'].includes(text);
+    return !['', 'hayır', 'hayir', 'no', 'false', 'yanlış', 'yanlis', '0'].includes(text); // i18n-ignore — mantıksal değer eşleştirmesi (veri)
   }
 
   /* ---------------- sözcük çözümleyici ---------------- */
@@ -904,11 +904,9 @@
     const columns = (options.columns || []).map(item => (typeof item === 'string' ? { name: item } : item)).filter(item => item && item.name);
     const request = String(options.request || '').trim();
     const lines = [];
-    if (english) {
-      lines.push('You are helping me write ONE formula for a calculated column in the Buyer Log app. It is NOT Excel: follow these rules exactly.');
-    } else {
-      lines.push('Buyer Log uygulamasında hesaplanan bir sütun için TEK bir formül yazmama yardım et. Bu Excel DEĞİL: aşağıdaki kurallara birebir uy.');
-    }
+    lines.push(english
+      ? 'You are helping me write ONE formula for a calculated column in the Buyer Log app. It is NOT Excel: follow these rules exactly.'
+      : 'Buyer Log uygulamasında hesaplanan bir sütun için TEK bir formül yazmama yardım et. Bu Excel DEĞİL: aşağıdaki kurallara birebir uy.');
     lines.push('', english ? 'RULES' : 'KURALLAR');
     RULES.forEach((rule, index) => lines.push(`${index + 1}. ${pick(rule)}`));
     lines.push('', english ? 'OPERATORS' : 'İŞLEMLER');
@@ -920,15 +918,15 @@
     lines.push('', english ? 'WHAT I WANT' : 'İSTEDİĞİM');
     lines.push(request || (english ? '(describe what the column should show here)' : '(sütunun ne göstermesini istediğinizi buraya yazın)'));
     lines.push('', english ? 'ANSWER FORMAT' : 'CEVAP BİÇİMİ');
-    if (english) {
-      lines.push('- Put the formula inside ONE code block (```), on a single line, with no leading "=".');
-      lines.push('- Under it, explain in one or two sentences what it does.');
-      lines.push('- If what I want cannot be done with these rules (e.g. it needs other rows), say so plainly instead of inventing a function.');
-    } else {
-      lines.push('- Formülü TEK bir kod bloğu (```) içinde, tek satır ve başında "=" olmadan ver.');
-      lines.push('- Altına ne yaptığını bir iki cümleyle açıkla.');
-      lines.push('- İstediğim şey bu kurallarla yapılamıyorsa (ör. başka satırlara bakmak gerekiyorsa) fonksiyon uydurmak yerine bunu açıkça söyle.');
-    }
+    lines.push(english
+      ? '- Put the formula inside ONE code block (```), on a single line, with no leading "=".'
+      : '- Formülü TEK bir kod bloğu (```) içinde, tek satır ve başında "=" olmadan ver.');
+    lines.push(english
+      ? '- Under it, explain in one or two sentences what it does.'
+      : '- Altına ne yaptığını bir iki cümleyle açıkla.');
+    lines.push(english
+      ? '- If what I want cannot be done with these rules (e.g. it needs other rows), say so plainly instead of inventing a function.'
+      : '- İstediğim şey bu kurallarla yapılamıyorsa (ör. başka satırlara bakmak gerekiyorsa) fonksiyon uydurmak yerine bunu açıkça söyle.');
     return lines.join('\n');
   }
 
