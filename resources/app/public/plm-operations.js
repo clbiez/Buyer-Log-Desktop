@@ -179,17 +179,37 @@
     return host;
   }
 
+  function syncFeedbackOffset(host) {
+    const root = document.documentElement;
+    if (!host || host.hidden) {
+      root.style.setProperty('--plm-ops-strip-offset', '0px');
+      return;
+    }
+    const apply = () => {
+      if (!host.isConnected || host.hidden) { root.style.setProperty('--plm-ops-strip-offset', '0px'); return; }
+      const height = Math.ceil(host.getBoundingClientRect().height || host.offsetHeight || 0);
+      root.style.setProperty('--plm-ops-strip-offset', height ? (height + 10) + 'px' : '0px');
+    };
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(apply); else apply();
+  }
+
   function renderStrip() {
     const host = stripHost();
     const scope = activeScope();
     // KAPSAM KURALI: sayfa yalnız kendi işlerini görür.
     const running = jobsForScope(scope).filter(job => job.running);
-    if (!scope || !running.length) { host.hidden = true; host.innerHTML = ''; return; }
+    if (!scope || !running.length) {
+      host.hidden = true;
+      host.innerHTML = '';
+      syncFeedbackOffset(host);
+      return;
+    }
     host.hidden = false;
     host.innerHTML = `<div class="plmOpsStripInner">
       ${running.map(job => jobCard(job, { detailed: false })).join('')}
       <button type="button" class="tbtn plmOpsOpen" data-plmops-open>${esc(t('Operasyon Merkezi', 'Operations Center'))}</button>
     </div>`;
+    syncFeedbackOffset(host);
   }
 
   /* ---------- operasyon merkezi (hepsi + geçmiş) ---------- */
