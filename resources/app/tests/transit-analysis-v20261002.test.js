@@ -239,7 +239,7 @@ test('IAS parsiyellerinden ülke × taşıt süreleri Excel olmadan hesaplanır'
   ];
   const analysis = source.buildLiveAnalysis({ orders, antrepoMap: map, overrides, today: '2026-10-02' });
   assert.equal(analysis.source, 'database');
-  assert.deepEqual(analysis.stats, { total: 4, used: 3, notArrived: 1, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0 });
+  assert.deepEqual(analysis.stats, { total: 4, used: 3, notArrived: 1, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0, outOfWindow: 0 });
   assert.equal(analysis.columns.actualLoading, false);
 
   const s = TA.summarize(analysis, { basis: 'warehouse' });
@@ -265,7 +265,7 @@ test('IAS kaynağında gerçekleşen tarih sütunları varsa tahminin önüne ge
     { country: 'ÇİN', vehicle: 'Gemi', qty: 10, arrived: true, loadingRequest: '2026-09-01', warehouseEntry: '2026-12-01' },
     { country: '', vehicle: 'Gemi', qty: 10, arrived: true, loadingRequest: '2025-01-01', warehouseEntry: '2025-03-01' },
   ], { today: '2026-10-02' });
-  assert.deepEqual(a.stats, { total: 4, used: 1, notArrived: 1, missingDates: 0, outOfRange: 1, missingVehicle: 0, missingCountry: 1 });
+  assert.deepEqual(a.stats, { total: 4, used: 1, notArrived: 1, missingDates: 0, outOfRange: 1, missingVehicle: 0, missingCountry: 1, outOfWindow: 0 });
   const wh = TA.summarize(a, { basis: 'warehouse' }).rows[0];
   assert.equal(wh.loading, 14); // talep → fiili yükleme
   assert.equal(wh.transit, 36); // fiili yükleme → ETA
@@ -279,6 +279,102 @@ test('canlı uç nokta Backlog ile aynı kapsam ve eşleştirmeyi kullanır; pan
   assert.match(server, /app\.get\('\/api\/transit-analysis\/live', userAccess\.requireAnyArea\('source', 'backlog'\)/);
   assert.match(server, /filterRowsByScope\(req\.currentUser, filterRowsByEffectiveHorizon\(req\.currentUser, 'backlog', ordersForTarget\(active, 'backlog', overrides\)\)\)/);
   assert.match(read('server/lib/transit-analysis-source.js'), /parseLib\.findAntrepoHits\(antrepoMap, order, \{ rule: overrides \}\)/);
-  assert.match(ui, /const view = \{ source: 'database'/);
-  assert.match(ui, /fetch\('\/api\/transit-analysis\/live'/);
+  assert.match(ui, /const view = \{ source: 'database', scope: 'filtered', window: 'y1'/);
+  assert.match(ui, /fetch\('\/api\/transit-analysis\/live\?' \+ qs\.toString\(\)/);
+});
+
+// Kapsam (mevcut filtre / şirket geneli) ve tarih penceresi (son N hafta/ay/yıl).
+test('tarih penceresi son N hafta/ay/yıl olarak hesaplanır; kısa pencerede haftalık kırılım', () => {
+  assert.deepEqual(TA.windowRange('w4', '2026-10-02'), { key: 'w4', from: '2026-09-05', to: '2026-10-02', granularity: 'week' });
+  assert.deepEqual(TA.windowRange('m3', '2026-10-02'), { key: 'm3', from: '2026-07-03', to: '2026-10-02', granularity: 'month' });
+  assert.deepEqual(TA.windowRange('y1', '2026-10-02'), { key: 'y1', from: '2025-10-03', to: '2026-10-02', granularity: 'month' });
+  assert.equal(TA.windowRange('bogus', '2026-10-02').key, 'all');
+  assert.equal(TA.windowLabel('w6'), 'Son 6 hafta');
+  assert.equal(TA.windowLabel('m1', 'en'), 'Last 1 month');
+  assert.equal(TA.isoWeekOf('2026-01-01'), '202601');
+  assert.equal(TA.isoWeekOf('2024-12-30'), '202501', 'ISO hafta yılı takvim yılından farklı olabilir');
+
+  const ship = entry => ({ country: 'ÇİN', vehicle: 'Gemi', qty: 100, arrived: true, loadingRequest: '2026-07-01', handover: '2026-07-05', eta: '2026-08-20', ...entry });
+  const range = TA.windowRange('w4', '2026-10-02');
+  const a = TA.buildFromShipments([
+    ship({ warehouseEntry: '2026-09-10' }),
+    ship({ warehouseEntry: '2026-09-28' }),
+    ship({ warehouseEntry: '2026-08-01' }), // pencere dışı
+  ], { today: '2026-10-02', fromDate: range.from, toDate: range.to, granularity: range.granularity, window: range.key, scope: 'company' });
+  assert.equal(a.stats.used, 2);
+  assert.equal(a.stats.outOfWindow, 1);
+  assert.deepEqual(a.window, { key: 'w4', from: '2026-09-05', to: '2026-10-02', granularity: 'week' });
+  assert.equal(a.scope, 'company');
+  const row = TA.summarize(a, { basis: 'warehouse', year: '*' }).rows[0];
+  assert.equal(row.granularity, 'week');
+  assert.deepEqual(row.series.map(x => x.period), ['202637', '202640']);
+});
+
+test('şirket geneli: kapsamdaki siparişe bağlanmayan IAS parsiyelleri de sayılır, ülke IAS Ürün Menşei sütunundan gelir', () => {
+  const parse = require('../server/lib/parse');
+  const source = require('../server/lib/transit-analysis-source');
+  const overrides = require('../server/db').defaultOverrides();
+  const map = parse.parseAntrepoRows([
+    iasRow({ 'Ürün Menşei': 'BANGLADEŞ' }),
+    // Buyer Log'da ASAS siparişi olmayan başka bir birimin parsiyeli
+    iasRow({ 'Sipariş Kod': 9009, 'Ürün Adı': 'MODEL Z', 'İthalat Dosya No': 'F9', 'Ürün Menşei': 'PAKİSTAN' }),
+    // IAS'ta menşei yok, ASAS eşleşmesinden gelir
+    iasRow({ 'Sipariş Kod': 2002, 'Ürün Adı': 'MODEL B', 'İthalat Dosya No': 'F8' }),
+    // ne IAS menşei ne ASAS eşleşmesi: ülkesiz
+    iasRow({ 'Sipariş Kod': 7007, 'Ürün Adı': 'MODEL Y', 'İthalat Dosya No': 'F7' }),
+  ], overrides);
+  const scopedOrders = [{ ocode: 1001, model: 'MODEL A', ccode: 'C1', colour: 'SIYAH', countryRaw: 'BANGLADEŞ' }];
+  const allOrders = [...scopedOrders, { ocode: 2002, model: 'MODEL B', ccode: 'C1', colour: 'SIYAH', countryRaw: 'HİNDİSTAN' }];
+
+  const filtered = source.buildLiveAnalysis({ orders: scopedOrders, antrepoMap: map, overrides, today: '2026-10-02', scope: 'filtered' });
+  assert.equal(filtered.stats.total, 1, 'mevcut filtre: yalnız kapsamdaki siparişe bağlı parsiyel');
+  assert.equal(filtered.scope, 'filtered');
+
+  const company = source.buildLiveAnalysis({ orders: allOrders, antrepoMap: map, overrides, today: '2026-10-02', scope: 'company' });
+  assert.equal(company.stats.total, 4);
+  assert.equal(company.stats.missingCountry, 1);
+  const countries = TA.summarize(company, { basis: 'warehouse', year: '*' }).rows.map(r => r.ruleCountry).sort();
+  assert.deepEqual(countries, ['Bangladesh', 'India', 'Pakistan']);
+});
+
+test('şirket sorgusu bağlantının kopyasında ufku tarih penceresiyle değiştirir, ek sütunları şemadan bulur', async () => {
+  const source = require('../server/lib/transit-analysis-source');
+  const modelFields = require('../server/lib/model-fields');
+  const item = {
+    id: 'ias', role: 'antrepo', server: 's', catalog: 'c', mode: 'auto',
+    horizon: { table: 'Fact_Ithalat', seasons: ['SS26'], groups: [{ conditions: [{ field: 'Sezon', op: 'in', values: ['SS26'] }] }] },
+    mapping: { 'Tahmini Antrepo Giriş Tarihi': { table: 'Fact_Ithalat', name: 'Tahmini Antrepo Giriş Tarihi', kind: 'column' } },
+  };
+  const before = JSON.stringify(item);
+  let captured = null;
+  const result = await source.queryCompanyIasRows({
+    item, matchRule: null, fromDate: '2026-07-03', toDate: '2026-10-02',
+    deps: {
+      normalizeMappingEntry: modelFields.normalizeMappingEntry,
+      discoverSchema: async () => ({ columns: [
+        { table: 'Dim_Urun', name: 'Ürün Menşei' },
+        { table: 'Fact_Ithalat', name: 'Ürün Menşei' },
+        { table: 'Fact_Ithalat', name: 'Fiili Yükleme Tarihi' },
+      ], measures: [] }),
+      queryConnectionRows: async clone => { captured = clone; return { rows: [{ a: 1 }] }; },
+    },
+  });
+  assert.equal(JSON.stringify(item), before, 'kalıcı bağlantı ayarı değişmez');
+  assert.deepEqual(result.rows, [{ a: 1 }]);
+  assert.deepEqual(result.addedFields, ['Ürün Menşei', 'Fiili Yükleme Tarih']);
+  assert.equal(captured.mapping['Ürün Menşei'].table, 'Fact_Ithalat', 'IAS fact tablosundaki sütun tercih edilir');
+  assert.equal(captured.horizon.seasons, undefined, 'kullanıcı ufku (sezon vb.) uygulanmaz');
+  assert.deepEqual(captured.horizon.groups[0].conditions, [{
+    table: 'Fact_Ithalat', field: 'Tahmini Antrepo Giriş Tarihi', name: 'Tahmini Antrepo Giriş Tarihi', valueType: 'date',
+    op: 'between', from: '2026-07-03', to: '2026-10-02',
+  }]);
+  await assert.rejects(() => source.queryCompanyIasRows({ item: { ...item, mode: 'manual' }, deps: {} }), err => err.code === 'TRANSIT_COMPANY_MANUAL_QUERY');
+  await assert.rejects(() => source.queryCompanyIasRows({ item: null, deps: {} }), err => err.code === 'TRANSIT_COMPANY_NO_CONNECTION');
+});
+
+test('şirket geneli kapsam iş kuralı yetkisi ister; uç nokta pencere ve kapsam parametrelerini doğrular', () => {
+  const server = read('server/server.js');
+  assert.match(server, /if \(scope === 'company'\) \{\s*if \(!userAccess\.hasPermission\(req\.currentUser, 'manageBusinessRules'\)\)/);
+  assert.match(server, /BLTransitAnalysis\.WINDOW_KEYS\.includes\(String\(req\.query\.window/);
+  assert.match(server, /transitAnalysisSource\.queryCompanyIasRows\(/);
 });

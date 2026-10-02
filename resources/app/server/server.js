@@ -10253,24 +10253,72 @@ app.get('/api/transit-analysis', (req, res) => {
 });
 // Excel'siz yol: Backlog'un kanonik ASAS + IAS veri kümesinden canlı hesap.
 // Kullanıcının kaynak ufku ve yetki kapsamı Backlog ile aynı uygulanır.
+// Excel'siz yol: Backlog'un kanonik ASAS + IAS veri kümesinden canlı hesap.
+// scope=filtered → kullanıcının kaynak ufku ve yetki kapsamı (Backlog ile aynı).
+// scope=company  → şirket geneli: IAS bağlantısı kullanıcı ufku olmadan, yalnız
+//   tarih penceresiyle ayrıca sorgulanır. Kapsam dışı veriyi toplu gösterdiği için
+//   iş kuralı yönetme yetkisi gerekir. window=w1..w12|m1..m12|m18|y1..y3|all.
+const transitCompanyCache = new Map();
+const TRANSIT_COMPANY_CACHE_MS = 15 * 60 * 1000;
 app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backlog'), async (req, res) => {
   try {
-    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['backlog'], req);
-    if (!filterStatus.ready) {
-      return res.json({ analysis: null, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr') });
+    const scope = req.query.scope === 'company' ? 'company' : 'filtered';
+    const window = BLTransitAnalysis.WINDOW_KEYS.includes(String(req.query.window || '')) ? String(req.query.window) : 'all';
+    const force = req.query.refresh === '1';
+    if (scope === 'company') {
+      if (!userAccess.hasPermission(req.currentUser, 'manageBusinessRules')) return res.status(403).json({ error: 'Şirket geneli yol süresi verisi için iş kuralı yönetme yetkisi gerekir.', code: 'PERMISSION_REQUIRED', permission: 'manageBusinessRules' });
     }
+    const id = sourceUserId(req);
     const runtime = cacheForUser(id);
     if (!runtime.asasOrders) await ensureDataLoaded(id);
     await ensureBacklogSourceFields(id);
     const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
-    const orders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser, 'backlog', ordersForTarget(active, 'backlog', overrides)));
     const mode = ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel';
     const label = { database: 'Database', dashboard: 'Power BI Dashboard', excel: 'Excel' }[mode];
-    const analysis = transitAnalysisSource.buildLiveAnalysis({
-      orders, antrepoMap: antrepoForTarget(active, 'backlog'), overrides,
-      sourceLabel: `Buyer Log IAS (Antrepo · ${label}) parsiyelleri`,
-    });
-    res.json({ analysis, antrepoSourceMode: mode, orderCount: orders.length });
+    const warnings = [];
+    let orders, antrepoMap, sourceLabel;
+    if (scope === 'filtered') {
+      const filterStatus = sourceFilterReadiness(['backlog'], req);
+      if (!filterStatus.ready) {
+        return res.json({ analysis: null, scope, window, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr') });
+      }
+      orders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser, 'backlog', ordersForTarget(active, 'backlog', overrides)));
+      antrepoMap = antrepoForTarget(active, 'backlog');
+      sourceLabel = `Buyer Log IAS (Antrepo · ${label}) · mevcut filtre`;
+    } else {
+      // Ülke yedeği için kapsam süzmesi uygulanmamış sipariş kümesi; yalnız toplu
+      // ülke etiketi olarak kullanılır, satır düzeyinde dışarı verilmez.
+      orders = ordersForTarget(active, 'backlog', overrides);
+      if (mode === 'database') {
+        const range = BLTransitAnalysis.windowRange(window, new Date().toISOString().slice(0, 10));
+        const cacheKey = `${window}|${range.from}`;
+        let cached = !force && transitCompanyCache.get(cacheKey);
+        if (!cached || Date.now() - cached.at > TRANSIT_COMPANY_CACHE_MS) {
+          const modelRefresh = require('./lib/model-refresh');
+          const antrepoItem = modelRefresh.selectRefreshConnections(loadModelConnections().items, { includeAsas: false, includeAntrepo: true }).antrepo;
+          const company = await transitAnalysisSource.queryCompanyIasRows({
+            item: antrepoItem && JSON.parse(JSON.stringify(antrepoItem)), matchRule: overrides.antrepoMatchConfig,
+            fromDate: range.from, toDate: range.to,
+            deps: { discoverSchema: modelQuery.discoverSchema, queryConnectionRows: modelRefresh.queryConnectionRows, normalizeMappingEntry: modelFields.normalizeMappingEntry },
+          });
+          cached = { at: Date.now(), map: parseLib.parseAntrepoRows(company.rows, overrides.antrepoMatchConfig), addedFields: company.addedFields, warnings: company.warnings };
+          transitCompanyCache.set(cacheKey, cached);
+        }
+        antrepoMap = cached.map;
+        warnings.push(...cached.warnings);
+        if (!cached.addedFields.includes('Ürün Menşei') && !Object.keys((loadModelConnections().items || []).find(i => i && i.role === 'antrepo')?.mapping || {}).includes('Ürün Menşei')) {
+          warnings.push('IAS modelinde "Ürün Menşei" sütunu bulunamadı; ülke yalnız Buyer Log\'daki ASAS siparişleriyle eşleşen parsiyellerde biliniyor.');
+        }
+        sourceLabel = `Buyer Log IAS (Antrepo · Database) · şirket geneli`;
+      } else {
+        // Excel/Dashboard kaynağında ayrı sorgu yok: Buyer Log'un okuduğu bütün IAS satırları.
+        antrepoMap = antrepoForTarget(active, 'backlog');
+        warnings.push(`Antrepo kaynağı ${label}: şirket geneli, Buyer Log'un okuduğu IAS satırlarının tamamıdır (kaynak ne kadarını içeriyorsa).`);
+        sourceLabel = `Buyer Log IAS (Antrepo · ${label}) · şirket geneli`;
+      }
+    }
+    const analysis = transitAnalysisSource.buildLiveAnalysis({ orders, antrepoMap, overrides, sourceLabel, window, scope });
+    res.json({ analysis, scope, window, antrepoSourceMode: mode, orderCount: Array.isArray(orders) ? orders.length : 0, warnings });
   } catch (err) { apiError(res, err, 'Yol süresi analizi Buyer Log verisinden hesaplanamadı.'); }
 });
 app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
