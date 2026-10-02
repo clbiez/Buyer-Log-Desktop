@@ -74,3 +74,65 @@
 @media(max-width:1000px){.blGuideArticle{grid-template-columns:1fr}.blGuideArticle .blGuideVisual{max-width:520px}.blGuideVisualBody{min-height:150px}.blGuideCopy h2{font-size:23px}}
 @media(max-width:760px){#blBootGuard.blBootWithGuide .blBootCard{padding:18px;width:calc(100vw - 24px);margin:12px}.blBootBrand span{display:none}.blBootTip{grid-template-columns:1fr;gap:16px;min-height:0}.blBootTip .blGuideVisualBody{min-height:100px;padding:14px}.blBootTip .blGuideVisual svg{height:100px}.blBootStages{gap:5px;margin:12px 0}.blBootStages span{padding:5px 7px}.blGuideDialog{width:calc(100vw - 20px);max-height:calc(100dvh - 20px)}.blGuideLayout{grid-template-columns:1fr;overflow:auto;display:block}.blGuideSidebar{border-right:0;border-bottom:1px solid var(--line);padding:14px;max-height:220px}.blGuideSidebar nav{max-height:90px}.blGuideArticle{padding:18px}.blGuideHeader,.blGuideFooter{padding:14px}.blGuideFooter{flex-wrap:wrap}.blBootTipFooter{gap:8px}}
 @media(prefers-reduced-motion:reduce){.blGuideVisual svg .blGuideRoute{animation:none}.blGuideTarget{scroll-behavior:auto}}
+/* Açılış "Biliyor muydunuz?" kartları — yalnız tema renk token'ları; sahneler dekoratif SVG. */
+.blTriviaVisual,.blTriviaCopy{--tone:var(--acc,#3f6488)}
+.blTriviaVisual[data-tone="green"],.blTriviaCopy[data-tone="green"]{--tone:var(--green,#177A4C)}
+.blTriviaVisual[data-tone="orange"],.blTriviaCopy[data-tone="orange"]{--tone:var(--orange,#946200)}
+.blTriviaVisual[data-tone="red"],.blTriviaCopy[data-tone="red"]{--tone:var(--red,#B42318)}
+.blTriviaVisual[data-tone="teal"],.blTriviaCopy[data-tone="teal"]{--tone:var(--teal,#3F7A6C)}
+.blTriviaVisual[data-tone="purple"],.blTriviaCopy[data-tone="purple"]{--tone:var(--purple,#6D53A8)}
+.blTriviaVisual{position:relative;margin:0;width:100%;overflow:hidden;border:1px solid var(--line,#d4d4d7);background:linear-gradient(170deg,color-mix(in srgb,var(--tone) 16%,var(--card,#fff)) 0%,var(--card,#fff) 78%);animation:blTriviaIn .5s ease-out both}
+.blTriviaVisual svg{display:block;width:100%;height:auto;aspect-ratio:2/1;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.blTriviaVisual svg .s{stroke:var(--tone);stroke-width:2.4}
+.blTriviaVisual svg .thin{stroke-width:1.4}
+.blTriviaVisual svg .f{fill:var(--tone)}
+.blTriviaVisual svg .f2{fill:color-mix(in srgb,var(--tone) 22%,var(--card,#fff))}
+.blTriviaVisual svg .dash{stroke-dasharray:4 7}
+.blTriviaVisual svg .lightline{stroke:var(--card,#fff);stroke-width:1.2}
+.blTriviaVisual svg text{fill:var(--tone);stroke:none;font:600 30px/1 var(--head,system-ui);text-anchor:middle}
+.blTriviaIcon{position:absolute;top:12px;right:12px;width:58px;height:58px;display:grid;place-items:center;font-size:32px;line-height:1;background:var(--card,#fff);border:1px solid color-mix(in srgb,var(--tone) 45%,var(--line,#d4d4d7));box-shadow:0 6px 18px color-mix(in srgb,var(--tone) 18%,transparent);animation:blTriviaPop .6s .15s cubic-bezier(.2,1.4,.4,1) both}
+.blTriviaVisual figcaption{display:flex;justify-content:space-between;gap:12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:10px 12px;color:var(--ink2,#5d5d60);border-top:1px solid var(--line,#d4d4d7);background:var(--card,#fff)}
+.blTriviaVisual figcaption span:first-child{color:var(--tone);font-weight:600}
+.blTriviaCopy{animation:blTriviaIn .5s .08s ease-out both}
+.blTriviaCopy .blGuideEyebrow{color:var(--tone)}
+.blTriviaCopy h2{font-size:28px}
+.blTriviaCopy p{font-size:16px;line-height:1.6;color:var(--ink,#1d1f20);border-left:3px solid var(--tone);padding-left:14px}
+/* Sahne hareketleri */
+.blTriviaVisual .tw{animation:blTriviaTwinkle 2.6s ease-in-out infinite}
+.blTriviaVisual .spin{animation:blTriviaSpin 9s linear infinite}
+.blTriviaVisual .spin.slow{animation-duration:40s}
+.blTriviaVisual .wave{animation:blTriviaWave 6s linear infinite}
+.blTriviaVisual .wave.slow{animation-duration:10s}
+.blTriviaVisual .rise{animation:blTriviaRise 6s ease-in infinite}
+.blTriviaVisual .swim{animation:blTriviaSwim 7s ease-in-out infinite alternate}
+.blTriviaVisual .sway{animation:blTriviaSway 4s ease-in-out infinite alternate}
+.blTriviaVisual .pop{animation:blTriviaFade .5s ease-out both}
+.blTriviaVisual .grow{animation:blTriviaGrow .7s ease-out both}
+.blTriviaVisual .draw{stroke-dasharray:900;stroke-dashoffset:900;animation:blTriviaDraw 2.4s ease-out forwards}
+.blTriviaVisual .ecg{animation:blTriviaDraw 2.4s linear infinite}
+.blTriviaVisual .beat{animation:blTriviaBeat 1.1s ease-in-out infinite}
+.blTriviaVisual .float{animation:blTriviaFloat 4s ease-in-out infinite alternate}
+.blTriviaVisual .bounce{animation:blTriviaFloat 1.6s ease-in-out infinite alternate}
+.blTriviaVisual .steam{animation:blTriviaSteam 3s ease-in-out infinite}
+.blTriviaVisual .pulse{stroke-width:3;stroke-dasharray:14 400;animation:blTriviaPulse 3.2s linear infinite}
+.blTriviaVisual .glow{animation:blTriviaTwinkle 4s ease-in-out infinite}
+.blTriviaVisual .knit{animation:blTriviaFade .4s ease-out both}
+.blTriviaVisual .globe{animation:blTriviaGlobe 6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes blTriviaIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes blTriviaPop{from{opacity:0;transform:scale(.6) rotate(-12deg)}to{opacity:1;transform:none}}
+@keyframes blTriviaFade{from{opacity:0}to{opacity:1}}
+@keyframes blTriviaTwinkle{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes blTriviaSpin{to{transform:rotate(360deg)}}
+@keyframes blTriviaWave{to{transform:translateX(-120px)}}
+@keyframes blTriviaRise{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-150px);opacity:0}}
+@keyframes blTriviaSwim{to{transform:translateX(40px)}}
+@keyframes blTriviaSway{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+@keyframes blTriviaGrow{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:none}}
+@keyframes blTriviaDraw{to{stroke-dashoffset:0}}
+@keyframes blTriviaBeat{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.12)}}
+@keyframes blTriviaFloat{from{transform:translateY(-5px)}to{transform:translateY(5px)}}
+@keyframes blTriviaSteam{0%{transform:translateY(6px);opacity:0}40%{opacity:.9}100%{transform:translateY(-14px);opacity:0}}
+@keyframes blTriviaPulse{from{stroke-dashoffset:0}to{stroke-dashoffset:-414}}
+@keyframes blTriviaGlobe{from{transform:scaleX(.55)}to{transform:scaleX(1.25)}}
+@media(max-width:760px){.blTriviaIcon{width:44px;height:44px;font-size:24px}.blTriviaCopy h2{font-size:22px}.blTriviaCopy p{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.blTriviaVisual,.blTriviaVisual *,.blTriviaIcon,.blTriviaCopy{animation:none!important}.blTriviaVisual .draw{stroke-dashoffset:0}}
