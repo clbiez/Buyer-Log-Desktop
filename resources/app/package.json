@@ -1,7 +1,7 @@
 {
   "name": "buyer-log-desktop",
   "productName": "Buyer Log",
-  "version": "7.0.210",
+  "version": "7.0.211",
   "description": "Buyer Log masaüstü barındırıcısı (mevcut backend + gömülü Chromium).",
   "main": "electron/launcher.js",
   "private": true,
@@ -27,6 +27,8 @@
     "release:bridge": "node scripts/bridge-publish.js",
     "release:test": "node scripts/release-publish.js --channel test",
     "version:assert": "node scripts/version-assert.js",
-    "portable:manifest": "node scripts/portable-manifest.js"
+    "portable:manifest": "node scripts/portable-manifest.js",
+    "release:notes:validate": "node scripts/release-notes.js validate",
+    "release:notes:seal": "node scripts/release-notes.js seal"
   }
 }
