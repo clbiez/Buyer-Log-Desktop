@@ -758,10 +758,12 @@ function buildConnectionQuery(item, options = {}) {
         'MODEL_REFRESH_ANTREPO_GRAIN_MISSING', 422,
         { requiredField: 'İthalat Dosya No' });
     }
-    // IAS satırları artık gruplanmaz. Gerçek fact tablosunun her satırı ayrı bir
-    // parsiyel olarak SELECTCOLUMNS ile projekte edilir; ölçüler o satırın
-    // bağlamında hesaplanır. Böylece farklı sipariş/renk kombinasyonları çapraz
-    // çoğalmaz ve aynı siparişin parsiyelleri tek satırda toplanmaz.
+    // DAX katmanında gerçek fact tablosu satır satır SELECTCOLUMNS ile
+    // projekte edilir; bu, farklı tablolardan gelen alanların çapraz çoğalmasını
+    // ve sipariş/model/renk alanlarının BLANK kalmasını önler. IASv2'nin aynı iş
+    // parsiyelini birden fazla teknik fact satırına bölmesi ise sorgu sonucundan
+    // sonra normalizeAntrepoDatabaseRows() ile Antrepo Excel iş granülüne
+    // indirilir. Gerçek farklı parsiyellerin kimlik alanları korunur.
     // Ufuk alanları (Sezon, MAG, MMYG, Buyer Grup…) çıktıya projekte edilmez ama
     // filtre koşulları onları Field Mapping'deki gerçek sütuna çözmelidir. Aksi
     // halde ASAS başlığı IAS tablosunda sütun adı sanılıp DAX'a yazılıyordu.
