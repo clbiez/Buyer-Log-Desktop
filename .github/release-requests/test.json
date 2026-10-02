@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.197",
-  "commit_sha": "a4113a7c7ebc99b61a0b58a5f70c98b24a085630",
-  "release_notes": "Buyer Log 7.0.197: Açılış bekleme ekranında kullanım ipuçları yerine 'Biliyor muydunuz?' kartları gösteriliyor: 14 kategoride 179 az bilinen genel kültür bilgisi, her kategoriye özgü hareketli çizimlerle. Görülmemiş bilgiler önce gelir; kullanım ipuçları F1 Kullanım Rehberi'nde kalmaya devam ediyor. 7.0.196 düzeltmelerini de içerir: ikinci kez başlatılan Buyer Log çalışan güncelleme denemesini geri almıyor; Check for Updates penceresine moderatöre özel Tekrar Dene düğmesi eklendi."
+  "version": "7.0.198",
+  "commit_sha": "d1ce57abc7aa745854858ef39d58b1c1fa9a90f1",
+  "release_notes": "Buyer Log 7.0.198 TEST: PLM sample status fixes (CP PLM Numune column, checklist, Priority). Orders past production (loading, shortage, in transit, customs, warehouse, awaiting retail transfer) or with any shipped quantity are always sample-approved (\"Approved · Post-production\"), whatever PLM shows. Fixed: \"Customs & Port Operations\" was not recognised as the customs stage. If a sample type has an approved request, later unapproved re-entries are ignored; an approved Sample Evaluation Status also counts. Stage order: Fit and S/Off are independent; S/Off approves Artwork; PPS (final) approves Fit, S/Off and Artwork. CP › PLM SYNC › PLM SAMPLES now offers Selected / Missing / In production / All (table filters are no longer applied implicitly). New editable Priority rule: PPS not approved within 21 days of Ex-factory. Opening CP refreshes stale (24h+) sample data for in-production orders in the background."
 }
