@@ -441,7 +441,7 @@
     <button data-tab="source" title="Veri Yönetimi" data-i18n-title-tr="Veri Yönetimi" data-i18n-title-en="Data Management"><svg class="ic"><use href="#i-bl-n25"/></svg><span data-i18n-tr="Veri Yönetimi" data-i18n-en="Data Management">Veri Yönetimi</span></button>
   </nav>
   <div class="railFoot">
-    <button id="railLangBtn" title="Switch language / Dil değiştir"><svg class="ic"><use href="#i-globe"/></svg><span id="railLangLabel" data-i18n-tr="Dil: TR" data-i18n-en="Language: EN">Dil: TR</span></button>
+    <button id="railLangBtn" title="Switch language / Dil değiştir"><svg class="ic"><use href="#i-globe"/></svg><span id="railLangLabel" data-no-i18n>Dil: TR</span></button>
     <button id="railThemeBtn" title="Tema: Aydınlık → Kurşun → Karanlık"><svg class="ic"><use href="#i-moon"/></svg><span data-i18n-tr="Tema" data-i18n-en="Theme">Tema</span></button>
     <button id="railFontSizeBtn" title="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-tr="Arayüz boyutu: Standard → Büyük → Çok Büyük → Kompakt" data-i18n-title-en="Interface size: Standard → Large → XL → Compact"><b class="railFontGlyph" aria-hidden="true">A</b><span id="railFontSizeLabel">Arayüz: Standard</span></button>
   </div>
@@ -1293,6 +1293,7 @@
             <span class="blvModuleTitle" data-i18n-tr="Backlog Genel Bakış" data-i18n-en="Backlog Overview">Backlog Genel Bakış</span>
             <span class="blvModuleHint" data-i18n-tr="Operasyon aşamaları · kırılımlar · zaman akışı" data-i18n-en="Operational stages · breakdowns · timeline">Operasyon aşamaları · kırılımlar · zaman akışı</span>
           </button>
+          <button type="button" class="tbtn bpaMoveBtn blvFilterButton" id="backlogOverviewFilter" title="Genel bakış filtreleri" data-i18n-title-tr="Genel bakış filtreleri" data-i18n-title-en="Overview filters" aria-expanded="false"><svg class="ic"><use href="#i-filter"/></svg><span class="blvFilterCount" id="backlogOverviewFilterCount" hidden>0</span></button>
           <button type="button" class="tbtn bpaMoveBtn" id="backlogOverviewRefresh" title="Genel bakışı yenile" data-i18n-title-tr="Genel bakışı yenile" data-i18n-title-en="Refresh overview"><svg class="ic"><use href="#i-refresh"/></svg></button>
         </div>
         <div id="backlogOverviewBody"></div>
@@ -1425,6 +1426,30 @@
 <!-- Sütun EN/TR görünen adları + veri kaynağı kataloğu (CP / Orders / Koleksiyon). -->
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
+<script>
+(function syncRailLanguageIndicator(){
+  const root=document.documentElement;
+  const button=document.getElementById('railLangBtn');
+  const label=document.getElementById('railLangLabel');
+  if(!root||!label)return;
+
+  function sync(){
+    const english=String(root.lang||'tr').toLowerCase().startsWith('en');
+    const text=english?'Language: EN':'Dil: TR';
+    if(label.textContent!==text)label.textContent=text;
+    label.dataset.activeLanguage=english?'en':'tr';
+    if(button){
+      button.title=english?'Switch to Turkish':'İngilizceye geç';
+      button.setAttribute('aria-label',button.title);
+    }
+  }
+
+  sync();
+  new MutationObserver(sync).observe(root,{attributes:true,attributeFilter:['lang']});
+  new MutationObserver(sync).observe(label,{childList:true,characterData:true,subtree:true});
+  button?.addEventListener('click',()=>queueMicrotask(sync));
+})();
+</script>
 <script src="license-royalty-commissions.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <script src="backlog-plan-actual-report.js?v=__BL_ASSET_VERSION__&rev=2"></script>

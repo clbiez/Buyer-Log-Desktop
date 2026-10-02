@@ -8,6 +8,7 @@ const path = require('path');
 const { SERVER_DATA_ROOT: DATA_DIR, APP_DATA_ROOT: USER_DATA_ROOT, atomicWriteJson } = require('./user-data');
 const BLBusinessRules = require('../public/business-rules');
 const BLFreight = require('../public/freight-calc');
+const BLTransitAnalysis = require('../public/transit-analysis');
 const modelHorizon = require('./lib/modelHorizon');
 const modelScopes = require('./lib/model-scopes');
 const modelFields = require('./lib/model-fields');
@@ -259,6 +260,10 @@ function defaultOverrides() {
     // hacimsel ağırlık katsayısı. Kaynak Excel'in tablo başındaki üç satırı
     // varsayılandır; kullanıcı rota ekleyip çıkarabilir.
     freightRates: BLFreight.defaultSettings(),
+    // İthalat Yol Süresi Raporu (Global Lojistik pivot Excel'i) analizi: ülke ×
+    // taşıt × dönem süreleri. Yol Süreleri kurallarına öneri kaynağıdır; kural
+    // motoru yalnız transitRules'u okur. null = analiz yüklenmedi.
+    transitAnalysis: null,
     // ASAS ↔ IAS eşleştirmesi kullanıcı tarafından 1+ tam eşitlik koşuluyla düzenlenir.
     // Eski metin alanı geriye dönük uyumluluk için tutulur; üretim config'i kullanır.
     antrepoMatchRule: DEFAULT_ANTREPO_MATCH_RULE,
@@ -275,7 +280,7 @@ function defaultOverrides() {
     // varsayılan üçlüye döndürmek için şema sürümü. Kullanıcı daha sonra
     // Matching Rule ekranından yeniden değiştirebilir.
     antrepoMatchConfigVersion: 3,
-    _revision: 0, _revisions: { orders: 0, suppFob: 0, pricingRules: 0, transitRules: 0, nonDtrManufacturers: 0, landedMultipliers: 0, freightRates: 0, antrepoMatchRule: 0, antrepoSourceMode: 0, asasSourceMode: 0, lflSourceMode: 0, noteColumnDefs: 0 },
+    _revision: 0, _revisions: { orders: 0, suppFob: 0, pricingRules: 0, transitRules: 0, nonDtrManufacturers: 0, landedMultipliers: 0, freightRates: 0, transitAnalysis: 0, antrepoMatchRule: 0, antrepoSourceMode: 0, asasSourceMode: 0, lflSourceMode: 0, noteColumnDefs: 0 },
   };
 }
 /* ===================================================================
@@ -366,6 +371,7 @@ function loadOverrides() {
     ? 'database' : 'excel';
   merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
+  merged.transitAnalysis = BLTransitAnalysis.normalizeAnalysis(parsed && parsed.transitAnalysis);
   // License Royalty v2: eski TR / Non-TR kayıtları okunurken tek
   // sözleşme kaydına dönüştürülür. Efektif ülke oranları ve varsa eski farklı
   // hologram tutarları korunur.
@@ -533,6 +539,16 @@ function replaceFreightRates(value, expectedRevision = null) {
   ov._revisions.freightRates = current + 1;
   const saved = saveOverrides(ov, ov._revision);
   return { freight: BLFreight.normalizeSettings(saved.freightRates), revision: saved._revisions.freightRates };
+}
+function replaceTransitAnalysis(value, expectedRevision = null) {
+  const ov = loadOverrides();
+  const current = Number(ov._revisions.transitAnalysis) || 0;
+  const wanted = expectedNumber(expectedRevision);
+  if (wanted != null && wanted !== current) throw new RevisionConflictError('Yol süresi analizi', wanted, current, 'transitAnalysis');
+  ov.transitAnalysis = value == null ? null : BLTransitAnalysis.normalizeAnalysis(value);
+  ov._revisions.transitAnalysis = current + 1;
+  const saved = saveOverrides(ov, ov._revision);
+  return { analysis: saved.transitAnalysis || null, revision: saved._revisions.transitAnalysis };
 }
 // Kullanıcı tanımlı boş not sütunları (Packet 9). normalizeCpModelColumns ile
 // aynı desen: id temizlenir, ad ve id çakışması elenir, dizi sınırlanır.
@@ -1700,7 +1716,7 @@ module.exports = {
   attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
   loadViews: userId => loadProfileFile(scopedProfileFile(VIEWS_FILE, userId), userId, 'view'),

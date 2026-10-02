@@ -705,8 +705,8 @@
       tools: [
         { id: 'transit', requires: 'manageBusinessRules', icon: 'i-ship',
           label: { tr: 'Yol Süreleri', en: 'Transfer Lead Times' },
-          hint: { tr: 'Üretim ülkesi ve sevkiyat tipine göre transit gün sayısı; tahmini varış bundan hesaplanır.',
-            en: 'Transit days by production country and shipment type; estimated arrival is derived from this.' },
+          hint: { tr: 'Üretim ülkesi ve sevkiyat tipine göre transit gün sayısı; tahmini varış bundan hesaplanır. İthalat Yol Süresi Raporu Excel\'inden ülke/taşıt analizi ve kural önerisi.',
+            en: 'Transit days by production country and shipment type; estimated arrival is derived from this. Country/vehicle analysis and rule suggestions from the import lead-time report Excel.' },
           run: () => openTransitRulesModal() },
         { id: 'landed', requires: 'manageBusinessRules', icon: 'i-calculator',
           label: { tr: 'Landed Çarpanları', en: 'Landed Multipliers' },

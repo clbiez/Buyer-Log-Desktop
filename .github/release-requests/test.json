@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.206",
-  "commit_sha": "b8acd0a6853274d8ebd03dab4c5f137be00de114",
-  "release_notes": "Buyer Log 7.0.206: CP › Lojistik akışında Buyer Log'un ASAS bakiyesi için açtığı \"Üretimde kalan\" satırı \"Eksik adet olarak işaretle\" ile kalıcı olarak Eksik Yükleme yapılabilir (parsiyellerin tamamı depodaysa Depoda - Eksik Yükleme); işaret Backlog, CP, Excel ve Planlanan & Gerçekleşen'e yansır, \"Geri al\" ile kaldırılır. ASAS'ta kapanmış ama IAS kaydı olmayan bakiye artık \"Parsiyel\" değil \"ASAS'ta kapanmış bakiye · IAS kaydı yok\" olarak gösterilir. Buyer Log'un açtığı satırların siparişin bütün bilgilerini (Sezon, Buyer, tarihler, kimlikler) taşıdığı testle güvence altında. Diğer sayfalar kısmi yenilenirken CP/Siparişler verisi korunur."
+  "version": "7.0.208",
+  "commit_sha": "879cecf6ab77b9fd9446db8fadfa99ea58428c80",
+  "release_notes": "Buyer Log 7.0.208: TEST kanalındaki güncellemeler artık girişten sonra otomatik kontrol ediliyor (açılış kontrolü giriş öncesi STABLE kanalına düşüyordu). 7.0.207 içeriği dahil: IAS kaynağı DATABASE seçildiğinde veri gelmemesi düzeltildi; Backlog Overview’a CP, ASAS ve IAS filtreleri; Yol Süreleri analizi doğrudan IAS verisinden; timeline düzeltmeleri; ASAS Ex-Factory tarih tamamlama; dil göstergesi düzeltmesi."
 }

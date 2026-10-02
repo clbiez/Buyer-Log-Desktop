@@ -231,8 +231,9 @@ async function runModelRows(input = {}, options = {}) {
   const parseStart = Date.now();
   try {
     const raw = (await fs.promises.readFile(summary.outFile, 'utf8')).replace(/^\uFEFF/, '');
-    const trimmed = raw.trimStart();
-    if (trimmed.startsWith('[')) rows = JSON.parse(raw);
+    // Yalnız "[{" veya "[]" JSON dizisidir. SELECTCOLUMNS sonucunda ADODB başlıkları
+    // "[Sipariş Kod];..." biçiminde döndüğü için tek başına "[" CSV de olabilir.
+    if (/^\[\s*[{\]]/.test(raw.trimStart())) rows = JSON.parse(raw);
     else {
       const parsed = await parseSemicolonCsvAsync(raw, { signal:options.signal });
       rows = parsed.rows;
@@ -243,6 +244,14 @@ async function runModelRows(input = {}, options = {}) {
       throw new ModelQueryError('Yenileme kullanıcı tarafından durduruldu.', 'REFRESH_CANCELLED', 409);
     }
     rows = [];
+    // Sunucu satır yazdığını bildirdiği hâlde sonuç okunamadıysa boş liste "veri yok"
+    // gibi görünür ve kaynaktaki veriyi sessizce siler; açık hata verilir.
+    if (Number(summary.rowCount) > 0) {
+      try { if (summary.tempDir) fs.rmSync(summary.tempDir, { recursive: true, force: true }); } catch (_) {}
+      throw new ModelQueryError(
+        `Model sorgusu ${summary.rowCount} satır döndürdü ancak sonuç dosyası okunamadı: ${String(error && error.message || error)}`,
+        'MODEL_QUERY_PARSE_FAILED', 502, { provider: summary.provider || '' });
+    }
   } finally {
     try { if (summary.tempDir) fs.rmSync(summary.tempDir, { recursive: true, force: true }); } catch (_) {}
   }
@@ -270,10 +279,17 @@ function parseCsvLine(line, delimiter = ';') {
   return cells;
 }
 
+// ADODB, SELECTCOLUMNS takma adlarını köşeli parantezle sarar ("[Sipariş Kod]").
+// Uygulama başlıkları parantezsiz bekler; "Tablo[Sütun]" adları olduğu gibi kalır.
+function resultHeader(name) {
+  const match = /^\[([^\[\]]+)\]$/.exec(String(name == null ? '' : name).trim());
+  return match ? match[1] : name;
+}
+
 function parseSemicolonCsv(text) {
   const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/).filter((line, index, all) => line.length || index < all.length - 1);
   if (!lines.length) return [];
-  const headers = parseCsvLine(lines[0]);
+  const headers = parseCsvLine(lines[0]).map(resultHeader);
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     if (!lines[i] && headers.length === 1) continue;
@@ -288,7 +304,7 @@ function parseSemicolonCsv(text) {
 async function parseSemicolonCsvAsync(text, options = {}) {
   const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/).filter((line, index, all) => line.length || index < all.length - 1);
   if (!lines.length) return { rows:[], uiBlockingMs:0 };
-  const headers = parseCsvLine(lines[0]);
+  const headers = parseCsvLine(lines[0]).map(resultHeader);
   const rows = [];
   const yieldEvery = Math.max(50, Number(options.yieldEvery) || 1000);
   let chunkStarted = Date.now(), uiBlockingMs = 0;

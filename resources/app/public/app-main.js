@@ -11220,6 +11220,7 @@ function openTransitRulesModal(){
     </div>
     <div style="padding:16px 20px;overflow:auto;display:flex;flex-direction:column;gap:14px;">
       <div class="pricingRuleFormula">Tahmini Antrepo = Ex-Factory + eşleşen yol süresi · Eşleşme yoksa varsayılan: Gemi 70 · Uçak 15 · Gemi+Uçak 35 · Gemi+Tır 70 gün</div>
+      <div id="_transitAnalysisMount"></div>
       <div style="padding:9px 11px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);font-size:11.5px;color:var(--ink2);">Birden fazla kural eşleşirse ülke/sezon/tarih açısından daha özel olan kural kullanılır. Yükleme operasyonları, yol/liman/depo ve retaile aktarım aşamalarındaki siparişler etkilenmez. Nakliye Kıyaslama'ya eklenmiş eski satırlar sabit kalır.</div>
       <div class="pricingRuleGrid">
         <div class="pricingRuleField"><label>Ex-Factory Başlangıç <span style="font-weight:400;color:var(--muted);">(boş = −∞)</span></label><input id="_transitStart" type="date"></div>
@@ -11274,6 +11275,13 @@ function openTransitRulesModal(){
   modal.addEventListener('keydown',e=>{if(e.key==='Escape'){if(seasonPanel.classList.contains('open')||countryPanel.classList.contains('open')){e.preventDefault();seasonPanel.classList.remove('open');countryPanel.classList.remove('open');}else{e.preventDefault();modal.remove();}}});
   $('_transitSave').addEventListener('click',async()=>{const btn=$('_transitSave');btn.disabled=true;$('_transitStatus').textContent=appLang==='en'?'Saving and refreshing calculations…':'Kaydediliyor ve hesaplamalar yenileniyor…';try{const clean=await persistTransitRules(working);modal.remove();showToast(appLang==='en'?`${clean.length} transit time rule(s) saved.`:`${clean.length} nakliye yol süresi kuralı kaydedildi.`);}catch(err){btn.disabled=false;$('_transitStatus').textContent=(appLang==='en'?'Could not save: ':'Kaydedilemedi: ')+err.message;}});
   setSeasons([]);setCountries([]);renderRules();clearForm();
+  // İthalat Yol Süresi Analizi paneli lazy yüklenir; öneriler yalnız bu
+  // penceredeki çalışma listesine aktarılır, kalıcılık "Kuralları Kaydet" ile.
+  const analysisMount=$('_transitAnalysisMount');
+  Promise.resolve(window.BLPerf?.ensureFeature?.('transitAnalysis')).then(()=>{
+    if(!modal.isConnected||!window.BLTransitAnalysisUI)return;
+    window.BLTransitAnalysisUI.mount(analysisMount,{getRules:()=>working,applyRules:next=>{working=normalizeTransitRules(next);renderRules();}});
+  }).catch(err=>{analysisMount.innerHTML=`<div style="font-size:11.5px;color:var(--red);">Yol süresi analizi yüklenemedi: ${escapeHtml(err.message)}</div>`;});
 }
 const COUNTRY_MAP = { 'HINDISTAN':'India','BANGLADES':'Bangladesh','CIN':'China','TURKIYE':'Turkey','MISIR':'Egypt','FAS':'Morocco','MYANMAR':'Myanmar','ENDONEZYA':'Indonesia' };
 function countryEN(raw){ return COUNTRY_MAP[turknorm(raw)] || raw; }
@@ -33682,6 +33690,11 @@ function refreshSharedMasterClient(area){
   if(area==='endeksmatik'){
     return Promise.resolve(refreshEndeksmatikStatus({silent:true})).then(()=>{ if(typeof renderKol==='function')renderKol(); });
   }
+  if(area==='transitAnalysis'){
+    // Analiz yalnız Yol Süreleri penceresinde okunur; hesaplamaları etkilemez.
+    window.BLTransitAnalysisUI?.invalidate?.();
+    return Promise.resolve();
+  }
   if(['transitRules','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','systemSettings'].includes(area)){
     // Program davranışını belirleyen Master kuralları SYNC'ten yerel cache'e
     // uygulandığında çalışan ekran da aynı kanonik state'i yeniden okumalıdır.
@@ -33725,7 +33738,7 @@ function initLiveSync(){
     }
     // Kendi yazdığın değişiklik için kendine yenileme tetikleme; ekran zaten güncel.
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
-    if(['fx','endeksmatik','transitRules','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings'].includes(payload.area)){
+    if(['fx','endeksmatik','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
     }else if(payload.area==='pricingRules'){
       void refreshPricingRulesFromServer().catch(()=>{});
@@ -33803,7 +33816,7 @@ window.addEventListener('bl-shared-revision',event=>{
   if(changed.has('endeksmatik')&&!liveSyncConnected)void refreshSharedMasterClient('endeksmatik').catch(()=>{});
   if(changed.has('transitRules')&&!liveSyncConnected)void refreshSharedMasterClient('transitRules').catch(()=>{});
   if(changed.has('emailGroups')&&!liveSyncConnected)void refreshSharedMasterClient('emailGroups').catch(()=>{});
-  for(const area of ['nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings']){
+  for(const area of ['transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings']){
     if(changed.has(area)&&!liveSyncConnected)void refreshSharedMasterClient(area).catch(()=>{});
   }
   // v7.21: canlı akış açıkken bu yol AYNI kayıt için ikinci bir yeniden
