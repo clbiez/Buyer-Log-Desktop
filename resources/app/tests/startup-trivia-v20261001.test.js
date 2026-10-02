@@ -126,6 +126,10 @@ test('page loading states get a delayed trivia panel, but compact and dialog ind
   assert.ok(wide.child);assert.ok(wide.classList.contains('hasTrivia'));assert.ok(!narrow.child);assert.ok(!inDialog.child);
 });
 
+test('startup Continue button centers its label consistently',()=>{
+  assert.match(CSS,/\.blBootContinue\{[^}]*display:inline-flex;[^}]*align-items:center;[^}]*justify-content:center;[^}]*text-align:center;[^}]*line-height:1\.2/);
+});
+
 test('trivia scripts load before the guide and motion respects reduced-motion',()=>{
   const at=name=>INDEX.indexOf(name);
   assert.ok(at('buyerlog-trivia-data.js')>0&&at('buyerlog-trivia-data.js')<at('buyerlog-trivia.js')&&at('buyerlog-trivia.js')<at('buyerlog-guide.js?'));
