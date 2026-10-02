@@ -72,6 +72,7 @@ let restarting = false;
 let lastStartedAt = 0;
 let updater = null;
 let updateStartupTimer = null;
+let updateSignInTimer = null;
 let updatePeriodicTimer = null;
 let updateRelaunchRequested = false;
 
@@ -289,8 +290,32 @@ function scheduleUpdateChecks() {
   // Açılış kontrolü login/renderer beklemez: uygulama ayağa kalkarken hemen
   // başlar. Ağ veya release kaynağı yavaşsa Buyer Log yine bloklanmadan açılır.
   void runUpdateCheck({manual:false}).catch(()=>{});
+  watchSignedInTestChannel();
   updatePeriodicTimer=setInterval(()=>{void runUpdateCheck({manual:false}).catch(()=>{});},cfg.checkIntervalHours*60*60*1000);
   if(updatePeriodicTimer.unref)updatePeriodicTimer.unref();
+}
+
+// Açılış kontrolü girişten önce çalışır; kullanıcı kimliği yokken moderator
+// doğrulanamaz ve TEST kanalı STABLE'a düşer. TEST yapılandırılmışsa giriş yapan
+// her yeni kullanıcı için kanal bir kez yeniden kontrol edilir; aksi hâlde TEST
+// sürümü ancak 6 saatlik periyodik kontrolde veya elle görülürdü.
+function watchSignedInTestChannel() {
+  if(updateSignInTimer){clearInterval(updateSignInTimer);updateSignInTimer=null;}
+  const cfg=updater.config(updaterBaseConfig());
+  if(cfg.channel!=='test')return;
+  let checkedUserId='',busy=false;
+  updateSignInTimer=setInterval(async()=>{
+    if(busy)return;
+    busy=true;
+    try{
+      const userId=await currentRendererUserId();
+      if(userId&&userId!==checkedUserId){
+        checkedUserId=userId;
+        await runUpdateCheck({manual:false,userId}).catch(()=>{});
+      }
+    }finally{busy=false;}
+  },5000);
+  if(updateSignInTimer.unref)updateSignInTimer.unref();
 }
 
 /* --------------------------------------------------------- pencere durumu */
@@ -1545,6 +1570,7 @@ async function startBuyerLog() {
 async function shutdown() {
   log('Buyer Log kapatılıyor.');
   if (updateStartupTimer) { clearTimeout(updateStartupTimer); updateStartupTimer = null; }
+  if (updateSignInTimer) { clearInterval(updateSignInTimer); updateSignInTimer = null; }
   if (updatePeriodicTimer) { clearInterval(updatePeriodicTimer); updatePeriodicTimer = null; }
   try { saveWindowState(); } catch (_) {}
   // Backend Authorization is process memory and may be cleared. The dedicated
