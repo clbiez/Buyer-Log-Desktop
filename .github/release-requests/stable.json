@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.195",
-  "commit_sha": "90a0d529acb36b09f951bac91c3ea4bd221364b5",
-  "release_notes": "Buyer Log 7.0.195: Backlog alt detay pencereleri CP tablosuyla aynı tasarıma getirildi; Odak/Genişletilmiş/Tümü görünümü, alt satıra sarılan uzun sütun başlıkları, sürüklenerek ayarlanan kalıcı sütun genişlikleri, Sütunları Sığdır ve sütun filtreleri eklendi. Send to Pricing için taslak e-postayı yeniden açma eklendi. Price & Supplier ekranında aranabilir çoklu seçimli filtreler ve tüm alanların filtre olarak eklenebilmesi sağlandı. Dinamik sütun filtreleme ve Product Main Definition desteği eklendi. Sayfa yükleme durumlarında Thinking Orbs göstergesi kullanılıyor. Quotations'ta yeniden kullanılan Koleksiyon satır kimlikleri nedeniyle Best Price/fiyat geçmişinin karışması engellendi."
+  "version": "7.0.197",
+  "commit_sha": "a4113a7c7ebc99b61a0b58a5f70c98b24a085630",
+  "release_notes": "Buyer Log 7.0.197: Açılış bekleme ekranında kullanım ipuçları yerine 'Biliyor muydunuz?' kartları gösteriliyor: 14 kategoride 179 az bilinen genel kültür bilgisi, her kategoriye özgü hareketli çizimlerle. Görülmemiş bilgiler önce gelir; kullanım ipuçları F1 Kullanım Rehberi'nde kalmaya devam ediyor. 7.0.196 düzeltmelerini de içerir: ikinci kez başlatılan Buyer Log çalışan güncelleme denemesini geri almıyor; Check for Updates penceresine moderatöre özel Tekrar Dene düğmesi eklendi."
 }
