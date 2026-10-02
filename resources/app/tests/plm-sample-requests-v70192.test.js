@@ -267,9 +267,14 @@ test('v7.0.192 kablolama: PLM Sync, CP, sağ tık menüsü, lazy yükleme ve sun
   const html = read('public/index.html');
   const menuOf = id => (html.match(new RegExp(`id="${id}"[\\s\\S]*?\\n\\s*</div>\\s*\\n\\s*</div>`)) || [''])[0];
   const cpMenu = menuOf('cpPlmSyncMenu');
-  for (const mode of ['selected', 'missing', 'production', 'all']) {
-    assert.match(cpMenu, new RegExp(`data-cp-plm-samples="${mode}"`), `${mode} seçeneği CP PLM SYNC menüsünde`);
-  }
+  // v7.0.198: tek menü girişi, PLM SYNC gibi adımlı kapsam penceresi.
+  assert.match(cpMenu, /data-plm-sync-category="samples" data-plm-sync-page="cp"/);
+  assert.doesNotMatch(cpMenu, /data-cp-plm-samples=/, 'menüde dört ayrı başlık olmamalı');
+  const flowStart = app.indexOf("if(category==='samples'){");
+  const flow = app.slice(flowStart, app.indexOf("const collection=page==='kol';", flowStart));
+  for (const mode of ['all', 'selected', 'production', 'missing']) assert.match(flow, new RegExp(`\\{id:'${mode}'`));
+  assert.match(flow, /confirmSelection:true/);
+  assert.match(flow, /await cpPlmSampleRequestsRun\(root,action\);/);
   const kolMenu = menuOf('kolPlmSyncMenu');
   assert.ok(kolMenu.length > 50);
   assert.doesNotMatch(kolMenu, /SampleRequests/);

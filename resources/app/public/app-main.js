@@ -29466,6 +29466,23 @@ async function openPlmSyncCategoryPanel(page,category,trigger){
     if(action==='selected'||action==='all')await updateModelImages({source:'asas',mode:action,button:root,scope});
     return;
   }
+  /* CP numune onayları (CoreNectum Requests): PLM SYNC ile aynı adımlı akış.
+     Seçili dışındaki kapsamlar tablo filtresini uygulamaz. */
+  if(category==='samples'){
+    const action=await plmSyncActionModal({
+      id:`_${page}PlmSampleSyncModal`,title:en?'Sample Synchronization':'Numune Senkronizasyonu',
+      intro:en?'Choose the model scope to update sample approvals for':'Numune onayları güncellenecek model kapsamını seçin',
+      trigger:root,onBack:back,confirmSelection:true,confirmLabel:en?'Continue':'Devam',
+      actions:[
+        {id:'all',label:en?'Update All':'Tümünü Güncelle',description:en?'All CP models (table filters are not applied)':'CP’deki tüm modeller (tablo filtresi uygulanmaz)',icon:'i-refresh'},
+        {id:'selected',label:en?'Update Selected Models':'Seçili Modelleri Güncelle',description:en?'Limit the update to selected rows':'Seçili satırlarla sınırla',icon:'i-refresh',disabled:!selectedCpRowsForAction().length},
+        {id:'production',label:en?'Update In-Production Models':'Üretimdekileri Güncelle',description:en?'Only orders whose logistics status is In Production':'Yalnız lojistik statüsü Üretimde olan siparişler',icon:'i-refresh'},
+        {id:'missing',label:en?'Complete Missing':'Eksikleri Tamamla',description:en?'Only models without sample data yet':'Yalnız numune verisi hiç çekilmemiş modeller',icon:'i-refresh'},
+      ],
+    });
+    if(['all','selected','production','missing'].includes(action))await cpPlmSampleRequestsRun(root,action);
+    return;
+  }
   const collection=page==='kol';
   const actions=plmSyncScopeActions(scope,{collection});
   const action=await plmSyncActionModal({
@@ -29482,7 +29499,8 @@ document.addEventListener('click',event=>{
   if(!entry)return;
   event.preventDefault();
   const page=String(entry.dataset.plmSyncPage||''),category=String(entry.dataset.plmSyncCategory||'');
-  if(!['kol','cp','orders'].includes(page)||!['plm','asas'].includes(category))return;
+  if(!['kol','cp','orders'].includes(page)||!['plm','asas','samples'].includes(category))return;
+  if(category==='samples'&&page!=='cp')return;
   void openPlmSyncCategoryPanel(page,category,entry);
 });
 /* "Yalnız başarısızları yeniden dene" — operasyon merkezi bu kancaları çağırır.
@@ -32131,7 +32149,6 @@ async function cpPlmSampleAutoRefresh(){
     await window.BLPlmSampleRequests?.autoRefreshStale?.(state.cp.rows);
   }catch(_){}
 }
-document.querySelectorAll('[data-cp-plm-samples]').forEach(button=>button.addEventListener('click',event=>{document.getElementById('cpPlmSyncMenu')?.setAttribute('hidden','');void cpPlmSampleRequestsRun(event.currentTarget,event.currentTarget.dataset.cpPlmSamples);}));
 document.getElementById('kolPricingExcelColsBtn')?.addEventListener('click',openKolPricingExcelColumnsModal);
 loadKolPricingExcelColumns();
 
