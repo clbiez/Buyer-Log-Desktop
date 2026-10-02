@@ -96,7 +96,7 @@
 .bpaColValue{font-size:10.5px;font-weight:700;color:var(--ink2)}
 .bpaColTrack{flex:1;width:100%;display:flex;align-items:flex-end;background:linear-gradient(to top,var(--line) 1px,transparent 1px) 0 0/100% 25%}
 .bpaColBar{width:100%;display:flex;flex-direction:column-reverse;gap:2px;transition:height .4s var(--ease)}
-.bpaColBar .bpaSeg{min-height:3px;width:100%}
+.bpaColBar .bpaSeg{height:0;min-height:0;flex-basis:0;width:100%}
 .bpaColBar .bpaSeg:hover{transform:scaleX(1.12)}
 .bpaColLabel{font-size:10.5px;color:var(--muted)}
 .bpaRevs{display:flex;flex-direction:column;gap:7px;padding:14px 12px}
