@@ -4885,8 +4885,45 @@ function cpLogisticPriorityText(priority){
   if(appLang==='en') return priority===1?'Production / Shortage':priority===2?'Pre-warehouse':'Warehouse';
   return priority===1?'Üretim / Eksik Yükleme':priority===2?'Depo öncesi':'Depo';
 }
+/* Buyer Log, ASAS adedinin IAS ile karşılanmayan kısmı için "Üretimde" satırı
+   açar. Bu bakiye yüklenmeyecekse kullanıcı onu kalıcı olarak "Eksik Adet"
+   yapabilir (overrides.shortagemap); Backlog, CP ve raporlar aynı kaydı okur.
+   Yalnız en az bir gerçek IAS parsiyeli olan siparişte sunulur. */
+function cpShortageActionHtml(row,segment,segments){
+  if(!window.SERVER_BACKED||row._canEdit===false)return '';
+  const hasPartial=(segments||[]).some(s=>s&&s.kind==='partial'&&!s.synthetic);
+  if(!hasPartial)return '';
+  const en=appLang==='en';
+  if(segment.kind==='production'&&!segment.userShortage)return `<button type="button" class="cpShortageAction" data-shortage-action="mark" data-id="${row._id}" data-qty="${toNum(segment.quantity)||0}" title="${escapeHtml(en?'This balance will not be loaded: mark it as a shortage in every report':'Bu bakiye yüklenmeyecek: tüm raporlarda eksik adet olarak işaretle')}">${escapeHtml(en?'Mark as shortage':'Eksik adet olarak işaretle')}</button>`;
+  if(segment.userShortage)return `<small class="cpShortageNote">${escapeHtml(en?'Marked as shortage by user':'Kullanıcı tarafından eksik adet olarak işaretlendi')}</small><button type="button" class="cpShortageAction is-undo" data-shortage-action="unmark" data-id="${row._id}">${escapeHtml(en?'Undo':'Geri al')}</button>`;
+  return '';
+}
+async function cpSetShortageMark(row,marked,qty){
+  const en=appLang==='en';
+  if(!row||row._canEdit===false){showToast(en?'You only have view access to this order.':'Bu sipariş için yalnız görüntüleme yetkiniz var.');return;}
+  const question=marked
+    ?(en?`Mark the remaining ${fmtInt(qty)} units of ${row['Order Code']} as a shortage? Backlog and reports will show them as "Shortage" instead of "In Production" until you undo it.`:`${row['Order Code']} siparişinin kalan ${fmtInt(qty)} adedi eksik adet olarak işaretlensin mi? Siz geri alana kadar Backlog ve raporlar bu bakiyeyi "Üretimde" yerine "Eksik Yükleme" gösterir.`)
+    :(en?`Remove the shortage mark from ${row['Order Code']}? The balance returns to the standard rule.`:`${row['Order Code']} siparişindeki eksik adet işareti kaldırılsın mı? Bakiye standart kurala döner.`);
+  if(!confirm(question))return;
+  try{
+    await enqueueOverrideMutation('orders',`/api/overrides/${encodeURIComponent(row['Order Code'])}`,{
+      method:'PATCH',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({...lineIdentity(row),shortage:marked?{marked:true,qty}:null}),
+    });
+    state.overrides.shortagemap=state.overrides.shortagemap||{};
+    const key=lineKeyOfRow(row);
+    if(marked)state.overrides.shortagemap[key]={markedAt:new Date().toISOString(),qty};else delete state.overrides.shortagemap[key];
+    // Statü sunucuda hesaplanır: CP yeniden yüklenir, Backlog bir sonraki çizimde günceldir.
+    await ensureCpLoaded({force:true});
+    if(typeof lastBacklogData!=='undefined'&&lastBacklogData)void fetchBacklog(buildBacklogParams());
+    showToast(marked?(en?'Balance marked as shortage.':'Bakiye eksik adet olarak işaretlendi.'):(en?'Shortage mark removed.':'Eksik adet işareti kaldırıldı.'));
+  }catch(err){
+    showToast((en?'Could not save: ':'Kaydedilemedi: ')+(err&&err.message||err));
+  }
+}
 function cpLogisticSegmentTitle(segment){
   if(segment.kind==='production') return appLang==='en'?'Remaining in production':'Üretimde kalan';
+  if(segment.kind==='shortage'&&segment.userShortage) return appLang==='en'?'Shortage (marked by user)':'Eksik adet (kullanıcı işareti)';
   if(segment.kind==='shortage') return appLang==='en'?'Loading shortage':'Eksik yükleme';
   // ASAS siparişi kapatmış ama IAS'ta karşılığı olmayan bakiye: Buyer Log'un açtığı satırdır, parsiyel değildir.
   if(segment.synthetic==='warehouse') return appLang==='en'?'Closed in ASAS · no IAS record':'ASAS\'ta kapanmış bakiye · IAS kaydı yok';
@@ -4907,7 +4944,7 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
     const arrivalNote=(segment.kind==='production'||segment.kind==='shortage')?(appLang==='en'?'Calculated from Ex-Factory':'Ex-Factory üzerinden hesaplandı'):'';
     return `<div class="cpLogisticDetailLine priority-${priority}">
       <div class="cpLogisticPriority"><b>${priority}</b><span>${escapeHtml(cpLogisticPriorityText(priority))}</span></div>
-      <div class="cpLogisticDetailName"><strong>${escapeHtml(cpLogisticSegmentTitle(segment))}</strong>${segment.sourceRow?`<small>IAS #${segment.sourceRow}</small>`:''}</div>
+      <div class="cpLogisticDetailName"><strong>${escapeHtml(cpLogisticSegmentTitle(segment))}</strong>${segment.sourceRow?`<small>IAS #${segment.sourceRow}</small>`:''}${cpShortageActionHtml(row,segment,segments)}</div>
       <div class="cpLogisticQty">${fmtInt(segment.quantity)} <small>${appLang==='en'?'units':'adet'}</small></div>
       <div>${badge(escapeHtml(statusDisplay(segment.status)||'—'),statusTone(segment.status))}</div>
       <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>
@@ -9027,6 +9064,13 @@ function bindCpLogisticToggle(tableId,tableKey,rerender){
   if(!el||el.dataset.logisticToggleBound==='1')return;
   el.dataset.logisticToggleBound='1';
   el.addEventListener('click', e=>{
+    const shortage=e.target.closest('.cpShortageAction');
+    if(shortage&&el.contains(shortage)){
+      const sourceRows=tableKey==='orders'?(state.orders&&state.orders.rows||[]):(state.cp&&state.cp.rows||[]);
+      const row=sourceRows.find(item=>item&&item._id===Number(shortage.dataset.id));
+      void cpSetShortageMark(row,shortage.dataset.shortageAction==='mark',Number(shortage.dataset.qty)||0);
+      return;
+    }
     const toggle=e.target.closest('.cpLogisticToggle');
     if(!toggle||!el.contains(toggle))return;
     const id=Number(toggle.dataset.id);
