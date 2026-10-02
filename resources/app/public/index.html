@@ -757,6 +757,32 @@
         <div class="oabProgressTrack"><div class="oabProgressFill" id="oabProgressFill"></div></div>
         <span class="oabProgressText" id="oabProgressText"></span>
       </div>
+      <!-- OAB işlem rehberi yalnız bu kartın normal belge akışında yaşar.
+           Global overlay/fixed katman kullanmaz; komşu Overview widget'larının
+           üstüne binmeden tarayıcı/PASS/veri çekme aşamalarını görünür kılar. -->
+      <div id="oabActivityGuide" class="oabActivityGuide" hidden role="status" aria-live="polite" aria-atomic="true">
+        <div class="oabActivityVisual" aria-hidden="true">
+          <div class="oabMiniBrowser">
+            <div class="oabMiniBrowserTop"><i></i><i></i><i></i></div>
+            <div class="oabMiniBrowserBody"><span class="oabMiniBrowserBadge">OAB</span><span class="oabMiniBrowserPulse"></span></div>
+          </div>
+          <div class="oabActivityFlow"><span></span><span></span><span></span></div>
+          <div class="oabMiniData"><i></i><i></i><i></i></div>
+        </div>
+        <div class="oabActivityContent">
+          <div class="oabActivityEyebrow" id="oabActivityEyebrow">OAB</div>
+          <div class="oabActivityTitle" id="oabActivityTitle"></div>
+          <div class="oabActivityDetail" id="oabActivityDetail"></div>
+          <div class="oabActivitySteps" id="oabActivitySteps">
+            <span data-oab-activity-step="prepare"><b>1</b><em data-i18n-tr="Hazırlık" data-i18n-en="Prepare">Hazırlık</em></span>
+            <span data-oab-activity-step="browser"><b>2</b><em data-i18n-tr="Tarayıcı" data-i18n-en="Browser">Tarayıcı</em></span>
+            <span data-oab-activity-step="login"><b>3</b><em data-i18n-tr="OAB Girişi" data-i18n-en="OAB Sign-in">OAB Girişi</em></span>
+            <span data-oab-activity-step="fetch"><b>4</b><em data-i18n-tr="Veri" data-i18n-en="Data">Veri</em></span>
+            <span data-oab-activity-step="done"><b>5</b><em data-i18n-tr="Hazır" data-i18n-en="Ready">Hazır</em></span>
+          </div>
+          <div class="oabActivityWarning" id="oabActivityWarning" hidden></div>
+        </div>
+      </div>
       <div id="oabStatus" class="oabStatus" hidden></div>
       <div id="oabBody" class="oabBody" hidden>
         <div class="oabLocalFilterBar" id="oabLocalFilterBar"></div>
