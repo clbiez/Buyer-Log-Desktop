@@ -4462,11 +4462,11 @@ tr.blRemoteChanged>td{animation:blRemoteChangedFade 5s ease-out 1;}
 .oabMiniData i{display:block;height:5px;border-radius:3px;background:color-mix(in srgb,var(--acc) 30%,var(--line));}
 .oabMiniData i:nth-child(2){width:78%}.oabMiniData i:nth-child(3){width:58%}
 .oabActivityContent{min-width:0;}
-.oabActivityEyebrow{margin-bottom:2px;color:var(--muted);font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
+.oabActivityEyebrow{margin-bottom:2px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;}
 .oabActivityTitle{color:var(--ink);font-size:13px;font-weight:800;line-height:1.25;}
 .oabActivityDetail{margin-top:3px;color:var(--ink2);font-size:11px;line-height:1.42;}
 .oabActivitySteps{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:9px;}
-.oabActivitySteps>span{display:inline-flex;align-items:center;gap:4px;min-width:0;padding:3px 6px;border:1px solid var(--line);border-radius:var(--r-full);background:var(--card);color:var(--muted);font-size:9.5px;}
+.oabActivitySteps>span{display:inline-flex;align-items:center;gap:4px;min-width:0;padding:3px 6px;border:1px solid var(--line);border-radius:var(--r-full);background:var(--card);color:var(--muted);font-size:10px;}
 .oabActivitySteps b{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--card2);font:700 9px/1 var(--mono);}
 .oabActivitySteps em{font-style:normal;white-space:nowrap;}
 .oabActivitySteps>span.isActive{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:var(--acc-bg);color:var(--acc-ink);font-weight:700;}
