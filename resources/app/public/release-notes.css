@@ -1,0 +1,52 @@
+/* Buyer Log visual release archive.
+   Uses the same token, two-panel card and progress language as Buyer Log Guide / Trivia. */
+.blRnDialog{width:min(1220px,calc(100vw - 48px));height:min(820px,calc(100dvh - 48px));max-width:1220px;max-height:calc(100dvh - 48px);padding:0;border:1px solid var(--line2);border-radius:var(--r-md,0);background:var(--card);color:var(--ink);font-family:var(--sans);box-shadow:var(--shadow-3)}
+.blRnDialog::backdrop{background:color-mix(in srgb,var(--ink) 40%,transparent)}
+.blRnDialog[open]{display:flex;flex-direction:column}
+.blRnHeader{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding:20px 24px;border-bottom:1px solid var(--line)}
+.blRnHeader h1{font:600 28px/1.1 var(--head);margin:5px 0 7px}
+.blRnHeader p{margin:0;color:var(--ink2);font-size:13px;line-height:1.45}
+.blRnClose{width:36px;height:36px;display:grid;place-items:center;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--card);color:var(--ink);font:500 22px/1 var(--sans);cursor:pointer}
+.blRnClose:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-bg)}
+.blRnLayout{display:grid;grid-template-columns:285px minmax(0,1fr);min-height:0;flex:1}
+.blRnArchive{min-height:0;padding:18px;border-right:1px solid var(--line);background:var(--card2)}
+.blRnArchive[hidden]{display:none}
+.blRnDialog--unseen .blRnLayout{grid-template-columns:1fr}
+.blRnArchiveHead{font-size:11px;font-weight:600;letter-spacing:.12em;color:var(--muted);margin:1px 4px 12px}
+.blRnArchive nav{display:flex;flex-direction:column;gap:5px;overflow:auto;max-height:calc(100% - 28px)}
+.blRnReleaseRow{display:grid;gap:5px;width:100%;text-align:left;padding:11px 12px;border:1px solid transparent;background:transparent;color:var(--ink);cursor:pointer}
+.blRnReleaseRow:hover{background:var(--paper);border-color:var(--line)}
+.blRnReleaseRow.is-active{background:var(--acc-bg);border-color:var(--acc)}
+.blRnReleaseRow span{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.blRnReleaseRow b{font:600 13px/1.2 var(--mono)}
+.blRnReleaseRow small{font-size:10px;color:var(--muted)}
+.blRnReleaseRow em{font-style:normal;font-size:12px;line-height:1.35;color:var(--ink2)}
+.blRnReleaseRow i{font-style:normal;font-size:9px;letter-spacing:.08em;color:var(--muted)}
+.blRnMain{min-width:0;min-height:0;display:flex;overflow:auto}
+.blRnStage{width:100%;min-height:100%;display:flex;flex-direction:column;padding:24px;box-sizing:border-box}
+.blRnMeta{display:flex;gap:8px;align-items:center;min-height:24px;margin-bottom:14px}
+.blRnMeta span{font:600 10px/1 var(--mono);letter-spacing:.06em;color:var(--ink2);border:1px solid var(--line);padding:6px 8px;background:var(--card2)}
+.blRnCard{display:grid;grid-template-columns:minmax(300px,.98fr) minmax(330px,1.02fr);gap:28px;align-items:center;min-height:0;flex:1}
+.blRnFigure{min-width:0}
+.blRnCopy{min-width:0;padding-right:12px}
+.blRnCopy h2{font-size:28px}
+.blRnCopy p{font-size:14.5px}
+.blRnVisual{margin:0;width:100%;border:1px solid var(--line);background:var(--paper);overflow:hidden;animation:blTriviaIn .45s ease-out both}
+.blRnShot{position:relative;display:grid;place-items:center;min-height:300px;background:linear-gradient(170deg,color-mix(in srgb,var(--acc) 8%,var(--card)) 0%,var(--card) 78%);overflow:hidden}
+.blRnShot img{display:block;width:100%;height:auto;max-height:470px;object-fit:contain}
+.blRnFocus{position:absolute;display:block;border:2px solid var(--acc);box-shadow:0 0 0 9999px color-mix(in srgb,var(--ink) 12%,transparent);pointer-events:none;animation:blRnFocusIn .35s ease-out both}
+.blRnVisual figcaption{font-size:11px;padding:10px 12px;color:var(--muted);border-top:1px solid var(--line)}
+.blRnFallbackVisual{min-height:340px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:18px;background:linear-gradient(155deg,var(--acc-bg),var(--card));color:var(--acc)}
+.blRnFallbackMark{width:84px;height:84px;display:grid;place-items:center;border:1px solid var(--acc);font:700 28px/1 var(--head);background:var(--card)}
+.blRnFallbackVisual>div:last-child{display:grid;gap:6px}
+.blRnFallbackVisual span,.blRnFallbackVisual small{font-size:11px;letter-spacing:.1em;color:var(--ink2)}
+.blRnFallbackVisual b{font:600 26px/1.1 var(--head);color:var(--ink)}
+.blRnNav{display:grid;gap:10px;margin-top:18px}
+.blRnNavRow{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:38px}
+.blRnNavRow>span{font-size:12px;color:var(--ink2)}
+.blRnLegacyItems{margin:12px 0 0;padding-left:18px;display:grid;gap:10px;color:var(--ink2);font-size:13px;line-height:1.45}
+.blRnEmpty{margin:auto;padding:24px;border:1px dashed var(--line2);color:var(--muted);text-align:center}
+@keyframes blRnFocusIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@media(max-width:900px){.blRnDialog{width:calc(100vw - 20px);height:calc(100dvh - 20px);max-height:calc(100dvh - 20px)}.blRnLayout{grid-template-columns:220px minmax(0,1fr)}.blRnCard{grid-template-columns:1fr;align-content:start}.blRnStage{padding:18px}.blRnShot{min-height:220px}.blRnCopy{padding:0}.blRnArchive{padding:12px}}
+@media(max-width:680px){.blRnLayout{display:block;overflow:auto}.blRnArchive{border-right:0;border-bottom:1px solid var(--line);max-height:180px}.blRnArchive nav{max-height:120px}.blRnHeader{padding:15px 16px}.blRnHeader h1{font-size:23px}.blRnCard{gap:18px}.blRnNavRow{align-items:flex-end}}
+@media(prefers-reduced-motion:reduce){.blRnVisual,.blRnFocus{animation:none}}
