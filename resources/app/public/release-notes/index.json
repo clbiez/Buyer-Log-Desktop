@@ -1,1 +1,19 @@
-{"schemaVersion":1,"releases":[]}
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "version": "7.0.211",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Görsel sürüm geçmişi ve kümülatif yenilik akışı",
+        "en": "Visual release history and cumulative What's New flow"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 0,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.211/release.json"
+    }
+  ]
+}

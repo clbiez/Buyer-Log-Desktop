@@ -1,71 +1,14 @@
 {
   "schemaVersion": 1,
-  "bootstrapVisual": true,
+  "publishedAt": "",
+  "bootstrapVisual": false,
   "title": {
-    "tr": "Görsel sürüm geçmişi ve kümülatif yenilik akışı",
-    "en": "Visual release history and cumulative What's New flow"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Stable sürümlerdeki değişiklikler artık Türkçe/İngilizce ve görsel anlatımla arşivleniyor.",
-    "en": "Changes in stable releases are now archived with Turkish/English copy and visual explanations."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "visual-release-archive",
-      "type": "feature",
-      "module": {
-        "tr": "Sürüm Geçmişi",
-        "en": "Version History"
-      },
-      "title": {
-        "tr": "Sürüm notları artık görsel bir Buyer Log arşivi",
-        "en": "Release notes are now a visual Buyer Log archive"
-      },
-      "body": {
-        "tr": "Her stable sürüm; kısa açıklamalar, Türkçe/İngilizce içerik ve ilgili Buyer Log ekranı ile saklanır. Eski metin tabanlı kayıtlar da arşivde erişilebilir kalır.",
-        "en": "Each stable release is stored with concise explanations, Turkish/English content and the relevant Buyer Log screen. Legacy text-only records remain accessible in the archive."
-      },
-      "visual": {
-        "src": "01-release-archive.svg",
-        "kind": "component-preview",
-        "alt": {
-          "tr": "Buyer Log görsel sürüm geçmişi arayüzü",
-          "en": "Buyer Log visual release history interface"
-        },
-        "caption": {
-          "tr": "Buyer Log Genel Kültür / Rehber kart diliyle aynı görsel sistem",
-          "en": "The same visual system used by Buyer Log Trivia / Guide cards"
-        }
-      }
-    },
-    {
-      "id": "cumulative-updates",
-      "type": "feature",
-      "module": {
-        "tr": "Güncelleme",
-        "en": "Update"
-      },
-      "title": {
-        "tr": "Birkaç sürüm geriden gelen kullanıcı tüm yenilikleri birlikte görür",
-        "en": "Users updating across several versions see every missed change together"
-      },
-      "body": {
-        "tr": "Son görülen stable sürüm cihazda tutulur. Örneğin 7.0.207'den 7.0.211'e geçen kullanıcı 7.0.208, 7.0.209, 7.0.210 ve 7.0.211 değişikliklerini kronolojik tek akışta görür.",
-        "en": "The last seen stable version is stored on the device. For example, a user moving from 7.0.207 to 7.0.211 sees the changes from 7.0.208, 7.0.209, 7.0.210 and 7.0.211 in one chronological flow."
-      },
-      "visual": {
-        "src": "02-cumulative-flow.svg",
-        "kind": "component-preview",
-        "alt": {
-          "tr": "Kümülatif stable sürüm akışı",
-          "en": "Cumulative stable release flow"
-        },
-        "caption": {
-          "tr": "Kaçırılan stable sürümler tek sunum akışında birleştirilir",
-          "en": "Missed stable releases are combined into one presentation flow"
-        }
-      }
-    }
-  ],
-  "publishedAt": "2026-10-03"
+  "changes": []
 }
