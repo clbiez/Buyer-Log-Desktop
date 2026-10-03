@@ -624,12 +624,6 @@ const intakeReport = require('./lib/intake-report');
 const intakeStore = require('./lib/intake-store');
 const intakeConnectionSelector = require('./lib/intake-connection');
 const technicalSheetOwnership = require('./lib/plm-technical-sheet-ownership');
-const { createOutlookGraphService } = require('./lib/outlook-graph');
-const { createOutlookLocalService } = require('./lib/outlook-local');
-const { createOutlookHybridService } = require('./lib/outlook-hybrid');
-const mailIntelligence = require('./lib/mail-intelligence');
-const { createOutlookIntelligenceService } = require('./lib/outlook-intelligence-service');
-const outlookSetupSettings = require('./lib/outlook-setup-settings');
 // v6.44 — istemci hangi sekmenin yazdığını bu başlıkla bildirir; SSE broadcast'i
 // bu sekmenin kendi event'ini ayırt edebilsin diye (kendi optimistic update'i
 // zaten var, kendine yenileme tetiklemesine gerek yok).
@@ -1758,52 +1752,6 @@ app.use((req, res, next) => {
   if (!systemRestoreState.writeLocked || req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS' || String(req.path || '').startsWith('/api/backups/restore/')) return next();
   return res.status(409).json({ error: 'Full System Restore uygulanıyor; yazma işlemleri geçici olarak kilitlendi.', code: 'SYSTEM_RESTORE_IN_PROGRESS' });
 });
-const outlookRuntime = outlookSetupSettings.applyToRuntime(config, process.env);
-const outlookGraph = createOutlookGraphService({ config:outlookRuntime.config, env:outlookRuntime.env, dataRoot: LOCAL_DATA_ROOT, writeJson: atomicWriteJson });
-const outlookLocal = createOutlookLocalService();
-const outlookMail = createOutlookHybridService({ graph: outlookGraph, local: outlookLocal });
-const outlookV2 = createOutlookIntelligenceService({
-  graph: outlookMail, dataRoot: LOCAL_DATA_ROOT, writeJson: atomicWriteJson, config:outlookRuntime.config, env:outlookRuntime.env,
-  saveWorkspacePreference: (userId,key,value) => userPreferences.merge(userId,{[key]:{value:JSON.stringify(value),updatedAt:new Date().toISOString()}}),
-  canAccessEntity: (profile, entityType, entityId, write) => {
-    if (!profile) return false;
-    if (entityType === 'ORDER' || entityType === 'PO') return write ? canUserEditOrderCode(profile, entityId) : (userAccess.hasCapability(profile, 'ORDERS.VIEW') || userAccess.hasPermission(profile, 'manageAllOrders'));
-    if (entityType === 'COLLECTION') return userAccess.hasCapability(profile, write ? 'COLLECTIONS.EDIT' : 'COLLECTIONS.VIEW');
-    return userAccess.hasCapability(profile, write ? 'ORDERS.EDIT' : 'ORDERS.VIEW');
-  },
-  applyBusinessChange: async (profile, candidate) => {
-    const orderCode = Number(candidate.entityId);
-    if (!Number.isFinite(orderCode) || !canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Sipariş değişikliği yetkisi bulunmuyor.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    if (candidate.ambiguous) throw Object.assign(new Error('Belirsiz mail değeri otomatik uygulanamaz.'), { code:'CHANGE_VALUE_AMBIGUOUS', statusCode:422 });
-    let patch;
-    if (candidate.type === 'DELIVERY_DATE_CHANGE') patch = { dates:{ retailDate:candidate.newValue } };
-    else if (candidate.type === 'PRICE_CHANGE' && candidate.currency && Number.isFinite(Number(candidate.newValue))) patch = { suppFob:Number(candidate.newValue) };
-    else throw Object.assign(new Error('Bu değişiklik tipi mevcut Buyer Log güncelleme akışına güvenli biçimde bağlanamıyor.'), { code:'CHANGE_APPLY_UNSUPPORTED', statusCode:422 });
-    const saved = patchOrderOverride(orderCode, patch, null, null, { actor: noteActorOf(profile) });
-    userAccess.appendAudit(profile, 'ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch), source:'MAIL_INTELLIGENCE', candidateId:candidate.id });
-    liveEvents.notifyChange('orders', 'mail-intelligence', { rowPatches: liveRowPatchesFor([{ orderCode, patch }]) });
-    return saved;
-  },
-  resolveEntities: async (message) => {
-    await ensureDataLoaded('moderator');
-    const rows = cacheForUser('moderator').asasOrders || [], configState = outlookV2.store.load().config, candidates = [];
-    for (const row of rows.slice(0, 250000)) {
-      const raw = row && row._sourceFields || {};
-      const context = {
-        orderNo: row && (row.ocode ?? raw['Order Code'] ?? raw['Sipariş Kod']),
-        poNo: raw['PO No'] ?? raw.PO, plmCode: row && (row.plmId ?? raw['PLM ID'] ?? raw.PLM),
-        styleId: raw['Style ID'], modelCode: raw['Model Code'], modelName: row && (row.model ?? raw['Model Name']),
-        colourCode: row && (row.ccode ?? raw['Colour Code'] ?? raw['C.Code']), manufacturer: row && (row.manufacturer ?? raw.Manufacturer), supplier: raw.Supplier,
-      };
-      const match = mailIntelligence.matchContext(message, context, configState);
-      if (match.score >= configState.confirmationThreshold && !match.falsePositiveProtected) {
-        const buyer=String(row&&row.buyer||raw.Buyer||raw['Buyer Name']||'').trim().toLocaleUpperCase('tr-TR'),profiles=userAccess.allPublicProfiles(),owner=profiles.find(profile=>String(profile.displayName||profile.username||'').trim().toLocaleUpperCase('tr-TR')===buyer),manager=owner&&profiles.find(profile=>profile.id===(owner.managerId||owner.supervisorId));
-        candidates.push({ entityType:'ORDER', entityId:String(context.orderNo || ''), confidence:match.score, decision:match.decision, reasons:match.reasons, userIds:[owner&&owner.id,manager&&manager.id].filter(Boolean) });
-      }
-    }
-    return candidates.filter(item=>item.entityId).sort((a,b)=>b.confidence-a.confidence).slice(0,3);
-  },
-});
 function sendUserSelectionPage(_req, res) {
   res.set('Cache-Control', 'no-store');
   return res.sendFile(path.join(__dirname, '..', 'public', 'select-user.html'));
@@ -1881,55 +1829,6 @@ app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) =>
 });
 app.post('/api/user-logout', userAccess.logoutHandler);
 app.get('/api/current-user', userAccess.currentHandler);
-// SameSite=Strict kullanıcı cookie'si Microsoft'tan gelen cross-site callback'te
-// bulunmayabilir. Callback yalnız sunucudaki tek kullanımlık PKCE state kaydına
-// güvenir ve bağlantıyı state içinde kayıtlı gerçek Buyer Log user ID'ye bağlar.
-app.get('/api/outlook/callback', async (req, res) => {
-  let userId = null;
-  try {
-    const result = await outlookGraph.handleCallback(req.query || {}); userId = result.userId;
-    const actor = userAccess.allPublicProfiles().find(item => item.id === userId) || { id: userId };
-    const maskedEmail = result.email ? String(result.email).replace(/^(.).+(@.*)$/,'$1***$2') : '';
-    userAccess.appendAudit(actor, 'OUTLOOK_CONNECTED', 'microsoft365', { email: maskedEmail, tenant: outlookGraph.config.tenantId }, req);
-    res.type('html').set('Cache-Control','no-store').send('<!doctype html><meta charset="utf-8"><title>Buyer Log</title><script>try{window.opener&&window.opener.postMessage({type:"BUYER_LOG_OUTLOOK_AUTH",ok:true},location.origin);}catch(e){}window.close();</script><p>Outlook bağlantısı tamamlandı. Bu pencereyi kapatabilirsiniz.</p>');
-  } catch (err) {
-    userId = err && err.userId || userId;
-    const actor = userId && userAccess.allPublicProfiles().find(item => item.id === userId);
-    if (actor) userAccess.appendAudit(actor, 'OUTLOOK_AUTH_FAILED', 'microsoft365', { code: err.code || 'OUTLOOK_AUTH_FAILED' }, req);
-    res.status(Number(err && err.statusCode) || 400).type('html').set('Cache-Control','no-store').send('<!doctype html><meta charset="utf-8"><title>Buyer Log</title><script>try{window.opener&&window.opener.postMessage({type:"BUYER_LOG_OUTLOOK_AUTH",ok:false,message:"Microsoft bağlantısı tamamlanamadı."},location.origin);}catch(e){}window.close();</script><p>Microsoft bağlantısı tamamlanamadı.</p>');
-  }
-});
-// Graph webhook'ları kullanıcı cookie'si taşımaz. Güvenlik; validationToken,
-// clientState, registry, idempotency ve Graph'tan yeniden fetch katmanlarında
-// uygulanır. Webhook yalnız sinyaldir, doğrudan business update yapmaz.
-const outlookWebhookRate = new Map();
-function outlookWebhookAllowed(req) {
-  const key = String(req.ip || req.socket && req.socket.remoteAddress || 'unknown'), time = Date.now();
-  let row = outlookWebhookRate.get(key); if (!row || time > row.resetAt) row = { count:0, resetAt:time + 60000 };
-  row.count += 1; outlookWebhookRate.set(key,row); return row.count <= 300;
-}
-function outlookValidationResponse(req, res) {
-  const token = String(req.query && req.query.validationToken || '');
-  if (!token || token.length > 4096) return false;
-  res.status(200).type('text/plain').set('Cache-Control','no-store').send(token); return true;
-}
-app.get(['/api/outlook/webhook','/api/outlook/lifecycle'], (req,res) => {
-  if (!outlookWebhookAllowed(req)) return res.status(429).end();
-  if (outlookValidationResponse(req,res)) return;
-  res.status(400).json({ error:'validationToken zorunludur.', code:'VALIDATION_TOKEN_REQUIRED' });
-});
-app.post('/api/outlook/webhook', express.json({ limit:'256kb', type:['application/json','text/json'] }), (req,res) => {
-  if (!outlookWebhookAllowed(req)) return res.status(429).end();
-  if (outlookValidationResponse(req,res)) return;
-  try { const result=outlookV2.subscriptions.acceptNotifications(req.body||{}); res.status(202).json({ ok:true,...result }); }
-  catch(err){ apiError(res,err,'Graph bildirimi doğrulanamadı.'); }
-});
-app.post('/api/outlook/lifecycle', express.json({ limit:'256kb', type:['application/json','text/json'] }), (req,res) => {
-  if (!outlookWebhookAllowed(req)) return res.status(429).end();
-  if (outlookValidationResponse(req,res)) return;
-  try { const result=outlookV2.subscriptions.acceptLifecycle(req.body||{}); res.status(202).json({ ok:true,...result }); }
-  catch(err){ apiError(res,err,'Graph lifecycle bildirimi doğrulanamadı.'); }
-});
 app.use(userAccess.requireSelection);
 // Sipariş bazlı düzenlemeler yalnız kullanıcının veri kapsamındaki siparişler
 // için döner (bkz. override-scope.js). Güvenlik ağı: override belgesi taşıyan
@@ -2055,25 +1954,6 @@ app.post('/api/iam/profile-copy', userAccess.requireCapability('USER.PROFILE_COP
 app.post('/api/iam/users/:id/temporary-grants', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '256kb' }), userAccess.temporaryGrantHandler);
 app.delete('/api/iam/users/:id/temporary-grants/:grantId', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '64kb' }), userAccess.temporaryGrantRevokeHandler);
 app.get('/api/iam/audit', userAccess.requireCapability('AUDIT.VIEW'), userAccess.auditListHandler);
-
-// ---- Microsoft 365 / Outlook route'ları (delegated Mail.Read + Mail Intelligence V2) → server/routes/outlook-routes.js ----
-require('./routes/outlook-routes')(app, {
-  LOCAL_DATA_ROOT,
-  apiError,
-  atomicWriteJson,
-  cleanupOrphanExcel,
-  createOutlookGraphService,
-  crypto,
-  express,
-  logRuntimeFailure,
-  outlookGraph,
-  outlookLocal,
-  outlookMail,
-  outlookSetupSettings,
-  outlookV2,
-  userAccess,
-  getConfig: () => config,
-});
 
 // ---- Agent Workflow Platform ------------------------------------------------
 // v5.46: Eski scheduler/web-recorder Agent sistemi tamamen kaldırıldı. Yeni
@@ -2922,8 +2802,7 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
   if(['email','mixed'].includes(purpose)){
     const email=recipe.email||{},fields=(email.reportFields||[]).filter(Boolean);
     const baseSubject=email.subject||recipe.name;
-    // Tek gönderimi yürüten ortak yol: iki kip de buradan geçer, böylece taslak
-    // ve Outlook davranışı ayrışamaz.
+    // E-posta otomasyonları güvenli taslak üretim yolunu kullanır.
     /* v9.47 — Bir grubun yazışma dili. 'auto' kipinde karar satırların kendi
        verisinden gelir; grup içinde karışıklık varsa çoğunluk kazanır (bir
        üreticinin tek bir maili olacak, iki dilde yazılamaz). İngilizce metin
@@ -2942,11 +2821,6 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
       const body=useEn&&email.bodyEn?email.bodyEn:email.body;
       const entry={groupId:group.id,groupName:group.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,rows:mailRows.length,deliveryMode:email.deliveryMode,language:lang};
       if(dryRun)return entry;
-      if(email.deliveryMode==='outlook_send'){
-        const sent=await automationEmail.sendWithOutlook({name:recipe.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,body,rows:mailRows,fields});
-        if(!sent.ok)throw Object.assign(new Error(sent.error||'Outlook gönderimi başarısız.'),{code:'AUTOMATION_EMAIL_SEND_FAILED',statusCode:502});
-        return {...entry,...sent};
-      }
       const open=trigger==='manual'&&email.openDraftOnManual!==false;
       const draft=automationEmail.createDraft({name:recipe.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,body,rows:mailRows,fields,open});
       return {...entry,filename:draft.filename,opened:draft.opened,draftUrl:`/api/automations/mail-drafts/${encodeURIComponent(draft.filename)}`};
@@ -2955,9 +2829,6 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
       const split=automationSplitRecipients(rows,recipe,ownerId);
       if(!split.resolved.length)throw Object.assign(new Error(`"${split.field}" alanındaki hiçbir değer adres defterinde bulunamadı; e-posta gönderilmedi.`),{code:'AUTOMATION_RECIPIENTS_UNRESOLVED',statusCode:400});
       const messages=[];
-      // Outlook COM automation is serialized deliberately; concurrent PowerShell
-      // senders contend for the same desktop Outlook profile. Awaiting each child
-      // keeps the server event loop free without introducing that race.
       for(const part of split.resolved)messages.push(await deliver(part.group,`${baseSubject} · ${part.value}`,email.includeReport===false?[]:part.rows,part.rows));
       result.emails=messages;
       result.email={...messages[0],split:true,messageCount:messages.length,recipientField:split.field};
@@ -11715,7 +11586,7 @@ require('./routes/cp-image-routes')(app, {
 });
 // ---- Fiyatlama e-posta taslakları (.eml) ----
 // Model dosyaları kalıcı MODEL_FILES_ROOT altında saklanır. E-posta taslakları ise
-// kalıcı veri değildir: Outlook/varsayılan istemci açılışında hata olursa kullanıcı
+// kalıcı veri değildir: varsayılan e-posta istemcisi açılışında hata olursa kullanıcı
 // aynı taslağı yeniden açabilsin diye yalnız sınırlı bir retry penceresi boyunca
 // işletim sisteminin geçici klasöründe tutulur; süre bitince otomatik temizlenir.
 const EMAIL_DRAFT_DIR = EMAIL_DRAFT_ROOT;
@@ -11739,7 +11610,7 @@ function deleteTransientDraft(fullPath, attempt=0){
   try{ fs.unlinkSync(fullPath); return; }
   catch(err){
     if(err && err.code==='ENOENT') return;
-    // Outlook dosyayı birkaç saniye kilitli tutabilir. Kalıcı saklama yapmadan,
+    // E-posta istemcisi dosyayı birkaç saniye kilitli tutabilir. Kalıcı saklama yapmadan,
     // kilit kalkana kadar kısa süreli yeniden dene.
     if(attempt<15) setTimeout(()=>deleteTransientDraft(fullPath,attempt+1),2000).unref();
     else logRuntimeFailure('emailDraftCleanup',err);
@@ -11876,7 +11747,7 @@ function buildPricingEml(payload) {
   return lines.join('\r\n');
 }
 // .eml taslağını işletim sisteminin varsayılan e-posta uygulamasında açar (Windows:
-// Outlook/Start-Process, macOS: Mail/open, Linux masaüstü: xdg-open). Açılamazsa false
+// platformun varsayılan e-posta uygulaması). Açılamazsa false
 // döner; UI bu durumda .eml dosyasını indirme bağlantısı olarak sunar.
 function openEmailDraft(fullPath) {
   return platform.openPathExternally(fullPath);
@@ -11904,7 +11775,7 @@ app.post('/api/email-drafts/pricing', (req, res) => {
       return res.json({ok:true,filename,opened:true,transient:true,attachmentBytes,...draftRef});
     }
     // Varsayılan istemci açılamadıysa kullanıcı yine .eml dosyasını indirebilir.
-    // Aynı geçici dosya retry penceresi boyunca korunur; böylece Outlook hazır
+    // Aynı geçici dosya retry penceresi boyunca korunur; böylece e-posta istemcisi hazır
     // olduğunda sonuç ekranından veya Quotations'tan yeniden açma denenebilir.
     return res.json({ok:true,filename,opened:false,transient:true,emlBase64:Buffer.from(emlText,'utf8').toString('base64'),attachmentBytes,...draftRef});
   } catch (err) {
@@ -11912,7 +11783,7 @@ app.post('/api/email-drafts/pricing', (req, res) => {
     apiError(res, err, 'E-posta taslağı oluşturulamadı.');
   }
 });
-// Outlook ilk açılışta hata verirse aynı, henüz süresi dolmamış .eml taslağını
+// E-posta istemcisi ilk açılışta hata verirse aynı, henüz süresi dolmamış .eml taslağını
 // tekrar işletim sistemi e-posta istemcisine gönder. Taslak kimliği rastgele ve
 // yalnız bu çalışan Buyer Log sürecinin RAM'indeki kayıtla eşleşir.
 app.post('/api/email-drafts/pricing/reopen', (req, res) => {
