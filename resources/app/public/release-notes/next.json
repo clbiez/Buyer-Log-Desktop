@@ -1,91 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-03",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Arama satır ilişkisini koruyor",
-    "en": "Search now preserves row relationships"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Excel veya e-postadan kopyalanan çok sütunlu tablolar satır bazında eşleşir; parantezli gruplar elle de kullanılabilir.",
-    "en": "Multi-column tables pasted from Excel or email now match row by row, and the same parenthesized groups can also be typed manually."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "search-row-group-paste",
-      "type": "feature",
-      "module": {
-        "tr": "Buyer Log Arama",
-        "en": "Buyer Log Search"
-      },
-      "title": {
-        "tr": "Tablo yapıştırmalarında satırlar artık karışmıyor",
-        "en": "Pasted table rows no longer get mixed"
-      },
-      "body": {
-        "tr": "Excel veya e-postadan çok sütunlu bir blok yapıştırıldığında her kaynak satırı ayrı bir eşleşme grubuna dönüşür. Örneğin A–1 ve B–2, (A; 1), (B; 2) olarak aranır; A–2 veya B–1 çapraz eşleşmeleri sonuçlara girmez.",
-        "en": "When a multi-column block is pasted from Excel or email, each source row becomes its own match group. For example, A–1 and B–2 are searched as (A; 1), (B; 2), so cross-row A–2 or B–1 combinations are excluded."
-      },
-      "path": {
-        "tr": "CP / Orders / Collection → Arama",
-        "en": "CP / Orders / Collection → Search"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "src": "row-group-search.webp",
-        "alt": {
-          "tr": "Buyer Log CP Tracker üst araç çubuğundaki arama alanı",
-          "en": "Search field in the Buyer Log CP Tracker top toolbar"
-        },
-        "caption": {
-          "tr": "Çok sütunlu tablo arama alanına yapıştırıldığında kaynak satırlar bağımsız eşleşme grupları olarak korunur.",
-          "en": "Pasting a multi-column table into the search field preserves each source row as an independent match group."
-        },
-        "focus": {
-          "x": 64,
-          "y": 0,
-          "w": 28,
-          "h": 34
-        }
-      }
-    },
-    {
-      "id": "search-parenthesized-row-groups",
-      "type": "improvement",
-      "module": {
-        "tr": "Buyer Log Arama",
-        "en": "Buyer Log Search"
-      },
-      "title": {
-        "tr": "Parantezli satır grupları elle de aranabiliyor",
-        "en": "Parenthesized row groups can also be searched manually"
-      },
-      "body": {
-        "tr": "(A; 1), (B; 2) biçimindeki sorgularda parantez içi koşullar birlikte, parantezler ise birbirinden bağımsız alternatifler olarak değerlendirilir. Mevcut virgüllü ve noktalı virgüllü arama sözdizimi değişmeden çalışmaya devam eder.",
-        "en": "In queries such as (A; 1), (B; 2), conditions inside each parenthesis must match together, while each parenthesized group is an independent alternative. Existing comma and semicolon search syntax continues to work unchanged."
-      },
-      "path": {
-        "tr": "CP / Orders / Collection → Arama",
-        "en": "CP / Orders / Collection → Search"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "src": "row-group-search.webp",
-        "alt": {
-          "tr": "Buyer Log CP Tracker üst araç çubuğundaki arama alanı",
-          "en": "Search field in the Buyer Log CP Tracker top toolbar"
-        },
-        "caption": {
-          "tr": "Parantezli gruplar aynı satırdaki koşulları birlikte, grupları ise ayrı alternatifler olarak arar.",
-          "en": "Parenthesized groups match conditions together within a row while treating each group as a separate alternative."
-        },
-        "focus": {
-          "x": 64,
-          "y": 0,
-          "w": 28,
-          "h": 34
-        }
-      }
-    }
-  ]
+  "changes": []
 }

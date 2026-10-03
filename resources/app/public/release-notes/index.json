@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.212",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Arama satır ilişkisini koruyor",
+        "en": "Search now preserves row relationships"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.212/release.json"
+    },
+    {
       "version": "7.0.211",
       "publishedAt": "2026-10-03",
       "title": {
