@@ -19,13 +19,6 @@ const ROLE_DEFAULT_SCOPE = Object.freeze({ buyer: 'SELF', manager: 'MMYG', senio
 const USER_STATUSES = Object.freeze({ ACTIVE: 'Aktif', INACTIVE: 'Pasif', SUSPENDED: 'Askıya Alındı' });
 const DATA_SCOPE_MODES = Object.freeze({ SELF: 'Kendi Verisi', TEAM: 'Ekibi', MMYG: 'MMYG', MAG: 'MAG', ALL: 'Tümü', CUSTOM: 'Özel' });
 const ACTIONS = Object.freeze(['VIEW', 'CREATE', 'EDIT', 'DELETE', 'APPROVE', 'EXPORT', 'MANAGE', 'GRANT', 'PROFILE_COPY', 'SEARCH', 'LINK', 'PIN', 'TIMELINE_VIEW', 'ATTACHMENT_VIEW', 'AI_SUMMARY', 'ADMIN']);
-const OUTLOOK_MAIL_SEARCH = 'OUTLOOK.SEARCH';
-const OUTLOOK_V2_PERMISSIONS = Object.freeze([
-  'OUTLOOK_SHARED_MAIL.SEARCH', 'OUTLOOK_MAIL.LINK', 'OUTLOOK_MAIL.PIN',
-  'OUTLOOK_MAIL.TIMELINE_VIEW', 'OUTLOOK_MAIL.ATTACHMENT_VIEW',
-  'OUTLOOK_MAIL.AI_SUMMARY', 'OUTLOOK_INTELLIGENCE.VIEW',
-  'OUTLOOK_INTELLIGENCE.ADMIN', 'OUTLOOK_MANAGED_MAILBOX.ADMIN',
-]);
 const RESOURCES = Object.freeze({
   OVERVIEW: { tr: 'Genel Bakış', en: 'Overview', actions: ['VIEW', 'EXPORT'], safe: true },
   CP: { tr: 'CP', en: 'CP', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'EXPORT'], safe: true },
@@ -39,11 +32,6 @@ const RESOURCES = Object.freeze({
   SHIPPING: { tr: 'Nakliye Kıyaslama', en: 'Shipping Comparison', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'EXPORT'] },
   AGENTS: { tr: 'Agent Workflow Studio', en: 'Agent Workflow Studio', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'APPROVE', 'MANAGE'] },
   AUTOMATIONS: { tr: 'Otomasyonlar', en: 'Automations', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'APPROVE', 'MANAGE'] },
-  OUTLOOK: { tr: 'Outlook Sipariş Mailleri', en: 'Outlook Order Emails', actions: ['SEARCH'], safe: true },
-  OUTLOOK_SHARED_MAIL: { tr: 'Outlook Ortak Mailbox', en: 'Outlook Shared Mailbox', actions: ['SEARCH'], safe: true },
-  OUTLOOK_MAIL: { tr: 'Outlook Mail İşlemleri', en: 'Outlook Mail Actions', actions: ['LINK', 'PIN', 'TIMELINE_VIEW', 'ATTACHMENT_VIEW', 'AI_SUMMARY'], safe: true },
-  OUTLOOK_INTELLIGENCE: { tr: 'Outlook Mail Intelligence', en: 'Outlook Mail Intelligence', actions: ['VIEW', 'ADMIN'] },
-  OUTLOOK_MANAGED_MAILBOX: { tr: 'Yönetilen Microsoft Mailbox', en: 'Managed Microsoft Mailbox', actions: ['ADMIN'], security: true },
   SOURCE_DATA: { tr: 'Kaynak Veri', en: 'Source Data', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'EXPORT', 'MANAGE'] },
   USER: { tr: 'Kullanıcı Yönetimi', en: 'User Management', actions: ['VIEW', 'CREATE', 'EDIT', 'MANAGE', 'GRANT', 'PROFILE_COPY'], security: true },
   ROLE: { tr: 'Rol Yönetimi', en: 'Role Management', actions: ['VIEW', 'MANAGE'], security: true },
@@ -272,10 +260,6 @@ function migrateStore(store) {
   const previousIamVersion = Number(store && store.iam && store.iam.version) || 0;
   const roles = normalizeRoles(store && store.iam && store.iam.roles);
   if (previousIamVersion < 2 && !roles.moderator.permissions.includes('USER.PROFILE_COPY')) roles.moderator.permissions.push('USER.PROFILE_COPY');
-  if (previousIamVersion < 4 && !roles.moderator.permissions.includes('OUTLOOK.SEARCH')) roles.moderator.permissions.push('OUTLOOK.SEARCH');
-  if (previousIamVersion < 5) for (const permission of OUTLOOK_V2_PERMISSIONS) {
-    if (!roles.moderator.permissions.includes(permission)) roles.moderator.permissions.push(permission);
-  }
   const workspaceTemplates = normalizeWorkspaceTemplates(store && store.iam && store.iam.workspaceTemplates);
   next.iam = { version: 5, roles, workspaceTemplates, migratedAt: clean(store && store.iam && store.iam.migratedAt) || new Date().toISOString() };
   if (next.moderator) next.moderator = normalizeProfileIam(next.moderator);
@@ -389,7 +373,7 @@ function rowInScope(row, scope) {
 function filterRows(profile, rows, store) { const scope = effectiveDataScope(profile, store); return (Array.isArray(rows) ? rows : []).filter(row => rowInScope(row, scope)); }
 
 module.exports = {
-  ORG_LEVELS, ORG_LEVEL_RANK, SYSTEM_ROLES, ROLE_DEFAULT_SCOPE, USER_STATUSES, DATA_SCOPE_MODES, ACTIONS, OUTLOOK_MAIL_SEARCH, OUTLOOK_V2_PERMISSIONS, RESOURCES,
+  ORG_LEVELS, ORG_LEVEL_RANK, SYSTEM_ROLES, ROLE_DEFAULT_SCOPE, USER_STATUSES, DATA_SCOPE_MODES, ACTIONS, RESOURCES,
   PERMISSION_REGISTRY, PERMISSION_CODES, SECURITY_PERMISSIONS, SAFE_VIEW_PERMISSIONS, BUYER_DEFAULT_PERMISSIONS, SHARED_SETTINGS_PERMISSION, ROLE_DEFAULTS_REVISION, LEGACY_AREA_RESOURCE,
   normalizeProfileIam, normalizeRoles, normalizeWorkspaceTemplates, migrateStore, identityKeys, findDuplicate, descendants, validateHierarchy,
   assignedPermissionDetails, effectivePermissionDetails, effectivePermissionSet, hasPermission, isSecurityPermission,
