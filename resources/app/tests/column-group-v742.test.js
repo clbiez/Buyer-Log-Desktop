@@ -199,11 +199,16 @@ test('v7.42 · syncColumns sütuna seçilen grubu verir', () => {
   assert.doesNotMatch(fn, /group: 'Hesaplanan'/, 'grup artık sabit değil');
 });
 
-test('v7.42 · sıra YALNIZ sütun yeniyken ya da grubu değişince kurulur', () => {
-  /* Aksi hâlde her eşitleme, kullanıcının elle sürüklediği sırayı geri alırdı. */
+test('v7.42 · sıra YALNIZ gerçekten yeni sütunda ya da gerçek grup değişikliğinde kurulur', () => {
+  /* Geç yüklenen persisted sütun "yeni" sayılmaz; aksi hâlde kullanıcının
+     elle sürüklediği sıra her açılışta tekrar grup sonuna taşınırdı. */
   const fn = extractFunction(FC, 'syncColumns');
+  assert.match(fn, /const knownBefore = new Set\(manager\.order\);/);
+  assert.match(fn, /persistedBefore = new Set\(window\.BLColumnState/);
+  assert.match(fn, /const isNew = !knownBefore\.has\(col\.k\) && !persistedBefore\.has\(col\.k\);/);
   assert.match(fn, /const placed = col\.formulaDef && col\.formulaDef\._placedGroup;/);
-  assert.match(fn, /if \(isNew \|\| nameKey\(placed \|\| ''\) !== nameKey\(col\.group\)\) \{/);
+  assert.match(fn, /const groupChanged = Boolean\(placed\) && nameKey\(placed\) !== nameKey\(col\.group\);/);
+  assert.match(fn, /if \(isNew \|\| groupChanged\) \{/);
   assert.match(fn, /placeInGroup\(tableKey, col\.k, col\.group\);/);
   assert.match(fn, /rememberPlacedGroup\(tableKey, col\.formulaId, col\.group\);/);
 });
@@ -244,10 +249,14 @@ test('v7.42 · veri tabanı sütunu da seçilen grubu alır, boşsa Database', (
   assert.match(APP, /const DEFAULT_MODEL_COLUMN_GROUP='Database';/);
 });
 
-test('v7.42 · veri tabanı sütunu da yalnız yeniyken/grubu değişince taşınır', () => {
+test('v7.42 · veri tabanı sütunu persisted sırayı korur; yalnız yeni/grup değişikliğinde taşınır', () => {
   const fn = extractFunction(APP, 'syncCpModelColumns');
   assert.match(fn, /const previousGroup=new Map\(CP_MODEL_COLUMN_DEFS\.map\(d=>\[d\.header,d\.group\|\|DEFAULT_MODEL_COLUMN_GROUP\]\)\);/);
-  assert.match(fn, /if\(isNew\|\|groupKey\(previousGroup\.get\(c\.k\)\|\|''\)!==groupKey\(c\.group\)\)placeColumnInGroup\('cp',c\.k,c\.group\);/);
+  assert.match(fn, /persistedBefore=new Set\(savedColumnOrderKeys\('cp'\)\)/);
+  assert.match(fn, /restoreLateManagedColumnState\('cp'\)/);
+  assert.match(fn, /const isNew=!knownBefore\.has\(c\.k\)&&!persistedBefore\.has\(c\.k\);/);
+  assert.match(fn, /const groupChanged=previousGroup\.has\(c\.k\)&&groupKey\(previousGroup\.get\(c\.k\)\|\|''\)!==groupKey\(c\.group\);/);
+  assert.match(fn, /if\(isNew\|\|groupChanged\)placeColumnInGroup\('cp',c\.k,c\.group\);/);
 });
 
 test('v7.42 · sunucu grubu saklar; uydurmaz (§152)', () => {
