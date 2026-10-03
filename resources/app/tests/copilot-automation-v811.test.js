@@ -150,15 +150,11 @@ test('otomatik gönderim yalnız açıkça istendiğinde seçilir', () => {
   assert.equal(draft.deliveryMode, 'draft', 'taslak denmişse gönderim seçilmemeli');
 });
 
-test('üretilen deliveryMode değerlerini sunucu GERÇEKTEN tanır', () => {
-  /* Sunucu tanımadığı değeri sessizce "draft"a düşürür. İstemci 'send'
-     üretseydi, "GÖNDERİLİR" yazan önizlemenin ardından taslak oluşurdu —
-     yani kullanıcıya yalan söylenmiş olurdu. Bu test iki tarafın sabitlerini
-     birbirine bağlar; biri değişirse burası kırılır. */
-  const allowed = /\['draft','([a-z_]+)'\]\.includes\(clean\(item\.deliveryMode\)\)/.exec(RECIPE_STORE);
-  assert.ok(allowed, 'sunucudaki teslimat sabitleri okunabilmeli');
-  assert.match(COPILOT, new RegExp(`'${allowed[1]}':'draft'`),
-    `istemci sunucunun tanıdığı '${allowed[1]}' değerini üretmeli`);
+test('deliveryMode her iki tarafta da yalnız TASLAK olarak sabitlenir', () => {
+  assert.match(RECIPE_STORE, /deliveryMode:'draft'/,
+    'sunucu otomatik gönderim kipi kabul etmemeli');
+  assert.match(COPILOT, /deliveryMode:'draft'/,
+    'istemci yalnız taslak kipi üretmeli');
 });
 
 /* --------------------------------------------------------------- TARİF */
@@ -299,12 +295,14 @@ test('önizleme grubu, günü, saati ve teslimat kipini AÇIKÇA yazar', () => {
   assert.match(html, /data-bcp-confirm/, 'onay düğmesi olmalı');
 });
 
-test('otomatik gönderim önizlemede saklanmaz', () => {
+test('otomatik gönderim önizlemede sunulmaz', () => {
   const intent = copilot.parseAutomationIntent('her pazartesi lcw grubuna cp raporu gönder', GROUPS);
   const proposal = actions.propose(
     { type: 'automation.recipe.create', payload: copilot.automationRecipePayload(intent) },
     { hasArea: () => true });
-  assert.match(copilot.renderProposal(proposal), /OTOMATİK GÖNDERİLİR/);
+  const html = copilot.renderProposal(proposal);
+  assert.match(html, /gönderilmez/, 'yalnız taslak davranışı açıkça yazılmalı');
+  assert.doesNotMatch(html, /OTOMATİK GÖNDERİLİR/, 'kaldırılan otomatik gönderim kipi görünmemeli');
 });
 
 /* Kayıt yolunun KENDİSİ çalıştırılır; teste bir kopyası yazılmaz. Kopya
