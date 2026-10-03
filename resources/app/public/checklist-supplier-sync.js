@@ -622,6 +622,23 @@
     } catch (_) { return null; }
   }
   async function prepareRowModelImage(row) {
+    // CP/Orders dışa aktarımında kullanılan kanonik çözücü, viewport/lazy-load
+    // durumundan bağımsız gerçek görseli data URL olarak üretir. Checklist
+    // Excel'i de aynı yolu kullanır; böylece ekranda görünen model Excel'de
+    // "boş" kalmaz.
+    if (typeof root.cpOrdersRowImageDataUrl === 'function') {
+      try {
+        const dataUrl = await root.cpOrdersRowImageDataUrl(row);
+        if (dataUrl) {
+          if (typeof root.kolPrepareExcelImage === 'function') {
+            const prepared = await root.kolPrepareExcelImage(dataUrl);
+            if (prepared && prepared.dataUrl) return prepared;
+          }
+          const prepared = await dataUrlPreparedImage(dataUrl);
+          if (prepared && prepared.dataUrl) return prepared;
+        }
+      } catch (_) {}
+    }
     const plm = visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']);
     const colourCode = visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']);
     const colour = visibleValue(row, ['Colour', 'Color', 'Renk']);
@@ -641,15 +658,24 @@
   }
 
   function imagePlacement(prepared, rowNo, columnNo) {
-    if (typeof root.kolExcelImageAspectLockedPlacement === 'function') {
-      try { return root.kolExcelImageAspectLockedPlacement(prepared, rowNo, 72, 46, columnNo); } catch (_) {}
-    }
     const naturalW = Math.max(1, Number(prepared && prepared.width) || 1);
     const naturalH = Math.max(1, Number(prepared && prepared.height) || 1);
-    const scale = Math.min(66 / naturalW, 40 / naturalH, 1);
-    const width = Math.max(1, Math.round(naturalW * scale));
-    const height = Math.max(1, Math.round(naturalH * scale));
-    return { tl: { col: columnNo - 1 + 0.08, row: rowNo - 1 + 0.08 }, ext: { width: width, height: height } };
+    const maxW = 66, maxH = 44;
+    const scale = Math.min(maxW / naturalW, maxH / naturalH, 1);
+    const width = Math.max(1, naturalW * scale), height = Math.max(1, naturalH * scale);
+    // Excel drawing = two-cell anchor. Bu, Excel'deki "Hücrelerle taşı ve
+    // boyutlandır" davranışının OOXML karşılığıdır. Görsel başlangıçta oranı
+    // korunarak hücrenin içine oturur; satır/sütun boyutu değişirse onunla taşınır.
+    const cellW = 72, cellH = 50;
+    const left = columnNo - 1 + 0.05, top = rowNo - 1 + 0.06;
+    return {
+      tl: { col: left, row: top },
+      br: {
+        col: Math.min(columnNo - 0.03, left + Math.min(0.90, width / cellW)),
+        row: Math.min(rowNo - 0.03, top + Math.min(0.88, height / cellH)),
+      },
+      editAs: 'twoCell',
+    };
   }
   const CHECKLIST_EXCEL_COLORS = Object.freeze({
     navy: 'FF2A3E52', ink: 'FF101828', ink2: 'FF475467', muted: 'FF98A2B3',
