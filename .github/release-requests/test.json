@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.225",
-  "commit_sha": "178aad5cf2d93ae1d44962d554e1b5dc816af520",
-  "release_notes": "Buyer Log 7.0.225: Shared Hub bağlı görünürken kullanıcı adımının 0 kullanıcı / 0 aktif kalmasına neden olan masaüstü kimlik deposu kurtarma hatası giderildi. Portable kurulumlarda data-BACKUP, eski data/auth, migration evidence, legacy server/data ve önceki Windows AppData kullanıcı depoları güvenli ve sınırlı biçimde kontrol edilerek en güçlü geçerli kullanıcı deposu otomatik kurtarılıyor. Ayrıca sıfır kullanıcı artık başarılı Shared Sync olarak gösterilmiyor.",
-  "request_id": "7.0.225-r1"
+  "version": "7.0.226",
+  "commit_sha": "b67f42a72ac1cb1d902eaa43d57ab7825561bedf",
+  "release_notes": "Buyer Log 7.0.226: Kullanıcı dizini kurtarma kapsamı genişletildi. Eski Buyer Log kurulumları, resources/app/data içindeki eski auth yapıları, iç içe migration-evidence kimlik kopyaları, portable AppData ve data-BACKUP konumları güvenli ve sınırlı biçimde taranıyor. Yeni fakat kullanılamaz boş bir cache artık daha eski fakat geçerli kullanıcı deposunun geri yüklenmesini engellemiyor.",
+  "request_id": "7.0.226-r1"
 }
