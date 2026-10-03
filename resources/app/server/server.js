@@ -5194,6 +5194,13 @@ require('./routes/plm-request-routes')(app, {
   userAccess,
   withPlmJob,
 });
+/* Checklist ↔ CP ↔ Supplier Excel: shared checklist headings and answers. */
+require('./routes/checklist-supplier-routes')(app, {
+  automationError,
+  checklistSupplierStore: require('./lib/checklist-supplier-store'),
+  express,
+  userAccess,
+});
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
    PASS'e (LC Waikiki intranet raporlama sistemi) bağlanıp
