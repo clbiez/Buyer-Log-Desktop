@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.222",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Checklist ve Kurallar yeniden tasarlandı",
+        "en": "Checklist and Rules redesigned"
+      },
+      "stats": {
+        "features": 4,
+        "improvements": 2,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.222/release.json"
+    },
+    {
       "version": "7.0.221",
       "publishedAt": "2026-10-03",
       "title": {
