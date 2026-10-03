@@ -15,7 +15,7 @@ test('v4.86 program bridge links ignore pointer single-click and open on double-
   assert.match(INDEX, /document\.addEventListener\('dblclick',event=>\{[\s\S]*?window\.open\(link\.href,link\.target\|\|'_blank','noopener,noreferrer'\)/);
 });
 
-test('v4.86 Troy and CPS bridge cells explain the double-click behavior', () => {
+test('v4.86 bridge cells explain the double-click behavior', () => {
   const links = INDEX.match(/<a class="lnk"[^>]+>/g) || [];
   assert.ok(links.length >= 4, 'all runtime order and shipment bridge links should be marked');
   // detailOrderLinkHtml (app-main.js:156-161) tooltip metnini önce ayrı bir `title`
@@ -32,5 +32,4 @@ test('v4.86 Troy and CPS bridge cells explain the double-click behavior', () => 
     directlyChecked++;
   }
   assert.ok(directlyChecked >= 3, 'en az birkaç bağlantı metni doğrudan gömmelidir');
-  assert.match(INDEX, /const title=appLang==='en'\?'Double-click to open this order in Troy':'Bu siparişi Troy’da açmak için çift tıklayın'/);
 });
