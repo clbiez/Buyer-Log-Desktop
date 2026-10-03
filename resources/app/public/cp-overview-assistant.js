@@ -139,6 +139,31 @@
         state.hidden = raw.hidden && typeof raw.hidden === 'object' ? raw.hidden : {};
         state.deletedRuleIds = Array.isArray(raw.deletedRuleIds) ? [...new Set(raw.deletedRuleIds.map(String).filter(Boolean))] : [];
         state.rules = Rules.mergeWithDefaults(raw.rules, state.deletedRuleIds);
+
+        /* v9.49 ve öncesinde ön tanımlı checklist ayarları rules içinde değil,
+           checklistSettings.items altında tutuluyordu. İlk geçişte kullanıcının
+           aç/kapat ve gün eşiği tercihlerini kaybetmeden yeni rule kayıtlarına
+           taşırız. Rule daha önce yeni editörden kaydedildiyse ona dokunmayız. */
+        const savedRuleIds = new Set((Array.isArray(raw.rules) ? raw.rules : [])
+          .map(rule => String(rule && rule.id || '')).filter(Boolean));
+        for (const id of (Rules.DEFAULT_CHECKLIST_RULE_IDS || [])) {
+          if (savedRuleIds.has(id) || state.deletedRuleIds.includes(id)) continue;
+          const rule = state.rules.find(item => item.id === id && item.kind === 'checklist');
+          const config = state.checklistSettings.items && state.checklistSettings.items[id];
+          if (!rule || !config) continue;
+          rule.enabled = config.enabled !== false;
+          const limit = Number(config.maxDaysToLoad);
+          if (!Number.isFinite(limit)) continue;
+          const daysCondition = (rule.conditions || []).find(condition =>
+            condition.field === '@daysToLoad' && condition.operator === 'lte');
+          if (daysCondition) {
+            daysCondition.value = limit;
+            if (daysCondition.right) daysCondition.right.value = limit;
+          }
+          if (rule.mode === 'formula' && rule.formula) {
+            rule.formula = rule.formula.replace(/(\[@daysToLoad\]<=)-?\d+(?:\.\d+)?/, `$1${limit}`);
+          }
+        }
         state.attentionColumns = normalizeAttentionColumns(raw.attentionColumns);
         state.attentionExclusions = normalizeAttentionExclusions(raw.attentionExclusions || raw.attentionExceptions);
         state.moduleLayout = normalizeModuleLayouts(raw.moduleLayout);
