@@ -10253,25 +10253,91 @@ app.get('/api/transit-analysis', (req, res) => {
 });
 // Excel'siz yol: Backlog'un kanonik ASAS + IAS veri kümesinden canlı hesap.
 // Kullanıcının kaynak ufku ve yetki kapsamı Backlog ile aynı uygulanır.
+// Yol Süresi Analizi canlı hesabı. İki kapsam:
+//   scope=company (varsayılan) → modülün KENDİ IAS database ufku: IAS bağlantısı
+//     kullanıcı/Backlog ufku olmadan, yalnız seçilen tarih penceresiyle ayrıca
+//     sorgulanır. Backlog runtime'ına bağlı değildir; tüm ülke/taşıtlar gelir.
+//     Kapsam dışı veriyi toplu gösterdiği için iş kuralı yönetme yetkisi gerekir.
+//   scope=filtered → Backlog'un kanonik ASAS + IAS kümesi (ufuk + yetki kapsamı).
+// window=w1..w12|m1..m12|m18|y1..y3|all · refresh=1 sunucu önbelleğini atlar.
+// Uyarılar {tr,en} çiftidir; istemci aktif dili seçer.
+const transitCompanyCache = new Map();
+const TRANSIT_COMPANY_CACHE_MS = 15 * 60 * 1000;
 app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backlog'), async (req, res) => {
   try {
-    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['backlog'], req);
-    if (!filterStatus.ready) {
-      return res.json({ analysis: null, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr') });
+    const scope = req.query.scope === 'filtered' ? 'filtered' : 'company';
+    const window = BLTransitAnalysis.WINDOW_KEYS.includes(String(req.query.window || '')) ? String(req.query.window) : 'y1';
+    const force = req.query.refresh === '1';
+    if (scope === 'company' && !userAccess.hasPermission(req.currentUser, 'manageBusinessRules')) {
+      return res.status(403).json({ error: 'IAS database kapsamı için iş kuralı yönetme yetkisi gerekir.', errorEn: 'Managing business rules permission is required for the IAS database scope.', code: 'PERMISSION_REQUIRED', permission: 'manageBusinessRules' });
     }
-    const runtime = cacheForUser(id);
-    if (!runtime.asasOrders) await ensureDataLoaded(id);
-    await ensureBacklogSourceFields(id);
-    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
-    const orders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser, 'backlog', ordersForTarget(active, 'backlog', overrides)));
+    const id = sourceUserId(req);
+    const overrides = effectiveOverridesForUser(id);
     const mode = ['database', 'dashboard'].includes(overrides.antrepoSourceMode) ? overrides.antrepoSourceMode : 'excel';
     const label = { database: 'Database', dashboard: 'Power BI Dashboard', excel: 'Excel' }[mode];
-    const analysis = transitAnalysisSource.buildLiveAnalysis({
-      orders, antrepoMap: antrepoForTarget(active, 'backlog'), overrides,
-      sourceLabel: `Buyer Log IAS (Antrepo · ${label}) parsiyelleri`,
-    });
-    res.json({ analysis, antrepoSourceMode: mode, orderCount: orders.length });
-  } catch (err) { apiError(res, err, 'Yol süresi analizi Buyer Log verisinden hesaplanamadı.'); }
+    const warnings = [];
+    const diag = { queriedAt: new Date().toISOString(), cacheHit: false, rowsFetched: null, addedFields: [] };
+    // Backlog runtime'ı yalnız ülke yedeği / filtreli kapsam için okunur; IAS
+    // database kapsamında yüklenememesi hesabı durdurmaz.
+    let active = null;
+    try {
+      if (!cacheForUser(id).asasOrders) await ensureDataLoaded(id);
+      if (scope === 'filtered') await ensureBacklogSourceFields(id);
+      active = cacheForUser(id);
+    } catch (err) {
+      if (scope === 'filtered') throw err;
+      warnings.push({ tr: `Buyer Log sipariş verisi okunamadı; ülke yalnız IAS sütunundan alınır: ${err.message}`, en: `Buyer Log order data could not be read; country comes only from the IAS column: ${err.message}` });
+    }
+    let orders = [], antrepoMap = {}, sourceLabel;
+    if (scope === 'filtered') {
+      const filterStatus = sourceFilterReadiness(['backlog'], req);
+      if (!filterStatus.ready) {
+        return res.json({ analysis: null, scope, window, sourceFilterRequired: true, message: sourceFilterReadinessMessage(filterStatus, 'tr'), messageEn: sourceFilterReadinessMessage(filterStatus, 'en') });
+      }
+      orders = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser, 'backlog', ordersForTarget(active, 'backlog', overrides)));
+      antrepoMap = antrepoForTarget(active, 'backlog');
+      sourceLabel = `Buyer Log IAS (Antrepo · ${label}) · Backlog`;
+      diag.rowsFetched = Object.keys(antrepoMap || {}).length;
+    } else {
+      // Ülke yedeği için kapsam süzmesi uygulanmamış sipariş kümesi; yalnız
+      // toplu ülke etiketi olarak kullanılır, satır düzeyinde dışarı verilmez.
+      orders = active ? ordersForTarget(active, 'backlog', overrides) : [];
+      const modelRefresh = require('./lib/model-refresh');
+      const antrepoItem = modelRefresh.selectRefreshConnections(loadModelConnections().items, { includeAsas: false, includeAntrepo: true }).antrepo;
+      if (antrepoItem) {
+        const range = BLTransitAnalysis.windowRange(window, new Date().toISOString().slice(0, 10));
+        const cacheKey = `${antrepoItem.id || ''}|${window}|${range.from}`;
+        let cached = transitCompanyCache.get(cacheKey);
+        if (force || !cached || Date.now() - cached.at > TRANSIT_COMPANY_CACHE_MS) {
+          const company = await transitAnalysisSource.queryCompanyIasRows({
+            item: JSON.parse(JSON.stringify(antrepoItem)), matchRule: overrides.antrepoMatchConfig,
+            fromDate: range.from, toDate: range.to,
+            deps: { discoverSchema: modelQuery.discoverSchema, queryConnectionRows: modelRefresh.queryConnectionRows, normalizeMappingEntry: modelFields.normalizeMappingEntry },
+          });
+          cached = { at: Date.now(), map: parseLib.parseAntrepoRows(company.rows, overrides.antrepoMatchConfig), rows: company.rows.length, addedFields: company.addedFields, warnings: company.warnings };
+          transitCompanyCache.set(cacheKey, cached);
+        } else diag.cacheHit = true;
+        antrepoMap = cached.map;
+        diag.rowsFetched = cached.rows;
+        diag.queriedAt = new Date(cached.at).toISOString();
+        diag.addedFields = cached.addedFields;
+        cached.warnings.forEach(text => warnings.push({ tr: text, en: text }));
+        const mapped = Object.keys(antrepoItem.mapping || {}).includes('Ürün Menşei'); // i18n-ignore
+        if (!mapped && !cached.addedFields.includes('Ürün Menşei')) { // i18n-ignore
+          warnings.push({ tr: 'IAS modelinde "Ürün Menşei" sütunu bulunamadı; ülke yalnız Buyer Log\'daki ASAS siparişleriyle eşleşen parsiyellerde biliniyor.', en: 'No "Ürün Menşei" column was found in the IAS model; the country is only known for partials that match Buyer Log ASAS orders.' });
+        }
+        sourceLabel = `IAS Database (${antrepoItem.name || antrepoItem.catalog || 'Antrepo'})`;
+      } else {
+        // Veri modeli bağlantısı yoksa ayrı sorgu kurulamaz: Buyer Log'un okuduğu IAS satırları.
+        antrepoMap = active ? antrepoForTarget(active, 'backlog') : {};
+        diag.rowsFetched = Object.keys(antrepoMap || {}).length;
+        warnings.push({ tr: `Aktif IAS veri modeli bağlantısı yok; Buyer Log'un ${label} kaynağından okuduğu IAS satırları kullanıldı.`, en: `No active IAS data model connection; the IAS rows Buyer Log read from its ${label} source were used.` });
+        sourceLabel = `Buyer Log IAS (Antrepo · ${label})`;
+      }
+    }
+    const analysis = transitAnalysisSource.buildLiveAnalysis({ orders, antrepoMap, overrides, sourceLabel, window, scope });
+    res.json({ analysis, scope, window, antrepoSourceMode: mode, orderCount: Array.isArray(orders) ? orders.length : 0, warnings, diag });
+  } catch (err) { apiError(res, err, 'Yol süresi analizi hesaplanamadı.'); }
 });
 app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
   try {

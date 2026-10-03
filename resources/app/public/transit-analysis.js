@@ -321,11 +321,63 @@
     const d = b - a;
     return d < MIN_SPAN || d > MAX_SPAN ? null : d;
   }
+  /* Hesaplama penceresi: son N hafta / ay / yıl. Pencere sevkiyatın baz tarihine
+     (antrepo giriş ya da fiili yükleme) uygulanır; bitiş bugündür. */
+  const WINDOW_KEYS = Object.freeze([
+    ...Array.from({ length: 12 }, (_, i) => 'w' + (i + 1)),
+    ...Array.from({ length: 12 }, (_, i) => 'm' + (i + 1)), 'm18',
+    'y1', 'y2', 'y3', 'all',
+  ]);
+  function isoFromOrdinal(ord) { return new Date(ord * 86400000).toISOString().slice(0, 10); }
+  function windowRange(key, today) {
+    const k = WINDOW_KEYS.includes(key) ? key : 'all';
+    const end = dayOrdinal(today || new Date().toISOString().slice(0, 10));
+    const m = k.match(/^([wmy])(\d+)$/);
+    if (!m || end == null) return { key: 'all', from: '', to: today || '', granularity: 'month' };
+    const n = Number(m[2]);
+    let start;
+    if (m[1] === 'w') start = end - n * 7 + 1;
+    else {
+      const d = new Date(end * 86400000);
+      const months = m[1] === 'm' ? n : n * 12;
+      start = Math.round(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() - months, d.getUTCDate()) / 86400000) + 1;
+    }
+    // Kısa pencerede aylık kırılım tek-iki noktaya iner; 12 haftaya kadar haftalık.
+    return { key: k, from: isoFromOrdinal(start), to: isoFromOrdinal(end), granularity: m[1] === 'w' ? 'week' : 'month' };
+  }
+  function windowLabel(key, lang) {
+    const en = lang === 'en';
+    const m = String(key || '').match(/^([wmy])(\d+)$/);
+    if (!m) return en ? 'All dates' : 'Tüm tarihler';
+    const n = Number(m[2]);
+    const UNITS = { w: { tr: 'hafta', en: 'week' }, m: { tr: 'ay', en: 'month' }, y: { tr: 'yıl', en: 'year' } };
+    const unit = UNITS[m[1]];
+    return en ? `Last ${n} ${unit.en}${n > 1 ? 's' : ''}` : `Son ${n} ${unit.tr}`;
+  }
+  // ISO hafta: YYYYWW (Pazartesi başlangıçlı, perşembe kuralı).
+  function isoWeekOf(value) {
+    const ord = dayOrdinal(value);
+    if (ord == null) return '';
+    const d = new Date(ord * 86400000);
+    const day = (d.getUTCDay() + 6) % 7;
+    const thursday = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - day + 3));
+    const firstThursday = new Date(Date.UTC(thursday.getUTCFullYear(), 0, 4));
+    const week = 1 + Math.round(((thursday - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+    return String(thursday.getUTCFullYear()) + String(week).padStart(2, '0');
+  }
   function monthOf(value) { const m = String(value || '').match(/^(\d{4})-(\d{2})/); return m ? m[1] + m[2] : ''; }
 
   function buildFromShipments(shipments, meta = {}) {
     const today = dayOrdinal(meta.today || new Date().toISOString().slice(0, 10));
-    const stats = { total: 0, used: 0, notArrived: 0, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0 };
+    const stats = { total: 0, used: 0, notArrived: 0, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0, outOfWindow: 0 };
+    const from = dayOrdinal(meta.fromDate);
+    const to = dayOrdinal(meta.toDate);
+    const granularity = meta.granularity === 'week' ? 'week' : 'month';
+    const periodOf = granularity === 'week' ? isoWeekOf : monthOf;
+    const inWindow = value => {
+      const d = dayOrdinal(value);
+      return d != null && (from == null || d >= from) && (to == null || d <= to);
+    };
     const groups = new Map();
     const stepGroups = new Map();
     const add = (map, id, seed) => { if (!map.has(id)) map.set(id, { ...seed, items: [] }); return map.get(id); };
@@ -342,6 +394,9 @@
       if (today != null && entry > today) { stats.notArrived += 1; continue; }
       const endToEnd = span(s.loadingRequest, s.warehouseEntry);
       if (endToEnd == null || endToEnd < 0) { stats.outOfRange += 1; continue; }
+      const entryInWindow = inWindow(s.warehouseEntry);
+      const loadingInWindow = !!s.actualLoading && inWindow(s.actualLoading);
+      if (!entryInWindow && !loadingInWindow) { stats.outOfWindow += 1; continue; }
       const departure = s.actualLoading || s.handover;
       const item = {
         qty: Math.max(0, Math.round(num(s.qty) || 0)),
@@ -358,17 +413,19 @@
         },
       };
       stats.used += 1;
-      const period = monthOf(s.warehouseEntry);
-      add(groups, ['warehouse', vehicle, country, period].join('|'), { basis: 'warehouse', vehicle, country, period }).items.push(item);
-      add(stepGroups, ['warehouse', vehicle, country, period.slice(0, 4)].join('|'), { basis: 'warehouse', vehicle, country, year: period.slice(0, 4) }).items.push(item);
-      if (s.actualLoading && dayOrdinal(s.actualLoading) != null) {
-        const lp = monthOf(s.actualLoading);
+      if (entryInWindow) {
+        const period = periodOf(s.warehouseEntry);
+        add(groups, ['warehouse', vehicle, country, period].join('|'), { basis: 'warehouse', vehicle, country, period }).items.push(item);
+        add(stepGroups, ['warehouse', vehicle, country, period.slice(0, 4)].join('|'), { basis: 'warehouse', vehicle, country, year: period.slice(0, 4) }).items.push(item);
+      }
+      if (loadingInWindow) {
+        const lp = periodOf(s.actualLoading);
         add(groups, ['loading', vehicle, country, lp].join('|'), { basis: 'loading', vehicle, country, period: lp }).items.push(item);
         add(stepGroups, ['loading', vehicle, country, lp.slice(0, 4)].join('|'), { basis: 'loading', vehicle, country, year: lp.slice(0, 4) }).items.push(item);
       }
     }
     const records = [...groups.values()].map(g => {
-      const out = { basis: g.basis, vehicle: g.vehicle, year: g.period.slice(0, 4), granularity: 'month', period: g.period, country: g.country,
+      const out = { basis: g.basis, vehicle: g.vehicle, year: g.period.slice(0, 4), granularity, period: g.period, country: g.country,
         qty: g.items.reduce((sum, it) => sum + it.qty, 0), shipments: g.items.length };
       MAIN_METRICS.forEach(m => { out[m] = round(weightedMean(g.items, it => it[m]), 2); });
       return out;
@@ -389,22 +446,26 @@
       const id = [r.basis, r.vehicle, r.year].join('|');
       if (seen.has(id)) return; seen.add(id);
       sources.push({ sheet: meta.sourceLabel || 'Buyer Log IAS parsiyelleri', role: 'main', basis: r.basis, vehicle: r.vehicle,
-        vehicleLabel: r.vehicle || 'Belirsiz', year: r.year, granularity: 'month',
+        vehicleLabel: r.vehicle || 'Belirsiz', year: r.year, granularity,
         rows: records.filter(x => x.basis === r.basis && x.vehicle === r.vehicle && x.year === r.year).length });
     });
     const analysis = normalizeAnalysis({
       version: VERSION, source: 'database', fileName: meta.sourceLabel || 'Buyer Log IAS (Antrepo) verisi',
       importedAt: meta.generatedAt || new Date().toISOString(), importedBy: '', sheetCount: 0, parsedSheets: [],
       sources, records, steps, stats,
+      window: meta.window ? { key: meta.window, from: meta.fromDate || '', to: meta.toDate || '', granularity } : null,
+      scope: meta.scope,
     });
     return analysis || { version: VERSION, source: 'database', records: [], steps: [], sources: [], stats: normalizeStats(stats),
+      window: meta.window ? { key: meta.window, from: meta.fromDate || '', to: meta.toDate || '', granularity } : null,
+      scope: meta.scope === 'company' ? 'company' : 'filtered',
       fileName: meta.sourceLabel || 'Buyer Log IAS (Antrepo) verisi', importedAt: new Date().toISOString(), importedBy: '', sheetCount: 0, parsedSheets: [] };
   }
 
   function normalizeStats(input) {
     if (!input || typeof input !== 'object') return null;
     const out = {};
-    ['total', 'used', 'notArrived', 'missingDates', 'outOfRange', 'missingVehicle', 'missingCountry'].forEach(k => {
+    ['total', 'used', 'notArrived', 'missingDates', 'outOfRange', 'missingVehicle', 'missingCountry', 'outOfWindow'].forEach(k => {
       out[k] = Math.max(0, Math.round(num(input[k]) || 0));
     });
     return out;
@@ -476,6 +537,12 @@
     return {
       version: VERSION,
       source: input.source === 'database' ? 'database' : 'excel',
+      scope: input.scope === 'company' ? 'company' : (input.scope === 'filtered' ? 'filtered' : ''),
+      window: input.window && typeof input.window === 'object' && WINDOW_KEYS.includes(input.window.key) ? {
+        key: input.window.key, from: /^\d{4}-\d{2}-\d{2}$/.test(input.window.from) ? input.window.from : '',
+        to: /^\d{4}-\d{2}-\d{2}$/.test(input.window.to) ? input.window.to : '',
+        granularity: input.window.granularity === 'week' ? 'week' : 'month',
+      } : null,
       stats: normalizeStats(input.stats),
       fileName: clip(input.fileName, 200),
       importedAt: Number.isFinite(Date.parse(importedAt)) ? new Date(importedAt).toISOString() : new Date().toISOString(),
@@ -517,7 +584,8 @@
     const bases = options(analysis).bases;
     const basis = filter.basis && bases.includes(filter.basis) ? filter.basis : (bases[0] || 'loading');
     const opts = options(analysis, basis);
-    const year = filter.year && opts.years.includes(String(filter.year)) ? String(filter.year) : (opts.years[0] || '');
+    // '*' = tüm yıllar (tarih penceresi zaten kapsamı belirliyor).
+    const year = filter.year === '*' ? '' : (filter.year && opts.years.includes(String(filter.year)) ? String(filter.year) : (opts.years[0] || ''));
     const scoped = records.filter(r => r.basis === basis && (!year || r.year === year)
       && (filter.vehicle == null || filter.vehicle === '*' || r.vehicle === filter.vehicle));
     const groups = new Map();
@@ -651,6 +719,7 @@
 
   return {
     VERSION, BASES, BASIS_LABELS, METRIC_LABELS, RULE_METRICS, RULE_STATS, LOW_SAMPLE_QTY, LOW_SAMPLE_PERIODS, LOW_SAMPLE_SHIPMENTS,
+    WINDOW_KEYS, windowRange, windowLabel, isoWeekOf,
     headerKind, parseSheet, parseWorkbook, buildFromShipments, labels, metricLabels, stepLabel, normalizeAnalysis, options, summarize,
     ruleDays, suggestRules, applySuggestions, currentRuleDays, countryRuleName, vehicleType,
   };

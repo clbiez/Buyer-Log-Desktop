@@ -11204,84 +11204,140 @@ async function persistTransitRules(rules){
   if(typeof renderKol==='function')renderKol();
   return clean;
 }
+/* Yol Süreleri penceresi (v7.0.214 yeniden tasarım).
+   Üst: İthalat Yol Süresi Analizi (lazy, IAS database). Alt: tek satır kompakt
+   kural düzenleyici + aranabilir/filtrelenebilir kural listesi. Kurallar yalnız
+   "Kuralları Kaydet" ile kalıcı olur (persistTransitRules). Tüm metinler TR/EN. */
 function openTransitRulesModal(){
   commitActiveTableEditor({refresh:false});
   document.getElementById('_transitRulesModal')?.remove();
+  const tl=(tr,en)=>appLang==='en'?en:tr;
+  const numLoc=appLang==='en'?'en-GB':'tr-TR';
   let working=normalizeTransitRules(state.overrides.transitRules).map(r=>({...r,seasons:[...(r.seasons||[])],countries:[...(r.countries||[])]}));
-  let editingId=null, selectedSeasons=new Set(), selectedCountries=new Set();
+  let editingId=null, formType='Gemi', listFilter={q:'',type:'*'};
   const cpRows=(state.cp&&state.cp.rows)||[],orderRows=overviewSummaryRows(),asasRows=state.asasOrders||[];
   const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const countryOptions=[...new Set([...cpRows.map(r=>norm(r.Country)),...orderRows.map(r=>norm(r.Country)),...asasRows.map(r=>norm(countryEN(r.countryRaw))),...working.flatMap(r=>r.countries||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
+  const countryOptions=()=>[...new Set([...cpRows.map(r=>norm(r.Country)),...orderRows.map(r=>norm(r.Country)),...asasRows.map(r=>norm(countryEN(r.countryRaw))),...working.flatMap(r=>r.countries||[]),...(window.BLTransitAnalysisUI?.knownCountries?.()||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
+  const typeSeg=DELTYPE_OPTS.map(v=>`<button type="button" data-trx-type="${escapeHtml(v)}">${escapeHtml(transitDelTypeDisplay(v))}</button>`).join('');
   const modal=document.createElement('div');modal.id='_transitRulesModal';modal.className='warnOverlay';
-  modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="_transitRulesTitle" style="width:min(97vw,1260px);max-height:91vh;display:flex;flex-direction:column;padding:0;">
-    <div style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
-      <div><div class="modalTitle" id="_transitRulesTitle">Nakliye Tipine Göre Ülke Bazlı Yol Süreleri</div><div style="margin-top:4px;color:var(--muted);font-size:11.5px;line-height:1.5;">Koşullar Ex-Factory tarihini baz alır. Boş başlangıç −∞, boş bitiş +∞; boş sezon veya ülke seçimi tüm değerlerdir. Yalnız Üretimde siparişlere uygulanır.</div></div>
-      <button type="button" class="pricingRuleIconBtn _transitClose" title="Kapat"><svg class="ic"><use href="#i-x"/></svg></button>
-    </div>
-    <div style="padding:16px 20px;overflow:auto;display:flex;flex-direction:column;gap:14px;">
-      <div class="pricingRuleFormula">Tahmini Antrepo = Ex-Factory + eşleşen yol süresi · Eşleşme yoksa varsayılan: Gemi 70 · Uçak 15 · Gemi+Uçak 35 · Gemi+Tır 70 gün</div>
+  modal.innerHTML=`<div class="modalCard trxModal" role="dialog" aria-modal="true" aria-labelledby="_transitRulesTitle">
+    <header class="trxModalHead">
+      <div><div class="modalTitle" id="_transitRulesTitle">${tl('Nakliye Tipine Göre Ülke Bazlı Yol Süreleri','Transit Times by Country and Shipping Type')}</div>
+        <div class="trxSub">${tl('Tahmini Antrepo = Ex-Factory + eşleşen yol süresi · yalnız Üretimde siparişlere uygulanır','Estimated Antrepo = Ex-Factory + matching transit time · applies only to In Production orders')}</div></div>
+      <button type="button" class="trxIconBtn _transitClose" title="${tl('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button>
+    </header>
+    <div class="trxModalBody">
       <div id="_transitAnalysisMount"></div>
-      <div style="padding:9px 11px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);font-size:11.5px;color:var(--ink2);">Birden fazla kural eşleşirse ülke/sezon/tarih açısından daha özel olan kural kullanılır. Yükleme operasyonları, yol/liman/depo ve retaile aktarım aşamalarındaki siparişler etkilenmez. Nakliye Kıyaslama'ya eklenmiş eski satırlar sabit kalır.</div>
-      <div class="pricingRuleGrid">
-        <div class="pricingRuleField"><label>Ex-Factory Başlangıç <span style="font-weight:400;color:var(--muted);">(boş = −∞)</span></label><input id="_transitStart" type="date"></div>
-        <div class="pricingRuleField"><label>Ex-Factory Bitiş <span style="font-weight:400;color:var(--muted);">(boş = +∞)</span></label><input id="_transitEnd" type="date"></div>
-        <div class="pricingRuleField"><label>Yükleme Tipi</label><select id="_transitType">${DELTYPE_OPTS.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(transitDelTypeDisplay(v))}</option>`).join('')}</select></div>
-        <div class="pricingRuleField"><label>Yol Süresi (gün)</label><input id="_transitDays" inputmode="numeric" type="number" min="0" max="3650" step="1" placeholder="Örn. 70"></div>
-        <div class="pricingRuleField"><label>Sezon <span style="font-weight:400;color:var(--muted);">(çoklu)</span></label><div class="pricingRuleSeasonPicker"><button type="button" class="pricingRuleSeasonBtn" id="_transitSeasonBtn"><span>Tüm Sezonlar</span><span>▾</span></button><div class="pricingRuleSeasonPanel" id="_transitSeasonPanel"></div></div></div>
-        <div class="pricingRuleField"><label>Ülke <span style="font-weight:400;color:var(--muted);">(çoklu)</span></label><div class="pricingRuleSeasonPicker"><button type="button" class="pricingRuleSeasonBtn" id="_transitCountryBtn"><span>Tüm Ülkeler</span><span>▾</span></button><div class="pricingRuleSeasonPanel" id="_transitCountryPanel"></div></div></div>
-      </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;"><button type="button" class="tbtn" id="_transitClear">Formu Temizle</button><button type="button" class="navActionBtn" id="_transitAdd" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-copy-plus"/></svg><span>Kural Ekle</span></button></div>
-      <div style="border:1px solid var(--line);border-radius:var(--r-md);overflow:auto;min-height:130px;max-height:390px;"><table class="pricingRulesTable"><thead><tr><th>Ex-Factory Aralığı</th><th>Sezon</th><th>Ülke</th><th>Del. Type</th><th style="text-align:right;">Gün</th><th style="text-align:right;">Eşleşen Üretimde</th><th style="text-align:right;">İşlemler</th></tr></thead><tbody id="_transitBody"></tbody></table></div>
-      <div id="_transitEmpty" style="display:none;padding:18px;text-align:center;color:var(--muted);">Henüz özel yol süresi kuralı eklenmedi. Varsayılan süreler kullanılmaya devam eder.</div>
+      <section class="trxCard trxRules">
+        <div class="trxCardHead">
+          <div class="trxCardTitle"><div class="trxH">${tl('Yol süresi kuralları','Transit time rules')}</div>
+            <div class="trxSub">${tl('Varsayılan','Default')}: ${DELTYPE_OPTS.map(v=>`${escapeHtml(transitDelTypeDisplay(v))} ${DEFAULT_TRANSIT_DAYS[v]}`).join(' · ')} ${tl('gün','days')}</div></div>
+          <span class="trxInfo" tabindex="0" title="${escapeHtml(tl('Birden fazla kural eşleşirse ülke/sezon/tarih açısından daha özel olan kullanılır. Boş tarih −∞/+∞, boş sezon/ülke tüm değerlerdir. Yükleme, yol/liman/depo ve retaile aktarım aşamasındaki siparişler etkilenmez; Nakliye Kıyaslama\'daki eski satırlar sabit kalır.','When several rules match, the most specific by country/season/date wins. Empty dates mean −∞/+∞; empty season/country means all values. Orders in loading, transit/port/warehouse or retail transfer stages are not affected; existing Shipping Comparison rows stay unchanged.'))}">i</span>
+        </div>
+        <div class="trxEditor" id="_transitEditor">
+          <div class="trxField trxFieldType"><span>${tl('Taşıt','Vehicle')}</span><div class="trxSeg" id="_transitType">${typeSeg}</div></div>
+          <div class="trxField"><span>${tl('Ülke','Country')}</span><div class="trxPick" id="_transitCountryPick"></div></div>
+          <div class="trxField"><span>${tl('Sezon','Season')}</span><div class="trxPick" id="_transitSeasonPick"></div></div>
+          <div class="trxField trxFieldDates"><span>Ex-Factory</span><div class="trxRange"><input id="_transitStart" class="trxInput" type="date" title="${tl('Başlangıç (boş = −∞)','Start (empty = −∞)')}"><i>→</i><input id="_transitEnd" class="trxInput" type="date" title="${tl('Bitiş (boş = +∞)','End (empty = +∞)')}"></div></div>
+          <div class="trxField trxFieldDays"><span>${tl('Gün','Days')}</span><input id="_transitDays" class="trxInput" inputmode="numeric" type="number" min="0" max="3650" step="1"></div>
+          <div class="trxField trxFieldActions"><span>&nbsp;</span><div class="trxActions"><button type="button" class="trxBtn trxBtnPrimary" id="_transitAdd"><svg class="ic"><use href="#i-copy-plus"/></svg><span>${tl('Ekle','Add')}</span></button><button type="button" class="trxIconBtn" id="_transitClear" title="${tl('Formu temizle','Clear form')}"><svg class="ic"><use href="#i-x"/></svg></button></div></div>
+        </div>
+        <div class="trxToolbar trxListBar">
+          <label class="trxSearch"><svg class="ic"><use href="#i-search"/></svg><input id="_transitSearch" type="search" placeholder="${tl('Ülke veya sezon ara','Search country or season')}"></label>
+          <div class="trxChips" id="_transitTypeFilter"></div>
+          <span class="trxGrow"></span>
+          <span class="trxMeta" id="_transitCount"></span>
+        </div>
+        <div class="trxTableWrap trxRulesWrap"><table class="trxTable"><thead><tr><th>${tl('Taşıt','Vehicle')}</th><th>${tl('Ülke','Country')}</th><th>${tl('Sezon','Season')}</th><th>Ex-Factory</th><th class="num">${tl('Gün','Days')}</th><th class="num" title="${tl('Bu kurala eşleşen Üretimde sipariş sayısı','In Production orders matching this rule')}">${tl('Eşleşen','Matching')}</th><th></th></tr></thead><tbody id="_transitBody"></tbody></table>
+          <div id="_transitEmpty" class="trxEmpty" style="display:none;"></div></div>
+      </section>
     </div>
-    <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;"><span id="_transitStatus" style="font-size:11.5px;color:var(--muted);"></span><span style="flex:1"></span><button type="button" class="tbtn _transitClose">Vazgeç</button><button type="button" class="navActionBtn" id="_transitSave" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-device-floppy"/></svg> Kuralları Kaydet</button></div>
+    <footer class="trxModalFoot"><span id="_transitStatus" class="trxMeta"></span><span class="trxGrow"></span><button type="button" class="tbtn _transitClose">${tl('Vazgeç','Cancel')}</button><button type="button" class="navActionBtn" id="_transitSave" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-device-floppy"/></svg> ${tl('Kuralları Kaydet','Save Rules')}</button></footer>
   </div>`;
   document.body.appendChild(modal);
-  modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
-  modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const $=id=>modal.querySelector('#'+id),start=$('_transitStart'),end=$('_transitEnd'),type=$('_transitType'),days=$('_transitDays'),seasonBtn=$('_transitSeasonBtn'),seasonPanel=$('_transitSeasonPanel'),countryBtn=$('_transitCountryBtn'),countryPanel=$('_transitCountryPanel');
-  function renderPicker(panel,button,options,selected,emptyLabel,itemLabel){
-    const all=[...new Set([...options,...selected])].sort((a,b)=>a.localeCompare(b,'tr'));
-    panel.innerHTML=all.length?all.map(v=>`<label class="pricingRuleSeasonOption"><input type="checkbox" value="${escapeHtml(v)}" ${selected.has(v)?'checked':''}> <span>${escapeHtml(v)}</span></label>`).join(''):`<div style="padding:8px;color:var(--muted);font-size:11.5px;">${escapeHtml(itemLabel)} verisi bulunamadı. Boş seçim tüm değerlere uygulanır.</div>`;
-    panel.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{if(inp.checked)selected.add(inp.value);else selected.delete(inp.value);updatePickerButton(button,selected,emptyLabel,itemLabel);}));
-    updatePickerButton(button,selected,emptyLabel,itemLabel);
+  const $=id=>modal.querySelector('#'+id),start=$('_transitStart'),end=$('_transitEnd'),days=$('_transitDays');
+
+  /* Aranabilir çoklu seçici: buton özeti + panel (arama, Tümü, liste). */
+  function makePicker(root,{allLabel,itemLabel,optionsFn,keyFn}){
+    let selected=new Set(),query='';
+    root.innerHTML=`<button type="button" class="trxPickBtn"><span class="trxPickText"></span><span class="trxCaret">▾</span></button><div class="trxPickPanel"><input type="search" class="trxPickSearch" placeholder="${escapeHtml(tl('Ara…','Search…'))}"><div class="trxPickList"></div><div class="trxPickFoot"><button type="button" data-clear>${escapeHtml(allLabel)}</button><button type="button" data-done>${escapeHtml(tl('Tamam','Done'))}</button></div></div>`;
+    const btn=root.querySelector('.trxPickBtn'),panel=root.querySelector('.trxPickPanel'),list=root.querySelector('.trxPickList'),search=root.querySelector('.trxPickSearch');
+    const label=()=>{const t=root.querySelector('.trxPickText');const v=[...selected];t.textContent=!v.length?allLabel:v.length<=2?v.join(', '):`${v.length} ${itemLabel}`;btn.title=v.length?v.join(', '):allLabel;btn.classList.toggle('has-value',v.length>0);};
+    const draw=()=>{
+      const all=[...new Set([...optionsFn(),...selected])].sort((a,b)=>a.localeCompare(b,'tr'));
+      const q=turknorm(query),shown=all.filter(v=>!q||turknorm(v).includes(q));
+      list.innerHTML=shown.length?shown.map(v=>`<label class="trxPickOption"><input type="checkbox" class="trxCheck" value="${escapeHtml(v)}" ${selected.has(v)?'checked':''}><span>${escapeHtml(v)}</span></label>`).join(''):`<div class="trxPickNone">${escapeHtml(tl('Eşleşen değer yok. Yazdığınızı Enter ile ekleyebilirsiniz.','No matching value. Press Enter to add what you typed.'))}</div>`;
+      list.querySelectorAll('input').forEach(inp=>inp.addEventListener('change',()=>{if(inp.checked)selected.add(inp.value);else selected.delete(inp.value);label();}));
+    };
+    const close=()=>root.classList.remove('open');
+    btn.addEventListener('click',e=>{e.stopPropagation();const open=!root.classList.contains('open');modal.querySelectorAll('.trxPick.open').forEach(x=>x.classList.remove('open'));if(open){root.classList.add('open');query='';search.value='';draw();search.focus();}});
+    panel.addEventListener('click',e=>e.stopPropagation());
+    search.addEventListener('input',()=>{query=search.value;draw();});
+    search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();const v=norm(search.value);if(v&&!selected.has(v)){selected.add(v);query='';search.value='';draw();label();}}});
+    panel.querySelector('[data-clear]').addEventListener('click',()=>{selected.clear();draw();label();});
+    panel.querySelector('[data-done]').addEventListener('click',close);
+    return {get:()=>[...selected],set:values=>{selected=new Set(normalizeTransitList(values,keyFn));label();if(root.classList.contains('open'))draw();},close};
   }
-  function updatePickerButton(button,selected,emptyLabel,itemLabel){const span=button.querySelector('span');span.textContent=!selected.size?emptyLabel:selected.size===1?[...selected][0]:`${selected.size} ${itemLabel.toLocaleLowerCase('tr-TR')} seçili`;button.title=!selected.size?emptyLabel:[...selected].join(', ');}
-  function setSeasons(values){selectedSeasons=new Set(normalizeTransitList(values));renderPicker(seasonPanel,seasonBtn,seasonOptions,selectedSeasons,'Tüm Sezonlar','Sezon');}
-  function setCountries(values){selectedCountries=new Set(normalizeTransitList(values,transitCountryKey));renderPicker(countryPanel,countryBtn,countryOptions,selectedCountries,'Tüm Ülkeler','Ülke');}
-  seasonBtn.addEventListener('click',e=>{e.stopPropagation();countryPanel.classList.remove('open');seasonPanel.classList.toggle('open');});
-  countryBtn.addEventListener('click',e=>{e.stopPropagation();seasonPanel.classList.remove('open');countryPanel.classList.toggle('open');});
-  [seasonPanel,countryPanel].forEach(panel=>panel.addEventListener('click',e=>e.stopPropagation()));
-  function clearForm(){editingId=null;start.value='';end.value='';type.value='Gemi';days.value=String(DEFAULT_TRANSIT_DAYS.Gemi);setSeasons([]);setCountries([]);modal.querySelector('#_transitAdd span').textContent='Kural Ekle';start.focus();}
+  const countryPick=makePicker($('_transitCountryPick'),{allLabel:tl('Tüm ülkeler','All countries'),itemLabel:tl('ülke','Countries'),optionsFn:countryOptions,keyFn:transitCountryKey});
+  const seasonPick=makePicker($('_transitSeasonPick'),{allLabel:tl('Tüm sezonlar','All seasons'),itemLabel:tl('sezon','Seasons'),optionsFn:()=>seasonOptions,keyFn:turknorm});
+  const closePickers=()=>{countryPick.close();seasonPick.close();};
+
+  function setType(value){formType=normalizeTransitDelType(value)||'Gemi';modal.querySelectorAll('[data-trx-type]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.trxType===formType)));}
+  modal.querySelectorAll('[data-trx-type]').forEach(b=>b.addEventListener('click',()=>{const prev=formType;setType(b.dataset.trxType);if(!editingId&&(!days.value||Number(days.value)===DEFAULT_TRANSIT_DAYS[prev]))days.value=String(DEFAULT_TRANSIT_DAYS[formType]);}));
+  function clearForm(){editingId=null;start.value='';end.value='';setType('Gemi');days.value=String(DEFAULT_TRANSIT_DAYS.Gemi);seasonPick.set([]);countryPick.set([]);$('_transitAdd').querySelector('span').textContent=tl('Ekle','Add');$('_transitEditor').classList.remove('is-editing');renderRules();}
+  const ruleSource=r=>String(r.id||'').startsWith('transit-analysis-')?'analysis':'manual';
+  const typeOrder=t=>{const i=DELTYPE_OPTS.indexOf(normalizeTransitDelType(t));return i<0?99:i;};
+  function renderFilterChips(){
+    const counts=DELTYPE_OPTS.map(v=>[v,working.filter(r=>normalizeTransitDelType(r.delType)===v).length]);
+    $('_transitTypeFilter').innerHTML=[['*',working.length],...counts].filter(([v,n])=>v==='*'||n>0).map(([v,n])=>`<button type="button" data-trx-filter="${escapeHtml(v)}" aria-pressed="${listFilter.type===v}">${escapeHtml(v==='*'?tl('Tümü','All'):transitDelTypeDisplay(v))} <b>${n}</b></button>`).join('');
+    $('_transitTypeFilter').querySelectorAll('[data-trx-filter]').forEach(b=>b.addEventListener('click',()=>{listFilter.type=b.dataset.trxFilter;renderRules();}));
+  }
   function renderRules(){
+    renderFilterChips();
+    const q=turknorm(listFilter.q);
+    const rows=working.filter(r=>(listFilter.type==='*'||normalizeTransitDelType(r.delType)===listFilter.type)
+      &&(!q||turknorm([...(r.countries||[]),...(r.seasons||[])].join(' ')).includes(q)))
+      .sort((a,b)=>typeOrder(a.delType)-typeOrder(b.delType)||String((a.countries||[])[0]||'~').localeCompare(String((b.countries||[])[0]||'~'),'tr')||String(a.exfStart||'').localeCompare(String(b.exfStart||'')));
     const body=$('_transitBody'),empty=$('_transitEmpty');
-    body.innerHTML=working.map(r=>`<tr data-id="${escapeHtml(r.id)}"><td>${escapeHtml(transitRuleDateLabel(r))}</td><td>${escapeHtml(transitRuleListLabel(r.seasons,'Tüm Sezonlar'))}</td><td>${escapeHtml(transitRuleListLabel(r.countries,'Tüm Ülkeler'))}</td><td>${escapeHtml(transitDelTypeDisplay(r.delType))}</td><td class="num"><strong>${Number(r.days).toLocaleString('tr-TR',{maximumFractionDigits:0})}</strong></td><td class="num">${transitRuleMatchCount(r)}</td><td><div class="pricingRuleActions"><button class="pricingRuleIconBtn editTransit" title="Düzenle"><svg class="ic"><use href="#i-pencil"/></svg></button><button class="pricingRuleIconBtn danger deleteTransit" title="Sil"><svg class="ic"><use href="#i-trash"/></svg></button></div></td></tr>`).join('');
-    empty.style.display=working.length?'none':'block';
-    body.querySelectorAll('.editTransit').forEach(btn=>btn.addEventListener('click',()=>{const r=working.find(x=>x.id===btn.closest('tr').dataset.id);if(!r)return;editingId=r.id;start.value=r.exfStart||'';end.value=r.exfEnd||'';type.value=r.delType;days.value=String(r.days);setSeasons(r.seasons);setCountries(r.countries);modal.querySelector('#_transitAdd span').textContent=appLang==='en'?'Update Rule':'Kuralı Güncelle';start.focus();}));
-    body.querySelectorAll('.deleteTransit').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.closest('tr').dataset.id;working=working.filter(x=>x.id!==id);if(editingId===id)clearForm();renderRules();}));
-    $('_transitStatus').textContent=`${working.length} kural · özel koşullar yalnız Üretimde siparişlerde çalışır`;
+    const chips=(list,allText)=>list&&list.length?list.map(v=>`<span class="trxChip">${escapeHtml(v)}</span>`).join(''):`<span class="trxMuted">${escapeHtml(allText)}</span>`;
+    body.innerHTML=rows.map(r=>`<tr data-id="${escapeHtml(r.id)}" class="${r.id===editingId?'is-editing':''}">
+      <td><span class="trxBadge" data-v="${escapeHtml(normalizeTransitDelType(r.delType))}">${escapeHtml(transitDelTypeDisplay(r.delType))}</span></td>
+      <td>${chips(r.countries,tl('Tüm ülkeler','All countries'))}${ruleSource(r)==='analysis'?`<span class="trxFlag" title="${escapeHtml(tl('İthalat Yol Süresi Analizi önerisinden','From an Import Lead Time Analysis suggestion'))}">${tl('Analiz','Analysis')}</span>`:''}</td>
+      <td>${chips(r.seasons,tl('Tüm sezonlar','All seasons'))}</td>
+      <td class="trxMuted">${escapeHtml(transitRuleDateLabel(r))}</td>
+      <td class="num"><strong>${Number(r.days).toLocaleString(numLoc,{maximumFractionDigits:0})}</strong></td>
+      <td class="num trxMuted">${transitRuleMatchCount(r)}</td>
+      <td class="trxRowActions"><button type="button" class="trxIconBtn editTransit" title="${tl('Düzenle','Edit')}"><svg class="ic"><use href="#i-pencil"/></svg></button><button type="button" class="trxIconBtn trxDanger deleteTransit" title="${tl('Sil','Delete')}"><svg class="ic"><use href="#i-trash"/></svg></button></td></tr>`).join('');
+    empty.style.display=rows.length?'none':'block';
+    empty.textContent=working.length?tl('Filtreye uyan kural yok.','No rules match the filter.'):tl('Henüz özel kural yok; varsayılan süreler kullanılıyor.','No custom rules yet; default times are used.');
+    body.querySelectorAll('.editTransit').forEach(btn=>btn.addEventListener('click',()=>{const r=working.find(x=>x.id===btn.closest('tr').dataset.id);if(!r)return;editingId=r.id;start.value=r.exfStart||'';end.value=r.exfEnd||'';setType(r.delType);days.value=String(r.days);seasonPick.set(r.seasons);countryPick.set(r.countries);$('_transitAdd').querySelector('span').textContent=tl('Güncelle','Update');$('_transitEditor').classList.add('is-editing');renderRules();days.focus();}));
+    body.querySelectorAll('.deleteTransit').forEach(btn=>btn.addEventListener('click',()=>{const id=btn.closest('tr').dataset.id;working=working.filter(x=>x.id!==id);if(editingId===id)clearForm();else renderRules();}));
+    $('_transitCount').textContent=rows.length===working.length?tl(`${working.length} kural`,`${working.length} rule(s)`):tl(`${rows.length} / ${working.length} kural`,`${rows.length} of ${working.length} rules`);
+    $('_transitStatus').textContent=tl(`${working.length} kural · kaydedilene kadar değişiklikler yalnız bu pencerede`,`${working.length} rule(s) · changes stay in this window until saved`);
   }
+  $('_transitSearch').addEventListener('input',e=>{listFilter.q=e.target.value;renderRules();});
   $('_transitAdd').addEventListener('click',()=>{
-    const rule={id:editingId||('transit-rule-'+Date.now()+'-'+Math.round(Math.random()*10000)),exfStart:toISODate(start.value),exfEnd:toISODate(end.value),seasons:normalizeTransitList([...selectedSeasons]),countries:normalizeTransitList([...selectedCountries],transitCountryKey),delType:normalizeTransitDelType(type.value),days:Number(days.value)};
-    if(rule.exfStart&&rule.exfEnd&&dateOrdinal(rule.exfStart)>dateOrdinal(rule.exfEnd)){showToast(appLang==='en'?'Ex-Factory end date cannot be before the start date.':'Ex-Factory bitiş tarihi başlangıç tarihinden önce olamaz.');return;}
-    if(!rule.delType||!Number.isFinite(rule.days)||rule.days<0||rule.days>3650||!Number.isInteger(rule.days)){showToast(appLang==='en'?'Transit time must be a whole number of days between 0 and 3650.':'Yol süresi 0–3650 arasında tam gün olmalıdır.');return;}
+    const rule={id:editingId||('transit-rule-'+Date.now()+'-'+Math.round(Math.random()*10000)),exfStart:toISODate(start.value),exfEnd:toISODate(end.value),seasons:normalizeTransitList(seasonPick.get()),countries:normalizeTransitList(countryPick.get(),transitCountryKey),delType:normalizeTransitDelType(formType),days:Number(days.value)};
+    if(rule.exfStart&&rule.exfEnd&&dateOrdinal(rule.exfStart)>dateOrdinal(rule.exfEnd)){showToast(tl('Ex-Factory bitiş tarihi başlangıç tarihinden önce olamaz.','Ex-Factory end date cannot be before the start date.'));return;}
+    if(!rule.delType||!Number.isFinite(rule.days)||rule.days<0||rule.days>3650||!Number.isInteger(rule.days)){showToast(tl('Yol süresi 0–3650 arasında tam gün olmalıdır.','Transit time must be a whole number of days between 0 and 3650.'));days.focus();return;}
     const duplicate=working.find(x=>x.id!==editingId&&x.exfStart===rule.exfStart&&x.exfEnd===rule.exfEnd&&normalizeTransitDelType(x.delType)===rule.delType&&normalizeTransitList(x.seasons).map(turknorm).join('|')===rule.seasons.map(turknorm).join('|')&&normalizeTransitList(x.countries,transitCountryKey).map(transitCountryKey).join('|')===rule.countries.map(transitCountryKey).join('|'));
-    if(duplicate){showToast(appLang==='en'?'Another rule with the same conditions exists. Edit the existing rule.':'Aynı koşullara sahip başka bir kural var. Mevcut kuralı düzenleyin.');return;}
-    const idx=working.findIndex(x=>x.id===rule.id);if(idx>=0)working[idx]=rule;else working.push(rule);working=normalizeTransitRules(working);clearForm();renderRules();
+    if(duplicate){showToast(tl('Aynı koşullara sahip başka bir kural var. Mevcut kuralı düzenleyin.','Another rule with the same conditions exists. Edit the existing rule.'));return;}
+    const idx=working.findIndex(x=>x.id===rule.id);if(idx>=0)working[idx]=rule;else working.push(rule);working=normalizeTransitRules(working);clearForm();
   });
+  days.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('_transitAdd').click();}});
   $('_transitClear').addEventListener('click',clearForm);
   modal.querySelectorAll('._transitClose').forEach(btn=>btn.addEventListener('click',()=>modal.remove()));
-  modal.addEventListener('click',e=>{if(!e.target.closest('.pricingRuleSeasonPicker')){seasonPanel.classList.remove('open');countryPanel.classList.remove('open');}if(e.target===modal)modal.remove();});
-  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){if(seasonPanel.classList.contains('open')||countryPanel.classList.contains('open')){e.preventDefault();seasonPanel.classList.remove('open');countryPanel.classList.remove('open');}else{e.preventDefault();modal.remove();}}});
-  $('_transitSave').addEventListener('click',async()=>{const btn=$('_transitSave');btn.disabled=true;$('_transitStatus').textContent=appLang==='en'?'Saving and refreshing calculations…':'Kaydediliyor ve hesaplamalar yenileniyor…';try{const clean=await persistTransitRules(working);modal.remove();showToast(appLang==='en'?`${clean.length} transit time rule(s) saved.`:`${clean.length} nakliye yol süresi kuralı kaydedildi.`);}catch(err){btn.disabled=false;$('_transitStatus').textContent=(appLang==='en'?'Could not save: ':'Kaydedilemedi: ')+err.message;}});
-  setSeasons([]);setCountries([]);renderRules();clearForm();
+  modal.addEventListener('click',e=>{if(!e.target.closest('.trxPick'))closePickers();if(e.target===modal)modal.remove();});
+  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();if(modal.querySelector('.trxPick.open'))closePickers();else modal.remove();}});
+  $('_transitSave').addEventListener('click',async()=>{const btn=$('_transitSave');btn.disabled=true;$('_transitStatus').textContent=tl('Kaydediliyor ve hesaplamalar yenileniyor…','Saving and refreshing calculations…');try{const clean=await persistTransitRules(working);modal.remove();showToast(tl(`${clean.length} nakliye yol süresi kuralı kaydedildi.`,`${clean.length} transit time rule(s) saved.`));}catch(err){btn.disabled=false;$('_transitStatus').textContent=tl('Kaydedilemedi: ','Could not save: ')+err.message;}});
+  clearForm();
   // İthalat Yol Süresi Analizi paneli lazy yüklenir; öneriler yalnız bu
   // penceredeki çalışma listesine aktarılır, kalıcılık "Kuralları Kaydet" ile.
   const analysisMount=$('_transitAnalysisMount');
   Promise.resolve(window.BLPerf?.ensureFeature?.('transitAnalysis')).then(()=>{
     if(!modal.isConnected||!window.BLTransitAnalysisUI)return;
     window.BLTransitAnalysisUI.mount(analysisMount,{getRules:()=>working,applyRules:next=>{working=normalizeTransitRules(next);renderRules();}});
-  }).catch(err=>{analysisMount.innerHTML=`<div style="font-size:11.5px;color:var(--red);">Yol süresi analizi yüklenemedi: ${escapeHtml(err.message)}</div>`;});
+  }).catch(err=>{analysisMount.innerHTML=`<div class="trxWarn">${escapeHtml(tl('Yol süresi analizi yüklenemedi: ','Could not load the lead time analysis: '))}${escapeHtml(err.message)}</div>`;});
 }
 const COUNTRY_MAP = { 'HINDISTAN':'India','BANGLADES':'Bangladesh','CIN':'China','TURKIYE':'Turkey','MISIR':'Egypt','FAS':'Morocco','MYANMAR':'Myanmar','ENDONEZYA':'Indonesia' };
 function countryEN(raw){ return COUNTRY_MAP[turknorm(raw)] || raw; }

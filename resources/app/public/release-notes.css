@@ -55,8 +55,8 @@
 .blRnNavBtn span{font-size:22px;line-height:1;margin-top:-1px}
 .blRnNavBtn b{font:inherit}
 .blRnNavBtn:hover:not(:disabled){border-color:var(--acc);color:var(--acc);background:var(--acc-bg)}
-.blRnNavBtn--next{background:var(--acc);border-color:var(--acc);color:var(--on-acc,#fff)}
-.blRnNavBtn--next:hover:not(:disabled){background:var(--acc-hover,var(--acc));color:var(--on-acc,#fff)}
+.blRnNavBtn--next{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.blRnNavBtn--next:hover:not(:disabled){background:var(--acc-hover,var(--acc));color:var(--on-acc)}
 .blRnNavBtn:active:not(:disabled){transform:scale(.97)}
 .blRnNavBtn:disabled{opacity:.42;cursor:default}
 .blRnNavBtn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
