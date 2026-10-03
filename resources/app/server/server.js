@@ -34,6 +34,7 @@ const holidayService = require('./lib/holiday-service').createHolidayService({
 const { createLocalDb, offloadLegacyAssets, sweepWriteDebris } = require('./lib/local-db');
 const { createSyncSettings } = require('./lib/sync-settings');
 const { createSharedHub } = require('./lib/shared-hub');
+const { createRefreshPerformance } = require('./lib/refresh-performance');
 const sharedSyncPolicy = require('./lib/shared-sync-policy');
 const { filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, createCollectionReplication } = require('./lib/collection-replication');
 const { createCollectionPermissionsStore } = require('./lib/collection-permissions-store');
@@ -80,6 +81,12 @@ const syncSettings = createSyncSettings({
   filterOutgoingDeltas: sharedHubDeltaFilter('outgoing'),
 });
 const sharedHub = createSharedHub({ localDataRoot: LOCAL_DATA_ROOT, appVersion: APP_VERSION, networkTimeoutMs: 15000 });
+const refreshPerformance = createRefreshPerformance({
+  syncSettings, sharedHub, localDb, localDataRoot:LOCAL_DATA_ROOT, appVersion:APP_VERSION,
+  onError:(stage,error)=>logRuntimeFailure(`refreshPerformance:${stage}`, error),
+});
+// Ortak SYNC performans özetini açılış kritik yoluna sokmadan ısıt.
+setTimeout(() => { void refreshPerformance.refreshSharedCache(); }, 6500).unref?.();
 const dataRoots = resolveBuyerLogDataRoots({ projectRoot: path.join(__dirname, '..'), serverDataRoot: SERVER_DATA_ROOT, appDataRoot: APP_DATA_ROOT, localDataRoot: LOCAL_DATA_ROOT, localDbPath: LOCAL_DB_FILE });
 const dataMaintenance = createDataMaintenance({ roots: dataRoots, localDb, syncSettings });
 /* Ortak iş verisinin delta motoruna taşınması. Faz config.json'daki
@@ -6371,6 +6378,33 @@ function sourceFolderForUser(value) {
   const id = sourceUserId(value);
   return getUserSourceFolder(id, id === 'moderator' ? config.sourceFolder || null : null);
 }
+function refreshPerformanceProfile(value, requestedTargets, sourcePolicy = {}) {
+  const id=sourceUserId(value);
+  const targets=[...new Set((Array.isArray(requestedTargets)&&requestedTargets.length?requestedTargets:['cp','orders','backlog','lfl','priceanalysis'])
+    .map(item=>String(item||'').toLowerCase()).filter(Boolean))].sort();
+  let items=[];
+  try{items=userPreferences.applyHorizonOverrides(loadModelConnections().items,id,targets,userAccess.roleWorkspaceEntries(value));}
+  catch(error){logRuntimeFailure('refreshPerformanceProfile:horizon',error);}
+  const horizons=[];
+  for(const item of Array.isArray(items)?items:[]){
+    const scopes=Array.isArray(item&&item.scopes)&&item.scopes.length?item.scopes:[{targets:item&&item.targets||[],horizon:item&&item.horizon||{}}];
+    for(const scope of scopes){
+      if(scope&&scope.enabled===false)continue;
+      const scopeTargets=(Array.isArray(scope&&scope.targets)?scope.targets:[]).map(target=>String(target||'').toLowerCase())
+        .filter(target=>targets.includes(target)).sort();
+      if(scopeTargets.length)horizons.push({targets:scopeTargets,horizon:scope&&scope.horizon&&typeof scope.horizon==='object'?scope.horizon:{}});
+    }
+  }
+  const runtime=cacheForUser(id),rowCounts={};
+  for(const target of targets){
+    if(target==='lfl')rowCounts[target]=Array.isArray(runtime.lflRows)?runtime.lflRows.length:0;
+    else if(runtime.asasOrdersByTarget&&Array.isArray(runtime.asasOrdersByTarget[target]))rowCounts[target]=runtime.asasOrdersByTarget[target].length;
+    else rowCounts[target]=Array.isArray(runtime.asasOrders)?runtime.asasOrders.length:0;
+  }
+  return refreshPerformance.buildProfile({targets,horizons,rowCounts,sourceModes:{
+    asas:sourcePolicy.asasMode||'',antrepo:sourcePolicy.antrepoMode||'',lfl:sourcePolicy.lflMode||'',
+  }});
+}
 function sourceFilterReadiness(targets = null,value='moderator') {
   const overrides = loadOverrides();
   const items=userPreferences.applyHorizonOverrides(loadModelConnections().items,sourceUserId(value),targets,userAccess.roleWorkspaceEntries(value));
@@ -8662,13 +8696,18 @@ async function runRefreshTelemetry(telemetry, connection, operation, category, t
 function refreshJobState(id) {
   const job = refreshJobs.get(id);
   if (!job) return { running: false, phase: 'idle', jobId: null };
+  const elapsedMs=job.running?Date.now()-job.startedMs:(job.elapsedMs||0);
+  const eta=job.eta?{...job.eta,
+    remainingMs:job.running&&job.eta.available?Math.max(0,Number(job.eta.estimateMs||0)-elapsedMs):null,
+    exceeded:Boolean(job.running&&job.eta.available&&Number(job.eta.highMs||0)>0&&elapsedMs>Number(job.eta.highMs)),
+  }:null;
   return {
     jobId: job.jobId || null,
     running: Boolean(job.running),
     phase: job.phase || 'idle',
     startedAt: job.startedAt || null,
     finishedAt: job.finishedAt || null,
-    elapsedMs: job.running ? Date.now() - job.startedMs : (job.elapsedMs || 0),
+    elapsedMs,
     error: job.error || null,
     errorCode: job.errorCode || null,
     repairAction: job.repairAction || null,
@@ -8689,6 +8728,7 @@ function refreshJobState(id) {
     cancelRequested: Boolean(job.cancelRequested),
     dashboard: job.dashboard || null,
     metrics: job.metrics || null,
+    eta,
   };
 }
 
@@ -9077,60 +9117,65 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   }
 
   if (!wantSync) {
-    const startedAt = new Date().toISOString();
-    const job = {
-      jobId: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`,
-      running: true, phase: 'source-setup', startedAt, startedMs: Date.now(), error: null,
-      requestedTargets: requestedTargets.slice(), loadedAt: null,
-      controller: new AbortController(), cancelRequested:false, commitStarted:false,
-      operations: [],
-    };
-    refreshJobs.set(id, job);
-    refreshInFlight.add(id);
+    const startedAt=new Date().toISOString();
     const currentUser = req.currentUser;
-    // Bilerek await edilmiyor: istek hemen döner, iş arka planda sürer.
-    // Kullanıcının Source Data seçimleri refresh akışına aynen aktarılmalı.
-    // Önceki kod ASAS/LFL'i burada zorla Database seçiyordu; ekranda ASAS
-    // Excel seçili olsa bile loadFromModels aktif ASAS bağlantısı arıyor ve
-    // dashboard'a hiç ulaşmadan "aktif ASAS veri modeli bağlantısı yok"
-    // hatasıyla bitiyordu.
+    // Kaynak modu sözleşmesi dashboard/Excel/Database davranışı için mevcut
+    // isimleri korur; ETA aynı politikayı yalnız profil anahtarı olarak okur.
     const refreshOverrides = loadOverrides();
     const selectedAsasMode = refreshOverrides.asasSourceMode === 'database' ? 'database' : 'excel';
     const selectedLflMode = refreshOverrides.lflSourceMode === 'database' ? 'database' : 'excel';
     const selectedAntrepoMode = ['database', 'dashboard'].includes(refreshOverrides.antrepoSourceMode) ? refreshOverrides.antrepoSourceMode : 'excel';
-    performRefresh(id, currentUser, targets && targets.length ? targets : null, {signal:job.controller.signal,sourcePolicy:{asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode},refreshId:job.jobId}).then(result => {
-      job.summary = { ...result.summary, historyItemId: result.historyItem ? result.historyItem.id : null };
-      job.connections = result.modelRefresh && result.modelRefresh.connections || null;
-      job.loadedAt = cacheForUser(id).loadedAt || null;
-      job.metrics = result.metrics || null;
-      const last = Array.isArray(job.phases) ? job.phases[job.phases.length - 1] : null;
+    const sourcePolicy={asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode};
+    const performanceProfile=refreshPerformanceProfile(currentUser,requestedTargets,sourcePolicy);
+    const job={jobId:`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`,running:true,phase:'source-setup',startedAt,startedMs:Date.now(),error:null,
+      requestedTargets:requestedTargets.slice(),loadedAt:null,controller:new AbortController(),cancelRequested:false,commitStarted:false,
+      operations:[],performanceProfile,eta:refreshPerformance.estimate(performanceProfile)};
+    refreshJobs.set(id,job);refreshInFlight.add(id);
+    void refreshPerformance.refreshSharedCache().then(()=>{if(job.running)job.eta=refreshPerformance.estimate(job.performanceProfile);});
+    performRefresh(id,currentUser,targets&&targets.length?targets:null,{signal:job.controller.signal,sourcePolicy:{asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode},refreshId:job.jobId}).then(result=>{
+      job.summary={...result.summary,historyItemId:result.historyItem?result.historyItem.id:null};
+      job.connections=result.modelRefresh&&result.modelRefresh.connections||null;job.loadedAt=cacheForUser(id).loadedAt||null;job.metrics=result.metrics||null;
+      const last=Array.isArray(job.phases)?job.phases[job.phases.length-1]:null;
       if (last && !last.endedMs) { last.endedMs = Date.now(); last.ms = last.endedMs - last.startedMs; }
-      job.phase = 'done';
-    }).catch(err => {
-      logRuntimeFailure('modelRefresh', err);
-      job.phase = 'error';
-      job.error = String(err && (err.publicMessage || err.message) || 'Yenileme başarısız oldu.');
-      job.errorCode = (err && err.code) || 'MODEL_REFRESH_FAILED';
-      job.repairAction = err && err.repairAction || null;
-    }).finally(() => {
-      job.running = false;
-      job.finishedAt = new Date().toISOString();
-      job.elapsedMs = Date.now() - job.startedMs;
+      job.phase='done';
+    }).catch(err=>{
+      logRuntimeFailure('modelRefresh',err);job.phase='error';
+      job.error=String(err&&(err.publicMessage||err.message)||'Yenileme başarısız oldu.');
+      job.errorCode=(err&&err.code)||'MODEL_REFRESH_FAILED';job.repairAction=err&&err.repairAction||null;
+    }).finally(()=>{
+      job.running=false;job.finishedAt=new Date().toISOString();job.elapsedMs=Date.now()-job.startedMs;
+      const status=job.phase==='done'?'done':(job.errorCode==='REFRESH_CANCELLED'?'cancelled':'error');
+      let finalProfile=job.performanceProfile;
+      if(status==='done'){try{finalProfile=refreshPerformanceProfile(currentUser,requestedTargets,sourcePolicy);}catch(error){logRuntimeFailure('refreshPerformanceProfile:final',error);}}
+      void refreshPerformance.record({eventId:job.jobId,startedAt:job.startedAt,finishedAt:job.finishedAt,durationMs:job.elapsedMs,status,profile:finalProfile});
       refreshInFlight.delete(id);
     });
-    return res.status(202).json({ started: true, job: refreshJobState(id) });
+    return res.status(202).json({started:true,job:refreshJobState(id)});
   }
-
+  const syncStartedAt=new Date().toISOString(),syncStartedMs=Date.now();
+  const syncEventId=`sync-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
+  const syncOverrides=loadOverrides(),syncSourcePolicy={
+    asasMode:syncOverrides.asasSourceMode==='database'?'database':'excel',
+    antrepoMode:['database','dashboard'].includes(syncOverrides.antrepoSourceMode)?syncOverrides.antrepoSourceMode:'excel',
+    lflMode:syncOverrides.lflSourceMode==='database'?'database':'excel',
+  };
+  const syncPerformanceProfile=refreshPerformanceProfile(req.currentUser,requestedTargets,syncSourcePolicy);
   refreshInFlight.add(id);
   try {
-    const result = await performRefresh(id, req.currentUser, targets && targets.length ? targets : null);
+    const result=await performRefresh(id,req.currentUser,targets&&targets.length?targets:null,{sourcePolicy:syncSourcePolicy,refreshId:syncEventId});
     const response = await buildResponse(req.currentUser);
     response.refreshSummary = { ...result.summary, historyItemId: result.historyItem ? result.historyItem.id : null };
     const refreshHistoryStore = loadRefreshHistory(id);
     response.refreshHistory = refreshHistoryStore.items;
     response.refreshHistoryRevision = refreshHistoryStore._revision;
-    sendDateSafeJson(res, response);
+    sendDateSafeJson(res,response);
+    let finalSyncProfile=syncPerformanceProfile;
+    try{finalSyncProfile=refreshPerformanceProfile(req.currentUser,requestedTargets,syncSourcePolicy);}catch(_){}
+    void refreshPerformance.record({eventId:syncEventId,startedAt:syncStartedAt,finishedAt:new Date().toISOString(),
+      durationMs:Date.now()-syncStartedMs,status:'done',profile:finalSyncProfile});
   } catch (err) {
+    void refreshPerformance.record({eventId:syncEventId,startedAt:syncStartedAt,finishedAt:new Date().toISOString(),
+      durationMs:Date.now()-syncStartedMs,status:err&&err.code==='REFRESH_CANCELLED'?'cancelled':'error',profile:syncPerformanceProfile});
     logRuntimeFailure('modelRefresh', err);
     const message = err && (err.publicMessage || err.message) ? (err.publicMessage || err.message) : 'Yenileme başarısız oldu.';
     res.status(Number(err && err.statusCode) || 500).json({
