@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.224",
-  "commit_sha": "ec6b64ecfab5c3a5c494e211c84be358197b14d2",
-  "release_notes": "Buyer Log 7.0.224: Central IAM etkin ancak Shared Hub geçici olarak erişilemiyorsa geçerli yerel/önceki sürüm kullanıcı deposu güvenli biçimde geri kazanılıyor; yerel giriş artık yalnız Moderatör parolasına bağlı değil ve parolası bulunan aktif kullanıcı kendi hesabıyla giriş yapabiliyor; bozuk Central IAM önbellekleri güvenlik için fail-closed kalmaya devam ediyor.",
-  "request_id": "7.0.224-r1"
+  "version": "7.0.225",
+  "commit_sha": "178aad5cf2d93ae1d44962d554e1b5dc816af520",
+  "release_notes": "Buyer Log 7.0.225: Shared Hub bağlı görünürken kullanıcı adımının 0 kullanıcı / 0 aktif kalmasına neden olan masaüstü kimlik deposu kurtarma hatası giderildi. Portable kurulumlarda data-BACKUP, eski data/auth, migration evidence, legacy server/data ve önceki Windows AppData kullanıcı depoları güvenli ve sınırlı biçimde kontrol edilerek en güçlü geçerli kullanıcı deposu otomatik kurtarılıyor. Ayrıca sıfır kullanıcı artık başarılı Shared Sync olarak gösterilmiyor.",
+  "request_id": "7.0.225-r1"
 }
