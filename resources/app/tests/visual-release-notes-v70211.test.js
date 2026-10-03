@@ -34,6 +34,18 @@ test('users several stable versions behind receive cumulative chronological chan
   assert.match(JS,/lastSeenStable/);
 });
 
+test('release cards always expose readable copy, zoomable visuals and explicit navigation',()=>{
+  assert.match(JS,/function description\(change,release\)/);
+  assert.match(JS,/pick\(release\?\.summary\)/);
+  assert.match(JS,/data-rn-zoom/);
+  assert.match(JS,/openVisual\(/);
+  assert.match(JS,/blRnNavBtn--next/);
+  assert.match(CSS,/\.blRnCopy\{[^}]*background:var\(--card\)/);
+  assert.match(CSS,/\.blRnLightbox\{/);
+  assert.match(CSS,/\.blRnZoomHint\{/);
+  assert.match(CSS,/\.blRnNavBtn\{/);
+});
+
 test('pending release-note contract has bilingual detail and a visual for every change',()=>{
   assert.ok(NEXT.changes.length>=2);
   for(const change of NEXT.changes){
