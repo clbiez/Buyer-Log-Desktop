@@ -52,9 +52,9 @@
   function normalizeState(value) {
     const raw = text(value).toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ');
     if (!raw) return '';
-    if (['done', 'completed', 'complete', 'tamam', 'tamamlandı', 'tamamlandi', 'yes', 'evet'].includes(raw)) return 'done';
+    if (['done', 'completed', 'complete', 'tamam', 'tamamlandı', 'tamamlandi', 'yes', 'evet'].includes(raw)) return 'done'; // i18n-ignore — import aliasları, UI metni değil
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired';
-    if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open';
+    if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open'; // i18n-ignore — import aliasları, UI metni değil
     return '';
   }
   function statusLabel(status) {
@@ -675,10 +675,14 @@
     await loadShared(true);
     const conflicts = Number(result.conflicts || 0);
     const skipped = Number(result.skipped || 0) + invalid + notApplicable + formulaCells;
-    toast(T(
-      'Checklist içe aktarıldı: ' + result.updated + ' güncellendi, ' + result.cleared + ' yeniden açıldı' + (conflicts ? ', ' + conflicts + ' daha yeni Buyer Log verisi nedeniyle korunarak atlandı' : '') + (staleRows ? ', ' + staleRows + ' satır yükleme tarihi değiştiği için atlandı' : '') + (skipped ? ', ' + skipped + ' geçersiz/uygunsuz kayıt atlandı.' : '.'),
-      'Checklist imported: ' + result.updated + ' updated, ' + result.cleared + ' reopened' + (conflicts ? ', ' + conflicts + ' kept because Buyer Log had newer data' : '') + (staleRows ? ', ' + staleRows + ' rows skipped because the load date changed' : '') + (skipped ? ', ' + skipped + ' invalid/not-applicable entries skipped.' : '.')
-    ));
+    toast(
+      T('Checklist içe aktarıldı: ', 'Checklist imported: ') + result.updated
+      + T(' güncellendi, ', ' updated, ') + result.cleared
+      + T(' yeniden açıldı', ' reopened')
+      + (conflicts ? ', ' + conflicts + T(' daha yeni Buyer Log verisi nedeniyle korunarak atlandı', ' kept because Buyer Log had newer data') : '')
+      + (staleRows ? ', ' + staleRows + T(' satır yükleme tarihi değiştiği için atlandı', ' rows skipped because the load date changed') : '')
+      + (skipped ? ', ' + skipped + T(' geçersiz/uygunsuz kayıt atlandı.', ' invalid/not-applicable entries skipped.') : '.')
+    );
     return true;
   }
 
