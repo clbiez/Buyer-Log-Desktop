@@ -636,6 +636,174 @@
     const height = Math.max(1, Math.round(naturalH * scale));
     return { tl: { col: columnNo - 1 + 0.08, row: rowNo - 1 + 0.08 }, ext: { width: width, height: height } };
   }
+  const CHECKLIST_EXCEL_COLORS = Object.freeze({
+    navy: 'FF2A3E52', ink: 'FF101828', ink2: 'FF475467', muted: 'FF98A2B3',
+    line: 'FFE4E7EC', paper: 'FFF6F7F9', band: 'FFFAFBFC', white: 'FFFFFFFF',
+    acc: 'FF5980A6', accBg: 'FFE9EFF5', red: 'FFA8453A', redBg: 'FFF4E7E4',
+    gold: 'FF8C6A1F', goldBg: 'FFF2EAD6', green: 'FF3F7757', greenBg: 'FFE3EDE6',
+    grayBg: 'FFEDEFF1',
+  });
+  function excelColumnName(index) {
+    let n = Number(index) || 0, out = '';
+    while (n > 0) {
+      const remainder = (n - 1) % 26;
+      out = String.fromCharCode(65 + remainder) + out;
+      n = Math.floor((n - 1) / 26);
+    }
+    return out;
+  }
+  function excelFormulaString(value) { return String(value == null ? '' : value).replace(/"/g, '""'); }
+  function checklistStatusTone(value) {
+    const stateValue = normalizeState(value);
+    if (stateValue === 'done') return { fg: CHECKLIST_EXCEL_COLORS.green, bg: CHECKLIST_EXCEL_COLORS.greenBg };
+    if (stateValue === 'notRequired') return { fg: CHECKLIST_EXCEL_COLORS.gold, bg: CHECKLIST_EXCEL_COLORS.goldBg };
+    return { fg: CHECKLIST_EXCEL_COLORS.acc, bg: CHECKLIST_EXCEL_COLORS.accBg };
+  }
+  function statusCountFormula(statusColumns, lastRow, label) {
+    const escaped = excelFormulaString(label);
+    const parts = (statusColumns || []).map(function (column) {
+      const letter = excelColumnName(column);
+      return 'COUNTIF(' + "'" + DATA_SHEET.replace(/'/g, "''") + "'!" + '$' + letter + '$2:$' + letter + '$' + lastRow + ',"' + escaped + '")';
+    });
+    return parts.length ? parts.join('+') : '0';
+  }
+  function identityStats(rows) {
+    const orders = new Set(), models = new Set(), options = new Set();
+    (rows || []).forEach(function (row) {
+      const order = visibleValue(row, ['Order Code', 'ORDER CODE', 'OrderCode']);
+      const plm = visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']);
+      const model = visibleValue(row, ['Model Name', 'MODEL NAME', 'Model', 'Model Adı']);
+      const colour = visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']);
+      if (order) orders.add(order);
+      if (plm || model) models.add([plm, model].join('\u001f'));
+      if (plm || model || colour) options.add([plm, model, colour].join('\u001f'));
+    });
+    return { orders: orders.size, models: models.size, options: options.size, rows: (rows || []).length };
+  }
+  function styleSummaryTile(ws, c0, rowStart, label, value, accent, foot, numFmt) {
+    const C = CHECKLIST_EXCEL_COLORS, c1 = c0 + 1;
+    [rowStart, rowStart + 1, rowStart + 2].forEach(function (rowNo) { ws.mergeCells(rowNo, c0, rowNo, c1); });
+    const labelCell = ws.getCell(rowStart, c0), valueCell = ws.getCell(rowStart + 1, c0), footCell = ws.getCell(rowStart + 2, c0);
+    labelCell.value = label;
+    labelCell.font = { name: 'Segoe UI', size: 8.5, bold: true, color: { argb: C.ink2 } };
+    valueCell.value = value;
+    if (numFmt) valueCell.numFmt = numFmt;
+    valueCell.font = { name: 'Segoe UI', size: 19, bold: true, color: { argb: accent } };
+    footCell.value = foot || '';
+    footCell.font = { name: 'Segoe UI', size: 8, color: { argb: C.muted } };
+    [labelCell, valueCell, footCell].forEach(function (cell) {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.paper } };
+      cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    });
+    for (let c = c0; c <= c1; c += 1) {
+      ws.getCell(rowStart, c).border = { top: { style: 'thick', color: { argb: accent } } };
+    }
+  }
+  function renderChecklistSummary(ws, rows, items, statusColumns, lastRow, exportedAt) {
+    const C = CHECKLIST_EXCEL_COLORS, stats = identityStats(rows);
+    ws.views = [{ showGridLines: false, zoomScale: 90 }];
+    ws.properties.tabColor = { argb: C.navy };
+    ws.getColumn(1).width = 2;
+    for (let col = 2; col <= 9; col += 1) ws.getColumn(col).width = 12;
+    ws.mergeCells(1, 2, 2, 9);
+    const title = ws.getCell(1, 2);
+    title.value = T('Buyer Log · Supplier Checklist', 'Buyer Log · Supplier Checklist');
+    title.font = { name: 'Segoe UI', size: 20, bold: true, color: { argb: C.white } };
+    title.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } };
+    title.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    ws.mergeCells(3, 2, 3, 9);
+    const subtitle = ws.getCell(3, 2);
+    subtitle.value = T('Üretici', 'Supplier') + ': ' + supplierNameFor(rows) + '   ·   '
+      + T('Oluşturma', 'Created') + ': ' + new Date(exportedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR');
+    subtitle.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink2 } };
+    subtitle.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+
+    styleSummaryTile(ws, 2, 5, T('Sipariş', 'Orders'), stats.orders, C.navy, T('Tekil Order Code', 'Unique Order Code'), '#,##0');
+    styleSummaryTile(ws, 4, 5, T('Model', 'Models'), stats.models, C.acc, 'PLM ID + ' + T('Model', 'Model'), '#,##0');
+    styleSummaryTile(ws, 6, 5, T('Option', 'Options'), stats.options, C.gold, 'PLM ID + ' + T('Model + Renk', 'Model + Colour'), '#,##0');
+    styleSummaryTile(ws, 8, 5, T('Satır', 'Rows'), stats.rows, C.green, T('Excel veri satırı', 'Workbook data rows'), '#,##0');
+
+    const openFormula = statusCountFormula(statusColumns, lastRow, statusLabel('open'));
+    const doneFormula = statusCountFormula(statusColumns, lastRow, statusLabel('done'));
+    const naFormula = statusCountFormula(statusColumns, lastRow, statusLabel('notRequired'));
+    styleSummaryTile(ws, 2, 9, T('Açık', 'Open'), { formula: openFormula }, C.acc, T('Aksiyon bekleyen', 'Awaiting action'), '#,##0');
+    styleSummaryTile(ws, 4, 9, T('Tamamlandı', 'Completed'), { formula: doneFormula }, C.green, T('Tamamlanan kontroller', 'Completed checks'), '#,##0');
+    styleSummaryTile(ws, 6, 9, T('Gerekmiyor', 'Not required'), { formula: naFormula }, C.gold, T('Uygulanmayan kontroller', 'Not applicable checks'), '#,##0');
+    styleSummaryTile(ws, 8, 9, T('Tamamlanma', 'Completion'),
+      { formula: 'IF((B10+D10+F10)=0,0,(D10+F10)/(B10+D10+F10))' }, C.green,
+      T('Dosya düzenlendikçe yenilenir', 'Recalculates as the file is edited'), '0.0%');
+
+    ws.mergeCells(13, 2, 13, 9);
+    const section = ws.getCell(13, 2);
+    section.value = T('Checklist Durum Dağılımı', 'Checklist Status Distribution');
+    section.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C.white } };
+    section.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } };
+    section.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+
+    const header = ws.getRow(14);
+    [T('Kontrol', 'Check'), T('Açık', 'Open'), T('Tamamlandı', 'Completed'), T('Gerekmiyor', 'Not required'), T('Tamamlanma', 'Completion')].forEach(function (label, index) {
+      const cell = header.getCell(2 + index);
+      cell.value = label;
+      cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C.white } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: index === 0 ? C.navy : C.acc } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    });
+    header.height = 28;
+    items.forEach(function (item, index) {
+      const rowNo = 15 + index, row = ws.getRow(rowNo), colLetter = excelColumnName(statusColumns[index]);
+      const range = "'" + DATA_SHEET.replace(/'/g, "''") + "'!" + '$' + colLetter + '$2:$' + colLetter + '$' + lastRow;
+      row.height = 20;
+      row.getCell(2).value = isEn() ? item.en : item.tr;
+      row.getCell(3).value = { formula: 'COUNTIF(' + range + ',"' + excelFormulaString(statusLabel('open')) + '")' };
+      row.getCell(4).value = { formula: 'COUNTIF(' + range + ',"' + excelFormulaString(statusLabel('done')) + '")' };
+      row.getCell(5).value = { formula: 'COUNTIF(' + range + ',"' + excelFormulaString(statusLabel('notRequired')) + '")' };
+      row.getCell(6).value = { formula: 'IF((C' + rowNo + '+D' + rowNo + '+E' + rowNo + ')=0,0,(D' + rowNo + '+E' + rowNo + ')/(C' + rowNo + '+D' + rowNo + '+E' + rowNo + '))' };
+      row.getCell(6).numFmt = '0.0%';
+      for (let col = 2; col <= 6; col += 1) {
+        const cell = row.getCell(col);
+        cell.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink }, bold: col === 2 };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: index % 2 ? C.band : C.white } };
+        cell.border = { bottom: { style: 'thin', color: { argb: C.line } } };
+        cell.alignment = { vertical: 'middle', horizontal: col === 2 ? 'left' : 'right' };
+      }
+    });
+    const instructionRow = 16 + items.length;
+    ws.mergeCells(instructionRow, 2, instructionRow + 1, 9);
+    const instruction = ws.getCell(instructionRow, 2);
+    instruction.value = T(
+      'Nasıl kullanılır: Checklist sekmesinde yalnız renkli Durum ve Not hücreleri düzenlenebilir. Durum hücresinde açılır listeden seçim yapın. Diğer alanlar Buyer Log kimliğini korumak için kilitlidir.',
+      'How to use: Only coloured Status and Note cells on the Checklist sheet are editable. Choose the status from the dropdown. All other fields are locked to preserve Buyer Log identity.'
+    );
+    instruction.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink2 } };
+    instruction.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.accBg } };
+    instruction.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true, indent: 1 };
+    ws.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
+    return ws;
+  }
+  function applyChecklistConditionalFormatting(sheet, statusColumns, lastRow) {
+    if (!sheet || typeof sheet.addConditionalFormatting !== 'function' || lastRow < 2) return;
+    const C = CHECKLIST_EXCEL_COLORS;
+    const specs = [
+      [statusLabel('open'), C.acc, C.accBg],
+      [statusLabel('done'), C.green, C.greenBg],
+      [statusLabel('notRequired'), C.gold, C.goldBg],
+    ];
+    statusColumns.forEach(function (column) {
+      const letter = excelColumnName(column), ref = letter + '2:' + letter + lastRow;
+      const rules = specs.map(function (spec) {
+        return {
+          type: 'expression',
+          formulae: [letter + '2="' + excelFormulaString(spec[0]) + '"'],
+          style: {
+            font: { bold: true, color: { argb: spec[1] } },
+            fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: spec[2] } },
+          },
+        };
+      });
+      try { sheet.addConditionalFormatting({ ref: ref, rules: rules }); } catch (_) {}
+    });
+  }
+
   function openExcelColumnsDialog() {
     if (!root.document) return;
     root.document.getElementById('_blChecklistExcelColumns')?.remove();
