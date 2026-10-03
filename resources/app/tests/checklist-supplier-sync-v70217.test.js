@@ -34,7 +34,8 @@ test('checklist Excel dates normalize to one native Excel date shape', () => {
   const iso = SYNC.excelDate('2026-10-19');
   const compact = SYNC.excelDate('20261019');
   const local = SYNC.excelDate('19.10.2026');
-  for (const value of [iso, compact, local]) {
+  const timestamp = SYNC.excelDate('2026-10-19T12:35:00');
+  for (const value of [iso, compact, local, timestamp]) {
     assert.ok(value instanceof Date);
     assert.equal(value.getFullYear(), 2026);
     assert.equal(value.getMonth(), 9);
@@ -108,8 +109,20 @@ test('wiring loads the bridge after app-main and registers shared checklist rout
   assert.match(bridge, /noteCell\.protection = \{ locked: !applicable \}/);
   assert.match(bridge, /sheet\.protect\(EXCEL_PROTECTION_PASSWORD/);
 
+  // Backlog V3 ile aynı renk ailesinde, dosya değiştikçe hesaplanan özet ekranı vardır.
+  assert.match(bridge, /CHECKLIST_EXCEL_COLORS/);
+  assert.match(bridge, /Checklist Özet/);
+  assert.match(bridge, /renderChecklistSummary/);
+  assert.match(bridge, /statusCountFormula/);
+  assert.match(bridge, /fullCalcOnLoad:\s*true/);
+  assert.match(bridge, /applyChecklistConditionalFormatting/);
+  assert.match(bridge, /Checklist Status Distribution/);
+  assert.match(bridge, /Dosya düzenlendikçe yenilenir/);
+
   // Ex-Factory gerçek Excel Date olur; tek format ve date validation kullanır.
   assert.match(bridge, /EXCEL_DATE_FORMAT = 'dd\.mm\.yyyy'/);
   assert.match(bridge, /cell\.numFmt = EXCEL_DATE_FORMAT/);
   assert.match(bridge, /type: 'date', operator: 'between'/);
+  assert.match(bridge, /\^\\d\{4\}-\\d\{2\}-\\d\{2\}\[T \]\\d\{2\}:\\d\{2\}/);
+  assert.match(bridge, /dataUrlPreparedImage/);
 });
