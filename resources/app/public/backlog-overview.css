@@ -22,9 +22,10 @@
 .blvTimelineLegendLabel{flex:0 0 104px;padding:9px 0 8px 12px;font-size:10.5px;font-weight:800;letter-spacing:.02em;color:var(--ink2);white-space:nowrap}
 .blvTimelineLegend .bpaLegend{flex:1;min-width:0;padding:8px 12px 8px 0}
 .blvBuyerLegend{max-height:66px;overflow:auto}
-.blvCols{height:548px;padding-top:30px}
-.blvCols .bpaCol{position:relative;flex:1 0 48px;max-width:96px}
+.blvCols{height:594px;padding-top:30px;padding-bottom:14px}
+.blvCols .bpaCol{position:relative;flex:1 0 48px;max-width:96px;min-height:0}
 .blvCols .bpaColValue{height:28px;flex:0 0 28px;min-height:28px;max-height:28px;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;position:relative;z-index:4}
+.blvCols .bpaColLabel{height:26px;flex:0 0 26px;min-height:26px;max-height:26px;overflow:visible;position:relative;z-index:4}
 .blvColTotal{font-size:10.5px;font-weight:800;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
 .blvColOverdue{font-size:10px;font-weight:750;line-height:1;color:var(--red);white-space:nowrap}
 .blvCols .bpaColTrack{position:relative}
@@ -61,7 +62,7 @@
 .blvGroupBar:hover{filter:brightness(1.12) saturate(1.1);transform:scaleX(1.16)}
 .blvChartMode button{min-width:64px}
 .blvTimelineDimension button{min-width:76px}
-@media(max-width:900px){.blvCols{height:492px;padding-top:28px}.blvLogisticsTrack{flex-basis:216px;height:216px}.blvBuyerTrack{flex-basis:170px;height:170px}.blvCols.is-grouped .bpaCol{flex-basis:58px}.blvChartMode button,.blvTimelineDimension button{min-width:0}.blvTodayLine b{top:-48px}.blvTimelineLegendLabel{flex-basis:88px}}
+@media(max-width:900px){.blvCols{height:536px;padding-top:28px;padding-bottom:14px}.blvLogisticsTrack{flex-basis:216px;height:216px}.blvBuyerTrack{flex-basis:170px;height:170px}.blvCols.is-grouped .bpaCol{flex-basis:58px}.blvChartMode button,.blvTimelineDimension button{min-width:0}.blvTodayLine b{top:-48px}.blvTimelineLegendLabel{flex-basis:88px}}
 @media(prefers-reduced-motion:reduce){.blvGroupBar,.blvBuyerBar,.blvBuyerStack,.blvBuyerStackSeg{transition:none}}
 
 /* Panel kabuğu */
