@@ -463,7 +463,7 @@
   function supplierNameFor(rows) {
     const names = new Set();
     rows.forEach(function (row) {
-      const value = visibleValue(row, ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier']);
+      const value = visibleValue(row, ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier']);
       if (value) names.add(value);
     });
     return names.size === 1 ? Array.from(names)[0] : T('Karma', 'Mixed');
@@ -501,7 +501,7 @@
       { id: 'plm', tr: 'PLM ID', en: 'PLM ID', width: 10, defaultOn: true, candidates: ['PLM ID', 'PLM', 'PLM Id'] },
       { id: 'model', tr: 'Model Adı', en: 'Model Name', width: 18, defaultOn: true, candidates: ['Model Name', 'MODEL NAME', 'Model', 'Model Adı'] },
       { id: 'colour', tr: 'Renk Kodu', en: 'Colour Code', width: 10, defaultOn: true, candidates: ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu'] },
-      { id: 'supplier', tr: 'Üretici', en: 'Supplier', width: 18, defaultOn: true, candidates: ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier'] },
+      { id: 'supplier', tr: 'Üretici', en: 'Supplier', width: 18, defaultOn: true, candidates: ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier'] },
       { id: 'exfactory', tr: 'Ex-Factory', en: 'Ex-Factory', width: 12, defaultOn: true, type: 'date', candidates: ['Ex-factory', 'Ex-Factory', 'EX FACTORY', 'EX-FACTORY'] },
       { id: 'season', tr: 'Sezon', en: 'Season', width: 10, candidates: ['Season', 'Sezon'] },
       { id: 'buyer', tr: 'Buyer', en: 'Buyer', width: 14, candidates: ['Buyer'] },
@@ -1330,7 +1330,7 @@
       return false;
     }
     const suppliers = Array.from(new Set(rows.map(function (row) {
-      return visibleValue(row, ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier']);
+      return visibleValue(row, ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier']);
     }).filter(Boolean)));
     if (suppliers.length !== 1) {
       toast(T('Üreticiye Checklist hazırlamak için seçili satırlar tek bir üreticiye ait olmalıdır.', 'Prepare Supplier Checklist requires rows from exactly one supplier.'));
