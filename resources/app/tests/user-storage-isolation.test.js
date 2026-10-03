@@ -61,7 +61,6 @@ const PERSONAL_KEYS = [
   'buyerlog.detailDrawer.columns.cp',
   'buyerlog.detailDrawer.width.cp',
   'buyerlog.backlog.detail.compact.v1',
-  'buyerlog.outlook.notifications.seen.v1',
   'buyerlog.endeksmatikClipboard.v1',
   'buyerlog.fx.pending.v1',
   'lcw.dashboard.layout.v1',
