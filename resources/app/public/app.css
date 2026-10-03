@@ -3974,6 +3974,9 @@ tfoot .collectionWeightedAverage .collectionWeightedChangeLine strong.isNegative
 .refreshStagesRunning{display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:0 8px;border-radius:999px;background:color-mix(in srgb,var(--acc) 10%,var(--card));color:var(--acc);font-size:10px;font-weight:800;white-space:nowrap;}
 .refreshStagesRunning .blOrb{transform:scale(.72);}
 .refreshStagesBody{padding:10px 12px 11px;display:grid;gap:9px;overflow:visible;background:var(--card);border-radius:0 0 14px 14px;}
+/* ETA v7.0.215 geriye dönük helper sınıfları: yeni kompakt akış ETA'yı summary satırında gösterir. */
+.refreshEtaCard{display:none;}
+.refreshEtaState{display:none;}
 .refreshCompactSummary{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:2px 2px 1px;}
 .refreshCompactSummary>div{display:flex;align-items:baseline;gap:6px;}
 .refreshCompactSummary>div>span{font-size:10px;color:var(--muted);font-weight:750;}
