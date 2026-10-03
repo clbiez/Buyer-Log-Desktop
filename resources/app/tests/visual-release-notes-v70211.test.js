@@ -34,6 +34,18 @@ test('users several stable versions behind receive cumulative chronological chan
   assert.match(JS,/lastSeenStable/);
 });
 
+test('release archive sorts legacy two-part versions below newer semantic versions',()=>{
+  const start=JS.indexOf('function versionParts(v){');
+  const end=JS.indexOf('const ver=',start);
+  assert.ok(start>=0&&end>start,'version comparator helpers must exist');
+  const helpers=new Function(JS.slice(start,end)+';return {cmp,versionKey};')();
+  assert.ok(helpers.cmp('7.0.213','7.137')>0,'7.0.213 must sort newer than historical 7.137');
+  assert.ok(helpers.cmp('7.0.211','7.82')>0,'7.0.211 must sort newer than historical 7.82');
+  assert.equal(helpers.versionKey('7.137'),'7.0.137');
+  assert.equal(helpers.versionKey('7.0.137'),'7.0.137');
+  assert.match(JS,/visual=new Set\(\(await loadIndex\(\)\)\.releases\.map\(x=>versionKey\(x\.version\)\)\)/);
+});
+
 test('release cards always expose readable copy, zoomable visuals and explicit navigation',()=>{
   assert.match(JS,/function description\(change,release\)/);
   assert.match(JS,/pick\(release\?\.summary\)/);
