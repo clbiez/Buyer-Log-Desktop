@@ -8382,7 +8382,7 @@ function renderCPNow(){
   const totalRowCount=partialViewEnabled('cp')?partialViewRows('cp',state.cp.rows).length:state.cp.rows.length;
   const qtySumCP = metricRows.reduce((s,r)=>s+(toNum(r['Order Quantity'])||0),0);
   const cpStats=pageModelOptionStats(metricRows);
-  const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon`;
+  const cpLabel=appLang==='en'?`${cpStats.modelCount} Model${cpStats.modelCount===1?'':'s'} · ${cpStats.optionCount} Option${cpStats.optionCount===1?'':'s'} · ${cpStats.orderCount} Order${cpStats.orderCount===1?'':'s'}`:`${cpStats.modelCount} Model · ${cpStats.optionCount} Opsiyon · ${cpStats.orderCount} Sipariş`;
   const cpScopeText=`${cpLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qtySumCP.toLocaleString('tr-TR')}`;
   document.getElementById('cpCount').textContent = cpScopeText;
   renderTableEmptyHint('cp',rows.length,totalRowCount);
@@ -8673,7 +8673,7 @@ function renderOrdersNow(){
   const totalRowCount=partialViewEnabled('orders')?partialViewRows('orders',state.orders.rows).length:state.orders.rows.length;
   const qty=metricRows.reduce((sum,row)=>sum+(toNum(row['Order Quantity'])||0),0);
   const ordersStats=pageModelOptionStats(metricRows);
-  const ordersLabel=appLang==='en'?`${ordersStats.modelCount} Model${ordersStats.modelCount===1?'':'s'} · ${ordersStats.optionCount} Option${ordersStats.optionCount===1?'':'s'}`:`${ordersStats.modelCount} Model · ${ordersStats.optionCount} Opsiyon`;
+  const ordersLabel=appLang==='en'?`${ordersStats.modelCount} Model${ordersStats.modelCount===1?'':'s'} · ${ordersStats.optionCount} Option${ordersStats.optionCount===1?'':'s'} · ${ordersStats.orderCount} Order${ordersStats.orderCount===1?'':'s'}`:`${ordersStats.modelCount} Model · ${ordersStats.optionCount} Opsiyon · ${ordersStats.orderCount} Sipariş`;
   const ordersScopeText=`${ordersLabel} · ${rows.length} / ${totalRowCount} ${appLang==='en'?'rows':'satır'} · Order Qty: ${qty.toLocaleString('tr-TR')}`;
   document.getElementById('ordersCount').textContent=ordersScopeText;
   renderTableEmptyHint('orders',rows.length,totalRowCount);
@@ -24879,9 +24879,15 @@ function refreshKolSummaryFooter(){
 }
 function pageModelOptionStats(rows,options){
   const helper=window.BLModelOptionStats;
-  if(helper?.getModelOptionStats)return helper.getModelOptionStats(rows,options);
+  const summaryOptions={optionMode:'unique',...(options||{})};
+  if(helper?.getModelOptionStats){
+    const stats=helper.getModelOptionStats(rows,summaryOptions);
+    const orderCount=typeof helper.getOrderCount==='function'?helper.getOrderCount(rows):0;
+    return {...stats,orderCount};
+  }
   const list=Array.isArray(rows)?rows:[];
-  return {rowCount:list.length,modelCount:list.length,optionCount:list.length};
+  const orderCount=new Set(list.map(row=>norm(row?.['Order Code'])).filter(Boolean)).size;
+  return {rowCount:list.length,modelCount:list.length,optionCount:list.length,orderCount};
 }
 function pageModelOptionText(rows){
   const stats=pageModelOptionStats(rows);
