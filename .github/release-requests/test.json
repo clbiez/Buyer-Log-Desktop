@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.221",
-  "commit_sha": "fe4d0452afa65a6a5fb7c0e9733956cd9916cff7",
-  "release_notes": "Buyer Log 7.0.221: Yol Süreleri / İthalat Yol Süresi Analizi IAS database'indeki bütün taşıt tiplerini (Tır, Kurye, Uçak+Tır …) ayrı satır ve filtre olarak gösteriyor; kuralı olmayan tipler bilgi amaçlıdır ve başka taşıtın kuralına aktarılmaz. Hesaplanan günlere otomatik eklenen gün/yüzde Buffer ile öneriler ve kurallara aktarılan süreler artırılabiliyor.",
-  "request_id": "7.0.221-r1"
+  "version": "7.0.222",
+  "commit_sha": "b7794a12ae9190e0af627c218802fe4f4e9b7e58",
+  "release_notes": "Buyer Log 7.0.222: Checklist/Rules yeniden tasarlandı ve dört durumlu checklist sistemi devreye alındı; IAS Yol Süreleri tüm taşıt tipleri ve Türkiye direkt sevkiyatlarını destekleyecek şekilde genişletildi; Backlog detaylarına model görselleri/PLM Sync eklendi; açılış TR/EN seçimi düzeltildi; Troy otomasyonu ve entegrasyonu uygulamadan tamamen kaldırıldı.",
+  "request_id": "7.0.222-r1"
 }
