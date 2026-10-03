@@ -38,8 +38,18 @@ test('Update Test UI uses the existing updater bridge and shows decisive status 
   assert.match(updateUi, /pendingReady/);
 });
 
+test('Update Test UI polls updater status and renders live download stages', () => {
+  assert.match(updateUi, /statusPollTimer = setInterval\(\(\) => \{ void refresh\(\)\.catch\(\(\)=>\{\}\); \}, 350\)/);
+  assert.match(updateUi, /data-update-progress/);
+  for (const step of ['check','download','verify','ready']) assert.match(updateUi,new RegExp('data-update-step="' + step + '"'));
+  assert.match(updateUi, /UPDATE_AVAILABLE: 'download'/);
+  assert.match(updateUi, /DOWNLOADING: 'download'/);
+  assert.match(updateUi, /VERIFYING: 'verify'/);
+  assert.match(updateUi, /READY_TO_INSTALL: 'ready'/);
+});
+
 test('Update Test UI is loaded before the user menu module in deferred UI', () => {
-  assert.match(perf, /update-test-ui\.js\?rev=3','user-access-ui\.js\?rev=APP-UPDATE-V3/);
+  assert.match(perf, /update-test-ui\.js\?rev=4','user-access-ui\.js\?rev=APP-UPDATE-V3/);
 });
 
 
