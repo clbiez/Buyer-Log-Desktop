@@ -5417,7 +5417,7 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartLegendItem:hover,.backlogChartLegendItem:focus-visible{color:var(--acc);outline:none;}
 .backlogChartLegendItem.is-muted{opacity:.38;text-decoration:line-through;}
 .backlogChartOverlayMark{font-style:normal;font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:3px;padding:1px 3px;}
-.backlogChartGestureHint{margin:0;padding:0 12px 8px;color:var(--muted);font-size:9.5px;}
+.backlogChartGestureHint{margin:0;padding:0 12px 8px;color:var(--muted);font-size:10px;}
 .backlogChartNotice{margin:6px 0 2px;padding:7px 9px;border:1px solid var(--line);background:var(--card2);color:var(--muted);font-size:10.5px;}
 .backlogChartLoading,.backlogChartError{padding:18px;text-align:center;color:var(--muted);font-size:11px;}
 .backlogChartError{color:var(--red);}
