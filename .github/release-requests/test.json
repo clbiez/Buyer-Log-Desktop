@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.223",
-  "commit_sha": "80567c9d6d1a26a6723d2440f6f9c6a4eb348b47",
-  "release_notes": "Buyer Log 7.0.223: Checklist onayları PO bazlı veya PLM ID + Model Adı + Colour Code bazında yeniden kullanılabilir hale getirildi; rapor numarası, gerçekleşme tarihi ve attachment kanıtları eklendi; checklist attachment adlandırması standartlaştırıldı; CP checklist değişikliklerinin kaybolmaması için kuyruklu/tekrar denemeli kayıt akışı eklendi; Checklist Excel model görselleri hücreyle taşınır/boyutlanır şekilde gömülüyor; Üreticiye Checklist Exceli Hazırla akışı Checklist Excel + ilgili ekleri Prepare E-Mail'e taşıyor ve 9,5 MB draft attachment kuralını kullanıyor.",
-  "request_id": "7.0.223-r1"
+  "version": "7.0.224",
+  "commit_sha": "ec6b64ecfab5c3a5c494e211c84be358197b14d2",
+  "release_notes": "Buyer Log 7.0.224: Central IAM etkin ancak Shared Hub geçici olarak erişilemiyorsa geçerli yerel/önceki sürüm kullanıcı deposu güvenli biçimde geri kazanılıyor; yerel giriş artık yalnız Moderatör parolasına bağlı değil ve parolası bulunan aktif kullanıcı kendi hesabıyla giriş yapabiliyor; bozuk Central IAM önbellekleri güvenlik için fail-closed kalmaya devam ediyor.",
+  "request_id": "7.0.224-r1"
 }
