@@ -197,6 +197,12 @@
     return true;
   }
 
+  function openOrderCodeMenu(config, cell, event) {
+    const table = cell && cell.closest ? cell.closest(config.sel) : null;
+    if (!table) return false;
+    return openForCell(config, table, cell, event);
+  }
+
   document.addEventListener('contextmenu', event => {
     const cell = event.target.closest('td');
     if (!cell) return;
@@ -208,7 +214,7 @@
       const isModelCell = cell.classList.contains('plmModelLinkCell')
         || MODEL_COLUMN_KEYS.has(columnKeyOfCell(table, cell));
       if (isModelCell) { openForCell(config, table, cell, event); return; }
-      if (cell.dataset.ordercodeCell === '1') { openManagedGridCopyMenu(config, table, cell, event); return; }
+      if (cell.dataset.ordercodeCell === '1') { openOrderCodeMenu(config, cell, event); return; }
       if (config.module === 'cp' || config.module === 'orders') { openManagedGridCopyMenu(config, table, cell, event); return; }
       return;
     }
