@@ -226,6 +226,14 @@ function groupCard(total){
     ${groups.length>15?`<button type="button" class="bpaMore" data-blv-action="toggleAll">${esc(state.showAll?L('Daha az göster','Show less'):L(`Tümünü göster (${groups.length})`,`Show all (${groups.length})`))}</button>`:''}
   </div>`;
 }
+function timelineTipHtml(title,bucket){
+  const rows=R().STAGES.filter(s=>(Number(bucket&&bucket.stages&&bucket.stages[s.key])||0)>0).map(s=>{
+    const qty=Number(bucket.stages[s.key])||0;
+    return `<span><i data-stage="${s.key}"></i><b>${esc(stageLabel(s.key))}</b><em>${esc(n(qty))}</em></span>`;
+  }).join('');
+  const total=Number(bucket&&bucket.qty)||0,overdue=Number(bucket&&bucket.overdueQty)||0;
+  return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(total))}</em></span>${overdue?`<span class="blvTimelineTooltipOverdue"><i></i><b>${esc(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'))}</b><em>${esc(n(overdue))}</em></span>`:''}`;
+}
 function flowCard(){
   const fields=R().TIMELINE_FIELDS,field=fields.find(f=>f.key===state.timeField)||fields[0];
   const series=R().timeline(items,field.key,{granularity:state.granularity,lang:lang()}),max=series.reduce((m,b)=>Math.max(m,b.qty),0);
@@ -241,26 +249,26 @@ function flowCard(){
   };
   const cols=series.map(b=>{
     const isToday=bucketIsToday(b);
-    const value=b.overdueQty?`<span class="blvOver">${n(b.overdueQty)}</span>`:n(b.qty);
+    const bucketTip=tip(timelineTipHtml(`${fLabel} · ${b.label}`,b));
+    const value=`<span class="blvColTotal">${n(b.qty)}</span>${b.overdueQty?`<small class="blvColOverdue">${n(b.overdueQty)} ${esc(L('gecikmiş','overdue'))}</small>`:''}`;
+    const todayMarker=isToday?`<span class="blvTodayLine" aria-hidden="true"><b>${esc(L('Bugün','Today'))}</b></span>`:'';
     const columnClass=`bpaCol${b.past?' is-past':''}${isToday?' is-today':''}`;
-    const commonAttrs=`data-blv-start="${esc(b.start||'')}"${isToday?' data-blv-today="1"':''}`;
+    const commonAttrs=`data-blv-start="${esc(b.start||'')}" data-blv-tip="${bucketTip}" data-blv-tip-style="chart"${isToday?' data-blv-today="1"':''}`;
     if(chartMode==='grouped'){
       const bars=R().STAGES.filter(s=>b.stages[s.key]>0).map(s=>{
         const qty=b.stages[s.key],list=b.items.filter(it=>it.stage===s.key);
-        const t=tip(tipHtml(`${fLabel} · ${b.label}`,[[stageLabel(s.key),n(qty)+' '+L('adet','pcs'),s.key],[L('Dönem toplamı','Period total'),n(b.qty)],[L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),n(b.overdueQty)]],L('Detay için tıklayın','Click for details')));
         const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),items:list,stage:s.key});
         const height=stageMax?Math.max(2,qty/stageMax*100):0;
-        return `<span class="blvGroupBar" data-stage="${s.key}" style="height:${height.toFixed(1)}%" data-blv-tip="${t}" data-blv-open="${o}" title="${esc(stageLabel(s.key)+': '+n(qty))}"></span>`;
+        return `<span class="blvGroupBar" data-stage="${s.key}" style="height:${height.toFixed(1)}%" data-blv-open="${o}" title="${esc(stageLabel(s.key)+': '+n(qty))}"></span>`;
       }).join('');
-      return `<div class="${columnClass} blvGroupedCol" ${commonAttrs}><div class="bpaColValue">${value}</div><div class="bpaColTrack blvGroupTrack"><div class="blvGroupBars">${bars}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
+      return `<div class="${columnClass} blvGroupedCol" ${commonAttrs}><div class="bpaColValue">${value}</div><div class="bpaColTrack blvGroupTrack">${todayMarker}<div class="blvGroupBars">${bars}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
     }
     const segs=R().STAGES.filter(s=>b.stages[s.key]>0).map(s=>{
       const qty=b.stages[s.key],list=b.items.filter(it=>it.stage===s.key);
-      const t=tip(tipHtml(`${fLabel} · ${b.label}`,[[stageLabel(s.key),n(qty)+' '+L('adet','pcs'),s.key],[L('Dönem toplamı','Period total'),n(b.qty)],[L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),n(b.overdueQty)]],L('Detay için tıklayın','Click for details')));
       const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),items:list,stage:s.key});
-      return `<span class="bpaSeg" data-stage="${s.key}" style="flex-grow:${qty}" data-blv-tip="${t}" data-blv-open="${o}"></span>`;
+      return `<span class="bpaSeg" data-stage="${s.key}" style="flex-grow:${qty}" data-blv-open="${o}"></span>`;
     }).join('');
-    return `<div class="${columnClass}" ${commonAttrs}><div class="bpaColValue">${value}</div><div class="bpaColTrack"><div class="bpaColBar" style="height:${max?Math.max(3,b.qty/max*100).toFixed(1):0}%">${segs}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
+    return `<div class="${columnClass}" ${commonAttrs}><div class="bpaColValue">${value}</div><div class="bpaColTrack">${todayMarker}<div class="bpaColBar" style="height:${max?Math.max(3,b.qty/max*100).toFixed(1):0}%">${segs}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
   }).join('');
   return `<div class="bpaCardBox"><div class="bpaSectionHead"><button type="button" class="bpaTodayBtn" data-blv-action="today" title="${esc(L('Bugünün dönemine git','Go to the current period'))}">${esc(L('Bugün','Today'))}</button><span class="bpaSectionTitle">${esc(L('Zaman akışı','Timeline'))}</span><span class="bpaSectionSub">${esc(L('Sütun üstünde kırmızı sayı: Ex-F tarihi geçmiş ama yüklenmemiş adet.','Red figure above a column: Ex-F passed but not loaded.'))}</span><span class="bpaSectionSpacer"></span>
     <div class="bpaSeg2" role="group">${fields.map(f=>`<button type="button" class="${f.key===field.key?'is-active':''}" data-blv-time="${f.key}">${esc(lang()==='en'?f.en:f.tr)}</button>`).join('')}</div>
@@ -449,6 +457,7 @@ function moveTip(e){
   const target=e.target&&e.target.closest?e.target.closest('[data-blv-tip]'):null;
   if(!target||!tips.has(target.dataset.blvTip)){hideTip();return;}
   const el=tipEl();
+  el.classList.toggle('is-chart-style',target.dataset.blvTipStyle==='chart');
   if(el.dataset.key!==target.dataset.blvTip){el.innerHTML=tips.get(target.dataset.blvTip);el.dataset.key=target.dataset.blvTip;}
   el.hidden=false;
   const pad=14,w=el.offsetWidth,h=el.offsetHeight;let x=e.clientX+pad,y=e.clientY+pad;

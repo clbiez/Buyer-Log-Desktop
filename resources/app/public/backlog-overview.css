@@ -18,16 +18,33 @@
 .blvOver{font-style:normal;color:var(--red);font-weight:700}
 .blvGap{height:12px}
 .blvTimelineLegend .bpaLegend{padding:8px 12px 0}
-.blvCols{height:300px}
-.blvCols .bpaCol{flex:1 0 48px;max-width:96px}
+.blvCols{height:318px;padding-top:30px}
+.blvCols .bpaCol{position:relative;flex:1 0 48px;max-width:96px}
+.blvCols .bpaColValue{height:28px;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;position:relative;z-index:4}
+.blvColTotal{font-size:10.5px;font-weight:800;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
+.blvColOverdue{font-size:8.5px;font-weight:750;line-height:1;color:var(--red);white-space:nowrap}
+.blvCols .bpaColTrack{position:relative}
+.blvTodayLine{position:absolute;left:50%;top:0;bottom:0;border-left:1.4px dashed var(--acc);z-index:3;pointer-events:none;opacity:.92}
+.blvTodayLine b{position:absolute;left:0;top:-50px;transform:translateX(-50%);min-width:50px;padding:3px 8px;border:1px solid var(--acc);border-radius:5px;background:var(--card);color:var(--acc-ink);font:750 10px/1.1 var(--font,system-ui,sans-serif);text-align:center;white-space:nowrap;box-shadow:0 2px 8px color-mix(in srgb,#000 8%,transparent)}
 .blvCols .bpaCol.is-past .bpaColLabel{color:var(--ink2);font-weight:650}
+.blvTipBox.is-chart-style{min-width:180px;max-width:290px;max-height:300px;overflow:auto;overscroll-behavior:contain;padding:8px;border:1px solid var(--line);border-radius:var(--r-xs);background:color-mix(in srgb,var(--card) 96%,transparent);box-shadow:0 8px 24px color-mix(in srgb,#000 18%,transparent);font:10px var(--font,system-ui,sans-serif)}
+.blvTipBox.is-chart-style strong{display:block;margin-bottom:6px;font-size:10.5px}
+.blvTipBox.is-chart-style span{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:6px;align-items:center;padding:2px 0}
+.blvTipBox.is-chart-style span i{width:7px;height:7px;border-radius:50%;background:var(--seg,var(--muted))}
+.blvTipBox.is-chart-style span b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.blvTipBox.is-chart-style span em{font-style:normal;font-variant-numeric:tabular-nums;color:var(--muted)}
+.blvTipBox.is-chart-style .backlogChartTooltipTotal{margin-top:5px;padding-top:6px;border-top:1px solid var(--line);font-weight:800}
+.blvTipBox.is-chart-style .backlogChartTooltipTotal i{background:var(--muted)}
+.blvTipBox.is-chart-style .blvTimelineTooltipOverdue{color:var(--red);font-weight:750}
+.blvTipBox.is-chart-style .blvTimelineTooltipOverdue i{background:var(--red)}
+.blvTipBox.is-chart-style .blvTimelineTooltipOverdue em{color:var(--red);font-weight:800}
 .blvCols.is-grouped .bpaCol{flex-basis:64px;max-width:112px}
 .blvGroupTrack{padding:0 3px}
 .blvGroupBars{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px}
 .blvGroupBar{display:block;flex:1 1 0;min-width:3px;max-width:11px;background:var(--seg);cursor:pointer;transform-origin:center bottom;transition:height .4s var(--ease),filter .12s var(--ease),transform .12s var(--ease)}
 .blvGroupBar:hover{filter:brightness(1.12) saturate(1.1);transform:scaleX(1.16)}
 .blvChartMode button{min-width:64px}
-@media(max-width:900px){.blvCols{height:270px}.blvCols.is-grouped .bpaCol{flex-basis:58px}.blvChartMode button{min-width:0}}
+@media(max-width:900px){.blvCols{height:288px;padding-top:28px}.blvCols.is-grouped .bpaCol{flex-basis:58px}.blvChartMode button{min-width:0}.blvTodayLine b{top:-48px}}
 @media(prefers-reduced-motion:reduce){.blvGroupBar{transition:none}}
 
 /* Panel kabuğu */
