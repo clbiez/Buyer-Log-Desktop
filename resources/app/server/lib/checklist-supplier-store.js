@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { withFileLeaseSync } = require('./shared-file-transaction');
 
@@ -11,6 +12,9 @@ const MAX_ANSWERS = 250000;
 const MAX_TOMBSTONES = 250000;
 const MAX_DEFINITIONS = 500;
 const MAX_EVENTS = 20000;
+const ATTACHMENT_ROOT = path.join(SERVER_DATA_ROOT, 'checklist-attachments');
+const MAX_ATTACHMENT_BYTES = 40 * 1024 * 1024;
+const MAX_ATTACHMENTS_PER_ANSWER = 40;
 
 function text(value, max = 500) {
   return String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
@@ -19,6 +23,84 @@ function iso(value) {
   const raw = text(value, 80);
   const time = Date.parse(raw);
   return Number.isFinite(time) ? new Date(time).toISOString() : new Date().toISOString();
+}
+function safeSegment(value, max = 50) {
+  return String(value == null ? '' : value)
+    .replace(/[\\/:*?"<>|\r\n]+/g, '_').replace(/\s+/g, ' ').trim().slice(0, max) || '-';
+}
+function safeExtension(filename) {
+  const ext = path.extname(String(filename || '')).replace(/[^.A-Za-z0-9]+/g, '').slice(0, 12);
+  return ext && ext !== '.' ? ext : '';
+}
+function attachmentDate(value) {
+  const d = new Date(value || Date.now());
+  if (Number.isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
+  return d.toISOString().slice(0, 10);
+}
+function attachmentDisplayName(context, originalName) {
+  const c = context && typeof context === 'object' ? context : {};
+  const sequence = Math.max(1, Math.min(99, Number(c.sequence) || 1));
+  const base = [
+    safeSegment(c.orderCode, 28),
+    safeSegment(c.plmId, 28),
+    safeSegment(c.modelName, 48),
+    safeSegment(c.colourCode, 28),
+    safeSegment(c.checklistName, 42),
+    safeSegment(c.checklistStatus, 28),
+    attachmentDate(c.addedAt),
+  ].join(' - ');
+  return base + (sequence > 1 ? ' - ' + sequence : '') + safeExtension(originalName);
+}
+function attachmentDiskPath(id) {
+  const token = String(id || '').trim().toLowerCase();
+  if (!/^[a-f0-9]{32}$/.test(token)) return '';
+  return path.join(ATTACHMENT_ROOT, token + '.bin');
+}
+function cleanAttachmentMeta(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const id = text(raw.id, 80).toLowerCase();
+  if (!/^[a-f0-9]{32}$/.test(id)) return null;
+  return {
+    id,
+    filename: text(raw.filename, 500),
+    originalName: text(raw.originalName, 500),
+    mimeType: text(raw.mimeType, 160) || 'application/octet-stream',
+    size: Math.max(0, Math.min(MAX_ATTACHMENT_BYTES, Number(raw.size) || 0)),
+    addedAt: text(raw.addedAt, 80),
+  };
+}
+function addAttachment(raw, actor) {
+  const item = raw && typeof raw === 'object' ? raw : {};
+  const encoded = String(item.base64 || '').replace(/^data:[^;,]+;base64,/i, '').replace(/\s+/g, '');
+  if (!encoded) {
+    const error = new Error('Attachment payload is empty.'); error.code = 'CHECKLIST_ATTACHMENT_EMPTY'; throw error;
+  }
+  const buffer = Buffer.from(encoded, 'base64');
+  if (!buffer.length || buffer.length > MAX_ATTACHMENT_BYTES) {
+    const error = new Error('Checklist attachment exceeds the 40 MB storage limit.'); error.code = 'CHECKLIST_ATTACHMENT_TOO_LARGE'; throw error;
+  }
+  const id = crypto.randomBytes(16).toString('hex');
+  const addedAt = new Date().toISOString();
+  const filename = attachmentDisplayName({ ...(item.context || {}), addedAt }, item.filename);
+  fs.mkdirSync(ATTACHMENT_ROOT, { recursive: true });
+  fs.writeFileSync(attachmentDiskPath(id), buffer);
+  return {
+    id, filename,
+    originalName: safeSegment(item.filename || 'attachment', 500),
+    mimeType: text(item.mimeType, 160) || 'application/octet-stream',
+    size: buffer.length, addedAt,
+    by: actorInfo(actor),
+  };
+}
+function getAttachmentPath(id) {
+  const fullPath = attachmentDiskPath(id);
+  return fullPath && fs.existsSync(fullPath) ? fullPath : '';
+}
+function deleteAttachment(id) {
+  const fullPath = attachmentDiskPath(id);
+  if (!fullPath || !fs.existsSync(fullPath)) return false;
+  fs.unlinkSync(fullPath);
+  return true;
 }
 function emptyStore() {
   return { schemaVersion: SCHEMA_VERSION, revision: 0, updatedAt: '', definitions: [], answers: {}, tombstones: {}, events: [] };
@@ -94,6 +176,12 @@ function normalizeDefinition(raw) {
     mode: raw.mode === 'formula' ? 'formula' : 'basic', formula: text(raw.formula, 4000),
     expressionVersion: Math.max(1, Number(raw.expressionVersion) || 1),
     conditions, match: raw.match === 'any' ? 'any' : 'all',
+    approvalScope: raw.approvalScope === 'option' ? 'option' : 'order',
+    evidenceFields: {
+      reportNumber: Boolean(raw.evidenceFields && raw.evidenceFields.reportNumber === true),
+      actualDate: Boolean(raw.evidenceFields && raw.evidenceFields.actualDate === true),
+      attachments: Boolean(raw.evidenceFields && raw.evidenceFields.attachments === true),
+    },
   };
 }
 
@@ -146,6 +234,10 @@ function applyEntries(entries, actor, options = {}) {
         key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
         byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
         note: text(raw.note, 2000), supplier: text(raw.supplier, 300), itemLabel: text(raw.itemLabel, 200),
+        reportNumber: text(raw.reportNumber, 300),
+        actualDate: text(raw.actualDate, 40),
+        attachments: (Array.isArray(raw.attachments) ? raw.attachments : [])
+          .slice(0, MAX_ATTACHMENTS_PER_ANSWER).map(cleanAttachmentMeta).filter(Boolean),
       };
       if (state === 'open') {
         if (!previous && store.tombstones[key] && String(store.tombstones[key].at || '') >= at) { skipped += 1; continue; }
@@ -167,5 +259,8 @@ function applyEntries(entries, actor, options = {}) {
 }
 
 module.exports = {
-  FILE, SCHEMA_VERSION, normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, applyEntries, _read: read,
+  FILE, ATTACHMENT_ROOT, SCHEMA_VERSION, MAX_ATTACHMENT_BYTES,
+  normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, applyEntries,
+  addAttachment, getAttachmentPath, deleteAttachment, cleanAttachmentMeta, attachmentDisplayName,
+  _read: read,
 };
