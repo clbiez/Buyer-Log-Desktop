@@ -1197,6 +1197,7 @@
     wrap.className = 'toolbarMoreWrap';
     wrap.id = 'cpChecklistToolsWrap';
     wrap.style.position = 'relative';
+    wrap.style.width = '100%';
 
     const trigger = root.document.createElement('button');
     trigger.type = 'button';
@@ -1204,6 +1205,8 @@
     trigger.id = 'cpChecklistToolsBtn';
     trigger.setAttribute('aria-haspopup', 'true');
     trigger.setAttribute('aria-expanded', 'false');
+    trigger.style.width = '100%';
+    trigger.style.justifyContent = 'flex-start';
     trigger.innerHTML = '<svg class="ic"><use href="#i-checklist"/></svg><span>Checklist</span>';
 
     const sub = root.document.createElement('div');
@@ -1239,6 +1242,18 @@
       event.stopPropagation();
       sub.hidden = !sub.hidden;
       trigger.setAttribute('aria-expanded', sub.hidden ? 'false' : 'true');
+      if (!sub.hidden) {
+        root.requestAnimationFrame(function () {
+          const rect = sub.getBoundingClientRect();
+          if (rect.right > root.innerWidth - 8) {
+            sub.style.left = 'auto';
+            sub.style.right = 'calc(100% + 6px)';
+          } else {
+            sub.style.left = 'calc(100% + 6px)';
+            sub.style.right = 'auto';
+          }
+        });
+      }
     });
     sub.addEventListener('click', function (event) { event.stopPropagation(); });
     root.document.addEventListener('click', function (event) {
