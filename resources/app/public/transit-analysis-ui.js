@@ -76,9 +76,20 @@
     const p = String(period || '');
     return granularity === 'week' ? p.slice(0, 4) + L('-H', '-W') + p.slice(4) : p.slice(0, 4) + '/' + p.slice(4);
   }
-  function vehicleLabel(vehicle) {
-    if (!vehicle) return L('Karma (Tümü)', 'Mixed (All)');
-    return typeof global.transitDelTypeDisplay === 'function' ? global.transitDelTypeDisplay(vehicle) : vehicle;
+  // IAS'taki taşıt adları İngilizce görünümde parça parça çevrilir; tanınmayan
+  // bir parça varsa database değeri olduğu gibi gösterilir.
+  const VEHICLE_WORDS = { GEMI: 'Sea', UCAK: 'Air', TIR: 'Truck', KARA: 'Road', KARAYOLU: 'Road', DEMIRYOLU: 'Rail', TREN: 'Rail', KURYE: 'Courier', DENIZ: 'Sea', DENIZYOLU: 'Sea', HAVAYOLU: 'Air' };
+  function vehicleLabel(vehicle, analysis) {
+    if (!vehicle) return analysis && analysis.source === 'database' ? L('Taşıt belirtilmemiş', 'Vehicle not specified') : L('Karma (Tümü)', 'Mixed (All)');
+    if (TA().ruleVehicle(vehicle)) return typeof global.transitDelTypeDisplay === 'function' ? global.transitDelTypeDisplay(vehicle) : vehicle;
+    if (lang() !== 'en') return vehicle;
+    const parts = String(vehicle).split(/(\s*[+/,-]\s*|\s+)/);
+    const out = parts.map(part => {
+      if (!part.trim() || /^\s*[+/,-]\s*$/.test(part)) return part;
+      const k = part.toLocaleUpperCase('tr-TR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return VEHICLE_WORDS[k] || null;
+    });
+    return out.some(x => x == null) ? vehicle : out.join('');
   }
   function toast(message) { if (typeof global.showToast === 'function') global.showToast(message); }
   function readView() {
@@ -181,7 +192,7 @@
   function mount(container, ctx) {
     if (!container || !TA()) return null;
     const saved = readView();
-    const view = { source: 'database', scope: 'company', window: 'y1', basis: '', year: '', vehicle: '*', metric: 'endToEnd', stat: 'mean', collapsed: false,
+    const view = { source: 'database', scope: 'company', window: 'y1', basis: '', year: '', vehicle: '*', metric: 'endToEnd', stat: 'mean', collapsed: false, bufferDays: 0, bufferPct: 0,
       ...saved, v: VIEW_VERSION };
     // v2: varsayılan kapsam modülün kendi IAS database ufkudur.
     if (saved.v !== VIEW_VERSION) view.scope = 'company';
@@ -189,6 +200,7 @@
     if (!['filtered', 'company'].includes(view.scope)) view.scope = 'company';
     if (!TA().WINDOW_KEYS.includes(view.window)) view.window = 'y1';
     if (!['shipment', 'qty'].includes(view.weight)) view.weight = 'shipment';
+    { const b = TA().normalizeBuffer(view); view.bufferDays = b.days; view.bufferPct = b.pct; }
     const liveParams = () => ({ scope: view.scope, window: view.window, weight: view.weight });
     const selected = new Map();
     const expanded = new Set();
@@ -288,29 +300,34 @@
       if (view.vehicle !== '*' && !summary.options.vehicles.includes(view.vehicle)) { view.vehicle = '*'; summary = TA().summarize(analysis, { basis: view.basis, year: yearFilter, vehicle: '*' }); }
       writeView(view);
       const rules = ctx.getRules();
-      const suggestions = new Map(TA().suggestRules(summary, view).map(s => [s.delType + '|' + s.countryKey, s]));
+      const suggestions = new Map(TA().suggestRules(summary, view).map(s => [s.vehicle + '|' + s.countryKey, s]));
       summary.rows.forEach(row => {
         const id = rowId(row);
-        if (!selected.has(id)) selected.set(id, !!row.vehicle && !row.lowSample && !row.anomaly && suggestions.has(id));
+        if (!selected.has(id)) selected.set(id, !!row.ruleType && !row.lowSample && !row.anomaly && suggestions.has(id));
       });
+      const hasBuffer = view.bufferDays > 0 || view.bufferPct > 0;
+      const bufferText = [view.bufferPct > 0 ? `+%${fmt(view.bufferPct)}` : '', view.bufferDays > 0 ? `+${view.bufferDays} ${L('gün', 'days')}` : ''].filter(Boolean).join(' ');
       const scale = Math.max(1, ...summary.rows.map(r => ['loading', 'transit', 'customs'].reduce((s, m) => s + Math.max(0, Number(r[m]) || 0), 0)));
       const labels = TA().metricLabels(analysis, lang());
       const text = TA().labels(lang());
       const tiles = summary.vehicleTotals.map(t => `<div class="trxTile">
-          <div class="trxTileHead">${esc(vehicleLabel(t.vehicle))} · ${t.countries} ${L('ülke', 'countries')} · ${fmtQty(t.qty)}</div>
+          <div class="trxTileHead">${esc(vehicleLabel(t.vehicle, analysis))} · ${t.countries} ${L('ülke', 'countries')} · ${fmtQty(t.qty)}</div>
           <div class="trxTileValue">${fmt(t.endToEnd)}<small>${L('gün', 'days')}</small></div>
           <div class="trxTileFoot">${L('Yük.', 'Load')} ${fmt(t.loading)} · ${L('Yol', 'Transit')} ${fmt(t.transit)} · ${L('Gümr.', 'Cust.')} ${fmt(t.customs)}</div></div>`).join('');
       const body = summary.rows.map(row => {
         const id = rowId(row);
         const s = suggestions.get(id);
-        const current = TA().currentRuleDays(rules, row.vehicle, row.ruleCountry);
+        const current = TA().currentRuleDays(rules, row.ruleType, row.ruleCountry);
         const diff = s && current ? s.days - current.days : null;
         const flags = [row.lowSample ? `<span class="trxFlag" title="${row.shipments != null ? L(`${TA().LOW_SAMPLE_SHIPMENTS} sevkiyattan az`, `Fewer than ${TA().LOW_SAMPLE_SHIPMENTS} shipments`) : L(`Toplam adet < ${fmtQty(TA().LOW_SAMPLE_QTY)} veya < ${TA().LOW_SAMPLE_PERIODS} dönem`, `Total qty < ${fmtQty(TA().LOW_SAMPLE_QTY)} or < ${TA().LOW_SAMPLE_PERIODS} periods`)}">${L('düşük örneklem', 'low sample')}</span>` : '',
           row.anomaly ? `<span class="trxFlag trxFlagBad" title="${esc(L('Negatif ana süre var (tarih tutarsızlığı)', 'Negative main duration (date inconsistency)'))}">${L('veri tutarsız', 'inconsistent')}</span>` : ''].join('');
-        const canSelect = !!row.vehicle && !!s;
+        const canSelect = !!row.ruleType && !!s;
+        const noRuleTip = row.vehicle
+          ? L('Bu taşıt tipi için Buyer Log kuralı yok (kurallar Gemi, Uçak, Gemi+Uçak ve Gemi+Tır için uygulanır); süre yalnız bilgi amaçlı gösterilir.', 'Buyer Log has no rule for this vehicle type (rules apply to Sea, Air, Sea+Air and Sea+Truck); the duration is shown for information only.')
+          : L('Taşıt tipi belirtilmemiş; kurala aktarılamaz', 'Vehicle type not specified; cannot be transferred');
         return `<tr data-ta-row="${esc(id)}" class="${expanded.has(id) ? 'is-open' : ''}">
-          <td><input type="checkbox" class="trxCheck" data-ta-pick="${esc(id)}" ${selected.get(id) && canSelect ? 'checked' : ''} ${canSelect ? '' : 'disabled'} title="${canSelect ? esc(L('Öneriyi kurallara aktar', 'Transfer the suggestion to the rules')) : esc(L('Taşıt tipi belirsiz; kurala aktarılamaz', 'Vehicle type unknown; cannot be transferred'))}"></td>
-          <td><span class="trxBadge" data-v="${esc(row.vehicle)}">${esc(vehicleLabel(row.vehicle))}</span></td>
+          <td><input type="checkbox" class="trxCheck" data-ta-pick="${esc(id)}" ${selected.get(id) && canSelect ? 'checked' : ''} ${canSelect ? '' : 'disabled'} title="${canSelect ? esc(L('Öneriyi kurallara aktar', 'Transfer the suggestion to the rules')) : esc(noRuleTip)}"></td>
+          <td><span class="trxBadge" data-v="${esc(row.vehicle)}" title="${esc(row.vehicle || '')}">${esc(vehicleLabel(row.vehicle, analysis))}</span></td>
           <td><strong>${esc(row.ruleCountry)}</strong>${flags}</td>
           <td class="num">${fmtQty(row.qty)}<div class="trxSubNum">${row.shipments != null ? row.shipments.toLocaleString(loc()) + L(' sevk.', ' shp.') : row.periods + (row.granularity === 'week' ? L(' hf', ' wk') : L(' ay', ' mo'))}</div></td>
           <td class="num">${fmt(row.loading)}</td><td class="num">${fmt(row.transit)}</td><td class="num">${fmt(row.customs)}</td>
@@ -319,24 +336,27 @@
           <td class="num trxMuted">${fmt(row.min)}–${fmt(row.max)}</td>
           <td class="num">${trendCell(row)}</td>
           <td class="num">${current ? `${fmt(current.days, 0)}<div class="trxSubNum">${current.source === 'rule' ? L('kural', 'rule') : L('varsayılan', 'default')}</div>` : '—'}</td>
-          <td class="num">${s ? `<strong>${fmt(s.days, 0)}</strong>${diff ? `<div class="trxSubNum" style="color:${diff > 0 ? 'var(--red)' : 'var(--green)'};">${diff > 0 ? '+' : ''}${diff}</div>` : ''}` : '—'}</td>
+          <td class="num"${s && hasBuffer ? ` title="${esc(L(`Hesaplanan ${s.baseDays} gün, ${bufferText} buffer ile ${s.days} gün`, `Calculated ${s.baseDays} days, ${bufferText} buffer = ${s.days} days`))}"` : ''}>${s ? `<strong>${fmt(s.days, 0)}</strong>${diff ? `<div class="trxSubNum" style="color:${diff > 0 ? 'var(--red)' : 'var(--green)'};">${diff > 0 ? '+' : ''}${diff}</div>` : ''}` : (row.vehicle && !row.ruleType ? `<span class="trxMuted" title="${esc(noRuleTip)}">${L('kural yok', 'no rule')}</span>` : '—')}</td>
           <td><button type="button" class="trxIconBtn" data-ta-expand="${esc(id)}" title="${esc(L('Dönem ve alt süreç detayı', 'Period and sub-process detail'))}" aria-expanded="${expanded.has(id)}">${expanded.has(id) ? '▴' : '▾'}</button></td>
         </tr>${expanded.has(id) ? `<tr class="trxDetailRow"><td colspan="14">${detailHtml(row, analysis)}</td></tr>` : ''}`;
       }).join('');
       const picked = summary.rows.filter(r => selected.get(rowId(r)) && suggestions.has(rowId(r))).length;
-      const allPickable = summary.rows.filter(r => r.vehicle && suggestions.has(rowId(r))).length;
+      const allPickable = summary.rows.filter(r => r.ruleType && suggestions.has(rowId(r))).length;
       return `<div class="trxFilters">
           <label class="trxInline"><span>${L('Baz', 'Basis')}</span><select class="trxSelect" data-ta-view="basis">${summary.options.bases.map(b => opt(b, text.basis[b], view.basis)).join('')}</select></label>
-          <label class="trxInline"><span>${L('Taşıt', 'Vehicle')}</span><select class="trxSelect" data-ta-view="vehicle">${opt('*', L('Tümü', 'All'), view.vehicle)}${summary.options.vehicles.map(v => opt(v, vehicleLabel(v), view.vehicle)).join('')}</select></label>
+          <label class="trxInline"><span>${L('Taşıt', 'Vehicle')}</span><select class="trxSelect" data-ta-view="vehicle">${opt('*', L('Tümü', 'All'), view.vehicle)}${summary.options.vehicles.map(v => opt(v, vehicleLabel(v, analysis), view.vehicle)).join('')}</select></label>
           <label class="trxInline"><span>${L('Kurala esas', 'Rule basis')}</span><select class="trxSelect" data-ta-view="metric">${Object.entries(labels.rule).map(([k, l]) => opt(k, l, view.metric)).join('')}</select></label>
           <label class="trxInline"><span>${L('İstatistik', 'Statistic')}</span><select class="trxSelect" data-ta-view="stat">${Object.entries(text.ruleStat).map(([k, l]) => opt(k, l, view.stat)).join('')}</select></label>
+          <span class="trxInline trxBuffer${hasBuffer ? ' is-on' : ''}" title="${esc(L('Hesaplanan güne otomatik eklenir: önce yüzde, sonra gün. Öneri sütunu ve kurallara aktarılan gün buffer\'lı değerdir.', 'Added automatically to the calculated days: first the percentage, then the days. The Suggested column and the days transferred to the rules include the buffer.'))}"><span>Buffer</span>
+            <input type="number" class="trxInput trxBufferInput" data-ta-buffer="bufferDays" min="0" max="${TA().MAX_BUFFER_DAYS}" step="1" value="${view.bufferDays}" aria-label="${esc(L('Buffer gün', 'Buffer days'))}"><span>${L('gün', 'days')}</span>
+            <input type="number" class="trxInput trxBufferInput" data-ta-buffer="bufferPct" min="0" max="${TA().MAX_BUFFER_PCT}" step="1" value="${view.bufferPct}" aria-label="${esc(L('Buffer yüzde', 'Buffer percent'))}"><span>%</span></span>
         </div>
         ${tiles ? `<div class="trxTiles">${tiles}</div>` : ''}
         ${isDb ? `<div class="trxNote">${esc(statsLine(analysis))}</div>${columnNotes(analysis)}` : ''}
         <div class="trxTableWrap"><table class="trxTable"><thead><tr>
           <th><input type="checkbox" class="trxCheck" data-ta-all title="${esc(L('Tümünü seç', 'Select all'))}" ${picked && picked === allPickable ? 'checked' : ''}></th><th>${L('Taşıt', 'Vehicle')}</th><th>${L('Ülke', 'Country')}</th><th class="num">${L('Adet', 'Qty')}</th><th class="num" title="${esc(labels.loading)}">${L('Yükleme', 'Loading')}</th><th class="num" title="${esc(labels.transit)}">${L('Yol', 'Transit')}</th><th class="num" title="${esc(labels.customs)}">${L('Gümrük', 'Customs')}</th><th class="num" title="${esc(labels.endToEnd)}">${L('Uçtan Uca', 'End-to-End')}</th><th class="num">P80</th><th class="num">${L('Min–Maks', 'Min–Max')}</th><th class="num">Trend</th><th class="num">${L('Mevcut', 'Current')}</th><th class="num">${L('Öneri', 'Suggested')}</th><th></th>
         </tr></thead><tbody>${body || `<tr><td colspan="14" class="trxEmpty">${L('Bu seçim için veri yok.', 'No data for this selection.')}</td></tr>`}</tbody></table></div>
-        <div class="trxFoot"><span class="trxMeta">${L(`${picked} öneri seçili`, `${picked} suggestion(s) selected`)} · ${esc(labels.rule[view.metric] || text.ruleMetric[view.metric])}, ${esc(text.ruleStat[view.stat])} · ${(analysis.weighting === 'shipment' ? L('süreler gün, sevkiyat ortalaması', 'days, shipment average') : L('süreler gün, adet ağırlıklı', 'days, quantity-weighted'))}</span><span class="trxGrow"></span>
+        <div class="trxFoot"><span class="trxMeta">${L(`${picked} öneri seçili`, `${picked} suggestion(s) selected`)} · ${esc(labels.rule[view.metric] || text.ruleMetric[view.metric])}, ${esc(text.ruleStat[view.stat])}${hasBuffer ? ` · Buffer ${esc(bufferText)}` : ''} · ${(analysis.weighting === 'shipment' ? L('süreler gün, sevkiyat ortalaması', 'days, shipment average') : L('süreler gün, adet ağırlıklı', 'days, quantity-weighted'))}</span><span class="trxGrow"></span>
           <button type="button" class="trxBtn trxBtnPrimary" data-ta-apply ${picked ? '' : 'disabled'}><svg class="ic"><use href="#i-copy-plus"/></svg><span>${L('Seçilenleri kurallara aktar', 'Transfer selected to rules')}</span></button></div>`;
     }
 
@@ -391,9 +411,17 @@
         selected.clear();
         render();
       }));
+      // Değişiklik odak kaybında gelir; aynı olay içinde yeniden çizmek odaktaki
+      // alanı silerken tarayıcı hatası verir, bu yüzden çizim ertelenir.
+      qa('[data-ta-buffer]').forEach(el => el.addEventListener('change', () => {
+        const b = TA().normalizeBuffer({ ...view, [el.dataset.taBuffer]: el.value });
+        if (b.days === view.bufferDays && b.pct === view.bufferPct) { el.value = view[el.dataset.taBuffer]; return; }
+        view.bufferDays = b.days; view.bufferPct = b.pct;
+        writeView(view); setTimeout(render, 0);
+      }));
       qa('[data-ta-pick]').forEach(el => el.addEventListener('change', () => { selected.set(el.dataset.taPick, el.checked); render(); }));
       q('[data-ta-all]')?.addEventListener('change', e => {
-        (summary ? summary.rows : []).forEach(r => { if (r.vehicle) selected.set(rowId(r), e.target.checked); });
+        (summary ? summary.rows : []).forEach(r => { if (r.ruleType) selected.set(rowId(r), e.target.checked); });
         render();
       });
       qa('[data-ta-expand]').forEach(el => el.addEventListener('click', () => {
@@ -402,7 +430,7 @@
         render();
       }));
       q('[data-ta-apply]')?.addEventListener('click', () => {
-        const suggestions = new Map(TA().suggestRules(summary, view).map(s => [s.delType + '|' + s.countryKey, s]));
+        const suggestions = new Map(TA().suggestRules(summary, view).map(s => [s.vehicle + '|' + s.countryKey, s]));
         const chosen = summary.rows.filter(r => selected.get(rowId(r))).map(r => suggestions.get(rowId(r))).filter(Boolean);
         const result = TA().applySuggestions(ctx.getRules(), chosen);
         ctx.applyRules(result.rules);

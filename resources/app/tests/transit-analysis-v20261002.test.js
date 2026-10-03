@@ -577,3 +577,39 @@ test('şirket sorgusu raporun gerçekleşen tarih sütunlarını ekler; tahmini 
   assert.deepEqual(same.result.addedFields, ['Fiili Yükleme Tarih']);
   assert.equal(same.captured.mapping['Antrepo Giriş Tarih'], undefined);
 });
+
+test('database\'deki bütün taşıt tipleri ayrı satırdır; yalnız kural motorunun tanıdığı tipler kurala aktarılır', () => {
+  const ship = (vehicle, days) => ({ country: 'ÇİN', vehicle, qty: 10, arrived: true, loadingRequest: '2026-07-01', warehouseEntry: `2026-07-${String(1 + days).padStart(2, '0')}` });
+  const a = TA.buildFromShipments([ship('GEMİ', 25), ship('Tır', 9), ship('Uçak+Tır', 12), ship('Kurye', 4), ship('SEA + AIR', 18), ship('', 20)], { today: '2026-12-31' });
+  assert.equal(a.stats.used, 6);
+  assert.equal(a.stats.missingVehicle, 1);
+  const rows = TA.summarize(a, { basis: 'warehouse', year: '*' }).rows;
+  assert.deepEqual(rows.map(r => [r.vehicle, r.ruleType]), [
+    ['Gemi', 'Gemi'], ['Gemi+Uçak', 'Gemi+Uçak'], ['Kurye', ''], ['Tır', ''], ['Uçak+Tır', ''], ['', ''],
+  ]);
+  // "Uçak+Tır" Uçak kuralına katlanmaz; Tır/Kurye için kural tipi yoktur.
+  assert.deepEqual(TA.suggestRules({ rows }).map(s => [s.vehicle, s.delType, s.days]), [['Gemi', 'Gemi', 25], ['Gemi+Uçak', 'Gemi+Uçak', 18]]);
+  assert.equal(TA.ruleVehicle('Uçak+Tır'), '');
+  assert.equal(TA.ruleVehicle('gemi+tır'), 'Gemi+Tır');
+  // Kayıtlı analiz yeniden okunurken database taşıt adı korunur.
+  assert.equal(TA.normalizeAnalysis(a).records.find(r => r.vehicle === 'Uçak+Tır').vehicle, 'Uçak+Tır');
+});
+
+test('Buffer hesaplanan güne önce yüzde sonra gün olarak eklenir ve kurallara buffer\'lı aktarılır', () => {
+  assert.equal(TA.applyBuffer(50, { bufferDays: 5, bufferPct: 10 }), 60);
+  assert.equal(TA.applyBuffer(50, {}), 50);
+  assert.deepEqual(TA.normalizeBuffer({ bufferDays: '-3', bufferPct: '999' }), { days: 0, pct: TA.MAX_BUFFER_PCT });
+  assert.deepEqual(TA.normalizeBuffer({ bufferDays: 9999 }), { days: TA.MAX_BUFFER_DAYS, pct: 0 });
+  const rows = [{ vehicle: 'Gemi', ruleType: 'Gemi', ruleCountry: 'India', countryKey: 'INDIA', endToEnd: 47.7, p80: 55 }];
+  const [s] = TA.suggestRules({ rows }, { metric: 'endToEnd', stat: 'mean', bufferDays: 7, bufferPct: 0 });
+  assert.equal(s.baseDays, 48);
+  assert.equal(s.days, 55);
+  const applied = TA.applySuggestions([], [s]);
+  assert.equal(applied.rules[0].days, 55);
+  assert.equal(applied.rules[0].delType, 'Gemi');
+  const ui = read('public/transit-analysis-ui.js');
+  assert.match(ui, /data-ta-buffer="bufferDays"/);
+  assert.match(ui, /data-ta-buffer="bufferPct"/);
+  assert.match(ui, /const canSelect = !!row\.ruleType && !!s;/);
+  assert.match(ui, /currentRuleDays\(rules, row\.ruleType, row\.ruleCountry\)/);
+});

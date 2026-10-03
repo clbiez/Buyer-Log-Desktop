@@ -5646,3 +5646,6 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 .trxPickFoot button[data-done]{background:var(--acc);border-color:var(--acc);color:var(--on-acc);}
 @media (max-width:1100px){.trxEditor{grid-template-columns:1fr 1fr 1fr;}.trxFieldType{grid-column:1/-1;}}
 @media (max-width:700px){.trxEditor{grid-template-columns:1fr;}.trxSearch{min-width:0;flex:1;}}
+.trxBuffer{gap:4px;}
+.trxBuffer .trxBufferInput{width:58px;text-align:right;padding:0 6px;}
+.trxBuffer.is-on>span:first-child{color:var(--acc-ink);font-weight:600;}
