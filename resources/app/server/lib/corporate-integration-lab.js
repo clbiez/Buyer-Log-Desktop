@@ -235,7 +235,7 @@ function statusForSource(source) {
 
 function describeAutomations(state = {}) {
   return (Array.isArray(state.recipes) ? state.recipes : [])
-    .filter(recipe => ['browser', 'mixed'].includes(clean(recipe && recipe.purpose).toLowerCase()) || /troy/i.test(`${recipe && recipe.name || ''} ${recipe && recipe.url || ''}`))
+    .filter(recipe => ['browser', 'mixed'].includes(clean(recipe && recipe.purpose).toLowerCase()) && !/troy/i.test(`${recipe && recipe.name || ''} ${recipe && recipe.url || ''}`))
     .map(recipe => {
       const allSteps = Array.isArray(recipe.steps) ? recipe.steps : [];
       return {
@@ -318,7 +318,7 @@ function buildSnapshot({ overview = {}, support = {}, probes = [], sourceRows = 
       secrets: 'redacted',
     },
     corporateValidation: environment.validationRequired
-      ? { required: true, label: 'CORPORATE VALIDATION REQUIRED', checks: ['live source connectivity', 'corporate VPN data counts', 'Troy selectors against live DOM'] }
+      ? { required: true, label: 'CORPORATE VALIDATION REQUIRED', checks: ['live source connectivity', 'corporate VPN data counts'] }
       : { required: false, label: 'LIVE PROBE VERIFIED', checks: [] },
   });
 }
