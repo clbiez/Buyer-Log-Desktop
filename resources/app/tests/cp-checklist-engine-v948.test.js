@@ -33,7 +33,7 @@ function order(spec) {
     ocode: o.ocode || 8001, _matchOcode: String(o.ocode || 8001),
     model: o.model || 'MODEL-1', ccode: o.ccode || 'C1', colour: 'SIYAH',
     qty: o.qty == null ? 1000 : o.qty, kalan: 1000, antrepo: 0, merkezSevkeHazirKalan: 0,
-    fob: 4.82, plm: o.plm || 'PLM1', ozel: 'S7AB73Z4', manufacturer: 'MF-1', season: '26SS',
+    fob: 4.82, plm: o.plm || 1001, ozel: 'S7AB73Z4', manufacturer: 'MF-1', season: '26SS',
     category: 'CL', merch: 'MAG-1', ageGroup: 'MMYG-1', buyerGrup: 'BG-1',
     countryRaw: 'HINDISTAN', license: 'L', productDescription: 'T',
     opd: o.opd || null, ex: o.ex || null, retail: o.retail || null, mb: o.mb || null,
@@ -109,9 +109,9 @@ test('aynı PLM ID + Model Adı + Colour Code için seçenek bazlı onay sonraki
     nearOrder(8101),
     nearOrder(8102),
     order({ ocode: 8103, opd: '2026-07-07', ex: '2026-09-25', retail: '2027-01-15', ccode: 'C2' }),
-    order({ ocode: 8104, opd: '2026-07-07', ex: '2026-09-25', retail: '2027-01-15', plm: 'PLM2' }),
+    order({ ocode: 8104, opd: '2026-07-07', ex: '2026-09-25', retail: '2027-01-15', plm: 2002 }),
   ]);
-  assert.equal(first.plmId, 'PLM1');
+  assert.equal(first.plmId, '1001');
   assert.equal(first.modelName, 'MODEL-1');
   assert.equal(first.colourCode, 'C1');
 
