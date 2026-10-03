@@ -146,7 +146,7 @@
   function openForCell(config, table, cell, event) {
     const id = rowIdOfCell(cell);
     if (!id) return false;
-    const row = typeof window.BLGetOutlookRow === 'function' ? window.BLGetOutlookRow(config.module, id) : null;
+    const row = typeof window.BLGetContextRow === 'function' ? window.BLGetContextRow(config.module, id) : null;
     const modelName = String((row && (row['Model Name'] || row.modelName || row.model)) || cell.textContent || '').trim();
     const clipboardItems = managedClipboardEntries(config, table, cell);
 
@@ -170,14 +170,6 @@
 
     const items = [...clipboardItems];
     if (clipboardItems.length) items.push({ separator: true });
-    const outlook = window.BLOutlook;
-    if (outlook && typeof outlook.canUse === 'function' && outlook.canUse() && row) {
-      items.push({
-        label: T('Outlook maillerini ara', 'Search Outlook emails'),
-        icon: '#i-mail-send',
-        run: () => outlook.openRow(row, config.module),
-      });
-    }
     // PLM numune talepleri (CoreNectum Requests): CP aşamasında takip edilir,
     // koleksiyonda numune çalışılmaz. Yalnız PLM ID'si olan CP/Sipariş satırı.
     const sampleRequests = window.BLPlmSampleRequests;
