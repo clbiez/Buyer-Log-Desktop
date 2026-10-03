@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.216",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Yol Süreleri: IAS database analizi düzeltildi",
+        "en": "Transit Times: IAS database analysis fixed"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.216/release.json"
+    },
+    {
       "version": "7.0.215",
       "publishedAt": "2026-10-03",
       "title": {
