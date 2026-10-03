@@ -290,13 +290,23 @@ function flowCard(){
     }
     const bucketGroups=dimensionByBucket.get(b.key)||[],byName=new Map(bucketGroups.map(g=>[g.name,g]));
     const groupTip=tip(timelineDimensionTipHtml(`${dimensionLabel} · ${b.label}`,b,dimension,dimensionNames));
-    const dimensionBars=dimensionNames.map((name,index)=>{
-      const g=byName.get(name);if(!g||!g.qty)return '';
-      const o=opener({title:name,subtitle:`${dimensionLabel} · ${fLabel} · ${b.label}`,items:g.items});
-      const height=dimensionMax?Math.max(2,g.qty/dimensionMax*100):0;
-      return `<span class="blvBuyerBar" style="height:${height.toFixed(1)}%;--seg:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`;
-    }).join('');
-    return `<div class="${columnClass} ${chartMode==='grouped'?'blvGroupedCol':''}" ${commonAttrs}>${todayMarker}<div class="bpaColValue">${value}</div><div class="bpaColTrack blvLogisticsTrack ${chartMode==='grouped'?'blvGroupTrack':''}">${logistics}</div><div class="blvBandDivider"></div><div class="blvBuyerTrack" data-blv-tip="${groupTip}" data-blv-tip-style="chart"><div class="blvBuyerBars">${dimensionBars}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
+    const dimensionEntries=dimensionNames.map((name,index)=>{
+      const g=byName.get(name);if(!g||!g.qty)return null;
+      return {name,index,g,o:opener({title:name,subtitle:`${dimensionLabel} · ${fLabel} · ${b.label}`,items:g.items})};
+    }).filter(Boolean);
+    let dimensionChart='';
+    if(chartMode==='grouped'){
+      const bars=dimensionEntries.map(({name,index,g,o})=>{
+        const height=dimensionMax?Math.max(2,g.qty/dimensionMax*100):0;
+        return `<span class="blvBuyerBar" style="height:${height.toFixed(1)}%;--seg:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`;
+      }).join('');
+      dimensionChart=`<div class="blvBuyerBars is-grouped">${bars}</div>`;
+    }else{
+      const stackHeight=max?Math.max(3,b.qty/max*100):0;
+      const segs=dimensionEntries.map(({name,index,g,o})=>`<span class="blvBuyerStackSeg" style="flex-grow:${g.qty};--seg:${timelineGroupColor(index)}" data-blv-open="${o}" title="${esc(name+': '+n(g.qty))}"></span>`).join('');
+      dimensionChart=`<div class="blvBuyerBars is-stacked"><div class="blvBuyerStack" style="height:${stackHeight.toFixed(1)}%">${segs}</div></div>`;
+    }
+    return `<div class="${columnClass} ${chartMode==='grouped'?'blvGroupedCol':''}" ${commonAttrs}>${todayMarker}<div class="bpaColValue">${value}</div><div class="bpaColTrack blvLogisticsTrack ${chartMode==='grouped'?'blvGroupTrack':''}">${logistics}</div><div class="blvBandDivider"></div><div class="blvBuyerTrack" data-blv-tip="${groupTip}" data-blv-tip-style="chart">${dimensionChart}</div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
   }).join('');
   return `<div class="bpaCardBox blvUnifiedTimelineCard"><div class="bpaSectionHead"><button type="button" class="bpaTodayBtn" data-blv-action="today" title="${esc(L('Bugünün dönemine git','Go to the current period'))}">${esc(L('Bugün','Today'))}</button><span class="bpaSectionTitle">${esc(L('Zaman akışı','Timeline'))}</span><span class="bpaSectionSub">${esc(L('Tek zaman ekseninde üstte lojistik durum, altta Buyer kırılımı gösterilir. Kırmızı sayı: Ex-F tarihi geçmiş ama yüklenmemiş adet.','One shared time axis: logistics status above, Buyer breakdown below. Red figure: Ex-F passed but not loaded.'))}</span><span class="bpaSectionSpacer"></span>
     <div class="bpaSeg2" role="group">${fields.map(f=>`<button type="button" class="${f.key===field.key?'is-active':''}" data-blv-time="${f.key}">${esc(lang()==='en'?f.en:f.tr)}</button>`).join('')}</div>
@@ -307,9 +317,10 @@ function flowCard(){
     ${timelineDimensionLegend(dimensionNames,dimensionLabel)}
     ${series.length?`<div class="bpaCols blvCols blvUnifiedCols ${chartMode==='grouped'?'is-grouped':'is-stacked'}">${cols}</div>`:`<div class="bpaEmpty">${esc(L('Bu tarih alanında veri yok.','No data for this date field.'))}</div>`}</div>`;
 }
-function scrollTimelineToToday(){
+function scrollTimelineToToday(behavior){
   const host=$('backlogOverviewBody'),scroller=host&&host.querySelector('.blvCols');
   if(!scroller)return;
+  const scrollBehavior=behavior==='auto'?'auto':'smooth';
   const cols=[...scroller.querySelectorAll('.bpaCol[data-blv-start]')];
   let target=scroller.querySelector('[data-blv-today="1"]');
   if(!target&&cols.length){
@@ -321,10 +332,10 @@ function scrollTimelineToToday(){
       return !best||dist<best.dist?{col,dist}:best;
     },null)?.col||null;
   }
-  if(!target){scroller.scrollTo({left:0,behavior:'smooth'});return;}
+  if(!target){scroller.scrollTo({left:0,behavior:scrollBehavior});return;}
   const sRect=scroller.getBoundingClientRect(),tRect=target.getBoundingClientRect();
   const left=scroller.scrollLeft+(tRect.left-sRect.left)-(scroller.clientWidth-target.offsetWidth)/2;
-  scroller.scrollTo({left:Math.max(0,left),behavior:'smooth'});
+  scroller.scrollTo({left:Math.max(0,left),behavior:scrollBehavior});
 }
 
 /* ----------------------------------------------------- filtre çekmecesi */
@@ -478,6 +489,8 @@ function render(){
   if(!items.length){host.innerHTML=`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
   const total=R().summarize(items);
   host.innerHTML=hero(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
+  // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
+  requestAnimationFrame(()=>scrollTimelineToToday('auto'));
 }
 
 /* --------------------------------------------------------- tooltip/panel */

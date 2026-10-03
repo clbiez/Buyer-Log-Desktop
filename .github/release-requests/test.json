@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "version": "7.0.218",
-  "commit_sha": "7958a5b1b91f3a79d63cbd49537b74a5af9920a6",
+  "commit_sha": "4b283e14eb15a57501fe79a514e7e74ae39dd362",
   "release_notes": "Buyer Log 7.0.218: Transit Times / Import Lead Time Analysis içinde IAS Database sorgusundaki Date–Text karşılaştırma hatası giderildi. Modül artık seçilen bağımsız tarih ufkunu DATE(...) sınırlarıyla uygular; Backlog/kullanıcı ufkunu değiştirmeden yalnız Transit Times sorgusunu sınırlar. Checklist yönetimi ve Supplier Checklist Excel iyileştirmeleri de bu sürümde yer alır.",
-  "request_id": "7.0.218-r1"
+  "request_id": "7.0.218-r2"
 }

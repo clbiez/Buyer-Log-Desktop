@@ -24,7 +24,7 @@
 .blvBuyerLegend{max-height:66px;overflow:auto}
 .blvCols{height:548px;padding-top:30px}
 .blvCols .bpaCol{position:relative;flex:1 0 48px;max-width:96px}
-.blvCols .bpaColValue{height:28px;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;position:relative;z-index:4}
+.blvCols .bpaColValue{height:28px;flex:0 0 28px;min-height:28px;max-height:28px;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;position:relative;z-index:4}
 .blvColTotal{font-size:10.5px;font-weight:800;line-height:1;color:var(--ink2);font-variant-numeric:tabular-nums}
 .blvColOverdue{font-size:10px;font-weight:750;line-height:1;color:var(--red);white-space:nowrap}
 .blvCols .bpaColTrack{position:relative}
@@ -33,8 +33,12 @@
 .blvBandDivider{width:100%;height:1px;flex:none;margin:7px 0;background:var(--line)}
 .blvBuyerTrack{position:relative;flex:0 0 196px;height:196px;width:100%;display:flex;align-items:flex-end;padding:0 3px;background:linear-gradient(to top,var(--line) 1px,transparent 1px) 0 0/100% 25%}
 .blvBuyerBars{width:100%;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.blvBuyerBars.is-stacked{gap:0;padding:0}
 .blvBuyerBar{display:block;flex:1 1 0;min-width:2px;max-width:11px;background:var(--seg);cursor:pointer;transform-origin:center bottom;transition:height .4s var(--ease),filter .12s var(--ease),transform .12s var(--ease)}
 .blvBuyerBar:hover{filter:brightness(1.12) saturate(1.1);transform:scaleX(1.16)}
+.blvBuyerStack{width:100%;display:flex;flex-direction:column-reverse;gap:2px;transition:height .4s var(--ease)}
+.blvBuyerStackSeg{display:block;height:0;min-height:0;flex-basis:0;width:100%;background:var(--seg);cursor:pointer;transition:filter .12s var(--ease),transform .12s var(--ease)}
+.blvBuyerStackSeg:hover{filter:brightness(1.12) saturate(1.1);transform:scaleX(1.04)}
 .blvTodayLine{position:absolute;left:50%;top:0;bottom:0;border-left:1.4px dashed var(--acc);z-index:3;pointer-events:none;opacity:.92}
 .blvUnifiedTodayLine{top:28px;bottom:26px}
 .blvTodayLine b{position:absolute;left:0;top:-50px;transform:translateX(-50%);min-width:50px;padding:3px 8px;border:1px solid var(--acc);border-radius:5px;background:var(--card);color:var(--acc-ink);font:750 10px/1.1 var(--font,system-ui,sans-serif);text-align:center;white-space:nowrap;box-shadow:0 2px 8px color-mix(in srgb,#000 8%,transparent)}
@@ -58,7 +62,7 @@
 .blvChartMode button{min-width:64px}
 .blvTimelineDimension button{min-width:76px}
 @media(max-width:900px){.blvCols{height:492px;padding-top:28px}.blvLogisticsTrack{flex-basis:216px;height:216px}.blvBuyerTrack{flex-basis:170px;height:170px}.blvCols.is-grouped .bpaCol{flex-basis:58px}.blvChartMode button,.blvTimelineDimension button{min-width:0}.blvTodayLine b{top:-48px}.blvTimelineLegendLabel{flex-basis:88px}}
-@media(prefers-reduced-motion:reduce){.blvGroupBar,.blvBuyerBar{transition:none}}
+@media(prefers-reduced-motion:reduce){.blvGroupBar,.blvBuyerBar,.blvBuyerStack,.blvBuyerStackSeg{transition:none}}
 
 /* Panel kabuğu */
 .blvModule{margin:0 0 10px;overflow:hidden;border:1px solid var(--line);background:var(--card);color:var(--ink)}
