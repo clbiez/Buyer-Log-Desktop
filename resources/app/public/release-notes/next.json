@@ -1,69 +1,71 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Checklist yönetimi ve üretici Excel akışı",
-    "en": "Checklist management and supplier Excel workflow"
+    "tr": "Yol süreleri Excel raporuyla aynı hesaplanıyor",
+    "en": "Transit times now match the Excel report"
   },
   "summary": {
-    "tr": "Priority & Checklist Rules ekranı artık ön tanımlı kuralları tam olarak yönetiyor; üretici checklist Excel’i ise daha güvenli, kompakt ve Backlog V3 görsel dilinde çalışıyor.",
-    "en": "Priority & Checklist Rules now fully manages predefined rules, while the supplier checklist workbook is safer, more compact, and uses the Backlog V3 visual language."
+    "tr": "İthalat Yol Süresi Analizi artık yalnız gerçekleşen antrepo girişlerini kullanıyor ve Global Lojistik Excel raporundaki sütun ve adım tanımlarıyla aynı hesaplıyor.",
+    "en": "The Import Transit Time Analysis now uses only realized warehouse entries and calculates with the same columns and step definitions as the Global Logistics Excel report."
   },
   "changes": [
     {
-      "id": "priority-checklist-rules-management",
+      "id": "transit-realized-only",
       "type": "fix",
-      "module": {
-        "tr": "Genel Bakış · Priority & Checklist Rules",
-        "en": "Overview · Priority & Checklist Rules"
-      },
+      "module": { "tr": "Yol Süreleri", "en": "Transit Times" },
       "title": {
-        "tr": "Yerleşik priority ve checklist kuralları artık düzenlenebilir",
-        "en": "Built-in priority and checklist rules are now editable"
+        "tr": "Yalnız gerçekleşen sevkiyatlar hesaba girer",
+        "en": "Only realized shipments are counted"
       },
       "body": {
-        "tr": "Ön tanımlı Checklist Questions kayıtları aynı kural editöründe görünür. Built-in priority ve checklist kuralları düzenlenebilir, kapatılabilir veya silinebilir; silinen kayıtlar tekrar açılışta geri gelmez. Metin seçerken fareyi pencere dışında bıraktığınızda modalın yanlışlıkla kapanması da engellendi.",
-        "en": "Predefined Checklist Questions now appear in the same rule editor. Built-in priority and checklist rules can be edited, disabled, or deleted, and deleted rules no longer return after reopening. The modal also stays open when a text-selection drag ends outside the window."
+        "tr": "Uçtan uca süre artık yalnız gerçekleşen Antrepo / Tema Depo Giriş tarihiyle hesaplanır. Tahmini antrepo girişi ve statüye dayalı tahmin kullanılmaz; bu yüzden süreler Excel raporundaki gibi 80–90 gün yerine gerçek değerlere iner. Varsayılan ortalama da rapordaki gibi sevkiyat ortalamasıdır; adet ağırlıklı ortalama ayrıca seçilebilir.",
+        "en": "End-to-end time is now calculated only from the realized Antrepo / Tema warehouse entry date. The estimated entry date and status-based estimates are no longer used, so durations drop from 80–90 days to the real values shown in the Excel report. The default average is the shipment average used by the report; a quantity-weighted average can still be selected."
+      },
+      "path": {
+        "tr": "Yol Süreleri › İthalat Yol Süresi Analizi",
+        "en": "Transit Times › Import Transit Time Analysis"
       },
       "visual": {
         "kind": "screenshot",
-        "src": "priority-checklist-rules.svg",
+        "src": "transit-realized-excel.png",
         "alt": {
-          "tr": "Priority and Checklist Rules ekranında düzenleme ve silme aksiyonlarını gösteren görsel",
-          "en": "Visual showing edit and delete actions in Priority and Checklist Rules"
+          "tr": "Gerçekleşen antrepo girişleriyle hesaplanan ülke ve taşıt bazlı yol süreleri (demo veri)",
+          "en": "Country and vehicle transit times calculated from realized warehouse entries (demo data)"
         },
         "caption": {
-          "tr": "Yerleşik ve özel kurallar aynı yönetim modelinde.",
-          "en": "Built-in and custom rules now use the same management model."
+          "tr": "Gerçekleşen antrepo girişi olmayan parsiyeller ayrıca sayılır ve ortalamaya girmez.",
+          "en": "Partials without a realized warehouse entry are counted separately and excluded from the average."
         }
       }
     },
     {
-      "id": "supplier-checklist-excel-v2",
-      "type": "feature",
-      "module": {
-        "tr": "CP · Tools → Checklist",
-        "en": "CP · Tools → Checklist"
-      },
+      "id": "transit-excel-steps",
+      "type": "improvement",
+      "module": { "tr": "Yol Süreleri", "en": "Transit Times" },
       "title": {
-        "tr": "Supplier Checklist Excel yeniden tasarlandı",
-        "en": "Supplier Checklist Excel redesigned"
+        "tr": "Excel raporundaki süreç adımları",
+        "en": "Process steps from the Excel report"
       },
       "body": {
-        "tr": "Checklist araçları artık Tools → Checklist altında Create Checklist Excel, Import Checklist Excel ve Checklist Excel Columns olarak tek menüde. Excel; model görseli, kompakt satırlar, kilitli sistem alanları, yalnız düzenlenebilir Durum/Not hücreleri, doğru dd.mm.yyyy Ex-Factory tarihi, açılır durum listeleri ve Backlog V3 renk ailesinde dinamik KPI/istatistik özeti ile oluşturulur.",
-        "en": "Checklist tools now live under Tools → Checklist as Create Checklist Excel, Import Checklist Excel, and Checklist Excel Columns. The workbook now includes model images, compact rows, locked system fields, editable Status/Note cells only, correct dd.mm.yyyy Ex-Factory dates, status dropdowns, and a dynamic KPI/statistics summary using the Backlog V3 colour family."
+        "tr": "Yükleme = Yükleme Talep → Fiili Yükleme (1–3), Yol = Fiili Yükleme → ETA (4), Gümrük = ETA → Antrepo Giriş (5–8). Alt süreçler Cut Off, Özet Beyan Onay, Ambar Onay ve Transit Beyanname tarihlerinden Excel raporundaki adım numaralarıyla gösterilir; Final Destination Antrepo dışı olan sevkiyatlar hariç tutulur.",
+        "en": "Loading = Loading Request → Actual Loading (1–3), Transit = Actual Loading → ETA (4), Customs = ETA → Antrepo Entry (5–8). Sub-steps are shown with the Excel report's step numbers from the Cut-off, Summary Declaration Approval, Warehouse Approval and Transit Declaration dates; shipments whose Final Destination is not Antrepo are excluded."
+      },
+      "path": {
+        "tr": "Yol Süreleri › İthalat Yol Süresi Analizi › Satır detayı",
+        "en": "Transit Times › Import Transit Time Analysis › Row detail"
       },
       "visual": {
         "kind": "screenshot",
-        "src": "supplier-checklist-excel.svg",
+        "src": "transit-excel-steps.png",
         "alt": {
-          "tr": "Renkli KPI alanları ve korumalı checklist tablosu bulunan Supplier Checklist Excel görseli",
-          "en": "Supplier Checklist Excel visual with coloured KPI tiles and a protected checklist table"
+          "tr": "Excel adım numaralarıyla alt süreç ortalamaları (demo veri)",
+          "en": "Sub-process averages with the Excel step numbers (demo data)"
         },
         "caption": {
-          "tr": "Dosya düzenlendikçe durum istatistikleri Excel içinde yeniden hesaplanır.",
-          "en": "Status statistics recalculate inside Excel as the supplier edits the file."
+          "tr": "Satırı açtığınızda Excel raporundaki 1–8 numaralı adımların ortalamaları görünür.",
+          "en": "Open a row to see the averages of steps 1–8 from the Excel report."
         }
       }
     }

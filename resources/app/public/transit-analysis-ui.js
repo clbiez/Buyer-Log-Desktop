@@ -25,7 +25,8 @@
   async function loadLive(force = false, params = {}) {
     const scope = params.scope === 'filtered' ? 'filtered' : 'company';
     const win = params.window || 'y1';
-    const key = scope + '|' + win;
+    const weight = params.weight === 'qty' ? 'qty' : 'shipment';
+    const key = scope + '|' + win + '|' + weight;
     if (live.loaded && !force && live.params === key) return live;
     if (live.pending && live.pendingKey === key && !force) return live.pending;
     live.pendingKey = key;
@@ -35,7 +36,7 @@
         live.analysis = null;
         live.message = L('Buyer Log verisinden hesap sunucu modunda çalışır.', 'Calculating from Buyer Log data requires server mode.');
       } else {
-        const qs = new URLSearchParams({ scope, window: win, ...(force ? { refresh: '1' } : {}) });
+        const qs = new URLSearchParams({ scope, window: win, weight, ...(force ? { refresh: '1' } : {}) });
         const res = await fetch('/api/transit-analysis/live?' + qs.toString(), { headers: { Accept: 'application/json' } });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -187,7 +188,8 @@
     if (!['database', 'excel'].includes(view.source)) view.source = 'database';
     if (!['filtered', 'company'].includes(view.scope)) view.scope = 'company';
     if (!TA().WINDOW_KEYS.includes(view.window)) view.window = 'y1';
-    const liveParams = () => ({ scope: view.scope, window: view.window });
+    if (!['shipment', 'qty'].includes(view.weight)) view.weight = 'shipment';
+    const liveParams = () => ({ scope: view.scope, window: view.window, weight: view.weight });
     const selected = new Map();
     const expanded = new Set();
     let busy = false;
@@ -203,11 +205,12 @@
       if (!st) return '';
       const n = value => Number(value || 0).toLocaleString(loc());
       const parts = [L(`${n(st.used)} / ${n(st.total)} IAS parsiyeli hesaba girdi`, `${n(st.used)} of ${n(st.total)} IAS partials used`)];
-      if (st.notArrived) parts.push(L(`${n(st.notArrived)} henüz antrepoda değil`, `${n(st.notArrived)} not yet in the warehouse`));
+      if (st.notArrived) parts.push(L(`${n(st.notArrived)} gerçekleşen antrepo girişi yok`, `${n(st.notArrived)} without a realized warehouse entry`));
       if (st.outOfWindow) parts.push(L(`${n(st.outOfWindow)} tarih aralığı dışında`, `${n(st.outOfWindow)} outside the date range`));
       if (st.missingDates) parts.push(L(`${n(st.missingDates)} tarihi eksik`, `${n(st.missingDates)} missing dates`));
       if (st.outOfRange) parts.push(L(`${n(st.outOfRange)} tutarsız tarih`, `${n(st.outOfRange)} inconsistent dates`));
       if (st.missingCountry) parts.push(L(`${n(st.missingCountry)} ülkesi yok`, `${n(st.missingCountry)} without a country`));
+      if (st.otherDestination) parts.push(L(`${n(st.otherDestination)} Antrepo dışı rota (rapor gibi hariç)`, `${n(st.otherDestination)} non-Antrepo route (excluded, as in the report)`));
       return parts.join(' · ');
     }
     function columnNotes(analysis) {
@@ -217,8 +220,10 @@
       const notes = [];
       if (!c.loadingRequest) notes.push(L('"Yükleme Talep Tarih" sütunu yok — uçtan uca süre hesaplanamaz', 'No "Yükleme Talep Tarih" column — end-to-end time cannot be calculated'));
       if (!c.eta) notes.push(L('"ETA Tarih" sütunu yok — yol/gümrük ayrılamaz', 'No "ETA Tarih" column — transit and customs cannot be separated'));
+      if (!c.actualEntry) notes.push(L('Gerçekleşen Antrepo/Tema Depo giriş tarihi bulunamadı — yalnız gerçekleşen veriyle hesaplandığı için tahmini giriş kullanılmaz. IAS Database kapsamını seçin veya IAS alan eşlemesine "Antrepo Giriş Tarihi" ekleyin.', 'No actual Antrepo/Tema warehouse entry date was found — only realized data is used, so the estimated entry is not used. Choose the IAS Database scope or add "Antrepo Giriş Tarihi" to the IAS field mapping.'));
       if (!c.actualLoading) notes.push(L('Fiili Yükleme tarihi yok; yükleme/yol ayrımı Handover\'a göre', 'No actual loading date; loading/transit split by Handover'));
-      if (!c.actualEntry) notes.push(L('Gerçekleşen antrepo giriş sütunu yok; IAS giriş tarihi kullanılır', 'No actual warehouse entry column; the IAS entry date is used'));
+      if (!c.summaryDeclaration) notes.push(L('Özet Beyan / Ambar / Transit Beyanname tarihleri yok; gümrük alt adımları (5–8) hesaplanamaz', 'No summary declaration / warehouse approval / transit declaration dates; customs sub-steps (5–8) cannot be calculated'));
+      if (!c.finalDestination) notes.push(L('Final Destination yok; Antrepo dışı rotalar ayrılamaz', 'No Final Destination; non-Antrepo routes cannot be excluded'));
       return notes.length ? `<div class="trxNote">${notes.map(esc).join(' · ')}</div>` : '';
     }
 
@@ -242,6 +247,7 @@
       return `<div class="trxToolbar">
         <div class="trxSeg" role="group" aria-label="${esc(L('Veri kapsamı', 'Data scope'))}">${seg('company', L('IAS Database', 'IAS Database'), L('Modülün kendi ufku: IAS verisi kullanıcı/Backlog filtresi olmadan, yalnız seçilen tarih aralığıyla sorgulanır. Tüm ülke ve taşıtlar gelir.', 'The module\'s own horizon: IAS data is queried without user/Backlog filters, limited only by the selected date range. All countries and vehicles are included.'))}${seg('filtered', L('Backlog filtrem', 'My Backlog filter'), L('Backlog\'daki kaynak ufkun ve yetki kapsamın', 'Your Backlog source horizon and access scope'))}</div>
         <label class="trxInline"><span>${L('Tarih aralığı', 'Date range')}</span><select class="trxSelect" data-ta-window ${busyLive ? 'disabled' : ''}>${group(L('Hafta', 'Weeks'), keys.filter(k => k[0] === 'w'))}${group(L('Ay', 'Months'), keys.filter(k => k[0] === 'm'))}${group(L('Yıl', 'Years'), keys.filter(k => k[0] === 'y'))}<option value="all" ${view.window === 'all' ? 'selected' : ''}>${esc(TA().windowLabel('all', lang()))}</option></select></label>
+        <label class="trxInline" title="${esc(L('Sevkiyat: her IAS parsiyeli eşit sayılır (Global Lojistik raporu gibi). Adet: yüklenen adetle ağırlıklı.', 'Shipment: every IAS partial counts equally (like the Global Logistics report). Quantity: weighted by loaded quantity.'))}"><span>${L('Ortalama', 'Average')}</span><select class="trxSelect" data-ta-weight ${busyLive ? 'disabled' : ''}><option value="shipment" ${view.weight !== 'qty' ? 'selected' : ''}>${esc(L('Sevkiyat (rapor gibi)', 'Shipment (like the report)'))}</option><option value="qty" ${view.weight === 'qty' ? 'selected' : ''}>${esc(L('Adet ağırlıklı', 'Quantity-weighted'))}</option></select></label>
         ${win && win.from ? `<span class="trxMeta">${esc(win.from)} → ${esc(win.to)} · ${win.granularity === 'week' ? L('haftalık', 'weekly') : L('aylık', 'monthly')}</span>` : ''}
         <span class="trxGrow"></span>
         ${diagText && !busyLive ? `<span class="trxMeta">${esc(diagText)}</span>` : ''}
@@ -330,7 +336,7 @@
         <div class="trxTableWrap"><table class="trxTable"><thead><tr>
           <th><input type="checkbox" class="trxCheck" data-ta-all title="${esc(L('Tümünü seç', 'Select all'))}" ${picked && picked === allPickable ? 'checked' : ''}></th><th>${L('Taşıt', 'Vehicle')}</th><th>${L('Ülke', 'Country')}</th><th class="num">${L('Adet', 'Qty')}</th><th class="num" title="${esc(labels.loading)}">${L('Yükleme', 'Loading')}</th><th class="num" title="${esc(labels.transit)}">${L('Yol', 'Transit')}</th><th class="num" title="${esc(labels.customs)}">${L('Gümrük', 'Customs')}</th><th class="num" title="${esc(labels.endToEnd)}">${L('Uçtan Uca', 'End-to-End')}</th><th class="num">P80</th><th class="num">${L('Min–Maks', 'Min–Max')}</th><th class="num">Trend</th><th class="num">${L('Mevcut', 'Current')}</th><th class="num">${L('Öneri', 'Suggested')}</th><th></th>
         </tr></thead><tbody>${body || `<tr><td colspan="14" class="trxEmpty">${L('Bu seçim için veri yok.', 'No data for this selection.')}</td></tr>`}</tbody></table></div>
-        <div class="trxFoot"><span class="trxMeta">${L(`${picked} öneri seçili`, `${picked} suggestion(s) selected`)} · ${esc(labels.rule[view.metric] || text.ruleMetric[view.metric])}, ${esc(text.ruleStat[view.stat])} · ${L('süreler gün, adet ağırlıklı', 'days, quantity-weighted')}</span><span class="trxGrow"></span>
+        <div class="trxFoot"><span class="trxMeta">${L(`${picked} öneri seçili`, `${picked} suggestion(s) selected`)} · ${esc(labels.rule[view.metric] || text.ruleMetric[view.metric])}, ${esc(text.ruleStat[view.stat])} · ${(analysis.weighting === 'shipment' ? L('süreler gün, sevkiyat ortalaması', 'days, shipment average') : L('süreler gün, adet ağırlıklı', 'days, quantity-weighted'))}</span><span class="trxGrow"></span>
           <button type="button" class="trxBtn trxBtnPrimary" data-ta-apply ${picked ? '' : 'disabled'}><svg class="ic"><use href="#i-copy-plus"/></svg><span>${L('Seçilenleri kurallara aktar', 'Transfer selected to rules')}</span></button></div>`;
     }
 
@@ -378,6 +384,7 @@
         view.scope = el.dataset.taScope; reloadLive(false);
       }));
       q('[data-ta-window]')?.addEventListener('change', e => { view.window = e.target.value; reloadLive(false); });
+      q('[data-ta-weight]')?.addEventListener('change', e => { view.weight = e.target.value; reloadLive(false); });
       qa('[data-ta-view]').forEach(el => el.addEventListener('change', () => {
         view[el.dataset.taView] = el.value;
         if (el.dataset.taView === 'basis') view.year = '';

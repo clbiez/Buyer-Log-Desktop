@@ -42,7 +42,7 @@
       handoverToWarehouse: ['Handover → Antrepo (Uçtan Uca − Üretici teslim)', 'Handover → Antrepo (end-to-end − supplier handover)'],
       loadingToWarehouse: ['Fiili Yükleme → Antrepo (Yol + Gümrük)', 'Actual Loading → Antrepo (transit + customs)'],
     },
-    ruleStat: { mean: ['Adet ağırlıklı ortalama', 'Quantity-weighted average'], p80: ['P80 (temkinli)', 'P80 (conservative)'] },
+    ruleStat: { mean: ['Ortalama', 'Average'], p80: ['P80 (temkinli)', 'P80 (conservative)'] },
   });
   const langIndex = lang => (lang === 'en' ? 1 : 0);
   function pickText(map, lang) {
@@ -203,12 +203,15 @@
     };
   }
 
-  function weightedMean(items, pick) {
+  /* weightOf varsayılanı adettir. Sevkiyat ortalamasında (Excel raporu gibi)
+     her parsiyel/sevkiyat 1, dönem kayıtları ise sevkiyat sayısıyla tartılır. */
+  function weightedMean(items, pick, weightOf) {
     let sum = 0, weight = 0, plainSum = 0, plainCount = 0;
     for (const item of items) {
       const v = pick(item);
       if (v == null || !Number.isFinite(v)) continue;
-      const w = Number(item.qty) > 0 ? Number(item.qty) : 0;
+      const raw = weightOf ? weightOf(item) : item.qty;
+      const w = Number(raw) > 0 ? Number(raw) : 0;
       sum += v * w; weight += w; plainSum += v; plainCount += 1;
     }
     if (weight > 0) return sum / weight;
@@ -295,12 +298,19 @@
      Tanim) × antrepo giriş ayı kırılımında adet ağırlıklı toplanır.
      shipment: { country, vehicle, qty, loadingRequest, handover, actualLoading?,
                  eta, warehouseEntry, arrived }  — tarihler 'YYYY-MM-DD'. */
+  /* Global Lojistik "İthalat Yol Süresi Raporu" ile aynı adımlar ve sütunlar
+     (Açıklamalar sayfası). Yalnız gerçekleşen tarihler kullanılır. */
   const SHIPMENT_STEPS = Object.freeze([
-    { code: '1', label: 'Yükleme Talep → Handover (üretici teslim)', labelEn: 'Loading Request → Handover (supplier handover)', group: 'loading' },
-    { code: '2', label: 'Handover → ETA (yükleme + deniz/hava yolu)', labelEn: 'Handover → ETA (loading + sea/air transit)', group: 'transit' },
-    { code: '2.1', label: 'Handover → Fiili Yükleme', labelEn: 'Handover → Actual Loading', group: 'loading', informational: true },
-    { code: '2.2', label: 'Fiili Yükleme → ETA', labelEn: 'Actual Loading → ETA', group: 'transit', informational: true },
-    { code: '3', label: 'ETA → Antrepo Giriş (gümrük + iç nakliye)', labelEn: 'ETA → Antrepo Entry (customs + inland haulage)', group: 'customs' },
+    { code: '1.2', label: 'Yükleme İthalat Onay Tarihi - Yükleme Talep Tarihi', labelEn: 'Import Loading Approval Date - Loading Request Date', group: 'loading', informational: true },
+    { code: '1', label: 'Yükleme Talep - HandOver', labelEn: 'Loading Request - Handover', group: 'loading' },
+    { code: '2', label: 'Handover Tarihi - CutOff Tarihi', labelEn: 'Handover Date - Cut-off Date', group: 'loading' },
+    { code: '3', label: 'CutOff Tarihi - Fiili Yükleme Tarihi', labelEn: 'Cut-off Date - Actual Loading Date', group: 'loading' },
+    { code: '4', label: 'Fiili Yükleme - ETA', labelEn: 'Actual Loading - ETA', group: 'transit' },
+    { code: '4.1', label: 'ETA - Evrak Teslim', labelEn: 'ETA - Document Delivery', group: 'transit', informational: true },
+    { code: '5', label: 'Özet Beyan Onay Tarihi-ETA Tarihi', labelEn: 'Summary Declaration Approval - ETA', group: 'customs' },
+    { code: '6', label: 'Özet Beyan Onay Tarih - Ambar Onay Tarih', labelEn: 'Summary Declaration Approval - Warehouse Approval', group: 'customs' },
+    { code: '7', label: 'Ambar Onay Tarih - Transit Beyanname Tarih', labelEn: 'Warehouse Approval - Transit Declaration', group: 'customs' },
+    { code: '8', label: 'Antrepo Giriş Tarih - Transit Beyanname Tarih', labelEn: 'Antrepo Entry - Transit Declaration', group: 'customs' },
   ]);
   /* Buyer Log verisinden üretilen adımların etiketi aktif dilde gösterilir;
      Excel raporundan gelen adım adları kaynak verisidir, olduğu gibi kalır. */
@@ -369,7 +379,10 @@
 
   function buildFromShipments(shipments, meta = {}) {
     const today = dayOrdinal(meta.today || new Date().toISOString().slice(0, 10));
-    const stats = { total: 0, used: 0, notArrived: 0, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0, outOfWindow: 0 };
+    const stats = { total: 0, used: 0, notArrived: 0, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0, outOfWindow: 0, otherDestination: 0 };
+    // Varsayılan: sevkiyat (parsiyel) ortalaması — Global Lojistik raporu gibi.
+    const weighting = meta.weighting === 'qty' ? 'qty' : 'shipment';
+    const itemWeight = weighting === 'qty' ? (it => it.qty) : (() => 1);
     const from = dayOrdinal(meta.fromDate);
     const to = dayOrdinal(meta.toDate);
     const granularity = meta.granularity === 'week' ? 'week' : 'month';
@@ -384,6 +397,7 @@
     for (const raw of Array.isArray(shipments) ? shipments : []) {
       stats.total += 1;
       const s = raw || {};
+      if (s.otherDestination) { stats.otherDestination += 1; continue; }
       if (!s.arrived) { stats.notArrived += 1; continue; }
       const country = clip(s.country, 60);
       if (!country) { stats.missingCountry += 1; continue; }
@@ -397,19 +411,30 @@
       const entryInWindow = inWindow(s.warehouseEntry);
       const loadingInWindow = !!s.actualLoading && inWindow(s.actualLoading);
       if (!entryInWindow && !loadingInWindow) { stats.outOfWindow += 1; continue; }
+      // Rapor (Excel) verisinin kendisiyle doğrulanan tanım: Yükleme = talep →
+      // fiili yükleme, Yol = fiili yükleme → ETA (4. adım), Gümrük = ETA →
+      // antrepo giriş (5–8. adımlar); Uçtan Uca = talep → antrepo giriş.
+      // Fiili Yükleme sütunu yoksa yükleme/yol ayrımı Handover'a göre yapılır.
       const departure = s.actualLoading || s.handover;
+      const customsStart = s.eta;
       const item = {
         qty: Math.max(0, Math.round(num(s.qty) || 0)),
         endToEnd,
         loading: span(s.loadingRequest, departure),
-        transit: span(departure, s.eta),
-        customs: span(s.eta, s.warehouseEntry),
+        transit: span(departure, customsStart),
+        customs: span(customsStart, s.warehouseEntry),
         steps: {
+          1.2: span(s.loadingRequest, s.importApproval),
           1: span(s.loadingRequest, s.handover),
-          2: span(s.handover, s.eta),
-          2.1: s.actualLoading ? span(s.handover, s.actualLoading) : null,
-          2.2: s.actualLoading ? span(s.actualLoading, s.eta) : null,
-          3: span(s.eta, s.warehouseEntry),
+          2: span(s.handover, s.cutOff),
+          3: span(s.cutOff, s.actualLoading),
+          4: span(s.actualLoading, s.eta),
+          // Rapor: pozitif = evrak ETA'dan önce teslim edildi.
+          4.1: span(s.documentDelivery, s.eta),
+          5: span(s.eta, s.summaryDeclaration),
+          6: span(s.summaryDeclaration, s.warehouseApproval),
+          7: span(s.warehouseApproval, s.transitDeclaration),
+          8: span(s.transitDeclaration, s.warehouseEntry),
         },
       };
       stats.used += 1;
@@ -427,13 +452,13 @@
     const records = [...groups.values()].map(g => {
       const out = { basis: g.basis, vehicle: g.vehicle, year: g.period.slice(0, 4), granularity, period: g.period, country: g.country,
         qty: g.items.reduce((sum, it) => sum + it.qty, 0), shipments: g.items.length };
-      MAIN_METRICS.forEach(m => { out[m] = round(weightedMean(g.items, it => it[m]), 2); });
+      MAIN_METRICS.forEach(m => { out[m] = round(weightedMean(g.items, it => it[m], itemWeight), 2); });
       return out;
     });
     const steps = [];
     for (const g of stepGroups.values()) {
       for (const def of SHIPMENT_STEPS) {
-        const mean = weightedMean(g.items, it => it.steps[def.code]);
+        const mean = weightedMean(g.items, it => it.steps[def.code], itemWeight);
         if (mean == null) continue;
         steps.push({ basis: g.basis, vehicle: g.vehicle, year: g.year, country: g.country, code: def.code, label: def.label,
           group: def.group, informational: !!def.informational, days: round(mean, 2),
@@ -452,11 +477,11 @@
     const analysis = normalizeAnalysis({
       version: VERSION, source: 'database', fileName: meta.sourceLabel || 'Buyer Log IAS (Antrepo) verisi',
       importedAt: meta.generatedAt || new Date().toISOString(), importedBy: '', sheetCount: 0, parsedSheets: [],
-      sources, records, steps, stats,
+      sources, records, steps, stats, weighting,
       window: meta.window ? { key: meta.window, from: meta.fromDate || '', to: meta.toDate || '', granularity } : null,
       scope: meta.scope,
     });
-    return analysis || { version: VERSION, source: 'database', records: [], steps: [], sources: [], stats: normalizeStats(stats),
+    return analysis || { version: VERSION, source: 'database', records: [], steps: [], sources: [], stats: normalizeStats(stats), weighting,
       window: meta.window ? { key: meta.window, from: meta.fromDate || '', to: meta.toDate || '', granularity } : null,
       scope: meta.scope === 'company' ? 'company' : 'filtered',
       fileName: meta.sourceLabel || 'Buyer Log IAS (Antrepo) verisi', importedAt: new Date().toISOString(), importedBy: '', sheetCount: 0, parsedSheets: [] };
@@ -465,7 +490,7 @@
   function normalizeStats(input) {
     if (!input || typeof input !== 'object') return null;
     const out = {};
-    ['total', 'used', 'notArrived', 'missingDates', 'outOfRange', 'missingVehicle', 'missingCountry', 'outOfWindow'].forEach(k => {
+    ['total', 'used', 'notArrived', 'missingDates', 'outOfRange', 'missingVehicle', 'missingCountry', 'outOfWindow', 'otherDestination'].forEach(k => {
       out[k] = Math.max(0, Math.round(num(input[k]) || 0));
     });
     return out;
@@ -537,6 +562,7 @@
     return {
       version: VERSION,
       source: input.source === 'database' ? 'database' : 'excel',
+      weighting: input.weighting === 'shipment' ? 'shipment' : 'qty',
       scope: input.scope === 'company' ? 'company' : (input.scope === 'filtered' ? 'filtered' : ''),
       window: input.window && typeof input.window === 'object' && WINDOW_KEYS.includes(input.window.key) ? {
         key: input.window.key, from: /^\d{4}-\d{2}-\d{2}$/.test(input.window.from) ? input.window.from : '',
@@ -554,8 +580,8 @@
   }
 
   /* ---------- Özet ---------- */
-  function weightedPercentile(items, pick, p) {
-    const values = items.map(item => ({ v: pick(item), w: Number(item.qty) > 0 ? Number(item.qty) : 1 }))
+  function weightedPercentile(items, pick, p, weightOf) {
+    const values = items.map(item => { const raw = weightOf ? weightOf(item) : item.qty; return { v: pick(item), w: Number(raw) > 0 ? Number(raw) : 1 }; })
       .filter(x => x.v != null && Number.isFinite(x.v)).sort((a, b) => a.v - b.v);
     if (!values.length) return null;
     const total = values.reduce((s, x) => s + x.w, 0);
@@ -580,6 +606,8 @@
 
   function summarize(analysis, filter = {}) {
     const records = analysis && Array.isArray(analysis.records) ? analysis.records : [];
+    // Sevkiyat ortalamasında dönem kayıtları sevkiyat sayısıyla, aksi halde adetle tartılır.
+    const recW = analysis && analysis.weighting === 'shipment' ? (r => (r.shipments != null ? r.shipments : 1)) : (r => r.qty);
     const steps = analysis && Array.isArray(analysis.steps) ? analysis.steps : [];
     const bases = options(analysis).bases;
     const basis = filter.basis && bases.includes(filter.basis) ? filter.basis : (bases[0] || 'loading');
@@ -600,13 +628,13 @@
       const ordered = list.slice().sort((a, b) => a.period.localeCompare(b.period));
       const qty = list.reduce((s, r) => s + (Number(r.qty) || 0), 0);
       const metrics = {};
-      MAIN_METRICS.forEach(m => { metrics[m] = round(weightedMean(list, r => r[m]), 1); });
+      MAIN_METRICS.forEach(m => { metrics[m] = round(weightedMean(list, r => r[m], recW), 1); });
       const loadingToWarehouse = rec => (rec.transit == null && rec.customs == null) ? null : (Number(rec.transit) || 0) + (Number(rec.customs) || 0);
       const stepList = steps.filter(s => s.basis === basis && (!year || s.year === year) && s.vehicle === first.vehicle && countryKey(s.country) === countryKey(first.country))
         .sort((a, b) => Number(a.code.split('.')[0]) - Number(b.code.split('.')[0]) || a.code.localeCompare(b.code));
       const producerStep = stepList.find(s => s.code === '1');
       const last = ordered.slice(-3);
-      const lastMean = weightedMean(last, r => r.endToEnd);
+      const lastMean = weightedMean(last, r => r.endToEnd, recW);
       const e2eValues = list.map(r => r.endToEnd).filter(v => v != null);
       rows.push({
         vehicle: first.vehicle,
@@ -618,12 +646,12 @@
         shipments: list.some(r => r.shipments != null) ? list.reduce((s, r) => s + (Number(r.shipments) || 0), 0) : null,
         granularity: first.granularity,
         ...metrics,
-        p50: round(weightedPercentile(list, r => r.endToEnd, 0.5), 1),
-        p80: round(weightedPercentile(list, r => r.endToEnd, 0.8), 1),
+        p50: round(weightedPercentile(list, r => r.endToEnd, 0.5, recW), 1),
+        p80: round(weightedPercentile(list, r => r.endToEnd, 0.8, recW), 1),
         min: e2eValues.length ? round(Math.min(...e2eValues), 1) : null,
         max: e2eValues.length ? round(Math.max(...e2eValues), 1) : null,
-        loadingToWarehouse: round(weightedMean(list, loadingToWarehouse), 1),
-        loadingToWarehouseP80: round(weightedPercentile(list, loadingToWarehouse, 0.8), 1),
+        loadingToWarehouse: round(weightedMean(list, loadingToWarehouse, recW), 1),
+        loadingToWarehouseP80: round(weightedPercentile(list, loadingToWarehouse, 0.8, recW), 1),
         producerDays: producerStep ? round(producerStep.days, 1) : null,
         lastMean: round(lastMean, 1),
         trend: lastMean != null && metrics.endToEnd != null ? round(lastMean - metrics.endToEnd, 1) : null,
@@ -646,7 +674,7 @@
     const vehicleTotals = [...totals].map(([vehicle, list]) => {
       const flat = scoped.filter(r => r.vehicle === vehicle);
       const out = { vehicle, countries: list.length, qty: list.reduce((s, r) => s + r.qty, 0) };
-      MAIN_METRICS.forEach(m => { out[m] = round(weightedMean(flat, r => r[m]), 1); });
+      MAIN_METRICS.forEach(m => { out[m] = round(weightedMean(flat, r => r[m], recW), 1); });
       return out;
     });
     return { basis, year, rows, vehicleTotals, options: opts };
