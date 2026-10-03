@@ -386,6 +386,7 @@
   function chartMetrics(model) {
     const width=1080,height=430,left=24,right=72,top=46,bottom=52,pw=width-left-right,ph=height-top-bottom;
     const values=(model&&model.series||[]).flatMap(s=>s.values||[]).filter(Number.isFinite);
+    if(model&&model.state&&model.state.chartType==='bar'&&model.state.barLayout==='stacked')values.push(...subtotalValues(model));
     if(model&&model.state&&model.state.showSubtotal)values.push(...subtotalValues(model));
     if(model&&model.state&&model.state.showAverage)values.push(averageValue(model));
     const rawMax=Math.max(0,...values),scale=niceTickScale(rawMax,5);
@@ -424,17 +425,29 @@
       out+='<text x="'+x.toFixed(2)+'" y="'+(top-10)+'" text-anchor="middle" class="backlogChartTodayText">'+esc(tr('Bugün','Today'))+'</text>';
     }
     if(model.state.chartType==='bar'){
-      const count=Math.max(1,model.series.length),group=step*.76,bw=Math.max(.7,group/count);
-      model.series.forEach((serie,si)=>{
-        serie.values.forEach((v,i)=>{
-          const h=ph*(Number(v)||0)/max,x=left+step*(i+.5)-group/2+si*bw,y=top+ph-h;
-          out+='<rect class="backlogChartBar" x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(.6,bw-1).toFixed(2)+'" height="'+Math.max(0,h).toFixed(2)+'" fill="'+serie.color+'" opacity="'+(serie.dash?'.48':'.86')+'"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></rect>';
+      const totals=subtotalValues(model),stacked=model.state.barLayout==='stacked';
+      if(stacked){
+        const bw=Math.max(3,step*.56);
+        model.categories.forEach((cat,i)=>{
+          let cursor=top+ph;
+          model.series.forEach(serie=>{
+            const v=Number(serie.values&&serie.values[i])||0;if(v<=0)return;
+            const h=ph*v/max,x=left+step*(i+.5)-bw/2,y=cursor-h;cursor=y;
+            out+='<rect class="backlogChartBar backlogChartBarStacked" x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+bw.toFixed(2)+'" height="'+Math.max(0,h).toFixed(2)+'" fill="'+serie.color+'" opacity="'+(serie.dash?'.48':'.86')+'"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></rect>';
+          });
         });
-      });
-      const totals=subtotalValues(model);
+      }else{
+        const count=Math.max(1,model.series.length),group=step*.76,bw=Math.max(.7,group/count);
+        model.series.forEach((serie,si)=>{
+          serie.values.forEach((v,i)=>{
+            const h=ph*(Number(v)||0)/max,x=left+step*(i+.5)-group/2+si*bw,y=top+ph-h;
+            out+='<rect class="backlogChartBar" x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(.6,bw-1).toFixed(2)+'" height="'+Math.max(0,h).toFixed(2)+'" fill="'+serie.color+'" opacity="'+(serie.dash?'.48':'.86')+'"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></rect>';
+          });
+        });
+      }
       model.categories.forEach((cat,i)=>{
         const total=Number(totals[i])||0;if(total<=0)return;
-        const peak=Math.max(0,...model.series.map(serie=>Number(serie.values&&serie.values[i])||0));
+        const peak=stacked?total:Math.max(0,...model.series.map(serie=>Number(serie.values&&serie.values[i])||0));
         const x=left+step*(i+.5),y=Math.max(top+10,top+ph-ph*peak/max-7);
         out+='<text x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" text-anchor="middle" class="backlogChartColumnTotal">'+esc(formatWholeValue(total))+'</text>';
       });
