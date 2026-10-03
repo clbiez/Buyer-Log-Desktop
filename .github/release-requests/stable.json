@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.222",
-  "commit_sha": "b7794a12ae9190e0af627c218802fe4f4e9b7e58",
-  "release_notes": "Buyer Log 7.0.222: Checklist/Rules yeniden tasarlandı ve dört durumlu checklist sistemi devreye alındı; IAS Yol Süreleri tüm taşıt tipleri ve Türkiye direkt sevkiyatlarını destekleyecek şekilde genişletildi; Backlog detaylarına model görselleri/PLM Sync eklendi; açılış TR/EN seçimi düzeltildi; Troy otomasyonu ve entegrasyonu uygulamadan tamamen kaldırıldı."
+  "version": "7.0.223",
+  "commit_sha": "80567c9d6d1a26a6723d2440f6f9c6a4eb348b47",
+  "release_notes": "Buyer Log 7.0.223: Checklist onayları PO bazlı veya PLM ID + Model Adı + Colour Code bazında yeniden kullanılabilir; rapor numarası, gerçekleşme tarihi ve attachment kanıtları eklendi; CP checklist kayıt güvenliği güçlendirildi; Checklist Excel model görselleri hücreyle taşınır/boyutlanır biçimde gömülüyor; Üreticiye Checklist Exceli Hazırla akışı Excel + ilgili ekleri Prepare E-Mail'e taşıyor ve 9,5 MB draft attachment kuralını kullanıyor."
 }
