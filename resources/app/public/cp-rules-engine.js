@@ -619,8 +619,12 @@
       base.en = text(item.en).slice(0, 160) || base.name;
       // order: her PO kendi cevabını ister.
       // option: Approved, PLM ID + Model Name + Colour Code eşleşen PO'larda
-      // yeniden kullanılır. Varsayılan order; mevcut davranış değişmez.
-      base.approvalScope = text(item.approvalScope) === 'option' ? 'option' : 'order';
+      // yeniden kullanılır. Kullanıcının oluşturduğu checklistlerde varsayılan
+      // option'dır; yerleşik kontroller güvenli tarafta kalıp PO bazında başlar.
+      const approvalScope = text(item.approvalScope);
+      base.approvalScope = approvalScope === 'order' || approvalScope === 'option'
+        ? approvalScope
+        : (base.builtIn ? 'order' : 'option');
       const evidence = item.evidenceFields && typeof item.evidenceFields === 'object' ? item.evidenceFields : {};
       base.evidenceFields = {
         reportNumber: evidence.reportNumber === true,

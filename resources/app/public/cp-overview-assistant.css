@@ -204,8 +204,13 @@
 .cpaRuleHead{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1.15fr) minmax(190px,.8fr);gap:8px;align-items:end}
 .cpaRuleTarget{display:grid;gap:3px;min-width:0}
 .cpaRuleTarget>span{font-size:var(--fs-xs);color:var(--muted)}
-.cpaRuleTarget select,.cpaRuleTarget input{width:100%;height:34px;min-width:0;padding:0 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink);font-family:var(--sans);font-size:var(--fs-sm);box-sizing:border-box}
-.cpaRuleTarget select:focus,.cpaRuleTarget input:focus,.cpaCondRow select:focus,.cpaCondRow input:focus{outline:none;border-color:var(--acc);box-shadow:var(--focus-ring)}
+.cpaRuleTarget select,.cpaRuleTarget>input{width:100%;height:34px;min-width:0;padding:0 9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink);font-family:var(--sans);font-size:var(--fs-sm);box-sizing:border-box}
+.cpaRuleTarget select:focus,.cpaRuleTarget>input:focus,.cpaCondRow select:focus,.cpaCondRow input:focus{outline:none;border-color:var(--acc);box-shadow:var(--focus-ring)}
+.cpaRuleEvidenceFields{align-self:start}
+.cpaRuleEvidenceChecks{display:flex;align-items:center;gap:12px;min-height:34px;padding:6px 9px;border:1px solid var(--line);background:var(--card2);box-sizing:border-box;flex-wrap:wrap}
+.cpaRuleEvidenceChecks .cpaCheck{flex:0 0 auto;gap:6px;min-height:20px}
+.cpaRuleEvidenceChecks .cpaCheck input{flex:0 0 16px;width:16px;height:16px;min-width:16px;margin:0;padding:0;border:0;box-shadow:none;accent-color:var(--acc)}
+.cpaRuleEvidenceChecks .cpaCheck span{min-width:0;color:var(--ink2);font-size:var(--fs-sm);line-height:1.25;white-space:nowrap}
 .cpaRuleName{font-weight:650}
 .cpaRuleReasons{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
 .cpaRuleModeTabs{display:flex;align-items:center;gap:0;border-bottom:1px solid var(--line);margin-top:2px}
