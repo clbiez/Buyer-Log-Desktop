@@ -331,7 +331,7 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
     if (String(info.manifest.app_version || '') !== String(appVersion || '')) warnings.push(`Backup sürümü ${info.manifest.app_version || 'bilinmiyor'}, yüklü sürüm ${appVersion}. Restore sonrası veri migration/doğrulaması uygulanacak.`);
     if (!contents.has('system/security/users-roles-permissions.json')) warnings.push('Kullanıcı/rol/yetki snapshotı bulunmuyor.');
     if (!contents.has('system/sync/metadata.json')) warnings.push('Sync metadata bulunmuyor.');
-    warnings.push('Parolalar, oturumlar, Outlook/API kimlik bilgileri güvenlik nedeniyle restore edilmez.');
+    warnings.push('Parolalar, oturumlar ve API kimlik bilgileri güvenlik nedeniyle restore edilmez.');
     const securitySnapshot = contents.has('system/security/users-roles-permissions.json')
       ? await readBackupJsonEntry(file, info, 'system/security/users-roles-permissions.json') : null;
     const settingsSnapshot = contents.has('system/server-data/settings.json')
