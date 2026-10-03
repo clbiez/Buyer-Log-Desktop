@@ -12616,7 +12616,7 @@ function renderRefreshStagesBody(){
     const t=item.timings;
     return `<div class="refreshCompactDiagRow">
       <b>${escapeHtml(item.name||item.catalog||item.role||'—')} <small>${escapeHtml(String(Number(item.rowCount)||0))} ${escapeHtml(en?'rows':'satır')}</small></b>
-      <span>${escapeHtml(en?'query':'sorgu')} ${escapeHtml(refreshSeconds(t.executeMs))} · ${escapeHtml(en?'open':'açılış')} ${escapeHtml(refreshSeconds(t.connectionOpenMs))} · ${escapeHtml(en?'retry':'tekrar')} ${escapeHtml(refreshSeconds(t.retryMs))} · ${escapeHtml(en?'overhead':'ek')} ${escapeHtml(refreshSeconds(t.overheadMs))}</span>
+      <span>${escapeHtml(en?'query':'sorgu')} ${escapeHtml(refreshSeconds(t.executeMs))} · ${escapeHtml(en?'write':'yazım')} ${escapeHtml(refreshSeconds(t.writeMs))} · ${escapeHtml(en?'parse':'ayrıştırma')} ${escapeHtml(refreshSeconds(t.parseMs))} · ${escapeHtml(en?'open':'açılış')} ${escapeHtml(refreshSeconds(t.connectionOpenMs))} · ${escapeHtml(en?'retry':'tekrar')} ${escapeHtml(refreshSeconds(t.retryMs))} · ${escapeHtml(en?'overhead':'ek')} ${escapeHtml(refreshSeconds(t.overheadMs))} · ${escapeHtml(en?'total':'toplam')} ${escapeHtml(refreshSeconds(t.totalMs))}</span>
     </div>`;
   }).join('');
   const metricDetails=metrics?`<div class="refreshCompactDiagMetrics">
@@ -12638,7 +12638,7 @@ function renderRefreshStagesBody(){
       <summary>${escapeHtml(en?'View technical details':'Teknik Detayları Gör')}</summary>
       <div class="refreshCompactDiag">
         ${metricDetails}
-        ${diagnosticRows||`<div class="refreshCompactDiagEmpty">${escapeHtml(running?(en?'Connection timings will appear when ready.':'Bağlantı süreleri hazır olduğunda burada görünür.'):(en?'No connection timing recorded.':'Bağlantı süresi kaydı yok.'))}</div>`}
+        ${diagnosticRows||`<div class="refreshCompactDiagEmpty">${escapeHtml(running?(en?'The per-connection breakdown appears once the queries finish. No stage information yet.':'Bağlantı bazlı döküm sorgular bittiğinde görünür. Henüz aşama bilgisi yok.'):(en?'No connection timing recorded for the last refresh.':'Son yenileme için bağlantı süresi kaydı yok.'))}</div>`}
       </div>
     </details>
     <div class="refreshCompactActions">
