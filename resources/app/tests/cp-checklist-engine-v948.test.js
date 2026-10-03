@@ -67,6 +67,29 @@ test('v9.48 yükleme yaklaşınca ilgili kontroller sorulur', () => {
   assert.ok(!ids.includes('productionStart'));
 });
 
+test('rule-managed ön tanımlı checklist legacy kopyasıyla çift görünmez', () => {
+  const [analysis] = analyses([nearOrder(8008)]);
+  const settings = Checklist.normalizeSettings(null);
+  const customPps = [{
+    id: 'pps', group: 'custom', tr: 'PPS onayı', en: 'PPS approval',
+    questionTr: 'PPS onayı alındı mı?', questionEn: 'Has PPS been approved?',
+  }];
+  const context = { settings, answers: {}, customItems: customPps, managedItemIds: ['pps'] };
+  const open = Checklist.openItems(analysis, context);
+  assert.equal(open.filter(item => item.id === 'pps').length, 1, 'aynı PPS sorusu iki kez görünmemeli');
+  assert.equal(Checklist.stateFor(analysis, context).pps, 'open');
+
+  const withoutRule = Checklist.stateFor(analysis, { settings, answers: {}, customItems: [], managedItemIds: ['pps'] });
+  assert.equal(withoutRule.pps, 'notApplicable', 'silinen/kapalı rule legacy checklist tarafından geri getirilmemeli');
+
+  const plmContext = {
+    ...context,
+    plmEvidence: (_analysis, id) => id === 'pps' ? { state: 'approved', requestCode: 'PPS-1' } : null,
+  };
+  assert.ok(!Checklist.openItems(analysis, plmContext).some(item => item.id === 'pps'),
+    'PLM onayı rule-managed ön tanımlı soruyu da kapatmalı');
+});
+
 test('v9.48 uzak tarihli siparişte hiçbir kontrol sorulmaz', () => {
   const [analysis] = analyses([order({ ocode: 8002, opd: '2026-08-25', ex: '2027-03-01', retail: '2027-09-01' })]);
   assert.deepEqual(Checklist.openItems(analysis, { settings: Checklist.normalizeSettings(null), answers: {} }), []);
