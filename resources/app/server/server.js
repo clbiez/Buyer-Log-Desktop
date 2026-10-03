@@ -9119,19 +9119,21 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   if (!wantSync) {
     const startedAt=new Date().toISOString();
     const jobId=`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
-    const currentUser=req.currentUser,refreshOverrides=loadOverrides();
-    const sourcePolicy={
-      asasMode:refreshOverrides.asasSourceMode==='database'?'database':'excel',
-      antrepoMode:['database','dashboard'].includes(refreshOverrides.antrepoSourceMode)?refreshOverrides.antrepoSourceMode:'excel',
-      lflMode:refreshOverrides.lflSourceMode==='database'?'database':'excel',
-    };
+    const currentUser = req.currentUser;
+    // Kaynak modu sözleşmesi dashboard/Excel/Database davranışı için mevcut
+    // isimleri korur; ETA aynı politikayı yalnız profil anahtarı olarak okur.
+    const refreshOverrides = loadOverrides();
+    const selectedAsasMode = refreshOverrides.asasSourceMode === 'database' ? 'database' : 'excel';
+    const selectedLflMode = refreshOverrides.lflSourceMode === 'database' ? 'database' : 'excel';
+    const selectedAntrepoMode = ['database', 'dashboard'].includes(refreshOverrides.antrepoSourceMode) ? refreshOverrides.antrepoSourceMode : 'excel';
+    const sourcePolicy={asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode};
     const performanceProfile=refreshPerformanceProfile(currentUser,requestedTargets,sourcePolicy);
     const job={jobId,running:true,phase:'source-setup',startedAt,startedMs:Date.now(),error:null,
       requestedTargets:requestedTargets.slice(),loadedAt:null,controller:new AbortController(),cancelRequested:false,commitStarted:false,
       operations:[],performanceProfile,eta:refreshPerformance.estimate(performanceProfile)};
     refreshJobs.set(id,job);refreshInFlight.add(id);
     void refreshPerformance.refreshSharedCache().then(()=>{if(job.running)job.eta=refreshPerformance.estimate(job.performanceProfile);});
-    performRefresh(id,currentUser,targets&&targets.length?targets:null,{signal:job.controller.signal,sourcePolicy,refreshId:job.jobId}).then(result=>{
+    performRefresh(id,currentUser,targets&&targets.length?targets:null,{signal:job.controller.signal,sourcePolicy:{asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode},refreshId:job.jobId}).then(result=>{
       job.summary={...result.summary,historyItemId:result.historyItem?result.historyItem.id:null};
       job.connections=result.modelRefresh&&result.modelRefresh.connections||null;job.loadedAt=cacheForUser(id).loadedAt||null;job.metrics=result.metrics||null;
       const last=Array.isArray(job.phases)?job.phases[job.phases.length-1]:null;
