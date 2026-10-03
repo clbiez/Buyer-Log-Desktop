@@ -841,6 +841,44 @@ function verify(secret, token) {
   try { const parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')); return parsed.exp > Date.now() ? parsed : null; } catch (_) { return null; }
 }
 function initials(name) { return userInitials(clean(name)); }
+/* Audit saklama/rotasyon. Varsayılan: aktif dosya 20 MB'ı aşınca zaman damgalı
+   arşive TAŞINIR (silinmez); en yeni 24 arşiv tutulur (~500 MB tavan). Ortam:
+   BUYER_LOG_AUDIT_MAX_BYTES, BUYER_LOG_AUDIT_MAX_ARCHIVES (0 = arşivleri hiç
+   silme). Rotasyon hatası audit yazımını asla engellemez. */
+const AUDIT_ARCHIVE_RE = /^user-audit\.(\d{8}T\d{6}Z)(?:-(\d+))?\.jsonl$/;
+function auditRetention(env = process.env) {
+  const bytes = Number(env.BUYER_LOG_AUDIT_MAX_BYTES), archives = Number(env.BUYER_LOG_AUDIT_MAX_ARCHIVES);
+  return {
+    maxBytes: Number.isFinite(bytes) && bytes >= 64 * 1024 ? Math.floor(bytes) : 20 * 1024 * 1024,
+    maxArchives: Number.isInteger(archives) && archives >= 0 ? archives : 24,
+  };
+}
+function listAuditArchives(dir = AUTH_DATA_ROOT) {
+  // Eskiden yeniye: önce zaman damgası, aynı saniyede sayaç (sözlük sırası "-1" ile "."yi ters dizer).
+  const key = name => { const m = AUDIT_ARCHIVE_RE.exec(name); return [m[1], Number(m[2] || 0)]; };
+  try {
+    return fs.readdirSync(dir).filter(name => AUDIT_ARCHIVE_RE.test(name))
+      .sort((a, b) => { const [sa, na] = key(a), [sb, nb] = key(b); return sa < sb ? -1 : sa > sb ? 1 : na - nb; });
+  } catch (_) { return []; }
+}
+function rotateAuditIfNeeded(file = AUDIT_FILE, retention = auditRetention()) {
+  let size = 0;
+  try { size = fs.statSync(file).size; } catch (_) { return false; }
+  if (size < retention.maxBytes) return false;
+  const dir = path.dirname(file), stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
+  // Aynı saniyede birden çok rotasyon: sayaç her zaman mevcutların üstüne çıkar ki
+  // budanan bir adın yeniden kullanılıp "en eski" sanılması mümkün olmasın.
+  const sameStamp = listAuditArchives(dir).map(name => AUDIT_ARCHIVE_RE.exec(name)).filter(m => m[1] === stamp).map(m => Number(m[2] || 0));
+  const target = path.join(dir, sameStamp.length ? `user-audit.${stamp}-${Math.max(...sameStamp) + 1}.jsonl` : `user-audit.${stamp}.jsonl`);
+  fs.renameSync(file, target);
+  if (retention.maxArchives > 0) {
+    const archives = listAuditArchives(dir);
+    for (const name of archives.slice(0, Math.max(0, archives.length - retention.maxArchives))) {
+      try { fs.unlinkSync(path.join(dir, name)); } catch (_) {}
+    }
+  }
+  return target;
+}
 function appendAudit(profile, action, target, details, requestMeta) {
   const transaction = iamTransaction.getStore();
   if (transaction) { transaction.audit.push({ action, target }); return true; }
@@ -855,6 +893,7 @@ function appendAudit(profile, action, target, details, requestMeta) {
       method: clean(req.method) || null, path: clean(req.originalUrl || req.path).slice(0, 500) || null,
     } : (requestMeta && typeof requestMeta === 'object' ? requestMeta : null);
     const line = JSON.stringify({ id: `audit-${crypto.randomUUID()}`, at: new Date().toISOString(), actorId: profile && profile.id || null, userId: profile && profile.id || null, actor: profile && profile.displayName || null, user: profile && profile.displayName || null, systemRole: profile && profile.systemRole || null, role: profile && profile.role || null, action, resource: clean(action).split('_')[0] || null, targetId: target || null, target: target || null, oldValue: details && details.oldValue || null, newValue: details && details.newValue || null, reason: details && details.reason || null, details: details || null, request: meta });
+    try { rotateAuditIfNeeded(); } catch (rotationError) { console.error('[DATA_INTEGRITY] Audit rotation skipped:', rotationError && rotationError.message || rotationError); }
     fs.appendFileSync(AUDIT_FILE, line + '\n', 'utf8');
     return true;
   } catch (error) {
@@ -880,6 +919,9 @@ function readAudit(limit = 200, filters = {}) {
     const from = Date.parse(filters.from || '') || 0, until = Date.parse(filters.until || '') || Infinity;
     const centralRows = centralConfigured ? getCentralIam().localAudit() : [];
     let legacyRows = []; try { legacyRows = fs.readFileSync(AUDIT_FILE, 'utf8').trim().split('\n').filter(Boolean).reverse().map(line => JSON.parse(line)); } catch (_) {}
+    // Rotasyondan hemen sonra görünüm boşalmasın: en yeni arşiv de okunur.
+    const latestArchive = listAuditArchives().at(-1);
+    if (latestArchive) { try { legacyRows = legacyRows.concat(fs.readFileSync(path.join(AUTH_DATA_ROOT, latestArchive), 'utf8').trim().split('\n').filter(Boolean).reverse().map(line => JSON.parse(line))); } catch (_) {} }
     return [...centralRows, ...legacyRows].filter(item => {
       const at = Date.parse(item.at || '') || 0;
       if (actorId && clean(item.actorId || item.userId) !== actorId) return false;
@@ -1848,7 +1890,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
 }
 
 module.exports = {
-  getCentralIam, AUTH_DATA_ROOT, ACCESS_FILE,
+  getCentralIam, AUTH_DATA_ROOT, ACCESS_FILE, rotateAuditIfNeeded, auditRetention, listAuditArchives,
   buildUserAccess, loadStore, readStore, saveStore, backupSafeStore, syncProfiles, mergeCatalogValues, scopeCatalogFromOrders, effectiveScopes, directEffectiveScopes, canEditOrder, publicProfile,
   hashPin, verifyPin, unique, norm, normalizeRole, isKnownRole, normalizePermissions, normalizeAccessAreas,
   normalizeCollectionAccess, effectivePermissions, hasPermission, directAccessAreas, effectiveAccessAreas, hasArea,

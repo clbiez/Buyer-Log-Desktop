@@ -375,16 +375,28 @@ function openExternal(target) {
  * Buyer Log arayüzü kendi origin'inde kalır; keyfi bir sayfa Electron
  * penceresini ele geçiremez.
  */
+/*
+ * Gerçek URL.origin eşitliği. Önek karşılaştırması (url.startsWith(origin))
+ * "http://127.0.0.1:6194@evil.example/" (userinfo) ve "http://127.0.0.1:61940/"
+ * gibi adresleri aynı origin sanıp yabancı sayfayı preload köprülü pencereye
+ * yüklüyordu.
+ */
+function sameOrigin(url, origin) {
+  try { return new URL(String(url)).origin === new URL(String(origin)).origin; }
+  catch (_) { return false; }
+}
 function applyNavigationPolicy(contents, origin) {
   contents.setWindowOpenHandler(({ url }) => {
     openExternal(url);
     return { action: 'deny' };
   });
-  contents.on('will-navigate', (event, url) => {
-    if (url.startsWith(origin)) return;
+  const guard = (event, url) => {
+    if (sameOrigin(url, origin)) return;
     event.preventDefault();
     openExternal(url);
-  });
+  };
+  contents.on('will-navigate', guard);
+  contents.on('will-redirect', guard);
   contents.on('will-attach-webview', event => event.preventDefault());
 }
 
@@ -1453,6 +1465,9 @@ function showStartupError(detail) {
     },
   });
   errorWindow.webContents.setWindowOpenHandler(({ url }) => { openExternal(url); return { action: 'deny' }; });
+  // Preload'lu hata ekranı yerel dosyadan başka bir yere gezinemez.
+  errorWindow.webContents.on('will-navigate', (event, url) => { event.preventDefault(); if (/^https?:/i.test(String(url))) openExternal(url); });
+  errorWindow.webContents.on('will-attach-webview', event => event.preventDefault());
   errorWindow.once('ready-to-show', () => { closeSplash(); errorWindow.show(); });
   errorWindow.on('closed', () => { errorWindow = null; });
   errorWindow.loadFile(path.join(__dirname, 'startup-error.html'));
@@ -1697,6 +1712,22 @@ function trustedBuyerLogIpcSender(event) {
   } catch (_) { return false; }
 }
 
+/*
+ * Başlatma hatası ekranı (file://startup-error.html) uygulama origin'inde değildir
+ * ama teşhis/yeniden dene/çıkış uçlarını kullanır. Bu uçlar yalnız o pencereden
+ * ya da güvenilen Buyer Log renderer'ından çağrılabilir; başka bir webContents
+ * (SSO pencereleri, dış sayfalar) bu kanallara erişemez.
+ */
+function trustedDesktopShellSender(event) {
+  if (trustedBuyerLogIpcSender(event)) return true;
+  if (!event || !event.sender || event.sender.isDestroyed()) return false;
+  if (!errorWindow || errorWindow.isDestroyed() || event.sender !== errorWindow.webContents) return false;
+  try {
+    const source = new URL(String(event.senderFrame && event.senderFrame.url || event.sender.getURL() || ''));
+    return source.protocol === 'file:' && path.basename(decodeURIComponent(source.pathname)) === 'startup-error.html';
+  } catch (_) { return false; }
+}
+
 function registerIpc() {
   ipcMain.handle('buyerlog:workspace-snapshot', event => {
     if (!workspace || !workspace.windowForShellContents(event.sender)) return null;
@@ -1780,9 +1811,10 @@ function registerIpc() {
     return Boolean(requested && await activeWorkspace.closeTab(tabId));
   });
 
-  ipcMain.handle('buyerlog:diagnostics', () => diagnostics());
-  ipcMain.handle('buyerlog:startup-failure', () => startupFailure);
-  ipcMain.handle('buyerlog:open-logs', () => {
+  ipcMain.handle('buyerlog:diagnostics', event => trustedDesktopShellSender(event) ? diagnostics() : { ok:false, code:'IPC_FORBIDDEN' });
+  ipcMain.handle('buyerlog:startup-failure', event => trustedDesktopShellSender(event) ? startupFailure : null);
+  ipcMain.handle('buyerlog:open-logs', event => {
+    if (!trustedDesktopShellSender(event)) return false;
     shell.openPath(paths.logsRoot);
     return true;
   });
@@ -1796,12 +1828,14 @@ function registerIpc() {
    * Kapanma başarılıysa açılış kendiliğinden yeniden denenir: kullanıcıdan
    * ikinci bir tıklama beklemek, çözülmüş bir sorunu çözülmemiş göstermek olur.
    */
-  ipcMain.handle('buyerlog:inspect-port', async () => {
+  ipcMain.handle('buyerlog:inspect-port', async event => {
+    if (!trustedDesktopShellSender(event)) return { ok:false, code:'IPC_FORBIDDEN' };
     const address = resolveAppUrl(readJson(paths.configPath, {}));
     return inspectPortOwner(address.origin, address.port);
   });
 
-  ipcMain.handle('buyerlog:close-other', async () => {
+  ipcMain.handle('buyerlog:close-other', async event => {
+    if (!trustedDesktopShellSender(event)) return { ok:false, code:'IPC_FORBIDDEN', started:false };
     const address = resolveAppUrl(readJson(paths.configPath, {}));
     const result = await closePortOwner(address.origin, address.port, log);
     if (!result.ok) return { ...result, started: false };
@@ -1813,7 +1847,8 @@ function registerIpc() {
     } finally { restarting = false; }
   });
 
-  ipcMain.handle('buyerlog:retry', async () => {
+  ipcMain.handle('buyerlog:retry', async event => {
+    if (!trustedDesktopShellSender(event)) return false;
     restarting = true;
     try {
       if (backend) { try { await backend.stop(); } catch (_) {} backend = null; }
@@ -1821,7 +1856,7 @@ function registerIpc() {
       return await startBuyerLog();
     } finally { restarting = false; }
   });
-  ipcMain.handle('buyerlog:quit', () => { app.quit(); return true; });
+  ipcMain.handle('buyerlog:quit', event => { if (!trustedDesktopShellSender(event)) return false; app.quit(); return true; });
 
   ipcMain.handle('buyerlog:update-status', async (event, payload = {}) => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'IPC_FORBIDDEN' };

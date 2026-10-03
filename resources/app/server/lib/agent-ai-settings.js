@@ -41,8 +41,13 @@ function envNvidiaKey() { return clean(process.env.BUYER_LOG_NVIDIA_API_KEY || p
 function envProvider() {
   const configured = clean(process.env.BUYER_LOG_AGENT_PROVIDER);
   if (configured) return gateway.normalizeProviderId(configured);
-  return envKey() ? 'openai-compatible' : '';
+  /* Genel OPENAI_API_KEY bu makinede başka bir araç için tanımlı olabilir; yalnız
+     onun varlığı Buyer Log'u sessizce bulut sağlayıcıya (api.openai.com) çeviremez.
+     Otomatik seçim yalnız Buyer Log'a özel değişkenle olur ve uzak uç nokta yine
+     veri politikası onayı ister (bkz. remoteDataPolicyFor). */
+  return clean(process.env.BUYER_LOG_AGENT_OPENAI_API_KEY) ? 'openai-compatible' : '';
 }
+function envRemoteDataPolicy() { return clean(process.env.BUYER_LOG_AGENT_REMOTE_DATA_POLICY).toLowerCase() === 'allowed'; }
 function envModel() { return clean(process.env.BUYER_LOG_AGENT_MODEL); }
 function envEndpoint() { return clean(process.env.BUYER_LOG_AGENT_BASE_URL || process.env.BUYER_LOG_AGENT_ENDPOINT); }
 const OPENROUTER_DEFAULT_MODEL = 'minimax/minimax-m3:free';
@@ -59,6 +64,9 @@ function defaultSettings() {
     // "Sağlayıcı" açılır listesinde yereli kapatacak bir seçenek yoktu; bu
     // ayrı anahtar o boşluğu dolduruyor (bkz. kullanıcı geri bildirimi).
     localProviderEnabled: true,
+    // Custom OpenAI-compatible sağlayıcı bu bilgisayar dışındaysa iş verisi
+    // üçüncü tarafa gider; OpenRouter/NVIDIA ile aynı açık onay kapısı.
+    customRemoteDataPolicy: 'off',
     openrouterEnabled: false,
     openrouterModel: OPENROUTER_DEFAULT_MODEL,
     openrouterDataPolicy: 'off',
@@ -129,6 +137,17 @@ function maskKey(value) {
   if (key.length <= 8) return '••••••••';
   return `••••••••${key.slice(-4)}`;
 }
+/* 'local'   → uç nokta bu bilgisayarda, veri dışarı çıkmaz.
+   'allowed' → uzak uç nokta için açık veri politikası onayı var.
+   'blocked' → uzak uç nokta, onay yok: gateway.createProvider reddeder.
+   OpenRouter/NVIDIA'nın kendi onay alanları vardır; Custom OpenAI-compatible
+   uzak uç nokta customRemoteDataPolicy (veya yönetici ortam değişkeni) ister. */
+function remoteDataPolicyFor(provider, endpoint, settings = loadSettings()) {
+  if (!gateway.isRemoteEndpoint(provider, endpoint)) return 'local';
+  if (provider === 'openrouter') return settings.openrouterDataPolicy === 'allowed' ? 'allowed' : 'blocked';
+  if (provider === 'nvidia') return settings.nvidiaDataPolicy === 'allowed' ? 'allowed' : 'blocked';
+  return settings.customRemoteDataPolicy === 'allowed' || envRemoteDataPolicy() ? 'allowed' : 'blocked';
+}
 function credentials(overrides = {}) {
   const settings = loadSettings();
   const provider = gateway.normalizeProviderId(overrides.provider || envProvider() || settings.provider || DEFAULT_PROVIDER);
@@ -157,10 +176,19 @@ function credentials(overrides = {}) {
   const configuredEndpoint = overrides.endpoint || overrides.baseUrl
     || (isCloudFixedProvider ? '' : (envEndpoint() || settings.endpoint))
     || (provider === 'openai-compatible' ? OPENAI_ENDPOINT : '');
-  const endpoint = gateway.normalizeEndpoint(provider, configuredEndpoint);
+  /* Önceden kaydedilmiş düz HTTP uzak uç nokta artık geçersizdir. Settings ekranı
+     yine açılabilsin diye burada fırlatılmaz; ham değer taşınır ve createProvider
+     içindeki normalizeConfig onu HTTPS hatasıyla reddeder (fail-closed). */
+  let endpoint, endpointError = null;
+  try { endpoint = gateway.normalizeEndpoint(provider, configuredEndpoint); }
+  catch (error) {
+    if (error && error.code === 'AI_ENDPOINT_INSECURE') { endpoint = clean(configuredEndpoint); endpointError = error.code; }
+    else throw error;
+  }
   const apiKey = overrideKey || environmentKey || savedKey;
   return {
-    provider, apiKey, model, endpoint, profile: clean(overrides.profile || settings.profile) || gateway.profileForModel(model),
+    provider, apiKey, model, endpoint, endpointError, remoteDataPolicy: remoteDataPolicyFor(provider, endpoint, settings),
+    profile: clean(overrides.profile || settings.profile) || gateway.profileForModel(model),
     temperature: overrides.temperature == null ? Number(settings.temperature) : Number(overrides.temperature),
     contextLimit: overrides.contextLimit == null ? Number(settings.contextLimit) : Number(overrides.contextLimit),
     source: overrideKey ? 'temporary' : environmentKey ? 'environment' : savedKey ? 'application' : 'none',
@@ -193,6 +221,9 @@ function publicSettings() {
   return {
     provider: creds.provider, providerLabel: provider.label, model: creds.model, profile: creds.profile,
     endpoint: creds.endpoint, configured: creds.provider !== 'openai-compatible' || Boolean(creds.apiKey),
+    endpointError: creds.endpointError || null, endpointRemote: gateway.isRemoteEndpoint(creds.provider, creds.endpoint),
+    remoteDataPolicy: creds.remoteDataPolicy, customRemoteDataPolicy: settings.customRemoteDataPolicy === 'allowed' ? 'allowed' : 'off',
+    remoteDataPolicyFromEnvironment: envRemoteDataPolicy(),
     mode: creds.provider, source: creds.source, hasStoredKey: Boolean(savedKey),
     maskedStoredKey: maskKey(savedKey), environmentConfigured: Boolean(envKey()),
     recommendedModels: gateway.recommendedModels(), autoCheckUpdates: settings.autoCheckUpdates !== false,
@@ -242,6 +273,7 @@ function saveSettings(input = {}) {
     localProviderEnabled: input.localProviderEnabled == null ? current.localProviderEnabled !== false : input.localProviderEnabled === true,
     updatedAt: new Date().toISOString(),
   };
+  if (input.customRemoteDataPolicy === 'allowed' || input.customRemoteDataPolicy === 'off') next.customRemoteDataPolicy = input.customRemoteDataPolicy;
   if (input.clearKey === true) next.encryptedApiKey = null;
   else if (clean(input.apiKey)) next.encryptedApiKey = encryptApiKey(input.apiKey);
   if (input.openrouterEnabled != null) next.openrouterEnabled = input.openrouterEnabled === true;
@@ -410,7 +442,9 @@ function recordNvidiaHealth(modelId, outcome = {}) {
 
 async function testConnection(input = {}) {
   const creds = credentials(input);
-  const provider = gateway.createProvider(creds);
+  // Moderatörün açık "Bağlantıyı Test Et" eylemi sabit bir deneme istemi gönderir,
+  // iş verisi taşımaz; HTTPS ve uç nokta doğrulaması yine normalizeConfig'te uygulanır.
+  const provider = gateway.createProvider({ ...creds, remoteDataPolicy: creds.remoteDataPolicy === 'blocked' ? 'connection-test' : creds.remoteDataPolicy });
   try {
     const result = await provider.testConnection({ inference: true });
     if (creds.provider === 'nvidia') recordNvidiaHealth(creds.model, { ok: true });
@@ -422,7 +456,7 @@ async function testConnection(input = {}) {
 }
 
 module.exports = {
-  credentials, publicSettings, saveSettings, testConnection, loadSettings, maskKey,
+  credentials, publicSettings, saveSettings, testConnection, loadSettings, maskKey, remoteDataPolicyFor,
   openrouterCredentials,
   nvidiaCredentials, nvidiaRouterState, recordNvidiaHealth, isLocalProviderEnabled,
   DEFAULT_MODEL, DEFAULT_PROVIDER, OPENAI_ENDPOINT, SETTINGS_FILE, OPENROUTER_DEFAULT_MODEL, NVIDIA_DEFAULT_MODEL,

@@ -67,11 +67,18 @@ function endpoint(config = {}) { return credentials(config).endpoint; }
 async function status(config = {}) {
   const recommendedModels = gateway.recommendedModels();
   if (!enabled(config)) return { status: STATUS.DISABLED, ok: false, recommendedModels };
-  let creds;
-  try { creds = credentials(config); } catch (error) {
-    return { status: STATUS.DISABLED, ok: false, reason: error.message, recommendedModels };
+  let creds, provider;
+  try { creds = credentials(config); provider = gateway.createProvider(creds); } catch (error) {
+    // HTTPS/veri politikası reddi (AI_ENDPOINT_INSECURE, AI_REMOTE_DATA_POLICY_REQUIRED)
+    // durum ekranını düşürmez; moderatör Settings'ten düzeltebilsin diye kodla döner.
+    return {
+      status: STATUS.DISABLED, ok: false, reason: error.message, errorCode: error && error.code || null,
+      // Settings ekranı kayıtlı sağlayıcıyı göstermeli; aksi hâlde varsayılan Ollama
+      // görünür ve "Kaydet" moderatörün yapılandırmasını sessizce değiştirirdi.
+      ...(creds ? { provider: creds.provider, model: creds.model, endpoint: creds.endpoint } : {}),
+      recommendedModels,
+    };
   }
-  const provider = gateway.createProvider(creds);
   let models;
   try { models = await provider.listModels({ timeoutMs: PROBE_TIMEOUT_MS }); }
   catch (error) {

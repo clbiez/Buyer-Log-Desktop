@@ -40,6 +40,7 @@ const MODEL_PROFILES = Object.freeze([
 ]);
 
 const modelRegistry = require('./ai-model-registry');
+const { isLoopbackHost } = require('./net-guard');
 
 /* OpenRouter'ın ücretsiz katalogu SIK değişiyor — v9.35'te seçilen 4 model
    (Llama 3.1 8B, Mistral 7B, Gemma 2 9B, Qwen3 8B) birkaç ay içinde
@@ -93,8 +94,14 @@ function assertUrl(value, providerId) {
   if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password) {
     throw Object.assign(new Error('AI sağlayıcı adresi yalnızca http/https ve kimlik bilgisi içermeyen bir URL olabilir.'), { code: 'AI_ENDPOINT_INVALID', statusCode: 400 });
   }
-  if (PROVIDERS[providerId].localOnly && !LOOPBACK_HOSTS.has(parsed.hostname.toLowerCase())) {
+  const loopback = LOOPBACK_HOSTS.has(parsed.hostname.toLowerCase()) || isLoopbackHost(parsed.hostname);
+  if (PROVIDERS[providerId].localOnly && !loopback) {
     throw Object.assign(new Error('Yerel AI sağlayıcıları yalnızca bu bilgisayardaki bir adrese bağlanabilir.'), { code: 'AI_ENDPOINT_NOT_LOCAL', statusCode: 400 });
+  }
+  // Bu bilgisayar dışındaki her AI uç noktası iş verisi ve API anahtarı taşır;
+  // düz HTTP ağda dinlenebilir/değiştirilebilir. Loopback dışı hedefte HTTPS zorunlu.
+  if (!loopback && parsed.protocol !== 'https:') {
+    throw Object.assign(new Error('Bu bilgisayar dışındaki AI sağlayıcı adresleri HTTPS kullanmalıdır. / Remote AI provider endpoints must use HTTPS.'), { code: 'AI_ENDPOINT_INSECURE', statusCode: 400 });
   }
   parsed.hash = '';
   parsed.search = '';
@@ -110,6 +117,19 @@ function normalizeEndpoint(provider, value) {
     return fallback;
   }
   return assertUrl(configured, providerId);
+}
+
+/* Uç nokta bu bilgisayarın dışında mı? Dışarıdaysa soru, araç sonuçları
+   (tedarikçi/sipariş/filtre/e-posta içerikleri) üçüncü tarafa gider ve bu
+   ancak açık bir veri politikası onayıyla mümkündür (bkz. agent-ai-settings). */
+function isRemoteEndpoint(provider, endpoint) {
+  const providerId = normalizeProviderId(provider);
+  if (providerId === 'openrouter' || providerId === 'nvidia') return true;
+  if (PROVIDERS[providerId].localOnly) return false;
+  try {
+    const host = new URL(clean(endpoint)).hostname.toLowerCase();
+    return !(LOOPBACK_HOSTS.has(host) || isLoopbackHost(host));
+  } catch (_) { return true; }
 }
 
 function normalizeConfig(input = {}) {
@@ -207,6 +227,11 @@ function readErrorMessage(data, fallback) {
 }
 
 function createProvider(input = {}, dependencies = {}) {
+  // Merkezi veri politikası kapısı: kimlik bilgisini üreten katman (agent-ai-settings)
+  // uzak uç noktayı onaysız bulursa 'blocked' işaretler; hiçbir çağıran bunu atlayamaz.
+  if (input && input.remoteDataPolicy === 'blocked') {
+    throw Object.assign(new Error('Bu bilgisayar dışındaki AI sağlayıcısına iş verisi gönderimi için Settings içinde veri politikası onayı gerekli. / Sending business data to a remote AI provider requires the data policy confirmation in Settings.'), { code: 'AI_REMOTE_DATA_POLICY_REQUIRED', statusCode: 403 });
+  }
   const config = normalizeConfig(input);
   const fetchImpl = dependencies.fetch || globalThis.fetch;
   if (typeof fetchImpl !== 'function') throw new Error('AI sağlayıcı için fetch kullanılamıyor.');
@@ -611,6 +636,7 @@ function createProvider(input = {}, dependencies = {}) {
 }
 
 module.exports = {
+  isRemoteEndpoint,
   DEFAULT_MODEL,
   PROVIDERS,
   MODEL_PROFILES,

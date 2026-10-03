@@ -5573,7 +5573,7 @@ async function receiveRequestToTempFile(req, maxBytes) {
     output.destroy(); fs.rmSync(root, { recursive: true, force: true }); throw err;
   }
 }
-app.post('/api/backup/restore', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), async (req, res) => {
+app.post('/api/backup/restore', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), userAccess.requireModerator, async (req, res) => {
   let upload = null;
   let ownsWriteLock = false;
   try {
@@ -5862,7 +5862,10 @@ app.get('/api/user-data/inventory', userAccess.requireArea('source'), userAccess
   try { res.json(getUserDataInventory()); }
   catch (err) { apiError(res, err, 'Kullanıcı veri envanteri okunamadı.'); }
 });
-app.post('/api/backup/export', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), async (req, res) => {
+// Eski tam-sistem .blgbackup dışa aktarımı. UI artık /api/backups (ZIP) kullanır; bu uç
+// geriye uyumluluk için kalır, ancak tam sistem kapsamı nedeniyle yalnız moderatör
+// çağırabilir ve kimlik/sır materyali paket dışında tutulur (bkz. user-data.js).
+app.post('/api/backup/export', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), userAccess.requireModerator, async (req, res) => {
   let backup = null;
   try {
     const payload = req.body || {};
@@ -11899,24 +11902,19 @@ if (AUTO_EXIT) {
 const PORT = config.port || 6194;
 const REQUESTED_HOST = String(config.host || '127.0.0.1').trim() || '127.0.0.1';
 
-// --- Ağ maruziyeti güvenlik kilidi (barındırma/telefon erişimi önkoşulu) ---
-// Dış erişim parolası etkin değilken yalnız localhost'a bağlanmak güvenlidir. Loopback
-// DIŞI bir adrese kimlik doğrulama olmadan bağlanmak istenirse, çökmek yerine güvenli biçimde
-// 127.0.0.1'e düşülür (bkz. lib/net-guard) — böylece watchdog altında sonsuz yeniden başlatma
-// oluşmaz ve uygulama her zaman ayakta kalır.
-// Loopback-dışı bağlanma yalnız ortak dış parola veya tüm aktif hesaplarda zorunlu kullanıcı
-// parolası ETKİNSE güvenlidir (bkz. lib/auth, lib/user-access, lib/net-guard).
+// --- Ağ maruziyeti güvenlik kilidi (fail-closed) ---
+// Sunucu TLS sonlandırmaz; loopback DIŞI bir adrese düz HTTP ile bağlanmak giriş
+// parolasını, oturum çerezini ve tüm iş verisini ağda açık metin taşır. Parola
+// (dış geçit veya kullanıcı şifreleri) bunu güvenli YAPMAZ. Bu yüzden loopback dışı
+// her istek çökmeden 127.0.0.1'e düşürülür (bkz. lib/net-guard) — watchdog altında
+// sonsuz yeniden başlatma oluşmaz, normal masaüstü kullanımı etkilenmez.
 const { resolveBindHost } = require('./lib/net-guard');
-const activeAgentAccounts = userAccess.allPublicProfiles().filter(profile => profile.enabled !== false);
-const secureUserGate = activeAgentAccounts.length > 0 && activeAgentAccounts.every(profile => profile.passwordRequired === true);
-// Buyer Log has a mandatory signed user session in addition to the optional outer
-// password gate. LAN binding is safe when either gate is configured. If an active
-// account ever loses its password, the existing net guard automatically falls back
-// to localhost instead of exposing that account on the network.
-const bind = resolveBindHost(REQUESTED_HOST, auth.enabled || secureUserGate);
+const bind = resolveBindHost(REQUESTED_HOST, { hasAuth: auth.enabled, tls: false });
 if (bind.downgraded) {
-  console.warn(`GÜVENLİK: ${bind.requested} adresine kimlik doğrulama olmadan bağlanılamaz; yalnız 127.0.0.1'e bağlanıldı. `
-    + `Ağ/telefon erişimi için tüm aktif kullanıcı hesaplarına şifre tanımlayın veya config.auth.passwordHash/BL_AUTH_PASSWORD ayarlayın.`);
+  markStartup('NETWORK_BIND_DOWNGRADED', { requested: bind.requested, reason: bind.reason });
+  console.warn(`GÜVENLİK: ${bind.requested} adresine TLS olmadan bağlanılamaz; yalnız 127.0.0.1'e bağlanıldı. `
+    + `Buyer Log ağ/telefon erişimi için düz HTTP sunmaz. / SECURITY: Refusing to listen on ${bind.requested} without TLS; `
+    + `bound to 127.0.0.1 only. Buyer Log does not serve plain HTTP on the network.`);
 }
 const HOST = bind.host;
 

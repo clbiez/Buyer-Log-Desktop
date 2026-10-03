@@ -8,6 +8,7 @@ const { extractZipSafe }=require('./zip');
 const { readJson,atomicWriteJson,ensureDir }=require('./json-store');
 const { FolderReleaseProvider,expandEnv }=require('./folder-provider');
 const { GitHubReleaseProvider,parseGitHubSource }=require('./github-provider');
+const { loadTrustedKeys,verifyManifestSignature }=require('./signature');
 
 const STATES=Object.freeze({IDLE:'IDLE',CHECKING:'CHECKING',UPDATE_AVAILABLE:'UPDATE_AVAILABLE',DOWNLOADING:'DOWNLOADING',VERIFYING:'VERIFYING',READY_TO_INSTALL:'READY_TO_INSTALL',INSTALLING:'INSTALLING',SUCCESS:'SUCCESS',FAILED:'FAILED',ROLLBACK:'ROLLBACK'});
 function updaterError(message,code='UPDATE_FAILED',extra={}){return Object.assign(new Error(message),{code,...extra});}
@@ -32,6 +33,7 @@ class BuyerLogUpdater{
     const clean={}; for(const [k,v] of Object.entries(meta||{})){if(/token|secret|password|cookie|authorization/i.test(k))continue;clean[k]=v;}
     const line=JSON.stringify({at:new Date().toISOString(),event,...clean}); try{fs.appendFileSync(this.logFile,line+'\n','utf8');}catch(_){} this.log('Updater: '+event+(clean.code?' · '+clean.code:''));
   }
+  trustedKeys(){return loadTrustedKeys(this.appCoreRoot);}
   state(){const value=readJson(this.stateFile,null);return value&&value.schemaVersion===1?value:defaultState(this.currentVersion);}
   saveState(patch){const next={...this.state(),...patch,currentVersion:this.currentVersion};atomicWriteJson(this.stateFile,next);return next;}
   config(base={}){
@@ -65,6 +67,9 @@ class BuyerLogUpdater{
     this.saveState({state:STATES.CHECKING,lastCheck:new Date().toISOString(),lastError:null}); this.appendLog('check-started',{channel,currentVersion:this.currentVersion,source:expandEnv(config.releaseSource)});
     try{
       const provider=config.provider==='github'?new GitHubReleaseProvider(config.releaseSource,{timeoutMs:5000}):new FolderReleaseProvider(config.releaseSource,{timeoutMs:5000}),loaded=await provider.readManifest(channel),manifest=parseReleaseManifest(JSON.parse(loaded.raw),channel);
+      // Authenticity before any download: keys come from the RUNNING app core only.
+      const signature=verifyManifestSignature(manifest,this.trustedKeys());
+      this.appendLog(signature.verified?'signature-ok':'signature-not-enforced',{version:manifest.version,keyId:signature.keyId||''});
       if(compareSemver(this.updaterVersion,manifest.minimumUpdaterVersion)<0)throw updaterError('Bu release daha yeni updater altyapısı gerektiriyor.','UPDATE_UPDATER_TOO_OLD',{required:manifest.minimumUpdaterVersion});
       const cmp=compareSemver(manifest.version,this.currentVersion),now=new Date().toISOString();
       if(cmp<=0){this.saveState({state:STATES.IDLE,lastSuccessfulCheck:now,latestVersion:manifest.version,lastError:null});this.appendLog('check-current',{channel,discoveredVersion:manifest.version});return {ok:true,current:true,manifest,...this.status(base,channel)};}
@@ -89,6 +94,7 @@ class BuyerLogUpdater{
     }
   }
   async prepare(provider,manifest){
+    verifyManifestSignature(manifest,this.trustedKeys());
     const versionKey=manifest.version.replace(/[^0-9A-Za-z._-]/g,'_'),cacheFile=path.join(this.cacheRoot,`${versionKey}-${manifest.sha256.slice(0,12)}.zip`),partial=cacheFile+'.partial';
     let reuse=false;
     if(fs.existsSync(cacheFile)){const hash=await sha256File(cacheFile);reuse=hash===manifest.sha256;if(!reuse)rmSafe(cacheFile);}

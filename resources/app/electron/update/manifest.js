@@ -1,6 +1,7 @@
 'use strict';
 const path = require('path');
 const { parseSemver } = require('./semver');
+const { parseSignature } = require('./signature');
 
 function manifestError(message, code='UPDATE_MANIFEST_INVALID') {
   return Object.assign(new Error(message), { code });
@@ -36,6 +37,9 @@ function parseReleaseManifest(raw, expectedChannel='') {
     mandatory:source.mandatory === true,
     releaseNotes:String(source.releaseNotes || '').slice(0, 8000),
     minimumUpdaterVersion,
+    // Optional Ed25519 signature; shape validated here, cryptographic check in
+    // signature.verifyManifestSignature against keys bundled in the running app.
+    ...(source.signature != null ? { signature:parseSignature(source.signature) } : {}),
   });
 }
 module.exports = { parseReleaseManifest, safeArtifactPath };

@@ -74,4 +74,33 @@ BuyerLog-Releases/
 
 ## Güvenlik sınırı
 
-İlk sürümde artifact integrity SHA-256 ile, erişim güvenliği kurumsal release klasörü izinleriyle sağlanır. Public-key manifest/artifact signing P2 olarak bırakılmıştır; private signing key repo/client/Shared Hub içine konulmamıştır. Persistent launcher v1 normal app-core sürümlerini günceller; launcher'ın kendi binary/protocol yükseltmeleri `minimumUpdaterVersion` ile bloke edilip ayrı bootstrap-upgrade mekanizması gerektirir.
+Artifact integrity SHA-256 ile korunur. Bunun üstüne manifest **Ed25519 imzası**
+eklendi (`electron/update/signature.js`): imza `version`, `artifact`, `sha256`,
+`size`, `mandatory`, `releaseNotes` ve `minimumUpdaterVersion` alanlarını kapsar;
+`channel`/`publishedAt` kapsam dışıdır ki TEST → STABLE promotion aynı imzayla
+yeniden yayınlanabilsin. Güvenilen public key'ler yalnız **çalışan** uygulamanın
+`electron/update/release-signing-keys.json` dosyasından okunur; indirilen paketin
+kendi anahtar dosyası dikkate alınmaz.
+
+- `keys` listesi **boşken** updater eski SHA-256-only davranışıyla çalışır
+  (`signature-not-enforced` log kaydı).
+- Listede en az bir anahtar varsa imzasız, değiştirilmiş veya yabancı anahtarla
+  imzalanmış manifest indirmeden önce reddedilir (`UPDATE_SIGNATURE_MISSING` /
+  `UPDATE_SIGNATURE_INVALID`). CI da bu durumda imzasız release yayınlamaz.
+
+### İmzayı devreye alma (bir kerelik yönetici adımı)
+
+1. Repo dışında, güvenli bir makinede: `node scripts/release-signing.js keygen <repo-dışı-klasör>`
+2. Oluşan `*.private.pem` içeriğini GitHub → Settings → Secrets and variables →
+   Actions altında `BUYER_LOG_RELEASE_SIGNING_KEY` secret'ı olarak kaydedin
+   (tercihen korumalı bir *environment* secret'ı). Private key'i repoya,
+   uygulama paketine veya Shared Hub'a koymayın; çevrimdışı yedeğini saklayın.
+3. Komutun yazdırdığı `publicKey` (ve `keyId`) değerini
+   `electron/update/release-signing-keys.json` içindeki `keys` listesine ekleyip
+   commit edin. Bu sürümden itibaren istemciler imzayı zorunlu tutar.
+4. Anahtar rotasyonu: yeni public key'i listeye ekleyin, bir sürüm boyunca iki
+   anahtarı birlikte taşıyın, sonra secret'ı değiştirip eski anahtarı çıkarın.
+
+Persistent launcher v1 normal app-core sürümlerini günceller; launcher'ın kendi
+binary/protocol yükseltmeleri `minimumUpdaterVersion` ile bloke edilip ayrı
+bootstrap-upgrade mekanizması gerektirir.

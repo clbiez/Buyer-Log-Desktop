@@ -38,7 +38,7 @@ app.get('/api/copilot/status', userAccess.requireAnyArea('source', 'koleksiyon',
     const requestedModel = String(req.query && req.query.model || '').trim();
     const status = await copilotLlm.status(requestedModel ? { ...getConfig(), aiModel: requestedModel } : getConfig());
     const aiPub = agentAi.providerStatus();
-    res.set('Cache-Control', 'no-store').json({ ...status, canConfigure:String(req.currentUser.role || '').trim().toLowerCase() === 'moderator', openrouter: aiPub.openrouter, nvidia: aiPub.nvidia });
+    res.set('Cache-Control', 'no-store').json({ ...status, canConfigure:String(req.currentUser.role || '').trim().toLowerCase() === 'moderator', openrouter: aiPub.openrouter, nvidia: aiPub.nvidia, customRemoteDataPolicy: aiPub.customRemoteDataPolicy, remoteDataPolicy: aiPub.remoteDataPolicy, endpointRemote: aiPub.endpointRemote, endpointError: aiPub.endpointError });
   }
   catch (err) { res.json({ status: copilotLlm.STATUS.OFFLINE, ok: false, reason: err && err.message }); }
 });

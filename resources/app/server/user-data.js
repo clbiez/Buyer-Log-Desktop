@@ -10,6 +10,7 @@ const readline = require('readline');
 const { once } = require('events');
 const { pipeline } = require('stream/promises');
 const { createDurableFileRecovery } = require('./lib/durable-file-recovery');
+const { SENSITIVE_KEY, isSensitiveBackupPath, sanitizeSensitiveValue } = require('./lib/backup-sensitivity');
 
 const PROJECT_ROOT = path.join(__dirname, '..');
 const SERVER_DATA_ROOT = process.env.BUYER_LOG_SERVER_DATA_ROOT || path.join(__dirname, 'data');
@@ -223,6 +224,7 @@ function walkFiles(root, options = {}) {
       const full = path.join(dir, entry.name);
       const rel = path.join(relBase, entry.name).replace(/\\/g, '/');
       if (entry.isSymbolicLink()) continue;
+      if (options.skipSensitive && isSensitiveBackupPath(rel)) continue;
       if (entry.isDirectory()) {
         visit(full, rel);
         continue;
@@ -238,13 +240,61 @@ function walkFiles(root, options = {}) {
   visit(root);
   return out;
 }
+// skipSensitive: kullanıcı/şifre hash deposu, audit, oturum sırları, AI/database
+// kimlik bilgileri ve bunları çözen anahtar dosyaları eski .blgbackup zincirine
+// HİÇ girmez. Aynı filtre restore'da da geçerlidir: bu dosyalar yedekten yazılmaz,
+// mevcut olanlar silinmez/geri alınmaz (bkz. lib/backup-sensitivity.js).
 function scopeDefinitions() {
   return {
-    serverData: { root: SERVER_DATA_ROOT, excludeTop: ['logs', 'email-drafts', 'model-files', 'collection-images'] },
-    appData: { root: APP_DATA_ROOT, excludeTop: APP_DATA_ROOT === LOCAL_DATA_ROOT ? ['logs', 'model-files', 'collection-images'] : [] },
-    modelFiles: { root: MODEL_FILES_ROOT, excludeTop: [] },
-    collectionImages: { root: COLLECTION_IMAGES_ROOT, excludeTop: [] },
+    serverData: { root: SERVER_DATA_ROOT, excludeTop: ['logs', 'email-drafts', 'model-files', 'collection-images'], skipSensitive: true },
+    appData: { root: APP_DATA_ROOT, excludeTop: APP_DATA_ROOT === LOCAL_DATA_ROOT ? ['auth', 'logs', 'model-files', 'collection-images'] : ['auth'], skipSensitive: true },
+    modelFiles: { root: MODEL_FILES_ROOT, excludeTop: [], skipSensitive: true },
+    collectionImages: { root: COLLECTION_IMAGES_ROOT, excludeTop: [], skipSensitive: true },
   };
+}
+function isProtectedRestorePath(scope, rel) {
+  if (scope === 'config') return false;
+  const def = scopeDefinitions()[scope];
+  const normalized = String(rel || '').replace(/\\/g, '/');
+  return Boolean(def && (def.excludeTop.includes(normalized.split('/')[0]) || isSensitiveBackupPath(normalized)));
+}
+// config.json dış parola hash'i ve oturum imza sırrını taşır; yedeğe sırsız girer.
+function sanitizedConfigBuffer() {
+  let parsed;
+  try { parsed = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); }
+  catch (_) { return Buffer.from('{}', 'utf8'); }
+  return Buffer.from(JSON.stringify(sanitizeSensitiveValue(parsed), null, 2), 'utf8');
+}
+// Restore sırasında mevcut kurulumun sır alanları korunur; yedekteki (eski ya da
+// elle hazırlanmış) parola hash'i/oturum sırrı bu makineye yazılamaz.
+function mergeProtectedConfig(restoredBuffer) {
+  let restored;
+  try { restored = JSON.parse(Buffer.from(restoredBuffer).toString('utf8')); } catch (_) { return restoredBuffer; }
+  let current = {};
+  try { current = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')) || {}; } catch (_) {}
+  function merge(target, existing) {
+    const out = sanitizeSensitiveValue(target);
+    if (!out || typeof out !== 'object' || Array.isArray(out) || !existing || typeof existing !== 'object' || Array.isArray(existing)) return out;
+    for (const [key, value] of Object.entries(existing)) {
+      if (SENSITIVE_KEY.test(key)) out[key] = value;
+      else if (value && typeof value === 'object' && !Array.isArray(value)) out[key] = merge(out[key] && typeof out[key] === 'object' ? out[key] : {}, value);
+    }
+    return out;
+  }
+  return Buffer.from(JSON.stringify(merge(restored, current), null, 2), 'utf8');
+}
+function sanitizeLegacyBrowserStorage(storage) {
+  const out = {};
+  for (const [key, value] of Object.entries(storage && typeof storage === 'object' && !Array.isArray(storage) ? storage : {})) {
+    if (SENSITIVE_KEY.test(key)) continue;
+    const text = String(value == null ? '' : value);
+    // Yalnız JSON nesne/dizi değerlerinin içindeki sır alanları ayıklanır; düz
+    // değerler ("1.50", "true") olduğu gibi kalır ki geri yükleme veriyi değiştirmesin.
+    let parsed = null;
+    try { parsed = /^\s*[[{]/.test(text) ? JSON.parse(text) : null; } catch (_) {}
+    out[key] = parsed && typeof parsed === 'object' ? JSON.stringify(sanitizeSensitiveValue(parsed)) : text;
+  }
+  return out;
 }
 function getUserDataInventory() {
   const scopes = scopeDefinitions();
@@ -273,7 +323,7 @@ function exportBackup({ appVersion = '', browserStorage = {} } = {}) {
     }
   }
   if (fs.existsSync(CONFIG_PATH)) {
-    const buffer = fs.readFileSync(CONFIG_PATH);
+    const buffer = sanitizedConfigBuffer();
     totalBytes += buffer.length;
     files.push({ scope: 'config', path: 'config.json', size: buffer.length, sha256: sha256(buffer), base64: buffer.toString('base64') });
   }
@@ -283,7 +333,7 @@ function exportBackup({ appVersion = '', browserStorage = {} } = {}) {
     appVersion: String(appVersion || ''),
     createdAt: new Date().toISOString(),
     inventory: getUserDataInventory(),
-    browserStorage: browserStorage && typeof browserStorage === 'object' ? browserStorage : {},
+    browserStorage: sanitizeLegacyBrowserStorage(browserStorage),
     // Boş kapsamlar da tam geri yüklemede hedefte sonradan oluşan dosyaları temizler.
     managedScopes: [...Object.keys(scopeDefinitions()), 'config'],
     files,
@@ -322,7 +372,9 @@ function restoreBackup(buffer) {
     total += data.length;
     if (total > MAX_BACKUP_BYTES) throw new Error('Yedek açıldığında güvenli boyut sınırını aşıyor.');
     if (Number(item.size) !== data.length || (item.sha256 && item.sha256 !== sha256(data))) throw new Error(`Yedek bütünlük kontrolü başarısız: ${item.path}`);
-    decoded.push({ ...item, data, target: targetFor(item.scope, item.path) });
+    const target = targetFor(item.scope, item.path);
+    if (isProtectedRestorePath(item.scope, item.path)) continue;
+    decoded.push({ ...item, data: item.scope === 'config' ? mergeProtectedConfig(data) : data, target });
   }
   const txRoot = fs.mkdtempSync(path.join(TEMP_ROOT, 'buyerlog-restore-'));
   const stageRoot = path.join(txRoot, 'stage');
@@ -356,7 +408,7 @@ function restoreBackup(buffer) {
     }
     if (scopesInBackup.has('config') && fs.existsSync(CONFIG_PATH)) fs.unlinkSync(CONFIG_PATH);
     for (const item of decoded) atomicWriteBuffer(item.target, fs.readFileSync(item.staged));
-    return { ok: true, restoredFiles: decoded.length, restoredBytes: total, browserStorage: manifest.browserStorage || {}, sourceAppVersion: manifest.appVersion || '', createdAt: manifest.createdAt || null };
+    return { ok: true, restoredFiles: decoded.length, restoredBytes: total, browserStorage: sanitizeLegacyBrowserStorage(manifest.browserStorage), sourceAppVersion: manifest.appVersion || '', createdAt: manifest.createdAt || null };
   } catch (err) {
     try {
       for (const scope of scopesInBackup) {
@@ -384,9 +436,9 @@ function backupSourceEntries() {
     }
   }
   if (fs.existsSync(CONFIG_PATH)) {
-    const stat = fs.statSync(CONFIG_PATH);
-    totalBytes += stat.size;
-    files.push({ scope: 'config', path: 'config.json', full: CONFIG_PATH, size: stat.size });
+    const buffer = sanitizedConfigBuffer();
+    totalBytes += buffer.length;
+    files.push({ scope: 'config', path: 'config.json', buffer, size: buffer.length });
   }
   if (files.length > MAX_BACKUP_FILES || totalBytes > MAX_BACKUP_BYTES) throw new Error('Yedek paketi güvenli dosya/boyut sınırını aşıyor.');
   return { files, totalBytes };
@@ -413,7 +465,7 @@ async function exportBackupToFile({ appVersion = '', browserStorage = {}, onProg
       inventory: getUserDataInventory(), managedScopes: [...Object.keys(scopeDefinitions()), 'config'],
       fileCount: source.files.length, totalBytes: source.totalBytes,
     });
-    const browserBuffer = Buffer.from(JSON.stringify(browserStorage && typeof browserStorage === 'object' ? browserStorage : {}), 'utf8');
+    const browserBuffer = Buffer.from(JSON.stringify(sanitizeLegacyBrowserStorage(browserStorage)), 'utf8');
     const browserHash = crypto.createHash('sha256');
     await writeBackupLine(gzip, { record: 'browserStart', size: browserBuffer.length });
     for (let offset = 0; offset < browserBuffer.length; offset += BACKUP_CHUNK_BYTES) {
@@ -427,7 +479,10 @@ async function exportBackupToFile({ appVersion = '', browserStorage = {}, onProg
       await writeBackupLine(gzip, { record: 'fileStart', scope: file.scope, path: file.path, size: file.size });
       const hash = crypto.createHash('sha256');
       let actualSize = 0;
-      for await (const chunk of fs.createReadStream(file.full, { highWaterMark: BACKUP_CHUNK_BYTES })) {
+      const chunks = file.buffer
+        ? Array.from({ length: Math.ceil(file.buffer.length / BACKUP_CHUNK_BYTES) }, (_, i) => file.buffer.subarray(i * BACKUP_CHUNK_BYTES, (i + 1) * BACKUP_CHUNK_BYTES))
+        : fs.createReadStream(file.full, { highWaterMark: BACKUP_CHUNK_BYTES });
+      for await (const chunk of chunks) {
         actualSize += chunk.length; processedBytes += chunk.length; hash.update(chunk);
         await writeBackupLine(gzip, { record: 'fileChunk', base64: chunk.toString('base64') });
         if (typeof onProgress === 'function') onProgress({ processedBytes, totalBytes: source.totalBytes, fileIndex: index + 1, fileCount: source.files.length, path: file.path });
@@ -534,7 +589,7 @@ async function restoreBackupV2FromFile(file) {
   const stageRoot = path.join(txRoot, 'stage'); ensureDir(stageRoot);
   const input = fs.createReadStream(file).pipe(zlib.createGunzip());
   const lines = readline.createInterface({ input, crlfDelay: Infinity });
-  let manifest = null, current = null, browser = null, browserStorage = {}, total = 0, fileCount = 0, sawEnd = false;
+  let manifest = null, current = null, browser = null, browserStorage = {}, total = 0, fileCount = 0, skippedCount = 0, sawEnd = false;
   const stagedItems = [];
   try {
     for await (const line of lines) {
@@ -558,13 +613,13 @@ async function restoreBackupV2FromFile(file) {
         if (!browser || browser.fd == null) throw new Error('Tarayıcı depolama bitiş kaydı başlangıç kaydı olmadan bulundu.');
         fs.closeSync(browser.fd); browser.fd = null;
         if (browser.size !== browser.expectedSize || (rec.sha256 && rec.sha256 !== browser.hash.digest('hex'))) throw new Error('Tarayıcı depolama bütünlük kontrolü başarısız.');
-        browserStorage = JSON.parse(fs.readFileSync(browser.staged, 'utf8') || '{}');
+        browserStorage = sanitizeLegacyBrowserStorage(JSON.parse(fs.readFileSync(browser.staged, 'utf8') || '{}'));
       } else if (rec.record === 'fileStart') {
         if (current) throw new Error('Yedekte iç içe dosya başlangıç kaydı bulundu.');
         if (++fileCount > MAX_BACKUP_FILES) throw new Error('Yedekte çok fazla dosya var.');
         const target = targetFor(rec.scope, rec.path);
         const staged = path.join(stageRoot, rec.scope, rec.path); ensureDir(path.dirname(staged));
-        current = { scope: rec.scope, path: rec.path, target, staged, fd: fs.openSync(staged, 'w'), size: 0, expectedSize: Number(rec.size), hash: crypto.createHash('sha256') };
+        current = { scope: rec.scope, path: rec.path, target, staged, skip: isProtectedRestorePath(rec.scope, rec.path), fd: fs.openSync(staged, 'w'), size: 0, expectedSize: Number(rec.size), hash: crypto.createHash('sha256') };
       } else if (rec.record === 'fileChunk') {
         if (!current) throw new Error('Dosya parçası başlangıç kaydı olmadan bulundu.');
         const data = Buffer.from(String(rec.base64 || ''), 'base64'); current.size += data.length; total += data.length;
@@ -575,16 +630,21 @@ async function restoreBackupV2FromFile(file) {
         fs.closeSync(current.fd); current.fd = null;
         const hash = current.hash.digest('hex');
         if (current.size !== current.expectedSize || Number(rec.size) !== current.size || (rec.sha256 && rec.sha256 !== hash)) throw new Error(`Yedek bütünlük kontrolü başarısız: ${current.path}`);
-        stagedItems.push({ scope: current.scope, path: current.path, target: current.target, staged: current.staged }); current = null;
+        if (current.skip) skippedCount += 1;
+        else {
+          if (current.scope === 'config') fs.writeFileSync(current.staged, mergeProtectedConfig(fs.readFileSync(current.staged)));
+          stagedItems.push({ scope: current.scope, path: current.path, target: current.target, staged: current.staged });
+        }
+        current = null;
       } else if (rec.record === 'end') {
         if (current) throw new Error('Yedek dosya kaydı tamamlanmadan sona erdi.');
         if (!browser || browser.fd != null) throw new Error('Tarayıcı depolama kaydı tamamlanmadan yedek sona erdi.');
-        if (Number(rec.fileCount) !== stagedItems.length || Number(rec.totalBytes) !== total) throw new Error('Yedek bitiş kaydındaki dosya sayısı veya boyut uyuşmuyor.');
+        if (Number(rec.fileCount) !== stagedItems.length + skippedCount || Number(rec.totalBytes) !== total) throw new Error('Yedek bitiş kaydındaki dosya sayısı veya boyut uyuşmuyor.');
         sawEnd = true;
       } else throw new Error(`Desteklenmeyen yedek kaydı: ${rec.record || '(boş)'}`);
     }
     if (!manifest || current || !browser || browser.fd != null || !sawEnd) throw new Error('Yedek dosyası eksik veya yarım kalmış.');
-    if (Number(manifest.fileCount) !== stagedItems.length || Number(manifest.totalBytes) !== total) throw new Error('Yedek manifestindeki dosya sayısı veya boyut uyuşmuyor.');
+    if (Number(manifest.fileCount) !== stagedItems.length + skippedCount || Number(manifest.totalBytes) !== total) throw new Error('Yedek manifestindeki dosya sayısı veya boyut uyuşmuyor.');
     return applyStagedRestore(manifest, stagedItems, total, browserStorage, txRoot);
   } finally {
     if (current && current.fd != null) try { fs.closeSync(current.fd); } catch (_) {}

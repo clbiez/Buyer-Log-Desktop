@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kurumsal veri güvenliği sertleştirmesi",
+    "en": "Enterprise data security hardening"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Uzak AI sağlayıcılarına iş verisi gönderimi açık onaya ve HTTPS'e bağlandı. Ayrıca Buyer Log artık ağda düz HTTP ile dinlemiyor (yalnız 127.0.0.1), eski tam yedek paketi kullanıcı/şifre ve anahtar materyali taşımıyor, güncellemeler imza doğrulamasına hazır ve masaüstü pencere/IPC kontrolleri sıkılaştırıldı.",
+    "en": "Sending business data to remote AI providers now requires explicit consent and HTTPS. Buyer Log also no longer listens on the network over plain HTTP (127.0.0.1 only), the legacy full backup no longer carries account/password or key material, updates are ready for signature verification and desktop window/IPC checks were tightened."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "ai-remote-data-policy-https",
+      "type": "improvement",
+      "module": {
+        "tr": "Octopus · AI Modelleri",
+        "en": "Octopus · AI Models"
+      },
+      "title": {
+        "tr": "Uzak Custom AI sağlayıcısı için veri politikası onayı ve zorunlu HTTPS",
+        "en": "Data policy consent and mandatory HTTPS for remote Custom AI providers"
+      },
+      "body": {
+        "tr": "Custom OpenAI-compatible sağlayıcı bu bilgisayar dışındaysa soru ve araç sonuçları (tedarikçi, sipariş, filtre, e-posta içerikleri) yalnız moderatör veri politikasını onayladıktan sonra gönderilir; varsayılan kapalıdır. Uzak adresler yalnız HTTPS ile kabul edilir ve sistemde tanımlı genel OPENAI_API_KEY artık Buyer Log'u sessizce buluta çevirmez. Ollama ve LM Studio gibi yerel sağlayıcılar değişmeden çalışır.",
+        "en": "When the Custom OpenAI-compatible provider is outside this computer, questions and tool results (supplier, order, filter, e-mail contents) are sent only after a moderator confirms the data policy; it is off by default. Remote addresses are accepted only over HTTPS, and a generic OPENAI_API_KEY on the machine no longer silently switches Buyer Log to the cloud. Local providers such as Ollama and LM Studio keep working unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ai-remote-data-policy.png",
+        "alt": {
+          "tr": "AI Modelleri penceresinde HTTPS uç noktalı Custom OpenAI-compatible sağlayıcı ve onaylanmamış veri politikası kutusu",
+          "en": "AI Models dialog with a Custom OpenAI-compatible provider on an HTTPS endpoint and the unconfirmed data policy box"
+        },
+        "caption": {
+          "tr": "Uzak Custom sağlayıcıya veri gönderimi açık onay ister; onay yokken istek reddedilir.",
+          "en": "Sending data to a remote Custom provider requires explicit consent; without it the request is refused."
+        }
+      }
+    }
+  ]
 }
