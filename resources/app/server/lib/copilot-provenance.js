@@ -9,7 +9,7 @@
  * edememesiydi. Audit kaydı vardı ve eksiksizdi; eksik olan BAĞLANTIydı.
  *
  * Çözüm, ayrı bir kayıt üretmek değil GERÇEK yazmayı etiketlemek — mevcut
- * mail-intelligence akışının deseni (ORDER_UPDATE + source:'MAIL_INTELLIGENCE').
+ * mevcut denetimli yazma akışının deseni (ORDER_UPDATE + kaynak etiketi).
  * İki kural bunu güvenli tutuyor:
  *
  *   1) KAYNAK istemciden gelir, AKTÖR oturumdan. İstemcinin bildirdiği bir
