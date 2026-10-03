@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.217",
-  "commit_sha": "e97e40235b5ba065cfaa6f407f003c79fb4eb2d9",
-  "release_notes": "Buyer Log 7.0.217: Checklist başlıkları CP'de Checklist grubu altında dinamik sütunlara yansıyor. Seçili CP siparişlerinden üretici checklist Excel'i oluşturulabiliyor ve üreticinin Açık / Tamamlandı / Gerekmiyor güncellemeleri tekrar Buyer Log'a alınabiliyor. Eski Excel dosyalarının daha yeni Buyer Log cevaplarını ezmesi ve değişmiş yükleme tarihli satırların yanlış import edilmesi engelleniyor.",
-  "request_id": "7.0.217-r1"
+  "version": "7.0.218",
+  "commit_sha": "7958a5b1b91f3a79d63cbd49537b74a5af9920a6",
+  "release_notes": "Buyer Log 7.0.218: Transit Times / Import Lead Time Analysis içinde IAS Database sorgusundaki Date–Text karşılaştırma hatası giderildi. Modül artık seçilen bağımsız tarih ufkunu DATE(...) sınırlarıyla uygular; Backlog/kullanıcı ufkunu değiştirmeden yalnız Transit Times sorgusunu sınırlar. Checklist yönetimi ve Supplier Checklist Excel iyileştirmeleri de bu sürümde yer alır.",
+  "request_id": "7.0.218-r1"
 }
