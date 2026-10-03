@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.212",
-  "commit_sha": "dd7c23f8f6d8e83742c1f45a6c9948dfbfa8edcf",
-  "release_notes": "Buyer Log 7.0.212: Excel ve e-posta tablolarından çok sütunlu veriler satır ilişkisini koruyarak aranabilir. Yapıştırılan satırlar (A; 1), (B; 2) biçiminde bağımsız gruplara dönüşür; parantez içi koşullar birlikte, gruplar birbirine alternatif olarak eşleşir. Mevcut virgüllü ve noktalı virgüllü arama davranışı korunur.",
-  "request_id": "7.0.212-r1"
+  "version": "7.0.213",
+  "commit_sha": "738095bb6b72bccba6f1533c99d603fb3837f7cf",
+  "release_notes": "Buyer Log 7.0.213: Backlog grafiklerinin tasarım dili birleştirildi; Today, hover detayları ve toplam adet görünürlüğü iyileştirildi. Delivery Risk alt kartları KPI tasarımıyla hizalandı. Güncelleme/sürüm notlarında metin okunabilirliği, görsel büyütme ve ileri-geri gezinme geliştirildi.",
+  "request_id": "7.0.213-r1"
 }
