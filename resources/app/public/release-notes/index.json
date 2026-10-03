@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.214",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Yol Süreleri: IAS database analizi ve yeni kural düzenleyici",
+        "en": "Transit Times: IAS database analysis and a new rule editor"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.214/release.json"
+    },
+    {
       "version": "7.0.213",
       "publishedAt": "2026-10-03",
       "title": {

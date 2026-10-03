@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.214",
+  "channel": "stable",
+  "publishedAt": "2026-10-03",
+  "title": {
+    "tr": "Yol Süreleri: IAS database analizi ve yeni kural düzenleyici",
+    "en": "Transit Times: IAS database analysis and a new rule editor"
+  },
+  "summary": {
+    "tr": "Yol Süreleri penceresi artık ülke ve taşıt bazlı süreleri doğrudan IAS database'inden, kendi tarih aralığıyla hesaplıyor. Kural ekleme alanı ve kural listesi daha kompakt, aranabilir ve filtrelenebilir hâle geldi.",
+    "en": "The Transit Times window now calculates country and vehicle lead times directly from the IAS database with its own date range. The rule editor and rule list are more compact, searchable and filterable."
+  },
+  "stats": {
+    "features": 1,
+    "improvements": 1,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "transit-ias-own-horizon",
+      "type": "feature",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "İthalat yol süresi analizi IAS database'inden, seçilebilir tarih aralığıyla",
+        "en": "Import lead time analysis from the IAS database with a selectable date range"
+      },
+      "body": {
+        "tr": "Analiz Backlog verisine bağlı kalmadan IAS database'ini kendi ufkuyla sorgular; tüm ülke ve taşıt seçenekleri gelir. Hesaplamaya girecek dönem son 1–12 hafta, son 1–12/18 ay veya son 1–3 yıl olarak seçilebilir. Yenile düğmesi önbelleği atlayıp veriyi gerçekten yeniden sorgular; son sorgu zamanı ve satır sayısı görünür. Kontroller boş sonuç veya hata durumunda da yerinde kalır.",
+        "en": "The analysis queries the IAS database with its own horizon instead of depending on Backlog data, so every country and vehicle option is available. The period can be set to the last 1–12 weeks, last 1–12/18 months or last 1–3 years. Refresh bypasses the cache and really re-queries the data; the last query time and row count are shown. Controls stay in place on empty results or errors."
+      },
+      "path": {
+        "tr": "Veri Yönetimi → Yol Süreleri → İthalat Yol Süresi Analizi",
+        "en": "Data Management → Transit Times → Import Lead Time Analysis"
+      },
+      "visual": {
+        "src": "01-transit-ias-analysis.png",
+        "kind": "screenshot",
+        "alt": {
+          "tr": "Yol Süreleri penceresinde IAS Database kapsamı, tarih aralığı seçimi ve ülke × taşıt süre tablosu",
+          "en": "Transit Times window with the IAS Database scope, date range selection and country × vehicle lead time table"
+        },
+        "caption": {
+          "tr": "IAS Database kapsamı, Son 6 ay aralığı, son sorgu bilgisi ve kural önerileri.",
+          "en": "IAS Database scope, Last 6 months range, last query info and rule suggestions."
+        }
+      }
+    },
+    {
+      "id": "transit-rules-compact-editor",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "Daha kompakt kural ekleme alanı ve aranabilir kural listesi",
+        "en": "A more compact rule editor and a searchable rule list"
+      },
+      "body": {
+        "tr": "Taşıt, ülke, sezon, Ex-Factory aralığı ve gün tek satırda girilir. Ülke ve sezon seçicileri aranabilir; IAS analizindeki ülkeler de listelenir. Kural listesi ülke/sezon araması ve taşıt filtresiyle daralır, analizden gelen kurallar etiketlenir ve düzenlenen kural vurgulanır.",
+        "en": "Vehicle, country, season, Ex-Factory range and days are entered on one row. Country and season pickers are searchable and also list the countries found in the IAS analysis. The rule list can be narrowed with a country/season search and a vehicle filter, rules created from the analysis are tagged and the rule being edited is highlighted."
+      },
+      "path": {
+        "tr": "Veri Yönetimi → Yol Süreleri → Yol süresi kuralları",
+        "en": "Data Management → Transit Times → Transit time rules"
+      },
+      "visual": {
+        "src": "02-transit-rules-editor.png",
+        "kind": "screenshot",
+        "alt": {
+          "tr": "Tek satırlık kural düzenleyici, açık ülke seçicisi ve filtrelenebilir kural listesi",
+          "en": "Single-row rule editor with the country picker open and the filterable rule list"
+        },
+        "caption": {
+          "tr": "Aranabilir ülke seçicisi, taşıt filtreleri ve kompakt kural tablosu.",
+          "en": "Searchable country picker, vehicle filters and the compact rule table."
+        }
+      }
+    }
+  ]
+}
