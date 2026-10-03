@@ -1,79 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-03",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yenilemeler artık süreyi geçmiş performanstan tahmin ediyor",
-    "en": "Refreshes now estimate duration from historical performance"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Buyer Log, sayfa/horizon kapsamı ve veri yoğunluğuna benzeyen geçmiş yenilemeleri SYNC üzerinden öğrenerek yenileme başlarken gerçekçi bir süre aralığı gösteriyor. Tahmin mevcut yenileme yüzeylerine entegre edildi ve sahte ilerleme yüzdesi kullanılmıyor.",
-    "en": "Buyer Log now learns from similar page/horizon scopes and data volumes through SYNC to show a realistic duration range as refresh starts. The estimate is integrated into the existing refresh surfaces without a fake progress percentage."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "refresh-learned-eta-ui",
-      "type": "feature",
-      "module": {
-        "tr": "Veri Yenileme",
-        "en": "Data Refresh"
-      },
-      "title": {
-        "tr": "Yenileme başlarken tahmini süre ve kalan süre görünür",
-        "en": "Estimated duration and remaining time appear when refresh starts"
-      },
-      "body": {
-        "tr": "Yenileme Aşamaları paneli ve mevcut yenileme sayaçları, yeterli benzer geçmiş olduğunda tahmini süre aralığını gösterir. Tahmin sayfa/yenileme hedefi, horizon imzası, veri hacmi bandı ve kaynak moduna göre seçilir; en az üç benzer başarılı örnek oluşana kadar “Tahmin öğreniliyor” mesajı görünür. Gerçek ilerleme bilgisi olmadığı için yapay yüzde gösterilmez.",
-        "en": "Refresh Stages and the existing refresh timers show an estimated duration range when enough comparable history exists. The estimate is selected by page/refresh target, horizon signature, data-volume band and source mode; until at least three similar successful samples exist, the UI shows “Learning estimate.” No artificial percentage is displayed when true progress is unavailable."
-      },
-      "path": {
-        "tr": "Üst Yenile → Yenileme Aşamaları",
-        "en": "Top Refresh → Refresh Stages"
-      },
-      "visual": {
-        "src": "01-refresh-eta-ui-context.webp",
-        "kind": "screenshot",
-        "alt": {
-          "tr": "Buyer Log CP Tracker üst araç çubuğunun gerçek uygulama ekran görüntüsü",
-          "en": "Real Buyer Log CP Tracker screenshot showing the top toolbar"
-        },
-        "caption": {
-          "tr": "ETA, ayrı bir tasarım oluşturmadan Buyer Log’un mevcut yenileme ve araç çubuğu diline eklenir.",
-          "en": "ETA is added to Buyer Log’s existing refresh and toolbar language instead of introducing a separate visual system."
-        }
-      }
-    },
-    {
-      "id": "refresh-sync-performance-learning",
-      "type": "improvement",
-      "module": {
-        "tr": "SYNC / Performans",
-        "en": "SYNC / Performance"
-      },
-      "title": {
-        "tr": "Tahminler tüm kullanıcıların anonim yenileme geçmişinden öğreniyor",
-        "en": "Estimates learn from anonymous refresh history across users"
-      },
-      "body": {
-        "tr": "Her yenileme yerelde kaydedilir ve SYNC mevcutsa ortak performans alanına eklenir. Başarılı yenilemeler median/P80 tabanlı modeli besler; hata ve iptaller kayda girer ancak tahmini eğitmez. Aşırı uzun örnekler robust aykırı-değer filtresiyle baskılanır ve tahmin önce aynı horizon + benzer veri hacmini, sonra daha geniş eşleşmeleri kullanır.",
-        "en": "Every refresh is recorded locally and, when SYNC is available, added to the shared performance area. Successful refreshes train a median/P80-based model; errors and cancellations are logged but do not train estimates. Robust outlier filtering suppresses unusually long samples, and matching falls back from the same horizon plus similar volume to broader comparable scopes."
-      },
-      "path": {
-        "tr": "SYNC → performance/refresh",
-        "en": "SYNC → performance/refresh"
-      },
-      "visual": {
-        "src": "02-refresh-sync-context.png",
-        "kind": "screenshot",
-        "alt": {
-          "tr": "Buyer Log Veri Yönetimi ekranının gerçek uygulama görüntüsü",
-          "en": "Real Buyer Log Data Management screenshot"
-        },
-        "caption": {
-          "tr": "SYNC tabanlı öğrenme arka planda çalışır; kullanıcı yalnız mevcut Buyer Log yenileme yüzeyinde tahmin sonucunu görür.",
-          "en": "SYNC-based learning runs in the background; users only see the estimate through Buyer Log’s existing refresh surface."
-        }
-      }
-    }
-  ]
+  "changes": []
 }

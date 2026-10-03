@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.215",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Yenilemeler artık süreyi geçmiş performanstan tahmin ediyor",
+        "en": "Refreshes now estimate duration from historical performance"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.215/release.json"
+    },
+    {
       "version": "7.0.214",
       "publishedAt": "2026-10-03",
       "title": {
