@@ -200,6 +200,19 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(CSS,/\.backlogChartTooltip\{[^}]*pointer-events:auto/);
 });
 
+test('Backlog bar chart reuses the upper timeline column layout instead of the axis-based SVG view', () => {
+  const chartSource=fs.readFileSync(path.join(ROOT,'public','backlog-chart.js'),'utf8');
+  assert.match(chartSource,/timelineMode=model\.state\.chartType==='bar'/);
+  assert.match(chartSource,/bpaCols blvCols is-grouped backlogTimelineCols/);
+  assert.match(chartSource,/bpaCol blvGroupedCol backlogTimelineCol/);
+  assert.match(chartSource,/class="blvColTotal"/);
+  assert.match(chartSource,/class="blvTodayLine"/);
+  assert.match(chartSource,/timelineTooltipHtml/);
+  assert.match(chartSource,/if\(timelineMode\)\{/);
+  assert.match(CSS,/\.backlogChartPanel \.backlogTimelineCols\{height:318px/);
+  assert.match(CSS,/\.backlogTimelineCanvas\{padding:0/);
+});
+
 test('Backlog overview timeline always shows bucket totals and mirrors the interactive chart hover/today language', () => {
   assert.match(OVERVIEW,/class="blvColTotal"/);
   assert.doesNotMatch(OVERVIEW,/const value=b\.overdueQty\?/);

@@ -549,6 +549,74 @@
       return '<button type="button" class="backlogChartLegendItem'+(active?'':' is-muted')+'" data-backlog-chart-legend-name="'+esc(name)+'" style="--series-color:'+COLORS[index%COLORS.length]+'" title="'+esc(tr('Tıkla: gizle/göster · Çift tık: yalnız bu seri','Click: hide/show · Double-click: isolate series'))+'"><span></span><b>'+esc(name)+'</b>'+(hasSecond?'<i class="backlogChartOverlayMark">A/B</i>':'')+'</button>';
     }).join('')+'</div>';
   }
+  function timelineCategoryLabel(category,granularity) {
+    const cat=category||{},key=String(cat.key||''),label=String(cat.label||key);
+    if(granularity==='week'&&DATE_DIMENSION&&typeof DATE_DIMENSION.describeBucket==='function'){
+      const d=DATE_DIMENSION.describeBucket(key,'week');
+      if(d&&d.monday){
+        const day=String(d.monday.getDate()).padStart(2,'0'),month=String(d.monday.getMonth()+1).padStart(2,'0');
+        return 'W'+String(d.isoWeek||'').padStart(2,'0')+' · '+day+'.'+month;
+      }
+    }
+    if(granularity==='month'){
+      const m=key.match(/^(\d{4})-(\d{2})$/);
+      if(m)return String(m[2])+'.'+String(m[1]).slice(-2);
+    }
+    if(granularity==='day'){
+      const d=parseDate(key);if(d)return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0');
+    }
+    return granularity==='year'?key:(axisTickLabel(cat,granularity)||label);
+  }
+  function timelineTooltipHtml(model,index) {
+    const cat=(model.categories||[])[index],rows=(model.series||[]).map(serie=>({
+      name:serie.name,color:serie.color,value:Number(serie.values&&serie.values[index])||0
+    })).filter(row=>row.value>0);
+    const total=rows.reduce((sum,row)=>sum+row.value,0);
+    return '<strong>'+esc(cat&&cat.label||'')+'</strong>'
+      +rows.map(row=>'<span><i style="--seg:'+row.color+'"></i><b>'+esc(row.name)+'</b><em>'+esc(formatWholeValue(row.value))+'</em></span>').join('')
+      +'<span class="backlogChartTooltipTotal"><i></i><b>'+esc(tr('Toplam','Total'))+'</b><em>'+esc(formatWholeValue(total))+'</em></span>';
+  }
+  function timelineColumnsHtml(model) {
+    const totals=subtotalValues(model),allValues=(model.series||[]).flatMap(serie=>serie.values||[]).map(Number).filter(Number.isFinite);
+    const max=Math.max(1,...allValues),avg=model.state.showAverage?averageValue(model):0,avgPct=Math.max(0,Math.min(100,avg/max*100));
+    const todayKey=todayKeyFor(model.state.granularity,new Date());
+    return (model.categories||[]).map((cat,index)=>{
+      const isToday=String(cat.key||'')===String(todayKey||''),total=Number(totals[index])||0;
+      const bars=(model.series||[]).map((serie,seriesIndex)=>{
+        const value=Number(serie.values&&serie.values[index])||0;if(value<=0)return '';
+        const height=Math.max(2,value/max*100);
+        return '<span class="blvGroupBar backlogTimelineBar" style="height:'+height.toFixed(2)+'%;--seg:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
+      }).join('');
+      const todayMarker=isToday?'<span class="blvTodayLine" aria-hidden="true"><b>'+esc(tr('Bugün','Today'))+'</b></span>':'';
+      const average=model.state.showAverage?'<span class="backlogTimelineAverage" style="bottom:'+avgPct.toFixed(2)+'%"></span>':'';
+      return '<div class="bpaCol blvGroupedCol backlogTimelineCol'+(isToday?' is-today':'')+'" data-backlog-timeline-index="'+index+'">'
+        +'<div class="bpaColValue"><span class="blvColTotal">'+esc(formatWholeValue(total))+'</span></div>'
+        +'<div class="bpaColTrack blvGroupTrack">'+todayMarker+average+'<div class="blvGroupBars">'+bars+'</div></div>'
+        +'<div class="bpaColLabel">'+esc(timelineCategoryLabel(cat,model.state.granularity))+'</div></div>';
+    }).join('');
+  }
+  function timelineTipEl() {
+    if(!root.document)return null;
+    let el=root.document.getElementById('_backlogTimelineTip');
+    if(!el){
+      el=root.document.createElement('div');el.id='_backlogTimelineTip';el.className='bpaTip blvTipBox is-chart-style backlogTimelineTip';
+      el.hidden=true;el.setAttribute('role','tooltip');root.document.body.appendChild(el);
+    }
+    return el;
+  }
+  function hideTimelineTip() { const el=root.document&&root.document.getElementById('_backlogTimelineTip');if(el)el.hidden=true; }
+  function moveTimelineTip(event,model) {
+    const target=event.target&&event.target.closest?event.target.closest('[data-backlog-timeline-index]'):null;
+    if(!target){hideTimelineTip();return;}
+    const index=Number(target.getAttribute('data-backlog-timeline-index'));if(!Number.isInteger(index)){hideTimelineTip();return;}
+    const el=timelineTipEl();if(!el)return;
+    const key=String(index)+'|'+chartViewSignature(model);
+    if(el.dataset.key!==key){el.innerHTML=timelineTooltipHtml(model,index);el.dataset.key=key;}
+    el.hidden=false;
+    const pad=14,w=el.offsetWidth,h=el.offsetHeight;let x=event.clientX+pad,y=event.clientY+pad;
+    if(x+w>root.innerWidth-8)x=event.clientX-w-pad;if(y+h>root.innerHeight-8)y=event.clientY-h-pad;
+    el.style.left=Math.max(8,x)+'px';el.style.top=Math.max(8,y)+'px';
+  }
   function safeChartFileName(title,ext) {
     const base=String(title||'Backlog Chart').replace(/[\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'Backlog Chart';
     return base+'.'+ext;
@@ -572,9 +640,14 @@
     return new XMLSerializer().serializeToString(clone);
   }
   async function exportChartGraphic(host,type,model) {
-    const svg=host&&host.querySelector('.backlogChartSvg');if(!svg)return;
-    const xmlText=serializeSvgForExport(svg);if(!xmlText)return;
-    if(type==='svg'){downloadBlob(new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),safeChartFileName(model.title,'svg'));return;}
+    let svg=host&&host.querySelector('.backlogChartSvg'),temporary=null;
+    if(!svg&&root.document&&model){
+      temporary=root.document.createElement('div');temporary.style.cssText='position:fixed;left:-10000px;top:-10000px;width:1080px;height:430px;pointer-events:none;';
+      temporary.innerHTML=svgChart(model);root.document.body.appendChild(temporary);svg=temporary.querySelector('.backlogChartSvg');
+    }
+    if(!svg){temporary?.remove();return;}
+    const xmlText=serializeSvgForExport(svg);if(!xmlText){temporary?.remove();return;}
+    if(type==='svg'){downloadBlob(new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),safeChartFileName(model.title,'svg'));temporary?.remove();return;}
     const blob=new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),url=root.URL.createObjectURL(blob);
     try{
       const img=new root.Image();
@@ -583,11 +656,12 @@
       const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.drawImage(img,0,0,vb.width,vb.height);
       const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
       if(png)downloadBlob(png,safeChartFileName(model.title,'png'));
-    }finally{root.URL.revokeObjectURL(url);}
+    }finally{root.URL.revokeObjectURL(url);temporary?.remove();}
   }
   function mountInteractiveChart(host,model,detail) {
     const target=host&&host.querySelector('[data-backlog-chart-body]');if(!target)return;
-    const total=model.categories.length,range=ensureChartView(model),visible=sliceModel(model,range),span=range.end-range.start;
+    hideTimelineTip();
+    const total=model.categories.length,range=ensureChartView(model),visible=sliceModel(model,range),span=range.end-range.start,timelineMode=model.state.chartType==='bar';
     const selected=filterSelection(model),available=model.availableSeriesNames||[],first=visible.categories[0],last=visible.categories[visible.categories.length-1];
     const rangeText=(first&&last?first.label+(first.key===last.key?'':' – '+last.label):'')+' · '+span+'/'+total;
     const fullTodayPos=todayPosition(model.categories,todayKeyFor(model.state.granularity,new Date()));
@@ -599,11 +673,13 @@
       return '<button type="button" class="backlogChartRangeBtn'+(active?' is-active':'')+'" data-backlog-chart-range="'+key+'">'+esc(label)+'</button>';
     }).join('');
     const filterPanel=available.length>1?'<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden><div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'"><div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button><button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div><div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>':'';
-    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets bpaSeg2">'+presetButtons+'</div><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><div class="backlogChartInlineActions bpaSeg2"><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button><button type="button" class="tbtn'+(model.state.showSubtotal?' is-active':'')+'" data-backlog-chart-subtotal>'+esc(tr('Alt Toplam','Subtotal'))+'</button>'+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
-      +filterPanel
-      +legendHtml(model)
-      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek zoomunu etkinleştirmek için grafiğe tıklayın; sürükleyerek yatay kaydırabilirsiniz.','Backlog chart. Click the chart to enable wheel zoom; drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div></div>'
-      +'<div class="backlogChartGestureHint">'+esc(tr('Grafiğe tıkla: tekerlek zoomunu etkinleştir · Grafik dışına tıkla: sayfa kaydırmaya dön · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Click chart: enable wheel zoom · Click outside: return wheel to page scrolling · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
+    const subtotalButton=timelineMode?'':'<button type="button" class="tbtn'+(model.state.showSubtotal?' is-active':'')+'" data-backlog-chart-subtotal>'+esc(tr('Alt Toplam','Subtotal'))+'</button>';
+    const chartBody=timelineMode
+      ?'<div class="backlogChartCanvas backlogTimelineCanvas" tabindex="0" aria-label="'+esc(tr('Backlog zaman akışı grafiği','Backlog timeline chart'))+'"><div class="bpaCols blvCols is-grouped backlogTimelineCols" data-backlog-timeline>'+timelineColumnsHtml(visible)+'</div></div>'
+      :'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek zoomunu etkinleştirmek için grafiğe tıklayın; sürükleyerek yatay kaydırabilirsiniz.','Backlog chart. Click the chart to enable wheel zoom; drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div>';
+    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets bpaSeg2">'+presetButtons+'</div><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><div class="backlogChartInlineActions bpaSeg2"><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button>'+subtotalButton+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
+      +filterPanel+legendHtml(model)+chartBody
+      +'<div class="backlogChartGestureHint">'+esc(timelineMode?tr('Üst zaman akışıyla aynı görünüm · Yatay kaydır: diğer dönemler · Hover: seri detayları','Same layout as the upper timeline · Scroll horizontally for other periods · Hover for series details'):tr('Grafiğe tıkla: tekerlek zoomunu etkinleştir · Grafik dışına tıkla: sayfa kaydırmaya dön · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Click chart: enable wheel zoom · Click outside: return wheel to page scrolling · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
     const updateRange=next=>{
       const safe=clampChartRange(next,total);chartView={signature:chartViewSignature(model),start:safe.start,end:safe.end};mountInteractiveChart(host,model,detail);
     };
@@ -612,6 +688,38 @@
     target.querySelector('[data-backlog-chart-subtotal]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{showSubtotal:!state.showSubtotal}));render(false,detail);});
     target.querySelector('[data-backlog-chart-today]')?.addEventListener('click',()=>{if(moveViewToToday(model))mountInteractiveChart(host,model,detail);});
     target.querySelectorAll('[data-backlog-chart-export]').forEach(button=>button.addEventListener('click',()=>void exportChartGraphic(host,button.getAttribute('data-backlog-chart-export'),visible)));
+    const bindLegendAndFilter=()=>{
+      target.querySelectorAll('[data-backlog-chart-legend-name]').forEach(button=>{
+        let clickTimer=null;const name=button.getAttribute('data-backlog-chart-legend-name');
+        const applyLegend=isolate=>{
+          const current=filterSelection(model),set=new Set(current);let next;
+          if(isolate)next=[name];else{if(set.has(name)){if(set.size<=1){notify(tr('Grafikte en az bir seri görünür kalmalı.','Keep at least one series visible.'));return;}set.delete(name);}else set.add(name);next=available.filter(item=>set.has(item));}
+          saveState(Object.assign({},state,{seriesFilter:next.length===available.length?[]:next}));render(false,detail);
+        };
+        button.addEventListener('click',()=>{if(clickTimer)clearTimeout(clickTimer);clickTimer=setTimeout(()=>{clickTimer=null;applyLegend(false);},210);});
+        button.addEventListener('dblclick',event=>{event.preventDefault();if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}applyLegend(true);});
+      });
+      const filterToggle=target.querySelector('[data-backlog-chart-filter]'),filterPanelEl=target.querySelector('[data-backlog-chart-filter-panel]');
+      filterToggle?.addEventListener('click',()=>{const opening=!!filterPanelEl?.hidden;if(filterPanelEl)filterPanelEl.hidden=!opening;filterToggle.setAttribute('aria-expanded',opening?'true':'false');if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();});
+      target.querySelector('[data-backlog-chart-filter-search]')?.addEventListener('input',event=>{
+        const q=String(event.target.value||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR');
+        target.querySelectorAll('[data-backlog-chart-filter-item]').forEach(label=>{label.hidden=q&&!String(label.textContent||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR').includes(q);});
+      });
+      target.querySelector('[data-backlog-chart-filter-all]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{seriesFilter:[]}));render(false,detail);});
+      target.querySelector('[data-backlog-chart-filter-apply]')?.addEventListener('click',()=>{
+        const chosen=[...target.querySelectorAll('[data-backlog-chart-series-index]:checked')].map(input=>available[Number(input.getAttribute('data-backlog-chart-series-index'))]).filter(Boolean);
+        if(!chosen.length){notify(tr('Grafikte en az bir seri seçili kalmalı.','Keep at least one series selected.'));return;}
+        saveState(Object.assign({},state,{seriesFilter:chosen.length===available.length?[]:chosen}));render(false,detail);
+      });
+    };
+    bindLegendAndFilter();
+    if(timelineMode){
+      const timeline=target.querySelector('[data-backlog-timeline]');
+      timeline?.addEventListener('mousemove',event=>moveTimelineTip(event,visible));
+      timeline?.addEventListener('mouseleave',hideTimelineTip);
+      timeline?.addEventListener('scroll',hideTimelineTip,{passive:true});
+      return;
+    }
     const canvas=target.querySelector('.backlogChartCanvas'),viewport=target.querySelector('[data-backlog-chart-viewport]'),svg=viewport&&viewport.querySelector('svg'),panLayer=svg&&svg.querySelector('[data-backlog-chart-pan-layer]');
     if(wheelZoomActive&&canvas)canvas.classList.add('is-wheel-active');
     const metrics=chartMetrics(visible),cross=viewport&&viewport.querySelector('[data-backlog-chart-crosshair]');
@@ -706,28 +814,7 @@
       else if(event.key==='0'||event.key==='Home')next=defaultChartRange(model,new Date());
       if(next){event.preventDefault();updateRange(next);}
     });
-    target.querySelectorAll('[data-backlog-chart-legend-name]').forEach(button=>{
-      let clickTimer=null;const name=button.getAttribute('data-backlog-chart-legend-name');
-      const applyLegend=isolate=>{
-        const current=filterSelection(model),set=new Set(current);let next;
-        if(isolate)next=[name];else{if(set.has(name)){if(set.size<=1){notify(tr('Grafikte en az bir seri görünür kalmalı.','Keep at least one series visible.'));return;}set.delete(name);}else set.add(name);next=available.filter(item=>set.has(item));}
-        saveState(Object.assign({},state,{seriesFilter:next.length===available.length?[]:next}));render(false,detail);
-      };
-      button.addEventListener('click',()=>{if(clickTimer)clearTimeout(clickTimer);clickTimer=setTimeout(()=>{clickTimer=null;applyLegend(false);},210);});
-      button.addEventListener('dblclick',event=>{event.preventDefault();if(clickTimer){clearTimeout(clickTimer);clickTimer=null;}applyLegend(true);});
-    });
-    const filterToggle=target.querySelector('[data-backlog-chart-filter]'),filterPanelEl=target.querySelector('[data-backlog-chart-filter-panel]');
-    filterToggle?.addEventListener('click',()=>{const opening=!!filterPanelEl?.hidden;if(filterPanelEl)filterPanelEl.hidden=!opening;filterToggle.setAttribute('aria-expanded',opening?'true':'false');if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();});
-    target.querySelector('[data-backlog-chart-filter-search]')?.addEventListener('input',event=>{
-      const q=String(event.target.value||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR');
-      target.querySelectorAll('[data-backlog-chart-filter-item]').forEach(label=>{label.hidden=q&&!String(label.textContent||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR').includes(q);});
-    });
-    target.querySelector('[data-backlog-chart-filter-all]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{seriesFilter:[]}));render(false,detail);});
-    target.querySelector('[data-backlog-chart-filter-apply]')?.addEventListener('click',()=>{
-      const chosen=[...target.querySelectorAll('[data-backlog-chart-series-index]:checked')].map(input=>available[Number(input.getAttribute('data-backlog-chart-series-index'))]).filter(Boolean);
-      if(!chosen.length){notify(tr('Grafikte en az bir seri seçili kalmalı.','Keep at least one series selected.'));return;}
-      saveState(Object.assign({},state,{seriesFilter:chosen.length===available.length?[]:chosen}));render(false,detail);
-    });
+
   }
   function cacheSignature(params) {
     return Object.keys(params||{}).sort().map(k=>k+'='+String(params[k]==null?'':params[k])).join('&');
