@@ -338,6 +338,17 @@ function verifyPin(password, stored) {
   } catch (_) { return false; }
 }
 function credentialHash(profile) { return clean(profile && (profile.passwordHash || profile.pinHash)); }
+function hasActiveLocalCredential(store) {
+  return allProfiles(store).some(profile => {
+    if (!profile || profile.enabled === false) return false;
+    const status = clean(profile.status);
+    if (status && status !== 'ACTIVE') return false;
+    return Boolean(credentialHash(profile));
+  });
+}
+function hasUsableOfflineAuthStore(store) {
+  return Boolean(store && store.moderator && (store._restoreSeed || hasActiveLocalCredential(store)));
+}
 function defaultStore() {
   return {
     schemaVersion: 8,
@@ -451,16 +462,31 @@ function resolveStore(shared) {
     }
   }
   if (centralConfigured) {
-    const restoreSeed = readAccessStoreFile(ACCESS_FILE);
+    let restoreSeed = readAccessStoreFile(ACCESS_FILE);
     const cached = restoreSeed && restoreSeed._restoreSeed ? null : getCentralIam().readLocal();
     if (cached) {
       try { const derived = JSON.parse(fs.readFileSync(path.join(AUTH_DATA_ROOT, 'iam-derived.json'), 'utf8')); cached.orderAccess = derived.orderAccess || {}; cached.scopeCatalog = derived.scopeCatalog || {}; } catch (_) {}
       return cached;
     }
-    // Before explicit migration a valid legacy directory remains an offline
-    // login source. A missing/corrupt directory must NEVER synthesize accounts.
+
+    // Central IAM may be enabled before this machine has produced a valid
+    // central cache (for example directly after an app update while Shared Hub
+    // is unavailable). In that state the old version's local auth store is the
+    // only safe login source. Recover it into the version-independent auth
+    // directory before declaring the directory empty. Never replace a cache
+    // that already carries Central IAM metadata: an invalid central cache must
+    // remain fail-closed and available for recovery/diagnostics.
+    if (!restoreSeed || !restoreSeed._centralIam) {
+      try { migrateLegacyAuthStoreIfNeeded(); } catch (_) {}
+      restoreSeed = readAccessStoreFile(ACCESS_FILE);
+    }
+
+    // Offline login is valid when ANY active cached account has a verifier.
+    // Requiring the Moderator specifically locked out healthy buyer/manager
+    // accounts whenever the Moderator had no local password on this device.
+    // A full-system restore seed is also intentionally accepted here.
     const raw = restoreSeed || readAccessStoreFile(ACCESS_FILE + '.bak');
-    if (!raw || raw._centralIam || !raw.moderator || (!credentialHash(raw.moderator) && !raw._restoreSeed)) return { schemaVersion: 8, _revision: 0, users: [], moderator: null, iam: iam.migrateStore({}).iam, orderAccess: {}, scopeCatalog: {} };
+    if (!raw || raw._centralIam || !hasUsableOfflineAuthStore(raw)) return { schemaVersion: 8, _revision: 0, users: [], moderator: null, iam: iam.migrateStore({}).iam, orderAccess: {}, scopeCatalog: {} };
   } else if (!((() => { const primary = readAccessStoreFile(ACCESS_FILE); return primary && primary._restoreSeed; })())) migrateLegacyAuthStoreIfNeeded();
   fs.mkdirSync(AUTH_DATA_ROOT, { recursive: true });
   // Tasima dosyayi degistirmis olabilir; imza tasimadan SONRA hesaplanir.
