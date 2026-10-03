@@ -259,13 +259,16 @@ async function queryCompanyIasRows({ item, matchRule, fromDate, toDate, deps }) 
   return { rows: Array.isArray(run && run.rows) ? run.rows : [], addedFields: added, warnings };
 }
 
-/* Rapor filtresi: Final Destination sütunu varsa yalnız Antrepo rotalı
-   sevkiyatlar kalır (raporun "Final Destination = Antrepo" filtresi). */
-function applyReportRules(shipments) {
+/* Excel raporu geçmişte Final Destination=Antrepo filtresiyle hazırlanıyordu.
+   Bu yardımcı o davranışı gerektiğinde korur; canlı IAS database analizi ise
+   ülke/taşıt sözlüğünün TAMAMINI göstermelidir ve hedefe göre satır elemez. */
+function applyReportRules(shipments, options = {}) {
   const hasActualEntry = shipments.some(s => s.entryIsActual);
   const hasDestination = shipments.some(s => s.finalDestination);
+  const excludeOtherDestinations = options.excludeOtherDestinations !== false;
   for (const s of shipments) {
-    if (hasDestination && !/ANTREPO/.test(headerKey(s.finalDestination))) s.otherDestination = true;
+    if (excludeOtherDestinations && hasDestination && !/ANTREPO/.test(headerKey(s.finalDestination))) s.otherDestination = true;
+    else if (!excludeOtherDestinations && Object.prototype.hasOwnProperty.call(s, 'otherDestination')) delete s.otherDestination;
   }
   return { hasActualEntry, hasDestination };
 }
@@ -276,7 +279,9 @@ function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, 
   const shipments = scope === 'company'
     ? collectAllShipments(antrepoMap, orders, overrides)
     : collectShipments(orders, antrepoMap, overrides);
-  const rules = applyReportRules(shipments);
+  // Database modu rapordaki Antrepo-only filtresini uygulamaz: Türkiye
+  // direkt sevkiyatlar dahil IAS'taki bütün final destination değerleri kalır.
+  const rules = applyReportRules(shipments, { excludeOtherDestinations: false });
   const analysis = BLTransitAnalysis.buildFromShipments(shipments, {
     today: todayIso, sourceLabel: sourceLabel || 'Buyer Log IAS (Antrepo) parsiyelleri', generatedAt: new Date().toISOString(),
     fromDate: range.from, toDate: range.to, granularity: range.granularity, window: range.key,
