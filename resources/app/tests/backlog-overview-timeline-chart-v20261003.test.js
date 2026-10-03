@@ -30,7 +30,10 @@ test('side-by-side mode scales each operational status against stage maximum',()
 });
 
 test('timeline receives more vertical room and a local status legend',()=>{
-  assert.match(CSS,/\.blvCols\{height:300px\}/);
+  // Zaman çizelgesi en az 300px alır; #302 kalıcı toplam etiketleri için
+  // üst boşlukla birlikte yüksekliği artırdı (sabit değere değil alt sınıra bakılır).
+  const colsHeight=Number((CSS.match(/\.blvCols\{height:(\d+)px/)||[])[1]);
+  assert.ok(colsHeight>=300,`.blvCols yüksekliği en az 300px olmalı (bulunan: ${colsHeight})`);
   assert.match(CSS,/\.blvGroupBars/);
   assert.match(CSS,/\.blvGroupBar/);
   assert.match(OVERVIEW,/blvTimelineLegend/);
