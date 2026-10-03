@@ -12564,86 +12564,87 @@ function refreshEtaPanelHtml(job,en){
   </div>`;
 }
 
+function refreshCompactConnectionKind(value){
+  const text=String(value||'').toLocaleUpperCase('tr-TR');
+  if(/(^|[^A-Z])IAS([^A-Z]|$)|ANTREPO|BONDED/.test(text))return'ias';
+  if(/(^|[^A-Z])ASAS([^A-Z]|$)/.test(text))return'asas';
+  return'';
+}
+function refreshCompactStageIndex(job){
+  const phase=String(job&&job.phase||'').toLowerCase();
+  if(!job)return 1;
+  if(!job.running&&phase==='done')return 4;
+  if(['comparing','saving','page-cache','finalizing','done','error'].includes(phase))return 3;
+  const operations=Array.isArray(job.operations)?job.operations:[];
+  let asasSeen=false,iasSeen=false,asasQueryDone=false,iasQueryDone=false;
+  for(const item of operations){
+    const kind=refreshCompactConnectionKind(item&&item.connection);
+    if(kind==='asas')asasSeen=true;
+    if(kind==='ias')iasSeen=true;
+    if(item&&item.type==='end'&&['server-query','model-query-failed'].includes(String(item.operation||''))){
+      if(kind==='asas')asasQueryDone=true;
+      if(kind==='ias')iasQueryDone=true;
+    }
+  }
+  if((asasQueryDone&&iasSeen)||(!asasSeen&&iasSeen)||iasQueryDone)return 2;
+  return 1;
+}
+function refreshCompactStepHtml(index,activeIndex,title,subtitle,en){
+  const done=activeIndex===4||index<activeIndex;
+  const active=activeIndex===index;
+  const state=done?'done':active?'active':'pending';
+  const status=done?(en?'Done':'Tamamlandı'):active?(en?'In progress':'Sürüyor'):(en?'Queued':'Sırada');
+  return `<div class="refreshCompactStep is-${state}" data-refresh-step="${index}">
+    <span class="refreshCompactStepMark" aria-hidden="true">${done?'✓':index}</span>
+    <div class="refreshCompactStepText"><b>${escapeHtml(title)}</b><small>${escapeHtml(subtitle)}</small></div>
+    <span class="refreshCompactStepStatus">${active?'<i></i><i></i><i></i>':escapeHtml(status)}</span>
+  </div>`;
+}
 function renderRefreshStagesBody(){
-  const host=document.getElementById('_refreshStagesBody'); if(!host) return;
-  const en=appLang==='en';
-  const job=window.BL_REFRESH_JOB_STATE||null;
-  const phases=job&&Array.isArray(job.phases)?job.phases:[];
-  const conns=(job&&Array.isArray(job.connections)&&job.connections.length?job.connections:window.BL_LAST_REFRESH_CONNECTIONS)||[];
-  const running=Boolean(job&&job.running);
-
-  const stageTotalMs=phases.reduce((sum,item)=>sum+Math.max(0,Number(item&&item.ms)||0),0);
-  const totalMs=job?Number(job.elapsedMs)||0:0;
-  const dispatchOverheadMs=Math.max(0,totalMs-stageTotalMs);
-  const phaseRows=phases.length?phases.map(item=>`
-    <tr${item.running?' class="refreshStageActive"':''}>
-      <td>${escapeHtml(refreshPhaseLabel(item.phase))}${item.running?` <small>${escapeHtml(en?'running':'sürüyor')}</small>`:''}</td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(item.ms))}</td>
-    </tr>`).join('')+`<tr><td>${escapeHtml(refreshPhaseLabel('dispatch-overhead'))}</td><td class="refreshStageNum">${escapeHtml(refreshSeconds(dispatchOverheadMs))}</td></tr>`
-    :`<tr><td colspan="2" class="refreshStageEmpty">${escapeHtml(en?'No stage information yet.':'Henüz aşama bilgisi yok.')}</td></tr>`;
-
-  // Bağlantı dökümü sorgular bitmeden oluşmaz; boşken sebebini yazıyoruz ki
-  // kullanıcı eksik veri sanmasın.
-  const connRows=conns.length?conns.filter(item=>item&&item.timings).map(item=>{
-    const t=item.timings;
-    return `<tr>
-      <td><b>${escapeHtml(item.name||item.catalog||item.role||'—')}</b><small>${escapeHtml(String(Number(item.rowCount)||0))} ${escapeHtml(en?'rows':'satır')}</small></td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(t.mappingMs))}</td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(t.connectionOpenMs))}</td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(t.executeMs))}</td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(t.retryMs))}</td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(t.writeMs))}</td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(t.parseMs))}</td>
-      <td class="refreshStageNum">${escapeHtml(refreshSeconds(t.overheadMs))}</td>
-      <td class="refreshStageNum"><b>${escapeHtml(refreshSeconds(t.totalMs))}</b></td>
-    </tr>`;
-  }).join('')
-    :`<tr><td colspan="9" class="refreshStageEmpty">${escapeHtml(running
-        ? (en?'The per-connection breakdown appears once the queries finish.':'Bağlantı bazlı döküm sorgular bittiğinde görünür.')
-        : (en?'No connection timing recorded for the last refresh.':'Son yenileme için bağlantı süresi kaydı yok.'))}</td></tr>`;
-
+  const host=document.getElementById('_refreshStagesBody');if(!host)return;
+  const en=appLang==='en',job=window.BL_REFRESH_JOB_STATE||null,running=Boolean(job&&job.running);
+  const activeIndex=refreshCompactStageIndex(job);
+  const elapsedMs=job?Number(job.elapsedMs)||0:0;
+  const eta=job&&job.eta||null;
+  const etaText=eta&&eta.available
+    ?(eta.exceeded?(en?'Estimate exceeded':'Tahmin aşıldı'):`~${refreshSeconds(Math.max(0,Number(eta.remainingMs)||0))} ${en?'left':'kaldı'}`)
+    :(en?'Learning estimate':'Tahmin öğreniliyor');
+  const stepCount=activeIndex===4?3:Math.min(3,Math.max(1,activeIndex));
   const metrics=job&&job.metrics||null;
-  const metricRows=metrics?`<div class="refreshStageMetrics">
-    <span>${escapeHtml(en?'Server query (longest connection)':'Sunucu sorgusu (en uzun bağlantı)')} <b>${escapeHtml(refreshSeconds(metrics.dbQueryMs))}</b></span>
-    <span>${escapeHtml(en?'Connection wait (longest)':'Bağlantı bekleme (en uzun)')} <b>${escapeHtml(refreshSeconds(metrics.connectionWaitMs))}</b></span>
-    <span>${escapeHtml(en?'Local snapshot write':'Yerel snapshot yazımı')} <b>${escapeHtml(refreshSeconds(metrics.localSnapshotWriteMs))}</b></span>
-    <span>${escapeHtml(en?'Max UI block':'Maks. UI bloklama')} <b>${escapeHtml(refreshSeconds(metrics.uiBlockingMs))}</b></span>
+  const conns=(job&&Array.isArray(job.connections)&&job.connections.length?job.connections:window.BL_LAST_REFRESH_CONNECTIONS)||[];
+  const diagnosticRows=conns.filter(item=>item&&item.timings).slice(0,6).map(item=>{
+    const t=item.timings;
+    return `<div class="refreshCompactDiagRow">
+      <b>${escapeHtml(item.name||item.catalog||item.role||'—')} <small>${escapeHtml(String(Number(item.rowCount)||0))} ${escapeHtml(en?'rows':'satır')}</small></b>
+      <span>${escapeHtml(en?'query':'sorgu')} ${escapeHtml(refreshSeconds(t.executeMs))} · ${escapeHtml(en?'write':'yazım')} ${escapeHtml(refreshSeconds(t.writeMs))} · ${escapeHtml(en?'parse':'ayrıştırma')} ${escapeHtml(refreshSeconds(t.parseMs))} · ${escapeHtml(en?'open':'açılış')} ${escapeHtml(refreshSeconds(t.connectionOpenMs))} · ${escapeHtml(en?'retry':'tekrar')} ${escapeHtml(refreshSeconds(t.retryMs))} · ${escapeHtml(en?'overhead':'ek')} ${escapeHtml(refreshSeconds(t.overheadMs))} · ${escapeHtml(en?'total':'toplam')} ${escapeHtml(refreshSeconds(t.totalMs))}</span>
+    </div>`;
+  }).join('');
+  const metricDetails=metrics?`<div class="refreshCompactDiagMetrics">
+    <span>${escapeHtml(en?'Longest query':'En uzun sorgu')} <b>${escapeHtml(refreshSeconds(metrics.dbQueryMs))}</b></span>
+    <span>${escapeHtml(en?'Snapshot write':'Snapshot yazımı')} <b>${escapeHtml(refreshSeconds(metrics.localSnapshotWriteMs))}</b></span>
   </div>`:'';
-  const dashboard=job&&job.dashboard||null;
-  const dashboardRows=dashboard?`<div class="refreshStageMetrics refreshDashboardProgress">
-    <span>${escapeHtml(en?'Dashboard orders':'Dashboard siparişleri')} <b>${escapeHtml(`${Number(dashboard.processedOrders)||0}/${Number(dashboard.totalOrders)||0}`)}</b></span>
-    <span>${escapeHtml(en?'Successful':'Başarılı')} <b>${escapeHtml(String(Number(dashboard.successfulOrders)||0))}</b></span>
-    <span>${escapeHtml(en?'Not found':'Bulunamadı')} <b>${escapeHtml(String(Number(dashboard.notFoundOrders)||0))}</b></span>
-    <span>${escapeHtml(en?'Failed':'Hatalı')} <b>${escapeHtml(String(Number(dashboard.failedOrders)||0))}</b></span>
-    <span>${escapeHtml(en?'Remaining':'Kalan')} <b>${escapeHtml(String(Array.isArray(dashboard.remainingOrders)?dashboard.remainingOrders.length:Math.max(0,(Number(dashboard.totalOrders)||0)-(Number(dashboard.processedOrders)||0))))}</b></span>
-  </div>`:'';
-  const reconciliation=`<div class="refreshStageMetrics"><span>${escapeHtml(en?'Stage reconciliation':'Aşama doğrulaması')} <b>${escapeHtml(refreshSeconds(stageTotalMs))} + ${escapeHtml(refreshSeconds(dispatchOverheadMs))} = ${escapeHtml(refreshSeconds(stageTotalMs+dispatchOverheadMs))}</b></span></div>`;
-  const etaPanel=refreshEtaPanelHtml(job,en);
   host.innerHTML=`
-    <div class="refreshStageTotal"><span>${escapeHtml(en?'Total elapsed':'Toplam süre')}</span><b>${escapeHtml(refreshSeconds(totalMs))}</b>${running?`<em>${escapeHtml(en?'refresh in progress':'yenileme sürüyor')}</em>`:''}</div>
-    ${etaPanel}
-    ${metricRows}
-    ${dashboardRows}
-    ${reconciliation}
-    <div class="refreshStageSection refreshStagePhases">
-      <h4>${escapeHtml(en?'Stages':'Aşamalar')}</h4>
-      <table class="refreshStageTable"><thead><tr><th>${escapeHtml(en?'Stage':'Aşama')}</th><th class="refreshStageNum">${escapeHtml(en?'Duration':'Süre')}</th></tr></thead><tbody>${phaseRows}</tbody></table>
+    <div class="refreshCompactSummary">
+      <div><span>${escapeHtml(en?'Elapsed':'Geçen süre')}</span><b>${escapeHtml(refreshSeconds(elapsedMs))}</b></div>
+      <span class="refreshCompactEta">${escapeHtml(etaText)}</span>
+      <span class="refreshCompactCount">${escapeHtml(activeIndex===4?(en?'Completed':'Tamamlandı'):`${stepCount}/3 ${en?'steps':'adım'}`)}</span>
     </div>
-    <div class="refreshStageSection refreshStageConnections">
-      <h4>${escapeHtml(en?'Per connection':'Bağlantı bazında')}</h4>
-      <table class="refreshStageTable"><thead><tr>
-        <th>${escapeHtml(en?'Connection':'Bağlantı')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Mapping wait':'Eşleme bekleme')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Connection wait':'Bağlantı bekleme')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Server query':'Sunucu sorgusu')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Retry':'Tekrar deneme')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Data write':'Veri yazımı')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Parse':'Ayrıştırma')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Overhead':'Ek işlem')}</th>
-        <th class="refreshStageNum">${escapeHtml(en?'Total':'Toplam')}</th>
-      </tr></thead><tbody>${connRows}</tbody></table>
+    <div class="refreshCompactFlow">
+      ${refreshCompactStepHtml(1,activeIndex,en?'Fetching ASAS data…':'ASAS Verisi Çekiliyor…',en?'Order and model data':'Sipariş ve model verileri',en)}
+      ${refreshCompactStepHtml(2,activeIndex,en?'Fetching IAS data…':'IAS Verisi Çekiliyor…',en?'Bonded warehouse / shipment data':'Antrepo ve sevkiyat verileri',en)}
+      ${refreshCompactStepHtml(3,activeIndex,en?'Reviewing & saving':'Denetleme ve Kaydetme',en?'Compare · save · cache · finalize':'Karşılaştırma · kaydetme · önbellek · tamamlama',en)}
     </div>
-    <div class="modalFoot refreshStagesActions"><button type="button" class="tbtn" data-stop-refresh ${running?'':'disabled'}>${escapeHtml(en?'Stop Refresh':'Yenilemeyi Durdur')}</button></div>`;
+    <details class="refreshCompactDetails">
+      <summary>${escapeHtml(en?'View technical details':'Teknik Detayları Gör')}</summary>
+      <div class="refreshCompactDiag">
+        ${metricDetails}
+        ${diagnosticRows||`<div class="refreshCompactDiagEmpty">${escapeHtml(running?(en?'The per-connection breakdown appears once the queries finish. No stage information yet.':'Bağlantı bazlı döküm sorgular bittiğinde görünür. Henüz aşama bilgisi yok.'):(en?'No connection timing recorded for the last refresh.':'Son yenileme için bağlantı süresi kaydı yok.'))}</div>`}
+      </div>
+    </details>
+    <div class="refreshCompactActions">
+      <span class="refreshCompactHint">${escapeHtml(running?(en?'You can keep working while refresh continues.':'Yenileme sürerken çalışmaya devam edebilirsiniz.'):(en?'Refresh finished.':'Yenileme tamamlandı.'))}</span>
+      <button type="button" class="tbtn" data-stop-refresh ${running?'':'disabled'}>${escapeHtml(en?'Stop':'Durdur')}</button>
+    </div>`;
 }
 
 function openRefreshStagesModal(){
@@ -12660,7 +12661,7 @@ function openRefreshStagesModal(){
   modal.id='_refreshStages'; modal.className='refreshStagesOverlay';
   modal.innerHTML=`<div class="modalCard refreshStagesCard" role="dialog" aria-modal="false" aria-labelledby="_refreshStagesTitle" tabindex="-1">
     <div class="refreshStagesHead">
-      <div class="modalTitle" id="_refreshStagesTitle">${escapeHtml(en?'Refresh stages':'Yenileme aşamaları')}</div>
+      <div class="refreshStagesTitleWrap"><div class="modalTitle" id="_refreshStagesTitle">${escapeHtml(en?'Refresh progress':'Yenileme durumu')}</div><span class="refreshStagesRunning"><span class="blOrb blOrb--sm" data-state="thinking" aria-hidden="true"></span>${escapeHtml(en?'Running':'Çalışıyor')}</span></div>
       <button type="button" class="pricingRuleIconBtn" data-overlay-close aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="refreshStagesBody" id="_refreshStagesBody"></div>
