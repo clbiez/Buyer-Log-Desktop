@@ -3468,14 +3468,13 @@ function syncCpModelColumns(defs){
   CP_COLS.splice(0,CP_COLS.length,...base,...dynamic);
   invalidateColumnIndex('cp');
   const cs=colmgr.cp; const valid=CP_COLS.map(c=>c.k);
-  cs.order=cs.order.filter(k=>valid.includes(k));
+  const knownBefore=new Set(cs.order),persistedBefore=new Set(savedColumnOrderKeys('cp'));
+  restoreLateManagedColumnState('cp');
   dynamic.forEach(c=>{
-    const isNew=!cs.order.includes(c.k);
-    if(isNew)cs.order.push(c.k);
-    if(isNew||groupKey(previousGroup.get(c.k)||'')!==groupKey(c.group))placeColumnInGroup('cp',c.k,c.group);
+    const isNew=!knownBefore.has(c.k)&&!persistedBefore.has(c.k);
+    const groupChanged=previousGroup.has(c.k)&&groupKey(previousGroup.get(c.k)||'')!==groupKey(c.group);
+    if(isNew||groupChanged)placeColumnInGroup('cp',c.k,c.group);
   });
-  cs.hidden=new Set([...cs.hidden].filter(k=>valid.includes(k)));
-  cs.widthPx=Object.fromEntries(Object.entries(cs.widthPx||{}).filter(([k])=>valid.includes(k)));
   Object.keys(state.colFilters.cp||{}).forEach(k=>{if(!valid.includes(k))delete state.colFilters.cp[k];});
   // v7.28: CP_COLS yeniden kurulduğu için kullanıcının hesaplanan sütunları
   // yeniden eklenir; aksi halde Database sütunu ekleyince formül sütunları
@@ -3501,21 +3500,22 @@ function syncCpNoteColumns(defs){
   CP_COLS.splice(0,CP_COLS.length,...base,...dynamic);
   invalidateColumnIndex('cp');
   const cs=colmgr.cp; const valid=CP_COLS.map(c=>c.k);
-  cs.order=cs.order.filter(k=>valid.includes(k));
-  dynamic.forEach(c=>{ if(!cs.order.includes(c.k))cs.order.push(c.k); });
-  cs.hidden=new Set([...cs.hidden].filter(k=>valid.includes(k)));
-  cs.widthPx=Object.fromEntries(Object.entries(cs.widthPx||{}).filter(([k])=>valid.includes(k)));
+  restoreLateManagedColumnState('cp');
   Object.keys(state.colFilters.cp||{}).forEach(k=>{if(!valid.includes(k))delete state.colFilters.cp[k];});
   window.BLFormulaColumns?.syncColumns('cp');
   syncOrdersColumnsFromCp();
   saveAutoTableColumnState();
 }
 async function saveCpNoteColumnDefs(nextDefs){
+  const previousIds=new Set(CP_NOTE_COLUMN_DEFS.map(d=>d.id));
   const res=await fetch('/api/note-columns',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(CP_NOTE_COLUMN_DEFS_REVISION||0)},body:JSON.stringify({columns:nextDefs})});
   const data=await res.json().catch(()=>({}));
   if(!res.ok)throw new Error(data.error||res.statusText);
   CP_NOTE_COLUMN_DEFS_REVISION=Number(data.revision)||CP_NOTE_COLUMN_DEFS_REVISION;
-  syncCpNoteColumns(data.columns||nextDefs);
+  const savedDefs=data.columns||nextDefs,nextIds=new Set((Array.isArray(savedDefs)?savedDefs:[]).map(d=>d&&d.id).filter(Boolean));
+  const removed=[...previousIds].filter(id=>!nextIds.has(id));
+  if(removed.length){forgetPersistedColumnKeys('cp',removed);forgetPersistedColumnKeys('orders',removed);}
+  syncCpNoteColumns(savedDefs);
 }
 // Not sütunu adı: EN/TR iki dilde; kimlik olan `label` diğer sütunlarla çakışmamalı.
 function cpNoteColumnNameClash(pair,exceptKey){
@@ -3568,10 +3568,7 @@ function syncOrdersColumnsFromCp(){
   ORDERS_COLS.splice(0,ORDERS_COLS.length,...rebuilt);
   invalidateColumnIndex('orders');
   const cs=colmgr.orders,valid=ORDERS_COLS.map(c=>c.k);
-  cs.order=cs.order.filter(k=>valid.includes(k));
-  valid.forEach(k=>{if(!cs.order.includes(k))cs.order.push(k);});
-  cs.hidden=new Set([...cs.hidden].filter(k=>valid.includes(k)));
-  cs.widthPx=Object.fromEntries(Object.entries(cs.widthPx||{}).filter(([k])=>valid.includes(k)));
+  restoreLateManagedColumnState('orders');
   Object.keys(state.colFilters.orders||{}).forEach(k=>{if(!valid.includes(k))delete state.colFilters.orders[k];});
   window.BLFormulaColumns?.syncColumns('orders');
 }
@@ -3582,14 +3579,7 @@ function cpModelColumnDefinitionsFromConnections(items){
 // and reuse the exact same column ordering, resizing, freezing and Excel-style filters.
 const GENERIC_TABLE_SOURCES = Object.create(null);
 function restoreRegisteredTableColumnState(tableKey){
-  try{
-    const saved=JSON.parse(BLStorage.getItem(AUTO_TABLE_COL_STATE_KEY)||'null');
-    const entry=saved&&saved[tableKey]; if(!entry)return;
-    const valid=(COLS_BY_TABLE[tableKey]||[]).map(c=>c.k);
-    colmgr[tableKey].order=normalizedColumnOrder(tableKey,entry.order);
-    colmgr[tableKey].hidden=new Set((entry.hidden||[]).filter(k=>valid.includes(k)));
-    colmgr[tableKey].widthPx=Object.fromEntries(Object.entries(entry.widthPx||{}).filter(([k,v])=>valid.includes(k)&&Number.isFinite(Number(v))));
-  }catch(e){}
+  restoreLateManagedColumnState(tableKey);
 }
 function registerGenericTable(tableKey,columns,getRows){
   const mapped=(columns||[]).map((c,index)=>({
@@ -3608,12 +3598,7 @@ function registerGenericTable(tableKey,columns,getRows){
   COLS_BY_TABLE[tableKey]=mapped;
   invalidateColumnIndex(tableKey);
   if(!previous){colmgr[tableKey]=initColState(mapped);restoreRegisteredTableColumnState(tableKey);}
-  else{
-    const valid=mapped.map(c=>c.k);
-    previous.order=normalizedColumnOrder(tableKey,previous.order);
-    previous.hidden=new Set([...previous.hidden].filter(k=>valid.includes(k)));
-    previous.widthPx=Object.fromEntries(Object.entries(previous.widthPx||{}).filter(([k])=>valid.includes(k)));
-  }
+  else restoreLateManagedColumnState(tableKey);
   if(!state.colFilters[tableKey])state.colFilters[tableKey]={};
   const validKeys=new Set(mapped.map(c=>c.k));
   Object.keys(state.colFilters[tableKey]).forEach(key=>{if(!validKeys.has(key))delete state.colFilters[tableKey][key];});
@@ -3622,6 +3607,22 @@ function registerGenericTable(tableKey,columns,getRows){
   return mapped;
 }
 const AUTO_TABLE_COL_STATE_KEY='lcw.table.columnState.v1';
+let autoTableColumnStateSnapshot=null;
+function readAutoTableColumnState(){
+  try{
+    const saved=JSON.parse(BLStorage.getItem(AUTO_TABLE_COL_STATE_KEY)||'null');
+    return saved&&typeof saved==='object'&&!Array.isArray(saved)?saved:{};
+  }catch(e){return {};}
+}
+function autoTableSavedEntry(tableKey){
+  const saved=autoTableColumnStateSnapshot||(autoTableColumnStateSnapshot=readAutoTableColumnState());
+  const entry=saved&&saved[tableKey];
+  return entry&&typeof entry==='object'&&!Array.isArray(entry)?entry:null;
+}
+function savedColumnOrderKeys(tableKey){
+  const entry=autoTableSavedEntry(tableKey);
+  return Array.isArray(entry&&entry.order)?entry.order.slice():[];
+}
 function normalizedColumnOrder(tableKey, savedOrder){
   const valid=(COLS_BY_TABLE[tableKey]||[]).map(c=>c.k);
   const validSet=new Set(valid),seen=new Set();
@@ -3637,17 +3638,90 @@ function normalizedColumnOrder(tableKey, savedOrder){
   });
   return order.length?order:valid;
 }
+/* Geç yüklenen dinamik sütunlar (Add Column / Calculated Column / not sütunu
+   ve sonradan register edilen yönetilen tablolar) ilk açılışta COLS_BY_TABLE'da
+   olmayabilir. Önceki sürüm bu anahtarları "geçersiz" sanıp ilk save'de kalıcı
+   kayıttan siliyordu. Kullanılabilir sütunların GÜNCEL sırası ana omurgadır;
+   o anda yüklenmemiş anahtarlar ise son bilinen komşusuna bağlı olarak korunur. */
+function mergeDeferredColumnOrder(previousOrder,currentOrder,availableKeys){
+  const available=new Set(Array.isArray(availableKeys)?availableKeys:[]);
+  const current=[...new Set((Array.isArray(currentOrder)?currentOrder:[]).filter(key=>available.has(key)))];
+  const currentSet=new Set(current),leading=[],after=new Map(),seen=new Set();
+  let anchor='';
+  (Array.isArray(previousOrder)?previousOrder:[]).forEach(key=>{
+    if(!key||seen.has(key))return;
+    seen.add(key);
+    if(available.has(key)){
+      if(currentSet.has(key))anchor=key;
+      return;
+    }
+    if(!anchor)leading.push(key);
+    else{
+      const bucket=after.get(anchor)||[];
+      bucket.push(key);after.set(anchor,bucket);
+    }
+  });
+  const out=[...leading];
+  current.forEach(key=>{out.push(key);if(after.has(key))out.push(...after.get(key));});
+  return out;
+}
+function restoreLateManagedColumnState(tableKey){
+  const cs=colmgr[tableKey];if(!cs)return [];
+  const valid=(COLS_BY_TABLE[tableKey]||[]).map(c=>c.k),validSet=new Set(valid);
+  const entry=autoTableSavedEntry(tableKey);
+  cs.order=normalizedColumnOrder(tableKey,entry&&Array.isArray(entry.order)?entry.order:cs.order);
+  const hidden=new Set([...cs.hidden].filter(k=>validSet.has(k)));
+  if(entry&&Array.isArray(entry.hidden))entry.hidden.forEach(k=>{if(validSet.has(k))hidden.add(k);});
+  cs.hidden=hidden;
+  const widthPx=Object.fromEntries(Object.entries(cs.widthPx||{}).filter(([k,v])=>validSet.has(k)&&Number.isFinite(Number(v))));
+  if(entry)Object.entries(entry.widthPx||{}).forEach(([k,v])=>{if(validSet.has(k)&&Number.isFinite(Number(v)))widthPx[k]=Number(v);});
+  cs.widthPx=widthPx;
+  return savedColumnOrderKeys(tableKey);
+}
+function writeAutoTableColumnStateSnapshot(){
+  try{BLStorage.setItem(AUTO_TABLE_COL_STATE_KEY,JSON.stringify(autoTableColumnStateSnapshot||{}));}catch(e){}
+}
+function forgetPersistedColumnKeys(tableKey,keys){
+  const drop=new Set((Array.isArray(keys)?keys:[keys]).filter(Boolean));
+  if(!drop.size)return;
+  const saved=autoTableColumnStateSnapshot||(autoTableColumnStateSnapshot=readAutoTableColumnState());
+  const entry=saved&&saved[tableKey];if(!entry)return;
+  entry.order=(Array.isArray(entry.order)?entry.order:[]).filter(key=>!drop.has(key));
+  entry.hidden=(Array.isArray(entry.hidden)?entry.hidden:[]).filter(key=>!drop.has(key));
+  const widths={...(entry.widthPx||{})};drop.forEach(key=>delete widths[key]);entry.widthPx=widths;
+  writeAutoTableColumnStateSnapshot();
+}
+function forgetPersistedTableColumnState(tableKey){
+  const saved=autoTableColumnStateSnapshot||(autoTableColumnStateSnapshot=readAutoTableColumnState());
+  if(saved&&Object.prototype.hasOwnProperty.call(saved,tableKey)){delete saved[tableKey];writeAutoTableColumnStateSnapshot();}
+}
 function saveAutoTableColumnState(){
   try{
-    const payload={};
-    Object.keys(COLS_BY_TABLE).forEach(t=>{ const cs=colmgr[t]; payload[t]={order:cs.order.slice(),hidden:[...cs.hidden],widthPx:{...cs.widthPx}}; });
+    const previous=autoTableColumnStateSnapshot||(autoTableColumnStateSnapshot=readAutoTableColumnState());
+    const payload={...previous};
+    Object.keys(COLS_BY_TABLE).forEach(t=>{
+      const cs=colmgr[t];if(!cs)return;
+      const valid=(COLS_BY_TABLE[t]||[]).map(c=>c.k),validSet=new Set(valid);
+      const prior=previous[t]&&typeof previous[t]==='object'?previous[t]:{};
+      const currentOrder=normalizedColumnOrder(t,cs.order);
+      const order=mergeDeferredColumnOrder(prior.order,currentOrder,valid);
+      const hidden=[...new Set([
+        ...(Array.isArray(prior.hidden)?prior.hidden.filter(k=>!validSet.has(k)):[]),
+        ...[...cs.hidden].filter(k=>validSet.has(k)),
+      ])];
+      const widthPx={};
+      Object.entries(prior.widthPx||{}).forEach(([k,v])=>{if(!validSet.has(k)&&Number.isFinite(Number(v)))widthPx[k]=Number(v);});
+      Object.entries(cs.widthPx||{}).forEach(([k,v])=>{if(validSet.has(k)&&Number.isFinite(Number(v)))widthPx[k]=Number(v);});
+      payload[t]={order,hidden,widthPx};
+      cs.order=currentOrder;
+    });
+    autoTableColumnStateSnapshot=payload;
     BLStorage.setItem(AUTO_TABLE_COL_STATE_KEY,JSON.stringify(payload));
   }catch(e){}
 }
 function loadAutoTableColumnState(){
   try{
-    const saved=JSON.parse(BLStorage.getItem(AUTO_TABLE_COL_STATE_KEY)||'null');
-    if(!saved||typeof saved!=='object') return;
+    const saved=autoTableColumnStateSnapshot=readAutoTableColumnState();
     Object.keys(COLS_BY_TABLE).forEach(t=>{
       if(!saved[t]) return;
       const valid=(COLS_BY_TABLE[t]||[]).map(c=>c.k);
@@ -3657,6 +3731,8 @@ function loadAutoTableColumnState(){
     });
   }catch(e){}
 }
+window.BLColumnState={persistedOrder:savedColumnOrderKeys,restoreLate:restoreLateManagedColumnState,forget:forgetPersistedColumnKeys,forgetTable:forgetPersistedTableColumnState};
+window.saveAutoTableColumnState=saveAutoTableColumnState;
 loadAutoTableColumnState();
 // Eski "small" sütun genişliği de dahil olmak üzere CP görsel sütununu seçili
 // Orta/Büyük moda hizala. Böylece önceki kullanıcı ayarları dar görünümü geri getirmez.
@@ -4627,6 +4703,7 @@ async function removeCpModelColumn(id,rerenderFn){
   if(!confirm(appLang==='en'?`Remove “${def.label}” from the CP/Orders table?`:`“${def.label}” sütununu CP/Siparişler tablosundan kaldırmak istiyor musun?`))return;
   try{
     const saved=await writeCpModelColumn(def.connectionId,{op:'remove',id});
+    forgetPersistedColumnKeys('cp',[def.header]);forgetPersistedColumnKeys('orders',[def.header]);
     syncCpModelColumns(cpModelColumnDefinitionsFromConnections(saved));
     if(typeof rerenderFn==='function')rerenderFn(); else renderCP();
     showToast(appLang==='en'?'Column removed.':'Sütun kaldırıldı.');
@@ -15131,6 +15208,7 @@ function resetViewToSystemDefault(){
     kolColOrder=null;kolColWidths={};kolHiddenCols=new Set();kolPictureHidden=false;
     saveKolColState();
   }else if(colmgr[page]){
+    forgetPersistedTableColumnState(page);
     colmgr[page]=initColState(COLS_BY_TABLE[page]||[]);
     if(page==='cp'||page==='orders')colmgr[page].widthPx.__picture=tableImageSizeDimensions(page,tableImageSizeCurrentValue(page)).col;
     saveAutoTableColumnState();
