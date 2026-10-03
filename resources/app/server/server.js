@@ -1511,11 +1511,17 @@ async function bootstrapSharedHub({ force = false } = {}) {
       const sameCompletedHub = localState && localState.completed === true && localState.hubId === checked.manifest.hubId;
       const iam = await userAccess.refreshIam({ allowBootstrapPlaceholderReplace:!sameCompletedHub, timeoutMs:30000 });
       const iamHealth = userAccess.centralIamHealth();
-      if (!iam && !sameCompletedHub && !userAccess.hasLocalLoginSnapshot()) {
-        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
+      // A remembered "completed" Hub marker is not proof that IAM still has a
+      // usable local/remote directory. The old bypass allowed bootstrap to show
+      // "0 kullanıcı · 0 aktif" as DONE after an auth-cache loss.
+      if (!iam && !userAccess.hasLocalLoginSnapshot()) {
+        throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı ve geçerli yerel kullanıcı önbelleği bulunamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
       }
       const profiles = userAccess.allPublicProfiles();
       const activeProfiles = profiles.filter(profile => profile && profile.enabled !== false);
+      if (!profiles.length || !activeProfiles.length) {
+        throw Object.assign(new Error('Kullanıcı dizini boş görünüyor; giriş için geçerli kullanıcı verisi kurtarılamadı.'), { code:'IAM_DIRECTORY_EMPTY', statusCode:503 });
+      }
       setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif` });
 
       setBootstrapProgress({ phase:'master', message:'Sistem ayarları eşitleniyor…' });

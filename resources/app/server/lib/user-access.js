@@ -99,19 +99,86 @@ function compareAccessStoreQuality(a, b) {
   return 0;
 }
 function legacyAccessCandidates() {
-  const out = new Set([LEGACY_ACCESS_FILE, LEGACY_ACCESS_FILE + '.bak']);
-  // Yeni sürüm ayrı bir kardeş klasöre açıldıysa önceki Buyer Log klasörlerindeki
-  // kullanıcı deposunu tek seferlik yakala. Arama yalnız yakın klasörlerle sınırlı.
+  const out = new Set();
+  const add = file => {
+    if (!file) return;
+    try { out.add(path.resolve(file)); } catch (_) {}
+  };
+  const addStore = file => { add(file); add(file + '.bak'); };
+  const addJsonDirectory = (dir, limit = 200) => {
+    try {
+      for (const entry of fs.readdirSync(dir, { withFileTypes:true }).slice(0, limit)) {
+        if (!entry.isFile() || !/\.json(?:\..+)?$/i.test(entry.name)) continue;
+        add(path.join(dir, entry.name));
+      }
+    } catch (_) {}
+  };
+
+  // Current historical server-data location.
+  addStore(LEGACY_ACCESS_FILE);
+
+  // Central IAM creates this immutable safety copy before the first migration.
+  add(path.join(AUTH_DATA_ROOT, 'user-access.pre-iam-migration.json'));
+  add(path.join(AUTH_DATA_ROOT, 'user-access.json.pre-migration.bak'));
+  addJsonDirectory(AUTH_DATA_ROOT, 100);
+
+  /*
+   * Packaged Buyer Log uses:
+   *   <portable>\data\app\auth\user-access.json   (current)
+   * Older builds and recovery flows used several other bounded locations.
+   * BUYER_LOG_SERVER_DATA_ROOT is ALWAYS set by the desktop launcher, so the
+   * previous "only scan when env is absent" branch never ran in production.
+   * Search only known Buyer Log roots; never crawl the user's drive.
+   */
+  let portableDataRoot = clean(process.env.BUYER_LOG_PORTABLE_DATA_ROOT);
+  if (!portableDataRoot) {
+    const parent = path.dirname(AUTH_DATA_ROOT);
+    if (/^app$/i.test(path.basename(parent))) portableDataRoot = path.dirname(parent);
+  }
+  if (portableDataRoot) {
+    const portableRoot = path.dirname(portableDataRoot);
+    // v7.78 bug used data\auth instead of data\app\auth.
+    addStore(path.join(portableDataRoot, 'auth', 'user-access.json'));
+    addStore(path.join(portableDataRoot, 'server', 'user-access.json'));
+    addStore(path.join(portableDataRoot, 'server', 'data', 'user-access.json'));
+    // Recovery scripts preserve candidate stores here.
+    addJsonDirectory(path.join(portableDataRoot, 'migration-evidence', 'auth-candidates'), 250);
+    addJsonDirectory(path.join(portableDataRoot, 'migration-evidence', 'user-identity-recovery'), 250);
+    // Installed core may still contain the last legacy server/data copy.
+    addStore(path.join(portableRoot, 'resources', 'app', 'server', 'data', 'user-access.json'));
+
+    // data-BACKUP-* is the supported pre-migration safety copy. Inspect only
+    // direct backup folders and only the known auth/server locations.
+    try {
+      for (const entry of fs.readdirSync(portableRoot, { withFileTypes:true }).slice(0, 250)) {
+        if (!entry.isDirectory() || !/^data[\s._-]*backup/i.test(entry.name)) continue;
+        const backup = path.join(portableRoot, entry.name);
+        for (const file of [
+          path.join(backup, 'app', 'auth', 'user-access.json'),
+          path.join(backup, 'auth', 'user-access.json'),
+          path.join(backup, 'server', 'user-access.json'),
+          path.join(backup, 'server', 'data', 'user-access.json'),
+        ]) addStore(file);
+      }
+    } catch (_) {}
+  }
+
+  // Real Windows AppData is retained by the desktop launcher before it points
+  // APPDATA to the portable profile. It is a safe source for pre-portable users.
+  const hostAppData = clean(process.env.BL_HOST_APPDATA);
+  if (hostAppData) addStore(path.join(hostAppData, 'Buyer Log', 'auth', 'user-access.json'));
+
+  // Development/legacy sibling installs remain supported, but bounded.
   if (!process.env.BUYER_LOG_SERVER_DATA_ROOT && AUTH_DATA_ROOT !== SERVER_DATA_ROOT) {
     try {
       const parent = path.dirname(PROJECT_ROOT);
       for (const entry of fs.readdirSync(parent, { withFileTypes: true }).slice(0, 250)) {
         if (!entry.isDirectory() || !/buyer[\s._-]*log/i.test(entry.name)) continue;
-        const candidate = path.join(parent, entry.name, 'server', 'data', 'user-access.json');
-        out.add(candidate); out.add(candidate + '.bak');
+        addStore(path.join(parent, entry.name, 'server', 'data', 'user-access.json'));
       }
     } catch (_) {}
   }
+
   return [...out].filter(file => path.resolve(file) !== path.resolve(ACCESS_FILE));
 }
 function migrateLegacyAuthStoreIfNeeded() {
@@ -132,9 +199,16 @@ function migrateLegacyAuthStoreIfNeeded() {
   fs.mkdirSync(AUTH_DATA_ROOT, { recursive: true });
   if (fs.existsSync(ACCESS_FILE)) { try { fs.copyFileSync(ACCESS_FILE, ACCESS_FILE + '.pre-migration.bak'); } catch (_) {} }
   fs.copyFileSync(best.file, ACCESS_FILE);
-  const sourceAudit = best.file.replace(/user-access\.json(?:\.bak)?$/i, 'user-audit.jsonl');
+  const sourceDir = path.dirname(best.file);
+  const sourceAudit = path.join(sourceDir, 'user-audit.jsonl');
   if (!fs.existsSync(AUDIT_FILE) && fs.existsSync(sourceAudit)) {
     try { fs.copyFileSync(sourceAudit, AUDIT_FILE); } catch (_) {}
+  }
+  for (const name of ['iam-audit.json', 'user-access.meta.json', 'iam-derived.json']) {
+    const source = path.join(sourceDir, name), target = path.join(AUTH_DATA_ROOT, name);
+    if (!fs.existsSync(target) && fs.existsSync(source)) {
+      try { fs.copyFileSync(source, target); } catch (_) {}
+    }
   }
   return true;
 }
@@ -477,8 +551,18 @@ function resolveStore(shared) {
     // that already carries Central IAM metadata: an invalid central cache must
     // remain fail-closed and available for recovery/diagnostics.
     if (!restoreSeed || !restoreSeed._centralIam) {
-      try { migrateLegacyAuthStoreIfNeeded(); } catch (_) {}
+      let recovered = false;
+      try { recovered = migrateLegacyAuthStoreIfNeeded(); } catch (_) {}
       restoreSeed = readAccessStoreFile(ACCESS_FILE);
+      // The strongest recovered candidate may itself be a valid Central IAM
+      // cache. readLocal() ran before recovery, so retry once after importing it.
+      if (recovered && restoreSeed && restoreSeed._centralIam && !restoreSeed._restoreSeed) {
+        const recoveredCentral = getCentralIam().readLocal();
+        if (recoveredCentral) {
+          try { const derived = JSON.parse(fs.readFileSync(path.join(AUTH_DATA_ROOT, 'iam-derived.json'), 'utf8')); recoveredCentral.orderAccess = derived.orderAccess || {}; recoveredCentral.scopeCatalog = derived.scopeCatalog || {}; } catch (_) {}
+          return recoveredCentral;
+        }
+      }
     }
 
     // Offline login is valid when ANY active cached account has a verifier.
