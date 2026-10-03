@@ -980,7 +980,7 @@
     const tabs = [['integrations', T('Entegrasyonlar', 'Integrations')]];
     if (model.canManage) tabs.push(
       ['inspector', T('Veri Denetçisi', 'Data Inspector')],
-      ['automation', T('Troy Otomasyon Laboratuvarı', 'Troy Automation Lab')]);
+      ['automation', T('Browser Otomasyon Laboratuvarı', 'Browser Automation Lab')]);
     return `<div class="dmLabTabs" data-bl-tabs="line" role="tablist" aria-label="${esc(T('Entegrasyon laboratuvarı bölümleri', 'Integration lab sections'))}">${tabs.map(([id, label]) =>
       `<button type="button" id="dmLabTab-${id}" class="dmLabTab${labTab === id ? ' isActive' : ''}" data-lab-tab="${id}" role="tab" aria-controls="dmLabPanel" aria-selected="${labTab === id}" tabindex="${labTab === id ? '0' : '-1'}">${esc(label)}</button>`).join('')}</div>`;
   }
@@ -1043,7 +1043,7 @@
 
   function labAutomation() {
     const recipes = lab && lab.automations || [];
-    if (!recipes.length) return `<p class="dmLabEmpty">${esc(T('Troy veya browser otomasyonu tanımlı değil.', 'No Troy or browser automation is configured.'))}</p>`;
+    if (!recipes.length) return `<p class="dmLabEmpty">${esc(T('Browser otomasyonu tanımlı değil.', 'No browser automation is configured.'))}</p>`;
     const recipe = recipes.find(item => item.id === selectedAutomationId) || recipes[0];
     return `<div class="dmLabAutomation">
       <div class="dmLabTools">
@@ -1399,7 +1399,7 @@
     }
   }
 
-  async function runTroyDryRun(recipeId) {
+  async function runAutomationDryRun(recipeId) {
     if (!recipeId || labBusy) return;
     labBusy = 'automation';
     labMessage = '';
@@ -1463,7 +1463,7 @@
     }
 
     const dryRun = event.target.closest('[data-lab-dry-run]');
-    if (dryRun) { void runTroyDryRun(dryRun.dataset.labDryRun); return; }
+    if (dryRun) { void runAutomationDryRun(dryRun.dataset.labDryRun); return; }
 
     const diagnostic = event.target.closest('[data-lab-ai-export]');
     if (diagnostic) { void exportAiDiagnostic(diagnostic.dataset.labAiExport); return; }
