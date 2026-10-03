@@ -1441,7 +1441,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       const store = loadStore(), actor = req.currentUser || sessionProfile(req), id = clean(req.params.id), target = profileById(store, id);
       if (!target) return res.status(404).json({ error: 'Kullanıcı bulunamadı.', code: 'USER_NOT_FOUND' });
       if (!canManageTarget(actor, target, store)) return res.status(403).json({ error: 'Bu kullanıcı sizin yönetim alanınızda değil.', code: 'USER_NOT_MANAGEABLE' });
-      const body = req.body || {}, oldValue = adminUser(target, store, actor), outlookCodes = [...iam.PERMISSION_CODES].filter(code=>code.startsWith('OUTLOOK')), oldOutlookPermissions = new Set(outlookCodes.filter(code=>iam.hasPermission(target,code,store))); applyBodyToTarget(store, target, body, actor);
+      const body = req.body || {}, oldValue = adminUser(target, store, actor); applyBodyToTarget(store, target, body, actor);
       const enabledModerators = allProfiles(store).filter(profile => profile.status === 'ACTIVE' && profile.systemRole === 'moderator');
       if (!enabledModerators.length) return res.status(400).json({ error: 'En az bir aktif Moderatör bulunmalıdır.', code: 'LAST_MODERATOR_REQUIRED' });
       const saved = saveStore(store, body.expectedRevision);
@@ -1451,11 +1451,6 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
         dataScope: target.dataScope, reason: clean(body.reason), oldValue, newValue: adminUser(target, saved, actor),
         passwordChanged: Object.prototype.hasOwnProperty.call(body, 'password') || Object.prototype.hasOwnProperty.call(body, 'pin'),
       }, req);
-      const updatedTarget = profileById(saved, id);
-      for (const permission of outlookCodes) {
-        const oldValue=oldOutlookPermissions.has(permission),newValue=iam.hasPermission(updatedTarget,permission,saved);
-        if(oldValue!==newValue)appendAudit(actor,'OUTLOOK_PERMISSION_CHANGED',id,{targetName:updatedTarget.displayName||updatedTarget.username,permission,oldValue,newValue,source:'USER',reason:clean(body.reason)},req);
-      }
       res.json({ ok: true, revision: saved._revision, user: publicProfile(profileById(saved, id), saved) });
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'USER_UPDATE_FAILED', currentRevision: err.currentRevision }); }
   }
@@ -1464,13 +1459,12 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {}, incoming = body.roles && typeof body.roles === 'object' ? body.roles : {};
       if (!clean(body.reason) || !body.confirmCritical) throw hierarchyError('Rol matrisi değişikliği için onay ve gerekçe zorunludur.', 'CRITICAL_CONFIRMATION_REQUIRED');
       const actorBefore = iam.effectivePermissionSet(actor, store);
-      const roles = iam.normalizeRoles(store.iam && store.iam.roles), outlookChanges = [];
+      const roles = iam.normalizeRoles(store.iam && store.iam.roles);
       for (const [roleId, value] of Object.entries(incoming)) {
         if (!roles[roleId] || !Array.isArray(value && value.permissions)) continue;
         const permissions = unique(value.permissions).map(norm).filter(code => iam.PERMISSION_CODES.has(code));
         const previousPermissions = unique(roles[roleId].permissions).map(norm).sort();
         const nextPermissions = [...permissions].sort();
-        const previousOutlook = previousPermissions.filter(permission=>permission.startsWith('OUTLOOK')), nextOutlook = nextPermissions.filter(permission=>permission.startsWith('OUTLOOK'));
         const scope = norm(value.defaultDataScope || roles[roleId].defaultDataScope);
         if (!Object.prototype.hasOwnProperty.call(iam.DATA_SCOPE_MODES, scope)) throw hierarchyError('Geçersiz rol veri kapsamı.', 'INVALID_DATA_SCOPE');
         const changed = JSON.stringify(previousPermissions) !== JSON.stringify(nextPermissions) || scope !== roles[roleId].defaultDataScope;
@@ -1478,7 +1472,6 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
         const added = permissions.filter(permission => !previousPermissions.includes(permission));
         for (const permission of added) if (!iam.canGrant(actor, permission, store)) throw Object.assign(new Error(`Sahip olmadığınız ${permission} yetkisini role veremezsiniz.`), { statusCode: 403, code: 'PERMISSION_ESCALATION_DENIED', permission });
         roles[roleId] = { ...roles[roleId], permissions, defaultDataScope: scope };
-        for(const permission of new Set([...previousOutlook,...nextOutlook]))if(previousOutlook.includes(permission)!==nextOutlook.includes(permission))outlookChanges.push({roleId,permission,oldValue:previousOutlook.includes(permission),newValue:nextOutlook.includes(permission)});
       }
       const candidateStore = { ...store, iam: { ...(store.iam || {}), version: 5, roles } };
       const actorAfter = iam.effectivePermissionSet(profileById(candidateStore, actor.id), candidateStore);
@@ -1487,7 +1480,6 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       store.iam = { ...(store.iam || {}), version: 5, roles };
       const saved = saveStore(store, body.expectedRevision);
       appendAudit(actor, 'ROLE_MATRIX_UPDATE', 'roles', { reason: clean(body.reason), newValue: roles }, req);
-      outlookChanges.forEach(change => appendAudit(actor, 'OUTLOOK_PERMISSION_CHANGED', `role:${change.roleId}`, { ...change, source: 'ROLE', reason: clean(body.reason) }, req));
       res.json({ ok: true, revision: saved._revision, roles: saved.iam.roles });
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'ROLE_MATRIX_UPDATE_FAILED', currentRevision: err.currentRevision }); }
   }
