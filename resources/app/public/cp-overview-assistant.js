@@ -28,6 +28,9 @@
     priority: 'lcw.cp.rules.priority.v1',
     checklist: 'lcw.cp.rules.checklist.v1',
   });
+  // v2: kullanıcı tarafından oluşturulan checklistlerde Onaylandı aynı
+  // PLM + Model + Renk seçeneğinin diğer PO'larına varsayılan olarak taşınır.
+  const CHECKLIST_RULE_STORE_VERSION = 2;
   const ATTENTION_DEFAULT_COLUMNS = Object.freeze([
     'sys:priority', 'sys:order', 'sys:style', 'sys:supplier',
     'sys:age', 'sys:toLoad', 'sys:target', 'sys:reason',
@@ -227,7 +230,21 @@
       const ids = new Set(stored.rules.map(rule => rule && rule.id));
       return [...stored.rules, ...legacyOfKind.filter(rule => !ids.has(rule.id))];
     };
-    const rules = [...withLegacy(priority, 'priority'), ...withLegacy(checklist, 'checklist')];
+    const rawChecklistRules = withLegacy(checklist, 'checklist');
+    const checklistStoreVersion = checklist ? Math.max(1, Number(checklist.version) || 1) : 0;
+    const legacyHasCustomChecklist = !checklist && rawChecklistRules.some(rule => rule && rule.builtIn !== true);
+    const checklistScopeMigration = Boolean(
+      (checklist && checklistStoreVersion < CHECKLIST_RULE_STORE_VERSION) || legacyHasCustomChecklist
+    );
+    // v1'de yeni checklistlerin varsayılanı yanlışlıkla PO bazlıydı. Kullanıcı
+    // checklistleri v2'de aynı ürün seçeneğine taşınır; yerleşik kontroller
+    // bilinçli olarak PO bazlı kalır. Kullanıcı isterse editörden tekrar
+    // "Her PO'da tekrar kontrol et" seçebilir ve v2'de bu tercih korunur.
+    const checklistRules = rawChecklistRules.map(rule => {
+      if (!checklistScopeMigration || !rule || rule.builtIn === true || rule.approvalScope === 'option') return rule;
+      return { ...rule, approvalScope: 'option' };
+    });
+    const rules = [...withLegacy(priority, 'priority'), ...checklistRules];
     const deleted = [
       ...(priority ? priority.deletedRuleIds || [] : []),
       ...(checklist ? checklist.deletedRuleIds || [] : []),
@@ -238,14 +255,14 @@
       deletedRuleIds: [...new Set(deleted.map(String).filter(Boolean))],
       sharedChecklistAdopted: Boolean(checklist && checklist.sharedChecklistAdopted),
       // Eski kayıttaki kurallar yeni (hesaba bağlı) anahtarlara bir kez yazılır;
-      // aksi hâlde Ön Ayar Paylaşımı kullanıcının kurallarını göremezdi.
-      needsMigration: legacyRules.length > 0 || legacyDeleted.length > 0,
+      // ayrıca v1 checklist scope'u v2'ye bir kez yükseltilir.
+      needsMigration: legacyRules.length > 0 || legacyDeleted.length > 0 || checklistScopeMigration,
     };
   }
   function ruleStorePayload(kind) {
     const defaults = new Set(Rules.DEFAULT_RULES.filter(rule => rule.kind === kind).map(rule => rule.id));
     return {
-      version: 1,
+      version: kind === 'checklist' ? CHECKLIST_RULE_STORE_VERSION : 1,
       rules: state.rules.filter(rule => rule.kind === kind),
       deletedRuleIds: state.deletedRuleIds.filter(id => defaults.has(id)),
       ...(kind === 'checklist' ? { sharedChecklistAdopted: state.sharedChecklistAdopted === true } : {}),
@@ -2012,9 +2029,9 @@
         <label class="cpaRuleTarget cpaRuleApprovalScopeField"><span>${esc(L('Onay geçerliliği', 'Approval scope'))}</span>
           <select data-cpa-rule-approval-scope>
             <option value="order"${rule.approvalScope !== 'option' ? ' selected' : ''}>${esc(L('Her PO’da tekrar kontrol et', 'Repeat for every PO'))}</option>
-            <option value="option"${rule.approvalScope === 'option' ? ' selected' : ''}>${esc(L('Aynı PLM + Model + Renk için bir kez', 'Once per PLM + Model + Colour'))}</option>
+            <option value="option"${rule.approvalScope === 'option' ? ' selected' : ''}>${esc(L('Aynı model/renkte diğer PO’lara taşı', 'Carry to other POs of the same model/colour'))}</option>
           </select>
-          <small>${esc(L('Seçenek bazlı kullanımda yalnız Onaylandı durumu sonraki PO’lara taşınır; Reddedildi ve Gerekmiyor PO’ya özeldir.', 'With option-level reuse, only Approved carries to later POs; Rejected and Not Required stay PO-specific.'))}</small>
+          <small>${esc(L('Varsayılan davranış: aynı PLM + Model + Renk için Onaylandı tüm PO’larda geçerli olur. Reddedildi ve Gerekmiyor PO’ya özeldir.', 'Default: Approved is shared across POs with the same PLM + Model + Colour. Rejected and Not Required stay PO-specific.'))}</small>
         </label>
         <div class="cpaRuleTarget cpaRuleEvidenceFields"><span>${esc(L('Ek bilgi alanları', 'Evidence fields'))}</span>
           <div class="cpaRuleEvidenceChecks">
@@ -2892,11 +2909,47 @@
     const api = sampleRequests();
     return api ? api.evidenceForAnalysis(analysis, itemId) : null;
   }
+  function promoteReusableChecklistAnswers(orders) {
+    if (typeof Checklist.optionAnswerKey !== 'function') return false;
+    const reusableRules = state.rules.filter(rule =>
+      rule && rule.kind === 'checklist' && rule.approvalScope === 'option');
+    if (!reusableRules.length) return false;
+    let changed = false;
+    for (const analysis of (Array.isArray(orders) ? orders : [])) {
+      if (!analysis || !analysis.orderKey) continue;
+      for (const rule of reusableRules) {
+        const directKey = Checklist.answerKey(analysis.orderKey, rule.id);
+        const direct = state.answers[directKey];
+        if (!direct || Checklist.normalizeStatus(direct.state) !== 'approved') continue;
+        if (typeof Checklist.answerIsStale === 'function' && Checklist.answerIsStale(direct, analysis)) continue;
+        const optionKey = Checklist.optionAnswerKey(analysis, rule.id);
+        if (!optionKey) continue;
+        const reusable = state.answers[optionKey];
+        const reusableState = reusable ? Checklist.normalizeStatus(reusable.state) : '';
+        const directAt = Date.parse(String(direct.at || '')) || 0;
+        const reusableAt = reusable ? (Date.parse(String(reusable.at || '')) || 0) : 0;
+        if (reusableState !== 'approved' || directAt >= reusableAt) {
+          state.answers[optionKey] = Checklist.makeAnswer('approved', analysis, { ...direct, loadDate: null });
+        }
+        // v1'de PO anahtarına yazılmış Onaylandı cevap artık seçenek anahtarında
+        // kanoniktir. Böylece ekrandaki mevcut onaylar da güncellemeden sonra
+        // diğer PO'lara anında yansır; kullanıcının tekrar tıklaması gerekmez.
+        delete state.answers[directKey];
+        changed = true;
+      }
+    }
+    if (changed) saveAnswers();
+    return changed;
+  }
+
   function analyzeRowsWithPersonalRules(rows, options) {
     const list = Array.isArray(rows) ? rows : [];
     const opts = options || {};
     const transitRules = (window.state && window.state.overrides && window.state.overrides.transitRules) || [];
     let model = Engine.analyze(list, { settings: { targetType: state.settings.targetType }, transitRules });
+    // v1'den kalan PO-bazlı onayları, yeni model/renk kapsamı seçiliyse
+    // değerlendirmeden önce seçenek anahtarına yükselt.
+    promoteReusableChecklistAnswers(model.orders);
 
     /* Tek kişisel karar katmanı. CP tablosu, Overview ve Attention aynı
        rule/checklist state'ini buradan tüketir; ikinci bir Priority motoru yoktur.
