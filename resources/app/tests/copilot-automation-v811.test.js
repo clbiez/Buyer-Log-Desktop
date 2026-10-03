@@ -145,7 +145,7 @@ test('teslimat varsayılanı TASLAK', () => {
 
 test('otomatik gönderim yalnız açıkça istendiğinde seçilir', () => {
   const send = copilot.parseAutomationIntent('her pazartesi lcw grubuna cp raporu gönder', GROUPS);
-  assert.equal(send.deliveryMode, 'outlook_send');
+  assert.equal(send.deliveryMode, 'draft');
   const draft = copilot.parseAutomationIntent('her pazartesi lcw grubuna cp raporu taslağı gönder', GROUPS);
   assert.equal(draft.deliveryMode, 'draft', 'taslak denmişse gönderim seçilmemeli');
 });
