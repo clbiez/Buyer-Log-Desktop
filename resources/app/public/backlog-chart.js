@@ -1023,7 +1023,7 @@
     const series=baseSeries.map((serie,i)=>({name:serie.name,valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(i+2)+'$'+first+':$'+excelColumn(i+2)+'$'+last,dash:!!serie.dash,color:String(serie.color||'').replace('#',''),isAverage:false}));
     if(st.showAverage)series.push({name:tr('Ortalama','Average'),valuesFormula:quoteSheet(dataName)+'!$'+excelColumn(avgIndex)+'$'+first+':$'+excelColumn(avgIndex)+'$'+last,dash:true,color:'64748B',isAverage:true});
     const metrics=chartMetrics(model);
-    return {model,viewRange:range,live:!!live,charts:[{sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',chartType:st.chartType,title:model.title,categoriesFormula:categories,series,majorUnit:metrics.tickStep,maxValue:metrics.max,axisFormatCode:metrics.max>=1000?'0,"k"':'#,##0',anchor:{fromCol:0,fromRow:4,toCol:15,toRow:28}}],chartSheetName:chartName,dataSheetName:dataName};
+    return {model,viewRange:range,live:!!live,charts:[{sheetPath:'xl/worksheets/sheet'+((wb.SheetNames||[]).indexOf(chartName)+1)+'.xml',chartType:st.chartType,barLayout:st.barLayout,title:model.title,categoriesFormula:categories,series,majorUnit:metrics.tickStep,maxValue:metrics.max,axisFormatCode:metrics.max>=1000?'0,"k"':'#,##0',anchor:{fromCol:0,fromRow:4,toCol:15,toRow:28}}],chartSheetName:chartName,dataSheetName:dataName};
   }
   function titleXml(title) {
     return '<c:title><c:tx><c:rich><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/><a:t>'+xml(title)+'</a:t></a:r><a:endParaRPr lang="'+(lang()==='en'?'en-US':'tr-TR')+'"/></a:p></c:rich></c:tx><c:layout/><c:overlay val="0"/></c:title>';
@@ -1037,7 +1037,8 @@
     const all=spec.series||[],avg=all.filter(s=>s.isAverage),normal=all.filter(s=>!s.isAverage);
     let chartBody;
     if(spec.chartType==='bar'){
-      chartBody='<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>'+seriesXml(normal,'bar',0)+'<c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:barChart>';
+      const grouping=spec.barLayout==='stacked'?'stacked':'clustered';
+      chartBody='<c:barChart><c:barDir val="col"/><c:grouping val="'+grouping+'"/><c:varyColors val="0"/>'+seriesXml(normal,'bar',0)+'<c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:barChart>';
       if(avg.length)chartBody+='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(avg,'line',normal.length)+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
     }else chartBody='<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>'+seriesXml(all,'line',0)+'<c:marker val="1"/><c:smooth val="0"/><c:axId val="'+catAx+'"/><c:axId val="'+valAx+'"/></c:lineChart>';
     const scaling='<c:scaling><c:orientation val="minMax"/><c:min val="0"/>'+(Number(spec.maxValue)>0?'<c:max val="'+Number(spec.maxValue)+'"/>':'')+'</c:scaling>';
