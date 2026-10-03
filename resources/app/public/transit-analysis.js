@@ -98,24 +98,17 @@
     // Bilinmeyen ülke: ASCII başlık biçimi (Türkçe küçük harf "ı" üretmesin).
     return k.toLowerCase().replace(/(^|[\s-])([a-z])/g, (m, sep, c) => sep + c.toUpperCase());
   }
-  /* Kural motorunun tanıdığı taşıt tipleri (Gemi, Uçak, Gemi+Uçak, Gemi+Tır).
-     Eşleme katıdır: "Uçak+Tır" gibi motorun ayrı tanımadığı bir tip "Uçak"a
-     katlanmaz; böyle bir kurala aktarım yanlış taşıtın süresini değiştirirdi. */
-  const VEHICLE_TOKENS = { GEMI: 'S', SEA: 'S', SHIP: 'S', UCAK: 'A', AIR: 'A', TIR: 'T', TRUCK: 'T' };
-  const RULE_VEHICLES = { S: 'Gemi', A: 'Uçak', AS: 'Gemi+Uçak', ST: 'Gemi+Tır' };
+  /* IAS taşıt sözlüğü kural sözlüğüdür: boş/"tümü" filtre değerleri hariç
+     her taşıt tipi kurala aktarılabilir. Ortak business-rules yalnız tarihsel
+     alias'ları kanonikleştirir; diğer IAS tiplerini kendi adıyla korur. */
   function ruleVehicle(value) {
-    const tokens = key(value).split(/[^A-Z0-9]+/).filter(Boolean);
-    if (!tokens.length) return '';
-    const kinds = [...new Set(tokens.map(t => VEHICLE_TOKENS[t] || 'X'))].sort().join('');
-    return RULE_VEHICLES[kinds] || '';
-  }
-  /* Analizdeki taşıt: kural tipine katı eşlenebiliyorsa kanonik ad, değilse
-     IAS database'indeki değerin kendisi (Tır, Kurye, Uçak+Tır …) — böylece
-     database'deki bütün yükleme tipleri ayrı satır olarak görünür. */
-  function vehicleType(value) {
     const t = key(value);
     if (!t || t === 'ALL' || t === 'TUMU' || t.includes('BIRDEN COK')) return '';
-    return ruleVehicle(value) || clip(String(value).replace(/\s+/g, ' ').trim(), 40);
+    const raw = clip(String(value).replace(/\s+/g, ' ').trim(), 40);
+    return rules && rules.normalizeTransitDelType ? rules.normalizeTransitDelType(raw) : raw;
+  }
+  function vehicleType(value) {
+    return ruleVehicle(value);
   }
 
   /* ---------- Excel pivot okuma ---------- */
@@ -742,8 +735,13 @@
     if (!rule || rule.exfStart || rule.exfEnd) return false;
     if (Array.isArray(rule.seasons) && rule.seasons.length) return false;
     const countries = Array.isArray(rule.countries) ? rule.countries : [];
-    const type = rules && rules.normalizeTransitDelType ? rules.normalizeTransitDelType(rule.delType) : rule.delType;
-    return countries.length === 1 && countryKey(countries[0]) === cKey && type === delType;
+    const typeKey = rules && rules.transitDelTypeKey
+      ? rules.transitDelTypeKey(rule.delType)
+      : key(rule.delType);
+    const wantedKey = rules && rules.transitDelTypeKey
+      ? rules.transitDelTypeKey(delType)
+      : key(delType);
+    return countries.length === 1 && countryKey(countries[0]) === cKey && !!wantedKey && typeKey === wantedKey;
   }
 
   /* Yalnız "tarihsiz + sezonsuz + tek ülke + taşıt" kapsamlı kuralı günceller ya
