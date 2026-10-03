@@ -31,9 +31,9 @@ function order(spec) {
   const o = spec || {};
   return {
     ocode: o.ocode || 8001, _matchOcode: String(o.ocode || 8001),
-    model: 'MODEL-1', ccode: 'C1', colour: 'SIYAH',
+    model: o.model || 'MODEL-1', ccode: o.ccode || 'C1', colour: 'SIYAH',
     qty: o.qty == null ? 1000 : o.qty, kalan: 1000, antrepo: 0, merkezSevkeHazirKalan: 0,
-    fob: 4.82, plm: 'PLM1', ozel: 'S7AB73Z4', manufacturer: 'MF-1', season: '26SS',
+    fob: 4.82, plm: o.plm || 1001, ozel: 'S7AB73Z4', manufacturer: 'MF-1', season: '26SS',
     category: 'CL', merch: 'MAG-1', ageGroup: 'MMYG-1', buyerGrup: 'BG-1',
     countryRaw: 'HINDISTAN', license: 'L', productDescription: 'T',
     opd: o.opd || null, ex: o.ex || null, retail: o.retail || null, mb: o.mb || null,
@@ -102,6 +102,39 @@ test('v9.48 "tamamlandı" işaretlenen soru BİR DAHA sorulmaz', () => {
   const ids = Checklist.openItems(analysis, { settings, answers }).map(item => item.id);
   assert.ok(!ids.includes('pps'), 'cevaplanan soru tekrar sorulmamalı');
   assert.ok(ids.includes('tests'), 'diğer sorular etkilenmemeli');
+});
+
+test('aynı PLM ID + Model Adı + Colour Code için seçenek bazlı onay sonraki PO’ya taşınır', () => {
+  const [first, later, otherColour, otherPlm] = analyses([
+    nearOrder(8101),
+    nearOrder(8102),
+    order({ ocode: 8103, opd: '2026-07-07', ex: '2026-09-25', retail: '2027-01-15', ccode: 'C2' }),
+    order({ ocode: 8104, opd: '2026-07-07', ex: '2026-09-25', retail: '2027-01-15', plm: 2002 }),
+  ]);
+  assert.equal(first.plmId, '1001');
+  assert.equal(first.modelName, 'MODEL-1');
+  assert.equal(first.colourCode, 'C1');
+
+  const item = { id: 'printTest', approvalScope: 'option' };
+  const reusableKey = Checklist.optionAnswerKey(first, item.id);
+  assert.match(reusableKey, /^@option:/);
+  const answers = { [reusableKey]: Checklist.makeAnswer('approved', first, { by: 'buyer', loadDate: null }) };
+
+  assert.equal(Checklist.statusOf(later, item.id, { answers, item }), 'approved',
+    'aynı ürün opsiyonunun sonraki PO’su otomatik onaylı gelmeli');
+  assert.equal(Checklist.statusOf(otherColour, item.id, { answers, item }), 'open',
+    'renk değişirse onay taşınmamalı');
+  assert.equal(Checklist.statusOf(otherPlm, item.id, { answers, item }), 'open',
+    'PLM ID değişirse onay taşınmamalı');
+  assert.equal(Checklist.statusOf(later, item.id, { answers, item: { ...item, approvalScope: 'order' } }), 'open',
+    'PO bazlı checklist her siparişte yeniden istenmeli');
+
+  const rejected = {
+    ...answers,
+    [Checklist.answerKey(later.orderKey, item.id)]: Checklist.makeAnswer('rejected', later, {}),
+  };
+  assert.equal(Checklist.statusOf(later, item.id, { answers: rejected, item }), 'rejected',
+    'PO’ya özel ret, paylaşılan onayın üzerinde istisna olmalı');
 });
 
 test('v9.48 "gerekmiyor" da soruyu susturur ama "tamamlandı"dan ayrı tutulur', () => {

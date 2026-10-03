@@ -617,6 +617,16 @@
       base.questionEn = text(item.questionEn).slice(0, 300);
       base.tr = text(item.tr).slice(0, 160) || base.name;
       base.en = text(item.en).slice(0, 160) || base.name;
+      // order: her PO kendi cevabını ister.
+      // option: Approved, PLM ID + Model Name + Colour Code eşleşen PO'larda
+      // yeniden kullanılır. Varsayılan order; mevcut davranış değişmez.
+      base.approvalScope = text(item.approvalScope) === 'option' ? 'option' : 'order';
+      const evidence = item.evidenceFields && typeof item.evidenceFields === 'object' ? item.evidenceFields : {};
+      base.evidenceFields = {
+        reportNumber: evidence.reportNumber === true,
+        actualDate: evidence.actualDate === true,
+        attachments: evidence.attachments === true,
+      };
     }
     if (base.mode === 'formula' && base.formula) {
       try {
@@ -873,6 +883,7 @@
       id: rule.id, group: 'custom', custom: true,
       tr: rule.tr || rule.name, en: rule.en || rule.name,
       questionTr: rule.questionTr || rule.name, questionEn: rule.questionEn || rule.name,
+      approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
     }));
   }
 
@@ -984,7 +995,11 @@
     const rules = Array.isArray(opts.rules) ? opts.rules : [];
     const checklistEnabled = opts.checklistEnabled !== false;
     const byId = new Map(rules.map(rule => [rule.id, rule]));
-    const statusContext = { answers: opts.answers || {}, plmEvidence: opts.plmEvidence };
+    const itemScopes = Object.fromEntries(
+      rules.filter(rule => rule && rule.kind === 'checklist')
+        .map(rule => [rule.id, rule.approvalScope === 'option' ? 'option' : 'order'])
+    );
+    const statusContext = { answers: opts.answers || {}, plmEvidence: opts.plmEvidence, itemScopes };
     const memo = new Map();
     const visiting = new Set();
     const facts = factsFor(analysis, {});
@@ -1016,6 +1031,7 @@
       id: rule.id, group: 'custom', custom: true,
       tr: rule.tr || rule.name, en: rule.en || rule.name,
       questionTr: rule.questionTr || rule.name, questionEn: rule.questionEn || rule.name,
+      approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
     }));
     const checklistState = {};
     for (const id of DEFAULT_CHECKLIST_RULE_IDS) checklistState[id] = 'notApplicable';

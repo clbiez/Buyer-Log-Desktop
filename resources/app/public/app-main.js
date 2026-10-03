@@ -30744,6 +30744,7 @@ function mailTplText(){
 
 const MAIL_TPL_KEY = 'lcw.mailTemplates.v1';
 const MAIL_QUOTATION_REMINDER_ID = 'general-quotation-reminder';
+const MAIL_CHECKLIST_ID = 'general-checklist';
 const MAIL_TPL_DEFAULTS = {
   pricing: {
     name: { tr:'Send to Pricing', en:'Send to Pricing' },
@@ -30784,6 +30785,20 @@ If you need any additional information, please let us know.
 
 Thank you.`
 };
+const MAIL_CHECKLIST_DEFAULT = {
+  id: MAIL_CHECKLIST_ID,
+  name: { tr:'Supplier Checklist', en:'Supplier Checklist' },
+  subjectTitle: 'Supplier Checklist',
+  body: `Hi
+
+I hope you are doing well.
+
+Please find attached the Buyer Log checklist for the selected orders together with the related report and e-mail attachments.
+
+Please update the editable checklist fields in the Excel file and return the completed workbook.
+
+Thank you.`
+};
 let _mailTpl = null;
 function mailTplLoad(){
   if(_mailTpl) return _mailTpl;
@@ -30806,6 +30821,20 @@ function mailTplLoad(){
         body:MAIL_QUOTATION_REMINDER_DEFAULT.body,
         contentOptions:{collection:{excel:false,table:true,tps:false},cp:{excel:false,table:true,tps:false}},
         subjectColumns:{collection:['season'],cp:['Season']},
+        subjectManufacturer:{collection:true,cp:true}
+      });
+      changed=true;
+    }
+    if(kind==='general'&&!st[kind].items.some(i=>i.id===MAIL_CHECKLIST_ID)){
+      st[kind].items.push({
+        id:MAIL_CHECKLIST_DEFAULT.id,
+        name:appLang==='en'?MAIL_CHECKLIST_DEFAULT.name.en:MAIL_CHECKLIST_DEFAULT.name.tr,
+        subjectTitle:MAIL_CHECKLIST_DEFAULT.subjectTitle,
+        body:MAIL_CHECKLIST_DEFAULT.body,
+        // Checklist Excel bu akışta zaten hazır dosya olarak eklenir. Burada
+        // ikinci bir genel Excel/tablo veya TP üretilmez.
+        contentOptions:{collection:{excel:false,table:false,tps:false},cp:{excel:false,table:false,tps:false}},
+        subjectColumns:{collection:[],cp:[]},
         subjectManufacturer:{collection:true,cp:true}
       });
       changed=true;
@@ -30945,7 +30974,7 @@ function mailTopicSelectedSubjectColumns(kind,id,sourceKind){
   return mailTopicSourceColumns(sourceKind).filter(c=>selected.has(c.k)).map(c=>({...c,sourceKind}));
 }
 function mailTopicIsProtected(kind,id){
-  return id===`${kind}-default` || id===MAIL_QUOTATION_REMINDER_ID;
+  return id===`${kind}-default` || id===MAIL_QUOTATION_REMINDER_ID || id===MAIL_CHECKLIST_ID;
 }
 function mailTopicDelete(kind,id){
   if(mailTopicIsProtected(kind,id))return false;
@@ -33003,8 +33032,12 @@ function renderKolMfrModal(ctx){
   // Sol sütun: üretici listesi. Seçim kutusunun hemen altındaki kalem,
   // üretici adı ve e-posta bilgisini ayrı pencere açmadan aynı kartta düzenler.
   let editingMfrIndex = -1;
-  let pricingModelFiles = [];
   let pricingFileSeq = 0;
+  let pricingModelFiles = (Array.isArray(SRC.initialFiles) ? SRC.initialFiles : []).map(entry=>{
+    const file=entry?.file||entry;
+    if(!file||!file.name)return null;
+    return {id:`initial-${++pricingFileSeq}`,file,modelLabel:String(entry?.modelLabel||''),stored:false};
+  }).filter(Boolean);
   let pricingStoredLoading = false;
   let storedPricingFilesLoaded = false;
   const pricingTaskV2=!!SRC.pricingTaskV2;
@@ -33553,7 +33586,17 @@ function prepareEmailOpenQuotationReminder({rows,recipients,requestId='',count=0
   });
   return true;
 }
-window.BLPrepareEmail={...(window.BLPrepareEmail||{}),openQuotationReminder:prepareEmailOpenQuotationReminder,pricingDraftCount:prepareEmailPricingDraftCount,reopenPricingRequest:prepareEmailReopenPricingRequest};
+function prepareEmailOpenChecklist(ctx={}){
+  renderKolMfrModal({
+    ...(ctx||{}),
+    persist:false,
+    defaultTopicKind:'general',
+    defaultTopicId:MAIL_CHECKLIST_ID,
+    title:ctx.title||(appLang==='en'?'Prepare Supplier Checklist':'Üreticiye Checklist Exceli Hazırla'),
+  });
+  return true;
+}
+window.BLPrepareEmail={...(window.BLPrepareEmail||{}),openQuotationReminder:prepareEmailOpenQuotationReminder,openChecklist:prepareEmailOpenChecklist,pricingDraftCount:prepareEmailPricingDraftCount,reopenPricingRequest:prepareEmailReopenPricingRequest};
 
 document.getElementById('kolSendPricingBtn')?.addEventListener('click', async ()=>{
   if(!kolSelected.size){ showToast('Önce en az bir model seç.'); return; }

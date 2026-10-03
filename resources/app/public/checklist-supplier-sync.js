@@ -17,7 +17,7 @@
   const COLUMN_PREFIX = '__checklist__';
   const META_SHEET = '__BL_META';
   const DATA_SHEET = 'Checklist';
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
   const EXCEL_COLUMNS_KEY = 'lcw.cp.checklist.excel.columns.v1';
   const EXCEL_DATE_FORMAT = 'dd.mm.yyyy';
   const EXCEL_PROTECTION_PASSWORD = 'BuyerLogChecklist';
@@ -28,6 +28,8 @@
     applyingRemote: false,
     syncingDefinitions: false,
     syncingAnswers: false,
+    syncQueued: false,
+    syncRetryTimer: null,
     shared: { definitions: [], answers: {}, tombstones: {}, revision: 0, updatedAt: '' },
     answerBaseline: {},
     renderWrapped: false,
@@ -38,6 +40,11 @@
   }
   function T(tr, en) { return isEn() ? en : tr; }
   function text(value) { return String(value == null ? '' : value).replace(/\s+/g, ' ').trim(); }
+  function html(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
   function toast(message) {
     if (typeof root.showToast === 'function') root.showToast(message);
     else if (root.console && root.console.info) root.console.info(message);
@@ -181,22 +188,56 @@
         at: after.at || now, baseAt: before && before.at || '',
         loadDate: after.loadDate || null, source: after.source || 'buyer_log',
         note: after.note || '',
+        reportNumber: after.reportNumber || '',
+        actualDate: after.actualDate || '',
+        attachments: Array.isArray(after.attachments) ? after.attachments : [],
       });
     });
     return entries;
   }
 
   async function syncAnswerChanges() {
-    if (state.syncingAnswers || state.applyingRemote) return;
-    const current = snapshotAnswers();
-    const entries = diffAnswers(state.answerBaseline, current);
-    if (!entries.length) { state.answerBaseline = current; return; }
+    if (state.applyingRemote) return false;
+    if (state.syncingAnswers) { state.syncQueued = true; return false; }
     state.syncingAnswers = true;
+    if (state.syncRetryTimer) { clearTimeout(state.syncRetryTimer); state.syncRetryTimer = null; }
     try {
-      await post('/answers', { entries: entries, source: 'buyer_log' });
-      state.answerBaseline = current;
+      // Kullanıcı ilk kayıt devam ederken ikinci/üçüncü kez durum değiştirirse
+      // eski kod bu olayları sessizce atlıyordu. Her başarılı POST'tan sonra
+      // snapshot yeniden alınır; kuyruk boşalana kadar devam edilir.
+      for (;;) {
+        state.syncQueued = false;
+        const current = snapshotAnswers();
+        const entries = diffAnswers(state.answerBaseline, current);
+        if (!entries.length) {
+          state.answerBaseline = current;
+          if (!state.syncQueued) break;
+          continue;
+        }
+        await post('/answers', { entries: entries, source: 'buyer_log' });
+        state.answerBaseline = current;
+        const latest = snapshotAnswers();
+        if (!state.syncQueued && !diffAnswers(state.answerBaseline, latest).length) break;
+      }
+      return true;
+    } catch (error) {
+      // Baseline yalnız başarılı POST'ta ilerlediği için veri yerelde kalır ve
+      // tekrar denendiğinde eksik değişiklik yeniden gönderilir.
+      if (!state.syncRetryTimer) {
+        state.syncRetryTimer = setTimeout(function () {
+          state.syncRetryTimer = null;
+          syncAnswerChanges().catch(function () {});
+        }, 1500);
+      }
+      throw error;
     } finally {
       state.syncingAnswers = false;
+      if (state.syncQueued && !state.syncRetryTimer) {
+        state.syncRetryTimer = setTimeout(function () {
+          state.syncRetryTimer = null;
+          syncAnswerChanges().catch(function () {});
+        }, 0);
+      }
     }
   }
 
@@ -213,6 +254,12 @@
         questionTr: rule.questionTr || rule.name || rule.id,
         questionEn: rule.questionEn || rule.name || rule.id,
         builtIn: rule.builtIn === true,
+        approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
+        evidenceFields: {
+          reportNumber: Boolean(rule.evidenceFields && rule.evidenceFields.reportNumber),
+          actualDate: Boolean(rule.evidenceFields && rule.evidenceFields.actualDate),
+          attachments: Boolean(rule.evidenceFields && rule.evidenceFields.attachments),
+        },
         raw: rule,
       });
     });
@@ -258,6 +305,11 @@
     const key = Checklist.answerKey(analysis.orderKey, item.id);
     const answer = s.answers && s.answers[key];
     if (answer && !Checklist.answerIsStale(answer, analysis)) return answer;
+    if (item.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function') {
+      const optionKey = Checklist.optionAnswerKey(analysis, item.id);
+      const reusable = optionKey && s.answers && s.answers[optionKey];
+      if (reusable && Checklist.normalizeStatus(reusable.state) === 'approved') return reusable;
+    }
     if (item.builtIn && root.BLPlmSampleRequests && typeof root.BLPlmSampleRequests.evidenceForAnalysis === 'function') {
       try {
         const evidence = root.BLPlmSampleRequests.evidenceForAnalysis(analysis, item.id);
@@ -370,6 +422,9 @@
           orderKey: parts.orderKey, itemId: parts.itemId, state: normalized,
           at: localAt || isoNow(), baseAt: remoteAt,
           loadDate: localAnswer.loadDate || null, note: localAnswer.note || '',
+          reportNumber: localAnswer.reportNumber || '',
+          actualDate: localAnswer.actualDate || '',
+          attachments: Array.isArray(localAnswer.attachments) ? localAnswer.attachments : [],
           source: localAnswer.source || 'buyer_log',
         });
       });
@@ -408,7 +463,7 @@
   function supplierNameFor(rows) {
     const names = new Set();
     rows.forEach(function (row) {
-      const value = visibleValue(row, ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier']);
+      const value = visibleValue(row, ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier']);
       if (value) names.add(value);
     });
     return names.size === 1 ? Array.from(names)[0] : T('Karma', 'Mixed');
@@ -446,7 +501,7 @@
       { id: 'plm', tr: 'PLM ID', en: 'PLM ID', width: 10, defaultOn: true, candidates: ['PLM ID', 'PLM', 'PLM Id'] },
       { id: 'model', tr: 'Model Adı', en: 'Model Name', width: 18, defaultOn: true, candidates: ['Model Name', 'MODEL NAME', 'Model', 'Model Adı'] },
       { id: 'colour', tr: 'Renk Kodu', en: 'Colour Code', width: 10, defaultOn: true, candidates: ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu'] },
-      { id: 'supplier', tr: 'Üretici', en: 'Supplier', width: 18, defaultOn: true, candidates: ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier'] },
+      { id: 'supplier', tr: 'Üretici', en: 'Supplier', width: 18, defaultOn: true, candidates: ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier'] },
       { id: 'exfactory', tr: 'Ex-Factory', en: 'Ex-Factory', width: 12, defaultOn: true, type: 'date', candidates: ['Ex-factory', 'Ex-Factory', 'EX FACTORY', 'EX-FACTORY'] },
       { id: 'season', tr: 'Sezon', en: 'Season', width: 10, candidates: ['Season', 'Sezon'] },
       { id: 'buyer', tr: 'Buyer', en: 'Buyer', width: 14, candidates: ['Buyer'] },
@@ -572,6 +627,23 @@
     } catch (_) { return null; }
   }
   async function prepareRowModelImage(row) {
+    // CP/Orders dışa aktarımında kullanılan kanonik çözücü, viewport/lazy-load
+    // durumundan bağımsız gerçek görseli data URL olarak üretir. Checklist
+    // Excel'i de aynı yolu kullanır; böylece ekranda görünen model Excel'de
+    // "boş" kalmaz.
+    if (typeof root.cpOrdersRowImageDataUrl === 'function') {
+      try {
+        const dataUrl = await root.cpOrdersRowImageDataUrl(row);
+        if (dataUrl) {
+          if (typeof root.kolPrepareExcelImage === 'function') {
+            const prepared = await root.kolPrepareExcelImage(dataUrl);
+            if (prepared && prepared.dataUrl) return prepared;
+          }
+          const prepared = await dataUrlPreparedImage(dataUrl);
+          if (prepared && prepared.dataUrl) return prepared;
+        }
+      } catch (_) {}
+    }
     const plm = visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']);
     const colourCode = visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']);
     const colour = visibleValue(row, ['Colour', 'Color', 'Renk']);
@@ -591,15 +663,27 @@
   }
 
   function imagePlacement(prepared, rowNo, columnNo) {
-    if (typeof root.kolExcelImageAspectLockedPlacement === 'function') {
-      try { return root.kolExcelImageAspectLockedPlacement(prepared, rowNo, 72, 46, columnNo); } catch (_) {}
+    // Buyer Log'un kanonik "Hücrelerle taşı ve boyutlandır" yardımcısını kullan:
+    // aynı OOXML twoCell anchor hem Koleksiyon exportunda hem Checklist Excel'de
+    // aynı davranışı verir.
+    if (typeof root.kolExcelImageMoveAndSizePlacement === 'function') {
+      try { return root.kolExcelImageMoveAndSizePlacement(prepared, rowNo, 72, 50, columnNo, 3); } catch (_) {}
     }
     const naturalW = Math.max(1, Number(prepared && prepared.width) || 1);
     const naturalH = Math.max(1, Number(prepared && prepared.height) || 1);
-    const scale = Math.min(66 / naturalW, 40 / naturalH, 1);
-    const width = Math.max(1, Math.round(naturalW * scale));
-    const height = Math.max(1, Math.round(naturalH * scale));
-    return { tl: { col: columnNo - 1 + 0.08, row: rowNo - 1 + 0.08 }, ext: { width: width, height: height } };
+    const maxW = 66, maxH = 44;
+    const scale = Math.min(maxW / naturalW, maxH / naturalH, 1);
+    const width = Math.max(1, naturalW * scale), height = Math.max(1, naturalH * scale);
+    const cellW = 72, cellH = 50;
+    const left = columnNo - 1 + 0.05, top = rowNo - 1 + 0.06;
+    return {
+      tl: { col: left, row: top },
+      br: {
+        col: Math.min(columnNo - 0.03, left + Math.min(0.90, width / cellW)),
+        row: Math.min(rowNo - 0.03, top + Math.min(0.88, height / cellH)),
+      },
+      editAs: 'twoCell',
+    };
   }
   const CHECKLIST_EXCEL_COLORS = Object.freeze({
     navy: 'FF2A3E52', ink: 'FF101828', ink2: 'FF475467', muted: 'FF98A2B3',
@@ -742,8 +826,8 @@
     ws.mergeCells(instructionRow, 2, instructionRow + 1, 9);
     const instruction = ws.getCell(instructionRow, 2);
     instruction.value = T(
-      'Nasıl kullanılır: Checklist sekmesinde yalnız renkli Durum ve Not hücreleri düzenlenebilir. Durumu açılır listeden seçin: Bekliyor, Onaylandı, Reddedildi, Gerekmiyor. Diğer alanlar Buyer Log kimliğini korumak için kilitlidir.',
-      'How to use: Only coloured Status and Note cells on the Checklist sheet are editable. Choose the status from the dropdown: Pending, Approved, Rejected, Not Required. All other fields are locked to preserve Buyer Log identity.'
+      'Nasıl kullanılır: Checklist sekmesinde renkli Durum, Not ve checklist için etkinleştirilmiş Rapor No / Gerçekleşme Tarihi hücreleri düzenlenebilir. Durumu açılır listeden seçin: Bekliyor, Onaylandı, Reddedildi, Gerekmiyor. Ek dosya adları ve kimlik alanları Buyer Log bütünlüğünü korumak için kilitlidir.',
+      'How to use: Coloured Status, Note and enabled Report No / Actual Date cells are editable on the Checklist sheet. Choose the status from the dropdown: Pending, Approved, Rejected, Not Required. Attachment names and identity fields are locked to preserve Buyer Log integrity.'
     );
     instruction.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink2 } };
     instruction.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.accBg } };
@@ -794,7 +878,7 @@
           return `<div class="cpaSettingRow"><label class="cpaCheck"><input type="checkbox" data-cx-column="${item.id}" ${checked ? 'checked' : ''} ${item.required ? 'disabled' : ''}>
             <span><b>${isEn() ? item.en : item.tr}</b><small>${item.required ? T('Zorunlu', 'Required') : (item.type === 'date' ? T('Excel tarih biçimi: GG.AA.YYYY', 'Excel date format: DD.MM.YYYY') : '')}</small></span></label></div>`;
         }).join('')}</div>
-        <p class="cpaNote">${T('Excel korumalı oluşturulur. Yalnız uygulanabilir checklist Durum ve Not hücreleri düzenlenebilir; diğer tüm alanlar kilitlidir.', 'The workbook is protected. Only applicable checklist Status and Note cells can be edited; every other field is locked.')}</p>
+        <p class="cpaNote">${T('Excel korumalı oluşturulur. Uygulanabilir checklist Durum, Not ve etkinleştirilmiş Rapor No / Gerçekleşme Tarihi hücreleri düzenlenebilir; ek dosya listesi ve kimlik alanları kilitlidir.', 'The workbook is protected. Applicable Status, Note and enabled Report No / Actual Date cells are editable; attachment lists and identity fields are locked.')}</p>
       </div>
       <footer><button type="button" class="cpaBtn" data-cx-reset>${T('Varsayılan', 'Default')}</button>
         <button type="button" class="cpaBtn primary" data-cx-save>${T('Kaydet', 'Save')}</button></footer>
@@ -814,9 +898,10 @@
     };
   }
 
-  async function exportWorkbook() {
+  async function exportWorkbook(options) {
+    const opts = options || {};
     await loadShared();
-    const rows = selectedRows();
+    const rows = Array.isArray(opts.rows) ? opts.rows : selectedRows();
     if (!rows.length) {
       toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
       return false;
@@ -852,8 +937,18 @@
       return { header: isEn() ? item.en : item.tr, key: item.id, width: item.width || 12, infoDefinition: item };
     });
     items.forEach(function (item, index) {
-      columns.push({ header: isEn() ? item.en : item.tr, key: 's' + index, width: 14, checklistStatus: true, checklistIndex: index });
-      columns.push({ header: (isEn() ? item.en : item.tr) + ' - ' + T('Not', 'Note'), key: 'n' + index, width: 22, checklistNote: true, checklistIndex: index });
+      const label = isEn() ? item.en : item.tr;
+      columns.push({ header: label, key: 's' + index, width: 14, checklistStatus: true, checklistIndex: index });
+      columns.push({ header: label + ' - ' + T('Not', 'Note'), key: 'n' + index, width: 22, checklistNote: true, checklistIndex: index });
+      if (item.evidenceFields && item.evidenceFields.reportNumber) {
+        columns.push({ header: label + ' - ' + T('Rapor No', 'Report No'), key: 'r' + index, width: 18, checklistEvidence: 'reportNumber', checklistIndex: index });
+      }
+      if (item.evidenceFields && item.evidenceFields.actualDate) {
+        columns.push({ header: label + ' - ' + T('Gerçekleşme Tarihi', 'Actual Date'), key: 'd' + index, width: 16, checklistEvidence: 'actualDate', checklistIndex: index });
+      }
+      if (item.evidenceFields && item.evidenceFields.attachments) {
+        columns.push({ header: label + ' - ' + T('Ekler', 'Attachments'), key: 'a' + index, width: 28, checklistEvidence: 'attachments', checklistIndex: index });
+      }
     });
     columns.push({ header: '__BL_ORDER_KEY', key: '__orderKey', width: 4, hidden: true });
     columns.push({ header: '__BL_LOAD_DATE', key: '__loadDate', width: 4, hidden: true });
@@ -867,6 +962,15 @@
     });
     const noteColumns = items.map(function (_item, index) {
       return columns.findIndex(function (column) { return column.key === 'n' + index; }) + 1;
+    });
+    const reportColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 'r' + index; }) + 1;
+    });
+    const actualDateColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 'd' + index; }) + 1;
+    });
+    const attachmentColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 'a' + index; }) + 1;
     });
     const imageColumn = columns.findIndex(function (column) { return column.key === 'image'; }) + 1;
     const optionValues = statusOptions();
@@ -889,6 +993,13 @@
         const answer = answerFor(item, analysis);
         values['s' + index] = answer ? statusLabel(answer.state) : statusLabel('open');
         values['n' + index] = answer && answer.note || '';
+        if (reportColumns[index]) values['r' + index] = answer && answer.reportNumber || '';
+        if (actualDateColumns[index]) values['d' + index] = answer && answer.actualDate ? excelDate(answer.actualDate) : '';
+        if (attachmentColumns[index]) {
+          values['a' + index] = answer && Array.isArray(answer.attachments)
+            ? answer.attachments.map(function (entry) { return entry && entry.filename || ''; }).filter(Boolean).join('\n')
+            : '';
+        }
       });
 
       const excelRow = sheet.addRow(values);
@@ -914,21 +1025,41 @@
         const applicable = Boolean(analysis && itemApplies(item, analysis));
         const statusCell = excelRow.getCell(statusColumns[index]);
         const noteCell = excelRow.getCell(noteColumns[index]);
+        const evidenceCells = [
+          reportColumns[index] ? { cell: excelRow.getCell(reportColumns[index]), kind: 'reportNumber' } : null,
+          actualDateColumns[index] ? { cell: excelRow.getCell(actualDateColumns[index]), kind: 'actualDate' } : null,
+          attachmentColumns[index] ? { cell: excelRow.getCell(attachmentColumns[index]), kind: 'attachments' } : null,
+        ].filter(Boolean);
         statusCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
         noteCell.alignment = { vertical: 'middle', wrapText: true };
         statusCell.protection = { locked: !applicable };
         noteCell.protection = { locked: !applicable };
+        evidenceCells.forEach(function (entry) {
+          entry.cell.alignment = { vertical: 'middle', horizontal: entry.kind === 'actualDate' ? 'center' : 'left', wrapText: true };
+          // Ek dosya isimleri bilgi amaçlıdır; dosyanın kendisi Buyer Log'dadır.
+          // Rapor No ve Gerçekleşme Tarihi ise üretici Excel'inden güncellenebilir.
+          entry.cell.protection = { locked: !applicable || entry.kind === 'attachments' };
+          if (entry.kind === 'actualDate') {
+            entry.cell.numFmt = EXCEL_DATE_FORMAT;
+            entry.cell.dataValidation = dateValidation();
+          }
+        });
         if (applicable) {
           const tone = checklistStatusTone(statusCell.value);
           statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: tone.bg } };
           statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: tone.fg } };
           noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.accBg } };
           noteCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.ink } };
+          evidenceCells.forEach(function (entry) {
+            const editable = entry.kind !== 'attachments';
+            entry.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: editable ? CHECKLIST_EXCEL_COLORS.accBg : CHECKLIST_EXCEL_COLORS.paper } };
+            entry.cell.font = { name: 'Segoe UI', size: 9, color: { argb: editable ? CHECKLIST_EXCEL_COLORS.ink : CHECKLIST_EXCEL_COLORS.muted } };
+          });
         } else {
-          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
-          noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
-          statusCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
-          noteCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
+          [statusCell, noteCell].concat(evidenceCells.map(function (entry) { return entry.cell; })).forEach(function (cell) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
+            cell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
+          });
         }
         if (applicable) {
           statusCell.dataValidation = {
@@ -963,6 +1094,7 @@
       const cell = header.getCell(index + 1);
       const fill = column.checklistStatus ? CHECKLIST_EXCEL_COLORS.acc
         : column.checklistNote ? CHECKLIST_EXCEL_COLORS.gold
+        : column.checklistEvidence ? (column.checklistEvidence === 'attachments' ? CHECKLIST_EXCEL_COLORS.muted : CHECKLIST_EXCEL_COLORS.green)
         : column.hidden ? CHECKLIST_EXCEL_COLORS.muted
         : CHECKLIST_EXCEL_COLORS.navy;
       cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: CHECKLIST_EXCEL_COLORS.white } };
@@ -1029,16 +1161,22 @@
     meta.addRow(['BUYER_LOG_CHECKLIST_SUPPLIER', SCHEMA_VERSION]);
     meta.addRow(['exportedAt', exportedAt]);
     meta.addRow(['supplier', supplierNameFor(rows)]);
-    meta.addRow(['statusColumn', 'noteColumn', 'itemId', 'tr', 'en', 'questionTr', 'questionEn']);
+    meta.addRow(['statusColumn', 'noteColumn', 'reportColumn', 'actualDateColumn', 'attachmentsColumn', 'itemId', 'tr', 'en', 'questionTr', 'questionEn']);
     items.forEach(function (item, index) {
-      meta.addRow([statusColumns[index], noteColumns[index], item.id, item.tr, item.en, item.questionTr, item.questionEn]);
+      meta.addRow([
+        statusColumns[index], noteColumns[index], reportColumns[index] || 0, actualDateColumns[index] || 0, attachmentColumns[index] || 0,
+        item.id, item.tr, item.en, item.questionTr, item.questionEn,
+      ]);
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
     const stamp = new Date().toISOString().slice(0, 10);
-    downloadBuffer(buffer, 'BuyerLog_Checklist_' + safeFilePart(supplierNameFor(rows)) + '_' + stamp + '.xlsx');
-    toast(T('Üretici checklist Excel’i oluşturuldu.', 'Supplier checklist workbook created.'));
-    return true;
+    const filename = 'BuyerLog_Checklist_' + safeFilePart(supplierNameFor(rows)) + '_' + stamp + '.xlsx';
+    if (opts.download !== false) {
+      downloadBuffer(buffer, filename);
+      toast(T('Üretici checklist Excel’i oluşturuldu.', 'Supplier checklist workbook created.'));
+    }
+    return { ok: true, buffer: buffer, filename: filename, rows: rows, supplier: supplierNameFor(rows) };
   }
 
   function readMeta(workbook) {
@@ -1047,22 +1185,33 @@
       throw new Error(T('Bu dosya Buyer Log üretici checklist şablonu değil.', 'This is not a Buyer Log supplier checklist workbook.'));
     }
     const version = Number(meta.getCell('B1').value) || 0;
-    if (version !== SCHEMA_VERSION) throw new Error(T('Checklist Excel şablon sürümü desteklenmiyor.', 'Checklist workbook schema version is not supported.'));
+    if (version < 1 || version > SCHEMA_VERSION) throw new Error(T('Checklist Excel şablon sürümü desteklenmiyor.', 'Checklist workbook schema version is not supported.'));
     const exportedAt = text(meta.getCell('B2').text || meta.getCell('B2').value);
     const items = [];
     for (let rowNo = 5; rowNo <= meta.rowCount; rowNo += 1) {
       const row = meta.getRow(rowNo);
-      const itemId = text(row.getCell(3).text || row.getCell(3).value);
+      const itemIdColumn = version >= 2 ? 6 : 3;
+      const itemId = text(row.getCell(itemIdColumn).text || row.getCell(itemIdColumn).value);
       if (!itemId) continue;
-      items.push({
+      items.push(version >= 2 ? {
         statusColumn: Number(row.getCell(1).value) || 0,
         noteColumn: Number(row.getCell(2).value) || 0,
+        reportColumn: Number(row.getCell(3).value) || 0,
+        actualDateColumn: Number(row.getCell(4).value) || 0,
+        attachmentsColumn: Number(row.getCell(5).value) || 0,
+        id: itemId,
+        tr: text(row.getCell(7).text || row.getCell(7).value),
+        en: text(row.getCell(8).text || row.getCell(8).value),
+      } : {
+        statusColumn: Number(row.getCell(1).value) || 0,
+        noteColumn: Number(row.getCell(2).value) || 0,
+        reportColumn: 0, actualDateColumn: 0, attachmentsColumn: 0,
         id: itemId,
         tr: text(row.getCell(4).text || row.getCell(4).value),
         en: text(row.getCell(5).text || row.getCell(5).value),
       });
     }
-    return { exportedAt: exportedAt, items: items };
+    return { version: version, exportedAt: exportedAt, items: items };
   }
 
   function headerIndex(sheet, label) {
@@ -1121,6 +1270,18 @@
         if (!item) { invalid += 1; return; }
         if (analysis && !itemApplies(item, analysis)) { notApplicable += 1; return; }
         const noteCell = metaItem.noteColumn ? row.getCell(metaItem.noteColumn) : null;
+        const reportCell = metaItem.reportColumn ? row.getCell(metaItem.reportColumn) : null;
+        const actualDateCell = metaItem.actualDateColumn ? row.getCell(metaItem.actualDateColumn) : null;
+        let actualDate = '';
+        if (actualDateCell && actualDateCell.value) {
+          const date = excelDate(actualDateCell.value);
+          if (date) actualDate = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0'),
+          ].join('-');
+        }
+        const existing = answerFor(item, analysis);
         entries.push({
           orderKey: orderKey,
           itemId: metaItem.id,
@@ -1130,6 +1291,9 @@
           baseAt: meta.exportedAt || '',
           loadDate: loadDate || null,
           note: noteCell ? text(noteCell.text || noteCell.value) : '',
+          ...(metaItem.reportColumn ? { reportNumber: reportCell ? text(reportCell.text || reportCell.value) : '' } : {}),
+          ...(metaItem.actualDateColumn ? { actualDate: actualDate } : {}),
+          attachments: existing && Array.isArray(existing.attachments) ? existing.attachments : [],
           supplier: supplier,
           source: 'supplier_excel',
         });
@@ -1159,6 +1323,85 @@
       + (skipped ? ', ' + skipped + T(' geçersiz/uygunsuz kayıt atlandı.', ' invalid/not-applicable entries skipped.') : '.')
     );
     return true;
+  }
+
+  async function prepareSupplierChecklistEmail() {
+    await loadShared();
+    const rows = selectedRows();
+    if (!rows.length) {
+      toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
+      return false;
+    }
+    const suppliers = Array.from(new Set(rows.map(function (row) {
+      return visibleValue(row, ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier']);
+    }).filter(Boolean)));
+    if (suppliers.length !== 1) {
+      toast(T('Üreticiye Checklist hazırlamak için seçili satırlar tek bir üreticiye ait olmalıdır.', 'Prepare Supplier Checklist requires rows from exactly one supplier.'));
+      return false;
+    }
+    const supplier = suppliers[0];
+    const artifact = await exportWorkbook({ rows: rows, download: false });
+    if (!artifact || !artifact.buffer) throw new Error(T('Checklist Excel hazırlanamadı.', 'Checklist workbook could not be prepared.'));
+    const excelBlob = new Blob([artifact.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    let excelFile;
+    try { excelFile = new File([excelBlob], artifact.filename, { type: excelBlob.type, lastModified: Date.now() }); }
+    catch (_) { excelBlob.name = artifact.filename; excelFile = excelBlob; }
+
+    const decision = analysesForRows(rows), items = itemCatalog(), attachmentMap = new Map();
+    rows.forEach(function (row) {
+      const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+      if (!analysis) return;
+      items.forEach(function (item) {
+        if (!itemApplies(item, analysis)) return;
+        const answer = answerFor(item, analysis);
+        (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
+          if (entry && entry.id && !attachmentMap.has(entry.id)) attachmentMap.set(entry.id, entry);
+        });
+      });
+    });
+
+    const evidenceFiles = [];
+    for (const meta of attachmentMap.values()) {
+      const file = await checklistAttachmentAsFile(meta);
+      if (!file) {
+        throw new Error(T('Checklist eklerinden biri okunamadı: ', 'A checklist attachment could not be read: ') + (meta.filename || meta.id));
+      }
+      evidenceFiles.push(file);
+    }
+    const initialFiles = [{ file: excelFile, modelLabel: T('Checklist Excel', 'Checklist Excel') }]
+      .concat(evidenceFiles.map(function (file) { return { file: file, modelLabel: T('Checklist eki', 'Checklist attachment') }; }));
+
+    const directory = typeof root.BLPrepareEmailManufacturers === 'function' ? root.BLPrepareEmailManufacturers() : null;
+    if (Array.isArray(directory) && !directory.some(function (item) {
+      return item && text(item.name).toLocaleLowerCase('tr-TR') === supplier.toLocaleLowerCase('tr-TR');
+    })) directory.push({ name: supplier, email: '' });
+
+    const tempRows = rows.map(function (row, index) {
+      return { ...row, id: -100000 - index, manufacturer: supplier, buyingSampleManufacturer: supplier, _cpSourceRow: row };
+    });
+    const context = {
+      rows: tempRows,
+      count: tempRows.length,
+      btnId: 'cpChecklistPrepareEmailVirtualBtn',
+      persist: false,
+      preselect: [supplier],
+      initialFiles: initialFiles,
+      title: T('Üreticiye Checklist Exceli Hazırla', 'Prepare Supplier Checklist'),
+      subtitle: T(
+        tempRows.length + ' sipariş · Checklist Excel + ' + evidenceFiles.length + ' ek · taslak oluşturmadan önce kontrol edin',
+        tempRows.length + ' orders · Checklist Excel + ' + evidenceFiles.length + ' attachment(s) · review before creating drafts'
+      ),
+      resultTitle: T('Checklist E-Posta Sonucu', 'Checklist E-Mail Result'),
+    };
+    if (root.BLPrepareEmail && typeof root.BLPrepareEmail.openChecklist === 'function') {
+      root.BLPrepareEmail.openChecklist(context);
+      return true;
+    }
+    if (typeof root.renderKolMfrModal === 'function') {
+      root.renderKolMfrModal({ ...context, defaultTopicKind: 'general', defaultTopicId: 'general-checklist' });
+      return true;
+    }
+    throw new Error(T('Prepaire E-Mail modülü hazır değil.', 'Prepaire E-Mail module is not ready.'));
   }
 
   function ensureUi() {
@@ -1191,6 +1434,7 @@
     sub.style.minWidth = '240px';
     sub.innerHTML = '<div class="toolbarMoreLabel">CHECKLIST</div>'
       + '<button type="button" class="tbtn" data-checklist-excel-create><svg class="ic"><use href="#i-file-export"/></svg><span>Create Checklist Excel</span></button>'
+      + '<button type="button" class="tbtn" data-checklist-supplier-prepare><svg class="ic"><use href="#i-mail-send"/></svg><span>' + T('Üreticiye Checklist Exceli Hazırla', 'Prepare Supplier Checklist') + '</span></button>'
       + '<button type="button" class="tbtn" data-checklist-excel-import><svg class="ic"><use href="#i-file-import"/></svg><span>Import Checklist Excel</span></button>'
       + '<button type="button" class="tbtn" data-checklist-excel-columns><svg class="ic"><use href="#i-columns-3"/></svg><span>Checklist Excel Columns</span></button>';
 
@@ -1238,6 +1482,12 @@
         toast(T('Checklist Excel oluşturulamadı: ', 'Checklist workbook could not be created: ') + (error.message || error));
       });
     });
+    sub.querySelector('[data-checklist-supplier-prepare]').addEventListener('click', function () {
+      closeSub();
+      prepareSupplierChecklistEmail().catch(function (error) {
+        toast(T('Üretici checklist e-postası hazırlanamadı: ', 'Supplier checklist e-mail could not be prepared: ') + (error.message || error));
+      });
+    });
     sub.querySelector('[data-checklist-excel-import]').addEventListener('click', function () {
       closeSub();
       input.value = '';
@@ -1253,6 +1503,161 @@
         toast(T('Checklist Excel içe aktarılamadı: ', 'Checklist workbook could not be imported: ') + (error.message || error));
       });
     });
+  }
+
+  function evidenceEnabled(item) {
+    const fields = item && item.evidenceFields || {};
+    return Boolean(fields.reportNumber || fields.actualDate || fields.attachments);
+  }
+  function fileBase64(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        const value = String(reader.result || '');
+        resolve(value.indexOf(',') >= 0 ? value.slice(value.indexOf(',') + 1) : value);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  async function uploadChecklistAttachment(file, context) {
+    const payload = await post('/attachments', {
+      filename: file.name || 'attachment',
+      mimeType: file.type || 'application/octet-stream',
+      base64: await fileBase64(file),
+      context: context || {},
+    });
+    return payload && payload.attachment;
+  }
+  async function deleteChecklistAttachment(id) {
+    const response = await root.fetch(API + '/attachments/' + encodeURIComponent(id), { method: 'DELETE' });
+    if (!response.ok) throw new Error(T('Checklist eki silinemedi.', 'Checklist attachment could not be deleted.'));
+    return true;
+  }
+  async function checklistAttachmentAsFile(meta) {
+    if (!meta || !meta.id) return null;
+    const response = await root.fetch(API + '/attachments/' + encodeURIComponent(meta.id), { cache: 'no-store' });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    try {
+      return new File([blob], meta.filename || 'attachment', { type: meta.mimeType || blob.type || 'application/octet-stream', lastModified: Date.now() });
+    } catch (_) {
+      blob.name = meta.filename || 'attachment';
+      return blob;
+    }
+  }
+  function evidenceContext(row, item, status, sequence) {
+    return {
+      orderCode: visibleValue(row, ['Order Code', 'ORDER CODE', 'OrderCode']),
+      plmId: visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']),
+      modelName: visibleValue(row, ['Model Name', 'MODEL NAME', 'Model', 'Model Adı']),
+      colourCode: visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']),
+      checklistName: isEn() ? item.en : item.tr,
+      checklistStatus: statusLabel(status),
+      sequence: sequence || 1,
+    };
+  }
+  function openChecklistEvidenceDialog(trigger) {
+    const row = cpRowById(trigger && trigger.dataset.id);
+    const itemId = trigger && trigger.dataset.item;
+    const item = itemCatalog().find(function (entry) { return entry.id === itemId; });
+    if (!row || !item || !evidenceEnabled(item)) return;
+    const decision = analysesForRows([row]);
+    const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+    if (!analysis) return;
+    const answer = answerFor(item, analysis);
+    const status = normalizeState(answer && answer.state) || normalizeState(trigger.dataset.status) || 'open';
+    if (status === 'open') {
+      toast(T('Rapor/ek bilgisi eklemeden önce checklist durumunu Onaylandı, Reddedildi veya Gerekmiyor olarak seçin.', 'Choose Approved, Rejected or Not Required before adding report/evidence details.'));
+      return;
+    }
+    root.document.getElementById('_blChecklistEvidence')?.remove();
+    let kept = Array.isArray(answer && answer.attachments) ? answer.attachments.slice() : [];
+    const removed = new Set();
+    const pending = [];
+    const modal = root.document.createElement('div');
+    modal.id = '_blChecklistEvidence';
+    modal.className = 'cpaModalOverlay';
+    const fields = item.evidenceFields || {};
+    const attachmentRows = function () {
+      const current = kept.filter(function (entry) { return !removed.has(entry.id); });
+      return current.map(function (entry) {
+        const href = API + '/attachments/' + encodeURIComponent(entry.id);
+        return '<div class="cpaSettingRow" data-evidence-attachment="' + html(entry.id) + '"><span><b>' + html(entry.filename || entry.originalName || T('Dosya', 'File')) + '</b><small>' + Math.max(0, Number(entry.size) || 0).toLocaleString() + ' B</small></span>'
+          + '<span style="display:flex;gap:6px"><a class="cpaBtn" href="' + html(href) + '" download="' + html(entry.filename || 'attachment') + '">' + T('Aç / İndir', 'Open / Download') + '</a>'
+          + '<button type="button" class="cpaBtn" data-evidence-remove="' + html(entry.id) + '">' + T('Kaldır', 'Remove') + '</button></span></div>';
+      }).join('');
+    };
+    modal.innerHTML = `<div class="cpaModal" role="dialog" aria-modal="true">
+      <header><div><b>${html(T('Checklist Detayları', 'Checklist Details'))} · ${html(isEn() ? item.en : item.tr)}</b>
+        <small>${html(visibleValue(row, ['Order Code', 'ORDER CODE']))} · ${html(statusLabel(status))}</small></div>
+        <button type="button" data-evidence-close aria-label="${T('Kapat', 'Close')}">×</button></header>
+      <div class="cpaModalBody">
+        <div class="cpaSettingGroup">
+          <label class="cpaSettingRow"><span><b>${html(T('Not', 'Note'))}</b></span><textarea data-evidence-note rows="3">${html(answer && answer.note || '')}</textarea></label>
+          ${fields.reportNumber ? `<label class="cpaSettingRow"><span><b>${T('Rapor numarası', 'Report number')}</b></span><input type="text" data-evidence-report value="${html(answer && answer.reportNumber || '')}"></label>` : ''}
+          ${fields.actualDate ? `<label class="cpaSettingRow"><span><b>${T('Gerçekleşme tarihi', 'Actual date')}</b></span><input type="date" data-evidence-date value="${html(answer && answer.actualDate || '')}"></label>` : ''}
+        </div>
+        ${fields.attachments ? `<div class="cpaSettingGroup"><div class="cpaSettingRow"><span><b>${T('Rapor / e-mail ekleri', 'Report / e-mail attachments')}</b><small>${T('Dosyalar Buyer Log’da saklanır ve Üreticiye Checklist Exceli Hazırla akışında e-postaya otomatik eklenir.', 'Files are stored in Buyer Log and automatically attached by Prepare Supplier Checklist.')}</small></span>
+          <label class="cpaBtn">${T('Dosya Ekle', 'Add File')}<input type="file" data-evidence-files multiple hidden></label></div>
+          <div data-evidence-list>${attachmentRows()}</div>
+          <div data-evidence-pending></div></div>` : ''}
+      </div>
+      <footer><button type="button" class="cpaBtn" data-evidence-close>${T('Vazgeç', 'Cancel')}</button><button type="button" class="cpaBtn primary" data-evidence-save>${T('Kaydet', 'Save')}</button></footer>
+    </div>`;
+    root.document.body.appendChild(modal);
+    const close = function () { modal.remove(); };
+    modal.querySelectorAll('[data-evidence-close]').forEach(function (button) { button.onclick = close; });
+    modal.onclick = function (event) { if (event.target === modal) close(); };
+    const refreshAttachments = function () {
+      const list = modal.querySelector('[data-evidence-list]');
+      if (list) list.innerHTML = attachmentRows();
+      const pendingHost = modal.querySelector('[data-evidence-pending]');
+      if (pendingHost) pendingHost.innerHTML = pending.map(function (file, index) {
+        return '<div class="cpaSettingRow"><span><b>' + html(file.name) + '</b><small>' + file.size.toLocaleString() + ' B · ' + T('Kaydedilince yeniden adlandırılacak', 'Will be renamed when saved') + '</small></span><button type="button" class="cpaBtn" data-evidence-pending-remove="' + index + '">' + T('Kaldır', 'Remove') + '</button></div>';
+      }).join('');
+    };
+    modal.addEventListener('click', function (event) {
+      const remove = event.target.closest('[data-evidence-remove]');
+      if (remove) { removed.add(remove.dataset.evidenceRemove); refreshAttachments(); return; }
+      const pendingRemove = event.target.closest('[data-evidence-pending-remove]');
+      if (pendingRemove) { pending.splice(Number(pendingRemove.dataset.evidencePendingRemove), 1); refreshAttachments(); }
+    });
+    modal.querySelector('[data-evidence-files]')?.addEventListener('change', function (event) {
+      Array.from(event.target.files || []).forEach(function (file) { pending.push(file); });
+      event.target.value = '';
+      refreshAttachments();
+    });
+    modal.querySelector('[data-evidence-save]').onclick = async function () {
+      const button = modal.querySelector('[data-evidence-save]');
+      button.disabled = true;
+      try {
+        const live = kept.filter(function (entry) { return !removed.has(entry.id); });
+        for (let i = 0; i < pending.length; i += 1) {
+          const uploaded = await uploadChecklistAttachment(pending[i], evidenceContext(row, item, status, live.length + i + 1));
+          if (uploaded) live.push(uploaded);
+        }
+        const assistant = await ensureAssistant();
+        if (!assistant || typeof assistant.setChecklistAnswer !== 'function') throw new Error(T('Checklist kaydı açılamadı.', 'Checklist record is unavailable.'));
+        assistant.setChecklistAnswer(analysis, item.id, status, {
+          note: String(modal.querySelector('[data-evidence-note]')?.value || ''),
+          reportNumber: fields.reportNumber ? String(modal.querySelector('[data-evidence-report]')?.value || '') : (answer && answer.reportNumber || ''),
+          actualDate: fields.actualDate ? String(modal.querySelector('[data-evidence-date]')?.value || '') : (answer && answer.actualDate || ''),
+          attachments: live,
+        });
+        await syncAnswerChanges();
+        for (const id of removed) {
+          try { await deleteChecklistAttachment(id); } catch (_) {}
+        }
+        kept = live;
+        refreshColumns({ render: true });
+        toast(T('Checklist detayları kaydedildi.', 'Checklist details saved.'));
+        close();
+      } catch (error) {
+        toast(T('Checklist detayları kaydedilemedi: ', 'Checklist details could not be saved: ') + (error.message || error));
+        button.disabled = false;
+      }
+    };
   }
 
   /* CP checklist hücresi durum menüsü. Hücreye yazı YAZILAMAZ; yalnız bu
@@ -1285,6 +1690,11 @@
     const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
     if (!analysis) { toast(T('Sipariş checklist için okunamadı.', 'The order could not be read for the checklist.')); return; }
     assistant.setChecklistAnswer(analysis, itemId, status);
+    // Yerel seçim anında görünür; sunucu yazması da aynı işlem zincirinde
+    // tetiklenir. syncAnswerChanges kuyruklu olduğu için hızlı ardışık seçimler
+    // kaybolmaz.
+    await syncAnswerChanges();
+    refreshColumns({ render: true });
   }
   function openStatusMenu(trigger) {
     if (!root.document || !trigger) return;
@@ -1300,6 +1710,12 @@
         + '<span class="clStatusDot is-' + status + '" aria-hidden="true"></span>'
         + '<span>' + statusLabel(status) + '</span></button>';
     }).join('');
+    const evidenceItem = itemCatalog().find(function (item) { return item.id === trigger.dataset.item; });
+    if (evidenceEnabled(evidenceItem)) {
+      menu.innerHTML += '<div style="height:1px;background:var(--line);margin:5px 4px"></div>'
+        + '<button type="button" class="delTypeOption clStatusOption" data-cl-evidence>'
+        + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Ekler', 'Checklist Details / Attachments') + '</span></button>';
+    }
     root.document.body.appendChild(menu);
     const rect = trigger.getBoundingClientRect();
     const width = Math.max(rect.width, 160);
@@ -1317,6 +1733,12 @@
     const selected = options.find(function (option) { return option.getAttribute('aria-selected') === 'true'; }) || options[0];
     if (selected) selected.focus();
     menu.addEventListener('click', function (event) {
+      const details = event.target.closest('[data-cl-evidence]');
+      if (details) {
+        closeStatusMenu(false);
+        openChecklistEvidenceDialog(trigger);
+        return;
+      }
       const option = event.target.closest('[data-cl-status]');
       if (!option) return;
       const status = option.dataset.clStatus;
@@ -1382,6 +1804,16 @@
     }
   }
 
+  function beaconPendingAnswers() {
+    try {
+      if (!root.navigator || typeof root.navigator.sendBeacon !== 'function') return false;
+      const entries = diffAnswers(state.answerBaseline, snapshotAnswers());
+      if (!entries.length) return true;
+      const body = JSON.stringify({ entries: entries, source: 'buyer_log' });
+      return root.navigator.sendBeacon(API + '/answers', new Blob([body], { type: 'application/json' }));
+    } catch (_) { return false; }
+  }
+
   function activeNeedsRuntime() {
     const active = root.document && root.document.querySelector('nav.tabs button.active[data-tab]');
     const tab = active && active.dataset ? String(active.dataset.tab || '') : '';
@@ -1408,6 +1840,13 @@
       if (activeNeedsRuntime()) startRuntime().catch(function () {});
     });
     root.addEventListener('bl:user-access-applied', function () { ensureUi(); });
+    root.document.addEventListener('visibilitychange', function () {
+      if (root.document.hidden) {
+        syncAnswerChanges().catch(function () { beaconPendingAnswers(); });
+      }
+    });
+    root.addEventListener('pagehide', beaconPendingAnswers);
+    root.addEventListener('beforeunload', beaconPendingAnswers);
     root.document.addEventListener('click', function (event) {
       const tab = event.target && event.target.closest && event.target.closest('nav.tabs button[data-tab]');
       if (tab && (tab.dataset.tab === 'cp' || tab.dataset.tab === 'overview')) {
@@ -1424,6 +1863,7 @@
     loadShared: loadShared,
     refreshColumns: refreshColumns,
     exportWorkbook: exportWorkbook,
+    prepareSupplierChecklistEmail: prepareSupplierChecklistEmail,
     importWorkbook: importWorkbook,
     normalizeState: normalizeState,
     statusLabel: statusLabel,

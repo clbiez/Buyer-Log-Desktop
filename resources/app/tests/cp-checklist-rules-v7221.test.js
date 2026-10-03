@@ -27,7 +27,9 @@ const { mergeValue, SHARE_ITEMS } = require('../server/lib/preset-share');
 function analysis(spec) {
   const o = spec || {};
   return {
-    orderKey: o.orderKey || 'O1', orderCode: 'O1', modelName: 'M', plannedLoadDate: 20000,
+    orderKey: o.orderKey || 'O1', orderCode: o.orderKey || 'O1',
+    plmId: o.plmId || 'PLM-1', modelName: o.modelName || 'M', colourCode: o.colourCode || 'C1',
+    plannedLoadDate: 20000,
     daysToLoad: o.daysToLoad == null ? 10 : o.daysToLoad, orderAgeDays: 40, stage: o.stage || 'PRODUCTION',
     priority: 'ON_TRACK', deliveryOutcome: 'ON_TRACK', qty: 100, sourceRow: o.row || { License: 'Minecraft' },
   };
@@ -120,6 +122,34 @@ test('checklist ↔ öncelik kuralı birbirine koşul olarak bağlanır ve sipar
 
   const off = Rules.evaluateOrder(a, { rules, answers: {}, checklistEnabled: false });
   assert.deepEqual(off.customItems, [], 'checklist kapalıyken soru yok');
+});
+
+test('Print Test seçenek bazlı onayı sonraki PO’ya taşır; GS Test PO bazında yeniden ister', () => {
+  const print = rule({
+    id: 'printTest', kind: 'checklist', name: 'Print Test', approvalScope: 'option',
+    conditions: [{ field: '@daysToLoad', operator: 'lte', value: 60 }],
+  });
+  const gs = rule({
+    id: 'gsTest', kind: 'checklist', name: 'GS Test', approvalScope: 'order',
+    conditions: [{ field: '@daysToLoad', operator: 'lte', value: 60 }],
+  });
+  assert.equal(print.approvalScope, 'option');
+  assert.equal(gs.approvalScope, 'order');
+
+  const po1 = analysis({ orderKey: 'PO1' });
+  const po2 = analysis({ orderKey: 'PO2' });
+  const otherColour = analysis({ orderKey: 'PO3', colourCode: 'C2' });
+  const answers = {
+    [Checklist.optionAnswerKey(po1, 'printTest')]: Checklist.makeAnswer('approved', po1, { loadDate: null }),
+    [Checklist.answerKey(po1.orderKey, 'gsTest')]: Checklist.makeAnswer('approved', po1),
+  };
+
+  const next = Rules.evaluateOrder(po2, { rules: [print, gs], answers });
+  assert.equal(next.checklistState.printTest, 'approved', 'Print Test aynı seçenek için taşınmalı');
+  assert.equal(next.checklistState.gsTest, 'open', 'GS Test yeni PO’da tekrar yapılmalı');
+
+  const different = Rules.evaluateOrder(otherColour, { rules: [print, gs], answers });
+  assert.equal(different.checklistState.printTest, 'open', 'farklı renk başka seçenek sayılmalı');
 });
 
 test('döngüsel bağlantı güvenle durur ve editörde gösterilir', () => {
@@ -239,6 +269,8 @@ test('Rules yalnız öncelik kurallarını, Checklist Settings yalnız checklist
   assert.match(view, /function confirmDelete\(rule\)/);
   assert.match(view, /Rules\.dependentsOf\(rule, state\.rules\)/);
   assert.match(view, /if \(!confirmDelete\(rule\)\) return;/);
+  assert.match(view, /data-cpa-rule-approval-scope/, 'checklist editöründe PO / ürün opsiyonu seçimi olmalı');
+  assert.match(view, /Checklist\.optionAnswerKey\(analysis, itemId\)/, 'seçenek bazlı onay özel kimliğe yazılmalı');
   // Sade düzenleyici: şablon, aranabilir alan seçici, canlı önizleme, AI rehberi.
   for (const hook of ['data-cpa-template', 'data-cpa-field-picker', 'data-cpa-rule-preview', 'data-cpa-ai-copy', 'data-cpa-ai-download', 'data-cpa-ai-answer', 'data-cpa-cond-choice']) {
     assert.ok((view.match(new RegExp(hook, 'g')) || []).length >= 2, `${hook} çizilmeli ve bağlanmalı`);
