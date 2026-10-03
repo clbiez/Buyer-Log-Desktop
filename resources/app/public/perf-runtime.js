@@ -135,9 +135,6 @@
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
          artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx.js',
     ],
-    /* Copilot açılış kritik yolunda değildir (§46): panel ilk açıldığında
-       yüklenir. Sıra önemli — araçlar ve grounding, çekmeceden önce. */
-    copilot:['octopus-conversations.js','octopus-window.js','octopus-jobs.js','copilot-tools.js','copilot-grounding.js','copilot-actions.js','copilot-ui-commands.js','copilot.js'],
     /* v7.81 — Veri Yönetimi ekranı açılış kritik yolunda DEĞİLDİR: günlük
        kullanımda hiç açılmayan bir kurulum ekranıdır. Sekmeye ilk geçişte
        yüklenir (§11). */

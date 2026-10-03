@@ -3,9 +3,8 @@
 /*
  * PLANLI OTOMASYONLARDA GÖRELİ TARİH
  *
- * Bulunan kusur: otomasyon filtreleri statik metin tutuyor ve doğal dil
- * planlayıcısı "geciken siparişler" için kurulum günündeki tarihi DEĞERE
- * GÖMÜYORDU (value: calendarDayISO(new Date())).
+ * Bulunan kusur: otomasyon filtreleri statik metin tutuyor ve "geciken
+ * siparişler" kuralında kurulum günündeki tarih DEĞERE GÖMÜLÜYORDU.
  *
  * Sonuç sessiz bir yanlıştı: haftalık çalışan bir hatırlatma otomasyonu,
  * kurulduğu günden sonra geciken siparişleri hiç görmez. Rapor her hafta biraz
@@ -21,7 +20,6 @@ const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
-const provider = require('../server/lib/agent-ai-provider');
 
 /* Çözücüyü sunucu kaynağından çıkarıp çalıştırır: kopyasını yazmak, testin
    gerçek davranışı değil kendi kopyasını doğrulaması olurdu. */
@@ -75,13 +73,6 @@ test('yalnız belirteç taşıyan kural kopyalanır; diğerleri aynı nesne kal�
   assert.equal(resolved[0].value, todayISO());
   assert.equal(resolved[1], rules[1], 'dokunulmayan kural yeniden oluşturulmamalı');
   assert.equal(rules[0].value, '@today', 'KAYITLI değer belirteç olarak kalmalı');
-});
-
-test('doğal dil planlayıcısı artık sabit tarih gömmüyor', () => {
-  const plan = provider.fallbackPlan('teslim tarihi geçen siparişleri getir');
-  const nodes = JSON.stringify(plan.workflow);
-  assert.match(nodes, /@today/, 'geciken filtresi belirteç kullanmalı');
-  assert.doesNotMatch(nodes, /"value":"\d{4}-\d{2}-\d{2}"/, 'sabit tarih gömülmemeli');
 });
 
 test('çözüm uygulama anında yapılır, kayıt anında değil', () => {

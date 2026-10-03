@@ -31,135 +31,33 @@ test('server bind is loopback by default and never plain-HTTP on the network', (
   assert.match(read('config.example.json'), /"host": "127\.0\.0\.1"/);
 });
 
-/* ------------------------------------------------------------ AI uç noktaları */
+/* ------------------------------------------------------------ AI katmanı kaldırıldı */
 
-test('local AI providers keep working over loopback HTTP; remote endpoints require HTTPS', () => {
-  const gateway = require('../server/lib/ai-provider-gateway');
-  assert.equal(gateway.normalizeEndpoint('ollama', 'http://127.0.0.1:11434'), 'http://127.0.0.1:11434');
-  assert.equal(gateway.normalizeEndpoint('lmstudio', 'http://localhost:1234/v1'), 'http://localhost:1234/v1');
-  assert.equal(gateway.normalizeEndpoint('openai-compatible', 'http://127.0.0.1:8000/v1'), 'http://127.0.0.1:8000/v1');
-  assert.equal(gateway.normalizeEndpoint('openai-compatible', 'https://llm.example.com/v1'), 'https://llm.example.com/v1');
-  for (const url of ['http://10.0.0.5:8000/v1', 'http://llm.corp.local/v1', 'http://api.openai.com/v1', 'http://127.example.com/v1']) {
-    assert.throws(() => gateway.normalizeEndpoint('openai-compatible', url), err => err.code === 'AI_ENDPOINT_INSECURE', url);
-    assert.throws(() => gateway.createProvider({ provider: 'openai-compatible', endpoint: url, model: 'm' }, { fetch: async () => { throw new Error('must not be called'); } }), err => err.code === 'AI_ENDPOINT_INSECURE', url);
+test('the AI assistant layer is fully removed and leftover AI secrets are wiped on startup', t => {
+  for (const rel of ['server/lib/ai-provider-gateway.js', 'server/lib/agent-ai-settings.js', 'server/lib/agent-ai-provider.js', 'server/lib/copilot-agent.js', 'server/lib/copilot-llm.js', 'server/routes/copilot-routes.js', 'public/copilot.js', 'public/octopus-window.js']) {
+    assert.equal(fs.existsSync(path.join(APP_ROOT, rel)), false, rel);
   }
-  assert.throws(() => gateway.normalizeEndpoint('ollama', 'https://10.0.0.5:11434'), err => err.code === 'AI_ENDPOINT_NOT_LOCAL');
-  assert.equal(gateway.isRemoteEndpoint('openai-compatible', 'https://llm.example.com/v1'), true);
-  assert.equal(gateway.isRemoteEndpoint('openai-compatible', 'http://127.0.0.1:8000/v1'), false);
-  assert.equal(gateway.isRemoteEndpoint('openrouter', ''), true);
-  assert.throws(() => gateway.createProvider({ provider: 'openai-compatible', endpoint: 'https://llm.example.com/v1', model: 'm', remoteDataPolicy: 'blocked' }), err => err.code === 'AI_REMOTE_DATA_POLICY_REQUIRED');
-});
+  const server = read('server/server.js');
+  assert.doesNotMatch(server, /copilot|octopus|agent-ai-provider|\/api\/agent-platform\/(?:ai|plan)/i);
+  assert.doesNotMatch(read('public/index.html'), /copilot|octopus/i);
+  assert.doesNotMatch(read('package.json'), /groq-sdk/);
+  assert.match(server, /removeRetiredAiArtifacts\(/);
 
-function isolatedAi(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-ai-policy-'));
-  const saved = {};
-  for (const key of ['BUYER_LOG_SERVER_DATA_ROOT', 'OPENAI_API_KEY', 'BUYER_LOG_AGENT_OPENAI_API_KEY', 'BUYER_LOG_AGENT_PROVIDER', 'BUYER_LOG_AGENT_BASE_URL', 'BUYER_LOG_AGENT_ENDPOINT', 'BUYER_LOG_AGENT_REMOTE_DATA_POLICY', 'BUYER_LOG_OPENROUTER_API_KEY', 'BUYER_LOG_NVIDIA_API_KEY', 'NVIDIA_API_KEY']) { saved[key] = process.env[key]; delete process.env[key]; }
-  process.env.BUYER_LOG_SERVER_DATA_ROOT = root;
-  const modules = ['../server/user-data', '../server/lib/agent-ai-settings', '../server/lib/copilot-agent'].map(id => require.resolve(id));
-  const clear = () => modules.forEach(id => { delete require.cache[id]; });
-  clear();
-  t.after(() => {
-    clear();
-    for (const [key, value] of Object.entries(saved)) { if (value == null) delete process.env[key]; else process.env[key] = value; }
-    fs.rmSync(root, { recursive: true, force: true });
-  });
-  return { root, aiSettings: require('../server/lib/agent-ai-settings') };
-}
-
-test('custom OpenAI-compatible remote endpoint needs explicit data-policy consent; local endpoint does not', t => {
-  const { aiSettings } = isolatedAi(t);
-  const gateway = require('../server/lib/ai-provider-gateway');
-  aiSettings.saveSettings({ provider: 'ollama', model: 'gemma4:12b' });
-  assert.equal(aiSettings.credentials().remoteDataPolicy, 'local');
-  assert.doesNotThrow(() => gateway.createProvider(aiSettings.credentials()), 'local Ollama is unaffected');
-
-  assert.throws(() => aiSettings.saveSettings({ provider: 'openai-compatible', endpoint: 'http://10.1.2.3:8000/v1', model: 'gpt-x' }), err => err.code === 'AI_ENDPOINT_INSECURE');
-  const saved = aiSettings.saveSettings({ provider: 'openai-compatible', endpoint: 'https://llm.example.com/v1', model: 'gpt-x', apiKey: 'sk-test-1234567890' });
-  assert.equal(saved.customRemoteDataPolicy, 'off', 'default OFF');
-  assert.equal(saved.remoteDataPolicy, 'blocked');
-  assert.throws(() => gateway.createProvider(aiSettings.credentials()), err => err.code === 'AI_REMOTE_DATA_POLICY_REQUIRED');
-
-  const allowed = aiSettings.saveSettings({ customRemoteDataPolicy: 'allowed' });
-  assert.equal(allowed.remoteDataPolicy, 'allowed');
-  assert.doesNotThrow(() => gateway.createProvider(aiSettings.credentials()));
-
-  aiSettings.saveSettings({ provider: 'openai-compatible', endpoint: 'http://127.0.0.1:8000/v1', customRemoteDataPolicy: 'off' });
-  assert.equal(aiSettings.credentials().remoteDataPolicy, 'local', 'loopback custom server is local');
-});
-
-test('a stored legacy plain-HTTP remote endpoint is blocked without breaking the settings screen', t => {
-  const { root, aiSettings } = isolatedAi(t);
-  const gateway = require('../server/lib/ai-provider-gateway');
-  fs.writeFileSync(path.join(root, 'agent-ai-settings.json'), JSON.stringify({ provider: 'openai-compatible', endpoint: 'http://10.9.8.7:8000/v1', model: 'gpt-x', customRemoteDataPolicy: 'allowed' }));
-  const pub = aiSettings.publicSettings();
-  assert.equal(pub.endpointError, 'AI_ENDPOINT_INSECURE');
-  assert.throws(() => gateway.createProvider(aiSettings.credentials()), err => err.code === 'AI_ENDPOINT_INSECURE');
-});
-
-test('a generic OPENAI_API_KEY in the environment no longer silently switches Buyer Log to a cloud provider', t => {
-  const { aiSettings } = isolatedAi(t);
-  process.env.OPENAI_API_KEY = 'sk-env-abcdef123456';
-  assert.equal(aiSettings.credentials().provider, 'ollama');
-  process.env.BUYER_LOG_AGENT_OPENAI_API_KEY = 'sk-buyerlog-123456';
-  const creds = aiSettings.credentials();
-  assert.equal(creds.provider, 'openai-compatible');
-  assert.equal(creds.remoteDataPolicy, 'blocked', 'even the app-specific key needs explicit consent for api.openai.com');
-});
-
-/* ------------------------------------------------------------ bulut fallback */
-
-function failingLocalAssistant(copilot, counters) {
-  return copilot.createCopilotAssistant({
-    providerFactory: overrides => ({
-      config: { provider: 'ollama', model: (overrides && overrides.model) || 'gemma4:12b' },
-      async resolveModel() { return { model: null, matched: false, supportsTools: false, capabilities: [], notice: 'none' }; },
-      async chat() { counters.local += 1; throw Object.assign(new Error('offline'), { code: 'AI_PROVIDER_OFFLINE' }); },
-      async listModels() { throw Object.assign(new Error('offline'), { code: 'AI_PROVIDER_OFFLINE' }); },
-    }),
-    cloudProviderFactory: creds => ({
-      config: { provider: creds.provider, model: creds.model },
-      async chat() { counters.cloud += 1; return { content: JSON.stringify({ type: 'answer', mode: 'general', answer: 'cloud' }), model: creds.model }; },
-    }),
-    recordNvidiaHealth: () => {},
-  });
-}
-async function ask(assistant) {
-  const { createToolRegistry } = require('../server/lib/agent-tool-registry');
-  const { createPolicyEngine } = require('../server/lib/agent-policy-engine');
-  const userAccess = { hasArea: () => true, appendAudit() {} };
-  return assistant.respond({ question: 'Tedarikçi X siparişleri?', language: 'tr', profile: { id: 'u1', areas: ['orders'] }, ownerId: 'u1', toolRegistry: createToolRegistry({ userAccess, getDataset: async () => [] }), policyEngine: createPolicyEngine({ userAccess }) });
-}
-
-test('cloud fallback never happens while the OpenRouter data policy is OFF, even with key + enabled', async t => {
-  const { aiSettings } = isolatedAi(t);
-  aiSettings.saveSettings({ openrouterEnabled: true, openrouterApiKey: 'sk-or-v1-testkey-123456', openrouterDataPolicy: 'off' });
-  assert.equal(aiSettings.openrouterCredentials(), null);
-  const copilot = require('../server/lib/copilot-agent');
-  copilot.resetModelResolutionCache();
-  const counters = { local: 0, cloud: 0 };
-  await assert.rejects(() => ask(failingLocalAssistant(copilot, counters)));
-  assert.equal(counters.cloud, 0, 'no business data may reach the cloud');
-});
-
-test('with explicit OpenRouter data policy the existing cloud fallback still works', async t => {
-  const { aiSettings } = isolatedAi(t);
-  aiSettings.saveSettings({ openrouterEnabled: true, openrouterApiKey: 'sk-or-v1-testkey-123456', openrouterDataPolicy: 'allowed' });
-  assert.equal(aiSettings.openrouterCredentials().provider, 'openrouter');
-  const copilot = require('../server/lib/copilot-agent');
-  copilot.resetModelResolutionCache();
-  const counters = { local: 0, cloud: 0 };
-  const result = await ask(failingLocalAssistant(copilot, counters));
-  assert.equal(result.ok, true);
-  assert.equal(counters.cloud >= 1, true);
-  assert.equal(result.cloudFallback && result.cloudFallback.provider, 'openrouter');
-});
-
-test('Copilot settings expose the remote data-policy consent in TR and EN', () => {
-  const copilot = read('public/copilot.js');
-  assert.match(copilot, /name="customRemoteDataPolicy"/);
-  assert.match(copilot, /customRemoteDataPolicy:settingsForm\.querySelector\('\[name=customRemoteDataPolicy\]'\)/);
-  assert.match(copilot, /I confirm that business data may be sent to the Custom OpenAI-compatible provider/);
-  assert.match(read('server/routes/copilot-routes.js'), /customRemoteDataPolicy: aiPub\.customRemoteDataPolicy/);
+  const { removeRetiredAiArtifacts } = require('../server/lib/retired-ai-cleanup');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-retired-ai-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  for (const name of ['agent-ai-settings.json', '.agent-ai-secret', 'orders-overrides.json']) fs.writeFileSync(path.join(root, name), 'x');
+  const configPath = path.join(root, 'config.json');
+  fs.writeFileSync(configPath, JSON.stringify({ port: 6194, aiEnabled: true, aiApiKey: 'sk-secret', aiModel: 'm' }));
+  const writeJson = (file, value) => fs.writeFileSync(file, JSON.stringify(value));
+  const first = removeRetiredAiArtifacts({ serverDataRoot: root, configPath, writeJson });
+  assert.deepEqual(first.removed.sort(), ['.agent-ai-secret', 'agent-ai-settings.json']);
+  assert.deepEqual(JSON.parse(fs.readFileSync(configPath, 'utf8')), { port: 6194 }, 'only ai* config keys are removed');
+  assert.equal(fs.existsSync(path.join(root, 'orders-overrides.json')), true, 'business data is untouched');
+  const before = fs.statSync(configPath).mtimeMs;
+  const second = removeRetiredAiArtifacts({ serverDataRoot: root, configPath, writeJson: () => { throw new Error('must not rewrite'); } });
+  assert.deepEqual(second, { removed: [], strippedKeys: [] }, 'idempotent');
+  assert.equal(fs.statSync(configPath).mtimeMs, before);
 });
 
 /* ------------------------------------------------------------ Electron */

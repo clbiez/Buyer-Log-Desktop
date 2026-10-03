@@ -3,8 +3,6 @@
   "host": "127.0.0.1",
   "deltaStoreMode": "shadow",
   "centralIamEnabled": false,
-  "aiEnabled": false,
-  "aiModel": "qwen2.5:3b",
   "refreshWithExcel": true,
   "excelRefreshTimeoutMs": 600000,
   "auth": {

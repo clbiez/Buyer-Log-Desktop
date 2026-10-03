@@ -77,6 +77,8 @@ test('v6.36 Agent Workflow Studio arayüzü uygulamadan kaldırıldı',()=>{
 });
 
 test('v5.46 server exposes only controlled workflow platform endpoints',()=>{
-  for(const endpoint of ['/api/agent-platform','/api/agent-platform/plan','/api/agent-platform/workflows']) assert.ok(SERVER.includes(endpoint),endpoint);
+  for(const endpoint of ['/api/agent-platform','/api/agent-platform/workflows']) assert.ok(SERVER.includes(endpoint),endpoint);
+  // AI asistan katmanı kaldırıldı: LLM planlama ve AI sağlayıcı uçları yok.
+  for(const endpoint of ["'/api/agent-platform/plan'","'/api/agent-platform/ai-settings'","'/api/agent-platform/ai/models'"]) assert.equal(SERVER.includes(endpoint),false,endpoint);
   assert.match(SERVER,/createPolicyEngine/);assert.match(SERVER,/createToolRegistry/);assert.match(SERVER,/createAgentRuntime/);
 });

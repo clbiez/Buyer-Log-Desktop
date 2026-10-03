@@ -219,15 +219,6 @@
 .cpaFormulaEditor{display:grid;gap:8px;padding:9px;border:1px solid var(--line);background:var(--card2)}
 .cpaFormulaEditor textarea{width:100%;min-height:116px;resize:vertical;padding:9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:var(--fs-sm);line-height:1.45;box-sizing:border-box}
 .cpaFormulaActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.cpaFormulaAiButton{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));color:var(--acc-ink)}
-.cpaFormulaAiOverlay{z-index:90}
-.cpaFormulaAiModal{width:min(760px,94vw);max-height:min(720px,90vh)}
-.cpaFormulaAiBody{gap:12px}
-.cpaFormulaAiTrainingNote{padding:9px 11px;border:1px solid color-mix(in srgb,var(--acc) 35%,var(--line));border-left:3px solid var(--acc);border-radius:var(--r-sm);background:var(--acc-bg);color:var(--ink2);font-size:var(--fs-sm);line-height:1.45}
-.cpaFormulaAiActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.cpaFormulaAiBody textarea{width:100%;box-sizing:border-box;resize:vertical}
-.cpaFormulaAiBody [data-cpa-formula-ai-result]{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.45}
-.cpaFormulaAiModal>footer{gap:8px}
 .cpaFormulaStatus{font-size:var(--fs-sm);color:var(--muted)}
 .cpaFormulaStatus.is-valid{color:var(--good);font-weight:700}
 .cpaFormulaStatus.is-invalid{color:var(--danger);font-weight:700}

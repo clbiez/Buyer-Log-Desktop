@@ -2062,7 +2062,6 @@
             <div class="cpaAiRow">
               <button type="button" class="cpaBtn sm primary" data-cpa-ai-copy>${esc(L('Rehberi kopyala', 'Copy guide'))}</button>
               <button type="button" class="cpaBtn sm" data-cpa-ai-download>${esc(L('Rehberi indir (.md)', 'Download guide (.md)'))}</button>
-              <button type="button" class="cpaBtn sm cpaFormulaAiButton" data-cpa-formula-ai>${esc(L('✦ Buyer Log AI ile öner', '✦ Suggest with Buyer Log AI'))}</button>
             </div>
             <p class="cpaNote">${esc(L('Rehber Buyer Log kural dilini, fonksiyonları ve yalnız alan ADLARINI içerir; sipariş, fiyat veya tedarikçi verisi eklenmez. Şirketinizin izin verdiği bir AI aracını (ChatGPT vb.) kullanın.', 'The guide contains the Buyer Log rule language, functions and only field NAMES; no order, price or supplier data is included. Use an AI tool your company allows (ChatGPT etc.).'))}</p></li>
           <li><b>${esc(L('AI cevabını buraya yapıştırın', 'Paste the AI answer here'))}</b>
@@ -2341,12 +2340,6 @@
     function addPriority() { showTemplates = false; createRule(null); }
     function addChecklist() { showTemplates = false; createRule(null); }
 
-    function notifyFormulaAi(message) {
-      if (typeof showToast === 'function') showToast(message);
-      else if (typeof toast === 'function') toast(message);
-      else if (typeof window.alert === 'function') window.alert(message);
-    }
-
     function applyFormula(rule, formula) {
       rule.formula = formula;
       rule.mode = 'formula';
@@ -2357,100 +2350,6 @@
         rule.mode = 'basic';
       }
       uiModes.set(rule.id, rule.mode);
-    }
-
-    function openFormulaAiDialog(rule) {
-      if (!rule) return;
-      document.getElementById('_cpaFormulaAi')?.remove();
-      const aiModal = document.createElement('div');
-      aiModal.id = '_cpaFormulaAi';
-      aiModal.className = 'cpaModalOverlay cpaFormulaAiOverlay';
-      aiModal.innerHTML = `<div class="cpaModal cpaFormulaAiModal" role="dialog" aria-modal="true" aria-labelledby="cpaFormulaAiTitle">
-        <header><div><b id="cpaFormulaAiTitle">${esc(L('Buyer Log AI ile formül öner', 'Suggest a formula with Buyer Log AI'))}</b>
-          <small>${esc(L('Buyer Log alan kataloğu hazırlandı. AI yalnızca incelenebilir bir formül önerisi üretir.', 'The Buyer Log field catalog is prepared. AI produces a reviewable formula suggestion only.'))}</small></div>
-          <button type="button" data-cpa-formula-ai-close aria-label="${esc(L('Kapat', 'Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></header>
-        <div class="cpaModalBody cpaFormulaAiBody">
-          <div class="cpaFormulaAiTrainingNote">${esc(L('Bu adım gerçek model eğitimi yapmaz; Buyer Log formül sözdizimini ve bu kuralın alan kataloğunu kontrollü bağlam olarak kullanır.', 'This step does not retrain the model; it uses the Buyer Log formula syntax and this rule\'s field catalog as controlled context.'))}</div>
-          <label class="cpaRuleTarget"><span>${esc(L('Derdini anlat', 'Describe the problem'))}</span>
-            <textarea data-cpa-formula-ai-request rows="6" maxlength="3000" placeholder="${esc(L('Örn. Üretimde olmayan ve yükleme tarihi 7 günden yakın siparişleri bu kurala al.', 'Example: include orders that are not in production and have a load date within 7 days.'))}">${esc(view.aiDraftOf(rule).request)}</textarea></label>
-          <div class="cpaFormulaAiActions"><button type="button" class="cpaBtn" data-cpa-formula-ai-generate>${esc(L('Formül öner', 'Generate formula'))}</button><span data-cpa-formula-ai-status class="cpaFormulaStatus"></span></div>
-          <label class="cpaRuleTarget"><span>${esc(L('Önerilen formül', 'Suggested formula'))}</span>
-            <textarea data-cpa-formula-ai-result rows="5" readonly spellcheck="false"></textarea></label>
-          <p data-cpa-formula-ai-explanation class="cpaNote"></p>
-        </div>
-        <footer><button type="button" class="cpaBtn" data-cpa-formula-ai-cancel>${esc(L('Vazgeç', 'Cancel'))}</button><button type="button" class="cpaBtn primary" data-cpa-formula-ai-apply disabled>${esc(L('Formülü uygula', 'Apply formula'))}</button></footer>
-      </div>`;
-      document.body.appendChild(aiModal);
-      const requestInput = aiModal.querySelector('[data-cpa-formula-ai-request]');
-      const resultInput = aiModal.querySelector('[data-cpa-formula-ai-result]');
-      const explanation = aiModal.querySelector('[data-cpa-formula-ai-explanation]');
-      const status = aiModal.querySelector('[data-cpa-formula-ai-status]');
-      const generate = aiModal.querySelector('[data-cpa-formula-ai-generate]');
-      const apply = aiModal.querySelector('[data-cpa-formula-ai-apply]');
-      let suggestion = '';
-      let controller = null;
-      const closeAi = () => {
-        if (controller) controller.abort();
-        aiModal.remove();
-      };
-      aiModal.querySelectorAll('[data-cpa-formula-ai-close], [data-cpa-formula-ai-cancel]').forEach(button => button.onclick = closeAi);
-      aiModal.onclick = event => { if (event.target === aiModal) closeAi(); };
-      aiModal.addEventListener('keydown', event => { if (event.key === 'Escape') closeAi(); });
-      generate.onclick = async () => {
-        const request = String(requestInput.value || '').trim();
-        if (!request) {
-          status.textContent = L('Önce ihtiyacı açıklayın.', 'Describe the problem first.');
-          status.className = 'cpaFormulaStatus is-invalid';
-          requestInput.focus();
-          return;
-        }
-        generate.disabled = true;
-        apply.disabled = true;
-        suggestion = '';
-        resultInput.value = '';
-        explanation.textContent = '';
-        status.textContent = L('AI önerisi hazırlanıyor…', 'Preparing AI suggestion…');
-        status.className = 'cpaFormulaStatus';
-        controller = new AbortController();
-        try {
-          const response = await fetch('/api/copilot/formula', {
-            method: 'POST', credentials: 'same-origin', signal: controller.signal,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ request, fields: formulaFieldCatalog(rule), language: isEn() ? 'en' : 'tr' }),
-          });
-          const data = await response.json().catch(() => ({}));
-          if (!response.ok || !data.ok) throw new Error(data.error || L('AI önerisi alınamadı.', 'AI suggestion could not be generated.'));
-          const formula = Rules.formulaFromDisplay(String(data.formula || '').trim(), catalogFor(rule));
-          const validation = Rules.validateExpression(formula, { fields: formulaFieldIds(rule) });
-          if (!validation.valid) throw new Error((validation.errors || [L('Üretilen formül geçersiz.', 'Generated formula is invalid.')]).join(' · '));
-          suggestion = formula;
-          resultInput.value = Rules.formulaToDisplay(formula, catalogFor(rule), lang());
-          explanation.textContent = String(data.explanation || '').trim();
-          apply.disabled = false;
-          status.textContent = L('✓ Güvenli öneri hazır', '✓ Safe suggestion ready');
-          status.className = 'cpaFormulaStatus is-valid';
-        } catch (error) {
-          if (error && error.name === 'AbortError') return;
-          status.textContent = error && error.message ? error.message : L('AI önerisi alınamadı.', 'AI suggestion could not be generated.');
-          status.className = 'cpaFormulaStatus is-invalid';
-        } finally {
-          controller = null;
-          if (aiModal.isConnected) generate.disabled = false;
-        }
-      };
-      apply.onclick = () => {
-        if (!suggestion) return;
-        const validation = Rules.validateExpression(suggestion, { fields: formulaFieldIds(rule) });
-        if (!validation.valid) {
-          notifyFormulaAi((validation.errors || [L('Formül geçersiz.', 'Formula is invalid.')]).join(' · '));
-          apply.disabled = true;
-          return;
-        }
-        applyFormula(rule, suggestion);
-        closeAi();
-        commit(); draw(); scrollToRule(rule.id);
-      };
-      requestAnimationFrame(() => requestInput.focus());
     }
 
     /* AI cevabı: formül bulunur, görünen adlar kimliğe çevrilir, Buyer Log'un
@@ -2745,10 +2644,6 @@
       modal.querySelectorAll('[data-cpa-rule-formula]').forEach(el => {
         el.oninput = () => syncFormulaInput(el, true);
         el.onchange = () => syncFormulaInput(el, false);
-      });
-      modal.querySelectorAll('[data-cpa-formula-ai]').forEach(el => el.onclick = () => {
-        const rule = findRule(ruleIdOf(el));
-        if (rule) openFormulaAiDialog(rule);
       });
       modal.querySelectorAll('[data-cpa-formula-test]').forEach(el => el.onclick = () => {
         const row = el.closest('[data-cpa-rule]'); const rule = findRule(ruleIdOf(el));

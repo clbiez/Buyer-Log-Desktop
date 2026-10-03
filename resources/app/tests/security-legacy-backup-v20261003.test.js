@@ -68,7 +68,7 @@ test('legacy v2 export carries business data but no secret/auth/AI key material;
   seed();
   const backup = await userData.exportBackupToFile({
     appVersion: '7.0.225',
-    browserStorage: { theme: 'dark', 'bl.user.u1.copilotApiKey': SECRET_MARKER, 'bl.user.u1.view': JSON.stringify({ cols: 3, token: SECRET_MARKER }) },
+    browserStorage: { theme: 'dark', 'bl.user.u1.aiApiKey': SECRET_MARKER, 'bl.user.u1.view': JSON.stringify({ cols: 3, token: SECRET_MARKER }) },
   });
   try {
     const text = backupText(backup.path);

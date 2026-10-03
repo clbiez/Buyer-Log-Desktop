@@ -316,13 +316,6 @@ const collectionImageSyncPolicy = require('./lib/collection-image-sync-policy');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
 const backlogPlanActual = require('./lib/backlog-plan-actual');
 const modelImageRegistry = require('./lib/model-image-registry');
-// Ajan kaynaklı yazmaların audit etiketi (bkz. copilot-provenance).
-const copilotProvenance = require('./lib/copilot-provenance');
-// Octopus çıktısı: cevabın dayandığı satırları Excel'e çevirir.
-const { createExportStore } = require('./lib/octopus-export-store');
-const octopusExports = createExportStore();
-// Eylem listesi istemciyle TEK kaynaktan paylaşılır (bkz. agent-tool-registry).
-const copilotActions = require('../public/copilot-actions.js');
 const {
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
   loadViews, addView, updateView, deleteView, setFavoriteView, markUsedView,
@@ -345,6 +338,15 @@ if (!loadedConfig.found) {
   logRuntimeFailure('configLoad', loadedConfig.error || loadedConfig.warning);
   console.warn(loadedConfig.warning);
 }
+// Kaldırılan AI asistan katmanının ayar/anahtar kalıntıları (bkz. lib/retired-ai-cleanup).
+try {
+  const retired = require('./lib/retired-ai-cleanup').removeRetiredAiArtifacts({
+    serverDataRoot: SERVER_DATA_ROOT, configPath: CONFIG_PATH,
+    log: message => logRuntimeFailure('retiredAiCleanup', message),
+  });
+  for (const key of retired.strippedKeys) delete config[key];
+  if (retired.removed.length || retired.strippedKeys.length) markStartup('RETIRED_AI_CLEANUP', retired);
+} catch (error) { logRuntimeFailure('retiredAiCleanup', error); }
 const SHARED_DATA_ROOT = path.resolve(config.sharedDataRoot || path.join(LOCAL_DATA_ROOT, 'shared-data'));
 const sharedRevisionStore = new SharedRevisionStore(SHARED_DATA_ROOT);
 // Sync Hub yalnız delta dosyaları taşır; BuyerLogLocal.db daima yerel diskte kalır.
@@ -587,8 +589,6 @@ const automationFieldCheck = require('./lib/automation-field-check');
 const { createPolicyEngine } = require('./lib/agent-policy-engine');
 const { createAgentRuntime } = require('./lib/agent-runtime');
 const { architectureTemplate, validateWorkflow, nodeCatalog } = require('./lib/agent-graph');
-const agentAi = require('./lib/agent-ai-provider');
-const copilotAgent = require('./lib/copilot-agent');
 const agentBrowserSettings = require('./lib/agent-browser-settings');
 const agentBrowserConnector = require('./lib/agent-browser-connector');
 const browserDebugService = require('./lib/browser-debug-service');
@@ -2117,10 +2117,9 @@ const agentPolicyEngine = createPolicyEngine({ userAccess, allowedConnectorHosts
 const agentRuntime = createAgentRuntime({ store:agentWorkflowStore, toolRegistry:agentToolRegistry, policyEngine:agentPolicyEngine, auditFn:(profile,action,target,detail)=>userAccess.appendAudit(profile,action,target,detail) });
 
 function agentPlatformState(ownerId, profile = null) {
-  const state = agentWorkflowStore.stateForOwner(ownerId), ai = agentAi.providerStatus();
+  const state = agentWorkflowStore.stateForOwner(ownerId);
   return {
     ...state,
-    ai: { ...ai, canConfigure:Boolean(profile && String(profile.role || '').trim().toLowerCase() === 'moderator') },
     browser: { ...agentBrowserSettings.publicSettings(), canConfigure:Boolean(profile && String(profile.role || '').trim().toLowerCase() === 'moderator'), managedPort:agentBrowserConnector.managedCdpPort() },
     connectors: { allowedHosts: agentPolicyEngine.allowedConnectorHosts, browserAllowedHosts:agentBrowserSettings.loadSettings().allowedHosts },
     nodeCatalog: nodeCatalog(agentToolRegistry.catalog()),
@@ -2234,89 +2233,6 @@ app.post('/api/agent-platform/browser/record/:id/stop', userAccess.requireArea('
     userAccess.appendAudit(req.currentUser, 'AGENT_BROWSER_RECORD_STOP', recording.id, { url:recording.url, steps:recording.steps.length });
     res.json({ ok:true, recording });
   } catch (err) { agentPlatformError(res,err,'Browser Automation kaydı durdurulamadı.'); }
-});
-app.post('/api/agent-platform/ai-settings', userAccess.requireArea('agents'), userAccess.requireModerator, express.json({limit:'32kb'}), (req,res) => {
-  try {
-    const saved = agentAi.saveSettings(req.body || {});
-    userAccess.appendAudit(req.currentUser, 'AGENT_AI_SETTINGS_UPDATE', 'openai', { model:saved.model, source:saved.source, configured:saved.configured, keyChanged:Boolean(req.body && (req.body.apiKey || req.body.clearKey)) });
-    res.json({ ok:true, ai:{ ...saved, canConfigure:true } });
-  } catch (err) { agentPlatformError(res,err,'AI sağlayıcı ayarları kaydedilemedi.'); }
-});
-app.post('/api/agent-platform/ai-settings/test', userAccess.requireArea('agents'), userAccess.requireModerator, express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const result = await agentAi.testConnection(req.body || {});
-    userAccess.appendAudit(req.currentUser, 'AGENT_AI_CONNECTION_TEST', 'openai', { model:result.model, source:result.source, ok:true });
-    res.json({ ok:true, result });
-  } catch (err) { agentPlatformError(res,err,'AI sağlayıcı bağlantısı test edilemedi.'); }
-});
-function agentAiRequestOptions(body) {
-  const input = body && typeof body === 'object' ? body : {};
-  return {
-    provider: input.provider,
-    model: input.model,
-    endpoint: input.endpoint || input.baseUrl,
-  };
-}
-app.get('/api/agent-platform/ai/models', userAccess.requireArea('agents'), async (req,res) => {
-  try {
-    const result = await agentAi.discoverModels();
-    res.set('Cache-Control','no-store').json({ ok:true, ...result });
-  } catch (err) { agentPlatformError(res,err,'AI modelleri keşfedilemedi.'); }
-});
-app.post('/api/agent-platform/ai/models/pull', userAccess.requireArea('agents'), userAccess.requireModerator, express.json({limit:'32kb'}), async (req,res) => {
-  const streaming = String(req.query && req.query.stream || '') === '1' || String(req.headers.accept || '').includes('application/x-ndjson');
-  try {
-    const model = String(req.body && req.body.model || '').trim();
-    if (!model) return res.status(400).json({ error:'Model adı zorunludur.', code:'AI_MODEL_REQUIRED' });
-    let lastProgress = null;
-    if (streaming) { res.status(200).set({ 'Cache-Control':'no-store', 'Content-Type':'application/x-ndjson; charset=utf-8' }); res.flushHeaders?.(); }
-    const result = await agentAi.pullModel(model, agentAiRequestOptions(req.body), progress => {
-      lastProgress = progress;
-      if (streaming && !res.writableEnded) res.write(`${JSON.stringify({ progress })}\n`);
-    });
-    userAccess.appendAudit(req.currentUser, 'AGENT_AI_MODEL_PULL', model, { provider:result.provider || agentAi.providerStatus().provider, status:result.status });
-    if (streaming) { res.write(`${JSON.stringify({ ok:true, result, progress:lastProgress })}\n`); return res.end(); }
-    res.json({ ok:true, result, progress:lastProgress });
-  } catch (err) {
-    if (streaming && res.headersSent) { if (!res.writableEnded) res.write(`${JSON.stringify({ ok:false, error:err && err.message || 'AI modeli indirilemedi.', code:err && err.code || 'AGENT_PLATFORM_ERROR' })}\n`); return res.end(); }
-    agentPlatformError(res,err,'AI modeli indirilemedi.');
-  }
-});
-app.post('/api/agent-platform/ai/models/update', userAccess.requireArea('agents'), userAccess.requireModerator, express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const model = String(req.body && req.body.model || '').trim();
-    if (!model) return res.status(400).json({ error:'Model adı zorunludur.', code:'AI_MODEL_REQUIRED' });
-    const result = await agentAi.pullModel(model, agentAiRequestOptions(req.body));
-    userAccess.appendAudit(req.currentUser, 'AGENT_AI_MODEL_UPDATE', model, { provider:result.provider || agentAi.providerStatus().provider, status:result.status });
-    res.json({ ok:true, result });
-  } catch (err) { agentPlatformError(res,err,'AI modeli güncellenemedi.'); }
-});
-app.post('/api/agent-platform/ai/models/update-all', userAccess.requireArea('agents'), userAccess.requireModerator, express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const result = await agentAi.updateAll(agentAiRequestOptions(req.body));
-    userAccess.appendAudit(req.currentUser, 'AGENT_AI_MODEL_UPDATE_ALL', result.provider, { count:result.results.length });
-    res.json({ ok:true, result });
-  } catch (err) { agentPlatformError(res,err,'AI modelleri güncellenemedi.'); }
-});
-app.post('/api/agent-platform/ai/models/remove', userAccess.requireArea('agents'), userAccess.requireModerator, express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const model = String(req.body && req.body.model || '').trim();
-    const current = agentAi.providerStatus();
-    if (!model) return res.status(400).json({ error:'Model adı zorunludur.', code:'AI_MODEL_REQUIRED' });
-    if (current.provider === (req.body && req.body.provider ? String(req.body.provider).trim().toLowerCase() : current.provider) && current.model === model) {
-      return res.status(409).json({ error:'Aktif model silinemez; önce başka bir model seçin.', code:'AI_ACTIVE_MODEL' });
-    }
-    const result = await agentAi.removeModel(model, agentAiRequestOptions(req.body));
-    userAccess.appendAudit(req.currentUser, 'AGENT_AI_MODEL_DELETE', model, { provider:result.provider || current.provider });
-    res.json({ ok:true, result });
-  } catch (err) { agentPlatformError(res,err,'AI modeli silinemedi.'); }
-});
-app.post('/api/agent-platform/plan', userAccess.requireArea('agents'), express.json({limit:'128kb'}), async (req,res) => {
-  try {
-    const planned = await agentAi.planTask(String(req.body && req.body.task || ''), agentToolRegistry);
-    userAccess.appendAudit(req.currentUser, 'AGENT_PLAN_CREATED', 'draft', { provider:planned.provider, task:String(req.body && req.body.task || '').slice(0,300) });
-    res.json({ ok:true, plan:planned });
-  } catch (err) { agentPlatformError(res,err,'Agent planı oluşturulamadı.'); }
 });
 app.post('/api/agent-platform/workflows', userAccess.requireArea('agents'), express.json({limit:'512kb'}), (req,res) => {
   try {
@@ -2464,8 +2380,7 @@ function automationNextChangeBaseline(rows,recipe,baseline,processedRows,baselin
    GÖRELİ TARİH BELİRTEÇLERİ
 
    Otomasyon filtreleri statik metin tutuyor. "Teslim tarihi geçmiş siparişler"
-   gibi bir kural kurulurken bugünün tarihi değere GÖMÜLÜYORDU — planlayıcı da
-   bunu yapıyor (agent-ai-provider: value: calendarDayISO(new Date())).
+   gibi bir kural kurulurken bugünün tarihi değere GÖMÜLÜYORDU.
 
    Sonuç sessiz bir yanlıştı: haftalık çalışan bir otomasyon, kurulduğu günden
    sonra geciken siparişleri hiç görmez. Rapor her hafta biraz daha eksilir ve
@@ -8554,7 +8469,7 @@ function markRefreshJobPhase(id,phase){
 }
 
 async function performRefresh(id, currentUser, targets = null, options = {}) {
-  // Otomasyon ve Octopus yolları da buradan geçer: bağlı grup birlikte yenilenir.
+  // Otomasyon yolu da buradan geçer: bağlı grup birlikte yenilenir.
   if (Array.isArray(targets) && targets.length) targets = refreshTargetsFor(targets);
   // Aşama işaretleri (v5.89): sayaca tıklandığında yenilemenin hangi adımda
   // olduğu ve her adımın kaç saniye sürdüğü gösterilebilsin diye her geçiş
@@ -9201,24 +9116,17 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     if (!Number.isFinite(orderCode)) return res.status(400).json({ error: 'Geçerli sipariş kodu zorunlu.', code: 'VALIDATION_ERROR' });
     if (rejectUnauthorizedOrders(req, res, [orderCode])) return;
     const beforeContext=pageProjectionContext(req.currentUser);
-    /* origin YALNIZ audit içindir; override store'una VERİ olarak girmez.
-       Yama gövdesinden ayıklanır — yoksa sipariş kaydına anlamsız bir alan
-       sızar, projeksiyon önbelleğine yazılır ve canlı yayınla bütün
-       cihazlara sipariş alanı gibi dağılırdı. */
-    const write = copilotProvenance.describeWrite(req.body);
-    const patchBody = write.patch;
+    /* İstemci kaynaklı "origin" alanı veri değildir; yama gövdesinden ayıklanır —
+       yoksa sipariş kaydına anlamsız bir alan sızar ve canlı yayınla bütün
+       cihazlara dağılırdı. */
+    const { origin: _ignoredOrigin, ...patchBody } = req.body && typeof req.body === 'object' ? req.body : {};
     const saved = patchOrderOverride(orderCode, patchBody, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     let pageCachePatched=false;
     try { pageCachePatched=await rewriteProjectionCacheForRowPatches(req.currentUser,beforeContext,[{orderCode,patch:patchBody}]); }
     catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
-    /* Değişikliğin KAYNAĞI kayda geçer: aynı uç hem elle düzenlemeyi hem
-       Copilot önerisini taşıyor ve altı ay sonra ikisini ayırt edebilmek
-       gerekiyor. Kaynak istemciden gelir ama AKTÖR oturumdan belirlenir —
-       istemcinin bildirdiği bir kimliğe güvenilmez. */
     userAccess.appendAudit(req.currentUser, 'ORDER_UPDATE', String(orderCode), {
-      fields: write.fields,
-      ...(write.origin || {}),
+      fields: Object.keys(patchBody).filter(key => !/^expected/.test(key)),
     });
     liveEvents.notifyChange('orders', requestClientId(req), { rowPatches: liveRowPatchesFor([{ orderCode, patch: patchBody }]) });
     res.set('ETag', `"${saved.revision}"`);
@@ -11238,29 +11146,19 @@ require('./routes/lfl-routes')(app, {
   withFabricDimensions,
 
 });
+app.get('/api/status', (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  // The desktop launcher needs a version marker before either authentication layer.
+  // When the optional outer password gate is enabled, do not expose local paths or
+  // source metadata until that gate has been passed.
+  if (auth.enabled && !auth.isAuthenticated(req)) {
+    return res.json({ app: 'Buyer Log', appVersion: APP_VERSION, displayVersion: DISPLAY_VERSION, authRequired: true });
+  }
+  const id=sourceUserId(req),runtime=cacheForUser(id);
+  res.json({ app: 'Buyer Log', appVersion: APP_VERSION, displayVersion: DISPLAY_VERSION, loadedAt: runtime.loadedAt, sources: runtime.sources, sourceFolder: sourceFolderForUser(id), userId:id, excelWorker: getExcelWorkerStats() });
+});
 // ---- Global Flow · Earth 3D sağlayıcı ayarları → server/routes/global-flow-earth-routes.js ----
 require('./routes/global-flow-earth-routes')(app, { express, userAccess });
-// ---- Octopus (Copilot) route'ları → server/routes/copilot-routes.js ----
-require('./routes/copilot-routes')(app, {
-  APP_VERSION,
-  DISPLAY_VERSION,
-  agentAi,
-  agentPlatformError,
-  agentPolicyEngine,
-  agentToolRegistry,
-  apiError,
-  auth,
-  cacheForUser,
-  copilotActions,
-  copilotAgent,
-  express,
-  getExcelWorkerStats,
-  octopusExports,
-  sourceFolderForUser,
-  sourceUserId,
-  userAccess,
-  getConfig: () => config,
-});
 // ---- Görünüm ve filtre profilleri + kaynak klasör seçimi route'ları → server/routes/view-profile-routes.js ----
 require('./routes/view-profile-routes')(app, {
   addFilterProfile,
