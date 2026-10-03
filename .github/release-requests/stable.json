@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.223",
-  "commit_sha": "80567c9d6d1a26a6723d2440f6f9c6a4eb348b47",
-  "release_notes": "Buyer Log 7.0.223: Checklist onayları PO bazlı veya PLM ID + Model Adı + Colour Code bazında yeniden kullanılabilir; rapor numarası, gerçekleşme tarihi ve attachment kanıtları eklendi; CP checklist kayıt güvenliği güçlendirildi; Checklist Excel model görselleri hücreyle taşınır/boyutlanır biçimde gömülüyor; Üreticiye Checklist Exceli Hazırla akışı Excel + ilgili ekleri Prepare E-Mail'e taşıyor ve 9,5 MB draft attachment kuralını kullanıyor."
+  "version": "7.0.224",
+  "commit_sha": "ec6b64ecfab5c3a5c494e211c84be358197b14d2",
+  "release_notes": "Buyer Log 7.0.224: Central IAM / Shared Hub geçici erişim sorunlarında geçerli yerel kullanıcı deposu güvenli biçimde kurtarılıyor; aktif kullanıcıların yerel girişinin gereksiz yere kilitlenmesi önlendi."
 }
