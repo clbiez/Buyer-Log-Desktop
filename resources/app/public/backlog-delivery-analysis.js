@@ -388,7 +388,10 @@
     const targetLabel = state.settings.targetType === 'inStore' ? L('Model Bütçe / In Store', 'Model Budget / In Store') : L('Retail Depo', 'Retail Warehouse');
     return `<div class="bdaHead">
       <div>
-        <div class="bdaTitle">${esc(L('Teslimat Riski Analizi', 'Delivery Risk Analysis'))}</div>
+        <button type="button" class="bdaTitle bdaTitleToggle" data-action="toggleAnalysis" aria-expanded="${state.collapsed ? 'false' : 'true'}">
+          <span>${esc(L('Teslimat Riski Analizi', 'Delivery Risk Analysis'))}</span>
+          <span class="bdaTitleChevron" aria-hidden="true"></span>
+        </button>
         <div class="bdaSub">${esc(L('Analiz hedefi', 'Analysis target'))}: <b>${esc(targetLabel)}</b>${periodNote()} · ${renderParity()}</div>
       </div>
       <div class="bdaHeadControls">
@@ -414,7 +417,6 @@
           <input type="date" data-control="periodFrom" value="${esc(state.period.from || '')}"></label>
         <label class="bdaControl"><span>${esc(L('Bitiş', 'To'))}</span>
           <input type="date" data-control="periodTo" value="${esc(state.period.to || '')}"></label>` : ''}
-        <button type="button" class="tbtn bdaAnalysisToggle" data-action="toggleAnalysis" aria-expanded="${state.collapsed ? 'false' : 'true'}">${esc(state.collapsed ? L('Analizi Göster', 'Show Analysis') : L('Analizi Gizle', 'Hide Analysis'))}</button>
         <button type="button" class="tbtn" data-action="settings">${esc(L('Yorum Ayarları', 'Insight Settings'))}</button>
         <button type="button" class="tbtn" data-action="copy">${esc(L('Özeti Kopyala', 'Copy Summary'))}</button>
         <button type="button" class="tbtn" data-action="refresh">${esc(L('Yenile', 'Refresh'))}</button>
