@@ -98,7 +98,7 @@ function positionModule(){
   const kpi=$('backlogOverview')||$('backlogKpi'),chart=$('backlogChartPanel'),delivery=$('backlogAnalysis');
   const tree=[...parent.children].find(el=>el.classList&&el.classList.contains('panel')&&el!==mod&&el.id!=='backlogChartPanel'&&el.id!=='backlogOverview');
   if(pos===0&&kpi)kpi.insertAdjacentElement('afterend',mod);
-  else if(pos===1&&chart)chart.insertAdjacentElement('afterend',mod);
+  else if(pos===1&&(chart||kpi))(chart||kpi).insertAdjacentElement('afterend',mod);
   else if(pos===2&&delivery)delivery.insertAdjacentElement('afterend',mod);
   else if(tree)tree.insertAdjacentElement('afterend',mod);
   syncMoveButtons();
