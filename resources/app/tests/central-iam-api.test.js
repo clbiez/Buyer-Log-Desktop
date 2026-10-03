@@ -16,11 +16,16 @@ async function setup(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-iam-api-')), shared = path.join(root, 'shared'); fs.mkdirSync(shared);
   const children = [];
   t.after(async () => { for (const child of children) { if (child.exitCode === null) { const stopped = once(child, 'exit'); child.kill(); await stopped; } } fs.rmSync(root, { recursive: true, force: true }); });
-  async function device(name, initial) {
+  async function device(name, initial, options = {}) {
     const auth = path.join(root, name, 'auth'); fs.mkdirSync(auth, { recursive: true });
+    const serverData = path.join(root, name, 'server');
     if (initial) fs.writeFileSync(path.join(auth, 'user-access.json'), JSON.stringify(initial));
+    if (options.legacyInitial) {
+      fs.mkdirSync(serverData, { recursive: true });
+      fs.writeFileSync(path.join(serverData, 'user-access.json'), JSON.stringify(options.legacyInitial));
+    }
     const child = fork(path.join(__dirname, 'helpers', 'iam-device.js'), [], { env: { ...process.env,
-      BUYER_LOG_AUTH_DATA_ROOT: auth, BUYER_LOG_SERVER_DATA_ROOT: path.join(root, name, 'server'), BUYER_LOG_DATA_ROOT: path.join(root, name, 'data'),
+      BUYER_LOG_AUTH_DATA_ROOT: auth, BUYER_LOG_SERVER_DATA_ROOT: serverData, BUYER_LOG_DATA_ROOT: path.join(root, name, 'data'),
       BUYER_LOG_LOCAL_DATA_ROOT: path.join(root, name, 'local'), BUYER_LOG_CONFIG_PATH: path.join(root, name, 'config.json'),
       BUYER_LOG_CENTRAL_IAM_ENABLED: '1', BUYER_LOG_IAM_SHARED_ROOT: shared }, stdio: ['ignore','pipe','pipe','ipc'] });
     children.push(child); const [{ port }] = await once(child, 'message');
@@ -35,6 +40,31 @@ async function setup(t) {
   }
   return { device, shared };
 }
+test('Central IAM offline login recovers legacy auth and accepts a credentialed non-Moderator account', async t => {
+  const { device, shared } = await setup(t);
+  const legacy = seed();
+  const verifier = legacy.moderator.passwordHash;
+  legacy.moderator.passwordHash = '';
+  legacy.moderator.pinHash = '';
+  legacy.users = [{
+    id: 'buyer-local', username: 'gokberk.celebi', displayName: 'Gökberk Çelebi',
+    role: 'buyer', systemRole: 'buyer', enabled: true, status: 'ACTIVE',
+    passwordHash: verifier, pinHash: verifier, title: 'Buyer',
+    managerId: 'moderator', supervisorId: 'moderator',
+  }];
+  const local = iam.migrateStore(legacy);
+  const client = await device('legacy-offline', null, { legacyInitial: local });
+
+  fs.renameSync(shared, shared + '-offline');
+  const login = await client.request('/api/user-login', 'POST', {
+    username: 'gokberk.celebi', password: 'Test-admin-123',
+  }, 'buyer');
+  assert.equal(login.status, 200, JSON.stringify(login));
+  assert.equal(login.body.user.username, 'gokberk.celebi');
+  assert.ok(fs.existsSync(path.join(client.auth, 'user-access.json')));
+  assert.equal(JSON.parse(fs.readFileSync(path.join(client.auth, 'user-access.json'))).users.length, 1);
+});
+
 test('Central IAM acceptance: create, second PC login, CP revoke/403, reset, offline login and reconnect', async t => {
   const { device, shared } = await setup(t), a = await device('a', seed()), b = await device('b');
   assert.equal((await a.request('/api/users/admin')).status, 401);
