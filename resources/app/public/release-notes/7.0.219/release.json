@@ -1,0 +1,141 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.219",
+  "channel": "stable",
+  "publishedAt": "2026-10-03",
+  "title": {
+    "tr": "Checklist yönetimi ve Yol Süreleri iyileştirmeleri",
+    "en": "Checklist management and Transit Times improvements"
+  },
+  "summary": {
+    "tr": "Checklist yönetimi ve üretici Excel akışı geliştirildi; Transit Times IAS Database sorgusu ise bağımsız modül ufku ve doğru tarih tipiyle güvenilir hale getirildi.",
+    "en": "Checklist management and the supplier Excel workflow were improved, while the Transit Times IAS Database query was made reliable with an independent module horizon and correct date typing."
+  },
+  "stats": {
+    "features": 1,
+    "improvements": 1,
+    "fixes": 2
+  },
+  "changes": [
+    {
+      "id": "priority-checklist-rules-management",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · Priority & Checklist Rules",
+        "en": "Overview · Priority & Checklist Rules"
+      },
+      "title": {
+        "tr": "Yerleşik priority ve checklist kuralları artık düzenlenebilir",
+        "en": "Built-in priority and checklist rules are now editable"
+      },
+      "body": {
+        "tr": "Ön tanımlı Checklist Questions kayıtları aynı kural editöründe görünür. Built-in priority ve checklist kuralları düzenlenebilir, kapatılabilir veya silinebilir; silinen kayıtlar tekrar açılışta geri gelmez. Metin seçerken fareyi pencere dışında bıraktığınızda modalın yanlışlıkla kapanması da engellendi.",
+        "en": "Predefined Checklist Questions now appear in the same rule editor. Built-in priority and checklist rules can be edited, disabled, or deleted, and deleted rules no longer return after reopening. The modal also stays open when a text-selection drag ends outside the window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "priority-checklist-rules.png",
+        "alt": {
+          "tr": "Priority and Checklist Rules ekranında düzenleme ve silme aksiyonlarını gösteren görsel",
+          "en": "Visual showing edit and delete actions in Priority and Checklist Rules"
+        },
+        "caption": {
+          "tr": "Yerleşik ve özel kurallar aynı yönetim modelinde.",
+          "en": "Built-in and custom rules now use the same management model."
+        }
+      }
+    },
+    {
+      "id": "supplier-checklist-excel-v2",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Tools → Checklist",
+        "en": "CP · Tools → Checklist"
+      },
+      "title": {
+        "tr": "Supplier Checklist Excel yeniden tasarlandı",
+        "en": "Supplier Checklist Excel redesigned"
+      },
+      "body": {
+        "tr": "Checklist araçları artık Tools → Checklist altında Create Checklist Excel, Import Checklist Excel ve Checklist Excel Columns olarak tek menüde. Excel; model görseli, kompakt satırlar, kilitli sistem alanları, yalnız düzenlenebilir Durum/Not hücreleri, doğru dd.mm.yyyy Ex-Factory tarihi, açılır durum listeleri ve Backlog V3 renk ailesinde dinamik KPI/istatistik özeti ile oluşturulur.",
+        "en": "Checklist tools now live under Tools → Checklist as Create Checklist Excel, Import Checklist Excel, and Checklist Excel Columns. The workbook now includes model images, compact rows, locked system fields, editable Status/Note cells only, correct dd.mm.yyyy Ex-Factory dates, status dropdowns, and a dynamic KPI/statistics summary using the Backlog V3 colour family."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "supplier-checklist-excel.png",
+        "alt": {
+          "tr": "Renkli KPI alanları ve korumalı checklist tablosu bulunan Supplier Checklist Excel görseli",
+          "en": "Supplier Checklist Excel visual with coloured KPI tiles and a protected checklist table"
+        },
+        "caption": {
+          "tr": "Dosya düzenlendikçe durum istatistikleri Excel içinde yeniden hesaplanır.",
+          "en": "Status statistics recalculate inside Excel as the supplier edits the file."
+        }
+      }
+    },
+    {
+      "id": "transit-ias-date-text-comparison-fix",
+      "type": "fix",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "IAS Database sorgusundaki Date/Text karşılaştırma hatası giderildi",
+        "en": "Date/Text comparison error in the IAS Database query was fixed"
+      },
+      "body": {
+        "tr": "Bazı IAS/SSAS kurulumlarında tarih alanı metadata'da metin olarak raporlandığı için modülün tarih penceresi DAX'ta metin karşılaştırmasına dönüşüyor ve sorgu başarısız oluyordu. Transit Times'ın kendi tarih ufku artık kanonik tarih olarak korunuyor ve DAX'a DATE(...) sınırlarıyla gönderiliyor.",
+        "en": "In some IAS/SSAS setups the date field was reported as text in metadata, causing the module date window to become a text comparison in DAX and the query to fail. Transit Times now preserves its own horizon as a canonical date and sends DATE(...) boundaries to DAX."
+      },
+      "path": {
+        "tr": "Veri Yönetimi → Yol Süreleri → İthalat Yol Süresi Analizi",
+        "en": "Data Management → Transit Times → Import Lead Time Analysis"
+      },
+      "visual": {
+        "src": "01-transit-date-type-fix.png",
+        "kind": "screenshot",
+        "alt": {
+          "tr": "Buyer Log Yol Süreleri ekranında IAS Database kapsamındaki ülke ve taşıt analizi",
+          "en": "Buyer Log Transit Times screen showing country and vehicle analysis in the IAS Database scope"
+        },
+        "caption": {
+          "tr": "IAS Database analizi seçilen tarih penceresiyle doğrudan veri modelinden hesaplanır.",
+          "en": "IAS Database analysis is calculated directly from the data model using the selected date window."
+        }
+      }
+    },
+    {
+      "id": "transit-module-horizon-isolated",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "Transit Times için bağımsız modül ufku netleştirildi",
+        "en": "A dedicated module horizon is now explicit for Transit Times"
+      },
+      "body": {
+        "tr": "Tarih aralığı kontrolü artık 'Modül ufku' olarak gösteriliyor. IAS Database kapsamı seçildiğinde bu pencere yalnız Transit Times sorgusunu sınırlar; kullanıcının veya Backlog'un kaynak ufkunu değiştirmez ve şirket genelindeki ülke/taşıt verisini seçilen dönemle sınırlar.",
+        "en": "The date-range control is now labeled 'Module horizon'. With IAS Database scope selected, this window limits only the Transit Times query; it does not change the user's or Backlog source horizon and limits company-wide country/vehicle data to the selected period."
+      },
+      "path": {
+        "tr": "Veri Yönetimi → Yol Süreleri → İthalat Yol Süresi Analizi",
+        "en": "Data Management → Transit Times → Import Lead Time Analysis"
+      },
+      "visual": {
+        "src": "02-transit-module-horizon.png",
+        "kind": "screenshot",
+        "alt": {
+          "tr": "Buyer Log Yol Süreleri ekranında IAS Database kapsamı ve tarih penceresi kontrolleri",
+          "en": "Buyer Log Transit Times screen showing IAS Database scope and date-window controls"
+        },
+        "caption": {
+          "tr": "Modül ufku yalnız bu analizin IAS sorgusuna uygulanır; Backlog ufku bağımsızdır.",
+          "en": "The module horizon applies only to this analysis's IAS query; the Backlog horizon remains independent."
+        }
+      }
+    }
+  ]
+}
