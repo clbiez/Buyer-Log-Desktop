@@ -87,7 +87,6 @@ Kartlar gerçek şirket kaydı içermeyen, kodla çizilen **örnek arayüz görs
 | Genel kullanım | Ön ayar paylaşımı | Sağ üst kullanıcı menüsü → Ön Ayar Paylaşımı | public/user-access-ui.js |
 | Genel kullanım | Kişisel görünümü sıfırlama | Kullanıcı menüsü → Görünümümü Sıfırla | public/user-access-ui.js |
 | Genel kullanım | Backup ayarlarına erişim | Kullanıcı menüsü → Backup | public/user-access-ui.js |
-| Genel kullanım | Outlook bağlantı ayarları | Kullanıcı menüsü → Microsoft 365 · Outlook | public/user-access-ui.js |
 | Genel kullanım | Uygulama güncellemesi | Kullanıcı menüsü → Uygulama Güncellemesi | public/user-access-ui.js |
 
 ## Bakım ve doğrulama
