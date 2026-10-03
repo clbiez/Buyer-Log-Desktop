@@ -213,7 +213,7 @@ function iasRow(over) {
     'Sipariş Kod': 1001, 'Ürün Adı': 'MODEL A', 'Renk Kod': 'C1', 'Renk Tanım': 'SIYAH',
     'Supplier Portal Statü': 'Depoda', 'Vasita Tanim': 'Gemi', 'İthalat Dosya No': 'F1',
     'Yükleme Talep Tarih': '2025-01-01', 'HANDOVER Tarihi': '2025-01-05', 'ETA Tarih': '2025-03-10',
-    'Tahmini Antrepo Giriş Tarihi': '2025-03-20', 'Yükleme Toplam Adet': 1000,
+    'Tahmini Antrepo Giriş Tarihi': '2025-03-20', 'Antrepo Giriş Tarihi': '2025-03-20', 'Yükleme Toplam Adet': 1000,
     ...over,
   };
 }
@@ -225,11 +225,11 @@ test('IAS parsiyellerinden ülke × taşıt süreleri Excel olmadan hesaplanır'
   const map = parse.parseAntrepoRows([
     iasRow({ 'Yükleme Toplam Adet': 3000 }),
     // aynı sipariş, ikinci parsiyel: Ithalat. önekli Dashboard başlığı da tanınır
-    iasRow({ 'İthalat Dosya No': 'F2', 'Yükleme Toplam Adet': 1000, 'Yükleme Talep Tarih': '2025-01-10', 'ETA Tarih': null, 'Ithalat.ETA Tarih': '2025-03-15', 'Tahmini Antrepo Giriş Tarihi': '2025-03-30' }),
-    // henüz yolda: antrepo girişi tahmindir, analize girmez
-    iasRow({ 'İthalat Dosya No': 'F3', 'Supplier Portal Statü': 'Yol Operasyonları', 'Tahmini Antrepo Giriş Tarihi': '2025-05-20' }),
+    iasRow({ 'İthalat Dosya No': 'F2', 'Yükleme Toplam Adet': 1000, 'Yükleme Talep Tarih': '2025-01-10', 'ETA Tarih': null, 'Ithalat.ETA Tarih': '2025-03-15', 'Tahmini Antrepo Giriş Tarihi': '2025-04-30', 'Antrepo Giriş Tarihi': '2025-03-30' }),
+    // gerçekleşen giriş yok: statü "Depoda" ve tahmini giriş olsa bile analize girmez
+    iasRow({ 'İthalat Dosya No': 'F3', 'Tahmini Antrepo Giriş Tarihi': '2025-05-20', 'Antrepo Giriş Tarihi': null }),
     // uçak, başka sipariş/ülke
-    iasRow({ 'Sipariş Kod': 2002, 'Ürün Adı': 'MODEL B', 'Vasita Tanim': 'Uçak', 'Yükleme Talep Tarih': '2025-02-01', 'HANDOVER Tarihi': '2025-02-03', 'ETA Tarih': '2025-02-08', 'Tahmini Antrepo Giriş Tarihi': '2025-02-12' }),
+    iasRow({ 'Sipariş Kod': 2002, 'Ürün Adı': 'MODEL B', 'Vasita Tanim': 'Uçak', 'Yükleme Talep Tarih': '2025-02-01', 'HANDOVER Tarihi': '2025-02-03', 'ETA Tarih': '2025-02-08', 'Tahmini Antrepo Giriş Tarihi': '2025-02-12', 'Antrepo Giriş Tarihi': '2025-02-12' }),
   ], overrides);
   const orders = [
     { ocode: 1001, model: 'MODEL A', ccode: 'C1', colour: 'SIYAH', countryRaw: 'BANGLADEŞ' },
@@ -237,9 +237,10 @@ test('IAS parsiyellerinden ülke × taşıt süreleri Excel olmadan hesaplanır'
     { ocode: 1001, model: 'MODEL A', ccode: 'C1', colour: 'SIYAH', countryRaw: 'BANGLADEŞ' },
     { ocode: 2002, model: 'MODEL B', ccode: 'C1', colour: 'SIYAH', countryRaw: 'HİNDİSTAN' },
   ];
-  const analysis = source.buildLiveAnalysis({ orders, antrepoMap: map, overrides, today: '2026-10-02' });
+  // Bu test adet ağırlıklı hesabı sınar (sevkiyat ortalaması ayrı testte).
+  const analysis = source.buildLiveAnalysis({ orders, antrepoMap: map, overrides, today: '2026-10-02', weighting: 'qty' });
   assert.equal(analysis.source, 'database');
-  assert.deepEqual(analysis.stats, { total: 4, used: 3, notArrived: 1, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0, outOfWindow: 0 });
+  assert.deepEqual(analysis.stats, { total: 4, used: 3, notArrived: 1, missingDates: 0, outOfRange: 0, missingVehicle: 0, missingCountry: 0, outOfWindow: 0, otherDestination: 0 });
   assert.equal(analysis.columns.actualLoading, false);
 
   const s = TA.summarize(analysis, { basis: 'warehouse' });
@@ -265,11 +266,11 @@ test('IAS kaynağında gerçekleşen tarih sütunları varsa tahminin önüne ge
     { country: 'ÇİN', vehicle: 'Gemi', qty: 10, arrived: true, loadingRequest: '2026-09-01', warehouseEntry: '2026-12-01' },
     { country: '', vehicle: 'Gemi', qty: 10, arrived: true, loadingRequest: '2025-01-01', warehouseEntry: '2025-03-01' },
   ], { today: '2026-10-02' });
-  assert.deepEqual(a.stats, { total: 4, used: 1, notArrived: 1, missingDates: 0, outOfRange: 1, missingVehicle: 0, missingCountry: 1, outOfWindow: 0 });
+  assert.deepEqual(a.stats, { total: 4, used: 1, notArrived: 1, missingDates: 0, outOfRange: 1, missingVehicle: 0, missingCountry: 1, outOfWindow: 0, otherDestination: 0 });
   const wh = TA.summarize(a, { basis: 'warehouse' }).rows[0];
   assert.equal(wh.loading, 14); // talep → fiili yükleme
   assert.equal(wh.transit, 36); // fiili yükleme → ETA
-  assert.deepEqual(wh.steps.map(x => x.code), ['1', '2', '2.1', '2.2', '3']);
+  assert.deepEqual(wh.steps.map(x => x.code), ['1', '4']); // Excel adım kodları; verisi olmayan adım gösterilmez
   assert.equal(TA.summarize(a, { basis: 'loading' }).rows[0].endToEnd, 59, 'fiili yükleme varsa yükleme bazı da üretilir');
 });
 
@@ -493,4 +494,86 @@ test('canlı uç nokta gerçek hatayı iki dilde iletir; IAS sorgusu düşerse B
   assert.match(route, /const fallbackMap = active \? antrepoForTarget\(active, 'backlog'\) : \{\};/);
   assert.match(route, /antrepoGrainTable: modelRefresh\.antrepoGrainTable/);
   assert.match(read('server/lib/model-refresh.js'), /const grainTable = String\(item && item\._grainTable \|\| ''\)\.trim\(\)\s*\|\| antrepoGrainTable\(mapping, aligned\.horizon\.table, aligned\.horizon\.table\);/);
+});
+
+
+// v7.0.218 — Global Lojistik raporuyla tutarlılık. Gerekçe: Buyer Log tahmini
+// antrepo girişini, adet ağırlıklı ortalamayı ve ETA sınırını kullandığı için
+// rapordan (sevkiyat ortalaması, gerçekleşen giriş, Özet Beyan sınırı) 10–30 gün
+// uzun sonuç veriyordu.
+test('varsayılan sevkiyat ortalaması raporla aynı; adet ağırlıklı ayrı seçenek', () => {
+  const ship = (days, qty, entry) => ({ country: 'BANGLADEŞ', vehicle: 'Gemi', qty, arrived: true, loadingRequest: '2026-08-01',
+    warehouseEntry: new Date(Date.UTC(2026, 7, 1 + days)).toISOString().slice(0, 10) });
+  const list = [ship(50, 9000), ship(70, 100), ship(60, 100)];
+  const byShipment = TA.buildFromShipments(list, { today: '2026-12-31' });
+  assert.equal(byShipment.weighting, 'shipment');
+  assert.equal(TA.summarize(byShipment, { basis: 'warehouse', year: '*' }).rows[0].endToEnd, 60, '(50+70+60)/3');
+  const byQty = TA.buildFromShipments(list, { today: '2026-12-31', weighting: 'qty' });
+  assert.equal(byQty.weighting, 'qty');
+  assert.equal(TA.summarize(byQty, { basis: 'warehouse', year: '*' }).rows[0].endToEnd, 50.3, '(50*9000+70*100+60*100)/9200 = 50.33');
+  // Dönemler arası özet de sevkiyat sayısıyla tartılır.
+  const twoMonths = TA.buildFromShipments([ship(40, 1), { ...ship(80, 1000000), warehouseEntry: '2026-10-20', loadingRequest: '2026-08-01' }, { ...ship(80, 1000000), warehouseEntry: '2026-10-20', loadingRequest: '2026-08-01' }], { today: '2026-12-31' });
+  const row = TA.summarize(twoMonths, { basis: 'warehouse', year: '*' }).rows[0];
+  assert.equal(row.shipments, 3);
+});
+
+test('Excel tanımları: Yol = fiili yükleme → ETA (4), Gümrük = ETA → gerçekleşen antrepo girişi (5–8)', () => {
+  const a = TA.buildFromShipments([{ country: 'HİNDİSTAN', vehicle: 'Gemi', qty: 10, arrived: true,
+    loadingRequest: '2026-07-01', handover: '2026-07-05', actualLoading: '2026-07-12', eta: '2026-08-02', summaryDeclaration: '2026-08-03', warehouseEntry: '2026-08-10' }], { today: '2026-12-31' });
+  const r = TA.summarize(a, { basis: 'warehouse', year: '*' }).rows[0];
+  assert.equal(r.loading, 11);
+  assert.equal(r.transit, 21);
+  assert.equal(r.customs, 8);
+  assert.equal(r.endToEnd, 40);
+  assert.equal(r.steps.find(x => x.code === '5').days, 1, '5: ETA → Özet Beyan Onay');
+});
+
+test('yalnız gerçekleşen giriş sayılır (tahmini giriş ve statü kullanılmaz); Final Destination Antrepo dışı hariç', () => {
+  const parse = require('../server/lib/parse');
+  const source = require('../server/lib/transit-analysis-source');
+  const overrides = require('../server/db').defaultOverrides();
+  // Gerçekleşen giriş sütunu hiç yoksa (yalnız tahmini) hiçbir parsiyel hesaba girmez.
+  const onlyEstimated = parse.parseAntrepoRows([iasRow({ 'Antrepo Giriş Tarihi': undefined, 'Ürün Menşei': 'BANGLADEŞ' })], overrides);
+  const none = source.buildLiveAnalysis({ orders: [], antrepoMap: onlyEstimated, overrides, today: '2026-10-02', scope: 'company' });
+  assert.equal(none.stats.used, 0);
+  assert.equal(none.stats.notArrived, 1);
+  assert.equal(none.columns.actualEntry, false);
+  // Tema Depo Giriş de gerçekleşen giriştir.
+  const tema = parse.parseAntrepoRows([iasRow({ 'Antrepo Giriş Tarihi': undefined, 'Tema Depo Giriş Tarih': '2025-03-18', 'Ürün Menşei': 'BANGLADEŞ' })], overrides);
+  const t = source.buildLiveAnalysis({ orders: [], antrepoMap: tema, overrides, today: '2026-10-02', scope: 'company' });
+  assert.equal(t.stats.used, 1);
+  assert.equal(TA.summarize(t, { basis: 'warehouse', year: '*' }).rows[0].endToEnd, 76);
+  const list = [
+    { entryIsActual: true, arrived: true, warehouseEntry: '2026-09-01', finalDestination: 'Antrepo' },
+    { entryIsActual: true, arrived: true, warehouseEntry: '2026-09-02', finalDestination: 'Depo' },
+  ];
+  assert.deepEqual(source.applyReportRules(list), { hasActualEntry: true, hasDestination: true });
+  assert.equal(list[1].otherDestination, true);
+  assert.ok(!list[0].otherDestination && list[0].arrived);
+  const legacy = [{ entryIsActual: true, arrived: true, warehouseEntry: '2026-09-20', finalDestination: '' }];
+  assert.deepEqual(source.applyReportRules(legacy), { hasActualEntry: true, hasDestination: false });
+  assert.ok(!legacy[0].otherDestination, 'Final Destination sütunu yoksa rota süzülmez');
+  assert.equal(TA.buildFromShipments([{ ...list[1], country: 'X', vehicle: 'Gemi', loadingRequest: '2026-08-01' }], { today: '2026-12-31' }).stats.otherDestination, 1);
+});
+
+test('şirket sorgusu raporun gerçekleşen tarih sütunlarını ekler; tahmini girişe eşlenmiş sütunu ikinci kez seçmez', async () => {
+  const source = require('../server/lib/transit-analysis-source');
+  const modelFields = require('../server/lib/model-fields');
+  const run = async (columns, tahminiName) => {
+    let captured = null;
+    const item = { id: 'ias', role: 'antrepo', server: 's', catalog: 'c', mode: 'auto', horizon: { table: 'Fact_Ithalat' },
+      mapping: { 'Tahmini Antrepo Giriş Tarihi': { table: 'Fact_Ithalat', name: tahminiName, kind: 'column' } } };
+    const result = await source.queryCompanyIasRows({ item, matchRule: null, fromDate: '2026-07-01', toDate: '2026-10-03', deps: {
+      normalizeMappingEntry: modelFields.normalizeMappingEntry,
+      discoverSchema: async () => ({ columns: columns.map(name => ({ table: 'Fact_Ithalat', name })), measures: [] }),
+      queryConnectionRows: async clone => { captured = clone; return { rows: [] }; },
+    } });
+    return { result, captured };
+  };
+  const full = await run(['Tahmini Antrepo Giriş Tarihi', 'Antrepo Giriş Tarihi', 'Fiili Yükleme Tarihi', 'Özet Beyan Onay Tarihi', 'Final Destination', 'Ürün Menşei'], 'Tahmini Antrepo Giriş Tarihi');
+  assert.deepEqual(full.result.addedFields, ['Ürün Menşei', 'Fiili Yükleme Tarih', 'Antrepo Giriş Tarih', 'Özet Beyan Onay Tarih', 'Final Destination']);
+  // Tahmini giriş modelde "Antrepo Giriş Tarihi" adlı sütuna eşliyse o sütun gerçekleşen giriş sayılmaz.
+  const same = await run(['Antrepo Giriş Tarihi', 'Fiili Yükleme Tarihi'], 'Antrepo Giriş Tarihi');
+  assert.deepEqual(same.result.addedFields, ['Fiili Yükleme Tarih']);
+  assert.equal(same.captured.mapping['Antrepo Giriş Tarih'], undefined);
 });

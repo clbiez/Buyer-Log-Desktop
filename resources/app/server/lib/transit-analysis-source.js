@@ -31,16 +31,35 @@ const SOURCE_FIELDS = Object.freeze({
   actualLoading: ['Fiili Yükleme Tarih', 'Fiili Yükleme Tarihi', 'Actual Loading Date'],
   actualEntry: ['Antrepo Giriş Tarih', 'Antrepo Giriş Tarihi', 'Tema Depo Giriş Tarih', 'Tema Depo Giriş Tarihi', 'Warehouse Entry Date'],
   country: ['Ürün Menşei', 'Urun Mensei', 'Menşei', 'Siparişin Üretildiği Ülke', 'Üretim Ülkesi', 'Country of Origin'],
+  // Global Lojistik raporunun Yol/Gümrük sınırı (Özet Beyan Onay Tarihi).
+  summaryDeclaration: ['Özet Beyan Onay Tarih', 'Özet Beyan Onay Tarihi', 'Özet Beyan Tarih', 'Özet Beyan Tarihi', 'Summary Declaration Date'],
+  // Rapor yalnız "Final Destination = Antrepo" sevkiyatlarını kapsar.
+  finalDestination: ['Final Destination', 'Final Destinasyon', 'Nihai Varış Yeri'],
+  // Rapor alt süreç adımlarının (1.2, 2, 3, 4.1, 6, 7, 8) gerçekleşen tarihleri.
+  importApproval: ['Yükleme İthalat Onay Tarih', 'Yükleme İthalat Onay Tarihi', 'İthalat Yükleme Onay Tarihi'],
+  cutOff: ['Cut Off Tarih', 'Cut Off Tarihi', 'CutOff Tarih', 'CutOff Tarihi'],
+  documentDelivery: ['Evrak Teslim Tarih', 'Evrak Teslim Tarihi', 'Gümrük Müşavirine Evrak Teslim Tarihi'],
+  warehouseApproval: ['Ambar Onay Tarih', 'Ambar Onay Tarihi'],
+  transitDeclaration: ['Transit Beyanname Tarih', 'Transit Beyanname Tarihi', 'Transit Beyanname Tescil Tarihi'],
 });
 const SOURCE_KEYS = Object.fromEntries(Object.entries(SOURCE_FIELDS).map(([k, list]) => [k, new Set(list.map(headerKey))]));
-const ARRIVED_STATUSES = new Set(['DEPODA', 'RETAILE AKTARIM BEKLENIYOR']);
 /* Şirket sorgusunda IAS projeksiyonuna ek olarak istenen sütunlar. Kalıcı alan
    eşlemesinde yoksa modelin şemasında aynı adla aranır; bulunamazsa sorguya
    eklenmez (sorgu bozulmaz, yalnız o bilgi eksik kalır). */
 const COMPANY_EXTRA_FIELDS = Object.freeze({
   'Ürün Menşei': SOURCE_FIELDS.country,
   'Fiili Yükleme Tarih': SOURCE_FIELDS.actualLoading,
+  // Gerçekleşen giriş: önce antrepo, yoksa Tema depo. Tahmini Antrepo Giriş
+  // Tarihi'ne zaten eşlenmiş fiziksel sütun bu adaylardan dışlanır.
+  'Antrepo Giriş Tarih': ['Antrepo Giriş Tarih', 'Antrepo Giriş Tarihi'],
   'Tema Depo Giriş Tarih': ['Tema Depo Giriş Tarih', 'Tema Depo Giriş Tarihi'],
+  'Özet Beyan Onay Tarih': SOURCE_FIELDS.summaryDeclaration,
+  'Final Destination': SOURCE_FIELDS.finalDestination,
+  'Cut Off Tarih': SOURCE_FIELDS.cutOff,
+  'Evrak Teslim Tarih': SOURCE_FIELDS.documentDelivery,
+  'Ambar Onay Tarih': SOURCE_FIELDS.warehouseApproval,
+  'Transit Beyanname Tarih': SOURCE_FIELDS.transitDeclaration,
+  'Yükleme İthalat Onay Tarih': SOURCE_FIELDS.importApproval,
 });
 
 function isoDate(value) {
@@ -59,21 +78,29 @@ function sourceValue(entry, field) {
   return null;
 }
 
+/* Yalnız GERÇEKLEŞEN veri: antrepo girişi gerçekleşen Antrepo/Tema Depo Giriş
+   tarihidir. "Tahmini Antrepo Giriş Tarihi" ve statüye dayalı tahmin hiç
+   kullanılmaz; gerçekleşen girişi olmayan parsiyel henüz girmemiş sayılır. */
 function shipmentFromEntry(entry, country) {
   const actualEntry = isoDate(sourceValue(entry, 'actualEntry'));
-  const arrived = !!actualEntry || ARRIVED_STATUSES.has(parseLib.antrepoStatusKey(entry.statu));
+  const date = field => isoDate(sourceValue(entry, field));
   return {
     country: country || '',
     vehicle: entry.vasita || '',
     qty: Number(entry.loadedQty) || 0,
-    arrived,
-    loadingRequest: isoDate(sourceValue(entry, 'loadingRequest')),
+    arrived: !!actualEntry,
+    loadingRequest: date('loadingRequest'),
+    importApproval: date('importApproval'),
     handover: isoDate(entry.handover),
-    actualLoading: isoDate(sourceValue(entry, 'actualLoading')),
-    eta: isoDate(sourceValue(entry, 'eta')),
-    // Gerçekleşen giriş sütunu yoksa, antrepoya girmiş parsiyelde IAS'ın
-    // "Tahmini Antrepo Giriş Tarihi" son bilinen giriş tarihidir.
-    warehouseEntry: actualEntry || (arrived ? isoDate(entry.arr) : ''),
+    cutOff: date('cutOff'),
+    actualLoading: date('actualLoading'),
+    eta: date('eta'),
+    documentDelivery: date('documentDelivery'),
+    summaryDeclaration: date('summaryDeclaration'),
+    warehouseApproval: date('warehouseApproval'),
+    transitDeclaration: date('transitDeclaration'),
+    finalDestination: String(sourceValue(entry, 'finalDestination') || '').trim(),
+    warehouseEntry: actualEntry,
     entryIsActual: !!actualEntry,
   };
 }
@@ -114,9 +141,11 @@ function collectAllShipments(antrepoMap, orders, overrides) {
   return out;
 }
 
-function findSchemaColumn(schema, aliases, preferTable) {
+function findSchemaColumn(schema, aliases, preferTable, taken) {
   const keys = new Set(aliases.map(headerKey));
-  const columns = (Array.isArray(schema && schema.columns) ? schema.columns : []).filter(c => c && c.name && keys.has(headerKey(c.name)));
+  const used = taken instanceof Set ? taken : new Set();
+  const columns = (Array.isArray(schema && schema.columns) ? schema.columns : [])
+    .filter(c => c && c.name && keys.has(headerKey(c.name)) && !used.has(`${headerKey(c.table)}|${headerKey(c.name)}`));
   if (!columns.length) return null;
   const pref = headerKey(preferTable);
   return columns.find(c => headerKey(c.table) === pref)
@@ -171,10 +200,18 @@ async function queryCompanyIasRows({ item, matchRule, fromDate, toDate, deps }) 
   let schema = null;
   try { schema = await deps.discoverSchema({ server: item.server, catalog: item.catalog, timeoutMs: 120000 }); }
   catch (err) { warnings.push(`Model şeması okunamadı; ek sütunlar (Ürün Menşei vb.) eklenmedi: ${err.message}`); }
+  // Zaten eşlenmiş fiziksel sütunlar (ör. Tahmini Antrepo Giriş = 'Antrepo Giriş
+  // Tarihi') ek alan olarak ikinci kez seçilmez.
+  const taken = new Set(Object.values(baseMapping).map(v => deps.normalizeMappingEntry(v, fallbackTable))
+    .filter(e => e && e.name).map(e => `${headerKey(e.table)}|${headerKey(e.name)}`));
   for (const [header, aliases] of Object.entries(COMPANY_EXTRA_FIELDS)) {
     if (baseMapping[header]) continue;
-    const hit = schema && findSchemaColumn(schema, aliases, dateEntry.table);
-    if (hit) { extraMapping[header] = { table: hit.table, name: hit.name, kind: 'column' }; added.push(header); }
+    const hit = schema && findSchemaColumn(schema, aliases, dateEntry.table, taken);
+    if (hit) {
+      extraMapping[header] = { table: hit.table, name: hit.name, kind: 'column' };
+      taken.add(`${headerKey(hit.table)}|${headerKey(hit.name)}`);
+      added.push(header);
+    }
   }
   const condition = fromDate || toDate
     ? { table: dateEntry.table, field: dateEntry.name, name: dateEntry.name, valueType: 'date',
@@ -222,28 +259,44 @@ async function queryCompanyIasRows({ item, matchRule, fromDate, toDate, deps }) 
   return { rows: Array.isArray(run && run.rows) ? run.rows : [], addedFields: added, warnings };
 }
 
-function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, window, scope } = {}) {
+/* Rapor filtresi: Final Destination sütunu varsa yalnız Antrepo rotalı
+   sevkiyatlar kalır (raporun "Final Destination = Antrepo" filtresi). */
+function applyReportRules(shipments) {
+  const hasActualEntry = shipments.some(s => s.entryIsActual);
+  const hasDestination = shipments.some(s => s.finalDestination);
+  for (const s of shipments) {
+    if (hasDestination && !/ANTREPO/.test(headerKey(s.finalDestination))) s.otherDestination = true;
+  }
+  return { hasActualEntry, hasDestination };
+}
+
+function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, window, scope, weighting } = {}) {
   const todayIso = today || new Date().toISOString().slice(0, 10);
   const range = BLTransitAnalysis.windowRange(window || 'all', todayIso);
   const shipments = scope === 'company'
     ? collectAllShipments(antrepoMap, orders, overrides)
     : collectShipments(orders, antrepoMap, overrides);
+  const rules = applyReportRules(shipments);
   const analysis = BLTransitAnalysis.buildFromShipments(shipments, {
     today: todayIso, sourceLabel: sourceLabel || 'Buyer Log IAS (Antrepo) parsiyelleri', generatedAt: new Date().toISOString(),
     fromDate: range.from, toDate: range.to, granularity: range.granularity, window: range.key,
     scope: scope === 'company' ? 'company' : 'filtered',
+    weighting: weighting === 'qty' ? 'qty' : 'shipment',
   });
   analysis.columns = {
     loadingRequest: shipments.some(s => s.loadingRequest),
     eta: shipments.some(s => s.eta),
     handover: shipments.some(s => s.handover),
     actualLoading: shipments.some(s => s.actualLoading),
-    actualEntry: shipments.some(s => s.entryIsActual),
+    actualEntry: rules.hasActualEntry,
+    summaryDeclaration: shipments.some(s => s.summaryDeclaration),
+    cutOff: shipments.some(s => s.cutOff),
+    finalDestination: rules.hasDestination,
   };
   return analysis;
 }
 
 module.exports = {
   SOURCE_FIELDS, COMPANY_EXTRA_FIELDS, headerKey, findSchemaColumn,
-  collectShipments, collectAllShipments, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
+  collectShipments, collectAllShipments, applyReportRules, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
 };

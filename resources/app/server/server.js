@@ -10320,6 +10320,8 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
     const scope = req.query.scope === 'filtered' ? 'filtered' : 'company';
     const window = BLTransitAnalysis.WINDOW_KEYS.includes(String(req.query.window || '')) ? String(req.query.window) : 'y1';
     const force = req.query.refresh === '1';
+    // Ortalama tipi: sevkiyat (rapor/Excel ile aynı, varsayılan) veya adet ağırlıklı.
+    const weighting = req.query.weight === 'qty' ? 'qty' : 'shipment';
     if (scope === 'company' && !userAccess.hasPermission(req.currentUser, 'manageBusinessRules')) {
       return res.status(403).json({ error: 'IAS database kapsamı için iş kuralı yönetme yetkisi gerekir.', errorEn: 'Managing business rules permission is required for the IAS database scope.', code: 'PERMISSION_REQUIRED', permission: 'manageBusinessRules' });
     }
@@ -10411,8 +10413,8 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
         sourceLabel = `Buyer Log IAS (Antrepo · ${label})`;
       }
     }
-    const analysis = transitAnalysisSource.buildLiveAnalysis({ orders, antrepoMap, overrides, sourceLabel, window, scope });
-    res.json({ analysis, scope, window, antrepoSourceMode: mode, orderCount: Array.isArray(orders) ? orders.length : 0, warnings, diag });
+    const analysis = transitAnalysisSource.buildLiveAnalysis({ orders, antrepoMap, overrides, sourceLabel, window, scope, weighting });
+    res.json({ analysis, scope, window, weighting, antrepoSourceMode: mode, orderCount: Array.isArray(orders) ? orders.length : 0, warnings, diag });
   } catch (err) {
     // Genel apiError yedek metni gerçek nedeni gizliyordu; kullanıcı ne olduğunu görmeli.
     if (err && err.code === 'REVISION_CONFLICT') return apiError(res, err, 'Yol süresi analizi hesaplanamadı.');
