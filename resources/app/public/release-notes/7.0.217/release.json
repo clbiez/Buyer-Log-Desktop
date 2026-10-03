@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.217",
+  "channel": "stable",
+  "publishedAt": "2026-10-03",
+  "title": {
+    "tr": "Backlog ve Checklist iş akışları güçlendi",
+    "en": "Backlog and Checklist workflows improved"
+  },
+  "summary": {
+    "tr": "Backlog zaman akışı birleştirildi; Checklist başlıkları artık CP sütunlarına yansıyor ve seçili siparişler üretici Excel’i üzerinden güvenli biçimde güncellenebiliyor.",
+    "en": "The Backlog timeline is unified; Checklist headings now appear as CP columns, and selected orders can be updated safely through supplier Excel workbooks."
+  },
+  "stats": {
+    "features": 2,
+    "improvements": 1,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "backlog-unified-timeline",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Lojistik ve Buyer grafikleri tek zaman akışında",
+        "en": "Logistics and Buyer charts in one timeline"
+      },
+      "body": {
+        "tr": "Ayrı Adet/Zaman grafik paneli kaldırıldı. Ana zaman akışı aşağı doğru genişletildi; tek ortak dönem, toplam adet ve Bugün işaretçisi üzerinden üstte Logistic Status, altta Buyer kırılımı birlikte okunuyor.",
+        "en": "The separate Quantity/Time chart panel was removed. The main timeline now extends downward and uses one shared period, total quantity and Today marker, with Logistics Status above and the Buyer breakdown below."
+      },
+      "path": {
+        "tr": "Backlog › Genel Bakış › Zaman Akışı",
+        "en": "Backlog › Overview › Timeline"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "backlog-unified-timeline-before.webp",
+        "alt": {
+          "tr": "Birleşmeden önce ayrı üst ve alt Backlog zaman grafikleri",
+          "en": "Separate upper and lower Backlog timeline charts before the merge"
+        },
+        "caption": {
+          "tr": "Bu ekrandaki ayrı üst ve alt zaman grafikleri artık tek ortak zaman akışında birleştirildi.",
+          "en": "The separate upper and lower timeline charts shown here are now combined into one shared timeline."
+        }
+      }
+    },
+    {
+      "id": "backlog-buyer-dimension-toggle",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Buyer Grup / Buyer kırılımı seçilebilir",
+        "en": "Switch between Buying Group and Buyer"
+      },
+      "body": {
+        "tr": "Birleşik grafiğin alt bandı varsayılan olarak Buyer Grup dağılımını gösteriyor. Aynı hafta/ay eksenini bozmadan tek tıkla Buyer bazlı görünüme geçilebiliyor.",
+        "en": "The lower band of the unified chart shows Buying Group distribution by default. It can switch to Buyer without changing the shared week/month axis."
+      },
+      "path": {
+        "tr": "Backlog › Genel Bakış › Zaman Akışı",
+        "en": "Backlog › Overview › Timeline"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "backlog-buyer-breakdown-before.webp",
+        "alt": {
+          "tr": "Önceki ayrı Buyer Grup zaman grafiği",
+          "en": "Previous separate Buying Group timeline chart"
+        },
+        "caption": {
+          "tr": "Önceden ayrı panelde bulunan Buyer Grup serileri artık üst zaman akışının alt bandında ve Buyer ile değiştirilebilir.",
+          "en": "Buying Group series that previously lived in a separate panel now sit in the lower band of the main timeline and can switch to Buyer."
+        }
+      }
+    },
+    {
+      "id": "cp-checklist-supplier-excel-sync",
+      "type": "feature",
+      "module": {
+        "tr": "CP / Checklist",
+        "en": "CP / Checklist"
+      },
+      "title": {
+        "tr": "Checklist ile CP paralel çalışıyor",
+        "en": "Checklist and CP now work in parallel"
+      },
+      "body": {
+        "tr": "Aktif Checklist başlıkları CP’de Checklist grubu altında dinamik sütunlara dönüşüyor. Seçili CP siparişleri üretici checklist Excel’ine aktarılabiliyor; üreticinin Açık / Tamamlandı / Gerekmiyor güncellemeleri tekrar Buyer Log’a alınabiliyor. Gizli eşleşme anahtarları satırların doğru siparişe bağlanmasını sağlıyor ve eski Excel dosyaları Buyer Log’daki daha yeni cevapların üzerine yazamıyor.",
+        "en": "Active Checklist headings become dynamic columns under the Checklist group in CP. Selected CP orders can be exported to a supplier checklist workbook, then supplier Open / Completed / Not required updates can be imported back into Buyer Log. Hidden match keys keep rows tied to the correct order, and stale workbooks cannot overwrite newer Buyer Log answers."
+      },
+      "path": {
+        "tr": "CP Tracker → Araçlar → Üretici Checklist Excel’i",
+        "en": "CP Tracker → Tools → Supplier Checklist Excel"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "cp-checklist-supplier-sync.webp",
+        "alt": {
+          "tr": "Buyer Log CP Tracker çalışma alanının gerçek ekran görüntüsü",
+          "en": "Real screenshot of the Buyer Log CP Tracker workspace"
+        },
+        "caption": {
+          "tr": "Checklist sütunları ve üretici Excel aksiyonları CP Tracker’ın mevcut çalışma alanına ve Araçlar akışına entegre edildi.",
+          "en": "Checklist columns and supplier Excel actions are integrated into the existing CP Tracker workspace and Tools flow."
+        }
+      }
+    }
+  ]
+}

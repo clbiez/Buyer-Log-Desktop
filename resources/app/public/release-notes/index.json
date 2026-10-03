@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.217",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Backlog ve Checklist iş akışları güçlendi",
+        "en": "Backlog and Checklist workflows improved"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.217/release.json"
+    },
+    {
       "version": "7.0.216",
       "publishedAt": "2026-10-03",
       "title": {
