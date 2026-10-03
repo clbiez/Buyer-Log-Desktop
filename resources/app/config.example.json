@@ -12,12 +12,6 @@
     "sessionSecret": "",
     "sessionHours": 12
   },
-  "microsoftGraph": {
-    "enabled": false,
-    "clientId": "",
-    "tenantId": "organizations",
-    "redirectUri": "http://buyerlog:6194/api/outlook/callback"
-  },
   "updates": {
     "enabled": true,
     "provider": "folder",
