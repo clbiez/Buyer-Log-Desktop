@@ -53,23 +53,29 @@
       return '_' + ch.charCodeAt(0).toString(16) + '_';
     });
   }
+  /* v7.221 — dört durum: Pending (open) · Approved · Rejected · Not Required.
+     Eski Excel/kayıt değerleri (Completed, Tamamlandı, Open…) aynı kanonik
+     duruma okunur; tanınmayan değer '' döner ve geçersiz sayılır. */
+  const STATUS_ORDER = Object.freeze(['open', 'approved', 'rejected', 'notRequired']);
   function normalizeState(value) {
     const raw = text(value).toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ');
     if (!raw) return '';
-    if (['done', 'completed', 'complete', 'tamam', 'tamamlandı', 'tamamlandi', 'yes', 'evet'].includes(raw)) return 'done'; // i18n-ignore — import aliasları, UI metni değil
+    if (['approved', 'approve', 'onaylandı', 'onaylandi', 'onaylı', 'onayli', 'done', 'completed', 'complete', 'tamam', 'tamamlandı', 'tamamlandi', 'yes', 'evet'].includes(raw)) return 'approved'; // i18n-ignore — import aliasları, UI metni değil
+    if (['rejected', 'reject', 'reddedildi', 'red', 'ret', 'failed', 'fail', 'no', 'hayır', 'hayir'].includes(raw)) return 'rejected'; // i18n-ignore — import aliasları, UI metni değil
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired';
-    if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open'; // i18n-ignore — import aliasları, UI metni değil
+    if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'beklemede', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open'; // i18n-ignore — import aliasları, UI metni değil
     return '';
   }
   function statusLabel(status) {
     const s = normalizeState(status);
-    if (s === 'done') return T('Tamamlandı', 'Completed');
-    if (s === 'notRequired') return T('Gerekmiyor', 'Not required');
-    if (s === 'open') return T('Açık', 'Open');
+    if (s === 'approved') return T('Onaylandı', 'Approved');
+    if (s === 'rejected') return T('Reddedildi', 'Rejected');
+    if (s === 'notRequired') return T('Gerekmiyor', 'Not Required');
+    if (s === 'open') return T('Bekliyor', 'Pending');
     return '';
   }
   function statusOptions() {
-    return isEn() ? ['Open', 'Completed', 'Not required'] : ['Açık', 'Tamamlandı', 'Gerekmiyor'];
+    return STATUS_ORDER.map(statusLabel);
   }
   function isoNow() { return new Date().toISOString(); }
 
@@ -110,52 +116,17 @@
     const s = assistantState();
     return safeJson((s && s.answers) || {});
   }
-  function customDefinitions() {
-    const s = assistantState();
-    return ((s && Array.isArray(s.rules)) ? s.rules : [])
-      .filter(function (rule) { return rule && rule.kind === 'checklist' && rule.builtIn !== true; })
-      .map(function (rule) {
-        return {
-          id: rule.id, kind: 'checklist', builtIn: false, enabled: rule.enabled !== false,
-          name: rule.name || rule.tr || rule.en || rule.id,
-          tr: rule.tr || rule.name || rule.id, en: rule.en || rule.name || rule.id,
-          questionTr: rule.questionTr || rule.name || rule.id,
-          questionEn: rule.questionEn || rule.name || rule.id,
-          mode: rule.mode === 'formula' ? 'formula' : 'basic',
-          formula: rule.formula || '', expressionVersion: Number(rule.expressionVersion) || 1,
-          conditions: Array.isArray(rule.conditions) ? safeJson(rule.conditions) : [],
-          match: rule.match === 'any' ? 'any' : 'all',
-        };
-      });
-  }
   function sameJson(a, b) {
     try { return JSON.stringify(a) === JSON.stringify(b); } catch (_) { return false; }
   }
-  function definitionSignature(list) {
-    const source = (Array.isArray(list) ? list : []).map(function (item) {
-      return {
-        id: text(item && item.id), enabled: item && item.enabled !== false,
-        name: text(item && item.name), tr: text(item && item.tr), en: text(item && item.en),
-        questionTr: text(item && item.questionTr), questionEn: text(item && item.questionEn),
-        mode: item && item.mode === 'formula' ? 'formula' : 'basic',
-        formula: text(item && item.formula),
-        match: item && item.match === 'any' ? 'any' : 'all',
-        conditions: Array.isArray(item && item.conditions) ? item.conditions : [],
-      };
-    }).sort(function (a, b) { return a.id.localeCompare(b.id); });
-    try { return JSON.stringify(source); } catch (_) { return ''; }
-  }
 
-  function mergeRemoteDefinitions(definitions) {
-    const s = assistantState(), Rules = root.BLCpRulesEngine;
-    if (!s || !Rules) return;
-    const remote = (Array.isArray(definitions) ? definitions : []).map(function (item) {
-      return Rules.normalizeRule(item, 'checklist');
-    }).filter(Boolean);
-    const preserved = (Array.isArray(s.rules) ? s.rules : []).filter(function (rule) {
-      return !(rule && rule.kind === 'checklist' && rule.builtIn !== true);
-    });
-    s.rules = Rules.mergeWithDefaults(preserved.concat(remote), s.deletedRuleIds);
+  /* v7.221 — checklist başlıkları KİŞİSELDİR (Ön Ayar Paylaşımı ile
+     paylaşılır). Sunucudaki eski ortak liste yalnız geçiş için bir kez
+     kullanıcının kendi kaydına alınır; her açılışta üzerine yazılmaz. */
+  function adoptRemoteDefinitions(definitions) {
+    const assistant = root.BLCpAssistant;
+    if (!assistant || typeof assistant.adoptSharedChecklistDefinitions !== 'function') return false;
+    return assistant.adoptSharedChecklistDefinitions(definitions);
   }
 
   function mergeRemoteAnswers(payload) {
@@ -185,21 +156,6 @@
       state.applyingRemote = false;
     }
     state.answerBaseline = snapshotAnswers();
-  }
-
-  async function syncDefinitions() {
-    if (state.syncingDefinitions || state.applyingRemote) return;
-    const definitions = customDefinitions();
-    if (definitionSignature(definitions) === definitionSignature(state.shared.definitions)) return;
-    state.syncingDefinitions = true;
-    try {
-      const result = await post('/definitions', { definitions: definitions });
-      state.shared.definitions = safeJson(result.definitions || definitions);
-      state.shared.revision = Number(result.revision) || state.shared.revision;
-      state.shared.updatedAt = result.updatedAt || state.shared.updatedAt;
-    } finally {
-      state.syncingDefinitions = false;
-    }
   }
 
   function diffAnswers(previous, current) {
@@ -282,9 +238,15 @@
 
   function itemApplies(item, analysis) {
     if (!analysis) return true;
+    // Karar katmanı her sipariş için geçerli checklist başlıklarını zaten
+    // hesapladı; aynı sonucu yeniden değerlendirmeyiz.
+    if (Array.isArray(analysis.checklistItemIds)) return analysis.checklistItemIds.indexOf(item.id) >= 0;
     const s = assistantState(), Rules = root.BLCpRulesEngine;
     if (!s || !Rules) return true;
-    return Rules.customChecklistItems(analysis, s.rules, {}).some(function (candidate) {
+    const evaluated = typeof Rules.evaluateOrder === 'function'
+      ? Rules.evaluateOrder(analysis, { rules: s.rules, answers: s.answers, checklistEnabled: !s.checklistSettings || s.checklistSettings.enabled !== false })
+      : { customItems: Rules.customChecklistItems(analysis, s.rules, {}) };
+    return evaluated.customItems.some(function (candidate) {
       return candidate.id === item.id;
     });
   }
@@ -300,7 +262,7 @@
       try {
         const evidence = root.BLPlmSampleRequests.evidenceForAnalysis(analysis, item.id);
         if (evidence && evidence.state === 'approved') {
-          return { state: 'done', at: evidence.date || '', by: 'PLM', source: 'plm' };
+          return { state: 'approved', at: evidence.date || '', by: 'PLM', source: 'plm' };
         }
       } catch (_) {}
     }
@@ -320,7 +282,8 @@
         k: columnKey(item.id),
         label: isEn() ? item.en : item.tr,
         group: 'Checklist',
-        type: 'text',
+        // Serbest metin DEĞİL: hücre yalnız dört durumdan birini seçtirir.
+        type: 'checklistStatus',
         weight: 12,
         checklistSupplierColumn: true,
         checklistItemId: item.id,
@@ -339,12 +302,19 @@
       const decision = analysesForRows(rows);
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+        const statuses = {};
         items.forEach(function (item) {
           const key = columnKey(item.id);
           if (!itemApplies(item, analysis)) { row[key] = ''; return; }
-          const answer = answerFor(item, analysis);
-          row[key] = answer ? statusLabel(answer.state) : statusLabel('open');
+          // Tek doğruluk kaynağı: karar katmanının hesapladığı durum.
+          const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
+          const answer = computed ? null : answerFor(item, analysis);
+          const status = (computed && computed !== 'notApplicable' ? computed : '') || normalizeState(answer && answer.state) || 'open';
+          statuses[item.id] = status;
+          row[key] = statusLabel(status);
         });
+        // Hücre çizimi ve durum menüsü için kanonik durum; görünür değer etiket.
+        Object.defineProperty(row, '_checklistStatus', { value: statuses, enumerable: false, configurable: true, writable: true });
       });
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
@@ -380,12 +350,7 @@
         updatedAt: payload.updatedAt || '',
       };
 
-      const localDefs = customDefinitions();
-      if (!state.shared.definitions.length && localDefs.length) {
-        await syncDefinitions();
-      } else {
-        mergeRemoteDefinitions(state.shared.definitions);
-      }
+      adoptRemoteDefinitions(state.shared.definitions);
       mergeRemoteAnswers(state.shared);
       // First rollout / another device: preserve a newer local checklist answer
       // by promoting it into the shared store instead of silently leaving it local.
@@ -655,7 +620,8 @@
   function excelFormulaString(value) { return String(value == null ? '' : value).replace(/"/g, '""'); }
   function checklistStatusTone(value) {
     const stateValue = normalizeState(value);
-    if (stateValue === 'done') return { fg: CHECKLIST_EXCEL_COLORS.green, bg: CHECKLIST_EXCEL_COLORS.greenBg };
+    if (stateValue === 'approved') return { fg: CHECKLIST_EXCEL_COLORS.green, bg: CHECKLIST_EXCEL_COLORS.greenBg };
+    if (stateValue === 'rejected') return { fg: CHECKLIST_EXCEL_COLORS.red, bg: CHECKLIST_EXCEL_COLORS.redBg };
     if (stateValue === 'notRequired') return { fg: CHECKLIST_EXCEL_COLORS.gold, bg: CHECKLIST_EXCEL_COLORS.goldBg };
     return { fg: CHECKLIST_EXCEL_COLORS.acc, bg: CHECKLIST_EXCEL_COLORS.accBg };
   }
@@ -723,25 +689,28 @@
     styleSummaryTile(ws, 6, 5, T('Option', 'Options'), stats.options, C.gold, 'PLM ID + ' + T('Model + Renk', 'Model + Colour'), '#,##0');
     styleSummaryTile(ws, 8, 5, T('Satır', 'Rows'), stats.rows, C.green, T('Excel veri satırı', 'Workbook data rows'), '#,##0');
 
-    const openFormula = statusCountFormula(statusColumns, lastRow, statusLabel('open'));
-    const doneFormula = statusCountFormula(statusColumns, lastRow, statusLabel('done'));
+    const pendingFormula = statusCountFormula(statusColumns, lastRow, statusLabel('open'));
+    const approvedFormula = statusCountFormula(statusColumns, lastRow, statusLabel('approved'));
+    const rejectedFormula = statusCountFormula(statusColumns, lastRow, statusLabel('rejected'));
     const naFormula = statusCountFormula(statusColumns, lastRow, statusLabel('notRequired'));
-    styleSummaryTile(ws, 2, 9, T('Açık', 'Open'), { formula: openFormula }, C.acc, T('Aksiyon bekleyen', 'Awaiting action'), '#,##0');
-    styleSummaryTile(ws, 4, 9, T('Tamamlandı', 'Completed'), { formula: doneFormula }, C.green, T('Tamamlanan kontroller', 'Completed checks'), '#,##0');
-    styleSummaryTile(ws, 6, 9, T('Gerekmiyor', 'Not required'), { formula: naFormula }, C.gold, T('Uygulanmayan kontroller', 'Not applicable checks'), '#,##0');
-    styleSummaryTile(ws, 8, 9, T('Tamamlanma', 'Completion'),
-      { formula: 'IF((B10+D10+F10)=0,0,(D10+F10)/(B10+D10+F10))' }, C.green,
+    styleSummaryTile(ws, 2, 9, T('Bekliyor', 'Pending'), { formula: pendingFormula }, C.acc, T('Cevap bekleyen', 'Awaiting an answer'), '#,##0');
+    styleSummaryTile(ws, 4, 9, T('Onaylandı', 'Approved'), { formula: approvedFormula }, C.green, T('Onaylanan kontroller', 'Approved checks'), '#,##0');
+    styleSummaryTile(ws, 6, 9, T('Reddedildi', 'Rejected'), { formula: rejectedFormula }, C.red, T('Aksiyon isteyen kontroller', 'Checks that need action'), '#,##0');
+    styleSummaryTile(ws, 8, 9, T('Gerekmiyor', 'Not Required'), { formula: naFormula }, C.gold, T('Uygulanmayan kontroller', 'Not applicable checks'), '#,##0');
+    // Tamamlanma = (Onaylandı + Gerekmiyor) / tüm uygulanabilir kontroller.
+    styleSummaryTile(ws, 2, 13, T('Tamamlanma', 'Completion'),
+      { formula: 'IF((B10+D10+F10+H10)=0,0,(D10+H10)/(B10+D10+F10+H10))' }, C.green,
       T('Dosya düzenlendikçe yenilenir', 'Recalculates as the file is edited'), '0.0%');
 
-    ws.mergeCells(13, 2, 13, 9);
-    const section = ws.getCell(13, 2);
+    ws.mergeCells(17, 2, 17, 9);
+    const section = ws.getCell(17, 2);
     section.value = T('Checklist Durum Dağılımı', 'Checklist Status Distribution');
     section.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C.white } };
     section.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } };
     section.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
 
-    const header = ws.getRow(14);
-    [T('Kontrol', 'Check'), T('Açık', 'Open'), T('Tamamlandı', 'Completed'), T('Gerekmiyor', 'Not required'), T('Tamamlanma', 'Completion')].forEach(function (label, index) {
+    const header = ws.getRow(18);
+    [T('Kontrol', 'Check'), T('Bekliyor', 'Pending'), T('Onaylandı', 'Approved'), T('Reddedildi', 'Rejected'), T('Gerekmiyor', 'Not Required'), T('Tamamlanma', 'Completion')].forEach(function (label, index) {
       const cell = header.getCell(2 + index);
       cell.value = label;
       cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C.white } };
@@ -750,16 +719,18 @@
     });
     header.height = 28;
     items.forEach(function (item, index) {
-      const rowNo = 15 + index, row = ws.getRow(rowNo), colLetter = excelColumnName(statusColumns[index]);
+      const rowNo = 19 + index, row = ws.getRow(rowNo), colLetter = excelColumnName(statusColumns[index]);
       const range = "'" + DATA_SHEET.replace(/'/g, "''") + "'!" + '$' + colLetter + '$2:$' + colLetter + '$' + lastRow;
+      const count = function (status) { return { formula: 'COUNTIF(' + range + ',"' + excelFormulaString(statusLabel(status)) + '")' }; };
       row.height = 20;
       row.getCell(2).value = isEn() ? item.en : item.tr;
-      row.getCell(3).value = { formula: 'COUNTIF(' + range + ',"' + excelFormulaString(statusLabel('open')) + '")' };
-      row.getCell(4).value = { formula: 'COUNTIF(' + range + ',"' + excelFormulaString(statusLabel('done')) + '")' };
-      row.getCell(5).value = { formula: 'COUNTIF(' + range + ',"' + excelFormulaString(statusLabel('notRequired')) + '")' };
-      row.getCell(6).value = { formula: 'IF((C' + rowNo + '+D' + rowNo + '+E' + rowNo + ')=0,0,(D' + rowNo + '+E' + rowNo + ')/(C' + rowNo + '+D' + rowNo + '+E' + rowNo + '))' };
-      row.getCell(6).numFmt = '0.0%';
-      for (let col = 2; col <= 6; col += 1) {
+      row.getCell(3).value = count('open');
+      row.getCell(4).value = count('approved');
+      row.getCell(5).value = count('rejected');
+      row.getCell(6).value = count('notRequired');
+      row.getCell(7).value = { formula: 'IF((C' + rowNo + '+D' + rowNo + '+E' + rowNo + '+F' + rowNo + ')=0,0,(D' + rowNo + '+F' + rowNo + ')/(C' + rowNo + '+D' + rowNo + '+E' + rowNo + '+F' + rowNo + '))' };
+      row.getCell(7).numFmt = '0.0%';
+      for (let col = 2; col <= 7; col += 1) {
         const cell = row.getCell(col);
         cell.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink }, bold: col === 2 };
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: index % 2 ? C.band : C.white } };
@@ -767,12 +738,12 @@
         cell.alignment = { vertical: 'middle', horizontal: col === 2 ? 'left' : 'right' };
       }
     });
-    const instructionRow = 16 + items.length;
+    const instructionRow = 20 + items.length;
     ws.mergeCells(instructionRow, 2, instructionRow + 1, 9);
     const instruction = ws.getCell(instructionRow, 2);
     instruction.value = T(
-      'Nasıl kullanılır: Checklist sekmesinde yalnız renkli Durum ve Not hücreleri düzenlenebilir. Durum hücresinde açılır listeden seçim yapın. Diğer alanlar Buyer Log kimliğini korumak için kilitlidir.',
-      'How to use: Only coloured Status and Note cells on the Checklist sheet are editable. Choose the status from the dropdown. All other fields are locked to preserve Buyer Log identity.'
+      'Nasıl kullanılır: Checklist sekmesinde yalnız renkli Durum ve Not hücreleri düzenlenebilir. Durumu açılır listeden seçin: Bekliyor, Onaylandı, Reddedildi, Gerekmiyor. Diğer alanlar Buyer Log kimliğini korumak için kilitlidir.',
+      'How to use: Only coloured Status and Note cells on the Checklist sheet are editable. Choose the status from the dropdown: Pending, Approved, Rejected, Not Required. All other fields are locked to preserve Buyer Log identity.'
     );
     instruction.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink2 } };
     instruction.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.accBg } };
@@ -785,7 +756,8 @@
     const C = CHECKLIST_EXCEL_COLORS;
     const specs = [
       [statusLabel('open'), C.acc, C.accBg],
-      [statusLabel('done'), C.green, C.greenBg],
+      [statusLabel('approved'), C.green, C.greenBg],
+      [statusLabel('rejected'), C.red, C.redBg],
       [statusLabel('notRequired'), C.gold, C.goldBg],
     ];
     statusColumns.forEach(function (column) {
@@ -1283,6 +1255,105 @@
     });
   }
 
+  /* CP checklist hücresi durum menüsü. Hücreye yazı YAZILAMAZ; yalnız bu
+     menüdeki dört durumdan biri seçilir ve Genel Bakış ile aynı cevap
+     kaydına (BLCpAssistant.setChecklistAnswer) yazılır. */
+  const statusMenu = { el: null, trigger: null };
+  function closeStatusMenu(focusTrigger) {
+    const trigger = statusMenu.trigger;
+    if (statusMenu.el) statusMenu.el.remove();
+    statusMenu.el = null;
+    statusMenu.trigger = null;
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'false');
+      if (focusTrigger && trigger.isConnected) trigger.focus();
+    }
+  }
+  function cpRowById(id) {
+    const rows = root.state && root.state.cp && Array.isArray(root.state.cp.rows) ? root.state.cp.rows : currentRows();
+    return rows.find(function (row) { return row && String(row._id) === String(id); }) || null;
+  }
+  async function chooseStatus(trigger, status) {
+    const assistant = await ensureAssistant();
+    const row = cpRowById(trigger.dataset.id);
+    const itemId = trigger.dataset.item;
+    if (!assistant || typeof assistant.setChecklistAnswer !== 'function' || !row || !itemId) {
+      toast(T('Checklist durumu kaydedilemedi.', 'Checklist status could not be saved.'));
+      return;
+    }
+    const decision = analysesForRows([row]);
+    const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+    if (!analysis) { toast(T('Sipariş checklist için okunamadı.', 'The order could not be read for the checklist.')); return; }
+    assistant.setChecklistAnswer(analysis, itemId, status);
+  }
+  function openStatusMenu(trigger) {
+    if (!root.document || !trigger) return;
+    if (statusMenu.trigger === trigger) { closeStatusMenu(true); return; }
+    closeStatusMenu(false);
+    const current = normalizeState(trigger.dataset.status) || 'open';
+    const menu = root.document.createElement('div');
+    menu.className = 'delTypeMenu clStatusMenu';
+    menu.setAttribute('role', 'listbox');
+    menu.setAttribute('aria-label', T('Checklist durumu', 'Checklist status'));
+    menu.innerHTML = STATUS_ORDER.map(function (status) {
+      return '<button type="button" class="delTypeOption clStatusOption" role="option" data-cl-status="' + status + '" aria-selected="' + (status === current ? 'true' : 'false') + '">'
+        + '<span class="clStatusDot is-' + status + '" aria-hidden="true"></span>'
+        + '<span>' + statusLabel(status) + '</span></button>';
+    }).join('');
+    root.document.body.appendChild(menu);
+    const rect = trigger.getBoundingClientRect();
+    const width = Math.max(rect.width, 160);
+    const height = menu.getBoundingClientRect().height || 140;
+    const viewportHeight = root.innerHeight || 800;
+    const openAbove = rect.bottom + height + 8 > viewportHeight && rect.top > height + 8;
+    menu.style.minWidth = width + 'px';
+    menu.style.left = Math.max(8, Math.min(rect.left, (root.innerWidth || 1200) - width - 8)) + 'px';
+    menu.style.top = (openAbove ? rect.top - height - 4 : rect.bottom + 4) + 'px';
+    if (openAbove) menu.classList.add('openAbove');
+    statusMenu.el = menu;
+    statusMenu.trigger = trigger;
+    trigger.setAttribute('aria-expanded', 'true');
+    const options = Array.from(menu.querySelectorAll('[data-cl-status]'));
+    const selected = options.find(function (option) { return option.getAttribute('aria-selected') === 'true'; }) || options[0];
+    if (selected) selected.focus();
+    menu.addEventListener('click', function (event) {
+      const option = event.target.closest('[data-cl-status]');
+      if (!option) return;
+      const status = option.dataset.clStatus;
+      closeStatusMenu(true);
+      chooseStatus(trigger, status).catch(function (error) {
+        toast(T('Checklist durumu kaydedilemedi: ', 'Checklist status could not be saved: ') + (error.message || error));
+      });
+    });
+    menu.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') { event.preventDefault(); closeStatusMenu(true); return; }
+      if (event.key === 'Tab') { closeStatusMenu(false); return; }
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      event.preventDefault();
+      const index = options.indexOf(root.document.activeElement);
+      const next = event.key === 'ArrowDown' ? Math.min(options.length - 1, index + 1) : Math.max(0, index - 1);
+      options[next < 0 ? 0 : next].focus();
+    });
+  }
+  function bindStatusCells() {
+    if (state.statusCellsBound || !root.document) return;
+    state.statusCellsBound = true;
+    root.document.addEventListener('click', function (event) {
+      const trigger = event.target && event.target.closest && event.target.closest('.clStatusTrigger[data-item]');
+      if (trigger) {
+        event.preventDefault();
+        event.stopPropagation();
+        openStatusMenu(trigger);
+        return;
+      }
+      if (statusMenu.el && !statusMenu.el.contains(event.target)) closeStatusMenu(false);
+    }, true);
+    root.document.addEventListener('scroll', function (event) {
+      if (statusMenu.el && !statusMenu.el.contains(event.target)) closeStatusMenu(false);
+    }, true);
+    root.addEventListener('resize', function () { closeStatusMenu(false); });
+  }
+
   function wrapRender() {
     if (state.renderWrapped || typeof root.renderCP !== 'function') return;
     const original = root.renderCP;
@@ -1299,13 +1370,13 @@
     if (state.applyingRemote) return;
     const reason = event && event.detail && event.detail.reason || '';
     if (reason === 'preferences') {
-      syncDefinitions().then(function () { refreshColumns({ render: true }); }).catch(function (error) {
-        toast(T('Checklist başlıkları senkronize edilemedi: ', 'Checklist headings could not be synced: ') + (error.message || error));
-      });
+      refreshColumns({ render: true });
       return;
     }
     if (reason === 'checklist-answer') {
-      syncAnswerChanges().then(function () { refreshColumns({ render: true }); }).catch(function (error) {
+      // Hücre yerel cevapla hemen güncellenir; sunucu senkronu arkada çalışır.
+      refreshColumns({ render: true });
+      syncAnswerChanges().catch(function (error) {
         toast(T('Checklist cevabı senkronize edilemedi: ', 'Checklist answer could not be synced: ') + (error.message || error));
       });
     }
@@ -1329,6 +1400,7 @@
     if (state.started || !root.document) return;
     state.started = true;
     ensureUi();
+    bindStatusCells();
     wrapRender();
     root.addEventListener('bl:cp-decision-context-changed', onDecisionChanged);
     root.addEventListener('bl:plm-requests-changed', function () { refreshColumns({ render: true }); });
@@ -1354,6 +1426,9 @@
     exportWorkbook: exportWorkbook,
     importWorkbook: importWorkbook,
     normalizeState: normalizeState,
+    statusLabel: statusLabel,
+    statusOptions: statusOptions,
+    openStatusMenu: openStatusMenu,
     diffAnswers: diffAnswers,
     columnKey: columnKey,
     excelDate: excelDate,

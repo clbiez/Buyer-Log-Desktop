@@ -85,9 +85,15 @@ test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlene
   }
   // Yerleşik kurallar listeden GİZLENMEMELİ.
   assert.doesNotMatch(VIEW, /filter\(rule => !rule\.builtIn\)/, 'yerleşik kurallar gizlenmemeli');
-  // Kurallar kullanıcı tercihiyle birlikte saklanmalı.
-  assert.match(VIEW, /rules: state\.rules,/);
-  assert.match(VIEW, /Rules\.mergeWithDefaults\(raw\.rules, state\.deletedRuleIds\)/);
+  // v7.221: kurallar kişiye özel, türüne göre AYRI hesap anahtarında saklanır
+  // (Ön Ayar Paylaşımı öncelik kurallarını ve checklist sorularını ayrı aktarır).
+  assert.match(VIEW, /priority: 'lcw\.cp\.rules\.priority\.v1'/);
+  assert.match(VIEW, /checklist: 'lcw\.cp\.rules\.checklist\.v1'/);
+  assert.match(VIEW, /rules: state\.rules\.filter\(rule => rule\.kind === kind\)/);
+  assert.match(VIEW, /Rules\.mergeWithDefaults\(stored\.rules, state\.deletedRuleIds\)/);
+  // Eski PREF_KEY içindeki kurallar kaybolmadan yeni anahtarlara taşınır.
+  assert.match(VIEW, /function loadRuleStores\(legacy\)/);
+  assert.match(VIEW, /if \(migrateRuleStores\) savePrefs\(\);/);
 });
 
 test('v9.49 kural uygulaması sırası doğru: kontrol durumu → öncelik → yeniden sayım', () => {
@@ -96,13 +102,16 @@ test('v9.49 kural uygulaması sırası doğru: kontrol durumu → öncelik → y
   const start = VIEW.indexOf('function analyzeRowsWithPersonalRules');
   const end = VIEW.indexOf('function recompute()', start);
   const decisionPass = VIEW.slice(start, end);
-  const stateIndex = decisionPass.indexOf('Checklist.stateFor');
-  const applyIndex = decisionPass.indexOf('Rules.applyPriorityRules');
+  // v7.221: checklist durumu ve öncelik kuralları birbirine koşul olarak
+  // bağlanabildiği için ikisi Rules.evaluateOrder içinde bağımlılık sırasıyla
+  // (tembel) çözülür; sonuç öncelik uygulamasından ÖNCE hazırdır.
+  const evaluateIndex = decisionPass.indexOf('Rules.evaluateOrder(');
+  const applyIndex = decisionPass.indexOf('const applied = evaluations.get(');
   const recountIndex = decisionPass.indexOf('Engine.recount');
-  assert.ok(start > 0 && stateIndex > 0 && applyIndex > stateIndex, 'kontrol durumu önceliklerden ÖNCE hesaplanmalı');
+  assert.ok(start > 0 && evaluateIndex > 0 && applyIndex > evaluateIndex, 'kontrol durumu önceliklerden ÖNCE hesaplanmalı');
   assert.ok(recountIndex > applyIndex, 'sayım kurallardan SONRA yeniden kurulmalı');
   // Özel kontrollerin kapsamı kural motorundan gelmeli.
-  assert.match(decisionPass, /Rules\.customChecklistItems\(/);
+  assert.match(decisionPass, /customItems\.set\(analysis\.orderKey, evaluated\.customItems\)/);
   assert.match(decisionPass, /customItemsFor:/);
   assert.match(VIEW, /function recompute\(\)[\s\S]*analyzeRowsWithPersonalRules\(lastRows, \{ commit: true \}\)/);
 });
@@ -231,13 +240,16 @@ test('v9.48 hesaplama motorlarında AI iş mantığı yok', () => {
 /* KULLANICI BİLDİRİMİ (v9.50): kural editörü bütün kuralları açık kart olarak
    alt alta çizdiği için özellikle 1366×768 ekranda koşullar görünmüyordu.
    Çözüm: geniş modal + tür sekmeleri + tek-açık accordion. İş mantığı aynı kalır. */
-test('v9.50 kural penceresi geniş, sekmeli ve tek-açık accordion kullanır', () => {
+test('v9.50 kural penceresi geniş ve tek-açık accordion kullanır; v7.221 Rules yalnız öncelik kuralı gösterir', () => {
   assert.match(VIEW, /class="cpaModal cpaRulesModal"/);
-  assert.match(VIEW, /data-cpa-rules-tab="priority"/);
-  assert.match(VIEW, /data-cpa-rules-tab="checklist"/);
+  // Kullanıcı talebi: "Rules'da sadece Rules ayarları olsun, checklist
+  // questions'u checklist settings'e taşı." Sekmeler kaldırıldı.
+  assert.doesNotMatch(VIEW, /data-cpa-rules-tab=/);
+  assert.match(VIEW, /function openRules\(\) \{ openRuleManager\('priority'\); \}/);
+  assert.match(VIEW, /function openSettings\(\) \{ openRuleManager\('checklist'\); \}/);
   assert.match(VIEW, /let expandedRuleId = null/);
   assert.match(VIEW, /expandedRuleId = expandedRuleId === id \? null : id/);
-  assert.match(VIEW, /visible\.map\(rule => ruleBlock\(rule, expandedRuleId\)\)/);
+  assert.match(VIEW, /visible\.map\(rule => ruleBlock\(rule, view\)\)/);
   assert.match(CSS, /\.cpaRulesModal\{[^}]*width:min\(1500px,96vw\)[^}]*height:auto[^}]*max-height:calc\(100vh\s*-\s*2\s*\*\s*var\(--sp-5\)\)/);
   assert.match(CSS, /\.cpaRulesBody\{[^}]*overflow:hidden/);
 });
@@ -248,10 +260,11 @@ test('rules modal text selection drag ile backdrop kapanışını tetiklemez', (
   assert.match(VIEW, /event\.target === modal && backdropPointerStarted/);
 });
 
-test('Checklist Questions ön tanımlı checklist rule kimliklerini kullanır', () => {
+test('Checklist Settings ön tanımlı checklist rule kimliklerini kullanır ve checklist aç/kapat içerir', () => {
   assert.match(VIEW, /managedItemIds: Rules\.DEFAULT_CHECKLIST_RULE_IDS/);
-  assert.match(VIEW, /Predefined checklist questions/);
-  assert.match(VIEW, /data-cpa-open-rules/);
+  assert.match(VIEW, /'Checklist Settings'/);
+  assert.match(VIEW, /data-cpa-master/);
+  assert.doesNotMatch(VIEW, /data-cpa-open-rules/, 'checklist soruları artık kendi penceresinde; Rules\'a yönlendirme yok');
 });
 
 test('kural penceresinde uzun liste bağımsız olarak dikey kaydırılır', () => {
@@ -267,15 +280,15 @@ test('kural satırı built-in dahil düzenleme ve silme aksiyonlarını gösteri
   assert.match(VIEW, /data-cpa-rule-edit/);
   assert.match(VIEW, /data-cpa-rule-delete/);
   assert.match(VIEW, /class="cpaRuleChevron"/);
-  assert.match(VIEW, /deletedRuleIds: state\.deletedRuleIds/);
-  assert.match(VIEW, /Rules\.mergeWithDefaults\(raw\.rules, state\.deletedRuleIds\)/);
+  assert.match(VIEW, /deletedRuleIds: state\.deletedRuleIds\.filter\(id => defaults\.has\(id\)\)/);
+  assert.match(VIEW, /Rules\.mergeWithDefaults\(stored\.rules, state\.deletedRuleIds\)/);
   assert.match(CSS, /\.cpaRuleBar\{[^}]*min-height:48px/);
   assert.match(CSS, /\.cpaCondLabels,\.cpaCondRow\{[^}]*40fr[^}]*25fr[^}]*35fr/);
 });
 
 test('v9.50 yeni kural açılmış halde oluşturulur ve editöre kaydırılır', () => {
-  assert.match(VIEW, /activeTab = 'priority'; expandedRuleId = rule\.id/);
-  assert.match(VIEW, /activeTab = 'checklist'; expandedRuleId = rule\.id/);
+  assert.match(VIEW, /showTemplates = false;\s*expandedRuleId = rule\.id;/);
+  assert.match(VIEW, /function createRule\(template\)/);
   assert.match(VIEW, /scrollIntoView\(\{ block: 'nearest' \}\)/);
   assert.match(VIEW, /scrollToRule\(rule\.id\)/);
 });
@@ -340,7 +353,7 @@ test('Rules Value picker body portal ile viewport-aware floating layer olarak a�
 
 test('Rules Field metadata kaynağı CP canlı column registry ile aynıdır', () => {
   const app = read('public/app-main.js');
-  assert.match(VIEW, /columnCatalog: liveColumnCatalog/);
+  assert.match(VIEW, /columnCatalog: liveRuleColumnCatalog\(\)/);
   assert.match(app, /window\.BLCpAttentionColumns = \{/);
   assert.match(app, /dataType:c\.dataType\|\|c\._blSchema\?\.dataType\|\|''/);
 });

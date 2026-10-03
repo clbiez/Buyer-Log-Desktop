@@ -66,14 +66,16 @@
 
   /* Motorun türettiği alanlar. Ham sütunlardan ayrı tutulur ki kullanıcı
      "yüklemeye kalan gün" gibi hesaplanmış bir değeri de koşulda kullanabilsin. */
+  const STAGE_VALUES = Object.freeze(['PRODUCTION', 'LOADING', 'SHORTAGE', 'IN_TRANSIT', 'CUSTOMS', 'IN_WAREHOUSE', 'AWAITING_RETAIL_TRANSFER', 'UNKNOWN']);
+  const OUTCOME_VALUES = Object.freeze(['ON_TRACK', 'AT_RISK', 'EXPECTED_LATE', 'ALREADY_LATE', 'UNKNOWN']);
   const DERIVED_FIELDS = Object.freeze([
     { id: '@daysToLoad', tr: 'Yüklemeye kalan gün', en: 'Days to load', numeric: true },
     { id: '@orderAgeDays', tr: 'Sipariş yaşı (gün)', en: 'Order age (days)', numeric: true },
-    { id: '@stage', tr: 'Aşama', en: 'Stage' },
-    { id: '@deliveryOutcome', tr: 'Teslimat sonucu', en: 'Delivery outcome' },
-    { id: '@basePriority', tr: 'Hesaplanan öncelik', en: 'Calculated priority' },
+    { id: '@stage', tr: 'Aşama', en: 'Stage', values: STAGE_VALUES },
+    { id: '@deliveryOutcome', tr: 'Teslimat sonucu', en: 'Delivery outcome', values: OUTCOME_VALUES },
+    { id: '@basePriority', tr: 'Hesaplanan öncelik', en: 'Calculated priority', values: SEVERITY },
     { id: '@scheduleBufferDays', tr: 'Hedefe tampon (gün)', en: 'Buffer to target (days)', numeric: true },
-    { id: '@transitRuleMissing', tr: 'Yol süresi kuralı eksik', en: 'Transit rule missing' },
+    { id: '@transitRuleMissing', tr: 'Yol süresi kuralı eksik', en: 'Transit rule missing', values: Object.freeze(['true', 'false']) },
     { id: '@qty', tr: 'Adet', en: 'Quantity', numeric: true },
     { id: '@loadingType', tr: 'Yükleme tipi', en: 'Loading type' },
   ]);
@@ -82,7 +84,29 @@
   /* Kontrol listesi durumu da koşulda kullanılabilir: "yükleme teyidi
      işaretlenmemiş" gibi bir kural ancak böyle yazılabilir. */
   const CHECKLIST_PREFIX = '@checklist:';
-  const CHECKLIST_STATES = Object.freeze(['open', 'answered', 'notApplicable']);
+  /* v7.221 — durumlar kullanıcının seçtiği dört değerle aynıdır:
+     open (Pending) · approved · rejected · notRequired, artı kapsam dışı. */
+  const CHECKLIST_STATES = Object.freeze(['open', 'approved', 'rejected', 'notRequired', 'notApplicable']);
+  const CHECKLIST_STATE_LABELS = Object.freeze({
+    tr: { open: 'Bekliyor', approved: 'Onaylandı', rejected: 'Reddedildi', notRequired: 'Gerekmiyor', notApplicable: 'Kapsam dışı' },
+    en: { open: 'Pending', approved: 'Approved', rejected: 'Rejected', notRequired: 'Not Required', notApplicable: 'Not applicable' },
+  });
+  /* Öncelik kuralları da koşulda kullanılabilir: "yalnız X kuralına takılan
+     siparişlere sor" gibi bir checklist sorusu böyle yazılır. */
+  const RULE_PREFIX = '@rule:';
+  const RULE_STATES = Object.freeze(['matched', 'notMatched']);
+  const RULE_STATE_LABELS = Object.freeze({
+    tr: { matched: 'Eşleşiyor', notMatched: 'Eşleşmiyor' },
+    en: { matched: 'Matches', notMatched: 'Does not match' },
+  });
+  /* Eski (v1) kayıtlarda 'open' = cevapsız, 'answered' = işaretli demekti.
+     Reddedilen durum yoktu; reddedilen bir kontrol hâlâ "yapılmadı"dır. Bu
+     yüzden eski anlam yeni durumlara KAYIPSIZ taşınır. */
+  const LEGACY_CHECKLIST_VALUE_SETS = Object.freeze({
+    open: Object.freeze(['open', 'rejected']),
+    answered: Object.freeze(['approved', 'notRequired']),
+    done: Object.freeze(['approved']),
+  });
 
   const text = value => String(value == null ? '' : value).trim();
   const lower = value => text(value).toLocaleLowerCase('tr-TR');
@@ -542,19 +566,44 @@
     return { match, conditions };
   }
 
+  const EXPRESSION_VERSION = 2;
+  function migrateLegacyChecklistCondition(condition) {
+    if (!condition || condition.field.indexOf(CHECKLIST_PREFIX) !== 0) return condition;
+    if (!condition.right || condition.right.type !== 'value') return condition;
+    if (!['eq', 'ne'].includes(condition.operator)) return condition;
+    const legacy = LEGACY_CHECKLIST_VALUE_SETS[text(condition.right.value)];
+    if (!legacy) return condition;
+    const values = legacy.slice();
+    const operator = condition.operator === 'eq' ? 'in' : 'notIn';
+    return { ...condition, operator, value: values, right: { ...condition.right, value: values } };
+  }
+  function migrateLegacyChecklistFormula(formula) {
+    if (!formula || formula.indexOf(CHECKLIST_PREFIX) < 0) return formula;
+    return formula.replace(/(\[@checklist:[^\]]+\])\s*(=|<>)\s*"(open|answered|done)"/g, (_all, field, operator, value) => {
+      const list = LEGACY_CHECKLIST_VALUE_SETS[value].map(item => `"${item}"`).join(',');
+      return operator === '=' ? `IN(${field},${list})` : `NOT(IN(${field},${list}))`;
+    });
+  }
+
   function normalizeRule(raw, kind) {
     const item = raw && typeof raw === 'object' ? raw : {};
     const ruleKind = kind || (['priority', 'checklist'].includes(text(item.kind)) ? text(item.kind) : 'priority');
-    const conditions = (Array.isArray(item.conditions) ? item.conditions : []).slice(0, 12).map(normalizeCondition).filter(rule => rule.field);
+    const legacyExpression = (Number(item.expressionVersion) || 1) < EXPRESSION_VERSION;
+    const conditions = (Array.isArray(item.conditions) ? item.conditions : []).slice(0, 12).map(normalizeCondition)
+      .filter(rule => rule.field)
+      .map(condition => (legacyExpression ? migrateLegacyChecklistCondition(condition) : condition));
+    const rawFormula = text(item.formula).slice(0, 4000);
     const base = {
       id: text(item.id) || `rule_${Math.random().toString(36).slice(2, 10)}`,
       kind: ruleKind,
       name: text(item.name).slice(0, 160),
+      // İngilizce arayüz adı. Kullanıcı adı değiştirince ikisi birlikte yazılır.
+      nameEn: text(item.nameEn).slice(0, 160),
       enabled: item.enabled !== false,
       builtIn: item.builtIn === true,
       mode: text(item.mode) === 'formula' ? 'formula' : 'basic',
-      formula: text(item.formula).slice(0, 4000),
-      expressionVersion: Number(item.expressionVersion) || 1,
+      formula: legacyExpression ? migrateLegacyChecklistFormula(rawFormula) : rawFormula,
+      expressionVersion: EXPRESSION_VERSION,
       conditions,
       // Koşulların hepsi mi biri mi? Varsayılan "hepsi": daha dar, daha güvenli.
       match: text(item.match) === 'any' ? 'any' : 'all',
@@ -587,6 +636,7 @@
     Object.freeze(normalizeRule({
       id: 'builtin_critical_late', builtIn: true, kind: 'priority', target: 'CRITICAL',
       name: 'Yükleme geçti ve Retail tarihine yetişmiyor',
+      nameEn: 'Load date passed and it will not make the Retail date',
       reasonTr: 'Yükleme tarihi geçmiş ve hedef tarihe yetişmiyor',
       reasonEn: 'Load date passed and will not make the target date',
       match: 'all',
@@ -598,25 +648,27 @@
     Object.freeze(normalizeRule({
       id: 'builtin_action_confirmation', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
       name: 'Gelecek hafta yüklenecek, üretici teyidi yok',
+      nameEn: 'Loads next week, no supplier confirmation',
       reasonTr: 'Gelecek hafta yükleme var, üretici teyidi işaretlenmemiş',
       reasonEn: 'Loading next week without supplier confirmation',
       match: 'all',
       conditions: [
         { field: '@daysToLoad', operator: 'gte', value: 0 },
         { field: '@daysToLoad', operator: 'lte', value: 14 },
-        { field: '@checklist:supplierConfirmation', operator: 'eq', value: 'open' },
+        { field: '@checklist:supplierConfirmation', operator: 'in', value: ['open', 'rejected'] },
       ],
     })),
     Object.freeze(normalizeRule({
       id: 'builtin_action_samples', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
       name: 'Gelecek hafta yüklenecek, numune onayı işaretlenmemiş',
+      nameEn: 'Loads next week, sample approval not ticked',
       reasonTr: 'Gelecek hafta yükleme var, numune onayları işaretlenmemiş',
       reasonEn: 'Loading next week without sample approvals',
       match: 'all',
       conditions: [
         { field: '@daysToLoad', operator: 'gte', value: 0 },
         { field: '@daysToLoad', operator: 'lte', value: 14 },
-        { field: '@checklist:pps', operator: 'eq', value: 'open' },
+        { field: '@checklist:pps', operator: 'in', value: ['open', 'rejected'] },
       ],
     })),
     /* PLM numune talepleri (CoreNectum Requests): Ex-factory yaklaşırken PPS
@@ -626,25 +678,27 @@
     Object.freeze(normalizeRule({
       id: 'builtin_action_pps_exfactory', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
       name: "Ex-factory'ye 21 gün kala PPS onayı yok",
+      nameEn: '21 days to ex-factory and no PPS approval',
       reasonTr: "Ex-factory yaklaşıyor, PPS onayı yok",
       reasonEn: 'Ex-factory is approaching without PPS approval',
       match: 'all',
       conditions: [
         { field: '@daysToLoad', operator: 'gte', value: 0 },
         { field: '@daysToLoad', operator: 'lte', value: 21 },
-        { field: '@checklist:pps', operator: 'eq', value: 'open' },
+        { field: '@checklist:pps', operator: 'in', value: ['open', 'rejected'] },
       ],
     })),
     Object.freeze(normalizeRule({
       id: 'builtin_action_tests', builtIn: true, kind: 'priority', target: 'ACTION_THIS_WEEK',
       name: 'Gelecek hafta yüklenecek, test onayı işaretlenmemiş',
+      nameEn: 'Loads next week, test approval not ticked',
       reasonTr: 'Gelecek hafta yükleme var, testler işaretlenmemiş',
       reasonEn: 'Loading next week without test approvals',
       match: 'all',
       conditions: [
         { field: '@daysToLoad', operator: 'gte', value: 0 },
         { field: '@daysToLoad', operator: 'lte', value: 14 },
-        { field: '@checklist:tests', operator: 'eq', value: 'open' },
+        { field: '@checklist:tests', operator: 'in', value: ['open', 'rejected'] },
       ],
     })),
   ]);
@@ -668,7 +722,7 @@
     if (Number.isFinite(minAge)) conditions.push({ field: '@orderAgeDays', operator: 'gte', value: minAge });
     const raw = {
       id: item.id, builtIn: true, kind: 'checklist', enabled: item.defaultEnabled !== false,
-      name: item.tr || item.en || item.id, tr: item.tr || item.id, en: item.en || item.tr || item.id,
+      name: item.tr || item.en || item.id, nameEn: item.en || item.tr || item.id, tr: item.tr || item.id, en: item.en || item.tr || item.id,
       questionTr: item.questionTr || item.tr || item.id,
       questionEn: item.questionEn || item.en || item.tr || item.id,
       match: 'all', conditions,
@@ -697,7 +751,8 @@
         '@orderAgeDays': analysis.orderAgeDays,
         '@stage': analysis.stage,
         '@deliveryOutcome': analysis.deliveryOutcome,
-        '@basePriority': analysis.priority,
+        // Kurallar uygulanmadan önceki (motorun) önceliği; kural sonucu değil.
+      '@basePriority': analysis.calculatedPriority != null ? analysis.calculatedPriority : analysis.priority,
         '@scheduleBufferDays': analysis.scheduleBufferDays,
         '@transitRuleMissing': analysis.transitRuleMissing ? 'true' : 'false',
         '@qty': analysis.qty,
@@ -709,12 +764,20 @@
   }
 
   function readField(field, facts) {
-    if (DERIVED_IDS.has(field)) return facts.derived[field];
+    const source = facts || {};
+    if (DERIVED_IDS.has(field)) return source.derived ? source.derived[field] : undefined;
     if (field.indexOf(CHECKLIST_PREFIX) === 0) {
       const itemId = field.slice(CHECKLIST_PREFIX.length);
-      return facts.checklist[itemId] || 'notApplicable';
+      // Canlı değerlendirmede durum, bağımlılık sırasına göre tembel hesaplanır.
+      if (typeof source.resolveChecklist === 'function') return source.resolveChecklist(itemId);
+      return (source.checklist && source.checklist[itemId]) || 'notApplicable';
     }
-    return facts.row ? facts.row[field] : undefined;
+    if (field.indexOf(RULE_PREFIX) === 0) {
+      const ruleId = field.slice(RULE_PREFIX.length);
+      if (typeof source.resolveRule === 'function') return source.resolveRule(ruleId);
+      return (source.ruleState && source.ruleState[ruleId]) || 'notMatched';
+    }
+    return source.row ? source.row[field] : undefined;
   }
 
   function resolveOperand(operand, facts, options) {
@@ -775,10 +838,10 @@
 
   /* Öncelik kuralları: YALNIZ yükseltir (§2). Eşleşen kuralların adları
      döner ki kullanıcı bir siparişin neden Kritik olduğunu görebilsin. */
-  function applyPriorityRules(analysis, rules, checklistState) {
+  function applyPriorityRules(analysis, rules, checklistState, preparedFacts) {
     const list = (Array.isArray(rules) ? rules : []).filter(rule => rule.kind === 'priority');
     if (!list.length) return { priority: analysis.priority, matched: [], signals: [] };
-    const facts = factsFor(analysis, checklistState);
+    const facts = preparedFacts || factsFor(analysis, checklistState);
     let priority = analysis.priority;
     const matched = [];
     const signals = [];
@@ -886,10 +949,324 @@
     const columns = [...seen.values()]
       .map(item => ({ ...item, tr: cleanLabel(item.tr) || humanLabel(item.id) || item.id, en: cleanLabel(item.en) || cleanLabel(item.tr) || humanLabel(item.id) || item.id }))
       .sort((a, b) => String(a.tr).localeCompare(String(b.tr), 'tr-TR', { sensitivity: 'base' }));
-    const checklist = (Array.isArray(opts.checklistItems) ? opts.checklistItems : []).map(item => ({
-      id: `${CHECKLIST_PREFIX}${item.id}`, tr: `Kontrol: ${item.tr}`, en: `Check: ${item.en}`, source: 'checklist',
+    /* Checklist ve öncelik başlıkları CANLI kural listesinden gelir: yeni
+       eklenen başlık anında seçilebilir, silinen başlık listede görünmez.
+       `excludeId` düzenlenen kuralın kendisini dışarıda bırakır (kendine
+       bağlı koşul yazılamaz). */
+    const excludeId = text(opts.excludeId);
+    const checklist = (Array.isArray(opts.checklistItems) ? opts.checklistItems : [])
+      .filter(item => item && text(item.id) && text(item.id) !== excludeId)
+      .map(item => ({
+        id: `${CHECKLIST_PREFIX}${item.id}`, tr: `Kontrol: ${text(item.tr || item.name || item.id)}`, en: `Check: ${text(item.en || item.name || item.tr || item.id)}`,
+        source: 'checklist', ref: text(item.id), enabled: item.enabled !== false, values: CHECKLIST_STATES.slice(),
+      }));
+    const rules = (Array.isArray(opts.priorityRules) ? opts.priorityRules : [])
+      .filter(rule => rule && text(rule.id) && text(rule.id) !== excludeId && (!rule.kind || rule.kind === 'priority'))
+      .map(rule => ({
+        id: `${RULE_PREFIX}${rule.id}`, tr: `Kural: ${text(rule.name || rule.reasonTr || rule.id)}`, en: `Rule: ${text(rule.nameEn || rule.name || rule.reasonEn || rule.id)}`,
+        source: 'rule', ref: text(rule.id), enabled: rule.enabled !== false, values: RULE_STATES.slice(),
+      }));
+    return { derived: DERIVED_FIELDS.slice(), checklist, rules, columns };
+  }
+
+  /* -------------------------------------------------------- canlı değerlendirme
+     Checklist soruları ve öncelik kuralları BİRBİRİNE koşul olarak bağlanabilir:
+       · öncelik kuralı  → [@checklist:<id>] durumunu okur
+       · checklist sorusu → [@rule:<id>] eşleşmesini ya da başka bir sorunun
+                            durumunu okur
+     Sabit bir "önce checklist, sonra öncelik" sırası bu zinciri doğru
+     çözemez. Bu yüzden her sipariş için değerler TEMBEL ve önbellekli
+     hesaplanır: bir koşul hangi değeri okursa o anda hesaplanır. Döngü
+     (A, B'ye; B, A'ya bağlı) güvenle kırılır: döngüdeki değer "bilinmiyor"
+     sayılır ve bilinmeyen değer hiçbir koşulu sağlamaz (§4). */
+  function evaluateOrder(analysis, options) {
+    const opts = options || {};
+    const rules = Array.isArray(opts.rules) ? opts.rules : [];
+    const checklistEnabled = opts.checklistEnabled !== false;
+    const byId = new Map(rules.map(rule => [rule.id, rule]));
+    const statusContext = { answers: opts.answers || {}, plmEvidence: opts.plmEvidence };
+    const memo = new Map();
+    const visiting = new Set();
+    const facts = factsFor(analysis, {});
+    if (opts.today != null) facts.today = opts.today;
+    const guarded = (key, compute, cycleValue) => {
+      if (memo.has(key)) return memo.get(key);
+      if (visiting.has(key)) return cycleValue;
+      visiting.add(key);
+      let value;
+      try { value = compute(); } finally { visiting.delete(key); }
+      memo.set(key, value);
+      return value;
+    };
+    const checklistApplies = id => guarded(`applies:${id}`, () => {
+      const rule = byId.get(id);
+      return Boolean(checklistEnabled && rule && rule.kind === 'checklist' && matchesRule(rule, facts));
+    }, false);
+    const statusOf = typeof Checklist.statusOf === 'function'
+      ? id => Checklist.statusOf(analysis, id, statusContext)
+      : () => 'open';
+    facts.resolveChecklist = id => guarded(`checklist:${id}`, () => (checklistApplies(id) ? statusOf(id) : 'notApplicable'), undefined);
+    facts.resolveRule = id => guarded(`rule:${id}`, () => {
+      const rule = byId.get(id);
+      return rule && rule.kind === 'priority' && matchesRule(rule, facts) ? 'matched' : 'notMatched';
+    }, undefined);
+
+    const checklistRules = rules.filter(rule => rule.kind === 'checklist');
+    const customItems = checklistRules.filter(rule => checklistApplies(rule.id)).map(rule => ({
+      id: rule.id, group: 'custom', custom: true,
+      tr: rule.tr || rule.name, en: rule.en || rule.name,
+      questionTr: rule.questionTr || rule.name, questionEn: rule.questionEn || rule.name,
     }));
-    return { derived: DERIVED_FIELDS.slice(), checklist, columns };
+    const checklistState = {};
+    for (const id of DEFAULT_CHECKLIST_RULE_IDS) checklistState[id] = 'notApplicable';
+    for (const rule of checklistRules) checklistState[rule.id] = facts.resolveChecklist(rule.id) || 'notApplicable';
+    const applied = applyPriorityRules(analysis, rules, checklistState, facts);
+    const ruleState = {};
+    for (const rule of rules) if (rule.kind === 'priority') ruleState[rule.id] = applied.matched.includes(rule) ? 'matched' : 'notMatched';
+    return { ...applied, checklistState, customItems, ruleState };
+  }
+
+  /* ---------------------------------------------------------- bağımlılıklar
+     Bir kural/checklist başka bir kuralın koşulunda kullanılıyorsa silmeden
+     önce kullanıcı uyarılmalı; silinmiş bir başlığa bağlı koşul sessizce
+     "hiç eşleşmez" hâline gelir. */
+  function referenceFieldOf(rule) {
+    if (!rule || !text(rule.id)) return '';
+    return `${rule.kind === 'checklist' ? CHECKLIST_PREFIX : RULE_PREFIX}${rule.id}`;
+  }
+
+  function referencedFields(rule) {
+    const fields = new Set();
+    if (!rule) return fields;
+    const add = value => { const id = text(value); if (id) fields.add(id); };
+    if (rule.mode === 'formula' && text(rule.formula)) {
+      try { parseFormula(rule.formula).fields.forEach(add); } catch (_) { /* geçersiz formül: koşullara düş */ }
+    }
+    for (const condition of (Array.isArray(rule.conditions) ? rule.conditions : [])) {
+      const item = normalizeCondition(condition);
+      add(item.field);
+      if (item.left) { if (item.left.type === 'field') add(item.left.field); add(item.left.offsetField); }
+      if (item.right) { if (item.right.type === 'field') add(item.right.field); add(item.right.offsetField); }
+    }
+    return fields;
+  }
+
+  function dependentsOf(target, rules) {
+    const field = typeof target === 'string' ? target : referenceFieldOf(target);
+    const targetId = typeof target === 'string' ? '' : text(target && target.id);
+    if (!field) return [];
+    return (Array.isArray(rules) ? rules : []).filter(rule => rule && rule.id !== targetId && referencedFields(rule).has(field));
+  }
+
+  /* Kuralın, artık var olmayan bir checklist/kural başlığına bağlı koşulları. */
+  function danglingReferences(rule, rules) {
+    const known = new Set((Array.isArray(rules) ? rules : []).map(referenceFieldOf).filter(Boolean));
+    return [...referencedFields(rule)].filter(field =>
+      (field.indexOf(CHECKLIST_PREFIX) === 0 || field.indexOf(RULE_PREFIX) === 0) && !known.has(field));
+  }
+
+  /* Döngüsel bağımlılık: A → B → A. Değerlendirme döngüde güvenle durur ama
+     kullanıcı bunu kayıttan önce görmeli. Döngüdeki kural adlarını döner. */
+  function findCycle(rule, rules) {
+    const list = Array.isArray(rules) ? rules : [];
+    const byField = new Map(list.map(item => [referenceFieldOf(item), item]));
+    const start = referenceFieldOf(rule);
+    const path = [];
+    const seen = new Set();
+    const walk = current => {
+      for (const field of referencedFields(current)) {
+        const next = byField.get(field);
+        if (!next) continue;
+        if (referenceFieldOf(next) === start) { path.push(next); return true; }
+        if (seen.has(next.id)) continue;
+        seen.add(next.id);
+        path.push(next);
+        if (walk(next)) return true;
+        path.pop();
+      }
+      return false;
+    };
+    return walk(rule) ? path : [];
+  }
+
+  /* ------------------------------------------------- formül görünen adları
+     Saklanan formül teknik kimlik kullanır ([@daysToLoad], [__f_x]). Kullanıcı
+     ve AI ise ekrandaki adı yazar ([Days to load]). İki yönlü çeviri yalnız
+     köşeli parantezleri değiştirir; tırnak içindeki metne dokunmaz. */
+  function mapFormulaFields(formula, mapper) {
+    const input = String(formula == null ? '' : formula);
+    let out = '';
+    let index = 0;
+    while (index < input.length) {
+      const ch = input[index];
+      if (ch === '"') {
+        let end = index + 1;
+        while (end < input.length) {
+          if (input[end] === '\\') { end += 2; continue; }
+          if (input[end] === '"') break;
+          end += 1;
+        }
+        out += input.slice(index, end + 1);
+        index = end + 1;
+        continue;
+      }
+      if (ch === '[') {
+        const end = input.indexOf(']', index + 1);
+        if (end < 0) { out += input.slice(index); break; }
+        out += `[${mapper(input.slice(index + 1, end).trim())}]`;
+        index = end + 1;
+        continue;
+      }
+      out += ch;
+      index += 1;
+    }
+    return out;
+  }
+
+  function catalogEntries(catalog) {
+    if (Array.isArray(catalog)) return catalog;
+    const source = catalog || {};
+    return [...(source.derived || []), ...(source.checklist || []), ...(source.rules || []), ...(source.columns || [])];
+  }
+
+  function formulaToDisplay(formula, catalog, lang) {
+    const byId = new Map(catalogEntries(catalog).map(item => [text(item.id), item]));
+    return mapFormulaFields(formula, field => {
+      const item = byId.get(field);
+      if (!item) return field;
+      const label = text(lang === 'en' ? item.en : item.tr) || text(item.label) || field;
+      return label.indexOf(']') >= 0 ? field : label;
+    });
+  }
+
+  function formulaFromDisplay(formula, catalog) {
+    const entries = catalogEntries(catalog);
+    const ids = new Set(entries.map(item => text(item.id)));
+    const byLabel = new Map();
+    const ambiguous = new Set();
+    for (const item of entries) {
+      for (const label of [item.tr, item.en, item.label]) {
+        const key = lower(label);
+        if (!key) continue;
+        if (byLabel.has(key) && byLabel.get(key) !== item.id) ambiguous.add(key);
+        else byLabel.set(key, text(item.id));
+      }
+    }
+    return mapFormulaFields(formula, field => {
+      if (ids.has(field)) return field;
+      const key = lower(field);
+      return byLabel.has(key) && !ambiguous.has(key) ? byLabel.get(key) : field;
+    });
+  }
+
+  /* -------------------------------------------------------------- AI rehberi
+     Kullanıcı istediğini ChatGPT gibi bir araca sorar; bu Markdown rehberi
+     o araca Buyer Log'un kural dilini, fonksiyonlarını ve YALNIZ alan
+     ADLARINI anlatır. Satır verisi (sipariş, fiyat, tedarikçi) asla girmez.
+     AI'ın cevabı yine Buyer Log'da doğrulanır; burada AI çağrısı YOKTUR. */
+  function buildAiGuide(options) {
+    const opts = options || {};
+    const en = opts.lang === 'en';
+    const kind = opts.kind === 'checklist' ? 'checklist' : 'priority';
+    const fields = catalogEntries(opts.fields || []).slice(0, 400);
+    const label = item => text(en ? item.en : item.tr) || text(item.label) || text(item.id);
+    const typeOf = item => (item.numeric ? 'number' : item.date ? 'date' : item.source === 'checklist' || item.source === 'rule' ? 'status' : 'text');
+    const valuesOf = item => {
+      if (Array.isArray(item.values) && !item.source) return item.values.map(value => `"${value}"`).join(', ');
+      if (item.source === 'checklist') return CHECKLIST_STATES.map(state => `"${state}"`).join(', ');
+      if (item.source === 'rule') return RULE_STATES.map(state => `"${state}"`).join(', ');
+      return '';
+    };
+    const group = (title, list) => (list.length
+      ? [`### ${title}`, '', '| Field | Type | Allowed values |', '|---|---|---|',
+        ...list.map(item => `| [${label(item).replace(/\|/g, '/')}] | ${typeOf(item)} | ${valuesOf(item)} |`), ''].join('\n')
+      : '');
+    const by = source => fields.filter(item => item.source === source);
+    const derived = fields.filter(item => text(item.id).indexOf('@') === 0 && !item.source);
+    const purpose = kind === 'checklist'
+      ? (en ? 'The formula decides WHICH ORDERS are asked this checklist question. TRUE = the question is asked for that order.'
+        : 'Formül, bu checklist sorusunun HANGİ SİPARİŞLERE sorulacağını belirler. TRUE = soru o siparişe sorulur.')
+      : (en ? 'The formula decides which orders are ESCALATED to the rule\'s priority. TRUE = the order is escalated. Rules can only raise priority, never lower it.'
+        : 'Formül, hangi siparişlerin kuralın önceliğine YÜKSELTİLECEĞİNİ belirler. TRUE = sipariş yükseltilir. Kurallar önceliği yalnız yükseltir, düşürmez.');
+    const request = text(opts.request);
+    const lines = [
+      en ? '# Buyer Log — Rule Formula Guide for AI' : '# Buyer Log — AI için Kural Formülü Rehberi',
+      '',
+      en ? 'You are helping a buyer write ONE Buyer Log rule formula. Reply with the formula in a single ```formula code block, then one short sentence that explains it. Use only the fields and functions below.'
+        : 'Bir buyer\'ın TEK bir Buyer Log kural formülü yazmasına yardım ediyorsun. Formülü tek bir ```formula kod bloğunda ver, ardından kısa bir cümleyle açıkla. Yalnız aşağıdaki alanları ve fonksiyonları kullan.',
+      '',
+      `## ${en ? 'What the formula does' : 'Formül ne yapar'}`,
+      '',
+      purpose,
+      '',
+      `## ${en ? 'Syntax' : 'Sözdizimi'}`,
+      '',
+      en ? '- Start with `=`. The result must be TRUE or FALSE.' : '- `=` ile başlar. Sonuç TRUE ya da FALSE olmalıdır.',
+      en ? '- Field: write the field name in square brackets exactly as listed, e.g. `[Days to load]`.' : '- Alan: listedeki adı köşeli parantez içinde aynen yaz, ör. `[Yüklemeye kalan gün]`.',
+      en ? '- Text in double quotes: `"In Production"`. Numbers without quotes: `14`. Text comparison ignores case.' : '- Metin çift tırnakta: `"In Production"`. Sayı tırnaksız: `14`. Metin karşılaştırması büyük/küçük harf duyarsızdır.',
+      en ? '- Comparison: `=` `<>` `>` `>=` `<` `<=`. Arithmetic: `+` `-` (date + number = date shifted by days).' : '- Karşılaştırma: `=` `<>` `>` `>=` `<` `<=`. Aritmetik: `+` `-` (tarih + sayı = gün kaydırılmış tarih).',
+      en ? '- Empty or unreadable values never match a comparison.' : '- Boş ya da okunamayan değer hiçbir karşılaştırmayı sağlamaz.',
+      en ? '- Not allowed: JavaScript, cell references like A1, `*` `/` `&`, any function not listed below.' : '- Yasak: JavaScript, A1 gibi hücre referansları, `*` `/` `&`, aşağıda olmayan fonksiyonlar.',
+      '',
+      `## ${en ? 'Functions' : 'Fonksiyonlar'}`,
+      '',
+      '| Function | ' + (en ? 'Meaning' : 'Anlamı') + ' |',
+      '|---|---|',
+      `| AND(a, b, …) | ${en ? 'all are TRUE' : 'hepsi TRUE'} |`,
+      `| OR(a, b, …) | ${en ? 'at least one is TRUE' : 'en az biri TRUE'} |`,
+      `| NOT(a) | ${en ? 'reverses TRUE/FALSE' : 'TRUE/FALSE tersine çevirir'} |`,
+      `| IF(test, a, b) | ${en ? 'a when test is TRUE, else b' : 'test TRUE ise a, değilse b'} |`,
+      `| IN(value, "x", "y", …) | ${en ? 'value equals one of the list' : 'değer listedekilerden birine eşit'} |`,
+      `| CONTAINS(text, "part") | ${en ? 'text contains part' : 'metin parçayı içerir'} |`,
+      `| ISBLANK(value) / ISNOTBLANK(value) | ${en ? 'empty / not empty' : 'boş / dolu'} |`,
+      `| BETWEEN(value, low, high) | ${en ? 'low <= value <= high' : 'alt <= değer <= üst'} |`,
+      `| TODAY() | ${en ? 'today\'s date' : 'bugünün tarihi'} |`,
+      `| DAYS_BETWEEN(date1, date2) | ${en ? 'date2 − date1 in days' : 'tarih2 − tarih1 (gün)'} |`,
+      '',
+      `## ${en ? 'Checklist and rule statuses' : 'Checklist ve kural durumları'}`,
+      '',
+      en ? '- A checklist field `[Check: …]` is one of: `"open"` (Pending, no answer yet), `"approved"`, `"rejected"`, `"notRequired"`, `"notApplicable"` (the question is not asked for that order).'
+        : '- Checklist alanı `[Kontrol: …]` şu değerlerden biridir: `"open"` (Bekliyor, henüz cevap yok), `"approved"`, `"rejected"`, `"notRequired"`, `"notApplicable"` (soru o siparişe sorulmuyor).',
+      en ? '- A rule field `[Rule: …]` is `"matched"` or `"notMatched"`.' : '- Kural alanı `[Kural: …]` `"matched"` ya da `"notMatched"` değerini alır.',
+      en ? '- "Not done yet" usually means `IN([Check: X], "open", "rejected")`.' : '- "Henüz tamamlanmadı" genelde `IN([Kontrol: X], "open", "rejected")` demektir.',
+      '',
+      `## ${en ? 'Examples' : 'Örnekler'}`,
+      '',
+      '```formula',
+      en ? '=AND([Days to load]>=0,[Days to load]<=14,IN([Stage],"PRODUCTION","LOADING"))' : '=AND([Yüklemeye kalan gün]>=0,[Yüklemeye kalan gün]<=14,IN([Aşama],"PRODUCTION","LOADING"))',
+      '```',
+      '',
+      '```formula',
+      en ? '=AND([Days to load]<=21,IN([Check: PPS approval],"open","rejected"))' : '=AND([Yüklemeye kalan gün]<=21,IN([Kontrol: PPS onayı],"open","rejected"))',
+      '```',
+      '',
+      `## ${en ? 'Available fields' : 'Kullanılabilir alanlar'}`,
+      '',
+      `${en ? 'Stage values' : 'Aşama değerleri'}: ${STAGE_VALUES.join(', ')}. ${en ? 'Delivery outcome values' : 'Teslimat sonucu değerleri'}: ${OUTCOME_VALUES.join(', ')}. ${en ? 'Priority values' : 'Öncelik değerleri'}: ${SEVERITY.join(', ')}.`,
+      '',
+      group(en ? 'Calculated' : 'Hesaplanan', derived),
+      group(en ? 'Checklist questions' : 'Checklist soruları', by('checklist')),
+      group(en ? 'Priority rules' : 'Öncelik kuralları', by('rule')),
+      group(en ? 'CP columns' : 'CP sütunları', fields.filter(item => item.source === 'column' || item.source === 'formula')),
+      `## ${en ? 'Request' : 'İstek'}`,
+      '',
+      request || (en ? '(Describe here what the rule should do.)' : '(Kuralın ne yapması gerektiğini buraya yazın.)'),
+      '',
+    ];
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n');
+  }
+
+  /* AI cevabının tamamı yapıştırılabilir: ```formula bloğu, ilk `=` ile
+     başlayan satır ya da metnin kendisi formül olarak alınır. */
+  function extractFormula(answer) {
+    const raw = String(answer == null ? '' : answer).replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    const fenced = raw.match(/```(?:formula|excel|text)?\s*\n?([\s\S]*?)```/i);
+    if (fenced && fenced[1].trim()) return fenced[1].trim().split('\n').map(line => line.trim()).filter(Boolean).join('');
+    const line = raw.split(/\r?\n/).map(item => item.trim()).find(item => /^=/.test(item));
+    if (line) return line;
+    const inline = raw.match(/`(=[^`]+)`/);
+    if (inline) return inline[1].trim();
+    return raw.trim();
   }
 
   function normalizeRules(raw) {
@@ -923,7 +1300,13 @@
     const byId = new Map(saved.map(rule => [rule.id, rule]));
     const merged = DEFAULT_RULES
       .filter(rule => !deleted.has(rule.id))
-      .map(rule => (byId.has(rule.id) ? byId.get(rule.id) : normalizeRule(rule)));
+      .map(rule => {
+        if (!byId.has(rule.id)) return normalizeRule(rule);
+        const own = byId.get(rule.id);
+        // Eski kayıtta İngilizce ad yoksa ve ad hiç değiştirilmediyse yerleşik çeviri kullanılır.
+        if (!own.nameEn && own.name === rule.name) own.nameEn = rule.nameEn;
+        return own;
+      });
     for (const rule of saved) {
       if (!DEFAULT_RULES.some(item => item.id === rule.id)) merged.push(rule);
     }
@@ -932,6 +1315,9 @@
 
   return {
     SEVERITY, severityRank, OPERATORS, OPERATOR_IDS, DERIVED_FIELDS, CHECKLIST_PREFIX, CHECKLIST_STATES,
+    CHECKLIST_STATE_LABELS, STAGE_VALUES, OUTCOME_VALUES, RULE_PREFIX, RULE_STATES, RULE_STATE_LABELS, EXPRESSION_VERSION,
+    evaluateOrder, referenceFieldOf, referencedFields, dependentsOf, danglingReferences, findCycle,
+    mapFormulaFields, formulaToDisplay, formulaFromDisplay, buildAiGuide, extractFormula,
     DEFAULT_RULES, DEFAULT_PRIORITY_RULES, DEFAULT_CHECKLIST_RULES, DEFAULT_CHECKLIST_RULE_IDS,
     normalizeCondition, normalizeRule, normalizeRules, conditionsToFormula, formulaToConditions, validateRule, mergeWithDefaults,
     compileExpression, evaluateExpression, validateExpression,
