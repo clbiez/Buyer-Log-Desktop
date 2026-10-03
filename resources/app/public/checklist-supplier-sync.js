@@ -127,6 +127,20 @@
   function sameJson(a, b) {
     try { return JSON.stringify(a) === JSON.stringify(b); } catch (_) { return false; }
   }
+  function definitionSignature(list) {
+    const source = (Array.isArray(list) ? list : []).map(function (item) {
+      return {
+        id: text(item && item.id), enabled: item && item.enabled !== false,
+        name: text(item && item.name), tr: text(item && item.tr), en: text(item && item.en),
+        questionTr: text(item && item.questionTr), questionEn: text(item && item.questionEn),
+        mode: item && item.mode === 'formula' ? 'formula' : 'basic',
+        formula: text(item && item.formula),
+        match: item && item.match === 'any' ? 'any' : 'all',
+        conditions: Array.isArray(item && item.conditions) ? item.conditions : [],
+      };
+    }).sort(function (a, b) { return a.id.localeCompare(b.id); });
+    try { return JSON.stringify(source); } catch (_) { return ''; }
+  }
 
   function mergeRemoteDefinitions(definitions) {
     const s = assistantState(), Rules = root.BLCpRulesEngine;
@@ -172,6 +186,7 @@
   async function syncDefinitions() {
     if (state.syncingDefinitions || state.applyingRemote) return;
     const definitions = customDefinitions();
+    if (definitionSignature(definitions) === definitionSignature(state.shared.definitions)) return;
     state.syncingDefinitions = true;
     try {
       const result = await post('/definitions', { definitions: definitions });
@@ -717,7 +732,14 @@
     }
   }
 
+  function activeNeedsRuntime() {
+    const active = root.document && root.document.querySelector('nav.tabs button.active[data-tab]');
+    const tab = active && active.dataset ? String(active.dataset.tab || '') : '';
+    return tab === 'cp' || tab === 'overview';
+  }
+
   async function startRuntime() {
+    if (!activeNeedsRuntime()) { ensureUi(); wrapRender(); return; }
     ensureUi();
     wrapRender();
     await loadShared();
@@ -731,13 +753,17 @@
     wrapRender();
     root.addEventListener('bl:cp-decision-context-changed', onDecisionChanged);
     root.addEventListener('bl:plm-requests-changed', function () { refreshColumns({ render: true }); });
-    root.addEventListener('bl:startup-ready', function () { startRuntime().catch(function () {}); });
+    root.addEventListener('bl:startup-ready', function () {
+      if (activeNeedsRuntime()) startRuntime().catch(function () {});
+    });
     root.addEventListener('bl:user-access-applied', function () { ensureUi(); });
     root.document.addEventListener('click', function (event) {
-      const tab = event.target && event.target.closest && event.target.closest('nav.tabs button[data-tab="cp"]');
-      if (tab) setTimeout(function () { startRuntime().catch(function () {}); }, 0);
+      const tab = event.target && event.target.closest && event.target.closest('nav.tabs button[data-tab]');
+      if (tab && (tab.dataset.tab === 'cp' || tab.dataset.tab === 'overview')) {
+        setTimeout(function () { startRuntime().catch(function () {}); }, 0);
+      }
     });
-    if (root.document.readyState === 'complete' || root.document.readyState === 'interactive') {
+    if ((root.document.readyState === 'complete' || root.document.readyState === 'interactive') && activeNeedsRuntime()) {
       startRuntime().catch(function () {});
     }
   }
