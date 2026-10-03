@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.220",
-  "commit_sha": "46d6f432bffc3f84a52bee4684cee64d81ee504f",
-  "release_notes": "Buyer Log 7.0.220: Yol Süreleri / İthalat Yol Süresi Analizi artık Global Lojistik Excel raporuyla aynı sütun ve tanımlarla hesaplanıyor (Yükleme = Talep → Fiili Yükleme, Yol = Fiili Yükleme → ETA, Gümrük = ETA → Antrepo Giriş) ve yalnız gerçekleşen Antrepo/Tema Depo girişlerini kullanıyor; tahmini giriş tarihi kullanılmıyor. Varsayılan ortalama rapordaki gibi sevkiyat ortalaması.",
-  "request_id": "7.0.220-r1"
+  "version": "7.0.221",
+  "commit_sha": "fe4d0452afa65a6a5fb7c0e9733956cd9916cff7",
+  "release_notes": "Buyer Log 7.0.221: Yol Süreleri / İthalat Yol Süresi Analizi IAS database'indeki bütün taşıt tiplerini (Tır, Kurye, Uçak+Tır …) ayrı satır ve filtre olarak gösteriyor; kuralı olmayan tipler bilgi amaçlıdır ve başka taşıtın kuralına aktarılmaz. Hesaplanan günlere otomatik eklenen gün/yüzde Buffer ile öneriler ve kurallara aktarılan süreler artırılabiliyor.",
+  "request_id": "7.0.221-r1"
 }
