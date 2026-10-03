@@ -139,6 +139,13 @@ test('saved Shared Sync folder is reused on every login without reopening the pi
 
 test('Shared Sync ayrıntıları ilk açılışta gizlidir ve yalnız Ayarlar ile açılır', () => {
   assert.match(LOGIN, /let hubDetailsOpen = false/);
+  assert.match(LOGIN, /class="formFooter"/);
+  const footer = LOGIN.indexOf('class="formFooter"');
+  const settings = LOGIN.indexOf('id="hubSettingsBtn"');
+  const formEnd = LOGIN.indexOf('</form>');
+  assert.ok(footer > formEnd && settings > footer, 'Ayarlar ana giriş akışından sonra, ikincil footer alanında olmalı');
+  assert.match(LOGIN, /class="hubSettingsBtn hubSettingsBtn--quiet"/);
+  assert.match(CSS, /\.hubSettingsBtn--quiet\{/);
   assert.match(LOGIN, /function setHubDetailsOpen\(open/);
   assert.match(LOGIN, /\$\('hubDetails'\)\.hidden = !hubDetailsOpen/);
   assert.match(LOGIN, /hubSettingsBtn'\)\.addEventListener\('click', \(\) => setHubDetailsOpen\(!hubDetailsOpen/);

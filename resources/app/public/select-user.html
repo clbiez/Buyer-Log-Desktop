@@ -36,37 +36,13 @@
         </button>
       </div>
 
-      <div class="hubSettingsRow">
-        <button type="button" class="hubSettingsBtn" id="hubSettingsBtn" aria-expanded="false" aria-controls="hubDetails">⚙ Ayarlar</button>
-      </div>
-      <div class="hubDetails" id="hubDetails" hidden>
-        <div class="hubGate" id="hubGate">
-          <div class="hubGateCopy">
-            <strong id="hubGateTitle">Shared Sync</strong>
-            <span id="hubGateText"></span>
-            <div class="hubSteps" id="hubSteps" hidden aria-live="polite"></div>
-          </div>
-        </div>
-        <div class="hubPanel" id="hubPanel">
-          <label for="hubPath" id="hubPathLabel">Shared Sync Folder / Buyer Log Shared Hub</label>
-          <div class="hubPathRow">
-            <input id="hubPath" type="text" spellcheck="false" autocomplete="off" placeholder="\\company-network\...\BuyerLog-Shared">
-            <button type="button" class="hubSecondaryBtn" id="hubBrowseBtn">Gözat</button>
-          </div>
-          <p class="hubStatusText" id="hubStatusText"></p>
-          <div class="hubActions">
-            <button type="button" class="hubSecondaryBtn" id="hubRetryBtn">Tekrar Dene</button>
-            <button type="button" class="hubPrimaryBtn" id="hubSaveBtn">Kaydet ve Eşitle</button>
-          </div>
-        </div>
-      </div>
-
       <div class="startupUpdateNotice" id="startupUpdateNotice" hidden role="status" aria-live="polite">
         <div class="startupUpdateIcon" aria-hidden="true">↑</div>
         <div class="startupUpdateCopy">
           <strong id="startupUpdateTitle">Güncelleme Mevcut</strong>
           <span id="startupUpdateText"></span>
         </div>
+        <button type="button" class="startupUpdateRestart" id="startupUpdateRestart" hidden data-i18n-tr="Yeniden Başlat" data-i18n-en="Restart">Yeniden Başlat</button>
       </div>
 
       <form class="loginForm" id="loginForm" autocomplete="on" novalidate>
@@ -100,7 +76,33 @@
         </button>
       </form>
 
-      <p class="hint" id="hint">Hesabınız görünmüyorsa bir Moderatör veya yöneticiden kullanıcı hesabı oluşturmasını isteyin.</p>
+      <div class="formFooter">
+        <p class="hint" id="hint">Hesabınız görünmüyorsa bir Moderatör veya yöneticiden kullanıcı hesabı oluşturmasını isteyin.</p>
+        <div class="hubSettingsRow hubSettingsRow--footer">
+          <button type="button" class="hubSettingsBtn hubSettingsBtn--quiet" id="hubSettingsBtn" aria-expanded="false" aria-controls="hubDetails" aria-label="Ayarlar" title="Ayarlar">⚙</button>
+        </div>
+      </div>
+      <div class="hubDetails" id="hubDetails" hidden>
+        <div class="hubGate" id="hubGate">
+          <div class="hubGateCopy">
+            <strong id="hubGateTitle">Shared Sync</strong>
+            <span id="hubGateText"></span>
+            <div class="hubSteps" id="hubSteps" hidden aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="hubPanel" id="hubPanel">
+          <label for="hubPath" id="hubPathLabel">Shared Sync Folder / Buyer Log Shared Hub</label>
+          <div class="hubPathRow">
+            <input id="hubPath" type="text" spellcheck="false" autocomplete="off" placeholder="\\company-network\...\BuyerLog-Shared">
+            <button type="button" class="hubSecondaryBtn" id="hubBrowseBtn">Gözat</button>
+          </div>
+          <p class="hubStatusText" id="hubStatusText"></p>
+          <div class="hubActions">
+            <button type="button" class="hubSecondaryBtn" id="hubRetryBtn">Tekrar Dene</button>
+            <button type="button" class="hubPrimaryBtn" id="hubSaveBtn">Kaydet ve Eşitle</button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 </main>
@@ -132,6 +134,7 @@
   let updatePollTimer = 0;
   let updateUnsubscribe = null;
   let lastUpdateStatus = null;
+  let updateRestartBusy = false;
 
   const $ = id => document.getElementById(id);
   const tr = (trText, enText) => lang === 'en' ? enText : trText;
@@ -154,13 +157,40 @@
       status.pendingReady === true ||
       ['UPDATE_AVAILABLE','DOWNLOADING','VERIFYING','READY_TO_INSTALL'].includes(code)
     ));
+    const restart = $('startupUpdateRestart');
     notice.hidden = !available;
+    if (restart) restart.hidden = !(available && status.pendingReady === true);
     if (!available) return;
     $('startupUpdateTitle').textContent = tr('Güncelleme Mevcut', 'Update Available');
     $('startupUpdateText').textContent = status.pendingReady
-      ? tr(`Buyer Log ${version} hazır. Program yeniden başlatıldığında otomatik kurulacak.`, `Buyer Log ${version} is ready. It will install automatically after restart.`)
+      ? tr(`Buyer Log ${version} hazır. Kurmak için yeniden başlatın.`, `Buyer Log ${version} is ready. Restart to install it.`)
       : tr(`Buyer Log ${version} bulundu. Güncelleme hazırlanıyor…`, `Buyer Log ${version} was found. Preparing the update…`);
     notice.dataset.state = status.pendingReady ? 'ready' : 'available';
+    if (restart) {
+      restart.disabled = updateRestartBusy;
+      restart.dataset.busy = updateRestartBusy ? 'true' : 'false';
+      restart.textContent = updateRestartBusy ? tr('Yeniden başlatılıyor…', 'Restarting…') : tr('Yeniden Başlat', 'Restart');
+      const restartLabel = tr('Güncellemeyi kurmak için Buyer Log’u yeniden başlat', 'Restart Buyer Log to install the update');
+      restart.setAttribute('aria-label', restartLabel);
+      restart.title = restartLabel;
+    }
+  }
+
+  async function restartForUpdate() {
+    if (updateRestartBusy || !lastUpdateStatus || lastUpdateStatus.pendingReady !== true) return;
+    const api = window.buyerLogDesktop && window.buyerLogDesktop.updates;
+    if (!api || typeof api.restart !== 'function') return;
+    updateRestartBusy = true;
+    renderStartupUpdate(lastUpdateStatus);
+    $('startupUpdateText').textContent = tr('Güncelleme kuruluyor. Buyer Log yeniden başlatılıyor…', 'Installing the update. Buyer Log is restarting…');
+    try {
+      const result = await api.restart();
+      if (!result || result.ok !== true) throw new Error(result && (result.error || result.code) || 'UPDATE_RESTART_FAILED');
+    } catch (_) {
+      updateRestartBusy = false;
+      renderStartupUpdate(lastUpdateStatus);
+      $('startupUpdateText').textContent = tr('Yeniden başlatma başlatılamadı. Tekrar deneyin.', 'Could not restart Buyer Log. Please try again.');
+    }
   }
 
   function stopStartupUpdatePolling() {
@@ -211,6 +241,7 @@
     $('lang').setAttribute('aria-label', lang === 'tr' ? 'Switch to English' : 'Türkçeye geç');
     $('clearSelection').setAttribute('aria-label', tr('Seçimi temizle', 'Clear selection'));
     $('clearSelection').title = tr('Seçimi temizle', 'Clear selection');
+    if (lastUpdateStatus) renderStartupUpdate(lastUpdateStatus);
     updatePasswordToggle();
     renderSuggestions();
     renderLoginButton();
@@ -446,8 +477,11 @@
   function renderHubSettingsToggle() {
     const button = $('hubSettingsBtn');
     if (!button) return;
+    const label = hubDetailsOpen ? tr('Ayarları kapat', 'Close settings') : tr('Ayarlar', 'Settings');
     button.setAttribute('aria-expanded', hubDetailsOpen ? 'true' : 'false');
-    button.textContent = hubDetailsOpen ? tr('✕ Ayarları Kapat', '✕ Close Settings') : tr('⚙ Ayarlar', '⚙ Settings');
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.textContent = hubDetailsOpen ? '×' : '⚙';
   }
   function setHubDetailsOpen(open, { focus = false } = {}) {
     hubDetailsOpen = Boolean(open);
@@ -804,6 +838,7 @@
   }
 
   $('hubSettingsBtn').addEventListener('click', () => setHubDetailsOpen(!hubDetailsOpen, { focus:true }));
+  $('startupUpdateRestart').addEventListener('click', restartForUpdate);
   $('hubBrowseBtn').addEventListener('click', browseHub);
   $('hubSaveBtn').addEventListener('click', configureHub);
   $('hubRetryBtn').addEventListener('click', () => loadHubStatus(true));
