@@ -9,8 +9,7 @@ app.get('/api/checklist-supplier', userAccess.requireAnyArea('cp', 'orders', 'ov
       } catch (err) {
         automationError(res, err, 'Checklist üretici verileri okunamadı.');
       }
-    }
-  });
+    });
 
 app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 'overview'), express.json({ limit: '2mb' }), (req, res) => {
       try {
@@ -27,8 +26,7 @@ app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 
       } catch (err) {
         automationError(res, err, 'Checklist tanımları kaydedilemedi.');
       }
-    }
-  });
+    });
 
 app.post('/api/checklist-supplier/answers', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '12mb' }), (req, res) => {
       try {
