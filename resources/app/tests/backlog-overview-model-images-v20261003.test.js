@@ -11,7 +11,8 @@ const OVERVIEW = fs.readFileSync(path.join(ROOT, 'public', 'backlog-overview.js'
 test('Backlog chart detail drawer shows shared model image thumbnails', () => {
   assert.match(OVERVIEW, /function drawerModelImageHtml\(it\)/);
   assert.match(OVERVIEW, /class="detailImgCell">\$\{drawerModelImageHtml\(it\)\}/);
-  assert.match(OVERVIEW, /BLDetailImages\?\.sourceFor/);
+  assert.match(OVERVIEW, /const api=window\.BLDetailImages/);
+  assert.match(OVERVIEW, /api\.sourceFor\?\./);
   assert.match(OVERVIEW, /BLDetailImages,id=drawerModelIdentity\(it\)/);
   assert.match(OVERVIEW, /api\.thumbHtml\(drawerModelImageUrl\(it\)/);
   assert.match(OVERVIEW, /allowEmpty:true/);
