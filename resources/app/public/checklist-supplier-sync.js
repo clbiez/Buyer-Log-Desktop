@@ -663,14 +663,17 @@
   }
 
   function imagePlacement(prepared, rowNo, columnNo) {
+    // Buyer Log'un kanonik "Hücrelerle taşı ve boyutlandır" yardımcısını kullan:
+    // aynı OOXML twoCell anchor hem Koleksiyon exportunda hem Checklist Excel'de
+    // aynı davranışı verir.
+    if (typeof root.kolExcelImageMoveAndSizePlacement === 'function') {
+      try { return root.kolExcelImageMoveAndSizePlacement(prepared, rowNo, 72, 50, columnNo, 3); } catch (_) {}
+    }
     const naturalW = Math.max(1, Number(prepared && prepared.width) || 1);
     const naturalH = Math.max(1, Number(prepared && prepared.height) || 1);
     const maxW = 66, maxH = 44;
     const scale = Math.min(maxW / naturalW, maxH / naturalH, 1);
     const width = Math.max(1, naturalW * scale), height = Math.max(1, naturalH * scale);
-    // Excel drawing = two-cell anchor. Bu, Excel'deki "Hücrelerle taşı ve
-    // boyutlandır" davranışının OOXML karşılığıdır. Görsel başlangıçta oranı
-    // korunarak hücrenin içine oturur; satır/sütun boyutu değişirse onunla taşınır.
     const cellW = 72, cellH = 50;
     const left = columnNo - 1 + 0.05, top = rowNo - 1 + 0.06;
     return {
