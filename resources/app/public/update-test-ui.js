@@ -9,6 +9,8 @@
   let overlay = null;
   let unsubscribe = null;
   let busy = false;
+  let statusPollTimer = null;
+  let statusPollBusy = false;
 
   const stateLabel = code => ({
     IDLE: tr('Hazır','Ready'),
@@ -50,8 +52,21 @@
       return String(status.pendingVersion) + ' ' + tr('indirildi ve doğrulandı. Yeniden başlatınca kurulacak.','was downloaded and verified. Restart to install it.');
     }
     if (status.state === 'CHECKING') return tr('Yeni sürüm kontrol ediliyor…','Checking for a new version…');
-    if (status.state === 'DOWNLOADING') return tr('Güncelleme indiriliyor…','Downloading update…');
-    if (status.state === 'VERIFYING') return tr('Paket doğrulanıyor…','Verifying package…');
+    if (status.state === 'UPDATE_AVAILABLE') {
+      return status.latestVersion
+        ? tr('Yeni sürüm bulundu: ','Update found: ') + status.latestVersion + '. ' + tr('İndirme hazırlanıyor…','Preparing download…')
+        : tr('Yeni sürüm bulundu. İndirme hazırlanıyor…','Update found. Preparing download…');
+    }
+    if (status.state === 'DOWNLOADING') {
+      return status.latestVersion
+        ? tr('Buyer Log ','Buyer Log ') + status.latestVersion + tr(' indiriliyor…',' is downloading…')
+        : tr('Güncelleme indiriliyor…','Downloading update…');
+    }
+    if (status.state === 'VERIFYING') {
+      return status.latestVersion
+        ? tr('Buyer Log ','Buyer Log ') + status.latestVersion + tr(' indirildi. Paket doğrulanıyor…',' downloaded. Verifying package…')
+        : tr('Paket doğrulanıyor…','Verifying package…');
+    }
     if (status.state === 'FAILED') {
       const last = status.lastError || {};
       return String(last.message || last.code || tr('Güncelleme kontrolü başarısız oldu.','Update check failed.'));
@@ -66,6 +81,9 @@
   function close() {
     if (unsubscribe) { try { unsubscribe(); } catch (_) {} }
     unsubscribe = null;
+    if (statusPollTimer) clearInterval(statusPollTimer);
+    statusPollTimer = null;
+    statusPollBusy = false;
     if (overlay) overlay.remove();
     overlay = null;
     busy = false;
@@ -77,6 +95,28 @@
     if (el) el.textContent = value == null || value === '' ? '—' : String(value);
   }
 
+  function renderProgress(status) {
+    if (!overlay) return;
+    const progress = overlay.querySelector('[data-update-progress]');
+    if (!progress) return;
+    const code = String(status && status.state || '').toUpperCase();
+    const phase = ({
+      CHECKING: 'check',
+      UPDATE_AVAILABLE: 'download',
+      DOWNLOADING: 'download',
+      VERIFYING: 'verify',
+      READY_TO_INSTALL: 'ready',
+    })[code] || '';
+    progress.hidden = !phase;
+    const order = ['check','download','verify','ready'];
+    const activeIndex = order.indexOf(phase);
+    progress.querySelectorAll('[data-update-step]').forEach(step => {
+      const index = order.indexOf(String(step.dataset.updateStep || ''));
+      step.classList.toggle('isDone', activeIndex > index);
+      step.classList.toggle('isActive', activeIndex === index);
+    });
+  }
+
   function render(status) {
     if (!overlay || !status) return;
     setValue('current',status.currentVersion);
@@ -84,6 +124,7 @@
     setValue('latest',status.latestVersion);
     setValue('pending',status.pendingVersion);
     setValue('state',stateLabel(status.state));
+    renderProgress(status);
     const channel = overlay.querySelector('[data-update-channel]');
     if (channel && !busy) channel.value = String(status.configuredChannel || status.channel || 'stable').toLowerCase() === 'test' ? 'test' : 'stable';
     const message = overlay.querySelector('[data-update-message]');
@@ -140,6 +181,13 @@
       moderator ? '<div class="updateTestControls"><label><span>' + esc(tr('Güncelleme kanalı','Update channel')) + '</span>' : '',
       moderator ? '<select data-update-channel><option value="test">TEST</option><option value="stable">STABLE</option></select></label></div>' : '',
       '<div class="updateTestMessage" data-update-message role="status" aria-live="polite"></div>',
+      '<div class="updateTestProgress" data-update-progress hidden aria-label="' + esc(tr('Güncelleme ilerlemesi','Update progress')) + '">',
+      '<div class="updateTestProgressSteps">',
+      '<span class="updateTestProgressStep" data-update-step="check">' + esc(tr('Kontrol','Check')) + '</span>',
+      '<span class="updateTestProgressStep" data-update-step="download">' + esc(tr('İndiriliyor','Download')) + '</span>',
+      '<span class="updateTestProgressStep" data-update-step="verify">' + esc(tr('Doğrulama','Verify')) + '</span>',
+      '<span class="updateTestProgressStep" data-update-step="ready">' + esc(tr('Hazır','Ready')) + '</span>',
+      '</div></div>',
       '<div class="updateTestActions">',
       '<button type="button" class="navActionBtn" data-update-retry hidden>' + esc(tr('Tekrar Dene','Retry')) + '</button>',
       '<button type="button" class="navActionBtn primary" data-update-check>' + esc(tr('Güncellemeyi Kontrol Et','Check for Update')) + '</button>',
@@ -156,9 +204,15 @@
     overlay.addEventListener('mousedown',event => { if (event.target === overlay) close(); });
 
     const refresh = async () => {
-      const status = await api.status(userId());
-      render(status);
-      return status;
+      if (statusPollBusy) return null;
+      statusPollBusy = true;
+      try {
+        const status = await api.status(userId());
+        render(status);
+        return status;
+      } finally {
+        statusPollBusy = false;
+      }
     };
     const setBusy = value => {
       busy = Boolean(value);
@@ -242,6 +296,11 @@
         message.classList.add('isError');
       }
     });
+    // checkAndStage tek IPC çağrısı boyunca indirme + doğrulamayı tamamlar.
+    // Main process yalnız işlem bittiğinde event gönderdiği için durum dosyasını
+    // kısa aralıklarla okuyarak CHECKING -> DOWNLOADING -> VERIFYING -> READY
+    // geçişlerini modal açıkken canlı göster.
+    statusPollTimer = setInterval(() => { void refresh().catch(()=>{}); }, 350);
   }
 
   window.openBuyerLogUpdateTest = open;
