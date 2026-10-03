@@ -127,43 +127,88 @@ function findSchemaColumn(schema, aliases, preferTable) {
 /* Şirket geneli IAS sorgusu. Bağlantının KOPYASI kullanılır: ufuk yerine tek
    koşul (Tahmini Antrepo Giriş Tarihi pencere içinde) ve ek sütunlar.
    deps: { discoverSchema, queryConnectionRows, normalizeMappingEntry } */
+/* Normal yenilemenin IAS sorgusu kapsam (scope) ufkuyla kurulur; bağlantının
+   kök horizon'u çoğu kurulumda boştur. Şirket sorgusu aynı kapsamın ufkunu
+   (sorgu tablosu dahil) temel alır, yalnız filtre koşulunu tarih penceresiyle
+   değiştirir. Aksi halde ufuk tablosu fact tablosu sanılıp parsiyel satır
+   tablosu (grain) adaylarından dışlanıyor ve sorgu yanlış tablodan kuruluyordu. */
+function baseHorizonForCompany(item) {
+  const scopes = (Array.isArray(item && item.scopes) ? item.scopes : []).filter(scope => scope && scope.enabled !== false);
+  for (const target of ['backlog', 'cp', 'orders']) {
+    const hit = scopes.find(scope => Array.isArray(scope.targets) && scope.targets.includes(target));
+    if (hit && hit.horizon) return hit.horizon;
+  }
+  return (scopes[0] && scopes[0].horizon) || (item && item.horizon) || {};
+}
+
+function companyQueryError(err, stage) {
+  const raw = String(err && (err.publicMessage || err.message) || err || '').trim();
+  const error = new Error(raw || 'IAS sorgusu başarısız.');
+  error.code = (err && err.code) || 'TRANSIT_COMPANY_QUERY_FAILED';
+  error.statusCode = err && err.statusCode && err.statusCode < 500 ? err.statusCode : 502;
+  error.stage = stage;
+  error.detail = raw;
+  return error;
+}
+
+/* Şirket geneli IAS sorgusu. Bağlantının KOPYASI kullanılır: kapsam ufku +
+   tek koşul (Tahmini Antrepo Giriş Tarihi pencere içinde) ve ek sütunlar.
+   Ek sütunlarla sorgu başarısız olursa bir kez ek sütunsuz denenir.
+   deps: { discoverSchema, queryConnectionRows, normalizeMappingEntry } */
 async function queryCompanyIasRows({ item, matchRule, fromDate, toDate, deps }) {
   if (!item) throw Object.assign(new Error('Aktif bir IAS (Antrepo) veri modeli bağlantısı yok; şirket geneli veri çekilemez.'), { statusCode: 400, code: 'TRANSIT_COMPANY_NO_CONNECTION' });
   if (item.mode === 'manual') throw Object.assign(new Error('IAS bağlantısı manuel DAX sorgusuyla tanımlı; şirket geneli sorgu yalnız otomatik sorgu modunda kurulabilir.'), { statusCode: 400, code: 'TRANSIT_COMPANY_MANUAL_QUERY' });
-  const mapping = { ...(item.mapping || {}) };
-  const fallbackTable = String(item.horizon && item.horizon.table || '').trim();
-  const dateEntry = deps.normalizeMappingEntry(mapping['Tahmini Antrepo Giriş Tarihi'], fallbackTable);
+  const baseHorizon = baseHorizonForCompany(item);
+  const fallbackTable = String(baseHorizon.table || (item.horizon && item.horizon.table) || '').trim();
+  const baseMapping = { ...(item.mapping || {}) };
+  const dateEntry = deps.normalizeMappingEntry(baseMapping['Tahmini Antrepo Giriş Tarihi'], fallbackTable);
   if (!dateEntry || !dateEntry.name || !dateEntry.table) {
-    throw Object.assign(new Error('IAS alan eşlemesinde "Tahmini Antrepo Giriş Tarihi" yok; tarih penceresi uygulanamaz.'), { statusCode: 400, code: 'TRANSIT_COMPANY_DATE_FIELD' });
+    throw Object.assign(new Error('IAS alan eşlemesinde "Tahmini Antrepo Giriş Tarihi" tablo/sütun bilgisi yok; tarih penceresi uygulanamaz.'), { statusCode: 400, code: 'TRANSIT_COMPANY_DATE_FIELD' });
   }
   const added = [];
   const warnings = [];
+  const extraMapping = {};
   let schema = null;
   try { schema = await deps.discoverSchema({ server: item.server, catalog: item.catalog, timeoutMs: 120000 }); }
   catch (err) { warnings.push(`Model şeması okunamadı; ek sütunlar (Ürün Menşei vb.) eklenmedi: ${err.message}`); }
   for (const [header, aliases] of Object.entries(COMPANY_EXTRA_FIELDS)) {
-    if (mapping[header]) continue;
+    if (baseMapping[header]) continue;
     const hit = schema && findSchemaColumn(schema, aliases, dateEntry.table);
-    if (hit) { mapping[header] = { table: hit.table, name: hit.name, kind: 'column' }; added.push(header); }
+    if (hit) { extraMapping[header] = { table: hit.table, name: hit.name, kind: 'column' }; added.push(header); }
   }
-  const conditions = [];
-  if (fromDate || toDate) {
-    conditions.push({
-      table: dateEntry.table, field: dateEntry.name, name: dateEntry.name, valueType: 'date',
-      op: fromDate && toDate ? 'between' : (fromDate ? 'gte' : 'lte'), from: fromDate || '', to: toDate || '',
-    });
-  } else {
+  const condition = fromDate || toDate
+    ? { table: dateEntry.table, field: dateEntry.name, name: dateEntry.name, valueType: 'date',
+      op: fromDate && toDate ? 'between' : (fromDate ? 'gte' : 'lte'), from: fromDate || '', to: toDate || '' }
     // "Tüm tarihler" bile sınırsız tablo çekmez: boş olmayan giriş tarihleri.
-    conditions.push({ table: dateEntry.table, field: dateEntry.name, name: dateEntry.name, valueType: 'date', op: 'notEmpty' });
-  }
-  const clone = {
-    ...item,
-    mapping,
-    horizon: { table: (item.horizon && item.horizon.table) || dateEntry.table, groups: [{ id: 'transit-window', conditions }] },
-    cpColumns: [],
-    _scopeTargets: ['backlog'],
+    : { table: dateEntry.table, field: dateEntry.name, name: dateEntry.name, valueType: 'date', op: 'notEmpty' };
+  // Satır (parsiyel) tablosu, normal yenilemenin bu kapsamla seçeceği tablodur.
+  const grainTable = deps.antrepoGrainTable
+    ? deps.antrepoGrainTable(baseMapping, fallbackTable, String(baseHorizon.table || '').trim())
+    : '';
+  const build = withExtras => {
+    const clone = {
+      ...item,
+      mapping: withExtras ? { ...baseMapping, ...extraMapping } : { ...baseMapping },
+      // Filtre tarih sütununun tablosunda çalışır (DAX FILTER satır bağlamı);
+      // kullanıcı/sezon koşulları yerine yalnız tarih penceresi uygulanır.
+      horizon: { ...baseHorizon, table: dateEntry.table, seasons: [], dateStart: '', dateEnd: '', extraExpression: '', groups: [{ id: 'transit-window', conditions: [condition] }] },
+      cpColumns: [],
+      _scopeTargets: ['backlog'],
+      _grainTable: grainTable || dateEntry.table,
+    };
+    delete clone.scopes;
+    return clone;
   };
-  const run = await deps.queryConnectionRows(clone, { matchRule, queryOptions: {} });
+  let run;
+  try {
+    run = await deps.queryConnectionRows(build(added.length > 0), { matchRule, queryOptions: {} });
+  } catch (err) {
+    if (!added.length) throw companyQueryError(err, 'query');
+    warnings.push(`Ek sütunlarla (${added.join(', ')}) IAS sorgusu başarısız oldu, ek sütunsuz yeniden denendi: ${String(err && err.message || err)}`);
+    added.length = 0;
+    try { run = await deps.queryConnectionRows(build(false), { matchRule, queryOptions: {} }); }
+    catch (retryErr) { throw companyQueryError(retryErr, 'query-retry'); }
+  }
   return { rows: Array.isArray(run && run.rows) ? run.rows : [], addedFields: added, warnings };
 }
 
@@ -190,5 +235,5 @@ function buildLiveAnalysis({ orders, antrepoMap, overrides, today, sourceLabel, 
 
 module.exports = {
   SOURCE_FIELDS, COMPANY_EXTRA_FIELDS, headerKey, findSchemaColumn,
-  collectShipments, collectAllShipments, queryCompanyIasRows, buildLiveAnalysis,
+  collectShipments, collectAllShipments, baseHorizonForCompany, queryCompanyIasRows, buildLiveAnalysis,
 };

@@ -365,7 +365,8 @@ test('şirket sorgusu bağlantının kopyasında ufku tarih penceresiyle değiş
   assert.deepEqual(result.rows, [{ a: 1 }]);
   assert.deepEqual(result.addedFields, ['Ürün Menşei', 'Fiili Yükleme Tarih']);
   assert.equal(captured.mapping['Ürün Menşei'].table, 'Fact_Ithalat', 'IAS fact tablosundaki sütun tercih edilir');
-  assert.equal(captured.horizon.seasons, undefined, 'kullanıcı ufku (sezon vb.) uygulanmaz');
+  assert.deepEqual(captured.horizon.seasons, [], 'kullanıcı ufku (sezon vb.) uygulanmaz');
+  assert.equal(captured.horizon.table, 'Fact_Ithalat', 'filtre tarih sütununun tablosunda çalışır');
   assert.deepEqual(captured.horizon.groups[0].conditions, [{
     table: 'Fact_Ithalat', field: 'Tahmini Antrepo Giriş Tarihi', name: 'Tahmini Antrepo Giriş Tarihi', valueType: 'date',
     op: 'between', from: '2026-07-03', to: '2026-10-02',
@@ -402,4 +403,87 @@ test('Yol Süreleri penceresi: kompakt düzenleyici, aranabilir seçiciler, list
   // Kontroller her durumda çizilir; hata/boş durum yalnız gövdeyi değiştirir.
   assert.match(ui, /<div class="trxCardBody">\$\{bodyHtml\(analysis\)\}<\/div>/);
   assert.match(ui, /q\('\[data-ta-refresh\]'\)\?\.addEventListener\('click', \(\) => reloadLive\(true\)\)/);
+});
+
+
+// v7.0.216 regresyon: kapsam (scope) ufkuyla kurulu bağlantıda IAS database
+// sorgusu yanlış satır tablosundan kuruluyor ve "hesaplanamadı" ile düşüyordu.
+const IAS_F = 'Fact_Ithalat', IAS_D = 'Dim_Siparis';
+const iasCol = (table, name) => ({ table, name, kind: 'column' });
+function scopedIasItem() {
+  return {
+    id: 'ias', role: 'antrepo', server: 's', catalog: 'c', mode: 'auto', name: 'IAS', horizon: {},
+    scopes: [{ id: 'sc1', enabled: true, targets: ['cp', 'orders', 'backlog'], horizon: { table: IAS_D, groups: [{ conditions: [{ table: IAS_D, field: 'Sezon', name: 'Sezon', op: 'in', values: ['SS26'] }] }] } }],
+    mapping: {
+      'İthalat Dosya No': iasCol(IAS_F, 'İthalat Dosya No'), 'Konteyner No': iasCol(IAS_F, 'Konteyner No'),
+      'Sipariş Kod': iasCol(IAS_D, 'Sipariş Kod'), 'Model Adı': iasCol(IAS_D, 'Ürün Adı'), 'Renk Kod': iasCol(IAS_D, 'Renk Kod'),
+      'Supplier Portal Statü': iasCol(IAS_F, 'Supplier Portal Statü'), 'Tahmini Antrepo Giriş Tarihi': iasCol(IAS_F, 'Tahmini Antrepo Giriş Tarihi'),
+      'Yükleme Toplam Adet': iasCol(IAS_F, 'Yükleme Toplam Adet'), 'Vasita Tanim': iasCol(IAS_F, 'Vasita Tanim'),
+      'Yükleme Talep Tarih': iasCol(IAS_F, 'Yükleme Talep Tarih'), 'ETA Tarih': iasCol(IAS_F, 'ETA Tarih'), 'Sezon': iasCol(IAS_D, 'Sezon'),
+    },
+  };
+}
+function realQueryDeps(schema, onQuery) {
+  const modelRefresh = require('../server/lib/model-refresh');
+  const modelFields = require('../server/lib/model-fields');
+  return {
+    normalizeMappingEntry: modelFields.normalizeMappingEntry,
+    antrepoGrainTable: modelRefresh.antrepoGrainTable,
+    discoverSchema: async () => schema,
+    queryConnectionRows: (clone, opts) => modelRefresh.queryConnectionRows(clone, {
+      ...opts, discoverSchema: async () => schema, columnType: false,
+      runModelRows: async q => onQuery(q.query),
+    }),
+  };
+}
+
+test('IAS database sorgusu kapsam ufkuyla kurulu bağlantıda fact satır tablosundan ve tarih penceresiyle kurulur', async () => {
+  const source = require('../server/lib/transit-analysis-source');
+  const item = scopedIasItem();
+  const schema = { columns: [...Object.values(item.mapping), iasCol(IAS_F, 'Ürün Menşei')], measures: [] };
+  let dax = '';
+  const result = await source.queryCompanyIasRows({ item, matchRule: null, fromDate: '2026-07-01', toDate: '2026-10-03',
+    deps: realQueryDeps(schema, query => { dax = query; return { rows: [] }; }) });
+  assert.deepEqual(result.addedFields, ['Ürün Menşei']);
+  assert.match(dax, /SELECTCOLUMNS\(\s*CALCULATETABLE\(\s*'Fact_Ithalat',\s*FILTER\(\s*'Fact_Ithalat',/, 'satır ve filtre tablosu IAS fact tablosu');
+  assert.match(dax, /'Fact_Ithalat'\[Tahmini Antrepo Giriş Tarihi\] >= DATE\(2026, 7, 1\) && 'Fact_Ithalat'\[Tahmini Antrepo Giriş Tarihi\] <= DATE\(2026, 10, 3\)/);
+  assert.match(dax, /"İthalat Dosya No", 'Fact_Ithalat'\[İthalat Dosya No\]/, 'fact sütunları doğrudan okunur');
+  assert.match(dax, /"Ürün Menşei", 'Fact_Ithalat'\[Ürün Menşei\]/);
+  assert.doesNotMatch(dax, /Sezon|SS26/, 'kullanıcı/sezon ufku uygulanmaz');
+  assert.equal(source.baseHorizonForCompany(item).table, IAS_D, 'temel ufuk Backlog kapsamından');
+});
+
+test('ek sütunla IAS sorgusu düşerse ek sütunsuz yeniden denenir; ikinci hata gerçek mesajla yükselir', async () => {
+  const source = require('../server/lib/transit-analysis-source');
+  const item = scopedIasItem();
+  const schema = { columns: [...Object.values(item.mapping), iasCol('Dim_Urun', 'Ürün Menşei')], measures: [] };
+  const queries = [];
+  const result = await source.queryCompanyIasRows({ item, matchRule: null, fromDate: '2026-07-01', toDate: '2026-10-03',
+    deps: realQueryDeps(schema, query => {
+      queries.push(query);
+      if (/Ürün Menşei/.test(query)) throw new Error("Column 'Ürün Menşei' cannot be determined");
+      return { rows: [{ ok: 1 }] };
+    }) });
+  assert.equal(queries.length, 2);
+  assert.match(queries[0], /Ürün Menşei/);
+  assert.doesNotMatch(queries[1], /Ürün Menşei/, 'yeniden deneme ek sütunsuz');
+  assert.ok(Array.isArray(result.rows));
+  assert.deepEqual(result.addedFields, []);
+  assert.match(result.warnings.join(' '), /ek sütunsuz yeniden denendi: Column 'Ürün Menşei' cannot be determined/);
+
+  await assert.rejects(() => source.queryCompanyIasRows({ item, matchRule: null, fromDate: '2026-07-01', toDate: '2026-10-03',
+    deps: realQueryDeps(schema, () => { throw new Error('Sunucuya bağlanılamadı'); }) }),
+  err => err.code === 'TRANSIT_COMPANY_QUERY_FAILED' && err.statusCode === 502 && /Sunucuya bağlanılamadı/.test(err.detail));
+});
+
+test('canlı uç nokta gerçek hatayı iki dilde iletir; IAS sorgusu düşerse Buyer Log IAS satırlarıyla sürer', () => {
+  const server = read('server/server.js');
+  const start = server.indexOf("app.get('/api/transit-analysis/live'");
+  const route = server.slice(start, server.indexOf("app.put('/api/transit-analysis', ", start));
+  assert.doesNotMatch(route, /apiError\(res, err, 'Yol süresi analizi hesaplanamadı\.'\);\s*\}\s*\}\);\s*$/, 'genel yedek metin gerçek nedeni gizlemez');
+  assert.match(route, /error: `Yol süresi analizi hesaplanamadı: \$\{detail\}`, errorEn: `Lead time analysis could not be calculated: \$\{detail\}`/);
+  assert.match(route, /error: `IAS database sorgusu başarısız: \$\{detail\}`, errorEn: `IAS database query failed: \$\{detail\}`/);
+  assert.match(route, /const fallbackMap = active \? antrepoForTarget\(active, 'backlog'\) : \{\};/);
+  assert.match(route, /antrepoGrainTable: modelRefresh\.antrepoGrainTable/);
+  assert.match(read('server/lib/model-refresh.js'), /const grainTable = String\(item && item\._grainTable \|\| ''\)\.trim\(\)\s*\|\| antrepoGrainTable\(mapping, aligned\.horizon\.table, aligned\.horizon\.table\);/);
 });

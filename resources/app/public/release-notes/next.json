@@ -1,14 +1,79 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yol Süreleri: IAS database analizi düzeltildi",
+    "en": "Transit Times: IAS database analysis fixed"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "IAS Database kapsamı seçildiğinde yol süresi analizi artık hesaplanıyor; sorun olursa gerçek neden gösteriliyor ve mümkünse yedek veriyle devam ediliyor.",
+    "en": "The lead time analysis now calculates with the IAS Database scope; if something goes wrong, the real cause is shown and it continues with fallback data when possible."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "transit-ias-database-query-fix",
+      "type": "fix",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "IAS Database seçiliyken yol süresi analizi hesaplanıyor",
+        "en": "Lead time analysis calculates with the IAS Database scope"
+      },
+      "body": {
+        "tr": "Kapsam bazlı veri ufku kullanan IAS bağlantılarında analiz sorgusu yanlış tablodan kuruluyor ve \"hesaplanamadı\" hatası veriyordu. Sorgu artık normal yenilemeyle aynı IAS parsiyel tablosundan, yalnız seçilen tarih aralığıyla çalışıyor. Ek sütunlar (Ürün Menşei vb.) sorunu çıkarırsa onlarsız yeniden deneniyor; sorgu yine başarısız olursa gerçek hata mesajı gösteriliyor ve varsa Buyer Log'un okuduğu IAS satırlarıyla devam ediliyor.",
+        "en": "For IAS connections that use scope-based data horizons, the analysis query was built from the wrong table and failed with \"could not be calculated\". The query now runs on the same IAS partial table as the normal refresh, limited only by the selected date range. If extra columns (Ürün Menşei etc.) cause a problem it retries without them; if the query still fails, the real error message is shown and the analysis continues with the IAS rows Buyer Log has already read, when available."
+      },
+      "path": {
+        "tr": "Veri Yönetimi → Yol Süreleri → İthalat Yol Süresi Analizi",
+        "en": "Data Management → Transit Times → Import Lead Time Analysis"
+      },
+      "visual": {
+        "src": "01-transit-ias-query-fix.png",
+        "kind": "screenshot",
+        "alt": {
+          "tr": "IAS Database kapsamında son 4 hafta için hesaplanmış ülke × taşıt yol süreleri",
+          "en": "Country × vehicle lead times calculated for the last 4 weeks with the IAS Database scope"
+        },
+        "caption": {
+          "tr": "IAS Database · Son 4 hafta · haftalık kırılım ve son sorgu bilgisi (demo veri).",
+          "en": "IAS Database · Last 4 weeks · weekly breakdown and last query info (demo data)."
+        }
+      }
+    },
+    {
+      "id": "transit-ias-error-visible",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "IAS sorgu hatası gerçek nedeniyle gösteriliyor",
+        "en": "IAS query errors are shown with their real cause"
+      },
+      "body": {
+        "tr": "Analiz hesaplanamadığında artık genel \"hesaplanamadı\" metni yerine asıl hata (ör. sunucuya bağlanılamadı) gösteriliyor. IAS database sorgusu başarısız olur ama Buyer Log'un okuduğu IAS satırları varsa analiz onlarla sürüyor ve durum kartın üstünde uyarı olarak yazıyor; kapsam, tarih aralığı ve Yenile kontrolleri her durumda yerinde kalıyor.",
+        "en": "When the analysis cannot be calculated, the actual error (e.g. could not connect to the server) is shown instead of a generic \"could not be calculated\" message. If the IAS database query fails but Buyer Log has already read IAS rows, the analysis continues with them and says so in a warning above the card; scope, date range and Refresh controls always stay in place."
+      },
+      "path": {
+        "tr": "Veri Yönetimi → Yol Süreleri → İthalat Yol Süresi Analizi",
+        "en": "Data Management → Transit Times → Import Lead Time Analysis"
+      },
+      "visual": {
+        "src": "02-transit-ias-error-visible.png",
+        "kind": "screenshot",
+        "alt": {
+          "tr": "IAS sorgusu başarısız olduğunda gerçek nedeni gösteren uyarı ve yedek veriyle hesaplanmış analiz",
+          "en": "Warning showing the real cause of a failed IAS query and the analysis calculated from fallback data"
+        },
+        "caption": {
+          "tr": "Gerçek hata nedeni uyarıda; analiz Buyer Log'un IAS satırlarıyla sürüyor (demo veri).",
+          "en": "The real error cause is in the warning; the analysis continues with Buyer Log IAS rows (demo data)."
+        }
+      }
+    }
+  ]
 }
