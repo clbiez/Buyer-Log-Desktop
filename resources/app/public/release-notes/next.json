@@ -28,7 +28,7 @@
       },
       "visual": {
         "kind": "screenshot",
-        "src": "priority-checklist-rules.svg",
+        "src": "priority-checklist-rules.png",
         "alt": {
           "tr": "Priority and Checklist Rules ekranında düzenleme ve silme aksiyonlarını gösteren görsel",
           "en": "Visual showing edit and delete actions in Priority and Checklist Rules"
@@ -56,7 +56,7 @@
       },
       "visual": {
         "kind": "screenshot",
-        "src": "supplier-checklist-excel.svg",
+        "src": "supplier-checklist-excel.png",
         "alt": {
           "tr": "Renkli KPI alanları ve korumalı checklist tablosu bulunan Supplier Checklist Excel görseli",
           "en": "Supplier Checklist Excel visual with coloured KPI tiles and a protected checklist table"
