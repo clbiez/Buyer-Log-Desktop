@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.227",
+      "publishedAt": "2026-10-04",
+      "title": {
+        "tr": "Giriş, güvenlik ve açılış akışı güçlendirildi",
+        "en": "Login, security and startup flow strengthened"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 2,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.227/release.json"
+    },
+    {
       "version": "7.0.226",
       "publishedAt": "2026-10-04",
       "title": {

@@ -1,0 +1,120 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.227",
+  "channel": "stable",
+  "publishedAt": "2026-10-04",
+  "title": {
+    "tr": "Giriş, güvenlik ve açılış akışı güçlendirildi",
+    "en": "Login, security and startup flow strengthened"
+  },
+  "summary": {
+    "tr": "Buyer Log 7.0.227; giriş ekranını sadeleştirir, hazır güncellemeler için yeniden başlatma eylemi ekler, uygulama içi AI bağlantı katmanını kaldırır, güncelleme manifestlerinde Ed25519 imza doğrulamasını devreye alır ve yavaş Overview/CP/Orders projeksiyonlarının kullanıcıyı açılış perdesinde bekletmesini önler.",
+    "en": "Buyer Log 7.0.227 streamlines the login screen, adds a restart action for ready updates, removes the in-app AI connection layer, enables Ed25519 verification for update manifests, and prevents slow Overview/CP/Orders projections from trapping users behind the startup curtain."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 2,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "login-screen-polish-restart",
+      "type": "improvement",
+      "module": {
+        "tr": "Giriş · Güncelleme",
+        "en": "Login · Updates"
+      },
+      "title": {
+        "tr": "Giriş ekranı sadeleşti; güncelleme hazırsa yeniden başlatabilirsiniz",
+        "en": "Login is cleaner and ready updates can restart immediately"
+      },
+      "body": {
+        "tr": "Ayarlar ana giriş akışından daha sakin bir ikincil konuma taşındı. Güncelleme indirilip kuruluma hazır olduğunda giriş ekranında doğrudan “Yeniden Başlat” eylemi gösterilir; kullanıcı güncellemenin arka planda hazır olduğunu tahmin etmek zorunda kalmaz.",
+        "en": "Settings moved to a quieter secondary location outside the primary login flow. When an update is downloaded and ready to install, the login screen now shows a direct Restart action instead of making the user infer that the update is waiting in the background."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "release-7.0.227.png",
+        "alt": {
+          "tr": "Buyer Log 7.0.227 giriş, güvenlik ve açılış iyileştirmeleri özeti",
+          "en": "Buyer Log 7.0.227 login, security and startup improvements summary"
+        },
+        "caption": {
+          "tr": "7.0.227; giriş deneyimi, güncelleme güvenliği ve açılış akışını birlikte güçlendirir.",
+          "en": "7.0.227 strengthens the login experience, update security and startup flow together."
+        }
+      },
+      "path": {
+        "tr": "Buyer Log → Giriş",
+        "en": "Buyer Log → Login"
+      }
+    },
+    {
+      "id": "security-hardening-ai-signing",
+      "type": "improvement",
+      "module": {
+        "tr": "Güvenlik · Güncelleme Altyapısı",
+        "en": "Security · Update Infrastructure"
+      },
+      "title": {
+        "tr": "AI bağlantı katmanı kaldırıldı; güncellemeler imza doğrulamasına geçti",
+        "en": "AI connection layer removed; updates now use signature verification"
+      },
+      "body": {
+        "tr": "Uygulama içi AI asistanı ve AI sağlayıcı bağlantıları kaldırıldı. Buyer Log artık yalnız yerel loopback arayüzünde dinler; eski yedek paketlerinden hassas kimlik/anahtar materyali çıkarılır. TEST release manifesti Ed25519 ile imzalanır ve istemci güncelleme uygulanmadan önce imzayı doğrular.",
+        "en": "The in-app AI assistant and AI provider connections were removed. Buyer Log now listens only on the local loopback interface and sensitive identity/key material is excluded from legacy backup packages. TEST release manifests are signed with Ed25519 and clients verify the signature before applying an update."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "release-7.0.227.png",
+        "alt": {
+          "tr": "Buyer Log 7.0.227 giriş, güvenlik ve açılış iyileştirmeleri özeti",
+          "en": "Buyer Log 7.0.227 login, security and startup improvements summary"
+        },
+        "caption": {
+          "tr": "7.0.227; giriş deneyimi, güncelleme güvenliği ve açılış akışını birlikte güçlendirir.",
+          "en": "7.0.227 strengthens the login experience, update security and startup flow together."
+        }
+      },
+      "path": {
+        "tr": "Buyer Log → Güvenlik · Self Update",
+        "en": "Buyer Log → Security · Self Update"
+      }
+    },
+    {
+      "id": "startup-curtain-nonblocking",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış · Genel Bakış",
+        "en": "Startup · Overview"
+      },
+      "title": {
+        "tr": "Yavaş ilk ekran verisi artık Buyer Log’u açılış perdesinde kilitlemiyor",
+        "en": "Slow first-screen data no longer traps Buyer Log behind the startup curtain"
+      },
+      "body": {
+        "tr": "Başlangıç perdesinin zorunlu koşulları artık uygulama kabuğu, başlangıç verisi ve doğrulanmış kullanıcı profilidir. Overview/CP/Orders projeksiyonu yeniden hazırlanıyorsa uygulama açılır ve ağır veri kendi ekranında yüklenmeye devam eder. Geç gelen projeksiyon hatası da hazır durumdaki açılışı yeniden hata ekranına çeviremez.",
+        "en": "The startup curtain now requires only the application shell, initial data and an authenticated user profile. If the Overview/CP/Orders projection is still rebuilding, Buyer Log opens and the heavy data continues loading in its own screen. A late projection failure can no longer turn an already-ready startup back into an error state."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "release-7.0.227.png",
+        "alt": {
+          "tr": "Buyer Log 7.0.227 giriş, güvenlik ve açılış iyileştirmeleri özeti",
+          "en": "Buyer Log 7.0.227 login, security and startup improvements summary"
+        },
+        "caption": {
+          "tr": "7.0.227; giriş deneyimi, güncelleme güvenliği ve açılış akışını birlikte güçlendirir.",
+          "en": "7.0.227 strengthens the login experience, update security and startup flow together."
+        }
+      },
+      "path": {
+        "tr": "Buyer Log → Açılış → Genel Bakış",
+        "en": "Buyer Log → Startup → Overview"
+      }
+    }
+  ]
+}
