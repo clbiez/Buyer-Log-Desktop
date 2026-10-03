@@ -172,7 +172,7 @@
   }
   function filterSelect(dim){
     const values=dataset?E.dimensionValues(dataset,dim):[];
-    if(!values.length)return `<label class="psaField isEmpty" title="${esc(t('noSourceData'))}"><span>${esc(dimLabel(dim))}</span><select disabled><option>${esc(t('noSourceData'))}</option></select></label>`;
+    if(!values.length)return `<div class="psaMultiFilter psaField isEmpty" title="${esc(t('noSourceData'))}"><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger" aria-disabled="true"><span class="psaMultiLabel">${esc(t('noSourceData'))}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></div>`;
     const selected=filterValues(dim),selectedKeys=new Set(selected.map(value=>E.keyOf(value))),query=ui.filterSearch[dim]||'',queryKey=E.keyOf(query);
     const shown=values.filter(value=>!queryKey||E.keyOf(value).includes(queryKey)),summary=selected.length>1?`${selected.length} ${t('selected')}`:selected[0]||t('all');
     return `<details class="psaMultiFilter psaField${selected.length?' isActive':''}" data-ps-filter-menu="${dim}"${ui.openFilter===dim?' open':''}>
@@ -194,7 +194,7 @@
     const columns=E.columnKeys(dataset),query=E.keyOf(ui.columnSearch);
     const columnRows=columns.map(name=>{const key=E.keyOf(name),html=toggle(E.COLUMN_PREFIX+name,name,{search:key});return query&&!key.includes(query)?html.replace('<label ','<label hidden '):html;}).join('');
     const shown=columns.filter(name=>!query||E.keyOf(name).includes(query)).length;
-    return `<details class="psaFilterConfig" data-ps-filter-config${ui.configOpen?' open':''}><summary class="psaGhostBtn">${icon('filter')}${esc(t('filterConfig'))}</summary><div class="psaFilterConfigPanel">
+    return `<details class="psaFilterConfig" data-ps-filter-config${ui.configOpen?' open':''}><summary class="psaMultiTrigger psaFilterConfigTrigger">${icon('filter')}<span class="psaMultiLabel">${esc(t('filterConfig'))}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></summary><div class="psaFilterConfigPanel">
       <p class="psaFilterConfigHead">${esc(t('filterStandard'))}</p>${standard}
       ${columns.length?`<p class="psaFilterConfigHead">${esc(t('filterColumns'))}</p><input type="search" class="psaMultiSearch" data-ps-column-search value="${esc(ui.columnSearch)}" placeholder="${esc(t('columnSearch'))}" autocomplete="off"><div class="psaFilterConfigColumns">${columnRows}<p class="psaMultiEmpty" data-ps-column-empty${shown?' hidden':''}>${esc(t('noColumnMatch'))}</p></div>`:''}
     </div></details>`;
@@ -432,6 +432,15 @@
   }
 
   /* ---------- olaylar (kök üzerinde tek sefer) ---------- */
+  function closeFilterDrawers(except=null){
+    if(!root)return;
+    const open=root.querySelectorAll?.('[data-ps-filter-menu][open],[data-ps-filter-config][open]')||[];
+    open.forEach(node=>{if(node!==except)node.open=false;});
+    const keepFilter=Boolean(except?.matches?.('[data-ps-filter-menu]'));
+    const keepConfig=Boolean(except?.matches?.('[data-ps-filter-config]'));
+    if(!keepFilter)ui.openFilter='';
+    if(!keepConfig)ui.configOpen=false;
+  }
   function bind(){
     root.addEventListener('change',event=>{
       const target=event.target,key=target.dataset.ps;
@@ -453,7 +462,8 @@
       if(target.dataset.psFilterSearch){const dim=target.dataset.psFilterSearch;ui.filterSearch[dim]=target.value;ui.openFilter=dim;const panel=target.closest?.('.psaMultiPanel'),query=E.keyOf(target.value);let shown=0;panel?.querySelectorAll?.('[data-ps-filter-option]').forEach(row=>{const visible=!query||String(row.dataset.search||'').includes(query);row.hidden=!visible;if(visible)shown++;});const empty=panel?.querySelector?.('[data-ps-filter-empty]');if(empty)empty.hidden=shown>0;return;}
       if(target.dataset.ps==='search'){ui.search=target.value;renderList();}
     });
-    root.addEventListener('toggle',event=>{const config=event.target?.closest?.('[data-ps-filter-config]');if(config&&config===event.target){ui.configOpen=!!config.open;return;}const details=event.target?.closest?.('[data-ps-filter-menu]');if(!details)return;const dim=details.dataset.psFilterMenu;if(details.open)ui.openFilter=dim;else if(ui.openFilter===dim)ui.openFilter='';},true);
+    root.addEventListener('toggle',event=>{const config=event.target?.closest?.('[data-ps-filter-config]');if(config&&config===event.target){if(config.open){closeFilterDrawers(config);ui.configOpen=true;}else ui.configOpen=false;return;}const details=event.target?.closest?.('[data-ps-filter-menu]');if(!details)return;const dim=details.dataset.psFilterMenu;if(details.open){closeFilterDrawers(details);ui.openFilter=dim;}else if(ui.openFilter===dim)ui.openFilter='';},true);
+    document.addEventListener?.('pointerdown',event=>{if(!root||!root.isConnected)return;const drawer=event.target?.closest?.('[data-ps-filter-menu],[data-ps-filter-config]');if(drawer&&root.contains(drawer))return;closeFilterDrawers();});
     root.addEventListener('click',event=>{
       const el=event.target.closest('button,[data-ps-drill],[data-ps-select]');if(!el||!root.contains(el))return;
       if(el.dataset.psTab){state.tab=el.dataset.psTab;ui.search='';ui.showAll=false;persist();render();return;}
@@ -467,7 +477,7 @@
       if(key==='clear'){filterDims().forEach(dim=>{state.filters[dim]=[];delete ui.filterSearch[dim];});ui.openFilter='';PERIOD_KINDS.forEach(kind=>{state.periods[kind].month='';});recalc();return;}
       if(key==='export')exportExcel();
     });
-    root.addEventListener('keydown',event=>{const row=event.target.closest?.('[data-ps-select]');if(row&&(event.key==='Enter'||event.key===' ')){event.preventDefault();ui.selected=row.dataset.psSelect;renderList();}});
+    root.addEventListener('keydown',event=>{if(event.key==='Escape'&&(ui.openFilter||ui.configOpen)){closeFilterDrawers();event.preventDefault();return;}const row=event.target.closest?.('[data-ps-select]');if(row&&(event.key==='Enter'||event.key===' ')){event.preventDefault();ui.selected=row.dataset.psSelect;renderList();}});
   }
 
   /* Linked Orders · Backlog · LFL · Price & Supplier refresh invalidates

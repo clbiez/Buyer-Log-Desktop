@@ -206,3 +206,10 @@ test('modül yükleniyor ve menülerden erişilebiliyor', () => {
   // Üç ekranın PLM Sync menüsünde de giriş noktası olmalı.
   assert.equal((INDEX.match(/data-plmops-open/g) || []).length, 3);
 });
+
+test('completed PLM jobs with item errors are not green success',()=>{
+  assert.match(OPS,/function jobHasFailures\(job\)/);
+  assert.match(OPS,/Hatalarla tamamlandı/);
+  assert.match(OPS,/Completed with errors/);
+  assert.match(OPS,/job\.status === 'failed' \|\| partial \? 'isFail'/);
+});

@@ -92,3 +92,19 @@ test('Price & Supplier Analysis Horizon kaynağını ve kendine ait horizon roze
   const normalizedScopes=modelScopes.normalizeScopes([{id:'legacy',targets:['cp','orders'],horizon:{}}],'asas',{},modelHorizon.normalizeHorizon);
   assert.ok(normalizedScopes.some(scope=>scope.targets.includes('priceanalysis')));
 });
+
+test('Horizon identities survive Price & Supplier drilldown and PLM image request',()=>{
+  const app=read('public/app-main.js'),drawer=read('public/detail-drawer.js'),bindings=read('public/canonical-module-bindings.js');
+  assert.match(bindings,/plmId:\['plm'\]/);
+  assert.match(bindings,/orderCode:\['ocode'\]/);
+  assert.match(bindings,/colourCode:\['ccode'\]/);
+  assert.match(app,/plmId,orderCode,orderKey:orderCode,colourCode,modelKey:/);
+  assert.match(app,/raw\.plm\|\|''/);
+  assert.match(app,/raw\.ccode\|\|''/);
+  assert.match(app,/raw\.ocode\|\|''/);
+  assert.match(app,/moduleId:detailModuleId,source:'price-supplier'/);
+  assert.match(app,/styleName:item\.styleName\|\|'',orderCode:item\.orderCode\|\|''/);
+  assert.match(drawer,/rawPlmId=get\('plmId','plm'/);
+  assert.match(drawer,/colourCode:get\('colourCode','ccode'/);
+  assert.match(drawer,/orderCode:get\('orderCode','ocode'/);
+});

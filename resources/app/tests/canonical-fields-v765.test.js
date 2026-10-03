@@ -97,3 +97,18 @@ test('new modules must explicitly register bindings before safe joins',()=>{
   assert.equal(fields.canonicalId(moduleId,'shadeCode'),'colourCode');
   assert.equal(fields.canJoin(moduleId,'shadeCode','collection','colourCode'),true);
 });
+
+test('ASAS compact runtime keys stay canonical across order-backed modules',()=>{
+  const row={ocode:'1265562',plm:'2100968',model:'TKM,BLUEY12',ccode:'A01',countryRaw:'TÜRKİYE',buyerGrup:'LİSANS',merch:'CU4E',ageGroup:'CUW4',qty:120,mb:'2026-10-01',opd:'2026-01-15',ex:'2026-09-10'};
+  for(const moduleId of ['cp','orders','backlog','overview','lfl']){
+    assert.equal(fields.value(row,moduleId,'plmId'),'2100968',moduleId+' plm');
+    assert.equal(fields.value(row,moduleId,'orderCode'),'1265562',moduleId+' order');
+    assert.equal(fields.value(row,moduleId,'modelName'),'TKM,BLUEY12',moduleId+' model');
+    assert.equal(fields.value(row,moduleId,'colourCode'),'A01',moduleId+' colour code');
+    assert.equal(fields.value(row,moduleId,'country'),'TÜRKİYE',moduleId+' country');
+    assert.equal(fields.value(row,moduleId,'buyingGroup'),'LİSANS',moduleId+' buying group');
+    assert.equal(fields.value(row,moduleId,'mag'),'CU4E',moduleId+' MAG');
+    assert.equal(fields.value(row,moduleId,'mmyg'),'CUW4',moduleId+' MMYG');
+    assert.equal(fields.value(row,moduleId,'orderQuantity'),120,moduleId+' quantity');
+  }
+});

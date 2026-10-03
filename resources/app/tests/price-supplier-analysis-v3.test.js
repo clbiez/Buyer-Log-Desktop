@@ -322,3 +322,17 @@ test('herhangi bir ham sütun ve Ürün Ana Tanım filtre olarak eklenebilir; ve
   assert.equal(JSON.stringify(api.state.filters['col:Product Main Definition']),'[]','temizle sütun filtrelerini de boşaltır');
   assert.equal(api.model.totals.records,3);
 });
+
+test('filter drawers share one multiselect shell and close outside / on Escape',async()=>{
+  const rows=[obs('26Y','A','Kazak',10,100,{country:'Türkiye',buyingGroup:''})];
+  const saved=JSON.stringify({filterLayout:['country','buyingGroup'],filters:{}});
+  const {root}=await mountScreen(rows,'tr',saved);
+  assert.match(root.innerHTML,/data-ps-filter-menu="country"[\s\S]*aria-multiselectable="true"/);
+  assert.match(root.innerHTML,/psaMultiFilter psaField isEmpty[\s\S]*psaMultiTrigger[\s\S]*Bu kaynakta veri yok/);
+  assert.doesNotMatch(root.innerHTML,/psaField isEmpty[^>]*>[\s\S]{0,180}<select disabled/);
+  assert.match(root.innerHTML,/psaMultiTrigger psaFilterConfigTrigger/);
+  const ui=read('public/price-supplier-analysis.js');
+  assert.match(ui,/function closeFilterDrawers\(except=null\)/);
+  assert.match(ui,/document\.addEventListener\?\.\('pointerdown'/);
+  assert.match(ui,/event\.key==='Escape'.*closeFilterDrawers\(\)/);
+});
