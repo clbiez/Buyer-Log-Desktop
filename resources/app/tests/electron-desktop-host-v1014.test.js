@@ -110,7 +110,7 @@ test('backend ortamı AppData\'yı pakete yönlendirir ama GERÇEK yolları BL_H
   });
   assert.equal(env.APPDATA, layout.portableAppData);
   assert.equal(env.LOCALAPPDATA, layout.portableLocalAppData);
-  // Troy/PLM/Remote Debugging kurumsal Edge profilini bu iki değişkenden bulur.
+  // PLM/Remote Debugging kurumsal Edge profilini bu iki değişkenden bulur.
   assert.equal(env.BL_HOST_APPDATA, 'C:\\Users\\gercek\\AppData\\Roaming');
   assert.equal(env.BL_HOST_LOCALAPPDATA, 'C:\\Users\\gercek\\AppData\\Local');
 });
@@ -470,7 +470,7 @@ test('indirme hedefi AÇIKÇA verilir — yol verilmezse Electron her dışa akt
   assert.match(MAIN_SOURCE, /function uniqueDownloadPath/);
 });
 
-test('harici bağlantı sistem tarayıcısına gider — Troy/PLM/M365 kurumsal profile bağlı', () => {
+test('harici bağlantı sistem tarayıcısına gider — PLM/M365 kurumsal profile bağlı', () => {
   assert.match(MAIN_SOURCE, /setWindowOpenHandler/);
   assert.match(MAIN_SOURCE, /action:\s*'deny'/);
   assert.match(MAIN_SOURCE, /shell\.openExternal/);

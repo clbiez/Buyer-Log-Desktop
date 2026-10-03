@@ -135,11 +135,11 @@ test('AI diagnostic packages redact secrets recursively in JSON and text', () =>
   assert.match(payload.text, /LOCAL_SIMULATION/);
 });
 
-test('Troy recipes are exposed only as dry-run diagnostics with bounded step evidence', () => {
+test('browser recipes are exposed only as dry-run diagnostics with bounded step evidence', () => {
   const result = lab.describeAutomations({
     recipes: [{
-      id: 'r1', name: 'Troy Close Order', purpose: 'browser', url: 'https://troy.example/orders',
-      steps: Array.from({ length: 80 }, (_, index) => ({ id: `s${index}`, action: index === 79 ? 'click' : 'assert_text', selector: '.secret', value: `v${index}` })),
+      id: 'r1', name: 'Catalog Browser Probe', purpose: 'browser', url: 'https://catalog.example/orders',
+      steps: Array.from({ length: 80 }, (_, index) => ({ id: `s${index}`, action: index === 79 ? 'click' : 'assert_text', selector: '.probe', value: `v${index}` })),
     }],
     runs: [{ recipeId: 'r1', status: 'completed', dryRun: false }],
   });
@@ -150,18 +150,18 @@ test('Troy recipes are exposed only as dry-run diagnostics with bounded step evi
   assert.ok(!('runs' in result[0]));
 });
 
-test('lab snapshot reuses registry read-model evidence and includes web integration state', () => {
+test('lab snapshot reuses registry read-model evidence and includes generic web integration state', () => {
   const snapshot = lab.buildSnapshot({
     overview: overview(),
     support: { supported: true, platformLabel: 'Windows' },
     probes: [],
     sourceRows: { mc_asas: [{ ocode: '1' }], mc_ias: [{ 'Sipariş Kod': '2' }] },
-    automations: { recipes: [{ id: 'troy', name: 'Troy', purpose: 'browser', url: 'https://troy.example', steps: [] }], runs: [] },
+    automations: { recipes: [{ id: 'catalog', name: 'Catalog Browser Probe', purpose: 'browser', url: 'https://catalog.example', steps: [] }], runs: [] },
   });
   assert.equal(snapshot.environment.mode, 'LOCAL_SIMULATION');
   assert.deepEqual(snapshot.probes, []);
   assert.ok(snapshot.inventory.some(item => item.id === 'mc_ias' && item.kind === 'database'));
-  assert.ok(snapshot.inventory.some(item => item.id === 'automation:troy' && item.kind === 'web'));
+  assert.ok(snapshot.inventory.some(item => item.id === 'automation:catalog' && item.kind === 'web'));
   assert.equal(snapshot.selectedInspector.sourceId, 'mc_ias');
   assert.equal(snapshot.safety.destructiveAutomation, 'dry-run-only');
 });

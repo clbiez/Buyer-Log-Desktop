@@ -1,8 +1,8 @@
 'use strict';
 
 /*
- * Ortak "dosya hazır" bildirim kartı: CP/Orders Excel dışa aktarımı ve Troy PO
- * indirmesi için paylaşılan sözleşme — başarılı dosya işlemi → yetkin son yol
+ * Ortak "dosya hazır" bildirim kartı: CP/Orders Excel dışa aktarımı ve
+ * Electron indirmeleri için paylaşılan sözleşme — başarılı dosya işlemi → yetkin son yol
  * → tek bir sağ üst bildirim (Aç/Klasörde Göster). public/app-main.js ve
  * public/row-context-menu.js DOM'a bağlı/ayrıştırılamaz (bkz. CLAUDE.md §2),
  * bu yüzden kaynak-metin sözleşmesiyle test edilir; ui-primitives.js ve
@@ -18,8 +18,6 @@ const ROOT = path.join(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(ROOT, relative), 'utf8');
 
 const APP_MAIN = read('public/app-main.js');
-const ROW_MENU = read('public/row-context-menu.js');
-const SERVER = read('server/server.js');
 const DESIGN = read('public/design.css');
 const MAIN_SOURCE = read('electron/main.js');
 const PRELOAD_SOURCE = read('electron/preload.js');
@@ -115,30 +113,6 @@ test('app-main.js: Electron indirme köprüsü yalnız köprü VARSA dinlenir, y
   assert.match(body, /mode:'created'/);
   assert.match(body, /window\.buyerLogDesktop\.openDownload\(info\.token\)/);
   assert.match(body, /window\.buyerLogDesktop\.revealDownload\(info\.token\)/);
-});
-
-/* --------------------------------------------------------- row-context-menu.js */
-
-test('row-context-menu.js: PO indirme başarıyla bitince ortak dosya-hazır kartı sunucudan gelen GERÇEK ad/yolu kullanır', () => {
-  const start = ROW_MENU.indexOf('async function downloadPoAction');
-  const body = ROW_MENU.slice(start, ROW_MENU.indexOf('async function openPoAction'));
-  assert.match(body, /notifyFileReady\(\{/);
-  assert.match(body, /filename: result\.fileName \|\| ''/);
-  assert.match(body, /path: result\.filePath \|\| ''/);
-  assert.match(body, /mode: 'downloaded'/);
-  assert.match(body, /\/po\/open`/);
-  assert.match(body, /\/po\/reveal`/);
-  assert.doesNotMatch(body, /showToast\(T\('PO indirildi\./, 'eski düz toast hâlâ duruyor, ortak karta taşınmadı');
-});
-
-/* --------------------------------------------------------------------- server.js */
-
-test('server.js: yeni po/reveal route\'u aynı yetki kontrolüyle ve mevcut dosya çözümlemesiyle tanımlı', () => {
-  assert.match(SERVER, /app\.post\('\/api\/troy\/orders\/:orderCode\/po\/reveal', userAccess\.requireAnyArea\('cp', 'orders'\)/);
-  const start = SERVER.indexOf("app.post('/api/troy/orders/:orderCode/po/reveal'");
-  const body = SERVER.slice(start, start + 600);
-  assert.match(body, /troyPoService\.findExistingPoFile\(req\.params\.orderCode/);
-  assert.match(body, /platform\.revealFileExternally\(existing\.filePath\)/);
 });
 
 /* ---------------------------------------------------- electron main/preload */

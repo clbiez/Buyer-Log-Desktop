@@ -25,7 +25,7 @@
  *    tuşlara bağlı. Edge --app kipinde de menü yoktu; davranışı birebir
  *    korumanın yolu menüyü hiç kurmamak.
  *
- * 3) HARİCİ BAĞLANTILAR NORMALDE SİSTEM TARAYICISINA GİDER. Troy ve
+ * 3) HARİCİ BAĞLANTILAR NORMALDE SİSTEM TARAYICISINA GİDER. PLM ve
  *    Microsoft 365 akışları kullanıcının gerçek kurumsal profiline bağlıdır.
  *    CoreNectum PLM bunun bilinçli istisnasıdır: yalnız Bearer'ı otomatik
  *    edinmek için ayrı, sandbox'lı ve kalıcı bir Electron SSO partition'ı

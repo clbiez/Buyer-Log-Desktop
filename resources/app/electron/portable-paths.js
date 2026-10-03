@@ -30,7 +30,7 @@
  *    Kullanıcı çıktıları için Downloads yolu ayrıca Electron'un gerçek
  *    app.getPath('downloads') değeri olarak korunur.
  *
- * 3) BL_HOST_* KORUNUR. Troy/PLM entegrasyonu ve "Allow Remote Debugging"
+ * 3) BL_HOST_* KORUNUR. PLM entegrasyonu ve "Allow Remote Debugging"
  *    kullanıcının GERÇEK Edge/Chrome profilini kullanmak zorunda
  *    (server/lib/agent-browser-connector.js, server/lib/browser-debug-service.js
  *    bu değişkenleri okuyor). Yönlendirilmiş LOCALAPPDATA'yı miras alan bir
