@@ -7,8 +7,16 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const lang=()=>{try{return typeof appLang!=='undefined'&&appLang==='en'?'en':'tr';}catch(_){return document.documentElement.lang==='en'?'en':'tr';}};
 const L=(tr,en)=>lang()==='en'?en:tr;
 const pick=v=>v&&typeof v==='object'?(v[lang()]||v.tr||v.en||''):String(v||'');
-const parts=v=>String(v||'').split('.').map(x=>parseInt(x,10)||0);
-const cmp=(a,b)=>{const aa=parts(a),bb=parts(b);for(let i=0;i<Math.max(aa.length,bb.length,3);i++){const d=(aa[i]||0)-(bb[i]||0);if(d)return d;}return 0;};
+function versionParts(v){
+  const raw=String(v||'').trim().split('.').filter(Boolean).map(x=>parseInt(x,10)||0);
+  // Historical Buyer Log versions used "7.137" to mean today's "7.0.137".
+  // Normalize that legacy two-part format before comparing it with semantic versions.
+  if(raw.length===2)return [raw[0]||0,0,raw[1]||0];
+  while(raw.length<3)raw.push(0);
+  return raw;
+}
+const versionKey=v=>versionParts(v).slice(0,3).join('.');
+const cmp=(a,b)=>{const aa=versionParts(a),bb=versionParts(b);for(let i=0;i<Math.max(aa.length,bb.length,3);i++){const d=(aa[i]||0)-(bb[i]||0);if(d)return d;}return 0;};
 const ver=()=>String(global.BL_APP_VERSION||'').trim();
 const withVersion=src=>{const v=encodeURIComponent(String(global.BL_ASSET_VERSION||global.BL_APP_VERSION||''));return src+(src.includes('?')?'&':'?')+'v='+v;};
 async function fetchJson(src){const r=await fetch(withVersion(src),{cache:'no-store'});if(!r.ok)throw new Error(String(r.status));return r.json();}
@@ -17,10 +25,10 @@ async function loadRelease(entry){try{return {...await fetchJson(entry.file),_en
 async function legacyRows(){
   if(legacyCache)return legacyCache;
   try{await global.BLPerf?.ensureFeature?.('versionHistory');}catch(_){}
-  const visual=new Set((await loadIndex()).releases.map(x=>x.version));
+  const visual=new Set((await loadIndex()).releases.map(x=>versionKey(x.version)));
   legacyCache=(Array.isArray(global.BL_VERSION_HISTORY)?global.BL_VERSION_HISTORY:[]).map(x=>({
     version:x?.v==='__CURRENT__'?ver():String(x?.v||''),publishedAt:x?.date||'',title:x?.title||{},items:Array.isArray(x?.items)?x.items:[],legacy:true
-  })).filter(x=>x.version&&!visual.has(x.version));
+  })).filter(x=>x.version&&!visual.has(versionKey(x.version)));
   return legacyCache;
 }
 function seenStorage(){return global.BLStorage||global.localStorage;}
