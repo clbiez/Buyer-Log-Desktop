@@ -55,3 +55,24 @@ test('timeline combines logistics and Buyer breakdown on one shared period axis'
   const colsHeight=Number((CSS.match(/\.blvCols\{height:(\d+)px/)||[])[1]);
   assert.ok(colsHeight>=500,`birleşik timeline yüksekliği en az 500px olmalı (bulunan: ${colsHeight})`);
 });
+
+
+test('overdue subtotal note cannot change timeline column geometry',()=>{
+  assert.match(CSS,/\.blvCols \.bpaColValue\{[^}]*flex:0 0 28px[^}]*min-height:28px[^}]*max-height:28px/);
+  assert.match(OVERVIEW,/class="blvColOverdue"/);
+});
+
+test('lower Buyer breakdown follows grouped and stacked chart mode',()=>{
+  assert.match(OVERVIEW,/class="blvBuyerBars is-grouped"/);
+  assert.match(OVERVIEW,/class="blvBuyerBars is-stacked"/);
+  assert.match(OVERVIEW,/class="blvBuyerStack"/);
+  assert.match(OVERVIEW,/class="blvBuyerStackSeg"/);
+  assert.match(CSS,/\.blvBuyerStack\{/);
+  assert.match(CSS,/\.blvBuyerStackSeg\{/);
+});
+
+test('timeline automatically centers the current period after render',()=>{
+  assert.match(OVERVIEW,/requestAnimationFrame\(\(\)=>scrollTimelineToToday\('auto'\)\)/);
+  assert.match(OVERVIEW,/const scrollBehavior=behavior==='auto'\?'auto':'smooth'/);
+  assert.match(OVERVIEW,/data-blv-action==='today'\)\{scrollTimelineToToday\(\)/);
+});
