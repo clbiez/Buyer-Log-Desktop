@@ -18,6 +18,10 @@
   const META_SHEET = '__BL_META';
   const DATA_SHEET = 'Checklist';
   const SCHEMA_VERSION = 1;
+  const EXCEL_COLUMNS_KEY = 'lcw.cp.checklist.excel.columns.v1';
+  const EXCEL_DATE_FORMAT = 'dd.mm.yyyy';
+  const EXCEL_PROTECTION_PASSWORD = 'BuyerLogChecklist';
+  const DEFAULT_EXCEL_COLUMNS = Object.freeze(['image', 'order', 'plm', 'model', 'colour', 'supplier', 'exfactory']);
   const state = {
     started: false,
     loading: null,
@@ -241,26 +245,19 @@
   }
 
   function itemCatalog() {
-    const s = assistantState(), Checklist = root.BLCpChecklistEngine;
-    if (!s || !Checklist) return [];
+    const s = assistantState();
+    if (!s) return [];
     const list = [];
-    (Checklist.ITEMS || []).forEach(function (item) {
-      const config = s.checklistSettings && s.checklistSettings.items && s.checklistSettings.items[item.id];
-      if (!config || config.enabled !== false) {
-        list.push({
-          id: item.id, tr: item.tr, en: item.en, questionTr: item.questionTr, questionEn: item.questionEn,
-          builtIn: true, raw: item,
-        });
-      }
-    });
     (Array.isArray(s.rules) ? s.rules : []).forEach(function (rule) {
-      if (!rule || rule.kind !== 'checklist' || rule.builtIn === true || rule.enabled === false) return;
-      if (list.some(function (item) { return item.id === rule.id; })) return;
+      if (!rule || rule.kind !== 'checklist' || rule.enabled === false) return;
       list.push({
-        id: rule.id, tr: rule.tr || rule.name || rule.id, en: rule.en || rule.name || rule.id,
+        id: rule.id,
+        tr: rule.tr || rule.name || rule.id,
+        en: rule.en || rule.name || rule.id,
         questionTr: rule.questionTr || rule.name || rule.id,
         questionEn: rule.questionEn || rule.name || rule.id,
-        builtIn: false, raw: rule,
+        builtIn: rule.builtIn === true,
+        raw: rule,
       });
     });
     return list;
@@ -285,13 +282,11 @@
 
   function itemApplies(item, analysis) {
     if (!analysis) return true;
-    const s = assistantState(), Checklist = root.BLCpChecklistEngine, Rules = root.BLCpRulesEngine;
-    if (!s || !Checklist || !Rules) return true;
-    if (item.builtIn) {
-      const config = s.checklistSettings && s.checklistSettings.items && s.checklistSettings.items[item.id];
-      return Boolean(config && Checklist.itemApplies(item.raw, config, analysis, s.checklistSettings));
-    }
-    return Rules.customChecklistItems(analysis, s.rules, {}).some(function (candidate) { return candidate.id === item.id; });
+    const s = assistantState(), Rules = root.BLCpRulesEngine;
+    if (!s || !Rules) return true;
+    return Rules.customChecklistItems(analysis, s.rules, {}).some(function (candidate) {
+      return candidate.id === item.id;
+    });
   }
 
   function answerFor(item, analysis) {
@@ -467,6 +462,176 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
   }
 
+  function storageGet(key) {
+    try {
+      if (root.BLStorage && typeof root.BLStorage.getItem === 'function') return root.BLStorage.getItem(key);
+      return root.localStorage ? root.localStorage.getItem(key) : null;
+    } catch (_) { return null; }
+  }
+  function storageSet(key, value) {
+    try {
+      if (root.BLStorage && typeof root.BLStorage.setItem === 'function') root.BLStorage.setItem(key, value);
+      else if (root.localStorage) root.localStorage.setItem(key, value);
+    } catch (_) {}
+  }
+  function excelColumnDefinitions() {
+    return [
+      { id: 'image', tr: 'Model Görseli', en: 'Model Image', width: 10, defaultOn: true },
+      { id: 'order', tr: 'Order Code', en: 'Order Code', width: 12, required: true, defaultOn: true, candidates: ['Order Code', 'ORDER CODE', 'OrderCode'] },
+      { id: 'plm', tr: 'PLM ID', en: 'PLM ID', width: 10, defaultOn: true, candidates: ['PLM ID', 'PLM', 'PLM Id'] },
+      { id: 'model', tr: 'Model Adı', en: 'Model Name', width: 18, defaultOn: true, candidates: ['Model Name', 'MODEL NAME', 'Model', 'Model Adı'] },
+      { id: 'colour', tr: 'Renk Kodu', en: 'Colour Code', width: 10, defaultOn: true, candidates: ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu'] },
+      { id: 'supplier', tr: 'Üretici', en: 'Supplier', width: 18, defaultOn: true, candidates: ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier'] },
+      { id: 'exfactory', tr: 'Ex-Factory', en: 'Ex-Factory', width: 12, defaultOn: true, type: 'date', candidates: ['Ex-factory', 'Ex-Factory', 'EX FACTORY', 'EX-FACTORY'] },
+      { id: 'season', tr: 'Sezon', en: 'Season', width: 10, candidates: ['Season', 'Sezon'] },
+      { id: 'buyer', tr: 'Buyer', en: 'Buyer', width: 14, candidates: ['Buyer'] },
+      { id: 'buyerGroup', tr: 'Buyer Grup', en: 'Buyer Group', width: 14, candidates: ['Buyer Grup (TR)', 'Buyer Grup', 'Buying Group', 'Buyer Group'] },
+      { id: 'category', tr: 'Kategori', en: 'Category', width: 14, candidates: ['Category', 'Kategori'] },
+      { id: 'license', tr: 'Lisans', en: 'License', width: 14, candidates: ['License', 'Lisans'] },
+    ];
+  }
+  function excelColumnIds() {
+    const definitions = excelColumnDefinitions(), known = new Set(definitions.map(function (item) { return item.id; }));
+    let saved = null;
+    try { saved = JSON.parse(storageGet(EXCEL_COLUMNS_KEY) || 'null'); } catch (_) {}
+    const source = Array.isArray(saved) ? saved : DEFAULT_EXCEL_COLUMNS;
+    const clean = [];
+    source.forEach(function (id) {
+      id = String(id || '');
+      if (known.has(id) && !clean.includes(id)) clean.push(id);
+    });
+    definitions.filter(function (item) { return item.required; }).forEach(function (item) {
+      if (!clean.includes(item.id)) clean.unshift(item.id);
+    });
+    return clean.length ? clean : DEFAULT_EXCEL_COLUMNS.slice();
+  }
+  function saveExcelColumnIds(ids) {
+    const known = new Set(excelColumnDefinitions().map(function (item) { return item.id; }));
+    const clean = (Array.isArray(ids) ? ids : []).map(String).filter(function (id, index, list) {
+      return known.has(id) && list.indexOf(id) === index;
+    });
+    if (!clean.includes('order')) clean.unshift('order');
+    storageSet(EXCEL_COLUMNS_KEY, JSON.stringify(clean));
+    return clean;
+  }
+  function rawValue(row, candidates) {
+    for (const key of (candidates || [])) {
+      const value = row && row[key];
+      if (value != null && value !== '') return value;
+    }
+    return null;
+  }
+  function excelDate(value) {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return new Date(value.getFullYear(), value.getMonth(), value.getDate(), 12, 0, 0);
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      if (value > 10000 && value < 30000) {
+        const d = new Date(value * 86400000);
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+      }
+      if (value >= 30000 && value < 80000) {
+        const epoch = Date.UTC(1899, 11, 30);
+        const d = new Date(epoch + Math.round(value) * 86400000);
+        return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+      }
+    }
+    const raw = text(value);
+    if (!raw) return null;
+    let match = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (!match) {
+      const compact = raw.match(/^(\d{4})(\d{2})(\d{2})$/);
+      if (compact) match = compact;
+    }
+    if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12, 0, 0);
+    const local = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+    if (local) return new Date(Number(local[3]), Number(local[2]) - 1, Number(local[1]), 12, 0, 0);
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 12, 0, 0);
+  }
+  function valueForExcelColumn(definition, row) {
+    if (!definition || definition.id === 'image') return '';
+    const value = rawValue(row, definition.candidates);
+    return definition.type === 'date' ? excelDate(value) : text(value);
+  }
+  function dateValidation() {
+    return {
+      type: 'date', operator: 'between', allowBlank: true,
+      formulae: [new Date(2000, 0, 1), new Date(2100, 11, 31)],
+      showErrorMessage: true,
+      errorTitle: T('Geçersiz tarih', 'Invalid date'),
+      error: T('Tarihi Excel tarih seçicisiyle girin. Format: GG.AA.YYYY', 'Use the Excel date picker. Format: DD.MM.YYYY'),
+    };
+  }
+  function preparedImageExtension(dataUrl) {
+    const raw = String(dataUrl || '').toLowerCase();
+    if (raw.startsWith('data:image/jpeg') || raw.startsWith('data:image/jpg')) return 'jpeg';
+    if (raw.startsWith('data:image/png')) return 'png';
+    return '';
+  }
+  async function prepareRowModelImage(row) {
+    if (typeof root.canonicalModelImageSource !== 'function' || typeof root.kolPrepareExcelImage !== 'function') return null;
+    const plm = visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']);
+    if (!plm) return null;
+    const colourCode = visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']);
+    const colour = visibleValue(row, ['Colour', 'Color', 'Renk']);
+    let source = '';
+    try { source = root.canonicalModelImageSource(plm, colourCode, colour) || ''; } catch (_) {}
+    if (!source) return null;
+    try {
+      const prepared = await root.kolPrepareExcelImage(source);
+      return prepared && prepared.dataUrl ? prepared : null;
+    } catch (_) { return null; }
+  }
+  function imagePlacement(prepared, rowNo, columnNo) {
+    if (typeof root.kolExcelImageAspectLockedPlacement === 'function') {
+      try { return root.kolExcelImageAspectLockedPlacement(prepared, rowNo, 72, 46, columnNo); } catch (_) {}
+    }
+    const naturalW = Math.max(1, Number(prepared && prepared.width) || 1);
+    const naturalH = Math.max(1, Number(prepared && prepared.height) || 1);
+    const scale = Math.min(66 / naturalW, 40 / naturalH, 1);
+    const width = Math.max(1, Math.round(naturalW * scale));
+    const height = Math.max(1, Math.round(naturalH * scale));
+    return { tl: { col: columnNo - 1 + 0.08, row: rowNo - 1 + 0.08 }, ext: { width: width, height: height } };
+  }
+  function openExcelColumnsDialog() {
+    if (!root.document) return;
+    root.document.getElementById('_blChecklistExcelColumns')?.remove();
+    const selected = new Set(excelColumnIds());
+    const definitions = excelColumnDefinitions();
+    const modal = root.document.createElement('div');
+    modal.id = '_blChecklistExcelColumns';
+    modal.className = 'cpaModalOverlay';
+    modal.innerHTML = `<div class="cpaModal" role="dialog" aria-modal="true">
+      <header><div><b>${T('Checklist Excel Columns', 'Checklist Excel Columns')}</b>
+        <small>${T('Üretici Excel’inde görünecek bilgi sütunlarını seçin. Kimlik ve teknik eşleşme alanları kullanıcı tarafından değiştirilemez.', 'Choose the information columns shown in the supplier workbook. Identity and technical match fields cannot be edited by the supplier.')}</small></div>
+        <button type="button" data-cx-close aria-label="${T('Kapat', 'Close')}">×</button></header>
+      <div class="cpaModalBody">
+        <div class="cpaSettingGroup">${definitions.map(function (item) {
+          const checked = selected.has(item.id) || item.required;
+          return `<div class="cpaSettingRow"><label class="cpaCheck"><input type="checkbox" data-cx-column="${item.id}" ${checked ? 'checked' : ''} ${item.required ? 'disabled' : ''}>
+            <span><b>${isEn() ? item.en : item.tr}</b><small>${item.required ? T('Zorunlu', 'Required') : (item.type === 'date' ? T('Excel tarih biçimi: GG.AA.YYYY', 'Excel date format: DD.MM.YYYY') : '')}</small></span></label></div>`;
+        }).join('')}</div>
+        <p class="cpaNote">${T('Excel korumalı oluşturulur. Yalnız uygulanabilir checklist Durum ve Not hücreleri düzenlenebilir; diğer tüm alanlar kilitlidir.', 'The workbook is protected. Only applicable checklist Status and Note cells can be edited; every other field is locked.')}</p>
+      </div>
+      <footer><button type="button" class="cpaBtn" data-cx-reset>${T('Varsayılan', 'Default')}</button>
+        <button type="button" class="cpaBtn primary" data-cx-save>${T('Kaydet', 'Save')}</button></footer>
+    </div>`;
+    root.document.body.appendChild(modal);
+    const close = function () { modal.remove(); };
+    modal.querySelectorAll('[data-cx-close]').forEach(function (el) { el.onclick = close; });
+    modal.onclick = function (event) { if (event.target === modal) close(); };
+    modal.querySelector('[data-cx-reset]').onclick = function () {
+      const defaults = new Set(DEFAULT_EXCEL_COLUMNS);
+      modal.querySelectorAll('[data-cx-column]').forEach(function (el) { el.checked = defaults.has(el.dataset.cxColumn) || el.disabled; });
+    };
+    modal.querySelector('[data-cx-save]').onclick = function () {
+      const ids = Array.from(modal.querySelectorAll('[data-cx-column]:checked')).map(function (el) { return el.dataset.cxColumn; });
+      saveExcelColumnIds(ids); close();
+      toast(T('Checklist Excel sütunları kaydedildi.', 'Checklist Excel columns saved.'));
+    };
+  }
+
   async function exportWorkbook() {
     await loadShared();
     const rows = selectedRows();
@@ -484,40 +649,44 @@
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Buyer Log';
     workbook.created = new Date();
-    const sheet = workbook.addWorksheet(DATA_SHEET, { views: [{ state: 'frozen', ySplit: 1 }] });
+    const sheet = workbook.addWorksheet(DATA_SHEET, { views: [{ state: 'frozen', ySplit: 1, showGridLines: false }] });
+    sheet.properties.defaultRowHeight = 18;
     const decision = analysesForRows(rows);
     const exportedAt = isoNow();
 
-    const columns = [
-      { header: 'Order Code', key: 'order', width: 16 },
-      { header: 'PLM ID', key: 'plm', width: 14 },
-      { header: T('Model Adı', 'Model Name'), key: 'model', width: 24 },
-      { header: T('Renk Kodu', 'Colour Code'), key: 'colour', width: 14 },
-      { header: T('Üretici', 'Supplier'), key: 'supplier', width: 24 },
-      { header: 'Ex-Factory', key: 'exfactory', width: 14 },
-    ];
+    const selectedIds = excelColumnIds();
+    const infoDefinitions = excelColumnDefinitions().filter(function (item) { return selectedIds.includes(item.id); });
+    const columns = infoDefinitions.map(function (item) {
+      return { header: isEn() ? item.en : item.tr, key: item.id, width: item.width || 12, infoDefinition: item };
+    });
     items.forEach(function (item, index) {
-      columns.push({ header: isEn() ? item.en : item.tr, key: 's' + index, width: 20 });
-      columns.push({ header: (isEn() ? item.en : item.tr) + ' - ' + T('Not', 'Note'), key: 'n' + index, width: 30 });
+      columns.push({ header: isEn() ? item.en : item.tr, key: 's' + index, width: 14, checklistStatus: true, checklistIndex: index });
+      columns.push({ header: (isEn() ? item.en : item.tr) + ' - ' + T('Not', 'Note'), key: 'n' + index, width: 22, checklistNote: true, checklistIndex: index });
     });
     columns.push({ header: '__BL_ORDER_KEY', key: '__orderKey', width: 4, hidden: true });
     columns.push({ header: '__BL_LOAD_DATE', key: '__loadDate', width: 4, hidden: true });
     sheet.columns = columns;
-    sheet.autoFilter = { from: 'A1', to: sheet.getRow(1).getCell(columns.length).address };
+    const visibleColumnCount = columns.length - 2;
+    sheet.autoFilter = { from: 'A1', to: sheet.getRow(1).getCell(visibleColumnCount).address };
 
+    const statusColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 's' + index; }) + 1;
+    });
+    const noteColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 'n' + index; }) + 1;
+    });
+    const imageColumn = columns.findIndex(function (column) { return column.key === 'image'; }) + 1;
     const optionValues = statusOptions();
-    rows.forEach(function (row) {
+
+    for (const row of rows) {
       const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
       const values = {
-        order: visibleValue(row, ['Order Code', 'ORDER CODE', 'OrderCode']),
-        plm: visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']),
-        model: visibleValue(row, ['Model Name', 'MODEL NAME', 'Model']),
-        colour: visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']),
-        supplier: visibleValue(row, ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier']),
-        exfactory: visibleValue(row, ['Ex-factory', 'Ex-Factory', 'EX FACTORY']),
         __orderKey: analysis && analysis.orderKey || '',
         __loadDate: analysis && analysis.plannedLoadDate || '',
       };
+      infoDefinitions.forEach(function (definition) {
+        if (definition.id !== 'image') values[definition.id] = valueForExcelColumn(definition, row);
+      });
       items.forEach(function (item, index) {
         if (!analysis || !itemApplies(item, analysis)) {
           values['s' + index] = '';
@@ -528,26 +697,99 @@
         values['s' + index] = answer ? statusLabel(answer.state) : statusLabel('open');
         values['n' + index] = answer && answer.note || '';
       });
+
       const excelRow = sheet.addRow(values);
-      items.forEach(function (_item, index) {
-        const statusColumn = 7 + (index * 2);
-        excelRow.getCell(statusColumn).dataValidation = {
-          type: 'list', allowBlank: true,
-          formulae: ['"' + optionValues.join(',') + '"'],
-          showErrorMessage: true,
-          errorTitle: T('Geçersiz durum', 'Invalid status'),
-          error: optionValues.join(' / '),
+      excelRow.height = imageColumn ? 38 : 22;
+
+      infoDefinitions.forEach(function (definition) {
+        const colNo = columns.findIndex(function (column) { return column.key === definition.id; }) + 1;
+        const cell = excelRow.getCell(colNo);
+        cell.protection = { locked: true };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF4F6F8' } };
+        if (definition.type === 'date') {
+          const date = valueForExcelColumn(definition, row);
+          cell.value = date || '';
+          cell.numFmt = EXCEL_DATE_FORMAT;
+          cell.dataValidation = dateValidation();
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        } else {
+          cell.alignment = { vertical: 'middle', wrapText: false };
+        }
+      });
+
+      items.forEach(function (item, index) {
+        const applicable = Boolean(analysis && itemApplies(item, analysis));
+        const statusCell = excelRow.getCell(statusColumns[index]);
+        const noteCell = excelRow.getCell(noteColumns[index]);
+        statusCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+        noteCell.alignment = { vertical: 'middle', wrapText: true };
+        statusCell.protection = { locked: !applicable };
+        noteCell.protection = { locked: !applicable };
+        const fill = applicable ? 'FFFFFFFF' : 'FFF0F2F4';
+        statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } };
+        noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } };
+        if (applicable) {
+          statusCell.dataValidation = {
+            type: 'list', allowBlank: false,
+            formulae: ['"' + optionValues.join(',') + '"'],
+            showErrorMessage: true,
+            errorTitle: T('Geçersiz durum', 'Invalid status'),
+            error: optionValues.join(' / '),
+            showInputMessage: true,
+            promptTitle: T('Checklist Durumu', 'Checklist Status'),
+            prompt: T('Listeden bir durum seçin.', 'Choose a status from the list.'),
+          };
+        }
+      });
+
+      if (imageColumn) {
+        const prepared = await prepareRowModelImage(row);
+        const extension = preparedImageExtension(prepared && prepared.dataUrl);
+        if (prepared && extension) {
+          try {
+            const imageId = workbook.addImage({ base64: prepared.dataUrl, extension: extension });
+            sheet.addImage(imageId, imagePlacement(prepared, excelRow.number, imageColumn));
+          } catch (_) {}
+        }
+      }
+    }
+
+    const header = sheet.getRow(1);
+    header.height = 28;
+    header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    header.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    header.eachCell({ includeEmpty: true }, function (cell) {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF26364A' } };
+      cell.protection = { locked: true };
+    });
+    sheet.eachRow({ includeEmpty: false }, function (row, rowNo) {
+      if (rowNo === 1) return;
+      row.eachCell({ includeEmpty: true }, function (cell) {
+        cell.border = {
+          top: { style: 'hair', color: { argb: 'FFD9DEE5' } },
+          left: { style: 'hair', color: { argb: 'FFD9DEE5' } },
+          bottom: { style: 'hair', color: { argb: 'FFD9DEE5' } },
+          right: { style: 'hair', color: { argb: 'FFD9DEE5' } },
         };
       });
     });
-    sheet.getRow(1).font = { bold: true };
-    sheet.getRow(1).alignment = { vertical: 'middle', wrapText: true };
-    sheet.eachRow({ includeEmpty: false }, function (row, rowNo) {
-      if (rowNo > 1) row.alignment = { vertical: 'middle', wrapText: true };
-    });
+
     const technicalStart = columns.length - 1;
     sheet.getColumn(technicalStart).hidden = true;
     sheet.getColumn(technicalStart + 1).hidden = true;
+    await sheet.protect(EXCEL_PROTECTION_PASSWORD, {
+      selectLockedCells: false,
+      selectUnlockedCells: true,
+      formatCells: false,
+      formatColumns: false,
+      formatRows: false,
+      insertColumns: false,
+      insertRows: false,
+      deleteColumns: false,
+      deleteRows: false,
+      sort: true,
+      autoFilter: true,
+    });
 
     const meta = workbook.addWorksheet(META_SHEET);
     meta.state = 'veryHidden';
@@ -556,7 +798,7 @@
     meta.addRow(['supplier', supplierNameFor(rows)]);
     meta.addRow(['statusColumn', 'noteColumn', 'itemId', 'tr', 'en', 'questionTr', 'questionEn']);
     items.forEach(function (item, index) {
-      meta.addRow([7 + index * 2, 8 + index * 2, item.id, item.tr, item.en, item.questionTr, item.questionEn]);
+      meta.addRow([statusColumns[index], noteColumns[index], item.id, item.tr, item.en, item.questionTr, item.questionEn]);
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -688,28 +930,79 @@
 
   function ensureUi() {
     const menu = root.document && root.document.getElementById('cpToolsMenu');
-    if (!menu || root.document.getElementById('cpSupplierChecklistExportBtn')) return;
-    const exportBtn = root.document.createElement('button');
-    exportBtn.type = 'button'; exportBtn.className = 'tbtn'; exportBtn.id = 'cpSupplierChecklistExportBtn';
-    exportBtn.innerHTML = '<svg class="ic"><use href="#i-file-export"/></svg><span>' + T('Üretici Checklist Excel’i Oluştur', 'Create Supplier Checklist Excel') + '</span>';
-    exportBtn.title = T('Seçili CP siparişlerini aktif checklist başlıklarıyla üretici Excel’ine aktar', 'Export selected CP orders with active checklist headings to a supplier workbook');
+    if (!menu || root.document.getElementById('cpChecklistToolsWrap')) return;
 
-    const importBtn = root.document.createElement('button');
-    importBtn.type = 'button'; importBtn.className = 'tbtn'; importBtn.id = 'cpSupplierChecklistImportBtn';
-    importBtn.innerHTML = '<svg class="ic"><use href="#i-file-import"/></svg><span>' + T('Üretici Checklist Excel’ini İçeri Aktar', 'Import Supplier Checklist Excel') + '</span>';
-    importBtn.title = T('Üreticinin doldurduğu Buyer Log checklist Excel’ini içeri aktar', 'Import a Buyer Log checklist workbook completed by the supplier');
+    const wrap = root.document.createElement('div');
+    wrap.className = 'toolbarMoreWrap';
+    wrap.id = 'cpChecklistToolsWrap';
+    wrap.style.position = 'relative';
+
+    const trigger = root.document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'tbtn';
+    trigger.id = 'cpChecklistToolsBtn';
+    trigger.setAttribute('aria-haspopup', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.innerHTML = '<svg class="ic"><use href="#i-checklist"/></svg><span>Checklist</span>';
+
+    const sub = root.document.createElement('div');
+    sub.className = 'toolbarMoreMenu';
+    sub.id = 'cpChecklistToolsMenu';
+    sub.hidden = true;
+    sub.style.left = 'calc(100% + 6px)';
+    sub.style.top = '0';
+    sub.style.minWidth = '240px';
+    sub.innerHTML = '<div class="toolbarMoreLabel">CHECKLIST</div>'
+      + '<button type="button" class="tbtn" data-checklist-excel-create><svg class="ic"><use href="#i-file-export"/></svg><span>Create Checklist Excel</span></button>'
+      + '<button type="button" class="tbtn" data-checklist-excel-import><svg class="ic"><use href="#i-file-import"/></svg><span>Import Checklist Excel</span></button>'
+      + '<button type="button" class="tbtn" data-checklist-excel-columns><svg class="ic"><use href="#i-columns"/></svg><span>Checklist Excel Columns</span></button>';
 
     const input = root.document.createElement('input');
-    input.type = 'file'; input.id = 'cpSupplierChecklistImportFile'; input.accept = '.xlsx,.xlsm'; input.hidden = true;
-    menu.appendChild(exportBtn); menu.appendChild(importBtn); menu.appendChild(input);
+    input.type = 'file';
+    input.id = 'cpChecklistExcelImportFile';
+    input.accept = '.xlsx,.xlsm';
+    input.hidden = true;
 
-    exportBtn.addEventListener('click', function () {
-      exportWorkbook().catch(function (error) { toast(T('Checklist Excel oluşturulamadı: ', 'Checklist workbook could not be created: ') + (error.message || error)); });
+    wrap.appendChild(trigger);
+    wrap.appendChild(sub);
+    menu.appendChild(wrap);
+    menu.appendChild(input);
+
+    const closeSub = function () {
+      sub.hidden = true;
+      trigger.setAttribute('aria-expanded', 'false');
+    };
+    trigger.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      sub.hidden = !sub.hidden;
+      trigger.setAttribute('aria-expanded', sub.hidden ? 'false' : 'true');
     });
-    importBtn.addEventListener('click', function () { input.value = ''; input.click(); });
+    sub.addEventListener('click', function (event) { event.stopPropagation(); });
+    root.document.addEventListener('click', function (event) {
+      if (!wrap.contains(event.target)) closeSub();
+    });
+
+    sub.querySelector('[data-checklist-excel-create]').addEventListener('click', function () {
+      closeSub();
+      exportWorkbook().catch(function (error) {
+        toast(T('Checklist Excel oluşturulamadı: ', 'Checklist workbook could not be created: ') + (error.message || error));
+      });
+    });
+    sub.querySelector('[data-checklist-excel-import]').addEventListener('click', function () {
+      closeSub();
+      input.value = '';
+      input.click();
+    });
+    sub.querySelector('[data-checklist-excel-columns]').addEventListener('click', function () {
+      closeSub();
+      openExcelColumnsDialog();
+    });
     input.addEventListener('change', function () {
       const file = input.files && input.files[0];
-      importWorkbook(file).catch(function (error) { toast(T('Checklist Excel içe aktarılamadı: ', 'Checklist workbook could not be imported: ') + (error.message || error)); });
+      importWorkbook(file).catch(function (error) {
+        toast(T('Checklist Excel içe aktarılamadı: ', 'Checklist workbook could not be imported: ') + (error.message || error));
+      });
     });
   }
 
@@ -786,6 +1079,9 @@
     normalizeState: normalizeState,
     diffAnswers: diffAnswers,
     columnKey: columnKey,
+    excelDate: excelDate,
+    excelColumnIds: excelColumnIds,
+    saveExcelColumnIds: saveExcelColumnIds,
     _state: state,
   };
 }));
