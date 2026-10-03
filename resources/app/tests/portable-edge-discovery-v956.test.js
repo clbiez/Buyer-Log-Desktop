@@ -16,8 +16,8 @@
  * LOCALAPPDATA yüzünden paketin içinde AYRI PROFİL açıyordu.
  *
  * Korunan asıl kusur: portable'ın kendi kendini yalıtması, kullanıcının GERÇEK
- * Edge oturumunu görmesini engellememeli — PLM aktarımı, CoreNectum görselleri
- * ve Troy entegrasyonu bu oturuma bağlı.
+ * Edge oturumunu görmesini engellememeli — PLM aktarımı ve CoreNectum görselleri
+ * bu oturuma bağlı.
  */
 
 const test = require('node:test');
