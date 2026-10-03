@@ -950,6 +950,7 @@
     sub.id = 'cpChecklistToolsMenu';
     sub.hidden = true;
     sub.style.left = 'calc(100% + 6px)';
+    sub.style.right = 'auto';
     sub.style.top = '0';
     sub.style.minWidth = '240px';
     sub.innerHTML = '<div class="toolbarMoreLabel">CHECKLIST</div>'
