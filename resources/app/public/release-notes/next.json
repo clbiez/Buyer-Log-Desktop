@@ -164,14 +164,14 @@
       },
       "visual": {
         "kind": "screenshot",
-        "src": "cp-checklist-cells.png",
+        "src": "checklist-statuses.png",
         "alt": {
-          "tr": "CP checklist hücresinde durum seçimi (demo veri)",
-          "en": "Picking a status in a CP checklist cell (demo data)"
+          "tr": "Checklist durum seçimi: Bekliyor, Onaylandı, Reddedildi ve Gerekmiyor (demo veri)",
+          "en": "Checklist status selection: Pending, Approved, Rejected and Not Required (demo data)"
         },
         "caption": {
-          "tr": "Klavye: ok tuşları ve Enter ile seçilir.",
-          "en": "Keyboard: choose with the arrow keys and Enter."
+          "tr": "CP checklist hücreleri aynı dört kanonik durumu kullanır.",
+          "en": "CP checklist cells use the same four canonical statuses."
         },
         "capture": "post-change"
       }
