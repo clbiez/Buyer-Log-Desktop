@@ -417,6 +417,9 @@
           orderKey: parts.orderKey, itemId: parts.itemId, state: normalized,
           at: localAt || isoNow(), baseAt: remoteAt,
           loadDate: localAnswer.loadDate || null, note: localAnswer.note || '',
+          reportNumber: localAnswer.reportNumber || '',
+          actualDate: localAnswer.actualDate || '',
+          attachments: Array.isArray(localAnswer.attachments) ? localAnswer.attachments : [],
           source: localAnswer.source || 'buyer_log',
         });
       });
