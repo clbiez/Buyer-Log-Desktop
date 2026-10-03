@@ -1,14 +1,147 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Checklist akışı ve üretici paylaşımı güçlendirildi",
+    "en": "Checklist workflow and supplier sharing enhanced"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Checklist onay kapsamları, rapor/tarih/ek kanıtları, kalıcı kayıt ve üreticiye Excel + e-posta hazırlama akışı birlikte geliştirildi.",
+    "en": "Checklist approval scopes, report/date/attachment evidence, durable saving, and the supplier Excel + e-mail preparation flow were enhanced together."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "checklist-approval-scope",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "Onaylar PO veya ürün seçeneği bazında çalışabiliyor",
+        "en": "Approvals can work per PO or per product option"
+      },
+      "body": {
+        "tr": "Her checklist için onayın her PO’da yeniden istenmesi veya PLM ID + Model Adı + Renk Kodu eşleşen sonraki siparişlerde tekrar kullanılması seçilebiliyor. Yalnız Onaylandı durumu taşınır; Reddedildi ve Gerekmiyor PO’ya özel kalır.",
+        "en": "Each checklist can require approval on every PO or reuse it for later orders with the same PLM ID + Model Name + Colour Code. Only Approved carries forward; Rejected and Not Required remain PO-specific."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-workflow-7.0.223.png",
+        "alt": {
+          "tr": "CP Tracker checklist sütunları ve durum alanları",
+          "en": "CP Tracker checklist columns and status fields"
+        },
+        "caption": {
+          "tr": "Checklist durumlarının yönetildiği CP alanı.",
+          "en": "The CP area where checklist statuses are managed."
+        }
+      },
+      "path": {
+        "tr": "CP Tracker → Checklist Settings → Onay geçerliliği",
+        "en": "CP Tracker → Checklist Settings → Approval scope"
+      }
+    },
+    {
+      "id": "checklist-evidence",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "Rapor numarası, gerçekleşme tarihi ve ek kanıtları",
+        "en": "Report number, actual date and evidence attachments"
+      },
+      "body": {
+        "tr": "Checklist durumlarına rapor numarası, gerçekleşme tarihi ve rapor/e-mail dosyaları eklenebiliyor. Ekler Buyer Log’da saklanıyor ve sipariş/model/checklist bilgileriyle standart biçimde yeniden adlandırılıyor.",
+        "en": "Checklist statuses can now store a report number, actual date, and report/e-mail files. Attachments are stored in Buyer Log and renamed consistently with order/model/checklist information."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-workflow-7.0.223.png",
+        "alt": {
+          "tr": "CP Tracker checklist sütunları ve durum alanları",
+          "en": "CP Tracker checklist columns and status fields"
+        },
+        "caption": {
+          "tr": "Checklist durumlarının yönetildiği CP alanı.",
+          "en": "The CP area where checklist statuses are managed."
+        }
+      },
+      "path": {
+        "tr": "CP Tracker → Checklist durumu → Checklist Detayları / Ekler",
+        "en": "CP Tracker → Checklist status → Checklist Details / Attachments"
+      }
+    },
+    {
+      "id": "supplier-checklist-email",
+      "type": "feature",
+      "module": {
+        "tr": "Checklist Excel · Prepare E-Mail",
+        "en": "Checklist Excel · Prepare E-Mail"
+      },
+      "title": {
+        "tr": "Üreticiye Checklist Exceli Hazırla akışı",
+        "en": "Prepare Supplier Checklist flow"
+      },
+      "body": {
+        "tr": "Yeni komut seçili üretici için Checklist Excel’i ve ilgili checklist eklerini birlikte hazırlayıp Prepare E-Mail ekranında taslaktan önce gösteriyor. Create Draft E-Mail sırasında aynı ekler kullanılıyor ve 9,5 MB sınırı mevcut sıkıştırma/bölme mekanizmasıyla korunuyor.",
+        "en": "The new command prepares the Checklist Excel and related checklist attachments for the selected supplier, then shows them in Prepare E-Mail before draft creation. Create Draft E-Mail uses the same files and keeps the existing 9.5 MB compression/splitting limit."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-workflow-7.0.223.png",
+        "alt": {
+          "tr": "CP Tracker checklist sütunları ve durum alanları",
+          "en": "CP Tracker checklist columns and status fields"
+        },
+        "caption": {
+          "tr": "Checklist durumlarının yönetildiği CP alanı.",
+          "en": "The CP area where checklist statuses are managed."
+        }
+      },
+      "path": {
+        "tr": "CP Tracker → Tools → Checklist → Üreticiye Checklist Exceli Hazırla",
+        "en": "CP Tracker → Tools → Checklist → Prepare Supplier Checklist"
+      }
+    },
+    {
+      "id": "checklist-durable-save-excel-images",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Checklist Excel",
+        "en": "CP Tracker · Checklist Excel"
+      },
+      "title": {
+        "tr": "Checklist değişiklikleri kaybolmuyor, model görselleri Excel’e gömülüyor",
+        "en": "Checklist edits persist and model images are embedded in Excel"
+      },
+      "body": {
+        "tr": "CP’de hızlı veya ardışık checklist durum değişiklikleri kuyruklu ve tekrar denemeli kayıt akışıyla korunuyor. Checklist Excel’de model görselleri dosyanın içine gömülüyor ve hücrelerle taşı/boyutlandır davranışıyla yerleştiriliyor.",
+        "en": "Rapid or consecutive checklist status changes in CP are protected by queued, retryable persistence. Model images are embedded in the Checklist Excel file and anchored to move and resize with cells."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-workflow-7.0.223.png",
+        "alt": {
+          "tr": "CP Tracker checklist sütunları ve durum alanları",
+          "en": "CP Tracker checklist columns and status fields"
+        },
+        "caption": {
+          "tr": "Checklist durumlarının yönetildiği CP alanı.",
+          "en": "The CP area where checklist statuses are managed."
+        }
+      },
+      "path": {
+        "tr": "CP Tracker → Checklist / Create Checklist Excel",
+        "en": "CP Tracker → Checklist / Create Checklist Excel"
+      }
+    }
+  ]
 }
