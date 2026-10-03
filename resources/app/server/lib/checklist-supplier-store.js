@@ -227,9 +227,12 @@ function applyEntries(entries, actor, options = {}) {
       const previous = store.answers[key];
       const tomb = store.tombstones[key];
       const previousAt = previous ? String(previous.at || '') : tomb ? String(tomb.at || '') : '';
-      // Supplier Excel carries the export timestamp as baseAt. If Buyer Log was
-      // changed after that export, the stale workbook must not overwrite it.
-      if (baseAt && previousAt && previousAt > baseAt) { conflicts += 1; continue; }
+      // Supplier Excel carries the export timestamp as baseAt. Only an imported
+      // supplier workbook is conflict-gated by that old snapshot. An explicit CP
+      // edit is a live Buyer Log action and must not be discarded merely because
+      // its client baseline is older; normal "at" ordering below still prevents
+      // an actually older live event from overwriting a newer one.
+      if (source === 'supplier_excel' && baseAt && previousAt && previousAt > baseAt) { conflicts += 1; continue; }
       const common = {
         key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
         byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
