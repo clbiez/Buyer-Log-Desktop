@@ -8,7 +8,7 @@
  *    güvenilirliği biter; bu yüzden motor teslimat sınıflandırmasını kendisi
  *    yapmaz ve test bunu birebir ölçer.
  * 2) CP'de KARŞILIĞI OLMAYAN veriden (PPS, test, kumaş hazırlığı, aksesuar,
- *    üretim aşaması, üretici teyidi, Troy tarihi) uyarı üretmek. Var olmayan
+ *    üretim aşaması, üretici teyidi) uyarı üretmek. Var olmayan
  *    alan "eksik" değildir; motor bunu UNAVAILABLE_DIMENSIONS olarak
  *    raporlamak zorundadır.
  *
