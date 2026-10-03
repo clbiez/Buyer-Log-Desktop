@@ -45,6 +45,7 @@
   /* CP satırının GERÇEK anahtarları (parse.js buildOrderRowsFromASAS). */
   const F = Object.freeze({
     orderCode: 'Order Code',
+    plmId: 'PLM ID',
     model: 'Model Name',
     colourCode: 'C.Code',
     colour: 'Colour',
@@ -374,6 +375,7 @@
       dateSync,
       orderKey: `${text(row && row[F.orderCode])}|${dimKey(row && row[F.model])}|${dimKey(row && row[F.colourCode])}`,
       orderCode: text(row && row[F.orderCode]),
+      plmId: text(row && row[F.plmId]),
       modelName: text(row && row[F.model]),
       colourCode: text(row && row[F.colourCode]),
       qty, status, stage,
