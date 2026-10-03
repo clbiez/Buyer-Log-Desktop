@@ -432,7 +432,7 @@ function realQueryDeps(schema, onQuery) {
     antrepoGrainTable: modelRefresh.antrepoGrainTable,
     discoverSchema: async () => schema,
     queryConnectionRows: (clone, opts) => modelRefresh.queryConnectionRows(clone, {
-      ...opts, discoverSchema: async () => schema, columnType: false,
+      ...opts, discoverSchema: async () => schema,
       runModelRows: async q => onQuery(q.query),
     }),
   };
@@ -441,13 +441,20 @@ function realQueryDeps(schema, onQuery) {
 test('IAS database sorgusu kapsam ufkuyla kurulu bağlantıda fact satır tablosundan ve tarih penceresiyle kurulur', async () => {
   const source = require('../server/lib/transit-analysis-source');
   const item = scopedIasItem();
-  const schema = { columns: [...Object.values(item.mapping), iasCol(IAS_F, 'Ürün Menşei')], measures: [] };
+  // Regresyon: bazı SSAS kurulumları tarih hiyerarşisini metadata'da WSTR
+  // (130/text) raporluyor; gerçek DAX sütunu Date. Modül ufku buna rağmen
+  // DATE(...) literal üretmeli ve Date-vs-Text hatasına düşmemeli.
+  const schema = { columns: [
+    ...Object.values(item.mapping).map(entry => entry.name === 'Tahmini Antrepo Giriş Tarihi' ? { ...entry, dataType: '130' } : entry),
+    iasCol(IAS_F, 'Ürün Menşei'),
+  ], measures: [] };
   let dax = '';
   const result = await source.queryCompanyIasRows({ item, matchRule: null, fromDate: '2026-07-01', toDate: '2026-10-03',
     deps: realQueryDeps(schema, query => { dax = query; return { rows: [] }; }) });
   assert.deepEqual(result.addedFields, ['Ürün Menşei']);
   assert.match(dax, /SELECTCOLUMNS\(\s*CALCULATETABLE\(\s*'Fact_Ithalat',\s*FILTER\(\s*'Fact_Ithalat',/, 'satır ve filtre tablosu IAS fact tablosu');
   assert.match(dax, /'Fact_Ithalat'\[Tahmini Antrepo Giriş Tarihi\] >= DATE\(2026, 7, 1\) && 'Fact_Ithalat'\[Tahmini Antrepo Giriş Tarihi\] <= DATE\(2026, 10, 3\)/);
+  assert.doesNotMatch(dax, /Tahmini Antrepo Giriş Tarihi[^\n]*>=\s*"2026-07-01"/, 'modül ufku tarih literalini text üretmez');
   assert.match(dax, /"İthalat Dosya No", 'Fact_Ithalat'\[İthalat Dosya No\]/, 'fact sütunları doğrudan okunur');
   assert.match(dax, /"Ürün Menşei", 'Fact_Ithalat'\[Ürün Menşei\]/);
   assert.doesNotMatch(dax, /Sezon|SS26/, 'kullanıcı/sezon ufku uygulanmaz');
