@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.211",
-  "commit_sha": "f03544c70c49f3def3b8a091706553d68439856b",
-  "release_notes": "Buyer Log 7.0.211: Görsel ve iki dilli stable sürüm arşivi; kümülatif ilk-açılış yenilik akışı; Version History üzerinden kalıcı erişim; sonraki stable sürümler için TR/EN + gerçek Buyer Log ekran görüntüsü release sözleşmesi."
+  "version": "7.0.212",
+  "commit_sha": "dd7c23f8f6d8e83742c1f45a6c9948dfbfa8edcf",
+  "release_notes": "Buyer Log 7.0.212: Excel ve e-posta tablolarından çok sütunlu veriler artık satır ilişkisini koruyarak aranır. Yapıştırılan satırlar (A; 1), (B; 2) biçiminde bağımsız gruplara dönüşür; parantez içi koşullar birlikte, gruplar birbirine alternatif olarak eşleşir. Mevcut arama sözdizimi geriye dönük uyumludur."
 }
