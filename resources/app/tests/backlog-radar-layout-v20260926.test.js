@@ -73,7 +73,9 @@ test('Teslimat Riski Analizi gövdesi kullanıcı tarafından gizlenip gösteril
   assert.match(ANALYSIS,/collapsed: false/);
   assert.match(ANALYSIS,/saved\.collapsed/);
   assert.match(ANALYSIS,/collapsed: state\.collapsed/);
-  assert.match(ANALYSIS,/data-action="toggleAnalysis"/);
+  assert.match(ANALYSIS,/class="bdaTitle bdaTitleToggle" data-action="toggleAnalysis"/);
+  assert.doesNotMatch(ANALYSIS,/bdaAnalysisToggle|Analizi Göster|Show Analysis|Analizi Gizle|Hide Analysis/);
+  assert.match(CSS,/\.bdaTitleToggle/);
   assert.match(ANALYSIS,/state\.collapsed = !state\.collapsed; save\(\); render\(\)/);
   assert.match(ANALYSIS,/if \(state\.collapsed\) \{ host\.innerHTML = renderHeader\(\); bind\(host\); return; \}/);
 });
