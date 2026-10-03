@@ -45,6 +45,19 @@ test('model-option stats keeps 10 models with three colours as 10/30', () => {
   assert.deepEqual(stats.getModelOptionStats(rows), { rowCount: 30, modelCount: 10, optionCount: 30 });
 });
 
+test('table identity stats collapse repeated PLM/model/colour while counting distinct orders', () => {
+  const rows = [
+    { 'PLM ID': '2091598', 'Model Name': 'KK.BDY,FORMULA-10-YD', 'C.Code': 'S7B130Z4', 'Order Code': '1361082' },
+    { 'PLM ID': '2091598', 'Model Name': 'KK.BDY,FORMULA-10-YD', 'C.Code': 'S7B130Z4', 'Order Code': '1364522' },
+    { 'PLM ID': '2091598', 'Model Name': 'KK.BDY,FORMULA-10-YD', 'C.Code': 'S7B130Z4', 'Order Code': '1364522' },
+  ];
+  const result = stats.getModelOptionStats(rows, { optionMode: 'unique' });
+  assert.equal(result.rowCount, 3);
+  assert.equal(result.modelCount, 1);
+  assert.equal(result.optionCount, 1);
+  assert.equal(stats.getOrderCount(rows), 2);
+});
+
 test('model-option stats prefers PLM plus model name, normalizes text, and has safe missing-ID fallback', () => {
   const result = stats.getModelOptionStats([
     { plmId: '1001', modelKod: ' ABC MODEL ' },
@@ -85,6 +98,8 @@ test('all visible-row summaries use the shared model/option counter', () => {
   assert.match(INDEX, /model-option-stats\.js/);
   assert.match(APP, /function pageModelOptionStats\(rows/);
   assert.match(APP, /getModelOptionStats\(rows/);
+  assert.match(APP, /optionMode:'unique'/);
+  assert.match(APP, /orderCount.*Order/);
   assert.match(APP, /Model.*Opsiyon|Models.*Options/);
   assert.match(SUMMARY, /BLModelOptionStats|modelKey/);
   assert.match(ANALYTICS, /BLModelOptionStats|modelKey/);
