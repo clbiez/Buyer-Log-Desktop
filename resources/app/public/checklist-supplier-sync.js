@@ -1017,21 +1017,41 @@
         const applicable = Boolean(analysis && itemApplies(item, analysis));
         const statusCell = excelRow.getCell(statusColumns[index]);
         const noteCell = excelRow.getCell(noteColumns[index]);
+        const evidenceCells = [
+          reportColumns[index] ? { cell: excelRow.getCell(reportColumns[index]), kind: 'reportNumber' } : null,
+          actualDateColumns[index] ? { cell: excelRow.getCell(actualDateColumns[index]), kind: 'actualDate' } : null,
+          attachmentColumns[index] ? { cell: excelRow.getCell(attachmentColumns[index]), kind: 'attachments' } : null,
+        ].filter(Boolean);
         statusCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
         noteCell.alignment = { vertical: 'middle', wrapText: true };
         statusCell.protection = { locked: !applicable };
         noteCell.protection = { locked: !applicable };
+        evidenceCells.forEach(function (entry) {
+          entry.cell.alignment = { vertical: 'middle', horizontal: entry.kind === 'actualDate' ? 'center' : 'left', wrapText: true };
+          // Ek dosya isimleri bilgi amaçlıdır; dosyanın kendisi Buyer Log'dadır.
+          // Rapor No ve Gerçekleşme Tarihi ise üretici Excel'inden güncellenebilir.
+          entry.cell.protection = { locked: !applicable || entry.kind === 'attachments' };
+          if (entry.kind === 'actualDate') {
+            entry.cell.numFmt = EXCEL_DATE_FORMAT;
+            entry.cell.dataValidation = dateValidation();
+          }
+        });
         if (applicable) {
           const tone = checklistStatusTone(statusCell.value);
           statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: tone.bg } };
           statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: tone.fg } };
           noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.accBg } };
           noteCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.ink } };
+          evidenceCells.forEach(function (entry) {
+            const editable = entry.kind !== 'attachments';
+            entry.cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: editable ? CHECKLIST_EXCEL_COLORS.accBg : CHECKLIST_EXCEL_COLORS.paper } };
+            entry.cell.font = { name: 'Segoe UI', size: 9, color: { argb: editable ? CHECKLIST_EXCEL_COLORS.ink : CHECKLIST_EXCEL_COLORS.muted } };
+          });
         } else {
-          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
-          noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
-          statusCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
-          noteCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
+          [statusCell, noteCell].concat(evidenceCells.map(function (entry) { return entry.cell; })).forEach(function (cell) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
+            cell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
+          });
         }
         if (applicable) {
           statusCell.dataValidation = {
@@ -1066,6 +1086,7 @@
       const cell = header.getCell(index + 1);
       const fill = column.checklistStatus ? CHECKLIST_EXCEL_COLORS.acc
         : column.checklistNote ? CHECKLIST_EXCEL_COLORS.gold
+        : column.checklistEvidence ? (column.checklistEvidence === 'attachments' ? CHECKLIST_EXCEL_COLORS.muted : CHECKLIST_EXCEL_COLORS.green)
         : column.hidden ? CHECKLIST_EXCEL_COLORS.muted
         : CHECKLIST_EXCEL_COLORS.navy;
       cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: CHECKLIST_EXCEL_COLORS.white } };
@@ -1132,16 +1153,22 @@
     meta.addRow(['BUYER_LOG_CHECKLIST_SUPPLIER', SCHEMA_VERSION]);
     meta.addRow(['exportedAt', exportedAt]);
     meta.addRow(['supplier', supplierNameFor(rows)]);
-    meta.addRow(['statusColumn', 'noteColumn', 'itemId', 'tr', 'en', 'questionTr', 'questionEn']);
+    meta.addRow(['statusColumn', 'noteColumn', 'reportColumn', 'actualDateColumn', 'attachmentsColumn', 'itemId', 'tr', 'en', 'questionTr', 'questionEn']);
     items.forEach(function (item, index) {
-      meta.addRow([statusColumns[index], noteColumns[index], item.id, item.tr, item.en, item.questionTr, item.questionEn]);
+      meta.addRow([
+        statusColumns[index], noteColumns[index], reportColumns[index] || 0, actualDateColumns[index] || 0, attachmentColumns[index] || 0,
+        item.id, item.tr, item.en, item.questionTr, item.questionEn,
+      ]);
     });
 
     const buffer = await workbook.xlsx.writeBuffer();
     const stamp = new Date().toISOString().slice(0, 10);
-    downloadBuffer(buffer, 'BuyerLog_Checklist_' + safeFilePart(supplierNameFor(rows)) + '_' + stamp + '.xlsx');
-    toast(T('Üretici checklist Excel’i oluşturuldu.', 'Supplier checklist workbook created.'));
-    return true;
+    const filename = 'BuyerLog_Checklist_' + safeFilePart(supplierNameFor(rows)) + '_' + stamp + '.xlsx';
+    if (opts.download !== false) {
+      downloadBuffer(buffer, filename);
+      toast(T('Üretici checklist Excel’i oluşturuldu.', 'Supplier checklist workbook created.'));
+    }
+    return { ok: true, buffer: buffer, filename: filename, rows: rows, supplier: supplierNameFor(rows) };
   }
 
   function readMeta(workbook) {
@@ -1150,22 +1177,33 @@
       throw new Error(T('Bu dosya Buyer Log üretici checklist şablonu değil.', 'This is not a Buyer Log supplier checklist workbook.'));
     }
     const version = Number(meta.getCell('B1').value) || 0;
-    if (version !== SCHEMA_VERSION) throw new Error(T('Checklist Excel şablon sürümü desteklenmiyor.', 'Checklist workbook schema version is not supported.'));
+    if (version < 1 || version > SCHEMA_VERSION) throw new Error(T('Checklist Excel şablon sürümü desteklenmiyor.', 'Checklist workbook schema version is not supported.'));
     const exportedAt = text(meta.getCell('B2').text || meta.getCell('B2').value);
     const items = [];
     for (let rowNo = 5; rowNo <= meta.rowCount; rowNo += 1) {
       const row = meta.getRow(rowNo);
-      const itemId = text(row.getCell(3).text || row.getCell(3).value);
+      const itemIdColumn = version >= 2 ? 6 : 3;
+      const itemId = text(row.getCell(itemIdColumn).text || row.getCell(itemIdColumn).value);
       if (!itemId) continue;
-      items.push({
+      items.push(version >= 2 ? {
         statusColumn: Number(row.getCell(1).value) || 0,
         noteColumn: Number(row.getCell(2).value) || 0,
+        reportColumn: Number(row.getCell(3).value) || 0,
+        actualDateColumn: Number(row.getCell(4).value) || 0,
+        attachmentsColumn: Number(row.getCell(5).value) || 0,
+        id: itemId,
+        tr: text(row.getCell(7).text || row.getCell(7).value),
+        en: text(row.getCell(8).text || row.getCell(8).value),
+      } : {
+        statusColumn: Number(row.getCell(1).value) || 0,
+        noteColumn: Number(row.getCell(2).value) || 0,
+        reportColumn: 0, actualDateColumn: 0, attachmentsColumn: 0,
         id: itemId,
         tr: text(row.getCell(4).text || row.getCell(4).value),
         en: text(row.getCell(5).text || row.getCell(5).value),
       });
     }
-    return { exportedAt: exportedAt, items: items };
+    return { version: version, exportedAt: exportedAt, items: items };
   }
 
   function headerIndex(sheet, label) {
@@ -1224,6 +1262,18 @@
         if (!item) { invalid += 1; return; }
         if (analysis && !itemApplies(item, analysis)) { notApplicable += 1; return; }
         const noteCell = metaItem.noteColumn ? row.getCell(metaItem.noteColumn) : null;
+        const reportCell = metaItem.reportColumn ? row.getCell(metaItem.reportColumn) : null;
+        const actualDateCell = metaItem.actualDateColumn ? row.getCell(metaItem.actualDateColumn) : null;
+        let actualDate = '';
+        if (actualDateCell && actualDateCell.value) {
+          const date = excelDate(actualDateCell.value);
+          if (date) actualDate = [
+            date.getFullYear(),
+            String(date.getMonth() + 1).padStart(2, '0'),
+            String(date.getDate()).padStart(2, '0'),
+          ].join('-');
+        }
+        const existing = answerFor(item, analysis);
         entries.push({
           orderKey: orderKey,
           itemId: metaItem.id,
@@ -1233,6 +1283,9 @@
           baseAt: meta.exportedAt || '',
           loadDate: loadDate || null,
           note: noteCell ? text(noteCell.text || noteCell.value) : '',
+          ...(metaItem.reportColumn ? { reportNumber: reportCell ? text(reportCell.text || reportCell.value) : '' } : {}),
+          ...(metaItem.actualDateColumn ? { actualDate: actualDate } : {}),
+          attachments: existing && Array.isArray(existing.attachments) ? existing.attachments : [],
           supplier: supplier,
           source: 'supplier_excel',
         });
