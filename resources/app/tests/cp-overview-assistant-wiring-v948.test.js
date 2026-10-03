@@ -87,7 +87,7 @@ test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlene
   assert.doesNotMatch(VIEW, /filter\(rule => !rule\.builtIn\)/, 'yerleşik kurallar gizlenmemeli');
   // Kurallar kullanıcı tercihiyle birlikte saklanmalı.
   assert.match(VIEW, /rules: state\.rules,/);
-  assert.match(VIEW, /Rules\.mergeWithDefaults\(raw\.rules\)/);
+  assert.match(VIEW, /Rules\.mergeWithDefaults\(raw\.rules, state\.deletedRuleIds\)/);
 });
 
 test('v9.49 kural uygulaması sırası doğru: kontrol durumu → öncelik → yeniden sayım', () => {
@@ -242,18 +242,33 @@ test('v9.50 kural penceresi geniş, sekmeli ve tek-açık accordion kullanır', 
   assert.match(CSS, /\.cpaRulesBody\{[^}]*overflow:hidden/);
 });
 
+test('rules modal text selection drag ile backdrop kapanışını tetiklemez', () => {
+  assert.match(VIEW, /let backdropPointerStarted = false/);
+  assert.match(VIEW, /backdropPointerStarted = event\.target === modal/);
+  assert.match(VIEW, /event\.target === modal && backdropPointerStarted/);
+});
+
+test('Checklist Questions ön tanımlı checklist rule kimliklerini kullanır', () => {
+  assert.match(VIEW, /managedItemIds: Rules\.DEFAULT_CHECKLIST_RULE_IDS/);
+  assert.match(VIEW, /Predefined checklist questions/);
+  assert.match(VIEW, /data-cpa-open-rules/);
+});
+
 test('kural penceresinde uzun liste bağımsız olarak dikey kaydırılır', () => {
   assert.match(CSS, /\.cpaRulesBody\{[^}]*overflow:hidden/);
   assert.match(CSS, /\.cpaRuleList\{[^}]*flex:1 1 auto[^}]*overflow-y:auto/);
   assert.match(CSS, /\.cpaRuleList\{[^}]*overscroll-behavior:contain/);
 });
 
-test('v9.50 kural satırı kompakt özet, açıklamalı switch ve built-in badge kullanır', () => {
+test('kural satırı built-in dahil düzenleme ve silme aksiyonlarını gösterir', () => {
   assert.match(VIEW, /class="cpaSwitch"/);
   assert.match(VIEW, /class="cpaRuleSummary"/);
   assert.match(VIEW, /class="cpaBuiltIn"/);
+  assert.match(VIEW, /data-cpa-rule-edit/);
+  assert.match(VIEW, /data-cpa-rule-delete/);
   assert.match(VIEW, /class="cpaRuleChevron"/);
-  assert.match(VIEW, /rule\.builtIn \? `<span class="cpaBuiltIn"[^`]*` : `<button[^`]*data-cpa-rule-delete/);
+  assert.match(VIEW, /deletedRuleIds: state\.deletedRuleIds/);
+  assert.match(VIEW, /Rules\.mergeWithDefaults\(raw\.rules, state\.deletedRuleIds\)/);
   assert.match(CSS, /\.cpaRuleBar\{[^}]*min-height:48px/);
   assert.match(CSS, /\.cpaCondLabels,\.cpaCondRow\{[^}]*40fr[^}]*25fr[^}]*35fr/);
 });

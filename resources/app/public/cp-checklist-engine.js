@@ -145,6 +145,12 @@
 
   function answerKey(orderKey, itemId) { return `${orderKey}::${itemId}`; }
 
+  function managedItemIdsOf(context) {
+    const raw = context && context.managedItemIds;
+    if (raw instanceof Set) return raw;
+    return new Set(Array.isArray(raw) ? raw.map(String) : []);
+  }
+
   /* PLM kanıtı: ctx.plmEvidence(analysis, itemId) → { state:'approved'|'open'|
      'rejected', requestCode, statusName, subTypeName, date } ya da null.
      Yalnız 'approved' soruyu susturur. */
@@ -197,18 +203,21 @@
     /* Kullanıcının kendi tanımladığı kontroller (ör. "Hologram siparişi verildi
        mi?", yalnız belirli lisanslar için). Kapsam koşulu kural motorunda
        değerlendirilir; buraya YALNIZ kapsama giren kontroller gelir. */
+    const managedItemIds = managedItemIdsOf(context);
     for (const item of (Array.isArray(context.customItems) ? context.customItems : [])) {
       const answer = answers[answerKey(analysis.orderKey, item.id)];
       const stale = answerIsStale(answer, analysis);
-      if (answer && !stale) continue;
+      const plm = plmEvidenceOf(context, analysis, item.id);
+      if ((answer && !stale) || plmApproved(plm)) continue;
       open.push({
         id: item.id, group: item.group || 'custom', custom: true,
         tr: item.tr, en: item.en, questionTr: item.questionTr, questionEn: item.questionEn,
         daysToLoad: analysis.daysToLoad, orderAgeDays: analysis.orderAgeDays,
-        reopened: Boolean(stale), previousAnswer: stale ? answer : null,
+        reopened: Boolean(stale), previousAnswer: stale ? answer : null, plm,
       });
     }
     for (const item of ITEMS) {
+      if (managedItemIds.has(item.id)) continue;
       const config = settings.items[item.id];
       if (!itemApplies(item, config, analysis, settings)) continue;
       const answer = answers[answerKey(analysis.orderKey, item.id)];
@@ -245,7 +254,11 @@
       const answer = answers[answerKey(analysis.orderKey, id)];
       state[id] = (answer && !answerIsStale(answer, analysis)) || plmApproved(plmEvidenceOf(context, analysis, id)) ? 'answered' : 'open';
     };
-    for (const item of ITEMS) mark(item.id, settings.enabled && itemApplies(item, settings.items[item.id], analysis, settings));
+    const managedItemIds = managedItemIdsOf(context);
+    for (const item of ITEMS) {
+      if (managedItemIds.has(item.id)) state[item.id] = 'notApplicable';
+      else mark(item.id, settings.enabled && itemApplies(item, settings.items[item.id], analysis, settings));
+    }
     for (const item of (Array.isArray(context.customItems) ? context.customItems : [])) mark(item.id, settings.enabled);
     return state;
   }
@@ -267,7 +280,7 @@
     // sipariş için hangilerinin geçerli olduğunu verir.
     const customFor = typeof context.customItemsFor === 'function' ? context.customItemsFor : () => [];
     for (const analysis of list) {
-      const open = openItems(analysis, { settings, answers, customItems: customFor(analysis), plmEvidence: context.plmEvidence });
+      const open = openItems(analysis, { settings, answers, customItems: customFor(analysis), plmEvidence: context.plmEvidence, managedItemIds: context.managedItemIds });
       for (const entry of open) {
         if (!buckets.has(entry.id)) buckets.set(entry.id, { id: entry.id, group: entry.group, tr: entry.tr, en: entry.en, questionTr: entry.questionTr, questionEn: entry.questionEn, rows: 0, qty: 0, reopened: 0, plmOpen: 0, plmRejected: 0, orders: [] });
         const bucket = buckets.get(entry.id);
@@ -280,7 +293,9 @@
         openTotal += 1;
       }
       // Cevaplanmış ve hâlâ geçerli olan kontroller: "bu kadarını hallettin".
+      const managedItemIds = managedItemIdsOf(context);
       for (const item of ITEMS) {
+        if (managedItemIds.has(item.id)) continue;
         const config = settings.items[item.id];
         if (!itemApplies(item, config, analysis, settings)) continue;
         const answer = answers[answerKey(analysis.orderKey, item.id)];
@@ -302,7 +317,7 @@
       // answeredTotal içinde, kullanıcı değil PLM onayıyla kapananlar.
       plmAnsweredTotal,
       // Kapalı kontroller: kullanıcı bunları takip etmemeyi SEÇTİ. Eksik değil.
-      disabled: ITEMS.filter(item => !settings.items[item.id].enabled).map(item => ({ id: item.id, tr: item.tr, en: item.en })),
+      disabled: ITEMS.filter(item => !managedItemIdsOf(context).has(item.id) && !settings.items[item.id].enabled).map(item => ({ id: item.id, tr: item.tr, en: item.en })),
     };
   }
 

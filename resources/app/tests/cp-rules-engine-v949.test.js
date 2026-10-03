@@ -68,6 +68,18 @@ test('v9.49 yerleşik tanımlar koda gömülü değil, düzenlenebilir kural ola
   }
 });
 
+test('predefined checklist soruları kural editöründe yerleşik kurallar olarak görünür', () => {
+  assert.deepEqual(Rules.DEFAULT_CHECKLIST_RULE_IDS, Checklist.ITEMS.map(item => item.id));
+  for (const item of Checklist.ITEMS) {
+    const rule = Rules.DEFAULT_RULES.find(candidate => candidate.id === item.id);
+    assert.ok(rule, `${item.id} kural listesinde görünmeli`);
+    assert.equal(rule.kind, 'checklist');
+    assert.equal(rule.builtIn, true);
+    assert.equal(rule.questionTr, item.questionTr);
+    assert.equal(rule.questionEn, item.questionEn);
+  }
+});
+
 test('v9.49 Kritik tanımı: yükleme geçmiş VE hedef tarihe yetişmiyor', () => {
   const rule = Rules.DEFAULT_RULES.find(item => item.id === 'builtin_critical_late');
   assert.equal(rule.target, 'CRITICAL');
@@ -224,6 +236,11 @@ test('v9.49 kaydedilmiş kurallar yerleşiklerle birleşir; yeni yerleşik kaybo
   for (const rule of Rules.DEFAULT_RULES) {
     assert.ok(merged.some(item => item.id === rule.id), `${rule.id} kaybolmamalı`);
   }
+  // Silinen yerleşikler tombstone ile yeniden eklenmemeli.
+  const deleted = Rules.mergeWithDefaults(saved, ['builtin_critical_late', 'pps']);
+  assert.ok(!deleted.some(rule => rule.id === 'builtin_critical_late'));
+  assert.ok(!deleted.some(rule => rule.id === 'pps'));
+
   // Aynı id iki kez kaydedilmişse tek kalmalı.
   assert.equal(Rules.normalizeRules([{ id: 'x', conditions: [] }, { id: 'x', conditions: [] }]).length, 1);
 });
@@ -241,6 +258,17 @@ test('v9.49 kural uygulandıktan sonra öncelik sayımları yeniden kurulur', ()
   assert.equal(after.rows, 2, 'çipler kural sonrası sayıyı göstermeli');
   // Teslimat sonucu sayımları DEĞİŞMEMELİ.
   assert.deepEqual(recounted.deliveryOutcome, model.deliveryOutcome);
+});
+
+test('formula kuralı edit sonrası yeniden derlenir', () => {
+  const model = analyze([nearOrder(7961)]);
+  const rule = Rules.normalizeRule({
+    id: 'formula-recompile', kind: 'checklist', name: 'x', mode: 'formula',
+    formula: '=[@daysToLoad]<=60', conditions: [{ field: '@daysToLoad', operator: 'lte', value: 60 }],
+  });
+  assert.equal(Rules.matchesRule(rule, Rules.factsFor(model.orders[0], {})), true);
+  rule.formula = '=[@daysToLoad]<0';
+  assert.equal(Rules.matchesRule(rule, Rules.factsFor(model.orders[0], {})), false);
 });
 
 test('v9.49 kural motoru saf: DOM, ağ, AI yok', () => {

@@ -3,14 +3,70 @@
   "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Backlog zaman akışı daha tutarlı ve odaklı",
-    "en": "Backlog timeline is more consistent and focused"
+    "tr": "Checklist ve Backlog iş akışları güncellendi",
+    "en": "Checklist and Backlog workflows updated"
   },
   "summary": {
-    "tr": "Backlog zaman akışında gecikmiş alt toplamlarının grafik hizasını bozması giderildi, görünüm otomatik olarak Bugün dönemine odaklanıyor ve alt Buyer grafiği seçilen yığılmış/yan yana modu doğru şekilde takip ediyor.",
-    "en": "Backlog timeline overdue subtotals no longer disturb chart alignment, the view now automatically focuses on the Today period, and the lower Buyer chart correctly follows the selected stacked/side-by-side mode."
+    "tr": "Checklist yönetimi ve üretici Excel akışı güçlendirildi; Backlog zaman akışında gecikmiş alt toplam hizası, otomatik Bugün odağı ve üst/alt grafiklerin Yığılmış–Yan yana davranışı düzeltildi.",
+    "en": "Checklist management and the supplier Excel workflow were improved; the Backlog timeline now fixes overdue subtotal alignment, automatically focuses Today, and keeps upper/lower Stacked–Side by side behavior in sync."
   },
   "changes": [
+    {
+      "id": "priority-checklist-rules-management",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · Priority & Checklist Rules",
+        "en": "Overview · Priority & Checklist Rules"
+      },
+      "title": {
+        "tr": "Yerleşik priority ve checklist kuralları artık düzenlenebilir",
+        "en": "Built-in priority and checklist rules are now editable"
+      },
+      "body": {
+        "tr": "Ön tanımlı Checklist Questions kayıtları aynı kural editöründe görünür. Built-in priority ve checklist kuralları düzenlenebilir, kapatılabilir veya silinebilir; silinen kayıtlar tekrar açılışta geri gelmez. Metin seçerken fareyi pencere dışında bıraktığınızda modalın yanlışlıkla kapanması da engellendi.",
+        "en": "Predefined Checklist Questions now appear in the same rule editor. Built-in priority and checklist rules can be edited, disabled, or deleted, and deleted rules no longer return after reopening. The modal also stays open when a text-selection drag ends outside the window."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "priority-checklist-rules.svg",
+        "alt": {
+          "tr": "Priority and Checklist Rules ekranında düzenleme ve silme aksiyonlarını gösteren görsel",
+          "en": "Visual showing edit and delete actions in Priority and Checklist Rules"
+        },
+        "caption": {
+          "tr": "Yerleşik ve özel kurallar aynı yönetim modelinde.",
+          "en": "Built-in and custom rules now use the same management model."
+        }
+      }
+    },
+    {
+      "id": "supplier-checklist-excel-v2",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Tools → Checklist",
+        "en": "CP · Tools → Checklist"
+      },
+      "title": {
+        "tr": "Supplier Checklist Excel yeniden tasarlandı",
+        "en": "Supplier Checklist Excel redesigned"
+      },
+      "body": {
+        "tr": "Checklist araçları artık Tools → Checklist altında Create Checklist Excel, Import Checklist Excel ve Checklist Excel Columns olarak tek menüde. Excel; model görseli, kompakt satırlar, kilitli sistem alanları, yalnız düzenlenebilir Durum/Not hücreleri, doğru dd.mm.yyyy Ex-Factory tarihi, açılır durum listeleri ve Backlog V3 renk ailesinde dinamik KPI/istatistik özeti ile oluşturulur.",
+        "en": "Checklist tools now live under Tools → Checklist as Create Checklist Excel, Import Checklist Excel, and Checklist Excel Columns. The workbook now includes model images, compact rows, locked system fields, editable Status/Note cells only, correct dd.mm.yyyy Ex-Factory dates, status dropdowns, and a dynamic KPI/statistics summary using the Backlog V3 colour family."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "supplier-checklist-excel.svg",
+        "alt": {
+          "tr": "Renkli KPI alanları ve korumalı checklist tablosu bulunan Supplier Checklist Excel görseli",
+          "en": "Supplier Checklist Excel visual with coloured KPI tiles and a protected checklist table"
+        },
+        "caption": {
+          "tr": "Dosya düzenlendikçe durum istatistikleri Excel içinde yeniden hesaplanır.",
+          "en": "Status statistics recalculate inside Excel as the supplier edits the file."
+        }
+      }
+    },
     {
       "id": "backlog-timeline-overdue-alignment",
       "type": "fix",
