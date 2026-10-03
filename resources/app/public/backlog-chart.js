@@ -647,7 +647,7 @@
     }
     if(!svg){temporary?.remove();return;}
     const xmlText=serializeSvgForExport(svg);if(!xmlText){temporary?.remove();return;}
-    if(type==='svg'){downloadBlob(new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),safeChartFileName(model.title,'svg'));return;}
+    if(type==='svg'){downloadBlob(new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),safeChartFileName(model.title,'svg'));temporary?.remove();return;}
     const blob=new Blob([xmlText],{type:'image/svg+xml;charset=utf-8'}),url=root.URL.createObjectURL(blob);
     try{
       const img=new root.Image();
@@ -657,7 +657,6 @@
       const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
       if(png)downloadBlob(png,safeChartFileName(model.title,'png'));
     }finally{root.URL.revokeObjectURL(url);temporary?.remove();}
-    if(type==='svg')temporary?.remove();
   }
   function mountInteractiveChart(host,model,detail) {
     const target=host&&host.querySelector('[data-backlog-chart-body]');if(!target)return;
