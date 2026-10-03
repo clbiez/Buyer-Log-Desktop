@@ -14,7 +14,7 @@
  * VERİ SINIRI — DÜRÜSTLÜK KURALI:
  * CP veri modelinde numune (PPS/S-Off/Proto/Fit/Size Set), test, kumaş
  * HAZIRLIK statüsü, aksesuar statüsü, üretim aşaması (kesim/dikim/ütü/paket),
- * üretici yükleme teyidi, Merchandiser ve Troy tarihi ALANLARI YOKTUR.
+ * üretici yükleme teyidi ve Merchandiser ALANLARI YOKTUR.
  * Bu motor onları TAHMİN ETMEZ ve "yok" saymaz: `UNAVAILABLE_DIMENSIONS`
  * altında açıkça raporlar. Var olmayan veriden "PPS eksik" uyarısı üretmek,
  * bu zincirdeki en pahalı hata türüdür.
@@ -83,7 +83,7 @@
     asasInStore: '_asasInStore',
   });
 
-  /* Tarih senkronu (§25). Kaynak Troy değil ASAS DB'dir: Buyer Log revizyonu
+  /* Tarih senkronu (§25). Kaynak ASAS DB'dir: Buyer Log revizyonu
      ASAS'a yansımadıysa iki sistem farklı tarih söylüyor demektir. */
   const DATE_SYNC_STATES = Object.freeze(['MATCH', 'REVISED_IN_BUYER_LOG', 'UNKNOWN']);
   const DATE_SYNC_LABELS = Object.freeze({
