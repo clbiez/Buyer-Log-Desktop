@@ -265,7 +265,7 @@ function modelIdentity(row){
      istemci PLM ID'yi model adından çözemez ve PLM SYNC'in kaydettiği
      görsel tabloya hiç işlenmez. */
   const modelName=get('model','modelName','modelKod','Model Adı','Model Name','Style Name','Style','Option Adı','Option Name','_modelName');
-  const rawPlmId=get('plmId','_plmId','PLM ID','PLM Id','PLMID','Plm Kod','PLM Kod','PLM Code');
+  const rawPlmId=get('plmId','plm','_plmId','PLM ID','PLM Id','PLMID','Plm Kod','PLM Kod','PLM Code');
   let plmId=rawPlmId;
   try{
     if(root.BLDetailImages?.resolvePlmId)plmId=root.BLDetailImages.resolvePlmId(rawPlmId,modelName)||rawPlmId;
@@ -273,9 +273,9 @@ function modelIdentity(row){
   return {
     plmId,
     modelName,
-    colourCode:get('colourCode','_colourCode','colorCode','C.Code','Renk Kod','Renk Kodu','Colour Code','Color Code'),
+    colourCode:get('colourCode','ccode','_colourCode','colorCode','C.Code','Renk Kod','Renk Kodu','Colour Code','Color Code'),
     colour:get('colour','color','Colour','Color','Renk','Renk Tanım','Renk Adı'),
-    orderCode:get('orderCode','orderKey','Sipariş Kod','Sipariş Kodu','Order Code','Order No')
+    orderCode:get('orderCode','ocode','orderKey','Sipariş Kod','Sipariş Kodu','Order Code','Order No')
   };
 }
 function imageUrl(row,index){

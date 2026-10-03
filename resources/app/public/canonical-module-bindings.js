@@ -14,10 +14,24 @@
   if(manufacturerField&&Array.isArray(manufacturerField.aliases)){
     manufacturerField.aliases=manufacturerField.aliases.filter(function(alias){return String(alias).toLowerCase()!=='supplier';});
   }
-  ['cp','orders','backlog','overview','lfl'].forEach(function(moduleId){
-    var current=fields.bindingFor(moduleId,'manufacturer');
+  function extendBinding(moduleId,fieldId,keys){
+    var current=fields.bindingFor(moduleId,fieldId);
     if(!current)return;
-    fields.registerModule(moduleId,{manufacturer:{keys:(current.keys||[]).concat(['Supplier','Sub-Manufacturer','Sub Manufacturer']),semantic:current.semantic}});
+    var all=(current.keys||[]).concat(keys||[]).filter(function(key,index,list){return key&&list.indexOf(key)===index;});
+    var patch={};patch[fieldId]={keys:all,semantic:current.semantic};
+    fields.registerModule(moduleId,patch);
+  }
+  /* ASAS/Horizon parser runtime rows deliberately use compact internal keys.
+     Analytics/details resolve them through the canonical registry instead of
+     maintaining per-screen alias lists. */
+  var ASAS_RUNTIME_KEYS={
+    plmId:['plm'],orderCode:['ocode'],modelName:['model'],colourCode:['ccode'],
+    country:['countryRaw'],buyingGroup:['buyerGrup'],mag:['merch'],mmyg:['ageGroup'],
+    orderQuantity:['qty'],inStore:['mb'],orderPlacementDate:['opd'],exFactory:['ex']
+  };
+  ['cp','orders','backlog','overview','lfl'].forEach(function(moduleId){
+    extendBinding(moduleId,'manufacturer',['Supplier','Sub-Manufacturer','Sub Manufacturer']);
+    Object.keys(ASAS_RUNTIME_KEYS).forEach(function(fieldId){extendBinding(moduleId,fieldId,ASAS_RUNTIME_KEYS[fieldId]);});
   });
 
   // Module-specific bindings intentionally stay outside source/import parsers.

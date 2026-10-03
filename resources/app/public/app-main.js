@@ -26748,9 +26748,9 @@ function canonicalPriceObservation(row,moduleId,base={}){
   const fields=window.BLCanonicalFields;
   if(!fields)throw new Error('Canonical field registry is unavailable.');
   const read=id=>fields.value(row,moduleId,id),country=norm(read('country')),inStore=norm(read('inStore')),manufacturer=norm(read('manufacturer')),subManufacturer=norm(read('subManufacturer'));
-  const plmId=norm(read('plmId')),model=norm(read('modelName')),classification=norm(read('category'))||'—',productMainDefinition=norm(read(moduleId==='collection'?'productMainDefinition':'productDescription'));
+  const plmId=norm(read('plmId')),orderCode=norm(read('orderCode')),colourCode=norm(read('colourCode')),model=norm(read('modelName')),classification=norm(read('category'))||'—',productMainDefinition=norm(read(moduleId==='collection'?'productMainDefinition':'productDescription'));
   const quantity=base.quantity!=null?base.quantity:toNum(read(moduleId==='collection'?'collectionQuantity':'orderQuantity'));
-  return {...base,source:moduleId,row,raw:row,rowId:base.rowId??row.id??row._id,orderKey:norm(read('orderCode')),modelKey:plmId||model||String(base.rowId??row.id??row._id??''),model,classification,category:classification,
+  return {...base,source:moduleId,row,raw:row,rowId:base.rowId??row.id??row._id,plmId,orderCode,orderKey:orderCode,colourCode,modelKey:plmId||model||String(base.rowId??row.id??row._id??''),model,classification,category:classification,
     manufacturer:norm(base.manufacturer||manufacturer)||'—',subManufacturer,supplierFob:toNum(read('supplierFob')),country:country||'—',buyer:norm(read('buyer'))||'—',buyingGroup:norm(read('buyingGroup'))||'—',mag:norm(read('mag'))||norm(base.mag)||'—',mmyg:norm(read('mmyg'))||norm(base.mmyg)||'—',collection:norm(read('collectionName')),
     productGroup:norm(read('productGroup')),productMainDefinition,season:norm(read('season'))||'—',status:norm(read('orderStatus')),colour:norm(read('colour')),month:inStore,planStartMonth:inStore,quantity:Number.isFinite(Number(quantity))&&Number(quantity)>0?Number(quantity):null};
 }
@@ -26798,9 +26798,10 @@ window.BLPriceSupplierAnalysisBridge={
   openDrilldown(source,observations,title){
     if(window.BLDetailDrawer?.open){
       const sharedLabels=appLang==='en'?{title:'Details',records:'records',order:'Order',model:'Model',supplier:'Supplier',country:'Country',buyer:'Buyer',season:'Season',price:'Price',currency:'Currency',quantity:'Quantity',status:'Status',category:'Category',buyingGroup:'Buying Group'}:{title:'Detay',records:'kayıt',order:'Sipariş',model:'Model',supplier:'Üretici',country:'Ülke',buyer:'Buyer',season:'Sezon',price:'Fiyat',currency:'Para Birimi',quantity:'Adet',status:'Statü',category:'Kategori',buyingGroup:'Buying Group'};
-      const sharedRows=(observations||[]).filter(Boolean).map(item=>({...item,plmId:item.plmId||item.row&&item.row.plmId||item.raw&&item.raw.plmId||'',colourCode:item.colourCode||item.row&&item.row.colourCode||item.raw&&item.raw.colourCode||'',colour:item.colour||item.row&&item.row.colour||item.raw&&item.raw.colour||'',orderCode:item.orderKey||item.orderCode||item.row&&item.row.orderCode||item.raw&&item.raw.orderCode||''}));
+      const sharedRows=(observations||[]).filter(Boolean).map(item=>{const raw=item.row||item.raw||{};return {...item,plmId:item.plmId||raw.plmId||raw.plm||'',colourCode:item.colourCode||raw.colourCode||raw.ccode||'',colour:item.colour||raw.colour||'',orderCode:item.orderCode||item.orderKey||raw.orderCode||raw.ocode||''};});
+      const detailModuleId=sharedRows.find(row=>['collection','cp','orders','lfl'].includes(String(row&&row.source||'')))?.source||'';
       const sharedTitle=title||sharedLabels.title;
-      window.BLDetailDrawer.open({storageKey:'priceSupplier.'+String(source||'generic')+'.detail',source:'price-supplier',title:sharedTitle,subtitle:sharedRows.length+' '+sharedLabels.records,rows:sharedRows,images:true,fileName:sharedTitle,columns:[
+      window.BLDetailDrawer.open({storageKey:'priceSupplier.'+String(source||'generic')+'.detail',moduleId:detailModuleId,source:'price-supplier',title:sharedTitle,subtitle:sharedRows.length+' '+sharedLabels.records,rows:sharedRows,images:true,fileName:sharedTitle,columns:[
         {key:'orderCode',label:sharedLabels.order},{key:'plmId',label:'PLM ID'},{key:'model',label:sharedLabels.model},{key:'colourCode',label:appLang==='en'?'Colour Code':'Renk Kod'},{key:'colour',label:appLang==='en'?'Colour':'Renk'},
         {key:'manufacturer',label:sharedLabels.supplier},{key:'country',label:sharedLabels.country},{key:'buyer',label:sharedLabels.buyer},{key:'buyingGroup',label:sharedLabels.buyingGroup},{key:'season',label:sharedLabels.season},
         {key:'status',label:sharedLabels.status},{key:'classification',label:sharedLabels.category},{key:'price',label:sharedLabels.price},{key:'currency',label:sharedLabels.currency},{key:'quantity',label:sharedLabels.quantity}
@@ -29093,7 +29094,7 @@ function modelAssetFilterToken(source){
 /* Kimlik → sunucu isteği gövdesi. Kanonik alanlar dışında hiçbir şey
    gönderilmez; ekrandaki metinden kimlik üretilmez. */
 function modelAssetImageItems(identities){
-  return (Array.isArray(identities)?identities:[]).map(item=>({plmId:item.plmId,colourCode:item.colourCode||'',colour:item.colour||'',styleName:item.styleName||''}));
+  return (Array.isArray(identities)?identities:[]).map(item=>({plmId:item.plmId,colourCode:item.colourCode||'',colour:item.colour||'',styleName:item.styleName||'',orderCode:item.orderCode||''}));
 }
 function modelAssetLinkItems(identities){
   const unique=new Map();

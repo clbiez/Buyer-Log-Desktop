@@ -96,15 +96,21 @@
 
   /* ---------- görünüm parçaları ---------- */
 
+  function jobHasFailures(job) {
+    return Math.max(Number(job && job.failed) || 0, Number(job && job.failureCount) || 0) > 0;
+  }
+
   function statusBadge(job) {
-    const tone = job.status === 'failed' ? 'isFail' : job.status === 'cancelled' ? 'isCancel'
+    const partial = !job.running && job.status === 'succeeded' && jobHasFailures(job);
+    const tone = job.status === 'failed' || partial ? 'isFail' : job.status === 'cancelled' ? 'isCancel'
       : job.running ? 'isRun' : 'isOk';
-    const text = job.cancelRequested && job.running ? t('Durduruluyor', 'Stopping') : label(STATUS_LABEL, job.status);
+    const text = job.cancelRequested && job.running ? t('Durduruluyor', 'Stopping')
+      : partial ? t('Hatalarla tamamlandı', 'Completed with errors') : label(STATUS_LABEL, job.status);
     return `<span class="badge plmOpsBadge ${tone}">${esc(text)}</span>`;
   }
 
   function progressBar(job) {
-    const tone = job.status === 'failed' ? ' isFail' : job.running ? '' : ' isDone';
+    const tone = job.status === 'failed' || (!job.running && jobHasFailures(job)) ? ' isFail' : job.running ? '' : ' isDone';
     return `<div class="plmOpsBar${tone}" role="progressbar" aria-valuenow="${job.percent}" aria-valuemin="0" aria-valuemax="100">
       <span style="width:${Math.max(0, Math.min(100, job.percent))}%"></span></div>`;
   }

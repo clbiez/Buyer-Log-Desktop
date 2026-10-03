@@ -34,7 +34,7 @@
 .psaFilterConfig{position:relative}
 .psaFilterConfig>summary{list-style:none;user-select:none}
 .psaFilterConfig>summary::-webkit-details-marker{display:none}
-.psaFilterConfig[open]>summary{border-color:var(--acc);color:var(--acc-ink)}
+.psaFilterConfig[open]>.psaFilterConfigTrigger{border-color:var(--acc);color:var(--acc-ink)}
 .psaFilterConfigPanel{position:absolute;z-index:30;right:0;top:calc(100% + 6px);display:grid;gap:2px;min-width:240px;max-width:320px;max-height:min(70vh,520px);overflow:auto;padding:8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);box-shadow:var(--shadow-2)}
 .psaFilterConfigPanel label{display:flex;align-items:center;gap:8px;min-height:30px;padding:3px 6px;color:var(--ink2);font-size:13px;cursor:pointer}
 .psaFilterConfigPanel label:hover{background:var(--hover)}
@@ -54,6 +54,9 @@
 .psaMultiFilter>summary::-webkit-details-marker{display:none}
 .psaMultiCaption{font-size:11px;font-weight:600;color:var(--muted)}
 .psaMultiTrigger{display:flex;align-items:center;justify-content:space-between;gap:8px;height:32px;min-width:110px;max-width:220px;box-sizing:border-box;padding:0 8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:13px;font-weight:500}
+.psaFilterConfigTrigger{min-width:150px;max-width:220px;cursor:pointer}
+.psaFilterConfigTrigger .psaMultiLabel{flex:1}
+.psaFilters .psaField.isEmpty .psaMultiTrigger{background:var(--paper);color:var(--muted);cursor:not-allowed;opacity:.78}
 .psaMultiLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .psaMultiChevron{flex:none;color:var(--muted)}
 .psaMultiFilter[open] .psaMultiTrigger,.psaMultiFilter.isActive .psaMultiTrigger{border-color:var(--acc)}
