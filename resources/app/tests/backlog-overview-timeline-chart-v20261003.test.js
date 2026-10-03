@@ -38,3 +38,20 @@ test('timeline receives more vertical room and a local status legend',()=>{
   assert.match(CSS,/\.blvGroupBar/);
   assert.match(OVERVIEW,/blvTimelineLegend/);
 });
+
+
+test('timeline combines logistics and Buyer breakdown on one shared period axis',()=>{
+  assert.match(OVERVIEW,/timelineDimension:'buyingGroup'/);
+  assert.match(OVERVIEW,/data-blv-timeline-dim="buyingGroup"/);
+  assert.match(OVERVIEW,/data-blv-timeline-dim="buyer"/);
+  assert.match(OVERVIEW,/blvUnifiedCols/);
+  assert.match(OVERVIEW,/blvLogisticsTrack/);
+  assert.match(OVERVIEW,/blvBuyerTrack/);
+  assert.match(OVERVIEW,/blvBuyerBar/);
+  assert.match(OVERVIEW,/timelineDimensionLegend/);
+  assert.match(OVERVIEW,/state\.timelineDimension=t\.dataset\.blvTimelineDim/);
+  assert.match(CSS,/\.blvBuyerTrack/);
+  assert.match(CSS,/\.blvBuyerBar/);
+  const colsHeight=Number((CSS.match(/\.blvCols\{height:(\d+)px/)||[])[1]);
+  assert.ok(colsHeight>=500,`birleşik timeline yüksekliği en az 500px olmalı (bulunan: ${colsHeight})`);
+});
