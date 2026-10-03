@@ -538,7 +538,15 @@
     }
     const raw = text(value);
     if (!raw) return null;
-    let match = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    /* Saat dilimli zaman damgası önce Date'e çevrilir. İlk 10 karakteri almak
+       UTC gününü kullanıp Türkiye'de bir gün geriye düşürebiliyordu. */
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(raw)) {
+      const timestamp = new Date(raw);
+      if (!Number.isNaN(timestamp.getTime())) {
+        return new Date(timestamp.getFullYear(), timestamp.getMonth(), timestamp.getDate(), 12, 0, 0);
+      }
+    }
+    let match = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
     if (!match) {
       const compact = raw.match(/^(\d{4})(\d{2})(\d{2})$/);
       if (compact) match = compact;
@@ -549,6 +557,7 @@
     const parsed = new Date(raw);
     return Number.isNaN(parsed.getTime()) ? null : new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 12, 0, 0);
   }
+
   function valueForExcelColumn(definition, row) {
     if (!definition || definition.id === 'image') return '';
     const value = rawValue(row, definition.candidates);
@@ -569,20 +578,53 @@
     if (raw.startsWith('data:image/png')) return 'png';
     return '';
   }
+  async function dataUrlPreparedImage(source) {
+    if (!source || typeof root.fetch !== 'function' || !root.FileReader) return null;
+    try {
+      const response = await root.fetch(source, { credentials: 'same-origin', cache: 'force-cache' });
+      if (!response.ok) return null;
+      const blob = await response.blob();
+      const dataUrl = await new Promise(function (resolve, reject) {
+        const reader = new root.FileReader();
+        reader.onload = function () { resolve(String(reader.result || '')); };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      if (!dataUrl) return null;
+      let width = 1, height = 1;
+      if (root.Image) {
+        try {
+          const size = await new Promise(function (resolve) {
+            const image = new root.Image();
+            image.onload = function () { resolve({ width: image.naturalWidth || image.width || 1, height: image.naturalHeight || image.height || 1 }); };
+            image.onerror = function () { resolve({ width: 1, height: 1 }); };
+            image.src = dataUrl;
+          });
+          width = size.width; height = size.height;
+        } catch (_) {}
+      }
+      return { dataUrl: dataUrl, width: width, height: height };
+    } catch (_) { return null; }
+  }
   async function prepareRowModelImage(row) {
-    if (typeof root.canonicalModelImageSource !== 'function' || typeof root.kolPrepareExcelImage !== 'function') return null;
     const plm = visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']);
-    if (!plm) return null;
     const colourCode = visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']);
     const colour = visibleValue(row, ['Colour', 'Color', 'Renk']);
     let source = '';
-    try { source = root.canonicalModelImageSource(plm, colourCode, colour) || ''; } catch (_) {}
+    if (typeof root.canonicalModelImageSource === 'function' && plm) {
+      try { source = root.canonicalModelImageSource(plm, colourCode, colour) || ''; } catch (_) {}
+    }
+    if (!source) source = visibleValue(row, ['Model Image', 'Image URL', 'Image Url', 'imageUrl', 'img', 'Image']);
     if (!source) return null;
-    try {
-      const prepared = await root.kolPrepareExcelImage(source);
-      return prepared && prepared.dataUrl ? prepared : null;
-    } catch (_) { return null; }
+    if (typeof root.kolPrepareExcelImage === 'function') {
+      try {
+        const prepared = await root.kolPrepareExcelImage(source);
+        if (prepared && prepared.dataUrl) return prepared;
+      } catch (_) {}
+    }
+    return dataUrlPreparedImage(source);
   }
+
   function imagePlacement(prepared, rowNo, columnNo) {
     if (typeof root.kolExcelImageAspectLockedPlacement === 'function') {
       try { return root.kolExcelImageAspectLockedPlacement(prepared, rowNo, 72, 46, columnNo); } catch (_) {}
