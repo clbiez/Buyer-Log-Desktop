@@ -21,6 +21,14 @@
   #blBootGuard[data-failed="1"] .blBootOrb{display:none}
   #blBootGuard[data-ready="1"] .blBootOrb{display:none}
   #blBootGuard button{margin-top:14px;padding:8px 14px;border:1px solid #3f6488;border-radius:0;background:#3f6488;color:#fff;cursor:pointer;font:inherit}
+  #blBootGuard .blBootLanguage{display:inline-flex;align-items:center;gap:2px;margin-left:8px;padding:2px;border:1px solid #d7dce2;background:#f7f9fb;color:#5c6773;flex:0 0 auto}
+  #blBootGuard .blBootLanguage button{min-width:31px;margin:0;padding:4px 7px;border:1px solid transparent;background:transparent;color:inherit;font-size:11px;font-weight:700;line-height:1;letter-spacing:.04em}
+  #blBootGuard .blBootLanguage button:hover{background:#eef2f6;border-color:#c7d2de}
+  #blBootGuard .blBootLanguage button[aria-pressed="true"]{background:#e6edf4;border-color:#3f6488;color:#2c455d}
+  #blBootGuard .blBootLanguage i{font-style:normal;opacity:.45;font-size:10px;user-select:none}
+  html[data-theme="dark"] #blBootGuard .blBootLanguage{background:#202329;border-color:#3a3f47;color:#c7cbd1}
+  html[data-theme="dark"] #blBootGuard .blBootLanguage button:hover{background:#292e35;border-color:#4a5663}
+  html[data-theme="dark"] #blBootGuard .blBootLanguage button[aria-pressed="true"]{background:#293847;border-color:#6d8fb2;color:#eef5fb}
   @keyframes blBootSpin{to{transform:rotate(360deg)}}
   html[data-theme="dark"] #blBootGuard{background:#131417;color:#f3f4f6}
   html[data-theme="dark"] #blBootGuard .blBootCard{background:#1d1f23;border-color:#34373d}
@@ -48,6 +56,7 @@
     el.innerHTML='<div class="blBootCard"><canvas class="blBootOrb" width="64" height="64" aria-hidden="true"></canvas><div id="blBootTitle" data-boot-message role="status" aria-live="polite">Buyer Log hazırlanıyor…</div></div>';
     document.body.appendChild(el);
     window.BLGuide?.mountStartup(el);
+    mountLanguageChooser(el);
     Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});
     el.focus({preventScroll:true});
     try{if(window.BLThinkingOrbBreathing)orb=window.BLThinkingOrbBreathing.attach(el.querySelector('.blBootOrb'));}catch(_){}
@@ -62,7 +71,50 @@
       if(card&&!card.querySelector('[data-boot-retry]')){var b=document.createElement('button');b.type='button';b.dataset.bootRetry='1';b.textContent=english()?'Retry':'Tekrar dene';b.onclick=function(){try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}location.replace('/?boot='+Date.now());};card.appendChild(b);}
     }
   }
-  function english(){try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return false;}}
+  function english(){try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return document.documentElement.lang==='en';}}
+  function syncBootLanguage(){
+    var el=guard();if(!el)return;
+    var active=english()?'en':'tr';
+    el.querySelectorAll('[data-boot-lang]').forEach(function(button){
+      var on=button.dataset.bootLang===active;
+      button.setAttribute('aria-pressed',String(on));
+      button.tabIndex=on?0:-1;
+    });
+    var chooser=el.querySelector('.blBootLanguage');
+    if(chooser)chooser.setAttribute('aria-label',active==='en'?'Language':'Dil');
+  }
+  function applyBootLanguage(next){
+    next=next==='en'?'en':'tr';
+    var before=english()?'en':'tr';
+    if(before!==next){
+      var canonical=document.getElementById('railLangBtn');
+      if(canonical){try{canonical.click();}catch(_){}}
+    }
+    if((english()?'en':'tr')!==next){
+      try{appLang=next;}catch(_){}
+      try{document.documentElement.lang=next;}catch(_){}
+      try{window.BLStorage?.setItem?.('lcw.lang.v1',next);}catch(_){}
+      try{window.BLI18n?.setLanguage?.(next);}catch(_){}
+      try{document.dispatchEvent(new CustomEvent('bl:language-changed',{detail:{language:next,source:'startup'}}));}catch(_){}
+    }else{
+      try{document.documentElement.lang=next;}catch(_){}
+      try{window.BLI18n?.setLanguage?.(next);}catch(_){}
+    }
+    try{window.BLGuide?.refreshLanguage?.();}catch(_){}
+    syncBootLanguage();
+  }
+  function mountLanguageChooser(root){
+    var brand=root&&root.querySelector('.blBootBrand');
+    if(!brand||brand.querySelector('.blBootLanguage'))return;
+    var chooser=document.createElement('div');chooser.className='blBootLanguage';chooser.setAttribute('role','group');
+    chooser.innerHTML='<button type="button" data-boot-lang="tr" aria-label="Türkçe">TR</button><i aria-hidden="true">/</i><button type="button" data-boot-lang="en" aria-label="English">EN</button>';
+    chooser.addEventListener('click',function(ev){var button=ev.target.closest?.('[data-boot-lang]');if(button)applyBootLanguage(button.dataset.bootLang);});
+    chooser.addEventListener('keydown',function(ev){
+      if(ev.key!=='ArrowLeft'&&ev.key!=='ArrowRight')return;
+      ev.preventDefault();var next=(english()?'en':'tr')==='tr'?'en':'tr';applyBootLanguage(next);chooser.querySelector('[data-boot-lang="'+next+'"]')?.focus();
+    });
+    brand.appendChild(chooser);syncBootLanguage();
+  }
   function ready(stage){
     if(finished)return;
     if(stage&&Object.prototype.hasOwnProperty.call(gates,stage))gates[stage]=true;else gates.core=true;
@@ -135,6 +187,7 @@
   window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(){if(finished)dismiss();},fail:function(reason){lastFailure=String(reason||'initial-data-failed');message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
+  document.addEventListener('bl:language-changed',function(){syncBootLanguage();try{window.BLGuide?.refreshLanguage?.();}catch(_){}}); 
   slowTimer=setTimeout(function(){if(finished)return;ensureGuard();if(guard())guard().dataset.slow='1';var hint=guard()?.querySelector('[data-boot-hint]');if(hint)hint.textContent=english()?'Preparation is taking longer. Data volume and source access can affect the wait.':'Hazırlık biraz uzun sürüyor. Veri hacmi ve kaynak erişimi bekleme süresini etkileyebilir.';},15000);
   // Normal slow starts must not be reloaded at 12 seconds. A bounded failure
   // screen still offers Retry if preparation stalls, without a reload loop.
