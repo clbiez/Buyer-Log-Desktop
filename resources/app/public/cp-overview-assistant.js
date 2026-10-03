@@ -153,15 +153,28 @@
           if (!rule || !config) continue;
           rule.enabled = config.enabled !== false;
           const limit = Number(config.maxDaysToLoad);
-          if (!Number.isFinite(limit)) continue;
-          const daysCondition = (rule.conditions || []).find(condition =>
-            condition.field === '@daysToLoad' && condition.operator === 'lte');
-          if (daysCondition) {
-            daysCondition.value = limit;
-            if (daysCondition.right) daysCondition.right.value = limit;
+          const grace = Number(state.checklistSettings.overdueGraceDays);
+          if (Number.isFinite(limit)) {
+            const daysCondition = (rule.conditions || []).find(condition =>
+              condition.field === '@daysToLoad' && condition.operator === 'lte');
+            if (daysCondition) {
+              daysCondition.value = limit;
+              if (daysCondition.right) daysCondition.right.value = limit;
+            }
+            if (rule.mode === 'formula' && rule.formula) {
+              rule.formula = rule.formula.replace(/(\[@daysToLoad\]<=)-?\d+(?:\.\d+)?/, `$1${limit}`);
+            }
           }
-          if (rule.mode === 'formula' && rule.formula) {
-            rule.formula = rule.formula.replace(/(\[@daysToLoad\]<=)-?\d+(?:\.\d+)?/, `$1${limit}`);
+          if (Number.isFinite(grace)) {
+            const overdueCondition = (rule.conditions || []).find(condition =>
+              condition.field === '@daysToLoad' && condition.operator === 'gte');
+            if (overdueCondition) {
+              overdueCondition.value = -grace;
+              if (overdueCondition.right) overdueCondition.right.value = -grace;
+            }
+            if (rule.mode === 'formula' && rule.formula) {
+              rule.formula = rule.formula.replace(/(\[@daysToLoad\]>=)-?\d+(?:\.\d+)?/, `$1${-grace}`);
+            }
           }
         }
         state.attentionColumns = normalizeAttentionColumns(raw.attentionColumns);
