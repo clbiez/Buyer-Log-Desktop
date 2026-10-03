@@ -29,7 +29,7 @@ function state(extra={}) {
   return Object.assign({
     enabled:true,timeField:'Model Bütçe Tarihi',timeField2:'',granularity:'week',
     metricField:'Adet',aggregation:'sum',seriesField:'Buyer',
-    chartType:'line',seriesLimit:'20',title:'',showAverage:false,showSubtotal:false,
+    chartType:'line',barLayout:'grouped',seriesLimit:'20',title:'',showAverage:false,showSubtotal:false,
   },extra);
 }
 
@@ -198,6 +198,26 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(chartSource,/backlogChartPresets bpaSeg2/);
   assert.match(chartSource,/tooltip\?\.addEventListener\('wheel'/);
   assert.match(CSS,/\.backlogChartTooltip\{[^}]*pointer-events:auto/);
+});
+
+test('Backlog timeline bar layout can switch between side-by-side and stacked and persists the selection', () => {
+  const grouped=chart.sanitizeState(state({chartType:'bar',barLayout:'grouped'}));
+  const stacked=chart.sanitizeState(state({chartType:'bar',barLayout:'stacked'}));
+  assert.equal(grouped.barLayout,'grouped');
+  assert.equal(stacked.barLayout,'stacked');
+  assert.equal(chart.sanitizeState(state({barLayout:'bad'})).barLayout,'grouped');
+
+  const stackedModel=chart.buildModel(rows,headers,state({chartType:'bar',barLayout:'stacked'}));
+  const svg=chart.svgChart(stackedModel,{today:new Date(2030,0,1)});
+  assert.match(svg,/backlogChartBarStacked/);
+
+  const chartSource=fs.readFileSync(path.join(ROOT,'public','backlog-chart.js'),'utf8');
+  assert.match(chartSource,/data-backlog-chart-layout="stacked"/);
+  assert.match(chartSource,/data-backlog-chart-layout="grouped"/);
+  assert.match(chartSource,/backlogTimelineStackSeg/);
+  assert.match(chartSource,/barLayout:overlay\.querySelector\('#backlogChartBarLayout'\)/);
+  assert.match(CSS,/\.backlogTimelineStack/);
+  assert.match(CSS,/\.backlogTimelineLayout/);
 });
 
 test('Backlog bar chart reuses the upper timeline column layout instead of the axis-based SVG view', () => {
