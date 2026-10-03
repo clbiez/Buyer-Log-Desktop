@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Checklist, Yol Süreleri ve Backlog iyileştirmeleri",
-    "en": "Checklist, Transit Times and Backlog improvements"
+    "tr": "Checklist yönetimi ve Yol Süreleri iyileştirmeleri",
+    "en": "Checklist management and Transit Times improvements"
   },
   "summary": {
-    "tr": "Checklist yönetimi ve üretici Excel akışı geliştirildi; Transit Times IAS Database sorgusu bağımsız modül ufku ve doğru tarih tipiyle güvenilir hale getirildi; Backlog zaman akışında gecikmiş alt toplam hizası, otomatik Bugün odağı ve üst/alt grafiklerin Yığılmış–Yan yana davranışı düzeltildi.",
-    "en": "Checklist management and the supplier Excel workflow were improved; the Transit Times IAS Database query was made reliable with an independent module horizon and correct date typing; the Backlog timeline now fixes overdue subtotal alignment, automatically focuses Today, and keeps upper/lower Stacked–Side by side behavior in sync."
+    "tr": "Checklist yönetimi ve üretici Excel akışı geliştirildi; Transit Times IAS Database sorgusu ise bağımsız modül ufku ve doğru tarih tipiyle güvenilir hale getirildi.",
+    "en": "Checklist management and the supplier Excel workflow were improved, while the Transit Times IAS Database query was made reliable with an independent module horizon and correct date typing."
   },
   "changes": [
     {
@@ -128,102 +128,6 @@
         "caption": {
           "tr": "Modül ufku yalnız bu analizin IAS sorgusuna uygulanır; Backlog ufku bağımsızdır.",
           "en": "The module horizon applies only to this analysis's IAS query; the Backlog horizon remains independent."
-        }
-      }
-    },
-    {
-      "id": "backlog-timeline-overdue-alignment",
-      "type": "fix",
-      "module": {
-        "tr": "Backlog",
-        "en": "Backlog"
-      },
-      "title": {
-        "tr": "Gecikmiş alt toplamı artık grafik hizasını bozmuyor",
-        "en": "Overdue subtotal no longer shifts chart alignment"
-      },
-      "body": {
-        "tr": "Hafta başlığının üzerinde görünen kırmızı gecikmiş adet notu için sabit bir değer bandı ayrıldı. Böylece gecikmiş notu bulunan haftalarda üst grafik aşağı kaymıyor ve hafta etiketi kapanmıyor.",
-        "en": "The red overdue quantity note now lives in a fixed value band. Weeks with an overdue note no longer push the upper chart downward or cover the week label."
-      },
-      "path": {
-        "tr": "Backlog › Genel Bakış › Zaman Akışı",
-        "en": "Backlog › Overview › Timeline"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "src": "backlog-timeline-20261003.webp",
-        "alt": {
-          "tr": "Backlog zaman akışında gecikmiş alt toplamlarının göründüğü gerçek ekran",
-          "en": "Real Backlog timeline screen showing overdue subtotals"
-        },
-        "caption": {
-          "tr": "Bu ekrandaki kırmızı gecikmiş alt toplamları artık tüm haftalarda aynı sabit üst bant içinde kalıyor.",
-          "en": "The red overdue subtotals shown here now stay inside the same fixed header band for every period."
-        }
-      }
-    },
-    {
-      "id": "backlog-timeline-auto-today-focus",
-      "type": "improvement",
-      "module": {
-        "tr": "Backlog",
-        "en": "Backlog"
-      },
-      "title": {
-        "tr": "Zaman akışı açıldığında Bugün otomatik odakta",
-        "en": "Timeline automatically opens focused on Today"
-      },
-      "body": {
-        "tr": "Zaman akışı her çizildiğinde mevcut hafta/ay dönemi yatay görünümün merkezine getiriliyor. Kullanıcının Bugün düğmesine ayrıca basması gerekmiyor; düğme manuel geri dönüş için çalışmaya devam ediyor.",
-        "en": "Whenever the timeline renders, the current week/month is centered in the horizontal viewport. Users no longer need to press Today first; the button still works as a manual return action."
-      },
-      "path": {
-        "tr": "Backlog › Genel Bakış › Zaman Akışı",
-        "en": "Backlog › Overview › Timeline"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "src": "backlog-timeline-20261003.webp",
-        "alt": {
-          "tr": "Bugün çizgisi bulunan Backlog zaman akışı ekranı",
-          "en": "Backlog timeline screen with the Today marker"
-        },
-        "caption": {
-          "tr": "Bugün çizgisinin bulunduğu dönem artık ekran açıldığında otomatik olarak yatay görünümün merkezine getiriliyor.",
-          "en": "The period containing the Today marker is now centered automatically when the view opens."
-        }
-      }
-    },
-    {
-      "id": "backlog-lower-chart-stacked-parity",
-      "type": "fix",
-      "module": {
-        "tr": "Backlog",
-        "en": "Backlog"
-      },
-      "title": {
-        "tr": "Alt Buyer grafiği de Yığılmış modunu takip ediyor",
-        "en": "Lower Buyer chart now follows Stacked mode"
-      },
-      "body": {
-        "tr": "Yığılmış seçiliyken yalnız üst Logistic Status grafiğinin yığılması sorunu giderildi. Alt Buyer Grup/Buyer grafiği de aynı seçimle yığılmış sütunlara dönüşüyor; Yan yana modunda ise her iki grafik yan yana sütun düzenini koruyor.",
-        "en": "Fixed an issue where only the upper Logistics Status chart stacked. The lower Buying Group/Buyer chart now stacks under the same selection, while Side by side keeps both charts grouped."
-      },
-      "path": {
-        "tr": "Backlog › Genel Bakış › Zaman Akışı",
-        "en": "Backlog › Overview › Timeline"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "src": "backlog-timeline-20261003.webp",
-        "alt": {
-          "tr": "Üst ve alt Backlog zaman grafiklerini birlikte gösteren gerçek ekran",
-          "en": "Real Backlog screen showing the upper and lower timeline charts together"
-        },
-        "caption": {
-          "tr": "Yığılmış / Yan yana seçimi artık üst ve alt grafik bantlarına birlikte uygulanıyor.",
-          "en": "The Stacked / Side by side selection now applies to both the upper and lower chart bands."
         }
       }
     }
