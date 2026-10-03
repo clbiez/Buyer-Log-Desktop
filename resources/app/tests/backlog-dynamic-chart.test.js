@@ -218,13 +218,21 @@ test('Backlog timeline bar layout can switch between side-by-side and stacked an
   assert.match(chartSource,/barLayout:overlay\.querySelector\('#backlogChartBarLayout'\)/);
   assert.match(CSS,/\.backlogTimelineStack/);
   assert.match(CSS,/\.backlogTimelineLayout/);
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['BACKLOG']]),'BACKLOG');
+  const exported=chart.appendWorkbookSheets(wb,rows,headers,{XLSX,state:state({chartType:'bar',barLayout:'stacked'})});
+  assert.equal(exported.charts[0].barLayout,'stacked');
+  assert.match(chart.chartXml(exported.charts[0],0),/<c:grouping val="stacked"\/>/);
 });
 
 test('Backlog bar chart reuses the upper timeline column layout instead of the axis-based SVG view', () => {
   const chartSource=fs.readFileSync(path.join(ROOT,'public','backlog-chart.js'),'utf8');
   assert.match(chartSource,/timelineMode=model\.state\.chartType==='bar'/);
-  assert.match(chartSource,/bpaCols blvCols is-grouped backlogTimelineCols/);
-  assert.match(chartSource,/bpaCol blvGroupedCol backlogTimelineCol/);
+  assert.match(chartSource,/bpaCols blvCols/);
+  assert.match(chartSource,/backlogTimelineCols/);
+  assert.match(chartSource,/backlogTimelineColStacked/);
+  assert.match(chartSource,/blvGroupedCol/);
   assert.match(chartSource,/class="blvColTotal"/);
   assert.match(chartSource,/class="blvTodayLine"/);
   assert.match(chartSource,/timelineTooltipHtml/);
