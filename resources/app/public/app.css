@@ -5372,6 +5372,10 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 .backlogChartPanel .backlogTimelineCols .blvGroupBars{position:relative;z-index:1}
 .backlogTimelineAverage{position:absolute;left:0;right:0;z-index:2;border-top:1.25px dashed var(--muted);opacity:.75;pointer-events:none}
 .backlogTimelineBar{min-width:3px}
+.backlogTimelineStack{position:relative;z-index:1;width:100%}
+.backlogTimelineStack .backlogTimelineStackSeg{min-width:0;width:100%;transform-origin:center bottom}
+.backlogTimelineStack .backlogTimelineStackSeg:hover{transform:scaleX(1.08)}
+.backlogTimelineLayout{flex:0 0 auto}
 .backlogTimelineTip{z-index:5200}
 @media(max-width:900px){.backlogChartPanel .backlogTimelineCols{height:288px;padding-top:28px}.backlogChartPanel .backlogTimelineCols .bpaCol{flex-basis:58px}}
 
