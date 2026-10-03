@@ -25,6 +25,6 @@
 - Kullanıcıya görünen her yeni/değişen metin TR + EN yazılır (`CLAUDE.md` §4.1);
   `tests/i18n-coverage-guard.test.js` tek dilli metni reddeder, baseline boş
   kalır.
-- Kullanıcıya görünen her yeni özellik/fix/iyileştirme için `CLAUDE.md` §4.2 uyarınca `public/release-notes/next.json` + gerçek Buyer Log ekran görüntüsü aynı değişiklik setinde güncellenir; Codex kaynaklı işler bu kuraldan muaf değildir.
+- Kullanıcıya görünen her yeni özellik/fix/iyileştirme için `CLAUDE.md` §4.2 uyarınca `public/release-notes/next.json` + değişiklik sonrası çekilmiş, doğrulanabilir gerçek Buyer Log PNG ekran görüntüsü aynı değişiklik setinde güncellenir; aşırı crop/bozuk/before/mockup görseller kabul edilmez ve Codex kaynaklı işler bu kuraldan muaf değildir.
 - `CLAUDE.md` ile bu dosya çelişir görünürse `CLAUDE.md` önceliklidir; bu dosya
   yalnız Codex'e özgü giriş/fast-path bilgisidir.
