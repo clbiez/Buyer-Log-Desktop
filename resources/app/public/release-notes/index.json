@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.223",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Checklist akışı ve üretici paylaşımı güçlendirildi",
+        "en": "Checklist workflow and supplier sharing enhanced"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.223/release.json"
+    },
+    {
       "version": "7.0.222",
       "publishedAt": "2026-10-03",
       "title": {
