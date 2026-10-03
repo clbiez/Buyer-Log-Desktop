@@ -106,7 +106,7 @@
   function mountLanguageChooser(root){
     var brand=root&&root.querySelector('.blBootBrand');
     if(!brand||brand.querySelector('.blBootLanguage'))return;
-    var chooser=document.createElement('div');chooser.className='blBootLanguage';chooser.setAttribute('role','group');
+    var chooser=document.createElement('div');chooser.className='blBootLanguage';chooser.setAttribute('role','group');chooser.setAttribute('data-no-i18n','');
     chooser.innerHTML='<button type="button" data-boot-lang="tr" aria-label="Türkçe">TR</button><i aria-hidden="true">/</i><button type="button" data-boot-lang="en" aria-label="English">EN</button>';
     chooser.addEventListener('click',function(ev){var button=ev.target.closest?.('[data-boot-lang]');if(button)applyBootLanguage(button.dataset.bootLang);});
     chooser.addEventListener('keydown',function(ev){
