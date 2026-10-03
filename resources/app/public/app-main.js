@@ -5072,13 +5072,6 @@ function cpLogisticDetailRowElement(row,cols=visibleCols('cp'),withChk=true,tabl
   const tr=document.createElement('tr'); tr.className='cpLogisticDetailRow'; tr.dataset.parentId=String(row._id); tr.innerHTML=html; return tr;
 }
 
-/* v7.31 — Satır içi Outlook düğmesi TABLOLARDAN KALDIRILDI (kullanıcı talebi).
-   E-posta araması artık model adına sağ tıklayınca açılan menüden yapılır
-   (row-context-menu.js). İşlev burada duruyor ama boş dönüyor: çağrı yerleri
-   (CP/Siparişler sipariş kodu hücresi, Backlog, Koleksiyon) tek tek
-   ayıklanmak yerine tek noktadan susturuluyor; ileride geri istenirse tek
-   satır değişir. */
-function outlookRowActionHtml(module,id){ return ''; }
 /* Tek kanonik CP Sub Mfr değeri: DTR kuralı ekranda Manufacturer'ı gösterir,
    bu değer filtreleme/kopyalama/dışa aktarma yollarında da aynı olmalıdır. */
 function cpSubManufacturerValue(r){
@@ -5147,7 +5140,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
     }
     case 'status': return r&&r._partialViewActive ? partialViewStatusCellHtml(r) : cpLogisticHasDetails(r) ? cpLogisticStatusCellHtml(r,tableKey) : `<td>${badge(escapeHtml(statusDisplay(v)||'—'), statusTone(v))}</td>`;
     case 'active': { const t = norm(v)==='Active'?'green':'gray'; return `<td>${badge(norm(v), t)}</td>`; }
-    case 'ordercode': return `<td class="num"${oc?' data-ordercode-cell="1"':''} data-copy-text="${escapeHtml(oc||'')}">${oc?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${ORDER_URL(oc)}">${fmtOC(oc)}</a>`:''}${outlookRowActionHtml('',id)}</td>`;
+    case 'ordercode': return `<td class="num"${oc?' data-ordercode-cell="1"':''} data-copy-text="${escapeHtml(oc||'')}">${oc?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${ORDER_URL(oc)}">${fmtOC(oc)}</a>`:''}</td>`;
     case 'retail': return `<td>${(v&&oc)?`<a class="lnk" title="${escapeHtml(appLang==='en'?'Double-click to open':'Açmak için çift tıklayın')}" target="_blank" rel="noopener" href="${SHIP_URL(oc)}">${fmtDate(v)}</a>`:fmtDate(v)}</td>`;
     case 'date': return `<td>${fmtDate(v)}</td>`;
     case 'exfactory': {
@@ -7087,7 +7080,7 @@ function cellStyleFor(c,r,cf){
 // tabloda kalın çizgiler oluşur. 'thin' anahtar kelimesi Excel'in ince kenarlığına
 // birebir karşılık gelir; hex ton Gri temanın tablo çizgisiyle aynıdır.
 const _COPY_BORDER = 'thin solid #B4B8BD';
-/* Kopyalama HER ZAMAN aydınlık temaya göre biçimlenir (Excel/Outlook'a
+/* Kopyalama HER ZAMAN aydınlık temaya göre biçimlenir (Excel/e-posta uygulaması'a
    yapıştırıldığında okunur olsun diye). Kayıt başına tam bir <tr>, sütun
    başına tam bir <td>; rowspan ve dikey birleştirme yok. */
 function buildHTMLTable(tableKey, rows, computeFn){
@@ -7167,7 +7160,7 @@ async function _copyImageDataUrlFor({modelId='',colourCode='',source='',fallback
 async function _copyImageDataUrl(img){
   // Tablo thumbnail'ı viewport'a girmediyse src hâlâ SVG placeholder'dır;
   // cache yüklendiyse de src geçici bir blob URL'dir. Kopyalama her iki durumda
-  // da kalıcı model kaynağını kullanmalı ki Excel/Outlook HTML'i resmi içersin.
+  // da kalıcı model kaynağını kullanmalı ki Excel/e-posta uygulaması HTML'i resmi içersin.
   const src=String(img?.dataset?.src||img?.currentSrc||img?.src||'');
   if(!src) return '';
   return _copyImageDataUrlFor({
@@ -7281,7 +7274,7 @@ function _copyMeaningfulCellText(td){
 
 // Clipboard resmi thumbnail'ın ekrandaki kutusundan değil, kaynak görselin
 // gerçek oranından hesaplanır. Böylece lazy thumbnail henüz çözülmemiş olsa da
-// Excel/Outlook'a giden ölçüler doğru kalır ve resim hücre sınırlarını aşmaz.
+// Excel/e-posta uygulaması'a giden ölçüler doğru kalır ve resim hücre sınırlarını aşmaz.
 function _copyImageFitBox(naturalWidth,naturalHeight,cellWidth,cellHeight,padding=4){
   const cw=Math.max(1,Number(cellWidth)||1),ch=Math.max(1,Number(cellHeight)||1);
   const pad=Math.max(0,Number(padding)||0);
@@ -7436,7 +7429,7 @@ function _copyEnsureRequiredRowsRendered(table,selSet,idAttr){
 
    Bu yüzden Koleksiyon'un dışa aktarım DEĞERİ artık kayıttan üretilir
    (TABLE_META.kolTable.cellText — Ctrl+C ve Excel aktarımıyla aynı kaynak).
-   Outlook/Word kopyası için DOM'a hiç bakılmaz: UI satırı, kontrolü ve görseli
+   E-posta/Word kopyası için DOM'a hiç bakılmaz: UI satırı, kontrolü ve görseli
    clipboard'a taşınmaz; yalnız kayıt matrisinin business değerleri kullanılır.
    =================================================================== */
 // Koleksiyon satırının görselini KAYITTAN (DOM'dan değil) çözüp panoya
@@ -7486,7 +7479,7 @@ async function buildCollectionStyledCopy(selSet){
     // desenle aynı); kayıttan çözüldüğü için DOM'a hiç dokunulmaz.
     pictureCells=await Promise.all(records.map(kolRecordImageCopyCell));
   }
-  // Outlook/Word/Excel rich clipboard da TSV ve doğrudan XLSX ile aynı
+  // E-posta/Word/Excel rich clipboard da TSV ve doğrudan XLSX ile aynı
   // tek-satır sözleşmesini kullanır: hücre içi Enter fiziksel satıra dönüşmez.
   // Görsel sütunu aynı satırda gerçek <img> olarak kalır.
   const cellStyle='border:1px solid #B4B8BD;padding:3px 6px;text-align:left;vertical-align:top;';
@@ -16988,8 +16981,7 @@ function renderBacklogDetailTable(rows,headers){
     let v=r[c];
     if(expanded.sourceDateHeaders.has(c)&&v)v=fmtDate(v);
     else if(v==null)v='';
-    const outlookAction=/(?:order|sipariş).*(?:no|number|code|kod)/i.test(c)?outlookRowActionHtml('backlog',rowIndex):'';
-    return `<td${outlookAction?` data-copy-text="${escapeHtml(String(v))}"`:''}>${escapeHtml(String(v))}${outlookAction}</td>`;
+    return `<td>${escapeHtml(String(v))}</td>`;
   }).join('')}</tr>`).join('')+'</tbody>';
   wrap.innerHTML=`<table class="backlogDetailTable">${thead}${tbody}</table>`;
   const identityCols=detailIdentityColumns(cols);
@@ -17006,7 +16998,7 @@ function renderBacklogDetailTable(rows,headers){
     repaint:()=>renderBacklogDetailTable(currentBacklogDetailRows,currentBacklogDetailHeaders),
   });
 }
-window.BLGetOutlookRow=function(module,id){
+window.BLGetContextRow=function(module,id){
   const key=String(id==null?'':id);
   if(module==='backlog')return currentBacklogDetailRows[Number(id)]||null;
   if(module==='collection')return (typeof kolRows!=='undefined'?kolRows:[]).find(row=>String(row.id)===key)||null;
@@ -18670,7 +18662,7 @@ function shipCompareHeadCells(){
     <span>${escapeHtml(column.name)}</span>${column.role?`<i class="shipBadge ${column.key==='fob'?'isSource':'isBase'}">${escapeHtml(column.role)}</i>`:''}
   </th>`).join('');
 }
-/* Kopyalanabilir çıktı: Excel ve Outlook text/html'i olduğu gibi alır, bu
+/* Kopyalanabilir çıktı: Excel ve e-posta uygulamasının text/html'i olduğu gibi alır, bu
    yüzden tabloyu satır içi stille yeniden kurarız (dış CSS gitmez). Görsel
    mutlak URL'e çevrilir; aksi hâlde e-postada kırık görünür. */
 /* Kopyalanacak küme: işaretli satır varsa yalnız onlar, yoksa tümü. */
@@ -25892,7 +25884,7 @@ function renderKol(){
         // PLM deep-link artık hücre içinde ikon olarak gösterilmez. Model adı
         // hücresindeki sağ tık menüsü aynı kanonik PLM resolver'ını kullanır;
         // böylece spreadsheet left-click/edit/range davranışı sade kalır.
-        html+=`<td class="editTd plmEditTd plmModelLinkCell"${rc} data-copy-text="${escapeHtml(cur)}"><div class="plmEditCell"><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(cur)}</textarea>${outlookRowActionHtml('collection',r.id)}</div></td>`;
+        html+=`<td class="editTd plmEditTd plmModelLinkCell"${rc} data-copy-text="${escapeHtml(cur)}"><div class="plmEditCell"><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(cur)}</textarea></div></td>`;
       }else if(c.inStorePeriod){
         const isWeek=c.inStorePeriod==='week',display=isWeek?kolWeekDisplay(val,r.inStore):kolMonthDisplay(val);
         const title=isWeek?(appLang==='en'?'Double-click to choose In Store Week':'Mağaza Haftası seçmek için çift tıkla'):(appLang==='en'?'Double-click to choose In Store Month':'Mağaza Ayı seçmek için çift tıkla');
@@ -26024,7 +26016,7 @@ function renderKol(){
     if(!row)return;
     window.BL_QUOTATIONS?.openPriceHistory([row]);
   }));
-  if(!kolWorkspaceCanEdit){tbody.querySelectorAll('.editCell,select,button').forEach(el=>{if(!el.classList.contains('rowChk')&&!el.classList.contains('outlookRowBtn')&&!el.classList.contains('kolModelGroupToggle'))el.disabled=true;});}
+  if(!kolWorkspaceCanEdit){tbody.querySelectorAll('.editCell,select,button').forEach(el=>{if(!el.classList.contains('rowChk')&&!el.classList.contains('kolModelGroupToggle'))el.disabled=true;});}
   /* v7.81 — Modele bağlı varyant hücreleri görünür biçimde kapalı. Yalnız
      yazmayı reddetmek yetmez: kullanıcı yazabildiğini sanıp sonra uyarı
      alırdı. Düzenleyici devre dışı + hücreye işaret sınıfı. */
@@ -31752,7 +31744,7 @@ async function kolCreatePricingEmailDraft({email,subject,workbook,previews,attac
   })});
   const data=await resp.json().catch(()=>({}));
   if(!resp.ok) throw new Error(data.error||'E-posta taslağı oluşturulamadı.');
-  // Sunucu taslakları kalıcı tutmaz. Outlook otomatik açılamazsa EML içeriği
+  // Sunucu taslakları kalıcı tutmaz. Varsayılan e-posta uygulaması otomatik açılamazsa EML içeriği
   // yalnız bu sonuç penceresinin ömrü boyunca tarayıcı belleğinde tutulur.
   const transientUrls=[];
   if(data.emlBase64){
@@ -31953,10 +31945,10 @@ async function kolCreatePreparedEmailDraft({email,subject,text,html,attachmentPl
   return data;
 }
 /* v6.43 — BİRDEN FAZLA ÜRETİCİ SEÇİLİYKEN TASLAK İNDİRME.
-   Outlook otomatik açılamadığında (opened:false) sunucu her taslak için ayrı
+   Varsayılan e-posta uygulaması otomatik açılamadığında (opened:false) sunucu her taslak için ayrı
    bir .eml linki döndürür. Eskiden yalnız TEK üretici seçiliyken (checked.
    length===1) bu link otomatik indiriliyordu; birden fazla üretici seçilip
-   Outlook açılamadığında hiçbiri kendiliğinden inmiyordu — sonuç penceresinde
+   varsayılan e-posta uygulaması açılamadığında hiçbiri kendiliğinden inmiyordu — sonuç penceresinde
    N tane link duruyor, kullanıcı her birine tek tek tıklamak zorunda kalıyordu.
    Artık HER taslak için ayrı ayrı indirme tetiklenir. Tarayıcılar art arda çok
    sayıda indirmeyi "birden fazla dosya indirme" uyarısıyla engelleyebildiği
@@ -32021,7 +32013,7 @@ async function prepareEmailReopenSingleDraft(ref,requestId='',button=null){
   try{
     const data=await prepareEmailReopenDraftRef(ref);
     if(requestId&&data.draftId)prepareEmailRememberPricingDraft(requestId,{...ref,...data});
-    if(typeof showToast==='function')showToast(data.opened?(appLang==='en'?'Draft e-mail reopened in Outlook.':'Taslak e-posta Outlook’ta yeniden açıldı.'):(appLang==='en'?'Outlook could not reopen the draft; the .eml file was downloaded instead.':'Outlook taslağı yeniden açamadı; .eml dosyası indirildi.'));
+    if(typeof showToast==='function')showToast(data.opened?(appLang==='en'?'Draft e-mail reopened in the default e-mail app.':'Taslak e-posta varsayılan e-posta uygulamasında yeniden açıldı.'):(appLang==='en'?'The default e-mail app could not reopen the draft; the .eml file was downloaded instead.':'Varsayılan e-posta uygulaması taslağı yeniden açamadı; .eml dosyası indirildi.'));
     return true;
   }catch(err){
     if(Number(err?.status)===410&&requestId)prepareEmailForgetPricingDraft(requestId,ref?.draftId);
