@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.219",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Checklist yönetimi ve Yol Süreleri iyileştirmeleri",
+        "en": "Checklist management and Transit Times improvements"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 1,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.219/release.json"
+    },
+    {
       "version": "7.0.217",
       "publishedAt": "2026-10-03",
       "title": {
