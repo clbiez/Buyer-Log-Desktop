@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.219",
-  "commit_sha": "63f822e44fd4cc8a087c754bc739116b347e43e7",
-  "release_notes": "Buyer Log 7.0.219: Transit Times IAS Database tarih filtresindeki Date/Text karşılaştırma hatası giderildi ve bağımsız Modül ufku netleştirildi. Checklist yönetimi ile Supplier Checklist Excel akışı geliştirildi. Backlog zaman akışında gecikmiş alt toplam hizası, otomatik Bugün odağı ve üst/alt grafiklerin Yığılmış–Yan yana davranışı düzeltildi."
+  "version": "7.0.220",
+  "commit_sha": "46d6f432bffc3f84a52bee4684cee64d81ee504f",
+  "release_notes": "Buyer Log 7.0.220: Yol Süreleri / İthalat Yol Süresi Analizi artık Global Lojistik Excel raporuyla aynı sütun ve tanımlarla hesaplanıyor ve yalnız gerçekleşen Antrepo/Tema Depo girişlerini kullanıyor; tahmini giriş tarihi kullanılmıyor. Varsayılan ortalama rapordaki gibi sevkiyat ortalaması."
 }
