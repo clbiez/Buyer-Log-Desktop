@@ -30,6 +30,21 @@ async function setup(t) {
       fs.mkdirSync(backupAuth, { recursive:true });
       fs.writeFileSync(path.join(backupAuth, 'user-access.json'), JSON.stringify(options.portableBackupInitial));
     }
+    if (options.resourcesDataInitial) {
+      const legacyAuth = path.join(path.dirname(portableDataRoot), 'resources', 'app', 'data', 'app', 'auth');
+      fs.mkdirSync(legacyAuth, { recursive:true });
+      fs.writeFileSync(path.join(legacyAuth, 'user-access.json'), JSON.stringify(options.resourcesDataInitial));
+    }
+    if (options.siblingInstallInitial) {
+      const siblingAuth = path.join(root, 'Buyer-Log-Desktop-OLD', 'data', 'app', 'auth');
+      fs.mkdirSync(siblingAuth, { recursive:true });
+      fs.writeFileSync(path.join(siblingAuth, 'user-access.json'), JSON.stringify(options.siblingInstallInitial));
+    }
+    if (options.nestedEvidenceInitial) {
+      const evidence = path.join(portableDataRoot, 'migration-evidence', 'legacy-auth-folder', 'archived', 'auth');
+      fs.mkdirSync(evidence, { recursive:true });
+      fs.writeFileSync(path.join(evidence, 'selected-20260921-user-access.json'), JSON.stringify(options.nestedEvidenceInitial));
+    }
     const child = fork(path.join(__dirname, 'helpers', 'iam-device.js'), [], { env: { ...process.env,
       BUYER_LOG_AUTH_DATA_ROOT: auth, BUYER_LOG_SERVER_DATA_ROOT: serverData, BUYER_LOG_DATA_ROOT: path.join(root, name, 'data'),
       BUYER_LOG_LOCAL_DATA_ROOT: path.join(root, name, 'local'), BUYER_LOG_CONFIG_PATH: path.join(root, name, 'config.json'),
@@ -95,6 +110,63 @@ test('packaged desktop recovers user store from data-BACKUP even when SERVER_DAT
   const recovered = JSON.parse(fs.readFileSync(path.join(client.auth, 'user-access.json'), 'utf8'));
   assert.equal(recovered.users.length, 1);
   assert.equal(recovered.users[0].username, 'gokberk.celebi');
+});
+
+test('packaged desktop recovers user store from resources/app/data legacy layout', async t => {
+  const { device, shared } = await setup(t);
+  const legacy = seed();
+  const verifier = legacy.moderator.passwordHash;
+  legacy.moderator.passwordHash = '';
+  legacy.moderator.pinHash = '';
+  legacy.users = [{
+    id:'buyer-resource', username:'gokberk.celebi', displayName:'Gökberk Çelebi',
+    role:'buyer', systemRole:'buyer', enabled:true, status:'ACTIVE',
+    passwordHash:verifier, pinHash:verifier, title:'Buyer',
+    managerId:'moderator', supervisorId:'moderator',
+  }];
+  const client = await device('resource-layout', null, { resourcesDataInitial:iam.migrateStore(legacy) });
+  fs.renameSync(shared, shared + '-offline');
+  const login = await client.request('/api/user-login', 'POST', { username:'gokberk.celebi', password:'Test-admin-123' }, 'buyer');
+  assert.equal(login.status, 200, JSON.stringify(login));
+  assert.equal(login.body.user.username, 'gokberk.celebi');
+});
+
+test('packaged desktop discovers an older sibling Buyer Log installation even with SERVER_DATA_ROOT set', async t => {
+  const { device, shared } = await setup(t);
+  const legacy = seed();
+  const verifier = legacy.moderator.passwordHash;
+  legacy.moderator.passwordHash = '';
+  legacy.moderator.pinHash = '';
+  legacy.users = [{
+    id:'buyer-sibling', username:'gokberk.celebi', displayName:'Gökberk Çelebi',
+    role:'buyer', systemRole:'buyer', enabled:true, status:'ACTIVE',
+    passwordHash:verifier, pinHash:verifier, title:'Buyer',
+    managerId:'moderator', supervisorId:'moderator',
+  }];
+  const client = await device('current-install', null, { siblingInstallInitial:iam.migrateStore(legacy) });
+  fs.renameSync(shared, shared + '-offline');
+  const login = await client.request('/api/user-login', 'POST', { username:'gokberk.celebi', password:'Test-admin-123' }, 'buyer');
+  assert.equal(login.status, 200, JSON.stringify(login));
+  assert.equal(login.body.user.username, 'gokberk.celebi');
+});
+
+test('packaged desktop recursively recovers nested migration-evidence auth copies', async t => {
+  const { device, shared } = await setup(t);
+  const legacy = seed();
+  const verifier = legacy.moderator.passwordHash;
+  legacy.moderator.passwordHash = '';
+  legacy.moderator.pinHash = '';
+  legacy.users = [{
+    id:'buyer-evidence', username:'gokberk.celebi', displayName:'Gökberk Çelebi',
+    role:'buyer', systemRole:'buyer', enabled:true, status:'ACTIVE',
+    passwordHash:verifier, pinHash:verifier, title:'Buyer',
+    managerId:'moderator', supervisorId:'moderator',
+  }];
+  const client = await device('nested-evidence', null, { nestedEvidenceInitial:iam.migrateStore(legacy) });
+  fs.renameSync(shared, shared + '-offline');
+  const login = await client.request('/api/user-login', 'POST', { username:'gokberk.celebi', password:'Test-admin-123' }, 'buyer');
+  assert.equal(login.status, 200, JSON.stringify(login));
+  assert.equal(login.body.user.username, 'gokberk.celebi');
 });
 
 test('Central IAM acceptance: create, second PC login, CP revoke/403, reset, offline login and reconnect', async t => {
