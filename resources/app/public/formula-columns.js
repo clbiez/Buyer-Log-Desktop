@@ -181,19 +181,27 @@
     cols.splice(0, cols.length, ...base, ...dynamic);
     if (typeof window.invalidateColumnIndex === 'function') window.invalidateColumnIndex(tableKey);
     const valid = cols.map(col => col.k);
-    manager.order = manager.order.filter(key => valid.includes(key));
+    const knownBefore = new Set(manager.order);
+    const persistedBefore = new Set(window.BLColumnState && typeof window.BLColumnState.persistedOrder === 'function'
+      ? window.BLColumnState.persistedOrder(tableKey) : []);
+    if (window.BLColumnState && typeof window.BLColumnState.restoreLate === 'function') window.BLColumnState.restoreLate(tableKey);
+    else {
+      manager.order = manager.order.filter(key => valid.includes(key));
+      valid.forEach(key => { if (!manager.order.includes(key)) manager.order.push(key); });
+      manager.hidden = new Set([...manager.hidden].filter(key => valid.includes(key)));
+    }
     dynamic.forEach(col => {
-      const isNew = !manager.order.includes(col.k);
-      if (isNew) manager.order.push(col.k);
-      /* Sıra YALNIZ sütun yeni eklendiğinde ya da grubu değiştiğinde kurulur;
-         her eşitlemede taşımak, kullanıcının elle sürüklediği sırayı bozardı. */
+      const isNew = !knownBefore.has(col.k) && !persistedBefore.has(col.k);
+      /* Kayıtlı bir sütun geç yüklenmişse "yeni" değildir. Ayrıca eski
+         tanımlarda _placedGroup hiç yoktu; boş metadata yüzünden kullanıcının
+         elle verdiği sıra yeniden grup sonuna taşınmamalı. */
       const placed = col.formulaDef && col.formulaDef._placedGroup;
-      if (isNew || nameKey(placed || '') !== nameKey(col.group)) {
+      const groupChanged = Boolean(placed) && nameKey(placed) !== nameKey(col.group);
+      if (isNew || groupChanged) {
         placeInGroup(tableKey, col.k, col.group);
         rememberPlacedGroup(tableKey, col.formulaId, col.group);
       }
     });
-    manager.hidden = new Set([...manager.hidden].filter(key => valid.includes(key)));
     return dynamic;
   }
   // Sütunun en son hangi grup için yerleştirildiğini tanımın yanında saklar.
@@ -1888,6 +1896,7 @@
     const key = `${COLUMN_KEY_PREFIX}${id}`;
     for (const row of tableRows(tableKey)) { if (row && Object.prototype.hasOwnProperty.call(row, key)) delete row[key]; }
     save(tableKey, list.filter(item => item.id !== id));
+    if (window.BLColumnState && typeof window.BLColumnState.forget === 'function') window.BLColumnState.forget(tableKey, [key]);
     finish(onDone, tableKey);
     return true;
   }
