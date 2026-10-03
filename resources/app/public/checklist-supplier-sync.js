@@ -617,7 +617,7 @@
     const liveByOrder = liveDecision.byOrderKey || new Map();
     const catalog = new Map(itemCatalog().map(function (item) { return [item.id, item]; }));
     const entries = [];
-    let blank = 0, invalid = 0, notApplicable = 0, formulaCells = 0;
+    let blank = 0, invalid = 0, notApplicable = 0, formulaCells = 0, staleRows = 0;
     const importedAt = isoNow();
 
     for (let rowNo = 2; rowNo <= sheet.rowCount; rowNo += 1) {
@@ -627,6 +627,11 @@
       const loadDate = loadDateCol ? text(row.getCell(loadDateCol).text || row.getCell(loadDateCol).value) : '';
       const supplier = supplierCol ? text(row.getCell(supplierCol).text || row.getCell(supplierCol).value) : '';
       const analysis = liveByOrder && liveByOrder.get ? liveByOrder.get(orderKey) : null;
+      if (!analysis) { invalid += meta.items.length; continue; }
+      if (loadDate && analysis.plannedLoadDate && loadDate !== String(analysis.plannedLoadDate)) {
+        staleRows += 1;
+        continue;
+      }
 
       meta.items.forEach(function (metaItem) {
         const cell = row.getCell(metaItem.statusColumn);
@@ -671,8 +676,8 @@
     const conflicts = Number(result.conflicts || 0);
     const skipped = Number(result.skipped || 0) + invalid + notApplicable + formulaCells;
     toast(T(
-      'Checklist içe aktarıldı: ' + result.updated + ' güncellendi, ' + result.cleared + ' yeniden açıldı' + (conflicts ? ', ' + conflicts + ' daha yeni Buyer Log verisi nedeniyle korunarak atlandı' : '') + (skipped ? ', ' + skipped + ' geçersiz/uygunsuz kayıt atlandı.' : '.'),
-      'Checklist imported: ' + result.updated + ' updated, ' + result.cleared + ' reopened' + (conflicts ? ', ' + conflicts + ' kept because Buyer Log had newer data' : '') + (skipped ? ', ' + skipped + ' invalid/not-applicable entries skipped.' : '.')
+      'Checklist içe aktarıldı: ' + result.updated + ' güncellendi, ' + result.cleared + ' yeniden açıldı' + (conflicts ? ', ' + conflicts + ' daha yeni Buyer Log verisi nedeniyle korunarak atlandı' : '') + (staleRows ? ', ' + staleRows + ' satır yükleme tarihi değiştiği için atlandı' : '') + (skipped ? ', ' + skipped + ' geçersiz/uygunsuz kayıt atlandı.' : '.'),
+      'Checklist imported: ' + result.updated + ' updated, ' + result.cleared + ' reopened' + (conflicts ? ', ' + conflicts + ' kept because Buyer Log had newer data' : '') + (staleRows ? ', ' + staleRows + ' rows skipped because the load date changed' : '') + (skipped ? ', ' + skipped + ' invalid/not-applicable entries skipped.' : '.')
     ));
     return true;
   }
