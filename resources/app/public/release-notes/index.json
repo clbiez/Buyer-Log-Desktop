@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.220",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Yol süreleri Excel raporuyla aynı hesaplanıyor",
+        "en": "Transit times now match the Excel report"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.220/release.json"
+    },
+    {
       "version": "7.0.219",
       "publishedAt": "2026-10-03",
       "title": {
