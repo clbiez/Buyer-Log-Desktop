@@ -87,7 +87,7 @@ test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlene
   assert.doesNotMatch(VIEW, /filter\(rule => !rule\.builtIn\)/, 'yerleşik kurallar gizlenmemeli');
   // Kurallar kullanıcı tercihiyle birlikte saklanmalı.
   assert.match(VIEW, /rules: state\.rules,/);
-  assert.match(VIEW, /Rules\.mergeWithDefaults\(raw\.rules\)/);
+  assert.match(VIEW, /Rules\.mergeWithDefaults\(raw\.rules, state\.deletedRuleIds\)/);
 });
 
 test('v9.49 kural uygulaması sırası doğru: kontrol durumu → öncelik → yeniden sayım', () => {
