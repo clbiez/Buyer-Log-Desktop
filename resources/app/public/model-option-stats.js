@@ -8,6 +8,8 @@
   const MODEL_FIELDS=['modelKod','Model Name','modelName','model','styleName','modelCode'];
   const PLM_FIELDS=['plmId','PLM ID','plm','plmID'];
   const STYLE_FIELDS=['styleId','Style ID','styleCode','Style Code'];
+  const COLOUR_CODE_FIELDS=['colourCode','colorCode','C.Code','Colour Code','Color Code','Renk Kod','Renk Kodu'];
+  const ORDER_FIELDS=['Order Code','orderCode','ORDER CODE','OrderCode','Sipariş Kod','Sipariş Kodu','ocode'];
   const text=value=>String(value==null?'':value).trim().replace(/\s+/g,' ');
   // Aynı model/renk metni binlerce satırda tekrarlanır; tr-TR büyük harf
   // dönüşümü sınırlı önbellekle bir kez yapılır.
@@ -37,9 +39,20 @@
   }
 
   function optionKey(row,index=0){
-    const explicit=keyText(first(row,['optionKey','optionId','optionCode','colourCode','colour','Colour','colorCode','color','Color','C.Code','Colour Code']));
+    const colourCode=keyText(first(row,COLOUR_CODE_FIELDS));
     const model=modelKey(row,index);
-    return explicit?`${model}|option:${explicit}`:`row:${keyText(stableId(row))||index}`;
+    return colourCode?`${model}|colour:${colourCode}`:`row:${keyText(stableId(row))||index}`;
+  }
+
+  function orderKey(row){
+    const order=keyText(first(row,ORDER_FIELDS));
+    return order?`order:${order}`:'';
+  }
+
+  function getOrderCount(rows){
+    const list=Array.isArray(rows)?rows:[],orders=new Set();
+    list.forEach(row=>{const order=orderKey(row);if(order)orders.add(order);});
+    return orders.size;
   }
 
   function getModelOptionStats(rows,options={}){
@@ -56,5 +69,5 @@
     return {rowCount:list.length,modelCount:models.size,optionCount:options.optionMode==='unique'?optionsSeen.size:list.length};
   }
 
-  return {modelKey,optionKey,getModelOptionStats,normalize:text};
+  return {modelKey,optionKey,orderKey,getOrderCount,getModelOptionStats,normalize:text};
 });
