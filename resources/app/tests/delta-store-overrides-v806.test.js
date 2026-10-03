@@ -243,7 +243,12 @@ test('bölüm bazlı merge: iki ayrı bölüme yazmak birbirini ezmez', async t 
 
 async function ownLeaseSandbox(t, mode) {
   const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-delta-own-'));
-  t.after(() => fsp.rm(root, { recursive: true, force: true }));
+  // sandbox() ile aynı: Windows'ta yerel DB write-lock klasörü kısa süre açık
+  // kalabilir; kuyruğu bekle ve EPERM'de Node'un yeniden denemesini kullan.
+  t.after(async () => {
+    await settle();
+    await fsp.rm(root, { recursive: true, force: true, maxRetries: 30, retryDelay: 50 });
+  });
   const dataDir = path.join(root, 'server-data');
   await fsp.mkdir(dataDir, { recursive: true });
   useDataRoots(t, {
