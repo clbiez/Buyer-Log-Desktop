@@ -29,13 +29,17 @@
  */
 (function (root, factory) {
   const isNode = typeof require === 'function' && typeof module === 'object';
-  const api = factory(isNode ? require('./order-decision-engine') : (root && root.BLOrderDecisionEngine));
+  const api = factory(
+    isNode ? require('./order-decision-engine') : (root && root.BLOrderDecisionEngine),
+    isNode ? require('./cp-checklist-engine') : (root && root.BLCpChecklistEngine)
+  );
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLCpRulesEngine = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function (decisionEngine) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (decisionEngine, checklistEngine) {
   'use strict';
 
   const OD = decisionEngine || {};
+  const Checklist = checklistEngine || {};
   /* Compatibility list keeps UNKNOWN visible to legacy editors, but new rules
      can target only real Action Priority severities. Rank comes from the shared
      decision registry. */
@@ -568,8 +572,10 @@
     if (base.mode === 'formula' && base.formula) {
       try {
         Object.defineProperty(base, '_compiledFormula', { value: compileExpression(base.formula), enumerable: false, configurable: true });
+        Object.defineProperty(base, '_compiledFormulaSource', { value: base.formula, enumerable: false, configurable: true });
       } catch (error) {
         Object.defineProperty(base, '_formulaError', { value: error.message || String(error), enumerable: false, configurable: true });
+        Object.defineProperty(base, '_compiledFormulaSource', { value: base.formula, enumerable: false, configurable: true });
       }
     }
     return base;
@@ -577,7 +583,7 @@
 
   /* ------------------------------------------------------------- YERLEŞİK
      Kullanıcının tarif ettiği tanımlar, düzenlenebilir kural olarak. */
-  const DEFAULT_RULES = Object.freeze([
+  const DEFAULT_PRIORITY_RULES = Object.freeze([
     Object.freeze(normalizeRule({
       id: 'builtin_critical_late', builtIn: true, kind: 'priority', target: 'CRITICAL',
       name: 'Yükleme geçti ve Retail tarihine yetişmiyor',
@@ -643,6 +649,43 @@
     })),
   ]);
 
+  /* Yerleşik checklist tanımları da aynı kural editörüne taşınır. Böylece
+     kullanıcı ön tanımlı soruları görebilir, değiştirebilir, kapatabilir veya
+     kullanıcı bazında silebilir. Kimlikler Checklist.ITEMS ile aynıdır; bu,
+     mevcut cevap anahtarlarını ve @checklist:<id> priority koşullarını korur. */
+  const DEFAULT_CHECKLIST_RULE_IDS = Object.freeze(
+    (Array.isArray(Checklist.ITEMS) ? Checklist.ITEMS : []).map(item => item.id)
+  );
+  function checklistDefaultRule(item) {
+    const stages = Array.isArray(item.stages) ? item.stages.slice() : [];
+    const maxDays = Number(item.maxDaysToLoad);
+    const minAge = item.minOrderAgeDays == null ? null : Number(item.minOrderAgeDays);
+    const conditions = [
+      { field: '@stage', operator: 'in', value: stages },
+      { field: '@daysToLoad', operator: 'gte', value: -30 },
+      { field: '@daysToLoad', operator: 'lte', value: Number.isFinite(maxDays) ? maxDays : 365 },
+    ];
+    if (Number.isFinite(minAge)) conditions.push({ field: '@orderAgeDays', operator: 'gte', value: minAge });
+    const raw = {
+      id: item.id, builtIn: true, kind: 'checklist', enabled: item.defaultEnabled !== false,
+      name: item.tr || item.en || item.id, tr: item.tr || item.id, en: item.en || item.tr || item.id,
+      questionTr: item.questionTr || item.tr || item.id,
+      questionEn: item.questionEn || item.en || item.tr || item.id,
+      match: 'all', conditions,
+    };
+    if (Number.isFinite(minAge)) {
+      const stageArgs = stages.map(stage => JSON.stringify(String(stage))).join(',');
+      const loadLimit = Number.isFinite(maxDays) ? maxDays : 365;
+      raw.mode = 'formula';
+      raw.formula = `=AND(IN([@stage],${stageArgs}),OR(ISBLANK([@daysToLoad]),[@daysToLoad]>=-30),OR([@daysToLoad]<=${loadLimit},[@orderAgeDays]>=${minAge}))`;
+    }
+    return Object.freeze(normalizeRule(raw));
+  }
+  const DEFAULT_CHECKLIST_RULES = Object.freeze(
+    (Array.isArray(Checklist.ITEMS) ? Checklist.ITEMS : []).map(checklistDefaultRule)
+  );
+  const DEFAULT_RULES = Object.freeze([...DEFAULT_PRIORITY_RULES, ...DEFAULT_CHECKLIST_RULES]);
+
   /* --------------------------------------------------------------- gerçekler
      Bir sipariş için koşulların okuyacağı değerler. Ham satır alanları da
      dahildir; kullanıcının kendi hesaplamalı sütunu da böyle okunur. */
@@ -707,7 +750,19 @@
   function matchesRule(rule, facts) {
     if (!rule.enabled) return false;
     if (rule.mode === 'formula') {
-      const compiled = rule._compiledFormula;
+      let compiled = rule._compiledFormula;
+      if (!compiled || rule._compiledFormulaSource !== rule.formula) {
+        try {
+          compiled = compileExpression(rule.formula);
+          Object.defineProperty(rule, '_compiledFormula', { value: compiled, enumerable: false, configurable: true });
+          Object.defineProperty(rule, '_compiledFormulaSource', { value: rule.formula, enumerable: false, configurable: true });
+          if (Object.prototype.hasOwnProperty.call(rule, '_formulaError')) delete rule._formulaError;
+        } catch (error) {
+          Object.defineProperty(rule, '_formulaError', { value: error.message || String(error), enumerable: false, configurable: true });
+          Object.defineProperty(rule, '_compiledFormulaSource', { value: rule.formula, enumerable: false, configurable: true });
+          return false;
+        }
+      }
       if (!compiled || rule._formulaError) return false;
       const result = compiled.evaluate(facts || {}, { today: facts && facts.today });
       return !result.error && (typeof result.value === 'boolean' ? result.value : !blank(result.value));
@@ -862,10 +917,13 @@
   /* Kaydedilmiş kurallar ile yerleşikleri birleştirir. Kullanıcı yerleşik bir
      kuralı kapatmış ya da eşiğini değiştirmişse KAYDI kazanır; hiç dokunmadığı
      yerleşikler güncel tanımıyla gelir (yeni sürümde eklenen kural kaybolmaz). */
-  function mergeWithDefaults(savedRules) {
-    const saved = normalizeRules(savedRules);
+  function mergeWithDefaults(savedRules, deletedRuleIds) {
+    const deleted = new Set((Array.isArray(deletedRuleIds) ? deletedRuleIds : []).map(text).filter(Boolean));
+    const saved = normalizeRules(savedRules).filter(rule => !deleted.has(rule.id));
     const byId = new Map(saved.map(rule => [rule.id, rule]));
-    const merged = DEFAULT_RULES.map(rule => (byId.has(rule.id) ? byId.get(rule.id) : normalizeRule(rule)));
+    const merged = DEFAULT_RULES
+      .filter(rule => !deleted.has(rule.id))
+      .map(rule => (byId.has(rule.id) ? byId.get(rule.id) : normalizeRule(rule)));
     for (const rule of saved) {
       if (!DEFAULT_RULES.some(item => item.id === rule.id)) merged.push(rule);
     }
@@ -874,7 +932,7 @@
 
   return {
     SEVERITY, severityRank, OPERATORS, OPERATOR_IDS, DERIVED_FIELDS, CHECKLIST_PREFIX, CHECKLIST_STATES,
-    DEFAULT_RULES,
+    DEFAULT_RULES, DEFAULT_PRIORITY_RULES, DEFAULT_CHECKLIST_RULES, DEFAULT_CHECKLIST_RULE_IDS,
     normalizeCondition, normalizeRule, normalizeRules, conditionsToFormula, formulaToConditions, validateRule, mergeWithDefaults,
     compileExpression, evaluateExpression, validateExpression,
     factsFor, readField, matchesCondition, matchesRule,

@@ -30,6 +30,19 @@ test('checklist supplier bridge normalizes supplier statuses and answer deltas d
   assert.match(SYNC.columnKey('fabric test / lab'), /^__checklist__/);
 });
 
+test('checklist Excel dates normalize to one native Excel date shape', () => {
+  const iso = SYNC.excelDate('2026-10-19');
+  const compact = SYNC.excelDate('20261019');
+  const local = SYNC.excelDate('19.10.2026');
+  const timestamp = SYNC.excelDate('2026-10-19T12:35:00');
+  for (const value of [iso, compact, local, timestamp]) {
+    assert.ok(value instanceof Date);
+    assert.equal(value.getFullYear(), 2026);
+    assert.equal(value.getMonth(), 9);
+    assert.equal(value.getDate(), 19);
+  }
+});
+
 test('shared checklist store rejects stale supplier Excel and preserves newer Buyer Log answers', () => {
   const dataRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-checklist-supplier-'));
   try {
@@ -76,4 +89,40 @@ test('wiring loads the bridge after app-main and registers shared checklist rout
   assert.match(bridge, /dataValidation/);
   assert.match(bridge, /baseAt:\s*meta\.exportedAt/);
   assert.match(bridge, /activeNeedsRuntime/);
+
+  // Tools -> Checklist tek giriş noktası; eski iki ayrı Tools butonu yok.
+  assert.match(bridge, /id = 'cpChecklistToolsBtn'/);
+  assert.match(bridge, /Create Checklist Excel/);
+  assert.match(bridge, /Import Checklist Excel/);
+  assert.match(bridge, /Checklist Excel Columns/);
+  assert.doesNotMatch(bridge, /cpSupplierChecklistExportBtn|cpSupplierChecklistImportBtn/);
+
+  // Workbook kompakt, görselli ve yanlışlıkla düzenlemeye kapalıdır.
+  assert.match(bridge, /Model Görseli/);
+  assert.match(bridge, /canonicalModelImageSource/);
+  assert.match(bridge, /kolPrepareExcelImage/);
+  assert.match(bridge, /excelRow\.height = imageColumn \? 38 : 22/);
+  assert.match(bridge, /width: 14, checklistStatus: true/);
+  assert.match(bridge, /width: 22, checklistNote: true/);
+  assert.match(bridge, /protection = \{ locked: true \}/);
+  assert.match(bridge, /statusCell\.protection = \{ locked: !applicable \}/);
+  assert.match(bridge, /noteCell\.protection = \{ locked: !applicable \}/);
+  assert.match(bridge, /sheet\.protect\(EXCEL_PROTECTION_PASSWORD/);
+
+  // Backlog V3 ile aynı renk ailesinde, dosya değiştikçe hesaplanan özet ekranı vardır.
+  assert.match(bridge, /CHECKLIST_EXCEL_COLORS/);
+  assert.match(bridge, /Checklist Özet/);
+  assert.match(bridge, /renderChecklistSummary/);
+  assert.match(bridge, /statusCountFormula/);
+  assert.match(bridge, /fullCalcOnLoad:\s*true/);
+  assert.match(bridge, /applyChecklistConditionalFormatting/);
+  assert.match(bridge, /Checklist Status Distribution/);
+  assert.match(bridge, /Dosya düzenlendikçe yenilenir/);
+
+  // Ex-Factory gerçek Excel Date olur; tek format ve date validation kullanır.
+  assert.match(bridge, /EXCEL_DATE_FORMAT = 'dd\.mm\.yyyy'/);
+  assert.match(bridge, /cell\.numFmt = EXCEL_DATE_FORMAT/);
+  assert.match(bridge, /type: 'date', operator: 'between'/);
+  assert.match(bridge, /\^\\d\{4\}-\\d\{2\}-\\d\{2\}\[T \]\\d\{2\}:\\d\{2\}/);
+  assert.match(bridge, /dataUrlPreparedImage/);
 });

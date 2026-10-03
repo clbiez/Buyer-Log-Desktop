@@ -80,6 +80,7 @@
     checklistSettings: Checklist.normalizeSettings(null),
     answers: {},
     hidden: {},
+    deletedRuleIds: [],
     rules: Rules.mergeWithDefaults(null),
     fieldCatalog: null,
     attentionLimit: 25,
@@ -136,7 +137,46 @@
         if (raw.settings && raw.settings.targetType === 'inStore') state.settings.targetType = 'inStore';
         state.checklistSettings = Checklist.normalizeSettings(raw.checklistSettings);
         state.hidden = raw.hidden && typeof raw.hidden === 'object' ? raw.hidden : {};
-        state.rules = Rules.mergeWithDefaults(raw.rules);
+        state.deletedRuleIds = Array.isArray(raw.deletedRuleIds) ? [...new Set(raw.deletedRuleIds.map(String).filter(Boolean))] : [];
+        state.rules = Rules.mergeWithDefaults(raw.rules, state.deletedRuleIds);
+
+        /* v9.49 ve öncesinde ön tanımlı checklist ayarları rules içinde değil,
+           checklistSettings.items altında tutuluyordu. İlk geçişte kullanıcının
+           aç/kapat ve gün eşiği tercihlerini kaybetmeden yeni rule kayıtlarına
+           taşırız. Rule daha önce yeni editörden kaydedildiyse ona dokunmayız. */
+        const savedRuleIds = new Set((Array.isArray(raw.rules) ? raw.rules : [])
+          .map(rule => String(rule && rule.id || '')).filter(Boolean));
+        for (const id of (Rules.DEFAULT_CHECKLIST_RULE_IDS || [])) {
+          if (savedRuleIds.has(id) || state.deletedRuleIds.includes(id)) continue;
+          const rule = state.rules.find(item => item.id === id && item.kind === 'checklist');
+          const config = state.checklistSettings.items && state.checklistSettings.items[id];
+          if (!rule || !config) continue;
+          rule.enabled = config.enabled !== false;
+          const limit = Number(config.maxDaysToLoad);
+          const grace = Number(state.checklistSettings.overdueGraceDays);
+          if (Number.isFinite(limit)) {
+            const daysCondition = (rule.conditions || []).find(condition =>
+              condition.field === '@daysToLoad' && condition.operator === 'lte');
+            if (daysCondition) {
+              daysCondition.value = limit;
+              if (daysCondition.right) daysCondition.right.value = limit;
+            }
+            if (rule.mode === 'formula' && rule.formula) {
+              rule.formula = rule.formula.replace(/(\[@daysToLoad\]<=)-?\d+(?:\.\d+)?/, `$1${limit}`);
+            }
+          }
+          if (Number.isFinite(grace)) {
+            const overdueCondition = (rule.conditions || []).find(condition =>
+              condition.field === '@daysToLoad' && condition.operator === 'gte');
+            if (overdueCondition) {
+              overdueCondition.value = -grace;
+              if (overdueCondition.right) overdueCondition.right.value = -grace;
+            }
+            if (rule.mode === 'formula' && rule.formula) {
+              rule.formula = rule.formula.replace(/(\[@daysToLoad\]>=)-?\d+(?:\.\d+)?/, `$1${-grace}`);
+            }
+          }
+        }
         state.attentionColumns = normalizeAttentionColumns(raw.attentionColumns);
         state.attentionExclusions = normalizeAttentionExclusions(raw.attentionExclusions || raw.attentionExceptions);
         state.moduleLayout = normalizeModuleLayouts(raw.moduleLayout);
@@ -160,6 +200,7 @@
     store.set(PREF_KEY, JSON.stringify({
         perspective: state.perspective, settings: state.settings,
         checklistSettings: state.checklistSettings, hidden: state.hidden, rules: state.rules,
+        deletedRuleIds: state.deletedRuleIds,
         attentionColumns: state.attentionColumns, attentionExclusions: state.attentionExclusions,
         moduleLayout: state.moduleLayout,
     }));
@@ -1249,7 +1290,9 @@
   }
 
   function openSettings() {
-    const items = Checklist.ITEMS.map(item => {
+    const managed = new Set(Rules.DEFAULT_CHECKLIST_RULE_IDS || []);
+    const legacyItems = Checklist.ITEMS.filter(item => !managed.has(item.id));
+    const items = legacyItems.map(item => {
       const config = state.checklistSettings.items[item.id];
       return `<div class="cpaSettingRow">
         <label class="cpaCheck"><input type="checkbox" data-cpa-item="${esc(item.id)}" ${config.enabled ? 'checked' : ''}>
@@ -1261,18 +1304,23 @@
     const modal = document.createElement('div');
     modal.className = 'cpaModalOverlay';
     modal.innerHTML = `<div class="cpaModal"><header>
-        <div><b>${esc(L('Kontrol Ayarları', 'Checklist Settings'))}</b><small>${esc(L('Takip etmek istemediğiniz kontrolleri kapatın.', 'Turn off the checks you do not want to track.'))}</small></div>
+        <div><b>${esc(L('Kontrol Ayarları', 'Checklist Settings'))}</b><small>${esc(L('Kontrol listesini açıp kapatın; soru koşullarını kural ekranından yönetin.', 'Enable or disable the checklist; manage question conditions from the rules screen.'))}</small></div>
         <button type="button" data-cpa-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
       <div class="cpaModalBody">
         <label class="cpaCheck cpaMaster"><input type="checkbox" data-cpa-master ${state.checklistSettings.enabled ? 'checked' : ''}>
           <span><b>${esc(L('Kontrol listesi açık', 'Checklist enabled'))}</b></span></label>
-        <div class="cpaSettingRow">
+        ${managed.size ? `<div class="cpaSettingRow">
+          <span><b>${esc(L('Ön tanımlı kontrol soruları', 'Predefined checklist questions'))}</b>
+            <small>${esc(L('Ad, soru, kapsam, eşik ve etkinlik ayarları artık Priority and Checklist Rules > Checklist Questions altında düzenlenir.', 'Name, question, scope, thresholds and enabled state are now edited under Priority and Checklist Rules > Checklist Questions.'))}</small></span>
+          <button type="button" class="cpaBtn sm" data-cpa-open-rules>${esc(L('Kuralları yönet', 'Manage rules'))}</button>
+        </div>` : ''}
+        ${legacyItems.length ? `<div class="cpaSettingRow">
           <span><b>${esc(L('Gecikmiş sipariş toleransı', 'Overdue grace window'))}</b>
-            <small>${esc(L('Yükleme tarihi bu kadar günden fazla geçmişse kontrol sorulmaz; o siparişler zaten Kritik olarak görünür.', 'Checks are not asked for orders overdue by more than this; those already appear as Critical.'))}</small></span>
+            <small>${esc(L('Yükleme tarihi bu kadar günden fazla geçmişse legacy kontroller sorulmaz.', 'Legacy checks are not asked when the load date is overdue by more than this.'))}</small></span>
           <label class="cpaDays"><span>${esc(L('gün', 'days'))}</span>
             <input type="number" min="0" max="365" data-cpa-grace value="${Number(state.checklistSettings.overdueGraceDays) || 0}"></label>
         </div>
-        <div class="cpaSettingGroup">${items}</div>
+        <div class="cpaSettingGroup">${items}</div>` : ''}
         <p class="cpaNote">${esc(L('Bu ayarlar yalnız sizin hesabınız içindir; diğer kullanıcıları etkilemez.', 'These settings apply only to your account and do not affect other users.'))}</p>
       </div>
       <footer><button type="button" class="cpaBtn" data-cpa-close>${esc(L('Kapat', 'Close'))}</button></footer></div>`;
@@ -1280,6 +1328,8 @@
     const close = () => { modal.remove(); recompute(); render(); };
     modal.querySelectorAll('[data-cpa-close]').forEach(el => el.onclick = close);
     modal.onclick = event => { if (event.target === modal) close(); };
+    const manageRules = modal.querySelector('[data-cpa-open-rules]');
+    if (manageRules) manageRules.onclick = () => { modal.remove(); openRules(); };
     const master = modal.querySelector('[data-cpa-master]');
     master.onchange = () => { state.checklistSettings.enabled = master.checked; savePrefs(); };
     modal.querySelectorAll('[data-cpa-item]').forEach(el => el.onchange = () => {
@@ -1659,7 +1709,9 @@
           <span class="cpaRuleSummaryMeta">${esc(countText)} · ${esc(matchText)}</span>
         </button>
         <div class="cpaRuleActions">
-          ${rule.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : `<button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Kuralı sil', 'Delete rule'))}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}"><svg class="ic"><use href="#i-trash"/></svg></button>`}
+          ${rule.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : ''}
+          <button type="button" class="cpaIconBtn" data-cpa-rule-edit title="${esc(L('Kuralı düzenle', 'Edit rule'))}" aria-label="${esc(L('Kuralı düzenle', 'Edit rule'))}"><svg class="ic"><use href="#i-pencil"/></svg></button>
+          <button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Kuralı sil', 'Delete rule'))}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}"><svg class="ic"><use href="#i-trash"/></svg></button>
           <button type="button" class="cpaRuleChevron" data-cpa-rule-toggle aria-label="${esc(isOpen ? L('Kuralı daralt', 'Collapse rule') : L('Kuralı genişlet', 'Expand rule'))}" aria-expanded="${isOpen ? 'true' : 'false'}"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
         </div>
       </header>
@@ -1675,6 +1727,7 @@
     let activeValuePicker = null;
     let activeValueMenu = null;
     let valuePositionRaf = 0;
+    let backdropPointerStarted = false;
     const newPriorityRuleIds = new Set();
     const valueMenuSafeMargin = 12;
     const valueMenuGap = 4;
@@ -1953,6 +2006,12 @@
         draw();
         if (expandedRuleId) scrollToRule(id);
       });
+      modal.querySelectorAll('[data-cpa-rule-edit]').forEach(el => el.onclick = () => {
+        const id = ruleIdOf(el);
+        expandedRuleId = id;
+        draw();
+        scrollToRule(id);
+      });
       modal.querySelectorAll('[data-cpa-rule-enabled]').forEach(el => el.onchange = () => { findRule(ruleIdOf(el)).enabled = el.checked; commit(); });
       modal.querySelectorAll('[data-cpa-rule-name]').forEach(el => el.onchange = () => {
         const rule = findRule(ruleIdOf(el)); rule.name = el.value;
@@ -1976,8 +2035,9 @@
       });
       modal.querySelectorAll('[data-cpa-rule-delete]').forEach(el => el.onclick = () => {
         const rule = findRule(ruleIdOf(el));
-        if (!rule || rule.builtIn) return;
+        if (!rule) return;
         if (!confirm(L(`"${rule.name}" kuralı silinsin mi?`, `Delete the rule "${rule.name}"?`))) return;
+        if (rule.builtIn && !state.deletedRuleIds.includes(rule.id)) state.deletedRuleIds.push(rule.id);
         state.rules = state.rules.filter(item => item.id !== rule.id);
         newPriorityRuleIds.delete(rule.id);
         if (expandedRuleId === rule.id) expandedRuleId = null;
@@ -2285,7 +2345,15 @@
     document.addEventListener('keydown', onValueEscape, true);
     window.addEventListener('resize', onValueViewportChange);
     draw();
-    modal.onclick = event => { if (event.target === modal) close(); };
+    modal.addEventListener('pointerdown', event => {
+      backdropPointerStarted = event.target === modal;
+    });
+    modal.addEventListener('pointercancel', () => { backdropPointerStarted = false; });
+    modal.onclick = event => {
+      const shouldClose = event.target === modal && backdropPointerStarted;
+      backdropPointerStarted = false;
+      if (shouldClose) close();
+    };
   }
 
   /* ------------------------------------------------------------- hesaplama */
@@ -2312,6 +2380,7 @@
       customItems.set(analysis.orderKey, custom);
       checklistState.set(analysis.orderKey, Checklist.stateFor(analysis, {
         settings: state.checklistSettings, answers: state.answers, customItems: custom, plmEvidence,
+        managedItemIds: Rules.DEFAULT_CHECKLIST_RULE_IDS,
       }));
     }
     for (const analysis of model.orders) {
@@ -2349,6 +2418,7 @@
       state.checklist = Checklist.summarize(model.orders, {
         settings: state.checklistSettings, answers: state.answers, limit: 5000, plmEvidence,
         customItemsFor: analysis => customItems.get(analysis.orderKey) || [],
+        managedItemIds: Rules.DEFAULT_CHECKLIST_RULE_IDS,
       });
       const liveColumnCatalog = liveRuleColumnCatalog();
       state.fieldCatalog = Rules.fieldCatalog(list, {
