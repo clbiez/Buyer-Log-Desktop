@@ -34,7 +34,7 @@ test('v5.57 email groups are validated and generic reports can be built without 
   const html=mail.tableHtml([{Order:'100',Status:'OK'}],['Order','Status']);
   assert.match(html,/100/);assert.match(html,/Status/);
   assert.match(SERVER,/\/api\/automations\/email-groups/);
-  assert.match(SERVER,/outlook_send/);
+  assert.match(SERVER,/automationEmail\.createDraft/);
 });
 
 test('v5.57 scheduled execution is intentionally limited to email recipes',()=>{
