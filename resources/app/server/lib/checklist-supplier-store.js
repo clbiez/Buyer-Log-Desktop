@@ -122,7 +122,7 @@ function applyEntries(entries, actor, options = {}) {
   const source = text(options.source || 'buyer_log', 80) || 'buyer_log';
   return withFileLeaseSync(FILE, () => {
     const store = read();
-    let updated = 0, cleared = 0, skipped = 0;
+    let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
     const changedKeys = [];
     for (const raw of input) {
       if (!raw || typeof raw !== 'object') { skipped += 1; continue; }
@@ -132,13 +132,19 @@ function applyEntries(entries, actor, options = {}) {
       if (!orderKey || !itemId || !state) { skipped += 1; continue; }
       const key = answerKey(orderKey, itemId);
       const at = iso(raw.at);
+      const baseAt = text(raw.baseAt, 80);
+      const previous = store.answers[key];
+      const tomb = store.tombstones[key];
+      const previousAt = previous ? String(previous.at || '') : tomb ? String(tomb.at || '') : '';
+      // Supplier Excel carries the export timestamp as baseAt. If Buyer Log was
+      // changed after that export, the stale workbook must not overwrite it.
+      if (baseAt && previousAt && previousAt > baseAt) { conflicts += 1; continue; }
       const common = {
         key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
         byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
         note: text(raw.note, 2000), supplier: text(raw.supplier, 300), itemLabel: text(raw.itemLabel, 200),
       };
       if (state === 'open') {
-        const previous = store.answers[key];
         if (!previous && store.tombstones[key] && String(store.tombstones[key].at || '') >= at) { skipped += 1; continue; }
         delete store.answers[key];
         store.tombstones[key] = { ...common, state: 'open' };
@@ -146,9 +152,6 @@ function applyEntries(entries, actor, options = {}) {
         cleared += 1; changedKeys.push(key);
         continue;
       }
-      const previous = store.answers[key];
-      const tomb = store.tombstones[key];
-      const previousAt = previous ? String(previous.at || '') : tomb ? String(tomb.at || '') : '';
       if (previousAt && previousAt > at) { skipped += 1; continue; }
       store.answers[key] = { ...common, state };
       delete store.tombstones[key];
@@ -156,7 +159,7 @@ function applyEntries(entries, actor, options = {}) {
       updated += 1; changedKeys.push(key);
     }
     write(store);
-    return { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, changedKeys };
+    return { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys };
   });
 }
 
