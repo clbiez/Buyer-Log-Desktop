@@ -11,6 +11,42 @@ app.get('/api/checklist-supplier', userAccess.requireAnyArea('cp', 'orders', 'ov
       }
     });
 
+app.post('/api/checklist-supplier/attachments', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '56mb' }), (req, res) => {
+      try {
+        const body = req.body && typeof req.body === 'object' ? req.body : {};
+        const attachment = checklistSupplierStore.addAttachment(body, req.currentUser);
+        userAccess.appendAudit(req.currentUser, 'CHECKLIST_ATTACHMENT_UPLOAD', attachment.id, {
+          filename: attachment.filename, size: attachment.size,
+        });
+        res.json({ ok: true, attachment });
+      } catch (err) {
+        automationError(res, err, 'Checklist eki yüklenemedi.');
+      }
+    });
+
+app.get('/api/checklist-supplier/attachments/:id', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
+      try {
+        const fullPath = checklistSupplierStore.getAttachmentPath(req.params && req.params.id);
+        if (!fullPath) return res.status(404).json({ error: 'Checklist eki bulunamadı.', code: 'CHECKLIST_ATTACHMENT_NOT_FOUND' });
+        res.set('Cache-Control', 'private, no-store');
+        res.type('application/octet-stream');
+        return res.sendFile(fullPath);
+      } catch (err) {
+        automationError(res, err, 'Checklist eki okunamadı.');
+      }
+    });
+
+app.delete('/api/checklist-supplier/attachments/:id', userAccess.requireAnyArea('cp', 'orders'), (req, res) => {
+      try {
+        const id = String(req.params && req.params.id || '');
+        const deleted = checklistSupplierStore.deleteAttachment(id);
+        userAccess.appendAudit(req.currentUser, 'CHECKLIST_ATTACHMENT_DELETE', id, { deleted });
+        res.json({ ok: true, deleted });
+      } catch (err) {
+        automationError(res, err, 'Checklist eki silinemedi.');
+      }
+    });
+
 app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 'overview'), express.json({ limit: '2mb' }), (req, res) => {
       try {
         const definitions = req.body && req.body.definitions;
