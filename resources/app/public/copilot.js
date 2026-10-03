@@ -380,7 +380,7 @@
          düşer, önizleme "gönderilir" derken taslak üretilirdi). */
       /* "taslağı" — Türkçede k→ğ yumuşaması. Yalnız "taslak" arasaydı,
          "taslağı gönder" diyen kullanıcıya OTOMATİK GÖNDERİM kurulurdu. */
-      deliveryMode:/gönder|gonder|\bsend\b/i.test(lowered)&&!/tasla[kğ]|draft/i.test(lowered)?'outlook_send':'draft',
+      deliveryMode:'draft',
       raw:value,
     };
   }
@@ -959,9 +959,7 @@
           : t('(filtre yok)','(no filter)')],
         [t('Grup','Group'),after.emailGroupName],
         [t('Zamanlama','Schedule'),`${t('Haftalık','Weekly')} · ${day[lang()==='en'?1:0]} · ${after.time}`],
-        [t('Teslimat','Delivery'),after.deliveryMode==='outlook_send'
-          ? t('E-POSTA OTOMATİK GÖNDERİLİR','EMAIL IS SENT AUTOMATICALLY')
-          : t('Taslak oluşturulur, gönderilmez','A draft is created, nothing is sent')],
+        [t('Teslimat','Delivery'),t('Taslak oluşturulur, gönderilmez','A draft is created, nothing is sent')],
       ];
     }else{
       const field=proposal.type==='order.note.set'?'note':'manufacturer';
