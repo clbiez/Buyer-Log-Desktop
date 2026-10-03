@@ -176,7 +176,9 @@ function normalizeDefinition(raw) {
     mode: raw.mode === 'formula' ? 'formula' : 'basic', formula: text(raw.formula, 4000),
     expressionVersion: Math.max(1, Number(raw.expressionVersion) || 1),
     conditions, match: raw.match === 'any' ? 'any' : 'all',
-    approvalScope: raw.approvalScope === 'option' ? 'option' : 'order',
+    // Custom checklist definitions default to reusable approval scope. An
+    // explicit per-PO choice remains authoritative.
+    approvalScope: raw.approvalScope === 'order' ? 'order' : 'option',
     evidenceFields: {
       reportNumber: Boolean(raw.evidenceFields && raw.evidenceFields.reportNumber === true),
       actualDate: Boolean(raw.evidenceFields && raw.evidenceFields.actualDate === true),
