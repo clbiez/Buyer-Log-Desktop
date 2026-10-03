@@ -11,9 +11,16 @@ const ROOT = path.resolve(__dirname, '..');
 const SYNC = require('../public/checklist-supplier-sync.js');
 
 test('checklist supplier bridge normalizes supplier statuses and answer deltas deterministically', () => {
-  assert.equal(SYNC.normalizeState('Tamamlandı'), 'done');
-  assert.equal(SYNC.normalizeState('Completed'), 'done');
+  // v7.221: Pending · Approved · Rejected · Not Required. Eski Excel değerleri
+  // (Completed / Tamamlandı / Open) aynı kanonik duruma okunur.
+  assert.equal(SYNC.normalizeState('Tamamlandı'), 'approved');
+  assert.equal(SYNC.normalizeState('Completed'), 'approved');
+  assert.equal(SYNC.normalizeState('Approved'), 'approved');
+  assert.equal(SYNC.normalizeState('Reddedildi'), 'rejected');
+  assert.equal(SYNC.normalizeState('Rejected'), 'rejected');
   assert.equal(SYNC.normalizeState('Gerekmiyor'), 'notRequired');
+  assert.equal(SYNC.normalizeState('Not Required'), 'notRequired');
+  assert.equal(SYNC.normalizeState('Pending'), 'open');
   assert.equal(SYNC.normalizeState('Open'), 'open');
   assert.equal(SYNC.normalizeState('bilinmeyen'), '');
 

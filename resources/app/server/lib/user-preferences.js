@@ -60,6 +60,9 @@ const WORKSPACE_CATEGORY_PREFIXES = Object.freeze({
     'lcw.tableViewFocus.',
   ]),
   views: Object.freeze(['lcw_view_favorite_']),
+  // v7.221 — kişisel CP öncelik kuralları ve checklist soruları. Kullanıcıya
+  // aittir; Ön Ayar Paylaşımı / Profil Kopyalama ile başkasına aktarılabilir.
+  rules: Object.freeze(['lcw.cp.rules.']),
   dashboard: Object.freeze(['buyerlog.dashboard.', 'lcw.dashboard.']),
   favorites: Object.freeze(['buyerlog.favorites.', 'lcw.favorites.']),
   appearance: Object.freeze([

@@ -31,6 +31,11 @@ const UNDO_ROOT = path.join(SERVER_DATA_ROOT, 'preset-share-undo');
 const HORIZON_PREFIX = userPreferences.WORKSPACE_HORIZON_PREFIX;
 const TABLE_VIEW_PRESET_PREFIX = 'lcw.tableViewFocus.';
 const FORMULA_COLUMNS_PREFIX = 'bl.formulaColumns.';
+// v7.221 — kişisel CP kuralları: öncelik kuralları ve checklist soruları ayrı
+// anahtarlarda durur ki kullanıcı ikisini ayrı ayrı alabilsin.
+const PRIORITY_RULES_KEY_PREFIX = 'lcw.cp.rules.priority.';
+const CHECKLIST_RULES_KEY_PREFIX = 'lcw.cp.rules.checklist.';
+const RULE_STORE_PREFIX = 'lcw.cp.rules.';
 const COLUMN_PREFIXES = userPreferences.WORKSPACE_CATEGORY_PREFIXES.columns;
 
 // Değeri { sayfa: ayar } biçiminde tutulan anahtarlar. MERGE bu anahtarlarda
@@ -53,6 +58,12 @@ const SHARE_ITEMS = Object.freeze([
   { id: 'customColumns', prefixes: [FORMULA_COLUMNS_PREFIX], defaultSelected: true,
     labelTr: 'Oluşturulan sütunlar', labelEn: 'Created columns',
     hintTr: 'Kullanıcının oluşturduğu hesaplanan (formül) sütunlar. Kendi sütunlarınız korunur.', hintEn: 'Calculated (formula) columns the user created. Your own columns are kept.' },
+  { id: 'cpPriorityRules', prefixes: [PRIORITY_RULES_KEY_PREFIX], defaultSelected: false,
+    labelTr: 'Öncelik kuralları', labelEn: 'Priority rules',
+    hintTr: 'Kullanıcının CP öncelik kuralları (Rules). Aynı kimlikli kurallarınız güncellenir, diğerleri korunur.', hintEn: 'The user’s CP priority rules (Rules). Your rules with the same ID are updated, the others are kept.' },
+  { id: 'cpChecklistQuestions', prefixes: [CHECKLIST_RULES_KEY_PREFIX], defaultSelected: false,
+    labelTr: 'Checklist soruları', labelEn: 'Checklist questions',
+    hintTr: 'Kullanıcının checklist soruları ve kimlere sorulduğu (Checklist Settings). Kendi sorularınız korunur.', hintEn: 'The user’s checklist questions and who they are asked for (Checklist Settings). Your own questions are kept.' },
   { id: 'views', prefixes: ['lcw_view_favorite_'], profileStore: 'views', defaultSelected: true,
     labelTr: 'Kayıtlı görünümler', labelEn: 'Saved views',
     hintTr: 'Adlandırılmış görünüm profilleri ve sayfa favorisi.', hintEn: 'Named view profiles and the page favourite.' },
@@ -97,6 +108,7 @@ function pagesOfEntry(key, value) {
 }
 function countOfEntry(key, value) {
   const parsed = parseJson(value);
+  if (String(key).indexOf(RULE_STORE_PREFIX) === 0 && isPlainObject(parsed) && Array.isArray(parsed.rules)) return parsed.rules.length;
   if (String(key).indexOf(FORMULA_COLUMNS_PREFIX) === 0 && Array.isArray(parsed)) return parsed.length;
   if (PAGE_KEYED_KEYS.has(String(key)) && isPlainObject(parsed)) return Object.keys(parsed).length;
   return 1;
@@ -114,6 +126,16 @@ function mergeValue(key, targetValue, sourceValue) {
   if (String(key).indexOf(FORMULA_COLUMNS_PREFIX) === 0 && Array.isArray(target) && Array.isArray(source)) {
     const ids = new Set(source.map(column => column && column.id).filter(Boolean));
     return JSON.stringify([...source, ...target.filter(column => column && column.id && !ids.has(column.id))]);
+  }
+  /* Kural deposu: kural kimliği düzeyinde birleşir. Kaynağın kuralı aynı
+     kimlikli kuralı günceller; talep edenin diğer kuralları korunur. Kaynakta
+     bulunan yerleşik kural, talep edende silinmiş olsa bile geri gelir. */
+  if (String(key).indexOf(RULE_STORE_PREFIX) === 0 && isPlainObject(target) && isPlainObject(source)
+    && Array.isArray(target.rules) && Array.isArray(source.rules)) {
+    const ids = new Set(source.rules.map(rule => rule && rule.id).filter(Boolean));
+    const rules = [...source.rules, ...target.rules.filter(rule => rule && rule.id && !ids.has(rule.id))];
+    const deletedRuleIds = (Array.isArray(target.deletedRuleIds) ? target.deletedRuleIds : []).filter(id => !ids.has(id));
+    return JSON.stringify({ ...target, ...source, rules, deletedRuleIds });
   }
   if (String(key).indexOf(HORIZON_PREFIX) === 0 && isPlainObject(target) && isPlainObject(source)
     && isPlainObject(target.byConnection) && isPlainObject(source.byConnection)) {

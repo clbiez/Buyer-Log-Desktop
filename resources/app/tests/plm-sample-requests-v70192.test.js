@@ -222,7 +222,7 @@ test('v7.0.192 PLM onayı soruyu kapatır; açık talep soruyu PLM durumuyla aç
   assert.equal(open.find(item => item.id === 'pps').plm, null);
 
   const state = Checklist.stateFor(analysis(), { settings, answers: {}, plmEvidence });
-  assert.equal(state.artwork, 'answered');
+  assert.equal(state.artwork, 'approved', 'PLM onayı soruyu Approved durumuna kapatır');
   assert.equal(state.soff, 'open');
 });
 
@@ -398,10 +398,12 @@ test('v7.0.193 Priority: Ex-factory’ye 21 gün kala PPS onayı yoksa ayrı seb
   assert.equal(rule.reasonTr, 'Ex-factory yaklaşıyor, PPS onayı yok');
   const days = rule.conditions.find(c => c.field === '@daysToLoad' && c.operator === 'lte');
   assert.equal(days.value, 21);
-  assert.ok(rule.conditions.some(c => c.field === '@checklist:pps' && c.value === 'open'));
+  // v7.221: 'açık' = Pending ya da Reddedildi (reddedilen PPS de onay değildir).
+  assert.ok(rule.conditions.some(c => c.field === '@checklist:pps' && c.operator === 'in' && c.value.includes('open') && c.value.includes('rejected')));
   const a = analysis({ daysToLoad: 18 });
   assert.ok(Rules.applyPriorityRules(a, [rule], { pps: 'open' }).matched.length, 'PPS açık → kural eşleşir');
-  assert.equal(Rules.applyPriorityRules(a, [rule], { pps: 'answered' }).matched.length, 0, 'PPS onaylı → eşleşmez');
+  assert.equal(Rules.applyPriorityRules(a, [rule], { pps: 'approved' }).matched.length, 0, 'PPS onaylı → eşleşmez');
+  assert.ok(Rules.applyPriorityRules(a, [rule], { pps: 'rejected' }).matched.length, 'PPS reddedildi → eşleşir');
   // Kullanıcı eşiği değiştirirse (kural düzenleyici) kaydı kazanır.
   const edited = JSON.parse(JSON.stringify(rule));
   const editedDays = edited.conditions.find(c => c.field === '@daysToLoad' && c.operator === 'lte');

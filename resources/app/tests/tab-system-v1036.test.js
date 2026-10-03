@@ -58,7 +58,9 @@ test('v10.36 gerçek tablistlerin tamamı adlandırılmış ve tek tab durağı 
   const source = TAB_FILES.map(([, value]) => value).join('\n');
   const lists = tags(source, 'tablist');
   const tabs = tags(source, 'tab');
-  assert.equal(lists.length, 8, 'durum filtresi tablist sayılmadan sekiz gerçek tablist kalmalı');
+  // v7.221: Rules penceresindeki Priority/Checklist sekmeleri kaldırıldı;
+  // checklist soruları Checklist Settings penceresine taşındı.
+  assert.equal(lists.length, 7, 'durum filtresi tablist sayılmadan yedi gerçek tablist kalmalı');
   lists.forEach(tag => {
     assert.match(tag, /data-bl-tabs="(?:line|segment|metrics)"/);
     assert.match(tag, /aria-label=/);
@@ -100,7 +102,7 @@ test('v10.36 sekme panelleri klavyeyle ulaşılabilir ve seçili sekmeyle ilişk
   const UM = read('public/user-management.js');
   assert.match(DM, /id="dmLabPanel"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
   assert.match(FC, /data-fc-build[^>]*role="tabpanel"[^>]*tabindex="0"/);
-  assert.match(CPA, /class="cpaRuleList"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
+  assert.match(CPA, /class="cpaRuleModePanel"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
   assert.match(LFL, /id="lflTrialDraftList"[^>]*role="tabpanel"[^>]*tabindex="0"/);
   assert.match(PSA, /id="psaPanel"[^>]*role="tabpanel"[^>]*aria-labelledby=/);
   assert.match(UM, /class="umMatrixWrap"[^>]*role="tabpanel"[^>]*aria-labelledby=/);

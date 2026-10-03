@@ -4068,7 +4068,7 @@ function defaultMinPx(c, tableKey){
   const byType = {
     priority:48, status:52, active:46, ordercode:58, money:46, moneyEdit:50, pct:36,
     int:42, plm:46, num:40, date:54, exfactory:56, retailEdit:56, instoreEdit:56, retail:56,
-    deltype:52, submfr:60, licensor:58, text:70,
+    deltype:52, submfr:60, licensor:58, text:70, checklistStatus:70,
     cpImage:tableImageSizeDimensions(tableKey,tableImageSizeBounds(tableKey).min).col
   };
   const label=tableColumnLabel(tableKey,c);
@@ -5128,6 +5128,17 @@ function cellHtml(c,r,cf,tableKey='cp'){
       return `<td class="${numeric?'num ':''}formulaCell" title="${escapeHtml(String(text))}">${escapeHtml(String(text))}</td>`;
     }
     case 'cpImage': return cpImageCellHtml(r);
+    /* v7.221 — Checklist sütunu SERBEST METİN DEĞİLDİR. Hücre yalnız dört
+       durumdan birini (Pending / Approved / Rejected / Not Required) seçtiren
+       bir düğmedir; seçim BLChecklistSupplierSync durum menüsünden yazılır.
+       Soru bu siparişe sorulmuyorsa hücre boş ve etkileşimsizdir. */
+    case 'checklistStatus': {
+      const label=norm(v);
+      if(!label) return `<td class="clStatusNa" title="${escapeHtml(appLang==='en'?'This question is not asked for this order':'Bu soru bu siparişe sorulmuyor')}">—</td>`;
+      const status=(r._checklistStatus&&r._checklistStatus[c.checklistItemId])||'open';
+      if(!canEdit) return viewOnly(label);
+      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)}" data-id="${id}" data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(appLang==='en'?'Choose a status':'Durum seçin')}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
+    }
     case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
       const reason=priorityReasonText(r),title=reason?` title="${escapeHtml(reason)}"`:'';

@@ -56,9 +56,12 @@ function write(store) {
 function normalizeState(value) {
   const raw = text(value, 80).toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ');
   if (!raw) return '';
-  if (['done','completed','complete','tamam','tamamlandı','tamamlandi','yes','evet'].includes(raw)) return 'done';
+  // v7.221 — Pending (open) · Approved · Rejected · Not Required. Eski 'done'
+  // kayıtları ve Excel değerleri 'approved' olarak okunur.
+  if (['approved','approve','onaylandı','onaylandi','onaylı','onayli','done','completed','complete','tamam','tamamlandı','tamamlandi','yes','evet'].includes(raw)) return 'approved';
+  if (['rejected','reject','reddedildi','red','ret','failed','fail','no','hayır','hayir'].includes(raw)) return 'rejected';
   if (['notrequired','not required','n a','na','gerekmiyor','gerek yok','uygulanmaz'].includes(raw)) return 'notRequired';
-  if (['open','pending','açık','acik','bekliyor','yeniden aç','yeniden ac'].includes(raw)) return 'open';
+  if (['open','pending','açık','acik','bekliyor','beklemede','yeniden aç','yeniden ac'].includes(raw)) return 'open';
   return '';
 }
 function answerKey(orderKey, itemId) { return text(orderKey, 300) + '::' + text(itemId, 160); }

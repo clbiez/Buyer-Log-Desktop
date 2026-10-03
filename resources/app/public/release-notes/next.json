@@ -1,14 +1,239 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Checklist ve Kurallar yeniden tasarlandı",
+    "en": "Checklist and Rules redesigned"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Checklist soruları kendi ayar penceresine taşındı, kural kurmak şablon ve aranabilir alanlarla sadeleşti, formül için AI rehberi eklendi. Checklist artık Bekliyor · Onaylandı · Reddedildi · Gerekmiyor durumlarını kullanıyor; kurallar ve sorular kişisel ve Ön Ayar Paylaşımı ile paylaşılabilir.",
+    "en": "Checklist questions moved to their own settings window, building rules is simpler with templates and searchable fields, and an AI guide helps with formulas. The checklist now uses Pending · Approved · Rejected · Not Required; rules and questions are personal and can be shared with Preset Sharing."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "checklist-settings-window",
+      "type": "improvement",
+      "module": {
+        "tr": "Bugünün Üretim Öncelikleri",
+        "en": "Today's Production Focus"
+      },
+      "title": {
+        "tr": "Checklist soruları Checklist Settings'te",
+        "en": "Checklist questions live in Checklist Settings"
+      },
+      "body": {
+        "tr": "Rules penceresinde artık yalnız öncelik kuralları var. Checklist soruları, checklist aç/kapat anahtarıyla birlikte Checklist Settings penceresinde yönetilir; her soru CP'de bir sütundur.",
+        "en": "The Rules window now shows only priority rules. Checklist questions are managed in Checklist Settings together with the checklist on/off switch; every question is a CP column."
+      },
+      "path": {
+        "tr": "Genel Bakış › Bugünün Üretim Öncelikleri › Checklist Settings",
+        "en": "Overview › Today's Production Focus › Checklist Settings"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "checklist-settings.png",
+        "alt": {
+          "tr": "Checklist Settings penceresi ve soru düzenleyici (demo veri)",
+          "en": "Checklist Settings window and question editor (demo data)"
+        },
+        "caption": {
+          "tr": "Önizleme, sorunun şu an kaç siparişe sorulduğunu gösterir.",
+          "en": "The preview shows how many orders the question is asked for right now."
+        }
+      }
+    },
+    {
+      "id": "rule-builder-simple",
+      "type": "feature",
+      "module": {
+        "tr": "Bugünün Üretim Öncelikleri",
+        "en": "Today's Production Focus"
+      },
+      "title": {
+        "tr": "Şablonla ve aranabilir alanlarla kolay kural",
+        "en": "Easy rules with templates and searchable fields"
+      },
+      "body": {
+        "tr": "Yeni kural ya da soru hazır bir şablondan başlar. Koşul satırı düz bir cümledir: alan aranarak seçilir, işlem ve değer alanın türüne göre daralır. Her kural şu an kaç siparişi etkilediğini canlı gösterir; alan-alan ve tarih karşılaştırması ⇄ ile açılan gelişmiş satırdadır.",
+        "en": "A new rule or question starts from a ready-made template. A condition row reads like a sentence: search for a field, and the operator and value narrow to the field type. Every rule shows live how many orders it affects; field-to-field and date comparisons sit in the advanced row opened with ⇄."
+      },
+      "path": {
+        "tr": "Bugünün Üretim Öncelikleri › Rules › + Öncelik kuralı",
+        "en": "Today's Production Focus › Rules › + Priority rule"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "rule-templates.png",
+        "alt": {
+          "tr": "Kural şablonları (demo veri)",
+          "en": "Rule templates (demo data)"
+        },
+        "caption": {
+          "tr": "Şablon yalnız başlangıçtır; her şey sonra düzenlenebilir.",
+          "en": "A template is only a starting point; everything stays editable."
+        }
+      }
+    },
+    {
+      "id": "rule-ai-guide",
+      "type": "feature",
+      "module": {
+        "tr": "Bugünün Üretim Öncelikleri",
+        "en": "Today's Production Focus"
+      },
+      "title": {
+        "tr": "AI ile formül yazma rehberi (.md)",
+        "en": "AI formula guide (.md)"
+      },
+      "body": {
+        "tr": "Karmaşık bir koşulu kendi cümlenizle yazın, Buyer Log kural dilini ve alan adlarını anlatan Markdown rehberi kopyalayın ya da indirin, ChatGPT gibi bir araca verin ve cevabı yapıştırın. Buyer Log formülü bulur, kendi ayrıştırıcısıyla denetler ve kaç siparişin eşleştiğini gösterir; uygulamak sizin onayınızladır. Rehbere sipariş, fiyat veya tedarikçi verisi girmez.",
+        "en": "Describe a complex condition in your own words, copy or download the Markdown guide that explains the Buyer Log rule language and field names, give it to a tool like ChatGPT and paste the answer. Buyer Log finds the formula, checks it with its own parser and shows how many orders match; applying it needs your confirmation. No order, price or supplier data goes into the guide."
+      },
+      "path": {
+        "tr": "Kural düzenleyici › ✦ AI ile yaz",
+        "en": "Rule editor › ✦ Write with AI"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "rule-ai-guide.png",
+        "alt": {
+          "tr": "AI cevabından bulunan ve doğrulanan formül (demo veri)",
+          "en": "Formula found in the AI answer and validated (demo data)"
+        },
+        "caption": {
+          "tr": "Formül alan adlarıyla yazılır: [Days to load].",
+          "en": "Formulas use field names: [Days to load]."
+        }
+      }
+    },
+    {
+      "id": "checklist-four-statuses",
+      "type": "feature",
+      "module": {
+        "tr": "Bugünün Üretim Öncelikleri",
+        "en": "Today's Production Focus"
+      },
+      "title": {
+        "tr": "Dört checklist durumu",
+        "en": "Four checklist statuses"
+      },
+      "body": {
+        "tr": "Checklist cevapları artık Bekliyor, Onaylandı, Reddedildi ve Gerekmiyor. Onaylandı ve Gerekmiyor soruyu kapatır; Reddedildi açık kalır, ayrıca sayılır ve kurallarda koşul olarak kullanılabilir. Eski 'Tamamlandı' cevapları Onaylandı olarak okunur; Excel şablonu da aynı dört durumu kullanır.",
+        "en": "Checklist answers are now Pending, Approved, Rejected and Not Required. Approved and Not Required close the question; Rejected stays open, is counted separately and can be used as a rule condition. Earlier 'Completed' answers read as Approved; the Excel workbook uses the same four statuses."
+      },
+      "path": {
+        "tr": "Bugünün Üretim Öncelikleri › Checklist › Aç",
+        "en": "Today's Production Focus › Checklist › Open"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "checklist-statuses.png",
+        "alt": {
+          "tr": "Sipariş bazında checklist durumu seçimi (demo veri)",
+          "en": "Choosing the checklist status per order (demo data)"
+        },
+        "caption": {
+          "tr": "Reddedildi kırmızı işaretlenir ve aksiyon ister.",
+          "en": "Rejected is marked red and needs action."
+        }
+      }
+    },
+    {
+      "id": "cp-checklist-no-free-text",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP checklist hücrelerine serbest metin yazılamaz",
+        "en": "CP checklist cells no longer accept free text"
+      },
+      "body": {
+        "tr": "CP'deki checklist sütunları artık metin kutusu değil; hücreye tıklayınca yalnız dört durumdan biri seçilir ve Genel Bakış ile aynı cevap kaydına yazılır. Soru o siparişe sorulmuyorsa hücre boş kalır.",
+        "en": "Checklist columns in CP are no longer text boxes; clicking a cell lets you pick one of the four statuses only, saved to the same answer record as the Overview. If the question is not asked for that order, the cell stays empty."
+      },
+      "path": {
+        "tr": "CP Tracker › Checklist sütunları",
+        "en": "CP Tracker › Checklist columns"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "cp-checklist-cells.png",
+        "alt": {
+          "tr": "CP checklist hücresinde durum seçimi (demo veri)",
+          "en": "Picking a status in a CP checklist cell (demo data)"
+        },
+        "caption": {
+          "tr": "Klavye: ok tuşları ve Enter ile seçilir.",
+          "en": "Keyboard: choose with the arrow keys and Enter."
+        }
+      }
+    },
+    {
+      "id": "rule-checklist-live-links",
+      "type": "improvement",
+      "module": {
+        "tr": "Bugünün Üretim Öncelikleri",
+        "en": "Today's Production Focus"
+      },
+      "title": {
+        "tr": "Checklist ve kurallar birbirine canlı bağlı",
+        "en": "Checklist and rules are linked live"
+      },
+      "body": {
+        "tr": "Checklist soruları öncelik kuralında, öncelik kuralları da checklist koşulunda anında seçilebilir; silinen başlıklar listede görünmez. Başka bir kuralda koşul olarak kullanılan başlığı silerken Buyer Log uyarır, eksik bağlantıları ve döngüsel bağlantıları işaretler.",
+        "en": "Checklist questions can be picked in priority rules and priority rules in checklist conditions right away; deleted items no longer appear. Deleting an item used as a condition elsewhere shows a warning, and missing or circular links are flagged."
+      },
+      "path": {
+        "tr": "Rules / Checklist Settings › Alan seçici",
+        "en": "Rules / Checklist Settings › Field picker"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "rule-checklist-links.png",
+        "alt": {
+          "tr": "Alan seçicide checklist soruları ve öncelik kuralları (demo veri)",
+          "en": "Checklist questions and priority rules in the field picker (demo data)"
+        },
+        "caption": {
+          "tr": "Kullanılan başlıklar 'N kuralda kullanılıyor' etiketiyle görünür.",
+          "en": "Items in use show a 'Used in N' badge."
+        }
+      }
+    },
+    {
+      "id": "rules-personal-preset-sharing",
+      "type": "feature",
+      "module": {
+        "tr": "Ön Ayar Paylaşımı",
+        "en": "Preset Sharing"
+      },
+      "title": {
+        "tr": "Kişisel kurallar ve checklist soruları paylaşılabilir",
+        "en": "Personal rules and checklist questions can be shared"
+      },
+      "body": {
+        "tr": "Öncelik kuralları ve checklist soruları artık her kullanıcıya özeldir ve hesapla birlikte taşınır. Başka bir kullanıcının kurallarını veya sorularını Ön Ayar Paylaşımı ile ayrı ayrı alabilirsiniz; Birleştir kipinde kendi kurallarınız korunur. Önceki ortak checklist başlıkları bir kez kişisel kaydınıza alınır.",
+        "en": "Priority rules and checklist questions are now personal and travel with your account. You can take another user's rules or questions separately with Preset Sharing; Merge keeps your own rules. Earlier shared checklist headings are copied into your personal set once."
+      },
+      "path": {
+        "tr": "Kullanıcı menüsü › Ön Ayar Paylaşımı",
+        "en": "User menu › Preset Sharing"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "preset-share-rules.png",
+        "alt": {
+          "tr": "Ön Ayar Paylaşımı'nda öncelik kuralları ve checklist soruları (demo kullanıcılar)",
+          "en": "Priority rules and checklist questions in Preset Sharing (demo users)"
+        },
+        "caption": {
+          "tr": "Son aktarım 'Geri al' ile geri alınabilir.",
+          "en": "The last transfer can be undone."
+        }
+      }
+    }
+  ]
 }
