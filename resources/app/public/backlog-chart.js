@@ -22,6 +22,7 @@
     aggregation:'count',
     seriesField:'',
     chartType:'line',
+    barLayout:'grouped',
     seriesLimit:'20',
     title:'',
     seriesFilter:[],
@@ -73,6 +74,7 @@
     const gran = ['day','week','month','year'].includes(src.granularity) ? src.granularity : DEFAULT_STATE.granularity;
     const agg = ['count','distinct','sum','avg'].includes(src.aggregation) ? src.aggregation : DEFAULT_STATE.aggregation;
     const chart = ['line','bar'].includes(src.chartType) ? src.chartType : DEFAULT_STATE.chartType;
+    const barLayout = ['grouped','stacked'].includes(src.barLayout) ? src.barLayout : DEFAULT_STATE.barLayout;
     const limit = ['5','10','20','50','all'].includes(String(src.seriesLimit)) ? String(src.seriesLimit) : DEFAULT_STATE.seriesLimit;
     const seriesFilter = Array.isArray(src.seriesFilter)
       ? [...new Set(src.seriesFilter.map(v=>String(v == null ? '' : v).trim()).filter(Boolean))].slice(0,200)
@@ -86,6 +88,7 @@
       aggregation:agg,
       seriesField:String(src.seriesField || ''),
       chartType:chart,
+      barLayout,
       seriesLimit:limit,
       title:String(src.title || '').slice(0,160),
       seriesFilter,
@@ -577,21 +580,34 @@
       +'<span class="backlogChartTooltipTotal"><i></i><b>'+esc(tr('Toplam','Total'))+'</b><em>'+esc(formatWholeValue(total))+'</em></span>';
   }
   function timelineColumnsHtml(model) {
-    const totals=subtotalValues(model),allValues=(model.series||[]).flatMap(serie=>serie.values||[]).map(Number).filter(Number.isFinite);
-    const max=Math.max(1,...allValues),avg=model.state.showAverage?averageValue(model):0,avgPct=Math.max(0,Math.min(100,avg/max*100));
+    const totals=subtotalValues(model),layout=model&&model.state&&model.state.barLayout==='stacked'?'stacked':'grouped';
+    const allValues=(model.series||[]).flatMap(serie=>serie.values||[]).map(Number).filter(Number.isFinite);
+    const scaleValues=layout==='stacked'?totals:allValues;
+    const max=Math.max(1,...scaleValues),avg=model.state.showAverage?averageValue(model):0,avgPct=Math.max(0,Math.min(100,avg/max*100));
     const todayKey=todayKeyFor(model.state.granularity,new Date());
     return (model.categories||[]).map((cat,index)=>{
       const isToday=String(cat.key||'')===String(todayKey||''),total=Number(totals[index])||0;
-      const bars=(model.series||[]).map((serie,seriesIndex)=>{
-        const value=Number(serie.values&&serie.values[index])||0;if(value<=0)return '';
-        const height=Math.max(2,value/max*100);
-        return '<span class="blvGroupBar backlogTimelineBar" style="height:'+height.toFixed(2)+'%;--seg:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
-      }).join('');
       const todayMarker=isToday?'<span class="blvTodayLine" aria-hidden="true"><b>'+esc(tr('Bugün','Today'))+'</b></span>':'';
       const average=model.state.showAverage?'<span class="backlogTimelineAverage" style="bottom:'+avgPct.toFixed(2)+'%"></span>':'';
-      return '<div class="bpaCol blvGroupedCol backlogTimelineCol'+(isToday?' is-today':'')+'" data-backlog-timeline-index="'+index+'">'
+      let chart='';
+      if(layout==='stacked'){
+        const segments=(model.series||[]).map((serie,seriesIndex)=>{
+          const value=Number(serie.values&&serie.values[index])||0;if(value<=0)return '';
+          return '<span class="bpaSeg backlogTimelineStackSeg" style="flex-grow:'+value+';--seg:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
+        }).join('');
+        const height=total>0?Math.max(3,total/max*100):0;
+        chart='<div class="bpaColBar backlogTimelineStack" style="height:'+height.toFixed(2)+'%">'+segments+'</div>';
+      }else{
+        const bars=(model.series||[]).map((serie,seriesIndex)=>{
+          const value=Number(serie.values&&serie.values[index])||0;if(value<=0)return '';
+          const height=Math.max(2,value/max*100);
+          return '<span class="blvGroupBar backlogTimelineBar" style="height:'+height.toFixed(2)+'%;--seg:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
+        }).join('');
+        chart='<div class="blvGroupBars">'+bars+'</div>';
+      }
+      return '<div class="bpaCol backlogTimelineCol '+(layout==='stacked'?'backlogTimelineColStacked':'blvGroupedCol')+(isToday?' is-today':'')+'" data-backlog-timeline-index="'+index+'">'
         +'<div class="bpaColValue"><span class="blvColTotal">'+esc(formatWholeValue(total))+'</span></div>'
-        +'<div class="bpaColTrack blvGroupTrack">'+todayMarker+average+'<div class="blvGroupBars">'+bars+'</div></div>'
+        +'<div class="bpaColTrack'+(layout==='stacked'?'':' blvGroupTrack')+'">'+todayMarker+average+chart+'</div>'
         +'<div class="bpaColLabel">'+esc(timelineCategoryLabel(cat,model.state.granularity))+'</div></div>';
     }).join('');
   }
@@ -674,10 +690,11 @@
     }).join('');
     const filterPanel=available.length>1?'<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden><div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'"><div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button><button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div><div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>':'';
     const subtotalButton=timelineMode?'':'<button type="button" class="tbtn'+(model.state.showSubtotal?' is-active':'')+'" data-backlog-chart-subtotal>'+esc(tr('Alt Toplam','Subtotal'))+'</button>';
+    const layoutToggle=timelineMode?'<div class="bpaSeg2 backlogTimelineLayout" role="group" aria-label="'+esc(tr('Sütun düzeni','Column layout'))+'"><button type="button" class="'+(model.state.barLayout==='stacked'?'is-active':'')+'" data-backlog-chart-layout="stacked">'+esc(tr('Yığılmış','Stacked'))+'</button><button type="button" class="'+(model.state.barLayout!=='stacked'?'is-active':'')+'" data-backlog-chart-layout="grouped">'+esc(tr('Yan yana','Side by side'))+'</button></div>':'';
     const chartBody=timelineMode
-      ?'<div class="backlogChartCanvas backlogTimelineCanvas" tabindex="0" aria-label="'+esc(tr('Backlog zaman akışı grafiği','Backlog timeline chart'))+'"><div class="bpaCols blvCols is-grouped backlogTimelineCols" data-backlog-timeline>'+timelineColumnsHtml(visible)+'</div></div>'
+      ?'<div class="backlogChartCanvas backlogTimelineCanvas" tabindex="0" aria-label="'+esc(tr('Backlog zaman akışı grafiği','Backlog timeline chart'))+'"><div class="bpaCols blvCols '+(model.state.barLayout==='stacked'?'is-stacked':'is-grouped')+' backlogTimelineCols" data-backlog-timeline>'+timelineColumnsHtml(visible)+'</div></div>'
       :'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek zoomunu etkinleştirmek için grafiğe tıklayın; sürükleyerek yatay kaydırabilirsiniz.','Backlog chart. Click the chart to enable wheel zoom; drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div>';
-    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets bpaSeg2">'+presetButtons+'</div><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><div class="backlogChartInlineActions bpaSeg2"><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button>'+subtotalButton+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
+    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets bpaSeg2">'+presetButtons+'</div>'+layoutToggle+'<span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><div class="backlogChartInlineActions bpaSeg2"><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button>'+subtotalButton+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
       +filterPanel+legendHtml(model)+chartBody
       +'<div class="backlogChartGestureHint">'+esc(timelineMode?tr('Üst zaman akışıyla aynı görünüm · Yatay kaydır: diğer dönemler · Hover: seri detayları','Same layout as the upper timeline · Scroll horizontally for other periods · Hover for series details'):tr('Grafiğe tıkla: tekerlek zoomunu etkinleştir · Grafik dışına tıkla: sayfa kaydırmaya dön · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Click chart: enable wheel zoom · Click outside: return wheel to page scrolling · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
     const updateRange=next=>{
@@ -686,6 +703,11 @@
     target.querySelectorAll('[data-backlog-chart-range]').forEach(button=>button.addEventListener('click',()=>updateRange(rangeForPreset(model,button.getAttribute('data-backlog-chart-range'),new Date()))));
     target.querySelector('[data-backlog-chart-average]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{showAverage:!state.showAverage}));render(false,detail);});
     target.querySelector('[data-backlog-chart-subtotal]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{showSubtotal:!state.showSubtotal}));render(false,detail);});
+    target.querySelectorAll('[data-backlog-chart-layout]').forEach(button=>button.addEventListener('click',()=>{
+      const layout=button.getAttribute('data-backlog-chart-layout')==='stacked'?'stacked':'grouped';
+      if(layout===state.barLayout)return;
+      saveState(Object.assign({},state,{barLayout:layout}));render(false,detail);
+    }));
     target.querySelector('[data-backlog-chart-today]')?.addEventListener('click',()=>{if(moveViewToToday(model))mountInteractiveChart(host,model,detail);});
     target.querySelectorAll('[data-backlog-chart-export]').forEach(button=>button.addEventListener('click',()=>void exportChartGraphic(host,button.getAttribute('data-backlog-chart-export'),visible)));
     const bindLegendAndFilter=()=>{
@@ -890,6 +912,7 @@
       +'<label><span>'+esc(tr('Hesaplama','Aggregation'))+'</span><select id="backlogChartAgg"><option value="count">'+esc(tr('Adet','Count'))+'</option><option value="distinct">'+esc(tr('Benzersiz adet','Distinct count'))+'</option><option value="sum">'+esc(tr('Toplam','Sum'))+'</option><option value="avg">'+esc(tr('Ortalama','Average'))+'</option></select></label>'
       +'<label><span>'+esc(tr('Kırılım / seri','Breakdown / series'))+'</span><select id="backlogChartSeries">'+optionHtml(headers,draft.seriesField,tr('Kırılım yok','No breakdown'))+'</select></label>'
       +'<label><span>'+esc(tr('Grafik tipi','Chart type'))+'</span><select id="backlogChartType"><option value="line">'+esc(tr('Çizgi','Line'))+'</option><option value="bar">'+esc(tr('Sütun','Column'))+'</option></select></label>'
+      +'<label><span>'+esc(tr('Sütun düzeni','Column layout'))+'</span><select id="backlogChartBarLayout"><option value="grouped">'+esc(tr('Yan yana','Side by side'))+'</option><option value="stacked">'+esc(tr('Yığılmış','Stacked'))+'</option></select></label>'
       +'<label><span>'+esc(tr('Seri limiti','Series limit'))+'</span><select id="backlogChartLimit"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="all">'+esc(tr('Tümü','All'))+'</option></select></label>'
       +'<label class="backlogChartToggleField"><input id="backlogChartAverage" type="checkbox"'+(draft.showAverage?' checked':'')+'><span>'+esc(tr('Görünür aralık ortalama çizgisini göster','Show visible-range average line'))+'</span></label>'
       +'<label class="backlogChartTitleField"><span>'+esc(tr('Başlık (opsiyonel)','Title (optional)'))+'</span><input id="backlogChartTitle" type="text" maxlength="160" value="'+esc(draft.title)+'"></label>'
@@ -898,12 +921,12 @@
     footer.innerHTML=(state.enabled?'<button type="button" class="tbtn" data-chart-remove>'+esc(tr('Grafiği kaldır','Remove chart'))+'</button>':'<span></span>')+'<button type="button" class="tbtn" data-chart-cancel>'+esc(tr('Vazgeç','Cancel'))+'</button><button type="button" class="tbtn primary" data-chart-save>'+esc(tr('Uygula','Apply'))+'</button>';
     modal.appendChild(footer);
     const set=(id,val)=>{const el=overlay.querySelector('#'+id);if(el)el.value=val;};
-    set('backlogChartGran',draft.granularity);set('backlogChartAgg',draft.aggregation);set('backlogChartType',draft.chartType);set('backlogChartLimit',draft.seriesLimit);
+    set('backlogChartGran',draft.granularity);set('backlogChartAgg',draft.aggregation);set('backlogChartType',draft.chartType);set('backlogChartBarLayout',draft.barLayout);set('backlogChartLimit',draft.seriesLimit);
     overlay.querySelector('[data-chart-cancel]')?.addEventListener('click',close);
     overlay.querySelector('[data-chart-remove]')?.addEventListener('click',()=>{saveState(Object.assign({},state,{enabled:false}));const p=panel();if(p)p.hidden=true;close();});
     overlay.querySelector('[data-chart-save]')?.addEventListener('click',()=>{
       const seriesField=overlay.querySelector('#backlogChartSeries')?.value;
-      const next=sanitizeState({enabled:true,timeField:overlay.querySelector('#backlogChartTime')?.value,timeField2:overlay.querySelector('#backlogChartTime2')?.value,granularity:overlay.querySelector('#backlogChartGran')?.value,metricField:overlay.querySelector('#backlogChartMetric')?.value,aggregation:overlay.querySelector('#backlogChartAgg')?.value,seriesField,seriesFilter:seriesField===state.seriesField?state.seriesFilter:[],chartType:overlay.querySelector('#backlogChartType')?.value,seriesLimit:overlay.querySelector('#backlogChartLimit')?.value,title:overlay.querySelector('#backlogChartTitle')?.value,showAverage:!!overlay.querySelector('#backlogChartAverage')?.checked});
+      const next=sanitizeState({enabled:true,timeField:overlay.querySelector('#backlogChartTime')?.value,timeField2:overlay.querySelector('#backlogChartTime2')?.value,granularity:overlay.querySelector('#backlogChartGran')?.value,metricField:overlay.querySelector('#backlogChartMetric')?.value,aggregation:overlay.querySelector('#backlogChartAgg')?.value,seriesField,seriesFilter:seriesField===state.seriesField?state.seriesFilter:[],chartType:overlay.querySelector('#backlogChartType')?.value,barLayout:overlay.querySelector('#backlogChartBarLayout')?.value,seriesLimit:overlay.querySelector('#backlogChartLimit')?.value,title:overlay.querySelector('#backlogChartTitle')?.value,showAverage:!!overlay.querySelector('#backlogChartAverage')?.checked});
       if(!next.timeField){notify(tr('Grafik için bir tarih alanı seçin.','Select a date field for the chart.'));return;}
       if(next.metricField==='__records')next.aggregation='count';
       const model=buildModel(detail.rows,detail.headers,next);if(!model.categories.length){notify(tr('Seçili tarih alanında grafiğe uygun veri yok.','The selected date field has no chartable data.'));return;}
