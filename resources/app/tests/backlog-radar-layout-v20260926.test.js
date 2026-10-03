@@ -58,6 +58,17 @@ test('Teslimat Riski Analizi KPI etiketleri tek yatay sırada kalır',()=>{
   assert.doesNotMatch(CSS,/\.bdaRiskOverview \.bdaKpiRow\{grid-template-columns:repeat\(3/);
 });
 
+test('Risk nedenleri ve Needs Attention kartları ana KPI tasarımını yeniden kullanır',()=>{
+  assert.match(ANALYSIS,/class="bdaKpi bdaCause"/);
+  assert.match(ANALYSIS,/class="bdaKpiLabel bdaCauseLabel"/);
+  assert.match(ANALYSIS,/class="bdaKpiValue bdaCauseValue"/);
+  assert.match(ANALYSIS,/class="bdaKpi bdaAttention is-/);
+  assert.match(ANALYSIS,/class="bdaKpiLabel bdaAttentionLabel"/);
+  assert.match(ANALYSIS,/class="bdaKpiValue bdaAttentionValue"/);
+  assert.match(CSS,/\.bdaCauseRow \{[^}]*minmax\(132px, 1fr\)[^}]*gap: 8px/);
+  assert.match(CSS,/\.bdaAttentionRow \{[^}]*minmax\(132px, 1fr\)[^}]*gap: 8px/);
+});
+
 test('Teslimat Riski Analizi gövdesi kullanıcı tarafından gizlenip gösterilebilir ve tercih saklanır',()=>{
   assert.match(ANALYSIS,/collapsed: false/);
   assert.match(ANALYSIS,/saved\.collapsed/);
