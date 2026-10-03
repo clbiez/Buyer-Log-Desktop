@@ -42,8 +42,13 @@ test('login screen surfaces update availability before authentication', () => {
   assert.match(LOGIN, /window\.buyerLogDesktop && window\.buyerLogDesktop\.updates/);
   assert.match(LOGIN, /api\.status\(''\)/);
   assert.match(LOGIN, /api\.onStatus/);
+  assert.match(LOGIN, /id="startupUpdateRestart"/);
+  assert.match(LOGIN, /api\.restart\(\)/);
+  assert.match(LOGIN, /pendingReady !== true/);
+  assert.match(LOGIN, /Yeniden Başlat/);
   assert.match(LOGIN, /setInterval\(\(\) => \{ void refresh\(\); \}, 350\)/);
   assert.match(LOGIN_CSS, /\.startupUpdateNotice\{/);
+  assert.match(LOGIN_CSS, /\.startupUpdateRestart\{/);
   assert.match(LOGIN_CSS, /\.startupUpdateNotice\[hidden\]/);
 });
 
