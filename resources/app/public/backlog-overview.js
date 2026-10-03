@@ -507,6 +507,54 @@ function moveTip(e){
   if(x+w>window.innerWidth-8)x=e.clientX-w-pad;if(y+h>window.innerHeight-8)y=e.clientY-h-pad;
   el.style.left=Math.max(8,x)+'px';el.style.top=Math.max(8,y)+'px';
 }
+
+function drawerModelIdentity(it){
+  const row=it&&it.row&&typeof it.row==='object'?it.row:{};
+  const take=(...values)=>{for(const value of values){const text=String(value==null?'':value).trim();if(text)return text;}return '';};
+  const modelName=take(it&&it.modelName,row._modelName,row['Model Adı'],row['Model Name'],row['Style Name']);
+  let plmId=take(it&&it.plmId,row._plmId,row.plmId,row.plm,row['PLM ID'],row['PLM Id'],row['Plm Kod'],row['PLM Kod'],row['PLM Code']);
+  try{plmId=window.BLDetailImages?.resolvePlmId?.(plmId,modelName)||plmId;}catch(_){}
+  return {
+    plmId,
+    modelName,
+    colourCode:take(it&&it.colourCode,row._colourCode,row.colourCode,row.ccode,row['C.Code'],row['Renk Kod'],row['Renk Kodu'],row['Colour Code'],row['Color Code']),
+    colour:take(it&&it.colour,row.colour,row.color,row.Colour,row.Color,row.Renk,row['Renk Adı']),
+    orderCode:take(it&&it.orderCode,row.orderCode,row.ocode,row['Sipariş Kod'],row['Sipariş Kodu'],row['Order Code'])
+  };
+}
+function drawerModelImageUrl(it){
+  const api=window.BLDetailImages,id=drawerModelIdentity(it),row=it&&it.row&&typeof it.row==='object'?it.row:{};
+  if(!api)return '';
+  const directRef=String(row._imageRef==null?'':row._imageRef).trim();
+  return api.sourceFor?.({plmId:id.plmId,modelName:id.modelName,colourCode:id.colourCode,colour:id.colour})||
+    (directRef?'/api/cp-images/'+encodeURIComponent(directRef):'')||'';
+}
+function drawerModelImageHtml(it){
+  const api=window.BLDetailImages,id=drawerModelIdentity(it);
+  if(!api?.thumbHtml)return '<span class="bpaSub">—</span>';
+  return api.thumbHtml(drawerModelImageUrl(it),{
+    modelId:id.plmId||id.modelName,plmId:id.plmId,modelName:id.modelName,colourCode:id.colourCode,colour:id.colour
+  },{
+    classes:'detailModelThumb blvModelThumb',
+    title:L('Büyük önizleme için üzerine gelin','Hover for large preview'),
+    allowEmpty:true
+  });
+}
+function registerDrawerModelImages(aside,list,spec){
+  const api=window.BLDetailImages;if(!api)return;
+  const identities=(list||[]).map((it,index)=>{
+    const id=drawerModelIdentity(it);
+    return {...id,rowId:String(index),hasImage:Boolean(drawerModelImageUrl(it))};
+  });
+  api.registerScope?.(aside,{
+    contextType:'backlog-overview-detail',
+    label:String(spec&&spec.title||L('Backlog detay','Backlog detail')),
+    identities,
+    repaint:()=>openDrawer(spec)
+  });
+  api.bindThumbs?.(aside);
+  api.bindModelImagesButton?.('blvDrawerPlmSync');
+}
 function drawerEl(){
   let el=$('blvDrawer');
   if(!el){
@@ -524,6 +572,7 @@ function openDrawer(spec){
   const list=(spec.items||[]).slice().sort((a,b)=>(b.overdueDays-a.overdueDays)||(b.qty-a.qty));
   const s=R().summarize(list);
   const rows=list.slice(0,ROW_LIMIT).map(it=>`<tr>
+    <td class="detailImgCell">${drawerModelImageHtml(it)}</td>
     <td><span class="bpaBadge blvBadge" data-stage="${it.stage}">${esc(stageLabel(it.stage))}</span>${it.status&&it.status!==stageLabel(it.stage)?`<small class="bpaSub">${esc(it.status)}</small>`:''}</td>
     <td><div class="bpaIdentity">${esc(it.orderCode||'—')}<small>${esc([it.modelName,it.colourCode,it.colour].filter(Boolean).join(' · '))}</small></div></td>
     <td>${esc(it.buyer||'—')}<small class="bpaSub">${esc([it.buyingGroup,it.category].filter(Boolean).join(' · '))}</small></td>
@@ -534,7 +583,8 @@ function openDrawer(spec){
     <td class="bpaDateCell">${esc(fmtDay(it.retail))}</td>
     <td>${it.risk?`<span class="bpaTag is-alert">${esc(L('risk','risk'))}</span>`:''}${it.transitOverdue?`<span class="bpaTag is-alert">${esc(L('transit gecikti','transit overdue'))}</span>`:''}</td>
   </tr>`).join('');
-  aside.innerHTML=`<header class="bpaDrawerHead"><div><div class="bpaDrawerKicker">${spec.stage?`<i class="bpaDot" data-stage="${spec.stage}"></i>`:''}${esc(spec.subtitle||'')}</div><h3 id="blvDrawerTitle">${esc(spec.title||'')}</h3></div><button type="button" class="tbtn bpaMoveBtn" data-blv-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></header>
+  const plmSyncButton=window.BLDetailImages?.modelImagesButtonHtml?.('blvDrawerPlmSync')||'';
+  aside.innerHTML=`<header class="bpaDrawerHead"><div><div class="bpaDrawerKicker">${spec.stage?`<i class="bpaDot" data-stage="${spec.stage}"></i>`:''}${esc(spec.subtitle||'')}</div><h3 id="blvDrawerTitle">${esc(spec.title||'')}</h3></div><div class="bpaActions">${plmSyncButton}<button type="button" class="tbtn bpaMoveBtn" data-blv-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
     <div class="bpaDrawerStats">
       <div><b>${n(s.qty)}</b><span>${esc(L('adet','qty'))}</span></div>
       <div><b>${n(s.orders)}</b><span>${esc(L('sipariş','orders'))}</span></div>
@@ -543,7 +593,8 @@ function openDrawer(spec){
       <div><b class="is-overdue">${n(s.overdueQty)}</b><span>${esc(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'))}</span></div>
     </div>
     <div class="bpaBar bpaDrawerBar">${R().STAGES.filter(x=>s.stages[x.key]>0).map(x=>`<span class="bpaSeg" data-stage="${x.key}" style="flex-grow:${s.stages[x.key]}" title="${esc(stageLabel(x.key)+': '+n(s.stages[x.key]))}"></span>`).join('')}</div>
-    <div class="bpaTableWrap bpaDrawerTable"><table class="bpaTable"><thead><tr><th>${esc(L('Aşama','Stage'))}</th><th>${esc(L('Sipariş','Order'))}</th><th>Buyer</th><th>${esc(L('Üretici / Sezon','Manufacturer / Season'))}</th><th class="num">${esc(L('Adet','Qty'))}</th><th>Ex-Factory</th><th>${esc(L('Antrepo','Warehouse'))}</th><th>Retail</th><th>${esc(L('Sinyal','Signal'))}</th></tr></thead><tbody>${rows}</tbody></table>${list.length>ROW_LIMIT?`<div class="bpaNote">${esc(L(`İlk ${ROW_LIMIT} satır gösteriliyor; tamamı Excel Backlog V3'te.`,`Showing first ${ROW_LIMIT} rows; Excel Backlog V3 contains all.`))}</div>`:''}</div>`;
+    <div class="bpaTableWrap bpaDrawerTable"><table class="bpaTable"><thead><tr><th class="detailImgCell">${esc(L('Görsel','Image'))}</th><th>${esc(L('Aşama','Stage'))}</th><th>${esc(L('Sipariş','Order'))}</th><th>Buyer</th><th>${esc(L('Üretici / Sezon','Manufacturer / Season'))}</th><th class="num">${esc(L('Adet','Qty'))}</th><th>Ex-Factory</th><th>${esc(L('Antrepo','Warehouse'))}</th><th>Retail</th><th>${esc(L('Sinyal','Signal'))}</th></tr></thead><tbody>${rows}</tbody></table>${list.length>ROW_LIMIT?`<div class="bpaNote">${esc(L(`İlk ${ROW_LIMIT} satır gösteriliyor; tamamı Excel Backlog V3'te.`,`Showing first ${ROW_LIMIT} rows; Excel Backlog V3 contains all.`))}</div>`:''}</div>`;
+  registerDrawerModelImages(aside,list,spec);
   root.hidden=false;requestAnimationFrame(()=>root.classList.add('is-open'));
   aside.querySelector('[data-blv-close]')?.focus();
 }
