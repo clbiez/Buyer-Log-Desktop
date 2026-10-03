@@ -98,10 +98,24 @@
     // Bilinmeyen ülke: ASCII başlık biçimi (Türkçe küçük harf "ı" üretmesin).
     return k.toLowerCase().replace(/(^|[\s-])([a-z])/g, (m, sep, c) => sep + c.toUpperCase());
   }
+  /* Kural motorunun tanıdığı taşıt tipleri (Gemi, Uçak, Gemi+Uçak, Gemi+Tır).
+     Eşleme katıdır: "Uçak+Tır" gibi motorun ayrı tanımadığı bir tip "Uçak"a
+     katlanmaz; böyle bir kurala aktarım yanlış taşıtın süresini değiştirirdi. */
+  const VEHICLE_TOKENS = { GEMI: 'S', SEA: 'S', SHIP: 'S', UCAK: 'A', AIR: 'A', TIR: 'T', TRUCK: 'T' };
+  const RULE_VEHICLES = { S: 'Gemi', A: 'Uçak', AS: 'Gemi+Uçak', ST: 'Gemi+Tır' };
+  function ruleVehicle(value) {
+    const tokens = key(value).split(/[^A-Z0-9]+/).filter(Boolean);
+    if (!tokens.length) return '';
+    const kinds = [...new Set(tokens.map(t => VEHICLE_TOKENS[t] || 'X'))].sort().join('');
+    return RULE_VEHICLES[kinds] || '';
+  }
+  /* Analizdeki taşıt: kural tipine katı eşlenebiliyorsa kanonik ad, değilse
+     IAS database'indeki değerin kendisi (Tır, Kurye, Uçak+Tır …) — böylece
+     database'deki bütün yükleme tipleri ayrı satır olarak görünür. */
   function vehicleType(value) {
     const t = key(value);
     if (!t || t === 'ALL' || t === 'TUMU' || t.includes('BIRDEN COK')) return '';
-    return rules && rules.normalizeTransitDelType ? rules.normalizeTransitDelType(value) : text(value);
+    return ruleVehicle(value) || clip(String(value).replace(/\s+/g, ' ').trim(), 40);
   }
 
   /* ---------- Excel pivot okuma ---------- */
@@ -638,6 +652,7 @@
       const e2eValues = list.map(r => r.endToEnd).filter(v => v != null);
       rows.push({
         vehicle: first.vehicle,
+        ruleType: ruleVehicle(first.vehicle),
         country: first.country,
         countryKey: countryKey(first.country),
         ruleCountry: countryRuleName(first.country),
@@ -693,12 +708,33 @@
     return Math.min(3650, Math.max(0, Math.round(value)));
   }
 
+  /* Buffer: hesaplanan güne önce yüzde, sonra sabit gün eklenir; öneriye ve
+     dolayısıyla kurallara aktarılan güne otomatik uygulanır. */
+  const MAX_BUFFER_DAYS = 365;
+  const MAX_BUFFER_PCT = 200;
+  function normalizeBuffer(value) {
+    const v = value || {};
+    const days = Math.round(num(v.bufferDays != null ? v.bufferDays : v.days) || 0);
+    const pct = Math.round((num(v.bufferPct != null ? v.bufferPct : v.pct) || 0) * 10) / 10;
+    return { days: Math.min(MAX_BUFFER_DAYS, Math.max(0, days)), pct: Math.min(MAX_BUFFER_PCT, Math.max(0, pct)) };
+  }
+  function applyBuffer(days, buffer) {
+    if (days == null || !Number.isFinite(days)) return null;
+    const b = normalizeBuffer(buffer);
+    return Math.min(3650, Math.max(0, Math.round(days * (1 + b.pct / 100)) + b.days));
+  }
+
   function suggestRules(summary, settings = {}) {
     const metric = RULE_METRICS[settings.metric] ? settings.metric : 'endToEnd';
     const stat = RULE_STATS[settings.stat] ? settings.stat : 'mean';
+    const buffer = normalizeBuffer(settings);
     return (summary && Array.isArray(summary.rows) ? summary.rows : [])
-      .filter(row => row.vehicle && row.ruleCountry)
-      .map(row => ({ delType: row.vehicle, country: row.ruleCountry, countryKey: row.countryKey, days: ruleDays(row, metric, stat), lowSample: row.lowSample }))
+      .filter(row => row.ruleType && row.ruleCountry)
+      .map(row => {
+        const base = ruleDays(row, metric, stat);
+        return { vehicle: row.vehicle, delType: row.ruleType, country: row.ruleCountry, countryKey: row.countryKey,
+          baseDays: base, days: applyBuffer(base, buffer), lowSample: row.lowSample };
+      })
       .filter(s => s.days != null);
   }
 
@@ -749,6 +785,7 @@
     VERSION, BASES, BASIS_LABELS, METRIC_LABELS, RULE_METRICS, RULE_STATS, LOW_SAMPLE_QTY, LOW_SAMPLE_PERIODS, LOW_SAMPLE_SHIPMENTS,
     WINDOW_KEYS, windowRange, windowLabel, isoWeekOf,
     headerKind, parseSheet, parseWorkbook, buildFromShipments, labels, metricLabels, stepLabel, normalizeAnalysis, options, summarize,
-    ruleDays, suggestRules, applySuggestions, currentRuleDays, countryRuleName, vehicleType,
+    ruleDays, suggestRules, applySuggestions, currentRuleDays, countryRuleName, vehicleType, ruleVehicle,
+    normalizeBuffer, applyBuffer, MAX_BUFFER_DAYS, MAX_BUFFER_PCT,
   };
 });
