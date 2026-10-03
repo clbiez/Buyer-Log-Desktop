@@ -2,7 +2,7 @@
 'use strict';
 const INDEX_URL='release-notes/index.json';
 const SEEN_KEY='bl.releaseNotes.lastSeenStable.v1';
-let indexCache=null,dialog=null,state=null,legacyCache=null;
+let indexCache=null,dialog=null,state=null,legacyCache=null,lightbox=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const lang=()=>{try{return typeof appLang!=='undefined'&&appLang==='en'?'en':'tr';}catch(_){return document.documentElement.lang==='en'?'en':'tr';}};
 const L=(tr,en)=>lang()==='en'?en:tr;
@@ -34,7 +34,29 @@ function ensureDialog(){
   dialog.querySelector('[data-rn-close]').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
   dialog.addEventListener('close',()=>{if(state?.auto)writeSeen(ver());state=null;});
+  dialog.addEventListener('keydown',e=>{
+    if(!state||lightbox?.open)return;
+    if(e.key==='ArrowLeft'&&state.index>0){e.preventDefault();state.index--;renderState();}
+    if(e.key==='ArrowRight'){const total=state.releases?.reduce((n,r)=>n+(r.changes||[]).length,0)||0;if(state.index<total-1){e.preventDefault();state.index++;renderState();}}
+  });
   return dialog;
+}
+function ensureLightbox(){
+  if(lightbox?.isConnected)return lightbox;
+  lightbox=document.createElement('dialog');lightbox.className='blRnLightbox';lightbox.setAttribute('aria-modal','true');
+  lightbox.innerHTML='<button type="button" class="blRnLightboxClose" data-rn-lightbox-close>×</button><div class="blRnLightboxBody"><img data-rn-lightbox-img alt=""><div class="blRnLightboxCaption" data-rn-lightbox-caption></div></div>';
+  document.body.appendChild(lightbox);
+  const close=lightbox.querySelector('[data-rn-lightbox-close]');
+  close.addEventListener('click',()=>lightbox.close());
+  lightbox.addEventListener('click',e=>{if(e.target===lightbox)lightbox.close();});
+  lightbox.addEventListener('keydown',e=>{if(e.key==='Escape')lightbox.close();});
+  return lightbox;
+}
+function openVisual(src,alt,caption){
+  const box=ensureLightbox(),img=box.querySelector('[data-rn-lightbox-img]'),cap=box.querySelector('[data-rn-lightbox-caption]');
+  img.src=src;img.alt=alt||'';cap.textContent=caption||'';
+  box.querySelector('[data-rn-lightbox-close]').title=L('Kapat','Close');
+  if(!box.open)box.showModal();
 }
 function setHeader(auto,count){
   const d=ensureDialog(),close=d.querySelector('[data-rn-close]');
@@ -59,17 +81,22 @@ function visualHtml(change,release){
   const v=change?.visual;if(!v?.src)return fallbackVisual(release);
   const src=withVersion('release-notes/'+release.version+'/'+v.src),focus=v.focus;
   const focusHtml=focus?'<i class="blRnFocus" style="left:'+Number(focus.x)+'%;top:'+Number(focus.y)+'%;width:'+Number(focus.w)+'%;height:'+Number(focus.h)+'%"></i>':'';
-  return '<figure class="blRnVisual"><div class="blGuideVisualTop"><span>BUYER LOG</span><span>'+esc(pick(change.module))+'</span></div><div class="blRnShot"><img src="'+esc(src)+'" alt="'+esc(pick(v.alt)||pick(change.title))+'">'+focusHtml+'</div><figcaption>'+esc(pick(v.caption)||L('Gerçek Buyer Log ekranı','Real Buyer Log screen'))+'</figcaption></figure>';
+  const alt=pick(v.alt)||pick(change.title),caption=pick(v.caption)||L('Gerçek Buyer Log ekranı','Real Buyer Log screen');
+  return '<figure class="blRnVisual"><div class="blGuideVisualTop"><span>BUYER LOG</span><span>'+esc(pick(change.module))+'</span></div><button type="button" class="blRnShot" data-rn-zoom aria-label="'+esc(L('Görseli büyüt','Enlarge image'))+'"><img src="'+esc(src)+'" alt="'+esc(alt)+'">'+focusHtml+'<span class="blRnZoomHint" aria-hidden="true">↗ '+esc(L('Büyüt','Enlarge'))+'</span></button><figcaption>'+esc(caption)+'</figcaption></figure>';
+}
+function description(change,release){
+  return String(pick(change?.body)||pick(change?.summary)||pick(release?.summary)||L('Bu değişiklik Buyer Log deneyimini daha anlaşılır ve kullanışlı hale getirir.','This change makes the Buyer Log experience clearer and easier to use.')).trim();
 }
 function typeLabel(type){return ({feature:L('YENİ ÖZELLİK','NEW FEATURE'),improvement:L('İYİLEŞTİRME','IMPROVEMENT'),fix:L('DÜZELTME','FIX')})[type]||L('GÜNCELLEME','UPDATE');}
 function renderCard(deck,index){
-  const {release,change}=deck[index],stage=dialog.querySelector('[data-rn-stage]');
-  stage.innerHTML='<div class="blRnMeta"><span>v'+esc(release.version)+'</span><span>'+esc(release.publishedAt||'')+'</span><span>'+(index+1)+' / '+deck.length+'</span></div><div class="blRnCard"><div class="blRnFigure">'+visualHtml(change,release)+'</div><section class="blRnCopy blGuideCopy"><div class="blGuideEyebrow">'+esc(typeLabel(change.type))+' · '+esc(pick(change.module))+'</div><h2>'+esc(pick(change.title))+'</h2><p>'+esc(pick(change.body))+'</p>'+(change.path?'<div class="blGuidePath">'+esc(pick(change.path))+'</div>':'')+'</section></div><div class="blRnNav"><div class="blTriviaProgress"><i style="transform:scaleX('+((index+1)/deck.length)+')"></i></div><div class="blRnNavRow"><span>'+esc(pick(release.title))+'</span><div class="blTriviaBtns"><button type="button" class="blTriviaBtn" data-rn-prev>‹</button><button type="button" class="blTriviaBtn blTriviaBtn--next" data-rn-next>›</button></div></div></div>';
-  const prev=stage.querySelector('[data-rn-prev]'),next=stage.querySelector('[data-rn-next]');
+  const {release,change}=deck[index],stage=dialog.querySelector('[data-rn-stage]'),body=description(change,release);
+  stage.innerHTML='<div class="blRnMeta"><span>v'+esc(release.version)+'</span><span>'+esc(release.publishedAt||'')+'</span><span>'+(index+1)+' / '+deck.length+'</span></div><div class="blRnCard"><div class="blRnFigure">'+visualHtml(change,release)+'</div><section class="blRnCopy blGuideCopy"><div class="blGuideEyebrow">'+esc(typeLabel(change.type))+' · '+esc(pick(change.module))+'</div><h2>'+esc(pick(change.title)||pick(release.title))+'</h2><p>'+esc(body)+'</p>'+(change.path?'<div class="blGuidePath">'+esc(pick(change.path))+'</div>':'')+'</section></div><div class="blRnNav"><div class="blTriviaProgress"><i style="transform:scaleX('+((index+1)/deck.length)+')"></i></div><div class="blRnNavRow"><span>'+esc(pick(release.title))+'</span><div class="blRnNavBtns"><button type="button" class="blRnNavBtn" data-rn-prev><span aria-hidden="true">‹</span><b>'+esc(L('Önceki','Previous'))+'</b></button><button type="button" class="blRnNavBtn blRnNavBtn--next" data-rn-next><b>'+esc(L('Sonraki','Next'))+'</b><span aria-hidden="true">›</span></button></div></div></div>';
+  const prev=stage.querySelector('[data-rn-prev]'),next=stage.querySelector('[data-rn-next]'),zoom=stage.querySelector('[data-rn-zoom]');
   prev.disabled=index===0;next.disabled=index===deck.length-1;
-  prev.title=prev.setAttribute('aria-label',L('Önceki değişiklik','Previous change'))||L('Önceki değişiklik','Previous change');
-  next.title=next.setAttribute('aria-label',L('Sonraki değişiklik','Next change'))||L('Sonraki değişiklik','Next change');
+  prev.title=L('Önceki değişiklik','Previous change');prev.setAttribute('aria-label',prev.title);
+  next.title=L('Sonraki değişiklik','Next change');next.setAttribute('aria-label',next.title);
   prev.addEventListener('click',()=>{state.index--;renderState();});next.addEventListener('click',()=>{state.index++;renderState();});
+  if(zoom){const img=zoom.querySelector('img'),cap=stage.querySelector('.blRnVisual figcaption');zoom.addEventListener('click',()=>openVisual(img.currentSrc||img.src,img.alt,cap?.textContent||''));}
 }
 function renderLegacy(row){
   dialog.querySelector('[data-rn-stage]').innerHTML='<div class="blRnMeta"><span>v'+esc(row.version)+'</span><span>'+esc(row.publishedAt||'')+'</span></div><div class="blRnCard"><div class="blRnFigure">'+fallbackVisual(row)+'</div><section class="blRnCopy blGuideCopy"><div class="blGuideEyebrow">'+esc(L('METİN ARŞİVİ','TEXT ARCHIVE'))+'</div><h2>'+esc(pick(row.title))+'</h2><ul class="blRnLegacyItems">'+row.items.map(x=>'<li>'+esc(pick(x))+'</li>').join('')+'</ul></section></div>';
