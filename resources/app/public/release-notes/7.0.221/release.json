@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.221",
+  "channel": "stable",
+  "publishedAt": "2026-10-03",
+  "title": {
+    "tr": "Yol Sürelerinde tüm taşıt tipleri ve Buffer",
+    "en": "All vehicle types and Buffer in Transit Times"
+  },
+  "summary": {
+    "tr": "İthalat Yol Süresi Analizi IAS database'indeki bütün taşıt tiplerini ayrı gösteriyor; hesaplanan günlere otomatik eklenen Buffer ile kurallara temkinli süre aktarılabiliyor.",
+    "en": "The Import Lead Time Analysis now shows every vehicle type in the IAS database separately, and a Buffer added automatically to the calculated days lets you transfer more conservative durations to the rules."
+  },
+  "stats": {
+    "features": 1,
+    "improvements": 1,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "transit-buffer",
+      "type": "feature",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "Hesaplanan günlere Buffer",
+        "en": "Buffer on calculated days"
+      },
+      "body": {
+        "tr": "Analizdeki Buffer alanına gün ve/veya yüzde girin; hesaplanan süreye önce yüzde, sonra gün eklenir. Öneri sütunu ve \"Seçilenleri kurallara aktar\" ile Buyer Log'a uygulanan gün buffer'lı değerdir. Ayar kaydedilir ve sonraki açılışlarda da otomatik uygulanır.",
+        "en": "Enter days and/or a percentage in the analysis Buffer field; the percentage is added to the calculated duration first, then the days. The Suggested column and the days applied to Buyer Log with \"Transfer selected to rules\" include the buffer. The setting is kept and applied automatically next time."
+      },
+      "path": {
+        "tr": "Yol Süreleri › İthalat Yol Süresi Analizi › Buffer",
+        "en": "Transit Times › Import Lead Time Analysis › Buffer"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "transit-buffer.png",
+        "alt": {
+          "tr": "Buffer alanında +7 gün; Öneri sütunu buffer'lı günleri gösteriyor (demo veri)",
+          "en": "Buffer field set to +7 days; the Suggested column shows buffered days (demo data)"
+        },
+        "caption": {
+          "tr": "Öneri = hesaplanan gün + buffer. Kurallara bu değer aktarılır.",
+          "en": "Suggested = calculated days + buffer. This value is transferred to the rules."
+        }
+      }
+    },
+    {
+      "id": "transit-all-vehicle-types",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "IAS'taki tüm taşıt tipleri",
+        "en": "Every vehicle type from IAS"
+      },
+      "body": {
+        "tr": "Analiz artık yalnız Gemi, Uçak ve Gemi+Uçak'ı değil, IAS database'indeki bütün taşıt tiplerini (ör. Tır, Kurye, Uçak+Tır) kendi adıyla ayrı satır ve filtre seçeneği olarak gösteriyor; bunlar artık \"Karma (Tümü)\" altında birleşmiyor. Buyer Log kuralı olmayan tipler \"kural yok\" olarak bilgi amaçlı listelenir ve yanlış taşıtın kuralına aktarılmaz.",
+        "en": "The analysis now shows every vehicle type in the IAS database (e.g. Truck, Courier, Air+Truck), not only Sea, Air and Sea+Air, each as its own row and filter option instead of being merged under \"Mixed (All)\". Types without a Buyer Log rule are listed as \"no rule\" for information and are never transferred to another vehicle's rule."
+      },
+      "path": {
+        "tr": "Yol Süreleri › İthalat Yol Süresi Analizi › Taşıt",
+        "en": "Transit Times › Import Lead Time Analysis › Vehicle"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "transit-all-vehicles.png",
+        "alt": {
+          "tr": "Gemi, Uçak, Gemi+Uçak, Tır, Kurye ve Uçak+Tır taşıt tipleriyle analiz tablosu (demo veri)",
+          "en": "Analysis table with Sea, Air, Sea+Air, Truck, Courier and Air+Truck vehicle types (demo data)"
+        },
+        "caption": {
+          "tr": "Her taşıt tipi ayrı satırda; kuralı olmayan tipler bilgi amaçlıdır.",
+          "en": "Each vehicle type has its own row; types without a rule are for information."
+        }
+      }
+    }
+  ]
+}

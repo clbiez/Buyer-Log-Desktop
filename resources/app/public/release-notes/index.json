@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.221",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Yol Sürelerinde tüm taşıt tipleri ve Buffer",
+        "en": "All vehicle types and Buffer in Transit Times"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.221/release.json"
+    },
+    {
       "version": "7.0.220",
       "publishedAt": "2026-10-03",
       "title": {
