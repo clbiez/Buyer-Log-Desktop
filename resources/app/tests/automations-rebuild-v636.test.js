@@ -121,25 +121,14 @@ test('v6.36 alana göre bölme çözülemeyen değerleri ATMIYOR', () => {
 });
 
 test('v6.36 iki alıcı kipi de tek gönderim yolundan geçiyor', () => {
-  // Taslak/Outlook davranışı iki kipte ayrışırsa biri sessizce farklı davranır.
+  // İki alıcı kipi farklı taslak yollarına ayrışırsa biri sessizce farklı davranır.
   const block = SERVER.slice(SERVER.indexOf("if(['email','mixed'].includes(purpose)){"));
   // v9.47: imzaya dil satırları eklendi (subjectBase/langRows) ama gönderimi
   // yürüten TEK fonksiyon olma özelliği korunuyor — asıl korunan kusur bu.
   assert.match(block, /const deliver=async\(group,subjectBase,mailRows,langRows\)=>\{/);
   assert.equal((block.match(/automationEmail\.createDraft\(/g) || []).length, 1, 'taslak oluşturma tek yerde kalmalı');
-  assert.equal((block.match(/automationEmail\.sendWithOutlook\(/g) || []).length, 1, 'Outlook gönderimi tek yerde kalmalı');
   assert.match(block, /if\(email\.recipientMode==='field'\)\{/);
   assert.match(block, /result\.emails=messages/);
-});
-
-test('Outlook otomatik gönderimi sunucunun olay döngüsünü 45 saniyeye kadar bloke etmez', () => {
-  assert.doesNotMatch(EMAIL, /spawnSync/, 'PowerShell ana sunucu iş parçacığında bekletilmemeli');
-  assert.match(EMAIL, /async function sendWithOutlook/);
-  assert.match(EMAIL, /randomBytes\(4\)/, 'geçici ek adları eşzamanlı gönderimlerde çakışmamalı');
-  assert.match(EMAIL, /unlink\(attachment\)/, 'Outlook gönderimi sonrası geçici CSV eki birikmemeli');
-  const block = SERVER.slice(SERVER.indexOf("if(['email','mixed'].includes(purpose)){"));
-  assert.match(block, /const deliver=async/);
-  assert.match(block, /await automationEmail\.sendWithOutlook/);
 });
 
 test('v6.36 alıcısı eksik otomasyon KAYDEDİLEMİYOR', () => {
