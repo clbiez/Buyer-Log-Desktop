@@ -151,7 +151,7 @@
     const preserved = (Array.isArray(s.rules) ? s.rules : []).filter(function (rule) {
       return !(rule && rule.kind === 'checklist' && rule.builtIn !== true);
     });
-    s.rules = Rules.mergeWithDefaults(preserved.concat(remote));
+    s.rules = Rules.mergeWithDefaults(preserved.concat(remote), s.deletedRuleIds);
   }
 
   function mergeRemoteAnswers(payload) {
