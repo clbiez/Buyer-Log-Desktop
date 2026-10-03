@@ -113,11 +113,54 @@ function legacyAccessCandidates() {
       }
     } catch (_) {}
   };
+  const scanUserAccessTree = (root, options = {}) => {
+    const maxDepth = Number.isInteger(options.maxDepth) ? options.maxDepth : 7;
+    const maxEntries = Number.isInteger(options.maxEntries) ? options.maxEntries : 1800;
+    let seenEntries = 0;
+    const skipDirs = new Set(['node_modules','Cache','Code Cache','GPUCache','Service Worker','temp','logs','runtime','write-recovery']);
+    function walk(dir, depth) {
+      if (depth > maxDepth || seenEntries >= maxEntries) return;
+      let entries = [];
+      try { entries = fs.readdirSync(dir, { withFileTypes:true }); } catch (_) { return; }
+      for (const entry of entries) {
+        if (++seenEntries > maxEntries) return;
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (skipDirs.has(entry.name)) continue;
+          walk(full, depth + 1);
+          continue;
+        }
+        if (!entry.isFile()) continue;
+        // Covers canonical, .bak/pre-migration and recovery copies such as
+        // selected-<stamp>-user-access.json without considering unrelated JSON.
+        if (/user-access[^\\/]*\.json(?:\..+)?$/i.test(entry.name) || /^user-access\.json(?:\..+)?$/i.test(entry.name)) add(full);
+      }
+    }
+    try { if (fs.statSync(root).isDirectory()) walk(root, 0); } catch (_) {}
+  };
+  const addKnownInstallLayout = installRoot => {
+    if (!installRoot) return;
+    const root = path.resolve(installRoot);
+    for (const file of [
+      path.join(root, 'data', 'app', 'auth', 'user-access.json'),
+      path.join(root, 'data', 'auth', 'user-access.json'),
+      path.join(root, 'data', 'server', 'user-access.json'),
+      path.join(root, 'data', 'server', 'data', 'user-access.json'),
+      path.join(root, 'data', 'portable-appdata', 'Buyer Log', 'auth', 'user-access.json'),
+      path.join(root, 'data', 'portable-appdata', 'BuyerLog', 'auth', 'user-access.json'),
+      path.join(root, 'resources', 'app', 'server', 'data', 'user-access.json'),
+      // Some pre-portable packages nested their migrated data below resources/app.
+      path.join(root, 'resources', 'app', 'data', 'app', 'auth', 'user-access.json'),
+      path.join(root, 'resources', 'app', 'data', 'auth', 'user-access.json'),
+      path.join(root, 'resources', 'app', 'data', 'server', 'user-access.json'),
+      path.join(root, 'resources', 'app', 'data', 'server', 'data', 'user-access.json'),
+    ]) addStore(file);
+  };
 
   // Current historical server-data location.
   addStore(LEGACY_ACCESS_FILE);
 
-  // Central IAM creates this immutable safety copy before the first migration.
+  // Central IAM creates immutable safety copies before migrations.
   add(path.join(AUTH_DATA_ROOT, 'user-access.pre-iam-migration.json'));
   add(path.join(AUTH_DATA_ROOT, 'user-access.json.pre-migration.bak'));
   addJsonDirectory(AUTH_DATA_ROOT, 100);
@@ -125,10 +168,10 @@ function legacyAccessCandidates() {
   /*
    * Packaged Buyer Log uses:
    *   <portable>\data\app\auth\user-access.json   (current)
-   * Older builds and recovery flows used several other bounded locations.
-   * BUYER_LOG_SERVER_DATA_ROOT is ALWAYS set by the desktop launcher, so the
-   * previous "only scan when env is absent" branch never ran in production.
-   * Search only known Buyer Log roots; never crawl the user's drive.
+   *
+   * Real installations have existed in multiple portable layouts over time.
+   * Recovery is intentionally bounded to Buyer Log owned roots; it never scans
+   * the user's entire drive or arbitrary profile folders.
    */
   let portableDataRoot = clean(process.env.BUYER_LOG_PORTABLE_DATA_ROOT);
   if (!portableDataRoot) {
@@ -137,44 +180,67 @@ function legacyAccessCandidates() {
   }
   if (portableDataRoot) {
     const portableRoot = path.dirname(portableDataRoot);
-    // v7.78 bug used data\auth instead of data\app\auth.
-    addStore(path.join(portableDataRoot, 'auth', 'user-access.json'));
-    addStore(path.join(portableDataRoot, 'server', 'user-access.json'));
-    addStore(path.join(portableDataRoot, 'server', 'data', 'user-access.json'));
-    // Recovery scripts preserve candidate stores here.
-    addJsonDirectory(path.join(portableDataRoot, 'migration-evidence', 'auth-candidates'), 250);
-    addJsonDirectory(path.join(portableDataRoot, 'migration-evidence', 'user-identity-recovery'), 250);
-    // Installed core may still contain the last legacy server/data copy.
-    addStore(path.join(portableRoot, 'resources', 'app', 'server', 'data', 'user-access.json'));
+    addKnownInstallLayout(portableRoot);
 
-    // data-BACKUP-* is the supported pre-migration safety copy. Inspect only
-    // direct backup folders and only the known auth/server locations.
+    // Search Buyer Log's own portable data tree so migration evidence nested in
+    // legacy-auth-folder or another recovery folder is not silently missed.
+    scanUserAccessTree(portableDataRoot, { maxDepth:7, maxEntries:2200 });
+
+    // Older packages could have resources/app/data/... beside server/data.
+    scanUserAccessTree(path.join(portableRoot, 'resources', 'app', 'data'), { maxDepth:6, maxEntries:1000 });
+
+    // data-BACKUP-* is the supported pre-migration safety copy. Scan each backup
+    // recursively because historical backups did not always use the same auth path.
     try {
       for (const entry of fs.readdirSync(portableRoot, { withFileTypes:true }).slice(0, 250)) {
         if (!entry.isDirectory() || !/^data[\s._-]*backup/i.test(entry.name)) continue;
         const backup = path.join(portableRoot, entry.name);
-        for (const file of [
-          path.join(backup, 'app', 'auth', 'user-access.json'),
-          path.join(backup, 'auth', 'user-access.json'),
-          path.join(backup, 'server', 'user-access.json'),
-          path.join(backup, 'server', 'data', 'user-access.json'),
-        ]) addStore(file);
+        scanUserAccessTree(backup, { maxDepth:7, maxEntries:1800 });
+      }
+    } catch (_) {}
+
+    // A user may have extracted a newer Buyer Log beside an older installation.
+    // Production previously skipped sibling discovery because SERVER_DATA_ROOT is
+    // always set. Inspect only sibling folders whose names clearly identify Buyer Log.
+    try {
+      const parent = path.dirname(portableRoot);
+      for (const entry of fs.readdirSync(parent, { withFileTypes:true }).slice(0, 250)) {
+        if (!entry.isDirectory() || !/buyer[\s._-]*log/i.test(entry.name)) continue;
+        const sibling = path.join(parent, entry.name);
+        if (path.resolve(sibling) === path.resolve(portableRoot)) continue;
+        addKnownInstallLayout(sibling);
+        scanUserAccessTree(path.join(sibling, 'data'), { maxDepth:6, maxEntries:1200 });
+        try {
+          for (const child of fs.readdirSync(sibling, { withFileTypes:true }).slice(0, 120)) {
+            if (child.isDirectory() && /^data[\s._-]*backup/i.test(child.name)) {
+              scanUserAccessTree(path.join(sibling, child.name), { maxDepth:6, maxEntries:1200 });
+            }
+          }
+        } catch (_) {}
       }
     } catch (_) {}
   }
 
-  // Real Windows AppData is retained by the desktop launcher before it points
-  // APPDATA to the portable profile. It is a safe source for pre-portable users.
+  // Real Windows profile locations are retained by the desktop launcher before
+  // APPDATA/LOCALAPPDATA are redirected into the portable folder.
   const hostAppData = clean(process.env.BL_HOST_APPDATA);
-  if (hostAppData) addStore(path.join(hostAppData, 'Buyer Log', 'auth', 'user-access.json'));
+  if (hostAppData) {
+    addStore(path.join(hostAppData, 'Buyer Log', 'auth', 'user-access.json'));
+    addStore(path.join(hostAppData, 'BuyerLog', 'auth', 'user-access.json'));
+  }
+  const hostLocalAppData = clean(process.env.BL_HOST_LOCALAPPDATA);
+  if (hostLocalAppData) {
+    addStore(path.join(hostLocalAppData, 'Buyer Log', 'auth', 'user-access.json'));
+    addStore(path.join(hostLocalAppData, 'BuyerLog', 'auth', 'user-access.json'));
+  }
 
-  // Development/legacy sibling installs remain supported, but bounded.
-  if (!process.env.BUYER_LOG_SERVER_DATA_ROOT && AUTH_DATA_ROOT !== SERVER_DATA_ROOT) {
+  // Development/legacy sibling installs remain supported.
+  if (!portableDataRoot && AUTH_DATA_ROOT !== SERVER_DATA_ROOT) {
     try {
       const parent = path.dirname(PROJECT_ROOT);
       for (const entry of fs.readdirSync(parent, { withFileTypes: true }).slice(0, 250)) {
         if (!entry.isDirectory() || !/buyer[\s._-]*log/i.test(entry.name)) continue;
-        addStore(path.join(parent, entry.name, 'server', 'data', 'user-access.json'));
+        addKnownInstallLayout(path.join(parent, entry.name));
       }
     } catch (_) {}
   }
@@ -188,9 +254,15 @@ function migrateLegacyAuthStoreIfNeeded() {
   const best = candidates[0]; if (!best) return false;
   let shouldImport = !current;
   if (current) {
-    // Var olan kalıcı auth deposunu yalnız açıkça daha zengin/gelişmiş bir eski
-    // depo varsa yükselt. Sadece mtime daha yeni diye şifre deposunu değiştirme.
-    if (best.enabledCredentialCount > current.enabledCredentialCount) shouldImport = true;
+    // If the active store cannot authenticate ANY active account, a usable
+    // historical store must win even if the broken/placeholder file has a newer
+    // revision. This is the exact state exposed by the login screen as
+    // "geçerli yerel kullanıcı önbelleği yok".
+    const currentUsable = hasUsableOfflineAuthStore(current.parsed);
+    const bestUsable = hasUsableOfflineAuthStore(best.parsed);
+    if (!currentUsable && bestUsable) shouldImport = true;
+    // Otherwise upgrade only when the candidate is demonstrably stronger.
+    else if (best.enabledCredentialCount > current.enabledCredentialCount) shouldImport = true;
     else if (best.enabledCredentialCount === current.enabledCredentialCount && best.credentialCount > current.credentialCount) shouldImport = true;
     else if (best.credentialCount === current.credentialCount && best.credentialCount > 0 && best.revision > current.revision) shouldImport = true;
     else if (best.credentialCount === current.credentialCount && best.revision >= current.revision && best.usernameCount > current.usernameCount) shouldImport = true;
