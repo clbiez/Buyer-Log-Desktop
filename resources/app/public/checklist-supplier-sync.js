@@ -40,6 +40,11 @@
   }
   function T(tr, en) { return isEn() ? en : tr; }
   function text(value) { return String(value == null ? '' : value).replace(/\s+/g, ' ').trim(); }
+  function html(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
   function toast(message) {
     if (typeof root.showToast === 'function') root.showToast(message);
     else if (root.console && root.console.info) root.console.info(message);
@@ -1575,20 +1580,20 @@
       const current = kept.filter(function (entry) { return !removed.has(entry.id); });
       return current.map(function (entry) {
         const href = API + '/attachments/' + encodeURIComponent(entry.id);
-        return '<div class="cpaSettingRow" data-evidence-attachment="' + entry.id + '"><span><b>' + (entry.filename || entry.originalName || T('Dosya', 'File')) + '</b><small>' + Math.max(0, Number(entry.size) || 0).toLocaleString() + ' B</small></span>'
-          + '<span style="display:flex;gap:6px"><a class="cpaBtn" href="' + href + '" download="' + (entry.filename || 'attachment') + '">' + T('Aç / İndir', 'Open / Download') + '</a>'
-          + '<button type="button" class="cpaBtn" data-evidence-remove="' + entry.id + '">' + T('Kaldır', 'Remove') + '</button></span></div>';
+        return '<div class="cpaSettingRow" data-evidence-attachment="' + html(entry.id) + '"><span><b>' + html(entry.filename || entry.originalName || T('Dosya', 'File')) + '</b><small>' + Math.max(0, Number(entry.size) || 0).toLocaleString() + ' B</small></span>'
+          + '<span style="display:flex;gap:6px"><a class="cpaBtn" href="' + html(href) + '" download="' + html(entry.filename || 'attachment') + '">' + T('Aç / İndir', 'Open / Download') + '</a>'
+          + '<button type="button" class="cpaBtn" data-evidence-remove="' + html(entry.id) + '">' + T('Kaldır', 'Remove') + '</button></span></div>';
       }).join('');
     };
     modal.innerHTML = `<div class="cpaModal" role="dialog" aria-modal="true">
-      <header><div><b>${T('Checklist Detayları', 'Checklist Details')} · ${isEn() ? item.en : item.tr}</b>
-        <small>${visibleValue(row, ['Order Code', 'ORDER CODE'])} · ${statusLabel(status)}</small></div>
+      <header><div><b>${html(T('Checklist Detayları', 'Checklist Details'))} · ${html(isEn() ? item.en : item.tr)}</b>
+        <small>${html(visibleValue(row, ['Order Code', 'ORDER CODE']))} · ${html(statusLabel(status))}</small></div>
         <button type="button" data-evidence-close aria-label="${T('Kapat', 'Close')}">×</button></header>
       <div class="cpaModalBody">
         <div class="cpaSettingGroup">
-          <label class="cpaSettingRow"><span><b>${T('Not', 'Note')}</b></span><textarea data-evidence-note rows="3">${answer && answer.note || ''}</textarea></label>
-          ${fields.reportNumber ? `<label class="cpaSettingRow"><span><b>${T('Rapor numarası', 'Report number')}</b></span><input type="text" data-evidence-report value="${answer && answer.reportNumber || ''}"></label>` : ''}
-          ${fields.actualDate ? `<label class="cpaSettingRow"><span><b>${T('Gerçekleşme tarihi', 'Actual date')}</b></span><input type="date" data-evidence-date value="${answer && answer.actualDate || ''}"></label>` : ''}
+          <label class="cpaSettingRow"><span><b>${html(T('Not', 'Note'))}</b></span><textarea data-evidence-note rows="3">${html(answer && answer.note || '')}</textarea></label>
+          ${fields.reportNumber ? `<label class="cpaSettingRow"><span><b>${T('Rapor numarası', 'Report number')}</b></span><input type="text" data-evidence-report value="${html(answer && answer.reportNumber || '')}"></label>` : ''}
+          ${fields.actualDate ? `<label class="cpaSettingRow"><span><b>${T('Gerçekleşme tarihi', 'Actual date')}</b></span><input type="date" data-evidence-date value="${html(answer && answer.actualDate || '')}"></label>` : ''}
         </div>
         ${fields.attachments ? `<div class="cpaSettingGroup"><div class="cpaSettingRow"><span><b>${T('Rapor / e-mail ekleri', 'Report / e-mail attachments')}</b><small>${T('Dosyalar Buyer Log’da saklanır ve Üreticiye Checklist Exceli Hazırla akışında e-postaya otomatik eklenir.', 'Files are stored in Buyer Log and automatically attached by Prepare Supplier Checklist.')}</small></span>
           <label class="cpaBtn">${T('Dosya Ekle', 'Add File')}<input type="file" data-evidence-files multiple hidden></label></div>
@@ -1606,7 +1611,7 @@
       if (list) list.innerHTML = attachmentRows();
       const pendingHost = modal.querySelector('[data-evidence-pending]');
       if (pendingHost) pendingHost.innerHTML = pending.map(function (file, index) {
-        return '<div class="cpaSettingRow"><span><b>' + file.name + '</b><small>' + file.size.toLocaleString() + ' B · ' + T('Kaydedilince yeniden adlandırılacak', 'Will be renamed when saved') + '</small></span><button type="button" class="cpaBtn" data-evidence-pending-remove="' + index + '">' + T('Kaldır', 'Remove') + '</button></div>';
+        return '<div class="cpaSettingRow"><span><b>' + html(file.name) + '</b><small>' + file.size.toLocaleString() + ' B · ' + T('Kaydedilince yeniden adlandırılacak', 'Will be renamed when saved') + '</small></span><button type="button" class="cpaBtn" data-evidence-pending-remove="' + index + '">' + T('Kaldır', 'Remove') + '</button></div>';
       }).join('');
     };
     modal.addEventListener('click', function (event) {
