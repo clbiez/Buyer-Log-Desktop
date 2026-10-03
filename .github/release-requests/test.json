@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.215",
-  "commit_sha": "d376c288fe44039c4313ed2cf841570b9b302fcf",
-  "release_notes": "Buyer Log 7.0.215: Yenilemeler artık sayfa/horizon kapsamı, veri hacmi ve kaynak moduna benzeyen geçmiş performanstan tahmini süre öğreniyor. SYNC üzerinden anonim ortak örnekler kullanılıyor; median/P80 ve aykırı değer filtresiyle tahmin üretiliyor. Refresh Stages ve mevcut yenileme sayaçlarında tahmini süre/kalan süre gösteriliyor; gerçek ilerleme bilgisi yoksa sahte yüzde kullanılmıyor.",
-  "request_id": "7.0.215-r1"
+  "version": "7.0.216",
+  "commit_sha": "3f26511ce2948f2a791dc8689ea9d8a697decc66",
+  "release_notes": "Buyer Log 7.0.216: Yol Süreleri penceresinde IAS Database kapsamı seçildiğinde yol süresi analizi artık hesaplanıyor; sorgu normal yenilemeyle aynı IAS tablosundan, seçilen tarih aralığıyla çalışıyor. Bir sorun olursa gerçek hata nedeni gösteriliyor ve mümkünse Buyer Log'un okuduğu IAS satırlarıyla devam ediliyor.",
+  "request_id": "7.0.216-r1"
 }
