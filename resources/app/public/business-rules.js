@@ -131,16 +131,28 @@
     return isNonDtrManufacturer(manufacturer, manufacturers) ? 'NON-DTR' : 'DTR';
   }
 
+  /* Yol süresi kuralları IAS'taki taşıt sözlüğünü sınırlamaz.
+     Dört tarihsel Buyer Log tipi alias'larıyla kanonik kalır; bunun dışındaki
+     bütün dolu IAS taşıt adları kendi kimliğiyle korunur. Böylece Kamyon,
+     Tır, Truck+Air, Rail, Kurye, Direkt Sevkiyat vb. tipler birbirine
+     katlanmadan ayrı ayrı kural alabilir. */
   function normalizeTransitDelType(value) {
-    const key = turkNorm(value).replace(/\s+/g, '');
+    const raw = norm(value).replace(/\s*\+\s*/g, '+').replace(/\s+/g, ' ');
+    if (!raw) return '';
+    const key = turkNorm(raw).replace(/\s+/g, '');
     const hasShip = key.includes('GEMI') || key.includes('SEA') || key.includes('SHIP');
     const hasAir = key.includes('UCAK') || key.includes('AIR');
     const hasTruck = key.includes('TIR') || key.includes('TRUCK');
-    if (hasShip && hasAir) return 'Gemi+Uçak';
-    if (hasShip && hasTruck) return 'Gemi+Tır';
-    if (hasAir) return 'Uçak';
-    if (hasShip) return 'Gemi';
-    return '';
+    if (hasShip && hasAir && !hasTruck) return 'Gemi+Uçak';
+    if (hasShip && hasTruck && !hasAir) return 'Gemi+Tır';
+    if (hasAir && !hasShip && !hasTruck) return 'Uçak';
+    if (hasShip && !hasAir && !hasTruck) return 'Gemi';
+    return raw;
+  }
+
+  function transitDelTypeKey(value) {
+    const normalized = normalizeTransitDelType(value);
+    return normalized ? turkNorm(normalized).replace(/\s+/g, '') : '';
   }
 
   function transitCountryKey(value) {
@@ -330,11 +342,11 @@
   }
 
   function findTransitRule(rules, exFactory, season, country, delType, dateOrdinal = defaultDateOrdinal) {
-    const wantedType = normalizeTransitDelType(delType);
+    const wantedType = transitDelTypeKey(delType);
     if (!wantedType) return null;
     const day = dateOrdinal(exFactory);
     const matches = (Array.isArray(rules) ? rules : []).filter(rule => {
-      if (normalizeTransitDelType(rule && rule.delType) !== wantedType) return false;
+      if (transitDelTypeKey(rule && rule.delType) !== wantedType) return false;
       const start = dateOrdinal(rule && rule.exfStart);
       const end = dateOrdinal(rule && rule.exfEnd);
       const dateMatches = (start == null && end == null)
@@ -350,7 +362,7 @@
 
   function defaultTransitDays(delType) {
     const key = normalizeTransitDelType(delType);
-    return key ? DEFAULT_TRANSIT_DAYS[key] : null;
+    return key && Object.prototype.hasOwnProperty.call(DEFAULT_TRANSIT_DAYS, key) ? DEFAULT_TRANSIT_DAYS[key] : null;
   }
 
   function resolveTransitDays(options, dateOrdinal = defaultDateOrdinal) {
@@ -757,6 +769,7 @@
     isNonDtrManufacturer,
     classifyDtrByManufacturer,
     normalizeTransitDelType,
+    transitDelTypeKey,
     transitCountryKey,
     normalizeList,
     defaultDateOrdinal,

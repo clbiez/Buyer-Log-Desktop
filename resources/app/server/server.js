@@ -10281,7 +10281,7 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
       days: Number(r.days),
     })).filter(r => {
       if ((r.exfStart && r.exfEnd && r.exfStart > r.exfEnd) || !r.delType || !Number.isFinite(r.days) || !Number.isInteger(r.days) || r.days < 0 || r.days > 3650) return false;
-      const key = [r.exfStart, r.exfEnd, r.seasons.map(v => v.toLocaleUpperCase('tr-TR')).join('~'), r.countries.map(v => v.toLocaleUpperCase('tr-TR')).join('~'), r.delType].join('|');
+      const key = [r.exfStart, r.exfEnd, r.seasons.map(v => v.toLocaleUpperCase('tr-TR')).join('~'), r.countries.map(v => v.toLocaleUpperCase('tr-TR')).join('~'), BLBusinessRules.transitDelTypeKey(r.delType)].join('|');
       if (seen.has(key)) return false;
       seen.add(key);
       return true;

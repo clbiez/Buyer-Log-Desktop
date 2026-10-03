@@ -13,7 +13,7 @@ test('production status normalization preserves current accepted forms', () => {
   }
 });
 
-test('delivery types are normalized to the four canonical values', () => {
+test('delivery types keep legacy aliases canonical and preserve every other IAS vehicle type', () => {
   const cases = new Map([
     ['Gemi', 'Gemi'],
     ['SEA', 'Gemi'],
@@ -24,9 +24,29 @@ test('delivery types are normalized to the four canonical values', () => {
     ['Sea+Air', 'Gemi+Uçak'],
     ['Gemi + Tır', 'Gemi+Tır'],
     ['ship truck', 'Gemi+Tır'],
-    ['Karayolu', ''],
+    ['Karayolu', 'Karayolu'],
+    ['Tır', 'Tır'],
+    ['Truck', 'Truck'],
+    ['Uçak + Tır', 'Uçak+Tır'],
+    ['Kurye', 'Kurye'],
+    ['Direkt Sevkiyat', 'Direkt Sevkiyat'],
+    ['', ''],
   ]);
   for (const [input, expected] of cases) assert.equal(rules.normalizeTransitDelType(input), expected, input);
+  assert.equal(rules.transitDelTypeKey('truck + air'), rules.transitDelTypeKey('TRUCK+AIR'));
+  assert.equal(rules.defaultTransitDays('Truck'), null);
+});
+
+test('custom IAS vehicle types can have their own transit rules without collapsing into legacy types', () => {
+  const ruleList = [
+    { id: 'truck-air', delType: 'Truck+Air', days: 12, countries: ['Türkiye'], seasons: [] },
+    { id: 'courier', delType: 'Kurye', days: 4, countries: [], seasons: [] },
+  ];
+  assert.equal(rules.findTransitRule(ruleList, '2026-08-01', 'W5', 'Türkiye', 'truck+air').id, 'truck-air');
+  assert.equal(rules.findTransitRule(ruleList, '2026-08-01', 'W5', 'India', 'KURYE').id, 'courier');
+  const resolved = rules.resolveTransitDays({ delType: 'Truck+Air', status: 'Üretimde', country: 'Turkey', rules: ruleList });
+  assert.equal(resolved.days, 12);
+  assert.equal(resolved.dynamic, true);
 });
 
 test('transit rule matching is inclusive and selects the most specific rule', () => {

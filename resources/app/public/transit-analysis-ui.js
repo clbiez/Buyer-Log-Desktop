@@ -184,7 +184,7 @@
     </div>`;
   }
 
-  /* ctx: { getRules():Rule[], applyRules(rules) }
+  /* ctx: { getRules():Rule[], applyRules(rules), setVehicleTypes?(types) }
      Kart iskeleti (başlık + kaynak + araç çubuğu) her durumda çizilir; yükleme,
      boş sonuç ve hata yalnız gövdeyi değiştirir. Böylece kapsam/tarih/Yenile
      kontrolleri hiçbir durumda kaybolmaz. */
@@ -222,7 +222,7 @@
       if (st.missingDates) parts.push(L(`${n(st.missingDates)} tarihi eksik`, `${n(st.missingDates)} missing dates`));
       if (st.outOfRange) parts.push(L(`${n(st.outOfRange)} tutarsız tarih`, `${n(st.outOfRange)} inconsistent dates`));
       if (st.missingCountry) parts.push(L(`${n(st.missingCountry)} ülkesi yok`, `${n(st.missingCountry)} without a country`));
-      if (st.otherDestination) parts.push(L(`${n(st.otherDestination)} Antrepo dışı rota (rapor gibi hariç)`, `${n(st.otherDestination)} non-Antrepo route (excluded, as in the report)`));
+      if (st.otherDestination) parts.push(L(`${n(st.otherDestination)} rapor filtresiyle hariç rota`, `${n(st.otherDestination)} route excluded by the report filter`));
       return parts.join(' · ');
     }
     function columnNotes(analysis) {
@@ -235,7 +235,7 @@
       if (!c.actualEntry) notes.push(L('Gerçekleşen Antrepo/Tema Depo giriş tarihi bulunamadı — yalnız gerçekleşen veriyle hesaplandığı için tahmini giriş kullanılmaz. IAS Database kapsamını seçin veya IAS alan eşlemesine "Antrepo Giriş Tarihi" ekleyin.', 'No actual Antrepo/Tema warehouse entry date was found — only realized data is used, so the estimated entry is not used. Choose the IAS Database scope or add "Antrepo Giriş Tarihi" to the IAS field mapping.'));
       if (!c.actualLoading) notes.push(L('Fiili Yükleme tarihi yok; yükleme/yol ayrımı Handover\'a göre', 'No actual loading date; loading/transit split by Handover'));
       if (!c.summaryDeclaration) notes.push(L('Özet Beyan / Ambar / Transit Beyanname tarihleri yok; gümrük alt adımları (5–8) hesaplanamaz', 'No summary declaration / warehouse approval / transit declaration dates; customs sub-steps (5–8) cannot be calculated'));
-      if (!c.finalDestination) notes.push(L('Final Destination yok; Antrepo dışı rotalar ayrılamaz', 'No Final Destination; non-Antrepo routes cannot be excluded'));
+      if (!c.finalDestination) notes.push(L('Final Destination yok; rota hedefi bilgisi gösterilemez', 'No Final Destination; route destination information cannot be shown'));
       return notes.length ? `<div class="trxNote">${notes.map(esc).join(' · ')}</div>` : '';
     }
 
@@ -300,6 +300,7 @@
       if (view.vehicle !== '*' && !summary.options.vehicles.includes(view.vehicle)) { view.vehicle = '*'; summary = TA().summarize(analysis, { basis: view.basis, year: yearFilter, vehicle: '*' }); }
       writeView(view);
       const rules = ctx.getRules();
+      if (typeof ctx.setVehicleTypes === 'function') ctx.setVehicleTypes(summary.options.vehicles.filter(Boolean));
       const suggestions = new Map(TA().suggestRules(summary, view).map(s => [s.vehicle + '|' + s.countryKey, s]));
       summary.rows.forEach(row => {
         const id = rowId(row);
@@ -322,9 +323,7 @@
         const flags = [row.lowSample ? `<span class="trxFlag" title="${row.shipments != null ? L(`${TA().LOW_SAMPLE_SHIPMENTS} sevkiyattan az`, `Fewer than ${TA().LOW_SAMPLE_SHIPMENTS} shipments`) : L(`Toplam adet < ${fmtQty(TA().LOW_SAMPLE_QTY)} veya < ${TA().LOW_SAMPLE_PERIODS} dönem`, `Total qty < ${fmtQty(TA().LOW_SAMPLE_QTY)} or < ${TA().LOW_SAMPLE_PERIODS} periods`)}">${L('düşük örneklem', 'low sample')}</span>` : '',
           row.anomaly ? `<span class="trxFlag trxFlagBad" title="${esc(L('Negatif ana süre var (tarih tutarsızlığı)', 'Negative main duration (date inconsistency)'))}">${L('veri tutarsız', 'inconsistent')}</span>` : ''].join('');
         const canSelect = !!row.ruleType && !!s;
-        const noRuleTip = row.vehicle
-          ? L('Bu taşıt tipi için Buyer Log kuralı yok (kurallar Gemi, Uçak, Gemi+Uçak ve Gemi+Tır için uygulanır); süre yalnız bilgi amaçlı gösterilir.', 'Buyer Log has no rule for this vehicle type (rules apply to Sea, Air, Sea+Air and Sea+Truck); the duration is shown for information only.')
-          : L('Taşıt tipi belirtilmemiş; kurala aktarılamaz', 'Vehicle type not specified; cannot be transferred');
+        const noRuleTip = L('Taşıt tipi belirtilmemiş; kurala aktarılamaz', 'Vehicle type not specified; cannot be transferred');
         return `<tr data-ta-row="${esc(id)}" class="${expanded.has(id) ? 'is-open' : ''}">
           <td><input type="checkbox" class="trxCheck" data-ta-pick="${esc(id)}" ${selected.get(id) && canSelect ? 'checked' : ''} ${canSelect ? '' : 'disabled'} title="${canSelect ? esc(L('Öneriyi kurallara aktar', 'Transfer the suggestion to the rules')) : esc(noRuleTip)}"></td>
           <td><span class="trxBadge" data-v="${esc(row.vehicle)}" title="${esc(row.vehicle || '')}">${esc(vehicleLabel(row.vehicle, analysis))}</span></td>
@@ -469,13 +468,19 @@
   }
 
   function invalidate() { store.loaded = false; live.loaded = false; }
-  // Kural düzenleyicinin ülke seçicisi IAS analizindeki ülkeleri de sunar.
+  // Kural düzenleyicisi IAS analizindeki ülke ve taşıt sözlüğünü de sunar.
   function knownCountries() {
     const names = new Set();
     [live.analysis, store.analysis].forEach(a => (a && Array.isArray(a.records) ? a.records : [])
       .forEach(r => { const name = TA() && TA().countryRuleName(r.country); if (name) names.add(name); }));
     return [...names];
   }
+  function knownVehicles() {
+    const names = new Set();
+    [live.analysis, store.analysis].forEach(a => (a && Array.isArray(a.records) ? a.records : [])
+      .forEach(r => { const name = TA() && TA().ruleVehicle(r.vehicle); if (name) names.add(name); }));
+    return [...names].sort((a, b) => a.localeCompare(b, 'tr'));
+  }
 
-  global.BLTransitAnalysisUI = { mount, load, loadLive, save, invalidate, readWorkbookFile, knownCountries };
+  global.BLTransitAnalysisUI = { mount, load, loadLive, save, invalidate, readWorkbookFile, knownCountries, knownVehicles };
 })(typeof window !== 'undefined' ? window : globalThis);
