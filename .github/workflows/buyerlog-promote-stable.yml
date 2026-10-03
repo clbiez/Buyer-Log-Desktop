@@ -11,7 +11,7 @@ on:
     paths:
       - '.github/release-requests/stable.json'
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: buyerlog-release-publish
   cancel-in-progress: false
@@ -20,8 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
       - name: Resolve promotion request
         shell: bash
         env:
@@ -52,3 +50,18 @@ jobs:
           BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
           BUYER_LOG_RELEASE_REPO_DIR: ${{ github.workspace }}/release-repo
         run: node scripts/github-release.js promote-stable "$PROMOTE_VERSION"
+
+      - name: Persist immutable visual release archive
+        working-directory: resources/app
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/release-notes.js seal "$PROMOTE_VERSION" --reset
+          cd "$GITHUB_WORKSPACE"
+          git config user.name "Buyer Log Release Bot"
+          git config user.email "buyer-log-release-bot@users.noreply.github.com"
+          git add -A resources/app/public/release-notes
+          if ! git diff --cached --quiet; then
+            git commit -m "Archive visual release notes $PROMOTE_VERSION"
+            git push origin HEAD:main
+          fi

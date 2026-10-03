@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.209",
-  "commit_sha": "680e8b23970d9c089892338afa2b7918cb7fd833",
-  "release_notes": "Buyer Log 7.0.209: IAS satırlarında Sipariş Kod / Model Adı / Renk Kod boş gelmesi ve ASAS eşleşmesinin 0 kalması düzeltildi. İthalat Dosya No Dim_Ithalat boyut tablosuna bağlı olsa da IAS sorgusu satır granülü olarak yükleme fact tablosunu (Ithalat) kullanır; sipariş alanları her parsiyel satırın kendi siparişinden okunur."
+  "version": "7.0.213",
+  "commit_sha": "738095bb6b72bccba6f1533c99d603fb3837f7cf",
+  "release_notes": "Buyer Log 7.0.213: Backlog grafiklerinin tasarım dili birleştirildi; Today, hover detayları ve toplam adet görünürlüğü iyileştirildi. Delivery Risk alt kartları KPI tasarımıyla hizalandı. Güncelleme/sürüm notlarında metin okunabilirliği, görsel büyütme ve ileri-geri gezinme geliştirildi.",
+  "request_id": "7.0.213-r1"
 }

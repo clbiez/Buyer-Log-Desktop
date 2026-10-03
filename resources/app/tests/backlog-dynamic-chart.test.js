@@ -14,6 +14,8 @@ const chart = require(path.join(ROOT, 'public', 'backlog-chart.js'));
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+const OVERVIEW = fs.readFileSync(path.join(ROOT, 'public', 'backlog-overview.js'), 'utf8');
+const OVERVIEW_CSS = fs.readFileSync(path.join(ROOT, 'public', 'backlog-overview.css'), 'utf8');
 
 const headers = ['Model Bütçe Tarihi','Adet','Buyer','MAG'];
 const rows = [
@@ -168,12 +170,17 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(CSS,/\.backlogChartCrosshair/);
   assert.match(CSS,/\.backlogChartLegendItem/);
   assert.match(CSS,/\.backlogChartTodayLine/);
+  assert.match(CSS,/\.backlogChartColumnTotal/);
   const chartSource=fs.readFileSync(path.join(ROOT,'public','backlog-chart.js'),'utf8');
   assert.match(chartSource,/data-backlog-chart-filter/);
   assert.match(chartSource,/data-backlog-chart-range/);
   assert.match(chartSource,/data-backlog-chart-crosshair/);
   assert.match(chartSource,/data-backlog-chart-legend-name/);
   assert.match(chartSource,/addEventListener\('wheel'/);
+  assert.match(chartSource,/setWheelZoomActive\(true,canvas\)/);
+  assert.match(chartSource,/if\(!wheelZoomActive\|\|total<=1\)return/);
+  assert.match(chartSource,/target\.closest\('\.backlogChartCanvas'\)/);
+  assert.match(chartSource,/setWheelZoomActive\(false\)/);
   assert.match(chartSource,/addEventListener\('pointerdown'/);
   assert.match(chartSource,/addEventListener\('pointermove'/);
   assert.match(chartSource,/addEventListener\('dblclick'/);
@@ -186,8 +193,21 @@ test('Backlog page exposes chart toolbar control, panel, styles and module', () 
   assert.match(chartSource,/data-backlog-chart-export="png"/);
   assert.match(chartSource,/timeField2/);
   assert.match(chartSource,/backlogChartTooltipTotal/);
+  assert.match(chartSource,/backlogChartColumnTotal/);
+  assert.match(chartSource,/backlogChartHead bpaSectionHead/);
+  assert.match(chartSource,/backlogChartPresets bpaSeg2/);
   assert.match(chartSource,/tooltip\?\.addEventListener\('wheel'/);
   assert.match(CSS,/\.backlogChartTooltip\{[^}]*pointer-events:auto/);
+});
+
+test('Backlog overview timeline always shows bucket totals and mirrors the interactive chart hover/today language', () => {
+  assert.match(OVERVIEW,/class="blvColTotal"/);
+  assert.doesNotMatch(OVERVIEW,/const value=b\.overdueQty\?/);
+  assert.match(OVERVIEW,/timelineTipHtml/);
+  assert.match(OVERVIEW,/data-blv-tip-style="chart"/);
+  assert.match(OVERVIEW,/class="blvTodayLine"/);
+  assert.match(OVERVIEW_CSS,/\.blvTipBox\.is-chart-style/);
+  assert.match(OVERVIEW_CSS,/\.blvTodayLine b/);
 });
 
 test('Backlog render refreshes chart and Excel export appends chart sheets', () => {

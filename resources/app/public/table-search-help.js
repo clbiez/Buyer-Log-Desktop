@@ -22,10 +22,11 @@
           ['ABC123','Finds rows containing this value.'],
           ['ABC123, ABC456','Comma + space = OR. Either value may match.'],
           ['Disney; Bangladesh','Semicolon + space = AND. Both conditions must match the same row.'],
+          ['(A; 1), (B; 2)','Parentheses = independent row groups. A + 1 OR B + 2 may match.'],
           ['Disney; !Bangladesh','! = must not contain the value.'],
         ],
         excelTitle:'Paste from Excel',
-        excel:'Copy one or more Excel cells and paste them directly into the search box. Rows and columns are flattened, empty cells are ignored, duplicates are removed, and the values are searched as OR automatically.',
+        excel:'Paste an Excel block directly into the search box. A single column stays an OR list. With multiple columns, each Excel row becomes its own parenthesized group, for example (A; 1), (B; 2), so values from different source rows never mix.',
         note:'Tip: separators intentionally include a following space. This keeps decimal values such as 13,50 as one search value.'
       };
     }
@@ -37,10 +38,11 @@
         ['ABC123','Bu değeri içeren kayıtları bulur.'],
         ['ABC123, ABC456','Virgül + boşluk = VEYA. Değerlerden birinin eşleşmesi yeterlidir.'],
         ['Disney; Bangladesh','Noktalı virgül + boşluk = VE. Aynı kayıtta iki koşul da bulunmalıdır.'],
+        ['(A; 1), (B; 2)','Parantez = bağımsız satır grubu. A + 1 VEYA B + 2 eşleşebilir.'],
         ['Disney; !Bangladesh','! = bu değeri içermesin.'],
       ],
       excelTitle:'Excel’den yapıştırma',
-      excel:'Excel’de bir veya birden fazla hücreyi kopyalayıp doğrudan arama kutusuna yapıştırın. Satır ve sütunlar tek listeye çevrilir; boş hücreler atılır, tekrar edenler tekilleştirilir ve değerler otomatik olarak VEYA şeklinde aranır.',
+      excel:'Excel’de bir bloğu doğrudan arama kutusuna yapıştırın. Tek sütun eski VEYA listesi olarak kalır. Birden fazla sütunda ise her Excel satırı kendi parantez grubuna dönüşür; örneğin (A; 1), (B; 2). Böylece farklı kaynak satırlarındaki değerler birbirine karışmaz.',
       note:'İpucu: Ayraçlardan sonra boşluk kullanılır. Böylece 13,50 gibi ondalık değerler tek arama değeri olarak kalır.'
     };
   }

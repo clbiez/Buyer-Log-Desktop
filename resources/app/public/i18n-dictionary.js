@@ -10,6 +10,7 @@
    =================================================================== */
 window.BL_I18N_DICTIONARY={version:1,
 pairs:[
+["Excel’de bir bloğu doğrudan arama kutusuna yapıştırın. Tek sütun eski VEYA listesi olarak kalır. Birden fazla sütunda ise her Excel satırı kendi parantez grubuna dönüşür; örneğin (A; 1), (B; 2). Böylece farklı kaynak satırlarındaki değerler birbirine karışmaz.","Paste an Excel block directly into the search box. A single column stays an OR list. With multiple columns, each Excel row becomes its own parenthesized group, for example (A; 1), (B; 2), so values from different source rows never mix."],
 ["Transit kuralları","Transit rules"],
 ["Eşleştirme kuralı","Matching rule"],
 ["Antrepo veri kaynağı","Antrepo data source"],

@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths-ignore:
       - '.github/release-requests/**'
+      - 'resources/app/public/release-notes/**'
 
 permissions:
   contents: write

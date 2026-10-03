@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "version": "7.0.213",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Backlog ve risk ekranlarında daha tutarlı deneyim",
+        "en": "A more consistent Backlog and risk experience"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 2,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.213/release.json"
+    },
+    {
+      "version": "7.0.212",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Arama satır ilişkisini koruyor",
+        "en": "Search now preserves row relationships"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.212/release.json"
+    },
+    {
+      "version": "7.0.211",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Görsel sürüm geçmişi ve kümülatif yenilik akışı",
+        "en": "Visual release history and cumulative What's New flow"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 0,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.211/release.json"
+    }
+  ]
+}

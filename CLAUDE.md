@@ -122,6 +122,33 @@ dilde metin içeren iş bitmiş sayılmaz.
   **boştur ve boş kalır**. Baseline'a kayıt/dosya eklemek, test sınırlarını
   (`MAX_ENTRIES = 0`, `FROZEN_FILES`) yükseltmek veya testi gevşetmek yasaktır.
 
+### 4.2 · Görsel stable sürüm notları
+
+Kullanıcıya görünen **her yeni özellik, davranış değişikliği, iyileştirme ve hata
+düzeltmesi**, işi hangi agent yaparsa yapsın, aynı PR/commit serisinde
+`resources/app/public/release-notes/next.json` içine eklenir.
+
+- Her kayıt `feature | improvement | fix` tipi, modül adı, başlık ve kısa açıklama
+  için **TR + EN** içerir.
+- Her kayıt bir görsel taşır. Normal akışta
+  `visual.kind="screenshot"` zorunludur ve dosya
+  `public/release-notes/next-assets/` altında gerçek Buyer Log ekran görüntüsü
+  (PNG/JPG/WEBP) olmalıdır. Mockup, stock görsel veya başka uygulama ekranı
+  kullanma.
+- Ekran görüntüsünde şirket/supplier/order/fiyat/kullanıcı gibi hassas gerçek
+  verileri göstermeyin; gerçek Buyer Log UI'sını anonim/demo veriyle çekin.
+- Bir görev birden fazla kullanıcı-visible değişiklik yapıyorsa her değişikliği
+  ayrı kayıt olarak ekle; release özetinde kaybolmasına izin verme.
+- `npm run release:notes:validate` pending paketi denetler. TEST release workflow'u
+  pending paketi canonical sürüme mühürler; eksik TR/EN, görsel veya dosya release'i
+  durdurur.
+- Stable promotion başarılı olduğunda sürüm paketi
+  `public/release-notes/<version>/` altına immutable arşivlenir ve pending paket
+  otomatik sıfırlanır. Arşivlenmiş stable paketi sonradan değiştirme.
+- Yalnız bu altyapıyı ilk kez kuran bootstrap sürümü, gerçek ekran henüz
+  üretilemediği için `bootstrapVisual=true` ile component preview kullanabilir;
+  sonraki sürümlerde bu istisnayı kullanma.
+
 ## 5 · Token, süre ve iletişim disiplini
 
 - Aynı dosyayı, aynı talimatı veya aynı Codebase Memory sonucunu aynı mantıksal

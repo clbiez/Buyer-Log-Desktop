@@ -23,7 +23,7 @@ let baseItems=null,items=null,loading=false,error='',signature='',tips=new Map()
 let filterCatalog=null,filterCatalogPromise=null,filterCatalogError='',filterOpen=false,filterSource='cp',filterSearch='',filterEditorId='',filterValueSearch='';
 
 function loadState(){
-  const defaults={open:true,groupBy:'buyer',barScale:'pct',timeField:'exFactory',granularity:'week',showAll:false,exportPlanActual:true,exportLegacy:true,filters:[]};
+  const defaults={open:true,groupBy:'buyer',barScale:'pct',timeField:'exFactory',granularity:'week',timelineChart:'stacked',showAll:false,exportPlanActual:true,exportLegacy:true,filters:[]};
   try{
     const raw=JSON.parse((window.BLStorage||localStorage).getItem(STORAGE_KEY)||'null');
     if(raw&&typeof raw==='object'){
@@ -226,9 +226,19 @@ function groupCard(total){
     ${groups.length>15?`<button type="button" class="bpaMore" data-blv-action="toggleAll">${esc(state.showAll?L('Daha az göster','Show less'):L(`Tümünü göster (${groups.length})`,`Show all (${groups.length})`))}</button>`:''}
   </div>`;
 }
+function timelineTipHtml(title,bucket){
+  const rows=R().STAGES.filter(s=>(Number(bucket&&bucket.stages&&bucket.stages[s.key])||0)>0).map(s=>{
+    const qty=Number(bucket.stages[s.key])||0;
+    return `<span><i data-stage="${s.key}"></i><b>${esc(stageLabel(s.key))}</b><em>${esc(n(qty))}</em></span>`;
+  }).join('');
+  const total=Number(bucket&&bucket.qty)||0,overdue=Number(bucket&&bucket.overdueQty)||0;
+  return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(total))}</em></span>${overdue?`<span class="blvTimelineTooltipOverdue"><i></i><b>${esc(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'))}</b><em>${esc(n(overdue))}</em></span>`:''}`;
+}
 function flowCard(){
   const fields=R().TIMELINE_FIELDS,field=fields.find(f=>f.key===state.timeField)||fields[0];
   const series=R().timeline(items,field.key,{granularity:state.granularity,lang:lang()}),max=series.reduce((m,b)=>Math.max(m,b.qty),0);
+  const stageMax=series.reduce((m,b)=>Math.max(m,...R().STAGES.map(s=>Number(b.stages[s.key])||0)),0);
+  const chartMode=state.timelineChart==='grouped'?'grouped':'stacked';
   const fLabel=lang()==='en'?field.en:field.tr;
   const today=R().dayIso(new Date()),todayMs=Date.parse(today+'T00:00:00Z');
   const bucketIsToday=b=>{
@@ -238,19 +248,34 @@ function flowCard(){
     return Number.isFinite(startMs)&&Number.isFinite(todayMs)&&todayMs>=startMs&&todayMs<startMs+7*86400000;
   };
   const cols=series.map(b=>{
+    const isToday=bucketIsToday(b);
+    const bucketTip=tip(timelineTipHtml(`${fLabel} · ${b.label}`,b));
+    const value=`<span class="blvColTotal">${n(b.qty)}</span>${b.overdueQty?`<small class="blvColOverdue">${n(b.overdueQty)} ${esc(L('gecikmiş','overdue'))}</small>`:''}`;
+    const todayMarker=isToday?`<span class="blvTodayLine" aria-hidden="true"><b>${esc(L('Bugün','Today'))}</b></span>`:'';
+    const columnClass=`bpaCol${b.past?' is-past':''}${isToday?' is-today':''}`;
+    const commonAttrs=`data-blv-start="${esc(b.start||'')}" data-blv-tip="${bucketTip}" data-blv-tip-style="chart"${isToday?' data-blv-today="1"':''}`;
+    if(chartMode==='grouped'){
+      const bars=R().STAGES.filter(s=>b.stages[s.key]>0).map(s=>{
+        const qty=b.stages[s.key],list=b.items.filter(it=>it.stage===s.key);
+        const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),items:list,stage:s.key});
+        const height=stageMax?Math.max(2,qty/stageMax*100):0;
+        return `<span class="blvGroupBar" data-stage="${s.key}" style="height:${height.toFixed(1)}%" data-blv-open="${o}" title="${esc(stageLabel(s.key)+': '+n(qty))}"></span>`;
+      }).join('');
+      return `<div class="${columnClass} blvGroupedCol" ${commonAttrs}><div class="bpaColValue">${value}</div><div class="bpaColTrack blvGroupTrack">${todayMarker}<div class="blvGroupBars">${bars}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
+    }
     const segs=R().STAGES.filter(s=>b.stages[s.key]>0).map(s=>{
       const qty=b.stages[s.key],list=b.items.filter(it=>it.stage===s.key);
-      const t=tip(tipHtml(`${fLabel} · ${b.label}`,[[stageLabel(s.key),n(qty)+' '+L('adet','pcs'),s.key],[L('Dönem toplamı','Period total'),n(b.qty)],[L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),n(b.overdueQty)]],L('Detay için tıklayın','Click for details')));
       const o=opener({title:`${fLabel} · ${b.label}`,subtitle:stageLabel(s.key),items:list,stage:s.key});
-      return `<span class="bpaSeg" data-stage="${s.key}" style="flex-grow:${qty}" data-blv-tip="${t}" data-blv-open="${o}"></span>`;
+      return `<span class="bpaSeg" data-stage="${s.key}" style="flex-grow:${qty}" data-blv-open="${o}"></span>`;
     }).join('');
-    const isToday=bucketIsToday(b);
-    return `<div class="bpaCol${b.past?' is-past':''}${isToday?' is-today':''}" data-blv-start="${esc(b.start||'')}"${isToday?' data-blv-today="1"':''}><div class="bpaColValue">${b.overdueQty?`<span class="blvOver">${n(b.overdueQty)}</span>`:n(b.qty)}</div><div class="bpaColTrack"><div class="bpaColBar" style="height:${max?Math.max(3,b.qty/max*100).toFixed(1):0}%">${segs}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
+    return `<div class="${columnClass}" ${commonAttrs}><div class="bpaColValue">${value}</div><div class="bpaColTrack">${todayMarker}<div class="bpaColBar" style="height:${max?Math.max(3,b.qty/max*100).toFixed(1):0}%">${segs}</div></div><div class="bpaColLabel">${esc(b.label)}</div></div>`;
   }).join('');
   return `<div class="bpaCardBox"><div class="bpaSectionHead"><button type="button" class="bpaTodayBtn" data-blv-action="today" title="${esc(L('Bugünün dönemine git','Go to the current period'))}">${esc(L('Bugün','Today'))}</button><span class="bpaSectionTitle">${esc(L('Zaman akışı','Timeline'))}</span><span class="bpaSectionSub">${esc(L('Sütun üstünde kırmızı sayı: Ex-F tarihi geçmiş ama yüklenmemiş adet.','Red figure above a column: Ex-F passed but not loaded.'))}</span><span class="bpaSectionSpacer"></span>
     <div class="bpaSeg2" role="group">${fields.map(f=>`<button type="button" class="${f.key===field.key?'is-active':''}" data-blv-time="${f.key}">${esc(lang()==='en'?f.en:f.tr)}</button>`).join('')}</div>
+    <div class="bpaSeg2 blvChartMode" role="group" aria-label="${esc(L('Grafik tipi','Chart type'))}"><button type="button" class="${chartMode==='stacked'?'is-active':''}" data-blv-chart="stacked" title="${esc(L('Durumları aynı sütunda yığılmış göster','Show statuses stacked in one column'))}">${esc(L('Yığılmış','Stacked'))}</button><button type="button" class="${chartMode==='grouped'?'is-active':''}" data-blv-chart="grouped" title="${esc(L('Durumları yan yana ayrı sütunlarda göster','Show statuses as separate side-by-side columns'))}">${esc(L('Yan yana','Side by side'))}</button></div>
     <div class="bpaSeg2" role="group"><button type="button" class="${state.granularity!=='month'?'is-active':''}" data-blv-gran="week">${esc(L('Hafta','Week'))}</button><button type="button" class="${state.granularity==='month'?'is-active':''}" data-blv-gran="month">${esc(L('Ay','Month'))}</button></div></div>
-    ${series.length?`<div class="bpaCols blvCols">${cols}</div>`:`<div class="bpaEmpty">${esc(L('Bu tarih alanında veri yok.','No data for this date field.'))}</div>`}</div>`;
+    <div class="blvTimelineLegend">${legend()}</div>
+    ${series.length?`<div class="bpaCols blvCols ${chartMode==='grouped'?'is-grouped':'is-stacked'}">${cols}</div>`:`<div class="bpaEmpty">${esc(L('Bu tarih alanında veri yok.','No data for this date field.'))}</div>`}</div>`;
 }
 function scrollTimelineToToday(){
   const host=$('backlogOverviewBody'),scroller=host&&host.querySelector('.blvCols');
@@ -406,7 +431,7 @@ function renderFilterPanel(){
   mount.innerHTML=`<header class="blvFilterHead"><div><span class="blvFilterKicker">${esc(L('BACKLOG GENEL BAKIŞ','BACKLOG OVERVIEW'))}</span><h3 id="blvFilterTitle">${esc(L('Analiz Filtreleri','Analysis Filters'))}</h3><p>${esc(L('Bu filtreler yalnız Genel Bakış analizini etkiler; Backlog ana tablosunu değiştirmez.','These filters affect only Overview analysis; the main Backlog table is unchanged.'))}</p></div><div class="blvFilterHeadActions"><button type="button" data-blvf-reset${active.length?'':' disabled'}>${esc(L('Tümünü sıfırla','Reset all'))}</button><button type="button" data-blvf-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
     <div class="blvFilterSummary"><div><b>${n((items||[]).length)}</b><span>/ ${n((baseItems||[]).length)} ${esc(L('satır','rows'))}</span></div><span>${esc(L(`${activeFilterCount()} aktif filtre`,`${activeFilterCount()} active filters`))}</span></div>
     <div class="blvFilterActive">${active.map(filter=>`<button type="button" class="${filter.id===filterEditorId?'is-active':''}" data-blvf-edit="${esc(encodeURIComponent(filter.id))}"><span>${esc(filterSourceLabel(filter.source))}</span><b>${esc(filter.label)}</b><small>${esc(filterCriterionText(filter))}</small></button><button type="button" class="blvFilterRemove" data-blvf-remove="${esc(encodeURIComponent(filter.id))}" title="${esc(L('Filtreyi kaldır','Remove filter'))}"><svg class="ic"><use href="#i-x"/></svg></button>`).join('')||`<span class="blvFilterNoActive">${esc(L('Henüz analiz filtresi eklenmedi.','No analysis filters added yet.'))}</span>`}</div>
-    <div class="blvFilterWorkspace"><section class="blvFilterCatalogue"><div class="blvFilterSourceTabs">${['cp','asas','antrepo'].map(source=>`<button type="button" class="${source===filterSource?'is-active':''}" data-blvf-source="${source}">${filterSourceLabel(source)} <b>${n(sourceCount(source))}</b></button>`).join('')}</div><input class="blvFilterSearch" type="search" data-blvf-search value="${esc(filterSearch)}" placeholder="${esc(L('Sütun ara…','Search columns…'))}"><div class="blvFilterColumns">${visibleFields.map(field=>`<button type="button" class="${activeIds.has(field.id)?'is-added':''}" data-blvf-add="${esc(encodeURIComponent(field.id))}" title="${esc(field.header)}"><span>${esc(field.header)}</span><svg class="ic"><use href="#${activeIds.has(field.id)?'i-check':'i-plus'}"/></svg></button>`).join('')||`<div class="blvFilterNoValue">${esc(L('Eşleşen sütun yok.','No matching columns.'))}</div>`}</div>${sourceItems.length>visibleFields.length?`<div class="blvFilterRangeHint">${esc(L(`${sourceItems.length} sütunun ilk 300'ü gösteriliyor. Aramayı kullanın.`,`Showing the first 300 of ${sourceItems.length} columns. Use search.`))}</div>`:''}</section><section class="blvFilterEditor">${renderFilterEditor(editor)}</section></div>`;
+    <div class="blvFilterWorkspace"><div class="blvFilterCatalogue"><div class="blvFilterSourceTabs">${['cp','asas','antrepo'].map(source=>`<button type="button" class="${source===filterSource?'is-active':''}" data-blvf-source="${source}">${filterSourceLabel(source)} <b>${n(sourceCount(source))}</b></button>`).join('')}</div><input class="blvFilterSearch" type="search" data-blvf-search value="${esc(filterSearch)}" placeholder="${esc(L('Sütun ara…','Search columns…'))}"><div class="blvFilterColumns">${visibleFields.map(field=>`<button type="button" class="${activeIds.has(field.id)?'is-added':''}" data-blvf-add="${esc(encodeURIComponent(field.id))}" title="${esc(field.header)}"><span>${esc(field.header)}</span><svg class="ic"><use href="#${activeIds.has(field.id)?'i-check':'i-plus'}"/></svg></button>`).join('')||`<div class="blvFilterNoValue">${esc(L('Eşleşen sütun yok.','No matching columns.'))}</div>`}</div>${sourceItems.length>visibleFields.length?`<div class="blvFilterRangeHint">${esc(L(`${sourceItems.length} sütunun ilk 300'ü gösteriliyor. Aramayı kullanın.`,`Showing the first 300 of ${sourceItems.length} columns. Use search.`))}</div>`:''}</div><div class="blvFilterEditor">${renderFilterEditor(editor)}</div></div>`;
   requestAnimationFrame(()=>{
     const columns=root.querySelector('.blvFilterColumns'),values=root.querySelector('.blvFilterValues'),editorEl=root.querySelector('.blvFilterEditor');
     if(columns)columns.scrollTop=previous.columns;if(values)values.scrollTop=previous.values;if(editorEl)editorEl.scrollTop=previous.editor;
@@ -432,6 +457,7 @@ function moveTip(e){
   const target=e.target&&e.target.closest?e.target.closest('[data-blv-tip]'):null;
   if(!target||!tips.has(target.dataset.blvTip)){hideTip();return;}
   const el=tipEl();
+  el.classList.toggle('is-chart-style',target.dataset.blvTipStyle==='chart');
   if(el.dataset.key!==target.dataset.blvTip){el.innerHTML=tips.get(target.dataset.blvTip);el.dataset.key=target.dataset.blvTip;}
   el.hidden=false;
   const pad=14,w=el.offsetWidth,h=el.offsetHeight;let x=e.clientX+pad,y=e.clientY+pad;
@@ -493,11 +519,12 @@ function bind(){
   $('backlogOverviewFilter')?.addEventListener('click',e=>{e.stopPropagation();if(filterOpen)closeFilterPanel();else void openFilterPanel();});
   $('backlogOverviewRefresh')?.addEventListener('click',e=>{e.stopPropagation();void refresh(true);});
   host.addEventListener('click',e=>{
-    const t=e.target.closest('[data-blv-open],[data-blv-group],[data-blv-scale],[data-blv-time],[data-blv-gran],[data-blv-action]');
+    const t=e.target.closest('[data-blv-open],[data-blv-group],[data-blv-scale],[data-blv-time],[data-blv-chart],[data-blv-gran],[data-blv-action]');
     if(!t||!host.contains(t))return;
     if(t.dataset.blvGroup){state.groupBy=t.dataset.blvGroup;state.showAll=false;saveState();return render();}
     if(t.dataset.blvScale){state.barScale=t.dataset.blvScale;saveState();return render();}
     if(t.dataset.blvTime){state.timeField=t.dataset.blvTime;saveState();return render();}
+    if(t.dataset.blvChart){state.timelineChart=t.dataset.blvChart==='grouped'?'grouped':'stacked';saveState();return render();}
     if(t.dataset.blvGran){state.granularity=t.dataset.blvGran;saveState();return render();}
     if(t.dataset.blvAction==='today'){scrollTimelineToToday();return;}
     if(t.dataset.blvAction==='toggleAll'){state.showAll=!state.showAll;saveState();return render();}

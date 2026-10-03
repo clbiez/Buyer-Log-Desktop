@@ -2617,12 +2617,61 @@ function asasAllocationRank(segment) {
   if (statusKey === 'DEPODA') return 3;
   return 1;
 }
+function asasAllocationText(value) {
+  return turknorm(value);
+}
+function compareAsasAllocationText(a, b) {
+  const aa = asasAllocationText(a), bb = asasAllocationText(b);
+  return aa < bb ? -1 : (aa > bb ? 1 : 0);
+}
+function compareAsasAllocationSegments(a, b) {
+  const rankDiff = asasAllocationRank(a) - asasAllocationRank(b);
+  if (rankDiff) return rankDiff;
+
+  // Aynı operasyon seviyesindeki parsiyeller kaynak satır sırasına göre değil,
+  // iş kimliklerine göre sıralanır. Böylece IAS Database ve Antrepo Excel aynı
+  // parsiyelleri farklı sırada döndürse bile ASAS kalan miktarı aynı parsiyellere
+  // düşer. Daha ileri antrepo tarihi önce gelir; tarih yoksa tarihli parsiyellerin
+  // arkasında kalır.
+  const aArrival = dateOrdinal(a && a._arr);
+  const bArrival = dateOrdinal(b && b._arr);
+  if (aArrival !== bArrival) {
+    if (aArrival == null) return 1;
+    if (bArrival == null) return -1;
+    return bArrival - aArrival;
+  }
+
+  let diff = compareAsasAllocationText(a && a._status, b && b._status);
+  if (diff) return diff;
+  diff = compareAsasAllocationText(a && a._delType, b && b._delType);
+  if (diff) return diff;
+
+  const aIas = a && a._iasRow || {};
+  const bIas = b && b._iasRow || {};
+  for (const field of ['importFile', 'containerNo', 'vesselName']) {
+    diff = compareAsasAllocationText(aIas[field], bIas[field]);
+    if (diff) return diff;
+  }
+
+  const aHandover = dateOrdinal(aIas.handover);
+  const bHandover = dateOrdinal(bIas.handover);
+  if (aHandover !== bHandover) {
+    if (aHandover == null) return 1;
+    if (bHandover == null) return -1;
+    return bHandover - aHandover;
+  }
+
+  // Son bağlayıcı olarak parsiyel miktarı kullanılır. Kaynak index / _sourceRow
+  // bilerek kullanılmaz; bunlar Database ve Excel'de aynı işi farklı sıraya
+  // sokabilen teknik kimliklerdir.
+  const qtyDiff = Math.max(0, Number(b && b.qty) || 0) - Math.max(0, Number(a && a.qty) || 0);
+  return qtyDiff;
+}
 function allocateAsasOrderQuantity(segments, total, field) {
   let left = Math.max(0, Number(total) || 0);
   const ordered = segments
-    .map((segment, index) => ({ segment, index, rank: asasAllocationRank(segment) }))
-    .sort((a, b) => a.rank - b.rank || a.index - b.index)
-    .map(item => item.segment);
+    .slice()
+    .sort(compareAsasAllocationSegments);
   ordered.forEach(segment => {
     const take = Math.min(left, Math.max(0, Number(segment.qty) || 0));
     segment[field] = take;

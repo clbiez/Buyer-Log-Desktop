@@ -65,6 +65,7 @@ let backend = null;
 let mainWindow = null;
 let workspace = null;
 let errorWindow = null;
+let splashWindow = null;
 let logStream = null;
 let quitting = false;
 let startupFailure = null;
@@ -1394,7 +1395,44 @@ function createMainWindow(origin) {
   log('Çoklu sekme çalışma alanı yükleniyor: ' + origin);
   const state = workspace.createWindow({ module: 'overview' });
   mainWindow = state.window; // eski hata/teşhis yolları için ilk pencere başvurusu
+  // Açılış ekranı, ana pencere gerçekten görünür olduğunda kapanır (boşluk kalmaz).
+  mainWindow.once('show', closeSplash);
+  mainWindow.once('closed', closeSplash);
   return mainWindow;
+}
+
+/*
+ * AÇILIŞ EKRANI. Kurulum onarımı, veri taşıma ve sunucunun hazır olmasını
+ * beklemek birkaç saniye sürebiliyor; bu sürede ekranda hiçbir şey olmadığı
+ * için kullanıcılar programın açılmadığını sanıp BuyerLog.exe'yi tekrar
+ * çalıştırıyordu. Ekranın ortasında küçük bir "başlatılıyor" penceresi ana
+ * pencere görünene ya da hata ekranı açılana kadar kalır.
+ */
+function showSplash() {
+  if (splashWindow && !splashWindow.isDestroyed()) return;
+  try {
+    splashWindow = new BrowserWindow({
+      width: 420, height: 240, center: true, show: false, frame: false,
+      resizable: false, minimizable: false, maximizable: false, fullscreenable: false,
+      backgroundColor: '#f8f8f9', title: 'Buyer Log başlatılıyor',
+      icon: APP_ICON_SOURCE,
+      webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true },
+    });
+    splashWindow.once('ready-to-show', () => {
+      if (splashWindow && !splashWindow.isDestroyed()) splashWindow.show();
+    });
+    splashWindow.on('closed', () => { splashWindow = null; });
+    splashWindow.loadFile(path.join(__dirname, 'splash.html'), { query: { v: appVersion() } });
+  } catch (error) {
+    splashWindow = null;
+    log('Açılış ekranı gösterilemedi: ' + error.message);
+  }
+}
+
+function closeSplash() {
+  const window = splashWindow;
+  splashWindow = null;
+  if (window && !window.isDestroyed()) window.destroy();
 }
 
 /*
@@ -1415,7 +1453,7 @@ function showStartupError(detail) {
     },
   });
   errorWindow.webContents.setWindowOpenHandler(({ url }) => { openExternal(url); return { action: 'deny' }; });
-  errorWindow.once('ready-to-show', () => errorWindow.show());
+  errorWindow.once('ready-to-show', () => { closeSplash(); errorWindow.show(); });
   errorWindow.on('closed', () => { errorWindow = null; });
   errorWindow.loadFile(path.join(__dirname, 'startup-error.html'));
 }
@@ -1463,6 +1501,7 @@ function handleBackendLoss() {
 
 async function startBuyerLog() {
   lastStartedAt = Date.now();
+  showSplash();
   try {
     ensureDataTree(paths);
   } catch (error) {
@@ -2045,7 +2084,7 @@ function bootstrap() {
     return;
   }
   app.on('second-instance', () => {
-    const window = activeBuyerLogWindow() || errorWindow;
+    const window = activeBuyerLogWindow() || errorWindow || splashWindow;
     if (!window || window.isDestroyed()) return;
     if (window.isMinimized()) window.restore();
     window.show();
@@ -2064,6 +2103,7 @@ function bootstrap() {
   app.on('before-quit', event => {
     if (quitting) return;
     quitting = true;
+    closeSplash();
     event.preventDefault();
     shutdown().finally(() => app.exit(0));
   });
@@ -2075,6 +2115,7 @@ function bootstrap() {
     log('Veri kökü   : ' + paths.dataRoot);
 
     Menu.setApplicationMenu(null); // §2
+    showSplash(); // kurulum onarımı/sunucu beklemesi sırasında kullanıcı boş ekran görmesin
     applyDownloadPolicy(session.defaultSession);
     registerIpc();
 

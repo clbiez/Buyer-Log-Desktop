@@ -33,6 +33,14 @@
   let initialized = false;
   let cache = { signature:'', headers:[], rows:[] };
   let chartView = { signature:'', start:0, end:0 };
+  let wheelZoomActive = false;
+
+  function setWheelZoomActive(active, canvas) {
+    wheelZoomActive=!!active;
+    if(!root.document)return;
+    root.document.querySelectorAll('.backlogChartCanvas.is-wheel-active').forEach(el=>el.classList.remove('is-wheel-active'));
+    if(wheelZoomActive&&canvas)canvas.classList.add('is-wheel-active');
+  }
 
   function esc(value) {
     return String(value == null ? '' : value)
@@ -373,7 +381,7 @@
     return values.length?values.reduce((sum,value)=>sum+value,0)/values.length:0;
   }
   function chartMetrics(model) {
-    const width=1080,height=430,left=24,right=88,top=28,bottom=58,pw=width-left-right,ph=height-top-bottom;
+    const width=1080,height=430,left=24,right=72,top=46,bottom=52,pw=width-left-right,ph=height-top-bottom;
     const values=(model&&model.series||[]).flatMap(s=>s.values||[]).filter(Number.isFinite);
     if(model&&model.state&&model.state.showSubtotal)values.push(...subtotalValues(model));
     if(model&&model.state&&model.state.showAverage)values.push(averageValue(model));
@@ -417,8 +425,15 @@
       model.series.forEach((serie,si)=>{
         serie.values.forEach((v,i)=>{
           const h=ph*(Number(v)||0)/max,x=left+step*(i+.5)-group/2+si*bw,y=top+ph-h;
-          out+='<rect x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(.6,bw-1).toFixed(2)+'" height="'+Math.max(0,h).toFixed(2)+'" fill="'+serie.color+'" opacity="'+(serie.dash?'.48':'.86')+'"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></rect>';
+          out+='<rect class="backlogChartBar" x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" width="'+Math.max(.6,bw-1).toFixed(2)+'" height="'+Math.max(0,h).toFixed(2)+'" fill="'+serie.color+'" opacity="'+(serie.dash?'.48':'.86')+'"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></rect>';
         });
+      });
+      const totals=subtotalValues(model);
+      model.categories.forEach((cat,i)=>{
+        const total=Number(totals[i])||0;if(total<=0)return;
+        const peak=Math.max(0,...model.series.map(serie=>Number(serie.values&&serie.values[i])||0));
+        const x=left+step*(i+.5),y=Math.max(top+10,top+ph-ph*peak/max-7);
+        out+='<text x="'+x.toFixed(2)+'" y="'+y.toFixed(2)+'" text-anchor="middle" class="backlogChartColumnTotal">'+esc(formatWholeValue(total))+'</text>';
       });
     }else{
       model.series.forEach(serie=>{
@@ -584,11 +599,11 @@
       return '<button type="button" class="backlogChartRangeBtn'+(active?' is-active':'')+'" data-backlog-chart-range="'+key+'">'+esc(label)+'</button>';
     }).join('');
     const filterPanel=available.length>1?'<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden><div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'"><div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button><button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div><div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>':'';
-    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets">'+presetButtons+'</div><div class="backlogChartInlineActions"><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button><button type="button" class="tbtn'+(model.state.showSubtotal?' is-active':'')+'" data-backlog-chart-subtotal>'+esc(tr('Alt Toplam','Subtotal'))+'</button>'+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
+    target.innerHTML='<div class="backlogChartTradingToolbar"><div class="backlogChartPresets bpaSeg2">'+presetButtons+'</div><span class="backlogChartRangeInfo" aria-live="polite">'+esc(rangeText)+'</span><div class="backlogChartInlineActions bpaSeg2"><button type="button" class="tbtn'+(model.state.showAverage?' is-active':'')+'" data-backlog-chart-average>'+esc(tr('Ortalama','Average'))+'</button><button type="button" class="tbtn'+(model.state.showSubtotal?' is-active':'')+'" data-backlog-chart-subtotal>'+esc(tr('Alt Toplam','Subtotal'))+'</button>'+todayButton+filterButton+'<button type="button" class="tbtn" data-backlog-chart-export="svg">SVG</button><button type="button" class="tbtn" data-backlog-chart-export="png">PNG</button></div></div>'
       +filterPanel
-      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek ile zoom, sürükleyerek yatay kaydırma yapabilirsiniz.','Backlog chart. Use the wheel to zoom and drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div></div>'
       +legendHtml(model)
-      +'<div class="backlogChartGestureHint">'+esc(tr('Tekerlek: zoom · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Wheel: zoom · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
+      +'<div class="backlogChartCanvas" tabindex="0" aria-label="'+esc(tr('Backlog grafiği. Tekerlek zoomunu etkinleştirmek için grafiğe tıklayın; sürükleyerek yatay kaydırabilirsiniz.','Backlog chart. Click the chart to enable wheel zoom; drag to pan horizontally.'))+'"><div class="backlogChartViewport" data-backlog-chart-viewport>'+svgChart(visible)+'<div class="backlogChartCrosshair" data-backlog-chart-crosshair hidden><i class="backlogChartCrosshairV"></i><i class="backlogChartCrosshairH"></i><span class="backlogChartCrosshairValue"></span><div class="backlogChartTooltip"></div></div></div></div>'
+      +'<div class="backlogChartGestureHint">'+esc(tr('Grafiğe tıkla: tekerlek zoomunu etkinleştir · Grafik dışına tıkla: sayfa kaydırmaya dön · Sürükle: akışkan kaydır · Noktaya tıkla: bilgiyi sabitle · Legend tıkla: seri gizle · çift tık: tek seri','Click chart: enable wheel zoom · Click outside: return wheel to page scrolling · Drag: smooth pan · Click a point: pin values · Click legend: hide series · double-click: isolate'))+'</div>';
     const updateRange=next=>{
       const safe=clampChartRange(next,total);chartView={signature:chartViewSignature(model),start:safe.start,end:safe.end};mountInteractiveChart(host,model,detail);
     };
@@ -598,6 +613,7 @@
     target.querySelector('[data-backlog-chart-today]')?.addEventListener('click',()=>{if(moveViewToToday(model))mountInteractiveChart(host,model,detail);});
     target.querySelectorAll('[data-backlog-chart-export]').forEach(button=>button.addEventListener('click',()=>void exportChartGraphic(host,button.getAttribute('data-backlog-chart-export'),visible)));
     const canvas=target.querySelector('.backlogChartCanvas'),viewport=target.querySelector('[data-backlog-chart-viewport]'),svg=viewport&&viewport.querySelector('svg'),panLayer=svg&&svg.querySelector('[data-backlog-chart-pan-layer]');
+    if(wheelZoomActive&&canvas)canvas.classList.add('is-wheel-active');
     const metrics=chartMetrics(visible),cross=viewport&&viewport.querySelector('[data-backlog-chart-crosshair]');
     let pinnedIndex=null,drag=null,suppressClickUntil=0,dragFrame=0;
     function hideCrosshair(){if(cross&&pinnedIndex==null)cross.hidden=true;}
@@ -675,8 +691,9 @@
       pinnedIndex=pinnedIndex===index?null:index;if(pinnedIndex==null)crosshairAt(event.clientX,event.clientY,null);else crosshairAt(event.clientX,event.clientY,pinnedIndex);
     });
     viewport?.addEventListener('dblclick',event=>{event.preventDefault();updateRange(defaultChartRange(model,new Date()));});
+    canvas?.addEventListener('click',()=>setWheelZoomActive(true,canvas));
     canvas?.addEventListener('wheel',event=>{
-      if(total<=1)return;event.preventDefault();
+      if(!wheelZoomActive||total<=1)return;event.preventDefault();
       const rect=viewport?viewport.getBoundingClientRect():canvas.getBoundingClientRect(),ratio=rect.width?Math.max(0,Math.min(1,(event.clientX-rect.left)/rect.width)):.5;
       if(event.shiftKey||Math.abs(event.deltaX)>Math.abs(event.deltaY)){animatedPan(panChartRange(range,total,(event.deltaX||event.deltaY)>0?1:-1));return;}
       updateRange(zoomChartRange(range,total,event.deltaY,ratio));
@@ -752,8 +769,8 @@
       }
       const model=buildModel(detail.rows,detail.headers,state);
       if(!model.categories.length||!model.series.length) throw new Error(tr('Seçili ayarlarla grafikte gösterilecek veri yok.','There is no chart data for the selected settings.'));
-      host.innerHTML='<div class="backlogChartHead"><div><strong>'+esc(model.title)+'</strong><small>'+esc(configSummary(model.state))+'</small></div>'
-        +'<div class="backlogChartActions"><button type="button" class="tbtn" data-backlog-chart-refresh>'+esc(tr('Yenile','Refresh'))+'</button>'
+      host.innerHTML='<div class="backlogChartHead bpaSectionHead"><div><strong class="bpaSectionTitle">'+esc(model.title)+'</strong><small class="bpaSectionSub">'+esc(configSummary(model.state))+'</small></div><span class="bpaSectionSpacer"></span>'
+        +'<div class="backlogChartActions bpaSeg2"><button type="button" class="tbtn" data-backlog-chart-refresh>'+esc(tr('Yenile','Refresh'))+'</button>'
         +'<button type="button" class="tbtn" data-backlog-chart-edit>'+esc(tr('Ayarlar','Settings'))+'</button>'
         +'<button type="button" class="tbtn" data-backlog-chart-disable aria-label="'+esc(tr('Grafiği kapat','Hide chart'))+'">×</button></div></div>'
         +(model.omittedSeriesCount?'<div class="backlogChartNotice">'+esc(tr('Okunabilirlik için en yüksek '+model.series.length+' seri gösteriliyor; '+model.omittedSeriesCount+' seri gizli. Ayarlardan seri limitini artırabilirsiniz.','Showing the top '+model.series.length+' series; '+model.omittedSeriesCount+' series are hidden. Increase the series limit in settings.'))+'</div>':'')
@@ -982,6 +999,10 @@
 
   function init() {
     if(initialized||!root.document)return; initialized=true; loadState();
+    root.document.addEventListener('pointerdown',event=>{
+      const target=event&&event.target;
+      if(wheelZoomActive&&!(target&&typeof target.closest==='function'&&target.closest('.backlogChartCanvas')))setWheelZoomActive(false);
+    });
     root.document.getElementById('backlogChartBtn')?.addEventListener('click',openSettings);
     const host=panel(); if(host&&state.enabled)host.hidden=false;
   }
