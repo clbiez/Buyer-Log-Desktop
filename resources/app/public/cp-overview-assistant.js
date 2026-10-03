@@ -286,8 +286,26 @@
     if (!analysis || !analysis.orderKey || !itemId) return false;
     const key = Checklist.answerKey(analysis.orderKey, itemId);
     const next = Checklist.normalizeStatus(status) || 'open';
-    if (next === 'open') delete state.answers[key];
-    else state.answers[key] = Checklist.makeAnswer(next, analysis, { by: (window.BL_USER_CONTEXT || {}).id || '', ...(meta || {}) });
+    const rule = state.rules.find(item => item && item.kind === 'checklist' && item.id === itemId);
+    const reusable = Boolean(rule && rule.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function');
+    const optionKey = reusable ? Checklist.optionAnswerKey(analysis, itemId) : '';
+    const by = (window.BL_USER_CONTEXT || {}).id || '';
+
+    if (next === 'open') {
+      delete state.answers[key];
+      // "Bekliyor" seçimi paylaşılan onayı da geri alır; aksi hâlde hücre
+      // anında yeniden Approved görünürdü.
+      if (optionKey) delete state.answers[optionKey];
+    } else if (next === 'approved' && optionKey) {
+      // Aynı PLM ID + Model Name + Colour Code için kalıcı seçenek onayı.
+      // Yükleme tarihi PO'ya özgü olduğundan bu cevap tarihe bağlanmaz.
+      delete state.answers[key];
+      state.answers[optionKey] = Checklist.makeAnswer(next, analysis, { by, ...(meta || {}), loadDate: null });
+    } else {
+      // Rejected / Not Required PO'ya özeldir ve paylaştırılmaz. PO cevabı,
+      // varsa seçenek onayının üzerinde istisna olarak önceliklidir.
+      state.answers[key] = Checklist.makeAnswer(next, analysis, { by, ...(meta || {}) });
+    }
     saveAnswers();
     return true;
   }
@@ -1981,7 +1999,14 @@
       : `<label class="cpaRuleTarget cpaRuleNameField"><span>${esc(L('Başlık (CP sütunu)', 'Heading (CP column)'))}</span>
           <input class="cpaRuleName" data-cpa-rule-name value="${esc(ruleName(rule))}" placeholder="${esc(L('Örn. Fabric Test', 'e.g. Fabric Test'))}"></label>
         <label class="cpaRuleTarget cpaRuleQuestionField"><span>${esc(L('Soru', 'Question'))}</span>
-          <input data-cpa-rule-question value="${esc(isEn() ? rule.questionEn : rule.questionTr)}" placeholder="${esc(L('Hologram siparişi verildi mi?', 'Has the hologram been ordered?'))}"></label>`;
+          <input data-cpa-rule-question value="${esc(isEn() ? rule.questionEn : rule.questionTr)}" placeholder="${esc(L('Hologram siparişi verildi mi?', 'Has the hologram been ordered?'))}"></label>
+        <label class="cpaRuleTarget cpaRuleApprovalScopeField"><span>${esc(L('Onay geçerliliği', 'Approval scope'))}</span>
+          <select data-cpa-rule-approval-scope>
+            <option value="order"${rule.approvalScope !== 'option' ? ' selected' : ''}>${esc(L('Her PO’da tekrar kontrol et', 'Repeat for every PO'))}</option>
+            <option value="option"${rule.approvalScope === 'option' ? ' selected' : ''}>${esc(L('Aynı PLM + Model + Renk için bir kez', 'Once per PLM + Model + Colour'))}</option>
+          </select>
+          <small>${esc(L('Seçenek bazlı kullanımda yalnız Onaylandı durumu sonraki PO’lara taşınır; Reddedildi ve Gerekmiyor PO’ya özeldir.', 'With option-level reuse, only Approved carries to later POs; Rejected and Not Required stay PO-specific.'))}</small>
+        </label>`;
     const reasonFields = rule.kind === 'priority'
       ? `<div class="cpaRuleReasons">
           <label class="cpaRuleTarget cpaRuleReasonField"><span>${esc(L('Siparişte görünecek sebep (TR)', 'Reason shown on the order (TR)'))}</span>
@@ -2223,7 +2248,7 @@
       const visible = rulesFor(activeTab);
       const isChecklist = activeTab === 'checklist';
       const note = isChecklist
-        ? L('Her checklist sorusu CP\'de bir sütun olur. Koşul, sorunun hangi siparişlerde sorulacağını belirler. Durumlar: Bekliyor · Onaylandı · Reddedildi · Gerekmiyor.', 'Every checklist question becomes a CP column. The condition decides which orders are asked. Statuses: Pending · Approved · Rejected · Not Required.')
+        ? L('Her checklist sorusu CP\'de bir sütun olur. Koşul, sorunun hangi siparişlerde sorulacağını; Onay geçerliliği ise onayın PO bazında mı yoksa PLM + Model + Renk bazında mı tekrar kullanılacağını belirler. Durumlar: Bekliyor · Onaylandı · Reddedildi · Gerekmiyor.', 'Every checklist question becomes a CP column. The condition decides which orders are asked; Approval scope decides whether approval is per PO or reused by PLM + Model + Colour. Statuses: Pending · Approved · Rejected · Not Required.')
         : L('Kurallar önceliği yalnız YÜKSELTİR; hiçbir kural bir siparişi listeden düşüremez. Checklist durumları ve diğer kurallar koşul olarak seçilebilir.', 'Rules only escalate priority; no rule can drop an order from the list. Checklist statuses and other rules can be used as conditions.');
       const empty = isChecklist
         ? `<div class="cpaRulesEmpty"><b>${esc(L('Henüz checklist sorusu yok', 'No checklist questions yet'))}</b><span>${esc(L('Belirli sipariş koşullarında sorulacak kontroller ekleyin; her biri CP\'de sütun olur.', 'Add checks asked only when specific order conditions are met; each one becomes a CP column.'))}</span><button type="button" class="cpaBtn" data-cpa-add-checklist>+ ${esc(L('Checklist sorusu ekle', 'Add checklist question'))}</button></div>`
@@ -2509,6 +2534,11 @@
       modal.querySelectorAll('[data-cpa-rule-match]').forEach(el => el.onchange = () => { findRule(ruleIdOf(el)).match = el.value; commit(); });
       modal.querySelectorAll('[data-cpa-rule-question]').forEach(el => el.onchange = () => {
         const rule = findRule(ruleIdOf(el)); rule.questionTr = el.value; rule.questionEn = el.value; commit();
+      });
+      modal.querySelectorAll('[data-cpa-rule-approval-scope]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        rule.approvalScope = el.value === 'option' ? 'option' : 'order';
+        commit(); draw();
       });
       modal.querySelectorAll('[data-cpa-rule-delete]').forEach(el => el.onclick = () => {
         const rule = findRule(ruleIdOf(el));
