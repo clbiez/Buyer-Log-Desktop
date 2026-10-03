@@ -11,7 +11,7 @@ const experience = fs.readFileSync(path.join(publicRoot, 'experience.css'), 'utf
 const integrity = fs.readFileSync(path.join(publicRoot, 'design-butunluk.css'), 'utf8');
 
 test('Ortak deneyim katmanı tüm modül stillerinden sonra yüklenir', () => {
-  assert.ok(index.indexOf('experience.css?') > index.indexOf('outlook-mail.css?'));
+  assert.ok(index.indexOf('experience.css?') > index.indexOf('app.css?'));
   assert.match(experience, /--bl-neutral-0:/);
   assert.match(experience, /--bl-surface-page:var\(--paper\)/);
   assert.match(experience, /--bl-radius-control:var\(--r-sm\)/);
