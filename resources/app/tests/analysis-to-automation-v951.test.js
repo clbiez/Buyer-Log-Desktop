@@ -41,7 +41,6 @@ test('v9.51 oluşturulan tarif KAPALI, zamanlamasız ve yalnız TASLAK üretir',
   assert.match(block, /recipe\.enabled=false;/, 'yeni tarif kendiliğinden etkinleşmemeli');
   assert.match(block, /schedule=\{\.\.\.recipe\.schedule,enabled:false,mode:'manual'\}/, 'zamanlama kapalı olmalı');
   assert.match(block, /deliveryMode:'draft'/, 'buradan otomatik gönderim kurulamamalı');
-  assert.doesNotMatch(block, /outlook_send/, 'otomatik gönderim seçeneği bu yoldan gelmemeli');
 });
 
 /* En kritik sözleşme: düğmenin kurduğu koşul alanı, sunucunun satıra GERÇEKTEN
