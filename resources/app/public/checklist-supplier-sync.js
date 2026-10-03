@@ -890,9 +890,10 @@
     };
   }
 
-  async function exportWorkbook() {
+  async function exportWorkbook(options) {
+    const opts = options || {};
     await loadShared();
-    const rows = selectedRows();
+    const rows = Array.isArray(opts.rows) ? opts.rows : selectedRows();
     if (!rows.length) {
       toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
       return false;
@@ -928,8 +929,18 @@
       return { header: isEn() ? item.en : item.tr, key: item.id, width: item.width || 12, infoDefinition: item };
     });
     items.forEach(function (item, index) {
-      columns.push({ header: isEn() ? item.en : item.tr, key: 's' + index, width: 14, checklistStatus: true, checklistIndex: index });
-      columns.push({ header: (isEn() ? item.en : item.tr) + ' - ' + T('Not', 'Note'), key: 'n' + index, width: 22, checklistNote: true, checklistIndex: index });
+      const label = isEn() ? item.en : item.tr;
+      columns.push({ header: label, key: 's' + index, width: 14, checklistStatus: true, checklistIndex: index });
+      columns.push({ header: label + ' - ' + T('Not', 'Note'), key: 'n' + index, width: 22, checklistNote: true, checklistIndex: index });
+      if (item.evidenceFields && item.evidenceFields.reportNumber) {
+        columns.push({ header: label + ' - ' + T('Rapor No', 'Report No'), key: 'r' + index, width: 18, checklistEvidence: 'reportNumber', checklistIndex: index });
+      }
+      if (item.evidenceFields && item.evidenceFields.actualDate) {
+        columns.push({ header: label + ' - ' + T('Gerçekleşme Tarihi', 'Actual Date'), key: 'd' + index, width: 16, checklistEvidence: 'actualDate', checklistIndex: index });
+      }
+      if (item.evidenceFields && item.evidenceFields.attachments) {
+        columns.push({ header: label + ' - ' + T('Ekler', 'Attachments'), key: 'a' + index, width: 28, checklistEvidence: 'attachments', checklistIndex: index });
+      }
     });
     columns.push({ header: '__BL_ORDER_KEY', key: '__orderKey', width: 4, hidden: true });
     columns.push({ header: '__BL_LOAD_DATE', key: '__loadDate', width: 4, hidden: true });
@@ -943,6 +954,15 @@
     });
     const noteColumns = items.map(function (_item, index) {
       return columns.findIndex(function (column) { return column.key === 'n' + index; }) + 1;
+    });
+    const reportColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 'r' + index; }) + 1;
+    });
+    const actualDateColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 'd' + index; }) + 1;
+    });
+    const attachmentColumns = items.map(function (_item, index) {
+      return columns.findIndex(function (column) { return column.key === 'a' + index; }) + 1;
     });
     const imageColumn = columns.findIndex(function (column) { return column.key === 'image'; }) + 1;
     const optionValues = statusOptions();
@@ -965,6 +985,13 @@
         const answer = answerFor(item, analysis);
         values['s' + index] = answer ? statusLabel(answer.state) : statusLabel('open');
         values['n' + index] = answer && answer.note || '';
+        if (reportColumns[index]) values['r' + index] = answer && answer.reportNumber || '';
+        if (actualDateColumns[index]) values['d' + index] = answer && answer.actualDate ? excelDate(answer.actualDate) : '';
+        if (attachmentColumns[index]) {
+          values['a' + index] = answer && Array.isArray(answer.attachments)
+            ? answer.attachments.map(function (entry) { return entry && entry.filename || ''; }).filter(Boolean).join('\n')
+            : '';
+        }
       });
 
       const excelRow = sheet.addRow(values);
