@@ -152,6 +152,47 @@ test('Print Test seçenek bazlı onayı sonraki PO’ya taşır; GS Test PO baz�
   assert.equal(different.checklistState.printTest, 'open', 'farklı renk başka seçenek sayılmalı');
 });
 
+test('yeni kullanıcı checklistleri varsayılan olarak aynı model/renk PO’larına Onaylandı taşır', () => {
+  const custom = Rules.normalizeRule({
+    id: 'fabricTest', kind: 'checklist', name: 'Fabric Test',
+    conditions: [{ field: '@daysToLoad', operator: 'lte', value: 60 }],
+    expressionVersion: Rules.EXPRESSION_VERSION,
+  });
+  const builtIn = Rules.normalizeRule({
+    id: 'builtinCheck', kind: 'checklist', builtIn: true, name: 'Built-in',
+    conditions: [{ field: '@daysToLoad', operator: 'lte', value: 60 }],
+    expressionVersion: Rules.EXPRESSION_VERSION,
+  });
+  const explicitOrder = Rules.normalizeRule({
+    id: 'perPo', kind: 'checklist', name: 'Per PO', approvalScope: 'order',
+    conditions: [{ field: '@daysToLoad', operator: 'lte', value: 60 }],
+    expressionVersion: Rules.EXPRESSION_VERSION,
+  });
+
+  assert.equal(custom.approvalScope, 'option', 'kullanıcı checklistinin güvenli ürün seçeneği varsayılanı option');
+  assert.equal(builtIn.approvalScope, 'order', 'yerleşik checklistlerin mevcut PO davranışı korunur');
+  assert.equal(explicitOrder.approvalScope, 'order', 'kullanıcının açıkça seçtiği PO bazlı kapsam korunur');
+
+  const po1 = analysis({ orderKey: 'PO-A' });
+  const po2 = analysis({ orderKey: 'PO-B' });
+  const answers = {
+    [Checklist.optionAnswerKey(po1, custom.id)]: Checklist.makeAnswer('approved', po1, { loadDate: null }),
+  };
+  assert.equal(
+    Rules.evaluateOrder(po2, { rules: [custom], answers }).checklistState.fabricTest,
+    'approved',
+    'aynı PLM + Model + Renk altındaki diğer PO onayı görmeli',
+  );
+
+  const view = read('public/cp-overview-assistant.js');
+  assert.match(view, /CHECKLIST_RULE_STORE_VERSION\s*=\s*2/);
+  assert.match(view, /checklistScopeMigration/);
+  assert.match(view, /function promoteReusableChecklistAnswers\(orders\)/);
+  assert.match(view, /Checklist\.answerIsStale\(direct, analysis\)/);
+  assert.match(view, /Checklist\.optionAnswerKey\(analysis, rule\.id\)/);
+  assert.match(view, /delete state\.answers\[directKey\]/, 'v1 PO onayı seçenek anahtarına kanonik taşınmalı');
+});
+
 test('döngüsel bağlantı güvenle durur ve editörde gösterilir', () => {
   const a = rule({ id: 'a', kind: 'checklist', name: 'A', conditions: [{ field: '@checklist:b', operator: 'eq', value: 'open' }] });
   const b = rule({ id: 'b', kind: 'checklist', name: 'B', conditions: [{ field: '@checklist:a', operator: 'eq', value: 'open' }] });
@@ -239,6 +280,17 @@ test('sunucu deposu dört durumu kanonik saklar', () => {
     assert.deepEqual(result.out, ['approved', 'approved', 'rejected', 'notRequired', 'open', '']);
     assert.equal(result.state, 'rejected');
     assert.equal(result.updated, 1);
+
+    const definitionScript = [
+      `const store=require(${JSON.stringify(storePath)});`,
+      "store.replaceDefinitions([{id:'fabric',kind:'checklist',builtIn:false,name:'Fabric'}],{id:'u'});",
+      "process.stdout.write(JSON.stringify(store.publicPayload().definitions[0]));",
+    ].join('');
+    const definition = JSON.parse(childProcess.execFileSync(process.execPath, ['-e', definitionScript], {
+      encoding: 'utf8',
+      env: { ...process.env, BUYER_LOG_SERVER_DATA_ROOT: dataRoot, BUYER_LOG_LOCAL_DATA_ROOT: path.join(dataRoot, 'local') },
+    }));
+    assert.equal(definition.approvalScope, 'option', 'paylaşılan yeni custom checklist de model/renk kapsamıyla başlamalı');
   } finally {
     fs.rmSync(dataRoot, { recursive: true, force: true });
   }
