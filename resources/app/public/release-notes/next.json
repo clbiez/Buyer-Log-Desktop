@@ -40,7 +40,8 @@
         "caption": {
           "tr": "Önizleme, sorunun şu an kaç siparişe sorulduğunu gösterir.",
           "en": "The preview shows how many orders the question is asked for right now."
-        }
+        },
+        "capture": "post-change"
       }
     },
     {
@@ -72,7 +73,8 @@
         "caption": {
           "tr": "Şablon yalnız başlangıçtır; her şey sonra düzenlenebilir.",
           "en": "A template is only a starting point; everything stays editable."
-        }
+        },
+        "capture": "post-change"
       }
     },
     {
@@ -104,7 +106,8 @@
         "caption": {
           "tr": "Formül alan adlarıyla yazılır: [Days to load].",
           "en": "Formulas use field names: [Days to load]."
-        }
+        },
+        "capture": "post-change"
       }
     },
     {
@@ -136,7 +139,8 @@
         "caption": {
           "tr": "Reddedildi kırmızı işaretlenir ve aksiyon ister.",
           "en": "Rejected is marked red and needs action."
-        }
+        },
+        "capture": "post-change"
       }
     },
     {
@@ -168,7 +172,8 @@
         "caption": {
           "tr": "Klavye: ok tuşları ve Enter ile seçilir.",
           "en": "Keyboard: choose with the arrow keys and Enter."
-        }
+        },
+        "capture": "post-change"
       }
     },
     {
@@ -200,7 +205,8 @@
         "caption": {
           "tr": "Kullanılan başlıklar 'N kuralda kullanılıyor' etiketiyle görünür.",
           "en": "Items in use show a 'Used in N' badge."
-        }
+        },
+        "capture": "post-change"
       }
     },
     {
@@ -232,7 +238,8 @@
         "caption": {
           "tr": "Son aktarım 'Geri al' ile geri alınabilir.",
           "en": "The last transfer can be undone."
-        }
+        },
+        "capture": "post-change"
       }
     }
   ]
