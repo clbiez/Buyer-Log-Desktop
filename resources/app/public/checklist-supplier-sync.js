@@ -17,7 +17,7 @@
   const COLUMN_PREFIX = '__checklist__';
   const META_SHEET = '__BL_META';
   const DATA_SHEET = 'Checklist';
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
   const EXCEL_COLUMNS_KEY = 'lcw.cp.checklist.excel.columns.v1';
   const EXCEL_DATE_FORMAT = 'dd.mm.yyyy';
   const EXCEL_PROTECTION_PASSWORD = 'BuyerLogChecklist';
@@ -28,6 +28,8 @@
     applyingRemote: false,
     syncingDefinitions: false,
     syncingAnswers: false,
+    syncQueued: false,
+    syncRetryTimer: null,
     shared: { definitions: [], answers: {}, tombstones: {}, revision: 0, updatedAt: '' },
     answerBaseline: {},
     renderWrapped: false,
@@ -181,22 +183,56 @@
         at: after.at || now, baseAt: before && before.at || '',
         loadDate: after.loadDate || null, source: after.source || 'buyer_log',
         note: after.note || '',
+        reportNumber: after.reportNumber || '',
+        actualDate: after.actualDate || '',
+        attachments: Array.isArray(after.attachments) ? after.attachments : [],
       });
     });
     return entries;
   }
 
   async function syncAnswerChanges() {
-    if (state.syncingAnswers || state.applyingRemote) return;
-    const current = snapshotAnswers();
-    const entries = diffAnswers(state.answerBaseline, current);
-    if (!entries.length) { state.answerBaseline = current; return; }
+    if (state.applyingRemote) return false;
+    if (state.syncingAnswers) { state.syncQueued = true; return false; }
     state.syncingAnswers = true;
+    if (state.syncRetryTimer) { clearTimeout(state.syncRetryTimer); state.syncRetryTimer = null; }
     try {
-      await post('/answers', { entries: entries, source: 'buyer_log' });
-      state.answerBaseline = current;
+      // Kullanıcı ilk kayıt devam ederken ikinci/üçüncü kez durum değiştirirse
+      // eski kod bu olayları sessizce atlıyordu. Her başarılı POST'tan sonra
+      // snapshot yeniden alınır; kuyruk boşalana kadar devam edilir.
+      for (;;) {
+        state.syncQueued = false;
+        const current = snapshotAnswers();
+        const entries = diffAnswers(state.answerBaseline, current);
+        if (!entries.length) {
+          state.answerBaseline = current;
+          if (!state.syncQueued) break;
+          continue;
+        }
+        await post('/answers', { entries: entries, source: 'buyer_log' });
+        state.answerBaseline = current;
+        const latest = snapshotAnswers();
+        if (!state.syncQueued && !diffAnswers(state.answerBaseline, latest).length) break;
+      }
+      return true;
+    } catch (error) {
+      // Baseline yalnız başarılı POST'ta ilerlediği için veri yerelde kalır ve
+      // tekrar denendiğinde eksik değişiklik yeniden gönderilir.
+      if (!state.syncRetryTimer) {
+        state.syncRetryTimer = setTimeout(function () {
+          state.syncRetryTimer = null;
+          syncAnswerChanges().catch(function () {});
+        }, 1500);
+      }
+      throw error;
     } finally {
       state.syncingAnswers = false;
+      if (state.syncQueued && !state.syncRetryTimer) {
+        state.syncRetryTimer = setTimeout(function () {
+          state.syncRetryTimer = null;
+          syncAnswerChanges().catch(function () {});
+        }, 0);
+      }
     }
   }
 
@@ -214,6 +250,11 @@
         questionEn: rule.questionEn || rule.name || rule.id,
         builtIn: rule.builtIn === true,
         approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
+        evidenceFields: {
+          reportNumber: Boolean(rule.evidenceFields && rule.evidenceFields.reportNumber),
+          actualDate: Boolean(rule.evidenceFields && rule.evidenceFields.actualDate),
+          attachments: Boolean(rule.evidenceFields && rule.evidenceFields.attachments),
+        },
         raw: rule,
       });
     });
