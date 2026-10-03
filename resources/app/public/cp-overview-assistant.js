@@ -290,6 +290,15 @@
     const reusable = Boolean(rule && rule.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function');
     const optionKey = reusable ? Checklist.optionAnswerKey(analysis, itemId) : '';
     const by = (window.BL_USER_CONTEXT || {}).id || '';
+    const previous = state.answers[key] || (optionKey ? state.answers[optionKey] : null) || {};
+    // Durum değişikliği rapor numarası / gerçekleşme tarihi / ekleri SİLMEZ.
+    // Kullanıcı ayrıntı penceresinde alanı açıkça boşaltırsa meta içindeki boş
+    // değer eski değerin üzerine yazar.
+    const preserved = {};
+    ['note', 'reportNumber', 'actualDate', 'attachments'].forEach(field => {
+      if (Object.prototype.hasOwnProperty.call(previous, field)) preserved[field] = previous[field];
+    });
+    const answerMeta = { ...preserved, ...(meta || {}), by };
 
     if (next === 'open') {
       delete state.answers[key];
@@ -300,11 +309,11 @@
       // Aynı PLM ID + Model Name + Colour Code için kalıcı seçenek onayı.
       // Yükleme tarihi PO'ya özgü olduğundan bu cevap tarihe bağlanmaz.
       delete state.answers[key];
-      state.answers[optionKey] = Checklist.makeAnswer(next, analysis, { by, ...(meta || {}), loadDate: null });
+      state.answers[optionKey] = Checklist.makeAnswer(next, analysis, { ...answerMeta, loadDate: null });
     } else {
       // Rejected / Not Required PO'ya özeldir ve paylaştırılmaz. PO cevabı,
       // varsa seçenek onayının üzerinde istisna olarak önceliklidir.
-      state.answers[key] = Checklist.makeAnswer(next, analysis, { by, ...(meta || {}) });
+      state.answers[key] = Checklist.makeAnswer(next, analysis, answerMeta);
     }
     saveAnswers();
     return true;
@@ -2006,7 +2015,15 @@
             <option value="option"${rule.approvalScope === 'option' ? ' selected' : ''}>${esc(L('Aynı PLM + Model + Renk için bir kez', 'Once per PLM + Model + Colour'))}</option>
           </select>
           <small>${esc(L('Seçenek bazlı kullanımda yalnız Onaylandı durumu sonraki PO’lara taşınır; Reddedildi ve Gerekmiyor PO’ya özeldir.', 'With option-level reuse, only Approved carries to later POs; Rejected and Not Required stay PO-specific.'))}</small>
-        </label>`;
+        </label>
+        <div class="cpaRuleTarget cpaRuleEvidenceFields"><span>${esc(L('Ek bilgi alanları', 'Evidence fields'))}</span>
+          <div class="cpaRuleEvidenceChecks">
+            <label class="cpaCheck"><input type="checkbox" data-cpa-rule-evidence="reportNumber"${rule.evidenceFields?.reportNumber ? ' checked' : ''}><span>${esc(L('Rapor numarası', 'Report number'))}</span></label>
+            <label class="cpaCheck"><input type="checkbox" data-cpa-rule-evidence="actualDate"${rule.evidenceFields?.actualDate ? ' checked' : ''}><span>${esc(L('Gerçekleşme tarihi', 'Actual date'))}</span></label>
+            <label class="cpaCheck"><input type="checkbox" data-cpa-rule-evidence="attachments"${rule.evidenceFields?.attachments ? ' checked' : ''}><span>${esc(L('Rapor / e-mail eki', 'Report / e-mail attachment'))}</span></label>
+          </div>
+          <small>${esc(L('Seçilen alanlar CP durum menüsündeki Checklist Detayları ekranında açılır.', 'Selected fields appear in Checklist Details from the CP status menu.'))}</small>
+        </div>`;
     const reasonFields = rule.kind === 'priority'
       ? `<div class="cpaRuleReasons">
           <label class="cpaRuleTarget cpaRuleReasonField"><span>${esc(L('Siparişte görünecek sebep (TR)', 'Reason shown on the order (TR)'))}</span>
@@ -2539,6 +2556,12 @@
         const rule = findRule(ruleIdOf(el));
         rule.approvalScope = el.value === 'option' ? 'option' : 'order';
         commit(); draw();
+      });
+      modal.querySelectorAll('[data-cpa-rule-evidence]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        if (!rule) return;
+        rule.evidenceFields = { ...(rule.evidenceFields || {}), [el.dataset.cpaRuleEvidence]: Boolean(el.checked) };
+        commit();
       });
       modal.querySelectorAll('[data-cpa-rule-delete]').forEach(el => el.onclick = () => {
         const rule = findRule(ruleIdOf(el));
