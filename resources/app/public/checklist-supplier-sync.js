@@ -955,7 +955,7 @@
     sub.innerHTML = '<div class="toolbarMoreLabel">CHECKLIST</div>'
       + '<button type="button" class="tbtn" data-checklist-excel-create><svg class="ic"><use href="#i-file-export"/></svg><span>Create Checklist Excel</span></button>'
       + '<button type="button" class="tbtn" data-checklist-excel-import><svg class="ic"><use href="#i-file-import"/></svg><span>Import Checklist Excel</span></button>'
-      + '<button type="button" class="tbtn" data-checklist-excel-columns><svg class="ic"><use href="#i-columns"/></svg><span>Checklist Excel Columns</span></button>';
+      + '<button type="button" class="tbtn" data-checklist-excel-columns><svg class="ic"><use href="#i-columns-3"/></svg><span>Checklist Excel Columns</span></button>';
 
     const input = root.document.createElement('input');
     input.type = 'file';
