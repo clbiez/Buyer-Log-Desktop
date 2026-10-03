@@ -74,5 +74,5 @@ test('lower Buyer breakdown follows grouped and stacked chart mode',()=>{
 test('timeline automatically centers the current period after render',()=>{
   assert.match(OVERVIEW,/requestAnimationFrame\(\(\)=>scrollTimelineToToday\('auto'\)\)/);
   assert.match(OVERVIEW,/const scrollBehavior=behavior==='auto'\?'auto':'smooth'/);
-  assert.match(OVERVIEW,/data-blv-action==='today'\)\{scrollTimelineToToday\(\)/);
+  assert.match(OVERVIEW,/t\.dataset\.blvAction==='today'\)\{scrollTimelineToToday\(\)/);
 });
