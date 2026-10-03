@@ -255,10 +255,10 @@
     const total = measureOf(model.totals);
     const cards = model.rootCauses.slice(0, 6).map(cause => {
       const value = state.measure === 'orders' ? cause.orders : cause.qty;
-      return `<button type="button" class="bdaCause" data-cause="${esc(cause.key)}">
-        <span class="bdaCauseLabel">${esc(causeLabel(cause.key))}</span>
-        <span class="bdaCauseValue">${esc(int(value))}</span>
-        <span class="bdaCauseMeta">${esc(pct(total > 0 ? (state.measure === 'orders' ? cause.orders : cause.qty) / total * 100 : 0))}</span>
+      return `<button type="button" class="bdaKpi bdaCause" data-cause="${esc(cause.key)}">
+        <span class="bdaKpiLabel bdaCauseLabel">${esc(causeLabel(cause.key))}</span>
+        <span class="bdaKpiValue bdaCauseValue">${esc(int(value))}</span>
+        <span class="bdaKpiMeta bdaCauseMeta">${esc(pct(total > 0 ? (state.measure === 'orders' ? cause.orders : cause.qty) / total * 100 : 0))}</span>
       </button>`;
     }).join('');
     const top = model.rootCauses[0];
@@ -297,10 +297,10 @@
       ACTION_THIS_WEEK: L('Bu Hafta', 'Action This Week'), WATCH: L('İzle', 'Watch'), ON_TRACK: L('Yolunda', 'On Track'),
     };
     const tone = { CRITICAL: 'bad', ACTION_TODAY: 'bad', ACTION_THIS_WEEK: 'warn', WATCH: 'mute', ON_TRACK: 'ok' };
-    const cards = Object.keys(labels).map(key => `<button type="button" class="bdaAttention is-${tone[key]}" data-attention="${key}">
-        <span class="bdaAttentionLabel">${esc(labels[key])}</span>
-        <span class="bdaAttentionValue">${esc(int(groups.counts[key]))}</span>
-        <span class="bdaAttentionMeta">${esc(int(groups.quantities[key]))} ${esc(L('adet', 'units'))}</span></button>`).join('');
+    const cards = Object.keys(labels).map(key => `<button type="button" class="bdaKpi bdaAttention is-${tone[key]}" data-attention="${key}">
+        <span class="bdaKpiLabel bdaAttentionLabel">${esc(labels[key])}</span>
+        <span class="bdaKpiValue bdaAttentionValue">${esc(int(groups.counts[key]))}</span>
+        <span class="bdaKpiMeta bdaAttentionMeta">${esc(int(groups.quantities[key]))} ${esc(L('adet', 'units'))}</span></button>`).join('');
     const urgent = (groups.counts.CRITICAL || 0) + (groups.counts.ACTION_TODAY || 0);
     return `${foldHead('attention', L('Aksiyon Gerekenler', 'Needs Attention'), urgent ? L(`${int(urgent)} acil sipariş`, `${int(urgent)} urgent orders`) : L('Acil sipariş yok', 'No urgent orders'))}<div class="bdaAttentionRow">${cards}</div></div></div>`;
   }
