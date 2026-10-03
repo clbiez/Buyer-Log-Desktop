@@ -194,11 +194,7 @@ function buildAuth(config, env = process.env) {
     if (!enabled || isAuthenticated(req)) return res.redirect(302, '/');
     res.type('html').send(LOGIN_PAGE_HTML);
   }
-
-  // Microsoft OAuth callback kendi tek kullanımlık PKCE state doğrulamasına sahiptir.
-  // SameSite=Strict dış parola cookie'si Microsoft'tan dönüşte gönderilmese de
-  // yalnız bu callback akışının tamamlanabilmesi için genel auth geçidinden muaftır.
-  const ALLOW = new Set(['/api/login', '/api/logout', '/api/auth-status', '/api/health', '/api/status', '/api/outlook/callback', '/api/outlook/webhook', '/api/outlook/lifecycle', '/login']);
+  const ALLOW = new Set(['/api/login', '/api/logout', '/api/auth-status', '/api/health', '/api/status', '/login']);
   function requireAuth(req, res, next) {
     if (!enabled) return next();
     if (ALLOW.has(req.path)) return next();
