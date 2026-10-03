@@ -9118,7 +9118,6 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
 
   if (!wantSync) {
     const startedAt=new Date().toISOString();
-    const jobId=`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
     const currentUser = req.currentUser;
     // Kaynak modu sözleşmesi dashboard/Excel/Database davranışı için mevcut
     // isimleri korur; ETA aynı politikayı yalnız profil anahtarı olarak okur.
@@ -9128,7 +9127,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
     const selectedAntrepoMode = ['database', 'dashboard'].includes(refreshOverrides.antrepoSourceMode) ? refreshOverrides.antrepoSourceMode : 'excel';
     const sourcePolicy={asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode};
     const performanceProfile=refreshPerformanceProfile(currentUser,requestedTargets,sourcePolicy);
-    const job={jobId,running:true,phase:'source-setup',startedAt,startedMs:Date.now(),error:null,
+    const job={jobId:`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`,running:true,phase:'source-setup',startedAt,startedMs:Date.now(),error:null,
       requestedTargets:requestedTargets.slice(),loadedAt:null,controller:new AbortController(),cancelRequested:false,commitStarted:false,
       operations:[],performanceProfile,eta:refreshPerformance.estimate(performanceProfile)};
     refreshJobs.set(id,job);refreshInFlight.add(id);
@@ -9137,7 +9136,8 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
       job.summary={...result.summary,historyItemId:result.historyItem?result.historyItem.id:null};
       job.connections=result.modelRefresh&&result.modelRefresh.connections||null;job.loadedAt=cacheForUser(id).loadedAt||null;job.metrics=result.metrics||null;
       const last=Array.isArray(job.phases)?job.phases[job.phases.length-1]:null;
-      if(last&&!last.endedMs){last.endedMs=Date.now();last.ms=last.endedMs-last.startedMs;}job.phase='done';
+      if (last && !last.endedMs) { last.endedMs = Date.now(); last.ms = last.endedMs - last.startedMs; }
+      job.phase='done';
     }).catch(err=>{
       logRuntimeFailure('modelRefresh',err);job.phase='error';
       job.error=String(err&&(err.publicMessage||err.message)||'Yenileme başarısız oldu.');
