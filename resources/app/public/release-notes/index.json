@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.224",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Giriş kurtarma akışı güçlendirildi",
+        "en": "Login recovery flow strengthened"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.224/release.json"
+    },
+    {
       "version": "7.0.223",
       "publishedAt": "2026-10-03",
       "title": {

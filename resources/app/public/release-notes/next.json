@@ -1,47 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-03",
-  "bootstrapVisual": true,
+  "publishedAt": "",
+  "bootstrapVisual": false,
   "title": {
-    "tr": "Giriş kurtarma akışı güçlendirildi",
-    "en": "Login recovery flow strengthened"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Shared Hub geçici olarak erişilemediğinde geçerli yerel kullanıcı bilgileri korunarak girişin gereksiz yere kilitlenmesi önlendi.",
-    "en": "When Shared Hub is temporarily unavailable, valid local user credentials are preserved so login is not unnecessarily blocked."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "central-iam-offline-login-recovery",
-      "type": "fix",
-      "module": {
-        "tr": "Giriş · Merkezi Kullanıcı Dizini",
-        "en": "Login · Central User Directory"
-      },
-      "title": {
-        "tr": "Geçerli yerel kullanıcı önbelleğiyle çevrimdışı giriş yeniden çalışıyor",
-        "en": "Offline login works again with a valid local user cache"
-      },
-      "body": {
-        "tr": "Central IAM etkin ancak Shared Hub erişilemiyorsa Buyer Log artık önceki sürümden kalan geçerli kullanıcı deposunu güvenli biçimde geri kazanıyor. Yerel giriş yalnız Moderatör hesabının parolasına bağlı değil; parolası bulunan herhangi bir aktif kullanıcı kendi hesabıyla giriş yapabiliyor. Bozuk Central IAM önbellekleri güvenlik için yine kapalı kalıyor.",
-        "en": "When Central IAM is enabled but Shared Hub is unavailable, Buyer Log now safely recovers a valid user store left by a previous version. Local login no longer depends only on the Moderator password; any active user with a valid password can sign in with their own account. Corrupt Central IAM caches still remain fail-closed for safety."
-      },
-      "visual": {
-        "kind": "component-preview",
-        "src": "iam-offline-recovery.svg",
-        "alt": {
-          "tr": "Shared Hub erişilemediğinde yerel kullanıcı önbelleğinden güvenli giriş kurtarma akışı",
-          "en": "Safe login recovery from the local user cache when Shared Hub is unavailable"
-        },
-        "caption": {
-          "tr": "Merkezi dizin geçici olarak çevrimdışı olsa da geçerli yerel kimlik bilgileriyle giriş devam eder.",
-          "en": "Login can continue with valid local credentials while the central directory is temporarily offline."
-        }
-      },
-      "path": {
-        "tr": "Buyer Log → Giriş",
-        "en": "Buyer Log → Login"
-      }
-    }
-  ]
+  "changes": []
 }
