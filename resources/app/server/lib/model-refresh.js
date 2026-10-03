@@ -751,7 +751,12 @@ function buildConnectionQuery(item, options = {}) {
     : aligned.horizon;
   let built;
   if (role === 'antrepo') {
-    const grainTable = antrepoGrainTable(mapping, aligned.horizon.table, aligned.horizon.table);
+    // _grainTable yalnız Yol Süresi Analizi'nin şirket sorgusu kopyasında bulunur:
+    // filtre fact tablosundaki tarih sütununa yazıldığı için ufuk tablosu fact
+    // olur; satır tablosu normal yenilemenin seçtiği tabloyla sabitlenir.
+    // Kalıcı bağlantılarda bu alan yoktur, normal yenileme değişmez.
+    const grainTable = String(item && item._grainTable || '').trim()
+      || antrepoGrainTable(mapping, aligned.horizon.table, aligned.horizon.table);
     if (!grainTable) {
       throw new ModelRefreshError(
         `${connectionLabel(item)} için IAS parsiyel fact tablosu belirlenemedi. Field Mapping içinde İthalat Dosya No alanını gerçek bir model sütununa bağlayın.`,

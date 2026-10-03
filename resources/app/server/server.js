@@ -10353,15 +10353,38 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
         const range = BLTransitAnalysis.windowRange(window, new Date().toISOString().slice(0, 10));
         const cacheKey = `${antrepoItem.id || ''}|${window}|${range.from}`;
         let cached = transitCompanyCache.get(cacheKey);
+        let queryError = null;
         if (force || !cached || Date.now() - cached.at > TRANSIT_COMPANY_CACHE_MS) {
-          const company = await transitAnalysisSource.queryCompanyIasRows({
-            item: JSON.parse(JSON.stringify(antrepoItem)), matchRule: overrides.antrepoMatchConfig,
-            fromDate: range.from, toDate: range.to,
-            deps: { discoverSchema: modelQuery.discoverSchema, queryConnectionRows: modelRefresh.queryConnectionRows, normalizeMappingEntry: modelFields.normalizeMappingEntry },
-          });
-          cached = { at: Date.now(), map: parseLib.parseAntrepoRows(company.rows, overrides.antrepoMatchConfig), rows: company.rows.length, addedFields: company.addedFields, warnings: company.warnings };
-          transitCompanyCache.set(cacheKey, cached);
+          try {
+            const company = await transitAnalysisSource.queryCompanyIasRows({
+              item: JSON.parse(JSON.stringify(antrepoItem)), matchRule: overrides.antrepoMatchConfig,
+              fromDate: range.from, toDate: range.to,
+              deps: { discoverSchema: modelQuery.discoverSchema, queryConnectionRows: modelRefresh.queryConnectionRows, normalizeMappingEntry: modelFields.normalizeMappingEntry, antrepoGrainTable: modelRefresh.antrepoGrainTable },
+            });
+            cached = { at: Date.now(), map: parseLib.parseAntrepoRows(company.rows, overrides.antrepoMatchConfig), rows: company.rows.length, addedFields: company.addedFields, warnings: company.warnings };
+            transitCompanyCache.set(cacheKey, cached);
+          } catch (err) {
+            queryError = err;
+            logRuntimeFailure('transitAnalysisCompanyQuery', err);
+          }
         } else diag.cacheHit = true;
+        if (queryError) {
+          // Sorgu başarısızsa gerçek hata kullanıcıya iletilir; Buyer Log'un zaten
+          // okuduğu IAS satırları varsa analiz onlarla sürer.
+          const detail = String(queryError.detail || queryError.message || queryError);
+          const fallbackMap = active ? antrepoForTarget(active, 'backlog') : {};
+          if (!Object.keys(fallbackMap || {}).length) {
+            return res.status(queryError.statusCode && queryError.statusCode < 500 ? queryError.statusCode : 502).json({
+              error: `IAS database sorgusu başarısız: ${detail}`, errorEn: `IAS database query failed: ${detail}`,
+              code: queryError.code || 'TRANSIT_COMPANY_QUERY_FAILED', scope, window,
+            });
+          }
+          warnings.push({ tr: `IAS database sorgusu başarısız (${detail}); Buyer Log'un okuduğu IAS satırları kullanıldı.`, en: `IAS database query failed (${detail}); the IAS rows Buyer Log already read were used.` });
+          antrepoMap = fallbackMap;
+          diag.rowsFetched = Object.keys(fallbackMap).length;
+          diag.queryError = detail;
+          sourceLabel = `Buyer Log IAS (Antrepo · ${label})`;
+        } else {
         antrepoMap = cached.map;
         diag.rowsFetched = cached.rows;
         diag.queriedAt = new Date(cached.at).toISOString();
@@ -10372,6 +10395,7 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
           warnings.push({ tr: 'IAS modelinde "Ürün Menşei" sütunu bulunamadı; ülke yalnız Buyer Log\'daki ASAS siparişleriyle eşleşen parsiyellerde biliniyor.', en: 'No "Ürün Menşei" column was found in the IAS model; the country is only known for partials that match Buyer Log ASAS orders.' });
         }
         sourceLabel = `IAS Database (${antrepoItem.name || antrepoItem.catalog || 'Antrepo'})`;
+        }
       } else {
         // Veri modeli bağlantısı yoksa ayrı sorgu kurulamaz: Buyer Log'un okuduğu IAS satırları.
         antrepoMap = active ? antrepoForTarget(active, 'backlog') : {};
@@ -10382,7 +10406,14 @@ app.get('/api/transit-analysis/live', userAccess.requireAnyArea('source', 'backl
     }
     const analysis = transitAnalysisSource.buildLiveAnalysis({ orders, antrepoMap, overrides, sourceLabel, window, scope });
     res.json({ analysis, scope, window, antrepoSourceMode: mode, orderCount: Array.isArray(orders) ? orders.length : 0, warnings, diag });
-  } catch (err) { apiError(res, err, 'Yol süresi analizi hesaplanamadı.'); }
+  } catch (err) {
+    // Genel apiError yedek metni gerçek nedeni gizliyordu; kullanıcı ne olduğunu görmeli.
+    if (err && err.code === 'REVISION_CONFLICT') return apiError(res, err, 'Yol süresi analizi hesaplanamadı.');
+    const status = err && err.statusCode || 500;
+    if (status >= 500) logRuntimeFailure('transitAnalysisLive', err);
+    const detail = String(err && (err.publicMessage || err.message) || err || '');
+    res.status(status).json({ error: `Yol süresi analizi hesaplanamadı: ${detail}`, errorEn: `Lead time analysis could not be calculated: ${detail}`, code: err && err.code || 'TRANSIT_ANALYSIS_FAILED' });
+  }
 });
 app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
   try {
