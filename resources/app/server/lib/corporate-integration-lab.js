@@ -235,7 +235,7 @@ function statusForSource(source) {
 
 function describeAutomations(state = {}) {
   return (Array.isArray(state.recipes) ? state.recipes : [])
-    .filter(recipe => ['browser', 'mixed'].includes(clean(recipe && recipe.purpose).toLowerCase()) && !/troy/i.test(`${recipe && recipe.name || ''} ${recipe && recipe.url || ''}`))
+    .filter(recipe => ['browser', 'mixed'].includes(clean(recipe && recipe.purpose).toLowerCase()))
     .map(recipe => {
       const allSteps = Array.isArray(recipe.steps) ? recipe.steps : [];
       return {
