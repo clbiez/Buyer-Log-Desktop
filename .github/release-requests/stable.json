@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.217",
-  "commit_sha": "e97e40235b5ba065cfaa6f407f003c79fb4eb2d9",
-  "release_notes": "Buyer Log 7.0.217: Checklist başlıkları CP'de Checklist grubu altında dinamik sütunlara yansıyor. Seçili CP siparişlerinden üretici checklist Excel'i oluşturulabiliyor ve üretici güncellemeleri Buyer Log'a geri alınabiliyor. Stale Excel ve değişmiş yükleme tarihli satırlara karşı veri bütünlüğü koruması eklendi."
+  "version": "7.0.218",
+  "commit_sha": "4b283e14eb15a57501fe79a514e7e74ae39dd362",
+  "release_notes": "Buyer Log 7.0.218: Transit Times IAS Database Date–Text karşılaştırma hatası giderildi ve bağımsız modül ufku netleştirildi. Priority & Checklist Rules ile Supplier Checklist Excel iyileştirmeleri de bu stable sürümde yer alır."
 }
