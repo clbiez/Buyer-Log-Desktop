@@ -173,6 +173,34 @@
 
   function answerKey(orderKey, itemId) { return `${orderKey}::${itemId}`; }
 
+  /* Bazı kontroller PO'ya değil ürün opsiyonuna aittir. Örn. aynı baskı,
+     aynı PLM + model + renk için bir kez onaylandıysa sonraki PO'larda tekrar
+     istenmemelidir. Kimlik eksikse güvenli tarafta kalıp PO bazında davranırız. */
+  function identityPart(value) {
+    let raw = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+    if (!raw) return '';
+    if (/^\d+(?:\.0+)?$/.test(raw)) raw = String(Number(raw));
+    return raw.toLocaleUpperCase('tr-TR');
+  }
+  function optionIdentity(analysis) {
+    if (!analysis) return '';
+    const row = analysis.sourceRow || {};
+    const plm = identityPart(analysis.plmId != null ? analysis.plmId : row['PLM ID']);
+    const model = identityPart(analysis.modelName != null ? analysis.modelName : row['Model Name']);
+    const colour = identityPart(analysis.colourCode != null ? analysis.colourCode : (row['C.Code'] != null ? row['C.Code'] : row['Colour Code']));
+    if (!plm || !model || !colour) return '';
+    return [plm, model, colour].map(encodeURIComponent).join('|');
+  }
+  function optionAnswerKey(analysis, itemId) {
+    const identity = optionIdentity(analysis);
+    return identity ? `@option:${identity}::${itemId}` : '';
+  }
+  function approvalScopeOf(context, itemId) {
+    const direct = context && context.item && context.item.id === itemId ? context.item.approvalScope : '';
+    const mapped = context && context.itemScopes ? context.itemScopes[itemId] : '';
+    return (direct || mapped) === 'option' ? 'option' : 'order';
+  }
+
   function managedItemIdsOf(context) {
     const raw = context && context.managedItemIds;
     if (raw instanceof Set) return raw;
@@ -194,11 +222,12 @@
   /* Cevap, verildiği andaki yükleme tarihine bağlanır. Tarih sonradan
      kayarsa cevap eskir ve soru yeniden sorulur (§4). */
   function makeAnswer(state, analysis, meta) {
+    const hasLoadDate = meta && Object.prototype.hasOwnProperty.call(meta, 'loadDate');
     return {
       state: ANSWER_STATES.includes(normalizeStatus(state)) ? normalizeStatus(state) : 'approved',
       at: (meta && meta.at) || new Date().toISOString(),
       by: (meta && meta.by) || '',
-      loadDate: analysis ? analysis.plannedLoadDate : null,
+      loadDate: hasLoadDate ? meta.loadDate : (analysis ? analysis.plannedLoadDate : null),
     };
   }
 
@@ -217,7 +246,16 @@
     const answer = answers[answerKey(analysis.orderKey, itemId)];
     const stale = answerIsStale(answer, analysis);
     const answerState = answer && !stale ? normalizeStatus(answer.state) : '';
+    // PO'ya özel seçim her zaman üstündür. Böylece paylaşılan bir onayın
+    // istisnası olan PO, örneğin Reddedildi olarak ayrıca takip edilebilir.
     if (answerState && answerState !== 'open') return answerState;
+    if (approvalScopeOf(context, itemId) === 'option') {
+      const reusableKey = optionAnswerKey(analysis, itemId);
+      const reusable = reusableKey ? answers[reusableKey] : null;
+      // Sadece gerçek onay taşınır. Rejected / Not Required başka PO'lara
+      // yayılmaz; bunlar siparişe özel kararlardır.
+      if (reusable && normalizeStatus(reusable.state) === 'approved') return 'approved';
+    }
     if (plmApproved(plmEvidenceOf(context, analysis, itemId))) return 'approved';
     return 'open';
   }
@@ -242,7 +280,7 @@
     const answers = context.answers || {};
     const answer = answers[answerKey(analysis.orderKey, item.id)];
     const stale = answerIsStale(answer, analysis);
-    const status = statusOf(analysis, item.id, context);
+    const status = statusOf(analysis, item.id, { ...context, item });
     if (isResolved(status)) return null;
     return {
       id: item.id, group: item.group || 'custom', ...(extra || {}),
@@ -292,15 +330,15 @@
     const context = ctx || {};
     const settings = context.settings && context.settings.items ? context.settings : normalizeSettings(context.settings);
     const state = {};
-    const mark = (id, applicable) => {
-      state[id] = applicable ? statusOf(analysis, id, context) : 'notApplicable';
+    const mark = (id, applicable, item) => {
+      state[id] = applicable ? statusOf(analysis, id, item ? { ...context, item } : context) : 'notApplicable';
     };
     const managedItemIds = managedItemIdsOf(context);
     for (const item of ITEMS) {
       if (managedItemIds.has(item.id)) state[item.id] = 'notApplicable';
       else mark(item.id, settings.enabled && itemApplies(item, settings.items[item.id], analysis, settings));
     }
-    for (const item of (Array.isArray(context.customItems) ? context.customItems : [])) mark(item.id, settings.enabled);
+    for (const item of (Array.isArray(context.customItems) ? context.customItems : [])) mark(item.id, settings.enabled, item);
     return state;
   }
 
@@ -340,18 +378,24 @@
       }
       if (!settings.enabled) continue;
       // Cevaplanmış ve hâlâ geçerli olan kontroller: "bu kadarını hallettin".
-      const countResolved = itemId => {
-        const status = statusOf(analysis, itemId, itemContext);
+      const countResolved = item => {
+        const itemId = item.id;
+        const scopedContext = { ...itemContext, item };
+        const status = statusOf(analysis, itemId, scopedContext);
         if (!isResolved(status)) return;
         answeredTotal += 1;
         const answer = answers[answerKey(analysis.orderKey, itemId)];
-        if (!(answer && !answerIsStale(answer, analysis) && normalizeStatus(answer.state))) plmAnsweredTotal += 1;
+        const direct = answer && !answerIsStale(answer, analysis) && normalizeStatus(answer.state);
+        const reusableKey = approvalScopeOf(scopedContext, itemId) === 'option' ? optionAnswerKey(analysis, itemId) : '';
+        const reusable = reusableKey ? answers[reusableKey] : null;
+        const reusableApproved = reusable && normalizeStatus(reusable.state) === 'approved';
+        if (!direct && !reusableApproved) plmAnsweredTotal += 1;
       };
-      for (const item of customItems) countResolved(item.id);
+      for (const item of customItems) countResolved(item);
       for (const item of ITEMS) {
         if (managedItemIds.has(item.id)) continue;
         if (!itemApplies(item, settings.items[item.id], analysis, settings)) continue;
-        countResolved(item.id);
+        countResolved(item);
       }
     }
 
@@ -376,7 +420,7 @@
   return {
     ITEMS, ITEM_BY_ID, GROUP_LABELS, ANSWER_STATES, ANSWER_LABELS, STATUS_IDS, STATUS_LABELS, RESOLVED_STATES,
     normalizeStatus, statusLabel, statusOf, isResolved,
-    normalizeSettings, answerKey, makeAnswer, answerIsStale, stateFor,
+    normalizeSettings, answerKey, optionIdentity, optionAnswerKey, approvalScopeOf, makeAnswer, answerIsStale, stateFor,
     itemApplies, openItems, summarize,
   };
 });
