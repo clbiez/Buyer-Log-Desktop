@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "version": "7.0.226",
   "commit_sha": "b67f42a72ac1cb1d902eaa43d57ab7825561bedf",
-  "release_notes": "Buyer Log 7.0.226: Kullanıcı dizini kurtarma kapsamı genişletildi. Eski Buyer Log kurulumları ve güvenli yedek konumları daha kapsamlı biçimde taranıyor; kullanılabilir eski kullanıcı deposu, daha yeni ama kullanılamaz boş cache'in önüne geçebiliyor."
+  "release_notes": "Buyer Log 7.0.226: Kullanıcı dizini kurtarma kapsamı genişletildi. Eski Buyer Log kurulumları, resources/app/data legacy auth yapıları, iç içe migration-evidence kopyaları, portable AppData ve data-BACKUP konumları güvenli biçimde taranıyor; kullanılamaz boş cache geçerli eski kullanıcı deposunun geri yüklenmesini engellemiyor."
 }
