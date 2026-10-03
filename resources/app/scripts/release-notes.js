@@ -1,6 +1,7 @@
 'use strict';
 const fs=require('fs');
 const path=require('path');
+const zlib=require('zlib');
 
 const APP_ROOT=path.resolve(__dirname,'..');
 const PUBLIC_ROOT=path.join(APP_ROOT,'public');
@@ -15,6 +16,37 @@ function writeJson(file,value){fs.mkdirSync(path.dirname(file),{recursive:true})
 function bilingual(value,label){if(!value||typeof value!=='object'||!String(value.tr||'').trim()||!String(value.en||'').trim())fail(label+' için TR ve EN zorunlu.');}
 function safeName(value){const name=String(value||'').trim();if(!name||name.includes('..')||name.includes('/')||name.includes('\\'))fail('Geçersiz görsel dosya adı: '+name);return name;}
 function stats(changes){return changes.reduce((out,change)=>{if(change.type==='feature')out.features++;else if(change.type==='fix')out.fixes++;else out.improvements++;return out;},{features:0,improvements:0,fixes:0});}
+const SCREENSHOT_MIN_WIDTH=900,SCREENSHOT_MIN_HEIGHT=360,SCREENSHOT_MIN_RATIO=1.2,SCREENSHOT_MAX_RATIO=3.2;
+function crc32(buffer){let crc=0xffffffff;for(const byte of buffer){crc^=byte;for(let i=0;i<8;i++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^0xffffffff)>>>0;}
+function inspectPngScreenshot(file,label='screenshot'){
+  const buffer=fs.readFileSync(file),sig=Buffer.from([137,80,78,71,13,10,26,10]);
+  if(buffer.length<33||!buffer.subarray(0,8).equals(sig))fail(label+' geçerli PNG değil.','RELEASE_NOTES_VISUAL_INVALID');
+  let offset=8,width=0,height=0,sawIhdr=false,sawIend=false;const idat=[];
+  while(offset+12<=buffer.length){
+    const len=buffer.readUInt32BE(offset),type=buffer.toString('ascii',offset+4,offset+8),end=offset+12+len;
+    if(end>buffer.length)fail(label+' PNG dosyası eksik/truncated.','RELEASE_NOTES_VISUAL_INVALID');
+    const data=buffer.subarray(offset+8,offset+8+len),stored=buffer.readUInt32BE(offset+8+len),actual=crc32(buffer.subarray(offset+4,offset+8+len));
+    if(stored!==actual)fail(label+' PNG CRC doğrulaması başarısız.','RELEASE_NOTES_VISUAL_INVALID');
+    if(type==='IHDR'){
+      if(len!==13||sawIhdr)fail(label+' PNG IHDR geçersiz.','RELEASE_NOTES_VISUAL_INVALID');
+      sawIhdr=true;width=data.readUInt32BE(0);height=data.readUInt32BE(4);
+      if(data[10]!==0||data[11]!==0||![0,1].includes(data[12]))fail(label+' PNG encoding desteklenmiyor.','RELEASE_NOTES_VISUAL_INVALID');
+    }else if(type==='IDAT')idat.push(data);
+    else if(type==='IEND'){sawIend=true;offset=end;break;}
+    offset=end;
+  }
+  if(!sawIhdr||!sawIend||offset!==buffer.length||!idat.length)fail(label+' PNG yapısı tamamlanmamış.','RELEASE_NOTES_VISUAL_INVALID');
+  try{zlib.inflateSync(Buffer.concat(idat));}catch(error){fail(label+' PNG piksel verisi açılamıyor: '+error.message,'RELEASE_NOTES_VISUAL_INVALID');}
+  const ratio=height?width/height:0;
+  if(width<SCREENSHOT_MIN_WIDTH||height<SCREENSHOT_MIN_HEIGHT)fail(label+' çok küçük/kırpılmış: en az '+SCREENSHOT_MIN_WIDTH+'x'+SCREENSHOT_MIN_HEIGHT+' olmalı.','RELEASE_NOTES_VISUAL_INVALID');
+  if(ratio<SCREENSHOT_MIN_RATIO||ratio>SCREENSHOT_MAX_RATIO)fail(label+' ekran oranı okunabilir değil: '+ratio.toFixed(2)+'.','RELEASE_NOTES_VISUAL_INVALID');
+  return {width,height,ratio};
+}
+function assertPostChangeVisual(change,src,label){
+  if(String(change?.visual?.capture||'')!=='post-change')fail(label+' visual.capture="post-change" olmalı.','RELEASE_NOTES_VISUAL_INVALID');
+  const text=[src,change?.visual?.alt?.tr,change?.visual?.alt?.en,change?.visual?.caption?.tr,change?.visual?.caption?.en].filter(Boolean).join(' ').toLocaleLowerCase('tr-TR');
+  if(/(^|[\\s._-])(before|previous|prior|old|önceki|önceden|eski)([\\s._-]|$)/i.test(text))fail(label+' değişiklikten önceki/eski durumu gösteremez; güncel post-change ekran gerekli.','RELEASE_NOTES_VISUAL_INVALID');
+}
 function validateNext(){
   if(!fs.existsSync(NEXT_FILE))fail('public/release-notes/next.json bulunamadı.');
   const data=readJson(NEXT_FILE);
@@ -37,7 +69,9 @@ function validateNext(){
       if(!['screenshot','component-preview'].includes(kind))fail(p+' bootstrap görsel kind geçersiz.');
     }else{
       if(kind!=='screenshot')fail(p+' gerçek Buyer Log ekran görüntüsü visual.kind="screenshot" olmalı.');
-      if(!/\.(png|jpe?g|webp)$/i.test(src))fail(p+' ekran görüntüsü PNG/JPG/WEBP olmalı.');
+      if(!/\.png$/i.test(src))fail(p+' ekran görüntüsü kayıpsız PNG olmalı; JPG/WEBP kabul edilmez.');
+      assertPostChangeVisual(change,src,p);
+      inspectPngScreenshot(asset,p+' '+src);
     }
     if(change.path)bilingual(change.path,p+' path');
   }
@@ -84,4 +118,4 @@ function main(){
   fail('Kullanım: release-notes.js validate | seal VERSION [--reset]','RELEASE_NOTES_ARG_INVALID');
 }
 if(require.main===module){try{main();}catch(error){console.error('['+(error.code||'RELEASE_NOTES_FAILED')+'] '+error.message);process.exitCode=1;}}
-module.exports={validateNext,seal,stats};
+module.exports={validateNext,seal,stats,inspectPngScreenshot,assertPostChangeVisual};

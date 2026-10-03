@@ -82,11 +82,14 @@ async function renderArchive(active){
   list.innerHTML=rows.length?rows.map(row=>'<button type="button" class="blRnReleaseRow'+(row.version===active?' is-active':'')+'" data-rn-version="'+esc(row.version)+'"><span><b>v'+esc(row.version)+'</b><small>'+esc(row.publishedAt||row.date||'')+'</small></span><em>'+esc(pick(row.title)||L('Bakım ve güncelleme','Maintenance and updates'))+'</em>'+(row.legacy?'<i>'+esc(L('Metin arşivi','Text archive'))+'</i>':'')+'</button>').join(''):'<div class="blRnEmpty">'+esc(L('Henüz arşivlenmiş stable sürüm yok.','There are no archived stable releases yet.'))+'</div>';
   list.querySelectorAll('[data-rn-version]').forEach(b=>b.addEventListener('click',()=>openVersion(b.dataset.rnVersion)));
 }
-function fallbackVisual(release){
-  return '<div class="blRnFallbackVisual" role="img" aria-label="'+esc(L('Sürüm arşivi görseli','Release archive visual'))+'"><div class="blRnFallbackMark">BL</div><div><span>BUYER LOG</span><b>v'+esc(release.version)+'</b><small>'+esc(L('Sürüm arşivi','Release archive'))+'</small></div></div>';
+function fallbackVisual(release,change,reason){
+  const title=pick(change?.title)||pick(release?.title)||('v'+String(release?.version||'')),module=pick(change?.module)||'Buyer Log';
+  const note=reason||L('Doğrulanmış ekran görüntüsü bulunamadığı için görsel gösterilmedi.','The visual was hidden because a verified screenshot is not available.');
+  return '<div class="blRnFallbackVisual blRnFallbackVisual--safe" role="img" aria-label="'+esc(L('Doğrulanmış görsel yok','No verified visual'))+'"><div class="blRnFallbackMark">BL</div><div><span>'+esc(module)+'</span><b>'+esc(title)+'</b><small>'+esc(note)+'</small></div></div>';
 }
 function visualHtml(change,release){
-  const v=change?.visual;if(!v?.src)return fallbackVisual(release);
+  const v=change?.visual;if(!v?.src)return fallbackVisual(release,change);
+  if(v.kind==='screenshot'&&!/\.png(?:\?|$)/i.test(String(v.src||'')))return fallbackVisual(release,change,L('Eski veya doğrulanmamış ekran görüntüsü güvenli şekilde gösterilmedi.','An old or unverified screenshot was hidden safely.'));
   const src=withVersion('release-notes/'+release.version+'/'+v.src),focus=v.focus;
   const focusHtml=focus?'<i class="blRnFocus" style="left:'+Number(focus.x)+'%;top:'+Number(focus.y)+'%;width:'+Number(focus.w)+'%;height:'+Number(focus.h)+'%"></i>':'';
   const alt=pick(v.alt)||pick(change.title),caption=pick(v.caption)||L('Gerçek Buyer Log ekranı','Real Buyer Log screen');
@@ -94,6 +97,24 @@ function visualHtml(change,release){
 }
 function description(change,release){
   return String(pick(change?.body)||pick(change?.summary)||pick(release?.summary)||L('Bu değişiklik Buyer Log deneyimini daha anlaşılır ve kullanışlı hale getirir.','This change makes the Buyer Log experience clearer and easier to use.')).trim();
+}
+function screenshotDimensionsOk(img){
+  const w=Number(img?.naturalWidth||0),h=Number(img?.naturalHeight||0),ratio=h?w/h:0;
+  return w>=900&&h>=360&&ratio>=1.2&&ratio<=3.2;
+}
+function bindScreenshotGuard(stage,change,release){
+  if(change?.visual?.kind!=='screenshot')return;
+  const host=stage.querySelector('.blRnFigure'),img=host?.querySelector('.blRnVisual img');
+  if(!host||!img)return;
+  let replaced=false;
+  const reject=()=>{
+    if(replaced)return;replaced=true;
+    host.innerHTML=fallbackVisual(release,change,L('Ekran görüntüsü bozuk, eksik veya okunamayacak kadar kırpılmış olduğu için gösterilmedi.','The screenshot was hidden because it is corrupt, incomplete, or cropped too tightly to read.'));
+  };
+  const verify=()=>{if(!screenshotDimensionsOk(img))reject();};
+  img.addEventListener('error',reject,{once:true});
+  img.addEventListener('load',verify,{once:true});
+  if(img.complete){if(!img.naturalWidth)reject();else verify();}
 }
 function typeLabel(type){return ({feature:L('YENİ ÖZELLİK','NEW FEATURE'),improvement:L('İYİLEŞTİRME','IMPROVEMENT'),fix:L('DÜZELTME','FIX')})[type]||L('GÜNCELLEME','UPDATE');}
 function renderCard(deck,index){
@@ -104,6 +125,7 @@ function renderCard(deck,index){
   prev.title=L('Önceki değişiklik','Previous change');prev.setAttribute('aria-label',prev.title);
   next.title=L('Sonraki değişiklik','Next change');next.setAttribute('aria-label',next.title);
   prev.addEventListener('click',()=>{state.index--;renderState();});next.addEventListener('click',()=>{state.index++;renderState();});
+  bindScreenshotGuard(stage,change,release);
   if(zoom){const img=zoom.querySelector('img'),cap=stage.querySelector('.blRnVisual figcaption');zoom.addEventListener('click',()=>openVisual(img.currentSrc||img.src,img.alt,cap?.textContent||''));}
 }
 function renderLegacy(row){

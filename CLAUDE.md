@@ -131,10 +131,15 @@ düzeltmesi**, işi hangi agent yaparsa yapsın, aynı PR/commit serisinde
 - Her kayıt `feature | improvement | fix` tipi, modül adı, başlık ve kısa açıklama
   için **TR + EN** içerir.
 - Her kayıt bir görsel taşır. Normal akışta
-  `visual.kind="screenshot"` zorunludur ve dosya
-  `public/release-notes/next-assets/` altında gerçek Buyer Log ekran görüntüsü
-  (PNG/JPG/WEBP) olmalıdır. Mockup, stock görsel veya başka uygulama ekranı
-  kullanma.
+  `visual.kind="screenshot"` ve `visual.capture="post-change"` zorunludur.
+  Dosya `public/release-notes/next-assets/` altında **değişiklik uygulandıktan
+  sonra çekilmiş gerçek Buyer Log ekran görüntüsü** olmalıdır.
+- Release-note ekran görüntüsü yalnız **kayıpsız PNG** kabul edilir. En az
+  **900×360 px** olmalı ve en-boy oranı **1.2–3.2** aralığında kalmalıdır.
+  Aşırı ince crop, bozuk/truncated dosya, JPG/WEBP, mockup, component preview,
+  stock/generatif görsel, başka uygulama ekranı veya değişiklikten önceki
+  ("before/eski/önceki") ekran kullanma. Görsel ilgili değişikliğin sonucunu
+  doğrudan göstermelidir; yalnız aynı modülden alakasız bir ekran yeterli değildir.
 - Ekran görüntüsünde şirket/supplier/order/fiyat/kullanıcı gibi hassas gerçek
   verileri göstermeyin; gerçek Buyer Log UI'sını anonim/demo veriyle çekin.
 - Bir görev birden fazla kullanıcı-visible değişiklik yapıyorsa her değişikliği
