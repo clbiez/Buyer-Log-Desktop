@@ -59,6 +59,7 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
             updated: result.updated,
             cleared: result.cleared,
             skipped: result.skipped,
+            conflicts: result.conflicts || 0,
             revision: result.revision,
           }
         );
