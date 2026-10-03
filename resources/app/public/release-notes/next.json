@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Checklist, Yol Süreleri ve Backlog iyileştirmeleri",
-    "en": "Checklist, Transit Times and Backlog improvements"
+    "tr": "Checklist ve Backlog iş akışları güncellendi",
+    "en": "Checklist and Backlog workflows updated"
   },
   "summary": {
-    "tr": "Checklist yönetimi ve üretici Excel akışı geliştirildi; Transit Times IAS Database sorgusu bağımsız modül ufku ve doğru tarih tipiyle güvenilir hale getirildi; Backlog zaman akışında gecikmiş alt toplam hizası, otomatik Bugün odağı ve üst/alt grafiklerin Yığılmış–Yan yana davranışı düzeltildi.",
-    "en": "Checklist management and the supplier Excel workflow were improved; the Transit Times IAS Database query was made reliable with an independent module horizon and correct date typing; the Backlog timeline now fixes overdue subtotal alignment, automatically focuses Today, and keeps upper/lower Stacked–Side by side behavior in sync."
+    "tr": "Checklist yönetimi ve üretici Excel akışı güçlendirildi; Backlog zaman akışında gecikmiş alt toplam hizası, otomatik Bugün odağı ve üst/alt grafiklerin Yığılmış–Yan yana davranışı düzeltildi.",
+    "en": "Checklist management and the supplier Excel workflow were improved; the Backlog timeline now fixes overdue subtotal alignment, automatically focuses Today, and keeps upper/lower Stacked–Side by side behavior in sync."
   },
   "changes": [
     {
@@ -28,7 +28,7 @@
       },
       "visual": {
         "kind": "screenshot",
-        "src": "priority-checklist-rules.svg",
+        "src": "priority-checklist-rules.png",
         "alt": {
           "tr": "Priority and Checklist Rules ekranında düzenleme ve silme aksiyonlarını gösteren görsel",
           "en": "Visual showing edit and delete actions in Priority and Checklist Rules"
@@ -56,7 +56,7 @@
       },
       "visual": {
         "kind": "screenshot",
-        "src": "supplier-checklist-excel.svg",
+        "src": "supplier-checklist-excel.png",
         "alt": {
           "tr": "Renkli KPI alanları ve korumalı checklist tablosu bulunan Supplier Checklist Excel görseli",
           "en": "Supplier Checklist Excel visual with coloured KPI tiles and a protected checklist table"
