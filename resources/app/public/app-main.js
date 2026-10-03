@@ -12472,6 +12472,42 @@ function refreshPhaseLabel(phase){
 function refreshSeconds(ms){ return fmtDurationSn(ms); }
 function refreshStagesModalOpen(){ return Boolean(document.getElementById('_refreshStages')); }
 
+function refreshEtaBasisLabel(basis,en){
+  const labels={exact:en?'same horizon + similar data volume':'aynı horizon + benzer veri hacmi',
+    horizon:en?'same horizon':'aynı horizon',volume:en?'similar data volume':'benzer veri hacmi',
+    target:en?'same refresh scope':'aynı yenileme kapsamı'};
+  return labels[String(basis||'')]||(en?'shared refresh history':'ortak yenileme geçmişi');
+}
+function refreshEtaRangeText(eta){
+  if(!eta||eta.available!==true)return'';
+  const low=Math.max(0,Number(eta.lowMs)||0),high=Math.max(low,Number(eta.highMs)||0);
+  return high>low?`${refreshSeconds(low)} – ${refreshSeconds(high)}`:refreshSeconds(low);
+}
+function refreshEtaInlineText(eta){const range=refreshEtaRangeText(eta);return range?`~${range}`:'';}
+function refreshEtaPanelHtml(job,en){
+  const eta=job&&job.eta||null;if(!eta)return'';
+  const running=Boolean(job&&job.running),available=eta.available===true,sampleCount=Math.max(0,Number(eta.sampleCount)||0);
+  const needed=Math.max(3,Number(eta.neededSamples)||3),scope=eta.scope&&typeof eta.scope==='object'?eta.scope:{};
+  const targets=Array.isArray(scope.targets)&&scope.targets.length?scope.targets.join(' + ').toUpperCase():'';
+  const volume=scope.rowBucket&&scope.rowBucket!=='unknown'?`${scope.rowBucket} ${en?'row band':'satır bandı'}`:(en?'data volume learning':'veri hacmi öğreniliyor');
+  let main,meta,state;
+  if(available){
+    main=refreshEtaRangeText(eta);meta=`${sampleCount} ${en?'similar refreshes':'benzer yenileme'} · ${refreshEtaBasisLabel(eta.basis,en)}`;
+    state=!running?(en?'Actual duration recorded':'Gerçek süre kaydedildi')
+      :eta.exceeded?(en?'Estimate range exceeded · refresh continues':'Tahmin aralığı aşıldı · yenileme sürüyor')
+      :`~${refreshSeconds(Math.max(0,Number(eta.remainingMs)||0))} ${en?'remaining':'kaldı'}`;
+  }else{
+    main=en?'Learning estimate':'Tahmin öğreniliyor';
+    meta=sampleCount?`${sampleCount}/${needed} ${en?'similar samples collected':'benzer örnek birikti'}`:(en?'Shared refresh history is building':'Ortak yenileme geçmişi birikiyor');
+    state=en?'No artificial percentage is shown':'Sahte ilerleme yüzdesi gösterilmez';
+  }
+  return `<div class="refreshEtaCard${available?' isReady':' isLearning'}">
+    <span class="blOrb blOrb--sm" data-state="${running?'thinking':'done'}" aria-hidden="true"></span>
+    <div class="refreshEtaMain"><span>${escapeHtml(en?'Estimated duration':'Tahmini süre')}</span><b>${escapeHtml(main)}</b><small>${escapeHtml(meta)}</small></div>
+    <div class="refreshEtaState"><strong>${escapeHtml(state)}</strong><span>${escapeHtml([targets,volume].filter(Boolean).join(' · '))}</span></div>
+  </div>`;
+}
+
 function renderRefreshStagesBody(){
   const host=document.getElementById('_refreshStagesBody'); if(!host) return;
   const en=appLang==='en';
@@ -12526,8 +12562,10 @@ function renderRefreshStagesBody(){
     <span>${escapeHtml(en?'Remaining':'Kalan')} <b>${escapeHtml(String(Array.isArray(dashboard.remainingOrders)?dashboard.remainingOrders.length:Math.max(0,(Number(dashboard.totalOrders)||0)-(Number(dashboard.processedOrders)||0))))}</b></span>
   </div>`:'';
   const reconciliation=`<div class="refreshStageMetrics"><span>${escapeHtml(en?'Stage reconciliation':'Aşama doğrulaması')} <b>${escapeHtml(refreshSeconds(stageTotalMs))} + ${escapeHtml(refreshSeconds(dispatchOverheadMs))} = ${escapeHtml(refreshSeconds(stageTotalMs+dispatchOverheadMs))}</b></span></div>`;
+  const etaPanel=refreshEtaPanelHtml(job,en);
   host.innerHTML=`
     <div class="refreshStageTotal"><span>${escapeHtml(en?'Total elapsed':'Toplam süre')}</span><b>${escapeHtml(refreshSeconds(totalMs))}</b>${running?`<em>${escapeHtml(en?'refresh in progress':'yenileme sürüyor')}</em>`:''}</div>
+    ${etaPanel}
     ${metricRows}
     ${dashboardRows}
     ${reconciliation}
@@ -12881,6 +12919,10 @@ async function waitForRefreshJob(expectedJob=null){
     }
     // Panel canlı okusun diye son iş durumu saklanır (v5.89).
     window.BL_REFRESH_JOB_STATE=jobState;
+    if(refreshTimerKey&&sourceRefreshTimers[refreshTimerKey]){
+      sourceRefreshTimers[refreshTimerKey].eta=jobState.eta||sourceRefreshTimers[refreshTimerKey].eta||null;updateSourceRefreshTimerDisplays();
+    }
+    if(topBtn&&jobState.running&&jobState.eta&&jobState.eta.available)topBtn.title=(appLang==='en'?'Refresh in progress · Estimated ':'Yenileme sürüyor · Tahmini ')+refreshEtaRangeText(jobState.eta);
     if(typeof refreshStagesModalOpen==='function'&&refreshStagesModalOpen())renderRefreshStagesBody();
     if(btn&&jobState.running){
       const elapsed=fmtDurationSn(jobState.elapsedMs);
@@ -12938,7 +12980,10 @@ async function waitForRefreshJob(expectedJob=null){
     // Yenileme artık arka planda çalışıyor: sunucu hemen 202 döner, uygulama
     // ekrandaki veriyle kullanılmaya devam eder ve iş bitince veri sessizce yenilenir.
     if(force && data && data.started){
-      const completedJob=await waitForRefreshJob(data.job||null);
+      const startedJob=data.job||null;window.BL_REFRESH_JOB_STATE=startedJob;
+      if(refreshTimerKey&&sourceRefreshTimers[refreshTimerKey]){sourceRefreshTimers[refreshTimerKey].eta=startedJob&&startedJob.eta||null;updateSourceRefreshTimerDisplays();}
+      if(topBtn&&startedJob&&startedJob.eta&&startedJob.eta.available)topBtn.title=(appLang==='en'?'Refresh in progress · Estimated ':'Yenileme sürüyor · Tahmini ')+refreshEtaRangeText(startedJob.eta);
+      const completedJob=await waitForRefreshJob(startedJob);
       // Aynı URL'nin eski yanıtını tarayıcıdan alma ihtimalini tamamen kapat. Refresh
       // tamamlandıktan SONRA bellekteki yeni snapshot tek seferde geri okunur.
       // Refresh sonrasında yalnız hafif Overview bootstrap'ını al. CP/Orders/
@@ -13448,8 +13493,9 @@ function sourceRefreshTimerText(key){
 function updateSourceRefreshTimerDisplays(){
   document.querySelectorAll('[data-source-timer]').forEach(el=>{
     const key=el.dataset.sourceTimer||'all';
-    const item=sourceRefreshTimers[key];
-    el.textContent=sourceRefreshTimerText(key);
+    const item=sourceRefreshTimers[key],elapsedText=sourceRefreshTimerText(key);
+    const etaText=item&&item.running?refreshEtaInlineText(item.eta):'';
+    el.textContent=etaText?`${elapsedText} · ${etaText}`:elapsedText;
     el.classList.toggle('isRunning',Boolean(item&&item.running));
     el.setAttribute('aria-label',appLang==='en'?`Refresh duration: ${el.textContent}`:`Yenileme süresi: ${el.textContent}`);
   });
