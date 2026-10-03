@@ -76,3 +76,11 @@ test('timeline automatically centers the current period after render',()=>{
   assert.match(OVERVIEW,/const scrollBehavior=behavior==='auto'\?'auto':'smooth'/);
   assert.match(OVERVIEW,/t\.dataset\.blvAction==='today'\)\{scrollTimelineToToday\(\)/);
 });
+
+
+test('timeline keeps the bottom period labels inside the scrollable chart',()=>{
+  const colsHeight=Number((CSS.match(/\.blvCols\{height:(\d+)px/)||[])[1]);
+  assert.ok(colsHeight>=580,`timeline label alanı için yükseklik en az 580px olmalı (bulunan: ${colsHeight})`);
+  assert.match(CSS,/\.blvCols \.bpaColLabel\{[^}]*flex:0 0 26px[^}]*min-height:26px[^}]*max-height:26px[^}]*overflow:visible/);
+  assert.match(CSS,/@media\(max-width:900px\)\{\.blvCols\{height:536px/);
+});
