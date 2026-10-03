@@ -23,8 +23,9 @@ async function legacyRows(){
   })).filter(x=>x.version&&!visual.has(x.version));
   return legacyCache;
 }
-function readSeen(){try{return String(localStorage.getItem(SEEN_KEY)||'').trim();}catch(_){return '';}}
-function writeSeen(v){if(!v)return;try{localStorage.setItem(SEEN_KEY,v);}catch(_){}}
+function seenStorage(){return global.BLStorage||global.localStorage;}
+function readSeen(){try{return String(seenStorage()?.getItem(SEEN_KEY)||'').trim();}catch(_){return '';}}
+function writeSeen(v){if(!v)return;try{seenStorage()?.setItem(SEEN_KEY,v);}catch(_){}}
 function ensureDialog(){
   if(dialog?.isConnected)return dialog;
   dialog=document.createElement('dialog');dialog.className='blRnDialog';dialog.setAttribute('aria-labelledby','blRnTitle');
