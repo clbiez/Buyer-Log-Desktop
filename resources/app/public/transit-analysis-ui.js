@@ -23,7 +23,7 @@
      Kapsam/pencere değişince sunucudan yeniden hesaplanır; hata (ör. şirket
      geneli yetkisi yok) panelde mesaj olarak gösterilir, kontroller kalır. */
   async function loadLive(force = false, params = {}) {
-    const scope = params.scope === 'company' ? 'company' : 'filtered';
+    const scope = params.scope === 'filtered' ? 'filtered' : 'company';
     const win = params.window || 'y1';
     const key = scope + '|' + win;
     if (live.loaded && !force && live.params === key) return live;
@@ -40,11 +40,13 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
           live.analysis = null;
-          live.message = data.error || res.statusText;
+          live.message = L(data.error || res.statusText, data.errorEn || data.error || res.statusText);
+          live.diag = null;
         } else {
           live.analysis = data.analysis || null;
-          live.message = data.message || '';
+          live.message = L(data.message || '', data.messageEn || data.message || '');
           live.warnings = Array.isArray(data.warnings) ? data.warnings : [];
+          live.diag = data.diag || null;
           live.meta = { antrepoSourceMode: data.antrepoSourceMode || '', orderCount: Number(data.orderCount) || 0 };
         }
       }
@@ -166,88 +168,117 @@
       : `<tr><td colspan="3" style="color:var(--muted);">${L('Bu ülke/taşıt için alt süreç kırılımı raporda yok.', 'The report has no sub-process breakdown for this country/vehicle.')}</td></tr>`;
     return `<div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.2fr);gap:18px;padding:10px 6px;">
       <div><div style="font-weight:600;font-size:12px;margin-bottom:6px;">${L('Dönem bazında uçtan uca (gün · adet)', 'End-to-end by period (days · qty)')}</div><div style="display:flex;flex-direction:column;gap:3px;max-height:220px;overflow:auto;">${series}</div></div>
-      <div><div style="font-weight:600;font-size:12px;margin-bottom:6px;">${L('Alt süreç ortalamaları (gün)', 'Sub-process averages (days)')}</div><table class="pricingRulesTable" style="min-width:0;"><tbody>${steps}</tbody></table></div>
+      <div><div style="font-weight:600;font-size:12px;margin-bottom:6px;">${L('Alt süreç ortalamaları (gün)', 'Sub-process averages (days)')}</div><table class="trxTable trxMini"><tbody>${steps}</tbody></table></div>
     </div>`;
   }
 
-  /* ctx: { getRules():Rule[], applyRules(rules), onChange?() } */
+  /* ctx: { getRules():Rule[], applyRules(rules) }
+     Kart iskeleti (başlık + kaynak + araç çubuğu) her durumda çizilir; yükleme,
+     boş sonuç ve hata yalnız gövdeyi değiştirir. Böylece kapsam/tarih/Yenile
+     kontrolleri hiçbir durumda kaybolmaz. */
+  const VIEW_VERSION = 2;
   function mount(container, ctx) {
     if (!container || !TA()) return null;
-    const view = { source: 'database', scope: 'filtered', window: 'y1', basis: '', year: '', vehicle: '*', metric: 'endToEnd', stat: 'mean', ...readView() };
+    const saved = readView();
+    const view = { source: 'database', scope: 'company', window: 'y1', basis: '', year: '', vehicle: '*', metric: 'endToEnd', stat: 'mean', collapsed: false,
+      ...saved, v: VIEW_VERSION };
+    // v2: varsayılan kapsam modülün kendi IAS database ufkudur.
+    if (saved.v !== VIEW_VERSION) view.scope = 'company';
     if (!['database', 'excel'].includes(view.source)) view.source = 'database';
-    if (!['filtered', 'company'].includes(view.scope)) view.scope = 'filtered';
+    if (!['filtered', 'company'].includes(view.scope)) view.scope = 'company';
     if (!TA().WINDOW_KEYS.includes(view.window)) view.window = 'y1';
     const liveParams = () => ({ scope: view.scope, window: view.window });
     const selected = new Map();
     const expanded = new Set();
     let busy = false;
+    let busyLive = false;
+    let errorText = '';
     let summary = null;
 
     function rowId(row) { return row.vehicle + '|' + row.countryKey; }
+    const opt = (value, label, current) => `<option value="${esc(value)}" ${String(value) === String(current) ? 'selected' : ''}>${esc(label)}</option>`;
 
-    function sourceTabs() {
-      const tab = (id, label) => `<button type="button" class="tbtn" data-ta-source="${id}" aria-pressed="${view.source === id}" style="${view.source === id ? 'background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);font-weight:600;' : ''}">${label}</button>`;
-      return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;"><span style="font-size:11.5px;color:var(--muted);margin-right:4px;">${L('Kaynak', 'Source')}</span>${tab('database', L('Buyer Log verisi (IAS)', 'Buyer Log data (IAS)'))}${tab('excel', L('Rapor Excel\'i (isteğe bağlı)', 'Report Excel (optional)'))}</div>`;
-    }
-    /* Buyer Log kaynağı: kapsam + tarih penceresi. */
-    function dbControls() {
-      const tab = (id, label, title) => `<button type="button" class="tbtn" data-ta-scope="${id}" aria-pressed="${view.scope === id}" title="${esc(title)}" style="${view.scope === id ? 'background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);font-weight:600;' : ''}">${label}</button>`;
-      const group = (label, keys) => `<optgroup label="${esc(label)}">${keys.map(k => `<option value="${k}" ${view.window === k ? 'selected' : ''}>${esc(TA().windowLabel(k, lang()))}</option>`).join('')}</optgroup>`;
-      const keys = TA().WINDOW_KEYS;
-      return `<div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;">
-        <div style="display:flex;flex-direction:column;gap:4px;"><span style="font-size:11.5px;color:var(--muted);">${L('Veri Kapsamı', 'Data Scope')}</span><div style="display:flex;gap:6px;flex-wrap:wrap;">${tab('filtered', L('Mevcut filtrem', 'My current filter'), L('Kaynak ufkun ve yetki kapsamın (Backlog ile aynı)', 'Your source horizon and access scope (same as Backlog)'))}${tab('company', L('Şirket geneli', 'Company-wide'), L('IAS verisi kullanıcı filtresi olmadan, yalnız tarih aralığıyla çekilir', 'IAS data is fetched without user filters, limited only by the date range'))}</div></div>
-        <div class="pricingRuleField" style="min-width:200px;"><label>${L('Tarih Aralığı', 'Date Range')}</label><select data-ta-window>${group(L('Hafta', 'Weeks'), keys.filter(k => k[0] === 'w'))}${group(L('Ay', 'Months'), keys.filter(k => k[0] === 'm'))}${group(L('Yıl', 'Years'), keys.filter(k => k[0] === 'y'))}<option value="all" ${view.window === 'all' ? 'selected' : ''}>${esc(TA().windowLabel('all', lang()))}</option></select></div>
-        ${live.analysis && live.analysis.window && live.analysis.window.from ? `<div style="font-size:11px;color:var(--muted);padding-bottom:8px;">${esc(live.analysis.window.from)} → ${esc(live.analysis.window.to)} · ${live.analysis.window.granularity === 'week' ? L('haftalık kırılım', 'weekly breakdown') : L('aylık kırılım', 'monthly breakdown')} · ${L('baz tarih: antrepo giriş', 'basis date: warehouse entry')}</div>` : ''}
-      </div>${live.warnings && live.warnings.length ? `<div style="font-size:11px;color:var(--orange);line-height:1.5;">${live.warnings.map(esc).join(' · ')}</div>` : ''}`;
-    }
     function statsLine(analysis) {
       const st = analysis && analysis.stats;
       if (!st) return '';
-      const n = value => value.toLocaleString(loc());
-      const parts = [L(`${n(st.used)} antrepoya girmiş sevkiyat kullanıldı (toplam ${n(st.total)} IAS parsiyeli)`, `${n(st.used)} shipments that entered the bonded warehouse were used (of ${n(st.total)} IAS partials)`)];
+      const n = value => Number(value || 0).toLocaleString(loc());
+      const parts = [L(`${n(st.used)} / ${n(st.total)} IAS parsiyeli hesaba girdi`, `${n(st.used)} of ${n(st.total)} IAS partials used`)];
       if (st.notArrived) parts.push(L(`${n(st.notArrived)} henüz antrepoda değil`, `${n(st.notArrived)} not yet in the warehouse`));
-      if (st.missingDates) parts.push(L(`${n(st.missingDates)} talep/giriş tarihi eksik`, `${n(st.missingDates)} missing request/entry date`));
+      if (st.outOfWindow) parts.push(L(`${n(st.outOfWindow)} tarih aralığı dışında`, `${n(st.outOfWindow)} outside the date range`));
+      if (st.missingDates) parts.push(L(`${n(st.missingDates)} tarihi eksik`, `${n(st.missingDates)} missing dates`));
       if (st.outOfRange) parts.push(L(`${n(st.outOfRange)} tutarsız tarih`, `${n(st.outOfRange)} inconsistent dates`));
       if (st.missingCountry) parts.push(L(`${n(st.missingCountry)} ülkesi yok`, `${n(st.missingCountry)} without a country`));
-      if (st.outOfWindow) parts.push(L(`${n(st.outOfWindow)} tarih aralığı dışında`, `${n(st.outOfWindow)} outside the date range`));
       return parts.join(' · ');
     }
     function columnNotes(analysis) {
       const c = analysis && analysis.columns;
-      if (!c) return '';
+      // Hiç parsiyel yoksa sütun teşhisi yanıltıcıdır (her sütun "yok" görünür).
+      if (!c || !(analysis.stats && analysis.stats.total)) return '';
       const notes = [];
-      if (!c.loadingRequest) notes.push(L('"Yükleme Talep Tarih" sütunu IAS kaynağında yok — uçtan uca süre hesaplanamaz', 'The IAS source has no "Yükleme Talep Tarih" column — end-to-end time cannot be calculated'));
-      if (!c.eta) notes.push(L('"ETA Tarih" sütunu yok — yol/gümrük ayrımı yapılamaz', 'No "ETA Tarih" column — transit and customs cannot be separated'));
-      if (!c.actualLoading) notes.push(L('Fiili Yükleme tarihi kaynakta yok; yükleme/yol ayrımı Handover tarihine göre', 'No actual loading date in the source; loading/transit are split by the Handover date'));
-      if (!c.actualEntry) notes.push(L('Gerçekleşen antrepo giriş sütunu yok; antrepoya girmiş parsiyelde IAS giriş tarihi kullanılır', 'No actual warehouse entry column; the IAS entry date is used for partials that entered the warehouse'));
-      return notes.length ? `<div style="font-size:11px;color:var(--muted);line-height:1.5;">${notes.map(esc).join(' · ')}</div>` : '';
+      if (!c.loadingRequest) notes.push(L('"Yükleme Talep Tarih" sütunu yok — uçtan uca süre hesaplanamaz', 'No "Yükleme Talep Tarih" column — end-to-end time cannot be calculated'));
+      if (!c.eta) notes.push(L('"ETA Tarih" sütunu yok — yol/gümrük ayrılamaz', 'No "ETA Tarih" column — transit and customs cannot be separated'));
+      if (!c.actualLoading) notes.push(L('Fiili Yükleme tarihi yok; yükleme/yol ayrımı Handover\'a göre', 'No actual loading date; loading/transit split by Handover'));
+      if (!c.actualEntry) notes.push(L('Gerçekleşen antrepo giriş sütunu yok; IAS giriş tarihi kullanılır', 'No actual warehouse entry column; the IAS entry date is used'));
+      return notes.length ? `<div class="trxNote">${notes.map(esc).join(' · ')}</div>` : '';
     }
 
-    function render() {
-      const analysis = view.source === 'database' ? live.analysis : store.analysis;
-      if (view.source === 'database' && !(analysis && analysis.records && analysis.records.length)) {
-        container.innerHTML = `<div style="border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:10px;background:var(--card);">
-          <div style="display:flex;gap:12px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;"><div><div style="font-weight:600;">${L('İthalat Yol Süresi Analizi', 'Import Lead Time Analysis')}</div><div style="font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5;">${L('Ülke ve taşıt bazlı süreler Buyer Log\'un ASAS + IAS (Antrepo) verisinden doğrudan hesaplanır; Excel gerekmez.', 'Lead times by country and vehicle are calculated directly from Buyer Log\'s ASAS + IAS (Antrepo) data; no Excel needed.')}</div></div>${sourceTabs()}</div>
-          ${dbControls()}
-          <div style="font-size:12px;color:var(--ink2);">${esc(live.message || (live.loaded ? L('Bu kapsam ve tarih aralığında antrepoya girmiş sevkiyat bulunamadı. Tarih aralığını genişletin veya Şirket geneli kapsamı seçin.', 'No shipments entered the bonded warehouse in this scope and date range. Widen the date range or choose Company-wide.') : L('Buyer Log verisi okunuyor…', 'Reading Buyer Log data…')))}</div>
-          ${statsLine(analysis) ? `<div style="font-size:11px;color:var(--muted);">${esc(statsLine(analysis))}</div>` : ''}${columnNotes(analysis)}
-          <div><button type="button" class="tbtn" data-ta-refresh><svg class="ic"><use href="#i-refresh"/></svg><span>${L('Yeniden Hesapla', 'Recalculate')}</span></button></div>
-        </div>`;
-        bindCommon();
-        return;
+    function sourceSeg() {
+      const b = (id, label) => `<button type="button" data-ta-source="${id}" aria-pressed="${view.source === id}">${label}</button>`;
+      return `<div class="trxSeg" role="group" aria-label="${esc(L('Kaynak', 'Source'))}">${b('database', L('IAS verisi', 'IAS data'))}${b('excel', L('Rapor Excel\'i', 'Report Excel'))}</div>`;
+    }
+
+    function dbToolbar() {
+      const seg = (id, label, title) => `<button type="button" data-ta-scope="${id}" aria-pressed="${view.scope === id}" title="${esc(title)}">${label}</button>`;
+      const group = (label, keys) => `<optgroup label="${esc(label)}">${keys.map(k => `<option value="${k}" ${view.window === k ? 'selected' : ''}>${esc(TA().windowLabel(k, lang()))}</option>`).join('')}</optgroup>`;
+      const keys = TA().WINDOW_KEYS;
+      const win = live.analysis && live.analysis.window;
+      const d = live.diag;
+      const when = d && d.queriedAt ? new Date(d.queriedAt).toLocaleTimeString(loc(), { hour: '2-digit', minute: '2-digit' }) : '';
+      const diagText = d ? [
+        when ? L(`Son sorgu ${when}`, `Last query ${when}`) : '',
+        d.rowsFetched != null ? L(`${Number(d.rowsFetched).toLocaleString(loc())} IAS satırı`, `${Number(d.rowsFetched).toLocaleString(loc())} IAS rows`) : '',
+        d.cacheHit ? L('önbellek', 'cached') : '',
+      ].filter(Boolean).join(' · ') : '';
+      return `<div class="trxToolbar">
+        <div class="trxSeg" role="group" aria-label="${esc(L('Veri kapsamı', 'Data scope'))}">${seg('company', L('IAS Database', 'IAS Database'), L('Modülün kendi ufku: IAS verisi kullanıcı/Backlog filtresi olmadan, yalnız seçilen tarih aralığıyla sorgulanır. Tüm ülke ve taşıtlar gelir.', 'The module\'s own horizon: IAS data is queried without user/Backlog filters, limited only by the selected date range. All countries and vehicles are included.'))}${seg('filtered', L('Backlog filtrem', 'My Backlog filter'), L('Backlog\'daki kaynak ufkun ve yetki kapsamın', 'Your Backlog source horizon and access scope'))}</div>
+        <label class="trxInline"><span>${L('Tarih aralığı', 'Date range')}</span><select class="trxSelect" data-ta-window ${busyLive ? 'disabled' : ''}>${group(L('Hafta', 'Weeks'), keys.filter(k => k[0] === 'w'))}${group(L('Ay', 'Months'), keys.filter(k => k[0] === 'm'))}${group(L('Yıl', 'Years'), keys.filter(k => k[0] === 'y'))}<option value="all" ${view.window === 'all' ? 'selected' : ''}>${esc(TA().windowLabel('all', lang()))}</option></select></label>
+        ${win && win.from ? `<span class="trxMeta">${esc(win.from)} → ${esc(win.to)} · ${win.granularity === 'week' ? L('haftalık', 'weekly') : L('aylık', 'monthly')}</span>` : ''}
+        <span class="trxGrow"></span>
+        ${diagText && !busyLive ? `<span class="trxMeta">${esc(diagText)}</span>` : ''}
+        <button type="button" class="trxBtn" data-ta-refresh ${busyLive ? 'disabled' : ''} title="${esc(L('IAS verisini yeniden sorgula (önbelleği atlar)', 'Re-query IAS data (bypasses the cache)'))}"><svg class="ic${busyLive ? ' trxSpin' : ''}"><use href="#i-refresh"/></svg><span>${busyLive ? L('Sorgulanıyor…', 'Querying…') : L('Yenile', 'Refresh')}</span></button>
+      </div>`;
+    }
+
+    function excelToolbar(analysis) {
+      const years = analysis ? TA().options(analysis, view.basis || undefined).years : [];
+      return `<div class="trxToolbar">
+        ${analysis ? `<label class="trxInline"><span>${L('Yıl', 'Year')}</span><select class="trxSelect" data-ta-view="year">${years.map(y => opt(y, y, view.year)).join('')}</select></label>
+        <span class="trxMeta">${esc(analysis.fileName || 'Excel')} · ${esc(new Date(analysis.importedAt).toLocaleDateString(loc()))}${analysis.importedBy ? ' · ' + esc(analysis.importedBy) : ''}</span>` : `<span class="trxMeta">${L('Global Lojistik "İthalat Yol Süresi Raporu" Excel\'ini yükleyin.', 'Upload the Global Logistics "İthalat Yol Süresi Raporu" Excel.')}</span>`}
+        <span class="trxGrow"></span>
+        <label class="trxBtn" style="cursor:pointer;"><svg class="ic"><use href="#i-file-import"/></svg><span>${busy ? L('Okunuyor…', 'Reading…') : (analysis ? L('Yeni Excel', 'New Excel') : L('Excel Yükle', 'Upload Excel'))}</span><input type="file" data-ta-file accept=".xlsx,.xlsm,.xls" hidden ${busy ? 'disabled' : ''}></label>
+        ${analysis ? `<button type="button" class="trxBtn" data-ta-clear title="${esc(L('Kayıtlı analizi kaldır (kurallar değişmez)', 'Remove the saved analysis (rules are unchanged)'))}"><svg class="ic"><use href="#i-trash"/></svg></button>` : ''}
+      </div>`;
+    }
+
+    function bodyHtml(analysis) {
+      const isDb = view.source === 'database';
+      if (isDb && busyLive && !analysis) return `<div class="trxEmpty">${view.scope === 'company' ? L('IAS database sorgulanıyor…', 'Querying the IAS database…') : L('Hesaplanıyor…', 'Calculating…')}</div>`;
+      if (isDb && errorText) return `<div class="trxEmpty trxError">${esc(errorText)}</div>`;
+      if (isDb && !(analysis && analysis.records && analysis.records.length)) {
+        const msg = live.message || (live.loaded
+          ? L('Bu kapsam ve tarih aralığında antrepoya girmiş sevkiyat yok. Tarih aralığını genişletin.', 'No shipments entered the warehouse in this scope and date range. Widen the date range.')
+          : L('IAS verisi okunuyor…', 'Reading IAS data…'));
+        return `<div class="trxEmpty">${esc(msg)}${statsLine(analysis) ? `<div class="trxNote">${esc(statsLine(analysis))}</div>` : ''}${columnNotes(analysis)}</div>`;
       }
-      if (!analysis) {
-        container.innerHTML = `<div style="border:1px dashed var(--line2);border-radius:var(--r-md);padding:14px 16px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;">
-          <div><div style="font-weight:600;">${L('İthalat Yol Süresi Analizi', 'Import Lead Time Analysis')}</div><div style="font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5;">${L('Global Lojistik "İthalat Yol Süresi Raporu" Excel\'ini yükleyin. Ülke ve taşıt bazında Yükleme · Yol · Gümrük · Uçtan Uca süreleri hesaplanır ve kural önerisine dönüştürülür.', 'Upload the Global Logistics "İthalat Yol Süresi Raporu" Excel. Loading · Transit · Customs · End-to-end times are calculated by country and vehicle and turned into rule suggestions.')}</div></div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${sourceTabs()}<label class="tbtn" style="cursor:pointer;"><svg class="ic"><use href="#i-file-import"/></svg><span>${busy ? L('Okunuyor…', 'Reading…') : L('Analiz Excel\'i Yükle', 'Upload Analysis Excel')}</span><input type="file" data-ta-file accept=".xlsx,.xlsm,.xls" hidden ${busy ? 'disabled' : ''}></label></div>
-        </div>`;
-        bindCommon();
-        return;
-      }
-      // Buyer Log kaynağında dönem kapsamını tarih aralığı belirler; yıl süzmesi yok.
-      const yearFilter = analysis.source === 'database' ? '*' : view.year;
+      if (!isDb && !analysis) return '';
+      return tableHtml(analysis);
+    }
+
+    function tableHtml(analysis) {
+      const isDb = analysis.source === 'database';
+      const yearFilter = isDb ? '*' : view.year;
       summary = TA().summarize(analysis, { basis: view.basis, year: yearFilter, vehicle: view.vehicle });
-      view.basis = summary.basis; if (analysis.source !== 'database') view.year = summary.year;
+      view.basis = summary.basis; if (!isDb) view.year = summary.year;
       if (view.vehicle !== '*' && !summary.options.vehicles.includes(view.vehicle)) { view.vehicle = '*'; summary = TA().summarize(analysis, { basis: view.basis, year: yearFilter, vehicle: '*' }); }
       writeView(view);
       const rules = ctx.getRules();
@@ -257,83 +288,114 @@
         if (!selected.has(id)) selected.set(id, !!row.vehicle && !row.lowSample && !row.anomaly && suggestions.has(id));
       });
       const scale = Math.max(1, ...summary.rows.map(r => ['loading', 'transit', 'customs'].reduce((s, m) => s + Math.max(0, Number(r[m]) || 0), 0)));
-      const isDb = analysis.source === 'database';
       const labels = TA().metricLabels(analysis, lang());
       const text = TA().labels(lang());
-      const sources = isDb ? statsLine(analysis)
-        : analysis.sources.map(s => `${s.sheet} (${s.role === 'steps' ? L('alt süreç', 'sub-process') : L('ana', 'main')}, ${text.basis[s.basis]}, ${vehicleLabel(s.vehicle)}, ${s.year})`).join(' · ');
-      const opt = (value, label, current) => `<option value="${esc(value)}" ${String(value) === String(current) ? 'selected' : ''}>${esc(label)}</option>`;
-      const totals = summary.vehicleTotals.map(t => `<div style="border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;background:var(--card);min-width:220px;">
-          <div style="font-size:11px;color:var(--muted);">${esc(vehicleLabel(t.vehicle))} · ${t.countries} ${L('ülke', 'countries')} · ${fmtQty(t.qty)} ${L('adet', 'pcs')}</div>
-          <div style="font-size:18px;font-weight:700;margin-top:2px;">${fmt(t.endToEnd)} <span style="font-size:11.5px;font-weight:500;color:var(--muted);">${L('gün uçtan uca', 'days end-to-end')}</span></div>
-          <div style="font-size:11px;color:var(--ink2);margin-top:2px;">${L('Yükleme', 'Loading')} ${fmt(t.loading)} · ${L('Yol', 'Transit')} ${fmt(t.transit)} · ${L('Gümrük', 'Customs')} ${fmt(t.customs)}</div></div>`).join('');
+      const tiles = summary.vehicleTotals.map(t => `<div class="trxTile">
+          <div class="trxTileHead">${esc(vehicleLabel(t.vehicle))} · ${t.countries} ${L('ülke', 'countries')} · ${fmtQty(t.qty)}</div>
+          <div class="trxTileValue">${fmt(t.endToEnd)}<small>${L('gün', 'days')}</small></div>
+          <div class="trxTileFoot">${L('Yük.', 'Load')} ${fmt(t.loading)} · ${L('Yol', 'Transit')} ${fmt(t.transit)} · ${L('Gümr.', 'Cust.')} ${fmt(t.customs)}</div></div>`).join('');
       const body = summary.rows.map(row => {
         const id = rowId(row);
         const s = suggestions.get(id);
         const current = TA().currentRuleDays(rules, row.vehicle, row.ruleCountry);
         const diff = s && current ? s.days - current.days : null;
-        const flags = [row.lowSample ? `<span title="${row.shipments != null ? L(`${TA().LOW_SAMPLE_SHIPMENTS} sevkiyattan az`, `Fewer than ${TA().LOW_SAMPLE_SHIPMENTS} shipments`) : L(`Toplam adet < ${fmtQty(TA().LOW_SAMPLE_QTY)} veya < ${TA().LOW_SAMPLE_PERIODS} dönem`, `Total qty < ${fmtQty(TA().LOW_SAMPLE_QTY)} or < ${TA().LOW_SAMPLE_PERIODS} periods`)}" style="color:var(--orange);">${L('düşük örneklem', 'low sample')}</span>` : '',
-          row.anomaly ? `<span title="${L('Kaynak raporda negatif ana süre var (tarih tutarsızlığı)', 'The source report has a negative main duration (date inconsistency)')}" style="color:var(--red);">${L('veri tutarsız', 'inconsistent data')}</span>` : ''].filter(Boolean).join(' · ');
+        const flags = [row.lowSample ? `<span class="trxFlag" title="${row.shipments != null ? L(`${TA().LOW_SAMPLE_SHIPMENTS} sevkiyattan az`, `Fewer than ${TA().LOW_SAMPLE_SHIPMENTS} shipments`) : L(`Toplam adet < ${fmtQty(TA().LOW_SAMPLE_QTY)} veya < ${TA().LOW_SAMPLE_PERIODS} dönem`, `Total qty < ${fmtQty(TA().LOW_SAMPLE_QTY)} or < ${TA().LOW_SAMPLE_PERIODS} periods`)}">${L('düşük örneklem', 'low sample')}</span>` : '',
+          row.anomaly ? `<span class="trxFlag trxFlagBad" title="${esc(L('Negatif ana süre var (tarih tutarsızlığı)', 'Negative main duration (date inconsistency)'))}">${L('veri tutarsız', 'inconsistent')}</span>` : ''].join('');
         const canSelect = !!row.vehicle && !!s;
-        return `<tr data-ta-row="${esc(id)}">
-          <td><input type="checkbox" data-ta-pick="${esc(id)}" ${selected.get(id) && canSelect ? 'checked' : ''} ${canSelect ? '' : 'disabled'} title="${canSelect ? L('Öneriyi kurallara aktar', 'Transfer the suggestion to the rules') : L('Taşıt tipi karışık (Vasita = All); kurala aktarılamaz', 'Mixed vehicle type (Vasita = All); cannot be transferred to a rule')}"></td>
-          <td>${esc(vehicleLabel(row.vehicle))}</td>
-          <td><strong>${esc(row.ruleCountry)}</strong><div style="font-size:10.5px;color:var(--muted);">${esc(row.country)}${flags ? ' · ' + flags : ''}</div></td>
-          <td class="num">${fmtQty(row.qty)}<div style="font-size:10.5px;color:var(--muted);">${row.shipments != null ? row.shipments.toLocaleString(loc()) + L(' sevkiyat · ', ' shipments · ') : ''}${row.periods} ${row.granularity === 'week' ? L('hafta', 'weeks') : L('ay', 'months')}</div></td>
+        return `<tr data-ta-row="${esc(id)}" class="${expanded.has(id) ? 'is-open' : ''}">
+          <td><input type="checkbox" class="trxCheck" data-ta-pick="${esc(id)}" ${selected.get(id) && canSelect ? 'checked' : ''} ${canSelect ? '' : 'disabled'} title="${canSelect ? esc(L('Öneriyi kurallara aktar', 'Transfer the suggestion to the rules')) : esc(L('Taşıt tipi belirsiz; kurala aktarılamaz', 'Vehicle type unknown; cannot be transferred'))}"></td>
+          <td><span class="trxBadge" data-v="${esc(row.vehicle)}">${esc(vehicleLabel(row.vehicle))}</span></td>
+          <td><strong>${esc(row.ruleCountry)}</strong>${flags}</td>
+          <td class="num">${fmtQty(row.qty)}<div class="trxSubNum">${row.shipments != null ? row.shipments.toLocaleString(loc()) + L(' sevk.', ' shp.') : row.periods + (row.granularity === 'week' ? L(' hf', ' wk') : L(' ay', ' mo'))}</div></td>
           <td class="num">${fmt(row.loading)}</td><td class="num">${fmt(row.transit)}</td><td class="num">${fmt(row.customs)}</td>
           <td class="num"><strong>${fmt(row.endToEnd)}</strong>${stackedBar(row, scale)}</td>
           <td class="num">${fmt(row.p80)}</td>
-          <td class="num" style="color:var(--muted);">${fmt(row.min)}–${fmt(row.max)}</td>
+          <td class="num trxMuted">${fmt(row.min)}–${fmt(row.max)}</td>
           <td class="num">${trendCell(row)}</td>
-          <td class="num">${current ? `${fmt(current.days, 0)}<div style="font-size:10.5px;color:var(--muted);">${current.source === 'rule' ? L('kural', 'rule') : L('varsayılan', 'default')}</div>` : '—'}</td>
-          <td class="num">${s ? `<strong>${fmt(s.days, 0)}</strong>${diff ? `<div style="font-size:10.5px;color:${diff > 0 ? 'var(--red)' : 'var(--green)'};">${diff > 0 ? '+' : ''}${diff}</div>` : ''}` : '—'}</td>
-          <td><button type="button" class="pricingRuleIconBtn" data-ta-expand="${esc(id)}" title="${L('Dönem ve alt süreç detayı', 'Period and sub-process detail')}" aria-expanded="${expanded.has(id)}">${expanded.has(id) ? '▴' : '▾'}</button></td>
-        </tr>${expanded.has(id) ? `<tr><td colspan="14" style="background:var(--card2);">${detailHtml(row, analysis)}</td></tr>` : ''}`;
+          <td class="num">${current ? `${fmt(current.days, 0)}<div class="trxSubNum">${current.source === 'rule' ? L('kural', 'rule') : L('varsayılan', 'default')}</div>` : '—'}</td>
+          <td class="num">${s ? `<strong>${fmt(s.days, 0)}</strong>${diff ? `<div class="trxSubNum" style="color:${diff > 0 ? 'var(--red)' : 'var(--green)'};">${diff > 0 ? '+' : ''}${diff}</div>` : ''}` : '—'}</td>
+          <td><button type="button" class="trxIconBtn" data-ta-expand="${esc(id)}" title="${esc(L('Dönem ve alt süreç detayı', 'Period and sub-process detail'))}" aria-expanded="${expanded.has(id)}">${expanded.has(id) ? '▴' : '▾'}</button></td>
+        </tr>${expanded.has(id) ? `<tr class="trxDetailRow"><td colspan="14">${detailHtml(row, analysis)}</td></tr>` : ''}`;
       }).join('');
       const picked = summary.rows.filter(r => selected.get(rowId(r)) && suggestions.has(rowId(r))).length;
-      container.innerHTML = `<div style="border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;display:flex;flex-direction:column;gap:12px;background:var(--card);">
-        <div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;">
-          <div><div style="font-weight:600;">${L('İthalat Yol Süresi Analizi', 'Import Lead Time Analysis')}</div>
-            <div style="font-size:11.5px;color:var(--muted);margin-top:3px;line-height:1.5;">${esc(analysis.fileName || 'Excel')} · ${esc(new Date(analysis.importedAt).toLocaleString(loc()))}${analysis.importedBy ? ' · ' + esc(analysis.importedBy) : ''}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;line-height:1.5;" title="${isDb ? L('Antrepoya girmiş IAS parsiyelleri; ülke eşleşen ASAS siparişinden, taşıt Vasita Tanim alanından.', 'IAS partials that entered the bonded warehouse; country from the matching ASAS order, vehicle from the Vasita Tanim field.') : L('Aynı veri birden çok pivotta tekrar eder; her baz/taşıt/yıl için tek kaynak kullanılır.', 'The same data repeats across pivots; one source is used per basis/vehicle/year.')}">${isDb ? '' : L('Kaynak: ', 'Source: ')}${esc(sources)}</div>${isDb ? columnNotes(analysis) : ''}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">${sourceTabs()}${isDb
-            ? `<button type="button" class="tbtn" data-ta-refresh><svg class="ic"><use href="#i-refresh"/></svg><span>${L('Yeniden Hesapla', 'Recalculate')}</span></button>`
-            : `<label class="tbtn" style="cursor:pointer;"><svg class="ic"><use href="#i-file-import"/></svg><span>${busy ? L('Okunuyor…', 'Reading…') : L('Yeni Excel Yükle', 'Upload New Excel')}</span><input type="file" data-ta-file accept=".xlsx,.xlsm,.xls" hidden ${busy ? 'disabled' : ''}></label><button type="button" class="tbtn" data-ta-clear title="${L('Kayıtlı analizi kaldır (kurallar değişmez)', 'Remove the saved analysis (rules are unchanged)')}"><svg class="ic"><use href="#i-trash"/></svg><span>${L('Analizi Kaldır', 'Remove Analysis')}</span></button>`}</div>
+      const allPickable = summary.rows.filter(r => r.vehicle && suggestions.has(rowId(r))).length;
+      return `<div class="trxFilters">
+          <label class="trxInline"><span>${L('Baz', 'Basis')}</span><select class="trxSelect" data-ta-view="basis">${summary.options.bases.map(b => opt(b, text.basis[b], view.basis)).join('')}</select></label>
+          <label class="trxInline"><span>${L('Taşıt', 'Vehicle')}</span><select class="trxSelect" data-ta-view="vehicle">${opt('*', L('Tümü', 'All'), view.vehicle)}${summary.options.vehicles.map(v => opt(v, vehicleLabel(v), view.vehicle)).join('')}</select></label>
+          <label class="trxInline"><span>${L('Kurala esas', 'Rule basis')}</span><select class="trxSelect" data-ta-view="metric">${Object.entries(labels.rule).map(([k, l]) => opt(k, l, view.metric)).join('')}</select></label>
+          <label class="trxInline"><span>${L('İstatistik', 'Statistic')}</span><select class="trxSelect" data-ta-view="stat">${Object.entries(text.ruleStat).map(([k, l]) => opt(k, l, view.stat)).join('')}</select></label>
         </div>
-        ${isDb ? dbControls() : ''}
-        <div class="pricingRuleGrid">
-          <div class="pricingRuleField"><label>${L('Dönem Bazı', 'Period Basis')}</label><select data-ta-view="basis">${summary.options.bases.map(b => opt(b, text.basis[b], view.basis)).join('')}</select></div>
-          ${isDb ? '' : `<div class="pricingRuleField"><label>${L('Yıl', 'Year')}</label><select data-ta-view="year">${summary.options.years.map(y => opt(y, y, view.year)).join('')}</select></div>`}
-          <div class="pricingRuleField"><label>${L('Taşıt', 'Vehicle')}</label><select data-ta-view="vehicle">${opt('*', L('Tüm taşıtlar', 'All vehicles'), view.vehicle)}${summary.options.vehicles.map(v => opt(v, vehicleLabel(v), view.vehicle)).join('')}</select></div>
-          <div class="pricingRuleField"><label>${L('Kurala Esas Süre', 'Rule Duration Basis')}</label><select data-ta-view="metric">${Object.entries(labels.rule).map(([k, l]) => opt(k, l, view.metric)).join('')}</select></div>
-          <div class="pricingRuleField"><label>${L('İstatistik', 'Statistic')}</label><select data-ta-view="stat">${Object.entries(text.ruleStat).map(([k, l]) => opt(k, l, view.stat)).join('')}</select></div>
+        ${tiles ? `<div class="trxTiles">${tiles}</div>` : ''}
+        ${isDb ? `<div class="trxNote">${esc(statsLine(analysis))}</div>${columnNotes(analysis)}` : ''}
+        <div class="trxTableWrap"><table class="trxTable"><thead><tr>
+          <th><input type="checkbox" class="trxCheck" data-ta-all title="${esc(L('Tümünü seç', 'Select all'))}" ${picked && picked === allPickable ? 'checked' : ''}></th><th>${L('Taşıt', 'Vehicle')}</th><th>${L('Ülke', 'Country')}</th><th class="num">${L('Adet', 'Qty')}</th><th class="num" title="${esc(labels.loading)}">${L('Yükleme', 'Loading')}</th><th class="num" title="${esc(labels.transit)}">${L('Yol', 'Transit')}</th><th class="num" title="${esc(labels.customs)}">${L('Gümrük', 'Customs')}</th><th class="num" title="${esc(labels.endToEnd)}">${L('Uçtan Uca', 'End-to-End')}</th><th class="num">P80</th><th class="num">${L('Min–Maks', 'Min–Max')}</th><th class="num">Trend</th><th class="num">${L('Mevcut', 'Current')}</th><th class="num">${L('Öneri', 'Suggested')}</th><th></th>
+        </tr></thead><tbody>${body || `<tr><td colspan="14" class="trxEmpty">${L('Bu seçim için veri yok.', 'No data for this selection.')}</td></tr>`}</tbody></table></div>
+        <div class="trxFoot"><span class="trxMeta">${L(`${picked} öneri seçili`, `${picked} suggestion(s) selected`)} · ${esc(labels.rule[view.metric] || text.ruleMetric[view.metric])}, ${esc(text.ruleStat[view.stat])} · ${L('süreler gün, adet ağırlıklı', 'days, quantity-weighted')}</span><span class="trxGrow"></span>
+          <button type="button" class="trxBtn trxBtnPrimary" data-ta-apply ${picked ? '' : 'disabled'}><svg class="ic"><use href="#i-copy-plus"/></svg><span>${L('Seçilenleri kurallara aktar', 'Transfer selected to rules')}</span></button></div>`;
+    }
+
+    function render() {
+      const analysis = view.source === 'database' ? live.analysis : store.analysis;
+      const title = L('İthalat Yol Süresi Analizi', 'Import Lead Time Analysis');
+      const sub = view.source === 'database'
+        ? L('Ülke × taşıt süreleri IAS database\'inden hesaplanır; seçilen öneriler aşağıdaki kurallara aktarılır.', 'Country × vehicle lead times are calculated from the IAS database; selected suggestions are transferred to the rules below.')
+        : L('Global Lojistik rapor Excel\'inden ülke × taşıt süreleri.', 'Country × vehicle lead times from the Global Logistics report Excel.');
+      container.innerHTML = `<section class="trxCard${view.collapsed ? ' is-collapsed' : ''}">
+        <div class="trxCardHead">
+          <button type="button" class="trxCollapse" data-ta-collapse aria-expanded="${!view.collapsed}" title="${esc(view.collapsed ? L('Aç', 'Expand') : L('Daralt', 'Collapse'))}">${view.collapsed ? '▸' : '▾'}</button>
+          <div class="trxCardTitle"><div class="trxH">${title}</div><div class="trxSub">${sub}</div></div>
+          ${sourceSeg()}
         </div>
-        ${totals ? `<div style="display:flex;gap:10px;flex-wrap:wrap;">${totals}</div>` : ''}
-        <div style="font-size:11px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;"><span><span style="display:inline-block;width:10px;height:6px;border-radius:2px;background:var(--blue);"></span> ${L('Yükleme', 'Loading')} (${esc(labels.loading)})</span><span><span style="display:inline-block;width:10px;height:6px;border-radius:2px;background:var(--teal);"></span> ${L('Yol', 'Transit')} (${esc(labels.transit)})</span><span><span style="display:inline-block;width:10px;height:6px;border-radius:2px;background:var(--orange);"></span> ${L('Gümrük', 'Customs')} (${esc(labels.customs)})</span><span>${L('Süreler gün; adet ağırlıklı ortalama.', 'Durations in days; quantity-weighted average.')}</span></div>
-        <div style="border:1px solid var(--line);border-radius:var(--r-md);overflow:auto;max-height:420px;"><table class="pricingRulesTable"><thead><tr>
-          <th><input type="checkbox" data-ta-all title="${L('Tümünü seç', 'Select all')}" ${picked && picked === summary.rows.filter(r => r.vehicle && suggestions.has(rowId(r))).length ? 'checked' : ''}></th><th>${L('Taşıt', 'Vehicle')}</th><th>${L('Ülke', 'Country')}</th><th style="text-align:right;">${L('Adet', 'Qty')}</th><th style="text-align:right;">${L('Yükleme', 'Loading')}</th><th style="text-align:right;">${L('Yol', 'Transit')}</th><th style="text-align:right;">${L('Gümrük', 'Customs')}</th><th style="text-align:right;">${L('Uçtan Uca', 'End-to-End')}</th><th style="text-align:right;">P80</th><th style="text-align:right;">${L('Min–Maks', 'Min–Max')}</th><th style="text-align:right;">Trend</th><th style="text-align:right;">${L('Mevcut Gün', 'Current Days')}</th><th style="text-align:right;">${L('Önerilen Gün', 'Suggested Days')}</th><th></th>
-        </tr></thead><tbody>${body || `<tr><td colspan="14" style="padding:14px;text-align:center;color:var(--muted);">${L('Bu seçim için veri yok.', 'No data for this selection.')}</td></tr>`}</tbody></table></div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span data-ta-status style="font-size:11.5px;color:var(--muted);">${L(`${picked} öneri seçili · Öneri:`, `${picked} suggestion(s) selected · Suggestion:`)} ${esc(labels.rule[view.metric] || text.ruleMetric[view.metric])}, ${esc(text.ruleStat[view.stat])}. ${L('Aktarım yalnız tarihsiz + sezonsuz ülke/taşıt kuralını ekler veya günceller.', 'Transfer only adds or updates the undated, season-less country/vehicle rule.')}</span><span style="flex:1"></span>
-          <button type="button" class="navActionBtn" data-ta-apply ${picked ? '' : 'disabled'}><svg class="ic"><use href="#i-copy-plus"/></svg><span>${L('Seçili Önerileri Kurallara Aktar', 'Transfer Selected Suggestions to Rules')}</span></button></div>
-      </div>`;
-      bindCommon();
-      container.querySelectorAll('[data-ta-view]').forEach(el => el.addEventListener('change', () => {
+        ${view.collapsed ? '' : `${view.source === 'database' ? dbToolbar() : excelToolbar(analysis)}
+        ${view.source === 'database' && live.warnings && live.warnings.length ? `<div class="trxWarn">${live.warnings.map(w => esc(w && typeof w === 'object' ? L(w.tr, w.en || w.tr) : String(w))).join(' · ')}</div>` : ''}
+        <div class="trxCardBody">${bodyHtml(analysis)}</div>`}
+      </section>`;
+      bindAll();
+    }
+
+    function reloadLive(force) {
+      writeView(view); selected.clear(); expanded.clear();
+      busyLive = true; errorText = ''; render();
+      loadLive(force, liveParams())
+        .then(() => { busyLive = false; render(); })
+        .catch(err => { busyLive = false; errorText = err.message; render(); });
+    }
+
+    function bindAll() {
+      const q = sel => container.querySelector(sel);
+      const qa = sel => container.querySelectorAll(sel);
+      q('[data-ta-collapse]')?.addEventListener('click', () => { view.collapsed = !view.collapsed; writeView(view); render(); });
+      qa('[data-ta-source]').forEach(el => el.addEventListener('click', () => {
+        if (view.source === el.dataset.taSource) return;
+        view.source = el.dataset.taSource; view.basis = ''; view.year = ''; view.vehicle = '*';
+        selected.clear(); writeView(view);
+        if (view.source === 'database') reloadLive(false);
+        else load().then(render).catch(err => { toast(err.message); render(); });
+      }));
+      q('[data-ta-refresh]')?.addEventListener('click', () => reloadLive(true));
+      qa('[data-ta-scope]').forEach(el => el.addEventListener('click', () => {
+        if (view.scope === el.dataset.taScope || busyLive) return;
+        view.scope = el.dataset.taScope; reloadLive(false);
+      }));
+      q('[data-ta-window]')?.addEventListener('change', e => { view.window = e.target.value; reloadLive(false); });
+      qa('[data-ta-view]').forEach(el => el.addEventListener('change', () => {
         view[el.dataset.taView] = el.value;
         if (el.dataset.taView === 'basis') view.year = '';
         selected.clear();
         render();
       }));
-      container.querySelectorAll('[data-ta-pick]').forEach(el => el.addEventListener('change', () => { selected.set(el.dataset.taPick, el.checked); render(); }));
-      container.querySelector('[data-ta-all]')?.addEventListener('change', e => {
-        summary.rows.forEach(r => { if (r.vehicle && suggestions.has(rowId(r))) selected.set(rowId(r), e.target.checked); });
+      qa('[data-ta-pick]').forEach(el => el.addEventListener('change', () => { selected.set(el.dataset.taPick, el.checked); render(); }));
+      q('[data-ta-all]')?.addEventListener('change', e => {
+        (summary ? summary.rows : []).forEach(r => { if (r.vehicle) selected.set(rowId(r), e.target.checked); });
         render();
       });
-      container.querySelectorAll('[data-ta-expand]').forEach(el => el.addEventListener('click', () => {
+      qa('[data-ta-expand]').forEach(el => el.addEventListener('click', () => {
         const id = el.dataset.taExpand;
         if (expanded.has(id)) expanded.delete(id); else expanded.add(id);
         render();
       }));
-      container.querySelector('[data-ta-apply]')?.addEventListener('click', () => {
+      q('[data-ta-apply]')?.addEventListener('click', () => {
+        const suggestions = new Map(TA().suggestRules(summary, view).map(s => [s.delType + '|' + s.countryKey, s]));
         const chosen = summary.rows.filter(r => selected.get(rowId(r))).map(r => suggestions.get(rowId(r))).filter(Boolean);
         const result = TA().applySuggestions(ctx.getRules(), chosen);
         ctx.applyRules(result.rules);
@@ -341,47 +403,12 @@
           `${result.added} rule(s) added, ${result.updated} updated${result.unchanged ? `, ${result.unchanged} unchanged` : ''}. Use "Save Rules" to keep them.`));
         render();
       });
-      container.querySelector('[data-ta-clear]')?.addEventListener('click', async () => {
+      q('[data-ta-clear]')?.addEventListener('click', async () => {
         if (!global.confirm(L('Kayıtlı yol süresi analizi kaldırılsın mı? Yol Süreleri kuralları değişmez.', 'Remove the saved lead time analysis? Transit time rules are not changed.'))) return;
         try { await save(null); selected.clear(); render(); toast(L('Yol süresi analizi kaldırıldı.', 'Lead time analysis removed.')); }
         catch (err) { toast(L('Analiz kaldırılamadı: ', 'Could not remove the analysis: ') + err.message); }
       });
-    }
-
-    function bindCommon() {
-      bindFile();
-      container.querySelectorAll('[data-ta-source]').forEach(el => el.addEventListener('click', () => {
-        if (view.source === el.dataset.taSource) return;
-        view.source = el.dataset.taSource; view.basis = ''; view.year = ''; view.vehicle = '*';
-        selected.clear(); writeView(view);
-        ensureLoaded().then(render).catch(showError);
-      }));
-      container.querySelector('[data-ta-refresh]')?.addEventListener('click', () => {
-        container.querySelector('[data-ta-refresh]').disabled = true;
-        loadLive(true, liveParams()).then(() => { selected.clear(); render(); }).catch(showError);
-      });
-      const reloadLive = () => {
-        writeView(view); selected.clear(); expanded.clear();
-        container.querySelectorAll('[data-ta-scope],[data-ta-window],[data-ta-refresh]').forEach(el => { el.disabled = true; });
-        const note = document.createElement('div');
-        note.style.cssText = 'font-size:11.5px;color:var(--muted);';
-        note.textContent = view.scope === 'company' ? L('Şirket geneli IAS verisi sorgulanıyor…', 'Querying company-wide IAS data…') : L('Hesaplanıyor…', 'Calculating…');
-        container.firstElementChild?.appendChild(note);
-        loadLive(false, liveParams()).then(render).catch(showError);
-      };
-      container.querySelectorAll('[data-ta-scope]').forEach(el => el.addEventListener('click', () => {
-        if (view.scope === el.dataset.taScope) return;
-        view.scope = el.dataset.taScope; reloadLive();
-      }));
-      container.querySelector('[data-ta-window]')?.addEventListener('change', e => { view.window = e.target.value; reloadLive(); });
-    }
-    function ensureLoaded() { return view.source === 'database' ? loadLive(false, liveParams()) : load(); }
-    function showError(err) {
-      container.innerHTML = `<div style="padding:12px;color:var(--red);font-size:11.5px;">${L('Yol süresi analizi okunamadı:', 'Could not read the lead time analysis:')} ${esc(err.message)}</div>`;
-    }
-
-    function bindFile() {
-      container.querySelectorAll('[data-ta-file]').forEach(input => input.addEventListener('change', async () => {
+      qa('[data-ta-file]').forEach(input => input.addEventListener('change', async () => {
         const file = input.files && input.files[0];
         input.value = '';
         if (!file || busy) return;
@@ -398,15 +425,22 @@
       }));
     }
 
-    container.innerHTML = `<div style="padding:12px;color:var(--muted);font-size:11.5px;">${L('Yol süresi analizi yükleniyor…', 'Loading lead time analysis…')}</div>`;
-    // Pencere her açıldığında güncel runtime'dan yeniden hesaplanır (şirket
-    // sorgusu sunucuda 15 dk önbellekli; "Yeniden Hesapla" önbelleği atlar).
+    // Pencere her açıldığında yeniden hesaplanır (IAS sorgusu sunucuda 15 dk
+    // önbellekli; "Yenile" önbelleği atlar).
     live.loaded = false;
-    (view.source === 'database' ? loadLive(false, liveParams()) : load()).then(render).catch(showError);
-    return { refresh: () => (view.source === 'database' ? loadLive(true, liveParams()) : load(true)).then(render), render };
+    if (view.source === 'database') reloadLive(false);
+    else { render(); load().then(render).catch(err => { toast(err.message); render(); }); }
+    return { refresh: () => (view.source === 'database' ? reloadLive(true) : load(true).then(render)), render };
   }
 
   function invalidate() { store.loaded = false; live.loaded = false; }
+  // Kural düzenleyicinin ülke seçicisi IAS analizindeki ülkeleri de sunar.
+  function knownCountries() {
+    const names = new Set();
+    [live.analysis, store.analysis].forEach(a => (a && Array.isArray(a.records) ? a.records : [])
+      .forEach(r => { const name = TA() && TA().countryRuleName(r.country); if (name) names.add(name); }));
+    return [...names];
+  }
 
-  global.BLTransitAnalysisUI = { mount, load, loadLive, save, invalidate, readWorkbookFile };
+  global.BLTransitAnalysisUI = { mount, load, loadLive, save, invalidate, readWorkbookFile, knownCountries };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -273,13 +273,15 @@ test('IAS kaynağında gerçekleşen tarih sütunları varsa tahminin önüne ge
   assert.equal(TA.summarize(a, { basis: 'loading' }).rows[0].endToEnd, 59, 'fiili yükleme varsa yükleme bazı da üretilir');
 });
 
-test('canlı uç nokta Backlog ile aynı kapsam ve eşleştirmeyi kullanır; panel varsayılanı Buyer Log verisidir', () => {
+test('canlı uç nokta: Backlog filtresi kapsamı Backlog ile aynı süzmeyi kullanır; panel varsayılanı modülün kendi IAS ufkudur', () => {
   const server = read('server/server.js');
   const ui = read('public/transit-analysis-ui.js');
   assert.match(server, /app\.get\('\/api\/transit-analysis\/live', userAccess\.requireAnyArea\('source', 'backlog'\)/);
   assert.match(server, /filterRowsByScope\(req\.currentUser, filterRowsByEffectiveHorizon\(req\.currentUser, 'backlog', ordersForTarget\(active, 'backlog', overrides\)\)\)/);
   assert.match(read('server/lib/transit-analysis-source.js'), /parseLib\.findAntrepoHits\(antrepoMap, order, \{ rule: overrides \}\)/);
-  assert.match(ui, /const view = \{ source: 'database', scope: 'filtered', window: 'y1'/);
+  assert.match(ui, /const view = \{ source: 'database', scope: 'company', window: 'y1'/);
+  // v2 görünüm kaydı: eski "filtered" tercihi bir kez modülün kendi ufkuna döner.
+  assert.match(ui, /if \(saved\.v !== VIEW_VERSION\) view\.scope = 'company';/);
   assert.match(ui, /fetch\('\/api\/transit-analysis\/live\?' \+ qs\.toString\(\)/);
 });
 
@@ -372,9 +374,32 @@ test('şirket sorgusu bağlantının kopyasında ufku tarih penceresiyle değiş
   await assert.rejects(() => source.queryCompanyIasRows({ item: null, deps: {} }), err => err.code === 'TRANSIT_COMPANY_NO_CONNECTION');
 });
 
-test('şirket geneli kapsam iş kuralı yetkisi ister; uç nokta pencere ve kapsam parametrelerini doğrular', () => {
+test('IAS database kapsamı varsayılandır, iş kuralı yetkisi ister ve Backlog runtime\'ına bağlı değildir', () => {
   const server = read('server/server.js');
-  assert.match(server, /if \(scope === 'company'\) \{\s*if \(!userAccess\.hasPermission\(req\.currentUser, 'manageBusinessRules'\)\)/);
+  assert.match(server, /const scope = req\.query\.scope === 'filtered' \? 'filtered' : 'company';/);
+  assert.match(server, /if \(scope === 'company' && !userAccess\.hasPermission\(req\.currentUser, 'manageBusinessRules'\)\)/);
+  // IAS bağlantısı varsa kaynak modu ne olursa olsun kendi sorgusu çalışır; Yenile önbelleği atlar.
+  assert.match(server, /const antrepoItem = modelRefresh\.selectRefreshConnections\(/);
+  assert.match(server, /if \(force \|\| !cached \|\| Date\.now\(\) - cached\.at > TRANSIT_COMPANY_CACHE_MS\)/);
   assert.match(server, /BLTransitAnalysis\.WINDOW_KEYS\.includes\(String\(req\.query\.window/);
   assert.match(server, /transitAnalysisSource\.queryCompanyIasRows\(/);
+});
+
+test('Yol Süreleri penceresi: kompakt düzenleyici, aranabilir seçiciler, liste filtresi ve iki dilli metinler', () => {
+  const app = read('public/app-main.js');
+  const start = app.indexOf('function openTransitRulesModal(){');
+  const modal = app.slice(start, app.indexOf('const COUNTRY_MAP = {', start));
+  assert.ok(start > 0 && modal.length > 1000);
+  for (const id of ['_transitEditor', '_transitType', '_transitCountryPick', '_transitSeasonPick', '_transitSearch', '_transitTypeFilter', '_transitCount', '_transitAnalysisMount', '_transitSave']) {
+    assert.match(modal, new RegExp(`id="${id}"`), id);
+  }
+  assert.match(modal, /function makePicker\(root,\{allLabel,itemLabel,optionsFn,keyFn\}\)/);
+  assert.match(modal, /listFilter=\{q:'',type:'\*'\}/);
+  assert.match(modal, /persistTransitRules\(working\)/, 'kalıcılık yalnız Kuralları Kaydet ile');
+  assert.doesNotMatch(modal, /pricingRuleSeasonPanel|pricingRuleGrid/, 'eski form bileşenleri kaldırıldı');
+  assert.match(read('public/app.css'), /\.trxCheck\{width:14px!important;height:14px!important;/, 'seçici onay kutuları sabit boyutlu');
+  const ui = read('public/transit-analysis-ui.js');
+  // Kontroller her durumda çizilir; hata/boş durum yalnız gövdeyi değiştirir.
+  assert.match(ui, /<div class="trxCardBody">\$\{bodyHtml\(analysis\)\}<\/div>/);
+  assert.match(ui, /q\('\[data-ta-refresh\]'\)\?\.addEventListener\('click', \(\) => reloadLive\(true\)\)/);
 });

@@ -5501,3 +5501,109 @@ body.kolPeriodDrawerOpen{overflow:hidden}
 #cpTable td.plmSampleCell,#ordersTable td.plmSampleCell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 td.plmSampleCell .badge+.badge{margin-left:2px}
 td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
+
+/* ===== Yol Süreleri penceresi (trx) — v7.0.214 kompakt yeniden tasarım =====
+   Yalnız tasarım token'ları kullanılır; tüm kontroller 30px yükseklik ritmindedir. */
+.trxModal{width:min(97vw,1280px);max-height:92vh;display:flex;flex-direction:column;padding:0;}
+.trxModalHead{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.trxModalBody{padding:14px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px;min-height:0;}
+.trxModalFoot{padding:10px 18px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;}
+.trxCard{border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+.trxCard.is-collapsed{gap:0;}
+.trxCardHead{display:flex;align-items:center;gap:10px;}
+.trxCardTitle{flex:1;min-width:0;}
+.trxH{font-weight:600;font-size:13px;color:var(--ink);}
+.trxSub{font-size:11.5px;color:var(--muted);line-height:1.45;margin-top:2px;}
+.trxCollapse{width:22px;height:22px;border:0;background:transparent;color:var(--muted);cursor:pointer;border-radius:var(--r-xs);font-size:12px;flex:none;}
+.trxCollapse:hover{background:var(--hover);color:var(--ink);}
+.trxInfo{width:18px;height:18px;border-radius:var(--r-full);border:1px solid var(--line2);color:var(--muted);font-size:11px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;cursor:help;flex:none;}
+.trxGrow{flex:1;}
+.trxMeta{font-size:11px;color:var(--muted);white-space:nowrap;}
+.trxMuted{color:var(--muted);}
+.trxNote{font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;}
+.trxWarn{font-size:11px;color:var(--orange);background:var(--orange-bg);border-radius:var(--r-sm);padding:6px 9px;line-height:1.45;}
+.trxEmpty{padding:16px 12px;text-align:center;color:var(--ink2);font-size:12px;}
+.trxError{color:var(--red);}
+.trxToolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.trxFilters{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap;}
+.trxInline{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);}
+.trxSelect,.trxInput{height:30px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font:inherit;font-size:12px;padding:0 8px;min-width:0;}
+.trxSelect:focus,.trxInput:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-bg);}
+.trxBtn{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+.trxBtn:hover:not(:disabled){border-color:var(--acc-lite);background:var(--hover);}
+.trxBtn:disabled{opacity:.55;cursor:default;}
+.trxBtnPrimary{background:var(--acc);border-color:var(--acc);color:var(--on-acc);}
+.trxBtnPrimary:hover:not(:disabled){background:var(--acc-hover);border-color:var(--acc-hover);}
+.trxIconBtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;}
+.trxIconBtn:hover{background:var(--hover);color:var(--ink);border-color:var(--line);}
+.trxIconBtn.trxDanger:hover{color:var(--red);background:var(--red-bg);}
+.trxSpin{animation:trxSpin 1s linear infinite;}
+@keyframes trxSpin{to{transform:rotate(360deg);}}
+.trxSeg{display:inline-flex;border:1px solid var(--line2);border-radius:var(--r-sm);overflow:hidden;background:var(--card2);flex:none;}
+.trxSeg button{height:28px;padding:0 11px;border:0;border-right:1px solid var(--line2);background:transparent;color:var(--ink2);font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;}
+.trxSeg button:last-child{border-right:0;}
+.trxSeg button:hover{color:var(--ink);background:var(--hover);}
+.trxSeg button[aria-pressed="true"]{background:var(--acc-bg);color:var(--acc-ink);font-weight:600;}
+.trxChips{display:flex;gap:6px;flex-wrap:wrap;}
+.trxChips button{height:26px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r-full);background:var(--card);color:var(--ink2);font:inherit;font-size:11.5px;cursor:pointer;}
+.trxChips button b{font-weight:600;color:var(--muted);margin-left:3px;}
+.trxChips button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
+.trxSearch{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 9px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);min-width:220px;}
+.trxSearch .ic{width:14px;height:14px;color:var(--muted);}
+.trxSearch input{border:0;outline:0;background:transparent;font:inherit;font-size:12px;color:var(--ink);width:100%;}
+.trxCheck{width:14px!important;height:14px!important;margin:0;accent-color:var(--acc);flex:none;cursor:pointer;}
+.trxBadge{display:inline-block;padding:2px 8px;border-radius:var(--r-full);font-size:11px;font-weight:600;white-space:nowrap;background:var(--gray-bg);color:var(--ink2);}
+.trxBadge[data-v="Gemi"]{background:var(--acc-bg);color:var(--acc-ink);}
+.trxBadge[data-v="Uçak"]{background:var(--orange-bg);color:var(--orange);}
+.trxBadge[data-v="Gemi+Uçak"]{background:var(--yellow-bg);color:var(--ink);}
+.trxBadge[data-v="Gemi+Tır"]{background:var(--green-bg);color:var(--green);}
+.trxChip{display:inline-block;padding:1px 7px;margin:1px 4px 1px 0;border:1px solid var(--line);border-radius:var(--r-full);font-size:11px;background:var(--card2);}
+.trxFlag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:var(--r-full);font-size:10.5px;font-weight:600;color:var(--orange);background:var(--orange-bg);vertical-align:1px;}
+.trxFlagBad{color:var(--red);background:var(--red-bg);}
+.trxTiles{display:flex;gap:8px;flex-wrap:wrap;}
+.trxTile{border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 11px;background:var(--card2);min-width:170px;}
+.trxTileHead{font-size:10.5px;color:var(--muted);}
+.trxTileValue{font-size:18px;font-weight:700;line-height:1.25;color:var(--ink);}
+.trxTileValue small{font-size:11px;font-weight:500;color:var(--muted);margin-left:3px;}
+.trxTileFoot{font-size:10.5px;color:var(--ink2);}
+.trxTableWrap{border:1px solid var(--line);border-radius:var(--r-sm);overflow:auto;max-height:380px;}
+.trxRulesWrap{max-height:340px;}
+.trxTable{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;}
+.trxTable th{position:sticky;top:0;z-index:2;background:var(--thead-bg);color:var(--thead-ink);font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;text-align:left;padding:7px 9px;border-bottom:1px solid var(--line2);white-space:nowrap;}
+.trxTable td{padding:6px 9px;border-bottom:1px solid var(--line);vertical-align:middle;}
+.trxTable tbody tr:hover td{background:var(--row-hover);}
+.trxTable tr.is-editing td{background:var(--acc-bg);}
+.trxTable tr.is-open td{background:var(--card2);}
+.trxTable .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.trxTable .trxSubNum{font-size:10.5px;color:var(--muted);font-weight:400;}
+.trxTable.trxMini td{padding:4px 6px;}
+.trxDetailRow td{background:var(--card2);}
+.trxRowActions{text-align:right;white-space:nowrap;width:1%;}
+.trxFoot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.trxEditor{display:grid;grid-template-columns:auto minmax(150px,1.2fr) minmax(130px,1fr) auto 76px auto;gap:10px;align-items:end;padding:10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);}
+.trxEditor.is-editing{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-bg);}
+.trxField{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.trxField>span{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+.trxFieldDays .trxInput{width:100%;text-align:right;}
+.trxRange{display:flex;align-items:center;gap:4px;}
+.trxRange i{font-style:normal;color:var(--muted);font-size:11px;}
+.trxRange .trxInput{width:132px;}
+.trxActions{display:flex;gap:4px;}
+.trxPick{position:relative;min-width:0;}
+.trxPickBtn{width:100%;height:30px;display:flex;align-items:center;gap:6px;padding:0 8px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--muted);font:inherit;font-size:12px;cursor:pointer;text-align:left;}
+.trxPickBtn.has-value{color:var(--ink);}
+.trxPickText{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.trxCaret{font-size:10px;color:var(--muted);}
+.trxPick.open .trxPickBtn{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc-bg);}
+.trxPickPanel{display:none;position:absolute;left:0;top:calc(100% + 4px);z-index:90;width:max(100%,240px);border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);box-shadow:var(--shadow-lg);padding:6px;}
+.trxPick.open .trxPickPanel{display:block;}
+.trxPickSearch{width:100%;height:28px;border:1px solid var(--line2);border-radius:var(--r-xs);padding:0 8px;font:inherit;font-size:12px;background:var(--card);color:var(--ink);box-sizing:border-box;}
+.trxPickList{max-height:220px;overflow:auto;margin:6px 0;}
+.trxPickOption{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:var(--r-xs);font-size:12px;cursor:pointer;color:var(--ink);}
+.trxPickOption:hover{background:var(--acc-bg);}
+.trxPickNone{padding:8px 6px;font-size:11.5px;color:var(--muted);}
+.trxPickFoot{display:flex;justify-content:space-between;gap:6px;border-top:1px solid var(--line);padding-top:6px;}
+.trxPickFoot button{height:26px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r-xs);background:var(--card);color:var(--ink2);font:inherit;font-size:11.5px;cursor:pointer;}
+.trxPickFoot button[data-done]{background:var(--acc);border-color:var(--acc);color:var(--on-acc);}
+@media (max-width:1100px){.trxEditor{grid-template-columns:1fr 1fr 1fr;}.trxFieldType{grid-column:1/-1;}}
+@media (max-width:700px){.trxEditor{grid-template-columns:1fr;}.trxSearch{min-width:0;flex:1;}}
