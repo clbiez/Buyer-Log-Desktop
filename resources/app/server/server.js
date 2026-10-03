@@ -594,8 +594,6 @@ const agentBrowserConnector = require('./lib/agent-browser-connector');
 const browserDebugService = require('./lib/browser-debug-service');
 const { createBrowserIntegrationManager } = require('./lib/browser-integration-manager');
 const browserIntegrationManager = createBrowserIntegrationManager({ connector:agentBrowserConnector });
-const troyOrderService = require('./lib/troy-order-service');
-const troyPoService = require('./lib/troy-po-service');
 const { normalizePlmId } = require('./lib/plm-id');
 const { createJobRegistry } = require('./lib/job-registry');
 /* PLM iş kaydı: her işin kendi kimliği ve KAPSAMI var. Eskiden ilerleme
@@ -4030,73 +4028,6 @@ app.post('/api/plm-style-links/browser/prepare', userAccess.requireAnyArea('cp',
     });
     res.set('Cache-Control', 'no-store').json({ ok:Boolean(result && result.ok), result, status });
   } catch (err) { automationError(res, err, 'Edge bağlantısı hazırlanamadı.'); }
-});
-
-/* v9.40 — TROY (Order Management) sağ tık işlemleri: Siparişi Kapat /
-   Download PO. Kimlik doğrulama mevcut Edge oturumundan taze alınır (bkz.
-   troy-session-service.js) — bu route'lar yalnız hangi siparişin
-   etkilendiğini ve sonucu taşır, token'a hiç dokunmaz. */
-app.post('/api/troy/orders/:orderCode/close', userAccess.requireAnyArea('cp', 'orders'), async (req, res) => {
-  try {
-    const result = await troyOrderService.closeOrder(req.currentUser.id, req.params.orderCode);
-    userAccess.appendAudit(req.currentUser, 'TROY_ORDER_CLOSE', 'orders', { orderCode:req.params.orderCode, ok:result.ok, code:result.code });
-    res.json(result);
-  } catch (err) { automationError(res, err, 'Sipariş kapatılamadı.'); }
-});
-app.get('/api/troy/orders/:orderCode/po/status', userAccess.requireAnyArea('cp', 'orders'), (req, res) => {
-  try {
-    const existing = troyPoService.findExistingPoFile(req.params.orderCode, String(req.query.styleName || ''));
-    res.set('Cache-Control', 'no-store').json({ exists:Boolean(existing), filePath:existing ? existing.filePath : null, fileName:existing ? existing.fileName : null });
-  } catch (err) { automationError(res, err, 'PO durumu okunamadı.'); }
-});
-app.post('/api/troy/orders/:orderCode/po', userAccess.requireAnyArea('cp', 'orders'), async (req, res) => {
-  try {
-    const result = await troyPoService.downloadPO(req.currentUser.id, req.params.orderCode, { styleName:String((req.body && req.body.styleName) || '') });
-    userAccess.appendAudit(req.currentUser, 'TROY_PO_DOWNLOAD', 'orders', { orderCode:req.params.orderCode, fileName:result.fileName });
-    res.json(result);
-  } catch (err) { automationError(res, err, 'PO indirilemedi.'); }
-});
-app.post('/api/troy/orders/:orderCode/po/open', userAccess.requireAnyArea('cp', 'orders'), (req, res) => {
-  try {
-    const existing = troyPoService.findExistingPoFile(req.params.orderCode, String((req.body && req.body.styleName) || ''));
-    if (!existing) return automationError(res, Object.assign(new Error('PO dosyası bulunamadı.'), { code:'TROY_PO_NOT_FOUND', statusCode:404 }), 'PO dosyası bulunamadı.');
-    platform.openPathExternallyAsync(existing.filePath);
-    res.json({ ok:true });
-  } catch (err) { automationError(res, err, 'PO dosyası açılamadı.'); }
-});
-app.post('/api/troy/po-folder/open', userAccess.requireAnyArea('cp', 'orders'), (_req, res) => {
-  try { platform.openFolderExternally(troyPoService.poFolder()); res.json({ ok:true }); }
-  catch (err) { automationError(res, err, 'PO klasörü açılamadı.'); }
-});
-// "Klasörde Göster" — indirilen PO dosyasını, tüm klasörü açmak yerine
-// gezginde SEÇİLİ olarak gösterir (paylaşılan dosya-hazır bildirim kartının
-// aksiyonu). PO'yu Aç/İndir route'larıyla aynı yetki ve dosya çözümlemesi.
-app.post('/api/troy/orders/:orderCode/po/reveal', userAccess.requireAnyArea('cp', 'orders'), (req, res) => {
-  try {
-    const existing = troyPoService.findExistingPoFile(req.params.orderCode, String((req.body && req.body.styleName) || ''));
-    if (!existing) return automationError(res, Object.assign(new Error('PO dosyası bulunamadı.'), { code:'TROY_PO_NOT_FOUND', statusCode:404 }), 'PO dosyası bulunamadı.');
-    platform.revealFileExternally(existing.filePath);
-    res.json({ ok:true });
-  } catch (err) { automationError(res, err, 'PO dosyası gösterilemedi.'); }
-});
-
-/* v9.45 — "Revize Et": Orders → Filter → satır → işlem menüsü → Revize Et
-   adımlarını otomatikleştirir, Troy'un gerçek revize stepper'ı açılınca durur.
-   Kapat/PO route'larıyla aynı yetki kontrolü; Kapat/PO implementasyonuna
-   dokunulmadı. */
-app.post('/api/troy/orders/:orderCode/revise', userAccess.requireAnyArea('cp', 'orders'), async (req, res) => {
-  try {
-    const result = await troyOrderService.openRevision(req.currentUser.id, req.params.orderCode);
-    userAccess.appendAudit(req.currentUser, 'TROY_ORDER_REVISE', 'orders', { orderCode:req.params.orderCode, ok:result.ok, state:result.state });
-    res.json(result);
-  } catch (err) { automationError(res, err, 'Troy revize ekranı açılamadı.'); }
-});
-app.post('/api/troy/login/open', userAccess.requireAnyArea('cp', 'orders'), async (req, res) => {
-  try {
-    const result = await troyOrderService.openTroyLogin(req.currentUser.id);
-    userAccess.appendAudit(req.currentUser, 'TROY_LOGIN_OPEN', 'orders', {});
-    res.json(result);
-  } catch (err) { automationError(res, err, 'Troy oturum açma sekmesi açılamadı.'); }
 });
 
 const modelImageImportLocks = new Set();
