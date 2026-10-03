@@ -155,10 +155,10 @@ test('Chart builder detects date columns and can infer Buyer / quantity defaults
   assert.equal(inferred.seriesField,'Buyer');
 });
 
-test('Backlog page exposes chart toolbar control, panel, styles and module', () => {
+test('Standalone Backlog chart UI is removed while the chart engine remains for Excel export', () => {
   const section=INDEX.slice(INDEX.indexOf('<section id="view-backlog">'),INDEX.indexOf('<section id="view-automations">'));
-  assert.match(section,/id="backlogChartBtn"/);
-  assert.match(section,/id="backlogChartPanel"/);
+  assert.doesNotMatch(section,/id="backlogChartBtn"/);
+  assert.doesNotMatch(section,/id="backlogChartPanel"/);
   assert.match(INDEX,/src="date-dimension\.js\?v=__BL_ASSET_VERSION__/);
   assert.match(INDEX,/src="backlog-chart\.js\?v=__BL_ASSET_VERSION__/);
   assert.match(CSS,/\.backlogChartPanel/);
@@ -246,7 +246,7 @@ test('Backlog overview timeline always shows bucket totals and mirrors the inter
   assert.doesNotMatch(OVERVIEW,/const value=b\.overdueQty\?/);
   assert.match(OVERVIEW,/timelineTipHtml/);
   assert.match(OVERVIEW,/data-blv-tip-style="chart"/);
-  assert.match(OVERVIEW,/class="blvTodayLine"/);
+  assert.match(OVERVIEW,/blvTodayLine/);
   assert.match(OVERVIEW_CSS,/\.blvTipBox\.is-chart-style/);
   assert.match(OVERVIEW_CSS,/\.blvTodayLine b/);
 });

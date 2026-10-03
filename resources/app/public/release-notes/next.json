@@ -1,14 +1,79 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Backlog zaman akışı birleşti",
+    "en": "Backlog timeline unified"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Lojistik durum ve Buyer analizi artık tek ortak hafta/ay ekseninde gösteriliyor; alt kırılım Buyer Grup veya Buyer olarak değiştirilebiliyor.",
+    "en": "Logistics status and Buyer analysis now share one week/month axis; the lower breakdown can switch between Buying Group and Buyer."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "backlog-unified-timeline",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Lojistik ve Buyer grafikleri tek zaman akışında",
+        "en": "Logistics and Buyer charts in one timeline"
+      },
+      "body": {
+        "tr": "Ayrı Adet/Zaman grafik paneli kaldırıldı. Ana zaman akışı aşağı doğru genişletildi; tek ortak dönem, toplam adet ve Bugün işaretçisi üzerinden üstte Logistic Status, altta Buyer kırılımı birlikte okunuyor.",
+        "en": "The separate Quantity/Time chart panel was removed. The main timeline now extends downward and uses one shared period, total quantity and Today marker, with Logistics Status above and the Buyer breakdown below."
+      },
+      "path": {
+        "tr": "Backlog › Genel Bakış › Zaman Akışı",
+        "en": "Backlog › Overview › Timeline"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "backlog-unified-timeline-before.webp",
+        "alt": {
+          "tr": "Birleşmeden önce ayrı üst ve alt Backlog zaman grafikleri",
+          "en": "Separate upper and lower Backlog timeline charts before the merge"
+        },
+        "caption": {
+          "tr": "Bu ekrandaki ayrı üst ve alt zaman grafikleri artık tek ortak zaman akışında birleştirildi.",
+          "en": "The separate upper and lower timeline charts shown here are now combined into one shared timeline."
+        }
+      }
+    },
+    {
+      "id": "backlog-buyer-dimension-toggle",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Buyer Grup / Buyer kırılımı seçilebilir",
+        "en": "Switch between Buying Group and Buyer"
+      },
+      "body": {
+        "tr": "Birleşik grafiğin alt bandı varsayılan olarak Buyer Grup dağılımını gösteriyor. Aynı hafta/ay eksenini bozmadan tek tıkla Buyer bazlı görünüme geçilebiliyor.",
+        "en": "The lower band of the unified chart shows Buying Group distribution by default. It can switch to Buyer without changing the shared week/month axis."
+      },
+      "path": {
+        "tr": "Backlog › Genel Bakış › Zaman Akışı",
+        "en": "Backlog › Overview › Timeline"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "src": "backlog-buyer-breakdown-before.webp",
+        "alt": {
+          "tr": "Önceki ayrı Buyer Grup zaman grafiği",
+          "en": "Previous separate Buying Group timeline chart"
+        },
+        "caption": {
+          "tr": "Önceden ayrı panelde bulunan Buyer Grup serileri artık üst zaman akışının alt bandında ve Buyer ile değiştirilebilir.",
+          "en": "Buying Group series that previously lived in a separate panel now sit in the lower band of the main timeline and can switch to Buyer."
+        }
+      }
+    }
+  ]
 }
