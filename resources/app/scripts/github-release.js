@@ -7,6 +7,9 @@ const cp=require('child_process');
 const C=require('./release-common');
 const {parseReleaseManifest}=require('../electron/update/manifest');
 const {parseGitHubSource,GitHubReleaseProvider}=require('../electron/update/github-provider');
+const {loadTrustedKeys,verifyManifestSignature}=require('../electron/update/signature');
+/* Clients that bundle trusted keys reject unsigned/mis-signed manifests; refuse to publish one. */
+function assertSignedForClients(manifest){verifyManifestSignature(manifest,loadTrustedKeys(C.APP_ROOT));}
 
 function run(command,args,options={}){return cp.execFileSync(command,args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],...options}).trim();}
 function gh(args){return run('gh',args,{env:{...process.env,GH_REPO:process.env.BUYER_LOG_GITHUB_RELEASE_REPO}});}
@@ -132,6 +135,7 @@ function updateRawMirror(repoDir,channel,manifest,artifact){
 async function publishTest(repoDir){
   assertCi();const manifest=parseReleaseManifest(C.readJson(path.join(C.DIST_ROOT,'latest.test.json'),null),'test');
   if(manifest.version!==C.readPackage().version)C.fail('Canonical package version manifest ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
+  assertSignedForClients(manifest);
   const artifact=path.join(C.DIST_ROOT,path.posix.basename(manifest.artifact));
   if(await C.sha256File(artifact)!==manifest.sha256||fs.statSync(artifact).size!==manifest.size)C.fail('Local artifact SHA/boyut yanlış.','RELEASE_SHA_MISMATCH');
   const per=path.join(C.DIST_ROOT,`BuyerLog-${manifest.version}.json`);C.atomicWriteJson(per,manifest);
@@ -164,6 +168,7 @@ async function promoteStable(repoDir,version){
     if(await C.sha256File(artifact)!==test.sha256||fs.statSync(artifact).size!==test.size)
       C.fail('TEST public artifact SHA/boyut doğrulaması başarısız.','RELEASE_REMOTE_VERIFY');
     const stable=parseReleaseManifest({...test,channel:'stable',publishedAt:new Date().toISOString()},'stable');
+    assertSignedForClients(stable);
     const stableManifestDir=path.join(temp,'stable');fs.mkdirSync(stableManifestDir);
     const stableManifestFile=path.join(stableManifestDir,name);C.atomicWriteJson(stableManifestFile,stable);
     if(!releaseExists('stable',version))gh(['release','create',tag('stable',version),'--title',`Buyer Log STABLE ${version}`,'--notes',`Promoted from TEST ${version}; SHA-256 ${test.sha256}`]);

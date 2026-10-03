@@ -534,7 +534,6 @@ button:disabled .ic{--ic-tint-o:.08;}
 
 /* Orb'un yaşadığı yerler */
 .uiState--loading .uiStateOrb{--orb-size:28px;margin-top:1px;}
-.bCpBusy{display:flex;align-items:center;gap:10px;}
 .ovLaunchHeading{position:relative;}
 .ovLaunchPulse{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:var(--fs-xs);color:var(--muted);}
 .uiStateSpinner.blOrb{border:0;}

@@ -7,7 +7,6 @@
   "private": true,
   "dependencies": {
     "express": "^4.19.2",
-    "groq-sdk": "^1.6.0",
     "resedit": "3.1.0",
     "xlsx": "^0.18.5"
   },
@@ -29,6 +28,8 @@
     "version:assert": "node scripts/version-assert.js",
     "portable:manifest": "node scripts/portable-manifest.js",
     "release:notes:validate": "node scripts/release-notes.js validate",
-    "release:notes:seal": "node scripts/release-notes.js seal"
+    "release:notes:seal": "node scripts/release-notes.js seal",
+    "release:sign": "node scripts/release-signing.js sign",
+    "release:verify-signature": "node scripts/release-signing.js verify"
   }
 }

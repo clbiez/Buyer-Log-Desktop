@@ -11858,10 +11858,6 @@ function syncOverrideToServer(orderCode,notes,row){
       method:'PATCH',headers:{'Content-Type':'application/json'},
       body:JSON.stringify((()=>{
         const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};
-        /* Copilot önerisinden gelen yazma işaretlenir. Bayrak TEK KULLANIMLIK:
-           debounce penceresinden sonra elle yapılan bir düzenleme yanlışlıkla
-           "Copilot" etiketi almamalı. */
-        if(row._copilotOrigin){ body.origin=row._copilotOrigin; delete row._copilotOrigin; }
         if(turknorm(row.Licensor)!=='DTR')body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true)body.licensor=norm(row.Licensor);
         if(row._suppFobManual===true){
@@ -34410,15 +34406,14 @@ function saveEverythingNow(){
   try{ if(typeof saveBacklogAutoState==='function') saveBacklogAutoState(); }catch(e){}
   return localSecure;
 }
-/* Octopus yalnız panel ilk açıldığında yüklenir; açılış kritik yolunda
-   hiçbir işi yoktur (§46). Modül yüklenemezse buton sessizce çalışmaz ve
-   Buyer Log'un geri kalanı etkilenmez. */
-document.getElementById('copilotBtn')?.addEventListener('click', async ()=>{
-  try{
-    await window.BLPerf?.ensureFeature?.('copilot');
-    window.BLCopilot?.open?.();
-  }catch(err){ showToast(appLang==='en'?'Octopus could not be loaded.':'Octopus yüklenemedi.'); }
-});
+/* Kaldırılan AI asistanının tarayıcıda bıraktığı sohbet/pencere kayıtları
+   bir kez temizlenir. Depolama erişilemezse sessizce geçilir. */
+try{
+  for(let i=localStorage.length-1;i>=0;i--){
+    const key=localStorage.key(i);
+    if(key&&(key.startsWith('octopus:')||key==='bcpDeveloperMode'))localStorage.removeItem(key);
+  }
+}catch(_){}
 document.getElementById('saveAllBtn')?.addEventListener('click', async ()=>{
   const localSecure=saveEverythingNow();
   const btn = document.getElementById('saveAllBtn');

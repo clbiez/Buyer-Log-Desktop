@@ -1116,10 +1116,7 @@ pairs:[
 ["Model sorgusu çalıştırılamadı.","The model query could not be run."],
 ["Açıklanacak cevaplanabilir bir sonuç yok.","There is no answerable result to explain."],
 ["Bilinmeyen eylem türü.","Unknown action type."],
-["Octopus denetim kaydı yazılamadı.","The Octopus audit record could not be written."],
 ["Çıktı bulunamadı ya da süresi doldu.","Output not found or expired."],
-["Octopus çıktısı üretilemedi.","The Octopus output could not be produced."],
-["Octopus yanıt üretemedi.","Octopus could not produce a response."],
 ["PLM çeviri sözlüğünü güncellemek için Koleksiyon düzenleme yetkisi gerekir.","Collection edit permission is required to update the PLM translation dictionary."],
 ["PLM çeviri sözlüğü kaydedilemedi.","The PLM translation dictionary could not be saved."],
 ["Microsoft 365 bağlantısı başlatılamadı.","The Microsoft 365 connection could not be started."],
@@ -1589,7 +1586,6 @@ pairs:[
 ["Sipariş notu güncelle","Update order note"],
 ["Sipariş üreticisi ata","Assign order manufacturer"],
 ["Koleksiyon satırı güncelle","Update Collection row"],
-["Bilinmeyen eylem: {0}. Copilot yalnız tanımlı eylemleri önerebilir.","Unknown action: {0}. Copilot can only suggest defined actions."],
 ["Bu değişiklik için {0} yetkiniz yok.","You do not have {0} permission for this change."],
 ["Öneri eksik alan içeriyor: {0}.","The suggestion has a missing field: {0}."],
 ["Uygulanacak geçerli bir öneri yok.","There is no valid suggestion to apply."],
@@ -4773,7 +4769,6 @@ pairs:[
 ["{0} not","{0} notes"],
 ["{0} karakter","{0} characters"],
 ["Yapılacaklar","To do"],
-["Octopus yüklenemedi.","Octopus could not be loaded."],
 ["Yerel olarak kaydedildi. Ağ senkronizasyonu arka planda devam ediyor.","Saved locally. Network sync continues in the background."],
 ["Cihazda güvenli şekilde bekliyor. Yerel sunucu kaydı yeniden denenecek.","Safely waiting on this device. The local server save will be retried."],
 ["Kaydedilemedi. Uygulamayı açık tutup yeniden deneyin.","Could not save. Keep the application open and retry."],
@@ -5772,7 +5767,6 @@ pairs:[
 ["Analiz tamamlanamadı","Analysis failed"],
 ["Konuşmalar","Conversations"],
 ["Konuşmaları temizle","Clear conversations"],
-["Octopus’a sorun…","Ask Octopus…"],
 ["Sor","Ask"],
 ["Bütün konuşmalar silinsin mi?","Delete all conversations?"],
 ["Uygulanacak öneri kalmadı.","There is no proposal left to apply."],
@@ -8365,4 +8359,4 @@ pairs:[
 ["Sunucu giriş isteğine zamanında yanıt vermedi. Tekrar deneyin.","The server did not respond to the sign-in request in time. Please try again."],
 ["Sunucuya ulaşılamadı.","The server could not be reached."]
 ],
-same:["ASAS","Backlog","Backlog Pivot","Buyer","Buyer Group","Buyer Log","Buyer Workspace","Buyer workspace","Buying Group","CP","CP Tracker","Capacity Request","Classic Outlook","Classic Outlook Local","CoreNectum","DTR / NON-DTR","Dummy PO Placed","Endeksmatik","Ex-F.","Ex-Factory","Excel","FOB","Final FOB","Get OAB","Groq","Horizon","IAS","INTAKE","Intake","LFL","LFL FOB","LFL Trial","License Royalty","Like For Like","Line","MAG","MB","MMYG","Microsoft Graph","OAB","OPD","Octopus","Ollama","Outlook","Outlook Bridge","Overview","PASS","PLM","PLM ID","Pending File","Pivot","Power BI","Quotations","Shared Hub","Shared Sync","Supp. FOB","Tech Pack","Trial","Troy","WSSI"]};
+same:["ASAS","Backlog","Backlog Pivot","Buyer","Buyer Group","Buyer Log","Buyer Workspace","Buyer workspace","Buying Group","CP","CP Tracker","Capacity Request","Classic Outlook","Classic Outlook Local","CoreNectum","DTR / NON-DTR","Dummy PO Placed","Endeksmatik","Ex-F.","Ex-Factory","Excel","FOB","Final FOB","Get OAB","Groq","Horizon","IAS","INTAKE","Intake","LFL","LFL FOB","LFL Trial","License Royalty","Like For Like","Line","MAG","MB","MMYG","Microsoft Graph","OAB","OPD","Ollama","Outlook","Outlook Bridge","Overview","PASS","PLM","PLM ID","Pending File","Pivot","Power BI","Quotations","Shared Hub","Shared Sync","Supp. FOB","Tech Pack","Trial","Troy","WSSI"]};

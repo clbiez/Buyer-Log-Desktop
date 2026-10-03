@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-03",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kurumsal veri güvenliği sertleştirmesi",
+    "en": "Enterprise data security hardening"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Uygulama içi AI asistanı ve tüm AI sağlayıcı bağlantıları kaldırıldı; iş verisi hiçbir AI servisine gönderilmiyor. Ayrıca Buyer Log artık ağda düz HTTP ile dinlemiyor (yalnız 127.0.0.1), eski tam yedek paketi kullanıcı/şifre ve anahtar materyali taşımıyor, güncellemeler imza doğrulamasına hazır ve masaüstü pencere/IPC kontrolleri sıkılaştırıldı.",
+    "en": "The in-app AI assistant and all AI provider connections were removed; business data is no longer sent to any AI service. Buyer Log also no longer listens on the network over plain HTTP (127.0.0.1 only), the legacy full backup no longer carries account/password or key material, updates are ready for signature verification and desktop window/IPC checks were tightened."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "ai-assistant-removed",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel · Üst çubuk",
+        "en": "General · Top bar"
+      },
+      "title": {
+        "tr": "Uygulama içi AI asistanı kaldırıldı",
+        "en": "In-app AI assistant removed"
+      },
+      "body": {
+        "tr": "Üst çubuktaki AI asistan düğmesi, sohbet penceresi, model yöneticisi ve CP kurallarındaki \"Buyer Log AI ile öner\" düğmesi kaldırıldı. Ollama, LM Studio, OpenRouter, NVIDIA veya özel AI sunucularına artık hiçbir bağlantı kurulmuyor. Bu bilgisayarda kayıtlı eski AI ayarları ve şifreli API anahtarları ilk açılışta otomatik silinir; iş verisine dokunulmaz. CP kurallarındaki \"AI ile yaz\" rehber akışı (şirketin kendi AI aracına rehber verip formülü yapıştırma) çalışmaya devam eder.",
+        "en": "The AI assistant button in the top bar, the chat window, the model manager and the \"Suggest with Buyer Log AI\" button in CP rules were removed. Buyer Log no longer connects to Ollama, LM Studio, OpenRouter, NVIDIA or custom AI servers. Previously saved AI settings and encrypted API keys on this computer are deleted automatically on first launch; business data is untouched. The \"Write with AI\" guide flow in CP rules (giving the guide to your company's own AI tool and pasting the formula) keeps working."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ai-assistant-removed.png",
+        "alt": {
+          "tr": "AI asistan düğmesi olmadan Buyer Log Genel Bakış ekranı ve üst çubuk",
+          "en": "Buyer Log Overview screen and top bar without the AI assistant button"
+        },
+        "caption": {
+          "tr": "Üst çubukta artık AI asistan düğmesi yok.",
+          "en": "The top bar no longer has an AI assistant button."
+        }
+      }
+    }
+  ]
 }

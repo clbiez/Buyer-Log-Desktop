@@ -80,6 +80,14 @@ jobs:
         env:
           BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
         run: npm run release:build -- --allow-dirty --notes "$RELEASE_NOTES"
+      - name: Sign release manifest (Ed25519)
+        working-directory: resources/app
+        env:
+          # Private key exists only as a repository/environment secret; clients ship public keys only.
+          BUYER_LOG_RELEASE_SIGNING_KEY: ${{ secrets.BUYER_LOG_RELEASE_SIGNING_KEY }}
+        run: |
+          node scripts/release-signing.js sign dist-updates/latest.test.json
+          node scripts/release-signing.js verify dist-updates/latest.test.json
       - name: Save exact bridge bundle for legacy folder distribution
         uses: actions/upload-artifact@v4
         with:

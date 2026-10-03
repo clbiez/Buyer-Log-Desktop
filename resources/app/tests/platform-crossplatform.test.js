@@ -47,31 +47,39 @@ test('refreshExcel: Windows dışında PowerShell çağırmadan net kodla redded
 });
 
 test('net-guard: loopback host tespiti', () => {
-  for (const h of ['127.0.0.1', '::1', 'localhost', '', '127.0.0.5', 'LOCALHOST']) {
+  for (const h of ['127.0.0.1', '::1', '[::1]', 'localhost', '127.0.0.5', 'LOCALHOST', '::ffff:127.0.0.1']) {
     assert.equal(isLoopbackHost(h), true, `${h} loopback sayılmalı`);
   }
-  for (const h of ['0.0.0.0', '192.168.1.10', '10.0.0.4', 'example.com']) {
+  // Boş host Node'da tüm arayüzler demektir; 127.* ile başlayan DNS adları loopback değildir.
+  for (const h of ['0.0.0.0', '::', '', '192.168.1.10', '10.0.0.4', 'example.com', '127.example.com', '127.0.0.1.nip.io']) {
     assert.equal(isLoopbackHost(h), false, `${h} loopback sayılmamalı`);
   }
 });
 
-test('net-guard: kimlik doğrulamasız loopback-dışı bağlanma reddedilir', () => {
+test('net-guard: TLS olmadan loopback-dışı bağlanma (parola olsa bile) reddedilir', () => {
   assert.doesNotThrow(() => assertSafeBind('127.0.0.1', false), 'localhost her zaman güvenli');
   assert.doesNotThrow(() => assertSafeBind('localhost', false));
-  assert.doesNotThrow(() => assertSafeBind('0.0.0.0', true), 'auth varsa loopback-dışı bağlanabilir');
-  assert.throws(
-    () => assertSafeBind('0.0.0.0', false),
-    err => err && err.code === 'UNSAFE_NETWORK_BIND',
-    'auth yokken loopback-dışı bağlanma reddedilmeli'
-  );
-  assert.throws(() => assertSafeBind('192.168.1.20', false), /UNSAFE_NETWORK_BIND|GÜVENLİK/);
+  for (const options of [false, true, { hasAuth: true }, { hasAuth: true, tls: false }]) {
+    assert.throws(
+      () => assertSafeBind('0.0.0.0', options),
+      err => err && err.code === 'UNSAFE_NETWORK_BIND' && err.reason === 'TLS_REQUIRED',
+      'TLS yokken loopback-dışı bağlanma reddedilmeli: ' + JSON.stringify(options)
+    );
+  }
+  assert.throws(() => assertSafeBind('192.168.1.20', { hasAuth: true }), /UNSAFE_NETWORK_BIND|GÜVENLİK/);
+  assert.throws(() => assertSafeBind('192.168.1.20', { tls: true }), err => err.reason === 'AUTH_REQUIRED');
+  assert.doesNotThrow(() => assertSafeBind('192.168.1.20', { hasAuth: true, tls: true }));
 });
 
 test('net-guard: resolveBindHost güvensiz yapılandırmada loopback\'e düşürür (çökmez)', () => {
   assert.deepEqual(resolveBindHost('127.0.0.1', false), { host: '127.0.0.1', downgraded: false });
-  assert.deepEqual(resolveBindHost('0.0.0.0', true), { host: '0.0.0.0', downgraded: false }, 'auth varsa istenen host korunur');
-  const downgraded = resolveBindHost('0.0.0.0', false);
-  assert.equal(downgraded.host, '127.0.0.1', 'auth yokken loopback\'e düşülmeli');
-  assert.equal(downgraded.downgraded, true);
-  assert.equal(downgraded.requested, '0.0.0.0');
+  assert.deepEqual(resolveBindHost('127.0.0.1', { hasAuth: false, tls: false }), { host: '127.0.0.1', downgraded: false });
+  for (const options of [false, true, { hasAuth: true, tls: false }]) {
+    const downgraded = resolveBindHost('0.0.0.0', options);
+    assert.equal(downgraded.host, '127.0.0.1', 'TLS yokken loopback\'e düşülmeli');
+    assert.equal(downgraded.downgraded, true);
+    assert.equal(downgraded.requested, '0.0.0.0');
+    assert.equal(downgraded.reason, 'TLS_REQUIRED');
+  }
+  assert.equal(resolveBindHost('', true).host, '127.0.0.1', 'boş host tüm arayüzlere açılmamalı');
 });

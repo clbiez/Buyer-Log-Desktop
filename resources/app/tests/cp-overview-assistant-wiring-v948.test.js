@@ -34,7 +34,7 @@ test('v9.48 panel KENDİ filtresini kurmaz: Genel Bakış\'ın satır kümesini 
   // Görünüm kendi veri çekmesini YAPMAMALI.
   // Formula AI is an explicit suggestion action and is the only allowed
   // network call in this view. Data rows still come from Overview.
-  assert.doesNotMatch(VIEW, /fetch\(\s*['"]\/api\/(?!copilot\/formula)/, 'panel kendi dataset çağrısını açmamalı');
+  assert.doesNotMatch(VIEW, /fetch\(\s*['"]\/api\//, 'panel kendi dataset çağrısını açmamalı');
   assert.doesNotMatch(VIEW, /getElementById\('cpF|getElementById\("cpF/, 'panel CP filtre girdilerini okumamalı');
 });
 
