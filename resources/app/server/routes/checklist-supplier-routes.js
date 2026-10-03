@@ -3,7 +3,7 @@
 module.exports = function registerChecklistSupplierRoutes(app, deps) {
   const { automationError, checklistSupplierStore, express, userAccess } = deps;
 
-  app.get('/api/checklist-supplier', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
+app.get('/api/checklist-supplier', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
       try {
         res.set('Cache-Control', 'no-store').json(checklistSupplierStore.publicPayload());
       } catch (err) {
@@ -12,7 +12,7 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
     }
   });
 
-  app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 'overview'), express.json({ limit: '2mb' }), (req, res) => {
+app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 'overview'), express.json({ limit: '2mb' }), (req, res) => {
       try {
         const definitions = req.body && req.body.definitions;
         if (!Array.isArray(definitions)) {
@@ -30,7 +30,7 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
     }
   });
 
-  app.post('/api/checklist-supplier/answers', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '12mb' }), (req, res) => {
+app.post('/api/checklist-supplier/answers', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '12mb' }), (req, res) => {
       try {
         const entries = req.body && req.body.entries;
         if (!Array.isArray(entries)) {
