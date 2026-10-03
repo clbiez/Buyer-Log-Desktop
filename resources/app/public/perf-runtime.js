@@ -125,7 +125,7 @@
     /* PLM numune talepleri (CoreNectum Requests) kontrol listesine kanıt verir;
        iki dosya görünümden ÖNCE yüklenir. deferredUi'de de listelidir (sağ tık
        penceresi); loadScript aynı dosyayı tek kez yükler. */
-    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-overview-assistant.js?rev=attn1-ovcp1'],
+    cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-overview-assistant.js?rev=attn1-ovcp2'],
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile
     // bekler; böylece işlevler kaybolmaz, yalnız açılış kritik yolundan çıkar.
