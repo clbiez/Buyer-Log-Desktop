@@ -489,6 +489,7 @@ function render(){
   if(!items.length){host.innerHTML=`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
   const total=R().summarize(items);
   host.innerHTML=hero(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
+  // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
   requestAnimationFrame(()=>scrollTimelineToToday('auto'));
 }
 
