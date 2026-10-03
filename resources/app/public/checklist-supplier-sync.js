@@ -1796,6 +1796,16 @@
     }
   }
 
+  function beaconPendingAnswers() {
+    try {
+      if (!root.navigator || typeof root.navigator.sendBeacon !== 'function') return false;
+      const entries = diffAnswers(state.answerBaseline, snapshotAnswers());
+      if (!entries.length) return true;
+      const body = JSON.stringify({ entries: entries, source: 'buyer_log' });
+      return root.navigator.sendBeacon(API + '/answers', new Blob([body], { type: 'application/json' }));
+    } catch (_) { return false; }
+  }
+
   function activeNeedsRuntime() {
     const active = root.document && root.document.querySelector('nav.tabs button.active[data-tab]');
     const tab = active && active.dataset ? String(active.dataset.tab || '') : '';
@@ -1822,6 +1832,13 @@
       if (activeNeedsRuntime()) startRuntime().catch(function () {});
     });
     root.addEventListener('bl:user-access-applied', function () { ensureUi(); });
+    root.document.addEventListener('visibilitychange', function () {
+      if (root.document.hidden) {
+        syncAnswerChanges().catch(function () { beaconPendingAnswers(); });
+      }
+    });
+    root.addEventListener('pagehide', beaconPendingAnswers);
+    root.addEventListener('beforeunload', beaconPendingAnswers);
     root.document.addEventListener('click', function (event) {
       const tab = event.target && event.target.closest && event.target.closest('nav.tabs button[data-tab]');
       if (tab && (tab.dataset.tab === 'cp' || tab.dataset.tab === 'overview')) {
