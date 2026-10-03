@@ -233,10 +233,13 @@ function applyEntries(entries, actor, options = {}) {
       const common = {
         key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
         byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
-        note: text(raw.note, 2000), supplier: text(raw.supplier, 300), itemLabel: text(raw.itemLabel, 200),
-        reportNumber: text(raw.reportNumber, 300),
-        actualDate: text(raw.actualDate, 40),
-        attachments: (Array.isArray(raw.attachments) ? raw.attachments : [])
+        note: Object.prototype.hasOwnProperty.call(raw, 'note') ? text(raw.note, 2000) : text(previous && previous.note, 2000),
+        supplier: text(raw.supplier, 300), itemLabel: text(raw.itemLabel, 200),
+        reportNumber: Object.prototype.hasOwnProperty.call(raw, 'reportNumber') ? text(raw.reportNumber, 300) : text(previous && previous.reportNumber, 300),
+        actualDate: Object.prototype.hasOwnProperty.call(raw, 'actualDate') ? text(raw.actualDate, 40) : text(previous && previous.actualDate, 40),
+        attachments: (Object.prototype.hasOwnProperty.call(raw, 'attachments')
+          ? (Array.isArray(raw.attachments) ? raw.attachments : [])
+          : (Array.isArray(previous && previous.attachments) ? previous.attachments : []))
           .slice(0, MAX_ATTACHMENTS_PER_ANSWER).map(cleanAttachmentMeta).filter(Boolean),
       };
       if (state === 'open') {
