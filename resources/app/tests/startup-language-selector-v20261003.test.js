@@ -10,6 +10,7 @@ test('startup curtain exposes explicit TR/EN language selection',()=>{
   assert.match(INDEX,/className='blBootLanguage'/);
   assert.match(INDEX,/data-boot-lang="tr"[^>]*>TR<\/button>/);
   assert.match(INDEX,/data-boot-lang="en"[^>]*>EN<\/button>/);
+  assert.match(INDEX,/chooser\.setAttribute\('data-no-i18n',''\)/);
   assert.match(INDEX,/aria-pressed',String\(on\)/);
 });
 
