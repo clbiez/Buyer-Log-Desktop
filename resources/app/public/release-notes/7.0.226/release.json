@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.226",
+  "channel": "stable",
+  "publishedAt": "2026-10-04",
+  "title": {
+    "tr": "Kullanıcı kurtarma kapsamı genişletildi",
+    "en": "User recovery coverage expanded"
+  },
+  "summary": {
+    "tr": "7.0.225 sonrasında hâlâ kullanıcı dizini bulunamayan masaüstü kurulumları için eski Buyer Log kimlik depolarının aranacağı güvenli konumlar genişletildi.",
+    "en": "Expanded the safe legacy Buyer Log identity-store locations checked on desktop installations that could still fail to recover users after 7.0.225."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 2
+  },
+  "changes": [
+    {
+      "id": "deep-packaged-iam-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Giriş · Shared Sync · Central IAM",
+        "en": "Login · Shared Sync · Central IAM"
+      },
+      "title": {
+        "tr": "Eski Buyer Log kurulumları ve iç içe kurtarma kayıtları artık otomatik bulunuyor",
+        "en": "Older Buyer Log installs and nested recovery copies are now discovered automatically"
+      },
+      "body": {
+        "tr": "Buyer Log artık yalnız birkaç sabit yolu değil, kendi portable data alanını sınırlı biçimde tarıyor. resources/app/data içindeki eski auth yapıları, migration-evidence altındaki iç içe kimlik kopyaları, portable AppData, data-BACKUP klasörleri ve aynı üst klasördeki eski Buyer Log kurulumları kapsama alındı. Bilgisayarın tamamı taranmıyor ve ilgisiz JSON dosyaları kullanıcı deposu olarak kabul edilmiyor.",
+        "en": "Buyer Log now performs a bounded scan of its own portable data area instead of relying on only a few fixed paths. Legacy auth layouts under resources/app/data, nested identity copies under migration-evidence, portable AppData, data-BACKUP folders, and older sibling Buyer Log installations are covered. It does not scan the whole computer and unrelated JSON files are not treated as identity stores."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "iam-recovery-7.0.226.png",
+        "alt": {
+          "tr": "Buyer Log kullanıcı dizini kurtarma sonrası giriş görünümü",
+          "en": "Buyer Log login after user-directory recovery"
+        },
+        "caption": {
+          "tr": "Geçerli eski kullanıcı deposu bulunduğunda aktif kullanıcılar yeniden giriş ekranında kullanılabilir hâle gelir.",
+          "en": "When a valid historical identity store is found, active users become available on the login screen again."
+        }
+      },
+      "path": {
+        "tr": "Buyer Log → Giriş → Shared Sync",
+        "en": "Buyer Log → Login → Shared Sync"
+      }
+    },
+    {
+      "id": "unusable-cache-replacement",
+      "type": "fix",
+      "module": {
+        "tr": "Central IAM · Yerel önbellek",
+        "en": "Central IAM · Local cache"
+      },
+      "title": {
+        "tr": "Yeni ama kullanılamaz boş önbellek eski geçerli kullanıcı deposunun önüne geçmiyor",
+        "en": "A newer unusable empty cache no longer blocks a valid historical user store"
+      },
+      "body": {
+        "tr": "Aktif kimlik deposunda hiçbir aktif hesabın geçerli yerel kimlik doğrulayıcısı yoksa, daha eski revizyon numarasına sahip olsa bile kullanılabilir bir geçmiş kullanıcı deposu kurtarma sırasında tercih ediliyor. Böylece yalnız dosyanın daha yeni olması gerçek kullanıcı verisinin geri yüklenmesini engellemiyor.",
+        "en": "If the active identity store cannot authenticate any active account, a usable historical store can be restored even when its revision is older. A newer placeholder file can no longer block recovery of real user data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "iam-recovery-7.0.226.png",
+        "alt": {
+          "tr": "Geçerli kullanıcı deposunun doğrulanması",
+          "en": "Validation of a usable user identity store"
+        },
+        "caption": {
+          "tr": "Kurtarma kararı artık yalnız revizyona değil, gerçek giriş yapılabilir kullanıcı bulunmasına öncelik veriyor.",
+          "en": "Recovery now prioritizes the presence of actually login-capable users rather than revision alone."
+        }
+      },
+      "path": {
+        "tr": "Buyer Log → Giriş",
+        "en": "Buyer Log → Login"
+      }
+    }
+  ]
+}
