@@ -80,6 +80,7 @@
     checklistSettings: Checklist.normalizeSettings(null),
     answers: {},
     hidden: {},
+    deletedRuleIds: [],
     rules: Rules.mergeWithDefaults(null),
     fieldCatalog: null,
     attentionLimit: 25,
@@ -136,7 +137,8 @@
         if (raw.settings && raw.settings.targetType === 'inStore') state.settings.targetType = 'inStore';
         state.checklistSettings = Checklist.normalizeSettings(raw.checklistSettings);
         state.hidden = raw.hidden && typeof raw.hidden === 'object' ? raw.hidden : {};
-        state.rules = Rules.mergeWithDefaults(raw.rules);
+        state.deletedRuleIds = Array.isArray(raw.deletedRuleIds) ? [...new Set(raw.deletedRuleIds.map(String).filter(Boolean))] : [];
+        state.rules = Rules.mergeWithDefaults(raw.rules, state.deletedRuleIds);
         state.attentionColumns = normalizeAttentionColumns(raw.attentionColumns);
         state.attentionExclusions = normalizeAttentionExclusions(raw.attentionExclusions || raw.attentionExceptions);
         state.moduleLayout = normalizeModuleLayouts(raw.moduleLayout);
@@ -160,6 +162,7 @@
     store.set(PREF_KEY, JSON.stringify({
         perspective: state.perspective, settings: state.settings,
         checklistSettings: state.checklistSettings, hidden: state.hidden, rules: state.rules,
+        deletedRuleIds: state.deletedRuleIds,
         attentionColumns: state.attentionColumns, attentionExclusions: state.attentionExclusions,
         moduleLayout: state.moduleLayout,
     }));
@@ -1659,7 +1662,9 @@
           <span class="cpaRuleSummaryMeta">${esc(countText)} · ${esc(matchText)}</span>
         </button>
         <div class="cpaRuleActions">
-          ${rule.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : `<button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Kuralı sil', 'Delete rule'))}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}"><svg class="ic"><use href="#i-trash"/></svg></button>`}
+          ${rule.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : ''}
+          <button type="button" class="cpaIconBtn" data-cpa-rule-edit title="${esc(L('Kuralı düzenle', 'Edit rule'))}" aria-label="${esc(L('Kuralı düzenle', 'Edit rule'))}"><svg class="ic"><use href="#i-pencil"/></svg></button>
+          <button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Kuralı sil', 'Delete rule'))}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}"><svg class="ic"><use href="#i-trash"/></svg></button>
           <button type="button" class="cpaRuleChevron" data-cpa-rule-toggle aria-label="${esc(isOpen ? L('Kuralı daralt', 'Collapse rule') : L('Kuralı genişlet', 'Expand rule'))}" aria-expanded="${isOpen ? 'true' : 'false'}"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
         </div>
       </header>
@@ -1675,6 +1680,7 @@
     let activeValuePicker = null;
     let activeValueMenu = null;
     let valuePositionRaf = 0;
+    let backdropPointerStarted = false;
     const newPriorityRuleIds = new Set();
     const valueMenuSafeMargin = 12;
     const valueMenuGap = 4;
@@ -1953,6 +1959,12 @@
         draw();
         if (expandedRuleId) scrollToRule(id);
       });
+      modal.querySelectorAll('[data-cpa-rule-edit]').forEach(el => el.onclick = () => {
+        const id = ruleIdOf(el);
+        expandedRuleId = id;
+        draw();
+        scrollToRule(id);
+      });
       modal.querySelectorAll('[data-cpa-rule-enabled]').forEach(el => el.onchange = () => { findRule(ruleIdOf(el)).enabled = el.checked; commit(); });
       modal.querySelectorAll('[data-cpa-rule-name]').forEach(el => el.onchange = () => {
         const rule = findRule(ruleIdOf(el)); rule.name = el.value;
@@ -1976,8 +1988,9 @@
       });
       modal.querySelectorAll('[data-cpa-rule-delete]').forEach(el => el.onclick = () => {
         const rule = findRule(ruleIdOf(el));
-        if (!rule || rule.builtIn) return;
+        if (!rule) return;
         if (!confirm(L(`"${rule.name}" kuralı silinsin mi?`, `Delete the rule "${rule.name}"?`))) return;
+        if (rule.builtIn && !state.deletedRuleIds.includes(rule.id)) state.deletedRuleIds.push(rule.id);
         state.rules = state.rules.filter(item => item.id !== rule.id);
         newPriorityRuleIds.delete(rule.id);
         if (expandedRuleId === rule.id) expandedRuleId = null;
@@ -2285,7 +2298,15 @@
     document.addEventListener('keydown', onValueEscape, true);
     window.addEventListener('resize', onValueViewportChange);
     draw();
-    modal.onclick = event => { if (event.target === modal) close(); };
+    modal.addEventListener('pointerdown', event => {
+      backdropPointerStarted = event.target === modal;
+    });
+    modal.addEventListener('pointercancel', () => { backdropPointerStarted = false; });
+    modal.onclick = event => {
+      const shouldClose = event.target === modal && backdropPointerStarted;
+      backdropPointerStarted = false;
+      if (shouldClose) close();
+    };
   }
 
   /* ------------------------------------------------------------- hesaplama */
@@ -2312,6 +2333,7 @@
       customItems.set(analysis.orderKey, custom);
       checklistState.set(analysis.orderKey, Checklist.stateFor(analysis, {
         settings: state.checklistSettings, answers: state.answers, customItems: custom, plmEvidence,
+        managedItemIds: Rules.DEFAULT_CHECKLIST_RULE_IDS,
       }));
     }
     for (const analysis of model.orders) {
@@ -2349,6 +2371,7 @@
       state.checklist = Checklist.summarize(model.orders, {
         settings: state.checklistSettings, answers: state.answers, limit: 5000, plmEvidence,
         customItemsFor: analysis => customItems.get(analysis.orderKey) || [],
+        managedItemIds: Rules.DEFAULT_CHECKLIST_RULE_IDS,
       });
       const liveColumnCatalog = liveRuleColumnCatalog();
       state.fieldCatalog = Rules.fieldCatalog(list, {
