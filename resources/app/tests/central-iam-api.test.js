@@ -19,14 +19,21 @@ async function setup(t) {
   async function device(name, initial, options = {}) {
     const auth = path.join(root, name, 'auth'); fs.mkdirSync(auth, { recursive: true });
     const serverData = path.join(root, name, 'server');
+    const portableDataRoot = path.join(root, name, 'portable-data');
     if (initial) fs.writeFileSync(path.join(auth, 'user-access.json'), JSON.stringify(initial));
     if (options.legacyInitial) {
       fs.mkdirSync(serverData, { recursive: true });
       fs.writeFileSync(path.join(serverData, 'user-access.json'), JSON.stringify(options.legacyInitial));
     }
+    if (options.portableBackupInitial) {
+      const backupAuth = path.join(path.dirname(portableDataRoot), 'data-BACKUP-20260921', 'app', 'auth');
+      fs.mkdirSync(backupAuth, { recursive:true });
+      fs.writeFileSync(path.join(backupAuth, 'user-access.json'), JSON.stringify(options.portableBackupInitial));
+    }
     const child = fork(path.join(__dirname, 'helpers', 'iam-device.js'), [], { env: { ...process.env,
       BUYER_LOG_AUTH_DATA_ROOT: auth, BUYER_LOG_SERVER_DATA_ROOT: serverData, BUYER_LOG_DATA_ROOT: path.join(root, name, 'data'),
       BUYER_LOG_LOCAL_DATA_ROOT: path.join(root, name, 'local'), BUYER_LOG_CONFIG_PATH: path.join(root, name, 'config.json'),
+      BUYER_LOG_PORTABLE_DATA_ROOT: portableDataRoot,
       BUYER_LOG_CENTRAL_IAM_ENABLED: '1', BUYER_LOG_IAM_SHARED_ROOT: shared }, stdio: ['ignore','pipe','pipe','ipc'] });
     children.push(child); const [{ port }] = await once(child, 'message');
     const cookies = new Map();
@@ -63,6 +70,31 @@ test('Central IAM offline login recovers legacy auth and accepts a credentialed 
   assert.equal(login.body.user.username, 'gokberk.celebi');
   assert.ok(fs.existsSync(path.join(client.auth, 'user-access.json')));
   assert.equal(JSON.parse(fs.readFileSync(path.join(client.auth, 'user-access.json'))).users.length, 1);
+});
+
+test('packaged desktop recovers user store from data-BACKUP even when SERVER_DATA_ROOT env is set', async t => {
+  const { device, shared } = await setup(t);
+  const backup = seed();
+  const verifier = backup.moderator.passwordHash;
+  backup.moderator.passwordHash = '';
+  backup.moderator.pinHash = '';
+  backup.users = [{
+    id:'buyer-backup', username:'gokberk.celebi', displayName:'Gökberk Çelebi',
+    role:'buyer', systemRole:'buyer', enabled:true, status:'ACTIVE',
+    passwordHash:verifier, pinHash:verifier, title:'Buyer',
+    managerId:'moderator', supervisorId:'moderator',
+  }];
+  const client = await device('portable-backup', null, { portableBackupInitial:iam.migrateStore(backup) });
+
+  fs.renameSync(shared, shared + '-offline');
+  const login = await client.request('/api/user-login', 'POST', {
+    username:'gokberk.celebi', password:'Test-admin-123',
+  }, 'buyer');
+  assert.equal(login.status, 200, JSON.stringify(login));
+  assert.equal(login.body.user.username, 'gokberk.celebi');
+  const recovered = JSON.parse(fs.readFileSync(path.join(client.auth, 'user-access.json'), 'utf8'));
+  assert.equal(recovered.users.length, 1);
+  assert.equal(recovered.users[0].username, 'gokberk.celebi');
 });
 
 test('Central IAM acceptance: create, second PC login, CP revoke/403, reset, offline login and reconnect', async t => {
