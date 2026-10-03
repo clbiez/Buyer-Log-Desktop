@@ -219,13 +219,19 @@
     const legacyDeleted = legacy && Array.isArray(legacy.deletedRuleIds) ? legacy.deletedRuleIds : [];
     const ofKind = (list, kind) => list.filter(rule => rule && (rule.kind === kind || (kind === 'priority' && !rule.kind)));
     const defaultKind = id => (Rules.DEFAULT_RULES.find(rule => rule.id === id) || {}).kind;
-    const rules = [
-      ...(priority ? priority.rules : ofKind(legacyRules, 'priority')),
-      ...(checklist ? checklist.rules : ofKind(legacyRules, 'checklist')),
-    ];
+    // Yeni anahtar (ör. Ön Ayar Paylaşımı ile) gelmiş ama eski kayıt henüz
+    // taşınmamışsa eski kurallar KAYBOLMAZ: yeni anahtarda olmayanlar eklenir.
+    const withLegacy = (stored, kind) => {
+      const legacyOfKind = ofKind(legacyRules, kind);
+      if (!stored) return legacyOfKind;
+      const ids = new Set(stored.rules.map(rule => rule && rule.id));
+      return [...stored.rules, ...legacyOfKind.filter(rule => !ids.has(rule.id))];
+    };
+    const rules = [...withLegacy(priority, 'priority'), ...withLegacy(checklist, 'checklist')];
     const deleted = [
-      ...(priority ? priority.deletedRuleIds || [] : legacyDeleted.filter(id => defaultKind(id) !== 'checklist')),
-      ...(checklist ? checklist.deletedRuleIds || [] : legacyDeleted.filter(id => defaultKind(id) === 'checklist')),
+      ...(priority ? priority.deletedRuleIds || [] : []),
+      ...(checklist ? checklist.deletedRuleIds || [] : []),
+      ...legacyDeleted,
     ];
     return {
       rules,
@@ -233,7 +239,7 @@
       sharedChecklistAdopted: Boolean(checklist && checklist.sharedChecklistAdopted),
       // Eski kayıttaki kurallar yeni (hesaba bağlı) anahtarlara bir kez yazılır;
       // aksi hâlde Ön Ayar Paylaşımı kullanıcının kurallarını göremezdi.
-      needsMigration: (!priority || !checklist) && (legacyRules.length > 0 || legacyDeleted.length > 0),
+      needsMigration: legacyRules.length > 0 || legacyDeleted.length > 0,
     };
   }
   function ruleStorePayload(kind) {
@@ -3050,7 +3056,8 @@
   }
 
   loadPrefs();
-  if (migrateRuleStores) saveRules();
+  // Taşıma: yeni anahtarlar yazılır, eski PREF_KEY'den rules çıkarılır.
+  if (migrateRuleStores) savePrefs();
   state.moduleLayout = normalizeModuleLayouts(state.moduleLayout);
   /* PLM numune verisi gelince karar bağlamı değişir: kontrol listesi ve
      CP öncelik hücreleri aynı olayla yeniden hesaplanır. */

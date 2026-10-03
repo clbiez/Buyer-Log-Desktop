@@ -93,7 +93,7 @@ test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlene
   assert.match(VIEW, /Rules\.mergeWithDefaults\(stored\.rules, state\.deletedRuleIds\)/);
   // Eski PREF_KEY içindeki kurallar kaybolmadan yeni anahtarlara taşınır.
   assert.match(VIEW, /function loadRuleStores\(legacy\)/);
-  assert.match(VIEW, /if \(migrateRuleStores\) saveRules\(\);/);
+  assert.match(VIEW, /if \(migrateRuleStores\) savePrefs\(\);/);
 });
 
 test('v9.49 kural uygulaması sırası doğru: kontrol durumu → öncelik → yeniden sayım', () => {

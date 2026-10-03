@@ -306,8 +306,10 @@
         items.forEach(function (item) {
           const key = columnKey(item.id);
           if (!itemApplies(item, analysis)) { row[key] = ''; return; }
-          const answer = answerFor(item, analysis);
-          const status = normalizeState(answer && answer.state) || 'open';
+          // Tek doğruluk kaynağı: karar katmanının hesapladığı durum.
+          const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
+          const answer = computed ? null : answerFor(item, analysis);
+          const status = (computed && computed !== 'notApplicable' ? computed : '') || normalizeState(answer && answer.state) || 'open';
           statuses[item.id] = status;
           row[key] = statusLabel(status);
         });
@@ -1372,7 +1374,9 @@
       return;
     }
     if (reason === 'checklist-answer') {
-      syncAnswerChanges().then(function () { refreshColumns({ render: true }); }).catch(function (error) {
+      // Hücre yerel cevapla hemen güncellenir; sunucu senkronu arkada çalışır.
+      refreshColumns({ render: true });
+      syncAnswerChanges().catch(function (error) {
         toast(T('Checklist cevabı senkronize edilemedi: ', 'Checklist answer could not be synced: ') + (error.message || error));
       });
     }

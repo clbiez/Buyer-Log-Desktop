@@ -135,7 +135,8 @@ function mergeValue(key, targetValue, sourceValue) {
     const ids = new Set(source.rules.map(rule => rule && rule.id).filter(Boolean));
     const rules = [...source.rules, ...target.rules.filter(rule => rule && rule.id && !ids.has(rule.id))];
     const deletedRuleIds = (Array.isArray(target.deletedRuleIds) ? target.deletedRuleIds : []).filter(id => !ids.has(id));
-    return JSON.stringify({ ...target, ...source, rules, deletedRuleIds });
+    const adopted = Boolean(target.sharedChecklistAdopted || source.sharedChecklistAdopted);
+    return JSON.stringify({ ...target, ...source, rules, deletedRuleIds, ...(adopted ? { sharedChecklistAdopted: true } : {}) });
   }
   if (String(key).indexOf(HORIZON_PREFIX) === 0 && isPlainObject(target) && isPlainObject(source)
     && isPlainObject(target.byConnection) && isPlainObject(source.byConnection)) {
