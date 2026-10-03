@@ -859,7 +859,17 @@
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Buyer Log';
     workbook.created = new Date();
-    const sheet = workbook.addWorksheet(DATA_SHEET, { views: [{ state: 'frozen', ySplit: 1, showGridLines: false }] });
+    workbook.calcProperties = Object.assign({}, workbook.calcProperties || {}, {
+      fullCalcOnLoad: true, forceFullCalc: true, calcMode: 'auto',
+    });
+    const summarySheet = workbook.addWorksheet(T('Checklist Özet', 'Checklist Summary'), {
+      views: [{ showGridLines: false, zoomScale: 90 }],
+      properties: { tabColor: { argb: CHECKLIST_EXCEL_COLORS.navy } },
+    });
+    const sheet = workbook.addWorksheet(DATA_SHEET, {
+      views: [{ state: 'frozen', ySplit: 1, showGridLines: false }],
+      properties: { tabColor: { argb: CHECKLIST_EXCEL_COLORS.acc } },
+    });
     sheet.properties.defaultRowHeight = 18;
     const decision = analysesForRows(rows);
     const exportedAt = isoNow();
@@ -877,6 +887,7 @@
     columns.push({ header: '__BL_LOAD_DATE', key: '__loadDate', width: 4, hidden: true });
     sheet.columns = columns;
     const visibleColumnCount = columns.length - 2;
+    sheet.views = [{ state: 'frozen', ySplit: 1, xSplit: Math.min(Math.max(infoDefinitions.length, 1), 6), showGridLines: false, zoomScale: 90 }];
     sheet.autoFilter = { from: 'A1', to: sheet.getRow(1).getCell(visibleColumnCount).address };
 
     const statusColumns = items.map(function (_item, index) {
@@ -935,9 +946,18 @@
         noteCell.alignment = { vertical: 'middle', wrapText: true };
         statusCell.protection = { locked: !applicable };
         noteCell.protection = { locked: !applicable };
-        const fill = applicable ? 'FFFFFFFF' : 'FFF0F2F4';
-        statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } };
-        noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } };
+        if (applicable) {
+          const tone = checklistStatusTone(statusCell.value);
+          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: tone.bg } };
+          statusCell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: tone.fg } };
+          noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.accBg } };
+          noteCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.ink } };
+        } else {
+          statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
+          noteCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
+          statusCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
+          noteCell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
+        }
         if (applicable) {
           statusCell.dataValidation = {
             type: 'list', allowBlank: false,
@@ -965,30 +985,45 @@
     }
 
     const header = sheet.getRow(1);
-    header.height = 28;
-    header.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    header.height = 30;
     header.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-    header.eachCell({ includeEmpty: true }, function (cell) {
-      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF26364A' } };
+    columns.forEach(function (column, index) {
+      const cell = header.getCell(index + 1);
+      const fill = column.checklistStatus ? CHECKLIST_EXCEL_COLORS.acc
+        : column.checklistNote ? CHECKLIST_EXCEL_COLORS.gold
+        : column.hidden ? CHECKLIST_EXCEL_COLORS.muted
+        : CHECKLIST_EXCEL_COLORS.navy;
+      cell.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: CHECKLIST_EXCEL_COLORS.white } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fill } };
+      cell.border = { bottom: { style: 'medium', color: { argb: fill } } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
       cell.protection = { locked: true };
     });
     sheet.eachRow({ includeEmpty: false }, function (row, rowNo) {
       if (rowNo === 1) return;
-      row.eachCell({ includeEmpty: true }, function (cell) {
+      row.eachCell({ includeEmpty: true }, function (cell, colNo) {
         cell.border = {
-          top: { style: 'hair', color: { argb: 'FFD9DEE5' } },
-          left: { style: 'hair', color: { argb: 'FFD9DEE5' } },
-          bottom: { style: 'hair', color: { argb: 'FFD9DEE5' } },
-          right: { style: 'hair', color: { argb: 'FFD9DEE5' } },
+          top: { style: 'hair', color: { argb: CHECKLIST_EXCEL_COLORS.line } },
+          left: { style: 'hair', color: { argb: CHECKLIST_EXCEL_COLORS.line } },
+          bottom: { style: 'hair', color: { argb: CHECKLIST_EXCEL_COLORS.line } },
+          right: { style: 'hair', color: { argb: CHECKLIST_EXCEL_COLORS.line } },
         };
+        const column = columns[colNo - 1];
+        if (column && column.infoDefinition && column.infoDefinition.id !== 'image') {
+          cell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.ink } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowNo % 2 ? CHECKLIST_EXCEL_COLORS.paper : CHECKLIST_EXCEL_COLORS.band } };
+        }
       });
     });
+    const lastDataRow = Math.max(2, sheet.rowCount);
+    applyChecklistConditionalFormatting(sheet, statusColumns, lastDataRow);
+    sheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
     const technicalStart = columns.length - 1;
     sheet.getColumn(technicalStart).hidden = true;
     sheet.getColumn(technicalStart + 1).hidden = true;
     await sheet.protect(EXCEL_PROTECTION_PASSWORD, {
-      selectLockedCells: false,
+      selectLockedCells: true,
       selectUnlockedCells: true,
       formatCells: false,
       formatColumns: false,
@@ -1001,8 +1036,24 @@
       autoFilter: true,
     });
 
+    renderChecklistSummary(summarySheet, rows, items, statusColumns, lastDataRow, exportedAt);
+    await summarySheet.protect(EXCEL_PROTECTION_PASSWORD, {
+      selectLockedCells: true,
+      selectUnlockedCells: false,
+      formatCells: false,
+      formatColumns: false,
+      formatRows: false,
+      insertColumns: false,
+      insertRows: false,
+      deleteColumns: false,
+      deleteRows: false,
+    });
+
     const meta = workbook.addWorksheet(META_SHEET);
     meta.state = 'veryHidden';
+    summarySheet.orderNo = 0;
+    sheet.orderNo = 1;
+    meta.orderNo = 2;
     meta.addRow(['BUYER_LOG_CHECKLIST_SUPPLIER', SCHEMA_VERSION]);
     meta.addRow(['exportedAt', exportedAt]);
     meta.addRow(['supplier', supplierNameFor(rows)]);
