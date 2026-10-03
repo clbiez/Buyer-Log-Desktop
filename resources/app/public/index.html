@@ -46,9 +46,11 @@
 (function(){
   'use strict';
   var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,dismissed=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;
-  // Core markup alone is insufficient: keep the curtain until initial data,
-  // the first usable render AND the actual top-right profile have been applied.
+  // The app shell, initial data and authenticated profile are hard startup gates.
+  // The active page projection is NOT a hard gate: Overview/CP/Orders may still be
+  // rebuilding after login and must never trap an authenticated user here.
   var gates={core:false,data:false,ui:false,profile:false};
+  var hardGates=['core','data','profile'];
   function guard(){var el=document.getElementById('blBootGuard');return el&&!el.dataset.leaving?el:null;}
   function ensureGuard(){
     if(finished||guard()||!document.body)return;
@@ -119,7 +121,10 @@
     if(finished)return;
     if(stage&&Object.prototype.hasOwnProperty.call(gates,stage))gates[stage]=true;else gates.core=true;
     window.BLGuide?.stage(stage||'core');
-    if(!Object.keys(gates).every(function(key){return gates[key];}))return;
+    if(!hardGates.every(function(key){return gates[key];}))return;
+    // "Ekran" means the interactive application shell is available. The active
+    // page's heavy projection continues behind the shell with its own loading UI.
+    if(!gates.ui){gates.ui=true;window.BLGuide?.stage('ui');}
     finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);
     try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}
     stopOrb();var el=guard();if(!el){dismiss();return;}
@@ -184,7 +189,7 @@
     if(ev.shiftKey&&(document.activeElement===first||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();last.focus();}
     else if(!ev.shiftKey&&(document.activeElement===last||!el.contains(document.activeElement)||document.activeElement===el)){ev.preventDefault();first.focus();}
   },true);
-  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(){if(finished)dismiss();},fail:function(reason){lastFailure=String(reason||'initial-data-failed');message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
+  window.BLBootGuard={ready:ready,recover:recover,mount:ensureGuard,continue:function(){if(finished)dismiss();},fail:function(reason){if(finished)return;lastFailure=String(reason||'initial-data-failed');message(english()?'Initial data could not be loaded. Press Retry.':'Başlangıç verisi yüklenemedi. Yeniden denemek için düğmeye basın.',true);},noteFailure:function(reason){lastFailure=String(reason||'resource-error');}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ensureGuard,{once:true});else ensureGuard();
   window.addEventListener('error',function(ev){var t=ev&&ev.target;if(t&&(t.tagName==='SCRIPT'||t.tagName==='LINK'))window.BLBootGuard.noteFailure((t.src||t.href||t.tagName)+' yüklenemedi.');},true);
   document.addEventListener('bl:language-changed',function(){syncBootLanguage();try{window.BLGuide?.refreshLanguage?.();}catch(_){}}); 
