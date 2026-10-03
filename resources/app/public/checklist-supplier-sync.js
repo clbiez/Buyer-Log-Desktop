@@ -377,6 +377,32 @@
         mergeRemoteDefinitions(state.shared.definitions);
       }
       mergeRemoteAnswers(state.shared);
+      // First rollout / another device: preserve a newer local checklist answer
+      // by promoting it into the shared store instead of silently leaving it local.
+      const mergedLocal = snapshotAnswers();
+      const promote = [];
+      Object.keys(mergedLocal).forEach(function (key) {
+        const localAnswer = mergedLocal[key];
+        const remoteAnswer = state.shared.answers[key];
+        const tomb = state.shared.tombstones[key];
+        const remoteAt = remoteAnswer ? String(remoteAnswer.at || '') : tomb ? String(tomb.at || '') : '';
+        const localAt = String(localAnswer && localAnswer.at || '');
+        if (remoteAt && (!localAt || localAt <= remoteAt)) return;
+        const parts = splitAnswerKey(key);
+        const normalized = normalizeState(localAnswer && localAnswer.state);
+        if (!parts.orderKey || !parts.itemId || !normalized || normalized === 'open') return;
+        promote.push({
+          orderKey: parts.orderKey, itemId: parts.itemId, state: normalized,
+          at: localAt || isoNow(), baseAt: remoteAt,
+          loadDate: localAnswer.loadDate || null, note: localAnswer.note || '',
+          source: localAnswer.source || 'buyer_log',
+        });
+      });
+      if (promote.length) {
+        try { await post('/answers', { entries: promote, source: 'buyer_log' }); }
+        catch (_) { /* local answer remains intact; next explicit change retries */ }
+      }
+      state.answerBaseline = snapshotAnswers();
       refreshAssistantView();
       return state.shared;
     }()).catch(function (error) {
@@ -627,10 +653,11 @@
 
     const result = await post('/answers', { entries: entries, source: 'supplier_excel' });
     await loadShared(true);
+    const conflicts = Number(result.conflicts || 0);
     const skipped = Number(result.skipped || 0) + invalid + notApplicable + formulaCells;
     toast(T(
-      'Checklist içe aktarıldı: ' + result.updated + ' güncellendi, ' + result.cleared + ' yeniden açıldı' + (skipped ? ', ' + skipped + ' atlandı.' : '.'),
-      'Checklist imported: ' + result.updated + ' updated, ' + result.cleared + ' reopened' + (skipped ? ', ' + skipped + ' skipped.' : '.')
+      'Checklist içe aktarıldı: ' + result.updated + ' güncellendi, ' + result.cleared + ' yeniden açıldı' + (conflicts ? ', ' + conflicts + ' daha yeni Buyer Log verisi nedeniyle korunarak atlandı' : '') + (skipped ? ', ' + skipped + ' geçersiz/uygunsuz kayıt atlandı.' : '.'),
+      'Checklist imported: ' + result.updated + ' updated, ' + result.cleared + ' reopened' + (conflicts ? ', ' + conflicts + ' kept because Buyer Log had newer data' : '') + (skipped ? ', ' + skipped + ' invalid/not-applicable entries skipped.' : '.')
     ));
     return true;
   }
