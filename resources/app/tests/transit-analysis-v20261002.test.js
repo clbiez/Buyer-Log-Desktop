@@ -398,6 +398,8 @@ test('Yol Süreleri penceresi: kompakt düzenleyici, aranabilir seçiciler, list
   assert.match(modal, /function makePicker\(root,\{allLabel,itemLabel,optionsFn,keyFn\}\)/);
   assert.match(modal, /listFilter=\{q:'',type:'\*'\}/);
   assert.match(modal, /persistTransitRules\(working\)/, 'kalıcılık yalnız Kuralları Kaydet ile');
+  assert.match(modal, /function transitTypeOptions\(\)/, 'taşıt seçici IAS tipleriyle dinamik olmalı');
+  assert.match(modal, /setVehicleTypes:types=>/, 'analizdeki taşıt sözlüğü kural düzenleyicisine aktarılmalı');
   assert.doesNotMatch(modal, /pricingRuleSeasonPanel|pricingRuleGrid/, 'eski form bileşenleri kaldırıldı');
   assert.match(read('public/app.css'), /\.trxCheck\{width:14px!important;height:14px!important;/, 'seçici onay kutuları sabit boyutlu');
   const ui = read('public/transit-analysis-ui.js');
@@ -528,7 +530,7 @@ test('Excel tanımları: Yol = fiili yükleme → ETA (4), Gümrük = ETA → ge
   assert.equal(r.steps.find(x => x.code === '5').days, 1, '5: ETA → Özet Beyan Onay');
 });
 
-test('yalnız gerçekleşen giriş sayılır (tahmini giriş ve statü kullanılmaz); Final Destination Antrepo dışı hariç', () => {
+test('yalnız gerçekleşen giriş sayılır; canlı IAS analizi Final Destination ayırmadan direkt rotaları da tutar', () => {
   const parse = require('../server/lib/parse');
   const source = require('../server/lib/transit-analysis-source');
   const overrides = require('../server/db').defaultOverrides();
@@ -543,12 +545,27 @@ test('yalnız gerçekleşen giriş sayılır (tahmini giriş ve statü kullanıl
   const t = source.buildLiveAnalysis({ orders: [], antrepoMap: tema, overrides, today: '2026-10-02', scope: 'company' });
   assert.equal(t.stats.used, 1);
   assert.equal(TA.summarize(t, { basis: 'warehouse', year: '*' }).rows[0].endToEnd, 76);
+  // Türkiye direkt sevkiyat Final Destination=Depo olsa da canlı IAS analizinde kalır.
+  const direct = parse.parseAntrepoRows([iasRow({
+    'Sipariş Kod': 3003, 'Ürün Menşei': 'TÜRKİYE', 'Vasita Tanim': 'Direkt Sevkiyat',
+    'Final Destination': 'Depo', 'Yükleme Talep Tarih': '2025-02-01',
+    'Antrepo Giriş Tarihi': undefined, 'Tema Depo Giriş Tarih': '2025-02-06',
+  })], overrides);
+  const directAnalysis = source.buildLiveAnalysis({ orders: [], antrepoMap: direct, overrides, today: '2026-10-02', scope: 'company' });
+  assert.equal(directAnalysis.stats.used, 1);
+  assert.equal(directAnalysis.stats.otherDestination, 0);
+  const directRow = TA.summarize(directAnalysis, { basis: 'warehouse', year: '*' }).rows[0];
+  assert.equal(directRow.ruleCountry, 'Turkey');
+  assert.equal(directRow.vehicle, 'Direkt Sevkiyat');
   const list = [
     { entryIsActual: true, arrived: true, warehouseEntry: '2026-09-01', finalDestination: 'Antrepo' },
     { entryIsActual: true, arrived: true, warehouseEntry: '2026-09-02', finalDestination: 'Depo' },
   ];
   assert.deepEqual(source.applyReportRules(list), { hasActualEntry: true, hasDestination: true });
   assert.equal(list[1].otherDestination, true);
+  const unfiltered = list.map(item => ({ ...item }));
+  assert.deepEqual(source.applyReportRules(unfiltered, { excludeOtherDestinations: false }), { hasActualEntry: true, hasDestination: true });
+  assert.ok(unfiltered.every(item => !item.otherDestination), 'canlı IAS modu hedefe göre satır elemez');
   assert.ok(!list[0].otherDestination && list[0].arrived);
   const legacy = [{ entryIsActual: true, arrived: true, warehouseEntry: '2026-09-20', finalDestination: '' }];
   assert.deepEqual(source.applyReportRules(legacy), { hasActualEntry: true, hasDestination: false });
@@ -578,18 +595,19 @@ test('şirket sorgusu raporun gerçekleşen tarih sütunlarını ekler; tahmini 
   assert.equal(same.captured.mapping['Antrepo Giriş Tarih'], undefined);
 });
 
-test('database\'deki bütün taşıt tipleri ayrı satırdır; yalnız kural motorunun tanıdığı tipler kurala aktarılır', () => {
+test('database\'deki bütün taşıt tipleri ayrı satırdır ve tamamı kendi tipiyle kurala aktarılır', () => {
   const ship = (vehicle, days) => ({ country: 'ÇİN', vehicle, qty: 10, arrived: true, loadingRequest: '2026-07-01', warehouseEntry: `2026-07-${String(1 + days).padStart(2, '0')}` });
   const a = TA.buildFromShipments([ship('GEMİ', 25), ship('Tır', 9), ship('Uçak+Tır', 12), ship('Kurye', 4), ship('SEA + AIR', 18), ship('', 20)], { today: '2026-12-31' });
   assert.equal(a.stats.used, 6);
   assert.equal(a.stats.missingVehicle, 1);
   const rows = TA.summarize(a, { basis: 'warehouse', year: '*' }).rows;
   assert.deepEqual(rows.map(r => [r.vehicle, r.ruleType]), [
-    ['Gemi', 'Gemi'], ['Gemi+Uçak', 'Gemi+Uçak'], ['Kurye', ''], ['Tır', ''], ['Uçak+Tır', ''], ['', ''],
+    ['Gemi', 'Gemi'], ['Gemi+Uçak', 'Gemi+Uçak'], ['Kurye', 'Kurye'], ['Tır', 'Tır'], ['Uçak+Tır', 'Uçak+Tır'], ['', ''],
   ]);
-  // "Uçak+Tır" Uçak kuralına katlanmaz; Tır/Kurye için kural tipi yoktur.
-  assert.deepEqual(TA.suggestRules({ rows }).map(s => [s.vehicle, s.delType, s.days]), [['Gemi', 'Gemi', 25], ['Gemi+Uçak', 'Gemi+Uçak', 18]]);
-  assert.equal(TA.ruleVehicle('Uçak+Tır'), '');
+  assert.deepEqual(TA.suggestRules({ rows }).map(s => [s.vehicle, s.delType, s.days]), [
+    ['Gemi', 'Gemi', 25], ['Gemi+Uçak', 'Gemi+Uçak', 18], ['Kurye', 'Kurye', 4], ['Tır', 'Tır', 9], ['Uçak+Tır', 'Uçak+Tır', 12],
+  ]);
+  assert.equal(TA.ruleVehicle('Uçak+Tır'), 'Uçak+Tır');
   assert.equal(TA.ruleVehicle('gemi+tır'), 'Gemi+Tır');
   // Kayıtlı analiz yeniden okunurken database taşıt adı korunur.
   assert.equal(TA.normalizeAnalysis(a).records.find(r => r.vehicle === 'Uçak+Tır').vehicle, 'Uçak+Tır');
