@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.225",
-  "commit_sha": "178aad5cf2d93ae1d44962d554e1b5dc816af520",
-  "release_notes": "Buyer Log 7.0.225: Shared Hub bağlı görünürken 0 kullanıcı / 0 aktif durumuna yol açan kimlik deposu kurtarma sorunu düzeltildi. Bilinen Buyer Log yedek konumlarından geçerli kullanıcı deposu otomatik kurtarılıyor ve boş kullanıcı dizini artık başarılı eşitleme olarak gösterilmiyor."
+  "version": "7.0.226",
+  "commit_sha": "b67f42a72ac1cb1d902eaa43d57ab7825561bedf",
+  "release_notes": "Buyer Log 7.0.226: Kullanıcı dizini kurtarma kapsamı genişletildi. Eski Buyer Log kurulumları ve güvenli yedek konumları daha kapsamlı biçimde taranıyor; kullanılabilir eski kullanıcı deposu, daha yeni ama kullanılamaz boş cache'in önüne geçebiliyor."
 }
