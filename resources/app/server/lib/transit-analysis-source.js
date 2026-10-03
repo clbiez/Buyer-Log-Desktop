@@ -199,14 +199,24 @@ async function queryCompanyIasRows({ item, matchRule, fromDate, toDate, deps }) 
     delete clone.scopes;
     return clone;
   };
+  /* Bu ufuktaki tarih koşulu kullanıcı filtresi değil, Buyer Log'un bu modül
+     için ürettiği kanonik tarih penceresidir. Bazı IAS/SSAS modellerinde
+     MDSCHEMA_LEVELS tarih hiyerarşisini WSTR (text) olarak raporlarken DAX
+     sütunun gerçek tipini Date olarak görür. Genel şema çözücüsünün
+     valueType:'date' değerini 'text' ile ezmesine izin verilirse DAX
+     Date >= "YYYY-MM-DD" üretir ve "Date vs Text" hatasıyla düşer.
+     Bu nedenle yalnız bu izole sorguda tip metadata override'ını kapatıyoruz;
+     modül ufku DATE(...) literalini kullanır. Kalıcı bağlantı/Backlog ufku
+     bundan etkilenmez. */
+  const moduleQueryOptions = { matchRule, queryOptions: {}, columnType: false };
   let run;
   try {
-    run = await deps.queryConnectionRows(build(added.length > 0), { matchRule, queryOptions: {} });
+    run = await deps.queryConnectionRows(build(added.length > 0), moduleQueryOptions);
   } catch (err) {
     if (!added.length) throw companyQueryError(err, 'query');
     warnings.push(`Ek sütunlarla (${added.join(', ')}) IAS sorgusu başarısız oldu, ek sütunsuz yeniden denendi: ${String(err && err.message || err)}`);
     added.length = 0;
-    try { run = await deps.queryConnectionRows(build(false), { matchRule, queryOptions: {} }); }
+    try { run = await deps.queryConnectionRows(build(false), moduleQueryOptions); }
     catch (retryErr) { throw companyQueryError(retryErr, 'query-retry'); }
   }
   return { rows: Array.isArray(run && run.rows) ? run.rows : [], addedFields: added, warnings };
