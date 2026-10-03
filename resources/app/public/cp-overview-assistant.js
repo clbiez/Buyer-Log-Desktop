@@ -1252,7 +1252,9 @@
   }
 
   function openSettings() {
-    const items = Checklist.ITEMS.map(item => {
+    const managed = new Set(Rules.DEFAULT_CHECKLIST_RULE_IDS || []);
+    const legacyItems = Checklist.ITEMS.filter(item => !managed.has(item.id));
+    const items = legacyItems.map(item => {
       const config = state.checklistSettings.items[item.id];
       return `<div class="cpaSettingRow">
         <label class="cpaCheck"><input type="checkbox" data-cpa-item="${esc(item.id)}" ${config.enabled ? 'checked' : ''}>
@@ -1264,18 +1266,23 @@
     const modal = document.createElement('div');
     modal.className = 'cpaModalOverlay';
     modal.innerHTML = `<div class="cpaModal"><header>
-        <div><b>${esc(L('Kontrol Ayarları', 'Checklist Settings'))}</b><small>${esc(L('Takip etmek istemediğiniz kontrolleri kapatın.', 'Turn off the checks you do not want to track.'))}</small></div>
+        <div><b>${esc(L('Kontrol Ayarları', 'Checklist Settings'))}</b><small>${esc(L('Kontrol listesini açıp kapatın; soru koşullarını kural ekranından yönetin.', 'Enable or disable the checklist; manage question conditions from the rules screen.'))}</small></div>
         <button type="button" data-cpa-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
       <div class="cpaModalBody">
         <label class="cpaCheck cpaMaster"><input type="checkbox" data-cpa-master ${state.checklistSettings.enabled ? 'checked' : ''}>
           <span><b>${esc(L('Kontrol listesi açık', 'Checklist enabled'))}</b></span></label>
-        <div class="cpaSettingRow">
+        ${managed.size ? `<div class="cpaSettingRow">
+          <span><b>${esc(L('Ön tanımlı kontrol soruları', 'Predefined checklist questions'))}</b>
+            <small>${esc(L('Ad, soru, kapsam, eşik ve etkinlik ayarları artık Priority and Checklist Rules > Checklist Questions altında düzenlenir.', 'Name, question, scope, thresholds and enabled state are now edited under Priority and Checklist Rules > Checklist Questions.'))}</small></span>
+          <button type="button" class="cpaBtn sm" data-cpa-open-rules>${esc(L('Kuralları yönet', 'Manage rules'))}</button>
+        </div>` : ''}
+        ${legacyItems.length ? `<div class="cpaSettingRow">
           <span><b>${esc(L('Gecikmiş sipariş toleransı', 'Overdue grace window'))}</b>
-            <small>${esc(L('Yükleme tarihi bu kadar günden fazla geçmişse kontrol sorulmaz; o siparişler zaten Kritik olarak görünür.', 'Checks are not asked for orders overdue by more than this; those already appear as Critical.'))}</small></span>
+            <small>${esc(L('Yükleme tarihi bu kadar günden fazla geçmişse legacy kontroller sorulmaz.', 'Legacy checks are not asked when the load date is overdue by more than this.'))}</small></span>
           <label class="cpaDays"><span>${esc(L('gün', 'days'))}</span>
             <input type="number" min="0" max="365" data-cpa-grace value="${Number(state.checklistSettings.overdueGraceDays) || 0}"></label>
         </div>
-        <div class="cpaSettingGroup">${items}</div>
+        <div class="cpaSettingGroup">${items}</div>` : ''}
         <p class="cpaNote">${esc(L('Bu ayarlar yalnız sizin hesabınız içindir; diğer kullanıcıları etkilemez.', 'These settings apply only to your account and do not affect other users.'))}</p>
       </div>
       <footer><button type="button" class="cpaBtn" data-cpa-close>${esc(L('Kapat', 'Close'))}</button></footer></div>`;
@@ -1283,6 +1290,8 @@
     const close = () => { modal.remove(); recompute(); render(); };
     modal.querySelectorAll('[data-cpa-close]').forEach(el => el.onclick = close);
     modal.onclick = event => { if (event.target === modal) close(); };
+    const manageRules = modal.querySelector('[data-cpa-open-rules]');
+    if (manageRules) manageRules.onclick = () => { modal.remove(); openRules(); };
     const master = modal.querySelector('[data-cpa-master]');
     master.onchange = () => { state.checklistSettings.enabled = master.checked; savePrefs(); };
     modal.querySelectorAll('[data-cpa-item]').forEach(el => el.onchange = () => {
