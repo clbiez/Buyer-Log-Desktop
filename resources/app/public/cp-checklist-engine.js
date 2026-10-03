@@ -222,13 +222,28 @@
   /* Cevap, verildiği andaki yükleme tarihine bağlanır. Tarih sonradan
      kayarsa cevap eskir ve soru yeniden sorulur (§4). */
   function makeAnswer(state, analysis, meta) {
-    const hasLoadDate = meta && Object.prototype.hasOwnProperty.call(meta, 'loadDate');
-    return {
+    const details = meta && typeof meta === 'object' ? meta : {};
+    const hasLoadDate = Object.prototype.hasOwnProperty.call(details, 'loadDate');
+    const answer = {
       state: ANSWER_STATES.includes(normalizeStatus(state)) ? normalizeStatus(state) : 'approved',
-      at: (meta && meta.at) || new Date().toISOString(),
-      by: (meta && meta.by) || '',
-      loadDate: hasLoadDate ? meta.loadDate : (analysis ? analysis.plannedLoadDate : null),
+      at: details.at || new Date().toISOString(),
+      by: details.by || '',
+      loadDate: hasLoadDate ? details.loadDate : (analysis ? analysis.plannedLoadDate : null),
     };
+    if (details.note != null) answer.note = String(details.note || '').slice(0, 2000);
+    if (details.reportNumber != null) answer.reportNumber = String(details.reportNumber || '').slice(0, 300);
+    if (details.actualDate != null) answer.actualDate = String(details.actualDate || '').slice(0, 40);
+    if (Array.isArray(details.attachments)) {
+      answer.attachments = details.attachments.slice(0, 40).map(item => ({
+        id: String(item && item.id || '').slice(0, 80),
+        filename: String(item && item.filename || '').slice(0, 500),
+        originalName: String(item && item.originalName || '').slice(0, 500),
+        mimeType: String(item && item.mimeType || '').slice(0, 160),
+        size: Math.max(0, Number(item && item.size) || 0),
+        addedAt: String(item && item.addedAt || '').slice(0, 80),
+      })).filter(item => item.id);
+    }
+    return answer;
   }
 
   function answerIsStale(answer, analysis) {
