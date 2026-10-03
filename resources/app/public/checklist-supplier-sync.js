@@ -1596,6 +1596,11 @@
     const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
     if (!analysis) { toast(T('Sipariş checklist için okunamadı.', 'The order could not be read for the checklist.')); return; }
     assistant.setChecklistAnswer(analysis, itemId, status);
+    // Yerel seçim anında görünür; sunucu yazması da aynı işlem zincirinde
+    // tetiklenir. syncAnswerChanges kuyruklu olduğu için hızlı ardışık seçimler
+    // kaybolmaz.
+    await syncAnswerChanges();
+    refreshColumns({ render: true });
   }
   function openStatusMenu(trigger) {
     if (!root.document || !trigger) return;
@@ -1611,6 +1616,12 @@
         + '<span class="clStatusDot is-' + status + '" aria-hidden="true"></span>'
         + '<span>' + statusLabel(status) + '</span></button>';
     }).join('');
+    const evidenceItem = itemCatalog().find(function (item) { return item.id === trigger.dataset.item; });
+    if (evidenceEnabled(evidenceItem)) {
+      menu.innerHTML += '<div style="height:1px;background:var(--line);margin:5px 4px"></div>'
+        + '<button type="button" class="delTypeOption clStatusOption" data-cl-evidence>'
+        + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Ekler', 'Checklist Details / Attachments') + '</span></button>';
+    }
     root.document.body.appendChild(menu);
     const rect = trigger.getBoundingClientRect();
     const width = Math.max(rect.width, 160);
@@ -1628,6 +1639,12 @@
     const selected = options.find(function (option) { return option.getAttribute('aria-selected') === 'true'; }) || options[0];
     if (selected) selected.focus();
     menu.addEventListener('click', function (event) {
+      const details = event.target.closest('[data-cl-evidence]');
+      if (details) {
+        closeStatusMenu(false);
+        openChecklistEvidenceDialog(trigger);
+        return;
+      }
       const option = event.target.closest('[data-cl-status]');
       if (!option) return;
       const status = option.dataset.clStatus;
