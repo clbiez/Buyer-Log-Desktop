@@ -14,6 +14,7 @@ const CLAUDE=fs.readFileSync(path.join(ROOT,'..','..','CLAUDE.md'),'utf8');
 const AGENTS=fs.readFileSync(path.join(ROOT,'..','..','AGENTS.md'),'utf8');
 const TEST_WORKFLOW=fs.readFileSync(path.join(ROOT,'..','..','.github','workflows','buyerlog-test-release.yml'),'utf8');
 const STABLE_WORKFLOW=fs.readFileSync(path.join(ROOT,'..','..','.github','workflows','buyerlog-promote-stable.yml'),'utf8');
+const RELEASE_NOTES_SCRIPT=require('../scripts/release-notes.js');
 
 test('visual release notes runtime is syntactically valid and loaded by shell',()=>{
   assert.doesNotThrow(()=>new Function(JS));
@@ -58,25 +59,45 @@ test('release cards always expose readable copy, zoomable visuals and explicit n
   assert.match(CSS,/\.blRnNavBtn\{/);
 });
 
-test('pending release-note contract has bilingual detail and a visual for every change',()=>{
-  assert.ok(NEXT.changes.length>=2);
+test('pending release-note contract has bilingual detail and verified post-change PNG screenshots',()=>{
+  if(!NEXT.changes.length){
+    assert.equal(NEXT.publishedAt,'');
+    return;
+  }
   for(const change of NEXT.changes){
     for(const key of ['module','title','body']){
       assert.ok(change[key]?.tr?.trim(),key+' tr missing');
       assert.ok(change[key]?.en?.trim(),key+' en missing');
     }
-    assert.ok(change.visual?.src);
+    assert.equal(change.visual?.kind,'screenshot');
+    assert.equal(change.visual?.capture,'post-change');
+    assert.match(change.visual?.src||'',/\.png$/i);
     assert.ok(change.visual?.alt?.tr&&change.visual?.alt?.en);
     assert.ok(change.visual?.caption?.tr&&change.visual?.caption?.en);
-    assert.ok(fs.existsSync(path.join(ROOT,'public','release-notes','next-assets',change.visual.src)));
+    const asset=path.join(ROOT,'public','release-notes','next-assets',change.visual.src);
+    assert.ok(fs.existsSync(asset));
+    assert.doesNotThrow(()=>RELEASE_NOTES_SCRIPT.inspectPngScreenshot(asset,change.visual.src));
   }
+});
+
+test('release-note image guard detects archived corruption and unreadable crops',()=>{
+  const good=path.join(ROOT,'public','release-notes','7.0.219','01-transit-date-type-fix.png');
+  const truncated=path.join(ROOT,'public','release-notes','7.0.219','priority-checklist-rules.png');
+  assert.doesNotThrow(()=>RELEASE_NOTES_SCRIPT.inspectPngScreenshot(good,'good screenshot'));
+  assert.throws(()=>RELEASE_NOTES_SCRIPT.inspectPngScreenshot(truncated,'truncated screenshot'),/truncated|tamamlanmamış|CRC|piksel/i);
+  assert.match(JS,/function screenshotDimensionsOk\(img\)/);
+  assert.match(JS,/function bindScreenshotGuard\(stage,change,release\)/);
+  assert.match(JS,/old or unverified screenshot|Eski veya doğrulanmamış ekran görüntüsü/);
 });
 
 test('Codex and Claude contracts require the same visual release-note workflow',()=>{
   assert.match(CLAUDE,/Görsel stable sürüm notları/);
   assert.match(CLAUDE,/release-notes\/next\.json/);
   assert.match(CLAUDE,/visual\.kind="screenshot"/);
+  assert.match(CLAUDE,/visual\.capture="post-change"/);
+  assert.match(CLAUDE,/kayıpsız PNG/);
   assert.match(AGENTS,/release-notes\/next\.json/);
+  assert.match(AGENTS,/PNG ekran görüntüsü/);
 });
 
 test('TEST seals notes and STABLE promotion persists immutable archive',()=>{
