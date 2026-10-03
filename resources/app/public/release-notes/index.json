@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.213",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Backlog ve risk ekranlarında daha tutarlı deneyim",
+        "en": "A more consistent Backlog and risk experience"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 2,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.213/release.json"
+    },
+    {
       "version": "7.0.212",
       "publishedAt": "2026-10-03",
       "title": {

@@ -1,111 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-03",
-  "bootstrapVisual": true,
+  "publishedAt": "",
+  "bootstrapVisual": false,
   "title": {
-    "tr": "Backlog ve risk ekranlarında daha tutarlı deneyim",
-    "en": "A more consistent Backlog and risk experience"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Backlog grafiklerinin görsel dili birleştirildi, teslimat riski kartları KPI tasarımına taşındı ve sürüm notlarında görsel okuma/gezinti iyileştirildi.",
-    "en": "Backlog charts now share one visual language, delivery-risk cards match the KPI design, and visual release notes are easier to read and navigate."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "backlog-chart-visual-unification",
-      "type": "improvement",
-      "module": {
-        "tr": "Backlog",
-        "en": "Backlog"
-      },
-      "title": {
-        "tr": "Backlog grafiklerinde tek ve daha okunabilir görsel dil",
-        "en": "One clearer visual language across Backlog charts"
-      },
-      "body": {
-        "tr": "Alt dinamik grafik üst timeline ile aynı tasarım sistemine taşındı. Today belirteci ve hover detayları üst grafikte de çalışıyor; toplam adet etiketleri grafiklerin üzerinde sürekli görünür tutuluyor.",
-        "en": "The lower dynamic chart now follows the same design system as the upper timeline. The Today marker and hover details are available on the upper chart as well, while total quantity labels remain persistently visible above the charts."
-      },
-      "path": {
-        "tr": "Backlog → Zaman Akışı / Adet-Hafta",
-        "en": "Backlog → Timeline / Quantity-Week"
-      },
-      "visual": {
-        "src": "01-backlog-chart-unification.svg",
-        "kind": "component-preview",
-        "alt": {
-          "tr": "Buyer Log Backlog grafiklerinin ortak görsel dil önizlemesi",
-          "en": "Preview of the unified visual language for Buyer Log Backlog charts"
-        },
-        "caption": {
-          "tr": "Today çizgisi, kalıcı toplam adetler ve ortak hover detay davranışı.",
-          "en": "Today marker, persistent totals and shared hover-detail behavior."
-        }
-      }
-    },
-    {
-      "id": "delivery-risk-kpi-card-alignment",
-      "type": "improvement",
-      "module": {
-        "tr": "Delivery Risk Analysis",
-        "en": "Delivery Risk Analysis"
-      },
-      "title": {
-        "tr": "Risk alt kartları artık KPI kartlarıyla aynı tasarımda",
-        "en": "Risk detail cards now match the KPI card design"
-      },
-      "body": {
-        "tr": "Why are orders at risk ve Needs Attention alanları, Delivery Risk Analysis üst KPI kartlarının tipografi, çerçeve, boşluk ve hiyerarşi yapısıyla hizalandı.",
-        "en": "Why are orders at risk and Needs Attention now follow the typography, border, spacing and hierarchy of the Delivery Risk Analysis KPI cards."
-      },
-      "path": {
-        "tr": "Backlog → Delivery Risk Analysis",
-        "en": "Backlog → Delivery Risk Analysis"
-      },
-      "visual": {
-        "src": "02-delivery-risk-kpi-alignment.svg",
-        "kind": "component-preview",
-        "alt": {
-          "tr": "Delivery Risk Analysis KPI ve alt risk kartlarının hizalı görünümü",
-          "en": "Aligned Delivery Risk Analysis KPI and detail cards"
-        },
-        "caption": {
-          "tr": "Üst ve alt risk alanları aynı kart sistemini kullanıyor.",
-          "en": "Top-level and detailed risk areas now use the same card system."
-        }
-      }
-    },
-    {
-      "id": "release-notes-readable-visuals",
-      "type": "fix",
-      "module": {
-        "tr": "Güncelleme Bildirimleri",
-        "en": "Update Notifications"
-      },
-      "title": {
-        "tr": "Sürüm notları daha okunaklı, görseller büyütülebilir",
-        "en": "Release notes are easier to read and visuals can be enlarged"
-      },
-      "body": {
-        "tr": "Görsel yanındaki açıklamalar okunabilir hale getirildi ve eksik açıklamalar için yedek metin eklendi. Görsele tıklayınca büyük önizleme açılıyor; ileri/geri okları daha belirgin gösteriliyor.",
-        "en": "Text beside visuals is now easier to read and missing descriptions receive fallback copy. Clicking a visual opens a larger preview, and previous/next navigation arrows are more prominent."
-      },
-      "path": {
-        "tr": "Güncelleme Bildirimi → Sürüm Geçmişi",
-        "en": "Update Notification → Version History"
-      },
-      "visual": {
-        "src": "03-release-notes-zoom-navigation.svg",
-        "kind": "component-preview",
-        "alt": {
-          "tr": "Büyütülebilir Buyer Log sürüm notu görseli ve belirgin gezinme okları",
-          "en": "Enlarged Buyer Log release-note visual with prominent navigation arrows"
-        },
-        "caption": {
-          "tr": "Küçük görselden detay görünümüne tek tıkla geçiş.",
-          "en": "Open the detailed visual view from the compact card with one click."
-        }
-      }
-    }
-  ]
+  "changes": []
 }
