@@ -823,8 +823,8 @@
     ws.mergeCells(instructionRow, 2, instructionRow + 1, 9);
     const instruction = ws.getCell(instructionRow, 2);
     instruction.value = T(
-      'Nasıl kullanılır: Checklist sekmesinde yalnız renkli Durum ve Not hücreleri düzenlenebilir. Durumu açılır listeden seçin: Bekliyor, Onaylandı, Reddedildi, Gerekmiyor. Diğer alanlar Buyer Log kimliğini korumak için kilitlidir.',
-      'How to use: Only coloured Status and Note cells on the Checklist sheet are editable. Choose the status from the dropdown: Pending, Approved, Rejected, Not Required. All other fields are locked to preserve Buyer Log identity.'
+      'Nasıl kullanılır: Checklist sekmesinde renkli Durum, Not ve checklist için etkinleştirilmiş Rapor No / Gerçekleşme Tarihi hücreleri düzenlenebilir. Durumu açılır listeden seçin: Bekliyor, Onaylandı, Reddedildi, Gerekmiyor. Ek dosya adları ve kimlik alanları Buyer Log bütünlüğünü korumak için kilitlidir.',
+      'How to use: Coloured Status, Note and enabled Report No / Actual Date cells are editable on the Checklist sheet. Choose the status from the dropdown: Pending, Approved, Rejected, Not Required. Attachment names and identity fields are locked to preserve Buyer Log integrity.'
     );
     instruction.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink2 } };
     instruction.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.accBg } };
@@ -875,7 +875,7 @@
           return `<div class="cpaSettingRow"><label class="cpaCheck"><input type="checkbox" data-cx-column="${item.id}" ${checked ? 'checked' : ''} ${item.required ? 'disabled' : ''}>
             <span><b>${isEn() ? item.en : item.tr}</b><small>${item.required ? T('Zorunlu', 'Required') : (item.type === 'date' ? T('Excel tarih biçimi: GG.AA.YYYY', 'Excel date format: DD.MM.YYYY') : '')}</small></span></label></div>`;
         }).join('')}</div>
-        <p class="cpaNote">${T('Excel korumalı oluşturulur. Yalnız uygulanabilir checklist Durum ve Not hücreleri düzenlenebilir; diğer tüm alanlar kilitlidir.', 'The workbook is protected. Only applicable checklist Status and Note cells can be edited; every other field is locked.')}</p>
+        <p class="cpaNote">${T('Excel korumalı oluşturulur. Uygulanabilir checklist Durum, Not ve etkinleştirilmiş Rapor No / Gerçekleşme Tarihi hücreleri düzenlenebilir; ek dosya listesi ve kimlik alanları kilitlidir.', 'The workbook is protected. Applicable Status, Note and enabled Report No / Actual Date cells are editable; attachment lists and identity fields are locked.')}</p>
       </div>
       <footer><button type="button" class="cpaBtn" data-cx-reset>${T('Varsayılan', 'Default')}</button>
         <button type="button" class="cpaBtn primary" data-cx-save>${T('Kaydet', 'Save')}</button></footer>
