@@ -193,7 +193,7 @@ function copyBuilderFor(records, cols, images, probe) {
     cpOrdersRecordImageCopyCells: imageRuntime(images, probe),
     cellStyleFor,
     escapeHtml,
-    ORDER_URL: code => `https://troy.example/orders/${code}`,
+    ORDER_URL: code => `https://orders.example.test/${code}`,
     _COPY_BORDER: COPY_BORDER,
     EXPORT_LIGHT_HEADER_BG: '#F2F4F7',
     EXPORT_LIGHT_HEADER_FG: '#54595F',
