@@ -41,6 +41,8 @@
 .blRnFallbackVisual>div:last-child{display:grid;gap:6px}
 .blRnFallbackVisual span,.blRnFallbackVisual small{font-size:11px;letter-spacing:.1em;color:var(--ink2)}
 .blRnFallbackVisual b{font:600 26px/1.1 var(--head);color:var(--ink)}
+.blTriviaProgress{height:3px;overflow:hidden;background:color-mix(in srgb,var(--acc) 14%,var(--line))}
+.blTriviaProgress i{display:block;height:100%;background:var(--acc);transform-origin:left center;transform:scaleX(0);transition:transform .25s linear}
 .blRnNav{display:grid;gap:10px;margin-top:18px}
 .blRnNavRow{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:38px}
 .blRnNavRow>span{font-size:12px;color:var(--ink2)}
