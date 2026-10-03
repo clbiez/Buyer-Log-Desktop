@@ -537,7 +537,7 @@ function normalizeTransitRules(rules){
     const exfStart=toISODate(r&&r.exfStart),exfEnd=toISODate(r&&r.exfEnd),seasons=normalizeTransitList(r&&r.seasons),countries=normalizeTransitList(r&&r.countries,transitCountryKey),delType=normalizeTransitDelType(r&&r.delType),days=Number(r&&r.days);
     if(exfStart&&exfEnd&&dateOrdinal(exfStart)>dateOrdinal(exfEnd)) return;
     if(!delType||!Number.isFinite(days)||days<0||days>3650) return;
-    const key=[exfStart,exfEnd,seasons.map(turknorm).join('~'),countries.map(transitCountryKey).join('~'),delType].join('|');
+    const key=[exfStart,exfEnd,seasons.map(turknorm).join('~'),countries.map(transitCountryKey).join('~'),BLBusinessRules.transitDelTypeKey?BLBusinessRules.transitDelTypeKey(delType):turknorm(delType)].join('|');
     if(seen.has(key)) return; seen.add(key);
     out.push({id:String((r&&r.id)||('transit-rule-'+Date.now()+'-'+i)),exfStart,exfEnd,seasons,countries,delType,days});
   });
@@ -11291,11 +11291,10 @@ function openTransitRulesModal(){
   const tl=(tr,en)=>appLang==='en'?en:tr;
   const numLoc=appLang==='en'?'en-GB':'tr-TR';
   let working=normalizeTransitRules(state.overrides.transitRules).map(r=>({...r,seasons:[...(r.seasons||[])],countries:[...(r.countries||[])]}));
-  let editingId=null, formType='Gemi', listFilter={q:'',type:'*'};
+  let editingId=null, formType='Gemi', listFilter={q:'',type:'*'}, analysisTypes=[];
   const cpRows=(state.cp&&state.cp.rows)||[],orderRows=overviewSummaryRows(),asasRows=state.asasOrders||[];
   const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const countryOptions=()=>[...new Set([...cpRows.map(r=>norm(r.Country)),...orderRows.map(r=>norm(r.Country)),...asasRows.map(r=>norm(countryEN(r.countryRaw))),...working.flatMap(r=>r.countries||[]),...(window.BLTransitAnalysisUI?.knownCountries?.()||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const typeSeg=DELTYPE_OPTS.map(v=>`<button type="button" data-trx-type="${escapeHtml(v)}">${escapeHtml(transitDelTypeDisplay(v))}</button>`).join('');
   const modal=document.createElement('div');modal.id='_transitRulesModal';modal.className='warnOverlay';
   modal.innerHTML=`<div class="modalCard trxModal" role="dialog" aria-modal="true" aria-labelledby="_transitRulesTitle">
     <header class="trxModalHead">
@@ -11312,7 +11311,7 @@ function openTransitRulesModal(){
           <span class="trxInfo" tabindex="0" title="${escapeHtml(tl('Birden fazla kural eşleşirse ülke/sezon/tarih açısından daha özel olan kullanılır. Boş tarih −∞/+∞, boş sezon/ülke tüm değerlerdir. Yükleme, yol/liman/depo ve retaile aktarım aşamasındaki siparişler etkilenmez; Nakliye Kıyaslama\'daki eski satırlar sabit kalır.','When several rules match, the most specific by country/season/date wins. Empty dates mean −∞/+∞; empty season/country means all values. Orders in loading, transit/port/warehouse or retail transfer stages are not affected; existing Shipping Comparison rows stay unchanged.'))}">i</span>
         </div>
         <div class="trxEditor" id="_transitEditor">
-          <div class="trxField trxFieldType"><span>${tl('Taşıt','Vehicle')}</span><div class="trxSeg" id="_transitType">${typeSeg}</div></div>
+          <div class="trxField trxFieldType"><span>${tl('Taşıt','Vehicle')}</span><select class="trxSelect" id="_transitType" aria-label="${tl('Taşıt tipi','Vehicle type')}"></select></div>
           <div class="trxField"><span>${tl('Ülke','Country')}</span><div class="trxPick" id="_transitCountryPick"></div></div>
           <div class="trxField"><span>${tl('Sezon','Season')}</span><div class="trxPick" id="_transitSeasonPick"></div></div>
           <div class="trxField trxFieldDates"><span>Ex-Factory</span><div class="trxRange"><input id="_transitStart" class="trxInput" type="date" title="${tl('Başlangıç (boş = −∞)','Start (empty = −∞)')}"><i>→</i><input id="_transitEnd" class="trxInput" type="date" title="${tl('Bitiş (boş = +∞)','End (empty = +∞)')}"></div></div>
@@ -11359,20 +11358,40 @@ function openTransitRulesModal(){
   const seasonPick=makePicker($('_transitSeasonPick'),{allLabel:tl('Tüm sezonlar','All seasons'),itemLabel:tl('sezon','Seasons'),optionsFn:()=>seasonOptions,keyFn:turknorm});
   const closePickers=()=>{countryPick.close();seasonPick.close();};
 
-  function setType(value){formType=normalizeTransitDelType(value)||'Gemi';modal.querySelectorAll('[data-trx-type]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.trxType===formType)));}
-  modal.querySelectorAll('[data-trx-type]').forEach(b=>b.addEventListener('click',()=>{const prev=formType;setType(b.dataset.trxType);if(!editingId&&(!days.value||Number(days.value)===DEFAULT_TRANSIT_DAYS[prev]))days.value=String(DEFAULT_TRANSIT_DAYS[formType]);}));
+  const transitTypeKey=value=>BLBusinessRules.transitDelTypeKey?BLBusinessRules.transitDelTypeKey(value):turknorm(normalizeTransitDelType(value));
+  function transitTypeOptions(){
+    const seen=new Set(),out=[];
+    [...DELTYPE_OPTS,...working.map(r=>r.delType),...analysisTypes].forEach(value=>{
+      const normalized=normalizeTransitDelType(value),key=transitTypeKey(normalized);
+      if(normalized&&key&&!seen.has(key)){seen.add(key);out.push(normalized);}
+    });
+    return out.sort((a,b)=>{
+      const ai=DELTYPE_OPTS.indexOf(a),bi=DELTYPE_OPTS.indexOf(b);
+      if(ai>=0||bi>=0)return (ai>=0?ai:99)-(bi>=0?bi:99);
+      return a.localeCompare(b,'tr');
+    });
+  }
+  function renderTypeOptions(){
+    const select=$('_transitType'),options=transitTypeOptions();
+    if(!options.some(v=>transitTypeKey(v)===transitTypeKey(formType))&&formType)options.push(formType);
+    select.innerHTML=options.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(transitDelTypeDisplay(v))}</option>`).join('');
+    const matching=options.find(v=>transitTypeKey(v)===transitTypeKey(formType));
+    if(matching)select.value=matching;
+  }
+  function setType(value){formType=normalizeTransitDelType(value)||'Gemi';renderTypeOptions();}
+  $('_transitType').addEventListener('change',e=>{const prev=formType;setType(e.target.value);const prevDefault=DEFAULT_TRANSIT_DAYS[normalizeTransitDelType(prev)],nextDefault=DEFAULT_TRANSIT_DAYS[formType];if(!editingId&&nextDefault!=null&&(!days.value||(prevDefault!=null&&Number(days.value)===prevDefault)))days.value=String(nextDefault);});
   function clearForm(){editingId=null;start.value='';end.value='';setType('Gemi');days.value=String(DEFAULT_TRANSIT_DAYS.Gemi);seasonPick.set([]);countryPick.set([]);$('_transitAdd').querySelector('span').textContent=tl('Ekle','Add');$('_transitEditor').classList.remove('is-editing');renderRules();}
   const ruleSource=r=>String(r.id||'').startsWith('transit-analysis-')?'analysis':'manual';
-  const typeOrder=t=>{const i=DELTYPE_OPTS.indexOf(normalizeTransitDelType(t));return i<0?99:i;};
+  const typeOrder=t=>{const options=transitTypeOptions(),key=transitTypeKey(t),i=options.findIndex(v=>transitTypeKey(v)===key);return i<0?999:i;};
   function renderFilterChips(){
-    const counts=DELTYPE_OPTS.map(v=>[v,working.filter(r=>normalizeTransitDelType(r.delType)===v).length]);
+    const counts=transitTypeOptions().map(v=>[v,working.filter(r=>transitTypeKey(r.delType)===transitTypeKey(v)).length]);
     $('_transitTypeFilter').innerHTML=[['*',working.length],...counts].filter(([v,n])=>v==='*'||n>0).map(([v,n])=>`<button type="button" data-trx-filter="${escapeHtml(v)}" aria-pressed="${listFilter.type===v}">${escapeHtml(v==='*'?tl('Tümü','All'):transitDelTypeDisplay(v))} <b>${n}</b></button>`).join('');
     $('_transitTypeFilter').querySelectorAll('[data-trx-filter]').forEach(b=>b.addEventListener('click',()=>{listFilter.type=b.dataset.trxFilter;renderRules();}));
   }
   function renderRules(){
     renderFilterChips();
     const q=turknorm(listFilter.q);
-    const rows=working.filter(r=>(listFilter.type==='*'||normalizeTransitDelType(r.delType)===listFilter.type)
+    const rows=working.filter(r=>(listFilter.type==='*'||transitTypeKey(r.delType)===transitTypeKey(listFilter.type))
       &&(!q||turknorm([...(r.countries||[]),...(r.seasons||[])].join(' ')).includes(q)))
       .sort((a,b)=>typeOrder(a.delType)-typeOrder(b.delType)||String((a.countries||[])[0]||'~').localeCompare(String((b.countries||[])[0]||'~'),'tr')||String(a.exfStart||'').localeCompare(String(b.exfStart||'')));
     const body=$('_transitBody'),empty=$('_transitEmpty');
@@ -11397,7 +11416,7 @@ function openTransitRulesModal(){
     const rule={id:editingId||('transit-rule-'+Date.now()+'-'+Math.round(Math.random()*10000)),exfStart:toISODate(start.value),exfEnd:toISODate(end.value),seasons:normalizeTransitList(seasonPick.get()),countries:normalizeTransitList(countryPick.get(),transitCountryKey),delType:normalizeTransitDelType(formType),days:Number(days.value)};
     if(rule.exfStart&&rule.exfEnd&&dateOrdinal(rule.exfStart)>dateOrdinal(rule.exfEnd)){showToast(tl('Ex-Factory bitiş tarihi başlangıç tarihinden önce olamaz.','Ex-Factory end date cannot be before the start date.'));return;}
     if(!rule.delType||!Number.isFinite(rule.days)||rule.days<0||rule.days>3650||!Number.isInteger(rule.days)){showToast(tl('Yol süresi 0–3650 arasında tam gün olmalıdır.','Transit time must be a whole number of days between 0 and 3650.'));days.focus();return;}
-    const duplicate=working.find(x=>x.id!==editingId&&x.exfStart===rule.exfStart&&x.exfEnd===rule.exfEnd&&normalizeTransitDelType(x.delType)===rule.delType&&normalizeTransitList(x.seasons).map(turknorm).join('|')===rule.seasons.map(turknorm).join('|')&&normalizeTransitList(x.countries,transitCountryKey).map(transitCountryKey).join('|')===rule.countries.map(transitCountryKey).join('|'));
+    const duplicate=working.find(x=>x.id!==editingId&&x.exfStart===rule.exfStart&&x.exfEnd===rule.exfEnd&&transitTypeKey(x.delType)===transitTypeKey(rule.delType)&&normalizeTransitList(x.seasons).map(turknorm).join('|')===rule.seasons.map(turknorm).join('|')&&normalizeTransitList(x.countries,transitCountryKey).map(transitCountryKey).join('|')===rule.countries.map(transitCountryKey).join('|'));
     if(duplicate){showToast(tl('Aynı koşullara sahip başka bir kural var. Mevcut kuralı düzenleyin.','Another rule with the same conditions exists. Edit the existing rule.'));return;}
     const idx=working.findIndex(x=>x.id===rule.id);if(idx>=0)working[idx]=rule;else working.push(rule);working=normalizeTransitRules(working);clearForm();
   });
@@ -11413,7 +11432,7 @@ function openTransitRulesModal(){
   const analysisMount=$('_transitAnalysisMount');
   Promise.resolve(window.BLPerf?.ensureFeature?.('transitAnalysis')).then(()=>{
     if(!modal.isConnected||!window.BLTransitAnalysisUI)return;
-    window.BLTransitAnalysisUI.mount(analysisMount,{getRules:()=>working,applyRules:next=>{working=normalizeTransitRules(next);renderRules();}});
+    window.BLTransitAnalysisUI.mount(analysisMount,{getRules:()=>working,applyRules:next=>{working=normalizeTransitRules(next);renderTypeOptions();renderRules();},setVehicleTypes:types=>{analysisTypes=normalizeTransitList(types,transitTypeKey);renderTypeOptions();renderRules();}});
   }).catch(err=>{analysisMount.innerHTML=`<div class="trxWarn">${escapeHtml(tl('Yol süresi analizi yüklenemedi: ','Could not load the lead time analysis: '))}${escapeHtml(err.message)}</div>`;});
 }
 const COUNTRY_MAP = { 'HINDISTAN':'India','BANGLADES':'Bangladesh','CIN':'China','TURKIYE':'Turkey','MISIR':'Egypt','FAS':'Morocco','MYANMAR':'Myanmar','ENDONEZYA':'Indonesia' };
