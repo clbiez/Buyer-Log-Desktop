@@ -571,6 +571,18 @@ test('yalnız gerçekleşen giriş sayılır; canlı IAS analizi Final Destinati
   assert.deepEqual(source.applyReportRules(legacy), { hasActualEntry: true, hasDestination: false });
   assert.ok(!legacy[0].otherDestination, 'Final Destination sütunu yoksa rota süzülmez');
   assert.equal(TA.buildFromShipments([{ ...list[1], country: 'X', vehicle: 'Gemi', loadingRequest: '2026-08-01' }], { today: '2026-12-31' }).stats.otherDestination, 1);
+
+  // Canlı IAS database görünümü rapordaki Final Destination=Antrepo filtresini
+  // uygulamaz; Türkiye direkt sevkiyat gibi rotalar ülke/taşıt analizinde kalır.
+  const directMap = parse.parseAntrepoRows([iasRow({
+    'Ürün Menşei': 'TÜRKİYE', 'Final Destination': 'Direkt Sevkiyat', 'Vasita Tanim': 'Tır',
+    'Yükleme Talep Tarih': '2025-02-01', 'Antrepo Giriş Tarihi': '2025-02-10',
+  })], overrides);
+  const direct = source.buildLiveAnalysis({ orders: [], antrepoMap: directMap, overrides, today: '2026-10-02', scope: 'company' });
+  assert.equal(direct.stats.used, 1);
+  const directRow = TA.summarize(direct, { basis: 'warehouse', year: '*' }).rows[0];
+  assert.equal(directRow.ruleCountry, 'Turkey');
+  assert.equal(directRow.ruleType, 'Tır');
 });
 
 test('şirket sorgusu raporun gerçekleşen tarih sütunlarını ekler; tahmini girişe eşlenmiş sütunu ikinci kez seçmez', async () => {
@@ -630,4 +642,5 @@ test('Buffer hesaplanan güne önce yüzde sonra gün olarak eklenir ve kurallar
   assert.match(ui, /data-ta-buffer="bufferPct"/);
   assert.match(ui, /const canSelect = !!row\.ruleType && !!s;/);
   assert.match(ui, /currentRuleDays\(rules, row\.ruleType, row\.ruleCountry\)/);
+  assert.match(ui, /ctx\.setVehicleTypes/);
 });
