@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "publishedAt": "2026-10-03",
-  "bootstrapVisual": true,
+  "bootstrapVisual": false,
   "title": {
     "tr": "Kullanıcı dizini kurtarma kapsamı düzeltildi",
     "en": "User directory recovery coverage fixed"
@@ -27,16 +27,17 @@
         "en": "Buyer Log now checks bounded known desktop locations including data-BACKUP folders, the legacy data/auth path, migration evidence, legacy server/data, and the previous Windows AppData identity store. The strongest valid user store is restored into the active auth location and a recovered Central IAM cache is re-read after import."
       },
       "visual": {
-        "kind": "component-preview",
-        "src": "iam-user-recovery-7.0.225.svg",
+        "kind": "screenshot",
+        "src": "iam-user-recovery-7.0.225.png",
         "alt": {
           "tr": "Shared Hub bağlıyken eski Buyer Log kullanıcı depolarından kimlik kurtarma akışı",
           "en": "Identity recovery flow from previous Buyer Log user stores while Shared Hub is connected"
         },
         "caption": {
-          "tr": "Kullanıcı dizini boşsa Buyer Log bilinen güvenli yedek konumlarını kontrol eder ve geçerli kullanıcı listesini geri yükler.",
-          "en": "If the user directory is empty, Buyer Log checks known safe backup locations and restores a valid user list."
-        }
+          "tr": "Düzeltme sonrası Shared Sync kullanıcı adımının örnek görünümü: geçerli kullanıcı dizini doğrulanmış ve girişe hazır.",
+          "en": "Example of the Shared Sync users step after the fix: a valid user directory is verified and ready for login."
+        },
+        "capture": "post-change"
       },
       "path": {
         "tr": "Buyer Log → Giriş → Ayarlar → Shared Sync",
@@ -59,16 +60,17 @@
         "en": "A previously completed Shared Hub marker could make the users step look successful even when IAM data was missing. Bootstrap now fails explicitly when there are zero users or zero active users, preventing a false ready state."
       },
       "visual": {
-        "kind": "component-preview",
-        "src": "iam-user-recovery-7.0.225.svg",
+        "kind": "screenshot",
+        "src": "iam-user-recovery-7.0.225.png",
         "alt": {
           "tr": "Shared Hub kullanıcı dizini doğrulama ve kurtarma adımları",
           "en": "Shared Hub user directory validation and recovery steps"
         },
         "caption": {
-          "tr": "Kullanıcı sayısı doğrulanmadan Shared Sync hazır kabul edilmez.",
-          "en": "Shared Sync is not considered ready until the user directory is validated."
-        }
+          "tr": "Düzeltme sonrası kullanıcı sayısı doğrulanmadan Shared Sync hazır kabul edilmiyor.",
+          "en": "After the fix, Shared Sync is not considered ready until the user count is validated."
+        },
+        "capture": "post-change"
       },
       "path": {
         "tr": "Buyer Log → Giriş → Ayarlar → Kullanıcılar ve yetkiler",
