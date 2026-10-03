@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.224",
-  "commit_sha": "ec6b64ecfab5c3a5c494e211c84be358197b14d2",
-  "release_notes": "Buyer Log 7.0.224: Central IAM / Shared Hub geçici erişim sorunlarında geçerli yerel kullanıcı deposu güvenli biçimde kurtarılıyor; aktif kullanıcıların yerel girişinin gereksiz yere kilitlenmesi önlendi."
+  "version": "7.0.225",
+  "commit_sha": "178aad5cf2d93ae1d44962d554e1b5dc816af520",
+  "release_notes": "Buyer Log 7.0.225: Shared Hub bağlı görünürken 0 kullanıcı / 0 aktif durumuna yol açan kimlik deposu kurtarma sorunu düzeltildi. Bilinen Buyer Log yedek konumlarından geçerli kullanıcı deposu otomatik kurtarılıyor ve boş kullanıcı dizini artık başarılı eşitleme olarak gösterilmiyor."
 }
