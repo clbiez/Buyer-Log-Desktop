@@ -88,7 +88,6 @@
     { id: 'cost', tr: 'Maliyet & Lojistik', en: 'Cost & Logistics', resources: ['OPEN_COSTING', 'SHIPPING'] },
     { id: 'reporting', tr: 'Raporlama', en: 'Reporting', resources: ['ANALYSIS'] },
     { id: 'automation', tr: 'Otomasyon', en: 'Automation', resources: ['AUTOMATIONS', 'AGENTS'] },
-    { id: 'integrations', tr: 'Entegrasyonlar', en: 'Integrations', resources: ['OUTLOOK'] },
     { id: 'admin', tr: 'Yönetim', en: 'Administration', resources: ['SOURCE_DATA', 'USER', 'ROLE', 'PERMISSION', 'SYSTEM', 'SECURITY', 'AUDIT'] },
   ];
 

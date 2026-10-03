@@ -75,8 +75,7 @@ test('Overview açılışında sekme-özel yardımcı modüller eager yüklenmez
   for (const file of [
     'formula-engine.js', 'formula-columns.js', 'row-context-menu.js', 'email-groups.js',
     'quick-filter-groups.js', 'kpi-groups.js', 'user-access-ui.js', 'user-management.js',
-    /* v7.81: horizon-editor.js SİLİNDİ (kişisel ufuk kaldırıldı). */
-    'outlook-mail.js', 'override-sync.js', 'backup-manager.js', 'fx.js',
+    /* v7.81: horizon-editor.js SİLİNDİ (kişisel ufuk kaldırıldı). */ 'override-sync.js', 'backup-manager.js', 'fx.js',
   ]) {
     assert.doesNotMatch(INDEX, new RegExp(`<script[^>]+src=["']${file.replace('.', '\\.')}`));
   }

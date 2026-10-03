@@ -14,7 +14,7 @@ const {
 } = require('../user-data');
 
 const SENSITIVE_KEY = /(?:password|pinHash|secret|token|session|cookie|credential|clientSecret|privateKey|loginFailures?|lockUntil)/i;
-const SENSITIVE_FILE = /(?:password|secret|token|session|cookie|credential|agent-ai-settings|agent-browser-settings|browser-debug-settings|browser-profiles|outlook-setup-settings|sync-settings|user-audit)/i;
+const SENSITIVE_FILE = /(?:password|secret|token|session|cookie|credential|agent-ai-settings|agent-browser-settings|browser-debug-settings|browser-profiles|sync-settings|user-audit)/i;
 
 const USER_BACKUP_COMPONENTS = Object.freeze([
   { id: 'preferences', labelTr: 'Arayüz ve kullanıcı tercihleri', labelEn: 'Interface & user preferences', paths: ['user/preferences.json', 'user/browser-storage.json'] },

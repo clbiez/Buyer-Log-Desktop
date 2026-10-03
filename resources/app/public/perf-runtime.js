@@ -133,8 +133,7 @@
       'formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
       'quick-filter-groups.js','kpi-groups.js','update-test-ui.js?rev=4','user-access-ui.js?rev=APP-UPDATE-V3','user-management.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
-         artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */
-      'outlook-mail.js','override-sync.js','backup-manager.js','fx.js',
+         artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx.js',
     ],
     /* Copilot açılış kritik yolunda değildir (§46): panel ilk açıldığında
        yüklenir. Sıra önemli — araçlar ve grounding, çekmeceden önce. */

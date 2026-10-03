@@ -4,7 +4,7 @@
  * ayrı oluşturulması artık görünür ve indirilebilir.
  *
  * Kök neden: kod her zaman üretici başına AYRI bir .eml taslağı oluşturuyordu
- * (for(const m of checked){ ... }), ama Outlook otomatik açılamadığında
+ * (for(const m of checked){ ... }), ama Varsayılan e-posta uygulaması otomatik açılamadığında
  * (opened:false) yalnız TEK üretici seçiliyken (checked.length===1) taslak
  * kendiliğinden indiriliyordu. Birden fazla üretici seçiliyse hiçbiri
  * otomatik inmiyordu; sonuç penceresinde N tane bağlantı duruyor, kullanıcı

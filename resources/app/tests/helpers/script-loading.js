@@ -1,7 +1,7 @@
 'use strict';
 
 /* Buyer Log açılışı v7.69'da lazy yüklemeye geçti: OAB, LFL, Automations,
- * Quotations, Outlook, formül motoru ve benzeri ağır modüller artık
+ * Quotations, formül motoru ve benzeri ağır modüller artık
  * index.html'de eager <script> etiketi DEĞİL; perf-runtime.js'teki ortak
  * yükleyicinin (ensureFeature / ensureLibrary / _loadScript) kayıt defterinde
  * duruyor ve ilgili ekrana geçilince yükleniyor.

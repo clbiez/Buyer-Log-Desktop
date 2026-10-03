@@ -2776,46 +2776,6 @@
       "level": "basic"
     },
     {
-      "id": "outlook",
-      "module": "general",
-      "visual": "menu",
-      "selector": "#currentUserBtn",
-      "title": {
-        "tr": "Outlook bağlantı ayarları",
-        "en": "Outlook connection settings"
-      },
-      "summary": {
-        "tr": "Outlook arama yetkiniz varsa kullanıcı menüsündeki Microsoft 365 · Outlook bağlantı ayarlarına erişebilirsiniz.",
-        "en": "With Outlook search permission, Microsoft 365 · Outlook in the user menu opens connection settings."
-      },
-      "path": {
-        "tr": "Kullanıcı menüsü → Microsoft 365 · Outlook",
-        "en": "User menu → Microsoft 365 · Outlook"
-      },
-      "steps": {
-        "tr": [
-          "Kullanıcı menüsünü açın.",
-          "Microsoft 365 · Outlook seçeneğini seçin.",
-          "Bağlantı ve arama ayarlarını kontrol edin."
-        ],
-        "en": [
-          "Open the user menu.",
-          "Choose Microsoft 365 · Outlook.",
-          "Review connection and search settings."
-        ]
-      },
-      "note": {
-        "tr": "",
-        "en": ""
-      },
-      "example": "Microsoft 365 · Outlook",
-      "evidence": "public/user-access-ui.js",
-      "area": null,
-      "areas": [],
-      "level": "basic",
-      "capability": "OUTLOOK.SEARCH"
-    },
-    {
       "id": "update",
       "module": "general",
       "visual": "menu",

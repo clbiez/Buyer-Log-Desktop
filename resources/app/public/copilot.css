@@ -4,8 +4,7 @@
    dosyayı okuyan onlarca seçiciyi ve testi sessizce kırardı.
 
    DESIGN_SYSTEM.md: paylaşılan token'lar, kare/keskin köşe, hairline kenar,
-   gölge yalnız yüzen katmanda. Yeni bir stil sistemi kurulmuyor; Outlook
-   çekmecesindeki yapısal desen tekrar kullanılıyor, kurallar `cp` ön ekiyle
+   gölge yalnız yüzen katmanda. Yeni bir stil sistemi kurulmuyor; mevcut çekmecelerdeki yapısal desen tekrar kullanılıyor, kurallar `cp` ön ekiyle
    kendi ad alanında tutuluyor (User Management'ın `um` deseni gibi).
 
    Dekoratif animasyon ve gradyan yok: yükleme/boş/hata durumları semantik ve

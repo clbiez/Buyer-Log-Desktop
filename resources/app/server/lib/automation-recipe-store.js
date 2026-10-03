@@ -85,7 +85,7 @@ function normalizeEmail(raw){
     body:clean(item.body).slice(0,16000),
     includeReport:item.includeReport!==false,
     reportFields:(Array.isArray(item.reportFields)?item.reportFields:[]).map(clean).filter(Boolean).slice(0,40),
-    deliveryMode:['draft','outlook_send'].includes(clean(item.deliveryMode))?clean(item.deliveryMode):'draft',
+    deliveryMode:'draft',
     openDraftOnManual:item.openDraftOnManual!==false,
     /* v9.47 — YAZIŞMA DİLİ.
        'auto': dil satırın kendi verisinden gelir (üretim ülkesi Türkiye ise TR,

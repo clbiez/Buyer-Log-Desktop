@@ -51,7 +51,7 @@ test('Fiyat & Üretici Analizi boş durumu ortak uiState bileşenini kullanır',
 });
 
 test('Kullanıcı menüsü metin simgesi değil ortak SVG ikon seti kullanır', () => {
-  assert.doesNotMatch(USER_UI, /data-(?:user-admin|outlook-settings-menu|plm-user-login|update-test|backup-settings|reset-my-view|switch-user)>[⚙✉↻↑⇩↺⇄]/);
+  assert.doesNotMatch(USER_UI, /data-(?:user-admin|plm-user-login|update-test|backup-settings|reset-my-view|switch-user)>[⚙✉↻↑⇩↺⇄]/);
   assert.match(USER_UI, /data-switch-user><svg class="ic" aria-hidden="true"><use href="#i-user"\/><\/svg>/);
 });
 

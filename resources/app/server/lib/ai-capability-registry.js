@@ -42,7 +42,7 @@ const ACTIONS = Object.freeze([
   {
     id: 'SEND_EMAIL', riskLevel: 'external', permission: 'automations',
     parameters: ['RECIPIENT_GROUP', 'SUBJECT', 'INCLUDE_MATCHING_ROWS', 'ATTACHMENT'],
-    description: 'Creates a draft or sends through the existing controlled Outlook path after user approval.',
+    description: 'Creates an e-mail draft through the existing controlled draft path after user approval.',
   },
   {
     id: 'OPEN_PAGE', riskLevel: 'read', permission: 'automations',

@@ -4,7 +4,7 @@
 
    Üç doğrulanmış kusur:
 
-   1) "Copy → Excel/Outlook": bir CP/Orders satırı Excel'e İKİ fiziksel satır
+   1) "Copy → Excel/e-posta": bir CP/Orders satırı Excel'e İKİ fiziksel satır
       olarak yapışıyordu (veri satırı + boş satır, dönüşümlü) ve komşu sütunlar
       bu iki satır boyunca dikey birleşiyordu. Sebep ekrandaki DOM'un serialize
       edilmesiydi: hücre metni normalize edilmiyor, yardımcı DOM düğümleri

@@ -126,7 +126,7 @@
     return html+'</table>';
   }
 
-  /* Word/Outlook için bilinçli olarak küçük bir clipboard HTML'i. Bu yol
+  /* Word/e-posta için bilinçli olarak küçük bir clipboard HTML'i. Bu yol
      ekrandaki DOM'u değil matrix'in kayıt kaynaklı değerlerini kullanır;
      böylece uygulama CSS'i, etkileşimli kontrolleri ve görsel binary'leri
      clipboard'a sızmaz. */

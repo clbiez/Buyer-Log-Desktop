@@ -142,9 +142,7 @@ check('Dosya engeli (Mark-of-the-Web)', () => {
   if (!IS_WINDOWS) return { status: OK, detail: 'Windows disi: gecerli degil' };
   const candidates = [
     path.join(PORTABLE_ROOT, 'BuyerLog.exe'),
-    path.join(APP_ROOT, 'server', 'lib', 'RefreshExcel.ps1'),
-    path.join(APP_ROOT, 'server', 'lib', 'OutlookLocal.ps1'),
-  ].filter(file => fs.existsSync(file));
+    path.join(APP_ROOT, 'server', 'lib', 'RefreshExcel.ps1'),  ].filter(file => fs.existsSync(file));
   const blocked = candidates.filter(file => {
     try { fs.readFileSync(file + ':Zone.Identifier'); return true; } catch (_) { return false; }
   });
@@ -159,7 +157,7 @@ check('Dosya engeli (Mark-of-the-Web)', () => {
 });
 
 /* ---------------------------------------------------------- PowerShell
-   Outlook maili, klasor secici, Excel yenileme ve model sorgusu .ps1 ile
+   Klasor secici, Excel yenileme ve model sorgusu .ps1 ile
    calisiyor. Kurumsal ExecutionPolicy / Constrained Language Mode bunlari
    engelleyebilir. */
 check('PowerShell', () => {
@@ -172,7 +170,7 @@ check('PowerShell', () => {
     return {
       status: WARN,
       detail: 'PowerShell kisitli modda: ' + out,
-      fix: 'Outlook maili, Excel yenileme ve klasor secici calismayabilir. Diger ozellikler etkilenmez.',
+      fix: 'Excel yenileme ve klasor secici calismayabilir. Diger ozellikler etkilenmez.',
     };
   }
   return { status: OK, detail: 'Calisiyor - ' + (out || 'FullLanguage') };

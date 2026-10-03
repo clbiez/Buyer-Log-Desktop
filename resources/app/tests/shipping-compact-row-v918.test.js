@@ -197,7 +197,7 @@ test('v9.18 görsel CP ile aynı override haritasından çözülüyor', () => {
 
 test('v9.18 kıyaslama Excel ve e-postaya yapıştırılabilir kopyalanıyor', () => {
   const html = fn('shipCopyTableHtml');
-  // Dış CSS panoya gitmez: stil satır içi olmalı, yoksa Excel/Outlook'ta çıplak kalır.
+  // Dış CSS panoya gitmez: stil satır içi olmalı, yoksa Excel/e-posta uygulamasında çıplak kalır.
   assert.match(html, /const border='border:1px solid #d0d5dd;padding:4px 6px;/);
   assert.match(html, /style="\$\{border\}/);
   // Görsel mutlak URL olmalı, yoksa e-postada kırık görünür.

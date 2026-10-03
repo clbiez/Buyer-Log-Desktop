@@ -34,7 +34,7 @@ echo   Yol sureleri, DTR/non-DTR, Landed ve Navlun ayarlari
 echo   Kur (FX), Endeksmatik ve ortak sistem ayarlari
 echo   Tum yerel data agaci icin dogrulanmis Full System Backup
 echo.
-echo Guvenlik: token, cookie, session ve cihaz-bagli Edge/Outlook oturumlari
+echo Guvenlik: token, cookie, session ve cihaz-bagli tarayici/API oturumlari
 echo ortak klasore kopyalanmaz. Temiz kurulumda yeniden giris gerekir.
 echo.
 
@@ -550,7 +550,7 @@ async function main() {
     '2. Ilk kurulumda AYNI Shared Hub klasorunu secin:\r\n' + checked.root + '\r\n' +
     '3. Central IAM kullanicilari; Shared Master/Business ortak veriyi geri getirir.\r\n' +
     '4. Bu klasordeki Full System Backup ikinci guvenlik katmanidir.\r\n' +
-    '5. Browser/Outlook/API oturumlari cihaz-bagli oldugu icin yeniden giris yapin.\r\n',
+    '5. Browser/API oturumlari cihaz-bagli oldugu icin yeniden giris yapin.\r\n',
     'utf8');
   await fsp.writeFile(RESULT, recoveryRoot + '\r\n', 'utf8');
 

@@ -45,7 +45,7 @@ function spriteSymbols() {
 }
 function spriteReferences() {
   const files = ['public/index.html', 'public/app-main.js', 'public/oab.js', 'public/row-context-menu.js',
-    'public/kpi-groups.js', 'public/automations.js', 'public/outlook-mail.js',
+    'public/kpi-groups.js', 'public/automations.js',
     'public/user-management.js', 'public/formula-columns.js'];
   const out = new Map();
   for (const file of files) {
@@ -181,13 +181,6 @@ test('KAYITLI DEĞER KÖRÜ KÖRÜNE UYGULANMAZ — veride yoksa düşer ve bild
 /* ------------------------------------------------------------------ */
 /* 4) Model adına sağ tık menüsü                                       */
 /* ------------------------------------------------------------------ */
-
-test('satır içi e-posta düğmesi artık çizilmiyor', () => {
-  const start = APP.indexOf('function outlookRowActionHtml(');
-  const body = APP.slice(start, start + 700);
-  assert.match(body, /return '';/);
-  assert.equal(/buttonHtml/.test(body), false, 'düğme üreten çağrı kalmamalı');
-});
 
 test('sağ tık menüsü betiği yükleniyor', () => {
   // v7.69: açılış kritik yolundan çıkarıldı; deferredUi grubuyla UI_READY

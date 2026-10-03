@@ -77,8 +77,8 @@ test('each guide card has bilingual instructions, a unique ID, a module, an illu
   for(const c of DATA.lessons){assert.ok(!ids.has(c.id),c.id);ids.add(c.id);assert.ok(DATA.modules.some(m=>m.id===c.module));assert.ok(visuals.has(c.visual));assert.ok(c.evidence.startsWith('public/'));for(const l of ['tr','en']){for(const k of ['title','summary','path'])assert.ok(c[k][l],c.id+' '+k);assert.equal(c.steps[l].length,3);assert.ok(c.steps[l].every(Boolean));}}
 });
 test('module and capability access filters match real Orders and quotation area aliases',()=>{
-  const h=guideHarness({accessAreas:{automations:true},capabilities:[]});let lessons=h.win.BLGuide.available();assert.ok(lessons.some(c=>c.id==='automation'));for(const id of ['tools','search','focus','quotation','paste','outlook'])assert.ok(!lessons.some(c=>c.id===id),id);
-  h.win.BL_USER_CONTEXT={accessAreas:{cp:true},capabilities:['OUTLOOK.SEARCH']};lessons=h.win.BLGuide.available();assert.ok(lessons.some(c=>c.id==='orders'));assert.ok(lessons.some(c=>c.id==='outlook'));assert.ok(!lessons.some(c=>c.id==='quotation'));
+  const h=guideHarness({accessAreas:{automations:true},capabilities:[]});let lessons=h.win.BLGuide.available();assert.ok(lessons.some(c=>c.id==='automation'));for(const id of ['tools','search','focus','quotation','paste'])assert.ok(!lessons.some(c=>c.id===id),id);
+  h.win.BL_USER_CONTEXT={accessAreas:{cp:true},capabilities:[]};lessons=h.win.BLGuide.available();assert.ok(lessons.some(c=>c.id==='orders'));assert.ok(!lessons.some(c=>c.id==='quotation'));
   h.win.BL_USER_CONTEXT={accessAreas:{koleksiyon:true},capabilities:[]};lessons=h.win.BLGuide.available();assert.ok(lessons.some(c=>c.id==='quotation'));assert.ok(!lessons.some(c=>c.id==='calculated'));
 });
 test('before a profile exists only general, unrestricted lessons are eligible',()=>{

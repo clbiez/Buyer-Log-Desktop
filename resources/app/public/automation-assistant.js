@@ -237,9 +237,7 @@
       const target = email.recipientMode === 'field'
         ? pick(lang, `“${email.recipientField || '…'}” alanındaki her değere (ör. her üreticiye) KENDİ listesiyle ayrı e-posta`, `a separate email to every value of “${email.recipientField || '…'}” (e.g. each supplier) with its own list`)
         : pick(lang, `${group ? `“${group}”` : '(grup seçilmedi)'} grubuna tek e-posta`, `one email to ${group ? `“${group}”` : '(no group chosen)'}`);
-      lines.push({ kind: 'do', text: email.deliveryMode === 'outlook_send'
-        ? pick(lang, `${target} Outlook ile GERÇEKTEN GÖNDERİLİR.`, `${target} is really SENT with Outlook.`)
-        : pick(lang, `${target} TASLAK olarak hazırlanır; siz kontrol edip gönderirsiniz.`, `${target} is prepared as a DRAFT; you check and send it.`) });
+      lines.push({ kind: 'do', text: pick(lang, `${target} TASLAK olarak hazırlanır; siz kontrol edip gönderirsiniz.`, `${target} is prepared as a DRAFT; you check and send it.`) });
     }
     if (['browser', 'mixed'].includes(r.purpose)) {
       const steps = (r.steps || []).length;
@@ -289,7 +287,6 @@
       } else if (!clean(email.groupId)) add('error', 'E-postanın gideceği grubu seçin.', 'Choose the email group.', { target: 'email' });
       else if (Array.isArray(ctx.groups) && ctx.groups.length && !ctx.groups.some(group => group.id === email.groupId)) add('error', 'Seçili e-posta grubu artık yok; yeniden seçin.', 'The chosen email group no longer exists; choose again.', { target: 'email' });
       if (!clean(email.subject)) add('warn', 'E-posta konusu boş.', 'The email subject is empty.', { target: 'email' });
-      if (email.deliveryMode === 'outlook_send') add('warn', 'Outlook ile otomatik gönderim GERÇEK e-posta gönderir. Emin değilseniz “Taslak oluştur” seçin.', 'Automatic Outlook delivery sends REAL email. If unsure, choose “Create draft”.', { target: 'email' });
     }
     const schedule = r.schedule || {};
     if (schedule.enabled) {

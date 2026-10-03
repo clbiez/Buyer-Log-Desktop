@@ -122,7 +122,7 @@ test('thumbnail henüz görünür alanda yüklenmemiş olsa da panoya kaynak mod
   assert.doesNotMatch(copyCell, /!\/\^data:image\\\/svg\\\+xml\/i\.test\(thumb\.src/);
 });
 
-test('WEBP model görseli Excel ve Outlook panosu için PNG data URL olarak hazırlanır', async () => {
+test('WEBP model görseli Excel ve e-posta panosu için PNG data URL olarak hazırlanır', async () => {
   const counters = { fetches: 0, created: 0, revoked: 0, conversions: 0 };
   const env = fakeEnvironment(fakeCacheStorage(), counters);
   env.fetch = async () => new Response(new Blob(['webp-source'], { type: 'image/webp' }), { status: 200 });

@@ -26,7 +26,7 @@
  *    korumanın yolu menüyü hiç kurmamak.
  *
  * 3) HARİCİ BAĞLANTILAR NORMALDE SİSTEM TARAYICISINA GİDER. PLM ve
- *    Microsoft 365 akışları kullanıcının gerçek kurumsal profiline bağlıdır.
+ *    Harici kurumsal akışlar kullanıcının gerçek kurumsal profiline bağlıdır.
  *    CoreNectum PLM bunun bilinçli istisnasıdır: yalnız Bearer'ı otomatik
  *    edinmek için ayrı, sandbox'lı ve kalıcı bir Electron SSO partition'ı
  *    kullanılır. Ana Buyer Log renderer'ı bu tokenı hiçbir zaman görmez.
@@ -362,7 +362,7 @@ function saveWindowState(targetWindow = activeBuyerLogWindow()) {
 /* ------------------------------------------------------- gezinme politikası */
 
 function isExternalScheme(target) {
-  return /^(https?|mailto|tel|msteams|ms-outlook):/i.test(String(target || ''));
+  return /^(https?|mailto|tel|msteams):/i.test(String(target || ''));
 }
 
 function openExternal(target) {
@@ -451,7 +451,7 @@ function applyDownloadPolicy(targetSession) {
   /*
    * İzinler açıkça yönetilir. Collection'ın çok hücreli kopyala/yapıştır
    * mantığı asenkron pano API'sini kullanıyor (navigator.clipboard.write +
-   * ClipboardItem); bu izin verilmezse Excel/Word/Outlook'a yapıştırma
+   * ClipboardItem); bu izin verilmezse Excel/Word/e-posta istemcisine yapıştırma
    * sessizce bozulur. Kamera, mikrofon, konum vb. Buyer Log'un işi değildir.
    */
   const ALLOWED = new Set(['clipboard-read', 'clipboard-sanitized-write', 'clipboard-write', 'fullscreen']);
