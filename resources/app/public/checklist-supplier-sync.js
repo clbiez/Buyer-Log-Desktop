@@ -1317,6 +1317,85 @@
     return true;
   }
 
+  async function prepareSupplierChecklistEmail() {
+    await loadShared();
+    const rows = selectedRows();
+    if (!rows.length) {
+      toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
+      return false;
+    }
+    const suppliers = Array.from(new Set(rows.map(function (row) {
+      return visibleValue(row, ['Manufacturer', 'Üretici', 'Sub-Manufacturer', 'Supplier']);
+    }).filter(Boolean)));
+    if (suppliers.length !== 1) {
+      toast(T('Üreticiye Checklist hazırlamak için seçili satırlar tek bir üreticiye ait olmalıdır.', 'Prepare Supplier Checklist requires rows from exactly one supplier.'));
+      return false;
+    }
+    const supplier = suppliers[0];
+    const artifact = await exportWorkbook({ rows: rows, download: false });
+    if (!artifact || !artifact.buffer) throw new Error(T('Checklist Excel hazırlanamadı.', 'Checklist workbook could not be prepared.'));
+    const excelBlob = new Blob([artifact.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    let excelFile;
+    try { excelFile = new File([excelBlob], artifact.filename, { type: excelBlob.type, lastModified: Date.now() }); }
+    catch (_) { excelBlob.name = artifact.filename; excelFile = excelBlob; }
+
+    const decision = analysesForRows(rows), items = itemCatalog(), attachmentMap = new Map();
+    rows.forEach(function (row) {
+      const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+      if (!analysis) return;
+      items.forEach(function (item) {
+        if (!itemApplies(item, analysis)) return;
+        const answer = answerFor(item, analysis);
+        (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
+          if (entry && entry.id && !attachmentMap.has(entry.id)) attachmentMap.set(entry.id, entry);
+        });
+      });
+    });
+
+    const evidenceFiles = [];
+    for (const meta of attachmentMap.values()) {
+      const file = await checklistAttachmentAsFile(meta);
+      if (!file) {
+        throw new Error(T('Checklist eklerinden biri okunamadı: ', 'A checklist attachment could not be read: ') + (meta.filename || meta.id));
+      }
+      evidenceFiles.push(file);
+    }
+    const initialFiles = [{ file: excelFile, modelLabel: T('Checklist Excel', 'Checklist Excel') }]
+      .concat(evidenceFiles.map(function (file) { return { file: file, modelLabel: T('Checklist eki', 'Checklist attachment') }; }));
+
+    const directory = typeof root.BLPrepareEmailManufacturers === 'function' ? root.BLPrepareEmailManufacturers() : null;
+    if (Array.isArray(directory) && !directory.some(function (item) {
+      return item && text(item.name).toLocaleLowerCase('tr-TR') === supplier.toLocaleLowerCase('tr-TR');
+    })) directory.push({ name: supplier, email: '' });
+
+    const tempRows = rows.map(function (row, index) {
+      return { ...row, id: -100000 - index, manufacturer: supplier, buyingSampleManufacturer: supplier, _cpSourceRow: row };
+    });
+    const context = {
+      rows: tempRows,
+      count: tempRows.length,
+      btnId: 'cpChecklistPrepareEmailVirtualBtn',
+      persist: false,
+      preselect: [supplier],
+      initialFiles: initialFiles,
+      title: T('Üreticiye Checklist Exceli Hazırla', 'Prepare Supplier Checklist'),
+      subtitle: T(
+        tempRows.length + ' sipariş · Checklist Excel + ' + evidenceFiles.length + ' ek · taslak oluşturmadan önce kontrol edin',
+        tempRows.length + ' orders · Checklist Excel + ' + evidenceFiles.length + ' attachment(s) · review before creating drafts'
+      ),
+      resultTitle: T('Checklist E-Posta Sonucu', 'Checklist E-Mail Result'),
+    };
+    if (root.BLPrepareEmail && typeof root.BLPrepareEmail.openChecklist === 'function') {
+      root.BLPrepareEmail.openChecklist(context);
+      return true;
+    }
+    if (typeof root.renderKolMfrModal === 'function') {
+      root.renderKolMfrModal({ ...context, defaultTopicKind: 'general', defaultTopicId: 'general-checklist' });
+      return true;
+    }
+    throw new Error(T('Prepaire E-Mail modülü hazır değil.', 'Prepaire E-Mail module is not ready.'));
+  }
+
   function ensureUi() {
     const menu = root.document && root.document.getElementById('cpToolsMenu');
     if (!menu || root.document.getElementById('cpChecklistToolsWrap')) return;
@@ -1347,6 +1426,7 @@
     sub.style.minWidth = '240px';
     sub.innerHTML = '<div class="toolbarMoreLabel">CHECKLIST</div>'
       + '<button type="button" class="tbtn" data-checklist-excel-create><svg class="ic"><use href="#i-file-export"/></svg><span>Create Checklist Excel</span></button>'
+      + '<button type="button" class="tbtn" data-checklist-supplier-prepare><svg class="ic"><use href="#i-mail-send"/></svg><span>' + T('Üreticiye Checklist Exceli Hazırla', 'Prepare Supplier Checklist') + '</span></button>'
       + '<button type="button" class="tbtn" data-checklist-excel-import><svg class="ic"><use href="#i-file-import"/></svg><span>Import Checklist Excel</span></button>'
       + '<button type="button" class="tbtn" data-checklist-excel-columns><svg class="ic"><use href="#i-columns-3"/></svg><span>Checklist Excel Columns</span></button>';
 
@@ -1392,6 +1472,12 @@
       closeSub();
       exportWorkbook().catch(function (error) {
         toast(T('Checklist Excel oluşturulamadı: ', 'Checklist workbook could not be created: ') + (error.message || error));
+      });
+    });
+    sub.querySelector('[data-checklist-supplier-prepare]').addEventListener('click', function () {
+      closeSub();
+      prepareSupplierChecklistEmail().catch(function (error) {
+        toast(T('Üretici checklist e-postası hazırlanamadı: ', 'Supplier checklist e-mail could not be prepared: ') + (error.message || error));
       });
     });
     sub.querySelector('[data-checklist-excel-import]').addEventListener('click', function () {
@@ -1752,6 +1838,7 @@
     loadShared: loadShared,
     refreshColumns: refreshColumns,
     exportWorkbook: exportWorkbook,
+    prepareSupplierChecklistEmail: prepareSupplierChecklistEmail,
     importWorkbook: importWorkbook,
     normalizeState: normalizeState,
     statusLabel: statusLabel,
