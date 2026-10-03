@@ -1411,6 +1411,161 @@
     });
   }
 
+  function evidenceEnabled(item) {
+    const fields = item && item.evidenceFields || {};
+    return Boolean(fields.reportNumber || fields.actualDate || fields.attachments);
+  }
+  function fileBase64(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function () {
+        const value = String(reader.result || '');
+        resolve(value.indexOf(',') >= 0 ? value.slice(value.indexOf(',') + 1) : value);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  async function uploadChecklistAttachment(file, context) {
+    const payload = await post('/attachments', {
+      filename: file.name || 'attachment',
+      mimeType: file.type || 'application/octet-stream',
+      base64: await fileBase64(file),
+      context: context || {},
+    });
+    return payload && payload.attachment;
+  }
+  async function deleteChecklistAttachment(id) {
+    const response = await root.fetch(API + '/attachments/' + encodeURIComponent(id), { method: 'DELETE' });
+    if (!response.ok) throw new Error(T('Checklist eki silinemedi.', 'Checklist attachment could not be deleted.'));
+    return true;
+  }
+  async function checklistAttachmentAsFile(meta) {
+    if (!meta || !meta.id) return null;
+    const response = await root.fetch(API + '/attachments/' + encodeURIComponent(meta.id), { cache: 'no-store' });
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    try {
+      return new File([blob], meta.filename || 'attachment', { type: meta.mimeType || blob.type || 'application/octet-stream', lastModified: Date.now() });
+    } catch (_) {
+      blob.name = meta.filename || 'attachment';
+      return blob;
+    }
+  }
+  function evidenceContext(row, item, status, sequence) {
+    return {
+      orderCode: visibleValue(row, ['Order Code', 'ORDER CODE', 'OrderCode']),
+      plmId: visibleValue(row, ['PLM ID', 'PLM', 'PLM Id']),
+      modelName: visibleValue(row, ['Model Name', 'MODEL NAME', 'Model', 'Model Adı']),
+      colourCode: visibleValue(row, ['C.Code', 'Colour Code', 'Color Code', 'Renk Kodu']),
+      checklistName: isEn() ? item.en : item.tr,
+      checklistStatus: statusLabel(status),
+      sequence: sequence || 1,
+    };
+  }
+  function openChecklistEvidenceDialog(trigger) {
+    const row = cpRowById(trigger && trigger.dataset.id);
+    const itemId = trigger && trigger.dataset.item;
+    const item = itemCatalog().find(function (entry) { return entry.id === itemId; });
+    if (!row || !item || !evidenceEnabled(item)) return;
+    const decision = analysesForRows([row]);
+    const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+    if (!analysis) return;
+    const answer = answerFor(item, analysis);
+    const status = normalizeState(answer && answer.state) || normalizeState(trigger.dataset.status) || 'open';
+    if (status === 'open') {
+      toast(T('Rapor/ek bilgisi eklemeden önce checklist durumunu Onaylandı, Reddedildi veya Gerekmiyor olarak seçin.', 'Choose Approved, Rejected or Not Required before adding report/evidence details.'));
+      return;
+    }
+    root.document.getElementById('_blChecklistEvidence')?.remove();
+    let kept = Array.isArray(answer && answer.attachments) ? answer.attachments.slice() : [];
+    const removed = new Set();
+    const pending = [];
+    const modal = root.document.createElement('div');
+    modal.id = '_blChecklistEvidence';
+    modal.className = 'cpaModalOverlay';
+    const fields = item.evidenceFields || {};
+    const attachmentRows = function () {
+      const current = kept.filter(function (entry) { return !removed.has(entry.id); });
+      return current.map(function (entry) {
+        const href = API + '/attachments/' + encodeURIComponent(entry.id);
+        return '<div class="cpaSettingRow" data-evidence-attachment="' + entry.id + '"><span><b>' + (entry.filename || entry.originalName || T('Dosya', 'File')) + '</b><small>' + Math.max(0, Number(entry.size) || 0).toLocaleString() + ' B</small></span>'
+          + '<span style="display:flex;gap:6px"><a class="cpaBtn" href="' + href + '" download="' + (entry.filename || 'attachment') + '">' + T('Aç / İndir', 'Open / Download') + '</a>'
+          + '<button type="button" class="cpaBtn" data-evidence-remove="' + entry.id + '">' + T('Kaldır', 'Remove') + '</button></span></div>';
+      }).join('');
+    };
+    modal.innerHTML = `<div class="cpaModal" role="dialog" aria-modal="true">
+      <header><div><b>${T('Checklist Detayları', 'Checklist Details')} · ${isEn() ? item.en : item.tr}</b>
+        <small>${visibleValue(row, ['Order Code', 'ORDER CODE'])} · ${statusLabel(status)}</small></div>
+        <button type="button" data-evidence-close aria-label="${T('Kapat', 'Close')}">×</button></header>
+      <div class="cpaModalBody">
+        <div class="cpaSettingGroup">
+          <label class="cpaSettingRow"><span><b>${T('Not', 'Note')}</b></span><textarea data-evidence-note rows="3">${answer && answer.note || ''}</textarea></label>
+          ${fields.reportNumber ? `<label class="cpaSettingRow"><span><b>${T('Rapor numarası', 'Report number')}</b></span><input type="text" data-evidence-report value="${answer && answer.reportNumber || ''}"></label>` : ''}
+          ${fields.actualDate ? `<label class="cpaSettingRow"><span><b>${T('Gerçekleşme tarihi', 'Actual date')}</b></span><input type="date" data-evidence-date value="${answer && answer.actualDate || ''}"></label>` : ''}
+        </div>
+        ${fields.attachments ? `<div class="cpaSettingGroup"><div class="cpaSettingRow"><span><b>${T('Rapor / e-mail ekleri', 'Report / e-mail attachments')}</b><small>${T('Dosyalar Buyer Log’da saklanır ve Üreticiye Checklist Exceli Hazırla akışında e-postaya otomatik eklenir.', 'Files are stored in Buyer Log and automatically attached by Prepare Supplier Checklist.')}</small></span>
+          <label class="cpaBtn">${T('Dosya Ekle', 'Add File')}<input type="file" data-evidence-files multiple hidden></label></div>
+          <div data-evidence-list>${attachmentRows()}</div>
+          <div data-evidence-pending></div></div>` : ''}
+      </div>
+      <footer><button type="button" class="cpaBtn" data-evidence-close>${T('Vazgeç', 'Cancel')}</button><button type="button" class="cpaBtn primary" data-evidence-save>${T('Kaydet', 'Save')}</button></footer>
+    </div>`;
+    root.document.body.appendChild(modal);
+    const close = function () { modal.remove(); };
+    modal.querySelectorAll('[data-evidence-close]').forEach(function (button) { button.onclick = close; });
+    modal.onclick = function (event) { if (event.target === modal) close(); };
+    const refreshAttachments = function () {
+      const list = modal.querySelector('[data-evidence-list]');
+      if (list) list.innerHTML = attachmentRows();
+      const pendingHost = modal.querySelector('[data-evidence-pending]');
+      if (pendingHost) pendingHost.innerHTML = pending.map(function (file, index) {
+        return '<div class="cpaSettingRow"><span><b>' + file.name + '</b><small>' + file.size.toLocaleString() + ' B · ' + T('Kaydedilince yeniden adlandırılacak', 'Will be renamed when saved') + '</small></span><button type="button" class="cpaBtn" data-evidence-pending-remove="' + index + '">' + T('Kaldır', 'Remove') + '</button></div>';
+      }).join('');
+    };
+    modal.addEventListener('click', function (event) {
+      const remove = event.target.closest('[data-evidence-remove]');
+      if (remove) { removed.add(remove.dataset.evidenceRemove); refreshAttachments(); return; }
+      const pendingRemove = event.target.closest('[data-evidence-pending-remove]');
+      if (pendingRemove) { pending.splice(Number(pendingRemove.dataset.evidencePendingRemove), 1); refreshAttachments(); }
+    });
+    modal.querySelector('[data-evidence-files]')?.addEventListener('change', function (event) {
+      Array.from(event.target.files || []).forEach(function (file) { pending.push(file); });
+      event.target.value = '';
+      refreshAttachments();
+    });
+    modal.querySelector('[data-evidence-save]').onclick = async function () {
+      const button = modal.querySelector('[data-evidence-save]');
+      button.disabled = true;
+      try {
+        const live = kept.filter(function (entry) { return !removed.has(entry.id); });
+        for (let i = 0; i < pending.length; i += 1) {
+          const uploaded = await uploadChecklistAttachment(pending[i], evidenceContext(row, item, status, live.length + i + 1));
+          if (uploaded) live.push(uploaded);
+        }
+        const assistant = await ensureAssistant();
+        if (!assistant || typeof assistant.setChecklistAnswer !== 'function') throw new Error(T('Checklist kaydı açılamadı.', 'Checklist record is unavailable.'));
+        assistant.setChecklistAnswer(analysis, item.id, status, {
+          note: String(modal.querySelector('[data-evidence-note]')?.value || ''),
+          reportNumber: fields.reportNumber ? String(modal.querySelector('[data-evidence-report]')?.value || '') : (answer && answer.reportNumber || ''),
+          actualDate: fields.actualDate ? String(modal.querySelector('[data-evidence-date]')?.value || '') : (answer && answer.actualDate || ''),
+          attachments: live,
+        });
+        await syncAnswerChanges();
+        for (const id of removed) {
+          try { await deleteChecklistAttachment(id); } catch (_) {}
+        }
+        kept = live;
+        refreshColumns({ render: true });
+        toast(T('Checklist detayları kaydedildi.', 'Checklist details saved.'));
+        close();
+      } catch (error) {
+        toast(T('Checklist detayları kaydedilemedi: ', 'Checklist details could not be saved: ') + (error.message || error));
+        button.disabled = false;
+      }
+    };
+  }
+
   /* CP checklist hücresi durum menüsü. Hücreye yazı YAZILAMAZ; yalnız bu
      menüdeki dört durumdan biri seçilir ve Genel Bakış ile aynı cevap
      kaydına (BLCpAssistant.setChecklistAnswer) yazılır. */
