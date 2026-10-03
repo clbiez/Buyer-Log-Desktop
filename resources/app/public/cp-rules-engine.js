@@ -621,6 +621,12 @@
       // option: Approved, PLM ID + Model Name + Colour Code eşleşen PO'larda
       // yeniden kullanılır. Varsayılan order; mevcut davranış değişmez.
       base.approvalScope = text(item.approvalScope) === 'option' ? 'option' : 'order';
+      const evidence = item.evidenceFields && typeof item.evidenceFields === 'object' ? item.evidenceFields : {};
+      base.evidenceFields = {
+        reportNumber: evidence.reportNumber === true,
+        actualDate: evidence.actualDate === true,
+        attachments: evidence.attachments === true,
+      };
     }
     if (base.mode === 'formula' && base.formula) {
       try {
