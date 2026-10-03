@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.225",
+      "publishedAt": "2026-10-03",
+      "title": {
+        "tr": "Kullanıcı dizini kurtarma kapsamı düzeltildi",
+        "en": "User directory recovery coverage fixed"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.225/release.json"
+    },
+    {
       "version": "7.0.224",
       "publishedAt": "2026-10-03",
       "title": {

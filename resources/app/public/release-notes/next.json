@@ -1,81 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-03",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kullanıcı dizini kurtarma kapsamı düzeltildi",
-    "en": "User directory recovery coverage fixed"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Shared Hub bağlı görünürken kullanıcı listesinin 0 kullanıcı / 0 aktif kalmasına yol açan masaüstü kimlik deposu kurtarma hatası giderildi.",
-    "en": "Fixed the desktop identity-store recovery issue that could leave the user list at 0 users / 0 active even while Shared Hub appeared connected."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "portable-auth-backup-recovery",
-      "type": "fix",
-      "module": {
-        "tr": "Giriş · Shared Sync · Central IAM",
-        "en": "Login · Shared Sync · Central IAM"
-      },
-      "title": {
-        "tr": "Eski kullanıcı deposu gerçek masaüstü yedek konumlarından otomatik bulunuyor",
-        "en": "Previous user stores are now recovered automatically from real desktop backup locations"
-      },
-      "body": {
-        "tr": "Buyer Log artık portable kurulumlarda data-BACKUP klasörlerini, eski data/auth konumunu, migration evidence kayıtlarını, legacy server/data deposunu ve önceki Windows AppData kimlik deposunu sınırlı ve güvenli bir aday listesi olarak kontrol ediyor. En güçlü geçerli kullanıcı deposu mevcut auth alanına taşınıyor ve Central IAM önbelleği ise içe aktarıldıktan sonra yeniden okunuyor.",
-        "en": "Buyer Log now checks bounded known desktop locations including data-BACKUP folders, the legacy data/auth path, migration evidence, legacy server/data, and the previous Windows AppData identity store. The strongest valid user store is restored into the active auth location and a recovered Central IAM cache is re-read after import."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "src": "iam-user-recovery-7.0.225.png",
-        "alt": {
-          "tr": "Shared Hub bağlıyken eski Buyer Log kullanıcı depolarından kimlik kurtarma akışı",
-          "en": "Identity recovery flow from previous Buyer Log user stores while Shared Hub is connected"
-        },
-        "caption": {
-          "tr": "Düzeltme sonrası Shared Sync kullanıcı adımının örnek görünümü: geçerli kullanıcı dizini doğrulanmış ve girişe hazır.",
-          "en": "Example of the Shared Sync users step after the fix: a valid user directory is verified and ready for login."
-        },
-        "capture": "post-change"
-      },
-      "path": {
-        "tr": "Buyer Log → Giriş → Ayarlar → Shared Sync",
-        "en": "Buyer Log → Login → Settings → Shared Sync"
-      }
-    },
-    {
-      "id": "empty-iam-bootstrap-guard",
-      "type": "fix",
-      "module": {
-        "tr": "Shared Sync · Kullanıcılar ve yetkiler",
-        "en": "Shared Sync · Users and permissions"
-      },
-      "title": {
-        "tr": "0 kullanıcı artık başarılı eşitleme olarak gösterilmiyor",
-        "en": "Zero users is no longer reported as a successful sync"
-      },
-      "body": {
-        "tr": "Daha önce tamamlanmış Shared Hub işareti, IAM verisi kayıp olsa bile kullanıcı adımını başarılı gösterebiliyordu. Artık sıfır kullanıcı veya sıfır aktif kullanıcı durumunda bootstrap açıkça hata verir; böylece arayüz gerçekte olmayan bir başarı durumu göstermiyor.",
-        "en": "A previously completed Shared Hub marker could make the users step look successful even when IAM data was missing. Bootstrap now fails explicitly when there are zero users or zero active users, preventing a false ready state."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "src": "iam-user-recovery-7.0.225.png",
-        "alt": {
-          "tr": "Shared Hub kullanıcı dizini doğrulama ve kurtarma adımları",
-          "en": "Shared Hub user directory validation and recovery steps"
-        },
-        "caption": {
-          "tr": "Düzeltme sonrası kullanıcı sayısı doğrulanmadan Shared Sync hazır kabul edilmiyor.",
-          "en": "After the fix, Shared Sync is not considered ready until the user count is validated."
-        },
-        "capture": "post-change"
-      },
-      "path": {
-        "tr": "Buyer Log → Giriş → Ayarlar → Kullanıcılar ve yetkiler",
-        "en": "Buyer Log → Login → Settings → Users and permissions"
-      }
-    }
-  ]
+  "changes": []
 }
