@@ -213,6 +213,7 @@
         questionTr: rule.questionTr || rule.name || rule.id,
         questionEn: rule.questionEn || rule.name || rule.id,
         builtIn: rule.builtIn === true,
+        approvalScope: rule.approvalScope === 'option' ? 'option' : 'order',
         raw: rule,
       });
     });
@@ -258,6 +259,11 @@
     const key = Checklist.answerKey(analysis.orderKey, item.id);
     const answer = s.answers && s.answers[key];
     if (answer && !Checklist.answerIsStale(answer, analysis)) return answer;
+    if (item.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function') {
+      const optionKey = Checklist.optionAnswerKey(analysis, item.id);
+      const reusable = optionKey && s.answers && s.answers[optionKey];
+      if (reusable && Checklist.normalizeStatus(reusable.state) === 'approved') return reusable;
+    }
     if (item.builtIn && root.BLPlmSampleRequests && typeof root.BLPlmSampleRequests.evidenceForAnalysis === 'function') {
       try {
         const evidence = root.BLPlmSampleRequests.evidenceForAnalysis(analysis, item.id);
