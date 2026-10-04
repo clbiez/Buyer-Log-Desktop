@@ -1339,7 +1339,7 @@ const _favoritesAppliedPages = new Set();
 // Seçime bağlı işlemler: eskiden vfBar'daki "Seçilenler" grubunda satır içi
 // duruyorlardı; artık CP/Siparişler araç çubuğundaki "Araçlar" menüsüne taşınırlar.
 // Tekil düğümler oldukları için paylaşılan taşıma sistemine dahil edilmeleri şart.
-const _selectionActionIds=['cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn','cpRemoveImagesBtn'];
+const _selectionActionIds=['cpQuotationsBtn','cpCreateOcBtn','cpPriceHistoryBtn','selectedBacklogBtn','cpProdStatusBtn','navToShipping','cpSendPricingBtn'];
 const _sharedTableActionIds=['undoBtn','redoBtn','cpCopyToKolBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navFitColumnsBtn','navFreezeBtn','navClearFilters','navColsBtn',..._selectionActionIds];
 function sharedTableActionNode(id){
   const el=document.getElementById(id);
@@ -14505,6 +14505,38 @@ async function openDataMaintenanceModal(host=null){
   await run('analyze');
 }
 void refreshSyncStatusBadge();
+/* Data Temizliği hatırlatması. Haftalık kontrolü sunucu yapar (kendi bayat
+   verisini sormadan siler); burada yalnız kayda değer temizlenebilir veri
+   kaldıysa oturum başına BİR kez bildirim gösterilir. Açılış perdesini
+   beklemek için gecikmeli başlar; Veri Yönetimi yetkisi yoksa hiç sormaz. */
+function openDataCleanupTool(){
+  if(switchTab('source')===false)return;
+  void window.BLPerf.ensureFeature('dataManagement').then(()=>{
+    const screen=window.BLDataManagement;
+    screen?.mount?.(document.getElementById('dataManagementRoot'));
+    screen?.openTool?.('cleanup');
+  }).catch(error=>{if(typeof showToast==='function')showToast(error&&error.message||String(error));});
+}
+async function checkDataCleanupReminder(){
+  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('source'))return;
+  const notify=window.BLUI?.notify;if(typeof notify!=='function')return;
+  let data;try{const res=await fetch('/api/data-cleanup/reminder',{cache:'no-store'});if(!res.ok)return;data=(await res.json()).result;}catch(_){return;}
+  if(!data||!data.due)return;
+  const en=appLang==='en';
+  const size=(data.localDue?Number(data.local&&data.local.size)||0:0)+(data.syncDue?Number(data.sync&&data.sync.size)||0:0);
+  const where=data.localDue&&data.syncDue?(en?'this computer and the sync folder':'bu bilgisayarda ve sync klasöründe'):data.syncDue?(en?'the sync folder':'sync klasöründe'):(en?'this computer':'bu bilgisayarda');
+  const message=en?`${blDataMaintBytes(size)} of unnecessary data can be cleaned on ${where}.`:`${where.charAt(0).toUpperCase()+where.slice(1)} ${blDataMaintBytes(size)} gereksiz veri temizlenebilir.`;
+  const auto=data.autoClean&&Number(data.autoClean.removed)>0?(en?`Buyer Log already removed its own stale temporary data (${blDataMaintBytes(data.autoClean.freed)}).`:`Buyer Log kendi bayat geçici verisini zaten temizledi (${blDataMaintBytes(data.autoClean.freed)}).`):'';
+  notificationHistoryAdd(message,'toast');
+  notify(message,{kind:'warning',placement:'edge',kindLabel:en?'DATA CLEANUP':'DATA TEMİZLİĞİ',detail:auto,language:appLang,duration:0,
+    actions:[{id:'open',label:en?'Review & Clean':'İncele ve Temizle',primary:true},{id:'later',label:en?'Remind next week':'Gelecek hafta hatırlat'}],
+    onAction:async(id,{close})=>{
+      close();
+      if(id==='open')openDataCleanupTool();
+      else await fetch('/api/data-cleanup/reminder/dismiss',{method:'POST'}).catch(()=>{});
+    }});
+}
+setTimeout(()=>{void checkDataCleanupReminder();},45000);
 document.getElementById('cpMoreBtn')?.addEventListener('click',e=>{
   e.stopPropagation();
   const btn=e.currentTarget,menu=document.getElementById('cpMoreMenu');
@@ -17962,13 +17994,6 @@ function updateShippingBtnVisibility(){
   if(ps){
     ps.disabled = !hasActionSelection;
     ps.title = hasActionSelection ? `${count} sipariş için e-posta taslağı hazırla` : 'E-posta hazırlamak için önce sipariş seç';
-  }
-  const rmi = document.getElementById('cpRemoveImagesBtn');
-  if(rmi){
-    rmi.disabled = !has;
-    rmi.title = has
-      ?(appLang==='en'?`Permanently delete the images of ${cpCount} selected row(s) locally and from the shared network folder`:`${cpCount} seçili satırın görselini yerelden ve ortak ağ klasöründen kalıcı olarak sil`)
-      :(appLang==='en'?'Select rows first to remove their images':'Görselleri kaldırmak için önce satır seç');
   }
   const ctk = document.getElementById('cpCopyToKolBtn');
   if(ctk){
@@ -32794,13 +32819,6 @@ function updateKolSendBtnState(){
     btn.disabled = !hasSelection;
     btn.title = hasSelection ? `${kolSelected.size} modeli fiyatlamaya gönder` : 'Fiyatlamaya göndermek için önce en az bir model seç';
   }
-  const removeImagesBtn=document.getElementById('kolRemoveImagesBtn');
-  if(removeImagesBtn){
-    removeImagesBtn.disabled=!(hasSelection&&kolWorkspaceCanEdit);
-    removeImagesBtn.title=hasSelection
-      ?(appLang==='en'?`Permanently delete the images of ${validSelectionCount} selected model(s) locally and from the shared network folder`:`${validSelectionCount} seçili modelin görselini yerelden ve ortak ağ klasöründen kalıcı olarak sil`)
-      :(appLang==='en'?'Select models first to remove their images':'Görselleri kaldırmak için önce model seç');
-  }
   const shippingBtn=document.getElementById('kolSendShippingBtn');
   if(shippingBtn){
     shippingBtn.disabled=!hasSelection;
@@ -34585,107 +34603,6 @@ document.getElementById('cpSendPricingBtn')?.addEventListener('click', ()=>{
   let tempId=-1;
   const tempRows=rows.map(r=>{const k=cpRowToKolRow(r),manufacturer=norm(r['Sub-Manufacturer'])||norm(r['Manufacturer'])||'';return {...r,...k,id:tempId--,manufacturer,buyingSampleManufacturer:manufacturer};});
   renderKolMfrModal({rows:tempRows,count:tempRows.length,btnId:'cpProdStatusBtn',persist:false,defaultTopicKind:'pricing',title:appLang==='en'?'Prepaire E-Mail':'E-Posta Hazırla'});
-});
-
-/* "Görselleri Kaldır" (CP + Koleksiyon): seçili modellerin görselleri tek
-   işlemde, gerçek anlamda silinir. Sunucu kanonik kayda mezar taşı yazar,
-   paylaşılan ağ klasöründen mezar taşı + baytları siler ve artık
-   kullanılmayan yerel dosyaları kaldırır. Aynı kimliği taşıyan CP/Siparişler
-   ve (kendi) Koleksiyon satırları da temizlenir; aksi hâlde bir sonraki
-   eşitleme görseli geri yayımlardı.
-   identities: PLM ID + Colour Code kimlikleri (Map key → {plmId,colourCode,refs}).
-   rowItems:   Colour Code taşımayan Koleksiyon satırları ({row,plmId,recordId,imageRef}). */
-async function modelImagesDeleteSelected({identities,rowItems=[],skipped=0}){
-  const total=identities.size+rowItems.length;
-  if(!total){showToast(appLang==='en'?'The selected rows have no image to remove.':'Seçili satırlarda kaldırılacak görsel yok.');return false;}
-  const question=appLang==='en'
-    ?`Permanently delete the images of ${total} model(s)? They will be removed from this computer and from the shared network folder. This cannot be undone.${skipped?` ${skipped} row(s) without an image identity will be skipped.`:''}`
-    :`${total} model görseli kalıcı olarak silinsin mi? Görseller bu bilgisayardan ve ortak ağ klasöründen kaldırılacak. Bu işlem geri alınamaz.${skipped?` Görsel kimliği olmayan ${skipped} satır atlanacak.`:''}`;
-  if(!confirm(question))return false;
-  // Koleksiyon satırları yalnız sunucu silmeyi onayladıktan SONRA değiştirilir;
-  // sunucu bu satırların görselini "kullanımda" saymaz.
-  const kolEditable=kolWorkspaceCanEdit&&kolWorkspaceMode!=='multi'&&kolIsOwnWorkspace();
-  const rowItemRows=new Set(rowItems.map(item=>item.row).filter(Boolean));
-  const kolTargets=(Array.isArray(kolRows)?kolRows:[]).filter(row=>{
-    if(!row||(!row.img&&!row.imgRef))return false;if(rowItemRows.has(row))return true;
-    const key=cpImageOverrideKey(row.plmId,row.colourCode);return key&&identities.has(key);
-  });
-  if(kolEditable)kolTargets.forEach(row=>{const key=cpImageOverrideKey(row.plmId,row.colourCode);if(row.imgRef&&key&&identities.has(key))identities.get(key).refs.add(row.imgRef);});
-  const items=[];identities.forEach(item=>{const refs=[...item.refs];(refs.length?refs:['']).forEach(imageRef=>items.push({plmId:item.plmId,colourCode:item.colourCode,imageRef}));});
-  const rowPayload=rowItems.map(item=>({plmId:item.plmId||'',recordId:item.recordId||'',imageRef:item.imageRef||''}));
-  try{
-    const res=await fetch('/api/model-images/delete-selected',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,rowItems:rowPayload,expectedRevision:state?.overrides?._revisions?.orders,collectionRowsCleared:kolEditable||!kolTargets.length,collectionOwnerId:kolWorkspaceOwnerId})});
-    const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);
-    const invalidated=[];let kolCleared=false;
-    if(kolEditable&&kolTargets.length){
-      kolTargets.forEach(row=>{if(row.imgRef)invalidated.push(row.imgRef,`${COLLECTION_IMAGE_API}/${encodeURIComponent(row.imgRef)}`);if(row.img)invalidated.push(row.img);row.img='';row.imgRef='';});
-      kolCleared=true;saveKolRows();
-    }
-    if(data.overrides){state.overrides=mergeImageOverridePayload(state.overrides,data.overrides);syncModelImageRegistry();}
-    identities.forEach(item=>{
-      item.refs.forEach(ref=>invalidated.push(ref,`${CP_IMAGE_API}/${encodeURIComponent(ref)}`,`${COLLECTION_IMAGE_API}/${encodeURIComponent(ref)}`));
-      cpRowsForImageIdentity(item.plmId,item.colourCode).forEach(row=>{if(row._imageUrl)invalidated.push(row._imageUrl);row._imageKey=cpImageOverrideKey(item.plmId,item.colourCode);row._imageRef='';row._imageUrl='';});
-    });
-    rowItems.forEach(item=>{if(item.imageRef)invalidated.push(item.imageRef);});
-    BLImageRuntime.invalidate(invalidated);
-    renderCP();renderOrders();if(kolCleared||document.body.dataset.activeTab==='koleksiyon')renderKol();
-    const shared=data.sharedQueued
-      ?(appLang==='en'?' Shared folder is unreachable; the deletion will be applied there when it reconnects.':' Ortak ağ klasörüne erişilemedi; silme bağlantı gelince orada da uygulanacak.')
-      :(appLang==='en'?` Shared folder: ${data.sharedTombstoned||0} record(s) deleted, ${data.sharedErased||0} image file(s) erased.`:` Ortak klasör: ${data.sharedTombstoned||0} kayıt silindi, ${data.sharedErased||0} görsel dosyası temizlendi.`);
-    showToast((appLang==='en'?`${data.identities||total} model image(s) removed; ${data.deletedLocal||0} local file(s) deleted.`:`${data.identities||total} model görseli kaldırıldı; ${data.deletedLocal||0} yerel dosya silindi.`)+shared);
-    return true;
-  }catch(err){
-    showToast((appLang==='en'?'Images could not be removed: ':'Görseller kaldırılamadı: ')+(err&&err.message||err));
-    return false;
-  }
-}
-async function cpRemoveSelectedImages(btn){
-  const rows=selectedCpRowsForAction();if(rows===null)return false;
-  if(!rows.length){showToast(appLang==='en'?'Select at least one row in CP first.':"Önce CP'de en az bir satır seç.");return false;}
-  const identities=new Map();let skipped=0;
-  rows.forEach(row=>{
-    const key=cpImageOverrideKey(row['PLM ID'],row['C.Code']);
-    if(!key){skipped++;return;}
-    if(!identities.has(key))identities.set(key,{plmId:row['PLM ID'],colourCode:row['C.Code'],refs:new Set()});
-    if(row._imageRef)identities.get(key).refs.add(row._imageRef);
-  });
-  if(btn)btn.disabled=true;
-  try{return await modelImagesDeleteSelected({identities,skipped});}
-  finally{if(btn)updateShippingBtnVisibility();}
-}
-async function kolRemoveSelectedImages(btn){
-  if(!kolRequireWorkspaceEdit())return false;
-  // Görselin sahibi kendi Koleksiyonudur; başka bir kullanıcının sayfasındaki
-  // görseller onun ortak klasör kayıtlarıdır ve buradan silinmez.
-  if(kolWorkspaceMode==='multi'||!kolIsOwnWorkspace()){showToast(appLang==='en'?'Images can be removed in bulk only in your own Collection.':'Görseller toplu olarak yalnız kendi Koleksiyonunuzda kaldırılabilir.');return false;}
-  const rows=kolValidSelectedRows();
-  if(!rows.length){showToast(appLang==='en'?'Select at least one Collection model first.':'Önce en az bir Koleksiyon modeli seç.');return false;}
-  const identities=new Map(),rowItems=[];let skipped=0;
-  rows.forEach(row=>{
-    const key=cpImageOverrideKey(row.plmId,row.colourCode);
-    if(key){
-      if(!identities.has(key))identities.set(key,{plmId:row.plmId,colourCode:row.colourCode,refs:new Set()});
-      if(row.imgRef)identities.get(key).refs.add(row.imgRef);
-      return;
-    }
-    if(!row.img&&!row.imgRef){skipped++;return;}
-    rowItems.push({row,plmId:norm(row.plmId)||'',recordId:String(row.recordId||row._sharedRecordId||row.id||''),imageRef:row.imgRef||''});
-  });
-  if(btn)btn.disabled=true;
-  try{return await modelImagesDeleteSelected({identities,rowItems,skipped});}
-  finally{if(btn)updateKolSendBtnState();}
-}
-document.getElementById('cpRemoveImagesBtn')?.addEventListener('click',async event=>{
-  const btn=event.currentTarget;
-  window.BLTableToolbarActionCleanup?.begin?.(btn);
-  const ok=await cpRemoveSelectedImages(btn);
-  window.BLTableToolbarActionCleanup?.finish?.(btn,ok);
-});
-document.getElementById('kolRemoveImagesBtn')?.addEventListener('click',async event=>{
-  const btn=event.currentTarget;
-  window.BLTableToolbarActionCleanup?.begin?.(btn);
-  const ok=await kolRemoveSelectedImages(btn);
-  window.BLTableToolbarActionCleanup?.finish?.(btn,ok);
 });
 
 // CP "Koleksiyona Kopyala": seçili CP satırlarını Koleksiyon sayfasına kopyalar.

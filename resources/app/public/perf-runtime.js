@@ -138,7 +138,7 @@
     /* v7.81 — Veri Yönetimi ekranı açılış kritik yolunda DEĞİLDİR: günlük
        kullanımda hiç açılmayan bir kurulum ekranıdır. Sekmeye ilk geçişte
        yüklenir (§11). */
-    dataManagement:['data-management-picker.js?rev=1','data-management-filter.js?rev=2','data-management-source.js?rev=2','data-management-mapping.js?rev=1','data-management-cpcolumns.js?rev=1','data-management-matchrule.js?rev=1','data-management-query.js?rev=1','data-management-connection.js?rev=1','data-management.js?rev=8'],
+    dataManagement:['data-management-picker.js?rev=1','data-management-filter.js?rev=2','data-management-source.js?rev=2','data-management-mapping.js?rev=1','data-management-cpcolumns.js?rev=1','data-management-matchrule.js?rev=1','data-management-query.js?rev=1','data-management-connection.js?rev=1','data-cleanup.js?rev=1','data-management.js?rev=8'],
   };
   // Yüklenmesi TAMAMLANMIŞ özellikler: çağıran "ilk kez mi yüklendi" ayrımını
   // yapabilsin (ör. sekmeye her girişte tabloyu yeniden çizmemek için).

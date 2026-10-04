@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "CP ve Koleksiyon model görselleri toplu ve kalıcı silinebilir",
-    "en": "CP and Collection model images can be deleted in bulk and permanently"
+    "tr": "CP & Data Temizliği modeli görselleri ve verisi iyileştirildi",
+    "en": "CP & Data Cleanup model images and data improvements"
   },
   "summary": {
-    "tr": "CP’de ve Koleksiyon’da seçilen birden fazla modelin görseli tek işlemde kaldırılır; görseller hem bu bilgisayardan hem de ortak ağ klasöründen gerçekten silinir.",
-    "en": "Images of several models selected in CP or Collection are removed in one action and are truly deleted both from this computer and from the shared network folder."
+    "tr": "CP'de ve Koleksiyon'da seçili modellerin görselleri toplu olarak kaldırılabilir; Veri Yönetimi'ne Data Temizliği aracı ve haftalık otomatik temizlik eklendi.",
+    "en": "Model images of selected models can be deleted in bulk in CP and Collection; Data Management gains Data Cleanup tool and weekly automatic cleanup."
   },
   "changes": [
     {
@@ -75,6 +75,64 @@
       "path": {
         "tr": "Koleksiyon → model seç → Araçlar → Görselleri Kaldır",
         "en": "Collection → select models → Tools → Remove Images"
+      }
+    },
+    {
+      "id": "data-cleanup-module",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi · Depolama ve bakım",
+        "en": "Data Management · Storage and maintenance"
+      },
+      "title": {
+        "tr": "Yeni Data Temizliği aracı",
+        "en": "New Data Cleanup tool"
+      },
+      "body": {
+        "tr": "Buyer Log'un kurulu olduğu klasörde programın çalışmasıyla ilgisi olmayan dosyaları (kurulum zip'leri, eski kurulum dosyaları, eski sürümler, eski data yedekleri, geçici dosyalar ve önbellekler) tarar, özetler ve onayınızla siler. Moderatör ayrıca sync klasöründeki eski kullanıcı yedeklerini, eski checkpoint'leri ve terk edilmiş geçici dosyaları temizleyebilir. Diğer kullanıcıların kullandığı senkron verisi ve her kullanıcının son yedeği daima korunur; tanınmayan dosyalar siz seçmeden silinmez.",
+        "en": "Scans the Buyer Log install folder for files that are not needed to run the program (setup zips, leftover installers, old versions, older data backups, temporary files and caches), summarises them and deletes them after your confirmation. The Moderator can also clean stale user backups, old checkpoints and abandoned temporary files in the sync folder. Sync data other users rely on and every user's latest backup are always kept; unrecognised files are never deleted unless you select them."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-cleanup.png",
+        "alt": {
+          "tr": "Data Temizliği panelinde bulunan, seçili ve korunan dosya özeti ile silinebilir öğeler listesi",
+          "en": "Data Cleanup panel showing the found, selected and kept summary and the list of removable items"
+        },
+        "caption": {
+          "tr": "Kurulum klasörü taranır; silmeden önce özet ve seçim gösterilir.",
+          "en": "The install folder is scanned; a summary and selection are shown before anything is deleted."
+        }
+      }
+    },
+    {
+      "id": "data-cleanup-weekly-reminder",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi · Data Temizliği",
+        "en": "Data Management · Data Cleanup"
+      },
+      "title": {
+        "tr": "Haftalık otomatik temizlik ve hatırlatma",
+        "en": "Weekly automatic cleanup and reminder"
+      },
+      "body": {
+        "tr": "Buyer Log haftada bir kendi oluşturduğu zararsız bayat veriyi (eski geçici dosyalar, yarım kalmış güncellemeler, önbellek, eski log/export ve eski sürümler) sormadan temizler. Ardından 100 MB'ı aşan temizlenebilir veri kaldıysa bir bildirimle hatırlatır; İncele ve Temizle doğrudan Data Temizliği'ni açar, Gelecek hafta hatırlat bildirimi bir sonraki haftalık kontrole kadar susturur. Kurulum arşivleri, yedekler, tanınmayan dosyalar ve sync klasörü hiçbir zaman otomatik silinmez; Moderatör sync klasörü için de hatırlatma alır.",
+        "en": "Once a week Buyer Log removes the harmless stale data it created itself (old temporary files, incomplete updates, caches, old logs/exports and old versions) without asking. If more than 100 MB of cleanable data remains, a notification reminds you; Review & Clean opens Data Cleanup directly and Remind next week silences it until the next weekly check. Setup archives, backups, unrecognised files and the sync folder are never deleted automatically; the Moderator is also reminded about the sync folder."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-cleanup-weekly-reminder.png",
+        "alt": {
+          "tr": "Temizlenebilir veri miktarını ve otomatik temizlenen bayat veriyi gösteren Data Temizliği hatırlatma bildirimi",
+          "en": "Data Cleanup reminder notification showing the cleanable amount and the stale data already removed automatically"
+        },
+        "caption": {
+          "tr": "Haftalık kontrol kendi bayat verisini temizler, kalan kayda değer veriyi hatırlatır.",
+          "en": "The weekly check removes its own stale data and reminds you about the significant remainder."
+        }
       }
     }
   ]
