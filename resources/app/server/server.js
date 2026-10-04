@@ -9194,7 +9194,14 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
   } catch (err) { apiError(res, err, 'PLM görsel bağlantıları kaydedilemedi.'); }
 });
 
-/* SEÇİLİ MODEL GÖRSELLERİNİ GERÇEKTEN SİL (CP/Siparişler çoklu seçim).
+function collectionRowSelectedForImageDelete(row, identities, rowPlmIds, rowRecordIds) {
+  if (identities.has(parseLib.plmColourImageKey(row && row.plmId, row && row.colourCode))) return true;
+  const plmId = parseLib.normalizePlmImageId(row && row.plmId);
+  if (plmId) return rowPlmIds.has(plmId) && !parseLib.normalizeCpImageColourCode(row && row.colourCode);
+  const recordId = String(row && (row.recordId || row._sharedRecordId || row.id) || '').trim();
+  return Boolean(recordId) && rowRecordIds.has(recordId);
+}
+/* SEÇİLİ MODEL GÖRSELLERİNİ GERÇEKTEN SİL (CP/Siparişler/Koleksiyon çoklu seçim).
    Tekil "Kaldır" yalnız bağlantıyı düşürüyordu: yerel dosya başka bir
    adlı kayıt tuttuğu için çoğu zaman kalıyor, paylaşılan ağ klasöründeki
    kopya ise hiç silinmiyordu. Bu uç sırayla:
@@ -9202,8 +9209,11 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
      2) sahiplik kaydını düşürür ve sayfa önbelleğini yamar,
      3) paylaşılan klasörde MANUEL mezar taşı yayımlar ve kullanılmayan baytları siler,
      4) artık hiçbir kayıt/satırın kullanmadığı yerel dosyaları siler.
-   Aynı dosyayı başka bir model hâlâ kullanıyorsa o dosya korunur. */
-app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','orders'), express.json({ limit:'512kb' }), async (req, res) => {
+   Aynı dosyayı başka bir model hâlâ kullanıyorsa o dosya korunur.
+   `rowItems`: Colour Code taşımayan Koleksiyon satırları. Bunların kanonik
+   renk anahtarı yoktur; paylaşılan kayıtları PLM-only (renksiz) ya da PLM'siz
+   satır kimliğiyle (row:<recordId>) eşlenir. Genel imagemap'e dokunulmaz. */
+app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','orders','koleksiyon'), express.json({ limit:'512kb' }), async (req, res) => {
   try {
     assertModelImageMutable();
     const body = req.body || {};
@@ -9218,11 +9228,20 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
       const hint = String(item && item.imageRef || '').trim();
       if (hint) identities.get(key).hints.add(hint);
     }
-    if (!identities.size) return res.status(400).json({ error:'Seçili satırlarda PLM ID ve Colour Code bulunamadı.', code:'MODEL_IMAGE_IDENTITY_REQUIRED' });
+    const rowPlmIds = new Set(), rowRecordIds = new Set(), rowRefs = new Set();
+    for (const item of (Array.isArray(body.rowItems) ? body.rowItems : []).slice(0, 5000)) {
+      const plmId = parseLib.normalizePlmImageId(item && item.plmId);
+      const recordId = String(item && item.recordId || '').trim().slice(0, 160);
+      const ref = String(item && item.imageRef || '').trim();
+      if (!plmId && !recordId) continue;
+      if (plmId) rowPlmIds.add(plmId); else rowRecordIds.add(recordId);
+      if (ref) rowRefs.add(ref);
+    }
+    if (!identities.size && !rowPlmIds.size && !rowRecordIds.size) return res.status(400).json({ error:'Seçili satırlarda silinecek model görseli kimliği bulunamadı.', code:'MODEL_IMAGE_IDENTITY_REQUIRED' });
 
     const beforeContext = pageProjectionContext(req.currentUser);
     const imagemap = loadOverrides().imagemap || {};
-    const candidates = new Set();
+    const candidates = new Set(rowRefs);
     const linkItems = [];
     for (const identity of identities.values()) {
       identity.hints.forEach(ref => candidates.add(ref));
@@ -9234,7 +9253,9 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
         if (mapKey !== identity.key) linkItems.push({ plmId:identity.plmId, colourCode:identity.colourCode, colour:mapKey.slice(namedPrefix.length), imageRef:'' });
       }
     }
-    const saved = patchPlmImageLinks(linkItems, requestRevision(req));
+    const saved = linkItems.length
+      ? patchPlmImageLinks(linkItems, requestRevision(req))
+      : { overrides:loadOverrides(), revision:Number(loadOverrides()._revisions && loadOverrides()._revisions.orders) || 0, updated:0 };
     try {
       const keys = linkItems.map(item => plmImageIngestLib.canonicalKeyFor(item)).filter(Boolean);
       if (keys.length) { plmImageOwnership.forget(keys); plmImageOwnership.forgetManual(keys); }
@@ -9244,7 +9265,14 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
     catch (cacheError) { logRuntimeFailure('imageProjectionCachePatch', cacheError); }
 
     const owner = String(req.currentUser.id || '').trim();
-    const matches = record => identities.has(parseLib.plmColourImageKey(record && record.plmId, record && record.colourCode));
+    const rowKeyPrefix = 'collection:' + owner + ':row:';
+    const matches = record => {
+      if (identities.has(parseLib.plmColourImageKey(record && record.plmId, record && record.colourCode))) return true;
+      const plmId = parseLib.normalizePlmImageId(record && record.plmId);
+      if (plmId && rowPlmIds.has(plmId) && !parseLib.normalizeCpImageColourCode(record && record.colourCode)) return true;
+      const key = String(record && record.canonicalKey || '');
+      return key.startsWith(rowKeyPrefix) && rowRecordIds.has(key.slice(rowKeyPrefix.length));
+    };
     let shared = { available:false, tombstoned:0, erased:0, keys:[] };
     try {
       shared = await sharedModelImageStore.purge({ prefix:'collection:' + owner + ':', match:matches });
@@ -9254,11 +9282,16 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
     }
     if (!shared.available || shared.error) {
       // Ağ klasörü yoksa mezar taşı kuyruğa girer; bağlantı gelince yayımlanır.
-      modelImageDistribution.queuePublish([...identities.values()].map(identity => ({
-        canonicalKey:'collection:' + owner + ':' + identity.key, plmId:identity.plmId, colourCode:identity.colourCode,
+      const tombstone = (key, plmId, colourCode) => ({
+        canonicalKey:'collection:' + owner + ':' + key, plmId, colourCode,
         source:sharedImageStoreLib.SOURCE_MANUAL, ownership:sharedImageStoreLib.OWNERSHIP_MANUAL,
-        status:sharedImageStoreLib.STATUS_DELETED, sourceIdentity:'collection:' + owner + ':' + identity.key,
-      })));
+        status:sharedImageStoreLib.STATUS_DELETED, sourceIdentity:'collection:' + owner + ':' + key,
+      });
+      modelImageDistribution.queuePublish([
+        ...[...identities.values()].map(identity => tombstone(identity.key, identity.plmId, identity.colourCode)),
+        ...[...rowPlmIds].map(plmId => tombstone(parseLib.plmImageKey(plmId), plmId, '')),
+        ...[...rowRecordIds].map(recordId => tombstone('row:' + recordId, '', '')),
+      ]);
     }
 
     // Yerel dosya yalnız artık HİÇBİR yerde kullanılmıyorsa silinir.
@@ -9268,7 +9301,7 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
       for (const row of loadWorkspace(ownerId).rows || []) {
         const ref = String(row && row.imgRef || '').trim();
         if (!ref) continue;
-        if (ownRowsCleared && String(ownerId) === owner && identities.has(parseLib.plmColourImageKey(row.plmId, row.colourCode))) continue;
+        if (ownRowsCleared && String(ownerId) === owner && collectionRowSelectedForImageDelete(row, identities, rowPlmIds, rowRecordIds)) continue;
         inUse.add(ref);
       }
     }
@@ -9284,7 +9317,7 @@ app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','or
     }
 
     const result = {
-      identities:identities.size, registryUpdated:saved.updated, deletedLocal:deletedLocal.length,
+      identities:identities.size + rowPlmIds.size + rowRecordIds.size, registryUpdated:saved.updated, deletedLocal:deletedLocal.length,
       keptLocal:[...candidates].filter(ref => !deletedLocal.includes(ref)).length,
       sharedAvailable:Boolean(shared.available), sharedTombstoned:shared.tombstoned || 0, sharedErased:shared.erased || 0,
       sharedQueued:!shared.available || Boolean(shared.error),

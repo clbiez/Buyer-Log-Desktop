@@ -104,6 +104,36 @@ test('server exposes a batch delete route that purges shared and local copies', 
 test('CP toolbar offers bilingual multi-select image removal', () => {
   assert.match(HTML, /id="cpRemoveImagesBtn"[^>]*data-i18n-title-en="[^"]+"[\s\S]*?data-i18n-en="Remove Images"/);
   assert.match(APP, /_selectionActionIds=\[[^\]]*'cpRemoveImagesBtn'/);
-  assert.match(APP, /async function cpRemoveSelectedImages\(btn\)\{[\s\S]*?selectedCpRowsForAction\(\)[\s\S]*?\/api\/model-images\/delete-selected/);
+  assert.match(APP, /async function cpRemoveSelectedImages\(btn\)\{[\s\S]*?selectedCpRowsForAction\(\)/);
+  assert.match(APP, /async function modelImagesDeleteSelected\(\{[\s\S]*?\/api\/model-images\/delete-selected/);
   assert.match(APP, /getElementById\('cpRemoveImagesBtn'\)\?\.addEventListener\('click'/);
+});
+
+test('Collection toolbar offers the same bilingual bulk removal on the shared core', () => {
+  assert.match(HTML, /id="kolRemoveImagesBtn"[^>]*data-i18n-title-en="[^"]+"[\s\S]*?data-i18n-en="Remove Images"/);
+  assert.match(APP, /async function kolRemoveSelectedImages\(btn\)\{[\s\S]*?kolValidSelectedRows\(\)[\s\S]*?modelImagesDeleteSelected\(/);
+  assert.match(APP, /async function cpRemoveSelectedImages\(btn\)\{[\s\S]*?modelImagesDeleteSelected\(/);
+  assert.match(APP, /getElementById\('kolRemoveImagesBtn'\)\?\.addEventListener\('click'/);
+  // Başka kullanıcının Koleksiyonundaki görseller buradan silinmez.
+  assert.match(APP, /async function kolRemoveSelectedImages[\s\S]*?kolIsOwnWorkspace\(\)/);
+  const start = SERVER.indexOf("app.post('/api/model-images/delete-selected'");
+  assert.match(SERVER.slice(start, start + 200), /requireAnyArea\('cp','orders','koleksiyon'\)/);
+  // Colour Code'suz satırlar: PLM-only ve PLM'siz row: anahtarları eşlenir.
+  assert.match(SERVER, /rowItems/);
+  assert.match(SERVER, /':row:'/);
+});
+
+test('purge can target a PLM-less Collection row by its row key', async () => {
+  const sharedRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-purge-row-'));
+  const a = storeFor(sharedRoot, 'device-a');
+  await a.publish([
+    { canonicalKey: 'collection:u1:row:42', source: sharedImageStore.SOURCE_PLM, ownership: sharedImageStore.OWNERSHIP_AUTOMATIC, status: sharedImageStore.STATUS_AVAILABLE, buffer: JPEG, mimeType: 'image/jpeg' },
+    { canonicalKey: 'collection:u1:row:43', source: sharedImageStore.SOURCE_PLM, ownership: sharedImageStore.OWNERSHIP_AUTOMATIC, status: sharedImageStore.STATUS_AVAILABLE, buffer: OTHER_JPEG, mimeType: 'image/jpeg' },
+  ]);
+  const prefix = 'collection:u1:row:';
+  const result = await a.purge({ prefix: 'collection:u1:', match: record => record.canonicalKey === prefix + '42' });
+  assert.deepEqual(result.keys, ['collection:u1:row:42']);
+  assert.equal(result.erased, 1);
+  assert.equal((await a.lookup('collection:u1:row:42')).status, sharedImageStore.STATUS_DELETED);
+  assert.ok((await a.readObject(await a.lookup('collection:u1:row:43'))).equals(OTHER_JPEG));
 });
