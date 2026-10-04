@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.233",
-  "commit_sha": "e73663ac0ea5336b933f170f81bcbe61b6a24277",
-  "release_notes": "Buyer Log 7.0.233: LCW AI’dan Destek Al — Hesaplanan Sütun, CP Kuralları ve Otomasyonlar tek merkezi LCW AI motorunu (GPT-6 Sol) kullanır; öneriler Buyer Log doğrulamasından geçer ve yalnız kullanıcı onayıyla uygulanır. Kullanıcı menüsünde Kurumsal Bağlantılar ve LCW AI Girişi eklendi.",
-  "request_id": "7.0.233-r1"
+  "version": "7.0.234",
+  "commit_sha": "6ea916eaa358327074297e71184eaa67cfa5cfeb",
+  "release_notes": "Buyer Log 7.0.234: Checklist durumları ve not, rapor numarası, tarih ve PDF ekleri anında kaydedilir; yeniden açılışta ve yükleme tarihi değişince korunur. Bağlantı kesilince kayıtlar cihazda bekletilir ve yeniden gönderilir. Bozuk kayıtların üzerine boş veri yazılması engellendi; son sağlam kopyadan kurtarma eklendi. Excel aktarımında PDF ekleri korunur. Koleksiyon Checklist seçimleri sunucuya hemen kaydedilir. Checklist decisions and evidence save immediately and survive reopening, schedule changes and offline retries.",
+  "request_id": "7.0.234-r1"
 }
