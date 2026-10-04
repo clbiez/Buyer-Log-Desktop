@@ -198,3 +198,40 @@ test('shell API veya kaynak simge yoksa hiçbir şey yazılmaz', () => {
     fs.rmSync(f.base, { recursive: true, force: true });
   }
 });
+
+test('eski exe yolunu hedefleyen ve ImplicitAppShortcuts altındaki kısayol eski simge kopyasıyla kalmaz', () => {
+  const f = fixture();
+  try {
+    const implicitDir = path.join(path.dirname(f.taskbar), 'ImplicitAppShortcuts', 'abc123');
+    fs.mkdirSync(implicitDir, { recursive: true });
+    const implicitLink = path.join(implicitDir, 'Buyer Log.lnk');
+    const movedLink = path.join(f.desktop, 'Buyer Log (eski).lnk');
+    const first = syncShortcutIcons({ shell: f.shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir });
+    f.addLink(implicitLink, { target: f.exePath, icon: '' });
+    f.addLink(movedLink, { target: path.join(f.base, 'EskiKlasor', 'BuyerLog.exe'), icon: first.icon });
+    fs.writeFileSync(f.sourceIcon, Buffer.from('ICON-V3'));
+    const second = syncShortcutIcons({ shell: f.shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir });
+    assert.equal(f.links.get(implicitLink).icon, second.icon);
+    assert.equal(f.links.get(movedLink).icon, second.icon);
+    assert.equal(f.links.get(movedLink).target, path.join(f.base, 'EskiKlasor', 'BuyerLog.exe'));
+  } finally {
+    fs.rmSync(f.base, { recursive: true, force: true });
+  }
+});
+
+test('güncellenemeyen kısayolun hâlâ gösterdiği eski simge kopyası silinmez', () => {
+  const f = fixture();
+  try {
+    const desktopLink = path.join(f.desktop, 'Buyer Log.lnk');
+    f.addLink(desktopLink, { target: f.exePath, icon: '' });
+    const first = syncShortcutIcons({ shell: f.shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir });
+    fs.writeFileSync(f.sourceIcon, Buffer.from('ICON-V3'));
+    const shell = { ...f.shell, writeShortcutLink() { throw new Error('erişim engellendi'); } };
+    const second = syncShortcutIcons({ shell, getPath: f.getPath, exePath: f.exePath, sourceIcon: f.sourceIcon, iconDir: f.iconDir });
+    assert.equal(f.links.get(desktopLink).icon, first.icon);
+    assert.equal(fs.existsSync(first.icon), true);
+    assert.equal(fs.existsSync(second.icon), true);
+  } finally {
+    fs.rmSync(f.base, { recursive: true, force: true });
+  }
+});

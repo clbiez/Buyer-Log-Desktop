@@ -39,6 +39,11 @@ function ensureStableIcon({ sourceIcon, iconDir }) {
   return target;
 }
 
+function isOwnIcon(iconPath, iconDir) {
+  if (!iconPath) return false;
+  return samePath(path.dirname(String(iconPath)), iconDir) && path.basename(String(iconPath)).toLowerCase().startsWith(ICON_PREFIX);
+}
+
 function listShortcuts(dir, depth) {
   const found = [];
   let entries = [];
@@ -59,7 +64,9 @@ function shortcutDirs(getPath) {
   try { appData = getPath('appData'); } catch (_) {}
   if (appData) {
     add(path.join(appData, 'Microsoft', 'Windows', 'Start Menu', 'Programs'), 1);
-    add(path.join(appData, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned', 'TaskBar'), 0);
+    // Görev çubuğunda sabitlenmiş ve Windows'un kendiliğinden ürettiği
+    // (ImplicitAppShortcuts\<id>\*.lnk) kısayollar.
+    add(path.join(appData, 'Microsoft', 'Internet Explorer', 'Quick Launch', 'User Pinned'), 2);
   }
   return dirs;
 }
@@ -70,11 +77,18 @@ function syncShortcutIcons({ shell, getPath, exePath, sourceIcon, iconDir, appUs
   if (!exePath || !sourceIcon || !fs.existsSync(sourceIcon)) return result;
   const icon = ensureStableIcon({ sourceIcon, iconDir });
   result.icon = icon;
+  // Güncellenemeyen kısayolların hâlâ gösterdiği eski kopyalar silinmez.
+  const referenced = new Set();
   for (const { dir, depth } of shortcutDirs(getPath)) {
     for (const file of listShortcuts(dir, depth)) {
       let link;
       try { link = shell.readShortcutLink(file); } catch (_) { continue; }
-      if (!link || !samePath(link.target, exePath)) continue;
+      if (!link) continue;
+      // Hedefi farklı bir BuyerLog.exe olsa da (eski konum/başlatıcı) bizim
+      // simge kopyamızı gösteren kısayol da güncellenir; aksi halde aşağıdaki
+      // temizlik o kopyayı silince kısayol genel "dosya" simgesine düşer.
+      const ownsIcon = isOwnIcon(link.icon, iconDir);
+      if (!samePath(link.target, exePath) && !ownsIcon) continue;
       const iconMatches = Boolean(link.icon && samePath(link.icon, icon));
       const appIdMatches = !appUserModelId || String(link.appUserModelId || '').trim().toLowerCase() === String(appUserModelId).trim().toLowerCase();
       if (iconMatches && appIdMatches) { result.skipped += 1; continue; }
@@ -82,7 +96,9 @@ function syncShortcutIcons({ shell, getPath, exePath, sourceIcon, iconDir, appUs
         const patch = { icon, iconIndex: 0 };
         if (appUserModelId) patch.appUserModelId = appUserModelId;
         if (shell.writeShortcutLink(file, 'update', patch)) result.updated.push(file);
+        else if (ownsIcon) referenced.add(path.resolve(link.icon).toLowerCase());
       } catch (error) {
+        if (ownsIcon) referenced.add(path.resolve(link.icon).toLowerCase());
         log('Kısayol simgesi güncellenemedi: ' + file + ' · ' + error.message);
       }
     }
@@ -91,7 +107,7 @@ function syncShortcutIcons({ shell, getPath, exePath, sourceIcon, iconDir, appUs
   try {
     for (const name of fs.readdirSync(iconDir)) {
       const full = path.join(iconDir, name);
-      if (name.startsWith(ICON_PREFIX) && /\.ico$/i.test(name) && !samePath(full, icon)) fs.rmSync(full, { force: true });
+      if (name.startsWith(ICON_PREFIX) && /\.ico$/i.test(name) && !samePath(full, icon) && !referenced.has(path.resolve(full).toLowerCase())) fs.rmSync(full, { force: true });
     }
   } catch (_) {}
   return result;
