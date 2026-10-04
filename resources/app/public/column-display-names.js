@@ -10,7 +10,7 @@
    * SÜTUN GÖRÜNEN ADLARI (EN/TR) + VERİ KAYNAĞI KATALOĞU
    * ----------------------------------------------------
    * CP / Orders / Koleksiyon tablolarında kullanıcı, sistemden gelen bir
-   * sütunu kendi ekranında başka bir adla görebilir (ör. "In Store" →
+   * sütunu kendi ekranında başka bir adla görebilir (ör. "Model Budget Month" →
    * "MB Month"). Bu katman YALNIZ GÖRÜNEN ETİKETİ değiştirir: veri anahtarı,
    * filtre, sıralama, override, formül referansı ve içe aktarma eşlemesi
    * olduğu gibi kalır.
