@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.234",
-  "commit_sha": "6ea916eaa358327074297e71184eaa67cfa5cfeb",
-  "release_notes": "Buyer Log 7.0.234: Checklist durumları ve not, rapor numarası, tarih ve PDF ekleri anında kaydedilir; yeniden açılışta ve yükleme tarihi değişince korunur. Bağlantı kesilince kayıtlar cihazda bekletilir ve yeniden gönderilir. Bozuk kayıtların üzerine boş veri yazılması engellendi; son sağlam kopyadan kurtarma eklendi. Excel aktarımında PDF ekleri korunur. Koleksiyon Checklist seçimleri sunucuya hemen kaydedilir. Checklist decisions and evidence save immediately and survive reopening, schedule changes and offline retries."
+  "version": "7.0.235",
+  "commit_sha": "019d31f90c382dc05a004b506856e0cf73ac18be",
+  "release_notes": "Buyer Log 7.0.235: LCW AI genel çalışma alanı, bağlam ekleme ve kural desteği güncellemeleri; uygulama simgesi iyileştirmesi; Mağaza Ayı/Hafta terminolojisi uçtan uca Model Bütçe Ayı/Hafta (Model Budget Month/Week) olarak standardize edildi. Eski veri başlıkları geriye dönük uyumluluk için alias olarak korunur."
 }
