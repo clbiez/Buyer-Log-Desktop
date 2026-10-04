@@ -2016,11 +2016,13 @@ function brandingDir() {
 function taskbarAppDetails() {
   if (process.platform !== 'win32' || !app.isPackaged) return null;
   try {
-    const icon = ensureStableIcon({ sourceIcon: APP_ICON_SOURCE, iconDir: brandingDir() });
+    // appIconPath bilerek verilmez: pencere başına RelaunchIconResource
+    // Windows'ta çözülemediğinde görev çubuğu düğmesi genel "dosya" simgesine
+    // düşüyordu. Düğme simgesi BrowserWindow `icon` (buyerlog.ico) değerinden,
+    // sabitlenmiş kısayolun simgesi syncShortcutIcons'tan gelir.
+    ensureStableIcon({ sourceIcon: APP_ICON_SOURCE, iconDir: brandingDir() });
     return {
       appId: APP_USER_MODEL_ID,
-      appIconPath: icon,
-      appIconIndex: 0,
       relaunchCommand: '"' + process.execPath + '"',
       relaunchDisplayName: 'Buyer Log',
     };
