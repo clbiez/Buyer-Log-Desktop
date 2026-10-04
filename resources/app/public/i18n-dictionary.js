@@ -1505,6 +1505,7 @@ pairs:[
 ["En İyi Fiyat","Best Price"],
 ["Nihai Üretici","Conf. Manufacturer"],
 ["Onaylı Fiyat","Conf. FOB"],
+["Onaylı Üretici Fiyatı","Approved Mfr. Price"],
 ["Fiyatlamaya gönderildi","Sent to pricing"],
 ["Otomatik hesaplanır — elle değiştirilemez","Calculated automatically — cannot be edited"],
 ["Salı","Tuesday"],

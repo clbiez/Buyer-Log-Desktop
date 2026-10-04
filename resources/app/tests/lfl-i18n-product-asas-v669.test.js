@@ -23,7 +23,7 @@ test('v6.69 ASAS Ürün Tanım değeri gerçek parser hattından CP ve Orders sa
   assert.equal(parse.buildOrdersRowsFromASAS(parsed.orders,new Map(),{})[0]['Ürün Tanım'],'Şort');
   const app=read('public/app-main.js');
   assert.match(app,/const CP_COLS\s*=\s*\[[\s\S]*?\{k:'Ürün Tanım',\s*label:'Ürün Tanım'/);
-  assert.match(app,/ORDERS_COLS\s*=\s*\[ORDERS_STATUS_COL,\s*\.\.\.CP_COLS\.map/);
+  assert.match(app,/ORDERS_COLS\s*=\s*ordersColumnsFromCp\(CP_COLS\)/);
 });
 
 test('v6.69 Ürün Tanım LFL ana filtresine ve filtre zincirine dahildir',()=>{

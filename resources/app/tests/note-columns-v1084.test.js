@@ -154,10 +154,10 @@ test('renderColPanel: Add Note Column düğmesi CP ve Orders panelinde basılıy
   assert.match(fn, /removeCpNoteColumn\(btn\.dataset\.noteColDrop,refreshCpPanel\)/);
 });
 
-test('2026-10-04 · ⋯ menüsünde Not Sütunu Ekle eylemi CP/Orders için görünür', () => {
-  const fn = extractFunction(APP, 'appendColumnActions');
-  assert.match(fn, /const noteLabel=appLang==='en'\?'Add Note Column':'Not Sütunu Ekle'/);
-  assert.match(fn, /add\('note','i-notebook',noteLabel,\(\)=>void addCpNoteColumn\(rerender\)\)/);
+test('2026-10-04 · Not Sütunu Ekle eylemi CP/Orders için görünür (v7.0.229: Alanlar çekmecesinde)', () => {
+  const fn = extractFunction(APP, 'renderTableFieldsMenu');
+  assert.match(fn, /data-table-fields-add="note">\+ \$\{escapeHtml\(en\?'Add Note Column':'Not Sütunu Ekle'\)\}/);
+  assert.match(fn, /else if\(action==='note'\)void addCpNoteColumn\(done\);/);
 });
 
 test('syncOverridesFromRow: not sütunu değerleri notesmap ile aynı anahtarla tutulur', () => {

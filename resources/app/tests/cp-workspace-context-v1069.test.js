@@ -38,6 +38,8 @@ test('v10.69 CP çizimi ortak çalışma özeti ve aktif filtre bağlamını gü
 
 test('v10.69 CP Sütunlar eylemi de ortak görünüm başlığına taşınır', () => {
   const sync = APP.slice(APP.indexOf('function syncTableToolbarActions'), APP.indexOf('const APP_PAGE_META'));
-  assert.match(sync, /appendSharedTableActions\('cpTableViewActions',\['navColsBtn'\]\)/);
+  // v7.0.229 — Sütunlar düğmesi CP'de kaldırıldı; sütun yönetimi Alanlar çekmecesinde.
+  assert.doesNotMatch(sync, /appendSharedTableActions\('cpTableViewActions',\['navColsBtn'\]\)/);
   assert.doesNotMatch(sync, /appendSharedTableActions\('cpMoreMenu',\['navColsBtn'/);
+  assert.match(sync, /columnsWrap\.hidden=tab==='cp'\|\|tab==='orders'\|\|tab==='koleksiyon'/);
 });

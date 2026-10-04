@@ -159,6 +159,7 @@
     'Order Code':asas('Sipariş Kod'),
     'FOB ($)':asas('FOB Fiyatı'),
     'Supp. FOB':buyerlog({tr:'Fiyat kuralı (OPD + ülke grubu + Licensor + License) veya elle giriş',en:'Pricing rule (OPD + country group + Licensor + License) or manual entry'}),
+    'Original Ex-factory':asas('Orijinal Exfactory Merch Tarih',{tr:'Buyer Log revizyonundan etkilenmez',en:'Not affected by a Buyer Log revision'}),
     'OPD':asas('Sipariş Yerleştirme MerchTarih'),
     'Ex-factory':asas('Orijinal Exfactory Merch Tarih',{tr:'Buyer Log revizyonu varsa o gösterilir',en:'A Buyer Log revision is shown when present'}),
     'LT':computed({tr:'OPD ile Ex-factory arasındaki gün farkı',en:'Days between OPD and Ex-factory'}),

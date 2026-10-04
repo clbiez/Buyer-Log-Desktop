@@ -12,7 +12,12 @@ const html = fs.readFileSync(path.join(root, 'public', 'app-main.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'public', 'app.css'), 'utf8');
 
 test('Collection defines one Buying Sample column with manufacturer input and approval tick', () => {
-  assert.match(html, /\{k:'buyingSampleManufacturer', label:'Buying Sample', w:220, buyingSample:true, suggest:'submfr'\}/);
+  // v7.0.229 — Buying Numunesi sütunu kullanıcı talebiyle Koleksiyon tablosundan
+  // kaldırıldı (Checklist'e bağlanacak). Satırdaki değer silinmez; üretici
+  // geri dönüşleri (manufacturerFor) aynı alanı okumaya devam eder.
+  const kolCols = html.slice(html.indexOf('const KOL_COLS = ['), html.indexOf('function kolColDefs'));
+  assert.doesNotMatch(kolCols, /k:'buyingSampleManufacturer'/);
+  assert.match(html, /manufacturerFor\(row\)\{ return norm\(row&&row\.confirmedManufacturer\)\|\|norm\(row&&row\.buyingSampleManufacturer\)/);
   assert.match(html, /'Buying Sample':'Buying Numunesi'/);
   const renderStart = html.indexOf("}else if(c.buyingSample){");
   const renderEnd = html.indexOf("}else if(c.suggest){", renderStart);

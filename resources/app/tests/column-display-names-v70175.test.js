@@ -185,9 +185,14 @@ test('Columns paneli: sistem sütunları kalem düğmesiyle düzenlenir (CP/Orde
   const kol = extractFunction(APP, 'renderKolColumnPanel');
   assert.match(kol, /data-label-edit="\$\{escapeHtml\(c\.k\)\}"/);
   assert.match(kol, /editSystemColumnLabel\('koleksiyon',col,/);
-  // Özel sütunun yeniden adlandırılması da EN/TR ve ortak kayıt.
-  assert.match(kol, /promptBilingualColumnName\(/);
-  assert.match(kol, /kolQueueWorkspaceSave\(\)/);
+  // Özel sütunun yeniden adlandırılması da EN/TR ve ortak kayıt (v7.0.229: panel ve
+  // Alanlar çekmecesi aynı kolRenameCustomColumn yolunu kullanır).
+  const rename = extractFunction(APP, 'kolRenameCustomColumn');
+  assert.match(rename, /promptBilingualColumnName\(/);
+  assert.match(rename, /kolQueueWorkspaceSave\(\)/);
+  const drawer = extractFunction(APP, 'tableFieldsRenameColumn');
+  assert.match(drawer, /editSystemColumnLabel\('koleksiyon',meta\.col,/);
+  assert.match(drawer, /void editSystemColumnLabel\(tableKey,meta\.col,\{onChange:done\}\)/);
 });
 
 test('sonradan eklenen sütunlar EN/TR adla oluşturulur', () => {

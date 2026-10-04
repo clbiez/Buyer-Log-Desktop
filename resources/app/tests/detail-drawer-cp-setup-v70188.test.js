@@ -23,8 +23,9 @@ test('Global Flow details request the CP table setup',()=>{
 test('CP exposes one read-only snapshot for detail table views',()=>{
   assert.ok(APP.includes('window.BLTableViewSetup=Object.freeze({snapshot:detailTableViewSnapshot})'));
   assert.ok(APP.includes('normalizedColumnOrder(tableKey,state.order)'));
-  assert.ok(APP.includes("tableViewPresetKeys(tableKey,'focus')"));
-  assert.ok(APP.includes("tableViewPresetKeys(tableKey,'extended')"));
+  // v7.0.229 — çekmece, ana tablonun Alanlar katmanını da (Tümü / Gizli başlıklar) miras alır.
+  assert.ok(APP.includes("tableViewEffectiveKeys(tableKey,'focus')"));
+  assert.ok(APP.includes("tableViewEffectiveKeys(tableKey,'extended')"));
   assert.ok(APP.includes('widthPx:colWidthPx(tableKey,column)'));
 });
 

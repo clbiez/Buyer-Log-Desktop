@@ -69,7 +69,7 @@ test('dondurma seçiminde tek sütun sınırı lazerle gösterilir ve buton kır
 });
 
 test('Koleksiyon sütun düzeni landed sütunlarını her zaman en sağa taşır', () => {
-  assert.match(INDEX, /const KOL_COL_LAYOUT_VERSION = 6/);
+  assert.match(INDEX, /const KOL_COL_LAYOUT_VERSION = 7/);
   assert.match(INDEX, /function kolPlaceLandedAtEnd\(order\)/);
   assert.match(INDEX, /out\.push\('ydLanded','trLanded'\)/);
   assert.match(INDEX, /kolColOrder\s*=\s*kolPlaceLandedAtEnd/);

@@ -531,6 +531,57 @@ footer{padding:10px var(--sp-5) 26px;font-size:var(--fs-xs);color:var(--muted);}
 @media(max-width:1200px){.tableViewStatus{max-width:210px;}.workspaceContextBar{flex-wrap:wrap;}.tableViewActions{margin-left:auto;}}
 @media(max-width:900px){.tableViewActions{width:100%;margin-left:0;flex-wrap:wrap;}.tableViewStatus{max-width:none;white-space:normal;}}
 /* ===================== v10.34 end ===================== */
+/* v7.0.229 — Alanlar: ana başlıkları preset tanımını değiştirmeden aç/kapat */
+.tableFieldsBtn{display:inline-flex;align-items:center;gap:var(--sp-1);margin-left:var(--sp-1);border-color:var(--line2);}
+.tableFieldsBtn .ic{width:13px;height:13px;}
+.tableFieldsBtn.hasOverrides,.tableFieldsBtn[aria-expanded="true"]{border-color:var(--acc);color:var(--acc-ink);}
+.tableFieldsBadge{min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:var(--card);font:700 var(--fs-2xs)/16px var(--sans);text-align:center;}
+.navColsRight[hidden]{display:none!important;}
+.tableFieldsDrawer{position:fixed;z-index:10060;top:64px;right:12px;bottom:12px;width:min(660px,calc(100vw - 24px));display:flex;flex-direction:column;border:1px solid var(--line2);border-radius:var(--r-sm,8px);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden;}
+.tableFieldsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);padding:var(--sp-3);border-bottom:1px solid var(--line);}
+.tableFieldsHead>div{display:flex;flex-direction:column;gap:2px;min-width:0;}
+.tableFieldsHead b{font:700 var(--fs-sm)/1.2 var(--heading);color:var(--ink);}
+.tableFieldsHead span{font:500 var(--fs-2xs)/1.35 var(--sans);color:var(--muted);}
+.tableFieldsClose{flex:0 0 auto;width:28px;height:28px;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--ink2);font-size:18px;line-height:1;cursor:pointer;}
+.tableFieldsClose:hover{border-color:var(--line2);background:var(--card2);}
+.tableFieldsGridHead{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);padding:6px var(--sp-3) 6px calc(var(--sp-3) + 6px);border-bottom:1px solid var(--line);background:var(--card2);color:var(--muted);font:700 var(--fs-2xs)/1 var(--heading);letter-spacing:.06em;text-transform:uppercase;}
+.tableFieldsChecks{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,78px);align-items:center;justify-items:center;}
+.tableFieldsPresetHead{padding:3px 6px;border-radius:var(--r-xs);text-align:center;}
+.tableFieldsPresetHead.isActive{background:var(--acc-bg);color:var(--acc-ink);}
+.tableFieldsCheck input{width:15px;height:15px;margin:0;accent-color:var(--acc);cursor:pointer;}
+.tableFieldsList{flex:1 1 auto;display:flex;flex-direction:column;gap:2px;padding:var(--sp-1) var(--sp-2);overflow:auto;}
+.tableFieldsGroup{border-radius:var(--r-xs);box-shadow:inset 3px 0 0 var(--grp-accent,var(--acc));}
+.tableFieldsGroup.isOpen{background:color-mix(in srgb,var(--card2) 55%,var(--card));}
+.tableFieldsGroupRow{display:flex;align-items:center;gap:var(--sp-2);min-height:34px;padding:0 var(--sp-1) 0 calc(var(--sp-2) + 3px);}
+.tableFieldsGroupToggle{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;padding:4px 2px;border:0;background:transparent;color:var(--ink);font:650 var(--fs-xs)/1.2 var(--sans);text-align:left;cursor:pointer;}
+.tableFieldsGroupToggle .ic{width:13px;height:13px;flex:0 0 auto;color:var(--muted);}
+.tableFieldsGroupToggle b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tableFieldsModeBtn{flex:0 0 auto;min-width:74px;padding:3px 8px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink2);font:600 var(--fs-2xs)/1.2 var(--sans);cursor:pointer;}
+.tableFieldsModeBtn:hover{border-color:var(--acc);}
+.tableFieldsModeBtn.is-all{border-color:color-mix(in srgb,var(--green) 50%,var(--line2));color:var(--green);}
+.tableFieldsModeBtn.is-hidden{color:var(--muted);text-decoration:line-through;}
+.tableFieldsGroup.is-hidden .tableFieldsGroupToggle b{color:var(--muted);}
+.tableFieldsItemCount{flex:0 0 auto;color:var(--muted);font:600 var(--fs-2xs)/1 var(--mono);}
+.tableFieldsColumns{display:flex;flex-direction:column;margin-left:3px;padding:0 0 var(--sp-1);}
+.tableFieldsColumn{display:flex;align-items:center;gap:var(--sp-1);min-height:30px;padding:0 var(--sp-1) 0 calc(var(--sp-3) + 7px);border-top:1px solid transparent;border-bottom:1px solid transparent;color:var(--ink2);font:500 var(--fs-xs)/1.2 var(--sans);}
+.tableFieldsColumn:hover{background:var(--card);}
+.tableFieldsColumn.isHiddenNow .tableFieldsColumnName{color:var(--muted);}
+.tableFieldsColumn.isDragging{opacity:.4;}
+.tableFieldsColumn.dropBefore{border-top-color:var(--acc);}
+.tableFieldsColumn.dropAfter{border-bottom-color:var(--acc);}
+.tableFieldsDrag{flex:0 0 auto;width:14px;margin-right:4px;color:var(--muted);font-size:12px;line-height:1;letter-spacing:-1px;text-align:center;cursor:grab;user-select:none;}
+.tableFieldsDrag.isDisabled{visibility:hidden;}
+.tableFieldsColumnName{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tableFieldsColumn.hasUserLabel .tableFieldsColumnName{font-style:italic;}
+.tableFieldsActions{flex:0 0 auto;display:inline-flex;align-items:center;gap:2px;}
+.tableFieldsIcon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--ink2);font:700 var(--fs-2xs)/1 var(--mono);cursor:pointer;}
+.tableFieldsIcon .ic{width:13px;height:13px;}
+.tableFieldsIcon:hover{border-color:var(--line2);background:var(--card2);color:var(--ink);}
+.tableFieldsIcon.isFx{color:var(--acc);font-style:italic;}
+.tableFieldsIcon.isDanger:hover{border-color:color-mix(in srgb,var(--red) 45%,var(--line2));color:var(--red);}
+.tableFieldsGroupToggle:focus-visible,.tableFieldsModeBtn:focus-visible,.tableFieldsIcon:focus-visible,.tableFieldsClose:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.tableFieldsFoot{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-top:1px solid var(--line);flex-wrap:wrap;}
+.tableFieldsAdd{display:flex;flex-wrap:wrap;gap:var(--sp-1);}
 /* v10.35 — Visible, removable table-filter context */
 .activeFilterBar{min-height:var(--control-md);display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-3);border-bottom:1px solid var(--line);background:var(--card);}
 .activeFilterLabel{flex:0 0 auto;color:var(--muted);font:700 var(--fs-2xs)/1 var(--heading);letter-spacing:.08em;}
@@ -1025,6 +1076,9 @@ body[data-active-tab="orders"] .ordersDimFilterGroup{display:flex;}
 /* Koleksiyon tablosunda tek başlık satırı vardır. Genel iki satırlı tablo ofseti
    (26px) uygulanırsa başlıklar kaydırma sırasında veri hücrelerinin ortasında kalır. */
 #kolTable thead tr.colRow th{top:0!important;z-index:7;background:var(--thead-bg);background-clip:padding-box;box-shadow:0 1px 0 var(--line2);}
+/* v7.0.229 — Koleksiyon ana başlık bandı (CP/Orders groupRow ile aynı görünüm). */
+#kolTable thead tr.kolGroupRow th{top:0;height:22px;padding:0 8px 0 12px;line-height:21px;box-sizing:border-box;text-align:left;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#kolTable thead.kolHasGroups tr.colRow th{top:22px!important;}
 #kolTable thead tr.colRow th.columnFilterActive{background:color-mix(in srgb, var(--acc) 9%, var(--thead-bg))!important;}
 
 /* ===================== GENEL BAKIŞ FİLTRE POPOVER + KALEM BUTONU ===================== */
@@ -5661,3 +5715,20 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 .trxBuffer{gap:4px;}
 .trxBuffer .trxBufferInput{width:58px;text-align:right;padding:0 6px;}
 .trxBuffer.is-on>span:first-child{color:var(--acc-ink);font-weight:600;}
+
+/* v7.0.229 — Koleksiyon Checklist hücresi ve durum menüsü (yalnız tasarım token'ları). */
+.kolChecklistTd{padding:3px 6px!important;}
+.kolChecklistStatusBtn{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:22px;padding:2px 8px;border:1px solid var(--line2);border-radius:999px;background:var(--card2);color:var(--ink2);font:inherit;font-size:10.5px;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kolChecklistStatusBtn:disabled{cursor:default;opacity:.75;}
+.kolChecklistStatusBtn:focus-visible,.kolChecklistMenuItem:focus-visible{outline:2px solid var(--acc);outline-offset:1px;}
+.kolChecklistDot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--yellow);}
+.is-approved>.kolChecklistDot{background:var(--green);}
+.is-rejected>.kolChecklistDot{background:var(--red);}
+.is-notRequired>.kolChecklistDot{background:var(--muted);}
+.kolChecklistStatusBtn.is-approved{border-color:color-mix(in srgb,var(--green) 45%,var(--line2));color:var(--green);}
+.kolChecklistStatusBtn.is-rejected{border-color:color-mix(in srgb,var(--red) 45%,var(--line2));color:var(--red);}
+.kolChecklistStatusBtn.is-notRequired{color:var(--muted);}
+.kolChecklistMenu{position:fixed;z-index:10070;display:flex;flex-direction:column;min-width:160px;padding:4px;border:1px solid var(--line2);border-radius:8px;background:var(--card);box-shadow:var(--shadow-lg);}
+.kolChecklistMenuItem{display:flex;align-items:center;gap:8px;padding:6px 10px;border:0;border-radius:6px;background:transparent;color:var(--ink);font:inherit;font-size:11px;text-align:left;cursor:pointer;}
+.kolChecklistMenuItem:hover,.kolChecklistMenuItem[aria-checked="true"]{background:var(--card2);}
+.kolChecklistMenuItem[aria-checked="true"]{font-weight:700;}
