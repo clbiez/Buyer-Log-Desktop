@@ -38,7 +38,7 @@ test('checklist evidence fields, lossless sync and supplier e-mail wiring are pr
   assert.match(app, /openChecklist:prepareEmailOpenChecklist/);
   assert.match(app, /Array\.isArray\(SRC\.initialFiles\)/);
   assert.match(app, /PRICING_ATTACHMENT_LIMIT_BYTES = Math\.floor\(9\.5 \* 1024 \* 1024\)/);
-  assert.match(app, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForDraft,rowsFor\)/);
+  assert.match(app, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForManufacturer\(m\.name\),rowsFor\)/);
 });
 
 test('checklist attachment is renamed from order/model/checklist identity and evidence survives partial updates', () => {
@@ -87,4 +87,29 @@ test('supplier checklist Excel v2 round-trips optional report/date/attachment me
   assert.match(bridge, /actualDateColumn/);
   assert.match(bridge, /attachmentsColumn/);
   assert.match(bridge, /version < 1 \|\| version > SCHEMA_VERSION/);
+});
+
+
+test('supplier checklist mail groups selected rows per supplier, keeps each Excel direct and adds workbook guidance', () => {
+  const bridge = read('public/checklist-supplier-sync.js');
+  const app = read('public/app-main.js');
+
+  assert.match(bridge, /const groupMap = new Map\(\), missingRows = \[\]/);
+  assert.match(bridge, /supplierGroups = Array\.from\(groupMap\.values\(\)\)/);
+  assert.match(bridge, /preselect: supplierNames/);
+  assert.match(bridge, /manufacturer: supplier[\s\S]*directAttachment: true/);
+  assert.doesNotMatch(bridge, /suppliers\.length !== 1/);
+
+  assert.match(bridge, /function renderChecklistInstructions/);
+  assert.match(bridge, /READ ME \/ NASIL DOLDURULUR/);
+  assert.match(bridge, /workbook\.views = \[\{ activeTab: 0/);
+  assert.match(bridge, /cell\.note = T\(/);
+
+  assert.match(app, /manufacturer:String\(entry\?\.manufacturer\|\|''\)/);
+  assert.match(app, /directAttachment:entry\?\.directAttachment===true/);
+  assert.match(app, /pricingFilesForManufacturer=name=>/);
+  assert.match(app, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForManufacturer\(m\.name\),rowsFor\)/);
+  assert.match(app, /if\(fixed\[i\]\.directAttachment\) continue/);
+  assert.match(app, /entries\.filter\(x=>!x\.isImage&&!x\.isPdf&&!x\.directAttachment\)/);
+  assert.match(app, /else if\(!item\.isImage&&!item\.directAttachment\)/);
 });

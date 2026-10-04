@@ -749,6 +749,102 @@
       ws.getCell(rowStart, c).border = { top: { style: 'thick', color: { argb: accent } } };
     }
   }
+  function renderChecklistInstructions(ws, rows, items, exportedAt) {
+    const C = CHECKLIST_EXCEL_COLORS, stats = identityStats(rows);
+    ws.views = [{ showGridLines: false, zoomScale: 100 }];
+    ws.properties.tabColor = { argb: C.green };
+    ws.getColumn(1).width = 2;
+    for (let col = 2; col <= 9; col += 1) ws.getColumn(col).width = 13;
+
+    ws.mergeCells(1, 2, 2, 9);
+    const title = ws.getCell(1, 2);
+    title.value = 'READ ME / NASIL DOLDURULUR';
+    title.font = { name: 'Segoe UI', size: 20, bold: true, color: { argb: C.white } };
+    title.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } };
+    title.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+
+    ws.mergeCells(3, 2, 3, 9);
+    const meta = ws.getCell(3, 2);
+    meta.value = T('Üretici', 'Supplier') + ': ' + supplierNameFor(rows) + '   ·   '
+      + T('Sipariş', 'Orders') + ': ' + stats.orders + '   ·   '
+      + T('Oluşturma', 'Created') + ': ' + new Date(exportedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR');
+    meta.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink2 } };
+    meta.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+
+    ws.mergeCells(5, 2, 5, 9);
+    const intro = ws.getCell(5, 2);
+    intro.value = 'Bu dosyada yalnızca renkli ve kilidi açık checklist alanlarını doldurun. / Fill only the coloured, unlocked checklist fields in this workbook.';
+    intro.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C.ink } };
+    intro.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.accBg } };
+    intro.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true, indent: 1 };
+    ws.getRow(5).height = 32;
+
+    const steps = [
+      ['1', 'Checklist sekmesine geçin. Her sipariş satırında ilgili kontrol alanlarını doldurun.', 'Open the Checklist sheet. Complete the relevant control fields for each order row.'],
+      ['2', 'Durum hücresinde açılır listeden seçim yapın: Bekliyor / Onaylandı / Reddedildi / Gerekmiyor.', 'In each Status cell, choose from the dropdown: Pending / Approved / Rejected / Not Required.'],
+      ['3', 'Reddedildi seçerseniz Not alanına sebebi ve beklenen aksiyonu yazın.', 'If you choose Rejected, explain the reason and required action in the Note field.'],
+      ['4', 'Rapor No ve Gerçekleşme Tarihi alanları renkliyse ilgili bilgiyi girin. Tarihi GG.AA.YYYY biçiminde kullanın.', 'If Report No and Actual Date cells are coloured, enter the requested information. Use DD.MM.YYYY for dates.'],
+      ['5', 'Gri/beyaz kilitli alanları, satırları, sütunları ve gizli teknik alanları değiştirmeyin. Ek dosya adları bilgi amaçlıdır.', 'Do not change grey/white locked cells, rows, columns or hidden technical fields. Attachment names are for reference only.'],
+      ['6', 'İşiniz bittiğinde dosyayı .xlsx olarak kaydedin ve aynı Excel dosyasını e-postaya ekleyerek geri gönderin.', 'When finished, save the workbook as .xlsx and return this same Excel file as an e-mail attachment.'],
+    ];
+    let rowNo = 7;
+    steps.forEach(function (step) {
+      ws.mergeCells(rowNo, 2, rowNo + 1, 2);
+      ws.mergeCells(rowNo, 3, rowNo + 1, 9);
+      const number = ws.getCell(rowNo, 2), copy = ws.getCell(rowNo, 3);
+      number.value = step[0];
+      number.font = { name: 'Segoe UI', size: 15, bold: true, color: { argb: C.white } };
+      number.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.acc } };
+      number.alignment = { vertical: 'middle', horizontal: 'center' };
+      copy.value = step[1] + '\n' + step[2];
+      copy.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink } };
+      copy.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: rowNo % 4 === 3 ? C.white : C.band } };
+      copy.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true, indent: 1 };
+      ws.getRow(rowNo).height = 22;
+      ws.getRow(rowNo + 1).height = 22;
+      rowNo += 2;
+    });
+
+    rowNo += 1;
+    ws.mergeCells(rowNo, 2, rowNo, 9);
+    const legendTitle = ws.getCell(rowNo, 2);
+    legendTitle.value = 'STATUS / DURUM';
+    legendTitle.font = { name: 'Segoe UI', size: 10, bold: true, color: { argb: C.white } };
+    legendTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } };
+    legendTitle.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    rowNo += 1;
+    const legend = [
+      [statusLabel('open'), C.acc, C.accBg, 'Henüz tamamlanmadı / Not completed yet'],
+      [statusLabel('approved'), C.green, C.greenBg, 'Kontrol tamam ve uygun / Check completed and accepted'],
+      [statusLabel('rejected'), C.red, C.redBg, 'Sorun var, aksiyon gerekli / Issue found, action required'],
+      [statusLabel('notRequired'), C.gold, C.goldBg, 'Bu sipariş için uygulanmıyor / Not applicable to this order'],
+    ];
+    legend.forEach(function (entry) {
+      ws.mergeCells(rowNo, 2, rowNo, 4);
+      ws.mergeCells(rowNo, 5, rowNo, 9);
+      const label = ws.getCell(rowNo, 2), detail = ws.getCell(rowNo, 5);
+      label.value = entry[0];
+      label.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: entry[1] } };
+      label.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: entry[2] } };
+      label.alignment = { vertical: 'middle', horizontal: 'center' };
+      detail.value = entry[3];
+      detail.font = { name: 'Segoe UI', size: 9, color: { argb: C.ink2 } };
+      detail.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+      rowNo += 1;
+    });
+
+    rowNo += 1;
+    ws.mergeCells(rowNo, 2, rowNo + 1, 9);
+    const footer = ws.getCell(rowNo, 2);
+    footer.value = items.length + ' ' + T('checklist başlığı', 'checklist item(s)')
+      + ' · ' + T('Doldurma alanları Checklist sekmesinde renkli gösterilir.', 'Editable fields are highlighted on the Checklist sheet.');
+    footer.font = { name: 'Segoe UI', size: 9, bold: true, color: { argb: C.ink2 } };
+    footer.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.greenBg } };
+    footer.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true, indent: 1 };
+    ws.pageSetup = { orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 1 };
+    return ws;
+  }
+
   function renderChecklistSummary(ws, rows, items, statusColumns, lastRow, exportedAt) {
     const C = CHECKLIST_EXCEL_COLORS, stats = identityStats(rows);
     ws.views = [{ showGridLines: false, zoomScale: 90 }];
@@ -918,6 +1014,10 @@
     workbook.created = new Date();
     workbook.calcProperties = Object.assign({}, workbook.calcProperties || {}, {
       fullCalcOnLoad: true, forceFullCalc: true, calcMode: 'auto',
+    });
+    const instructionsSheet = workbook.addWorksheet(T('Önce Oku', 'Read Me'), {
+      views: [{ showGridLines: false, zoomScale: 100 }],
+      properties: { tabColor: { argb: CHECKLIST_EXCEL_COLORS.green } },
     });
     const summarySheet = workbook.addWorksheet(T('Checklist Özet', 'Checklist Summary'), {
       views: [{ showGridLines: false, zoomScale: 90 }],
@@ -1102,6 +1202,17 @@
       cell.border = { bottom: { style: 'medium', color: { argb: fill } } };
       cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
       cell.protection = { locked: true };
+      if (column.checklistStatus) cell.note = T(
+        'Doldurulacak alan: açılır listeden Bekliyor / Onaylandı / Reddedildi / Gerekmiyor seçin.',
+        'Editable field: choose Pending / Approved / Rejected / Not Required from the dropdown.'
+      );
+      else if (column.checklistNote) cell.note = T(
+        'Doldurulacak alan: özellikle Reddedildi durumunda sebep ve beklenen aksiyonu yazın.',
+        'Editable field: especially for Rejected status, enter the reason and required action.'
+      );
+      else if (column.checklistEvidence === 'reportNumber') cell.note = T('Doldurulacak alan: ilgili rapor numarasını yazın.', 'Editable field: enter the related report number.');
+      else if (column.checklistEvidence === 'actualDate') cell.note = T('Doldurulacak alan: gerçekleşme tarihini GG.AA.YYYY olarak girin.', 'Editable field: enter the actual date as DD.MM.YYYY.');
+      else if (column.checklistEvidence === 'attachments') cell.note = T('Bilgi alanı: bu sütun kilitlidir; ek dosya adlarını değiştirmeyin.', 'Reference field: this column is locked; do not change attachment names.');
     });
     sheet.eachRow({ includeEmpty: false }, function (row, rowNo) {
       if (rowNo === 1) return;
@@ -1140,6 +1251,19 @@
       autoFilter: true,
     });
 
+    renderChecklistInstructions(instructionsSheet, rows, items, exportedAt);
+    await instructionsSheet.protect(EXCEL_PROTECTION_PASSWORD, {
+      selectLockedCells: true,
+      selectUnlockedCells: false,
+      formatCells: false,
+      formatColumns: false,
+      formatRows: false,
+      insertColumns: false,
+      insertRows: false,
+      deleteColumns: false,
+      deleteRows: false,
+    });
+
     renderChecklistSummary(summarySheet, rows, items, statusColumns, lastDataRow, exportedAt);
     await summarySheet.protect(EXCEL_PROTECTION_PASSWORD, {
       selectLockedCells: true,
@@ -1155,9 +1279,11 @@
 
     const meta = workbook.addWorksheet(META_SHEET);
     meta.state = 'veryHidden';
-    summarySheet.orderNo = 0;
-    sheet.orderNo = 1;
-    meta.orderNo = 2;
+    instructionsSheet.orderNo = 0;
+    summarySheet.orderNo = 1;
+    sheet.orderNo = 2;
+    meta.orderNo = 3;
+    workbook.views = [{ activeTab: 0, firstSheet: 0, visibility: 'visible' }];
     meta.addRow(['BUYER_LOG_CHECKLIST_SUPPLIER', SCHEMA_VERSION]);
     meta.addRow(['exportedAt', exportedAt]);
     meta.addRow(['supplier', supplierNameFor(rows)]);
@@ -1332,65 +1458,113 @@
       toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
       return false;
     }
-    const suppliers = Array.from(new Set(rows.map(function (row) {
-      return visibleValue(row, ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier']);
-    }).filter(Boolean)));
-    if (suppliers.length !== 1) {
-      toast(T('Üreticiye Checklist hazırlamak için seçili satırlar tek bir üreticiye ait olmalıdır.', 'Prepare Supplier Checklist requires rows from exactly one supplier.'));
+
+    // Birden fazla üretici aynı seçimde olabilir. Her satırı kendi üreticisine
+    // ayırırız; Excel ve kanıt ekleri de aynı kapsamla etiketlenir. Böylece
+    // Prepare E-Mail her üretici için yalnız kendi siparişlerini ve dosyalarını
+    // kullanarak ayrı taslak oluşturabilir.
+    const groupMap = new Map(), missingRows = [];
+    rows.forEach(function (row) {
+      const supplier = visibleValue(row, ['Sub-Manufacturer', 'Manufacturer', 'Üretici', 'Supplier']);
+      if (!supplier) { missingRows.push(row); return; }
+      const key = supplier.toLocaleLowerCase('tr-TR');
+      if (!groupMap.has(key)) groupMap.set(key, { supplier: supplier, rows: [] });
+      groupMap.get(key).rows.push(row);
+    });
+    if (missingRows.length) {
+      toast(T(
+        'Checklist e-postası hazırlanamadı: seçili ' + missingRows.length + ' satırda üretici bilgisi yok. Önce üretici atamasını tamamlayın.',
+        'Checklist e-mail could not be prepared: ' + missingRows.length + ' selected row(s) have no supplier. Assign a supplier first.'
+      ));
       return false;
     }
-    const supplier = suppliers[0];
-    const artifact = await exportWorkbook({ rows: rows, download: false });
-    if (!artifact || !artifact.buffer) throw new Error(T('Checklist Excel hazırlanamadı.', 'Checklist workbook could not be prepared.'));
-    const excelBlob = new Blob([artifact.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    let excelFile;
-    try { excelFile = new File([excelBlob], artifact.filename, { type: excelBlob.type, lastModified: Date.now() }); }
-    catch (_) { excelBlob.name = artifact.filename; excelFile = excelBlob; }
+    const supplierGroups = Array.from(groupMap.values());
+    if (!supplierGroups.length) {
+      toast(T('Seçili satırlarda üretici bilgisi bulunamadı.', 'No supplier information was found in the selected rows.'));
+      return false;
+    }
 
-    const decision = analysesForRows(rows), items = itemCatalog(), attachmentMap = new Map();
-    rows.forEach(function (row) {
-      const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
-      if (!analysis) return;
-      items.forEach(function (item) {
-        if (!itemApplies(item, analysis)) return;
-        const answer = answerFor(item, analysis);
-        (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
-          if (entry && entry.id && !attachmentMap.has(entry.id)) attachmentMap.set(entry.id, entry);
+    const items = itemCatalog();
+    const initialFiles = [];
+    const tempRows = [];
+    const directory = typeof root.BLPrepareEmailManufacturers === 'function' ? root.BLPrepareEmailManufacturers() : null;
+    let evidenceFileCount = 0, virtualRowId = -100000;
+
+    for (const group of supplierGroups) {
+      const supplier = group.supplier, supplierRows = group.rows;
+      const artifact = await exportWorkbook({ rows: supplierRows, download: false });
+      if (!artifact || !artifact.buffer) {
+        throw new Error(T('Checklist Excel hazırlanamadı: ', 'Checklist workbook could not be prepared: ') + supplier);
+      }
+      const excelBlob = new Blob([artifact.buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      let excelFile;
+      try { excelFile = new File([excelBlob], artifact.filename, { type: excelBlob.type, lastModified: Date.now() }); }
+      catch (_) { excelBlob.name = artifact.filename; excelFile = excelBlob; }
+      initialFiles.push({
+        file: excelFile,
+        modelLabel: supplier + ' · ' + T('Checklist Excel', 'Checklist Excel'),
+        manufacturer: supplier,
+        directAttachment: true,
+      });
+
+      const decision = analysesForRows(supplierRows), attachmentMap = new Map();
+      supplierRows.forEach(function (row) {
+        const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+        if (!analysis) return;
+        items.forEach(function (item) {
+          if (!itemApplies(item, analysis)) return;
+          const answer = answerFor(item, analysis);
+          (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
+            if (entry && entry.id && !attachmentMap.has(entry.id)) attachmentMap.set(entry.id, entry);
+          });
         });
       });
-    });
 
-    const evidenceFiles = [];
-    for (const meta of attachmentMap.values()) {
-      const file = await checklistAttachmentAsFile(meta);
-      if (!file) {
-        throw new Error(T('Checklist eklerinden biri okunamadı: ', 'A checklist attachment could not be read: ') + (meta.filename || meta.id));
+      for (const meta of attachmentMap.values()) {
+        const file = await checklistAttachmentAsFile(meta);
+        if (!file) {
+          throw new Error(
+            T('Checklist eklerinden biri okunamadı: ', 'A checklist attachment could not be read: ')
+            + (meta.filename || meta.id) + ' · ' + supplier
+          );
+        }
+        initialFiles.push({
+          file: file,
+          modelLabel: supplier + ' · ' + T('Checklist eki', 'Checklist attachment'),
+          manufacturer: supplier,
+        });
+        evidenceFileCount += 1;
       }
-      evidenceFiles.push(file);
+
+      if (Array.isArray(directory) && !directory.some(function (item) {
+        return item && text(item.name).toLocaleLowerCase('tr-TR') === supplier.toLocaleLowerCase('tr-TR');
+      })) directory.push({ name: supplier, email: '' });
+
+      supplierRows.forEach(function (row) {
+        tempRows.push({
+          ...row,
+          id: virtualRowId--,
+          manufacturer: supplier,
+          buyingSampleManufacturer: supplier,
+          _cpSourceRow: row,
+        });
+      });
     }
-    const initialFiles = [{ file: excelFile, modelLabel: T('Checklist Excel', 'Checklist Excel') }]
-      .concat(evidenceFiles.map(function (file) { return { file: file, modelLabel: T('Checklist eki', 'Checklist attachment') }; }));
 
-    const directory = typeof root.BLPrepareEmailManufacturers === 'function' ? root.BLPrepareEmailManufacturers() : null;
-    if (Array.isArray(directory) && !directory.some(function (item) {
-      return item && text(item.name).toLocaleLowerCase('tr-TR') === supplier.toLocaleLowerCase('tr-TR');
-    })) directory.push({ name: supplier, email: '' });
-
-    const tempRows = rows.map(function (row, index) {
-      return { ...row, id: -100000 - index, manufacturer: supplier, buyingSampleManufacturer: supplier, _cpSourceRow: row };
-    });
+    const supplierNames = supplierGroups.map(function (group) { return group.supplier; });
     const context = {
       rows: tempRows,
       count: tempRows.length,
       btnId: 'cpChecklistPrepareEmailVirtualBtn',
       persist: false,
-      preselect: [supplier],
+      preselect: supplierNames,
       initialFiles: initialFiles,
       title: T('Üreticiye Checklist Exceli Hazırla', 'Prepare Supplier Checklist'),
-      subtitle: T(
-        tempRows.length + ' sipariş · Checklist Excel + ' + evidenceFiles.length + ' ek · taslak oluşturmadan önce kontrol edin',
-        tempRows.length + ' orders · Checklist Excel + ' + evidenceFiles.length + ' attachment(s) · review before creating drafts'
-      ),
+      subtitle: supplierNames.length + ' ' + T('üretici', 'supplier(s)')
+        + ' · ' + tempRows.length + ' ' + T('sipariş', 'orders')
+        + ' · ' + T('her üretici için ayrı Checklist Excel', 'separate Checklist Excel per supplier')
+        + (evidenceFileCount ? ' + ' + evidenceFileCount + ' ' + T('ek', 'attachment(s)') : '')
+        + ' · ' + T('taslak oluşturmadan önce kontrol edin', 'review before creating drafts'),
       resultTitle: T('Checklist E-Posta Sonucu', 'Checklist E-Mail Result'),
     };
     if (root.BLPrepareEmail && typeof root.BLPrepareEmail.openChecklist === 'function') {

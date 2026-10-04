@@ -32020,7 +32020,7 @@ async function pricingPrepareAttachmentPlan(workbook,fileEntries,rows){
     const file=entry?.file||entry;
     if(!file||!file.name) return null;
     const isImage=/^image\//i.test(String(file.type||''));
-    return {index,file,modelLabel:entry?.modelLabel||pricingMatchFileToRow(file,rows)||'',isImage,isPdf:!isImage&&pricingIsPdf(file)};
+    return {index,file,modelLabel:entry?.modelLabel||pricingMatchFileToRow(file,rows)||'',isImage,isPdf:!isImage&&pricingIsPdf(file),directAttachment:entry?.directAttachment===true};
   }).filter(Boolean);
   const included=[];
   if(!entries.length) return {attachments,included,excluded:[],totalBytes:excelBytes,limitBytes:PRICING_ATTACHMENT_LIMIT_BYTES,excelBytes,allIncluded:true};
@@ -32034,13 +32034,16 @@ async function pricingPrepareAttachmentPlan(workbook,fileEntries,rows){
 
   const fixed=[];
   for(const item of entries.filter(x=>!x.isImage&&!x.isPdf)){
-    fixed.push({item,source:item.file,name:item.file.name,mimeType:item.file.type||'application/octet-stream',compressed:false,archive:false});
+    fixed.push({item,source:item.file,name:item.file.name,mimeType:item.file.type||'application/octet-stream',compressed:false,archive:false,directAttachment:item.directAttachment===true});
   }
   let fixedBytes=fixed.reduce((sum,x)=>sum+(x.source.size||0),0);
   const minimumModelBudget=compressibleItems.reduce((s,it)=>s+floorFor(it),0);
   let availableForModels=PRICING_ATTACHMENT_LIMIT_BYTES-excelBytes-fixedBytes;
   if(availableForModels<minimumModelBudget){
     for(let i=0;i<fixed.length;i++){
+      // Supplier Checklist Excel gibi doğrudan eklenmesi istenen dosyaları
+      // GZIP/ZIP'e dönüştürmeyiz; alıcı .xlsx dosyasını doğrudan açabilmelidir.
+      if(fixed[i].directAttachment) continue;
       const zipped=await pricingGzipFile(fixed[i].source);
       if(zipped){
         fixedBytes-=fixed[i].source.size||0;
@@ -32050,12 +32053,21 @@ async function pricingPrepareAttachmentPlan(workbook,fileEntries,rows){
     }
     availableForModels=PRICING_ATTACHMENT_LIMIT_BYTES-excelBytes-fixedBytes;
   }
-  // Ayrı GZIP dosyalarından daha küçükse bütün görsel/PDF olmayan dosyaları tek,
-  // maksimum sıkıştırmalı ZIP içine al.
+  // Maksimum ZIP yalnız arşivlenmesine izin verilen dosyalar için kullanılabilir.
+  // directAttachment işaretli dosyalar e-postada kendi uzantısıyla kalır.
   let fixedArchive=null;
-  if(fixed.length){
-    const candidate=await pricingZipFiles(entries.filter(x=>!x.isImage&&!x.isPdf).map(item=>({source:item.file,name:item.file.name})),'Model_Files.zip');
-    if(candidate && candidate.blob.size<fixedBytes){ fixedArchive=candidate; fixedBytes=candidate.blob.size; }
+  const directFixed=fixed.filter(x=>x.directAttachment);
+  const archivableFixed=fixed.filter(x=>!x.directAttachment);
+  if(archivableFixed.length){
+    const candidate=await pricingZipFiles(
+      entries.filter(x=>!x.isImage&&!x.isPdf&&!x.directAttachment).map(item=>({source:item.file,name:item.file.name})),
+      'Model_Files.zip'
+    );
+    const archivableBytes=archivableFixed.reduce((sum,x)=>sum+(x.source.size||0),0);
+    if(candidate && candidate.blob.size<archivableBytes){
+      fixedArchive=candidate;
+      fixedBytes=directFixed.reduce((sum,x)=>sum+(x.source.size||0),0)+candidate.blob.size;
+    }
   }
   availableForModels=PRICING_ATTACHMENT_LIMIT_BYTES-excelBytes-fixedBytes;
   if(availableForModels<minimumModelBudget){
@@ -32065,10 +32077,15 @@ async function pricingPrepareAttachmentPlan(workbook,fileEntries,rows){
     err.code='PRICING_MULTIPART_REQUIRED'; throw err;
   }
 
-  // Önce görsel/PDF olmayan dosyaları ekle; maksimum ZIP daha küçükse tek arşiv kullanılır.
+  // Doğrudan ekler her zaman özgün dosya olarak kalır. Diğer Office/ikili
+  // dosyalar gerekiyorsa mevcut ZIP/GZIP optimizasyonunu kullanabilir.
   if(fixedArchive){
+    for(const x of directFixed){
+      attachments.push({filename:x.name,mimeType:x.mimeType,base64:await pricingBlobBase64(x.source),size:x.source.size||0,role:'model'});
+      included.push({name:x.name,size:x.source.size||0,originalName:x.item.file.name,originalSize:x.item.file.size||0,modelLabel:x.item.modelLabel,compressed:false,archive:false});
+    }
     attachments.push({filename:fixedArchive.name,mimeType:fixedArchive.mimeType,base64:await pricingBlobBase64(fixedArchive.blob),size:fixedArchive.blob.size||0,role:'model'});
-    fixed.forEach(x=>included.push({name:fixedArchive.name,size:fixedArchive.blob.size||0,originalName:x.item.file.name,originalSize:x.item.file.size||0,modelLabel:x.item.modelLabel,compressed:true,archive:true}));
+    archivableFixed.forEach(x=>included.push({name:fixedArchive.name,size:fixedArchive.blob.size||0,originalName:x.item.file.name,originalSize:x.item.file.size||0,modelLabel:x.item.modelLabel,compressed:true,archive:true}));
   }else{
     for(const x of fixed){
       attachments.push({filename:x.name,mimeType:x.mimeType,base64:await pricingBlobBase64(x.source),size:x.source.size||0,role:'model'});
@@ -32139,7 +32156,7 @@ async function pricingPrepareMultipartAttachmentPlans(workbook,fileEntries,rows)
   const excelBytes=workbook?.buffer?.byteLength||0;
   if(workbook && (!excelBytes||excelBytes>=PRICING_ATTACHMENT_LIMIT_BYTES)) throw new Error(appLang==='en'?'The pricing Excel attachment is too large.':'Fiyatlama Excel eki çok büyük.');
   const excelAttachment=excelBytes?{filename:workbook.name,mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',base64:kolArrayBufferToBase64(workbook.buffer),size:excelBytes,role:'excel'}:null;
-  const entries=(fileEntries||[]).map((entry,index)=>{ const file=entry?.file||entry; if(!file||!file.name)return null; const isImage=/^image\//i.test(String(file.type||'')); return {index,file,modelLabel:entry?.modelLabel||pricingMatchFileToRow(file,rows)||'',isImage,isPdf:!isImage&&pricingIsPdf(file)}; }).filter(Boolean);
+  const entries=(fileEntries||[]).map((entry,index)=>{ const file=entry?.file||entry; if(!file||!file.name)return null; const isImage=/^image\//i.test(String(file.type||'')); return {index,file,modelLabel:entry?.modelLabel||pricingMatchFileToRow(file,rows)||'',isImage,isPdf:!isImage&&pricingIsPdf(file),directAttachment:entry?.directAttachment===true}; }).filter(Boolean);
   const safety=24*1024;
   const firstCapacity=PRICING_ATTACHMENT_LIMIT_BYTES-excelBytes-safety;
   const otherCapacity=PRICING_ATTACHMENT_LIMIT_BYTES-safety;
@@ -32154,7 +32171,7 @@ async function pricingPrepareMultipartAttachmentPlans(workbook,fileEntries,rows)
       // ikili parçalara bölmek yalnızca bu da yetmezse devreye girer.
       const smaller=await pricingCompressPdfFile(source,otherCapacity);
       if(smaller){ source=smaller.blob; name=smaller.name; mimeType=smaller.mimeType; compressed=true; }
-    }else if(!item.isImage){
+    }else if(!item.isImage&&!item.directAttachment){
       const zipped=await pricingGzipFile(source);
       if(zipped){ source=zipped.blob; name=zipped.name; mimeType=zipped.mimeType; compressed=true; archive=true; }
     }
@@ -33679,7 +33696,7 @@ function renderKolMfrModal(ctx){
   let pricingModelFiles = (Array.isArray(SRC.initialFiles) ? SRC.initialFiles : []).map(entry=>{
     const file=entry?.file||entry;
     if(!file||!file.name)return null;
-    return {id:`initial-${++pricingFileSeq}`,file,modelLabel:String(entry?.modelLabel||''),stored:false};
+    return {id:`initial-${++pricingFileSeq}`,file,modelLabel:String(entry?.modelLabel||''),manufacturer:String(entry?.manufacturer||''),directAttachment:entry?.directAttachment===true,stored:false};
   }).filter(Boolean);
   let pricingStoredLoading = false;
   let storedPricingFilesLoaded = false;
@@ -34064,7 +34081,19 @@ function renderKolMfrModal(ctx){
     const topicForDraft={...selectedTopic};
     const topicColumns=mailTopicSelectedColumns(topicForDraft.kind,topicForDraft.id,topicSourceKind);
     const topicContent=mailTopicContentOptions(topicForDraft.kind,topicForDraft.id,topicSourceKind);
-    const pricingFilesForDraft=pricingModelFiles.filter(entry=>!entry.stored||topicContent.tps).map(entry=>({file:entry.file,modelLabel:entry.modelLabel||pricingMatchFileToRow(entry.file,selRows)}));
+    const pricingFilesForDraft=pricingModelFiles.filter(entry=>!entry.stored||topicContent.tps).map(entry=>({
+      file:entry.file,
+      modelLabel:entry.modelLabel||pricingMatchFileToRow(entry.file,selRows),
+      manufacturer:String(entry.manufacturer||''),
+      directAttachment:entry.directAttachment===true,
+    }));
+    const pricingFilesForManufacturer=name=>{
+      const key=String(name||'').trim().toLocaleLowerCase('tr-TR');
+      return pricingFilesForDraft.filter(entry=>{
+        const owner=String(entry.manufacturer||'').trim();
+        return !owner || owner.toLocaleLowerCase('tr-TR')===key;
+      });
+    };
     close(); if(SRC.persist) renderKol();
     const btn=document.getElementById(SRC.btnId);
     if(btn){btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);}
@@ -34090,7 +34119,7 @@ function renderKolMfrModal(ctx){
           prepareProgress.setStage(en?'Preparing Excel and attachments…':'Excel ve ekler hazırlanıyor…');
           const tableWorkbook=topicContent.excel?await prepareEmailBuildTopicTableWorkbook(rowsFor,topicColumns,topicForDraft.name,m.name):null;
           prepareProgress.setStage(en?'Arranging attachments under the 9.5 MB limit…':'Ekler 9,5 MB sınırına göre düzenleniyor…');
-          const attachmentPlans=await pricingPrepareAttachmentPlans(tableWorkbook,pricingFilesForDraft,rowsFor);
+          const attachmentPlans=await pricingPrepareAttachmentPlans(tableWorkbook,pricingFilesForManufacturer(m.name),rowsFor);
           prepareProgress.setStage(en?'Preparing e-mail images and table…':'E-posta görselleri ve tablosu hazırlanıyor…');
           const tableContent=topicContent.table?await prepareEmailTopicTableContent(rowsFor,topicColumns):{html:'',plain:'',inlineImages:[]};
           const tableHtml=tableContent.html,tablePlain=tableContent.plain;
