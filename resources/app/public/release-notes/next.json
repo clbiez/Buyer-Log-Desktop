@@ -7,8 +7,8 @@
     "en": "Bulk image removal and Data Cleanup"
   },
   "summary": {
-    "tr": "CP ve Koleksiyon'da seçili modellerin görselleri tek işlemde ve kalıcı olarak kaldırılır. Veri Yönetimi'ne gereksiz dosyaları tarayıp onayla silen Data Temizliği eklendi; Buyer Log haftada bir kendi bayat verisini otomatik temizler ve kayda değer veri kaldıysa hatırlatır.",
-    "en": "Images of selected models in CP and Collection are removed permanently in one action. Data Management gains Data Cleanup, which scans and—after confirmation—deletes unnecessary files; once a week Buyer Log automatically removes its own stale data and reminds you when a significant amount remains."
+    "tr": "Buyer Log 7.0.228; CP ve Koleksiyon'da seçili modellerin görsellerini tek işlemde ve kalıcı olarak kaldırır, Veri Yönetimi'ne gereksiz dosyaları tarayıp onayla silen Data Temizliği aracını ekler ve haftada bir kendi bayat verisini otomatik temizleyip kayda değer veri kaldıysa hatırlatır.",
+    "en": "Buyer Log 7.0.228 removes images of selected models in CP and Collection permanently in one action, adds Data Cleanup to Data Management to scan and—after confirmation—delete unnecessary files, and once a week automatically removes its own stale data and reminds you when a significant amount remains."
   },
   "changes": [
     {
