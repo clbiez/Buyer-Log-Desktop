@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.236",
+      "publishedAt": "2026-10-04",
+      "title": {
+        "tr": "LCW AI sohbeti cevap veriyor",
+        "en": "LCW AI chat answers again"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.236/release.json"
+    },
+    {
       "version": "7.0.235",
       "publishedAt": "2026-10-05",
       "title": {

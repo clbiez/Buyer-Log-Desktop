@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.236",
+  "channel": "stable",
+  "publishedAt": "2026-10-04",
+  "title": {
+    "tr": "LCW AI sohbeti cevap veriyor",
+    "en": "LCW AI chat answers again"
+  },
+  "summary": {
+    "tr": "Genel LCW AI ekranında sorular “LCW AI düşünüyor…” durumunda kalıyordu; cevaplar artık geliyor, boş cevap anlaşılır hata olarak gösteriliyor.",
+    "en": "Questions in the general LCW AI screen stayed at “LCW AI is thinking…”; answers now arrive and an empty answer is shown as a clear error."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "lcwai-chat-empty-answer",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI sohbeti artık sorulara cevap veriyor",
+        "en": "LCW AI chat now answers questions"
+      },
+      "body": {
+        "tr": "Genel LCW AI ekranında gönderilen sorular “LCW AI düşünüyor…” olarak kalıyor, cevap gelmiyordu. Sohbet artık bağlama özel “LCW AI’dan Destek Al” alanlarının kullandığı kanıtlanmış akışla çalışıyor ve cevap akışındaki farklı parça türlerini doğru okuyor. LCW AI boş cevap dönerse ekranda anlaşılır bir hata ve Tekrar Dene görünür; tekrar denemek boş cevapları ekranda biriktirmez.",
+        "en": "Questions sent in the general LCW AI screen stayed at “LCW AI is thinking…” with no answer. The chat now uses the proven stream of the context-specific “Get help from LCW AI” areas and reads the different chunk types in the answer stream correctly. If LCW AI returns an empty answer, a clear error and Try Again are shown; retrying no longer piles up empty answers."
+      },
+      "path": {
+        "tr": "Sol menü › LCW AI",
+        "en": "Left menu › LCW AI"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-chat-answers.png",
+        "alt": {
+          "tr": "LCW AI sohbetinde “Şu an dikkat etmem gereken siparişler hangileri” sorusuna tablo hâlinde cevap (demo veri)",
+          "en": "LCW AI chat answering “Which orders should I pay attention to now” with a table (demo data)"
+        },
+        "caption": {
+          "tr": "Soru gönderildiğinde cevap akarak gelir.",
+          "en": "The answer streams in after the question is sent."
+        }
+      }
+    }
+  ]
+}
