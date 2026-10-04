@@ -62,6 +62,7 @@ ${lines([
     'Do not output PowerShell, CMD, Bash, JavaScript, Python, SQL, shell commands or operating-system commands.',
     'Do not use eval, new Function, exec, spawn, filesystem commands or arbitrary URLs.',
     'Use ASK_USER for an email group or other value that must be selected inside Buyer Log.',
+    'To send each manufacturer its own rows, use RECIPIENT_FIELD [Manufacturer] instead of RECIPIENT_GROUP; Buyer Log resolves every order to its manufacturer card (licensed non-DTR orders use the Sub-Manufacturer). Never write e-mail addresses.',
     'A parsed automation is a draft until the user reviews the preview and explicitly activates it.',
     'Unknown fields and unsupported actions must be reported, never silently remapped.',
   ])}

@@ -41,8 +41,8 @@ const FUNCTIONS = Object.freeze([
 const ACTIONS = Object.freeze([
   {
     id: 'SEND_EMAIL', riskLevel: 'external', permission: 'automations',
-    parameters: ['RECIPIENT_GROUP', 'SUBJECT', 'INCLUDE_MATCHING_ROWS', 'ATTACHMENT'],
-    description: 'Creates an e-mail draft through the existing controlled draft path after user approval.',
+    parameters: ['RECIPIENT_GROUP', 'RECIPIENT_FIELD', 'SUBJECT', 'INCLUDE_MATCHING_ROWS', 'ATTACHMENT'],
+    description: 'Creates an e-mail draft through the existing controlled draft path after user approval. RECIPIENT_GROUP ASK_USER sends one e-mail to a group chosen in Buyer Log; RECIPIENT_FIELD [Manufacturer] sends each responsible manufacturer its own rows, resolved per order through the Buyer Log manufacturer cards (licensed non-DTR orders use the Sub-Manufacturer).',
   },
   {
     id: 'OPEN_PAGE', riskLevel: 'read', permission: 'automations',

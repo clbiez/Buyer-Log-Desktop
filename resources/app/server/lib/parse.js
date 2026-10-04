@@ -1027,6 +1027,9 @@ function parseASASMatrix(rows, ruleValue) {
   const shipConfHeader = resolveHeader(
     ['Buying Son Onay Tarihi'],
     [['BUYING','SON','ONAY','TARIH'], ['BUYING','APPROVAL','DATE'], ['SON','ONAY','TARIH']]);
+  const initialInspectionHeader = resolveHeader(
+    ['Initial Inspection Geçme Tarih', 'Initial Inspection Tarih', 'Initial Inspection Tarihi', 'Initial Inspection'],
+    [['INITIAL','INSPECTION','GECME','TARIH'], ['INITIAL','INSPECTION','TARIH'], ['INITIAL','INSPECTION','DATE']]);
   const technicalImageHeader = resolveHeader(
     ['Teknik Görsel', 'Teknik Resim'],
     [['TEKNIK','GORSEL'], ['TEKNIK','RESIM'], ['TECHNICAL','IMAGE'], ['TECHNICAL','PICTURE']]);
@@ -1077,6 +1080,7 @@ function parseASASMatrix(rows, ruleValue) {
       mb: yyyymmdd(g(row, 'Model Bütçe Tarih Yıl Ay Gün')),
       opd: yyyymmdd(g(row, 'Sipariş Yerleştirme MerchTarih')),
       shipConf: shipConfHeader ? yyyymmdd(g(row, shipConfHeader)) : null,
+      initialInspection: initialInspectionHeader ? yyyymmdd(gFuzzy(row, initialInspectionHeader)) : null,
       buyer: norm(g(row, 'Buyer')),
       line: norm(g(row, 'Line')),
       // ASAS aynı sipariş satırını kumaş bileşeni kadar çoğaltabilir. Yalnız
@@ -2160,6 +2164,8 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _asasInStore: asasBaseline(o, 'mb', '_asasMb'),
       'HANDOVER Tarihi': handover, 'Retail Date': o.retail, 'Ex→Retail': '',
       'Buying Son Onay Tarihi': o.shipConf, 'In-Store (Model Budget)': o.mb,
+      // Üretici kartı termin performansı için ilk söz (gizli alan).
+      _initialInspection: o.initialInspection || null,
       'Order Quantity': o.qty, 'Shipment Quantity': logistic.loadedQty, 'Remaining Units': logistic.remainingQty, '%': o.qty ? (o.qty - logistic.remainingQty) / o.qty : '',
       STATUS: status, 'Ant. Arrival': ant, 'Del. Type': delType,
       _logisticSegments: logistic.segments,

@@ -733,11 +733,13 @@
         en: 'Shared data that arrives from a file or manual entry rather than a connection.',
       },
       tools: [
+        /* v7.0.229 — E-Mail Grupları "Üreticiler" olarak sol menüye taşındı;
+           buradaki araç o sayfaya götürür (sayfa yoksa rehberi açar). */
         { id: 'emailgroups', icon: 'i-mail-send',
-          label: { tr: 'E-Mail Grupları', en: 'E-Mail Groups' },
-          hint: { tr: 'Üretici e-posta adresleri, ülke ve gruplara göre.',
-            en: 'Manufacturer email addresses by country and group.' },
-          run: async () => { await feature('deferredUi'); window.BLEmailGroups?.open?.(); } },
+          label: { tr: 'Üreticiler (eski E-Mail Grupları)', en: 'Manufacturers (formerly E-Mail Groups)' },
+          hint: { tr: 'Üretici kartları ve e-posta rehberi artık sol menüdeki Üreticiler sayfasında.',
+            en: 'Manufacturer cards and the e-mail directory now live on the Manufacturers page in the left menu.' },
+          run: async () => { if (typeof window.switchTab === 'function' && document.getElementById('view-manufacturers')) { window.switchTab('manufacturers'); return; } await feature('deferredUi'); window.BLEmailGroups?.open?.(); } },
         { id: 'fx', requires: 'manageBusinessRules', icon: 'i-coins',
           label: { tr: 'Kur Excel’i', en: 'FX Excel' },
           hint: { tr: 'Döviz kuru tablosunu Excel’den yükler.', en: 'Loads the exchange-rate table from Excel.' },

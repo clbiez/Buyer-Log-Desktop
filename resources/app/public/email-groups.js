@@ -71,6 +71,9 @@
     if (data.lockTtlMs) S.data.lockTtlMs = data.lockTtlMs;
     if (data.currentUserId) S.currentUserId = data.currentUserId;
     rebuildDirectory();
+    /* v7.0.229 — Üreticiler sayfası kartları bu rehberden eşler; rehber her
+       değiştiğinde (kayıt, alternatif ad, kilit) sayfa yeniden eşleme yapar. */
+    try { window.dispatchEvent(new CustomEvent('bl:manufacturer-directory-changed', { detail: { ...S.data } })); } catch (_) { /* eski tarayıcı */ }
   }
 
   /* ---------------- ORTAK ADRES REHBERİ (v7.35) ----------------
@@ -117,8 +120,12 @@
   function rebuildDirectory() {
     directory.clear();
     for (const record of S.data.records) {
-      const key = dirKey(record && record.manufacturer);
-      if (key && !directory.has(key)) directory.set(key, { ...record, recipients: parseRecipients(record && record.email) });
+      const entry = { ...record, recipients: parseRecipients(record && record.email) };
+      // Alternatif adlar (eski yazımlar) da aynı karta çözülür.
+      for (const name of [record && record.manufacturer].concat(Array.isArray(record && record.aliases) ? record.aliases : [])) {
+        const key = dirKey(name);
+        if (key && !directory.has(key)) directory.set(key, entry);
+      }
     }
     directoryLoadedAt = Date.now();
   }
@@ -158,7 +165,7 @@
     if (S.filterType && record.typeId !== S.filterType) return false;
     const query = S.search.toLocaleLowerCase('tr-TR');
     if (!query) return true;
-    return [record.manufacturer, record.email, record.contact, record.phone, record.note]
+    return [record.manufacturer, record.email, record.contact, record.phone, record.note, ...(record.aliases || [])]
       .some(value => String(value || '').toLocaleLowerCase('tr-TR').includes(query));
   }
 
@@ -213,12 +220,13 @@
       <div class="egCardTop"><div class="egCardTitle"><strong>${esc(T('Kaydı düzenle', 'Edit record'))}</strong>
         <span class="egMuted">${esc(T('Siz düzenlerken bu kayıt diğer kullanıcılara kapalıdır.', 'While you edit, this record is closed to other users.'))}</span></div></div>
       <div class="egForm">
-        <label class="egField">${esc(T('Üretici', 'Manufacturer'))}<input type="text" data-eg-input="manufacturer" value="${esc(draft.manufacturer)}" maxlength="240"></label>
+        <label class="egField egFieldWide">${esc(T('Üretici (ASAS’taki tam ad)', 'Manufacturer (exact ASAS name)'))}<input type="text" data-eg-input="manufacturer" value="${esc(draft.manufacturer)}" maxlength="240" list="egAsasNames" autocomplete="off"><datalist id="egAsasNames">${asasNames().map(name => `<option value="${esc(name)}"></option>`).join('')}</datalist><small class="egAsasHint" data-eg-asas-hint>${asasHintText(draft.manufacturer)}</small></label>
+        <label class="egField egFieldWide">${esc(T('Alternatif adlar', 'Alternative names'))}<textarea data-eg-input="aliases" rows="2" maxlength="4000" placeholder="${esc(T('Eski veya farklı yazımlar; ; ya da yeni satırla ayırın. Bu adlarla gelen siparişler de bu karta bağlanır.', 'Old or different spellings; separate with ; or a new line. Orders using these names are tied to this card too.'))}">${esc(Array.isArray(draft.aliases) ? draft.aliases.join('; ') : (draft.aliases || ''))}</textarea></label>
         <label class="egField egFieldWide egRecipientsField">${esc(T('E-posta alıcıları', 'E-mail recipients'))}<div class="egRecipientEditor"><div class="egRecipientChips" data-eg-recipient-chips>${recipientChipsHtml(draft.email, true)}</div><textarea data-eg-input="email" data-eg-recipient-input rows="3" maxlength="2000" placeholder="${esc(T('Birden fazla adresi ; veya yeni satır ile ayırabilirsiniz. e-posta istemcisinden liste yapıştırabilirsiniz.', 'Separate multiple addresses with ; or a new line. You can paste a list from your e-mail client.'))}">${esc(draft.email)}</textarea><div class="egRecipientHint">${esc(T('Örnek: Zeynep <zeynep@firma.com>; merch@firma.com', 'Example: Zeynep <zeynep@company.com>; merch@company.com'))}</div></div></label>
         <label class="egField">${esc(T('İlgili kişi', 'Contact'))}<input type="text" data-eg-input="contact" value="${esc(draft.contact)}" maxlength="240"></label>
         <label class="egField">${esc(T('Telefon', 'Phone'))}<input type="text" data-eg-input="phone" value="${esc(draft.phone)}" maxlength="80"></label>
         <label class="egField">${esc(T('Ülke', 'Country'))}<select data-eg-input="countryId"><option value="">${esc(T('— seçilmedi —', '— none —'))}</option>${optionsHtml(S.data.countries, draft.countryId)}</select></label>
-        <label class="egField">${esc(T('Grup', 'Group'))}<select data-eg-input="typeId"><option value="">${esc(T('— seçilmedi —', '— none —'))}</option>${optionsHtml(S.data.types, draft.typeId)}</select></label>
+        <label class="egField">${esc(T('Üretim alanı', 'Production area'))}<select data-eg-input="typeId"><option value="">${esc(T('— seçilmedi —', '— none —'))}</option>${optionsHtml(S.data.types, draft.typeId)}</select></label>
         <label class="egField egFieldWide">${esc(T('Not', 'Note'))}<textarea data-eg-input="note" rows="2" maxlength="2000">${esc(draft.note)}</textarea></label>
       </div>
       <footer class="egCardFoot egEditFoot">
@@ -228,6 +236,20 @@
         <button type="button" class="egBtn egPrimary" data-eg-save="${esc(record.id)}"><svg class="ic"><use href="#i-device-floppy"/></svg>${esc(T('Kaydet', 'Save'))}</button>
       </footer>
     </article>`;
+  }
+
+  /* v7.0.229 — ASAS önceliği: ad alanı Üreticiler sayfasının yüklediği ASAS
+     üretici adlarını önerir ve ad ASAS'ta birebir yoksa uyarır. Liste yoksa
+     (sayfa hiç açılmadıysa) uyarı gösterilmez — yanlış alarm verilmez. */
+  function asasNames() { return Array.isArray(window.BLManufacturerAsasNames) ? window.BLManufacturerAsasNames : []; }
+  function asasHintText(name) {
+    const names = asasNames(), E = window.BLManufacturerCards;
+    if (!names.length || !E || !clean(name)) return '';
+    const key = E.nameKey(name);
+    if (names.some(item => E.nameKey(item) === key)) return esc(T('✓ ASAS’taki üretici adıyla birebir eşleşiyor.', '✓ Exactly matches the ASAS manufacturer name.'));
+    const near = E.suggestMatches(name, names, 2);
+    return esc(T('ASAS’ta bu adla üretici yok; kurallar ve otomasyonlar bu karta sipariş bağlayamaz.', 'No ASAS manufacturer has this name; rules and automations cannot tie orders to this card.'))
+      + (near.length ? ` ${esc(T('Benzer:', 'Similar:'))} ${near.map(item => esc(item.name)).join(', ')}` : '');
   }
 
   function directoryRowHtml(record) {
@@ -251,8 +273,9 @@
       <header class="egDetailHead"><div><span>${esc(T('Üretici kaydı','Manufacturer record'))}</span><h3>${esc(record.manufacturer||T('(adsız üretici)','(unnamed manufacturer)'))}</h3></div>
         ${other?`<span class="egLockBadge"><svg class="ic"><use href="#i-user"/></svg>${esc(other.userName||other.userId)} ${esc(T('düzenliyor','is editing'))}</span>`:`<button type="button" class="egBtn egPrimary" data-eg-edit="${esc(record.id)}"><svg class="ic"><use href="#i-pencil"/></svg>${esc(T('Düzenle','Edit'))}</button>`}
       </header>
-      <div class="egDetailGrid"><div><label>${esc(T('Ülke','Country'))}</label><strong>${esc(country||'—')}</strong></div><div><label>${esc(T('Grup','Group'))}</label><strong>${esc(type||'—')}</strong></div><div><label>${esc(T('İlgili kişi','Contact'))}</label><strong>${esc(record.contact||'—')}</strong></div><div><label>${esc(T('Telefon','Phone'))}</label><strong>${esc(record.phone||'—')}</strong></div></div>
+      <div class="egDetailGrid"><div><label>${esc(T('Ülke','Country'))}</label><strong>${esc(country||'—')}</strong></div><div><label>${esc(T('Üretim alanı','Production area'))}</label><strong>${esc(type||'—')}</strong></div><div><label>${esc(T('İlgili kişi','Contact'))}</label><strong>${esc(record.contact||'—')}</strong></div><div><label>${esc(T('Telefon','Phone'))}</label><strong>${esc(record.phone||'—')}</strong></div></div>
       <section class="egRecipientsPanel"><div class="egPanelTitle"><div><strong>${esc(T('E-posta alıcıları','E-mail recipients'))}</strong><span>${parseRecipients(record.email).filter(r=>!r.invalid).length}</span></div><p>${esc(T('Prepare E-Mail ve Send to Pricing bu alıcı listesini doğrudan kullanır.','Prepare E-Mail and Send to Pricing use this recipient list directly.'))}</p></div><div class="egRecipientChips isReadOnly">${recipientChipsHtml(record.email,false)}</div></section>
+      ${(record.aliases||[]).length?`<section class="egNotePanel"><label>${esc(T('Alternatif adlar','Alternative names'))}</label><p>${esc(record.aliases.join(' · '))}</p></section>`:''}
       <section class="egNotePanel"><label>${esc(T('Not','Note'))}</label><p>${esc(record.note||'—')}</p></section>
       <footer class="egDetailFoot">${esc(T('Son güncelleme','Last updated'))}: ${esc(stampText(record.updatedAt))}${record.updatedByName?` · ${esc(record.updatedByName)}`:''}</footer>
     </section>`;
@@ -285,7 +308,7 @@
     const filters=S.modal.querySelector('[data-eg-filter-country]');
     if(filters)filters.innerHTML=`<option value="">${esc(T('Tüm ülkeler','All countries'))}</option>${optionsHtml(S.data.countries,S.filterCountry)}`;
     const typeFilter=S.modal.querySelector('[data-eg-filter-type]');
-    if(typeFilter)typeFilter.innerHTML=`<option value="">${esc(T('Tüm gruplar','All groups'))}</option>${optionsHtml(S.data.types,S.filterType)}`;
+    if(typeFilter)typeFilter.innerHTML=`<option value="">${esc(T('Tüm üretim alanları','All production areas'))}</option>${optionsHtml(S.data.types,S.filterType)}`;
     if(S.editingId)setTimeout(()=>S.modal?.querySelector('[data-eg-input="manufacturer"]')?.focus(),0);
     applyReadOnly();
   }
@@ -475,7 +498,7 @@
   async function openHeadings(kind) {
     const isCountry = kind === 'country';
     const list = isCountry ? S.data.countries : S.data.types;
-    const title = isCountry ? T('Ülkeler', 'Countries') : T('Gruplar', 'Groups');
+    const title = isCountry ? T('Ülkeler', 'Countries') : T('Üretim alanları', 'Production areas');
     closeHeadingEditor();
     const items = list.map((item, order) => ({ id: item.id, name: item.name, order }));
     S.headingEditor = { kind, baseItems: items.map(item => ({ ...item })), items };
@@ -487,7 +510,7 @@
         <p>${esc(T('Manuel başlık ekleyin. İçinde kayıt olan başlık kaldırılamaz.', 'Add headings manually. Headings with records cannot be removed.'))}</p></div>
         <button type="button" class="egBtn egHeadingClose" data-eg-heading-close aria-label="${esc(T('Kapat', 'Close'))}">×</button>
       </header>
-      <div class="egHeadingAdd"><input type="text" data-eg-heading-input maxlength="120" placeholder="${esc(isCountry ? T('Yeni ülke', 'New country') : T('Yeni grup', 'New group'))}">
+      <div class="egHeadingAdd"><input type="text" data-eg-heading-input maxlength="120" placeholder="${esc(isCountry ? T('Yeni ülke', 'New country') : T('Yeni üretim alanı (ör. Örme)', 'New production area (e.g. Knit)'))}">
         <button type="button" class="egBtn egPrimary" data-eg-heading-add>＋ ${esc(T('Ekle', 'Add'))}</button></div>
       <ul class="egHeadingList" data-eg-heading-list></ul>
       <footer class="egHeadingFoot"><button type="button" class="egBtn" data-eg-heading-close>${esc(T('Vazgeç', 'Cancel'))}</button>
@@ -644,8 +667,8 @@
     S.modal.innerHTML = `<div class="modalCard egCardShell" role="dialog" aria-modal="true">
       <div class="egHead">
         <div>
-          <div class="modalTitle">${esc(T('E-Mail Grupları', 'E-Mail Groups'))}</div>
-          <p class="egSub">${esc(T('Buyer Log’un merkezi üretici e-posta rehberi. Prepare E-Mail, Send to Pricing ve diğer e-posta akışları bu kayıtları kullanır.', 'Buyer Log’s central manufacturer e-mail directory. Prepare E-Mail, Send to Pricing and other e-mail workflows use these records.'))}</p>
+          <div class="modalTitle">${esc(T('Üreticiler — İletişim Rehberi', 'Manufacturers — Contact Directory'))}</div>
+          <p class="egSub">${esc(T('Üretici kartlarının merkezi e-posta rehberi. Prepare E-Mail, Send to Pricing, kurallar ve otomasyonlar bu kayıtları kullanır; üretici adı ASAS’taki tam ad olmalıdır.', 'The central e-mail directory of the manufacturer cards. Prepare E-Mail, Send to Pricing, rules and automations use these records; the manufacturer name must be the exact ASAS name.'))}</p>
         </div>
         <button type="button" class="pricingRuleIconBtn" data-eg-close aria-label="${esc(T('Kapat', 'Close'))}">✕</button>
       </div>
@@ -656,14 +679,14 @@
         <label class="egGroupBy">${esc(T('Grupla', 'Group by'))}
           <select data-eg-groupby>
             <option value="country">${esc(T('Ülke', 'Country'))}</option>
-            <option value="type">${esc(T('Grup', 'Group'))}</option>
+            <option value="type">${esc(T('Üretim alanı', 'Production area'))}</option>
             <option value="none">${esc(T('Gruplama yok', 'No grouping'))}</option>
           </select>
         </label>
         <span class="egCount" data-eg-count></span>
         <span style="flex:1"></span>
         <button type="button" class="egBtn" data-eg-headings="country"><svg class="ic"><use href="#i-map-pin"/></svg>＋ ${esc(T('Ülke ekle', 'Add country'))}</button>
-        <button type="button" class="egBtn" data-eg-headings="type"><svg class="ic"><use href="#i-tag"/></svg>＋ ${esc(T('Grup ekle', 'Add group'))}</button>
+        <button type="button" class="egBtn" data-eg-headings="type"><svg class="ic"><use href="#i-tag"/></svg>＋ ${esc(T('Üretim alanı ekle', 'Add production area'))}</button>
         <button type="button" class="egBtn egPrimary" data-eg-add><svg class="ic"><use href="#i-copy-plus"/></svg>${esc(T('Kayıt Ekle', 'Add record'))}</button>
       </div>
       <div class="egBody" data-eg-body></div>
@@ -700,6 +723,7 @@
     });
     S.modal.addEventListener('input', event => {
       if (event.target.matches('[data-eg-search]')) { S.search = event.target.value; render(); return; }
+      if (event.target.matches('[data-eg-input="manufacturer"]')) { const hint = S.modal?.querySelector('[data-eg-asas-hint]'); if (hint) hint.innerHTML = asasHintText(event.target.value); }
       if (event.target.matches('[data-eg-input]')) { S.draft = collectDraft(); if(event.target.matches('[data-eg-recipient-input]')){ const chips=S.modal?.querySelector('[data-eg-recipient-chips]'); if(chips) chips.innerHTML=recipientChipsHtml(event.target.value,true); } }
     });
     S.modal.addEventListener('keydown', event => {
@@ -717,6 +741,16 @@
     S.refreshTimer = setInterval(() => refresh(), REFRESH_MS);
   }
 
+  /* Üreticiler sayfasındaki "Kartı düzenle": rehberi açar, kaydı seçer ve
+     kilitli düzenlemeyi başlatır (kilit ve yetki yine sunucuda). */
+  async function openRecord(id, { edit = false } = {}) {
+    await open();
+    if (!S.modal || !id) return;
+    S.selectedId = id;
+    render();
+    if (edit) await startEdit(id);
+  }
+
   function close() {
     if (S.editingId) { const id = S.editingId; S.editingId = ''; S.draft = null;
       api(`/api/email-groups/records/${encodeURIComponent(id)}/lock`, { method: 'DELETE' }).catch(() => {}); }
@@ -731,7 +765,7 @@
   // Tarayıcı kapanırken kilidi bırakmaya ÇALIŞ; ulaşmazsa sunucudaki süre düşürür.
   window.addEventListener('beforeunload', () => { if (S.editingId) { try { navigator.sendBeacon?.(`/api/email-groups/records/${encodeURIComponent(S.editingId)}/lock-release`); } catch (_) {} } });
 
-  window.BLEmailGroups = { open, close, refresh, sections, lockedByOther, stampText, state: S,
+  window.BLEmailGroups = { open, openRecord, close, refresh, sections, lockedByOther, stampText, state: S,
     prepareEmailCandidates, importFromPrepareEmail, importSummaryText, reconcileLegacyDirectoryIfSparse };
   /* Prepare E-Mail bu rehberden okur. Ayrı bir nesne olmasının sebebi, adres
      sorgulamak için e-posta grupları EKRANINA hiç ihtiyaç duyulmamasıdır. */

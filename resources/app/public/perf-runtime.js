@@ -105,6 +105,9 @@
     // yardımcıdır; iki görünüm dosyası da onu window'dan okur, bu yüzden önce.
     automations:['automation-assistant.js','automations.js','ai-automation-import.js'],
     lfl:['lfl.js?rev=2'],
+    // v7.0.229 — Üreticiler sayfası: saf motor ve ortak rehber görünümden ÖNCE.
+    // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
+    manufacturers:['manufacturer-cards-engine.js?rev=1','email-groups.js?rev=2','manufacturers.js?rev=1'],
     collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=4','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
     // v9.46 — Backlog teslimat riski analizi. Sıra önemli: iki saf motor
     // görünüm katmanından ÖNCE yüklenir (görünüm ikisini de window'dan okur).
@@ -150,6 +153,7 @@
     if(name==='openCosting'&&typeof global.initOpenCosting==='function')return;
     if(name==='automations'&&typeof global.initAutomationStudio==='function'&&typeof global.initAiAutomationImport==='function')return;
     if(name==='lfl'&&typeof global.initLFL==='function')return;
+    if(name==='manufacturers'&&typeof global.initManufacturersPage==='function'&&global.BLEmailGroups)return;
     if(name==='collectionTools'&&typeof global.initPriceSupplierAnalysis==='function')return;
     if(name==='backlogAnalysis'&&global.BLBacklogAnalysis)return;
     if(name==='transitAnalysis'&&global.BLTransitAnalysis&&global.BLTransitAnalysisUI)return;

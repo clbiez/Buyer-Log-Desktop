@@ -67,5 +67,6 @@ test('mevcut eski ASAS mappingi schema onarımında Ürün Ana Tanım kaynağın
     discoverSchema: async () => ({ columns: schemaNames.map(name => ({ table: 'ASAS', name, kind: 'column' })), measures: [] }),
   });
   assert.equal(result.mapping['Ürün Tanım'].name, 'Ürün Ana Tanım');
-  assert.equal(item.mappingEnhancementScanVersion, 2);
+  // v7.0.229: aynı onarım geçişinde Initial Inspection taraması da yapılır (sürüm 3).
+  assert.equal(item.mappingEnhancementScanVersion, 3);
 });

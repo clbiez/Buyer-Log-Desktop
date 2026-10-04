@@ -213,7 +213,15 @@ function validate(ast, model = registry.getCapabilityModel()) {
         if (!definition.parameters.includes(property)) errors.push(`Desteklenmeyen action parametresi: ${action.type}.${property}`);
       }
     }
-    if (action.type === 'SEND_EMAIL' && !action.RECIPIENT_GROUP) errors.push('SEND_EMAIL için RECIPIENT_GROUP gerekli.');
+    if (action.type === 'SEND_EMAIL') {
+      /* Alıcı ya Buyer Log'da seçilen sabit grup (RECIPIENT_GROUP ASK_USER)
+         ya da satırdaki bir alan (RECIPIENT_FIELD [Üretici]) olur. Üretici
+         alanında her sipariş kendi Üretici kartına eşlenir. */
+      const field = action.RECIPIENT_FIELD == null ? '' : String(action.RECIPIENT_FIELD).trim().replace(/^\[|\]$/g, '').trim();
+      if (!action.RECIPIENT_GROUP && !field) errors.push('SEND_EMAIL için RECIPIENT_GROUP veya RECIPIENT_FIELD gerekli.');
+      if (action.RECIPIENT_GROUP && field) errors.push('SEND_EMAIL içinde RECIPIENT_GROUP ve RECIPIENT_FIELD birlikte kullanılamaz.');
+      if (field && !registry.resolveField(field, ast.source)) errors.push(`Bilinmeyen alan: ${field}`);
+    }
     if (action.type === 'REFRESH_SOURCE' && action.SOURCE && !(definition.allowedSources || []).includes(String(action.SOURCE).toLowerCase())) errors.push(`REFRESH_SOURCE dataset'i bu action için desteklenmiyor: ${action.SOURCE}`);
   }
   return { ok: errors.length === 0, errors, warnings, resolvedFields, requiredInputs: [...new Set(ast && ast.requiredInputs || [])], capabilityHash: model.capabilityHash };

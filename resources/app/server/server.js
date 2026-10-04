@@ -580,6 +580,7 @@ const agentWorkflowStore = require('./lib/agent-workflow-store');
 const automationRecipeStore = require('./lib/automation-recipe-store');
 const aiCapabilityRegistry = require('./lib/ai-capability-registry');
 const automationLanguage = require('./lib/automation-language');
+const manufacturerCards = require('../public/manufacturer-cards-engine.js');
 const aiGuideGenerator = require('./lib/ai-guide-generator');
 const aiAutomationCompiler = require('./lib/ai-automation-compiler');
 const aiAutomationCompatibility = require('./lib/ai-automation-compatibility');
@@ -2622,8 +2623,23 @@ function automationAddressBookEntries(ownerId){
 function automationPrepareEmailGroups(ownerId){
   return automationAddressBookEntries(ownerId);
 }
+/* ÜRETİCİ KARTLARI ADRES DEFTERİNDE (v7.0.229).
+   v7.35'ten beri üretici adresleri yalnız ortak Üreticiler (eski E-Mail
+   Grupları) rehberinde tutuluyor; Prepare E-Mail listesi adresleri artık
+   boş saklıyor. Otomasyon adres defteri ise hâlâ yalnız eski kişisel
+   kaynakları okuyordu: rehbere eklenen bir üretici otomasyonda HİÇ
+   bulunamıyor, "Üretici" alanına göre bölme sessizce çözülemiyordu. Kartlar
+   artık deftere ilk sırada, alternatif adlarıyla birlikte girer. */
+function automationManufacturerCardGroups(){
+  let records=[];
+  try{records=emailGroupsStore.loadStore().records||[];}catch(_){records=[];}
+  return records.map(record=>{
+    const recipients=manufacturerCards.parseRecipients(record.email).map(item=>item.email);
+    return {id:`card_${record.id}`,name:String(record.manufacturer||'').trim(),aliases:Array.isArray(record.aliases)?record.aliases.slice():[],to:recipients,cc:[],bcc:[],source:'manufacturer_card',origin:'manufacturers',readOnly:true};
+  }).filter(group=>group.name&&group.to.length);
+}
 function automationEmailGroupsForOwner(ownerId){
-  const persisted=automationRecipeStore.stateForOwner(ownerId).emailGroups.map(group=>({...group,source:'automation',readOnly:false})),prepare=automationPrepareEmailGroups(ownerId),seen=new Set(persisted.map(group=>`${String(group.name).toLocaleLowerCase('tr-TR')}|${(group.to||[]).join(';').toLowerCase()}`));
+  const persisted=automationRecipeStore.stateForOwner(ownerId).emailGroups.map(group=>({...group,source:'automation',readOnly:false})),prepare=automationManufacturerCardGroups().concat(automationPrepareEmailGroups(ownerId)),seen=new Set(persisted.map(group=>`${String(group.name).toLocaleLowerCase('tr-TR')}|${(group.to||[]).join(';').toLowerCase()}`));
   for(const group of prepare){const key=`${String(group.name).toLocaleLowerCase('tr-TR')}|${(group.to||[]).join(';').toLowerCase()}`;if(!seen.has(key)){seen.add(key);persisted.push(group);}}
   return persisted;
 }
@@ -2672,6 +2688,16 @@ function automationSplitRecipients(rows,recipe,ownerId){
   const field=String(recipe&&recipe.email&&recipe.email.recipientField||'').trim();
   if(!field)throw Object.assign(new Error('Alıcıyı belirleyen alanı seçin.'),{code:'AUTOMATION_RECIPIENT_FIELD_REQUIRED',statusCode:400});
   const book=automationEmailGroupsForOwner(ownerId);
+  /* ÜRETİCİYE GÖRE BÖLME SİPARİŞ BAZINDA ÜRETİCİ KARTINA GÖRE YAPILIR.
+     Lisanslı Non-DTR siparişte Manufacturer lisansörün adıdır; e-posta
+     Sub-Manufacturer'ın kartına gider. Alt Üreticisi boş Non-DTR sipariş
+     lisansöre DÜŞMEZ, çözülemeyen olarak raporlanır. Kart (rehber) kayıtları
+     deftere önce girer; aynı adlı eski kişisel kayıt kartı gölgeleyemez. */
+  if(manufacturerCards.isManufacturerField(field)){
+    const ordered=book.filter(group=>group.source==='manufacturer_card').concat(book.filter(group=>group.source!=='manufacturer_card'));
+    const split=manufacturerCards.splitRowsByResponsibleManufacturer(rows,ordered);
+    return {field,responsible:true,resolved:split.resolved,unresolved:split.unresolved.map(item=>({...item,value:item.value||'(boş)'}))}; // i18n-ignore
+  }
   const byName=new Map(book.map(group=>[String(group.name||'').trim().toLocaleLowerCase('tr-TR'),group]));
   const buckets=new Map();
   for(const row of (Array.isArray(rows)?rows:[])){
@@ -2750,11 +2776,11 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
     };
     if(email.recipientMode==='field'){
       const split=automationSplitRecipients(rows,recipe,ownerId);
-      if(!split.resolved.length)throw Object.assign(new Error(`"${split.field}" alanındaki hiçbir değer adres defterinde bulunamadı; e-posta gönderilmedi.`),{code:'AUTOMATION_RECIPIENTS_UNRESOLVED',statusCode:400});
+      if(!split.resolved.length)throw Object.assign(new Error(split.responsible?'Hiçbir siparişin sorumlu üreticisi için e-posta adresli bir Üretici kartı bulunamadı; e-posta gönderilmedi. Üreticiler sayfasından kartları ASAS adlarıyla eşleyin.':`"${split.field}" alanındaki hiçbir değer adres defterinde bulunamadı; e-posta gönderilmedi.`),{code:'AUTOMATION_RECIPIENTS_UNRESOLVED',statusCode:400,details:{unresolved:split.unresolved.slice(0,50)}});
       const messages=[];
       for(const part of split.resolved)messages.push(await deliver(part.group,`${baseSubject} · ${part.value}`,email.includeReport===false?[]:part.rows,part.rows));
       result.emails=messages;
-      result.email={...messages[0],split:true,messageCount:messages.length,recipientField:split.field};
+      result.email={...messages[0],split:true,messageCount:messages.length,recipientField:split.field,responsibleManufacturer:Boolean(split.responsible)};
       // Çözülemeyen değerler sonuçta AÇIKÇA raporlanır; kullanıcı hangi
       // üretici/ülke için e-posta gitmediğini görmeden devam etmemeli.
       if(split.unresolved.length)result.unresolvedRecipients=split.unresolved;
@@ -3094,6 +3120,26 @@ app.post('/api/email-groups/import', userAccess.requirePermission('manageBusines
     if (result.summary.added.length || result.summary.filled.length) publishSharedMasterChange('emailGroups', req);
     emailGroupsRespond(res, { summary: result.summary });
   } catch (err) { apiError(res, err, 'Prepare E-Mail kayıtları taşınamadı.'); }
+});
+/* v7.0.229 — Üreticiler: kartı olmayan ASAS üreticileri için TAM ASAS adıyla
+   kart açma ve ASAS'ta karşılığı olmayan kartı bir ASAS adına bağlama. Aday
+   ASAS adları istemcinin yüklü Orders verisinden gelir; birleştirme kararını
+   sunucu verir ve mevcut kartın üzerine yazmaz. */
+app.post('/api/email-groups/asas-cards', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '4mb' }), (req, res) => {
+  try {
+    const result = emailGroupsStore.createFromAsas((req.body || {}).records, emailGroupsActor(req));
+    userAccess.appendAudit(req.currentUser, 'MANUFACTURER_CARDS_CREATED', 'asas', { added: result.summary.added.length, unchanged: result.summary.unchanged.length });
+    if (result.summary.added.length) publishSharedMasterChange('emailGroups', req);
+    emailGroupsRespond(res, { summary: result.summary });
+  } catch (err) { apiError(res, err, 'Üretici kartları oluşturulamadı.'); }
+});
+app.post('/api/email-groups/records/:id/link', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '256kb' }), (req, res) => {
+  try {
+    const result = emailGroupsStore.linkRecord(req.params.id, (req.body || {}).name, emailGroupsActor(req));
+    userAccess.appendAudit(req.currentUser, 'MANUFACTURER_CARD_LINKED', req.params.id, { manufacturer: result.record && result.record.manufacturer });
+    publishSharedMasterChange('emailGroups', req);
+    emailGroupsRespond(res, { record: result.record });
+  } catch (err) { apiError(res, err, 'Üretici kartı ASAS adına bağlanamadı.'); }
 });
 app.put('/api/email-groups/records/:id', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '1mb' }), (req, res) => {
   try {

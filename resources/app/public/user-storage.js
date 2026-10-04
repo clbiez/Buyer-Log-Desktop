@@ -20,7 +20,7 @@
      aynaları da mutlaka burada kapsanmalıdır. */
   var formerlyDeviceWide=[
     'bl.quickFilterGroups.','lcw.collection.quickDims.','bl.formulaColumns.','bl.excelImport.profiles.','lcw.dashboard.','lcw.favorites.',
-    'lcw.tableColWidth.','lcw.priceSupplierAnalysis.','lcw.pricingHistory.columns.','lcw.priceHistory.mfrOrder.',
+    'lcw.tableColWidth.','lcw.priceSupplierAnalysis.','lcw.manufacturersPage.','lcw.pricingHistory.columns.','lcw.priceHistory.mfrOrder.',
     'lcw.orders.imageSize.','lcw.koleksiyon.imageSize.','lcw.koleksiyon.modelGroups.view.','lcw.lfl.analysisHeights.',
     'lcw.backlog.radar.layout.','lcw.backlog.chart.','bl.backlog.excelFormulas.','buyerlog.shipCompare.','buyerlog.overview.worldClocks.',
     'buyerlog.detailDrawer.','buyerlog.backlog.detail.compact.','buyerlog.endeksmatikClipboard.',

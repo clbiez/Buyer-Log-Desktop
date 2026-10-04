@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Alanlar ve yeniden düzenlenen tablo başlıkları",
-    "en": "Fields and reorganised table headings"
+    "tr": "Alanlar ve yeniden düzenlenen tablo başlıkları; Üreticiler sayfası",
+    "en": "Fields and reorganised table headings; Manufacturers page"
   },
   "summary": {
-    "tr": "Koleksiyon, CP ve Siparişler tablolarında ana başlıklar görünüm ayarı bozulmadan tek tıkla açılıp kapatılabiliyor; başlıklar ve varsayılan sütun sırası yeniden düzenlendi, Koleksiyon'a Checklist eklendi.",
-    "en": "Collection, CP and Orders column headings can now be shown or hidden with one click without changing the view preset; headings and the default column order were reorganised and Collection gained a Checklist."
+    "tr": "Koleksiyon, CP ve Siparişler tablolarında ana başlıklar görünüm ayarı bozulmadan tek tıkla açılıp kapatılabiliyor; başlıklar ve varsayılan sütun sırası yeniden düzenlendi, Koleksiyon'a Checklist eklendi. E-Mail Grupları, sol menüde kendi sayfası olan Üreticiler'e dönüştü: her ASAS üreticisi; ülke, üretim alanı, aylık yükleme, sipariş hacmi, MAG grupları, yükleme termin performansı ve e-posta adresleriyle tek bir kartta. Otomasyonlar artık her siparişi kendi üretici kartına eşleyip her üreticiye ayrı e-posta taslağı hazırlayabiliyor.",
+    "en": "Collection, CP and Orders column headings can now be shown or hidden with one click without changing the view preset; headings and the default column order were reorganised and Collection gained a Checklist. E-Mail Groups became Manufacturers, a page of its own in the left menu: every ASAS manufacturer on one card with country, production area, monthly shipments, order volume, MAG groups, delivery performance and e-mail addresses. Automations now match every order to its manufacturer card and can prepare a separate e-mail draft for each manufacturer."
   },
   "changes": [
     {
@@ -141,6 +141,138 @@
           "tr": "Durum menüsü dört seçenek sunar; değer satıra kaydedilir.",
           "en": "The status menu offers four choices; the value is saved to the row."
         }
+      }
+    },
+    {
+      "id": "manufacturers-page",
+      "type": "feature",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Üreticiler sol menüde kendi sayfasında: ASAS verisiyle üretici kartı",
+        "en": "Manufacturers gets its own page in the left menu: manufacturer cards built from ASAS data"
+      },
+      "body": {
+        "tr": "E-Mail Grupları, Ticari menüsünde Üreticiler sayfası oldu. Her ASAS üreticisi için kart; ülke, üretim alanı (Dokuma/Örme/Triko…), LCW'deki aylık yükleme adetleri, toplam ve açık sipariş hacmi, sipariş aldığı MAG grupları, yükleme termin performansı ve e-posta adreslerini gösterir. Analiz, Orders / LFL / Fiyat & Üretici Analizi ile ortak sipariş verisinden gelir; ek sorgu yapılmaz. Lisanslı Non-DTR siparişler Manufacturer'daki lisansöre değil, Alt Üreticiye (Sub-Manufacturer) yazılır.",
+        "en": "E-Mail Groups became the Manufacturers page in the Commercial menu. Each ASAS manufacturer gets a card showing country, production area (Woven/Knit/Knitwear…), monthly shipment quantities at LCW, total and open order volume, the MAG groups it receives orders for, shipment delivery performance and e-mail addresses. The analysis uses the order data shared with Orders / LFL / Price & Supplier Analysis; no extra query runs. Licensed non-DTR orders are attributed to the Sub-Manufacturer, not to the licensor in the Manufacturer field."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturers-page.png",
+        "alt": {
+          "tr": "Üreticiler sayfası: solda ASAS üreticileri listesi, sağda seçili üreticinin kartı ve aylık yükleme grafiği",
+          "en": "Manufacturers page: the ASAS manufacturer list on the left and the selected manufacturer's card with the monthly shipment chart"
+        },
+        "caption": {
+          "tr": "Üretici kartı: ülke, üretim alanı, sipariş hacmi, aylık yükleme ve MAG grupları tek ekranda.",
+          "en": "Manufacturer card: country, production area, order volume, monthly shipments and MAG groups on one screen."
+        }
+      },
+      "path": {
+        "tr": "Sol menü → Ticari → Üreticiler",
+        "en": "Left menu → Commercial → Manufacturers"
+      }
+    },
+    {
+      "id": "manufacturer-delivery-performance",
+      "type": "feature",
+      "module": {
+        "tr": "Üreticiler · Termin performansı",
+        "en": "Manufacturers · Delivery performance"
+      },
+      "title": {
+        "tr": "Yükleme termin performansı ve yorumu",
+        "en": "Shipment delivery performance with a plain-language comment"
+      },
+      "body": {
+        "tr": "Kart; ilk sözü (ASAS Initial Inspection Geçme Tarih — CP'deki Original Ex-F.), revize edilen Ex-Factory tarihini ve Yükleme Onay Tarihini karşılaştırır. İlk söze göre zamanında yükleme oranı, onaylanmış erteleme (ileri revize) oranı ve ortalama kayma, geç yüklenenlerde ortalama gecikme ve Ex-Factory'si geçmiş açık siparişler hesaplanır; A–D notu ve düz dille yorum verilir. Terminin öne çekilmesi olumlu sayılır, notu düşürmez. Mevcut ASAS bağlantılarına bu alan bir kez otomatik eklenir; eşlenmemişse ASAS'ın ilk Ex-Factory değeri kullanılır ve kartta belirtilir.",
+        "en": "The card compares the first promise (ASAS Initial Inspection Geçme Tarih — Original Ex-F. in CP), the revised Ex-Factory date and the Loading Approval date. It calculates the on-time rate against the first promise, the share and average shift of approved postponements (forward revisions), the average delay of late shipments and open orders past Ex-Factory, then gives an A–D grade with a plain-language comment. Pulling a date forward counts as positive and does not lower the grade. If the Initial Inspection field is not mapped in the ASAS connection, the first ASAS Ex-Factory value is used and the card says so."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-delivery-performance.png",
+        "alt": {
+          "tr": "Üretici kartında yükleme termin performansı paneli: zamanında yükleme, revize termin, ortalama gecikme ve C notu",
+          "en": "Delivery performance panel on a manufacturer card: on-time rate, revised dates, average delay and a C grade"
+        },
+        "caption": {
+          "tr": "Revize talepleri ve gerçek gecikme ayrı ölçülür; yorum ikisini birlikte anlatır.",
+          "en": "Date revisions and real delay are measured separately; the comment explains both together."
+        }
+      },
+      "path": {
+        "tr": "Üreticiler → üretici seç → Yükleme termin performansı",
+        "en": "Manufacturers → select a manufacturer → Shipment delivery performance"
+      }
+    },
+    {
+      "id": "manufacturer-asas-matching",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler · ASAS eşlemesi",
+        "en": "Manufacturers · ASAS matching"
+      },
+      "title": {
+        "tr": "Üretici kartları ASAS adlarıyla birebir eşlenir",
+        "en": "Manufacturer cards match ASAS names exactly"
+      },
+      "body": {
+        "tr": "Kartı olmayan ASAS üreticileri için tek tıkla TAM ASAS adıyla kart açılır. ASAS'ta karşılığı olmayan kartlar işaretlenir ve benzer ASAS adı önerilir; eşleme yalnız onayla yapılır, önceki ad alternatif ad olarak saklanır. Kart düzenlerken ad alanı ASAS adlarını önerir ve ad ASAS'ta yoksa uyarır. Ülke/Grup başlıklarındaki gruplar artık Üretim alanı olarak adlandırılıyor.",
+        "en": "Cards for ASAS manufacturers without one are created with their EXACT ASAS name in one click. Cards with no ASAS match are flagged and a similar ASAS name is suggested; linking only happens on confirmation and the previous name is kept as an alternative name. While editing a card the name field suggests ASAS names and warns when the name is not in ASAS. Groups are now called Production areas."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-asas-link.png",
+        "alt": {
+          "tr": "ASAS'ta karşılığı olmayan kart uyarısı ve benzer ASAS adıyla eşle düğmesi",
+          "en": "Warning on a card without an ASAS match and a button to link it to a similar ASAS name"
+        },
+        "caption": {
+          "tr": "ASAS'ta olmayan kart görünür kalır; benzer ASAS adına onayla bağlanır.",
+          "en": "A card not found in ASAS stays visible and is linked to a similar ASAS name on confirmation."
+        }
+      },
+      "path": {
+        "tr": "Üreticiler → Durum: ASAS'ta yok → Benzer ASAS adıyla eşle",
+        "en": "Manufacturers → Status: Not in ASAS → Link to similar ASAS name"
+      }
+    },
+    {
+      "id": "automation-manufacturer-recipients",
+      "type": "fix",
+      "module": {
+        "tr": "Otomasyonlar",
+        "en": "Automations"
+      },
+      "title": {
+        "tr": "Otomasyon her üreticiye kendi siparişleriyle ayrı e-posta hazırlayabilir",
+        "en": "Automations can prepare a separate e-mail for each manufacturer with its own orders"
+      },
+      "body": {
+        "tr": "AI ile yazılan otomasyonlar yalnız tek bir sabit grubu alıcı yapabiliyordu ve otomasyon adres defteri ortak üretici rehberini okumuyordu; bu yüzden [Üretici] değerine göre ayrı gönderim kurulamıyordu. Automation Code'a RECIPIENT_FIELD [Üretici] eklendi; her sipariş Üretici kartına (alternatif adlar dahil) eşlenir, lisanslı Non-DTR siparişlerde Alt Üretici sorumludur ve Alt Üreticisi boş sipariş lisansöre gitmez, çözülemeyen olarak bildirilir.",
+        "en": "Automations written with AI could only use one fixed group as the recipient and the automation address book did not read the shared manufacturer directory, so per-[Manufacturer] sending could not be set up. Automation Code now supports RECIPIENT_FIELD [Manufacturer]; every order is matched to its manufacturer card (aliases included), the Sub-Manufacturer is responsible on licensed non-DTR orders, and an order with an empty Sub-Manufacturer is reported as unresolved instead of going to the licensor."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "automation-manufacturer-recipients.png",
+        "alt": {
+          "tr": "AI ile otomasyon yaz penceresinde RECIPIENT_FIELD [Üretici] içeren haftalık yükleme otomasyonu geçerli olarak denetlenmiş",
+          "en": "Write an automation with AI dialog showing a weekly shipment automation with RECIPIENT_FIELD [Üretici] validated successfully"
+        },
+        "caption": {
+          "tr": "Her pazartesi bu haftanın yüklemeleri: e-posta grubu sorulmaz, her üreticiye kendi siparişleri gider.",
+          "en": "This week's shipments every Monday: no e-mail group is asked, each manufacturer gets its own orders."
+        }
+      },
+      "path": {
+        "tr": "Otomasyonlar → AI ile oluştur",
+        "en": "Automations → Create with AI"
       }
     }
   ]

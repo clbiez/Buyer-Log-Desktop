@@ -26,7 +26,7 @@
   const canManageUsers = () => Boolean(current() && current().canManageUsers);
   const hasPermission = key => Boolean(current() && current().permissions && current().permissions[key]);
   const hasCapability = key => Boolean(current() && Array.isArray(current().capabilities) && current().capabilities.includes(key));
-  const areaAllowed = (areas, key) => { const mapped=(key==='quotations'||key==='pricinghistory')?'koleksiyon':key; return Boolean(mapped === 'orders' ? (areas && (areas.orders ?? areas.cp)) : areas && areas[mapped]); };
+  const areaAllowed = (areas, key) => { const mapped=(key==='quotations'||key==='pricinghistory')?'koleksiyon':(key==='manufacturers'?'orders':key); return Boolean(mapped === 'orders' ? (areas && (areas.orders ?? areas.cp)) : areas && areas[mapped]); };
   const hasArea = key => areaAllowed(current() && current().accessAreas || {}, key);
 
   function applyAccessAreaVisibility(profile) {
