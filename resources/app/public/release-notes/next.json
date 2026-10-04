@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yeni Data Temizliği aracı",
+    "en": "New Data Cleanup tool"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Veri Yönetimi'ne kurulum klasöründeki gereksiz dosyaları tarayıp özetleyen ve onayla silen Data Temizliği eklendi; Moderatör sync klasöründeki eski yedekleri de temizleyebilir.",
+    "en": "Data Management gains Data Cleanup, which scans, summarises and—after confirmation—deletes unnecessary files in the install folder; the Moderator can also clean stale backups in the sync folder."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "data-cleanup-module",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi · Depolama ve bakım",
+        "en": "Data Management · Storage and maintenance"
+      },
+      "title": {
+        "tr": "Yeni Data Temizliği aracı",
+        "en": "New Data Cleanup tool"
+      },
+      "body": {
+        "tr": "Buyer Log'un kurulu olduğu klasörde programın çalışmasıyla ilgisi olmayan dosyaları (kurulum zip'leri, eski kurulum dosyaları, eski sürümler, eski data yedekleri, geçici dosyalar ve önbellekler) tarar, özetler ve onayınızla siler. Moderatör ayrıca sync klasöründeki eski kullanıcı yedeklerini, eski checkpoint'leri ve terk edilmiş geçici dosyaları temizleyebilir. Diğer kullanıcıların kullandığı senkron verisi ve her kullanıcının son yedeği daima korunur; tanınmayan dosyalar siz seçmeden silinmez.",
+        "en": "Scans the Buyer Log install folder for files that are not needed to run the program (setup zips, leftover installers, old versions, older data backups, temporary files and caches), summarises them and deletes them after your confirmation. The Moderator can also clean stale user backups, old checkpoints and abandoned temporary files in the sync folder. Sync data other users rely on and every user's latest backup are always kept; unrecognised files are never deleted unless you select them."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-cleanup.png",
+        "alt": {
+          "tr": "Data Temizliği panelinde bulunan, seçili ve korunan dosya özeti ile silinebilir öğeler listesi",
+          "en": "Data Cleanup panel showing the found, selected and kept summary and the list of removable items"
+        },
+        "caption": {
+          "tr": "Kurulum klasörü taranır; silmeden önce özet ve seçim gösterilir.",
+          "en": "The install folder is scanned; a summary and selection are shown before anything is deleted."
+        }
+      }
+    }
+  ]
 }

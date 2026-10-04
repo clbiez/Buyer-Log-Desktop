@@ -775,6 +775,10 @@
           label: { tr: 'Data Maintenance', en: 'Data Maintenance' },
           hint: { tr: 'Yerel veri, PLM, cache ve Shared Sync sağlığını analiz eder; iş verisi silinmez.',
             en: 'Analyzes local data, PLM, cache and Shared Sync health; business data is never deleted.' } },
+        { id: 'cleanup', icon: 'i-eraser', inline: true,
+          label: { tr: 'Data Temizliği', en: 'Data Cleanup' },
+          hint: { tr: 'Kurulum klasöründeki gereksiz dosyaları (zip, eski sürüm, geçici dosya) tarar, özetler ve siler. Moderatör sync klasöründeki eski yedekleri de temizler.',
+            en: 'Scans, summarises and deletes unnecessary files in the install folder (zips, old versions, temp files). The Moderator can also clean stale backups in the sync folder.' } },
         { id: 'sync', icon: 'i-folder',
           label: { tr: 'Sync & Local Data', en: 'Sync & Local Data' },
           hint: { tr: 'Yerel veritabanının yeri ve paylaşılan senkron klasörü.',
@@ -869,6 +873,9 @@
       slot.__onDataMaintClosed = () => { openTool = ''; render(); };
       if (tool.id === 'maintenance' && typeof openDataMaintenanceModal === 'function') {
         void openDataMaintenanceModal(slot);
+      }
+      if (tool.id === 'cleanup' && window.BLDataCleanup) {
+        window.BLDataCleanup.open(slot, { onClose: slot.__onDataMaintClosed });
       }
       return;
     }

@@ -160,3 +160,10 @@
   .blDataMaintSummary { grid-template-columns: repeat(2, minmax(130px, 1fr)); }
   .blDataMaintHealth { grid-template-columns: 1fr; }
 }
+
+/* Data Temizliği (public/data-cleanup.js) — Data Maintenance yüzeyini paylaşır;
+   yalnız üç küçük yardımcı eklendi, renkler mevcut token'lardan gelir. */
+.blDataCleanupHint { align-self: center; font-size: 11px; color: var(--ink2); }
+.blDataCleanupKinds { display: flex; flex-wrap: wrap; gap: 6px; }
+.blDataCleanupEmpty { padding: 14px 12px; font-size: 12px; color: var(--ink2); }
+.blDataCleanupKept > summary { cursor: pointer; list-style: revert; }
