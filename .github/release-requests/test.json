@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.235",
-  "commit_sha": "019d31f90c382dc05a004b506856e0cf73ac18be",
-  "release_notes": "Buyer Log 7.0.235: LCW AI genel çalışma alanı, bağlam ekleme ve kural desteği güncellemeleri; uygulama simgesi iyileştirmesi; Mağaza Ayı/Hafta terminolojisi uçtan uca Model Bütçe Ayı/Hafta (Model Budget Month/Week) olarak standardize edildi. Eski veri başlıkları geriye dönük uyumluluk için alias olarak korunur."
+  "version": "7.0.236",
+  "commit_sha": "65d804161414a174428417006f91ff964a81e651",
+  "release_notes": "Buyer Log 7.0.236: LCW AI genel sohbeti artık sorulara cevap veriyor; boş cevap anlaşılır hata olarak gösterilir ve Tekrar Dene boş cevapları biriktirmez. LCW AI chat answers questions again; empty answers show a clear error."
 }
