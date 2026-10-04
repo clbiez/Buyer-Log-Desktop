@@ -169,7 +169,7 @@ html[data-theme="dark"] select{color-scheme:dark;}
 html[data-theme="grey"] select{color-scheme:light;}
 *,*::before,*::after{box-sizing:border-box}
 html[data-rail="min"]{--rail-w:var(--rail-min-w);}
-body{margin:0;max-width:100%;overflow-x:hidden;font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:var(--fs-base);-webkit-font-smoothing:antialiased;padding-left:var(--rail-w);transition:padding-left .15s var(--ease);}
+body{margin:0;max-width:100%;overflow-x:clip;font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:var(--fs-base);-webkit-font-smoothing:antialiased;padding-left:var(--rail-w);transition:padding-left .15s var(--ease);}
 /* Tema değişiminde aktif sayfadaki binlerce tablo hücresinin aynı karede
    yeniden boyanmasını engeller. Sabit perde mevcut görünümü örter; ağır içerik
    iki kare boyunca render dışı kalır ve ardından yeni temayla tek seferde açılır. */
@@ -222,7 +222,7 @@ html[data-rail="min"] nav.tabs>.railGroupLabel{display:none;}
 html[data-rail="min"] .railFoot button{justify-content:center;padding:0;width:50px;}
 html[data-rail="min"] .railFoot button span{display:none;}
 /* ===================== ÜST BAR ===================== */
-.appTop{position:sticky;top:0;z-index:50;height:var(--topbar-h);max-width:100%;min-width:0;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 var(--sp-5);overflow:hidden;}
+.appTop{position:sticky;top:0;z-index:300;height:var(--topbar-h);max-width:100%;min-width:0;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 var(--sp-5);overflow:hidden;}
 .appTop h1{font-size:15px;margin:0 auto 0 0;font-weight:650;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .appTop .pageMeta{font-size:var(--fs-xs);color:var(--muted);}
 .gsearch{margin-left:0;display:flex;align-items:center;gap:8px;background:var(--card2-strong);border:1px solid var(--line);border-radius:var(--r-sm);padding:0 10px;height:33px;min-width:min(250px,36vw);max-width:360px;flex:0 1 360px;color:var(--muted);cursor:pointer;font-size:var(--fs-sm);overflow:hidden;}
