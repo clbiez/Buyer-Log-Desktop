@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.234",
+      "publishedAt": "2026-10-04",
+      "title": {
+        "tr": "Checklist kayıtları ve ekleri korunur",
+        "en": "Checklist decisions and evidence stay saved"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.234/release.json"
+    },
+    {
       "version": "7.0.233",
       "publishedAt": "2026-10-04",
       "title": {
