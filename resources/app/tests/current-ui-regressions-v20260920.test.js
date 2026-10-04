@@ -31,7 +31,7 @@ test('Bugünün Üretim Öncelikleri kalıcı Buyer görünümünde ve Kırılı
   assert.doesNotMatch(CP_ASSIST, /data-cpa-perspective|cpaPerspective/);
 });
 
-test('Mağaza Ayı/Haftası picker hard-coded dark surface yerine aktif tema tokenlarını kullanır', () => {
+test('Model Bütçe Ayı/Hafta picker hard-coded dark surface yerine aktif tema tokenlarını kullanır', () => {
   const start = CSS.indexOf('.kolPeriodDrawerBackdrop');
   const end = CSS.indexOf('/*', start + 1);
   const block = CSS.slice(start, end > start ? end : start + 8000);
