@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.228",
+      "publishedAt": "2026-10-04",
+      "title": {
+        "tr": "Toplu görsel silme ve Data Temizliği",
+        "en": "Bulk image removal and Data Cleanup"
+      },
+      "stats": {
+        "features": 4,
+        "improvements": 0,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.228/release.json"
+    },
+    {
       "version": "7.0.227",
       "publishedAt": "2026-10-04",
       "title": {

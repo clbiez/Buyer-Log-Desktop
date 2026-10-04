@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.228",
+  "channel": "stable",
+  "publishedAt": "2026-10-04",
+  "title": {
+    "tr": "Toplu görsel silme ve Data Temizliği",
+    "en": "Bulk image removal and Data Cleanup"
+  },
+  "summary": {
+    "tr": "Buyer Log 7.0.228; CP ve Koleksiyon'da seçili modellerin görsellerini tek işlemde ve kalıcı olarak kaldırır, Veri Yönetimi'ne gereksiz dosyaları tarayıp onayla silen Data Temizliği aracını ekler ve haftada bir kendi bayat verisini otomatik temizleyip kayda değer veri kaldıysa hatırlatır.",
+    "en": "Buyer Log 7.0.228 removes images of selected models in CP and Collection permanently in one action, adds Data Cleanup to Data Management to scan and—after confirmation—delete unnecessary files, and once a week automatically removes its own stale data and reminds you when a significant amount remains."
+  },
+  "stats": {
+    "features": 4,
+    "improvements": 0,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "cp-model-image-bulk-delete",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Model Görselleri",
+        "en": "CP Tracker · Model Images"
+      },
+      "title": {
+        "tr": "Seçili modellerin görselleri toplu ve kalıcı olarak kaldırılır",
+        "en": "Remove images of selected models in bulk, permanently"
+      },
+      "body": {
+        "tr": "CP’de satırları seçip Araçlar → Görselleri Kaldır ile seçili tüm model/renklerin görseli tek onayla silinir. Görsel kaydı mezar taşıyla kapanır, artık hiçbir modelin kullanmadığı yerel dosya silinir ve ortak ağ klasöründeki kayıt ile görsel baytları da temizlenir; başka bir model aynı görseli kullanıyorsa o görsel korunur. Ağ klasörüne o an erişilemiyorsa silme bağlantı gelince uygulanır.",
+        "en": "Select rows in CP and use Tools → Remove Images to delete the images of all selected model/colours with a single confirmation. The image record is closed with a tombstone, local files no longer used by any model are deleted, and the record and image bytes in the shared network folder are erased too; an image still used by another model is kept. If the network folder is unreachable, the deletion is applied when it reconnects."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-image-bulk-delete.png",
+        "alt": {
+          "tr": "CP Tracker’da yedi seçili modelin görseli kaldırılmış, bilgi bildirimi yerel ve ortak klasör silme sonucunu gösteriyor",
+          "en": "CP Tracker with images removed from seven selected models and a notice showing the local and shared-folder deletion result"
+        },
+        "caption": {
+          "tr": "Seçili yedi modelin görseli kaldırıldı; seçilmeyen modelin görseli duruyor.",
+          "en": "Images of the seven selected models are removed; the unselected model keeps its image."
+        }
+      },
+      "path": {
+        "tr": "CP Tracker → satır seç → Araçlar → Görselleri Kaldır",
+        "en": "CP Tracker → select rows → Tools → Remove Images"
+      }
+    },
+    {
+      "id": "collection-model-image-bulk-delete",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Model Görselleri",
+        "en": "Collection · Model Images"
+      },
+      "title": {
+        "tr": "Koleksiyon’da seçili modellerin görselleri toplu ve kalıcı olarak kaldırılır",
+        "en": "Remove images of selected Collection models in bulk, permanently"
+      },
+      "body": {
+        "tr": "Kendi Koleksiyonunuzda modelleri seçip Araçlar → Görselleri Kaldır ile tüm seçili görseller tek onayla silinir. PLM ID + Colour Code taşıyan modellerde CP ve Siparişler görseli de kalkar; Colour Code’u olmayan veya PLM’siz konsept modellerin görseli de silinir. Artık kullanılmayan yerel dosyalar ve ortak ağ klasöründeki kayıt ile görsel baytları temizlenir; başka bir modelin kullandığı görsel korunur.",
+        "en": "In your own Collection, select models and use Tools → Remove Images to delete all selected images with a single confirmation. For models with PLM ID + Colour Code the CP and Orders image is removed too; images of models without a Colour Code or concept models without a PLM ID are deleted as well. Local files no longer in use and the record and image bytes in the shared network folder are erased; an image still used by another model is kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-model-image-bulk-delete.png",
+        "alt": {
+          "tr": "Koleksiyon’da beş seçili modelin görseli kaldırılmış, bilgi bildirimi yerel ve ortak klasör silme sonucunu gösteriyor",
+          "en": "Collection with images removed from five selected models and a notice showing the local and shared-folder deletion result"
+        },
+        "caption": {
+          "tr": "Seçili beş modelin görseli kaldırıldı; seçilmeyen modelin görseli duruyor.",
+          "en": "Images of the five selected models are removed; the unselected model keeps its image."
+        }
+      },
+      "path": {
+        "tr": "Koleksiyon → model seç → Araçlar → Görselleri Kaldır",
+        "en": "Collection → select models → Tools → Remove Images"
+      }
+    },
+    {
+      "id": "data-cleanup-module",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi · Depolama ve bakım",
+        "en": "Data Management · Storage and maintenance"
+      },
+      "title": {
+        "tr": "Yeni Data Temizliği aracı",
+        "en": "New Data Cleanup tool"
+      },
+      "body": {
+        "tr": "Buyer Log'un kurulu olduğu klasörde programın çalışmasıyla ilgisi olmayan dosyaları (kurulum zip'leri, eski kurulum dosyaları, eski sürümler, eski data yedekleri, geçici dosyalar ve önbellekler) tarar, özetler ve onayınızla siler. Moderatör ayrıca sync klasöründeki eski kullanıcı yedeklerini, eski checkpoint'leri ve terk edilmiş geçici dosyaları temizleyebilir. Diğer kullanıcıların kullandığı senkron verisi ve her kullanıcının son yedeği daima korunur; tanınmayan dosyalar siz seçmeden silinmez.",
+        "en": "Scans the Buyer Log install folder for files that are not needed to run the program (setup zips, leftover installers, old versions, older data backups, temporary files and caches), summarises them and deletes them after your confirmation. The Moderator can also clean stale user backups, old checkpoints and abandoned temporary files in the sync folder. Sync data other users rely on and every user's latest backup are always kept; unrecognised files are never deleted unless you select them."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-cleanup.png",
+        "alt": {
+          "tr": "Data Temizliği panelinde bulunan, seçili ve korunan dosya özeti ile silinebilir öğeler listesi",
+          "en": "Data Cleanup panel showing the found, selected and kept summary and the list of removable items"
+        },
+        "caption": {
+          "tr": "Kurulum klasörü taranır; silmeden önce özet ve seçim gösterilir.",
+          "en": "The install folder is scanned; a summary and selection are shown before anything is deleted."
+        }
+      }
+    },
+    {
+      "id": "data-cleanup-weekly-reminder",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi · Data Temizliği",
+        "en": "Data Management · Data Cleanup"
+      },
+      "title": {
+        "tr": "Haftalık otomatik temizlik ve hatırlatma",
+        "en": "Weekly automatic cleanup and reminder"
+      },
+      "body": {
+        "tr": "Buyer Log haftada bir kendi oluşturduğu zararsız bayat veriyi (eski geçici dosyalar, yarım kalmış güncellemeler, önbellek, eski log/export ve eski sürümler) sormadan temizler. Ardından 100 MB'ı aşan temizlenebilir veri kaldıysa bir bildirimle hatırlatır; İncele ve Temizle doğrudan Data Temizliği'ni açar, Gelecek hafta hatırlat bildirimi bir sonraki haftalık kontrole kadar susturur. Kurulum arşivleri, yedekler, tanınmayan dosyalar ve sync klasörü hiçbir zaman otomatik silinmez; Moderatör sync klasörü için de hatırlatma alır.",
+        "en": "Once a week Buyer Log removes the harmless stale data it created itself (old temporary files, incomplete updates, caches, old logs/exports and old versions) without asking. If more than 100 MB of cleanable data remains, a notification reminds you; Review & Clean opens Data Cleanup directly and Remind next week silences it until the next weekly check. Setup archives, backups, unrecognised files and the sync folder are never deleted automatically; the Moderator is also reminded about the sync folder."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-cleanup-weekly-reminder.png",
+        "alt": {
+          "tr": "Temizlenebilir veri miktarını ve otomatik temizlenen bayat veriyi gösteren Data Temizliği hatırlatma bildirimi",
+          "en": "Data Cleanup reminder notification showing the cleanable amount and the stale data already removed automatically"
+        },
+        "caption": {
+          "tr": "Haftalık kontrol kendi bayat verisini temizler, kalan kayda değer veriyi hatırlatır.",
+          "en": "The weekly check removes its own stale data and reminds you about the significant remainder."
+        }
+      }
+    }
+  ]
+}
