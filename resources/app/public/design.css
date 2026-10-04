@@ -454,13 +454,13 @@ body[data-active-tab="cp"] #vfSelLabel,body[data-active-tab="orders"] #vfSelLabe
 
 #cpCreateOcBtn:not(:disabled),#cpSendPricingBtn:not(:disabled),
 #cpProdStatusBtn:not(:disabled),#navToShipping:not(:disabled),
-#cpCopyToKolBtn:not(:disabled),#cpPriceHistoryBtn:not(:disabled),#selectedBacklogBtn:not(:disabled){
+#cpCopyToKolBtn:not(:disabled),#cpPriceHistoryBtn:not(:disabled),#selectedBacklogBtn:not(:disabled),#cpRemoveImagesBtn:not(:disabled){
   background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);
   font-weight:500;box-shadow:none;
 }
 #cpCreateOcBtn:not(:disabled):hover,#cpSendPricingBtn:not(:disabled):hover,
 #cpProdStatusBtn:not(:disabled):hover,#navToShipping:not(:disabled):hover,
-#cpCopyToKolBtn:not(:disabled):hover,#cpPriceHistoryBtn:not(:disabled):hover,#selectedBacklogBtn:not(:disabled):hover{
+#cpCopyToKolBtn:not(:disabled):hover,#cpPriceHistoryBtn:not(:disabled):hover,#selectedBacklogBtn:not(:disabled):hover,#cpRemoveImagesBtn:not(:disabled):hover{
   background:color-mix(in srgb, var(--acc) 18%, var(--card));box-shadow:none;
 }
 

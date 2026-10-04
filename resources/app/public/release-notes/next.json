@@ -3,14 +3,80 @@
   "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yeni Data Temizliği aracı ve haftalık hatırlatma",
-    "en": "New Data Cleanup tool and weekly reminder"
+    "tr": "Toplu görsel silme ve Data Temizliği",
+    "en": "Bulk image removal and Data Cleanup"
   },
   "summary": {
-    "tr": "Veri Yönetimi'ne kurulum klasöründeki gereksiz dosyaları tarayıp özetleyen ve onayla silen Data Temizliği eklendi; Moderatör sync klasöründeki eski yedekleri de temizleyebilir. Buyer Log haftada bir kendi bayat verisini otomatik temizler ve kayda değer veri kaldıysa hatırlatır.",
-    "en": "Data Management gains Data Cleanup, which scans, summarises and—after confirmation—deletes unnecessary files in the install folder; the Moderator can also clean stale backups in the sync folder. Once a week Buyer Log automatically removes its own stale data and reminds you when a significant amount remains."
+    "tr": "CP ve Koleksiyon'da seçili modellerin görselleri tek işlemde ve kalıcı olarak kaldırılır. Veri Yönetimi'ne gereksiz dosyaları tarayıp onayla silen Data Temizliği eklendi; Buyer Log haftada bir kendi bayat verisini otomatik temizler ve kayda değer veri kaldıysa hatırlatır.",
+    "en": "Images of selected models in CP and Collection are removed permanently in one action. Data Management gains Data Cleanup, which scans and—after confirmation—deletes unnecessary files; once a week Buyer Log automatically removes its own stale data and reminds you when a significant amount remains."
   },
   "changes": [
+    {
+      "id": "cp-model-image-bulk-delete",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Model Görselleri",
+        "en": "CP Tracker · Model Images"
+      },
+      "title": {
+        "tr": "Seçili modellerin görselleri toplu ve kalıcı olarak kaldırılır",
+        "en": "Remove images of selected models in bulk, permanently"
+      },
+      "body": {
+        "tr": "CP’de satırları seçip Araçlar → Görselleri Kaldır ile seçili tüm model/renklerin görseli tek onayla silinir. Görsel kaydı mezar taşıyla kapanır, artık hiçbir modelin kullanmadığı yerel dosya silinir ve ortak ağ klasöründeki kayıt ile görsel baytları da temizlenir; başka bir model aynı görseli kullanıyorsa o görsel korunur. Ağ klasörüne o an erişilemiyorsa silme bağlantı gelince uygulanır.",
+        "en": "Select rows in CP and use Tools → Remove Images to delete the images of all selected model/colours with a single confirmation. The image record is closed with a tombstone, local files no longer used by any model are deleted, and the record and image bytes in the shared network folder are erased too; an image still used by another model is kept. If the network folder is unreachable, the deletion is applied when it reconnects."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-image-bulk-delete.png",
+        "alt": {
+          "tr": "CP Tracker’da yedi seçili modelin görseli kaldırılmış, bilgi bildirimi yerel ve ortak klasör silme sonucunu gösteriyor",
+          "en": "CP Tracker with images removed from seven selected models and a notice showing the local and shared-folder deletion result"
+        },
+        "caption": {
+          "tr": "Seçili yedi modelin görseli kaldırıldı; seçilmeyen modelin görseli duruyor.",
+          "en": "Images of the seven selected models are removed; the unselected model keeps its image."
+        }
+      },
+      "path": {
+        "tr": "CP Tracker → satır seç → Araçlar → Görselleri Kaldır",
+        "en": "CP Tracker → select rows → Tools → Remove Images"
+      }
+    },
+    {
+      "id": "collection-model-image-bulk-delete",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Model Görselleri",
+        "en": "Collection · Model Images"
+      },
+      "title": {
+        "tr": "Koleksiyon’da seçili modellerin görselleri toplu ve kalıcı olarak kaldırılır",
+        "en": "Remove images of selected Collection models in bulk, permanently"
+      },
+      "body": {
+        "tr": "Kendi Koleksiyonunuzda modelleri seçip Araçlar → Görselleri Kaldır ile tüm seçili görseller tek onayla silinir. PLM ID + Colour Code taşıyan modellerde CP ve Siparişler görseli de kalkar; Colour Code’u olmayan veya PLM’siz konsept modellerin görseli de silinir. Artık kullanılmayan yerel dosyalar ve ortak ağ klasöründeki kayıt ile görsel baytları temizlenir; başka bir modelin kullandığı görsel korunur.",
+        "en": "In your own Collection, select models and use Tools → Remove Images to delete all selected images with a single confirmation. For models with PLM ID + Colour Code the CP and Orders image is removed too; images of models without a Colour Code or concept models without a PLM ID are deleted as well. Local files no longer in use and the record and image bytes in the shared network folder are erased; an image still used by another model is kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-model-image-bulk-delete.png",
+        "alt": {
+          "tr": "Koleksiyon’da beş seçili modelin görseli kaldırılmış, bilgi bildirimi yerel ve ortak klasör silme sonucunu gösteriyor",
+          "en": "Collection with images removed from five selected models and a notice showing the local and shared-folder deletion result"
+        },
+        "caption": {
+          "tr": "Seçili beş modelin görseli kaldırıldı; seçilmeyen modelin görseli duruyor.",
+          "en": "Images of the five selected models are removed; the unselected model keeps its image."
+        }
+      },
+      "path": {
+        "tr": "Koleksiyon → model seç → Araçlar → Görselleri Kaldır",
+        "en": "Collection → select models → Tools → Remove Images"
+      }
+    },
     {
       "id": "data-cleanup-module",
       "type": "feature",
