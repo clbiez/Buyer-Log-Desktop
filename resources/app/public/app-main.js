@@ -5015,6 +5015,10 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
   const production=Math.max(0,toNum(row._logisticProductionQty)||0);
   const shortage=Math.max(0,toNum(row._logisticShortageQty)||0);
   const remaining=Math.max(0,toNum(row._logisticRemainingQty)||Math.max(0,total-loaded));
+  // Ex-Factory ve Yükleme Onayı sipariş seviyesindedir; her parsiyelde aynı
+  // sipariş tarihlerini gösterir. Handover ve Antrepo tarihi parsiyel bazında kalır.
+  const exFactory=coerceDateLoose(row&&row['Ex-factory']);
+  const loadingApproval=coerceDateLoose(row&&row['Buying Son Onay Tarihi']);
   const rows=segments.map(segment=>{
     const priority=Number(segment.priority)||2;
     const arrival=coerceDateLoose(segment.arrival), handover=coerceDateLoose(segment.handover);
@@ -5024,15 +5028,17 @@ function cpLogisticDetailRowHtml(row,cols,withChk,tableKey='cp'){
       <div class="cpLogisticDetailName"><strong>${escapeHtml(cpLogisticSegmentTitle(segment))}</strong>${segment.sourceRow?`<small>IAS #${segment.sourceRow}</small>`:''}${cpShortageActionHtml(row,segment,segments)}</div>
       <div class="cpLogisticQty">${fmtInt(segment.quantity)} <small>${appLang==='en'?'units':'adet'}</small></div>
       <div>${badge(escapeHtml(statusDisplay(segment.status)||'—'),statusTone(segment.status))}</div>
-      <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>
       <div>${escapeHtml(segment.delType?transitDelTypeDisplay(segment.delType):'—')}</div>
+      <div>${fmtDate(exFactory)||'—'}</div>
+      <div>${fmtDate(loadingApproval)||'—'}</div>
       <div>${fmtDate(handover)||'—'}</div>
+      <div class="cpLogisticDateValue"><strong>${fmtDate(arrival)||'—'}</strong>${arrivalNote?`<small>${escapeHtml(arrivalNote)}</small>`:''}</div>
     </div>`;
   }).join('');
   const colspan=Math.max(1,cols.length+(withChk?1:0));
   return `<td colspan="${colspan}" class="cpLogisticDetailCell"><div class="cpLogisticDetailCard">
     <div class="cpLogisticDetailHead"><div><strong>${appLang==='en'?'Logistics flow':'Lojistik akışı'}</strong><span>${fmtInt(loaded)} / ${fmtInt(total)} ${appLang==='en'?'loaded':'yüklendi'}${remaining?` · ${fmtInt(remaining)} ${appLang==='en'?'remaining':'kalan'}`:''}${shortage?` · ${fmtInt(shortage)} ${appLang==='en'?'shortage':'eksik yükleme'}`:''}</span></div><div class="cpLogisticPriorityLegend"><span><b>1</b>${appLang==='en'?'Production / Shortage':'Üretim / Eksik Yükleme'}</span><span><b>2</b>${appLang==='en'?'Pre-warehouse':'Depo öncesi'}</span><span><b>3</b>${appLang==='en'?'Warehouse':'Depo'}</span></div></div>
-    <div class="cpLogisticDetailGridHead"><span>${appLang==='en'?'Flow Rank':'Akış Sırası'}</span><span>${appLang==='en'?'Detail':'Detay'}</span><span>${appLang==='en'?'Quantity':'Adet'}</span><span>${appLang==='en'?'Status':'Durum'}</span><span>${appLang==='en'?'Warehouse ETA':'Antrepo tarihi'}</span><span>${appLang==='en'?'Vehicle':'Vasıta'}</span><span>Handover</span></div>
+    <div class="cpLogisticDetailGridHead"><span>${appLang==='en'?'Flow Rank':'Akış Sırası'}</span><span>${appLang==='en'?'Detail':'Detay'}</span><span>${appLang==='en'?'Quantity':'Adet'}</span><span>${appLang==='en'?'Status':'Durum'}</span><span>${appLang==='en'?'Vehicle':'Vasıta'}</span><span>${appLang==='en'?'Ex-Factory Date':'Ex-Factory Tarihi'}</span><span>${appLang==='en'?'Loading Approval Date':'Yükleme Onay Tarihi'}</span><span>Handover</span><span>${appLang==='en'?'Warehouse ETA':'Antrepo tarihi'}</span></div>
     <div class="cpLogisticDetailBody">${rows}</div>
   </div></td>`;
 }
