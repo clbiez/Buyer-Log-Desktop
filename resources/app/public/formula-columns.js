@@ -1536,7 +1536,7 @@
           buildRequest: text => ({ task: text, context: lcwaiContext(), guide: aiPrompt() }),
           interpret: result => {
             const picked = AI.pickField(result, 'formula', E.extractFormula);
-            if (!picked.value) return { ok: false, issues: [T('LCW AI bir formül önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest a formula. Clarify the request and try again.')], explanation: result.data && result.data.explanation };
+            if (!picked.value) return { ok: false, explanation: picked.explanation, issues: [T('LCW AI bir formül önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest a formula. Clarify the request and try again.')] };
             const analysis = analyzeText(E.extractFormula(picked.value));
             const issues = analysis.issues.filter(item => item.level === 'error').map(item => (en() ? item.en : item.tr));
             const columnName = clean(result.data && result.data.columnName);

@@ -372,7 +372,7 @@
         interpret: async result => {
           const A = assistant();
           const picked = AI.pickField(result, 'code', text => (A ? A.extractAutomationCode(text) : text));
-          if (!picked.value) return { ok: false, issues: [tr('LCW AI bir otomasyon kodu önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest automation code. Clarify the request and try again.')] };
+          if (!picked.value) return { ok: false, explanation: picked.explanation, issues: [tr('LCW AI bir otomasyon kodu önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest automation code. Clarify the request and try again.')] };
           const code = A ? A.autoFixCode(A.extractAutomationCode(picked.value), { version: capabilityModel && capabilityModel.automationLanguageVersion }).code : picked.value;
           try {
             const data = await api('/api/automations/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });

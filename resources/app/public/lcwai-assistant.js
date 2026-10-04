@@ -417,10 +417,11 @@
         resultBox.innerHTML = state.interpreted.html || '';
         const issues = (state.interpreted.issues || []).filter(Boolean);
         if (issues.length) resultBox.insertAdjacentHTML('beforeend', `<ul class="lcwaiIssues">${issues.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`);
-        const explanation = String(state.interpreted.explanation || (result.data && result.data.explanation) || '').trim();
+        const partialData = result.structured && result.structured.partial;
+        const explanation = String(state.interpreted.explanation || (result.data && result.data.explanation) || (partialData && partialData.explanation) || '').trim();
         explainBox.hidden = !explanation;
         explainBox.textContent = explanation;
-        const warnings = (state.interpreted.warnings || (result.data && result.data.warnings) || []).filter(Boolean);
+        const warnings = (state.interpreted.warnings || (result.data && result.data.warnings) || (partialData && partialData.warnings) || []).filter(Boolean);
         warningsBox.hidden = !warnings.length;
         warningsBox.innerHTML = warnings.map(item => `<li>${esc(item)}</li>`).join('');
         applyBtn.disabled = !state.interpreted.ok;
@@ -486,8 +487,14 @@
   function pickField(result, field, fallbackExtract) {
     const value = result && result.data && typeof result.data[field] === 'string' ? result.data[field].trim() : '';
     if (value) return { value, structured: true };
-    const partial = result && result.structured && result.structured.partial && typeof result.structured.partial[field] === 'string' ? result.structured.partial[field].trim() : '';
+    const partialData = result && result.structured && result.structured.partial && typeof result.structured.partial === 'object' ? result.structured.partial : null;
+    const partial = partialData && typeof partialData[field] === 'string' ? partialData[field].trim() : '';
     if (partial) return { value: partial, structured: false };
+    /* Cevap geçerli bir JSON'du ama alan boş: LCW AI bilerek öneri vermedi
+       (nedeni "explanation"da). Ham metin formül/kod sanılmaz — eskiden JSON
+       metninin kendisi formül diye denetlenip "Desteklenmeyen karakter: {"
+       hatası çıkıyordu. */
+    if (partialData) return { value: '', structured: true, declined: true, explanation: String(partialData.explanation || '').trim() };
     const text = String(result && result.text || '');
     const extracted = typeof fallbackExtract === 'function' ? String(fallbackExtract(text) || '').trim() : '';
     return { value: extracted, structured: false };
