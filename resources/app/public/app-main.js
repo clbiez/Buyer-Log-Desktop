@@ -12698,6 +12698,7 @@ function refreshCompactStepHtml(index,activeIndex,title,subtitle,en){
 }
 function renderRefreshStagesBody(){
   const host=document.getElementById('_refreshStagesBody');if(!host)return;
+  const technicalDetailsOpen=host.querySelector('.refreshCompactDetails')?.open===true;
   const en=appLang==='en',job=window.BL_REFRESH_JOB_STATE||null,running=Boolean(job&&job.running);
   const activeIndex=refreshCompactStageIndex(job);
   const elapsedMs=job?Number(job.elapsedMs)||0:0;
@@ -12741,6 +12742,10 @@ function renderRefreshStagesBody(){
       <span class="refreshCompactHint">${escapeHtml(running?(en?'You can keep working while refresh continues.':'Yenileme sürerken çalışmaya devam edebilirsiniz.'):(en?'Refresh finished.':'Yenileme tamamlandı.'))}</span>
       <button type="button" class="tbtn" data-stop-refresh ${running?'':'disabled'}>${escapeHtml(en?'Stop':'Durdur')}</button>
     </div>`;
+  if(technicalDetailsOpen){
+    const details=host.querySelector('.refreshCompactDetails');
+    if(details)details.open=true;
+  }
 }
 
 function openRefreshStagesModal(){
