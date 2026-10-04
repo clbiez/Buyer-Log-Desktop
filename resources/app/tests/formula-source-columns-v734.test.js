@@ -51,6 +51,7 @@ const CP_COLS = [
   { k: '__f_fc_a', label: 'Üretim Süresi', formulaCustom: true, formulaId: 'fc_a' },
   { k: '__CPX_cpx_m1', label: 'Üretici Kodu', modelCustom: true, role: 'asas', modelColumnId: 'cpx_m1' },
   { k: '__CPX_cpx_m2', label: 'Antrepo Adedi', modelCustom: true, role: 'antrepo', modelColumnId: 'cpx_m2' },
+  { k: '__checklist__fabric_test', label: 'Fabric Test', checklistSupplierColumn: true, checklistItemId: 'fabric_test' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -101,6 +102,31 @@ test('v7.34 · hesaplanan sütunlar (v7.31) ve normal sütunlar bozulmadan kalı
   assert.ok(list.some(c => c.key === 'Ex-factory'), 'normal sütun listede kalmalı');
   assert.equal(api.sourceColumns('cp', 'fc_a').some(c => c.calculated), false,
     'düzenlenen sütun kendi listesinde görünmez (kendine gönderme)');
+});
+
+test('2026-10-04 · Checklist sütunları hesaplanan sütun kaynak listesinde görünür', () => {
+  const api = loadModule({ COLS_BY_TABLE: { cp: CP_COLS } });
+  const col = api.sourceColumns('cp').find(item => item.label === 'Fabric Test');
+  assert.ok(col, 'Checklist sütunu kaynak listesinde olmalı');
+  assert.equal(col.key, 'Fabric Test', 'kullanıcı iç anahtarı değil görünen başlığı kullanmalı');
+  assert.equal(col.ref, '__checklist__fabric_test', 'kalıcı başvuru checklist kimliğini korumalı');
+  assert.equal(col.checklist, true);
+});
+
+test('2026-10-04 · Checklist başvurusu kalıcı anahtara çevrilir ve satır değerini okur', () => {
+  const store = {};
+  const api = loadModule({
+    COLS_BY_TABLE: { cp: CP_COLS },
+    BLStorage: { getItem: k => store[k] || null, setItem: (k, v) => { store[k] = v; } },
+  });
+  const stored = api.toStorage('cp', 'IF([Fabric Test] = "Onaylandı", 1, 0)');
+  assert.match(stored.formula, /\[__checklist__fabric_test\]/,
+    'formül checklist başlığını değişmeyen iç anahtarla saklamalı');
+  api.save('cp', [{ id: 'fc_check', label: 'Checklist Kontrol', formula: stored.formula, refs: stored.refs, format: 'auto', decimals: '' }]);
+  const rows = [{ 'Order Code': 'A1', __checklist__fabric_test: 'Onaylandı' }];
+  const result = api.applyToRows('cp', rows);
+  assert.deepEqual(result.errors, {});
+  assert.equal(rows[0].__f_fc_check, 1);
 });
 
 /* ------------------------------------------------------------------ */
