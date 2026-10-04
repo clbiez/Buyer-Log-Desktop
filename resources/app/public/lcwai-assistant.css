@@ -1,0 +1,55 @@
+/* LCW AI ortak asistan paneli — yalnız mevcut tasarım token'ları kullanılır
+   (--acc, --line, --card, --ink, --green/--orange/--red …). Yeni renk yok. */
+.lcwaiAssist{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--line2);border-left:2px solid var(--acc);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:12.2px;}
+.lcwaiHead{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.lcwaiHead b{font-weight:650;color:var(--acc-ink);}
+.lcwaiMark{color:var(--acc);}
+.lcwaiModel{padding:1px 7px;border:1px solid var(--line2);border-radius:var(--r-full,999px);color:var(--ink2);font-size:10.5px;background:var(--bg);}
+.lcwaiConnPill{margin-left:auto;font-size:10.8px;color:var(--ink2);}
+.lcwaiConnPill.is-warn{color:var(--orange);}
+.lcwaiConnPill.is-off{color:var(--muted);}
+.lcwaiField{display:flex;flex-direction:column;gap:4px;}
+.lcwaiField>span{font-size:11px;color:var(--ink2);}
+.lcwaiField textarea{border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);font:inherit;line-height:1.5;padding:7px 9px;resize:vertical;min-width:0;}
+.lcwaiField textarea:focus{outline:none;border-color:var(--acc);}
+.lcwaiRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.lcwaiBtn{height:var(--ctl-h);padding:0 12px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:12px;cursor:pointer;}
+.lcwaiBtn:hover:not(:disabled){border-color:var(--acc);}
+.lcwaiBtn:disabled{opacity:.55;cursor:not-allowed;}
+.lcwaiBtn.is-primary{background:var(--acc);border-color:var(--acc);color:var(--on-acc,#fff);font-weight:650;}
+.lcwaiBtn.is-link{height:auto;padding:0;border:0;background:none;color:var(--acc);text-decoration:underline;font-weight:600;}
+.lcwaiStatus{font-size:11.6px;color:var(--ink2);}
+.lcwaiStatus.is-busy{color:var(--acc-ink);}
+.lcwaiStatus.is-ok{color:var(--green);}
+.lcwaiStatus.is-warn{color:var(--orange);}
+.lcwaiStatus.is-error{color:var(--red);}
+.lcwaiLive summary{cursor:pointer;font-size:11px;color:var(--muted);}
+.lcwaiLive pre{max-height:140px;overflow:auto;margin:4px 0 0;padding:6px 8px;background:var(--bg);border:1px solid var(--line);font-family:var(--mono);font-size:11px;white-space:pre-wrap;word-break:break-word;}
+.lcwaiSuggestion{display:flex;flex-direction:column;gap:6px;padding:9px 10px;border:1px solid var(--line);background:var(--acc-bg);}
+.lcwaiSuggestionHead{font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;color:var(--acc-ink);}
+.lcwaiSuggestion code{display:block;padding:6px 8px;background:var(--card);border:1px solid var(--line);font-family:var(--mono);font-size:11.8px;white-space:pre-wrap;word-break:break-word;}
+.lcwaiSuggestion pre{max-height:220px;overflow:auto;margin:0;padding:6px 8px;background:var(--card);border:1px solid var(--line);font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;}
+.lcwaiExplain{margin:0;line-height:1.5;color:var(--ink);}
+.lcwaiWarnings,.lcwaiIssues{margin:0;padding-left:18px;color:var(--orange);font-size:11.6px;}
+.lcwaiIssues{color:var(--red);}
+.lcwaiResultLine{display:flex;gap:6px;align-items:baseline;flex-wrap:wrap;font-size:11.8px;}
+.lcwaiResultLine>span:first-child{color:var(--ink2);min-width:72px;}
+.lcwaiResultLine.is-ok{color:var(--green);}
+.lcwaiNote{margin:0;font-size:10.8px;color:var(--muted);}
+.lcwaiManual{margin-top:6px;}
+.lcwaiManual>summary{cursor:pointer;font-size:11.5px;color:var(--ink2);}
+.lcwaiPanelCard{max-width:720px;}
+.lcwaiPanelBody{padding:14px 16px;}
+.lcwaiConnCard{max-width:620px;}
+.lcwaiConnBody{padding:16px 18px;display:grid;gap:10px;}
+.lcwaiConnBody p{margin:0;font-size:12px;line-height:1.5;}
+.lcwaiConnState{padding:8px 10px;border:1px solid var(--line);font-weight:650;background:var(--card);}
+.lcwaiConnState.is-ok{color:var(--green);background:var(--green-bg);}
+.lcwaiConnState.is-warn{color:var(--orange);background:var(--orange-bg);}
+.lcwaiConnState.is-off,.lcwaiConnState.is-unknown,.lcwaiConnState.is-busy{color:var(--ink2);}
+/* Kullanıcı menüsü · Kurumsal Bağlantılar */
+.userMenuSection{margin:6px 8px 2px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+.userMenu button .userMenuBadge{margin-left:auto;font-size:10.8px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.userMenu button .userMenuBadge.is-ok{color:var(--green);}
+.userMenu button .userMenuBadge.is-warn{color:var(--orange);}
+.userMenu button .userMenuBadge.is-off{color:var(--acc);}

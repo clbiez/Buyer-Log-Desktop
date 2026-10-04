@@ -130,11 +130,42 @@
     }
   }
 
+  /* Kurumsal Bağlantılar: PLM ve LCW AI oturumları BAĞIMSIZDIR; her biri
+     kendi durumunu gösterir. Durum okunamazsa rozet boş kalır (menü
+     açılışını bekletmez). */
+  async function paintCorporateConnections(target) {
+    const plm = target.querySelector('[data-plm-badge]');
+    const lcwai = target.querySelector('[data-lcwai-badge]');
+    const paint = (el, kind, text) => { if (!el || !target.isConnected) return; el.className = `userMenuBadge is-${kind}`; el.textContent = text; };
+    fetch('/api/corenectum-api/status', { credentials: 'same-origin' }).then(response => response.json()).then(data => {
+      const configured = Boolean(data && data.status && data.status.configured);
+      paint(plm, configured ? 'ok' : 'off', configured ? tr('✓ Bağlı', '✓ Connected') : tr('Giriş Yap', 'Sign in'));
+    }).catch(() => {});
+    try {
+      const AI = await ensureLcwAi();
+      if (!AI) return;
+      paint(lcwai, 'unknown', tr('Kontrol ediliyor…', 'Checking…'));
+      const status = await AI.getStatus();
+      const kind = status.connected ? 'ok' : status.loginInProgress ? 'busy' : status.state === 'expired' ? 'warn' : 'off';
+      paint(lcwai, kind, status.connected ? tr('✓ Bağlı', '✓ Connected') : status.loginInProgress ? tr('Giriş bekleniyor…', 'Waiting for sign-in…') : status.state === 'expired' ? tr('⚠ Oturum Yenilenmeli', '⚠ Session Needs Renewal') : tr('Giriş Yap', 'Sign in'));
+    } catch (_) { paint(lcwai, 'off', tr('Giriş Yap', 'Sign in')); }
+  }
+  async function ensureLcwAi() {
+    if (window.BuyerLogAI) return window.BuyerLogAI;
+    try { await window.BLPerf?._loadScript?.('lcwai-assistant.js?rev=1'); } catch (_) {}
+    return window.BuyerLogAI || null;
+  }
+  async function openLcwAiUserLogin() {
+    const AI = await ensureLcwAi();
+    if (AI) { AI.openConnectionDialog(); return; }
+    if (typeof showToast === 'function') showToast(tr('LCW AI bileşeni yüklenemedi.', 'The LCW AI component could not be loaded.'));
+  }
+
   function openMenu(anchor) {
     if (menu) return closeMenu();
     const profile = current(); if (!profile) return;
     menu = document.createElement('div'); menu.className = 'userMenu';
-    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar"><span class="blSteelInitials">${esc(initials(profile.displayName))}</span></span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div><button type="button" data-user-guide><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg>${esc(tr('Kullanım Rehberi', 'User Guide'))}</button>${canManageUsers() ? `<button type="button" data-user-admin><svg class="ic" aria-hidden="true"><use href="#i-users-group"/></svg>${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}<button type="button" data-plm-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}</button><button type="button" data-oab-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('OAB Kullanıcı Girişi', 'OAB User Sign-In'))}</button><button type="button" data-update-test><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>${esc(tr('Güncellemeleri Kontrol Et', 'Check for Updates'))}</button><button type="button" data-backup-settings><svg class="ic" aria-hidden="true"><use href="#i-database-import"/></svg>${esc(tr('Backup', 'Backup'))}</button><button type="button" data-preset-share><svg class="ic" aria-hidden="true"><use href="#i-copy-plus"/></svg>${esc(tr('Ön Ayar Paylaşımı', 'Preset Sharing'))}</button><button type="button" data-reset-my-view><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg>${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
+    menu.innerHTML = `<div class="userMenuHead"><span class="userMenuAvatar"><span class="blSteelInitials">${esc(initials(profile.displayName))}</span></span><div><div class="userMenuName">${esc(profile.displayName || profile.username)}</div><div class="userMenuRole">${esc(roleLabels[profile.systemRole] || profile.systemRoleLabel || profile.roleLabel)}</div></div></div><div class="userMenuScope">${esc([profile.title, profile.dataScope && scopeLabels[profile.dataScope.mode]].filter(Boolean).join(' · '))}</div><button type="button" data-user-guide><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg>${esc(tr('Kullanım Rehberi', 'User Guide'))}</button>${canManageUsers() ? `<button type="button" data-user-admin><svg class="ic" aria-hidden="true"><use href="#i-users-group"/></svg>${esc(tr('Kullanıcı & Yetki Yönetimi', 'User & Authorization Management'))}</button>` : ''}<div class="userMenuSection" role="presentation">${esc(tr('Kurumsal Bağlantılar', 'Corporate Connections'))}</div><button type="button" data-plm-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('PLM Kullanıcı Girişi', 'PLM User Sign-In'))}<span class="userMenuBadge" data-plm-badge></span></button><button type="button" data-oab-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('OAB Kullanıcı Girişi', 'OAB User Sign-In'))}</button><button type="button" data-lcwai-user-login><svg class="ic" aria-hidden="true"><use href="#i-globe"/></svg>${esc(tr('LCW AI Girişi', 'LCW AI Sign-In'))}<span class="userMenuBadge" data-lcwai-badge></span></button><button type="button" data-update-test><svg class="ic" aria-hidden="true"><use href="#i-download"/></svg>${esc(tr('Güncellemeleri Kontrol Et', 'Check for Updates'))}</button><button type="button" data-backup-settings><svg class="ic" aria-hidden="true"><use href="#i-database-import"/></svg>${esc(tr('Backup', 'Backup'))}</button><button type="button" data-preset-share><svg class="ic" aria-hidden="true"><use href="#i-copy-plus"/></svg>${esc(tr('Ön Ayar Paylaşımı', 'Preset Sharing'))}</button><button type="button" data-reset-my-view><svg class="ic" aria-hidden="true"><use href="#i-reload"/></svg>${esc(tr('Görünümümü Sıfırla', 'Reset My View'))}</button><button type="button" data-switch-user><svg class="ic" aria-hidden="true"><use href="#i-user"/></svg>${esc(tr('Kullanıcı Değiştir', 'Switch User'))}</button>`;
     document.body.appendChild(menu);
     const rect = anchor.getBoundingClientRect(), width = Math.min(380, window.innerWidth - 24); menu.style.width = `${width}px`; menu.style.left = `${Math.max(12, Math.min(rect.right - width, window.innerWidth - width - 12))}px`; menu.style.top = `${Math.min(rect.bottom + 8, window.innerHeight - menu.offsetHeight - 12)}px`;
     menu.querySelector('[data-user-guide]').addEventListener('click', () => { closeMenu(); window.BLGuide?.open(); });
@@ -144,6 +175,8 @@
     menu.querySelector('[data-user-admin]')?.addEventListener('click', () => { closeMenu(); openUserManagement(); });
     menu.querySelector('[data-plm-user-login]')?.addEventListener('click', () => { closeMenu(); window.openCoreNectumApiSettings?.({ required:false, manual:true }); });
     menu.querySelector('[data-oab-user-login]')?.addEventListener('click', () => { closeMenu(); void openOabUserLogin(); });
+    menu.querySelector('[data-lcwai-user-login]')?.addEventListener('click', () => { closeMenu(); void openLcwAiUserLogin(); });
+    void paintCorporateConnections(menu);
     menu.querySelector('[data-update-test]')?.addEventListener('click', () => { closeMenu(); window.openBuyerLogUpdateTest?.(); });
     menu.querySelector('[data-backup-settings]')?.addEventListener('click', () => { closeMenu(); window.buyerLogBackupModal?.(); });
   }
