@@ -2055,7 +2055,7 @@
       : '';
     const modeTab = (mode, label) => `<button type="button" id="cpa-rule-mode-${mode}-${esc(rule.id)}" role="tab" data-cpa-rule-mode="${mode}" aria-controls="cpa-rule-mode-panel-${esc(rule.id)}" aria-selected="${uiMode === mode ? 'true' : 'false'}" tabindex="${uiMode === mode ? '0' : '-1'}" class="${uiMode === mode ? 'is-on' : ''}">${esc(label)}</button>`;
     const modeEditor = `<div class="cpaRuleModeTabs" data-bl-tabs="segment" role="tablist" aria-label="${esc(L('Koşul yazma biçimi', 'How to write the condition'))}">
-          ${modeTab('basic', L('Basit', 'Simple'))}${modeTab('formula', L('Formül', 'Formula'))}${modeTab('ai', L('✦ AI ile yaz', '✦ Write with AI'))}
+          ${modeTab('basic', L('Basit', 'Simple'))}${modeTab('formula', L('Formül', 'Formula'))}${modeTab('ai', L('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI'))}
         </div>`;
     const displayFormula = Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang());
     const formulaEditor = `<div class="cpaFormulaEditor">
@@ -2070,7 +2070,12 @@
           <p class="cpaNote">${esc(L('Alan adlarını köşeli parantezle yazın: [Yüklemeye kalan gün]. Checklist alanı "open" (Pending), "approved", "rejected", "notRequired" ya da "notApplicable" değerini alır.', 'Write field names in square brackets: [Days to load]. A checklist field is "open" (Pending), "approved", "rejected", "notRequired" or "notApplicable".'))}</p>
         </div>`;
     const aiDraft = view.aiDraftOf(rule);
-    const aiEditor = `<ol class="cpaAiSteps">
+    /* LCW AI ortak paneli (public/lcwai-assistant.js) birincil yoldur; kural
+       motorunun doğrulaması ve canlı önizlemesi aynıdır. Kopyala / yapıştır
+       rehberi LCW AI erişimi olmayanlar için "Manuel yol" olarak durur. */
+    const aiEditor = `<div class="cpaLcwAi" data-cpa-lcwai-host></div>
+        <details class="lcwaiManual"><summary>${esc(L('Manuel yol: rehberi başka bir AI aracına verin', 'Manual route: give the guide to another AI tool'))}</summary>
+        <ol class="cpaAiSteps">
           <li><b>${esc(L('Ne istediğinizi kendi cümlenizle yazın', 'Describe what you want in your own words'))}</b>
             <textarea data-cpa-ai-request rows="3" maxlength="3000" placeholder="${esc(rule.kind === 'checklist'
       ? L('Örn. Minecraft ve Roblox lisanslı, yüklemeye 30 günden az kalan siparişlere sor.', 'e.g. Ask for Minecraft and Roblox orders that load within 30 days.')
@@ -2084,7 +2089,7 @@
           <li><b>${esc(L('AI cevabını buraya yapıştırın', 'Paste the AI answer here'))}</b>
             <textarea data-cpa-ai-answer rows="3" spellcheck="false" placeholder="${esc(L('Cevabın tamamını yapıştırabilirsiniz; formül kendiliğinden bulunur ve denetlenir.', 'You can paste the whole answer; the formula is found and checked automatically.'))}">${esc(aiDraft.answer)}</textarea>
             <div class="cpaAiResult" data-cpa-ai-result aria-live="polite"></div></li>
-        </ol>`;
+        </ol></details>`;
     const basicEditor = `<div class="cpaConditions">
           <div class="cpaMatchLine"><span>${esc(rule.kind === 'checklist' ? L('Siparişe sor, eğer', 'Ask the order if') : L('Siparişi yükselt, eğer', 'Escalate the order if'))}</span>
             <select data-cpa-rule-match aria-label="${esc(L('Koşul birleşimi', 'Condition match'))}">
@@ -2319,7 +2324,7 @@
       bindRules();
       const openRow = expandedRuleId && modal.querySelector(`[data-cpa-rule="${CSS.escape(expandedRuleId)}"]`);
       const openRule = expandedRuleId && findRule(expandedRuleId);
-      if (openRow && openRule && view.modeOf(openRule) === 'ai') renderAiResult(openRow, openRule);
+      if (openRow && openRule && view.modeOf(openRule) === 'ai') { renderAiResult(openRow, openRule); mountRuleLcwAi(openRow, openRule); }
     };
     const findRule = id => state.rules.find(rule => rule.id === id);
     const ruleIdOf = el => el.closest('[data-cpa-rule]').dataset.cpaRule;
@@ -2405,6 +2410,66 @@
         commit(); draw(); scrollToRule(rule.id);
         if (typeof showToast === 'function') showToast(L('Formül kurala uygulandı.', 'The formula was applied to the rule.'));
       };
+    }
+
+    /* LCW AI önerisi: formül görünen adlardan kimliğe çevrilir, kural
+       motoruyla doğrulanır, bugünkü eşleşme sayısı gösterilir. "Uygula"
+       mevcut applyFormula yolunu kullanır; hiçbir şey kendiliğinden
+       uygulanmaz. */
+    function mountRuleLcwAi(row, rule) {
+      const host = row && row.querySelector('[data-cpa-lcwai-host]');
+      if (!host) return;
+      const mount = AI => {
+        if (!AI || !host.isConnected) return;
+        const draft = view.aiDraftOf(rule);
+        AI.mountAssistant(host, {
+          source: 'rules',
+          initialRequest: draft.request,
+          placeholder: rule.kind === 'checklist'
+            ? { tr: 'Örn. Minecraft ve Roblox lisanslı, yüklemeye 30 günden az kalan siparişlere sor.', en: 'e.g. Ask for Minecraft and Roblox orders that load within 30 days.' }
+            : { tr: 'Örn. MB’ye 14 günden az kalan siparişleri bu önceliğe al.', en: 'e.g. Put orders with fewer than 14 days to MB into this priority.' },
+          onRequestChange: text => { draft.request = text; },
+          buildRequest: text => ({
+            task: text,
+            guide: aiGuideFor(rule.kind, rule, text),
+            context: {
+              ruleKind: rule.kind,
+              ruleName: ruleName(rule),
+              priorityTarget: rule.kind === 'priority' ? priorityLabel(rule.target) : '',
+              currentFormula: Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang()),
+              availableFields: formulaFieldCatalog(rule).map(item => ({ name: item.label, type: item.type })),
+              checklistValues: ['open', 'approved', 'rejected', 'notRequired', 'notApplicable'],
+            },
+          }),
+          interpret: result => {
+            const picked = AI.pickField(result, 'formula', Rules.extractFormula);
+            if (!picked.value) return { ok: false, issues: [L('LCW AI bir koşul formülü önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest a condition formula. Clarify the request and try again.')] };
+            const formula = Rules.formulaFromDisplay(Rules.extractFormula(picked.value), catalogFor(rule));
+            const validation = Rules.validateExpression(formula, { fields: formulaFieldIds(rule) });
+            const shown = Rules.formulaToDisplay(formula, catalogFor(rule), lang()) || picked.value;
+            let matchLine = '';
+            if (validation.valid) {
+              const probe = Rules.normalizeRule({ ...rule, mode: 'formula', formula, enabled: true, expressionVersion: Rules.EXPRESSION_VERSION }, rule.kind);
+              const preview = rulePreview(probe);
+              if (preview) matchLine = `<div class="lcwaiResultLine is-ok"><span>${esc(L('Önizleme', 'Preview'))}</span>✓ ${esc(L(`Formül geçerli · şu an ${int(preview.count)} sipariş eşleşiyor`, `Formula is valid · ${int(preview.count)} orders match right now`))}</div>`;
+            }
+            return {
+              ok: Boolean(validation.valid),
+              value: formula,
+              issues: validation.valid ? [] : (validation.errors || []),
+              html: `<div class="lcwaiResultLine"><span>${esc(L('Koşul', 'Condition'))}</span></div><code>${esc(shown)}</code>${matchLine}`,
+            };
+          },
+          onApply: formula => {
+            applyFormula(rule, formula);
+            draft.answer = '';
+            commit(); draw(); scrollToRule(rule.id);
+            if (typeof showToast === 'function') showToast(L('LCW AI önerisi kurala uygulandı.', 'The LCW AI suggestion was applied to the rule.'));
+          },
+        });
+      };
+      if (window.BuyerLogAI) mount(window.BuyerLogAI);
+      else Promise.resolve(window.BLPerf?._loadScript?.('lcwai-assistant.js?rev=1')).catch(() => null).then(() => mount(window.BuyerLogAI || null));
     }
 
     function confirmDelete(rule) {
