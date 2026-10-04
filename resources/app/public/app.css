@@ -3124,7 +3124,7 @@ input.kolLandedInput.isManual{border-bottom-color:color-mix(in srgb,var(--acc,#2
 .cpLogisticPriorityLegend span:nth-child(1) b,.cpLogisticDetailLine.priority-1 .cpLogisticPriority>b{background:var(--red-bg);color:var(--red);}
 .cpLogisticPriorityLegend span:nth-child(2) b,.cpLogisticDetailLine.priority-2 .cpLogisticPriority>b{background:var(--orange-bg);color:var(--orange);}
 .cpLogisticPriorityLegend span:nth-child(3) b,.cpLogisticDetailLine.priority-3 .cpLogisticPriority>b{background:var(--green-bg);color:var(--green);}
-.cpLogisticDetailGridHead,.cpLogisticDetailLine{display:grid;grid-template-columns:minmax(92px,.65fr) minmax(130px,1.05fr) minmax(84px,.55fr) minmax(150px,1.2fr) minmax(125px,.9fr) minmax(90px,.65fr) minmax(100px,.7fr);align-items:center;column-gap:12px;}
+.cpLogisticDetailGridHead,.cpLogisticDetailLine{display:grid;grid-template-columns:minmax(92px,.65fr) minmax(130px,1.05fr) minmax(84px,.55fr) minmax(150px,1.2fr) minmax(90px,.65fr) minmax(108px,.75fr) minmax(118px,.82fr) minmax(100px,.7fr) minmax(125px,.9fr);align-items:center;column-gap:12px;}
 .cpLogisticDetailGridHead{padding:7px 12px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--card2) 72%,var(--card));font-size:10px;font-weight:700;letter-spacing:.35px;text-transform:uppercase;color:var(--muted);}
 .cpLogisticDetailLine{position:relative;padding:9px 12px;border-bottom:1px solid var(--line);font-size:10.5px;color:var(--ink2);}
 .cpLogisticDetailLine:last-child{border-bottom:none;}
@@ -3146,7 +3146,7 @@ input.kolLandedInput.isManual{border-bottom-color:color-mix(in srgb,var(--acc,#2
 .cpLogisticDateValue strong{font-family:var(--mono);font-size:10.5px;color:var(--ink);}
 @media(max-width:980px){
   .cpLogisticDetailCard{overflow-x:auto;}
-  .cpLogisticDetailHead,.cpLogisticDetailGridHead,.cpLogisticDetailBody{min-width:860px;}
+  .cpLogisticDetailHead,.cpLogisticDetailGridHead,.cpLogisticDetailBody{min-width:1120px;}
 }
 
 /* v4.45 — Antrepo Excel/database source selector */
