@@ -359,6 +359,17 @@
          sütunu iç alan değil, kullanıcının kendi eklediği gerçek bir sütun.
          Formülde İÇ ANAHTARLA değil ADIYLA anılır ([Üretici Kodu]); anahtar
          çözümü applyToRows içindeki modelAliasMap ile yapılır. */
+      /* Checklist sütunları da gerçek CP satır alanlarıdır. İç anahtarları
+         __checklist__<id> ile başladığı için genel "__ alanlarını gizle" kuralı
+         bunları yanlışlıkla formül sözlüğünden atıyordu. Kullanıcıya başlığı
+         gösterilir; kayıtta değişmeyen iç anahtar tutulur. */
+      if (col.checklistSupplierColumn) {
+        const name = String(col.label || '').trim();
+        if (!name || seen.has(nameKey(name))) continue;
+        seen.add(nameKey(name));
+        out.push({ key: name, label: name, checklist: true, source: 'Checklist', ref: col.k });
+        continue;
+      }
       if (col.modelCustom) {
         const name = String(col.label || '').trim();
         if (!name || seen.has(nameKey(name))) continue;
@@ -472,6 +483,7 @@
      adlarla gösterilir.
        · hesaplanan sütun → [__f_<id>]   (tanımın kimliği)
        · veri tabanı sütunu → [__CPX_<id>] (sunucudaki sütun kimliği)
+       · checklist sütunu → [__checklist__<id>] (checklist tanım kimliği)
        · not sütunu / temel sütun → satırdaki kendi anahtarı (zaten sabit)
      Satırda bu anahtarlar doğrudan durduğu için hesaplama bir çeviri
      katmanına ihtiyaç duymaz. Kullanıcı formülü her zaman okunur adlarla görür
@@ -485,7 +497,7 @@
   function columnIndex(tableKey) {
     const cols = (window.COLS_BY_TABLE && window.COLS_BY_TABLE[tableKey]) || [];
     const byKey = new Map();
-    const calculated = new Map(), model = new Map(), base = new Map();
+    const calculated = new Map(), model = new Map(), checklist = new Map(), base = new Map();
     const remember = (map, name, key) => { const k = nameKey(name); if (k && !map.has(k)) map.set(k, key); };
     for (const definition of definitions(tableKey)) {
       const key = columnKey(definition);
@@ -494,6 +506,11 @@
     }
     for (const col of cols) {
       if (!col || !col.k || col.formulaCustom) continue;
+      if (col.checklistSupplierColumn) {
+        byKey.set(col.k, { key: col.k, name: clean(col.label) || col.k, kind: 'checklist' });
+        remember(checklist, col.label, col.k);
+        continue;
+      }
       if (col.modelCustom) {
         byKey.set(col.k, { key: col.k, name: clean(col.label) || col.k, kind: 'model' });
         remember(model, col.label, col.k);
@@ -506,7 +523,7 @@
       remember(base, col.label, col.k);
       remember(base, col.k, col.k);
     }
-    return { byKey, calculated, model, base };
+    return { byKey, calculated, model, checklist, base };
   }
   /* Bir adı (ya da anahtarı) kalıcı anahtara çözer. `legacy` yalnız eski
      çalışma zamanının tanıdığı yolları kullanır: taşıma, formülün ANLAMINI
@@ -517,7 +534,7 @@
     if (!raw) return null;
     if (index.byKey.has(raw)) return raw;
     const key = nameKey(raw);
-    return index.calculated.get(key) || index.model.get(key) || (legacy ? null : index.base.get(key)) || null;
+    return index.calculated.get(key) || index.model.get(key) || index.checklist.get(key) || (legacy ? null : index.base.get(key)) || null;
   }
   // Anahtarın EKRANDA görünen adı. Temel sütunda başlık yalnız geri aynı
   // anahtara çözülüyorsa kullanılır; yoksa belirsizlik olmasın diye anahtar.

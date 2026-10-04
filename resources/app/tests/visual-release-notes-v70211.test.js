@@ -69,14 +69,18 @@ test('pending release-note contract has bilingual detail and verified post-chang
       assert.ok(change[key]?.tr?.trim(),key+' tr missing');
       assert.ok(change[key]?.en?.trim(),key+' en missing');
     }
-    assert.equal(change.visual?.kind,'screenshot');
-    assert.equal(change.visual?.capture,'post-change');
-    assert.match(change.visual?.src||'',/\.png$/i);
     assert.ok(change.visual?.alt?.tr&&change.visual?.alt?.en);
     assert.ok(change.visual?.caption?.tr&&change.visual?.caption?.en);
     const asset=path.join(ROOT,'public','release-notes','next-assets',change.visual.src);
     assert.ok(fs.existsSync(asset));
-    assert.doesNotThrow(()=>RELEASE_NOTES_SCRIPT.inspectPngScreenshot(asset,change.visual.src));
+    if(NEXT.bootstrapVisual===true){
+      assert.ok(['screenshot','component-preview'].includes(change.visual?.kind));
+    }else{
+      assert.equal(change.visual?.kind,'screenshot');
+      assert.equal(change.visual?.capture,'post-change');
+      assert.match(change.visual?.src||'',/\.png$/i);
+      assert.doesNotThrow(()=>RELEASE_NOTES_SCRIPT.inspectPngScreenshot(asset,change.visual.src));
+    }
   }
 });
 

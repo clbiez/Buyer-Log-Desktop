@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.231",
+      "publishedAt": "2026-10-04",
+      "title": {
+        "tr": "CP, yenileme ve lojistik kullanım iyileştirmeleri",
+        "en": "CP, refresh and logistics usability improvements"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.231/release.json"
+    },
+    {
       "version": "7.0.228",
       "publishedAt": "2026-10-04",
       "title": {
