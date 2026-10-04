@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.231",
-  "commit_sha": "1c4af93e35d515c6f0da7a91366a152617cfed77",
-  "release_notes": "Buyer Log 7.0.231: Üst uygulama çubuğu kaydırmada görünür kalır; yenileme teknik detayları canlı güncellemelerde açık kalır; CP lojistik detayına Ex-Factory ve Yükleme Onay tarihleri eklenir; Checklist alanları hesaplanan sütunlarda kullanılabilir ve CP/Siparişler menüsünde Not Sütunu Ekle erişimi düzeltilir. Release görsel doğrulamasındaki test/validator uyumsuzluğu da güvenli şekilde giderildi.",
-  "request_id": "7.0.231-r1"
+  "version": "7.0.232",
+  "commit_sha": "309c76dde64e8fb730cad981a5085548316b611f",
+  "release_notes": "Buyer Log 7.0.232: Koleksiyon, CP ve Siparişler için yeni Alanlar çekmecesi ve yeniden düzenlenen tablo başlıkları; Koleksiyon Checklist desteği; ASAS verisinden üretici kartları, termin performansı ve üretici eşleme özellikleriyle yeni Üreticiler sayfası; otomasyonlarda üretici bazlı ayrı e-posta alıcı akışı.",
+  "request_id": "7.0.232-r1"
 }
