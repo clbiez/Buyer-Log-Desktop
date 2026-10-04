@@ -38,7 +38,7 @@ test('checklist evidence fields, lossless sync and supplier e-mail wiring are pr
   assert.match(app, /openChecklist:prepareEmailOpenChecklist/);
   assert.match(app, /Array\.isArray\(SRC\.initialFiles\)/);
   assert.match(app, /PRICING_ATTACHMENT_LIMIT_BYTES = Math\.floor\(9\.5 \* 1024 \* 1024\)/);
-  assert.match(app, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForDraft,rowsFor\)/);
+  assert.match(app, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForManufacturer\(m\.name\),rowsFor\)/);
 });
 
 test('checklist attachment is renamed from order/model/checklist identity and evidence survives partial updates', () => {
@@ -111,4 +111,5 @@ test('supplier checklist mail groups selected rows per supplier, keeps each Exce
   assert.match(app, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForManufacturer\(m\.name\),rowsFor\)/);
   assert.match(app, /if\(fixed\[i\]\.directAttachment\) continue/);
   assert.match(app, /entries\.filter\(x=>!x\.isImage&&!x\.isPdf&&!x\.directAttachment\)/);
+  assert.match(app, /else if\(!item\.isImage&&!item\.directAttachment\)/);
 });
