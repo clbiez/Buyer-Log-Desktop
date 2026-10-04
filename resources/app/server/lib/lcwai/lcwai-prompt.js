@@ -8,6 +8,12 @@
  * Bu dosya bağlamı güvenli boyuta indirir, sırları ayıklar, isteği tek bir
  * prompt'ta birleştirir ve cevabı modülün SÖZLEŞMESİNE göre denetler.
  *
+ * VERİ POLİTİKASI: LCW AI şirkete ait iç servistir; iş verisi (örnek
+ * satırlar, alan değerleri) bağlamda gönderilebilir (kullanıcı/ürün kararı).
+ * Kimlik bilgisi ise HİÇBİR ZAMAN gönderilmez: token/parola/çerez anahtarları
+ * atılır, metinlerdeki JWT/Bearer kalıpları silinir. Boyut sınırları her
+ * durumda uygulanır.
+ *
  * Sözleşme kaydı TEK yerdedir (CONTRACTS). Yeni bir modül (Order, Dashboard,
  * Mail…) LCW AI kullanmak istediğinde buraya bir kayıt ekler; kendi AI
  * entegrasyonunu yazmaz. Kaydı olmayan kaynak serbest metin cevabı alır.
@@ -20,6 +26,8 @@ const { redactSecrets, SECRET_KEY_RE } = require('../../../shared/secret-redacti
 const config = require('./lcwai-config');
 
 const ROW_DATA_KEYS = /^(rows|samplerows|records)$/i;
+// Satır örnekleri prompt'u şişirmesin: yalnız ilk N satır gider.
+const MAX_SAMPLE_ROWS = 20;
 
 const CONTRACTS = Object.freeze({
   'calculated-column': Object.freeze({
@@ -60,9 +68,9 @@ function contractFor(source) { return Object.prototype.hasOwnProperty.call(CONTR
    - sır taşıyabilecek anahtarlar (token, password, cookie…) atılır,
    - metinlerden JWT/Bearer kalıpları silinir,
    - derinlik, dizi uzunluğu ve metin boyu sınırlanır,
-   - satır VERİSİ anahtarları (rows, sampleRows…) varsayılan olarak atılır:
-     mevcut ekranlar "satır verisi gönderilmez" sözü veriyor. */
-function sanitizeContext(value, { depth = 0, allowRowData = false } = {}) {
+   - satır örnekleri (rows, sampleRows…) MAX_SAMPLE_ROWS ile kısaltılır;
+     allowRowData:false verilirse tamamen atılır. */
+function sanitizeContext(value, { depth = 0, allowRowData = true } = {}) {
   const limits = config.LIMITS;
   if (value == null) return null;
   if (typeof value === 'string') {
@@ -80,8 +88,9 @@ function sanitizeContext(value, { depth = 0, allowRowData = false } = {}) {
     for (const [key, item] of Object.entries(value).slice(0, 200)) {
       const name = clean(key).slice(0, 80);
       if (!name || SECRET_KEY_RE.test(name)) continue;
-      if (!allowRowData && ROW_DATA_KEYS.test(name)) continue;
-      const next = sanitizeContext(item, { depth: depth + 1, allowRowData });
+      const rowData = ROW_DATA_KEYS.test(name);
+      if (rowData && !allowRowData) continue;
+      const next = sanitizeContext(rowData && Array.isArray(item) ? item.slice(0, MAX_SAMPLE_ROWS) : item, { depth: depth + 1, allowRowData });
       if (next !== null && next !== undefined) out[name] = next;
     }
     return out;
@@ -103,7 +112,7 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
   const key = normalizeSource(source);
   const contract = contractFor(key);
   const request = clean(task).slice(0, config.LIMITS.maxTaskChars);
-  const safeContext = sanitizeContext(context && typeof context === 'object' ? context : {}, { allowRowData: false }) || {};
+  const safeContext = sanitizeContext(context && typeof context === 'object' ? context : {}) || {};
   const moduleName = contract ? (english ? contract.label.en : contract.label.tr) : key;
   const lines = [];
   lines.push(english
@@ -198,4 +207,4 @@ function parseStructured(text, source) {
   return { ok: blocking.length === 0, data, errors };
 }
 
-module.exports = { CONTRACTS, contractFor, normalizeSource, sanitizeContext, buildPrompt, extractJsonObject, parseStructured };
+module.exports = { CONTRACTS, MAX_SAMPLE_ROWS, contractFor, normalizeSource, sanitizeContext, buildPrompt, extractJsonObject, parseStructured };

@@ -231,7 +231,7 @@ test('motor: geçersiz JSON var olan öneriyi bozmaz → data null, ham metin ye
   assert.deepEqual(result.model, { key: 'gpt-6-sol', label: 'GPT-6 Sol' });
 });
 
-test('prompt builder: bağlam + rehber + istek birleşir; satır verisi ve sırlar ayıklanır', () => {
+test('prompt builder: bağlam + rehber + istek birleşir; iş verisi gider, sırlar ayıklanır, satırlar sınırlanır', () => {
   const token = makeToken();
   const built = prompts.buildPrompt({
     source: 'rules', lang: 'tr', task: 'MB’ye 14 günden az kalan siparişleri kırmızı yap', guide: `REHBER\nAuthorization: Bearer ${token}`,
@@ -241,8 +241,12 @@ test('prompt builder: bağlam + rehber + istek birleşir; satır verisi ve sırl
   assert.match(built.prompt, /Yüklemeye kalan gün/);
   assert.match(built.prompt, /"formula": string/);
   assert.ok(!built.prompt.includes(token), 'token prompt\'a girmez');
-  assert.ok(!/PO-1|sampleRows|password/.test(built.prompt), 'satır verisi ve parola anahtarı atılır');
+  assert.ok(!/password|accessToken/.test(built.prompt), 'kimlik bilgisi anahtarları atılır');
+  assert.match(built.prompt, /PO-1/, 'LCW AI şirket içi servis: örnek satır verisi bağlamda gider');
   assert.equal(built.contract, 'rules');
+  const many = prompts.sanitizeContext({ sampleRows: Array.from({ length: 100 }, (_, i) => ({ i })) });
+  assert.equal(many.sampleRows.length, prompts.MAX_SAMPLE_ROWS);
+  assert.equal(prompts.sanitizeContext({ rows: [{ a: 1 }] }, { allowRowData: false }).rows, undefined);
 });
 
 test('güvenlik: access token log\'a, hata nesnesine, status\'a ve public hataya sızmaz', async () => {
