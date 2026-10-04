@@ -15,9 +15,11 @@ test('refresh progress is compact and groups the workflow into three user-facing
   assert.match(body,/refreshCompactStageIndex/);
   assert.doesNotMatch(body,/refreshStageTable/);
 });
-test('technical timing remains available only behind a collapsed details control',()=>{
+test('technical timing remains available behind details and keeps the user open state across live rerenders',()=>{
   assert.match(body,/<details class="refreshCompactDetails">/);
   assert.match(body,/Teknik Detayları Gör/);
+  assert.match(body,/const technicalDetailsOpen=host\.querySelector\('\.refreshCompactDetails'\)\?\.open===true/);
+  assert.match(body,/if\(technicalDetailsOpen\)\{[\s\S]*?details\.open=true/);
   assert.match(body,/refreshSeconds\(t\.executeMs\)/);
   assert.match(body,/refreshSeconds\(t\.connectionOpenMs\)/);
   assert.match(body,/refreshSeconds\(t\.retryMs\)/);
