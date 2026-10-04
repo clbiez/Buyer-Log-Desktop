@@ -62,8 +62,8 @@
         "en": "CP and Orders headings reorganised"
       },
       "body": {
-        "tr": "Sütunlar Öncelik, PLM Numune, Marka Detayları, Model Detayları, Sipariş Detayları, Lisans Detayları, Tarihler, Kumaş Detayları, Lojistik, Notlar ve Checklist başlıkları altında yeni varsayılan sırayla gelir. Tarihler'e revizyondan etkilenmeyen Original Ex-F. sütunu eklendi. Bu güncellemeyle kayıtlı sütun sırası bir kez varsayılana döner; eklediğiniz sütunlar, gizli sütunlar ve genişlikler korunur.",
-        "en": "Columns now follow the new default order under Priority, PLM Sample, Brand Details, Model Details, Order Details, License Details, Dates, Fabric Details, Logistics, Notes and Checklist headings. Dates gained an Original Ex-F. column that is not affected by revisions. With this update the saved column order resets to the default once; columns you added, hidden columns and widths are kept."
+        "tr": "Sütunlar Öncelik, PLM Numune, Marka Detayları, Model Detayları, Sipariş Detayları, Lisans Detayları, Tarihler, Kumaş Detayları, Lojistik, Notlar ve Checklist başlıkları altında yeni varsayılan sırayla gelir. Tarihler'e revizyondan etkilenmeyen Original Ex-F. sütunu eklendi. Mevcut kişisel sütun sıranız korunur; yeni varsayılan sıra yalnız daha önce kişisel yerleşim kaydı olmayan kullanıcılar için kullanılır.",
+        "en": "Columns now follow the new default order under Priority, PLM Sample, Brand Details, Model Details, Order Details, License Details, Dates, Fabric Details, Logistics, Notes and Checklist headings. Dates gained an Original Ex-F. column that is not affected by revisions. Your saved personal column order is preserved; the new default order is used only when no personal layout has been saved before."
       },
       "path": {
         "tr": "CP Tracker / Siparişler",
@@ -95,8 +95,8 @@
         "en": "Collection headings and column order"
       },
       "body": {
-        "tr": "Koleksiyon tablosu Marka Detayları, Model Detayları, Notlar, Lisans Detayları, Tarihler & Sevkiyat, Checklist, Fiyatlandırma ve Endeksmatik & Avantaj başlık bandıyla gelir. Sipariş Tipi ve Buying Numunesi sütunları tablodan kaldırıldı (kayıtlı değerler silinmez); Onaylı Fiyat sütununun adı Onaylı Üretici Fiyatı oldu. Kayıtlı sütun sırası bir kez varsayılana döner; eklediğiniz sütunlar kaybolmaz.",
-        "en": "The Collection table now has a heading band with Brand Details, Model Details, Notes, License Details, Dates & Shipment, Checklist, Pricing and Endeksmatik & Advantage. The Order Type and Buying Sample columns were removed from the table (saved values are kept); the Confirmed FOB column is now called Approved Mfr. Price. The saved column order resets to the default once; columns you added are kept."
+        "tr": "Koleksiyon tablosu Marka Detayları, Model Detayları, Notlar, Lisans Detayları, Tarihler & Sevkiyat, Checklist, Fiyatlandırma ve Endeksmatik & Avantaj başlık bandıyla gelir. Sipariş Tipi ve Buying Numunesi sütunları tablodan kaldırıldı (kayıtlı değerler silinmez); Onaylı Fiyat sütununun adı Onaylı Üretici Fiyatı oldu. Mevcut kişisel sütun sıranız korunur; yeni varsayılan yalnız daha önce kişisel yerleşim kaydı olmayan kullanıcılar için kullanılır.",
+        "en": "The Collection table now has a heading band with Brand Details, Model Details, Notes, License Details, Dates & Shipment, Checklist, Pricing and Endeksmatik & Advantage. The Order Type and Buying Sample columns were removed from the table (saved values are kept); the Confirmed FOB column is now called Approved Mfr. Price. Your saved personal column order is preserved; the new default is used only when no personal layout has been saved before."
       },
       "path": {
         "tr": "Koleksiyon",

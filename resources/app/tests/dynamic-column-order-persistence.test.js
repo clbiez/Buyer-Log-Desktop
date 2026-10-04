@@ -75,6 +75,17 @@ test('Calculated Column geç yüklenince persisted anahtarı yeni sütun saymaz'
   assert.match(sync, /const groupChanged = Boolean\(placed\)/);
 });
 
+test('sunucudan yeni tercih geldiyse sütun state aynı açılışta tekrar yüklenir', () => {
+  const reload = extractFunction(APP, 'reloadPersistedTableColumnStateAfterHydration');
+  assert.match(reload, /autoTableColumnStateSnapshot=null;/);
+  assert.match(reload, /loadAutoTableColumnState\(\)/);
+  assert.match(reload, /loadKolColState\(\{preserveCustom:true\}\)/);
+  const at = APP.indexOf('const sync=await authHydrationPromise;');
+  assert.ok(at > 0, 'auth hydration bekleme noktası bulunmalı');
+  const block = APP.slice(at, at + 900);
+  assert.match(block, /if\(sync&&sync\.applied\)\{ reloadPersistedTableColumnStateAfterHydration\(\); \}/);
+});
+
 test('silinen dinamik sütunun hayalet sıra, gizlilik ve genişlik kaydı temizlenir', () => {
   assert.match(extractFunction(APP, 'removeCpModelColumn'), /forgetPersistedColumnKeys\('cp',\[def\.header\]\).*forgetPersistedColumnKeys\('orders',\[def\.header\]\)/s);
   assert.match(extractFunction(APP, 'saveCpNoteColumnDefs'), /forgetPersistedColumnKeys\('cp',removed\).*forgetPersistedColumnKeys\('orders',removed\)/s);
