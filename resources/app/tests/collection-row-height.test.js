@@ -92,7 +92,7 @@ test('Collection image resizing writes width and height from one shared scale fa
 });
 
 test('Collection Status keeps native select lifecycle while rendering shared catalog pill semantics', () => {
-  assert.match(html,/\{k:'durum', label:'Durum', w:170, status:true\}/);
+  assert.match(html,/\{k:'durum', label:'Durum', w:170, status:true, group:'[^']+'\}/);
   assert.match(html,/else if\(c\.status\)/);
   assert.match(html,/class="editCell kolStatusNoArrow"/);
   assert.match(html,/kolStatusEntries\(\)/);

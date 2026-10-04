@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.231",
+  "channel": "stable",
+  "publishedAt": "2026-10-04",
+  "title": {
+    "tr": "CP, yenileme ve lojistik kullanım iyileştirmeleri",
+    "en": "CP, refresh and logistics usability improvements"
+  },
+  "summary": {
+    "tr": "Buyer Log 7.0.231; 7.0.229 ile gelen arayüz, yenileme, lojistik ve sütun araçları iyileştirmelerini güvenli stable yayın akışıyla paketler ve release görsel doğrulamasındaki test/validator uyumsuzluğunu giderir.",
+    "en": "Buyer Log 7.0.231 packages the UI, refresh, logistics and column-tool improvements introduced in 7.0.229 through the safe stable release flow and fixes the test/validator mismatch in release visual validation."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "release-visual-bootstrap-consistency",
+      "type": "fix",
+      "module": {
+        "tr": "Sürüm Yayını",
+        "en": "Release Publishing"
+      },
+      "title": {
+        "tr": "Stable yayın görsel doğrulaması tutarlı",
+        "en": "Stable release visual validation is consistent"
+      },
+      "body": {
+        "tr": "Release validator'ın desteklediği bootstrap component-preview yolu regresyon testi tarafından da aynı şekilde kabul edilir; bu patch sahte post-change ekran görüntüsü eklemeden güvenli stable yayına izin verir.",
+        "en": "The regression test now honors the bootstrap component-preview path already supported by the release validator, allowing a safe stable publish without fabricating post-change screenshots."
+      },
+      "visual": {
+        "kind": "component-preview",
+        "src": "release-publishing-preview.png",
+        "alt": {
+          "tr": "Buyer Log stable sürüm sunumu için bileşen önizlemesi",
+          "en": "Component preview for Buyer Log stable release presentation"
+        },
+        "caption": {
+          "tr": "Bu görsel bir uygulama ekran görüntüsü değil, release sunumu bileşen önizlemesidir.",
+          "en": "This visual is a release presentation component preview, not an application screenshot."
+        }
+      },
+      "path": {
+        "tr": "Sürüm yayını → TEST → STABLE",
+        "en": "Release publishing → TEST → STABLE"
+      }
+    }
+  ]
+}

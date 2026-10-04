@@ -58,6 +58,8 @@ const WORKSPACE_CATEGORY_PREFIXES = Object.freeze({
     // hesaba bağlı senkron listesinde tutuyordu ama sunucu whitelist'inde
     // yoktu; yazma 'not-synced' diye reddediliyor, ön ayar makineye kalıyordu.
     'lcw.tableViewFocus.',
+    // v7.0.229 — Alanlar: ana başlık bazında Tümü / Gizli katmanı (presetten bağımsız).
+    'lcw.tableGroupOverrides.',
   ]),
   views: Object.freeze(['lcw_view_favorite_']),
   // v7.221 — kişisel CP öncelik kuralları ve checklist soruları. Kullanıcıya

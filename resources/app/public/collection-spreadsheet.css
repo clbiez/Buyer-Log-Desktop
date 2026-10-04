@@ -57,6 +57,8 @@
 @media(max-width:620px){.kolEmptyState{min-height:180px;padding:var(--sp-3)}.kolEmptyState .uiState{width:100%}}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.editTd:has(.editCell:focus){box-shadow:inset 0 0 0 2px var(--acc)!important;background-image:linear-gradient(rgba(29,95,145,.035),rgba(29,95,145,.035))}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead:not(.isLettersHidden) tr.colRow th{top:18px!important}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead:not(.isLettersHidden) tr.kolGroupRow th{top:18px!important}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead.kolHasGroups:not(.isLettersHidden) tr.colRow th{top:40px!important}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{position:sticky;top:0!important;z-index:14}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.frzL{z-index:16;background:var(--paper)!important}
 

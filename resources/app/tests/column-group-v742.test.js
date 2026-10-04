@@ -234,7 +234,7 @@ test('v7.42 · yeni başlık seçilip adı boş bırakılırsa kaydedilmez', () 
 
 test('v7.42 · hesaplanan sütun ile veri tabanı sütunu AYNI yerleştirmeyi kullanır', () => {
   /* İki ayrı kopya zamanla ayrışır; bant birleşmesi tek bir yerde durmalı. */
-  assert.match(APP, /window\.BLColumnGroups=\{ list:existingColumnGroups, placeInGroup:placeColumnInGroup, key:groupKey \};/);
+  assert.match(APP, /window\.BLColumnGroups=\{ list:existingColumnGroups, placeInGroup:placeColumnInGroup, key:groupKey, canonical:canonicalColumnGroup, label:tableColumnGroupLabel \};/);
   assert.match(extractFunction(FC, 'placeInGroup'), /shared\.placeInGroup\(tableKey, key, group\)/);
   assert.match(extractFunction(FC, 'existingGroups'), /shared\.list\(tableKey\)/);
 });
@@ -245,13 +245,14 @@ test('v7.42 · hesaplanan sütun ile veri tabanı sütunu AYNI yerleştirmeyi ku
 
 test('v7.42 · veri tabanı sütunu da seçilen grubu alır, boşsa Database', () => {
   const fn = extractFunction(APP, 'syncCpModelColumns');
-  assert.match(fn, /group:String\(d\.group\|\|''\)\.trim\(\)\|\|DEFAULT_MODEL_COLUMN_GROUP/);
+  // v7.0.229 — eski başlık adı (Order Info, Kumaş …) yeni kanonik başlığa katılır.
+  assert.match(fn, /group:canonicalColumnGroup\(d\.group\)\|\|DEFAULT_MODEL_COLUMN_GROUP/);
   assert.match(APP, /const DEFAULT_MODEL_COLUMN_GROUP='Database';/);
 });
 
 test('v7.42 · veri tabanı sütunu persisted sırayı korur; yalnız yeni/grup değişikliğinde taşınır', () => {
   const fn = extractFunction(APP, 'syncCpModelColumns');
-  assert.match(fn, /const previousGroup=new Map\(CP_MODEL_COLUMN_DEFS\.map\(d=>\[d\.header,d\.group\|\|DEFAULT_MODEL_COLUMN_GROUP\]\)\);/);
+  assert.match(fn, /const previousGroup=new Map\(CP_MODEL_COLUMN_DEFS\.map\(d=>\[d\.header,canonicalColumnGroup\(d\.group\)\|\|DEFAULT_MODEL_COLUMN_GROUP\]\)\);/);
   assert.match(fn, /persistedBefore=new Set\(savedColumnOrderKeys\('cp'\)\)/);
   assert.match(fn, /restoreLateManagedColumnState\('cp'\)/);
   assert.match(fn, /const isNew=!knownBefore\.has\(c\.k\)&&!persistedBefore\.has\(c\.k\);/);
@@ -305,7 +306,7 @@ test('v7.42 · düzenlemede sütunun kayıtlı başlığı seçili gelir', () =>
 /* ------------------------------------------------------------------ */
 
 test('v7.42 · başlık adı serbest metin olduğu için kaçışlı yazılır', () => {
-  assert.match(APP, /data-grp="\$\{escapeHtml\(r\.group\)\}"[\s\S]{0,160}\$\{escapeHtml\(L\(r\.group\)\)\}<\/th>/);
+  assert.match(APP, /data-grp="\$\{escapeHtml\(r\.group\)\}"[\s\S]{0,160}\$\{escapeHtml\(tableColumnGroupLabel\(r\.group\)\)\}<\/th>/);
 });
 
 test('v7.42 · bilinmeyen başlık rengi varsayılana düşer (çizim bozulmaz)', () => {

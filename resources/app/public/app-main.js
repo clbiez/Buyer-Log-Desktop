@@ -1375,36 +1375,8 @@ function placeSharedActionsBefore(refId,ids){
    Düğmeler her sekme geçişinde yeniden kurulur; eskiler önce silinir ki
    menü çoğalmasın. Her tablo YALNIZ gerçekten desteklediği eylemi görür —
    çalışmayan bir düğme koymaktansa hiç koymamak dürüst olanı. */
-function appendColumnActions(targetId,tableKey){
-  const menu=document.getElementById(targetId); if(!menu) return;
-  menu.querySelectorAll('[data-col-action]').forEach(el=>el.remove());
-  const rerender=()=>{const info=activeTableInfo(); if(info&&typeof info.rerender==='function') info.rerender();};
-  const add=(action,icon,label,run)=>{
-    const btn=document.createElement('button');
-    btn.type='button'; btn.className='tbtn'; btn.dataset.colAction=action;
-    btn.innerHTML=`<svg class="ic"><use href="#${icon}"/></svg><span>${escapeHtml(label)}</span>`;
-    btn.addEventListener('click',()=>{ menu.hidden=true; run(); });
-    menu.appendChild(btn);
-  };
-  const addColLabel=appLang==='en'?'Add Column':'Sütun Ekle';
-  const calcLabel=appLang==='en'?'Add Calculated Column':'Hesaplanan Sütun Ekle';
-  if(tableKey==='cp'||tableKey==='orders'){
-    // Orders'ın sütun şeması CP_COLS'un kopyası (syncOrdersColumnsFromCp); aynı
-    // pencere kullanılır, ikinci bir sütun sistemi kurulmaz.
-    add('add','i-columns-3',addColLabel,()=>openCpModelColumnModal(null,rerender));
-  }else if(tableKey==='koleksiyon'){
-    add('add','i-columns-3',addColLabel,()=>kolAddCustomColumn(null));
-  }
-  /* Formül modülü tembel yükleniyor (perf-runtime). Varlığına menü KURULURKEN
-     bakılsaydı düğme ilk açılışta sessizce eksik kalır, yalnız sekme değişince
-     belirirdi — ölçüldü. Bu yüzden kontrol tıklama anına alındı. */
-  if(FORMULA_COLUMN_TABLES.has(tableKey)){
-    add('calc','i-calculator',calcLabel,()=>{
-      const fc=window.BLFormulaColumns;
-      if(!fc){showToast(appLang==='en'?'Calculated columns are still loading.':'Hesaplanan sütunlar henüz yükleniyor.');return;}
-      fc.open(tableKey,null,rerender);
-    });
-  }
+function removeColumnActions(targetId){
+  document.getElementById(targetId)?.querySelectorAll('[data-col-action]').forEach(el=>el.remove());
 }
 function appendVfProfiles(targetId){
   const target=document.getElementById(targetId);if(!target)return;
@@ -1447,29 +1419,32 @@ function syncTableToolbarActions(tab=document.body.dataset.activeTab){
   // bile anlamsız bir denetim ve filtre varken iki eşdeğer yol oluşturuyordu.
   const contextualClear=document.getElementById('navClearFilters');
   if(contextualClear)contextualClear.hidden=tab==='orders'||tab==='koleksiyon';
+  // v7.0.229 — CP / Siparişler / Koleksiyon'da sütun yönetimi yalnız Alanlar
+  // çekmecesindedir; eski Sütunlar düğmesi bu sayfalarda gösterilmez.
+  const columnsWrap=document.getElementById('navColsBtn')?.closest('.navColsRight');
+  if(columnsWrap)columnsWrap.hidden=tab==='cp'||tab==='orders'||tab==='koleksiyon';
   placeCpDimensionFilters(tab);
   if(tab==='cp'){
     appendSharedTableActions('cpTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','cpCopyToKolBtn','navExcelBtn']);
     appendSharedTableActions('cpToolsMenu',_selectionActionIds);
-    appendSharedTableActions('cpTableViewActions',['navColsBtn']);
     appendSharedTableActions('cpMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('cpMoreWrap',['navClearFilters']);
-    appendColumnActions('cpMoreMenu','cp');
+    // v7.0.229 — Sütun / Hesaplanan / Not Sütunu ekleme ve eski Sütunlar paneli
+    // Alanlar çekmecesine taşındı; ⋯ menüsünde ve görünüm çubuğunda yer almaz.
+    removeColumnActions('cpMoreMenu');
     appendVfProfiles('cpMoreMenu');
   }else if(tab==='orders'){
     appendSharedTableActions('ordersTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navExcelBtn']);
-    appendSharedTableActions('ordersTableViewActions',['navColsBtn']);
     // Siparişler'de "Koleksiyona Kopyala" ve CP'ye özgü Fiyat Çalışmaları yok.
     appendSharedTableActions('ordersToolsMenu',_selectionActionIds.filter(id=>id!=='cpQuotationsBtn'));
     appendSharedTableActions('ordersMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('ordersMoreWrap',['navClearFilters']);
-    appendColumnActions('ordersMoreMenu','orders');
+    removeColumnActions('ordersMoreMenu');
     appendVfProfiles('ordersMoreMenu');
   }else if(tab==='koleksiyon'){
-    appendSharedTableActions('kolTableViewActions',['navColsBtn']);
     appendSharedTableActions('kolMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('kolMoreWrap',['navClearFilters']);
-    appendColumnActions('kolMoreMenu','koleksiyon');
+    removeColumnActions('kolMoreMenu');
     // Görünüm (Page Options) ve Filtre profilleri de ⋯ menüsünün içine girer.
     appendVfProfiles('kolMoreMenu');
   }else if(tab==='shipping'){
@@ -2230,7 +2205,7 @@ function fitActiveTableColumns(){
     [
       {kind:'best',k:'__bestPrice__',label:L('Best Price')},
       {kind:'confirmedName',k:'__confirmedName__',label:L('Conf. Manufacturer')},
-      {kind:'confirmedPrice',k:'__confirmedPrice__',label:L('Conf. FOB')},
+      {kind:'confirmedPrice',k:'__confirmedPrice__',label:L('Approved Mfr. Price')},
     ].forEach(descriptor=>{kolColWidths[descriptor.k]=kolDescriptorMinWidth(descriptor);});
     saveKolColState();
     renderKol();
@@ -3345,64 +3320,115 @@ function cpCycleImageSize(){
   openTableImageSizePopover(document.querySelector('#cpTable th[data-k="__picture"]'),'cp');
 }
 
+/* v7.0.229 — CP / Orders ana başlıkları ve varsayılan sütun sırası kullanıcı
+   talebiyle yeniden düzenlendi: Öncelik · PLM Numune · Marka Detayları · Model
+   Detayları · Sipariş Detayları · Lisans Detayları · Tarihler · Kumaş Detayları ·
+   Lojistik · Notlar · Checklist (dinamik). `group` değerleri kanonik başlık
+   kimliğidir; görünen TR/EN ad TABLE_COLUMN_GROUP_LABELS'tan okunur. */
 const CP_COLS = [
-  {k:'__picture', label:'Picture', type:'cpImage', weight:8, group:'Order Info'},
-  {k:'Priority', label:'Priority', type:'priority', weight:9, group:'Order Info'},
+  {k:'Priority', label:'Priority', type:'priority', weight:9, group:'Öncelik'},
   /* PLM numune talepleri (CoreNectum Requests) — salt okunur, satıra YAZILMAZ;
      değer plm-sample-requests.js'ten okunur (bkz. ensurePlmSampleAccessors). */
-  {k:'PLM Numune', label:'PLM Numune', type:'plmSample', weight:14, group:'Order Info'},
-  {k:'Season', label:'Season', type:'ro', weight:6, group:'Order Info'},
-  {k:'Country', label:'Country', type:'ro', weight:8, group:'Order Info'},
-  {k:'Merch Marka Yaş Grup Kod', label:'Yaş Grup', type:'ro', weight:8, group:'Order Info'},
-  {k:'Merch Alt Grup Kod', label:'Merch Alt Grup', type:'ro', weight:8, group:'Order Info'},
-  {k:'Buyer Grup (TR)', label:'Buying Group', type:'ro', weight:9, group:'Order Info'},
-  {k:'Buyer', label:'Buyer', type:'ro', weight:10, group:'Order Info'},
-  {k:'Line', label:'Line', type:'ro', weight:10, group:'Order Info'},
-  {k:'Manufacturer', label:'Manufacturer', type:'ro', weight:15, group:'Order Info'},
-  {k:'Sub-Manufacturer', label:'Sub-Mfr', type:'submfr', weight:15, group:'Order Info'},
-  {k:'Licensor', label:'Licensor', type:'licensor', weight:8, group:'Order Info'},
-  {k:'License', label:'License', type:'ro', weight:11, group:'Order Info'},
-  {k:'Category', label:'Category', type:'ro', weight:12, group:'Order Info'},
-  {k:'Special Code', label:'Sp. Code', type:'ro', weight:8, group:'Order Info'},
-  {k:'PLM ID', label:'PLM ID', type:'plm', weight:8, group:'Order Info'},
-  {k:'Model Name', label:'Model Name', type:'modelLink', weight:15, group:'Order Info'},
-  {k:'Ürün Tanım', label:'Ürün Tanım', type:'ro', weight:16, group:'Order Info'},
-  {k:'C.Code', label:'C.Code', type:'ro', weight:7, group:'Order Info'},
-  {k:'Colour', label:'Colour', type:'ro', weight:9, group:'Order Info'},
-  {k:'Order Code', label:'Order Code', type:'ordercode', weight:9, group:'Order Info'},
-  {k:'FOB ($)', label:'FOB ($)', type:'money', weight:7, group:'Order Info'},
-  {k:'Supp. FOB', label:'Supp. FOB', type:'moneyEdit', weight:7, group:'Order Info'},
-  {k:'OPD', label:'OPD', type:'date', weight:8, group:'Order Info'},
-  {k:'Ex-factory', label:'Ex-factory', type:'exfactory', weight:9, group:'Order Info'},
-  {k:'LT', label:'Ür. Sür.', type:'num', weight:6, group:'Order Info'},
-  {k:'HANDOVER Tarihi', label:'Handover', type:'date', weight:9, group:'Order Info'},
-  {k:'Retail Date', label:'Retail Date', type:'retailEdit', weight:9, group:'Order Info'},
-  {k:'Ex→Retail', label:'Ex→Retail', type:'num', weight:7, group:'Order Info'},
-  {k:'Buying Son Onay Tarihi', label:'Yükleme Onayı', type:'date', weight:9, group:'Order Info'},
-  {k:'In-Store (Model Budget)', label:'In-Store', type:'instoreEdit', weight:8, group:'Order Info'},
-  {k:'Order Quantity', label:'Order Qty', type:'int', weight:8, group:'Order Info'},
-  {k:'Shipment Quantity', label:'Shipment Qty', type:'int', weight:8, group:'Order Info'},
-  {k:'Remaining Units', label:'Remaining', type:'int', weight:8, group:'Order Info'},
-  {k:'%', label:'%', type:'pct', weight:5, group:'Order Info'},
-  {k:'Kumaş Kategorisi', label:'Kumaş Kategorisi', type:'ro', weight:12, group:'Kumaş'},
-  {k:'Kumaşçı Ülkesi', label:'Kumaşçı Ülkesi', type:'ro', weight:11, group:'Kumaş'},
-  {k:'Kumaşçı', label:'Kumaşçı', type:'ro', weight:14, group:'Kumaş'},
-  {k:'Kumaş Tipi', label:'Kumaş Tipi', type:'ro', weight:10, group:'Kumaş'},
-  {k:'İplik No', label:'İplik No', type:'ro', weight:8, group:'Kumaş'},
-  {k:'Gramaj', label:'Gramaj', type:'ro', weight:7, group:'Kumaş'},
-  {k:'Karışım', label:'Karışım', type:'ro', weight:12, group:'Kumaş'},
-  {k:'STATUS', label:'Status', type:'status', weight:12, group:'Lojistik'},
-  {k:'Ant. Arrival', label:'Ant. Arrival', type:'date', weight:8, group:'Lojistik'},
+  {k:'PLM Numune', label:'PLM Numune', type:'plmSample', weight:14, group:'PLM Numune'},
+  {k:'Merch Marka Yaş Grup Kod', label:'Yaş Grup', type:'ro', weight:8, group:'Marka Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
+  {k:'Merch Alt Grup Kod', label:'Merch Alt Grup', type:'ro', weight:8, group:'Marka Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
+  {k:'Buyer Grup (TR)', label:'Buying Group', type:'ro', weight:9, group:'Marka Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
+  {k:'Buyer', label:'Buyer', type:'ro', weight:10, group:'Marka Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
+  {k:'__picture', label:'Picture', type:'cpImage', weight:8, group:'Model Detayları'},
+  {k:'Line', label:'Line', type:'ro', weight:10, group:'Model Detayları'},
+  {k:'Ürün Tanım', label:'Ürün Tanım', type:'ro', weight:16, group:'Model Detayları'},
+  {k:'Category', label:'Category', type:'ro', weight:12, group:'Model Detayları'},
+  {k:'PLM ID', label:'PLM ID', type:'plm', weight:8, group:'Model Detayları'},
+  {k:'Model Name', label:'Model Name', type:'modelLink', weight:15, group:'Model Detayları'},
+  {k:'C.Code', label:'C.Code', type:'ro', weight:7, group:'Model Detayları'},
+  {k:'Colour', label:'Colour', type:'ro', weight:9, group:'Model Detayları'},
+  {k:'Special Code', label:'Sp. Code', type:'ro', weight:8, group:'Model Detayları'},
+  {k:'Season', label:'Season', type:'ro', weight:6, group:'Sipariş Detayları'},
+  {k:'Country', label:'Country', type:'ro', weight:8, group:'Sipariş Detayları'},
+  {k:'Manufacturer', label:'Manufacturer', type:'ro', weight:15, group:'Sipariş Detayları'},
+  {k:'Sub-Manufacturer', label:'Sub-Mfr', type:'submfr', weight:15, group:'Sipariş Detayları'},
+  {k:'Order Code', label:'Order Code', type:'ordercode', weight:9, group:'Sipariş Detayları'},
+  {k:'FOB ($)', label:'FOB ($)', type:'money', weight:7, group:'Sipariş Detayları'},
+  {k:'Supp. FOB', label:'Supp. FOB', type:'moneyEdit', weight:7, group:'Sipariş Detayları'},
+  {k:'Order Quantity', label:'Order Qty', type:'int', weight:8, group:'Sipariş Detayları'},
+  {k:'Shipment Quantity', label:'Shipment Qty', type:'int', weight:8, group:'Sipariş Detayları'},
+  {k:'Remaining Units', label:'Remaining', type:'int', weight:8, group:'Sipariş Detayları'},
+  {k:'%', label:'%', type:'pct', weight:5, group:'Sipariş Detayları'},
+  {k:'Licensor', label:'Licensor', type:'licensor', weight:8, group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
+  {k:'License', label:'License', type:'ro', weight:11, group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
+  /* ASAS'tan gelen ilk Ex-factory; Yükleme Termin (Ex-factory) elle revize
+     edilse bile bu sütun değişmez. Salt okunur. */
+  {k:'Original Ex-factory', label:'Original Ex-F.', type:'date', weight:9, group:'Tarihler'},
+  {k:'OPD', label:'OPD', type:'date', weight:8, group:'Tarihler'},
+  {k:'Ex-factory', label:'Ex-factory', type:'exfactory', weight:9, group:'Tarihler'},
+  {k:'LT', label:'Ür. Sür.', type:'num', weight:6, group:'Tarihler'},
+  {k:'Retail Date', label:'Retail Date', type:'retailEdit', weight:9, group:'Tarihler'},
+  {k:'Ex→Retail', label:'Ex→Retail', type:'num', weight:7, group:'Tarihler'},
+  {k:'In-Store (Model Budget)', label:'In-Store', type:'instoreEdit', weight:8, group:'Tarihler'},
+  {k:'Kumaş Tipi', label:'Kumaş Tipi', type:'ro', weight:10, group:'Kumaş Detayları'},
+  {k:'Kumaş Kategorisi', label:'Kumaş Kategorisi', type:'ro', weight:12, group:'Kumaş Detayları'},
+  {k:'Kumaşçı Ülkesi', label:'Kumaşçı Ülkesi', type:'ro', weight:11, group:'Kumaş Detayları'},
+  {k:'Kumaşçı', label:'Kumaşçı', type:'ro', weight:14, group:'Kumaş Detayları'},
+  {k:'Karışım', label:'Karışım', type:'ro', weight:12, group:'Kumaş Detayları'},
+  {k:'İplik No', label:'İplik No', type:'ro', weight:8, group:'Kumaş Detayları'},
+  {k:'Gramaj', label:'Gramaj', type:'ro', weight:7, group:'Kumaş Detayları'},
   {k:'Del. Type', label:'Del. Type', type:'deltype', weight:8, group:'Lojistik'},
+  {k:'STATUS', label:'Status', type:'status', weight:12, group:'Lojistik'},
+  {k:'Buying Son Onay Tarihi', label:'Yükleme Onayı', type:'date', weight:9, group:'Lojistik'},
+  {k:'HANDOVER Tarihi', label:'Handover', type:'date', weight:9, group:'Lojistik'},
+  {k:'Ant. Arrival', label:'Ant. Arrival', type:'date', weight:8, group:'Lojistik'},
   {k:'Notes', label:'Notes', type:'text', weight:16, group:'Notlar'},
   {k:'Ek Not', label:'Ek Notlar', type:'text', weight:16, group:'Notlar'},
 ];
-const ORDERS_STATUS_COL = {k:'Active/Inactive', label:'Order Status', type:'active', weight:8, group:'Order Info'};
-const ORDERS_COLS = [ORDERS_STATUS_COL, ...CP_COLS.map(c=>({...c}))];
+const ORDERS_STATUS_COL = {k:'Active/Inactive', label:'Order Status', type:'active', weight:8, group:'Sipariş Detayları'};
+// Orders, CP sütunlarının kopyasıdır; Sipariş Durumu Sipariş Detayları'nın başında durur.
+function ordersColumnsFromCp(cpCols){
+  const copied=(Array.isArray(cpCols)?cpCols:[]).map(c=>({...c}));
+  const at=copied.findIndex(c=>c.k==='Season');
+  copied.splice(at>=0?at:copied.length,0,ORDERS_STATUS_COL);
+  return copied;
+}
+const ORDERS_COLS = ordersColumnsFromCp(CP_COLS);
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
    okunurluğu bozulmaz). Renkler CSS'te .groupRow th[data-grp] ile uygulanır. */
-const GROUP_ACCENTS = {'ORDER INFO':'var(--acc)','ONAY':'var(--green)','LOJİSTİK':'var(--purple)','NOTLAR':'var(--ink2)','PRE-PROD':'var(--teal)','PRE-SHIP':'var(--acc)','KUMAŞ':'var(--orange)','Hesaplanan':'var(--pink,var(--purple))'}; // i18n-ignore — sütun grubu anahtarları (veri)
+const GROUP_ACCENTS = {'Öncelik':'var(--red,var(--acc))','PLM Numune':'var(--teal)','Marka Detayları':'var(--acc)','Model Detayları':'var(--acc)','Sipariş Detayları':'var(--green)','Lisans Detayları':'var(--purple)','Tarihler':'var(--teal)','Tarihler & Sevkiyat':'var(--teal)','Kumaş Detayları':'var(--orange)','Lojistik':'var(--purple)','Notlar':'var(--ink2)','Checklist':'var(--green)','Fiyatlandırma':'var(--green)','Endeksmatik & Avantaj':'var(--orange)','Hesaplanan':'var(--pink,var(--purple))'}; // i18n-ignore — sütun grubu anahtarları (veri)
+/* Tablo ana başlıklarının (sütun grubu) görünen TR/EN adları. `group` değeri
+   kimliktir; ekranda daima aktif dile göre bu katalogdan okunur. */
+const TABLE_COLUMN_GROUP_LABELS = Object.freeze({
+  'Öncelik':{tr:'Öncelik',en:'Priority'},
+  'PLM Numune':{tr:'PLM Numune',en:'PLM Sample'},
+  'Marka Detayları':{tr:'Marka Detayları',en:'Brand Details'}, // i18n-ignore — anahtar başlık kimliği; çift değer yanında
+  'Model Detayları':{tr:'Model Detayları',en:'Model Details'},
+  'Sipariş Detayları':{tr:'Sipariş Detayları',en:'Order Details'},
+  'Lisans Detayları':{tr:'Lisans Detayları',en:'License Details'}, // i18n-ignore — anahtar başlık kimliği; çift değer yanında
+  'Tarihler':{tr:'Tarihler',en:'Dates'},
+  'Tarihler & Sevkiyat':{tr:'Tarihler & Sevkiyat',en:'Dates & Shipment'},
+  'Kumaş Detayları':{tr:'Kumaş Detayları',en:'Fabric Details'},
+  'Lojistik':{tr:'Lojistik',en:'Logistics'},
+  'Notlar':{tr:'Notlar',en:'Notes'},
+  'Checklist':{tr:'Checklist',en:'Checklist'},
+  'Fiyatlandırma':{tr:'Fiyatlandırma',en:'Pricing'}, // i18n-ignore — anahtar başlık kimliği; çift değer yanında
+  'Endeksmatik & Avantaj':{tr:'Endeksmatik & Avantaj',en:'Endeksmatik & Advantage'},
+});
+/* v7.0.229 öncesi başlık adları. Kullanıcının daha önce bu başlıklara bağladığı
+   veritabanı / not / hesaplanan sütunları yeni karşılık gelen başlığa katılır;
+   ikinci bir eski bant açılmaz. */
+const LEGACY_COLUMN_GROUP_ALIASES = Object.freeze({
+  'order info':'Sipariş Detayları','kumaş':'Kumaş Detayları','fabric':'Kumaş Detayları', // i18n-ignore — eski başlık kimlikleri
+  'notes':'Notlar','logistics':'Lojistik', // i18n-ignore — eski başlık kimlikleri
+});
+function canonicalColumnGroup(value){
+  const name=String(value==null?'':value).trim();
+  if(!name)return name;
+  // 'Order Info' TR yerelinde 'order ınfo' olur; iki küçültme de denenir.
+  return LEGACY_COLUMN_GROUP_ALIASES[name.toLowerCase()]||LEGACY_COLUMN_GROUP_ALIASES[name.toLocaleLowerCase('tr-TR')]||name;
+}
+function tableColumnGroupLabel(group){
+  const name=canonicalColumnGroup(group),entry=TABLE_COLUMN_GROUP_LABELS[name];
+  if(entry)return appLang==='en'?entry.en:entry.tr;
+  return L(name);
+}
 
 function initColState(cols){ return { order: cols.map(c=>c.k), hidden:new Set(), widthPx:{} }; }
 const colmgr = { cp: initColState(CP_COLS), orders:initColState(ORDERS_COLS), ship: initColState(SHIP_COLS) };
@@ -3463,17 +3489,17 @@ function placeColumnInGroup(tableKey,key,group){
   if(lastIndex<0){ cs.order.push(key); return; }
   cs.order.splice(lastIndex+(current>=0&&current<=lastIndex?0:1),0,key);
 }
-window.BLColumnGroups={ list:existingColumnGroups, placeInGroup:placeColumnInGroup, key:groupKey };
+window.BLColumnGroups={ list:existingColumnGroups, placeInGroup:placeColumnInGroup, key:groupKey, canonical:canonicalColumnGroup, label:tableColumnGroupLabel };
 
 let CP_MODEL_COLUMN_DEFS=[];
 function syncCpModelColumns(defs){
   const clean=(Array.isArray(defs)?defs:[]).filter(d=>d&&d.header&&d.label).map(d=>({...d}));
   // Bir önceki eşitlemedeki gruplar: sütun YALNIZ yeniyken ya da grubu
   // değiştiğinde taşınır; her eşitlemede taşımak elle sürüklenen sırayı bozardı.
-  const previousGroup=new Map(CP_MODEL_COLUMN_DEFS.map(d=>[d.header,d.group||DEFAULT_MODEL_COLUMN_GROUP]));
+  const previousGroup=new Map(CP_MODEL_COLUMN_DEFS.map(d=>[d.header,canonicalColumnGroup(d.group)||DEFAULT_MODEL_COLUMN_GROUP]));
   CP_MODEL_COLUMN_DEFS=clean;
   const base=CP_COLS.filter(c=>!c.modelCustom);
-  const dynamic=clean.map(d=>({k:d.header,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'ro',weight:10,group:String(d.group||'').trim()||DEFAULT_MODEL_COLUMN_GROUP,modelCustom:true,modelColumnId:d.id,connectionId:d.connectionId,role:d.role,sourceTable:d.table,sourceName:d.name,dataType:d.dataType||d.data_type,sourceMetadata:d.sourceMetadata||d.metadata||d.dbMetadata,percentageScale:d.percentageScale||d.scale}));
+  const dynamic=clean.map(d=>({k:d.header,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'ro',weight:10,group:canonicalColumnGroup(d.group)||DEFAULT_MODEL_COLUMN_GROUP,modelCustom:true,modelColumnId:d.id,connectionId:d.connectionId,role:d.role,sourceTable:d.table,sourceName:d.name,dataType:d.dataType||d.data_type,sourceMetadata:d.sourceMetadata||d.metadata||d.dbMetadata,percentageScale:d.percentageScale||d.scale}));
   CP_COLS.splice(0,CP_COLS.length,...base,...dynamic);
   invalidateColumnIndex('cp');
   const cs=colmgr.cp; const valid=CP_COLS.map(c=>c.k);
@@ -3484,6 +3510,7 @@ function syncCpModelColumns(defs){
     const groupChanged=previousGroup.has(c.k)&&groupKey(previousGroup.get(c.k)||'')!==groupKey(c.group);
     if(isNew||groupChanged)placeColumnInGroup('cp',c.k,c.group);
   });
+  regroupDynamicColumnsAfterLayoutReset('cp');
   Object.keys(state.colFilters.cp||{}).forEach(k=>{if(!valid.includes(k))delete state.colFilters.cp[k];});
   // v7.28: CP_COLS yeniden kurulduğu için kullanıcının hesaplanan sütunları
   // yeniden eklenir; aksi halde Database sütunu ekleyince formül sütunları
@@ -3505,11 +3532,12 @@ let CP_NOTE_COLUMN_DEFS_REVISION=0;
 function syncCpNoteColumns(defs){
   CP_NOTE_COLUMN_DEFS=(Array.isArray(defs)?defs:[]).filter(d=>d&&d.id&&d.label).map(d=>({...d}));
   const base=CP_COLS.filter(c=>!c.noteCustom);
-  const dynamic=CP_NOTE_COLUMN_DEFS.map(d=>({k:d.id,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'text',weight:12,group:String(d.group||'').trim()||(appLang==='en'?'Notes':'Notlar'),noteCustom:true,noteColumnId:d.id}));
+  const dynamic=CP_NOTE_COLUMN_DEFS.map(d=>({k:d.id,label:d.label,labelEn:d.labelEn||'',labelTr:d.labelTr||'',type:'text',weight:12,group:canonicalColumnGroup(d.group)||'Notlar',noteCustom:true,noteColumnId:d.id}));
   CP_COLS.splice(0,CP_COLS.length,...base,...dynamic);
   invalidateColumnIndex('cp');
   const cs=colmgr.cp; const valid=CP_COLS.map(c=>c.k);
   restoreLateManagedColumnState('cp');
+  regroupDynamicColumnsAfterLayoutReset('cp');
   Object.keys(state.colFilters.cp||{}).forEach(k=>{if(!valid.includes(k))delete state.colFilters.cp[k];});
   window.BLFormulaColumns?.syncColumns('cp');
   syncOrdersColumnsFromCp();
@@ -3573,11 +3601,12 @@ function syncOrdersColumnsFromCp(){
   // Siparişler tablosu CP sütunlarının kopyasıdır; ancak hesaplanan sütunlar
   // tabloya ÖZELDİR (CP'nin formülü Siparişler'e taşınmaz), bu yüzden kopyadan
   // çıkarılıp Siparişler'in kendi tanımları eklenir.
-  const rebuilt=[ORDERS_STATUS_COL,...CP_COLS.filter(c=>!c.formulaCustom).map(c=>({...c}))];
+  const rebuilt=ordersColumnsFromCp(CP_COLS.filter(c=>!c.formulaCustom));
   ORDERS_COLS.splice(0,ORDERS_COLS.length,...rebuilt);
   invalidateColumnIndex('orders');
   const cs=colmgr.orders,valid=ORDERS_COLS.map(c=>c.k);
   restoreLateManagedColumnState('orders');
+  regroupDynamicColumnsAfterLayoutReset('orders');
   Object.keys(state.colFilters.orders||{}).forEach(k=>{if(!valid.includes(k))delete state.colFilters.orders[k];});
   window.BLFormulaColumns?.syncColumns('orders');
 }
@@ -3728,9 +3757,38 @@ function saveAutoTableColumnState(){
     BLStorage.setItem(AUTO_TABLE_COL_STATE_KEY,JSON.stringify(payload));
   }catch(e){}
 }
+/* v7.0.229 — CP / Orders ana başlıkları yeniden düzenlendi. Bu sürümle her
+   kullanıcının kayıtlı SÜTUN SIRASI bir kez yeni varsayılana döner; gizli
+   sütunlar, genişlikler ve kullanıcının eklediği (veritabanı / not /
+   hesaplanan / checklist) sütunlar korunur. Eklenen sütunlar sıranın sonuna
+   taşınır; kanonik bir başlığa bağlı olanlar ilk eşitlemede o başlığa katılır. */
+const CP_ORDERS_COLUMN_LAYOUT_VERSION=20261004;
+const COLUMN_LAYOUT_REGROUP=new Set();
+function migrateCpOrdersColumnLayout(saved){
+  if(!saved||typeof saved!=='object')return false;
+  const meta=saved._layout&&typeof saved._layout==='object'&&!Array.isArray(saved._layout)?saved._layout:{};
+  if(Number(meta.cpOrders)>=CP_ORDERS_COLUMN_LAYOUT_VERSION)return false;
+  ['cp','orders'].forEach(tableKey=>{
+    const entry=saved[tableKey];
+    if(!entry||typeof entry!=='object'||!Array.isArray(entry.order))return;
+    const base=(COLS_BY_TABLE[tableKey]||[]).map(c=>c.k),baseSet=new Set(base);
+    const added=[...new Set(entry.order.filter(key=>key&&!baseSet.has(key)))];
+    entry.order=[...base,...added];
+    COLUMN_LAYOUT_REGROUP.add(tableKey);
+  });
+  saved._layout={...meta,cpOrders:CP_ORDERS_COLUMN_LAYOUT_VERSION};
+  return true;
+}
+function regroupDynamicColumnsAfterLayoutReset(tableKey){
+  if(!COLUMN_LAYOUT_REGROUP.has(tableKey))return;
+  const cols=COLS_BY_TABLE[tableKey]||[];
+  const baseGroups=new Set(cols.filter(c=>!c.modelCustom&&!c.noteCustom&&!c.formulaCustom&&!c.checklistSupplierColumn).map(c=>groupKey(c.group)));
+  cols.filter(c=>(c.modelCustom||c.noteCustom)&&baseGroups.has(groupKey(c.group))).forEach(c=>placeColumnInGroup(tableKey,c.k,c.group));
+}
 function loadAutoTableColumnState(){
   try{
     const saved=autoTableColumnStateSnapshot=readAutoTableColumnState();
+    if(migrateCpOrdersColumnLayout(saved))writeAutoTableColumnStateSnapshot();
     Object.keys(COLS_BY_TABLE).forEach(t=>{
       if(!saved[t]) return;
       const valid=(COLS_BY_TABLE[t]||[]).map(c=>c.k);
@@ -3860,9 +3918,18 @@ function tableViewDefaultExtendedKeys(tableKey){
   scored.slice(0,target-focus.length).forEach(item=>selected.add(item.key));
   return all.filter(key=>selected.has(key));
 }
+// Tümü artık da düzenlenebilir: hariç tutulan sütunlar ayrı tutulur ki sonradan
+// eklenen sütunlar Tümü'ye kendiliğinden girsin.
+function tableViewAllHiddenKeys(tableKey){
+  const page=tableViewPresetStored()[tableKey];
+  return new Set(page&&typeof page==='object'&&!Array.isArray(page)&&Array.isArray(page.allHidden)?page.allHidden:[]);
+}
 function tableViewPresetKeys(tableKey,preset){
   const all=tableViewAllKeys(tableKey);
-  if(preset==='all')return all;
+  if(preset==='all'){
+    const excluded=tableViewAllHiddenKeys(tableKey),keys=all.filter(key=>!excluded.has(key));
+    return keys.length?keys:all;
+  }
   const fallback=preset==='focus'?tableViewFocusKeys(tableKey):preset==='extended'?tableViewDefaultExtendedKeys(tableKey):[];
   const saved=tableViewSavedPresetKeys(tableKey,preset);
   if(!Array.isArray(saved))return fallback;
@@ -3870,32 +3937,98 @@ function tableViewPresetKeys(tableKey,preset){
   return valid.length?valid:fallback;
 }
 function saveTableViewPreset(tableKey,preset,keys){
-  if(!TABLE_VIEW_EDITABLE_PRESETS.includes(preset))return false;
+  if(!TABLE_VIEW_EDITABLE_PRESETS.includes(preset)&&preset!=='all')return false;
   const all=tableViewAllKeys(tableKey),valid=[...new Set(Array.isArray(keys)?keys:[])].filter(key=>all.includes(key));
   if(!valid.length)return false;
   const stored=tableViewPresetStored(),current=stored[tableKey];
   const page=Array.isArray(current)?{focus:[...new Set(current)].filter(key=>all.includes(key))}:current&&typeof current==='object'?{...current}:{};
-  page[preset]=valid;stored[tableKey]=page;
+  if(preset==='all'){const chosen=new Set(valid);page.allHidden=all.filter(key=>!chosen.has(key));if(!page.allHidden.length)delete page.allHidden;}
+  else page[preset]=valid;
+  stored[tableKey]=page;
   try{BLStorage.setItem(TABLE_VIEW_FOCUS_KEY,JSON.stringify(stored));return true;}catch(_){return false;}
-}
-function tableViewFocusCatalog(tableKey){
-  const all=tableViewAllKeys(tableKey);
-  return all.map(key=>({key,label:tableViewColumnMeta(tableKey,key)?.label||key}));
 }
 function tableViewHiddenKeys(tableKey){
   if(tableKey==='koleksiyon')return new Set([...kolHiddenCols,...(kolPictureHidden?['__picture__']:[])]);
   return new Set(colmgr[tableKey]?.hidden||[]);
 }
+/* v7.0.229 — ALANLAR (ana başlık) katmanı. Odak / Genişletilmiş / Tümü preset
+   tanımlarına DOKUNMAZ; her tablo için ana başlık bazında kalıcı bir üst katman
+   tutar: 'all' (başlığın tüm sütunları açık) veya 'hidden' (başlık tamamen
+   kapalı). Katman yoksa başlık aktif presetin seçimini izler. Örnek: Odak'ta
+   Kumaş yoksa "Kumaş: Tümü" yapılabilir; Odak tanımı aynı kalır. */
+const TABLE_GROUP_OVERRIDES_KEY = 'lcw.tableGroupOverrides.v1';
+function tableGroupOverridesStored(){
+  try{
+    const value=JSON.parse(BLStorage.getItem(TABLE_GROUP_OVERRIDES_KEY)||'null');
+    return value&&typeof value==='object'&&!Array.isArray(value)?value:{};
+  }catch(_){return {};}
+}
+function tableGroupOverrides(tableKey){
+  const page=tableGroupOverridesStored()[tableKey],out={};
+  if(page&&typeof page==='object'&&!Array.isArray(page))Object.entries(page).forEach(([group,mode])=>{
+    if(mode==='all'||mode==='hidden')out[canonicalColumnGroup(group)]=mode;
+  });
+  return out;
+}
+function saveTableGroupOverride(tableKey,group,mode){
+  const stored=tableGroupOverridesStored(),page={...tableGroupOverrides(tableKey)},id=canonicalColumnGroup(group);
+  if(mode==='all'||mode==='hidden')page[id]=mode;else delete page[id];
+  if(Object.keys(page).length)stored[tableKey]=page;else delete stored[tableKey];
+  try{BLStorage.setItem(TABLE_GROUP_OVERRIDES_KEY,JSON.stringify(stored));return true;}catch(_){return false;}
+}
+function tableViewColumnGroup(tableKey,key,orderKeys){
+  if(tableKey==='koleksiyon')return kolColumnGroupFor(key,orderKeys);
+  return canonicalColumnGroup((COLS_BY_TABLE[tableKey]||[]).find(column=>column.k===key)?.group)||'';
+}
+// Tablonun ana başlıkları, ekrandaki sütun sırasıyla. Boş başlık (ör. hiç
+// checklist maddesi yoksa Checklist) listede yer almaz.
+function tableViewGroupCatalog(tableKey){
+  const all=tableViewAllKeys(tableKey),allSet=new Set(all);
+  let ordered;
+  if(tableKey==='koleksiyon'){
+    // Görsel sabit sol sütundur; menüde başlık sırasını değil, Model Detayları'nın
+    // ilk sütunu olarak yerini belirler.
+    const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(key=>allSet.has(key));
+    const modelAt=order.findIndex(key=>kolColumnGroupFor(key,order)==='Model Detayları');
+    ordered=order.slice();
+    if(allSet.has('__picture__'))ordered.splice(modelAt>=0?modelAt:0,0,'__picture__');
+    all.forEach(key=>{if(!ordered.includes(key))ordered.push(key);});
+  }else{
+    ordered=normalizedColumnOrder(tableKey,colmgr[tableKey]?.order).filter(key=>allSet.has(key));
+  }
+  const kolOrder=tableKey==='koleksiyon'?ordered.filter(key=>key!=='__picture__'):null;
+  const groups=new Map();
+  ordered.forEach(key=>{
+    const group=tableViewColumnGroup(tableKey,key,kolOrder);if(!group)return;
+    if(!groups.has(group))groups.set(group,{group,label:tableColumnGroupLabel(group),keys:[]});
+    groups.get(group).keys.push(key);
+  });
+  return [...groups.values()];
+}
+function tableViewApplyGroupOverrides(tableKey,keys){
+  const overrides=tableGroupOverrides(tableKey),visible=new Set(keys);
+  if(!Object.keys(overrides).length)return [...visible];
+  tableViewGroupCatalog(tableKey).forEach(entry=>{
+    const mode=overrides[entry.group];
+    if(mode==='all')entry.keys.forEach(key=>visible.add(key));
+    else if(mode==='hidden')entry.keys.forEach(key=>visible.delete(key));
+  });
+  return tableViewAllKeys(tableKey).filter(key=>visible.has(key));
+}
+// Presetin, Alanlar katmanı uygulanmış görünür sütunları.
+function tableViewEffectiveKeys(tableKey,preset){
+  return tableViewApplyGroupOverrides(tableKey,tableViewPresetKeys(tableKey,preset));
+}
 function tableViewPresetState(tableKey){
   const all=tableViewAllKeys(tableKey),hidden=tableViewHiddenKeys(tableKey);
-  if(!all.some(key=>hidden.has(key)))return 'all';
   const visible=new Set(all.filter(key=>!hidden.has(key)));
-  const matches=TABLE_VIEW_EDITABLE_PRESETS.filter(preset=>{
-    const keys=new Set(tableViewPresetKeys(tableKey,preset));
+  const matches=['focus','extended','all'].filter(preset=>{
+    const keys=new Set(tableViewEffectiveKeys(tableKey,preset));
     return keys.size===visible.size&&[...keys].every(key=>visible.has(key));
   });
   const preferred=tableViewLastAppliedPreset[tableKey];
   if(preferred&&matches.includes(preferred))return preferred;
+  if(matches.includes('all'))return 'all';
   return matches[0]||'custom';
 }
 function renderTableViewContext(tableKey){
@@ -3906,12 +4039,19 @@ function renderTableViewContext(tableKey){
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
   root.querySelectorAll('[data-partial-view-toggle]').forEach(button=>button.setAttribute('aria-pressed',String(partialViewEnabled(button.dataset.partialViewToggle))));
+  const fieldsButton=root.querySelector('[data-table-fields]');
+  if(fieldsButton){
+    const count=Object.keys(tableGroupOverrides(tableKey)).length;
+    fieldsButton.classList.toggle('hasOverrides',count>0);
+    const badge=fieldsButton.querySelector('.tableFieldsBadge');
+    if(badge){badge.textContent=count?String(count):'';badge.hidden=!count;}
+  }
+  const menu=document.getElementById('_tableFieldsMenu');
+  if(menu&&menu.dataset.tableKey===tableKey)renderTableFieldsMenu(menu,tableKey);
 }
-function applyTableViewPreset(tableKey,preset){
-  const all=tableViewAllKeys(tableKey);if(!all.length||!TABLE_VIEW_PRESETS[tableKey]||!['focus','extended','all'].includes(preset))return false;
-  const visible=new Set(tableViewPresetKeys(tableKey,preset));
-  if(!visible.size)return false;
-  tableViewLastAppliedPreset[tableKey]=preset;
+// Görünür sütun setini tablonun kendi görünürlük yöneticisine yazar.
+function tableViewApplyVisibility(tableKey,visible){
+  const all=tableViewAllKeys(tableKey);
   if(tableKey==='koleksiyon'){
     kolPictureHidden=!visible.has('__picture__');
     kolHiddenCols = new Set(all.filter(key=>key!=='__picture__'&&!visible.has(key)));
@@ -3925,6 +4065,274 @@ function applyTableViewPreset(tableKey,preset){
   else renderTableViewContext(tableKey);
   return true;
 }
+function applyTableViewPreset(tableKey,preset){
+  const all=tableViewAllKeys(tableKey);if(!all.length||!TABLE_VIEW_PRESETS[tableKey]||!['focus','extended','all'].includes(preset))return false;
+  const visible=new Set(tableViewEffectiveKeys(tableKey,preset));
+  if(!visible.size)return false;
+  tableViewLastAppliedPreset[tableKey]=preset;
+  return tableViewApplyVisibility(tableKey,visible);
+}
+// Alanlar menüsündeki başlık durumu: 'preset' (aktif görünümü izler), 'all', 'hidden'.
+function tableGroupMode(tableKey,group){return tableGroupOverrides(tableKey)[group]||'preset';}
+function tableViewBasePreset(tableKey){
+  const state=tableViewPresetState(tableKey);
+  if(state!=='custom')return state;
+  return tableViewLastAppliedPreset[tableKey]||'custom';
+}
+function tableViewPresetName(preset){
+  if(preset==='focus')return appLang==='en'?'Focus':'Odak';
+  if(preset==='extended')return appLang==='en'?'Extended':'Genişletilmiş';
+  if(preset==='all')return appLang==='en'?'All':'Tümü';
+  return appLang==='en'?'Custom':'Özel';
+}
+function tableGroupModeLabel(tableKey,group){
+  const mode=tableGroupMode(tableKey,group);
+  if(mode==='all')return appLang==='en'?'All':'Tümü';
+  if(mode==='hidden')return appLang==='en'?'Hidden':'Gizli';
+  return tableViewPresetName(tableViewBasePreset(tableKey));
+}
+// Döngü: Preset → Tümü → Gizli → Preset. Aktif görünüm zaten Tümü ise ara adım atlanır.
+function tableGroupNextMode(tableKey,group){
+  const mode=tableGroupMode(tableKey,group),baseIsAll=tableViewBasePreset(tableKey)==='all';
+  if(mode==='preset')return baseIsAll?'hidden':'all';
+  if(mode==='all')return 'hidden';
+  return 'preset';
+}
+function cycleTableGroupMode(tableKey,group){
+  const entry=tableViewGroupCatalog(tableKey).find(item=>item.group===group);if(!entry)return false;
+  const next=tableGroupNextMode(tableKey,group),base=tableViewBasePreset(tableKey);
+  const all=tableViewAllKeys(tableKey),hidden=tableViewHiddenKeys(tableKey);
+  const visible=new Set(all.filter(key=>!hidden.has(key)));
+  // Yalnız bu başlığın sütunları değişir; diğer başlıklardaki elle yapılmış ayarlar korunur.
+  const presetKeys=new Set(base==='custom'?[...visible]:tableViewPresetKeys(tableKey,base));
+  entry.keys.forEach(key=>{
+    const show=next==='all'?true:next==='hidden'?false:presetKeys.has(key);
+    if(show)visible.add(key);else visible.delete(key);
+  });
+  if(!visible.size){showToast(appLang==='en'?'At least one field must stay visible.':'En az bir alan görünür kalmalı.');return false;}
+  saveTableGroupOverride(tableKey,group,next==='preset'?'':next);
+  if(base!=='custom')tableViewLastAppliedPreset[tableKey]=base;
+  return tableViewApplyVisibility(tableKey,visible);
+}
+function resetTableGroupOverrides(tableKey){
+  // Aktif görünüm katman temizlenmeden önce okunur; sonra yalnız preset uygulanır.
+  const base=tableViewBasePreset(tableKey);
+  Object.keys(tableGroupOverrides(tableKey)).forEach(group=>saveTableGroupOverride(tableKey,group,''));
+  if(base!=='custom')return applyTableViewPreset(tableKey,base);
+  renderTableViewContext(tableKey);return true;
+}
+/* v7.0.229 — ALANLAR ÇEKMECESİ. Eski "Sütunlar" paneli ve ayrı Odak/Genişletilmiş
+   editörü yerine tek yer: ana başlıklar açılır-kapanır, altında sütunlar listelenir.
+   Sağdaki Odak / Genişletilmiş / Tümü tikleri sütunun hangi görünümde yer aldığını
+   belirler (preset tanımı); başlıktaki mod düğmesi Tümü / Gizli katmanını döndürür.
+   Sütunlar başlık içinde sürüklenerek sıralanır; ad / formül düzenleme, silme ve
+   sütun ekleme komutları da buradadır. */
+const TABLE_FIELDS_PRESETS = Object.freeze(['focus','extended','all']);
+const tableFieldsExpanded=Object.create(null);
+let tableFieldsDragKey=null;
+function tableFieldsRerender(tableKey){
+  const info=activeTableInfo();
+  if(info?.tableKey===tableKey&&typeof info.rerender==='function')info.rerender();
+  else if(tableKey==='koleksiyon')renderKol();
+  else if(tableKey==='cp')renderCP();
+  else if(tableKey==='orders')renderOrders();
+  const menu=document.getElementById('_tableFieldsMenu');
+  if(menu&&menu.dataset.tableKey===tableKey)renderTableFieldsMenu(menu,tableKey);
+}
+function tableFieldsColumn(tableKey,key){
+  if(tableKey==='koleksiyon'){
+    if(key==='__picture__')return {key,label:L('Picture'),kind:'picture',fixed:true};
+    if(KOL_SYNTHETIC_COL_META[key])return {key,label:L(KOL_SYNTHETIC_COL_META[key].label),kind:'synthetic'};
+    const col=kolColDefs().find(c=>c.k===key);if(!col)return {key,label:key,kind:'unknown'};
+    const custom=kolIsCustomCol(key);
+    return {key,col,label:kolColumnLabel(col),kind:custom?(col.checklist?'checklist':'custom'):'system',canRename:custom?kolWorkspaceCanEdit:true,canDelete:custom&&kolWorkspaceCanEdit,userLabel:!custom&&kolColumnHasUserLabel(col)};
+  }
+  const col=(COLS_BY_TABLE[tableKey]||[]).find(c=>c.k===key);if(!col)return {key,label:key,kind:'unknown'};
+  const kind=col.formulaCustom?'formula':col.modelCustom?'model':col.noteCustom?'note':col.checklistSupplierColumn?'cpChecklist':'system';
+  const labelEditable=!!window.BLColumnNames&&BLColumnNames.TABLES.includes(tableKey);
+  return {key,col,label:tableColumnLabel(tableKey,col),kind,fixed:col.type==='cpImage',canRename:kind==='system'?labelEditable:kind!=='cpChecklist',canDelete:['formula','model','note'].includes(kind),userLabel:kind==='system'&&tableColumnHasUserLabel(tableKey,col)};
+}
+function tableFieldsRenameColumn(tableKey,key){
+  const meta=tableFieldsColumn(tableKey,key),done=()=>tableFieldsRerender(tableKey);
+  if(!meta.col||!meta.canRename)return;
+  if(tableKey==='koleksiyon'){
+    if(meta.kind==='system')void editSystemColumnLabel('koleksiyon',meta.col,{defaultLabel:lang=>kolColumnSystemLabelIn(meta.col,lang),onChange:done});
+    else void kolRenameCustomColumn(key,done);
+    return;
+  }
+  if(meta.kind==='formula'){window.BLFormulaColumns?.open(tableKey,meta.col.formulaId,done);return;}
+  if(meta.kind==='model'){openCpModelColumnModal(meta.col.modelColumnId,done);return;}
+  if(meta.kind==='note'){void renameCpNoteColumn(meta.col.noteColumnId,done);return;}
+  void editSystemColumnLabel(tableKey,meta.col,{onChange:done});
+}
+function tableFieldsDeleteColumn(tableKey,key){
+  const meta=tableFieldsColumn(tableKey,key),done=()=>tableFieldsRerender(tableKey);
+  if(!meta.col||!meta.canDelete)return;
+  if(tableKey==='koleksiyon'){kolRemoveCustomColumn(key,done);return;}
+  if(meta.kind==='formula')removeFormulaColumn(tableKey,meta.col.formulaId,done);
+  else if(meta.kind==='model')void removeCpModelColumn(meta.col.modelColumnId,done);
+  else if(meta.kind==='note')void removeCpNoteColumn(meta.col.noteColumnId,done);
+}
+// Sütun yalnız kendi başlığı içinde taşınır; bant bölünmez.
+function tableFieldsMoveColumn(tableKey,key,targetKey,after){
+  if(!key||!targetKey||key===targetKey)return false;
+  if(tableKey==='koleksiyon'){
+    if(key==='__picture__'||targetKey==='__picture__')return false;
+    const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
+    const at=order.indexOf(targetKey);if(at<0)return false;
+    order.splice(after?at+1:at,0,key);
+    kolColOrder=kolNormalizeDisplayOrder(order);saveKolColState();
+  }else{
+    const cs=colmgr[tableKey];if(!cs)return false;
+    const order=normalizedColumnOrder(tableKey,cs.order).filter(item=>item!==key);
+    const at=order.indexOf(targetKey);if(at<0)return false;
+    order.splice(after?at+1:at,0,key);
+    cs.order=order;saveAutoTableColumnState();
+  }
+  tableFieldsRerender(tableKey);
+  return true;
+}
+// Görünüm tiki preset tanımını değiştirir; o görünüm açıksa tablo hemen güncellenir.
+function tableFieldsSetPresetKeys(tableKey,preset,keys,checked){
+  const current=new Set(tableViewPresetKeys(tableKey,preset));
+  keys.forEach(key=>{if(checked)current.add(key);else current.delete(key);});
+  if(!current.size){showToast(appLang==='en'?'Each view needs at least one column.':'Her görünümde en az bir sütun kalmalı.');return false;}
+  const ordered=tableViewAllKeys(tableKey).filter(key=>current.has(key));
+  const base=tableViewBasePreset(tableKey);
+  if(!saveTableViewPreset(tableKey,preset,ordered))return false;
+  if(base===preset)applyTableViewPreset(tableKey,preset);
+  else{const menu=document.getElementById('_tableFieldsMenu');if(menu&&menu.dataset.tableKey===tableKey)renderTableFieldsMenu(menu,tableKey);}
+  return true;
+}
+function tableFieldsCheckbox(attrs,state,label){
+  return `<span class="tableFieldsCheck"><input type="checkbox" ${attrs} ${state==='all'?'checked':''} ${state==='some'?'data-indeterminate="1"':''} aria-label="${escapeHtml(label)}"></span>`;
+}
+function renderTableFieldsMenu(menu,tableKey){
+  const en=appLang==='en';
+  const hidden=tableViewHiddenKeys(tableKey),catalog=tableViewGroupCatalog(tableKey),overrides=tableGroupOverrides(tableKey);
+  const base=tableViewBasePreset(tableKey),expanded=tableFieldsExpanded[tableKey]||(tableFieldsExpanded[tableKey]=new Set());
+  const presetSets=Object.fromEntries(TABLE_FIELDS_PRESETS.map(preset=>[preset,new Set(tableViewPresetKeys(tableKey,preset))]));
+  const presetHead=TABLE_FIELDS_PRESETS.map(preset=>`<span class="tableFieldsPresetHead${base===preset?' isActive':''}">${escapeHtml(tableViewPresetName(preset))}</span>`).join('');
+  const listScroll=menu.querySelector('.tableFieldsList')?.scrollTop||0;
+  const groupsHtml=catalog.map(entry=>{
+    const mode=tableGroupMode(tableKey,entry.group),shown=entry.keys.filter(key=>!hidden.has(key)).length,open=expanded.has(entry.group);
+    const modeLabel=tableGroupModeLabel(tableKey,entry.group);
+    const nextMode=tableGroupNextMode(tableKey,entry.group);
+    const nextLabel=nextMode==='all'?(en?'All':'Tümü'):nextMode==='hidden'?(en?'Hidden':'Gizli'):tableViewPresetName(base);
+    const modeTitle=en?`${entry.label}: ${modeLabel} · Click: ${nextLabel} (does not change the view definitions)`:`${entry.label}: ${modeLabel} · Tıkla: ${nextLabel} (görünüm tanımlarını değiştirmez)`;
+    const groupChecks=TABLE_FIELDS_PRESETS.map(preset=>{
+      const n=entry.keys.filter(key=>presetSets[preset].has(key)).length;
+      const state=n===0?'none':n===entry.keys.length?'all':'some';
+      return tableFieldsCheckbox(`data-table-fields-group-preset="${preset}" data-group="${escapeHtml(entry.group)}"`,state,`${entry.label} · ${tableViewPresetName(preset)}`);
+    }).join('');
+    const columns=open?entry.keys.map(key=>{
+      const meta=tableFieldsColumn(tableKey,key);
+      const actions=[
+        meta.kind==='formula'?`<button type="button" class="tableFieldsIcon isFx" data-table-fields-formula="${escapeHtml(key)}" title="${escapeHtml(formulaColumnTooltip(meta.col,tableKey))}" aria-label="${escapeHtml(en?'Edit formula':'Formülü düzenle')}">fx</button>`:'',
+        meta.canRename?`<button type="button" class="tableFieldsIcon" data-table-fields-rename="${escapeHtml(key)}" title="${escapeHtml(en?'Rename column':'Sütun adını düzenle')}" aria-label="${escapeHtml(en?'Rename column':'Sütun adını düzenle')}"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></button>`:'',
+        meta.canDelete?`<button type="button" class="tableFieldsIcon isDanger" data-table-fields-delete="${escapeHtml(key)}" title="${escapeHtml(en?'Delete column':'Sütunu sil')}" aria-label="${escapeHtml(en?'Delete column':'Sütunu sil')}"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button>`:'',
+      ].join('');
+      const checks=TABLE_FIELDS_PRESETS.map(preset=>tableFieldsCheckbox(`data-table-fields-preset="${preset}" data-key="${escapeHtml(key)}"`,presetSets[preset].has(key)?'all':'none',`${meta.label} · ${tableViewPresetName(preset)}`)).join('');
+      const draggable=!meta.fixed&&entry.keys.length>1;
+      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
+    }).join(''):'';
+    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--acc)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
+  }).join('');
+  const addButtons=[];
+  if(tableKey==='cp'||tableKey==='orders'){
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
+    if(FORMULA_COLUMN_TABLES.has(tableKey))addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="calc">+ ${escapeHtml(en?'Add Calculated Column':'Hesaplanan Sütun Ekle')}</button>`);
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="note">+ ${escapeHtml(en?'Add Note Column':'Not Sütunu Ekle')}</button>`);
+  }else if(tableKey==='koleksiyon'&&kolWorkspaceCanEdit){
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-checklist>+ ${escapeHtml(en?'Add checklist item':'Checklist maddesi ekle')}</button>`);
+  }
+  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
+  menu.querySelectorAll('input[data-indeterminate]').forEach(input=>{input.indeterminate=true;});
+  const list=menu.querySelector('.tableFieldsList');if(list)list.scrollTop=listScroll;
+  menu.querySelector('[data-table-fields-close]')?.addEventListener('click',()=>closeTableFieldsMenu());
+  menu.querySelectorAll('[data-table-fields-toggle]').forEach(button=>button.addEventListener('click',()=>{
+    const group=button.dataset.tableFieldsToggle;
+    if(expanded.has(group))expanded.delete(group);else expanded.add(group);
+    renderTableFieldsMenu(menu,tableKey);
+    menu.querySelector(`[data-table-fields-toggle="${CSS.escape(group)}"]`)?.focus();
+  }));
+  menu.querySelectorAll('[data-table-fields-group]').forEach(button=>button.addEventListener('click',()=>{
+    const group=button.dataset.tableFieldsGroup;
+    cycleTableGroupMode(tableKey,group);
+    renderTableFieldsMenu(menu,tableKey);
+    menu.querySelector(`[data-table-fields-group="${CSS.escape(group)}"]`)?.focus();
+  }));
+  menu.querySelectorAll('[data-table-fields-preset]').forEach(input=>input.addEventListener('change',()=>{
+    tableFieldsSetPresetKeys(tableKey,input.dataset.tableFieldsPreset,[input.dataset.key],input.checked);
+  }));
+  menu.querySelectorAll('[data-table-fields-group-preset]').forEach(input=>input.addEventListener('change',()=>{
+    const entry=catalog.find(item=>item.group===input.dataset.group);if(!entry)return;
+    tableFieldsSetPresetKeys(tableKey,input.dataset.tableFieldsGroupPreset,entry.keys,input.checked);
+  }));
+  menu.querySelectorAll('[data-table-fields-rename]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsRename)));
+  menu.querySelectorAll('[data-table-fields-formula]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsFormula)));
+  menu.querySelectorAll('[data-table-fields-delete]').forEach(button=>button.addEventListener('click',()=>tableFieldsDeleteColumn(tableKey,button.dataset.tableFieldsDelete)));
+  menu.querySelectorAll('.tableFieldsColumn[draggable="true"]').forEach(row=>{
+    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
+    row.addEventListener('dragend',()=>{tableFieldsDragKey=null;menu.querySelectorAll('.isDragging,.dropBefore,.dropAfter').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter'));});
+  });
+  menu.querySelectorAll('.tableFieldsColumn').forEach(row=>{
+    const sameGroup=()=>{const dragged=tableFieldsDragKey&&menu.querySelector(`[data-table-fields-col="${CSS.escape(tableFieldsDragKey)}"]`);return dragged&&dragged.dataset.group===row.dataset.group&&dragged!==row&&row.getAttribute('draggable')==='true';};
+    row.addEventListener('dragover',event=>{
+      if(!sameGroup())return;event.preventDefault();
+      const rect=row.getBoundingClientRect(),after=event.clientY>rect.top+rect.height/2;
+      row.classList.toggle('dropAfter',after);row.classList.toggle('dropBefore',!after);
+    });
+    row.addEventListener('dragleave',()=>row.classList.remove('dropBefore','dropAfter'));
+    row.addEventListener('drop',event=>{
+      if(!sameGroup())return;event.preventDefault();
+      const after=row.classList.contains('dropAfter');row.classList.remove('dropBefore','dropAfter');
+      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,row.dataset.tableFieldsCol,after);
+    });
+  });
+  menu.querySelector('[data-table-fields-reset]')?.addEventListener('click',()=>{resetTableGroupOverrides(tableKey);renderTableFieldsMenu(menu,tableKey);});
+  const done=()=>tableFieldsRerender(tableKey);
+  menu.querySelectorAll('[data-table-fields-add]').forEach(button=>button.addEventListener('click',()=>{
+    const action=button.dataset.tableFieldsAdd;
+    if(tableKey==='koleksiyon'){void kolAddCustomColumn(null).then(()=>done());return;}
+    if(action==='column')openCpModelColumnModal(null,done);
+    else if(action==='note')void addCpNoteColumn(done);
+    else if(action==='calc'){
+      const fc=window.BLFormulaColumns;
+      if(!fc){showToast(en?'Calculated columns are still loading.':'Hesaplanan sütunlar henüz yükleniyor.');return;}
+      fc.open(tableKey,null,done);
+    }
+  }));
+  menu.querySelector('[data-table-fields-checklist]')?.addEventListener('click',()=>{void kolAddChecklistItem().then(()=>done());});
+}
+function closeTableFieldsMenu(){
+  const menu=document.getElementById('_tableFieldsMenu');if(!menu)return;
+  menu._cleanup?.();menu.remove();
+  document.querySelectorAll('[data-table-fields][aria-expanded="true"]').forEach(button=>button.setAttribute('aria-expanded','false'));
+}
+function openTableFieldsMenu(button){
+  const tableKey=button.dataset.tableFields,existing=document.getElementById('_tableFieldsMenu');
+  if(existing&&existing.dataset.tableKey===tableKey){closeTableFieldsMenu();return;}
+  closeTableFieldsMenu();
+  const menu=document.createElement('aside');menu.id='_tableFieldsMenu';menu.className='tableFieldsMenu tableFieldsDrawer';menu.dataset.tableKey=tableKey;
+  menu.setAttribute('role','dialog');menu.setAttribute('aria-label',appLang==='en'?'Fields':'Alanlar');
+  document.body.appendChild(menu);renderTableFieldsMenu(menu,tableKey);
+  button.setAttribute('aria-expanded','true');
+  // Çekmeceden açılan ad / formül / sütun pencereleri çekmeceyi kapatmaz.
+  const insideOverlay=target=>target.closest?.('.warnOverlay,.modalCard,[aria-modal="true"],.fcOverlay,.kolChecklistMenu');
+  const outside=event=>{if(!menu.contains(event.target)&&!button.contains(event.target)&&!insideOverlay(event.target))closeTableFieldsMenu();};
+  const onKey=event=>{if(event.key!=='Escape')return;const active=document.activeElement;if(active&&active!==document.body&&!menu.contains(active))return;closeTableFieldsMenu();button.focus();};
+  setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
+  document.addEventListener('keydown',onKey,true);
+  menu._cleanup=()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',onKey,true);};
+  menu.querySelector('[data-table-fields-toggle]')?.focus();
+}
+document.addEventListener('click',event=>{
+  const button=event.target.closest?.('[data-table-fields]');if(!button)return;
+  event.preventDefault();openTableFieldsMenu(button);
+});
+window.BLTableFields=Object.freeze({catalog:tableViewGroupCatalog,mode:tableGroupMode,cycle:cycleTableGroupMode,reset:resetTableGroupOverrides,effectiveKeys:tableViewEffectiveKeys});
 
 /* v7.0.188 — Alt detay çekmeceleri ana tablo görünümünü gerçekten miras alır.
    Bu salt-okunur köprü CP/Orders Focus · Extended · All presetlerini, kullanıcının
@@ -3940,7 +4348,7 @@ function detailTableViewSnapshot(tableKey='cp'){
     return {
       key,
       label:tableColumnLabel(tableKey,column),
-      group:String(column.group||''),
+      group:tableColumnGroupLabel(column.group||''),
       type:column.type||'ro',
       weight:Number(column.weight)||10,
       widthPx:colWidthPx(tableKey,column),
@@ -3961,8 +4369,8 @@ function detailTableViewSnapshot(tableKey='cp'){
     order:order.slice(),
     visible:withoutPicture(all.filter(key=>!state.hidden.has(key))),
     presets:{
-      focus:withoutPicture(tableViewPresetKeys(tableKey,'focus')),
-      extended:withoutPicture(tableViewPresetKeys(tableKey,'extended')),
+      focus:withoutPicture(tableViewEffectiveKeys(tableKey,'focus')),
+      extended:withoutPicture(tableViewEffectiveKeys(tableKey,'extended')),
       all:order.slice()
     },
     columns:order.map(makeColumn).filter(Boolean)
@@ -3978,31 +4386,12 @@ document.addEventListener('click',event=>{
   const tableKey=button.dataset.partialViewToggle;
   setPartialView(tableKey,!partialViewEnabled(tableKey));
 });
-function openTableViewFocusEditor(tableKey,preset='focus'){
-  if(!TABLE_VIEW_EDITABLE_PRESETS.includes(preset))return;
-  document.getElementById('_tableViewFocusModal')?.remove();
-  const catalog=tableViewFocusCatalog(tableKey),selected=new Set(tableViewPresetKeys(tableKey,preset)),previousFocus=document.activeElement;
-  const modal=document.createElement('div');modal.id='_tableViewFocusModal';modal.className='warnOverlay';
-  const presetName=preset==='extended'?(appLang==='en'?'Extended':'Genişletilmiş'):(appLang==='en'?'Focus':'Odak');
-  const title=appLang==='en'?`${presetName} columns`:`${presetName} sütunları`;
-  const help=appLang==='en'?`Choose which columns remain visible when ${presetName} is selected.`:`${presetName} seçildiğinde görünür kalacak sütunları seçin.`;
-  modal.innerHTML=`<div class="modalCard quickFilterEditorCard tableViewFocusEditorCard" role="dialog" aria-modal="true" aria-labelledby="_tableViewFocusTitle"><div class="modalTitle" id="_tableViewFocusTitle">${escapeHtml(title)}</div><div class="muted quickFilterEditorHelp">${escapeHtml(help)}</div><div class="quickFilterEditorList">${catalog.map(column=>`<label class="quickFilterEditorItem"><input type="checkbox" data-table-view-focus-key="${escapeHtml(column.key)}" ${selected.has(column.key)?'checked':''}> <span>${escapeHtml(L(column.label))}</span></label>`).join('')}</div><div class="modalFoot"><span></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-apply>${escapeHtml(appLang==='en'?'Apply':'Uygula')}</button></div></div>`;
-  document.body.appendChild(modal);
-  const close=()=>{document.removeEventListener('keydown',onKey,true);modal.remove();previousFocus?.focus?.();};
-  const onKey=event=>{if(event.key==='Escape')close();};
-  document.addEventListener('keydown',onKey,true);
-  modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));
-  modal.addEventListener('click',event=>{if(event.target===modal)close();});
-  modal.querySelector('[data-apply]')?.addEventListener('click',()=>{
-    const keys=[...modal.querySelectorAll('[data-table-view-focus-key]:checked')].map(input=>input.dataset.tableViewFocusKey);
-    if(!keys.length){showToast(appLang==='en'?'Choose at least one column.':'En az bir sütun seçin.');return;}
-    if(saveTableViewPreset(tableKey,preset,keys)){close();applyTableViewPreset(tableKey,preset);}
-  });
-  modal.querySelector('[data-table-view-focus-key]')?.focus();
-}
 document.addEventListener('dblclick',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button||!TABLE_VIEW_EDITABLE_PRESETS.includes(button.dataset.tableViewPreset))return;
-  event.preventDefault();event.stopImmediatePropagation();openTableViewFocusEditor(button.dataset.tableKey,button.dataset.tableViewPreset);
+  // v7.0.229 — Odak / Genişletilmiş çift tıklaması ayrı preset editörü yerine Alanlar çekmecesini açar.
+  event.preventDefault();event.stopImmediatePropagation();
+  const drawerButton=document.querySelector(`[data-table-fields="${CSS.escape(button.dataset.tableKey)}"]`);
+  if(drawerButton&&document.getElementById('_tableFieldsMenu')?.dataset.tableKey!==button.dataset.tableKey)openTableFieldsMenu(drawerButton);
 });
 
 // Excel benzeri sütun görünürlük menüsü. Sağ tıklanan sütun gizlenebilir; aynı
@@ -4365,6 +4754,7 @@ const CP_EN_HEADER_LABELS = {
   'Special Code':'Special Code',
   'Ürün Tanım':'Product Description',
   'FOB ($)':'FOB',
+  'Original Ex-factory':'Original Ex-F.',
   'Ex-factory':'Ex-Factory',
   'LT':'LT',
   'Retail Date':'Retail Date',
@@ -4415,6 +4805,7 @@ const CP_TR_HEADER_LABELS = {
   'Order Code':'Sipariş',
   'FOB ($)':'FOB',
   'Supp. FOB':'Alt Üretici FOB',
+  'Original Ex-factory':'Original Ex-F.',
   'OPD':'Sipariş Tarihi',
   'Ex-factory':'Yükleme Termin',
   'LT':'Ür. Sür.',
@@ -4586,7 +4977,7 @@ window.BLCpAttentionColumns = {
     return CP_COLS.map(c=>({
       key:c.k,
       label:tableColumnLabel('cp',c),
-      group:c.group||'',
+      group:tableColumnGroupLabel(c.group||''),
       type:c.type||'ro',
       dataType:c.dataType||c._blSchema?.dataType||'',
       modelCustom:!!c.modelCustom,
@@ -6349,6 +6740,10 @@ function freezeColumnWidths(table,withChk){
 function applyFreeze(tableId, tableKey, withChk){
   const table=document.getElementById(tableId);
   if(!table)return;
+  // Koleksiyon ana başlık bandı dondurma sınırında bölünür; sınır değiştiyse bant
+  // yeniden çizilir (renderKol bu fonksiyonu yeni sınırla tekrar çağırır).
+  const kolGroupRow=tableId==='kolTable'?table.querySelector('thead tr.kolGroupRow'):null;
+  if(kolGroupRow&&Number(kolGroupRow.dataset.freezeLeft)!==Number(getFreeze(tableKey).left)&&typeof renderKol==='function'){renderKol();return;}
   table.querySelectorAll('.frzL').forEach(el=>{
     el.classList.remove('frzL','frzLEdge');
     el.style.left='';
@@ -6757,7 +7152,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
       else{cur={group:g,span:1,start:index,end:index};runs.push(cur);}
     });
     theadHtml+='<tr class="groupRow">'+(withChk?'<th class="groupSpacer"></th>':'')+
-      runs.map((r,i)=>`<th colspan="${r.span}" class="${i>0?'groupDivider':''}" data-grp="${escapeHtml(r.group)}" data-start="${r.start}" data-end="${r.end}" style="--grp-accent:${GROUP_ACCENTS[r.group]||'var(--acc)'}">${escapeHtml(L(r.group))}</th>`).join('')+'</tr>';
+      runs.map((r,i)=>`<th colspan="${r.span}" class="${i>0?'groupDivider':''}" data-grp="${escapeHtml(r.group)}" data-start="${r.start}" data-end="${r.end}" style="--grp-accent:${GROUP_ACCENTS[r.group]||'var(--acc)'}">${escapeHtml(tableColumnGroupLabel(r.group))}</th>`).join('')+'</tr>';
   }
   const checkFilterActive = !!normalizeCheckFilterMode(state.checkFilter[tableKey]);
   const checkFilterLabel=appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele';
@@ -11681,7 +12076,7 @@ function buildCPRowsFromASAS(){
       'Order Code':o.ocode,
       'FOB ($)': fobRounded, 'Supp. FOB': suppfob!=null?suppfob:null,
       _suppFobManual:hasSuppfobOverride&&!isRuleOverride, _suppFobRule:isRuleOverride?(suppFobMeta.ruleId||true):((!hasSuppfobOverride&&priced.rule)?(priced.rule.id||true):null), _suppFobMeta:isRuleOverride?suppFobMeta:((!hasSuppfobOverride&&priced.rule)?automaticSuppFobRuleMeta(priced.rule,false):suppFobMeta), _suppFobOverride:hasSuppfobOverride, _licensorManual:hasLicensorOverride, _nonDtrManufacturerRule:false,
-      OPD:o.opd, 'Ex-factory':o.ex, _asasExFactory:o.ex, 'HANDOVER Tarihi':handover, 'Retail Date':o.retail, 'Ex→Retail':'',
+      OPD:o.opd, 'Original Ex-factory':o.ex, 'Ex-factory':o.ex, _asasExFactory:o.ex, 'HANDOVER Tarihi':handover, 'Retail Date':o.retail, 'Ex→Retail':'',
       'Buying Son Onay Tarihi':o.shipConf, 'In-Store (Model Budget)':o.mb,
       'Order Quantity':o.qty, 'Shipment Quantity':Math.max(0,toNum(hit&&((hit.loadedQty!=null)?hit.loadedQty:hit._loadedQty))||0), 'Remaining Units':o.kalan, '%': o.qty? (o.qty-o.kalan)/o.qty : '',
       STATUS:status, 'Ant. Arrival':ant, 'Del. Type':delType,
@@ -11733,7 +12128,7 @@ function buildOrderSummaryRowsFromASAS(){
       'PLM ID': (o.plm!=null && !isNaN(Number(o.plm))) ? Math.trunc(Number(o.plm)) : '', 'Special Code':o.ozel,
       'Order Code':o.ocode, 'FOB ($)': fobRounded, 'Supp. FOB': suppfob!=null?suppfob:null,
       _suppFobManual:hasSuppfobOverride&&!isRuleOverride, _suppFobRule:isRuleOverride?(suppFobMeta.ruleId||true):((!hasSuppfobOverride&&priced.rule)?(priced.rule.id||true):null), _suppFobMeta:isRuleOverride?suppFobMeta:((!hasSuppfobOverride&&priced.rule)?automaticSuppFobRuleMeta(priced.rule,false):suppFobMeta), _suppFobOverride:hasSuppfobOverride, _licensorManual:hasLicensorOverride, _nonDtrManufacturerRule:false,
-      OPD:o.opd, 'Ex-factory':o.ex, 'Retail Date':o.retail, 'Ex→Retail':exRetail, 'In-Store (Model Budget)':o.mb, 'Days to go':daysToGo,
+      OPD:o.opd, 'Original Ex-factory':o.ex, 'Ex-factory':o.ex, 'Retail Date':o.retail, 'Ex→Retail':exRetail, 'In-Store (Model Budget)':o.mb, 'Days to go':daysToGo,
       'Order Quantity':o.qty, Received:o.antrepo, Remaining:o.kalan, '%': o.qty? (o.qty-o.kalan)/o.qty : '', 'Deliv.%':delivPct,
       Risk:risk, STATUS:status, 'Ant. Arrival':ant, 'Del. Type':delType, _sevSort:isActive?0:1
     };
@@ -21251,51 +21646,53 @@ window.BLCollectionStatusRuntime={
   getCatalog:()=>kolStatusEntries(),presetColors:()=>KOL_STATUS_API?KOL_STATUS_API.PRESET_COLORS.slice():[],canEdit:()=>Boolean(kolWorkspaceCanEdit),language:()=>appLang,
   displayLabel:kolStatusDisplayLabel,usage:kolStatusUsageCount,add:kolAddStatus,setColor:kolSetStatusColor,rename:kolRenameStatus,remove:kolRemoveStatus,notify:message=>showToast(message),
 };
+/* v7.0.229 — Koleksiyon ana başlıkları (group) ve varsayılan sıra kullanıcı
+   talebiyle yeniden düzenlendi. Sipariş Tipi (mbOrderType) ve Buying Numunesi
+   (buyingSampleManufacturer) sütunları kaldırıldı; satırdaki mevcut değerler
+   silinmez, yalnız tabloda sütun olarak gösterilmez. */
 const KOL_COLS = [
-  {k:'plmId', label:'PLM ID', w:100},
-  {k:'modelKod', label:'Model Name', w:160},
-  {k:'productMainDefinition', label:'Product Main Definition', w:170, suggest:'productMainDefinition'},
-  {k:'lisans', label:'License', w:120, suggest:'license'},
-  {k:'urunTipi', label:'Category', w:140, suggest:'category'},
-  {k:'specialCode', label:'Special Code', w:110},
-  {k:'line', label:'Line', w:100, suggest:'line'},
-  {k:'mbOrderType', label:'Order Type', w:120},
-  {k:'colourCode', label:'Colour Code', w:100},
-  {k:'colour', label:'Colour', w:130},
-  {k:'fabric', label:'Fabric', w:150},
-  {k:'fit', label:'Fit', w:110},
-  {k:'buyingSampleManufacturer', label:'Buying Sample', w:220, buyingSample:true, suggest:'submfr'},
-  {k:'quantity', label:'Quantity', w:100, money:false, qty:true},
-  {k:'assortment', label:'Assortment', w:120},
-  {k:'licensor', label:'Licensor', w:110, suggest:'licensor'},
-  {k:'mag', label:'MAG', w:110, suggest:'mag'},
-  {k:'mmyg', label:'MMYG', w:110, suggest:'mmyg'},
-  {k:'buyingGroup', label:'Buying Group', w:130, suggest:'buyingGroup'},
-  {k:'buyer', label:'Buyer', w:120, suggest:'buyer'},
-  {k:'season', label:'Season', w:100, suggest:'season'},
-  {k:'country', label:'Country', w:120, suggest:'country'},
-  {k:'delType', label:'Del. Type', w:110, select:DELTYPE_OPTS},
-  {k:'exFactory', label:'Ex-Factory', w:110, date:true},
-  {k:'retail', label:'Retail', w:110, date:true},
-  {k:'exToRetail', label:'Ex→Retail', w:90, exToRetail:true},
-  {k:'inStore', label:'In Store', w:110, date:true},
+  {k:'mag', label:'MAG', w:110, suggest:'mag', group:'Marka Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'mmyg', label:'MMYG', w:110, suggest:'mmyg', group:'Marka Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'buyingGroup', label:'Buying Group', w:130, suggest:'buyingGroup', group:'Marka Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'buyer', label:'Buyer', w:120, suggest:'buyer', group:'Marka Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'season', label:'Season', w:100, suggest:'season', group:'Model Detayları'},
   // v8 — Mağaza Hafta/Ay alanları serbest metin değildir. Koleksiyon tablosunda
   // sağ çekmeceden seçilir ve Mağazaya Giriş tarihiyle tek dönem seti halinde güncellenir.
-  {k:'inStoreWeek', label:'In Store Week', w:112, inStorePeriod:'week'},
-  {k:'inStoreMonth', label:'In Store Month', w:128, inStorePeriod:'month'},
-  {k:'targetPrice', label:'Target Price', w:100, money:true},
-  {k:'royalty', label:'Royalty', w:90, percent:true, ruleReadonly:true},
-  {k:'hologramCost', label:'Hologram Cost', w:110, hologram:true, ruleReadonly:true},
-  {k:'fob', label:'FOB', w:90, money:true, formulaReadonly:true},
-  {k:'durum', label:'Durum', w:170, status:true},
-  {k:'not', label:'Notes', w:180},
+  {k:'inStoreWeek', label:'In Store Week', w:112, inStorePeriod:'week', group:'Model Detayları'},
+  {k:'inStoreMonth', label:'In Store Month', w:128, inStorePeriod:'month', group:'Model Detayları'},
+  {k:'durum', label:'Durum', w:170, status:true, group:'Model Detayları'},
+  {k:'productMainDefinition', label:'Product Main Definition', w:170, suggest:'productMainDefinition', group:'Model Detayları'},
+  {k:'urunTipi', label:'Category', w:140, suggest:'category', group:'Model Detayları'},
+  {k:'plmId', label:'PLM ID', w:100, group:'Model Detayları'},
+  {k:'modelKod', label:'Model Name', w:160, group:'Model Detayları'},
+  {k:'colourCode', label:'Colour Code', w:100, group:'Model Detayları'},
+  {k:'colour', label:'Colour', w:130, group:'Model Detayları'},
+  {k:'specialCode', label:'Special Code', w:110, group:'Model Detayları'},
+  {k:'line', label:'Line', w:100, suggest:'line', group:'Model Detayları'},
+  {k:'fabric', label:'Fabric', w:150, group:'Model Detayları'},
+  {k:'assortment', label:'Assortment', w:120, group:'Model Detayları'},
+  {k:'fit', label:'Fit', w:110, group:'Model Detayları'},
+  {k:'quantity', label:'Quantity', w:100, money:false, qty:true, group:'Model Detayları'},
+  {k:'not', label:'Notes', w:180, group:'Notlar'},
+  {k:'licensor', label:'Licensor', w:110, suggest:'licensor', group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'lisans', label:'License', w:120, suggest:'license', group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'royalty', label:'Royalty', w:90, percent:true, ruleReadonly:true, group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'hologramCost', label:'Hologram Cost', w:110, hologram:true, ruleReadonly:true, group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği
+  {k:'country', label:'Country', w:120, suggest:'country', group:'Tarihler & Sevkiyat'},
+  {k:'delType', label:'Del. Type', w:110, select:DELTYPE_OPTS, group:'Tarihler & Sevkiyat'},
+  {k:'exFactory', label:'Ex-Factory', w:110, date:true, group:'Tarihler & Sevkiyat'},
+  {k:'retail', label:'Retail', w:110, date:true, group:'Tarihler & Sevkiyat'},
+  {k:'exToRetail', label:'Ex→Retail', w:90, exToRetail:true, group:'Tarihler & Sevkiyat'},
+  {k:'inStore', label:'In Store', w:110, date:true, group:'Tarihler & Sevkiyat'},
+  {k:'targetPrice', label:'Target Price', w:100, money:true, group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
+  {k:'fob', label:'FOB', w:90, money:true, formulaReadonly:true, group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
   // Endeksmatik bir fiyat alanını otomatik değiştirmez; hesaplanan benchmark
   // burada görünür ve ayrıntısı kullanıcı tıklayınca açılır.
-  {k:'endeksmatik', label:'Endeksmatik', w:210, endeksmatik:true, noFilter:true},
+  {k:'endeksmatik', label:'Endeksmatik', w:210, endeksmatik:true, noFilter:true, group:'Endeksmatik & Avantaj'},
   // Hesaplanan landed alanları kullanıcı sütun sırasından bağımsız olarak her
   // zaman tablonun en sağında tutulur.
-  {k:'ydLanded', label:'Overseas Landed', w:154, ydLanded:true},
-  {k:'trLanded', label:'TR Landed', w:160, trLanded:true},
+  {k:'ydLanded', label:'Overseas Landed', w:154, ydLanded:true, group:'Endeksmatik & Avantaj'},
+  {k:'trLanded', label:'TR Landed', w:160, trLanded:true, group:'Endeksmatik & Avantaj'},
 ];
 // Kullanıcının Koleksiyon tablosuna kendi eklediği sütunlar. Sabit KOL_COLS'a
 // dokunulmaz; özel sütunlar aynı yapıda tanımlanır ve bayrak taşımadıkları için
@@ -21351,6 +21748,7 @@ function kolNormalizeCustomCols(list){
     if(!k||!label||reserved.has(k)||seen.has(k)) return;
     seen.add(k);
     out.push({k,label,w:Math.max(64,Math.min(600,Number(entry.w)||140)),custom:true,
+      ...(entry.checklist===true?{checklist:true}:{}),
       ...(entry.labelEn?{labelEn:String(entry.labelEn).trim().slice(0,80)}:{}),...(entry.labelTr?{labelTr:String(entry.labelTr).trim().slice(0,80)}:{}),
       dataType:entry.dataType||entry.data_type||'', percentageScale:entry.percentageScale||entry.scale||'',
       sourceMetadata:entry.sourceMetadata||entry.metadata||entry.dbMetadata||null});
@@ -22895,14 +23293,14 @@ function releaseKolTransientTopRow(id=null){
   if(id==null || Number(kolTransientTopRowId)===Number(id)) kolTransientTopRowId=null;
 }
 const KOL_COL_STATE_KEY = 'lcw.koleksiyon.colState.v1';
-const KOL_COL_LAYOUT_VERSION = 6;
+const KOL_COL_LAYOUT_VERSION = 7;
 const KOL_SYNTHETIC_COL_KEYS = Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__']);
 // Sentetik sütunların tek kaynak tanımı: hem çizim (kolDescriptorCatalog) hem de
 // sütun seçici paneli buradan okur, ikisi ayrışamaz.
 const KOL_SYNTHETIC_COL_META = Object.freeze({
-  __bestPrice__:{kind:'best',label:'Best Price'},
-  __confirmedName__:{kind:'confirmedName',label:'Conf. Manufacturer'},
-  __confirmedPrice__:{kind:'confirmedPrice',label:'Conf. FOB'},
+  __bestPrice__:{kind:'best',label:'Best Price',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
+  __confirmedName__:{kind:'confirmedName',label:'Conf. Manufacturer',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
+  __confirmedPrice__:{kind:'confirmedPrice',label:'Approved Mfr. Price',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
 });
 function kolIsSyntheticColKey(key){ return KOL_SYNTHETIC_COL_KEYS.indexOf(key)>=0; }
 function kolPlaceLandedAtEnd(order){
@@ -22915,17 +23313,47 @@ function kolDefaultDisplayOrder(){
   // Koleksiyon'un ilk açılış düzeni. Picture/Görsel ayrı sabit sütundur ve
   // burada yer almaz. Yalnız varsayılan sıra belirlenir; kullanıcı sütunları
   // sürüklediğinde mevcut kolColOrder persistence akışı kendi düzenini korur.
+  // v7.0.229 sırası: Marka Detayları · Model Detayları · Notlar · Lisans
+  // Detayları · Tarihler & Sevkiyat · Checklist · Fiyatlandırma · Endeksmatik & Avantaj.
+  const checklistKeys=kolCustomCols.filter(c=>c.checklist).map(c=>c.k);
   const preferred=[
-    'season','mmyg','mag','buyingGroup','buyer','inStoreWeek','inStoreMonth','line','durum','mbOrderType',
-    'productMainDefinition','urunTipi','plmId','specialCode','modelKod','colourCode','colour','fit','fabric','licensor','lisans',
-    'quantity','assortment','not','buyingSampleManufacturer','exFactory','retail','exToRetail','inStore','country','delType',
-    'targetPrice','__bestPrice__','__confirmedName__','__confirmedPrice__','royalty','hologramCost','fob','endeksmatik','ydLanded','trLanded'
+    'mag','mmyg','buyingGroup','buyer',
+    'season','inStoreWeek','inStoreMonth','durum','productMainDefinition','urunTipi','plmId','modelKod','colourCode','colour','specialCode','line','fabric','assortment','fit','quantity',
+    'not',
+    'licensor','lisans','royalty','hologramCost',
+    'country','delType','exFactory','retail','exToRetail','inStore',
+    ...checklistKeys,
+    'targetPrice','__bestPrice__','__confirmedName__','__confirmedPrice__','fob',
+    'endeksmatik','ydLanded','trLanded'
   ];
   const valid=[];kolColDefs().forEach(c=>{valid.push(c.k);if(c.k==='targetPrice')valid.push(...KOL_SYNTHETIC_COL_KEYS);});
   const validSet=new Set(valid),seen=new Set(),out=[];
   preferred.forEach(key=>{if(validSet.has(key)&&!seen.has(key)){seen.add(key);out.push(key);}});
   valid.forEach(key=>{if(!seen.has(key)){seen.add(key);out.push(key);}});
   return kolPlaceLandedAtEnd(out);
+}
+function kolResetDisplayOrderKeepingCustom(previousOrder){
+  const customKeys=new Set(kolCustomCols.map(c=>c.k));
+  const base=kolDefaultDisplayOrder().filter(key=>!customKeys.has(key));
+  return kolNormalizeDisplayOrder(mergeDeferredColumnOrder(previousOrder,base,base));
+}
+/* Koleksiyon ana başlığı (group). Sistem sütunları sabit başlık taşır; kullanıcının
+   eklediği serbest sütun, tablodaki solundaki sütunun başlığına katılır. */
+function kolColumnGroupFor(key,orderKeys){
+  if(key==='__picture__')return 'Model Detayları';
+  if(KOL_SYNTHETIC_COL_META[key])return KOL_SYNTHETIC_COL_META[key].group;
+  const def=kolColDefs().find(c=>c.k===key);
+  if(def&&def.checklist)return 'Checklist';
+  if(def&&def.group)return def.group;
+  const order=Array.isArray(orderKeys)?orderKeys:kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
+  for(let i=order.indexOf(key)-1;i>=0;i--){
+    const left=order[i];
+    if(KOL_SYNTHETIC_COL_META[left])return KOL_SYNTHETIC_COL_META[left].group;
+    const leftDef=kolColDefs().find(c=>c.k===left);
+    if(leftDef&&leftDef.checklist)return 'Checklist';
+    if(leftDef&&leftDef.group)return leftDef.group;
+  }
+  return 'Model Detayları';
 }
 function kolNormalizeDisplayOrder(order){
   const defaults=kolDefaultDisplayOrder(),valid=new Set(defaults),seen=new Set();
@@ -22965,14 +23393,12 @@ function loadKolColState(options={}){
     if(obj.filters) Object.entries(obj.filters).forEach(([k,vals])=>{ if(Array.isArray(vals)&&vals.length) kolColFilters[k]=new Set(vals); });
     if(Number(obj.layoutVersion||0)<KOL_COL_LAYOUT_VERSION){
       // v5.24: Fit artık sabit Koleksiyon alanıdır. Eski kullanıcı görünümünde
-      // gizlenmiş/eksik kalmış olsa bile Fabric'in hemen yanında görünür hale getir.
-      kolHiddenCols.delete('fit');
-      if(Array.isArray(kolColOrder)){
-        kolColOrder=kolColOrder.filter(key=>key!=='fit');
-        const fabricAt=kolColOrder.indexOf('fabric');
-        kolColOrder.splice(fabricAt>=0?fabricAt+1:Math.min(9,kolColOrder.length),0,'fit');
-        kolColOrder=kolNormalizeDisplayOrder(kolColOrder);
-      }
+      // gizlenmiş kalmış olsa bile görünür hale getir.
+      if(Number(obj.layoutVersion||0)<6)kolHiddenCols.delete('fit');
+      // v7.0.229: ana başlıklar yeniden düzenlendi; kayıtlı sütun sırası bir kez
+      // yeni varsayılana döner. Kullanıcının eklediği sütunlar kaybolmaz: her
+      // biri eski sırada solunda duran sistem sütununun hemen sağında kalır.
+      if(Array.isArray(kolColOrder))kolColOrder=kolResetDisplayOrderKeepingCustom(Array.isArray(obj.order)?obj.order:kolColOrder);
       obj.layoutVersion=KOL_COL_LAYOUT_VERSION; obj.order=kolColOrder; obj.hidden=[...kolHiddenCols];
       BLStorage.setItem(KOL_COL_STATE_KEY,JSON.stringify(obj));
     }
@@ -23032,6 +23458,99 @@ async function kolAddCustomColumn(panelEl){
   renderKol();
   return true;
 }
+/* v7.0.229 — Koleksiyon Checklist. Her checklist maddesi, çalışma alanının
+   özel sütunlarında `checklist:true` bayrağıyla tutulur (ortak, sunucuya
+   kaydedilir) ve tabloda "Checklist" ana başlığı altında görünür. Hücre serbest
+   metin değildir: yalnız dört durumdan biri seçilir ve satırın kendi alanına
+   (model grubu mirasıyla aynı yazma yolundan) kanonik kimlik olarak yazılır.
+   Hiç madde yoksa Checklist başlığı tabloda hiç açılmaz. */
+const KOL_CHECKLIST_STATUSES = Object.freeze(['open','approved','rejected','notRequired']);
+function kolChecklistStatus(value){
+  const status=String(value==null?'':value).trim();
+  return KOL_CHECKLIST_STATUSES.includes(status)?status:'open';
+}
+function kolChecklistStatusLabel(status){
+  const en=appLang==='en';
+  if(status==='approved')return en?'Approved':'Onaylandı';
+  if(status==='rejected')return en?'Rejected':'Reddedildi';
+  if(status==='notRequired')return en?'Not Required':'Gerekmiyor';
+  return en?'Pending':'Bekliyor';
+}
+function kolChecklistColumns(){return kolCustomCols.filter(c=>c.checklist);}
+function kolChecklistCellHtml(row,c,value,rc){
+  const status=kolChecklistStatus(value),label=kolChecklistStatusLabel(status);
+  const title=appLang==='en'?`${kolColumnLabel(c)}: ${label} · Click to change`:`${kolColumnLabel(c)}: ${label} · Değiştirmek için tıklayın`;
+  return `<td class="kolChecklistTd"${rc}><button type="button" class="kolChecklistStatusBtn is-${status}" data-kol-checklist-row="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" title="${escapeHtml(title)}" aria-haspopup="menu"${kolWorkspaceCanEdit?'':' disabled aria-disabled="true"'}><span class="kolChecklistDot" aria-hidden="true"></span><span>${escapeHtml(label)}</span></button></td>`;
+}
+function kolSetChecklistStatus(rowId,key,status){
+  if(!kolRequireWorkspaceEdit())return false;
+  const row=kolRows.find(item=>String(item.id)===String(rowId)),col=kolChecklistColumns().find(c=>c.k===key);
+  if(!row||!col||!KOL_CHECKLIST_STATUSES.includes(status))return false;
+  if(kolCellLinkedToModel(row,key)){
+    showToast(appLang==='en'?'This field is linked to the model. Use right-click › Make this field colour-specific first.':'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');
+    return false;
+  }
+  if(kolChecklistStatus(kolEffectiveValue(row,key))===status)return true;
+  kolPushUndo();
+  kolWriteGroupedStorageValue(row,key,status==='open'?'':status);
+  saveKolRows();renderKol();
+  return true;
+}
+function openKolChecklistStatusMenu(button){
+  document.querySelector('.kolChecklistMenu')?.remove();
+  const rowId=button.dataset.kolChecklistRow,key=button.dataset.kolChecklistKey;
+  const row=kolRows.find(item=>String(item.id)===String(rowId));if(!row)return;
+  const current=kolChecklistStatus(kolEffectiveValue(row,key));
+  const menu=document.createElement('div');menu.className='kolChecklistMenu';menu.setAttribute('role','menu');
+  menu.innerHTML=KOL_CHECKLIST_STATUSES.map(status=>`<button type="button" role="menuitemradio" aria-checked="${status===current}" class="kolChecklistMenuItem is-${status}" data-status="${status}"><span class="kolChecklistDot" aria-hidden="true"></span><span>${escapeHtml(kolChecklistStatusLabel(status))}</span></button>`).join('');
+  document.body.appendChild(menu);
+  const rect=button.getBoundingClientRect(),box=menu.getBoundingClientRect();
+  menu.style.left=Math.max(4,Math.min(rect.left,innerWidth-box.width-4))+'px';
+  menu.style.top=(rect.bottom+box.height+4>innerHeight?Math.max(4,rect.top-box.height-4):rect.bottom+4)+'px';
+  const close=()=>{menu.remove();document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',onKey,true);};
+  const outside=event=>{if(!menu.contains(event.target))close();};
+  const onKey=event=>{if(event.key==='Escape'){close();button.focus();}};
+  setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
+  document.addEventListener('keydown',onKey,true);
+  menu.querySelectorAll('[data-status]').forEach(item=>item.addEventListener('click',()=>{close();kolSetChecklistStatus(rowId,key,item.dataset.status);}));
+  menu.querySelector('[aria-checked="true"]')?.focus();
+}
+async function kolAddChecklistItem(panelEl){
+  if(!kolRequireWorkspaceEdit())return false;
+  const pair=await promptBilingualColumnName({
+    title:appLang==='en'?'Add checklist item':'Checklist maddesi ekle',
+    confirmLabel:appLang==='en'?'Add':'Ekle',
+    validate:value=>kolCustomColumnNameClash(value,null)
+  });
+  if(!pair)return false;
+  const column=BLColumnNames.withDefinitionLabels({k:kolNewCustomColKey(),w:140,custom:true,checklist:true},pair);
+  kolCustomCols.push(column);
+  // Yeni madde Checklist başlığının sonuna (yoksa Tarihler & Sevkiyat'ın sağına) yerleşir.
+  if(Array.isArray(kolColOrder)){
+    const order=kolColOrder.filter(key=>key!==column.k),checklist=kolChecklistColumns().map(c=>c.k).filter(key=>key!==column.k);
+    const anchor=[...order].reverse().find(key=>checklist.includes(key))||'inStore';
+    const at=order.indexOf(anchor);
+    order.splice(at>=0?at+1:order.length,0,column.k);
+    kolColOrder=order;
+  }
+  kolHiddenCols.delete(column.k);
+  saveKolColState();kolQueueWorkspaceSave();
+  if(panelEl&&panelEl.isConnected)renderKolColumnPanel(panelEl);
+  renderKol();
+  showToast(appLang==='en'?'Checklist item added.':'Checklist maddesi eklendi.');
+  return true;
+}
+document.addEventListener('pointerdown',event=>{
+  const button=event.target.closest?.('.kolChecklistStatusBtn[data-kol-checklist-row]');
+  if(!button||button.disabled||event.button!==0)return;
+  event.preventDefault();event.stopPropagation();
+  openKolChecklistStatusMenu(button);
+},true);
+document.addEventListener('keydown',event=>{
+  const button=event.target.closest?.('.kolChecklistStatusBtn[data-kol-checklist-row]');
+  if(!button||button.disabled||(event.key!=='Enter'&&event.key!==' '))return;
+  event.preventDefault();openKolChecklistStatusMenu(button);
+});
 function renderKolColumnPanel(panelEl){
   const cols=kolAllOrderedCols(),canEdit=kolWorkspaceCanEdit;
   const addLabel = appLang==='en' ? 'Add column' : 'Sütun ekle';
@@ -23049,7 +23568,7 @@ function renderKolColumnPanel(panelEl){
         const userLabel = !KOL_SYNTHETIC_COL_META[c.k] && kolColumnHasUserLabel(c);
         return `<label class="colPanelItem${custom?' isCustomCol':''}${userLabel?' hasUserLabel':''}"${userLabel?' data-bl-user-label="1"':''}${personal?` title="${escapeHtml(columnSourceTooltip('koleksiyon',c))}"`:''}><input type="checkbox" data-key="${c.k}" ${kolHiddenCols.has(c.k)?'':'checked'}> <span class="colPanelName"${editableCustom?` data-rename="${escapeHtml(c.k)}" title="${escapeHtml(renameTitle)}"`:''}>${escapeHtml(label)}</span>${personal?`<button type="button" class="colPanelEdit" data-label-edit="${escapeHtml(c.k)}" title="${escapeHtml(labelTitle)}" aria-label="${escapeHtml(labelTitle)}"><svg class="ic"><use href="#i-pencil"/></svg></button>`:''}${editableCustom?`<button type="button" class="colPanelDrop" data-drop="${escapeHtml(c.k)}" title="${escapeHtml(deleteTitle)}">×</button>`:''}</label>`;
       }).join('')
-    + (canEdit?`<button type="button" class="colPanelAdd" id="kolAddColBtn">+ ${escapeHtml(addLabel)}</button>`:'');
+    + (canEdit?`<button type="button" class="colPanelAdd" id="kolAddColBtn">+ ${escapeHtml(addLabel)}</button><button type="button" class="colPanelAdd" id="kolAddChecklistBtn">+ ${escapeHtml(appLang==='en'?'Add checklist item':'Checklist maddesi ekle')}</button>`:'');
   panelEl.querySelectorAll('input[data-key]').forEach(inp=>inp.addEventListener('change',()=>{
     if(inp.dataset.key==='__picture') kolPictureHidden=!inp.checked;
     else if(inp.checked) kolHiddenCols.delete(inp.dataset.key); else kolHiddenCols.add(inp.dataset.key);
@@ -23058,21 +23577,12 @@ function renderKolColumnPanel(panelEl){
   panelEl.querySelector('#kolAddColBtn')?.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation(); void kolAddCustomColumn(panelEl);
   });
-  panelEl.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click', async e=>{
-    e.preventDefault(); e.stopPropagation(); if(!kolRequireWorkspaceEdit())return;
-    const col = kolCustomCols.find(c=>c.k===el.dataset.rename); if(!col) return;
-    const pair = await promptBilingualColumnName({
-      title:appLang==='en'?'Rename column':'Sütunu yeniden adlandır',
-      confirmLabel:appLang==='en'?'Save':'Kaydet',
-      definition:col,
-      sourceRows:BLColumnNames.describeSource(BLColumnNames.sourceFor('koleksiyon',col),appLang),
-      validate:value=>kolCustomColumnNameClash(value,col.k)
-    });
-    if(!pair) return;
-    Object.assign(col,BLColumnNames.withDefinitionLabels(col,pair));
-    if(!col.labelEn)delete col.labelEn;
-    if(!col.labelTr)delete col.labelTr;
-    saveKolColState(); kolQueueWorkspaceSave(); renderKolColumnPanel(panelEl); renderKol();
+  panelEl.querySelector('#kolAddChecklistBtn')?.addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation(); void kolAddChecklistItem(panelEl);
+  });
+  panelEl.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    void kolRenameCustomColumn(el.dataset.rename,()=>{ if(panelEl.isConnected) renderKolColumnPanel(panelEl); });
   }));
   panelEl.querySelectorAll('[data-label-edit]').forEach(btn=>btn.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation();
@@ -23084,23 +23594,48 @@ function renderKolColumnPanel(panelEl){
   }));
   panelEl.querySelectorAll('[data-drop]').forEach(btn=>btn.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation();
-    const key = btn.dataset.drop;
-    const col = kolCustomCols.find(c=>c.k===key); if(!col) return;
-    // Sütunla birlikte satırlardaki değerleri de gider; bu geri alınamaz, o yüzden sorulur.
-    const filled = kolRows.filter(r=>String(r[key]==null?'':r[key]).trim()).length;
-    const question = appLang==='en'
-      ? `Delete the column "${col.label}"?${filled?` ${filled} rows have a value in it and those values will be lost.`:''}`
-      : `"${col.label}" sütunu silinsin mi?${filled?` ${filled} satırda dolu değer var, bu değerler kaybolacak.`:''}`;
-    if(!confirm(question)) return;
-    kolCustomCols = kolCustomCols.filter(c=>c.k!==key);
-    kolHiddenCols.delete(key);
-    delete kolColWidths[key];
-    delete kolColFilters[key];
-    if(Array.isArray(kolColOrder)) kolColOrder = kolColOrder.filter(k=>k!==key);
-    if(kolSort.key===key) kolSort={key:null,dir:1};
-    kolRows.forEach(r=>{ delete r[key]; });
-    saveKolColState(); saveKolRows(); renderKolColumnPanel(panelEl); renderKol();
+    kolRemoveCustomColumn(btn.dataset.drop,()=>{ if(panelEl.isConnected) renderKolColumnPanel(panelEl); });
   }));
+}
+// Koleksiyon özel sütunu (checklist maddesi dahil) yeniden adlandırma / silme:
+// Sütunlar paneli ve Alanlar çekmecesi aynı yolu kullanır.
+async function kolRenameCustomColumn(key,onDone){
+  if(!kolRequireWorkspaceEdit())return false;
+  const col = kolCustomCols.find(c=>c.k===key); if(!col) return false;
+  const pair = await promptBilingualColumnName({
+    title:appLang==='en'?'Rename column':'Sütunu yeniden adlandır',
+    confirmLabel:appLang==='en'?'Save':'Kaydet',
+    definition:col,
+    sourceRows:BLColumnNames.describeSource(BLColumnNames.sourceFor('koleksiyon',col),appLang),
+    validate:value=>kolCustomColumnNameClash(value,col.k)
+  });
+  if(!pair) return false;
+  Object.assign(col,BLColumnNames.withDefinitionLabels(col,pair));
+  if(!col.labelEn)delete col.labelEn;
+  if(!col.labelTr)delete col.labelTr;
+  saveKolColState(); kolQueueWorkspaceSave(); renderKol();
+  if(typeof onDone==='function')onDone();
+  return true;
+}
+function kolRemoveCustomColumn(key,onDone){
+  if(!kolRequireWorkspaceEdit())return false;
+  const col = kolCustomCols.find(c=>c.k===key); if(!col) return false;
+  // Sütunla birlikte satırlardaki değerleri de gider; bu geri alınamaz, o yüzden sorulur.
+  const filled = kolRows.filter(r=>String(r[key]==null?'':r[key]).trim()).length;
+  const question = appLang==='en'
+    ? `Delete the column "${col.label}"?${filled?` ${filled} rows have a value in it and those values will be lost.`:''}`
+    : `"${col.label}" sütunu silinsin mi?${filled?` ${filled} satırda dolu değer var, bu değerler kaybolacak.`:''}`;
+  if(!confirm(question)) return false;
+  kolCustomCols = kolCustomCols.filter(c=>c.k!==key);
+  kolHiddenCols.delete(key);
+  delete kolColWidths[key];
+  delete kolColFilters[key];
+  if(Array.isArray(kolColOrder)) kolColOrder = kolColOrder.filter(k=>k!==key);
+  if(kolSort.key===key) kolSort={key:null,dir:1};
+  kolRows.forEach(r=>{ delete r[key]; });
+  saveKolColState(); saveKolRows(); renderKol();
+  if(typeof onDone==='function')onDone();
+  return true;
 }
 let kolActiveImgRowId = null; // Ctrl+V ile görsel yapıştırma hedefi
 const COLLECTION_IMAGE_API='/api/collection-images';
@@ -23222,6 +23757,7 @@ function kolFilterValue(row,key){
   }
   const col=kolColDefs().find(c=>c.k===key),schema=col&&columnSchemaFor(col,kolRows);
   const effective=kolEffectiveValue(row,key);
+  if(col?.checklist)return kolChecklistStatusLabel(kolChecklistStatus(effective));
   if(col?.custom&&schema){ const value=schema.filterValue(effective); return value==null?'':String(value); }
   return norm(effective);
 }
@@ -23259,6 +23795,7 @@ function kolCompareRowsForActiveSort(a,b,rowsForSchema){
   let x=kolSort.key==='exToRetail'?kolExToRetailDays(a):kolEffectiveValue(a,kolSort.key);
   let y=kolSort.key==='exToRetail'?kolExToRetailDays(b):kolEffectiveValue(b,kolSort.key);
   if(kolSort.key==='season') return compareSeasonValues(x,y)*kolSort.dir;
+  if(col?.checklist) return (KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(x))-KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(y)))*kolSort.dir;
   const schema=columnSchemaFor(col,rowsForSchema||[]);
   if(schema&&(schema.sortType==='number'||schema.sortType==='date')){ x=schema.sortValue(x); y=schema.sortValue(y); }
   else if(col?.qty){ x=kolParseQuantityNum(x); y=kolParseQuantityNum(y); }
@@ -23683,6 +24220,9 @@ function kolCollapsedGroupSummary(members,descriptors){
       if(distinct.length===1){put(key,distinct[0]);return;}
       const weighted=kolGroupSummaryWeighted(rows,valueOf);
       const fallback=valueOf(parent);put(key,weighted==null?(Number.isFinite(fallback)?`$${kolMoney2(fallback)}`:''):`$${kolMoney2(weighted)}`);return;
+    }
+    if(column.checklist){
+      put(key,kolGroupSummaryDistinct(rows.map(row=>kolChecklistStatusLabel(kolChecklistStatus(kolEffectiveValue(row,column.k))))).join(KOL_GROUP_SUMMARY_SEPARATOR));return;
     }
     if(column.qty){
       let total=0;
@@ -24997,7 +25537,7 @@ function renderKolSummaryFooter(table,rows,descriptors,{pictureVisible=false}={}
   descriptors.forEach(d=>{
     if(d.kind==='base'&&d.k==='targetPrice'){cells.push(kolAverageFooter(targetAvg,targetArithmetic,L('Target Price')));return;}
     if(d.kind==='best'){cells.push(kolAverageFooter(bestAvg,bestArithmetic,L('Best Price')));return;}
-    if(d.kind==='confirmedPrice'){cells.push(kolAverageFooter(confirmedAvg,confirmedArithmetic,L('Conf. FOB')));return;}
+    if(d.kind==='confirmedPrice'){cells.push(kolAverageFooter(confirmedAvg,confirmedArithmetic,L('Approved Mfr. Price')));return;}
     if(d.kind==='base'&&d.k==='fob'){cells.push(kolAverageFooter(fobAvg,fobArithmetic,'FOB'));return;}
     if(d.kind==='base'&&d.k==='ydLanded'){cells.push(kolAverageFooter(ydLandedAvg,ydLandedArithmetic,L('Overseas Landed'),{weightedChangePct:ydLandedWeightedChange}));return;}
     if(d.kind==='base'&&d.k==='trLanded'){cells.push(kolAverageFooter(trLandedAvg,trLandedArithmetic,L('TR Landed')));return;}
@@ -25727,7 +26267,18 @@ function renderKol(){
     return `<th data-kcol="${d.k}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
   }).join('');
   const kolCheckActive=!!normalizeCheckFilterMode(kolCheckFilter);
-  thead.innerHTML=`<tr class="colRow"><th class="chkTh${kolCheckActive?' columnFilterActive':''}"><input type="checkbox" id="kolSelAll"><button type="button" class="thFilterBtn kolChkFilterBtn${kolCheckActive?' filterActive':''}" title="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}" aria-label="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}">▾</button></th>${pictureVisible?`<th id="kolPicTh" class="kolPicTh" title="${escapeHtml(L('Görsel boyutunu değiştir'))}">${L('Picture')}</th>`:''}${headers}</tr>`;
+  // v7.0.229 — CP/Orders ile aynı ana başlık bandı. Görsel sabit sol sütundur;
+  // bant hücresi boş kalır ama dondurma ofseti için indekse dahildir.
+  const kolOrderKeys=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
+  const kolPicOffset=pictureVisible?1:0,kolFreezeLeft=getFreeze('koleksiyon').left,kolGroupRuns=[];
+  descriptors.forEach((d,index)=>{
+    const group=kolColumnGroupFor(d.k,kolOrderKeys),at=index+kolPicOffset,last=kolGroupRuns[kolGroupRuns.length-1];
+    if(last&&last.group===group&&at!==kolFreezeLeft){last.span++;last.end=at;}
+    else kolGroupRuns.push({group,span:1,start:at,end:at});
+  });
+  const kolGroupRowHtml=`<tr class="groupRow kolGroupRow" data-freeze-left="${kolFreezeLeft}"><th class="groupSpacer"></th>${pictureVisible?'<th class="groupSpacer kolPicGroupSpacer" data-start="0" data-end="0"></th>':''}${kolGroupRuns.map((run,index)=>`<th colspan="${run.span}" class="${index>0||pictureVisible?'groupDivider':''}" data-grp="${escapeHtml(run.group)}" data-start="${run.start}" data-end="${run.end}" style="--grp-accent:${GROUP_ACCENTS[run.group]||'var(--acc)'}">${escapeHtml(tableColumnGroupLabel(run.group))}</th>`).join('')}</tr>`;
+  thead.classList.add('kolHasGroups');
+  thead.innerHTML=kolGroupRowHtml+`<tr class="colRow"><th class="chkTh${kolCheckActive?' columnFilterActive':''}"><input type="checkbox" id="kolSelAll"><button type="button" class="thFilterBtn kolChkFilterBtn${kolCheckActive?' filterActive':''}" title="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}" aria-label="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}">▾</button></th>${pictureVisible?`<th id="kolPicTh" class="kolPicTh" title="${escapeHtml(L('Görsel boyutunu değiştir'))}">${L('Picture')}</th>`:''}${headers}</tr>`;
   thead.querySelectorAll('th[data-kcol]').forEach(th=>{
     const key=th.dataset.kcol,descriptor=descriptors.find(d=>d.k===key);
     attachKolColDrag(th,key);attachKolColResize(th,key,table,colgroup);
@@ -25965,6 +26516,7 @@ function renderKol(){
       }else if(c.qty){html+=`<td class="editTd num"${rc}><input type="text" inputmode="numeric" class="editCell kolQtyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatQuantityDisplay(val))}" style="text-align:right;"></td>`;
       }else if(c.money){html+=`<td class="editTd money"${rc}><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:10.5px;flex-shrink:0;">$</span><input type="text" inputmode="decimal" class="editCell kolMoneyCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolFormatMoneyDisplay(val))}" placeholder="0,00" style="flex:1;min-width:0;"></div></td>`;
       }else if(c.k==='inStoreMonth'){html+=`<td class="editTd"${rc}><input type="text" class="editCell kolMonthCell" data-id="${r.id}" data-k="${c.k}" value="${escapeHtml(kolMonthDisplay(val))}" placeholder=""></td>`;
+      }else if(c.checklist){html+=kolChecklistCellHtml(r,c,val,rc);
       }else if(c.custom){
         const schema=columnSchemaFor(c),display=schema?schema.format(val,{row:r}):String(val);
         html+=`<td class="editTd"${rc} data-copy-text="${escapeHtml(display)}"><textarea class="editCell kolTextCell kolCustomSchemaCell" data-id="${r.id}" data-k="${c.k}" data-raw-value="${escapeHtml(String(val))}" data-display-value="${escapeHtml(display)}">${escapeHtml(display)}</textarea></td>`;
@@ -26147,6 +26699,8 @@ function kolSpreadsheetColumnMeta(key){
   const d=kolFieldDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
   if(d.kind!=='base')return {key,label:d.label,type:d.kind==='confirmedName'?'text':'money',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   const c=d.col;
+  // Checklist hücresi yalnız durum menüsünden yazılır; yapıştırma/yazma ile serbest metin girmez.
+  if(c.checklist)return {key,label:d.label,type:'select',access:'checklist',editable:false,calculated:false,inheritance:kolFieldMetadata(c.k).inheritance,overrideable:false,formula:'',options:KOL_CHECKLIST_STATUSES.map(kolChecklistStatusLabel),col:c};
   const calculated=Boolean(c.ruleReadonly||c.formulaReadonly||c.exToRetail||c.endeksmatik||c.ydLanded||c.trLanded);
   const type=c.date?'date':c.qty?'integer':c.money||c.hologram?'money':c.percent?'percent':c.select?'select':c.custom?'custom':'text';
   const sourceKeys=new Set(['plmId','modelKod','productMainDefinition','lisans','urunTipi','specialCode','line','colourCode','colour','fabric','fit']);
@@ -26163,6 +26717,7 @@ function kolSpreadsheetRawValue(row,key){
   if(d.kind==='confirmedName')return kolConfirmedDisplay(row)?.name??'';
   if(d.kind==='confirmedPrice')return kolConfirmedDisplay(row)?.price??'';
   const c=d.col;if(c.exToRetail)return kolExToRetailDays(row);
+  if(c.checklist)return kolChecklistStatusLabel(kolChecklistStatus(kolEffectiveValue(row,c.k)));
   if(c.endeksmatik)return endeksmatikExcelText(kolEffectiveEndeksmatikRow(row));
   if(c.ydLanded)return kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).ydLanded??'';
   if(c.trLanded)return kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).trLanded??'';
@@ -30531,6 +31086,8 @@ function buildKolStyledSheet(rows){
       const schema=columnSchemaFor(c,sourceRows);
       const s = {border:bd, font:{sz:10, bold:c.k==='modelKod'}};
       let cell;
+      // Checklist hücresi kanonik durum kimliğini değil, ekrandaki TR/EN etiketi yazar.
+      if(c.checklist){put(ri+1,ci+imgOff,{v:kolChecklistStatusLabel(kolChecklistStatus(raw)),t:'s',s:{...s,alignment:{vertical:'middle'}}});return;}
       if(c.endeksmatik){
         // v6.42 — Ekranda hücre fiyat + index olmak üzere İKİ satır gösterirken
         // ("YD $.. · TR $.." ve "YD %.. · TR %.."), bu yol yalnız fiyat satırını
@@ -34905,7 +35462,7 @@ const KOL_EN_TR_DICT = {
   'Notes':'Notlar','Durum':'Durum','Status':'Durum',
   'Manufacturer':'Üretici','Best Price':'En İyi Fiyat',
   'MAG':'MAG','MMYG':'MMYG','Buying Group':'Buying Group','Buyer':'Buyer',
-  'Conf. Manufacturer':'Nihai Üretici','Conf. FOB':'Onaylı Fiyat',
+  'Conf. Manufacturer':'Nihai Üretici','Conf. FOB':'Onaylı Fiyat','Approved Mfr. Price':'Onaylı Üretici Fiyatı',
   'Fiyatlamaya gönderildi':'Fiyatlamaya gönderildi',
   'Otomatik hesaplanır — elle değiştirilemez':'Otomatik hesaplanır — elle değiştirilemez',
   'Fiyat hücresindeki onay tikiyle belirlenir':'Fiyat hücresindeki onay tikiyle belirlenir',
