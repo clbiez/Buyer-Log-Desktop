@@ -76,7 +76,7 @@ const CATEGORIES = Object.freeze([
 
 // Ad → etiket. Uzantı yok sayılır; hem "settings.json" hem "settings" eşleşir.
 const BACKUP_COMPONENT_CATALOG = Object.freeze({
-  'BuyerLogLocal.db': { cat: 'core', tr: 'Yerel veritabanı (siparişler, kayıtlar)', en: 'Local database (orders, records)' },
+  'BuyerLogLocal.db': { cat: 'core', tr: 'Yerel veritabanı (siparişler, kayıtlar · günlük ve güvenlik kopyalarıyla)', en: 'Local database (orders, records · with journal and safety copies)' },
   'BuyerLogLocal.db.wal': { cat: 'core', tr: 'Yerel veritabanı günlüğü', en: 'Local database journal' },
   'BuyerLogLocal.db.bak': { cat: 'core', tr: 'Yerel veritabanı yedek kopyası', en: 'Local database safety copy' },
   'BuyerLogLocal.db.wal.bak': { cat: 'core', tr: 'Yerel veritabanı günlüğü yedek kopyası', en: 'Local database journal safety copy' },
@@ -108,7 +108,7 @@ const BACKUP_COMPONENT_CATALOG = Object.freeze({
 
   'shipping-comparison': { cat: 'orders', tr: 'Shipping Comparison', en: 'Shipping Comparison' },
   'checklist-supplier-sync': { cat: 'orders', tr: 'Checklist tedarikçi eşitlemesi', en: 'Checklist supplier sync' },
-  'checklist-attachments': { cat: 'orders', tr: 'Checklist ekleri (görseller hariç)', en: 'Checklist attachments (images excluded)' },
+  'checklist-attachments': { cat: 'orders', tr: 'Checklist ekleri (görsel/PDF hariç)', en: 'Checklist attachments (images/PDF excluded)' },
   'backlog-plan-actual': { cat: 'orders', tr: 'Backlog plan / gerçekleşen', en: 'Backlog plan / actual' },
   'oab-settings': { cat: 'orders', tr: 'OAB ayarları', en: 'OAB settings' },
   'oab-metadata': { cat: 'orders', tr: 'OAB meta verisi', en: 'OAB metadata' },
@@ -186,14 +186,42 @@ function humanize(name) {
  * Arşiv yolunu restore bileşenine çevirir. Bileşen = veri kökü + üst seviye
  * dosya/klasör. scopes: [{ id, prefix }] (full-restore-service scopeDefinitions).
  */
+// Yerel DB, WAL ve güvenlik kopyaları tek bileşendir: yalnız DB geri yüklenip
+// canlı WAL diskte kalırsa açılışta eski snapshot üstüne yeni işlemler
+// yeniden oynatılır ve hiç var olmamış karışık bir durum oluşur.
+const DB_FAMILY = 'BuyerLogLocal.db';
+function componentTop(top) {
+  const name = String(top || '');
+  return name === DB_FAMILY || name.startsWith(`${DB_FAMILY}.`) ? DB_FAMILY : name;
+}
+// Diskteki üst seviye ad bileşene ait mi? Windows dosya adları büyük/küçük
+// harf duyarsızdır.
+function topMatches(name, onlyTop, platform = process.platform) {
+  if (platform !== 'win32') return componentTop(name) === componentTop(onlyTop);
+  const fold = value => {
+    const lower = String(value || '').toLowerCase(), family = DB_FAMILY.toLowerCase();
+    return lower === family || lower.startsWith(`${family}.`) ? family : lower;
+  };
+  return fold(name) === fold(onlyTop);
+}
 function componentIdForArchivePath(archivePath, scopes) {
   const name = String(archivePath || '');
   if (SPECIAL_COMPONENTS[name]) return SPECIAL_COMPONENTS[name];
-  if (name === 'system/local/BuyerLogLocal.db') return 'localData/BuyerLogLocal.db';
+  if (name === 'system/local/BuyerLogLocal.db') return `localData/${DB_FAMILY}`;
   const scope = (scopes || []).find(item => name.startsWith(item.prefix));
   if (!scope) return null;
   const top = name.slice(scope.prefix.length).split('/')[0];
-  return top ? `${scope.id}/${top}` : null;
+  return top ? `${scope.id}/${componentTop(top)}` : null;
+}
+// Restore'un yazacağı/dokunacağı arşiv kaydı mı? Kapsam dışı (ağır/sır/önbellek)
+// kayıtlar eski yedeklerde bulunsa bile uygulanmaz; rollback onları
+// snapshot'lamadığı için yazılmaları geri alınamaz olurdu.
+function archivePathRestorable(archivePath, scopes) {
+  const name = String(archivePath || '');
+  if (SPECIAL_COMPONENTS[name] || name === 'system/local/BuyerLogLocal.db') return true;
+  const scope = (scopes || []).find(item => name.startsWith(item.prefix));
+  if (!scope) return false;
+  return !skipBackupFile(name.slice(scope.prefix.length), new Set(scope.excludeTop || []));
 }
 function describeComponent(id) {
   const key = String(id || '');
@@ -217,6 +245,7 @@ function describeComponent(id) {
 function componentsFromManifest(manifest, scopes) {
   const groups = new Map();
   for (const item of (manifest && Array.isArray(manifest.contents) ? manifest.contents : [])) {
+    if (!archivePathRestorable(item && item.path, scopes)) continue;
     const id = componentIdForArchivePath(item && item.path, scopes);
     if (!id) continue;
     const group = groups.get(id) || { ...describeComponent(id), fileCount: 0, bytes: 0, scopeLabelTr: '', scopeLabelEn: '' };
@@ -231,5 +260,5 @@ function componentsFromManifest(manifest, scopes) {
 
 module.exports = {
   BACKUP_EXCLUDED_TOP, HEAVY_ASSET_DIRS, CACHE_DIRS, HEAVY_EXT, CATEGORIES, BACKUP_COMPONENT_CATALOG, SPECIAL_COMPONENTS,
-  isHeavyBackupPath, skipBackupFile, componentIdForArchivePath, describeComponent, componentsFromManifest, catalogEntry,
+  isHeavyBackupPath, skipBackupFile, componentIdForArchivePath, archivePathRestorable, topMatches, componentTop, DB_FAMILY, describeComponent, componentsFromManifest, catalogEntry,
 };

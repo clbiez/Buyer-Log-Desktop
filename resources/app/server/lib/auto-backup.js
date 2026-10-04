@@ -19,11 +19,16 @@ const os = require('os');
 const crypto = require('crypto');
 const { safeId } = require('./backup-service');
 const { atomicCopy } = require('./shared-personal-backup');
+const { isNetworkPath } = require('./local-path-policy');
 
 const STATE_SCHEMA_VERSION = 1;
 const DEFAULT_RETENTION_DAYS = 3;
 const FILE_PATTERN = /^BuyerLog_AutoBackup_(\d{8})\.zip$/;
 const RETRY_AFTER_FAILURE_MS = 60 * 60 * 1000;
+// Yerel hedef bugün tamamsa ve yalnız Sync hedefi erişilemiyorsa tam yedeği
+// her saat yeniden üretmeyiz.
+const RETRY_SYNC_ONLY_MS = 6 * 60 * 60 * 1000;
+const PRODUCED_HISTORY = 12;
 const TARGETS = Object.freeze(['local', 'sync']);
 
 function autoBackupError(code, message, statusCode = 400) {
@@ -113,6 +118,9 @@ function createAutoBackupService({
       lastSuccessDay: state.lastSuccessDay && typeof state.lastSuccessDay === 'object' ? state.lastSuccessDay : {},
       lastAttemptAt: state.lastAttemptAt || null,
       lastRun: state.lastRun || null,
+      // Bu cihazın ürettiği yedeklerin sha256 kaydı: listeden geri yükleme yalnız
+      // doğrulanmış (bu cihazın yazdığı ve değişmemiş) dosyaları kabul eder.
+      produced: state.produced && typeof state.produced === 'object' ? state.produced : {},
     };
   }
   async function writeState(state) { await writeJsonAtomic(stateFile, { ...state, schemaVersion: STATE_SCHEMA_VERSION }); }
@@ -120,6 +128,7 @@ function createAutoBackupService({
   function validateLocalFolder(value) {
     const raw = String(value || '').trim();
     if (!raw) return '';
+    if (isNetworkPath(raw)) throw autoBackupError('AUTO_BACKUP_FOLDER_NETWORK', 'Kişisel yedek klasörü bu bilgisayarda yerel bir klasör olmalı; ağ klasörü seçilemez.');
     if (!path.isAbsolute(raw)) throw autoBackupError('AUTO_BACKUP_FOLDER_INVALID', 'Yedek klasörü tam (mutlak) bir yol olmalı.');
     const resolved = path.resolve(raw);
     for (const root of forbiddenRoots.filter(Boolean)) {
@@ -127,7 +136,12 @@ function createAutoBackupService({
     }
     return resolved;
   }
-  function effectiveLocalFolder(state) { return state.localFolder || defaultLocalFolder(homeDir); }
+  // Yedekten geri gelmiş ayar dosyası doğrulanmamış bir klasör taşıyabilir;
+  // her kullanımda yeniden doğrulanır, geçersizse varsayılana dönülür.
+  function effectiveLocalFolder(state) {
+    if (state.localFolder) { try { const folder = validateLocalFolder(state.localFolder); if (folder) return folder; } catch (_) {} }
+    return defaultLocalFolder(homeDir);
+  }
 
   async function syncFolder(requireWrite) {
     if (!syncSettings || !sharedHub) return { configured: false };
@@ -150,11 +164,12 @@ function createAutoBackupService({
     if (running) return running;
     if (isBlocked()) throw autoBackupError('AUTO_BACKUP_BLOCKED', 'Geri yükleme sürerken otomatik yedek alınamaz.', 409);
     running = (async () => {
-      const state = await readState();
+      const initial = await readState();
       const startedAt = now(), day = dayKey(startedAt), filename = backupFilename(day);
-      state.lastAttemptAt = startedAt.toISOString();
-      await writeState(state);
-      const results = {};
+      initial.lastAttemptAt = startedAt.toISOString();
+      await writeState(initial);
+      const results = {}, succeeded = {};
+      let lastRun = null, producedSha = '';
       let archive = null;
       try {
         archive = await backupService.create({
@@ -176,21 +191,32 @@ function createAutoBackupService({
             await writeJsonAtomic(path.join(resolved.folder, filename.replace(/\.zip$/i, '.json')), meta);
             const pruned = await pruneFolder(resolved.folder, retentionDays);
             results[target] = { ok: true, folder: resolved.folder, pruned };
-            state.lastSuccessDay[target] = day;
+            succeeded[target] = day;
+            producedSha = sha256;
           } catch (error) {
             results[target] = { ok: false, error: error && error.message || String(error), code: error && error.code || null };
             if (typeof logger === 'function') logger(`autoBackup:${target}`, error);
           }
         }
-        state.lastRun = { day, reason, startedAt: startedAt.toISOString(), finishedAt: now().toISOString(), bytes: meta.bytes, fileCount: meta.fileCount, results };
+        lastRun = { day, reason, startedAt: startedAt.toISOString(), finishedAt: now().toISOString(), bytes: meta.bytes, fileCount: meta.fileCount, results };
       } catch (error) {
         if (typeof logger === 'function') logger('autoBackup', error);
-        state.lastRun = { day, reason, startedAt: startedAt.toISOString(), finishedAt: now().toISOString(), error: error && error.message || String(error), results };
+        lastRun = { day, reason, startedAt: startedAt.toISOString(), finishedAt: now().toISOString(), error: error && error.message || String(error), results };
       } finally {
         if (archive && typeof archive.cleanup === 'function') await archive.cleanup().catch(() => {});
       }
+      // Çalışma sırasında yapılan ayar değişiklikleri (kapatma, klasör) ezilmesin:
+      // durum yeniden okunur, yalnız bu çalışmanın sonuçları birleştirilir.
+      const state = await readState();
+      Object.assign(state.lastSuccessDay, succeeded);
+      state.lastRun = lastRun;
+      if (producedSha) {
+        state.produced[filename] = producedSha;
+        const keys = Object.keys(state.produced).sort().reverse();
+        for (const key of keys.slice(PRODUCED_HISTORY)) delete state.produced[key];
+      }
       await writeState(state);
-      return state.lastRun;
+      return lastRun;
     })().finally(() => { running = null; });
     return running;
   }
@@ -212,7 +238,8 @@ function createAutoBackupService({
     }
     if (!missing.length) return false;
     const attemptedToday = lastAttempt && dayKey(new Date(lastAttempt)) === today;
-    return !attemptedToday || now().getTime() - lastAttempt >= RETRY_AFTER_FAILURE_MS;
+    const retryAfter = missing.length === 1 && missing[0] === 'sync' ? RETRY_SYNC_ONLY_MS : RETRY_AFTER_FAILURE_MS;
+    return !attemptedToday || now().getTime() - lastAttempt >= retryAfter;
   }
   async function tick() {
     try { if (await isDue()) await runNow({ reason: 'schedule' }); }
@@ -246,7 +273,7 @@ function createAutoBackupService({
       try {
         const resolved = await resolveTarget(target);
         targets[target] = resolved.configured
-          ? { configured: true, folder: resolved.folder, backups: await listFolder(resolved.folder), lastSuccessDay: state.lastSuccessDay[target] || null }
+          ? { configured: true, folder: resolved.folder, backups: (await listFolder(resolved.folder)).map(item => ({ ...item, verifiable: Boolean(state.produced[item.filename]) })), lastSuccessDay: state.lastSuccessDay[target] || null }
           : { configured: false, backups: [] };
       } catch (error) {
         targets[target] = { configured: true, available: false, error: error && error.message || String(error), backups: [] };
@@ -259,6 +286,17 @@ function createAutoBackupService({
     };
   }
 
+  // Listeden geri yükleme öncesi bütünlük: dosya bu cihazın ürettiği sha256 ile
+  // birebir aynı olmalı. Sync klasörüne başka biri tarafından bırakılmış ya da
+  // değiştirilmiş bir arşiv geri yükleme listesinden açılamaz.
+  async function resolveVerifiedBackupFile(target, filename) {
+    const file = await resolveBackupFile(target, filename);
+    const state = await readState();
+    const expected = state.produced[path.basename(file)];
+    if (!expected) throw autoBackupError('AUTO_BACKUP_UNVERIFIED', 'Bu yedek bu cihaz tarafından üretilmemiş veya kaydı yok; doğrulanamadığı için listeden geri yüklenemez. Dosyayı inceleyip "Dosyadan seç" ile yükleyebilirsiniz.', 409);
+    if (await sha256File(file) !== expected) throw autoBackupError('AUTO_BACKUP_TAMPERED', 'Yedek dosyası üretildikten sonra değişmiş; geri yükleme reddedildi.', 409);
+    return file;
+  }
   async function resolveBackupFile(target, filename) {
     const name = String(filename || '');
     if (!FILE_PATTERN.test(name) || path.basename(name) !== name) throw autoBackupError('AUTO_BACKUP_FILE_INVALID', 'Otomatik yedek dosya adı geçersiz.');
@@ -270,7 +308,7 @@ function createAutoBackupService({
     return file;
   }
 
-  return { runNow, isDue, tick, start, stop, status, updateSettings, resolveBackupFile, validateLocalFolder };
+  return { runNow, isDue, tick, start, stop, status, updateSettings, resolveBackupFile, resolveVerifiedBackupFile, validateLocalFolder, isRunning: () => Boolean(running) };
 }
 
 module.exports = { createAutoBackupService, dayKey, backupFilename, listFolder, pruneFolder, defaultLocalFolder, DEFAULT_RETENTION_DAYS, FILE_PATTERN };

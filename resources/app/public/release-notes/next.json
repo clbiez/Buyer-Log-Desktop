@@ -23,8 +23,8 @@
         "en": "Daily automatic backup: personal folder + Sync folder, last 3 days"
       },
       "body": {
-        "tr": "Buyer Log her gün bir kez tam sistem yedeği alır ve iki yere yazar: Buyer Log veri klasörlerinin dışındaki kişisel klasör (varsayılan Belgeler/Buyer Log Backups, değiştirilebilir) ve Buyer Log Sync klasörü. Her hedefte en fazla 3 günlük yedek tutulur; yeni gün yedeği geldiğinde en eskisi silinir. Otomatik yedek sekmesinde son yedekler listelenir, indirilebilir veya doğrudan geri yüklenebilir.",
-        "en": "Buyer Log takes one full system backup per day and writes it to two places: a personal folder outside Buyer Log data folders (default Documents/Buyer Log Backups, configurable) and the Buyer Log Sync folder. Each target keeps at most 3 days; when a new day's backup arrives the oldest one is deleted. The Automatic backup tab lists recent backups, which can be downloaded or restored directly."
+        "tr": "Buyer Log her gün bir kez tam sistem yedeği alır ve iki yere yazar: Buyer Log veri klasörlerinin dışındaki kişisel klasör (varsayılan Belgeler/Buyer Log Backups, değiştirilebilir) ve Buyer Log Sync klasörü. Her hedefte en fazla 3 günlük yedek tutulur; yeni gün yedeği geldiğinde en eskisi silinir. Otomatik yedek sekmesinde son yedekler listelenir, indirilebilir veya doğrudan geri yüklenebilir. Listeden geri yükleme yalnız bu cihazın ürettiği ve sonradan değişmemiş yedekler için açıktır; otomatik yedek ayarlarını moderatör yönetir.",
+        "en": "Buyer Log takes one full system backup per day and writes it to two places: a personal folder outside Buyer Log data folders (default Documents/Buyer Log Backups, configurable) and the Buyer Log Sync folder. Each target keeps at most 3 days; when a new day's backup arrives the oldest one is deleted. The Automatic backup tab lists recent backups, which can be downloaded or restored directly. Restoring from the list is only offered for backups produced by this device and unchanged since; the moderator manages automatic backup settings."
       },
       "visual": {
         "kind": "screenshot",
@@ -56,8 +56,8 @@
         "en": "Choose each data area to restore individually"
       },
       "body": {
-        "tr": "Tam sistem geri yüklemesi artık ön kontrol sonrası veri alanlarını kategorilere ayrılmış bir listede gösterir (temel veri, Collection, siparişler, fiyatlama, PLM, kullanıcı verileri, sistem). Yalnız işaretlenen alanlar yedekten yazılır; seçilmeyenler olduğu gibi kalır. Liste yedeğin kendi içeriğinden üretildiği için Buyer Log'a eklenen yeni özelliklerin verileri otomatik olarak yedeklenir ve “otomatik algılandı” etiketiyle seçilebilir görünür.",
-        "en": "After the preflight, full system restore now shows data areas in a categorised list (core data, Collection, orders, pricing, PLM, user data, system). Only ticked areas are written from the backup; unselected ones stay as they are. Because the list is built from the backup's own contents, data of new Buyer Log features is backed up automatically and appears as selectable with an “auto-detected” badge."
+        "tr": "Tam sistem geri yüklemesi artık ön kontrol sonrası veri alanlarını kategorilere ayrılmış bir listede gösterir (temel veri, Collection, siparişler, fiyatlama, PLM, kullanıcı verileri, sistem). Yalnız işaretlenen alanlar yedekten yazılır; seçilmeyenler olduğu gibi kalır. Yerel veritabanı günlüğü ve güvenlik kopyalarıyla birlikte tek alan olarak geri yüklenir. Liste yedeğin kendi içeriğinden üretildiği için Buyer Log'a eklenen yeni özelliklerin verileri otomatik olarak yedeklenir ve “otomatik algılandı” etiketiyle seçilebilir görünür.",
+        "en": "After the preflight, full system restore now shows data areas in a categorised list (core data, Collection, orders, pricing, PLM, user data, system). Only ticked areas are written from the backup; unselected ones stay as they are. The local database is restored as one area together with its journal and safety copies. Because the list is built from the backup's own contents, data of new Buyer Log features is backed up automatically and appears as selectable with an “auto-detected” badge."
       },
       "visual": {
         "kind": "screenshot",

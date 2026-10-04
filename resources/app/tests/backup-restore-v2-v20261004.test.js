@@ -195,6 +195,53 @@ test('v2 · kesintiye uğrayan seçmeli restore kurtarması yalnız snapshot al�
   assert.equal(await fsp.readFile(path.join(roots.serverDataRoot, 'untouched.json'), 'utf8'), '{"keep":true}');
 });
 
+test('v2 · yerel DB, WAL ve güvenlik kopyaları tek bileşendir; yalnız DB seçilse de canlı WAL temizlenir', async t => {
+  const { root, roots } = await makeRoots(t);
+  await fsp.writeFile(roots.localDbFile, JSON.stringify(dbState(7, 'old')));
+  await fsp.writeFile(`${roots.localDbFile}.wal`, '{"newer":"ops"}\n');
+  await fsp.writeFile(`${roots.localDbFile}.wal.bak`, '{"newer":"ops"}\n');
+  await fsp.writeFile(path.join(roots.serverDataRoot, 'quotations.json'), '{"old":"quotations"}');
+  await fsp.writeFile(roots.configPath, '{"port":6194}');
+  const archive = await newFormatArchive(root); t.after(() => archive.cleanup());
+  const service = createFullRestoreService({ appVersion: '7.0.227', roots, localDb: createLocalDb(roots.localDbFile), ...deps(roots) });
+  const plan = await service.inspect(archive.path);
+  assert.equal(plan.components.filter(item => item.id.startsWith('localData/BuyerLogLocal.db')).length, 1);
+  const result = await service.restore(archive.path, { actor: { id: 'moderator', systemRole: 'moderator' }, createSafetyBackup: false, preflight: plan, components: ['localData/BuyerLogLocal.db'] });
+  assert.equal(result.applied.mode, 'selective');
+  assert.equal(fs.existsSync(`${roots.localDbFile}.wal`), false);
+  assert.equal(fs.existsSync(`${roots.localDbFile}.wal.bak`), false);
+  assert.equal(JSON.parse(await fsp.readFile(roots.localDbFile, 'utf8')).revision, 42);
+  assert.equal(await fsp.readFile(path.join(roots.serverDataRoot, 'quotations.json'), 'utf8'), '{"old":"quotations"}');
+  assert.equal(scope.topMatches('buyerloglocal.DB.wal', 'BuyerLogLocal.db', 'win32'), true);
+  assert.equal(scope.topMatches('Quotations.json', 'quotations.json', 'win32'), true);
+  assert.equal(scope.topMatches('Quotations.json', 'quotations.json', 'linux'), false);
+});
+
+test('v2 · eski yedekteki görsel/PDF kayıtları listelenmez ve uygulanmaz (rollback dışı yazım olmaz)', async t => {
+  const { root, roots } = await makeRoots(t);
+  await fsp.writeFile(roots.localDbFile, JSON.stringify(dbState(7, 'old')));
+  await fsp.writeFile(path.join(roots.serverDataRoot, 'logo.png'), 'current-logo');
+  await fsp.writeFile(roots.configPath, '{"port":6194}');
+  const dbFile = path.join(root, 'legacy-db.json'); await fsp.writeFile(dbFile, JSON.stringify(dbState(42, 'restored')));
+  const archive = await createBackupArchive({
+    entries: [
+      { name: 'system/server-data/logo.png', buffer: Buffer.from('legacy-logo'), stage: 'data' },
+      { name: 'system/server-data/checklist-attachments/a/spec.pdf', buffer: Buffer.from('pdf'), stage: 'data' },
+      { name: 'system/server-data/settings.json', buffer: Buffer.from('{"modelConnections":[]}'), stage: 'settings' },
+      { name: 'system/local-data/BuyerLogLocal.db', sourcePath: dbFile, stage: 'data' },
+    ],
+    manifest: { app_version: '7.0.200', created_at: '2026-09-01T08:00:00.000Z', backup_type: 'full', user: { id: 'moderator' }, device: {} },
+    filename: 'legacy.zip',
+  });
+  t.after(() => archive.cleanup());
+  const service = createFullRestoreService({ appVersion: '7.0.227', roots, localDb: createLocalDb(roots.localDbFile), ...deps(roots) });
+  const plan = await service.inspect(archive.path);
+  assert.equal(plan.components.some(item => /logo\.png|checklist-attachments/.test(item.id)), false);
+  await service.restore(archive.path, { actor: { id: 'moderator', systemRole: 'moderator' }, createSafetyBackup: false, preflight: plan });
+  assert.equal(await fsp.readFile(path.join(roots.serverDataRoot, 'logo.png'), 'utf8'), 'current-logo');
+  assert.equal(fs.existsSync(path.join(roots.serverDataRoot, 'checklist-attachments', 'a', 'spec.pdf')), false);
+});
+
 function fakeBackupService(root) {
   let counter = 0;
   return {
@@ -257,8 +304,40 @@ test('v2 · otomatik yedek klasörü Buyer Log veri klasörlerinin dışında ol
   assert.equal(run.results.sync.skipped, true);
   await assert.rejects(service.resolveBackupFile('local', '../evil.zip'), error => error.code === 'AUTO_BACKUP_FILE_INVALID');
   assert.ok(await service.resolveBackupFile('local', (await listFolder(outside))[0].filename));
+  await assert.rejects(service.updateSettings({ localFolder: '\\\\server\\share\\backups' }), error => error.code === 'AUTO_BACKUP_FOLDER_NETWORK');
   await service.updateSettings({ enabled: false });
   assert.equal(await service.isDue(), false);
+});
+
+test('v2 · listeden geri yükleme yalnız bu cihazın ürettiği ve değişmemiş yedeği kabul eder', async t => {
+  const root = await tempDir(t, 'auto-backup-verify');
+  const folder = path.join(root, 'out');
+  const service = createAutoBackupService({ backupService: fakeBackupService(root), stateFile: path.join(root, 'state', 'auto-backup.json'), homeDir: root, now: () => new Date(2026, 9, 4, 9) });
+  await service.updateSettings({ localFolder: folder });
+  await service.runNow();
+  assert.ok(await service.resolveVerifiedBackupFile('local', 'BuyerLog_AutoBackup_20261004.zip'));
+  await fsp.writeFile(path.join(folder, 'BuyerLog_AutoBackup_20261003.zip'), 'planted');
+  await assert.rejects(service.resolveVerifiedBackupFile('local', 'BuyerLog_AutoBackup_20261003.zip'), error => error.code === 'AUTO_BACKUP_UNVERIFIED');
+  await fsp.writeFile(path.join(folder, 'BuyerLog_AutoBackup_20261004.zip'), 'tampered');
+  await assert.rejects(service.resolveVerifiedBackupFile('local', 'BuyerLog_AutoBackup_20261004.zip'), error => error.code === 'AUTO_BACKUP_TAMPERED');
+  const status = await service.status();
+  assert.equal(status.targets.local.backups.find(item => item.day === '20261003').verifiable, false);
+});
+
+test('v2 · yedek sürerken yapılan ayar değişikliği çalışma sonunda ezilmez', async t => {
+  const root = await tempDir(t, 'auto-backup-race');
+  let release;
+  const gate = new Promise(resolve => { release = resolve; });
+  const inner = fakeBackupService(root);
+  const backupService = { async create(options) { await gate; return inner.create(options); } };
+  const service = createAutoBackupService({ backupService, stateFile: path.join(root, 'state', 'auto-backup.json'), homeDir: root });
+  const running = service.runNow();
+  await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(service.isRunning(), true);
+  await service.updateSettings({ enabled: false });
+  release();
+  await running;
+  assert.equal((await service.status()).enabled, false);
 });
 
 test('v2 · sunucu ve arayüz otomatik yedek, listeden restore ve seçmeli tam restore sözleşmesini taşır', () => {
@@ -266,6 +345,9 @@ test('v2 · sunucu ve arayüz otomatik yedek, listeden restore ve seçmeli tam r
   for (const route of ['/api/backups/auto/status', '/api/backups/auto/settings', '/api/backups/auto/run', '/api/backups/auto/download', '/api/backups/auto/restore/inspect']) assert.ok(server.includes(route), route);
   assert.match(server, /components: Array\.isArray\(req\.body && req\.body\.components\)/);
   assert.match(server, /autoBackupService\.start\(\)/);
+  assert.match(server, /resolveVerifiedBackupFile/);
+  assert.match(server, /AUTO_BACKUP_IN_PROGRESS/);
+  assert.match(server, /'\/api\/backups\/auto\/run', userAccess\.requireArea\('source'\), userAccess\.requirePermission\('manageBackup'\), userAccess\.requireModerator/);
   assert.match(ui, /data-full-restore-scope-id/);
   assert.match(ui, /JSON\.stringify\(\{ uploadId, createSafetyBackup: f\.safety, components \}\)/);
   assert.match(ui, /\/api\/backups\/auto\/restore\/inspect/);

@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const {
   inspectBackupArchive, readBackupJsonEntry, extractBackupArchive, BACKUP_VERSION, BACKUP_SCHEMA_VERSION,
 } = require('./backup-archive');
-const { skipBackupFile, BACKUP_EXCLUDED_TOP, CATEGORIES: COMPONENT_CATEGORIES, componentsFromManifest, componentIdForArchivePath } = require('./backup-scope');
+const { skipBackupFile, BACKUP_EXCLUDED_TOP, CATEGORIES: COMPONENT_CATEGORIES, componentsFromManifest, componentIdForArchivePath, archivePathRestorable, topMatches } = require('./backup-scope');
 const { createLocalDb, SCHEMA_VERSION: LOCAL_DB_SCHEMA_VERSION } = require('./local-db');
 const { isNetworkPath } = require('./local-path-policy');
 const prewipeMasterRecovery = require('./prewipe-master-recovery');
@@ -93,7 +93,7 @@ async function walkManaged(root, excludeTop = [], onlyTop = '') {
     try { dir = await fsp.opendir(current); } catch (_) { return; }
     for await (const item of dir) {
       const rel = relative ? `${relative}/${item.name}` : item.name;
-      if (onlyTop && !relative && item.name !== onlyTop) continue;
+      if (onlyTop && !relative && !topMatches(item.name, onlyTop)) continue;
       if (skipBackupFile(rel, excluded) || item.isSymbolicLink()) continue;
       const full = path.join(current, item.name);
       if (item.isDirectory()) await visit(full, rel);
@@ -188,6 +188,9 @@ function buildRestorePlan(scopes, manifest, components = null) {
     selected.add(id);
   }
   if (!selected.size) throw restoreError('RESTORE_SCOPE_EMPTY', 'Geri yüklenecek en az bir veri alanı seçin.');
+  // Tümü seçiliyse eski tam ayna davranışı: backup'ta olmayan üst seviye
+  // dosyalar da (ör. yedekten sonra oluşmuş WAL) temizlenir.
+  if (selected.size === availableIds.size) return buildRestorePlan(scopes, manifest, null);
   const touched = [];
   for (const id of selected) {
     if (SPECIAL_COMPONENT_IDS.has(id)) continue;
@@ -199,6 +202,7 @@ function buildRestorePlan(scopes, manifest, components = null) {
   return { mode: 'selective', selected, touched, available };
 }
 function planIncludes(plan, archivePath, scopes) {
+  if (!archivePathRestorable(archivePath, scopes)) return false;
   if (!plan || plan.mode === 'mirror') return true;
   return plan.selected.has(componentIdForArchivePath(archivePath, scopes));
 }
@@ -309,7 +313,7 @@ function walkManagedSync(root, excludeTop = [], onlyTop = '') {
   function visit(current, relative = '') {
     for (const item of fs.readdirSync(current, { withFileTypes: true })) {
       const rel = relative ? `${relative}/${item.name}` : item.name;
-      if (onlyTop && !relative && item.name !== onlyTop) continue;
+      if (onlyTop && !relative && !topMatches(item.name, onlyTop)) continue;
       if (skipBackupFile(rel, excluded) || item.isSymbolicLink()) continue;
       const full = path.join(current, item.name);
       if (item.isDirectory()) visit(full, rel);
@@ -422,7 +426,7 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       excludedAssets: info.manifest.excluded_assets || null,
       autoBackup: Boolean(info.manifest.auto_backup),
     };
-    if (info.manifest.heavy_assets_excluded) warnings.push('Bu yedek model dosyalarını ve görselleri içermez; mevcut model dosyaları ve görseller restore sırasında korunur.');
+    if (info.manifest.heavy_assets_excluded) warnings.push('Bu yedek model dosyalarını, görselleri, PDF ve arşiv dosyalarını içermez; bu dosyaların mevcut halleri restore sırasında korunur.');
     // Keep the verified central-directory records for the same-process start
     // phase without serializing hundreds of thousands of records to the UI.
     Object.defineProperty(result, 'records', { value: info.records, enumerable: false });

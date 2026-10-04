@@ -5670,6 +5670,8 @@ app.get('/api/backups/user-restore/:id/status', (req, res) => {
 app.post('/api/backups/restore/start', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), (req, res) => {
   try {
     if (systemRestoreState.writeLocked || [...fullRestoreJobs.values()].some(job => !job.done)) return res.status(409).json({ error: 'Başka bir Full System Restore çalışıyor.', code: 'SYSTEM_RESTORE_IN_PROGRESS' });
+    // Yarım kalmış bir otomatik yedek, restore commit'i ile karışık bir arşiv üretmesin.
+    if (autoBackupService.isRunning()) return res.status(409).json({ error: 'Otomatik yedek alınıyor; tamamlanınca geri yüklemeyi yeniden başlatın.', code: 'AUTO_BACKUP_IN_PROGRESS' });
     const upload = fullRestoreUploadFor(req, req.body && req.body.uploadId);
     if (!upload) return res.status(404).json({ error: 'Restore için yüklenmiş backup bulunamadı.', code: 'RESTORE_UPLOAD_NOT_FOUND' });
     const createSafetyBackup = !(req.body && req.body.createSafetyBackup === false);
@@ -5839,21 +5841,29 @@ function autoBackupApiError(res, error, fallback) {
   if (status >= 500) logRuntimeFailure('autoBackupApi', error);
   return res.status(status).json({ error: error && error.message || fallback, code: error && error.code || 'AUTO_BACKUP_FAILED' });
 }
+// Klasör yolları ve hata ayrıntıları yalnız moderatöre gösterilir.
+function redactAutoBackupStatus(status, req) {
+  if (req.currentUser && req.currentUser.systemRole === 'moderator') return status;
+  const targets = {};
+  for (const [key, target] of Object.entries(status.targets || {})) targets[key] = { ...target, folder: undefined, error: target.error ? 'unavailable' : undefined };
+  const lastRun = status.lastRun ? { ...status.lastRun, error: status.lastRun.error ? 'failed' : undefined, results: Object.fromEntries(Object.entries(status.lastRun.results || {}).map(([key, item]) => [key, { ok: Boolean(item && item.ok), skipped: Boolean(item && item.skipped) }])) } : null;
+  return { ...status, localFolder: undefined, defaultLocalFolder: undefined, targets, lastRun };
+}
 app.get('/api/backups/auto/status', async (req, res) => {
-  try { res.json({ ok: true, ...(await autoBackupService.status()) }); }
+  try { res.json({ ok: true, ...redactAutoBackupStatus(await autoBackupService.status(), req) }); }
   catch (error) { autoBackupApiError(res, error, 'Otomatik yedek durumu okunamadı.'); }
 });
-app.post('/api/backups/auto/settings', userAccess.requirePermission('manageBackup'), async (req, res) => {
+app.post('/api/backups/auto/settings', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), userAccess.requireModerator, async (req, res) => {
   try {
     const body = req.body || {};
     res.json({ ok: true, ...(await autoBackupService.updateSettings({ enabled: body.enabled, localFolder: body.localFolder })) });
   } catch (error) { autoBackupApiError(res, error, 'Otomatik yedek ayarları kaydedilemedi.'); }
 });
-app.post('/api/backups/auto/run', userAccess.requirePermission('manageBackup'), async (req, res) => {
+app.post('/api/backups/auto/run', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), userAccess.requireModerator, async (req, res) => {
   try { res.json({ ok: true, lastRun: await autoBackupService.runNow({ reason: 'manual' }), status: await autoBackupService.status() }); }
   catch (error) { autoBackupApiError(res, error, 'Otomatik yedek alınamadı.'); }
 });
-app.get('/api/backups/auto/download', userAccess.requirePermission('manageBackup'), async (req, res) => {
+app.get('/api/backups/auto/download', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), userAccess.requireModerator, async (req, res) => {
   try {
     const file = await autoBackupService.resolveBackupFile(String(req.query.target || ''), String(req.query.filename || ''));
     const stat = await fs.promises.stat(file);
@@ -5868,12 +5878,12 @@ app.get('/api/backups/auto/download', userAccess.requirePermission('manageBackup
 // Listeden geri yükleme: dosya yükleme gerekmez. Yedek önce geçici alana
 // kopyalanır (inceleme sırasında 3 günlük temizlik dosyayı silebilir), sonra
 // normal Full System Restore ön kontrolünden geçer.
-app.post('/api/backups/auto/restore/inspect', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), async (req, res) => {
+app.post('/api/backups/auto/restore/inspect', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), userAccess.requireModerator, async (req, res) => {
   let upload = null;
   try {
     if (systemRestoreState.writeLocked) return res.status(409).json({ error: 'Başka bir Full System Restore uygulanıyor.', code: 'SYSTEM_RESTORE_IN_PROGRESS' });
     const body = req.body || {};
-    const source = await autoBackupService.resolveBackupFile(String(body.target || ''), String(body.filename || ''));
+    const source = await autoBackupService.resolveVerifiedBackupFile(String(body.target || ''), String(body.filename || ''));
     const root = fs.mkdtempSync(path.join(TEMP_ROOT, 'buyerlog-upload-'));
     upload = { root, file: path.join(root, 'upload.blgbackup') };
     await fs.promises.copyFile(source, upload.file);

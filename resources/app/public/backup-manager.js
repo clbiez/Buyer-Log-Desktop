@@ -131,6 +131,8 @@ function buyerLogBackupModal(options = {}) {
   document.getElementById('_buyerLogBackupModal')?.remove();
   const moderator = Boolean(window.BLIsModerator && window.BLIsModerator());
   const canManage = moderator || (typeof window.BLHasPermission === 'function' && window.BLHasPermission('manageBackup'));
+  // Otomatik yedek bu bilgisayarın tam sistem yedeğidir; yönetimi moderatöre aittir.
+  const autoManage = moderator;
   const st = buyerLogBackupFreshState();
   buyerLogBackupState.tab = options.tab || buyerLogBackupState.tab || 'auto';
   if (!moderator && !canManage) buyerLogBackupState.restoreKind = 'user';
@@ -153,7 +155,7 @@ function buyerLogBackupModal(options = {}) {
     if (!data.configured) body = `<div class="blBkEmpty">${key === 'sync' ? T('Buyer Log Sync klasörü bağlı değil. Data Management üzerinden Sync klasörünü seçtiğinizde yedekler buraya da yazılır.','Buyer Log Sync folder is not connected. Once you select it in Data Management, backups are written there too.') : T('Klasör hazırlanamadı.','Folder is not ready.')}</div>`;
     else if (data.error) body = `<div class="blBkEmpty is-error">${buyerLogBackupEsc(data.error)}</div>`;
     else if (!data.backups.length) body = `<div class="blBkEmpty">${T('Henüz otomatik yedek yok. İlk yedek bugün içinde otomatik alınır.','No automatic backup yet. The first one is taken automatically today.')}</div>`;
-    else body = `<ul class="blBkList">${data.backups.map(item => `<li><div class="blBkListMain"><b>${buyerLogBackupEsc(buyerLogBackupDate(item.createdAt))}</b><small>${buyerLogRestoreBytes(item.bytes)}${item.fileCount ? ` · ${Number(item.fileCount).toLocaleString()} ${T('dosya','files')}` : ''}${item.appVersion ? ` · v${buyerLogBackupEsc(item.appVersion)}` : ''}</small></div>${canManage ? `<div class="blBkListActions"><button class="tbtn" type="button" data-auto-download="${key}|${buyerLogBackupEsc(item.filename)}" title="${T('İndir','Download')}"><svg class="ic"><use href="#i-download"/></svg><span>${T('İndir','Download')}</span></button><button class="tbtn" type="button" data-auto-restore="${key}|${buyerLogBackupEsc(item.filename)}"><svg class="ic"><use href="#i-refresh"/></svg><span>${T('Geri yükle…','Restore…')}</span></button></div>` : ''}</li>`).join('')}</ul>`;
+    else body = `<ul class="blBkList">${data.backups.map(item => `<li><div class="blBkListMain"><b>${buyerLogBackupEsc(buyerLogBackupDate(item.createdAt))}</b><small>${buyerLogRestoreBytes(item.bytes)}${item.fileCount ? ` · ${Number(item.fileCount).toLocaleString()} ${T('dosya','files')}` : ''}${item.appVersion ? ` · v${buyerLogBackupEsc(item.appVersion)}` : ''}</small></div>${autoManage ? `<div class="blBkListActions"><button class="tbtn" type="button" data-auto-download="${key}|${buyerLogBackupEsc(item.filename)}" title="${T('İndir','Download')}"><svg class="ic"><use href="#i-download"/></svg><span>${T('İndir','Download')}</span></button>${item.verifiable ? `<button class="tbtn" type="button" data-auto-restore="${key}|${buyerLogBackupEsc(item.filename)}"><svg class="ic"><use href="#i-refresh"/></svg><span>${T('Geri yükle…','Restore…')}</span></button>` : `<em class="blBkBadge is-locked" title="${T('Bu cihaz tarafından üretildiği doğrulanamadı; indirip dosyadan geri yükleyebilirsiniz.','Could not be verified as produced by this device; download it and restore from file.')}">${T('doğrulanamadı','unverified')}</em>`}</div>` : ''}</li>`).join('')}</ul>`;
     const folder = data.folder ? `<code class="blBkPath" title="${buyerLogBackupEsc(data.folder)}">${buyerLogBackupEsc(data.folder)}</code>` : '';
     const ok = data.lastSuccessDay && st.auto.data && data.lastSuccessDay === st.auto.data.today;
     return `<article class="blBkTarget"><header><span class="blBkTargetIcon"><svg class="ic"><use href="#${icon}"/></svg></span><div><b>${title}</b>${folder}</div><span class="blBkPill ${ok ? 'is-ok' : (data.configured ? 'is-wait' : 'is-off')}">${ok ? T('Bugün alındı','Done today') : (data.configured ? T('Bekliyor','Pending') : T('Bağlı değil','Not connected'))}</span></header>${body}</article>`;
@@ -172,7 +174,7 @@ function buyerLogBackupModal(options = {}) {
         <div class="blBkStat"><span>${T('Durum','Status')}</span><b class="${data.enabled ? 'is-ok' : 'is-off'}">${data.enabled ? T('Açık · her gün','On · daily') : T('Kapalı','Off')}</b></div>
         <div class="blBkStat"><span>${T('Son yedek','Last backup')}</span><b>${buyerLogBackupEsc(lastText)}</b></div>
         <div class="blBkStat"><span>${T('Saklama','Retention')}</span><b>${T(`Son ${data.retentionDays} gün`, `Last ${data.retentionDays} days`)}</b></div>
-        <div class="blBkStat"><span>${T('Kapsam','Scope')}</span><b>${T('Tüm veriler · model dosyaları ve görseller hariç','All data · model files & images excluded')}</b></div>
+        <div class="blBkStat"><span>${T('Kapsam','Scope')}</span><b>${T('Tüm veriler · model, görsel, PDF ve arşiv dosyaları hariç','All data · model, image, PDF & archive files excluded')}</b></div>
       </div>
       ${lastErrors.length ? `<div class="blBkAlert is-error">${lastErrors.map(buyerLogBackupEsc).join('<br>')}</div>` : ''}
       ${a.message ? `<div class="blBkAlert">${buyerLogBackupEsc(a.message)}</div>` : ''}
@@ -180,12 +182,12 @@ function buyerLogBackupModal(options = {}) {
         ${autoTargetHtml('local', data.targets && data.targets.local, T('Bu bilgisayar (Buyer Log dışı klasör)','This computer (folder outside Buyer Log)'), 'i-folder')}
         ${autoTargetHtml('sync', data.targets && data.targets.sync, T('Buyer Log Sync klasörü','Buyer Log Sync folder'), 'i-cloud')}
       </div>
-      ${canManage ? `<div class="blBkSettings">
+      ${autoManage ? `<div class="blBkSettings">
         <label class="blBkSwitch"><input type="checkbox" data-auto-enabled ${data.enabled ? 'checked' : ''} ${a.busy ? 'disabled' : ''}/><span>${T('Günlük otomatik yedek','Daily automatic backup')}</span></label>
         <div class="blBkFolderRow"><input type="text" data-auto-folder placeholder="${buyerLogBackupEsc(data.defaultLocalFolder)}" value="${buyerLogBackupEsc(folderValue)}" aria-label="${T('Yedek klasörü','Backup folder')}"/><button class="tbtn" type="button" data-auto-folder-save ${a.busy ? 'disabled' : ''}>${T('Klasörü kaydet','Save folder')}</button></div>
         <small class="blBkHint">${T('Boş bırakılırsa varsayılan klasör kullanılır. Klasör Buyer Log veri klasörlerinin dışında olmalıdır.','Leave empty to use the default folder. The folder must be outside Buyer Log data folders.')}</small>
         <div class="blBkActions"><button class="navActionBtn" type="button" data-auto-run ${a.busy || data.running ? 'disabled' : ''}><svg class="ic"><use href="#i-database-import"/></svg><span>${a.busy || data.running ? T('Yedekleniyor…','Backing up…') : T('Şimdi yedekle','Back up now')}</span></button></div>
-      </div>` : `<div class="blBkHint">${T('Otomatik yedek ayarlarını yalnız yedek yönetme yetkisi olan kullanıcılar değiştirebilir.','Only users with backup permission can change automatic backup settings.')}</div>`}`;
+      </div>` : `<div class="blBkHint">${T('Otomatik yedek ayarlarını ve listeden geri yüklemeyi yalnız moderatör yönetebilir.','Only the moderator can manage automatic backup settings and restore from the list.')}</div>`}`;
   }
 
   // ---- Yedek al -----------------------------------------------------------
@@ -210,7 +212,7 @@ function buyerLogBackupModal(options = {}) {
           <div class="blBkActions"><button class="navActionBtn" type="button" data-backup-mode="user" ${b.busy ? 'disabled' : ''}><svg class="ic"><use href="#i-download"/></svg><span>${T('Verilerimi Yedekle','Back Up My Data')}</span></button></div>
         </article>
         <div class="blBkStack">
-          ${moderator ? `<article class="blBkCard"><header><b>${T('Tam Sistem Yedeği','Full System Backup')}</b></header><p class="blBkHint">${T('Bu bilgisayardaki tüm Buyer Log verisi, kullanıcı/rol yapısı ve ayarlar tek ZIP olarak indirilir. Model dosyaları ve görseller boyutu şişirmemek için yedeğe alınmaz.','All Buyer Log data on this computer, the user/role structure and settings are downloaded as one ZIP. Model files and images are excluded to keep the size small.')}</p><div class="blBkActions"><button class="tbtn" type="button" data-backup-mode="full" ${b.busy ? 'disabled' : ''}><svg class="ic"><use href="#i-database-import"/></svg><span>${T('Tam Sistem Yedeği','Full System Backup')}</span></button></div></article>` : ''}
+          ${moderator ? `<article class="blBkCard"><header><b>${T('Tam Sistem Yedeği','Full System Backup')}</b></header><p class="blBkHint">${T('Bu bilgisayardaki tüm Buyer Log verisi, kullanıcı/rol yapısı ve ayarlar tek ZIP olarak indirilir. Model dosyaları, görseller, PDF ve arşiv dosyaları boyutu şişirmemek için yedeğe alınmaz.','All Buyer Log data on this computer, the user/role structure and settings are downloaded as one ZIP. Model files, images, PDF and archive files are excluded to keep the size small.')}</p><div class="blBkActions"><button class="tbtn" type="button" data-backup-mode="full" ${b.busy ? 'disabled' : ''}><svg class="ic"><use href="#i-database-import"/></svg><span>${T('Tam Sistem Yedeği','Full System Backup')}</span></button></div></article>` : ''}
           <article class="blBkCard backupSharedPanel"><div><b>${T('Ortak kişisel yedek','Shared personal backup')}</b><div data-shared-personal-status>${buyerLogBackupEsc(sharedText)}</div></div><div class="backupRestoreActions"><button class="tbtn" type="button" data-shared-personal-now ${shared.busy ? 'disabled' : ''}>${T('Şimdi güncelle','Back up now')}</button>${sd && sd.available && sd.latest ? `<button class="tbtn" type="button" data-shared-personal-download>${T('Ortak yedeği indir','Download shared backup')}</button>` : ''}</div></article>
         </div>
       </div>
@@ -273,7 +275,7 @@ function buyerLogBackupModal(options = {}) {
     ];
     const scrollTop = modal.querySelector('.blBkBody') ? modal.querySelector('.blBkBody').scrollTop : 0;
     modal.innerHTML = `<div class="modalCard backupCard blBkCard2" role="dialog" aria-modal="true" aria-labelledby="_backupTitle">
-      <div class="backupHead"><div><div class="modalTitle" id="_backupTitle">${T('Yedekleme ve Geri Yükleme','Backup & Restore')}</div><div class="backupIntro">${T('Verileriniz her gün otomatik yedeklenir. Model dosyaları ve görseller yedeği şişirmemek için kapsam dışıdır.','Your data is backed up automatically every day. Model files and images are excluded to keep backups small.')}</div></div><button class="pricingRuleIconBtn _backupClose" type="button" aria-label="${T('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
+      <div class="backupHead"><div><div class="modalTitle" id="_backupTitle">${T('Yedekleme ve Geri Yükleme','Backup & Restore')}</div><div class="backupIntro">${T('Verileriniz her gün otomatik yedeklenir. Model dosyaları, görseller, PDF ve arşiv dosyaları yedeği şişirmemek için kapsam dışıdır.','Your data is backed up automatically every day. Model files, images, PDF and archive files are excluded to keep backups small.')}</div></div><button class="pricingRuleIconBtn _backupClose" type="button" aria-label="${T('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="blBkTabs" role="tablist">${tabs.map(item => `<button type="button" role="tab" data-backup-tab="${item.id}" aria-selected="${tab === item.id}" class="${tab === item.id ? 'active' : ''}"><svg class="ic"><use href="#${item.icon}"/></svg><span>${item.label}</span></button>`).join('')}</div>
       <div class="backupBody blBkBody">${tab === 'auto' ? autoPanel() : tab === 'backup' ? backupPanel() : restorePanel()}</div>
     </div>`;
