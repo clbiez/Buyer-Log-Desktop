@@ -66,7 +66,7 @@ function createLcwAiClient(options = {}) {
   function safeLog(event, details = {}) {
     // Yalnız sayısal/kod alanları: metin, başlık, token geçmez.
     const out = { event };
-    for (const key of ['status', 'code', 'ms', 'attempt', 'chunks', 'bytes']) if (details[key] != null) out[key] = details[key];
+    for (const key of ['status', 'code', 'ms', 'attempt', 'chunks', 'bytes', 'types']) if (details[key] != null) out[key] = details[key];
     try { log(out); } catch (_) {}
   }
 
@@ -145,11 +145,13 @@ function createLcwAiClient(options = {}) {
         onActivity: () => deadline.activity(),
         onDelta: (delta, state) => { if (typeof input.onDelta === 'function') { try { input.onDelta(delta, { chars: state.text.length }); } catch (_) {} } },
       });
-      safeLog('LCWAI_MESSAGE_DONE', { ms: Date.now() - started, chunks: result.chunks });
+      safeLog('LCWAI_MESSAGE_DONE', { ms: Date.now() - started, chunks: result.chunks, types: result.types });
       return { ...result, modelKey: (result.metadata && result.metadata.modelKey) || payload.modelKey };
     } catch (error) {
       const failure = failureFor(error, deadline.reason());
-      safeLog('LCWAI_MESSAGE_FAILED', { code: failure.code, ms: Date.now() - started });
+      // Akış türü özeti teşhis içindir (tür adları + adet; metin/sır içermez).
+      const types = /types=([a-z0-9_:,-]*)/i.exec(String(failure.detail || ''));
+      safeLog('LCWAI_MESSAGE_FAILED', { code: failure.code, ms: Date.now() - started, types: types ? types[1] : undefined });
       throw failure;
     } finally { deadline.dispose(); }
   }

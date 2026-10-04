@@ -276,6 +276,7 @@
         },
       });
       conv.chatId = result.chatId || conv.chatId;
+      if (!String(result.text || '').trim()) throw Object.assign(new Error('empty'), { code: 'LCWAI_INVALID_RESPONSE' });
       answer.text = result.text;
       answer.model = result.model && result.model.label;
     } catch (error) {
@@ -295,7 +296,9 @@
     const conv = activeConversation();
     const lastUser = [...conv.messages].reverse().find(item => item.role === 'user');
     if (!lastUser || state.busy) return;
-    if (conv.messages[conv.messages.length - 1].role === 'ai' && conv.messages[conv.messages.length - 1].error) conv.messages.pop();
+    const last = conv.messages[conv.messages.length - 1];
+    // Boş ya da hatalı cevap yeniden denemede kaldırılır; ekranda yığılmaz.
+    if (last && last.role === 'ai' && (last.error || !last.text)) conv.messages.pop();
     send(lastUser.text, { reuse: lastUser });
   }
 

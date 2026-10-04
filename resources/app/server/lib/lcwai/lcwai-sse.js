@@ -63,8 +63,21 @@ function createSseParser(onEvent) {
 
 /* Olayları tek bir cevaba indirger. Yalnız `content` parçaları cevaba girer;
    düşünme/reasoning parçaları sayılır ama metne karışmaz. */
+/* Olayları tek bir cevaba indirger.
+   - İçerik: chunkType "content" (doğrulanan biçim) ve içerik taşıyan diğer
+     türler (text/delta/message…); alan adı content | delta | text | message.
+   - Cevaba KARIŞMAYANLAR: düşünme/reasoning, başlık (generateTitle), durum,
+     kullanım/metadata parçaları.
+   - Tamamlanma yalnız İÇERİK akışının complete'i ile sayılır; başlık
+     parçasının isComplete'i cevabı bitirmez (canlıda sohbet boş kalıyordu).
+   - types: tür → adet özeti (teşhis; metin içermez). */
+const NON_ANSWER_TYPES = /reason|think|title|status|usage|meta|tool|progress|heartbeat|ping/;
+function chunkText(payload) {
+  for (const key of ['content', 'delta', 'text', 'message']) if (typeof payload[key] === 'string') return payload[key];
+  return '';
+}
 function createChunkAccumulator({ maxChars = 200000 } = {}) {
-  const state = { text: '', chunks: 0, reasoningChunks: 0, complete: false, done: false, finishReason: '', metadata: null, truncated: false };
+  const state = { text: '', chunks: 0, reasoningChunks: 0, complete: false, done: false, finishReason: '', metadata: null, truncated: false, types: {} };
   function apply(event) {
     const raw = String(event && event.data != null ? event.data : '').trim();
     if (!raw) return { kind: 'empty' };
@@ -74,34 +87,42 @@ function createChunkAccumulator({ maxChars = 200000 } = {}) {
     catch (_) { throw lcwAiError('INVALID_RESPONSE', { detail: 'sse-json' }); }
     if (!payload || typeof payload !== 'object') return { kind: 'empty' };
     const type = String(payload.chunkType || '').toLowerCase();
+    const typeKey = type || 'untyped';
+    state.types[typeKey] = (state.types[typeKey] || 0) + 1;
     if (type === 'error' || payload.error) {
       throw lcwAiError('UNAVAILABLE', { detail: typeof payload.error === 'string' ? payload.error : 'stream-error' });
     }
+    const nonAnswer = NON_ANSWER_TYPES.test(type);
     let delta = '';
-    if ((type === 'content' || (!type && typeof payload.content === 'string')) && typeof payload.content === 'string') {
-      delta = payload.content;
-      const room = Math.max(0, maxChars - state.text.length);
-      if (delta.length > room) { delta = delta.slice(0, room); state.truncated = true; }
-      state.text += delta;
-      state.chunks += 1;
-    } else if (/reason|think/.test(type)) {
-      state.reasoningChunks += 1;
+    if (nonAnswer) {
+      if (/reason|think/.test(type)) state.reasoningChunks += 1;
+    } else if (type !== 'complete') {
+      delta = chunkText(payload);
+      if (delta) {
+        const room = Math.max(0, maxChars - state.text.length);
+        if (delta.length > room) { delta = delta.slice(0, room); state.truncated = true; }
+        state.text += delta;
+        state.chunks += 1;
+      }
     }
-    if (payload.isComplete === true || type === 'complete') {
+    if (!nonAnswer && (payload.isComplete === true || type === 'complete')) {
       state.complete = true;
       state.finishReason = String(payload.finishReason || state.finishReason || '');
-      if (payload.metadata && typeof payload.metadata === 'object') {
-        state.metadata = {
-          chatId: payload.metadata.chatId == null ? null : String(payload.metadata.chatId),
-          modelKey: payload.metadata.modelKey == null ? '' : String(payload.metadata.modelKey),
-        };
-      }
-      return { kind: 'complete', delta };
     }
+    // chatId hangi parçada gelirse gelsin alınır (başlık parçası dahil).
+    if (payload.metadata && typeof payload.metadata === 'object') {
+      const meta = payload.metadata;
+      state.metadata = {
+        chatId: meta.chatId == null ? (state.metadata && state.metadata.chatId) || null : String(meta.chatId),
+        modelKey: meta.modelKey == null ? (state.metadata && state.metadata.modelKey) || '' : String(meta.modelKey),
+      };
+    }
+    if (state.complete && !nonAnswer && (payload.isComplete === true || type === 'complete')) return { kind: 'complete', delta };
     return { kind: delta ? 'content' : (type || 'other'), delta };
   }
   return { apply, state };
 }
+const typeSummary = types => Object.entries(types || {}).map(([key, count]) => `${key}:${count}`).join(',');
 
 async function* iterateStream(body) {
   if (!body) return;
@@ -138,19 +159,29 @@ async function readSseResponse(body, { onDelta, maxChars, onActivity } = {}) {
     if (typeof onActivity === 'function') onActivity();
     parser.feed(typeof part === 'string' ? part : decoder.decode(part, { stream: true }));
     if (failure) throw failure;
-    if (accumulator.state.done) break;
+    // [DONE] yalnız içerik geldiyse ya da içerik akışı tamamlandıysa okumayı
+    // bitirir; başlık akışının erken [DONE]'ı cevabı kesmez.
+    if (accumulator.state.done && (accumulator.state.text || accumulator.state.complete)) break;
+    accumulator.state.done = false;
   }
   parser.feed(decoder.decode());
   parser.end();
   if (failure) throw failure;
   const state = accumulator.state;
-  if (!state.complete && !state.done) throw lcwAiError('STREAM_INTERRUPTED');
-  if (!state.complete && state.done && !state.text) throw lcwAiError('INVALID_RESPONSE', { detail: 'empty-stream' });
+  if (!state.text) {
+    // İçeriksiz akış asla sessiz başarı sayılmaz; tür özeti teşhis içindir.
+    throw lcwAiError(state.complete || Object.keys(state.types).length ? 'INVALID_RESPONSE' : 'STREAM_INTERRUPTED', { detail: `empty-answer types=${typeSummary(state.types)}` });
+  }
+  if (!state.complete && !state.done && !Object.keys(state.types).includes('complete')) {
+    // İçerik geldi ama tamamlanma işareti yok: yarım cevap.
+    throw lcwAiError('STREAM_INTERRUPTED', { detail: `types=${typeSummary(state.types)}` });
+  }
   return {
     text: state.text,
     finishReason: state.finishReason || (state.done ? 'stop' : ''),
     metadata: state.metadata,
     chunks: state.chunks,
+    types: typeSummary(state.types),
     truncated: state.truncated,
   };
 }

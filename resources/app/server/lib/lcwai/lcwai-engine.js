@@ -135,7 +135,11 @@ function createLcwAiEngine(options = {}) {
         content: built.prompt,
         chatId,
         attachments,
-        generateTitle: !chatId,
+        /* Başlık üretimi kapalı: generateTitle=true akışa başlık parçaları ve
+           erken [DONE] karıştırıp canlıda sohbeti boş bırakıyordu. Bağlama özel
+           çağrıların kanıtlanmış yolu (false) kullanılır; LCW AI geçmişinde
+           sohbet yine oluşur. */
+        generateTitle: false,
         modelKey: input.modelKey,
         reasoningLevel: input.reasoningLevel,
         signal,

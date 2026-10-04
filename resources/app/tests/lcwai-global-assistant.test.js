@@ -64,7 +64,7 @@ test('sohbet prompt: ilk mesaj = sistem + global + modül + bağlam + mesaj; dev
   assert.match(many, /500 satırın 200 tanesi gösteriliyor/);
 });
 
-test('motor.chat: yeni sohbet chatId=null + başlık; ikinci mesaj aynı chatId; modül bilgisi tekrar gitmez', async () => {
+test('motor.chat: yeni sohbet chatId=null; ikinci mesaj aynı chatId; modül bilgisi tekrar gitmez', async () => {
   const bodies = [];
   const auth = createLcwAiAuth({ provider: provider([makeToken()]) });
   const client = createLcwAiClient({ auth, fetch: async (url, init) => { bodies.push(JSON.parse(init.body)); return sse('cevap', 'chat-42'); } });
@@ -72,7 +72,7 @@ test('motor.chat: yeni sohbet chatId=null + başlık; ikinci mesaj aynı chatId;
   const first = await engine.chat('u1', { message: 'Backlog gecikmelerini analiz et', lang: 'tr' });
   assert.equal(first.chatId, 'chat-42');
   assert.equal(bodies[0].chatId, null);
-  assert.equal(bodies[0].generateTitle, true);
+  assert.equal(bodies[0].generateTitle, false, 'başlık üretimi akışı boşaltıyordu (v7.0.235 regresyonu)');
   assert.match(bodies[0].content, /MODÜL BİLGİSİ: Backlog/);
   const second = await engine.chat('u1', { chatId: first.chatId, message: 'Backlog için ilk üçü hangisi?', lang: 'tr' });
   assert.equal(bodies[1].chatId, 'chat-42');
