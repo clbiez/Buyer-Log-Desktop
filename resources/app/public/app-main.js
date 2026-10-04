@@ -3757,25 +3757,16 @@ function saveAutoTableColumnState(){
     BLStorage.setItem(AUTO_TABLE_COL_STATE_KEY,JSON.stringify(payload));
   }catch(e){}
 }
-/* v7.0.229 — CP / Orders ana başlıkları yeniden düzenlendi. Bu sürümle her
-   kullanıcının kayıtlı SÜTUN SIRASI bir kez yeni varsayılana döner; gizli
-   sütunlar, genişlikler ve kullanıcının eklediği (veritabanı / not /
-   hesaplanan / checklist) sütunlar korunur. Eklenen sütunlar sıranın sonuna
-   taşınır; kanonik bir başlığa bağlı olanlar ilk eşitlemede o başlığa katılır. */
+/* v7.0.229 — CP / Orders ana başlık şeması değişti.
+   ÖNEMLİ: Şema migrasyonu kullanıcının kayıtlı sütun sırasını ASLA değiştirmez.
+   Yeni varsayılan sıra yalnız daha önce hiç kayıt oluşturmamış kullanıcılar için
+   geçerlidir. Mevcut order/hidden/widthPx kullanıcı tercihi olarak korunur. */
 const CP_ORDERS_COLUMN_LAYOUT_VERSION=20261004;
 const COLUMN_LAYOUT_REGROUP=new Set();
 function migrateCpOrdersColumnLayout(saved){
   if(!saved||typeof saved!=='object')return false;
   const meta=saved._layout&&typeof saved._layout==='object'&&!Array.isArray(saved._layout)?saved._layout:{};
   if(Number(meta.cpOrders)>=CP_ORDERS_COLUMN_LAYOUT_VERSION)return false;
-  ['cp','orders'].forEach(tableKey=>{
-    const entry=saved[tableKey];
-    if(!entry||typeof entry!=='object'||!Array.isArray(entry.order))return;
-    const base=(COLS_BY_TABLE[tableKey]||[]).map(c=>c.k),baseSet=new Set(base);
-    const added=[...new Set(entry.order.filter(key=>key&&!baseSet.has(key)))];
-    entry.order=[...base,...added];
-    COLUMN_LAYOUT_REGROUP.add(tableKey);
-  });
   saved._layout={...meta,cpOrders:CP_ORDERS_COLUMN_LAYOUT_VERSION};
   return true;
 }
@@ -3797,6 +3788,14 @@ function loadAutoTableColumnState(){
       colmgr[t].widthPx=Object.fromEntries(Object.entries(saved[t].widthPx||{}).filter(([k,v])=>valid.includes(k)&&Number.isFinite(Number(v))));
     });
   }catch(e){}
+}
+function reloadPersistedTableColumnStateAfterHydration(){
+  // user-storage hydrate() uygulama çekirdeği çalıştıktan SONRA daha yeni bir
+  // hesap tercihini localStorage'a yazabilir. Bellekteki snapshot yenilenmezse
+  // tablo varsayılan/eski sırada kalır ve sonraki save doğru uzak state'i ezer.
+  autoTableColumnStateSnapshot=null;
+  loadAutoTableColumnState();
+  try{if(typeof loadKolColState==='function')loadKolColState({preserveCustom:true});}catch(_){}
 }
 window.BLColumnState={persistedOrder:savedColumnOrderKeys,restoreLate:restoreLateManagedColumnState,forget:forgetPersistedColumnKeys,forgetTable:forgetPersistedTableColumnState};
 window.saveAutoTableColumnState=saveAutoTableColumnState;
@@ -13603,6 +13602,10 @@ async function waitForRefreshJob(expectedJob=null){
        tarayıcıya özel localStorage'da duruyordu; başka bir tarayıcıda açınca
        görünmüyorlardı. Açılışta sunucudaki kopyayla birleştiriyoruz (v5.98). */
     const sync=await authHydrationPromise;
+    // Tercih eşitlemesi uygulama çekirdeği yüklendikten sonra tamamlanabilir.
+    // Uzak taraftan daha yeni bir sütun yerleşimi geldiyse onu aynı açılışta
+    // belleğe yeniden uygula; aksi halde kullanıcı eski/varsayılan sırayı görür.
+    if(sync&&sync.applied){ reloadPersistedTableColumnStateAfterHydration(); }
     // Not Defteri belleğe alınmış olabilir; taze veri geldiyse bırakılır.
     if(sync&&sync.applied){ _todoState=null; }
     if(sync&&sync.applied){ _notificationHistoryState=null;notificationHistoryUpdateBadge(); }
@@ -23395,10 +23398,10 @@ function loadKolColState(options={}){
       // v5.24: Fit artık sabit Koleksiyon alanıdır. Eski kullanıcı görünümünde
       // gizlenmiş kalmış olsa bile görünür hale getir.
       if(Number(obj.layoutVersion||0)<6)kolHiddenCols.delete('fit');
-      // v7.0.229: ana başlıklar yeniden düzenlendi; kayıtlı sütun sırası bir kez
-      // yeni varsayılana döner. Kullanıcının eklediği sütunlar kaybolmaz: her
-      // biri eski sırada solunda duran sistem sütununun hemen sağında kalır.
-      if(Array.isArray(kolColOrder))kolColOrder=kolResetDisplayOrderKeepingCustom(Array.isArray(obj.order)?obj.order:kolColOrder);
+      // v7.0.229: ana başlık metadata'sı değişti. Mevcut kullanıcı sırası
+      // korunur; yeni sistem sütunları kolNormalizeDisplayOrder tarafından
+      // varsayılan komşularının yanına eklenir. Migration kullanıcı tercihini
+      // yeni varsayılana zorla sıfırlamaz.
       obj.layoutVersion=KOL_COL_LAYOUT_VERSION; obj.order=kolColOrder; obj.hidden=[...kolHiddenCols];
       BLStorage.setItem(KOL_COL_STATE_KEY,JSON.stringify(obj));
     }
