@@ -25473,7 +25473,7 @@ function kolDescriptorByKey(key){
   return kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
 }
 // Görünüm (gizli/görünür sütun) yalnız ÇİZİMİ belirler. Yazma kuralları, düzenlenebilirlik,
-// modele bağlılık ve bağımlı alan (örn. In Store Week → In Store → Retail) kararları
+// modele bağlılık ve bağımlı alan (örn. Model Budget Week → In Store → Retail) kararları
 // sütun gizli olsa bile aynı alan tanımını kullanmalıdır; aksi halde gizli alan sessizce
 // salt okunur sayılır ve bağımlı değer eski kalır.
 function kolFieldDescriptorByKey(key){
