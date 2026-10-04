@@ -116,3 +116,18 @@ test('automation split routes each order to its responsible manufacturer card', 
   assert.equal(engine.isManufacturerField('Manufacturer'), true);
   assert.equal(engine.isManufacturerField('Sub-Manufacturer'), false);
 });
+
+test('a date pulled forward is not a revision and does not lower the grade', () => {
+  const today = Date.UTC(2026, 5, 1);
+  const forward = engine.rowDelivery({ _isActive: false, 'Initial Inspection': '2026-01-15', 'Ex-factory': '2026-01-10', 'Buying Son Onay Tarihi': '2026-01-10' }, today);
+  assert.equal(forward.revised, false);
+  assert.equal(forward.pulledForward, true);
+  assert.equal(forward.revisionDays, -5);
+  const rows = [1, 2, 3].map(i => ({ Manufacturer: 'F', 'Order Code': `F${i}`, 'Order Quantity': 10, _isActive: false,
+    'Initial Inspection': '2026-01-15', 'Ex-factory': '2026-01-10', 'Buying Son Onay Tarihi': '2026-01-10' }));
+  const perf = engine.buildCards(rows, [], { today: '2026-06-01' }).cards[0].performance;
+  assert.equal(perf.revised, 0);
+  assert.equal(perf.pulledForward, 3);
+  assert.equal(perf.revisionRate, 0);
+  assert.equal(perf.grade, 'A');
+});

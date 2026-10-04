@@ -1028,8 +1028,8 @@ function parseASASMatrix(rows, ruleValue) {
     ['Buying Son Onay Tarihi'],
     [['BUYING','SON','ONAY','TARIH'], ['BUYING','APPROVAL','DATE'], ['SON','ONAY','TARIH']]);
   const initialInspectionHeader = resolveHeader(
-    ['Initial Inspection Tarih', 'Initial Inspection Tarihi', 'Initial Inspection'],
-    [['INITIAL','INSPECTION'], ['ILK','INSPECTION'], ['INITIAL','INSPEKSIYON']]);
+    ['Initial Inspection Geçme Tarih', 'Initial Inspection Tarih', 'Initial Inspection Tarihi', 'Initial Inspection'],
+    [['INITIAL','INSPECTION','GECME','TARIH'], ['INITIAL','INSPECTION','TARIH'], ['INITIAL','INSPECTION','DATE']]);
   const technicalImageHeader = resolveHeader(
     ['Teknik Görsel', 'Teknik Resim'],
     [['TEKNIK','GORSEL'], ['TEKNIK','RESIM'], ['TECHNICAL','IMAGE'], ['TECHNICAL','PICTURE']]);

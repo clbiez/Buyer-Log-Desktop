@@ -219,9 +219,10 @@
     }
     if (perf.revisionRate != null && perf.revised) {
       parts.push(perf.revisionRate >= 0.3
-        ? T(`Siparişlerin ${pct(perf.revisionRate)}’inde termin revize edilmiş (ortalama +${perf.avgRevisionDays} gün): doğrudan gecikme olmasa da ilk söze sadakat düşük.`, `${pct(perf.revisionRate)} of orders had their date revised (+${perf.avgRevisionDays} days on average): even without direct delay, the first promise is often not kept.`)
-        : T(`Revize termin talebi sınırlı (${perf.revised} sipariş, ortalama +${perf.avgRevisionDays} gün).`, `Revised date requests are limited (${perf.revised} orders, +${perf.avgRevisionDays} days on average).`));
+        ? T(`Siparişlerin ${pct(perf.revisionRate)}’inde termin ileri revize edilmiş, yani ertelenmiş (ortalama +${perf.avgRevisionDays} gün): doğrudan gecikme olmasa da ilk söze sadakat düşük.`, `${pct(perf.revisionRate)} of orders had their date revised (+${perf.avgRevisionDays} days on average): even without direct delay, the first promise is often not kept.`)
+        : T(`Erteleme (ileri revize) talebi sınırlı (${perf.revised} sipariş, ortalama +${perf.avgRevisionDays} gün).`, `Revised date requests are limited (${perf.revised} orders, +${perf.avgRevisionDays} days on average).`));
     }
+    if (perf.pulledForward) parts.push(T(`${perf.pulledForward} siparişte termin öne çekilmiş; bu olumlu sayılır ve notu düşürmez.`, `${perf.pulledForward} orders had their date pulled forward; this counts as positive and does not lower the grade.`));
     if (perf.lateVsExFactory) parts.push(T(`${perf.lateVsExFactory} sipariş güncel (revize) Ex-Factory tarihini de kaçırmış.`, `${perf.lateVsExFactory} orders also missed the current (revised) Ex-Factory date.`));
     if (perf.openOverdue) parts.push(T(`${perf.openOverdue} açık siparişin Ex-Factory tarihi geçti ve yükleme onayı yok (ortalama ${perf.avgOpenOverdueDays} gün).`, `${perf.openOverdue} open orders are past Ex-Factory with no loading approval (${perf.avgOpenOverdueDays} days on average).`));
     return parts.join(' ');
@@ -237,7 +238,7 @@
       <div class="mfpPanelHead"><strong>${esc(T('Yükleme termin performansı', 'Shipment delivery performance'))}</strong>${gradeBadge(perf, true)}</div>
       <div class="mfpMetrics">
         ${metric(T('İlk söze göre zamanında', 'On time vs first promise'), esc(pct(perf.onTimeRate)), T(`${nf(perf.onTime)} / ${nf(perf.loaded)} yüklenen sipariş`, `${nf(perf.onTime)} / ${nf(perf.loaded)} shipped orders`))}
-        ${metric(T('Revize edilen termin', 'Revised dates'), esc(pct(perf.revisionRate)), perf.revised ? T(`${nf(perf.revised)} sipariş · ort. +${perf.avgRevisionDays} gün`, `${nf(perf.revised)} orders · avg +${perf.avgRevisionDays} days`) : T('Revize yok', 'No revisions'))}
+        ${metric(T('Ertelenen termin (revize)', 'Postponed dates (revised)'), esc(pct(perf.revisionRate)), [perf.revised ? T(`${nf(perf.revised)} sipariş · ort. +${perf.avgRevisionDays} gün`, `${nf(perf.revised)} orders · avg +${perf.avgRevisionDays} days`) : T('Erteleme yok', 'No postponements'), perf.pulledForward ? T(`${nf(perf.pulledForward)} öne çekildi`, `${nf(perf.pulledForward)} pulled forward`) : ''].filter(Boolean).join(' · '))}
         ${metric(T('Ortalama gecikme', 'Average delay'), perf.avgDelayDays ? esc(T(`${perf.avgDelayDays} gün`, `${perf.avgDelayDays} days`)) : '—', T('Geç yüklenenlerde, yükleme onayı − ilk söz', 'For late shipments, loading approval − first promise'))}
         ${metric(T('Açık ve gecikmiş', 'Open and overdue'), esc(nf(perf.openOverdue)), perf.openOverdue ? T(`ort. ${perf.avgOpenOverdueDays} gün`, `avg ${perf.avgOpenOverdueDays} days`) : T('Ex-Factory’si geçen açık sipariş yok', 'No open order past Ex-Factory'))}
       </div>

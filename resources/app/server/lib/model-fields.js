@@ -62,7 +62,10 @@ const FIELD_CATALOGUE = {
     // v7.0.229 — Üretici kartı termin performansı: PO açılırken verilen ilk
     // ex-factory sözü. İsteğe bağlıdır; eşlenmezse ASAS'ın ilk ex-factory
     // değeri temel alınır.
-    { header: 'Initial Inspection Tarih', aliases: ['INITIAL INSPECTION', 'INITIAL INSPECTION DATE', 'INITIAL INSPECTION TARIHI', 'ILK INSPECTION TARIHI'] },
+    // ASAS modelindeki gerçek ad "Initial Inspection Geçme Tarih"tir (CP'de
+    // "Original Ex-F."). Ay/Hafta türevleri aynı öneki taşır; birebir ad önce
+    // eşlendiği için tarih sütunu seçilir.
+    { header: 'Initial Inspection Geçme Tarih', aliases: ['INITIAL INSPECTION GECME TARIH', 'INITIAL INSPECTION DATE', 'INITIAL INSPECTION TARIHI'] },
     { header: 'Buyer', aliases: ['SATIN ALMACI'] },
     { header: 'Line', aliases: ['URUN GRUBU', 'PRODUCT LINE'] },
     // Kumaş bilgileri artık ayrı bir Fabric bağlantısından değil aynı ASAS sorgusundan

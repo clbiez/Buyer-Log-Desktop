@@ -89,3 +89,21 @@ test('store keeps aliases, creates ASAS cards without overwriting and links with
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('existing ASAS connections pick up Initial Inspection Geçme Tarih once, without breaking refresh', async () => {
+  const modelFields = require('../server/lib/model-fields');
+  const { ensureConnectionMapping } = require('../server/lib/model-refresh');
+  const required = modelFields.fieldsForRole('asas').filter(field => field.required);
+  const base = () => Object.fromEntries(required.map(field => [field.header, { table: 'ASAS', name: field.header, kind: 'column' }]));
+  const columns = [...required.map(field => field.header), 'Ürün Tanım', 'Initial Inspection Geçme Merch Ay', 'Initial Inspection Geçme Merch Hafta', 'Initial Inspection Geçme Tarih', 'Initial Inspection Geçme Tarih Gün Ay Yıl']
+    .map(name => ({ table: 'ASAS', name, kind: 'column' }));
+  const item = { role: 'asas', name: 'ASAS', server: 'db', catalog: 'c', mapping: { ...base(), 'Ürün Tanım': { table: 'ASAS', name: 'Ürün Tanım', kind: 'column' } }, mappingEnhancementScanVersion: 2, horizon: { table: 'ASAS' } };
+  const result = await ensureConnectionMapping(item, { discoverSchema: async () => ({ columns, measures: [] }) });
+  assert.equal(result.mapping['Initial Inspection Geçme Tarih'].name, 'Initial Inspection Geçme Tarih');
+  assert.equal(item.mappingEnhancementScanVersion, 3);
+  // Şema okunamazsa yenileme durmaz ve tarama tekrar denenmez.
+  const offline = { role: 'asas', name: 'ASAS', server: 'db', catalog: 'c', mapping: { ...base(), 'Ürün Tanım': { table: 'ASAS', name: 'Ürün Ana Tanım', kind: 'column' } }, mappingEnhancementScanVersion: 2, horizon: { table: 'ASAS' } };
+  const soft = await ensureConnectionMapping(offline, { discoverSchema: async () => { throw new Error('offline'); } });
+  assert.equal(soft.repaired, false);
+  assert.equal(offline.mappingEnhancementScanVersion, 3);
+});

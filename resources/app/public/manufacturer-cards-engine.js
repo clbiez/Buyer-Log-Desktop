@@ -218,8 +218,14 @@
     const approval = dayValue(pick(row, KEYS.loadingApproval));
     const initial = inspection != null ? inspection : (asasEx != null ? asasEx : null);
     const baseline = inspection != null ? 'initialInspection' : (asasEx != null ? 'asasExFactory' : '');
-    const out = { initial, exFactory, approval, baseline, revised: false, revisionDays: 0, delayDays: null, delayVsExFactory: null, openOverdueDays: null };
-    if (initial != null && exFactory != null && exFactory !== initial) { out.revised = true; out.revisionDays = Math.round((exFactory - initial) / DAY); }
+    const out = { initial, exFactory, approval, baseline, revised: false, pulledForward: false, revisionDays: 0, delayDays: null, delayVsExFactory: null, openOverdueDays: null };
+    /* Yalnız İLERİ kayma (onaylanmış erteleme talebi) revize sayılır. Tarihin
+       öne çekilmesi üreticinin erken yükleme sözüdür; cezalandırılmaz, ayrıca
+       sayılır (kullanıcı kararı). */
+    if (initial != null && exFactory != null && exFactory !== initial) {
+      out.revisionDays = Math.round((exFactory - initial) / DAY);
+      if (out.revisionDays > 0) out.revised = true; else out.pulledForward = true;
+    }
     if (approval != null) {
       if (initial != null) out.delayDays = Math.round((approval - initial) / DAY);
       if (exFactory != null) out.delayVsExFactory = Math.round((approval - exFactory) / DAY);
@@ -229,13 +235,14 @@
     return out;
   }
   function emptyPerformance() {
-    return { measured: 0, revised: 0, revisionDaysTotal: 0, loaded: 0, onTime: 0, delayDaysTotal: 0, lateVsExFactory: 0, openOverdue: 0, openOverdueDaysTotal: 0, baselines: { initialInspection: 0, asasExFactory: 0 } };
+    return { measured: 0, revised: 0, pulledForward: 0, revisionDaysTotal: 0, loaded: 0, onTime: 0, delayDaysTotal: 0, lateVsExFactory: 0, openOverdue: 0, openOverdueDaysTotal: 0, baselines: { initialInspection: 0, asasExFactory: 0 } };
   }
   function addPerformance(perf, delivery) {
     if (delivery.initial != null) {
       perf.measured += 1;
       perf.baselines[delivery.baseline] = (perf.baselines[delivery.baseline] || 0) + 1;
-      if (delivery.revised) { perf.revised += 1; perf.revisionDaysTotal += Math.max(0, delivery.revisionDays); }
+      if (delivery.revised) { perf.revised += 1; perf.revisionDaysTotal += delivery.revisionDays; }
+      if (delivery.pulledForward) perf.pulledForward += 1;
     }
     if (delivery.delayDays != null) {
       perf.loaded += 1;
@@ -251,7 +258,7 @@
     const revisionRate = ratio(perf.revised, perf.measured);
     const lateCount = perf.loaded - perf.onTime;
     const out = {
-      measured: perf.measured, revised: perf.revised, loaded: perf.loaded, onTime: perf.onTime,
+      measured: perf.measured, revised: perf.revised, pulledForward: perf.pulledForward, loaded: perf.loaded, onTime: perf.onTime,
       lateVsExFactory: perf.lateVsExFactory, openOverdue: perf.openOverdue,
       onTimeRate, revisionRate,
       avgRevisionDays: perf.revised ? Math.round(perf.revisionDaysTotal / perf.revised) : 0,

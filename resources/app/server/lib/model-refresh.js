@@ -331,11 +331,17 @@ async function ensureConnectionMapping(item, options = {}) {
   // alanı bulursak mevcut eşlemeye ekler ve kalıcı bağlantıya kaydederiz.
   const enhancementFields = role === 'asas' ? ['Teknik Resim', 'Ürün Tanım'] : [];
   const mappingEnhancementScanVersion = Math.max(0, Number(item && item.mappingEnhancementScanVersion) || 0);
-  const missingEnhancements = mappingEnhancementScanVersion < 1
-    ? enhancementFields.filter(header => !normalized.mapping[header]) : [];
+  // v3: üretici kartı termin performansı için Initial Inspection Geçme Tarih
+  // (ilk ex-factory sözü) mevcut ASAS bağlantılarına bir kez taranıp eklenir.
+  const INITIAL_INSPECTION = 'Initial Inspection Geçme Tarih';
+  const missingEnhancements = (mappingEnhancementScanVersion < 1
+    ? enhancementFields.filter(header => !normalized.mapping[header]) : [])
+    .concat(role === 'asas' && mappingEnhancementScanVersion < 3 && !normalized.mapping[INITIAL_INSPECTION] ? [INITIAL_INSPECTION] : []);
   const productDescriptionRepairNeeded = role === 'asas' && modelFields.productDescriptionNeedsRepair(normalized.mapping);
   const brokenManualQuery = item && item.mode === 'manual' && /\[object Object\]/i.test(String(item.query || ''));
   const needsRepair = normalized.invalidHeaders.length > 0 || missingBefore.length > 0 || missingEnhancements.length > 0 || productDescriptionRepairNeeded || brokenManualQuery;
+  const softEnhancementOnly = needsRepair && !normalized.invalidHeaders.length && !missingBefore.length && !productDescriptionRepairNeeded && !brokenManualQuery
+    && missingEnhancements.every(header => header === INITIAL_INSPECTION);
 
   // Eşleme "eksiksiz" olsa bile kimlik alanları yanlış sütuna bağlanmış olabilir;
   // bu durumda sorgu sorunsuz çalışır ama hiçbir satır birebir eşleşmez.
@@ -376,6 +382,14 @@ async function ensureConnectionMapping(item, options = {}) {
     }, options.queryOptions || {});
   } catch (err) {
     if (telemetry) telemetry({ type:'end', category:'query', connection:connectionLabel(item), operation:'schema-discovery', timestampMs:Date.now(), durationMs:Date.now() - schemaStartedMs, error:String(err && err.message || err) });
+    /* Yalnız isteğe bağlı Initial Inspection taraması için şema okunamadıysa
+       yenileme DURMAZ: eşleme olduğu gibi kullanılır, tarama bir daha denenmez
+       (alan Veri Yönetimi'nden elle eşlenebilir). */
+    if (softEnhancementOnly) {
+      item.mapping = normalized.mapping;
+      item.mappingEnhancementScanVersion = Math.max(3, Number(item.mappingEnhancementScanVersion) || 0);
+      return { repaired: false, mapping: item.mapping, warnings: suspectWarnings };
+    }
     throw new ModelRefreshError(
       `${connectionLabel(item)} alan eşlemesi bozuk veya eksik ve model şeması otomatik okunamadı: ${String(err && err.message || err)}`,
       'MODEL_REFRESH_MAPPING_REPAIR_FAILED', 502,
@@ -399,7 +413,8 @@ async function ensureConnectionMapping(item, options = {}) {
   item.mapping = repairedMapping;
   const productDescriptionRepaired = productDescriptionRepairNeeded
     && modelFields.fieldKey(repairedMapping['Ürün Tanım'] && repairedMapping['Ürün Tanım'].name) === modelFields.fieldKey('Ürün Ana Tanım');
-  if (missingEnhancements.length) item.mappingEnhancementScanVersion = 1;
+  if (missingEnhancements.length) item.mappingEnhancementScanVersion = Math.max(1, Number(item.mappingEnhancementScanVersion) || 0);
+  if (missingEnhancements.includes(INITIAL_INSPECTION)) item.mappingEnhancementScanVersion = Math.max(3, Number(item.mappingEnhancementScanVersion) || 0);
   if (productDescriptionRepaired) item.mappingEnhancementScanVersion = Math.max(2, Number(item.mappingEnhancementScanVersion) || 0);
   if (brokenManualQuery) {
     item.mode = 'auto';
