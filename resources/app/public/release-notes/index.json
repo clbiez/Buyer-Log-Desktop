@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.232",
+      "publishedAt": "2026-10-04",
+      "title": {
+        "tr": "Alanlar ve yeniden düzenlenen tablo başlıkları; Üreticiler sayfası",
+        "en": "Fields and reorganised table headings; Manufacturers page"
+      },
+      "stats": {
+        "features": 4,
+        "improvements": 3,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.232/release.json"
+    },
+    {
       "version": "7.0.231",
       "publishedAt": "2026-10-04",
       "title": {
