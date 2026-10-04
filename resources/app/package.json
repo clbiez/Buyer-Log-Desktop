@@ -1,7 +1,7 @@
 {
   "name": "buyer-log-desktop",
   "productName": "Buyer Log",
-  "version": "7.0.229",
+  "version": "7.0.230",
   "description": "Buyer Log masaüstü barındırıcısı (mevcut backend + gömülü Chromium).",
   "main": "electron/launcher.js",
   "private": true,
