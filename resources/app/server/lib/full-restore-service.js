@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const {
   inspectBackupArchive, readBackupJsonEntry, extractBackupArchive, BACKUP_VERSION, BACKUP_SCHEMA_VERSION,
 } = require('./backup-archive');
-const { skipBackupFile } = require('./backup-service');
+const { skipBackupFile, BACKUP_EXCLUDED_TOP, CATEGORIES: COMPONENT_CATEGORIES, componentsFromManifest, componentIdForArchivePath } = require('./backup-scope');
 const { createLocalDb, SCHEMA_VERSION: LOCAL_DB_SCHEMA_VERSION } = require('./local-db');
 const { isNetworkPath } = require('./local-path-policy');
 const prewipeMasterRecovery = require('./prewipe-master-recovery');
@@ -83,7 +83,9 @@ async function removeEmptyParents(file, stopRoot) {
     dir = path.dirname(dir);
   }
 }
-async function walkManaged(root, excludeTop = []) {
+// onlyTop: seçmeli restore'da kök altındaki tek bir üst seviye dosya/klasörle
+// sınırlar; diğer veri alanlarına dokunulmaz.
+async function walkManaged(root, excludeTop = [], onlyTop = '') {
   const out = [], excluded = new Set(excludeTop);
   if (!root || !fs.existsSync(root)) return out;
   async function visit(current, relative = '') {
@@ -91,6 +93,7 @@ async function walkManaged(root, excludeTop = []) {
     try { dir = await fsp.opendir(current); } catch (_) { return; }
     for await (const item of dir) {
       const rel = relative ? `${relative}/${item.name}` : item.name;
+      if (onlyTop && !relative && item.name !== onlyTop) continue;
       if (skipBackupFile(rel, excluded) || item.isSymbolicLink()) continue;
       const full = path.join(current, item.name);
       if (item.isDirectory()) await visit(full, rel);
@@ -105,7 +108,7 @@ async function walkManaged(root, excludeTop = []) {
 }
 async function folderBytes(scopes) {
   let total = 0;
-  for (const scope of scopes) for (const file of await walkManaged(scope.root, scope.excludeTop)) total += file.size;
+  for (const scope of scopes) for (const file of await walkManaged(scope.root, scope.excludeTop, scope.onlyTop)) total += file.size;
   return total;
 }
 async function freeBytesFor(target) {
@@ -147,15 +150,66 @@ function securityInventory(snapshot) {
   const roles = Array.isArray(rolesValue) ? rolesValue.length : (rolesValue && typeof rolesValue === 'object' ? Object.keys(rolesValue).length : 0);
   return { users, roles };
 }
+// excludeTop backup-service fullBackupRoots ile aynı kaynaktan gelir
+// (backup-scope.js). modelFiles/collectionImages yalnız eski (v1) yedeklerde
+// bulunur; yeni yedekler bu büyük varlıkları içermez ve restore onlara dokunmaz.
+const CORE_SCOPE_IDS = new Set(['serverData', 'appData', 'localData']);
 function scopeDefinitions(roots) {
   return [
-    { id: 'serverData', prefix: 'system/server-data/', root: roots.serverDataRoot, excludeTop: ['logs', 'email-drafts'] },
-    { id: 'appData', prefix: 'system/app-data/', root: roots.appDataRoot, excludeTop: ['auth', 'logs', 'email-drafts', 'model-files', 'collection-images'] },
-    { id: 'localData', prefix: 'system/local-data/', root: roots.localDataRoot, excludeTop: ['logs', 'model-files', 'collection-images', 'qtx-files', 'page-cache', 'model-snapshots', 'oab-snapshots', 'restore-recovery'] },
+    { id: 'serverData', prefix: 'system/server-data/', root: roots.serverDataRoot, excludeTop: [...BACKUP_EXCLUDED_TOP] },
+    { id: 'appData', prefix: 'system/app-data/', root: roots.appDataRoot, excludeTop: [...BACKUP_EXCLUDED_TOP] },
+    { id: 'localData', prefix: 'system/local-data/', root: roots.localDataRoot, excludeTop: [...BACKUP_EXCLUDED_TOP, 'qtx-files'] },
     { id: 'modelFiles', prefix: 'system/model-files/', root: roots.modelFilesRoot, excludeTop: [] },
     { id: 'collectionImages', prefix: 'system/collection-images/', root: roots.collectionImagesRoot, excludeTop: [] },
     { id: 'qtxFiles', prefix: 'system/qtx-files/', root: roots.qtxFilesRoot, excludeTop: [] },
   ];
+}
+const SPECIAL_COMPONENT_IDS = new Set(['config', 'security', 'sync']);
+/*
+ * components == null → eski "ayna" restore: çekirdek veri kökleri ve arşivde
+ * bulunan varlık kökleri tamamen backup içeriğine eşitlenir.
+ * components = [...] → seçmeli restore: yalnız seçilen veri alanları
+ * (kök + üst seviye dosya/klasör) temizlenir ve backup'tan yazılır.
+ */
+function buildRestorePlan(scopes, manifest, components = null) {
+  const available = componentsFromManifest(manifest, scopes);
+  const availableIds = new Set(available.map(item => item.id));
+  if (components == null) {
+    const names = (manifest && manifest.contents || []).map(item => String(item && item.path || ''));
+    const touched = scopes.filter(scope => CORE_SCOPE_IDS.has(scope.id) || names.some(name => name.startsWith(scope.prefix))).map(scope => ({ ...scope, baseId: scope.id, onlyTop: '' }));
+    return { mode: 'mirror', selected: availableIds, touched, available };
+  }
+  if (!Array.isArray(components)) throw restoreError('RESTORE_SCOPE_INVALID', 'Restore kapsamı geçersiz.');
+  const selected = new Set();
+  for (const raw of components) {
+    const id = String(raw || '').trim();
+    if (!id) continue;
+    if (!availableIds.has(id)) throw restoreError('RESTORE_SCOPE_UNAVAILABLE', `Seçilen veri alanı bu backup içinde yok: ${id}`, 400, { component: id });
+    selected.add(id);
+  }
+  if (!selected.size) throw restoreError('RESTORE_SCOPE_EMPTY', 'Geri yüklenecek en az bir veri alanı seçin.');
+  const touched = [];
+  for (const id of selected) {
+    if (SPECIAL_COMPONENT_IDS.has(id)) continue;
+    const slash = id.indexOf('/'), baseId = id.slice(0, slash), top = id.slice(slash + 1);
+    const scope = scopes.find(item => item.id === baseId);
+    if (!scope || !top || top.includes('/') || top === '.' || top === '..') throw restoreError('RESTORE_SCOPE_INVALID', `Restore kapsamı geçersiz: ${id}`);
+    touched.push({ ...scope, id: `${baseId}~${top}`, baseId, onlyTop: top });
+  }
+  return { mode: 'selective', selected, touched, available };
+}
+function planIncludes(plan, archivePath, scopes) {
+  if (!plan || plan.mode === 'mirror') return true;
+  return plan.selected.has(componentIdForArchivePath(archivePath, scopes));
+}
+// Rollback manifest'i hangi alanların snapshot'landığını taşır; kesintiden
+// sonra kurtarma yalnız o alanları geri yazar (seçilmeyen veriler silinmez).
+function touchedScopesFromManifest(manifest, scopes) {
+  if (!Array.isArray(manifest && manifest.touched)) return scopes;
+  return manifest.touched.map(item => {
+    const base = scopes.find(scope => scope.id === item.baseId);
+    return base ? { ...base, id: item.id, baseId: item.baseId, onlyTop: String(item.onlyTop || '') } : null;
+  }).filter(Boolean);
 }
 function stagePath(stageRoot, archivePath) { return path.join(stageRoot, ...String(archivePath).split('/')); }
 function relativeForScope(scope, archivePath) { return String(archivePath).slice(scope.prefix.length); }
@@ -179,9 +233,9 @@ async function writeJournal(txRoot, value) {
 async function snapshotRollback(txRoot, scopes, specialFiles) {
   const rollbackRoot = path.join(txRoot, 'rollback');
   await fsp.mkdir(rollbackRoot, { recursive: true });
-  const manifest = { scopes: {}, specials: {} };
+  const manifest = { scopes: {}, specials: {}, touched: scopes.map(scope => ({ id: scope.id, baseId: scope.baseId || scope.id, onlyTop: scope.onlyTop || '' })) };
   for (const scope of scopes) {
-    const files = await walkManaged(scope.root, scope.excludeTop);
+    const files = await walkManaged(scope.root, scope.excludeTop, scope.onlyTop);
     manifest.scopes[scope.id] = files.map(file => file.rel);
     for (const file of files) await copyFileDurable(file.full, path.join(rollbackRoot, 'scopes', scope.id, ...file.rel.split('/')));
   }
@@ -195,16 +249,17 @@ async function snapshotRollback(txRoot, scopes, specialFiles) {
 }
 async function clearManagedScopes(scopes) {
   for (const scope of scopes) {
-    const files = await walkManaged(scope.root, scope.excludeTop);
+    const files = await walkManaged(scope.root, scope.excludeTop, scope.onlyTop);
     for (const file of files) {
       await fsp.rm(file.full, { force: true });
       await removeEmptyParents(file.full, scope.root);
     }
   }
 }
-async function restoreRollback(txRoot, scopes) {
+async function restoreRollback(txRoot, baseScopes) {
   const rollbackRoot = path.join(txRoot, 'rollback');
   const manifest = safeJsonRead(path.join(rollbackRoot, 'manifest.json'), 'RESTORE_ROLLBACK_INVALID', 'Restore rollback manifesti okunamadı.');
+  const scopes = touchedScopesFromManifest(manifest, baseScopes);
   await clearManagedScopes(scopes);
   for (const scope of scopes) {
     const files = Array.isArray(manifest.scopes && manifest.scopes[scope.id]) ? manifest.scopes[scope.id] : [];
@@ -248,12 +303,13 @@ async function recoverInterruptedRestores({ roots, securityFile = null, syncFile
   return { recovered, cleaned, failures, securityFile, syncFile };
 }
 
-function walkManagedSync(root, excludeTop = []) {
+function walkManagedSync(root, excludeTop = [], onlyTop = '') {
   const out = [], excluded = new Set(excludeTop);
   if (!root || !fs.existsSync(root)) return out;
   function visit(current, relative = '') {
     for (const item of fs.readdirSync(current, { withFileTypes: true })) {
       const rel = relative ? `${relative}/${item.name}` : item.name;
+      if (onlyTop && !relative && item.name !== onlyTop) continue;
       if (skipBackupFile(rel, excluded) || item.isSymbolicLink()) continue;
       const full = path.join(current, item.name);
       if (item.isDirectory()) visit(full, rel);
@@ -263,13 +319,14 @@ function walkManagedSync(root, excludeTop = []) {
   visit(root); return out;
 }
 function clearManagedScopesSync(scopes) {
-  for (const scope of scopes) for (const file of walkManagedSync(scope.root, scope.excludeTop)) {
+  for (const scope of scopes) for (const file of walkManagedSync(scope.root, scope.excludeTop, scope.onlyTop)) {
     try { fs.rmSync(file.full, { force: true }); } catch (_) {}
   }
 }
-function restoreRollbackSync(txRoot, scopes) {
+function restoreRollbackSync(txRoot, baseScopes) {
   const rollbackRoot = path.join(txRoot, 'rollback');
   const manifest = JSON.parse(fs.readFileSync(path.join(rollbackRoot, 'manifest.json'), 'utf8'));
+  const scopes = touchedScopesFromManifest(manifest, baseScopes);
   clearManagedScopesSync(scopes);
   for (const scope of scopes) {
     const files = Array.isArray(manifest.scopes && manifest.scopes[scope.id]) ? manifest.scopes[scope.id] : [];
@@ -357,7 +414,15 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
         security: contents.has('system/security/users-roles-permissions.json'),
         config: contents.has('system/config/config.json'), sync: contents.has('system/sync/metadata.json'),
       },
+      // Seçmeli restore listesi arşivin kendi içeriğinden üretilir; yeni bir
+      // özelliğin veri dosyası otomatik olarak seçilebilir bileşen olur.
+      components: componentsFromManifest(info.manifest, scopes),
+      componentCategories: COMPONENT_CATEGORIES,
+      heavyAssetsExcluded: Boolean(info.manifest.heavy_assets_excluded),
+      excludedAssets: info.manifest.excluded_assets || null,
+      autoBackup: Boolean(info.manifest.auto_backup),
     };
+    if (info.manifest.heavy_assets_excluded) warnings.push('Bu yedek model dosyalarını ve görselleri içermez; mevcut model dosyaları ve görseller restore sırasında korunur.');
     // Keep the verified central-directory records for the same-process start
     // phase without serializing hundreds of thousands of records to the UI.
     Object.defineProperty(result, 'records', { value: info.records, enumerable: false });
@@ -365,12 +430,30 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
     return result;
   }
 
-  async function validateStaged(stageRoot, manifest) {
+  async function validateStaged(stageRoot, manifest, plan = null) {
     validateManifestContents(scopes, manifest);
     const names = new Set((manifest.contents || []).map(item => item.path));
     const dbArchivePath = names.has('system/local-data/BuyerLogLocal.db') ? 'system/local-data/BuyerLogLocal.db' : (names.has('system/local/BuyerLogLocal.db') ? 'system/local/BuyerLogLocal.db' : null);
-    if (!dbArchivePath) throw restoreError('RESTORE_DATABASE_MISSING', 'Full System Backup içinde BuyerLogLocal.db bulunamadı.');
-    const stagedDb = stagePath(stageRoot, dbArchivePath);
+    const wants = id => !plan || plan.mode === 'mirror' || plan.selected.has(id);
+    const dbSelected = wants('localData/BuyerLogLocal.db');
+    if (!dbArchivePath && dbSelected) throw restoreError('RESTORE_DATABASE_MISSING', 'Full System Backup içinde BuyerLogLocal.db bulunamadı.');
+    if (dbArchivePath && dbSelected) await validateStagedDb(stagePath(stageRoot, dbArchivePath));
+    const configFile = stagePath(stageRoot, 'system/config/config.json');
+    const securityFilePath = stagePath(stageRoot, 'system/security/users-roles-permissions.json');
+    const syncFilePath = stagePath(stageRoot, 'system/sync/metadata.json');
+    const settingsFilePath = stagePath(stageRoot, 'system/server-data/settings.json');
+    const configSnapshot = wants('config') && fs.existsSync(configFile) ? safeJsonRead(configFile, 'RESTORE_CONFIG_INVALID', 'Backup config.json okunamadı.') : null;
+    const securitySnapshot = wants('security') && fs.existsSync(securityFilePath) ? safeJsonRead(securityFilePath, 'RESTORE_SECURITY_SNAPSHOT_INVALID', 'Backup kullanıcı/rol/yetki snapshotı okunamadı.') : null;
+    const syncSnapshot = wants('sync') && fs.existsSync(syncFilePath) ? safeJsonRead(syncFilePath, 'RESTORE_SYNC_METADATA_INVALID', 'Backup Sync metadata okunamadı.') : null;
+    const settingsSelected = wants('serverData/settings.json');
+    const settingsSnapshot = settingsSelected && fs.existsSync(settingsFilePath) ? safeJsonRead(settingsFilePath, 'RESTORE_SETTINGS_INVALID', 'Backup settings.json okunamadı.') : null;
+    return {
+      dbArchivePath, dbSelected: Boolean(dbArchivePath && dbSelected), configSnapshot: configSnapshot || (plan && plan.mode === 'selective' ? null : {}), securitySnapshot, syncSnapshot,
+      checkConnections: settingsSelected, modelConnections: modelConnectionsFrom(settingsSnapshot),
+    };
+  }
+
+  async function validateStagedDb(stagedDb) {
     let rawDb;
     try { rawDb = JSON.parse(await fsp.readFile(stagedDb, 'utf8')); }
     catch (error) { throw restoreError('RESTORE_DATABASE_CORRUPT', `BuyerLogLocal.db okunamadı: ${error.message}`); }
@@ -380,22 +463,14 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       const state = await stagedLocalDb.read();
       if (!state || typeof state !== 'object' || !state.records || !state.deviceId) throw new Error('DB envelope eksik.');
     } catch (error) { throw restoreError('RESTORE_DATABASE_CORRUPT', `BuyerLogLocal.db bütünlük kontrolü başarısız: ${error.message}`); }
-    const configFile = stagePath(stageRoot, 'system/config/config.json');
-    const securityFilePath = stagePath(stageRoot, 'system/security/users-roles-permissions.json');
-    const syncFilePath = stagePath(stageRoot, 'system/sync/metadata.json');
-    const settingsFilePath = stagePath(stageRoot, 'system/server-data/settings.json');
-    const configSnapshot = fs.existsSync(configFile) ? safeJsonRead(configFile, 'RESTORE_CONFIG_INVALID', 'Backup config.json okunamadı.') : {};
-    const securitySnapshot = fs.existsSync(securityFilePath) ? safeJsonRead(securityFilePath, 'RESTORE_SECURITY_SNAPSHOT_INVALID', 'Backup kullanıcı/rol/yetki snapshotı okunamadı.') : null;
-    const syncSnapshot = fs.existsSync(syncFilePath) ? safeJsonRead(syncFilePath, 'RESTORE_SYNC_METADATA_INVALID', 'Backup Sync metadata okunamadı.') : null;
-    const settingsSnapshot = fs.existsSync(settingsFilePath) ? safeJsonRead(settingsFilePath, 'RESTORE_SETTINGS_INVALID', 'Backup settings.json okunamadı.') : null;
-    return { dbArchivePath, configSnapshot, securitySnapshot, syncSnapshot, modelConnections: modelConnectionsFrom(settingsSnapshot) };
   }
 
-  async function applyStaged(stageRoot, manifest, validation, progress) {
-    report(progress, { phase: 'Uygulanıyor', current: 0, total: manifest.contents.length, item: 'Mevcut veri alanları hazırlanıyor' });
-    await clearManagedScopes(scopes);
+  async function applyStaged(stageRoot, manifest, validation, progress, plan) {
+    const contents = (manifest.contents || []).filter(item => planIncludes(plan, String(item && item.path || ''), scopes));
+    report(progress, { phase: 'Uygulanıyor', current: 0, total: contents.length, item: 'Mevcut veri alanları hazırlanıyor' });
+    await clearManagedScopes(plan.touched);
     let applied = 0;
-    for (const item of manifest.contents || []) {
+    for (const item of contents) {
       const archivePath = String(item.path || '');
       if (archivePath === 'system/config/config.json' || archivePath === 'system/security/users-roles-permissions.json' || archivePath === 'system/sync/metadata.json') continue;
       let scope = findScope(scopes, archivePath), rel = scope && relativeForScope(scope, archivePath);
@@ -404,10 +479,10 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       const source = stagePath(stageRoot, archivePath), target = path.join(scope.root, ...rel.split('/'));
       if (!ensureInside(scope.root, target)) throw restoreError('RESTORE_UNSAFE_PATH', `Restore hedefi veri alanı dışına çıkıyor: ${archivePath}`);
       await copyFileDurable(source, target); applied += 1;
-      report(progress, { phase: 'Uygulanıyor', current: applied, total: manifest.contents.length, item: archivePath });
+      report(progress, { phase: 'Uygulanıyor', current: applied, total: contents.length, item: archivePath });
     }
     let masterRecovery = { promoted:0, ids:[], coverage:null };
-    if (localDb && typeof localDb.read === 'function' && typeof localDb.transaction === 'function') {
+    if (validation.dbSelected && localDb && typeof localDb.read === 'function' && typeof localDb.transaction === 'function') {
       if (typeof localDb.setFolder === 'function') localDb.setFolder(path.dirname(roots.localDbFile));
       const restoredState = await localDb.read();
       const recoveredRecords = prewipeMasterRecovery.loadMasterRecordsFromFullSystemRoots(roots, restoredState);
@@ -430,9 +505,11 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
         coverage:prewipeMasterRecovery.masterCoverage(after.records),
       };
     }
-    let currentConfig = {};
-    try { currentConfig = JSON.parse(await fsp.readFile(roots.configPath, 'utf8')); } catch (_) {}
-    await atomicWriteJson(roots.configPath, mergePortableConfig(currentConfig, validation.configSnapshot));
+    if (validation.configSnapshot) {
+      let currentConfig = {};
+      try { currentConfig = JSON.parse(await fsp.readFile(roots.configPath, 'utf8')); } catch (_) {}
+      await atomicWriteJson(roots.configPath, mergePortableConfig(currentConfig, validation.configSnapshot));
+    }
     // Central IAM restore, backup'taki taşınabilir shared root üzerinden remote
     // dizini deneyebilsin diye Sync metadata güvenlik snapshotından ÖNCE uygulanır.
     const sync = validation.syncSnapshot && syncSettings && typeof syncSettings.restoreMetadata === 'function'
@@ -441,7 +518,7 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
     const security = validation.securitySnapshot && userAccess && typeof userAccess.restoreBackupSnapshot === 'function'
       ? await userAccess.restoreBackupSnapshot(validation.securitySnapshot, { centralIamExpected: validation.configSnapshot && validation.configSnapshot.centralIamEnabled === true })
       : { applied: false, restoredUsers: 0, credentialsRequired: 0 };
-    return { appliedFiles: applied, security, sync, masterRecovery };
+    return { appliedFiles: applied, security, sync, masterRecovery, mode: plan.mode, components: [...plan.selected] };
   }
 
   async function verifyRestored(validation = null, applied = null) {
@@ -471,6 +548,9 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       if (expected > 0 && actual === 0) throw restoreError('RESTORE_USERS_MISSING', 'Restore sonrası kullanıcı dizini okunamadı.', 500, users);
       if (missing.length) throw restoreError('RESTORE_USERS_MISSING', `Restore sonrası kullanıcı dizini eksik (${actual}/${expected}; eksik ${missing.length}).`, 500, users);
     }
+    if (validation && validation.checkConnections === false) {
+      return { checks, users, connections: { configurationRestored: null, skipped: true, roles: {}, modelConnections: [], health: {} }, dbRevision: Number(state.revision) || 0, dbSchemaVersion: Number(state.schemaVersion) || LOCAL_DB_SCHEMA_VERSION };
+    }
     const expectedConnections = modelConnectionsFrom({ modelConnections: validation && validation.modelConnections });
     const restoredSettingsFile = path.join(roots.serverDataRoot, 'settings.json');
     let restoredConnections = [];
@@ -495,7 +575,7 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
     };
   }
 
-  async function restore(file, { actor, onProgress = null, shouldCancel = null, createSafetyBackup = true, preflight = null } = {}) {
+  async function restore(file, { actor, onProgress = null, shouldCancel = null, createSafetyBackup = true, preflight = null, components = null } = {}) {
     const restoreId = crypto.randomUUID(), txRoot = path.join(recoveryRoot, restoreId), stageRoot = path.join(txRoot, 'stage');
     await fsp.mkdir(stageRoot, { recursive: true });
     let safetyArchive = null, commitStarted = false, rollback = null, paused = false, writeLocked = false, iamRestoreLocked = false;
@@ -506,7 +586,8 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       if (typeof shouldCancel === 'function' && shouldCancel()) throw restoreError('RESTORE_CANCELLED', 'Restore kullanıcı tarafından iptal edildi.', 409);
       report(onProgress, { phase: 'Hazırlanıyor', current: 0, total: checked.fileCount, item: 'Backup staging alanına açılıyor' });
       const extracted = await extractBackupArchive(file, stageRoot, { requireType: 'full', preflight: checked, onProgress, shouldCancel });
-      const validation = await validateStaged(stageRoot, extracted.manifest);
+      const plan = buildRestorePlan(scopes, extracted.manifest, components);
+      const validation = await validateStaged(stageRoot, extracted.manifest, plan);
       if (typeof shouldCancel === 'function' && shouldCancel()) throw restoreError('RESTORE_CANCELLED', 'Restore kullanıcı tarafından iptal edildi.', 409);
 
       // Stop Central IAM refresh/commit races before the optional safety backup
@@ -529,14 +610,14 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       if (syncSettings && typeof syncSettings.pause === 'function') { syncSettings.pause(`restore:${restoreId}`); paused = true; }
       if (syncSettings && typeof syncSettings.waitForIdle === 'function') await syncSettings.waitForIdle();
       report(onProgress, { phase: 'Rollback hazırlanıyor', current: 0, total: 1, item: 'Mevcut canlı sistem güvenceye alınıyor' });
-      await snapshotRollback(txRoot, scopes, specialFiles);
+      await snapshotRollback(txRoot, plan.touched, specialFiles);
       await writeJournal(txRoot, { ...journalBase, status: 'rollback_ready', safetyBackup: safetyArchive ? safetyArchive.filename : null });
       if (typeof shouldCancel === 'function' && shouldCancel()) throw restoreError('RESTORE_CANCELLED', 'Restore kullanıcı tarafından iptal edildi.', 409);
 
       commitStarted = true;
       await writeJournal(txRoot, { ...journalBase, status: 'committing', safetyBackup: safetyArchive ? safetyArchive.filename : null });
       if (typeof onCommitState === 'function') onCommitState(true, restoreId);
-      const applied = await applyStaged(stageRoot, extracted.manifest, validation, onProgress);
+      const applied = await applyStaged(stageRoot, extracted.manifest, validation, onProgress, plan);
       report(onProgress, { phase: 'Doğrulanıyor', current: 0, total: 1, item: 'Restore edilen sistem kontrol ediliyor' });
       const verification = await verifyRestored(validation, applied);
       const warnings = [...checked.warnings];
@@ -590,4 +671,5 @@ module.exports = {
   mergePortableConfig,
   compareVersions,
   scopeDefinitions,
+  buildRestorePlan,
 };

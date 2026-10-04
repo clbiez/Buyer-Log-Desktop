@@ -10,6 +10,7 @@ const userPreferences = require('./user-preferences');
 const collectionWorkspaces = require('./collection-workspaces');
 const db = require('../db');
 const { SERVER_DATA_ROOT, APP_DATA_ROOT } = require('../user-data');
+const { skipBackupFile } = require('./backup-scope');
 
 const REQUIRED_JSON = Object.freeze([
   'user/preferences.json',
@@ -47,8 +48,23 @@ async function copyTree(source, target) {
     else if (entry.isFile()) { await fsp.mkdir(path.dirname(to), { recursive: true }); await fsp.copyFile(from, to); }
   }
 }
+// Yedeğe girmeyen dosyalar (görseller, model dosyaları vb.) restore sırasında
+// silinmez; yalnız yedek kapsamındaki dosyalar backup içeriğiyle değiştirilir.
+async function removeManagedFiles(root, relative = '') {
+  const current = relative ? path.join(root, ...relative.split('/')) : root;
+  let dir;
+  try { dir = await fsp.opendir(current); } catch (_) { return; }
+  for await (const entry of dir) {
+    const rel = relative ? `${relative}/${entry.name}` : entry.name;
+    if (entry.isSymbolicLink()) continue;
+    if (entry.isDirectory()) {
+      await removeManagedFiles(root, rel);
+      await fsp.rmdir(path.join(current, entry.name)).catch(() => {});
+    } else if (entry.isFile() && !skipBackupFile(rel)) await fsp.rm(path.join(current, entry.name), { force: true });
+  }
+}
 async function replaceTree(source, target) {
-  await fsp.rm(target, { recursive: true, force: true });
+  await removeManagedFiles(target);
   if (source && fs.existsSync(source)) await copyTree(source, target);
 }
 async function readJsonFile(file, label) {

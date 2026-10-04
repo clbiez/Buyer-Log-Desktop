@@ -9,12 +9,11 @@ const userPreferences = require('./user-preferences');
 const collectionWorkspaces = require('./collection-workspaces');
 const { createBackupArchive } = require('./backup-archive');
 const {
-  SERVER_DATA_ROOT, APP_DATA_ROOT, LOCAL_DATA_ROOT, LOCAL_DB_FILE, MODEL_FILES_ROOT,
-  COLLECTION_IMAGES_ROOT, QTX_FILES_ROOT, CONFIG_PATH,
+  SERVER_DATA_ROOT, APP_DATA_ROOT, LOCAL_DATA_ROOT, QTX_FILES_ROOT, CONFIG_PATH,
 } = require('../user-data');
 
-const SENSITIVE_KEY = /(?:password|pinHash|secret|token|session|cookie|credential|clientSecret|privateKey|loginFailures?|lockUntil)/i;
-const SENSITIVE_FILE = /(?:password|secret|token|session|cookie|credential|agent-ai-settings|agent-browser-settings|browser-debug-settings|browser-profiles|sync-settings|user-audit)/i;
+const { SENSITIVE_KEY } = require('./backup-sensitivity');
+const { skipBackupFile, isHeavyBackupPath, BACKUP_EXCLUDED_TOP, HEAVY_ASSET_DIRS } = require('./backup-scope');
 
 const USER_BACKUP_COMPONENTS = Object.freeze([
   { id: 'preferences', labelTr: 'Arayüz ve kullanıcı tercihleri', labelEn: 'Interface & user preferences', paths: ['user/preferences.json', 'user/browser-storage.json'] },
@@ -70,14 +69,18 @@ function sanitizeBrowserStorage(storage, userId) {
   }
   return out;
 }
-function skipBackupFile(rel, topExcludes) {
-  const normalized = String(rel || '').replace(/\\/g, '/'), parts = normalized.split('/');
-  if (!normalized || topExcludes.has(parts[0])) return true;
-  if (parts.some(part => /^(?:auth|cache|caches|temp|tmp|logs?|sessions?)$/i.test(part))) return true;
-  if (/(?:^|\/)\.env(?:\.|$)/i.test(normalized) || /\.(?:pem|key|pfx|p12|tmp|lock|write-lock)$/i.test(normalized) || /(?:^|\/)user-access\.json$/i.test(normalized) || SENSITIVE_FILE.test(normalized)) return true;
-  return false;
+async function measureSkipped(dirPath, skipped) {
+  let dir;
+  try { dir = await fsp.opendir(dirPath); } catch (_) { return; }
+  for await (const item of dir) {
+    const full = path.join(dirPath, item.name);
+    if (item.isDirectory()) await measureSkipped(full, skipped);
+    else if (item.isFile()) { skipped.count += 1; try { skipped.bytes += (await fsp.stat(full)).size; } catch (_) {} }
+  }
 }
-async function collectRoot(entries, root, prefix, excludeTop = []) {
+// skipped: { count, bytes } — model/görsel gibi bilerek dışarıda bırakılan
+// büyük varlıkları manifest'e raporlamak için.
+async function collectRoot(entries, root, prefix, excludeTop = [], skipped = null) {
   if (!root || !fs.existsSync(root)) return;
   const excluded = new Set(excludeTop);
   async function visit(current, relative = '') {
@@ -85,7 +88,15 @@ async function collectRoot(entries, root, prefix, excludeTop = []) {
     try { dir = await fsp.opendir(current); } catch (_) { return; }
     for await (const item of dir) {
       const rel = relative ? `${relative}/${item.name}` : item.name;
-      if (skipBackupFile(rel, excluded) || item.isSymbolicLink()) continue;
+      if (item.isSymbolicLink()) continue;
+      if (skipBackupFile(rel, excluded)) {
+        if (skipped && item.isDirectory() && !relative && HEAVY_ASSET_DIRS.includes(item.name)) await measureSkipped(path.join(current, item.name), skipped);
+        else if (skipped && item.isFile() && isHeavyBackupPath(rel)) {
+          skipped.count += 1;
+          try { skipped.bytes += (await fsp.stat(path.join(current, item.name))).size; } catch (_) {}
+        }
+        continue;
+      }
       const full = path.join(current, item.name);
       if (item.isDirectory()) await visit(full, rel);
       else if (item.isFile()) entries.push({ name: `${prefix}/${rel.replace(/\\/g, '/')}`, sourcePath: full, stage: 'data' });
@@ -97,7 +108,7 @@ function userProfile(snapshot, userId) {
   const all = [snapshot && snapshot.moderator, ...(Array.isArray(snapshot && snapshot.users) ? snapshot.users : [])].filter(Boolean);
   return all.find(item => String(item.id) === String(userId)) || { id: String(userId || '') };
 }
-async function userEntries({ user, browserStorage, accessSnapshot, components }) {
+async function userEntries({ user, browserStorage, accessSnapshot, components, skipped = null }) {
   const id = safeId(user.id), selected = new Set(components), entries = [
     // profile.json backup sahibini doğrulamak için her zaman bulunur; restore
     // kapsamında seçilebilir bir sayfa verisi değildir.
@@ -117,20 +128,26 @@ async function userEntries({ user, browserStorage, accessSnapshot, components })
   // bütün kullanıcıların kur tablosunu değiştirmemelidir.
   if (selected.has('refresh-history')) entries.push(jsonEntry('user/refresh-history.json', db.loadRefreshHistory(user.id), 'data'));
   if (selected.has('source-data')) {
-    await collectRoot(entries, path.join(SERVER_DATA_ROOT, 'user-source-data', id), 'user/source-data');
-    await collectRoot(entries, path.join(APP_DATA_ROOT, 'user-source-data', id), 'user/local-source-data');
+    await collectRoot(entries, path.join(SERVER_DATA_ROOT, 'user-source-data', id), 'user/source-data', [], skipped);
+    await collectRoot(entries, path.join(APP_DATA_ROOT, 'user-source-data', id), 'user/local-source-data', [], skipped);
   }
   if (selected.has('cp-exfactory')) entries.push(jsonEntry('user/cp-ex-factory-revisions.json', db.cpExFactoryRevisionSnapshot(), 'data'));
   return entries;
 }
-async function fullEntries({ accessSnapshot, syncSettings, localDbFile }) {
+// Tam sistem yedeğinin kök tanımları full-restore-service scopeDefinitions ile
+// aynı excludeTop listesini kullanır; yedeğe girmeyen hiçbir dosya restore
+// sırasında silinmez. Model dosyaları ve görsel depoları artık yedeğe girmez.
+function fullBackupRoots() {
+  return [
+    { root: SERVER_DATA_ROOT, prefix: 'system/server-data', excludeTop: BACKUP_EXCLUDED_TOP },
+    { root: APP_DATA_ROOT, prefix: 'system/app-data', excludeTop: BACKUP_EXCLUDED_TOP },
+    { root: LOCAL_DATA_ROOT, prefix: 'system/local-data', excludeTop: [...BACKUP_EXCLUDED_TOP, 'qtx-files'] },
+    { root: QTX_FILES_ROOT, prefix: 'system/qtx-files', excludeTop: [] },
+  ];
+}
+async function fullEntries({ accessSnapshot, syncSettings, localDbFile, skipped = null }) {
   const entries = [];
-  await collectRoot(entries, SERVER_DATA_ROOT, 'system/server-data', ['logs', 'email-drafts']);
-  await collectRoot(entries, APP_DATA_ROOT, 'system/app-data', ['auth', 'logs', 'email-drafts', 'model-files', 'collection-images']);
-  await collectRoot(entries, LOCAL_DATA_ROOT, 'system/local-data', ['logs', 'model-files', 'collection-images', 'qtx-files', 'page-cache', 'model-snapshots', 'oab-snapshots']);
-  await collectRoot(entries, MODEL_FILES_ROOT, 'system/model-files');
-  await collectRoot(entries, COLLECTION_IMAGES_ROOT, 'system/collection-images');
-  await collectRoot(entries, QTX_FILES_ROOT, 'system/qtx-files');
+  for (const item of fullBackupRoots()) await collectRoot(entries, item.root, item.prefix, item.excludeTop, skipped);
   if (localDbFile && fs.existsSync(localDbFile) && !entries.some(item => path.resolve(item.sourcePath || '') === path.resolve(localDbFile))) entries.push({ name: 'system/local/BuyerLogLocal.db', sourcePath: localDbFile, stage: 'data' });
   let config = {};
   try { config = JSON.parse(await fsp.readFile(CONFIG_PATH, 'utf8')); } catch (_) {}
@@ -140,27 +157,34 @@ async function fullEntries({ accessSnapshot, syncSettings, localDbFile }) {
   return entries;
 }
 function createBackupService({ appVersion, userAccess, syncSettings, localDb }) {
-  async function create({ mode = 'user', user, browserStorage = {}, components = null, onProgress = null }) {
+  // trusted: yalnız sunucu içi zamanlanmış otomatik yedek kullanır (HTTP
+  // isteğinden asla gelmez); kullanıcı oturumu olmadan tam sistem yedeği alır.
+  async function create({ mode = 'user', user, browserStorage = {}, components = null, onProgress = null, trusted = false, auto = false, filename: requestedFilename = '' }) {
     const current = user || {}, full = mode === 'full';
-    if (full && current.systemRole !== 'moderator') throw Object.assign(new Error('Tam Sistem Yedeği yalnız moderatör tarafından oluşturulabilir.'), { statusCode: 403, code: 'MODERATOR_REQUIRED' });
+    if (full && !trusted && current.systemRole !== 'moderator') throw Object.assign(new Error('Tam Sistem Yedeği yalnız moderatör tarafından oluşturulabilir.'), { statusCode: 403, code: 'MODERATOR_REQUIRED' });
     const accessSnapshot = userAccess.backupSnapshot();
     const syncSnapshot = full ? await syncSettings.read() : null;
     const selectedComponents = full ? ['full-system'] : normalizeUserBackupSelection(components, { allowShared: current.systemRole === 'moderator' });
+    const skipped = { count: 0, bytes: 0 };
     const entries = full
-      ? await fullEntries({ accessSnapshot, syncSettings: syncSnapshot, localDbFile: localDb && (localDb.getFile ? localDb.getFile() : localDb.file) })
-      : await userEntries({ user: current, browserStorage, accessSnapshot, components: selectedComponents });
-    const stamp = dateStamp(), filename = full ? `BuyerLog_FullBackup_${stamp}.zip` : `BuyerLog_Backup_${safeId(current.username || current.displayName || current.id)}_${stamp}.zip`;
-    return createBackupArchive({
+      ? await fullEntries({ accessSnapshot, syncSettings: syncSnapshot, localDbFile: localDb && (localDb.getFile ? localDb.getFile() : localDb.file), skipped })
+      : await userEntries({ user: current, browserStorage, accessSnapshot, components: selectedComponents, skipped });
+    const stamp = dateStamp(), filename = requestedFilename ? requestedFilename : full ? `BuyerLog_FullBackup_${stamp}.zip` : `BuyerLog_Backup_${safeId(current.username || current.displayName || current.id)}_${stamp}.zip`;
+    const archive = await createBackupArchive({
       entries, filename, onProgress,
       manifest: {
         app_version: String(appVersion || ''), created_at: new Date().toISOString(), backup_type: full ? 'full' : 'user',
         user: sanitize({ id: current.id, username: current.username, displayName: current.displayName, systemRole: current.systemRole }),
         device: { hostname: os.hostname(), platform: process.platform, arch: process.arch },
         scope_schema: 1, scope_components: selectedComponents,
+        // v2 kapsam: model dosyaları/görseller gibi büyük varlıklar bilerek yok.
+        heavy_assets_excluded: true, excluded_assets: skipped, auto_backup: Boolean(auto),
       },
     });
+    archive.excludedAssets = skipped;
+    return archive;
   }
   return { create, sanitizeBrowserStorage };
 }
 
-module.exports = { createBackupService, sanitize, sanitizeBrowserStorage, dateStamp, safeId, skipBackupFile, USER_BACKUP_COMPONENTS, DEFAULT_USER_BACKUP_COMPONENTS, normalizeUserBackupSelection };
+module.exports = { createBackupService, sanitize, sanitizeBrowserStorage, dateStamp, safeId, skipBackupFile, fullBackupRoots, USER_BACKUP_COMPONENTS, DEFAULT_USER_BACKUP_COMPONENTS, normalizeUserBackupSelection };

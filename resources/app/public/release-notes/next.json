@@ -1,14 +1,114 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yedekleme ve geri yükleme yeniden inşa edildi",
+    "en": "Backup and restore rebuilt"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Buyer Log artık her gün otomatik yedek alır; yedekler hem bu bilgisayarda Buyer Log dışındaki bir klasöre hem de Sync klasörüne yazılır ve son 3 gün saklanır. Model dosyaları ve görseller yedeği şişirmez; geri yükleme sırasında hangi veri alanının döneceği tek tek seçilir.",
+    "en": "Buyer Log now takes an automatic backup every day, writes it to a folder outside Buyer Log on this computer and to the Sync folder, and keeps the last 3 days. Model files and images no longer bloat backups, and every data area can be picked individually when restoring."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "backup-auto-daily",
+      "type": "feature",
+      "module": {
+        "tr": "Yedekleme · Otomatik yedek",
+        "en": "Backup · Automatic backup"
+      },
+      "title": {
+        "tr": "Günlük otomatik yedek: kişisel klasör + Sync klasörü, son 3 gün",
+        "en": "Daily automatic backup: personal folder + Sync folder, last 3 days"
+      },
+      "body": {
+        "tr": "Buyer Log her gün bir kez tam sistem yedeği alır ve iki yere yazar: Buyer Log veri klasörlerinin dışındaki kişisel klasör (varsayılan Belgeler/Buyer Log Backups, değiştirilebilir) ve Buyer Log Sync klasörü. Her hedefte en fazla 3 günlük yedek tutulur; yeni gün yedeği geldiğinde en eskisi silinir. Otomatik yedek sekmesinde son yedekler listelenir, indirilebilir veya doğrudan geri yüklenebilir.",
+        "en": "Buyer Log takes one full system backup per day and writes it to two places: a personal folder outside Buyer Log data folders (default Documents/Buyer Log Backups, configurable) and the Buyer Log Sync folder. Each target keeps at most 3 days; when a new day's backup arrives the oldest one is deleted. The Automatic backup tab lists recent backups, which can be downloaded or restored directly."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backup-auto-daily.png",
+        "alt": {
+          "tr": "Otomatik yedek sekmesi: iki hedef klasör ve son 3 günün yedekleri",
+          "en": "Automatic backup tab: two target folders and backups of the last 3 days"
+        },
+        "caption": {
+          "tr": "Bu bilgisayar ve Sync klasörü için son 3 günün yedekleri; indir veya geri yükle.",
+          "en": "Last 3 days of backups for this computer and the Sync folder; download or restore."
+        }
+      },
+      "path": {
+        "tr": "Data Management → Yedekleme → Otomatik yedek",
+        "en": "Data Management → Backup → Automatic backup"
+      }
+    },
+    {
+      "id": "backup-selective-restore",
+      "type": "feature",
+      "module": {
+        "tr": "Yedekleme · Geri yükleme",
+        "en": "Backup · Restore"
+      },
+      "title": {
+        "tr": "Geri yüklenecek veri alanları tek tek seçilir",
+        "en": "Choose each data area to restore individually"
+      },
+      "body": {
+        "tr": "Tam sistem geri yüklemesi artık ön kontrol sonrası veri alanlarını kategorilere ayrılmış bir listede gösterir (temel veri, Collection, siparişler, fiyatlama, PLM, kullanıcı verileri, sistem). Yalnız işaretlenen alanlar yedekten yazılır; seçilmeyenler olduğu gibi kalır. Liste yedeğin kendi içeriğinden üretildiği için Buyer Log'a eklenen yeni özelliklerin verileri otomatik olarak yedeklenir ve “otomatik algılandı” etiketiyle seçilebilir görünür.",
+        "en": "After the preflight, full system restore now shows data areas in a categorised list (core data, Collection, orders, pricing, PLM, user data, system). Only ticked areas are written from the backup; unselected ones stay as they are. Because the list is built from the backup's own contents, data of new Buyer Log features is backed up automatically and appears as selectable with an “auto-detected” badge."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backup-selective-restore.png",
+        "alt": {
+          "tr": "Geri yükleme listesi: kategorilere ayrılmış, tek tek seçilebilen veri alanları",
+          "en": "Restore list: categorised data areas that can be selected one by one"
+        },
+        "caption": {
+          "tr": "Seçilmeyen alanlara dokunulmaz; yeni özellik verileri otomatik algılanır.",
+          "en": "Unselected areas are left untouched; new feature data is auto-detected."
+        }
+      },
+      "path": {
+        "tr": "Data Management → Yedekleme → Geri yükle",
+        "en": "Data Management → Backup → Restore"
+      }
+    },
+    {
+      "id": "backup-heavy-assets-excluded",
+      "type": "improvement",
+      "module": {
+        "tr": "Yedekleme · Kapsam",
+        "en": "Backup · Scope"
+      },
+      "title": {
+        "tr": "Model dosyaları ve görseller yedeği şişirmez",
+        "en": "Model files and images no longer bloat backups"
+      },
+      "body": {
+        "tr": "Yedekler artık model dosyalarını, görselleri, 3D/video/PDF ve arşiv dosyalarını içermez; boyut küçülür ve yedek hızlanır. Geri yükleme bu dosyalara dokunmaz, mevcut model dosyaları ve görseller korunur. Ön kontrol kaç dosyanın yedek dışında kaldığını gösterir. Parola özeti taşıyabilen hesap deposu kopyaları ve IAM denetim kayıtları da yedeğe alınmaz; Sync klasöründeki kişisel ortak yedekler de en fazla 3 gün saklanır.",
+        "en": "Backups no longer contain model files, images, 3D/video/PDF or archive files, so they are smaller and faster. Restore does not touch these files, so existing model files and images are kept. The preflight shows how many files were left out. Account-store copies that may carry password hashes and IAM audit logs are excluded too, and shared personal backups in the Sync folder are kept for at most 3 days."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backup-heavy-excluded.png",
+        "alt": {
+          "tr": "Ön kontrol özeti: yedek dışında kalan model/görsel dosyaları ve veri alanları",
+          "en": "Preflight summary: model/image files left out of the backup and data areas"
+        },
+        "caption": {
+          "tr": "Ön kontrol, yedek dışında kalan model ve görsel dosyalarını ayrıca gösterir.",
+          "en": "The preflight separately shows the model and image files left out of the backup."
+        }
+      },
+      "path": {
+        "tr": "Data Management → Yedekleme",
+        "en": "Data Management → Backup"
+      }
+    }
+  ]
 }

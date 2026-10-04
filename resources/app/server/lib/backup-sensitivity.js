@@ -13,7 +13,7 @@
  */
 
 const SENSITIVE_KEY = /(?:password|passwd|pinHash|secret|token|session|cookie|credential|clientSecret|privateKey|apiKey|api_key|loginFailures?|lockUntil)/i;
-const SENSITIVE_FILE = /(?:password|secret|token|session|cookie|credential|agent-ai-settings|agent-browser-settings|browser-debug-settings|browser-profiles|sync-settings|user-audit)/i;
+const SENSITIVE_FILE = /(?:password|secret|token|session|cookie|credential|agent-ai-settings|agent-browser-settings|browser-debug-settings|browser-profiles|sync-settings|user-audit|iam-audit)/i;
 const SENSITIVE_DIR = /^(?:auth|sessions?)$/i;
 const SENSITIVE_EXT = /\.(?:pem|key|pfx|p12)$/i;
 
@@ -26,7 +26,9 @@ function isSensitiveBackupPath(rel) {
   const parts = normalized.split('/').filter(Boolean);
   if (parts.slice(0, -1).some(part => SENSITIVE_DIR.test(part))) return true;
   if (/(?:^|\/)\.env(?:\.|$)/i.test(normalized) || SENSITIVE_EXT.test(normalized)) return true;
-  if (/(?:^|\/)user-access\.json(?:\.bak)?$/i.test(normalized)) return true;
+  // user-access.json ve tüm türevleri (.bak, .meta, .pre-iam-migration,
+  // .pre-migration.bak) parola hash'i taşıyabilir.
+  if (/(?:^|\/)user-access(?:[.-][^/]*)?\.(?:json|bak)$/i.test(normalized)) return true;
   return SENSITIVE_FILE.test(normalized);
 }
 

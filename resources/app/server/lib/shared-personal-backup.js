@@ -9,6 +9,9 @@ const { inspectBackupArchive } = require('./backup-archive');
 const { safeId } = require('./backup-service');
 
 const DEFAULT_RETENTION = 30;
+// Ortak kişisel yedekler de en fazla 3 günlük geçmiş tutar; en son sürüm her
+// zaman korunur.
+const MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
 const META_SCHEMA_VERSION = 1;
 
 function digest(value) {
@@ -86,7 +89,8 @@ async function pruneVersions(area, keepName, retentionCount) {
     } catch (_) {}
   }
   versions.sort((a, b) => b.mtimeMs - a.mtimeMs || b.name.localeCompare(a.name));
-  const keep = new Set([keepName, ...versions.slice(0, Math.max(1, retentionCount)).map(item => item.name)]);
+  const cutoff = Date.now() - MAX_AGE_MS;
+  const keep = new Set([keepName, ...versions.slice(0, Math.max(1, retentionCount)).filter(item => item.mtimeMs >= cutoff).map(item => item.name)]);
   let removed = 0;
   for (const item of versions) {
     if (keep.has(item.name)) continue;
@@ -190,4 +194,4 @@ function createSharedPersonalBackupService({ backupService, syncSettings, shared
   return { create, status, latestFile };
 }
 
-module.exports = { createSharedPersonalBackupService, META_SCHEMA_VERSION, DEFAULT_RETENTION, contentFingerprint };
+module.exports = { createSharedPersonalBackupService, META_SCHEMA_VERSION, DEFAULT_RETENTION, MAX_AGE_MS, contentFingerprint, atomicCopy };
