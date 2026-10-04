@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.228",
-  "commit_sha": "129ed4388ccac1af22ee4621c3da46162297949a",
-  "release_notes": "Buyer Log 7.0.228: CP ve Koleksiyon'da seçili modellerin görselleri tek işlemde ve kalıcı olarak kaldırılabiliyor. Veri Yönetimi'ne gereksiz dosyaları tarayıp onayla silen Data Temizliği eklendi; Buyer Log haftada bir kendi bayat verisini otomatik temizliyor ve kayda değer veri kaldıysa hatırlatıyor.",
-  "request_id": "7.0.228-r1"
+  "version": "7.0.230",
+  "commit_sha": "482e5fea59366aa26f64a535ae7ec1ed0a4068b3",
+  "release_notes": "Buyer Log 7.0.230: Üst uygulama çubuğu kaydırmada görünür kalır; yenileme teknik detayları canlı güncellemelerde açık kalır; CP lojistik detayına Ex-Factory ve Yükleme Onay tarihleri eklenir; Checklist alanları hesaplanan sütunlarda kullanılabilir ve CP/Siparişler menüsünde Not Sütunu Ekle erişimi düzeltilir. 7.0.229 release-note paketleme hatası güvenli patch sürümüyle giderildi.",
+  "request_id": "7.0.230-r1"
 }
