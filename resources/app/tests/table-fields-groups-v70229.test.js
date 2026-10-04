@@ -6,8 +6,8 @@
    - CP / Orders / Koleksiyon sütunları kullanıcının verdiği ana başlık ve sıra
      düzeninde tanımlıdır; Sipariş Tipi ve Buying Numunesi Koleksiyon
      tablosunda sütun değildir (satırdaki alan yaşar).
-   - Kayıtlı sütun sırası bu sürümde BİR KEZ varsayılana döner; kullanıcının
-     eklediği sütunlar kaybolmaz.
+   - Kayıtlı sütun sırası sürüm geçişinde korunur; yeni varsayılan yalnız daha
+     önce kişisel yerleşim kaydı olmayan kullanıcıya uygulanır.
    - Alanlar katmanı Odak / Genişletilmiş tanımlarını değiştirmez; döngü
      Preset → Tümü → Gizli → Preset şeklindedir.
    - Koleksiyon Checklist maddesi yoksa Checklist başlığı oluşmaz. */
@@ -110,35 +110,33 @@ test('Koleksiyon varsayılan sırası kullanıcı düzenini izler; checklist mad
   ]);
 });
 
-test('CP / Orders kayıtlı sırası bir kez sıfırlanır; eklenen sütunlar ve gizli/genişlik ayarları korunur', () => {
+test('CP / Orders layout migrasyonu kayıtlı kullanıcı sırasına dokunmaz ve yalnız sürüm damgasını yazar', () => {
   const context = {
     COLS_BY_TABLE: { cp: [{ k: 'A' }, { k: 'B' }, { k: 'C' }], orders: [{ k: 'S' }, { k: 'A' }] },
   };
-  vm.runInNewContext(`${extractConst(APP, 'CP_ORDERS_COLUMN_LAYOUT_VERSION')}const COLUMN_LAYOUT_REGROUP=new Set();${extractFunction(APP, 'migrateCpOrdersColumnLayout')};this.fn=migrateCpOrdersColumnLayout;this.regroup=COLUMN_LAYOUT_REGROUP;`, context);
+  vm.runInNewContext(`${extractConst(APP, 'CP_ORDERS_COLUMN_LAYOUT_VERSION')}const COLUMN_LAYOUT_REGROUP=new Set();${extractFunction(APP, 'migrateCpOrdersColumnLayout')};this.fn=migrateCpOrdersColumnLayout;this.regroup=COLUMN_LAYOUT_REGROUP;this.version=CP_ORDERS_COLUMN_LAYOUT_VERSION;`, context);
   const saved = {
     cp: { order: ['C', '__db_1', 'A', 'B', '__f_1'], hidden: ['B'], widthPx: { A: 120 } },
     orders: { order: ['A', 'S'], hidden: [], widthPx: {} },
   };
+  const before = plain({ cp: saved.cp, orders: saved.orders });
   assert.equal(context.fn(saved), true);
-  assert.deepEqual(plain(saved.cp.order), ['A', 'B', 'C', '__db_1', '__f_1']);
-  assert.deepEqual(plain(saved.cp.hidden), ['B']);
-  assert.deepEqual(plain(saved.cp.widthPx), { A: 120 });
-  assert.deepEqual(plain(saved.orders.order), ['S', 'A']);
-  assert.ok(context.regroup.has('cp') && context.regroup.has('orders'));
-  // İkinci açılışta kullanıcının yeni sırası korunur.
+  assert.deepEqual(plain(saved.cp), before.cp);
+  assert.deepEqual(plain(saved.orders), before.orders);
+  assert.equal(saved._layout.cpOrders, context.version);
+  assert.equal(context.regroup.size, 0);
   saved.cp.order = ['B', 'A', 'C'];
   assert.equal(context.fn(saved), false);
   assert.deepEqual(plain(saved.cp.order), ['B', 'A', 'C']);
   assert.match(extractFunction(APP, 'loadAutoTableColumnState'), /if\(migrateCpOrdersColumnLayout\(saved\)\)writeAutoTableColumnStateSnapshot\(\);/);
 });
 
-test('Koleksiyon sırası sıfırlanırken özel sütun solundaki sistem sütununun yanında kalır', () => {
-  const context = {};
-  vm.runInNewContext(`${extractFunction(APP, 'mergeDeferredColumnOrder')};this.fn=mergeDeferredColumnOrder;`, context);
-  const base = ['mag', 'season', 'not', 'fob'];
-  assert.deepEqual(plain(context.fn(['season', 'cx_a', 'fob', 'mag', 'not', 'cx_b'], base, base)), ['mag', 'season', 'cx_a', 'not', 'cx_b', 'fob']);
+test('Koleksiyon layout migrasyonu kayıtlı sırayı yeni varsayılana zorla sıfırlamaz', () => {
+  const load = extractFunction(APP, 'loadKolColState');
   assert.match(APP, /const KOL_COL_LAYOUT_VERSION = 7;/);
-  assert.match(extractFunction(APP, 'loadKolColState'), /kolColOrder=kolResetDisplayOrderKeepingCustom\(/);
+  assert.doesNotMatch(load, /kolResetDisplayOrderKeepingCustom/);
+  assert.match(load, /kolColOrder = kolNormalizeDisplayOrder\(obj\.order\)/);
+  assert.match(load, /obj\.layoutVersion=KOL_COL_LAYOUT_VERSION/);
 });
 
 test('eski başlık adları yeni kanonik başlığa katılır; görünen ad TR/EN', () => {
