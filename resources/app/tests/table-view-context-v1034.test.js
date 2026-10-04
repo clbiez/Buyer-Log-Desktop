@@ -18,8 +18,11 @@ test('Orders ve Collection görünür tablo bağlamında Odak/Tümü presetlerin
 });
 
 test('v10.34 mevcut tek Sütunlar bileşeni aktif çalışma alanının görünür bağlamına taşınır', () => {
-  assert.match(APP, /appendSharedTableActions\('ordersTableViewActions',\['navColsBtn'\]\)/);
-  assert.match(APP, /appendSharedTableActions\('kolTableViewActions',\['navColsBtn'\]\)/);
+  // v7.0.229 — Orders ve Koleksiyon'da Sütunlar düğmesi yerine Alanlar çekmecesi.
+  assert.doesNotMatch(APP, /appendSharedTableActions\('ordersTableViewActions',\['navColsBtn'\]\)/);
+  assert.doesNotMatch(APP, /appendSharedTableActions\('kolTableViewActions',\['navColsBtn'\]\)/);
+  assert.match(INDEX, /data-table-fields="orders"/);
+  assert.match(INDEX, /data-table-fields="koleksiyon"/);
   assert.doesNotMatch(APP, /appendSharedTableActions\('ordersMoreMenu',\[[^\]]*'navColsBtn'/);
   assert.doesNotMatch(APP, /appendSharedTableActions\('kolMoreMenu',\[[^\]]*'navColsBtn'/);
   assert.match(INDEX, /id="navColsBtn"[^>]*aria-haspopup="true"[^>]*aria-expanded="false"/);

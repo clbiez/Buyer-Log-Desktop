@@ -264,3 +264,51 @@ test('Koleksiyon Checklist: dört durum, ortak özel sütun bayrağı, madde yok
   assert.match(meta, /if\(c\.checklist\)return \{[^}]*editable:false/);
   assert.match(extractFunction(APP, 'kolSetChecklistStatus'), /kolWriteGroupedStorageValue\(row,key,status==='open'\?'':status\)/);
 });
+
+test('Alanlar çekmecesi: Tümü de tiklenir; hariç tutulanlar ayrı saklanır, yeni sütunlar Tümü\'ye girer', () => {
+  const store = {};
+  const context = { BLStorage: { getItem: key => store[key] ?? null, setItem: (key, value) => { store[key] = value; } }, allKeys: ['A', 'B', 'C'] };
+  vm.runInNewContext(`
+    ${extractConst(APP, 'TABLE_VIEW_FOCUS_KEY')}
+    ${extractConst(APP, 'TABLE_VIEW_EDITABLE_PRESETS')}
+    function tableViewAllKeys(){return allKeys;}
+    function tableViewFocusKeys(){return ['A'];}
+    function tableViewDefaultExtendedKeys(){return ['A','B'];}
+    ${extractFunction(APP, 'tableViewPresetStored')}
+    ${extractFunction(APP, 'tableViewSavedPresetKeys')}
+    ${extractFunction(APP, 'tableViewAllHiddenKeys')}
+    ${extractFunction(APP, 'tableViewPresetKeys')}
+    ${extractFunction(APP, 'saveTableViewPreset')}
+    this.keys=tableViewPresetKeys;this.save=saveTableViewPreset;`, context);
+  assert.equal(context.save('cp', 'all', ['A', 'C']), true);
+  assert.deepEqual(plain(context.keys('cp', 'all')), ['A', 'C']);
+  assert.deepEqual(JSON.parse(store['lcw.tableViewFocus.v1']).cp, { allHidden: ['B'] });
+  context.allKeys.push('D');
+  assert.deepEqual(plain(context.keys('cp', 'all')), ['A', 'C', 'D']);
+  assert.equal(context.save('cp', 'focus', ['C']), true);
+  assert.deepEqual(plain(context.keys('cp', 'focus')), ['C']);
+  assert.equal(context.save('cp', 'extended', []), false);
+});
+
+test('Alanlar çekmecesi: başlık açılır, tikler, düzenle / formül / sil ve ekleme komutları; sıralama başlık içinde', () => {
+  const fn = extractFunction(APP, 'renderTableFieldsMenu');
+  assert.match(fn, /data-table-fields-toggle=/);
+  assert.match(fn, /data-table-fields-preset="\$\{preset\}"/);
+  assert.match(fn, /data-table-fields-group-preset=/);
+  assert.match(fn, /data-table-fields-formula=/);
+  assert.match(fn, /data-table-fields-rename=/);
+  assert.match(fn, /data-table-fields-delete=/);
+  assert.match(fn, /dragged\.dataset\.group===row\.dataset\.group/);
+  assert.doesNotMatch(fn, /<section/, 'section öğeleri sayfa görünümü kuralıyla gizlenir');
+  const move = extractFunction(APP, 'tableFieldsMoveColumn');
+  assert.match(move, /if\(key==='__picture__'\|\|targetKey==='__picture__'\)return false;/);
+  assert.match(move, /cs\.order=order;saveAutoTableColumnState\(\);/);
+  assert.match(move, /kolColOrder=kolNormalizeDisplayOrder\(order\);saveKolColState\(\);/);
+  const del = extractFunction(APP, 'tableFieldsDeleteColumn');
+  assert.match(del, /removeFormulaColumn\(/);
+  assert.match(del, /removeCpModelColumn\(/);
+  assert.match(del, /removeCpNoteColumn\(/);
+  assert.match(del, /kolRemoveCustomColumn\(key,done\)/);
+  // Çekmeceden açılan diyaloglar çekmeceyi kapatmaz.
+  assert.match(extractFunction(APP, 'openTableFieldsMenu'), /\.warnOverlay,\.modalCard,\[aria-modal="true"\]/);
+});

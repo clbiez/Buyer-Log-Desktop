@@ -556,36 +556,36 @@
       "id": "columns",
       "module": "views",
       "visual": "column",
-      "selector": "#navColsBtn",
+      "selector": "[data-table-fields]",
       "title": {
-        "tr": "Sütunları gösterin, gizleyin, adlandırın",
-        "en": "Show, hide and name columns"
+        "tr": "Alanlar: sütunları gösterin, sıralayın, adlandırın",
+        "en": "Fields: show, order and name columns"
       },
       "summary": {
-        "tr": "Sütunlar paneli görünür alanları yönetir. Sütun başlığına sağ tıklayarak gizleme menüsünü de açabilirsiniz.",
-        "en": "The Columns panel manages visible fields. Right-clicking a heading also opens visibility actions."
+        "tr": "Alanlar çekmecesi ana başlıkları ve altındaki sütunları tek yerde yönetir: hangi sütunun Odak, Genişletilmiş veya Tümü görünümünde yer alacağını tikleyin, sürükleyerek sıralayın, adını ve formülünü düzenleyin, yeni sütun ekleyin. Odak veya Genişletilmiş düğmesine çift tıklamak da aynı çekmeceyi açar.",
+        "en": "The Fields drawer manages headings and their columns in one place: tick which views (Focus, Extended, All) a column appears in, drag to reorder, edit its name and formula and add new columns. Double-clicking Focus or Extended opens the same drawer."
       },
       "path": {
-        "tr": "Tablo → Sütunlar",
-        "en": "Table → Columns"
+        "tr": "Tablo → Görünüm → Alanlar",
+        "en": "Table → View → Fields"
       },
       "steps": {
         "tr": [
-          "Sütunlar düğmesini açın.",
-          "Görünmesini istediğiniz alanları işaretleyin.",
-          "Başlık düzenleme simgesi varsa kişisel adınızı ve veri kaynağını inceleyin."
+          "Alanlar düğmesine basın veya Odak / Genişletilmiş düğmesine çift tıklayın.",
+          "Bir ana başlığı açın ve sütunların görünüm tiklerini seçin.",
+          "Sütunu sürükleyerek başlık içinde sıralayın; kalem ile adını, fx ile formülünü düzenleyin."
         ],
         "en": [
-          "Open Columns.",
-          "Check the fields to display.",
-          "Use the rename icon where available to inspect the label and data source."
+          "Press Fields or double-click Focus / Extended.",
+          "Open a heading and tick the views for each column.",
+          "Drag a column to reorder it within its heading; use the pencil for its name and fx for its formula."
         ]
       },
       "note": {
-        "tr": "",
-        "en": ""
+        "tr": "Başlıktaki Odak / Tümü / Gizli düğmesi görünüm tanımlarını değiştirmeden başlığı geçici olarak açar veya kapatır.",
+        "en": "The Focus / All / Hidden button on a heading opens or closes it without changing the view definitions."
       },
-      "example": "☑ Model · ☑ Status · ☐ Notes",
+      "example": "Marka Detayları · Buyer ☑ Odak ☑ Tümü",
       "evidence": "public/app-main.js",
       "area": "cp",
       "areas": [

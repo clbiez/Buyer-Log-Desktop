@@ -536,20 +536,52 @@ footer{padding:10px var(--sp-5) 26px;font-size:var(--fs-xs);color:var(--muted);}
 .tableFieldsBtn .ic{width:13px;height:13px;}
 .tableFieldsBtn.hasOverrides,.tableFieldsBtn[aria-expanded="true"]{border-color:var(--acc);color:var(--acc-ink);}
 .tableFieldsBadge{min-width:16px;height:16px;padding:0 4px;border-radius:999px;background:var(--acc);color:var(--card);font:700 var(--fs-2xs)/16px var(--sans);text-align:center;}
-.tableFieldsMenu{position:fixed;z-index:10060;width:300px;max-width:calc(100vw - 16px);max-height:min(560px,calc(100vh - 24px));display:flex;flex-direction:column;border:1px solid var(--line2);border-radius:var(--r-sm,8px);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden;}
-.tableFieldsHead{display:flex;flex-direction:column;gap:2px;padding:var(--sp-2) var(--sp-3);border-bottom:1px solid var(--line);}
+.navColsRight[hidden]{display:none!important;}
+.tableFieldsDrawer{position:fixed;z-index:10060;top:64px;right:12px;bottom:12px;width:min(660px,calc(100vw - 24px));display:flex;flex-direction:column;border:1px solid var(--line2);border-radius:var(--r-sm,8px);background:var(--card);box-shadow:var(--shadow-lg);overflow:hidden;}
+.tableFieldsHead{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-2);padding:var(--sp-3);border-bottom:1px solid var(--line);}
+.tableFieldsHead>div{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .tableFieldsHead b{font:700 var(--fs-sm)/1.2 var(--heading);color:var(--ink);}
-.tableFieldsHead span{font:500 var(--fs-2xs)/1.3 var(--sans);color:var(--muted);}
-.tableFieldsList{display:flex;flex-direction:column;gap:2px;padding:var(--sp-1);overflow:auto;}
-.tableFieldsItem{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);min-height:30px;padding:0 var(--sp-2) 0 calc(var(--sp-2) + 3px);border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--ink2);font:500 var(--fs-xs)/1.2 var(--sans);text-align:left;cursor:pointer;box-shadow:inset 3px 0 0 var(--grp-accent,var(--acc));}
-.tableFieldsItem:hover{background:var(--card2);color:var(--ink);}
-.tableFieldsItem:focus-visible{outline:none;box-shadow:inset 3px 0 0 var(--grp-accent,var(--acc)),var(--focus-ring);}
-.tableFieldsItem b{font-weight:650;color:var(--ink);}
-.tableFieldsItem.is-all>.tableFieldsItemLabel>span{color:var(--green);font-weight:650;}
-.tableFieldsItem.is-hidden{color:var(--muted);}
-.tableFieldsItem.is-hidden b{color:var(--muted);text-decoration:line-through;}
+.tableFieldsHead span{font:500 var(--fs-2xs)/1.35 var(--sans);color:var(--muted);}
+.tableFieldsClose{flex:0 0 auto;width:28px;height:28px;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--ink2);font-size:18px;line-height:1;cursor:pointer;}
+.tableFieldsClose:hover{border-color:var(--line2);background:var(--card2);}
+.tableFieldsGridHead{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);padding:6px var(--sp-3) 6px calc(var(--sp-3) + 6px);border-bottom:1px solid var(--line);background:var(--card2);color:var(--muted);font:700 var(--fs-2xs)/1 var(--heading);letter-spacing:.06em;text-transform:uppercase;}
+.tableFieldsChecks{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,78px);align-items:center;justify-items:center;}
+.tableFieldsPresetHead{padding:3px 6px;border-radius:var(--r-xs);text-align:center;}
+.tableFieldsPresetHead.isActive{background:var(--acc-bg);color:var(--acc-ink);}
+.tableFieldsCheck input{width:15px;height:15px;margin:0;accent-color:var(--acc);cursor:pointer;}
+.tableFieldsList{flex:1 1 auto;display:flex;flex-direction:column;gap:2px;padding:var(--sp-1) var(--sp-2);overflow:auto;}
+.tableFieldsGroup{border-radius:var(--r-xs);box-shadow:inset 3px 0 0 var(--grp-accent,var(--acc));}
+.tableFieldsGroup.isOpen{background:color-mix(in srgb,var(--card2) 55%,var(--card));}
+.tableFieldsGroupRow{display:flex;align-items:center;gap:var(--sp-2);min-height:34px;padding:0 var(--sp-1) 0 calc(var(--sp-2) + 3px);}
+.tableFieldsGroupToggle{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:6px;padding:4px 2px;border:0;background:transparent;color:var(--ink);font:650 var(--fs-xs)/1.2 var(--sans);text-align:left;cursor:pointer;}
+.tableFieldsGroupToggle .ic{width:13px;height:13px;flex:0 0 auto;color:var(--muted);}
+.tableFieldsGroupToggle b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tableFieldsModeBtn{flex:0 0 auto;min-width:74px;padding:3px 8px;border:1px solid var(--line2);border-radius:999px;background:var(--card);color:var(--ink2);font:600 var(--fs-2xs)/1.2 var(--sans);cursor:pointer;}
+.tableFieldsModeBtn:hover{border-color:var(--acc);}
+.tableFieldsModeBtn.is-all{border-color:color-mix(in srgb,var(--green) 50%,var(--line2));color:var(--green);}
+.tableFieldsModeBtn.is-hidden{color:var(--muted);text-decoration:line-through;}
+.tableFieldsGroup.is-hidden .tableFieldsGroupToggle b{color:var(--muted);}
 .tableFieldsItemCount{flex:0 0 auto;color:var(--muted);font:600 var(--fs-2xs)/1 var(--mono);}
-.tableFieldsFoot{display:flex;justify-content:flex-end;gap:var(--sp-1);padding:var(--sp-2);border-top:1px solid var(--line);}
+.tableFieldsColumns{display:flex;flex-direction:column;margin-left:3px;padding:0 0 var(--sp-1);}
+.tableFieldsColumn{display:flex;align-items:center;gap:var(--sp-1);min-height:30px;padding:0 var(--sp-1) 0 calc(var(--sp-3) + 7px);border-top:1px solid transparent;border-bottom:1px solid transparent;color:var(--ink2);font:500 var(--fs-xs)/1.2 var(--sans);}
+.tableFieldsColumn:hover{background:var(--card);}
+.tableFieldsColumn.isHiddenNow .tableFieldsColumnName{color:var(--muted);}
+.tableFieldsColumn.isDragging{opacity:.4;}
+.tableFieldsColumn.dropBefore{border-top-color:var(--acc);}
+.tableFieldsColumn.dropAfter{border-bottom-color:var(--acc);}
+.tableFieldsDrag{flex:0 0 auto;width:14px;margin-right:4px;color:var(--muted);font-size:12px;line-height:1;letter-spacing:-1px;text-align:center;cursor:grab;user-select:none;}
+.tableFieldsDrag.isDisabled{visibility:hidden;}
+.tableFieldsColumnName{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tableFieldsColumn.hasUserLabel .tableFieldsColumnName{font-style:italic;}
+.tableFieldsActions{flex:0 0 auto;display:inline-flex;align-items:center;gap:2px;}
+.tableFieldsIcon{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--ink2);font:700 var(--fs-2xs)/1 var(--mono);cursor:pointer;}
+.tableFieldsIcon .ic{width:13px;height:13px;}
+.tableFieldsIcon:hover{border-color:var(--line2);background:var(--card2);color:var(--ink);}
+.tableFieldsIcon.isFx{color:var(--acc);font-style:italic;}
+.tableFieldsIcon.isDanger:hover{border-color:color-mix(in srgb,var(--red) 45%,var(--line2));color:var(--red);}
+.tableFieldsGroupToggle:focus-visible,.tableFieldsModeBtn:focus-visible,.tableFieldsIcon:focus-visible,.tableFieldsClose:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.tableFieldsFoot{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);padding:var(--sp-2) var(--sp-3);border-top:1px solid var(--line);flex-wrap:wrap;}
+.tableFieldsAdd{display:flex;flex-wrap:wrap;gap:var(--sp-1);}
 /* v10.35 — Visible, removable table-filter context */
 .activeFilterBar{min-height:var(--control-md);display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-1) var(--sp-3);border-bottom:1px solid var(--line);background:var(--card);}
 .activeFilterLabel{flex:0 0 auto;color:var(--muted);font:700 var(--fs-2xs)/1 var(--heading);letter-spacing:.08em;}

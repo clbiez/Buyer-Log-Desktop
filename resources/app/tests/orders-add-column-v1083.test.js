@@ -48,12 +48,15 @@ test('renderColPanel: DB-bağlı özel sütunlar Orders panelinde de düzenle/ka
 });
 
 test('⋯ More Actions menüsü: Orders artık Add Column eylemini alıyor', () => {
-  const fn = extractFunction(APP, 'appendColumnActions');
+  /* v7.0.229 — Sütun / Hesaplanan / Not Sütunu ekleme ⋯ menüsünden Alanlar
+     çekmecesinin altına taşındı; CP ve Orders aynı komutları alır. */
+  const fn = extractFunction(APP, 'renderTableFieldsMenu');
   assert.match(fn, /if\(tableKey==='cp'\|\|tableKey==='orders'\)\{/);
-  assert.match(fn, /add\('add','i-columns-3',addColLabel,\(\)=>openCpModelColumnModal\(null,rerender\)\);/);
-  // Menü zaten Orders için kuruluyordu (appendColumnActions('ordersMoreMenu','orders')),
-  // yalnız içeride hiçbir şey basmıyordu.
-  assert.match(APP, /appendColumnActions\('ordersMoreMenu','orders'\);/);
+  assert.match(fn, /if\(action==='column'\)openCpModelColumnModal\(null,done\);/);
+  assert.match(fn, /else if\(action==='note'\)void addCpNoteColumn\(done\);/);
+  assert.match(fn, /fc\.open\(tableKey,null,done\);/);
+  assert.match(APP, /removeColumnActions\('ordersMoreMenu'\);/);
+  assert.doesNotMatch(APP, /function appendColumnActions\(/);
 });
 
 test('sütun kaydı tek yoldan gider: ikinci bir Orders-özel sütun sistemi yok', () => {

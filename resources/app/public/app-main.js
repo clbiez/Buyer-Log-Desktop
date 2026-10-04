@@ -1375,36 +1375,8 @@ function placeSharedActionsBefore(refId,ids){
    Düğmeler her sekme geçişinde yeniden kurulur; eskiler önce silinir ki
    menü çoğalmasın. Her tablo YALNIZ gerçekten desteklediği eylemi görür —
    çalışmayan bir düğme koymaktansa hiç koymamak dürüst olanı. */
-function appendColumnActions(targetId,tableKey){
-  const menu=document.getElementById(targetId); if(!menu) return;
-  menu.querySelectorAll('[data-col-action]').forEach(el=>el.remove());
-  const rerender=()=>{const info=activeTableInfo(); if(info&&typeof info.rerender==='function') info.rerender();};
-  const add=(action,icon,label,run)=>{
-    const btn=document.createElement('button');
-    btn.type='button'; btn.className='tbtn'; btn.dataset.colAction=action;
-    btn.innerHTML=`<svg class="ic"><use href="#${icon}"/></svg><span>${escapeHtml(label)}</span>`;
-    btn.addEventListener('click',()=>{ menu.hidden=true; run(); });
-    menu.appendChild(btn);
-  };
-  const addColLabel=appLang==='en'?'Add Column':'Sütun Ekle';
-  const calcLabel=appLang==='en'?'Add Calculated Column':'Hesaplanan Sütun Ekle';
-  if(tableKey==='cp'||tableKey==='orders'){
-    // Orders'ın sütun şeması CP_COLS'un kopyası (syncOrdersColumnsFromCp); aynı
-    // pencere kullanılır, ikinci bir sütun sistemi kurulmaz.
-    add('add','i-columns-3',addColLabel,()=>openCpModelColumnModal(null,rerender));
-  }else if(tableKey==='koleksiyon'){
-    add('add','i-columns-3',addColLabel,()=>kolAddCustomColumn(null));
-  }
-  /* Formül modülü tembel yükleniyor (perf-runtime). Varlığına menü KURULURKEN
-     bakılsaydı düğme ilk açılışta sessizce eksik kalır, yalnız sekme değişince
-     belirirdi — ölçüldü. Bu yüzden kontrol tıklama anına alındı. */
-  if(FORMULA_COLUMN_TABLES.has(tableKey)){
-    add('calc','i-calculator',calcLabel,()=>{
-      const fc=window.BLFormulaColumns;
-      if(!fc){showToast(appLang==='en'?'Calculated columns are still loading.':'Hesaplanan sütunlar henüz yükleniyor.');return;}
-      fc.open(tableKey,null,rerender);
-    });
-  }
+function removeColumnActions(targetId){
+  document.getElementById(targetId)?.querySelectorAll('[data-col-action]').forEach(el=>el.remove());
 }
 function appendVfProfiles(targetId){
   const target=document.getElementById(targetId);if(!target)return;
@@ -1447,29 +1419,32 @@ function syncTableToolbarActions(tab=document.body.dataset.activeTab){
   // bile anlamsız bir denetim ve filtre varken iki eşdeğer yol oluşturuyordu.
   const contextualClear=document.getElementById('navClearFilters');
   if(contextualClear)contextualClear.hidden=tab==='orders'||tab==='koleksiyon';
+  // v7.0.229 — CP / Siparişler / Koleksiyon'da sütun yönetimi yalnız Alanlar
+  // çekmecesindedir; eski Sütunlar düğmesi bu sayfalarda gösterilmez.
+  const columnsWrap=document.getElementById('navColsBtn')?.closest('.navColsRight');
+  if(columnsWrap)columnsWrap.hidden=tab==='cp'||tab==='orders'||tab==='koleksiyon';
   placeCpDimensionFilters(tab);
   if(tab==='cp'){
     appendSharedTableActions('cpTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','cpCopyToKolBtn','navExcelBtn']);
     appendSharedTableActions('cpToolsMenu',_selectionActionIds);
-    appendSharedTableActions('cpTableViewActions',['navColsBtn']);
     appendSharedTableActions('cpMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('cpMoreWrap',['navClearFilters']);
-    appendColumnActions('cpMoreMenu','cp');
+    // v7.0.229 — Sütun / Hesaplanan / Not Sütunu ekleme ve eski Sütunlar paneli
+    // Alanlar çekmecesine taşındı; ⋯ menüsünde ve görünüm çubuğunda yer almaz.
+    removeColumnActions('cpMoreMenu');
     appendVfProfiles('cpMoreMenu');
   }else if(tab==='orders'){
     appendSharedTableActions('ordersTableActions',['undoBtn','redoBtn','navCopy','navCopyMenuBtn','gridSelectionStatus','navExcelBtn']);
-    appendSharedTableActions('ordersTableViewActions',['navColsBtn']);
     // Siparişler'de "Koleksiyona Kopyala" ve CP'ye özgü Fiyat Çalışmaları yok.
     appendSharedTableActions('ordersToolsMenu',_selectionActionIds.filter(id=>id!=='cpQuotationsBtn'));
     appendSharedTableActions('ordersMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('ordersMoreWrap',['navClearFilters']);
-    appendColumnActions('ordersMoreMenu','orders');
+    removeColumnActions('ordersMoreMenu');
     appendVfProfiles('ordersMoreMenu');
   }else if(tab==='koleksiyon'){
-    appendSharedTableActions('kolTableViewActions',['navColsBtn']);
     appendSharedTableActions('kolMoreMenu',['navFitColumnsBtn','navFreezeBtn']);
     placeSharedActionsBefore('kolMoreWrap',['navClearFilters']);
-    appendColumnActions('kolMoreMenu','koleksiyon');
+    removeColumnActions('kolMoreMenu');
     // Görünüm (Page Options) ve Filtre profilleri de ⋯ menüsünün içine girer.
     appendVfProfiles('kolMoreMenu');
   }else if(tab==='shipping'){
@@ -3934,9 +3909,18 @@ function tableViewDefaultExtendedKeys(tableKey){
   scored.slice(0,target-focus.length).forEach(item=>selected.add(item.key));
   return all.filter(key=>selected.has(key));
 }
+// Tümü artık da düzenlenebilir: hariç tutulan sütunlar ayrı tutulur ki sonradan
+// eklenen sütunlar Tümü'ye kendiliğinden girsin.
+function tableViewAllHiddenKeys(tableKey){
+  const page=tableViewPresetStored()[tableKey];
+  return new Set(page&&typeof page==='object'&&!Array.isArray(page)&&Array.isArray(page.allHidden)?page.allHidden:[]);
+}
 function tableViewPresetKeys(tableKey,preset){
   const all=tableViewAllKeys(tableKey);
-  if(preset==='all')return all;
+  if(preset==='all'){
+    const excluded=tableViewAllHiddenKeys(tableKey),keys=all.filter(key=>!excluded.has(key));
+    return keys.length?keys:all;
+  }
   const fallback=preset==='focus'?tableViewFocusKeys(tableKey):preset==='extended'?tableViewDefaultExtendedKeys(tableKey):[];
   const saved=tableViewSavedPresetKeys(tableKey,preset);
   if(!Array.isArray(saved))return fallback;
@@ -3944,17 +3928,15 @@ function tableViewPresetKeys(tableKey,preset){
   return valid.length?valid:fallback;
 }
 function saveTableViewPreset(tableKey,preset,keys){
-  if(!TABLE_VIEW_EDITABLE_PRESETS.includes(preset))return false;
+  if(!TABLE_VIEW_EDITABLE_PRESETS.includes(preset)&&preset!=='all')return false;
   const all=tableViewAllKeys(tableKey),valid=[...new Set(Array.isArray(keys)?keys:[])].filter(key=>all.includes(key));
   if(!valid.length)return false;
   const stored=tableViewPresetStored(),current=stored[tableKey];
   const page=Array.isArray(current)?{focus:[...new Set(current)].filter(key=>all.includes(key))}:current&&typeof current==='object'?{...current}:{};
-  page[preset]=valid;stored[tableKey]=page;
+  if(preset==='all'){const chosen=new Set(valid);page.allHidden=all.filter(key=>!chosen.has(key));if(!page.allHidden.length)delete page.allHidden;}
+  else page[preset]=valid;
+  stored[tableKey]=page;
   try{BLStorage.setItem(TABLE_VIEW_FOCUS_KEY,JSON.stringify(stored));return true;}catch(_){return false;}
-}
-function tableViewFocusCatalog(tableKey){
-  const all=tableViewAllKeys(tableKey);
-  return all.map(key=>({key,label:tableViewColumnMeta(tableKey,key)?.label||key}));
 }
 function tableViewHiddenKeys(tableKey){
   if(tableKey==='koleksiyon')return new Set([...kolHiddenCols,...(kolPictureHidden?['__picture__']:[])]);
@@ -4130,25 +4112,190 @@ function resetTableGroupOverrides(tableKey){
   if(base!=='custom')return applyTableViewPreset(tableKey,base);
   renderTableViewContext(tableKey);return true;
 }
+/* v7.0.229 — ALANLAR ÇEKMECESİ. Eski "Sütunlar" paneli ve ayrı Odak/Genişletilmiş
+   editörü yerine tek yer: ana başlıklar açılır-kapanır, altında sütunlar listelenir.
+   Sağdaki Odak / Genişletilmiş / Tümü tikleri sütunun hangi görünümde yer aldığını
+   belirler (preset tanımı); başlıktaki mod düğmesi Tümü / Gizli katmanını döndürür.
+   Sütunlar başlık içinde sürüklenerek sıralanır; ad / formül düzenleme, silme ve
+   sütun ekleme komutları da buradadır. */
+const TABLE_FIELDS_PRESETS = Object.freeze(['focus','extended','all']);
+const tableFieldsExpanded=Object.create(null);
+let tableFieldsDragKey=null;
+function tableFieldsRerender(tableKey){
+  const info=activeTableInfo();
+  if(info?.tableKey===tableKey&&typeof info.rerender==='function')info.rerender();
+  else if(tableKey==='koleksiyon')renderKol();
+  else if(tableKey==='cp')renderCP();
+  else if(tableKey==='orders')renderOrders();
+  const menu=document.getElementById('_tableFieldsMenu');
+  if(menu&&menu.dataset.tableKey===tableKey)renderTableFieldsMenu(menu,tableKey);
+}
+function tableFieldsColumn(tableKey,key){
+  if(tableKey==='koleksiyon'){
+    if(key==='__picture__')return {key,label:L('Picture'),kind:'picture',fixed:true};
+    if(KOL_SYNTHETIC_COL_META[key])return {key,label:L(KOL_SYNTHETIC_COL_META[key].label),kind:'synthetic'};
+    const col=kolColDefs().find(c=>c.k===key);if(!col)return {key,label:key,kind:'unknown'};
+    const custom=kolIsCustomCol(key);
+    return {key,col,label:kolColumnLabel(col),kind:custom?(col.checklist?'checklist':'custom'):'system',canRename:custom?kolWorkspaceCanEdit:true,canDelete:custom&&kolWorkspaceCanEdit,userLabel:!custom&&kolColumnHasUserLabel(col)};
+  }
+  const col=(COLS_BY_TABLE[tableKey]||[]).find(c=>c.k===key);if(!col)return {key,label:key,kind:'unknown'};
+  const kind=col.formulaCustom?'formula':col.modelCustom?'model':col.noteCustom?'note':col.checklistSupplierColumn?'cpChecklist':'system';
+  const labelEditable=!!window.BLColumnNames&&BLColumnNames.TABLES.includes(tableKey);
+  return {key,col,label:tableColumnLabel(tableKey,col),kind,fixed:col.type==='cpImage',canRename:kind==='system'?labelEditable:kind!=='cpChecklist',canDelete:['formula','model','note'].includes(kind),userLabel:kind==='system'&&tableColumnHasUserLabel(tableKey,col)};
+}
+function tableFieldsRenameColumn(tableKey,key){
+  const meta=tableFieldsColumn(tableKey,key),done=()=>tableFieldsRerender(tableKey);
+  if(!meta.col||!meta.canRename)return;
+  if(tableKey==='koleksiyon'){
+    if(meta.kind==='system')void editSystemColumnLabel('koleksiyon',meta.col,{defaultLabel:lang=>kolColumnSystemLabelIn(meta.col,lang),onChange:done});
+    else void kolRenameCustomColumn(key,done);
+    return;
+  }
+  if(meta.kind==='formula'){window.BLFormulaColumns?.open(tableKey,meta.col.formulaId,done);return;}
+  if(meta.kind==='model'){openCpModelColumnModal(meta.col.modelColumnId,done);return;}
+  if(meta.kind==='note'){void renameCpNoteColumn(meta.col.noteColumnId,done);return;}
+  void editSystemColumnLabel(tableKey,meta.col,{onChange:done});
+}
+function tableFieldsDeleteColumn(tableKey,key){
+  const meta=tableFieldsColumn(tableKey,key),done=()=>tableFieldsRerender(tableKey);
+  if(!meta.col||!meta.canDelete)return;
+  if(tableKey==='koleksiyon'){kolRemoveCustomColumn(key,done);return;}
+  if(meta.kind==='formula')removeFormulaColumn(tableKey,meta.col.formulaId,done);
+  else if(meta.kind==='model')void removeCpModelColumn(meta.col.modelColumnId,done);
+  else if(meta.kind==='note')void removeCpNoteColumn(meta.col.noteColumnId,done);
+}
+// Sütun yalnız kendi başlığı içinde taşınır; bant bölünmez.
+function tableFieldsMoveColumn(tableKey,key,targetKey,after){
+  if(!key||!targetKey||key===targetKey)return false;
+  if(tableKey==='koleksiyon'){
+    if(key==='__picture__'||targetKey==='__picture__')return false;
+    const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder()).filter(item=>item!==key);
+    const at=order.indexOf(targetKey);if(at<0)return false;
+    order.splice(after?at+1:at,0,key);
+    kolColOrder=kolNormalizeDisplayOrder(order);saveKolColState();
+  }else{
+    const cs=colmgr[tableKey];if(!cs)return false;
+    const order=normalizedColumnOrder(tableKey,cs.order).filter(item=>item!==key);
+    const at=order.indexOf(targetKey);if(at<0)return false;
+    order.splice(after?at+1:at,0,key);
+    cs.order=order;saveAutoTableColumnState();
+  }
+  tableFieldsRerender(tableKey);
+  return true;
+}
+// Görünüm tiki preset tanımını değiştirir; o görünüm açıksa tablo hemen güncellenir.
+function tableFieldsSetPresetKeys(tableKey,preset,keys,checked){
+  const current=new Set(tableViewPresetKeys(tableKey,preset));
+  keys.forEach(key=>{if(checked)current.add(key);else current.delete(key);});
+  if(!current.size){showToast(appLang==='en'?'Each view needs at least one column.':'Her görünümde en az bir sütun kalmalı.');return false;}
+  const ordered=tableViewAllKeys(tableKey).filter(key=>current.has(key));
+  const base=tableViewBasePreset(tableKey);
+  if(!saveTableViewPreset(tableKey,preset,ordered))return false;
+  if(base===preset)applyTableViewPreset(tableKey,preset);
+  else{const menu=document.getElementById('_tableFieldsMenu');if(menu&&menu.dataset.tableKey===tableKey)renderTableFieldsMenu(menu,tableKey);}
+  return true;
+}
+function tableFieldsCheckbox(attrs,state,label){
+  return `<span class="tableFieldsCheck"><input type="checkbox" ${attrs} ${state==='all'?'checked':''} ${state==='some'?'data-indeterminate="1"':''} aria-label="${escapeHtml(label)}"></span>`;
+}
 function renderTableFieldsMenu(menu,tableKey){
-  const hidden=tableViewHiddenKeys(tableKey),catalog=tableViewGroupCatalog(tableKey),overrides=tableGroupOverrides(tableKey);
   const en=appLang==='en';
-  const rows=catalog.map(entry=>{
-    const mode=tableGroupMode(tableKey,entry.group),shown=entry.keys.filter(key=>!hidden.has(key)).length;
-    const modeLabel=tableGroupModeLabel(tableKey,entry.group),nextLabel=(()=>{const next=tableGroupNextMode(tableKey,entry.group);return next==='all'?(en?'All':'Tümü'):next==='hidden'?(en?'Hidden':'Gizli'):tableViewPresetName(tableViewBasePreset(tableKey));})();
-    const title=en?`${entry.label}: ${modeLabel} · ${shown}/${entry.keys.length} columns visible · Click: ${nextLabel}`:`${entry.label}: ${modeLabel} · ${shown}/${entry.keys.length} sütun görünür · Tıkla: ${nextLabel}`;
-    return `<button type="button" class="tableFieldsItem is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(title)}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--acc)'}"><span class="tableFieldsItemLabel"><b>${escapeHtml(entry.label)}:</b> <span>${escapeHtml(modeLabel)}</span></span><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button>`;
+  const hidden=tableViewHiddenKeys(tableKey),catalog=tableViewGroupCatalog(tableKey),overrides=tableGroupOverrides(tableKey);
+  const base=tableViewBasePreset(tableKey),expanded=tableFieldsExpanded[tableKey]||(tableFieldsExpanded[tableKey]=new Set());
+  const presetSets=Object.fromEntries(TABLE_FIELDS_PRESETS.map(preset=>[preset,new Set(tableViewPresetKeys(tableKey,preset))]));
+  const presetHead=TABLE_FIELDS_PRESETS.map(preset=>`<span class="tableFieldsPresetHead${base===preset?' isActive':''}">${escapeHtml(tableViewPresetName(preset))}</span>`).join('');
+  const listScroll=menu.querySelector('.tableFieldsList')?.scrollTop||0;
+  const groupsHtml=catalog.map(entry=>{
+    const mode=tableGroupMode(tableKey,entry.group),shown=entry.keys.filter(key=>!hidden.has(key)).length,open=expanded.has(entry.group);
+    const modeLabel=tableGroupModeLabel(tableKey,entry.group);
+    const nextMode=tableGroupNextMode(tableKey,entry.group);
+    const nextLabel=nextMode==='all'?(en?'All':'Tümü'):nextMode==='hidden'?(en?'Hidden':'Gizli'):tableViewPresetName(base);
+    const modeTitle=en?`${entry.label}: ${modeLabel} · Click: ${nextLabel} (does not change the view definitions)`:`${entry.label}: ${modeLabel} · Tıkla: ${nextLabel} (görünüm tanımlarını değiştirmez)`;
+    const groupChecks=TABLE_FIELDS_PRESETS.map(preset=>{
+      const n=entry.keys.filter(key=>presetSets[preset].has(key)).length;
+      const state=n===0?'none':n===entry.keys.length?'all':'some';
+      return tableFieldsCheckbox(`data-table-fields-group-preset="${preset}" data-group="${escapeHtml(entry.group)}"`,state,`${entry.label} · ${tableViewPresetName(preset)}`);
+    }).join('');
+    const columns=open?entry.keys.map(key=>{
+      const meta=tableFieldsColumn(tableKey,key);
+      const actions=[
+        meta.kind==='formula'?`<button type="button" class="tableFieldsIcon isFx" data-table-fields-formula="${escapeHtml(key)}" title="${escapeHtml(formulaColumnTooltip(meta.col,tableKey))}" aria-label="${escapeHtml(en?'Edit formula':'Formülü düzenle')}">fx</button>`:'',
+        meta.canRename?`<button type="button" class="tableFieldsIcon" data-table-fields-rename="${escapeHtml(key)}" title="${escapeHtml(en?'Rename column':'Sütun adını düzenle')}" aria-label="${escapeHtml(en?'Rename column':'Sütun adını düzenle')}"><svg class="ic" aria-hidden="true"><use href="#i-pencil"/></svg></button>`:'',
+        meta.canDelete?`<button type="button" class="tableFieldsIcon isDanger" data-table-fields-delete="${escapeHtml(key)}" title="${escapeHtml(en?'Delete column':'Sütunu sil')}" aria-label="${escapeHtml(en?'Delete column':'Sütunu sil')}"><svg class="ic" aria-hidden="true"><use href="#i-trash"/></svg></button>`:'',
+      ].join('');
+      const checks=TABLE_FIELDS_PRESETS.map(preset=>tableFieldsCheckbox(`data-table-fields-preset="${preset}" data-key="${escapeHtml(key)}"`,presetSets[preset].has(key)?'all':'none',`${meta.label} · ${tableViewPresetName(preset)}`)).join('');
+      const draggable=!meta.fixed&&entry.keys.length>1;
+      return `<div class="tableFieldsColumn${hidden.has(key)?' isHiddenNow':''}${meta.userLabel?' hasUserLabel':''}" data-table-fields-col="${escapeHtml(key)}" data-group="${escapeHtml(entry.group)}"${draggable?' draggable="true"':''}><span class="tableFieldsDrag${draggable?'':' isDisabled'}" aria-hidden="true">⋮⋮</span><span class="tableFieldsColumnName" title="${escapeHtml(meta.label)}">${escapeHtml(meta.label)}</span><span class="tableFieldsActions">${actions}</span><span class="tableFieldsChecks">${checks}</span></div>`;
+    }).join(''):'';
+    return `<div class="tableFieldsGroup is-${mode}${open?' isOpen':''}" style="--grp-accent:${GROUP_ACCENTS[entry.group]||'var(--acc)'}"><div class="tableFieldsGroupRow"><button type="button" class="tableFieldsGroupToggle" data-table-fields-toggle="${escapeHtml(entry.group)}" aria-expanded="${open}"><svg class="ic" aria-hidden="true"><use href="#${open?'i-chevron-down':'i-chevron-right'}"/></svg><b>${escapeHtml(entry.label)}</b><span class="tableFieldsItemCount">${shown}/${entry.keys.length}</span></button><button type="button" class="tableFieldsModeBtn is-${mode}" data-table-fields-group="${escapeHtml(entry.group)}" title="${escapeHtml(modeTitle)}">${escapeHtml(modeLabel)}</button><span class="tableFieldsChecks">${groupChecks}</span></div>${columns?`<div class="tableFieldsColumns">${columns}</div>`:''}</div>`;
   }).join('');
-  const canAddChecklist=tableKey==='koleksiyon'&&kolWorkspaceCanEdit;
-  menu.innerHTML=`<div class="tableFieldsHead"><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Click a heading: view → All → Hidden':'Başlığa tıkla: görünüm → Tümü → Gizli')}</span></div><div class="tableFieldsList" role="group">${rows}</div><div class="tableFieldsFoot">${canAddChecklist?`<button type="button" class="tbtn" data-table-fields-checklist>+ ${escapeHtml(en?'Add checklist item':'Checklist maddesi ekle')}</button>`:''}<button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
+  const addButtons=[];
+  if(tableKey==='cp'||tableKey==='orders'){
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
+    if(FORMULA_COLUMN_TABLES.has(tableKey))addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="calc">+ ${escapeHtml(en?'Add Calculated Column':'Hesaplanan Sütun Ekle')}</button>`);
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="note">+ ${escapeHtml(en?'Add Note Column':'Not Sütunu Ekle')}</button>`);
+  }else if(tableKey==='koleksiyon'&&kolWorkspaceCanEdit){
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-add="column">+ ${escapeHtml(en?'Add Column':'Sütun Ekle')}</button>`);
+    addButtons.push(`<button type="button" class="tbtn" data-table-fields-checklist>+ ${escapeHtml(en?'Add checklist item':'Checklist maddesi ekle')}</button>`);
+  }
+  menu.innerHTML=`<div class="tableFieldsHead"><div><b>${escapeHtml(en?'Fields':'Alanlar')}</b><span>${escapeHtml(en?'Open a heading to see its columns. Ticks choose the views a column appears in; drag to reorder.':'Başlığı açıp sütunları görün. Tikler sütunun hangi görünümde yer alacağını belirler; sürükleyerek sıralayın.')}</span></div><button type="button" class="tableFieldsClose" data-table-fields-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div><div class="tableFieldsGridHead"><span>${escapeHtml(en?'Heading / column':'Başlık / sütun')}</span><span class="tableFieldsChecks">${presetHead}</span></div><div class="tableFieldsList" role="group">${groupsHtml}</div><div class="tableFieldsFoot"><div class="tableFieldsAdd">${addButtons.join('')}</div><button type="button" class="tbtn" data-table-fields-reset ${Object.keys(overrides).length?'':'disabled'}>${escapeHtml(en?'Reset fields':'Alanları sıfırla')}</button></div>`;
+  menu.querySelectorAll('input[data-indeterminate]').forEach(input=>{input.indeterminate=true;});
+  const list=menu.querySelector('.tableFieldsList');if(list)list.scrollTop=listScroll;
+  menu.querySelector('[data-table-fields-close]')?.addEventListener('click',()=>closeTableFieldsMenu());
+  menu.querySelectorAll('[data-table-fields-toggle]').forEach(button=>button.addEventListener('click',()=>{
+    const group=button.dataset.tableFieldsToggle;
+    if(expanded.has(group))expanded.delete(group);else expanded.add(group);
+    renderTableFieldsMenu(menu,tableKey);
+    menu.querySelector(`[data-table-fields-toggle="${CSS.escape(group)}"]`)?.focus();
+  }));
   menu.querySelectorAll('[data-table-fields-group]').forEach(button=>button.addEventListener('click',()=>{
     const group=button.dataset.tableFieldsGroup;
     cycleTableGroupMode(tableKey,group);
     renderTableFieldsMenu(menu,tableKey);
     menu.querySelector(`[data-table-fields-group="${CSS.escape(group)}"]`)?.focus();
   }));
+  menu.querySelectorAll('[data-table-fields-preset]').forEach(input=>input.addEventListener('change',()=>{
+    tableFieldsSetPresetKeys(tableKey,input.dataset.tableFieldsPreset,[input.dataset.key],input.checked);
+  }));
+  menu.querySelectorAll('[data-table-fields-group-preset]').forEach(input=>input.addEventListener('change',()=>{
+    const entry=catalog.find(item=>item.group===input.dataset.group);if(!entry)return;
+    tableFieldsSetPresetKeys(tableKey,input.dataset.tableFieldsGroupPreset,entry.keys,input.checked);
+  }));
+  menu.querySelectorAll('[data-table-fields-rename]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsRename)));
+  menu.querySelectorAll('[data-table-fields-formula]').forEach(button=>button.addEventListener('click',()=>tableFieldsRenameColumn(tableKey,button.dataset.tableFieldsFormula)));
+  menu.querySelectorAll('[data-table-fields-delete]').forEach(button=>button.addEventListener('click',()=>tableFieldsDeleteColumn(tableKey,button.dataset.tableFieldsDelete)));
+  menu.querySelectorAll('.tableFieldsColumn[draggable="true"]').forEach(row=>{
+    row.addEventListener('dragstart',event=>{tableFieldsDragKey=row.dataset.tableFieldsCol;row.classList.add('isDragging');event.dataTransfer.effectAllowed='move';try{event.dataTransfer.setData('text/plain',tableFieldsDragKey);}catch(_){}});
+    row.addEventListener('dragend',()=>{tableFieldsDragKey=null;menu.querySelectorAll('.isDragging,.dropBefore,.dropAfter').forEach(el=>el.classList.remove('isDragging','dropBefore','dropAfter'));});
+  });
+  menu.querySelectorAll('.tableFieldsColumn').forEach(row=>{
+    const sameGroup=()=>{const dragged=tableFieldsDragKey&&menu.querySelector(`[data-table-fields-col="${CSS.escape(tableFieldsDragKey)}"]`);return dragged&&dragged.dataset.group===row.dataset.group&&dragged!==row&&row.getAttribute('draggable')==='true';};
+    row.addEventListener('dragover',event=>{
+      if(!sameGroup())return;event.preventDefault();
+      const rect=row.getBoundingClientRect(),after=event.clientY>rect.top+rect.height/2;
+      row.classList.toggle('dropAfter',after);row.classList.toggle('dropBefore',!after);
+    });
+    row.addEventListener('dragleave',()=>row.classList.remove('dropBefore','dropAfter'));
+    row.addEventListener('drop',event=>{
+      if(!sameGroup())return;event.preventDefault();
+      const after=row.classList.contains('dropAfter');row.classList.remove('dropBefore','dropAfter');
+      tableFieldsMoveColumn(tableKey,tableFieldsDragKey,row.dataset.tableFieldsCol,after);
+    });
+  });
   menu.querySelector('[data-table-fields-reset]')?.addEventListener('click',()=>{resetTableGroupOverrides(tableKey);renderTableFieldsMenu(menu,tableKey);});
-  menu.querySelector('[data-table-fields-checklist]')?.addEventListener('click',()=>{closeTableFieldsMenu();void kolAddChecklistItem();});
+  const done=()=>tableFieldsRerender(tableKey);
+  menu.querySelectorAll('[data-table-fields-add]').forEach(button=>button.addEventListener('click',()=>{
+    const action=button.dataset.tableFieldsAdd;
+    if(tableKey==='koleksiyon'){void kolAddCustomColumn(null).then(()=>done());return;}
+    if(action==='column')openCpModelColumnModal(null,done);
+    else if(action==='note')void addCpNoteColumn(done);
+    else if(action==='calc'){
+      const fc=window.BLFormulaColumns;
+      if(!fc){showToast(en?'Calculated columns are still loading.':'Hesaplanan sütunlar henüz yükleniyor.');return;}
+      fc.open(tableKey,null,done);
+    }
+  }));
+  menu.querySelector('[data-table-fields-checklist]')?.addEventListener('click',()=>{void kolAddChecklistItem().then(()=>done());});
 }
 function closeTableFieldsMenu(){
   const menu=document.getElementById('_tableFieldsMenu');if(!menu)return;
@@ -4159,19 +4306,18 @@ function openTableFieldsMenu(button){
   const tableKey=button.dataset.tableFields,existing=document.getElementById('_tableFieldsMenu');
   if(existing&&existing.dataset.tableKey===tableKey){closeTableFieldsMenu();return;}
   closeTableFieldsMenu();
-  const menu=document.createElement('div');menu.id='_tableFieldsMenu';menu.className='tableFieldsMenu';menu.dataset.tableKey=tableKey;
+  const menu=document.createElement('aside');menu.id='_tableFieldsMenu';menu.className='tableFieldsMenu tableFieldsDrawer';menu.dataset.tableKey=tableKey;
   menu.setAttribute('role','dialog');menu.setAttribute('aria-label',appLang==='en'?'Fields':'Alanlar');
   document.body.appendChild(menu);renderTableFieldsMenu(menu,tableKey);
-  const rect=button.getBoundingClientRect(),box=menu.getBoundingClientRect();
-  menu.style.left=Math.max(8,Math.min(rect.right-box.width,innerWidth-box.width-8))+'px';
-  menu.style.top=Math.max(8,Math.min(rect.bottom+6,innerHeight-box.height-8))+'px';
   button.setAttribute('aria-expanded','true');
-  const outside=event=>{if(!menu.contains(event.target)&&!button.contains(event.target))closeTableFieldsMenu();};
-  const onKey=event=>{if(event.key==='Escape'){closeTableFieldsMenu();button.focus();}};
+  // Çekmeceden açılan ad / formül / sütun pencereleri çekmeceyi kapatmaz.
+  const insideOverlay=target=>target.closest?.('.warnOverlay,.modalCard,[aria-modal="true"],.fcOverlay,.kolChecklistMenu');
+  const outside=event=>{if(!menu.contains(event.target)&&!button.contains(event.target)&&!insideOverlay(event.target))closeTableFieldsMenu();};
+  const onKey=event=>{if(event.key!=='Escape')return;const active=document.activeElement;if(active&&active!==document.body&&!menu.contains(active))return;closeTableFieldsMenu();button.focus();};
   setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
   document.addEventListener('keydown',onKey,true);
   menu._cleanup=()=>{document.removeEventListener('pointerdown',outside,true);document.removeEventListener('keydown',onKey,true);};
-  menu.querySelector('[data-table-fields-group]')?.focus();
+  menu.querySelector('[data-table-fields-toggle]')?.focus();
 }
 document.addEventListener('click',event=>{
   const button=event.target.closest?.('[data-table-fields]');if(!button)return;
@@ -4231,31 +4377,12 @@ document.addEventListener('click',event=>{
   const tableKey=button.dataset.partialViewToggle;
   setPartialView(tableKey,!partialViewEnabled(tableKey));
 });
-function openTableViewFocusEditor(tableKey,preset='focus'){
-  if(!TABLE_VIEW_EDITABLE_PRESETS.includes(preset))return;
-  document.getElementById('_tableViewFocusModal')?.remove();
-  const catalog=tableViewFocusCatalog(tableKey),selected=new Set(tableViewPresetKeys(tableKey,preset)),previousFocus=document.activeElement;
-  const modal=document.createElement('div');modal.id='_tableViewFocusModal';modal.className='warnOverlay';
-  const presetName=preset==='extended'?(appLang==='en'?'Extended':'Genişletilmiş'):(appLang==='en'?'Focus':'Odak');
-  const title=appLang==='en'?`${presetName} columns`:`${presetName} sütunları`;
-  const help=appLang==='en'?`Choose which columns remain visible when ${presetName} is selected.`:`${presetName} seçildiğinde görünür kalacak sütunları seçin.`;
-  modal.innerHTML=`<div class="modalCard quickFilterEditorCard tableViewFocusEditorCard" role="dialog" aria-modal="true" aria-labelledby="_tableViewFocusTitle"><div class="modalTitle" id="_tableViewFocusTitle">${escapeHtml(title)}</div><div class="muted quickFilterEditorHelp">${escapeHtml(help)}</div><div class="quickFilterEditorList">${catalog.map(column=>`<label class="quickFilterEditorItem"><input type="checkbox" data-table-view-focus-key="${escapeHtml(column.key)}" ${selected.has(column.key)?'checked':''}> <span>${escapeHtml(L(column.label))}</span></label>`).join('')}</div><div class="modalFoot"><span></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-apply>${escapeHtml(appLang==='en'?'Apply':'Uygula')}</button></div></div>`;
-  document.body.appendChild(modal);
-  const close=()=>{document.removeEventListener('keydown',onKey,true);modal.remove();previousFocus?.focus?.();};
-  const onKey=event=>{if(event.key==='Escape')close();};
-  document.addEventListener('keydown',onKey,true);
-  modal.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',close));
-  modal.addEventListener('click',event=>{if(event.target===modal)close();});
-  modal.querySelector('[data-apply]')?.addEventListener('click',()=>{
-    const keys=[...modal.querySelectorAll('[data-table-view-focus-key]:checked')].map(input=>input.dataset.tableViewFocusKey);
-    if(!keys.length){showToast(appLang==='en'?'Choose at least one column.':'En az bir sütun seçin.');return;}
-    if(saveTableViewPreset(tableKey,preset,keys)){close();applyTableViewPreset(tableKey,preset);}
-  });
-  modal.querySelector('[data-table-view-focus-key]')?.focus();
-}
 document.addEventListener('dblclick',event=>{
   const button=event.target.closest?.('[data-table-view-preset][data-table-key]');if(!button||!TABLE_VIEW_EDITABLE_PRESETS.includes(button.dataset.tableViewPreset))return;
-  event.preventDefault();event.stopImmediatePropagation();openTableViewFocusEditor(button.dataset.tableKey,button.dataset.tableViewPreset);
+  // v7.0.229 — Odak / Genişletilmiş çift tıklaması ayrı preset editörü yerine Alanlar çekmecesini açar.
+  event.preventDefault();event.stopImmediatePropagation();
+  const drawerButton=document.querySelector(`[data-table-fields="${CSS.escape(button.dataset.tableKey)}"]`);
+  if(drawerButton&&document.getElementById('_tableFieldsMenu')?.dataset.tableKey!==button.dataset.tableKey)openTableFieldsMenu(drawerButton);
 });
 
 // Excel benzeri sütun görünürlük menüsü. Sağ tıklanan sütun gizlenebilir; aynı
@@ -23444,21 +23571,9 @@ function renderKolColumnPanel(panelEl){
   panelEl.querySelector('#kolAddChecklistBtn')?.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation(); void kolAddChecklistItem(panelEl);
   });
-  panelEl.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click', async e=>{
-    e.preventDefault(); e.stopPropagation(); if(!kolRequireWorkspaceEdit())return;
-    const col = kolCustomCols.find(c=>c.k===el.dataset.rename); if(!col) return;
-    const pair = await promptBilingualColumnName({
-      title:appLang==='en'?'Rename column':'Sütunu yeniden adlandır',
-      confirmLabel:appLang==='en'?'Save':'Kaydet',
-      definition:col,
-      sourceRows:BLColumnNames.describeSource(BLColumnNames.sourceFor('koleksiyon',col),appLang),
-      validate:value=>kolCustomColumnNameClash(value,col.k)
-    });
-    if(!pair) return;
-    Object.assign(col,BLColumnNames.withDefinitionLabels(col,pair));
-    if(!col.labelEn)delete col.labelEn;
-    if(!col.labelTr)delete col.labelTr;
-    saveKolColState(); kolQueueWorkspaceSave(); renderKolColumnPanel(panelEl); renderKol();
+  panelEl.querySelectorAll('[data-rename]').forEach(el=>el.addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    void kolRenameCustomColumn(el.dataset.rename,()=>{ if(panelEl.isConnected) renderKolColumnPanel(panelEl); });
   }));
   panelEl.querySelectorAll('[data-label-edit]').forEach(btn=>btn.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation();
@@ -23470,23 +23585,48 @@ function renderKolColumnPanel(panelEl){
   }));
   panelEl.querySelectorAll('[data-drop]').forEach(btn=>btn.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation();
-    const key = btn.dataset.drop;
-    const col = kolCustomCols.find(c=>c.k===key); if(!col) return;
-    // Sütunla birlikte satırlardaki değerleri de gider; bu geri alınamaz, o yüzden sorulur.
-    const filled = kolRows.filter(r=>String(r[key]==null?'':r[key]).trim()).length;
-    const question = appLang==='en'
-      ? `Delete the column "${col.label}"?${filled?` ${filled} rows have a value in it and those values will be lost.`:''}`
-      : `"${col.label}" sütunu silinsin mi?${filled?` ${filled} satırda dolu değer var, bu değerler kaybolacak.`:''}`;
-    if(!confirm(question)) return;
-    kolCustomCols = kolCustomCols.filter(c=>c.k!==key);
-    kolHiddenCols.delete(key);
-    delete kolColWidths[key];
-    delete kolColFilters[key];
-    if(Array.isArray(kolColOrder)) kolColOrder = kolColOrder.filter(k=>k!==key);
-    if(kolSort.key===key) kolSort={key:null,dir:1};
-    kolRows.forEach(r=>{ delete r[key]; });
-    saveKolColState(); saveKolRows(); renderKolColumnPanel(panelEl); renderKol();
+    kolRemoveCustomColumn(btn.dataset.drop,()=>{ if(panelEl.isConnected) renderKolColumnPanel(panelEl); });
   }));
+}
+// Koleksiyon özel sütunu (checklist maddesi dahil) yeniden adlandırma / silme:
+// Sütunlar paneli ve Alanlar çekmecesi aynı yolu kullanır.
+async function kolRenameCustomColumn(key,onDone){
+  if(!kolRequireWorkspaceEdit())return false;
+  const col = kolCustomCols.find(c=>c.k===key); if(!col) return false;
+  const pair = await promptBilingualColumnName({
+    title:appLang==='en'?'Rename column':'Sütunu yeniden adlandır',
+    confirmLabel:appLang==='en'?'Save':'Kaydet',
+    definition:col,
+    sourceRows:BLColumnNames.describeSource(BLColumnNames.sourceFor('koleksiyon',col),appLang),
+    validate:value=>kolCustomColumnNameClash(value,col.k)
+  });
+  if(!pair) return false;
+  Object.assign(col,BLColumnNames.withDefinitionLabels(col,pair));
+  if(!col.labelEn)delete col.labelEn;
+  if(!col.labelTr)delete col.labelTr;
+  saveKolColState(); kolQueueWorkspaceSave(); renderKol();
+  if(typeof onDone==='function')onDone();
+  return true;
+}
+function kolRemoveCustomColumn(key,onDone){
+  if(!kolRequireWorkspaceEdit())return false;
+  const col = kolCustomCols.find(c=>c.k===key); if(!col) return false;
+  // Sütunla birlikte satırlardaki değerleri de gider; bu geri alınamaz, o yüzden sorulur.
+  const filled = kolRows.filter(r=>String(r[key]==null?'':r[key]).trim()).length;
+  const question = appLang==='en'
+    ? `Delete the column "${col.label}"?${filled?` ${filled} rows have a value in it and those values will be lost.`:''}`
+    : `"${col.label}" sütunu silinsin mi?${filled?` ${filled} satırda dolu değer var, bu değerler kaybolacak.`:''}`;
+  if(!confirm(question)) return false;
+  kolCustomCols = kolCustomCols.filter(c=>c.k!==key);
+  kolHiddenCols.delete(key);
+  delete kolColWidths[key];
+  delete kolColFilters[key];
+  if(Array.isArray(kolColOrder)) kolColOrder = kolColOrder.filter(k=>k!==key);
+  if(kolSort.key===key) kolSort={key:null,dir:1};
+  kolRows.forEach(r=>{ delete r[key]; });
+  saveKolColState(); saveKolRows(); renderKol();
+  if(typeof onDone==='function')onDone();
+  return true;
 }
 let kolActiveImgRowId = null; // Ctrl+V ile görsel yapıştırma hedefi
 const COLLECTION_IMAGE_API='/api/collection-images';
