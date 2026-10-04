@@ -2457,6 +2457,38 @@
        motoruyla doğrulanır, bugünkü eşleşme sayısı gösterilir. "Uygula"
        mevcut applyFormula yolunu kullanır; hiçbir şey kendiliğinden
        uygulanmaz. */
+    /* LCW AI'a yalnız alan ADLARI değil ANLAMLARI da verilir: "Teslimat
+       sonucu"nun yol süresi kuralına göre hedef tarihe yetişme tahmini
+       olduğunu bilmeyen model, "In Store'a yetişmeyecek" isteğini kuramaz
+       (canlıda tam olarak bu oldu). Hedef türü ekrandaki Retail Depo / In
+       Store seçimidir; öncelikler kuralın taşıyacağı seviyelerdir. */
+    const DERIVED_MEANINGS = Object.fromEntries((Rules.DERIVED_FIELDS || []).filter(item => item.meaning).map(item => [item.id, L(item.meaning.tr, item.meaning.en)]));
+    function lcwaiRuleContext(rule) {
+      const fields = formulaFieldCatalog(rule).map(item => {
+        const entry = { name: item.label, type: item.type };
+        if (DERIVED_MEANINGS[item.id]) entry.meaning = DERIVED_MEANINGS[item.id];
+        if (String(item.id).indexOf('@') === 0) {
+          const values = ruleValueOptions(item.id).slice(0, 30).map(option => option.raw === option.display ? option.raw : `${option.raw} (${option.display})`);
+          if (values.length) entry.allowedValues = values;
+        }
+        return entry;
+      });
+      const targets = Rules.SEVERITY.filter(key => key !== 'ON_TRACK' && key !== 'UNKNOWN');
+      return {
+        ruleKind: rule.kind,
+        ruleName: ruleName(rule),
+        currentPriority: rule.kind === 'priority' ? { key: rule.target, label: priorityLabel(rule.target) } : null,
+        availablePriorities: rule.kind === 'priority' ? targets.map(key => ({ key, label: priorityLabel(key) })) : [],
+        deliveryTarget: state.settings.targetType === 'inStore'
+          ? L('In Store (mağaza giriş tarihi) — Teslimat sonucu ve Hedefe tampon bu tarihe göre hesaplanır.', 'In Store (store entry date) — Delivery outcome and Buffer to target are calculated against this date.')
+          : L('Retail Depo (retail depo tarihi) — Teslimat sonucu ve Hedefe tampon bu tarihe göre hesaplanır.', 'Retail warehouse (retail date) — Delivery outcome and Buffer to target are calculated against this date.'),
+        howRulesWork: L('Formül TRUE ise kural siparişe uygulanır. Öncelik kuralı eşleşen siparişi seçili önceliğe YÜKSELTİR (CRITICAL = Kritik/kırmızı). Renk/öncelik formülde değil "priority" alanında verilir.', 'When the formula is TRUE the rule applies to the order. A priority rule ESCALATES a matching order to the chosen priority (CRITICAL = Critical/red). Colour/priority is given in the "priority" field, not in the formula.'),
+        currentFormula: Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang()),
+        availableFields: fields,
+        checklistValues: ['open', 'approved', 'rejected', 'notRequired', 'notApplicable'],
+      };
+    }
+
     function mountRuleLcwAi(row, rule) {
       const host = row && row.querySelector('[data-cpa-lcwai-host]');
       if (!host) return;
@@ -2473,18 +2505,13 @@
           buildRequest: text => ({
             task: text,
             guide: aiGuideFor(rule.kind, rule, text),
-            context: {
-              ruleKind: rule.kind,
-              ruleName: ruleName(rule),
-              priorityTarget: rule.kind === 'priority' ? priorityLabel(rule.target) : '',
-              currentFormula: Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang()),
-              availableFields: formulaFieldCatalog(rule).map(item => ({ name: item.label, type: item.type })),
-              checklistValues: ['open', 'approved', 'rejected', 'notRequired', 'notApplicable'],
-            },
+            context: lcwaiRuleContext(rule),
           }),
           interpret: result => {
             const picked = AI.pickField(result, 'formula', Rules.extractFormula);
-            if (!picked.value) return { ok: false, issues: [L('LCW AI bir koşul formülü önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest a condition formula. Clarify the request and try again.')] };
+            if (!picked.value) return { ok: false, explanation: picked.explanation, issues: [L('LCW AI bir koşul formülü önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest a condition formula. Clarify the request and try again.')] };
+            const targets = Rules.SEVERITY.filter(key => key !== 'ON_TRACK' && key !== 'UNKNOWN');
+            const suggestedPriority = rule.kind === 'priority' && result.data && targets.includes(String(result.data.priority || '').trim().toUpperCase()) ? String(result.data.priority).trim().toUpperCase() : '';
             const formula = Rules.formulaFromDisplay(Rules.extractFormula(picked.value), catalogFor(rule));
             const validation = Rules.validateExpression(formula, { fields: formulaFieldIds(rule) });
             const shown = Rules.formulaToDisplay(formula, catalogFor(rule), lang()) || picked.value;
@@ -2494,15 +2521,17 @@
               const preview = rulePreview(probe);
               if (preview) matchLine = `<div class="lcwaiResultLine is-ok"><span>${esc(L('Önizleme', 'Preview'))}</span>✓ ${esc(L(`Formül geçerli · şu an ${int(preview.count)} sipariş eşleşiyor`, `Formula is valid · ${int(preview.count)} orders match right now`))}</div>`;
             }
+            const priorityLine = suggestedPriority ? `<div class="lcwaiResultLine"><span>${esc(L('Öncelik', 'Priority'))}</span><b>${esc(priorityLabel(suggestedPriority))}</b></div>` : '';
             return {
               ok: Boolean(validation.valid),
-              value: formula,
+              value: { formula, priority: suggestedPriority },
               issues: validation.valid ? [] : (validation.errors || []),
-              html: `<div class="lcwaiResultLine"><span>${esc(L('Koşul', 'Condition'))}</span></div><code>${esc(shown)}</code>${matchLine}`,
+              html: `<div class="lcwaiResultLine"><span>${esc(L('Koşul', 'Condition'))}</span></div><code>${esc(shown)}</code>${priorityLine}${matchLine}`,
             };
           },
-          onApply: formula => {
+          onApply: ({ formula, priority }) => {
             applyFormula(rule, formula);
+            if (priority && rule.kind === 'priority') rule.target = priority;
             draft.answer = '';
             commit(); draw(); scrollToRule(rule.id);
             if (typeof showToast === 'function') showToast(L('LCW AI önerisi kurala uygulandı.', 'The LCW AI suggestion was applied to the rule.'));

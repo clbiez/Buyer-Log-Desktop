@@ -244,6 +244,9 @@ test('prompt builder: bağlam + rehber + istek birleşir; iş verisi gider, sır
   assert.ok(!/password|accessToken/.test(built.prompt), 'kimlik bilgisi anahtarları atılır');
   assert.match(built.prompt, /PO-1/, 'LCW AI şirket içi servis: örnek satır verisi bağlamda gider');
   assert.equal(built.contract, 'rules');
+  assert.match(built.prompt, /BUYER LOG BİLGİSİ[\s\S]*Yol süresi kuralı[\s\S]*In Store/, 'iş kavramları her isteğe gider');
+  assert.match(built.prompt, /"priority": string/);
+  assert.doesNotMatch(built.prompt, /yapılamıyorsa zorunlu alanları boş metin bırak/, 'model erken vazgeçmeye yönlendirilmez');
   const many = prompts.sanitizeContext({ sampleRows: Array.from({ length: 100 }, (_, i) => ({ i })) });
   assert.equal(many.sampleRows.length, prompts.MAX_SAMPLE_ROWS);
   assert.equal(prompts.sanitizeContext({ rows: [{ a: 1 }] }, { allowRowData: false }).rows, undefined);

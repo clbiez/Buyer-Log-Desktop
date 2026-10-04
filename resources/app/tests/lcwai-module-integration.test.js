@@ -116,11 +116,12 @@ test('CP Kuralları entegrasyonu: ortak panel + kural motoru doğrulaması + Uyg
   const block = CPA.slice(CPA.indexOf('function mountRuleLcwAi(row, rule)'), CPA.indexOf('function confirmDelete(rule)'));
   assert.match(block, /AI\.mountAssistant\(host, \{\s*source: 'rules'/);
   assert.match(block, /guide: aiGuideFor\(rule\.kind, rule, text\)/);
-  assert.match(block, /availableFields: formulaFieldCatalog\(rule\)/);
+  assert.match(CPA, /availableFields: fields/);
+  assert.match(CPA, /const fields = formulaFieldCatalog\(rule\)\.map/);
   assert.match(block, /Rules\.formulaFromDisplay\(Rules\.extractFormula\(picked\.value\), catalogFor\(rule\)\)/);
   assert.match(block, /Rules\.validateExpression\(formula, \{ fields: formulaFieldIds\(rule\) \}\)/);
   assert.match(block, /rulePreview\(probe\)/, 'canlı eşleşme sayısı önizlenir');
-  assert.match(block, /onApply: formula => \{\s*applyFormula\(rule, formula\);/);
+  assert.match(block, /onApply: \(\{ formula, priority \}\) => \{\s*applyFormula\(rule, formula\);/);
   assert.match(CPA, /renderAiResult\(openRow, openRule\); mountRuleLcwAi\(openRow, openRule\);/);
   assert.match(CPA, /L\('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI'\)/);
 });
@@ -148,4 +149,25 @@ test('kullanıcı menüsü: Kurumsal Bağlantılar altında PLM ve LCW AI bağı
   assert.match(CLIENT, /L\('LCW AI Girişi Yap', 'Sign in to LCW AI'\)/);
   assert.match(CLIENT, /L\('✓ LCW AI Bağlı', '✓ LCW AI Connected'\)/);
   assert.match(PERF, /deferredUi:\[\s*'lcwai-assistant\.js\?rev=1'/);
+});
+
+test('regresyon: LCW AI geçerli JSON ile formülü boş bıraktıysa ham JSON formül sanılmaz, açıklama döner', () => {
+  const { BuyerLogAI } = loadClient(async () => new Response('{}'));
+  const rules = { extractFormula: text => text }; // canlıdaki gibi: ham metni olduğu gibi döndüren ayıklayıcı
+  const result = { text: '{"explanation":"Alan yok","formula":""}', data: null, structured: { ok: false, partial: { explanation: 'Alan yok', formula: '' } } };
+  const picked = JSON.parse(JSON.stringify(BuyerLogAI.pickField(result, 'formula', rules.extractFormula)));
+  assert.deepEqual(picked, { value: '', structured: true, declined: true, explanation: 'Alan yok' });
+  for (const source of [FC, CPA, AUTO]) assert.match(source, /ok: false, explanation: picked\.explanation/);
+});
+
+test('Kurallar bağlamı alan ANLAMLARINI, hedef türünü ve seçilebilir öncelikleri taşır; öneri önceliği uygulanır', () => {
+  const block = CPA.slice(CPA.indexOf('const DERIVED_MEANINGS'), CPA.indexOf('function confirmDelete(rule)'));
+  assert.match(block, /Rules\.DERIVED_FIELDS/);
+  const Rules = require('../public/cp-rules-engine.js');
+  for (const id of ['@deliveryOutcome', '@scheduleBufferDays', '@stage']) assert.ok(Rules.DERIVED_FIELDS.find(item => item.id === id).meaning.tr, id);
+  assert.match(block, /deliveryTarget: state\.settings\.targetType === 'inStore'/);
+  assert.match(block, /availablePriorities:/);
+  assert.match(block, /entry\.allowedValues = values/);
+  assert.match(block, /context: lcwaiRuleContext\(rule\)/);
+  assert.match(block, /if \(priority && rule\.kind === 'priority'\) rule\.target = priority;/);
 });

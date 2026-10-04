@@ -48,6 +48,9 @@ class LcwAiError extends Error {
     if (options.retryAfterSec) this.retryAfterSec = Number(options.retryAfterSec) || 0;
     // Ayrıntı yalnız teşhis içindir; yine de sır taşımadığından emin olunur.
     if (options.detail) this.detail = redactSecrets(String(options.detail)).slice(0, 240);
+    // Yalnız kota için LCW AI'ın kendi açıklaması kullanıcıya gösterilir
+    // (ör. kalan alan); sırlardan arındırılır ve kısa tutulur.
+    if (options.remoteMessage) this.remoteMessage = redactSecrets(String(options.remoteMessage)).replace(/[<>]/g, '').slice(0, 200);
   }
 }
 
@@ -56,9 +59,16 @@ function isLcwAiError(error) { return Boolean(error && error.name === 'LcwAiErro
 
 /* LCW AI HTTP durumunu koda çevirir. Gövde metni kullanıcıya gitmez; yalnız
    kota/boyut ayrımı için okunur. */
+function remoteMessageOf(body) {
+  const raw = String(body || '').trim();
+  try { const parsed = JSON.parse(raw); const message = parsed && (parsed.message || parsed.error || parsed.title || parsed.detail); if (typeof message === 'string') return message; } catch (_) {}
+  return raw.startsWith('<') ? '' : raw;
+}
 function errorForHttpStatus(status, { body = '', upload = false, retryAfter = '' } = {}) {
   const code = Number(status) || 0;
   const text = String(body || '').toLowerCase();
+  const quota = /quota|kota|storage/.test(text);
+  if (quota && (code === 403 || code === 429 || upload)) return lcwAiError('QUOTA_EXCEEDED', { remoteStatus: code, remoteMessage: remoteMessageOf(body) });
   const retryAfterSec = Number.parseInt(String(retryAfter || ''), 10) || 0;
   if (code === 401) return lcwAiError('SESSION_EXPIRED', { remoteStatus: code });
   if (code === 403) return lcwAiError(/quota|kota|limit/.test(text) ? 'QUOTA_EXCEEDED' : 'FORBIDDEN', { remoteStatus: code });
@@ -88,6 +98,7 @@ function publicError(error) {
   const out = { code: safe.code, message: safe.message, messageEn: safe.messageEn, retryable: safe.retryable };
   if (safe.action) out.action = safe.action;
   if (safe.retryAfterSec) out.retryAfterSec = safe.retryAfterSec;
+  if (safe.shortCode === 'QUOTA_EXCEEDED' && safe.remoteMessage) out.remoteMessage = safe.remoteMessage;
   return out;
 }
 

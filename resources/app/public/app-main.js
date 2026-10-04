@@ -1466,6 +1466,7 @@ const APP_PAGE_META=Object.freeze({
   manufacturers:{tr:'Üreticiler',en:'Manufacturers',group:'commercial'},
   lfl:{tr:'LFL analizi',en:'LFL Analysis',group:'commercial'},
   opencosting:{tr:'Ön Maliyet',en:'Open Costing',group:'commercial'},
+  lcwai:{tr:'LCW AI',en:'LCW AI',group:'home'},
   automations:{tr:'Otomasyonlar',en:'Automations',group:'operations'},
   source:{tr:'Veri Yönetimi',en:'Data Management',group:'system'},
   agents:{tr:'Agent Workflow Studio',en:'Agent Workflow Studio',group:'operations'},
@@ -2042,12 +2043,14 @@ window.BLEnsureCollectionCatalogLoaded=ensureCollectionCatalogLoaded;
 function switchTab(tab){
   // Üreticiler sayfası Siparişler verisini okur; yetkisi Siparişler alanıdır.
   const accessArea=tab==='manufacturers'?'orders':((tab==='quotations'||tab==='pricinghistory')?'koleksiyon':tab);
-  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea(accessArea)){
+  // LCW AI her oturum açmış kullanıcıya açıktır; kapısı LCW AI kurumsal girişidir.
+  if(tab!=='lcwai'&&typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea(accessArea)){
     if(typeof showToast==='function')showToast(appLang==='en'?'You do not have access to this area.':'Bu yetki alanına erişiminiz bulunmuyor.');
     return false;
   }
   void window.buyerLogDesktop?.workspace?.setModule?.(tab);
   const previousTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
+  if(tab==='lcwai'&&previousTab&&previousTab!=='lcwai')window.BL_LCWAI_LAST_TAB=previousTab;
   if(previousTab==='cp'||previousTab==='orders') saveCoreAutoFilterState();
   if(typeof closeAllColumnPanels==='function') closeAllColumnPanels();
   document.body.dataset.activeTab = tab;
@@ -2103,6 +2106,12 @@ function switchTab(tab){
   if(tab==='manufacturers'){
     void window.BLPerf.ensureFeature('manufacturers').then(()=>{
       if(currentActiveTab()==='manufacturers')return window.initManufacturersPage?.();
+    }).catch(err=>showToast(err&&err.message||String(err)));
+  }
+  /* Genel LCW AI çalışma alanı: lazy; ilk geçişte yüklenir. */
+  if(tab==='lcwai'){
+    void window.BLPerf.ensureFeature('lcwaiChat').then(()=>{
+      if(currentActiveTab()==='lcwai')return window.initLcwAiChat?.();
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
   if(tab==='overview')void ensureOverviewOabModule();
@@ -2180,6 +2189,11 @@ function activeTableInfo(){
   // sınıfı kısa süreliğine DOM'da bulunmayabiliyor; body'deki aktif sayfa
   // ise tek ve güncel durum kaynağıdır.
   const tab = document.body.dataset.activeTab || btn?.dataset.tab || 'overview';
+  return tableInfoForTab(tab);
+}
+/* Sekme verilerek tablo tanımı. LCW AI bağlam sağlayıcıları, kullanıcı LCW AI
+   sekmesindeyken ÖNCEKİ çalışma ekranının tablosunu bununla okur. */
+function tableInfoForTab(tab){
   const map = {
     cp: {tableKey:'cp', tableSel:'#cpTable', cols:()=>CP_COLS, rowsFn:()=>filteredCP(), selSet:()=>state.cpSelected, computeFn:computeFlags, rerender:()=>renderCP(), csvName:'cp_filtered.csv',
       filterIds:['cpSearch','cpFPriority','cpFCountry','cpFLicense','cpFDelType','cpFStatus','cpFSeason']},
@@ -12429,6 +12443,39 @@ window.state = state; window.colmgr = colmgr;
    modül düzeyindeki shipRows) için tek bir sağlayıcı yayımlanır; formül modülü
    app-main'in iç değişkenlerini tanımak zorunda kalmaz. */
 window.COLS_BY_TABLE = COLS_BY_TABLE;
+/* LCW AI bağlam köprüsü (public/lcwai-chat.js sağlayıcıları okur). Yalnız
+   OKUR; satır nesneleri kopyalanmaz, sağlayıcı ihtiyacı kadarını seçer.
+   lastTab: kullanıcının LCW AI'a geçmeden önceki çalışma ekranı. */
+window.BLAIScreenData = {
+  lastTab: () => window.BL_LCWAI_LAST_TAB || 'overview',
+  table(tab) {
+    let info = null;
+    try { info = tableInfoForTab(tab); } catch (_) { info = null; }
+    if (!info) return null;
+    let rows = [];
+    try { rows = info.rowsFn() || []; } catch (_) { return null; }
+    if (!Array.isArray(rows) || !rows.length) return null;
+    let cols = [];
+    try { cols = (info.tableKey === 'cp' || info.tableKey === 'orders') ? visibleCols(info.tableKey) : (info.cols() || []); } catch (_) { cols = []; }
+    const selected = (() => { try { return info.selSet ? info.selSet() : null; } catch (_) { return null; } })();
+    const filters = {};
+    for (const id of info.filterIds || []) {
+      const el = document.getElementById(id);
+      const value = el && 'value' in el ? String(el.value || '').trim() : '';
+      if (value) filters[el.getAttribute('aria-label') || el.getAttribute('placeholder') || id] = value;
+    }
+    return {
+      tableKey: info.tableKey, rows, selectedIds: selected ? [...selected] : [], filters,
+      columns: cols.filter(col => col && col.k && !String(col.k).startsWith('_')).map(col => ({ key: col.k, label: String(col.label || col.l || col.k) })),
+    };
+  },
+  overviewCpRows: () => { try { return ovFilteredCpRows(); } catch (_) { return []; } },
+  cpColumns: () => { try { return visibleCols('cp').map(col => ({ key: col.k, label: String(col.label || col.k) })); } catch (_) { return []; } },
+  backlogQuery: () => { try { return typeof backlogExportQueryParams === 'function' ? backlogExportQueryParams() : null; } catch (_) { return null; } },
+  pageTitle: tab => { const item = APP_PAGE_META[tab]; return item ? (appLang === 'en' ? item.en : item.tr) : tab; },
+};
+// Üst çubuktaki LCW AI düğmesi: her ekrandan genel LCW AI çalışma alanına.
+document.addEventListener('click',event=>{if(event.target.closest&&event.target.closest('#lcwaiTopBtn')){event.preventDefault();switchTab('lcwai');}});
 window.BLFormulaRows = {
   cp: () => (state.cp && Array.isArray(state.cp.rows) ? state.cp.rows : []),
   orders: () => (state.orders && Array.isArray(state.orders.rows) ? state.orders.rows : []),

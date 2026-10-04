@@ -95,7 +95,13 @@ Test runner: `npm test` → `node --test tests/*.test.js`.
   `resources/app/server/lib/lcwai/` (sunucu) + `public/lcwai-assistant.js`
   (`window.BuyerLogAI`). Modül kendi AI entegrasyonunu, ikinci bir sağlayıcıyı
   veya ayrı bir tarayıcı/oturum sistemini yazmaz; yeni kullanım için
-  `lcwai-prompt.js` içine sözleşme ekler ve ortak paneli kullanır. AI önerisi
+  `lcwai-prompt.js` içine sözleşme ekler ve ortak paneli kullanır. Genel
+  sohbet modülü (`public/lcwai-chat.js`, sol menü › LCW AI) aynı motoru
+  kullanır; ekranlar veri vermek için `BuyerLogAI.registerContextProvider`
+  ile sağlayıcı kaydeder. LCW AI'ın Buyer Log bilgisi
+  `server/lib/lcwai/lcwai-knowledge.js`'tedir: formül/kural/otomasyon bilgisi
+  gerçek motorlardan türetilir, elle kopyalanmaz; her isteğe yalnız ilgili
+  modül bilgisi seçilir. AI önerisi
   modülün deterministik doğrulayıcısından geçer, önizlenir ve yalnız kullanıcı
   onayıyla uygulanır; iş gerçeği daima deterministic/canonical veriden gelir.
   LCW AI token'ı yalnız süreç belleğinde yaşar; diske, log'a, renderer'a

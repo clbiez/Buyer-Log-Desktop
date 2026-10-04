@@ -67,6 +67,7 @@
     error.action = data.action || (LOGIN_CODES.has(code) ? 'login' : '');
     error.retryable = Boolean(data.retryable);
     error.lcwai = true;
+    if (code === 'LCWAI_QUOTA_EXCEEDED' && data.remoteMessage) error.remoteMessage = String(data.remoteMessage).slice(0, 200);
     return error;
   }
   function errorText(error) {
@@ -417,10 +418,11 @@
         resultBox.innerHTML = state.interpreted.html || '';
         const issues = (state.interpreted.issues || []).filter(Boolean);
         if (issues.length) resultBox.insertAdjacentHTML('beforeend', `<ul class="lcwaiIssues">${issues.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`);
-        const explanation = String(state.interpreted.explanation || (result.data && result.data.explanation) || '').trim();
+        const partialData = result.structured && result.structured.partial;
+        const explanation = String(state.interpreted.explanation || (result.data && result.data.explanation) || (partialData && partialData.explanation) || '').trim();
         explainBox.hidden = !explanation;
         explainBox.textContent = explanation;
-        const warnings = (state.interpreted.warnings || (result.data && result.data.warnings) || []).filter(Boolean);
+        const warnings = (state.interpreted.warnings || (result.data && result.data.warnings) || (partialData && partialData.warnings) || []).filter(Boolean);
         warningsBox.hidden = !warnings.length;
         warningsBox.innerHTML = warnings.map(item => `<li>${esc(item)}</li>`).join('');
         applyBtn.disabled = !state.interpreted.ok;
@@ -486,17 +488,108 @@
   function pickField(result, field, fallbackExtract) {
     const value = result && result.data && typeof result.data[field] === 'string' ? result.data[field].trim() : '';
     if (value) return { value, structured: true };
-    const partial = result && result.structured && result.structured.partial && typeof result.structured.partial[field] === 'string' ? result.structured.partial[field].trim() : '';
+    const partialData = result && result.structured && result.structured.partial && typeof result.structured.partial === 'object' ? result.structured.partial : null;
+    const partial = partialData && typeof partialData[field] === 'string' ? partialData[field].trim() : '';
     if (partial) return { value: partial, structured: false };
+    /* Cevap geçerli bir JSON'du ama alan boş: LCW AI bilerek öneri vermedi
+       (nedeni "explanation"da). Ham metin formül/kod sanılmaz — eskiden JSON
+       metninin kendisi formül diye denetlenip "Desteklenmeyen karakter: {"
+       hatası çıkıyordu. */
+    if (partialData) return { value: '', structured: true, declined: true, explanation: String(partialData.explanation || '').trim() };
     const text = String(result && result.text || '');
     const extracted = typeof fallbackExtract === 'function' ? String(fallbackExtract(text) || '').trim() : '';
     return { value: extracted, structured: false };
   }
 
+  /* ---------------- Genel sohbet (Global LCW AI) ----------------
+     Aynı ask() yolunun sohbet uç noktası. chatId=null yeni sohbet açar;
+     dönen chatId ile devam edilir (geçmişi LCW AI tutar). */
+  async function chat(options = {}) {
+    const requestId = String(options.requestId || `bl${Date.now().toString(36)}${(++requestSeq).toString(36)}`);
+    const controller = new AbortController();
+    if (options.signal) { if (options.signal.aborted) controller.abort(); else options.signal.addEventListener('abort', () => controller.abort(), { once: true }); }
+    active.set(requestId, controller);
+    const onProgress = typeof options.onProgress === 'function' ? options.onProgress : () => {};
+    try {
+      let response;
+      try {
+        response = await fetch('/api/lcwai/chat', {
+          method: 'POST', credentials: 'same-origin', signal: controller.signal,
+          headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
+          body: JSON.stringify({ requestId, chatId: options.chatId || null, message: options.message || '', contexts: options.contexts || [], attachments: options.attachments || [], lang: options.lang || (isEn() ? 'en' : 'tr') }),
+        });
+      } catch (error) { throw lcwError({ code: error && error.name === 'AbortError' ? 'LCWAI_CANCELLED' : 'LCWAI_NETWORK' }); }
+      if (!response.ok) { let data = null; try { data = await response.json(); } catch (_) {} throw lcwError(data); }
+      let result = null, failure = null;
+      try {
+        await readEvents(response, event => {
+          if (event.type === 'progress') { try { onProgress(event); } catch (_) {} }
+          else if (event.type === 'result') result = event.result;
+          else if (event.type === 'error') failure = lcwError(event.error);
+        });
+      } catch (error) {
+        if (controller.signal.aborted) throw lcwError({ code: 'LCWAI_CANCELLED' });
+        throw lcwError({ code: 'LCWAI_STREAM_INTERRUPTED' });
+      }
+      if (failure) throw failure;
+      if (!result) throw lcwError({ code: controller.signal.aborted ? 'LCWAI_CANCELLED' : 'LCWAI_STREAM_INTERRUPTED' });
+      if (result.model && result.model.label) modelLabel = String(result.model.label);
+      return result;
+    } catch (error) {
+      if (needsLogin(error)) getStatus({ refresh: false }).catch(() => {});
+      throw error;
+    } finally { active.delete(requestId); }
+  }
+  const createConversation = (options = {}) => chat({ ...options, chatId: null });
+  const continueConversation = (chatId, options = {}) => chat({ ...options, chatId });
+
+  /* ---------------- Bağlam sağlayıcıları (AIContextProvider) ----------------
+     Genel LCW AI ekranlara bağımlı değildir. Her ekran (veya modül) bir
+     sağlayıcı kaydeder:
+       { id, screen, label:{tr,en}, getOptions() → [{ id, label, detail }],
+         build(optionId) → { label, screen, summary, filters, columns, rows, totalRows, text } }
+     Genel sohbet yalnız getAvailableContext() / buildContext() kullanır. */
+  const contextProviders = new Map();
+  function registerContextProvider(provider) {
+    if (!provider || !provider.id || typeof provider.getOptions !== 'function' || typeof provider.build !== 'function') return false;
+    contextProviders.set(String(provider.id), provider);
+    return true;
+  }
+  function getAvailableContext({ preferScreen = '' } = {}) {
+    const groups = [];
+    for (const provider of contextProviders.values()) {
+      let options = [];
+      try { options = (provider.getOptions() || []).filter(item => item && item.id); } catch (_) { options = []; }
+      if (!options.length) continue;
+      groups.push({ providerId: provider.id, screen: provider.screen || provider.id, label: textOf(provider.label), options: options.map(item => ({ id: `${provider.id}:${item.id}`, label: textOf(item.label), detail: textOf(item.detail) })) });
+    }
+    return groups.sort((a, b) => (b.screen === preferScreen) - (a.screen === preferScreen));
+  }
+  async function buildContext(contextId) {
+    const [providerId, ...rest] = String(contextId || '').split(':');
+    const provider = contextProviders.get(providerId);
+    if (!provider) throw lcwError({ code: 'LCWAI_BAD_REQUEST' });
+    const built = await provider.build(rest.join(':'));
+    if (!built) throw lcwError({ code: 'LCWAI_BAD_REQUEST' });
+    return { id: String(contextId), screen: provider.screen || provider.id, ...built, label: textOf(built.label) };
+  }
+
+  /* Her yerden: "LCW AI ile Analiz Et" gibi girişler genel ekranı açar ve
+     istenen bağlamları önceden ekler. */
+  function openChat(options = {}) {
+    const pending = { contexts: Array.isArray(options.contexts) ? options.contexts.slice() : [], prompt: String(options.prompt || '') };
+    root.BL_LCWAI_PENDING_OPEN = pending;
+    if (typeof root.switchTab === 'function') root.switchTab('lcwai');
+    root.dispatchEvent?.(new root.CustomEvent('buyerlog:lcwai-open', { detail: pending }));
+    return true;
+  }
+
   root.BuyerLogAI = {
     ask, askWithFiles, uploadFile, cancel, getStatus, onStatus, connect, disconnect,
+    chat, createConversation, continueConversation, openChat,
+    registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,
-    errorText, notifyError, needsLogin,
+    errorText, notifyError, needsLogin, loadConfig,
     get modelLabel() { return modelLabel; },
   };
   root.LCWAI = root.BuyerLogAI;

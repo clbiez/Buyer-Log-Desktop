@@ -103,6 +103,68 @@ function createLcwAiEngine(options = {}) {
     });
   }
 
+  /* Genel sohbet (Global LCW AI). LCW AI sohbet geçmişini chatId ile
+     kendisi tutar; burada yalnız "bu sohbete hangi modül bilgisi zaten
+     gönderildi" bilgisi bellekte tutulur ki devam mesajlarında tekrar
+     gönderilmesin (token). Sohbet içeriği saklanmaz. */
+  const conversations = new Map(); // owner -> Map(chatId -> { sentModules:Set, updatedAt })
+  const MAX_CONVERSATIONS = 50;
+  function conversationStore(ownerId) {
+    const key = clean(ownerId) || 'default';
+    if (!conversations.has(key)) conversations.set(key, new Map());
+    return conversations.get(key);
+  }
+  function chat(ownerId, input = {}) {
+    return run(ownerId, input, async (requestId, signal) => {
+      const message = clean(input.message);
+      const attachments = Array.isArray(input.attachments) ? input.attachments : [];
+      if (!message && !attachments.length) throw lcwAiError('BAD_REQUEST', { detail: 'empty-message' });
+      const chatId = clean(input.chatId) || null;
+      const store = conversationStore(ownerId);
+      const known = chatId ? store.get(chatId) : null;
+      const built = prompts.buildChatPrompt({
+        message: message || (input.lang === 'en' ? 'Analyse the attached file(s).' : 'Ekli dosyaları incele.'),
+        contexts: input.contexts,
+        lang: input.lang,
+        firstMessage: !chatId,
+        sentModules: known ? [...known.sentModules] : [],
+      });
+      emit(input.onProgress, { phase: 'sending', requestId, modules: built.modules });
+      let chars = 0;
+      const result = await client.sendMessage(ownerId, {
+        content: built.prompt,
+        chatId,
+        attachments,
+        generateTitle: !chatId,
+        modelKey: input.modelKey,
+        reasoningLevel: input.reasoningLevel,
+        signal,
+        onDelta: delta => { chars += delta.length; emit(input.onProgress, { phase: 'streaming', requestId, delta, chars }); },
+      });
+      const nextChatId = (result.metadata && result.metadata.chatId) || chatId;
+      if (nextChatId) {
+        const entry = store.get(nextChatId) || { sentModules: new Set(), updatedAt: 0 };
+        built.modules.forEach(key => entry.sentModules.add(key));
+        entry.updatedAt = Date.now();
+        store.set(nextChatId, entry);
+        if (store.size > MAX_CONVERSATIONS) {
+          const oldest = [...store.entries()].sort((a, b) => a[1].updatedAt - b[1].updatedAt)[0];
+          if (oldest) store.delete(oldest[0]);
+        }
+      }
+      const model = config.modelInfo(result.modelKey) || config.modelInfo(config.DEFAULT_MODEL);
+      return {
+        requestId,
+        chatId: nextChatId,
+        text: result.text,
+        model: { key: model.key, label: model.label },
+        finishReason: result.finishReason,
+        modules: built.modules,
+        truncated: Boolean(result.truncated || built.truncated),
+      };
+    });
+  }
+
   function uploadFile(ownerId, file, opts = {}) { return client.uploadFile(ownerId, file, opts); }
 
   function cancel(ownerId, requestId) {
@@ -123,7 +185,7 @@ function createLcwAiEngine(options = {}) {
   }
 
   return {
-    ask, askWithFiles, uploadFile, cancel, getStatus,
+    ask, askWithFiles, chat, uploadFile, cancel, getStatus,
     login: ownerId => auth.login(ownerId),
     disconnect: ownerId => { cancel(ownerId); return auth.disconnect(ownerId); },
     isLcwAiError,

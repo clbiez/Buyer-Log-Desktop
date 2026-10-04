@@ -95,7 +95,41 @@ app.post('/api/lcwai/files', express.raw({ type: () => true, limit: lcwaiConfig.
     }
   });
 
-  /* İstek NDJSON akışıyla cevaplanır: {type:'progress'} … {type:'result'} ya
+  /* Genel sohbet (Global LCW AI). ask ile aynı NDJSON akışı; sonuç chatId
+   taşır, istemci devam mesajlarında aynı chatId'yi gönderir. */
+app.post('/api/lcwai/chat', express.json({ limit: '2mb' }), async (req, res) => {
+    const owner = ownerOf(req);
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const controller = new AbortController();
+    let finished = false;
+    res.on('close', () => { if (!finished) controller.abort(); });
+    res.status(200).set({ 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
+    const write = event => { if (!res.writableEnded) { try { res.write(`${JSON.stringify(event)}\n`); } catch (_) {} } };
+    const contexts = Array.isArray(body.contexts) ? body.contexts : [];
+    try {
+      const result = await engineOf().chat(owner, {
+        requestId: body.requestId,
+        chatId: body.chatId,
+        message: body.message,
+        contexts,
+        attachments: body.attachments,
+        lang: body.lang,
+        signal: controller.signal,
+        onProgress: event => write({ type: 'progress', ...event }),
+      });
+      audit(req, 'LCWAI_CHAT', { ok: true, continued: Boolean(body.chatId), contexts: contexts.length, attachments: Array.isArray(body.attachments) ? body.attachments.length : 0 });
+      write({ type: 'result', result });
+    } catch (error) {
+      const safe = isLcwAiError(error) ? error : lcwAiError('INTERNAL');
+      audit(req, 'LCWAI_CHAT', { ok: false, code: safe.code });
+      write({ type: 'error', error: publicError(safe) });
+    } finally {
+      finished = true;
+      if (!res.writableEnded) res.end();
+    }
+  });
+
+/* İstek NDJSON akışıyla cevaplanır: {type:'progress'} … {type:'result'} ya
      da {type:'error'}. İstemci bağlantıyı keserse LCW AI isteği de iptal
      edilir. */
 app.post('/api/lcwai/ask', express.json({ limit: '768kb' }), async (req, res) => {

@@ -54,7 +54,7 @@ const MODULES = Object.freeze([
     area: 'cp', route: 'cp',
     datasets: ['cp'],
     capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'note', 'export', 'plm-sync', 'refresh', 'analyze', 'automate', 'view'],
-    summary: { tr: 'Sipariş takibi; not, Supp. FOB, tarih ve durum alanları burada düzenlenir.', en: 'Order tracking; notes, Supp. FOB, dates and status are edited here.' },
+    summary: { tr: 'Sipariş takibi: not, Supp. FOB, tarih, durum.', en: 'Order tracking; notes, Supp. FOB, dates and status are edited here.' },
   },
   {
     id: 'orders', agentFilter: true, tableKey: 'orders', label: { tr: 'Siparişler', en: 'Orders' },
@@ -68,7 +68,7 @@ const MODULES = Object.freeze([
     area: 'koleksiyon', route: 'koleksiyon',
     datasets: ['collection'],
     capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'import', 'plm-sync', 'compare', 'analyze', 'view'],
-    summary: { tr: 'Sezon koleksiyonu; PLM bilgisi, görsel ve fiyat alanları burada tutulur.', en: 'Season collection; PLM data, images and price fields live here.' },
+    summary: { tr: 'Sezon koleksiyonu: PLM, görsel, fiyat.', en: 'Season collection; PLM data, images and price fields live here.' },
   },
   {
     id: 'quotations', agentFilter: false, tableKey: null, label: { tr: 'Quotations', en: 'Quotations' },
@@ -77,14 +77,14 @@ const MODULES = Object.freeze([
     area: 'koleksiyon', route: 'quotations',
     datasets: ['collection'],
     capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'compare', 'analyze'],
-    summary: { tr: 'Fiyat talepleri, teklifler ve onay/Drop kararları.', en: 'Pricing requests, quotations and approval/drop decisions.' },
+    summary: { tr: 'Fiyat talepleri, teklifler, onay/Drop.', en: 'Pricing requests, quotations and approval/drop decisions.' },
   },
   {
     id: 'pricinghistory', agentFilter: false, tableKey: null, label: { tr: 'Fiyat Geçmişi', en: 'Pricing History' },
     area: 'koleksiyon', route: 'pricinghistory',
     datasets: ['collection'],
     capabilities: ['read', 'filter', 'sort', 'export', 'compare', 'analyze'],
-    summary: { tr: 'Quotation fiyat geçmişi, benchmark ve trend.', en: 'Historical prices, benchmarks and trends from quotations.' },
+    summary: { tr: 'Fiyat geçmişi, benchmark, trend.', en: 'Historical prices, benchmarks and trends from quotations.' },
   },
   {
     id: 'priceanalysis', agentFilter: false, tableKey: null, label: { tr: 'Fiyat & Üretici Analizi', en: 'Price & Supplier Analysis' },
@@ -92,6 +92,16 @@ const MODULES = Object.freeze([
     datasets: ['cp', 'orders', 'collection'],
     capabilities: ['read', 'analyze', 'compare'],
     summary: { tr: 'Fiyat ve üretici karşılaştırmaları.', en: 'Price and supplier comparisons.' },
+  },
+  {
+    // Genel LCW AI çalışma alanı. Kendi yetki alanı yoktur: oturum açmış her
+    // kullanıcıya açıktır, kapısı LCW AI kurumsal girişidir. Kayıt defteri
+    // gerçek bir alana bağlanmak zorunda olduğu için Overview alanını paylaşır.
+    id: 'lcwai', agentFilter: false, tableKey: null, label: { tr: 'LCW AI', en: 'LCW AI' },
+    area: 'overview', route: 'lcwai',
+    datasets: [],
+    capabilities: ['analyze'],
+    summary: { tr: 'AI asistanı.', en: 'General AI assistant.' },
   },
   {
     // v7.0.229 — eski E-Mail Grupları. Siparişler verisini okuduğu için
@@ -128,14 +138,14 @@ const MODULES = Object.freeze([
     area: 'shipping', route: 'shipping',
     datasets: ['cp', 'orders'],
     capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'compare', 'analyze'],
-    summary: { tr: 'Domestic landed ile gemi/gemi+uçak/uçak landed maliyet karşılaştırması.', en: 'Domestic landed versus sea/sea+air/air landed cost comparison.' },
+    summary: { tr: 'Domestic ile gemi/uçak landed maliyet kıyası.', en: 'Domestic landed versus sea/sea+air/air landed cost comparison.' },
   },
   {
     id: 'automations', agentFilter: false, tableKey: null, label: { tr: 'Otomasyonlar', en: 'Automations' },
     area: 'automations', route: 'automations',
     datasets: [],
     capabilities: ['read', 'automate'],
-    summary: { tr: 'Zamanlanmış ve koşullu otomasyon tarifleri.', en: 'Scheduled and conditional automation recipes.' },
+    summary: { tr: 'Zamanlanmış/koşullu otomasyonlar.', en: 'Scheduled and conditional automation recipes.' },
   },
   /* v7.81 — Kaynak Veri artık gerçek bir ekran: Veri Yönetimi.
      Önceden route=null idi, çünkü kaynak ayarları bir çekmece ve bir modalın
@@ -147,7 +157,7 @@ const MODULES = Object.freeze([
     area: 'source', route: 'source',
     datasets: ['asas', 'ias'],
     capabilities: ['read', 'refresh', 'import', 'analyze'],
-    summary: { tr: 'Veritabanları, modül bağlantıları, filtreler ve yenileme tek ekranda.', en: 'Databases, module connections, filters and refresh in one screen.' },
+    summary: { tr: 'Veritabanı, bağlantı, filtre ve yenileme.', en: 'Databases, module connections, filters and refresh in one screen.' },
   },
   /* Ekranı olmayan ama ajanın bilmesi gereken kaynaklar. route=null olması
      "bu modüle gidilemez" demektir; UI komut katmanı buna bakar. */
