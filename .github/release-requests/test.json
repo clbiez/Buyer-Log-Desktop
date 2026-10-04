@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.230",
-  "commit_sha": "482e5fea59366aa26f64a535ae7ec1ed0a4068b3",
-  "release_notes": "Buyer Log 7.0.230: Üst uygulama çubuğu kaydırmada görünür kalır; yenileme teknik detayları canlı güncellemelerde açık kalır; CP lojistik detayına Ex-Factory ve Yükleme Onay tarihleri eklenir; Checklist alanları hesaplanan sütunlarda kullanılabilir ve CP/Siparişler menüsünde Not Sütunu Ekle erişimi düzeltilir. 7.0.229 release-note paketleme hatası güvenli patch sürümüyle giderildi.",
-  "request_id": "7.0.230-r1"
+  "version": "7.0.231",
+  "commit_sha": "1c4af93e35d515c6f0da7a91366a152617cfed77",
+  "release_notes": "Buyer Log 7.0.231: Üst uygulama çubuğu kaydırmada görünür kalır; yenileme teknik detayları canlı güncellemelerde açık kalır; CP lojistik detayına Ex-Factory ve Yükleme Onay tarihleri eklenir; Checklist alanları hesaplanan sütunlarda kullanılabilir ve CP/Siparişler menüsünde Not Sütunu Ekle erişimi düzeltilir. Release görsel doğrulamasındaki test/validator uyumsuzluğu da güvenli şekilde giderildi.",
+  "request_id": "7.0.231-r1"
 }
