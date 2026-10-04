@@ -39,7 +39,7 @@ test('Collection Product Main Definition önerileri gerçek ASAS canonical kayna
 });
 
 test('Collection Product Main Definition Category ile aynı suggestion editor ve serbest kayıt yolunu kullanır', () => {
-  assert.match(APP, /\{k:'productMainDefinition', label:'Product Main Definition', w:170, suggest:'productMainDefinition'\}/);
+  assert.match(APP, /\{k:'productMainDefinition', label:'Product Main Definition', w:170, suggest:'productMainDefinition', group:'[^']+'\}/);
   assert.match(APP, /const KOL_ASAS_CATALOG_KINDS = new Set\(\[[^\]]*'productMainDefinition'/);
 
   const renderBlock = extractBetween(APP, 'const KOL_COLS = [', 'function kolColDefs');

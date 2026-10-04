@@ -1,14 +1,87 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Alanlar ve yeniden düzenlenen tablo başlıkları",
+    "en": "Fields and reorganised table headings"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon, CP ve Siparişler tablolarında ana başlıklar görünüm ayarı bozulmadan tek tıkla açılıp kapatılabiliyor; başlıklar ve varsayılan sütun sırası yeniden düzenlendi, Koleksiyon'a Checklist eklendi.",
+    "en": "Collection, CP and Orders column headings can now be shown or hidden with one click without changing the view preset; headings and the default column order were reorganised and Collection gained a Checklist."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "table-fields-headings",
+      "type": "feature",
+      "module": { "tr": "Koleksiyon · CP · Siparişler", "en": "Collection · CP · Orders" },
+      "title": { "tr": "Alanlar: ana başlıkları tek tıkla aç / kapat", "en": "Fields: show or hide column headings in one click" },
+      "body": {
+        "tr": "Odak / Genişletilmiş / Tümü düğmelerinin sağındaki Alanlar menüsü her ana başlığı aktif görünüme göre gösterir (ör. Kumaş Detayları: Odak). Başlığa her tıklamada Tümü → Gizli → görünüm döngüsü uygulanır. Bu katman Odak ve Genişletilmiş tanımlarınızı değiştirmez, görünüm değiştirince de korunur; Alanları sıfırla ile tek seferde temizlenir.",
+        "en": "The Fields menu to the right of Focus / Extended / All shows each column heading against the active view (e.g. Fabric Details: Focus). Each click on a heading cycles All → Hidden → view. This layer never changes your Focus and Extended definitions, stays in place when you switch views and is cleared at once with Reset fields."
+      },
+      "path": { "tr": "CP Tracker / Siparişler / Koleksiyon › Görünüm › Alanlar", "en": "CP Tracker / Orders / Collection › View › Fields" },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-fields-menu.png",
+        "alt": { "tr": "Odak görünümünde Alanlar menüsü; Kumaş Detayları Tümü olarak açık (demo veri)", "en": "Fields menu in Focus view with Fabric Details switched to All (demo data)" },
+        "caption": { "tr": "Odak tanımı aynı kalır; Kumaş Detayları yalnız Alanlar katmanıyla açıldı.", "en": "The Focus definition is unchanged; Fabric Details is opened only by the Fields layer." }
+      }
+    },
+    {
+      "id": "cp-orders-heading-layout",
+      "type": "improvement",
+      "module": { "tr": "CP · Siparişler", "en": "CP · Orders" },
+      "title": { "tr": "CP ve Siparişler ana başlıkları yeniden düzenlendi", "en": "CP and Orders headings reorganised" },
+      "body": {
+        "tr": "Sütunlar Öncelik, PLM Numune, Marka Detayları, Model Detayları, Sipariş Detayları, Lisans Detayları, Tarihler, Kumaş Detayları, Lojistik, Notlar ve Checklist başlıkları altında yeni varsayılan sırayla gelir. Tarihler'e revizyondan etkilenmeyen Original Ex-F. sütunu eklendi. Bu güncellemeyle kayıtlı sütun sırası bir kez varsayılana döner; eklediğiniz sütunlar, gizli sütunlar ve genişlikler korunur.",
+        "en": "Columns now follow the new default order under Priority, PLM Sample, Brand Details, Model Details, Order Details, License Details, Dates, Fabric Details, Logistics, Notes and Checklist headings. Dates gained an Original Ex-F. column that is not affected by revisions. With this update the saved column order resets to the default once; columns you added, hidden columns and widths are kept."
+      },
+      "path": { "tr": "CP Tracker / Siparişler", "en": "CP Tracker / Orders" },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-column-headings.png",
+        "alt": { "tr": "CP Tracker'da Öncelik, PLM Numune, Marka Detayları ve Model Detayları başlıkları (demo veri)", "en": "CP Tracker with Priority, PLM Sample, Brand Details and Model Details headings (demo data)" },
+        "caption": { "tr": "Siparişler aynı düzeni kullanır; Sipariş Durumu Sipariş Detayları'nın başındadır.", "en": "Orders uses the same layout; Order Status sits at the start of Order Details." }
+      }
+    },
+    {
+      "id": "collection-heading-layout",
+      "type": "improvement",
+      "module": { "tr": "Koleksiyon", "en": "Collection" },
+      "title": { "tr": "Koleksiyon ana başlıkları ve sütun sırası", "en": "Collection headings and column order" },
+      "body": {
+        "tr": "Koleksiyon tablosu Marka Detayları, Model Detayları, Notlar, Lisans Detayları, Tarihler & Sevkiyat, Checklist, Fiyatlandırma ve Endeksmatik & Avantaj başlık bandıyla gelir. Sipariş Tipi ve Buying Numunesi sütunları tablodan kaldırıldı (kayıtlı değerler silinmez); Onaylı Fiyat sütununun adı Onaylı Üretici Fiyatı oldu. Kayıtlı sütun sırası bir kez varsayılana döner; eklediğiniz sütunlar kaybolmaz.",
+        "en": "The Collection table now has a heading band with Brand Details, Model Details, Notes, License Details, Dates & Shipment, Checklist, Pricing and Endeksmatik & Advantage. The Order Type and Buying Sample columns were removed from the table (saved values are kept); the Confirmed FOB column is now called Approved Mfr. Price. The saved column order resets to the default once; columns you added are kept."
+      },
+      "path": { "tr": "Koleksiyon", "en": "Collection" },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-column-headings.png",
+        "alt": { "tr": "Koleksiyon tablosunda Marka Detayları ve Model Detayları başlık bandı (demo veri)", "en": "Collection table with the Brand Details and Model Details heading band (demo data)" },
+        "caption": { "tr": "Görsel sabit sol sütun olarak kalır ve Alanlar menüsünde Model Detayları'na dahildir.", "en": "Picture stays as the fixed left column and belongs to Model Details in the Fields menu." }
+      }
+    },
+    {
+      "id": "collection-checklist",
+      "type": "feature",
+      "module": { "tr": "Koleksiyon", "en": "Collection" },
+      "title": { "tr": "Koleksiyon Checklist", "en": "Collection Checklist" },
+      "body": {
+        "tr": "Alanlar menüsünden veya Sütunlar panelinden Checklist maddesi ekleyebilirsiniz. Her madde Checklist başlığı altında bir sütun olur ve hücrede Bekliyor, Onaylandı, Reddedildi veya Gerekmiyor seçilir. Madde yoksa Checklist başlığı tabloda görünmez.",
+        "en": "Add checklist items from the Fields menu or the Columns panel. Each item becomes a column under the Checklist heading and each cell is set to Pending, Approved, Rejected or Not Required. Without items the Checklist heading does not appear."
+      },
+      "path": { "tr": "Koleksiyon › Alanlar › Checklist maddesi ekle", "en": "Collection › Fields › Add checklist item" },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-checklist.png",
+        "alt": { "tr": "Koleksiyon Checklist sütunları ve durum menüsü (demo veri)", "en": "Collection Checklist columns and the status menu (demo data)" },
+        "caption": { "tr": "Durum menüsü dört seçenek sunar; değer satıra kaydedilir.", "en": "The status menu offers four choices; the value is saved to the row." }
+      }
+    }
+  ]
 }

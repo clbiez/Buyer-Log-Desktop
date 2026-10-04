@@ -163,7 +163,8 @@ test('v4.72 kumaş alanları ayrı Fabric rolünde değil ana ASAS alan eşlemes
 });
 
 test('v4.72 CP kumaş sütunları istenen sırada ve yan yana bulunur', () => {
-  const fields = ['Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Kumaş Tipi', 'İplik No', 'Gramaj', 'Karışım'];
+  // v7.0.229 — Kumaş Detayları sırası kullanıcı talebiyle güncellendi.
+  const fields = ['Kumaş Tipi', 'Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Karışım', 'İplik No', 'Gramaj'];
   const positions = fields.map(field => html.indexOf(`{k:'${field}'`));
   positions.forEach((position, index) => assert.ok(position >= 0, `${fields[index]} CP sütunu bulunmalı`));
   assert.deepEqual([...positions].sort((a, b) => a - b), positions, 'kumaş sütun sırası korunmalı');

@@ -79,7 +79,7 @@ test('Style Management import satır notuyla mevcut modeli bulur ve değişiklik
 });
 
 test('Overseas Landed ve TR Landed kaydedilmiş ve sürüklenen düzenlerde en sağda kalır',()=>{
-  assert.match(INDEX,/const KOL_COL_LAYOUT_VERSION = 6/);
+  assert.match(INDEX,/const KOL_COL_LAYOUT_VERSION = 7/);
   assert.match(INDEX,/function kolPlaceLandedAtEnd\(order\)/);
   assert.match(INDEX,/out\.push\('ydLanded','trLanded'\)/);
   assert.match(INDEX,/kolColOrder=kolPlaceLandedAtEnd\(kolColOrder\)/);

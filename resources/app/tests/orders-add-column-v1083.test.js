@@ -71,7 +71,12 @@ test('syncOrdersColumnsFromCp: DB-bağlı özel sütunlar (modelCustom) filtrele
 });
 
 test('ORDERS_COLS, sistem sütununu (durum) kaybetmeden CP_COLS kopyası olarak kuruluyor', () => {
-  assert.match(APP, /const ORDERS_COLS = \[ORDERS_STATUS_COL, \.\.\.CP_COLS\.map\(c=>\(\{\.\.\.c\}\)\)\];/);
+  // v7.0.229 — Sipariş Durumu, Sipariş Detayları başlığının başına (Season öncesine) yerleşir.
+  assert.match(APP, /const ORDERS_COLS = ordersColumnsFromCp\(CP_COLS\);/);
+  const helper = extractFunction(APP, 'ordersColumnsFromCp');
+  assert.match(helper, /\.map\(c=>\(\{\.\.\.c\}\)\)/);
+  assert.match(helper, /c\.k==='Season'/);
+  assert.match(helper, /ORDERS_STATUS_COL/);
   const fn = extractFunction(APP, 'syncOrdersColumnsFromCp');
-  assert.match(fn, /const rebuilt=\[ORDERS_STATUS_COL,\.\.\.CP_COLS\.filter/);
+  assert.match(fn, /const rebuilt=ordersColumnsFromCp\(CP_COLS\.filter/);
 });

@@ -139,7 +139,10 @@
      bandı belirir ve kullanıcı "dahil edemedim" derdi. */
   const DEFAULT_GROUP = 'Hesaplanan';
   function definitionGroup(definition) {
-    return clean(definition && definition.group) || DEFAULT_GROUP;
+    const raw = clean(definition && definition.group);
+    // Eski başlık adları (Order Info, Kumaş …) yeni kanonik başlığa katılır.
+    const shared = typeof window !== 'undefined' ? window.BLColumnGroups : null;
+    return (raw && shared && typeof shared.canonical === 'function' ? shared.canonical(raw) : raw) || DEFAULT_GROUP;
   }
   /* Grup listesi ve yerleştirme app-main.js'te TEK yerde durur (BLColumnGroups):
      veri tabanı sütunu ile hesaplanan sütun aynı davranışı paylaşır, iki ayrı

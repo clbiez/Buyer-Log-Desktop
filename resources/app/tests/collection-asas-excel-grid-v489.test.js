@@ -55,9 +55,9 @@ test('v4.89 Collection cells use ASAS suggestions without an LFL dependency or s
   const block = extractBetween(INDEX, 'const KOL_ASAS_CATALOG_KINDS', 'function migrateKolRow');
   assert.match(block, /state\.collectionCatalogs/);
   assert.doesNotMatch(block, /BLLFLCatalog/);
-  assert.match(INDEX, /\{k:'season', label:'Season', w:100, suggest:'season'\}/);
-  assert.match(INDEX, /\{k:'country', label:'Country', w:120, suggest:'country'\}/);
-  assert.match(INDEX, /\{k:'line', label:'Line', w:100, suggest:'line'\}/);
+  assert.match(INDEX, /\{k:'season', label:'Season', w:100, suggest:'season', group:'[^']+'\}/);
+  assert.match(INDEX, /\{k:'country', label:'Country', w:120, suggest:'country', group:'[^']+'\}/);
+  assert.match(INDEX, /\{k:'line', label:'Line', w:100, suggest:'line', group:'[^']+'\}/);
   assert.doesNotMatch(INDEX, /data-strict-catalog/);
   assert.doesNotMatch(INDEX, /Category must be selected from the LFL/);
 });

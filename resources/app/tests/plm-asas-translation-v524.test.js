@@ -68,9 +68,9 @@ test('v5.24 conflicting ASAS translations are never guessed',()=>{
 test('v5.24 Fit is a fixed visible Collection column and PLM Label Fit Name fills it',()=>{
   const cols=between(APP,'const KOL_COLS = [','let kolCustomCols');
   assert.match(cols,/\{k:'fit', label:'Fit'/);
-  /* v7.81 — üst sınır fabricSupplierS6 idi, o sütun kaldırıldı.
-     Fit'ten sonraki ilk sütun artık Buying Sample. */
-  assert.ok(cols.indexOf("{k:'fit'")>cols.indexOf("{k:'fabric'") && cols.indexOf("{k:'fit'")<cols.indexOf("{k:'buyingSampleManufacturer'"));
+  /* v7.0.229 — Buying Sample sütunu kaldırıldı; Model Detayları sırası
+     Kumaş · Assortment · Kalıp · Adet şeklindedir. */
+  assert.ok(cols.indexOf("{k:'fit'")>cols.indexOf("{k:'fabric'") && cols.indexOf("{k:'fit'")<cols.indexOf("{k:'quantity'"));
   assert.match(APP,/add\('fit','Label Fit Name','Fit'\)/);
   assert.match(APP,/fit:norm\(raw\.fit\)/);
   assert.match(APP,/kolHiddenCols\.delete\('fit'\)/);

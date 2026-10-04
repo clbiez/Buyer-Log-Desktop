@@ -35,12 +35,14 @@ test('v5.21 Collection keeps MB source fields and fixes Assortment as a permanen
      migrateKolRow onları her satırda kurmaya devam ediyor ve mbDerived MB
      hesaplarında (fabricLfl, önceki sezon LFL) okuyor. Bu testin koruduğu
      şey zaten alanın YAŞAMASI; sütun olarak görünmesi ayrı bir karardı. */
-  for(const key of ['mbOrderType','colourCode','assortment']){
+  for(const key of ['colourCode','assortment']){
     assert.match(APP,new RegExp(`k:'${key}'`));
   }
+  /* v7.0.229 — Sipariş Tipi (mbOrderType) Koleksiyon TABLOSUNDAN kaldırıldı;
+     alan satırda kurulmaya devam eder (aşağıdaki migrateKolRow kontrolü). */
   const migrate=APP.slice(APP.indexOf('function migrateKolRow'),APP.indexOf('if(r.buyingSampleApproved===undefined'));
   assert.ok(migrate.length>0,'migrateKolRow bulunamadı');
-  for(const key of ['previousFob','fabricSupplierS6','fabricPriceS6','fabricSupplierS7','fabricPriceS7']){
+  for(const key of ['previousFob','fabricSupplierS6','fabricPriceS6','fabricSupplierS7','fabricPriceS7','mbOrderType','buyingSampleManufacturer']){
     assert.ok(migrate.includes(`'${key}'`),`${key} satırda kurulmuyor — MB hesapları sessizce boşalır`);
   }
   assert.match(APP,/legacyAssortment/);
