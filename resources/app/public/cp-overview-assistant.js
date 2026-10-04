@@ -2421,17 +2421,7 @@
        olduğunu bilmeyen model, "In Store'a yetişmeyecek" isteğini kuramaz
        (canlıda tam olarak bu oldu). Hedef türü ekrandaki Retail Depo / In
        Store seçimidir; öncelikler kuralın taşıyacağı seviyelerdir. */
-    const DERIVED_MEANINGS = {
-      '@daysToLoad': L('Bugünden yükleme (MB / Ex-Factory planı) tarihine kalan gün; negatifse yükleme tarihi geçmiş.', 'Days from today to the loading (MB / ex-factory plan) date; negative means the loading date has passed.'),
-      '@orderAgeDays': L('Siparişin açılışından bu yana geçen gün.', 'Days since the order was created.'),
-      '@stage': L('Siparişin operasyon aşaması (üretim, yükleme, yolda, gümrük, depoda…). PRODUCTION dışındaki aşamalar Ex-Factory/yüklemenin gerçekleştiğini gösterir.', 'Operational stage of the order (production, loading, in transit, customs, in warehouse…). Any stage other than PRODUCTION means ex-factory/loading has happened.'),
-      '@deliveryOutcome': L('Yükleme tarihi + yol süresi kuralıyla hesaplanan tahmini varışın HEDEF tarihe yetişme sonucu. Hedef, ekranda seçili türdür (deliveryTarget). ON_TRACK yetişir, AT_RISK tampon dar, EXPECTED_LATE yetişmeyecek, ALREADY_LATE hedef tarih geçti ve teslim edilmedi, UNKNOWN hesaplanamadı.', 'Whether the estimated arrival (loading date + transit-time rule) makes the TARGET date. The target is the type selected on screen (deliveryTarget). ON_TRACK makes it, AT_RISK narrow buffer, EXPECTED_LATE will miss it, ALREADY_LATE target date passed without delivery, UNKNOWN could not be calculated.'),
-      '@basePriority': L('Kurallar uygulanmadan önce motorun hesapladığı öncelik.', 'Priority calculated by the engine before rules are applied.'),
-      '@scheduleBufferDays': L('Hedef tarih ile yol süresine göre tahmini varış arasındaki gün farkı; negatifse hedefe yetişmez.', 'Days between the target date and the estimated arrival by transit time; negative means it misses the target.'),
-      '@transitRuleMissing': L('Siparişe uyan yol süresi kuralı tanımlı değilse "true"; o zaman varış hesaplanamaz.', '"true" when no transit-time rule matches the order; arrival then cannot be calculated.'),
-      '@qty': L('Sipariş adedi.', 'Order quantity.'),
-      '@loadingType': L('Yükleme / sevkiyat tipi (Gemi, Uçak…).', 'Loading / shipment type (Sea, Air…).'),
-    };
+    const DERIVED_MEANINGS = Object.fromEntries((Rules.DERIVED_FIELDS || []).filter(item => item.meaning).map(item => [item.id, L(item.meaning.tr, item.meaning.en)]));
     function lcwaiRuleContext(rule) {
       const fields = formulaFieldCatalog(rule).map(item => {
         const entry = { name: item.label, type: item.type };

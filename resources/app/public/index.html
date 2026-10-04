@@ -425,6 +425,7 @@
   <nav class="tabs" aria-label="Ana modüller" data-i18n-aria-label-tr="Ana modüller" data-i18n-aria-label-en="Main modules">
     <span class="railGroupLabel" data-i18n-tr="Ana Sayfa" data-i18n-en="Home">Ana Sayfa</span>
     <button data-tab="overview" class="active" title="Overview" aria-current="page"><svg class="ic"><use href="#i-bl-n01"/></svg><span data-i18n-tr="Overview" data-i18n-en="Overview">Overview</span></button>
+    <button data-tab="lcwai" title="LCW AI" data-i18n-title-tr="LCW AI — genel asistan" data-i18n-title-en="LCW AI — general assistant"><svg class="ic"><use href="#i-robot"/></svg><span data-i18n-tr="LCW AI" data-i18n-en="LCW AI">LCW AI</span></button>
 
     <span class="railGroupLabel" data-i18n-tr="Planla &amp; Yürüt" data-i18n-en="Plan &amp; Execute">Planla &amp; Yürüt</span>
     <button data-tab="cp" title="CP Tracker"><svg class="ic"><use href="#i-bl-n03"/></svg><span data-i18n-tr="CP Tracker" data-i18n-en="CP Tracker">CP Tracker</span></button>
@@ -477,6 +478,7 @@
   <button class="iconbtn" id="saveAllBtn" title="Tüm değişiklikleri şimdi kaydet" data-i18n-title-tr="Tüm değişiklikleri şimdi kaydet" data-i18n-title-en="Save all changes now"><svg class="ic"><use href="#i-device-floppy"/></svg></button>
   <button class="iconbtn" id="topRefreshBtn" title="Veri Modelinden Güncelle" data-i18n-title-tr="Veri Modelinden Güncelle" data-i18n-title-en="Refresh from data model"><svg class="ic"><use href="#i-reload"/></svg></button>
   <button class="iconbtn syncStatusBtn" id="syncStatusBtn" title="Offline" aria-label="Offline"><span class="syncStatusBadge is-offline" id="syncStatusBadge"><svg class="ic" aria-hidden="true"><use href="#i-cloud-off"/></svg></span></button>
+  <button type="button" class="navActionBtn lcwaiTopBtn" id="lcwaiTopBtn" title="LCW AI — her yerden sorun" aria-label="LCW AI" data-i18n-title-tr="LCW AI — her yerden sorun" data-i18n-title-en="LCW AI — ask from anywhere"><svg class="ic" aria-hidden="true"><use href="#i-robot"/></svg><span>LCW AI</span></button>
   <button type="button" class="navActionBtn" id="buyerLogGuideBtn" title="Kullanım Rehberi (F1)" aria-label="Kullanım Rehberi (F1)" data-i18n-title-tr="Kullanım Rehberi (F1)" data-i18n-title-en="User Guide (F1)" data-i18n-aria-label-tr="Kullanım Rehberi (F1)" data-i18n-aria-label-en="User Guide (F1)"><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg></button>
   <span class="accessModeBadge" id="accessModeBadge"></span><button type="button" class="userAvatar userAvatarBtn" id="currentUserBtn" title="Kullanıcı menüsü" data-i18n-title-tr="Kullanıcı menüsü" data-i18n-title-en="User menu"><span id="currentUserInitials" class="blSteelInitials">?</span></button>
 </header>
@@ -1050,6 +1052,9 @@
     <div class="priceSupplierAnalysis" id="priceSupplierAnalysis" aria-live="polite"></div>
   </section>
 
+  <section id="view-lcwai">
+    <div class="lcwaiChatPage" id="lcwaiChatPage" aria-live="polite"></div>
+  </section>
   <section id="view-manufacturers">
     <div class="manufacturersPage" id="manufacturersPage" aria-live="polite"></div>
   </section>
@@ -1492,7 +1497,7 @@
 
 /* ============ Kabuk davranışları (ray + üst bar) ============ */
 (function shell(){
-  const TITLES={overview:{tr:'Genel Bakış',en:'Overview'},cp:{tr:'CP Tracker',en:'CP Tracker'},orders:{tr:'Siparişler',en:'Orders'},koleksiyon:{tr:'Koleksiyon',en:'Collection'},quotations:{tr:'Quotations',en:'Quotations'},pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History'},priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis'},manufacturers:{tr:'Üreticiler',en:'Manufacturers'},lfl:{tr:'LFL analizi',en:'LFL Analysis'},opencosting:{tr:'Ön Maliyet',en:'Open Costing'},backlog:{tr:'Backlog',en:'Backlog'},shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison'},automations:{tr:'Otomasyonlar',en:'Automations'},source:{tr:'Veri Yönetimi',en:'Data Management'}};
+  const TITLES={overview:{tr:'Genel Bakış',en:'Overview'},cp:{tr:'CP Tracker',en:'CP Tracker'},orders:{tr:'Siparişler',en:'Orders'},koleksiyon:{tr:'Koleksiyon',en:'Collection'},quotations:{tr:'Quotations',en:'Quotations'},pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History'},priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis'},manufacturers:{tr:'Üreticiler',en:'Manufacturers'},lcwai:{tr:'LCW AI',en:'LCW AI'},lfl:{tr:'LFL analizi',en:'LFL Analysis'},opencosting:{tr:'Ön Maliyet',en:'Open Costing'},backlog:{tr:'Backlog',en:'Backlog'},shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison'},automations:{tr:'Otomasyonlar',en:'Automations'},source:{tr:'Veri Yönetimi',en:'Data Management'}};
   const titleEl=document.getElementById('pageTitle');
   function syncTitle(){
     if(typeof syncActivePageTitle==='function'){syncActivePageTitle();return;}

@@ -68,16 +68,28 @@
      "yüklemeye kalan gün" gibi hesaplanmış bir değeri de koşulda kullanabilsin. */
   const STAGE_VALUES = Object.freeze(['PRODUCTION', 'LOADING', 'SHORTAGE', 'IN_TRANSIT', 'CUSTOMS', 'IN_WAREHOUSE', 'AWAITING_RETAIL_TRANSFER', 'UNKNOWN']);
   const OUTCOME_VALUES = Object.freeze(['ON_TRACK', 'AT_RISK', 'EXPECTED_LATE', 'ALREADY_LATE', 'UNKNOWN']);
+  /* meaning: alanın İŞ anlamı (TR/EN). Kural editöründeki LCW AI bağlamı ve
+     sunucudaki LCW AI bilgi katmanı (server/lib/lcwai/lcwai-knowledge.js) bu
+     tek kaynaktan okur; model "Teslimat sonucu"nun ne olduğunu tahmin etmez. */
   const DERIVED_FIELDS = Object.freeze([
-    { id: '@daysToLoad', tr: 'Yüklemeye kalan gün', en: 'Days to load', numeric: true },
-    { id: '@orderAgeDays', tr: 'Sipariş yaşı (gün)', en: 'Order age (days)', numeric: true },
-    { id: '@stage', tr: 'Aşama', en: 'Stage', values: STAGE_VALUES },
-    { id: '@deliveryOutcome', tr: 'Teslimat sonucu', en: 'Delivery outcome', values: OUTCOME_VALUES },
-    { id: '@basePriority', tr: 'Hesaplanan öncelik', en: 'Calculated priority', values: SEVERITY },
-    { id: '@scheduleBufferDays', tr: 'Hedefe tampon (gün)', en: 'Buffer to target (days)', numeric: true },
-    { id: '@transitRuleMissing', tr: 'Yol süresi kuralı eksik', en: 'Transit rule missing', values: Object.freeze(['true', 'false']) },
-    { id: '@qty', tr: 'Adet', en: 'Quantity', numeric: true },
-    { id: '@loadingType', tr: 'Yükleme tipi', en: 'Loading type' },
+    { id: '@daysToLoad', tr: 'Yüklemeye kalan gün', en: 'Days to load', numeric: true,
+      meaning: { tr: 'Bugünden yükleme (MB / Ex-Factory planı) tarihine kalan gün; negatifse yükleme tarihi geçmiş.', en: 'Days from today to the loading (MB / ex-factory plan) date; negative means the loading date has passed.' } },
+    { id: '@orderAgeDays', tr: 'Sipariş yaşı (gün)', en: 'Order age (days)', numeric: true,
+      meaning: { tr: 'Siparişin açılışından bu yana geçen gün.', en: 'Days since the order was created.' } },
+    { id: '@stage', tr: 'Aşama', en: 'Stage', values: STAGE_VALUES,
+      meaning: { tr: 'Siparişin operasyon aşaması. PRODUCTION dışındaki aşamalar Ex-Factory/yüklemenin gerçekleştiğini gösterir.', en: 'Operational stage of the order. Any stage other than PRODUCTION means ex-factory/loading has happened.' } },
+    { id: '@deliveryOutcome', tr: 'Teslimat sonucu', en: 'Delivery outcome', values: OUTCOME_VALUES,
+      meaning: { tr: 'Yükleme tarihi + yol süresi kuralıyla hesaplanan tahmini varışın HEDEF tarihe (ekranda seçili Retail Depo ya da In Store) yetişme sonucu: ON_TRACK yetişir, AT_RISK tampon dar, EXPECTED_LATE yetişmeyecek, ALREADY_LATE hedef tarih geçti ve teslim edilmedi, UNKNOWN hesaplanamadı.', en: 'Whether the estimated arrival (loading date + transit-time rule) makes the TARGET date (Retail warehouse or In Store, as selected on screen): ON_TRACK makes it, AT_RISK narrow buffer, EXPECTED_LATE will miss it, ALREADY_LATE target passed without delivery, UNKNOWN could not be calculated.' } },
+    { id: '@basePriority', tr: 'Hesaplanan öncelik', en: 'Calculated priority', values: SEVERITY,
+      meaning: { tr: 'Kurallar uygulanmadan önce motorun hesapladığı öncelik.', en: 'Priority calculated by the engine before rules are applied.' } },
+    { id: '@scheduleBufferDays', tr: 'Hedefe tampon (gün)', en: 'Buffer to target (days)', numeric: true,
+      meaning: { tr: 'Hedef tarih ile yol süresine göre tahmini varış arasındaki gün farkı; negatifse hedefe yetişmez.', en: 'Days between the target date and the estimated arrival by transit time; negative means it misses the target.' } },
+    { id: '@transitRuleMissing', tr: 'Yol süresi kuralı eksik', en: 'Transit rule missing', values: Object.freeze(['true', 'false']),
+      meaning: { tr: 'Siparişe uyan yol süresi kuralı yoksa "true"; varış hesaplanamaz.', en: '"true" when no transit-time rule matches the order; arrival cannot be calculated.' } },
+    { id: '@qty', tr: 'Adet', en: 'Quantity', numeric: true,
+      meaning: { tr: 'Sipariş adedi.', en: 'Order quantity.' } },
+    { id: '@loadingType', tr: 'Yükleme tipi', en: 'Loading type',
+      meaning: { tr: 'Yükleme / sevkiyat tipi (Gemi, Uçak…).', en: 'Loading / shipment type (Sea, Air…).' } },
   ]);
   const DERIVED_IDS = Object.freeze(new Set(DERIVED_FIELDS.map(item => item.id)));
 

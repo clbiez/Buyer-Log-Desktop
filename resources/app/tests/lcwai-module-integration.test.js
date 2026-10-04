@@ -162,8 +162,9 @@ test('regresyon: LCW AI geçerli JSON ile formülü boş bıraktıysa ham JSON f
 
 test('Kurallar bağlamı alan ANLAMLARINI, hedef türünü ve seçilebilir öncelikleri taşır; öneri önceliği uygulanır', () => {
   const block = CPA.slice(CPA.indexOf('const DERIVED_MEANINGS'), CPA.indexOf('function confirmDelete(rule)'));
-  assert.match(block, /'@deliveryOutcome': L\(/);
-  assert.match(block, /'@scheduleBufferDays': L\(/);
+  assert.match(block, /Rules\.DERIVED_FIELDS/);
+  const Rules = require('../public/cp-rules-engine.js');
+  for (const id of ['@deliveryOutcome', '@scheduleBufferDays', '@stage']) assert.ok(Rules.DERIVED_FIELDS.find(item => item.id === id).meaning.tr, id);
   assert.match(block, /deliveryTarget: state\.settings\.targetType === 'inStore'/);
   assert.match(block, /availablePriorities:/);
   assert.match(block, /entry\.allowedValues = values/);
