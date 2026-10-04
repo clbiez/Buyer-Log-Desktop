@@ -495,7 +495,7 @@ test('v7.81 her araç NE YAPTIĞINI yazar — iki dilde', () => {
   const groups = loadToolGroups();
   const tools = groups.flatMap(group => group.tools);
   // v7.0.172: + Endeksmatik Setleri (çoklu set yöneticisi).
-  // v7.0.184: + Data Cleanup (depolama temizliği ve haftalık otomatik bakım).
+  // + Data Temizliği (kurulum/sync klasörü temizliği).
   assert.equal(tools.length, 15, `15 araç beklenir, bulunan: ${tools.length}`);
 
   for (const item of groups.concat(tools)) {

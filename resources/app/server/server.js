@@ -40,6 +40,7 @@ const { filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, creat
 const { createCollectionPermissionsStore } = require('./lib/collection-permissions-store');
 const { resolveBuyerLogDataRoots } = require('./lib/data-roots');
 const { createDataMaintenance } = require('./lib/data-maintenance');
+const { createDataCleanup, resolveInstallRoot } = require('./lib/data-cleanup');
 const { createBackupService } = require('./lib/backup-service');
 const { runBackupRestore } = require('./lib/backup-restore-worker-client');
 const { inspectBackupArchive, extractBackupArchive } = require('./lib/backup-archive');
@@ -89,6 +90,7 @@ const refreshPerformance = createRefreshPerformance({
 setTimeout(() => { void refreshPerformance.refreshSharedCache(); }, 6500).unref?.();
 const dataRoots = resolveBuyerLogDataRoots({ projectRoot: path.join(__dirname, '..'), serverDataRoot: SERVER_DATA_ROOT, appDataRoot: APP_DATA_ROOT, localDataRoot: LOCAL_DATA_ROOT, localDbPath: LOCAL_DB_FILE });
 const dataMaintenance = createDataMaintenance({ roots: dataRoots, localDb, syncSettings });
+const dataCleanup = createDataCleanup({ roots: dataRoots, installRoot: resolveInstallRoot({ projectRoot: dataRoots.projectRoot }), portableDataRoot: process.env.BUYER_LOG_PORTABLE_DATA_ROOT || '', tempRoot: process.env.BUYER_LOG_TEMP_ROOT || '', appVersion: APP_VERSION, syncSettings, sharedHub, dataMaintenance, extraProtected: [process.env.BUYER_LOG_AUTH_DATA_ROOT, process.env.BUYER_LOG_CONFIG_PATH].filter(Boolean) });
 /* Ortak iş verisinin delta motoruna taşınması. Faz config.json'daki
    deltaStoreMode ya da BL_DELTA_STORE_MODE ile ilerletilir; varsayılan
    "shadow" üretimde hiçbir davranışı değiştirmez. Faz sözleşmesi ve neden
@@ -8711,6 +8713,27 @@ app.get('/api/data-maintenance/sync-health', userAccess.requireArea('source'), a
 app.post('/api/data-maintenance/clean', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), express.json({ limit:'16kb' }), async (req, res) => {
   try { const rawScope=String(req.body&&req.body.scope||'all'); const scope=['browser','legacy'].includes(rawScope)?rawScope:'all'; const result=await dataMaintenance.safeClean({ apply:Boolean(req.body&&req.body.apply), scope }); userAccess.appendAudit(req.currentUser,'DATA_MAINTENANCE_SAFE_CLEAN','source',{apply:Boolean(req.body&&req.body.apply),scope,removed:result.removed||0,freed:result.freed||0}); res.json({ok:true,result}); } catch(error){res.status(error.statusCode||500).json({error:error.message||String(error),code:error.code||'DATA_MAINTENANCE_CLEAN_FAILED'});}
 });
+/* Data Temizliği: local kapsam her kullanıcıya, sync kapsamı yalnız Moderatöre açıktır.
+   Silme listesi sunucuda yeniden üretilir; istemci yalnız kimlik gönderir. */
+const dataCleanupScope = req => String(req.method === 'GET' ? req.query.scope || 'local' : req.body && req.body.scope || 'local');
+const dataCleanupIsModerator = req => Boolean(req.currentUser && req.currentUser.systemRole === 'moderator');
+app.get('/api/data-cleanup/scan', userAccess.requireArea('source'), async (req, res) => {
+  try { const scope = dataCleanupScope(req); res.json({ ok:true, moderator:dataCleanupIsModerator(req), result:await dataCleanup.scan(scope, { moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_SCAN_FAILED' }); }
+});
+app.get('/api/data-cleanup/reminder', userAccess.requireArea('source'), async (req, res) => {
+  try { res.set('Cache-Control', 'no-store'); res.json({ ok:true, result:await dataCleanup.reminder({ moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_REMINDER_FAILED' }); }
+});
+app.post('/api/data-cleanup/reminder/dismiss', userAccess.requireArea('source'), async (req, res) => {
+  try { res.json({ ok:true, result:await dataCleanup.dismissReminder({ moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_REMINDER_FAILED' }); }
+});
+/* Haftalık Data Temizliği kontrolü: açılış kritik yolunun dışında başlar,
+   6 saatte bir yoklar; asıl iş son kontrolden 7 gün geçtiyse yapılır. */
+const runDataCleanupWeeklyCheck = () => dataCleanup.weeklyCheck().catch(error => logRuntimeFailure('dataCleanupWeekly', error));
+setTimeout(runDataCleanupWeeklyCheck, 120000).unref?.();
+setInterval(runDataCleanupWeeklyCheck, 6 * 60 * 60 * 1000).unref?.();
+app.post('/api/data-cleanup/apply', userAccess.requireArea('source'), express.json({ limit:'256kb' }), async (req, res) => {
+  try { const scope = dataCleanupScope(req); const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids.slice(0, 20000) : []; const result = await dataCleanup.apply(scope, ids, { moderator:dataCleanupIsModerator(req) }); userAccess.appendAudit(req.currentUser, 'DATA_CLEANUP_APPLY', 'source', { scope, removed:result.removed, failed:result.failed, freed:result.freed }); res.json({ ok:true, result }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_APPLY_FAILED' }); }
+});
 app.post('/api/data-maintenance/compact-local-db', userAccess.requireArea('source'), userAccess.requirePermission('manageBackup'), express.json({ limit:'16kb' }), async (req, res) => {
   try { const result=await dataMaintenance.compactLocalData({ keepUploadedTail:Number(req.body&&req.body.keepUploadedTail)||1000 }); userAccess.appendAudit(req.currentUser,'LOCAL_DB_COMPACT','source',{compacted:result.compacted,bytesFreed:result.bytesFreed}); res.json({ok:true,result}); } catch(error){res.status(error.statusCode||500).json({error:error.message||String(error),code:error.code||'LOCAL_DB_COMPACTION_FAILED'});}
 });
@@ -11959,29 +11982,7 @@ if (process.env.NODE_ENV !== 'test') {
   console.log(`Buyer Log runtime config: ${CONFIG_PATH} · port=${PORT} · host=${REQUESTED_HOST}`);
 }
 
-const httpServer = /* Data Temizliği: local kapsam her kullanıcıya, sync kapsamı yalnız Moderatöre açıktır.
-   Silme listesi sunucuda yeniden üretilir; istemci yalnız kimlik gönderir. */
-const dataCleanupScope = req => String(req.method === 'GET' ? req.query.scope || 'local' : req.body && req.body.scope || 'local');
-const dataCleanupIsModerator = req => Boolean(req.currentUser && req.currentUser.systemRole === 'moderator');
-app.get('/api/data-cleanup/scan', userAccess.requireArea('source'), async (req, res) => {
-  try { const scope = dataCleanupScope(req); res.json({ ok:true, moderator:dataCleanupIsModerator(req), result:await dataCleanup.scan(scope, { moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_SCAN_FAILED' }); }
-});
-app.get('/api/data-cleanup/reminder', userAccess.requireArea('source'), async (req, res) => {
-  try { res.set('Cache-Control', 'no-store'); res.json({ ok:true, result:await dataCleanup.reminder({ moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_REMINDER_FAILED' }); }
-});
-app.post('/api/data-cleanup/reminder/dismiss', userAccess.requireArea('source'), async (req, res) => {
-  try { res.json({ ok:true, result:await dataCleanup.dismissReminder({ moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_REMINDER_FAILED' }); }
-});
-/* Haftalık Data Temizliği kontrolü: açılış kritik yolunun dışında başlar,
-   6 saatte bir yoklar; asıl iş son kontrolden 7 gün geçtiyse yapılır. */
-const runDataCleanupWeeklyCheck = () => dataCleanup.weeklyCheck().catch(error => logRuntimeFailure('dataCleanupWeekly', error));
-setTimeout(runDataCleanupWeeklyCheck, 120000).unref?.();
-setInterval(runDataCleanupWeeklyCheck, 6 * 60 * 60 * 1000).unref?.();
-app.post('/api/data-cleanup/apply', userAccess.requireArea('source'), express.json({ limit:'256kb' }), async (req, res) => {
-  try { const scope = dataCleanupScope(req); const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids.slice(0, 20000) : []; const result = await dataCleanup.apply(scope, ids, { moderator:dataCleanupIsModerator(req) }); userAccess.appendAudit(req.currentUser, 'DATA_CLEANUP_APPLY', 'source', { scope, removed:result.removed, failed:result.failed, freed:result.freed }); res.json({ ok:true, result }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_APPLY_FAILED' }); }
-});
-
-app.listen(PORT, HOST, () => {
+const httpServer = app.listen(PORT, HOST, () => {
   markStartup('SERVER_READY', { host: HOST, port: PORT });
   const displayHost = HOST === '127.0.0.1' ? 'localhost' : HOST;
   console.log(`Buyer Log sunucusu çalışıyor: http://${displayHost}:${PORT}`);
