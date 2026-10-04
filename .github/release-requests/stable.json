@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.232",
-  "commit_sha": "309c76dde64e8fb730cad981a5085548316b611f",
-  "release_notes": "Buyer Log 7.0.232: Koleksiyon, CP ve Siparişler için yeni Alanlar çekmecesi ve yeniden düzenlenen tablo başlıkları; Koleksiyon Checklist desteği; ASAS verisinden üretici kartları, termin performansı ve üretici eşleme özellikleriyle yeni Üreticiler sayfası; otomasyonlarda üretici bazlı ayrı e-posta alıcı akışı."
+  "version": "7.0.233",
+  "commit_sha": "e73663ac0ea5336b933f170f81bcbe61b6a24277",
+  "release_notes": "Buyer Log 7.0.233: LCW AI’dan Destek Al — Hesaplanan Sütun, CP Kuralları ve Otomasyonlar tek merkezi LCW AI motorunu (GPT-6 Sol) kullanır; öneriler Buyer Log doğrulamasından geçer ve yalnız kullanıcı onayıyla uygulanır. Kullanıcı menüsünde Kurumsal Bağlantılar ve LCW AI Girişi eklendi.",
+  "request_id": "7.0.233-r1"
 }
