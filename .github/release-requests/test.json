@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.236",
-  "commit_sha": "65d804161414a174428417006f91ff964a81e651",
-  "release_notes": "Buyer Log 7.0.236: LCW AI genel sohbeti artık sorulara cevap veriyor; boş cevap anlaşılır hata olarak gösterilir ve Tekrar Dene boş cevapları biriktirmez. LCW AI chat answers questions again; empty answers show a clear error."
+  "version": "7.0.237",
+  "commit_sha": "5fc96e1874a9c958f32a409080019b294264d0a1",
+  "release_notes": "Buyer Log 7.0.237: LCW AI Bağlam Ekle tabloları artık kesilmeden, tüm satır ve sütunlarıyla CSV dosyası olarak gönderilir. Add Context tables are now sent uncut as a CSV file."
 }
