@@ -9194,6 +9194,139 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
   } catch (err) { apiError(res, err, 'PLM görsel bağlantıları kaydedilemedi.'); }
 });
 
+function collectionRowSelectedForImageDelete(row, identities, rowPlmIds, rowRecordIds) {
+  if (identities.has(parseLib.plmColourImageKey(row && row.plmId, row && row.colourCode))) return true;
+  const plmId = parseLib.normalizePlmImageId(row && row.plmId);
+  if (plmId) return rowPlmIds.has(plmId) && !parseLib.normalizeCpImageColourCode(row && row.colourCode);
+  const recordId = String(row && (row.recordId || row._sharedRecordId || row.id) || '').trim();
+  return Boolean(recordId) && rowRecordIds.has(recordId);
+}
+/* SEÇİLİ MODEL GÖRSELLERİNİ GERÇEKTEN SİL (CP/Siparişler/Koleksiyon çoklu seçim).
+   Tekil "Kaldır" yalnız bağlantıyı düşürüyordu: yerel dosya başka bir
+   adlı kayıt tuttuğu için çoğu zaman kalıyor, paylaşılan ağ klasöründeki
+   kopya ise hiç silinmiyordu. Bu uç sırayla:
+     1) PLM ID + Colour Code kimliğine (ve |name: varyantlarına) mezar taşı yazar,
+     2) sahiplik kaydını düşürür ve sayfa önbelleğini yamar,
+     3) paylaşılan klasörde MANUEL mezar taşı yayımlar ve kullanılmayan baytları siler,
+     4) artık hiçbir kayıt/satırın kullanmadığı yerel dosyaları siler.
+   Aynı dosyayı başka bir model hâlâ kullanıyorsa o dosya korunur.
+   `rowItems`: Colour Code taşımayan Koleksiyon satırları. Bunların kanonik
+   renk anahtarı yoktur; paylaşılan kayıtları PLM-only (renksiz) ya da PLM'siz
+   satır kimliğiyle (row:<recordId>) eşlenir. Genel imagemap'e dokunulmaz. */
+app.post('/api/model-images/delete-selected', userAccess.requireAnyArea('cp','orders','koleksiyon'), express.json({ limit:'512kb' }), async (req, res) => {
+  try {
+    assertModelImageMutable();
+    const body = req.body || {};
+    if (!Array.isArray(body.items)) return res.status(400).json({ error:'items (dizi) zorunlu.', code:'VALIDATION_ERROR' });
+    const identities = new Map();
+    for (const item of body.items.slice(0, 5000)) {
+      const plmId = parseLib.normalizePlmImageId(item && item.plmId);
+      const colourCode = parseLib.normalizeCpImageColourCode(item && item.colourCode);
+      const key = parseLib.plmColourImageKey(plmId, colourCode);
+      if (!key) continue;
+      if (!identities.has(key)) identities.set(key, { key, plmId, colourCode, hints:new Set() });
+      const hint = String(item && item.imageRef || '').trim();
+      if (hint) identities.get(key).hints.add(hint);
+    }
+    const rowPlmIds = new Set(), rowRecordIds = new Set(), rowRefs = new Set();
+    for (const item of (Array.isArray(body.rowItems) ? body.rowItems : []).slice(0, 5000)) {
+      const plmId = parseLib.normalizePlmImageId(item && item.plmId);
+      const recordId = String(item && item.recordId || '').trim().slice(0, 160);
+      const ref = String(item && item.imageRef || '').trim();
+      if (!plmId && !recordId) continue;
+      if (plmId) rowPlmIds.add(plmId); else rowRecordIds.add(recordId);
+      if (ref) rowRefs.add(ref);
+    }
+    if (!identities.size && !rowPlmIds.size && !rowRecordIds.size) return res.status(400).json({ error:'Seçili satırlarda silinecek model görseli kimliği bulunamadı.', code:'MODEL_IMAGE_IDENTITY_REQUIRED' });
+
+    const beforeContext = pageProjectionContext(req.currentUser);
+    const imagemap = loadOverrides().imagemap || {};
+    const candidates = new Set(rowRefs);
+    const linkItems = [];
+    for (const identity of identities.values()) {
+      identity.hints.forEach(ref => candidates.add(ref));
+      linkItems.push({ plmId:identity.plmId, colourCode:identity.colourCode, imageRef:'' });
+      const namedPrefix = identity.key + '|name:';
+      for (const [mapKey, ref] of Object.entries(imagemap)) {
+        if (mapKey !== identity.key && !mapKey.startsWith(namedPrefix)) continue;
+        if (String(ref == null ? '' : ref).trim()) candidates.add(String(ref).trim());
+        if (mapKey !== identity.key) linkItems.push({ plmId:identity.plmId, colourCode:identity.colourCode, colour:mapKey.slice(namedPrefix.length), imageRef:'' });
+      }
+    }
+    const saved = linkItems.length
+      ? patchPlmImageLinks(linkItems, requestRevision(req))
+      : { overrides:loadOverrides(), revision:Number(loadOverrides()._revisions && loadOverrides()._revisions.orders) || 0, updated:0 };
+    try {
+      const keys = linkItems.map(item => plmImageIngestLib.canonicalKeyFor(item)).filter(Boolean);
+      if (keys.length) { plmImageOwnership.forget(keys); plmImageOwnership.forgetManual(keys); }
+    } catch (ownershipError) { logRuntimeFailure('plmImageOwnershipForget', ownershipError); }
+    let pageCachePatched = false;
+    try { pageCachePatched = await rewriteProjectionCacheForImageItems(req.currentUser, beforeContext, linkItems); }
+    catch (cacheError) { logRuntimeFailure('imageProjectionCachePatch', cacheError); }
+
+    const owner = String(req.currentUser.id || '').trim();
+    const rowKeyPrefix = 'collection:' + owner + ':row:';
+    const matches = record => {
+      if (identities.has(parseLib.plmColourImageKey(record && record.plmId, record && record.colourCode))) return true;
+      const plmId = parseLib.normalizePlmImageId(record && record.plmId);
+      if (plmId && rowPlmIds.has(plmId) && !parseLib.normalizeCpImageColourCode(record && record.colourCode)) return true;
+      const key = String(record && record.canonicalKey || '');
+      return key.startsWith(rowKeyPrefix) && rowRecordIds.has(key.slice(rowKeyPrefix.length));
+    };
+    let shared = { available:false, tombstoned:0, erased:0, keys:[] };
+    try {
+      shared = await sharedModelImageStore.purge({ prefix:'collection:' + owner + ':', match:matches });
+    } catch (sharedError) {
+      logRuntimeFailure('sharedModelImagePurge', sharedError);
+      shared = { available:true, error:(sharedError && sharedError.message) || String(sharedError), tombstoned:0, erased:0, keys:[] };
+    }
+    if (!shared.available || shared.error) {
+      // Ağ klasörü yoksa mezar taşı kuyruğa girer; bağlantı gelince yayımlanır.
+      const tombstone = (key, plmId, colourCode) => ({
+        canonicalKey:'collection:' + owner + ':' + key, plmId, colourCode,
+        source:sharedImageStoreLib.SOURCE_MANUAL, ownership:sharedImageStoreLib.OWNERSHIP_MANUAL,
+        status:sharedImageStoreLib.STATUS_DELETED, sourceIdentity:'collection:' + owner + ':' + key,
+      });
+      modelImageDistribution.queuePublish([
+        ...[...identities.values()].map(identity => tombstone(identity.key, identity.plmId, identity.colourCode)),
+        ...[...rowPlmIds].map(plmId => tombstone(parseLib.plmImageKey(plmId), plmId, '')),
+        ...[...rowRecordIds].map(recordId => tombstone('row:' + recordId, '', '')),
+      ]);
+    }
+
+    // Yerel dosya yalnız artık HİÇBİR yerde kullanılmıyorsa silinir.
+    const inUse = new Set(Object.values(saved.overrides && saved.overrides.imagemap || {}).map(ref => String(ref == null ? '' : ref).trim()).filter(Boolean));
+    const ownRowsCleared = body.collectionRowsCleared === true && String(body.collectionOwnerId || '') === owner;
+    for (const ownerId of collectionWorkspaces.listOwnerIds()) {
+      for (const row of loadWorkspace(ownerId).rows || []) {
+        const ref = String(row && row.imgRef || '').trim();
+        if (!ref) continue;
+        if (ownRowsCleared && String(ownerId) === owner && collectionRowSelectedForImageDelete(row, identities, rowPlmIds, rowRecordIds)) continue;
+        inUse.add(ref);
+      }
+    }
+    for (const entry of Object.values(readCollectionSharedImageCache().entries || {})) {
+      const ref = String(entry && entry.imageRef || '').trim();
+      if (ref) inUse.add(ref);
+    }
+    const deletedLocal = [];
+    for (const ref of candidates) {
+      if (inUse.has(ref)) continue;
+      try { if (deleteCollectionImage(ref)) deletedLocal.push(ref); }
+      catch (deleteError) { logRuntimeFailure('modelImageDeleteLocal', deleteError); }
+    }
+
+    const result = {
+      identities:identities.size + rowPlmIds.size + rowRecordIds.size, registryUpdated:saved.updated, deletedLocal:deletedLocal.length,
+      keptLocal:[...candidates].filter(ref => !deletedLocal.includes(ref)).length,
+      sharedAvailable:Boolean(shared.available), sharedTombstoned:shared.tombstoned || 0, sharedErased:shared.erased || 0,
+      sharedQueued:!shared.available || Boolean(shared.error),
+    };
+    userAccess.appendAudit(req.currentUser, 'MODEL_IMAGES_DELETE_SELECTED', 'model-images', result);
+    res.json({ ok:true, ...result, deletedRefs:deletedLocal, overrides:saved.overrides, revision:saved.revision, pageCachePatched });
+  } catch (err) { apiError(res, err, 'Seçili model görselleri silinemedi.'); }
+});
+
 app.post('/api/overrides/batch-suppfob', async (req, res) => {
   try {
     const items = (req.body || {}).items;

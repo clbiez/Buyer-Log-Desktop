@@ -1005,8 +1005,8 @@ td.exf-next{background:var(--acc-bg);color:var(--acc-ink);}
 .warningDetailTable tbody tr:hover td{background:var(--table-hover);}
 .warningDetailTable td.empty{text-align:center;color:var(--muted);padding:30px;}
 /* CP'yi Excele Aktar / Fiyatlamaya Gönder yalnızca CP sekmesinde görünür */
-#cpSuppFobRulesBtn,#cpQuotationsBtn,#cpPriceHistoryBtn,#cpSendPricingBtn,#cpCreateOcBtn,#navToShipping,#cpCopyToKolBtn,#cpProdStatusBtn,#selectedBacklogBtn{display:none;}
-body[data-active-tab="cp"] #cpSuppFobRulesBtn,body[data-active-tab="cp"] #cpQuotationsBtn,body[data-active-tab="cp"] #cpPriceHistoryBtn,body[data-active-tab="cp"] #cpSendPricingBtn,body[data-active-tab="cp"] #cpCreateOcBtn,body[data-active-tab="cp"] #navToShipping,body[data-active-tab="cp"] #cpCopyToKolBtn,body[data-active-tab="cp"] #cpProdStatusBtn,body[data-active-tab="cp"] #selectedBacklogBtn,body[data-active-tab="orders"] #cpPriceHistoryBtn,body[data-active-tab="orders"] #selectedBacklogBtn{display:inline-flex;}
+#cpSuppFobRulesBtn,#cpQuotationsBtn,#cpPriceHistoryBtn,#cpSendPricingBtn,#cpCreateOcBtn,#navToShipping,#cpCopyToKolBtn,#cpProdStatusBtn,#selectedBacklogBtn,#cpRemoveImagesBtn{display:none;}
+body[data-active-tab="cp"] #cpSuppFobRulesBtn,body[data-active-tab="cp"] #cpQuotationsBtn,body[data-active-tab="cp"] #cpPriceHistoryBtn,body[data-active-tab="cp"] #cpSendPricingBtn,body[data-active-tab="cp"] #cpCreateOcBtn,body[data-active-tab="cp"] #navToShipping,body[data-active-tab="cp"] #cpCopyToKolBtn,body[data-active-tab="cp"] #cpProdStatusBtn,body[data-active-tab="cp"] #selectedBacklogBtn,body[data-active-tab="cp"] #cpRemoveImagesBtn,body[data-active-tab="orders"] #cpPriceHistoryBtn,body[data-active-tab="orders"] #selectedBacklogBtn{display:inline-flex;}
 
 /* ===================== CP HIZLI BOYUT FİLTRELERİ (Buying Group / Buyer / Country / MAG / MMYG) ===================== */
 .cpDimFilterGroup,.ordersDimFilterGroup{display:none;gap:6px;align-items:center;}

@@ -385,6 +385,21 @@ function createSharedImageStore(options = {}) {
     } catch (_) { return false; }
   }
 
+  async function locatorIntact(root, locator) {
+    const safe = normalizeContentLocator(locator); if (!safe) return false;
+    try {
+      const file = path.join(root, ...(safe.objectPath || safe.packPath).split('/'));
+      if (!isInsideRoot(root, file)) return false;
+      if (safe.objectPath) return hashOf(await fsp.readFile(file)) === safe.contentHash;
+      const handle = await fsp.open(file, 'r');
+      try {
+        const slice = Buffer.alloc(safe.packLength);
+        const read = await handle.read(slice, 0, safe.packLength, safe.packOffset);
+        return read.bytesRead === safe.packLength && hashOf(slice) === safe.contentHash;
+      } finally { await handle.close(); }
+    } catch (_) { return false; }
+  }
+
   async function appendPack(root, deviceId, contentHash, mimeType, buffer) {
     const device = safeSegment(deviceId, 80) || 'unknown';
     const packRoot = path.join(root, PACKS, device);
@@ -426,7 +441,10 @@ function createSharedImageStore(options = {}) {
       // or v2 pack locator from manifests if this content already exists.
       try {
         const legacy = (await legacyContentCache()).get(contentHash);
-        if (legacy && await locatorUsable(root, legacy)) {
+        // Hash de doğrulanır: kalıcı silmede sıfırlanan bir pack dilimi başka
+        // cihazın eski manifestosunda hâlâ görünebilir; boyutu tutsa da
+        // içeriği gitmiştir ve yeniden kullanılamaz.
+        if (legacy && await locatorUsable(root, legacy) && await locatorIntact(root, legacy)) {
           index.records[contentHash] = legacy;
           index.schemaVersion = SCHEMA_VERSION; index.updatedAt = new Date().toISOString();
           await atomicJson(indexFile, index);
@@ -606,9 +624,106 @@ function createSharedImageStore(options = {}) {
     };
   }
 
+  /* İçeriği paylaşılan klasörden GERÇEKTEN siler. v1 nesne dosyası silinir;
+     pack dilimi ise yerinde sıfırlanır (pack ofsetleri başka kayıtlarca
+     kullanıldığı için dosya kısaltılamaz). Sıfırlamadan önce dilimin hash'i
+     doğrulanır: yanlış ofsetteki başka bir görsel ASLA ezilmez. */
+  async function eraseContent(root, contentHash, manifests) {
+    const locators = new Map();
+    const addLocator = raw => {
+      const safe = normalizeContentLocator(raw);
+      if (!safe || safe.contentHash !== contentHash) return;
+      locators.set(safe.objectPath || `${safe.packPath}@${safe.packOffset}`, safe);
+    };
+    for (const manifest of manifests) {
+      for (const record of Object.values(manifest.records || {})) {
+        if (record.contentHash === contentHash) addLocator(locatorFromRecord(record));
+      }
+    }
+    const indexFile = contentIndexFile(root, contentHash);
+    await withFileLeaseAsync(indexFile, async () => {
+      const index = await readJsonSafe(indexFile, null);
+      if (!index || !index.records || !index.records[contentHash]) return;
+      addLocator(index.records[contentHash]);
+      delete index.records[contentHash];
+      index.updatedAt = new Date().toISOString();
+      await atomicJson(indexFile, index);
+    }, { timeoutMs: 20000, staleMs: 120000 });
+    let erased = 0;
+    for (const locator of locators.values()) {
+      try {
+        if (locator.objectPath) {
+          const file = path.join(root, ...locator.objectPath.split('/'));
+          if (!isInsideRoot(root, file)) continue;
+          await fsp.unlink(file);
+          erased += 1;
+          continue;
+        }
+        const file = path.join(root, ...locator.packPath.split('/'));
+        if (!isInsideRoot(root, file)) continue;
+        const handle = await fsp.open(file, 'r+');
+        try {
+          const slice = Buffer.alloc(locator.packLength);
+          const read = await handle.read(slice, 0, locator.packLength, locator.packOffset);
+          if (read.bytesRead !== locator.packLength || hashOf(slice) !== contentHash) continue;
+          await handle.write(Buffer.alloc(locator.packLength), 0, locator.packLength, locator.packOffset);
+          try { await handle.sync(); } catch (_) {}
+          erased += 1;
+        } finally { await handle.close(); }
+      } catch (error) {
+        if (!error || (error.code !== 'ENOENT' && error.code !== 'ENOTDIR')) throw error;
+      }
+    }
+    return erased;
+  }
+
+  /* SEÇİLİ MODEL GÖRSELLERİNİN KALICI SİLİNMESİ.
+     `match(record)` true dönen her kanonik kimliğe MANUEL mezar taşı yazılır
+     (eski bir istemci kopyası onu diriltemez) ve artık hiçbir canlı kaydın
+     kullanmadığı baytlar paylaşılan klasörden silinir. Aynı içeriği başka bir
+     model hâlâ kullanıyorsa bayt korunur; yalnız silinen kimlik düşer. */
+  async function purge({ prefix = '', match } = {}) {
+    const root = await rootFolder();
+    if (!root) return { available: false, tombstoned: 0, erased: 0, keys: [] };
+    const accept = typeof match === 'function' ? match : () => false;
+    const keyPrefix = clean(prefix, 300);
+    const manifests = [];
+    for (const head of await listDeviceHeads()) manifests.push(await readManifest(head.deviceId));
+    const targets = new Map();
+    const hashes = new Set();
+    for (const manifest of manifests) {
+      for (const record of Object.values(manifest.records || {})) {
+        if (keyPrefix && !record.canonicalKey.startsWith(keyPrefix)) continue;
+        if (!accept(record)) continue;
+        if (!targets.has(record.canonicalKey)) targets.set(record.canonicalKey, record);
+        if (record.status === STATUS_AVAILABLE && record.contentHash) hashes.add(record.contentHash);
+      }
+    }
+    if (!targets.size) return { available: true, tombstoned: 0, erased: 0, keys: [] };
+    const published = await publish([...targets.values()].map(record => ({
+      canonicalKey: record.canonicalKey, plmId: record.plmId, colourCode: record.colourCode, colour: record.colour,
+      source: SOURCE_MANUAL, ownership: OWNERSHIP_MANUAL, status: STATUS_DELETED,
+      sourceIdentity: record.sourceIdentity || record.canonicalKey,
+    })));
+    const alive = new Set();
+    for (const manifest of manifests) {
+      for (const record of Object.values(manifest.records || {})) {
+        if (targets.has(record.canonicalKey)) continue;
+        if (record.status === STATUS_AVAILABLE && record.contentHash) alive.add(record.contentHash);
+      }
+    }
+    let erased = 0;
+    for (const contentHash of hashes) {
+      if (alive.has(contentHash)) continue;
+      erased += await eraseContent(root, contentHash, manifests);
+    }
+    legacyContentCachePromise = null;
+    return { available: true, tombstoned: published.published || 0, erased, keys: [...targets.keys()], revision: published.revision || 0 };
+  }
+
   return {
     available, rootFolder, listDeviceHeads, readManifest, readDelta, mergedView,
-    lookup, lookupMany, readObject, publish, withRefreshLease, acquireRefreshLease, nextRevision,
+    lookup, lookupMany, readObject, publish, withRefreshLease, acquireRefreshLease, nextRevision, purge,
   };
 }
 

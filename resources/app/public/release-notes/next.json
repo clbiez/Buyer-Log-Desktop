@@ -1,14 +1,81 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "CP ve Koleksiyon model görselleri toplu ve kalıcı silinebilir",
+    "en": "CP and Collection model images can be deleted in bulk and permanently"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP’de ve Koleksiyon’da seçilen birden fazla modelin görseli tek işlemde kaldırılır; görseller hem bu bilgisayardan hem de ortak ağ klasöründen gerçekten silinir.",
+    "en": "Images of several models selected in CP or Collection are removed in one action and are truly deleted both from this computer and from the shared network folder."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-model-image-bulk-delete",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Model Görselleri",
+        "en": "CP Tracker · Model Images"
+      },
+      "title": {
+        "tr": "Seçili modellerin görselleri toplu ve kalıcı olarak kaldırılır",
+        "en": "Remove images of selected models in bulk, permanently"
+      },
+      "body": {
+        "tr": "CP’de satırları seçip Araçlar → Görselleri Kaldır ile seçili tüm model/renklerin görseli tek onayla silinir. Görsel kaydı mezar taşıyla kapanır, artık hiçbir modelin kullanmadığı yerel dosya silinir ve ortak ağ klasöründeki kayıt ile görsel baytları da temizlenir; başka bir model aynı görseli kullanıyorsa o görsel korunur. Ağ klasörüne o an erişilemiyorsa silme bağlantı gelince uygulanır.",
+        "en": "Select rows in CP and use Tools → Remove Images to delete the images of all selected model/colours with a single confirmation. The image record is closed with a tombstone, local files no longer used by any model are deleted, and the record and image bytes in the shared network folder are erased too; an image still used by another model is kept. If the network folder is unreachable, the deletion is applied when it reconnects."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-image-bulk-delete.png",
+        "alt": {
+          "tr": "CP Tracker’da yedi seçili modelin görseli kaldırılmış, bilgi bildirimi yerel ve ortak klasör silme sonucunu gösteriyor",
+          "en": "CP Tracker with images removed from seven selected models and a notice showing the local and shared-folder deletion result"
+        },
+        "caption": {
+          "tr": "Seçili yedi modelin görseli kaldırıldı; seçilmeyen modelin görseli duruyor.",
+          "en": "Images of the seven selected models are removed; the unselected model keeps its image."
+        }
+      },
+      "path": {
+        "tr": "CP Tracker → satır seç → Araçlar → Görselleri Kaldır",
+        "en": "CP Tracker → select rows → Tools → Remove Images"
+      }
+    },
+    {
+      "id": "collection-model-image-bulk-delete",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Model Görselleri",
+        "en": "Collection · Model Images"
+      },
+      "title": {
+        "tr": "Koleksiyon’da seçili modellerin görselleri toplu ve kalıcı olarak kaldırılır",
+        "en": "Remove images of selected Collection models in bulk, permanently"
+      },
+      "body": {
+        "tr": "Kendi Koleksiyonunuzda modelleri seçip Araçlar → Görselleri Kaldır ile tüm seçili görseller tek onayla silinir. PLM ID + Colour Code taşıyan modellerde CP ve Siparişler görseli de kalkar; Colour Code’u olmayan veya PLM’siz konsept modellerin görseli de silinir. Artık kullanılmayan yerel dosyalar ve ortak ağ klasöründeki kayıt ile görsel baytları temizlenir; başka bir modelin kullandığı görsel korunur.",
+        "en": "In your own Collection, select models and use Tools → Remove Images to delete all selected images with a single confirmation. For models with PLM ID + Colour Code the CP and Orders image is removed too; images of models without a Colour Code or concept models without a PLM ID are deleted as well. Local files no longer in use and the record and image bytes in the shared network folder are erased; an image still used by another model is kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-model-image-bulk-delete.png",
+        "alt": {
+          "tr": "Koleksiyon’da beş seçili modelin görseli kaldırılmış, bilgi bildirimi yerel ve ortak klasör silme sonucunu gösteriyor",
+          "en": "Collection with images removed from five selected models and a notice showing the local and shared-folder deletion result"
+        },
+        "caption": {
+          "tr": "Seçili beş modelin görseli kaldırıldı; seçilmeyen modelin görseli duruyor.",
+          "en": "Images of the five selected models are removed; the unselected model keeps its image."
+        }
+      },
+      "path": {
+        "tr": "Koleksiyon → model seç → Araçlar → Görselleri Kaldır",
+        "en": "Collection → select models → Tools → Remove Images"
+      }
+    }
+  ]
 }
