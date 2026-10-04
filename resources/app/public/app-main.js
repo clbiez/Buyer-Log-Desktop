@@ -1387,11 +1387,15 @@ function appendColumnActions(targetId,tableKey){
     menu.appendChild(btn);
   };
   const addColLabel=appLang==='en'?'Add Column':'Sütun Ekle';
+  const noteLabel=appLang==='en'?'Add Note Column':'Not Sütunu Ekle';
   const calcLabel=appLang==='en'?'Add Calculated Column':'Hesaplanan Sütun Ekle';
   if(tableKey==='cp'||tableKey==='orders'){
     // Orders'ın sütun şeması CP_COLS'un kopyası (syncOrdersColumnsFromCp); aynı
     // pencere kullanılır, ikinci bir sütun sistemi kurulmaz.
     add('add','i-columns-3',addColLabel,()=>openCpModelColumnModal(null,rerender));
+    // Not sütunu zaten CP/Orders'ın ortak tanım ve kayıt akışını kullanır.
+    // Sütun panelindeki eylemi ⋯ menüsünde de doğrudan erişilebilir kıl.
+    add('note','i-notebook',noteLabel,()=>void addCpNoteColumn(rerender));
   }else if(tableKey==='koleksiyon'){
     add('add','i-columns-3',addColLabel,()=>kolAddCustomColumn(null));
   }
