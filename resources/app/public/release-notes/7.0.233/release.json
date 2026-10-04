@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.233",
+  "channel": "stable",
+  "publishedAt": "2026-10-04",
+  "title": {
+    "tr": "LCW AI’dan Destek Al: tek merkezi AI motoru",
+    "en": "Get help from LCW AI: one central AI engine"
+  },
+  "summary": {
+    "tr": "Hesaplanan Sütun, CP Öncelik/Checklist Kuralları ve Otomasyonlar artık aynı LCW AI motorunu (GPT-6 Sol) kullanıyor. İsteğinizi yazın; LCW AI öneriyi üretir, Buyer Log kendi denetimiyle doğrular ve siz “Uygula” demeden hiçbir şey değişmez. LCW AI girişi kullanıcı menüsündeki Kurumsal Bağlantılar’dan, mevcut kurumsal Edge/Chrome profilinizle yapılır; parola istenmez, oturum yalnız uygulama belleğinde tutulur.",
+    "en": "Calculated Column, CP Priority/Checklist Rules and Automations now share the same LCW AI engine (GPT-6 Sol). Write your request; LCW AI produces a suggestion, Buyer Log validates it with its own checks and nothing changes until you press “Apply”. Sign in to LCW AI from Corporate Connections in the user menu with your existing corporate Edge/Chrome profile; no password is asked and the session is kept only in app memory."
+  },
+  "stats": {
+    "features": 4,
+    "improvements": 0,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "lcwai-calculated-column",
+      "type": "feature",
+      "module": {
+        "tr": "Hesaplanan Sütun · LCW AI",
+        "en": "Calculated Column · LCW AI"
+      },
+      "title": {
+        "tr": "Hesaplanan Sütun: LCW AI’dan Destek Al",
+        "en": "Calculated Column: Get help from LCW AI"
+      },
+      "body": {
+        "tr": "“AI ile yaz” kipi “LCW AI’dan Destek Al” oldu. Ne istediğinizi yazın (ör. “Margin % hesaplayan kolon oluştur”); LCW AI, tablonun sütunları ve örnek satırlarla formül, kolon adı, açıklama ve uyarı önerir. Öneri Buyer Log formül motorunda denetlenir; “Uygula” formülü Formül kutusuna koyar, kayıt yine Kaydet ile yapılır. Tekrar Dene ve İptal her an kullanılabilir. Kopyala/yapıştır yöntemi “Manuel yol” altında duruyor.",
+        "en": "The “Write with AI” mode is now “Get help from LCW AI”. Describe what you want (e.g. “Create a column that calculates Margin %”); LCW AI suggests a formula, column name, explanation and warnings using the table’s columns and sample rows. The Buyer Log formula engine checks the suggestion; “Apply” puts the formula in the Formula box and saving still happens with Save. Try Again and Cancel are always available. The copy/paste method stays under “Manual route”."
+      },
+      "path": {
+        "tr": "Tablo › Alanlar › Hesaplanan Sütun › LCW AI’dan Destek Al",
+        "en": "Table › Fields › Calculated Column › Get help from LCW AI"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-calculated-column.png",
+        "alt": {
+          "tr": "Hesaplanan sütun penceresinde LCW AI önerisi: Margin % formülü, kolon adı, denetim sonucu, açıklama ve uyarı; Uygula, Tekrar Dene, İptal (demo veri)",
+          "en": "LCW AI suggestion in the calculated column window: Margin % formula, column name, check result, explanation and warning; Apply, Try Again, Cancel (demo data)"
+        },
+        "caption": {
+          "tr": "Öneri Buyer Log formül motorunda denetlenir; Uygula yalnız formülü taslağa koyar.",
+          "en": "The Buyer Log formula engine checks the suggestion; Apply only puts the formula into the draft."
+        }
+      }
+    },
+    {
+      "id": "lcwai-cp-rules",
+      "type": "feature",
+      "module": {
+        "tr": "CP Öncelik / Checklist Kuralları · LCW AI",
+        "en": "CP Priority / Checklist Rules · LCW AI"
+      },
+      "title": {
+        "tr": "Kurallar: koşulu LCW AI’a yazdırın",
+        "en": "Rules: let LCW AI write the condition"
+      },
+      "body": {
+        "tr": "Kural düzenleyicideki “✦ LCW AI’dan Destek Al” sekmesinde isteği yazın (ör. “MB’ye 14 günden az kalan siparişleri kırmızı yap”). LCW AI kural dilinde bir koşul formülü önerir; Buyer Log kural motoru formülü doğrular ve şu an kaç siparişin eşleştiğini gösterir. “Uygula” koşulu kurala yazar; renk/öncelik kuralın kendi öncelik seçimidir.",
+        "en": "In the “✦ Get help from LCW AI” tab of the rule editor, write your request (e.g. “Make orders with less than 14 days to MB red”). LCW AI suggests a condition formula in the rule language; the Buyer Log rule engine validates it and shows how many orders match right now. “Apply” writes the condition into the rule; the colour/priority is the rule’s own priority choice."
+      },
+      "path": {
+        "tr": "Genel Bakış › Bugünün Üretim Öncelikleri › Kurallar",
+        "en": "Overview › Today’s Production Priorities › Rules"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-cp-rules.png",
+        "alt": {
+          "tr": "Öncelik kuralı düzenleyicisinde LCW AI önerisi: koşul formülü, geçerlilik ve eşleşen sipariş sayısı (demo veri)",
+          "en": "LCW AI suggestion in the priority rule editor: condition formula, validity and matching order count (demo data)"
+        },
+        "caption": {
+          "tr": "Kural motoru öneriyi doğrular ve canlı eşleşmeyi gösterir.",
+          "en": "The rule engine validates the suggestion and shows the live match."
+        }
+      }
+    },
+    {
+      "id": "lcwai-automations",
+      "type": "feature",
+      "module": {
+        "tr": "Otomasyonlar · LCW AI",
+        "en": "Automations · LCW AI"
+      },
+      "title": {
+        "tr": "Otomasyonlar: LCW AI ile kod, Buyer Log ile denetim",
+        "en": "Automations: code by LCW AI, checks by Buyer Log"
+      },
+      "body": {
+        "tr": "“✦ LCW AI’dan Destek Al” penceresinde veriyi seçip isteğinizi yazın. LCW AI, seçilen verinin alanları ve izinli tetikleyici/eylemlerle Automation Code önerir; öneri sunucudaki otomasyon denetiminden geçer. “Uygula ve denetle” kodu kod kutusuna koyar; Veride dene ve Kapalı taslak oluştur adımları değişmedi, hiçbir eylem kendiliğinden çalışmaz.",
+        "en": "In the “✦ Get help from LCW AI” window, choose the data and write your request. LCW AI suggests Automation Code using the chosen data’s fields and the allowed triggers/actions; the suggestion passes the server’s automation check. “Apply and check” puts the code in the code box; Try on data and Create disabled draft are unchanged and no action runs by itself."
+      },
+      "path": {
+        "tr": "Otomasyonlar › ✦ LCW AI’dan Destek Al",
+        "en": "Automations › ✦ Get help from LCW AI"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-automations.png",
+        "alt": {
+          "tr": "Otomasyon penceresinde LCW AI önerisi: Automation Code, denetim sonucu ve açıklama (demo veri)",
+          "en": "LCW AI suggestion in the automation window: Automation Code, check result and explanation (demo data)"
+        },
+        "caption": {
+          "tr": "Kod sunucuda denetlenir; taslak yine kapalı oluşturulur.",
+          "en": "The code is checked on the server; the draft is still created disabled."
+        }
+      }
+    },
+    {
+      "id": "lcwai-corporate-connections",
+      "type": "feature",
+      "module": {
+        "tr": "Kullanıcı Menüsü · Kurumsal Bağlantılar",
+        "en": "User Menu · Corporate Connections"
+      },
+      "title": {
+        "tr": "LCW AI Girişi ve Kurumsal Bağlantılar",
+        "en": "LCW AI Sign-In and Corporate Connections"
+      },
+      "body": {
+        "tr": "Kullanıcı menüsünde Kurumsal Bağlantılar bölümü PLM ve LCW AI durumunu ayrı ayrı gösterir (✓ Bağlı / ⚠ Oturum Yenilenmeli / Giriş Yap). LCW AI Girişi mevcut kurumsal Edge/Chrome profilinizde LCW AI’ı açar; girişi normal şekilde yaparsınız, Buyer Log parola istemez. Oturum yalnız uygulama belleğinde tutulur ve LCW AI sekmesinden sessizce yenilenir; AI istekleri doğrudan LCW AI servisine gider. Oturum düşerse bildirim “LCW AI Girişi Yap” aksiyonunu sunar.",
+        "en": "The Corporate Connections section of the user menu shows PLM and LCW AI status separately (✓ Connected / ⚠ Session Needs Renewal / Sign in). LCW AI Sign-In opens LCW AI in your existing corporate Edge/Chrome profile; you sign in as usual and Buyer Log never asks for a password. The session is kept only in app memory and renewed silently from the LCW AI tab; AI requests go directly to the LCW AI service. If the session drops, a notification offers “Sign in to LCW AI”."
+      },
+      "path": {
+        "tr": "Kullanıcı menüsü › Kurumsal Bağlantılar › LCW AI Girişi",
+        "en": "User menu › Corporate Connections › LCW AI Sign-In"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-corporate-connections.png",
+        "alt": {
+          "tr": "Kullanıcı menüsünde Kurumsal Bağlantılar: PLM Giriş Yap, LCW AI ✓ Bağlı (demo kullanıcı)",
+          "en": "Corporate Connections in the user menu: PLM Sign in, LCW AI ✓ Connected (demo user)"
+        },
+        "caption": {
+          "tr": "PLM ve LCW AI oturumları birbirinden bağımsızdır.",
+          "en": "PLM and LCW AI sessions are independent of each other."
+        }
+      }
+    }
+  ]
+}
