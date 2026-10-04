@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.235",
+  "channel": "stable",
+  "publishedAt": "2026-10-05",
+  "title": {
+    "tr": "LCW AI genel çalışma alanı",
+    "en": "LCW AI general workspace"
+  },
+  "summary": {
+    "tr": "Sol menüde ve üst çubukta yeni LCW AI modülü: her konuda soru sorun, dosya ekleyin, isteğe bağlı olarak Buyer Log verisini bağlam olarak verin. LCW AI artık Buyer Log’un modüllerini, kavramlarını ve formül/kural/otomasyon dillerini gerçek motorlardan türetilen bilgiyle tanıyor.",
+    "en": "New LCW AI module in the left menu and top bar: ask anything, attach files and optionally give Buyer Log data as context. LCW AI now knows Buyer Log’s modules, concepts and formula/rule/automation languages from knowledge derived from the real engines."
+  },
+  "stats": {
+    "features": 2,
+    "improvements": 0,
+    "fixes": 2
+  },
+  "changes": [
+    {
+      "id": "lcwai-global-workspace",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI: Buyer Log’un her yerinden genel asistan",
+        "en": "LCW AI: a general assistant from anywhere in Buyer Log"
+      },
+      "body": {
+        "tr": "Sol menüdeki LCW AI ya da üst çubuktaki LCW AI düğmesiyle açılan ChatGPT benzeri çalışma alanı. Cevaplar akarak gelir; tablo, liste ve kod blokları güvenli biçimde gösterilir. Aynı sohbette devam edebilir, Yeni Sohbet açabilir, isteği iptal edebilir, cevabı kopyalayabilir, yeniden üretebilir ya da yeni mesajda kullanabilirsiniz. “Dosya Ekle” ile birden fazla dosya doğrudan LCW AI’a yüklenir. Hesaplanan Sütun, Kurallar ve Otomasyonlar içindeki “LCW AI’dan Destek Al” alanları aynen sürüyor; hepsi aynı LCW AI motorunu ve aynı girişi kullanır.",
+        "en": "A ChatGPT-like workspace opened from LCW AI in the left menu or the LCW AI button in the top bar. Answers stream in; tables, lists and code blocks are shown safely. You can continue the same chat, start a New Chat, cancel a request, and copy, regenerate or reuse an answer in a new message. “Add File” uploads several files directly to LCW AI. The “Get help from LCW AI” areas in Calculated Column, Rules and Automations stay as they are; all use the same LCW AI engine and sign-in."
+      },
+      "path": {
+        "tr": "Sol menü › LCW AI · Üst çubuk › LCW AI",
+        "en": "Left menu › LCW AI · Top bar › LCW AI"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-global-chat.png",
+        "alt": {
+          "tr": "LCW AI çalışma alanında Backlog risk özeti: tablo ve öneri, Kopyala / Yeni mesajda kullan / Yeniden üret (demo veri)",
+          "en": "Backlog risk summary in the LCW AI workspace: table and recommendation with Copy / Use in new message / Regenerate (demo data)"
+        },
+        "caption": {
+          "tr": "Sohbet, dosya ve Buyer Log bağlamı tek ekranda.",
+          "en": "Chat, files and Buyer Log context on one screen."
+        }
+      }
+    },
+    {
+      "id": "lcwai-global-context",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Bağlam",
+        "en": "LCW AI · Context"
+      },
+      "title": {
+        "tr": "Bağlam Ekle: Buyer Log verisini isteğe bağlı olarak verin",
+        "en": "Add Context: optionally give Buyer Log data"
+      },
+      "body": {
+        "tr": "Composer’daki “Bağlam Ekle” menüsü, en son çalıştığınız ekranı öne alarak eklenebilecek verileri listeler: CP Tracker, Siparişler, Nakliye ve Koleksiyon’da görünen (filtreli) ya da seçili kayıtlar ve aktif filtreler, Overview CP kümesi, Backlog kayıtları. Bağlam zorunlu değildir; hiçbir veri eklemeden de soru sorabilirsiniz. LCW AI her istekte yalnız ilgili Buyer Log bilgisini alır: formül, kural ve otomasyon dili gerçek motorlardan türetilir, uydurma sözdizimi önerilmez.",
+        "en": "The “Add Context” menu in the composer lists the data you can add, putting the screen you last worked on first: visible (filtered) or selected records and active filters in CP Tracker, Orders, Shipping and Collection, the Overview CP set and Backlog records. Context is optional; you can ask without adding any data. Each request gets only the relevant Buyer Log knowledge: the formula, rule and automation languages are derived from the real engines, so no invented syntax is suggested."
+      },
+      "path": {
+        "tr": "LCW AI › Bağlam Ekle",
+        "en": "LCW AI › Add Context"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-global-context.png",
+        "alt": {
+          "tr": "Bağlam Ekle menüsü açık; Backlog kayıtları bağlam olarak eklenmiş (demo veri)",
+          "en": "Add Context menu open with Backlog records added as context (demo data)"
+        },
+        "caption": {
+          "tr": "Eklenen bağlam mesajın üstünde etiket olarak görünür ve tek tıkla kaldırılır.",
+          "en": "Added context appears as a chip above the message and is removed with one click."
+        }
+      }
+    },
+    {
+      "id": "lcwai-rules-meanings",
+      "type": "fix",
+      "module": {
+        "tr": "CP Kuralları · LCW AI",
+        "en": "CP Rules · LCW AI"
+      },
+      "title": {
+        "tr": "Kurallar: LCW AI alan anlamlarını biliyor, öncelik de önerebiliyor",
+        "en": "Rules: LCW AI knows field meanings and can suggest a priority"
+      },
+      "body": {
+        "tr": "“In Store tarihine yetişmeyecek siparişler için kritik uyarı” gibi istekler artık Teslimat sonucu ve Hedefe tampon alanlarıyla karşılanır; LCW AI her hesaplanan alanın anlamını, ekranda seçili hedef türünü (Retail Depo / In Store) ve seçilebilir öncelikleri bilir ve “Kritik” gibi bir öncelik önerebilir. LCW AI bilerek öneri vermediğinde ham cevap formül sanılıp “Desteklenmeyen karakter: {” hatası gösterilmez; LCW AI’ın açıklaması gösterilir.",
+        "en": "Requests such as “critical alert for orders that will miss the In Store date” are now answered with the Delivery outcome and Buffer to target fields; LCW AI knows each calculated field’s meaning, the target type selected on screen (Retail / In Store) and the available priorities, and can suggest a priority such as “Critical”. When LCW AI deliberately gives no suggestion, its raw answer is no longer treated as a formula (“Unsupported character: {”); LCW AI’s explanation is shown instead."
+      },
+      "path": {
+        "tr": "Overview › Bugünün Üretim Öncelikleri › Kurallar › LCW AI’dan Destek Al",
+        "en": "Overview › Today’s Production Priorities › Rules › Get help from LCW AI"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-rules-priority.png",
+        "alt": {
+          "tr": "Kural düzenleyicide LCW AI önerisi: Teslimat sonucu koşulu, Öncelik Kritik, formül geçerli (demo veri)",
+          "en": "LCW AI suggestion in the rule editor: Delivery outcome condition, Priority Critical, formula valid (demo data)"
+        },
+        "caption": {
+          "tr": "Uygula koşulu ve önerilen önceliği kurala yazar.",
+          "en": "Apply writes the condition and suggested priority into the rule."
+        }
+      }
+    },
+    {
+      "id": "app-icon-neutral-taskbar",
+      "type": "fix",
+      "module": {
+        "tr": "Masaüstü uygulaması",
+        "en": "Desktop app"
+      },
+      "title": {
+        "tr": "Görev çubuğu simgesi düzeltildi, yeni nötr açık simge",
+        "en": "Taskbar icon fixed, new neutral light icon"
+      },
+      "body": {
+        "tr": "Windows görev çubuğunda Buyer Log düğmesi bazen genel “dosya” simgesi gösteriyordu; artık uygulama simgesi görünür. Simge de yenilendi: fırçalanmış metal yerine sıcak/soğuk tonu olmayan, aydınlık nötr gri zemin ve küçük boyutlarda da net okunan BL harfleri.",
+        "en": "The Buyer Log button on the Windows taskbar sometimes showed a generic “file” icon; the app icon now appears. The icon is also refreshed: instead of brushed metal, a bright neutral grey background with no warm/cool tint and BL letters that stay crisp at small sizes."
+      },
+      "path": {
+        "tr": "Windows görev çubuğu · Giriş ekranı",
+        "en": "Windows taskbar · Sign-in screen"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "app-icon-neutral.png",
+        "alt": {
+          "tr": "Giriş ekranında yeni nötr açık Buyer Log simgesi",
+          "en": "New neutral light Buyer Log icon on the sign-in screen"
+        },
+        "caption": {
+          "tr": "Aydınlık, nötr gri zeminli yeni BL simgesi.",
+          "en": "New BL icon on a bright neutral grey background."
+        }
+      }
+    }
+  ]
+}

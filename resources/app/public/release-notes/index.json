@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.235",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "LCW AI genel çalışma alanı",
+        "en": "LCW AI general workspace"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 0,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.235/release.json"
+    },
+    {
       "version": "7.0.234",
       "publishedAt": "2026-10-04",
       "title": {
