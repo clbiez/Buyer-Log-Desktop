@@ -1,14 +1,33 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Checklist kayıtları ve ekleri korunur",
+    "en": "Checklist decisions and evidence stay saved"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Checklist seçimleri ve detay değişiklikleri anında kaydedilir; yeniden açılış, tarih değişikliği ve bağlantı kesintisinde kayıtlar korunur.",
+    "en": "Checklist selections and detail edits save immediately and remain available after reopening, schedule changes and connection interruptions."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "checklist-durable-save",
+      "type": "fix",
+      "module": { "tr": "Checklist", "en": "Checklist" },
+      "title": { "tr": "Durum ve detaylar yeniden açılışta korunur", "en": "Decisions and details persist after reopening" },
+      "body": {
+        "tr": "Bekliyor, Onaylandı, Reddedildi ve Gerekmiyor seçimleri yükleme tarihi değişse de korunur. Not, rapor numarası, gerçekleşme tarihi ve PDF ekleri durum değiştirirken silinmez. Detaylar yazıldıkça kaydedilir; bağlantı kesilirse bekleyen kayıt bu cihazda tutulur ve tekrar gönderilir. Kayıt hataları ve çakışmalar gösterilir. Okunamayan kayıtların üzerine boş veri yazılmaz; sunucu son sağlam kopyadan kurtarma yapabilir. Koleksiyon Checklist seçimlerinde sunucu kaydı hemen başlar.",
+        "en": "Pending, Approved, Rejected and Not Required selections persist when the planned load date changes. Notes, report numbers, actual dates and PDF attachments stay available across status changes. Detail edits save as you type; interrupted saves remain queued on this device and are retried. Save errors and conflicts are shown. Unreadable records are protected from empty overwrites, and the server can recover its last good copy. Collection Checklist selections start the server save immediately."
+      },
+      "path": { "tr": "CP Tracker → Checklist → Detaylar", "en": "CP Tracker → Checklist → Details" },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-durable-save.png",
+        "alt": { "tr": "Yeniden açılan Checklist detaylarında Reddedildi, not, rapor numarası, tarih ve PDF ekleri", "en": "Reopened Checklist details showing Rejected, a note, report number, date and PDF attachments" },
+        "caption": { "tr": "Gerçek uygulamada kaydedilip yeniden açılan demo kaydının durumu ve tüm detayları korunur.", "en": "The demo record retains its decision and all details after saving and reopening in the application." }
+      }
+    }
+  ]
 }

@@ -3,10 +3,11 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
+const { SERVER_DATA_ROOT, atomicWriteJson, atomicWriteBuffer } = require('../user-data');
 const { withFileLeaseSync } = require('./shared-file-transaction');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'checklist-supplier-sync.json');
+const RECOVERY_FILE = path.join(SERVER_DATA_ROOT, 'checklist-supplier-sync.last-good.json');
 const SCHEMA_VERSION = 1;
 const MAX_ANSWERS = 250000;
 const MAX_TOMBSTONES = 250000;
@@ -83,7 +84,7 @@ function addAttachment(raw, actor) {
   const addedAt = new Date().toISOString();
   const filename = attachmentDisplayName({ ...(item.context || {}), addedAt }, item.filename);
   fs.mkdirSync(ATTACHMENT_ROOT, { recursive: true });
-  fs.writeFileSync(attachmentDiskPath(id), buffer);
+  atomicWriteBuffer(attachmentDiskPath(id), buffer);
   return {
     id, filename,
     originalName: safeSegment(item.filename || 'attachment', 500),
@@ -99,6 +100,10 @@ function getAttachmentPath(id) {
 function deleteAttachment(id) {
   const fullPath = attachmentDiskPath(id);
   if (!fullPath || !fs.existsSync(fullPath)) return false;
+  const store = read();
+  const referenced = Object.values(store.answers).concat(Object.values(store.tombstones), store.events)
+    .some(record => (record.attachments || []).some(item => item.id === id));
+  if (referenced) return false;
   fs.unlinkSync(fullPath);
   return true;
 }
@@ -107,30 +112,46 @@ function emptyStore() {
 }
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
 function read() {
+  let raw;
+  const exists = fs.existsSync(FILE), recoveryExists = fs.existsSync(RECOVERY_FILE);
+  if (!exists && !recoveryExists) return emptyStore();
+  const parse = filename => {
+    const value = JSON.parse(fs.readFileSync(filename, 'utf8'));
+    if (!value || typeof value !== 'object' || Array.isArray(value)
+      || !value.answers || typeof value.answers !== 'object' || Array.isArray(value.answers)
+      || !Array.isArray(value.definitions)) throw new Error('Invalid checklist store structure.');
+    return value;
+  };
   try {
-    if (!fs.existsSync(FILE)) return emptyStore();
-    const raw = JSON.parse(fs.readFileSync(FILE, 'utf8'));
+    raw = parse(FILE);
+  } catch (error) {
+    try { raw = parse(RECOVERY_FILE); }
+    catch (_) { throw Object.assign(new Error('Checklist storage is unreadable; existing data was preserved.'), { code: 'CHECKLIST_STORE_UNREADABLE', statusCode: 503, cause: error }); }
+  }
+  {
     const store = raw && typeof raw === 'object' ? raw : emptyStore();
     store.schemaVersion = SCHEMA_VERSION;
     store.revision = Number(store.revision) || 0;
     store.updatedAt = text(store.updatedAt, 80);
-    store.definitions = Array.isArray(store.definitions) ? store.definitions.slice(0, MAX_DEFINITIONS) : [];
+    store.definitions = Array.isArray(store.definitions) ? store.definitions : [];
     store.answers = store.answers && typeof store.answers === 'object' ? store.answers : {};
     store.tombstones = store.tombstones && typeof store.tombstones === 'object' ? store.tombstones : {};
     store.events = Array.isArray(store.events) ? store.events.slice(-MAX_EVENTS) : [];
     return store;
-  } catch (_) { return emptyStore(); }
+  }
 }
 function write(store) {
   store.schemaVersion = SCHEMA_VERSION;
   store.revision = (Number(store.revision) || 0) + 1;
   store.updatedAt = new Date().toISOString();
   const answerKeys = Object.keys(store.answers || {});
-  if (answerKeys.length > MAX_ANSWERS) answerKeys.slice(0, answerKeys.length - MAX_ANSWERS).forEach(key => delete store.answers[key]);
   const tombKeys = Object.keys(store.tombstones || {});
-  if (tombKeys.length > MAX_TOMBSTONES) tombKeys.slice(0, tombKeys.length - MAX_TOMBSTONES).forEach(key => delete store.tombstones[key]);
+  if (answerKeys.length > MAX_ANSWERS || tombKeys.length > MAX_TOMBSTONES) {
+    throw Object.assign(new Error('Checklist capacity reached; existing records were preserved.'), { code: 'CHECKLIST_CAPACITY', statusCode: 507 });
+  }
   if (store.events.length > MAX_EVENTS) store.events = store.events.slice(-MAX_EVENTS);
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
+  atomicWriteJson(RECOVERY_FILE, store);
   atomicWriteJson(FILE, store);
   return store;
 }
@@ -196,6 +217,7 @@ function publicPayload() {
 }
 
 function replaceDefinitions(definitions, actor) {
+  if (Array.isArray(definitions) && definitions.length > MAX_DEFINITIONS) throw Object.assign(new Error('Too many checklist definitions.'), { code: 'CHECKLIST_CAPACITY', statusCode: 507 });
   const list = (Array.isArray(definitions) ? definitions : []).map(normalizeDefinition).filter(Boolean);
   const seen = new Set();
   const unique = list.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; }).slice(0, MAX_DEFINITIONS);
@@ -210,13 +232,14 @@ function replaceDefinitions(definitions, actor) {
 }
 
 function applyEntries(entries, actor, options = {}) {
-  const input = Array.isArray(entries) ? entries.slice(0, 100000) : [];
+  if (Array.isArray(entries) && entries.length > 100000) throw Object.assign(new Error('Too many checklist changes in one request.'), { code: 'CHECKLIST_CAPACITY', statusCode: 413 });
+  const input = Array.isArray(entries) ? entries : [];
   const who = actorInfo(actor);
   const source = text(options.source || 'buyer_log', 80) || 'buyer_log';
   return withFileLeaseSync(FILE, () => {
     const store = read();
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
-    const changedKeys = [];
+    const changedKeys = [], rejectedAt = {};
     for (const raw of input) {
       if (!raw || typeof raw !== 'object') { skipped += 1; continue; }
       const orderKey = text(raw.orderKey, 300);
@@ -229,40 +252,48 @@ function applyEntries(entries, actor, options = {}) {
       const previous = store.answers[key];
       const tomb = store.tombstones[key];
       const previousAt = previous ? String(previous.at || '') : tomb ? String(tomb.at || '') : '';
+      const previousEvidence = previous || tomb;
       // Supplier Excel carries the export timestamp as baseAt. Only an imported
       // supplier workbook is conflict-gated by that old snapshot. An explicit CP
       // edit is a live Buyer Log action and must not be discarded merely because
       // its client baseline is older; normal "at" ordering below still prevents
       // an actually older live event from overwriting a newer one.
       if (source === 'supplier_excel' && baseAt && previousAt && previousAt > baseAt) { conflicts += 1; continue; }
+      // Apply the same ordering to Pending as every other status: a late beacon
+      // or offline retry must never clear a more recent answer.
+      if (previousAt && previousAt > at) { skipped += 1; rejectedAt[key] = previousAt; continue; }
+      if (Array.isArray(raw.attachments) && (raw.attachments.length > MAX_ATTACHMENTS_PER_ANSWER
+        || raw.attachments.some(item => !cleanAttachmentMeta(item)))) {
+        throw Object.assign(new Error('Invalid or oversized checklist attachment list; existing evidence was preserved.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
+      }
+      if (Object.prototype.hasOwnProperty.call(raw, 'attachments') && !Array.isArray(raw.attachments)) throw Object.assign(new Error('Checklist attachments must be an array.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
+      if (String(raw.note || '').length > 2000 || String(raw.reportNumber || '').length > 300) throw Object.assign(new Error('Checklist evidence exceeds the allowed field length.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       const common = {
         key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
         byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
-        note: Object.prototype.hasOwnProperty.call(raw, 'note') ? text(raw.note, 2000) : text(previous && previous.note, 2000),
+        note: String(Object.prototype.hasOwnProperty.call(raw, 'note') ? raw.note || '' : previousEvidence && previousEvidence.note || '').slice(0, 2000),
         supplier: text(raw.supplier, 300), itemLabel: text(raw.itemLabel, 200),
-        reportNumber: Object.prototype.hasOwnProperty.call(raw, 'reportNumber') ? text(raw.reportNumber, 300) : text(previous && previous.reportNumber, 300),
-        actualDate: Object.prototype.hasOwnProperty.call(raw, 'actualDate') ? text(raw.actualDate, 40) : text(previous && previous.actualDate, 40),
+        reportNumber: Object.prototype.hasOwnProperty.call(raw, 'reportNumber') ? text(raw.reportNumber, 300) : text(previousEvidence && previousEvidence.reportNumber, 300),
+        actualDate: Object.prototype.hasOwnProperty.call(raw, 'actualDate') ? text(raw.actualDate, 40) : text(previousEvidence && previousEvidence.actualDate, 40),
         attachments: (Object.prototype.hasOwnProperty.call(raw, 'attachments')
           ? (Array.isArray(raw.attachments) ? raw.attachments : [])
-          : (Array.isArray(previous && previous.attachments) ? previous.attachments : []))
+          : (Array.isArray(previousEvidence && previousEvidence.attachments) ? previousEvidence.attachments : []))
           .slice(0, MAX_ATTACHMENTS_PER_ANSWER).map(cleanAttachmentMeta).filter(Boolean),
       };
       if (state === 'open') {
-        if (!previous && store.tombstones[key] && String(store.tombstones[key].at || '') >= at) { skipped += 1; continue; }
         delete store.answers[key];
-        store.tombstones[key] = { ...common, state: 'open' };
+        store.tombstones[key] = { ...common, state: 'open', ...(raw.deleted === true ? { deleted: true } : {}) };
         store.events.push({ type: 'answer-opened', ...common, previousState: previous && previous.state || '' });
         cleared += 1; changedKeys.push(key);
         continue;
       }
-      if (previousAt && previousAt > at) { skipped += 1; continue; }
       store.answers[key] = { ...common, state };
       delete store.tombstones[key];
       store.events.push({ type: 'answer-upserted', ...common, state, previousState: previous && previous.state || '' });
       updated += 1; changedKeys.push(key);
     }
     write(store);
-    return { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys };
+    return { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt };
   });
 }
 

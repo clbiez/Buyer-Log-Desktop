@@ -126,23 +126,29 @@
      aynı makinedeki iki kullanıcı aynı kontrol ayarlarını ve aynı "tamamlandı"
      cevaplarını paylaşırdı. Önekler user-storage.js'in İKİ listesine de
      kayıtlı; okuma/yazma o sarmalayıcıdan geçmeli. */
+  const unreadablePreferenceStores = new Set();
   const store = {
     get(key) {
-      try { return (window.BLStorage ? window.BLStorage.getItem(key) : localStorage.getItem(key)); }
-      catch (_) { return null; }
+      return window.BLStorage ? window.BLStorage.getItem(key) : localStorage.getItem(key);
     },
     set(key, value) {
-      try { if (window.BLStorage) window.BLStorage.setItem(key, value); else localStorage.setItem(key, value); }
-      catch (_) { /* kota dolduysa ekran çalışmaya devam eder */ }
+      if (unreadablePreferenceStores.has(key)) throw new Error(L('Okunamayan ayar/kural kaydı korundu. Kaydı kurtarmadan üzerine yazılamaz.', 'The unreadable settings/rules record was preserved. Recover it before overwriting it.'));
+      if (window.BLStorage) window.BLStorage.setItem(key, value); else localStorage.setItem(key, value);
+      if (store.get(key) !== value) throw new Error(L('Kayıt depoya yazılamadı.', 'The record could not be written to storage.'));
     },
   };
 
-  /* Kullanıcı tercihleri. Bozuk/eski kayıt okunamazsa varsayılana düşülür —
-     tercih kaydı yüzünden ekran açılmaması kabul edilemez. */
+  /* Ekran okunamayan tercihlerde de açılır; hasarlı kayıt korunur ve
+     varsayılanlar onun üzerine kaydedilmez. Kural anahtarları ayrıca okunur. */
   let migrateRuleStores = false;
   function loadPrefs() {
+    let parsed = null;
     try {
-      const parsed = JSON.parse(store.get(PREF_KEY) || 'null');
+      parsed = JSON.parse(store.get(PREF_KEY) || 'null');
+      if (parsed != null && (typeof parsed !== 'object' || Array.isArray(parsed))) throw new Error('Invalid preference store');
+      if (parsed && ((parsed.rules != null && !Array.isArray(parsed.rules)) || (parsed.deletedRuleIds != null && !Array.isArray(parsed.deletedRuleIds)))) throw new Error('Invalid legacy rule store');
+    } catch (_) { parsed = null; unreadablePreferenceStores.add(PREF_KEY); }
+    try {
       // Görünüm tercihi hiç kaydedilmemiş olsa da (ör. kurallar Ön Ayar
       // Paylaşımı ile alındı) kişisel kural anahtarları okunmalı.
       const raw = parsed && typeof parsed === 'object' ? parsed : {};
@@ -201,19 +207,23 @@
         state.attentionExclusions = normalizeAttentionExclusions(raw.attentionExclusions || raw.attentionExceptions);
         state.moduleLayout = normalizeModuleLayouts(raw.moduleLayout);
       }
-    } catch (_) { /* varsayılanlarla devam */ }
+    } catch (_) { unreadablePreferenceStores.add(PREF_KEY); unreadablePreferenceStores.add(RULE_KEYS.priority); unreadablePreferenceStores.add(RULE_KEYS.checklist); }
     try {
       const raw = JSON.parse(store.get(ANSWER_KEY) || 'null');
-      if (raw && typeof raw === 'object') state.answers = raw;
-    } catch (_) { state.answers = {}; }
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) state.answers = raw;
+      else if (raw != null) throw new Error('Invalid checklist answer store');
+    } catch (_) { state.answers = {}; state.answerStoreError = true; }
   }
   /* Kural kayıtları. Yeni anahtar yoksa (ilk açılış) eski PREF_KEY içindeki
      rules/deletedRuleIds okunur; ilk kayıtta yeni anahtarlara taşınır. */
   function readRuleStore(kind) {
     try {
       const parsed = JSON.parse(store.get(RULE_KEYS[kind]) || 'null');
-      return parsed && typeof parsed === 'object' && Array.isArray(parsed.rules) ? parsed : null;
-    } catch (_) { return null; }
+      if (parsed == null) return null;
+      if (typeof parsed !== 'object' || Array.isArray(parsed) || !Array.isArray(parsed.rules)
+        || (parsed.deletedRuleIds != null && !Array.isArray(parsed.deletedRuleIds))) throw new Error('Invalid rule store');
+      return parsed;
+    } catch (_) { unreadablePreferenceStores.add(RULE_KEYS[kind]); return null; }
   }
   function loadRuleStores(legacy) {
     const priority = readRuleStore('priority');
@@ -283,22 +293,45 @@
     } catch (_) { /* eski browser: persistence yine çalışır */ }
   }
   function savePrefs() {
-    store.set(PREF_KEY, JSON.stringify({
+    try {
+      if (unreadablePreferenceStores.size) throw new Error(L('Okunamayan ayar/kural kaydı korundu. Kaydı kurtarmadan değişiklik kaydedilemez.', 'The unreadable settings/rules record was preserved. Recover it before saving changes.'));
+      // Legacy kurallar PREF_KEY'den ancak iki yeni kayıt da yazıldıktan sonra çıkar.
+      saveRules();
+      store.set(PREF_KEY, JSON.stringify({
         perspective: state.perspective, settings: state.settings,
         checklistSettings: state.checklistSettings, hidden: state.hidden,
         attentionColumns: state.attentionColumns, attentionExclusions: state.attentionExclusions,
         moduleLayout: state.moduleLayout,
-    }));
-    saveRules();
-    notifyDecisionContextChanged('preferences');
+      }));
+      notifyDecisionContextChanged('preferences');
+    } catch (error) {
+      if (typeof showToast === 'function') showToast(L('Checklist ayarları kaydedilemedi: ', 'Checklist settings could not be saved: ') + error.message);
+      throw error;
+    }
   }
-  function saveAnswers() {
-    store.set(ANSWER_KEY, JSON.stringify(state.answers));
+  function saveAnswers(options) {
+    let saved = true;
+    try {
+      if (state.answerStoreError && options && options.recovered === true) {
+        const storage = window.BLStorage;
+        const native = storage && storage.native || localStorage;
+        const recoveryKey = storage && storage.actualKey ? storage.actualKey('lcw.cp.checklist.recovery.v1') : 'lcw.cp.checklist.recovery.v1';
+        native.setItem(recoveryKey, store.get(ANSWER_KEY) || '');
+        state.answerStoreError = false;
+      }
+      if (state.answerStoreError) throw new Error(L('Önceki checklist kaydı okunamıyor; üzerine yazılmadı.', 'The previous checklist record cannot be read; it was not overwritten.'));
+      store.set(ANSWER_KEY, JSON.stringify(state.answers));
+    }
+    catch (error) {
+      saved = false;
+      if (typeof window.showToast === 'function') window.showToast(L('Checklist yerel kaydı başarısız; sunucu kaydı bekleniyor: ', 'Checklist local save failed; waiting for server save: ') + error.message);
+    }
     notifyDecisionContextChanged('checklist-answer');
+    return saved;
   }
 
-  /* Tek cevap yazma yolu: Genel Bakış listesi, CP hücresi ve Excel içe
-     aktarma aynı kanonik durumu yazar. Pending = cevap yok (kayıt silinir). */
+  /* Tek cevap yazma yolu: Genel Bakış listesi ve CP hücresi aynı kanonik
+     durumu yazar. Pending dahil tüm seçimler ek bilgileriyle saklanır. */
   function setChecklistAnswer(analysis, itemId, status, meta) {
     if (!analysis || !analysis.orderKey || !itemId) return false;
     const key = Checklist.answerKey(analysis.orderKey, itemId);
@@ -316,16 +349,24 @@
       if (Object.prototype.hasOwnProperty.call(previous, field)) preserved[field] = previous[field];
     });
     const answerMeta = { ...preserved, ...(meta || {}), by };
+    // Millisecond-equal rapid edits must still have a strictly ordered identity.
+    const remoteAt = window.BLChecklistSupplierSync && typeof window.BLChecklistSupplierSync.latestAnswerAt === 'function'
+      ? Math.max(window.BLChecklistSupplierSync.latestAnswerAt(key), optionKey ? window.BLChecklistSupplierSync.latestAnswerAt(optionKey) : 0) : 0;
+    const lastAt = Math.max(Date.parse(previous.at || '') || 0, state.lastAnswerAt || 0, remoteAt);
+    answerMeta.at = new Date(Math.max(Date.now(), lastAt + 1)).toISOString();
+    state.lastAnswerAt = Date.parse(answerMeta.at);
 
     if (next === 'open') {
-      delete state.answers[key];
+      state.answers[key] = Checklist.makeAnswer('open', analysis, answerMeta);
       // "Bekliyor" seçimi paylaşılan onayı da geri alır; aksi hâlde hücre
       // anında yeniden Approved görünürdü.
-      if (optionKey) delete state.answers[optionKey];
+      if (optionKey && state.answers[optionKey]) {
+        state.answers[optionKey] = Checklist.makeAnswer('open', analysis, { ...state.answers[optionKey], at: answerMeta.at, by, loadDate: null });
+      }
     } else if (next === 'approved' && optionKey) {
       // Aynı PLM ID + Model Name + Colour Code için kalıcı seçenek onayı.
       // Yükleme tarihi PO'ya özgü olduğundan bu cevap tarihe bağlanmaz.
-      delete state.answers[key];
+      state.answers[key] = Checklist.makeAnswer(next, analysis, answerMeta);
       state.answers[optionKey] = Checklist.makeAnswer(next, analysis, { ...answerMeta, loadDate: null });
     } else {
       // Rejected / Not Required PO'ya özeldir ve paylaştırılmaz. PO cevabı,
@@ -348,9 +389,11 @@
     const incoming = (Array.isArray(definitions) ? definitions : [])
       .map(item => Rules.normalizeRule(item, 'checklist'))
       .filter(rule => rule && !rule.builtIn && !known.has(rule.id) && !deleted.has(rule.id));
+    const previousRules = state.rules;
     state.rules = [...state.rules, ...incoming];
     state.sharedChecklistAdopted = true;
-    savePrefs();
+    try { savePrefs(); }
+    catch (error) { state.rules = previousRules; state.sharedChecklistAdopted = false; throw error; }
     recompute();
     return incoming.length > 0;
   }
@@ -484,7 +527,7 @@
       <td><b>${esc(itemLabel(item))}</b><small>${esc(questionOf(item))}</small></td>
       <td class="num">${int(item.rows - (item.rejected || 0))}${item.plmOpen ? ` <span class="cpaPlm tone-wait" title="${esc(L('PLM\'de açık numune talebi olan sipariş', 'Orders with an open sample request in PLM'))}">PLM ${int(item.plmOpen)}</span>` : ''}${item.plmRejected ? ` <span class="cpaPlm tone-bad" title="${esc(L('PLM\'de reddedilmiş numune talebi olan sipariş', 'Orders with a rejected sample request in PLM'))}">PLM ${int(item.plmRejected)}</span>` : ''}</td>
       <td class="num">${item.rejected ? `<span class="cpaFlag tone-bad" title="${esc(L('Reddedildi olarak işaretlenen sipariş', 'Orders marked as rejected'))}">${int(item.rejected)}</span>` : ''}</td>
-      <td class="num">${item.reopened ? `<span class="cpaFlag" title="${esc(L('Yükleme tarihi değiştiği için yeniden soruldu', 'Re-asked because the load date changed'))}">${int(item.reopened)}</span>` : ''}</td>
+      <td class="num">${item.reopened ? `<span class="cpaFlag" title="${esc(L('Yükleme tarihi değişti; kayıtlı seçim korundu', 'Load date changed; the saved decision was kept'))}">${int(item.reopened)}</span>` : ''}</td>
       <td class="act"><button type="button" class="cpaBtn sm" data-cpa-open-checklist="${esc(item.id)}">${esc(L('Aç', 'Open'))}</button></td>
     </tr>`).join('');
     const disabled = summary.disabled.length
@@ -1417,7 +1460,7 @@
         <div><b>${esc(itemLabel(bucket))}</b><small>${esc(questionOf(bucket))}</small></div>
         <button type="button" data-cpa-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
       <div class="cpaModalBody">
-        <p class="cpaNote">${esc(L('Onaylandı veya Gerekmiyor seçilen sipariş için soru bir daha sorulmaz. Reddedildi açık kalır ve aksiyon ister. Yükleme tarihi değişirse soru yeniden gelir.', 'Approved or Not Required stops the question for that order. Rejected stays open and needs action. If the load date changes, the question comes back.'))}</p>
+        <p class="cpaNote">${esc(L('Seçimler anında kaydedilir. Yükleme tarihi değişse de durum, not ve ekler korunur. Reddedildi aksiyon ister; Bekliyor seçimi ek bilgileri silmez.', 'Selections are saved immediately. Status, notes and attachments survive load date changes. Rejected needs action; Pending keeps the evidence.'))}</p>
         <div class="cpaScroll"><table class="cpaTable"><thead><tr>
           <th>${esc(L('Sipariş', 'Order'))}</th><th>${esc(L('Model', 'Style'))}</th><th>${esc(L('Üretici', 'Supplier'))}</th>
           <th class="num">${esc(L('Yükleme', 'To load'))}</th><th>PLM</th><th class="num">${esc(L('Durum', 'Status'))}</th></tr></thead><tbody>${rows}</tbody></table></div>
@@ -1435,9 +1478,7 @@
       const analysis = orders.find(item => item.orderKey === el.dataset.cpaKey);
       if (!analysis) return;
       const status = el.dataset.cpaAnswer;
-      if (status === 'open') delete state.answers[Checklist.answerKey(analysis.orderKey, itemId)];
-      else state.answers[Checklist.answerKey(analysis.orderKey, itemId)] = Checklist.makeAnswer(status, analysis, { by: (window.BL_USER_CONTEXT || {}).id || '' });
-      saveAnswers();
+      setChecklistAnswer(analysis, itemId, status);
       const row = modal.querySelector(`[data-cpa-answer-row="${CSS.escape(analysis.orderKey)}"]`);
       if (row) {
         row.classList.toggle('is-answered', Checklist.isResolved(status));
@@ -2986,21 +3027,17 @@
         const directKey = Checklist.answerKey(analysis.orderKey, rule.id);
         const direct = state.answers[directKey];
         if (!direct || Checklist.normalizeStatus(direct.state) !== 'approved') continue;
-        if (typeof Checklist.answerIsStale === 'function' && Checklist.answerIsStale(direct, analysis)) continue;
         const optionKey = Checklist.optionAnswerKey(analysis, rule.id);
         if (!optionKey) continue;
         const reusable = state.answers[optionKey];
-        const reusableState = reusable ? Checklist.normalizeStatus(reusable.state) : '';
         const directAt = Date.parse(String(direct.at || '')) || 0;
         const reusableAt = reusable ? (Date.parse(String(reusable.at || '')) || 0) : 0;
-        if (reusableState !== 'approved' || directAt >= reusableAt) {
+        if (!reusable || directAt > reusableAt) {
           state.answers[optionKey] = Checklist.makeAnswer('approved', analysis, { ...direct, loadDate: null });
+          changed = true;
         }
-        // v1'de PO anahtarına yazılmış Onaylandı cevap artık seçenek anahtarında
-        // kanoniktir. Böylece ekrandaki mevcut onaylar da güncellemeden sonra
-        // diğer PO'lara anında yansır; kullanıcının tekrar tıklaması gerekmez.
-        delete state.answers[directKey];
-        changed = true;
+        // Each PO keeps its own evidence. Only the reusable approval is copied;
+        // migrating multiple POs must never discard their different notes/files.
       }
     }
     if (changed) saveAnswers();
@@ -3123,7 +3160,10 @@
 
   loadPrefs();
   // Taşıma: yeni anahtarlar yazılır, eski PREF_KEY'den rules çıkarılır.
-  if (migrateRuleStores) savePrefs();
+  if (migrateRuleStores && !unreadablePreferenceStores.size) {
+    try { savePrefs(); } catch (_) { /* Kayıt hatası bildirildi; eski kayıt korunur. */ }
+  }
+  if (unreadablePreferenceStores.size && typeof showToast === 'function') showToast(L('Checklist ayar/kural kaydı okunamadı. Mevcut kayıt korundu; kurtarılana kadar ayar değişikliği kaydedilemez.', 'A Checklist settings/rules record could not be read. It was preserved; recover it before saving settings changes.'));
   state.moduleLayout = normalizeModuleLayouts(state.moduleLayout);
   /* PLM numune verisi gelince karar bağlamı değişir: kontrol listesi ve
      CP öncelik hücreleri aynı olayla yeniden hesaplanır. */
@@ -3139,6 +3179,7 @@
      depodan yeniden okunur. */
   window.BLCpAssistant = {
     onOverviewRendered, render, computeDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions,
+    persistChecklistAnswers: saveAnswers,
     openRules, openSettings,
     decisionContextRevision: () => decisionContextRevision, _state: state,
   };

@@ -64,7 +64,7 @@ app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 
       }
     });
 
-app.post('/api/checklist-supplier/answers', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '12mb' }), (req, res) => {
+app.post('/api/checklist-supplier/answers', userAccess.requireAnyArea('cp', 'orders', 'overview'), express.json({ limit: '12mb' }), (req, res) => {
       try {
         const entries = req.body && req.body.entries;
         if (!Array.isArray(entries)) {
