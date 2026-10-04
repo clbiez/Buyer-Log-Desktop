@@ -1090,7 +1090,7 @@
              ['join', T('Birleştirme', 'Join'), T('Sütunları tek hücrede birleştir', 'Put several columns in one cell')],
              ['ifelse', T('Koşula göre yaz', 'Label by condition'), T('Eğer … ise “…” yaz', 'If … then write “…”')],
              ['advanced', T('Gelişmiş', 'Advanced'), T('Formülü kendim yazarım (sözlüklü)', 'I will type the formula (with dictionary)')],
-             ['ai', T('AI ile yaz', 'Write with AI'), T('Karmaşık iş: AI yazsın, Buyer Log denetlesin', 'Complex: AI writes, Buyer Log checks')]]
+             ['ai', T('LCW AI’dan Destek Al', 'Get help from LCW AI'), T('Karmaşık iş: LCW AI (GPT-6 Sol) yazsın, Buyer Log denetlesin', 'Complex: LCW AI (GPT-6 Sol) writes, Buyer Log checks')]]
             .map(([id, label, tip]) => `<button type="button" id="fcMode-${id}" role="tab" class="fcMode fcRecipe${id === 'ai' ? ' fcRecipeAi' : ''}${builder.mode === id ? ' active' : ''}" data-fc-mode="${id}" title="${esc(tip)}" aria-controls="fcModePanel" aria-selected="${builder.mode === id}" tabindex="${builder.mode === id ? '0' : '-1'}"><b>${esc(label)}</b><small>${esc(tip)}</small></button>`).join('')}
         </div>
         <div class="fcStep" data-fc-step2></div>
@@ -1242,7 +1242,7 @@
       join: T('Hangi sütunlar, hangi sırayla?', 'Which columns, in which order?'),
       ifelse: T('Koşulu cümle gibi kurun', 'Build the condition like a sentence'),
       advanced: T('Formülü yazın', 'Type the formula'),
-      ai: T('AI ile formül yazın', 'Write the formula with AI'),
+      ai: T('LCW AI’dan destek alarak formül yazın', 'Write the formula with help from LCW AI'),
     };
 
     function renderBuild() {
@@ -1383,6 +1383,7 @@
             : T('Tarihleri, sayıları ve metinleri karşılaştırabilirsiniz; büyük/küçük harf fark etmez. Birden çok sütunu “+ koşul ekle” ile bağlayın: “ve” hepsinin, “veya” en az birinin sağlanmasını ister. Duruma göre FARKLI sonuçlar için “+ başka bir kural ekle” (ör. X = 0 ise “N/A”, X = 1 ve Y = 0 ise “Pending”, X = 1 ve Y = 1 ise “OK”).', 'You can compare dates, numbers and text; case does not matter. Link several columns with “+ add condition”: “and” needs all, “or” needs at least one. For DIFFERENT results per situation use “+ add another rule” (e.g. X = 0 → “N/A”, X = 1 and Y = 0 → “Pending”, X = 1 and Y = 1 → “OK”).'))}</p>`;
       } else if (builder.mode === 'ai') {
         build.innerHTML = aiPanelHtml();
+        mountLcwAi();
         renderAiPrompt();
         renderAiResult();
       } else {
@@ -1466,27 +1467,101 @@
       box.innerHTML = text ? issuesHtml(analyzeText(text)) : `<p class="fcNote">${esc(T('Yazdıkça formül burada denetlenir: eksik parantez, olmayan sütun, yanlış fonksiyon adı…', 'The formula is checked here as you type: missing brackets, unknown columns, wrong function names…'))}</p>`;
     }
 
-    /* ---- AI ile yaz ---- */
+    /* ---- AI ile yaz ----
+       Birincil yol LCW AI'dır (ortak motor: public/lcwai-assistant.js →
+       /api/lcwai). Öneri doğrudan kaydedilmez: "Uygula" formülü aşağıdaki
+       "Formül" kutusuna koyar, burada Buyer Log'un kendi formül motoru
+       denetler ve önizleme gösterir; kayıt yine "Kaydet" iledir. Kopyala /
+       yapıştır yolu, LCW AI erişimi olmayanlar için "Manuel yol" olarak durur. */
+    let lcwaiPanel = null;
     function aiPanelHtml() {
-      return `<ol class="fcAiSteps">
+      return `<div class="fcLcwAi" data-fc-lcwai-host></div>
+        <ol class="fcAiSteps">
           <li>
-            <b>${esc(T('Ne istediğinizi kendi cümlenizle yazın', 'Describe what you want in your own words'))}</b>
-            <textarea data-fc-ai-request rows="3" placeholder="${esc(T('Örn. Ex-factory, Retail Date’ten sonraysa “Gecikmeli”, 7 günden az fark varsa “Riskli”, değilse “Zamanında” yazsın.', 'e.g. If Ex-factory is after Retail Date write “Late”, if they are less than 7 days apart write “At risk”, otherwise “On time”.'))}">${esc(builder.ai.request)}</textarea>
-          </li>
-          <li>
-            <b>${esc(T('Yönergeyi kopyalayın ve kullandığınız AI aracına yapıştırın', 'Copy the instructions and paste them into your AI tool'))}</b>
-            <div class="fcAiRow">
-              <button type="button" class="fcBtn fcPrimary" data-fc-ai-copy>${esc(T('AI yönergesini kopyala', 'Copy AI instructions'))}</button>
-              <details class="fcAiPromptWrap"><summary>${esc(T('Yönergeyi göster', 'Show instructions'))}</summary><pre class="fcAiPrompt" data-fc-ai-prompt></pre></details>
-            </div>
-            <p class="fcNote">${esc(T('Yönerge formül kurallarını, fonksiyon sözlüğünü ve bu tablonun yalnız sütun ADLARINI içerir; hiçbir satır verisi (sipariş, fiyat, tedarikçi) eklenmez. Şirketinizin izin verdiği bir AI aracını kullanın.', 'The instructions contain the formula rules, the dictionary and only the column NAMES of this table; no row data (orders, prices, suppliers) is included. Use an AI tool your company allows.'))}</p>
-          </li>
-          <li>
-            <b>${esc(T('AI’ın cevabını buraya yapıştırın', 'Paste the AI’s answer here'))}</b>
-            <textarea data-fc-ai-answer rows="4" spellcheck="false" placeholder="${esc(T('Cevabın tamamını yapıştırabilirsiniz; formül kendiliğinden bulunur ve denetlenir.', 'You can paste the whole answer; the formula is found and checked automatically.'))}">${esc(builder.ai.answer)}</textarea>
+            <b>${esc(T('Formül (LCW AI’dan uygulanan ya da yapıştırılan)', 'Formula (applied from LCW AI or pasted)'))}</b>
+            <textarea data-fc-ai-answer rows="3" spellcheck="false" placeholder="${esc(T('LCW AI önerisini uygulayın ya da başka bir AI aracının cevabını buraya yapıştırın; formül kendiliğinden bulunur ve denetlenir.', 'Apply the LCW AI suggestion or paste another AI tool’s answer here; the formula is found and checked automatically.'))}">${esc(builder.ai.answer)}</textarea>
             <div class="fcAiResult" data-fc-ai-result aria-live="polite"></div>
           </li>
-        </ol>`;
+        </ol>
+        <details class="lcwaiManual">
+          <summary>${esc(T('Manuel yol: yönergeyi başka bir AI aracına verin', 'Manual route: give the instructions to another AI tool'))}</summary>
+          <ol class="fcAiSteps">
+            <li>
+              <b>${esc(T('Ne istediğinizi kendi cümlenizle yazın', 'Describe what you want in your own words'))}</b>
+              <textarea data-fc-ai-request rows="2" placeholder="${esc(T('Örn. Ex-factory, Retail Date’ten sonraysa “Gecikmeli”, 7 günden az fark varsa “Riskli”, değilse “Zamanında” yazsın.', 'e.g. If Ex-factory is after Retail Date write “Late”, if they are less than 7 days apart write “At risk”, otherwise “On time”.'))}">${esc(builder.ai.request)}</textarea>
+            </li>
+            <li>
+              <b>${esc(T('Yönergeyi kopyalayın ve kullandığınız AI aracına yapıştırın; cevabı yukarıdaki Formül kutusuna getirin', 'Copy the instructions into your AI tool and bring the answer back to the Formula box above'))}</b>
+              <div class="fcAiRow">
+                <button type="button" class="fcBtn" data-fc-ai-copy>${esc(T('AI yönergesini kopyala', 'Copy AI instructions'))}</button>
+                <details class="fcAiPromptWrap"><summary>${esc(T('Yönergeyi göster', 'Show instructions'))}</summary><pre class="fcAiPrompt" data-fc-ai-prompt></pre></details>
+              </div>
+              <p class="fcNote">${esc(T('Yönerge formül kurallarını, fonksiyon sözlüğünü ve bu tablonun yalnız sütun ADLARINI içerir; hiçbir satır verisi (sipariş, fiyat, tedarikçi) eklenmez. Şirketinizin izin verdiği bir AI aracını kullanın.', 'The instructions contain the formula rules, the dictionary and only the column NAMES of this table; no row data (orders, prices, suppliers) is included. Use an AI tool your company allows.'))}</p>
+            </li>
+          </ol>
+        </details>`;
+    }
+    /* LCW AI bağlamı: kullanılabilir sütunlar (ad + tür), mevcut formül,
+       beklenen sonuç türü ve birkaç örnek satır (LCW AI şirket içi servistir).
+       Modül rehberi, manuel yolun kullandığı aynı formül yönergesidir. */
+    function lcwaiContext() {
+      const rows = sampleRows(tableKey, 5).map(row => {
+        const out = {};
+        for (const col of columns.slice(0, 80)) {
+          const value = row ? (row[col.ref] !== undefined ? row[col.ref] : row[col.key]) : undefined;
+          if (value === undefined || value === null || value === '' || typeof value === 'object') continue;
+          out[col.label] = value;
+        }
+        return out;
+      });
+      return {
+        table: en() ? TABLES[tableKey].en : TABLES[tableKey].tr,
+        availableColumns: columns.map(col => ({ name: col.label, type: columnType(tableKey, col.ref) || 'unknown' })),
+        currentFormula: shown(builderFormula(builder) || draft.formula || ''),
+        columnName: clean((en() ? labelEnInput : labelInput)?.value || ''),
+        sampleRows: rows,
+      };
+    }
+    function mountLcwAi() {
+      const host = modal.querySelector('[data-fc-lcwai-host]');
+      if (!host) return;
+      if (lcwaiPanel) { lcwaiPanel.destroy(); lcwaiPanel = null; }
+      const mount = AI => {
+        if (!AI || !host.isConnected) return;
+        lcwaiPanel = AI.mountAssistant(host, {
+          source: 'calculated-column',
+          initialRequest: builder.ai.request,
+          placeholder: { tr: 'Örn. Margin % hesaplayan kolon oluştur: (Retail − Maliyet) / Retail.', en: 'e.g. Create a column that calculates Margin %: (Retail − Cost) / Retail.' },
+          onRequestChange: text => { builder.ai.request = text; const manual = modal.querySelector('[data-fc-ai-request]'); if (manual && manual !== document.activeElement) manual.value = text; renderAiPrompt(); },
+          buildRequest: text => ({ task: text, context: lcwaiContext(), guide: aiPrompt() }),
+          interpret: result => {
+            const picked = AI.pickField(result, 'formula', E.extractFormula);
+            if (!picked.value) return { ok: false, issues: [T('LCW AI bir formül önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest a formula. Clarify the request and try again.')], explanation: result.data && result.data.explanation };
+            const analysis = analyzeText(E.extractFormula(picked.value));
+            const issues = analysis.issues.filter(item => item.level === 'error').map(item => (en() ? item.en : item.tr));
+            const columnName = clean(result.data && result.data.columnName);
+            return {
+              ok: analysis.ok,
+              value: { formula: analysis.formula || picked.value, columnName },
+              issues,
+              html: `<div class="lcwaiResultLine"><span>${esc(T('Formül', 'Formula'))}</span></div><code>${esc(analysis.formula || picked.value)}</code>${columnName ? `<div class="lcwaiResultLine"><span>${esc(T('Kolon', 'Column'))}</span><b>${esc(columnName)}</b></div>` : ''}${analysis.ok ? `<div class="lcwaiResultLine is-ok"><span>${esc(T('Denetim', 'Check'))}</span>✓ ${esc(T('Buyer Log formül motoru formülü geçerli buldu.', 'The Buyer Log formula engine found the formula valid.'))}</div>` : ''}`,
+            };
+          },
+          onApply: value => {
+            builder.ai.answer = value.formula;
+            const answer = modal.querySelector('[data-fc-ai-answer]');
+            if (answer) answer.value = value.formula;
+            if (value.columnName && !labelTouched) {
+              (en() ? labelEnInput : labelInput).value = value.columnName.slice(0, 60);
+              labelTouched = true;
+            }
+            renderAiResult();
+            renderPreview();
+          },
+        });
+      };
+      if (window.BuyerLogAI) mount(window.BuyerLogAI);
+      else Promise.resolve(window.BLPerf?._loadScript?.('lcwai-assistant.js?rev=1')).catch(() => null).then(() => mount(window.BuyerLogAI || null));
     }
     function aiPrompt() {
       const request = clean(builder.ai.request);
@@ -1570,7 +1645,7 @@
         preview.textContent = builder.mode === 'advanced'
           ? T('Formülü yazdıkça sonucu burada göreceksiniz.', 'You will see the result here as you type.')
           : builder.mode === 'ai'
-            ? T('AI’ın cevabını yapıştırınca sonucu burada göreceksiniz.', 'Paste the AI’s answer to see the result here.')
+            ? T('LCW AI önerisini uygulayınca ya da bir AI cevabını yapıştırınca sonucu burada göreceksiniz.', 'Apply the LCW AI suggestion or paste an AI answer to see the result here.')
             : T('Kutuları doldurun; sonucu ilk satırlarda burada göreceksiniz.', 'Fill in the boxes; you will see the result on the first rows here.');
         return;
       }

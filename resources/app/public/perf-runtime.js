@@ -132,8 +132,11 @@
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile
     // bekler; böylece işlevler kaybolmaz, yalnız açılış kritik yolundan çıkar.
+    /* lcwai-assistant.js — LCW AI ortak istemcisi (window.BuyerLogAI). AI paneli
+       açan modüller (Otomasyon, CP Kuralları) onu ayrıca _loadScript ile
+       ister; aynı dize tek kez yüklenir. */
     deferredUi:[
-      'formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
+      'lcwai-assistant.js?rev=1','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
       'quick-filter-groups.js','kpi-groups.js','update-test-ui.js?rev=4','user-access-ui.js?rev=APP-UPDATE-V3','user-management.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
          artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx.js',

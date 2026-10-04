@@ -5138,6 +5138,11 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
 });
 
 // ---- OAB çoklu seçim toplu çekme ve OAB durum route'ları → server/routes/oab-batch-routes.js ----
+/* LCW AI — Buyer Log'un tek merkezi AI motoru (server/lib/lcwai). Kimlik
+   mevcut kurumsal Edge oturumundan (agent-browser-connector +
+   browser-debug-service) okunur, yalnız bellekte tutulur; AI istekleri
+   doğrudan LCW AI HTTP API'sine gider. */
+require('./routes/lcwai-routes')(app, { express, userAccess });
 require('./routes/oab-batch-routes')(app, {
   afterSharedCollectionSave,
   automationError,

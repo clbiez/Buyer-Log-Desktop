@@ -3339,6 +3339,7 @@ module.exports.coreNectumApiExpression=coreNectumApiExpression;
 module.exports.coreNectumApiCall=coreNectumApiCall;
 module.exports.pageForCoreNectumApi=pageForCoreNectumApi;
 module.exports.pageInBoundProfile=pageInBoundProfile;
+module.exports.reusableBlankPageInBoundProfile=reusableBlankPageInBoundProfile;
 module.exports.coreNectumProfileBinding=coreNectumProfileBinding;
 module.exports.pageIsInBoundProfile=pageIsInBoundProfile;
 module.exports.pinnedProfileAffinity=pinnedProfileAffinity;

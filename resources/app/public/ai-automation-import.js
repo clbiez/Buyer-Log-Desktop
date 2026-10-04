@@ -271,20 +271,15 @@
     modal.id = '_aiAutomationImport';
     modal.className = 'autoModalOverlay aiAutomationModal';
     const datasets = [['cp', 'CP Tracker'], ['orders', tr('Siparişler', 'Orders')], ['backlog', 'Backlog'], ['lfl', 'LFL'], ['collection', tr('Koleksiyon', 'Collection')], ['asas', 'ASAS'], ['ias', 'IAS / Antrepo'], ['intake', 'INTAKE']];
-    modal.innerHTML = `<div class="autoModal aiAutomationDialog"><header><div><span class="autoEyebrow">BUYER LOG · AI AUTOMATION</span><h3>${esc(tr('AI ile otomasyon yaz', 'Write an automation with AI'))}</h3><p>${esc(tr('Karmaşık bir otomasyonu kendi cümlenizle anlatın; AI yazsın, Buyer Log denetlesin. Denetim ve ön izleme hiçbir eylem çalıştırmaz; içe aktarma KAPALI bir taslak oluşturur.', 'Describe a complex automation in your own words; the AI writes it and Buyer Log checks it. Checking and preview run no actions; import creates a DISABLED draft.'))}</p></div><button type="button" data-ai-close>×</button></header>
+    modal.innerHTML = `<div class="autoModal aiAutomationDialog"><header><div><span class="autoEyebrow">BUYER LOG · LCW AI</span><h3>${esc(tr('LCW AI’dan Destek Al · Otomasyon', 'Get help from LCW AI · Automation'))}</h3><p>${esc(tr('Otomasyonu kendi cümlenizle anlatın; LCW AI yazsın, Buyer Log denetlesin. Denetim ve ön izleme hiçbir eylem çalıştırmaz; içe aktarma KAPALI bir taslak oluşturur.', 'Describe the automation in your own words; LCW AI writes it and Buyer Log checks it. Checking and preview run no actions; import creates a DISABLED draft.'))}</p></div><button type="button" data-ai-close>×</button></header>
       <div class="autoModalBody aiAutomationBody">
         <ol class="aiSteps">
-          <li><b>${esc(tr('Ne istediğinizi yazın', 'Describe what you want'))}</b>
-            <label class="autoField"><span>${esc(tr('Hangi veri üzerinde?', 'On which data?'))}</span><select data-ai-source>${datasets.map(([id, label]) => `<option value="${id}">${esc(label)}</option>`).join('')}</select></label>
-            <textarea data-ai-request rows="3" placeholder="${esc(tr('Örn. Her pazartesi 09:00’da Ex-factory’sine 7 günden az kalan ve durumu “Yüklendi” olmayan siparişleri e-postayla gönder.', 'e.g. Every Monday at 09:00 email the orders whose ex-factory is within 7 days and whose status is not “Loaded”.'))}"></textarea>
+          <li><b>${esc(tr('Hangi veri üzerinde?', 'On which data?'))}</b>
+            <label class="autoField"><select data-ai-source aria-label="${esc(tr('Hangi veri üzerinde?', 'On which data?'))}">${datasets.map(([id, label]) => `<option value="${id}">${esc(label)}</option>`).join('')}</select></label>
           </li>
-          <li><b>${esc(tr('Yönergeyi kopyalayıp kullandığınız AI aracına yapıştırın', 'Copy the instructions into your AI tool'))}</b>
-            <div class="aiAutomationActions"><button class="tbtn primary" type="button" data-ai-copy>${esc(tr('AI yönergesini kopyala', 'Copy AI instructions'))}</button><button class="tbtn" type="button" data-ai-guide>${esc(tr('Güncel AI Guide indir', 'Download current AI Guide'))}</button></div>
-            <details class="aiPromptWrap"><summary>${esc(tr('Yönergeyi göster', 'Show instructions'))}</summary><pre class="aiPrompt" data-ai-prompt></pre></details>
-            <p class="aiNote">${esc(tr('Yönerge dilin kurallarını, sözlüğü ve seçtiğiniz verinin yalnız alan ADLARINI içerir; hiçbir sipariş, fiyat, tedarikçi ya da e-posta adresi eklenmez. Şirketinizin izin verdiği bir AI aracını kullanın.', 'The instructions contain the language rules, the dictionary and only the field NAMES of the chosen data; no order, price, supplier or email address is included. Use an AI tool your company allows.'))}</p>
-          </li>
-          <li><b>${esc(tr('AI’ın cevabını buraya yapıştırın', 'Paste the AI’s answer here'))}</b>
-            <textarea data-ai-code rows="10" spellcheck="false" placeholder="${esc(tr('Cevabın tamamını yapıştırabilirsiniz; kod kendiliğinden bulunur ve denetlenir.', 'You can paste the whole answer; the code is found and checked automatically.'))}"></textarea>
+          <li><div data-ai-lcwai-host></div></li>
+          <li><b>${esc(tr('Otomasyon kodu (LCW AI’dan uygulanan ya da yapıştırılan)', 'Automation code (applied from LCW AI or pasted)'))}</b>
+            <textarea data-ai-code rows="10" spellcheck="false" placeholder="${esc(tr('LCW AI önerisini uygulayın ya da başka bir AI aracının cevabını buraya yapıştırın; kod kendiliğinden bulunur ve denetlenir.', 'Apply the LCW AI suggestion or paste another AI tool’s answer here; the code is found and checked automatically.'))}"></textarea>
             <div data-ai-found></div>
             <div data-ai-status class="aiAutomationStatus" aria-live="polite"></div>
             <div data-ai-issues></div>
@@ -293,6 +288,18 @@
             <details class="aiTech" hidden><summary>${esc(tr('Teknik ayrıntı', 'Technical details'))}</summary><pre data-ai-details class="aiAutomationDetails"></pre></details>
           </li>
         </ol>
+        <details class="lcwaiManual"><summary>${esc(tr('Manuel yol: yönergeyi başka bir AI aracına verin', 'Manual route: give the instructions to another AI tool'))}</summary>
+          <ol class="aiSteps">
+            <li><b>${esc(tr('Ne istediğinizi yazın', 'Describe what you want'))}</b>
+              <textarea data-ai-request rows="3" placeholder="${esc(tr('Örn. Her pazartesi 09:00’da Ex-factory’sine 7 günden az kalan ve durumu “Yüklendi” olmayan siparişleri e-postayla gönder.', 'e.g. Every Monday at 09:00 email the orders whose ex-factory is within 7 days and whose status is not “Loaded”.'))}"></textarea>
+            </li>
+            <li><b>${esc(tr('Yönergeyi kopyalayıp kullandığınız AI aracına yapıştırın; cevabı yukarıdaki kod kutusuna getirin', 'Copy the instructions into your AI tool and bring the answer back to the code box above'))}</b>
+              <div class="aiAutomationActions"><button class="tbtn" type="button" data-ai-copy>${esc(tr('AI yönergesini kopyala', 'Copy AI instructions'))}</button><button class="tbtn" type="button" data-ai-guide>${esc(tr('Güncel AI Guide indir', 'Download current AI Guide'))}</button></div>
+              <details class="aiPromptWrap"><summary>${esc(tr('Yönergeyi göster', 'Show instructions'))}</summary><pre class="aiPrompt" data-ai-prompt></pre></details>
+              <p class="aiNote">${esc(tr('Yönerge dilin kurallarını, sözlüğü ve seçtiğiniz verinin yalnız alan ADLARINI içerir; hiçbir sipariş, fiyat, tedarikçi ya da e-posta adresi eklenmez. Şirketinizin izin verdiği bir AI aracını kullanın.', 'The instructions contain the language rules, the dictionary and only the field NAMES of the chosen data; no order, price, supplier or email address is included. Use an AI tool your company allows.'))}</p>
+            </li>
+          </ol>
+        </details>
         <details class="fcDict aiDict"><summary>${esc(tr('📖 Automation Code sözlüğü — kurallar, örnekler, alan listesi', '📖 Automation Code dictionary — rules, examples, field list'))}</summary><div data-ai-dict></div></details>
       </div>
       <footer><button class="tbtn" type="button" data-ai-close>${esc(tr('Kapat', 'Close'))}</button><span style="flex:1"></span><button class="tbtn" type="button" data-ai-analyze>${esc(tr('Denetle', 'Check'))}</button><button class="tbtn" type="button" data-ai-preview disabled>${esc(tr('Veride dene', 'Try on data'))}</button><button class="tbtn primary" type="button" data-ai-import disabled>${esc(tr('Kapalı taslak oluştur', 'Create disabled draft'))}</button></footer></div>`;
@@ -328,7 +335,67 @@
     loadModel().then(() => { renderPrompt(modal); renderDictionary(modal); }).catch(error => { setStatus(modal, error.message, 'error'); renderPrompt(modal); renderDictionary(modal); });
     renderPrompt(modal);
     renderDictionary(modal);
-    modal.querySelector('[data-ai-request]').focus();
+    mountLcwAi(modal);
+  }
+
+  /* LCW AI ortak paneli (public/lcwai-assistant.js). Bağlam: seçilen veri,
+     o verinin alanları, izinli tetikleyiciler ve eylemler; rehber, manuel
+     yolun kullandığı aynı Automation Code yönergesidir. "Uygula" kodu
+     yukarıdaki kutuya koyar ve sunucudaki mevcut denetimi başlatır; taslak
+     yine "Kapalı taslak oluştur" ile, kullanıcı onayıyla oluşur. */
+  function mountLcwAi(modal) {
+    const host = modal.querySelector('[data-ai-lcwai-host]');
+    const mount = AI => {
+      if (!AI || !host || !host.isConnected) { modal.querySelector('[data-ai-request]')?.focus(); return; }
+      const manual = modal.querySelector('[data-ai-request]');
+      AI.mountAssistant(host, {
+        source: 'automations',
+        placeholder: { tr: 'Örn. MB’ye 10 gün kala bana bildirim oluştur.', en: 'e.g. Notify me 10 days before MB.' },
+        onRequestChange: text => { if (manual) { manual.value = text; renderPrompt(modal); } },
+        buildRequest: async text => {
+          await loadModel().catch(() => null);
+          const source = modal.querySelector('[data-ai-source]').value;
+          const A = assistant();
+          const model = capabilityModel || {};
+          return {
+            task: text,
+            guide: A ? A.buildAutomationPrompt({ lang: lang(), model, source, request: text }) : '',
+            context: {
+              dataset: source,
+              availableFields: (A ? A.fieldsForSource(model, source) : []).slice(0, 300).map(field => ({ name: (field.label && (lang() === 'en' ? field.label.en : field.label.tr)) || field.id, id: field.id, type: field.type || '' })),
+              availableTriggers: (model.triggers || []).map(item => ({ id: item.id, parameters: item.parameters || [] })),
+              availableActions: (model.actions || []).map(item => ({ id: item.id, parameters: item.parameters || [] })),
+              automationLanguageVersion: model.automationLanguageVersion || '',
+            },
+          };
+        },
+        interpret: async result => {
+          const A = assistant();
+          const picked = AI.pickField(result, 'code', text => (A ? A.extractAutomationCode(text) : text));
+          if (!picked.value) return { ok: false, issues: [tr('LCW AI bir otomasyon kodu önermedi. İsteği netleştirip tekrar deneyin.', 'LCW AI did not suggest automation code. Clarify the request and try again.')] };
+          const code = A ? A.autoFixCode(A.extractAutomationCode(picked.value), { version: capabilityModel && capabilityModel.automationLanguageVersion }).code : picked.value;
+          try {
+            const data = await api('/api/automations/ai/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
+            const parsed = data.parsed || {};
+            const actions = (parsed.actions || []).map(action => action.type).join(', ') || tr('eylem yok', 'no actions');
+            return { ok: true, value: code, html: `<pre>${esc(code)}</pre><div class="lcwaiResultLine is-ok"><span>${esc(tr('Denetim', 'Check'))}</span>✓ ${esc(`${tr('Kod geçerli', 'The code is valid')} · ${parsed.name || ''} · ${tr('Veri', 'Data')}: ${parsed.source || ''} · ${(parsed.conditions || []).length} ${tr('koşul', 'condition(s)')} · ${actions}`)}</div>` };
+          } catch (error) {
+            const errors = error.details && error.details.validation && Array.isArray(error.details.validation.errors) ? error.details.validation.errors : [error.message];
+            const explained = errors.filter(Boolean).slice(0, 6).map(message => { const item = A ? A.explainDslError(message, { model: capabilityModel, source: sourceOf(code) }) : { tr: message, en: message }; return tr(item.tr, item.en); });
+            return { ok: false, value: code, html: `<pre>${esc(code)}</pre>`, issues: explained };
+          }
+        },
+        applyLabel: { tr: 'Uygula ve denetle', en: 'Apply and check' },
+        onApply: code => {
+          const field = modal.querySelector('[data-ai-code]');
+          field.value = code;
+          analyze(modal);
+        },
+      });
+      host.querySelector('[data-lcwai-request]')?.focus();
+    };
+    if (window.BuyerLogAI) mount(window.BuyerLogAI);
+    else Promise.resolve(window.BLPerf?._loadScript?.('lcwai-assistant.js?rev=1')).catch(() => null).then(() => mount(window.BuyerLogAI || null));
   }
 
   function install() {
@@ -339,8 +406,8 @@
     button.type = 'button';
     button.className = 'tbtn';
     button.dataset.aiAutomationImport = '1';
-    button.textContent = tr('✦ AI ile oluştur', '✦ Create with AI');
-    button.title = tr('Ne istediğinizi yazın, AI yazsın, Buyer Log denetleyip kapalı bir taslak oluştursun', 'Describe it, let the AI write it, Buyer Log checks it and creates a disabled draft');
+    button.textContent = tr('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI');
+    button.title = tr('Ne istediğinizi yazın, LCW AI (GPT-6 Sol) yazsın, Buyer Log denetleyip kapalı bir taslak oluştursun', 'Describe it, let LCW AI (GPT-6 Sol) write it, Buyer Log checks it and creates a disabled draft');
     button.onclick = openModal;
     actions.insertBefore(button, actions.firstChild);
     return true;
