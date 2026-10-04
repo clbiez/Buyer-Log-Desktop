@@ -44,6 +44,7 @@ const path = require('path');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { withFileLeaseSync } = require('./shared-file-transaction');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
+const manufacturerCards = require('../../public/manufacturer-cards-engine.js');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'email-groups.json');
 /* Delta motoruna taşınmış belge. Kimlik veri köküne göreli yol; db.js'teki
@@ -131,12 +132,34 @@ function activeLock(lock, at = Date.now()) {
   return { userId, userName: clean(src.userName, 240), at: new Date(stamp).toISOString() };
 }
 
+/* v7.0.229 — ÜRETİCİ KARTI. Kayıt artık ASAS üreticisinin kartıdır:
+   `manufacturer` ASAS'taki TAM addır; eski/alternatif yazımlar `aliases`
+   içinde tutulur ki otomasyon ve kurallar eski adla gelen siparişi de aynı
+   karta bağlasın. `origin` kaydın ASAS'tan mı (öncelikli) yoksa elle mi
+   açıldığını söyler. */
+const MAX_ALIASES = 30;
+function normalizeAliases(value, manufacturer) {
+  const list = Array.isArray(value) ? value : String(value == null ? '' : value).split(/[;\n]+/);
+  const own = manufacturerCards.nameKey(manufacturer), seen = new Set(own ? [own] : []);
+  const out = [];
+  for (const item of list) {
+    const name = clean(item, 240), key = manufacturerCards.nameKey(name);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+    if (out.length >= MAX_ALIASES) break;
+  }
+  return out;
+}
 function normalizeRecord(value) {
   const src = cleanObject(value);
   const createdAt = clean(src.createdAt, 80) || now();
+  const manufacturer = clean(src.manufacturer, 240);
   return {
     id: cleanId(src.id) || newId('em'),
-    manufacturer: clean(src.manufacturer, 240),
+    manufacturer,
+    aliases: normalizeAliases(src.aliases, manufacturer),
+    origin: ['asas', 'manual'].includes(clean(src.origin, 20)) ? clean(src.origin, 20) : '',
     email: clean(src.email, 2000),
     contact: clean(src.contact, 240),
     phone: clean(src.phone, 80),
@@ -310,7 +333,7 @@ function updateRecord(id, patch, actor, expectedRevision) {
   const next = normalizeRecord({
     ...record,
     // Yalnız gönderilen alanlar değişir; kimlik ve oluşturma bilgisi korunur.
-    ...Object.fromEntries(['manufacturer', 'email', 'contact', 'phone', 'note', 'countryId', 'typeId']
+    ...Object.fromEntries(['manufacturer', 'aliases', 'origin', 'email', 'contact', 'phone', 'note', 'countryId', 'typeId']
       .filter(field => Object.prototype.hasOwnProperty.call(src, field))
       .map(field => [field, src[field]])),
     id: record.id,
@@ -456,8 +479,85 @@ function importRecords(list, actor, expectedRevision) {
   return { summary, revision: saved._revision };
 }
 
+/* ---------------- ASAS üreticileriyle eşleme (v7.0.229) ----------------
+
+   Kullanıcı talebi: "Buyer Log'a ASAS'ta olmayan bir üretici de eklenebilir
+   ancak öncelik ASAS'ta olanlardan yana olmalı. Yoksa formüller ve kurallar
+   çalışmaz. Üreticilerin isimleri tam ve doğru yazılmalı."
+
+   createFromAsas: kartı olmayan ASAS üreticileri için TAM ASAS adıyla kart
+   açar. Aynı ad (ya da alternatif adı) zaten bir kartta varsa dokunulmaz.
+   Ülke başlığı ASAS ülkesinden bulunur; yoksa açılır.
+   linkRecord: ASAS'ta karşılığı olmayan kartı seçilen ASAS adına bağlar; eski
+   ad alternatif ad olarak korunur (veri kaybı yok, §142). */
+function createFromAsas(list, actor) {
+  const stamp = now();
+  const summary = { added: [], unchanged: [] };
+  const saved = saveStore(current => {
+    const records = current.records.slice();
+    const countries = current.countries.slice();
+    const taken = manufacturerCards.buildDirectoryIndex(records);
+    const countryByKey = new Map(countries.map(item => [manufacturerCards.nameKey(item.name), item]));
+    for (const value of Array.isArray(list) ? list.slice(0, MAX_RECORDS) : []) {
+      const src = cleanObject(value);
+      const manufacturer = clean(src.manufacturer, 240);
+      const key = manufacturerCards.nameKey(manufacturer);
+      if (!key) continue;
+      if (taken.has(key)) { summary.unchanged.push(manufacturer); continue; }
+      if (records.length >= MAX_RECORDS) break;
+      let countryId = '';
+      const countryName = clean(src.countryName, 120), countryKey = manufacturerCards.nameKey(countryName);
+      if (countryKey) {
+        let heading = countryByKey.get(countryKey);
+        if (!heading && countries.length < MAX_HEADINGS) {
+          heading = { id: newId('h'), name: countryName, order: countries.length };
+          countries.push(heading);
+          countryByKey.set(countryKey, heading);
+        }
+        countryId = heading ? heading.id : '';
+      }
+      const record = normalizeRecord({
+        manufacturer, origin: 'asas', email: '', countryId, typeId: cleanId(src.typeId),
+        id: '', createdAt: stamp, createdBy: actor && actor.id, createdByName: actor && actor.name,
+        updatedAt: stamp, updatedBy: actor && actor.id, updatedByName: actor && actor.name, lock: null,
+      });
+      records.push(record);
+      taken.set(key, record);
+      summary.added.push(manufacturer);
+    }
+    return { ...current, countries, records };
+  }, null);
+  return { summary, revision: saved._revision };
+}
+
+function linkRecord(id, asasName, actor) {
+  const name = clean(asasName, 240);
+  if (!manufacturerCards.nameKey(name)) throw storeError('ASAS üretici adı zorunludur.', 'VALIDATION_ERROR', 400);
+  const saved = saveStore(current => {
+    const index = recordIndex(current, id);
+    const record = current.records[index];
+    const held = activeLock(record.lock);
+    if (held && held.userId !== cleanId(actor && actor.id)) {
+      throw storeError(`Bu kaydı şu anda ${held.userName || held.userId} düzenliyor.`, 'EMAIL_RECORD_LOCKED', 409, { lock: held });
+    }
+    const other = current.records.find((item, position) => position !== index
+      && [item.manufacturer].concat(item.aliases || []).some(value => manufacturerCards.nameKey(value) === manufacturerCards.nameKey(name)));
+    if (other) throw storeError(`"${name}" zaten "${other.manufacturer}" kartına bağlı.`, 'MANUFACTURER_ALREADY_LINKED', 409);
+    const records = current.records.slice();
+    records[index] = normalizeRecord({
+      ...record,
+      manufacturer: name,
+      aliases: [record.manufacturer].concat(record.aliases || []),
+      origin: 'asas',
+      updatedAt: now(), updatedBy: actor && actor.id, updatedByName: actor && actor.name,
+    });
+    return { ...current, records };
+  }, null);
+  return { record: saved.records.find(item => item.id === cleanId(id)), revision: saved._revision };
+}
+
 module.exports = {
-  attachDeltaStore,
+  attachDeltaStore, createFromAsas, linkRecord, normalizeAliases,
   FILE, LOCK_TTL_MS, DEFAULT_TYPES,
   loadStore, saveStore, publicStore, defaultStore,
   normalizeHeadings, normalizeRecord, activeLock,

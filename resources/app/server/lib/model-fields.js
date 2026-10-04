@@ -59,6 +59,10 @@ const FIELD_CATALOGUE = {
     { header: 'Model Bütçe Tarih Yıl Ay Gün', aliases: ['IN STORE', 'MODEL BUDGET DATE'] },
     { header: 'Sipariş Yerleştirme MerchTarih', aliases: [] },
     { header: 'Buying Son Onay Tarihi', aliases: ['BUYING APPROVAL DATE', 'SON ONAY TARIHI'] },
+    // v7.0.229 — Üretici kartı termin performansı: PO açılırken verilen ilk
+    // ex-factory sözü. İsteğe bağlıdır; eşlenmezse ASAS'ın ilk ex-factory
+    // değeri temel alınır.
+    { header: 'Initial Inspection Tarih', aliases: ['INITIAL INSPECTION', 'INITIAL INSPECTION DATE', 'INITIAL INSPECTION TARIHI', 'ILK INSPECTION TARIHI'] },
     { header: 'Buyer', aliases: ['SATIN ALMACI'] },
     { header: 'Line', aliases: ['URUN GRUBU', 'PRODUCT LINE'] },
     // Kumaş bilgileri artık ayrı bir Fabric bağlantısından değil aynı ASAS sorgusundan

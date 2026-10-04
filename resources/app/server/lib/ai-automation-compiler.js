@@ -45,7 +45,10 @@ function compile(ast, validation, options = {}) {
   const emailAction = actions.find(action => action.type === 'SEND_EMAIL') || null;
   const hasAppActions = actions.some(action => action.type !== 'SEND_EMAIL');
   const emailGroupId = clean(options.emailGroupId);
-  if (emailAction && String(emailAction.RECIPIENT_GROUP || '').toUpperCase() === 'ASK_USER' && !emailGroupId) {
+  // RECIPIENT_FIELD [Üretici] → alana göre bölünmüş alıcı; köşeli parantez
+  // yazılmış olsa da alan adı olarak saklanır.
+  const recipientField = emailAction ? clean(emailAction.RECIPIENT_FIELD).replace(/^\[|\]$/g, '').trim() : '';
+  if (emailAction && !recipientField && String(emailAction.RECIPIENT_GROUP || '').toUpperCase() === 'ASK_USER' && !emailGroupId) {
     const error = new Error('E-posta grubu seçilmeden taslak oluşturulamaz.');
     error.code = 'AI_AUTOMATION_INPUT_REQUIRED';
     error.details = { requiredInputs: ['EMAIL_GROUP'] };
@@ -69,9 +72,9 @@ function compile(ast, validation, options = {}) {
     filters: [],
     limit: 50,
     email: emailAction ? {
-      groupId: emailGroupId || clean(emailAction.RECIPIENT_GROUP),
-      recipientMode: 'group',
-      recipientField: '',
+      groupId: recipientField ? '' : (emailGroupId || clean(emailAction.RECIPIENT_GROUP)),
+      recipientMode: recipientField ? 'field' : 'group',
+      recipientField,
       subject: clean(emailAction.SUBJECT) || ast.name || 'Buyer Log Raporu',
       body: '',
       includeReport: emailAction.INCLUDE_MATCHING_ROWS !== false,

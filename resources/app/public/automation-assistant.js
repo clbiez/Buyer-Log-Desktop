@@ -265,6 +265,18 @@
     const fields = Array.isArray(ctx.fields) ? ctx.fields : [];
     const knowsFields = Boolean(ctx.fieldsLoaded) && fields.length > 0;
     const hasField = name => fields.some(item => lowerTr(item) === lowerTr(name));
+    /* Alıcı alanı kanonik eşdeğeriyle de kabul edilir: AI ile yazılan
+       RECIPIENT_FIELD [Üretici], Orders verisinde "Manufacturer" başlığıdır;
+       sunucu da aynı kanonik eşlemeyle çözer (automation-field-check). */
+    const canonical = typeof globalThis !== 'undefined' ? globalThis.BLCanonicalFields : null;
+    const sameCanonical = (a, b) => {
+      try {
+        if (!canonical || typeof canonical.canonicalId !== 'function') return false;
+        const source = clean(r.source).toLowerCase(), left = canonical.canonicalId(source, a);
+        return Boolean(left) && left === canonical.canonicalId(source, b);
+      } catch (_) { return false; }
+    };
+    const hasRecipientField = name => hasField(name) || fields.some(item => sameCanonical(item, name));
     if (!clean(r.name)) add('error', 'Otomasyona bir ad verin.', 'Give the automation a name.', { target: 'name' });
     if (r.source && r.source !== 'manual') {
       (r.filters || []).forEach((rule, index) => {
@@ -283,7 +295,7 @@
       const email = r.email || {};
       if (email.recipientMode === 'field') {
         if (!clean(email.recipientField)) add('error', 'Alıcıyı belirleyecek alanı seçin (ör. Üretici).', 'Choose the field that decides the recipient (e.g. Supplier).', { target: 'email' });
-        else if (knowsFields && !hasField(email.recipientField)) add('error', `Alıcı alanı “${email.recipientField}” bu veride yok.`, `Recipient field “${email.recipientField}” is not in this data.`, { target: 'email', suggestion: closest(email.recipientField, fields) });
+        else if (knowsFields && !hasRecipientField(email.recipientField)) add('error', `Alıcı alanı “${email.recipientField}” bu veride yok.`, `Recipient field “${email.recipientField}” is not in this data.`, { target: 'email', suggestion: closest(email.recipientField, fields) });
       } else if (!clean(email.groupId)) add('error', 'E-postanın gideceği grubu seçin.', 'Choose the email group.', { target: 'email' });
       else if (Array.isArray(ctx.groups) && ctx.groups.length && !ctx.groups.some(group => group.id === email.groupId)) add('error', 'Seçili e-posta grubu artık yok; yeniden seçin.', 'The chosen email group no longer exists; choose again.', { target: 'email' });
       if (!clean(email.subject)) add('warn', 'E-posta konusu boş.', 'The email subject is empty.', { target: 'email' });
@@ -312,7 +324,8 @@
     { tr: 'Alan adı köşeli parantez içinde yazılır: [Üretici]. Metin çift tırnak içinde: "Riskli".', en: 'Field names go in square brackets: [Supplier]. Text goes in double quotes: "At risk".' },
     { tr: 'WHEN içinde her satır bir koşuldur; kayıt ancak HEPSİNE uyarsa işlenir.', en: 'Each line inside WHEN is one condition; a record is processed only if it matches ALL of them.' },
     { tr: 'Her eylem kendi END satırıyla kapanır; ACTIONS bölümü de END ile biter.', en: 'Every action closes with its own END; the ACTIONS section ends with END too.' },
-    { tr: 'E-posta alıcısı Buyer Log içinde seçilir: RECIPIENT_GROUP ASK_USER yazın.', en: 'The email recipient is chosen inside Buyer Log: write RECIPIENT_GROUP ASK_USER.' },
+    { tr: 'E-posta alıcısı iki yoldan belirlenir: tek bir sabit grup için RECIPIENT_GROUP ASK_USER (grup Buyer Log’da seçilir); her üreticiye KENDİ siparişleriyle ayrı e-posta için RECIPIENT_FIELD [Üretici].', en: 'The email recipient is set in one of two ways: RECIPIENT_GROUP ASK_USER for one fixed group (chosen in Buyer Log); RECIPIENT_FIELD [Manufacturer] for a separate email to each manufacturer with ITS OWN orders.' },
+    { tr: 'RECIPIENT_FIELD [Üretici] sipariş bazında Buyer Log Üretici kartlarıyla eşlenir: adresler karttan gelir, lisanslı Non-DTR siparişlerde Alt Üretici (Sub-Manufacturer) sorumludur. E-posta adresi kodda YAZILMAZ.', en: 'RECIPIENT_FIELD [Manufacturer] is matched per order to the Buyer Log manufacturer cards: addresses come from the card, and on licensed non-DTR orders the Sub-Manufacturer is responsible. Never write e-mail addresses in the code.' },
     { tr: 'Kod, komut, betik (JavaScript, PowerShell, SQL…) YAZILMAZ; reddedilir.', en: 'No code, commands or scripts (JavaScript, PowerShell, SQL…); they are rejected.' },
     { tr: 'İçe aktarılan otomasyon KAPALI bir taslak olarak gelir; siz inceleyip açarsınız.', en: 'An imported automation arrives as a DISABLED draft; you review and enable it.' },
   ];
@@ -339,6 +352,7 @@
     ] },
     { cat: 'action', tr: 'Ne yapılsın? (ACTIONS … END)', en: 'What to do? (ACTIONS … END)', items: [
       { syntax: 'SEND_EMAIL\n  RECIPIENT_GROUP ASK_USER\n  SUBJECT "Riskli siparişler"\n  INCLUDE_MATCHING_ROWS TRUE\nEND', syntaxEn: 'SEND_EMAIL\n  RECIPIENT_GROUP ASK_USER\n  SUBJECT "Orders at risk"\n  INCLUDE_MATCHING_ROWS TRUE\nEND', tr: 'E-posta (taslak). Alıcı grubu Buyer Log’da seçilir.', en: 'Email (draft). The recipient group is chosen in Buyer Log.' },
+      { syntax: 'SEND_EMAIL\n  RECIPIENT_FIELD [Üretici]\n  SUBJECT "Bu haftanın yüklemeleri"\n  INCLUDE_MATCHING_ROWS TRUE\nEND', syntaxEn: 'SEND_EMAIL\n  RECIPIENT_FIELD [Manufacturer]\n  SUBJECT "This week\'s shipments"\n  INCLUDE_MATCHING_ROWS TRUE\nEND', tr: 'Her üreticiye kendi siparişleriyle ayrı e-posta taslağı. Adresler Üreticiler sayfasındaki kartlardan gelir.', en: 'A separate draft to each manufacturer with its own orders. Addresses come from the cards on the Manufacturers page.' },
       { syntax: 'SHOW_REPORT\n  TITLE "Özet"\nEND', syntaxEn: 'SHOW_REPORT\n  TITLE "Summary"\nEND', tr: 'Sonucu Buyer Log içinde rapor olarak göster.', en: 'Show the result as a report inside Buyer Log.' },
       { syntax: 'OPEN_PAGE\n  MODULE cp\nEND', tr: 'Bir Buyer Log sayfasını aç.', en: 'Open a Buyer Log page.' },
       { syntax: 'REFRESH_SOURCE\n  SOURCE cp\nEND', tr: 'Veriyi yenile (cp, orders, backlog, lfl).', en: 'Refresh data (cp, orders, backlog, lfl).' },
@@ -448,7 +462,8 @@
       const suggestion = closest(match[1], actions);
       return out(`“${match[1]}” diye bir eylem yok.`, `There is no action “${match[1]}”.`, `${suggestion ? `Bunu mu demek istediniz: ${suggestion}? ` : ''}Eylemler: ${actions.join(', ')}`, `${suggestion ? `Did you mean ${suggestion}? ` : ''}Actions: ${actions.join(', ')}`, { suggestion });
     }
-    if (/RECIPIENT_GROUP gerekli/i.test(text)) return out('E-posta eyleminde alıcı satırı yok.', 'The email action has no recipient line.', 'SEND_EMAIL altına RECIPIENT_GROUP ASK_USER ekleyin; grubu Buyer Log’da seçersiniz.', 'Add RECIPIENT_GROUP ASK_USER under SEND_EMAIL; you choose the group in Buyer Log.');
+    if (/RECIPIENT_GROUP veya RECIPIENT_FIELD gerekli|RECIPIENT_GROUP gerekli/i.test(text)) return out('E-posta eyleminde alıcı satırı yok.', 'The email action has no recipient line.', 'SEND_EMAIL altına RECIPIENT_GROUP ASK_USER (sabit grup) ya da RECIPIENT_FIELD [Üretici] (her üreticiye ayrı) ekleyin.', 'Add RECIPIENT_GROUP ASK_USER (fixed group) or RECIPIENT_FIELD [Manufacturer] (one per manufacturer) under SEND_EMAIL.');
+    if (/birlikte kullanılamaz/i.test(text)) return out('RECIPIENT_GROUP ve RECIPIENT_FIELD aynı e-postada birlikte olamaz.', 'RECIPIENT_GROUP and RECIPIENT_FIELD cannot be used in the same email.', 'Birini silin: sabit grup için RECIPIENT_GROUP, üreticiye göre bölmek için RECIPIENT_FIELD.', 'Delete one: RECIPIENT_GROUP for a fixed group, RECIPIENT_FIELD to split by manufacturer.');
     if (/DAYS_UNTIL tarih alanı/i.test(text)) return out('DAYS_UNTIL yalnız TARİH alanıyla çalışır.', 'DAYS_UNTIL only works with a DATE field.');
     if (/BETWEEN aralığı/i.test(text)) return out('BETWEEN iki sayı ister: BETWEEN 0 AND 7.', 'BETWEEN needs two numbers: BETWEEN 0 AND 7.');
     if (/Forbidden|çalıştırılabilir kod/i.test(text)) return out('Kodda komut ya da betik var; yalnız Buyer Log otomasyon dili kabul edilir.', 'The code contains commands or scripts; only the Buyer Log automation language is accepted.', 'AI’a “yalnız Buyer Log Automation Code yaz, betik yazma” deyin.', 'Tell the AI: “write only Buyer Log Automation Code, no scripts”.');
@@ -502,7 +517,7 @@
     lines.push('', pick(lang, 'CEVAP BİÇİMİ', 'ANSWER FORMAT'));
     lines.push(pick(lang, '- Kodu TEK bir kod bloğu (```) içinde ver; ilk satırı BUYERLOG_AUTOMATION 1.0 olsun.', '- Put the code in ONE code block (```); its first line is BUYERLOG_AUTOMATION 1.0.'));
     lines.push(pick(lang, '- Listede olmayan alan, eylem ya da fonksiyon UYDURMA. İstediğim şey bu dille yapılamıyorsa açıkça söyle.', '- Do NOT invent fields, actions or functions. If what I want cannot be done with this language, say so plainly.'));
-    lines.push(pick(lang, '- E-posta alıcısı için her zaman RECIPIENT_GROUP ASK_USER yaz.', '- For the email recipient always write RECIPIENT_GROUP ASK_USER.'));
+    lines.push(pick(lang, '- E-posta tek bir sabit gruba gidecekse RECIPIENT_GROUP ASK_USER yaz. Kayıtların üreticisine göre her üreticiye ayrı gidecekse RECIPIENT_FIELD [Üretici] yaz; Buyer Log her siparişi Üretici kartına eşler (lisanslı Non-DTR siparişte Alt Üretici). E-posta adresi yazma.', '- If the email goes to one fixed group write RECIPIENT_GROUP ASK_USER. If each manufacturer should get its own records write RECIPIENT_FIELD [Manufacturer]; Buyer Log matches every order to its manufacturer card (Sub-Manufacturer on licensed non-DTR orders). Do not write e-mail addresses.'));
     return lines.join('\n');
   }
 

@@ -77,14 +77,14 @@ const MODULES = Object.freeze([
     area: 'koleksiyon', route: 'quotations',
     datasets: ['collection'],
     capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'compare', 'analyze'],
-    summary: { tr: 'Fiyat talepleri, üretici teklifleri, onay/Drop kararları ve fiyatlama takibi.', en: 'Pricing requests, supplier quotations, approval/drop decisions and pricing follow-up.' },
+    summary: { tr: 'Fiyat talepleri, teklifler ve onay/Drop kararları.', en: 'Pricing requests, quotations and approval/drop decisions.' },
   },
   {
     id: 'pricinghistory', agentFilter: false, tableKey: null, label: { tr: 'Fiyat Geçmişi', en: 'Pricing History' },
     area: 'koleksiyon', route: 'pricinghistory',
     datasets: ['collection'],
     capabilities: ['read', 'filter', 'sort', 'export', 'compare', 'analyze'],
-    summary: { tr: 'Quotation kayıtlarından türetilen geçmiş fiyatlar, benchmarklar ve fiyat trendi karar desteği.', en: 'Historical prices, benchmarks and price-trend decision support derived from quotation records.' },
+    summary: { tr: 'Quotation fiyat geçmişi, benchmark ve trend.', en: 'Historical prices, benchmarks and trends from quotations.' },
   },
   {
     id: 'priceanalysis', agentFilter: false, tableKey: null, label: { tr: 'Fiyat & Üretici Analizi', en: 'Price & Supplier Analysis' },
@@ -92,6 +92,15 @@ const MODULES = Object.freeze([
     datasets: ['cp', 'orders', 'collection'],
     capabilities: ['read', 'analyze', 'compare'],
     summary: { tr: 'Fiyat ve üretici karşılaştırmaları.', en: 'Price and supplier comparisons.' },
+  },
+  {
+    // v7.0.229 — eski E-Mail Grupları. Siparişler verisini okuduğu için
+    // ayrı bir yetki alanı açmaz; Siparişler alanını paylaşır.
+    id: 'manufacturers', agentFilter: false, tableKey: null, label: { tr: 'Üreticiler', en: 'Manufacturers' },
+    area: 'orders', route: 'manufacturers',
+    datasets: ['orders'],
+    capabilities: ['read', 'analyze'],
+    summary: { tr: 'Üretici kartları.', en: 'Manufacturer cards.' },
   },
   {
     id: 'lfl', agentFilter: false, tableKey: 'lfl', label: { tr: 'LFL Analizi', en: 'LFL Analysis' },

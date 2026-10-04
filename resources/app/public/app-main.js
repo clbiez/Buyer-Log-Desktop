@@ -1488,6 +1488,7 @@ const APP_PAGE_META=Object.freeze({
   quotations:{tr:'Quotations',en:'Quotations',group:'commercial'},
   pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History',group:'commercial'},
   priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis',group:'commercial'},
+  manufacturers:{tr:'Üreticiler',en:'Manufacturers',group:'commercial'},
   lfl:{tr:'LFL analizi',en:'LFL Analysis',group:'commercial'},
   opencosting:{tr:'Ön Maliyet',en:'Open Costing',group:'commercial'},
   automations:{tr:'Otomasyonlar',en:'Automations',group:'operations'},
@@ -2064,7 +2065,8 @@ window.BLGlobalFlowDataProviders={
 window.BLEnsureCollectionCatalogLoaded=ensureCollectionCatalogLoaded;
 
 function switchTab(tab){
-  const accessArea=(tab==='quotations'||tab==='pricinghistory')?'koleksiyon':tab;
+  // Üreticiler sayfası Siparişler verisini okur; yetkisi Siparişler alanıdır.
+  const accessArea=tab==='manufacturers'?'orders':((tab==='quotations'||tab==='pricinghistory')?'koleksiyon':tab);
   if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea(accessArea)){
     if(typeof showToast==='function')showToast(appLang==='en'?'You do not have access to this area.':'Bu yetki alanına erişiminiz bulunmuyor.');
     return false;
@@ -2120,6 +2122,13 @@ function switchTab(tab){
       if(tab==='pricinghistory')return window.BL_QUOTATIONS?.mountPricingHistory?.(document.getElementById('pricingHistoryWorkspacePage'),{preserveContext:true});
       if(tab==='koleksiyon')window.BL_QUOTATIONS?.syncCollectionPricingUI?.();
     }).catch(err=>showToast(err.message));
+  }
+  /* v7.0.229 — Üreticiler: lazy; motor, rehber ve görünüm ilk geçişte yüklenir.
+     Analiz Orders/LFL/Fiyat & Üretici Analizi'nin ortak sipariş verisini okur. */
+  if(tab==='manufacturers'){
+    void window.BLPerf.ensureFeature('manufacturers').then(()=>{
+      if(currentActiveTab()==='manufacturers')return window.initManufacturersPage?.();
+    }).catch(err=>showToast(err&&err.message||String(err)));
   }
   if(tab==='overview')void ensureOverviewOabModule();
   /* v7.81 — Veri Yönetimi. Lazy: ilk geçişte yüklenir, açılışta değil.
@@ -26907,6 +26916,27 @@ function canonicalPriceObservation(row,moduleId,base={}){
     manufacturer:norm(base.manufacturer||manufacturer)||'—',subManufacturer,supplierFob:toNum(read('supplierFob')),country:country||'—',buyer:norm(read('buyer'))||'—',buyingGroup:norm(read('buyingGroup'))||'—',mag:norm(read('mag'))||norm(base.mag)||'—',mmyg:norm(read('mmyg'))||norm(base.mmyg)||'—',collection:norm(read('collectionName')),
     productGroup:norm(read('productGroup')),productMainDefinition,season:norm(read('season'))||'—',status:norm(read('orderStatus')),colour:norm(read('colour')),month:inStore,planStartMonth:inStore,quantity:Number.isFinite(Number(quantity))&&Number(quantity)>0?Number(quantity):null};
 }
+/* v7.0.229 — Üreticiler sayfasının veri köprüsü. Orders/LFL/Fiyat & Üretici
+   Analizi'nin paylaştığı ASAS sipariş projeksiyonunu (Siparişler satırları)
+   verir; ayrı sorgu yapılmaz. Sipariş listesi ortak detay çekmecesinde açılır. */
+const _manufacturerRowVersions=new WeakMap();let _manufacturerRowVersionSeq=0;
+window.BLManufacturerDataBridge={
+  async rows(){await ensureOrdersLoaded();return (state.orders&&state.orders.rows)||[];},
+  // Yenilemede satır dizisi yeniden kurulur; dizi kimliği sürüm olarak yeter.
+  version(){const rows=(state.orders&&state.orders.rows)||null;if(!rows)return '';if(!_manufacturerRowVersions.has(rows))_manufacturerRowVersions.set(rows,++_manufacturerRowVersionSeq);return `orders:${_manufacturerRowVersions.get(rows)}`;},
+  openOrders(rows,title){
+    const list=Array.isArray(rows)?rows:[];
+    const day=value=>{const d=coerceDateLoose(value);return d?fmtDate(d):'';};
+    const mapped=list.map((row,index)=>({...row,_rowKey:index,'Ex-factory':day(row['Ex-factory']),'Buying Son Onay Tarihi':day(row['Buying Son Onay Tarihi']),'Initial Inspection':day(row._initialInspection||row._asasExFactory)}));
+    const L2=(tr,en)=>appLang==='en'?en:tr;
+    const labels={order:L2('Sipariş Kodu','Order Code'),model:L2('Model Adı','Model Name'),colour:L2('Renk Kodu','Colour Code'),mfr:L2('Üretici','Manufacturer'),sub:L2('Alt Üretici','Sub-Manufacturer'),lic:L2('Lisans','License'),country:L2('Ülke','Country'),qty:L2('Sipariş Adedi','Order Quantity'),rem:L2('Kalan','Remaining'),ex:'Ex-Factory',first:L2('İlk söz (Initial Inspection)','First promise (Initial Inspection)'),appr:L2('Yükleme Onayı','Loading Approval'),status:L2('Durum','Status'),records:L2('kayıt','records')};
+    if(!window.BLDetailDrawer?.open)return;
+    window.BLDetailDrawer.open({storageKey:'manufacturers.orders',moduleId:'orders',source:'manufacturers',title:title||labels.order,subtitle:`${mapped.length} ${labels.records}`,rows:mapped,images:true,fileName:title||'Manufacturer orders',columns:[
+      {key:'Order Code',label:labels.order},{key:'Model Name',label:labels.model},{key:'C.Code',label:labels.colour},{key:'Manufacturer',label:labels.mfr},{key:'Sub-Manufacturer',label:labels.sub},{key:'License',label:labels.lic},
+      {key:'Country',label:labels.country},{key:'Merch Alt Grup Kod',label:'MAG'},{key:'Order Quantity',label:labels.qty},{key:'Remaining Units',label:labels.rem},{key:'Initial Inspection',label:labels.first},{key:'Ex-factory',label:labels.ex},{key:'Buying Son Onay Tarihi',label:labels.appr},{key:'STATUS',label:labels.status}
+    ]});
+  },
+};
 window.BLPriceSupplierAnalysisBridge={
   async get(source,scope='all',priceType='finalFob'){
     const selected=String(source||'collection').toLowerCase();
@@ -35236,6 +35266,7 @@ function applyLanguage(lang){
     else if(tab==='opencosting' && typeof renderOpenCostingLanguage==='function') renderOpenCostingLanguage();
     else if(tab==='lfl' && typeof renderLFLLanguage==='function') renderLFLLanguage();
     else if(tab==='priceanalysis' && typeof window.renderPriceSupplierAnalysisLanguage==='function') window.renderPriceSupplierAnalysisLanguage();
+    else if(tab==='manufacturers' && typeof window.renderManufacturersLanguage==='function') window.renderManufacturersLanguage();
     if(typeof renderKolScopeFilters==='function' && document.getElementById('kolScopeFilters')) renderKolScopeFilters();
   }catch(e){}
   // Ufuk rozeti sunucu verisinden değil, o anki dilden metin üretir; dil

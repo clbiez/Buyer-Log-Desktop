@@ -157,7 +157,7 @@ function normalizeAiDefinition(raw){
   const actions=(Array.isArray(item.actions)?item.actions:[]).slice(0,20).map(action=>{
     const source=action&&typeof action==='object'?action:{};
     const result={type:clean(source.type).slice(0,60)};
-    for(const key of ['RECIPIENT_GROUP','SUBJECT','INCLUDE_MATCHING_ROWS','ATTACHMENT','MODULE','SOURCE','TITLE']){
+    for(const key of ['RECIPIENT_GROUP','RECIPIENT_FIELD','SUBJECT','INCLUDE_MATCHING_ROWS','ATTACHMENT','MODULE','SOURCE','TITLE']){
       if(Object.prototype.hasOwnProperty.call(source,key))result[key]=typeof source[key]==='boolean'||typeof source[key]==='number'?source[key]:clean(source[key]).slice(0,1000);
     }
     return result;

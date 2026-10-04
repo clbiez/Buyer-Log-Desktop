@@ -112,10 +112,12 @@ test('v9.21 yetkisi olmayan modül keşfedilemiyor', () => {
   const userAccess = { hasArea: (profile, area) => (profile.areas || []).includes(area) };
   const buyer = { areas: ['cp', 'orders'] };
   const gorunen = registry.forProfile(buyer, userAccess).map(m => m.id).sort();
-  assert.deepEqual(gorunen, ['cp', 'orders']);
+  // v7.0.229: Üreticiler sayfası Siparişler verisini okur ve Siparişler
+  // yetki alanını paylaşır; Siparişler yetkisi olan onu da görür.
+  assert.deepEqual(gorunen, ['cp', 'manufacturers', 'orders']);
   // Katalog da aynı süzgeçten geçmeli.
   const katalog = registry.catalog('tr', buyer, userAccess).map(m => m.id).sort();
-  assert.deepEqual(katalog, ['cp', 'orders']);
+  assert.deepEqual(katalog, ['cp', 'manufacturers', 'orders']);
   // Profil verilmezse tam liste döner (sunucu içi kullanım).
   assert.equal(registry.catalog('tr').length, registry.list().length);
 });
