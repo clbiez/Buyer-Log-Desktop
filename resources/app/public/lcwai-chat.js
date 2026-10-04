@@ -24,15 +24,16 @@
   const L = (trText, enText) => (isEn() ? enText : trText);
   const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
   const AI = () => window.BuyerLogAI || null;
-  const MAX_TABLE_ROWS = 200;
-  const MAX_TABLE_COLUMNS = 25;
+  /* Bağlam tabloları KESİLMEZ: tüm satırlar ve tüm görünür sütunlar CSV dosyası
+     olarak LCW AI'a yüklenir (mesaj metni sınırı yok); mesajda yalnız kısa özet
+     kalır. Eskiden 200 satır / 25 sütun / 20 bin karakterle kesiliyordu. */
 
   /* ---------------- Varsayılan bağlam sağlayıcıları ---------------- */
   const cellValue = value => (value == null ? '' : (typeof value === 'object' ? (value instanceof Date ? value.toISOString().slice(0, 10) : JSON.stringify(value)) : String(value)));
   function tableContext(tab, mode) {
     const data = window.BLAIScreenData && window.BLAIScreenData.table(tab);
     if (!data) return null;
-    const columns = data.columns.slice(0, MAX_TABLE_COLUMNS);
+    const columns = data.columns;
     const selected = new Set((data.selectedIds || []).map(String));
     const source = mode === 'selected' ? data.rows.filter(row => selected.has(String(row && row._id))) : data.rows;
     const title = window.BLAIScreenData.pageTitle(tab);
@@ -42,10 +43,33 @@
       summary: L(`${source.length} kayıt (tablodaki filtreler uygulanmış).`, `${source.length} records (table filters applied).`),
       filters: data.filters,
       columns: mode === 'filters' ? [] : columns.map(col => col.label),
-      rows: mode === 'filters' ? [] : source.slice(0, MAX_TABLE_ROWS).map(row => columns.map(col => cellValue(row && row[col.key]))),
+      rows: mode === 'filters' ? [] : source.map(row => columns.map(col => cellValue(row && row[col.key]))),
       totalRows: source.length,
     };
   }
+  /* Bağlam tablosu → CSV (RFC 4180; Excel uyumu için UTF-8 BOM). */
+  const csvCell = value => { const text = String(value == null ? '' : value); return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text; };
+  function contextCsv(context) {
+    const lines = [context.columns.map(csvCell).join(',')];
+    for (const row of context.rows) lines.push(context.columns.map((_, index) => csvCell(Array.isArray(row) ? row[index] : '')).join(','));
+    return `\ufeff${lines.join('\r\n')}\r\n`;
+  }
+  function contextFileName(context) {
+    const base = String(context.label || context.screen || 'buyerlog').replace(/ı/g, 'i').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'buyerlog';
+    return `BuyerLog-${base}.csv`;
+  }
+  /* Tablo taşıyan bağlamı dosyaya çevirir: { context (yalnız özet), file }. */
+  function contextAsFile(context) {
+    if (!context || !Array.isArray(context.columns) || !context.columns.length || !Array.isArray(context.rows) || !context.rows.length) return { context, file: null };
+    const name = contextFileName(context);
+    const file = new File([contextCsv(context)], name, { type: 'text/csv' });
+    const { rows, columns, ...rest } = context;
+    return {
+      file,
+      context: { ...rest, text: L(`Tablonun tamamı ekli “${name}” dosyasında: ${rows.length} satır, ${columns.length} sütun (${columns.join(', ')}).`, `The full table is in the attached “${name}” file: ${rows.length} rows, ${columns.length} columns (${columns.join(', ')}).`) },
+    };
+  }
+
   function registerDefaultProviders() {
     const api = AI();
     if (!api || !api.registerContextProvider) return;
@@ -56,7 +80,7 @@
         getOptions() {
           const data = window.BLAIScreenData && window.BLAIScreenData.table(tab);
           if (!data) return [];
-          const options = [{ id: 'visible', label: { tr: `Görünen kayıtlar (${data.rows.length})`, en: `Visible records (${data.rows.length})` }, detail: { tr: `İlk ${MAX_TABLE_ROWS} satır, görünür sütunlar`, en: `First ${MAX_TABLE_ROWS} rows, visible columns` } }];
+          const options = [{ id: 'visible', label: { tr: `Görünen kayıtlar (${data.rows.length})`, en: `Visible records (${data.rows.length})` }, detail: { tr: 'Tüm satırlar, görünür sütunlar · CSV dosyası olarak', en: 'All rows, visible columns · as a CSV file' } }];
           if (data.selectedIds && data.selectedIds.length) options.unshift({ id: 'selected', label: { tr: `Seçili kayıtlar (${data.selectedIds.length})`, en: `Selected records (${data.selectedIds.length})` } });
           options.push({ id: 'filters', label: { tr: 'Aktif filtreler ve özet', en: 'Active filters and summary' } });
           return options;
@@ -72,20 +96,20 @@
       },
       build() {
         const rows = window.BLAIScreenData.overviewCpRows();
-        const columns = window.BLAIScreenData.cpColumns().slice(0, MAX_TABLE_COLUMNS);
-        return { label: L('Overview — CP kümesi', 'Overview — CP set'), screen: 'overview', summary: L(`${rows.length} CP satırı (Overview filtreleri uygulanmış).`, `${rows.length} CP rows (Overview filters applied).`), columns: columns.map(col => col.label), rows: rows.slice(0, MAX_TABLE_ROWS).map(row => columns.map(col => cellValue(row[col.key]))), totalRows: rows.length };
+        const columns = window.BLAIScreenData.cpColumns();
+        return { label: L('Overview — CP kümesi', 'Overview — CP set'), screen: 'overview', summary: L(`${rows.length} CP satırı (Overview filtreleri uygulanmış).`, `${rows.length} CP rows (Overview filters applied).`), columns: columns.map(col => col.label), rows: rows.map(row => columns.map(col => cellValue(row[col.key]))), totalRows: rows.length };
       },
     });
     api.registerContextProvider({
       id: 'backlog', screen: 'backlog', label: { tr: 'Backlog', en: 'Backlog' },
       getOptions() {
         const ready = window.BLBacklogRows && window.BLAIScreenData && window.BLAIScreenData.backlogQuery();
-        return ready ? [{ id: 'rows', label: { tr: 'Backlog kayıtları (aktif filtre)', en: 'Backlog records (active filter)' }, detail: { tr: `İlk ${MAX_TABLE_ROWS} satır`, en: `First ${MAX_TABLE_ROWS} rows` } }] : [];
+        return ready ? [{ id: 'rows', label: { tr: 'Backlog kayıtları (aktif filtre)', en: 'Backlog records (active filter)' }, detail: { tr: 'Tüm satırlar · CSV dosyası olarak', en: 'All rows · as a CSV file' } }] : [];
       },
       async build() {
         const rows = await window.BLBacklogRows.load(window.BLAIScreenData.backlogQuery());
-        const columns = Object.keys(rows[0] || {}).filter(key => !key.startsWith('_')).slice(0, MAX_TABLE_COLUMNS);
-        return { label: L('Backlog — kayıtlar', 'Backlog — records'), screen: 'backlog', summary: L(`${rows.length} Backlog satırı.`, `${rows.length} Backlog rows.`), columns, rows: rows.slice(0, MAX_TABLE_ROWS).map(row => columns.map(key => cellValue(row[key]))), totalRows: rows.length };
+        const columns = Object.keys(rows[0] || {}).filter(key => !key.startsWith('_'));
+        return { label: L('Backlog — kayıtlar', 'Backlog — records'), screen: 'backlog', summary: L(`${rows.length} Backlog satırı.`, `${rows.length} Backlog rows.`), columns, rows: rows.map(row => columns.map(key => cellValue(row[key]))), totalRows: rows.length };
       },
     });
   }
@@ -257,7 +281,15 @@
         for (const id of contextIds) {
           answer.phase = L('Buyer Log bağlamı hazırlanıyor…', 'Preparing Buyer Log context…');
           renderMessages();
-          userMessage.contexts.push(await api.buildContext(id));
+          const prepared = contextAsFile(await api.buildContext(id));
+          if (prepared.file) {
+            const limit = state.config && state.config.limits ? state.config.limits.maxFileBytes : 20 * 1048576;
+            if (prepared.file.size > limit) throw Object.assign(new Error('too-large'), { code: 'LCWAI_FILE_TOO_LARGE' });
+            answer.phase = L(`Bağlam dosyası yükleniyor: ${prepared.file.name}`, `Uploading context file: ${prepared.file.name}`);
+            renderMessages();
+            userMessage.attachments.push(await api.uploadFile(prepared.file));
+          }
+          userMessage.contexts.push(prepared.context);
         }
       }
       answer.phase = L('LCW AI düşünüyor…', 'LCW AI is thinking…');
@@ -382,5 +414,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile };
 })();
