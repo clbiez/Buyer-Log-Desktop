@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.227",
-  "commit_sha": "425527f64bb3f4689f5c375ac021f1f66962a3b5",
-  "release_notes": "Buyer Log 7.0.227: Giriş ekranı sadeleştirildi ve hazır güncellemeler için yeniden başlatma eylemi eklendi. Uygulama içi AI asistanı/sağlayıcı katmanı kaldırıldı; güncelleme manifestleri Ed25519 ile imzalanıp istemcide doğrulanıyor. Yavaş Overview/CP/Orders ilk ekran projeksiyonu artık doğrulanmış kullanıcıyı açılış perdesinde bekletmiyor."
+  "version": "7.0.228",
+  "commit_sha": "129ed4388ccac1af22ee4621c3da46162297949a",
+  "release_notes": "Buyer Log 7.0.228: CP ve Koleksiyon'da seçili modellerin görselleri tek işlemde ve kalıcı olarak kaldırılabiliyor. Veri Yönetimi'ne gereksiz dosyaları tarayıp onayla silen Data Temizliği eklendi; Buyer Log haftada bir kendi bayat verisini otomatik temizliyor ve kayda değer veri kaldıysa hatırlatıyor."
 }
