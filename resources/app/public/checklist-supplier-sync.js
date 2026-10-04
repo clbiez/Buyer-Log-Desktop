@@ -1560,14 +1560,11 @@
       preselect: supplierNames,
       initialFiles: initialFiles,
       title: T('Üreticiye Checklist Exceli Hazırla', 'Prepare Supplier Checklist'),
-      subtitle: T(
-        supplierNames.length + ' üretici · ' + tempRows.length + ' sipariş · her üretici için ayrı Checklist Excel'
-          + (evidenceFileCount ? ' + ' + evidenceFileCount + ' ek' : '')
-          + ' · taslak oluşturmadan önce kontrol edin',
-        supplierNames.length + ' supplier(s) · ' + tempRows.length + ' orders · separate Checklist Excel per supplier'
-          + (evidenceFileCount ? ' + ' + evidenceFileCount + ' attachment(s)' : '')
-          + ' · review before creating drafts'
-      ),
+      subtitle: supplierNames.length + ' ' + T('üretici', 'supplier(s)')
+        + ' · ' + tempRows.length + ' ' + T('sipariş', 'orders')
+        + ' · ' + T('her üretici için ayrı Checklist Excel', 'separate Checklist Excel per supplier')
+        + (evidenceFileCount ? ' + ' + evidenceFileCount + ' ' + T('ek', 'attachment(s)') : '')
+        + ' · ' + T('taslak oluşturmadan önce kontrol edin', 'review before creating drafts'),
       resultTitle: T('Checklist E-Posta Sonucu', 'Checklist E-Mail Result'),
     };
     if (root.BLPrepareEmail && typeof root.BLPrepareEmail.openChecklist === 'function') {
