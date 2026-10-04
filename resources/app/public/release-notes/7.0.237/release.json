@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.237",
+  "channel": "stable",
+  "publishedAt": "2026-10-05",
+  "title": {
+    "tr": "LCW AI bağlamı tam tablo olarak gönderiliyor",
+    "en": "LCW AI context sent as the full table"
+  },
+  "summary": {
+    "tr": "LCW AI’a eklenen Buyer Log tabloları artık kesilmeden, tüm satır ve sütunlarıyla CSV dosyası olarak gönderiliyor.",
+    "en": "Buyer Log tables added to LCW AI are now sent uncut, with all rows and columns, as a CSV file."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 1,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "lcwai-context-csv",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Bağlam",
+        "en": "LCW AI · Context"
+      },
+      "title": {
+        "tr": "Bağlam Ekle: tablonun tamamı CSV dosyası olarak gider",
+        "en": "Add Context: the whole table goes as a CSV file"
+      },
+      "body": {
+        "tr": "“Bağlam Ekle” ile seçilen tablolar (CP Tracker, Siparişler, Nakliye, Koleksiyon, Overview, Backlog) artık 200 satır / 25 sütun ile kesilmiyor. Tablonun tüm satırları ve görünür sütunları CSV dosyası olarak doğrudan LCW AI’a yükleniyor; mesajda yalnız kısa özet kalıyor. Böylece LCW AI eksiksiz veriyle cevap veriyor ve büyük bağlam mesajı şişirmiyor.",
+        "en": "Tables chosen with “Add Context” (CP Tracker, Orders, Shipping, Collection, Overview, Backlog) are no longer cut at 200 rows / 25 columns. All rows and visible columns are uploaded directly to LCW AI as a CSV file; only a short summary stays in the message. LCW AI answers with the complete data and large context no longer bloats the message."
+      },
+      "path": {
+        "tr": "LCW AI › Bağlam Ekle",
+        "en": "LCW AI › Add Context"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-context-csv.png",
+        "alt": {
+          "tr": "Backlog bağlamıyla sorulan soruya 640 siparişin tamamı üzerinden verilen cevap (demo veri)",
+          "en": "Answer covering all 640 orders for a question asked with Backlog context (demo data)"
+        },
+        "caption": {
+          "tr": "Bağlam tablosu dosya olarak eklenir, cevap tüm satırları kapsar.",
+          "en": "The context table is attached as a file; the answer covers every row."
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.237",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "LCW AI bağlamı tam tablo olarak gönderiliyor",
+        "en": "LCW AI context sent as the full table"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.237/release.json"
+    },
+    {
       "version": "7.0.236",
       "publishedAt": "2026-10-04",
       "title": {
