@@ -1954,5 +1954,21 @@
     else void load().then(apply);
   }
 
-  window.BLDataManagement = { mount, reload: load, focusModule, focusSource };
+  /* Dışarıdan bir aracı açar (ör. Data Temizliği hatırlatması). Araç zaten
+     açıksa ikinci çağrı onu KAPATMAZ; yalnız görünür alana kaydırır. */
+  function openToolById(toolId) {
+    const wanted = String(toolId || '').trim();
+    if (!wanted || !root) return;
+    const reveal = () => root.querySelector(`[data-tool-slot="${CSS.escape(wanted)}"]`)
+      ?.closest('.dmToolRow')?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const apply = () => {
+      if (!model) return;
+      if (openTool === wanted) { reveal(); return; }
+      void runTool(wanted).then(reveal);
+    };
+    if (model && !loadPromise) apply();
+    else void load().then(apply);
+  }
+
+  window.BLDataManagement = { mount, reload: load, focusModule, focusSource, openTool: openToolById };
 })();

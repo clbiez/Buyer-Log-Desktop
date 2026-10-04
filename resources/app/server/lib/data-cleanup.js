@@ -33,6 +33,18 @@ const { walkStats } = require('./data-maintenance');
 const DAY_MS = 86400000;
 const TEMP_AGE_MS = DAY_MS;
 const CHECKPOINT_KEEP = 3;
+const WEEK_MS = 7 * DAY_MS;
+// Hatırlatma yalnız kayda değer miktarda temizlenebilir veri varsa gösterilir.
+const REMINDER_MIN_BYTES = 100 * 1024 * 1024;
+/*
+ * Sormadan silinebilecek, Buyer Log'un KENDİ ürettiği zararsız bayat veri.
+ * Hepsi yeniden üretilebilir ya da yarım kalmış iş artığıdır; kullanıcı
+ * dosyası, yedek, kurulum arşivi, tanınmayan öğe ve sync klasörü ASLA bu
+ * listeye girmez. Tarayıcı önbelleği açık bir oturum tarafından kullanılıyor
+ * olabileceği için otomatik temizliğe alınmadı.
+ */
+const AUTO_CLEAN_REASONS = new Set(['app-temp', 'partial-update', 'rebuildable-cache', 'old-log', 'expired-export', 'old-app-version', 'old-update-package']);
+function isAutoCleanable(item) { return Boolean(item && item.selected && AUTO_CLEAN_REASONS.has(item.reason) && item.kind !== 'browser-cache'); }
 const ARCHIVE_RE = /\.(zip|7z|rar|tar|tgz|gz|bz2|xz|cab)$/i;
 const INSTALLER_RE = /\.(exe|msi|msix|msixbundle|appx|appinstaller)$/i;
 const SETUP_NAME_RE = /setup|install|kurulum|update|guncelle|güncelle|portable|\d+\.\d+\.\d+/i;
@@ -88,7 +100,7 @@ function resolveInstallRoot({ env = process.env, projectRoot = '' } = {}) {
 
 function createDataCleanup({
   roots, installRoot = '', portableDataRoot = '', tempRoot = '', execPath = process.execPath, appVersion = '',
-  syncSettings = null, sharedHub = null, dataMaintenance = null, extraProtected = [], now = () => Date.now(),
+  syncSettings = null, sharedHub = null, dataMaintenance = null, extraProtected = [], now = () => Date.now(), stateFile = '',
 } = {}) {
   if (!roots) throw new Error('data-cleanup requires roots.');
   const installDir = resolved(installRoot);
@@ -411,7 +423,11 @@ function createDataCleanup({
   // İstemciye giden görünüm: tekil dosya yolları (paths) gönderilmez.
   function publicPlan(plan) { return { ...plan, items: plan.items.map(({ paths, ...rest }) => rest) }; }
 
-  async function scan(scope, options = {}) { return publicPlan(await buildPlan(scope, options)); }
+  async function scan(scope, options = {}) {
+    const plan = publicPlan(await buildPlan(scope, options));
+    const state = await readState();
+    return { ...plan, autoClean: scope === 'local' ? state.autoClean || null : null, lastCheckAt: state.lastCheckAt || null };
+  }
 
   async function removeTarget(target, guard) {
     if (isProtected(target, guard)) return { removed: false, freed: 0, error: 'protected' };
@@ -449,10 +465,88 @@ function createDataCleanup({
       results.push({ id: item.id, path: item.path, kind: item.kind, ok, freed: itemFreed, error });
     }
     const skipped = wanted.size - results.length;
+    // Kullanıcı az önce temizlik yaptı: bekleyen hatırlatma bir sonraki haftalık kontrole kadar susar.
+    if (!options.automatic && removed) await updateState(state => ({ ...state, [scope === 'sync' ? 'syncDismissedAt' : 'localDismissedAt']: new Date(now()).toISOString() }));
     return { scope, applied: true, removed, failed, skipped, freed, results, finishedAt: new Date(now()).toISOString() };
   }
 
-  return { scan, apply, buildPlan, resolveInstallRoot: () => installDir };
+  /* ---------------- haftalık kontrol ve hatırlatma ---------------- */
+
+  const stateTarget = resolved(stateFile) || (roots.localDataRoot ? path.join(resolved(roots.localDataRoot), 'data-cleanup-state.json') : '');
+  async function readState() {
+    const value = stateTarget ? await readJsonSafe(stateTarget) : null;
+    return value && value.schemaVersion === 1 ? value : { schemaVersion: 1 };
+  }
+  let stateQueue = Promise.resolve();
+  function updateState(mutator) {
+    const run = stateQueue.then(async () => {
+      const next = { ...(await mutator(await readState())), schemaVersion: 1 };
+      if (!stateTarget) return next;
+      await fsp.mkdir(path.dirname(stateTarget), { recursive: true });
+      const tmp = `${stateTarget}.${process.pid}.${Date.now()}.tmp`;
+      await fsp.writeFile(tmp, JSON.stringify(next, null, 2), 'utf8');
+      await fsp.rename(tmp, stateTarget);
+      return next;
+    });
+    stateQueue = run.catch(() => {});
+    return run;
+  }
+  function totals(items) {
+    const picked = items.filter(item => item.selected);
+    return { count: picked.length, size: picked.reduce((t, x) => t + x.size, 0) };
+  }
+
+  /*
+   * Haftada bir çalışır (force ile hemen). Sırası:
+   *   1) yerel planda Buyer Log'un kendi zararsız bayat verisini SORMADAN siler,
+   *   2) kalan önerilen temizliği (yerel + yapılandırılmışsa sync) özetler.
+   * Sync klasöründe otomatik silme yapılmaz; orası ortak alandır.
+   */
+  let running = null;
+  async function weeklyCheck({ force = false } = {}) {
+    if (running) return running;
+    running = (async () => {
+      const state = await readState();
+      const last = Date.parse(state.lastCheckAt || '') || 0;
+      if (!force && now() - last < WEEK_MS) return state;
+      let autoClean = state.autoClean || null;
+      try {
+        const plan = await buildPlan('local');
+        const ids = plan.items.filter(isAutoCleanable).map(item => item.id);
+        if (ids.length) {
+          const result = await apply('local', ids, { automatic: true });
+          autoClean = { at: new Date(now()).toISOString(), removed: result.removed, freed: result.freed, failed: result.failed };
+        }
+      } catch (_) { /* senkron sürüyorsa ya da kilitliyse bir sonraki kontrole kalır */ }
+      let local = null, sync = null;
+      try { local = totals((await buildPlan('local')).items); } catch (_) {}
+      try {
+        const settings = syncSettings ? await syncSettings.read() : null;
+        if (settings && settings.sharedSyncRoot) sync = totals((await buildPlan('sync', { moderator: true })).items);
+      } catch (_) {}
+      return updateState(current => ({ ...current, lastCheckAt: new Date(now()).toISOString(), autoClean, local, sync }));
+    })();
+    try { return await running; } finally { running = null; }
+  }
+
+  function dueFor(summary, dismissedAt, checkedAt) {
+    if (!summary || summary.size < REMINDER_MIN_BYTES) return false;
+    return !dismissedAt || Date.parse(dismissedAt) < Date.parse(checkedAt || 0);
+  }
+  async function reminder({ moderator = false } = {}) {
+    const state = await readState();
+    const local = state.local || null, sync = moderator ? state.sync || null : null;
+    const localDue = dueFor(local, state.localDismissedAt, state.lastCheckAt);
+    const syncDue = moderator && dueFor(sync, state.syncDismissedAt, state.lastCheckAt);
+    return { due: localDue || syncDue, localDue, syncDue, local, sync, checkedAt: state.lastCheckAt || null, autoClean: state.autoClean || null, minBytes: REMINDER_MIN_BYTES };
+  }
+  async function dismissReminder({ moderator = false } = {}) {
+    const at = new Date(now()).toISOString();
+    await updateState(state => ({ ...state, localDismissedAt: at, ...(moderator ? { syncDismissedAt: at } : {}) }));
+    return reminder({ moderator });
+  }
+
+  return { scan, apply, buildPlan, weeklyCheck, reminder, dismissReminder, resolveInstallRoot: () => installDir };
 }
 
-module.exports = { createDataCleanup, resolveInstallRoot, isInside, TEMP_FILE_RE, ARCHIVE_RE, INSTALLER_RE };
+module.exports = { createDataCleanup, resolveInstallRoot, isInside, isAutoCleanable, AUTO_CLEAN_REASONS, REMINDER_MIN_BYTES, WEEK_MS, TEMP_FILE_RE, ARCHIVE_RE, INSTALLER_RE };

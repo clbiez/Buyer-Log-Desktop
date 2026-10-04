@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
-const { createDataCleanup, resolveInstallRoot } = require('../server/lib/data-cleanup');
+const { createDataCleanup, resolveInstallRoot, REMINDER_MIN_BYTES } = require('../server/lib/data-cleanup');
 
 const DAY = 86400000;
 async function write(file, body = 'x', ageMs = 0) {
@@ -194,4 +194,67 @@ test('UI contract: Data Cleanup is a lazy Data Management tool and the sync scop
   // İstemci yalnız kimlik gönderir; yol göndermez.
   assert.match(ui, /JSON\.stringify\(\{ scope: state\.scope, ids: \[\.\.\.state\.selected\] \}\)/);
   assert.match(server, /dataCleanup\.apply\(scope, ids, \{ moderator:dataCleanupIsModerator\(req\) \}\)/);
+});
+
+test('weekly check auto-cleans only Buyer Log own stale data and reminds when the rest is significant', async t => {
+  const x = await installBox(t);
+  const ownTemp = await write(path.join(x.data, 'temp', 'job-old.xlsx'), 'tmp', 3 * DAY);
+  const freshTemp = await write(path.join(x.data, 'temp', 'job-new.xlsx'), 'tmp');
+  const partial = await write(path.join(x.install, '.buyerlog-updater', 'staging', '7.0.100.partial-1-1', 'x'), 'p');
+  await age(path.join(x.install, '.buyerlog-updater', 'staging', '7.0.100.partial-1-1'), 3 * DAY);
+  const bigZip = path.join(x.install, 'BuyerLog-Desktop-7.0.100.zip');
+  await fsp.writeFile(bigZip, '');
+  await fsp.truncate(bigZip, REMINDER_MIN_BYTES + 1);
+  const userFile = await write(path.join(x.install, 'my-notes.xlsx'), 'user');
+  const oldBackup = path.join(x.install, 'data-backup-old');
+  await write(path.join(oldBackup, 'a'), 'a');
+  await age(oldBackup, 100 * DAY);
+  await write(path.join(x.install, 'data-backup-new', 'a'), 'a');
+  let clock = Date.now();
+  const cleanup = createDataCleanup({ roots: x.roots, installRoot: x.install, portableDataRoot: x.data, now: () => clock });
+
+  const state = await cleanup.weeklyCheck();
+  assert.equal(fs.existsSync(ownTemp), false, 'own stale temp is removed without asking');
+  assert.equal(fs.existsSync(partial), false, 'abandoned update extraction is removed without asking');
+  assert.equal(fs.existsSync(freshTemp), true);
+  assert.equal(fs.existsSync(bigZip), true, 'setup archives need confirmation');
+  assert.equal(fs.existsSync(userFile), true);
+  assert.equal(fs.existsSync(oldBackup), true, 'backups are never auto-deleted');
+  assert.ok(state.autoClean.removed >= 2);
+
+  let reminder = await cleanup.reminder({ moderator: false });
+  assert.equal(reminder.due, true);
+  assert.equal(reminder.localDue, true);
+  assert.ok(reminder.local.size > REMINDER_MIN_BYTES);
+  assert.equal(reminder.sync, null, 'non-moderators never see sync totals');
+
+  reminder = await cleanup.dismissReminder();
+  assert.equal(reminder.due, false, 'dismissed until the next weekly check');
+  clock += 2 * DAY;
+  await cleanup.weeklyCheck();
+  assert.equal((await cleanup.reminder()).due, false, 'no re-check inside the week');
+  clock += 6 * DAY;
+  await cleanup.weeklyCheck();
+  assert.equal((await cleanup.reminder()).due, true, 'next week reminds again while data is still there');
+});
+
+test('no reminder when the remaining cleanup is not significant', async t => {
+  const x = await installBox(t);
+  await write(path.join(x.install, 'small.zip'), 'tiny');
+  const cleanup = createDataCleanup({ roots: x.roots, installRoot: x.install, portableDataRoot: x.data });
+  await cleanup.weeklyCheck();
+  const reminder = await cleanup.reminder();
+  assert.equal(reminder.due, false);
+  assert.equal(reminder.local.count, 1);
+});
+
+test('UI contract: weekly reminder offers review or snooze and opens the Data Cleanup tool', () => {
+  const read = rel => fs.readFileSync(path.join(__dirname, '..', rel), 'utf8');
+  const app = read('public/app-main.js'), dm = read('public/data-management.js'), server = read('server/server.js');
+  assert.match(app, /fetch\('\/api\/data-cleanup\/reminder'/);
+  assert.match(app, /if\(!data\|\|!data\.due\)return;/);
+  assert.match(app, /fetch\('\/api\/data-cleanup\/reminder\/dismiss',\{method:'POST'\}\)/);
+  assert.match(app, /screen\?\.openTool\?\.\('cleanup'\)/);
+  assert.match(dm, /openTool: openToolById/);
+  assert.match(server, /setInterval\(runDataCleanupWeeklyCheck, 6 \* 60 \* 60 \* 1000\)/);
 });

@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-04",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yeni Data Temizliği aracı",
-    "en": "New Data Cleanup tool"
+    "tr": "Yeni Data Temizliği aracı ve haftalık hatırlatma",
+    "en": "New Data Cleanup tool and weekly reminder"
   },
   "summary": {
-    "tr": "Veri Yönetimi'ne kurulum klasöründeki gereksiz dosyaları tarayıp özetleyen ve onayla silen Data Temizliği eklendi; Moderatör sync klasöründeki eski yedekleri de temizleyebilir.",
-    "en": "Data Management gains Data Cleanup, which scans, summarises and—after confirmation—deletes unnecessary files in the install folder; the Moderator can also clean stale backups in the sync folder."
+    "tr": "Veri Yönetimi'ne kurulum klasöründeki gereksiz dosyaları tarayıp özetleyen ve onayla silen Data Temizliği eklendi; Moderatör sync klasöründeki eski yedekleri de temizleyebilir. Buyer Log haftada bir kendi bayat verisini otomatik temizler ve kayda değer veri kaldıysa hatırlatır.",
+    "en": "Data Management gains Data Cleanup, which scans, summarises and—after confirmation—deletes unnecessary files in the install folder; the Moderator can also clean stale backups in the sync folder. Once a week Buyer Log automatically removes its own stale data and reminds you when a significant amount remains."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Kurulum klasörü taranır; silmeden önce özet ve seçim gösterilir.",
           "en": "The install folder is scanned; a summary and selection are shown before anything is deleted."
+        }
+      }
+    },
+    {
+      "id": "data-cleanup-weekly-reminder",
+      "type": "feature",
+      "module": {
+        "tr": "Veri Yönetimi · Data Temizliği",
+        "en": "Data Management · Data Cleanup"
+      },
+      "title": {
+        "tr": "Haftalık otomatik temizlik ve hatırlatma",
+        "en": "Weekly automatic cleanup and reminder"
+      },
+      "body": {
+        "tr": "Buyer Log haftada bir kendi oluşturduğu zararsız bayat veriyi (eski geçici dosyalar, yarım kalmış güncellemeler, önbellek, eski log/export ve eski sürümler) sormadan temizler. Ardından 100 MB'ı aşan temizlenebilir veri kaldıysa bir bildirimle hatırlatır; İncele ve Temizle doğrudan Data Temizliği'ni açar, Gelecek hafta hatırlat bildirimi bir sonraki haftalık kontrole kadar susturur. Kurulum arşivleri, yedekler, tanınmayan dosyalar ve sync klasörü hiçbir zaman otomatik silinmez; Moderatör sync klasörü için de hatırlatma alır.",
+        "en": "Once a week Buyer Log removes the harmless stale data it created itself (old temporary files, incomplete updates, caches, old logs/exports and old versions) without asking. If more than 100 MB of cleanable data remains, a notification reminds you; Review & Clean opens Data Cleanup directly and Remind next week silences it until the next weekly check. Setup archives, backups, unrecognised files and the sync folder are never deleted automatically; the Moderator is also reminded about the sync folder."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-cleanup-weekly-reminder.png",
+        "alt": {
+          "tr": "Temizlenebilir veri miktarını ve otomatik temizlenen bayat veriyi gösteren Data Temizliği hatırlatma bildirimi",
+          "en": "Data Cleanup reminder notification showing the cleanable amount and the stale data already removed automatically"
+        },
+        "caption": {
+          "tr": "Haftalık kontrol kendi bayat verisini temizler, kalan kayda değer veriyi hatırlatır.",
+          "en": "The weekly check removes its own stale data and reminds you about the significant remainder."
         }
       }
     }

@@ -8720,6 +8720,17 @@ const dataCleanupIsModerator = req => Boolean(req.currentUser && req.currentUser
 app.get('/api/data-cleanup/scan', userAccess.requireArea('source'), async (req, res) => {
   try { const scope = dataCleanupScope(req); res.json({ ok:true, moderator:dataCleanupIsModerator(req), result:await dataCleanup.scan(scope, { moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_SCAN_FAILED' }); }
 });
+app.get('/api/data-cleanup/reminder', userAccess.requireArea('source'), async (req, res) => {
+  try { res.set('Cache-Control', 'no-store'); res.json({ ok:true, result:await dataCleanup.reminder({ moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_REMINDER_FAILED' }); }
+});
+app.post('/api/data-cleanup/reminder/dismiss', userAccess.requireArea('source'), async (req, res) => {
+  try { res.json({ ok:true, result:await dataCleanup.dismissReminder({ moderator:dataCleanupIsModerator(req) }) }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_REMINDER_FAILED' }); }
+});
+/* Haftalık Data Temizliği kontrolü: açılış kritik yolunun dışında başlar,
+   6 saatte bir yoklar; asıl iş son kontrolden 7 gün geçtiyse yapılır. */
+const runDataCleanupWeeklyCheck = () => dataCleanup.weeklyCheck().catch(error => logRuntimeFailure('dataCleanupWeekly', error));
+setTimeout(runDataCleanupWeeklyCheck, 120000).unref?.();
+setInterval(runDataCleanupWeeklyCheck, 6 * 60 * 60 * 1000).unref?.();
 app.post('/api/data-cleanup/apply', userAccess.requireArea('source'), express.json({ limit:'256kb' }), async (req, res) => {
   try { const scope = dataCleanupScope(req); const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids.slice(0, 20000) : []; const result = await dataCleanup.apply(scope, ids, { moderator:dataCleanupIsModerator(req) }); userAccess.appendAudit(req.currentUser, 'DATA_CLEANUP_APPLY', 'source', { scope, removed:result.removed, failed:result.failed, freed:result.freed }); res.json({ ok:true, result }); } catch (error) { res.status(error.statusCode||500).json({ error:error.message||String(error), code:error.code||'DATA_CLEANUP_APPLY_FAILED' }); }
 });

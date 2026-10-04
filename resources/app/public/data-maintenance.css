@@ -167,3 +167,4 @@
 .blDataCleanupKinds { display: flex; flex-wrap: wrap; gap: 6px; }
 .blDataCleanupEmpty { padding: 14px 12px; font-size: 12px; color: var(--ink2); }
 .blDataCleanupKept > summary { cursor: pointer; list-style: revert; }
+.blDataCleanupAuto { font-size: 11px; color: var(--ink2); }

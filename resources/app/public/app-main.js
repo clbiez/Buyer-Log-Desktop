@@ -14505,6 +14505,38 @@ async function openDataMaintenanceModal(host=null){
   await run('analyze');
 }
 void refreshSyncStatusBadge();
+/* Data Temizliği hatırlatması. Haftalık kontrolü sunucu yapar (kendi bayat
+   verisini sormadan siler); burada yalnız kayda değer temizlenebilir veri
+   kaldıysa oturum başına BİR kez bildirim gösterilir. Açılış perdesini
+   beklemek için gecikmeli başlar; Veri Yönetimi yetkisi yoksa hiç sormaz. */
+function openDataCleanupTool(){
+  if(switchTab('source')===false)return;
+  void window.BLPerf.ensureFeature('dataManagement').then(()=>{
+    const screen=window.BLDataManagement;
+    screen?.mount?.(document.getElementById('dataManagementRoot'));
+    screen?.openTool?.('cleanup');
+  }).catch(error=>{if(typeof showToast==='function')showToast(error&&error.message||String(error));});
+}
+async function checkDataCleanupReminder(){
+  if(typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea('source'))return;
+  const notify=window.BLUI?.notify;if(typeof notify!=='function')return;
+  let data;try{const res=await fetch('/api/data-cleanup/reminder',{cache:'no-store'});if(!res.ok)return;data=(await res.json()).result;}catch(_){return;}
+  if(!data||!data.due)return;
+  const en=appLang==='en';
+  const size=(data.localDue?Number(data.local&&data.local.size)||0:0)+(data.syncDue?Number(data.sync&&data.sync.size)||0:0);
+  const where=data.localDue&&data.syncDue?(en?'this computer and the sync folder':'bu bilgisayarda ve sync klasöründe'):data.syncDue?(en?'the sync folder':'sync klasöründe'):(en?'this computer':'bu bilgisayarda');
+  const message=en?`${blDataMaintBytes(size)} of unnecessary data can be cleaned on ${where}.`:`${where.charAt(0).toUpperCase()+where.slice(1)} ${blDataMaintBytes(size)} gereksiz veri temizlenebilir.`;
+  const auto=data.autoClean&&Number(data.autoClean.removed)>0?(en?`Buyer Log already removed its own stale temporary data (${blDataMaintBytes(data.autoClean.freed)}).`:`Buyer Log kendi bayat geçici verisini zaten temizledi (${blDataMaintBytes(data.autoClean.freed)}).`):'';
+  notificationHistoryAdd(message,'toast');
+  notify(message,{kind:'warning',placement:'edge',kindLabel:en?'DATA CLEANUP':'DATA TEMİZLİĞİ',detail:auto,language:appLang,duration:0,
+    actions:[{id:'open',label:en?'Review & Clean':'İncele ve Temizle',primary:true},{id:'later',label:en?'Remind next week':'Gelecek hafta hatırlat'}],
+    onAction:async(id,{close})=>{
+      close();
+      if(id==='open')openDataCleanupTool();
+      else await fetch('/api/data-cleanup/reminder/dismiss',{method:'POST'}).catch(()=>{});
+    }});
+}
+setTimeout(()=>{void checkDataCleanupReminder();},45000);
 document.getElementById('cpMoreBtn')?.addEventListener('click',e=>{
   e.stopPropagation();
   const btn=e.currentTarget,menu=document.getElementById('cpMoreMenu');
