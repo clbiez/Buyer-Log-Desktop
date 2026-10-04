@@ -93,7 +93,8 @@ test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlene
   assert.match(VIEW, /Rules\.mergeWithDefaults\(stored\.rules, state\.deletedRuleIds\)/);
   // Eski PREF_KEY içindeki kurallar kaybolmadan yeni anahtarlara taşınır.
   assert.match(VIEW, /function loadRuleStores\(legacy\)/);
-  assert.match(VIEW, /if \(migrateRuleStores\) savePrefs\(\);/);
+  assert.match(VIEW, /if \(migrateRuleStores && !unreadablePreferenceStores\.size\)/);
+  assert.match(VIEW, /try \{ savePrefs\(\); \} catch/);
 });
 
 test('v9.49 kural uygulaması sırası doğru: kontrol durumu → öncelik → yeniden sayım', () => {
@@ -170,7 +171,9 @@ test('v9.48 perspektif YETKİYİ değiştirmez, yalnız kart sırasını değiş
    ayarlarını ve aynı "tamamlandı" cevaplarını paylaşması demekti — kullanıcı
    açıkça kişiye özel olmasını istemişti. */
 test('v9.48 kontrol cevabı sipariş verisine DEĞİL, kullanıcıya ÖZEL kayda yazılır', () => {
-  assert.match(VIEW, /state\.answers\[Checklist\.answerKey\(/);
+  assert.match(VIEW, /const key = Checklist\.answerKey\(analysis\.orderKey, itemId\)/);
+  assert.match(VIEW, /state\.answers\[key\] = Checklist\.makeAnswer/);
+  assert.match(VIEW, /setChecklistAnswer\(analysis, itemId, status\);/);
   assert.match(VIEW, /store\.set\(ANSWER_KEY/);
   assert.match(VIEW, /store\.set\(PREF_KEY/);
   assert.match(VIEW, /window\.BLStorage\.setItem\(key, value\)/);

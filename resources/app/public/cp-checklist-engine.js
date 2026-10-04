@@ -23,10 +23,9 @@
  *    demek DEĞİLDİR; "bu soru henüz yanıtlanmadı" demektir. Etiketler ve
  *    sayımlar bunu ayırır — olmayan veriden kesin uyarı üretmiyoruz.
  *
- * 4) TARİH KAYARSA SORU GERİ GELİR. Yükleme tarihi cevaptan sonra ileri/geri
- *    alınırsa cevap "eskimiş" sayılır ve kontrol yeniden sorulur; aksi hâlde
- *    Ocak'ta "evet" denen bir kontrol, Nisan'a ertelenmiş sipariş için sonsuza
- *    kadar onaylı görünürdü.
+ * 4) TARİH DEĞİŞİKLİĞİ KARARI SİLMEZ. Kullanıcının seçimi, notu ve ekleri
+ *    korunur. Tarih farkı yalnız bilgi olarak gösterilir; durum sadece
+ *    açık bir kullanıcı işlemiyle değişir.
  *
  * 5) PLM KANITI SORUYU KENDİSİ CEVAPLAR. CoreNectum Requests sekmesinden
  *    gelen numune talebi (plm-sample-requests-engine) onaylıysa soru
@@ -91,7 +90,7 @@
   });
 
   /* Cevap durumları (v7.221). Kullanıcı dört durumdan birini seçer:
-       Pending (open)   → cevap YOK; soru açıktır. Saklanmaz, kayıt silinir.
+       Pending (open)   → soru açıktır; seçim ve ek bilgiler saklanır.
        Approved         → soruyu susturur.
        Not Required     → soruyu susturur; "yapıldı"dan ayrı bilgi.
        Rejected         → soru AÇIK kalır ama "reddedildi" diye işaretlenir:
@@ -225,7 +224,7 @@
     const details = meta && typeof meta === 'object' ? meta : {};
     const hasLoadDate = Object.prototype.hasOwnProperty.call(details, 'loadDate');
     const answer = {
-      state: ANSWER_STATES.includes(normalizeStatus(state)) ? normalizeStatus(state) : 'approved',
+      state: normalizeStatus(state) || 'approved',
       at: details.at || new Date().toISOString(),
       by: details.by || '',
       loadDate: hasLoadDate ? details.loadDate : (analysis ? analysis.plannedLoadDate : null),
@@ -253,17 +252,17 @@
   }
 
   /* Bir sorunun sipariş için geçerli durumu ('open' | 'approved' | 'rejected'
-     | 'notRequired'). Kullanıcı cevabı her zaman önceliklidir; eskimiş cevap
-     soruyu yeniden açar; cevap yoksa PLM onayı soruyu kapatır. */
+     | 'notRequired'). Kullanıcı cevabı her zaman önceliklidir; tarih farkı
+     durumu değiştirmez; cevap yoksa PLM onayı soruyu kapatır. */
   function statusOf(analysis, itemId, ctx) {
     const context = ctx || {};
     const answers = context.answers || {};
     const answer = answers[answerKey(analysis.orderKey, itemId)];
-    const stale = answerIsStale(answer, analysis);
-    const answerState = answer && !stale ? normalizeStatus(answer.state) : '';
+    // A date revision is context, never permission to undo a user's decision.
+    const answerState = answer ? normalizeStatus(answer.state) : '';
     // PO'ya özel seçim her zaman üstündür. Böylece paylaşılan bir onayın
     // istisnası olan PO, örneğin Reddedildi olarak ayrıca takip edilebilir.
-    if (answerState && answerState !== 'open') return answerState;
+    if (answerState) return answerState;
     if (approvalScopeOf(context, itemId) === 'option') {
       const reusableKey = optionAnswerKey(analysis, itemId);
       const reusable = reusableKey ? answers[reusableKey] : null;
@@ -400,7 +399,7 @@
         if (!isResolved(status)) return;
         answeredTotal += 1;
         const answer = answers[answerKey(analysis.orderKey, itemId)];
-        const direct = answer && !answerIsStale(answer, analysis) && normalizeStatus(answer.state);
+        const direct = answer && normalizeStatus(answer.state);
         const reusableKey = approvalScopeOf(scopedContext, itemId) === 'option' ? optionAnswerKey(analysis, itemId) : '';
         const reusable = reusableKey ? answers[reusableKey] : null;
         const reusableApproved = reusable && normalizeStatus(reusable.state) === 'approved';

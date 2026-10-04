@@ -173,7 +173,7 @@ test('v9.48 eşikler kullanıcıya göre değişir ama sınırsız değildir', (
   assert.equal(Checklist.normalizeSettings({ items: { pps: { maxDaysToLoad: -5 } } }).items.pps.maxDaysToLoad, 0);
 });
 
-test('v9.48 yükleme tarihi kayarsa eski cevap eskir ve soru YENİDEN sorulur', () => {
+test('yükleme tarihi farkı tespit edilir ama kayıtlı kullanıcı kararı korunur', () => {
   const [analysis] = analyses([nearOrder(8006)]);
   const settings = Checklist.normalizeSettings(null);
   const answer = Checklist.makeAnswer('done', analysis, {});
@@ -183,9 +183,8 @@ test('v9.48 yükleme tarihi kayarsa eski cevap eskir ve soru YENİDEN sorulur', 
   assert.equal(Checklist.answerIsStale(answer, moved), true);
   const reopened = Checklist.openItems(moved, { settings, answers: { [Checklist.answerKey(moved.orderKey, 'pps')]: answer } })
     .find(item => item.id === 'pps');
-  assert.ok(reopened, 'tarih kayınca soru geri gelmeli');
-  assert.equal(reopened.reopened, true);
-  assert.ok(reopened.previousAnswer, 'önceki cevap gösterilebilmeli');
+  assert.equal(reopened, undefined, 'tarih değişimi onayı kendiliğinden kaldırmamalı');
+  assert.equal(Checklist.statusOf(moved, 'pps', { answers: { [Checklist.answerKey(moved.orderKey, 'pps')]: answer } }), 'approved');
 });
 
 test('v9.48 kumaş sorusu yüklemeye uzak olsa da sipariş yaşlandıysa sorulur', () => {

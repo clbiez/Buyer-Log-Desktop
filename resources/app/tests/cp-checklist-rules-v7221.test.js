@@ -188,9 +188,9 @@ test('yeni kullanıcı checklistleri varsayılan olarak aynı model/renk PO’la
   assert.match(view, /CHECKLIST_RULE_STORE_VERSION\s*=\s*2/);
   assert.match(view, /checklistScopeMigration/);
   assert.match(view, /function promoteReusableChecklistAnswers\(orders\)/);
-  assert.match(view, /Checklist\.answerIsStale\(direct, analysis\)/);
+  assert.doesNotMatch(view, /answerIsStale\(direct, analysis\)\) continue/, 'tarih değişikliği kaydedilmiş onayın taşınmasını engellemez');
   assert.match(view, /Checklist\.optionAnswerKey\(analysis, rule\.id\)/);
-  assert.match(view, /delete state\.answers\[directKey\]/, 'v1 PO onayı seçenek anahtarına kanonik taşınmalı');
+  assert.doesNotMatch(view, /delete state\.answers\[directKey\]/, 'paylaşılan onay oluşturulurken her PO kendi ek bilgilerini korumalı');
 });
 
 test('döngüsel bağlantı güvenle durur ve editörde gösterilir', () => {

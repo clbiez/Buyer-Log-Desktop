@@ -14,6 +14,7 @@
 
   const API = '/api/checklist-supplier';
   const ANSWER_KEY = 'lcw.cp.checklist.v1';
+  const PENDING_KEY = 'lcw.cp.checklist.pending.v1';
   const COLUMN_PREFIX = '__checklist__';
   const META_SHEET = '__BL_META';
   const DATA_SHEET = 'Checklist';
@@ -30,6 +31,12 @@
     syncingAnswers: false,
     syncQueued: false,
     syncRetryTimer: null,
+    syncPromise: null,
+    pendingAnswers: {},
+    journalLoaded: false,
+    journalError: false,
+    observedAnswers: null,
+    pendingUploads: 0,
     shared: { definitions: [], answers: {}, tombstones: {}, revision: 0, updatedAt: '' },
     answerBaseline: {},
     renderWrapped: false,
@@ -127,6 +134,51 @@
     try { return JSON.stringify(a) === JSON.stringify(b); } catch (_) { return false; }
   }
 
+  // This journal is device-local and user-scoped. Generic preference hydration
+  // must not replace an unacknowledged edit with another device's snapshot.
+  function journalStorage() {
+    const storage = root.BLStorage;
+    return { native: storage && storage.native || root.localStorage,
+      key: storage && storage.actualKey ? storage.actualKey(PENDING_KEY) : 'bl.user.' + String((root.BL_USER_CONTEXT || {}).id || 'anonymous') + '.' + PENDING_KEY };
+  }
+  function readPendingAnswers() {
+    if (state.journalLoaded) return;
+    const storage = journalStorage();
+    try {
+      const raw = storage.native && storage.native.getItem(storage.key);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('Invalid checklist journal');
+      state.pendingAnswers = parsed;
+      state.journalLoaded = true;
+    } catch (error) {
+      state.journalError = true;
+      throw new Error(T('Bekleyen checklist kayıtları okunamadı; mevcut kayıt korunuyor.', 'Pending checklist changes could not be read; existing records are preserved.'));
+    }
+  }
+  function persistPendingAnswers() {
+    const storage = journalStorage();
+    try {
+      if (!storage.native) throw new Error('Checklist local storage unavailable');
+      if (Object.keys(state.pendingAnswers).length) storage.native.setItem(storage.key, JSON.stringify(state.pendingAnswers));
+      else storage.native.removeItem(storage.key);
+      state.journalError = false;
+      return true;
+    } catch (error) {
+      if (!state.journalError) toast(T('Checklist yerel kaydı başarısız; sunucu onayı bekleniyor.', 'Checklist local save failed; waiting for server acknowledgement.'));
+      state.journalError = true;
+      return false;
+    }
+  }
+  function captureAnswerChanges() {
+    readPendingAnswers();
+    const current = snapshotAnswers();
+    const entries = diffAnswers(state.observedAnswers || state.answerBaseline, current);
+    entries.forEach(function (entry) { state.pendingAnswers[answerKey(entry.orderKey, entry.itemId)] = entry; });
+    state.observedAnswers = current;
+    persistPendingAnswers();
+    return current;
+  }
+
   /* v7.221 — checklist başlıkları KİŞİSELDİR (Ön Ayar Paylaşımı ile
      paylaşılır). Sunucudaki eski ortak liste yalnız geçiş için bir kez
      kullanıcının kendi kaydına alınır; her açılışta üzerine yazılmaz. */
@@ -145,13 +197,18 @@
     state.applyingRemote = true;
     try {
       Object.keys(tombstones).forEach(function (key) {
+        if (state.pendingAnswers[key]) return;
         const tomb = tombstones[key] || {};
         const current = local[key];
         const currentAt = current && String(current.at || '');
         const tombAt = String(tomb.at || '');
-        if (!currentAt || currentAt <= tombAt) delete local[key];
+        if (!currentAt || currentAt <= tombAt) {
+          if (tomb.deleted === true) delete local[key];
+          else local[key] = safeJson({ ...tomb, state: 'open' });
+        }
       });
       Object.keys(answers).forEach(function (key) {
+        if (state.pendingAnswers[key]) return;
         const incoming = answers[key] || {};
         const current = local[key];
         if (!current || String(current.at || '') <= String(incoming.at || '')) {
@@ -159,10 +216,16 @@
         }
       });
       s.answers = local;
+      // Restore the exact unacknowledged decisions before displaying remote data.
+      Object.keys(state.pendingAnswers).forEach(function (key) {
+        const entry = state.pendingAnswers[key];
+        if (entry.deleted === true) delete local[key]; else local[key] = safeJson(entry);
+      });
+      if (root.BLCpAssistant && typeof root.BLCpAssistant.persistChecklistAnswers === 'function') root.BLCpAssistant.persistChecklistAnswers({ recovered: true });
     } finally {
       state.applyingRemote = false;
     }
-    state.answerBaseline = snapshotAnswers();
+    state.observedAnswers = snapshotAnswers();
   }
 
   function diffAnswers(previous, current) {
@@ -177,12 +240,12 @@
         entries.push({
           orderKey: parts.orderKey, itemId: parts.itemId, state: 'open',
           at: now, baseAt: before && before.at || '', loadDate: before && before.loadDate || null,
-          source: 'buyer_log',
+          source: 'buyer_log', deleted: true,
         });
         return;
       }
       const answerState = normalizeState(after.state);
-      if (!answerState || answerState === 'open') return;
+      if (!answerState) return;
       entries.push({
         orderKey: parts.orderKey, itemId: parts.itemId, state: answerState,
         at: after.at || now, baseAt: before && before.at || '',
@@ -196,34 +259,52 @@
     return entries;
   }
 
-  async function syncAnswerChanges() {
-    if (state.applyingRemote) return false;
-    if (state.syncingAnswers) { state.syncQueued = true; return false; }
+  function syncAnswerChanges() {
+    if (state.applyingRemote) return Promise.resolve(false);
+    try { captureAnswerChanges(); }
+    catch (error) { return Promise.reject(error); }
+    if (state.syncPromise) { state.syncQueued = true; return state.syncPromise; }
     state.syncingAnswers = true;
     if (state.syncRetryTimer) { clearTimeout(state.syncRetryTimer); state.syncRetryTimer = null; }
+    state.syncPromise = drainAnswerChanges().finally(function () { state.syncPromise = null; });
+    return state.syncPromise;
+  }
+  async function drainAnswerChanges() {
     try {
       // Kullanıcı ilk kayıt devam ederken ikinci/üçüncü kez durum değiştirirse
       // eski kod bu olayları sessizce atlıyordu. Her başarılı POST'tan sonra
       // snapshot yeniden alınır; kuyruk boşalana kadar devam edilir.
       for (;;) {
         state.syncQueued = false;
-        const current = snapshotAnswers();
-        const entries = diffAnswers(state.answerBaseline, current);
+        captureAnswerChanges();
+        const entries = Object.values(state.pendingAnswers).filter(entry => !entry.syncBlocked).slice(0, 200);
         if (!entries.length) {
-          state.answerBaseline = current;
+          if (Object.keys(state.pendingAnswers).length) throw Object.assign(new Error(T('Sunucuda daha yeni bir checklist kaydı var. Bekleyen değişiklik korundu; durumu kontrol edip yeniden seçin.', 'A newer checklist record exists on the server. Your pending edit was preserved; review and select the status again.')), { code: 'CHECKLIST_CONFLICT' });
           if (!state.syncQueued) break;
           continue;
         }
-        await post('/answers', { entries: entries, source: 'buyer_log' });
-        state.answerBaseline = current;
-        const latest = snapshotAnswers();
-        if (!state.syncQueued && !diffAnswers(state.answerBaseline, latest).length) break;
+        const result = await post('/answers', { entries: entries, source: 'buyer_log' });
+        if (result.ok === false) throw new Error(T('Checklist değişikliği onaylanmadı; bekleyen kayıt korunuyor.', 'Checklist change was not acknowledged; the pending record is preserved.'));
+        const accepted = Array.isArray(result.changedKeys) ? new Set(result.changedKeys) : null;
+        if (!accepted && (result.skipped || result.conflicts)) throw new Error(T('Checklist değişikliği onaylanmadı; bekleyen kayıt korunuyor.', 'Checklist change was not acknowledged; the pending record is preserved.'));
+        entries.forEach(function (entry) {
+          const key = answerKey(entry.orderKey, entry.itemId);
+          if (accepted && !accepted.has(key)) {
+            if (sameJson(state.pendingAnswers[key], entry)) state.pendingAnswers[key] = { ...entry, syncBlocked: true, remoteAt: result.rejectedAt && result.rejectedAt[key] || '' };
+            return;
+          }
+          state.answerBaseline[key] = safeJson(entry);
+          if (sameJson(state.pendingAnswers[key], entry)) delete state.pendingAnswers[key];
+        });
+        persistPendingAnswers();
+        captureAnswerChanges();
+        if (!state.syncQueued && !Object.keys(state.pendingAnswers).length) break;
       }
       return true;
     } catch (error) {
       // Baseline yalnız başarılı POST'ta ilerlediği için veri yerelde kalır ve
       // tekrar denendiğinde eksik değişiklik yeniden gönderilir.
-      if (!state.syncRetryTimer) {
+        if (error.code !== 'CHECKLIST_CONFLICT' && !state.syncRetryTimer) {
         state.syncRetryTimer = setTimeout(function () {
           state.syncRetryTimer = null;
           syncAnswerChanges().catch(function () {});
@@ -232,7 +313,7 @@
       throw error;
     } finally {
       state.syncingAnswers = false;
-      if (state.syncQueued && !state.syncRetryTimer) {
+      if (state.syncQueued && Object.values(state.pendingAnswers).some(entry => !entry.syncBlocked) && !state.syncRetryTimer) {
         state.syncRetryTimer = setTimeout(function () {
           state.syncRetryTimer = null;
           syncAnswerChanges().catch(function () {});
@@ -304,7 +385,7 @@
     if (!s || !Checklist) return null;
     const key = Checklist.answerKey(analysis.orderKey, item.id);
     const answer = s.answers && s.answers[key];
-    if (answer && !Checklist.answerIsStale(answer, analysis)) return answer;
+    if (answer) return answer;
     if (item.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function') {
       const optionKey = Checklist.optionAnswerKey(analysis, item.id);
       const reusable = optionKey && s.answers && s.answers[optionKey];
@@ -389,11 +470,18 @@
   }
 
   async function loadShared(force) {
-    if (state.loading && !force) return state.loading;
+    if (state.loading) return state.loading;
     state.loading = (async function () {
       const assistant = await ensureAssistant();
       if (!assistant) return null;
+      readPendingAnswers();
+      if (state.observedAnswers == null) state.observedAnswers = snapshotAnswers();
+      captureAnswerChanges();
       const payload = await jsonFetch(API, { cache: 'no-store' });
+      if (!payload.answers || typeof payload.answers !== 'object' || Array.isArray(payload.answers)
+        || !payload.tombstones || typeof payload.tombstones !== 'object' || Array.isArray(payload.tombstones)) {
+        throw new Error(T('Checklist yanıtı geçersiz; mevcut kayıtlar korundu.', 'Invalid checklist response; existing records were preserved.'));
+      }
       state.shared = {
         definitions: safeJson(payload.definitions || []),
         answers: safeJson(payload.answers || {}),
@@ -402,7 +490,10 @@
         updatedAt: payload.updatedAt || '',
       };
 
-      adoptRemoteDefinitions(state.shared.definitions);
+      // A settings-store failure must never block independent answer/evidence recovery.
+      try { adoptRemoteDefinitions(state.shared.definitions); }
+      catch (error) { toast(T('Checklist tanımları kaydedilemedi: ', 'Checklist definitions could not be saved: ') + error.message); }
+      state.answerBaseline = safeJson({ ...state.shared.tombstones, ...state.shared.answers });
       mergeRemoteAnswers(state.shared);
       // First rollout / another device: preserve a newer local checklist answer
       // by promoting it into the shared store instead of silently leaving it local.
@@ -417,7 +508,7 @@
         if (remoteAt && (!localAt || localAt <= remoteAt)) return;
         const parts = splitAnswerKey(key);
         const normalized = normalizeState(localAnswer && localAnswer.state);
-        if (!parts.orderKey || !parts.itemId || !normalized || normalized === 'open') return;
+        if (!parts.orderKey || !parts.itemId || !normalized) return;
         promote.push({
           orderKey: parts.orderKey, itemId: parts.itemId, state: normalized,
           at: localAt || isoNow(), baseAt: remoteAt,
@@ -429,10 +520,13 @@
         });
       });
       if (promote.length) {
-        try { await post('/answers', { entries: promote, source: 'buyer_log' }); }
-        catch (_) { /* local answer remains intact; next explicit change retries */ }
+        promote.forEach(function (entry) { state.pendingAnswers[answerKey(entry.orderKey, entry.itemId)] = entry; });
+        persistPendingAnswers();
       }
-      state.answerBaseline = snapshotAnswers();
+      if (Object.keys(state.pendingAnswers).length) {
+        try { await syncAnswerChanges(); }
+        catch (error) { toast(T('Checklist kaydı bekliyor: ', 'Checklist save is pending: ') + error.message); }
+      }
       refreshAssistantView();
       return state.shared;
     }()).catch(function (error) {
@@ -1407,7 +1501,6 @@
             String(date.getDate()).padStart(2, '0'),
           ].join('-');
         }
-        const existing = answerFor(item, analysis);
         entries.push({
           orderKey: orderKey,
           itemId: metaItem.id,
@@ -1416,10 +1509,11 @@
           at: importedAt,
           baseAt: meta.exportedAt || '',
           loadDate: loadDate || null,
-          note: noteCell ? text(noteCell.text || noteCell.value) : '',
+          note: noteCell ? String(noteCell.text || noteCell.value || '') : '',
           ...(metaItem.reportColumn ? { reportNumber: reportCell ? text(reportCell.text || reportCell.value) : '' } : {}),
           ...(metaItem.actualDateColumn ? { actualDate: actualDate } : {}),
-          attachments: existing && Array.isArray(existing.attachments) ? existing.attachments : [],
+          // Workbook attachment names are read-only; preserve authoritative
+          // server attachments even when this device has no complete mirror.
           supplier: supplier,
           source: 'supplier_excel',
         });
@@ -1741,14 +1835,11 @@
     if (!analysis) return;
     const answer = answerFor(item, analysis);
     const status = normalizeState(answer && answer.state) || normalizeState(trigger.dataset.status) || 'open';
-    if (status === 'open') {
-      toast(T('Rapor/ek bilgisi eklemeden önce checklist durumunu Onaylandı, Reddedildi veya Gerekmiyor olarak seçin.', 'Choose Approved, Rejected or Not Required before adding report/evidence details.'));
-      return;
-    }
     root.document.getElementById('_blChecklistEvidence')?.remove();
     let kept = Array.isArray(answer && answer.attachments) ? answer.attachments.slice() : [];
     const removed = new Set();
     const pending = [];
+    let uploadPromise = null;
     const modal = root.document.createElement('div');
     modal.id = '_blChecklistEvidence';
     modal.className = 'cpaModalOverlay';
@@ -1768,8 +1859,8 @@
         <button type="button" data-evidence-close aria-label="${T('Kapat', 'Close')}">×</button></header>
       <div class="cpaModalBody">
         <div class="cpaSettingGroup">
-          <label class="cpaSettingRow"><span><b>${html(T('Not', 'Note'))}</b></span><textarea data-evidence-note rows="3">${html(answer && answer.note || '')}</textarea></label>
-          ${fields.reportNumber ? `<label class="cpaSettingRow"><span><b>${T('Rapor numarası', 'Report number')}</b></span><input type="text" data-evidence-report value="${html(answer && answer.reportNumber || '')}"></label>` : ''}
+          <label class="cpaSettingRow"><span><b>${html(T('Not', 'Note'))}</b></span><textarea data-evidence-note rows="3" maxlength="2000">${html(answer && answer.note || '')}</textarea></label>
+          ${fields.reportNumber ? `<label class="cpaSettingRow"><span><b>${T('Rapor numarası', 'Report number')}</b></span><input type="text" maxlength="300" data-evidence-report value="${html(answer && answer.reportNumber || '')}"></label>` : ''}
           ${fields.actualDate ? `<label class="cpaSettingRow"><span><b>${T('Gerçekleşme tarihi', 'Actual date')}</b></span><input type="date" data-evidence-date value="${html(answer && answer.actualDate || '')}"></label>` : ''}
         </div>
         ${fields.attachments ? `<div class="cpaSettingGroup"><div class="cpaSettingRow"><span><b>${T('Rapor / e-mail ekleri', 'Report / e-mail attachments')}</b><small>${T('Dosyalar Buyer Log’da saklanır ve Üreticiye Checklist Exceli Hazırla akışında e-postaya otomatik eklenir.', 'Files are stored in Buyer Log and automatically attached by Prepare Supplier Checklist.')}</small></span>
@@ -1777,10 +1868,16 @@
           <div data-evidence-list>${attachmentRows()}</div>
           <div data-evidence-pending></div></div>` : ''}
       </div>
-      <footer><button type="button" class="cpaBtn" data-evidence-close>${T('Vazgeç', 'Cancel')}</button><button type="button" class="cpaBtn primary" data-evidence-save>${T('Kaydet', 'Save')}</button></footer>
+      <footer><span role="status" aria-live="polite" data-evidence-save-state>${T('Değişiklikler anında kaydedilir.', 'Changes are saved immediately.')}</span><button type="button" class="cpaBtn" data-evidence-close>${T('Kapat', 'Close')}</button><button type="button" class="cpaBtn primary" data-evidence-save>${T('Kaydı Doğrula', 'Verify Save')}</button></footer>
     </div>`;
     root.document.body.appendChild(modal);
-    const close = function () { modal.remove(); };
+    const close = function () {
+      if (pending.length || uploadPromise) {
+        toast(T('Dosya kaydı tamamlanmadı. Pencereyi açık tutun ve Kaydı Doğrula ile yeniden deneyin.', 'File save is incomplete. Keep this window open and use Verify Save to retry.'));
+        return;
+      }
+      modal.remove();
+    };
     modal.querySelectorAll('[data-evidence-close]').forEach(function (button) { button.onclick = close; });
     modal.onclick = function (event) { if (event.target === modal) close(); };
     const refreshAttachments = function () {
@@ -1788,47 +1885,83 @@
       if (list) list.innerHTML = attachmentRows();
       const pendingHost = modal.querySelector('[data-evidence-pending]');
       if (pendingHost) pendingHost.innerHTML = pending.map(function (file, index) {
-        return '<div class="cpaSettingRow"><span><b>' + html(file.name) + '</b><small>' + file.size.toLocaleString() + ' B · ' + T('Kaydedilince yeniden adlandırılacak', 'Will be renamed when saved') + '</small></span><button type="button" class="cpaBtn" data-evidence-pending-remove="' + index + '">' + T('Kaldır', 'Remove') + '</button></div>';
+        return '<div class="cpaSettingRow"><span><b>' + html(file.name) + '</b><small>' + file.size.toLocaleString() + ' B · ' + T('Dosya kaydı bekleniyor', 'File save pending') + '</small></span></div>';
       }).join('');
     };
     modal.addEventListener('click', function (event) {
       const remove = event.target.closest('[data-evidence-remove]');
-      if (remove) { removed.add(remove.dataset.evidenceRemove); refreshAttachments(); return; }
-      const pendingRemove = event.target.closest('[data-evidence-pending-remove]');
-      if (pendingRemove) { pending.splice(Number(pendingRemove.dataset.evidencePendingRemove), 1); refreshAttachments(); }
+      if (remove) {
+        removed.add(remove.dataset.evidenceRemove); refreshAttachments();
+        saveEvidence().catch(showSaveError);
+      }
     });
     modal.querySelector('[data-evidence-files]')?.addEventListener('change', function (event) {
-      Array.from(event.target.files || []).forEach(function (file) { pending.push(file); });
+      const files = Array.from(event.target.files || []);
+      if (kept.filter(entry => !removed.has(entry.id)).length + pending.length + files.length > 40) {
+        toast(T('Bir checklist kaydına en fazla 40 dosya eklenebilir.', 'A checklist record can contain up to 40 files.'));
+        event.target.value = ''; return;
+      }
+      files.forEach(function (file) { pending.push(file); state.pendingUploads += 1; });
       event.target.value = '';
       refreshAttachments();
+      uploadPendingFiles().catch(showSaveError);
+    });
+    function saveState(label) { const host = modal.querySelector('[data-evidence-save-state]'); if (host) host.textContent = label; }
+    function showSaveError(error) {
+      saveState(T('Kaydedilemedi; tekrar denenecek.', 'Save failed; retry pending.'));
+      toast(T('Checklist detayları kaydedilemedi: ', 'Checklist details could not be saved: ') + (error.message || error));
+    }
+    async function saveEvidence() {
+      const assistant = root.BLCpAssistant;
+      if (!assistant || typeof assistant.setChecklistAnswer !== 'function') throw new Error(T('Checklist kaydı açılamadı.', 'Checklist record is unavailable.'));
+      const latest = answerFor(item, analysis) || {};
+      // A remote update or another cell may have changed the status while this
+      // dialog was open. Evidence edits never restore the captured old status.
+      const currentStatus = normalizeState(latest.state) || status;
+      const attachments = new Map((latest.attachments || []).concat(kept).map(entry => [entry.id, entry]));
+      removed.forEach(id => attachments.delete(id));
+      if (attachments.size > 40) throw new Error(T('Bir checklist kaydına en fazla 40 dosya eklenebilir; mevcut ekler korundu.', 'A checklist record can contain up to 40 files; existing attachments were preserved.'));
+      saveState(T('Kaydediliyor…', 'Saving…'));
+      assistant.setChecklistAnswer(analysis, item.id, currentStatus, {
+        note: String(modal.querySelector('[data-evidence-note]')?.value || ''),
+        reportNumber: fields.reportNumber ? String(modal.querySelector('[data-evidence-report]')?.value || '') : (latest.reportNumber || ''),
+        actualDate: fields.actualDate ? String(modal.querySelector('[data-evidence-date][type="date"]')?.value || '') : (latest.actualDate || ''),
+        attachments: Array.from(attachments.values()),
+      });
+      await syncAnswerChanges();
+      saveState(T('Kaydedildi', 'Saved'));
+      refreshColumns({ render: true });
+    }
+    function uploadPendingFiles() {
+      if (uploadPromise) return uploadPromise;
+      uploadPromise = (async function () {
+        while (pending.length) {
+          const file = pending[0];
+          const latest = answerFor(item, analysis) || {};
+          const uploaded = await uploadChecklistAttachment(file, evidenceContext(row, item, normalizeState(latest.state) || status, kept.length + 1));
+          if (!uploaded || !uploaded.id) throw new Error(T('Dosya kaydı onaylanmadı.', 'File save was not acknowledged.'));
+          // Remember each successful upload immediately, including if a later
+          // file fails. Retry cannot duplicate or orphan an earlier uploaded file.
+          kept.push(uploaded); pending.shift(); state.pendingUploads -= 1;
+          refreshAttachments();
+          await saveEvidence();
+        }
+      }()).finally(function () { uploadPromise = null; });
+      return uploadPromise;
+    }
+    modal.querySelectorAll('[data-evidence-note], [data-evidence-report], [data-evidence-date]').forEach(function (input) {
+      input.addEventListener('input', function () { saveEvidence().catch(showSaveError); });
+      input.addEventListener('change', function () { saveEvidence().catch(showSaveError); });
     });
     modal.querySelector('[data-evidence-save]').onclick = async function () {
       const button = modal.querySelector('[data-evidence-save]');
       button.disabled = true;
       try {
-        const live = kept.filter(function (entry) { return !removed.has(entry.id); });
-        for (let i = 0; i < pending.length; i += 1) {
-          const uploaded = await uploadChecklistAttachment(pending[i], evidenceContext(row, item, status, live.length + i + 1));
-          if (uploaded) live.push(uploaded);
-        }
-        const assistant = await ensureAssistant();
-        if (!assistant || typeof assistant.setChecklistAnswer !== 'function') throw new Error(T('Checklist kaydı açılamadı.', 'Checklist record is unavailable.'));
-        assistant.setChecklistAnswer(analysis, item.id, status, {
-          note: String(modal.querySelector('[data-evidence-note]')?.value || ''),
-          reportNumber: fields.reportNumber ? String(modal.querySelector('[data-evidence-report]')?.value || '') : (answer && answer.reportNumber || ''),
-          actualDate: fields.actualDate ? String(modal.querySelector('[data-evidence-date]')?.value || '') : (answer && answer.actualDate || ''),
-          attachments: live,
-        });
-        await syncAnswerChanges();
-        for (const id of removed) {
-          try { await deleteChecklistAttachment(id); } catch (_) {}
-        }
-        kept = live;
-        refreshColumns({ render: true });
-        toast(T('Checklist detayları kaydedildi.', 'Checklist details saved.'));
-        close();
+        await uploadPendingFiles();
+        await saveEvidence();
+        button.disabled = false;
       } catch (error) {
-        toast(T('Checklist detayları kaydedilemedi: ', 'Checklist details could not be saved: ') + (error.message || error));
+        showSaveError(error);
         button.disabled = false;
       }
     };
@@ -1970,6 +2103,9 @@
       return;
     }
     if (reason === 'checklist-answer') {
+      // Journal first: rendering can itself invoke checklist migrations.
+      try { captureAnswerChanges(); }
+      catch (error) { toast(T('Checklist kaydı bekliyor: ', 'Checklist save is pending: ') + error.message); }
       // Hücre yerel cevapla hemen güncellenir; sunucu senkronu arkada çalışır.
       refreshColumns({ render: true });
       syncAnswerChanges().catch(function (error) {
@@ -1981,7 +2117,8 @@
   function beaconPendingAnswers() {
     try {
       if (!root.navigator || typeof root.navigator.sendBeacon !== 'function') return false;
-      const entries = diffAnswers(state.answerBaseline, snapshotAnswers());
+      captureAnswerChanges();
+      const entries = Object.values(state.pendingAnswers);
       if (!entries.length) return true;
       const body = JSON.stringify({ entries: entries, source: 'buyer_log' });
       return root.navigator.sendBeacon(API + '/answers', new Blob([body], { type: 'application/json' }));
@@ -2020,7 +2157,13 @@
       }
     });
     root.addEventListener('pagehide', beaconPendingAnswers);
-    root.addEventListener('beforeunload', beaconPendingAnswers);
+    root.addEventListener('beforeunload', function (event) {
+      beaconPendingAnswers();
+      if (state.pendingUploads || Object.keys(state.pendingAnswers).length || (state.journalError && !state.journalLoaded)) {
+        event.preventDefault(); event.returnValue = '';
+      }
+    });
+    root.addEventListener('online', function () { syncAnswerChanges().catch(function () {}); });
     root.document.addEventListener('click', function (event) {
       const tab = event.target && event.target.closest && event.target.closest('nav.tabs button[data-tab]');
       if (tab && (tab.dataset.tab === 'cp' || tab.dataset.tab === 'overview')) {
@@ -2032,6 +2175,12 @@
     }
   }
 
+  if (assistantState()) state.observedAnswers = snapshotAnswers();
+  function latestAnswerAt(key) {
+    const remote = state.shared.answers[key] || state.shared.tombstones[key] || {};
+    const pending = state.pendingAnswers[key] || {};
+    return Math.max(Date.parse(remote.at || '') || 0, Date.parse(pending.remoteAt || '') || 0);
+  }
   return {
     init: init,
     loadShared: loadShared,
@@ -2044,6 +2193,8 @@
     statusOptions: statusOptions,
     openStatusMenu: openStatusMenu,
     diffAnswers: diffAnswers,
+    syncAnswerChanges: syncAnswerChanges,
+    latestAnswerAt: latestAnswerAt,
     columnKey: columnKey,
     excelDate: excelDate,
     excelColumnIds: excelColumnIds,

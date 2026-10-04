@@ -23496,8 +23496,10 @@ function kolSetChecklistStatus(rowId,key,status){
   if(kolChecklistStatus(kolEffectiveValue(row,key))===status)return true;
   kolPushUndo();
   kolWriteGroupedStorageValue(row,key,status==='open'?'':status);
-  saveKolRows();renderKol();
-  return true;
+  const saved=saveKolRows();
+  void kolSaveWorkspaceNow();
+  renderKol();
+  return saved;
 }
 function openKolChecklistStatusMenu(button){
   document.querySelector('.kolChecklistMenu')?.remove();
@@ -23537,7 +23539,8 @@ async function kolAddChecklistItem(panelEl){
     kolColOrder=order;
   }
   kolHiddenCols.delete(column.k);
-  saveKolColState();kolQueueWorkspaceSave();
+  saveKolColState();saveKolRows();
+  void kolSaveWorkspaceNow();
   if(panelEl&&panelEl.isConnected)renderKolColumnPanel(panelEl);
   renderKol();
   showToast(appLang==='en'?'Checklist item added.':'Checklist maddesi eklendi.');
@@ -35886,4 +35889,3 @@ loadLang();
 applyLanguage(appLang);
 syncTableToolbarActions(document.body.dataset.activeTab||'overview');
 setTimeout(()=>void loadModelImageSettings(),1200);
-
