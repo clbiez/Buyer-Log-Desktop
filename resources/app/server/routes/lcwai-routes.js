@@ -11,7 +11,12 @@ const { publicError, isLcwAiError, lcwAiError } = require('../lib/lcwai/lcwai-er
 const lcwaiConfig = require('../lib/lcwai/lcwai-config');
 
 module.exports = function registerLcwAiRoutes(app, deps) {
-  const { express, userAccess, engine: engineOverride } = deps;
+  const {
+    express,
+    userAccess,
+  } = deps;
+  // Testler motoru enjekte edebilir; üretimde varsayılan LCW AI motoru kullanılır.
+  const engineOverride = deps.engine;
   const engineOf = () => engineOverride || require('../lib/lcwai').getDefaultEngine();
   const loginErrors = new Map();
   const ownerOf = req => String(req.currentUser && req.currentUser.id || 'default');
@@ -26,11 +31,11 @@ module.exports = function registerLcwAiRoutes(app, deps) {
     return error && !status.connected && !status.loginInProgress ? { ...status, lastError: error } : status;
   };
 
-  app.get('/api/lcwai/config', (req, res) => {
+app.get('/api/lcwai/config', (req, res) => {
     res.set('Cache-Control', 'no-store').json({ ok: true, config: lcwaiConfig.publicConfig() });
   });
 
-  app.get('/api/lcwai/status', async (req, res) => {
+app.get('/api/lcwai/status', async (req, res) => {
     try {
       const owner = ownerOf(req);
       const status = await engineOf().getStatus(owner, { refresh: req.query.refresh !== '0' });
@@ -41,7 +46,7 @@ module.exports = function registerLcwAiRoutes(app, deps) {
   /* Giriş arka planda yürür (kullanıcı tarayıcıda kurumsal girişini yapar);
      istemci durumu /status ile izler. Zaten geçerli bir sekme varsa sonuç
      birkaç saniye içinde döner. */
-  app.post('/api/lcwai/connect', express.json({ limit: '4kb' }), async (req, res) => {
+app.post('/api/lcwai/connect', express.json({ limit: '4kb' }), async (req, res) => {
     const owner = ownerOf(req);
     const engine = engineOf();
     loginErrors.delete(owner);
@@ -59,7 +64,7 @@ module.exports = function registerLcwAiRoutes(app, deps) {
     } catch (error) { fail(res, error); }
   });
 
-  app.post('/api/lcwai/disconnect', express.json({ limit: '4kb' }), async (req, res) => {
+app.post('/api/lcwai/disconnect', express.json({ limit: '4kb' }), async (req, res) => {
     try {
       const owner = ownerOf(req);
       loginErrors.delete(owner);
@@ -69,14 +74,14 @@ module.exports = function registerLcwAiRoutes(app, deps) {
     } catch (error) { fail(res, error); }
   });
 
-  app.post('/api/lcwai/cancel', express.json({ limit: '4kb' }), (req, res) => {
+app.post('/api/lcwai/cancel', express.json({ limit: '4kb' }), (req, res) => {
     const cancelled = engineOf().cancel(ownerOf(req), req.body && req.body.requestId);
     res.set('Cache-Control', 'no-store').json({ ok: true, cancelled });
   });
 
   /* Dosya ham gövdeyle gelir (multipart ayrıştırıcısı/bağımlılığı yok).
      Ad başlıkta URI-kodlu taşınır. Sonuç yalnız ek tanımıdır. */
-  app.post('/api/lcwai/files', express.raw({ type: () => true, limit: lcwaiConfig.LIMITS.maxFileBytes + 1024 }), async (req, res) => {
+app.post('/api/lcwai/files', express.raw({ type: () => true, limit: lcwaiConfig.LIMITS.maxFileBytes + 1024 }), async (req, res) => {
     try {
       let fileName = '';
       try { fileName = decodeURIComponent(String(req.headers['x-lcwai-file-name'] || '')); } catch (_) { fileName = ''; }
@@ -93,7 +98,7 @@ module.exports = function registerLcwAiRoutes(app, deps) {
   /* İstek NDJSON akışıyla cevaplanır: {type:'progress'} … {type:'result'} ya
      da {type:'error'}. İstemci bağlantıyı keserse LCW AI isteği de iptal
      edilir. */
-  app.post('/api/lcwai/ask', express.json({ limit: '768kb' }), async (req, res) => {
+app.post('/api/lcwai/ask', express.json({ limit: '768kb' }), async (req, res) => {
     const owner = ownerOf(req);
     const body = req.body && typeof req.body === 'object' ? req.body : {};
     const controller = new AbortController();

@@ -1,5 +1,7 @@
 /* LCW AI ortak asistan paneli — yalnız mevcut tasarım token'ları kullanılır
    (--acc, --line, --card, --ink, --green/--orange/--red …). Yeni renk yok. */
+/* display kuralları hidden özniteliğini ezmesin (öneri kutusu, durum rozeti…). */
+.lcwaiAssist [hidden],.lcwaiConnBody [hidden]{display:none !important;}
 .lcwaiAssist{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--line2);border-left:2px solid var(--acc);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:12.2px;}
 .lcwaiHead{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .lcwaiHead b{font-weight:650;color:var(--acc-ink);}
