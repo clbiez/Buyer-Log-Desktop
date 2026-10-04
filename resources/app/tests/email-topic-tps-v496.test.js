@@ -32,7 +32,7 @@ test('Send to Pricing eski davranışı korur, genel başlıklarda TPs varsayıl
 test('Add TPs açıkken kayıtlı model dosyaları seçili satırlardan yüklenir ve 9,5 MB planlayıcısına girer', () => {
   assert.match(INDEX, /kolListStoredModelFiles\(prepareEmailStoredModelRows\(getRows\(\)\)\)/);
   assert.match(INDEX, /pricingModelFiles\.filter\(entry=>!entry\.stored\|\|topicContent\.tps\)/);
-  assert.match(INDEX, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForDraft,rowsFor\)/);
+  assert.match(INDEX, /pricingPrepareAttachmentPlans\(tableWorkbook,pricingFilesForManufacturer\(m\.name\),rowsFor\)/);
   assert.match(INDEX, /const PRICING_ATTACHMENT_LIMIT_BYTES = Math\.floor\(9\.5 \* 1024 \* 1024\)/);
 });
 
