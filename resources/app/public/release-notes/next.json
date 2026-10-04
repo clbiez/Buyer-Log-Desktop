@@ -109,6 +109,39 @@
           "en": "Apply writes the condition and suggested priority into the rule."
         }
       }
+    },
+    {
+      "id": "app-icon-neutral-taskbar",
+      "type": "fix",
+      "module": {
+        "tr": "Masaüstü uygulaması",
+        "en": "Desktop app"
+      },
+      "title": {
+        "tr": "Görev çubuğu simgesi düzeltildi, yeni nötr açık simge",
+        "en": "Taskbar icon fixed, new neutral light icon"
+      },
+      "body": {
+        "tr": "Windows görev çubuğunda Buyer Log düğmesi bazen genel “dosya” simgesi gösteriyordu; artık uygulama simgesi görünür. Simge de yenilendi: fırçalanmış metal yerine sıcak/soğuk tonu olmayan, aydınlık nötr gri zemin ve küçük boyutlarda da net okunan BL harfleri.",
+        "en": "The Buyer Log button on the Windows taskbar sometimes showed a generic “file” icon; the app icon now appears. The icon is also refreshed: instead of brushed metal, a bright neutral grey background with no warm/cool tint and BL letters that stay crisp at small sizes."
+      },
+      "path": {
+        "tr": "Windows görev çubuğu · Giriş ekranı",
+        "en": "Windows taskbar · Sign-in screen"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "app-icon-neutral.png",
+        "alt": {
+          "tr": "Giriş ekranında yeni nötr açık Buyer Log simgesi",
+          "en": "New neutral light Buyer Log icon on the sign-in screen"
+        },
+        "caption": {
+          "tr": "Aydınlık, nötr gri zeminli yeni BL simgesi.",
+          "en": "New BL icon on a bright neutral grey background."
+        }
+      }
     }
   ]
 }
