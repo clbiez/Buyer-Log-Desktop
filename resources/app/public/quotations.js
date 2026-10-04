@@ -1984,7 +1984,7 @@
     ];
     if(viewMode==='ranked'){
       const maxRank=Math.max(0,...models.map(m=>qhOrderedOffers(m,mfrs).length));
-      const head=[en?'Picture':'Görsel',en?'Season':'Sezon','In Store Month',en?'Category':'Kategori',en?'Model Name':'Model Adı',en?'Quantity':'Adet','PLM ID',en?'Target':'Hedef',...Array.from({length:maxRank},(_,i)=>`${i+1}.`)];
+      const head=[en?'Picture':'Görsel',en?'Season':'Sezon',en?'Model Budget Month':'Model Bütçe Ayı',en?'Category':'Kategori',en?'Model Name':'Model Adı',en?'Quantity':'Adet','PLM ID',en?'Target':'Hedef',...Array.from({length:maxRank},(_,i)=>`${i+1}.`)];
       ws.addRow(head);
       models.forEach(m=>{
         const offers=qhOrderedOffers(m,mfrs);
@@ -1999,7 +1999,7 @@
       });
       ws.columns.forEach((col,i)=>{col.width=i===0?11:(i===4?28:(i===3?22:(i===2?18:(i>=8?24:14))));if(i===5)col.numFmt='#,##0';if(i===7)col.numFmt='"$"#,##0.00';});
     }else{
-      const head=[en?'Picture':'Görsel',en?'Season':'Sezon','In Store Month',en?'Category':'Kategori',en?'Model Name':'Model Adı',en?'Quantity':'Adet','PLM ID',en?'Target':'Hedef'];
+      const head=[en?'Picture':'Görsel',en?'Season':'Sezon',en?'Model Budget Month':'Model Bütçe Ayı',en?'Category':'Kategori',en?'Model Name':'Model Adı',en?'Quantity':'Adet','PLM ID',en?'Target':'Hedef'];
       mfrs.forEach(m=>{head.push(m,`${m} %`);});ws.addRow(head);
       const MFR_FIRST_COL=9;
       models.forEach(m=>{const row=[m.picture? (en?'Available':'Var'):'',m.season,m.inStoreMonth,m.category,m.model,Number.isFinite(m.quantity)?m.quantity:null,m.plmId,Number.isFinite(m.target)?m.target:null];mfrs.forEach(name=>{const c=m.cells.get(name);row.push(c&&Number.isFinite(c.price)?c.price:null);row.push(c&&c.deltaPct!=null?c.deltaPct/100:null);});
@@ -2123,7 +2123,7 @@
       thead.innerHTML=`<tr>
         <th class="qhPictureHead"><span>${qhEsc(en?'Picture':'Görsel')}</span></th>
         <th data-qhsort="season"><span>${qhEsc(en?'Season':'Sezon')}</span><i class="qhArrow"></i></th>
-        <th data-qhsort="inStoreMonth"><span>In Store Month</span><i class="qhArrow"></i></th>
+        <th data-qhsort="inStoreMonth"><span>${qhEsc(en?'Model Budget Month':'Model Bütçe Ayı')}</span><i class="qhArrow"></i></th>
         <th data-qhsort="category"><span>${qhEsc(en?'Category':'Kategori')}</span><i class="qhArrow"></i></th>
         <th data-qhsort="model"><span>${qhEsc(en?'Model Name':'Model Adı')}</span><i class="qhArrow"></i></th>
         <th data-qhsort="quantity" class="isNum"><span>${qhEsc(en?'Quantity':'Adet')}</span><i class="qhArrow"></i></th>
@@ -2342,7 +2342,7 @@
   function qHistoryColumnDefinitions(){
     const shared=window.BLCollectionColumns?.catalog?.()||[
       {key:'picture',label:'Picture',type:'image'},
-      {key:'inStoreMonth',label:'In Store Month',type:'text'},
+      {key:'inStoreMonth',label:'Model Budget Month',type:'text'},
       {key:'modelKod',label:'Model Name',type:'text'},
     ];
     const seen=new Set(),all=[];
@@ -2464,7 +2464,7 @@
     if(!host)return false;await qReady;await qHydrateShared(true);qWorkspaceMounted=false;qWorkspaceMode='pricinghistory';if(Array.isArray(rows)&&rows.length)qPricingHistoryRows=rows;else if(!preserveContext)qPricingHistoryRows=null;
     const base=qhCollect(qHistoryRowsFromContext(qPricingHistoryRows));qPricingHistoryColumns=qHistoryLoadColumns();
     host.innerHTML=`<div class="pricingWorkspaceShell pricingHistoryShell"><div class="pricingWorkspaceHeader"><div><h1>${qEsc(qLang('Fiyat Geçmişi','Pricing History'))}</h1><p>${qEsc(qLang('Geçmiş fiyatları aktif benchmark ve karar desteği olarak kullan.','Use historical prices as active benchmarks and decision support.'))}</p></div><div class="pricingWorkspaceHeaderActions">${window.BLDetailImages?.modelImagesButtonHtml?window.BLDetailImages.modelImagesButtonHtml('pricingHistoryPlmSync'):''}<button type="button" class="tbtn" data-ph-back><svg class="ic"><use href="#i-chevron-left"/></svg>${qEsc(qLang('Koleksiyona Dön','Back to Collection'))}</button><button type="button" class="tbtn" data-ph-open-quotes>${qEsc(qLang('Quotations Aç','Open Quotations'))}</button><button type="button" class="tbtn" data-ph-export><svg class="ic"><use href="#i-file-export"/></svg>${qEsc(qLang('Excel','Export'))}</button></div></div>
-      <div class="pricingHistoryFilters"><input type="search" data-ph-search placeholder="${qEsc(qLang('Model, üretici veya kategori ara…','Search model, supplier or category…'))}"><select data-ph-model>${qHistoryOptions(base.map(r=>r.model),qLang('Tüm Modeller','All Models'))}</select><select data-ph-mfr>${qHistoryOptions(base.map(r=>r.manufacturer),qLang('Tüm Üreticiler','All Suppliers'))}</select><select data-ph-category>${qHistoryOptions(base.map(r=>r.category),qLang('Tüm Kategoriler','All Categories'))}</select><select data-ph-season>${qHistoryOptions(base.map(r=>r.season),qLang('Tüm Sezonlar','All Seasons'))}</select><select data-ph-in-store-month>${qHistoryOptions(base.map(r=>r.inStoreMonth),qLang('Tüm In Store Month','All In Store Month'))}</select></div>
+      <div class="pricingHistoryFilters"><input type="search" data-ph-search placeholder="${qEsc(qLang('Model, üretici veya kategori ara…','Search model, supplier or category…'))}"><select data-ph-model>${qHistoryOptions(base.map(r=>r.model),qLang('Tüm Modeller','All Models'))}</select><select data-ph-mfr>${qHistoryOptions(base.map(r=>r.manufacturer),qLang('Tüm Üreticiler','All Suppliers'))}</select><select data-ph-category>${qHistoryOptions(base.map(r=>r.category),qLang('Tüm Kategoriler','All Categories'))}</select><select data-ph-season>${qHistoryOptions(base.map(r=>r.season),qLang('Tüm Sezonlar','All Seasons'))}</select><select data-ph-in-store-month>${qHistoryOptions(base.map(r=>r.inStoreMonth),qLang('Tüm Model Bütçe Ayı','All Model Budget Months'))}</select></div>
       <div class="pricingWorkspaceKpis" data-ph-kpis></div><div class="pricingHistoryGrid"><div class="pricingHistoryTablePane"><div class="pricingPaneTitle pricingHistoryTableTitle"><span>${qEsc(qLang('Geçmiş Fiyat Kayıtları','Historical Price Records'))}</span><button type="button" class="tbtn" data-ph-columns>${qEsc(qLang('Sütunlar','Columns'))}</button></div><div class="pricingHistoryColumnsPanel" data-ph-columns-panel hidden></div><div class="pricingHistoryTableWrap"><table class="pricingHistoryTable"><thead><tr data-ph-head></tr></thead><tbody data-ph-body></tbody></table></div></div><aside class="pricingHistoryAnalysis"><div class="pricingPaneTitle">${qEsc(qLang('Fiyat Trendi','Price Trend'))}</div><div data-ph-chart></div><div class="pricingPaneTitle">${qEsc(qLang('Seçili Fiyat Karşılaştırması','Selected Price Comparison'))}</div><div data-ph-detail></div></aside></div></div>`;
     host.querySelectorAll('[data-ph-search],[data-ph-model],[data-ph-mfr],[data-ph-category],[data-ph-season],[data-ph-in-store-month]').forEach(el=>el.addEventListener(el.tagName==='INPUT'?'input':'change',()=>qRenderPricingHistory(host)));
     window.BLDetailImages?.bindModelImagesButton?.('pricingHistoryPlmSync');

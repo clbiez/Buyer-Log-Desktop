@@ -100,7 +100,7 @@
     return { rows, groups: groups.filter(group => group.rows.length > 1) };
   }
 
-  // PLM aktarımında In Store Month henüz girilmemiş olabilir. Bu yüzden yalnız
+  // PLM aktarımında Model Budget Month henüz girilmemiş olabilir. Bu yüzden yalnız
   // o aktarımın yeni satırları için PLM ID + model adı kimliğiyle bağ kurulur;
   // genel otomatik gruplama kuralı (ay dahil) değişmeden kalır.
   function linkImportedColourVariants(input) {

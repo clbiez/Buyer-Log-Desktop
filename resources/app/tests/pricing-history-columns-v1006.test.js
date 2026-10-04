@@ -24,9 +24,11 @@ test('pricing history renders selectable and reorderable Collection columns', ()
   assert.match(quotations, /qHistoryColumnDefinitions/);
 });
 
-test('In Store Month is a first-class pricing-history filter and column', () => {
+test('Model Budget Month is a first-class pricing-history filter and column', () => {
   assert.match(quotations, /data-ph-in-store-month/);
   assert.match(quotations, /inStoreMonth/);
+  assert.match(quotations, /Model Budget Month/);
+  assert.match(quotations, /Model Bütçe Ayı/);
   assert.match(quotations, /qHistoryFilters[\s\S]*r\.inStoreMonth/);
 });
 

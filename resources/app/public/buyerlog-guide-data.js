@@ -1309,12 +1309,12 @@
       "visual": "table",
       "selector": "#kolPlmSyncBtn",
       "title": {
-        "tr": "Aynı modeli farklı In Store ayına ekleme",
-        "en": "Add the same model for another In Store month"
+        "tr": "Aynı modeli farklı Model Bütçe Ayına ekleme",
+        "en": "Add the same model for another Model Budget Month"
       },
       "summary": {
-        "tr": "PLM aktarımında mevcut model bulunursa Yeni olarak ekle / Add as a New ikinci, bağımsız bir Koleksiyon kaydı oluşturur. Bu seçim farklı In Store dönemleri için kullanılır.",
-        "en": "When PLM import finds an existing model, Add as a New creates a second independent Collection record. Use this for different In Store periods."
+        "tr": "PLM aktarımında mevcut model bulunursa Yeni olarak ekle / Add as a New ikinci, bağımsız bir Koleksiyon kaydı oluşturur. Bu seçim farklı Model Bütçe dönemleri için kullanılır.",
+        "en": "When PLM import finds an existing model, Add as a New creates a second independent Collection record. Use this for different Model Budget periods."
       },
       "path": {
         "tr": "Koleksiyon → PLM SYNC → model aktarımı → mevcut model kararı",
@@ -1324,19 +1324,19 @@
         "tr": [
           "PLM model aktarımında kapsamı hazırlayın.",
           "Mevcut model kararında Yeni olarak ekle seçeneğini değerlendirin.",
-          "Yeni kaydın In Store ayını kontrol edin; güncelleme seçimiyle karıştırmayın."
+          "Yeni kaydın Model Bütçe Ayını kontrol edin; güncelleme seçimiyle karıştırmayın."
         ],
         "en": [
           "Prepare the PLM model import scope.",
           "Review Add as a New in the existing-model decision.",
-          "Check the new record’s In Store month; distinguish it from Update."
+          "Check the new record’s Model Budget Month; distinguish it from Update."
         ]
       },
       "note": {
         "tr": "",
         "en": ""
       },
-      "example": "Same model → Different In Store month",
+      "example": "Same model → Different Model Budget Month",
       "evidence": "public/app-main.js",
       "area": "koleksiyon",
       "areas": [

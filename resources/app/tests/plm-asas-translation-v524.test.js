@@ -76,7 +76,7 @@ test('v5.24 Fit is a fixed visible Collection column and PLM Label Fit Name fill
   assert.match(APP,/kolHiddenCols\.delete\('fit'\)/);
 });
 
-test('blank In Store Month renders as a truly blank cell',()=>{
+test('blank Model Budget Month renders as a truly blank cell',()=>{
   assert.match(APP,/c\.k==='inStoreMonth'[\s\S]*?class="editCell kolMonthCell"[\s\S]*?placeholder=""/);
 });
 

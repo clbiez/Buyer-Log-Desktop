@@ -21706,10 +21706,10 @@ const KOL_COLS = [
   {k:'buyingGroup', label:'Buying Group', w:130, suggest:'buyingGroup', group:'Marka Detayları'}, // i18n-ignore — başlık kimliği
   {k:'buyer', label:'Buyer', w:120, suggest:'buyer', group:'Marka Detayları'}, // i18n-ignore — başlık kimliği
   {k:'season', label:'Season', w:100, suggest:'season', group:'Model Detayları'},
-  // v8 — Mağaza Hafta/Ay alanları serbest metin değildir. Koleksiyon tablosunda
+  // v8 — Model Bütçe Hafta/Ay alanları serbest metin değildir. Koleksiyon tablosunda
   // sağ çekmeceden seçilir ve Mağazaya Giriş tarihiyle tek dönem seti halinde güncellenir.
-  {k:'inStoreWeek', label:'In Store Week', w:112, inStorePeriod:'week', group:'Model Detayları'},
-  {k:'inStoreMonth', label:'In Store Month', w:128, inStorePeriod:'month', group:'Model Detayları'},
+  {k:'inStoreWeek', label:'Model Budget Week', w:112, inStorePeriod:'week', group:'Model Detayları'},
+  {k:'inStoreMonth', label:'Model Budget Month', w:128, inStorePeriod:'month', group:'Model Detayları'},
   {k:'durum', label:'Durum', w:170, status:true, group:'Model Detayları'},
   {k:'productMainDefinition', label:'Product Main Definition', w:170, suggest:'productMainDefinition', group:'Model Detayları'},
   {k:'urunTipi', label:'Category', w:140, suggest:'category', group:'Model Detayları'},
@@ -21936,7 +21936,7 @@ function openKolPricingExcelColumnsModal(){
 }
 // Eski (önceki revizyon) satır şemasından yeniye taşır — sil/yeniden adlandır alanları
 // kapsar. Zaten yeni şemada olan satırlarda hiçbir şey değiştirmez.
-// ---- In Store Month: "AY YIL" biçimi ----
+// ---- Model Budget Month: "AY YIL" biçimi ----
 // Hücre her çizimde kanonik biçimde gösterilir; kullanıcı ne yazarsa yazsın
 // (202702 · 2027-02 · 02/2027 · şubat 2027) bir sonraki kayıtta "ŞUBAT 2027" olur.
 // LFL Trial da ay bilgisini bu sütundan okur.
@@ -21959,7 +21959,7 @@ function kolMonthCode(value){
 }
 function kolMonthDisplay(value){
   const code=kolMonthCode(value);
-  // In Store Month yalnız ay+yıl bilgisidir. Date nesnesi veya tam tarih metni
+  // Model Budget Month yalnız ay+yıl bilgisidir. Date nesnesi veya tam tarih metni
   // (örn. "Fri Apr 03 2026 00:00:00 GMT+0300") bu alana ait değildir ve
   // eskiden CP/Orders Model Budget tarihinden öneri listesine sızabiliyordu.
   // Geçersiz değerleri ekranda/suggestion listesinde taşımak yerine boş göster.
@@ -22087,7 +22087,7 @@ function openKolPeriodDrawer(rowId,mode){
   const current=kolPeriodCurrentSchedule(),selectedMonth=kolMonthCode(row.inStoreMonth),selectedWeek=kolWeekCode(row.inStoreWeek,row.inStore);
   const backdrop=document.createElement('div');backdrop.className='kolPeriodDrawerBackdrop';
   const panel=document.createElement('aside');panel.className='kolPeriodDrawer';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
-  const title=mode==='week'?(appLang==='en'?'Select In Store Week':'Mağaza Haftası Seç'):(appLang==='en'?'Select In Store Month':'Mağaza Ayı Seç');
+  const title=mode==='week'?(appLang==='en'?'Select Model Budget Week':'Model Bütçe Hafta Seç'):(appLang==='en'?'Select Model Budget Month':'Model Bütçe Ayı Seç');
   const currentText=appLang==='en'?`${kolMonthDisplay(current.inStoreMonth)} · Week ${kolWeekDisplay(current.inStoreWeek)} · ${fmtDate(current.inStore)}`:`${kolMonthDisplay(current.inStoreMonth)} · ${kolWeekDisplay(current.inStoreWeek)}. hafta · ${fmtDate(current.inStore)}`;
   const items=mode==='week'?kolPeriodDrawerWeekItems():kolPeriodDrawerMonthItems();
   const rows=items.map(schedule=>{
@@ -22288,7 +22288,7 @@ function endeksmatikModelContext(mode,row){
     // Domestic/TR referansı varsayılan olarak Overseas ile ortaktır; kullanıcı isterse
     // yalnız eski dönemleri ayırabilir. Yeni sezon hedef dönemleri her iki hesapta ortaktır.
     separateTryPeriods:Boolean(saved.separateTryPeriods),previousTryOrderMonth:saved.previousTryOrderMonth||saved.previousOrderMonth||'',previousTryInStoreMonth:saved.previousTryInStoreMonth||seededPreviousInStore,
-    // Yeni In Store yalnız kolaylık için Collection'ın açık In Store Month alanından
+    // Yeni In Store yalnız kolaylık için Collection'ın açık Model Budget Month alanından
     // başlatılır; modalda tamamen değiştirilebilir.
     newInStoreMonth:seededNewInStore,
     // Previous Season FOB bir başlangıç önerisidir; alan manuel düzenlemeye açıktır.
@@ -22958,7 +22958,7 @@ function kolCatalogValues(kind){
     (kolManufacturers||[]).forEach(item=>add(item&&item.name));
     (kolRows||[]).forEach(row=>add(row.buyingSampleManufacturer));
   }else if(kind==='inStoreMonth'){
-    // In Store Month seçenekleri yalnız Koleksiyon'da gerçekten kayıtlı ve geçerli
+    // Model Budget Month seçenekleri yalnız Koleksiyon'da gerçekten kayıtlı ve geçerli
     // ay+yıl değerlerinden gelir. CP/Orders'taki tam model-budget tarih alanını
     // alanını burada katalog olarak kullanmak yanlıştı ve Date.toString() çıktılarının
     // (Fri Apr 03 2026...) açılır listede görünmesine neden oluyordu.
@@ -25473,7 +25473,7 @@ function kolDescriptorByKey(key){
   return kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
 }
 // Görünüm (gizli/görünür sütun) yalnız ÇİZİMİ belirler. Yazma kuralları, düzenlenebilirlik,
-// modele bağlılık ve bağımlı alan (örn. In Store Week → In Store → Retail) kararları
+// modele bağlılık ve bağımlı alan (örn. Model Budget Week → In Store → Retail) kararları
 // sütun gizli olsa bile aynı alan tanımını kullanmalıdır; aksi halde gizli alan sessizce
 // salt okunur sayılır ve bağımlı değer eski kalır.
 function kolFieldDescriptorByKey(key){
@@ -25771,7 +25771,7 @@ document.getElementById('kolClearColFiltersBtn')?.addEventListener('click', ()=>
   renderKol();
   showToast('Koleksiyon sütun filtreleri temizlendi.');
 });
-// ---- Koleksiyon hızlı filtre çipleri: In Store Month / Durum / Kategori — CP'deki hızlı
+// ---- Koleksiyon hızlı filtre çipleri: Model Budget Month / Durum / Kategori — CP'deki hızlı
 // filtre şeridiyle aynı dil. Bir grubun sayıları DİĞER aktif filtrelere göre daralır
 // (kendi grubu hariç), CP'deki cpRowsScoped ile aynı çapraz filtre mantığı.
 const KOL_QUICK_DIMS = KOL_COLS.filter(col=>!col.noFilter).map(col=>({key:col.k,label:col.label}));
@@ -25971,7 +25971,7 @@ window.BLCollection={
   // Klasman icin ayri bir sutun yok: bu bilgi Category (urunTipi) sutununda tutuluyor.
   classificationFor(row){ return norm(row&&row.urunTipi); },
   quantityFor(row){ const n=kolParseQuantityNum(row&&row.quantity); return Number.isFinite(n)&&n>0?n:null; },
-  // In Store Month sutunu "AY YIL" gosterir; LFL'in bekledigi YYYYAA kodu buradan uretilir.
+  // Model Budget Month sutunu "AY YIL" gosterir; LFL'in bekledigi YYYYAA kodu buradan uretilir.
   monthCodeFor(row){ return kolMonthCode(row&&row.inStoreMonth); },
   // LFL Trial fiyatı HER ZAMAN Collection tablosunda kullanıcının gördüğü
   // hesaplanmış FOB hücresinden gelir. Target / Best / Confirmed fiyatlarını burada
@@ -26546,7 +26546,7 @@ function renderKol(){
         html+=`<td class="editTd plmEditTd plmModelLinkCell"${rc} data-copy-text="${escapeHtml(cur)}"><div class="plmEditCell"><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(cur)}</textarea></div></td>`;
       }else if(c.inStorePeriod){
         const isWeek=c.inStorePeriod==='week',display=isWeek?kolWeekDisplay(val,r.inStore):kolMonthDisplay(val);
-        const title=isWeek?(appLang==='en'?'Double-click to choose In Store Week':'Mağaza Haftası seçmek için çift tıkla'):(appLang==='en'?'Double-click to choose In Store Month':'Mağaza Ayı seçmek için çift tıkla');
+        const title=isWeek?(appLang==='en'?'Double-click to choose Model Budget Week':'Model Bütçe Hafta seçmek için çift tıkla'):(appLang==='en'?'Double-click to choose Model Budget Month':'Model Bütçe Ayı seçmek için çift tıkla');
         // v10 UX — Bu iki hücre normal spreadsheet seçimi gibi davranır. İç
         // görünüm pointer hedefi değildir; single-click/drag/Shift seçimi doğrudan
         // td üzerinden Collection spreadsheet katmanına gider. Picker yalnız td'nin
@@ -33010,7 +33010,7 @@ document.getElementById('kolExportImgBtn')?.addEventListener('click',async()=>{
 // mevcut 41 sütunlu MB Excel formatına doğrudan aktarılır.
 const MB_LIST_HEADERS = [
   'PBL NAME','BUYER','STATU / ORDER TYPE','Supplier Name','Buyer Group','CATEGORY','LINE','SPECIAL CODE','PLM ID','STYLE NAME','COLOR CODE','COLOR',
-  'EXFACTORY DATE','RETAIL DATE (Retail Date)','MB DATE (In Store Date)','MB MONTH (In Store Month)','VESSEL / LEAD TIME (Ex->Retail)','7S QTY (Quantity)','MEVCUT DURUM (Status)','PBL NOT',
+  'EXFACTORY DATE','RETAIL DATE (Retail Date)','MB DATE (In Store Date)','MB MONTH (Model Budget Month)','VESSEL / LEAD TIME (Ex->Retail)','7S QTY (Quantity)','MEVCUT DURUM (Status)','PBL NOT',
   '6S FOB','7S Confirmed FOB','7S Confirmed LANDED','LFL DEGISIM 6S&7S','TR TARGET (TR FOB)','KUR','TR USD LANDED + %5','Advantage FROM TR PRICE',
   'FABRIC SUPPLIER S6','FABRIC PRICE S6','FABRIC SUPPLIER S7','FABRIC PRICE S7','FABRIC LFL DEGISIM','FABRIC','FIT',
   'Pricing History 1.','Pricing History 2.','Pricing History 3.','Pricing History 4.','Pricing History 5.','Buying Sample'
@@ -35539,7 +35539,7 @@ const KOL_EN_TR_DICT = {
   'Picture':'Görsel','Model Name':'Model Adı','Product Main Definition':'Ürün Ana Tanım','License':'Lisans','Category':'Kategori','Special Code':'Özel Kod','Line':'Line',
   'Order Type':'Sipariş Tipi','Colour Code':'Renk Kodu','Colour':'Renk','Fabric':'Kumaş','Fabric Supplier S6':'Kumaşçı S6','Fabric Price S6':'Kumaş Fiyatı S6','Fabric Supplier S7':'Kumaşçı S7','Fabric Price S7':'Kumaş Fiyatı S7','Fit':'Kalıp','Buying Sample':'Buying Numunesi','Quantity':'Adet','Licensor':'Lisans Veren',
   'Season':'Sezon','Ex-Factory':'Sevk Tarihi','Retail':'Perakende','Ex→Retail':'Sevk→Perakende',
-  'In Store':'Mağazaya Giriş','In Store Week':'Mağaza Hafta','In Store Month':'Mağaza Ayı','Previous Season FOB':'Önceki Sezon FOB','Target Price':'Hedef Fiyat',
+  'In Store':'Mağazaya Giriş','In Store Week':'Model Bütçe Hafta','In Store Month':'Model Bütçe Ayı','Model Budget Week':'Model Bütçe Hafta','Model Budget Month':'Model Bütçe Ayı','Previous Season FOB':'Önceki Sezon FOB','Target Price':'Hedef Fiyat',
   'Supp. FOB':'Tedarikçi FOB','Royalty':'Royalti','Hologram Cost':'Hologram Maliyeti','FOB':'FOB',
   'Notes':'Notlar','Durum':'Durum','Status':'Durum',
   'Manufacturer':'Üretici','Best Price':'En İyi Fiyat',

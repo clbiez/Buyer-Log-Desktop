@@ -13,7 +13,7 @@
   }
   function scopeState(ctx){
     const saved=ctx.saved||{},columns=columnCatalog(ctx);
-    const fallback=columns.find(function(column){return column.k==='inStoreMonth';})||columns[0]||{k:'inStoreMonth',label:'In Store Month'};
+    const fallback=columns.find(function(column){return column.k==='inStoreMonth';})||columns[0]||{k:'inStoreMonth',label:'Model Budget Month'};
     const requested=text(saved.scopeColumn);
     const column=columns.find(function(item){return item.k===requested;})||fallback;
     const availableInfo=ctx.summary.availableColumns(ctx.rows,{columns:[column],valueFor:ctx.columnValue})[0]||{values:[]};

@@ -62,8 +62,8 @@
     brandDirectorate:{tr:'Marka Müdürlükleri',en:'Brand Directorates',rowKey:'brandDirectorate'},
     classification:{tr:'Klasman',en:'Classification',rowKey:'classification'},
     inStore:{tr:'In-Store Tarihi',en:'In-Store Date',rowKey:'inStore',date:true},
-    inStoreMonth:{tr:'In-Store Ayı',en:'In-Store Month',rowKey:'inStoreMonth',monthCode:true},
-    inStoreWeek:{tr:'In-Store Haftası',en:'In-Store Week',rowKey:'inStoreWeek',weekCode:true},
+    inStoreMonth:{tr:'Model Bütçe Ayı',en:'Model Budget Month',rowKey:'inStoreMonth',monthCode:true},
+    inStoreWeek:{tr:'Model Bütçe Hafta',en:'Model Budget Week',rowKey:'inStoreWeek',weekCode:true},
     country:{tr:'Ülke',en:'Country',rowKey:'country'},
     buyer:{tr:'Buyer',en:'Buyer',rowKey:'buyer'},
     buyingGroup:{tr:'Buying Group',en:'Buying Group',rowKey:'buyingGroup'},
@@ -94,7 +94,7 @@
   const CUSTOM_COMPARE_META={
     ...BREAKDOWN_META,
     brandDirectorate:{tr:'Marka Müdürlükleri',en:'Brand Directorates',rowKey:'brandDirectorate'},
-    inStoreMonth:{tr:'In-Store Ayı',en:'In-Store Month',rowKey:'inStoreMonth',monthCode:true},
+    inStoreMonth:{tr:'Model Bütçe Ayı',en:'Model Budget Month',rowKey:'inStoreMonth',monthCode:true},
     lflKey:{tr:'MAG · MMYG · Klasman',en:'MAG · MMYG · Classification',rowKey:'lflKey'},
   };
   const CUSTOM_COMPARE_DIMS=Object.keys(CUSTOM_COMPARE_META);
@@ -1293,8 +1293,8 @@
      Corrections explicitly approved in the basket are also written back to the matching
      Collection model, so the simulation and Collection page stay aligned. */
   const TRIAL_REQUIRED=['mag','mmyg','classification','country','buyingGroup','buyer','inStoreMonth','quantity','fob'];
-  const TRIAL_LABELS={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Marka Müdürlüğü',classification:'Klasman',productDescription:'Ürün Tanım',manufacturer:'Üretici',country:'Ülke',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Kumaş Kategorisi',fabricSupplierCountry:'Kumaşçı Ülkesi',fabricSupplier:'Kumaşçı',kumasTipi:'Kumaş Tipi',iplikNo:'İplik No',fabricWeight:'Gramaj',karisim:'Karışım',inStoreMonth:'In-Store Ayı',quantity:'Adet',fob:'LFL FOB'};
-  const TRIAL_LABELS_EN={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Brand Directorate',classification:'Classification',productDescription:'Product Description',manufacturer:'Manufacturer',country:'Country',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Fabric Category',fabricSupplierCountry:'Fabric Supplier Country',fabricSupplier:'Fabric Supplier',kumasTipi:'Fabric Type',iplikNo:'Yarn Count',fabricWeight:'Weight (GSM)',karisim:'Composition',inStoreMonth:'In-Store Month',quantity:'Quantity',fob:'LFL FOB'};
+  const TRIAL_LABELS={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Marka Müdürlüğü',classification:'Klasman',productDescription:'Ürün Tanım',manufacturer:'Üretici',country:'Ülke',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Kumaş Kategorisi',fabricSupplierCountry:'Kumaşçı Ülkesi',fabricSupplier:'Kumaşçı',kumasTipi:'Kumaş Tipi',iplikNo:'İplik No',fabricWeight:'Gramaj',karisim:'Karışım',inStoreMonth:'Model Bütçe Ayı',quantity:'Adet',fob:'LFL FOB'};
+  const TRIAL_LABELS_EN={mag:'MAG',mmyg:'MMYG',brandDirectorate:'Brand Directorate',classification:'Classification',productDescription:'Product Description',manufacturer:'Manufacturer',country:'Country',buyingGroup:'Buying Group',buyer:'Buyer',fabricCategory:'Fabric Category',fabricSupplierCountry:'Fabric Supplier Country',fabricSupplier:'Fabric Supplier',kumasTipi:'Fabric Type',iplikNo:'Yarn Count',fabricWeight:'Weight (GSM)',karisim:'Composition',inStoreMonth:'Model Budget Month',quantity:'Quantity',fob:'LFL FOB'};
   const TRIAL_SOURCE_LABELS={fob:{tr:'Koleksiyon FOB',en:'Collection FOB'},confirmed:{tr:'Onaylı fiyat',en:'Approved price'},best:{tr:'Best price',en:'Best price'},target:{tr:'Hedef fiyat',en:'Target price'},manual:{tr:'Elle girildi',en:'Manual'}};
   const TRIAL_TEXT_FIELDS=['mag','mmyg','brandDirectorate','classification','country','buyingGroup','buyer'];
   const TRIAL_CATALOG_FIELDS=[...TRIAL_TEXT_FIELDS];

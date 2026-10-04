@@ -16,14 +16,14 @@ const fields = [
   { id:'modelKod', label:'Model Adı', dataType:'text', writable:true, identity:true, aliases:['Model Adı','Model Name'] },
   { id:'colourCode', label:'Renk Kodu', dataType:'code', writable:true, identity:true, aliases:['Colour Code','Renk Kodu'] },
   { id:'not', label:'Notlar', dataType:'text', writable:true, identity:false, aliases:['Notlar','Notes'] },
-  { id:'storeMonth', label:'Mağaza Ayı', dataType:'text', writable:true, identity:false, aliases:['Mağaza Ayı'] },
+  { id:'storeMonth', label:'Model Bütçe Ayı', dataType:'text', writable:true, identity:false, aliases:['Model Bütçe Ayı','Model Budget Month','Mağaza Ayı','In Store Month'] },
 ];
 const columns = [
   { id:'c1', header:'PLM ID', rawHeader:'PLM ID' },
   { id:'c2', header:'Model Adı', rawHeader:'Model Adı' },
   { id:'c3', header:'Colour Code', rawHeader:'Colour Code' },
   { id:'c4', header:'Notlar', rawHeader:'Notlar' },
-  { id:'c5', header:'Mağaza Ayı', rawHeader:'Mağaza Ayı' },
+  { id:'c5', header:'Model Bütçe Ayı', rawHeader:'Model Bütçe Ayı' },
 ];
 const assignments = {
   c1:{ action:'match', targetId:'plmId' },
