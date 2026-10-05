@@ -3,14 +3,80 @@
   "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "CP performansı ve giriş ekranında kullanıcı listesi düzeltmesi · LCW AI tüm veriyi görüyor",
-    "en": "CP performance and sign-in user list fix · LCW AI sees all data"
+    "tr": "Backlog düzeninde alt detay raporları ve kullanım iyileştirmeleri",
+    "en": "Backlog-style detail reports and usability improvements"
   },
   "summary": {
-    "tr": "CP açılınca arka planda başlayan PLM numune tazelemesi kaldırıldı; program bu yüzden yavaşlamıyor. OneDrive üzerinden eşitlenen Shared Hub ile kullanıcıların görünmemesi düzeltildi; giriş yapan kişinin bilgisi yalnız kendisi için yerelde de saklanıyor. LCW AI’a eklenen ekran verisi artık sayfa filtrelerine takılmıyor; varsayılan olarak tüm kayıtlar ve tüm sütunlar gidiyor.",
-    "en": "The background PLM sample refresh that started when CP opened has been removed, so it no longer slows the app down. Fixed users not appearing with a Shared Hub synced through OneDrive; a signed-in person's details are now also stored locally for that person only. Screen data added to LCW AI is no longer limited by page filters; all records and all columns are sent by default."
+    "tr": "OAB, LFL, Price & Supplier Analysis ve ortak alt detay raporları, Backlog gibi gruplu ve rahat okunabilen satırlara taşındı. Arama, alan filtreleri, görseller, bağlantılar ve tüm sütunlarla Excel aktarımı kullanılmaya devam ediyor. CP açılınca arka planda başlayan PLM numune tazelemesi kaldırıldı; program bu yüzden yavaşlamıyor. OneDrive üzerinden eşitlenen Shared Hub ile kullanıcıların görünmemesi düzeltildi; giriş yapan kişinin bilgisi yalnız kendisi için yerelde de saklanıyor. LCW AI’a eklenen ekran verisi artık sayfa filtrelerine takılmıyor; varsayılan olarak tüm kayıtlar ve tüm sütunlar gidiyor.",
+    "en": "OAB, LFL, Price & Supplier Analysis and shared detail reports now use grouped, readable Backlog-style rows. Search, field filters, images, links and full-column Excel export remain available. The background PLM sample refresh that started when CP opened has been removed, so it no longer slows the app down. Fixed users not appearing with a Shared Hub synced through OneDrive; a signed-in person's details are now also stored locally for that person only. Screen data added to LCW AI is no longer limited by page filters; all records and all columns are sent by default."
   },
   "changes": [
+    {
+      "id": "backlog-style-shared-detail-reports",
+      "type": "improvement",
+      "module": {
+        "tr": "Alt detay raporları",
+        "en": "Detail reports"
+      },
+      "title": {
+        "tr": "Alt detaylar Backlog düzenine taşındı",
+        "en": "Detail reports now use the Backlog layout"
+      },
+      "body": {
+        "tr": "OAB, Price & Supplier Analysis, Overview, Backlog ve ortak rapor pencerelerinde sipariş/model, buyer/grup, üretici/sezon ve durum bilgileri aynı hücrede ana ve alt satırlarla gösterilir. Özet kartları ve geniş satır aralıkları raporu okumayı kolaylaştırır. Odak ve geniş görünüm, sütun seçimi, alan bazında filtreler, arama, görseller ve sipariş/model bağlantıları birlikte çalışır. Tüm kaynak alanları sütun menüsünde ve Excel aktarımında korunur.",
+        "en": "OAB, Price & Supplier Analysis, Overview, Backlog and shared report windows group order/model, buyer/group, manufacturer/season and status information into primary and secondary lines. Summary cards and roomier rows make reports easier to read. Focus and extended views, column selection, field filters, search, images and order/model links work together. All source fields remain available in the column menu and Excel export."
+      },
+      "path": {
+        "tr": "OAB / Price & Supplier Analysis / Overview / Backlog → Alt detay",
+        "en": "OAB / Price & Supplier Analysis / Overview / Backlog → Details"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "detail-backlog-report.png",
+        "alt": {
+          "tr": "Demo verilerle gruplu sipariş, üretici ve fiyat detay raporu.",
+          "en": "Grouped order, manufacturer and price detail report with demo data."
+        },
+        "caption": {
+          "tr": "Demo verilerle gruplu sipariş, üretici ve fiyat detay raporu.",
+          "en": "Grouped order, manufacturer and price detail report with demo data."
+        }
+      }
+    },
+    {
+      "id": "lfl-detail-readable-typed-export",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL · Alt detay",
+        "en": "LFL · Details"
+      },
+      "title": {
+        "tr": "LFL detayında dönem ve metrikler birlikte okunur",
+        "en": "LFL details keep periods and metrics readable"
+      },
+      "body": {
+        "tr": "LFL alt raporunda satır türü ve dönem bilgisi korunur; miktar, FOB, tutar ve tarihler ayrı okunabilir alanlarda yer alır. Excel aktarımında miktar ve fiyatlar sayısal hücre olarak kalır. Sevkiyat ve rota gibi rapora özgü alanlar görünüm seçimi değiştiğinde kaybolmaz.",
+        "en": "LFL detail reports preserve row type and period information while quantity, FOB, amount and dates remain in readable fields. Quantity and prices stay numeric in Excel exports. Report-specific fields such as shipment and route context remain available when switching views."
+      },
+      "path": {
+        "tr": "LFL → Alt detay → Excel",
+        "en": "LFL → Details → Excel"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "detail-lfl-report.png",
+        "alt": {
+          "tr": "Demo LFL kayıtlarında gruplu bilgiler, dönemler ve sayısal metrikler.",
+          "en": "Grouped information, periods and numeric metrics in demo LFL records."
+        },
+        "caption": {
+          "tr": "Demo LFL kayıtlarında gruplu bilgiler, dönemler ve sayısal metrikler.",
+          "en": "Grouped information, periods and numeric metrics in demo LFL records."
+        }
+      }
+    },
     {
       "id": "cp-plm-sample-auto-refresh-off",
       "type": "improvement",
