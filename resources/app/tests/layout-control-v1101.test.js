@@ -159,3 +159,12 @@ test('layout-control backend exposes durable per-user audit history without stor
   assert.match(store,/ownerKey/);
   assert.doesNotMatch(store,/pdfBytes|nativeText|Buffer\.from\(.*pdf/i);
 });
+
+test('layout-control result and history panels are not hidden by the global section{display:none} rule',()=>{
+  const ui=fs.readFileSync(path.join(__dirname,'..','public','layout-control.js'),'utf8');
+  // app.css: `section{display:none}` hides every <section> without its own display (AI result never appeared).
+  const sections=ui.match(/<section\b[^>]*>/g)||[];
+  sections.forEach(tag=>assert.doesNotMatch(tag,/class="layout(Report|History)"/,'report/history must not be <section>: '+tag));
+  assert.match(ui,/<div class="layoutReport">/);
+  assert.match(ui,/<div class="layoutHistory">/);
+});
