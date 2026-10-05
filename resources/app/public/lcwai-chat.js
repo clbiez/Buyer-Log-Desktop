@@ -7,9 +7,10 @@
    motoru kullanır: window.BuyerLogAI (public/lcwai-assistant.js) →
    /api/lcwai/chat → server/lib/lcwai (LCWAIEngine) → LCW AI HTTP API.
 
-   - Sohbet: chatId=null yeni sohbet; dönen chatId ile devam. Sohbetler bu
-     oturumun BELLEĞİNDE tutulur (diske/localStorage'a yazılmaz; içerik
-     şirket verisi taşıyabilir). Geçmişin kalıcı kopyası LCW AI'dadır.
+   - Sohbet: chatId=null yeni sohbet; dönen chatId ile devam. Görünen sohbet
+     geçmişi BLStorage üzerinden kullanıcı bazlı ve yalnız bu cihazda saklanır;
+     ek dosya baytları / Buyer Log bağlam tabloları geçmiş kaydına yazılmaz.
+     chatId korunur, böylece LCW AI'daki aynı konuşmaya devam edilebilir.
    - Dosyalar: LCW AI upload uç noktasına doğrudan yüklenir, ek olarak gider.
    - Buyer Log bağlamı: isteğe bağlıdır. Ekranlar AIContextProvider kaydeder
      (BuyerLogAI.registerContextProvider); bu dosya varsayılan sağlayıcıları
@@ -162,10 +163,110 @@
     conversations: [], activeId: '', files: [], contexts: [], busy: false, requestId: '', config: null, status: null, mounted: false,
     // Yanıt biçimi: '' = sohbet; pdf/pptx/xlsx/html = AI Çıktı Oluşturma.
     output: { format: '', orientation: 'portrait', detail: 'standard' },
-    // Mesajda ekran adı geçerse o ekranın verisi otomatik eklenir. Kapatılabilir;
-    // tercih yalnız bu oturumda tutulur (bu modül tarayıcı deposuna yazmaz).
+    // Mesajda ekran adı geçerse o ekranın verisi otomatik eklenir.
     autoContext: true,
   };
+
+  /* ---------------- Kullanıcı bazlı sohbet geçmişi ----------------
+     BLStorage bu anahtarı kullanıcı kimliğiyle scope eder; SYNCED listesine
+     eklenmediği için konuşma içeriği Shared Hub / user-preferences sunucusuna
+     taşınmaz. Yalnız metin + güvenli UI metadatası tutulur; yüklenen dosya
+     baytları, attachment URL'leri, Buyer Log context satırları ve imageMap
+     diske yazılmaz. */
+  const HISTORY_KEY = 'bl.lcwai.history.v1';
+  const HISTORY_MAX_CONVERSATIONS = 30;
+  const HISTORY_MAX_MESSAGES = 80;
+  const HISTORY_MAX_JSON = 2400000;
+  const HISTORY_LABEL_CHARS = 200;
+  const historyStore = () => (window.BLStorage && typeof window.BLStorage.getItem === 'function' && typeof window.BLStorage.setItem === 'function' ? window.BLStorage : null);
+  const cleanHistoryText = value => String(value == null ? '' : value).slice(0, 100000);
+  function historyFile(file) {
+    if (!file || !file.id || !file.fileName) return null;
+    return {
+      id: String(file.id), fileName: String(file.fileName).slice(0, 240),
+      format: String(file.format || '').slice(0, 12), title: cleanHistoryText(file.title).slice(0, 240),
+      template: String(file.template || '').slice(0, 80), templateLabel: String(file.templateLabel || '').slice(0, 160),
+      bytes: Number(file.bytes) || 0, createdAt: String(file.createdAt || '').slice(0, 40),
+      attempts: Math.max(1, Number(file.attempts) || 1), fallback: String(file.fallback || '').slice(0, 20),
+    };
+  }
+  function historyMessage(message) {
+    if (!message || (message.role !== 'user' && message.role !== 'ai') || message.streaming) return null;
+    const item = { role: message.role, text: cleanHistoryText(message.text) };
+    if (message.error) item.error = cleanHistoryText(message.error).slice(0, 1000);
+    if (message.model) item.model = String(message.model).slice(0, 80);
+    if (message.role === 'user') {
+      item.contextLabels = (Array.isArray(message.contextLabels) ? message.contextLabels : []).slice(0, 12).map(value => String(value).slice(0, HISTORY_LABEL_CHARS));
+      item.fileNames = (Array.isArray(message.fileNames) ? message.fileNames : []).slice(0, 12).map(value => String(value).slice(0, 240));
+      item.output = message.output && typeof message.output === 'object' ? {
+        format: String(message.output.format || '').slice(0, 12),
+        orientation: message.output.orientation === 'landscape' ? 'landscape' : 'portrait',
+        detail: String(message.output.detail || 'standard').slice(0, 20),
+      } : null;
+      // Yeniden üretmede upstream sohbet geçmişi kullanılır; eski upload URL/context
+      // nesnelerini kalıcı depoya taşımıyoruz.
+      item.attachments = [];
+      item.contexts = [];
+    }
+    const file = historyFile(message.file);
+    if (file) item.file = file;
+    return item;
+  }
+  function persistConversations() {
+    const store = historyStore();
+    if (!store) return;
+    let list = state.conversations.filter(conv => conv && Array.isArray(conv.messages) && conv.messages.some(message => !message.streaming)).slice(0, HISTORY_MAX_CONVERSATIONS).map(conv => ({
+      id: String(conv.id || '').slice(0, 80),
+      chatId: conv.chatId == null ? null : String(conv.chatId).slice(0, 180),
+      title: String(conv.title || '').slice(0, 120),
+      messages: conv.messages.slice(-HISTORY_MAX_MESSAGES).map(historyMessage).filter(Boolean),
+    })).filter(conv => conv.messages.length);
+    try {
+      let json = JSON.stringify(list);
+      while (json.length > HISTORY_MAX_JSON && list.length > 1) {
+        list.pop();
+        json = JSON.stringify(list);
+      }
+      if (json.length <= HISTORY_MAX_JSON) store.setItem(HISTORY_KEY, json);
+    } catch (_) { /* dolu/kapalı depolama sohbeti bozmaz */ }
+  }
+  function restoreConversations() {
+    const store = historyStore();
+    if (!store) return false;
+    try {
+      const parsed = JSON.parse(store.getItem(HISTORY_KEY) || '[]');
+      if (!Array.isArray(parsed)) return false;
+      const restored = parsed.slice(0, HISTORY_MAX_CONVERSATIONS).map(raw => {
+        if (!raw || !Array.isArray(raw.messages)) return null;
+        const messages = raw.messages.slice(-HISTORY_MAX_MESSAGES).map(message => {
+          if (!message || (message.role !== 'user' && message.role !== 'ai')) return null;
+          const item = { role: message.role, text: cleanHistoryText(message.text) };
+          if (message.error) item.error = cleanHistoryText(message.error).slice(0, 1000);
+          if (message.model) item.model = String(message.model).slice(0, 80);
+          if (message.role === 'user') {
+            item.contextLabels = Array.isArray(message.contextLabels) ? message.contextLabels.slice(0, 12).map(String) : [];
+            item.fileNames = Array.isArray(message.fileNames) ? message.fileNames.slice(0, 12).map(String) : [];
+            item.output = message.output && typeof message.output === 'object' ? message.output : null;
+            item.attachments = [];
+            item.contexts = [];
+          }
+          if (message.file && message.file.id && message.file.fileName) item.file = historyFile(message.file);
+          return item;
+        }).filter(Boolean);
+        if (!messages.length) return null;
+        return {
+          id: String(raw.id || `c${Date.now().toString(36)}${(++seq).toString(36)}`).slice(0, 80),
+          chatId: raw.chatId == null ? null : String(raw.chatId).slice(0, 180),
+          title: String(raw.title || '').slice(0, 120),
+          messages,
+        };
+      }).filter(Boolean);
+      if (!restored.length) return false;
+      state.conversations = restored;
+      state.activeId = restored[0].id;
+      return true;
+    } catch (_) { return false; }
+  }
 
   /* ---------------- Otomatik bağlam ----------------
      Kullanıcı "Backlog'da…", "CP'deki…", "bu ekranda…" dediğinde ve elle
@@ -241,7 +342,7 @@
         <aside class="lcwaiChatSide" aria-label="${esc(L('Sohbetler', 'Conversations'))}">
           <button type="button" class="lcwaiBtn is-primary lcwaiNewChat" data-chat-new>＋ ${esc(L('Yeni Sohbet', 'New Chat'))}</button>
           <div class="lcwaiChatList" data-chat-list></div>
-          <p class="lcwaiNote">${esc(L('Sohbetler bu oturumda tutulur; kalıcı geçmiş LCW AI’dadır.', 'Chats are kept for this session; the permanent history lives in LCW AI.'))}</p>
+          <p class="lcwaiNote">${esc(L('Sohbet geçmişi bu kullanıcı için bu cihazda saklanır.', 'Chat history is kept for this user on this device.'))}</p>
         </aside>
         <div class="lcwaiChatMain">
           <header class="lcwaiChatHead"><div><b>LCW AI</b> <small class="lcwaiModel" data-chat-model>${esc(AI() ? AI().modelLabel : 'GPT-6 Sol')}</small></div><div class="lcwaiChatConn" data-chat-conn></div></header>
@@ -360,7 +461,7 @@
     const visible = document.body && document.body.dataset.activeTab === 'lcwai' && state.activeId === conv.id && !document.hidden;
     if (visible || typeof window.notifyFileReady !== 'function') return;
     const api = AI();
-    window.notifyFileReady({ filename: file.fileName, path: file.path || '', mode: 'created', onOpen: () => api.openOutput(file.id), onReveal: () => api.revealOutput(file.id) });
+    window.notifyFileReady({ filename: file.fileName, path: file.path || '', mode: 'created', onOpen: () => api.openOutput(file.id, file.fileName), onReveal: () => api.revealOutput(file.id, file.fileName) });
   }
 
   function outputPhase(event, output) {
@@ -428,6 +529,19 @@
     const contexts = state.contexts.map((item, index) => `<span class="lcwaiChip is-context">◆ ${esc(item.label)}<button type="button" data-chip-context="${index}" aria-label="${esc(L('Kaldır', 'Remove'))}">×</button></span>`);
     box.innerHTML = [...contexts, ...files].join('');
     box.hidden = !files.length && !contexts.length;
+  }
+
+  function addFiles(files) {
+    const limits = state.config && state.config.limits || { maxFilesPerRequest: 5, maxFileBytes: 20 * 1048576 };
+    for (const file of Array.from(files || [])) {
+      if (!file || typeof file.name !== 'string') continue;
+      if (state.files.length >= limits.maxFilesPerRequest) {
+        if (typeof showToast === 'function') showToast(L(`En fazla ${limits.maxFilesPerRequest} dosya eklenebilir.`, `Up to ${limits.maxFilesPerRequest} files can be added.`));
+        break;
+      }
+      state.files.push({ file, error: file.size > limits.maxFileBytes ? L('çok büyük', 'too large') : '' });
+    }
+    renderChips();
   }
 
   function renderLimits() {
@@ -498,6 +612,9 @@
     conv.messages.push(answer);
     if (!reuse) { state.files = []; state.contexts = []; const input = $('[data-chat-input]'); if (input) input.value = ''; }
     renderChips(); renderList(); renderMessages(); setBusy(true);
+    // Kullanıcı mesajını hemen kaydet; uygulama cevap beklerken kapanırsa istem
+    // geçmişten kaybolmasın. Streaming AI placeholder geçmişe yazılmaz.
+    persistConversations();
     state.requestId = `bl${Date.now().toString(36)}${(++seq).toString(36)}`;
     try {
       if (!userMessage.attachments) {
@@ -572,6 +689,7 @@
     } finally {
       answer.streaming = false;
       setBusy(false);
+      persistConversations();
       if (state.activeId === conv.id) renderMessages();
       renderList();
     }
@@ -610,7 +728,8 @@
       const api = AI();
       const opening = target.matches('[data-file-open]');
       const id = opening ? target.dataset.fileOpen : target.dataset.fileReveal;
-      if (api) (opening ? api.openOutput(id) : api.revealOutput(id)).catch(error => { if (typeof showToast === 'function') showToast(api.errorText(error), { kind: 'error' }); });
+      const file = activeConversation().messages.map(message => message && message.file).find(item => item && String(item.id) === String(id));
+      if (api) (opening ? api.openOutput(id, file && file.fileName) : api.revealOutput(id, file && file.fileName)).catch(error => { if (typeof showToast === 'function') showToast(api.errorText(error), { kind: 'error' }); });
       return;
     }
     if (target.matches('[data-chat-context]')) { const menu = $('[data-chat-context-menu]'); if (menu.hidden) openContextMenu(); else closeContextMenu(); return; }
@@ -654,13 +773,8 @@
     });
     input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); send(input.value); } });
     fileInput.addEventListener('change', () => {
-      const limits = state.config && state.config.limits || { maxFilesPerRequest: 5, maxFileBytes: 20 * 1048576 };
-      for (const file of [...fileInput.files]) {
-        if (state.files.length >= limits.maxFilesPerRequest) { if (typeof showToast === 'function') showToast(L(`En fazla ${limits.maxFilesPerRequest} dosya eklenebilir.`, `Up to ${limits.maxFilesPerRequest} files can be added.`)); break; }
-        state.files.push({ file, error: file.size > limits.maxFileBytes ? L('çok büyük', 'too large') : '' });
-      }
+      addFiles(fileInput.files);
       fileInput.value = '';
-      renderChips();
     });
     // Kapsayıcı (lcwaiChatPage) yeniden çizimlerde kalıcıdır; tıklama
     // dinleyicisi YALNIZ bir kez eklenir. Aksi hâlde sayfaya her girişte
@@ -669,6 +783,35 @@
     if (!el.__lcwaiClickBound) {
       el.__lcwaiClickBound = true;
       el.addEventListener('click', onHostClick);
+    }
+    // İşletim sisteminden / Explorer'dan dosyayı doğrudan LCW AI alanına
+    // sürükleyip bırakma. Metin/link sürüklemeleri yakalanmaz.
+    if (!el.__lcwaiDropBound) {
+      el.__lcwaiDropBound = true;
+      const hasFiles = event => Array.from(event.dataTransfer && event.dataTransfer.types || []).includes('Files');
+      el.addEventListener('dragenter', event => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        el.classList.add('is-file-drag');
+      });
+      el.addEventListener('dragover', event => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+        el.classList.add('is-file-drag');
+      });
+      el.addEventListener('dragleave', event => {
+        if (event.relatedTarget && el.contains(event.relatedTarget)) return;
+        el.classList.remove('is-file-drag');
+      });
+      el.addEventListener('drop', event => {
+        if (!hasFiles(event)) return;
+        event.preventDefault();
+        el.classList.remove('is-file-drag');
+        addFiles(event.dataTransfer && event.dataTransfer.files);
+        const currentInput = $('[data-chat-input]');
+        currentInput?.focus();
+      });
     }
   }
 
@@ -697,7 +840,7 @@
         api.onStatus(status => { state.status = status; renderConnection(); });
         api.loadConfig().then(config => { state.config = config; renderLimits(); }).catch(() => {});
       }
-      newConversation();
+      if (!restoreConversations()) newConversation();
       window.addEventListener('buyerlog:lcwai-open', () => { if (state.mounted) applyPendingOpen(); });
     }
     render();
@@ -706,5 +849,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, addFiles, persistConversations, restoreConversations };
 })();
