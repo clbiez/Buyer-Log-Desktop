@@ -106,14 +106,18 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
          },
        });
        collected.links = collected.links.map(record => {
-         const entry = bomSync.entries.get(String(record && record.plmId || ''));
+         const plmId = String(record && record.plmId || '');
+         const override = bomSync.recordOverrides && bomSync.recordOverrides.get(plmId);
+         const base = override ? { ...record, ...override } : record;
+         const entry = bomSync.entries.get(plmId);
          return entry ? {
-           ...record,
+           ...base,
            bomSummary: entry.summary,
+           artworkSummary: entry.artworkSummary || (base && base.artworkSummary) || '',
            bomPrintCount: entry.totalPrintCount,
            bomHasPrint: entry.hasPrint,
            bomAiStatus: entry.ai && entry.ai.status || 'not-needed',
-         } : record;
+         } : base;
        });
        collected.bomSync = {
          requested: bomSync.requested,
