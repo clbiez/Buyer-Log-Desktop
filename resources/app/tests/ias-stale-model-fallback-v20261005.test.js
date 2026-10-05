@@ -75,8 +75,8 @@ test('stale IAS fallback is allowed only with a real last-known-good snapshot fo
 
 test('main refresh wires previous IAS runtime into fail-closed last-known-good fallback', () => {
   assert.match(SERVER, /allowStaleAntrepoFallback:\s*antrepoMode === 'database' && needsAntrepo/);
-  assert.match(SERVER, /previousAntrepoMapByTarget:\s*runtime\.antrepoMapByTarget \|\| null/);
-  assert.match(SERVER, /previousAntrepoLoadedAt:[\s\S]{0,220}?runtime\.loadedAt/);
+  assert.match(SERVER, /previousAntrepoMapByTarget:[\s\S]{0,180}?antrepoSourceMode === 'database'[\s\S]{0,180}?runtime\.antrepoMapByTarget/);
+  assert.match(SERVER, /previousAntrepoLoadedAt:[\s\S]{0,260}?antrepoSourceMode === 'database'[\s\S]{0,260}?runtime\.loadedAt/);
   assert.match(SERVER, /antrepoLiveAt:\s*result\.antrepoFallback/);
 
   assert.match(REFRESH, /antrepoFallback = buildAntrepoStaleFallback\(options, requestedTargets, error\)/);
