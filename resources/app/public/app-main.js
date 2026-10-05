@@ -21859,6 +21859,10 @@ const KOL_COLS = [
   {k:'colour', label:'Colour', w:130, group:'Model Detayları'},
   {k:'specialCode', label:'Special Code', w:110, group:'Model Detayları'},
   {k:'line', label:'Line', w:100, suggest:'line', group:'Model Detayları'},
+  // PLM SYNC'in BOM analizinden gelen baskı yerleşimi özeti. Diğer metin alanları
+  // gibi gerçek bir sütundur (filtre, taşıma, düzenleme, LCW AI); değer
+  // collection-artwork-detail.js tarafından plm-bom.json'dan projekte edilir.
+  {k:'artworkDetail', label:'Artwork Detail', w:240, group:'Model Detayları'},
   {k:'fabric', label:'Fabric', w:150, group:'Model Detayları'},
   {k:'assortment', label:'Assortment', w:120, group:'Model Detayları'},
   {k:'fit', label:'Fit', w:110, group:'Model Detayları'},
@@ -23508,7 +23512,7 @@ function kolDefaultDisplayOrder(){
   const checklistKeys=kolCustomCols.filter(c=>c.checklist).map(c=>c.k);
   const preferred=[
     'mag','mmyg','buyingGroup','buyer',
-    'season','inStoreWeek','inStoreMonth','durum','productMainDefinition','urunTipi','plmId','modelKod','colourCode','colour','specialCode','line','fabric','assortment','fit','quantity',
+    'season','inStoreWeek','inStoreMonth','durum','productMainDefinition','urunTipi','plmId','modelKod','colourCode','colour','specialCode','line','artworkDetail','fabric','assortment','fit','quantity',
     'not',
     'licensor','lisans','royalty','hologramCost',
     'country','delType','exFactory','retail','exToRetail','inStore',
@@ -29537,7 +29541,7 @@ async function openCoreNectumApiSettings({required=false}={}){
       modal.addEventListener('click',event=>{if(event.target===modal&&!required)close();});
       modal.querySelector('[data-plm-api-clear]')?.addEventListener('click',async()=>{try{message.textContent=en?'Clearing…':'Temizleniyor…';if(window.buyerLogDesktop?.clearCoreNectumAuth)await window.buyerLogDesktop.clearCoreNectumAuth();try{await coreNectumApiRaw('/api/corenectum-api/token',{method:'DELETE'});}catch(_){}status={configured:false,source:'none',automatic:false};message.textContent=en?'PLM session cleared.':'PLM oturumu temizlendi.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}});
       modal.querySelector('[data-plm-api-test]')?.addEventListener('click',async()=>{try{message.textContent=en?'Testing…':'Test ediliyor…';await coreNectumApiRaw('/api/corenectum-api/test',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});message.textContent=en?'Connection successful.':'Bağlantı başarılı.';}catch(error){message.textContent=plmSyncErrorMessage(error)||String(error&&error.message||error);}});
-      connect?.addEventListener('click',async()=>{connect.disabled=true;try{message.textContent=en?'Connecting automatically…':'Otomatik bağlanıyor…';status=await runCoreNectumAutoAuth({interactive:true,force:true});message.textContent=en?'CoreNectum authorization obtained automatically.':'CoreNectum yetkilendirmesi otomatik alındı.';refreshBadge();}catch(error){message.textContent=String(error&&error.message||error);}finally{connect.disabled=false;}});
+      connect?.addEventListener('click',async()=>{connect.disabled=true;try{message.textContent=en?'Connecting automatically…':'Otomatik bağlanıyor…';status=await runCoreNectumAutoAuth({interactive:true,force:true});message.textContent=en?'CoreNectum authorization obtained automatically.':'CoreNectum yetkilendirmesi otomatik alındı.';refreshBadge();}catch(error){message.textContent=error&&error.code==='CORENECTUM_AUTH_NAVIGATION_FAILED'?`${en?'The CoreNectum page could not be opened. Check that you are on the company network/VPN, then try again; if it persists, use Clear PLM session and connect again.':'CoreNectum sayfası açılamadı. Şirket ağına/VPN’e bağlı olduğunuzu kontrol edip yeniden deneyin; sürerse PLM oturumunu temizle ile oturumu sıfırlayıp tekrar bağlanın.'} (${String(error.message||error.code)})`:String(error&&error.message||error);}finally{connect.disabled=false;}});
     });
   })();
   coreNectumApiSettingsInFlight=promise;

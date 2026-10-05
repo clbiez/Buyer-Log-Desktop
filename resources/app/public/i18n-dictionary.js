@@ -2767,6 +2767,7 @@ pairs:[
 ["Fiyat Çalışmaları","Quotations"],
 ["Maliyet Oluştur","Create OC"],
 ["Kumaş","Fabric"],
+["Artwork Detayı","Artwork Detail"],
 ["Ürün Ana Tanım","Product Main Definition"],
 ["boş","is empty"],
 ["Yeni otomasyon","New automation"],

@@ -29,6 +29,7 @@
   var COLLECTION_DISTINCT_LABELS=Object.freeze({
     productMainDefinition:Object.freeze({en:'Product Main Definition',tr:'Ürün Ana Tanım'}),
     line:Object.freeze({en:'Line',tr:'Line'}),
+    artworkDetail:Object.freeze({en:'Artwork Detail',tr:'Artwork Detayı'}),
     buyingSampleManufacturer:Object.freeze({en:'Buying Sample',tr:'Buying Numunesi'})
   });
 

@@ -6,6 +6,7 @@
 .blSyncGuideStatus{margin:18px 30px 0;padding:13px 15px;border-radius:14px;display:flex;align-items:flex-start;gap:11px;border:1px solid var(--line,#d9dee7);background:color-mix(in srgb,var(--surface,#fff) 92%,#7ca7ff 8%)}
 .blSyncGuideStatus>span{width:12px;height:12px;border-radius:50%;margin-top:4px;box-shadow:0 0 0 5px rgba(86,176,104,.12);background:#55ad68}.blSyncGuideStatus.isBlocked>span{background:#e7a13d;box-shadow:0 0 0 5px rgba(231,161,61,.14)}
 .blSyncGuideStatus strong,.blSyncGuideStatus small{display:block}.blSyncGuideStatus small{margin-top:3px;color:var(--muted,#677287)}
+.blSyncGuideStatus .blSyncGuideNotice{margin-top:7px;font-weight:600}.blSyncGuideStatus .blSyncGuideNotice.isOk{color:var(--green,#2f7d47)}.blSyncGuideStatus .blSyncGuideNotice.isError{color:var(--red,#b4232c)}.blSyncGuideEnable{margin-top:10px}
 .blSyncGuideSteps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;padding:18px 30px}
 .blSyncGuideStep{min-width:0;padding:18px;border:1px solid var(--line,#d9dee7);border-radius:18px;background:var(--surface,#fff);display:flex;gap:12px}
 .blSyncGuideStepNo{flex:0 0 28px;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:800;background:color-mix(in srgb,var(--accent,#4474ff) 13%,transparent);color:var(--accent,#4474ff)}

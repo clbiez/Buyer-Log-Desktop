@@ -661,6 +661,24 @@ function isAllowedCoreNectumAuthUrl(value) {
   } catch (_) { return false; }
 }
 
+function coreNectumNavigationErrno(error) {
+  const code = Number(error && error.errno);
+  if (Number.isFinite(code) && code < 0) return code;
+  const match = /\((-\d+)\)/.exec(String(error && error.message || ''));
+  if (match) return Number(match[1]);
+  const text = String(error && (error.code || error.message) || '');
+  if (/ERR_ABORTED/i.test(text)) return -3;
+  if (/ERR_FAILED/i.test(text)) return -2;
+  return 0;
+}
+
+/* SSO oturumuna (çerez/localStorage) dokunmadan yalnız gezinmeyi bozabilen
+ * service worker kayıtlarını, Cache Storage'ı ve HTTP önbelleğini temizler. */
+async function resetCoreNectumNavigationCache(authSession) {
+  try { await authSession.clearStorageData({ storages: ['serviceworkers', 'cachestorage'] }); } catch (_) {}
+  try { await authSession.clearCache(); } catch (_) {}
+}
+
 async function acquireCoreNectumToken(options = {}) {
   if (coreNectumAuthInFlight) return coreNectumAuthInFlight;
   const interactive = options.interactive !== false;
@@ -787,12 +805,36 @@ async function acquireCoreNectumToken(options = {}) {
         resolve(value);
       }, interactive ? 180000 : 9000);
 
-      authWindow.loadURL(CORENECTUM_HOME).catch(error => {
+      const failNavigation = error => {
         if (settled) return;
         settled = true;
         cleanup();
         resolve({ ok: false, code: 'CORENECTUM_AUTH_NAVIGATION_FAILED', error: error && error.message ? error.message : 'CoreNectum açılamadı.' });
-      });
+      };
+      const loadHome = async (attempt) => {
+        if (settled || !authWindow || authWindow.isDestroyed()) return;
+        try {
+          await authWindow.loadURL(CORENECTUM_HOME);
+        } catch (error) {
+          if (settled || !authWindow || authWindow.isDestroyed()) return;
+          const errno = coreNectumNavigationErrno(error);
+          // SSO yönlendirmesi devam ederken ilk yükleme ERR_ABORTED ile biter;
+          // pencere gezinmeye devam eder, zaman aşımı/probe akışı sonucu belirler.
+          if (errno === -3) { log('CoreNectum SSO yönlendirmesi devam ediyor (ERR_ABORTED göz ardı edildi).'); return; }
+          // ERR_FAILED: kalıcı bölümdeki eski service worker/önbellek (Chromium ya
+          // da CoreNectum güncellemesi sonrası) gezinmeyi düşürür. Oturum
+          // çerezleri/localStorage korunur; yalnız SW + önbellek temizlenip bir
+          // kez yeniden denenir.
+          if (errno === -2 && attempt === 0) {
+            log('CoreNectum ERR_FAILED; service worker/önbellek temizlenip yeniden deneniyor.');
+            await resetCoreNectumNavigationCache(authSession);
+            return loadHome(1);
+          }
+          log('CoreNectum açılamadı (' + errno + ').');
+          failNavigation(error);
+        }
+      };
+      void loadHome(0);
     });
   })();
   coreNectumAuthInFlight = request;

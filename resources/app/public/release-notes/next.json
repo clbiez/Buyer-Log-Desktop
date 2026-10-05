@@ -1,14 +1,147 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Artwork Detayı sütunu ve PLM Sync bağlantı iyileştirmeleri",
+    "en": "Artwork Detail column and PLM Sync connection improvements"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir.",
+    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-artwork-detail-column",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "Artwork Detayı sütununda filtre, taşıma, düzenleme ve LCW AI",
+        "en": "Filter, move, edit and LCW AI on the Artwork Detail column"
+      },
+      "body": {
+        "tr": "Artwork Detayı sütunu artık tablo çizildikten sonra eklenen ayrı bir katman değil, Koleksiyon’un gerçek bir sütunu. Başlıktaki ▾ ile filtreleyip sıralayabilir, sütunu sürükleyerek taşıyabilir, gizleyebilir ve hücreyi elle düzenleyebilirsiniz. Elle girdiğiniz değer sonraki PLM SYNC’te korunur; hücreyi temizlerseniz PLM değeri geri gelir. LCW AI’a Koleksiyon verisi eklendiğinde bu sütun da tüm satırlarla birlikte gider. BOM ayrıntısı için hücrede sağ tık › BOM Detayını Aç.",
+        "en": "The Artwork Detail column is no longer a separate layer added after the table is drawn; it is a real Collection column. Use the ▾ in its header to filter and sort, drag it to move it, hide it and edit the cell by hand. A value you enter yourself is kept on the next PLM SYNC; clear the cell to bring the PLM value back. When Collection data is added to LCW AI, this column is sent with all rows. For the BOM breakdown, right-click the cell › Open BOM Detail."
+      },
+      "path": {
+        "tr": "Koleksiyon › Model Detayları › Artwork Detayı",
+        "en": "Collection › Model Details › Artwork Detail"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-detail-column.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda Artwork Detayı sütununun açık başlık filtresi ve elle düzenlenmiş bir hücre (demo veri)",
+          "en": "Open header filter on the Artwork Detail column in the Collection table and a hand-edited cell (demo data)"
+        },
+        "caption": {
+          "tr": "Artwork Detayı diğer sütunlar gibi filtrelenir ve düzenlenir.",
+          "en": "Artwork Detail is filtered and edited like any other column."
+        }
+      }
+    },
+    {
+      "id": "plm-sync-auth-err-failed",
+      "type": "fix",
+      "module": {
+        "tr": "PLM Sync",
+        "en": "PLM Sync"
+      },
+      "title": {
+        "tr": "PLM Sync otomatik bağlanma ERR_FAILED hatasında takılmıyor",
+        "en": "PLM Sync automatic sign-in no longer stops on ERR_FAILED"
+      },
+      "body": {
+        "tr": "Güncelleme sonrası bazı bilgisayarlarda PLM Kullanıcı Girişi “ERR_FAILED (-2) loading …/style-list” hatası verip PLM Sync’i kullanılamaz bırakıyordu. Buyer Log artık bu durumda CoreNectum oturumunun eski önbelleğini ve service worker kaydını (giriş çerezlerine dokunmadan) temizleyip sayfayı otomatik yeniden açar; SSO yönlendirmesi sırasında gelen ERR_ABORTED da hata sayılmaz. Sayfa yine açılamazsa ham kod yerine ağ/VPN ve oturum sıfırlama yönlendirmesi gösterilir.",
+        "en": "After the update, PLM User Sign-In on some computers failed with “ERR_FAILED (-2) loading …/style-list”, leaving PLM Sync unusable. Buyer Log now clears the CoreNectum session’s stale cache and service worker (without touching sign-in cookies) and reopens the page automatically; an ERR_ABORTED during the SSO redirect is no longer treated as a failure. If the page still cannot be opened, guidance about the network/VPN and resetting the session is shown instead of the raw code."
+      },
+      "path": {
+        "tr": "PLM Sync › PLM Kullanıcı Girişi › Otomatik bağlan",
+        "en": "PLM Sync › PLM User Sign-In › Connect automatically"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-auth-retry.png",
+        "alt": {
+          "tr": "PLM Kullanıcı Girişi: CoreNectum açılamadığında gösterilen ağ/VPN ve oturum sıfırlama yönlendirmesi (demo veri)",
+          "en": "PLM User Sign-In: network/VPN and session reset guidance shown when CoreNectum cannot be opened (demo data)"
+        },
+        "caption": {
+          "tr": "CoreNectum açılamazsa ham hata kodu yerine yönlendirme gösterilir",
+          "en": "If CoreNectum cannot be opened, guidance is shown instead of the raw error code"
+        }
+      }
+    },
+    {
+      "id": "plm-guide-one-click-remote-debugging",
+      "type": "feature",
+      "module": {
+        "tr": "PLM Sync",
+        "en": "PLM Sync"
+      },
+      "title": {
+        "tr": "Rehberden tek tıkla Remote Debugging",
+        "en": "One-click Remote Debugging from the guide"
+      },
+      "body": {
+        "tr": "PLM/ASAS senkron rehberi tarayıcı bağlantısını hazır görmediğinde artık “Remote Debugging'i tek tıkla aç” düğmesi gösterir. Browser & Remote Debugging penceresini açmanız gerekmez: Buyer Log kayıtlı tarayıcı tercihinizle bağlantıyı açar, hemen Test Connection ile doğrular ve sonucu rehberde gösterir. Tarayıcı açıksa yeniden başlatma yalnız onayınızla yapılır; profil seçimi gerekiyorsa ayarlara yönlendirilirsiniz.",
+        "en": "When the PLM/ASAS sync guide does not see a ready browser connection, it now shows an “Enable Remote Debugging in one click” button. You no longer need to open the Browser & Remote Debugging window: Buyer Log enables the connection with your saved browser preference, verifies it right away with Test Connection and shows the result in the guide. If the browser is running, it is restarted only with your confirmation; if a profile must be chosen, you are sent to the settings."
+      },
+      "path": {
+        "tr": "PLM Sync › senkron başlat › rehber › Remote Debugging'i tek tıkla aç",
+        "en": "PLM Sync › start sync › guide › Enable Remote Debugging in one click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-guide-one-click-remote-debugging.png",
+        "alt": {
+          "tr": "PLM senkron rehberi: tek tıkla açılan ve doğrulanan Remote Debugging bağlantısı (demo veri)",
+          "en": "PLM sync guide: Remote Debugging enabled and verified in one click (demo data)"
+        },
+        "caption": {
+          "tr": "Bağlantı açılır, hemen doğrulanır ve devam düğmesi etkinleşir.",
+          "en": "The connection is enabled, verified at once and Continue becomes available."
+        }
+      }
+    },
+    {
+      "id": "remote-debugging-setup-complete-page",
+      "type": "improvement",
+      "module": {
+        "tr": "Browser & Remote Debugging",
+        "en": "Browser & Remote Debugging"
+      },
+      "title": {
+        "tr": "Açılan tarayıcıda “işlem tamamlandı” sayfası",
+        "en": "“Setup complete” page in the opened browser"
+      },
+      "body": {
+        "tr": "Enable & Launch, Tarayıcıyı yeniden başlat veya rehberdeki tek tık ile açılan tarayıcı artık boş sekmede kalmaz. Bağlantı doğrulandıktan sonra işlemin tamamlandığını ve sayfanın kapatılabileceğini söyleyen bir sayfa açılır; boş başlangıç sekmesi kapanır. Buyer Log tarayıcıya yeniden ihtiyaç duyduğunda pencereyi kendisi açar.",
+        "en": "The browser opened by Enable & Launch, Restart browser or the one-click guide button no longer stays on a blank tab. After the connection is verified, a page says setup is complete and the page can be closed; the blank start tab is closed. When Buyer Log needs the browser again, it reopens the window by itself."
+      },
+      "path": {
+        "tr": "Veri Yönetimi › Araçlar › Browser ve Remote Debugging › Enable & Launch",
+        "en": "Data Management › Tools › Browser & Remote Debugging › Enable & Launch"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "remote-debugging-setup-complete-page.png",
+        "alt": {
+          "tr": "Remote Debugging kurulumu sonrası açılan tamamlandı sayfası (TR/EN)",
+          "en": "Setup complete page opened after Remote Debugging setup (TR/EN)"
+        },
+        "caption": {
+          "tr": "Kurulum bitince tarayıcı ne yapacağınızı söyler: sayfayı kapatabilirsiniz.",
+          "en": "After setup the browser tells you what to do: you can close the page."
+        }
+      }
+    }
+  ]
 }
