@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.243",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "LCW AI çıktılarında gerçek model görselleri",
+        "en": "Real model images in LCW AI outputs"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 0,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.243/release.json"
+    },
+    {
       "version": "7.0.242",
       "publishedAt": "2026-10-05",
       "title": {

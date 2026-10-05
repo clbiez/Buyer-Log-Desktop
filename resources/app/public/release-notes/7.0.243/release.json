@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.243",
+  "channel": "stable",
+  "publishedAt": "2026-10-05",
+  "title": {
+    "tr": "LCW AI çıktılarında gerçek model görselleri",
+    "en": "Real model images in LCW AI outputs"
+  },
+  "summary": {
+    "tr": "LCW AI ile oluşturulan HTML, PDF, PowerPoint ve Excel dosyalarına Buyer Log’daki gerçek model görselleri ekleniyor; görseller LCW AI’a gönderilmiyor.",
+    "en": "HTML, PDF, PowerPoint and Excel files created with LCW AI now include the real model images from Buyer Log; the images are not sent to LCW AI."
+  },
+  "stats": {
+    "features": 1,
+    "improvements": 0,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "lcwai-model-images",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Çıktı Oluşturma",
+        "en": "LCW AI · Output Engine"
+      },
+      "title": {
+        "tr": "Model kartları gerçek ürün görselleriyle",
+        "en": "Model cards with real product images"
+      },
+      "body": {
+        "tr": "Koleksiyon, CP Tracker, Siparişler veya Overview bağlamı eklendiğinde Buyer Log her kayda kısa bir görsel anahtarı verir; LCW AI görselleri görmez, yalnız bu anahtarı kullanır. Buyer Log dosyayı oluştururken kullanılan görselleri kendi yerel deposundan alır, küçültür ve gömer. HTML/PDF’te model kartları, PowerPoint’te yeni “galeri” slaytı ve yan görselli slaytlar, Excel’de hücreye gömülü görsel sütunu çıkar. Görseli olmayan kayıtta “Görsel yok” kutusu kalır. Görselli büyük PDF’ler de JavaScript’i ve ağı kapalı ayrı pencerede basılır.",
+        "en": "When Collection, CP Tracker, Orders or Overview context is added, Buyer Log gives each record a short image key; LCW AI never sees the images, it only uses the key. While building the file, Buyer Log takes the images that are used from its own local store, shrinks and embeds them. HTML/PDF get model cards, PowerPoint gets a new “gallery” slide and slides with a side image, and Excel gets an image column embedded in the cells. Records without an image show a “No image” box. Large PDFs with images are also printed in a separate window with JavaScript and network disabled."
+      },
+      "path": {
+        "tr": "LCW AI › Bağlam Ekle › Yanıt biçimi",
+        "en": "LCW AI › Add Context › Answer as"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-model-images.png",
+        "alt": {
+          "tr": "Buyer Log’un oluşturduğu, gerçek model görselli kart raporu; görseli olmayan model “Görsel yok” (demo veri)",
+          "en": "Card report built by Buyer Log with real model images; a model without an image shows “No image” (demo data)"
+        },
+        "caption": {
+          "tr": "Görseller Buyer Log’dan gelir, LCW AI’a gitmez.",
+          "en": "Images come from Buyer Log and never go to LCW AI."
+        }
+      }
+    }
+  ]
+}
