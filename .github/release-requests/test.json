@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.240",
-  "commit_sha": "070249cb272c7380ca08fce82d60e9b1255805d0",
-  "release_notes": "Buyer Log 7.0.240: LCW AI ekranına yeniden girildiğinde çalışmayan \"Bağlam Ekle\" menüsü düzeltildi. Fixed the \"Add Context\" menu that stopped working after re-entering the LCW AI screen."
+  "version": "7.0.241",
+  "commit_sha": "a9bfd0f3a276e00da2ccad91a1d1644b2504b3bc",
+  "release_notes": "Buyer Log 7.0.241: LCW AI önce girişe, sonra konuşulacak ekranı seçmeye yönlendirir; mesajda ekran adı geçince o ekranın verisi otomatik eklenir. LCW AI guides sign-in and topic choice; naming a screen adds its data automatically."
 }
