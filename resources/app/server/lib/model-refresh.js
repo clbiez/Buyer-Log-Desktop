@@ -178,6 +178,69 @@ function fieldMappingRepairFromError(item, error) {
 }
 
 
+/* IASv2 bazen dağıtım/işleme sırasında bir calculated column'u geçici olarak
+ * "recalculated or refreshed" durumunda bırakabiliyor. Bağlantı ve şema okuması
+ * sağlıklı olsa bile herhangi bir IAS sorgusu bu model hatasıyla kesilebilir.
+ * Bu bir ağ/VPN veya Buyer Log Field Mapping hatası değildir.
+ *
+ * Buyer Log bu hatada YENİ/eksik IAS sonucu yazmaz. Önceki başarılı IAS
+ * snapshot'ı varsa onu koruyup ASAS gibi bağımsız kaynakların yenilenmesine izin
+ * verir. Snapshot yoksa fail-closed davranış korunur.
+ */
+function staleCalculatedColumnFromError(error) {
+  const message = String(error && (error.publicMessage || error.message) || error || '');
+  const match = message.match(/column\s+['"]([^'"]+)['"]\s*\[([^\]]+)\][\s\S]{0,240}?does not hold any data[\s\S]{0,240}?needs to be recalculated or refreshed/i);
+  if (!match) return null;
+  return {
+    table: String(match[1] || '').trim(),
+    column: String(match[2] || '').trim(),
+    message,
+  };
+}
+
+function buildAntrepoStaleFallback(options = {}, requestedTargets = [], error) {
+  const staleColumn = staleCalculatedColumnFromError(error);
+  if (!staleColumn || options.allowStaleAntrepoFallback !== true) return null;
+
+  // Boş bir IAS kümesi de geçerli olabilir; bu yüzden "satır var mı" yerine
+  // gerçekten daha önce yayınlanmış bir snapshot zamanı aranır.
+  const previousLoadedAt = String(options.previousAntrepoLoadedAt || '').trim();
+  if (!previousLoadedAt) return null;
+
+  const previousByTarget = options.previousAntrepoMapByTarget
+    && typeof options.previousAntrepoMapByTarget === 'object'
+    ? options.previousAntrepoMapByTarget : {};
+  const previousLegacy = options.previousAntrepoMap
+    && typeof options.previousAntrepoMap === 'object'
+    ? options.previousAntrepoMap : null;
+  const allowed = new Set(modelScopes.allowedTargets('antrepo'));
+  const targets = [...new Set((Array.isArray(requestedTargets) ? requestedTargets : [])
+    .filter(target => allowed.has(target)))];
+  if (!targets.length) return null;
+
+  const byTarget = {};
+  for (const target of targets) {
+    if (Object.prototype.hasOwnProperty.call(previousByTarget, target)) {
+      byTarget[target] = previousByTarget[target];
+    } else if (previousLegacy) {
+      byTarget[target] = previousLegacy;
+    } else {
+      // Bir hedef için bile son başarılı IAS verisi yoksa kısmi/uydurulmuş
+      // antrepo görünümü yayınlamayız.
+      return null;
+    }
+  }
+  return {
+    byTarget,
+    previousLoadedAt,
+    targets,
+    table: staleColumn.table,
+    column: staleColumn.column,
+    originalCode: String(error && error.code || ''),
+  };
+}
+
+
 /* v10.15 — CANLI ŞEMA İLE HORIZON/FİLTRE ONARIMI.
  *
  * Kaynak modelde tablo/sütun adı değiştiğinde saklanmış scope filtresi eski
@@ -1300,27 +1363,50 @@ async function loadFromModelConnections(items, options = {}) {
   //    birebir sağlandığında yapılır.
   const antrepoMapByTarget = {};
   let antrepoRuns = [];
+  let antrepoFallback = null;
   if (antrepoPromise) {
-    const antrepoResult = await antrepoPromise;
-    connectionWarnings.push(...antrepoResult.warnings);
-    for (const [target, entry] of antrepoResult.byTarget) {
-      const run = entry.run;
-      const map = parseAntrepoRows(run.rows, options.matchRule);
-      connectionWarnings.push(...validateAntrepoIntegrity(target, map, asasOrdersByTarget[target] || [], options.matchRule));
-      antrepoMapByTarget[target] = map && typeof map === 'object' ? map : {};
-      antrepoRuns.push(run);
-      connectionWarnings.push(...describeAntrepoMatch(target, map, asasOrdersByTarget[target] || [], run, options.matchRule));
-    }
-    /* Kapatılan IAS beslemesi SESSİZ KALMAZ. Siparişler'den IAS bağlantısını
-       kaldırmak desteklenen bir karardır (ASAS verisi gelmeye ve yenilenmeye
-       devam eder), ama sayfa eksik sütunlarla açılacağı için bunun nedeni
-       görünür olmalı — yoksa kullanıcı boş antrepo sütunlarını arıza sanar. */
-    for (const target of requestedTargets) {
-      if (!modelScopes.allowedTargets('antrepo').includes(target)) continue;
-      if (antrepoResult.byTarget.has(target)) continue;
-      const label = modelScopes.TARGET_LABELS[target] || target;
+    let antrepoResult = null;
+    try {
+      antrepoResult = await antrepoPromise;
+    } catch (error) {
+      antrepoFallback = buildAntrepoStaleFallback(options, requestedTargets, error);
+      if (!antrepoFallback) throw error;
+
+      Object.assign(antrepoMapByTarget, antrepoFallback.byTarget);
+      const staleRef = antrepoFallback.table && antrepoFallback.column
+        ? `'${antrepoFallback.table}'[${antrepoFallback.column}]`
+        : 'IAS calculated column';
+      const previousAt = (() => {
+        const parsed = Date.parse(antrepoFallback.previousLoadedAt);
+        return Number.isFinite(parsed) ? new Date(parsed).toISOString() : antrepoFallback.previousLoadedAt;
+      })();
       connectionWarnings.push(
-        `${label} sayfası antrepo verisi olmadan yenilendi: ${connectionLabel(selected.antrepo)} bağlantısı bu modül için kapalı. Sipariş satırları güncel, antrepo/sevkiyat sütunları boş.`);
+        `IAS Database canlı sorgusu, ${staleRef} model sütunu yeniden hesaplanmayı/yenilenmeyi beklediği için tamamlanamadı. ` +
+        `Yanlış veya eksik IAS verisi yazılmadı; ${previousAt} tarihli son başarılı IAS verisi korundu. ` +
+        `ASAS ve diğer bağımsız kaynaklar güncellendi. IASv2 modeli yeniden işlendiğinde sonraki yenileme otomatik olarak canlı veriye döner.`);
+    }
+
+    if (antrepoResult) {
+      connectionWarnings.push(...antrepoResult.warnings);
+      for (const [target, entry] of antrepoResult.byTarget) {
+        const run = entry.run;
+        const map = parseAntrepoRows(run.rows, options.matchRule);
+        connectionWarnings.push(...validateAntrepoIntegrity(target, map, asasOrdersByTarget[target] || [], options.matchRule));
+        antrepoMapByTarget[target] = map && typeof map === 'object' ? map : {};
+        antrepoRuns.push(run);
+        connectionWarnings.push(...describeAntrepoMatch(target, map, asasOrdersByTarget[target] || [], run, options.matchRule));
+      }
+      /* Kapatılan IAS beslemesi SESSİZ KALMAZ. Siparişler'den IAS bağlantısını
+         kaldırmak desteklenen bir karardır (ASAS verisi gelmeye ve yenilenmeye
+         devam eder), ama sayfa eksik sütunlarla açılacağı için bunun nedeni
+         görünür olmalı — yoksa kullanıcı boş antrepo sütunlarını arıza sanar. */
+      for (const target of requestedTargets) {
+        if (!modelScopes.allowedTargets('antrepo').includes(target)) continue;
+        if (antrepoResult.byTarget.has(target)) continue;
+        const label = modelScopes.TARGET_LABELS[target] || target;
+        connectionWarnings.push(
+          `${label} sayfası antrepo verisi olmadan yenilendi: ${connectionLabel(selected.antrepo)} bağlantısı bu modül için kapalı. Sipariş satırları güncel, antrepo/sevkiyat sütunları boş.`);
+      }
     }
   }
 
@@ -1375,7 +1461,9 @@ async function loadFromModelConnections(items, options = {}) {
     lflLoadedAt: new Date().toISOString(),
     sources: {
       asas: includeAsas ? `Model: ${connectionLabel(selected.asas)}` : null,
-      antrepo: includeAntrepo && selected.antrepo ? `Model: ${connectionLabel(selected.antrepo)}` : null,
+      antrepo: includeAntrepo && selected.antrepo
+        ? `Model: ${connectionLabel(selected.antrepo)}${antrepoFallback ? ' · son başarılı IAS verisi korundu' : ''}`
+        : null,
       lfl: includeLfl ? `Model: ${connectionLabel(selected.asas)}` : null,
     },
     warnings,
@@ -1383,6 +1471,7 @@ async function loadFromModelConnections(items, options = {}) {
     scopes: scopeSummary,
     appliedHorizons,
     mappingRepairs: [...asasRuns, ...antrepoRuns].filter(run => run && run.mappingRepaired).length,
+    antrepoFallback,
     runs: [...asasRuns, ...antrepoRuns],
     queryMetrics: queryCoordinator.metrics(),
   };
@@ -1400,6 +1489,8 @@ module.exports = {
   normalizedRole,
   normalizedConnectionMapping,
   fieldMappingRepairFromError,
+  staleCalculatedColumnFromError,
+  buildAntrepoStaleFallback,
   repairHorizonAgainstSchema,
   ensureConnectionMapping,
   alignHorizonWithMapping,
