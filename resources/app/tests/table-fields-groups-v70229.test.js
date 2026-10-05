@@ -100,7 +100,7 @@ test('Koleksiyon varsayılan sırası kullanıcı düzenini izler; checklist mad
   const keys = [...preferred.matchAll(/'([^']+)'|\.\.\.checklistKeys/g)].map(match => match[1] || '...checklist');
   assert.deepEqual(keys, [
     'mag', 'mmyg', 'buyingGroup', 'buyer',
-    'season', 'inStoreWeek', 'inStoreMonth', 'durum', 'productMainDefinition', 'urunTipi', 'plmId', 'modelKod', 'colourCode', 'colour', 'specialCode', 'line', 'fabric', 'assortment', 'fit', 'quantity',
+    'season', 'inStoreWeek', 'inStoreMonth', 'durum', 'productMainDefinition', 'urunTipi', 'plmId', 'modelKod', 'colourCode', 'colour', 'specialCode', 'line', 'artworkDetail', 'fabric', 'assortment', 'fit', 'quantity',
     'not',
     'licensor', 'lisans', 'royalty', 'hologramCost',
     'country', 'delType', 'exFactory', 'retail', 'exToRetail', 'inStore',
