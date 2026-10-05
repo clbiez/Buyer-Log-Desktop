@@ -112,10 +112,50 @@
     ];
   }
 
-  function renderGuide(category,status,{blocking=false}={}){
+  /* TEK TIKLA REMOTE DEBUGGING.
+     Rehber, Browser & Remote Debugging penceresini açtırmadan aynı kurulum
+     uç noktasını (kayıtlı tercih + Enable & Launch) çağırır ve sonucu hemen
+     Test Connection ile teyit eder. Profil seçimi gereken durumlarda tahmin
+     yapılmaz; kullanıcı ayarlar penceresine yönlendirilir. */
+  const oneClickStates=new Set(['DISABLED','REMOTE_DEBUG_DISABLED','ENDPOINT_UNVERIFIED','PORT_CONFLICT','CONTEXT_MISMATCH','DISCOVERING']);
+  async function postJson(url,body){
+    const response=await fetch(url,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+    const data=await response.json().catch(()=>({}));
+    return {ok:response.ok&&data.ok!==false,data,result:data.result||{}};
+  }
+  function setupFailureText(result,data){
+    const reason=result&&result.reason;
+    if(reason==='browser-running')return t('Tarayıcı şu anda açık; Remote Debugging yalnız yeniden başlatmayla açılabilir.','The browser is running; Remote Debugging can only be enabled by restarting it.');
+    if(reason==='browser-profile-running-no-cdp')return t('Buyer Log tarayıcı penceresi açık fakat bağlantı vermiyor. O pencereyi kapatıp tekrar deneyin.','The Buyer Log browser window is open but not responding. Close that window and try again.');
+    if(reason==='policy-blocked')return t('Remote Debugging kuruluş politikası tarafından engellenmiş.','Remote Debugging is blocked by organization policy.');
+    if(reason==='browser-not-installed'||reason==='unsupported-browser')return t('Desteklenen bir Chrome/Edge bulunamadı. Browser ayarlarından tarayıcı seçin.','No supported Chrome/Edge was found. Choose a browser in browser settings.');
+    if(result&&(result.connectionState==='PROFILE_REQUIRED'||result.connectionState==='PROFILE_NOT_FOUND'))return t('Önce Browser ayarlarından kullanılacak profili seçin.','Choose the profile to use in browser settings first.');
+    return t('Remote Debugging açılamadı: ','Remote Debugging could not be enabled: ')+String((result&&result.status)||(data&&data.error)||t('bilinmeyen hata','unknown error'));
+  }
+  async function enableRemoteDebugging(){
+    let attempt=await postJson('/api/browser-debug/enable',{});
+    if(!attempt.ok&&attempt.result.reason==='browser-running'){
+      if(!confirm(t('Seçili tarayıcı kapatılıp aynı profille Remote Debugging açık olarak yeniden açılacak. Açık sekmelerinizi kaydedin. Devam edilsin mi?','The selected browser will be closed and reopened with the same profile and Remote Debugging enabled. Save your open tabs. Continue?'))){
+        return {ok:false,notice:setupFailureText(attempt.result,attempt.data)};
+      }
+      attempt=await postJson('/api/browser-debug/restart',{});
+    }
+    // Kurulumun dönüşü yeterli kanıt sayılmaz: Test Connection ile hemen teyit edilir.
+    const check=await postJson('/api/browser-debug/test',{}).catch(()=>({ok:false,result:{}}));
+    const status=await browserStatus(true);
+    const ready=status.connectionState==='READY'||check.result.connectionState==='READY';
+    if(ready&&status.connectionState!=='READY')status.connectionState='READY';
+    if(ready)return {ok:true,status,notice:attempt.result.setupPage
+      ?t('Remote Debugging açıldı ve doğrulandı. Açılan tarayıcı sayfası işlemin tamamlandığını gösteriyor; o sayfayı kapatabilirsiniz.','Remote Debugging is enabled and verified. The opened browser page confirms completion; you can close that page.')
+      :t('Remote Debugging açıldı ve doğrulandı.','Remote Debugging is enabled and verified.')};
+    return {ok:false,status,notice:attempt.ok?t('Tarayıcı açıldı fakat bağlantı doğrulanamadı. Tekrar kontrol edin veya Browser ayarlarını açın.','The browser opened but the connection could not be verified. Check again or open browser settings.'):setupFailureText(attempt.result,attempt.data)};
+  }
+
+  function renderGuide(category,status,{blocking=false,notice=null}={}){
     closeExisting();
     const state=status&&status.connectionState||'';
     const ready=state==='READY';
+    const oneClick=!ready&&oneClickStates.has(state);
     const source=category==='asas'?'ASAS':'PLM';
     const overlay=document.createElement('div');
     overlay.id='_syncGuideOverlay';
@@ -125,7 +165,10 @@
       '<div class="blSyncGuideHead"><div><span class="blSyncGuideEyebrow">'+source+' SYNC</span><h2 id="_syncGuideTitle">'+esc(blocking?t('Önce tarayıcı bağlantısını hazırlayın','Prepare the browser connection first'):t('Başlamadan önce 20 saniyelik rehber','A quick guide before you start'))+'</h2>'+
       '<p>'+esc(blocking?t('Bu işlem tarayıcı bağlantısı hazır olmadan çalışmaz.','This operation cannot run until the browser connection is ready.'):t('Aşağıdaki üç noktayı bilirseniz PLM ve ASAS senkronları kesintisiz ilerler.','These three points help PLM and ASAS syncs complete without interruption.'))+'</p></div>'+
       '<button type="button" class="pricingRuleIconBtn" data-syncguide-close aria-label="'+esc(t('Kapat','Close'))+'"><svg class="ic"><use href="#i-x"/></svg></button></div>'+
-      '<div class="blSyncGuideStatus '+(ready?'isReady':'isBlocked')+'"><span></span><div><strong>'+esc(t('Tarayıcı bağlantısı: ','Browser connection: ')+stateText(state))+'</strong><small>'+esc(ready?t('Buyer Log tarayıcı bağlantısını doğruladı.','Buyer Log verified the browser connection.'):t('Senkronu başlatmadan önce bu durumu düzeltin.','Fix this before starting the sync.'))+'</small></div></div>'+
+      '<div class="blSyncGuideStatus '+(ready?'isReady':'isBlocked')+'"><span></span><div><strong>'+esc(t('Tarayıcı bağlantısı: ','Browser connection: ')+stateText(state))+'</strong><small>'+esc(ready?t('Buyer Log tarayıcı bağlantısını doğruladı.','Buyer Log verified the browser connection.'):(oneClick?t('Aşağıdaki düğmeyle Remote Debugging tek tıkla açılır ve hemen doğrulanır.','Use the button below to enable Remote Debugging in one click; it is verified right away.'):t('Senkronu başlatmadan önce bu durumu düzeltin.','Fix this before starting the sync.')))+'</small>'+
+      (notice?'<small class="blSyncGuideNotice '+(notice.ok?'isOk':'isError')+'" role="status">'+esc(notice.text)+'</small>':'')+
+      (oneClick?'<button type="button" class="tbtn primary blSyncGuideEnable" data-syncguide-enable>'+esc(t('Remote Debugging\'i tek tıkla aç','Enable Remote Debugging in one click'))+'</button>':'')+
+      '</div></div>'+
       '<div class="blSyncGuideSteps">'+steps+'</div>'+
       '<div class="blSyncGuideManual"><strong>'+esc(t('Manuel kontrol','Manual check'))+'</strong><code>'+esc(inspectUrl(status))+'</code><span>→ Remote Debugging → Allow Remote Debugging</span></div>'+
       '<div class="blSyncGuideFoot">'+
@@ -144,6 +187,16 @@
         else document.querySelector('[data-browser-debug-settings]')?.click();
       }catch(_){}
     });
+    overlay.querySelector('[data-syncguide-enable]')?.addEventListener('click',async event=>{
+      const btn=event.currentTarget;if(btn.disabled)return;
+      btn.disabled=true;btn.textContent=t('Açılıyor ve doğrulanıyor…','Enabling and verifying…');
+      let outcome;
+      try{outcome=await enableRemoteDebugging();}
+      catch(error){outcome={ok:false,notice:t('Remote Debugging açılamadı: ','Remote Debugging could not be enabled: ')+((error&&error.message)||String(error))};}
+      if(!overlay.isConnected)return;
+      const next=outcome.status||await browserStatus(true);
+      renderGuide(category,next,{blocking:next.connectionState!=='READY',notice:{ok:outcome.ok,text:outcome.notice}});
+    });
     overlay.querySelector('[data-syncguide-recheck]')?.addEventListener('click',async event=>{
       const btn=event.currentTarget;btn.disabled=true;btn.textContent=t('Kontrol ediliyor…','Checking…');
       const next=await browserStatus(true);btn.disabled=false;
@@ -157,7 +210,7 @@
       const entry=bypassEntry;bypassEntry=null;
       if(entry&&entry.isConnected){entry.dataset.syncGuideBypass='1';entry.click();}
     });
-    try{window.BLLayerSystem?.openDialog?.(overlay,{initialFocus:'[data-syncguide-continue]:not(:disabled),[data-syncguide-settings]'});}catch(_){}
+    try{window.BLLayerSystem?.openDialog?.(overlay,{initialFocus:'[data-syncguide-continue]:not(:disabled),[data-syncguide-enable],[data-syncguide-settings]'});}catch(_){}
   }
 
   async function interceptEntry(event){

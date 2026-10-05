@@ -2218,7 +2218,7 @@ app.post('/api/browser-debug/configuration', browserDebugAccess, express.json({l
 });
 app.post('/api/browser-debug/enable', browserDebugAccess, express.json({limit:'16kb'}), async (req, res) => {
   try {
-    const result = await browserDebugService.enableAndLaunch(req.body || {});
+    const result = await browserDebugService.enableAndLaunch(req.body || {}, { announceReady:true });
     if (!result.ok) return res.status(result.status === 'Blocked by organization' ? 403 : 409).json({ ok:false, result });
     userAccess.appendAudit(req.currentUser, 'BROWSER_DEBUG_ENABLE_LAUNCH', result.resolved.resolvedBrowser, { profileMode:result.endpoint.profileMode, port:result.endpoint.port });
     res.json({ ok:true, result });
@@ -2226,7 +2226,7 @@ app.post('/api/browser-debug/enable', browserDebugAccess, express.json({limit:'1
 });
 app.post('/api/browser-debug/restart', browserDebugAccess, express.json({limit:'16kb'}), async (req, res) => {
   try {
-    const result = await browserDebugService.restartWithRemoteDebugging(req.body || {});
+    const result = await browserDebugService.restartWithRemoteDebugging(req.body || {}, { announceReady:true });
     if (!result.ok) return res.status(result.status === 'Blocked by organization' ? 403 : 409).json({ ok:false, result });
     userAccess.appendAudit(req.currentUser, 'BROWSER_DEBUG_RESTART', result.resolved.resolvedBrowser, { profileMode:result.endpoint.profileMode, port:result.endpoint.port });
     res.json({ ok:true, result });
