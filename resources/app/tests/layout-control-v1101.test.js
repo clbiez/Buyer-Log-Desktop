@@ -145,6 +145,17 @@ test('layout-control wiring reuses central BuyerLogAI and exposes LCW AI workspa
   assert.match(ui,/\/api\/data\/cp/);
   assert.doesNotMatch(ui,/mym\.prod\.lcwaikiki\.com|Authorization|access_token/);
   assert.match(chat,/data-layout-control/);
-  assert.match(perf,/layout-control-engine\.js/);
-  assert.match(perf,/layout-control\.js/);
+  assert.match(perf,/lcwaiChat:\['lcwai-assistant\.js\?rev=1','lcwai-markdown\.js\?rev=1','lcwai-chat\.js\?rev=1'\]/);
+  assert.match(perf,/layoutControl:\['layout-control-engine\.js\?rev=1','layout-control\.js\?rev=1'\]/);
+  assert.match(chat,/ensureFeature\('layoutControl'\)/);
+});
+
+test('layout-control backend exposes durable per-user audit history without storing PDF bytes',()=>{
+  const route=fs.readFileSync(path.join(__dirname,'..','server','routes','lcwai-routes.js'),'utf8');
+  const store=fs.readFileSync(path.join(__dirname,'..','server','lib','layout-control-store.js'),'utf8');
+  assert.match(route,/\/api\/lcwai\/layout-control\/history/);
+  assert.match(route,/LCWAI_LAYOUT_CHECK/);
+  assert.match(store,/layout-control-history/);
+  assert.match(store,/ownerKey/);
+  assert.doesNotMatch(store,/pdfBytes|nativeText|Buffer\.from\(.*pdf/i);
 });
