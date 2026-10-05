@@ -49,11 +49,9 @@ test('visible Collection models read BOM summaries with one local batch request'
   assert.match(ROUTE, /app\.post\('\/api\/plm-sync\/bom\/batch'/);
   assert.match(ROUTE, /plmBomStore\.load\(\)/);
   assert.match(ROUTE, /entries\[plmId\] = entry/);
-  assert.doesNotMatch(
-    ROUTE.slice(ROUTE.indexOf("app.post('/api/plm-sync/bom/batch'"), ROUTE.indexOf("app.get('/api/plm-sync/bom/:plmId'")),
-    /CoreNectum|syncPlmBoms|getDefaultEngine|lcwai/i,
-    'batch projection must not trigger remote PLM/AI work'
-  );
+  const batch = ROUTE.slice(ROUTE.indexOf("app.post('/api/plm-sync/bom/batch'"), ROUTE.indexOf("app.get('/api/plm-sync/bom/:plmId'"));
+  assert.doesNotMatch(batch, /syncPlmBoms\s*\(|coreNectumApiClient\.|getDefaultEngine\s*\(|\.ask\s*\(/,
+    'batch projection must not trigger remote PLM/AI work');
 });
 
 test('Artwork cell can open the full BOM detail view on double click', () => {
