@@ -180,3 +180,61 @@ test('regresyon: LCW AI sayfasına yeniden girince sohbet tıklama dinleyicisi �
   assert.match(handler, /const input = \$\('\[data-chat-input\]'\);/);
   assert.match(handler, /const fileInput = \$\('\[data-chat-file-input\]'\);/);
 });
+
+function loadChatModule({ status = null, groups = [], lastTab = 'overview', autoStored = null } = {}) {
+  const vm = require('node:vm');
+  const store = new Map(autoStored == null ? [] : [['bl.lcwai.autoContext', autoStored]]);
+  const window = {
+    appLang: 'tr',
+    localStorage: { getItem: key => (store.has(key) ? store.get(key) : null), setItem: (key, value) => store.set(key, String(value)) },
+    BLAIScreenData: { lastTab: () => lastTab },
+    BuyerLogAI: { getAvailableContext: () => groups, registerContextProvider() {} },
+    BLMarkdown: null,
+  };
+  window.window = window;
+  const context = vm.createContext({ window, document: { documentElement: { lang: 'tr' }, getElementById: () => null }, localStorage: window.localStorage, console });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'lcwai-chat.js'), 'utf8'), context);
+  window.BLLcwAiChat._state.status = status;
+  return window.BLLcwAiChat;
+}
+
+test('otomatik bağlam: mesajdaki ekran adı ilgili ekran verisini seçer; "orders" kelimesi tek başına Siparişler sayılmaz', () => {
+  const groups = [
+    { screen: 'backlog', label: 'Backlog', options: [{ id: 'backlog:rows', label: 'Backlog kayıtları (aktif filtre)' }] },
+    { screen: 'cp', label: 'CP Tracker', options: [{ id: 'cp:selected', label: 'Seçili kayıtlar (3)' }, { id: 'cp:visible', label: 'Görünen kayıtlar (40)' }, { id: 'cp:filters', label: 'Aktif filtreler ve özet' }] },
+    { screen: 'orders', label: 'Siparişler', options: [{ id: 'orders:visible', label: 'Görünen kayıtlar (9)' }, { id: 'orders:filters', label: 'Aktif filtreler' }] },
+  ];
+  const chat = loadChatModule({ groups, lastTab: 'orders' });
+  assert.deepEqual([...chat.detectScreens('Backlog’daki gecikmeleri analiz et ve en riskli 10 siparişi göster')], ['backlog']);
+  assert.deepEqual([...chat.detectScreens('Analyse the delays in the Backlog and show the 10 riskiest orders as a table.')], ['backlog']);
+  assert.deepEqual([...chat.detectScreens('CP Tracker ve Siparişler ekranını karşılaştır')], ['cp', 'orders']);
+  assert.deepEqual([...chat.detectScreens('bu ekrandaki verileri özetle')], ['orders'], '"bu ekran" son açılan ekranı kullanır');
+  assert.deepEqual([...chat.detectScreens('Bu maili daha profesyonel yaz')], []);
+  const auto = chat.autoContextsFor('CP Tracker’da gecikenleri listele');
+  assert.equal(auto.length, 1);
+  assert.equal(auto[0].id, 'cp:selected', 'seçili kayıt varsa onlar; filtre seçeneği otomatik seçilmez');
+  assert.equal(chat.autoContextsFor('Siparişler tablosunu özetle')[0].id, 'orders:visible');
+  assert.equal(chat.autoContextsFor('Koleksiyonda ne var?').length, 0, 'verisi olmayan ekran eklenmez');
+  chat._state.autoContext = false;
+  assert.equal(chat.autoContextsFor('Backlog’u özetle').length, 0, 'kullanıcı kapattıysa otomatik bağlam yok');
+});
+
+test('boş ekran: girişsizken giriş yönlendirmesi, girişten sonra konu (ekran) seçimi', () => {
+  const groups = [{ screen: 'backlog', label: 'Backlog', options: [{ id: 'backlog:rows', label: 'Backlog kayıtları (aktif filtre)' }] }];
+  const signedOut = loadChatModule({ status: { state: 'disconnected', connected: false }, groups }).emptyStateHtml();
+  assert.match(signedOut, /Önce LCW AI’a giriş yapın/);
+  assert.match(signedOut, /data-chat-login/);
+  assert.doesNotMatch(signedOut, /data-chat-topic/);
+  const waiting = loadChatModule({ status: { state: 'connecting', connected: false, loginInProgress: true }, groups }).emptyStateHtml();
+  assert.doesNotMatch(waiting, /data-chat-login/, 'giriş sürerken düğme tekrar gösterilmez');
+  const signedIn = loadChatModule({ status: { state: 'connected', connected: true }, groups }).emptyStateHtml();
+  assert.match(signedIn, /Ne hakkında konuşalım\?/);
+  assert.match(signedIn, /data-chat-topic="backlog"/);
+  assert.match(signedIn, /data-chat-topic="general"/);
+  const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'lcwai-chat.js'), 'utf8');
+  assert.match(source, /const auto = reuse \|\| state\.contexts\.length \? \[\] : autoContextsFor\(text\);/, 'elle bağlam varsa otomatik eklenmez');
+  assert.match(source, /if \(!activeConversation\(\)\.messages\.length\) renderMessages\(\);/, 'giriş durumu değişince boş ekran güncellenir');
+  assert.match(source, /window\.BLBacklogRows \? await window\.BLBacklogRows\.load\(query\) : await window\.BLAIScreenData\.backlogRows\(query\)/, 'Backlog ekranı açılmadan veri alınır');
+  const main = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
+  assert.match(main, /backlogRows: async query => \{\s*const response = await fetch\(`\/api\/backlog-export\?/);
+});
