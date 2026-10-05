@@ -12,7 +12,7 @@
 .mfpHeadActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .mfpBtn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
 .mfpBtn:hover{border-color:var(--acc);color:var(--acc-ink)}
-.mfpBtn:focus-visible,.mfpRow:focus-visible,.mfpStat:focus-visible,.mfpSearch:focus-visible,.mfpField select:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.mfpBtn:focus-visible,.mfpRow:focus-visible,.mfpStat:focus-visible,.mfpSearch:focus-visible,.mfpField select:focus-visible,.mfpTile.isDrill:focus-visible,.mfpMetric.isDrill:focus-visible,.mfpMonth.isDrill:focus-visible,.mfpChip.isDrill:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 .mfpBtn.isPrimary{border-color:var(--acc);background:var(--acc);color:var(--paper)}
 .mfpBtn.isPrimary:hover{color:var(--paper);filter:brightness(1.05)}
 .mfpBtn.isSmall{height:26px;padding:0 9px;font-size:12px}
@@ -71,12 +71,18 @@
 .mfpTile strong small{font-size:11px;font-weight:500;color:var(--muted)}
 .mfpTile>small,.mfpMetric small{color:var(--muted);font-size:11px;line-height:1.35}
 
+button.mfpTile,button.mfpMetric{width:100%;margin:0;border:1px solid var(--line);font:inherit;color:inherit;text-align:left;appearance:none;cursor:pointer}
+.mfpTile.isDrill:hover,.mfpMetric.isDrill:hover{border-color:var(--acc);background:var(--acc-bg)}
+.mfpTile.isDrill:hover label,.mfpMetric.isDrill:hover label{color:var(--acc-ink)}
+
 .mfpPanel{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:var(--r-sm)}
 .mfpPanelHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .mfpPanelHead strong{font-size:13px}
 .mfpPanelHead span{color:var(--muted);font-size:12px}
 .mfpChips{display:flex;gap:6px;flex-wrap:wrap}
 .mfpChip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink2);font-size:12px;text-decoration:none}
+button.mfpChip{font:inherit;font-size:12px;appearance:none;cursor:pointer}
+.mfpChip.isDrill:hover{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink)}
 .mfpChip b{color:var(--acc-ink);font-weight:600}
 .mfpChip.isMail:hover{border-color:var(--acc);color:var(--acc-ink)}
 .mfpMuted{color:var(--muted);font-size:12px}
@@ -85,6 +91,8 @@
 
 .mfpChart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;height:130px;align-items:end}
 .mfpMonth{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;min-width:0}
+button.mfpMonth{margin:0;padding:0;border:0;background:transparent;font:inherit;color:inherit;appearance:none;cursor:pointer}
+.mfpMonth.isDrill:hover span{color:var(--acc-ink);font-weight:700}
 .mfpMonthBars{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:2px;width:100%}
 .mfpMonthBars i{display:block;width:42%;max-width:14px;min-height:1px;border-radius:2px 2px 0 0}
 .mfpMonth span{font-size:10px;color:var(--muted);white-space:nowrap}
