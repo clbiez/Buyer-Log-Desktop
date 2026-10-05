@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.239",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "LCW AI raporlarında Buyer Log gri başlıklar",
+        "en": "Buyer Log grey headers in LCW AI reports"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.239/release.json"
+    },
+    {
       "version": "7.0.238",
       "publishedAt": "2026-10-05",
       "title": {
