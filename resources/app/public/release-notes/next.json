@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI tüm Buyer Log verisini görüyor",
+    "en": "LCW AI sees all Buyer Log data"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI’a eklenen ekran verisi artık sayfa filtrelerine takılmıyor; varsayılan olarak tüm kayıtlar ve tüm sütunlar gidiyor.",
+    "en": "Screen data added to LCW AI is no longer limited by page filters; all records and all columns are sent by default."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "lcwai-all-data",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Bağlam",
+        "en": "LCW AI · Context"
+      },
+      "title": {
+        "tr": "Bağlam varsayılanı: tüm kayıtlar, sayfa filtresi olmadan",
+        "en": "Default context: all records, without page filters"
+      },
+      "body": {
+        "tr": "CP Tracker, Siparişler, Koleksiyon, Overview ve Backlog verisi LCW AI’a eklenirken artık ekrandaki filtreler, arama ve gizli sütunlar engel olmuyor. Varsayılan seçenek “Tüm kayıtlar” ve tüm sütunlar; otomatik bağlam ve konu kartları da bunu kullanıyor. Yalnız filtrelenmiş veya seçili kayıtları göndermek isterseniz “Bağlam Ekle” menüsünde bu seçenekler duruyor. Kullanıcının yetki kapsamı her zamanki gibi geçerli.",
+        "en": "When CP Tracker, Orders, Collection, Overview or Backlog data is added to LCW AI, on-screen filters, search and hidden columns no longer get in the way. The default option is “All records” with all columns; auto context and topic cards use it too. To send only filtered or selected records, those options remain in the “Add Context” menu. The user’s access scope still applies as always."
+      },
+      "path": {
+        "tr": "LCW AI › Bağlam Ekle",
+        "en": "LCW AI › Add Context"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-all-data.png",
+        "alt": {
+          "tr": "Bağlam Ekle menüsünde varsayılan “Tüm Backlog kayıtları — Sayfa filtreleri olmadan” seçeneği (demo veri)",
+          "en": "Add Context menu with the default “All Backlog records — without page filters” option (demo data)"
+        },
+        "caption": {
+          "tr": "Sayfa filtreleri LCW AI’ın veriyi görmesini engellemez.",
+          "en": "Page filters no longer limit what LCW AI sees."
+        }
+      }
+    }
+  ]
 }

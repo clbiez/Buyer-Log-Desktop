@@ -238,3 +238,48 @@ test('boş ekran: girişsizken giriş yönlendirmesi, girişten sonra konu (ekra
   const main = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
   assert.match(main, /backlogRows: async query => \{\s*const response = await fetch\(`\/api\/backlog-export\?/);
 });
+
+test('bağlam: varsayılan sayfa filtrelerinden bağımsız TÜM kayıtlar ve tüm sütunlar; filtreli/seçili isteğe bağlı', () => {
+  const vm = require('node:vm');
+  const allRows = Array.from({ length: 10 }, (_, i) => ({ _id: `r${i}`, Model: `M${i}`, Hidden: `h${i}` }));
+  const filtered = allRows.slice(0, 3);
+  const providers = new Map();
+  const calls = [];
+  const window = {
+    appLang: 'tr',
+    BLAIScreenData: {
+      lastTab: () => 'cp', pageTitle: () => 'CP Tracker',
+      table: (tab, opts = {}) => (opts.all
+        ? { rows: allRows, all: true, columns: [{ key: 'Model', label: 'Model' }, { key: 'Hidden', label: 'Gizli' }], selectedIds: ['r1'], filters: {} }
+        : { rows: filtered, columns: [{ key: 'Model', label: 'Model' }], selectedIds: ['r1'], filters: { Sezon: 'SS27' } }),
+      overviewCpRows: (opts = {}) => (opts.all ? allRows : filtered),
+      cpColumns: () => [{ key: 'Model', label: 'Model' }],
+      backlogQuery: (opts = {}) => { calls.push(opts); return opts.all ? { format: 'json' } : { format: 'json', retailFrom: '2026-01-01' }; },
+      backlogRows: async query => { calls.push(query); return [{ PO: 'A' }]; },
+    },
+    BuyerLogAI: { registerContextProvider: provider => providers.set(provider.id, provider), getAvailableContext: () => [] },
+  };
+  window.window = window;
+  const context = vm.createContext({ window, document: { documentElement: { lang: 'tr' }, getElementById: () => null }, console });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'lcwai-chat.js'), 'utf8'), context);
+  const chat = window.BLLcwAiChat;
+  // Sağlayıcılar init'te kaydedilir; burada doğrudan kaydettiriyoruz.
+  vm.runInContext('window.BLLcwAiChat.init', context);
+  const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'lcwai-chat.js'), 'utf8');
+  vm.runInContext(`(${/function registerDefaultProviders\(\) \{[^]*?\n  \}\n/.exec(source)[0].replace('function registerDefaultProviders()', 'function ()')})`, context);
+  const all = chat.tableContext('cp', 'all');
+  assert.equal(all.rows.length, 10, 'sayfa filtresi tüm veriyi engellemez');
+  assert.deepEqual([...all.columns], ['Model', 'Gizli'], 'gizli sütunlar da dahil');
+  assert.match(all.summary, /sayfa filtreleri uygulanmadan/);
+  assert.deepEqual(JSON.parse(JSON.stringify(all.filters)), {});
+  assert.equal(chat.tableContext('cp', 'visible').rows.length, 3, 'filtreli seçenek isteğe bağlı kalır');
+  assert.match(source, /const option = group\.options\.find\(item => \/:all\$\/\.test\(item\.id\)\) \|\| /, 'otomatik/konu seçiminde varsayılan tüm kayıtlar');
+  assert.match(source, /window\.BLAIScreenData\.backlogQuery\(\{ all: mode !== 'rows' \}\)/);
+  assert.match(source, /window\.BLAIScreenData\.overviewCpRows\(\{ all: mode !== 'cp' \}\)/);
+  const main = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
+  assert.match(main, /cp: \(\) => \(state\.cp \? state\.cp\.rows : \[\]\),\s*orders: \(\) => \(state\.orders \? state\.orders\.rows : \[\]\),\s*koleksiyon: \(\) => kolRows,/);
+  assert.match(main, /return opts && opts\.all \? \{ format: 'json', \.\.\.\(params\.sourceColumns/);
+  const groups = [{ screen: 'cp', label: 'CP Tracker', options: [{ id: 'cp:all', label: 'Tüm kayıtlar (10)' }, { id: 'cp:visible', label: 'Yalnız filtrelenmiş (3)' }, { id: 'cp:selected', label: 'Seçili (1)' }] }];
+  window.BuyerLogAI.getAvailableContext = () => groups;
+  assert.equal(chat.autoContextsFor('CP Tracker’da gecikenleri listele')[0].id, 'cp:all');
+});

@@ -58,7 +58,7 @@
     return { columns: [IMAGE_COLUMN, ...columns], values: values.map((row, index) => [keys[index], ...row]), images };
   }
   function tableContext(tab, mode) {
-    const data = window.BLAIScreenData && window.BLAIScreenData.table(tab);
+    const data = window.BLAIScreenData && window.BLAIScreenData.table(tab, { all: mode === 'all' });
     if (!data) return null;
     const columns = data.columns;
     const selected = new Set((data.selectedIds || []).map(String));
@@ -67,9 +67,9 @@
     const keyed = mode === 'filters' ? null : withImageKeys(tab, source, columns.map(col => col.label), source.map(row => columns.map(col => cellValue(row && row[col.key]))));
     return {
       images: keyed && keyed.images,
-      label: mode === 'selected' ? L(`${title} — seçili kayıtlar`, `${title} — selected records`) : mode === 'filters' ? L(`${title} — filtreler ve özet`, `${title} — filters and summary`) : L(`${title} — görünen kayıtlar`, `${title} — visible records`),
+      label: mode === 'all' ? L(`${title} — tüm kayıtlar`, `${title} — all records`) : mode === 'selected' ? L(`${title} — seçili kayıtlar`, `${title} — selected records`) : mode === 'filters' ? L(`${title} — filtreler ve özet`, `${title} — filters and summary`) : L(`${title} — görünen kayıtlar`, `${title} — visible records`),
       screen: tab,
-      summary: L(`${source.length} kayıt (tablodaki filtreler uygulanmış).`, `${source.length} records (table filters applied).`),
+      summary: mode === 'all' ? L(`${source.length} kayıt (sayfa filtreleri uygulanmadan, tüm sütunlarla).`, `${source.length} records (without page filters, all columns).`) : L(`${source.length} kayıt (tablodaki filtreler uygulanmış).`, `${source.length} records (table filters applied).`),
       filters: data.filters,
       columns: keyed ? keyed.columns : [],
       rows: keyed ? keyed.values : [],
@@ -108,11 +108,14 @@
       api.registerContextProvider({
         id: tab, screen: tab, label,
         getOptions() {
-          const data = window.BLAIScreenData && window.BLAIScreenData.table(tab);
-          if (!data) return [];
-          const options = [{ id: 'visible', label: { tr: `Görünen kayıtlar (${data.rows.length})`, en: `Visible records (${data.rows.length})` }, detail: { tr: 'Tüm satırlar, görünür sütunlar · CSV dosyası olarak', en: 'All rows, visible columns · as a CSV file' } }];
-          if (data.selectedIds && data.selectedIds.length) options.unshift({ id: 'selected', label: { tr: `Seçili kayıtlar (${data.selectedIds.length})`, en: `Selected records (${data.selectedIds.length})` } });
-          options.push({ id: 'filters', label: { tr: 'Aktif filtreler ve özet', en: 'Active filters and summary' } });
+          // Varsayılan: sayfa filtrelerinden bağımsız TÜM kayıtlar.
+          const full = window.BLAIScreenData && window.BLAIScreenData.table(tab, { all: true });
+          if (!full) return [];
+          const data = window.BLAIScreenData.table(tab);
+          const options = [{ id: 'all', label: { tr: `Tüm kayıtlar (${full.rows.length})`, en: `All records (${full.rows.length})` }, detail: { tr: 'Sayfa filtreleri olmadan, tüm sütunlar · CSV dosyası olarak', en: 'Without page filters, all columns · as a CSV file' } }];
+          if (data && data.rows.length !== full.rows.length) options.push({ id: 'visible', label: { tr: `Yalnız filtrelenmiş kayıtlar (${data.rows.length})`, en: `Filtered records only (${data.rows.length})` }, detail: { tr: 'Sayfadaki filtreler uygulanmış', en: 'Page filters applied' } });
+          if (data && data.selectedIds && data.selectedIds.length) options.push({ id: 'selected', label: { tr: `Seçili kayıtlar (${data.selectedIds.length})`, en: `Selected records (${data.selectedIds.length})` } });
+          if (data) options.push({ id: 'filters', label: { tr: 'Aktif filtreler ve özet', en: 'Active filters and summary' } });
           return options;
         },
         build: mode => tableContext(tab, mode),
@@ -121,28 +124,35 @@
     api.registerContextProvider({
       id: 'overview', screen: 'overview', label: { tr: 'Overview', en: 'Overview' },
       getOptions() {
-        const rows = window.BLAIScreenData ? window.BLAIScreenData.overviewCpRows() : [];
-        return rows.length ? [{ id: 'cp', label: { tr: `Overview CP kümesi (${rows.length})`, en: `Overview CP set (${rows.length})` }, detail: { tr: 'Overview filtreleri uygulanmış', en: 'Overview filters applied' } }] : [];
-      },
-      build() {
+        const all = window.BLAIScreenData ? window.BLAIScreenData.overviewCpRows({ all: true }) : [];
+        if (!all.length) return [];
         const rows = window.BLAIScreenData.overviewCpRows();
+        const options = [{ id: 'all', label: { tr: `Tüm CP kayıtları (${all.length})`, en: `All CP records (${all.length})` }, detail: { tr: 'Overview filtreleri olmadan', en: 'Without Overview filters' } }];
+        if (rows.length !== all.length) options.push({ id: 'cp', label: { tr: `Overview CP kümesi (${rows.length})`, en: `Overview CP set (${rows.length})` }, detail: { tr: 'Overview filtreleri uygulanmış', en: 'Overview filters applied' } });
+        return options;
+      },
+      build(mode) {
+        const rows = window.BLAIScreenData.overviewCpRows({ all: mode !== 'cp' });
         const columns = window.BLAIScreenData.cpColumns();
         const keyed = withImageKeys('overview', rows, columns.map(col => col.label), rows.map(row => columns.map(col => cellValue(row[col.key]))));
-        return { label: L('Overview — CP kümesi', 'Overview — CP set'), screen: 'overview', summary: L(`${rows.length} CP satırı (Overview filtreleri uygulanmış).`, `${rows.length} CP rows (Overview filters applied).`), columns: keyed.columns, rows: keyed.values, images: keyed.images, totalRows: rows.length };
+        return { label: mode === 'cp' ? L('Overview — CP kümesi', 'Overview — CP set') : L('Overview — tüm CP kayıtları', 'Overview — all CP records'), screen: 'overview', summary: mode === 'cp' ? L(`${rows.length} CP satırı (Overview filtreleri uygulanmış).`, `${rows.length} CP rows (Overview filters applied).`) : L(`${rows.length} CP satırı (filtre uygulanmadan).`, `${rows.length} CP rows (no filters applied).`), columns: keyed.columns, rows: keyed.values, images: keyed.images, totalRows: rows.length };
       },
     });
     api.registerContextProvider({
       id: 'backlog', screen: 'backlog', label: { tr: 'Backlog', en: 'Backlog' },
       getOptions() {
         const ready = window.BLAIScreenData && window.BLAIScreenData.backlogQuery();
-        return ready ? [{ id: 'rows', label: { tr: 'Backlog kayıtları (aktif filtre)', en: 'Backlog records (active filter)' }, detail: { tr: 'Tüm satırlar · CSV dosyası olarak', en: 'All rows · as a CSV file' } }] : [];
+        return ready ? [
+          { id: 'all', label: { tr: 'Tüm Backlog kayıtları', en: 'All Backlog records' }, detail: { tr: 'Sayfa filtreleri olmadan · CSV dosyası olarak', en: 'Without page filters · as a CSV file' } },
+          { id: 'rows', label: { tr: 'Backlog kayıtları (aktif filtre)', en: 'Backlog records (active filter)' }, detail: { tr: 'Sayfadaki filtreler uygulanmış', en: 'Page filters applied' } },
+        ] : [];
       },
-      async build() {
+      async build(mode) {
         // Backlog ekranı hiç açılmamış olsa da veri sunucudan doğrudan alınır.
-        const query = window.BLAIScreenData.backlogQuery();
+        const query = window.BLAIScreenData.backlogQuery({ all: mode !== 'rows' });
         const rows = window.BLBacklogRows ? await window.BLBacklogRows.load(query) : await window.BLAIScreenData.backlogRows(query);
         const columns = Object.keys(rows[0] || {}).filter(key => !key.startsWith('_'));
-        return { label: L('Backlog — kayıtlar', 'Backlog — records'), screen: 'backlog', summary: L(`${rows.length} Backlog satırı.`, `${rows.length} Backlog rows.`), columns, rows: rows.map(row => columns.map(key => cellValue(row[key]))), totalRows: rows.length };
+        return { label: mode === 'rows' ? L('Backlog — filtrelenmiş kayıtlar', 'Backlog — filtered records') : L('Backlog — tüm kayıtlar', 'Backlog — all records'), screen: 'backlog', summary: mode === 'rows' ? L(`${rows.length} Backlog satırı (sayfa filtreleri uygulanmış).`, `${rows.length} Backlog rows (page filters applied).`) : L(`${rows.length} Backlog satırı (filtre uygulanmadan).`, `${rows.length} Backlog rows (no filters applied).`), columns, rows: rows.map(row => columns.map(key => cellValue(row[key]))), totalRows: rows.length };
       },
     });
   }
@@ -181,7 +191,8 @@
   function defaultContextFor(screen, groups) {
     const group = groups.find(item => item.screen === screen);
     if (!group) return null;
-    const option = group.options.find(item => /:selected$/.test(item.id)) || group.options.find(item => !/:filters$/.test(item.id));
+    // Varsayılan: sayfa filtrelerinden bağımsız tüm kayıtlar.
+    const option = group.options.find(item => /:all$/.test(item.id)) || group.options.find(item => !/:filters$/.test(item.id));
     return option ? { id: option.id, label: `${group.label} — ${option.label}` } : null;
   }
   function autoContextsFor(text) {
