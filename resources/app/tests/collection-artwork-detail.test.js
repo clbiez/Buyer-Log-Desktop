@@ -147,3 +147,18 @@ test('Set Style Artwork keeps child A/B summary instead of merging placements', 
   assert.match(COLUMN, /entry\.isSetStyle && String\(entry\.artworkSummary/);
   assert.match(COLUMN, /white-space:pre-line/);
 });
+
+test('Artwork Detail drops All Over (fabric carries it) and writes per-placement technique when front/back differ', () => {
+  const { api } = loadModule({ lang: 'en' });
+  const place = (placement, en, printType) => ({ placement, placementTr: en, placementEn: en, count: 1, printType });
+  assert.equal(api.summaryFor({ hasPrint: true, totalPrintCount: 2, placements: [
+    place('all_over', 'All Over', 'Allover'), place('front_body', 'Front', 'Pigment'),
+  ] }), 'Front: 1 | Pigment | Total: 1');
+  assert.equal(api.summaryFor({ hasPrint: true, totalPrintCount: 2, placements: [
+    place('front_body', 'Front', 'Pigment'), place('back_body', 'Back', 'Transfer'),
+  ] }), 'Front: 1 | Pigment • Back: 1 | Transfer | Total: 2');
+  assert.equal(api.summaryFor({ hasPrint: true, totalPrintCount: 2, placements: [
+    place('front_body', 'Front', 'Pigment'), place('back_body', 'Back', 'Pigment'),
+  ] }), 'Front: 1 • Back: 1 | Pigment | Total: 2');
+  assert.equal(api.summaryFor({ hasPrint: true, totalPrintCount: 1, placements: [place('all_over', 'All Over', 'Allover')] }), 'No print');
+});

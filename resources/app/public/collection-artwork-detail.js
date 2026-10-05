@@ -57,18 +57,34 @@
        A ve B'yi tek modelmiş gibi birleştirmek parça bilgisini kaybettirir. */
     if (entry.isSetStyle && String(entry.artworkSummary || '').trim()) return String(entry.artworkSummary).trim();
     if (!entry.hasPrint) return L('Baskı yok', 'No print');
+    /* All Over baskı kumaş detayında yazdığı için burada sayılmaz. Bölgeler
+       aynı tekniği paylaşıyorsa "Front: 1 • Back: 1 | Pigment | Total: 2";
+       farklıysa her bölge kendi tekniğiyle: "Front: 1 | Pigment • Back: 1 |
+       Transfer | Total: 2" (server summaryForPlacements ile aynı kural). */
     const groups = new Map(), techniques = new Set();
+    let total = 0;
     for (const item of Array.isArray(entry.placements) ? entry.placements : []) {
+      if (!item || item.placement === 'all_over') continue;
       const label = isEn() ? (item.placementEn || item.placement) : (item.placementTr || item.placement);
+      if (!label) continue;
       const count = Math.max(1, Number(item.count) || 1);
-      if (label) groups.set(label, (groups.get(label) || 0) + count);
       const technique = String(item.printType || '').trim();
-      if (technique) techniques.add(technique);
+      const group = groups.get(label) || { count: 0, techniques: new Set() };
+      group.count += count;
+      if (technique) { group.techniques.add(technique); techniques.add(technique); }
+      groups.set(label, group);
+      total += count;
     }
-    const parts = [...groups].map(([label, count]) => `${label}: ${count}`);
-    const total = Number(entry.totalPrintCount) || [...groups.values()].reduce((a, b) => a + b, 0);
-    const tech = [...techniques].join(' + ') || String(entry.techniqueSummary || '').trim();
-    return `${parts.join(' • ')}${tech ? ` | ${tech}` : ''} | ${L('Toplam', 'Total')}: ${total}`;
+    if (!total) return L('Baskı yok', 'No print');
+    const techOf = group => [...group.techniques].join(' + ');
+    const uniform = new Set([...groups.values()].map(techOf)).size <= 1;
+    const totalText = `${L('Toplam', 'Total')}: ${total}`;
+    if (!uniform) {
+      return `${[...groups].map(([label, group]) => `${label}: ${group.count}${techOf(group) ? ` | ${techOf(group)}` : ''}`).join(' • ')} | ${totalText}`;
+    }
+    const parts = [...groups].map(([label, group]) => `${label}: ${group.count}`);
+    const tech = [...techniques].join(' + ');
+    return `${parts.join(' • ')}${tech ? ` | ${tech}` : ''} | ${totalText}`;
   }
   function aiStatus(entry) {
     const status = entry && entry.ai && entry.ai.status || 'not-needed';
