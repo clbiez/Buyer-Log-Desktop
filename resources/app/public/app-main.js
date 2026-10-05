@@ -2056,7 +2056,6 @@ function switchTab(tab){
   document.body.dataset.activeTab = tab;
   if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
   flushDeferredRenderForTab(tab);
-  if(tab==='cp')void cpPlmSampleAutoRefresh();
   syncTableToolbarActions(tab);
   syncNavExcelButtonLabel(tab);
   syncActivePageTitle();
@@ -33368,15 +33367,6 @@ async function cpPlmSampleRequestsRun(button,mode='all'){
     if(span)span.textContent=old;
     if(button){button.disabled=false;button.removeAttribute('aria-busy');}
   }
-}
-/* CP açılınca üretimdeki siparişlerin eskiyen (24 saat) PLM numune verisi
-   arka planda tazelenir; ayrıntı ve sınırlar plm-sample-requests.js'te. */
-async function cpPlmSampleAutoRefresh(){
-  try{
-    if(!state.cp||!Array.isArray(state.cp.rows)||!state.cp.rows.length)return;
-    if(!window.BLPlmSampleRequests&&window.BLPerf?.ensureFeature)await window.BLPerf.ensureFeature('deferredUi');
-    await window.BLPlmSampleRequests?.autoRefreshStale?.(state.cp.rows);
-  }catch(_){}
 }
 document.getElementById('kolPricingExcelColsBtn')?.addEventListener('click',openKolPricingExcelColumnsModal);
 loadKolPricingExcelColumns();
