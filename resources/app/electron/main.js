@@ -142,6 +142,21 @@ function registerDownload(filePath) {
   return token;
 }
 
+/* LCW AI çıktıları masaüstü kipinde doğrudan gerçek İndirilenler klasörüne
+ * yazılır. Renderer yalnız dosya ADINI geri verir; ham/keyfi bir yol kabul
+ * edilmez. Böylece Aç / Klasörde Göster güvenli biçimde Electron shell
+ * üzerinden çalışır ve backend'in PowerShell/explorer başlatmasına bağlı kalmaz. */
+function generatedDownloadPath(fileName) {
+  const name = String(fileName || '').trim();
+  if (!name || path.basename(name) !== name || /[\\/]/.test(name)) return '';
+  try {
+    const downloads = path.resolve(app.getPath('downloads'));
+    const full = path.resolve(downloads, name);
+    if (path.dirname(full) !== downloads || !fs.existsSync(full)) return '';
+    return full;
+  } catch (_) { return ''; }
+}
+
 /* ------------------------------------------------------------------ log */
 
 function timestamp() { return new Date().toISOString(); }
@@ -1672,6 +1687,7 @@ async function startBuyerLog() {
     paths,
     appCoreRoot: APP_CORE_ROOT,
     desktopBridgeSecret,
+    downloadsRoot: app.getPath('downloads'),
     log,
     onUnexpectedExit: info => {
       if (quitting) return;
@@ -2173,6 +2189,20 @@ function registerIpc() {
     if (!entry || !fs.existsSync(entry.path)) return { ok: false, error: 'not-found' };
     shell.showItemInFolder(entry.path);
     return { ok: true };
+  });
+  ipcMain.handle('buyerlog:open-generated-download', async (event, fileName) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, error:'forbidden' };
+    const full = generatedDownloadPath(fileName);
+    if (!full) return { ok:false, error:'not-found' };
+    const error = await shell.openPath(full);
+    return error ? { ok:false, error } : { ok:true };
+  });
+  ipcMain.handle('buyerlog:reveal-generated-download', (event, fileName) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, error:'forbidden' };
+    const full = generatedDownloadPath(fileName);
+    if (!full) return { ok:false, error:'not-found' };
+    shell.showItemInFolder(full);
+    return { ok:true };
   });
   /*
    * LCW AI Export Engine → PDF. Renderer, sunucunun temizleyip katı CSP ile

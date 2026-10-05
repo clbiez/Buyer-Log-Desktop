@@ -58,6 +58,7 @@
 /* ---------------- Genel LCW AI çalışma alanı (sol menü › LCW AI) ---------------- */
 #view-lcwai .lcwaiChatPage{height:calc(100vh - 120px);min-height:420px;}
 .lcwaiChat{display:grid;grid-template-columns:220px minmax(0,1fr);gap:12px;height:100%;}
+.lcwaiChatPage.is-file-drag .lcwaiComposer{outline:2px dashed var(--acc);outline-offset:-4px;background:var(--acc-bg);}
 .lcwaiChatSide{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);background:var(--card);overflow:auto;}
 .lcwaiNewChat{width:100%;}
 .lcwaiChatList{display:flex;flex-direction:column;gap:2px;}

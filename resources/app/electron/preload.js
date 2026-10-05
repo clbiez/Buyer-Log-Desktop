@@ -96,6 +96,10 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
   },
   openDownload: (token) => ipcRenderer.invoke('buyerlog:open-download', token),
   revealDownload: (token) => ipcRenderer.invoke('buyerlog:reveal-download', token),
+  // LCW AI çıktıları yalnız İndirilenler klasöründeki dosya adıyla açılır;
+  // renderer keyfi bir dosya sistemi yolu veremez.
+  openGeneratedDownload: (fileName) => ipcRenderer.invoke('buyerlog:open-generated-download', String(fileName || '')),
+  revealGeneratedDownload: (fileName) => ipcRenderer.invoke('buyerlog:reveal-generated-download', String(fileName || '')),
   /* LCW AI arka plan oturumu (PLM Sync deseni): gizli Electron oturumu.
      Yanıt yalnız { ok, code }; token renderer'a dönmez. */
   ensureLcwAiAuth: (options) => ipcRenderer.invoke('buyerlog:lcwai-auth', { interactive: !(options && options.interactive === false) }),

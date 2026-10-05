@@ -6,11 +6,13 @@
 const settings = require('./corenectum-api-settings');
 const styleApi = require('./corenectum-style-api');
 const requestApi = require('./corenectum-request-api');
+const bomApi = require('./corenectum-bom-api');
+const setStyleApi = require('./corenectum-set-style-api');
 
 const ORIGIN = 'https://corenectum.lcwaikiki.com';
 const REFERER = 'https://corenectum.lcwaikiki.com/';
 const TECHNICAL_SHEET_URL = 'https://mym-api.lcwaikiki.com/lcw/live/corenectum/service/api/ReportOperations/CreateTechnicalSheetReport';
-const ALLOWED_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, styleApi.GET_STYLE_IMAGES_URL, TECHNICAL_SHEET_URL, requestApi.GET_REQUEST_LIST_URL]);
+const ALLOWED_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, styleApi.GET_STYLE_IMAGES_URL, TECHNICAL_SHEET_URL, bomApi.GET_STYLE_BOM_INFORMATION_URL, setStyleApi.SET_STYLE_CHILD_ASSOCIATION_URL, requestApi.GET_REQUEST_LIST_URL]);
 const DEFAULT_TIMEOUT_MS = 90000;
 const DEFAULT_RETRIES = 3;
 
@@ -33,8 +35,20 @@ function assertEndpoint(url) {
   if (!ALLOWED_ENDPOINTS.has(normalized)) throw apiError('İzin verilmeyen CoreNectum API uç noktası.','CORENECTUM_API_ENDPOINT_NOT_ALLOWED',400);
   return normalized;
 }
+function endpointWithQuery(endpoint, query) {
+  if (!query || typeof query !== 'object') return endpoint;
+  const parsed = new URL(endpoint);
+  for (const [key, value] of Object.entries(query)) {
+    if (value == null || value === '') continue;
+    parsed.searchParams.set(String(key), String(value));
+  }
+  return parsed.href;
+}
 async function request(userId, url, body, options = {}) {
   const endpoint = assertEndpoint(url), token = tokenFor(userId, options.token);
+  const method = String(options.method || 'POST').toUpperCase();
+  if (!['GET', 'POST'].includes(method)) throw apiError('Desteklenmeyen CoreNectum API metodu.','CORENECTUM_API_METHOD_NOT_ALLOWED',400);
+  const requestUrl = method === 'GET' ? endpointWithQuery(endpoint, options.query) : endpoint;
   const retries = Math.max(1, Math.min(5, Number(options.retries) || DEFAULT_RETRIES));
   const timeoutMs = Math.max(5000, Math.min(180000, Number(options.timeoutMs) || DEFAULT_TIMEOUT_MS));
   const accept = options.accept || 'application/json, text/plain, */*';
@@ -42,17 +56,17 @@ async function request(userId, url, body, options = {}) {
   for (let attempt = 1; attempt <= retries; attempt += 1) {
     const controller = new AbortController(), timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(endpoint, {
-        method:'POST', signal:controller.signal, redirect:'follow', cache:'no-store',
+      const response = await fetch(requestUrl, {
+        method, signal:controller.signal, redirect:'follow', cache:'no-store',
         headers:{
           Accept:accept,
           Authorization:`Bearer ${token}`,
           Origin:ORIGIN,
           Referer:REFERER,
           ...(options.language==='tr'?{'Accept-Language':'tr-TR,tr;q=0.9,en;q=0.7'}:options.language==='en'?{'Accept-Language':'en-US,en;q=0.9,tr;q=0.6'}:{}),
-          'Content-Type':'application/json',
+          ...(method === 'POST' ? {'Content-Type':'application/json'} : {}),
         },
-        body:JSON.stringify(body == null ? {} : body),
+        ...(method === 'POST' ? { body:JSON.stringify(body == null ? {} : body) } : {}),
       });
       clearTimeout(timer);
       if (response.status === 401 || response.status === 403) {
@@ -77,11 +91,18 @@ async function request(userId, url, body, options = {}) {
   }
   throw lastError || apiError('CoreNectum API isteği başarısız.','CORENECTUM_API_NETWORK_ERROR',502);
 }
-async function postJson(userId, url, body, options = {}) {
-  const response = await request(userId, url, body, { ...options, accept:options.accept || 'application/json, text/plain, */*' });
+async function jsonResponse(response) {
   const text = await response.text();
   try { return text ? JSON.parse(text) : {}; }
   catch (_) { throw apiError('CoreNectum API geçerli JSON döndürmedi.','CORENECTUM_API_INVALID_JSON',502,{remoteStatus:response.status}); }
+}
+async function postJson(userId, url, body, options = {}) {
+  const response = await request(userId, url, body, { ...options, method:'POST', accept:options.accept || 'application/json, text/plain, */*' });
+  return jsonResponse(response);
+}
+async function getJson(userId, url, query, options = {}) {
+  const response = await request(userId, url, null, { ...options, method:'GET', query, accept:options.accept || 'application/json, text/plain, */*' });
+  return jsonResponse(response);
 }
 async function postBuffer(userId, url, body, options = {}) {
   const response = await request(userId, url, body, { ...options, accept:options.accept || 'application/pdf, application/octet-stream, */*' });
@@ -94,4 +115,4 @@ async function testConnection(userId, tokenOverride) {
   return { ok:true, records:styleApi.styleListRecords(payload).length, mode:status.mode, source:status.source };
 }
 
-module.exports = { ORIGIN, REFERER, TECHNICAL_SHEET_URL, postJson, postBuffer, testConnection };
+module.exports = { ORIGIN, REFERER, TECHNICAL_SHEET_URL, postJson, getJson, postBuffer, testConnection };

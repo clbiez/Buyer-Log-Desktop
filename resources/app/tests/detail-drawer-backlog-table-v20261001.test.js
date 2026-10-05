@@ -11,9 +11,11 @@ const CSS=read('detail-drawer.css');
 const APP=read('app-main.js');
 const ANALYSIS=read('backlog-delivery-analysis.js');
 
-test('alt detay tablosu CP başlık yapısını (thInner/thLabel/▾ filtre) kullanır',()=>{
-  assert.ok(DRAWER.includes('<div class="thInner"><span class="thLabel">'));
-  assert.ok(DRAWER.includes('class="thFilterBtn'));
+test('alt detay tablosu Backlog rapor başlıkları ve alan filtrelerini kullanır',()=>{
+  assert.ok(DRAWER.includes('blDetailReportHeading'));
+  assert.ok(DRAWER.includes('reportColumns()'));
+  assert.ok(DRAWER.includes('reportCell(col,row)'));
+  assert.ok(DRAWER.includes('blDetailReportFilter'));
   assert.ok(DRAWER.includes('data-bl-detail-filter='));
   assert.ok(CSS.includes('background:var(--thead-bg)'));
   assert.ok(CSS.includes('color:var(--thead-ink)'));

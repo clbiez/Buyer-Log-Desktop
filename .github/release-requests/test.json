@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.243",
-  "commit_sha": "5d2709551058a65ec3c575b614ad80e092b01bcf",
-  "release_notes": "Buyer Log 7.0.243: LCW AI ile oluşturulan HTML, PDF, PowerPoint ve Excel dosyalarına Buyer Log’daki gerçek model görselleri eklenir; görseller LCW AI’a gönderilmez. Real model images in LCW AI outputs."
+  "version": "7.0.244",
+  "commit_sha": "6bdd5902903a0519c7673c9eea1f717931e1d07b",
+  "release_notes": "Buyer Log 7.0.244: OAB, LFL, Price & Supplier Analysis ve ortak alt detay raporları Backlog düzeninde gruplu, geniş satırlar ve özet kartları kullanır. Arama, alan filtreleri, görseller ve tüm kaynak sütunları korunur; LFL Excel miktar/FOB değerleri sayısaldır. Backlog-style shared detail reports and typed LFL Excel exports."
 }

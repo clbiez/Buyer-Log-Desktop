@@ -1,5 +1,8 @@
 'use strict';
 
+const plmBomSync = require('../lib/plm-bom-sync');
+const plmBomStore = require('../lib/plm-bom-store');
+
 /* Koleksiyon doğrudan PLM senkronu ve QTX route'ları
    server.js'ten birebir taşındı (davranış değişikliği yok). Kayıt, server.js'te
    blokların eskiden durduğu satırda yapılır; Express route SIRASI korunur.
@@ -70,20 +73,66 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
     const fetchRun = await withPlmJob(req, {
        kind: 'plm-sync', scope: 'koleksiyon', total: items.length,
        label: selectedOnly ? 'PLM seçili modelleri aktar' : `PLM verisi · ${items.length} model`, phase: 'PLM verisi aranıyor',
-     }, async job => agentBrowserConnector.collectCoreNectumStyleLinks(req.currentUser.id, items, {
-       ...getModelImageSettings(),
-       selectedOnly,
-       language,
-      onProgress: progress => {
-        setModelOperationProgress(req.currentUser.id, { kind: 'plm-sync', ...progress });
-        job.report({
-          phase: progress && progress.phase,
-          processed: progress && progress.current,
-           total: (progress && progress.total) || items.length,
-          activeModel: progress && progress.model,
-        });
-      },
-    }));
+     }, async job => {
+       const collected = await agentBrowserConnector.collectCoreNectumStyleLinks(req.currentUser.id, items, {
+         ...getModelImageSettings(),
+         selectedOnly,
+         language,
+         onProgress: progress => {
+           setModelOperationProgress(req.currentUser.id, { kind: 'plm-sync', ...progress });
+           job.report({
+             phase: progress && progress.phase,
+             processed: progress && progress.current,
+             total: (progress && progress.total) || items.length,
+             activeModel: progress && progress.model,
+           });
+         },
+       });
+
+       /* BOM, Style List sonucundaki doğrulanmış styleId üzerinden okunur.
+          Başarısız BOM/LCW AI analizi ana PLM alan senkronunu geri ALMAZ:
+          plm-bom-sync eski başarılı kaydı korur ve yalnız hata raporlar. */
+       const bomSync = await plmBomSync.syncPlmBoms(collected.links, {
+         ownerId: req.currentUser.id,
+         language,
+         onProgress: progress => {
+           setModelOperationProgress(req.currentUser.id, { kind: 'plm-sync', ...progress });
+           job.report({
+             phase: progress && progress.phase,
+             processed: progress && progress.current,
+             total: (progress && progress.total) || collected.links.length,
+             activeModel: progress && progress.model,
+           });
+         },
+       });
+       collected.links = collected.links.map(record => {
+         const plmId = String(record && record.plmId || '');
+         const override = bomSync.recordOverrides && bomSync.recordOverrides.get(plmId);
+         const base = override ? { ...record, ...override } : record;
+         const entry = bomSync.entries.get(plmId);
+         return entry ? {
+           ...base,
+           bomSummary: entry.summary,
+           artworkSummary: entry.artworkSummary || (base && base.artworkSummary) || '',
+           bomPrintCount: entry.totalPrintCount,
+           bomHasPrint: entry.hasPrint,
+           bomAiStatus: entry.ai && entry.ai.status || 'not-needed',
+         } : base;
+       });
+       collected.bomSync = {
+         requested: bomSync.requested,
+         fetched: bomSync.fetched,
+         changed: bomSync.changed,
+         unchanged: bomSync.unchanged,
+         withPrint: bomSync.withPrint,
+         aiConsulted: bomSync.aiConsulted,
+         aiResolved: bomSync.aiResolved,
+         failed: bomSync.failed,
+         revision: bomSync.revision,
+         updatedAt: bomSync.updatedAt,
+       };
+       return collected;
+     });
     const collected = fetchRun.result;
     // Bulunamayan modeller işin başarısız listesine yazılır ki kullanıcı
     // ayrıntısını görebilsin ve YALNIZ onları yeniden deneyebilsin.
@@ -91,6 +140,13 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
       plmJobs.addFailure(req.currentUser.id, fetchRun.job.id, {
         plmId: item && item.plmId, model: item && item.styleName,
         error: (item && item.error) || 'PLM listesinde bulunamadı.', code: (item && item.code) || 'PLM_NOT_FOUND',
+      });
+    }
+    for (const item of (collected.bomSync && collected.bomSync.failed) || []) {
+      plmJobs.addFailure(req.currentUser.id, fetchRun.job.id, {
+        plmId: item && item.plmId,
+        error: (item && item.error) || 'PLM BOM alınamadı.',
+        code: (item && item.code) || 'PLM_BOM_FETCH_FAILED',
       });
     }
      plmJobs.update(req.currentUser.id, fetchRun.job.id, {
@@ -109,6 +165,10 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
     userAccess.appendAudit(req.currentUser, 'PLM_SYNC_FETCH', 'corenectum', {
       requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
       scannedPages: collected.scannedPages, scannedRows: collected.scannedRows,
+      bomFetched: collected.bomSync && collected.bomSync.fetched || 0,
+      bomWithPrint: collected.bomSync && collected.bomSync.withPrint || 0,
+      bomAiConsulted: collected.bomSync && collected.bomSync.aiConsulted || 0,
+      bomFailed: collected.bomSync && collected.bomSync.failed ? collected.bomSync.failed.length : 0,
     });
     res.json({
       ok: true, records: collected.links, failed: collected.failed,
@@ -118,10 +178,48 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
       // hâlinde de aynı iz automationError üzerinden details.diagnostics olarak
       // döner, böylece "0 model" ile "oturum yok" karıştırılamaz.
       diagnostics: collected.diagnostics || [],
+      bom: collected.bomSync || null,
       styleLinks, jobId: fetchRun.job.id,
     });
   } catch (err) { automationError(res, err, 'PLM verileri alınamadı.'); }
   finally { clearModelOperationProgress(req.currentUser && req.currentUser.id); }
+});
+
+/* Koleksiyon tablosundaki Artwork Detayı sanal sistem sütunu görünür
+   satırların BOM özetini tek yerel okumayla alır. Bu uç CoreNectum/LCW AI
+   çağırmaz; yalnız kalıcı plm-bom.json kaydını projekte eder. */
+app.post('/api/plm-sync/bom/batch', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), express.json({ limit: '128kb' }), (req, res) => {
+  try {
+    const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
+    if (!raw) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    const plmIds = [...new Set(raw.map(normalizePlmId).filter(Boolean))].slice(0, 1000);
+    const store = plmBomStore.load();
+    const entries = {};
+    for (const plmId of plmIds) {
+      const entry = store.models && store.models[plmId];
+      if (entry) entries[plmId] = entry;
+    }
+    res.set('Cache-Control', 'no-store').json({
+      ok: true,
+      entries,
+      requested: plmIds.length,
+      found: Object.keys(entries).length,
+      revision: Number(store._revision) || 0,
+      updatedAt: store._updatedAt || null,
+    });
+  } catch (err) { apiError(res, err, 'PLM BOM özetleri okunamadı.'); }
+});
+
+/* PLM Sync sırasında saklanan son normalize BOM analizi. Bu uç yalnız
+   Buyer Log deposunu okur; CoreNectum'a veya LCW AI'a yeni istek atmaz. */
+app.get('/api/plm-sync/bom/:plmId', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), (req, res) => {
+  try {
+    const plmId = normalizePlmId(req.params && req.params.plmId);
+    if (!plmId) return res.status(400).json({ error: 'Geçerli PLM ID gerekli.', code: 'PLM_ID_REQUIRED' });
+    const entry = plmBomStore.entry(plmId);
+    if (!entry) return res.status(404).json({ error: 'Bu model için kaydedilmiş BOM yok.', code: 'PLM_BOM_NOT_FOUND' });
+    res.set('Cache-Control', 'no-store').json({ ok: true, entry });
+  } catch (err) { apiError(res, err, 'PLM BOM bilgisi okunamadı.'); }
 });
 
 /* PLM teknik föylerini (Technical Sheet Report) toplu indirip Koleksiyon'un
