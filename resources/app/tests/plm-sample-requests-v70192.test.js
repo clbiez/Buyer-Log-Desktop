@@ -413,14 +413,16 @@ test('v7.0.193 Priority: Ex-factory’ye 21 gün kala PPS onayı yoksa ayrı seb
   assert.equal(Rules.applyPriorityRules(a, [merged], { pps: 'open' }).matched.length, 0);
 });
 
-test('v7.0.193 CP açılınca yalnız üretimdeki ve 24 saatten eski/hiç çekilmemiş modeller tazelenir', () => {
+test('CP açılınca PLM numune verisi otomatik tazelenmez (yalnız kullanıcı butonuyla)', () => {
+  /* Arka plan tazelemesi her CP açılışında üretimdeki tüm modelleri PLM'den
+     çekip programı yavaşlatıyordu; kullanıcı kararıyla kaldırıldı. */
   const src = read('public/plm-sample-requests.js');
-  assert.match(src, /const AUTO_REFRESH_MAX_AGE_MS = 24 \* 3600 \* 1000;/);
+  assert.doesNotMatch(src, /autoRefreshStale/);
+  assert.match(src, /const STALE_MAX_AGE_MS = 24 \* 3600 \* 1000;/);
   assert.match(src, /if \(rowStage\(row\) !== 'PRODUCTION'\) continue;/);
-  assert.match(src, /sync\(ids, \{ scope: 'cp', ensureConnection: false, silent: true \}\)/);
-  assert.match(src, /typeof plmJsonRequest === 'function' && !opts\.silent \? plmJsonRequest/, 'sessiz tazeleme yetki penceresi açmaz');
   const app = read('public/app-main.js');
-  assert.match(app, /if\(tab==='cp'\)void cpPlmSampleAutoRefresh\(\);/);
+  assert.doesNotMatch(app, /cpPlmSampleAutoRefresh|autoRefreshStale/);
+  assert.match(app, /async function cpPlmSampleRequestsRun\(button,mode='all'\)/, 'elle çekim yolu korunur');
 });
 
 test('v7.0.193 üretimi bitmiş sipariş: tüm numune kalemleri onaylı; üretimdeki sipariş PLM’e göre', () => {
@@ -511,6 +513,6 @@ test('v7.0.193 ekran örnekleri: üretim sonrası/sevk edilmiş sipariş tek "On
   // Kontrol listesi: gümrükteki sipariş numune sorusu sormaz.
   const evidence = api.evidenceForAnalysis({ stage: 'UNKNOWN', sourceRow: { 'PLM ID': 9999999, STATUS: 'Customs & Port Operations 10.616' } }, 'pps');
   assert.equal(evidence && evidence.state, 'approved');
-  // Otomatik tazeleme yalnız üretimdeki siparişleri hedefler.
+  // Eskiyen veri tespiti yalnız üretimdeki siparişleri hedefler.
   assert.deepEqual([...api.staleProductionPlmIds([{ 'PLM ID': 1, STATUS: 'Üretimde' }, { 'PLM ID': 2, STATUS: 'In Transit' }, { 'PLM ID': 3, STATUS: 'Üretimde', 'Shipment Quantity': 50 }])], ['1']);
 });
