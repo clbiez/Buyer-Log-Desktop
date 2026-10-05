@@ -709,7 +709,7 @@ function open(options){
   const setup=tableSetupSnapshot(input);
   const contextColumns=normalizeColumns(input.columns,rows);
   const setupColumns=setup?normalizeColumns(setup.columns,rows):[];
-  const contextKeys=contextColumns.map(col=>col.key).filter(key=>!setupColumns.some(col=>col.key===key));
+  const contextKeys=setup?contextColumns.map(col=>col.key).filter(key=>!setupColumns.some(col=>col.key===key)):[];
   const columns=setup?normalizeColumns([...setupColumns,...contextColumns.filter(col=>!setupColumns.some(base=>base.key===col.key))],rows):contextColumns;
   const scope=input.storageKey||input.scope||input.source||'generic',page=pageScope(input);
   const canonical=root.BLCanonicalFields,moduleId=input.moduleId||input.source||page;

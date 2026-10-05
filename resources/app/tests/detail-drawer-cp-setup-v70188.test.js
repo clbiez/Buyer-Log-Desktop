@@ -34,6 +34,8 @@ test('shared detail drawer keeps the CP catalog but applies its own report layou
   assert.ok(DRAWER.includes("['focus','extended','all']"));
   assert.ok(DRAWER.includes('tableSetupSnapshot(input)'));
   assert.ok(DRAWER.includes('BLDetailReportLayout.focusKeys'));
+  assert.ok(DRAWER.includes('const contextKeys=setup?contextColumns.map'));
+  assert.ok(DRAWER.includes('.concat(contextKeys)'));
   assert.ok(DRAWER.includes('tableSetup:null,viewPresets'));
   assert.ok(DRAWER.includes("setupPresetKeys(setup,'extended')"));
   assert.ok(DRAWER.includes('...setupColumns,...contextColumns')); 
