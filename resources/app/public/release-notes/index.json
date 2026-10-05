@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.245",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "Test raporlarını sürükle-bırak ile aktarma",
+        "en": "Import test reports by drag and drop"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 0,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.245/release.json"
+    },
+    {
       "version": "7.0.244",
       "publishedAt": "2026-10-05",
       "title": {
