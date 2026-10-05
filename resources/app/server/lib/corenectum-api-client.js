@@ -6,11 +6,12 @@
 const settings = require('./corenectum-api-settings');
 const styleApi = require('./corenectum-style-api');
 const requestApi = require('./corenectum-request-api');
+const bomApi = require('./corenectum-bom-api');
 
 const ORIGIN = 'https://corenectum.lcwaikiki.com';
 const REFERER = 'https://corenectum.lcwaikiki.com/';
 const TECHNICAL_SHEET_URL = 'https://mym-api.lcwaikiki.com/lcw/live/corenectum/service/api/ReportOperations/CreateTechnicalSheetReport';
-const ALLOWED_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, styleApi.GET_STYLE_IMAGES_URL, TECHNICAL_SHEET_URL, requestApi.GET_REQUEST_LIST_URL]);
+const ALLOWED_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, styleApi.GET_STYLE_IMAGES_URL, TECHNICAL_SHEET_URL, requestApi.GET_REQUEST_LIST_URL, bomApi.GET_STYLE_BOM_INFORMATION_URL]);
 const DEFAULT_TIMEOUT_MS = 90000;
 const DEFAULT_RETRIES = 3;
 
