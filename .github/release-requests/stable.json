@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.244",
-  "commit_sha": "6bdd5902903a0519c7673c9eea1f717931e1d07b",
-  "release_notes": "Buyer Log 7.0.244: OAB, LFL, Price & Supplier Analysis ve ortak alt detay raporları Backlog düzeninde gruplu, geniş satırlar ve özet kartları kullanır. Arama, alan filtreleri, görseller ve tüm kaynak sütunları korunur; LFL Excel miktar/FOB değerleri sayısaldır. Backlog-style shared detail reports and typed LFL Excel exports.",
-  "request_id": "7.0.244-backlog-report-r1"
+  "version": "7.0.245",
+  "commit_sha": "95c019386ec25e19fe1244eaf5b9d17fddffa725",
+  "release_notes": "Buyer Log 7.0.245: LCW AI Layout Kontrolü eklendi. Care Label ve Price Tag PDF'leri otomatik tanınır; model/renk/sipariş/ülke/kompozisyon CP ile doğrulanır, barkod/QR okunur, belirsiz AI bulguları REVIEW olarak ayrılır ve kullanıcı bazlı kontrol geçmişi saklanır. Bu sürüm ayrıca 7.0.244 sonrasındaki CP Tracker test raporu aktarma geliştirmelerini de içerir.",
+  "request_id": "7.0.245-layout-control-r1"
 }
