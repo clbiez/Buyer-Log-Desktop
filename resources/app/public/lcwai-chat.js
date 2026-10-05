@@ -345,7 +345,7 @@
           <p class="lcwaiNote">${esc(L('Sohbet geçmişi bu kullanıcı için bu cihazda saklanır.', 'Chat history is kept for this user on this device.'))}</p>
         </aside>
         <div class="lcwaiChatMain">
-          <header class="lcwaiChatHead"><div><b>LCW AI</b> <small class="lcwaiModel" data-chat-model>${esc(AI() ? AI().modelLabel : 'GPT-6 Sol')}</small></div><div class="lcwaiChatConn" data-chat-conn></div></header>
+          <header class="lcwaiChatHead"><div><b>LCW AI</b> <small class="lcwaiModel" data-chat-model>${esc(AI() ? AI().modelLabel : 'GPT-6 Sol')}</small></div><div class="lcwaiChatHeadActions"><button type="button" class="lcwaiBtn lcwaiLayoutControlBtn" data-layout-control>✓ ${esc(L('Layout Kontrol', 'Layout Control'))}</button><div class="lcwaiChatConn" data-chat-conn></div></div></header>
           <div class="lcwaiChatMessages" data-chat-messages role="log" aria-live="polite"></div>
           <form class="lcwaiComposer" data-chat-form>
             <div class="lcwaiOutputBar" data-chat-output>
@@ -720,6 +720,12 @@
     const fileInput = $('[data-chat-file-input]');
     const target = event.target.closest('button');
     if (!target || !el.contains(target)) { if (!event.target.closest('.lcwaiContextWrap')) closeContextMenu(); return; }
+    if (target.matches('[data-layout-control]')) {
+      const openLayout=()=>window.BLLayoutControl?.open?.();
+      if (window.BLLayoutControl) openLayout();
+      else if (window.BLPerf?.ensureFeature) window.BLPerf.ensureFeature('layoutControl').then(openLayout).catch(() => { if (typeof showToast === 'function') showToast(L('Layout Kontrol modülü yüklenemedi.','Layout Control module could not be loaded.'), { kind: 'error' }); });
+      return;
+    }
     if (target.matches('[data-chat-new]')) { if (!state.busy) { newConversation(); renderList(); renderMessages(); input.focus(); } return; }
     if (target.matches('[data-chat-open]')) { if (!state.busy) { state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
     if (target.matches('[data-chat-file]')) { fileInput.click(); return; }

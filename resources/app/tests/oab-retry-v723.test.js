@@ -271,6 +271,9 @@ test('v7.23 istemciden gelen kombinasyon METADATA ile doğrulanır, doğrudan PA
 });
 
 test.after(() => {
-  fs.rmSync(root, { recursive: true, force: true });
+  // Windows runner'da sunucu kapanırken local DB recovery yazarı birkaç ms daha
+  // temp klasörüne dokunabiliyor. Cleanup test sonucunu/hook'u düşürmemeli;
+  // runner temp alanı process sonunda zaten geri alınır.
+  try { fs.rmSync(root, { recursive: true, force: true, maxRetries: 8, retryDelay: 75 }); } catch (_) {}
   setImmediate(() => process.exit(0));
 });
