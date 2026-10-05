@@ -283,6 +283,7 @@ const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
 const filterValueTypes = require('./lib/filter-value-types');
 const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery } = require('./lib/model-refresh');
+const refreshErrorDiagnostics = require('./lib/refresh-error-diagnostics');
 const {
   POWER_BI_IMPORT_DASHBOARD_URL, PowerBiImportDashboardConnector,
   dashboardAntrepoMatchRule, normalizeDashboardRows, uniqueOrderCodes, createDashboardCheckpointStore,
@@ -8532,6 +8533,7 @@ function refreshJobState(id) {
     error: job.error || null,
     errorCode: job.errorCode || null,
     repairAction: job.repairAction || null,
+    diagnosis: job.diagnosis || null,
     summary: job.summary || null,
     sourceRequest:job.sourceRequest||null,
     connections: job.connections || null,
@@ -8971,7 +8973,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
     const performanceProfile=refreshPerformanceProfile(currentUser,requestedTargets,sourcePolicy);
     const job={jobId:`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`,running:true,phase:'source-setup',startedAt,startedMs:Date.now(),error:null,
       requestedTargets:requestedTargets.slice(),loadedAt:null,controller:new AbortController(),cancelRequested:false,commitStarted:false,
-      operations:[],performanceProfile,eta:refreshPerformance.estimate(performanceProfile)};
+      operations:[],performanceProfile,eta:refreshPerformance.estimate(performanceProfile),diagnosis:null};
     refreshJobs.set(id,job);refreshInFlight.add(id);
     void refreshPerformance.refreshSharedCache().then(()=>{if(job.running)job.eta=refreshPerformance.estimate(job.performanceProfile);});
     performRefresh(id,currentUser,targets&&targets.length?targets:null,{signal:job.controller.signal,sourcePolicy:{asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode},refreshId:job.jobId}).then(result=>{
@@ -8984,6 +8986,11 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
       logRuntimeFailure('modelRefresh',err);job.phase='error';
       job.error=String(err&&(err.publicMessage||err.message)||'Yenileme başarısız oldu.');
       job.errorCode=(err&&err.code)||'MODEL_REFRESH_FAILED';job.repairAction=err&&err.repairAction||null;
+      job.diagnosis=refreshErrorDiagnostics.diagnoseRefreshError(err,{
+        operations:job.operations,
+        sourcePolicy,
+        requestedTargets:requestedTargets.slice(),
+      });
     }).finally(()=>{
       job.running=false;job.finishedAt=new Date().toISOString();job.elapsedMs=Date.now()-job.startedMs;
       const status=job.phase==='done'?'done':(job.errorCode==='REFRESH_CANCELLED'?'cancelled':'error');
@@ -9020,10 +9027,15 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
       durationMs:Date.now()-syncStartedMs,status:err&&err.code==='REFRESH_CANCELLED'?'cancelled':'error',profile:syncPerformanceProfile});
     logRuntimeFailure('modelRefresh', err);
     const message = err && (err.publicMessage || err.message) ? (err.publicMessage || err.message) : 'Yenileme başarısız oldu.';
+    const diagnosis = refreshErrorDiagnostics.diagnoseRefreshError(err, {
+      sourcePolicy: syncSourcePolicy,
+      requestedTargets: requestedTargets.slice(),
+    });
     res.status(Number(err && err.statusCode) || 500).json({
       error: message,
       code: (err && err.code) || 'MODEL_REFRESH_FAILED',
       repairAction: err && err.repairAction || null,
+      diagnosis,
     });
   } finally { refreshInFlight.delete(id); }
 });
