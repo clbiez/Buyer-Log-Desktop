@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "CP: PLM numune verisi artık otomatik çekilmiyor",
+    "en": "CP: PLM sample data is no longer fetched automatically"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP açılınca arka planda başlayan PLM numune tazelemesi kaldırıldı; program bu yüzden yavaşlamıyor.",
+    "en": "The background PLM sample refresh that started when CP opened has been removed, so it no longer slows the app down."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-plm-sample-auto-refresh-off",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · PLM Numune",
+        "en": "CP Tracker · PLM Samples"
+      },
+      "title": {
+        "tr": "CP açılışında otomatik PLM numune çekimi kapatıldı",
+        "en": "Automatic PLM sample fetch on CP open turned off"
+      },
+      "body": {
+        "tr": "Eskiden CP sekmesi her açıldığında, üretimdeki siparişlerin numune verisi 24 saatten eskiyse PLM’den arka planda topluca çekiliyordu; bu iş programı yavaşlatıyordu. Artık CP açılışı PLM’e istek göndermez. Numune onaylarını güncellemek için PLM SYNC › Numune Senkronizasyonu penceresinden kapsamı (Tümü, Seçili, Üretimdekiler, Eksikler) seçip elle başlatın.",
+        "en": "Previously, every time the CP tab opened, sample data of in-production orders older than 24 hours was fetched from PLM in bulk in the background, which slowed the app down. Opening CP no longer sends any request to PLM. To update sample approvals, start it manually from PLM SYNC › Sample Synchronization and pick the scope (All, Selected, In Production, Missing)."
+      },
+      "path": {
+        "tr": "CP Tracker › PLM SYNC › Numune Senkronizasyonu",
+        "en": "CP Tracker › PLM SYNC › Sample Synchronization"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-plm-sample-auto-refresh-off.png",
+        "alt": {
+          "tr": "CP Tracker üzerinde elle başlatılan Numune Senkronizasyonu kapsam seçimi (demo veri)",
+          "en": "Manually started Sample Synchronization scope picker on CP Tracker (demo data)"
+        },
+        "caption": {
+          "tr": "Numune verisi yalnız siz başlatınca PLM’den çekilir.",
+          "en": "Sample data is fetched from PLM only when you start it."
+        }
+      }
+    }
+  ]
 }
