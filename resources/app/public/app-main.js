@@ -5547,8 +5547,13 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const label=norm(v);
       if(!label) return `<td class="clStatusNa" title="${escapeHtml(appLang==='en'?'This question is not asked for this order':'Bu soru bu siparişe sorulmuyor')}">—</td>`;
       const status=(r._checklistStatus&&r._checklistStatus[c.checklistItemId])||'open';
-      if(!canEdit) return viewOnly(label);
-      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)}" data-id="${id}" data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(appLang==='en'?'Choose a status':'Durum seçin')}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
+      /* Test raporu aktarımı: "Buyingden dönüş bekleniyor" kullanıcıdan beklenen
+         bir iştir; hücrede işaretlenir, açıklama başlıkta okunur. */
+      const clTasks=(r._checklistTasks&&r._checklistTasks[c.checklistItemId])||[];
+      const clTaskTitle=clTasks.map(t=>(appLang==='en'?'Awaiting buying feedback':'Buying dönüşü bekleniyor')+` · ${t.talepNo} · ${t.test||''}${t.aciklama?' — '+t.aciklama:''}`).join('\n');
+      const clTaskFlag=clTasks.length?`<span class="clTaskFlag" title="${escapeHtml(clTaskTitle)}">Buying ${clTasks.length}</span>`:'';
+      if(!canEdit) return clTasks.length?`<td title="${escapeHtml(clTaskTitle)}">${escapeHtml(label)} ${clTaskFlag}</td>`:viewOnly(label);
+      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)}${clTasks.length?' has-task':''}" data-id="${id}" data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(clTaskTitle||(appLang==='en'?'Choose a status':'Durum seçin'))}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span>${clTaskFlag}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
     }
     case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {

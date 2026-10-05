@@ -1,0 +1,62 @@
+'use strict';
+/* Test Raporu Aktarımı — arayüz kaynak sözleşmesi. Uçtan uca bırakma akışı
+   gerçek Chromium'da (Playwright) doğrulandı; burada bağlantıların sessizce
+   kopmaması çivilenir. */
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const ROOT = path.resolve(__dirname, '..');
+const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
+
+test('modül tembel yüklenir: motor görünümden önce', () => {
+  const perf = read('public/perf-runtime.js');
+  const m = perf.match(/testReportImport:\[([^\]]+)\]/);
+  assert.ok(m, 'testReportImport özelliği tanımlı');
+  assert.ok(m[1].indexOf('test-report-engine.js') < m[1].indexOf('test-report-import.js'));
+  assert.doesNotMatch(read('public/index.html'), /test-report-import\.js/, 'eager yüklenmez');
+});
+
+test('checklist menüsü, CP bırakma alanı ve görev listesi bağlı', () => {
+  const sync = read('public/checklist-supplier-sync.js');
+  assert.match(sync, /data-checklist-test-reports/);
+  assert.match(sync, /T\('Test Raporu Aktar', 'Import Test Reports'\)/);
+  assert.match(sync, /function bindReportDrop\(\)/);
+  assert.match(sync, /activeTab\(\) === 'cp'/, 'bırakma yalnız CP ekranında');
+  assert.match(sync, /\.cpaModalOverlay/, 'açık pencerelerin bırakması ele geçirilmez');
+  assert.match(sync, /\/api\/test-reports\/tasks/);
+  assert.match(sync, /_checklistTasks/);
+});
+
+test('hücre Buying görevini TR/EN gösterir; düzenleme yetkisi korunur', () => {
+  const app = read('public/app-main.js');
+  assert.match(app, /clTaskFlag/);
+  assert.match(app, /'Awaiting buying feedback':'Buying dönüşü bekleniyor'/);
+  const css = read('public/app.css');
+  assert.match(css, /\.clTaskFlag\{/);
+  const ui = read('public/test-report-import.js');
+  assert.match(ui, /row\._canEdit === false/, 'satır düzenleme yetkisi kontrol edilir');
+  assert.match(ui, /answer\.source !== 'test_report'/, 'kullanıcı girişi öncelikli');
+  assert.match(ui, /source: 'test_report'/);
+});
+
+test('checklist cevabı kaynak alanını taşır; elle seçim kaynaksızdır', () => {
+  const Checklist = require('../public/cp-checklist-engine');
+  const analysis = { orderKey: 'PO1', plannedLoadDate: 1 };
+  assert.equal(Checklist.makeAnswer('approved', analysis, { source: 'test_report' }).source, 'test_report');
+  assert.equal(Object.prototype.hasOwnProperty.call(Checklist.makeAnswer('approved', analysis, {}), 'source'), false);
+});
+
+test('rota kayıtlı ve ek yükleme ile aynı yetki alanında', () => {
+  assert.match(read('server/server.js'), /require\('\.\/routes\/test-report-routes'\)/);
+  const routes = read('server/routes/test-report-routes.js');
+  assert.match(routes, /'\/api\/test-reports\/parse', userAccess\.requireAnyArea\('cp', 'orders'\)/);
+  assert.match(routes, /'\/api\/test-reports\/commit', userAccess\.requireAnyArea\('cp', 'orders'\)/);
+  assert.match(read('server/lib/test-reports/extract.js'), /isEvalSupported: false/);
+});
+
+test('package.json msgreader bağımlılığını taşır', () => {
+  const pkg = JSON.parse(read('package.json'));
+  assert.ok(pkg.dependencies['@kenjiuno/msgreader']);
+});

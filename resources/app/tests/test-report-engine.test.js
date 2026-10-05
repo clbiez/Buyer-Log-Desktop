@@ -105,6 +105,13 @@ test('tuzak 5: karar mailleri raporu günceller; Ticari Onay geçer sayılır', 
   assert.equal(E.reportOutcome(retest).code, 'pending');
 });
 
+test('test ayrıntısı olmayan Kalır raporu (yalnız mail) adımı reddeder', () => {
+  const r = report({ talepNo: '4400003', genelSonuc: 'Kalır' });
+  assert.equal(E.reportOutcome(r).code, 'fail');
+  assert.equal(E.deriveStepStatus([r]).state, 'rejected');
+  assert.equal(E.reportOutcome(report({ talepNo: '1', genelSonuc: 'Geçer' })).code, 'pass');
+});
+
 test('tuzak 5: Buyingden dönüş bekleniyor kullanıcı görevi üretir', () => {
   const r = report({ talepNo: '3465774', kararlar: [
     { test: 'Yıkama Haslığı (ISO 105 C06:2010)', karar: 'Buyingden dönüş bekleniyor', aciklama: 'görsel iletebilir misiniz' },

@@ -8,29 +8,35 @@
    Yetki: ek yükleme ile aynı alanlar (cp, orders); satır düzenleme yetkisi
    istemcide row._canEdit ile ayrıca uygulanır. */
 
+const checklistSupplierStore = require('../lib/checklist-supplier-store');
+const extract = require('../lib/test-reports/extract');
+const store = require('../lib/test-reports/store');
+const staging = require('../lib/test-reports/staging');
+
 const MAX_FILES = 30;
 const MAX_FILE_BYTES = 40 * 1024 * 1024;
 const MIME = { pdf: 'application/pdf', msg: 'application/vnd.ms-outlook', eml: 'message/rfc822' };
 
 module.exports = function registerTestReportRoutes(app, deps) {
-  const { automationError, checklistSupplierStore, express, userAccess } = deps;
-  const extract = deps.testReportExtract || require('../lib/test-reports/extract');
-  const store = deps.testReportStore || require('../lib/test-reports/store');
-  const staging = deps.testReportStaging || require('../lib/test-reports/staging');
+  const {
+    automationError,
+    express,
+    userAccess,
+  } = deps;
   const userId = req => String(req.currentUser && req.currentUser.id || '');
   const text = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max || 300);
 
-  app.get('/api/test-reports', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
+app.get('/api/test-reports', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
     try { res.set('Cache-Control', 'no-store').json(store.publicPayload()); }
     catch (err) { automationError(res, err, 'Test raporları okunamadı.'); }
   });
 
-  app.get('/api/test-reports/tasks', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
+app.get('/api/test-reports/tasks', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
     try { res.set('Cache-Control', 'no-store').json({ tasks: store.tasks() }); }
     catch (err) { automationError(res, err, 'Test raporu görevleri okunamadı.'); }
   });
 
-  app.post('/api/test-reports/parse', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '160mb' }), async (req, res) => {
+app.post('/api/test-reports/parse', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '160mb' }), async (req, res) => {
     try {
       const input = Array.isArray(req.body && req.body.files) ? req.body.files : null;
       if (!input || !input.length) return res.status(400).json({ error: 'files (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
@@ -55,7 +61,7 @@ module.exports = function registerTestReportRoutes(app, deps) {
     }
   });
 
-  app.post('/api/test-reports/commit', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '2mb' }), (req, res) => {
+app.post('/api/test-reports/commit', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '2mb' }), (req, res) => {
     try {
       const body = req.body && typeof req.body === 'object' ? req.body : {};
       const session = staging.getSession(body.sessionId, userId(req));

@@ -661,6 +661,8 @@
     if (tests.some(t => normalizeResult(t.sonuc) === 'lackOfSample')) pending = true;
     let failing = tests.filter(t => normalizeResult(t.sonuc) === 'fail').map(t => t.ad);
     if (!tests.length && (base === 'fail' || !base)) failing = decisions.map(d => d.test);
+    // Test ayrıntısı ve karar yoksa genel "Kalır" doğrudan başarısızdır.
+    if (!tests.length && base === 'fail' && !decisions.length) failing = ['*'];
     const unmatched = decisions.slice();
     const covering = [];
     const uncovered = [];

@@ -4997,7 +4997,6 @@ require('./routes/checklist-supplier-routes')(app, {
 /* Test Raporu Aktarımı: sonuç mailleri / PDF'ler → önizleme → checklist. */
 require('./routes/test-report-routes')(app, {
   automationError,
-  checklistSupplierStore: require('./lib/checklist-supplier-store'),
   express,
   userAccess,
 });

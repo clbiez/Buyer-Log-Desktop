@@ -40,6 +40,8 @@
     shared: { definitions: [], answers: {}, tombstones: {}, revision: 0, updatedAt: '' },
     answerBaseline: {},
     renderWrapped: false,
+    testTasks: new Map(),
+    reportDropBound: false,
   };
 
   function isEn() {
@@ -438,7 +440,10 @@
         const statuses = {};
         items.forEach(function (item) {
           const key = columnKey(item.id);
-          if (!itemApplies(item, analysis)) { row[key] = ''; return; }
+          // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan
+          // kullanıcıya düşen bekleyen bir iş varsa hücre görünür kalır.
+          const pendingTasks = analysis && state.testTasks.get(answerKey(analysis.orderKey, item.id));
+          if (!itemApplies(item, analysis) && !(pendingTasks && pendingTasks.length)) { row[key] = ''; return; }
           // Tek doğruluk kaynağı: karar katmanının hesapladığı durum.
           const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
           const answer = computed ? null : answerFor(item, analysis);
@@ -448,6 +453,12 @@
         });
         // Hücre çizimi ve durum menüsü için kanonik durum; görünür değer etiket.
         Object.defineProperty(row, '_checklistStatus', { value: statuses, enumerable: false, configurable: true, writable: true });
+        const tasks = {};
+        if (analysis && state.testTasks.size) items.forEach(function (item) {
+          const list = state.testTasks.get(answerKey(analysis.orderKey, item.id));
+          if (list && list.length) tasks[item.id] = list;
+        });
+        Object.defineProperty(row, '_checklistTasks', { value: tasks, enumerable: false, configurable: true, writable: true });
       });
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
@@ -1704,7 +1715,8 @@
       + '<button type="button" class="tbtn" data-checklist-excel-create><svg class="ic"><use href="#i-file-export"/></svg><span>Create Checklist Excel</span></button>'
       + '<button type="button" class="tbtn" data-checklist-supplier-prepare><svg class="ic"><use href="#i-mail-send"/></svg><span>' + T('Üreticiye Checklist Exceli Hazırla', 'Prepare Supplier Checklist') + '</span></button>'
       + '<button type="button" class="tbtn" data-checklist-excel-import><svg class="ic"><use href="#i-file-import"/></svg><span>Import Checklist Excel</span></button>'
-      + '<button type="button" class="tbtn" data-checklist-excel-columns><svg class="ic"><use href="#i-columns-3"/></svg><span>Checklist Excel Columns</span></button>';
+      + '<button type="button" class="tbtn" data-checklist-excel-columns><svg class="ic"><use href="#i-columns-3"/></svg><span>Checklist Excel Columns</span></button>'
+      + '<button type="button" class="tbtn" data-checklist-test-reports><svg class="ic"><use href="#i-file-import"/></svg><span>' + T('Test Raporu Aktar', 'Import Test Reports') + '</span></button>';
 
     const input = root.document.createElement('input');
     input.type = 'file';
@@ -1764,6 +1776,10 @@
     sub.querySelector('[data-checklist-excel-columns]').addEventListener('click', function () {
       closeSub();
       openExcelColumnsDialog();
+    });
+    sub.querySelector('[data-checklist-test-reports]').addEventListener('click', function () {
+      closeSub();
+      openTestReportImport(null);
     });
     input.addEventListener('change', function () {
       const file = input.files && input.files[0];
@@ -2125,6 +2141,83 @@
     } catch (_) { return false; }
   }
 
+  /* Test Raporu Aktarımı (tembel modül). CP açıkken sayfaya .msg/.eml/.pdf
+     bırakmak önizlemeyi açar; hiçbir şey onaysız yazılmaz. */
+  async function openTestReportImport(files) {
+    try {
+      if (root.BLPerf && typeof root.BLPerf.ensureFeature === 'function') await root.BLPerf.ensureFeature('testReportImport');
+      if (!root.BLTestReportImport) throw new Error(T('Modül yüklenemedi.', 'Module could not be loaded.'));
+      await root.BLTestReportImport.open(files);
+    } catch (error) {
+      toast(T('Test raporu aktarımı açılamadı: ', 'Test report import could not be opened: ') + (error.message || error));
+    }
+  }
+  function activeTab() {
+    const active = root.document && root.document.querySelector('nav.tabs button.active[data-tab]');
+    return active && active.dataset ? String(active.dataset.tab || '') : '';
+  }
+  function dragHasFiles(event) {
+    const types = event.dataTransfer && event.dataTransfer.types;
+    return Boolean(types && Array.prototype.indexOf.call(types, 'Files') >= 0);
+  }
+  function bindReportDrop() {
+    if (state.reportDropBound || !root.document) return;
+    state.reportDropBound = true;
+    let overlay = null, depth = 0;
+    const eligible = function (event) {
+      // Açık bir pencere (ek ekleme vb.) kendi bırakmasını yönetir.
+      return activeTab() === 'cp' && !(event.target && event.target.closest && event.target.closest('.cpaModalOverlay'));
+    };
+    const hide = function () { depth = 0; if (overlay) { overlay.remove(); overlay = null; } };
+    root.document.addEventListener('dragenter', function (event) {
+      if (!eligible(event) || !(dragHasFiles(event) || (event.dataTransfer && event.dataTransfer.types && event.dataTransfer.types.length))) return;
+      depth += 1;
+      if (overlay) return;
+      overlay = root.document.createElement('div');
+      overlay.className = 'trDropOverlay';
+      overlay.setAttribute('role', 'status');
+      overlay.innerHTML = '<div><b>' + html(T('Test raporlarını bırakın', 'Drop test reports')) + '</b><small>' + html(T('.msg, .eml, .pdf · önizleme açılır, onaysız yazılmaz', '.msg, .eml, .pdf · a preview opens, nothing is written without approval')) + '</small></div>';
+      root.document.body.appendChild(overlay);
+    });
+    root.document.addEventListener('dragover', function (event) {
+      if (!overlay || !eligible(event)) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+    });
+    root.document.addEventListener('dragleave', function () {
+      depth = Math.max(0, depth - 1);
+      if (!depth) hide();
+    });
+    root.document.addEventListener('drop', function (event) {
+      if (!overlay) return;
+      hide();
+      if (!eligible(event)) return;
+      event.preventDefault();
+      const files = event.dataTransfer && event.dataTransfer.files;
+      if (!files || !files.length) {
+        // Klasik Outlook'tan sürüklenen mail çoğu zaman dosya üretmez.
+        toast(T('Bırakılan öğe dosya içermiyor. Outlook\'tan maili .msg olarak kaydedip bırakın.', 'The dropped item has no file. Save the e-mail from Outlook as .msg and drop it.'));
+        return;
+      }
+      openTestReportImport(Array.prototype.slice.call(files));
+    });
+  }
+  /* "Buyingden dönüş bekleniyor" gibi kullanıcıdan beklenen işler CP
+     checklist hücresinde öne çıkar. Kaynak: sunucudaki test raporu deposu. */
+  async function loadTestReportTasks() {
+    try {
+      const payload = await jsonFetch('/api/test-reports/tasks', { cache: 'no-store' });
+      const map = new Map();
+      (payload && payload.tasks || []).forEach(function (task) {
+        const key = answerKey(task.orderKey, task.itemId);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key).push(task);
+      });
+      state.testTasks = map;
+    } catch (_) { /* görev listesi isteğe bağlıdır; checklist çalışmaya devam eder */ }
+    return state.testTasks;
+  }
+
   function activeNeedsRuntime() {
     const active = root.document && root.document.querySelector('nav.tabs button.active[data-tab]');
     const tab = active && active.dataset ? String(active.dataset.tab || '') : '';
@@ -2135,7 +2228,8 @@
     if (!activeNeedsRuntime()) { ensureUi(); wrapRender(); return; }
     ensureUi();
     wrapRender();
-    await loadShared();
+    bindReportDrop();
+    await Promise.all([loadShared(), loadTestReportTasks()]);
     refreshColumns({ render: true });
   }
 
@@ -2144,6 +2238,7 @@
     state.started = true;
     ensureUi();
     bindStatusCells();
+    bindReportDrop();
     wrapRender();
     root.addEventListener('bl:cp-decision-context-changed', onDecisionChanged);
     root.addEventListener('bl:plm-requests-changed', function () { refreshColumns({ render: true }); });
@@ -2184,6 +2279,8 @@
   return {
     init: init,
     loadShared: loadShared,
+    loadTestReportTasks: loadTestReportTasks,
+    openTestReportImport: openTestReportImport,
     refreshColumns: refreshColumns,
     exportWorkbook: exportWorkbook,
     prepareSupplierChecklistEmail: prepareSupplierChecklistEmail,

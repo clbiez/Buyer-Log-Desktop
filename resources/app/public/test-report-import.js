@@ -229,7 +229,7 @@
     if (p.skippedDecisions) list.push(E().warningText({ code: 'decisionAlreadyApplied' }, lang()) + ' (' + p.skippedDecisions + ')');
     const tasks = p.step ? p.step.tasks.filter(function (t) { return t.talepNo === entry.report.talepNo; }) : E().reportOutcome(entry.report).tasks;
     tasks.forEach(function (t) { list.push(T('Buying dönüşü bekleniyor: ', 'Awaiting buying feedback: ') + t.test + (t.aciklama ? ' — ' + t.aciklama : '')); });
-    if (!list.length) return '<span class="trMuted">—</span>';
+    if (!list.length) return '';
     return '<ul class="trWarnings">' + list.map(function (w) { return '<li>' + html(w) + '</li>'; }).join('') + '</ul>';
   }
   function filesCell(report) {
@@ -308,11 +308,10 @@
         + '<td>' + rowCell(entry) + '</td>'
         + '<td><select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId) + '</select></td>'
         + '<td>' + changeCell(entry, p) + '</td>'
-        + '<td>' + filesCell(r) + '</td>'
-        + '<td>' + warningsCell(entry, p) + '</td></tr>';
+        + '<td>' + warningsCell(entry, p) + '<div class="trFiles">' + filesCell(r) + '</div></td></tr>';
     }).join('');
     body.innerHTML = drop + summaryHtml(plans) + fileIssuesHtml() + typeMappingHtml()
-      + (ui.entries.length ? '<div class="trTableWrap"><table class="cpaTable trTable"><thead><tr><th></th><th>' + html(T('Talep', 'Request')) + '</th><th>' + html(T('Sonuç', 'Result')) + '</th><th>' + html(T('Eşleşme', 'Match')) + '</th><th>' + html(T('Satır', 'Row')) + '</th><th>' + html(T('Checklist adımı', 'Checklist step')) + '</th><th>' + html(T('Değişiklik', 'Change')) + '</th><th>' + html(T('Eklenecek dosyalar', 'Files to attach')) + '</th><th>' + html(T('Uyarılar', 'Warnings')) + '</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' : '');
+      + (ui.entries.length ? '<div class="trTableWrap"><table class="cpaTable trTable"><thead><tr><th></th><th>' + html(T('Talep', 'Request')) + '</th><th>' + html(T('Sonuç', 'Result')) + '</th><th>' + html(T('Eşleşme', 'Match')) + '</th><th>' + html(T('Satır', 'Row')) + '</th><th>' + html(T('Checklist adımı', 'Checklist step')) + '</th><th>' + html(T('Değişiklik', 'Change')) + '</th><th>' + html(T('Uyarılar ve eklenecek dosyalar', 'Warnings and files to attach')) + '</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' : '');
     const ready = plans.filter(function (p, i) { return p.ready && ui.entries[i].include; }).length;
     footer.disabled = !ready;
     footer.textContent = T('Onayla ve yaz', 'Confirm and write') + ' (' + ready + ')';

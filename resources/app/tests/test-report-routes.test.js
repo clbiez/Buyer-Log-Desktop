@@ -20,7 +20,7 @@ function app() {
   const a = express();
   a.use((req, _res, next) => { req.currentUser = { id: 'u1', displayName: 'Demo User' }; next(); });
   register(a, {
-    express, checklistSupplierStore,
+    express,
     automationError: (res, err) => res.status(err.statusCode || 500).json({ error: err.message, code: err.code }),
     userAccess: { requireAnyArea: () => (_req, _res, next) => next(), appendAudit: (...args) => audits.push(args) },
   });
