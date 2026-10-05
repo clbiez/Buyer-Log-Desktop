@@ -202,7 +202,7 @@
     const bars = months.map(item => {
       const planned = Math.round((item.planned / max) * 100), loaded = Math.round((item.loaded / max) * 100);
       const tip = T(`${monthLabel(item.month)} · Ex-Factory planı ${nf(item.planned)} · Yüklenen ${nf(item.loaded)}`, `${monthLabel(item.month)} · Ex-Factory plan ${nf(item.planned)} · Loaded ${nf(item.loaded)}`);
-      return `<div class="mfpMonth${item.month === current ? ' isCurrent' : ''}" title="${esc(tip)}"><div class="mfpMonthBars"><i class="isPlanned" style="height:${planned}%"></i><i class="isLoaded" style="height:${loaded}%"></i></div><span>${esc(monthLabel(item.month))}</span></div>`;
+      return `<button type="button" class="mfpMonth isDrill${item.month === current ? ' isCurrent' : ''}" data-mfp-drill="month" data-mfp-drill-value="${esc(item.month)}" data-mfp-drill-label="${esc(monthLabel(item.month))}" title="${esc(tip)}"><div class="mfpMonthBars"><i class="isPlanned" style="height:${planned}%"></i><i class="isLoaded" style="height:${loaded}%"></i></div><span>${esc(monthLabel(item.month))}</span></button>`;
     }).join('');
     return `<div class="mfpChart" role="img" aria-label="${esc(T('Aylık yükleme adetleri', 'Monthly shipment quantities'))}">${bars}</div>
       <div class="mfpLegend"><span><i class="isPlanned"></i>${esc(T('Ex-Factory ayına göre plan', 'Planned by Ex-Factory month'))}</span><span><i class="isLoaded"></i>${esc(T('Yükleme onayı ayına göre yüklenen', 'Loaded by loading-approval month'))}</span></div>`;
@@ -233,14 +233,14 @@
     const baselineNote = perf.baseline === 'asasExFactory'
       ? T('İlk söz olarak ASAS’ın ilk Ex-Factory değeri kullanıldı: ASAS bağlantısında Initial Inspection Tarih alanı eşlenince ölçüm ona göre yapılır.', 'The first ASAS Ex-Factory value was used as the first promise: once the Initial Inspection date field is mapped in the ASAS connection, it is used instead.')
       : perf.baseline === 'initialInspection' ? T('İlk söz: Initial Inspection tarihi.', 'First promise: Initial Inspection date.') : '';
-    const metric = (label, value, hint) => `<div class="mfpMetric"><label>${esc(label)}</label><strong>${value}</strong>${hint ? `<small>${esc(hint)}</small>` : ''}</div>`;
+    const metric = (label, value, hint, drillKind) => `<button type="button" class="mfpMetric isDrill" data-mfp-drill="${esc(drillKind)}" data-mfp-drill-label="${esc(label)}"><label>${esc(label)}</label><strong>${value}</strong>${hint ? `<small>${esc(hint)}</small>` : ''}</button>`;
     return `<div class="mfpPanel mfpPerf">
       <div class="mfpPanelHead"><strong>${esc(T('Yükleme termin performansı', 'Shipment delivery performance'))}</strong>${gradeBadge(perf, true)}</div>
       <div class="mfpMetrics">
-        ${metric(T('İlk söze göre zamanında', 'On time vs first promise'), esc(pct(perf.onTimeRate)), T(`${nf(perf.onTime)} / ${nf(perf.loaded)} yüklenen sipariş`, `${nf(perf.onTime)} / ${nf(perf.loaded)} shipped orders`))}
-        ${metric(T('Ertelenen termin (revize)', 'Postponed dates (revised)'), esc(pct(perf.revisionRate)), [perf.revised ? T(`${nf(perf.revised)} sipariş · ort. +${perf.avgRevisionDays} gün`, `${nf(perf.revised)} orders · avg +${perf.avgRevisionDays} days`) : T('Erteleme yok', 'No postponements'), perf.pulledForward ? T(`${nf(perf.pulledForward)} öne çekildi`, `${nf(perf.pulledForward)} pulled forward`) : ''].filter(Boolean).join(' · '))}
-        ${metric(T('Ortalama gecikme', 'Average delay'), perf.avgDelayDays ? esc(T(`${perf.avgDelayDays} gün`, `${perf.avgDelayDays} days`)) : '—', T('Geç yüklenenlerde, yükleme onayı − ilk söz', 'For late shipments, loading approval − first promise'))}
-        ${metric(T('Açık ve gecikmiş', 'Open and overdue'), esc(nf(perf.openOverdue)), perf.openOverdue ? T(`ort. ${perf.avgOpenOverdueDays} gün`, `avg ${perf.avgOpenOverdueDays} days`) : T('Ex-Factory’si geçen açık sipariş yok', 'No open order past Ex-Factory'))}
+        ${metric(T('İlk söze göre zamanında', 'On time vs first promise'), esc(pct(perf.onTimeRate)), T(`${nf(perf.onTime)} / ${nf(perf.loaded)} yüklenen sipariş`, `${nf(perf.onTime)} / ${nf(perf.loaded)} shipped orders`), 'on_time')}
+        ${metric(T('Ertelenen termin (revize)', 'Postponed dates (revised)'), esc(pct(perf.revisionRate)), [perf.revised ? T(`${nf(perf.revised)} sipariş · ort. +${perf.avgRevisionDays} gün`, `${nf(perf.revised)} orders · avg +${perf.avgRevisionDays} days`) : T('Erteleme yok', 'No postponements'), perf.pulledForward ? T(`${nf(perf.pulledForward)} öne çekildi`, `${nf(perf.pulledForward)} pulled forward`) : ''].filter(Boolean).join(' · '), 'revised')}
+        ${metric(T('Ortalama gecikme', 'Average delay'), perf.avgDelayDays ? esc(T(`${perf.avgDelayDays} gün`, `${perf.avgDelayDays} days`)) : '—', T('Geç yüklenenlerde, yükleme onayı − ilk söz', 'For late shipments, loading approval − first promise'), 'late')}
+        ${metric(T('Açık ve gecikmiş', 'Open and overdue'), esc(nf(perf.openOverdue)), perf.openOverdue ? T(`ort. ${perf.avgOpenOverdueDays} gün`, `avg ${perf.avgOpenOverdueDays} days`) : T('Ex-Factory’si geçen açık sipariş yok', 'No open order past Ex-Factory'), 'overdue')}
       </div>
       <p class="mfpComment">${esc(performanceComment(perf))}</p>
       ${baselineNote ? `<p class="mfpNote">${esc(baselineNote)}</p>` : ''}
@@ -269,7 +269,12 @@
     if (record && !card.recipients.length) warnings.push(`<div class="mfpAlert isSoft">${esc(T('Kartta e-posta adresi yok. Otomasyonlar bu üreticiyi “çözülemedi” olarak raporlar.', 'The card has no e-mail address. Automations report this manufacturer as “unresolved”.'))}</div>`);
     const aliases = record && record.aliases && record.aliases.length ? record.aliases : [];
     const spellings = (card.spellings || []).filter(name => name !== card.name);
-    const tile = (label, value, hint) => `<div class="mfpTile"><label>${esc(label)}</label><strong>${value}</strong>${hint ? `<small>${esc(hint)}</small>` : ''}</div>`;
+    const tile = (label, value, hint, drillKind = '', drillLabel = '') => {
+      const inner = `<label>${esc(label)}</label><strong>${value}</strong>${hint ? `<small>${esc(hint)}</small>` : ''}`;
+      return drillKind
+        ? `<button type="button" class="mfpTile isDrill" data-mfp-drill="${esc(drillKind)}" data-mfp-drill-label="${esc(drillLabel || label)}">${inner}</button>`
+        : `<div class="mfpTile">${inner}</div>`;
+    };
     return `<article class="mfpCard">
       <header class="mfpCardHead"><div><span class="mfpEyebrow">${esc(T('Üretici kartı', 'Manufacturer card'))}</span><h3>${esc(card.name)}</h3>
         <div class="mfpCardBadges">${statusBadge(card)}${record && record.origin === 'manual' ? `<span class="mfpBadge">${esc(T('Elle eklendi', 'Added manually'))}</span>` : ''}</div></div>
@@ -278,14 +283,14 @@
       ${card.inAsas ? `<div class="mfpTiles">
         ${tile(T('Ülke', 'Country'), esc(country || '—'), card.countries.length > 1 ? card.countries.slice(1).map(item => item.name).join(', ') : '')}
         ${tile(T('Üretim alanı', 'Production area'), esc(area || '—'), fabric ? T(`ASAS kumaş kategorisi: ${fabric}`, `ASAS fabric category: ${fabric}`) : '')}
-        ${tile(T('Toplam sipariş hacmi', 'Total order volume'), `${esc(nf(card.quantity))} <small>${esc(T('adet', 'units'))}</small>`, T(`${nf(card.orders)} sipariş · ${nf(card.activeOrders)} açık`, `${nf(card.orders)} orders · ${nf(card.activeOrders)} open`))}
-        ${tile(T('Açık bakiye', 'Open balance'), `${esc(nf(card.remaining))} <small>${esc(T('adet', 'units'))}</small>`, card.fobValue ? T(`FOB değeri ≈ ${nf(card.fobValue)}`, `FOB value ≈ ${nf(card.fobValue)}`) : '')}
-        ${tile(T('Aylık ortalama yükleme', 'Average monthly shipment'), `${esc(nf(card.avgMonthlyLoaded))} <small>${esc(T('adet', 'units'))}</small>`, T('Son 6 ay, yükleme onayı ayına göre', 'Last 6 months, by loading-approval month'))}
+        ${tile(T('Toplam sipariş hacmi', 'Total order volume'), `${esc(nf(card.quantity))} <small>${esc(T('adet', 'units'))}</small>`, T(`${nf(card.orders)} sipariş · ${nf(card.activeOrders)} açık`, `${nf(card.orders)} orders · ${nf(card.activeOrders)} open`), 'all')}
+        ${tile(T('Açık bakiye', 'Open balance'), `${esc(nf(card.remaining))} <small>${esc(T('adet', 'units'))}</small>`, card.fobValue ? T(`FOB değeri ≈ ${nf(card.fobValue)}`, `FOB value ≈ ${nf(card.fobValue)}`) : '', 'open')}
+        ${tile(T('Aylık ortalama yükleme', 'Average monthly shipment'), `${esc(nf(card.avgMonthlyLoaded))} <small>${esc(T('adet', 'units'))}</small>`, T('Son 6 ay, yükleme onayı ayına göre', 'Last 6 months, by loading-approval month'), 'recent_loaded')}
         ${tile(T('Sezonlar', 'Seasons'), esc(card.seasons.slice(-4).join(', ') || '—'), '')}
       </div>
       <div class="mfpPanel"><div class="mfpPanelHead"><strong>${esc(T('LCW’deki aylık yükleme adetleri', 'Monthly shipment quantities at LCW'))}</strong></div>${monthlyChartHtml(card)}</div>
       <div class="mfpPanel"><div class="mfpPanelHead"><strong>${esc(T('Sipariş aldığı MAG grupları', 'MAG groups ordered'))}</strong><span>${nf(card.mags.length)}</span></div>
-        <div class="mfpChips">${card.mags.length ? card.mags.map(item => `<span class="mfpChip" title="${esc(nf(item.qty))}">${esc(item.name)} <b>${esc(pct(item.share))}</b></span>`).join('') : `<span class="mfpMuted">—</span>`}</div></div>
+        <div class="mfpChips">${card.mags.length ? card.mags.map(item => `<button type="button" class="mfpChip isDrill" data-mfp-drill="mag" data-mfp-drill-value="${esc(item.name)}" data-mfp-drill-label="${esc(item.name)}" title="${esc(nf(item.qty))}">${esc(item.name)} <b>${esc(pct(item.share))}</b></button>`).join('') : `<span class="mfpMuted">—</span>`}</div></div>
       ${performanceHtml(card)}` : ''}
       <div class="mfpPanel"><div class="mfpPanelHead"><strong>${esc(T('E-posta adresleri', 'E-mail addresses'))}</strong><span>${nf(card.recipients.length)}</span></div>
         <div class="mfpChips">${card.recipients.length ? card.recipients.map(item => `<a class="mfpChip isMail" href="mailto:${esc(item.email)}">${esc(item.name ? `${item.name} · ${item.email}` : item.email)}</a>`).join('') : `<span class="mfpMuted">${esc(T('E-posta adresi yok', 'No e-mail address'))}</span>`}</div>
@@ -348,6 +353,123 @@
   function rowsForCard(card) { return S.rows.filter(row => E.nameKey(E.responsibleManufacturer(row).name) === card.key); }
   function rowsMissingSub() { return S.rows.filter(row => { const r = E.responsibleManufacturer(row); return !r.name && r.issue === 'sub_manufacturer_missing'; }); }
 
+  /* Üretici özetleri aynı Backlog V3 alt detay çekmecesini kullanır. Sipariş
+     satırlarını burada yalnız operasyon alanlarına adapte ederiz; kimlik,
+     Buyer/üretici/sezon gibi alanlar canonical registry üzerinden aynen kalır. */
+  function rowPick(row, keys) {
+    for (const key of Array.isArray(keys) ? keys : [keys]) {
+      if (row && Object.prototype.hasOwnProperty.call(row, key) && row[key] != null && String(row[key]).trim() !== '') return row[key];
+    }
+    return '';
+  }
+  function canonicalValue(row, id) {
+    try {
+      const api = window.BLCanonicalFields;
+      return api && typeof api.value === 'function' ? api.value(row, 'orders', id) : '';
+    } catch (_) { return ''; }
+  }
+  function rowNumber(row, keys) {
+    const raw = rowPick(row, keys);
+    if (typeof raw === 'number') return Number.isFinite(raw) ? raw : 0;
+    const value = Number(String(raw == null ? '' : raw).replace(/\s/g, '').replace(',', '.'));
+    return Number.isFinite(value) ? value : 0;
+  }
+  function rowIsOpen(row) {
+    if (typeof row?._isActive === 'boolean') return row._isActive;
+    const explicit = String(rowPick(row, ['Active/Inactive']) || '').trim();
+    if (explicit) return /^active$/i.test(explicit);
+    return rowNumber(row, E.KEYS.remaining) > 0;
+  }
+  function dayMonth(value) {
+    const day = E.dayValue(value);
+    if (day == null) return '';
+    const date = new Date(day);
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+  }
+  function recentLoadedMonths() {
+    const now = new Date(), out = new Set();
+    for (let offset = -6; offset < 0; offset += 1) {
+      const date = new Date(Date.UTC(now.getFullYear(), now.getMonth() + offset, 1));
+      out.add(`${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`);
+    }
+    return out;
+  }
+  function drillRows(card, kind, value) {
+    const rows = rowsForCard(card);
+    if (kind === 'all') return rows;
+    if (kind === 'open') return rows.filter(rowIsOpen);
+    if (kind === 'recent_loaded') {
+      const months = recentLoadedMonths();
+      return rows.filter(row => months.has(dayMonth(rowPick(row, E.KEYS.loadingApproval))));
+    }
+    if (kind === 'month') return rows.filter(row => {
+      const planned = dayMonth(rowPick(row, E.KEYS.exFactory));
+      const loaded = dayMonth(rowPick(row, E.KEYS.loadingApproval));
+      return planned === value || loaded === value;
+    });
+    if (kind === 'mag') return rows.filter(row => E.nameKey(rowPick(row, E.KEYS.mag)) === E.nameKey(value));
+    const today = E.dayValue(new Date());
+    if (kind === 'on_time') return rows.filter(row => { const d = E.rowDelivery(row, today); return d.delayDays != null && d.delayDays <= 0; });
+    if (kind === 'revised') return rows.filter(row => E.rowDelivery(row, today).revised);
+    if (kind === 'late') return rows.filter(row => { const d = E.rowDelivery(row, today); return d.delayDays != null && d.delayDays > 0; });
+    if (kind === 'overdue') return rows.filter(row => E.rowDelivery(row, today).openOverdueDays != null);
+    return rows;
+  }
+  function qtyForDrill(row, kind) {
+    if (kind === 'open') return rowNumber(row, E.KEYS.remaining);
+    if (kind === 'recent_loaded') {
+      const shipped = rowNumber(row, E.KEYS.shipmentQuantity);
+      return shipped > 0 ? shipped : rowNumber(row, E.KEYS.orderQuantity);
+    }
+    return rowNumber(row, E.KEYS.orderQuantity);
+  }
+  function backlogItemsFromOrders(rows, kind) {
+    const report = window.BLBacklogV3Report;
+    if (!report || typeof report.normalizeRows !== 'function') return [];
+    const engineFields = window.BLBacklogDeliveryEngine?.FIELDS || {};
+    const fallback = {
+      status: 'GÜNCEL DURUM\n(STATUS)', revisedLoad: 'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)',
+      plannedLoad: 'Orijinal Exfactory Merch Tarih', antrepo: 'ANTREPO GİRİŞ TARİHİ',
+      retail: 'Retail Depo Tarih Yıl Ay Gün', inStore: 'Model Bütçe Tarih Yıl Ay Gün', qty: 'Adet',
+    };
+    const adapted = (Array.isArray(rows) ? rows : []).map(row => {
+      const next = { ...row };
+      const put = (field, value) => { if (field && value != null && String(value).trim() !== '') next[field] = value; };
+      const status = canonicalValue(row, 'orderStatus') || rowPick(row, ['STATUS', 'Status', 'status', fallback.status]);
+      const exFactory = canonicalValue(row, 'exFactory') || rowPick(row, E.KEYS.exFactory);
+      const planned = rowPick(row, E.KEYS.initialInspection) || rowPick(row, E.KEYS.asasExFactory) || exFactory;
+      const antrepo = rowPick(row, [engineFields.antrepo, fallback.antrepo, 'Ant. Arrival', 'Antrepo Giriş Tarihi', 'Warehouse Arrival', 'antrepo'].filter(Boolean));
+      const retail = canonicalValue(row, 'retailDate') || rowPick(row, [engineFields.retail, fallback.retail, 'Retail Date', 'retailDate'].filter(Boolean));
+      const inStore = canonicalValue(row, 'inStore') || rowPick(row, [engineFields.inStore, fallback.inStore, 'In-Store', 'In-Store (Model Budget)', 'inStore'].filter(Boolean));
+      const qty = qtyForDrill(row, kind);
+      [[engineFields.status || fallback.status, status], [fallback.status, status],
+       [engineFields.revisedLoad || fallback.revisedLoad, exFactory], [fallback.revisedLoad, exFactory],
+       [engineFields.plannedLoad || fallback.plannedLoad, planned], [fallback.plannedLoad, planned],
+       [engineFields.antrepo || fallback.antrepo, antrepo], [fallback.antrepo, antrepo],
+       [engineFields.retail || fallback.retail, retail], [fallback.retail, retail],
+       [engineFields.inStore || fallback.inStore, inStore], [fallback.inStore, inStore],
+       [engineFields.qty || fallback.qty, qty], [fallback.qty, qty]].forEach(([field, val]) => put(field, val));
+      return next;
+    });
+    return report.normalizeRows(adapted).map((item, index) => {
+      const responsible = E.responsibleManufacturer(rows[index] || {});
+      if (responsible.name) item.manufacturer = responsible.name;
+      return item;
+    });
+  }
+  function openDrill(card, kind, value = '', label = '') {
+    if (!card) return;
+    const rows = drillRows(card, kind, value);
+    if (!rows.length) { toast(T('Bu özet için eşleşen sipariş yok.', 'No orders match this summary.')); return; }
+    const items = backlogItemsFromOrders(rows, kind);
+    const title = [card.name, label || value].filter(Boolean).join(' · ');
+    if (items.length && window.BLBacklogOverview?.openItems?.(items, {
+      title,
+      subtitle: T('Üreticiler · Sipariş alt detayı', 'Manufacturers · Order drill-down'),
+    })) return;
+    openOrders(card, rows, title || card.name);
+  }
+
   function bind(host) {
     host.addEventListener('click', async event => {
       const target = event.target;
@@ -365,8 +487,17 @@
       if (edit) { window.BLEmailGroups?.openRecord?.(edit.dataset.mfpEdit, { edit: true }); return; }
       const link = target.closest('[data-mfp-link]');
       if (link) { await linkCard(link.dataset.mfpLink, link.dataset.mfpLinkName); return; }
+      const drill = target.closest('[data-mfp-drill]');
+      if (drill) {
+        const card = cardByKey(S.selectedKey);
+        if (card) openDrill(card, drill.dataset.mfpDrill, drill.dataset.mfpDrillValue || '', drill.dataset.mfpDrillLabel || '');
+        return;
+      }
       const orders = target.closest('[data-mfp-orders]');
-      if (orders) { const card = cardByKey(orders.dataset.mfpOrders); if (card) openOrders(card, rowsForCard(card), card.name); }
+      if (orders) {
+        const card = cardByKey(orders.dataset.mfpOrders);
+        if (card) openDrill(card, 'all', '', T('Tüm siparişler', 'All orders'));
+      }
     });
     host.addEventListener('input', event => {
       if (event.target.matches('[data-mfp-search]')) { S.search = event.target.value; render(); }
@@ -401,5 +532,5 @@
 
   window.initManufacturersPage = initManufacturersPage;
   window.renderManufacturersLanguage = renderManufacturersLanguage;
-  window.BLManufacturersPage = { state: S, refresh, visibleCards, performanceComment };
+  window.BLManufacturersPage = { state: S, refresh, visibleCards, performanceComment, openDrill };
 })();
