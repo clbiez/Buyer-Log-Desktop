@@ -105,7 +105,7 @@
     // yardımcıdır; iki görünüm dosyası da onu window'dan okur, bu yüzden önce.
     automations:['automation-assistant.js','automations.js','ai-automation-import.js'],
     // Genel LCW AI çalışma alanı: ortak istemci + güvenli Markdown + görünüm.
-    lcwaiChat:['lcwai-assistant.js?rev=1','lcwai-markdown.js?rev=1','lcwai-chat.js?rev=1'],
+    lcwaiChat:['lcwai-assistant.js?rev=1','lcwai-markdown.js?rev=1','layout-control-engine.js?rev=1','layout-control.js?rev=1','lcwai-chat.js?rev=1'],
     lfl:['lfl.js?rev=2'],
     // v7.0.229 — Üreticiler sayfası: saf motor ve ortak rehber görünümden ÖNCE.
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
@@ -158,7 +158,7 @@
     if(name==='openCosting'&&typeof global.initOpenCosting==='function')return;
     if(name==='automations'&&typeof global.initAutomationStudio==='function'&&typeof global.initAiAutomationImport==='function')return;
     if(name==='lfl'&&typeof global.initLFL==='function')return;
-    if(name==='lcwaiChat'&&typeof global.initLcwAiChat==='function'&&global.BLMarkdown)return;
+    if(name==='lcwaiChat'&&typeof global.initLcwAiChat==='function'&&global.BLMarkdown&&global.BLLayoutControl)return;
     if(name==='manufacturers'&&typeof global.initManufacturersPage==='function'&&global.BLEmailGroups)return;
     if(name==='collectionTools'&&typeof global.initPriceSupplierAnalysis==='function')return;
     if(name==='backlogAnalysis'&&global.BLBacklogAnalysis)return;
