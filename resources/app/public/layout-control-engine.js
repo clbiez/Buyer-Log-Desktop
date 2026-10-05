@@ -7,6 +7,7 @@
 })(typeof window !== 'undefined' ? window : null, function () {
   const STATUS = Object.freeze({ MATCH:'MATCH', MISMATCH:'MISMATCH', REVIEW:'REVIEW', NOT_CHECKED:'NOT_CHECKED' });
   const DOC = Object.freeze({ CARE_LABEL:'CARE_LABEL', PRICE_TAG:'PRICE_TAG', UNKNOWN:'UNKNOWN' });
+  const T=(tr,en)=>{try{const lang=typeof window!=='undefined'?String(window.appLang||document.documentElement.lang||'tr'):String(process&&process.env&&process.env.BUYER_LOG_LANG||'tr');return lang.toLowerCase().startsWith('en')?en:tr;}catch(_){return tr;}};
 
   const MATERIAL_ALIASES = Object.freeze({
     COTTON:['PAMUK','COTTON','COTON','BAUMWOLLE','ALGODON','ALGODÃO','COTONE','PAMUT','PAMBIQ','PAMBUK','ХЛОПОК','БАВОВНА','ПАМУК','ΜΠΑΜΒΑΚΙ','PAXTA','KAPAS'],
@@ -273,102 +274,102 @@
     const add=(...args)=>checks.push(makeCheck(...args));
     const doc=clean(ex.documentType)||DOC.UNKNOWN, isCare=doc===DOC.CARE_LABEL, isPrice=doc===DOC.PRICE_TAG;
     const has=field=>list(ex[field]).length>0 || Boolean(clean(ex[field]));
-    const skip=(rule,category,actual,detail)=>add(rule,category,STATUS.NOT_CHECKED,[],actual||[],detail||'Bu layout türünde uygulanmıyor.');
+    const skip=(rule,category,actual,detail)=>add(rule,category,STATUS.NOT_CHECKED,[],actual||[],detail||T('Bu layout türünde uygulanmıyor.','Not applicable to this layout type.'));
 
     const models=list(ex.modelCodes), cpModels=cpCatalog(rows,'Model Name');
-    if(!models.length) add('MODEL_MATCH','IDENTITY',STATUS.REVIEW,[],[], 'Layout içinden güvenilir model kodu çıkarılamadı.');
-    else if(!rows.length) add('MODEL_MATCH','IDENTITY',STATUS.REVIEW,[],models,'PDF modeli CP içinde kesin olarak eşleştirilemedi.');
+    if(!models.length) add('MODEL_MATCH','IDENTITY',STATUS.REVIEW,[],[], T('Layout içinden güvenilir model kodu çıkarılamadı.','A reliable model code could not be extracted from the layout.'));
+    else if(!rows.length) add('MODEL_MATCH','IDENTITY',STATUS.REVIEW,[],models,T('PDF modeli CP içinde kesin olarak eşleştirilemedi.','The PDF model could not be matched to CP with certainty.'));
     else add('MODEL_MATCH','IDENTITY',intersects(models,cpModels,compactIdentifier)?STATUS.MATCH:statusForMismatch(ex,'modelCodes'),cpModels,models,'');
 
     const compareField=(rule,category,field,expected,normalizer,missingDetail,missingActualStatus) => {
       const actual=list(ex[field]);
-      if(!expected.length) return add(rule,category,STATUS.NOT_CHECKED,[],actual,missingDetail||'CP referansı bulunamadı.');
-      if(!actual.length) return add(rule,category,missingActualStatus||STATUS.REVIEW,expected,[], missingActualStatus===STATUS.NOT_CHECKED?'Layout kapsamı gereği bu alan zorunlu kontrol edilmedi.':'Layout alanı güvenilir biçimde okunamadı.');
+      if(!expected.length) return add(rule,category,STATUS.NOT_CHECKED,[],actual,missingDetail||T('CP referansı bulunamadı.','CP reference was not found.'));
+      if(!actual.length) return add(rule,category,missingActualStatus||STATUS.REVIEW,expected,[], missingActualStatus===STATUS.NOT_CHECKED?T('Layout kapsamı gereği bu alan zorunlu kontrol edilmedi.','This field was not required for this layout scope.'):T('Layout alanı güvenilir biçimde okunamadı.','The layout field could not be read reliably.'));
       add(rule,category,intersects(actual,expected,normalizer)?STATUS.MATCH:statusForMismatch(ex,field),expected,actual,'');
     };
 
-    compareField('COLOR_CODE_MATCH','IDENTITY','colourCodes',cpCatalog(rows,'C.Code'),compactIdentifier,'CP renk kodu referansı yok.');
-    compareField('COLOR_NAME_MATCH','IDENTITY','colours',cpCatalog(rows,'Colour'),key,'CP renk adı referansı yok.');
+    compareField('COLOR_CODE_MATCH','IDENTITY','colourCodes',cpCatalog(rows,'C.Code'),compactIdentifier,T('CP renk kodu referansı yok.','CP colour-code reference is unavailable.'));
+    compareField('COLOR_NAME_MATCH','IDENTITY','colours',cpCatalog(rows,'Colour'),key,T('CP renk adı referansı yok.','CP colour-name reference is unavailable.'));
 
-    if(isPrice || has('orderNumbers')) compareField('ORDER_MATCH','IDENTITY','orderNumbers',cpCatalog(rows,'Order Code').map(String),compactIdentifier,'CP sipariş referansı yok.');
-    else skip('ORDER_MATCH','IDENTITY',[], 'Care Label için sipariş numarası zorunlu kontrol alanı değildir.');
+    if(isPrice || has('orderNumbers')) compareField('ORDER_MATCH','IDENTITY','orderNumbers',cpCatalog(rows,'Order Code').map(String),compactIdentifier,T('CP sipariş referansı yok.','CP order reference is unavailable.'));
+    else skip('ORDER_MATCH','IDENTITY',[], T('Care Label için sipariş numarası zorunlu kontrol alanı değildir.','Order number is not a mandatory check for Care Label.'));
 
-    compareField('COUNTRY_MATCH','COUNTRY','countries',cpCatalog(rows,'Country'),normalizeCountry,'CP üretim ülkesi referansı yok.');
+    compareField('COUNTRY_MATCH','COUNTRY','countries',cpCatalog(rows,'Country'),normalizeCountry,T('CP üretim ülkesi referansı yok.','CP country-of-origin reference is unavailable.'));
 
     const cpComposition=cpCatalog(rows,'Karışım');
     const actualComposition=list(ex.composition);
     if(!(isCare || actualComposition.length)) {
-      skip('COMPOSITION_MATCH','COMPOSITION',actualComposition,'Price Tag için kompozisyon kontrolü uygulanmaz.');
-    } else if(!cpComposition.length) add('COMPOSITION_MATCH','COMPOSITION',STATUS.NOT_CHECKED,[],actualComposition,'CP ana kumaş Karışım referansı yok.');
-    else if(!actualComposition.length) add('COMPOSITION_MATCH','COMPOSITION',STATUS.REVIEW,cpComposition,[],'Layout kompozisyonu güvenilir biçimde okunamadı.');
+      skip('COMPOSITION_MATCH','COMPOSITION',actualComposition,T('Price Tag için kompozisyon kontrolü uygulanmaz.','Composition check does not apply to Price Tag.'));
+    } else if(!cpComposition.length) add('COMPOSITION_MATCH','COMPOSITION',STATUS.NOT_CHECKED,[],actualComposition,T('CP ana kumaş Karışım referansı yok.','CP main-fabric composition reference is unavailable.'));
+    else if(!actualComposition.length) add('COMPOSITION_MATCH','COMPOSITION',STATUS.REVIEW,cpComposition,[],T('Layout kompozisyonu güvenilir biçimde okunamadı.','Layout composition could not be read reliably.'));
     else {
       const expectedKey=compositionKey(cpComposition), actualKey=compositionKey(actualComposition);
-      if(!expectedKey || !actualKey) add('COMPOSITION_MATCH','COMPOSITION',STATUS.REVIEW,cpComposition,actualComposition,'Kompozisyon oranları normalize edilemedi; manuel doğrulama gerekli.');
+      if(!expectedKey || !actualKey) add('COMPOSITION_MATCH','COMPOSITION',STATUS.REVIEW,cpComposition,actualComposition,T('Kompozisyon oranları normalize edilemedi; manuel doğrulama gerekli.','Composition percentages could not be normalized; manual verification is required.'));
       else add('COMPOSITION_MATCH','COMPOSITION',expectedKey===actualKey?STATUS.MATCH:statusForMismatch(ex,'composition'),cpComposition,actualComposition,'');
     }
 
     const cpCare=valuesForAliases(rows,FIELD_ALIASES.care);
-    if(isCare || has('careInstructions')) compareField('CARE_INSTRUCTION_MATCH','CARE','careInstructions',cpCare,key,'CP projeksiyonunda resmi yıkama talimatı alanı yok; AI yalnız semantik REVIEW yapabilir.',cpCare.length?STATUS.REVIEW:STATUS.NOT_CHECKED);
-    else skip('CARE_INSTRUCTION_MATCH','CARE',[], 'Price Tag için yıkama talimatı kontrolü uygulanmaz.');
+    if(isCare || has('careInstructions')) compareField('CARE_INSTRUCTION_MATCH','CARE','careInstructions',cpCare,key,T('CP projeksiyonunda resmi yıkama talimatı alanı yok; AI yalnız semantik REVIEW yapabilir.','The CP projection has no official care-instruction field; AI can only provide semantic REVIEW.'),cpCare.length?STATUS.REVIEW:STATUS.NOT_CHECKED);
+    else skip('CARE_INSTRUCTION_MATCH','CARE',[], T('Price Tag için yıkama talimatı kontrolü uygulanmaz.','Care-instruction check does not apply to Price Tag.'));
 
     const cpWarnings=valuesForAliases(rows,FIELD_ALIASES.warning);
-    if(isCare || has('warnings')) compareField('WARNING_MATCH','CARE','warnings',cpWarnings,key,'CP projeksiyonunda resmi uyarı zorunluluğu alanı yok.',cpWarnings.length?STATUS.REVIEW:STATUS.NOT_CHECKED);
-    else skip('WARNING_MATCH','CARE',[], 'Price Tag için care-label uyarı kontrolü uygulanmaz.');
+    if(isCare || has('warnings')) compareField('WARNING_MATCH','CARE','warnings',cpWarnings,key,T('CP projeksiyonunda resmi uyarı zorunluluğu alanı yok.','The CP projection has no official warning-requirement field.'),cpWarnings.length?STATUS.REVIEW:STATUS.NOT_CHECKED);
+    else skip('WARNING_MATCH','CARE',[], T('Price Tag için care-label uyarı kontrolü uygulanmaz.','Care-label warning check does not apply to Price Tag.'));
 
     const cpSizes=valuesForAliases(rows,FIELD_ALIASES.size);
     if(isPrice || has('sizes')) {
       if(cpSizes.length) {
         const actual=list(ex.sizes);
-        if(!actual.length) add('SIZE_RANGE_MATCH','SIZE',STATUS.REVIEW,cpSizes,[],'Layout bedenleri okunamadı.');
+        if(!actual.length) add('SIZE_RANGE_MATCH','SIZE',STATUS.REVIEW,cpSizes,[],T('Layout bedenleri okunamadı.','Layout sizes could not be read.'));
         else add('SIZE_RANGE_MATCH','SIZE',setEquals(actual,cpSizes,normalizeSize)?STATUS.MATCH:statusForMismatch(ex,'sizes'),cpSizes,actual,'');
-      } else add('SIZE_RANGE_MATCH','SIZE',STATUS.NOT_CHECKED,[],list(ex.sizes),'CP projeksiyonunda beden aralığı referansı yok.');
-    } else skip('SIZE_RANGE_MATCH','SIZE',[], 'Care Label için beden aralığı kontrolü uygulanmaz.');
+      } else add('SIZE_RANGE_MATCH','SIZE',STATUS.NOT_CHECKED,[],list(ex.sizes),T('CP projeksiyonunda beden aralığı referansı yok.','The CP projection has no size-range reference.'));
+    } else skip('SIZE_RANGE_MATCH','SIZE',[], T('Care Label için beden aralığı kontrolü uygulanmaz.','Size-range check does not apply to Care Label.'));
 
     const cpBarcodes=valuesForAliases(rows,FIELD_ALIASES.barcode);
     if(isPrice || has('barcodes')) {
-      compareField('BARCODE_MATCH','BARCODE','barcodes',cpBarcodes,normalizeBarcode,'CP projeksiyonunda barkod referansı yok.',STATUS.NOT_CHECKED);
+      compareField('BARCODE_MATCH','BARCODE','barcodes',cpBarcodes,normalizeBarcode,T('CP projeksiyonunda barkod referansı yok.','The CP projection has no barcode reference.'),STATUS.NOT_CHECKED);
       if(list(ex.barcodes).length) {
         const direct=ex._sources&&ex._sources.barcodes==='local';
-        add('BARCODE_READABLE','BARCODE',direct?STATUS.MATCH:STATUS.REVIEW,[],list(ex.barcodes),direct?'PDF sayfasındaki barkod BarcodeDetector ile doğrudan okunabildi.':'Barkod yalnız LCW AI görsel okumasından geldi; doğrudan decoder kanıtı olmadığı için REVIEW.',''+(direct?'PDF BarcodeDetector':'LCW AI'));
-      } else add('BARCODE_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'Tarayıcı barkod dekoderi değer okuyamadı; bu durum tek başına hata sayılmaz.','PDF BarcodeDetector');
-      if(cpBarcodes.length && cpSizes.length) add('BARCODE_SIZE_MATCH','BARCODE',STATUS.REVIEW,[],list(ex.pageVariants),'Barkod ↔ beden eşleşmesi için CP tarafında çiftli mapping yapısı bulunamadı.');
-      else add('BARCODE_SIZE_MATCH','BARCODE',STATUS.NOT_CHECKED,[],list(ex.pageVariants),'CP tarafında barkod ↔ beden mapping referansı yok.');
+        add('BARCODE_READABLE','BARCODE',direct?STATUS.MATCH:STATUS.REVIEW,[],list(ex.barcodes),direct?T('PDF sayfasındaki barkod BarcodeDetector ile doğrudan okunabildi.','The barcode on the PDF page was decoded directly with BarcodeDetector.'):T('Barkod yalnız LCW AI görsel okumasından geldi; doğrudan decoder kanıtı olmadığı için REVIEW.','The barcode was read only by LCW AI; REVIEW is required because there is no direct decoder evidence.'),''+(direct?'PDF BarcodeDetector':'LCW AI'));
+      } else add('BARCODE_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],T('Tarayıcı barkod dekoderi değer okuyamadı; bu durum tek başına hata sayılmaz.','The browser barcode decoder could not read a value; this alone is not an error.'),'PDF BarcodeDetector');
+      if(cpBarcodes.length && cpSizes.length) add('BARCODE_SIZE_MATCH','BARCODE',STATUS.REVIEW,[],list(ex.pageVariants),T('Barkod ↔ beden eşleşmesi için CP tarafında çiftli mapping yapısı bulunamadı.','No paired barcode-to-size mapping was found in CP.'));
+      else add('BARCODE_SIZE_MATCH','BARCODE',STATUS.NOT_CHECKED,[],list(ex.pageVariants),T('CP tarafında barkod ↔ beden mapping referansı yok.','CP has no barcode-to-size mapping reference.'));
     } else {
-      skip('BARCODE_MATCH','BARCODE',[], 'Care Label için karton etiket barkod kontrolü uygulanmaz.');
-      skip('BARCODE_READABLE','BARCODE',[], 'Care Label için karton etiket barkod kontrolü uygulanmaz.');
-      skip('BARCODE_SIZE_MATCH','BARCODE',[], 'Care Label için barkod ↔ beden kontrolü uygulanmaz.');
+      skip('BARCODE_MATCH','BARCODE',[], T('Care Label için karton etiket barkod kontrolü uygulanmaz.','Price-tag barcode check does not apply to Care Label.'));
+      skip('BARCODE_READABLE','BARCODE',[], T('Care Label için karton etiket barkod kontrolü uygulanmaz.','Price-tag barcode check does not apply to Care Label.'));
+      skip('BARCODE_SIZE_MATCH','BARCODE',[], T('Care Label için barkod ↔ beden kontrolü uygulanmaz.','Barcode-to-size check does not apply to Care Label.'));
     }
 
     const cpQr=valuesForAliases(rows,FIELD_ALIASES.qr);
     if(isPrice || has('qrCodes')) {
-      if(cpQr.length) compareField('QR_MATCH','BARCODE','qrCodes',cpQr,normalizeBarcode,'CP QR referansı yok.',STATUS.NOT_CHECKED);
+      if(cpQr.length) compareField('QR_MATCH','BARCODE','qrCodes',cpQr,normalizeBarcode,T('CP QR referansı yok.','CP QR reference is unavailable.'),STATUS.NOT_CHECKED);
       else if(list(ex.qrCodes).length) {
         const direct=ex._sources&&ex._sources.qrCodes==='local';
-        add('QR_READABLE','BARCODE',direct?STATUS.MATCH:STATUS.REVIEW,[],list(ex.qrCodes),direct?'QR kodu tarayıcı dekoderi ile doğrudan okunabildi.':'QR içeriği yalnız LCW AI görsel okumasından geldi; doğrudan decoder kanıtı olmadığı için REVIEW.',direct?'PDF BarcodeDetector':'LCW AI');
-      } else add('QR_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'QR için doğrulanabilir CP referansı/decode değeri yok.');
-    } else skip('QR_READABLE','BARCODE',[], 'Care Label için QR kontrolü uygulanmaz.');
+        add('QR_READABLE','BARCODE',direct?STATUS.MATCH:STATUS.REVIEW,[],list(ex.qrCodes),direct?T('QR kodu tarayıcı dekoderi ile doğrudan okunabildi.','The QR code was decoded directly with the browser decoder.'):T('QR içeriği yalnız LCW AI görsel okumasından geldi; doğrudan decoder kanıtı olmadığı için REVIEW.','The QR content was read only by LCW AI; REVIEW is required because there is no direct decoder evidence.'),direct?'PDF BarcodeDetector':'LCW AI');
+      } else add('QR_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],T('QR için doğrulanabilir CP referansı/decode değeri yok.','No verifiable CP reference or decoded value is available for QR.'));
+    } else skip('QR_READABLE','BARCODE',[], T('Care Label için QR kontrolü uygulanmaz.','QR check does not apply to Care Label.'));
 
     const cpPrices=valuesForAliases(rows,FIELD_ALIASES.price);
-    if(isPrice || has('prices')) compareField('PRICE_MATCH','PRICE','prices',cpPrices,normalizePrice,'CP projeksiyonunda doğrulanabilir fiyat referansı yok.',STATUS.NOT_CHECKED);
-    else skip('PRICE_MATCH','PRICE',[], 'Care Label için fiyat kontrolü uygulanmaz.');
+    if(isPrice || has('prices')) compareField('PRICE_MATCH','PRICE','prices',cpPrices,normalizePrice,T('CP projeksiyonunda doğrulanabilir fiyat referansı yok.','The CP projection has no verifiable price reference.'),STATUS.NOT_CHECKED);
+    else skip('PRICE_MATCH','PRICE',[], T('Care Label için fiyat kontrolü uygulanmaz.','Price check does not apply to Care Label.'));
 
     const cpProduct=uniq(cpCatalog(rows,'Category').concat(cpCatalog(rows,'Ürün Tanım')));
     if(isPrice || clean(ex.productClass)) {
       if(clean(ex.productClass) && cpProduct.length && cpProduct.some(v=>key(v)===key(ex.productClass))) add('PRODUCT_CLASS_MATCH','IDENTITY',STATUS.MATCH,cpProduct,[ex.productClass],'');
-      else add('PRODUCT_CLASS_MATCH','IDENTITY',STATUS.NOT_CHECKED,cpProduct,clean(ex.productClass)?[ex.productClass]:[],'Karton etiketteki ürün sınıfının CP Category/Ürün Tanım ile aynı iş anlamına geldiği garanti edilmedi.');
+      else add('PRODUCT_CLASS_MATCH','IDENTITY',STATUS.NOT_CHECKED,cpProduct,clean(ex.productClass)?[ex.productClass]:[],T('Karton etiketteki ürün sınıfının CP Category/Ürün Tanım ile aynı iş anlamına geldiği garanti edilmedi.','The product class on the price tag cannot be guaranteed to have the same business meaning as CP Category/Product Description.'));
       const cpFit=valuesForAliases(rows,['Fit','Kalıp','Kalip','Fit Tanım','Fit Tanimi']);
-      compareField('FIT_MATCH','IDENTITY','fit',cpFit,key,'CP projeksiyonunda doğrulanabilir fit/kalıp referansı yok.',STATUS.NOT_CHECKED);
+      compareField('FIT_MATCH','IDENTITY','fit',cpFit,key,T('CP projeksiyonunda doğrulanabilir fit/kalıp referansı yok.','The CP projection has no verifiable fit reference.'),STATUS.NOT_CHECKED);
     } else {
-      skip('PRODUCT_CLASS_MATCH','IDENTITY',[], 'Care Label için ürün sınıfı kontrolü uygulanmaz.');
-      skip('FIT_MATCH','IDENTITY',[], 'Care Label için fit/kalıp kontrolü uygulanmaz.');
+      skip('PRODUCT_CLASS_MATCH','IDENTITY',[], T('Care Label için ürün sınıfı kontrolü uygulanmaz.','Product-class check does not apply to Care Label.'));
+      skip('FIT_MATCH','IDENTITY',[], T('Care Label için fit/kalıp kontrolü uygulanmaz.','Fit check does not apply to Care Label.'));
     }
 
     const findings=list(ex.visualFindings);
-    findings.forEach((finding,index)=>add('AI_VISUAL_'+String(index+1),'VISUAL',STATUS.REVIEW,[],[finding],'LCW AI görsel/semantik bulgusu; deterministik ERROR üretmez.','LCW AI'));
+    findings.forEach((finding,index)=>add('AI_VISUAL_'+String(index+1),'VISUAL',STATUS.REVIEW,[],[finding],T('LCW AI görsel/semantik bulgusu; deterministik ERROR üretmez.','LCW AI visual/semantic finding; it does not create a deterministic ERROR.'),'LCW AI'));
 
     const opt=options&&typeof options==='object'?options:{};
-    if(opt.aiUnavailable) add('AI_VISUAL_REVIEW','VISUAL',STATUS.REVIEW,[],[],'LCW AI görsel incelemesi tamamlanamadı; deterministik kontroller korunmuştur.','LCW AI');
-    if(doc===DOC.UNKNOWN) add('DOCUMENT_TYPE','IDENTITY',STATUS.REVIEW,[DOC.CARE_LABEL,DOC.PRICE_TAG],[DOC.UNKNOWN],'Layout türü kesin belirlenemedi.');
+    if(opt.aiUnavailable) add('AI_VISUAL_REVIEW','VISUAL',STATUS.REVIEW,[],[],T('LCW AI görsel incelemesi tamamlanamadı; deterministik kontroller korunmuştur.','LCW AI visual review could not be completed; deterministic checks were preserved.'),'LCW AI');
+    if(doc===DOC.UNKNOWN) add('DOCUMENT_TYPE','IDENTITY',STATUS.REVIEW,[DOC.CARE_LABEL,DOC.PRICE_TAG],[DOC.UNKNOWN],T('Layout türü kesin belirlenemedi.','The layout type could not be determined with certainty.'));
 
     return {referenceRows:rows,checks,summary:summarize(checks),documentType:doc,extraction:ex};
   }
