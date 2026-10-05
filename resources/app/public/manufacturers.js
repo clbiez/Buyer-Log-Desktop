@@ -374,6 +374,18 @@
     const value = Number(String(raw == null ? '' : raw).replace(/\s/g, '').replace(',', '.'));
     return Number.isFinite(value) ? value : 0;
   }
+  function backlogStatus(value) {
+    const raw = String(value == null ? '' : value).trim();
+    const key = raw.toLocaleUpperCase('tr-TR').replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ğ/g, 'G').replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C');
+    if (key.includes('IN PRODUCTION')) return 'Üretimde';
+    if (key.includes('LOADING')) return 'Yükleme Operasyonları';
+    if (key.includes('IN TRANSIT')) return 'Yolda';
+    if (key.includes('CUSTOM')) return 'Gümrük';
+    if (key.includes('SHORTAGE')) return 'Eksik Yükleme';
+    if (key.includes('AWAITING RETAIL') || key.includes('RETAIL')) return 'Retail Bekliyor';
+    if (key.includes('WAREHOUSE')) return 'Depoda';
+    return raw;
+  }
   function rowIsOpen(row) {
     if (typeof row?._isActive === 'boolean') return row._isActive;
     const explicit = String(rowPick(row, ['Active/Inactive']) || '').trim();
@@ -435,7 +447,7 @@
     const adapted = (Array.isArray(rows) ? rows : []).map(row => {
       const next = { ...row };
       const put = (field, value) => { if (field && value != null && String(value).trim() !== '') next[field] = value; };
-      const status = canonicalValue(row, 'orderStatus') || rowPick(row, ['STATUS', 'Status', 'status', fallback.status]);
+      const status = backlogStatus(canonicalValue(row, 'orderStatus') || rowPick(row, ['STATUS', 'Status', 'status', fallback.status]));
       const exFactory = canonicalValue(row, 'exFactory') || rowPick(row, E.KEYS.exFactory);
       const planned = rowPick(row, E.KEYS.initialInspection) || rowPick(row, E.KEYS.asasExFactory) || exFactory;
       const antrepo = rowPick(row, [engineFields.antrepo, fallback.antrepo, 'Ant. Arrival', 'Antrepo Giriş Tarihi', 'Warehouse Arrival', 'antrepo'].filter(Boolean));
