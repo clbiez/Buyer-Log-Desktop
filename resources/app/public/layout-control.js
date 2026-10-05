@@ -11,7 +11,7 @@
   const L=(tr,en)=>isEn()?en:tr;
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const arr=value=>Array.isArray(value)?value:[];
-  let modal=null, currentFile=null, currentReport=null, busy=false, filter='attention';
+  let modal=null, currentFile=null, currentReport=null, busy=false, filter='attention', activeAbort=null, activeRequestId='';
 
   const GUIDE=[
     'You are the visual extraction and QA layer for Buyer Log Layout Control.',
@@ -203,7 +203,7 @@
       'Inspect the attached layout PDF completely. Detect the document type, extract visible product/model/colour/order/country/composition/care/size/barcode/price fields in structured form, and list only visual/semantic REVIEW findings supported by visible evidence. Do not guess CP correctness.'
     );
   }
-  async function askAi(file,nativeInfo,onProgress){
+  async function askAi(file,nativeInfo,onProgress,signal,requestId){
     const api=AI();
     if(!api||typeof api.askWithFiles!=='function') throw new Error('LCWAI_UNAVAILABLE');
     const result=await api.askWithFiles({
@@ -217,6 +217,8 @@
       },
       guide:GUIDE,
       files:[file],
+      signal,
+      requestId,
       onProgress
     });
     return result;
@@ -238,7 +240,7 @@
     if(!file||String(file.type||'').toLowerCase()!=='application/pdf'&&!/\.pdf$/i.test(file.name||'')){
       setStage(L('Lütfen bir PDF dosyası seçin.','Please select a PDF file.'),'error'); return;
     }
-    currentFile=file; currentReport=null; filter='attention'; setBusy(true); paint();
+    currentFile=file; currentReport=null; filter='attention'; activeAbort=new AbortController(); activeRequestId='layout-'+Date.now().toString(36); setBusy(true); paint();
     let cpRows=[], nativeInfo={text:'',pages:0,error:''}, local={}, aiData={}, aiUnavailable=false;
     try{
       setStage(L('PDF hazırlanıyor…','Preparing PDF…'),'busy');
@@ -248,7 +250,7 @@
       local=E().deriveLocalExtraction(nativeInfo.text,cpRows);
       setStage(cpRows.length?L('CP referansı hazır. LCW AI görsel kontrol yapıyor…','CP reference ready. LCW AI is running visual QA…'):L('CP referansı alınamadı; LCW AI görsel kontrol yapıyor…','CP reference unavailable; LCW AI is running visual QA…'),'busy');
       try{
-        const aiResult=await askAi(file,nativeInfo,event=>setStage(phaseText(event),'busy'));
+        const aiResult=await askAi(file,nativeInfo,event=>setStage(phaseText(event),'busy'),activeAbort.signal,activeRequestId);
         aiData=usefulAiData(aiResult);
       }catch(error){
         aiUnavailable=true;
@@ -275,7 +277,7 @@
       const message=api&&typeof api.errorText==='function'&&error&&error.lcwai?api.errorText(error):L('Layout kontrolü tamamlanamadı. CP/LCW AI bağlantısını kontrol edip tekrar deneyin.','Layout check could not be completed. Check CP/LCW AI connectivity and try again.');
       setStage(message,'error');
     }finally{
-      setBusy(false); paint();
+      activeAbort=null; activeRequestId=''; setBusy(false); paint();
     }
   }
   function openHistory(id){
@@ -335,8 +337,9 @@
   }
   function close(){
     if(!modal) return;
-    if(busy&&AI()) AI().cancel();
-    modal.remove();modal=null;currentFile=null;currentReport=null;busy=false;
+    if(activeAbort) activeAbort.abort();
+    if(activeRequestId&&AI()) AI().cancel(activeRequestId);
+    activeAbort=null;activeRequestId='';modal.remove();modal=null;currentFile=null;currentReport=null;busy=false;
   }
 
   root.BLLayoutControl={open,close,run,_loadHistory:loadHistory,_clearHistory:clearHistory};
