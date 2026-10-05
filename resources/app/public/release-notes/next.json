@@ -7,8 +7,8 @@
     "en": "Artwork Detail column and PLM Sync connection improvements"
   },
   "summary": {
-    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener.",
-    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED."
+    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir.",
+    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed."
   },
   "changes": [
     {
@@ -74,6 +74,72 @@
         "caption": {
           "tr": "CoreNectum açılamazsa ham hata kodu yerine yönlendirme gösterilir",
           "en": "If CoreNectum cannot be opened, guidance is shown instead of the raw error code"
+        }
+      }
+    },
+    {
+      "id": "plm-guide-one-click-remote-debugging",
+      "type": "feature",
+      "module": {
+        "tr": "PLM Sync",
+        "en": "PLM Sync"
+      },
+      "title": {
+        "tr": "Rehberden tek tıkla Remote Debugging",
+        "en": "One-click Remote Debugging from the guide"
+      },
+      "body": {
+        "tr": "PLM/ASAS senkron rehberi tarayıcı bağlantısını hazır görmediğinde artık “Remote Debugging'i tek tıkla aç” düğmesi gösterir. Browser & Remote Debugging penceresini açmanız gerekmez: Buyer Log kayıtlı tarayıcı tercihinizle bağlantıyı açar, hemen Test Connection ile doğrular ve sonucu rehberde gösterir. Tarayıcı açıksa yeniden başlatma yalnız onayınızla yapılır; profil seçimi gerekiyorsa ayarlara yönlendirilirsiniz.",
+        "en": "When the PLM/ASAS sync guide does not see a ready browser connection, it now shows an “Enable Remote Debugging in one click” button. You no longer need to open the Browser & Remote Debugging window: Buyer Log enables the connection with your saved browser preference, verifies it right away with Test Connection and shows the result in the guide. If the browser is running, it is restarted only with your confirmation; if a profile must be chosen, you are sent to the settings."
+      },
+      "path": {
+        "tr": "PLM Sync › senkron başlat › rehber › Remote Debugging'i tek tıkla aç",
+        "en": "PLM Sync › start sync › guide › Enable Remote Debugging in one click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-guide-one-click-remote-debugging.png",
+        "alt": {
+          "tr": "PLM senkron rehberi: tek tıkla açılan ve doğrulanan Remote Debugging bağlantısı (demo veri)",
+          "en": "PLM sync guide: Remote Debugging enabled and verified in one click (demo data)"
+        },
+        "caption": {
+          "tr": "Bağlantı açılır, hemen doğrulanır ve devam düğmesi etkinleşir.",
+          "en": "The connection is enabled, verified at once and Continue becomes available."
+        }
+      }
+    },
+    {
+      "id": "remote-debugging-setup-complete-page",
+      "type": "improvement",
+      "module": {
+        "tr": "Browser & Remote Debugging",
+        "en": "Browser & Remote Debugging"
+      },
+      "title": {
+        "tr": "Açılan tarayıcıda “işlem tamamlandı” sayfası",
+        "en": "“Setup complete” page in the opened browser"
+      },
+      "body": {
+        "tr": "Enable & Launch, Tarayıcıyı yeniden başlat veya rehberdeki tek tık ile açılan tarayıcı artık boş sekmede kalmaz. Bağlantı doğrulandıktan sonra işlemin tamamlandığını ve sayfanın kapatılabileceğini söyleyen bir sayfa açılır; boş başlangıç sekmesi kapanır. Buyer Log tarayıcıya yeniden ihtiyaç duyduğunda pencereyi kendisi açar.",
+        "en": "The browser opened by Enable & Launch, Restart browser or the one-click guide button no longer stays on a blank tab. After the connection is verified, a page says setup is complete and the page can be closed; the blank start tab is closed. When Buyer Log needs the browser again, it reopens the window by itself."
+      },
+      "path": {
+        "tr": "Veri Yönetimi › Araçlar › Browser ve Remote Debugging › Enable & Launch",
+        "en": "Data Management › Tools › Browser & Remote Debugging › Enable & Launch"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "remote-debugging-setup-complete-page.png",
+        "alt": {
+          "tr": "Remote Debugging kurulumu sonrası açılan tamamlandı sayfası (TR/EN)",
+          "en": "Setup complete page opened after Remote Debugging setup (TR/EN)"
+        },
+        "caption": {
+          "tr": "Kurulum bitince tarayıcı ne yapacağınızı söyler: sayfayı kapatabilirsiniz.",
+          "en": "After setup the browser tells you what to do: you can close the page."
         }
       }
     }

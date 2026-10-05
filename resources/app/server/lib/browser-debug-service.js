@@ -279,6 +279,33 @@ function buildLaunchArgs({ browser, profileMode, userDataDir = '', profileDirect
   return args;
 }
 
+/* KURULUM TAMAMLANDI SAYFASI.
+   Kullanıcı Enable & Launch / Restart / PLM rehberindeki tek tık ile tarayıcıyı
+   açtığında pencere boş bir sekmeyle kalıyordu; işin bitip bitmediği ve
+   pencerenin kapatılıp kapatılamayacağı belli değildi. Doğrulanan bağlantıdan
+   sonra açılan sekme bu yerel sayfayı gösterir. Sayfa statiktir (data: URL,
+   script yok); sunucu dil tercihini bilmediği için TR + EN birlikte yazılır. */
+function buildSetupCompletePage() {
+  const html = '<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+    '<title>Buyer Log · Remote Debugging ✓</title><style>' +
+    'body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:"Segoe UI",system-ui,sans-serif;background:#f4f6f8;color:#1f2933}' +
+    '.card{max-width:560px;margin:24px;padding:32px;border-radius:16px;background:#fff;box-shadow:0 8px 30px rgba(15,23,42,.08)}' +
+    '.ok{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:#e6f6ec;color:#1a7f45;font-size:26px;font-weight:700}' +
+    'h1{font-size:20px;margin:16px 0 8px}p{margin:0 0 10px;line-height:1.5;color:#3e4c59}.en{margin-top:18px;padding-top:14px;border-top:1px solid #e4e7eb}' +
+    '</style></head><body><main class="card"><div class="ok">✓</div>' +
+    '<h1>Buyer Log tarayıcı bağlantısı tamamlandı</h1>' +
+    '<p>Remote Debugging açıldı ve Buyer Log bağlantıyı doğruladı. İşlem tamamlandı; bu sayfayı kapatabilirsiniz.</p>' +
+    '<p>Buyer Log bu tarayıcıya ihtiyaç duyduğunda (ör. PLM / ASAS senkronu) pencereyi kendisi yeniden açar.</p>' +
+    '<div class="en"><h1>Buyer Log browser connection completed</h1>' +
+    '<p>Remote Debugging is enabled and Buyer Log verified the connection. Setup is complete; you can close this page.</p>' +
+    '<p>When Buyer Log needs this browser again (e.g. PLM / ASAS sync), it reopens the window by itself.</p></div>' +
+    '</main></body></html>';
+  return `data:text/html;charset=utf-8;base64,${Buffer.from(html, 'utf8').toString('base64')}`;
+}
+// Tarayıcının ilk açılışta kendiliğinden gösterdiği boş/yeni sekme adresleri.
+// Yalnız bunlar kapatılır; kullanıcının (geri yüklenen) sekmelerine dokunulmaz.
+const BLANK_START_PAGE = /^(?:about:blank|(?:edge|chrome):\/\/(?:newtab|new-tab-page)\/?|chrome-search:\/\/local-ntp\/.*|edge:\/\/(?:welcome|ntp)\/?)$/i;
+
 /* ======================================================================
    "Edg/" — GERÇEK EDGE KENDİNİ BÖYLE TANITIR
 
@@ -969,14 +996,41 @@ function createBrowserDebugService(options = {}) {
   /* Tek kanonik kurulum işlemi. Paralel istekler aynı sözü paylaşır; ikinci
      bir tarayıcı başlatma dizisi başlatılmaz. */
   let setupInFlight = null;
-  function enableAndLaunch(input = {}) {
+  function enableAndLaunch(input = {}, { announceReady = false } = {}) {
     if (setupInFlight) return setupInFlight;
-    const request = runSetup(input, { allowRestart: Boolean(input && input.allowRestart) })
+    const request = runSetup(input, { allowRestart: Boolean(input && input.allowRestart), announceReady: Boolean(announceReady) })
       .finally(() => { if (setupInFlight === request) setupInFlight = null; });
     setupInFlight = request;
     return request;
   }
-  async function runSetup(input = {}, { allowRestart = false } = {}) {
+  /* Yalnız kullanıcının başlattığı kurulumda ve yalnız YENİ açılan tarayıcıda
+     çalışır: tamamlandı sayfasını yeni sekmede açar, ilk boş sekmeyi kapatır.
+     Arka planda (ensureEndpoint) açılan tarayıcıya dokunulmaz; orada PLM işi
+     sürerken "kapatabilirsiniz" demek işi yarıda bıraktırırdı. En iyi
+     çabadır: hata kurulumu bozmaz. Yalnız CDP HTTP uç noktası kullanılır. */
+  async function announceSetupComplete(port) {
+    if (!validatePort(port) || typeof fetchImpl !== 'function') return false;
+    const base = `http://127.0.0.1:${Number(port)}`;
+    const call = async (url, method = 'GET') => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 1500);
+      try {
+        const response = await fetchImpl(url, { method, signal: controller.signal, headers: { Accept: 'application/json' } });
+        const text = await response.text();
+        if (!response.ok) return null;
+        try { return JSON.parse(text); } catch (_) { return {}; }
+      } finally { clearTimeout(timer); }
+    };
+    try {
+      const before = await call(`${base}/json/list`);
+      const blanks = (Array.isArray(before) ? before : []).filter(target => target && target.type === 'page' && BLANK_START_PAGE.test(clean(target.url)) && clean(target.id));
+      const opened = await call(`${base}/json/new?${encodeURIComponent(buildSetupCompletePage())}`, 'PUT');
+      if (!opened || !clean(opened.id)) return false;
+      for (const target of blanks) await call(`${base}/json/close/${encodeURIComponent(target.id)}`).catch(() => null);
+      return true;
+    } catch (_) { return false; }
+  }
+  async function runSetup(input = {}, { allowRestart = false, announceReady = false } = {}) {
     runtime.state = 'DETECTING';
     runtime.error = null;
     const configuration = saveConfiguration({ ...input, enabled: true });
@@ -1077,7 +1131,9 @@ function createBrowserDebugService(options = {}) {
         // Açtığımız portta bize ait OLMAYAN bir tarayıcı cevap veriyorsa
         // (port kapıldı) bağlanmak, yabancı bir oturuma girmek olurdu.
         if (!ownership.owned) return fail('Port conflict', ownership.reason || 'endpoint-not-owned', { ...base, strategy, policy, port: portInfo.port, connectionState: 'PORT_CONFLICT', portConflict: { port: portInfo.port, reason: ownership.reason } });
-        return { ok: true, status: 'Connected', endpoint: markConnected(connection, strategy, ownership), strategy, policy, portConflict, ...base };
+        const endpoint = markConnected(connection, strategy, ownership);
+        const setupPage = announceReady ? await announceSetupComplete(portInfo.port) : false;
+        return { ok: true, status: 'Connected', endpoint, setupPage, strategy, policy, portConflict, ...base };
       }
       await new Promise(resolve => setTimeout(resolve, 180));
     }
@@ -1177,9 +1233,9 @@ function createBrowserDebugService(options = {}) {
   /* Yeniden başlatma AYNI orkestrasyondan geçer; farkı, kullanıcının açıkça
      istediği TEK kontrollü kapatmaya izin vermesidir. Süreç zorla (/F)
      sonlandırılmaz ve bir çağrıda en fazla bir kapatma denenir. */
-  function restartWithRemoteDebugging(input = {}) {
+  function restartWithRemoteDebugging(input = {}, { announceReady = false } = {}) {
     if (setupInFlight) return setupInFlight;
-    const request = runSetup({ ...input, enabled: true }, { allowRestart: true })
+    const request = runSetup({ ...input, enabled: true }, { allowRestart: true, announceReady: Boolean(announceReady) })
       .finally(() => { if (setupInFlight === request) setupInFlight = null; });
     setupInFlight = request;
     return request;
@@ -1260,7 +1316,7 @@ module.exports = {
   normalizePreferredBrowser, normalizePort, normalizeProfileDirectory,
   normalizeConfiguration, browserFromProgId, parseRegistryValue,
   resolveSystemDefault, normalizePolicyValue, combinePolicyValues,
-  parseEdgeProfiles, edgeProfileUsageOrder, buildLaunchArgs, validateCdpVersion, createBrowserDebugService,
+  parseEdgeProfiles, edgeProfileUsageOrder, buildLaunchArgs, buildSetupCompletePage, validateCdpVersion, createBrowserDebugService,
   deviceFingerprint, rebindConfiguration, normalizeDeviceId, DEVICE_BOUND_FIELDS,
   ...defaultService,
 };
