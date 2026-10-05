@@ -839,6 +839,14 @@ td.exf-next{background:var(--acc-bg);color:var(--acc-ink);}
 .clStatusTrigger{display:inline-flex;align-items:center;gap:6px;width:100%;min-width:0;border:1px solid transparent;background:transparent;border-radius:var(--r-xs);padding:4px 7px;font-size:var(--fs-xs);font-weight:650;color:var(--table-ink);cursor:pointer;text-align:left;}
 .clStatusTrigger:hover{background:var(--table-editHover);border-color:var(--line);}
 .clStatusTrigger:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+/* Test raporu aktarımı: kullanıcıdan beklenen iş (Buying dönüşü) işareti ve CP bırakma katmanı. */
+.clStatusTrigger.has-task{flex-wrap:wrap;row-gap:2px}
+.clStatusTrigger.has-task .clStatusText{flex:1 1 auto}
+.clTaskFlag{order:3;flex:none;padding:0 5px;border:1px solid var(--orange);background:var(--orange-bg);color:var(--orange);font-size:var(--fs-xs);font-weight:700;line-height:16px;border-radius:var(--r-xs)}
+.trDropOverlay{position:fixed;inset:12px;z-index:79;display:flex;align-items:center;justify-content:center;border:2px dashed var(--acc);background:color-mix(in srgb,var(--paper) 82%,transparent);pointer-events:none}
+.trDropOverlay>div{display:grid;gap:4px;padding:var(--sp-4) var(--sp-5);border:1px solid var(--line);background:var(--card);text-align:center}
+.trDropOverlay b{font-size:var(--fs-lg)}
+.trDropOverlay small{color:var(--muted);font-size:var(--fs-sm)}
 .clStatusTrigger .clStatusText{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .clStatusTrigger[aria-expanded="true"] .delTypeChevron{transform:rotate(180deg);}
 .clStatusDot{flex:0 0 auto;width:8px;height:8px;border-radius:var(--r-full);background:var(--acc);}

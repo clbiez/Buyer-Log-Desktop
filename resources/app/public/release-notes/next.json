@@ -1,14 +1,81 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Test raporlarını sürükle-bırak ile aktarma",
+    "en": "Import test reports by drag and drop"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Test sonuç mailleri ve rapor PDF’leri CP Tracker’a bırakılarak doğru satıra eşlenir; önizlemede onaylanınca checklist adımı güncellenir ve dosyalar satıra eklenir. Buying dönüşü beklenen kararlar satırda öne çıkar.",
+    "en": "Test result e-mails and report PDFs dropped on CP Tracker are matched to the right row; once confirmed in the preview, the checklist step is updated and the files are attached to the row. Decisions awaiting buying feedback stand out on the row."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "test-report-import",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "Test raporlarını sürükle-bırak ile aktarma",
+        "en": "Import test reports by drag and drop"
+      },
+      "body": {
+        "tr": "Test sonuç maillerini (.msg, .eml) ve rapor PDF’lerini CP Tracker ekranına bırakın. Buyer Log tedarikçi lab, Labright sonuç, ticari karar maillerini ve Labright PDF’lerini kendisi okur; raporu sipariş kodu, model adı ve renk tanımıyla doğru satıra eşler. Önizlemede eşleşme düzeyi, checklist adımında ne değişeceği, eklenecek dosyalar ve mail ile PDF arasındaki çelişkiler görünür; onaylamadan hiçbir şey yazılmaz. Adımın durumu satırın bütün raporlarından türetilir, Ticari Onay geçer sayılır, tekrar test eskisinin yerine geçer ve aynı karar iki kez işlenmez. Elle verdiğiniz durum korunur. Karşılığı olmayan talep tipi için adım seçebilir ya da yeni adım açabilirsiniz.",
+        "en": "Drop test result e-mails (.msg, .eml) and report PDFs onto the CP Tracker screen. Buyer Log reads supplier lab, Labright result and commercial decision e-mails and Labright PDFs itself, and matches each report to the right row by order code, model name and colour description. The preview shows the match level, what will change in the checklist step, the files to attach and any conflicts between the e-mail and the PDF; nothing is written until you confirm. The step status is derived from all reports on the row, Commercial Approval counts as a pass, a retest replaces the earlier result and the same decision is never applied twice. A status you entered yourself is kept. For a request type without a step, you can pick a step or create a new one."
+      },
+      "path": {
+        "tr": "CP Tracker › Araçlar › Checklist › Test Raporu Aktar (ya da dosyaları ekrana bırakın)",
+        "en": "CP Tracker › Tools › Checklist › Import Test Reports (or drop the files on the screen)"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-import.png",
+        "alt": {
+          "tr": "Test raporu aktarımı önizlemesi: eşleşme düzeyleri, checklist değişiklikleri ve tanınmayan dosya (demo veri)",
+          "en": "Test report import preview: match levels, checklist changes and an unrecognised file (demo data)"
+        },
+        "caption": {
+          "tr": "Onaylamadan önce her raporun satırı ve etkisi görünür.",
+          "en": "Each report’s row and effect are visible before you confirm."
+        }
+      }
+    },
+    {
+      "id": "test-report-buying-task",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "“Buying dönüşü bekleniyor” kararı satırda görünür",
+        "en": "“Awaiting buying feedback” decisions show on the row"
+      },
+      "body": {
+        "tr": "Labright ticari karar mailinde “Buyingden dönüş bekleniyor” kararı varsa ilgili checklist hücresinde Buying işareti çıkar. Üzerine gelince talep no, test adı ve laboratuvarın açıklaması okunur. Yeni karar geldiğinde işaret kendiliğinden kalkar.",
+        "en": "When a Labright commercial decision e-mail says “Awaiting buying feedback”, the related checklist cell shows a Buying flag. Hover it to read the request number, test name and the lab’s comment. The flag clears by itself once a new decision arrives."
+      },
+      "path": {
+        "tr": "CP Tracker › Kontrol listesi sütunları",
+        "en": "CP Tracker › Checklist columns"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-buying-task.png",
+        "alt": {
+          "tr": "Testler sütununda Bekliyor durumunun altında Buying 1 işareti (demo veri)",
+          "en": "Buying 1 flag under the Pending status in the Tests column (demo data)"
+        },
+        "caption": {
+          "tr": "Kullanıcıdan beklenen iş satırda öne çıkar.",
+          "en": "Work waiting on you stands out on the row."
+        }
+      }
+    }
+  ]
 }

@@ -377,6 +377,31 @@
     return true;
   }
 
+  /* Test Raporu Aktarımı: talep tipi Buyer Log'da karşılığı olmayan bir
+     adımsa kullanıcı önizlemede yeni adım açabilir. Kural editöründeki
+     "Yeni kontrol" ile aynı yoldan kaydedilir; rapor numarası ve ek kanıt
+     alanları açık gelir. Kapsam geniştir (yüklemeye 365 gün), kullanıcı
+     Kurallar ekranında daraltabilir. */
+  function createChecklistItem(spec) {
+    const tr = String(spec && spec.tr || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+    const en = String(spec && spec.en || '').replace(/\s+/g, ' ').trim().slice(0, 160) || tr;
+    if (!tr) return null;
+    const question = { tr: ' tamamlandı mı?', en: ' complete?' };
+    const rule = Rules.normalizeRule({
+      kind: 'checklist', name: tr, nameEn: en, tr, en,
+      questionTr: tr + question.tr, questionEn: 'Is ' + en + question.en,
+      conditions: [{ field: '@daysToLoad', operator: 'lte', value: 365 }],
+      expressionVersion: Rules.EXPRESSION_VERSION, approvalScope: 'order',
+      evidenceFields: { reportNumber: true, actualDate: false, attachments: true },
+    });
+    const previousRules = state.rules;
+    state.rules = [...state.rules, rule];
+    try { savePrefs(); }
+    catch (error) { state.rules = previousRules; throw error; }
+    recompute();
+    return rule;
+  }
+
   /* Eski sürümde checklist başlıkları sunucuda TÜM kullanıcılar için ortaktı.
      Artık kişiseldir: ortak listede olup kullanıcıda olmayan başlıklar YALNIZ
      BİR KEZ kişisel kayda alınır (kimse mevcut sorusunu kaybetmez); sonrasında
@@ -3207,7 +3232,7 @@
      aynı oturumda sunucudan yeni değer gelirse (BLStorage hydrate) kurallar
      depodan yeniden okunur. */
   window.BLCpAssistant = {
-    onOverviewRendered, render, computeDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions,
+    onOverviewRendered, render, computeDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
     persistChecklistAnswers: saveAnswers,
     openRules, openSettings,
     decisionContextRevision: () => decisionContextRevision, _state: state,
