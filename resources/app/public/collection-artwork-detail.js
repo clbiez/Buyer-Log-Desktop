@@ -178,6 +178,7 @@
       const at = insertionIndex(colRow);
       if (at < 0) return false;
       const fabric = colRow.cells[at];
+      const logicalAt = [...colRow.cells].filter(th => !th.classList.contains('chkTh')).indexOf(fabric);
       artHead = makeHeader(fabric);
       colRow.insertBefore(artHead, fabric);
 
@@ -188,7 +189,9 @@
         col.style.width = '240px';
         group.insertBefore(col, group.children[at] || null);
       }
-      patchGroupRow(table, at);
+      // Group ranges selection checkbox'ını saymaz; bu nedenle grup başlığı
+      // için veri-sütunu indeksini, fiziksel hücre eklemek için DOM indeksini kullan.
+      patchGroupRow(table, logicalAt >= 0 ? logicalAt : at);
       changed = true;
     }
 
