@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.245",
-  "commit_sha": "95c019386ec25e19fe1244eaf5b9d17fddffa725",
-  "release_notes": "Buyer Log 7.0.245: LCW AI Layout Kontrolü eklendi. Care Label ve Price Tag PDF'leri otomatik tanınır; model/renk/sipariş/ülke/kompozisyon CP ile doğrulanır, barkod/QR okunur, belirsiz AI bulguları REVIEW olarak ayrılır ve kullanıcı bazlı kontrol geçmişi saklanır. Bu sürüm ayrıca 7.0.244 sonrasındaki CP Tracker test raporu aktarma geliştirmelerini de içerir.",
-  "request_id": "7.0.245-layout-control-r1"
+  "version": "7.0.246",
+  "commit_sha": "cba6df201a80f0039411ac1b4dd967066d43c114",
+  "release_notes": "Buyer Log 7.0.246: Koleksiyon Artwork Detayı sütunu, PLM CoreNectum bağlantı dayanıklılığı ve tek tık Remote Debugging/kurulum doğrulama geliştirmeleri.",
+  "request_id": "7.0.246-plm-artwork-r1"
 }
