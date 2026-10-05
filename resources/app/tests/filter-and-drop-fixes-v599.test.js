@@ -52,15 +52,18 @@ test('v5.99 eski filtre geçersiz kılması aralık filtresini tanıyor', () => 
   assert.match(block, /if\(raw==null\|\|raw===''\)return false;/);
 });
 
-test('v5.99 drop edilen üreticinin fiyatı Koleksiyon’dan siliniyor', () => {
-  const block = blockOf(Q, 'function qWritePriceToCollection(req,line){', 'function qRefreshCollection()');
-  assert.match(block, /if\(line\.dropped\)\{/);
-  assert.match(block, /delete row\.pricing\[line\.manufacturer\];/);
+test('v5.99 drop edilen üreticinin fiyatı Koleksiyon’dan kanonik pricing deposundan siliniyor', () => {
+  const block = blockOf(Q, 'function qWritePriceToCollection(req,line', 'function qSameCollectionRow');
+  assert.match(block, /const pricing=qCollectionPricingMap\(row\);/);
+  assert.match(block, /if\(line\.dropped\) delete pricing\[manufacturer\];/);
+  assert.match(block, /qWriteCollectionGroupedValue\(row,'pricing',pricing\)/);
   // Silinmiş bir teklifin üreticisi "nihai üretici" olarak kalmamalı.
-  assert.match(block, /if\(qNorm\(row\.confirmedManufacturer\)===line\.manufacturer\) row\.confirmedManufacturer='';/);
-  // Drop kaldırılınca fiyat aynı yoldan geri yazılmalı.
-  assert.match(block, /\}else\{/);
-  assert.match(block, /row\.pricing\[line\.manufacturer\]=qValidPrice\(line\.price\)/);
+  assert.match(block, /line\.dropped&&currentConfirmed===manufacturer/);
+  assert.match(block, /qWriteCollectionGroupedValue\(row,'confirmedManufacturer',nextConfirmed\)/);
+  // Model/renk gruplarında ham row.pricing yazımı eski değeri diriltmemeli.
+  const grouped = blockOf(Q, 'function qWriteCollectionGroupedValue(row,key,value){', 'function qWritePriceToCollection');
+  assert.match(grouped, /api\.setVariantOverride/);
+  assert.match(grouped, /api\.setSharedValue/);
 });
 
 test('v5.99 drop düğmesi Koleksiyon’a yansıyor ama yayılmıyor', () => {
@@ -72,6 +75,20 @@ test('v5.99 drop düğmesi Koleksiyon’a yansıyor ama yayılmıyor', () => {
   assert.ok(!block.includes('req.items.forEach'));
   assert.ok(!block.includes('qLoad().requests.forEach'));
   assert.ok(!block.includes('row.dropped='));
+});
+
+test('quotation request silme Collection projectionını kalan kayıtlarla uzlaştırıyor', () => {
+  const remove = blockOf(Q, 'async function qDeleteRequest(req){', 'function qPricingEngine');
+  assert.match(remove, /st\.requests=st\.requests\.filter\(item=>item\.id!==req\.id\)/);
+  assert.match(remove, /qReconcileCollectionAfterRequestRemoval\(req\);/);
+  assert.match(remove, /qRefreshCollection\(\);/);
+
+  const reconcile = blockOf(Q, 'function qReconcileCollectionAfterRequestRemoval(removedRequest){', 'function qRefreshCollection');
+  assert.match(reconcile, /qLatestCollectionLine\(row,manufacturer\)/);
+  assert.match(reconcile, /delete pricing\[manufacturer\]/);
+  assert.match(reconcile, /qWriteCollectionGroupedValue\(row,'pricing',pricing\)/);
+  assert.match(reconcile, /qLatestApprovedCollectionLine\(row\)/);
+  assert.match(reconcile, /saveKolRows\(\)/);
 });
 
 test('v5.99 fiyat revizesi ve silme Best Price’a yansıyor', () => {
