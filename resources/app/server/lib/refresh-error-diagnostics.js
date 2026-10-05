@@ -105,19 +105,6 @@ function diagnoseRefreshError(error, context = {}) {
     );
   }
 
-  if (/MODEL_QUERY_TIMEOUT|TIMEOUT|timed out|zaman aş/i.test(`${code} ${raw}`)) {
-    return result(
-      'timeout', source,
-      lang('Veri kaynağı zaman aşımına uğradı', 'Data source timed out'),
-      lang('Buyer Log kaynağa sorgu gönderdi ancak yanıt güvenli süre içinde tamamlanmadı. Bu durum yoğun model, çok geniş filtre veya geçici sunucu yavaşlığından kaynaklanabilir.',
-        'Buyer Log sent the query, but the source did not finish within the safe time window. This can be caused by a busy model, a very broad filter, or temporary server slowness.'),
-      lang('Önce aynı yenilemeyi bir kez daha deneyin. Tekrarlarsa Horizon/filtre kapsamını daraltın; bağlantı açılıyor fakat sorgu bekliyorsa kaynak model performansını BI ekibiyle kontrol edin.',
-        'Retry once. If it repeats, narrow the Horizon/filter scope; if the connection opens but the query stalls, ask the BI team to check source-model performance.'),
-      lang('Kaynak performansı / sorgu kapsamı', 'Source performance / query scope'),
-      raw, code, { confidence: 'medium', repairable: false }
-    );
-  }
-
   if (/permission|access denied|forbidden|unauthori[sz]ed|yetki|read access/i.test(raw)) {
     return result(
       'permission', source,
@@ -141,6 +128,19 @@ function diagnoseRefreshError(error, context = {}) {
         'Check the company network/VPN and whether the same source opens from Excel/Power BI, then retry Refresh.'),
       lang('Ağ / kurumsal erişim', 'Network / corporate access'),
       raw, code, { confidence: 'high', repairable: false, vpnRelated: true }
+    );
+  }
+
+  if (/MODEL_QUERY_TIMEOUT|QUERY_TIMEOUT|COMMAND_TIMEOUT|query[^.]{0,80}timed out|command[^.]{0,80}timed out|sorgu[^.]{0,80}zaman aş/i.test(`${code} ${raw}`)) {
+    return result(
+      'timeout', source,
+      lang('Veri kaynağı zaman aşımına uğradı', 'Data source timed out'),
+      lang('Buyer Log kaynağa sorgu gönderdi ancak yanıt güvenli süre içinde tamamlanmadı. Bu durum yoğun model, çok geniş filtre veya geçici sunucu yavaşlığından kaynaklanabilir.',
+        'Buyer Log sent the query, but the source did not finish within the safe time window. This can be caused by a busy model, a very broad filter, or temporary server slowness.'),
+      lang('Önce aynı yenilemeyi bir kez daha deneyin. Tekrarlarsa Horizon/filtre kapsamını daraltın; bağlantı açılıyor fakat sorgu bekliyorsa kaynak model performansını BI ekibiyle kontrol edin.',
+        'Retry once. If it repeats, narrow the Horizon/filter scope; if the connection opens but the query stalls, ask the BI team to check source-model performance.'),
+      lang('Kaynak performansı / sorgu kapsamı', 'Source performance / query scope'),
+      raw, code, { confidence: 'medium', repairable: false }
     );
   }
 
