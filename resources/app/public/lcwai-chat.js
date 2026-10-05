@@ -437,6 +437,41 @@
   }
 
   /* ---------------- Olaylar ---------------- */
+  function onHostClick(event) {
+    const el = host();
+    if (!el) return;
+    // Öğeler her çizimde yenilenir; güncel olanlar her tıklamada okunur.
+    const input = $('[data-chat-input]');
+    const fileInput = $('[data-chat-file-input]');
+    const target = event.target.closest('button');
+    if (!target || !el.contains(target)) { if (!event.target.closest('.lcwaiContextWrap')) closeContextMenu(); return; }
+    if (target.matches('[data-chat-new]')) { if (!state.busy) { newConversation(); renderList(); renderMessages(); input.focus(); } return; }
+    if (target.matches('[data-chat-open]')) { if (!state.busy) { state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
+    if (target.matches('[data-chat-file]')) { fileInput.click(); return; }
+    if (target.matches('[data-output-format]')) { state.output.format = target.dataset.outputFormat; renderOutputBar(); input.focus(); return; }
+    if (target.matches('[data-file-open], [data-file-reveal]')) {
+      const api = AI();
+      const opening = target.matches('[data-file-open]');
+      const id = opening ? target.dataset.fileOpen : target.dataset.fileReveal;
+      if (api) (opening ? api.openOutput(id) : api.revealOutput(id)).catch(error => { if (typeof showToast === 'function') showToast(api.errorText(error), { kind: 'error' }); });
+      return;
+    }
+    if (target.matches('[data-chat-context]')) { const menu = $('[data-chat-context-menu]'); if (menu.hidden) openContextMenu(); else closeContextMenu(); return; }
+    if (target.matches('[data-context-add]')) {
+      if (!state.contexts.some(item => item.id === target.dataset.contextAdd)) state.contexts.push({ id: target.dataset.contextAdd, label: target.dataset.contextLabel });
+      closeContextMenu(); renderChips(); return;
+    }
+    if (target.matches('[data-chip-file]')) { state.files.splice(Number(target.dataset.chipFile), 1); renderChips(); return; }
+    if (target.matches('[data-chip-context]')) { state.contexts.splice(Number(target.dataset.chipContext), 1); renderChips(); return; }
+    if (target.matches('[data-chat-cancel]')) { AI()?.cancel(state.requestId); return; }
+    if (target.matches('[data-chat-login]')) { AI()?.connect().then(status => { state.status = status; renderConnection(); }).catch(() => {}); return; }
+    if (target.matches('[data-chat-example]')) { input.value = target.dataset.chatExample; input.focus(); return; }
+    if (target.matches('[data-msg-copy]')) { const message = activeConversation().messages[Number(target.dataset.msgCopy)]; if (message) copyText(message.text, target); return; }
+    if (target.matches('[data-msg-reuse]')) { const message = activeConversation().messages[Number(target.dataset.msgReuse)]; if (message) { input.value = `${input.value ? `${input.value}\n\n` : ''}${message.text}`; input.focus(); } return; }
+    if (target.matches('[data-msg-retry]')) { retryLast(); return; }
+    if (target.matches('[data-lcwai-code-copy]')) { const code = target.closest('.lcwaiCode')?.querySelector('code'); if (code) copyText(code.textContent, target); }
+  }
+
   function bind() {
     const el = host();
     const form = $('[data-chat-form]');
@@ -455,35 +490,14 @@
       fileInput.value = '';
       renderChips();
     });
-    el.addEventListener('click', event => {
-      const target = event.target.closest('button');
-      if (!target || !el.contains(target)) { if (!event.target.closest('.lcwaiContextWrap')) closeContextMenu(); return; }
-      if (target.matches('[data-chat-new]')) { if (!state.busy) { newConversation(); renderList(); renderMessages(); input.focus(); } return; }
-      if (target.matches('[data-chat-open]')) { if (!state.busy) { state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
-      if (target.matches('[data-chat-file]')) { fileInput.click(); return; }
-      if (target.matches('[data-output-format]')) { state.output.format = target.dataset.outputFormat; renderOutputBar(); input.focus(); return; }
-      if (target.matches('[data-file-open], [data-file-reveal]')) {
-        const api = AI();
-        const opening = target.matches('[data-file-open]');
-        const id = opening ? target.dataset.fileOpen : target.dataset.fileReveal;
-        if (api) (opening ? api.openOutput(id) : api.revealOutput(id)).catch(error => { if (typeof showToast === 'function') showToast(api.errorText(error), { kind: 'error' }); });
-        return;
-      }
-      if (target.matches('[data-chat-context]')) { const menu = $('[data-chat-context-menu]'); if (menu.hidden) openContextMenu(); else closeContextMenu(); return; }
-      if (target.matches('[data-context-add]')) {
-        if (!state.contexts.some(item => item.id === target.dataset.contextAdd)) state.contexts.push({ id: target.dataset.contextAdd, label: target.dataset.contextLabel });
-        closeContextMenu(); renderChips(); return;
-      }
-      if (target.matches('[data-chip-file]')) { state.files.splice(Number(target.dataset.chipFile), 1); renderChips(); return; }
-      if (target.matches('[data-chip-context]')) { state.contexts.splice(Number(target.dataset.chipContext), 1); renderChips(); return; }
-      if (target.matches('[data-chat-cancel]')) { AI()?.cancel(state.requestId); return; }
-      if (target.matches('[data-chat-login]')) { AI()?.connect().then(status => { state.status = status; renderConnection(); }).catch(() => {}); return; }
-      if (target.matches('[data-chat-example]')) { input.value = target.dataset.chatExample; input.focus(); return; }
-      if (target.matches('[data-msg-copy]')) { const message = activeConversation().messages[Number(target.dataset.msgCopy)]; if (message) copyText(message.text, target); return; }
-      if (target.matches('[data-msg-reuse]')) { const message = activeConversation().messages[Number(target.dataset.msgReuse)]; if (message) { input.value = `${input.value ? `${input.value}\n\n` : ''}${message.text}`; input.focus(); } return; }
-      if (target.matches('[data-msg-retry]')) { retryLast(); return; }
-      if (target.matches('[data-lcwai-code-copy]')) { const code = target.closest('.lcwaiCode')?.querySelector('code'); if (code) copyText(code.textContent, target); }
-    });
+    // Kapsayıcı (lcwaiChatPage) yeniden çizimlerde kalıcıdır; tıklama
+    // dinleyicisi YALNIZ bir kez eklenir. Aksi hâlde sayfaya her girişte
+    // çoğalır: "Bağlam Ekle" menüyü aynı tıklamada açıp kapatır, ek/kart
+    // silme iki kez çalışır.
+    if (!el.__lcwaiClickBound) {
+      el.__lcwaiClickBound = true;
+      el.addEventListener('click', onHostClick);
+    }
   }
 
   function applyPendingOpen() {

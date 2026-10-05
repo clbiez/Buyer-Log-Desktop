@@ -167,3 +167,16 @@ test('genel ve bağlama özel AI aynı motoru kullanır; bağlama özel alanlar 
   assert.match(routes, /engineOf\(\)\.ask\(owner/);
   assert.equal((read('server/lib/lcwai/index.js').match(/createLcwAiAuth\(/g) || []).length, 1, 'tek auth');
 });
+
+test('regresyon: LCW AI sayfasına yeniden girince sohbet tıklama dinleyicisi çoğalmaz (Bağlam Ekle iki kez aç-kapa yapmaz)', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'lcwai-chat.js'), 'utf8');
+  const bind = source.slice(source.indexOf('  function bind() {'), source.indexOf('  function applyPendingOpen()'));
+  // Kalıcı kapsayıcıya (lcwaiChatPage) bağlanan tıklama dinleyicisi tek sefer eklenir.
+  assert.match(bind, /if \(!el\.__lcwaiClickBound\) \{\s*el\.__lcwaiClickBound = true;\s*el\.addEventListener\('click', onHostClick\);\s*\}/);
+  assert.equal((bind.match(/el\.addEventListener\('click'/g) || []).length, 1);
+  // Dinleyici yeniden çizimden sonra eski (DOM'dan kopmuş) öğelere bakmaz.
+  const handler = source.slice(source.indexOf('  function onHostClick(event) {'), source.indexOf('  function bind() {'));
+  assert.ok(handler.length > 100, 'onHostClick ayrı tanımlı');
+  assert.match(handler, /const input = \$\('\[data-chat-input\]'\);/);
+  assert.match(handler, /const fileInput = \$\('\[data-chat-file-input\]'\);/);
+});
