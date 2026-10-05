@@ -192,7 +192,8 @@ function createLcwAiAuth(options = {}) {
      sekmeden sessizce yenisini okumayı dener (tarayıcı başlatmaz). */
   async function refreshStatus(ownerId) {
     const key = ownerKey(ownerId), info = meta.get(key);
-    if (!cached(key) && info && info.hadSession && !logins.has(key)) {
+    const passive = provider && typeof provider.passiveAvailable === 'function' && provider.passiveAvailable();
+    if (!cached(key) && ((info && info.hadSession) || passive) && !logins.has(key)) {
       try { await getAuthorization(ownerId); } catch (_) { /* durum "expired" kalır */ }
     }
     return status(ownerId);

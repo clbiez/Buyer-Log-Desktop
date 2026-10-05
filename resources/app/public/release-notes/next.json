@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "LCW AI cevabı PDF, PowerPoint, Excel ve HTML dosyası olarak",
-    "en": "LCW AI answers as PDF, PowerPoint, Excel and HTML files"
+    "tr": "LCW AI: dosya çıktıları, canlı raporlar ve arka plan oturumu",
+    "en": "LCW AI: file outputs, lively reports and a background session"
   },
   "summary": {
-    "tr": "LCW AI artık içerik üretiyor, Buyer Log da onu kendi temasıyla gerçek bir dosyaya dönüştürüyor: PDF rapor, PowerPoint sunum, Excel çalışma kitabı ya da HTML rapor.",
-    "en": "LCW AI now produces the content and Buyer Log turns it into a real file with its own theme: a PDF report, PowerPoint deck, Excel workbook or HTML report."
+    "tr": "LCW AI cevapları Buyer Log temalı PDF, PowerPoint, Excel ve HTML dosyalarına dönüşüyor; raporlar hareketli ve görsel; LCW AI de PLM gibi arka planda, tarayıcı açmadan bağlanıyor.",
+    "en": "LCW AI answers become Buyer Log-themed PDF, PowerPoint, Excel and HTML files; reports are animated and visual; and LCW AI now connects in the background like PLM, without opening a browser."
   },
   "changes": [
     {
@@ -41,6 +41,72 @@
         "caption": {
           "tr": "Yanıt biçimini seçin; Buyer Log dosyayı oluşturur ve AI Outputs klasörüne kaydeder.",
           "en": "Pick the answer format; Buyer Log builds the file and saves it to the AI Outputs folder."
+        }
+      }
+    },
+    {
+      "id": "lcwai-dynamic-reports",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Çıktı Oluşturma",
+        "en": "LCW AI · Output Engine"
+      },
+      "title": {
+        "tr": "Canlı, hareketli ve görsel raporlar",
+        "en": "Lively, animated and visual reports"
+      },
+      "body": {
+        "tr": "HTML raporlar renk geçişli başlık bandı ve giriş animasyonlarıyla açılır: bölümler sırayla belirir, KPI kartları yükselir, çubuk ve halka göstergeler dolar. Yeni bileşenler: ilerleme halkası, ilerleme çubuğu, zaman çizelgesi, numaralı aksiyonlar ve eğilim oku. Animasyonlar yalnız CSS ile yapılır; betik çalışmaz. \"Hareketi azalt\" tercihinde ve PDF baskısında kapanır. PowerPoint sunumlarında renk geçişli kapak ve bölüm slaytları ile slayt geçişleri, Excel dosyalarında zebra satırlar ve sayısal sütunlarda veri çubukları var.",
+        "en": "HTML reports open with a gradient header band and entrance animations: sections appear in turn, KPI cards rise, and bar and ring gauges fill up. New components: progress ring, progress bar, timeline, numbered actions and trend arrow. Animations are CSS only; no scripts run. They switch off with \"reduce motion\" and in PDF printing. PowerPoint decks get gradient cover and section slides with slide transitions; Excel files get banded rows and data bars on numeric columns."
+      },
+      "path": {
+        "tr": "LCW AI › Yanıt biçimi › HTML / PDF / PowerPoint / Excel",
+        "en": "LCW AI › Answer as › HTML / PDF / PowerPoint / Excel"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-dynamic-reports.png",
+        "alt": {
+          "tr": "Buyer Log’un oluşturduğu HTML raporu: KPI kartları, ilerleme halkaları, renkli çubuklar ve adımlar (demo veri)",
+          "en": "HTML report built by Buyer Log: KPI cards, progress rings, coloured bars and steps (demo data)"
+        },
+        "caption": {
+          "tr": "Raporlar Buyer Log renkleriyle, hareketli ve görsel.",
+          "en": "Reports in Buyer Log colours, animated and visual."
+        }
+      }
+    },
+    {
+      "id": "lcwai-background-session",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Oturum",
+        "en": "LCW AI · Session"
+      },
+      "title": {
+        "tr": "LCW AI arka planda bağlanıyor (PLM gibi)",
+        "en": "LCW AI connects in the background (like PLM)"
+      },
+      "body": {
+        "tr": "Masaüstü uygulamasında LCW AI artık Edge sekmesi açmadan, PLM senkronunda olduğu gibi gizli ve ayrı bir oturumla bağlanıyor. Kurumsal giriş bir kez yapıldıktan sonra oturum, siz tarayıcı görmeden sessizce yenileniyor. Giriş penceresi yalnız gerçekten giriş gerektiğinde görünüyor. Bağlantı durumu \"Bağlı · arka plan\" olarak gösteriliyor. Token yalnız uygulama belleğinde tutulur; diske, loglara veya arayüze yazılmaz. LCW AI bağlantısını kesmek arka plan oturumunu da kapatır. Tarayıcı kipinde önceki Edge yolu çalışmaya devam eder.",
+        "en": "In the desktop app, LCW AI now connects without opening an Edge tab, through a hidden, separate session just like PLM sync. After the corporate sign-in is done once, the session renews silently without you seeing a browser. The sign-in window appears only when sign-in is really needed. The connection shows as \"Connected · background\". The token lives only in the app’s memory and is never written to disk, logs or the interface. Disconnecting LCW AI also closes the background session. In browser mode the previous Edge path keeps working."
+      },
+      "path": {
+        "tr": "LCW AI › bağlantı durumu",
+        "en": "LCW AI › connection status"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-background-session.png",
+        "alt": {
+          "tr": "LCW AI ekranında “✓ LCW AI Bağlı · arka plan” durumu ve oluşturulan rapor kartı (demo veri)",
+          "en": "LCW AI screen showing “✓ LCW AI Connected · background” and a created report card (demo data)"
+        },
+        "caption": {
+          "tr": "Tarayıcı açılmadan bağlı: oturum arka planda yenilenir.",
+          "en": "Connected without a browser: the session renews in the background."
         }
       }
     }

@@ -294,7 +294,11 @@
     const status = state.status;
     const model = $('[data-chat-model]');
     if (model && AI()) model.textContent = AI().modelLabel;
-    if (status && status.connected) { box.innerHTML = `<span class="lcwaiConnPill is-ok">${esc(L('✓ LCW AI Bağlı', '✓ LCW AI Connected'))}</span>`; return; }
+    if (status && status.connected) {
+      const background = status.source === 'desktop-sso';
+      box.innerHTML = `<span class="lcwaiConnPill is-ok" title="${esc(background ? L('LCW AI, PLM gibi arka planda gizli bir oturumla bağlı; tarayıcı açılmaz.', 'LCW AI is connected through a hidden background session, like PLM; no browser opens.') : '')}">${esc(background ? L('✓ LCW AI Bağlı · arka plan', '✓ LCW AI Connected · background') : L('✓ LCW AI Bağlı', '✓ LCW AI Connected'))}</span>`;
+      return;
+    }
     const text = !status ? L('Kontrol ediliyor…', 'Checking…')
       : status.loginInProgress ? L('Giriş bekleniyor…', 'Waiting for sign-in…')
         : status.state === 'expired' ? L('LCW AI oturumu yenilenmeli.', 'The LCW AI session needs renewal.')

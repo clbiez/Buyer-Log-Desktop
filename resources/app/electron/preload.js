@@ -96,6 +96,10 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
   },
   openDownload: (token) => ipcRenderer.invoke('buyerlog:open-download', token),
   revealDownload: (token) => ipcRenderer.invoke('buyerlog:reveal-download', token),
+  /* LCW AI arka plan oturumu (PLM Sync deseni): gizli Electron oturumu.
+     Yanıt yalnız { ok, code }; token renderer'a dönmez. */
+  ensureLcwAiAuth: (options) => ipcRenderer.invoke('buyerlog:lcwai-auth', { interactive: !(options && options.interactive === false) }),
+  clearLcwAiAuth: () => ipcRenderer.invoke('buyerlog:lcwai-auth-clear'),
   /* LCW AI Export Engine: sunucunun temizlediği rapor HTML'i → PDF baytları.
      Ana süreç JS'i kapalı, ağı engelli gizli pencerede basar; yol/dosya
      yetkisi yoktur (kaydı sunucu yapar). */
