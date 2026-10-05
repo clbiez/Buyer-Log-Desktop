@@ -99,6 +99,12 @@ const CORENECTUM_STYLE_LIST_API = 'https://mym-api.lcwaikiki.com/lcw/live/corene
 const desktopBridgeSecret = crypto.randomBytes(32).toString('hex');
 let coreNectumAuthWindow = null;
 let coreNectumAuthInFlight = null;
+/* LCW AI arka plan oturumu: CoreNectum ile aynı desen, ayrı kalıcı bölüm. */
+const LCWAI_AUTH_PARTITION = 'persist:buyerlog-lcwai-auth';
+const LCWAI_HOME = 'https://lcwai.lcwaikiki.com/';
+const LCWAI_STORAGE_PROBE = "(() => { try { return localStorage.getItem('access_token') || ''; } catch (_) { return ''; } })()";
+let lcwAiAuthWindow = null;
+let lcwAiAuthInFlight = null;
 let coreNectumStyleListTemplate = null;
 
 /* OAB automatic auth — intentionally independent from CoreNectum and from the
@@ -789,6 +795,99 @@ async function clearCoreNectumAuthSession() {
   } catch (_) {}
   if (coreNectumAuthWindow && !coreNectumAuthWindow.isDestroyed()) coreNectumAuthWindow.close();
   coreNectumAuthWindow = null;
+  return { ok: true };
+}
+
+/* ---------------------------------------------------- LCW AI arka plan oturumu
+ * Kullanıcı tarayıcı görmeden: LCW AI gizli pencerede, kalıcı ayrılmış
+ * bölümde açılır; kurumsal SSO çerezleri orada kaldığı için token sessizce
+ * yenilenir. Pencere yalnız etkileşimli kipte ve gerçekten giriş sayfasına
+ * gidildiğinde (ya da 4,5 sn içinde token yoksa) görünür. Token yalnız
+ * localStorage'dan okunur, masaüstü köprüsüyle sunucu belleğine verilir;
+ * renderer'a/IPC yanıtına/log'a girmez. Parola alanları okunmaz/doldurulmaz. */
+function lcwAiAuthSession() {
+  return session.fromPartition(LCWAI_AUTH_PARTITION, { cache: true });
+}
+
+async function pushLcwAiTokenToBackend(token) {
+  if (!backend || !backend.running || !backend.origin) throw new Error('Buyer Log backend hazır değil.');
+  const response = await fetch(backend.origin + '/api/internal/desktop/lcwai-token', {
+    method: 'POST', cache: 'no-store',
+    headers: { 'Content-Type': 'application/json', 'X-BuyerLog-Desktop-Bridge': desktopBridgeSecret },
+    body: JSON.stringify({ token: String(token || '') }),
+  });
+  const data = await response.json().catch(() => ({}));
+  return Boolean(response.ok && data.ok);
+}
+
+async function acquireLcwAiToken(options = {}) {
+  if (lcwAiAuthInFlight) return lcwAiAuthInFlight;
+  const interactive = options.interactive !== false;
+  const request = new Promise(resolve => {
+    let settled = false;
+    let busy = false;
+    let probeTimer = null, showTimer = null, timeoutTimer = null;
+    const win = new BrowserWindow({
+      width: 1120, height: 820, show: false, title: 'Buyer Log · LCW AI Oturumu',
+      parent: activeBuyerLogWindow(options.requestingContents) || undefined,
+      autoHideMenuBar: true, backgroundColor: '#ffffff',
+      webPreferences: { partition: LCWAI_AUTH_PARTITION, nodeIntegration: false, contextIsolation: true, sandbox: true, spellcheck: false },
+    });
+    lcwAiAuthWindow = win;
+    const finish = value => {
+      if (settled) return;
+      settled = true;
+      if (probeTimer) clearInterval(probeTimer);
+      if (showTimer) clearTimeout(showTimer);
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      if (!win.isDestroyed()) { try { win.close(); } catch (_) {} }
+      if (lcwAiAuthWindow === win) lcwAiAuthWindow = null;
+      resolve(value);
+    };
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      if (isAllowedCoreNectumAuthUrl(url)) setImmediate(() => { if (!win.isDestroyed()) win.loadURL(url).catch(() => {}); });
+      return { action: 'deny' };
+    });
+    win.webContents.on('will-navigate', (event, url) => { if (!isAllowedCoreNectumAuthUrl(url)) event.preventDefault(); });
+    win.webContents.on('did-navigate', (_event, url) => {
+      if (!interactive || settled || win.isVisible()) return;
+      try { if (new URL(url).hostname.toLowerCase() !== 'lcwai.lcwaikiki.com') { win.show(); win.focus(); } } catch (_) {}
+    });
+    win.on('closed', () => finish({ ok: false, code: 'LCWAI_AUTH_CANCELLED' }));
+    const probe = async () => {
+      if (settled || busy || win.isDestroyed()) return;
+      let url = '';
+      try { url = win.webContents.getURL(); } catch (_) {}
+      if (!/^https:\/\/lcwai\.lcwaikiki\.com\//i.test(url)) return;
+      busy = true;
+      try {
+        const token = await win.webContents.executeJavaScript(LCWAI_STORAGE_PROBE, true);
+        // Sunucu iss/azp/exp doğrular; geçersiz token kabul edilmez, beklenir.
+        if (token && await pushLcwAiTokenToBackend(token)) { log('LCW AI arka plan oturumu hazır.'); finish({ ok: true, source: 'desktop-sso' }); }
+      } catch (_) {} finally { busy = false; }
+    };
+    win.webContents.on('did-finish-load', () => { void probe(); });
+    probeTimer = setInterval(() => { void probe(); }, 900);
+    if (interactive) showTimer = setTimeout(() => { if (!settled && !win.isDestroyed()) { win.show(); win.focus(); } }, 4500);
+    timeoutTimer = setTimeout(() => finish({ ok: false, code: interactive ? 'LCWAI_LOGIN_TIMEOUT' : 'LCWAI_SIGNIN_REQUIRED' }), interactive ? 300000 : 12000);
+    win.loadURL(LCWAI_HOME).catch(() => finish({ ok: false, code: 'LCWAI_NETWORK' }));
+  });
+  lcwAiAuthInFlight = request;
+  try { return await request; }
+  finally { if (lcwAiAuthInFlight === request) lcwAiAuthInFlight = null; }
+}
+
+async function clearLcwAiAuthSession() {
+  if (backend && backend.running && backend.origin) {
+    try { await fetch(backend.origin + '/api/internal/desktop/lcwai-token', { method: 'DELETE', cache: 'no-store', headers: { 'X-BuyerLog-Desktop-Bridge': desktopBridgeSecret } }); } catch (_) {}
+  }
+  try {
+    const authSession = lcwAiAuthSession();
+    await authSession.clearStorageData({ storages: ['cookies', 'localstorage', 'indexdb', 'serviceworkers', 'cachestorage'] });
+    await authSession.clearCache();
+  } catch (_) {}
+  if (lcwAiAuthWindow && !lcwAiAuthWindow.isDestroyed()) lcwAiAuthWindow.close();
+  lcwAiAuthWindow = null;
   return { ok: true };
 }
 
@@ -1701,6 +1800,53 @@ function diagnostics() {
   };
 }
 
+// data: URL gezintisi Chromium'da ~2 MB ile sınırlı; base64 payı bırakılır.
+const AI_PDF_HTML_MAX_BYTES = 1400 * 1024;
+function withDeadline(promise, ms, label) {
+  let timer = null;
+  return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label}-timeout`)), ms); })]).finally(() => clearTimeout(timer));
+}
+// Tek, kalıcı olmayan (bellek içi) oturum: her basımda yeni oturum açıp
+// sızdırmak yerine aynı kilitli oturum yeniden kullanılır.
+const AI_PDF_PARTITION = 'buyerlog-ai-pdf';
+let aiPdfSessionReady = false;
+let aiPdfQueue = Promise.resolve();
+function aiPdfSession() {
+  const pdfSession = session.fromPartition(AI_PDF_PARTITION, { cache: false });
+  if (!aiPdfSessionReady) {
+    pdfSession.webRequest.onBeforeRequest((details, callback) => callback({ cancel: !/^(data|about):/i.test(String(details.url || '')) }));
+    pdfSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    aiPdfSessionReady = true;
+  }
+  return pdfSession;
+}
+// Basımlar sıraya alınır: aynı anda en fazla bir gizli PDF penceresi.
+function renderAiPdf(html, options) {
+  const run = aiPdfQueue.then(() => renderAiPdfNow(html, options));
+  aiPdfQueue = run.catch(() => {});
+  return run;
+}
+async function renderAiPdfNow(html, { landscape = false } = {}) {
+  aiPdfSession();
+  const partition = AI_PDF_PARTITION;
+  const win = new BrowserWindow({
+    show: false, width: 1123, height: 794,
+    webPreferences: { javascript: false, sandbox: true, contextIsolation: true, nodeIntegration: false, webSecurity: true, partition, spellcheck: false, navigateOnDragDrop: false, devTools: false },
+  });
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', navigation => navigation.preventDefault());
+  try {
+    await withDeadline(win.loadURL(`data:text/html;charset=utf-8;base64,${Buffer.from(html, 'utf8').toString('base64')}`), 30000, 'load');
+    return await withDeadline(win.webContents.printToPDF({
+      printBackground: true, preferCSSPageSize: true, landscape, displayHeaderFooter: true,
+      headerTemplate: '<span></span>',
+      footerTemplate: '<div style="font-size:8px;width:100%;padding:0 12mm;color:#7a7a7d;display:flex;justify-content:space-between;font-family:Segoe UI,Arial,sans-serif"><span>Buyer Log · LCW AI</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
+    }), 60000, 'print');
+  } finally {
+    if (!win.isDestroyed()) win.destroy();
+  }
+}
+
 function trustedBuyerLogIpcSender(event) {
   if (!event || !event.sender || event.sender.isDestroyed()) return false;
   if (workspace && !workspace.tabForContents(event.sender)) return false;
@@ -1953,6 +2099,18 @@ function registerIpc() {
     catch (error) { return { ok:false, code:'CORENECTUM_AUTH_CLEAR_FAILED', error:error && error.message || String(error) }; }
   });
 
+  /* LCW AI arka plan oturumu: yanıt yalnız durum kodudur, token dönmez. */
+  ipcMain.handle('buyerlog:lcwai-auth', async (event, options = {}) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'LCWAI_IPC_FORBIDDEN' };
+    try { return await acquireLcwAiToken({ interactive: options && options.interactive !== false, requestingContents:event.sender }); }
+    catch (_) { return { ok:false, code:'LCWAI_AUTH_FAILED' }; }
+  });
+  ipcMain.handle('buyerlog:lcwai-auth-clear', async event => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'LCWAI_IPC_FORBIDDEN' };
+    try { return await clearLcwAiAuthSession(); }
+    catch (_) { return { ok:false, code:'LCWAI_AUTH_CLEAR_FAILED' }; }
+  });
+
   /* OAB SSO is independent from CoreNectum. Only the trusted Buyer Log renderer
      may request the flow; the external OAB/Microsoft pages have no preload and
      therefore cannot invoke these channels. Raw Authorization never crosses IPC. */
@@ -1996,6 +2154,21 @@ function registerIpc() {
     if (!entry || !fs.existsSync(entry.path)) return { ok: false, error: 'not-found' };
     shell.showItemInFolder(entry.path);
     return { ok: true };
+  });
+  /*
+   * LCW AI Export Engine → PDF. Renderer, sunucunun temizleyip katı CSP ile
+   * sardığı rapor HTML'ini verir; burada JavaScript'i KAPALI, ağı ENGELLİ
+   * (yalnız data:/about:), izinleri reddedilen, kalıcı olmayan bir oturumdaki
+   * GİZLİ pencerede açılır ve Chromium printToPDF ile basılır. Dönen yalnız
+   * PDF baytlarıdır: dosya sistemi yetkisi verilmez, kaydı Buyer Log
+   * sunucusu (AI Outputs) yapar. AI HTML'i ana Buyer Log DOM'una girmez.
+   */
+  ipcMain.handle('buyerlog:render-pdf', async (event, payload = {}) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, error:'forbidden' };
+    const html = payload && typeof payload.html === 'string' ? payload.html : '';
+    if (!html || Buffer.byteLength(html, 'utf8') > AI_PDF_HTML_MAX_BYTES) return { ok:false, error:'invalid' };
+    try { return { ok:true, data: await renderAiPdf(html, { landscape: payload.landscape === true }) }; }
+    catch (error) { return { ok:false, error: String(error && error.message || 'render-failed').slice(0, 80) }; }
   });
 }
 

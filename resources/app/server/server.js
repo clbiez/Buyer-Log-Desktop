@@ -481,6 +481,20 @@ app.delete('/api/internal/desktop/corenectum-token', (req, res) => {
   const status = coreNectumApiSettings.clearDesktopToken();
   return res.set('Cache-Control','no-store').json({ ok:true, status });
 });
+/* LCW AI arka plan oturumu (Electron gizli oturum → yalnız süreç belleği). */
+app.post('/api/internal/desktop/lcwai-token', express.json({ limit:'32kb' }), (req, res) => {
+  if (!desktopBridgeAuthorized(req)) return res.status(403).json({ ok:false, code:'DESKTOP_BRIDGE_FORBIDDEN' });
+  try {
+    const status = require('./lib/lcwai').getDesktopTokenHolder().set(req.body && req.body.token);
+    return res.set('Cache-Control','no-store').json({ ok:true, status });
+  } catch (err) {
+    return res.status(400).set('Cache-Control','no-store').json({ ok:false, code:err.code||'LCWAI_AUTH_REQUIRED' });
+  }
+});
+app.delete('/api/internal/desktop/lcwai-token', (req, res) => {
+  if (!desktopBridgeAuthorized(req)) return res.status(403).json({ ok:false, code:'DESKTOP_BRIDGE_FORBIDDEN' });
+  return res.set('Cache-Control','no-store').json({ ok:true, status: require('./lib/lcwai').getDesktopTokenHolder().clear() });
+});
 app.post('/api/internal/desktop/corenectum-style-template', express.json({ limit:'320kb' }), (req, res) => {
   if (!desktopBridgeAuthorized(req)) return res.status(403).json({ ok:false, code:'DESKTOP_BRIDGE_FORBIDDEN' });
   try {

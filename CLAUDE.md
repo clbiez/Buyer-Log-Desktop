@@ -105,7 +105,14 @@ Test runner: `npm test` → `node --test tests/*.test.js`.
   modülün deterministik doğrulayıcısından geçer, önizlenir ve yalnız kullanıcı
   onayıyla uygulanır; iş gerçeği daima deterministic/canonical veriden gelir.
   LCW AI token'ı yalnız süreç belleğinde yaşar; diske, log'a, renderer'a
-  taşınmaz. Başka bir AI sağlayıcısı eklemek ayrı ürün ve güvenlik kararıdır.
+  taşınmaz. Masaüstünde token PLM Sync deseniyle Electron'un gizli, kalıcı
+  bölümünden (`persist:buyerlog-lcwai-auth`) masaüstü köprüsüyle sunucu
+  belleğine gelir (kullanıcı tarayıcı görmez); tarayıcı kipinde Edge/CDP yolu. Dosya çıktısı (PDF/PowerPoint/Excel/HTML) için ortak yol
+  `server/lib/lcwai-output/` (AI Export Engine): LCW AI yalnız içerik/yapı
+  (HTML ya da sözleşmeli JSON) üretir; Buyer Log doğrular, onarım ister ve
+  dosyayı kendi temasıyla (`design.css` anahtarları) oluşturur. AI HTML'i
+  temizlenir, katı CSP ile sarılır ve ana DOM'a eklenmez; PDF, JS'i kapalı ve
+  ağı engelli gizli pencerede (`buyerlog:render-pdf`) basılır. Başka bir AI sağlayıcısı eklemek ayrı ürün ve güvenlik kararıdır.
 - Secret, credential, private ağ bilgisi veya kaynak kodunu dış servislere
   gönderme. Şirket/iş verisi yalnız şirket içi LCW AI'a bağlam olarak
   gidebilir (kullanıcı kararı); kimlik bilgisi oraya da gönderilmez.

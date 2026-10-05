@@ -1,7 +1,7 @@
 /* LCW AI ortak asistan paneli — yalnız mevcut tasarım token'ları kullanılır
    (--acc, --line, --card, --ink, --green/--orange/--red …). Yeni renk yok. */
 /* display kuralları hidden özniteliğini ezmesin (öneri kutusu, durum rozeti…). */
-.lcwaiAssist [hidden],.lcwaiConnBody [hidden]{display:none !important;}
+.lcwaiAssist [hidden],.lcwaiConnBody [hidden],.lcwaiChat [hidden]{display:none !important;}
 .lcwaiAssist{display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px solid var(--line2);border-left:2px solid var(--acc);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:12.2px;}
 .lcwaiHead{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
 .lcwaiHead b{font-weight:650;color:var(--acc-ink);}
@@ -104,6 +104,25 @@
 .lcwaiComposer textarea:focus{outline:none;border-color:var(--acc);}
 .lcwaiComposerRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .lcwaiChips{display:flex;flex-wrap:wrap;gap:6px;}
+/* AI Çıktı Oluşturma: yanıt biçimi seçici + dosya kartı */
+.lcwaiOutputBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.lcwaiOutputLabel{font-size:11.5px;color:var(--muted);}
+.lcwaiSeg{display:inline-flex;border:1px solid var(--line2);border-radius:var(--r-sm);overflow:hidden;}
+.lcwaiSeg button{height:calc(var(--ctl-h) - 2px);padding:0 11px;border:0;border-left:1px solid var(--line2);background:var(--card);color:var(--ink2);font-size:12px;cursor:pointer;}
+.lcwaiSeg button:first-child{border-left:0;}
+.lcwaiSeg button:hover{background:var(--card2);color:var(--ink);}
+.lcwaiSeg button.is-active{background:var(--acc);color:var(--on-acc,#fff);font-weight:650;}
+.lcwaiSeg button:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.lcwaiOutputOptions{display:inline-flex;gap:6px;}
+.lcwaiOutputOptions select{height:var(--ctl-h);border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:12px;padding:0 6px;}
+.lcwaiFile{display:flex;align-items:center;gap:12px;margin:6px 0 2px;padding:10px 12px;border:1px solid var(--line2);border-left:3px solid var(--acc);background:var(--card);}
+.lcwaiFileIcon{flex:none;width:42px;height:42px;display:grid;place-items:center;font:600 11px/1 var(--head);letter-spacing:.04em;color:var(--on-acc,#fff);background:var(--acc);}
+.lcwaiFileIcon.is-pdf{background:var(--red);}.lcwaiFileIcon.is-xlsx{background:var(--green);}.lcwaiFileIcon.is-pptx{background:var(--orange);}.lcwaiFileIcon.is-html{background:var(--acc-ink);}
+.lcwaiFileInfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.lcwaiFileInfo b{font-size:13px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lcwaiFileInfo small{font-size:11.5px;color:var(--muted);}
+.lcwaiFileActions{display:flex;gap:6px;flex:none;}
+@media (max-width:640px){.lcwaiFile{flex-wrap:wrap;}.lcwaiFileActions{width:100%;}}
 .lcwaiChip{display:inline-flex;align-items:center;gap:5px;padding:2px 4px 2px 8px;border:1px solid var(--line2);background:var(--bg);font-size:11.5px;}
 .lcwaiChip.is-context{border-color:var(--acc);color:var(--acc-ink);}
 .lcwaiChip.is-error{border-color:var(--red);color:var(--red);}

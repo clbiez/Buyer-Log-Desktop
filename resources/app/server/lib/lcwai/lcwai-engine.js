@@ -128,6 +128,7 @@ function createLcwAiEngine(options = {}) {
         lang: input.lang,
         firstMessage: !chatId,
         sentModules: known ? [...known.sentModules] : [],
+        outputInstruction: input.outputInstruction,
       });
       emit(input.onProgress, { phase: 'sending', requestId, modules: built.modules });
       let chars = 0;

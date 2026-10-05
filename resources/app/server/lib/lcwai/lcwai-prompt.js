@@ -265,7 +265,7 @@ function formatContextBlock(item, english) {
   return text;
 }
 
-function buildChatPrompt({ message, contexts, lang, firstMessage = true, sentModules = [] } = {}) {
+function buildChatPrompt({ message, contexts, lang, firstMessage = true, sentModules = [], outputInstruction = '' } = {}) {
   const english = clean(lang).toLowerCase() === 'en';
   const langKey = english ? 'en' : 'tr';
   const request = clean(message).slice(0, config.LIMITS.maxTaskChars * 4);
@@ -297,9 +297,16 @@ function buildChatPrompt({ message, contexts, lang, firstMessage = true, sentMod
   }
   const hasExtras = lines.length > 0;
   if (hasExtras) lines.push('', english ? '=== USER MESSAGE ===' : '=== KULLANICI MESAJI ===');
-  lines.push(request);
-  const prompt = lines.join('\n');
-  return { prompt: prompt.slice(0, config.LIMITS.maxPromptChars), modules, truncated: prompt.length > config.LIMITS.maxPromptChars };
+  /* Dosya çıktısı istendiyse (AI Export Engine) biçim sözleşmesi EN SONA
+     eklenir. Sınır aşılırsa kırpılan kısım baştaki bilgi/bağlamdır; kullanıcı
+     isteği ve sözleşme her zaman eksiksiz kalır. */
+  const contract = clean(outputInstruction);
+  const tail = contract ? `${request}\n\n${contract}` : request;
+  const head = lines.join('\n');
+  const full = head ? `${head}\n${tail}` : tail;
+  if (full.length <= config.LIMITS.maxPromptChars) return { prompt: full, modules, truncated: false };
+  const room = Math.max(0, config.LIMITS.maxPromptChars - tail.length - 1);
+  return { prompt: `${head.slice(0, room)}\n${tail}`.slice(-config.LIMITS.maxPromptChars), modules, truncated: true };
 }
 
 module.exports = { CONTRACTS, MAX_SAMPLE_ROWS, CHAT_MAX_ROWS, buildChatPrompt, formatContextBlock, contractFor, normalizeSource, sanitizeContext, buildPrompt, extractJsonObject, parseStructured };

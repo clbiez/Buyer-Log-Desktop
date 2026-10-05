@@ -49,6 +49,9 @@
     LCWAI_UPLOAD_FAILED: { tr: 'Dosya LCW AI’a yüklenemedi.', en: 'The file could not be uploaded to LCW AI.' },
     LCWAI_FILE_TOO_LARGE: { tr: 'Dosya LCW AI için çok büyük.', en: 'The file is too large for LCW AI.' },
     LCWAI_FILE_TYPE_NOT_ALLOWED: { tr: 'Bu dosya türü LCW AI’a gönderilemez.', en: 'This file type cannot be sent to LCW AI.' },
+    LCWAI_OUTPUT_INVALID: { tr: 'LCW AI istenen dosya için geçerli içerik üretmedi (düzeltme denemeleri de sonuç vermedi). İsteği sadeleştirip tekrar deneyin.', en: 'LCW AI did not produce valid content for the requested file (repair attempts failed too). Simplify the request and try again.' },
+    LCWAI_OUTPUT_RENDER_FAILED: { tr: 'Dosya oluşturulamadı.', en: 'The file could not be created.' },
+    LCWAI_OUTPUT_NOT_FOUND: { tr: 'Dosya bulunamadı; silinmiş ya da taşınmış olabilir.', en: 'The file was not found; it may have been deleted or moved.' },
     LCWAI_QUOTA_EXCEEDED: { tr: 'LCW AI dosya kotanız doldu. Eski sohbet dosyalarını silip tekrar deneyin.', en: 'Your LCW AI file quota is full. Delete old chat files and try again.' },
     LCWAI_INVALID_RESPONSE: { tr: 'LCW AI’ın cevabı anlaşılamadı. Tekrar deneyin ya da isteği sadeleştirin.', en: 'The LCW AI answer could not be understood. Try again or simplify the request.' },
     LCWAI_SCHEMA_MISMATCH: { tr: 'LCW AI beklenen biçimde bir öneri üretmedi. Tekrar deneyin ya da isteği netleştirin.', en: 'LCW AI did not produce a suggestion in the expected format. Try again or clarify the request.' },
@@ -122,9 +125,39 @@
     for (const listener of statusListeners) { try { listener(lastStatus); } catch (_) {} }
     return lastStatus;
   }
+  /* Masaüstü arka plan oturumu (PLM Sync deseni): Electron gizli, kalıcı
+     bölümde LCW AI'ı açar; SSO çerezleriyle token kullanıcı tarayıcı
+     görmeden alınır. Köprü yoksa (tarayıcı kipi/eski kabuk) Edge yolu. */
+  const desktopAuth = () => (root.buyerLogDesktop && typeof root.buyerLogDesktop.ensureLcwAiAuth === 'function' ? root.buyerLogDesktop : null);
+  let silentAuth = null;
+  let silentAuthAt = 0;
+  function silentDesktopAuth({ force = false } = {}) {
+    const desktop = desktopAuth();
+    if (!desktop) return Promise.resolve(false);
+    if (silentAuth) return silentAuth;
+    if (!force && Date.now() - silentAuthAt < 60000) return Promise.resolve(false);
+    silentAuthAt = Date.now();
+    silentAuth = Promise.resolve(desktop.ensureLcwAiAuth({ interactive: false }))
+      .then(result => Boolean(result && result.ok), () => false)
+      .finally(() => { silentAuth = null; });
+    return silentAuth;
+  }
   async function getStatus({ refresh = true } = {}) {
     const data = await api(`/api/lcwai/status${refresh ? '' : '?refresh=0'}`);
-    return publishStatus(data.status);
+    const status = data.status;
+    // Bağlı değilse önce sessiz arka plan girişi denenir (dakikada en fazla bir).
+    if (refresh && status && !status.connected && !status.loginInProgress && await silentDesktopAuth()) {
+      return publishStatus((await api('/api/lcwai/status')).status);
+    }
+    return publishStatus(status);
+  }
+  /* Oturum gerektiren hata → sessiz arka plan girişi → bir kez yeniden dene. */
+  async function withDesktopAuth(run) {
+    try { return await run(); }
+    catch (error) {
+      if (!needsLogin(error) || !(await silentDesktopAuth({ force: true }))) throw error;
+      return run();
+    }
   }
   function onStatus(listener) {
     if (typeof listener !== 'function') return () => {};
@@ -142,9 +175,22 @@
       const notify = root.BLUI && root.BLUI.notify;
       let closeInfo = null;
       if (!quiet && typeof notify === 'function') {
-        closeInfo = notify(L('LCW AI açılıyor. Tarayıcıda kurumsal hesabınızla giriş yapın; Buyer Log parolanızı görmez.', 'Opening LCW AI. Sign in with your corporate account in the browser; Buyer Log never sees your password.'), { kind: 'loading', language: isEn() ? 'en' : 'tr' });
+        closeInfo = notify(desktopAuth()
+          ? L('LCW AI oturumu arka planda açılıyor. Giriş gerekirse küçük bir LCW AI penceresi görünür; Buyer Log parolanızı görmez.', 'Opening the LCW AI session in the background. If sign-in is needed a small LCW AI window appears; Buyer Log never sees your password.')
+          : L('LCW AI açılıyor. Tarayıcıda kurumsal hesabınızla giriş yapın; Buyer Log parolanızı görmez.', 'Opening LCW AI. Sign in with your corporate account in the browser; Buyer Log never sees your password.'), { kind: 'loading', language: isEn() ? 'en' : 'tr' });
       }
       try {
+        const desktop = desktopAuth();
+        if (desktop) {
+          // Masaüstü: önce sessiz; gerekirse giriş penceresi yalnız bir kez görünür.
+          const result = (await silentDesktopAuth({ force: true })) ? { ok: true } : await desktop.ensureLcwAiAuth({ interactive: true });
+          const status = publishStatus((await api('/api/lcwai/status')).status);
+          if (result && result.ok && status && status.connected) {
+            if (!quiet && typeof root.showToast === 'function') root.showToast(L('LCW AI bağlı (arka plan oturumu).', 'LCW AI is connected (background session).'), { kind: 'success' });
+            return status;
+          }
+          throw lcwError({ code: result && result.code === 'LCWAI_AUTH_CANCELLED' ? 'LCWAI_CANCELLED' : 'LCWAI_LOGIN_TIMEOUT' });
+        }
         let status = publishStatus((await api('/api/lcwai/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).status);
         const deadline = Date.now() + 5 * 60 * 1000 + 5000;
         while (status && status.loginInProgress && Date.now() < deadline) {
@@ -166,6 +212,11 @@
     return promise;
   }
   async function disconnect() {
+    // Masaüstü arka plan oturumu da kapatılır (çerezler silinir; sonraki
+    // bağlantıda yeniden giriş istenir).
+    const desktop = root.buyerLogDesktop;
+    if (desktop && typeof desktop.clearLcwAiAuth === 'function') { try { await desktop.clearLcwAiAuth(); } catch (_) {} }
+    silentAuthAt = Date.now();
     const data = await api('/api/lcwai/disconnect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     return publishStatus(data.status);
   }
@@ -266,7 +317,9 @@
   function statusBadge(status) {
     if (!status) return { kind: 'unknown', text: L('Kontrol ediliyor…', 'Checking…') };
     if (status.loginInProgress) return { kind: 'busy', text: L('Giriş bekleniyor…', 'Waiting for sign-in…') };
-    if (status.connected) return { kind: 'ok', text: L('✓ LCW AI Bağlı', '✓ LCW AI Connected') };
+    if (status.connected) return status.source === 'desktop-sso'
+      ? { kind: 'ok', text: L('✓ Bağlı · arka plan', '✓ Connected · background') }
+      : { kind: 'ok', text: L('✓ LCW AI Bağlı', '✓ LCW AI Connected') };
     if (status.state === 'expired') return { kind: 'warn', text: L('⚠ LCW AI Oturumu Yenilenmeli', '⚠ LCW AI Session Needs Renewal') };
     return { kind: 'off', text: L('LCW AI Girişi Yap', 'Sign in to LCW AI') };
   }
@@ -516,7 +569,7 @@
         response = await fetch('/api/lcwai/chat', {
           method: 'POST', credentials: 'same-origin', signal: controller.signal,
           headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
-          body: JSON.stringify({ requestId, chatId: options.chatId || null, message: options.message || '', contexts: options.contexts || [], attachments: options.attachments || [], lang: options.lang || (isEn() ? 'en' : 'tr') }),
+          body: JSON.stringify({ requestId, chatId: options.chatId || null, message: options.message || '', contexts: options.contexts || [], attachments: options.attachments || [], lang: options.lang || (isEn() ? 'en' : 'tr'), output: options.output && options.output.format ? options.output : undefined }),
         });
       } catch (error) { throw lcwError({ code: error && error.name === 'AbortError' ? 'LCWAI_CANCELLED' : 'LCWAI_NETWORK' }); }
       if (!response.ok) { let data = null; try { data = await response.json(); } catch (_) {} throw lcwError(data); }
@@ -534,14 +587,46 @@
       if (failure) throw failure;
       if (!result) throw lcwError({ code: controller.signal.aborted ? 'LCWAI_CANCELLED' : 'LCWAI_STREAM_INTERRUPTED' });
       if (result.model && result.model.label) modelLabel = String(result.model.label);
-      return result;
+      return result.output && result.output.pending === 'pdf' ? await finalizePdf(result, onProgress) : result;
     } catch (error) {
       if (needsLogin(error)) getStatus({ refresh: false }).catch(() => {});
       throw error;
     } finally { active.delete(requestId); }
   }
-  const createConversation = (options = {}) => chat({ ...options, chatId: null });
-  const continueConversation = (chatId, options = {}) => chat({ ...options, chatId });
+
+  /* ---------------- AI Çıktı Oluşturma (Export Engine) ----------------
+     PDF son adımı: sunucunun temizlediği rapor HTML'i masaüstü kabuğunda
+     (Chromium printToPDF; JS kapalı, ağ engelli gizli pencere) basılır ve
+     baytlar AI Outputs'a kaydedilir. HTML bu sayfanın DOM'una hiç girmez.
+     Kabuk yoksa (tarayıcı kipi) ya da baskı başarısızsa rapor HTML olarak
+     kaydedilir; kullanıcı onu açıp Yazdır → PDF yapabilir. */
+  async function finalizePdf(result, onProgress) {
+    const pending = result.output;
+    const id = encodeURIComponent(String(pending.pendingId || ''));
+    const desktop = root.buyerLogDesktop;
+    let record = null;
+    if (desktop && typeof desktop.renderPdf === 'function') {
+      try { onProgress({ phase: 'output', step: 'pdf' }); } catch (_) {}
+      try {
+        const rendered = await desktop.renderPdf(pending.html, { landscape: pending.landscape });
+        if (rendered && rendered.ok && rendered.data) {
+          record = (await api(`/api/lcwai/outputs/${id}/pdf`, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: rendered.data })).output;
+        }
+      } catch (_) { record = null; }
+    }
+    if (!record) record = { ...(await api(`/api/lcwai/outputs/${id}/fallback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).output, fallback: 'html' };
+    return { ...result, output: record };
+  }
+  const outputAction = action => async id => {
+    const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(id || ''))}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (!data.ok) throw lcwError({ code: 'LCWAI_OUTPUT_NOT_FOUND' });
+    return true;
+  };
+  const openOutput = outputAction('open');
+  const revealOutput = outputAction('reveal');
+  const listOutputs = async () => (await api('/api/lcwai/outputs')).outputs || [];
+  const createConversation = (options = {}) => withDesktopAuth(() => chat({ ...options, chatId: null }));
+  const continueConversation = (chatId, options = {}) => withDesktopAuth(() => chat({ ...options, chatId }));
 
   /* ---------------- Bağlam sağlayıcıları (AIContextProvider) ----------------
      Genel LCW AI ekranlara bağımlı değildir. Her ekran (veya modül) bir
@@ -584,9 +669,13 @@
     return true;
   }
 
+  const askAuthed = options => withDesktopAuth(() => ask(options));
+  const chatAuthed = options => withDesktopAuth(() => chat(options));
+  const uploadAuthed = (file, options) => withDesktopAuth(() => uploadFile(file, options));
   root.BuyerLogAI = {
-    ask, askWithFiles, uploadFile, cancel, getStatus, onStatus, connect, disconnect,
-    chat, createConversation, continueConversation, openChat,
+    ask: askAuthed, askWithFiles: options => withDesktopAuth(() => askWithFiles(options)), uploadFile: uploadAuthed, cancel, getStatus, onStatus, connect, disconnect,
+    chat: chatAuthed, createConversation, continueConversation, openChat,
+    openOutput, revealOutput, listOutputs,
     registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,
     errorText, notifyError, needsLogin, loadConfig,
