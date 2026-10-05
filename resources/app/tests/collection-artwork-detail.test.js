@@ -39,7 +39,7 @@ test('Artwork Detail remains PLM-owned: persistent source is BOM sidecar, not Co
 });
 
 test('Artwork Detail keeps grouped header/spreadsheet geometry aligned', () => {
-  assert.match(COLUMN, /patchGroupRow\(table, at\)/);
+  assert.match(COLUMN, /patchGroupRow\(table, logicalAt >= 0 \? logicalAt : at\)/);
   assert.match(COLUMN, /th\.colSpan = span \+ 1/);
   assert.match(COLUMN, /BLCollectionSpreadsheet\.afterRender/);
   assert.match(COLUMN, /data-key/);
@@ -49,9 +49,18 @@ test('visible Collection models read BOM summaries with one local batch request'
   assert.match(ROUTE, /app\.post\('\/api\/plm-sync\/bom\/batch'/);
   assert.match(ROUTE, /plmBomStore\.load\(\)/);
   assert.match(ROUTE, /entries\[plmId\] = entry/);
-  const batch = ROUTE.slice(ROUTE.indexOf("app.post('/api/plm-sync/bom/batch'"), ROUTE.indexOf("app.get('/api/plm-sync/bom/:plmId'"));
+  const start = ROUTE.indexOf("app.post('/api/plm-sync/bom/batch'");
+  const end = ROUTE.indexOf('\n});', start);
+  assert.ok(start >= 0 && end > start, 'batch route block must be found');
+  const batch = ROUTE.slice(start, end + 4);
   assert.doesNotMatch(batch, /syncPlmBoms\s*\(|coreNectumApiClient\.|getDefaultEngine\s*\(|\.ask\s*\(/,
     'batch projection must not trigger remote PLM/AI work');
+});
+
+
+test('Set Style Artwork keeps child A/B summary instead of merging placements', () => {
+  assert.match(COLUMN, /entry\.isSetStyle && String\(entry\.artworkSummary/);
+  assert.match(COLUMN, /white-space:pre-line/);
 });
 
 test('Artwork cell can open the full BOM detail view on double click', () => {
