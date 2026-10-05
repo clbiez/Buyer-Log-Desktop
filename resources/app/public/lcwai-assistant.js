@@ -627,7 +627,18 @@
     if (!record) record = { ...(await api(`/api/lcwai/outputs/${id}/fallback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).output, fallback: 'html' };
     return { ...result, output: record };
   }
-  const outputAction = action => async id => {
+  const outputAction = action => async (id, fileName = '') => {
+    // Masaüstünde yeni LCW AI çıktıları doğrudan Downloads'a kaydedilir.
+    // Aç/Göster işlemini Electron shell yapar; renderer yalnız dosya adını
+    // verebilir. Dosya eski konumdaysa aşağıdaki sunucu yolu geriye uyumludur.
+    const desktop = root.buyerLogDesktop;
+    const nativeAction = action === 'open' ? desktop && desktop.openGeneratedDownload : desktop && desktop.revealGeneratedDownload;
+    if (fileName && typeof nativeAction === 'function') {
+      try {
+        const result = await nativeAction(fileName);
+        if (result && result.ok) return true;
+      } catch (_) { /* legacy/server fallback below */ }
+    }
     const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(id || ''))}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
     if (!data.ok) throw lcwError({ code: 'LCWAI_OUTPUT_NOT_FOUND' });
     return true;
