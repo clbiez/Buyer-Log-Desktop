@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.241",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "LCW AI: giriş ve konu yönlendirmesi, otomatik ekran verisi",
+        "en": "LCW AI: sign-in and topic guidance, automatic screen data"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 0,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.241/release.json"
+    },
+    {
       "version": "7.0.240",
       "publishedAt": "2026-10-05",
       "title": {

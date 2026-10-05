@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.241",
+  "channel": "stable",
+  "publishedAt": "2026-10-05",
+  "title": {
+    "tr": "LCW AI: giriş ve konu yönlendirmesi, otomatik ekran verisi",
+    "en": "LCW AI: sign-in and topic guidance, automatic screen data"
+  },
+  "summary": {
+    "tr": "LCW AI ekranı önce girişe, sonra konuşulacak ekranı seçmeye yönlendiriyor; mesajda ekran adı geçince o ekranın verisi otomatik ekleniyor.",
+    "en": "The LCW AI screen now guides you to sign in, then to pick the screen to talk about; naming a screen in your message adds that screen’s data automatically."
+  },
+  "stats": {
+    "features": 2,
+    "improvements": 0,
+    "fixes": 0
+  },
+  "changes": [
+    {
+      "id": "lcwai-onboarding",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Sohbet",
+        "en": "LCW AI · Chat"
+      },
+      "title": {
+        "tr": "Önce giriş, sonra “Ne hakkında konuşalım?”",
+        "en": "Sign in first, then “What shall we talk about?”"
+      },
+      "body": {
+        "tr": "LCW AI’a giriş yapılmamışsa sohbet ekranı doğrudan “LCW AI Girişi Yap” adımını gösteriyor. Giriş yapıldıktan sonra ekran, verisi paylaşılabilen Buyer Log ekranlarını (Backlog, CP Tracker, Siparişler, Overview…) konu kartı olarak sunuyor. Bir karta tıklayınca o ekranın verisi sohbete ekleniyor ve o konuya uygun örnek sorular çıkıyor. “Genel soru” ile veri eklemeden de sohbet edilebiliyor.",
+        "en": "If you are not signed in to LCW AI, the chat screen goes straight to the “Sign in to LCW AI” step. After sign-in it offers the Buyer Log screens whose data can be shared (Backlog, CP Tracker, Orders, Overview…) as topic cards. Clicking a card adds that screen’s data to the chat and shows example questions for that topic. “General question” lets you chat without adding data."
+      },
+      "path": {
+        "tr": "LCW AI › boş sohbet",
+        "en": "LCW AI › empty chat"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-onboarding.png",
+        "alt": {
+          "tr": "Girişten sonra “Ne hakkında konuşalım?” konu kartları ve Backlog bağlamı eklenmiş sohbet (demo veri)",
+          "en": "“What shall we talk about?” topic cards after sign-in, with Backlog context added (demo data)"
+        },
+        "caption": {
+          "tr": "Bir ekran seçin; verisi sohbete eklenir.",
+          "en": "Pick a screen; its data is added to the chat."
+        }
+      }
+    },
+    {
+      "id": "lcwai-auto-context",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Bağlam",
+        "en": "LCW AI · Context"
+      },
+      "title": {
+        "tr": "Ekran adını yazınca veri otomatik eklenir",
+        "en": "Naming a screen adds its data automatically"
+      },
+      "body": {
+        "tr": "Mesajda bir Buyer Log ekranı geçtiğinde (ör. “Backlog’daki gecikmeleri özetle”, “CP Tracker’da…”, “bu ekrandaki…”), elle bağlam eklenmemişse Buyer Log o ekranın verisini kendiliğinden CSV dosyası olarak ekliyor. Seçili kayıt varsa yalnız seçili kayıtlar gidiyor. Backlog verisi, Backlog ekranı açılmamış olsa da ekleniyor. Eklenen veri mesajın altında “otomatik” etiketiyle görünüyor. “Otomatik bağlam” kutusuyla bu davranış kapatılabiliyor.",
+        "en": "When your message names a Buyer Log screen (e.g. “summarise the delays in the Backlog”, “in CP Tracker…”, “on this screen…”) and no context was added manually, Buyer Log attaches that screen’s data as a CSV file automatically. If records are selected, only those are sent. Backlog data is added even if the Backlog screen was never opened. The added data appears under the message with an “automatic” label. The “Auto context” box turns this off."
+      },
+      "path": {
+        "tr": "LCW AI › Otomatik bağlam",
+        "en": "LCW AI › Auto context"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-auto-context.png",
+        "alt": {
+          "tr": "Backlog adı geçen mesaja Backlog verisinin otomatik eklendiği sohbet (demo veri)",
+          "en": "Chat where Backlog data was added automatically to a message naming the Backlog (demo data)"
+        },
+        "caption": {
+          "tr": "“Backlog’daki…” yazınca Backlog verisi otomatik eklenir.",
+          "en": "Writing “in the Backlog…” adds Backlog data automatically."
+        }
+      }
+    }
+  ]
+}
