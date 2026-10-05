@@ -437,10 +437,15 @@ test('Electron: render-pdf JS kapalı, ağ engelli, güvenilir göndericili; pre
   assert.match(render, /javascript: false/);
   assert.match(render, /sandbox: true/);
   assert.match(render, /nodeIntegration: false/);
-  assert.match(render, /cancel: !\/\^\(data\|about\):\/i\.test/);
+  assert.match(render, /callback\(\{ cancel: !\(\/\^\(data\|about\):\/i\.test\(url\) \|\| \(aiPdfAllowedFileUrl && url === aiPdfAllowedFileUrl\)\) \}\);/, 'yalnız data:/about: ve o basımın kendi geçici dosyası');
+  assert.match(render, /aiPdfAllowedFileUrl = '';\s*if \(tempFile\) \{ try \{ fs\.unlinkSync\(tempFile\); \} catch \(_\) \{\} \}/, 'geçici dosya silinir, izin kaldırılır');
   assert.match(render, /setPermissionRequestHandler\(\(_contents, _permission, callback\) => callback\(false\)\)/);
   assert.match(render, /setWindowOpenHandler\(\(\) => \(\{ action: 'deny' \}\)\)/);
-  assert.doesNotMatch(render, /preload|persist:|writeFile/);
+  assert.doesNotMatch(render, /preload|persist:/);
+  // Tek dosya yazımı: büyük (görselli) belge için rastgele adlı, yalnız sahibin
+  // okuyabildiği geçici dosya; basımdan sonra silinir.
+  assert.equal((render.match(/writeFileSync\(/g) || []).length, 1);
+  assert.match(render, /tempFile = path\.join\(app\.getPath\('temp'\), `buyerlog-ai-pdf-\$\{crypto\.randomBytes\(8\)\.toString\('hex'\)\}\.html`\);\s*fs\.writeFileSync\(tempFile, bytes, \{ mode: 0o600 \}\);/);
   assert.match(render, /printToPDF\(/);
   const preload = fs.readFileSync(path.join(ROOT, 'electron', 'preload.js'), 'utf8');
   assert.match(preload, /renderPdf: \(html, options\) => ipcRenderer\.invoke\('buyerlog:render-pdf', \{\s*html: String\(html \|\| ''\),\s*landscape: Boolean\(options && options\.landscape\),\s*\}\)/);

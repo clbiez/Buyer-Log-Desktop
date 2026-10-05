@@ -12472,6 +12472,21 @@ window.BLAIScreenData = {
   overviewCpRows: () => { try { return ovFilteredCpRows(); } catch (_) { return []; } },
   cpColumns: () => { try { return visibleCols('cp').map(col => ({ key: col.k, label: String(col.label || col.k) })); } catch (_) { return []; } },
   backlogQuery: () => { try { return typeof backlogExportQueryParams === 'function' ? backlogExportQueryParams() : null; } catch (_) { return null; } },
+  // Model görseli kimliği (ekrandaki küçük görselle AYNI kanonik öncelik):
+  // CP/Siparişler/Overview → cpOrdersRowImageIdentity, Koleksiyon → kol sırası.
+  rowImage(tab, row) {
+    try {
+      if (tab === 'koleksiyon') {
+        const source = kolCollectionProjectionSource(row);
+        const url = String(source && source._sharedCollectionImageUrl || '') || canonicalModelImageSource(source.plmId, source.colourCode, source.colour) || source.img || (source.imgRef ? `${COLLECTION_IMAGE_API}/${encodeURIComponent(source.imgRef)}` : '');
+        return url ? { modelId: source.plmId || source.modelKod || source.id || '', colourCode: source.colourCode || '', source: url } : null;
+      }
+      const identity = cpOrdersRowImageIdentity(row);
+      return identity ? { modelId: identity.modelId, colourCode: identity.colourCode, source: identity.source } : null;
+    } catch (_) { return null; }
+  },
+  // Kimlik → gömülebilir data URL (panoya/Excel'e kopyalamayla aynı yol).
+  imageDataUrl: identity => cpOrdersImageDataUrlFor(identity).catch(() => ''),
   // Backlog ekranı (backlog-overview.js) hiç açılmamış olsa da LCW AI bağlamı
   // için aynı dışa aktarma uç noktasından satırlar alınır.
   backlogRows: async query => {

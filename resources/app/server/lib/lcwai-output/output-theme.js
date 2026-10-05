@@ -170,6 +170,13 @@ a{color:var(--acc-ink);}
 .bl-card{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--acc-lite);padding:12px 14px;break-inside:avoid;}
 .bl-card.ok{border-left-color:var(--green);}.bl-card.warn{border-left-color:var(--orange);}.bl-card.risk{border-left-color:var(--red);}
 .bl-card h3{margin-top:0;color:var(--logo);}
+/* Model görselleri (Buyer Log yerel deposundan gömülür) */
+.bl-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:10px 0 18px;}
+.bl-gallery .bl-card{display:flex;flex-direction:column;gap:4px;}
+.bl-model-img{display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;border:1px solid var(--line);margin:0 0 8px;break-inside:avoid;}
+.bl-noimg{display:grid;place-items:center;align-content:center;gap:2px;width:100%;aspect-ratio:1/1;border:1px dashed var(--line2);background:var(--card2);color:var(--muted);font-size:12px;margin:0 0 8px;text-align:center;}
+.bl-noimg small{font-size:11px;color:var(--muted);}
+td .bl-model-img,td .bl-noimg{width:64px;margin:0;}
 .bl-callout{border-left:4px solid var(--acc);background:var(--acc-bg);padding:12px 16px;margin:14px 0;break-inside:avoid;}
 .bl-callout.ok{border-left-color:var(--green);background:var(--green-bg);}.bl-callout.warn{border-left-color:var(--orange);background:var(--orange-bg);}.bl-callout.risk{border-left-color:var(--red);background:var(--red-bg);}
 .bl-table-wrap{overflow-x:auto;margin:8px 0 16px;border:1px solid var(--thead-line);}

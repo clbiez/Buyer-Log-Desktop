@@ -1800,8 +1800,11 @@ function diagnostics() {
   };
 }
 
-// data: URL gezintisi Chromium'da ~2 MB ile sınırlı; base64 payı bırakılır.
-const AI_PDF_HTML_MAX_BYTES = 1400 * 1024;
+// Küçük belge data: URL ile açılır (Chromium ~2 MB sınırı); model görselleri
+// gömülü büyük belge geçici dosyadan açılır. Her iki yolda da ağ kapalıdır.
+const AI_PDF_DATA_URL_MAX_BYTES = 1400 * 1024;
+const AI_PDF_HTML_MAX_BYTES = 60 * 1024 * 1024;
+let aiPdfAllowedFileUrl = '';
 function withDeadline(promise, ms, label) {
   let timer = null;
   return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label}-timeout`)), ms); })]).finally(() => clearTimeout(timer));
@@ -1814,7 +1817,12 @@ let aiPdfQueue = Promise.resolve();
 function aiPdfSession() {
   const pdfSession = session.fromPartition(AI_PDF_PARTITION, { cache: false });
   if (!aiPdfSessionReady) {
-    pdfSession.webRequest.onBeforeRequest((details, callback) => callback({ cancel: !/^(data|about):/i.test(String(details.url || '')) }));
+    // Yalnız data:/about: ve o anki basımın kendi geçici dosyası; başka hiçbir
+    // dosya veya ağ isteği yüklenmez.
+    pdfSession.webRequest.onBeforeRequest((details, callback) => {
+      const url = String(details.url || '');
+      callback({ cancel: !(/^(data|about):/i.test(url) || (aiPdfAllowedFileUrl && url === aiPdfAllowedFileUrl)) });
+    });
     pdfSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
     aiPdfSessionReady = true;
   }
@@ -1828,6 +1836,7 @@ function renderAiPdf(html, options) {
 }
 async function renderAiPdfNow(html, { landscape = false } = {}) {
   aiPdfSession();
+  let tempFile = '';
   const partition = AI_PDF_PARTITION;
   const win = new BrowserWindow({
     show: false, width: 1123, height: 794,
@@ -1836,7 +1845,15 @@ async function renderAiPdfNow(html, { landscape = false } = {}) {
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', navigation => navigation.preventDefault());
   try {
-    await withDeadline(win.loadURL(`data:text/html;charset=utf-8;base64,${Buffer.from(html, 'utf8').toString('base64')}`), 30000, 'load');
+    const bytes = Buffer.from(html, 'utf8');
+    if (bytes.length <= AI_PDF_DATA_URL_MAX_BYTES) {
+      await withDeadline(win.loadURL(`data:text/html;charset=utf-8;base64,${bytes.toString('base64')}`), 30000, 'load');
+    } else {
+      tempFile = path.join(app.getPath('temp'), `buyerlog-ai-pdf-${crypto.randomBytes(8).toString('hex')}.html`);
+      fs.writeFileSync(tempFile, bytes, { mode: 0o600 });
+      aiPdfAllowedFileUrl = require('url').pathToFileURL(tempFile).href;
+      await withDeadline(win.loadURL(aiPdfAllowedFileUrl), 60000, 'load');
+    }
     return await withDeadline(win.webContents.printToPDF({
       printBackground: true, preferCSSPageSize: true, landscape, displayHeaderFooter: true,
       headerTemplate: '<span></span>',
@@ -1844,6 +1861,8 @@ async function renderAiPdfNow(html, { landscape = false } = {}) {
     }), 60000, 'print');
   } finally {
     if (!win.isDestroyed()) win.destroy();
+    aiPdfAllowedFileUrl = '';
+    if (tempFile) { try { fs.unlinkSync(tempFile); } catch (_) {} }
   }
 }
 

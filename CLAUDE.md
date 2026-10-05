@@ -112,7 +112,7 @@ Test runner: `npm test` → `node --test tests/*.test.js`.
   (HTML ya da sözleşmeli JSON) üretir; Buyer Log doğrular, onarım ister ve
   dosyayı kendi temasıyla (`design.css` anahtarları) oluşturur. AI HTML'i
   temizlenir, katı CSP ile sarılır ve ana DOM'a eklenmez; PDF, JS'i kapalı ve
-  ağı engelli gizli pencerede (`buyerlog:render-pdf`) basılır. Başka bir AI sağlayıcısı eklemek ayrı ürün ve güvenlik kararıdır.
+  ağı engelli gizli pencerede (`buyerlog:render-pdf`) basılır. Model görselleri LCW AI'a gitmez: bağlamda yalnız anahtar (`BL Image`, ör. `KOL-3`) bulunur; Buyer Log kullanılan görselleri yerel depodan (kanonik çözümleyici) gömer. Başka bir AI sağlayıcısı eklemek ayrı ürün ve güvenlik kararıdır.
 - Secret, credential, private ağ bilgisi veya kaynak kodunu dış servislere
   gönderme. Şirket/iş verisi yalnız şirket içi LCW AI'a bağlam olarak
   gidebilir (kullanıcı kararı); kimlik bilgisi oraya da gönderilmez.
