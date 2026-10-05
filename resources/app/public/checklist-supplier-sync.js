@@ -2163,14 +2163,22 @@
   function bindReportDrop() {
     if (state.reportDropBound || !root.document) return;
     state.reportDropBound = true;
-    let overlay = null, depth = 0;
+    let overlay = null, depth = 0, internalDrag = false;
+    // Sayfa içinden başlayan sürükleme (sütun başlığı/satır taşıma vb.) dosya
+    // bırakma değildir; yalnız dışarıdan (Explorer/Outlook) gelen sürükleme
+    // test raporu katmanını açar.
+    root.document.addEventListener('dragstart', function () { internalDrag = true; }, true);
+    // Kaynak öğe yeniden çizilirse dragend belgeye ulaşmayabilir; bırakmada da sıfırla.
+    const endInternal = function () { internalDrag = false; };
+    root.document.addEventListener('dragend', endInternal, true);
+    root.document.addEventListener('drop', endInternal, true);
     const eligible = function (event) {
       // Açık bir pencere (ek ekleme vb.) kendi bırakmasını yönetir.
       return activeTab() === 'cp' && !(event.target && event.target.closest && event.target.closest('.cpaModalOverlay'));
     };
     const hide = function () { depth = 0; if (overlay) { overlay.remove(); overlay = null; } };
     root.document.addEventListener('dragenter', function (event) {
-      if (!eligible(event) || !(dragHasFiles(event) || (event.dataTransfer && event.dataTransfer.types && event.dataTransfer.types.length))) return;
+      if (internalDrag || !eligible(event) || !(dragHasFiles(event) || (event.dataTransfer && event.dataTransfer.types && event.dataTransfer.types.length))) return;
       depth += 1;
       if (overlay) return;
       overlay = root.document.createElement('div');
