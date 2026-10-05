@@ -49,8 +49,11 @@ test('visible Collection models read BOM summaries with one local batch request'
   assert.match(ROUTE, /app\.post\('\/api\/plm-sync\/bom\/batch'/);
   assert.match(ROUTE, /plmBomStore\.load\(\)/);
   assert.match(ROUTE, /entries\[plmId\] = entry/);
+  const start = ROUTE.indexOf("app.post('/api/plm-sync/bom/batch'");
+  const end = ROUTE.indexOf('\n});', start);
+  assert.ok(start >= 0 && end > start, 'batch route block must be found');
   assert.doesNotMatch(
-    ROUTE.slice(ROUTE.indexOf("app.post('/api/plm-sync/bom/batch'"), ROUTE.indexOf("app.get('/api/plm-sync/bom/:plmId'")),
+    ROUTE.slice(start, end + 4),
     /CoreNectum|syncPlmBoms|getDefaultEngine|lcwai/i,
     'batch projection must not trigger remote PLM/AI work'
   );
