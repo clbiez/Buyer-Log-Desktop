@@ -129,7 +129,7 @@
     const statusClass=s.status==='ERROR'?'is-error':(s.status==='REVIEW'?'is-review':'is-ok');
     const checks=selectedChecks();
     return [
-      '<section class="layoutReport">',
+      '<div class="layoutReport">',
       '<div class="layoutReportTop">',
       '<div><span class="layoutEyebrow">'+esc(docText(currentReport.documentType))+'</span>',
       '<h3>'+esc(arr(ex.modelCodes)[0]||L('Model doğrulanamadı','Model not verified'))+'</h3>',
@@ -150,7 +150,7 @@
         '</article>'
       ].join('')).join(''):'<div class="layoutEmpty">'+esc(L('Bu filtrede sonuç yok.','No results in this filter.'))+'</div>',
       '</div>',
-      '</section>'
+      '</div>'
     ].join('');
   }
   function historyHtml(){
@@ -374,7 +374,7 @@
       '<section class="layoutUploadCard" data-layout-drop><div class="layoutDropIcon">PDF</div><div><b>'+esc(L('Layout PDF’ini buraya sürükle','Drop the layout PDF here'))+'</b><p>'+esc(L('Care Label ve Price Tag otomatik tanınır. Model bilgisi manuel girilmez.','Care Label and Price Tag are detected automatically. No manual model entry.'))+'</p></div><button type="button" class="lcwaiBtn is-primary" data-layout-file>'+esc(L('PDF Seç','Choose PDF'))+'</button><input type="file" accept="application/pdf,.pdf" data-layout-file-input hidden></section>',
       '<div class="layoutStage" data-layout-stage>'+esc(L('PDF bekleniyor.','Waiting for PDF.'))+'</div>',
       '<div data-layout-result></div>',
-      '<section class="layoutHistory"><div class="layoutHistoryHead"><div><b>'+esc(L('Layout Geçmişi','Layout History'))+'</b><small>'+esc(L('Bu kullanıcı ve cihazda son kontroller','Recent checks for this user and device'))+'</small></div><div><button type="button" class="lcwaiBtn" data-layout-rerun disabled>'+esc(L('Yeniden Kontrol','Recheck'))+'</button><button type="button" class="lcwaiBtn" data-layout-history-clear>'+esc(L('Geçmişi Temizle','Clear History'))+'</button></div></div><div data-layout-history-list></div></section>',
+      '<div class="layoutHistory"><div class="layoutHistoryHead"><div><b>'+esc(L('Layout Geçmişi','Layout History'))+'</b><small>'+esc(L('Bu kullanıcı ve cihazda son kontroller','Recent checks for this user and device'))+'</small></div><div><button type="button" class="lcwaiBtn" data-layout-rerun disabled>'+esc(L('Yeniden Kontrol','Recheck'))+'</button><button type="button" class="lcwaiBtn" data-layout-history-clear>'+esc(L('Geçmişi Temizle','Clear History'))+'</button></div></div><div data-layout-history-list></div></div>',
       '</div>',
       '<footer class="layoutControlFoot"><span>'+esc(L('CP = kaynak veri · Buyer Log = deterministik kontrol · LCW AI = görsel/semantik REVIEW','CP = reference · Buyer Log = deterministic verification · LCW AI = visual/semantic REVIEW'))+'</span><button type="button" class="lcwaiBtn" data-layout-close>'+esc(L('Kapat','Close'))+'</button></footer>',
       '</div>'
