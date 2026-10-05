@@ -1701,6 +1701,35 @@ function diagnostics() {
   };
 }
 
+// data: URL gezintisi Chromium'da ~2 MB ile sınırlı; base64 payı bırakılır.
+const AI_PDF_HTML_MAX_BYTES = 1400 * 1024;
+function withDeadline(promise, ms, label) {
+  let timer = null;
+  return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label}-timeout`)), ms); })]).finally(() => clearTimeout(timer));
+}
+async function renderAiPdf(html, { landscape = false } = {}) {
+  const partition = `buyerlog-ai-pdf-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`; // kalıcı önek yok → bellek içi oturum
+  const pdfSession = session.fromPartition(partition, { cache: false });
+  pdfSession.webRequest.onBeforeRequest((details, callback) => callback({ cancel: !/^(data|about):/i.test(String(details.url || '')) }));
+  pdfSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+  const win = new BrowserWindow({
+    show: false, width: 1123, height: 794,
+    webPreferences: { javascript: false, sandbox: true, contextIsolation: true, nodeIntegration: false, webSecurity: true, partition, spellcheck: false, navigateOnDragDrop: false, devTools: false },
+  });
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', navigation => navigation.preventDefault());
+  try {
+    await withDeadline(win.loadURL(`data:text/html;charset=utf-8;base64,${Buffer.from(html, 'utf8').toString('base64')}`), 30000, 'load');
+    return await withDeadline(win.webContents.printToPDF({
+      printBackground: true, preferCSSPageSize: true, landscape, displayHeaderFooter: true,
+      headerTemplate: '<span></span>',
+      footerTemplate: '<div style="font-size:8px;width:100%;padding:0 12mm;color:#7a7a7d;display:flex;justify-content:space-between;font-family:Segoe UI,Arial,sans-serif"><span>Buyer Log · LCW AI</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>',
+    }), 60000, 'print');
+  } finally {
+    if (!win.isDestroyed()) win.destroy();
+  }
+}
+
 function trustedBuyerLogIpcSender(event) {
   if (!event || !event.sender || event.sender.isDestroyed()) return false;
   if (workspace && !workspace.tabForContents(event.sender)) return false;
@@ -1996,6 +2025,21 @@ function registerIpc() {
     if (!entry || !fs.existsSync(entry.path)) return { ok: false, error: 'not-found' };
     shell.showItemInFolder(entry.path);
     return { ok: true };
+  });
+  /*
+   * LCW AI Export Engine → PDF. Renderer, sunucunun temizleyip katı CSP ile
+   * sardığı rapor HTML'ini verir; burada JavaScript'i KAPALI, ağı ENGELLİ
+   * (yalnız data:/about:), izinleri reddedilen, kalıcı olmayan bir oturumdaki
+   * GİZLİ pencerede açılır ve Chromium printToPDF ile basılır. Dönen yalnız
+   * PDF baytlarıdır: dosya sistemi yetkisi verilmez, kaydı Buyer Log
+   * sunucusu (AI Outputs) yapar. AI HTML'i ana Buyer Log DOM'una girmez.
+   */
+  ipcMain.handle('buyerlog:render-pdf', async (event, payload = {}) => {
+    if (!trustedBuyerLogIpcSender(event)) return { ok:false, error:'forbidden' };
+    const html = payload && typeof payload.html === 'string' ? payload.html : '';
+    if (!html || Buffer.byteLength(html, 'utf8') > AI_PDF_HTML_MAX_BYTES) return { ok:false, error:'invalid' };
+    try { return { ok:true, data: await renderAiPdf(html, { landscape: payload.landscape === true }) }; }
+    catch (error) { return { ok:false, error: String(error && error.message || 'render-failed').slice(0, 80) }; }
   });
 }
 

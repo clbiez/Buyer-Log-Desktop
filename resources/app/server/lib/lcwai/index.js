@@ -26,4 +26,14 @@ function getDefaultEngine() {
   return defaultEngine;
 }
 
-module.exports = { config, errors, createDefaultEngine, getDefaultEngine };
+/* AI Çıktı Oluşturma (Export Engine): aynı motoru kullanır. */
+let defaultOutputService = null;
+function getDefaultOutputService() {
+  if (!defaultOutputService) {
+    const { createOutputService } = require('../lcwai-output/output-service');
+    defaultOutputService = createOutputService({ engine: () => getDefaultEngine() });
+  }
+  return defaultOutputService;
+}
+
+module.exports = { config, errors, createDefaultEngine, getDefaultEngine, getDefaultOutputService };

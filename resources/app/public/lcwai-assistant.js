@@ -49,6 +49,9 @@
     LCWAI_UPLOAD_FAILED: { tr: 'Dosya LCW AI’a yüklenemedi.', en: 'The file could not be uploaded to LCW AI.' },
     LCWAI_FILE_TOO_LARGE: { tr: 'Dosya LCW AI için çok büyük.', en: 'The file is too large for LCW AI.' },
     LCWAI_FILE_TYPE_NOT_ALLOWED: { tr: 'Bu dosya türü LCW AI’a gönderilemez.', en: 'This file type cannot be sent to LCW AI.' },
+    LCWAI_OUTPUT_INVALID: { tr: 'LCW AI istenen dosya için geçerli içerik üretmedi (düzeltme denemeleri de sonuç vermedi). İsteği sadeleştirip tekrar deneyin.', en: 'LCW AI did not produce valid content for the requested file (repair attempts failed too). Simplify the request and try again.' },
+    LCWAI_OUTPUT_RENDER_FAILED: { tr: 'Dosya oluşturulamadı.', en: 'The file could not be created.' },
+    LCWAI_OUTPUT_NOT_FOUND: { tr: 'Dosya bulunamadı; silinmiş ya da taşınmış olabilir.', en: 'The file was not found; it may have been deleted or moved.' },
     LCWAI_QUOTA_EXCEEDED: { tr: 'LCW AI dosya kotanız doldu. Eski sohbet dosyalarını silip tekrar deneyin.', en: 'Your LCW AI file quota is full. Delete old chat files and try again.' },
     LCWAI_INVALID_RESPONSE: { tr: 'LCW AI’ın cevabı anlaşılamadı. Tekrar deneyin ya da isteği sadeleştirin.', en: 'The LCW AI answer could not be understood. Try again or simplify the request.' },
     LCWAI_SCHEMA_MISMATCH: { tr: 'LCW AI beklenen biçimde bir öneri üretmedi. Tekrar deneyin ya da isteği netleştirin.', en: 'LCW AI did not produce a suggestion in the expected format. Try again or clarify the request.' },
@@ -516,7 +519,7 @@
         response = await fetch('/api/lcwai/chat', {
           method: 'POST', credentials: 'same-origin', signal: controller.signal,
           headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
-          body: JSON.stringify({ requestId, chatId: options.chatId || null, message: options.message || '', contexts: options.contexts || [], attachments: options.attachments || [], lang: options.lang || (isEn() ? 'en' : 'tr') }),
+          body: JSON.stringify({ requestId, chatId: options.chatId || null, message: options.message || '', contexts: options.contexts || [], attachments: options.attachments || [], lang: options.lang || (isEn() ? 'en' : 'tr'), output: options.output && options.output.format ? options.output : undefined }),
         });
       } catch (error) { throw lcwError({ code: error && error.name === 'AbortError' ? 'LCWAI_CANCELLED' : 'LCWAI_NETWORK' }); }
       if (!response.ok) { let data = null; try { data = await response.json(); } catch (_) {} throw lcwError(data); }
@@ -534,12 +537,44 @@
       if (failure) throw failure;
       if (!result) throw lcwError({ code: controller.signal.aborted ? 'LCWAI_CANCELLED' : 'LCWAI_STREAM_INTERRUPTED' });
       if (result.model && result.model.label) modelLabel = String(result.model.label);
-      return result;
+      return result.output && result.output.pending === 'pdf' ? await finalizePdf(result, onProgress) : result;
     } catch (error) {
       if (needsLogin(error)) getStatus({ refresh: false }).catch(() => {});
       throw error;
     } finally { active.delete(requestId); }
   }
+
+  /* ---------------- AI Çıktı Oluşturma (Export Engine) ----------------
+     PDF son adımı: sunucunun temizlediği rapor HTML'i masaüstü kabuğunda
+     (Chromium printToPDF; JS kapalı, ağ engelli gizli pencere) basılır ve
+     baytlar AI Outputs'a kaydedilir. HTML bu sayfanın DOM'una hiç girmez.
+     Kabuk yoksa (tarayıcı kipi) ya da baskı başarısızsa rapor HTML olarak
+     kaydedilir; kullanıcı onu açıp Yazdır → PDF yapabilir. */
+  async function finalizePdf(result, onProgress) {
+    const pending = result.output;
+    const id = encodeURIComponent(String(pending.pendingId || ''));
+    const desktop = root.buyerLogDesktop;
+    let record = null;
+    if (desktop && typeof desktop.renderPdf === 'function') {
+      try { onProgress({ phase: 'output', step: 'pdf' }); } catch (_) {}
+      try {
+        const rendered = await desktop.renderPdf(pending.html, { landscape: pending.landscape });
+        if (rendered && rendered.ok && rendered.data) {
+          record = (await api(`/api/lcwai/outputs/${id}/pdf`, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: rendered.data })).output;
+        }
+      } catch (_) { record = null; }
+    }
+    if (!record) record = { ...(await api(`/api/lcwai/outputs/${id}/fallback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).output, fallback: 'html' };
+    return { ...result, output: record };
+  }
+  const outputAction = action => async id => {
+    const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(id || ''))}/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    if (!data.ok) throw lcwError({ code: 'LCWAI_OUTPUT_NOT_FOUND' });
+    return true;
+  };
+  const openOutput = outputAction('open');
+  const revealOutput = outputAction('reveal');
+  const listOutputs = async () => (await api('/api/lcwai/outputs')).outputs || [];
   const createConversation = (options = {}) => chat({ ...options, chatId: null });
   const continueConversation = (chatId, options = {}) => chat({ ...options, chatId });
 
@@ -587,6 +622,7 @@
   root.BuyerLogAI = {
     ask, askWithFiles, uploadFile, cancel, getStatus, onStatus, connect, disconnect,
     chat, createConversation, continueConversation, openChat,
+    openOutput, revealOutput, listOutputs,
     registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,
     errorText, notifyError, needsLogin, loadConfig,

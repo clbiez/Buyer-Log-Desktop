@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI cevabı PDF, PowerPoint, Excel ve HTML dosyası olarak",
+    "en": "LCW AI answers as PDF, PowerPoint, Excel and HTML files"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI artık içerik üretiyor, Buyer Log da onu kendi temasıyla gerçek bir dosyaya dönüştürüyor: PDF rapor, PowerPoint sunum, Excel çalışma kitabı ya da HTML rapor.",
+    "en": "LCW AI now produces the content and Buyer Log turns it into a real file with its own theme: a PDF report, PowerPoint deck, Excel workbook or HTML report."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "lcwai-ai-outputs",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Çıktı Oluşturma",
+        "en": "LCW AI · Output Engine"
+      },
+      "title": {
+        "tr": "Yanıt biçimi: PDF, PowerPoint, Excel veya HTML dosyası",
+        "en": "Answer as: a PDF, PowerPoint, Excel or HTML file"
+      },
+      "body": {
+        "tr": "LCW AI ekranında “Yanıt biçimi” seçiciyle cevabı dosya olarak isteyebilirsiniz; PDF ve HTML için sayfa yönü, PDF, PowerPoint ve HTML için detay seviyesi seçilebilir. LCW AI içeriği ve yapıyı üretir; Buyer Log çıktıyı doğrular, gerekirse aynı sohbette otomatik düzelttirir (en fazla 2 kez) ve kendi renk ve yazı tipleriyle gerçek dosyayı oluşturur. Şablon (yönetici özeti, veri analizi, operasyon raporu, karşılaştırma) isteğe göre otomatik seçilir. Dosyalar AI Outputs klasörüne anlamlı adla kaydedilir; kart üzerindeki Aç ve Klasörde Göster ile ulaşılır. Başka ekrana geçerseniz iş arka planda tamamlanır ve bildirim gelir. Güvenlik: AI’ın ürettiği HTML temizlenir; betik, uzak kaynak ve iframe çalışmaz; PDF, JavaScript’i kapalı ve ağ erişimi olmayan ayrı bir pencerede basılır.",
+        "en": "In the LCW AI screen, use the “Answer as” selector to get the answer as a file; choose page orientation for PDF and HTML, and the level of detail for PDF, PowerPoint and HTML. LCW AI produces the content and structure; Buyer Log validates it, asks for an automatic fix in the same chat when needed (at most twice) and builds the real file with its own colours and fonts. The template (executive summary, data analysis, operational report, comparison) is chosen automatically from the request. Files are saved with a meaningful name in the AI Outputs folder and opened with Open and Show in folder on the card. If you switch screens, the work finishes in the background and you get a notification. Security: AI-generated HTML is sanitized; scripts, remote resources and iframes cannot run; PDFs are printed in a separate window with JavaScript disabled and no network access."
+      },
+      "path": {
+        "tr": "LCW AI › Yanıt biçimi",
+        "en": "LCW AI › Answer as"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-ai-outputs.png",
+        "alt": {
+          "tr": "LCW AI ekranında PDF seçiliyken oluşturulan yönetici özeti dosya kartı, Aç ve Klasörde Göster düğmeleriyle (demo veri)",
+          "en": "Executive summary file card created with PDF selected in the LCW AI screen, with Open and Show in folder buttons (demo data)"
+        },
+        "caption": {
+          "tr": "Yanıt biçimini seçin; Buyer Log dosyayı oluşturur ve AI Outputs klasörüne kaydeder.",
+          "en": "Pick the answer format; Buyer Log builds the file and saves it to the AI Outputs folder."
+        }
+      }
+    }
+  ]
 }

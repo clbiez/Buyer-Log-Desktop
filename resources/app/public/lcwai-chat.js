@@ -117,7 +117,17 @@
   /* ---------------- Durum ---------------- */
   const state = {
     conversations: [], activeId: '', files: [], contexts: [], busy: false, requestId: '', config: null, status: null, mounted: false,
+    // Yanıt biçimi: '' = sohbet; pdf/pptx/xlsx/html = AI Çıktı Oluşturma.
+    output: { format: '', orientation: 'portrait', detail: 'standard' },
   };
+  const OUTPUT_FORMATS = () => [
+    { key: '', label: L('Sohbet', 'Chat') },
+    { key: 'pdf', label: 'PDF' },
+    { key: 'pptx', label: 'PowerPoint' },
+    { key: 'xlsx', label: 'Excel' },
+    { key: 'html', label: 'HTML' },
+  ];
+  const formatLabel = key => (OUTPUT_FORMATS().find(item => item.key === key) || { label: key }).label;
   let seq = 0;
   const newConversation = () => { const conv = { id: `c${Date.now().toString(36)}${(++seq).toString(36)}`, chatId: null, title: '', messages: [] }; state.conversations.unshift(conv); state.activeId = conv.id; return conv; };
   const activeConversation = () => state.conversations.find(item => item.id === state.activeId) || newConversation();
@@ -147,6 +157,14 @@
           <header class="lcwaiChatHead"><div><b>LCW AI</b> <small class="lcwaiModel" data-chat-model>${esc(AI() ? AI().modelLabel : 'GPT-6 Sol')}</small></div><div class="lcwaiChatConn" data-chat-conn></div></header>
           <div class="lcwaiChatMessages" data-chat-messages role="log" aria-live="polite"></div>
           <form class="lcwaiComposer" data-chat-form>
+            <div class="lcwaiOutputBar" data-chat-output>
+              <span class="lcwaiOutputLabel">${esc(L('Yanıt biçimi', 'Answer as'))}</span>
+              <div class="lcwaiSeg" role="radiogroup" aria-label="${esc(L('Yanıt biçimi', 'Answer as'))}">${OUTPUT_FORMATS().map(item => `<button type="button" role="radio" data-output-format="${esc(item.key)}">${esc(item.label)}</button>`).join('')}</div>
+              <span class="lcwaiOutputOptions" data-output-options hidden>
+                <select data-output-orientation aria-label="${esc(L('Sayfa yönü', 'Page orientation'))}"><option value="portrait">${esc(L('Dikey', 'Portrait'))}</option><option value="landscape">${esc(L('Yatay', 'Landscape'))}</option></select>
+                <select data-output-detail aria-label="${esc(L('Detay seviyesi', 'Level of detail'))}"><option value="summary">${esc(L('Kısa', 'Brief'))}</option><option value="standard">${esc(L('Standart', 'Standard'))}</option><option value="detailed">${esc(L('Detaylı', 'Detailed'))}</option></select>
+              </span>
+            </div>
             <div class="lcwaiChips" data-chat-chips></div>
             <textarea data-chat-input rows="3" placeholder="${esc(L('Mesajınızı yazın… (Enter gönderir, Shift+Enter yeni satır)', 'Type your message… (Enter sends, Shift+Enter new line)'))}"></textarea>
             <div class="lcwaiComposerRow">
@@ -162,7 +180,61 @@
         </div>
       </div>`;
     bind();
-    renderList(); renderMessages(); renderChips(); renderLimits(); renderConnection();
+    renderList(); renderMessages(); renderChips(); renderLimits(); renderConnection(); renderOutputBar();
+  }
+
+  /* Yanıt biçimi seçici: Sohbet ya da dosya (PDF/PowerPoint/Excel/HTML). */
+  function renderOutputBar() {
+    const bar = $('[data-chat-output]');
+    if (!bar) return;
+    const format = state.output.format;
+    bar.querySelectorAll('[data-output-format]').forEach(button => {
+      const active = button.dataset.outputFormat === format;
+      button.setAttribute('aria-checked', active ? 'true' : 'false');
+      button.classList.toggle('is-active', active);
+    });
+    const options = bar.querySelector('[data-output-options]');
+    const orientation = bar.querySelector('[data-output-orientation]');
+    const detail = bar.querySelector('[data-output-detail]');
+    if (options) options.hidden = !format;
+    if (orientation) { orientation.hidden = !(format === 'pdf' || format === 'html'); orientation.value = state.output.orientation; }
+    if (detail) { detail.hidden = format === 'xlsx'; detail.value = state.output.detail; }
+    const input = $('[data-chat-input]');
+    if (input) {
+      input.placeholder = format
+        ? L(`${formatLabel(format)} dosyasında ne olmasını istediğinizi yazın… (Buyer Log dosyayı LCW AI içeriğiyle oluşturur)`, `Describe what the ${formatLabel(format)} file should contain… (Buyer Log builds the file from LCW AI content)`)
+        : L('Mesajınızı yazın… (Enter gönderir, Shift+Enter yeni satır)', 'Type your message… (Enter sends, Shift+Enter new line)');
+    }
+    const sendButton = $('[data-chat-send]');
+    if (sendButton) sendButton.textContent = format ? L(`${formatLabel(format)} Oluştur`, `Create ${formatLabel(format)}`) : L('Gönder', 'Send');
+  }
+
+  const formatBytesSafe = bytes => (Number(bytes) > 0 ? formatBytes(Number(bytes)) : '');
+  function fileCardHtml(file) {
+    const format = String(file.format || '').toLowerCase();
+    const details = [file.templateLabel, formatBytesSafe(file.bytes), file.attempts > 1 ? L(`${file.attempts - 1} otomatik düzeltme`, `${file.attempts - 1} automatic repair(s)`) : ''].filter(Boolean).join(' · ');
+    const fallback = file.fallback === 'html'
+      ? `<p class="lcwaiNote">${esc(L('PDF basımı bu ortamda yapılamadı; rapor HTML olarak kaydedildi. Açıp Yazdır → PDF olarak kaydet ile PDF alabilirsiniz.', 'PDF printing is not available here; the report was saved as HTML. Open it and use Print → Save as PDF.'))}</p>`
+      : '';
+    return `<div class="lcwaiFile" data-file-card="${esc(file.id)}"><span class="lcwaiFileIcon is-${esc(format)}">${esc(format === 'pptx' ? 'PPT' : format.toUpperCase())}</span><div class="lcwaiFileInfo"><b title="${esc(file.path || file.fileName)}">${esc(file.fileName)}</b><small>${esc(details)}</small></div><div class="lcwaiFileActions"><button type="button" class="lcwaiBtn is-primary" data-file-open="${esc(file.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="lcwaiBtn" data-file-reveal="${esc(file.id)}">${esc(L('Klasörde Göster', 'Show in folder'))}</button></div></div>${fallback}`;
+  }
+
+  /* Kullanıcı başka ekrandaysa (iş arka planda bitti) ortak "Dosya
+     oluşturuldu" bildirimi gösterilir; sohbet açıkken kart yeterlidir. */
+  function notifyFile(file, conv) {
+    const visible = document.body && document.body.dataset.activeTab === 'lcwai' && state.activeId === conv.id && !document.hidden;
+    if (visible || typeof window.notifyFileReady !== 'function') return;
+    const api = AI();
+    window.notifyFileReady({ filename: file.fileName, path: file.path || '', mode: 'created', onOpen: () => api.openOutput(file.id), onReveal: () => api.revealOutput(file.id) });
+  }
+
+  function outputPhase(event, output) {
+    const name = formatLabel(output.format);
+    if (event.step === 'generating') return L(`LCW AI ${name} içeriğini hazırlıyor${event.templateLabel ? ` · ${event.templateLabel}` : ''}…`, `LCW AI is preparing the ${name} content${event.templateLabel ? ` · ${event.templateLabel}` : ''}…`);
+    if (event.step === 'repairing') return L(`LCW AI çıktısı Buyer Log biçimine uymadı; düzeltme isteniyor (${event.attempt}/2)…`, `The LCW AI output did not match the Buyer Log format; asking for a fix (${event.attempt}/2)…`);
+    if (event.step === 'rendering') return L(`Buyer Log ${name} dosyasını oluşturuyor…`, `Buyer Log is building the ${name} file…`);
+    if (event.step === 'pdf') return L('PDF basılıyor…', 'Printing the PDF…');
+    return '';
   }
 
   function renderList() {
@@ -174,13 +246,14 @@
 
   function messageHtml(message, index, conv) {
     if (message.role === 'user') {
-      const meta = [...(message.contextLabels || []).map(label => `◆ ${label}`), ...(message.fileNames || []).map(name => `📎 ${name}`)];
+      const meta = [...(message.contextLabels || []).map(label => `◆ ${label}`), ...(message.fileNames || []).map(name => `📎 ${name}`), ...(message.output && message.output.format ? [`⇩ ${formatLabel(message.output.format)}`] : [])];
       return `<div class="lcwaiMsg is-user"><div class="lcwaiMsgBody">${esc(message.text).replace(/\n/g, '<br>')}</div>${meta.length ? `<div class="lcwaiMsgMeta">${meta.map(esc).join(' · ')}</div>` : ''}</div>`;
     }
     const last = index === conv.messages.length - 1;
     const body = message.error
       ? `<div class="lcwaiMsgError">${esc(message.error)}${message.login ? ` <button type="button" class="lcwaiBtn is-link" data-chat-login>${esc(L('LCW AI Girişi Yap', 'Sign in to LCW AI'))}</button>` : ''}</div>`
-      : (message.text ? md(message.text) : `<p class="lcwaiNote">${esc(message.phase || L('LCW AI düşünüyor…', 'LCW AI is thinking…'))}</p>`);
+      : message.file ? `${message.text ? md(message.text) : ''}${fileCardHtml(message.file)}`
+        : (message.text ? md(message.text) : `<p class="lcwaiNote">${esc(message.phase || L('LCW AI düşünüyor…', 'LCW AI is thinking…'))}</p>`);
     const actions = message.streaming ? '' : `<div class="lcwaiMsgActions">${message.text ? `<button type="button" class="lcwaiBtn is-link" data-msg-copy="${index}">${esc(L('Kopyala', 'Copy'))}</button><button type="button" class="lcwaiBtn is-link" data-msg-reuse="${index}">${esc(L('Yeni mesajda kullan', 'Use in new message'))}</button>` : ''}${last ? `<button type="button" class="lcwaiBtn is-link" data-msg-retry>${esc(message.error ? L('Tekrar Dene', 'Try Again') : L('Yeniden üret', 'Regenerate'))}</button>` : ''}</div>`;
     return `<div class="lcwaiMsg is-ai${message.streaming ? ' is-streaming' : ''}"><div class="lcwaiMsgWho">LCW AI${message.model ? ` · ${esc(message.model)}` : ''}</div><div class="lcwaiMsgBody lcwaiMd">${body}</div>${actions}</div>`;
   }
@@ -259,7 +332,8 @@
     const files = reuse ? [] : state.files.filter(item => !item.error).map(item => item.file);
     const contextIds = reuse ? [] : state.contexts.map(item => item.id);
     if (!message && !files.length && !reuse) return;
-    const userMessage = reuse || { role: 'user', text: message, contextLabels: state.contexts.map(item => item.label), fileNames: files.map(file => file.name), contexts: null, attachments: null };
+    const userMessage = reuse || { role: 'user', text: message, contextLabels: state.contexts.map(item => item.label), fileNames: files.map(file => file.name), contexts: null, attachments: null, output: state.output.format ? { ...state.output } : null };
+    const output = userMessage.output || null;
     if (!reuse) conv.messages.push(userMessage);
     if (!conv.title) conv.title = (message || files.map(file => file.name).join(', ')).slice(0, 60);
     const answer = { role: 'ai', text: '', streaming: true, phase: '' };
@@ -292,24 +366,42 @@
           userMessage.contexts.push(prepared.context);
         }
       }
-      answer.phase = L('LCW AI düşünüyor…', 'LCW AI is thinking…');
+      answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
       renderMessages();
       let pendingPaint = 0;
+      const paint = () => { if (!pendingPaint) pendingPaint = requestAnimationFrame(() => { pendingPaint = 0; if (state.activeId === conv.id) renderMessages(); }); };
       const result = await api.chat({
         requestId: state.requestId,
         chatId: conv.chatId,
         message: userMessage.text,
         contexts: userMessage.contexts,
         attachments: userMessage.attachments,
+        output,
         onProgress: event => {
+          // Dosya modunda ham HTML/JSON akışı gösterilmez; yalnız aşama ve
+          // üretilen karakter sayısı görünür.
+          if (output) {
+            if (event.phase === 'output') answer.phase = outputPhase(event, output) || answer.phase;
+            else if (event.phase === 'streaming' && event.chars) answer.phase = `${outputPhase({ step: 'generating', templateLabel: answer.templateLabel }, output)} (${L(`${event.chars} karakter`, `${event.chars} characters`)})`;
+            if (event.templateLabel) answer.templateLabel = event.templateLabel;
+            paint();
+            return;
+          }
           if (event.phase !== 'streaming' || !event.delta) return;
           answer.text += event.delta;
-          if (!pendingPaint) pendingPaint = requestAnimationFrame(() => { pendingPaint = 0; if (state.activeId === conv.id) renderMessages(); });
+          paint();
         },
       });
       conv.chatId = result.chatId || conv.chatId;
-      if (!String(result.text || '').trim()) throw Object.assign(new Error('empty'), { code: 'LCWAI_INVALID_RESPONSE' });
-      answer.text = result.text;
+      if (output) {
+        if (!result.output || !result.output.id) throw Object.assign(new Error('no-output'), { code: 'LCWAI_OUTPUT_RENDER_FAILED' });
+        answer.text = String(result.text || '').trim();
+        answer.file = result.output;
+        notifyFile(result.output, conv);
+      } else {
+        if (!String(result.text || '').trim()) throw Object.assign(new Error('empty'), { code: 'LCWAI_INVALID_RESPONSE' });
+        answer.text = result.text;
+      }
       answer.model = result.model && result.model.label;
     } catch (error) {
       answer.error = api.errorText(error);
@@ -347,6 +439,8 @@
     const input = $('[data-chat-input]');
     const fileInput = $('[data-chat-file-input]');
     form.addEventListener('submit', event => { event.preventDefault(); send(input.value); });
+    $('[data-output-orientation]').addEventListener('change', event => { state.output.orientation = event.target.value === 'landscape' ? 'landscape' : 'portrait'; });
+    $('[data-output-detail]').addEventListener('change', event => { state.output.detail = event.target.value; });
     input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); send(input.value); } });
     fileInput.addEventListener('change', () => {
       const limits = state.config && state.config.limits || { maxFilesPerRequest: 5, maxFileBytes: 20 * 1048576 };
@@ -363,6 +457,14 @@
       if (target.matches('[data-chat-new]')) { if (!state.busy) { newConversation(); renderList(); renderMessages(); input.focus(); } return; }
       if (target.matches('[data-chat-open]')) { if (!state.busy) { state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
       if (target.matches('[data-chat-file]')) { fileInput.click(); return; }
+      if (target.matches('[data-output-format]')) { state.output.format = target.dataset.outputFormat; renderOutputBar(); input.focus(); return; }
+      if (target.matches('[data-file-open], [data-file-reveal]')) {
+        const api = AI();
+        const opening = target.matches('[data-file-open]');
+        const id = opening ? target.dataset.fileOpen : target.dataset.fileReveal;
+        if (api) (opening ? api.openOutput(id) : api.revealOutput(id)).catch(error => { if (typeof showToast === 'function') showToast(api.errorText(error), { kind: 'error' }); });
+        return;
+      }
       if (target.matches('[data-chat-context]')) { const menu = $('[data-chat-context-menu]'); if (menu.hidden) openContextMenu(); else closeContextMenu(); return; }
       if (target.matches('[data-context-add]')) {
         if (!state.contexts.some(item => item.id === target.dataset.contextAdd)) state.contexts.push({ id: target.dataset.contextAdd, label: target.dataset.contextLabel });

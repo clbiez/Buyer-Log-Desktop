@@ -18,6 +18,9 @@ module.exports = function registerLcwAiRoutes(app, deps) {
   // Testler motoru enjekte edebilir; üretimde varsayılan LCW AI motoru kullanılır.
   const engineOverride = deps.engine;
   const engineOf = () => engineOverride || require('../lib/lcwai').getDefaultEngine();
+  const outputOverride = deps.outputService;
+  const outputsOf = () => outputOverride || require('../lib/lcwai').getDefaultOutputService();
+  const platform = deps.platform || require('../lib/platform');
   const loginErrors = new Map();
   const ownerOf = req => String(req.currentUser && req.currentUser.id || 'default');
   const audit = (req, action, details) => { try { userAccess.appendAudit(req.currentUser, action, 'lcwai', details); } catch (_) {} };
@@ -106,8 +109,11 @@ app.post('/api/lcwai/chat', express.json({ limit: '2mb' }), async (req, res) => 
     res.status(200).set({ 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store', 'X-Accel-Buffering': 'no' });
     const write = event => { if (!res.writableEnded) { try { res.write(`${JSON.stringify(event)}\n`); } catch (_) {} } };
     const contexts = Array.isArray(body.contexts) ? body.contexts : [];
+    // output: { format: pdf|xlsx|pptx|html, orientation, detail } → AI Çıktı
+    // Oluşturma; aynı sohbet, cevap Buyer Log'un oluşturduğu dosyadır.
+    const output = body.output && typeof body.output === 'object' ? body.output : null;
     try {
-      const result = await engineOf().chat(owner, {
+      const input = {
         requestId: body.requestId,
         chatId: body.chatId,
         message: body.message,
@@ -116,17 +122,61 @@ app.post('/api/lcwai/chat', express.json({ limit: '2mb' }), async (req, res) => 
         lang: body.lang,
         signal: controller.signal,
         onProgress: event => write({ type: 'progress', ...event }),
-      });
-      audit(req, 'LCWAI_CHAT', { ok: true, continued: Boolean(body.chatId), contexts: contexts.length, attachments: Array.isArray(body.attachments) ? body.attachments.length : 0 });
+      };
+      const result = output ? await outputsOf().create(owner, { ...input, output }) : await engineOf().chat(owner, input);
+      audit(req, 'LCWAI_CHAT', { ok: true, continued: Boolean(body.chatId), contexts: contexts.length, attachments: Array.isArray(body.attachments) ? body.attachments.length : 0, output: output ? String(output.format || '').slice(0, 8) : undefined });
       write({ type: 'result', result });
     } catch (error) {
       const safe = isLcwAiError(error) ? error : lcwAiError('INTERNAL');
-      audit(req, 'LCWAI_CHAT', { ok: false, code: safe.code });
+      if (!isLcwAiError(error)) { try { console.warn('[LCWAI] chat failure', error && error.code ? `code=${error.code}` : ''); } catch (_) {} }
+      audit(req, 'LCWAI_CHAT', { ok: false, code: safe.code, output: output ? String(output.format || '').slice(0, 8) : undefined });
       write({ type: 'error', error: publicError(safe) });
     } finally {
       finished = true;
       if (!res.writableEnded) res.end();
     }
+  });
+
+  /* ---------------- AI çıktıları (AI Outputs) ----------------
+     Renderer dosyaya yalnız kimlik ile ulaşır; yol kabul edilmez. */
+app.get('/api/lcwai/outputs', (req, res) => {
+    try {
+      res.set('Cache-Control', 'no-store').json({ ok: true, outputs: outputsOf().list(ownerOf(req), 20) });
+    } catch (error) { fail(res, error); }
+  });
+
+  // Masaüstü kabuğunun (Chromium printToPDF) bastığı PDF baytları.
+app.post('/api/lcwai/outputs/:pendingId/pdf', express.raw({ type: () => true, limit: '52mb' }), (req, res) => {
+    try {
+      const record = outputsOf().completePdf(ownerOf(req), req.params.pendingId, Buffer.isBuffer(req.body) ? req.body : Buffer.alloc(0));
+      audit(req, 'LCWAI_OUTPUT', { format: 'pdf', bytes: record.bytes });
+      res.set('Cache-Control', 'no-store').json({ ok: true, output: record });
+    } catch (error) { fail(res, error); }
+  });
+
+  // Kabuk yoksa/başarısızsa aynı belge HTML olarak kaydedilir.
+app.post('/api/lcwai/outputs/:pendingId/fallback', express.json({ limit: '4kb' }), (req, res) => {
+    try {
+      const record = outputsOf().fallbackHtml(ownerOf(req), req.params.pendingId);
+      audit(req, 'LCWAI_OUTPUT', { format: 'html', fallback: true, bytes: record.bytes });
+      res.set('Cache-Control', 'no-store').json({ ok: true, output: record });
+    } catch (error) { fail(res, error); }
+  });
+
+app.post('/api/lcwai/outputs/:id/open', express.json({ limit: '4kb' }), (req, res) => {
+    try {
+      const record = outputsOf().get(ownerOf(req), req.params.id);
+      if (!record) throw lcwAiError('OUTPUT_NOT_FOUND');
+      res.set('Cache-Control', 'no-store').json({ ok: Boolean(platform.openPathExternallyAsync(record.path)) });
+    } catch (error) { fail(res, error); }
+  });
+
+app.post('/api/lcwai/outputs/:id/reveal', express.json({ limit: '4kb' }), (req, res) => {
+    try {
+      const record = outputsOf().get(ownerOf(req), req.params.id);
+      if (!record) throw lcwAiError('OUTPUT_NOT_FOUND');
+      res.set('Cache-Control', 'no-store').json({ ok: Boolean(platform.revealFileExternally(record.path)) });
+    } catch (error) { fail(res, error); }
   });
 
 /* İstek NDJSON akışıyla cevaplanır: {type:'progress'} … {type:'result'} ya
