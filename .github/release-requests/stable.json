@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.238",
-  "commit_sha": "3442e7123f19a375b234735b2ba7eaa4bf64c1fd",
-  "release_notes": "Buyer Log 7.0.238: LCW AI cevapları PDF, PowerPoint, Excel ve HTML dosyası olarak oluşturulur; raporlar canlı ve hareketli; LCW AI PLM gibi arka planda bağlanır. LCW AI answers as PDF/PowerPoint/Excel/HTML files, lively animated reports, background LCW AI session.",
-  "request_id": "7.0.238-r1"
+  "version": "7.0.239",
+  "commit_sha": "ff9969030a0e899746d6e39c56a7fc2f75e40562",
+  "release_notes": "Buyer Log 7.0.239: LCW AI raporlarında başlıklar Buyer Log tablo başlığı grisinde, başlık metinleri logo siyahında. LCW AI report headers now use the Buyer Log table-header grey with logo-black text.",
+  "request_id": "7.0.239-r1"
 }
