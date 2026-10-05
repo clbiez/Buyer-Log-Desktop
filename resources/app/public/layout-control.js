@@ -11,7 +11,7 @@
   const L=(tr,en)=>isEn()?en:tr;
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const arr=value=>Array.isArray(value)?value:[];
-  let modal=null, currentFile=null, currentReport=null, busy=false, filter='attention', activeAbort=null, activeRequestId='';
+  let modal=null, currentFile=null, currentReport=null, busy=false, filter='attention', activeAbort=null, activeRequestId='', historyCache=[], historyLoaded=false;
 
   const GUIDE=[
     'You are the visual extraction and QA layer for Buyer Log Layout Control.',
@@ -36,37 +36,75 @@
   function storage(){
     return root.BLStorage&&typeof root.BLStorage.getItem==='function'&&typeof root.BLStorage.setItem==='function'?root.BLStorage:null;
   }
-  function loadHistory(){
+  function readLocalHistory(){
     try{
       const store=storage(); if(!store) return [];
       const parsed=JSON.parse(store.getItem(HISTORY_KEY)||'[]');
       return Array.isArray(parsed)?parsed.slice(0,HISTORY_MAX):[];
     }catch(_){return [];}
   }
-  function saveHistory(report,fileName){
+  function writeLocalHistory(items){
     try{
-      const store=storage(); if(!store||!report) return;
-      const ex=report.extraction||{};
-      const item={
-        id:'lc-'+Date.now().toString(36),
-        at:new Date().toISOString(),
-        fileName:String(fileName||'').slice(0,180),
-        documentType:report.documentType,
-        summary:report.summary,
-        modelCodes:arr(ex.modelCodes).slice(0,5),
-        colourCodes:arr(ex.colourCodes).slice(0,5),
-        checks:arr(report.checks).slice(0,80).map(check=>({
-          rule:check.rule,category:check.category,status:check.status,
-          expected:arr(check.expected).slice(0,12),actual:arr(check.actual).slice(0,12),
-          detail:String(check.detail||'').slice(0,500),source:String(check.source||'').slice(0,80)
-        }))
-      };
-      const next=[item,...loadHistory().filter(old=>old&&old.id!==item.id)].slice(0,HISTORY_MAX);
-      store.setItem(HISTORY_KEY,JSON.stringify(next));
+      const store=storage(); if(store) store.setItem(HISTORY_KEY,JSON.stringify(arr(items).slice(0,HISTORY_MAX)));
     }catch(_){}
   }
+  function loadHistory(){
+    return historyLoaded?historyCache:readLocalHistory();
+  }
+  async function refreshHistory(){
+    try{
+      const response=await fetch('/api/lcwai/layout-control/history?limit='+HISTORY_MAX,{credentials:'same-origin',cache:'no-store'});
+      if(!response.ok) throw new Error('LAYOUT_HISTORY_UNAVAILABLE');
+      const data=await response.json();
+      historyCache=arr(data&&data.runs).slice(0,HISTORY_MAX);
+      historyLoaded=true;
+      writeLocalHistory(historyCache);
+    }catch(_){
+      historyCache=readLocalHistory();
+      historyLoaded=true;
+    }
+    paint();
+    return historyCache;
+  }
+  function historyPayload(report,fileName){
+    const ex=report&&report.extraction||{};
+    return {
+      fileName:String(fileName||'').slice(0,180),
+      documentType:report&&report.documentType||'UNKNOWN',
+      summary:report&&report.summary||{},
+      modelCodes:arr(ex.modelCodes).slice(0,5),
+      colourCodes:arr(ex.colourCodes).slice(0,5),
+      referenceRowCount:arr(report&&report.referenceRows).length,
+      checks:arr(report&&report.checks).slice(0,120).map(check=>({
+        rule:check.rule,category:check.category,status:check.status,
+        expected:arr(check.expected).slice(0,20),actual:arr(check.actual).slice(0,20),
+        detail:String(check.detail||'').slice(0,1200),source:String(check.source||'').slice(0,120)
+      }))
+    };
+  }
+  function saveHistory(report,fileName){
+    if(!report) return;
+    const payload=historyPayload(report,fileName);
+    const localItem={...payload,id:'local-'+Date.now().toString(36),at:new Date().toISOString(),referenceAt:new Date().toISOString()};
+    const current=loadHistory();
+    historyCache=[localItem,...current].slice(0,HISTORY_MAX);
+    historyLoaded=true;
+    writeLocalHistory(historyCache);
+    paint();
+    fetch('/api/lcwai/layout-control/history',{
+      method:'POST',credentials:'same-origin',cache:'no-store',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)
+    }).then(response=>{
+      if(!response.ok) throw new Error('LAYOUT_HISTORY_SAVE_FAILED');
+      return response.json();
+    }).then(()=>refreshHistory()).catch(()=>{});
+  }
   function clearHistory(){
-    try{const store=storage(); if(store) store.removeItem(HISTORY_KEY);}catch(_){}
+    historyCache=[];historyLoaded=true;
+    try{const store=storage();if(store)store.removeItem(HISTORY_KEY);}catch(_){}
+    paint();
+    fetch('/api/lcwai/layout-control/history',{method:'DELETE',credentials:'same-origin',cache:'no-store'}).catch(()=>{});
   }
   function statusText(status){
     return {
@@ -362,7 +400,7 @@
       '</div>'
     ].join('');
     document.body.appendChild(modal);
-    bind();paint();
+    bind();paint();refreshHistory();
     modal.addEventListener('click',event=>{if(event.target===modal)close();});
     return true;
   }
