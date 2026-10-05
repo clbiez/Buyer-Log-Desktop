@@ -48,7 +48,10 @@ function createSlideBuilder(p, lang) {
   const next = () => ++id;
   function box({ x, y, w, h, fill, line, paragraphs = [], anchor = 't', inset = 6, name = 'Shape', geometry = 'rect' }) {
     const shapeId = next();
-    const fillXml = fill ? `<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>` : '<a:noFill/>';
+    // fill: 'RRGGBB' | { color, alpha (0–100) }
+    const fillXml = !fill ? '<a:noFill/>' : typeof fill === 'object'
+      ? `<a:solidFill><a:srgbClr val="${fill.color}"><a:alpha val="${Math.round((fill.alpha == null ? 100 : fill.alpha) * 1000)}"/></a:srgbClr></a:solidFill>`
+      : `<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>`;
     const lineXml = line ? `<a:ln w="${pt(line.width || 1)}"><a:solidFill><a:srgbClr val="${line.color}"/></a:solidFill></a:ln>` : '<a:ln><a:noFill/></a:ln>';
     const body = paragraphs.length ? paragraphs.join('') : `<a:p><a:endParaRPr lang="${lang}" dirty="0"/></a:p>`;
     shapes.push(`<p:sp><p:nvSpPr><p:cNvPr id="${shapeId}" name="${xmlText(name)} ${shapeId}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${Math.round(x)}" y="${Math.round(y)}"/><a:ext cx="${Math.max(1, Math.round(w))}" cy="${Math.max(1, Math.round(h))}"/></a:xfrm><a:prstGeom prst="${geometry}"><a:avLst/></a:prstGeom>${fillXml}${lineXml}</p:spPr><p:txBody><a:bodyPr wrap="square" lIns="${pt(inset)}" tIns="${pt(inset)}" rIns="${pt(inset)}" bIns="${pt(inset)}" anchor="${anchor}" rtlCol="0"><a:noAutofit/></a:bodyPr><a:lstStyle/>${body}</p:txBody></p:sp>`);
@@ -70,9 +73,15 @@ function createSlideBuilder(p, lang) {
       .concat(rows.map((row, rowIndex) => `<a:tr h="${rowH}">${columns.map((_, index) => cell(row[index], false, rowIndex, numericCols[index])).join('')}</a:tr>`));
     shapes.push(`<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${shapeId}" name="Table ${shapeId}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${colW * columns.length}" cy="${rowH * (rows.length + 1)}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="1" bandRow="1"/><a:tblGrid>${columns.map(() => `<a:gridCol w="${colW}"/>`).join('')}</a:tblGrid>${xmlRows.join('')}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`);
   }
-  function xml(background) {
+  /* background: 'RRGGBB' ya da [başlangıç, bitiş] renk geçişi.
+     transition: slayt geçişi (fade | push) — sunum hareketli akar. */
+  function xml(background, transition = 'fade') {
+    const bg = Array.isArray(background)
+      ? `<a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:srgbClr val="${background[0]}"/></a:gs><a:gs pos="100000"><a:srgbClr val="${background[1]}"/></a:gs></a:gsLst><a:lin ang="2400000" scaled="0"/></a:gradFill>`
+      : `<a:solidFill><a:srgbClr val="${background || p.paper}"/></a:solidFill>`;
+    const motion = transition === 'push' ? '<p:transition spd="slow"><p:push dir="u"/></p:transition>' : '<p:transition spd="med"><p:fade/></p:transition>';
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="${background || p.paper}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${shapes.join('')}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
+<p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:bg><p:bgPr>${bg}<a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${shapes.join('')}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>${motion}</p:sld>`;
   }
   return { box, text, table, xml };
 }
@@ -86,6 +95,7 @@ function fitSize(lines, base, min, capacity) {
 }
 
 function chrome(s, slide, index, total, deck, p, lang) {
+  s.box({ x: W - pt(150), y: -pt(110), w: pt(240), h: pt(240), fill: { color: p.acc, alpha: 7 }, geometry: 'ellipse', name: 'Orb' });
   s.box({ x: 0, y: 0, w: W, h: pt(6), fill: p.acc, name: 'Accent' });
   s.text(MARGIN, pt(26), W - MARGIN * 2, pt(52), slide.title, { size: slide.title.length > 60 ? 24 : 30, bold: true, color: p.accInk }, { anchor: 'b' });
   s.box({ x: MARGIN, y: pt(84), w: pt(64), h: pt(3), fill: p.acc, name: 'Rule' });
@@ -102,18 +112,23 @@ function renderSlide(slide, index, total, deck, p, lang) {
   const s = createSlideBuilder(p, lang);
   const english = lang.startsWith('en');
   if (slide.layout === 'title') {
-    s.box({ x: 0, y: 0, w: pt(18), h: H, fill: p.acc, name: 'Band' });
-    s.text(pt(80), pt(150), W - pt(160), pt(40), english ? 'BUYER LOG · LCW AI' : 'BUYER LOG · LCW AI', { size: 13, bold: true, color: p.acc });
-    s.text(pt(80), pt(190), W - pt(160), pt(140), slide.title, { size: slide.title.length > 50 ? 36 : 44, bold: true, color: p.ink });
-    if (slide.subtitle) s.text(pt(80), pt(335), W - pt(160), pt(60), slide.subtitle, { size: 20, color: p.ink2 });
-    s.box({ x: pt(80), y: pt(410), w: pt(90), h: pt(4), fill: p.acc, name: 'Rule' });
-    s.text(pt(80), pt(425), W - pt(160), pt(24), deck.date, { size: 12, color: p.muted });
-    return s.xml();
+    // Renk geçişli kapak + yarı saydam dekoratif daireler.
+    s.box({ x: W - pt(380), y: -pt(180), w: pt(560), h: pt(560), fill: { color: 'FFFFFF', alpha: 9 }, geometry: 'ellipse', name: 'Orb' });
+    s.box({ x: W - pt(210), y: pt(300), w: pt(300), h: pt(300), fill: { color: p.accBg, alpha: 14 }, geometry: 'ellipse', name: 'Orb' });
+    s.box({ x: -pt(90), y: H - pt(150), w: pt(240), h: pt(240), fill: { color: 'FFFFFF', alpha: 6 }, geometry: 'ellipse', name: 'Orb' });
+    s.text(pt(80), pt(140), W - pt(200), pt(40), 'BUYER LOG · LCW AI', { size: 13, bold: true, color: p.accBg });
+    s.text(pt(80), pt(180), W - pt(260), pt(150), slide.title, { size: slide.title.length > 50 ? 36 : 46, bold: true, color: 'FFFFFF' });
+    if (slide.subtitle) s.text(pt(80), pt(335), W - pt(260), pt(60), slide.subtitle, { size: 20, color: p.accBg });
+    s.box({ x: pt(80), y: pt(410), w: pt(90), h: pt(4), fill: 'FFFFFF', name: 'Rule' });
+    s.text(pt(80), pt(425), W - pt(160), pt(24), deck.date, { size: 12, color: p.accBg });
+    return s.xml([p.deep, p.acc]);
   }
   if (slide.layout === 'section') {
-    s.text(MARGIN * 2, H / 2 - pt(70), W - MARGIN * 4, pt(100), slide.title, { size: 40, bold: true, color: 'FFFFFF' }, { anchor: 'b' });
+    s.box({ x: W - pt(320), y: -pt(120), w: pt(460), h: pt(460), fill: { color: 'FFFFFF', alpha: 8 }, geometry: 'ellipse', name: 'Orb' });
+    s.box({ x: MARGIN * 2, y: H / 2 - pt(92), w: pt(70), h: pt(5), fill: p.accBg, name: 'Rule' });
+    s.text(MARGIN * 2, H / 2 - pt(80), W - MARGIN * 4, pt(100), slide.title, { size: 40, bold: true, color: 'FFFFFF' }, { anchor: 'b' });
     if (slide.subtitle) s.text(MARGIN * 2, H / 2 + pt(40), W - MARGIN * 4, pt(60), slide.subtitle, { size: 18, color: p.accBg });
-    return s.xml(p.deep);
+    return s.xml([p.acc, p.deep], 'push');
   }
   chrome(s, slide, index, total, deck, p, lang);
   const width = W - MARGIN * 2;

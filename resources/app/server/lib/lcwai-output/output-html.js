@@ -84,16 +84,21 @@ function safeUrl(value, tag) {
   return null;
 }
 
+// CSS kaçışı (\75rl( → url() denetimi atlatabildiği için ters bölü içeren
+// stil hiç kabul edilmez; uzak kaynak çağırabilen tüm işlevler engellenir.
+const CSS_BLOCK = /\\|url\s*\(|image-set\s*\(|\bsrc\s*\(|@import|@namespace|expression\s*\(|behavio(u)?r\s*:|-moz-binding|javascript:|vbscript:|<\/?\s*style/i;
 function safeCss(value) {
   const css = String(value || '');
-  const flat = css.replace(/\\[0-9a-f]{1,6}\s?/gi, 'x').replace(/\/\*[\s\S]*?\*\//g, '');
-  if (/url\s*\(|@import|expression\s*\(|behavio(u)?r\s*:|-moz-binding|javascript:|vbscript:|<\/?\s*style/i.test(flat)) return null;
+  if (CSS_BLOCK.test(css.replace(/\/\*[\s\S]*?\*\//g, ''))) return null;
   return css.replace(/[<>]/g, '');
 }
 
 /* <style> bloklarındaki CSS: uzak/url kaynağı, @import, @font-face dışarıda. */
 function sanitizeStyleSheet(cssText) {
   let css = String(cssText || '').replace(/\/\*[\s\S]*?\*\//g, '');
+  // Kaçış içeren bildirim/kural düşer (\75rl(…), @\69mport…).
+  css = css.replace(/[^{};]*\\[^{};]*;?/g, '');
+  css = css.replace(/(-webkit-)?image-set\s*\([^)]*\)/gi, 'none').replace(/\bsrc\s*\([^)]*\)/gi, 'none').replace(/@namespace[^;]*;?/gi, '');
   css = css.replace(/@import[^;]*;?/gi, '').replace(/@font-face\s*\{[^}]*\}/gi, '');
   css = css.replace(/url\s*\([^)]*\)/gi, 'none').replace(/expression\s*\(/gi, '(').replace(/behavio(u)?r\s*:/gi, 'x:').replace(/-moz-binding/gi, 'x').replace(/javascript:|vbscript:/gi, '');
   return css.replace(/<\/?\s*style/gi, '').replace(/[<>]/g, '').trim();
@@ -106,7 +111,7 @@ function sanitizeAttributes(tag, raw) {
   ATTR_RE.lastIndex = 0;
   while ((match = ATTR_RE.exec(raw || ''))) {
     const name = match[1].toLowerCase();
-    const value = match[2] != null ? match[2] : match[3] != null ? match[3] : match[4] != null ? match[4] : '';
+    const value = match[2] != null ? match[2] : match[3] != null ? match[3] : match[4] != null ? match[4].replace(/\/$/, '') : '';
     if (/^on/.test(name) || !ALLOWED_ATTRS.has(name)) continue;
     const decoded = value.replace(/&#x([0-9a-f]+);?/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16))).replace(/&#(\d+);?/g, (_, dec) => String.fromCharCode(Number(dec))).replace(/&colon;/gi, ':').replace(/&tab;|&newline;/gi, '');
     let safe = decoded;
@@ -214,7 +219,7 @@ function buildDocument({ body, styles = [], title = '', lang = 'tr', orientation
   const date = meta.date || new Date().toISOString().slice(0, 10);
   const brand = english ? 'Buyer Log · LCW AI Report' : 'Buyer Log · LCW AI Raporu';
   const hasHeader = /class="[^"]*\bbl-header\b/.test(body);
-  const header = hasHeader ? '' : `<div class="bl-header"><div><div class="bl-brand">${esc(brand)}</div></div><div class="bl-meta">${esc(date)}${meta.template ? `<br>${esc(meta.template)}` : ''}</div></div>`;
+  const header = hasHeader ? '' : `<div class="bl-header"><div class="bl-brand">${esc(brand)}${title ? `<small>${esc(title)}</small>` : ''}</div><div class="bl-meta">${esc(date)}${meta.template ? `<br>${esc(meta.template)}` : ''}</div></div>`;
   const footer = print ? '' : `<div class="bl-footer"><span>${esc(english ? 'Generated with LCW AI in Buyer Log. Verify figures against Buyer Log data.' : 'Buyer Log içinde LCW AI ile oluşturuldu. Rakamları Buyer Log verisiyle doğrulayın.')}</span><span>${esc(date)}</span></div>`;
   return `<!DOCTYPE html>
 <html lang="${english ? 'en' : 'tr'}">

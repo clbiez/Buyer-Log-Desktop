@@ -297,16 +297,16 @@ function buildChatPrompt({ message, contexts, lang, firstMessage = true, sentMod
   }
   const hasExtras = lines.length > 0;
   if (hasExtras) lines.push('', english ? '=== USER MESSAGE ===' : '=== KULLANICI MESAJI ===');
-  lines.push(request);
   /* Dosya çıktısı istendiyse (AI Export Engine) biçim sözleşmesi EN SONA
-     eklenir ve kırpmada korunur: kırpılan kısım bağlamdır, sözleşme değil. */
+     eklenir. Sınır aşılırsa kırpılan kısım baştaki bilgi/bağlamdır; kullanıcı
+     isteği ve sözleşme her zaman eksiksiz kalır. */
   const contract = clean(outputInstruction);
-  const body = lines.join('\n');
-  if (contract) {
-    const room = Math.max(0, config.LIMITS.maxPromptChars - contract.length - 2);
-    return { prompt: `${body.slice(0, room)}\n\n${contract}`, modules, truncated: body.length > room };
-  }
-  return { prompt: body.slice(0, config.LIMITS.maxPromptChars), modules, truncated: body.length > config.LIMITS.maxPromptChars };
+  const tail = contract ? `${request}\n\n${contract}` : request;
+  const head = lines.join('\n');
+  const full = head ? `${head}\n${tail}` : tail;
+  if (full.length <= config.LIMITS.maxPromptChars) return { prompt: full, modules, truncated: false };
+  const room = Math.max(0, config.LIMITS.maxPromptChars - tail.length - 1);
+  return { prompt: `${head.slice(0, room)}\n${tail}`.slice(-config.LIMITS.maxPromptChars), modules, truncated: true };
 }
 
 module.exports = { CONTRACTS, MAX_SAMPLE_ROWS, CHAT_MAX_ROWS, buildChatPrompt, formatContextBlock, contractFor, normalizeSource, sanitizeContext, buildPrompt, extractJsonObject, parseStructured };

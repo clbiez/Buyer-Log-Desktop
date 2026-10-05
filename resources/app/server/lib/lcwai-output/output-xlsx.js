@@ -77,6 +77,7 @@ function stylesXml(currency) {
 <xf numFmtId="0" fontId="5" fillId="0" borderId="0" xfId="0" applyFont="1"/>
 </cellXfs>
 <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+<dxfs count="1"><dxf><fill><patternFill patternType="solid"><bgColor rgb="FF${ooxml(c.card2)}"/></patternFill></fill></dxf></dxfs>
 </styleSheet>`;
 }
 
@@ -105,6 +106,23 @@ function textWidth(value, type) {
   return Math.max(...String(value).split('\n').map(line => line.length));
 }
 
+/* Görsel canlılık: zebra satırlar + sayısal sütunlarda veri çubukları
+   (Excel'de düzenlenebilir koşullu biçim; veri değişince çubuk da değişir). */
+function conditionalFormats(columns, rowCount) {
+  if (!rowCount) return '';
+  const last = rowCount + 1;
+  const all = `A2:${colName(Math.max(0, columns.length - 1))}${last}`;
+  const parts = [`<conditionalFormatting sqref="${all}"><cfRule type="expression" dxfId="0" priority="1"><formula>MOD(ROW(),2)=0</formula></cfRule></conditionalFormatting>`];
+  let priority = 2;
+  const barColor = ooxml(theme().colors['acc-lite']);
+  columns.forEach((column, index) => {
+    if (!['integer', 'number', 'currency', 'percent'].includes(column.type) || rowCount < 2) return;
+    const ref = `${colName(index)}2:${colName(index)}${last}`;
+    parts.push(`<conditionalFormatting sqref="${ref}"><cfRule type="dataBar" priority="${priority++}"><dataBar><cfvo type="min"/><cfvo type="max"/><color rgb="FF${barColor}"/></dataBar></cfRule></conditionalFormatting>`);
+  });
+  return parts.join('');
+}
+
 function dataSheetXml(sheet) {
   const columns = sheet.columns;
   const rows = sheet.rows;
@@ -128,6 +146,7 @@ function dataSheetXml(sheet) {
 <cols>${widths.map((width, index) => `<col min="${index + 1}" max="${index + 1}" width="${width}" customWidth="1"/>`).join('')}</cols>
 <sheetData>${lines.join('')}</sheetData>
 <autoFilter ref="A1:${lastRef}"/>
+${conditionalFormats(columns, rows.length)}
 <pageMargins left="0.5" right="0.5" top="0.6" bottom="0.6" header="0.3" footer="0.3"/>
 <pageSetup orientation="landscape" fitToWidth="1" fitToHeight="0"/>
 </worksheet>`;
@@ -175,7 +194,7 @@ function renderWorkbook(workbook, { lang = 'tr', date = new Date() } = {}) {
   const used = new Set(sheets.map(sheet => sheet.name.toLowerCase()));
   for (const sheet of workbook.sheets) {
     let name = sheet.name;
-    for (let n = 2; used.has(name.toLowerCase()); n++) name = `${sheet.name.slice(0, 27)} (${n})`;
+    for (let n = 2; used.has(name.toLowerCase()); n++) { const suffix = ` (${n})`; name = `${sheet.name.slice(0, 31 - suffix.length)}${suffix}`; }
     used.add(name.toLowerCase());
     sheets.push({ name, xml: dataSheetXml(sheet), filter: sheet });
   }

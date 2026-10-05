@@ -67,7 +67,9 @@ function canOpenNativeFolderDialog() { return folderDialogPlan().kind !== 'unsup
 function externalOpenPlan(fullPath) {
   const p = String(fullPath || '');
   if (IS_WINDOWS) {
-    const escaped = p.replace(/'/g, "''");
+    // PowerShell U+2018–U+201B'yi de tek tırnak sayar; hepsi ikilenerek
+    // kaçışlanır (aksi hâlde "’" içeren bir ad dizeyi kapatıp komut çalıştırabilir).
+    const escaped = p.replace(/['\u2018-\u201B]/g, quote => quote + quote);
     return { cmd: 'powershell.exe', args: ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', `Start-Process -FilePath '${escaped}'`] };
   }
   if (IS_MAC) return { cmd: 'open', args: [p] };

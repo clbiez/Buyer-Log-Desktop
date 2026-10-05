@@ -49,12 +49,16 @@ function htmlInstruction({ format, english, orientation }) {
     `Return ONE complete HTML document inside a single \`\`\`html code block. Buyer Log will turn it into ${format === 'pdf' ? `an A4 ${orientation} PDF` : 'an HTML file'}; anything outside the code block is shown to the user as a short note.`,
     'Write only the content inside <body>; Buyer Log adds its own theme, header, fonts and colours. Do NOT write <script>, event handlers, <iframe>, <form>, external links to CSS/fonts/images, or remote images. Inline <svg> charts are allowed. Avoid custom CSS; if needed keep it to small layout tweaks in one <style>.',
     'Use these Buyer Log classes: <h1> title, <p class="bl-lead"> intro; <section class="bl-section"> per section with <h2>; KPIs: <div class="bl-kpis"><div class="bl-kpi ok|warn|risk"><span class="bl-kpi-label">…</span><span class="bl-kpi-value">…</span><span class="bl-kpi-note">…</span></div></div>; cards: <div class="bl-grid"><div class="bl-card"><h3>…</h3>…</div></div>; notes: <div class="bl-callout ok|warn|risk">…</div>; tables: <div class="bl-table-wrap"><table><thead>…</thead><tbody>…</tbody></table></div> with <td class="num"> for numbers; status: <span class="bl-badge ok|warn|risk|info">…</span>; bar charts: <div class="bl-bars"><div class="bl-bar warn"><span>Label</span><span class="bl-bar-track"><span class="bl-bar-fill" style="width:62%"></span></span><span>62</span></div></div>.',
-    format === 'pdf' ? 'The document is printed: no interactive elements, keep tables narrow enough for the page, prefer several short tables over one very wide table.' : 'The file is opened in a browser offline; keep it self-contained.',
+    'More components: progress rings <div class="bl-rings"><div class="bl-ring-card"><div class="bl-ring ok|warn|risk" style="--bl-p:72">72%</div><div class="bl-ring-label">…</div></div></div>; progress bar <div class="bl-progress"><span class="bl-progress-fill" style="width:40%"></span></div>; timeline <ol class="bl-timeline"><li class="ok|warn|risk"><time>…</time>…</li></ol>; numbered actions <ol class="bl-steps"><li><div>…</div></li></ol>; trend <span class="bl-trend up|down">▲ 4%</span>; tone cards <div class="bl-card ok|warn|risk">.',
+    'Make it visual and lively, not a wall of text: lead with KPIs, show comparisons as bars/rings, use cards, timelines and tone colours (ok/warn/risk) to guide the eye; keep paragraphs short.',
+    format === 'pdf' ? 'The document is printed: no interactive elements, keep tables narrow enough for the page, prefer several short tables over one very wide table.' : 'The file is opened in a browser offline; keep it self-contained. Entrance animations (sections, KPIs, bars, rings) are added automatically; you may add small extra CSS @keyframes animations or <details class="bl-details"> folds, but never JavaScript.',
   ] : [
     `Tek bir \`\`\`html kod bloğu içinde TEK ve tam bir HTML belge döndür. Buyer Log bunu ${format === 'pdf' ? `A4 ${orientation === 'landscape' ? 'yatay' : 'dikey'} PDF'e` : 'HTML dosyasına'} çevirecek; kod bloğu dışındaki metin kullanıcıya kısa not olarak gösterilir.`,
     'Yalnız <body> içeriğini yaz; tema, üst bilgi, yazı tipi ve renkleri Buyer Log ekler. <script>, olay öznitelikleri, <iframe>, <form>, dış CSS/yazı tipi/görsel bağlantısı ve uzak görsel KULLANMA. Satır içi <svg> grafik serbesttir. Özel CSS yazma; gerekirse tek bir <style> içinde küçük yerleşim ayarları yap.',
     'Buyer Log sınıflarını kullan: <h1> başlık, <p class="bl-lead"> giriş; her bölüm için <section class="bl-section"> ve <h2>; KPI: <div class="bl-kpis"><div class="bl-kpi ok|warn|risk"><span class="bl-kpi-label">…</span><span class="bl-kpi-value">…</span><span class="bl-kpi-note">…</span></div></div>; kartlar: <div class="bl-grid"><div class="bl-card"><h3>…</h3>…</div></div>; not: <div class="bl-callout ok|warn|risk">…</div>; tablo: <div class="bl-table-wrap"><table><thead>…</thead><tbody>…</tbody></table></div>, sayılar için <td class="num">; durum: <span class="bl-badge ok|warn|risk|info">…</span>; bar grafik: <div class="bl-bars"><div class="bl-bar warn"><span>Etiket</span><span class="bl-bar-track"><span class="bl-bar-fill" style="width:62%"></span></span><span>62</span></div></div>.',
-    format === 'pdf' ? 'Belge basılacak: etkileşimli öğe koyma, tabloları sayfaya sığacak genişlikte tut, çok geniş tek tablo yerine birkaç kısa tablo tercih et.' : 'Dosya tarayıcıda çevrimdışı açılır; kendi içinde eksiksiz olsun.',
+    'Diğer bileşenler: ilerleme halkası <div class="bl-rings"><div class="bl-ring-card"><div class="bl-ring ok|warn|risk" style="--bl-p:72">%72</div><div class="bl-ring-label">…</div></div></div>; ilerleme çubuğu <div class="bl-progress"><span class="bl-progress-fill" style="width:40%"></span></div>; zaman çizelgesi <ol class="bl-timeline"><li class="ok|warn|risk"><time>…</time>…</li></ol>; numaralı aksiyonlar <ol class="bl-steps"><li><div>…</div></li></ol>; eğilim <span class="bl-trend up|down">▲ %4</span>; tonlu kart <div class="bl-card ok|warn|risk">.',
+    'Raporu görsel ve canlı yap, düz metin yığını olmasın: KPI ile başla, karşılaştırmaları bar/halka ile göster, kart, zaman çizelgesi ve ton renkleriyle (ok/warn/risk) gözü yönlendir; paragrafları kısa tut.',
+    format === 'pdf' ? 'Belge basılacak: etkileşimli öğe koyma, tabloları sayfaya sığacak genişlikte tut, çok geniş tek tablo yerine birkaç kısa tablo tercih et.' : 'Dosya tarayıcıda çevrimdışı açılır; kendi içinde eksiksiz olsun. Giriş animasyonları (bölüm, KPI, bar, halka) otomatik eklenir; istersen küçük ek CSS @keyframes animasyonları ya da <details class="bl-details"> açılır bölümler ekleyebilirsin, JavaScript asla.',
   ];
   return lines.join('\n');
 }
@@ -144,11 +148,27 @@ function toNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-const BLOCKED_FORMULA = /\[|\||\b(WEBSERVICE|FILTERXML|HYPERLINK|CALL|REGISTER(\.ID)?|RTD|DDE|EXEC|CELL|INFO|IMPORTXML|IMPORTDATA)\s*\(/i;
+/* Formüller izin listesiyle doğrulanır: yalnız bilinen İngilizce işlev
+   adları, virgül ayırıcı (Türkçe ";" Excel'de dosyayı bozar), dış başvuru
+   ([...]), DDE (|) ve uzak veri çeken işlevler (IMAGE, WEBSERVICE…) yok.
+   Uymayan formül hücresi boş bırakılır. */
+const FORMULA_FUNCTIONS = new Set(['SUM', 'SUMIF', 'SUMIFS', 'SUMPRODUCT', 'AVERAGE', 'AVERAGEIF', 'AVERAGEIFS', 'COUNT', 'COUNTA', 'COUNTBLANK', 'COUNTIF', 'COUNTIFS', 'MIN', 'MAX', 'MINIFS', 'MAXIFS', 'MEDIAN', 'MODE', 'STDEV', 'STDEV.S', 'STDEV.P', 'VAR', 'PERCENTILE', 'QUARTILE', 'RANK', 'RANK.EQ', 'LARGE', 'SMALL', 'PRODUCT', 'ROUND', 'ROUNDUP', 'ROUNDDOWN', 'INT', 'MOD', 'ABS', 'POWER', 'SQRT', 'IF', 'IFS', 'IFERROR', 'IFNA', 'AND', 'OR', 'NOT', 'ISBLANK', 'ISNUMBER', 'ISTEXT', 'ISERROR', 'VLOOKUP', 'HLOOKUP', 'XLOOKUP', 'INDEX', 'MATCH', 'XMATCH', 'CHOOSE', 'TODAY', 'DATE', 'YEAR', 'MONTH', 'DAY', 'WEEKDAY', 'WEEKNUM', 'EDATE', 'EOMONTH', 'NETWORKDAYS', 'WORKDAY', 'DATEDIF', 'DAYS', 'TEXT', 'VALUE', 'LEFT', 'RIGHT', 'MID', 'LEN', 'UPPER', 'LOWER', 'PROPER', 'TRIM', 'CONCAT', 'CONCATENATE', 'TEXTJOIN', 'SUBSTITUTE', 'FIND', 'SEARCH', 'ROWS', 'COLUMNS']);
+function safeFormula(value) {
+  const formula = String(value || '').trim().replace(/^=/, '').slice(0, 2000);
+  if (!formula || /[{}\\]/.test(formula) || /https?:|:\/\//i.test(formula)) return null;
+  const outside = formula.replace(/"[^"]*"/g, '""');
+  if (/[;\[\]|]/.test(outside)) return null;
+  const names = outside.match(/[A-Za-z_][A-Za-z0-9_.]*\s*\(/g) || [];
+  if (names.some(name => !FORMULA_FUNCTIONS.has(name.replace(/\s*\($/, '').toUpperCase()))) return null;
+  let depth = 0;
+  for (const char of outside) { if (char === '(') depth++; else if (char === ')' && --depth < 0) return null; }
+  return depth === 0 ? formula : null;
+}
 
 function sheetName(value, index, english) {
   const name = clean(String(value == null ? '' : value).replace(/[\[\]:*?/\\]/g, ' '), 31).replace(/^'+|'+$/g, '').trim();
-  return name || `${english ? 'Sheet' : 'Sayfa'} ${index + 1}`;
+  // "History" Excel'in ayrılmış sayfa adıdır.
+  return name && name.toLowerCase() !== 'history' ? name : `${english ? 'Sheet' : 'Sayfa'} ${index + 1}`;
 }
 
 function normalizeWorkbook(raw, { lang = 'tr', date } = {}) {
@@ -178,8 +198,9 @@ function normalizeWorkbook(raw, { lang = 'tr', date } = {}) {
     rows = rows.slice(0, LIMITS.sheetRows).filter(Array.isArray).map((row, rowIndex) => columns.map((column, i) => {
       const value = row[i];
       if (isObject(value) && typeof value.f === 'string') {
-        const formula = value.f.trim().replace(/^=/, '').slice(0, 2000);
-        return formula && !BLOCKED_FORMULA.test(formula) ? { f: formula } : null;
+        const formula = safeFormula(value.f);
+        if (!formula) warnings.push('formula-dropped');
+        return formula ? { f: formula } : null;
       }
       if (value == null) return null;
       if (['integer', 'number', 'currency', 'percent'].includes(column.type)) {
@@ -312,7 +333,7 @@ function parseOutput(format, text, options = {}) {
 }
 
 module.exports = {
-  FORMATS, FORMAT_LABEL, LIMITS, COLUMN_TYPES, LAYOUTS,
+  safeFormula, FORMATS, FORMAT_LABEL, LIMITS, COLUMN_TYPES, LAYOUTS,
   normalizeFormat, buildInstruction, repairMessage, parseOutput, parseJson,
   normalizeWorkbook, normalizePresentation, normalizeHtmlOutput, toNumber,
 };

@@ -28,8 +28,12 @@ function defaultRoot() {
 
 /* Windows/macOS/Linux için güvenli dosya adı tabanı (Türkçe harfler korunur). */
 function safeFileBase(value, fallback = 'LCW AI') {
+  // İzin listesi: harf, rakam, boşluk ve - _ . , ( ) +. Tırnaklar (tipografik
+  // olanlar dâhil), ; $ ` [ ] & % gibi kabuk/joker anlamı taşıyan her şey düşer:
+  // ad, LCW AI'ın yazdığı başlıktan gelir ve "Aç" işletim sistemi komutuna gider.
   let base = String(value == null ? '' : value).normalize('NFC')
-    .replace(/[\u0000-\u001F\u007F<>:"/\\|?*]+/g, ' ')
+    .replace(/['`\u2018-\u201F\u2032\u2035]/g, '')
+    .replace(/[^\p{L}\p{M}\p{N} \-_.,()+]+/gu, ' ')
     .replace(/\s+/g, ' ').trim()
     .replace(/^[.\s-]+|[.\s]+$/g, '');
   if (/^(con|prn|aux|nul|com\d|lpt\d)(\..*)?$/i.test(base)) base = `_${base}`;
@@ -50,7 +54,12 @@ function createOutputStore(options = {}) {
   const pending = new Map();
 
   function readIndex() {
-    try { const list = JSON.parse(fs.readFileSync(indexFile(), 'utf8')); return Array.isArray(list) ? list : []; } catch (_) { return []; }
+    let raw;
+    try { raw = fs.readFileSync(indexFile(), 'utf8'); } catch (_) { return []; }
+    try { const list = JSON.parse(raw); if (Array.isArray(list)) return list; } catch (_) {}
+    // Bozuk kayıt sessizce ezilmez: yanına yedeklenir, yeni kayıt boş başlar.
+    try { fs.renameSync(indexFile(), `${indexFile()}.corrupt-${Date.now()}`); } catch (_) {}
+    return [];
   }
   function writeIndex(list) {
     const file = indexFile();

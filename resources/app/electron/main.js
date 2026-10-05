@@ -1707,11 +1707,29 @@ function withDeadline(promise, ms, label) {
   let timer = null;
   return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${label}-timeout`)), ms); })]).finally(() => clearTimeout(timer));
 }
-async function renderAiPdf(html, { landscape = false } = {}) {
-  const partition = `buyerlog-ai-pdf-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`; // kalıcı önek yok → bellek içi oturum
-  const pdfSession = session.fromPartition(partition, { cache: false });
-  pdfSession.webRequest.onBeforeRequest((details, callback) => callback({ cancel: !/^(data|about):/i.test(String(details.url || '')) }));
-  pdfSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+// Tek, kalıcı olmayan (bellek içi) oturum: her basımda yeni oturum açıp
+// sızdırmak yerine aynı kilitli oturum yeniden kullanılır.
+const AI_PDF_PARTITION = 'buyerlog-ai-pdf';
+let aiPdfSessionReady = false;
+let aiPdfQueue = Promise.resolve();
+function aiPdfSession() {
+  const pdfSession = session.fromPartition(AI_PDF_PARTITION, { cache: false });
+  if (!aiPdfSessionReady) {
+    pdfSession.webRequest.onBeforeRequest((details, callback) => callback({ cancel: !/^(data|about):/i.test(String(details.url || '')) }));
+    pdfSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    aiPdfSessionReady = true;
+  }
+  return pdfSession;
+}
+// Basımlar sıraya alınır: aynı anda en fazla bir gizli PDF penceresi.
+function renderAiPdf(html, options) {
+  const run = aiPdfQueue.then(() => renderAiPdfNow(html, options));
+  aiPdfQueue = run.catch(() => {});
+  return run;
+}
+async function renderAiPdfNow(html, { landscape = false } = {}) {
+  aiPdfSession();
+  const partition = AI_PDF_PARTITION;
   const win = new BrowserWindow({
     show: false, width: 1123, height: 794,
     webPreferences: { javascript: false, sandbox: true, contextIsolation: true, nodeIntegration: false, webSecurity: true, partition, spellcheck: false, navigateOnDragDrop: false, devTools: false },
