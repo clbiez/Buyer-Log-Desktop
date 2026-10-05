@@ -30,6 +30,7 @@
   const FIELD_ALIASES = Object.freeze({
     size:['Beden','BEDEN','Size','SIZE','Beden/Size','Beden Tanım','Beden Tanimi'],
     barcode:['Barkod','BARKOD','Barcode','BARCODE','EAN','GTIN'],
+    qr:['QR','QR Code','QR Kod','QRCode'],
     price:['Fiyat','FİYAT','Price','PRICE','Retail Price','Satış Fiyatı','Satis Fiyati'],
     care:['Yıkama Talimatı','Yikama Talimati','Care Instruction','Care Instructions','Washing Instruction','Washing Instructions'],
     warning:['Uyarı','Uyari','Warning','Warnings']
@@ -191,6 +192,7 @@
       warnings: /KEEP\s+AWAY\s+FROM\s+FIRE|ATES.*UZAK/i.test(fold(raw))?['KEEP AWAY FROM FIRE']:[],
       sizes: [],
       barcodes: [],
+      qrCodes: [],
       pageVariants: [],
       productClass:'',
       fit:'',
@@ -202,7 +204,7 @@
     };
   }
 
-  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','countries','composition','careInstructions','warnings','sizes','barcodes','pageVariants','prices','visualFindings'];
+  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','visualFindings'];
   function mergeExtraction(localData, aiData) {
     const local=localData&&typeof localData==='object'?localData:{};
     const ai=aiData&&typeof aiData==='object'?aiData:{};
@@ -308,8 +310,15 @@
 
     const cpBarcodes=valuesForAliases(rows,FIELD_ALIASES.barcode);
     compareField('BARCODE_MATCH','BARCODE','barcodes',cpBarcodes,normalizeBarcode,'CP projeksiyonunda barkod referansı yok.');
+    if(list(ex.barcodes).length) add('BARCODE_READABLE','BARCODE',STATUS.MATCH,[],list(ex.barcodes),'PDF sayfasındaki barkod BarcodeDetector ile doğrudan okunabildi.','PDF BarcodeDetector');
+    else add('BARCODE_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'Tarayıcı barkod dekoderi değer okuyamadı; bu durum tek başına hata sayılmaz.','PDF BarcodeDetector');
     if(cpBarcodes.length && cpSizes.length) add('BARCODE_SIZE_MATCH','BARCODE',STATUS.REVIEW,[],list(ex.pageVariants),'Barkod ↔ beden eşleşmesi için CP tarafında çiftli mapping yapısı bulunamadı.');
     else add('BARCODE_SIZE_MATCH','BARCODE',STATUS.NOT_CHECKED,[],list(ex.pageVariants),'CP tarafında barkod ↔ beden mapping referansı yok.');
+
+    const cpQr=valuesForAliases(rows,FIELD_ALIASES.qr);
+    if(cpQr.length) compareField('QR_MATCH','BARCODE','qrCodes',cpQr,normalizeBarcode,'CP QR referansı yok.');
+    else if(list(ex.qrCodes).length) add('QR_READABLE','BARCODE',STATUS.MATCH,[],list(ex.qrCodes),'QR kodu tarayıcı dekoderi ile doğrudan okunabildi.','PDF BarcodeDetector');
+    else add('QR_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'QR için doğrulanabilir CP referansı/decode değeri yok.');
 
     const cpPrices=valuesForAliases(rows,FIELD_ALIASES.price);
     compareField('PRICE_MATCH','PRICE','prices',cpPrices,normalizePrice,'CP projeksiyonunda doğrulanabilir fiyat referansı yok.');
@@ -317,6 +326,8 @@
     const cpProduct=uniq(cpCatalog(rows,'Category').concat(cpCatalog(rows,'Ürün Tanım')));
     if(clean(ex.productClass) && cpProduct.length && cpProduct.some(v=>key(v)===key(ex.productClass))) add('PRODUCT_CLASS_MATCH','IDENTITY',STATUS.MATCH,cpProduct,[ex.productClass],'');
     else add('PRODUCT_CLASS_MATCH','IDENTITY',STATUS.NOT_CHECKED,cpProduct,clean(ex.productClass)?[ex.productClass]:[],'Karton etiketteki ürün sınıfının CP Category/Ürün Tanım ile aynı iş anlamına geldiği garanti edilmedi.');
+    const cpFit=valuesForAliases(rows,['Fit','Kalıp','Kalip','Fit Tanım','Fit Tanimi']);
+    compareField('FIT_MATCH','IDENTITY','fit',cpFit,key,'CP projeksiyonunda doğrulanabilir fit/kalıp referansı yok.');
 
     const findings=list(ex.visualFindings);
     findings.forEach((finding,index)=>add('AI_VISUAL_'+String(index+1),'VISUAL',STATUS.REVIEW,[],[finding],'LCW AI görsel/semantik bulgusu; deterministik ERROR üretmez.','LCW AI'));
