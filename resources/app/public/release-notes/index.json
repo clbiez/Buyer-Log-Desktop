@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.242",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "Yenileme hatalarında gerçek neden ve güvenli IAS devamı",
+        "en": "Clear refresh diagnostics and safe IAS fallback"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.242/release.json"
+    },
+    {
       "version": "7.0.241",
       "publishedAt": "2026-10-05",
       "title": {
