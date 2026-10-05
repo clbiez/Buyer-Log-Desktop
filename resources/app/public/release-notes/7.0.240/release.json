@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.240",
+  "channel": "stable",
+  "publishedAt": "2026-10-05",
+  "title": {
+    "tr": "LCW AI: Bağlam Ekle düzeltmesi",
+    "en": "LCW AI: Add Context fix"
+  },
+  "summary": {
+    "tr": "LCW AI ekranına tekrar girildiğinde çalışmayan “Bağlam Ekle” menüsü düzeltildi.",
+    "en": "Fixed the “Add Context” menu that stopped working after re-entering the LCW AI screen."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "lcwai-add-context-fix",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI · Sohbet",
+        "en": "LCW AI · Chat"
+      },
+      "title": {
+        "tr": "“Bağlam Ekle” menüsü yeniden açılıyor",
+        "en": "The “Add Context” menu opens again"
+      },
+      "body": {
+        "tr": "LCW AI ekranından çıkıp tekrar girildiğinde “Bağlam Ekle” düğmesi menüyü aynı tıklamada açıp kapatıyordu, bu yüzden hiçbir şey olmuyor gibi görünüyordu. Ek veya bağlam kaldırma, “Yeni Sohbet” gibi işlemler de iki kez çalışabiliyordu. Artık ekrana kaç kez girilirse girilsin her tıklama tek kez işleniyor.",
+        "en": "After leaving and re-entering the LCW AI screen, the “Add Context” button opened and closed its menu in the same click, so nothing seemed to happen. Actions such as removing an attachment or context and “New Chat” could also run twice. Now every click is handled once, however many times the screen is opened."
+      },
+      "path": {
+        "tr": "LCW AI › Bağlam Ekle",
+        "en": "LCW AI › Add Context"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-add-context-fix.png",
+        "alt": {
+          "tr": "LCW AI ekranına tekrar girildikten sonra açılan Bağlam Ekle menüsü (demo veri)",
+          "en": "Add Context menu open after re-entering the LCW AI screen (demo data)"
+        },
+        "caption": {
+          "tr": "Bağlam Ekle her girişte çalışır.",
+          "en": "Add Context works on every visit."
+        }
+      }
+    }
+  ]
+}
