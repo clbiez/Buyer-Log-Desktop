@@ -7,8 +7,8 @@
     "en": "Artwork Detail column and PLM Sync connection improvements"
   },
   "summary": {
-    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir. Artwork Detayı ön ve arka baskıyı tek BOM satırında da doğru sayar, All Over baskıyı (kumaşta yazdığı için) özete katmaz ve ön/arka teknikleri farklıysa her bölgeyi kendi tekniğiyle yazar.",
-    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed. Artwork Detail now counts front and back prints correctly even when they share one BOM line, leaves All Over prints out of the summary (they are already in Fabric) and writes each placement with its own technique when front and back differ."
+    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir. Artwork Detayı ön ve arka baskıyı tek BOM satırında da doğru sayar, All Over baskıyı (kumaşta yazdığı için) özete katmaz ve ön/arka teknikleri farklıysa her bölgeyi kendi tekniğiyle yazar. CP Tracker’da sütun başlığı sürüklemek artık test raporu bırakma alanını açmaz.",
+    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed. Artwork Detail now counts front and back prints correctly even when they share one BOM line, leaves All Over prints out of the summary (they are already in Fabric) and writes each placement with its own technique when front and back differ. Dragging a column header in CP Tracker no longer opens the test report drop area."
   },
   "changes": [
     {
@@ -206,6 +206,39 @@
         "caption": {
           "tr": "Kontrol bittikten sonra sonuç kartı pencerede görünür.",
           "en": "The result card is shown in the window once the check finishes."
+        }
+      }
+    },
+    {
+      "id": "cp-header-drag-not-test-report",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Test Raporu Aktarımı",
+        "en": "CP Tracker · Test Report Import"
+      },
+      "title": {
+        "tr": "Sütun başlığı sürüklerken test raporu alanı açılmıyor",
+        "en": "Dragging a column header no longer opens the test report drop area"
+      },
+      "body": {
+        "tr": "CP Tracker’da sütun ya da grup başlığını tutup taşırken ekranın ortasında “Test raporlarını bırakın” alanı açılıyordu. Artık yalnız Buyer Log dışından (Explorer, Outlook) sürüklenen dosyalar test raporu bırakma alanını açar; tablo içindeki sürüklemeler normal çalışır.",
+        "en": "In CP Tracker, picking up a column or group header to move it opened the “Drop test reports” area in the middle of the screen. Now only files dragged in from outside Buyer Log (Explorer, Outlook) open the test report drop area; drags inside the table work normally."
+      },
+      "path": {
+        "tr": "CP Tracker › tablo başlığını sürükle",
+        "en": "CP Tracker › drag a table header"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-header-drag-not-test-report.png",
+        "alt": {
+          "tr": "CP Tracker’da bir grup başlığı sürüklenirken test raporu bırakma alanı açılmıyor (demo veri)",
+          "en": "A group header being dragged in CP Tracker without the test report drop area opening (demo data)"
+        },
+        "caption": {
+          "tr": "Başlık sürüklenirken tablo serbest kalıyor; test raporu alanı yalnız dışarıdan dosya bırakınca açılır.",
+          "en": "The table stays free while a header is dragged; the test report area opens only when a file is dropped from outside."
         }
       }
     }

@@ -29,6 +29,17 @@ test('checklist menüsü, CP bırakma alanı ve görev listesi bağlı', () => {
   assert.match(sync, /_checklistTasks/);
 });
 
+test('CP içi sürükleme (sütun başlığı taşıma vb.) test raporu bırakma sayılmaz', () => {
+  const sync = read('public/checklist-supplier-sync.js');
+  const fn = sync.slice(sync.indexOf('function bindReportDrop()'), sync.indexOf('async function loadTestReportTasks'));
+  assert.match(fn, /addEventListener\('dragstart'[^]*?internalDrag = true[^]*?, true\)/, 'sayfa içi sürükleme yakalanır');
+  assert.match(fn, /endInternal = function \(\) \{ internalDrag = false; \}/);
+  assert.match(fn, /addEventListener\('dragend', endInternal, true\)/, 'sürükleme bitince bayrak sıfırlanır');
+  assert.match(fn, /addEventListener\('drop', endInternal, true\)/, 'bırakmada bayrak sıfırlanır');
+  const enter = fn.slice(fn.indexOf("addEventListener('dragenter'"), fn.indexOf("addEventListener('dragover'"));
+  assert.match(enter, /internalDrag/, 'iç sürüklemede bırakma katmanı açılmaz');
+});
+
 test('hücre Buying görevini TR/EN gösterir; düzenleme yetkisi korunur', () => {
   const app = read('public/app-main.js');
   assert.match(app, /clTaskFlag/);
