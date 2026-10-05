@@ -177,6 +177,39 @@
       }
     },
     {
+      "id": "layout-control-report-visible",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI · Layout Kontrolü",
+        "en": "LCW AI · Layout Control"
+      },
+      "title": {
+        "tr": "Layout Kontrolü sonucu ve LCW AI bulguları yeniden görünüyor",
+        "en": "Layout Control results and LCW AI findings are visible again"
+      },
+      "body": {
+        "tr": "Care Label / Price Tag kontrolü “Kontrol tamamlandı: inceleme gerekiyor.” yazıp boş kalıyordu; LCW AI cevabı ve CP karşılaştırması hesaplanıyor ama ekranda gösterilmiyordu. Artık sonuç kartı (özet, filtreler, her kontrolün CP / Layout değerleri ve LCW AI görsel bulguları) ile Layout Geçmişi pencerede görünür.",
+        "en": "The Care Label / Price Tag check showed “Check complete: review required.” and stayed empty; the LCW AI answer and CP comparison were computed but not displayed. The result card (summary, filters, CP / Layout values for each check and LCW AI visual findings) and Layout History are now shown in the window."
+      },
+      "path": {
+        "tr": "LCW AI › Layout Kontrolü › PDF Seç",
+        "en": "LCW AI › Layout Control › Choose PDF"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "layout-control-report-visible.png",
+        "alt": {
+          "tr": "Layout Kontrolü penceresinde Care Label sonucu: özet sayaçlar, filtreler ve kontrol kartları (demo veri)",
+          "en": "Care Label result in the Layout Control window: summary counters, filters and check cards (demo data)"
+        },
+        "caption": {
+          "tr": "Kontrol bittikten sonra sonuç kartı pencerede görünür.",
+          "en": "The result card is shown in the window once the check finishes."
+        }
+      }
+    },
+    {
       "id": "cp-header-drag-not-test-report",
       "type": "fix",
       "module": {
