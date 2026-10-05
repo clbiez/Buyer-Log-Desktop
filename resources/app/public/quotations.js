@@ -478,21 +478,125 @@
      ediyor ve Best Price hesabına giriyordu. Aynı sebeple onaylı üretici de
      düşülünce temizlenir — silinmiş bir teklifin üreticisi "nihai üretici"
      olarak kalmamalı. */
-  function qWritePriceToCollection(req,line){
-    if(!req||req.ownerId!==qCurrentUserId())return false;
-    const row=qFindCollectionRow(line); if(!row) return false;
-    if(!row.pricing) row.pricing={};
-    if(line.dropped){
-      delete row.pricing[line.manufacturer];
-      if(qNorm(row.confirmedManufacturer)===line.manufacturer) row.confirmedManufacturer='';
-    }else{
-      row.pricing[line.manufacturer]=qValidPrice(line.price)?qMoneyDisplay(line.price):qNorm(line.price);
-      if(line.approved && qValidPrice(line.price)) row.confirmedManufacturer=line.manufacturer;
-      else if(qNorm(row.confirmedManufacturer)===line.manufacturer && !line.approved) row.confirmedManufacturer='';
+  function qCollectionPricingMap(row){
+    const value=qCollectionEffectiveValue(row,'pricing');
+    return value&&typeof value==='object'&&!Array.isArray(value)?{...value}:{...(row?.pricing||{})};
+  }
+
+  /* Quotations, Collection tablosundaki fiyatı ham row.pricing üzerinden
+     değiştiremez. Model/renk gruplarında pricing modelSharedValues veya
+     variantOverrides içinden okunabilir; ham satırı değiştirmek bu durumda
+     Pricing History'yi temizlerken Collection'da eski Best Price'ın görünmeye
+     devam etmesine yol açar. Bu yardımcı, app-main'deki kanonik grup yazma
+     kurallarıyla aynı depoya yazar. Bir variant quotation satırı açıkça o
+     renge aittir; linked ise fiyat değişikliği otomatik olarak renk override'ı
+     olur. Parent satır ise paylaşılmış model fiyatını günceller. */
+  function qWriteCollectionGroupedValue(row,key,value){
+    if(!row||!key)return row;
+    const api=window.BLCollectionModelGroups;
+    const members=api?.groupFor?.(kolRows,row.modelGroupId)||[];
+    const grouped=members.length>1;
+    const overridden=api?.hasVariantOverride?api.hasVariantOverride(row,key):Boolean(row.variantOverrides&&Object.prototype.hasOwnProperty.call(row.variantOverrides,key));
+    let nextRows=null;
+    if(grouped&&api){
+      if(overridden||row.modelGroupRole==='variant') nextRows=api.setVariantOverride?.(kolRows,row.id,key,value)||null;
+      else if(row.modelGroupRole==='parent') nextRows=api.setSharedValue?.(kolRows,row.modelGroupId,key,value)||null;
     }
+    if(Array.isArray(nextRows)){
+      kolRows=typeof kolNormalizeModelGroups==='function'?kolNormalizeModelGroups(nextRows):nextRows;
+      return kolRows.find(item=>String(item?.id)===String(row.id))||row;
+    }
+    row[key]=value;
+    return row;
+  }
+
+  function qWritePriceToCollection(req,line,{save=true}={}){
+    if(!req||req.ownerId!==qCurrentUserId())return false;
+    let row=qFindCollectionRow(line); if(!row) return false;
+    const manufacturer=qNorm(line.manufacturer); if(!manufacturer)return false;
+    const pricing=qCollectionPricingMap(row);
+    if(line.dropped) delete pricing[manufacturer];
+    else pricing[manufacturer]=qValidPrice(line.price)?qMoneyDisplay(line.price):qNorm(line.price);
+    row=qWriteCollectionGroupedValue(row,'pricing',pricing);
+
+    const currentConfirmed=qNorm(qCollectionEffectiveValue(row,'confirmedManufacturer')||row.confirmedManufacturer);
+    let nextConfirmed=currentConfirmed;
+    if(line.dropped&&currentConfirmed===manufacturer) nextConfirmed='';
+    else if(line.approved&&qValidPrice(line.price)) nextConfirmed=manufacturer;
+    else if(currentConfirmed===manufacturer&&!line.approved) nextConfirmed='';
+    if(nextConfirmed!==currentConfirmed)row=qWriteCollectionGroupedValue(row,'confirmedManufacturer',nextConfirmed);
+
     if(typeof kolApplyRulePricing==='function') kolApplyRulePricing(row);
-    if(typeof saveKolRows==='function') saveKolRows();
+    if(save&&typeof saveKolRows==='function') saveKolRows();
     return true;
+  }
+
+  function qSameCollectionRow(row,line){
+    const candidate=qFindCollectionRow(line);
+    return Boolean(candidate&&String(candidate.id)===String(row?.id));
+  }
+  function qLatestCollectionLine(row,manufacturer,{approvedOnly=false}={}){
+    let hit=null;
+    qLoad().requests.forEach(request=>{
+      if(request.source!=='collection'||request.ownerId!==qCurrentUserId())return;
+      (request.items||[]).forEach(item=>{
+        if(item.dropped||qNorm(item.manufacturer)!==qNorm(manufacturer)||!qSameCollectionRow(row,item))return;
+        if(approvedOnly&&(!item.approved||!qValidPrice(item.price)))return;
+        const stamp=String(request.updatedAt||request.createdAt||'');
+        if(!hit||stamp>=hit.stamp)hit={request,item,stamp};
+      });
+    });
+    return hit;
+  }
+  function qLatestApprovedCollectionLine(row){
+    let hit=null;
+    qLoad().requests.forEach(request=>{
+      if(request.source!=='collection'||request.ownerId!==qCurrentUserId())return;
+      (request.items||[]).forEach(item=>{
+        if(item.dropped||!item.approved||!qValidPrice(item.price)||!qSameCollectionRow(row,item))return;
+        const stamp=String(request.updatedAt||request.createdAt||'');
+        if(!hit||stamp>=hit.stamp)hit={request,item,stamp};
+      });
+    });
+    return hit;
+  }
+
+  /* Bir quotation tamamen silindiğinde Pricing History zaten qState üzerinden
+     kaybolur. Collection tarafı ise ayrı bir projection tuttuğu için silinen
+     request'in model+üretici hücrelerini kalan quotation kayıtlarından yeniden
+     kurmak gerekir. Yalnız silinen request'in dokunduğu üreticiler uzlaştırılır;
+     böylece quotation dışı legacy/manual fiyatlara dokunulmaz. */
+  function qReconcileCollectionAfterRequestRemoval(removedRequest){
+    if(!removedRequest||removedRequest.source!=='collection'||removedRequest.ownerId!==qCurrentUserId())return 0;
+    const affected=new Map();
+    (removedRequest.items||[]).forEach(item=>{
+      const row=qFindCollectionRow(item),manufacturer=qNorm(item.manufacturer);
+      if(!row||!manufacturer)return;
+      const key=String(row.id);
+      if(!affected.has(key))affected.set(key,{row,manufacturers:new Set()});
+      affected.get(key).manufacturers.add(manufacturer);
+    });
+    let changed=0;
+    affected.forEach(({row:initialRow,manufacturers})=>{
+      let row=kolRows.find(item=>String(item?.id)===String(initialRow.id))||initialRow;
+      const pricing=qCollectionPricingMap(row);
+      manufacturers.forEach(manufacturer=>{
+        const remaining=qLatestCollectionLine(row,manufacturer);
+        if(remaining)pricing[manufacturer]=qValidPrice(remaining.item.price)?qMoneyDisplay(remaining.item.price):qNorm(remaining.item.price);
+        else delete pricing[manufacturer];
+      });
+      row=qWriteCollectionGroupedValue(row,'pricing',pricing);
+
+      const currentConfirmed=qNorm(qCollectionEffectiveValue(row,'confirmedManufacturer')||row.confirmedManufacturer);
+      if(currentConfirmed&&manufacturers.has(currentConfirmed)){
+        const remainingApproved=qLatestApprovedCollectionLine(row);
+        row=qWriteCollectionGroupedValue(row,'confirmedManufacturer',remainingApproved?qNorm(remainingApproved.item.manufacturer):'');
+      }
+      if(typeof kolApplyRulePricing==='function')kolApplyRulePricing(row);
+      changed++;
+    });
+    if(changed&&typeof saveKolRows==='function')saveKolRows();
+    return changed;
   }
 
   function qRefreshCollection(){
@@ -727,6 +831,11 @@
     try{await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'DELETE'});}
     catch(err){if(typeof showToast==='function')showToast(err?.message||qLang('Quotation görünümden kaldırılamadı.','Quotation could not be hidden from your view.'));return false;}
     const st=qLoad();st.requests=st.requests.filter(item=>item.id!==req.id);qTableStates.delete(req.id);qPersistLocal();
+    // Pricing History qState'ten türediği için request silinince kendiliğinden
+    // temizlenir. Collection ise fiyat projection'ını ayrıca tuttuğundan aynı
+    // silmeyi kanonik grouped-pricing deposuna da uzlaştır.
+    qReconcileCollectionAfterRequestRemoval(req);
+    qRefreshCollection();
     const search=document.getElementById('quotationSearch');
     qActiveId=qVisibleRequests(qActiveSource,search?.value||'')[0]?.id||qVisibleRequests(qActiveSource,'')[0]?.id||null;
     if(qWorkspaceMounted)qRenderWorkspaceAll(search?.value||'');else{qRenderNav(search?.value||'');qRenderDetail();}
