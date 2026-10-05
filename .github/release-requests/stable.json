@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.239",
-  "commit_sha": "ff9969030a0e899746d6e39c56a7fc2f75e40562",
-  "release_notes": "Buyer Log 7.0.239: LCW AI raporlarında başlıklar Buyer Log tablo başlığı grisinde, başlık metinleri logo siyahında. LCW AI report headers now use the Buyer Log table-header grey with logo-black text.",
-  "request_id": "7.0.239-r1"
+  "version": "7.0.240",
+  "commit_sha": "070249cb272c7380ca08fce82d60e9b1255805d0",
+  "release_notes": "Buyer Log 7.0.240: LCW AI ekranına yeniden girildiğinde çalışmayan \"Bağlam Ekle\" menüsü düzeltildi. Fixed the \"Add Context\" menu that stopped working after re-entering the LCW AI screen.",
+  "request_id": "7.0.240-r1"
 }
