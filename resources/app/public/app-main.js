@@ -12447,15 +12447,30 @@ window.COLS_BY_TABLE = COLS_BY_TABLE;
    lastTab: kullanıcının LCW AI'a geçmeden önceki çalışma ekranı. */
 window.BLAIScreenData = {
   lastTab: () => window.BL_LCWAI_LAST_TAB || 'overview',
-  table(tab) {
+  /* LCW AI bağlamı. { all:true } → sayfa filtrelerinden BAĞIMSIZ tüm kayıtlar
+     ve tüm sütunlar (kullanıcının yetki kapsamı veri yüklenirken zaten
+     uygulanmıştır). Varsayılan (all yok) → ekranda görünen filtreli kayıtlar. */
+  table(tab, opts = {}) {
     let info = null;
     try { info = tableInfoForTab(tab); } catch (_) { info = null; }
     if (!info) return null;
+    const all = Boolean(opts && opts.all);
+    const allRows = {
+      cp: () => (state.cp ? state.cp.rows : []),
+      orders: () => (state.orders ? state.orders.rows : []),
+      koleksiyon: () => kolRows,
+    }[tab];
     let rows = [];
-    try { rows = info.rowsFn() || []; } catch (_) { return null; }
+    try { rows = (all && allRows ? allRows() : info.rowsFn()) || []; } catch (_) { return null; }
     if (!Array.isArray(rows) || !rows.length) return null;
     let cols = [];
-    try { cols = (info.tableKey === 'cp' || info.tableKey === 'orders') ? visibleCols(info.tableKey) : (info.cols() || []); } catch (_) { cols = []; }
+    try {
+      if (info.tableKey === 'cp' || info.tableKey === 'orders') {
+        cols = visibleCols(info.tableKey);
+        // Tüm veri: gizli sütunlar da dahil (görünür + tanımlı tüm sütunlar).
+        if (all) { const seen = new Set(cols.map(col => col && col.k)); cols = cols.concat((info.cols() || []).filter(col => col && !seen.has(col.k))); }
+      } else cols = info.cols() || [];
+    } catch (_) { cols = []; }
     const selected = (() => { try { return info.selSet ? info.selSet() : null; } catch (_) { return null; } })();
     const filters = {};
     for (const id of info.filterIds || []) {
@@ -12464,13 +12479,21 @@ window.BLAIScreenData = {
       if (value) filters[el.getAttribute('aria-label') || el.getAttribute('placeholder') || id] = value;
     }
     return {
-      tableKey: info.tableKey, rows, selectedIds: selected ? [...selected] : [], filters,
+      tableKey: info.tableKey, rows, all, selectedIds: selected ? [...selected] : [], filters: all ? {} : filters,
       columns: cols.filter(col => col && col.k && !String(col.k).startsWith('_')).map(col => ({ key: col.k, label: String(col.label || col.l || col.k) })),
     };
   },
-  overviewCpRows: () => { try { return ovFilteredCpRows(); } catch (_) { return []; } },
+  overviewCpRows: (opts = {}) => { try { return opts && opts.all ? (state.cp ? state.cp.rows : []) : ovFilteredCpRows(); } catch (_) { return []; } },
   cpColumns: () => { try { return visibleCols('cp').map(col => ({ key: col.k, label: String(col.label || col.k) })); } catch (_) { return []; } },
-  backlogQuery: () => { try { return typeof backlogExportQueryParams === 'function' ? backlogExportQueryParams() : null; } catch (_) { return null; } },
+  backlogQuery: (opts = {}) => {
+    try {
+      if (typeof backlogExportQueryParams !== 'function') return null;
+      const params = backlogExportQueryParams();
+      // Tüm veri: tarih/boyut filtreleri ve gruplama olmadan; yalnız biçim ve
+      // seçili kaynak sütunlar korunur.
+      return opts && opts.all ? { format: 'json', ...(params.sourceColumns ? { sourceColumns: params.sourceColumns } : {}) } : params;
+    } catch (_) { return null; }
+  },
   // Model görseli kimliği (ekrandaki küçük görselle AYNI kanonik öncelik):
   // CP/Siparişler/Overview → cpOrdersRowImageIdentity, Koleksiyon → kol sırası.
   rowImage(tab, row) {
