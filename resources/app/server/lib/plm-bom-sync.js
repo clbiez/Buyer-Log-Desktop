@@ -383,6 +383,7 @@ async function syncPlmBoms(records, options = {}) {
         plmId: target.plmId,
         styleId: target.styleId,
         styleBomId: analysis.styleBomId,
+        isSetStyle: false,
         fetchedAt: new Date().toISOString(),
         sourceCreatedDate: analysis.sourceCreatedDate,
         sourceModifiedDate: analysis.sourceModifiedDate,
