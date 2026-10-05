@@ -177,6 +177,7 @@
   const HISTORY_MAX_CONVERSATIONS = 30;
   const HISTORY_MAX_MESSAGES = 80;
   const HISTORY_MAX_JSON = 2400000;
+  const HISTORY_LABEL_CHARS = 200;
   const historyStore = () => (window.BLStorage && typeof window.BLStorage.getItem === 'function' && typeof window.BLStorage.setItem === 'function' ? window.BLStorage : null);
   const cleanHistoryText = value => String(value == null ? '' : value).slice(0, 100000);
   function historyFile(file) {
@@ -195,7 +196,7 @@
     if (message.error) item.error = cleanHistoryText(message.error).slice(0, 1000);
     if (message.model) item.model = String(message.model).slice(0, 80);
     if (message.role === 'user') {
-      item.contextLabels = (Array.isArray(message.contextLabels) ? message.contextLabels : []).slice(0, 12).map(value => String(value).slice(0, 200));
+      item.contextLabels = (Array.isArray(message.contextLabels) ? message.contextLabels : []).slice(0, 12).map(value => String(value).slice(0, HISTORY_LABEL_CHARS));
       item.fileNames = (Array.isArray(message.fileNames) ? message.fileNames : []).slice(0, 12).map(value => String(value).slice(0, 240));
       item.output = message.output && typeof message.output === 'object' ? {
         format: String(message.output.format || '').slice(0, 12),
