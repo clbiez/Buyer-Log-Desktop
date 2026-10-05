@@ -179,6 +179,15 @@
         run: () => sampleRequests.openForRow(row, config.module),
       });
     }
+    // PLM BOM / Baskı Detayı: Collection, CP ve Orders aynı PLM kanıtını
+    // okur. BOM yalnız PLM Sync sırasında alınır; sağ tık yeni ağ taraması yapmaz.
+    const plmBom = window.BLPlmBom;
+    if (plmBom && row && plmBom.plmIdOfRow(row, config.module)) {
+      items.push({
+        label: T('PLM BOM / Baskı Detayı', 'PLM BOM / Print Details'),
+        run: () => plmBom.openForRow(row, config.module),
+      });
+    }
     const tools = toolEntries(config.tools);
     if (items.length && tools.length) items.push({ separator: true });
     items.push(...tools);
