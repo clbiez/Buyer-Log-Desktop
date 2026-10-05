@@ -10,6 +10,7 @@ const centralIam = require('./central-iam');
 const orderAuthorityShare = require('./order-authority-share');
 const iam = require('./iam-core');
 const userPreferences = require('./user-preferences');
+const { createPersonalLoginCache } = require('./personal-login-cache');
 
 // Kullanıcı kimlik bilgileri sürüm klasörünün server/data alanında tutulursa yeni
 // Buyer Log ZIP'i ayrı bir klasöre açıldığında eski şifre hash'leri kaybolabiliyor.
@@ -21,6 +22,9 @@ const ACCESS_FILE = path.join(AUTH_DATA_ROOT, 'user-access.json');
 const AUDIT_FILE = path.join(AUTH_DATA_ROOT, 'user-audit.jsonl');
 const LEGACY_ACCESS_FILE = path.join(SERVER_DATA_ROOT, 'user-access.json');
 const LEGACY_AUDIT_FILE = path.join(SERVER_DATA_ROOT, 'user-audit.jsonl');
+// Bu cihazda giriş yapmış kişilerin yalnız kendi profilleri; merkezi dizin ve
+// yerel önbellek ikisi birden yokken son çare giriş kaynağı (personal-login-cache.js).
+const personalLogin = createPersonalLoginCache({ file: path.join(AUTH_DATA_ROOT, 'personal-login.json') });
 const iamTransaction = new AsyncLocalStorage();
 let centralService = null, iamApplied = () => {};
 let restoreActive = false;
@@ -43,9 +47,23 @@ let iamSharedRoot = defaultIamSharedRoot;
 function getCentralIam() {
   if (!centralConfigured) return null;
   if (!centralService) centralService = centralIam.createCentralIam({ cacheFile: ACCESS_FILE,
-    getSharedRoot: defaultIamSharedRoot, onApply: cache => { storeCache = null; iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive,
+    getSharedRoot: defaultIamSharedRoot, onApply: cache => { storeCache = null; reconcilePersonalLogin(cache); iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive,
   });
   return centralService;
+}
+function reconcilePersonalLogin(cache) { try { personalLogin.reconcile(cache); } catch (_) {} }
+function personalLoginFallbackStore() {
+  let saved = [];
+  try { saved = personalLogin.profiles(); } catch (_) {}
+  if (!saved.length) return null;
+  const store = iam.migrateStore({
+    schemaVersion: 8, _revision: 0, _personalLoginFallback: true,
+    moderator: saved.find(profile => profile.id === 'moderator') || null,
+    users: saved.filter(profile => profile.id !== 'moderator'),
+    iam: personalLogin.iamState() || undefined, orderAccess: {}, scopeCatalog: {},
+  });
+  try { const derived = JSON.parse(fs.readFileSync(path.join(AUTH_DATA_ROOT, 'iam-derived.json'), 'utf8')); store.orderAccess = derived.orderAccess || {}; store.scopeCatalog = derived.scopeCatalog || {}; } catch (_) {}
+  return store;
 }
 const COOKIE_NAME = 'bl_user_session';
 const SESSION_HOURS = 12;
@@ -642,7 +660,8 @@ function resolveStore(shared) {
     // accounts whenever the Moderator had no local password on this device.
     // A full-system restore seed is also intentionally accepted here.
     const raw = restoreSeed || readAccessStoreFile(ACCESS_FILE + '.bak');
-    if (!raw || raw._centralIam || !hasUsableOfflineAuthStore(raw)) return { schemaVersion: 8, _revision: 0, users: [], moderator: null, iam: iam.migrateStore({}).iam, orderAccess: {}, scopeCatalog: {} };
+    // Son çare: bu cihazda daha önce giriş yapmış kişinin kendi kişisel kaydı.
+    if (!raw || raw._centralIam || !hasUsableOfflineAuthStore(raw)) return personalLoginFallbackStore() || { schemaVersion: 8, _revision: 0, users: [], moderator: null, iam: iam.migrateStore({}).iam, orderAccess: {}, scopeCatalog: {} };
   } else if (!((() => { const primary = readAccessStoreFile(ACCESS_FILE); return primary && primary._restoreSeed; })())) migrateLegacyAuthStoreIfNeeded();
   fs.mkdirSync(AUTH_DATA_ROOT, { recursive: true });
   // Tasima dosyayi degistirmis olabilir; imza tasimadan SONRA hesaplanir.
@@ -1097,7 +1116,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     centralConfigured = centralOptions.enabled === true;
     if (typeof centralOptions.getSharedRoot === 'function') iamSharedRoot = centralOptions.getSharedRoot;
     else if (centralOptions.sharedRoot) iamSharedRoot = async () => centralOptions.sharedRoot;
-    centralService = centralConfigured ? centralIam.createCentralIam({ ...centralOptions, cacheFile: ACCESS_FILE, onApply: cache => { storeCache = null; iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive }) : null;
+    centralService = centralConfigured ? centralIam.createCentralIam({ ...centralOptions, cacheFile: ACCESS_FILE, onApply: cache => { storeCache = null; reconcilePersonalLogin(cache); iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive }) : null;
   }
   let authoritySnapshot = readStore().orderAccess || {};
   const runtimeSecret = crypto.randomBytes(32), ttlMs = SESSION_HOURS * 3600 * 1000, loginAttempts = new Map();
@@ -1207,7 +1226,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     };
   }
   function suggestionIndex(store) {
-    const revision = Number(store && store._revision) || 0;
+    const revision = `${Number(store && store._revision) || 0}:${allProfiles(store).length}:${store && store._personalLoginFallback ? 'personal' : 'directory'}`;
     if (suggestionIndexCache.revision === revision) return suggestionIndexCache.items;
     const items = allProfiles(store).filter(profile => profile && profile.enabled !== false).map(profile => {
       const dto = safeSuggestion(profile);
@@ -1277,6 +1296,9 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
         return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.', code: 'BAD_PASSWORD' });
       }
       clearLoginFailures(req, attemptName); setCookie(req, res, profile.id); appendAudit(profile, 'LOGIN', 'session');
+      // Giriş bilgisi yalnız bu kişi için yerelde de saklanır; merkezi dizin ve
+      // önbellek kaybolsa bile bu cihazda kendi hesabıyla girebilir.
+      try { personalLogin.remember(profile, store); } catch (_) {}
       res.json({ ok: true, user: { ...publicProfile(profile, readStore()), initials: initials(profile.displayName) } });
     } catch (err) { res.status(500).json({ error: 'Kullanıcı oturumu başlatılamadı.', code: 'USER_LOGIN_FAILED' }); }
   }
@@ -2041,6 +2063,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       return allProfiles(store).map(profile => ({ id: profile.id, enabled: profile.enabled !== false, collectionAccess: normalizeCollectionAccess(profile.collectionAccess) }));
     },
     backupSnapshot: () => backupSafeStore(readStore()),
+    usingPersonalLoginFallback: () => Boolean(readStore()._personalLoginFallback),
     COOKIE_NAME,
   };
 }

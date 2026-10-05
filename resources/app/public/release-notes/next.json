@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Giriş ekranında kullanıcı listesi ve kişisel yerel giriş",
+    "en": "Sign-in user list and personal local sign-in"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "OneDrive üzerinden eşitlenen Shared Hub ile kullanıcıların görünmemesi düzeltildi; giriş yapan kişinin bilgisi yalnız kendisi için yerelde de saklanıyor.",
+    "en": "Fixed users not appearing with a Shared Hub synced through OneDrive; a signed-in person's details are now also stored locally for that person only."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "login-users-onedrive-personal-fallback",
+      "type": "fix",
+      "module": {
+        "tr": "Giriş · Kullanıcılar ve yetkiler",
+        "en": "Sign-in · Users and permissions"
+      },
+      "title": {
+        "tr": "OneDrive Shared Hub ile kullanıcı listesinin boş kalması düzeltildi",
+        "en": "Fixed empty user list with a OneDrive Shared Hub"
+      },
+      "body": {
+        "tr": "Shared Hub klasörü OneDrive üzerinden eşitlenen bilgisayarlarda kullanıcı dizini okunamıyor, giriş ekranında hiçbir kullanıcı görünmüyordu. Dizin artık doğru okunuyor. Ayrıca bu bilgisayarda şifresiyle giriş yapan kişinin giriş bilgisi yalnız kendisi için yerelde de saklanıyor; merkezi dizin geçici olarak okunamasa bile kendi hesabıyla giriş yapabiliyor. Sorun sürerse ‘Kullanıcılar ve yetkiler’ adımında hata kodu gösteriliyor.",
+        "en": "On computers where the Shared Hub folder syncs through OneDrive, the user directory could not be read and no users appeared on the sign-in screen. The directory is now read correctly. In addition, the sign-in details of a person who signs in with their password on this computer are also stored locally for that person only, so they can still sign in with their own account if the central directory is temporarily unreadable. If a problem persists, the ‘Users and permissions’ step shows the error code."
+      },
+      "path": {
+        "tr": "Giriş ekranı → Kullanıcı adı",
+        "en": "Sign-in screen → Username"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "personal-local-login.png",
+        "alt": {
+          "tr": "Giriş ekranında kullanıcı adı yazılınca demo hesabın önerilmesi",
+          "en": "Sign-in screen suggesting the demo account while typing the username"
+        },
+        "caption": {
+          "tr": "Merkezi dizin okunamasa da bu bilgisayarda giriş yapmış kullanıcı listede görünür.",
+          "en": "Even if the central directory cannot be read, a user who has signed in on this computer is listed."
+        }
+      }
+    }
+  ]
 }

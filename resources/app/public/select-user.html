@@ -512,7 +512,9 @@
     box.innerHTML = entries.map(([id, step]) => {
       const state = String(step && step.status || 'pending');
       const icon = state === 'done' ? '✓' : state === 'active' ? '•' : state === 'error' ? '!' : '–';
-      const detail = step && step.detail ? `<span class="hubStepDetail">${esc(step.detail)}</span>` : '';
+      // Merkezi dizin okunamadığında bu cihazda giriş yapmış kişinin kişisel kaydı kullanılır.
+      const detailText = step && step.personalFallback ? `${tr('Kişisel yerel giriş', 'Personal local sign-in')} · ${step.code || ''}` : (step && step.detail || '');
+      const detail = detailText ? `<span class="hubStepDetail">${esc(detailText)}</span>` : '';
       return `<div class="hubStep" data-state="${esc(state)}" data-step="${esc(id)}"><span class="hubStepIcon" aria-hidden="true">${icon}</span><span class="hubStepLabel">${esc(step && step.label || id)}</span>${detail}</div>`;
     }).join('');
   }
