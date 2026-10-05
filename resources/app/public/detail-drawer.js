@@ -10,7 +10,7 @@
 'use strict';
 
 const PREF_PREFIX='buyerlog.detailDrawer.report.columns.v1.';
-const WIDTH_PREFIX='buyerlog.detailDrawer.width.';
+const WIDTH_PREFIX='buyerlog.detailDrawer.report.width.v1.';
 const COL_WIDTH_PREFIX='buyerlog.detailDrawer.report.colWidths.v1.';
 const PRESET_PREFIX='buyerlog.detailDrawer.report.preset.v1.';
 // Sütun genişliği sınırları: uzun başlık sarılır, sütunu genişletmez.
@@ -729,7 +729,7 @@ function open(options){
     scope,pageScope:page,moduleId:input.moduleId||page,source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
-    rows,columns,visible:initialVisible.filter(key=>allowed.has(key)),width:loadWidth(page)||Math.min(1280,root.innerWidth*0.96),
+    rows,columns,visible:initialVisible.filter(key=>allowed.has(key)),width:loadWidth(page)||Math.min(1600,root.innerWidth*0.96),
     tableSetup:null,viewPresets,contextKeys,preset,
     colWidths:loadColWidths(scope,page),autoWidths:null,filters:new Map(),filterVersion:0,
     images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],

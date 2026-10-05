@@ -50,7 +50,7 @@
 
 /* Backlog report language: summary cards, stacked identities and readable rows.
    Independent of CP density and inherited column widths. */
-.blDetailDrawerPanel{width:min(1280px,96vw);box-shadow:var(--shadow-3)}
+.blDetailDrawerPanel{width:min(1600px,96vw);box-shadow:var(--shadow-3)}
 .blDetailDrawerHead{padding:16px 18px 12px}
 .blDetailDrawerTitle b{font:700 20px/1.15 var(--heading,var(--font))}
 .blDetailDrawerTitle span{font-size:11px}
