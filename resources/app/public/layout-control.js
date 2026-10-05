@@ -3,7 +3,6 @@
 (function (root) {
   if (!root || root.BLLayoutControl) return;
 
-  const HISTORY_KEY='lcw.layoutControl.history.v1';
   const HISTORY_MAX=30;
   const E=()=>root.BLLayoutControlEngine;
   const AI=()=>root.BuyerLogAI;
@@ -33,23 +32,8 @@
     link.rel='stylesheet'; link.href='layout-control.css'; link.dataset.layoutControlStyle='1';
     document.head.appendChild(link);
   }
-  function storage(){
-    return root.BLStorage&&typeof root.BLStorage.getItem==='function'&&typeof root.BLStorage.setItem==='function'?root.BLStorage:null;
-  }
-  function readLocalHistory(){
-    try{
-      const store=storage(); if(!store) return [];
-      const parsed=JSON.parse(store.getItem(HISTORY_KEY)||'[]');
-      return Array.isArray(parsed)?parsed.slice(0,HISTORY_MAX):[];
-    }catch(_){return [];}
-  }
-  function writeLocalHistory(items){
-    try{
-      const store=storage(); if(store) store.setItem(HISTORY_KEY,JSON.stringify(arr(items).slice(0,HISTORY_MAX)));
-    }catch(_){}
-  }
   function loadHistory(){
-    return historyLoaded?historyCache:readLocalHistory();
+    return historyLoaded?historyCache:[];
   }
   async function refreshHistory(){
     try{
@@ -58,10 +42,8 @@
       const data=await response.json();
       historyCache=arr(data&&data.runs).slice(0,HISTORY_MAX);
       historyLoaded=true;
-      writeLocalHistory(historyCache);
     }catch(_){
-      historyCache=readLocalHistory();
-      historyLoaded=true;
+      if(!historyLoaded){historyCache=[];historyLoaded=true;}
     }
     paint();
     return historyCache;
@@ -89,7 +71,6 @@
     const current=loadHistory();
     historyCache=[localItem,...current].slice(0,HISTORY_MAX);
     historyLoaded=true;
-    writeLocalHistory(historyCache);
     paint();
     fetch('/api/lcwai/layout-control/history',{
       method:'POST',credentials:'same-origin',cache:'no-store',
@@ -102,7 +83,6 @@
   }
   function clearHistory(){
     historyCache=[];historyLoaded=true;
-    try{const store=storage();if(store)store.removeItem(HISTORY_KEY);}catch(_){}
     paint();
     fetch('/api/lcwai/layout-control/history',{method:'DELETE',credentials:'same-origin',cache:'no-store'}).catch(()=>{});
   }
