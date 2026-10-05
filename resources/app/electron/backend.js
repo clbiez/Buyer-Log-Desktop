@@ -151,6 +151,7 @@ class BackendProcess {
     this.log = typeof options.log === 'function' ? options.log : () => {};
     this.onUnexpectedExit = typeof options.onUnexpectedExit === 'function' ? options.onUnexpectedExit : () => {};
     this.desktopBridgeSecret = String(options.desktopBridgeSecret || '');
+    this.downloadsRoot = String(options.downloadsRoot || '');
     this.child = null;
     this.stopping = false;
     this.exited = false;
@@ -194,6 +195,10 @@ class BackendProcess {
     this.openLogStream();
     const env = backendEnv(this.paths, process.env);
     if (this.desktopBridgeSecret) env.BUYER_LOG_DESKTOP_BRIDGE_SECRET = this.desktopBridgeSecret;
+    // LCW AI tarafından üretilen PDF/PPTX/XLSX/HTML dosyaları, diğer
+    // Buyer Log dışa aktarımlarıyla aynı gerçek İndirilenler klasörüne gider.
+    // Sunucu Electron API'sini göremez; ana süreç güvenilir yolu env ile verir.
+    if (this.downloadsRoot) env.BUYER_LOG_AI_OUTPUTS_ROOT = this.downloadsRoot;
     this.log('Backend başlatılıyor: ' + watchdog + ' · port=' + this.port);
 
     this.child = spawn(process.execPath, [watchdog], {
