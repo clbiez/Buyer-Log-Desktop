@@ -187,18 +187,11 @@
     return { ok: true, ...result };
   }
 
-  /* ESKİYEN VERİ OTOMATİK TAZELEME (kullanıcı onaylı öneri). CP açılınca
-     ÜRETİMDEKİ siparişlerin modelleri, numune verisi hiç yoksa ya da 24
-     saatten eskiyse arka planda PLM'den çekilir. Üretim sonrası siparişler
-     zaten onaylı sayıldığı için çekilmez. Sessizdir: oturum yoksa ya da
-     hata olursa kullanıcıyı rahatsız etmez; aynı oturumda saatte en fazla
-     bir kez denenir. */
-  const AUTO_REFRESH_MAX_AGE_MS = 24 * 3600 * 1000;
-  const AUTO_REFRESH_RETRY_MS = 3600 * 1000;
-  const AUTO_REFRESH_KEY = 'lcw.cp.plmSamples.autoRefreshAt';
-  let autoRefreshRunning = false;
-  function storageGet(key) { try { return (window.BLStorage || localStorage).getItem(key); } catch (_) { return null; } }
-  function storageSet(key, value) { try { (window.BLStorage || localStorage).setItem(key, value); } catch (_) { /* kota */ } }
+  /* ESKİYEN VERİ TESPİTİ. Üretimdeki siparişlerin modellerinden numune verisi
+     hiç olmayan ya da 24 saatten eski olanları döndürür. Otomatik arka plan
+     tazelemesi kaldırıldı (programı yavaşlatıyordu); PLM'den çekim yalnız
+     kullanıcı butonla başlatınca yapılır. */
+  const STALE_MAX_AGE_MS = 24 * 3600 * 1000;
   function staleProductionPlmIds(rows, now = Date.now()) {
     const ids = new Set();
     for (const row of Array.isArray(rows) ? rows : []) {
@@ -207,28 +200,9 @@
       if (!plmId || ids.has(plmId)) continue;
       const entry = entryFor(plmId);
       const fetched = entry && entry.fetchedAt ? Date.parse(entry.fetchedAt) : NaN;
-      if (!Number.isFinite(fetched) || now - fetched > AUTO_REFRESH_MAX_AGE_MS) ids.add(plmId);
+      if (!Number.isFinite(fetched) || now - fetched > STALE_MAX_AGE_MS) ids.add(plmId);
     }
     return [...ids];
-  }
-  async function autoRefreshStale(rows) {
-    if (autoRefreshRunning) return { ok: false, reason: 'running' };
-    const last = Number(storageGet(AUTO_REFRESH_KEY)) || 0;
-    if (Date.now() - last < AUTO_REFRESH_RETRY_MS) return { ok: false, reason: 'throttled' };
-    autoRefreshRunning = true;
-    try {
-      await load();
-      const ids = staleProductionPlmIds(rows);
-      if (!ids.length) return { ok: true, synced: 0 };
-      storageSet(AUTO_REFRESH_KEY, String(Date.now()));
-      const result = await sync(ids, { scope: 'cp', ensureConnection: false, silent: true });
-      if (result.ok && result.synced) toast(L(`PLM numune durumu arka planda güncellendi: ${summaryText(result)}`, `PLM sample status refreshed in the background: ${summaryText(result)}`), { duration: 6000 });
-      return result;
-    } catch (_) {
-      return { ok: false, reason: 'failed' };
-    } finally {
-      autoRefreshRunning = false;
-    }
   }
 
   function summaryText(result) {
@@ -364,7 +338,7 @@
   });
 
   window.BLPlmSampleRequests = {
-    load, sync, syncStep, syncStepSuffix, summaryText, autoRefreshStale, staleProductionPlmIds,
+    load, sync, syncStep, syncStepSuffix, summaryText, staleProductionPlmIds,
     entryFor, milestonesFor, orderMilestones, rowStage, evidenceForAnalysis, plmIdOfRow,
     openForPlm, openForRow, evidenceBadge, columnParts, columnText,
     get loaded() { return state.loaded; },
