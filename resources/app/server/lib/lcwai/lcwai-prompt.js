@@ -74,6 +74,7 @@ const CONTRACTS = Object.freeze({
       warnings: { type: 'string[]', max: 300, items: 30 },
       sizes: { type: 'string[]', max: 80, items: 40 },
       barcodes: { type: 'string[]', max: 100, items: 40 },
+      qrCodes: { type: 'string[]', max: 500, items: 20 },
       pageVariants: { type: 'string[]', max: 220, items: 50, hint: { tr: 'page=<n>|size=<değer>|barcode=<değer>|order=<değer>', en: 'page=<n>|size=<value>|barcode=<value>|order=<value>' } },
       productClass: { type: 'string', max: 160 },
       fit: { type: 'string', max: 120 },
@@ -85,7 +86,7 @@ const CONTRACTS = Object.freeze({
     example: {
       documentType: 'CARE_LABEL', modelCodes: ['MODEL-1'], colourCodes: ['ABC'], colours: ['BLUE'],
       orderNumbers: [], countries: ['India'], composition: ['100% Cotton'], careInstructions: ['Wash with similar colours'],
-      warnings: ['Keep away from fire'], sizes: [], barcodes: [], pageVariants: [], productClass: '', fit: '', prices: [],
+      warnings: ['Keep away from fire'], sizes: [], barcodes: [], qrCodes: [], pageVariants: [], productClass: '', fit: '', prices: [],
       visualFindings: [], confidence: 'HIGH', explanation: 'Visible fields extracted from the attached PDF.'
     },
   }),
