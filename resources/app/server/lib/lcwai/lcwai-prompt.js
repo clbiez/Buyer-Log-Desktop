@@ -90,6 +90,37 @@ const CONTRACTS = Object.freeze({
       visualFindings: [], confidence: 'HIGH', explanation: 'Visible fields extracted from the attached PDF.'
     },
   }),
+  /* Test raporu aktarımı (CP › Checklist). İki sözleşme: okuma yedeği ve
+     inceleme. İç içe nesne desteklenmediği için satırlar "a | b | c"
+     biçimindedir; ayrıştırma ve doğrulama public/test-report-engine.js'te. */
+  'test-report-extract': Object.freeze({
+    label: { tr: 'Test Raporu Okuma', en: 'Test Report Reading' },
+    fields: Object.freeze({
+      talepNo: { type: 'string', required: true, max: 12, hint: { tr: 'Test talep no / Request No; yalnız rakam, sayıya çevirmeden', en: 'Test request no / Request No; digits only, as text' } },
+      talepTipi: { type: 'string', max: 120 },
+      siparisKodu: { type: 'string', max: 20, hint: { tr: 'Sipariş Kodu / Order Number', en: 'Order code / Order Number' } },
+      modelAdi: { type: 'string', max: 120 },
+      modelKodu: { type: 'string', max: 40 },
+      renk: { type: 'string', max: 80, hint: { tr: 'varyant rengi tanımı (Varyant Rengi / Sample Color); bileşen rengi DEĞİL', en: 'variant colour description (Sample Color); NOT a component colour' } },
+      genelSonuc: { type: 'string', max: 60, hint: { tr: 'raporda basılı ham değer (Geçer, Kalır, Pass, Fail, Lack of Sample…)', en: 'raw printed value (Pass, Fail, Lack of Sample…)' } },
+      raporTarihi: { type: 'string', max: 40 },
+      lab: { type: 'string', max: 160 },
+      retestOf: { type: 'string', max: 12, hint: { tr: 'Retest Request No varsa', en: 'Retest Request No if present' } },
+      testler: { type: 'string[]', max: 400, items: 80, hint: { tr: 'her test: "test adı | bileşen | sonuç"', en: 'each test: "test name | component | result"' } },
+      kararlar: { type: 'string[]', max: 900, items: 60, hint: { tr: 'her ticari karar: "test adı | karar | açıklama | karar veren | tarih"', en: 'each commercial decision: "test name | decision | comment | decided by | date"' } },
+      confidence: { type: 'string', required: true, max: 12, hint: { tr: 'EXACT, HIGH, MEDIUM veya LOW', en: 'EXACT, HIGH, MEDIUM or LOW' } },
+      explanation: { type: 'string', required: true, max: 1500 },
+    }),
+    example: { talepNo: '3464570', talepTipi: 'Gold Seal', siparisKodu: '1354538', modelAdi: 'KK.BDY,EXAMPLE-6-YD', modelKodu: 'S7IQ90Z4', renk: 'MID GREEN', genelSonuc: 'Lack of Sample', raporTarihi: '30.09.2026 13:11', lab: 'Labright', retestOf: '', testler: ['Determination of pH (ISO 3071) | C1 | Lack of Sample'], kararlar: [], confidence: 'HIGH', explanation: '…' },
+  }),
+  'test-report-review': Object.freeze({
+    label: { tr: 'Test Raporu İnceleme', en: 'Test Report Review' },
+    fields: Object.freeze({
+      reviews: { type: 'string[]', required: true, max: 1400, items: 30, hint: { tr: 'rapor başına bir satır: "talepNo=<no>|step=<context.checklistSteps id ya da boş>|summary=<kısa özet>|actions=<iş 1; iş 2>|risks=<risk 1; risk 2>"', en: 'one line per report: "talepNo=<no>|step=<context.checklistSteps id or empty>|summary=<short summary>|actions=<task 1; task 2>|risks=<risk 1; risk 2>"' } },
+      explanation: { type: 'string', required: true, max: 1500 },
+    }),
+    example: { reviews: ['talepNo=3465774|step=tests|summary=…|actions=…; …|risks=…'], explanation: '…' },
+  }),
 });
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
@@ -179,7 +210,11 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
   lines.push(request || (english ? '(empty)' : '(boş)'));
   if (contract) {
     lines.push('', english ? '=== ANSWER FORMAT (overrides any earlier answer-format instruction) ===' : '=== CEVAP BİÇİMİ (önceki tüm cevap biçimi talimatlarının yerine geçer) ===');
-    if (key === 'layout-control') {
+    if (key === 'test-report-extract') {
+      lines.push(english
+        ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Copy every value exactly as printed in the attached report or e-mail (original language and spelling); only "explanation" should be English.'
+        : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. Her değeri ekli rapor ya da mailde basıldığı gibi (özgün dil ve yazım) kopyala; yalnız "explanation" Türkçe olsun.');
+    } else if (key === 'layout-control') {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Preserve all extracted label values in the language and spelling printed in the PDF; only "explanation" should be English.'
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. PDF’den çıkarılan tüm etiket değerlerini basıldığı dil ve yazımla koru; yalnız "explanation" Türkçe olsun.');
@@ -189,7 +224,15 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" ve "warnings" Türkçe olsun.');
     }
     lines.push(schemaText(contract, english));
-    if (key === 'layout-control') {
+    if (key === 'test-report-extract') {
+      lines.push(english
+        ? 'Fill the schema only from values visibly present in the attached file or in CONTEXT.mailText. Leave a field empty rather than guessing; never compute or translate a result. Lower "confidence" for scanned or partly unreadable documents and say why in "explanation".'
+        : 'Şemayı yalnız ekli dosyada ya da BAĞLAM.mailText içinde görünen değerlerle doldur. Tahmin etmek yerine alanı boş bırak; sonucu hesaplama ya da çevirme. Taranmış ya da kısmen okunamayan belgede "confidence" değerini düşür ve nedenini "explanation" içinde yaz.');
+    } else if (key === 'test-report-review') {
+      lines.push(english
+        ? 'Review each report in CONTEXT.reports as a buyer assistant. "step" must be one id from CONTEXT.checklistSteps that fits the request type, or empty. "actions" are concrete next steps for the buyer (e.g. ask the supplier for a retest or an image, reply to the lab). Do not change Buyer Log\'s outcome (buyerLogOutcome); explain it. Write summary, actions and risks in English.'
+        : 'CONTEXT.reports içindeki her raporu bir buyer asistanı olarak incele. "step", talep tipine uyan CONTEXT.checklistSteps kimliklerinden biri ya da boş olmalı. "actions" buyer için somut sonraki adımlardır (ör. tedarikçiden tekrar test ya da görsel iste, laboratuvara dönüş yap). Buyer Log\'un sonucunu (buyerLogOutcome) değiştirme; açıkla. summary, actions ve risks Türkçe olsun.');
+    } else if (key === 'layout-control') {
       lines.push(english
         ? 'Fill the schema only from values visibly supported by the attached layout PDF. "warnings" means warnings printed on the product label, not your own cautions. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
         : 'Şemayı yalnız ekli layout PDF içinde görünür kanıtı olan değerlerle doldur. "warnings", senin uyarıların değil ürün etiketinde basılı uyarılardır. Belirsizliği yalnız "explanation" içinde belirt ve "confidence" değerini düşür. CP/reference değeri uydurma.');

@@ -173,3 +173,53 @@ test('eşleştirme: sipariş + model + renk tanımı; düzey görünür', () => 
   const conflicted = E.mergeReports(report({ talepNo: '1', siparisKodu: '1354538', modelAdi: 'KK.BDY,MINECRAFT-6-YD', renk: 'BRIGHT RED' }), report({ talepNo: '1', renk: 'MID GREEN' }));
   assert.equal(E.matchReport(conflicted, rows).level, 'exact');
 });
+
+test('LCW AI okuması aynı rapor şemasına çevrilir ve doğrulanır', () => {
+  const r = E.reportFromAiExtract({
+    talepNo: ' 3464570 ', talepTipi: 'Gold Seal', siparisKodu: '1354538', modelAdi: 'KK.BDY,DEMO-6-YD', renk: 'MID GREEN',
+    genelSonuc: 'Lack of Sample', raporTarihi: '30.09.2026 13:11', lab: 'Labright',
+    testler: ['Determination of pH (ISO 3071) | C1 | Lack of Sample', 'Azo | C2 | Pass', 'Bozuk | C3 | Belki'],
+    kararlar: ['pH | Ticari Onay | uygun | DEMO USER | 05.10.2026'],
+    confidence: 'medium', explanation: 'Taranmış sayfa.',
+  }, { fileName: 'scan.png' });
+  assert.equal(r.talepNo, '3464570');
+  assert.equal(typeof r.talepNo, 'string');
+  assert.equal(r.kaynak, 'ai');
+  assert.equal(r.aiConfidence, 'MEDIUM');
+  assert.equal(r.testler.length, 3);
+  assert.equal(r.testler[0].sonuc, 'Lack of Sample');
+  assert.equal(r.kararlar[0].karar, 'Ticari Onay');
+  assert.equal(r.kararlar[0].tarihIso, '2026-10-05');
+  assert.ok(r.uyarilar.some(w => w.code === 'aiExtracted'));
+  assert.ok(r.uyarilar.some(w => w.code === 'aiUnknownResult' && w.value === 'Belki'), 'sözlük dışı sonuç tahmin edilmez');
+  assert.ok(r.uyarilar.some(w => w.code === 'aiNote'));
+  const bad = E.reportFromAiExtract({ talepNo: 'abc', siparisKodu: 'SİP-1', confidence: 'sure' });
+  assert.equal(bad.talepNo, '');
+  assert.equal(bad.siparisKodu, '');
+  assert.equal(bad.aiConfidence, 'LOW');
+  assert.ok(bad.uyarilar.some(w => w.code === 'missingTalepNo'));
+});
+
+test('LCW AI incelemesi: bilinmeyen talep ve adım kimliği kabul edilmez', () => {
+  const reviews = E.parseReviews([
+    'talepNo=3465774|step=tests|summary=İki haslık testi Buying dönüşü bekliyor.|actions=Tedarikçiden görsel iste; Laboratuvara dönüş yap|risks=Yükleme gecikebilir',
+    'talepNo=4400003|step=uydurma_adim|summary=Kalır',
+    'talepNo=9999999|step=tests|summary=bilinmeyen',
+    'bozuk satır',
+  ], { talepNos: ['3465774', '4400003'], stepIds: ['tests', 'pps'] });
+  assert.deepEqual(Object.keys(reviews).sort(), ['3465774', '4400003']);
+  assert.equal(reviews['3465774'].step, 'tests');
+  assert.deepEqual(reviews['3465774'].actions, ['Tedarikçiden görsel iste', 'Laboratuvara dönüş yap']);
+  assert.equal(reviews['4400003'].step, '', 'mevcut olmayan adım önerilmez');
+  assert.equal(reviews['4400003'].stepRejected, true);
+  assert.deepEqual(E.parseReviews(null, {}), {});
+});
+
+test('LCW AI inceleme bağlamı Buyer Log sonucunu ve adımları taşır', () => {
+  const ctx = E.reviewContext([{ report: report({ talepNo: '1', genelSonuc: 'Kalır', testler: [{ ad: 'pH', sonuc: 'Kalır' }, { ad: 'Azo', sonuc: 'Geçer' }] }), matchLevel: 'exact', currentStep: 'tests', currentStatus: 'open' }], [{ id: 'tests', name: 'Testler' }]);
+  assert.equal(ctx.reports[0].buyerLogOutcome, 'fail');
+  assert.deepEqual(ctx.reports[0].notableTests, ['pH | Kalır']);
+  assert.deepEqual(ctx.checklistSteps, [{ id: 'tests', name: 'Testler' }]);
+  assert.match(E.aiKnowledge('en'), /Commercial Approval counts as pass/);
+  assert.match(E.aiKnowledge('tr'), /Ticari Onay geçer sayılır/);
+});

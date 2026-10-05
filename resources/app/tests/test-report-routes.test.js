@@ -96,3 +96,36 @@ test('önizlemede olmayan talep no ve süresi dolan oturum reddedilir', async ()
     assert.equal(expired.status, 410);
   });
 });
+
+test('LCW AI okuması: aday dosya geçici alandan alınır, cevap doğrulanıp önizlemeye eklenir, yalnız commit yazar', async () => {
+  await withServer(async base => {
+    const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]), Buffer.alloc(64)]);
+    const parsed = await post(base, '/api/test-reports/parse', { files: [{ name: 'rapor-foto.png', base64: png.toString('base64') }] });
+    assert.equal(parsed.status, 200);
+    assert.equal(parsed.body.reports.length, 0);
+    const candidate = parsed.body.files[0];
+    assert.equal(candidate.status, 'unrecognized');
+    assert.ok(candidate.ai && candidate.ai.uploadId);
+    const staged = await fetch(`${base}/api/test-reports/staged/${parsed.body.sessionId}/${candidate.ai.uploadId}`);
+    assert.equal(staged.status, 200);
+    assert.equal(staged.headers.get('content-type'), 'image/png');
+    assert.equal(Buffer.from(await staged.arrayBuffer()).length, png.length);
+    assert.equal((await fetch(`${base}/api/test-reports/staged/nope/${candidate.ai.uploadId}`)).status, 404);
+
+    const notCandidate = await post(base, '/api/test-reports/ai-report', { sessionId: parsed.body.sessionId, fileName: 'baska.pdf', data: {} });
+    assert.equal(notCandidate.status, 400);
+    const ai = await post(base, '/api/test-reports/ai-report', { sessionId: parsed.body.sessionId, fileName: 'rapor-foto.png', data: {
+      talepNo: '4400009', talepTipi: 'Gold Seal', siparisKodu: '1000009', modelAdi: 'KK.BDY,DEMO-9-YD', renk: 'MID GREEN', genelSonuc: 'Geçer', confidence: 'HIGH', explanation: 'demo',
+    } });
+    assert.equal(ai.status, 200);
+    assert.equal(ai.body.report.talepNo, '4400009');
+    assert.equal(ai.body.report.kaynak, 'ai');
+    assert.equal(ai.body.report.dosyalar[0].ad, 'rapor-foto.png');
+    assert.equal(fs.existsSync(path.join(DATA, 'test-reports.json')) && store.read().reports['4400009'], undefined, 'AI okuması tek başına yazmaz');
+    const committed = await post(base, '/api/test-reports/commit', { sessionId: parsed.body.sessionId, items: [{ talepNo: '4400009', orderKey: '1000009|KK.BDY,DEMO-9-YD|K5L', itemId: 'tests' }] });
+    assert.equal(committed.status, 200);
+    assert.equal(committed.body.results[0].attachments.length, 1, 'fotoğraf satıra eklenir');
+    assert.equal(store.read().reports['4400009'].kaynak, 'ai');
+    assert.ok(audits.some(a => a[1] === 'TEST_REPORT_AI_READ' && a[2] === '4400009'));
+  });
+});

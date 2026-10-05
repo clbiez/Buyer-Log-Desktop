@@ -208,6 +208,39 @@
           "en": "The result card is shown in the window once the check finishes."
         }
       }
+    },
+    {
+      "id": "test-report-lcwai",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist · LCW AI",
+        "en": "CP Tracker · Checklist · LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI test raporlarını inceleyip yönlendiriyor",
+        "en": "LCW AI reviews test reports and guides you"
+      },
+      "body": {
+        "tr": "Test raporu aktarımında LCW AI bağlıysa her rapor için kısa bir özet, yapılacaklar (ör. tedarikçiden görsel ya da tekrar test isteme), riskler ve uygun checklist adımı önerilir. Önerilen adım “Uygula” ile tek tıkla seçilir; siz uygulamadan hiçbir şey değişmez. Buyer Log’un tanımadığı format, taranmış PDF ya da rapor fotoğrafı LCW AI tarafından okunur; bu satırlar “LCW AI okudu” etiketiyle gelir ve alanları kontrol edip işaretlemeden yazılmaz. Satır eşleştirmesi ve checklist durumu her zaman Buyer Log’un kendi kurallarıyla belirlenir. LCW AI bağlı değilse önizleme bağlanma seçeneğiyle her zamanki gibi çalışır.",
+        "en": "When LCW AI is connected, test report import shows a short summary, next steps (e.g. ask the supplier for an image or a retest), risks and a fitting checklist step for each report. The suggested step is selected with one click on “Apply”; nothing changes until you apply it. Formats Buyer Log does not recognise, scanned PDFs and report photos are read by LCW AI; these rows are tagged “Read by LCW AI” and are not written until you check the fields and tick them. Row matching and the checklist status are always decided by Buyer Log’s own rules. If LCW AI is not connected, the preview works as before and offers to connect."
+      },
+      "path": {
+        "tr": "CP Tracker › Araçlar › Checklist › Test Raporu Aktar",
+        "en": "CP Tracker › Tools › Checklist › Import Test Reports"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-lcwai.png",
+        "alt": {
+          "tr": "Test raporu önizlemesinde LCW AI analizi: fotoğraftan okunan rapor, adım önerileri ve yapılacaklar (demo veri)",
+          "en": "LCW AI analysis in the test report preview: a report read from a photo, step suggestions and next steps (demo data)"
+        },
+        "caption": {
+          "tr": "LCW AI önerir; Buyer Log doğrular ve siz onaylarsınız.",
+          "en": "LCW AI suggests; Buyer Log validates and you approve."
+        }
+      }
     }
   ]
 }

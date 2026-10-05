@@ -60,3 +60,18 @@ test('package.json msgreader bağımlılığını taşır', () => {
   const pkg = JSON.parse(read('package.json'));
   assert.ok(pkg.dependencies['@kenjiuno/msgreader']);
 });
+
+test('LCW AI tek ortak yoldan çağrılır; öneri onaysız uygulanmaz', () => {
+  const ui = read('public/test-report-import.js');
+  assert.match(read('public/perf-runtime.js'), /testReportImport:\['lcwai-assistant\.js\?rev=1'/, 'ortak BuyerLogAI istemcisi önce yüklenir');
+  assert.match(ui, /source: 'test-report-extract'/);
+  assert.match(ui, /source: 'test-report-review'/);
+  assert.doesNotMatch(ui, /\/lcw\/gpt\/api|Authorization|Bearer/, 'modül kendi AI entegrasyonunu yazmaz');
+  assert.match(ui, /include: Boolean\(chosen\) && !fromAi/, 'LCW AI okuduğu satır varsayılan seçilmez');
+  assert.match(ui, /entry\.include = Boolean\(entry\.chosen\) && !entry\.fromAi/, 'tip eşlemesi AI satırını seçmez');
+  assert.match(ui, /data-tr-ai-step/);
+  assert.match(ui, /E\(\)\.parseReviews\(/, 'AI incelemesi motorun doğrulayıcısından geçer');
+  assert.match(ui, /T\('LCW AI bağlı değil', 'LCW AI is not connected'\)/);
+  const routes = read('server/routes/test-report-routes.js');
+  assert.match(routes, /Engine\.reportFromAiExtract\(body\.data/, 'AI okuması sunucuda doğrulanır');
+});

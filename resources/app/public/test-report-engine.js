@@ -779,14 +779,130 @@
     if (w.code === 'mailPdf') return en ? 'Read from a PDF printout of the e-mail.' : 'Mailin PDF çıktısından okundu.';
     if (w.code === 'missingTalepNo') return en ? 'No request number found.' : 'Talep no bulunamadı.';
     if (w.code === 'decisionTableEmpty') return en ? 'The decision table could not be read.' : 'Karar tablosu okunamadı.';
-    if (w.code === 'noTextLayer') return en ? 'The PDF has no text layer (scanned). LCW AI fallback is not connected yet.' : 'PDF metin katmanı yok (taranmış). LCW AI yedeği henüz bağlı değil.';
-    if (w.code === 'unrecognized') return en ? 'Unrecognised format. LCW AI fallback is not connected yet.' : 'Tanınmayan format. LCW AI yedeği henüz bağlı değil.';
+    if (w.code === 'noTextLayer') return en ? 'The PDF has no text layer (scanned); it is sent to LCW AI for reading.' : 'PDF metin katmanı yok (taranmış); okuma için LCW AI\'a gönderilir.';
+    if (w.code === 'unrecognized') return en ? 'Unrecognised format; it is sent to LCW AI for reading.' : 'Tanınmayan format; okuma için LCW AI\'a gönderilir.';
+    if (w.code === 'aiExtracted') return en ? 'Read by LCW AI (' + (w.confidence || '?') + '). Check the fields before confirming.' : 'LCW AI tarafından okundu (' + (w.confidence || '?') + '). Onaylamadan önce alanları kontrol edin.';
+    if (w.code === 'aiUnknownResult') return en ? 'LCW AI result value not in the dictionary: ' + w.value : 'LCW AI sonuç değeri sözlükte yok: ' + w.value;
+    if (w.code === 'aiNote') return (en ? 'LCW AI note: ' : 'LCW AI notu: ') + text(w.message);
     if (w.code === 'decisionAlreadyApplied') return en ? 'This decision was already imported; it will not be applied twice.' : 'Bu karar daha önce aktarıldı; iki kez işlenmez.';
     return text(w.message || w.code);
   }
 
+  /* ------------------------------------------------------- LCW AI
+     LCW AI iki yerde çalışır ve iki yerde de yalnız ÖNERİR:
+       1) Okuma yedeği: deterministik ayrıştırıcının tanımadığı / taranmış
+          dosya. Cevap (sözleşme 'test-report-extract') aşağıdaki
+          reportFromAiExtract ile aynı rapor şemasına çevrilir ve doğrulanır.
+       2) İnceleme: okunan raporlar için özet, önerilen checklist adımı ve
+          yapılacak işler (sözleşme 'test-report-review'). Önerilen adım
+          yalnız mevcut bir adım kimliğiyse kabul edilir; kullanıcı "Uygula"
+          demedikçe hiçbir seçim değişmez.
+     Eşleştirme, durum türetme ve yazma her zaman bu motorun işidir. */
+  const AI_SPLIT = /\s*\|\s*/;
+  function aiList(value, max) { return (Array.isArray(value) ? value : []).map(text).filter(Boolean).slice(0, max); }
+  function reportFromAiExtract(data, meta) {
+    const d = data && typeof data === 'object' ? data : {};
+    const report = emptyReport();
+    for (const field of ['talepNo', 'talepTipi', 'siparisKodu', 'modelAdi', 'modelKodu', 'renk', 'genelSonuc', 'raporTarihi', 'lab', 'retestOf']) {
+      assignField(report, field === 'lab' ? '' : field, d[field]);
+    }
+    report.lab = text(d.lab).slice(0, 160);
+    const order = text(d.siparisKodu).replace(/\s+/g, '');
+    report.siparisKodu = /^\d{5,9}$/.test(order) ? order : '';
+    report.testler = aiList(d.testler, 80).map(line => {
+      const parts = line.split(AI_SPLIT);
+      return { ad: text(parts[0]).slice(0, 300), bilesen: text(parts[1]).slice(0, 60), sonuc: text(parts[2]).slice(0, 60) };
+    }).filter(t => t.ad);
+    report.kararlar = aiList(d.kararlar, 60).map(line => {
+      const parts = line.split(AI_SPLIT);
+      const date = parseDate(parts[4]);
+      return { talepNo: report.talepNo, test: text(parts[0]).slice(0, 300), karar: text(parts[1]).slice(0, 80), aciklama: text(parts[2]).slice(0, 600), kararVeren: text(parts[3]).slice(0, 120), islemYapan: '', tarih: text(parts[4]).slice(0, 40), tarihIso: date.iso, saatDilimi: '' };
+    }).filter(k => k.test && k.karar);
+    report.kaynak = 'ai';
+    report.kaynaklar = ['ai'];
+    if (meta && meta.fileName) report.kaynakDosya = text(meta.fileName);
+    const confidence = /^(EXACT|HIGH|MEDIUM|LOW)$/.test(fold(d.confidence)) ? fold(d.confidence) : 'LOW';
+    report.aiConfidence = confidence;
+    report.uyarilar.push({ code: 'aiExtracted', confidence });
+    // Sözlük dışı sonuç tahmin edilmez; uyarı olarak görünür.
+    const unknown = new Set();
+    if (report.genelSonuc && !normalizeResult(report.genelSonuc)) unknown.add(report.genelSonuc);
+    report.testler.forEach(t => { if (t.sonuc && !normalizeResult(t.sonuc)) unknown.add(t.sonuc); });
+    report.kararlar.forEach(k => { if (!normalizeResult(k.karar)) unknown.add(k.karar); });
+    unknown.forEach(value => report.uyarilar.push({ code: 'aiUnknownResult', value }));
+    if (text(d.explanation)) report.uyarilar.push({ code: 'aiNote', message: text(d.explanation).slice(0, 500) });
+    return finalizeReport(report);
+  }
+
+  /* İnceleme bağlamı: rapor başına kısa özet (bileşen ayrıntısı yok,
+     yalnız başarısız/bekleyen testler). */
+  function reviewContext(items, steps) {
+    return {
+      checklistSteps: (steps || []).map(s => ({ id: text(s.id), name: text(s.name) })).slice(0, 80),
+      resultDictionary: RESULT_CODES.map(code => code + ' = ' + RESULT_LABELS[code].tr + ' / ' + RESULT_LABELS[code].en),
+      reports: (items || []).slice(0, 30).map(item => {
+        const r = item.report || {};
+        const outcome = reportOutcome(r);
+        const notable = (r.testler || []).filter(t => normalizeResult(t.sonuc) && normalizeResult(t.sonuc) !== 'pass');
+        return {
+          talepNo: r.talepNo, talepTipi: r.talepTipi, lab: r.lab, siparisKodu: r.siparisKodu, modelAdi: r.modelAdi, renk: r.renk,
+          genelSonuc: r.genelSonuc, buyerLogOutcome: outcome.code, testCount: (r.testler || []).length,
+          notableTests: notable.slice(0, 15).map(t => t.ad + ' | ' + t.sonuc),
+          decisions: (r.kararlar || []).slice(0, 15).map(k => [k.test, k.karar, k.aciklama, k.tarih].join(' | ')),
+          warnings: (r.uyarilar || []).map(w => warningText(w, 'tr')).slice(0, 8),
+          matchLevel: item.matchLevel || '', currentStep: text(item.currentStep), currentStatus: text(item.currentStatus),
+        };
+      }),
+    };
+  }
+  /* "talepNo=…|step=…|summary=…|actions=a; b|risks=c; d" satırları. Bilinmeyen
+     talep no atılır; adım kimliği mevcut değilse öneri boş kalır. */
+  function parseReviews(lines, options) {
+    const opts = options || {};
+    const talepSet = new Set((opts.talepNos || []).map(String));
+    const stepSet = new Set((opts.stepIds || []).map(String));
+    const out = {};
+    for (const line of aiList(lines, 60)) {
+      const fields = {};
+      line.split('|').forEach(part => {
+        const at = part.indexOf('=');
+        if (at > 0) fields[text(part.slice(0, at)).toLowerCase()] = text(part.slice(at + 1));
+      });
+      const talepNo = normalizeTalepNo(fields.talepno || fields.talep || fields.request);
+      if (!talepNo || (talepSet.size && !talepSet.has(talepNo))) continue;
+      const split = value => String(value || '').split(';').map(text).filter(Boolean).slice(0, 6).map(v => v.slice(0, 240));
+      const step = text(fields.step);
+      out[talepNo] = {
+        summary: text(fields.summary).slice(0, 600),
+        step: step && stepSet.has(step) ? step : '',
+        stepRejected: Boolean(step && !stepSet.has(step)),
+        actions: split(fields.actions),
+        risks: split(fields.risks),
+      };
+    }
+    return out;
+  }
+  /* LCW AI'ın "test raporu" bilgisi (lcwai-knowledge). Elle kopya değil:
+     formatlar, sözlük ve kurallar bu motorun sabitlerinden üretilir. */
+  function aiKnowledge(lang) {
+    const en = lang === 'en';
+    const dict = RESULT_CODES.map(code => '- ' + code + ': ' + RESULT_LABELS[code].tr + ' / ' + RESULT_LABELS[code].en);
+    const labels = Object.keys(FIELD_LABELS).slice(0, 40).join(', ');
+    return [
+      en ? 'Test report import (CP Tracker › Checklist). Formats Buyer Log reads itself:' : 'Test raporu aktarımı (CP Tracker › Checklist). Buyer Log\'un kendisinin okuduğu formatlar:',
+      en ? 'A) Supplier lab result mail (SupplierLabUser) + TestRequestResultReport PDF. B) Labright result mail [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright commercial decision mail (table: test, decision, comment, decided by, date). D) Standalone Labright PDF (e.g. Gold Seal).'
+        : 'A) Tedarikçi lab sonuç maili (SupplierLabUser) + TestRequestResultReport PDF. B) Labright sonuç maili [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright ticari karar maili (tablo: test, karar, açıklama, karar veren, tarih). D) Tek başına Labright PDF (ör. Gold Seal).',
+      (en ? 'Field labels: ' : 'Alan etiketleri: ') + labels,
+      en ? 'Result dictionary (raw value is stored, never a binary pass/fail):' : 'Sonuç sözlüğü (ham değer saklanır, ikili geçer/kalır değildir):', ...dict,
+      en ? 'Rules: request number is text (BD 6 digits, TR 7 digits). Variant colour is the colour description (e.g. MID GREEN); codes like "R9J EKRU" in the component list are component colours. A retest (Retest Request No) replaces the earlier result. Commercial Approval counts as pass. Retest, awaiting buying feedback and lack of sample keep the step pending. The step status is derived from ALL reports of the row; a status entered by the user has priority.'
+        : 'Kurallar: talep no metindir (BD 6 hane, TR 7 hane). Varyant rengi renk tanımıdır (ör. MID GREEN); bileşen listesindeki "R9J EKRU" gibi değerler bileşen rengidir. Tekrar test (Retest Request No) eski sonucun yerine geçer. Ticari Onay geçer sayılır. Tekrar test, Buying dönüşü ve numune yetersizliği adımı bekletir. Adım durumu satırın BÜTÜN raporlarından türetilir; kullanıcının girdiği durum önceliklidir.',
+      en ? 'Matching rows and writing the checklist are always done by Buyer Log, never by AI.' : 'Satır eşleştirme ve checklist yazımı her zaman Buyer Log tarafından yapılır, AI tarafından değil.',
+    ].join('\n');
+  }
+
   return {
     RESULT_CODES, RESULT_LABELS, FIELD_LABELS,
+    reportFromAiExtract, reviewContext, parseReviews, aiKnowledge,
     fold, normalizeResult, resultLabel, normalizeTalepNo, normalizeOrderCode,
     modelKey, modelMatch, modelCodeMatch, colourParts, colourKey, colourMatch, talepTipiKey,
     parseDate, inferOffsetMinutes, regionOffset,

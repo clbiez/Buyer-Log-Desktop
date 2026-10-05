@@ -18,7 +18,7 @@
  * en fazla birkaç modül seçer; her modül bir karakter bütçesiyle kesilir.
  */
 
-const KNOWLEDGE_VERSION = '2026-10-04.1';
+const KNOWLEDGE_VERSION = '2026-10-05.1';
 const MODULE_BUDGET_CHARS = 9000;
 const MAX_MODULES = 2;
 
@@ -92,6 +92,10 @@ function backlogKnowledge(lang) {
   ].join('\n');
 }
 
+function testReportKnowledge(lang) {
+  return require('../../../public/test-report-engine.js').aiKnowledge(lang);
+}
+
 const STATIC_MODULES = Object.freeze({
   orders: { tr: 'Siparişler: ASAS sipariş satırları (PO, model, renk, tedarikçi, adet, FOB, tarihler). CP Tracker aynı siparişlerin üretim/yükleme takibidir; kontrol listesi (PPS, S/Off, test, artwork onayları) CP satırlarına bağlıdır.', en: 'Orders: ASAS order lines (PO, model, colour, supplier, quantity, FOB, dates). CP Tracker follows the production/loading of the same orders; the checklist (PPS, S/Off, test, artwork approvals) is attached to CP rows.' },
   collection: { tr: 'Koleksiyon: sezon geliştirme çalışma alanı; ürün/model satırları, PLM bağlantıları, görseller, durum kataloğu ve fiyat teklifleri (Quotations).', en: 'Collection: season development workspace; product/model rows, PLM links, images, status catalogue and quotations.' },
@@ -103,6 +107,7 @@ const MODULES = Object.freeze({
   automations: { title: { tr: 'Automation Code', en: 'Automation Code' }, keywords: ['otomasyon', 'automation', 'tetik', 'trigger', 'e-posta', 'email', 'mail at', 'bildirim'], build: automationKnowledge },
   backlog: { title: { tr: 'Backlog ve teslimat riski', en: 'Backlog and delivery risk' }, keywords: ['backlog', 'gecikme', 'delay', 'teslimat', 'delivery', 'yetiş', 'in store', 'retail'], build: backlogKnowledge },
   orders: { title: { tr: 'Siparişler ve CP', en: 'Orders and CP' }, keywords: ['sipariş', 'siparis', 'order', 'po ', 'cp ', 'cp tracker', 'tedarikçi', 'supplier'], build: lang => pick(lang, STATIC_MODULES.orders) },
+  'test-reports': { title: { tr: 'Test raporu aktarımı', en: 'Test report import' }, keywords: ['test raporu', 'test report', 'talep no', 'request no', 'labright', 'ticari onay', 'commercial approval', 'gold seal', 'tekrar test', 'retest'], build: testReportKnowledge },
   collection: { title: { tr: 'Koleksiyon', en: 'Collection' }, keywords: ['koleksiyon', 'collection', 'model geliştirme', 'quotation', 'teklif'], build: lang => pick(lang, STATIC_MODULES.collection) },
 });
 
@@ -130,6 +135,7 @@ function selectModules({ source = '', task = '', screens = [], exclude = [] } = 
   const chosen = [];
   const add = key => { if (MODULES[key] && !skip.has(key) && !chosen.includes(key) && chosen.length < MAX_MODULES) chosen.push(key); };
   if (MODULES[source]) add(source);
+  if (/^test-report-/.test(clean(source))) add('test-reports');
   for (const screen of screens) add(SCREEN_MODULES[clean(screen)] || '');
   const text = ` ${lower(task)} `;
   if (text.trim()) {

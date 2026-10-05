@@ -11,15 +11,22 @@
  *  - Öncelik kullanıcının girişindedir: elle verilmiş bir durum raporla
  *    ezilmez (önizlemede açıkça "Raporla güncelle" seçilmedikçe).
  *  - Yazma, satır düzenleme yetkisinden geçer (row._canEdit).
+ *  - LCW AI (ortak BuyerLogAI yolu) iki iş yapar ve yalnız ÖNERİR:
+ *      okuma yedeği — tanınmayan / taranmış dosyayı okur; cevap sunucuda
+ *        motorun doğrulayıcısından geçer, satır varsayılan olarak seçilmez;
+ *      inceleme — her rapor için özet, yapılacak işler, riskler ve
+ *        önerilen checklist adımı. Öneri "Uygula" ile seçilmedikçe hiçbir
+ *        şey değişmez; eşleştirme ve durum Buyer Log'un motorundadır.
  */
 (function (root) {
   'use strict';
 
   const API = '/api/test-reports';
-  const ACCEPT = /\.(msg|eml|pdf)$/i;
+  const ACCEPT = /\.(msg|eml|pdf|png|jpe?g|webp)$/i;
+  const MAX_AI_FILES = 5;
   const NEW_ITEM = '__new__';
   const MAX_ATTACHMENTS = 40;
-  const ui = { modal: null, busy: false, session: null, store: null, entries: [], files: [], typeMap: {}, newTypeMap: {}, decision: null, done: null };
+  const ui = { modal: null, busy: false, session: null, store: null, entries: [], files: [], typeMap: {}, newTypeMap: {}, decision: null, done: null, seq: 0, ai: { state: 'idle', message: '', progress: '', reviews: {}, model: '', read: {} }, aiRun: 0 };
 
   function isEn() { return String((root.document && root.document.documentElement.lang) || root.appLang || 'tr').toLowerCase().startsWith('en'); }
   function T(tr, en) { return isEn() ? en : tr; }
@@ -115,10 +122,12 @@
       else if (candidates.length === 1 && (match.level === 'exact' || match.level === 'partial')) chosen = candidates[0].key;
       const typeKey = E().talepTipiKey(report.talepTipi);
       const mapped = (link && link.itemId) || (store.typeMap[typeKey] && store.typeMap[typeKey].itemId) || ui.newTypeMap[typeKey] || '';
+      const fromAi = report.kaynak === 'ai';
       return {
-        id: 'r' + index, report: report, match: match, candidates: candidates, chosen: chosen,
+        id: 'r' + (ui.seq++), report: report, match: match, candidates: candidates, chosen: chosen,
         typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === mapped; }) ? mapped : '',
-        include: Boolean(chosen), override: false, linked: Boolean(link),
+        // LCW AI'ın okuduğu rapor varsayılan olarak seçilmez: kullanıcı alanları kontrol edip işaretler.
+        include: Boolean(chosen) && !fromAi, override: false, linked: Boolean(link), fromAi: fromAi,
       };
     });
   }
@@ -229,8 +238,39 @@
     if (p.skippedDecisions) list.push(E().warningText({ code: 'decisionAlreadyApplied' }, lang()) + ' (' + p.skippedDecisions + ')');
     const tasks = p.step ? p.step.tasks.filter(function (t) { return t.talepNo === entry.report.talepNo; }) : E().reportOutcome(entry.report).tasks;
     tasks.forEach(function (t) { list.push(T('Buying dönüşü bekleniyor: ', 'Awaiting buying feedback: ') + t.test + (t.aciklama ? ' — ' + t.aciklama : '')); });
-    if (!list.length) return '';
-    return '<ul class="trWarnings">' + list.map(function (w) { return '<li>' + html(w) + '</li>'; }).join('') + '</ul>';
+    const review = aiReviewHtml(entry);
+    if (!list.length) return review;
+    return '<ul class="trWarnings">' + list.map(function (w) { return '<li>' + html(w) + '</li>'; }).join('') + '</ul>' + review;
+  }
+  /* LCW AI yönlendirmesi: özet, yapılacak işler, riskler, önerilen adım. */
+  function aiReviewHtml(entry) {
+    const review = entry.report.talepNo ? ui.ai.reviews[entry.report.talepNo] : null;
+    if (!review) return '';
+    let out = '<div class="trAi"><b>' + html(T('LCW AI önerisi', 'LCW AI suggestion')) + '</b>';
+    if (review.summary) out += '<p>' + html(review.summary) + '</p>';
+    if (review.actions.length) out += '<small>' + html(T('Yapılacaklar', 'Next steps')) + '</small><ul class="trWarnings">' + review.actions.map(function (a) { return '<li>' + html(a) + '</li>'; }).join('') + '</ul>';
+    if (review.risks.length) out += '<small>' + html(T('Riskler', 'Risks')) + '</small><ul class="trWarnings">' + review.risks.map(function (a) { return '<li>' + html(a) + '</li>'; }).join('') + '</ul>';
+    if (review.step && review.step !== entry.itemId) {
+      out += '<button type="button" class="cpaBtn sm" data-tr-ai-step="' + entry.id + '">' + html(T('Adım önerisi: ', 'Suggested step: ') + itemLabel(review.step) + T(' · Uygula', ' · Apply')) + '</button>';
+    }
+    return out + '</div>';
+  }
+  // Aynı talep tipindeki raporlar için LCW AI'ın en sık önerdiği adım.
+  function aiStepForType(typeKey) {
+    const counts = {};
+    ui.entries.forEach(function (e) {
+      const review = e.typeKey === typeKey && e.report.talepNo ? ui.ai.reviews[e.report.talepNo] : null;
+      if (review && review.step) counts[review.step] = (counts[review.step] || 0) + 1;
+    });
+    return Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || '';
+  }
+  function aiStatusHtml() {
+    const ai = ui.ai;
+    if (!root.BuyerLogAI || ai.state === 'idle') return '';
+    if (ai.state === 'running') return '<section class="trAiBar is-running" role="status"><b>' + html(T('LCW AI analiz ediyor…', 'LCW AI is analysing…')) + '</b><small>' + html(ai.progress) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-cancel>' + html(T('Durdur', 'Stop')) + '</button></section>';
+    if (ai.state === 'offline') return '<section class="trAiBar"><b>' + html(T('LCW AI bağlı değil', 'LCW AI is not connected')) + '</b><small>' + html(T('Bağlanırsanız LCW AI raporları inceleyip yapılacakları ve uygun checklist adımını önerir, okunamayan dosyaları okur. Öneriler yalnız sizin onayınızla uygulanır.', 'Once connected, LCW AI reviews the reports, suggests next steps and a fitting checklist step, and reads files Buyer Log could not. Suggestions are applied only with your approval.')) + '</small><button type="button" class="cpaBtn sm primary" data-tr-ai-connect>' + html(T('LCW AI\'a bağlan ve analiz et', 'Connect to LCW AI and analyse')) + '</button></section>';
+    if (ai.state === 'error') return '<section class="trAiBar is-error"><b>' + html(T('LCW AI analizi tamamlanamadı', 'LCW AI analysis did not complete')) + '</b><small>' + html(ai.message) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-retry>' + html(T('Tekrar dene', 'Try again')) + '</button></section>';
+    return '<section class="trAiBar is-done"><b>' + html(T('LCW AI analizi hazır', 'LCW AI analysis ready')) + (ai.model ? ' · ' + html(ai.model) : '') + '</b><small>' + html(ai.message || T('Öneriler her raporun satırında; hiçbiri siz uygulamadan seçilmez.', 'Suggestions are shown on each report row; none is applied until you do.')) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-retry>' + html(T('Yeniden analiz et', 'Analyse again')) + '</button></section>';
   }
   function filesCell(report) {
     return (report.dosyalar || []).map(function (f) { return '<div class="trFile" title="' + html(f.ad) + '">' + html(f.ad) + '</div>'; }).join('') || '<span class="trMuted">—</span>';
@@ -243,8 +283,10 @@
       + [...pending.entries()].map(function (pair) {
         const key = pair[0], label = pair[1] || key;
         const parts = String(label).split(' / ');
+        const suggested = aiStepForType(key);
         return '<div class="trTypeRow" data-tr-type="' + html(key) + '"><span>' + html(T('"' + parts[0] + '" hangi checklist adımına girilsin?', 'Which checklist step should "' + (parts[1] || parts[0]) + '" go to?')) + '</span>'
           + '<select data-tr-type-select="' + html(key) + '">' + itemOptions('') + '</select>'
+          + (suggested ? '<button type="button" class="cpaBtn sm" data-tr-ai-type="' + html(key) + '">' + html(T('LCW AI önerisi: ', 'LCW AI suggests: ') + itemLabel(suggested) + T(' · Uygula', ' · Apply')) + '</button>' : '')
           + '<span class="trNewItem" hidden><input type="text" data-tr-new-tr maxlength="160" value="' + html(parts[0]) + '" placeholder="' + html(T('Adım adı (Türkçe)', 'Step name (Turkish)')) + '">'
           + '<input type="text" data-tr-new-en maxlength="160" value="' + html(parts[1] || parts[0]) + '" placeholder="' + html(T('Adım adı (İngilizce)', 'Step name (English)')) + '">'
           + '<button type="button" class="cpaBtn sm" data-tr-create="' + html(key) + '">' + html(T('Oluştur', 'Create')) + '</button></span></div>';
@@ -276,6 +318,9 @@
           if (w.code === 'readError') return T('Dosya okunamadı.', 'The file could not be read.');
           return E().warningText(w, lang());
         });
+        const aiRead = ui.ai.read && ui.ai.read[f.name];
+        if (aiRead && aiRead.ok) return '<li><b>' + html(f.name) + '</b> — ' + html(T('LCW AI okudu → talep ', 'Read by LCW AI → request ') + aiRead.talepNo) + '</li>';
+        if (aiRead) reasons.push(T('LCW AI de okuyamadı.', 'LCW AI could not read it either.'));
         return '<li><b>' + html(f.name) + '</b> — ' + html(reasons.join(' ') || T('Tanınmadı.', 'Not recognised.')) + '</li>';
       }).join('') + '</ul></section>';
   }
@@ -288,9 +333,9 @@
       footer.hidden = true;
       return;
     }
-    const drop = '<label class="trDrop" data-tr-drop><input type="file" data-tr-input multiple accept=".msg,.eml,.pdf" hidden>'
+    const drop = '<label class="trDrop" data-tr-drop><input type="file" data-tr-input multiple accept=".msg,.eml,.pdf,.png,.jpg,.jpeg,.webp" hidden>'
       + '<b>' + html(T('Test sonuç maillerini ve rapor PDF\'lerini buraya bırakın', 'Drop test result e-mails and report PDFs here')) + '</b>'
-      + '<small>' + html(T('.msg, .eml ve .pdf · Outlook\'tan sürükleme dosya üretmezse maili .msg olarak kaydedip bırakın · ya da dosya seçmek için tıklayın', '.msg, .eml and .pdf · If dragging from Outlook gives no file, save the mail as .msg and drop it · or click to choose files')) + '</small></label>';
+      + '<small>' + html(T('.msg, .eml, .pdf ve rapor fotoğrafı · Outlook\'tan sürükleme dosya üretmezse maili .msg olarak kaydedip bırakın · ya da dosya seçmek için tıklayın', '.msg, .eml, .pdf and report photos · If dragging from Outlook gives no file, save the mail as .msg and drop it · or click to choose files')) + '</small></label>';
     if (ui.busy) {
       body.innerHTML = drop + '<p class="trMuted" role="status">' + html(T('Dosyalar okunuyor…', 'Reading files…')) + '</p>';
       footer.disabled = true;
@@ -302,7 +347,7 @@
       const p = plans[index], r = entry.report;
       return '<tr class="' + (p.ready ? '' : 'is-blocked') + '">'
         + '<td><input type="checkbox" data-tr-include="' + entry.id + '"' + (entry.include && p.ready ? ' checked' : '') + (p.ready ? '' : ' disabled') + ' aria-label="' + html(T('Bu raporu yaz', 'Write this report')) + '"></td>'
-        + '<td><b>' + html(r.talepNo || '—') + '</b><small>' + html(r.talepTipi || '') + '</small><small>' + html([r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small></td>'
+        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small><small>' + html([r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small></td>'
         + '<td>' + resultBadge(r) + '</td>'
         + '<td>' + levelBadge(entry) + '</td>'
         + '<td>' + rowCell(entry) + '</td>'
@@ -310,7 +355,7 @@
         + '<td>' + changeCell(entry, p) + '</td>'
         + '<td>' + warningsCell(entry, p) + '<div class="trFiles">' + filesCell(r) + '</div></td></tr>';
     }).join('');
-    body.innerHTML = drop + summaryHtml(plans) + fileIssuesHtml() + typeMappingHtml()
+    body.innerHTML = drop + summaryHtml(plans) + aiStatusHtml() + fileIssuesHtml() + typeMappingHtml()
       + (ui.entries.length ? '<div class="trTableWrap"><table class="cpaTable trTable"><thead><tr><th></th><th>' + html(T('Talep', 'Request')) + '</th><th>' + html(T('Sonuç', 'Result')) + '</th><th>' + html(T('Eşleşme', 'Match')) + '</th><th>' + html(T('Satır', 'Row')) + '</th><th>' + html(T('Checklist adımı', 'Checklist step')) + '</th><th>' + html(T('Değişiklik', 'Change')) + '</th><th>' + html(T('Uyarılar ve eklenecek dosyalar', 'Warnings and files to attach')) + '</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' : '');
     const ready = plans.filter(function (p, i) { return p.ready && ui.entries[i].include; }).length;
     footer.disabled = !ready;
@@ -322,7 +367,7 @@
     const all = Array.from(fileList || []);
     const files = all.filter(function (f) { return ACCEPT.test(f.name || ''); });
     const skipped = all.filter(function (f) { return !ACCEPT.test(f.name || ''); });
-    if (!files.length) { toast(T('Desteklenen dosya yok (.msg, .eml, .pdf).', 'No supported files (.msg, .eml, .pdf).')); return; }
+    if (!files.length) { toast(T('Desteklenen dosya yok (.msg, .eml, .pdf, görsel).', 'No supported files (.msg, .eml, .pdf, image).')); return; }
     ui.busy = true; ui.done = null; render();
     try {
       const payload = { files: [] };
@@ -337,18 +382,116 @@
       ui.files = parsed.files.concat(skipped.map(function (f) { return { name: f.name, status: 'unsupported', warnings: [{ code: 'unsupported' }] }; }));
       ui.newTypeMap = {};
       ui.entries = buildEntries(parsed.reports || []);
+      ui.ai = { state: 'idle', message: '', progress: '', reviews: {}, model: '', read: {} };
     } catch (error) {
       toast(T('Test raporları okunamadı: ', 'Test reports could not be read: ') + (error.message || error));
     } finally {
       ui.busy = false;
       render();
     }
+    if (ui.session) runAi({ interactive: false });
+  }
+
+  /* ----------------------------------------------------------- LCW AI */
+  function aiCandidates() { return ui.files.filter(function (f) { return f.ai; }).slice(0, MAX_AI_FILES); }
+  function aiDone() { return ui.aiRun; }
+  async function stagedFile(candidate) {
+    const response = await root.fetch(API + '/staged/' + encodeURIComponent(ui.session) + '/' + encodeURIComponent(candidate.ai.uploadId), { cache: 'no-store' });
+    if (!response.ok) throw new Error(T('Geçici dosya alınamadı.', 'The staged file could not be read.'));
+    const blob = await response.blob();
+    return new File([blob], candidate.ai.uploadName || candidate.name, { type: blob.type || 'application/pdf' });
+  }
+  /* Okuma yedeği: brief'teki extractWithAI(file) → aynı rapor şeması.
+     Cevap sunucuda motorun doğrulayıcısından geçer. */
+  async function extractWithAI(candidate, run) {
+    const AI = root.BuyerLogAI;
+    const context = { fileName: candidate.name, mailText: candidate.ai.mailText || '', mailDate: candidate.ai.mailDate || '' };
+    const task = T('Ekli test raporunu ya da test sonuç mailini oku ve alanları şemaya göre çıkar.', 'Read the attached test report or test result e-mail and extract the fields according to the schema.');
+    const options = { source: 'test-report-extract', task: task, context: context, lang: lang() };
+    const result = candidate.ai.uploadId
+      ? await AI.askWithFiles(Object.assign(options, { files: [await stagedFile(candidate)] }))
+      : await AI.ask(options);
+    if (run !== ui.aiRun) return null;
+    const data = result && (result.data || (result.structured && result.structured.partial));
+    if (!data) throw new Error(T('LCW AI beklenen biçimde cevap vermedi.', 'LCW AI did not answer in the expected format.'));
+    const payload = await jsonFetch(API + '/ai-report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: ui.session, fileName: candidate.name, data: data }) });
+    return payload && payload.report;
+  }
+  function addAiReport(report) {
+    if (!report) return;
+    const existing = report.talepNo ? ui.entries.find(function (e) { return e.report.talepNo === report.talepNo; }) : null;
+    const entry = buildEntries([report])[0];
+    if (existing) {
+      // Aynı talep zaten okunduysa AI parçası birleşmiş raporla değişir; seçimler korunur.
+      existing.report = report;
+      if (!existing.chosen && entry.chosen) { existing.chosen = entry.chosen; existing.candidates = entry.candidates; existing.match = entry.match; }
+      return;
+    }
+    ui.entries.push(entry);
+  }
+  async function runAi(options) {
+    const AI = root.BuyerLogAI;
+    if (!AI || !ui.session) return;
+    const run = ++ui.aiRun;
+    const set = function (patch) { if (run === ui.aiRun) { Object.assign(ui.ai, patch); render(); } };
+    try {
+      let status = await AI.getStatus();
+      if (status && !status.connected && options && options.interactive) status = await AI.connect();
+      if (run !== ui.aiRun) return;
+      if (!status || !status.connected) { set({ state: 'offline', progress: '' }); return; }
+      set({ state: 'running', message: '', progress: '' });
+      const candidates = aiCandidates();
+      let read = 0, failed = 0;
+      for (let i = 0; i < candidates.length; i++) {
+        set({ progress: T('Okunuyor ', 'Reading ') + (i + 1) + '/' + candidates.length + ': ' + candidates[i].name });
+        try {
+          const report = await extractWithAI(candidates[i], run);
+          addAiReport(report);
+          ui.ai.read[candidates[i].name] = { talepNo: report && report.talepNo || '', ok: Boolean(report && report.talepNo) };
+          if (report && report.talepNo) read += 1; else failed += 1;
+        } catch (error) {
+          if (run !== ui.aiRun) return;
+          ui.ai.read[candidates[i].name] = { talepNo: '', ok: false };
+          failed += 1;
+        }
+      }
+      if (run !== ui.aiRun) return;
+      const entries = ui.entries.filter(function (e) { return e.report.talepNo; });
+      let model = '';
+      if (entries.length) {
+        set({ progress: T('Raporlar inceleniyor: ', 'Reviewing reports: ') + entries.length });
+        const steps = catalog().map(function (item) { return { id: item.id, name: isEn() ? item.en : item.tr }; });
+        const items = entries.map(function (e) { const p = plan(e); return { report: e.report, matchLevel: e.match.level, currentStep: e.itemId, currentStatus: p.current }; });
+        const result = await AI.ask({
+          source: 'test-report-review', lang: lang(), context: E().reviewContext(items, steps),
+          task: T('Bu test raporlarını incele; her rapor için özet, yapılacaklar, riskler ve uygun checklist adımını öner.', 'Review these test reports; for each one suggest a summary, next steps, risks and a fitting checklist step.'),
+        });
+        if (run !== ui.aiRun) return;
+        const data = result && (result.data || (result.structured && result.structured.partial));
+        ui.ai.reviews = E().parseReviews(data && data.reviews, { talepNos: entries.map(function (e) { return e.report.talepNo; }), stepIds: steps.map(function (s) { return s.id; }) });
+        model = result && result.model && result.model.label || '';
+      }
+      const notes = [];
+      if (read) notes.push(T(read + ' dosyayı LCW AI okudu; alanları kontrol edip işaretleyin.', 'LCW AI read ' + read + ' files; check the fields and tick them.'));
+      if (failed) notes.push(T(failed + ' dosya LCW AI ile de okunamadı.', failed + ' files could not be read by LCW AI either.'));
+      set({ state: 'done', progress: '', model: model, message: notes.join(' ') });
+    } catch (error) {
+      if (run !== ui.aiRun) return;
+      const message = root.BuyerLogAI && typeof root.BuyerLogAI.errorText === 'function' ? root.BuyerLogAI.errorText(error) : (error && error.message) || String(error);
+      set({ state: 'error', progress: '', message: message });
+    }
+  }
+  function cancelAi() {
+    ui.aiRun += 1;
+    if (root.BuyerLogAI) root.BuyerLogAI.cancel();
+    ui.ai.state = 'idle';
+    render();
   }
 
   function setTypeItem(typeKey, itemId) {
     ui.newTypeMap[typeKey] = itemId;
     ui.entries.forEach(function (entry) {
-      if (entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen); }
+      if (entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen) && !entry.fromAi; }
     });
     render();
   }
@@ -445,7 +588,7 @@
   }
 
   function bind(modal) {
-    const close = function () { if (ui.busy) return; modal.remove(); ui.modal = null; };
+    const close = function () { if (ui.busy) return; if (ui.ai.state === 'running') cancelAi(); modal.remove(); ui.modal = null; };
     modal.querySelectorAll('[data-tr-close]').forEach(function (b) { b.onclick = close; });
     modal.addEventListener('keydown', function (event) { if (event.key === 'Escape') close(); });
     modal.addEventListener('change', function (event) {
@@ -469,6 +612,22 @@
     modal.addEventListener('click', function (event) {
       const create = event.target.closest('[data-tr-create]');
       if (create) createItem(create.dataset.trCreate, create.closest('[data-tr-type]'));
+      if (event.target.closest('[data-tr-ai-connect]')) runAi({ interactive: true });
+      if (event.target.closest('[data-tr-ai-retry]')) runAi({ interactive: true });
+      if (event.target.closest('[data-tr-ai-cancel]')) cancelAi();
+      const applyType = event.target.closest('[data-tr-ai-type]');
+      if (applyType) { const step = aiStepForType(applyType.dataset.trAiType); if (step) setTypeItem(applyType.dataset.trAiType, step); }
+      const apply = event.target.closest('[data-tr-ai-step]');
+      if (apply) {
+        // AI önerisi yalnız bu açık tıklamayla seçilir; talep tipi eşlemesi de önerilir.
+        const entry = ui.entries.find(function (e) { return e.id === apply.dataset.trAiStep; });
+        const review = entry && ui.ai.reviews[entry.report.talepNo];
+        if (entry && review && review.step) {
+          entry.itemId = review.step;
+          if (entry.typeKey && !(ui.store && ui.store.typeMap && ui.store.typeMap[entry.typeKey])) ui.newTypeMap[entry.typeKey] = review.step;
+          render();
+        }
+      }
     });
     modal.addEventListener('dragover', function (event) {
       if (!event.dataTransfer || [].indexOf.call(event.dataTransfer.types || [], 'Files') < 0) return;
@@ -508,5 +667,5 @@
     if (files && files.length) await handleFiles(files);
   }
 
-  root.BLTestReportImport = { open: open, _ui: ui, _plan: plan };
+  root.BLTestReportImport = { open: open, runAi: runAi, extractWithAI: extractWithAI, _ui: ui, _plan: plan, _aiDone: aiDone };
 })(typeof window !== 'undefined' ? window : globalThis);
