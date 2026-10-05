@@ -216,7 +216,13 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     let entries;
     try { entries = await fsp.readdir(path.join(base, 'revisions'), { withFileTypes: true }); }
     catch (e) { if (e.code === 'ENOENT') throw error('IAM_NOT_INITIALIZED'); throw error('IAM_OFFLINE'); }
-    const revisions = entries.filter(e => e.isDirectory() && /^\d{16}$/.test(e.name)).map(e => e.name).sort();
+    // OneDrive/SharePoint "Files On-Demand" klasörleri Windows'ta reparse point
+    // taşır; Node bunları Dirent'te isDirectory()=false, isSymbolicLink()=true
+    // bildirir. Yalnız isDirectory() ile süzmek, Shared Hub'ı OneDrive'dan
+    // eşitleyen cihazda bütün revizyonları gizleyip IAM_NOT_INITIALIZED
+    // üretiyordu (kullanıcı listesi boş). Klasör olmayan bir kayıt zaten
+    // meta.json okunurken reddedilir.
+    const revisions = entries.filter(e => (e.isDirectory() || e.isSymbolicLink()) && /^\d{16}$/.test(e.name)).map(e => e.name).sort();
     if (!revisions.length) throw error('IAM_NOT_INITIALIZED');
     const dir = path.join(base, 'revisions', revisions.at(-1));
     try {
