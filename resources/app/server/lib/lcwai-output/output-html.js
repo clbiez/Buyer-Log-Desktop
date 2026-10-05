@@ -112,6 +112,11 @@ function sanitizeAttributes(tag, raw) {
   while ((match = ATTR_RE.exec(raw || ''))) {
     const name = match[1].toLowerCase();
     const value = match[2] != null ? match[2] : match[3] != null ? match[3] : match[4] != null ? match[4].replace(/\/$/, '') : '';
+    // Model görseli yer tutucusu: yalnız <img> üzerinde, yalnız anahtar biçimi.
+    if (name === 'data-bl-image') {
+      if (tag === 'img' && /^[A-Za-z]{2,4}-\d{1,6}$/.test(value)) out.push(` data-bl-image="${value.toUpperCase()}"`);
+      continue;
+    }
     if (/^on/.test(name) || !ALLOWED_ATTRS.has(name)) continue;
     const decoded = value.replace(/&#x([0-9a-f]+);?/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16))).replace(/&#(\d+);?/g, (_, dec) => String.fromCharCode(Number(dec))).replace(/&colon;/gi, ':').replace(/&tab;|&newline;/gi, '');
     let safe = decoded;
@@ -186,7 +191,7 @@ function sanitizeHtml(html) {
       // sarmalayıcılar (html/body/form/font…) kaldırma sayılmaz.
       if (!ALLOWED_TAGS.has(opening)) { if (!/^(html|body|form|label|font|center|fieldset|legend)$/.test(opening)) removed++; continue; }
       const attrs = sanitizeAttributes(opening, match[3]);
-      if (opening === 'img' && !/\ssrc="/.test(attrs)) { removed++; continue; }
+      if (opening === 'img' && !/\ssrc="|\sdata-bl-image="/.test(attrs)) { removed++; continue; }
       const name = CASED[opening] || opening;
       if (VOID_TAGS.has(opening)) { out.push(`<${name}${attrs}>`); continue; }
       if (match[4]) { out.push(`<${name}${attrs}></${name}>`); continue; }

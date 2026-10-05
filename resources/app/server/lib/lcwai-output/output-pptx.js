@@ -49,10 +49,30 @@ function paragraph(text, style, p, lang, { align = 'l', bullet = false, spaceAft
   return `<a:p>${ppr}${text === '' ? '' : run(text, style, p, lang)}<a:endParaRPr lang="${lang}" sz="${Math.round((style.size || 18) * 100)}" dirty="0"/></a:p>`;
 }
 
-function createSlideBuilder(p, lang) {
+/* media: { token → { name, width, height } } (deste genelinde paylaşılır).
+   Slayt kendi ilişki listesini (rels) tutar; rId1 düzen şablonudur. */
+function createSlideBuilder(p, lang, media = {}) {
   let id = 1;
   const shapes = [];
+  const rels = [];
   const next = () => ++id;
+  /* Gerçek model görseli (en-boy korunarak kutuya sığdırılır); yoksa
+     "görsel yok" kutusu. */
+  function picture({ x, y, w, h, token, label = '' }) {
+    const item = token && media[token];
+    if (!item) {
+      box({ x, y, w, h, fill: p.card, line: { color: p.line }, anchor: 'ctr', name: 'NoImage', paragraphs: [paragraph(lang.startsWith('en') ? 'No image' : 'Görsel yok', { size: 10, color: p.muted }, p, lang, { align: 'ctr', spaceAfter: 0 })] });
+      return;
+    }
+    let rel = rels.find(entry => entry.target === item.name);
+    if (!rel) { rel = { id: `rId${rels.length + 2}`, target: item.name }; rels.push(rel); }
+    const ratio = Math.max(0.05, item.width / Math.max(1, item.height));
+    let pw = w, ph = w / ratio;
+    if (ph > h) { ph = h; pw = h * ratio; }
+    const shapeId = next();
+    box({ x, y, w, h, fill: 'FFFFFF', line: { color: p.line }, name: 'ImageFrame' });
+    shapes.push(`<p:pic><p:nvPicPr><p:cNvPr id="${shapeId}" name="Picture ${shapeId}" descr="${xmlText(label || token)}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="${rel.id}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="${Math.round(x + (w - pw) / 2)}" y="${Math.round(y + (h - ph) / 2)}"/><a:ext cx="${Math.round(pw)}" cy="${Math.round(ph)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`);
+  }
   function box({ x, y, w, h, fill, line, paragraphs = [], anchor = 't', inset = 6, name = 'Shape', geometry = 'rect' }) {
     const shapeId = next();
     // fill: 'RRGGBB' | { color, alpha (0–100) }
@@ -90,7 +110,7 @@ function createSlideBuilder(p, lang) {
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:bg><p:bgPr>${bg}<a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${shapes.join('')}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>${motion}</p:sld>`;
   }
-  return { box, text, table, xml };
+  return { box, text, table, picture, xml, rels };
 }
 
 /* Metin uzunluğuna göre yazı boyutu (PowerPoint otomatik sığdırmayı ancak
@@ -117,8 +137,13 @@ const CONTENT_TOP = pt(110);
 const NUMERIC_TEXT = /^%?\s*[-+]?(\d{1,3}([.,]\d{3})+|\d+)([.,]\d+)?\s*%?$/;
 const CONTENT_H = H - CONTENT_TOP - pt(44);
 
-function renderSlide(slide, index, total, deck, p, lang) {
-  const s = createSlideBuilder(p, lang);
+function renderSlide(slide, index, total, deck, p, lang, media) {
+  const s = createSlideBuilder(p, lang, media);
+  const xml = renderSlideBody(s, slide, index, total, deck, p, lang);
+  return { xml, rels: s.rels };
+}
+
+function renderSlideBody(s, slide, index, total, deck, p, lang) {
   const english = lang.startsWith('en');
   if (slide.layout === 'title') {
     // Renk geçişli kapak + yarı saydam dekoratif daireler.
@@ -223,14 +248,41 @@ function renderSlide(slide, index, total, deck, p, lang) {
     });
     return s.xml();
   }
+  if (slide.layout === 'gallery') {
+    // Model kartları: görsel + ad + alt başlık + not; en fazla 6 (3 × 2).
+    const list = slide.items;
+    const perRow = list.length <= 3 ? list.length : 3;
+    const rowsCount = Math.ceil(list.length / perRow);
+    const gap = pt(14);
+    const cardW = (width - gap * (perRow - 1)) / perRow;
+    const cardH = (CONTENT_H - pt(8) - gap * (rowsCount - 1)) / rowsCount;
+    const textH = pt(58);
+    list.forEach((item, i) => {
+      const x = MARGIN + (i % perRow) * (cardW + gap);
+      const y = CONTENT_TOP + pt(8) + Math.floor(i / perRow) * (cardH + gap);
+      s.box({ x, y, w: cardW, h: cardH, fill: p.card, line: { color: p.line }, name: 'Card' });
+      s.box({ x, y, w: cardW, h: pt(4), fill: toneColor(item.tone, p), name: 'Tone' });
+      const imgH = Math.max(pt(40), cardH - textH - pt(16));
+      s.picture({ x: x + pt(8), y: y + pt(10), w: cardW - pt(16), h: imgH, token: item.image, label: item.title });
+      const ty = y + pt(10) + imgH + pt(4);
+      s.text(x + pt(8), ty, cardW - pt(16), pt(18), item.title, { size: 12, bold: true, color: p.logo });
+      const meta = [item.subtitle, item.note].filter(Boolean).join(' · ');
+      if (meta) s.text(x + pt(8), ty + pt(18), cardW - pt(16), textH - pt(22), meta, { size: 9.5, color: p.ink2 });
+    });
+    return s.xml();
+  }
   // bullets & summary
   const numbered = slide.layout === 'summary';
   const items = slide.bullets;
   const hasCallout = Boolean(slide.callout);
   const size = fitSize(items, 20, 12, hasCallout ? 7 : 9);
   const bodyH = CONTENT_H - (hasCallout ? pt(78) : 0);
+  // Maddeli slayt model görseli taşıyabilir (sağda).
+  const sideImage = slide.layout === 'bullets' && slide.image;
+  const imageW = sideImage ? Math.min(pt(300), bodyH) : 0;
+  if (sideImage) s.picture({ x: W - MARGIN - imageW, y: CONTENT_TOP + pt(8), w: imageW, h: Math.min(bodyH, imageW), token: slide.image, label: slide.title });
   s.box({
-    x: MARGIN, y: CONTENT_TOP + pt(8), w: width, h: bodyH,
+    x: MARGIN, y: CONTENT_TOP + pt(8), w: width - (imageW ? imageW + pt(20) : 0), h: bodyH,
     paragraphs: items.map((item, i) => numbered ? paragraph(`${i + 1}.  ${item}`, { size, color: p.ink }, p, lang, { spaceAfter: 8 }) : paragraph(item, { size, color: p.ink }, p, lang, { bullet: true, spaceAfter: 8 })),
     name: 'Bullets',
   });
@@ -264,14 +316,24 @@ const EMPTY_TREE = '<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpP
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /* deck: normalizePresentation() çıktısı. Döner: Buffer (.pptx). */
-function renderPresentation(deck, { lang = 'tr', date = new Date() } = {}) {
+function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} } = {}) {
   const p = palette();
   const langTag = lang === 'en' ? 'en-US' : 'tr-TR';
-  const slides = deck.slides.map((slide, index) => renderSlide(slide, index, deck.slides.length, deck, p, langTag));
+  // PowerPoint yalnız PNG/JPEG/GIF'i güvenle açar (WEBP → "görsel yok").
+  const media = {};
+  const mediaFiles = [];
+  for (const [token, image] of Object.entries(images || {})) {
+    if (!['png', 'jpg', 'gif'].includes(image.ext)) continue;
+    const name = `image${mediaFiles.length + 1}.${image.ext}`;
+    media[token] = { name, width: image.width, height: image.height };
+    mediaFiles.push({ name: `ppt/media/${name}`, data: image.buffer });
+  }
+  const rendered = deck.slides.map((slide, index) => renderSlide(slide, index, deck.slides.length, deck, p, langTag, media));
+  const slides = rendered.map(item => item.xml);
   const created = (date instanceof Date ? date : new Date()).toISOString().replace(/\.\d{3}Z$/, 'Z');
   const entries = [
     { name: '[Content_Types].xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/><Override PartName="/ppt/viewProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"/><Override PartName="/ppt/tableStyles.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"/>${slides.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join('')}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>` },
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/><Default Extension="gif" ContentType="image/gif"/><Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/><Override PartName="/ppt/slideMasters/slideMaster1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideMaster+xml"/><Override PartName="/ppt/slideLayouts/slideLayout1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slideLayout+xml"/><Override PartName="/ppt/theme/theme1.xml" ContentType="application/vnd.openxmlformats-officedocument.theme+xml"/><Override PartName="/ppt/presProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presProps+xml"/><Override PartName="/ppt/viewProps.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.viewProps+xml"/><Override PartName="/ppt/tableStyles.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.tableStyles+xml"/>${slides.map((_, i) => `<Override PartName="/ppt/slides/slide${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>`).join('')}<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>` },
     { name: '_rels/.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/officeDocument" Target="ppt/presentation.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="${REL}/extended-properties" Target="docProps/app.xml"/></Relationships>` },
     { name: 'docProps/core.xml', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -300,8 +362,9 @@ function renderPresentation(deck, { lang = 'tr', date = new Date() } = {}) {
     ...slides.flatMap((xml, i) => [
       { name: `ppt/slides/slide${i + 1}.xml`, data: xml },
       { name: `ppt/slides/_rels/slide${i + 1}.xml.rels`, data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/slideLayout" Target="../slideLayouts/slideLayout1.xml"/></Relationships>` },
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${REL}/slideLayout" Target="../slideLayouts/slideLayout1.xml"/>${rendered[i].rels.map(rel => `<Relationship Id="${rel.id}" Type="${REL}/image" Target="../media/${rel.target}"/>`).join('')}</Relationships>` },
     ]),
+    ...mediaFiles,
   ];
   return createZip(entries, { date });
 }

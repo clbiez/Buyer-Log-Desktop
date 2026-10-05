@@ -20,6 +20,7 @@ const { buildDocument } = require('./output-html');
 const { renderWorkbook } = require('./output-xlsx');
 const { renderPresentation } = require('./output-pptx');
 const { createOutputStore } = require('./output-store');
+const { collectTokens, normalizeImages, fillHtmlImages } = require('./output-images');
 
 const MAX_REPAIRS = 2;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
@@ -78,32 +79,60 @@ function createOutputService(options = {}) {
     }
     if (!parsed.ok) throw lcwAiError('OUTPUT_INVALID', { detail: parsed.errors.join(' | ').slice(0, 300) });
 
-    emit(input.onProgress, { phase: 'output', step: 'rendering', format: spec.format });
     const title = (parsed.data && parsed.data.title) || fallbackTitle(input.message, english);
-    const label = templateLabel(template, lang);
+    const job = {
+      format: spec.format, data: parsed.data, title, template: template.key, templateLabel: templateLabel(template, lang),
+      attempts, lang, orientation: spec.orientation, day, date: date.toISOString(), requestId: result.requestId,
+    };
     const base = { requestId: result.requestId, chatId, text: parsed.explanation || '', model: result.model, finishReason: result.finishReason, modules: result.modules, truncated: result.truncated, warnings: parsed.warnings || [] };
+    // Çıktı model görseli anahtarı kullanıyorsa görseller renderer'dan istenir
+    // (yerel depo, kanonik çözümleyici); dosya görsellerle birlikte oluşur.
+    const tokens = input.output && input.output.images === false ? [] : collectTokens(spec.format, parsed.data);
+    if (tokens.length) {
+      const pendingId = store.putPending(ownerId, { stage: 'images', job, tokens });
+      return { ...base, output: { pending: 'images', pendingId, tokens, format: spec.format, title, templateLabel: job.templateLabel, attempts } };
+    }
+    emit(input.onProgress, { phase: 'output', step: 'rendering', format: spec.format });
+    return { ...base, output: render(ownerId, job, {}) };
+  }
+
+  /* İş + (varsa) görseller → dosya. PDF son adımı masaüstü kabuğunda. */
+  function render(ownerId, job, images) {
+    const { format, data, title, lang, orientation, day } = job;
+    const date = new Date(job.date);
     try {
-      if (spec.format === 'pdf') {
-        const html = buildDocument({ body: parsed.data.body, styles: parsed.data.styles, title, lang, orientation: spec.orientation, print: true, meta: { date: day, template: label } });
-        const pendingId = store.putPending(ownerId, { html, title, template: template.key, templateLabel: label, attempts, lang, orientation: spec.orientation, requestId: result.requestId });
-        return { ...base, output: { pending: 'pdf', pendingId, html, title, landscape: spec.orientation === 'landscape', format: 'pdf', templateLabel: label, attempts } };
+      if (format === 'pdf' || format === 'html') {
+        const body = fillHtmlImages(data.body, images, lang);
+        if (format === 'pdf') {
+          const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel } });
+          const pendingId = store.putPending(ownerId, { stage: 'pdf', html, title, template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, lang, orientation, requestId: job.requestId });
+          return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts };
+        }
+        const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel } }), 'utf8');
+        return store.save(ownerId, { buffer, title, format, template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId });
       }
-      let buffer;
-      if (spec.format === 'html') buffer = Buffer.from(buildDocument({ body: parsed.data.body, styles: parsed.data.styles, title, lang, orientation: spec.orientation, meta: { date: day, template: label } }), 'utf8');
-      else if (spec.format === 'xlsx') buffer = renderWorkbook(parsed.data, { lang, date });
-      else buffer = renderPresentation(parsed.data, { lang, date });
-      const record = store.save(ownerId, { buffer, title, format: spec.format, template: template.key, templateLabel: label, attempts, requestId: result.requestId });
-      return { ...base, output: record };
+      const buffer = format === 'xlsx' ? renderWorkbook(data, { lang, date, images }) : renderPresentation(data, { lang, date, images });
+      return store.save(ownerId, { buffer, title, format, template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId });
     } catch (error) {
       if (isLcwAiError(error)) throw error;
       throw lcwAiError('OUTPUT_RENDER_FAILED', { detail: String(error && error.code || 'render').slice(0, 60) });
     }
   }
 
+  /* Renderer'ın çözdüğü görseller ({ anahtar: dataURL }) → dosya. Eksik
+     görsel dosyayı durdurmaz; yerine "görsel yok" kutusu konur. */
+  function completeImages(ownerId, pendingId, rawImages) {
+    const entry = store.takePending(ownerId, pendingId);
+    if (!entry || entry.stage !== 'images') throw lcwAiError('OUTPUT_NOT_FOUND');
+    const images = normalizeImages(rawImages, entry.tokens);
+    const output = render(ownerId, entry.job, images);
+    return { ...output, imagesUsed: Object.keys(images).length, imagesRequested: entry.tokens.length };
+  }
+
   /* Masaüstü kabuğunun bastığı PDF baytları → AI Outputs. */
   function completePdf(ownerId, pendingId, buffer) {
     const entry = store.takePending(ownerId, pendingId, { keep: true });
-    if (!entry) throw lcwAiError('OUTPUT_NOT_FOUND');
+    if (!entry || entry.stage !== 'pdf') throw lcwAiError('OUTPUT_NOT_FOUND');
     if (!Buffer.isBuffer(buffer) || buffer.length < 64 || buffer.length > MAX_PDF_BYTES || buffer.slice(0, 5).toString('latin1') !== '%PDF-') throw lcwAiError('OUTPUT_RENDER_FAILED', { detail: 'pdf-bytes' });
     store.takePending(ownerId, pendingId);
     return store.save(ownerId, { buffer, title: entry.title, format: 'pdf', template: entry.template, templateLabel: entry.templateLabel, attempts: entry.attempts, requestId: entry.requestId });
@@ -113,12 +142,12 @@ function createOutputService(options = {}) {
      olarak kaydedilir; kullanıcı tarayıcıda Yazdır → PDF yapabilir. */
   function fallbackHtml(ownerId, pendingId) {
     const entry = store.takePending(ownerId, pendingId);
-    if (!entry) throw lcwAiError('OUTPUT_NOT_FOUND');
+    if (!entry || entry.stage !== 'pdf') throw lcwAiError('OUTPUT_NOT_FOUND');
     return store.save(ownerId, { buffer: Buffer.from(entry.html, 'utf8'), title: entry.title, format: 'html', template: entry.template, templateLabel: entry.templateLabel, attempts: entry.attempts, requestId: entry.requestId });
   }
 
   return {
-    create, completePdf, fallbackHtml,
+    create, completeImages, completePdf, fallbackHtml,
     get: (ownerId, id) => store.get(ownerId, id),
     list: (ownerId, limit) => store.list(ownerId, limit),
     store,

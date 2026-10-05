@@ -30,6 +30,33 @@
 
   /* ---------------- Varsayılan bağlam sağlayıcıları ---------------- */
   const cellValue = value => (value == null ? '' : (typeof value === 'object' ? (value instanceof Date ? value.toISOString().slice(0, 10) : JSON.stringify(value)) : String(value)));
+  /* Model görseli anahtarları: görselin kendisi LCW AI'a GİTMEZ; CSV'ye
+     yalnız kısa anahtar (ör. KOL-3) yazılır. Çıktı bu anahtarı kullanırsa
+     Buyer Log görseli yerel depodan alıp dosyaya gömer. */
+  const IMAGE_PREFIX = { cp: 'CP', orders: 'ORD', koleksiyon: 'KOL', overview: 'OV', shipping: 'SHP' };
+  const IMAGE_COLUMN = 'BL Image';
+  // Aynı görsel → oturum boyunca aynı anahtar; farklı görsel → farklı anahtar
+  // (birden çok bağlam eklense de anahtarlar çakışmaz).
+  const imageKeys = new Map();
+  function imageKeyFor(tab, identity) {
+    const id = `${tab}|${identity.source}|${identity.modelId}|${identity.colourCode}`;
+    if (!imageKeys.has(id)) imageKeys.set(id, `${IMAGE_PREFIX[tab]}-${imageKeys.size + 1}`);
+    return imageKeys.get(id);
+  }
+  function withImageKeys(tab, rows, columns, values) {
+    const screenData = window.BLAIScreenData;
+    if (!screenData || typeof screenData.rowImage !== 'function' || !IMAGE_PREFIX[tab]) return { columns, values, images: null };
+    const images = {};
+    const keys = rows.map(row => {
+      const identity = screenData.rowImage(tab, row);
+      if (!identity) return '';
+      const key = imageKeyFor(tab, identity);
+      images[key] = identity;
+      return key;
+    });
+    if (!Object.keys(images).length) return { columns, values, images: null };
+    return { columns: [IMAGE_COLUMN, ...columns], values: values.map((row, index) => [keys[index], ...row]), images };
+  }
   function tableContext(tab, mode) {
     const data = window.BLAIScreenData && window.BLAIScreenData.table(tab);
     if (!data) return null;
@@ -37,13 +64,15 @@
     const selected = new Set((data.selectedIds || []).map(String));
     const source = mode === 'selected' ? data.rows.filter(row => selected.has(String(row && row._id))) : data.rows;
     const title = window.BLAIScreenData.pageTitle(tab);
+    const keyed = mode === 'filters' ? null : withImageKeys(tab, source, columns.map(col => col.label), source.map(row => columns.map(col => cellValue(row && row[col.key]))));
     return {
+      images: keyed && keyed.images,
       label: mode === 'selected' ? L(`${title} — seçili kayıtlar`, `${title} — selected records`) : mode === 'filters' ? L(`${title} — filtreler ve özet`, `${title} — filters and summary`) : L(`${title} — görünen kayıtlar`, `${title} — visible records`),
       screen: tab,
       summary: L(`${source.length} kayıt (tablodaki filtreler uygulanmış).`, `${source.length} records (table filters applied).`),
       filters: data.filters,
-      columns: mode === 'filters' ? [] : columns.map(col => col.label),
-      rows: mode === 'filters' ? [] : source.map(row => columns.map(col => cellValue(row && row[col.key]))),
+      columns: keyed ? keyed.columns : [],
+      rows: keyed ? keyed.values : [],
       totalRows: source.length,
     };
   }
@@ -63,10 +92,11 @@
     if (!context || !Array.isArray(context.columns) || !context.columns.length || !Array.isArray(context.rows) || !context.rows.length) return { context, file: null };
     const name = contextFileName(context);
     const file = new File([contextCsv(context)], name, { type: 'text/csv' });
-    const { rows, columns, ...rest } = context;
+    const { rows, columns, images, ...rest } = context;
     return {
       file,
-      context: { ...rest, text: L(`Tablonun tamamı ekli “${name}” dosyasında: ${rows.length} satır, ${columns.length} sütun (${columns.join(', ')}).`, `The full table is in the attached “${name}” file: ${rows.length} rows, ${columns.length} columns (${columns.join(', ')}).`) },
+      context: { ...rest, text: L(`Tablonun tamamı ekli “${name}” dosyasında: ${rows.length} satır, ${columns.length} sütun (${columns.join(', ')}).`, `The full table is in the attached “${name}” file: ${rows.length} rows, ${columns.length} columns (${columns.join(', ')}).`) + (images ? L(` “${IMAGE_COLUMN}” sütunu kaydın Buyer Log’daki gerçek model görselinin anahtarıdır.`, ` The “${IMAGE_COLUMN}” column is the key of the record’s real model image in Buyer Log.`) : '') },
+      images: images || null,
     };
   }
 
@@ -97,7 +127,8 @@
       build() {
         const rows = window.BLAIScreenData.overviewCpRows();
         const columns = window.BLAIScreenData.cpColumns();
-        return { label: L('Overview — CP kümesi', 'Overview — CP set'), screen: 'overview', summary: L(`${rows.length} CP satırı (Overview filtreleri uygulanmış).`, `${rows.length} CP rows (Overview filters applied).`), columns: columns.map(col => col.label), rows: rows.map(row => columns.map(col => cellValue(row[col.key]))), totalRows: rows.length };
+        const keyed = withImageKeys('overview', rows, columns.map(col => col.label), rows.map(row => columns.map(col => cellValue(row[col.key]))));
+        return { label: L('Overview — CP kümesi', 'Overview — CP set'), screen: 'overview', summary: L(`${rows.length} CP satırı (Overview filtreleri uygulanmış).`, `${rows.length} CP rows (Overview filters applied).`), columns: keyed.columns, rows: keyed.values, images: keyed.images, totalRows: rows.length };
       },
     });
     api.registerContextProvider({
@@ -268,6 +299,50 @@
     return `<div class="lcwaiFile" data-file-card="${esc(file.id)}"><span class="lcwaiFileIcon is-${esc(format)}">${esc(format === 'pptx' ? 'PPT' : format.toUpperCase())}</span><div class="lcwaiFileInfo"><b title="${esc(file.path || file.fileName)}">${esc(file.fileName)}</b><small>${esc(details)}</small></div><div class="lcwaiFileActions"><button type="button" class="lcwaiBtn is-primary" data-file-open="${esc(file.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="lcwaiBtn" data-file-reveal="${esc(file.id)}">${esc(L('Klasörde Göster', 'Show in folder'))}</button></div></div>${fallback}`;
   }
 
+  /* Çıktının kullandığı model görsellerini yerel depodan çözer ve küçültür
+     (JPEG, en uzun kenar 640 px): { anahtar: dataURL }. Bulunamayan görsel
+     dosyayı durdurmaz; sunucu yerine "görsel yok" kutusu koyar. */
+  async function shrinkImage(dataUrl) {
+    try {
+      const bitmap = new Image();
+      bitmap.src = dataUrl;
+      await bitmap.decode();
+      const scale = Math.min(1, 640 / Math.max(bitmap.naturalWidth || 1, bitmap.naturalHeight || 1));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.naturalHeight * scale));
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.84);
+    } catch (_) { return ''; }
+  }
+  async function resolveImages(conv, tokens, answer) {
+    const map = conv.imageMap || {};
+    const screenData = window.BLAIScreenData;
+    const list = (tokens || []).filter(token => map[token]);
+    const images = {};
+    let done = 0;
+    const paint = () => { answer.phase = L(`Model görselleri Buyer Log’dan ekleniyor (${done}/${list.length})…`, `Adding model images from Buyer Log (${done}/${list.length})…`); if (state.activeId === conv.id) renderMessages(); };
+    paint();
+    let cursor = 0;
+    const worker = async () => {
+      while (cursor < list.length) {
+        const token = list[cursor++];
+        try {
+          const raw = screenData && typeof screenData.imageDataUrl === 'function' ? await screenData.imageDataUrl(map[token]) : '';
+          const small = raw ? await shrinkImage(raw) : '';
+          if (small) images[token] = small;
+        } catch (_) { /* eksik görsel → "görsel yok" */ }
+        done++;
+        paint();
+      }
+    };
+    await Promise.all([worker(), worker(), worker(), worker()]);
+    return images;
+  }
+
   /* Kullanıcı başka ekrandaysa (iş arka planda bitti) ortak "Dosya
      oluşturuldu" bildirimi gösterilir; sohbet açıkken kart yeterlidir. */
   function notifyFile(file, conv) {
@@ -428,6 +503,8 @@
           answer.phase = L('Buyer Log bağlamı hazırlanıyor…', 'Preparing Buyer Log context…');
           renderMessages();
           const prepared = contextAsFile(await api.buildContext(id));
+          if (prepared.images) conv.imageMap = { ...(conv.imageMap || {}), ...prepared.images };
+          else if (prepared.context && prepared.context.images) { conv.imageMap = { ...(conv.imageMap || {}), ...prepared.context.images }; delete prepared.context.images; }
           if (prepared.file) {
             const limit = state.config && state.config.limits ? state.config.limits.maxFileBytes : 20 * 1048576;
             if (prepared.file.size > limit) throw Object.assign(new Error('too-large'), { code: 'LCWAI_FILE_TOO_LARGE' });
@@ -449,6 +526,7 @@
         contexts: userMessage.contexts,
         attachments: userMessage.attachments,
         output,
+        resolveImages: tokens => resolveImages(conv, tokens, answer),
         onProgress: event => {
           // Dosya modunda ham HTML/JSON akışı gösterilmez; yalnız aşama ve
           // üretilen karakter sayısı görünür.
@@ -617,5 +695,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages };
 })();

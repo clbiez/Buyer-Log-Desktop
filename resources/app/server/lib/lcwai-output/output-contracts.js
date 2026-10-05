@@ -21,8 +21,26 @@ const LIMITS = Object.freeze({
   slides: 25, bullets: 8, bulletChars: 240, kpis: 6, tableCols: 8, tableRows: 12, chartCategories: 12, chartSeries: 3,
   sheets: 10, sheetCols: 40, sheetRows: 5000, titleChars: 140,
 });
-const COLUMN_TYPES = ['text', 'integer', 'number', 'percent', 'currency', 'date'];
-const LAYOUTS = ['title', 'section', 'bullets', 'kpis', 'table', 'chart', 'comparison', 'summary'];
+const COLUMN_TYPES = ['text', 'integer', 'number', 'percent', 'currency', 'date', 'image'];
+const LAYOUTS = ['title', 'section', 'bullets', 'kpis', 'table', 'chart', 'comparison', 'summary', 'gallery'];
+const GALLERY_ITEMS = 6;
+// Model görseli anahtarı (bağlam CSV'sindeki "BL Image" sütunu): KOL-3, CP-12…
+const IMAGE_TOKEN = /^[A-Z]{2,4}-\d{1,6}$/;
+const imageToken = value => { const token = String(value == null ? '' : value).trim().toUpperCase(); return IMAGE_TOKEN.test(token) ? token : ''; };
+
+/* Model görselleri: LCW AI görseli görmez; bağlamdaki anahtarı yer tutucu
+   olarak yazar, Buyer Log gerçek görseli kendi yerel deposundan gömer. */
+function imageInstruction(format, english) {
+  const head = english
+    ? 'MODEL IMAGES: if the Buyer Log context (CSV) has a "BL Image" column, each value (e.g. KOL-3) is the key of that record\'s real product image held by Buyer Log. You cannot see the images; never write "image not available" for a record that has a key. '
+    : 'MODEL GÖRSELLERİ: Buyer Log bağlamında (CSV) "BL Image" sütunu varsa her değer (ör. KOL-3) o kaydın Buyer Log’daki gerçek ürün görselinin anahtarıdır. Görselleri göremezsin; anahtarı olan kayıt için asla "görsel yok" yazma. ';
+  const how = {
+    html: english ? 'Place it with <img class="bl-model-img" data-bl-image="KOL-3" alt="model name"> (no src); Buyer Log inserts the real picture. Model cards: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.' : 'Görseli <img class="bl-model-img" data-bl-image="KOL-3" alt="model adı"> ile koy (src yazma); gerçek resmi Buyer Log ekler. Model kartları: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.',
+    pptx: english ? 'For model visuals use the "gallery" layout: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (max 6 items per slide; split into several slides). A "bullets" slide may also take "image":"KOL-3".' : 'Model görselleri için "gallery" düzenini kullan: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (slayt başına en fazla 6 öğe; gerekirse birkaç slayta böl). "bullets" slaytı da "image":"KOL-3" alabilir.',
+    xlsx: english ? 'To show pictures add a column {"header":"Image","type":"image"} whose cells hold the key (e.g. "KOL-3"); Buyer Log embeds the picture in the cell.' : 'Resim göstermek için {"header":"Görsel","type":"image"} sütunu ekle; hücrelerine anahtarı (ör. "KOL-3") yaz, Buyer Log resmi hücreye gömer.',
+  };
+  return head + (format === 'pptx' ? how.pptx : format === 'xlsx' ? how.xlsx : how.html);
+}
 const TONES = ['ok', 'warn', 'risk', 'info'];
 
 const clean = (value, max = 4000) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
@@ -66,11 +84,11 @@ function htmlInstruction({ format, english, orientation }) {
 function workbookInstruction(english) {
   return english ? [
     'Return ONLY one JSON object (no Markdown) in this WORKBOOK shape; Buyer Log builds the .xlsx with its own styling:',
-    '{"title":"…","subtitle":"…","currency":"TRY|USD|EUR","kpis":[{"label":"…","value":123,"note":"…"}],"notes":["…"],"sheets":[{"name":"…","columns":[{"header":"…","type":"text|integer|number|percent|currency|date"}],"rows":[["…",12,0.25,"2026-10-05"]]}]}',
+    '{"title":"…","subtitle":"…","currency":"TRY|USD|EUR","kpis":[{"label":"…","value":123,"note":"…"}],"notes":["…"],"sheets":[{"name":"…","columns":[{"header":"…","type":"text|integer|number|percent|currency|date|image"}],"rows":[["…",12,0.25,"2026-10-05"]]}]}',
     'Rules: each row has exactly as many cells as columns; numbers are JSON numbers (no thousands separators); percent values are fractions (0.25 = 25%); dates are "YYYY-MM-DD"; sheet names ≤ 31 characters; formulas may be given as {"f":"SUM(B2:B10)"} (no external references). kpis/notes go to a Summary sheet and are optional.',
   ].join('\n') : [
     'YALNIZ tek bir JSON nesnesi döndür (Markdown yok), şu WORKBOOK biçiminde; .xlsx dosyasını kendi stiliyle Buyer Log oluşturur:',
-    '{"title":"…","subtitle":"…","currency":"TRY|USD|EUR","kpis":[{"label":"…","value":123,"note":"…"}],"notes":["…"],"sheets":[{"name":"…","columns":[{"header":"…","type":"text|integer|number|percent|currency|date"}],"rows":[["…",12,0.25,"2026-10-05"]]}]}',
+    '{"title":"…","subtitle":"…","currency":"TRY|USD|EUR","kpis":[{"label":"…","value":123,"note":"…"}],"notes":["…"],"sheets":[{"name":"…","columns":[{"header":"…","type":"text|integer|number|percent|currency|date|image"}],"rows":[["…",12,0.25,"2026-10-05"]]}]}',
     'Kurallar: her satırda sütun sayısı kadar hücre; sayılar JSON sayısı (binlik ayırıcı yok); yüzdeler oran (0.25 = %25); tarihler "YYYY-MM-DD"; sayfa adı ≤ 31 karakter; formül {"f":"SUM(B2:B10)"} biçiminde verilebilir (dış başvuru yok). kpis/notes Özet sayfasına gider, isteğe bağlıdır.',
   ].join('\n');
 }
@@ -78,11 +96,11 @@ function workbookInstruction(english) {
 function presentationInstruction(english, template) {
   return english ? [
     'Return ONLY one JSON object (no Markdown) in this PRESENTATION shape; Buyer Log designs the 16:9 .pptx itself (colours, fonts, positions):',
-    '{"title":"…","subtitle":"…","slides":[{"layout":"title|section|bullets|kpis|table|chart|comparison|summary","title":"…","subtitle":"…","bullets":["…"],"kpis":[{"label":"…","value":"…","note":"…","tone":"ok|warn|risk|info"}],"table":{"columns":["…"],"rows":[["…"]]},"chart":{"categories":["…"],"series":[{"name":"…","values":[1,2]}],"unit":"%"},"left":{"title":"…","bullets":["…"]},"right":{"title":"…","bullets":["…"]},"callout":{"text":"…","tone":"ok|warn|risk|info"}}]}',
+    '{"title":"…","subtitle":"…","slides":[{"layout":"title|section|bullets|kpis|table|chart|comparison|summary|gallery","title":"…","subtitle":"…","bullets":["…"],"kpis":[{"label":"…","value":"…","note":"…","tone":"ok|warn|risk|info"}],"table":{"columns":["…"],"rows":[["…"]]},"chart":{"categories":["…"],"series":[{"name":"…","values":[1,2]}],"unit":"%"},"left":{"title":"…","bullets":["…"]},"right":{"title":"…","bullets":["…"]},"callout":{"text":"…","tone":"ok|warn|risk|info"}}]}',
     `Rules: use only the fields the layout needs; at most ${LIMITS.bullets} short bullets per slide, ${LIMITS.kpis} KPIs, ${LIMITS.tableRows} table rows × ${LIMITS.tableCols} columns, ${LIMITS.chartCategories} chart categories; chart values are numbers. Suggested flow: ${template.slides || 'title → content → summary'}.`,
   ].join('\n') : [
     'YALNIZ tek bir JSON nesnesi döndür (Markdown yok), şu PRESENTATION biçiminde; 16:9 .pptx tasarımını (renk, yazı tipi, yerleşim) Buyer Log yapar:',
-    '{"title":"…","subtitle":"…","slides":[{"layout":"title|section|bullets|kpis|table|chart|comparison|summary","title":"…","subtitle":"…","bullets":["…"],"kpis":[{"label":"…","value":"…","note":"…","tone":"ok|warn|risk|info"}],"table":{"columns":["…"],"rows":[["…"]]},"chart":{"categories":["…"],"series":[{"name":"…","values":[1,2]}],"unit":"%"},"left":{"title":"…","bullets":["…"]},"right":{"title":"…","bullets":["…"]},"callout":{"text":"…","tone":"ok|warn|risk|info"}}]}',
+    '{"title":"…","subtitle":"…","slides":[{"layout":"title|section|bullets|kpis|table|chart|comparison|summary|gallery","title":"…","subtitle":"…","bullets":["…"],"kpis":[{"label":"…","value":"…","note":"…","tone":"ok|warn|risk|info"}],"table":{"columns":["…"],"rows":[["…"]]},"chart":{"categories":["…"],"series":[{"name":"…","values":[1,2]}],"unit":"%"},"left":{"title":"…","bullets":["…"]},"right":{"title":"…","bullets":["…"]},"callout":{"text":"…","tone":"ok|warn|risk|info"}}]}',
     `Kurallar: her düzende yalnız gereken alanları kullan; slayt başına en fazla ${LIMITS.bullets} kısa madde, ${LIMITS.kpis} KPI, ${LIMITS.tableRows} satır × ${LIMITS.tableCols} sütun tablo, ${LIMITS.chartCategories} grafik kategorisi; grafik değerleri sayıdır. Önerilen akış: ${template.slides || 'title → içerik → summary'}.`,
   ].join('\n');
 }
@@ -97,7 +115,7 @@ function buildInstruction({ format, template, orientation = 'portrait', detail =
   const body = format === 'xlsx' ? workbookInstruction(english)
     : format === 'pptx' ? presentationInstruction(english, template)
       : htmlInstruction({ format, english, orientation });
-  return [head, `${english ? 'Template' : 'Şablon'}: ${template.label[langKey]} — ${template.guide[langKey]}`, `${english ? 'Length' : 'Uzunluk'}: ${(DETAIL[detail] || DETAIL.standard)[langKey]}`, body].join('\n');
+  return [head, `${english ? 'Template' : 'Şablon'}: ${template.label[langKey]} — ${template.guide[langKey]}`, `${english ? 'Length' : 'Uzunluk'}: ${(DETAIL[detail] || DETAIL.standard)[langKey]}`, body, imageInstruction(format, english)].join('\n');
 }
 
 /* Geçersiz cevap sonrası aynı sohbete gönderilen düzeltme isteği. */
@@ -203,6 +221,7 @@ function normalizeWorkbook(raw, { lang = 'tr', date } = {}) {
         return formula ? { f: formula } : null;
       }
       if (value == null) return null;
+      if (column.type === 'image') return imageToken(value) || null;
       if (['integer', 'number', 'currency', 'percent'].includes(column.type)) {
         const number = toNumber(value);
         if (number != null && column.type === 'percent' && typeof value === 'string' && value.includes('%')) { percentText.add(`${rowIndex}:${i}`); return number / 100; }
@@ -275,6 +294,15 @@ function normalizeSlide(slide, index, english, warnings) {
     base.right = side(slide.right, 'B');
     if (!base.left.bullets.length && !base.right.bullets.length) return { error: english ? `Slide ${index + 1} (comparison) has empty columns.` : `${index + 1}. slayt (comparison) boş.` };
   }
+  if (layout === 'gallery') {
+    base.bullets = [];
+    base.items = asArray(slide.items || slide.cards || slide.models).filter(isObject).slice(0, GALLERY_ITEMS).map(item => ({
+      title: clean(item.title || item.name || item.model, 60), subtitle: clean(item.subtitle, 80), note: clean(item.note || item.text, 140), image: imageToken(item.image), tone: tone(item.tone),
+    })).filter(item => item.title || item.image);
+    if (!base.items.length) return { error: english ? `Slide ${index + 1} (gallery) has no items.` : `${index + 1}. slayt (gallery) öğe içermiyor.` };
+    return { slide: base };
+  }
+  if (layout === 'bullets' && slide.image) base.image = imageToken(slide.image);
   if ((layout === 'bullets' || layout === 'summary') && !base.bullets.length) {
     if (base.callout) base.bullets = [base.callout.text];
     else return { error: english ? `Slide ${index + 1} (${layout}) has no bullets.` : `${index + 1}. slayt (${layout}) madde içermiyor.` };
