@@ -159,11 +159,16 @@ test('.eml okuyucu: MIME gövde + PDF eki', async () => {
   assert.equal(r.dosyalar[0].ad, 'TestRequestResultReport_(4459415).pdf');
 });
 
-test('tanınmayan dosya sessiz kalmaz: uyarı + AI yedeği sözleşmesi', async () => {
-  const result = await X.processFile({ name: 'not-a-report.pdf', buffer: Buffer.from('hello') });
-  assert.notEqual(result.status, 'parsed');
-  assert.ok(result.warnings.length > 0);
-  const { extractWithAI } = require('../server/lib/test-reports/ai-fallback');
-  const ai = await extractWithAI({ name: 'x.pdf', buffer: Buffer.alloc(0) });
-  assert.deepEqual(Object.keys(ai).sort(), ['ok', 'reason', 'report']);
+test('tanınmayan dosya sessiz kalmaz: desteklenmeyen tür uyarılır, görsel LCW AI adayıdır', async () => {
+  const junk = await X.processFile({ name: 'not-a-report.pdf', buffer: Buffer.from('hello') });
+  assert.equal(junk.status, 'unsupported');
+  assert.ok(junk.warnings.length > 0);
+  const staged = [];
+  const png = Buffer.concat([Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]), Buffer.alloc(32)]);
+  const photo = await X.processFile({ name: 'rapor-foto.png', buffer: png }, { stage: f => { staged.push(f); return 'id' + staged.length; } });
+  assert.equal(photo.kind, 'image');
+  assert.equal(photo.status, 'unrecognized');
+  assert.equal(photo.ai.eligible, true);
+  assert.equal(photo.ai.uploadId, 'id1', 'dosya LCW AI yüklemesi için geçici alanda');
+  assert.equal(photo.ai.files[0].tur, 'image');
 });

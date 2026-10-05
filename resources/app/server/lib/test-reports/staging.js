@@ -26,7 +26,7 @@ function createSession(userId) {
   const now = Date.now();
   purge(now);
   const id = crypto.randomBytes(16).toString('hex');
-  const session = { id, userId: String(userId || ''), createdAt: now, bytes: 0, files: new Map(), reports: [] };
+  const session = { id, userId: String(userId || ''), createdAt: now, bytes: 0, files: new Map(), reports: [], aiCandidates: new Map() };
   sessions.set(id, session);
   return {
     id,
@@ -37,6 +37,8 @@ function createSession(userId) {
       return fileId;
     },
     setReports(reports) { session.reports = reports; },
+    // LCW AI'a gönderilebilecek, deterministik okunamayan dosyalar (ada göre).
+    setAiCandidates(files) { (files || []).forEach(f => { if (f && f.ai && f.ai.eligible) session.aiCandidates.set(f.name, f.ai); }); },
   };
 }
 

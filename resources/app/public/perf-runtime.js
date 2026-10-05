@@ -134,7 +134,7 @@
     cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-overview-assistant.js?rev=attn1-ovcp2'],
     /* Test Raporu Aktarımı: yalnız menüden açılınca ya da CP'ye dosya
        bırakılınca yüklenir. Saf motor görünümden ÖNCE gelir. */
-    testReportImport:['test-report-engine.js?rev=1','test-report-import.js?rev=1'],
+    testReportImport:['lcwai-assistant.js?rev=1','test-report-engine.js?rev=2','test-report-import.js?rev=2'],
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile
     // bekler; böylece işlevler kaybolmaz, yalnız açılış kritik yolundan çıkar.

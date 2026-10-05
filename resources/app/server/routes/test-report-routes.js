@@ -13,7 +13,14 @@ const extract = require('../lib/test-reports/extract');
 const store = require('../lib/test-reports/store');
 const staging = require('../lib/test-reports/staging');
 
+const Engine = require('../../public/test-report-engine.js');
+
 const MAX_FILES = 30;
+function imageType(buffer) {
+  if (buffer[0] === 0x89) return 'image/png';
+  if (buffer[0] === 0xFF) return 'image/jpeg';
+  return 'image/webp';
+}
 const MAX_FILE_BYTES = 40 * 1024 * 1024;
 const MIME = { pdf: 'application/pdf', msg: 'application/vnd.ms-outlook', eml: 'message/rfc822' };
 
@@ -50,14 +57,47 @@ app.post('/api/test-reports/parse', userAccess.requireAnyArea('cp', 'orders'), e
       const session = staging.createSession(userId(req));
       const out = await extract.processFiles(files, { stage: session.stage });
       session.setReports(out.reports);
+      session.setAiCandidates(out.files);
       res.set('Cache-Control', 'no-store').json({
         ok: true,
         sessionId: session.id,
-        files: out.files.map(f => ({ name: f.name, kind: f.kind, status: f.status, format: f.format, warnings: f.warnings, talepNos: f.reports.map(r => r.talepNo) })),
+        files: out.files.map(f => ({
+          name: f.name, kind: f.kind, status: f.status, format: f.format, warnings: f.warnings, talepNos: f.reports.map(r => r.talepNo),
+          ai: f.ai && f.ai.eligible ? { uploadId: f.ai.uploadId, uploadName: f.ai.uploadName, mailText: f.ai.mailText, mailDate: f.ai.mailDate } : null,
+        })),
         reports: out.reports,
       });
     } catch (err) {
       automationError(res, err, 'Test raporları okunamadı.');
+    }
+  });
+
+/* LCW AI'a yüklenecek geçici dosya (yalnız oturumu açan kullanıcı). */
+app.get('/api/test-reports/staged/:sessionId/:fileId', userAccess.requireAnyArea('cp', 'orders'), (req, res) => {
+    const session = staging.getSession(req.params.sessionId, userId(req));
+    const file = session && session.files.get(String(req.params.fileId || ''));
+    if (!file) return res.status(404).json({ error: 'Dosya bulunamadı.', code: 'TEST_REPORT_STAGED_NOT_FOUND' });
+    const type = file.kind === 'pdf' ? 'application/pdf' : file.kind === 'image' ? imageType(file.buffer) : 'application/octet-stream';
+    res.set('Cache-Control', 'private, no-store').type(type).send(file.buffer);
+  });
+
+/* LCW AI okuma sonucu: AI cevabı motorun doğrulayıcısından (aynı rapor
+   şeması) geçer ve önizleme oturumuna eklenir. Yazma yine /commit ile ve
+   yalnız kullanıcı onayıyla olur. */
+app.post('/api/test-reports/ai-report', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '512kb' }), (req, res) => {
+    try {
+      const body = req.body && typeof req.body === 'object' ? req.body : {};
+      const session = staging.getSession(body.sessionId, userId(req));
+      if (!session) return res.status(410).json({ error: 'Önizleme süresi doldu; dosyaları yeniden bırakın.', code: 'TEST_REPORT_SESSION_EXPIRED' });
+      const candidate = session.aiCandidates.get(text(body.fileName, 300));
+      if (!candidate) return res.status(400).json({ error: 'Bu dosya LCW AI okuması için aday değil.', code: 'TEST_REPORT_AI_NOT_CANDIDATE' });
+      const report = Engine.reportFromAiExtract(body.data, { fileName: body.fileName });
+      report.dosyalar = candidate.files.map(f => ({ ...f }));
+      if (report.talepNo) session.reports = Engine.groupReports(session.reports.concat([report]));
+      userAccess.appendAudit(req.currentUser, 'TEST_REPORT_AI_READ', report.talepNo || '-', { file: text(body.fileName, 120), confidence: report.aiConfidence });
+      res.set('Cache-Control', 'no-store').json({ ok: true, report: report.talepNo ? session.reports.find(r => r.talepNo === report.talepNo) : report });
+    } catch (err) {
+      automationError(res, err, 'LCW AI okuması doğrulanamadı.');
     }
   });
 

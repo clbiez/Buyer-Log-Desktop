@@ -7,7 +7,6 @@
 const path = require('path');
 const crypto = require('crypto');
 const Engine = require('../../../public/test-report-engine.js');
-const { extractWithAI } = require('./ai-fallback');
 
 const PUBLIC_VENDOR = path.join(__dirname, '..', '..', '..', 'public', 'vendor');
 const MAX_PDF_PAGES = 60;
@@ -30,6 +29,9 @@ function detectKind(buffer, name) {
   const head = buffer.subarray(0, 8);
   if (head.subarray(0, 5).toString('latin1') === '%PDF-') return 'pdf';
   if (head.equals(Buffer.from([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]))) return 'msg';
+  if (head.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4E, 0x47]))) return 'image';
+  if (head[0] === 0xFF && head[1] === 0xD8 && head[2] === 0xFF) return 'image';
+  if (head.subarray(0, 4).toString('latin1') === 'RIFF' && buffer.subarray(8, 12).toString('latin1') === 'WEBP') return 'image';
   const ext = path.extname(String(name || '')).toLowerCase();
   if (ext === '.eml' || /^(received|from|date|subject|mime-version|return-path|message-id|to|x-[a-z-]+):/im.test(buffer.subarray(0, 4096).toString('latin1'))) return 'eml';
   return '';
@@ -206,8 +208,16 @@ async function processFile(file, options) {
         result.reports.push(parsed.report);
       } else {
         result.warnings.push({ code: parsed.noText ? 'noTextLayer' : 'unrecognized' });
-        await fallback(result, { name, buffer, kind });
+        const entry = fileEntry(name, buffer, 'pdf', opts.stage);
+        aiCandidate(result, { upload: entry, evidence: entry });
       }
+      return result;
+    }
+    if (kind === 'image') {
+      // Fotoğraf/tarama rapor: deterministik okuma yok, LCW AI okur.
+      result.warnings.push({ code: 'unrecognized' });
+      const entry = fileEntry(name, buffer, 'image', opts.stage);
+      aiCandidate(result, { upload: entry, evidence: entry });
       return result;
     }
     if (kind === 'msg' || kind === 'eml') {
@@ -237,7 +247,10 @@ async function processFile(file, options) {
         if (!result.format) result.format = 'pdf-in-mail';
       } else {
         result.warnings.push({ code: 'unrecognized' });
-        await fallback(result, { name, buffer, kind });
+        const evidence = fileEntry(name, buffer, kind, opts.stage);
+        const firstPdf = pdfs[0] ? fileEntry(pdfs[0].name, pdfs[0].buffer, 'pdf', opts.stage) : null;
+        const mailText = [mail.subject, mail.body].filter(Boolean).join('\n\n').slice(0, 12000);
+        aiCandidate(result, { upload: firstPdf, evidence, extra: firstPdf ? [firstPdf] : [], mailText, mailDate: mail.date });
       }
       return result;
     }
@@ -251,16 +264,20 @@ async function processFile(file, options) {
   }
 }
 
-async function fallback(result, file) {
-  const ai = await extractWithAI(file);
-  if (ai && ai.ok && ai.report) {
-    ai.report.kaynak = 'ai';
-    ai.report.kaynaklar = ['ai'];
-    result.reports.push(ai.report);
-    result.format = 'ai';
-  } else {
-    result.status = 'unrecognized';
-  }
+/* Deterministik ayrıştırıcının okuyamadığı dosya LCW AI'a aday olur. AI
+   çağrısı istemcideki ortak BuyerLogAI yolundan yapılır (oturum, hata metni,
+   iptal orada); sunucu yalnız dosyayı geçici alanda tutar ve AI cevabını
+   /ai-report ile doğrular. */
+function aiCandidate(result, parts) {
+  result.status = 'unrecognized';
+  result.ai = {
+    eligible: Boolean(parts.upload || parts.mailText),
+    uploadId: parts.upload && parts.upload.stagingId || '',
+    uploadName: parts.upload && parts.upload.ad || '',
+    files: [parts.evidence].concat(parts.extra || []).filter(Boolean),
+    mailText: parts.mailText || '',
+    mailDate: parts.mailDate || '',
+  };
 }
 
 async function processFiles(files, options) {
