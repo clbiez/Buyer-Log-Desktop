@@ -9,6 +9,7 @@
  */
 const { publicError, isLcwAiError, lcwAiError } = require('../lib/lcwai/lcwai-errors');
 const lcwaiConfig = require('../lib/lcwai/lcwai-config');
+const layoutControlStore = require('../lib/layout-control-store');
 
 module.exports = function registerLcwAiRoutes(app, deps) {
   const {
@@ -135,6 +136,39 @@ app.post('/api/lcwai/chat', express.json({ limit: '2mb' }), async (req, res) => 
       finished = true;
       if (!res.writableEnded) res.end();
     }
+  });
+
+  /* ---------------- Layout Control history ----------------
+     PDF baytları/native metin saklanmaz. Yalnız normalize kontrol özeti,
+     reference zamanı ve kullanıcıya gösterilen check sonuçları kalıcıdır. */
+app.get('/api/lcwai/layout-control/history', (req, res) => {
+    try {
+      const result = layoutControlStore.listRuns(ownerOf(req), req.query && req.query.limit);
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
+    } catch (error) { fail(res, error); }
+  });
+
+app.post('/api/lcwai/layout-control/history', express.json({ limit: '256kb' }), (req, res) => {
+    try {
+      const result = layoutControlStore.add(ownerOf(req), req.body || {});
+      audit(req, 'LCWAI_LAYOUT_CHECK', {
+        documentType: result.run.documentType,
+        status: result.run.summary.status,
+        models: result.run.modelCodes.slice(0, 3),
+        errors: result.run.summary.errors,
+        review: result.run.summary.review,
+        notChecked: result.run.summary.notChecked,
+      });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
+    } catch (error) { fail(res, error); }
+  });
+
+app.delete('/api/lcwai/layout-control/history', (req, res) => {
+    try {
+      const result = layoutControlStore.clear(ownerOf(req));
+      audit(req, 'LCWAI_LAYOUT_HISTORY_CLEAR', { count: result.cleared });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
+    } catch (error) { fail(res, error); }
   });
 
   /* ---------------- AI çıktıları (AI Outputs) ----------------
