@@ -167,6 +167,7 @@ function handleCopyShortcut(event,options={}){if(!isCollectionActive()||modalOpe
       {label:lang()==='en'?'Clear Cell':'Hücreyi Temizle',key:'Delete',run:()=>bridge()?.batchEdit?.([{rowId:state.active.rowId,key:state.active.key,value:''}]),disabled:!meta?.editable||!bridge()?.canEdit?.()},
       ...(groupActions.length?['sep',...groupActions]:[]),
       ...(modelNameContext?['sep',{label:lang()==='en'?'Go to PLM Page':'PLM Sayfasına Git',run:()=>bridge()?.openPlm?.(contextRow),disabled:!canOpenContextPlm}]:[]),
+      ...(contextCoord.key==='artworkDetail'&&bridge()?.openArtworkBom?['sep',{label:lang()==='en'?'Open BOM Detail':'BOM Detayını Aç',run:()=>bridge().openArtworkBom(contextRow)}]:[]),
       'sep',{label:'Open Quotations',run:()=>bridge()?.openQuotations?.(row)},{label:'Pricing History',run:()=>bridge()?.openPricingHistory?.(row)},
       'sep',{label:lang()==='en'?'Freeze Up To This Column':'Bu Sütuna Kadar Dondur',run:()=>bridge()?.freezeToKey?.(state.active.key)},{label:lang()==='en'?'Hide Column':'Sütunu Gizle',run:()=>bridge()?.hideColumn?.(state.active.key)}
     ]);

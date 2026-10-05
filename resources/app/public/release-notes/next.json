@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon: Artwork Detayı artık tam bir sütun",
+    "en": "Collection: Artwork Detail is now a full column"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir.",
+    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-artwork-detail-column",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "Artwork Detayı sütununda filtre, taşıma, düzenleme ve LCW AI",
+        "en": "Filter, move, edit and LCW AI on the Artwork Detail column"
+      },
+      "body": {
+        "tr": "Artwork Detayı sütunu artık tablo çizildikten sonra eklenen ayrı bir katman değil, Koleksiyon’un gerçek bir sütunu. Başlıktaki ▾ ile filtreleyip sıralayabilir, sütunu sürükleyerek taşıyabilir, gizleyebilir ve hücreyi elle düzenleyebilirsiniz. Elle girdiğiniz değer sonraki PLM SYNC’te korunur; hücreyi temizlerseniz PLM değeri geri gelir. LCW AI’a Koleksiyon verisi eklendiğinde bu sütun da tüm satırlarla birlikte gider. BOM ayrıntısı için hücrede sağ tık › BOM Detayını Aç.",
+        "en": "The Artwork Detail column is no longer a separate layer added after the table is drawn; it is a real Collection column. Use the ▾ in its header to filter and sort, drag it to move it, hide it and edit the cell by hand. A value you enter yourself is kept on the next PLM SYNC; clear the cell to bring the PLM value back. When Collection data is added to LCW AI, this column is sent with all rows. For the BOM breakdown, right-click the cell › Open BOM Detail."
+      },
+      "path": {
+        "tr": "Koleksiyon › Model Detayları › Artwork Detayı",
+        "en": "Collection › Model Details › Artwork Detail"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-detail-column.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda Artwork Detayı sütununun açık başlık filtresi ve elle düzenlenmiş bir hücre (demo veri)",
+          "en": "Open header filter on the Artwork Detail column in the Collection table and a hand-edited cell (demo data)"
+        },
+        "caption": {
+          "tr": "Artwork Detayı diğer sütunlar gibi filtrelenir ve düzenlenir.",
+          "en": "Artwork Detail is filtered and edited like any other column."
+        }
+      }
+    }
+  ]
 }

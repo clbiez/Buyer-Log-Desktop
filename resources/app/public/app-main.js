@@ -21859,6 +21859,10 @@ const KOL_COLS = [
   {k:'colour', label:'Colour', w:130, group:'Model Detayları'},
   {k:'specialCode', label:'Special Code', w:110, group:'Model Detayları'},
   {k:'line', label:'Line', w:100, suggest:'line', group:'Model Detayları'},
+  // PLM SYNC'in BOM analizinden gelen baskı yerleşimi özeti. Diğer metin alanları
+  // gibi gerçek bir sütundur (filtre, taşıma, düzenleme, LCW AI); değer
+  // collection-artwork-detail.js tarafından plm-bom.json'dan projekte edilir.
+  {k:'artworkDetail', label:'Artwork Detail', w:240, group:'Model Detayları'},
   {k:'fabric', label:'Fabric', w:150, group:'Model Detayları'},
   {k:'assortment', label:'Assortment', w:120, group:'Model Detayları'},
   {k:'fit', label:'Fit', w:110, group:'Model Detayları'},
@@ -23508,7 +23512,7 @@ function kolDefaultDisplayOrder(){
   const checklistKeys=kolCustomCols.filter(c=>c.checklist).map(c=>c.k);
   const preferred=[
     'mag','mmyg','buyingGroup','buyer',
-    'season','inStoreWeek','inStoreMonth','durum','productMainDefinition','urunTipi','plmId','modelKod','colourCode','colour','specialCode','line','fabric','assortment','fit','quantity',
+    'season','inStoreWeek','inStoreMonth','durum','productMainDefinition','urunTipi','plmId','modelKod','colourCode','colour','specialCode','line','artworkDetail','fabric','assortment','fit','quantity',
     'not',
     'licensor','lisans','royalty','hologramCost',
     'country','delType','exFactory','retail','exToRetail','inStore',

@@ -119,7 +119,14 @@
           if (data) options.push({ id: 'filters', label: { tr: 'Aktif filtreler ve özet', en: 'Active filters and summary' } });
           return options;
         },
-        build: mode => tableContext(tab, mode),
+        // Koleksiyon ekranı hiç açılmamış olsa da PLM'den gelen Artwork Detayı
+        // bağlama girsin diye BOM projeksiyonu önce tazelenir.
+        async build(mode) {
+          if (tab === 'koleksiyon' && window.BLCollectionArtworkDetail && window.BLCollectionArtworkDetail.ensureFresh) {
+            try { await window.BLCollectionArtworkDetail.ensureFresh(); } catch (_) {}
+          }
+          return tableContext(tab, mode);
+        },
       });
     }
     api.registerContextProvider({

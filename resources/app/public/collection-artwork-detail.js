@@ -1,45 +1,43 @@
 /* Buyer Log — Koleksiyon Artwork Detayı sütunu
  *
  * PLM BOM'un kalıcı source-of-truth'u server/data/plm-bom.json'dır.
- * Koleksiyon satırına ikinci bir kalıcı kopya yazılmaz; bu dosya görünür
- * Collection satırlarını sidecar depodan projekte eder. Böylece PLM Sync
- * güncellediğinde tek gerçek kaynak korunur ve kullanıcı alanları kirlenmez.
+ * Sütunun kendisi KOL_COLS içinde sıradan bir Koleksiyon sütunudur
+ * (k:'artworkDetail', Model Detayları, Kumaş'ın solunda): filtre, sıralama,
+ * sürükleyerek taşıma, gizleme, manuel düzenleme ve LCW AI bağlamı diğer
+ * sütunlarla aynı yoldan çalışır. Bu dosya yalnız PLM değerini satırlara
+ * projekte eder; DOM'a ayrı hücre/başlık enjekte etmez.
  *
- * Sütun: Model Detayları içinde, Kumaş'ın hemen solunda, salt okunur.
+ * Sahiplik kuralı: satırdaki değer son PLM özetine eşitse (veya boşsa) PLM'e
+ * aittir ve PLM SYNC güncellediğinde yenilenir. Kullanıcı hücreyi farklı bir
+ * değerle düzenlerse değer manueldir ve korunur; hücreyi temizlemek PLM
+ * değerine geri döndürür. Projeksiyon saveKolRows çağırmaz; ikinci bir kalıcı
+ * kaynak oluşturmaz.
  */
 (function (global) {
   'use strict';
   if (global.BLCollectionArtworkDetail) return;
 
   const ART_KEY = 'artworkDetail';
-  const FABRIC_KEY = 'fabric';
-  const state = { requestSeq: 0, timer: 0, patchedRender: false, bound: false };
+  const PLM_KEY = 'artworkDetailPlm';
+  const FRESH_MS = 20000;
+  const BATCH = 500;
+  const state = { cache: new Map(), meta: new Map(), fetchedAt: 0, inflight: null, timer: 0, patchedRender: false, bound: false, rendering: false };
 
   const isEn = () => String(document.documentElement.lang || '').toLowerCase().startsWith('en')
     || (typeof global.appLang !== 'undefined' && global.appLang === 'en');
   const L = (tr, en) => (isEn() ? en : tr);
-  const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[ch]));
   function numericId(value) {
     let text = String(value == null ? '' : value).trim().replace(/^_+/, '');
     if (/^\d+\.0+$/.test(text)) text = text.slice(0, text.indexOf('.'));
     text = text.replace(/^0+(?=\d)/, '');
     return /^\d+$/.test(text) && Number(text) > 0 ? text : '';
   }
-  function rowId(tr) {
-    return String(tr && (tr.dataset.id || tr.dataset.kolid || tr.getAttribute('data-kolid')) || '');
-  }
-  function rowForTr(tr) {
-    const id = rowId(tr);
-    if (!id) return null;
+  function bridge() { return global.BLCollectionSpreadsheetBridge || null; }
+  function allRows() {
     try {
-      if (typeof global.BLGetContextRow === 'function') return global.BLGetContextRow('collection', id);
-    } catch (_) {}
-    try {
-      const rows = global.BLCollection && typeof global.BLCollection.rows === 'function' ? global.BLCollection.rows() : [];
-      return Array.isArray(rows) ? rows.find(row => String(row && row.id) === id) || null : null;
-    } catch (_) { return null; }
+      const rows = bridge() && typeof bridge().rows === 'function' ? bridge().rows() : [];
+      return Array.isArray(rows) ? rows : [];
+    } catch (_) { return []; }
   }
   function plmIdOfRow(row) {
     if (!row) return '';
@@ -50,7 +48,7 @@
       const id = numericId(value);
       if (id) return id;
     } catch (_) {}
-    return numericId(row.plmId || row['PLM ID'] || row._plmId);
+    return numericId(row.plmId || row['PLM ID'] || row._plmId); // i18n-ignore — kaynak başlığı
   }
   function summaryFor(entry) {
     if (!entry) return '';
@@ -81,207 +79,155 @@
     return L('Kural ile net', 'Resolved by rule');
   }
 
+  /* PLM özetini satıra yazar. Manuel değer (son PLM özetinden farklı ve dolu)
+     korunur. Henüz izlenmeyen eski satırlar (PLM_KEY yok) önceki sürümün
+     salt-okunur projeksiyonundan geldiği için PLM'e ait sayılır. */
+  function applyToRow(row, summary) {
+    if (!row) return false;
+    const current = row[ART_KEY] == null ? '' : String(row[ART_KEY]);
+    const tracked = Object.prototype.hasOwnProperty.call(row, PLM_KEY);
+    const plmOwned = !current.trim() || !tracked || current === String(row[PLM_KEY] == null ? '' : row[PLM_KEY]);
+    let changed = false;
+    if (plmOwned && current !== summary) { row[ART_KEY] = summary; changed = true; }
+    if (!tracked || row[PLM_KEY] !== summary) row[PLM_KEY] = summary;
+    return changed;
+  }
+  /* Önbellekteki BOM özetlerini TÜM Koleksiyon satırlarına uygular (yalnız
+     görünenlere değil): filtre, sıralama ve LCW AI tüm veriyi görür. Henüz
+     okunmamış PLM ID'lere dokunulmaz; okunamayan bir istek değeri silmez. */
+  function project() {
+    let changed = 0;
+    for (const row of allRows()) {
+      const plmId = plmIdOfRow(row);
+      if (plmId && !state.cache.has(plmId)) continue;
+      const entry = plmId ? state.cache.get(plmId) : null;
+      if (applyToRow(row, summaryFor(entry))) changed++;
+    }
+    return changed;
+  }
+  function missingIds() {
+    const ids = new Set();
+    for (const row of allRows()) {
+      const plmId = plmIdOfRow(row);
+      if (plmId && !state.cache.has(plmId)) ids.add(plmId);
+    }
+    return ids;
+  }
+  async function fetchEntries(ids) {
+    const list = [...ids];
+    const out = {};
+    for (let i = 0; i < list.length; i += BATCH) {
+      const response = await fetch('/api/plm-sync/bom/batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        cache: 'no-store',
+        body: JSON.stringify({ plmIds: list.slice(i, i + BATCH) }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || response.statusText);
+      Object.assign(out, payload.entries || {});
+    }
+    return out;
+  }
+  /* BOM özetlerini yerel depodan tazeler (uzak PLM/AI çağrısı yapmaz).
+     Değer değiştiyse Koleksiyon yeniden çizilir. */
+  function ensureFresh(options = {}) {
+    if (state.inflight) return state.inflight;
+    const stale = Date.now() - state.fetchedAt > FRESH_MS || options.force;
+    const ids = stale ? new Set(allRows().map(plmIdOfRow).filter(Boolean)) : missingIds();
+    if (!ids.size) return Promise.resolve(project());
+    state.inflight = (async () => {
+      try {
+        const entries = await fetchEntries(ids);
+        for (const id of ids) {
+          state.cache.set(id, entries[id] || null);
+          state.meta.set(id, entries[id] || null);
+        }
+        if (stale) state.fetchedAt = Date.now();
+      } catch (_) {
+        return 0;
+      } finally {
+        state.inflight = null;
+      }
+      const changed = project();
+      if (changed && !options.silent && typeof global.renderKol === 'function' && document.getElementById('kolTable')) {
+        try { global.renderKol(); } catch (_) {}
+      }
+      return changed;
+    })();
+    return state.inflight;
+  }
+
   function injectStyle() {
     if (document.getElementById('blCollectionArtworkStyle')) return;
     const style = document.createElement('style');
     style.id = 'blCollectionArtworkStyle';
     style.textContent = `
-      #kolTable th[data-k="${ART_KEY}"]{min-width:210px;max-width:310px}
-      #kolTable td[data-key="${ART_KEY}"]{min-width:210px;max-width:310px;white-space:normal;overflow:hidden}
-      #kolTable td[data-key="${ART_KEY}"].kolArtworkNeedsReview{color:var(--orange);font-weight:650}
-      #kolTable td[data-key="${ART_KEY}"] .kolArtworkText{display:block;overflow:hidden;white-space:pre-line;line-height:1.25}
-      #kolTable td[data-key="${ART_KEY}"]{cursor:default}
+      #kolTable td[data-key="${ART_KEY}"].kolArtworkNeedsReview .editCell{color:var(--orange);font-weight:650}
+      #kolTable td[data-key="${ART_KEY}"] .editCell{white-space:pre-line}
     `;
     document.head.appendChild(style);
   }
-
-  function wrapSpreadsheetBridge() {
-    const bridge = global.BLCollectionSpreadsheetBridge;
-    if (!bridge || bridge.__artworkDetailWrapped) return;
-    bridge.__artworkDetailWrapped = true;
-    const baseMeta = typeof bridge.columnMeta === 'function' ? bridge.columnMeta.bind(bridge) : null;
-    const baseRaw = typeof bridge.rawValue === 'function' ? bridge.rawValue.bind(bridge) : null;
-    bridge.columnMeta = key => {
-      if (String(key) === ART_KEY) return {
-        key: ART_KEY,
-        label: L('Artwork Detayı', 'Artwork Detail'),
-        editable: false,
-        formula: 'CoreNectum BOM',
-        col: { k: ART_KEY, noFilter: true, readonly: true, group: 'Model Detayları' },
-      };
-      return baseMeta ? baseMeta(key) : null;
-    };
-    bridge.rawValue = (row, key) => {
-      if (String(key) === ART_KEY) return row && row[ART_KEY] || '';
-      return baseRaw ? baseRaw(row, key) : row && row[key];
-    };
-  }
-
-  function headerKey(th) {
-    return String(th && (th.dataset.k || th.dataset.kcol) || '');
-  }
-  function insertionIndex(colRow) {
-    const cells = [...colRow.cells];
-    let index = cells.findIndex(th => headerKey(th) === FABRIC_KEY);
-    if (index >= 0) return index;
-    for (const fallback of ['assortment', 'fit', 'quantity']) {
-      index = cells.findIndex(th => headerKey(th) === fallback);
-      if (index >= 0) return index;
-    }
-    return -1;
-  }
-  function patchGroupRow(table, at) {
-    const row = table.tHead && table.tHead.querySelector('tr.kolGroupRow');
-    if (!row) return;
-    let containing = null;
-    for (const th of row.cells) {
-      const start = Number(th.dataset.start), end = Number(th.dataset.end);
-      if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-      if (start <= at && end >= at) containing = th;
-    }
-    for (const th of row.cells) {
-      const start = Number(th.dataset.start), end = Number(th.dataset.end);
-      if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-      if (th === containing) {
-        th.dataset.end = String(end + 1);
-        const span = Math.max(1, Number(th.colSpan) || (end - start + 1));
-        th.colSpan = span + 1;
-      } else if (start >= at) {
-        th.dataset.start = String(start + 1);
-        th.dataset.end = String(end + 1);
-      }
-    }
-  }
-  function makeHeader(fabric) {
-    const th = document.createElement('th');
-    th.dataset.k = ART_KEY;
-    th.dataset.kcol = ART_KEY;
-    th.className = String(fabric && fabric.className || '').replace(/\b(sortAsc|sortDesc|filtered)\b/g, '').trim();
-    th.title = L('PLM BOM baskı yerleşimi özeti · salt okunur', 'PLM BOM print-placement summary · read-only');
-    th.innerHTML = `<span class="thLabel">${esc(L('Artwork Detayı', 'Artwork Detail'))}</span>`;
-    return th;
-  }
-  function makeCell() {
-    const td = document.createElement('td');
-    td.dataset.key = ART_KEY;
-    td.className = 'kolArtworkDetailCell kolSpreadsheetReadonly';
-    td.setAttribute('aria-readonly', 'true');
-    td.innerHTML = '<span class="kolArtworkText">…</span>';
-    return td;
-  }
-
-  function ensureStructure() {
+  /* Hücreye yalnız bilgi (ipucu + kontrol gerekli vurgusu) ekler; değer ve
+     düzenleyici app-main'in ortak metin hücresinden gelir. */
+  function decorate() {
     injectStyle();
-    wrapSpreadsheetBridge();
-    const table = document.getElementById('kolTable');
-    const colRow = table && table.tHead && table.tHead.querySelector('tr.colRow');
-    if (!table || !colRow) return false;
-
-    let artHead = colRow.querySelector(`th[data-k="${ART_KEY}"],th[data-kcol="${ART_KEY}"]`);
-    let changed = false;
-    if (!artHead) {
-      const at = insertionIndex(colRow);
-      if (at < 0) return false;
-      const fabric = colRow.cells[at];
-      const logicalAt = [...colRow.cells].filter(th => !th.classList.contains('chkTh')).indexOf(fabric);
-      artHead = makeHeader(fabric);
-      colRow.insertBefore(artHead, fabric);
-
-      const group = table.querySelector('colgroup');
-      if (group) {
-        const col = document.createElement('col');
-        col.dataset.k = ART_KEY;
-        col.style.width = '240px';
-        group.insertBefore(col, group.children[at] || null);
-      }
-      // Group ranges selection checkbox'ını saymaz; fiziksel DOM indeksi yerine
-      // veri-sütunu indeksini kullanarak Model Detayları başlığını hizala.
-      patchGroupRow(table, logicalAt >= 0 ? logicalAt : at);
-      changed = true;
-    }
-
-    const index = [...colRow.cells].indexOf(artHead);
-    if (index < 0) return changed;
-    for (const tr of table.tBodies[0] ? [...table.tBodies[0].rows] : []) {
-      if (!rowId(tr) || tr.querySelector(`td[data-key="${ART_KEY}"]`)) continue;
-      tr.insertBefore(makeCell(), tr.cells[index] || null);
-      changed = true;
-    }
-
-    if (changed && global.BLCollectionSpreadsheet && typeof global.BLCollectionSpreadsheet.afterRender === 'function') {
-      try { global.BLCollectionSpreadsheet.afterRender(); } catch (_) {}
-    }
-    return changed;
-  }
-
-  function visibleTargets() {
-    const table = document.getElementById('kolTable');
-    if (!table || !table.tBodies[0]) return [];
-    const seen = new Set(), out = [];
-    for (const tr of table.tBodies[0].rows) {
-      const row = rowForTr(tr), plmId = plmIdOfRow(row);
-      if (!row || !plmId || seen.has(plmId)) continue;
-      seen.add(plmId);
-      out.push({ plmId, row });
-    }
-    return out;
-  }
-  function paint(entries) {
     const table = document.getElementById('kolTable');
     if (!table || !table.tBodies[0]) return;
-    for (const tr of table.tBodies[0].rows) {
-      const cell = tr.querySelector(`td[data-key="${ART_KEY}"]`);
-      if (!cell) continue;
-      const row = rowForTr(tr), plmId = plmIdOfRow(row);
-      const entry = plmId && entries ? entries[plmId] : null;
-      const summary = summaryFor(entry);
-      if (row) {
-        row[ART_KEY] = summary;
-        row._artworkDetailMeta = entry || null;
+    const byId = new Map(allRows().map(row => [String(row && row.id), row]));
+    for (const td of table.tBodies[0].querySelectorAll(`td[data-key="${ART_KEY}"]`)) {
+      const tr = td.closest('tr');
+      const row = byId.get(String(tr && (tr.dataset.id || tr.dataset.kolid || tr.getAttribute('data-kolid')) || ''))
+        || byId.get(String(td.querySelector('[data-id]') && td.querySelector('[data-id]').dataset.id || ''));
+      if (!row) continue;
+      const entry = state.meta.get(plmIdOfRow(row)) || null;
+      const plmValue = String(row[PLM_KEY] == null ? '' : row[PLM_KEY]);
+      const current = String(row[ART_KEY] == null ? '' : row[ART_KEY]);
+      const manual = Boolean(current.trim()) && current !== plmValue;
+      td.classList.toggle('kolArtworkNeedsReview', Boolean(entry && entry.needsAi && !manual));
+      const lines = [];
+      if (manual) {
+        lines.push(L('Manuel değer · temizlerseniz PLM değeri geri gelir', 'Manual value · clear it to restore the PLM value'));
+        if (plmValue) lines.push(`PLM: ${plmValue}`);
+      } else if (entry) {
+        if (entry.needsAi) lines.push(L('⚠ Kontrol gerekli', '⚠ Review required'));
+        lines.push(`CoreNectum BOM · ${aiStatus(entry)}`);
+        if (entry.fetchedAt) lines.push(new Date(entry.fetchedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR'));
+      } else {
+        lines.push(L('Bu model için BOM kaydı yok. PLM SYNC çalıştırıldığında otomatik oluşur.', 'No BOM record exists for this style. It is created automatically by PLM SYNC.'));
       }
-      cell.classList.toggle('kolArtworkNeedsReview', Boolean(entry && entry.needsAi));
-      const display = entry && entry.needsAi ? `⚠ ${summary || L('Kontrol gerekli', 'Review required')}` : (summary || '—');
-      cell.innerHTML = `<span class="kolArtworkText">${esc(display)}</span>`;
-      cell.title = entry
-        ? [summary, `CoreNectum BOM · ${aiStatus(entry)}`, entry.fetchedAt ? new Date(entry.fetchedAt).toLocaleString(isEn() ? 'en-GB' : 'tr-TR') : ''].filter(Boolean).join('\n')
-        : L('Bu model için BOM kaydı yok. PLM SYNC çalıştırıldığında otomatik oluşur.', 'No BOM record exists for this style. It is created automatically by PLM SYNC.');
-    }
-  }
-  async function loadVisible() {
-    const targets = visibleTargets();
-    if (!targets.length) { paint({}); return; }
-    const seq = ++state.requestSeq;
-    try {
-      const response = await fetch('/api/plm-sync/bom/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        cache: 'no-store',
-        body: JSON.stringify({ plmIds: targets.map(item => item.plmId) }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (seq !== state.requestSeq) return;
-      if (!response.ok || !payload.ok) throw new Error(payload.error || response.statusText);
-      paint(payload.entries || {});
-    } catch (_) {
-      if (seq !== state.requestSeq) return;
-      paint({});
+      lines.push(L('Sağ tık › BOM Detayını Aç', 'Right-click › Open BOM Detail'));
+      td.title = [current, ...lines].filter(Boolean).join('\n');
     }
   }
 
-  function patchAndLoad() {
-    ensureStructure();
-    void loadVisible();
+  async function openBom(row) {
+    if (!row) return false;
+    try {
+      if (!global.BLPlmBom && global.BLPerf && typeof global.BLPerf._loadScript === 'function') {
+        await global.BLPerf._loadScript('plm-bom.js');
+      }
+      if (global.BLPlmBom && global.BLPlmBom.openForRow) { global.BLPlmBom.openForRow(row, 'collection'); return true; }
+    } catch (_) {}
+    return false;
   }
-  function schedule() {
-    clearTimeout(state.timer);
-    state.timer = setTimeout(patchAndLoad, 40);
+  function extendBridge() {
+    const b = bridge();
+    if (b && !b.openArtworkBom) b.openArtworkBom = openBom;
   }
+
   function wrapRender() {
     if (state.patchedRender || typeof global.renderKol !== 'function') return;
     const base = global.renderKol;
     const wrapped = function (...args) {
+      // Önbellekteki PLM özetleri render'dan ÖNCE satıra yazılır; böylece
+      // filtre/sıralama/hücre aynı çizimde doğru değeri görür.
+      project();
       const result = base.apply(this, args);
-      queueMicrotask(schedule);
+      extendBridge();
+      decorate();
+      clearTimeout(state.timer);
+      state.timer = setTimeout(() => { void ensureFresh(); }, 40);
       return result;
     };
     wrapped.__artworkDetailWrapped = true;
@@ -292,38 +238,22 @@
     if (state.bound) return;
     state.bound = true;
     wrapRender();
-    const table = document.getElementById('kolTable');
-    if (table) {
-      const observer = new MutationObserver(() => {
-        const colRow = table.tHead && table.tHead.querySelector('tr.colRow');
-        if (!colRow) return;
-        const missingHead = !colRow.querySelector(`th[data-k="${ART_KEY}"],th[data-kcol="${ART_KEY}"]`);
-        const missingCells = table.tBodies[0] && [...table.tBodies[0].rows].some(tr => rowId(tr) && !tr.querySelector(`td[data-key="${ART_KEY}"]`));
-        if (missingHead || missingCells) schedule();
-      });
-      observer.observe(table, { childList: true, subtree: true });
-      table.addEventListener('dblclick', async event => {
-        const td = event.target.closest && event.target.closest(`td[data-key="${ART_KEY}"]`);
-        if (!td) return;
-        const row = rowForTr(td.closest('tr'));
-        if (!row) return;
-        try {
-          if (!global.BLPlmBom && global.BLPerf && typeof global.BLPerf._loadScript === 'function') {
-            await global.BLPerf._loadScript('plm-bom.js');
-          }
-          global.BLPlmBom && global.BLPlmBom.openForRow && global.BLPlmBom.openForRow(row, 'collection');
-        } catch (_) {}
-      });
-    }
-    document.addEventListener('bl:language-changed', schedule);
-    schedule();
+    extendBridge();
+    // PLM işlemi başlarken önbellek bayatlatılır; sonraki render'lar (ve
+    // FRESH_MS süresi) PLM SYNC'in yazdığı yeni BOM özetlerini okur.
+    global.addEventListener('bl:plm-operation-started', () => { state.fetchedAt = 0; });
+    // Özet metni dile bağlıdır (Toplam/Total); dil değişince önbellekten yeniden yazılır.
+    document.addEventListener('bl:language-changed', () => { project(); });
   }
 
   global.BLCollectionArtworkDetail = {
     key: ART_KEY,
-    ensureStructure,
-    loadVisible,
-    refresh: patchAndLoad,
+    plmKey: PLM_KEY,
+    ensureFresh,
+    project,
+    applyToRow,
+    refresh: () => ensureFresh({ force: true }),
+    openBom,
     summaryFor,
   };
 
