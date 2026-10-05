@@ -247,9 +247,9 @@
 
   function statusForMismatch(extraction, field) {
     const source=extraction&&extraction._sources&&extraction._sources[field];
-    const confidence=fold(extraction&&extraction.confidence);
-    if(source==='local' || confidence==='EXACT' || confidence==='HIGH') return STATUS.MISMATCH;
-    return STATUS.REVIEW;
+    // ERROR yalnız deterministik/yerel extraction + CP çatışmasından doğar.
+    // LCW AI'dan okunan değer CP ile çelişse bile kullanıcı doğrulaması gerekir.
+    return source==='local' ? STATUS.MISMATCH : STATUS.REVIEW;
   }
   function setEquals(actual, expected, normalizer) {
     const a=new Set(list(actual).map(normalizer).filter(Boolean)), e=new Set(list(expected).map(normalizer).filter(Boolean));
@@ -327,8 +327,10 @@
     const cpBarcodes=valuesForAliases(rows,FIELD_ALIASES.barcode);
     if(isPrice || has('barcodes')) {
       compareField('BARCODE_MATCH','BARCODE','barcodes',cpBarcodes,normalizeBarcode,'CP projeksiyonunda barkod referansı yok.',STATUS.NOT_CHECKED);
-      if(list(ex.barcodes).length) add('BARCODE_READABLE','BARCODE',STATUS.MATCH,[],list(ex.barcodes),'PDF sayfasındaki barkod BarcodeDetector ile doğrudan okunabildi.','PDF BarcodeDetector');
-      else add('BARCODE_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'Tarayıcı barkod dekoderi değer okuyamadı; bu durum tek başına hata sayılmaz.','PDF BarcodeDetector');
+      if(list(ex.barcodes).length) {
+        const direct=ex._sources&&ex._sources.barcodes==='local';
+        add('BARCODE_READABLE','BARCODE',direct?STATUS.MATCH:STATUS.REVIEW,[],list(ex.barcodes),direct?'PDF sayfasındaki barkod BarcodeDetector ile doğrudan okunabildi.':'Barkod yalnız LCW AI görsel okumasından geldi; doğrudan decoder kanıtı olmadığı için REVIEW.',''+(direct?'PDF BarcodeDetector':'LCW AI'));
+      } else add('BARCODE_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'Tarayıcı barkod dekoderi değer okuyamadı; bu durum tek başına hata sayılmaz.','PDF BarcodeDetector');
       if(cpBarcodes.length && cpSizes.length) add('BARCODE_SIZE_MATCH','BARCODE',STATUS.REVIEW,[],list(ex.pageVariants),'Barkod ↔ beden eşleşmesi için CP tarafında çiftli mapping yapısı bulunamadı.');
       else add('BARCODE_SIZE_MATCH','BARCODE',STATUS.NOT_CHECKED,[],list(ex.pageVariants),'CP tarafında barkod ↔ beden mapping referansı yok.');
     } else {
@@ -340,8 +342,10 @@
     const cpQr=valuesForAliases(rows,FIELD_ALIASES.qr);
     if(isPrice || has('qrCodes')) {
       if(cpQr.length) compareField('QR_MATCH','BARCODE','qrCodes',cpQr,normalizeBarcode,'CP QR referansı yok.',STATUS.NOT_CHECKED);
-      else if(list(ex.qrCodes).length) add('QR_READABLE','BARCODE',STATUS.MATCH,[],list(ex.qrCodes),'QR kodu tarayıcı dekoderi ile doğrudan okunabildi.','PDF BarcodeDetector');
-      else add('QR_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'QR için doğrulanabilir CP referansı/decode değeri yok.');
+      else if(list(ex.qrCodes).length) {
+        const direct=ex._sources&&ex._sources.qrCodes==='local';
+        add('QR_READABLE','BARCODE',direct?STATUS.MATCH:STATUS.REVIEW,[],list(ex.qrCodes),direct?'QR kodu tarayıcı dekoderi ile doğrudan okunabildi.':'QR içeriği yalnız LCW AI görsel okumasından geldi; doğrudan decoder kanıtı olmadığı için REVIEW.',direct?'PDF BarcodeDetector':'LCW AI');
+      } else add('QR_READABLE','BARCODE',STATUS.NOT_CHECKED,[],[],'QR için doğrulanabilir CP referansı/decode değeri yok.');
     } else skip('QR_READABLE','BARCODE',[], 'Care Label için QR kontrolü uygulanmaz.');
 
     const cpPrices=valuesForAliases(rows,FIELD_ALIASES.price);
