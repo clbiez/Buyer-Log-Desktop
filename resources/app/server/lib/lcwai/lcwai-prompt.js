@@ -182,9 +182,15 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" and "warnings" in English.'
       : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" ve "warnings" Türkçe olsun.');
     lines.push(schemaText(contract, english));
-    lines.push(english
-      ? 'Use the field meanings in CONTEXT and build the closest condition achievable with the listed fields; state any assumption in "explanation" and "warnings". Leave the required fields as empty strings only if nothing close is possible, and explain why.'
-      : 'BAĞLAM\'daki alan anlamlarını kullan ve listelenen alanlarla yapılabilecek en yakın koşulu kur; varsayımını "explanation" ve "warnings" içinde belirt. Zorunlu alanları yalnız yakın bir çözüm hiç yoksa boş bırak ve nedenini açıkla.');
+    if (key === 'layout-control') {
+      lines.push(english
+        ? 'Fill the schema only from values visibly supported by the attached layout PDF. "warnings" means warnings printed on the product label, not your own cautions. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
+        : 'Şemayı yalnız ekli layout PDF içinde görünür kanıtı olan değerlerle doldur. "warnings", senin uyarıların değil ürün etiketinde basılı uyarılardır. Belirsizliği yalnız "explanation" içinde belirt ve "confidence" değerini düşür. CP/reference değeri uydurma.');
+    } else {
+      lines.push(english
+        ? 'Use the field meanings in CONTEXT and build the closest condition achievable with the listed fields; state any assumption in "explanation" and "warnings". Leave the required fields as empty strings only if nothing close is possible, and explain why.'
+        : 'BAĞLAM\'daki alan anlamlarını kullan ve listelenen alanlarla yapılabilecek en yakın koşulu kur; varsayımını "explanation" ve "warnings" içinde belirt. Zorunlu alanları yalnız yakın bir çözüm hiç yoksa boş bırak ve nedenini açıkla.');
+    }
   }
   const prompt = lines.join('\n');
   return { prompt: prompt.slice(0, config.LIMITS.maxPromptChars), source: key, contract: contract ? key : null, modules, truncated: prompt.length > config.LIMITS.maxPromptChars };
