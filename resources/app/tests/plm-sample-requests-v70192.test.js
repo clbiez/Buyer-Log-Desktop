@@ -288,7 +288,7 @@ test('v7.0.192 kablolama: PLM Sync, CP, sağ tık menüsü, lazy yükleme ve sun
   assert.match(ctxMenu, /sampleRequests\.openForRow\(row, config\.module\)/);
   assert.match(ctxMenu, /config\.module !== 'collection' && sampleRequests\.plmIdOfRow/, 'sağ tık penceresi koleksiyonda gösterilmez');
   const perf = read('public/perf-runtime.js');
-  assert.match(perf, /'plm-sample-requests-engine\.js','plm-sample-requests\.js','row-context-menu\.js'/);
+  assert.match(perf, /'plm-sample-requests-engine\.js','plm-sample-requests\.js','plm-bom\.js','row-context-menu\.js'/);
   assert.match(read('public/plm-operations.js'), /'plm-requests':/);
 });
 
