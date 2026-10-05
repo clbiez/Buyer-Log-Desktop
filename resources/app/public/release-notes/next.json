@@ -1,14 +1,47 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
-  "bootstrapVisual": false,
+  "publishedAt": "2026-10-05",
+  "bootstrapVisual": true,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yenileme hatalarında gerçek neden ve güvenli IAS devamı",
+    "en": "Clear refresh diagnostics and safe IAS fallback"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Buyer Log yenileme hatalarında artık ağ/VPN varsayımı yapmak yerine gerçek nedeni, kaynağı ve yapılacak aksiyonu gösteriyor; IASv2 model işleme sorunlarında güvenliyse son başarılı IAS verisi korunuyor.",
+    "en": "Buyer Log now explains the real refresh cause, source and next action instead of making generic network/VPN assumptions; during IASv2 model-processing issues it safely preserves the last successful IAS data when possible."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "refresh-diagnostics-ias-fallback",
+      "type": "fix",
+      "module": {
+        "tr": "Yenileme · Veri Kaynakları",
+        "en": "Refresh · Data Sources"
+      },
+      "title": {
+        "tr": "Yenileme sorunu artık doğru nedenle açıklanıyor",
+        "en": "Refresh failures now explain the real cause"
+      },
+      "body": {
+        "tr": "IASv2’de bir calculated column yeniden işlenmeyi bekliyorsa Buyer Log bunu VPN veya Field Mapping problemi gibi göstermiyor. Kaynağa erişilebildiğini, sorunun kaynak model processing tarafında olduğunu ve hangi alanın etkilendiğini açıklıyor. Daha önce başarıyla alınmış IAS Database snapshot’ı varsa yeni/eksik veri yazmadan o veri korunuyor; ASAS ve diğer bağımsız kaynaklar yenilenmeye devam ediyor. Ağ, timeout, yetki, Field Mapping, şema değişikliği ve veri bütünlüğü hataları da ayrı sınıflandırılıp kullanıcıya kaynak, sorumlu alan ve sonraki aksiyonla birlikte gösteriliyor.",
+        "en": "When an IASv2 calculated column is waiting to be processed, Buyer Log no longer presents it as a VPN or Field Mapping problem. It explains that the source is reachable, identifies the upstream model-processing issue and the affected field. If a previously successful IAS Database snapshot exists, Buyer Log preserves it without publishing new or incomplete IAS data while ASAS and other independent sources continue to refresh. Network, timeout, permission, Field Mapping, schema-change and data-integrity failures are also classified separately with their source, owner and recommended next action."
+      },
+      "path": {
+        "tr": "Yenile → Hata ayrıntısı / Yenileme durumu",
+        "en": "Refresh → Error details / Refresh status"
+      },
+      "visual": {
+        "kind": "component-preview",
+        "src": "refresh-diagnostics-preview.png",
+        "alt": {
+          "tr": "Buyer Log stable sürüm sunumu için bileşen önizlemesi",
+          "en": "Component preview for the Buyer Log stable release presentation"
+        },
+        "caption": {
+          "tr": "Bu görsel uygulama ekran görüntüsü değil, sürüm sunumu bileşen önizlemesidir.",
+          "en": "This visual is a release-presentation component preview, not an application screenshot."
+        }
+      }
+    }
+  ]
 }
