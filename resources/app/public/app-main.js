@@ -13164,6 +13164,18 @@ function renderRefreshStagesBody(){
   const host=document.getElementById('_refreshStagesBody');if(!host)return;
   const technicalDetailsOpen=host.querySelector('.refreshCompactDetails')?.open===true;
   const en=appLang==='en',job=window.BL_REFRESH_JOB_STATE||null,running=Boolean(job&&job.running);
+  const failed=Boolean(job&&!running&&(job.phase==='error'||job.error));
+  const diagnosis=job&&job.diagnosis||null;
+  const diagnosisTitle=refreshDiagnosisText(diagnosis,'title',en);
+  const diagnosisSummary=refreshDiagnosisText(diagnosis,'summary',en);
+  const diagnosisAction=refreshDiagnosisText(diagnosis,'action',en);
+  const diagnosisSource=refreshDiagnosisText(diagnosis,'source',en);
+  const diagnosisOwner=refreshDiagnosisText(diagnosis,'owner',en);
+  const statusBadge=document.querySelector('#_refreshStages .refreshStagesRunning');
+  if(statusBadge){
+    statusBadge.innerHTML=running?`<span class="blOrb blOrb--sm" data-state="thinking" aria-hidden="true"></span>${escapeHtml(en?'Running':'Çalışıyor')}`
+      :escapeHtml(failed?(en?'Failed':'Başarısız'):(en?'Completed':'Tamamlandı'));
+  }
   const activeIndex=refreshCompactStageIndex(job);
   const elapsedMs=job?Number(job.elapsedMs)||0:0;
   const eta=job&&job.eta||null;
@@ -13180,6 +13192,10 @@ function renderRefreshStagesBody(){
       <span>${escapeHtml(en?'query':'sorgu')} ${escapeHtml(refreshSeconds(t.executeMs))} · ${escapeHtml(en?'write':'yazım')} ${escapeHtml(refreshSeconds(t.writeMs))} · ${escapeHtml(en?'parse':'ayrıştırma')} ${escapeHtml(refreshSeconds(t.parseMs))} · ${escapeHtml(en?'open':'açılış')} ${escapeHtml(refreshSeconds(t.connectionOpenMs))} · ${escapeHtml(en?'retry':'tekrar')} ${escapeHtml(refreshSeconds(t.retryMs))} · ${escapeHtml(en?'overhead':'ek')} ${escapeHtml(refreshSeconds(t.overheadMs))} · ${escapeHtml(en?'total':'toplam')} ${escapeHtml(refreshSeconds(t.totalMs))}</span>
     </div>`;
   }).join('');
+  const diagnosisDetails=failed&&diagnosis?`<div class="refreshCompactDiagRow">
+    <b>${escapeHtml(diagnosisTitle||(en?'Refresh failed':'Yenileme başarısız'))} <small>${escapeHtml(diagnosisSource||'')}</small></b>
+    <span>${escapeHtml(diagnosisSummary||String(job.error||''))}${diagnosisAction?` · ${escapeHtml(en?'Action':'Aksiyon')}: ${escapeHtml(diagnosisAction)}`:''}${diagnosisOwner?` · ${escapeHtml(en?'Responsibility':'Sorumlu alan')}: ${escapeHtml(diagnosisOwner)}`:''}</span>
+  </div>`:'';
   const metricDetails=metrics?`<div class="refreshCompactDiagMetrics">
     <span>${escapeHtml(en?'Longest query':'En uzun sorgu')} <b>${escapeHtml(refreshSeconds(metrics.dbQueryMs))}</b></span>
     <span>${escapeHtml(en?'Snapshot write':'Snapshot yazımı')} <b>${escapeHtml(refreshSeconds(metrics.localSnapshotWriteMs))}</b></span>
@@ -13198,12 +13214,13 @@ function renderRefreshStagesBody(){
     <details class="refreshCompactDetails">
       <summary>${escapeHtml(en?'View technical details':'Teknik Detayları Gör')}</summary>
       <div class="refreshCompactDiag">
+        ${diagnosisDetails}
         ${metricDetails}
         ${diagnosticRows||`<div class="refreshCompactDiagEmpty">${escapeHtml(running?(en?'The per-connection breakdown appears once the queries finish. No stage information yet.':'Bağlantı bazlı döküm sorgular bittiğinde görünür. Henüz aşama bilgisi yok.'):(en?'No connection timing recorded for the last refresh.':'Son yenileme için bağlantı süresi kaydı yok.'))}</div>`}
       </div>
     </details>
     <div class="refreshCompactActions">
-      <span class="refreshCompactHint">${escapeHtml(running?(en?'You can keep working while refresh continues.':'Yenileme sürerken çalışmaya devam edebilirsiniz.'):(en?'Refresh finished.':'Yenileme tamamlandı.'))}</span>
+      <span class="refreshCompactHint">${escapeHtml(running?(en?'You can keep working while refresh continues.':'Yenileme sürerken çalışmaya devam edebilirsiniz.'):failed?(diagnosisSummary||(en?'Refresh failed.':'Yenileme başarısız.')):(en?'Refresh finished.':'Yenileme tamamlandı.'))}</span>
       <button type="button" class="tbtn" data-stop-refresh ${running?'':'disabled'}>${escapeHtml(en?'Stop':'Durdur')}</button>
     </div>`;
   if(technicalDetailsOpen){
@@ -13253,33 +13270,63 @@ window.showSourceRefreshAdvisory=showSourceRefreshAdvisory;
 function setRefreshFailureState(failed){
   ['topRefreshBtn','serverRefreshBtn'].forEach(id=>document.getElementById(id)?.classList.toggle('refreshError',Boolean(failed)));
 }
-function showSourceRefreshFailureModal(detail,repairAction=null){
+function refreshDiagnosisText(diagnosis,key,en){
+  const value=diagnosis&&diagnosis[key];
+  if(value&&typeof value==='object'){
+    return String(value[en?'en':'tr']||value.tr||value.en||'').trim();
+  }
+  return value==null?'':String(value).trim();
+}
+function showSourceRefreshFailureModal(detail,repairAction=null,diagnosis=null){
   document.getElementById('sourceRefreshFailureModal')?.remove();
   const en=appLang==='en';
-  const repair=repairAction&&repairAction.kind==='field-mapping'
-    && String(repairAction.sourceId||'').trim()
-    && String(repairAction.header||'').trim()
-    ? repairAction : null;
+  const diagnosisRepair=diagnosis&&diagnosis.repairAction&&diagnosis.repairAction.kind==='field-mapping'
+    ? diagnosis.repairAction : null;
+  const candidateRepair=repairAction||diagnosisRepair;
+  const repair=candidateRepair&&candidateRepair.kind==='field-mapping'
+    && String(candidateRepair.sourceId||'').trim()
+    && String(candidateRepair.header||'').trim()
+    ? candidateRepair : null;
   const brokenSource=repair
     ? [String(repair.table||'').trim(),String(repair.column||'').trim()].filter(Boolean).join(' · ')
     : '';
+  const title=refreshDiagnosisText(diagnosis,'title',en)
+    || (repair?(en?'Field mapping needs repair':'Alan eşlemesi onarılmalı'):(en?'Data models could not be refreshed':'Veri modelleri güncellenemedi'));
+  const summary=refreshDiagnosisText(diagnosis,'summary',en)
+    || (repair
+      ?(en
+        ?`The database field mapped to "${repair.header}" can no longer be used${brokenSource?` (${brokenSource})`:''}.`
+        :`"${repair.header}" alanının bağlı olduğu database alanı artık kullanılamıyor${brokenSource?` (${brokenSource})`:''}.`)
+      :(en
+        ?'The refresh could not be completed. Buyer Log could not safely classify the cause; the original technical error is preserved below.'
+        :'Yenileme tamamlanamadı. Buyer Log kök nedeni güvenle sınıflandıramadı; özgün teknik hata aşağıda korunuyor.'));
+  const action=refreshDiagnosisText(diagnosis,'action',en)
+    || (repair
+      ?(en?'Choose Repair to open this source directly in Field Mapping, select the current database column, save it, and Buyer Log will retry the refresh.':'Onar ile bu kaynağı doğrudan Field Mapping içinde açın, güncel database sütununu seçip kaydedin; Buyer Log yenilemeyi otomatik yeniden deneyecek.')
+      :(en?'Do not change VPN, connection, or Field Mapping settings based on a guess. Check the technical detail first.':'VPN, bağlantı veya Field Mapping ayarlarını tahminle değiştirmeyin. Önce teknik ayrıntıyı kontrol edin.'));
+  const source=refreshDiagnosisText(diagnosis,'source',en);
+  const owner=refreshDiagnosisText(diagnosis,'owner',en);
+  const category=String(diagnosis&&diagnosis.category||'').trim();
+  const errorCode=String(diagnosis&&diagnosis.code||'').trim();
+  const technical=refreshDiagnosisText(diagnosis,'technical',en)||String(detail||'').trim();
+  const meta=[
+    source?`${en?'Source':'Kaynak'}: ${source}`:'',
+    owner?`${en?'Responsibility':'Sorumlu alan'}: ${owner}`:'',
+    category?`${en?'Type':'Tür'}: ${category}`:'',
+    errorCode?`${en?'Code':'Kod'}: ${errorCode}`:'',
+  ].filter(Boolean).join(' · ');
   const modal=document.createElement('div');
   modal.id='sourceRefreshFailureModal';modal.className='warnOverlay';
   modal.innerHTML=`<div class="modalCard refreshFailureCard" role="alertdialog" aria-modal="true">
     <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <span>${escapeHtml(repair?(en?'Field mapping needs repair':'Alan eşlemesi onarılmalı'):(en?'Data models could not be refreshed':'Veri modelleri güncellenemedi'))}</span>
+      <span>${escapeHtml(title)}</span>
       <button type="button" class="tbtn" data-refresh-failure-close aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="refreshFailureBody">
-      <p>${escapeHtml(repair
-        ?(en
-          ?`The database field mapped to "${repair.header}" can no longer be used${brokenSource?` (${brokenSource})`:''}.`
-          :`"${repair.header}" alanının bağlı olduğu database alanı artık kullanılamıyor${brokenSource?` (${brokenSource})`:''}.`)
-        :(en?'The ASAS and Bonded Warehouse data models could not be queried. Check your network connection and, outside the company network, make sure you are signed in to the VPN.':'ASAS ve Antrepo veri modelleri sorgulanamadı. Ağ bağlantınızı kontrol edin; şirket dışındaysanız VPN girişinin yapılmış olması gerekir.'))}</p>
-      <p>${escapeHtml(repair
-        ?(en?'Choose Repair to open this source directly in Field Mapping, select the current database column, save it, and Buyer Log will retry the refresh.':'Onar ile bu kaynağı doğrudan Field Mapping içinde açın, güncel database sütununu seçip kaydedin; Buyer Log yenilemeyi otomatik yeniden deneyecek.')
-        :(en?'Also verify the active roles, horizon and field mappings in Data Model Connection, then try again.':'Data Model Connection ekranındaki aktif roller, ufuk ve alan eşlemelerini de kontrol edip yeniden deneyin.'))}</p>
-      ${detail?`<div class="refreshFailureDetail">${escapeHtml(detail)}</div>`:''}
+      ${meta?`<div class="refreshFailureDetail">${escapeHtml(meta)}</div>`:''}
+      <p>${escapeHtml(summary)}</p>
+      <p><b>${escapeHtml(en?'What to do':'Ne yapmalısınız')}:</b> ${escapeHtml(action)}</p>
+      ${technical?`<details class="refreshCompactDetails"><summary>${escapeHtml(en?'Technical details':'Teknik ayrıntı')}</summary><div class="refreshFailureDetail">${escapeHtml(technical)}</div></details>`:''}
     </div>
     <div style="padding:12px 20px 16px;display:flex;justify-content:flex-end;gap:8px;">
       <button type="button" class="tbtn ${repair?'':'primary'}" data-refresh-failure-close>${escapeHtml(en?'Close':'Kapat')}</button>
@@ -13551,7 +13598,7 @@ async function waitForRefreshJob(expectedJob=null){
       btn.textContent=appLang==='en'?`⏳ Refreshing… ${elapsed}`:`⏳ Yenileniyor… ${elapsed}`;
     }
     if(jobState.running)continue;
-    if(jobState.phase==='error'||jobState.error){const err=new Error(jobState.error||'Yenileme başarısız oldu.');err.code=jobState.errorCode||'';err.repairAction=jobState.repairAction||null;throw err;}
+    if(jobState.phase==='error'||jobState.error){const err=new Error(jobState.error||'Yenileme başarısız oldu.');err.code=jobState.errorCode||'';err.repairAction=jobState.repairAction||null;err.diagnosis=jobState.diagnosis||null;throw err;}
     // idle/unknown bir durum başarılı yenileme değildir. Sadece DONE kabul edilir.
     if(jobState.phase!=='done'){
       if(Date.now()-started>timeoutMs)throw new Error(appLang==='en'?'Refresh did not reach a completed state.':'Yenileme tamamlanmış duruma ulaşmadı.');
@@ -13591,7 +13638,7 @@ async function waitForRefreshJob(expectedJob=null){
     if(!res.ok){
       const e = await res.json().catch(()=>({error:res.statusText}));
       if(e.code==='USER_SELECTION_REQUIRED'){ location.href='/select-user.html'; return; }
-      const err=new Error(e.error||res.statusText);err.code=e.code||'';err.sourceFilterStatus=e.sourceFilterStatus||null;err.sourceFilterRequired=Boolean(e.sourceFilterRequired);err.repairAction=e.repairAction||null;throw err;
+      const err=new Error(e.error||res.statusText);err.code=e.code||'';err.sourceFilterStatus=e.sourceFilterStatus||null;err.sourceFilterRequired=Boolean(e.sourceFilterRequired);err.repairAction=e.repairAction||null;err.diagnosis=e.diagnosis||null;throw err;
     }
     if(bootstrapFetchMetric)window.BLPerf?.end?.(bootstrapFetchMetric);
     if(initialScreenLoad)window.BLPerf?.mark?.('LOCAL_DB_READY');
@@ -13906,13 +13953,14 @@ async function waitForRefreshJob(expectedJob=null){
       console.warn('Kaynak filtresi gerekli:',err.message);
       return false;
     }
-    setServerStatus((appLang==='en'?'Data model refresh failed: ':'Veri modeli yenilenemedi: ') + err.message);
+    const diagnosisSummary=refreshDiagnosisText(err&&err.diagnosis,'summary',appLang==='en')||err.message;
+    setServerStatus((appLang==='en'?'Data model refresh failed: ':'Veri modeli yenilenemedi: ') + diagnosisSummary);
     if(userVisibleRefresh){
       setRefreshFailureState(true);
-      _overviewRefreshResult=normalizeOverviewRefreshResult({status:'error',at:new Date().toISOString(),message:err.message});
+      _overviewRefreshResult=normalizeOverviewRefreshResult({status:'error',at:new Date().toISOString(),message:diagnosisSummary});
       renderOverviewRefreshResult();
-      showSourceRefreshFailureModal(err.message,err.repairAction||null);
-      showToast((appLang==='en'?'Refresh failed: ':'Yenileme başarısız: ')+err.message);
+      showSourceRefreshFailureModal(err.message,err.repairAction||null,err.diagnosis||null);
+      showToast((appLang==='en'?'Refresh failed: ':'Yenileme başarısız: ')+diagnosisSummary);
     }
     console.warn('Sunucu veri hatası:', err);
     return false;
