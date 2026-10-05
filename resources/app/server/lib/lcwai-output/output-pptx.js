@@ -26,8 +26,15 @@ function palette() {
   return {
     acc: ooxml(c.acc), accBg: ooxml(c['acc-bg']), accInk: ooxml(c['acc-ink']), deep: ooxml(c['navy-deep']),
     ink: ooxml(c.ink), ink2: ooxml(c.ink2), muted: ooxml(c.muted), line: ooxml(c.line), card: ooxml(c.card2), paper: 'FFFFFF',
+    // Başlıklar: Buyer Log tablo başlığı grisi; başlık metni BL logosu siyahı.
+    headBg: ooxml(c['thead-bg']), headBg2: mixHex(c['thead-bg'], c['thead-ink'], 0.14), headInk: ooxml(c['thead-ink']), headLine: ooxml(c['thead-line']), logo: ooxml(c.logo),
     ok: ooxml(c.green), okBg: ooxml(c['green-bg']), warn: ooxml(c.orange), warnBg: ooxml(c['orange-bg']), risk: ooxml(c.red), riskBg: ooxml(c['red-bg']),
   };
+}
+function mixHex(a, b, weight) {
+  const parse = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const [x, y] = [parse(a), parse(b)];
+  return x.map((value, i) => Math.round(value * (1 - weight) + y[i] * weight).toString(16).padStart(2, '0')).join('').toUpperCase();
 }
 const toneColor = (tone, p) => ({ ok: p.ok, warn: p.warn, risk: p.risk }[tone] || p.acc);
 
@@ -64,8 +71,8 @@ function createSlideBuilder(p, lang) {
     const colW = Math.floor(w / columns.length);
     const rowH = pt(fontSize * 2.1);
     const cell = (value, header, index, numeric) => {
-      const fill = header ? p.acc : index % 2 ? p.card : p.paper;
-      const color = header ? 'FFFFFF' : p.ink;
+      const fill = header ? p.headBg : index % 2 ? p.card : p.paper;
+      const color = header ? p.logo : p.ink;
       return `<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:pPr algn="${numeric && !header ? 'r' : 'l'}"/>${run(String(value == null ? '' : value), { size: fontSize, bold: header, color }, p, lang)}</a:p></a:txBody><a:tcPr marL="${pt(5)}" marR="${pt(5)}" marT="${pt(3)}" marB="${pt(3)}" anchor="ctr"><a:lnL w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnL><a:lnR w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnR><a:lnT w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnT><a:lnB w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnB><a:solidFill><a:srgbClr val="${fill}"/></a:solidFill></a:tcPr></a:tc>`;
     };
     const numericCols = columns.map((_, index) => rows.length > 0 && rows.every(row => row[index] === '' || row[index] == null || typeof row[index] === 'number' || NUMERIC_TEXT.test(String(row[index]).trim())));
@@ -95,15 +102,17 @@ function fitSize(lines, base, min, capacity) {
 }
 
 function chrome(s, slide, index, total, deck, p, lang) {
-  s.box({ x: W - pt(150), y: -pt(110), w: pt(240), h: pt(240), fill: { color: p.acc, alpha: 7 }, geometry: 'ellipse', name: 'Orb' });
-  s.box({ x: 0, y: 0, w: W, h: pt(6), fill: p.acc, name: 'Accent' });
-  s.text(MARGIN, pt(26), W - MARGIN * 2, pt(52), slide.title, { size: slide.title.length > 60 ? 24 : 30, bold: true, color: p.accInk }, { anchor: 'b' });
-  s.box({ x: MARGIN, y: pt(84), w: pt(64), h: pt(3), fill: p.acc, name: 'Rule' });
+  // Başlık bandı: tablo başlığı grisi; başlık metni logo siyahı.
+  s.box({ x: 0, y: 0, w: W, h: pt(96), fill: p.headBg, name: 'HeadBand' });
+  s.box({ x: W - pt(150), y: -pt(110), w: pt(240), h: pt(240), fill: { color: p.logo, alpha: 4 }, geometry: 'ellipse', name: 'Orb' });
+  s.box({ x: 0, y: pt(96), w: W, h: pt(1), fill: p.headLine, name: 'HeadLine' });
+  s.text(MARGIN, pt(26), W - MARGIN * 2, pt(52), slide.title, { size: slide.title.length > 60 ? 24 : 30, bold: true, color: p.logo }, { anchor: 'b' });
+  s.box({ x: MARGIN, y: pt(84), w: pt(64), h: pt(3), fill: p.logo, name: 'Rule' });
   s.text(MARGIN, H - pt(30), W / 2, pt(18), `Buyer Log · LCW AI${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });
   s.text(W - MARGIN - pt(120), H - pt(30), pt(120), pt(18), `${index + 1} / ${total}`, { size: 9, color: p.muted }, { align: 'r' });
 }
 
-const CONTENT_TOP = pt(104);
+const CONTENT_TOP = pt(110);
 // 1.234,5 · 1,234.5 · 12 · %15 · 15% — tarih (02.11.2026) sayı sayılmaz.
 const NUMERIC_TEXT = /^%?\s*[-+]?(\d{1,3}([.,]\d{3})+|\d+)([.,]\d+)?\s*%?$/;
 const CONTENT_H = H - CONTENT_TOP - pt(44);
@@ -113,22 +122,23 @@ function renderSlide(slide, index, total, deck, p, lang) {
   const english = lang.startsWith('en');
   if (slide.layout === 'title') {
     // Renk geçişli kapak + yarı saydam dekoratif daireler.
-    s.box({ x: W - pt(380), y: -pt(180), w: pt(560), h: pt(560), fill: { color: 'FFFFFF', alpha: 9 }, geometry: 'ellipse', name: 'Orb' });
-    s.box({ x: W - pt(210), y: pt(300), w: pt(300), h: pt(300), fill: { color: p.accBg, alpha: 14 }, geometry: 'ellipse', name: 'Orb' });
-    s.box({ x: -pt(90), y: H - pt(150), w: pt(240), h: pt(240), fill: { color: 'FFFFFF', alpha: 6 }, geometry: 'ellipse', name: 'Orb' });
-    s.text(pt(80), pt(140), W - pt(200), pt(40), 'BUYER LOG · LCW AI', { size: 13, bold: true, color: p.accBg });
-    s.text(pt(80), pt(180), W - pt(260), pt(150), slide.title, { size: slide.title.length > 50 ? 36 : 46, bold: true, color: 'FFFFFF' });
-    if (slide.subtitle) s.text(pt(80), pt(335), W - pt(260), pt(60), slide.subtitle, { size: 20, color: p.accBg });
-    s.box({ x: pt(80), y: pt(410), w: pt(90), h: pt(4), fill: 'FFFFFF', name: 'Rule' });
-    s.text(pt(80), pt(425), W - pt(160), pt(24), deck.date, { size: 12, color: p.accBg });
-    return s.xml([p.deep, p.acc]);
+    s.box({ x: W - pt(380), y: -pt(180), w: pt(560), h: pt(560), fill: { color: p.logo, alpha: 5 }, geometry: 'ellipse', name: 'Orb' });
+    s.box({ x: W - pt(210), y: pt(300), w: pt(300), h: pt(300), fill: { color: p.headInk, alpha: 8 }, geometry: 'ellipse', name: 'Orb' });
+    s.box({ x: -pt(90), y: H - pt(150), w: pt(240), h: pt(240), fill: { color: p.logo, alpha: 4 }, geometry: 'ellipse', name: 'Orb' });
+    s.box({ x: 0, y: H - pt(6), w: W, h: pt(6), fill: p.logo, name: 'Base' });
+    s.text(pt(80), pt(140), W - pt(200), pt(40), 'BUYER LOG · LCW AI', { size: 13, bold: true, color: p.headInk });
+    s.text(pt(80), pt(180), W - pt(260), pt(150), slide.title, { size: slide.title.length > 50 ? 36 : 46, bold: true, color: p.logo });
+    if (slide.subtitle) s.text(pt(80), pt(335), W - pt(260), pt(60), slide.subtitle, { size: 20, color: p.headInk });
+    s.box({ x: pt(80), y: pt(410), w: pt(90), h: pt(4), fill: p.logo, name: 'Rule' });
+    s.text(pt(80), pt(425), W - pt(160), pt(24), deck.date, { size: 12, color: p.headInk });
+    return s.xml([p.headBg, p.headBg2]);
   }
   if (slide.layout === 'section') {
-    s.box({ x: W - pt(320), y: -pt(120), w: pt(460), h: pt(460), fill: { color: 'FFFFFF', alpha: 8 }, geometry: 'ellipse', name: 'Orb' });
-    s.box({ x: MARGIN * 2, y: H / 2 - pt(92), w: pt(70), h: pt(5), fill: p.accBg, name: 'Rule' });
-    s.text(MARGIN * 2, H / 2 - pt(80), W - MARGIN * 4, pt(100), slide.title, { size: 40, bold: true, color: 'FFFFFF' }, { anchor: 'b' });
-    if (slide.subtitle) s.text(MARGIN * 2, H / 2 + pt(40), W - MARGIN * 4, pt(60), slide.subtitle, { size: 18, color: p.accBg });
-    return s.xml([p.acc, p.deep], 'push');
+    s.box({ x: W - pt(320), y: -pt(120), w: pt(460), h: pt(460), fill: { color: p.logo, alpha: 5 }, geometry: 'ellipse', name: 'Orb' });
+    s.box({ x: MARGIN * 2, y: H / 2 - pt(92), w: pt(70), h: pt(5), fill: p.logo, name: 'Rule' });
+    s.text(MARGIN * 2, H / 2 - pt(80), W - MARGIN * 4, pt(100), slide.title, { size: 40, bold: true, color: p.logo }, { anchor: 'b' });
+    if (slide.subtitle) s.text(MARGIN * 2, H / 2 + pt(40), W - MARGIN * 4, pt(60), slide.subtitle, { size: 18, color: p.headInk });
+    return s.xml([p.headBg2, p.headBg], 'push');
   }
   chrome(s, slide, index, total, deck, p, lang);
   const width = W - MARGIN * 2;
@@ -206,8 +216,8 @@ function renderSlide(slide, index, total, deck, p, lang) {
     [slide.left, slide.right].forEach((column, i) => {
       const x = MARGIN + i * (colW + gap);
       s.box({ x, y: CONTENT_TOP + pt(8), w: colW, h: cardH, fill: p.card, line: { color: p.line }, name: 'Column' });
-      s.box({ x, y: CONTENT_TOP + pt(8), w: colW, h: pt(5), fill: i ? p.accInk : p.acc, name: 'Tone' });
-      s.text(x + pt(14), CONTENT_TOP + pt(22), colW - pt(28), pt(30), column.title, { size: 20, bold: true, color: p.accInk });
+      s.box({ x, y: CONTENT_TOP + pt(8), w: colW, h: pt(5), fill: i ? p.headInk : p.logo, name: 'Tone' });
+      s.text(x + pt(14), CONTENT_TOP + pt(22), colW - pt(28), pt(30), column.title, { size: 20, bold: true, color: p.logo });
       const size = fitSize(column.bullets, 16, 11, 9);
       s.box({ x: x + pt(14), y: CONTENT_TOP + pt(60), w: colW - pt(28), h: cardH - pt(64), paragraphs: column.bullets.map(item => paragraph(item, { size, color: p.ink }, p, lang, { bullet: true })), name: 'Bullets' });
     });

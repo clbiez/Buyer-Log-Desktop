@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-05",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI raporlarında Buyer Log gri başlıklar",
+    "en": "Buyer Log grey headers in LCW AI reports"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI’ın oluşturduğu PDF, HTML, PowerPoint ve Excel dosyalarında başlıklar artık Buyer Log tablo başlığı grisinde, başlık metinleri BL logosunun siyahında.",
+    "en": "Headers in the PDF, HTML, PowerPoint and Excel files created with LCW AI now use the Buyer Log table-header grey, with header text in the BL logo black."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "lcwai-report-headers",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Çıktı Oluşturma",
+        "en": "LCW AI · Output Engine"
+      },
+      "title": {
+        "tr": "Rapor başlıkları Buyer Log grisinde, metinler logo siyahında",
+        "en": "Report headers in Buyer Log grey, text in logo black"
+      },
+      "body": {
+        "tr": "Rapor ve sunum başlık bantları, tablo başlıkları ve Excel başlık satırları artık mavi değil. Hepsi Buyer Log tablolarındaki başlık grisini kullanıyor. Ana başlık ve tablo başlığı metinleri BL logosunun siyahında; tarih ve alt başlık gibi ikincil metinler daha açık gri tonda. Durum renkleri (yolunda / uyarı / risk) ve grafik renkleri değişmedi.",
+        "en": "Report and slide header bands, table headers and Excel header rows are no longer blue. They all use the header grey of Buyer Log tables. Main titles and table-header text use the BL logo black; secondary text such as the date and subtitle uses a lighter grey. Status colours (on track / warning / risk) and chart colours are unchanged."
+      },
+      "path": {
+        "tr": "LCW AI › Yanıt biçimi",
+        "en": "LCW AI › Answer as"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-report-headers.png",
+        "alt": {
+          "tr": "Gri başlık bandı ve siyah başlık metniyle Buyer Log’un oluşturduğu HTML raporu (demo veri)",
+          "en": "HTML report built by Buyer Log with a grey header band and black header text (demo data)"
+        },
+        "caption": {
+          "tr": "Başlıklar Buyer Log tablo başlığı grisinde.",
+          "en": "Headers in the Buyer Log table-header grey."
+        }
+      }
+    }
+  ]
 }
