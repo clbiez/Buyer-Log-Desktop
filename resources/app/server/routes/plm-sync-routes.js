@@ -185,6 +185,31 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
   finally { clearModelOperationProgress(req.currentUser && req.currentUser.id); }
 });
 
+/* Koleksiyon tablosundaki Artwork Detayı sanal sistem sütunu görünür
+   satırların BOM özetini tek yerel okumayla alır. Bu uç CoreNectum/LCW AI
+   çağırmaz; yalnız kalıcı plm-bom.json kaydını projekte eder. */
+app.post('/api/plm-sync/bom/batch', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), express.json({ limit: '128kb' }), (req, res) => {
+  try {
+    const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
+    if (!raw) return res.status(400).json({ error: 'plmIds (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    const plmIds = [...new Set(raw.map(normalizePlmId).filter(Boolean))].slice(0, 1000);
+    const store = plmBomStore.load();
+    const entries = {};
+    for (const plmId of plmIds) {
+      const entry = store.models && store.models[plmId];
+      if (entry) entries[plmId] = entry;
+    }
+    res.set('Cache-Control', 'no-store').json({
+      ok: true,
+      entries,
+      requested: plmIds.length,
+      found: Object.keys(entries).length,
+      revision: Number(store._revision) || 0,
+      updatedAt: store._updatedAt || null,
+    });
+  } catch (err) { apiError(res, err, 'PLM BOM özetleri okunamadı.'); }
+});
+
 /* PLM Sync sırasında saklanan son normalize BOM analizi. Bu uç yalnız
    Buyer Log deposunu okur; CoreNectum'a veya LCW AI'a yeni istek atmaz. */
 app.get('/api/plm-sync/bom/:plmId', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), (req, res) => {
