@@ -6,6 +6,7 @@
   "main": "electron/launcher.js",
   "private": true,
   "dependencies": {
+    "@kenjiuno/msgreader": "^1.28.0",
     "express": "^4.19.2",
     "resedit": "3.1.0",
     "xlsx": "^0.18.5"

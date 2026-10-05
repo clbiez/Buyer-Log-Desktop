@@ -230,6 +230,8 @@
       loadDate: hasLoadDate ? details.loadDate : (analysis ? analysis.plannedLoadDate : null),
     };
     if (details.note != null) answer.note = String(details.note || '').slice(0, 2000);
+    // Kaynak: 'test_report' kaydı rapor aktarımından gelir; elle seçim kaynaksızdır.
+    if (details.source) answer.source = String(details.source).slice(0, 80);
     if (details.reportNumber != null) answer.reportNumber = String(details.reportNumber || '').slice(0, 300);
     if (details.actualDate != null) answer.actualDate = String(details.actualDate || '').slice(0, 40);
     if (Array.isArray(details.attachments)) {

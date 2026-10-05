@@ -4994,6 +4994,13 @@ require('./routes/checklist-supplier-routes')(app, {
   express,
   userAccess,
 });
+/* Test Raporu Aktarımı: sonuç mailleri / PDF'ler → önizleme → checklist. */
+require('./routes/test-report-routes')(app, {
+  automationError,
+  checklistSupplierStore: require('./lib/checklist-supplier-store'),
+  express,
+  userAccess,
+});
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
    PASS'e (LC Waikiki intranet raporlama sistemi) bağlanıp

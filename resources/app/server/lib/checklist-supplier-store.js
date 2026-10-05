@@ -76,8 +76,13 @@ function addAttachment(raw, actor) {
   if (!encoded) {
     const error = new Error('Attachment payload is empty.'); error.code = 'CHECKLIST_ATTACHMENT_EMPTY'; throw error;
   }
-  const buffer = Buffer.from(encoded, 'base64');
-  if (!buffer.length || buffer.length > MAX_ATTACHMENT_BYTES) {
+  return addAttachmentBuffer(Buffer.from(encoded, 'base64'), item, actor);
+}
+/* Test raporu aktarımı ekleri sunucuda zaten tampondadır; aynı depoya aynı
+   adlandırma ve sınırlarla yazılır. */
+function addAttachmentBuffer(buffer, raw, actor) {
+  const item = raw && typeof raw === 'object' ? raw : {};
+  if (!Buffer.isBuffer(buffer) || !buffer.length || buffer.length > MAX_ATTACHMENT_BYTES) {
     const error = new Error('Checklist attachment exceeds the 40 MB storage limit.'); error.code = 'CHECKLIST_ATTACHMENT_TOO_LARGE'; throw error;
   }
   const id = crypto.randomBytes(16).toString('hex');
@@ -300,6 +305,6 @@ function applyEntries(entries, actor, options = {}) {
 module.exports = {
   FILE, ATTACHMENT_ROOT, SCHEMA_VERSION, MAX_ATTACHMENT_BYTES,
   normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, applyEntries,
-  addAttachment, getAttachmentPath, deleteAttachment, cleanAttachmentMeta, attachmentDisplayName,
+  addAttachment, addAttachmentBuffer, getAttachmentPath, deleteAttachment, cleanAttachmentMeta, attachmentDisplayName,
   _read: read,
 };
