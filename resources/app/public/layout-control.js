@@ -19,7 +19,7 @@
     'documentType must be CARE_LABEL, PRICE_TAG or UNKNOWN.',
     'Extract only values clearly visible in the PDF. Keep model/style codes exactly as printed.',
     'For CARE_LABEL extract colour code/name, country, composition percentages, care instructions and warnings.',
-    'For PRICE_TAG inspect every page and extract model, order number, size, barcode digits if visibly readable, product class/fit and prices.',
+    'For PRICE_TAG inspect every page and extract model, order number, size, barcode digits and QR content only if visibly readable, product class/fit and prices.',
     'pageVariants entries must use: page=<n>|size=<value>|barcode=<value>|order=<value> when visible.',
     'visualFindings: only visible layout/semantic concerns such as clipping, overlap, unreadable QR/barcode, duplicated block, inconsistent country/composition/language or suspicious page variation.',
     'Do not call a business field wrong unless the PDF itself proves the inconsistency. Reference comparison is performed deterministically by Buyer Log.',
@@ -179,23 +179,53 @@
   }
   async function nativePdfText(file,onPage){
     try{
-      if(!root.BLPerf||typeof root.BLPerf.ensureLibrary!=='function') return {text:'',pages:0,error:'PDF_LIBRARY_UNAVAILABLE'};
+      if(!root.BLPerf||typeof root.BLPerf.ensureLibrary!=='function') return {text:'',pages:0,barcodes:[],qrCodes:[],pageVariants:[],barcodeDetectorAvailable:false,error:'PDF_LIBRARY_UNAVAILABLE'};
       await root.BLPerf.ensureLibrary('pdf');
-      if(!root.pdfjsLib) return {text:'',pages:0,error:'PDF_LIBRARY_UNAVAILABLE'};
+      if(!root.pdfjsLib) return {text:'',pages:0,barcodes:[],qrCodes:[],pageVariants:[],barcodeDetectorAvailable:false,error:'PDF_LIBRARY_UNAVAILABLE'};
       const bytes=new Uint8Array(await file.arrayBuffer());
       const task=root.pdfjsLib.getDocument({data:bytes});
       const pdf=await task.promise;
-      const chunks=[];
+      const chunks=[], barcodes=[], qrCodes=[], pageVariants=[];
       const total=Math.min(Number(pdf.numPages)||0,80);
+      let detector=null, detectorAvailable=false;
+      try{
+        if(typeof root.BarcodeDetector==='function'){
+          const wanted=['ean_13','ean_8','code_128','code_39','qr_code'];
+          const supported=typeof root.BarcodeDetector.getSupportedFormats==='function'?await root.BarcodeDetector.getSupportedFormats():wanted;
+          const formats=wanted.filter(format=>supported.includes(format));
+          if(formats.length){detector=new root.BarcodeDetector({formats});detectorAvailable=true;}
+        }
+      }catch(_){detector=null;detectorAvailable=false;}
       for(let pageNo=1;pageNo<=total;pageNo++){
         const page=await pdf.getPage(pageNo);
         const content=await page.getTextContent();
         const text=arr(content&&content.items).map(item=>item&&item.str||'').join(' ').replace(/\s+/g,' ').trim();
         chunks.push('[[PAGE '+pageNo+']] '+text);
+        if(detector){
+          try{
+            const viewport=page.getViewport({scale:1.8});
+            const canvas=document.createElement('canvas');
+            canvas.width=Math.max(1,Math.ceil(viewport.width)); canvas.height=Math.max(1,Math.ceil(viewport.height));
+            const ctx=canvas.getContext('2d',{alpha:false});
+            await page.render({canvasContext:ctx,viewport}).promise;
+            const detected=await detector.detect(canvas);
+            arr(detected).forEach(code=>{
+              const raw=String(code&&code.rawValue||'').trim(); if(!raw) return;
+              const format=String(code&&code.format||'').toLowerCase();
+              if(format==='qr_code'){
+                if(!qrCodes.includes(raw)) qrCodes.push(raw);
+                pageVariants.push('page='+pageNo+'|qr='+raw);
+              }else{
+                if(!barcodes.includes(raw)) barcodes.push(raw);
+                pageVariants.push('page='+pageNo+'|barcode='+raw);
+              }
+            });
+          }catch(_){/* native decode is optional; LCW AI remains the visual fallback */}
+        }
         if(onPage) onPage(pageNo,total);
       }
-      return {text:chunks.join('\n'),pages:total,error:''};
-    }catch(_){return {text:'',pages:0,error:'PDF_TEXT_EXTRACTION_FAILED'};}
+      return {text:chunks.join('\n'),pages:total,barcodes,qrCodes,pageVariants,barcodeDetectorAvailable:detectorAvailable,error:''};
+    }catch(_){return {text:'',pages:0,barcodes:[],qrCodes:[],pageVariants:[],barcodeDetectorAvailable:false,error:'PDF_TEXT_EXTRACTION_FAILED'};}
   }
   function aiTask(){
     return L(
@@ -241,13 +271,14 @@
       setStage(L('Lütfen bir PDF dosyası seçin.','Please select a PDF file.'),'error'); return;
     }
     currentFile=file; currentReport=null; filter='attention'; activeAbort=new AbortController(); activeRequestId='layout-'+Date.now().toString(36); setBusy(true); paint();
-    let cpRows=[], nativeInfo={text:'',pages:0,error:''}, local={}, aiData={}, aiUnavailable=false;
+    let cpRows=[], nativeInfo={text:'',pages:0,barcodes:[],qrCodes:[],pageVariants:[],error:''}, local={}, aiData={}, aiUnavailable=false;
     try{
       setStage(L('PDF hazırlanıyor…','Preparing PDF…'),'busy');
       const cpPromise=fetchCpRows().catch(()=>[]);
       nativeInfo=await nativePdfText(file,(page,total)=>setStage(L('PDF okunuyor: '+page+'/'+total,'Reading PDF: '+page+'/'+total),'busy'));
       cpRows=await cpPromise;
       local=E().deriveLocalExtraction(nativeInfo.text,cpRows);
+      local.barcodes=arr(nativeInfo.barcodes); local.qrCodes=arr(nativeInfo.qrCodes); local.pageVariants=arr(nativeInfo.pageVariants);
       setStage(cpRows.length?L('CP referansı hazır. LCW AI görsel kontrol yapıyor…','CP reference ready. LCW AI is running visual QA…'):L('CP referansı alınamadı; LCW AI görsel kontrol yapıyor…','CP reference unavailable; LCW AI is running visual QA…'),'busy');
       try{
         const aiResult=await askAi(file,nativeInfo,event=>setStage(phaseText(event),'busy'),activeAbort.signal,activeRequestId);
