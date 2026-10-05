@@ -72,6 +72,20 @@ test('objective composition conflict becomes MISMATCH',()=>{
   assert.equal(report.summary.status,'ERROR');
 });
 
+
+test('AI-only CP conflicts stay REVIEW; local deterministic conflicts can be ERROR',()=>{
+  const aiOnly=engine.mergeExtraction({},{
+    documentType:'CARE_LABEL',modelCodes:['FORTNITE-4-YD'],colourCodes:['GDA'],countries:['Bangladesh'],
+    composition:['100% Cotton'],confidence:'HIGH',explanation:'visible'
+  });
+  const aiReport=engine.compare(aiOnly,CP);
+  assert.equal(aiReport.checks.find(check=>check.rule==='COUNTRY_MATCH').status,'REVIEW');
+
+  const local=engine.deriveLocalExtraction('FORTNITE-4-YD GDA 100% COTTON MADE IN BANGLADESH',CP);
+  const localReport=engine.compare(engine.mergeExtraction(local,{}),CP);
+  assert.equal(localReport.checks.find(check=>check.rule==='COUNTRY_MATCH').status,'MISMATCH');
+});
+
 test('AI visual finding stays REVIEW and never becomes deterministic ERROR by itself',()=>{
   const local=engine.deriveLocalExtraction('FORTNITE-4-YD GDA 100% COTTON MADE IN INDIA',CP);
   const extraction=engine.mergeExtraction(local,{visualFindings:['Page 2 text may be clipped'],confidence:'HIGH'});
@@ -96,8 +110,8 @@ test('price tag scope does not create false composition/care errors and keeps un
   assert.equal(byRule.WARNING_MATCH.status,'NOT_CHECKED');
   assert.equal(byRule.SIZE_RANGE_MATCH.status,'NOT_CHECKED');
   assert.equal(byRule.BARCODE_MATCH.status,'NOT_CHECKED');
-  assert.equal(byRule.BARCODE_READABLE.status,'MATCH');
-  assert.equal(byRule.QR_READABLE.status,'MATCH');
+  assert.equal(byRule.BARCODE_READABLE.status,'REVIEW');
+  assert.equal(byRule.QR_READABLE.status,'REVIEW');
   assert.equal(byRule.PRICE_MATCH.status,'NOT_CHECKED');
 });
 
