@@ -53,7 +53,12 @@
     return numericId(row.plmId || row['PLM ID'] || row._plmId);
   }
   function summaryFor(entry) {
-    if (!entry || !entry.hasPrint) return entry ? L('Baskı yok', 'No print') : '';
+    if (!entry) return '';
+    /* Set Style özeti child A/B/C ayrımını server tarafındaki kanonik
+       artworkSummary'dan alır. Placement'ları burada yeniden gruplayıp
+       A ve B'yi tek modelmiş gibi birleştirmek parça bilgisini kaybettirir. */
+    if (entry.isSetStyle && String(entry.artworkSummary || '').trim()) return String(entry.artworkSummary).trim();
+    if (!entry.hasPrint) return L('Baskı yok', 'No print');
     const groups = new Map(), techniques = new Set();
     for (const item of Array.isArray(entry.placements) ? entry.placements : []) {
       const label = isEn() ? (item.placementEn || item.placement) : (item.placementTr || item.placement);
@@ -82,9 +87,9 @@
     style.id = 'blCollectionArtworkStyle';
     style.textContent = `
       #kolTable th[data-k="${ART_KEY}"]{min-width:210px;max-width:310px}
-      #kolTable td[data-key="${ART_KEY}"]{min-width:210px;max-width:310px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      #kolTable td[data-key="${ART_KEY}"]{min-width:210px;max-width:310px;white-space:normal;overflow:hidden}
       #kolTable td[data-key="${ART_KEY}"].kolArtworkNeedsReview{color:var(--orange);font-weight:650}
-      #kolTable td[data-key="${ART_KEY}"] .kolArtworkText{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      #kolTable td[data-key="${ART_KEY}"] .kolArtworkText{display:block;overflow:hidden;white-space:pre-line;line-height:1.25}
       #kolTable td[data-key="${ART_KEY}"]{cursor:default}
     `;
     document.head.appendChild(style);
@@ -189,8 +194,8 @@
         col.style.width = '240px';
         group.insertBefore(col, group.children[at] || null);
       }
-      // Group ranges selection checkbox'ını saymaz; bu nedenle grup başlığı
-      // için veri-sütunu indeksini, fiziksel hücre eklemek için DOM indeksini kullan.
+      // Group ranges selection checkbox'ını saymaz; fiziksel DOM indeksi yerine
+      // veri-sütunu indeksini kullanarak Model Detayları başlığını hizala.
       patchGroupRow(table, logicalAt >= 0 ? logicalAt : at);
       changed = true;
     }
