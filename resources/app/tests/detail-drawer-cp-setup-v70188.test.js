@@ -29,13 +29,18 @@ test('CP exposes one read-only snapshot for detail table views',()=>{
   assert.ok(APP.includes('widthPx:colWidthPx(tableKey,column)'));
 });
 
-test('shared detail drawer renders Focus Extended All from the inherited setup',()=>{
+test('shared detail drawer keeps the CP catalog but applies its own report layout',()=>{
   assert.ok(DRAWER.includes('data-bl-detail-view-preset'));
   assert.ok(DRAWER.includes("['focus','extended','all']"));
   assert.ok(DRAWER.includes('tableSetupSnapshot(input)'));
-  assert.ok(DRAWER.includes('setupInitialPreset(setup)'));
-  assert.ok(DRAWER.includes('setupVisibleKeys(setup,preset,contextKeys)'));
-  assert.ok(DRAWER.includes('groupHeaderHtml(columns,showImages)'));
+  assert.ok(DRAWER.includes('BLDetailReportLayout.focusKeys'));
+  assert.ok(DRAWER.includes('const contextKeys=setup?contextColumns.map'));
+  assert.ok(DRAWER.includes('.concat(contextKeys)'));
+  assert.ok(DRAWER.includes('tableSetup:null,viewPresets'));
+  assert.ok(DRAWER.includes("setupPresetKeys(setup,'extended')"));
+  assert.ok(DRAWER.includes('...setupColumns,...contextColumns')); 
+  assert.ok(DRAWER.includes('BLDetailReportLayout.project'));
+  assert.ok(DRAWER.includes('data-bl-detail-stats'));
   assert.ok(CSS.includes('.blDetailViewPreset[aria-pressed="true"]'));
   assert.ok(CSS.includes('.blDetailGroupRow'));
 });

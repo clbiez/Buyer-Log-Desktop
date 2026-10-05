@@ -47,3 +47,39 @@
 .blDetailTable .blDetailGroupRow th{top:0;z-index:6;height:var(--table-group-head-h,25px);padding:4px 8px;background:var(--card2-strong);color:var(--ink2);text-align:center;vertical-align:middle;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;font-weight:650;letter-spacing:.4px;border-bottom:1px solid var(--line2);box-shadow:inset 0 2px 0 var(--acc)}
 .blDetailTable .blDetailGroupRow+.blDetailColumnRow th{top:var(--table-group-head-h,25px)}
 @media(max-width:760px){.blDetailViewActions{width:100%;overflow-x:auto;border-right:0;padding-right:0}.blDetailViewLabel{position:sticky;left:0;background:var(--card);z-index:1}}
+
+/* Backlog report language: summary cards, stacked identities and readable rows.
+   Independent of CP density and inherited column widths. */
+.blDetailDrawerPanel{width:min(1600px,96vw);box-shadow:var(--shadow-3)}
+.blDetailDrawerHead{padding:16px 18px 12px}
+.blDetailDrawerTitle b{font:700 20px/1.15 var(--heading,var(--font))}
+.blDetailDrawerTitle span{font-size:11px}
+.blDetailDrawerSubbar{flex-wrap:wrap;padding:8px 18px}
+.blDetailReportStats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;padding:12px 18px 8px;flex:none}
+.blDetailReportStats>div{padding:8px 10px;border:1px solid var(--line);background:var(--card2)}
+.blDetailReportStats b{display:block;font:700 19px/1.1 var(--heading,var(--font));font-variant-numeric:tabular-nums}
+.blDetailReportStats span{font-size:11px;color:var(--muted)}
+.blDetailReportAccent{height:6px;margin:0 18px 10px;background:var(--acc);flex:none}
+.blDetailDrawer .blDetailTable{font:11.5px/1.4 var(--font);background:var(--card);color:var(--ink)}
+.blDetailDrawer .blDetailTable thead th{padding:9px 8px;background:var(--card2);color:var(--ink2);vertical-align:middle;font-size:10.5px;font-weight:700;line-height:1.35;word-break:normal;overflow-wrap:normal}
+.blDetailDrawer .blDetailTable tbody tr{height:auto}
+.blDetailDrawer .blDetailTable td{padding:8px;border-bottom:1px solid var(--line);white-space:normal;overflow:visible;vertical-align:top;line-height:1.4}
+.blDetailReportHeading{display:flex;align-items:center;gap:5px}
+.blDetailReportHeading>span{flex:1;min-width:0}
+.blDetailReportPrimary,.blDetailReportSub{overflow-wrap:break-word;word-break:normal}
+.blDetailReportPrimary{font-weight:600}
+.blDetailReportSub{margin-top:2px;font-size:10.5px;color:var(--muted)}
+.blDetailReportSub a{color:inherit}
+.blDetailReportBadge{display:inline-block;padding:2px 6px;border-left:2px solid var(--acc);background:var(--acc-bg);color:var(--acc-ink);font-size:10px;font-weight:700}
+.blDetailNumeric{text-align:right!important;font-variant-numeric:tabular-nums}
+.blDetailReportFilter{position:relative;flex:none;font-weight:400}
+.blDetailReportFilter>summary{cursor:pointer;padding:2px 5px;color:var(--muted);list-style:none}
+.blDetailReportFilter>summary::-webkit-details-marker{display:none}
+.blDetailReportFilter[open]>summary,.columnFilterActive .blDetailReportFilter>summary{color:var(--acc-ink);background:var(--acc-bg)}
+.blDetailReportFilter>div{position:absolute;top:100%;right:0;z-index:10;min-width:180px;max-height:250px;overflow:auto;padding:5px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow-2)}
+.blDetailReportFilter button{display:block;width:100%;padding:7px 8px;border:0;background:transparent;color:var(--ink);font:11px var(--font);text-align:left;cursor:pointer}
+.blDetailReportFilter button:hover,.blDetailReportFilter button.filterActive{background:var(--acc-bg);color:var(--acc-ink)}
+.blDetailDrawer .blDetailTable .colResizer{position:absolute;right:0;top:0;width:7px;height:100%;cursor:ew-resize;touch-action:none}
+.blDetailDrawer .blDetailImageCell{vertical-align:middle}
+.blDetailDrawer .blDetailImageCell img{max-height:48px}
+@media(max-width:760px){.blDetailReportStats{grid-template-columns:repeat(2,minmax(0,1fr))}.blDetailDrawerTitle b{font-size:18px}.blDetailDrawerSubbar>input{width:100%}.blDetailReportFilter>div{min-width:150px}}

@@ -1095,7 +1095,7 @@
       const a=state.analysis||compute(),current=normalized==='current';
       const rows=current?a.currentRows:a.compareRows,season=current?a.currentSeason:a.compareSeason,months=current?a.currentMonths:a.compareMonths;
       const title=current?(isEn()?'Selected Portfolio Detail':'Seçili Portföy Detayı'):(isEn()?'Compared Portfolio Detail':'Kıyaslanan Portföy Detayı');
-      const columns=detailColumns().map(col=>({key:col.key,label:columnLabel(col),value:row=>col.display?col.display(row):columnRawValue(col,row),exportWidth:col.exportWidth||col.weight}));
+      const columns=detailColumns().map(col=>({key:col.key,label:columnLabel(col),type:col.type,value:row=>columnRawValue(col,row),format:(value,row)=>col.display?col.display(row):(col.type==='date'?dateTR(value):value),exportWidth:col.exportWidth||col.weight}));
       window.BLDetailDrawer.open({storageKey:'lfl.'+normalized+'.detail',source:'lfl',title,subtitle:[season,monthSelectionLabel(months)].filter(Boolean).join(' · '),rows,columns,images:true,fileName:'LFL_'+title});
       return;
     }
@@ -1143,7 +1143,7 @@
   function openLflPortfolioModal({title,currentRows=[],previousRows=[],currentSeason,compareSeason}){
     const rows=[...(currentRows||[]).map(row=>({...row,_lflPeriod:currentSeason})),...(previousRows||[]).map(row=>({...row,_lflPeriod:compareSeason}))],summary=`${currentSeason}: ${integer(currentRows.length)} ${isEn()?'rows':'satır'} · ${integer(quantityTotal(currentRows))} ${isEn()?'units':'adet'}   |   ${compareSeason}: ${integer(previousRows.length)} ${isEn()?'rows':'satır'} · ${integer(quantityTotal(previousRows))} ${isEn()?'units':'adet'}`;
     if(window.BLDetailDrawer?.open){
-      const columns=portfolioModalColumns().map(col=>({key:col.key,label:columnLabel(col),value:row=>col.display?col.display(row):columnRawValue(col,row),exportWidth:col.exportWidth||col.weight}));
+      const columns=portfolioModalColumns().map(col=>({key:col.key,label:columnLabel(col),type:col.type,value:row=>columnRawValue(col,row),format:(value,row)=>col.display?col.display(row):(col.type==='date'?dateTR(value):value),exportWidth:col.exportWidth||col.weight}));
       window.BLDetailDrawer.open({storageKey:'lfl.portfolio.detail',source:'lfl',title,subtitle:summary,rows,columns,images:true,fileName:'LFL_Portfolio_'+title});
       return;
     }
