@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.238",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "LCW AI: dosya çıktıları, canlı raporlar ve arka plan oturumu",
+        "en": "LCW AI: file outputs, lively reports and a background session"
+      },
+      "stats": {
+        "features": 2,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.238/release.json"
+    },
+    {
       "version": "7.0.237",
       "publishedAt": "2026-10-05",
       "title": {
