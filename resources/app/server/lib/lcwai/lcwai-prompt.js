@@ -179,9 +179,15 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
   lines.push(request || (english ? '(empty)' : '(boş)'));
   if (contract) {
     lines.push('', english ? '=== ANSWER FORMAT (overrides any earlier answer-format instruction) ===' : '=== CEVAP BİÇİMİ (önceki tüm cevap biçimi talimatlarının yerine geçer) ===');
-    lines.push(english
-      ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" and "warnings" in English.'
-      : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" ve "warnings" Türkçe olsun.');
+    if (key === 'layout-control') {
+      lines.push(english
+        ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Preserve all extracted label values in the language and spelling printed in the PDF; only "explanation" should be English.'
+        : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. PDF’den çıkarılan tüm etiket değerlerini basıldığı dil ve yazımla koru; yalnız "explanation" Türkçe olsun.');
+    } else {
+      lines.push(english
+        ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" and "warnings" in English.'
+        : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" ve "warnings" Türkçe olsun.');
+    }
     lines.push(schemaText(contract, english));
     if (key === 'layout-control') {
       lines.push(english
