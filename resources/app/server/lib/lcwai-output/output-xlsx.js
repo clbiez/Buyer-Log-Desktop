@@ -45,26 +45,27 @@ function stylesXml(currency) {
 <numFmts count="5"><numFmt numFmtId="164" formatCode="#,##0"/><numFmt numFmtId="165" formatCode="#,##0.00"/><numFmt numFmtId="166" formatCode="0.0%"/><numFmt numFmtId="167" formatCode="${xmlText(currencyFormat(currency))}"/><numFmt numFmtId="168" formatCode="dd.mm.yyyy"/></numFmts>
 <fonts count="6">
 <font><sz val="11"/><color rgb="FF${ooxml(c.ink)}"/><name val="${font}"/><family val="2"/></font>
-<font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="${font}"/><family val="2"/></font>
-<font><b/><sz val="16"/><color rgb="FF${ooxml(c['acc-ink'])}"/><name val="${font}"/><family val="2"/></font>
-<font><b/><sz val="11"/><color rgb="FF${ooxml(c['acc-ink'])}"/><name val="${font}"/><family val="2"/></font>
+<font><b/><sz val="11"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
+<font><b/><sz val="16"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
+<font><b/><sz val="11"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
 <font><i/><sz val="10"/><color rgb="FF${ooxml(c.muted)}"/><name val="${font}"/><family val="2"/></font>
 <font><sz val="11"/><color rgb="FF${ooxml(c.ink2)}"/><name val="${font}"/><family val="2"/></font>
 </fonts>
 <fills count="4">
 <fill><patternFill patternType="none"/></fill>
 <fill><patternFill patternType="gray125"/></fill>
-<fill><patternFill patternType="solid"><fgColor rgb="FF${ooxml(c.acc)}"/><bgColor indexed="64"/></patternFill></fill>
-<fill><patternFill patternType="solid"><fgColor rgb="FF${ooxml(c['acc-bg'])}"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FF${ooxml(c['thead-bg'])}"/><bgColor indexed="64"/></patternFill></fill>
+<fill><patternFill patternType="solid"><fgColor rgb="FF${ooxml(c['thead-bg'])}"/><bgColor indexed="64"/></patternFill></fill>
 </fills>
-<borders count="2">
+<borders count="3">
 <border><left/><right/><top/><bottom/><diagonal/></border>
 <border><left/><right/><top/><bottom style="thin"><color rgb="FF${ooxml(c.line)}"/></bottom><diagonal/></border>
+<border><left/><right style="thin"><color rgb="FF${ooxml(c['thead-line'])}"/></right><top/><bottom style="medium"><color rgb="FF${ooxml(c['thead-line'])}"/></bottom><diagonal/></border>
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
 <cellXfs count="12">
 <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
+<xf numFmtId="0" fontId="1" fillId="2" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
 <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
 <xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>
 <xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1"/>

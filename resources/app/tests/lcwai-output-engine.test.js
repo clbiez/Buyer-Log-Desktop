@@ -223,8 +223,10 @@ test('XLSX: Buyer Log stilli başlık, dondurulmuş satır, filtre, tipli hücre
   assert.equal(read.Sheets.Gecikmeler.B4.f, 'SUM(B2:B3)');
   const files = unzip(buffer);
   for (const [name, xml] of Object.entries(files)) if (name.endsWith('.xml') || name.endsWith('.rels')) assert.ok(xmlWellFormed(xml), `${name} iyi biçimli`);
-  const acc = theme.ooxml(theme.theme().colors.acc);
-  assert.match(files['xl/styles.xml'], new RegExp(`<fgColor rgb="FF${acc}"/>`));
+  const colors = theme.theme().colors;
+  assert.match(files['xl/styles.xml'], new RegExp(`<fgColor rgb="FF${theme.ooxml(colors['thead-bg'])}"/>`), 'başlık zemini Buyer Log tablo başlığı grisi');
+  assert.match(files['xl/styles.xml'], new RegExp(`<font><b/><sz val="11"/><color rgb="FF${theme.ooxml(colors.logo)}"/>`), 'başlık metni logo siyahı');
+  assert.doesNotMatch(files['xl/styles.xml'], new RegExp(`<fgColor rgb="FF${theme.ooxml(colors.acc)}"/>`), 'mavi başlık yok');
   assert.match(files['xl/worksheets/sheet2.xml'], /<pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"\/>/);
   assert.match(files['xl/worksheets/sheet2.xml'], /<autoFilter ref="A1:D4"\/>/);
   assert.match(files['xl/workbook.xml'], /_xlnm\._FilterDatabase" localSheetId="1" hidden="1">'Gecikmeler'!\$A\$1:\$D\$4/);
@@ -531,9 +533,29 @@ test('dinamik tasarım: HTML’de yalnız-CSS animasyonlar (azaltılmış hareke
   assert.match(files['ppt/slides/slide1.xml'], /<a:gradFill rotWithShape="1">/);
   assert.match(files['ppt/slides/slide2.xml'], /<p:transition spd="slow"><p:push dir="u"\/><\/p:transition><\/p:sld>$/);
   assert.match(files['ppt/slides/slide3.xml'], /<p:transition spd="med"><p:fade\/><\/p:transition><\/p:sld>$/);
-  assert.match(files['ppt/slides/slide1.xml'], /<a:alpha val="9000"\/>/);
+  assert.match(files['ppt/slides/slide1.xml'], /<a:alpha val="5000"\/>/);
   const book = unzip(renderWorkbook(contracts.normalizeWorkbook({ title: 't', sheets: [{ name: 'S', columns: [{ header: 'A', type: 'text' }, { header: 'N', type: 'integer' }], rows: [['a', 1], ['b', 2]] }] }).data));
   assert.match(book['xl/worksheets/sheet1.xml'], /<cfRule type="dataBar" priority="2">/);
   assert.match(book['xl/worksheets/sheet1.xml'], /<conditionalFormatting sqref="B2:B3">/);
   assert.match(book['xl/styles.xml'], /<dxfs count="1">/);
+});
+
+test('başlıklar: mavi değil Buyer Log tablo başlığı grisi; metin BL logosu siyahı (HTML/PDF/PPTX/XLSX)', () => {
+  const colors = theme.theme().colors;
+  const app = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
+  assert.equal(colors['thead-bg'], /--thead-bg:\s*(#[0-9A-Fa-f]{6})/.exec(app)[1].toUpperCase());
+  assert.equal(colors['thead-line'], /--thead-line:\s*(#[0-9A-Fa-f]{6})/.exec(app)[1].toUpperCase());
+  assert.equal(colors.logo, '#262626', 'icons/icon-mark.png BL siyahı');
+  const css = theme.reportCss({});
+  assert.match(css, /\.bl-header\{[^}]*color:var\(--logo\);background:linear-gradient\(120deg,var\(--thead-bg\)/);
+  assert.match(css, /\nth\{background:var\(--thead-bg\);color:var\(--logo\);/);
+  assert.match(css, /h1\{[^}]*color:var\(--logo\)/);
+  assert.doesNotMatch(css, /\.bl-header\{[^}]*var\(--acc\)/);
+  const deck = contracts.normalizePresentation({ title: 'T', slides: [{ layout: 'table', title: 'Tablo', table: { columns: ['A'], rows: [['x']] } }] }).data;
+  const files = unzip(renderPresentation(deck));
+  const g = theme.ooxml(colors['thead-bg']), logo = theme.ooxml(colors.logo);
+  assert.match(files['ppt/slides/slide1.xml'], new RegExp(`<a:gs pos="0"><a:srgbClr val="${g}"/>`), 'kapak gri');
+  assert.match(files['ppt/slides/slide2.xml'], new RegExp(`name="HeadBand \\d+"/>[^]*?<a:srgbClr val="${g}"/>`), 'slayt başlık bandı gri');
+  assert.match(files['ppt/slides/slide2.xml'], new RegExp(`<a:srgbClr val="${logo}"/></a:solidFill><a:latin[^>]*/><a:cs[^>]*/></a:rPr><a:t>Tablo</a:t>`), 'başlık metni logo siyahı');
+  assert.match(files['ppt/slides/slide2.xml'], new RegExp(`b="1" dirty="0"><a:solidFill><a:srgbClr val="${logo}"/>[^]*?<a:t>A</a:t>[^]*?<a:srgbClr val="${g}"/>`), 'tablo başlığı gri + siyah');
 });
