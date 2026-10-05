@@ -720,7 +720,12 @@
     const fileInput = $('[data-chat-file-input]');
     const target = event.target.closest('button');
     if (!target || !el.contains(target)) { if (!event.target.closest('.lcwaiContextWrap')) closeContextMenu(); return; }
-    if (target.matches('[data-layout-control]')) { window.BLLayoutControl?.open?.(); return; }
+    if (target.matches('[data-layout-control]')) {
+      const openLayout=()=>window.BLLayoutControl?.open?.();
+      if (window.BLLayoutControl) openLayout();
+      else if (window.BLPerf?.ensureFeature) window.BLPerf.ensureFeature('layoutControl').then(openLayout).catch(() => { if (typeof showToast === 'function') showToast(L('Layout Kontrol modülü yüklenemedi.','Layout Control module could not be loaded.'), { kind: 'error' }); });
+      return;
+    }
     if (target.matches('[data-chat-new]')) { if (!state.busy) { newConversation(); renderList(); renderMessages(); input.focus(); } return; }
     if (target.matches('[data-chat-open]')) { if (!state.busy) { state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
     if (target.matches('[data-chat-file]')) { fileInput.click(); return; }
