@@ -60,6 +60,35 @@ const CONTRACTS = Object.freeze({
     }),
     example: { explanation: '…', code: 'AUTOMATION "…"\nSOURCE cp\n…', warnings: [] },
   }),
+  'layout-control': Object.freeze({
+    label: { tr: 'Layout Kontrolü', en: 'Layout Control' },
+    fields: Object.freeze({
+      documentType: { type: 'string', required: true, max: 20, hint: { tr: 'yalnız CARE_LABEL, PRICE_TAG veya UNKNOWN', en: 'CARE_LABEL, PRICE_TAG or UNKNOWN only' } },
+      modelCodes: { type: 'string[]', max: 120, items: 12 },
+      colourCodes: { type: 'string[]', max: 80, items: 12 },
+      colours: { type: 'string[]', max: 120, items: 12 },
+      orderNumbers: { type: 'string[]', max: 80, items: 20 },
+      countries: { type: 'string[]', max: 100, items: 12 },
+      composition: { type: 'string[]', max: 180, items: 24 },
+      careInstructions: { type: 'string[]', max: 300, items: 30 },
+      warnings: { type: 'string[]', max: 300, items: 30 },
+      sizes: { type: 'string[]', max: 80, items: 40 },
+      barcodes: { type: 'string[]', max: 100, items: 40 },
+      pageVariants: { type: 'string[]', max: 220, items: 50, hint: { tr: 'page=<n>|size=<değer>|barcode=<değer>|order=<değer>', en: 'page=<n>|size=<value>|barcode=<value>|order=<value>' } },
+      productClass: { type: 'string', max: 160 },
+      fit: { type: 'string', max: 120 },
+      prices: { type: 'string[]', max: 120, items: 20 },
+      visualFindings: { type: 'string[]', max: 500, items: 30, hint: { tr: 'yalnız görünür kanıta dayalı görsel/semantik inceleme bulguları', en: 'only visual/semantic review findings supported by visible evidence' } },
+      confidence: { type: 'string', required: true, max: 12, hint: { tr: 'EXACT, HIGH, MEDIUM veya LOW', en: 'EXACT, HIGH, MEDIUM or LOW' } },
+      explanation: { type: 'string', required: true, max: 2000 }
+    }),
+    example: {
+      documentType: 'CARE_LABEL', modelCodes: ['MODEL-1'], colourCodes: ['ABC'], colours: ['BLUE'],
+      orderNumbers: [], countries: ['India'], composition: ['100% Cotton'], careInstructions: ['Wash with similar colours'],
+      warnings: ['Keep away from fire'], sizes: [], barcodes: [], pageVariants: [], productClass: '', fit: '', prices: [],
+      visualFindings: [], confidence: 'HIGH', explanation: 'Visible fields extracted from the attached PDF.'
+    },
+  }),
 });
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
@@ -208,7 +237,7 @@ function parseStructured(text, source) {
     const value = raw[name];
     if (spec.type === 'string[]') {
       const list = Array.isArray(value) ? value : (typeof value === 'string' && value.trim() ? [value] : []);
-      data[name] = list.filter(item => typeof item === 'string' || typeof item === 'number').map(item => String(item).trim().slice(0, spec.max)).filter(Boolean).slice(0, 10);
+      data[name] = list.filter(item => typeof item === 'string' || typeof item === 'number').map(item => String(item).trim().slice(0, spec.max)).filter(Boolean).slice(0, Math.max(1, Number(spec.items) || 10));
       continue;
     }
     if (value != null && typeof value !== 'string' && typeof value !== 'number') { errors.push(`type:${name}`); data[name] = ''; continue; }
