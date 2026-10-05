@@ -107,4 +107,8 @@ test('refresh UI shows classified cause, responsibility and action instead of a 
   assert.match(APP, /showSourceRefreshFailureModal\(err\.message,err\.repairAction\|\|null,err\.diagnosis\|\|null\)/);
   assert.match(APP, /const diagnosisDetails=failed&&diagnosis/);
   assert.match(APP, /failed\?\(diagnosisSummary\|\|/);
+  assert.match(APP, /function showAntrepoFallbackWarning\(fallback\)/);
+  assert.match(APP, /IAS canlı verisi güncellenemedi — son başarılı veri korunuyor/);
+  assert.match(APP, /if\(antrepoFallback\)showAntrepoFallbackWarning\(antrepoFallback\)/);
+  assert.match(APP, /Yenileme kaynak uyarısıyla tamamlandı/);
 });
