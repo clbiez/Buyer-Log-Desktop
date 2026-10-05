@@ -56,6 +56,12 @@ test('visible Collection models read BOM summaries with one local batch request'
   );
 });
 
+
+test('Set Style Artwork keeps child A/B summary instead of merging placements', () => {
+  assert.match(COLUMN, /entry\.isSetStyle && String\(entry\.artworkSummary/);
+  assert.match(COLUMN, /white-space:pre-line/);
+});
+
 test('Artwork cell can open the full BOM detail view on double click', () => {
   assert.match(COLUMN, /addEventListener\('dblclick'/);
   assert.match(COLUMN, /_loadScript\('plm-bom\.js'\)/);
