@@ -643,10 +643,26 @@ function init(){
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
+/* Aynı Backlog detay çekmecesi başka özet ekranlarından da açılabilir.
+   Dış modül yalnız normalize edilmiş item listesini verir; çizim, PLM SYNC,
+   görseller ve tablo davranışı burada tek kaynak olarak kalır. */
+function openExternalItems(externalItems,options){
+  const opts=options&&typeof options==='object'?options:{};
+  const list=Array.isArray(externalItems)?externalItems.filter(Boolean):[];
+  if(!list.length)return false;
+  openDrawer({
+    title:String(opts.title||L('Sipariş detayı','Order detail')),
+    subtitle:String(opts.subtitle||''),
+    stage:String(opts.stage||''),
+    items:list
+  });
+  return true;
+}
+
 /* Excel Backlog V3 seçenekleri ve kırılım tercihi app-main'deki dışa aktarım
    akışına buradan verilir. */
 window.BLBacklogOverview={
-  onBacklogRendered,refresh:()=>refresh(true),
+  onBacklogRendered,refresh:()=>refresh(true),openItems:openExternalItems,
   exportOptions:()=>({includePlanActual:state.exportPlanActual!==false,includeLegacy:state.exportLegacy!==false,groupBy:state.groupBy}),
   setExportOption:(key,value)=>{if(key==='includePlanActual')state.exportPlanActual=!!value;if(key==='includeLegacy')state.exportLegacy=!!value;saveState();},
 };
