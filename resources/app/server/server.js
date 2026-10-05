@@ -7026,12 +7026,16 @@ async function loadFromModels(value, targets = null, options = {}) {
     // sorgulanamazsa bütün Buyer Log yenilemesini bloke etme. Yalnız daha önce
     // başarıyla yayınlanmış IAS snapshot'ı varsa onu koru; yeni/eksik veri üretme.
     allowStaleAntrepoFallback: antrepoMode === 'database' && needsAntrepo,
-    previousAntrepoMapByTarget: runtime.antrepoMapByTarget || null,
-    previousAntrepoMap: runtime.antrepoMap || null,
-    previousAntrepoLoadedAt: runtime.modelRefresh && runtime.modelRefresh.antrepoLiveAt
-      || runtime.modelRefresh && runtime.modelRefresh.at
-      || runtime.loadedAt
-      || null,
+    // Başka bir kaynak modundan (Excel/Dashboard) kalmış antrepo verisini
+    // "son başarılı IAS" diye yeniden kullanmayız. Fallback yalnız önceki
+    // yayın da gerçekten IAS Database kaynağından geldiyse açılır.
+    previousAntrepoMapByTarget: runtime.modelRefresh && runtime.modelRefresh.antrepoSourceMode === 'database'
+      ? (runtime.antrepoMapByTarget || null) : null,
+    previousAntrepoMap: runtime.modelRefresh && runtime.modelRefresh.antrepoSourceMode === 'database'
+      ? (runtime.antrepoMap || null) : null,
+    previousAntrepoLoadedAt: runtime.modelRefresh && runtime.modelRefresh.antrepoSourceMode === 'database'
+      ? (runtime.modelRefresh.antrepoLiveAt || runtime.modelRefresh.at || runtime.loadedAt || null)
+      : null,
     presetAsasOrdersByTarget,
     presetLfl: asasExcel && needsLfl && lflMode === 'excel' ? { rows: asasExcel.lflRows, meta: asasExcel.lflMeta } : null,
     signal: options.signal,
