@@ -81,12 +81,33 @@ test('AI visual finding stays REVIEW and never becomes deterministic ERROR by it
   assert.equal(visual.source,'LCW AI');
 });
 
+
+test('price tag scope does not create false composition/care errors and keeps unsupported CP fields NOT_CHECKED',()=>{
+  const ai={
+    documentType:'PRICE_TAG',modelCodes:['FORTNITE-4-YD'],colourCodes:['GDA'],colours:['DULL GREEN'],
+    orderNumbers:['1381184'],countries:['India'],sizes:['8y-9y'],barcodes:['8685010660219'],qrCodes:['https://example.invalid/item'],
+    pageVariants:['page=1|size=8y-9y|barcode=8685010660219'],prices:['499,99 TL'],productClass:'T-Shirt',fit:'Regular Fit',
+    visualFindings:[],confidence:'HIGH',explanation:'visible'
+  };
+  const report=engine.compare(engine.mergeExtraction({},ai),CP);
+  const byRule=Object.fromEntries(report.checks.map(check=>[check.rule,check]));
+  assert.equal(byRule.COMPOSITION_MATCH.status,'NOT_CHECKED');
+  assert.equal(byRule.CARE_INSTRUCTION_MATCH.status,'NOT_CHECKED');
+  assert.equal(byRule.WARNING_MATCH.status,'NOT_CHECKED');
+  assert.equal(byRule.SIZE_RANGE_MATCH.status,'NOT_CHECKED');
+  assert.equal(byRule.BARCODE_MATCH.status,'NOT_CHECKED');
+  assert.equal(byRule.BARCODE_READABLE.status,'MATCH');
+  assert.equal(byRule.QR_READABLE.status,'MATCH');
+  assert.equal(byRule.PRICE_MATCH.status,'NOT_CHECKED');
+});
+
 test('LCW AI layout-control contract keeps multi-page arrays beyond legacy ten-item cap',()=>{
   const payload={
     documentType:'PRICE_TAG',
     modelCodes:['FORTNITE-3-YD'],
     sizes:Array.from({length:14},(_,i)=>(i+1)+'y-'+(i+2)+'y'),
     barcodes:Array.from({length:14},(_,i)=>String(8685000000000+i)),
+    qrCodes:['https://example.invalid/qr'],
     pageVariants:Array.from({length:14},(_,i)=>'page='+(i+1)+'|size='+(i+1)+'y-'+(i+2)+'y|barcode='+(8685000000000+i)),
     confidence:'HIGH',
     explanation:'Clearly visible'
@@ -96,6 +117,7 @@ test('LCW AI layout-control contract keeps multi-page arrays beyond legacy ten-i
   assert.equal(parsed.data.sizes.length,14);
   assert.equal(parsed.data.barcodes.length,14);
   assert.equal(parsed.data.pageVariants.length,14);
+  assert.equal(parsed.data.qrCodes.length,1);
   assert.equal(parsed.data.documentType,'PRICE_TAG');
 });
 
