@@ -81,7 +81,10 @@
           return;
         }
         const placements = Array.isArray(entry.placements) ? entry.placements : [];
+        const setComponents = Array.isArray(entry.setComponents) ? entry.setComponents : [];
+        const isSet = entry.isSetStyle === true || setComponents.length > 0;
         const rows = placements.map(item => `<tr>
+          ${isSet ? `<td><b>${esc(item.setPart || '—')}</b></td>` : ''}
           <td>${esc(isEn() ? (item.placementEn || item.placement) : (item.placementTr || item.placement))}${item.aiResolved ? ` <span class="cpaPlm tone-ok">AI</span>` : ''}</td>
           <td>${esc(item.printType || item.categoryName || 'Print')}</td>
           <td>${esc(item.componentCode || '—')}</td>
@@ -91,15 +94,28 @@
           <td>${esc(item.graphicApprovalStatusName || '—')}</td>
         </tr>`).join('');
         const ai = entry.ai || {};
-        const summary = entry.hasPrint ? entry.summary : L('Baskı yok', 'No print');
+        const summary = isSet ? (entry.artworkSummary || entry.summary || L('Baskı yok', 'No print')) : (entry.hasPrint ? entry.summary : L('Baskı yok', 'No print'));
+        const setRows = setComponents.map(item => `<tr>
+          <td><b>${esc(item.label || '—')}</b></td>
+          <td>${esc(item.childPlmId || '—')}</td>
+          <td>${esc(item.childStyleName || '—')}</td>
+          <td>${esc(item.specialCode || '—')}</td>
+          <td>${esc(item.fabric || '—')}</td>
+          <td>${esc(item.bomSummary || L('Baskı yok', 'No print'))}</td>
+        </tr>`).join('');
         body.innerHTML = `
           <div class="cpaChips">
             <div class="cpaChip is-static"><span class="l">${esc(L('Baskı', 'Print'))}</span><b>${esc(summary)}</b></div>
+            ${isSet && entry.fabricSummary ? `<div class="cpaChip is-static"><span class="l">${esc(L('Kumaş', 'Fabric'))}</span><span class="q">${esc(entry.fabricSummary)}</span></div>` : ''}
             <div class="cpaChip is-static"><span class="l">${esc(L('Kaynak', 'Source'))}</span><span class="q">CoreNectum BOM · ${esc(dateTime(entry.fetchedAt))}</span></div>
             <div class="cpaChip is-static"><span class="l">AI</span><span class="cpaPlm tone-${toneForAi(ai)}">${esc(aiText(ai))}</span>${ai.model ? `<span class="q">${esc(ai.model)}${ai.confidence ? ' · ' + esc(ai.confidence) : ''}</span>` : ''}</div>
           </div>
+          ${setRows ? `<div class="cpaScroll"><table class="cpaTable"><thead><tr>
+            <th>${esc(L('Parça', 'Part'))}</th><th>PLM</th><th>${esc(L('Model', 'Model'))}</th><th>Special Code</th>
+            <th>${esc(L('Kumaş', 'Fabric'))}</th><th>Artwork / BOM</th>
+          </tr></thead><tbody>${setRows}</tbody></table></div>` : ''}
           ${rows ? `<div class="cpaScroll"><table class="cpaTable"><thead><tr>
-            <th>${esc(L('Yerleşim', 'Placement'))}</th><th>${esc(L('Teknik', 'Technique'))}</th><th>Component</th>
+            ${isSet ? `<th>${esc(L('Parça', 'Part'))}</th>` : ''}<th>${esc(L('Yerleşim', 'Placement'))}</th><th>${esc(L('Teknik', 'Technique'))}</th><th>Component</th>
             <th>${esc(L('PLM Açıklaması', 'PLM Description'))}</th><th>${esc(L('Baskı Adedi', 'Print Count'))}</th>
             <th>${esc(L('BOM Miktarı', 'BOM Quantity'))}</th><th>${esc(L('Grafik Onayı', 'Graphic Approval'))}</th>
           </tr></thead><tbody>${rows}</tbody></table></div>`
