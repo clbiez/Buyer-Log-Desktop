@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.244",
+      "publishedAt": "2026-10-05",
+      "title": {
+        "tr": "Backlog düzeninde alt detay raporları ve kullanım iyileştirmeleri",
+        "en": "Backlog-style detail reports and usability improvements"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 4,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.244/release.json"
+    },
+    {
       "version": "7.0.243",
       "publishedAt": "2026-10-05",
       "title": {
