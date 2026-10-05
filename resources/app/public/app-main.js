@@ -12472,6 +12472,14 @@ window.BLAIScreenData = {
   overviewCpRows: () => { try { return ovFilteredCpRows(); } catch (_) { return []; } },
   cpColumns: () => { try { return visibleCols('cp').map(col => ({ key: col.k, label: String(col.label || col.k) })); } catch (_) { return []; } },
   backlogQuery: () => { try { return typeof backlogExportQueryParams === 'function' ? backlogExportQueryParams() : null; } catch (_) { return null; } },
+  // Backlog ekranı (backlog-overview.js) hiç açılmamış olsa da LCW AI bağlamı
+  // için aynı dışa aktarma uç noktasından satırlar alınır.
+  backlogRows: async query => {
+    const response = await fetch(`/api/backlog-export?${new URLSearchParams(query || {}).toString()}`, { credentials: 'same-origin' });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(body && body.error ? body.error : `HTTP ${response.status}`);
+    return Array.isArray(body.rows) ? body.rows : [];
+  },
   pageTitle: tab => { const item = APP_PAGE_META[tab]; return item ? (appLang === 'en' ? item.en : item.tr) : tab; },
 };
 // Üst çubuktaki LCW AI düğmesi: her ekrandan genel LCW AI çalışma alanına.

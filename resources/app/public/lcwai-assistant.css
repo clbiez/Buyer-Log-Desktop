@@ -74,6 +74,17 @@
 .lcwaiChatEmpty b{font-size:16px;color:var(--ink);}
 .lcwaiExamples{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;}
 .lcwaiExamples .lcwaiBtn{height:auto;padding:6px 10px;text-align:left;white-space:normal;}
+/* Boş ekran yönlendirmesi: 1) giriş 2) konu (ekran) seçimi */
+.lcwaiOnboard{max-width:760px;justify-items:center;}
+.lcwaiStep{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--line2);background:var(--card2);color:var(--ink);font:600 13px/1 var(--head);}
+.lcwaiTopics{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;width:100%;margin-top:4px;}
+.lcwaiTopic{display:grid;gap:3px;text-align:left;padding:10px 12px;border:1px solid var(--line2);background:var(--card);color:var(--ink);cursor:pointer;font:inherit;}
+.lcwaiTopic b{font-size:13px;}
+.lcwaiTopic small{font-size:11px;color:var(--muted);line-height:1.35;}
+.lcwaiTopic:hover{background:var(--card2);border-color:var(--line3,var(--line2));}
+.lcwaiTopic.is-active{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);}
+.lcwaiTopic:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.lcwaiAuto{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink2);cursor:pointer;user-select:none;}
 .lcwaiMsg{max-width:min(860px,92%);display:flex;flex-direction:column;gap:4px;}
 .lcwaiMsg.is-user{align-self:flex-end;}
 .lcwaiMsg.is-user .lcwaiMsgBody{background:var(--acc-bg);color:var(--ink);padding:8px 11px;border:1px solid var(--line);}

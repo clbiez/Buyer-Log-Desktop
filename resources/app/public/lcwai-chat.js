@@ -103,11 +103,13 @@
     api.registerContextProvider({
       id: 'backlog', screen: 'backlog', label: { tr: 'Backlog', en: 'Backlog' },
       getOptions() {
-        const ready = window.BLBacklogRows && window.BLAIScreenData && window.BLAIScreenData.backlogQuery();
+        const ready = window.BLAIScreenData && window.BLAIScreenData.backlogQuery();
         return ready ? [{ id: 'rows', label: { tr: 'Backlog kayıtları (aktif filtre)', en: 'Backlog records (active filter)' }, detail: { tr: 'Tüm satırlar · CSV dosyası olarak', en: 'All rows · as a CSV file' } }] : [];
       },
       async build() {
-        const rows = await window.BLBacklogRows.load(window.BLAIScreenData.backlogQuery());
+        // Backlog ekranı hiç açılmamış olsa da veri sunucudan doğrudan alınır.
+        const query = window.BLAIScreenData.backlogQuery();
+        const rows = window.BLBacklogRows ? await window.BLBacklogRows.load(query) : await window.BLAIScreenData.backlogRows(query);
         const columns = Object.keys(rows[0] || {}).filter(key => !key.startsWith('_'));
         return { label: L('Backlog — kayıtlar', 'Backlog — records'), screen: 'backlog', summary: L(`${rows.length} Backlog satırı.`, `${rows.length} Backlog rows.`), columns, rows: rows.map(row => columns.map(key => cellValue(row[key]))), totalRows: rows.length };
       },
@@ -119,7 +121,53 @@
     conversations: [], activeId: '', files: [], contexts: [], busy: false, requestId: '', config: null, status: null, mounted: false,
     // Yanıt biçimi: '' = sohbet; pdf/pptx/xlsx/html = AI Çıktı Oluşturma.
     output: { format: '', orientation: 'portrait', detail: 'standard' },
+    // Mesajda ekran adı geçerse o ekranın verisi otomatik eklenir. Kapatılabilir;
+    // tercih yalnız bu oturumda tutulur (bu modül tarayıcı deposuna yazmaz).
+    autoContext: true,
   };
+
+  /* ---------------- Otomatik bağlam ----------------
+     Kullanıcı "Backlog'da…", "CP'deki…", "bu ekranda…" dediğinde ve elle
+     bağlam eklemediyse ilgili ekranın verisi otomatik eklenir. Konu
+     kartları ve otomatik seçim aynı ekran listesini kullanır. */
+  const SCREEN_HINTS = [
+    ['backlog', /\bbacklog/i],
+    ['cp', /\bcp\b|cp[- ]?tracker|cp takip/i], // i18n-ignore
+    ['orders', /sipari[şs]ler|sipari[şs] (listesi|ekran|tablo)|\borders? (screen|table|tab|list)|\borders ekran/i], // i18n-ignore
+    ['shipping', /nakliye|navlun|shipping|freight/i], // i18n-ignore
+    ['koleksiyon', /koleksiyon|\bcollection/i], // i18n-ignore
+    ['overview', /\boverview|genel bak[ıi][şs]/i], // i18n-ignore
+  ];
+  const THIS_SCREEN = /bu ekran|bu tablo|bu sayfa|this screen|this table|this page/i; // i18n-ignore
+  function detectScreens(text) {
+    const value = String(text || '');
+    const screens = SCREEN_HINTS.filter(([, re]) => re.test(value)).map(([screen]) => screen);
+    if (!screens.length && THIS_SCREEN.test(value) && window.BLAIScreenData) screens.push(window.BLAIScreenData.lastTab());
+    return [...new Set(screens)].slice(0, 2);
+  }
+  /* Ekran → varsayılan bağlam seçeneği: seçili kayıt varsa onlar, yoksa
+     görünen/tüm kayıtlar (yalnız-filtre seçeneği otomatik seçilmez). */
+  function defaultContextFor(screen, groups) {
+    const group = groups.find(item => item.screen === screen);
+    if (!group) return null;
+    const option = group.options.find(item => /:selected$/.test(item.id)) || group.options.find(item => !/:filters$/.test(item.id));
+    return option ? { id: option.id, label: `${group.label} — ${option.label}` } : null;
+  }
+  function autoContextsFor(text) {
+    const api = AI();
+    if (!api || !state.autoContext) return [];
+    const groups = api.getAvailableContext({});
+    return detectScreens(text).map(screen => defaultContextFor(screen, groups)).filter(Boolean);
+  }
+  const TOPIC_PROMPTS = {
+    backlog: () => [L('Backlog’daki gecikmeleri analiz et ve en riskli 10 siparişi tablo hâlinde göster.', 'Analyse the delays in the Backlog and show the 10 riskiest orders as a table.'), L('Backlog’u tedarikçiye göre özetle; geç kalanları vurgula.', 'Summarise the Backlog by supplier and highlight late orders.')],
+    cp: () => [L('CP Tracker’da önceliği yüksek ama gecikmeli modelleri listele.', 'List high-priority but delayed models in the CP Tracker.'), L('CP Tracker verisinden yönetici özeti hazırla.', 'Prepare an executive summary from the CP Tracker data.')],
+    orders: () => [L('Siparişlerde termin riski taşıyanları ülke bazında özetle.', 'Summarise orders at delivery risk by country.'), L('Siparişleri lisansa göre grupla ve toplam adetleri ver.', 'Group the orders by license and give the total quantities.')],
+    shipping: () => [L('Nakliye kıyaslamasında en maliyetli rotaları göster.', 'Show the most expensive routes in the shipping comparison.')],
+    koleksiyon: () => [L('Koleksiyonda fiyat hedefini tutturamayan modelleri listele.', 'List the collection models that miss their price target.')],
+    overview: () => [L('Overview’daki CP kümesinden durum özeti çıkar.', 'Give a status summary of the Overview CP set.')],
+  };
+  let activeTopic = '';
   const OUTPUT_FORMATS = () => [
     { key: '', label: L('Sohbet', 'Chat') },
     { key: 'pdf', label: 'PDF' },
@@ -170,6 +218,7 @@
             <div class="lcwaiComposerRow">
               <button type="button" class="lcwaiBtn" data-chat-file>＋ ${esc(L('Dosya Ekle', 'Add File'))}</button>
               <div class="lcwaiContextWrap"><button type="button" class="lcwaiBtn" data-chat-context aria-haspopup="menu">${esc(L('Bağlam Ekle', 'Add Context'))} ▾</button><div class="lcwaiContextMenu" data-chat-context-menu role="menu" hidden></div></div>
+              <label class="lcwaiAuto" title="${esc(L('Mesajda ekran adı geçerse (Backlog, CP, Siparişler…) o ekranın verisi otomatik eklenir.', 'If your message names a screen (Backlog, CP, Orders…) that screen’s data is added automatically.'))}"><input type="checkbox" data-chat-auto${state.autoContext ? ' checked' : ''}> ${esc(L('Otomatik bağlam', 'Auto context'))}</label>
               <span class="lcwaiNote" data-chat-limits></span>
               <span style="flex:1"></span>
               <button type="button" class="lcwaiBtn" data-chat-cancel hidden>${esc(L('İptal', 'Cancel'))}</button>
@@ -263,11 +312,27 @@
     if (!box) return;
     const conv = activeConversation();
     if (!conv.messages.length) {
-      box.innerHTML = `<div class="lcwaiChatEmpty"><b>${esc(L('LCW AI’a istediğinizi sorun', 'Ask LCW AI anything'))}</b><p>${esc(L('Serbest soru sorabilir, dosya ekleyebilir ya da “Bağlam Ekle” ile Buyer Log verisini (filtreli kayıtlar, seçili siparişler…) isteğe bağlı olarak ekleyebilirsiniz.', 'Ask freely, attach files, or optionally add Buyer Log data (filtered records, selected orders…) with “Add Context”.'))}</p><div class="lcwaiExamples">${EXAMPLES().map(text => `<button type="button" class="lcwaiBtn" data-chat-example="${esc(text)}">${esc(text)}</button>`).join('')}</div></div>`;
+      box.innerHTML = emptyStateHtml();
       return;
     }
     box.innerHTML = conv.messages.map((message, index) => messageHtml(message, index, conv)).join('');
     box.scrollTop = box.scrollHeight;
+  }
+
+  /* Boş ekran: önce giriş, sonra "ne hakkında konuşalım?" konu seçimi. */
+  function emptyStateHtml() {
+    const status = state.status;
+    if (!status || !status.connected) {
+      const checking = !status;
+      const waiting = status && status.loginInProgress;
+      return `<div class="lcwaiChatEmpty lcwaiOnboard"><span class="lcwaiStep">1</span><b>${esc(L('Önce LCW AI’a giriş yapın', 'First, sign in to LCW AI'))}</b><p>${esc(checking ? L('LCW AI oturumu kontrol ediliyor…', 'Checking the LCW AI session…') : waiting ? L('Giriş bekleniyor… Açılan LCW AI penceresinde kurumsal hesabınızla giriş yapın.', 'Waiting for sign-in… Sign in with your corporate account in the LCW AI window.') : L('Kurumsal hesabınızla bir kez giriş yapın; sonrasında Buyer Log oturumu arka planda kendisi yeniler. Buyer Log parolanızı görmez.', 'Sign in once with your corporate account; after that Buyer Log renews the session in the background. Buyer Log never sees your password.'))}</p>${checking || waiting ? '' : `<div><button type="button" class="lcwaiBtn is-primary" data-chat-login>${esc(L('LCW AI Girişi Yap', 'Sign in to LCW AI'))}</button></div>`}</div>`;
+    }
+    const api = AI();
+    const groups = api ? api.getAvailableContext({ preferScreen: window.BLAIScreenData ? window.BLAIScreenData.lastTab() : '' }) : [];
+    const topics = groups.map(group => `<button type="button" class="lcwaiTopic${activeTopic === group.screen ? ' is-active' : ''}" data-chat-topic="${esc(group.screen)}"><b>${esc(group.label)}</b><small>${esc(group.options.filter(option => !/:filters$/.test(option.id)).map(option => option.label).join(' · '))}</small></button>`);
+    topics.push(`<button type="button" class="lcwaiTopic${activeTopic === 'general' ? ' is-active' : ''}" data-chat-topic="general"><b>${esc(L('Genel soru', 'General question'))}</b><small>${esc(L('Buyer Log verisi eklemeden', 'Without Buyer Log data'))}</small></button>`);
+    const prompts = activeTopic && TOPIC_PROMPTS[activeTopic] ? TOPIC_PROMPTS[activeTopic]() : activeTopic === 'general' ? EXAMPLES().slice(1) : [];
+    return `<div class="lcwaiChatEmpty lcwaiOnboard"><span class="lcwaiStep">2</span><b>${esc(L('Ne hakkında konuşalım?', 'What shall we talk about?'))}</b><p>${esc(L('Bir ekran seçin; o ekranın verisi sohbete eklenir. Ya da doğrudan yazın: mesajda ekran adı geçerse (ör. “Backlog’da…”, “CP’deki…”, “bu ekranda…”) Buyer Log ilgili veriyi otomatik ekler.', 'Pick a screen and its data is added to the chat. Or just type: if your message names a screen (e.g. “in the Backlog…”, “in CP…”, “on this screen…”) Buyer Log adds that data automatically.'))}</p><div class="lcwaiTopics">${topics.join('')}</div>${prompts.length ? `<div class="lcwaiExamples">${prompts.map(text => `<button type="button" class="lcwaiBtn" data-chat-example="${esc(text)}">${esc(text)}</button>`).join('')}</div>` : ''}${groups.length ? '' : `<p class="lcwaiNote">${esc(L('Henüz paylaşılabilir ekran verisi yok; CP, Siparişler gibi ekranlar yüklendiğinde burada görünür.', 'No screen data to share yet; screens such as CP or Orders appear here once loaded.'))}</p>`}</div>`;
   }
 
   function renderChips() {
@@ -291,6 +356,7 @@
   function renderConnection() {
     const box = $('[data-chat-conn]');
     if (!box) return;
+    if (!activeConversation().messages.length) renderMessages();
     const status = state.status;
     const model = $('[data-chat-model]');
     if (model && AI()) model.textContent = AI().modelLabel;
@@ -334,9 +400,11 @@
     const conv = activeConversation();
     const message = String(text || '').trim();
     const files = reuse ? [] : state.files.filter(item => !item.error).map(item => item.file);
-    const contextIds = reuse ? [] : state.contexts.map(item => item.id);
+    // Elle bağlam eklenmediyse mesajdaki ekran adına göre otomatik bağlam.
+    const auto = reuse || state.contexts.length ? [] : autoContextsFor(text);
+    const contextIds = reuse ? [] : [...state.contexts.map(item => item.id), ...auto.map(item => item.id)];
     if (!message && !files.length && !reuse) return;
-    const userMessage = reuse || { role: 'user', text: message, contextLabels: state.contexts.map(item => item.label), fileNames: files.map(file => file.name), contexts: null, attachments: null, output: state.output.format ? { ...state.output } : null };
+    const userMessage = reuse || { role: 'user', text: message, contextLabels: [...state.contexts.map(item => item.label), ...auto.map(item => `${item.label} · ${L('otomatik', 'automatic')}`)], fileNames: files.map(file => file.name), contexts: null, attachments: null, output: state.output.format ? { ...state.output } : null };
     const output = userMessage.output || null;
     if (!reuse) conv.messages.push(userMessage);
     if (!conv.title) conv.title = (message || files.map(file => file.name).join(', ')).slice(0, 60);
@@ -465,6 +533,18 @@
     if (target.matches('[data-chip-context]')) { state.contexts.splice(Number(target.dataset.chipContext), 1); renderChips(); return; }
     if (target.matches('[data-chat-cancel]')) { AI()?.cancel(state.requestId); return; }
     if (target.matches('[data-chat-login]')) { AI()?.connect().then(status => { state.status = status; renderConnection(); }).catch(() => {}); return; }
+    if (target.matches('[data-chat-topic]')) {
+      activeTopic = target.dataset.chatTopic;
+      if (activeTopic !== 'general') {
+        const api = AI();
+        const choice = api ? defaultContextFor(activeTopic, api.getAvailableContext({})) : null;
+        if (choice && !state.contexts.some(item => item.id === choice.id)) state.contexts.push(choice);
+        renderChips();
+      }
+      renderMessages();
+      input.focus();
+      return;
+    }
     if (target.matches('[data-chat-example]')) { input.value = target.dataset.chatExample; input.focus(); return; }
     if (target.matches('[data-msg-copy]')) { const message = activeConversation().messages[Number(target.dataset.msgCopy)]; if (message) copyText(message.text, target); return; }
     if (target.matches('[data-msg-reuse]')) { const message = activeConversation().messages[Number(target.dataset.msgReuse)]; if (message) { input.value = `${input.value ? `${input.value}\n\n` : ''}${message.text}`; input.focus(); } return; }
@@ -480,6 +560,9 @@
     form.addEventListener('submit', event => { event.preventDefault(); send(input.value); });
     $('[data-output-orientation]').addEventListener('change', event => { state.output.orientation = event.target.value === 'landscape' ? 'landscape' : 'portrait'; });
     $('[data-output-detail]').addEventListener('change', event => { state.output.detail = event.target.value; });
+    $('[data-chat-auto]').addEventListener('change', event => {
+      state.autoContext = Boolean(event.target.checked);
+    });
     input.addEventListener('keydown', event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); send(input.value); } });
     fileInput.addEventListener('change', () => {
       const limits = state.config && state.config.limits || { maxFilesPerRequest: 5, maxFileBytes: 20 * 1048576 };
@@ -534,5 +617,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml };
 })();
