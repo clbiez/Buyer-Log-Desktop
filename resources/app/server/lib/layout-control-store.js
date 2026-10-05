@@ -39,6 +39,19 @@ function normalizeSummary(raw){
     status:status(item.status,['APPROVED','REVIEW','ERROR'],'REVIEW'),
   };
 }
+function summaryFromChecks(checks,raw){
+  const list=Array.isArray(checks)?checks:[];
+  if(!list.length)return normalizeSummary(raw);
+  const out={passed:0,review:0,errors:0,notChecked:0,status:'APPROVED'};
+  for(const check of list){
+    if(check.status==='MATCH')out.passed+=1;
+    else if(check.status==='MISMATCH')out.errors+=1;
+    else if(check.status==='REVIEW')out.review+=1;
+    else if(check.status==='NOT_CHECKED')out.notChecked+=1;
+  }
+  out.status=out.errors?'ERROR':(out.review?'REVIEW':'APPROVED');
+  return out;
+}
 function normalizeRun(raw,nowFallback){
   const item=raw&&typeof raw==='object'?raw:{};
   const checks=(Array.isArray(item.checks)?item.checks:[]).slice(0,MAX_CHECKS).map(normalizeCheck).filter(check=>check.rule);
@@ -50,7 +63,7 @@ function normalizeRun(raw,nowFallback){
     documentType:status(item.documentType,['CARE_LABEL','PRICE_TAG','UNKNOWN'],'UNKNOWN'),
     modelCodes:list(item.modelCodes,12,120),
     colourCodes:list(item.colourCodes,12,80),
-    summary:normalizeSummary(item.summary),
+    summary:summaryFromChecks(checks,item.summary),
     checks,
     aiFindings:checks.filter(check=>check.source==='LCW AI'||check.rule.startsWith('AI_VISUAL_')).slice(0,30),
     referenceRowCount:number(item.referenceRowCount),
@@ -104,4 +117,4 @@ function clear(ownerId){
   return {cleared:count,revision:saved.revision,updatedAt:saved.updatedAt};
 }
 
-module.exports={ROOT,SCHEMA_VERSION,MAX_RUNS,MAX_CHECKS,ownerKey,fileFor,emptyStore,normalizeRun,normalizeStore,load,add,listRuns,clear};
+module.exports={ROOT,SCHEMA_VERSION,MAX_RUNS,MAX_CHECKS,ownerKey,fileFor,emptyStore,normalizeSummary,summaryFromChecks,normalizeRun,normalizeStore,load,add,listRuns,clear};
