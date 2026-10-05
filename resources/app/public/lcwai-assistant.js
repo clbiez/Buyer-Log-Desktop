@@ -587,7 +587,17 @@
       if (failure) throw failure;
       if (!result) throw lcwError({ code: controller.signal.aborted ? 'LCWAI_CANCELLED' : 'LCWAI_STREAM_INTERRUPTED' });
       if (result.model && result.model.label) modelLabel = String(result.model.label);
-      return result.output && result.output.pending === 'pdf' ? await finalizePdf(result, onProgress) : result;
+      let finalResult = result;
+      // Çıktı model görseli kullanıyorsa: görseller renderer'da (yerel depo)
+      // çözülür, sunucu dosyayı görsellerle oluşturur.
+      if (finalResult.output && finalResult.output.pending === 'images') {
+        const pending = finalResult.output;
+        let images = {};
+        try { images = typeof options.resolveImages === 'function' ? (await options.resolveImages(pending.tokens || [])) || {} : {}; } catch (_) { images = {}; }
+        const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(pending.pendingId || ''))}/images`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images }) });
+        finalResult = { ...finalResult, output: data.output };
+      }
+      return finalResult.output && finalResult.output.pending === 'pdf' ? await finalizePdf(finalResult, onProgress) : finalResult;
     } catch (error) {
       if (needsLogin(error)) getStatus({ refresh: false }).catch(() => {});
       throw error;

@@ -1,7 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.242",
-  "commit_sha": "cd0884bb786c45e40118258a1bae2468877c309c",
-  "release_notes": "Buyer Log 7.0.242: IASv2 calculated-column processing sorunlarında yenileme artık tüm akışı gereksiz yere durdurmaz; güvenliyse son başarılı IAS snapshot'ını korur. Yenileme hataları artık VPN/ağ varsayımı yapmak yerine gerçek nedeni, kaynağı, sorumlu alanı ve yapılacak aksiyonu net gösterir. Buyer Log 7.0.242: refresh now preserves the last known-good IAS snapshot when safe during IASv2 calculated-column processing issues, and refresh failures clearly identify the real cause, source, owner and next action instead of making generic VPN/network assumptions.",
-  "request_id": "7.0.242-r2"
+  "version": "7.0.243",
+  "commit_sha": "5d2709551058a65ec3c575b614ad80e092b01bcf",
+  "release_notes": "Buyer Log 7.0.243: LCW AI ile oluşturulan HTML, PDF, PowerPoint ve Excel dosyalarına Buyer Log’daki gerçek model görselleri eklenir; görseller LCW AI’a gönderilmez. Real model images in LCW AI outputs."
 }

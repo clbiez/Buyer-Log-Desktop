@@ -145,6 +145,19 @@ app.get('/api/lcwai/outputs', (req, res) => {
     } catch (error) { fail(res, error); }
   });
 
+  // Çıktının kullandığı model görselleri: renderer yerel depodan çözer
+  // ({ anahtar: dataURL }); sunucu doğrular ve dosyayı görsellerle oluşturur.
+app.post('/api/lcwai/outputs/:pendingId/images', express.json({ limit: '48mb' }), (req, res) => {
+    try {
+      const output = outputsOf().completeImages(ownerOf(req), req.params.pendingId, req.body && req.body.images);
+      audit(req, 'LCWAI_OUTPUT_IMAGES', { requested: output.imagesRequested, used: output.imagesUsed });
+      res.set('Cache-Control', 'no-store').json({ ok: true, output });
+    } catch (error) {
+      if (error && error.type === 'entity.too.large') return fail(res, lcwAiError('OUTPUT_RENDER_FAILED', { detail: 'images-too-large' }));
+      fail(res, error);
+    }
+  });
+
   // Masaüstü kabuğunun (Chromium printToPDF) bastığı PDF baytları.
 app.post('/api/lcwai/outputs/:pendingId/pdf', express.raw({ type: () => true, limit: '52mb' }), (req, res) => {
     try {
