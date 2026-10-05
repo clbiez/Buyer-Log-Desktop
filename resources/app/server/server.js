@@ -7022,6 +7022,20 @@ async function loadFromModels(value, targets = null, options = {}) {
     includeAntrepo: antrepoMode === 'database' && needsAntrepo,
     includeAsas: asasMode === 'database',
     includeLfl: lflMode === 'database',
+    // IASv2'nin kendisi işlenmemiş bir calculated column yüzünden geçici olarak
+    // sorgulanamazsa bütün Buyer Log yenilemesini bloke etme. Yalnız daha önce
+    // başarıyla yayınlanmış IAS snapshot'ı varsa onu koru; yeni/eksik veri üretme.
+    allowStaleAntrepoFallback: antrepoMode === 'database' && needsAntrepo,
+    // Başka bir kaynak modundan (Excel/Dashboard) kalmış antrepo verisini
+    // "son başarılı IAS" diye yeniden kullanmayız. Fallback yalnız önceki
+    // yayın da gerçekten IAS Database kaynağından geldiyse açılır.
+    previousAntrepoMapByTarget: runtime.modelRefresh && runtime.modelRefresh.antrepoSourceMode === 'database'
+      ? (runtime.antrepoMapByTarget || null) : null,
+    previousAntrepoMap: runtime.modelRefresh && runtime.modelRefresh.antrepoSourceMode === 'database'
+      ? (runtime.antrepoMap || null) : null,
+    previousAntrepoLoadedAt: runtime.modelRefresh && runtime.modelRefresh.antrepoSourceMode === 'database'
+      ? (runtime.modelRefresh.antrepoLiveAt || runtime.modelRefresh.at || runtime.loadedAt || null)
+      : null,
     presetAsasOrdersByTarget,
     presetLfl: asasExcel && needsLfl && lflMode === 'excel' ? { rows: asasExcel.lflRows, meta: asasExcel.lflMeta } : null,
     signal: options.signal,
@@ -7210,6 +7224,13 @@ async function loadFromModels(value, targets = null, options = {}) {
     modelRefresh: {
       at: result.loadedAt,
       antrepoSourceMode: antrepoMode,
+      // Canlı IAS başarıyla geldiyse bu tur; stale-model fallback devredeyse
+      // önceki başarılı IAS zamanı korunur. Böylece bir sonraki hata halinde
+      // gerçek last-known-good snapshot yaşı kaybolmaz.
+      antrepoLiveAt: result.antrepoFallback
+        ? (runtime.modelRefresh && runtime.modelRefresh.antrepoLiveAt || runtime.modelRefresh && runtime.modelRefresh.at || runtime.loadedAt || null)
+        : (antrepoMode === 'database' && needsAntrepo ? result.loadedAt : (runtime.modelRefresh && runtime.modelRefresh.antrepoLiveAt || null)),
+      antrepoFallback: result.antrepoFallback || null,
       dashboard: result._antrepoDashboardRefresh || null,
       asasSourceMode: asasMode,
       lflSourceMode: lflMode,
