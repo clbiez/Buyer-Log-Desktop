@@ -1,10 +1,12 @@
 'use strict';
 
 /*
- * AI Outputs klasörü + metadata kaydı.
+ * LCW AI çıktı dosyaları + metadata kaydı.
  *
- * Dosyalar Buyer Log'un yerel veri kökünde tek bir klasörde toplanır
- * (<LOCAL_DATA_ROOT>/ai-outputs). Ad anlamlı ve güvenlidir:
+ * Masaüstünde ana süreç BUYER_LOG_AI_OUTPUTS_ROOT ile kullanıcının gerçek
+ * İndirilenler klasörünü verir. Tarayıcı/headless kipinde eski güvenli yerel
+ * klasör (<LOCAL_DATA_ROOT>/ai-outputs) yedek davranış olarak korunur.
+ * Ad anlamlı ve güvenlidir:
  * "<başlık> - <YYYY-MM-DD>.<uzantı>", çakışmada " (2)", " (3)"…
  *
  * Metadata (ai-outputs-index.json, klasörün yanında) yalnız dosya bilgisi
@@ -24,6 +26,20 @@ function defaultRoot() {
   if (process.env.BUYER_LOG_AI_OUTPUTS_ROOT) return process.env.BUYER_LOG_AI_OUTPUTS_ROOT;
   // user-data yalnız gerektiğinde yüklenir (testler kökü enjekte eder).
   return path.join(require('../../user-data').LOCAL_DATA_ROOT, 'ai-outputs');
+}
+
+function defaultIndexFile(rootDir) {
+  // Çıktının kendisi Downloads'a gidebilir; metadata kullanıcı profilinin
+  // köküne saçılmaz. Eski ve yeni sürümler aynı yerel index'i kullanır.
+  if (process.env.BUYER_LOG_AI_OUTPUTS_ROOT) {
+    return path.join(require('../../user-data').LOCAL_DATA_ROOT, 'ai-outputs-index.json');
+  }
+  return path.join(path.dirname(rootDir), 'ai-outputs-index.json');
+}
+
+function legacyRoot() {
+  try { return path.join(require('../../user-data').LOCAL_DATA_ROOT, 'ai-outputs'); }
+  catch (_) { return ''; }
 }
 
 /* Windows/macOS/Linux için güvenli dosya adı tabanı (Türkçe harfler korunur). */
@@ -50,7 +66,7 @@ function createOutputStore(options = {}) {
   const now = typeof options.now === 'function' ? options.now : () => new Date();
   let rootPath = options.root || null;
   const root = () => (rootPath || (rootPath = defaultRoot()));
-  const indexFile = () => options.indexFile || path.join(path.dirname(root()), 'ai-outputs-index.json');
+  const indexFile = () => options.indexFile || defaultIndexFile(root());
   const pending = new Map();
 
   function readIndex() {
@@ -116,14 +132,18 @@ function createOutputStore(options = {}) {
     return publicRecord(record);
   }
 
-  /* Sahibine ait kaydı döndürür; dosya hâlâ AI Outputs içinde ve mevcut
-     olmalıdır (index elle değiştirilse bile klasör dışına çıkılamaz). */
+  /* Sahibine ait kaydı döndürür. Yeni dosyalar Downloads'tadır; yükseltme
+     öncesinde üretilmiş kayıtlar için eski LOCAL_DATA_ROOT/ai-outputs klasörü
+     de yalnız-okuma uyumluluğu olarak kabul edilir. Her iki durumda da index
+     elle değiştirilerek başka bir klasöre çıkılamaz. */
   function get(ownerId, id) {
     const record = readIndex().find(item => item.id === String(id || '') && item.owner === String(ownerId || 'default'));
     if (!record) return null;
     const full = path.resolve(record.path);
-    const base = path.resolve(root());
-    if (path.dirname(full) !== base || !fs.existsSync(full)) return null;
+    const allowed = new Set([path.resolve(root())]);
+    const legacy = legacyRoot();
+    if (legacy) allowed.add(path.resolve(legacy));
+    if (!allowed.has(path.dirname(full)) || !fs.existsSync(full)) return null;
     return { ...publicRecord(record), path: full };
   }
 
