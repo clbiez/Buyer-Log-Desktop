@@ -7,8 +7,8 @@
     "en": "Artwork Detail column and PLM Sync connection improvements"
   },
   "summary": {
-    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir.",
-    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed."
+    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir. Artwork Detayı ön ve arka baskıyı tek BOM satırında da doğru sayar, All Over baskıyı (kumaşta yazdığı için) özete katmaz ve ön/arka teknikleri farklıysa her bölgeyi kendi tekniğiyle yazar.",
+    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed. Artwork Detail now counts front and back prints correctly even when they share one BOM line, leaves All Over prints out of the summary (they are already in Fabric) and writes each placement with its own technique when front and back differ."
   },
   "changes": [
     {
@@ -140,6 +140,39 @@
         "caption": {
           "tr": "Kurulum bitince tarayıcı ne yapacağınızı söyler: sayfayı kapatabilirsiniz.",
           "en": "After setup the browser tells you what to do: you can close the page."
+        }
+      }
+    },
+    {
+      "id": "plm-artwork-detail-placements",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "Artwork Detayı ön/arka baskıyı doğru çekiyor",
+        "en": "Artwork Detail reads front/back prints correctly"
+      },
+      "body": {
+        "tr": "PLM BOM’da tek baskı satırı birden çok bölgeyi kapsadığında (ör. “ÖN BEDEN + ARKA BEDEN + FRONT BODY + BACK BODY”) Artwork Detayı yalnız ön baskıyı sayıyordu; artık “Ön: 1 • Arka: 1 | Pigment | Toplam: 2” yazar. All Over / Tüm Beden baskı kumaş bilgisinde yer aldığı için Artwork Detayı’na ve toplam baskı sayısına katılmaz. Ön ve arkada farklı baskı teknikleri varsa her bölge kendi tekniğiyle yazılır: “Ön: 1 | Pigment • Arka: 1 | Transfer | Toplam: 2”. Mevcut modeller bir sonraki PLM SYNC’te yeni kuralla güncellenir.",
+        "en": "When a single print line in the PLM BOM covered several placements (e.g. “ÖN BEDEN + ARKA BEDEN + FRONT BODY + BACK BODY”), Artwork Detail counted only the front print; it now shows “Front: 1 • Back: 1 | Pigment | Total: 2”. All Over / All Body prints are already listed in Fabric, so they are left out of Artwork Detail and the total print count. When front and back use different print techniques, each placement is written with its own technique: “Front: 1 | Pigment • Back: 1 | Transfer | Total: 2”. Existing models are updated with the new rule on the next PLM SYNC."
+      },
+      "path": {
+        "tr": "Koleksiyon › Model Detayları › Artwork Detayı",
+        "en": "Collection › Model Details › Artwork Detail"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-artwork-detail-front-back.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda ön+arka, All Over hariç ve farklı teknikli ön/arka Artwork Detayı özetleri (demo veri)",
+          "en": "Artwork Detail summaries in the Collection table for front+back, All Over excluded and front/back with different techniques (demo data)"
+        },
+        "caption": {
+          "tr": "Ön/arka bölgeler ve teknikler PLM BOM’dan doğru yazılır; All Over kumaşta kalır.",
+          "en": "Front/back placements and techniques are written correctly from the PLM BOM; All Over stays in Fabric."
         }
       }
     },

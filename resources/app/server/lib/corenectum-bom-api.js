@@ -96,28 +96,65 @@ const PLACEMENTS = Object.freeze({
 
 function placementMeta(key) { return PLACEMENTS[key] || PLACEMENTS.other; }
 
-function detectPlacement(description) {
+/* Analiz kuralı değiştiğinde artır: BOM fingerprint'ine girer, böylece
+   verisi değişmemiş eski kayıtlar da bir sonraki PLM Sync'te yeni kuralla
+   yeniden çözümlenir. */
+const ANALYZER_VERSION = 2;
+
+const RX = Object.freeze({
+  all_over: /(^| )(all over|allover|tüm yüzey|tum yuzey|tüm beden|tum beden|all body)( |$)/,
+  left_sleeve: /(^| )(sol kol|left sleeve|left arm)( |$)/,
+  right_sleeve: /(^| )(sağ kol|sag kol|right sleeve|right arm)( |$)/,
+  both_sleeves: /(^| )(kollar|both sleeves|sleeves)( |$)/,
+  front_body: /(^| )(ön beden|on beden|front body|front panel|ön panel|on panel)( |$)/,
+  back_body: /(^| )(arka beden|back body|back panel|arka panel)( |$)/,
+  front_back: /(^| )(ön ve arka|on ve arka|ön arka beden|on arka beden|front and back|front back body)( |$)/,
+  left_leg: /(^| )(sol bacak|left leg)( |$)/,
+  right_leg: /(^| )(sağ bacak|sag bacak|right leg)( |$)/,
+  both_legs: /(^| )(bacaklar|both legs)( |$)/,
+  chest: /(^| )(göğüs|gogus|chest)( |$)/,
+  pocket: /(^| )(cep|pocket)( |$)/,
+  hood: /(^| )(kapüşon|kapuson|hood)( |$)/,
+  sleeve: /(^| )(kol|sleeve|arm)( |$)/,
+  leg: /(^| )(paça|paca|leg)( |$)/,
+});
+
+/* Bir Print satırı birden çok bölgeyi kapsayabilir
+   (ör. "ÖN BEDEN + ARKA BEDEN + FRONT BODY + BACK BODY" = Ön 1 + Arka 1).
+   Göğüs/cep gövde içi alt konumdur; gövde bölgesi yoksa tek başına sayılır. */
+function detectPlacements(description) {
   const text = norm(description);
-  if (!text) return PLACEMENTS.other;
-  if (/(^| )(all over|allover|tüm yüzey|tum yuzey)( |$)/.test(text)) return PLACEMENTS.all_over;
-  if (/(^| )(sol kol|left sleeve|left arm)( |$)/.test(text)) return PLACEMENTS.left_sleeve;
-  if (/(^| )(sağ kol|sag kol|right sleeve|right arm)( |$)/.test(text)) return PLACEMENTS.right_sleeve;
-  if (/(^| )(kollar|both sleeves|sleeves)( |$)/.test(text)) return PLACEMENTS.both_sleeves;
-  if (/(^| )(ön beden|on beden|front body|front panel|ön panel|on panel)( |$)/.test(text)) return PLACEMENTS.front_body;
-  if (/(^| )(arka beden|back body|back panel|arka panel)( |$)/.test(text)) return PLACEMENTS.back_body;
-  if (/(^| )(sol bacak|left leg)( |$)/.test(text)) return PLACEMENTS.left_leg;
-  if (/(^| )(sağ bacak|sag bacak|right leg)( |$)/.test(text)) return PLACEMENTS.right_leg;
-  if (/(^| )(bacaklar|both legs)( |$)/.test(text)) return PLACEMENTS.both_legs;
-  if (/(^| )(göğüs|gogus|chest)( |$)/.test(text)) return PLACEMENTS.chest;
-  if (/(^| )(cep|pocket)( |$)/.test(text)) return PLACEMENTS.pocket;
-  if (/(^| )(kapüşon|kapuson|hood)( |$)/.test(text)) return PLACEMENTS.hood;
-  if (/(^| )(kol|sleeve|arm)( |$)/.test(text)) return PLACEMENTS.sleeve;
-  if (/(^| )(paça|paca|leg)( |$)/.test(text)) return PLACEMENTS.leg;
-  return PLACEMENTS.other;
+  if (!text) return [PLACEMENTS.other];
+  if (RX.all_over.test(text)) return [PLACEMENTS.all_over];
+  const keys = [];
+  const frontBack = RX.front_back.test(text);
+  if (frontBack || RX.front_body.test(text)) keys.push('front_body');
+  if (frontBack || RX.back_body.test(text)) keys.push('back_body');
+  const left = RX.left_sleeve.test(text), right = RX.right_sleeve.test(text);
+  if ((left && right) || RX.both_sleeves.test(text)) keys.push('both_sleeves');
+  else if (left) keys.push('left_sleeve');
+  else if (right) keys.push('right_sleeve');
+  else if (RX.sleeve.test(text)) keys.push('sleeve');
+  const leftLeg = RX.left_leg.test(text), rightLeg = RX.right_leg.test(text);
+  if ((leftLeg && rightLeg) || RX.both_legs.test(text)) keys.push('both_legs');
+  else if (leftLeg) keys.push('left_leg');
+  else if (rightLeg) keys.push('right_leg');
+  else if (RX.leg.test(text)) keys.push('leg');
+  if (RX.hood.test(text)) keys.push('hood');
+  if (!keys.includes('front_body') && !keys.includes('back_body')) {
+    if (RX.chest.test(text)) keys.push('chest');
+    else if (RX.pocket.test(text)) keys.push('pocket');
+  }
+  if (!keys.length) return [PLACEMENTS.other];
+  const order = Object.keys(PLACEMENTS);
+  return keys.sort((a, b) => order.indexOf(a) - order.indexOf(b)).map(placementMeta);
 }
 
-function placementFromComponent(component) {
-  const place = detectPlacement(component && component.description);
+function detectPlacement(description) {
+  return detectPlacements(description)[0];
+}
+
+function placementEntry(component, place) {
   return {
     componentCode: clean(component && component.componentCode, 120),
     styleBomComponentId: clean(component && component.styleBomComponentId, 80),
@@ -134,31 +171,62 @@ function placementFromComponent(component) {
   };
 }
 
-function summaryForPlacements(placements) {
-  const list = Array.isArray(placements) ? placements : [];
+function placementFromComponent(component) {
+  return placementEntry(component, detectPlacement(component && component.description));
+}
+
+function placementsFromComponent(component) {
+  return detectPlacements(component && component.description).map(place => placementEntry(component, place));
+}
+
+/* All Over baskı kumaş detayında yazdığı için Artwork özetine/sayısına girmez.
+   Bölgeler aynı tekniği paylaşıyorsa "Ön: 1 • Arka: 1 | Pigment | Toplam: 2";
+   teknikler farklıysa her bölge kendi tekniğiyle yazılır:
+   "Ön: 1 | Pigment • Arka: 1 | Transfer | Toplam: 2". */
+function formatPlacementSummary(placements, labelOf, totalLabel, noneLabel) {
   const grouped = new Map();
   const techniques = new Set();
   let total = 0;
-  for (const item of list) {
-    const meta = placementMeta(item && item.placement);
-    const count = Math.max(1, Math.min(20, Number(item && item.count) || meta.count || 1));
+  for (const item of Array.isArray(placements) ? placements : []) {
+    if (!item || item.placement === 'all_over') continue;
+    const meta = placementMeta(item.placement);
+    const label = labelOf(item, meta);
+    const count = Math.max(1, Math.min(20, Number(item.count) || meta.count || 1));
+    const technique = clean(item.printType, 160);
     total += count;
-    grouped.set(meta.key, (grouped.get(meta.key) || 0) + count);
-    if (clean(item && item.printType, 160)) techniques.add(clean(item.printType, 160));
+    const group = grouped.get(label) || { key: meta.key, count: 0, techniques: new Set() };
+    group.count += count;
+    if (technique) { group.techniques.add(technique); techniques.add(technique); }
+    grouped.set(label, group);
   }
   const order = Object.keys(PLACEMENTS);
-  const parts = order.filter(key => grouped.has(key)).map(key => `${PLACEMENTS[key].tr}: ${grouped.get(key)}`);
+  const groups = [...grouped].sort((a, b) => order.indexOf(a[1].key) - order.indexOf(b[1].key));
+  const techOf = group => [...group.techniques].join(' + ');
+  const uniform = new Set(groups.map(([, group]) => techOf(group))).size <= 1;
+  const parts = groups.map(([label, group]) => `${label}: ${group.count}`);
   const tech = [...techniques];
+  let summary = noneLabel;
+  if (total) {
+    summary = uniform
+      ? `${parts.join(' • ')}${tech.length ? ` | ${tech.join(' + ')}` : ''} | ${totalLabel}: ${total}`
+      : `${groups.map(([label, group]) => `${label}: ${group.count}${techOf(group) ? ` | ${techOf(group)}` : ''}`).join(' • ')} | ${totalLabel}: ${total}`;
+  }
+  return { total, parts, tech, summary };
+}
+
+function summaryForPlacements(placements) {
+  const result = formatPlacementSummary(placements, (_item, meta) => meta.tr, 'Toplam', 'Baskı yok');
   return {
-    totalPrintCount: total,
-    placementSummary: parts.join(' • '),
-    techniqueSummary: tech.join(' + '),
-    summary: total ? `${parts.join(' • ')}${tech.length ? ` | ${tech.join(' + ')}` : ''} | Toplam: ${total}` : 'Baskı yok',
+    totalPrintCount: result.total,
+    placementSummary: result.parts.join(' • '),
+    techniqueSummary: result.tech.join(' + '),
+    summary: result.summary,
   };
 }
 
 function fingerprint(styleBom, components) {
   const payload = {
+    analyzerVersion: ANALYZER_VERSION,
     styleBomId: coreId(styleBom && styleBom.styleBomId) || clean(styleBom && styleBom.styleBomId, 80),
     components: (Array.isArray(components) ? components : []).map(item => ({
       styleBomComponentId: item.styleBomComponentId,
@@ -182,7 +250,7 @@ function analyzeBom(payload) {
   const normalized = bomComponents(payload).map(normalizeComponent).filter(Boolean);
   const decorations = normalized.filter(isEmbellishment);
   const prints = decorations.filter(isPrint);
-  const placements = prints.map(placementFromComponent);
+  const placements = prints.flatMap(placementsFromComponent);
   const unknown = placements.filter(item => item.placement === 'other');
   const summary = summaryForPlacements(placements);
   return {
@@ -260,8 +328,11 @@ module.exports = {
   normalizeComponent,
   isEmbellishment,
   isPrint,
+  ANALYZER_VERSION,
   detectPlacement,
+  detectPlacements,
   placementFromComponent,
+  placementsFromComponent,
   summaryForPlacements,
   analyzeBom,
   mergeAiAnalysis,

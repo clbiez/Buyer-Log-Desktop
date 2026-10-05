@@ -77,6 +77,45 @@ test('BOM parser Ön + Arka Pigment baskıyı 2 olarak çıkarır; SEE ARTWORK l
   assert.equal(result.needsAi, false);
 });
 
+test('tek Print satırı Ön + Arka bölgeyi kapsıyorsa iki baskı sayılır (SPIDERMAN-4-YD)', () => {
+  const result = bomApi.analyzeBom(payload([
+    component({ description: 'ÖN BEDEN + ARKA BEDEN + FRONT BODY + BACK BODY' }),
+  ]));
+  assert.deepEqual(result.placements.map(item => item.placement), ['front_body', 'back_body']);
+  assert.equal(result.totalPrintCount, 2);
+  assert.equal(result.summary, 'Ön: 1 • Arka: 1 | Pigment | Toplam: 2');
+  assert.equal(result.needsAi, false);
+});
+
+test('All Over (TÜM BEDEN / ALL BODY) kumaşta yazdığı için Artwork özetine girmez (PSG-6-YD)', () => {
+  const result = bomApi.analyzeBom(payload([
+    component({ componentCode: 'B1', description: 'TÜM BEDEN / ALL BODY', categoryGroupName: 'Allover' }),
+    component({ styleBomComponentId: 2, componentCode: 'B2', description: 'ÖN BEDEN / DRONT BODY' }),
+  ]));
+  assert.equal(result.placements[0].placement, 'all_over');
+  assert.equal(result.needsAi, false);
+  assert.equal(result.totalPrintCount, 1);
+  assert.equal(result.techniqueSummary, 'Pigment');
+  assert.equal(result.summary, 'Ön: 1 | Pigment | Toplam: 1');
+  const onlyAllOver = bomApi.analyzeBom(payload([component({ description: 'ALL OVER' })]));
+  assert.equal(onlyAllOver.hasPrint, false);
+  assert.equal(onlyAllOver.summary, 'Baskı yok');
+});
+
+test('Ön ve Arka farklı teknikteyse her bölge kendi tekniğiyle yazılır', () => {
+  const result = bomApi.analyzeBom(payload([
+    component(),
+    component({ styleBomComponentId: 2, componentCode: 'B2', description: 'ARKA BEDEN / BACK BODY', categoryGroupName: 'Transfer' }),
+  ]));
+  assert.equal(result.summary, 'Ön: 1 | Pigment • Arka: 1 | Transfer | Toplam: 2');
+});
+
+test('analiz kuralı sürümü fingerprint\'e girer; eski kayıtlar yeni kuralla yeniden çözümlenir', () => {
+  assert.ok(bomApi.ANALYZER_VERSION >= 2);
+  const a = bomApi.analyzeBom(payload([component()]));
+  assert.match(a.fingerprint, /^[0-9a-f]{64}$/);
+});
+
 test('belirsiz Print yerleşimi LCW AI sonucu yalnız aynı componentCode için kabul eder', () => {
   const base = bomApi.analyzeBom(payload([
     component({ componentCode: 'B-UNKNOWN', description: 'SPECIAL ART POSITION' }),
