@@ -13345,6 +13345,42 @@ function showSourceRefreshFailureModal(detail,repairAction=null,diagnosis=null){
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
 }
 
+function showAntrepoFallbackWarning(fallback){
+  if(!fallback||typeof fallback!=='object')return;
+  const en=appLang==='en';
+  const table=String(fallback.table||'').trim();
+  const column=String(fallback.column||'').trim();
+  const ref=table&&column?`'${table}'[${column}]`:(en?'an IAS calculated column':'bir IAS calculated column');
+  const rawAt=String(fallback.previousLoadedAt||'').trim();
+  let previousAt=rawAt;
+  if(rawAt){
+    const parsed=new Date(rawAt);
+    if(!Number.isNaN(parsed.getTime()))previousAt=parsed.toLocaleString(en?'en-GB':'tr-TR');
+  }
+  showSourceRefreshFailureModal('',null,{
+    category:'source-model-processing',
+    source:'IAS Database',
+    title:{
+      tr:'IAS canlı verisi güncellenemedi — son başarılı veri korunuyor',
+      en:'Live IAS data could not be refreshed — last successful data is retained',
+    },
+    summary:{
+      tr:`ASAS ve diğer bağımsız kaynaklar güncellendi; ancak ${ref} kaynak modelde yeniden hesaplanmayı/işlenmeyi beklediği için IAS canlı sorgusu tamamlanamadı. Bu ağ veya VPN hatası değil.${previousAt?` Kullanılan son başarılı IAS: ${previousAt}.`:''}`,
+      en:`ASAS and other independent sources were refreshed, but the live IAS query could not finish because ${ref} is waiting to be recalculated/processed in the source model. This is not a network or VPN problem.${previousAt?` Last successful IAS data in use: ${previousAt}.`:''}`,
+    },
+    action:{
+      tr:`${ref} kaynağın BI/model sahibi tarafından Process/Recalculate edilmelidir. Buyer Log bağlantı veya Field Mapping ayarlarını değiştirmeyin. Kaynak model düzeldikten sonra Yenile'yi tekrar çalıştırın.`,
+      en:`${ref} must be Processed/Recalculated by the source BI/model owner. Do not change Buyer Log connection or Field Mapping settings. Retry Refresh after the source model is fixed.`,
+    },
+    owner:{tr:'Kaynak BI / veri modeli',en:'Source BI / data model'},
+    code:'IAS_SOURCE_MODEL_NOT_PROCESSED',
+    technical:{
+      tr:`Buyer Log canlı IAS sonucu yerine son başarılı IAS snapshot'ını korudu.${rawAt?` Snapshot zamanı: ${rawAt}.`:''}`,
+      en:`Buyer Log retained the last successful IAS snapshot instead of publishing an incomplete live IAS result.${rawAt?` Snapshot time: ${rawAt}.`:''}`,
+    },
+  });
+}
+
 // ================= YENİLEMEYİ DURDURMA =================
 // Durdur isteği sunucudaki aktif sorgunun AbortSignal'ına iletilir. Sonuçlar
 // yayın sınırına kadar geçici tutulduğu için iptal edilen/başarısız iş eski yerel
@@ -13924,11 +13960,17 @@ async function waitForRefreshJob(expectedJob=null){
           notes:Array.isArray(summary.details)?summary.details.slice(0,8):[],
         });
       }
-      const resultMessage=( _overviewRefreshResult&&_overviewRefreshResult.hasChanges
-        ?(appLang==='en'?`Refresh completed: ${_overviewRefreshResult.totalChanges.toLocaleString('en-GB')} source-data changes found.`:`Yenileme tamamlandı: ${_overviewRefreshResult.totalChanges.toLocaleString('tr-TR')} kaynak veri değişikliği bulundu.`)
-        :(appLang==='en'?'Refresh completed. No changes were found in ASAS or ANTREPO data.':'Yenileme tamamlandı. ASAS veya ANTREPO verisinde değişiklik bulunmadı.'));
+      const antrepoFallback=data.modelRefresh&&data.modelRefresh.antrepoFallback||null;
+      const resultMessage=antrepoFallback
+        ?(appLang==='en'
+          ?'Refresh completed with a source warning: ASAS is current; the last successful IAS data is being retained because the live IAS model needs processing.'
+          :'Yenileme kaynak uyarısıyla tamamlandı: ASAS güncel; canlı IAS modeli işlenmeyi beklediği için son başarılı IAS verisi korunuyor.')
+        :( _overviewRefreshResult&&_overviewRefreshResult.hasChanges
+          ?(appLang==='en'?`Refresh completed: ${_overviewRefreshResult.totalChanges.toLocaleString('en-GB')} source-data changes found.`:`Yenileme tamamlandı: ${_overviewRefreshResult.totalChanges.toLocaleString('tr-TR')} kaynak veri değişikliği bulundu.`)
+          :(appLang==='en'?'Refresh completed. No changes were found in ASAS or ANTREPO data.':'Yenileme tamamlandı. ASAS veya ANTREPO verisinde değişiklik bulunmadı.'));
       updSourceHint(resultMessage);
       renderOverviewRefreshResult();
+      if(antrepoFallback)showAntrepoFallbackWarning(antrepoFallback);
       // Otomatik yenileme sayacı baştan başlasın (v6.03).
       try{ window.dispatchEvent(new Event('bl-refresh-finished')); }catch(_){}
       // Değişiklik varsa notlar kendiliğinden açılır (bkz. autoOpenRefreshHistory).
