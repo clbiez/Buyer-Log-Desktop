@@ -123,7 +123,7 @@
       const typeKey = E().talepTipiKey(report.talepTipi);
       const mapped = (link && link.itemId) || (store.typeMap[typeKey] && store.typeMap[typeKey].itemId) || ui.newTypeMap[typeKey] || '';
       const fromAi = report.kaynak === 'ai';
-      const ignored = match.level === 'none' && match.reason === 'order';
+      const ignored = Boolean(E().normalizeOrderCode(report.siparisKodu)) && match.level === 'none' && match.reason === 'order';
       return {
         id: 'r' + (ui.seq++), report: report, match: match, candidates: candidates, chosen: chosen,
         typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === mapped; }) ? mapped : '',
