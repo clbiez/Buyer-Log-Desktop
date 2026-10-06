@@ -215,9 +215,14 @@ test('LCW AI incelemesi: bilinmeyen talep ve adım kimliği kabul edilmez', () =
   assert.deepEqual(E.parseReviews(null, {}), {});
 });
 
-test('LCW AI inceleme bağlamı Buyer Log sonucunu ve adımları taşır', () => {
-  const ctx = E.reviewContext([{ report: report({ talepNo: '1', genelSonuc: 'Kalır', testler: [{ ad: 'pH', sonuc: 'Kalır' }, { ad: 'Azo', sonuc: 'Geçer' }] }), matchLevel: 'exact', currentStep: 'tests', currentStatus: 'open' }], [{ id: 'tests', name: 'Testler' }]);
+test('LCW AI inceleme bağlamı Buyer Log sonucunu, test adlarını ve adımları taşır', () => {
+  const ctx = E.reviewContext([{ report: report({
+    talepNo: '1', genelSonuc: 'Kalır',
+    testler: [{ ad: 'pH', sonuc: 'Kalır' }, { ad: 'Azo', sonuc: 'Geçer' }],
+    kararlar: [{ test: 'Baskı Dayanımı', karar: 'Ticari Onay', aciklama: '', tarih: '06.10.2026' }],
+  }), matchLevel: 'exact', currentStep: 'tests', currentStatus: 'open' }], [{ id: 'tests', name: 'Testler' }]);
   assert.equal(ctx.reports[0].buyerLogOutcome, 'fail');
+  assert.deepEqual(ctx.reports[0].testNames, ['pH', 'Azo', 'Baskı Dayanımı']);
   assert.deepEqual(ctx.reports[0].notableTests, ['pH | Kalır']);
   assert.deepEqual(ctx.checklistSteps, [{ id: 'tests', name: 'Testler' }]);
   assert.match(E.aiKnowledge('en'), /Commercial Approval counts as pass/);
