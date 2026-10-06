@@ -273,18 +273,23 @@
     }).join('');
   }
   let holidayRenderSeq=0;
+  let primaryScreenReady=false;
   async function refreshHolidayNotes(){
+    // Holiday providers can be slow. Keep HTTP slots available for the local
+    // opening snapshot, then use at most two holiday requests at a time.
+    if(!primaryScreenReady)return;
     const seq=++holidayRenderSeq,host=document.getElementById('ovLaunchpad');if(!host||!loadHolidayEnabled())return;
     const now=new Date(),l=lang(),holidayMonths=loadHolidayMonths(),nodes=[...host.querySelectorAll('[data-clock-holidays][data-clock-country]')];
-    await Promise.all(nodes.map(async node=>{
-      const code=String(node.dataset.clockCountry||''),zone=String(node.dataset.clockZone||''),subdivision=String(node.dataset.clockSubdivision||'');if(!code||!zone)return;
-      let localISO='';try{localISO=zonedISODate(now,zone);}catch(_){return;}
-      const year=Number(localISO.slice(0,4));if(!year)return;
+    for(const node of nodes){
+      if(seq!==holidayRenderSeq)return;
+      const code=String(node.dataset.clockCountry||''),zone=String(node.dataset.clockZone||''),subdivision=String(node.dataset.clockSubdivision||'');if(!code||!zone)continue;
+      let localISO='';try{localISO=zonedISODate(now,zone);}catch(_){continue;}
+      const year=Number(localISO.slice(0,4));if(!year)continue;
       const sets=await Promise.all([fetchHolidayYear(year,code),fetchHolidayYear(year+1,code)]);
       if(seq!==holidayRenderSeq||!node.isConnected)return;
       const rows=upcomingHolidays(sets.flat(),localISO,holidayMonths,HOLIDAY_MAX_ITEMS,subdivision);
       node.innerHTML=holidayMarkup(rows,localISO,l,holidayMonths);node.hidden=!rows.length;
-    }));
+    }
   }
   function analogHtml(parts){
     const a=clockAngles(parts);
@@ -377,6 +382,8 @@
       const pulse=host.querySelector('.ovLaunchPulse');
       if(refreshing()||pulse)render();
     }).observe(refreshBtn,{attributes:true,attributeFilter:['class']});
+    window.addEventListener('bl:primary-screen-ready',()=>{primaryScreenReady=true;void refreshHolidayNotes();},{once:true});
+    primaryScreenReady=Boolean(window.BLPerf?.timeline?.().some(mark=>mark.name==='UI_READY'));
     render();timer=window.setInterval(tick,1000);
     document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
     window.addEventListener('beforeunload',()=>{if(timer)clearInterval(timer);},{once:true});

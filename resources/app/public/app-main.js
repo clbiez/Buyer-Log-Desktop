@@ -980,6 +980,7 @@ const _unifiedPriorityCache={cp:null,orders:null};
 // Tablo başına revizyon: bir tablonun verisi yüklenince diğerinin kararları
 // geçersiz sayılmaz (Siparişler yüklenince CP ≈1 sn boşuna yeniden hesaplanıyordu).
 const _unifiedPriorityTableRevision={cp:1,orders:1};
+window.BL_CP_DECISION_DATA_REVISION=()=>_unifiedPriorityTableRevision.cp;
 function invalidateUnifiedPriorityDecisions(reason,tables=null){
   _unifiedPriorityDataRevision+=1;
   for(const key of Array.isArray(tables)&&tables.length?tables:['cp','orders']){_unifiedPriorityTableRevision[key]=(_unifiedPriorityTableRevision[key]||0)+1;_unifiedPriorityCache[key]=null;}
@@ -998,16 +999,16 @@ function applyUnifiedPriorityAnalysis(row,analysis){
   row._actionPriorityReasons=analysis&&Array.isArray(analysis.actionReasons)?analysis.actionReasons.slice():[];
   row._actionPrioritySignals=analysis&&Array.isArray(analysis.signals)?analysis.signals.slice():[];
 }
-function syncUnifiedPrioritiesForTable(tableKey){
+function syncUnifiedPrioritiesForTable(tableKey,preparedResult=null){
   if(tableKey==='orders')return true;
   const tableState=state&&state[tableKey],rows=tableState&&Array.isArray(tableState.rows)?tableState.rows:null;
   const assistant=window.BLCpAssistant;
   if(!rows||!assistant||typeof assistant.computeDecisionsForRows!=='function')return false;
   const contextRevision=typeof assistant.decisionContextRevision==='function'?assistant.decisionContextRevision():0;
   const cached=_unifiedPriorityCache[tableKey];
-  if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===contextRevision)return true;
+  if(cached&&cached.rows===rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===contextRevision&&cached.day===new Date().toDateString())return true;
   const activeRows=rows.filter(row=>unifiedPriorityRowActive(tableKey,row));
-  const result=assistant.computeDecisionsForRows(activeRows);
+  const result=preparedResult||assistant.computeDecisionsForRows(activeRows);
   for(const row of rows){
     if(!unifiedPriorityRowActive(tableKey,row)){
       row['Priority']='';row._actionPriorityReasons=[];row._actionPrioritySignals=[];continue;
@@ -1039,8 +1040,27 @@ function syncUnifiedPrioritiesForTable(tableKey){
       }
     }
   }
-  _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision};
+  _unifiedPriorityCache[tableKey]={rows,dataRevision:_unifiedPriorityTableRevision[tableKey],contextRevision,day:new Date().toDateString()};
   return true;
+}
+let cpPriorityJob=null;
+function scheduleUnifiedPrioritiesForTable(tableKey){
+  if(tableKey==='orders')return Promise.resolve(true);
+  const rows=state.cp?.rows,assistant=window.BLCpAssistant;
+  if(!rows||!assistant?.computeDecisionsForRowsAsync)return Promise.resolve(false);
+  const revision=_unifiedPriorityTableRevision.cp,contextRevision=assistant.decisionContextRevision();
+  const day=new Date().toDateString(),cached=_unifiedPriorityCache.cp;
+  if(cached&&cached.rows===rows&&cached.dataRevision===revision&&cached.contextRevision===contextRevision&&cached.day===day)return Promise.resolve(true);
+  if(cpPriorityJob&&cpPriorityJob.rows===rows&&cpPriorityJob.revision===revision&&cpPriorityJob.contextRevision===contextRevision)return cpPriorityJob.promise;
+  const job={rows,revision,contextRevision};cpPriorityJob=job;
+  job.promise=assistant.computeDecisionsForRowsAsync(rows).then(result=>{
+    if(!result||state.cp?.rows!==rows||revision!==_unifiedPriorityTableRevision.cp||contextRevision!==assistant.decisionContextRevision()||day!==new Date().toDateString())return false;
+    syncUnifiedPrioritiesForTable('cp',result);
+    window.BLPerf?.mark?.('CP_PRIORITY_READY',{rows:rows.length,mode:'background'});
+    if(currentActiveTab()==='cp')renderCP();
+    scheduleOverviewRender('cp-priority-ready');return true;
+  }).catch(error=>{showToast(error.message);return false;}).finally(()=>{if(cpPriorityJob===job)cpPriorityJob=null;});
+  return job.promise;
 }
 function renderCorePageLoadingState(tableKey,message){
   const empty=document.getElementById(tableKey==='cp'?'cpEmpty':'ordersEmpty');
@@ -1061,7 +1081,10 @@ function showUnifiedPriorityLoading(tableKey){
   renderCorePageLoadingState(tableKey,appLang==='en'?'Preparing unified priorities…':'Ortak öncelikler hazırlanıyor…');
 }
 function ensureUnifiedPrioritiesForTable(tableKey){
-  if(syncUnifiedPrioritiesForTable(tableKey))return true;
+  if(tableKey==='orders')return true;
+  const cached=_unifiedPriorityCache[tableKey],assistant=window.BLCpAssistant;
+  if(cached&&cached.rows===state[tableKey]?.rows&&cached.dataRevision===_unifiedPriorityTableRevision[tableKey]&&cached.contextRevision===assistant?.decisionContextRevision()&&cached.day===new Date().toDateString())return true;
+  if(assistant?.computeDecisionsForRowsAsync){showUnifiedPriorityLoading(tableKey);void scheduleUnifiedPrioritiesForTable(tableKey);return false;}
   showUnifiedPriorityLoading(tableKey);
   if(!_unifiedPriorityFeaturePromise){
     const ensure=window.BLPerf?.ensureFeature?.('cpAssistant');
@@ -1823,6 +1846,7 @@ window.BLRetryRefreshAfterFieldMapping=retryRefreshAfterFieldMapping;
 let ordersLoadPromise=null;
 let cpLoadPromise=null;
 let overviewLoadPromise=null;
+let startupReadySignaled=false;
 let collectionCatalogLoadPromise=null;
 // Overview CP dependency lifecycle: CP projection is intentionally lazy, but
 // Overview consumes it. Loading/ready/error is distinct from a genuinely empty
@@ -2150,12 +2174,12 @@ function switchTab(tab){
   /* v9.48 — Genel Bakış'ın üretim öncelikleri paneli açılış kritik yolunda
      değil: sekmeye geçildiğinde yüklenir, yüklendiğinde mevcut satırlarla
      kendini çizer (Genel Bakış zaten çizilmiş olabilir). */
-  if(tab==='overview'){
+  if(tab==='overview'&&startupReadySignaled){
     // Motor zaten yüklüyse "hazır" olayı yeniden işlenmez: her girişte kararları
     // temizlemek CP/Siparişler önceliklerini ≈1 sn baştan hesaplatıyordu.
     const decisionEngineWasReady=Boolean(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function');
     void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve())
-      .then(()=>{if(decisionEngineWasReady)return;try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready');syncUnifiedPrioritiesForTable('cp');renderOverview();}catch(_){}}).catch(()=>{});
+      .then(()=>{if(decisionEngineWasReady)return;try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready',['cp']);void scheduleUnifiedPrioritiesForTable('cp');renderOverview();}catch(_){}}).catch(()=>{});
   }
   document.querySelectorAll('.vfMenu.open').forEach(x=>x.classList.remove('open'));
   const bar=document.querySelector('.vfBar');
@@ -10482,7 +10506,7 @@ function renderOverviewNow(){
     renderOverviewCpDependencyState(mode,overviewCpLoadError);
     // Overview kabuğunu bloklamadan CP projection'ı arka planda hazırla.
     // cpLoadPromise aynı anda CP sekmesine geçilirse ikinci request'i engeller.
-    if(mode!=='error')void ensureOverviewCpDependency();
+    if(mode!=='error'&&startupReadySignaled)void ensureOverviewCpDependency();
   }else{
     overviewCpLoadState='ready';overviewCpLoadError='';
     /* Panel yüklüyse aynı satır kümesiyle güncellenir. Dataset revision +
@@ -10493,10 +10517,10 @@ function renderOverviewNow(){
       filterRevision:overviewCpFilterSignature(),
     });
     if(!window.BLCpAssistant)renderOverviewCpDependencyState('loading');
-    if(!window.BLCpAssistant && !window.__cpAssistantBootstrapped){
+    if(startupReadySignaled && !window.BLCpAssistant && !window.__cpAssistantBootstrapped){
       window.__cpAssistantBootstrapped = true;
       void (window.BLPerf?.ensureFeature?.('cpAssistant')||Promise.resolve())
-        .then(()=>{try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready');syncUnifiedPrioritiesForTable('cp');scheduleOverviewRender('overview-decision-engine-ready');}catch(_){}}).catch(()=>{});
+        .then(()=>{try{invalidateUnifiedPriorityDecisions('overview-decision-engine-ready',['cp']);void scheduleUnifiedPrioritiesForTable('cp');scheduleOverviewRender('overview-decision-engine-ready');}catch(_){}}).catch(()=>{});
     }
   }
   /* Aktif Sipariş Kırılımı widget'ının grafik modeli tablolarla aynı toplamlardan
@@ -10507,7 +10531,7 @@ function renderOverviewNow(){
     season:(v,pri)=>{clearCpQuickFilters();setSelectValue('cpFSeason',v);if(pri)setSelectValue('cpFPriority',pri);switchTab('cp');renderCP();},
   }};
   if(state.cp){
-    if(window.BLCpAssistant?.computeDecisionsForRows)syncUnifiedPrioritiesForTable('cp');
+    if(window.BLCpAssistant?.computeDecisionsForRows)void scheduleUnifiedPrioritiesForTable('cp');
     breakdown.country=groupCount(cpRows,'Country');
     breakdown.subManufacturer=groupCount(cpRows,'Sub-Manufacturer');
     fillMiniTable('tblCountry', breakdown.country);
@@ -14018,7 +14042,7 @@ async function waitForRefreshJob(expectedJob=null){
       notifyCpCoverage(data.lastRefreshResult);
     }
     if(data.hasCachedData&&data.loadedAt){
-      const t = new Date(data.loadedAt).toLocaleTimeString(appLang==='en'?'en-GB':'tr-TR');
+      const t = new Date(data.loadedAt).toLocaleString(appLang==='en'?'en-GB':'tr-TR');
       const sourceStatus=appLang==='en'
         ?`Last loaded: ${t} — ASAS:${data.sources.asas||'-'}${data.sources.antrepo? ', Antrepo:'+data.sources.antrepo:''}${data.sources.lfl? ', LFL:'+data.sources.lfl:''}`
         :`Son okunma: ${t} — ASAS:${data.sources.asas||'-'}${data.sources.antrepo? ', Antrepo:'+data.sources.antrepo:''}${data.sources.lfl? ', LFL:'+data.sources.lfl:''}`;
@@ -15364,7 +15388,7 @@ async function loadInitialBuyerLogData(){
   const msg=appLang==='en'?'Buyer Log opened, but the initial data could not be loaded. Use Refresh to try again.':'Buyer Log açıldı ancak başlangıç verisi yüklenemedi. Yeniden denemek için Yenile düğmesini kullanın.';
   setServerStatus(msg);showToast(msg);return false;
 }
-let startupReadySignaled=false;
+
 function signalStartupReady(){
   if(startupReadySignaled)return;startupReadySignaled=true;
   void fetch('/api/startup/ready',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({marks:window.BLPerf?.timeline?.()||[]})})
@@ -15472,15 +15496,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     const switched=switchTab(requestedModule);
     if(switched===false&&requestedModule!=='overview')switchTab('overview');
   }
-  schedulePostUiStartupTasks();
   const primaryScreenReady=initialDataLoaded&&await waitForStartupPrimaryScreen();
   if(!primaryScreenReady)window.BLBootGuard?.fail('initial-screen-failed');
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
     window.BLPerf?.mark?.('UI_READY');
     if(primaryScreenReady)window.BLBootGuard?.ready('ui');
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
-    schedulePostUiStartupTasks();
     signalStartupReady();
+    window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
+    schedulePostUiStartupTasks();
+    if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
     if(state.overviewDeferred&&currentActiveTab()==='overview')void ensureOverviewLoaded();
     const idle=window.requestIdleCallback||((fn)=>setTimeout(()=>fn({timeRemaining:()=>8}),40));
     idle(()=>{

@@ -485,6 +485,14 @@
     const today = context.today == null ? defaultOrdinal(new Date()) : context.today;
     const settings = { ...DEFAULT_SETTINGS, ...(context.settings || {}) };
     const analyses = list.map(row => analyzeOrder(row, { ...context, today, settings }));
+    return summarizeAnalyses(analyses, { ...context, today, settings });
+  }
+
+  // Both synchronous and cooperative callers use the same aggregation and
+  // business engine; scheduling never changes how an order is classified.
+  function summarizeAnalyses(analyses, context = {}) {
+    const today = context.today == null ? defaultOrdinal(new Date()) : context.today;
+    const settings = { ...DEFAULT_SETTINGS, ...(context.settings || {}) };
 
     let totalQty = 0;
     const orders = new Set();
@@ -604,7 +612,7 @@
     LOAD_WINDOWS, LOAD_WINDOW_LABELS, ACTION_PRIORITIES, PRIORITIES, PRIORITY_LABELS,
     RISK_REASONS, RISK_REASON_LABELS, DEFAULT_SETTINGS,
     DATE_SYNC_STATES, DATE_SYNC_LABELS, DATE_SYNC_FIELDS, dateSyncOf,
-    analyzeOrder, analyze, recount, needsAttention, needsAttentionSort: needsAttention,
+    analyzeOrder, analyze, summarizeAnalyses, recount, needsAttention, needsAttentionSort: needsAttention,
     loadWindowOf, defaultOrdinal, toDeliveryRow,
   };
 });

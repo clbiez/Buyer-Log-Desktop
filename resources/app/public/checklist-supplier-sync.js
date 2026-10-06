@@ -434,7 +434,7 @@
     if (typeof root.invalidateColumnIndex === 'function') root.invalidateColumnIndex('cp');
 
     if (rows.length && items.length) {
-      const decision = analysesForRows(rows);
+      const decision = opts.decision || analysesForRows(rows);
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
         const statuses = {};
@@ -465,6 +465,7 @@
     return true;
   }
 
+  let assistantRefreshGeneration = 0;
   function refreshAssistantView() {
     const assistant = root.BLCpAssistant, s = assistantState();
     if (!assistant || !s) return;
@@ -477,7 +478,14 @@
         });
       } else if (typeof assistant.render === 'function') assistant.render();
     } catch (_) {}
-    refreshColumns({ render: false });
+    const rows = currentRows(), generation = ++assistantRefreshGeneration;
+    if (typeof assistant.computeDecisionsForRowsAsync === 'function') {
+      void assistant.computeDecisionsForRowsAsync(rows).then(decision=>{
+        if(!decision || generation!==assistantRefreshGeneration || currentRows()!==rows)return;
+        refreshColumns({render:false,decision});
+        if(root.document?.body?.dataset.activeTab==='cp'&&typeof root.renderCP==='function')root.renderCP();
+      }).catch(error=>toast(error.message));
+    } else refreshColumns({render:false});
   }
 
   async function loadShared(force) {
@@ -2104,7 +2112,9 @@
     const original = root.renderCP;
     root.renderCP = function () {
       if (root.BLCpAssistant) {
-        try { refreshColumns({ render: false }); } catch (_) {}
+        const decision=root.BLCpAssistant.peekDecisionsForRows?.(currentRows());
+        if(decision){try{refreshColumns({render:false,decision});}catch(_){}}
+        else refreshAssistantView();
       }
       return original.apply(this, arguments);
     };
@@ -2115,7 +2125,7 @@
     if (state.applyingRemote) return;
     const reason = event && event.detail && event.detail.reason || '';
     if (reason === 'preferences') {
-      refreshColumns({ render: true });
+      refreshAssistantView();
       return;
     }
     if (reason === 'checklist-answer') {
@@ -2249,7 +2259,7 @@
     bindReportDrop();
     wrapRender();
     root.addEventListener('bl:cp-decision-context-changed', onDecisionChanged);
-    root.addEventListener('bl:plm-requests-changed', function () { refreshColumns({ render: true }); });
+    root.addEventListener('bl:plm-requests-changed', function () { refreshAssistantView(); });
     root.addEventListener('bl:startup-ready', function () {
       if (activeNeedsRuntime()) startRuntime().catch(function () {});
     });
