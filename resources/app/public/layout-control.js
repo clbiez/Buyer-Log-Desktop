@@ -17,8 +17,9 @@
     'Analyse only the attached PDF. Do not invent CP/reference values.',
     'documentType must be CARE_LABEL, PRICE_TAG or UNKNOWN.',
     'Extract only values clearly visible in the PDF. Keep model/style codes exactly as printed.',
-    'For CARE_LABEL extract colour code/name, country, composition percentages, care instructions and warnings.',
-    'For PRICE_TAG inspect every page and extract model, order number, size, barcode digits and QR content only if visibly readable, product class/fit and prices.',
+    'For CARE_LABEL extract colour code/name, manufacturing/country-of-origin, composition percentages, care instructions and warnings. Importer/distributor/company-address countries are not production countries.',
+    'For PRICE_TAG inspect every page. Extract model, order number, Special Code, colour code/name, season code, MAG, MMYG, Line, Product Main Definition, manufacturing country, size, barcode digits and QR content only when visibly readable, plus product class/fit and prices.',
+    'For PRICE_TAG copy the complete visible upper identity/code band verbatim into identityText. Slash-separated unlabeled codes must stay in identityText when their business meaning is uncertain; do not guess the field.',
     'pageVariants entries must use: page=<n>|size=<value>|barcode=<value>|order=<value> when visible.',
     'visualFindings: only visible layout/semantic concerns such as clipping, overlap, unreadable QR/barcode, duplicated block, inconsistent country/composition/language or suspicious page variation.',
     'Do not call a business field wrong unless the PDF itself proves the inconsistency. Reference comparison is performed deterministically by Buyer Log.',
@@ -99,6 +100,34 @@
     if(type==='PRICE_TAG') return L('Karton Etiket','Price Tag');
     return L('Bilinmeyen Layout','Unknown Layout');
   }
+  function ruleText(rule){
+    const map={
+      MODEL_MATCH:L('Model Adı','Model Name'),
+      ORDER_MATCH:L('Sipariş No','Order No'),
+      SPECIAL_CODE_MATCH:'Special Code',
+      COLOR_CODE_MATCH:L('Renk Kodu','Colour Code'),
+      COLOR_NAME_MATCH:L('Renk Adı','Colour Name'),
+      SEASON_MATCH:L('Sezon Kodu','Season Code'),
+      MAG_MATCH:L('MAG Kodu','MAG Code'),
+      MMYG_MATCH:L('MMYG Kodu','MMYG Code'),
+      LINE_MATCH:L('Line Kodu','Line Code'),
+      COUNTRY_MATCH:L('Üretim Yeri','Country of Origin'),
+      PRODUCT_MAIN_DEFINITION_MATCH:'Product Main Definition',
+      COMPOSITION_MATCH:L('Kumaş Karışımı','Composition'),
+      CARE_INSTRUCTION_MATCH:L('Yıkama Talimatı','Care Instruction'),
+      WARNING_MATCH:L('Uyarılar','Warnings'),
+      SIZE_RANGE_MATCH:L('Beden Aralığı','Size Range'),
+      BARCODE_MATCH:L('Barkod','Barcode'),
+      BARCODE_READABLE:L('Barkod Okunabilirliği','Barcode Readability'),
+      BARCODE_SIZE_MATCH:L('Barkod / Beden','Barcode / Size'),
+      QR_MATCH:'QR',
+      QR_READABLE:L('QR Okunabilirliği','QR Readability'),
+      PRICE_MATCH:L('Fiyat','Price'),
+      PRODUCT_CLASS_MATCH:L('Ürün Sınıfı','Product Class'),
+      FIT_MATCH:L('Kalıp / Fit','Fit')
+    };
+    return map[rule]||String(rule||'');
+  }
   function valueHtml(values){
     const list=arr(values).filter(value=>String(value||'').trim());
     return list.length?list.map(value=>'<span class="layoutValue">'+esc(value)+'</span>').join(''):'<span class="layoutMuted">—</span>';
@@ -143,7 +172,7 @@
       '<div class="layoutChecks">',
       checks.length?checks.map(check=>[
         '<article class="layoutCheck is-'+String(check.status||'').toLowerCase()+'">',
-        '<div class="layoutCheckHead"><span class="layoutStatus">'+esc(statusText(check.status))+'</span><b>'+esc(check.rule)+'</b><span class="layoutCategory">'+esc(check.category||'')+'</span></div>',
+        '<div class="layoutCheckHead"><span class="layoutStatus">'+esc(statusText(check.status))+'</span><b title="'+esc(check.rule)+'">'+esc(ruleText(check.rule))+'</b><span class="layoutCategory">'+esc(check.category||'')+'</span></div>',
         '<div class="layoutCompare"><div><small>'+esc(L('CP / Beklenen','CP / Expected'))+'</small>'+valueHtml(check.expected)+'</div><div><small>'+esc(L('Layout / Bulunan','Layout / Found'))+'</small>'+valueHtml(check.actual)+'</div></div>',
         check.detail?'<p>'+esc(check.detail)+'</p>':'',
         '<footer>'+esc(check.source||'CP ↔ Layout')+'</footer>',
@@ -247,8 +276,8 @@
   }
   function aiTask(){
     return L(
-      'Ekli layout PDF dosyasını eksiksiz incele. Belge türünü otomatik belirle, görünür ürün/model/renk/sipariş/ülke/kompozisyon/bakım/beden/barkod/fiyat alanlarını yapılandırılmış olarak çıkar ve yalnız görünür kanıta dayanan görsel/semantik REVIEW bulgularını listele. CP doğruluğu hakkında tahmin yapma.',
-      'Inspect the attached layout PDF completely. Detect the document type, extract visible product/model/colour/order/country/composition/care/size/barcode/price fields in structured form, and list only visual/semantic REVIEW findings supported by visible evidence. Do not guess CP correctness.'
+      'Ekli layout PDF dosyasını eksiksiz incele. Belge türünü otomatik belirle. Price Tag için özellikle Sipariş No, Model Adı, Special Code, Renk Kodu/Adı, Sezon Kodu, MAG, MMYG, Line, Üretim Yeri ve Product Main Definition alanlarını; ayrıca beden, barkod, QR ve fiyatı çıkar. Üst kimlik/kod bandını identityText içine aynen kopyala. Care Label için yalnız gerçek üretim/menşe ülkesini çıkar; ithalatçı/distribütör/adres ülkelerini üretim yeri sayma. Kompozisyon/bakım ve yalnız görünür kanıta dayanan görsel/semantik REVIEW bulgularını da yapılandır. CP doğruluğu hakkında tahmin yapma.',
+      'Inspect the attached layout PDF completely and detect the document type. For Price Tag especially extract Order No, Model Name, Special Code, Colour Code/Name, Season Code, MAG, MMYG, Line, Country of Origin and Product Main Definition, plus size, barcode, QR and price. Copy the upper identity/code band verbatim into identityText. For Care Label extract only the true manufacturing/country-of-origin; never treat importer/distributor/address countries as production country. Also structure composition/care and only visual/semantic REVIEW findings supported by visible evidence. Do not guess CP correctness.'
     );
   }
   async function askAi(file,nativeInfo,onProgress,signal,requestId){
