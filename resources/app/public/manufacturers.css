@@ -18,7 +18,7 @@
 .mfpBtn.isSmall{height:26px;padding:0 9px;font-size:12px}
 
 .mfpStats{display:flex;gap:8px;flex-wrap:wrap}
-.mfpStat{display:inline-flex;align-items:baseline;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink2);font:inherit;font-size:12px;cursor:pointer}
+.mfpStat{display:inline-flex;align-items:baseline;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:0;background:var(--card);color:var(--ink2);font:inherit;font-size:12px;cursor:pointer}
 .mfpStat b{font-size:15px;color:var(--ink)}
 .mfpStat:hover,.mfpStat.isActive{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink)}
 .mfpStat.isWarn{border-color:var(--orange);background:var(--orange-bg)}
@@ -43,11 +43,11 @@
 .mfpRowMain small,.mfpRowMeta small{color:var(--muted);font-size:11px}
 .mfpRowMeta{display:flex;flex-direction:column;align-items:flex-end;font-size:12px}
 
-.mfpBadge{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;background:var(--card2);color:var(--ink2);font-size:11px;font-weight:600}
+.mfpBadge{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:0;background:var(--card2);color:var(--ink2);font-size:11px;font-weight:600}
 .mfpBadge.is-linked{background:var(--green-bg);color:var(--green)}
 .mfpBadge.is-missing_card{background:var(--orange-bg);color:var(--orange)}
 .mfpBadge.is-not_in_asas{background:var(--red-bg);color:var(--red)}
-.mfpGrade{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--card2);color:var(--muted);font-size:12px;font-weight:700}
+.mfpGrade{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:0;background:var(--card2);color:var(--muted);font-size:12px;font-weight:700}
 .mfpGrade.isLarge{width:36px;height:36px;font-size:16px}
 .mfpGrade.is-A{background:var(--green-bg);color:var(--green)}
 .mfpGrade.is-B{background:var(--acc-bg);color:var(--acc-ink)}
@@ -80,7 +80,7 @@ button.mfpTile,button.mfpMetric{width:100%;margin:0;border:1px solid var(--line)
 .mfpPanelHead strong{font-size:13px}
 .mfpPanelHead span{color:var(--muted);font-size:12px}
 .mfpChips{display:flex;gap:6px;flex-wrap:wrap}
-.mfpChip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--paper);color:var(--ink2);font-size:12px;text-decoration:none}
+.mfpChip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border:1px solid var(--line);border-radius:0;background:var(--paper);color:var(--ink2);font-size:12px;text-decoration:none}
 button.mfpChip{font:inherit;font-size:12px;appearance:none;cursor:pointer}
 .mfpChip.isDrill:hover{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink)}
 .mfpChip b{color:var(--acc-ink);font-weight:600}

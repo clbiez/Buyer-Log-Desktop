@@ -1222,7 +1222,7 @@
       window.BLDetailImages?.bindModelImagesButton?.('quotationDetailPlmSync');
       window.BLDetailImages?.registerScope?.(host,{contextType:'quotations-detail',label:qLang('Quotation Detayı','Quotation Detail'),identities:visibleItems.map((item,index)=>{const row=qFindCollectionRow(item);return {plmId:item.plmId||row?.plmId||'',styleName:item.modelCode||row?.modelKod||'',colourCode:row?.colourCode||'',colour:row?.colour||'',rowId:item.id||String(index),hasImage:null};}),repaint:qRenderDetail});
     }
-    if(qWorkspaceMounted)qRenderWorkspaceDecision(req,visibleItems);
+    if(qWorkspaceMounted)qMarkWorkspaceSelectedLine(visibleItems);
     const wrap=host.querySelector('.quotationTableWrap');
     if(wrap){
       const view=tableState.view||{scrollTop:0,scrollLeft:0};
@@ -1266,9 +1266,8 @@
     const table=input.closest?.('table.quotationTable');
     qUpdateModelPricingCells(req,line.modelKey,table);
     if(qWorkspaceMounted){
-      const kpi=document.getElementById('quotationWorkspaceKpis');if(kpi)kpi.innerHTML=qWorkspaceKpiMarkup();qRenderStatusTabs();
+      qRenderStatusTabs();
       if(!['active','all'].includes(qStatusFilter)&&!qRequestMatchesStatus(req,qStatusFilter)){qActiveId=qVisibleRequests(qActiveSource,document.getElementById('quotationSearch')?.value||'')[0]?.id||null;qRenderWorkspaceAll(document.getElementById('quotationSearch')?.value||'');}
-      else qRenderWorkspaceDecision(req,qVisibleTableItems(req));
     }
     return true;
   }
@@ -1434,7 +1433,7 @@
     if(qWorkspaceMounted)host.querySelector('tbody')?.addEventListener('click',event=>{
       if(event.target.closest('button,input,select,a,label'))return;
       const row=event.target.closest('[data-quote-line]');if(!row)return;
-      qWorkspaceSelectedLineId=row.dataset.quoteLine||'';qRenderWorkspaceDecision(req,qVisibleTableItems(req));
+      qWorkspaceSelectedLineId=row.dataset.quoteLine||'';
       host.querySelectorAll('[data-quote-line]').forEach(tr=>tr.classList.toggle('isWorkspaceSelected',tr.dataset.quoteLine===qWorkspaceSelectedLineId));
     });
     host.querySelectorAll('[data-quote-approve]').forEach(btn=>btn.addEventListener('click',()=>{const line=getLine(btn.dataset.quoteApprove);if(line)qToggleApproval(req,line);}));
@@ -1649,18 +1648,6 @@
     },0);
   }
 
-  function qWorkspaceKpiMarkup(){
-    const engine=qPricingEngine(),k=engine?.workspaceKpis?.(qLoad().requests,'collection')||{};
-    const cards=[
-      [qLang('Aktif Talep','Active Requests'),k.requests??0,'i-notebook'],
-      [qLang('Üretici','Manufacturers'),k.manufacturers??0,'i-users-group'],
-      [qLang('Onay Bekleyen','Waiting Approval'),k.waitingApproval??0,'i-calendar'],
-      [qLang('Onaylı','Approved'),k.approved??0,'i-check'],
-      [qLang('Fiyat Bekleyen','Waiting Quote'),k.waitingQuote??0,'i-mail'],
-    ];
-    return cards.map(([label,value,icon])=>`<div class="pricingMetric"><svg class="ic"><use href="#${icon}"/></svg><span>${qEsc(label)}</span><b>${qEsc(value)}</b></div>`).join('');
-  }
-
   function qBindWorkspaceNav(nav,search,root){
     if(!nav)return;
     nav.addEventListener('dragstart',e=>{
@@ -1689,7 +1676,7 @@
 
   function qRenderWorkspaceAll(query=''){
     if(!qWorkspaceMounted)return;
-    const kpi=document.getElementById('quotationWorkspaceKpis');if(kpi)kpi.innerHTML=qWorkspaceKpiMarkup();
+
     qRenderNav(query);qRenderDetail();
   }
 
@@ -1701,8 +1688,7 @@
     if(!preserveContext||!['active','waiting-approval','approved','closed','all'].includes(qStatusFilter))qStatusFilter='active';
     const candidates=qVisibleRequests(qActiveSource,'');if(!candidates.some(req=>req.id===qActiveId))qActiveId=candidates[0]?.id||null;
     host.innerHTML=`<div class="pricingWorkspaceShell quotationWorkspaceShell">
-      <div class="pricingWorkspaceHeader"><div><h1>${qEsc(qLang('Fiyat Teklifleri','Quotations'))}</h1><p>${qEsc(qLang('Fiyat taleplerini, üretici tekliflerini ve onay kararlarını tek yerde yönet.','Manage pricing requests, supplier quotes and approval decisions in one place.'))}</p></div><div class="pricingWorkspaceHeaderActions"><button type="button" class="tbtn primary" data-q-new-pricing><svg class="ic"><use href="#i-copy-plus"/></svg>${qEsc(qLang('Yeni Fiyat Talebi','New Quotation'))}</button><button type="button" class="tbtn" data-q-open-collection-main><svg class="ic"><use href="#i-hanger"/></svg>${qEsc(qLang('Koleksiyonu Aç','Open Collection'))}</button></div></div>
-      <div class="pricingWorkspaceKpis" id="quotationWorkspaceKpis"></div>
+      <div class="quotationWorkspaceTopBar"><h1 title="${qEsc(qLang('Fiyat taleplerini, üretici tekliflerini ve onay kararlarını tek yerde yönet.','Manage pricing requests, supplier quotes and approval decisions in one place.'))}">${qEsc(qLang('Fiyat Teklifleri','Quotations'))}</h1>
       <div class="quotationStatusTabs pricingWorkspaceTabs" id="quotationStatusTabs" role="group">
         <button type="button" data-quotation-status-filter="active"><span>${qEsc(qLang('Devam Eden','In Progress'))}</span><b data-status-count>0</b></button>
         <button type="button" data-quotation-status-filter="waiting-approval"><span>${qEsc(qLang('Onay Bekleyen','Waiting Approval'))}</span><b data-status-count>0</b></button>
@@ -1711,7 +1697,8 @@
         <button type="button" data-quotation-status-filter="all"><span>${qEsc(qLang('Tümü','All'))}</span><b data-status-count>0</b></button>
       </div>
       <div class="pricingWorkspaceSearch"><input type="search" id="quotationSearch" placeholder="${qEsc(qLang('Model, üretici veya kayıt sahibi ara…','Search model, manufacturer or owner…'))}" autocomplete="off"><span id="quotationCount"></span></div>
-      <div class="pricingWorkspaceGrid"><aside class="pricingWorkspaceNav"><div class="pricingPaneTitle">${qEsc(qLang('Fiyat Talebi Grupları','Quotation Groups'))}</div><div class="verHistNav" id="quotationNav"></div></aside><main class="quotationDetail pricingWorkspaceMain" id="quotationDetail"></main><aside class="pricingWorkspaceDecision" id="quotationWorkspaceDecision"></aside></div>
+      <div class="pricingWorkspaceHeaderActions"><button type="button" class="tbtn primary" data-q-new-pricing><svg class="ic"><use href="#i-copy-plus"/></svg>${qEsc(qLang('Yeni Fiyat Talebi','New Quotation'))}</button><button type="button" class="tbtn" data-q-open-collection-main><svg class="ic"><use href="#i-hanger"/></svg>${qEsc(qLang('Koleksiyonu Aç','Open Collection'))}</button></div></div>
+      <div class="pricingWorkspaceGrid"><aside class="pricingWorkspaceNav"><div class="pricingPaneTitle">${qEsc(qLang('Fiyat Talebi Grupları','Quotation Groups'))}</div><div class="verHistNav" id="quotationNav"></div></aside><main class="quotationDetail pricingWorkspaceMain" id="quotationDetail"></main></div>
     </div>`;
     const search=host.querySelector('#quotationSearch');
     host.addEventListener('pointerdown',event=>{const active=document.activeElement;if(active!==event.target&&active?.classList?.contains('quotationPriceInput'))qCommitActivePriceInput(qActiveRequest(),host);},true);
@@ -2409,27 +2396,12 @@
   }
 
 
-  function qRenderWorkspaceDecision(req,items=null){
-    const host=document.getElementById('quotationWorkspaceDecision');if(!host||!req)return;
-    const visible=Array.isArray(items)?items:qVisibleTableItems(req),live=visible.filter(item=>!item.dropped);
-    let line=req.items.find(item=>item.id===qWorkspaceSelectedLineId&&visible.includes(item));
-    if(!line)line=live[0]||visible[0]||null;
-    if(!line){host.innerHTML=`<div class="pricingEmptyState">${qEsc(qLang('Karar detayını görmek için bir teklif satırı seç.','Select a quotation line to see decision details.'))}</div>`;return;}
-    qWorkspaceSelectedLineId=line.id;
-    document.querySelectorAll('#quotationDetail [data-quote-line]').forEach(tr=>tr.classList.toggle('isWorkspaceSelected',tr.dataset.quoteLine===line.id));
-    const row=qFindCollectionRow(line),history=row?qhCollect([row]):[],hs=qPricingEngine()?.historySummary?.(history)||{};
-    const target=qMoneyNumber(qItemTargetPrice(req,line)),current=qMoneyNumber(line.price),best=hs.best;
-    const variance=Number.isFinite(target)&&target>0&&Number.isFinite(current)?((current-target)/target)*100:null;
-    const histVariance=Number.isFinite(best)&&best>0&&Number.isFinite(current)?((current-best)/best)*100:null;
-    const image=qCollectionImageSrc(row,line),imageHtml=image?qCachedModelThumb(image,{modelId:line.plmId||line.modelCode,colourCode:row?.colourCode||'',classes:'pricingDecisionThumb'}):'';
-    host.innerHTML=`<div class="pricingPaneTitle">${qEsc(qLang('Karar Paneli','Decision Panel'))}</div><div class="pricingDecisionModel">${imageHtml}<div><b>${qEsc(line.modelCode||line.plmId||line.orderCode||'—')}</b><span>${qEsc(qItemFabric(req,line)||qItemCategory(req,line)||'')}</span></div></div>
-      <dl class="pricingDecisionStats"><div><dt>${qEsc(qLang('Hedef Fiyat','Target Price'))}</dt><dd>${Number.isFinite(target)?'$'+qMoneyDisplay(target):'—'}</dd></div><div><dt>${qEsc(qLang('Geçmiş En İyi','Historical Best'))}</dt><dd>${Number.isFinite(best)?'$'+qMoneyDisplay(best):'—'}</dd></div><div><dt>${qEsc(qLang('Teklif Fiyatı','Quotation Price'))}</dt><dd>${Number.isFinite(current)?'$'+qMoneyDisplay(current):'—'}</dd></div><div><dt>${qEsc(qLang('Hedefe Göre','vs Target'))}</dt><dd class="${variance!=null?(variance<=0?'isGood':'isBad'):''}">${variance==null?'—':`${variance>0?'+':''}${variance.toFixed(1)}%`}</dd></div><div><dt>${qEsc(qLang('Geçmiş En İyiye Göre','vs Historical Best'))}</dt><dd class="${histVariance!=null?(histVariance<=0?'isGood':'isBad'):''}">${histVariance==null?'—':`${histVariance>0?'+':''}${histVariance.toFixed(1)}%`}</dd></div><div><dt>${qEsc(qLang('Üretici','Manufacturer'))}</dt><dd>${qEsc(line.manufacturer||'—')}</dd></div></dl>
-      <div class="pricingDecisionState"><span class="pricingStatusChip ${line.dropped?'isDanger':line.approved?'isSuccess':qValidPrice(line.price)?'isWarning':'isNeutral'}">${qEsc(line.dropped?qLang('Drop','Dropped'):line.approved?qLang('Onaylı','Approved'):qValidPrice(line.price)?qLang('Karar Bekliyor','Decision Pending'):qLang('Fiyat Bekliyor','Waiting Quote'))}</span></div>
-      <div class="pricingDecisionActions"><button type="button" class="tbtn primary" data-q-decision-approve ${qCanEditLine(req,line)&&qValidPrice(line.price)?'':'disabled'}>${qEsc(line.approved?qLang('Onayı Kaldır','Remove Approval'):qLang('Teklifi Onayla','Approve Quote'))}</button>${req.source==='collection'?`<button type="button" class="tbtn" data-q-decision-drop ${qCanEditLine(req,line)?'':'disabled'}>${qEsc(line.dropped?qLang('Drop Kaldır','Remove Drop'):qLang('Drop','Drop'))}</button>`:''}<button type="button" class="tbtn" data-q-decision-history>${qEsc(qLang('Fiyat Geçmişi','Pricing History'))}</button><button type="button" class="tbtn" data-q-decision-collection>${qEsc(qLang('Koleksiyonda Aç','Open in Collection'))}</button></div>`;
-    host.querySelector('[data-q-decision-approve]')?.addEventListener('click',()=>qToggleApproval(req,line));
-    host.querySelector('[data-q-decision-drop]')?.addEventListener('click',()=>qToggleDrop(req,line));
-    host.querySelector('[data-q-decision-history]')?.addEventListener('click',()=>openPricingHistoryWorkspace(row?[row]:qCollectionRowsForRequest(req),{requestId:req.id,itemId:line.id}));
-    host.querySelector('[data-q-decision-collection]')?.addEventListener('click',()=>qOpenRequestInCollection(req,line));
+  /* Karar paneli kaldırıldı: hedef/teklif/onay bilgisi zaten tabloda. Yalnız
+     seçili satır vurgusu korunur (tablo tıklaması ve yeniden çizimde). */
+  function qMarkWorkspaceSelectedLine(items){
+    const visible=Array.isArray(items)?items:[];
+    if(!visible.some(item=>item.id===qWorkspaceSelectedLineId))qWorkspaceSelectedLineId='';
+    document.querySelectorAll('#quotationDetail [data-quote-line]').forEach(tr=>tr.classList.toggle('isWorkspaceSelected',!!qWorkspaceSelectedLineId&&tr.dataset.quoteLine===qWorkspaceSelectedLineId));
   }
 
   function qHistoryRowsFromContext(rows){

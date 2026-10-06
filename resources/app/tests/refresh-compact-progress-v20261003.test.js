@@ -26,7 +26,7 @@ test('technical timing remains available behind details and keeps the user open 
   assert.match(body,/refreshSeconds\(t\.overheadMs\)/);
 });
 test('compact refresh UI uses the Buyer Log card language and animated active state',()=>{
-  assert.match(CSS,/\.refreshStagesCard\{[^}]*width:min\(440px/);
+  assert.match(CSS,/\.refreshStagesCard\{[^}]*width:min\(340px/);
   assert.match(CSS,/\.refreshCompactStep\.is-active/);
   assert.match(CSS,/@keyframes refreshCompactDot/);
   assert.match(CSS,/@keyframes refreshCompactSweep/);

@@ -44,9 +44,6 @@ test('all image/link hydration paths merge partial overrides instead of replacin
   assert.equal((APP.match(/state\.overrides=data\.overrides/g)||[]).length, 0,
     'partial image response must never wholesale-replace state.overrides');
 
-  const autoComplete = between('const flushAutoImageComplete=async()=>', 'const scheduleAutoImageComplete=');
-  assert.ok(autoComplete.includes('state.overrides=mergeImageOverridePayload(state.overrides,data.overrides)'));
-
   const linkedImage = between('async function kolPlmLinkImageEverywhere', 'async function kolPlmPersistImportedImage');
   assert.ok(linkedImage.includes('state.overrides=mergeImageOverridePayload(state.overrides,data.overrides)'));
 

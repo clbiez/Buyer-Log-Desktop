@@ -57,7 +57,7 @@ test('daha önce yüklenmiş tablo görseli yeniden çizimde yer tutucuyla bekle
 
   const observeStart = APP.indexOf('const observe=img=>{');
   const observe = APP.slice(observeStart, APP.indexOf('const cancelHover=', observeStart));
-  assert.match(observe, /if\(hasSource&&loaded\.has\(key\(img\.dataset\.src\)\)\)\{loadTableImage\(img\);return;\}/);
+  assert.match(observe, /if\(loaded\.has\(key\(img\.dataset\.src\)\)\)\{loadTableImage\(img\);return;\}/);
   assert.ok(observe.indexOf('loaded.has(') < observe.indexOf('observer.observe(img)'));
   assert.match(APP, /MAX_LOADED_KEYS=2048/);
 });

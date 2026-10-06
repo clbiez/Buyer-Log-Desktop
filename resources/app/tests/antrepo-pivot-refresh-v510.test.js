@@ -48,13 +48,12 @@ test('Excel automation refreshes workbook once without repeating every PivotTabl
   assert.match(PS1, /OpenMs=.*RefreshMs=.*LayoutMs=.*CalculateMs=.*SaveMs=.*TotalMs=/);
 });
 
-test('v5.10 latest refresh result notes are shown directly on Overview', () => {
-  assert.match(INDEX, /id="ovRefreshResult"/);
-  assert.match(APP, /function renderOverviewRefreshResult\(\)/);
+test('v7.0.250 latest refresh result is kept for toast/history but not rendered on Overview', () => {
+  assert.doesNotMatch(INDEX, /id="ovRefreshResult"/);
+  assert.doesNotMatch(APP, /function renderOverviewRefreshResult\(\)/);
   assert.match(APP, /lastRefreshResult/);
-  assert.match(APP, /data-refresh-result-detail/);
   assert.match(APP, /Değişiklik geçmişi otomatik modal açmaz/);
-  assert.match(CSS, /\.ovRefreshResult/);
+  assert.doesNotMatch(CSS, /\.ovRefreshResult/);
 });
 
 test('v5.10 refresh result is persisted in model snapshot and returned by api data', () => {

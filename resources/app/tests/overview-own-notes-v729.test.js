@@ -355,7 +355,7 @@ test('Genel Bakış metinleri kuralı açıkça anlatır', () => {
 
 test('Notes Reminder not metnine tıklamak mevcut not düzenleyicisini açar', () => {
   const start = APP.indexOf('function renderOverviewPriorityReminder(');
-  const end = APP.indexOf('function renderOverviewRefreshResult(', start);
+  const end = APP.indexOf('function renderOverviewState(', start);
   const block = APP.slice(start, end);
   assert.match(block, /class=\"ovNoteText ovNoteTextEdit\"/);
   assert.match(block, /data-note-edit=\"\$\{groupIndex\}\"/);
