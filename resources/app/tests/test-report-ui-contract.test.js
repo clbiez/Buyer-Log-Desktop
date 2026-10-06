@@ -52,6 +52,23 @@ test('hücre Buying görevini TR/EN gösterir; düzenleme yetkisi korunur', () =
   assert.match(ui, /source: 'test_report'/);
 });
 
+test('CP\'de siparişi olmayan raporlar dikkate alınmaz ve LCW AI incelemesine gönderilmez', () => {
+  const ui = read('public/test-report-import.js');
+  assert.match(ui, /const ignored = match\.level === 'none' && match\.reason === 'order'/);
+  assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/);
+  assert.match(ui, /function reviewableEntries\(\) \{ return ui\.entries\.filter\(function \(e\) \{ return e\.report\.talepNo && !e\.ignored; \}\); \}/);
+  assert.match(ui, /T\('Dikkate alınmadı', 'Ignored'\)/);
+  assert.match(ui, /LCW AI\\'a gönderilmedi/);
+  assert.match(ui, /if \(!entry\.ignored && !entry\.itemId && entry\.typeKey/);
+});
+
+test('önizleme rapordaki test adlarını görünür gösterir', () => {
+  const ui = read('public/test-report-import.js');
+  assert.match(ui, /function testNames\(report\)/);
+  assert.match(ui, /T\('Test adı: ', 'Test name: '\)/);
+  assert.match(ui, /tests\.join\(', '\)/);
+});
+
 test('checklist cevabı kaynak alanını taşır; elle seçim kaynaksızdır', () => {
   const Checklist = require('../public/cp-checklist-engine');
   const analysis = { orderKey: 'PO1', plannedLoadDate: 1 };
