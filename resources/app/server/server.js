@@ -281,6 +281,7 @@ const databaseConnector = require('./lib/database-connector');
 const databaseCredentialStore = require('./lib/database-credential-store');
 const corporateIntegrationLab = require('./lib/corporate-integration-lab');
 const modelFields = require('./lib/model-fields');
+const plmFabricInfo = require('./lib/plm-fabric-info');
 const filterValueTypes = require('./lib/filter-value-types');
 const { loadFromModelConnections, ensureConnectionMapping, alignHorizonWithMapping, validateAntrepoIntegrity, resolveColumnTypes, effectiveScopes, buildConnectionQuery } = require('./lib/model-refresh');
 const refreshErrorDiagnostics = require('./lib/refresh-error-diagnostics');
@@ -3745,6 +3746,35 @@ app.get('/api/plm-main-colours', userAccess.requireAnyArea('koleksiyon', 'cp', '
   const store = plmMainColour.loadStore(), models = {};
   for (const [plmId, entry] of Object.entries(store.models)) models[plmId] = { mainColourCode: entry.mainColourCode || '', colourCodes: entry.colourCodes || null };
   res.set('Cache-Control', 'no-store').json({ models });
+});
+/* ASAS ↔ PLM ana kumaş karşılaştırması (salt okunur ölçüm). Son Refresh'in
+   ASAS siparişleri ile kullanıcının Koleksiyon satırlarındaki PLM
+   mainFabricInfo değeri "Plm Kod" üzerinden eşlenir; alan bazında
+   eşleşti/farklı/PLM'de yok sayıları ve ASAS satır çoğalması döner. Hiçbir
+   sipariş, LFL veya Koleksiyon verisi değiştirilmez. */
+app.get('/api/diagnostics/fabric-source-comparison', userAccess.requireAnyArea('cp', 'orders'), (req, res) => {
+  try {
+    const runtime = cacheForUser(req.currentUser.id);
+    const orders = modelImageIdentityOrders(runtime);
+    let collectionRows = [];
+    try { collectionRows = loadWorkspace(String(req.currentUser.id || '')).rows || []; } catch (_) { collectionRows = []; }
+    const report = plmFabricInfo.compareFabricSources(orders, collectionRows, { sampleLimit: 100 });
+    const fabricHeaderInfo = runtime && runtime.fabricHeaderInfo || null;
+    res.set('Cache-Control', 'no-store').json({
+      ok: true,
+      generatedAt: new Date().toISOString(),
+      refreshRowExpansion: fabricHeaderInfo ? {
+        sourceRowCount: fabricHeaderInfo.sourceRowCount ?? null,
+        orderIdentityCount: fabricHeaderInfo.orderIdentityCount ?? null,
+        rowsPerOrderIdentity: fabricHeaderInfo.rowsPerOrderIdentity ?? null,
+        mainRowCount: fabricHeaderInfo.mainRowCount ?? null,
+        ignoredNonMainRows: fabricHeaderInfo.ignoredNonMainRows ?? null,
+      } : null,
+      ...report,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message, code: 'FABRIC_SOURCE_COMPARISON_FAILED' });
+  }
 });
 app.post('/api/plm-main-colours', userAccess.requireAnyArea('koleksiyon'), express.json({ limit: '32kb' }), (req, res) => {
   try {
