@@ -302,7 +302,9 @@ test('v7.0.192 CP PLM Numune sütunu: tanımlı, salt okunur ve kayda girmeyen e
   assert.match(app, /if\(c\.type==='plmSample'\) return norm\(v\);/);
   // Hem ham satırlar hem Partial View kopyaları erişimciyi taşır.
   assert.match(app, /ensurePlmSampleAccessors\(state\.cp\.rows\);\n  const source=partialViewRows\('cp',state\.cp\.rows\);ensurePlmSampleAccessors\(source\);/);
-  assert.match(app, /ensurePlmSampleAccessors\(state\.orders\.rows\);\n  const source=partialViewRows\('orders',state\.orders\.rows\);ensurePlmSampleAccessors\(source\);/);
+  // Siparişler'de checklist/PLM numune çalışmaz (kullanıcı kararı).
+  assert.doesNotMatch(app, /ensurePlmSampleAccessors\(state\.orders\.rows\)/);
+  assert.match(app, /filter\(c=>c\.k!=='Priority'&&c\.type!=='plmSample'\)/);
   assert.match(app, /window\.addEventListener\('bl:plm-requests-changed'/);
 
   // Erişimci davranışı: kaynak koddaki fonksiyon izole çalıştırılır.
