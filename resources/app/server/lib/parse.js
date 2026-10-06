@@ -1923,17 +1923,18 @@ function computeFlags(row, transitRules, todayValue = new Date()) {
     today: todayValue,
   }, dateOrdinal);
 }
-function applyFormulas(row, transitRules) {
+function applyFormulas(row, transitRules, includePriority = true) {
   const cf = computeFlags(row, transitRules);
   // CP/Orders Priority artık legacy operational warning text değildir.
   // Sunucu base/system Action Priority üretir; browser kişisel checklist/custom
   // rule overlay'ini aynı cp-readiness motorunun üstünde uygular.
-  const decision = BLCpReadinessEngine.analyzeOrder(row, {
+  const decision = includePriority ? BLCpReadinessEngine.analyzeOrder(row, {
     transitRules: Array.isArray(transitRules) ? transitRules : [],
     today: dateOrdinal(new Date()),
     dateOrdinal,
-  });
-  row['Priority'] = decision && decision.priority ? decision.priority : 'ON_TRACK';
+  }) : null;
+  if(includePriority)row['Priority'] = decision && decision.priority ? decision.priority : 'ON_TRACK';
+  else delete row['Priority'];
   row['Ex→Retail'] = cf.exr == null ? '' : cf.exr;
   // LT (OPD → Ex-Factory) de CP/Orders payload'ının gerçek türev alanıdır.
   // İstemcide hesaplanıyor olsa da sunucudan boş gelmesi revizyon karşılaştırmasında
@@ -2198,8 +2199,8 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       const noteColumnRec = overrideGet(ov.noteColumnValues || {}, o) || {};
       noteColumnDefs.forEach(def => { row[def.id] = noteColumnRec[def.id] || ''; });
     }
-    applyFormulas(row, ov.transitRules);
-    if (!isActive) row.Priority = '';
+    applyFormulas(row, ov.transitRules, options.includePriority!==false&&(!options.priorityForActiveOnly||row._isActive));
+    if (!isActive && options.includePriority!==false) row.Priority = '';
     return attachSourceOrderRef(row, o);
   });
 }
@@ -2227,7 +2228,7 @@ function buildCPRowsFromASAS(asasOrders, antrepoMap, overrides) {
 }
 
 function buildOrdersRowsFromASAS(asasOrders, antrepoMap, overrides) {
-  return buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, { includeInactive: true });
+  return buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, { includeInactive: true, includePriority:false });
 }
 
 // CP ve Orders aynı ASAS/IAS kapsamını kullanıyorsa pahalı lojistik eşleştirmesi,
@@ -2236,8 +2237,9 @@ function buildOrdersRowsFromASAS(asasOrders, antrepoMap, overrides) {
 // salt-okunur lojistik dizileri paylaşılabilir, ancak _id ve _canEdit gibi ekran
 // alanları iki modülün birbirini değiştirmemesi için bağımsız kalır.
 function buildSharedOrderProjectionRowsFromASAS(asasOrders, antrepoMap, overrides) {
-  const orders = buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, { includeInactive: true });
+  const orders = buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, { includeInactive: true, priorityForActiveOnly:true });
   const cp = orders.filter(row => row && row._isActive).map((row, index) => ({ ...row, _id:index }));
+  orders.forEach(row=>{delete row.Priority;});
   return { cp, orders };
 }
 

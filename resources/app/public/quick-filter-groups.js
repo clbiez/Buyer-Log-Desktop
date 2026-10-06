@@ -59,7 +59,7 @@
   const BUILT_INS = {
     overview: [['season', { tr: 'Sezon', en: 'SEASON' }], ['pri', 'Priority'], ['status', 'Status'], ['exf', 'Ex-Factory'], ['del', 'Del. Type']],
     cp: [['season', 'Season'], ['pri', 'Priority'], ['status', 'Status'], ['exf', 'Ex-Factory'], ['del', 'Del. Type']],
-    orders: [['orderStatus', { tr: 'Sipariş Durumu', en: 'Order Status' }], ['season', 'Season'], ['pri', 'Priority'], ['status', 'Status'], ['exf', 'Ex-Factory'], ['del', 'Del. Type']],
+    orders: [['orderStatus', { tr: 'Sipariş Durumu', en: 'Order Status' }], ['season', 'Season'], ['status', 'Status'], ['exf', 'Ex-Factory'], ['del', 'Del. Type']],
   };
   const builtInLabel = label => (label && typeof label === 'object' ? (en() ? label.en : label.tr) : label);
   // Hazır başlıkların dayandığı sütunlar; ekleme listesinde ikinci kez çıkmasınlar.
@@ -76,7 +76,7 @@
       const known = new Set((BUILT_INS[moduleKey] || []).map(([id]) => id));
       return {
         hidden: (Array.isArray(parsed.hidden) ? parsed.hidden : []).filter(id => known.has(id)),
-        extra: (Array.isArray(parsed.extra) ? parsed.extra : []).map(clean).filter(Boolean).slice(0, MAX_EXTRA),
+        extra: (Array.isArray(parsed.extra) ? parsed.extra : []).map(clean).filter(key=>key&&(moduleKey!=='orders'||key!=='Priority')).slice(0, MAX_EXTRA),
       };
     } catch (_) { return { hidden: [], extra: [] }; }
   }

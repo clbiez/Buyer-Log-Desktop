@@ -71,7 +71,7 @@ test('Orders Sipariş Durumu Sipariş Detayları başlığının başında durur
   const context = { ORDERS_STATUS_COL: { k: 'Active/Inactive', group: 'Sipariş Detayları' } };
   vm.runInNewContext(`${extractFunction(APP, 'ordersColumnsFromCp')};this.fn=ordersColumnsFromCp;`, context);
   const out = context.fn([{ k: 'Priority' }, { k: 'Buyer' }, { k: 'Season' }, { k: 'Country' }]);
-  assert.deepEqual(plain(out.map(c => c.k)), ['Priority', 'Buyer', 'Active/Inactive', 'Season', 'Country']);
+  assert.deepEqual(plain(out.map(c => c.k)), ['Buyer', 'Active/Inactive', 'Season', 'Country']);
 });
 
 test('Koleksiyon ana başlıkları; Sipariş Tipi ve Buying Numunesi tabloda yok, alan satırda yaşar', () => {

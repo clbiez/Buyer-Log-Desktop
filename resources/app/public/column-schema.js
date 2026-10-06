@@ -289,5 +289,23 @@
       return schema;
     });
   }
-  return { resolveColumnSchema, resolveColumnSchemas, parseDate: strictDate, parseNumber: numeric, parseBoolean: value => buildSchema({ field: '' }, 'boolean').parser(value) };
+  function createResolverCache() {
+    const entries=new WeakMap(),functions=new WeakMap();let nextFunction=0;
+    const signature=(column,metadata)=>JSON.stringify([
+      Object.fromEntries(Object.entries(column).filter(([key])=>key!=='_blSchema')),metadata,
+    ],(_key,value)=>{
+      if(typeof value!=='function')return value;
+      if(!functions.has(value))functions.set(value,++nextFunction);
+      return {functionId:functions.get(value)};
+    });
+    return {resolve(column,rows,metadata,revision){
+      if(!column||typeof column!=='object')return resolveColumnSchema(column,rows,metadata);
+      let key;try{key=signature(column,metadata);}catch(_){return resolveColumnSchema(column,rows,metadata);}
+      const old=entries.get(column);
+      if(old&&old.rows===rows&&old.revision===revision&&old.key===key)return old.schema;
+      const schema=resolveColumnSchema(column,rows,metadata);
+      entries.set(column,{rows,revision,key,schema});return schema;
+    }};
+  }
+  return { resolveColumnSchema, resolveColumnSchemas, createResolverCache, parseDate: strictDate, parseNumber: numeric, parseBoolean: value => buildSchema({ field: '' }, 'boolean').parser(value) };
 }));

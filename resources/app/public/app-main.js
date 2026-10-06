@@ -77,7 +77,7 @@ function collectCoreAutoFilterState(){
     },
     orders:{
       search:value('ordersSearch'),
-      selects:{ordersFCountry:value('ordersFCountry'),ordersFLicense:value('ordersFLicense'),ordersFPriority:value('ordersFPriority'),ordersFDelType:value('ordersFDelType'),ordersFStatus:value('ordersFStatus'),ordersFSeason:value('ordersFSeason')},
+      selects:{ordersFCountry:value('ordersFCountry'),ordersFLicense:value('ordersFLicense'),ordersFDelType:value('ordersFDelType'),ordersFStatus:value('ordersFStatus'),ordersFSeason:value('ordersFSeason')},
       colFilters:coreSerializeFilters(state.colFilters.orders),
       checkFilter:normalizeCheckFilterMode(state.checkFilter.orders),
       quickExf:state.ordersQuickExf||'',
@@ -999,6 +999,7 @@ function applyUnifiedPriorityAnalysis(row,analysis){
   row._actionPrioritySignals=analysis&&Array.isArray(analysis.signals)?analysis.signals.slice():[];
 }
 function syncUnifiedPrioritiesForTable(tableKey){
+  if(tableKey==='orders')return true;
   const tableState=state&&state[tableKey],rows=tableState&&Array.isArray(tableState.rows)?tableState.rows:null;
   const assistant=window.BLCpAssistant;
   if(!rows||!assistant||typeof assistant.computeDecisionsForRows!=='function')return false;
@@ -1073,9 +1074,8 @@ function ensureUnifiedPrioritiesForTable(tableKey){
   return false;
 }
 window.addEventListener('bl:cp-decision-context-changed',()=>{
-  invalidateUnifiedPriorityDecisions('personal-decision-context');
+  invalidateUnifiedPriorityDecisions('personal-decision-context',['cp']);
   if(currentActiveTab()==='cp')renderCP();
-  if(currentActiveTab()==='orders')renderOrders();
   scheduleOverviewRender('personal-decision-context');
 });
 
@@ -2197,7 +2197,7 @@ function tableInfoForTab(tab){
     cp: {tableKey:'cp', tableSel:'#cpTable', cols:()=>CP_COLS, rowsFn:()=>filteredCP(), selSet:()=>state.cpSelected, computeFn:computeFlags, rerender:()=>renderCP(), csvName:'cp_filtered.csv',
       filterIds:['cpSearch','cpFPriority','cpFCountry','cpFLicense','cpFDelType','cpFStatus','cpFSeason']},
     orders: {tableKey:'orders', tableSel:'#ordersTable', cols:()=>ORDERS_COLS, rowsFn:()=>filteredOrders(), selSet:()=>state.ordersSelected, computeFn:computeFlags, rerender:()=>renderOrders(), csvName:'orders_filtered.csv',
-      filterIds:['ordersSearch','ordersFPriority','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason']},
+      filterIds:['ordersSearch','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason']},
     shipping: {tableKey:'ship', tableSel:'#shipTable', idAttr:'data-shipid', cols:()=>SHIP_COLS, rowsFn:()=>shipRows.map(r=>({...r,_id:r._shipId})), selSet:()=>new Set([...shipSelected]), computeFn:null, rerender:()=>renderShipTable(), csvName:'nakliye_kiyaslama.csv',
       filterIds:[]},
     koleksiyon: {tableKey:'koleksiyon', tableSel:'#kolTable', cols:()=>kolColDefs(), rowsFn:()=>filteredKol(), selSet:()=>kolSelected, computeFn:null, rerender:()=>renderKol(), csvName:'koleksiyon.xlsx',
@@ -2300,7 +2300,7 @@ function removeActiveFilterToken(tableKey,kind,key){
 function clearTableFilters(tableKey,{announce=true}={}){
   const filterIds={
     cp:['cpSearch','cpFPriority','cpFCountry','cpFLicense','cpFDelType','cpFStatus','cpFSeason'],
-    orders:['ordersSearch','ordersFPriority','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'],
+    orders:['ordersSearch','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'],
     koleksiyon:['kolSearch'],
   }[tableKey]||[];
   filterIds.forEach(id=>{const control=document.getElementById(id);if(control)control.value='';});
@@ -3397,7 +3397,7 @@ const CP_COLS = [
 const ORDERS_STATUS_COL = {k:'Active/Inactive', label:'Order Status', type:'active', weight:8, group:'Sipariş Detayları'};
 // Orders, CP sütunlarının kopyasıdır; Sipariş Durumu Sipariş Detayları'nın başında durur.
 function ordersColumnsFromCp(cpCols){
-  const copied=(Array.isArray(cpCols)?cpCols:[]).map(c=>({...c}));
+  const copied=(Array.isArray(cpCols)?cpCols:[]).filter(c=>c.k!=='Priority').map(c=>({...c}));
   const at=copied.findIndex(c=>c.k==='Season');
   copied.splice(at>=0?at:copied.length,0,ORDERS_STATUS_COL);
   return copied;
@@ -3450,11 +3450,15 @@ const COLS_BY_TABLE = { cp:CP_COLS, orders:ORDERS_COLS, ship:SHIP_COLS };
 const CP_BASE_COLUMN_KEYS=new Set(CP_COLS.map(c=>c.k));
 // Tek tip çözümleme kapısı: sütun tanımları ve ham satırlar ayrı tutulur;
 // schema yalnız görünüm/filtre/sıralama/export katmanında kullanılır.
+let _tableSchemaResolverCache=null;
 function resolveTableColumnSchemas(tableKey,rows){
   const resolver=window.BLColumnSchema&&window.BLColumnSchema.resolveColumnSchema;
   if(typeof resolver!=='function')return;
+  _tableSchemaResolverCache||=window.BLColumnSchema.createResolverCache?.();
+  const sourceRows=Array.isArray(state[tableKey]?.rows)?state[tableKey].rows:(Array.isArray(rows)?rows:[]);
   (COLS_BY_TABLE[tableKey]||[]).forEach(column=>{
-    column._blSchema=resolver(column,Array.isArray(rows)?rows:[],column.sourceMetadata||column.metadata);
+    const metadata=column.sourceMetadata||column.metadata;
+    column._blSchema=_tableSchemaResolverCache?_tableSchemaResolverCache.resolve(column,sourceRows,metadata,_unifiedPriorityTableRevision[tableKey]):resolver(column,sourceRows,metadata);
   });
 }
 function columnSchemaFor(column,rows){
@@ -6011,7 +6015,7 @@ function quickFilterColumnActive(tableKey, key){
       const dim = dimByColumn[key];
       if(dim && cpDimFilters && cpDimFilters[dim] && cpDimFilters[dim].size) return true;
     }else if(tableKey==='orders'){
-      const controlByColumn={'Priority':'ordersFPriority','Season':'ordersFSeason','Country':'ordersFCountry','License':'ordersFLicense','Del. Type':'ordersFDelType','STATUS':'ordersFStatus'};
+      const controlByColumn={'Season':'ordersFSeason','Country':'ordersFCountry','License':'ordersFLicense','Del. Type':'ordersFDelType','STATUS':'ordersFStatus'};
       const controlId=controlByColumn[key],control=controlId&&document.getElementById(controlId);
       if(control&&norm(control.value))return true;
       if(key==='Ex-factory'&&(norm(state.ordersQuickExf)||!!state.colFilters.orders?.['Ex-factory']?.quickExf))return true;
@@ -8463,7 +8467,7 @@ function buildCPFilters(){
 }
 function buildOrdersFilters(){
   const rows=state.orders?.rows||[];
-  fillPrioritySelect('ordersFPriority');
+  for(const row of rows){delete row.Priority;delete row._actionPriorityReasons;delete row._actionPrioritySignals;delete row._calculationStatus;}
   fillSelect('ordersFCountry',uniqueVals(rows,'Country'));
   fillSelect('ordersFLicense',uniqueVals(rows,'License'));
   fillSelect('ordersFDelType',uniqueVals(rows,'Del. Type'));localizeDelTypeSelect('ordersFDelType');
@@ -8551,7 +8555,7 @@ const renderKolDebounced = debounce(renderKol, 180);
 });
 bindTableSearchClipboardPaste(document.getElementById('cpSearch'));
 const renderOrdersDebounced=debounce(renderOrders,150);
-['ordersSearch','ordersFPriority','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'].forEach(id=>{
+['ordersSearch','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'].forEach(id=>{
   const el=document.getElementById(id);if(!el)return;
   if(el.tagName==='INPUT')el.addEventListener('input',renderOrdersDebounced);
   el.addEventListener('change',renderOrders);
@@ -8611,6 +8615,9 @@ const CP_MIRROR_GROUPS=[
 ];
 const CP_MIRROR_IDS=CP_MIRROR_GROUPS.map(g=>g.id);
 const CP_MIRROR_COLS=CP_MIRROR_GROUPS.map(g=>g.col);
+const ORDERS_MIRROR_GROUPS=CP_MIRROR_GROUPS.filter(g=>g.id!=='pri');
+const ORDERS_MIRROR_IDS=ORDERS_MIRROR_GROUPS.map(g=>g.id);
+const ORDERS_MIRROR_COLS=ORDERS_MIRROR_GROUPS.map(g=>g.col);
 function cpBuildFilterContext(){
   migrateLegacyCpQuickFilters();
   const bucket=state.colFilters.cp||{};
@@ -8950,13 +8957,14 @@ function renderCPNow(){
 
 // ================= ORDERS / SİPARİŞLER =================
 function migrateLegacyOrdersQuickFilters(){
-  normalizeUnifiedPriorityFilter('orders');
-  [['ordersFPriority','Priority'],['ordersFStatus','STATUS'],['ordersFDelType','Del. Type'],['ordersFSeason','Season']].forEach(([id,key])=>{
+  if(state.colFilters.orders)delete state.colFilters.orders.Priority;
+  if(state.ordersSort?.key==='Priority')state.ordersSort.key=null;
+  [['ordersFStatus','STATUS'],['ordersFDelType','Del. Type'],['ordersFSeason','Season']].forEach(([id,key])=>{
     const el=document.getElementById(id),value=norm(el&&el.value);if(!value)return;
     if(!state.colFilters.orders)state.colFilters.orders={};
     const entry=state.colFilters.orders[key],values=new Set(entry&&entry.values?[...entry.values].map(String):[]);
-    const nextValue=key==='Priority'?actionPriorityCode(value):value;if(nextValue)values.add(nextValue);
-    if(values.size){state.colFilters.orders[key]={values};if(key==='Priority')state.colFilters.orders[key].quickPriority=true;}
+    values.add(value);
+    if(values.size)state.colFilters.orders[key]={values};
     el.value='';
   });
   const legacy=norm(state.ordersQuickExf);
@@ -8987,13 +8995,12 @@ function toggleOrdersActiveQuick(value){
 function ordersBuildFilterContext(){
   migrateLegacyOrdersQuickFilters();
   const bucket=state.colFilters.orders||{},groupFilters={};
-  CP_MIRROR_GROUPS.forEach(g=>{groupFilters[g.id]=prepareColFilter('orders',g.col,bucket[g.col]);});
+  ORDERS_MIRROR_GROUPS.forEach(g=>{groupFilters[g.id]=prepareColFilter('orders',g.col,bucket[g.col]);});
   const dimEntries=[];
   Object.entries(ordersDimFilters).forEach(([dim,set])=>{if(set&&set.size&&ORDERS_DIM_META[dim])dimEntries.push([ORDERS_DIM_META[dim].col,set]);});
   const fD=document.getElementById('ordersFDelType')?.value||'';
   return {
     q:parseTableSearchTerms(document.getElementById('ordersSearch')?.value),
-    fP:document.getElementById('ordersFPriority')?.value||'',
     fC:document.getElementById('ordersFCountry')?.value||'',
     fL:document.getElementById('ordersFLicense')?.value||'',
     fD,fDCanon:fD?comparableColumnFilterValue('Del. Type',fD):'',
@@ -9001,7 +9008,7 @@ function ordersBuildFilterContext(){
     fSeason:document.getElementById('ordersFSeason')?.value||'',
     checkFilter:normalizeCheckFilterMode(state.checkFilter.orders),
     activeSet:new Set(state.ordersQuickActive||[]),
-    baseFilters:prepareColFilters('orders',[...CP_MIRROR_COLS,'Active/Inactive']),
+    baseFilters:prepareColFilters('orders',[...ORDERS_MIRROR_COLS,'Active/Inactive']),
     activeFilter:prepareColFilter('orders','Active/Inactive',bucket['Active/Inactive']),
     groupFilters,dimEntries,
   };
@@ -9025,10 +9032,6 @@ function ordersPassesBase(row,ctx,ignoreActive=false){
   return true;
 }
 function ordersPassesGroup(row,ctx,id){
-  if(id==='pri'){
-    if(ctx.fP&&!priorityHas(row.Priority,ctx.fP))return false;
-    return preparedColFilterPasses(ctx.groupFilters.pri,'Priority',row);
-  }
   if(id==='status'){
     if(ctx.fS&&norm(row.STATUS)!==ctx.fS)return false;
     return preparedColFilterPasses(ctx.groupFilters.status,'STATUS',row);
@@ -9063,24 +9066,23 @@ function ordersEvaluateAll(){
   for(const row of state.orders.rows){
     if(!ordersPassesBase(row,ctx,true))continue;
     let allGroups=true;
-    for(const id of CP_MIRROR_IDS)if(!ordersPassesGroup(row,ctx,id)){allGroups=false;break;}
+    for(const id of ORDERS_MIRROR_IDS)if(!ordersPassesGroup(row,ctx,id)){allGroups=false;break;}
     if(allGroups)out.activeScope.push(row);
     if(!ordersPassesBase(row,ctx,false))continue;
     out.none.push(row);
     let failed=0,failedId=null;
-    for(const id of CP_MIRROR_IDS){if(!ordersPassesGroup(row,ctx,id)){failed++;failedId=id;if(failed>1)break;}}
-    if(failed===0){out.all.push(row);for(const id of CP_MIRROR_IDS)out[id].push(row);}
+    for(const id of ORDERS_MIRROR_IDS){if(!ordersPassesGroup(row,ctx,id)){failed++;failedId=id;if(failed>1)break;}}
+    if(failed===0){out.all.push(row);for(const id of ORDERS_MIRROR_IDS)out[id].push(row);}
     else if(failed===1)out[failedId].push(row);
   }
   return out;
 }
 function filteredOrders(){
   if(!state.orders)return [];
-  if(window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('orders');
   const ctx=ordersBuildFilterContext();
   ensurePlmSampleAccessors(state.orders.rows);
   const source=partialViewRows('orders',state.orders.rows);ensurePlmSampleAccessors(source);
-  let rows=source.filter(row=>ordersRowPasses(row,ctx,CP_MIRROR_IDS));
+  let rows=source.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
 }
@@ -9139,7 +9141,6 @@ function ordersCycleImageSize(){
 }
 function renderOrdersNow(){
   if(!state.orders)return;
-  if(!ensureUnifiedPrioritiesForTable('orders'))return;
   applyFormulaColumns('orders');
   migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
   document.getElementById('ordersEmpty').style.display='none';
@@ -9168,12 +9169,11 @@ function renderOrdersNow(){
     [...new Set(values.map(value=>norm(value)||'—'))].forEach(v=>{statusCounts[v]=(statusCounts[v]||0)+1;});
   });
   scope.del.forEach(row=>{const v=normalizeTransitDelType(row['Del. Type'])||norm(row['Del. Type'])||'—';delCounts[v]=(delCounts[v]||0)+1;});
-  const buckets=actionPriorityCounts(scope.pri);
   const exfDefs=[['past',appLang==='en'?'Past':'Geçmiş','red'],['thisWeek',appLang==='en'?'This Week':'Bu Hafta','yellow'],['nextWeek',appLang==='en'?'Next Week':'Önümüzdeki Hafta','blue'],['thisMonth',appLang==='en'?'This Month':'Bu Ay','orange'],['nextMonth',appLang==='en'?'Next Month':'Önümüzdeki Ay','purple']];
   const exfCounts=Object.fromEntries(exfDefs.map(([key])=>[key,0]));
   scope.exf.forEach(row=>exfDefs.forEach(([key])=>{if(matchesQuickExFactory(row,key))exfCounts[key]++;}));
   const selectedActive=state.ordersQuickActive||new Set();
-  const mirrored=['Priority','STATUS','Del. Type','Season','Ex-factory'];
+  const mirrored=['STATUS','Del. Type','Season','Ex-factory'];
   const noMirrored=!selectedActive.size&&!mirrored.some(key=>state.colFilters.orders?.[key]);
   const chip=(tone,n,label,attr)=>Number(n)>0?`<div class="kpi tone-${tone}" ${attr}><span class="n">${n}</span><span class="l">${escapeHtml(label)}</span></div>`:'';
   // v7.36 — hazır başlıklar aynen; hangisinin çizileceğini kullanıcı seçer.
@@ -9184,8 +9184,6 @@ function renderOrdersNow(){
     `<div class="kpiSep"></div>`+
     `<div class="kpi tone-navy${noMirrored?' active':''}" data-act="clearAll"><span class="n">${scope.none.length}</span><span class="l">${appLang==='en'?'All':'Tümü'}</span></div>`+
     qfgSeg('orders','season','Season',quickSeasonEntries(seasonCounts).map(([v,n])=>chip('blue',n,v,`data-season="${escapeHtml(v)}"`)).join(''))+
-    qfgSeg('orders','pri','Priority',
-      actionPriorityCodes().map(code=>chip(priorityTone(code),buckets[code],priorityDisplay(code),`data-pri="${escapeHtml(code)}"`)).join(''))+
     qfgSeg('orders','status','Status',quickCountEntries(statusCounts).map(([v,n])=>chip(v==='Depoda'?'green':v==='Üretimde'?'gray':'blue',n,statusDisplay(v),`data-status="${escapeHtml(v)}"`)).join(''))+
     qfgSeg('orders','exf','Ex-Factory',exfDefs.map(([key,label,tone])=>chip(tone,exfCounts[key],label,`data-exf="${key}"`)).join(''))+
     qfgSeg('orders','del','Del. Type',quickCountEntries(delCounts).map(([v,n])=>chip('purple',n,transitDelTypeDisplay(v),`data-deltype="${escapeHtml(v)}"`)).join(''))+
@@ -9196,19 +9194,17 @@ function renderOrdersNow(){
     if(selectedActive.has(el.dataset.orderActive))el.classList.add('active');
     el.addEventListener('click',()=>toggleOrdersActiveQuick(el.dataset.orderActive));
   });
-  const curPri=state.colFilters.orders?.Priority?.values||new Set(),curStatus=state.colFilters.orders?.STATUS?.values||new Set(),curDel=state.colFilters.orders?.['Del. Type']?.values||new Set(),curSeason=state.colFilters.orders?.Season?.values||new Set(),curExf=state.colFilters.orders?.['Ex-factory']?.quickExf?state.colFilters.orders['Ex-factory'].values:new Set();
-  kpi.querySelectorAll('[data-pri]').forEach(el=>{if(mirroredQuickValueActive('orders','Priority',curPri,el.dataset.pri))el.classList.add('active');});
+  const curStatus=state.colFilters.orders?.STATUS?.values||new Set(),curDel=state.colFilters.orders?.['Del. Type']?.values||new Set(),curSeason=state.colFilters.orders?.Season?.values||new Set(),curExf=state.colFilters.orders?.['Ex-factory']?.quickExf?state.colFilters.orders['Ex-factory'].values:new Set();
   kpi.querySelectorAll('[data-status]').forEach(el=>{if(mirroredQuickValueActive('orders','STATUS',curStatus,el.dataset.status))el.classList.add('active');});
   kpi.querySelectorAll('[data-deltype]').forEach(el=>{if(mirroredQuickValueActive('orders','Del. Type',curDel,el.dataset.deltype))el.classList.add('active');});
   kpi.querySelectorAll('[data-season]').forEach(el=>{if(mirroredQuickValueActive('orders','Season',curSeason,el.dataset.season))el.classList.add('active');});
   kpi.querySelectorAll('[data-exf]').forEach(el=>{if([...curExf].some(v=>norm(v)===norm(el.dataset.exf)))el.classList.add('active');});
   kpi.querySelectorAll('.kpi:not([data-qfg-col])').forEach(el=>{
-    if(el.dataset.act==='clearAll')el.addEventListener('click',()=>{['ordersFPriority','ordersFStatus','ordersFDelType','ordersFSeason'].forEach(id=>{const node=document.getElementById(id);if(node)node.value='';});state.ordersQuickActive.clear();clearColumnFilters('orders',mirrored);renderOrders();});
+    if(el.dataset.act==='clearAll')el.addEventListener('click',()=>{['ordersFStatus','ordersFDelType','ordersFSeason'].forEach(id=>{const node=document.getElementById(id);if(node)node.value='';});state.ordersQuickActive.clear();clearColumnFilters('orders',mirrored);renderOrders();});
     else if(el.dataset.status!=null)el.addEventListener('click',()=>toggleMirroredQuickFilter('orders','STATUS','ordersFStatus',el.dataset.status,renderOrders));
     else if(el.dataset.deltype!=null)el.addEventListener('click',()=>toggleMirroredQuickFilter('orders','Del. Type','ordersFDelType',el.dataset.deltype,renderOrders));
     else if(el.dataset.season!=null)el.addEventListener('click',()=>toggleMirroredQuickFilter('orders','Season','ordersFSeason',el.dataset.season,renderOrders));
     else if(el.dataset.exf!=null)el.addEventListener('click',()=>toggleOrdersQuickExFactory(el.dataset.exf,renderOrders));
-    else if(el.dataset.pri!=null)el.addEventListener('click',()=>toggleMirroredQuickFilter('orders','Priority','ordersFPriority',el.dataset.pri,renderOrders));
   });
   scheduleCoreAutoFilterSave();
   renderFullTable('ordersTable','orders',rows,state.ordersSort,key=>{
@@ -15545,7 +15541,7 @@ async function chooseSourceFolder(){
 const VIEW_TABLES = ['cp', 'orders', 'ship', 'koleksiyon'];
 const FILTER_INPUTS = {
   cp: { search: 'cpSearch', selects: ['cpFPriority','cpFCountry','cpFLicense','cpFDelType','cpFStatus','cpFSeason'] },
-  orders: { search: 'ordersSearch', selects: ['ordersFPriority','ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'] },
+  orders: { search: 'ordersSearch', selects: ['ordersFCountry','ordersFLicense','ordersFDelType','ordersFStatus','ordersFSeason'] },
   ship: { search: null, selects: [] },
   koleksiyon: { search: 'kolSearch', selects: [] },
 };

@@ -22,14 +22,27 @@ function catalogs(rows){
 }
 async function main(){
   const started=Date.now(),data=workerData||{},editable=new Set((data.editableOrderCodes||[]).map(String));
-  const projected=data.shared
+  const requested=new Set(data.modules||['cp','overview','orders','order-summary','collection-catalog']);
+  let catalogRows=null;
+  if(requested.has('collection-catalog')&&data.catalogOrdersBuffer){
+    const raw=await promisify(zlib.gunzip)(Buffer.from(data.catalogOrdersBuffer));
+    catalogRows=JSON.parse(raw.toString('utf8')).rows;
+  }
+  const needCp=requested.has('cp'),needOrders=requested.has('orders')||(requested.has('collection-catalog')&&!catalogRows);
+  const projected=data.shared&&needCp&&needOrders
     ?parse.buildSharedOrderProjectionRowsFromASAS(data.ordersSource,data.ordersAntrepo,data.overrides)
-    :{cp:parse.buildCPRowsFromASAS(data.cpSource,data.cpAntrepo,data.overrides),orders:parse.buildOrdersRowsFromASAS(data.ordersSource,data.ordersAntrepo,data.overrides)};
-  const orderSummary=data.orderSummaryAllowed?parse.buildOrderSummaryRowsFromASAS(data.cpSource,data.cpAntrepo,data.overrides):[];
-  const overview=data.orderSummaryAllowed?parse.buildOverviewSummaryRowsFromASAS(data.cpSource,data.overrides):[];
+    :{cp:needCp?parse.buildCPRowsFromASAS(data.cpSource,data.cpAntrepo,data.overrides):[],orders:needOrders?parse.buildOrdersRowsFromASAS(data.ordersSource,data.ordersAntrepo,data.overrides):[]};
+  const orderSummary=requested.has('order-summary')&&data.orderSummaryAllowed?parse.buildOrderSummaryRowsFromASAS(data.cpSource,data.cpAntrepo,data.overrides):[];
+  const needOverview=requested.has('overview')||(requested.has('collection-catalog')&&!(catalogRows||projected.orders).length);
+  const overview=needOverview&&data.orderSummaryAllowed?parse.buildOverviewSummaryRowsFromASAS(data.cpSource,data.overrides):[];
   projected.cp.forEach(row=>{row._canEdit=editable.has(String(row['Order Code']));});
   projected.orders.forEach(row=>{row._canEdit=false;});orderSummary.forEach(row=>{row._canEdit=editable.has(String(row['Order Code']));});
-  const values={cp:{rows:projected.cp,cpModelColumns:data.cpModelColumns||[]},overview:{rows:overview},orders:{rows:projected.orders},'order-summary':{rows:orderSummary},'collection-catalog':{catalogs:catalogs(projected.orders.length?projected.orders:overview),catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION}};
+  const values={};
+  if(requested.has('cp'))values.cp={rows:projected.cp,cpModelColumns:data.cpModelColumns||[]};
+  if(requested.has('overview'))values.overview={rows:overview};
+  if(requested.has('orders'))values.orders={rows:projected.orders};
+  if(requested.has('order-summary'))values['order-summary']={rows:orderSummary};
+  if(requested.has('collection-catalog')){const rows=catalogRows||projected.orders;values['collection-catalog']={catalogs:catalogs(rows.length?rows:overview),catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION};}
   const compressed={},transfer=[];
   for(const [module,value] of Object.entries(values)){
     const json=Buffer.from(JSON.stringify(value,dateSafeReplacer),'utf8'),gz=await gzip(json,{level:4}),copy=Uint8Array.from(gz);

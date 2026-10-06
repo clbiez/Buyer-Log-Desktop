@@ -182,15 +182,42 @@ async function readProjection(userId, module, contextHash) {
     decompressMs: parseStarted - inflateStarted, parseMs: Date.now() - parseStarted,
   };
 }
-async function writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt = null, projections = {}, extra = {}, previous = null } = {}) {
+async function decodeProjection(buffer){return JSON.parse((await gunzip(buffer)).toString('utf8'));}
+async function readReusableProjections(userId,contextHash,moduleInputKeys={}) {
+  const manifest=loadManifest(userId),projections={};
+  if(!manifest||String(manifest.contextHash)!==String(contextHash))return {manifest,projections};
+  for(const [module,key] of Object.entries(moduleInputKeys)){
+    const meta=manifest.modules?.[module];
+    if(!MODULES.has(module)||!key||manifest.moduleInputKeys?.[module]!==key||!meta?.checksum)continue;
+    try{
+      const {buffer}=await readCompressed(modulePath(userId,manifest.activeGeneration,module),meta.checksum);
+      projections[module]={buffer,uncompressedBytes:meta.uncompressedBytes};
+    }catch(_){/* Missing/corrupt bytes must be rebuilt from authoritative data. */}
+  }
+  return {manifest,projections};
+}
+async function reuseGeneration(userId,{contextHash,generation,moduleInputKeys={},sourceLoadedAt=null,extra={}}={}){
+  return enqueueUserMutation(userId,async()=>{
+    const checked=await readReusableProjections(userId,contextHash,moduleInputKeys),manifest=checked.manifest;
+    if(!manifest||manifest.activeGeneration!==generation||Object.keys(checked.projections).length!==Object.keys(moduleInputKeys).length)return null;
+    const next={...manifest,...extra,sourceLoadedAt,moduleInputKeys};
+    if(manifest.backlogInputKey!==next.backlogInputKey)next.backlogVariants={};
+    await saveManifest(userId,next);return next;
+  });
+}
+async function writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt = null, projections = {}, reused = {}, extra = {}, previous = null } = {}) {
     const id = generationId();
     const root = generationRoot(userId, id);
     await fs.promises.mkdir(root, { recursive: true });
     const modules = {};
     try {
       for (const module of MODULES) {
-        if (!Object.prototype.hasOwnProperty.call(projections, module)) continue;
-        modules[module] = await writeJsonGzip(modulePath(userId, id, module), projections[module]);
+        if (Object.prototype.hasOwnProperty.call(projections, module))modules[module] = await writeJsonGzip(modulePath(userId, id, module), projections[module]);
+        else if(reused[module]){
+          const entry=reused[module],buffer=Buffer.from(entry.buffer);
+          await atomicWrite(modulePath(userId,id,module),buffer);
+          modules[module]={bytes:buffer.length,uncompressedBytes:entry.uncompressedBytes,checksum:checksum(buffer)};
+        }
       }
       const manifest = {
         schemaVersion: CACHE_SCHEMA_VERSION,
@@ -211,15 +238,17 @@ async function writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt = n
       throw error;
     }
 }
-async function writeGeneration(userId, { contextHash, sourceLoadedAt = null, projections = {}, extra = {} } = {}) {
-  const moduleKey = Object.keys(projections).sort().join(',');
-  return singleFlight(`generation:${safeUserId(userId)}:${contextHash}:${moduleKey}`, () => enqueueUserMutation(userId, async () => {
-    return writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt, projections, extra, previous:loadManifest(userId) });
+async function writeGeneration(userId, { contextHash, sourceLoadedAt = null, projections = {}, reused = {}, extra = {} } = {}) {
+  const moduleKey = Object.keys({...reused,...projections}).sort().join(',');
+  const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null])));
+  return singleFlight(`generation:${safeUserId(userId)}:${contextHash}:${moduleKey}:${inputKey}`, () => enqueueUserMutation(userId, async () => {
+    return writeGenerationUnlocked(userId, { contextHash, sourceLoadedAt, projections, reused, extra, previous:loadManifest(userId) });
   }));
 }
 async function writeCompressedGeneration(userId,{contextHash,sourceLoadedAt=null,projections={},extra={}}={}){
   const moduleKey=Object.keys(projections).sort().join(',');
-  return singleFlight(`compressed-generation:${safeUserId(userId)}:${contextHash}:${moduleKey}`,()=>enqueueUserMutation(userId,async()=>{
+  const inputKey=checksum(Buffer.from(JSON.stringify([sourceLoadedAt,extra.moduleInputKeys||null])));
+  return singleFlight(`compressed-generation:${safeUserId(userId)}:${contextHash}:${moduleKey}:${inputKey}`,()=>enqueueUserMutation(userId,async()=>{
     const previous=loadManifest(userId),id=generationId(),root=generationRoot(userId,id),modules={};
     await fs.promises.mkdir(root,{recursive:true});
     try{
@@ -295,6 +324,8 @@ async function readBacklog(userId, contextHash, key) {
   for (let index = 0; index < candidates.length; index += 1) {
     const manifest = candidates[index];
     if (String(manifest.contextHash || '') !== String(contextHash || '')) continue;
+    // A previous manifest may only supply variants for the current Backlog input.
+    if(manifest.backlogInputKey!==candidates[0].backlogInputKey)continue;
     const meta = manifest.backlogVariants && manifest.backlogVariants[key];
     if (!meta) continue;
     try {
@@ -302,8 +333,12 @@ async function readBacklog(userId, contextHash, key) {
       // Yalnız aktif manifest üzerinde LRU touch yap; fallback manifest'i tekrar aktif
       // hale getirmeye çalışma.
       if (index === 0) {
-        meta.lastAccessAt = new Date().toISOString();
-        saveManifest(userId, manifest).catch(() => {});
+        enqueueUserMutation(userId,async()=>{
+          const current=loadManifest(userId);
+          if(current?.activeGeneration!==manifest.activeGeneration||current.backlogInputKey!==manifest.backlogInputKey||!current.backlogVariants?.[key])return;
+          current.backlogVariants[key].lastAccessAt=new Date().toISOString();
+          await saveManifest(userId,current);
+        }).catch(() => {});
       }
       return { ...result, manifest, hit: true, fallback: index > 0 };
     } catch (_) { /* aynı context'teki önceki varyantı dene */ }
@@ -353,5 +388,5 @@ function listSnapshotUserIds(snapshotRoot) {
 module.exports = {
   ROOT, CACHE_SCHEMA_VERSION, BACKLOG_MAX_VARIANTS, safeUserId, manifestPath, loadManifest,
   MEMORY_MAX_ENTRIES, MEMORY_MAX_BYTES,
-  readProjection, readProjectionCompressed, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
+  readProjection, readProjectionCompressed, decodeProjection, readReusableProjections, reuseGeneration, writeProjection, writeGeneration, writeCompressedGeneration, rewriteGeneration, readBacklog, writeBacklog, invalidate, invalidateAll, listCachedUserIds, listSnapshotUserIds,
 };

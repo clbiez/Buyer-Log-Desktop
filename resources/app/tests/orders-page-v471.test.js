@@ -48,7 +48,7 @@ test('v4.71 CP aktif siparişleri, Orders aktif ve pasif siparişleri listeler',
   const passive = allRows.find(row => row['Order Code'] === 1002);
   assert.equal(passive['Active/Inactive'], 'Inactive');
   assert.equal(passive.STATUS, 'Pasif');
-  assert.equal(passive.Priority, '');
+  assert.ok(allRows.every(row=>!Object.hasOwn(row,'Priority')));
   assert.equal(passive._canEdit, undefined);
 });
 
