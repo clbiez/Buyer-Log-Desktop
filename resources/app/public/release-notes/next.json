@@ -208,6 +208,39 @@
         "tr": "Üreticiler ekranındaki oval filtre düğmeleri, rozetler, bağlantı çipleri ve not göstergeleri Buyer Log'un köşeli tasarımına çevrildi.",
         "en": "Oval filter buttons, badges, link chips and grade markers on the Manufacturers screen now use Buyer Log's square design."
       }
+    },
+    {
+      "id": "orders-without-checklist",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Siparişler'de checklist çalışmaz",
+        "en": "Checklist no longer runs on Orders"
+      },
+      "path": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-without-checklist.png",
+        "alt": {
+          "tr": "Siparişler'de checklist çalışmaz — gerçek Buyer Log demo ekranı",
+          "en": "Checklist no longer runs on Orders — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Siparişler'de checklist çalışmaz",
+          "en": "Checklist no longer runs on Orders"
+        }
+      },
+      "body": {
+        "tr": "Checklist ve PLM Numune durumu yalnız CP Tracker'da hesaplanır; Siparişler tablosunda bu sütun açılmaz ve numune değişikliklerinde Siparişler yeniden çizilmez.",
+        "en": "Checklist and PLM Sample status are computed only in CP Tracker; the Orders table no longer shows that column or re-renders on sample changes."
+      }
     }
   ]
 }
