@@ -65,10 +65,16 @@ const CONTRACTS = Object.freeze({
     fields: Object.freeze({
       documentType: { type: 'string', required: true, max: 20, hint: { tr: 'yalnız CARE_LABEL, PRICE_TAG veya UNKNOWN', en: 'CARE_LABEL, PRICE_TAG or UNKNOWN only' } },
       modelCodes: { type: 'string[]', max: 120, items: 12 },
+      specialCodes: { type: 'string[]', max: 120, items: 12 },
       colourCodes: { type: 'string[]', max: 80, items: 12 },
       colours: { type: 'string[]', max: 120, items: 12 },
       orderNumbers: { type: 'string[]', max: 80, items: 20 },
-      countries: { type: 'string[]', max: 100, items: 12 },
+      seasonCodes: { type: 'string[]', max: 80, items: 12 },
+      magCodes: { type: 'string[]', max: 80, items: 12 },
+      mmygCodes: { type: 'string[]', max: 80, items: 12 },
+      lineCodes: { type: 'string[]', max: 160, items: 12 },
+      productMainDefinitions: { type: 'string[]', max: 160, items: 12 },
+      countries: { type: 'string[]', max: 100, items: 12, hint: { tr: 'yalnız üretim/menşe ülkesi; ithalatçı, distribütör veya adres ülkeleri değil', en: 'manufacturing/country-of-origin only; never importer, distributor or address countries' } },
       composition: { type: 'string[]', max: 180, items: 24 },
       careInstructions: { type: 'string[]', max: 300, items: 30 },
       warnings: { type: 'string[]', max: 300, items: 30 },
@@ -78,15 +84,17 @@ const CONTRACTS = Object.freeze({
       pageVariants: { type: 'string[]', max: 220, items: 50, hint: { tr: 'page=<n>|size=<değer>|barcode=<değer>|order=<değer>', en: 'page=<n>|size=<value>|barcode=<value>|order=<value>' } },
       productClass: { type: 'string', max: 160 },
       fit: { type: 'string', max: 120 },
+      identityText: { type: 'string', max: 5000, hint: { tr: 'özellikle Price Tag üst kimlik/kod bandını görünür olduğu haliyle aynen kopyala', en: 'especially for Price Tag, transcribe the visible upper identity/code band verbatim' } },
       prices: { type: 'string[]', max: 120, items: 20 },
       visualFindings: { type: 'string[]', max: 500, items: 30, hint: { tr: 'yalnız görünür kanıta dayalı görsel/semantik inceleme bulguları', en: 'only visual/semantic review findings supported by visible evidence' } },
       confidence: { type: 'string', required: true, max: 12, hint: { tr: 'EXACT, HIGH, MEDIUM veya LOW', en: 'EXACT, HIGH, MEDIUM or LOW' } },
       explanation: { type: 'string', required: true, max: 2000 }
     }),
     example: {
-      documentType: 'CARE_LABEL', modelCodes: ['MODEL-1'], colourCodes: ['ABC'], colours: ['BLUE'],
-      orderNumbers: [], countries: ['India'], composition: ['100% Cotton'], careInstructions: ['Wash with similar colours'],
-      warnings: ['Keep away from fire'], sizes: [], barcodes: [], qrCodes: [], pageVariants: [], productClass: '', fit: '', prices: [],
+      documentType: 'CARE_LABEL', modelCodes: ['MODEL-1'], specialCodes: [], colourCodes: ['ABC'], colours: ['BLUE'],
+      orderNumbers: [], seasonCodes: [], magCodes: [], mmygCodes: [], lineCodes: [], productMainDefinitions: [],
+      countries: ['India'], composition: ['100% Cotton'], careInstructions: ['Wash with similar colours'],
+      warnings: ['Keep away from fire'], sizes: [], barcodes: [], qrCodes: [], pageVariants: [], productClass: '', fit: '', identityText: '', prices: [],
       visualFindings: [], confidence: 'HIGH', explanation: 'Visible fields extracted from the attached PDF.'
     },
   }),
@@ -234,8 +242,8 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
         : 'CONTEXT.reports içindeki her raporu bir buyer asistanı olarak incele. "step", talep tipine uyan CONTEXT.checklistSteps kimliklerinden biri ya da boş olmalı. "actions" buyer için somut sonraki adımlardır (ör. tedarikçiden tekrar test ya da görsel iste, laboratuvara dönüş yap). Buyer Log\'un sonucunu (buyerLogOutcome) değiştirme; açıkla. summary, actions ve risks Türkçe olsun.');
     } else if (key === 'layout-control') {
       lines.push(english
-        ? 'Fill the schema only from values visibly supported by the attached layout PDF. "warnings" means warnings printed on the product label, not your own cautions. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
-        : 'Şemayı yalnız ekli layout PDF içinde görünür kanıtı olan değerlerle doldur. "warnings", senin uyarıların değil ürün etiketinde basılı uyarılardır. Belirsizliği yalnız "explanation" içinde belirt ve "confidence" değerini düşür. CP/reference değeri uydurma.');
+        ? 'Fill the schema only from values visibly supported by the attached layout PDF. "warnings" means warnings printed on the product label, not your own cautions. "countries" means manufacturing/country-of-origin only: never treat importer, distributor, company-address or legal-contact countries (for example MAROC in an importer block) as production country. For PRICE_TAG, transcribe the whole visible upper identity/code band verbatim into "identityText" and extract modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions and countries when their meaning is visually supportable. If an unlabeled slash-separated code cannot be assigned safely, keep it only in identityText rather than guessing its business meaning. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
+        : 'Şemayı yalnız ekli layout PDF içinde görünür kanıtı olan değerlerle doldur. "warnings", senin uyarıların değil ürün etiketinde basılı uyarılardır. "countries" yalnız üretim/menşe ülkesidir; ithalatçı, distribütör, şirket adresi veya yasal iletişim bloklarındaki ülkeleri (ör. ithalatçı bloğundaki MAROC) üretim ülkesi sayma. PRICE_TAG için üstteki görünür kimlik/kod bandının tamamını "identityText" alanına aynen kopyala; anlamı görsel olarak destekleniyorsa modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions ve countries alanlarını doldur. Etiketsiz slash-ayrımlı bir kodun iş anlamından emin değilsen tahmin etme; yalnız identityText içinde bırak. Belirsizliği yalnız "explanation" içinde belirt ve "confidence" değerini düşür. CP/reference değeri uydurma.');
     } else {
       lines.push(english
         ? 'Use the field meanings in CONTEXT and build the closest condition achievable with the listed fields; state any assumption in "explanation" and "warnings". Leave the required fields as empty strings only if nothing close is possible, and explain why.'
