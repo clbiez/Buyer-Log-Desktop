@@ -95,7 +95,7 @@ test('LCW AI tek ortak yoldan çağrılır; öneri onaysız uygulanmaz', () => {
   assert.match(ui, /source: 'test-report-extract'/);
   assert.match(ui, /source: 'test-report-review'/);
   assert.doesNotMatch(ui, /\/lcw\/gpt\/api|Authorization|Bearer/, 'modül kendi AI entegrasyonunu yazmaz');
-  assert.match(ui, /include: Boolean\(chosen\) && !fromAi/, 'LCW AI okuduğu satır varsayılan seçilmez');
+  assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/, 'LCW AI okuduğu ve CP dışında kalan satır varsayılan seçilmez');
   assert.match(ui, /entry\.include = Boolean\(entry\.chosen\) && !entry\.fromAi/, 'tip eşlemesi AI satırını seçmez');
   assert.match(ui, /data-tr-ai-step/);
   assert.match(ui, /E\(\)\.parseReviews\(/, 'AI incelemesi motorun doğrulayıcısından geçer');
