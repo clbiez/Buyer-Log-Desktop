@@ -42,6 +42,9 @@
     renderWrapped: false,
     testTasks: new Map(),
     reportDropBound: false,
+    appliedColumns: null,
+    runtimeLoadedAt: 0,
+    runtimeSignature: '',
   };
 
   function isEn() {
@@ -433,6 +436,20 @@
     }
     if (typeof root.invalidateColumnIndex === 'function') root.invalidateColumnIndex('cp');
 
+    /* Her CP çiziminde (sekme dönüşü, filtre) bütün satırların checklist
+       hücreleri baştan yazılıyordu (5 bin satırda ~0,7 sn). Aynı satır dizisi,
+       aynı karar sonucu, aynı başlıklar/dil ve aynı test görevleri için iş
+       zaten yapılmıştır; yalnız çizim yolu (reuse) bunu atlar. Olay/senkron
+       yolları her zaman yeniden uygular. */
+    const itemsSignature = items.map(function (item) { return item.id + '\u0001' + item.tr + '\u0001' + item.en; }).join('\u0002') + '|' + (isEn() ? 'en' : 'tr');
+    const applied = state.appliedColumns;
+    if (opts.reuse && opts.decision && applied && applied.rows === rows && applied.decision === opts.decision
+      && applied.items === itemsSignature && applied.tasks === state.testTasks) {
+      if (opts.render && typeof root.renderCP === 'function') root.renderCP();
+      return true;
+    }
+    state.appliedColumns = null;
+
     if (rows.length && items.length) {
       const decision = opts.decision || analysesForRows(rows);
       rows.forEach(function (row) {
@@ -460,6 +477,7 @@
         });
         Object.defineProperty(row, '_checklistTasks', { value: tasks, enumerable: false, configurable: true, writable: true });
       });
+      state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
     return true;
@@ -472,8 +490,10 @@
     try {
       const rows = currentRows();
       if (rows.length && typeof assistant.onOverviewRendered === 'function') {
+        // Sabit veri revizyonu: Date.now() her çağrıda Üretim Önceliklerini
+        // baştan hesaplatıyordu; checklist değişimi filtre revizyonundadır.
         assistant.onOverviewRendered(rows, {
-          dataRevision: Date.now(),
+          dataRevision: typeof root.BL_CP_DECISION_DATA_REVISION === 'function' ? root.BL_CP_DECISION_DATA_REVISION() : 0,
           filterRevision: 'checklist-supplier:' + String(state.shared.revision || 0),
         });
       } else if (typeof assistant.render === 'function') assistant.render();
@@ -482,8 +502,10 @@
     if (typeof assistant.computeDecisionsForRowsAsync === 'function') {
       void assistant.computeDecisionsForRowsAsync(rows).then(decision=>{
         if(!decision || generation!==assistantRefreshGeneration || currentRows()!==rows)return;
+        // Aynı karar zaten hücrelere işlendiyse CP'yi ikinci kez çizmeye gerek yok.
+        const already=state.appliedColumns&&state.appliedColumns.rows===rows&&state.appliedColumns.decision===decision&&state.appliedColumns.tasks===state.testTasks;
         refreshColumns({render:false,decision});
-        if(root.document?.body?.dataset.activeTab==='cp'&&typeof root.renderCP==='function')root.renderCP();
+        if(!already&&root.document?.body?.dataset.activeTab==='cp'&&typeof root.renderCP==='function')root.renderCP();
       }).catch(error=>toast(error.message));
     } else refreshColumns({render:false});
   }
@@ -546,7 +568,11 @@
         try { await syncAnswerChanges(); }
         catch (error) { toast(T('Checklist kaydı bekliyor: ', 'Checklist save is pending: ') + error.message); }
       }
-      refreshAssistantView();
+      const sharedSignature = runtimeSignature();
+      if (sharedSignature !== state.sharedViewSignature) {
+        state.sharedViewSignature = sharedSignature;
+        refreshAssistantView();
+      }
       return state.shared;
     }()).catch(function (error) {
       toast(T('Checklist senkronu okunamadı: ', 'Checklist sync could not be loaded: ') + (error.message || error));
@@ -2113,7 +2139,7 @@
     root.renderCP = function () {
       if (root.BLCpAssistant) {
         const decision=root.BLCpAssistant.peekDecisionsForRows?.(currentRows());
-        if(decision){try{refreshColumns({render:false,decision});}catch(_){}}
+        if(decision){try{refreshColumns({render:false,decision,reuse:true});}catch(_){}}
         else refreshAssistantView();
       }
       return original.apply(this, arguments);
@@ -2242,12 +2268,32 @@
     return tab === 'cp' || tab === 'overview';
   }
 
-  async function startRuntime() {
+  /* CP / Genel Bakış sekmesine her tıklama checklist senkronunu yeniden
+     indirip CP'yi iki kez daha çiziyordu. Kısa tazelik penceresi içinde ağ
+     tekrarlanmaz; yükleme sonrası veri değişmediyse yeniden çizim yapılmaz.
+     Cevap değişiklikleri kendi olaylarıyla (checklist-answer) anında işlenir. */
+  const RUNTIME_FRESH_MS = 60 * 1000;
+  function runtimeSignature() {
+    let tasks = 0;
+    state.testTasks.forEach(function (list) { tasks += list.length; });
+    return [state.shared.revision || 0, state.shared.updatedAt || '', Object.keys(state.shared.answers || {}).length,
+      Object.keys(state.shared.tombstones || {}).length, (state.shared.definitions || []).length, state.testTasks.size, tasks,
+      Object.keys(state.pendingAnswers || {}).length].join('|');
+  }
+  async function startRuntime(options) {
     if (!activeNeedsRuntime()) { ensureUi(); wrapRender(); return; }
     ensureUi();
     wrapRender();
     bindReportDrop();
+    const opts = options || {};
+    if (opts.ifStale && state.runtimeLoadedAt && Date.now() - state.runtimeLoadedAt < RUNTIME_FRESH_MS
+      && !Object.keys(state.pendingAnswers || {}).length) return;
+    const first = !state.runtimeLoadedAt;
     await Promise.all([loadShared(), loadTestReportTasks()]);
+    state.runtimeLoadedAt = Date.now();
+    const signature = runtimeSignature();
+    if (!first && signature === state.runtimeSignature) return;
+    state.runtimeSignature = signature;
     refreshColumns({ render: true });
   }
 
@@ -2280,7 +2326,7 @@
     root.document.addEventListener('click', function (event) {
       const tab = event.target && event.target.closest && event.target.closest('nav.tabs button[data-tab]');
       if (tab && (tab.dataset.tab === 'cp' || tab.dataset.tab === 'overview')) {
-        setTimeout(function () { startRuntime().catch(function () {}); }, 0);
+        setTimeout(function () { startRuntime({ ifStale: true }).catch(function () {}); }, 0);
       }
     });
     if ((root.document.readyState === 'complete' || root.document.readyState === 'interactive') && activeNeedsRuntime()) {

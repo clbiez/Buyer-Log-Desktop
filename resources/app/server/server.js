@@ -8299,6 +8299,37 @@ app.get('/api/backlog-source-columns', userAccess.requireArea('backlog'), async 
   }catch(err){apiError(res,err,'Backlog kaynak sütunları listelenemedi.');}
 });
 
+/* Backlog detay satırları kısa süreli bellek önbelleği.
+   Genel Bakış açılışta aynı Backlog sorgusunu üç ayrı widget'tan (akış haritası,
+   Backlog özeti, teslim analizi) istiyor; her biri tüm Backlog'u baştan
+   hesaplayıp olay döngüsünü saniyelerce kilitliyordu. Anahtar; kaynak satır
+   ve antrepo nesnelerinin kimliği (yenilemede değişir), override revizyonu,
+   kullanıcı kapsamı/IAM revizyonu, gün ve sorgunun tamamıdır. Herhangi bir
+   girdi değişince anahtar da değişir; TTL yalnız bellek tavanıdır. */
+const BACKLOG_ROWS_CACHE_MS=60*1000,BACKLOG_ROWS_CACHE_MAX=12;
+const backlogRowsCache=new Map(),backlogObjectIds=new WeakMap();let backlogObjectSeq=0;
+function backlogObjectIdentity(value){
+  if(!value||typeof value!=='object')return '0';
+  let id=backlogObjectIds.get(value);if(!id){id=String(++backlogObjectSeq);backlogObjectIds.set(value,id);}return id;
+}
+function backlogRowsCacheKey(id,active,overrides,profile,parts){
+  const day=new Date();
+  return JSON.stringify([id,backlogObjectIdentity(active&&active.asasOrdersByTarget&&Array.isArray(active.asasOrdersByTarget.backlog)?active.asasOrdersByTarget.backlog:active&&active.asasOrders),
+    backlogObjectIdentity(antrepoForTarget(active,'backlog')),backlogObjectIdentity(active&&active.cpupdateOverrides),
+    overrides&&overrides._revision,overrides&&overrides._revisions||null,overrides&&overrides.antrepoSourceMode||'',
+    profile&&profile.id||'',profile&&profile.accessRevision||0,userAccess.localIamRevision(),
+    `${day.getFullYear()}-${day.getMonth()+1}-${day.getDate()}`,parts]);
+}
+function cachedBacklogTemplateRows(key,compute){
+  const now=Date.now();
+  for(const [entryKey,entry] of backlogRowsCache)if(now-entry.at>BACKLOG_ROWS_CACHE_MS)backlogRowsCache.delete(entryKey);
+  const hit=backlogRowsCache.get(key);if(hit)return hit.rows;
+  const rows=compute();
+  backlogRowsCache.set(key,{at:now,rows});
+  while(backlogRowsCache.size>BACKLOG_ROWS_CACHE_MAX)backlogRowsCache.delete(backlogRowsCache.keys().next().value);
+  return rows;
+}
+
 app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res)=>{
   try{
     assertSourceFilters(['backlog'], req);
@@ -8320,7 +8351,8 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     const sourceById=new Map(sourceCatalog.map(column=>[column.id,column]));
     const sourceColumns=requestedIds.map(id=>sourceById.get(id)).filter(Boolean);
     const previewLimit=Math.min(500,Math.max(0,Number(req.query.previewLimit)||0));
-    const detailRows=buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,previewLimit?{limit:previewLimit}:{});
+    const detailRowsKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,[filterOpts,sourceColumns.map(column=>column.id),previewLimit]);
+    const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,previewLimit?{limit:previewLimit}:{}));
     const exportHeaders=[...BACKLOG_TEMPLATE_HEADERS,...sourceColumns.map(column=>column.label)];
     // format=json: satırlar istemciye gider, Excel istemcide CP ile AYNI stil motoruyla üretilir.
     if(req.query.format==='json'){

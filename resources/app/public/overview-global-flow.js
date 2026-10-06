@@ -1249,9 +1249,20 @@ function ensureLoadingOverlay(){
   const wrap=$('globalFlowCanvasWrap');if(!wrap)return null;let overlay=$('globalFlowLoadingOverlay');if(overlay)return overlay;
   overlay=document.createElement('div');overlay.id='globalFlowLoadingOverlay';overlay.className='globalFlowLoadingOverlay';
   overlay.innerHTML='<div class="gfWorkingCard"><canvas id="globalFlowWorkingOrb" width="64" height="64" aria-hidden="true"></canvas><b>'+esc(L('Harita hazırlanıyor','Preparing map'))+'</b><span>'+esc(L('Sevkiyatlar ve coğrafi katmanlar eşleştiriliyor…','Matching shipments and geographic layers…'))+'</span></div>';
-  wrap.appendChild(overlay);const canvas=$('globalFlowWorkingOrb');
-  if(window.BLThinkingOrb&&typeof window.BLThinkingOrb.attach==='function'&&canvas)state.orbHandle=window.BLThinkingOrb.attach(canvas,{state:'working'});
+  wrap.appendChild(overlay);
   return overlay;
+}
+/* Yükleme küresi yalnız katman görünürken çalışır. Eskiden bir kez başlatılıp
+   hiç durdurulmuyordu: harita hazır olduktan sonra da her karede yerleşim
+   ölçümü (getBoundingClientRect) yaparak bütün uygulamayı yavaşlatıyordu. */
+function syncLoadingOrb(busy){
+  if(busy&&!state.orbHandle){
+    const canvas=$('globalFlowWorkingOrb');
+    if(window.BLThinkingOrb&&typeof window.BLThinkingOrb.attach==='function'&&canvas)state.orbHandle=window.BLThinkingOrb.attach(canvas,{state:'working'});
+  }else if(!busy&&state.orbHandle){
+    try{state.orbHandle.stop();}catch(_){}
+    state.orbHandle=null;
+  }
 }
 function syncLoadingOverlay(){
   const overlay=ensureLoadingOverlay();if(!overlay)return;const earth=Boolean(state.earthLoading&&state.engine==='earth'),busy=Boolean(state.loading||state.worldLoading||earth);
@@ -1259,6 +1270,7 @@ function syncLoadingOverlay(){
   if(title)title.textContent=earth?L('Earth 3D hazırlanıyor','Preparing Earth 3D'):L('Harita hazırlanıyor','Preparing map');
   if(text)text.textContent=earth?L('Küre motoru ve görüntü katmanları yükleniyor…','Loading the globe engine and imagery layers…'):L('Sevkiyatlar ve coğrafi katmanlar eşleştiriliyor…','Matching shipments and geographic layers…');
   overlay.hidden=!busy;overlay.setAttribute('aria-hidden',busy?'false':'true');
+  syncLoadingOrb(busy);
 }
 function setCollapsed(next){
   state.collapsed=Boolean(next);savePrefs();

@@ -27,7 +27,11 @@ const RUNTIME_FILE = path.join(RUNTIME_ROOT, 'watchdog.json');
 /* Kullanıcı oturum çerezi imza anahtarı: gözetmen ömrü boyunca sabit, yalnız
    bellekte. Sunucu çöküp yeniden başlatılınca açık oturum giriş ekranına
    düşmesin diye her başlatmada aynı değer ortamla aktarılır; diske yazılmaz. */
-const USER_SESSION_SECRET = crypto.randomBytes(32).toString('hex');
+// Masaüstü süreci bir anahtar verdiyse o kullanılır: gözetmenin kendisi de
+// yeniden başlatılsa oturum korunur.
+const USER_SESSION_SECRET = /^[0-9a-f]{64,}$/i.test(String(process.env.BUYER_LOG_USER_SESSION_SECRET || ''))
+  ? String(process.env.BUYER_LOG_USER_SESSION_SECRET)
+  : crypto.randomBytes(32).toString('hex');
 let child = null;
 let restartTimer = null;
 let stopping = false;

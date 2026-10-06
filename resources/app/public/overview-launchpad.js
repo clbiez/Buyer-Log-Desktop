@@ -299,6 +299,8 @@
     // Sekme arka plandayken veya Genel Bakış görünmüyorken saatler DOM'a yazılmaz;
     // görünür olunca ilk tick güncel saati hemen gösterir.
     if(document.hidden)return;
+    // Başka modüldeyken yerleşim ölçümü (getClientRects) bile yapılmaz.
+    const activeTab=document.body&&document.body.dataset.activeTab;if(activeTab&&activeTab!=='overview')return;
     const host=document.getElementById('ovLaunchpad');if(!host||!host.getClientRects().length)return;
     const now=new Date(),l=lang();
     host.querySelectorAll('[data-clock-zone]').forEach(card=>{

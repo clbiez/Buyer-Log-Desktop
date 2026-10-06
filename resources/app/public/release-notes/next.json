@@ -7,10 +7,109 @@
     "en": "Cleaner screens, wider tables"
   },
   "summary": {
-    "tr": "Tablolara daha fazla alan açıldı, Buyer Log köşeli tasarımı yaygınlaştırıldı ve PLM SYNC artık yalnız elle başlar.",
-    "en": "Tables get more room, Buyer Log's square design is applied more widely and PLM SYNC now only starts manually."
+    "tr": "Tablolara daha fazla alan açıldı, Buyer Log köşeli tasarımı yaygınlaştırıldı ve PLM SYNC artık yalnız elle başlar. Sayfa geçişleri ve açılış hızlandı; uygulamaya dönünce oturum açık kalır.",
+    "en": "Tables get more room, Buyer Log's square design is applied more widely and PLM SYNC now only starts manually. Page switches and startup are faster; you stay signed in when you come back."
   },
   "changes": [
+    {
+      "id": "tab-revisit-instant",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Genel Bakış",
+        "en": "CP Tracker · Overview"
+      },
+      "title": {
+        "tr": "Sayfalar arası geçiş beklemesi kalktı",
+        "en": "No more waiting when switching pages"
+      },
+      "path": {
+        "tr": "CP Tracker · Genel Bakış",
+        "en": "CP Tracker · Overview"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "tab-revisit-instant.png",
+        "alt": {
+          "tr": "Sayfalar arası geçiş beklemesi kalktı — gerçek Buyer Log demo ekranı",
+          "en": "No more waiting when switching pages — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sayfalar arası geçiş beklemesi kalktı",
+          "en": "No more waiting when switching pages"
+        }
+      },
+      "body": {
+        "tr": "CP Tracker'a her dönüşte checklist yeniden indirilip tablo üç kez çiziliyordu; artık değişiklik yoksa sayfa hazır haliyle açılır (ölçüm: ~1,9 sn → ~0,2 sn, Genel Bakış ~0,9 sn → ~0,06 sn). Merkezi kullanıcı dizini açıkken her sunucu isteği de kullanıcı dosyalarını yeniden okumadığı için ~50 ms daha hızlı yanıt verir.",
+        "en": "Each return to CP Tracker re-downloaded the checklist and drew the table three times; when nothing changed the page now opens as it was (measured: ~1.9 s → ~0.2 s, Overview ~0.9 s → ~0.06 s). With the central user directory on, every server request also answers ~50 ms faster because user files are no longer re-read."
+      }
+    },
+    {
+      "id": "faster-opening-gates",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Buyer Log daha hızlı açılır",
+        "en": "Buyer Log opens faster"
+      },
+      "path": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "faster-opening-gates.png",
+        "alt": {
+          "tr": "Buyer Log daha hızlı açılır — gerçek Buyer Log demo ekranı",
+          "en": "Buyer Log opens faster — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Buyer Log daha hızlı açılır",
+          "en": "Buyer Log opens faster"
+        }
+      },
+      "body": {
+        "tr": "Açılışta arka planda yüklenen modüller artık sırayla değil paralel indirilir ve kullanıcı bilgileri bu zinciri beklemez. \"Buyer Log hazır\" ekranı yaklaşık 1 saniye daha erken gelir.",
+        "en": "Modules loaded in the background at startup now download in parallel instead of one by one, and user details no longer wait for that chain. The \"Buyer Log is ready\" screen appears about one second earlier."
+      }
+    },
+    {
+      "id": "overview-lighter-map-backlog",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Genel Bakış ve harita uygulamayı yavaşlatmaz",
+        "en": "Overview and the map no longer slow the app down"
+      },
+      "path": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-lighter-map-backlog.png",
+        "alt": {
+          "tr": "Genel Bakış ve harita uygulamayı yavaşlatmaz — gerçek Buyer Log demo ekranı",
+          "en": "Overview and the map no longer slow the app down — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Genel Bakış ve harita uygulamayı yavaşlatmaz",
+          "en": "Overview and the map no longer slow the app down"
+        }
+      },
+      "body": {
+        "tr": "Küresel Akış Haritası'nın yükleme animasyonu harita hazır olduktan sonra da arka planda çalışıp tüm ekranları yavaşlatıyordu; artık yalnız yüklenirken çalışır. Genel Bakış'taki Backlog widget'ları aynı veriyi üç kez hesaplatmak yerine tek hesabı paylaşır.",
+        "en": "The Global Flow Map loading animation kept running in the background after the map was ready and slowed every screen; it now runs only while loading. Overview's Backlog widgets share one calculation instead of computing the same data three times."
+      }
+    },
     {
       "id": "plm-sync-manual-only",
       "type": "improvement",
@@ -271,8 +370,8 @@
         }
       },
       "body": {
-        "tr": "Arka plandaki Buyer Log sunucusu bir hata sonrası kendiliğinden yeniden başladığında açık oturum artık düşmüyor; uygulama açıkken durup durup kullanıcı girişi ekranına dönme sorunu giderildi.",
-        "en": "When the background Buyer Log server restarts itself after an error, the open session is no longer lost; the app no longer keeps returning to the sign-in screen while it is open."
+        "tr": "Arka plandaki Buyer Log sunucusu bir hata sonrası kendiliğinden yeniden başladığında açık oturum artık düşmüyor; uygulama açıkken durup durup kullanıcı girişi ekranına dönme sorunu giderildi. Kullanıcı dizini o an güncelleniyor olsa veya tek bir denetim olumsuz dönse de oturum korunur; uygulamaya başka bir pencereden dönünce giriş ekranı açılmaz.",
+        "en": "When the background Buyer Log server restarts itself after an error, the open session is no longer lost; the app no longer keeps returning to the sign-in screen while it is open. The session also survives a moment when the user directory is being updated or a single failed check, so returning from another window no longer opens the sign-in screen."
       }
     }
   ]
