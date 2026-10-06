@@ -1121,10 +1121,11 @@ function parseASASMatrix(rows, ruleValue) {
   const signatureByOrder = new Map();
   const seen = new Map();
   const duplicateMainDetailByKey = new Map();
-  let mainFabricRows = 0, ignoredNonMainRows = 0, duplicateMainRows = 0;
+  let mainFabricRows = 0, ignoredNonMainRows = 0, duplicateMainRows = 0, sourceRowCount = 0;
   for (let r = hIdx + 1; r < rows.length; r++) {
     const row = rows[r]; if (!row) continue;
     const oc = g(row, 'Sipariş Kod'); if (oc == null || oc === '') continue;
+    sourceRowCount++;
     const order = toOrder(row, r + 1);
     if (fabricHeaders.main) {
       if (order._isMainFabric) mainFabricRows++;
@@ -1279,6 +1280,12 @@ function parseASASMatrix(rows, ruleValue) {
       ignoredNonMainRows,
       duplicateMainRows: duplicateMainDetailByKey.size || duplicateMainRows,
       duplicateMainSourceRows: duplicateMainRows,
+      // Refresh maliyeti ölçümü: ASAS'ın kumaş bileşeni başına çoğalttığı satır
+      // sayısı ile tekilleştirilmiş sipariş kimliği sayısı. Oran 1'e yakınsa
+      // kumaş sütunlarının sorguya etkisi küçüktür.
+      sourceRowCount,
+      orderIdentityCount: seen.size,
+      rowsPerOrderIdentity: seen.size ? Math.round((sourceRowCount / seen.size) * 100) / 100 : null,
       resolvedHeaders: { ...fabricHeaders },
       warnings,
       warningDetails,
