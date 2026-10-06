@@ -52,6 +52,23 @@ test('hücre Buying görevini TR/EN gösterir; düzenleme yetkisi korunur', () =
   assert.match(ui, /source: 'test_report'/);
 });
 
+test('CP\'de siparişi olmayan raporlar dikkate alınmaz ve LCW AI incelemesine gönderilmez', () => {
+  const ui = read('public/test-report-import.js');
+  assert.match(ui, /const ignored = Boolean\(E\(\)\.normalizeOrderCode\(report\.siparisKodu\)\) && match\.level === 'none' && match\.reason === 'order'/);
+  assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/);
+  assert.match(ui, /function reviewableEntries\(\) \{ return ui\.entries\.filter\(function \(e\) \{ return e\.report\.talepNo && !e\.ignored; \}\); \}/);
+  assert.match(ui, /T\('Dikkate alınmadı', 'Ignored'\)/);
+  assert.match(ui, /LCW AI\\'a gönderilmedi/);
+  assert.match(ui, /if \(!entry\.ignored && !entry\.itemId && entry\.typeKey/);
+});
+
+test('önizleme rapordaki test adlarını görünür gösterir', () => {
+  const ui = read('public/test-report-import.js');
+  assert.match(ui, /function testNames\(report\)/);
+  assert.match(ui, /T\('Test adı: ', 'Test name: '\)/);
+  assert.match(ui, /tests\.join\(', '\)/);
+});
+
 test('checklist cevabı kaynak alanını taşır; elle seçim kaynaksızdır', () => {
   const Checklist = require('../public/cp-checklist-engine');
   const analysis = { orderKey: 'PO1', plannedLoadDate: 1 };
@@ -78,7 +95,7 @@ test('LCW AI tek ortak yoldan çağrılır; öneri onaysız uygulanmaz', () => {
   assert.match(ui, /source: 'test-report-extract'/);
   assert.match(ui, /source: 'test-report-review'/);
   assert.doesNotMatch(ui, /\/lcw\/gpt\/api|Authorization|Bearer/, 'modül kendi AI entegrasyonunu yazmaz');
-  assert.match(ui, /include: Boolean\(chosen\) && !fromAi/, 'LCW AI okuduğu satır varsayılan seçilmez');
+  assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/, 'LCW AI okuduğu ve CP dışında kalan satır varsayılan seçilmez');
   assert.match(ui, /entry\.include = Boolean\(entry\.chosen\) && !entry\.fromAi/, 'tip eşlemesi AI satırını seçmez');
   assert.match(ui, /data-tr-ai-step/);
   assert.match(ui, /E\(\)\.parseReviews\(/, 'AI incelemesi motorun doğrulayıcısından geçer');
