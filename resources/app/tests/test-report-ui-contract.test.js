@@ -54,7 +54,7 @@ test('hücre Buying görevini TR/EN gösterir; düzenleme yetkisi korunur', () =
 
 test('CP\'de siparişi olmayan raporlar dikkate alınmaz ve LCW AI incelemesine gönderilmez', () => {
   const ui = read('public/test-report-import.js');
-  assert.match(ui, /const ignored = match\.level === 'none' && match\.reason === 'order'/);
+  assert.match(ui, /const ignored = Boolean\(E\(\)\.normalizeOrderCode\(report\.siparisKodu\)\) && match\.level === 'none' && match\.reason === 'order'/);
   assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/);
   assert.match(ui, /function reviewableEntries\(\) \{ return ui\.entries\.filter\(function \(e\) \{ return e\.report\.talepNo && !e\.ignored; \}\); \}/);
   assert.match(ui, /T\('Dikkate alınmadı', 'Ignored'\)/);
