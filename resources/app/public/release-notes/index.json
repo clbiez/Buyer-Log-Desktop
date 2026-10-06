@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.247",
+      "publishedAt": "2026-10-06",
+      "title": {
+        "tr": "Büyük tablolar, hazır analizler ve Excel görselleri · PLM iyileştirmeleri",
+        "en": "Large tables, analysis snapshots and Excel images · PLM improvements"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 8,
+        "fixes": 6
+      },
+      "file": "release-notes/7.0.247/release.json"
+    },
+    {
       "version": "7.0.245",
       "publishedAt": "2026-10-05",
       "title": {
