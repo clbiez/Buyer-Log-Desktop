@@ -56,13 +56,16 @@ test('v5.18 CP/Orders Excel starts at current cell size and locks image proporti
   const block=between('async function exportStyledDomTable','async function exportCpTableWithLightTheme');
   assert.match(block,/entry\.cellWidth/);
   assert.match(block,/entry\.cellHeight/);
-  assert.match(block,/kolExcelImageTwoCellPlacement\(image,entry\.row,cellWidth,cellHeight,entry\.col\+1,2\)/);
+  // The requested cell-resizing behavior uses a fitted two-cell anchor;
+  // the existing Collection placement helpers remain protected below.
+  assert.match(block,/kolExcelImageMoveAndSizePlacement\(image,entry\.row,cellWidth,cellHeight,entry\.col\+1,2\)/);
   assert.doesNotMatch(APP,/editAs:'oneCell'/);
   assert.match(APP,/nativeColOff/);
   assert.match(APP,/nativeRowOff/);
   assert.doesNotMatch(block,/tl:\{col:entry\.col/);
-  // v10.90 — görsel kaynağı kanonik model kimliğidir; hücre ölçüleri DOM'dan gelmeye devam eder.
-  assert.match(APP,/imageEntries\.push\(\{row:excelRow,col:col-1,identity,src:domImage,cellWidth:tdRect\.width\|\|0,cellHeight:trRect\.height\|\|0\}\)/);
+  // Canonical images also work for detached, off-page record rows. Their cell
+  // height falls back to the current image-size setting when DOM height is zero.
+  assert.match(APP,/imageEntries\.push\(\{row:excelRow,col:col-1,identity,src:domImage,cellWidth:tdRect\.width\|\|0,cellHeight:trRect\.height\|\|\(managedRecords\?cpOrdersImageDims\(opts\.tableKey\)\.row:0\)\}\)/);
   assert.match(APP,/orders:\s*\{sel:'#ordersTable'/);
 });
 

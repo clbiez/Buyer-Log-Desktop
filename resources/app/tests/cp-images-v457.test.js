@@ -134,7 +134,9 @@ test('v5.13 CP copy and Excel export embed actual images without SheetJS→Excel
   assert.match(html, /const wb=new ExcelJS\.Workbook\(\)/);
   // v10.90 — dışa aktarımdaki görsel ekrandaki <img>'in currentSrc'sinden değil
   // kanonik model kimliğinden çözülür (lazy/viewport bağımsız).
-  assert.match(html, /imageEntries\.push\(\{row:excelRow,col:col-1,identity,src:domImage,cellWidth:tdRect\.width\|\|0,cellHeight:trRect\.height\|\|0\}\)/);
+  // Paginated exports use detached record rows, so their zero DOM height falls
+  // back to the configured image-cell height while retaining canonical sources.
+  assert.match(html, /imageEntries\.push\(\{row:excelRow,col:col-1,identity,src:domImage,cellWidth:tdRect\.width\|\|0,cellHeight:trRect\.height\|\|\(managedRecords\?cpOrdersImageDims\(opts\.tableKey\)\.row:0\)\}\)/);
   assert.match(html, /cpOrdersRowImageIdentity\(record\)/);
   assert.match(html, /thumb\.dataset\.hasImage==='1'/);
   assert.match(html, /wb\.addImage\(\{base64:image\.dataUrl/);

@@ -3115,10 +3115,11 @@
     const checklistState = new Map();
     const customItems = new Map();
     const evaluations = new Map();
+    const preparedRules=Rules.prepareEvaluation?.(state.rules);
     for (const analysis of model.orders) {
       if (analysis.calculatedPriority == null) analysis.calculatedPriority = analysis.priority;
       const evaluated = Rules.evaluateOrder(analysis, {
-        rules: state.rules, answers: state.answers, plmEvidence, checklistEnabled: state.checklistSettings.enabled,
+        rules: state.rules, preparedRules, answers: state.answers, plmEvidence, checklistEnabled: state.checklistSettings.enabled,
       });
       evaluations.set(analysis.orderKey, evaluated);
       analysis.checklistItemIds = evaluated.customItems.map(item => item.id);

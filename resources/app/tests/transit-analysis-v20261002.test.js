@@ -283,7 +283,7 @@ test('canlı uç nokta: Backlog filtresi kapsamı Backlog ile aynı süzmeyi kul
   assert.match(ui, /const view = \{ source: 'database', scope: 'company', window: 'y1'/);
   // v2 görünüm kaydı: eski "filtered" tercihi bir kez modülün kendi ufkuna döner.
   assert.match(ui, /if \(saved\.v !== VIEW_VERSION\) view\.scope = 'company';/);
-  assert.match(ui, /fetch\('\/api\/transit-analysis\/live\?' \+ qs\.toString\(\)/);
+  assert.match(ui, /fetch\('\/api\/transit-analysis\/live\?'\s*\+\s*qs\.toString\(\)/);
 });
 
 // Kapsam (mevcut filtre / şirket geneli) ve tarih penceresi (son N hafta/ay/yıl).

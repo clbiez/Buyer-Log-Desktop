@@ -114,7 +114,10 @@ test('Status footer alt toplamı split status adedini kullanır; diğer sayısal
   assert.match(footer, /statusSubtotal&&c\.k===statusSubtotal\.key/);
   assert.match(footer, /partialStatusSubtotalLabel/);
   assert.match(footer, /appLang==='en'\?'Subtotal':'Alt toplam'/);
-  assert.match(APP, /const footerRows=partialViewEnabled\(tableKey\)\?partialViewUniqueSourceRows\(rows\):rows;/);
+  // Pagination must not limit partial-status subtotals or deduplicated totals
+  // to the currently displayed page.
+  assert.match(APP, /const footerRows=partialViewEnabled\(tableKey\)\?partialViewUniqueSourceRows\(fullRows\):fullRows;/);
+  assert.match(APP, /totalRows:footerRows,statusRows:fullRows/);
   assert.match(APP, /statusSubtotal:partialViewEnabled\(tableKey\)\?\{key:'STATUS',getQty:row=>row&&row\._partialViewStatusQuantity\}:null/);
   assert.match(CSS, /\.partialStatusSubtotalLabel\{/);
 });

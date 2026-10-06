@@ -370,9 +370,13 @@ test('liste kendi kendine tazelenir ama AÇIK FORMU ezmez', () => {
   /* Tazeleme olmasa "kimin düzenlediği" bilgisi bayat kalırdı; ama açık formu
      yeniden çizmek kullanıcının yazdığı metni silerdi. */
   assert.match(UI, /S\.refreshTimer = setInterval/);
-  const start = UI.indexOf('async function refresh(');
-  const body = UI.slice(start, start + 500);
+  // refresh returns the coalesced promise; inspect its complete body, including
+  // the guard for an editor opened while the directory read was pending.
+  const start = UI.indexOf('function refresh(');
+  assert.ok(start >= 0);
+  const body = UI.slice(start, UI.indexOf('async function startEdit(', start));
   assert.match(body, /if \(S\.editingId && !force\) return;/);
+  assert.match(body, /if\(\(changed\|\|force\)&&\(!S\.editingId\|\|force\)\)render\(\);/);
 });
 
 test('kilit kalp atışıyla tazelenir ve sunucudaki ömrün ALTINDA kalır', () => {

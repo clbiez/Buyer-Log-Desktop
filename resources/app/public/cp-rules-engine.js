@@ -121,7 +121,19 @@
   });
 
   const text = value => String(value == null ? '' : value).trim();
-  const lower = value => text(value).toLocaleLowerCase('tr-TR');
+  // The same statuses and rule operands occur thousands of times. Cache only
+  // immutable, short strings; arbitrary objects must still run toString each time.
+  const lowerCache=new Map(),LOWER_CACHE_LIMIT=1024;
+  const lower = value => {
+    if(typeof value!=='string'||value.length>1024)return text(value).toLocaleLowerCase('tr-TR');
+    let result=lowerCache.get(value);
+    if(result===undefined){
+      result=text(value).toLocaleLowerCase('tr-TR');
+      if(lowerCache.size>=LOWER_CACHE_LIMIT)lowerCache.delete(lowerCache.keys().next().value);
+      lowerCache.set(value,result);
+    }
+    return result;
+  };
 
   function numberOf(value) {
     if (value == null || value === '') return null;
@@ -821,7 +833,7 @@
   }
 
   function matchesCondition(condition, facts, options) {
-    const item = normalizeCondition(condition);
+    const item = facts?._rulePreparation?.conditions.get(condition) || normalizeCondition(condition);
     const left = resolveOperand(item.left, facts || {}, options || {});
     const right = resolveOperand(item.right, facts || {}, options || {});
     if (item.operator === 'empty') return blank(left);
@@ -865,7 +877,9 @@
   /* Öncelik kuralları: YALNIZ yükseltir (§2). Eşleşen kuralların adları
      döner ki kullanıcı bir siparişin neden Kritik olduğunu görebilsin. */
   function applyPriorityRules(analysis, rules, checklistState, preparedFacts) {
-    const list = (Array.isArray(rules) ? rules : []).filter(rule => rule.kind === 'priority');
+    const list = preparedFacts?._rulePreparation?.rules===rules
+      ?preparedFacts._rulePreparation.priorityRules
+      :(Array.isArray(rules) ? rules : []).filter(rule => rule.kind === 'priority');
     if (!list.length) return { priority: analysis.priority, matched: [], signals: [] };
     const facts = preparedFacts || factsFor(analysis, checklistState);
     let priority = analysis.priority;
@@ -1006,12 +1020,25 @@
      hesaplanır: bir koşul hangi değeri okursa o anda hesaplanır. Döngü
      (A, B'ye; B, A'ya bağlı) güvenle kırılır: döngüdeki değer "bilinmiyor"
      sayılır ve bilinmeyen değer hiçbir koşulu sağlamaz (§4). */
+  // One preparation per synchronous batch; never retain mutable rule objects
+  // across batches. Single-order calls continue to normalize their current input.
+  function prepareEvaluation(rules) {
+    const list=Array.isArray(rules)?rules:[];
+    const checklistRules=list.filter(rule=>rule.kind==='checklist');
+    const conditions=new Map();
+    for(const rule of list)for(const condition of (rule.conditions||[]))conditions.set(condition,normalizeCondition(condition));
+    return {rules:list,byId:new Map(list.map(rule=>[rule.id,rule])),checklistRules,
+      priorityRules:list.filter(rule=>rule.kind==='priority'),conditions,
+      itemScopes:Object.fromEntries(checklistRules.map(rule=>[rule.id,rule.approvalScope==='option'?'option':'order']))};
+  }
+
   function evaluateOrder(analysis, options) {
     const opts = options || {};
     const rules = Array.isArray(opts.rules) ? opts.rules : [];
     const checklistEnabled = opts.checklistEnabled !== false;
-    const byId = new Map(rules.map(rule => [rule.id, rule]));
-    const itemScopes = Object.fromEntries(
+    const prepared=opts.preparedRules?.rules===rules?opts.preparedRules:null;
+    const byId = prepared?prepared.byId:new Map(rules.map(rule => [rule.id, rule]));
+    const itemScopes = prepared?prepared.itemScopes:Object.fromEntries(
       rules.filter(rule => rule && rule.kind === 'checklist')
         .map(rule => [rule.id, rule.approvalScope === 'option' ? 'option' : 'order'])
     );
@@ -1019,6 +1046,7 @@
     const memo = new Map();
     const visiting = new Set();
     const facts = factsFor(analysis, {});
+    if(prepared)facts._rulePreparation=prepared;
     if (opts.today != null) facts.today = opts.today;
     const guarded = (key, compute, cycleValue) => {
       if (memo.has(key)) return memo.get(key);
@@ -1042,7 +1070,7 @@
       return rule && rule.kind === 'priority' && matchesRule(rule, facts) ? 'matched' : 'notMatched';
     }, undefined);
 
-    const checklistRules = rules.filter(rule => rule.kind === 'checklist');
+    const checklistRules = prepared?prepared.checklistRules:rules.filter(rule => rule.kind === 'checklist');
     const customItems = checklistRules.filter(rule => checklistApplies(rule.id)).map(rule => ({
       id: rule.id, group: 'custom', custom: true,
       tr: rule.tr || rule.name, en: rule.en || rule.name,
@@ -1348,7 +1376,7 @@
   return {
     SEVERITY, severityRank, OPERATORS, OPERATOR_IDS, DERIVED_FIELDS, CHECKLIST_PREFIX, CHECKLIST_STATES,
     CHECKLIST_STATE_LABELS, STAGE_VALUES, OUTCOME_VALUES, RULE_PREFIX, RULE_STATES, RULE_STATE_LABELS, EXPRESSION_VERSION,
-    evaluateOrder, referenceFieldOf, referencedFields, dependentsOf, danglingReferences, findCycle,
+    evaluateOrder, prepareEvaluation, referenceFieldOf, referencedFields, dependentsOf, danglingReferences, findCycle,
     mapFormulaFields, formulaToDisplay, formulaFromDisplay, buildAiGuide, extractFormula,
     DEFAULT_RULES, DEFAULT_PRIORITY_RULES, DEFAULT_CHECKLIST_RULES, DEFAULT_CHECKLIST_RULE_IDS,
     normalizeCondition, normalizeRule, normalizeRules, conditionsToFormula, formulaToConditions, validateRule, mergeWithDefaults,

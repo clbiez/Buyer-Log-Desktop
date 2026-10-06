@@ -1223,7 +1223,7 @@
       cellHtmlFn:(col,row)=>frameworkCellHtml(columns,col,row),rowClassFn:row=>typeof rowClass==='function'?rowClass(row._source||row):'',emptyText,
       rowPostBuildFn:drillColumnIndex>=0?(tr,row)=>{const cell=tr.children[drillColumnIndex];if(!cell)return;cell.dataset.lflDrill='1';cell.classList.add('lflPortfolioDrillCell');const hint=isEn()?'Double-click to view portfolio details':'Portföy detayını görmek için çift tıkla';const text=cell.textContent.trim();cell.title=text?`${text}\\n${hint}`:hint;}:null,
       footerHtmlFn:(_displayRows,visibleCols)=>typeof footer==='function'?footer(sorted.map(row=>row._source||row),visibleCols):'',
-      virtualize:true,
+      virtualize:true,range:true,
     });
     attachLflColumnResize(tableId,viewName,columns);
     LFL_TABLE_EXPORTS.set(tableId,{title,columns,rows:sorted.map(row=>row._source||row)});bindLflDrillDown(tableId,all,drillKey,onDrill);

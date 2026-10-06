@@ -22,40 +22,56 @@
   /* params: { scope: 'filtered'|'company', window: 'w4'|'m3'|'y1'|'all'… }.
      Kapsam/pencere değişince sunucudan yeniden hesaplanır; hata (ör. şirket
      geneli yetkisi yok) panelde mesaj olarak gösterilir, kontroller kalır. */
+  const liveSnapshots=new Map(),summarySnapshots=new WeakMap();
+  const LIVE_TTL_MS=5*60*1000,MAX_LIVE_RECORDS=40000;
+  let liveGeneration=0,liveRequestSeq=0;
+  const localDay=()=>{const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
+  const liveKey=params=>[params.scope==='filtered'?'filtered':'company',params.window||'y1',params.weight==='qty'?'qty':'shipment',localDay()].join('|');
+  function rememberLive(key,result){
+    liveSnapshots.delete(key);liveSnapshots.set(key,result);
+    const count=()=>[...liveSnapshots.values()].reduce((n,item)=>n+(item.analysis?.records?.length||0),0);
+    while(liveSnapshots.size>4||count()>MAX_LIVE_RECORDS)liveSnapshots.delete(liveSnapshots.keys().next().value);
+  }
+  function summarized(analysis,params){
+    let cache=summarySnapshots.get(analysis);if(!cache){cache=new Map();summarySnapshots.set(analysis,cache);}
+    const key=JSON.stringify(params);
+    if(cache.has(key))return cache.get(key);
+    const result=TA().summarize(analysis,params);cache.set(key,result);
+    if(cache.size>6)cache.delete(cache.keys().next().value);
+    return result;
+  }
   async function loadLive(force = false, params = {}) {
-    const scope = params.scope === 'filtered' ? 'filtered' : 'company';
-    const win = params.window || 'y1';
-    const weight = params.weight === 'qty' ? 'qty' : 'shipment';
-    const key = scope + '|' + win + '|' + weight;
-    if (live.loaded && !force && live.params === key) return live;
-    if (live.pending && live.pendingKey === key && !force) return live.pending;
-    live.pendingKey = key;
-    live.pending = (async () => {
-      live.warnings = [];
-      if (!global.SERVER_BACKED) {
-        live.analysis = null;
-        live.message = L('Buyer Log verisinden hesap sunucu modunda çalışır.', 'Calculating from Buyer Log data requires server mode.');
-      } else {
-        const qs = new URLSearchParams({ scope, window: win, weight, ...(force ? { refresh: '1' } : {}) });
-        const res = await fetch('/api/transit-analysis/live?' + qs.toString(), { headers: { Accept: 'application/json' } });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          live.analysis = null;
-          live.message = L(data.error || res.statusText, data.errorEn || data.error || res.statusText);
-          live.diag = null;
-        } else {
-          live.analysis = data.analysis || null;
-          live.message = L(data.message || '', data.messageEn || data.message || '');
-          live.warnings = Array.isArray(data.warnings) ? data.warnings : [];
-          live.diag = data.diag || null;
-          live.meta = { antrepoSourceMode: data.antrepoSourceMode || '', orderCount: Number(data.orderCount) || 0 };
+    const scope=params.scope==='filtered'?'filtered':'company',win=params.window||'y1',weight=params.weight==='qty'?'qty':'shipment',key=liveKey(params);
+    if(live.pending&&live.pendingKey===key&&(!force||live.pendingForce))return live.pending;
+    if(!force){
+      const cached=liveSnapshots.get(key);
+      if(cached&&Date.now()-cached.at<LIVE_TTL_MS){
+        ++liveRequestSeq;live.pending=null;live.pendingKey='';liveSnapshots.delete(key);liveSnapshots.set(key,cached);Object.assign(live,cached,{message:L(cached.messageTr||cached.message,cached.messageEn||cached.message)});return live;
+      }
+    }else{liveSnapshots.clear();++liveGeneration;live.loaded=false;}
+    const generation=liveGeneration,sequence=++liveRequestSeq;
+    const pending=(async()=>{
+      const result={loaded:true,params:key,analysis:null,message:'',warnings:[],diag:null,meta:null,at:Date.now()};
+      if(!global.SERVER_BACKED)result.message=L('Buyer Log verisinden hesap sunucu modunda çalışır.', 'Calculating from Buyer Log data requires server mode.');
+      else{
+        const qs=new URLSearchParams({scope,window:win,weight,...(force?{refresh:'1'}:{})});
+        const res=await fetch('/api/transit-analysis/live?'+qs.toString(),{headers:{Accept:'application/json'}});
+        const data=await res.json().catch(()=>({}));
+        if(!res.ok)result.message=L(data.error||res.statusText,data.errorEn||data.error||res.statusText);
+        else{
+          result.analysis=data.analysis||null;result.messageTr=data.message||'';result.messageEn=data.messageEn||data.message||'';result.message=L(result.messageTr,result.messageEn);
+          result.warnings=Array.isArray(data.warnings)?data.warnings:[];result.diag=data.diag||null;
+          result.meta={antrepoSourceMode:data.antrepoSourceMode||'',orderCount:Number(data.orderCount)||0};
+          if(generation===liveGeneration)rememberLive(key,result);
         }
       }
-      live.loaded = true;
-      live.params = key;
-      return live;
-    })().finally(() => { live.pending = null; live.pendingKey = ''; });
-    return live.pending;
+      // A late result from a prior scope, force refresh or invalidated model
+      // may not replace the current snapshot.
+      if(sequence===liveRequestSeq&&generation===liveGeneration)Object.assign(live,result);
+      return result;
+    })().finally(()=>{if(live.pending===pending){live.pending=null;live.pendingKey='';live.pendingForce=false;}});
+    live.pending=pending;live.pendingKey=key;live.pendingForce=force;
+    return pending;
   }
 
   function TA() { return global.BLTransitAnalysis; }
@@ -295,9 +311,9 @@
     function tableHtml(analysis) {
       const isDb = analysis.source === 'database';
       const yearFilter = isDb ? '*' : view.year;
-      summary = TA().summarize(analysis, { basis: view.basis, year: yearFilter, vehicle: view.vehicle });
+      summary = summarized(analysis, { basis: view.basis, year: yearFilter, vehicle: view.vehicle });
       view.basis = summary.basis; if (!isDb) view.year = summary.year;
-      if (view.vehicle !== '*' && !summary.options.vehicles.includes(view.vehicle)) { view.vehicle = '*'; summary = TA().summarize(analysis, { basis: view.basis, year: yearFilter, vehicle: '*' }); }
+      if (view.vehicle !== '*' && !summary.options.vehicles.includes(view.vehicle)) { view.vehicle = '*'; summary = summarized(analysis, { basis: view.basis, year: yearFilter, vehicle: '*' }); }
       writeView(view);
       const rules = ctx.getRules();
       if (typeof ctx.setVehicleTypes === 'function') ctx.setVehicleTypes(summary.options.vehicles.filter(Boolean));
@@ -380,7 +396,7 @@
 
     function reloadLive(force) {
       writeView(view); selected.clear(); expanded.clear();
-      busyLive = true; errorText = ''; render();
+      busyLive = force || !live.loaded || live.params!==liveKey(liveParams()); errorText = ''; render();
       loadLive(force, liveParams())
         .then(() => { busyLive = false; render(); })
         .catch(err => { busyLive = false; errorText = err.message; render(); });
@@ -467,7 +483,7 @@
     return { refresh: () => (view.source === 'database' ? reloadLive(true) : load(true).then(render)), render };
   }
 
-  function invalidate() { store.loaded = false; live.loaded = false; }
+  function invalidate({liveOnly=false}={}) { if(!liveOnly)store.loaded=false;live.loaded=false;live.pending=null;live.pendingKey='';liveSnapshots.clear();++liveGeneration;++liveRequestSeq; }
   // Kural düzenleyicisi IAS analizindeki ülke ve taşıt sözlüğünü de sunar.
   function knownCountries() {
     const names = new Set();

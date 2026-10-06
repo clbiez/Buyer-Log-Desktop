@@ -41,34 +41,45 @@
   // yazar. Kod anahtarı yoksa aynı PLM+Renk Kodu altındaki named kayıt TEK
   // bir ref'e çözülüyorsa güvenle kullanılır. Birden çok farklı ref varsa
   // yanlış modele/renge görsel bağlamamak için çözüm yapılmaz.
-  const namedColourEntries=(map,modelId,colourCode)=>{
+  const namedColourEntries=(map,modelId,colourCode,index)=>{
     const base=canonicalImageKey(modelId,colourCode);
     if(!base||!map||typeof map!=='object')return [];
     const prefix=`${base}|name:`;
-    return Object.keys(map).filter(key=>key.startsWith(prefix)).map(key=>({key,ref:clean(map[key])}));
+    const keys=index?(index.get(base)||[]):Object.keys(map).filter(key=>key.startsWith(prefix));
+    return keys.filter(key=>Object.prototype.hasOwnProperty.call(map,key)).map(key=>({key,ref:clean(map[key])}));
   };
-  const resolveImageRef=(map,modelId,colourCode,colourName='')=>{
+  const resolveImageRef=(map,modelId,colourCode,colourName='',index)=>{
     const key=canonicalImageKey(modelId,colourCode,colourName);
     if(key&&map&&Object.prototype.hasOwnProperty.call(map,key))return clean(map[key]);
     const fallback=canonicalImageKey(modelId,colourCode);
     if(fallback&&map&&Object.prototype.hasOwnProperty.call(map,fallback))return clean(map[fallback]);
-    const entries=namedColourEntries(map,modelId,colourCode);
+    const entries=namedColourEntries(map,modelId,colourCode,index);
     if(!entries.length)return '';
     const refs=[...new Set(entries.map(item=>item.ref))];
     return refs.length===1?refs[0]:'';
   };
-  const hasImageKey=(map,modelId,colourCode,colourName='')=>{
+  const hasImageKey=(map,modelId,colourCode,colourName='',index)=>{
     const key=canonicalImageKey(modelId,colourCode,colourName),fallback=canonicalImageKey(modelId,colourCode);
     if(map&&((key&&Object.prototype.hasOwnProperty.call(map,key))||(fallback&&Object.prototype.hasOwnProperty.call(map,fallback))))return true;
-    return namedColourEntries(map,modelId,colourCode).length>0;
+    return namedColourEntries(map,modelId,colourCode,index).length>0;
   };
-  let registryMap={};
-  const setRegistryMap=map=>{registryMap=map&&typeof map==='object'?map:{};return registryMap;};
+  let registryMap={},registryNamed=new Map();
+  // Rebuild on every registry publication, including mutations of the same map.
+  // Stateless map helpers remain fresh; only this explicitly published registry is indexed.
+  const setRegistryMap=map=>{
+    registryMap=map&&typeof map==='object'?map:{};registryNamed=new Map();
+    for(const key of Object.keys(registryMap)){
+      const split=key.indexOf('|name:');if(split<0)continue;
+      const base=key.slice(0,split),keys=registryNamed.get(base);
+      if(keys)keys.push(key);else registryNamed.set(base,[key]);
+    }
+    return registryMap;
+  };
   const resolveRegistrySource=(modelId,colourCode,base='/api/collection-images',colourName='')=>{
-    const ref=resolveImageRef(registryMap,modelId,colourCode,colourName);
+    const ref=resolveImageRef(registryMap,modelId,colourCode,colourName,registryNamed);
     return ref?`${base}/${encodeURIComponent(ref)}`:'';
   };
-  const hasRegistryKey=(modelId,colourCode,colourName='')=>hasImageKey(registryMap,modelId,colourCode,colourName);
+  const hasRegistryKey=(modelId,colourCode,colourName='')=>hasImageKey(registryMap,modelId,colourCode,colourName,registryNamed);
   const sourceHash=value=>{
     const input=clean(value);let hash=2166136261;
     for(let i=0;i<input.length;i++){hash^=input.charCodeAt(i);hash=Math.imul(hash,16777619);}
@@ -222,7 +233,7 @@
   async function clearAll(){
     for(const [,entry] of thumbnailMemory)revoke(entry);
     thumbnailMemory.clear();originalMemory.clear();thumbnailInFlight.clear();originalInFlight.clear();
-    registryMap={};
+    registryMap={};registryNamed.clear();
     try{
       if(env.caches&&typeof env.caches.delete==='function')await env.caches.delete(CACHE_NAME);
       else{const cache=await openDisk();if(cache&&typeof cache.keys==='function')for(const request of await cache.keys())await cache.delete(request);}

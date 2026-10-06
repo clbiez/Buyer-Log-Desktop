@@ -24,14 +24,14 @@ test('v5.13 CP/Orders styled Excel export is native ExcelJS, not a SheetJS-to-Ex
   assert.doesNotMatch(APP,/imageWorkbook\.xlsx\.load\(raw\)/);
 });
 
-test('v5.18 CP/Orders Excel images preserve aspect ratio with one-cell locked anchors',()=>{
+test('CP/Orders Excel images preserve fitted aspect ratio and move and size with their cells',()=>{
   const block=between('async function exportStyledDomTable','async function exportCpTableWithLightTheme');
-  assert.match(block,/cellWidth:tdRect\.width\|\|0,cellHeight:trRect\.height\|\|0/);
+  assert.match(block,/cellWidth:tdRect\.width\|\|0,cellHeight:trRect\.height\|\|\(managedRecords/);
   // v10.90 — görsel kaynağı artık ekrandaki <img>'in currentSrc'si değil kanonik
   // model kimliğidir (bkz. tests/cp-orders-external-output-v1090.test.js);
   // hazırlama yine kolPrepareExcelImage üzerinden geçer.
   assert.match(APP,/async function _prepareExcelJsImages[\s\S]*kolPrepareExcelImage\(source\)/);
-  assert.match(block,/kolExcelImageTwoCellPlacement\(image,entry\.row,cellWidth,cellHeight,entry\.col\+1,2\)/);
+  assert.match(block,/kolExcelImageMoveAndSizePlacement\(image,entry\.row,cellWidth,cellHeight,entry\.col\+1,2\)/);
   assert.match(APP,/nativeColOff/);
   assert.doesNotMatch(APP,/editAs:'oneCell'/);
   assert.match(APP,/ext:\{width:box\.width,height:box\.height\}/);

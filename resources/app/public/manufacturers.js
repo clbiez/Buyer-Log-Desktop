@@ -34,6 +34,9 @@
   const toast = message => { try { if (typeof showToast === 'function') showToast(message); } catch (_) { /* toast yoksa sessiz */ } };
   const MONTHS = { tr: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'], en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] };
   const STORE_KEY = 'lcw.manufacturersPage.v1';
+  const DIRECTORY_RECHECK_MS=30000;
+  let directoryLoadedAt=0,refreshPending=null,refreshQueued=null,refreshReadsRows=false,resultKey='';
+  const localDay=()=>{const d=new Date();return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;};
 
   const S = {
     host: null, loading: false, error: '',
@@ -63,25 +66,50 @@
   /* ---------------- veri ---------------- */
   async function loadDirectory() {
     const data = await api('/api/email-groups');
-    S.directory = { countries: data.countries || [], types: data.types || [], records: data.records || [], revision: Number(data.revision) || 0 };
+    const revision=Number(data.revision)||0;
+    if(revision>=S.directory.revision)S.directory = { countries: data.countries || [], types: data.types || [], records: data.records || [], revision };
+    directoryLoadedAt=Date.now();
   }
   async function loadRows() {
     const bridge = window.BLManufacturerDataBridge;
-    const rows = bridge && typeof bridge.rows === 'function' ? await bridge.rows() : [];
-    S.rows = Array.isArray(rows) ? rows : [];
-    S.rowsVersion = bridge && typeof bridge.version === 'function' ? bridge.version() : String(S.rows.length);
+    for(let attempt=0;attempt<3;attempt++){
+      const before=bridge?.version?.()||'';
+      const rows=bridge&&typeof bridge.rows==='function'?await bridge.rows():[];
+      const after=bridge?.version?.()||'';
+      if(before&&before!==after&&attempt<2)continue;
+      S.rows=Array.isArray(rows)?rows:[];
+      S.rowsVersion=before||after||String(S.rows.length);
+      return;
+    }
   }
-  function compute() {
+  function compute(force=false) {
+    const key=`${S.rowsVersion}|${S.directory.revision}|${localDay()}`;
+    if(!force&&S.result&&resultKey===key)return false;
     S.result = E.buildCards(S.rows, S.directory.records, { today: new Date() });
+    resultKey=key;
     window.BLManufacturerAsasNames = S.result.asasNames.slice();
+    return true;
   }
-  async function refresh({ rows = true } = {}) {
-    S.loading = true; S.error = ''; render();
-    try {
-      await Promise.all([rows ? loadRows() : Promise.resolve(), loadDirectory()]);
-      compute();
-    } catch (error) { S.error = error && error.message || String(error); }
-    S.loading = false; render();
+  function refresh({ rows = true,force=false } = {}) {
+    if(refreshPending){
+      if((rows&&!refreshReadsRows)||force)refreshQueued={rows:rows||!!refreshQueued?.rows,force:force||!!refreshQueued?.force};
+      return refreshPending;
+    }
+    refreshReadsRows=rows;
+    refreshPending=(async()=>{
+      S.loading = true; S.error = ''; render();
+      let intent={rows,force};
+      do{
+        refreshQueued=null;refreshReadsRows=intent.rows;
+        try {
+          await Promise.all([intent.rows ? loadRows() : Promise.resolve(), loadDirectory()]);
+          if(!refreshQueued)compute(intent.force);
+        } catch (error) { S.error = error && error.message || String(error); }
+        intent=refreshQueued;
+      }while(intent);
+      S.loading = false; render();
+    })().finally(()=>{refreshPending=null;refreshQueued=null;refreshReadsRows=false;});
+    return refreshPending;
   }
 
   /* ---------------- süzme ---------------- */
@@ -490,7 +518,7 @@
       const status = target.closest('[data-mfp-status]');
       if (status) { S.status = S.status === status.dataset.mfpStatus ? '' : status.dataset.mfpStatus; persist(); render(); return; }
       if (target.closest('[data-mfp-unassigned]')) { openOrders(null, rowsMissingSub(), T('Alt Üreticisi eksik Non-DTR lisans siparişleri', 'Non-DTR license orders missing a Sub-Manufacturer')); return; }
-      if (target.closest('[data-mfp-refresh]')) { await refresh(); return; }
+      if (target.closest('[data-mfp-refresh]')) { await refresh({force:true}); return; }
       if (target.closest('[data-mfp-directory]')) { window.BLEmailGroups?.open?.(); return; }
       if (target.closest('[data-mfp-create-all]')) { await createCards(S.result.cards.filter(card => card.status === 'missing_card')); return; }
       const create = target.closest('[data-mfp-create]');
@@ -528,7 +556,8 @@
     if (!S.host || !Array.isArray(detail.records)) return;
     if (Number(detail.revision) === S.directory.revision) return;
     S.directory = { countries: detail.countries || [], types: detail.types || [], records: detail.records, revision: Number(detail.revision) || 0 };
-    if (S.rows.length || S.result) { compute(); render(); }
+    directoryLoadedAt=Date.now();
+    if (document.body?.dataset?.activeTab==='manufacturers'&&(S.rows.length || S.result)) { compute(); render(); }
   });
 
   async function initManufacturersPage() {
@@ -538,11 +567,20 @@
     const bridge = window.BLManufacturerDataBridge;
     const version = bridge && typeof bridge.version === 'function' ? bridge.version() : '';
     if (!S.result || (version && version !== S.rowsVersion)) await refresh();
-    else { render(); try { await loadDirectory(); compute(); render(); } catch (_) { /* rehber geçici okunamadı */ } }
+    else {
+      compute();render();
+      // Show the existing snapshot immediately, then recheck shared contacts only
+      // when due. A same-revision response never recalculates the orders analysis.
+      if(Date.now()-directoryLoadedAt>=DIRECTORY_RECHECK_MS)void refresh({rows:false});
+    }
   }
   function renderManufacturersLanguage() { if (S.host) { S.host.innerHTML = shellHtml(); render(); } }
+  function invalidate(){
+    resultKey='';
+    if(S.host&&document.body?.dataset?.activeTab==='manufacturers')void refresh({force:true});
+  }
 
   window.initManufacturersPage = initManufacturersPage;
   window.renderManufacturersLanguage = renderManufacturersLanguage;
-  window.BLManufacturersPage = { state: S, refresh, visibleCards, performanceComment, openDrill };
+  window.BLManufacturersPage = { state: S, refresh, invalidate, visibleCards, performanceComment, openDrill };
 })();
