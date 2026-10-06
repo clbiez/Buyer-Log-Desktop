@@ -1,14 +1,213 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-06",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Daha sade ekranlar, daha geniş tablolar",
+    "en": "Cleaner screens, wider tables"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tablolara daha fazla alan açıldı, Buyer Log köşeli tasarımı yaygınlaştırıldı ve PLM SYNC artık yalnız elle başlar.",
+    "en": "Tables get more room, Buyer Log's square design is applied more widely and PLM SYNC now only starts manually."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "plm-sync-manual-only",
+      "type": "improvement",
+      "module": {
+        "tr": "PLM SYNC",
+        "en": "PLM SYNC"
+      },
+      "title": {
+        "tr": "PLM SYNC yalnız elle başlar",
+        "en": "PLM SYNC starts only manually"
+      },
+      "path": {
+        "tr": "PLM SYNC",
+        "en": "PLM SYNC"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-sync-manual-only.png",
+        "alt": {
+          "tr": "PLM SYNC yalnız elle başlar — gerçek Buyer Log demo ekranı",
+          "en": "PLM SYNC starts only manually — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "PLM SYNC yalnız elle başlar",
+          "en": "PLM SYNC starts only manually"
+        }
+      },
+      "body": {
+        "tr": "Hiçbir ekran PLM SYNC'i kendiliğinden başlatmaz; görselsiz satırlar için arka planda PLM'e istek gitmez ve uygulama yavaşlamaz. Eksik görseller PLM SYNC menüsünden başlatıldığında gelir.",
+        "en": "No screen starts PLM SYNC on its own; rows without images no longer send background PLM requests that slowed the app. Missing images arrive when you start a sync from the PLM SYNC menu."
+      }
+    },
+    {
+      "id": "quotations-table-workspace",
+      "type": "improvement",
+      "module": {
+        "tr": "Quotations",
+        "en": "Quotations"
+      },
+      "title": {
+        "tr": "Quotations tablosu tüm alanı kullanır",
+        "en": "Quotations table uses the full workspace"
+      },
+      "path": {
+        "tr": "Quotations",
+        "en": "Quotations"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "quotations-table-workspace.png",
+        "alt": {
+          "tr": "Quotations tablosu tüm alanı kullanır — gerçek Buyer Log demo ekranı",
+          "en": "Quotations table uses the full workspace — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Quotations tablosu tüm alanı kullanır",
+          "en": "Quotations table uses the full workspace"
+        }
+      },
+      "body": {
+        "tr": "Üstteki özet kartları ve Karar Paneli kaldırıldı; başlık, durum sekmeleri, arama ve eylemler tek satırda. Tablo ekran yüksekliğine sığar, sağa-sola kayar ve fiyat girişini engelleyen panel yoktur. Onay düğmeleri kare.",
+        "en": "The summary cards and Decision Panel are removed; title, status tabs, search and actions share one row. The table fits the screen height, scrolls horizontally and no panel covers price entry. Approve buttons are square."
+      }
+    },
+    {
+      "id": "table-range-inline",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Sayfa denetimi araç satırında",
+        "en": "Paging controls in the toolbar row"
+      },
+      "path": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-range-inline.png",
+        "alt": {
+          "tr": "Sayfa denetimi araç satırında — gerçek Buyer Log demo ekranı",
+          "en": "Paging controls in the toolbar row — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sayfa denetimi araç satırında",
+          "en": "Paging controls in the toolbar row"
+        }
+      },
+      "body": {
+        "tr": "Görünür satır aralığı ve sayfa bilgisi ayrı satır açmadan araç satırının en sağına kompakt ve köşeli olarak taşındı; tabloya daha fazla yükseklik kalır.",
+        "en": "The visible row range and page controls moved into the right end of the toolbar row as a compact, square control, so the table gets more height."
+      }
+    },
+    {
+      "id": "refresh-progress-compact",
+      "type": "improvement",
+      "module": {
+        "tr": "Yenileme",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Kompakt yenileme durumu paneli",
+        "en": "Compact refresh progress panel"
+      },
+      "path": {
+        "tr": "Yenileme",
+        "en": "Refresh"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-progress-compact.png",
+        "alt": {
+          "tr": "Kompakt yenileme durumu paneli — gerçek Buyer Log demo ekranı",
+          "en": "Compact refresh progress panel — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Kompakt yenileme durumu paneli",
+          "en": "Compact refresh progress panel"
+        }
+      },
+      "body": {
+        "tr": "Yenileme durumu paneli küçültüldü ve Buyer Log tasarımına uyarlandı: köşeli kart, ince adım satırları ve kompakt durum etiketi.",
+        "en": "The refresh progress panel is smaller and follows the Buyer Log design: square card, slim step rows and a compact status label."
+      }
+    },
+    {
+      "id": "overview-without-refresh-card",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Son yenileme sonucu kartı kaldırıldı",
+        "en": "Latest refresh result card removed"
+      },
+      "path": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-without-refresh-card.png",
+        "alt": {
+          "tr": "Son yenileme sonucu kartı kaldırıldı — gerçek Buyer Log demo ekranı",
+          "en": "Latest refresh result card removed — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Son yenileme sonucu kartı kaldırıldı",
+          "en": "Latest refresh result card removed"
+        }
+      },
+      "body": {
+        "tr": "Genel Bakış'taki Son yenileme sonucu kartı kaldırıldı; ekran doğrudan saatler ve iş widget'larıyla başlar. Yenileme sonucu bildirimi ve değişiklik geçmişi korunur.",
+        "en": "The Latest refresh result card is removed from Overview, so the screen starts with clocks and work widgets. The refresh toast and change history remain available."
+      }
+    },
+    {
+      "id": "manufacturers-square-controls",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Üreticiler'de köşeli düğmeler",
+        "en": "Square controls in Manufacturers"
+      },
+      "path": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturers-square-controls.png",
+        "alt": {
+          "tr": "Üreticiler'de köşeli düğmeler — gerçek Buyer Log demo ekranı",
+          "en": "Square controls in Manufacturers — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Üreticiler'de köşeli düğmeler",
+          "en": "Square controls in Manufacturers"
+        }
+      },
+      "body": {
+        "tr": "Üreticiler ekranındaki oval filtre düğmeleri, rozetler, bağlantı çipleri ve not göstergeleri Buyer Log'un köşeli tasarımına çevrildi.",
+        "en": "Oval filter buttons, badges, link chips and grade markers on the Manufacturers screen now use Buyer Log's square design."
+      }
+    }
+  ]
 }

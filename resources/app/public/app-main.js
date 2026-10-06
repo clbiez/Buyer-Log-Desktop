@@ -2963,19 +2963,11 @@ function canonicalModelImageKnown(plmId,colourCode,colour=''){
 // aynı görsel için yarışan Image nesneleri oluşmaz.
 const BLImageRuntime=(()=>{
   const IMAGE_HOVER_DELAY=140,IMAGE_REQUEST_CONCURRENCY=4,NEGATIVE_CACHE_TTL=30000,MAX_LOADED_KEYS=2048;
-  /* AÇILIŞTA EKSİK GÖRSEL TAMAMLAMA. Görünür bir hücrede model görseli yoksa
-     (ya da kayıtlı dosya açılamıyorsa) kimlik sessizce "Eksikleri tamamla"
-     kuyruğuna girer; sunucu LOCAL → PLM sırasını uygular ve yalnız gerçekten
-     eksik olanı indirir. Kullanıcının PLM Sync'e basıp "Remote added" ile
-     görselleri bir anda görmesi gerekmez.
-       · Yalnız GÖRÜNÜR hücreler istenir; lazy mimari korunur.
-       · Login penceresi AÇILMAZ: yalnız gizli SSO yenilemesi denenir.
-       · Elle başlatılan görsel işiyle çakışmaz (sunucu kilidi 409 vermez). */
-  const AUTO_IMAGE_BATCH_MAX=80,AUTO_IMAGE_DELAY=250,AUTO_IMAGE_COOLDOWN=10*60*1000,AUTO_IMAGE_RETRY=15000,AUTO_IMAGE_MAX_ATTEMPTS=3,AUTO_IMAGE_AUTH_PAUSE=10*60*1000;
-  const AUTO_IMAGE_AUTH_CODES=new Set(['CORENECTUM_API_TOKEN_INVALID','CORENECTUM_API_TOKEN_REQUIRED','CORENECTUM_LOGIN_REQUIRED','CORENECTUM_SIGNIN_REQUIRED','CORENECTUM_AUTH_REQUIRED','ACCESS_AREA_REQUIRED','PERMISSION_REQUIRED']);
+  /* PLM'e OTOMATİK istek YOK: görselsiz/açılamayan hücre yalnız yer tutucuyla
+     kalır. Eksik görseller kullanıcı PLM SYNC'i elle başlattığında gelir
+     (açılıştaki sessiz "eksikleri tamamla" işi uygulamayı yavaşlatıyordu). */
   const inFlight=new Map(),failed=new Map(),loaded=new Map();
   const queue=[];let active=0,observer=null,hoverTimer=0,hoverToken=0;
-  const autoImagePending=new Map(),autoImageCooldown=new Map();let autoImageTimer=0,autoImageInFlight=null,autoImagePausedUntil=0,autoImageHolds=0;
   const key=src=>String(src||'').trim();
   const isImageSource=src=>{const value=key(src);return value&&!/^data:image\/svg\+xml/i.test(value);};
   const isCacheableSource=src=>isImageSource(src)&&!/^data:/i.test(key(src));
@@ -3012,8 +3004,7 @@ const BLImageRuntime=(()=>{
   const tableImageSource=img=>key(img?.dataset?.src||img?.currentSrc||img?.src);
   const loadTableImage=img=>{
     const src=key(img?.dataset?.src);if(!img||!isImageSource(src)||img.dataset.blImageLoaded==='1'||img.dataset.blImageFailed==='1')return;
-    // Kayıtlı ama açılamayan görsel de eksiktir: sunucu dosya yoksa yeniden indirir.
-    const markFailed=()=>{if(img.isConnected&&img.dataset.src===src){img.dataset.blImageFailed='1';scheduleAutoImageComplete(img);}};
+    const markFailed=()=>{if(img.isConnected&&img.dataset.src===src)img.dataset.blImageFailed='1';};
     /* Bu oturumda zaten yüklenmiş görsel, sayfa/sekme değişip tablo yeniden
        çizildiğinde yer tutucuyla beklemez: kaynak hemen bağlanır ve tarayıcı
        önbelleğinden gelir. Eskiden her yeniden çizimde görseller bir an
@@ -3025,105 +3016,18 @@ const BLImageRuntime=(()=>{
     if(window.BLModelImageCache){void window.BLModelImageCache.bind(img).catch(markFailed);return;}
     void load(src).then(()=>{if(img.isConnected&&img.dataset.src===src){img.src=src;img.dataset.blImageLoaded='1';}}).catch(markFailed);
   };
-  const autoIdentityFromImage=img=>{
-    if(!img)return null;
-    const modelId=key(img.dataset.plmId||img.dataset.modelId),explicitName=key(img.dataset.modelName);
-    const direct=normalizePlmLinkId(modelId),styleName=explicitName||(!direct?modelId:'');
-    if(!direct&&!styleName)return null;
-    return {plmId:direct||'',styleName,colourCode:key(img.dataset.colourCode),colour:key(img.dataset.colourName)};
-  };
-  const autoIdentityKey=item=>`${item.plmId||`name:${String(item.styleName||'').toUpperCase()}`}|${String(item.colourCode||'').toUpperCase()}|${String(item.colour||'').toUpperCase()}`;
-  const autoImageScope=img=>{
-    const scoped=key(img?.closest?.('[data-bl-model-asset-scope]')?.dataset?.blModelAssetScope);
-    if(scoped)return scoped;
-    const tab=document.body?.dataset?.activeTab||'';
-    return ['cp','orders','koleksiyon'].includes(tab)?tab:'';
-  };
-  const armAutoImageComplete=(delay=AUTO_IMAGE_DELAY)=>{
-    if(autoImageTimer||autoImageInFlight||autoImageHolds||!autoImagePending.size)return;
-    autoImageTimer=setTimeout(()=>{autoImageTimer=0;void flushAutoImageComplete();},delay);
-  };
-  const flushAutoImageComplete=async()=>{
-    if(autoImageInFlight||autoImageHolds||!autoImagePending.size)return;
-    if(autoImagePausedUntil>Date.now()){autoImagePending.clear();return;}
-    const scope=autoImagePending.values().next().value.scope;
-    const entries=[...autoImagePending.entries()].filter(([,item])=>item.scope===scope).slice(0,AUTO_IMAGE_BATCH_MAX);
-    entries.forEach(([id])=>autoImagePending.delete(id));
-    const items=entries.map(([,item])=>({plmId:item.plmId,colourCode:item.colourCode,colour:item.colour,styleName:item.styleName}));
-    const settle=ms=>{const until=Date.now()+ms;entries.forEach(([id])=>autoImageCooldown.set(id,until));};
-    const retry=()=>{
-      entries.forEach(([id,item])=>{
-        const attempts=(item.attempts||0)+1;
-        if(attempts<AUTO_IMAGE_MAX_ATTEMPTS&&!autoImagePending.has(id))autoImagePending.set(id,{...item,attempts});
-        else autoImageCooldown.set(id,Date.now()+AUTO_IMAGE_COOLDOWN);
-      });
-    };
-    let release=()=>{};autoImageInFlight=new Promise(resolve=>{release=resolve;});
-    let retryDelay=AUTO_IMAGE_DELAY;
-    try{
-      /* Düz fetch + sessiz yetki başlığı: notifyPlmOperationStarted paneli
-         açılmaz, plmJsonRequest'in etkileşimli login denemesi çalışmaz. */
-      const response=await fetch('/api/model-images/import-plm',{method:'POST',headers:{'Content-Type':'application/json','X-BuyerLog-Auth-Mode':'silent'},body:JSON.stringify({items,mode:'missing',scope})});
-      const data=await response.json().catch(()=>({}));
-      if(response.ok&&data){
-        // Kısmi görsel yanıtı state.overrides'ı DEĞİŞTİRMEZ, birleştirir.
-        if(data.overrides){state.overrides=mergeImageOverridePayload(state.overrides,data.overrides);syncModelImageRegistry();}
-        if(Array.isArray(data.images)&&data.images.length){
-          applySyncedPlmImages(data);
-          try{const current=modelAssetScopeApi()?.currentScope?.();if(current?.repaint)current.repaint();else plmSyncRepaintAll();}catch(_){}
-        }
-        settle(AUTO_IMAGE_COOLDOWN);
-      }else if(AUTO_IMAGE_AUTH_CODES.has(String(data&&data.code||''))||response.status===401||response.status===403){
-        // Oturum/yetki yok: login penceresi açılmaz, otomatik iş bir süre bekler.
-        autoImagePausedUntil=Date.now()+AUTO_IMAGE_AUTH_PAUSE;autoImagePending.clear();settle(AUTO_IMAGE_AUTH_PAUSE);
-      }else{
-        retry();retryDelay=AUTO_IMAGE_RETRY;
-      }
-    }catch(_){
-      retry();retryDelay=AUTO_IMAGE_RETRY;
-    }finally{
-      autoImageInFlight=null;release();
-      armAutoImageComplete(retryDelay);
-    }
-  };
-  const scheduleAutoImageComplete=img=>{
-    if(autoImagePausedUntil>Date.now())return;
-    const item=autoIdentityFromImage(img);if(!item)return;
-    const id=autoIdentityKey(item),until=autoImageCooldown.get(id)||0;if(until>Date.now()||autoImagePending.has(id))return;
-    if(until)autoImageCooldown.delete(id);
-    autoImagePending.set(id,{...item,scope:autoImageScope(img),attempts:0});
-    armAutoImageComplete();
-  };
-  /* Elle başlatılan görsel işi (PLM/ASAS) önce otomatik işin bitmesini bekler,
-     sürdüğü sürece otomatik iş istek göndermez. Başarılı elle iş oturumun
-     kurulduğunu gösterdiği için otomatik bekleme kaldırılır. */
-  const holdAutoImageComplete=()=>{
-    autoImageHolds++;
-    if(autoImageTimer){clearTimeout(autoImageTimer);autoImageTimer=0;}
-    let released=false;
-    return {
-      ready:(autoImageInFlight||Promise.resolve()).catch(()=>{}),
-      release:({ok=false}={})=>{
-        if(released)return;released=true;
-        autoImageHolds=Math.max(0,autoImageHolds-1);
-        if(ok){autoImagePausedUntil=0;autoImageCooldown.clear();}
-        armAutoImageComplete();
-      },
-    };
-  };
   const ensureObserver=()=>{
     if(observer||typeof IntersectionObserver==='undefined')return;
-    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const img=entry.target;if(!img.isConnected){observer.unobserve(img);return;}if(isImageSource(img.dataset.src))loadTableImage(img);else scheduleAutoImageComplete(img);observer.unobserve(img);}}),{root:null,rootMargin:'160px 0px'});
+    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const img=entry.target;if(!img.isConnected){observer.unobserve(img);return;}loadTableImage(img);observer.unobserve(img);}}),{root:null,rootMargin:'160px 0px'});
   };
   const observe=img=>{
     if(!img||img.dataset.blImageObserved==='1')return;
-    const hasSource=isImageSource(img.dataset.src),hasIdentity=Boolean(autoIdentityFromImage(img));
-    if(!hasSource&&!hasIdentity)return;
+    if(!isImageSource(img.dataset.src))return;
     img.dataset.blImageObserved='1';
     // Daha önce yüklenmiş kaynak için görünürlük beklenmez (bkz. loadTableImage).
-    if(hasSource&&loaded.has(key(img.dataset.src))){loadTableImage(img);return;}
+    if(loaded.has(key(img.dataset.src))){loadTableImage(img);return;}
     ensureObserver();
-    if(observer)observer.observe(img);else if(hasSource)loadTableImage(img);else scheduleAutoImageComplete(img);
+    if(observer)observer.observe(img);else loadTableImage(img);
   };
   const release=root=>{for(const img of root?.querySelectorAll('img[data-src]')||[]){observer?.unobserve(img);delete img.dataset.blImageObserved;}};
   const cancelHover=()=>{if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=0;}hoverToken++;};
@@ -3149,7 +3053,7 @@ const BLImageRuntime=(()=>{
     try{await window.BLModelImageCache?.clearAll?.();}catch(_){}
     return true;
   };
-  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,inFlight,failed,observe,release,load,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource,scheduleAutoImageComplete,holdAutoImageComplete};
+  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,inFlight,failed,observe,release,load,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource};
 })();
 window.BLImageRuntime=BLImageRuntime;
 function cpImageCellHtml(row){
@@ -7173,8 +7077,12 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   if(!view){
     let size=50;try{size=(window.BLStorage||localStorage).getItem(`bl.tableRange.${tableKey}.v1`);}catch(_){}
     const bar=document.createElement('div');bar.className='tableRangeBar';
-    bar.innerHTML='<label data-range-label><span></span><select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select></label><output data-range-info role="status" aria-live="polite"></output><button type="button" class="tbtn" data-range-prev>‹</button><label data-range-page-label><span></span><input data-range-page type="number" min="1" step="1"></label><button type="button" class="tbtn" data-range-next>›</button>';
-    const wrap=table.closest('.tablewrap')||table;wrap.before(bar);
+    bar.innerHTML='<select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select><output data-range-info role="status" aria-live="polite"></output><span class="tableRangePager"><button type="button" data-range-prev>‹</button><input data-range-page type="number" min="1" step="1"><span data-range-pages></span><button type="button" data-range-next>›</button></span>';
+    /* CP ve Siparişler'de ayrı satır açmaz: araç satırının en sağına kompakt
+       yerleşir (sabitlenmiş; taşma menüsüne düşmez). Diğer tablolar eski yerinde. */
+    const toolbar=(tableKey==='cp'||tableKey==='orders')?document.getElementById(`${tableKey}TableToolbar`):null;
+    if(toolbar){bar.classList.add('tableRangeBar--inline');bar.dataset.tbPriority='pinned';bar.dataset.tbOverflow='never';toolbar.appendChild(bar);}
+    else{const wrap=table.closest('.tablewrap')||table;wrap.before(bar);}
     view={controller:BLTableRange.create(size),bar,rerender};_tableRangeViews.set(table,view);
     const draw=()=>{window.BLGridClipboard?.clear?.(table.id);const host=table.closest('.tablewrap');if(host)host.scrollTop=0;view.rerender();};
     bar.querySelector('[data-range-size]').addEventListener('change',event=>{
@@ -7188,12 +7096,13 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
   }
   view.rerender=rerender;
   const range=view.controller.update(rows),bar=view.bar;
-  bar.querySelector('[data-range-label] span').textContent=T('Görünür satır aralığı','Visible row range');
   bar.title=T('Filtreler, toplamlar ve dışa aktarma tüm eşleşen satırları kapsar.','Filters, totals and exports include all matching rows.');
   const select=bar.querySelector('[data-range-size]');select.value=String(range.size);select.lastElementChild.textContent=T('Tümü','All');
+  select.title=T('Görünür satır aralığı','Visible row range');select.setAttribute('aria-label',select.title);
   bar.querySelector('[data-range-info]').textContent=`${range.total?range.start+1:0}–${range.end} / ${range.total.toLocaleString(appLang==='en'?'en-GB':'tr-TR')}`;
-  bar.querySelector('[data-range-page-label] span').textContent=T('Sayfa','Page');
   const page=bar.querySelector('[data-range-page]');page.value=range.page+1;page.max=range.pages;page.disabled=range.pages===1;
+  page.title=T('Sayfa','Page');page.setAttribute('aria-label',page.title);
+  bar.querySelector('[data-range-pages]').textContent=`/ ${range.pages.toLocaleString(appLang==='en'?'en-GB':'tr-TR')}`;
   const prev=bar.querySelector('[data-range-prev]'),next=bar.querySelector('[data-range-next]');
   prev.disabled=range.page===0;next.disabled=range.page+1>=range.pages;
   prev.setAttribute('aria-label',T('Önceki sayfa','Previous page'));next.setAttribute('aria-label',T('Sonraki sayfa','Next page'));
@@ -10428,32 +10337,6 @@ function normalizeOverviewRefreshResult(value){
     qtyChangedOrders:Number(value.qtyChangedOrders)||0,historyItemId:value.historyItemId||null,notes,message:String(value.message||''),
   };
 }
-function renderOverviewRefreshResult(){
-  const host=document.getElementById('ovRefreshResult');if(!host)return;
-  const rec=_overviewRefreshResult;if(!rec){host.hidden=true;host.innerHTML='';return;}
-  const en=appLang==='en',isError=rec.status==='error';
-  const at=new Date(rec.at),time=Number.isNaN(at.getTime())?'':at.toLocaleString(en?'en-GB':'tr-TR');
-  const title=isError?(en?'Refresh failed':'Yenileme başarısız'):(en?'Latest refresh result':'Son yenileme sonucu');
-  const mainText=rec.message||(rec.hasChanges
-    ?(en?`${rec.totalChanges.toLocaleString('en-GB')} source-data changes found.`:`${rec.totalChanges.toLocaleString('tr-TR')} kaynak veri değişikliği bulundu.`)
-    :(en?'Refresh completed. No changes were found in ASAS or ANTREPO data.':'Yenileme tamamlandı. ASAS veya ANTREPO verisinde değişiklik bulunmadı.'));
-  host.className=`ovRefreshResult ${isError?'isError':(rec.hasChanges?'isWarning':'isSuccess')}`;
-  const chips=isError?'':[
-    [en?'ASAS':'ASAS',rec.asasChangeCount],[en?'Warehouse':'Antrepo',rec.antrepoChangeCount],
-    [en?'New':'Yeni',rec.newlyAppeared],[en?'Status':'Durum',rec.statusChanged],[en?'Qty':'Adet',rec.qtyChangedOrders],
-  ].map(([label,n])=>`<span class="ovRefreshResultChip"><span>${escapeHtml(label)}</span><b>${Number(n||0).toLocaleString(en?'en-GB':'tr-TR')}</b></span>`).join('');
-  const notes=rec.notes.length?`<ul class="ovRefreshResultNotes">${rec.notes.map(note=>{
-    const id=[note.ocode,note.modelName,note.colour].filter(Boolean).join(' · ');
-    const text=[id,note.changeType,note.detail].filter(Boolean).join(' — ');
-    return `<li><span class="ovRefreshResultSource">${escapeHtml(note.source||'—')}</span><span class="ovRefreshResultNoteText" title="${escapeHtml(text)}">${escapeHtml(text)}</span></li>`;
-  }).join('')}</ul>`:'';
-  const hiddenCount=Math.max(0,rec.totalChanges-rec.notes.length);
-  host.innerHTML=`<div class="ovRefreshResultHead"><div><p class="ovRefreshResultTitle"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg>${escapeHtml(title)}</p><div class="ovRefreshResultTime">${escapeHtml(time)}</div></div><div class="ovRefreshResultActions">${rec.historyItemId?`<button type="button" class="tbtn" data-refresh-result-detail>${escapeHtml(en?'Open details':'Detayları aç')}</button>`:''}</div></div>
-    <div class="ovRefreshResultBody"><div class="ovRefreshResultSummary"><span>${escapeHtml(mainText)}</span>${chips}</div>${notes}${hiddenCount?`<div class="ovRefreshResultMore">+ ${hiddenCount.toLocaleString(en?'en-GB':'tr-TR')} ${escapeHtml(en?'more changes':'değişiklik daha')}</div>`:''}</div>`;
-  host.hidden=false;
-  host.querySelector('[data-refresh-result-detail]')?.addEventListener('click',()=>openSourceRefreshHistory(rec.historyItemId));
-}
-
 function renderOverviewState(options){
   const target=document.getElementById('ovEmpty');
   if(!target)return;
@@ -10494,7 +10377,6 @@ function renderOverviewNow(){
     empty.style.display='flex';return;
   }
   empty.style.display='none';
-  renderOverviewRefreshResult();
   updateOvFilterBadge('main');
   updateOvFilterBadge('bg');
   window.BLINTAKE?.onOverviewFiltersChanged?.();
@@ -14081,7 +13963,6 @@ async function waitForRefreshJob(expectedJob=null){
           ?(appLang==='en'?`Refresh completed: ${_overviewRefreshResult.totalChanges.toLocaleString('en-GB')} source-data changes found.`:`Yenileme tamamlandı: ${_overviewRefreshResult.totalChanges.toLocaleString('tr-TR')} kaynak veri değişikliği bulundu.`)
           :(appLang==='en'?'Refresh completed. No changes were found in ASAS or ANTREPO data.':'Yenileme tamamlandı. ASAS veya ANTREPO verisinde değişiklik bulunmadı.'));
       updSourceHint(resultMessage);
-      renderOverviewRefreshResult();
       if(antrepoFallback)showAntrepoFallbackWarning(antrepoFallback);
       // Otomatik yenileme sayacı baştan başlasın (v6.03).
       try{ window.dispatchEvent(new Event('bl-refresh-finished')); }catch(_){}
@@ -14112,7 +13993,6 @@ async function waitForRefreshJob(expectedJob=null){
     if(userVisibleRefresh){
       setRefreshFailureState(true);
       _overviewRefreshResult=normalizeOverviewRefreshResult({status:'error',at:new Date().toISOString(),message:diagnosisSummary});
-      renderOverviewRefreshResult();
       showSourceRefreshFailureModal(err.message,err.repairAction||null,err.diagnosis||null);
       showToast((appLang==='en'?'Refresh failed: ':'Yenileme başarısız: ')+diagnosisSummary);
     }
@@ -29541,19 +29421,11 @@ function notifyPlmOperationStarted(url,options){
     window.dispatchEvent(new CustomEvent('bl:plm-operation-started',{detail:{kind,url:String(url)}}));
   }catch(_){ }
 }
-const MODEL_IMAGE_IMPORT_ENDPOINTS=new Set(['/api/model-images/import-plm','/api/model-images/import-asas']);
 async function plmJsonRequest(url,options){
   notifyPlmOperationStarted(url,options);
-  /* Elle görsel işi, açılıştaki otomatik eksik-görsel tamamlamasının bitmesini
-     bekler; aksi hâlde sunucunun kullanıcı başına görsel kilidi 409 verirdi. */
-  const autoHold=MODEL_IMAGE_IMPORT_ENDPOINTS.has(String(url||''))?BLImageRuntime.holdAutoImageComplete():null;
-  let succeeded=false;
   const execute=async()=>{const res=await fetch(url,options),data=await res.json().catch(()=>({}));
     if(!res.ok){const error=new Error(data.error||res.statusText);error.code=data.code||'PLM_REQUEST_FAILED';error.details=data.details;throw error;}return data;};
-  try{
-    if(autoHold)await autoHold.ready;
-    const data=await execute();succeeded=true;return data;
-  }
+  try{return await execute();}
   catch(error){
     if(!coreNectumAuthenticationError(error))throw error;
     /* Korunan PLM uçlarında plm-auth-recovery fetch katmanı oturumu zaten
@@ -29563,13 +29435,13 @@ async function plmJsonRequest(url,options){
     if(!recoveredByFetch&&coreNectumDesktopAuthAvailable()){
       try{await runCoreNectumAutoAuth({interactive:true,force:true});}
       catch(_){openPlmSignInAfterAuthFailure();throw error;}
-      try{const data=await execute();succeeded=true;return data;}
+      try{return await execute();}
       catch(retryError){if(coreNectumAuthenticationError(retryError))openPlmSignInAfterAuthFailure();throw retryError;}
     }
     // Oturum otomatik yenilenemedi: kullanıcı PLM Kullanıcı Girişi ekranına yönlenir.
     openPlmSignInAfterAuthFailure();
     throw error;
-  }finally{autoHold?.release({ok:succeeded});}
+  }
 }
 function openPlmSignInAfterAuthFailure(){try{void openCoreNectumApiSettings();}catch(_){}}
 let coreNectumApiSettingsInFlight=null,coreNectumAutoAuthInFlight=null;

@@ -2,10 +2,12 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
 const clocks=fs.readFileSync(path.join(__dirname,'../public/overview-launchpad.js'),'utf8');
-test('the snapshot refresh timestamp is visible despite the global section tab rule',()=>{
+test('Overview no longer renders the latest refresh result card',()=>{
   const css=fs.readFileSync(path.join(__dirname,'../public/app.css'),'utf8');
-  assert.match(css,/\.ovRefreshResult\{display:block;/);
-  assert.match(css,/\.ovRefreshResult\[hidden\]\{display:none!important;/);
+  const index=fs.readFileSync(path.join(__dirname,'../public/index.html'),'utf8');
+  assert.doesNotMatch(css,/\.ovRefreshResult/);
+  assert.doesNotMatch(index,/id="ovRefreshResult"/);
+  assert.doesNotMatch(app,/renderOverviewRefreshResult/);
 });
 test('the first screen awaits its prepared projection before secondary tasks can consume HTTP slots',()=>{
   const start=app.indexOf("window.addEventListener('DOMContentLoaded', async ()");

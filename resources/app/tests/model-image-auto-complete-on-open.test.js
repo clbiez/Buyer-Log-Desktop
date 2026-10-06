@@ -1,6 +1,12 @@
 'use strict';
 
-/* Açılışta eksik model görselleri otomatik tamamlanır.
+/* PLM SYNC hiçbir ekranda otomatik başlamaz (v7.0.250).
+ *
+ * Eskiden görselsiz hücreler açılışta sessizce /api/model-images/import-plm
+ * kuyruğuna giriyordu; kullanıcı bu işin uygulamayı yavaşlattığını bildirdi.
+ * Eksik görseller yalnız kullanıcı PLM SYNC'i elle başlatınca gelir.
+ *
+ * Aşağıdaki eski not tarihçe içindir:
  *
  * Regresyon: görünür tablo hücresinde görseli olmayan modeller açılışta
  * boş kalıyor, yalnız kullanıcı PLM Sync'e bastığında "Remote added N" ile
@@ -56,68 +62,24 @@ function placeholder(plmId, colourCode = 'HFB') {
 
 const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-test('görünür görselsiz hücre açılışta PLM "eksikleri tamamla" isteğine girer (bozuk shared/hydrate değil)', async () => {
-  const { runtime, calls, applied } = createRuntime({
-    responses: [{ ok: true, status: 200, data: { ok: true, mode: 'missing', images: [{ plmId: '1202929', colourCode: 'HFB', imageRef: 'img-1' }], overrides: { imagemap: { 'plm:1202929|colour:HFB': 'img-1' } } } }],
-  });
+test('görselsiz hücre PLM SYNC\'i otomatik başlatmaz (istek yok)', async () => {
+  const { runtime, calls } = createRuntime();
   runtime.observe(placeholder('1202929'));
   runtime.observe(placeholder('1202930'));
   await wait(400);
-
-  assert.equal(calls.length, 1, 'aynı turdaki kimlikler tek istekte toplanır');
-  assert.equal(calls[0].url, '/api/model-images/import-plm');
-  assert.equal(calls[0].body.mode, 'missing', 'otomatik iş mevcut görseli asla yeniden indirmez');
-  assert.equal(calls[0].body.scope, 'cp');
-  assert.deepEqual(calls[0].body.items.map(item => item.plmId).sort(), ['1202929', '1202930']);
-  assert.equal(calls[0].init.headers['X-BuyerLog-Auth-Mode'], 'silent', 'otomatik iş login penceresi açtırmaz');
-  assert.equal(applied.length, 1, 'gelen görseller ekrana uygulanır');
-  assert.doesNotMatch(runtimeSource(), /shared\/hydrate/);
+  assert.equal(calls.length, 0, 'görünür/eksik görsel PLM isteği tetiklememeli');
+  assert.equal(typeof runtime.scheduleAutoImageComplete, 'undefined');
+  assert.equal(typeof runtime.holdAutoImageComplete, 'undefined');
 });
 
-test('aynı kimlik soğuma süresinde tekrar istenmez', async () => {
-  const { runtime, calls } = createRuntime();
-  runtime.observe(placeholder('1202929'));
-  await wait(400);
-  runtime.scheduleAutoImageComplete(placeholder('1202929'));
-  await wait(400);
-  assert.equal(calls.length, 1);
-});
-
-test('oturum yoksa otomatik iş durur; login açmaz, istek yağdırmaz', async () => {
-  const { runtime, calls } = createRuntime({
-    responses: [{ ok: false, status: 409, data: { code: 'CORENECTUM_API_TOKEN_REQUIRED' } }],
-  });
-  runtime.observe(placeholder('1202929'));
-  await wait(400);
-  runtime.scheduleAutoImageComplete(placeholder('1202931'));
-  await wait(400);
-  assert.equal(calls.length, 1, 'yetki hatasından sonra otomatik iş beklemeye alınır');
-});
-
-test('elle başlatılan görsel işi sürerken otomatik iş istek göndermez', async () => {
-  const { runtime, calls } = createRuntime();
-  const hold = runtime.holdAutoImageComplete();
-  await hold.ready;
-  runtime.observe(placeholder('1202929'));
-  await wait(400);
-  assert.equal(calls.length, 0);
-  hold.release({ ok: true });
-  await wait(400);
-  assert.equal(calls.length, 1, 'elle iş bitince otomatik tamamlama kaldığı yerden sürer');
-});
-
-test('kayıtlı ama açılamayan görsel de otomatik tamamlamaya girer', () => {
+test('runtime ve plmJsonRequest otomatik PLM görsel işi içermez', () => {
   const source = runtimeSource();
-  assert.match(source, /img\.dataset\.blImageFailed='1';scheduleAutoImageComplete\(img\);/);
-});
-
-test('plmJsonRequest elle görsel işini otomatik işin bitmesine bağlar', () => {
+  assert.doesNotMatch(source, /\/api\/model-images\/import-plm/);
+  assert.doesNotMatch(source, /shared\/hydrate/);
+  assert.match(source, /const markFailed=\(\)=>\{if\(img\.isConnected&&img\.dataset\.src===src\)img\.dataset\.blImageFailed='1';\};/);
   const start = APP.indexOf('async function plmJsonRequest');
-  const block = APP.slice(start, APP.indexOf('let coreNectumApiSettingsInFlight', start));
-  assert.match(APP, /MODEL_IMAGE_IMPORT_ENDPOINTS=new Set\(\['\/api\/model-images\/import-plm','\/api\/model-images\/import-asas'\]\)/);
-  assert.match(block, /BLImageRuntime\.holdAutoImageComplete\(\)/);
-  assert.match(block, /await autoHold\.ready/);
-  assert.match(block, /autoHold\?\.release\(\{ok:succeeded\}\)/);
+  const block = APP.slice(start, APP.indexOf('function openPlmSignInAfterAuthFailure', start));
+  assert.doesNotMatch(block, /autoHold|holdAutoImageComplete/);
 });
 
 // Node'un Request'i göreli URL kabul etmez; tarayıcıda aynı istek göreli gider.

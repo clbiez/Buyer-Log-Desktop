@@ -30,11 +30,14 @@ test('Send to Pricing is task-specific but reuses the reliable Prepare E-Mail im
   assert.match(app,/Fiyat Talebi Oluştur/);
 });
 
-test('Quotations workspace preserves core business actions and adds decision/context panels',()=>{
-  assert.match(q,/function mountWorkspace\(/);assert.match(q,/pricingWorkspaceDecision/);
+test('Quotations workspace preserves core business actions without KPI strip or decision panel',()=>{
+  assert.match(q,/function mountWorkspace\(/);assert.doesNotMatch(q,/pricingWorkspaceDecision|quotationWorkspaceKpis|qRenderWorkspaceDecision/);
+  assert.match(q,/class="quotationWorkspaceTopBar"/);assert.match(q,/function qMarkWorkspaceSelectedLine\(/);
+  assert.match(css,/\.quotationWorkspaceShell \.quotationTableWrap\{flex:1 1 auto;min-height:0;[^}]*overflow:auto/);
+  assert.match(css,/\.quotationWorkspaceShell \.quotationApproveBtn\{[^}]*border-radius:0/);
   assert.match(q,/qToggleApproval\(req,line\)/);assert.match(q,/qToggleDrop\(req,line\)/);
   assert.match(q,/data-manage-quotation-access/);assert.match(q,/data-export-quotation/);assert.match(q,/data-quotation-capacity/);assert.match(q,/data-quotation-note/);
-  assert.match(q,/function qRenderWorkspaceDecision\(/);assert.match(q,/openPricingHistoryWorkspace/);assert.match(q,/qOpenRequestInCollection/);
+  assert.match(q,/openPricingHistoryWorkspace/);assert.match(q,/qOpenRequestInCollection/);
 });
 
 test('Pricing History V2 derives summaries and chart from canonical quotation history instead of a new store',()=>{

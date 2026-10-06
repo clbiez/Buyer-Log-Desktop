@@ -97,8 +97,6 @@ test('v5.84 pencerede tercihi kapatan kutucuk var', () => {
 test('v5.84 çağrı yenilemenin sonunda ve yalnız gerçek yenilemede yapılır', () => {
   const call = APP.indexOf('await autoOpenRefreshHistory(_overviewRefreshResult)');
   assert.ok(call > 0, 'yenileme sonunda çağrılmalı');
-  // Sonuç kartı önce çizilir; pencere kapatılınca arkada kart durur.
-  assert.ok(APP.lastIndexOf('renderOverviewRefreshResult();', call) < call);
   // Hata yutulur: notlar açılamadı diye yenileme başarısız sayılmamalı.
   assert.match(APP.slice(call - 120, call + 200), /catch\(err\)\{ console\.warn\('Yenileme notları açılamadı:',err\); \}/);
 });
