@@ -844,9 +844,14 @@
         const r = item.report || {};
         const outcome = reportOutcome(r);
         const notable = (r.testler || []).filter(t => normalizeResult(t.sonuc) && normalizeResult(t.sonuc) !== 'pass');
+        const testNames = [...new Set([]
+          .concat((r.testler || []).map(t => text(t.ad)))
+          .concat((r.kararlar || []).map(k => text(k.test)))
+          .filter(Boolean))].slice(0, 30);
         return {
           talepNo: r.talepNo, talepTipi: r.talepTipi, lab: r.lab, siparisKodu: r.siparisKodu, modelAdi: r.modelAdi, renk: r.renk,
-          genelSonuc: r.genelSonuc, buyerLogOutcome: outcome.code, testCount: (r.testler || []).length,
+          genelSonuc: r.genelSonuc, buyerLogOutcome: outcome.code, testCount: testNames.length,
+          testNames,
           notableTests: notable.slice(0, 15).map(t => t.ad + ' | ' + t.sonuc),
           decisions: (r.kararlar || []).slice(0, 15).map(k => [k.test, k.karar, k.aciklama, k.tarih].join(' | ')),
           warnings: (r.uyarilar || []).map(w => warningText(w, 'tr')).slice(0, 8),
