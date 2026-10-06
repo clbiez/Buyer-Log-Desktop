@@ -56,27 +56,28 @@ test('a server restart with the same session secret keeps the signed-in user sig
   fs.mkdirSync(path.join(root, 'auth'), { recursive: true });
   fs.writeFileSync(path.join(root, 'auth', 'user-access.json'), JSON.stringify(seed()));
   const secret = crypto.randomBytes(32).toString('hex');
-  let device = await startDevice(deviceEnv(root, { BUYER_LOG_SESSION_SECRET: secret }));
+  let device = await startDevice(deviceEnv(root, { BUYER_LOG_USER_SESSION_SECRET: secret }));
   t.after(async () => { await stopDevice(device); fs.rmSync(root, { recursive: true, force: true }); });
   const login = await call(device, '/api/user-login', '', 'POST', { username: 'admin', password: 'Test-admin-123' });
   assert.equal(login.status, 200, JSON.stringify(login.body));
   assert.equal((await call(device, '/api/current-user', login.cookie)).body.selected, true);
 
   await stopDevice(device);
-  device = await startDevice(deviceEnv(root, { BUYER_LOG_SESSION_SECRET: secret }));
+  device = await startDevice(deviceEnv(root, { BUYER_LOG_USER_SESSION_SECRET: secret }));
   const afterRestart = await call(device, '/api/current-user', login.cookie);
   assert.equal(afterRestart.body.selected, true, 'watchdog restart must not log the user out');
 
   await stopDevice(device);
-  device = await startDevice(deviceEnv(root, { BUYER_LOG_SESSION_SECRET: crypto.randomBytes(32).toString('hex') }));
+  device = await startDevice(deviceEnv(root, { BUYER_LOG_USER_SESSION_SECRET: crypto.randomBytes(32).toString('hex') }));
   assert.equal((await call(device, '/api/current-user', login.cookie)).body.selected, false, 'a new app session still requires a new sign-in');
 });
 
 test('watchdog and desktop backend hand one in-memory session secret to the server', () => {
   const watchdog = fs.readFileSync(path.join(__dirname, '..', 'server', 'watchdog.js'), 'utf8');
-  assert.match(watchdog, /BUYER_LOG_SESSION_SECRET: SESSION_SECRET/);
+  assert.match(watchdog, /BUYER_LOG_USER_SESSION_SECRET: USER_SESSION_SECRET/);
+  assert.match(watchdog, /process\.env\.BUYER_LOG_USER_SESSION_SECRET/, 'a secret handed down by the desktop process is reused');
   const backend = fs.readFileSync(path.join(__dirname, '..', 'electron', 'backend.js'), 'utf8');
-  assert.match(backend, /env\.BUYER_LOG_SESSION_SECRET = this\.sessionSecret/);
+  assert.match(backend, /env\.BUYER_LOG_USER_SESSION_SECRET = this\.sessionSecret/);
   assert.doesNotMatch(backend, /writeFile[^\n]*sessionSecret/, 'the session secret is never written to disk');
 });
 
