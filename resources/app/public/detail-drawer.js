@@ -444,7 +444,7 @@ function bindColumnResize(table){
     });
   });
 }
-function currentColumns(){if(!active)return[];const set=new Set(active.visible);return active.columns.filter(col=>set.has(col.key));}
+function currentColumns(){if(!active)return[];const set=new Set(active.visible);if(active.requiredVisible)active.requiredVisible.forEach(key=>set.add(key));return active.columns.filter(col=>set.has(col.key));}
 
 function setupVisibleKeys(snapshot,preset,contextKeys){
   const base=preset==='custom'&&Array.isArray(snapshot&&snapshot.visible)?snapshot.visible:setupPresetKeys(snapshot,preset);
@@ -496,9 +496,9 @@ function registerAssetScope(panel,rows,imageIndex){
 function renderColumnsPanel(){
   const host=document.querySelector('#blSharedDetailDrawer [data-bl-detail-column-panel]');
   if(!host||!active)return;
-  const selected=new Set(active.visible);
+  const selected=new Set(active.visible);if(active.requiredVisible)active.requiredVisible.forEach(key=>selected.add(key));
   host.innerHTML='<div class="blDetailColumnPanelHead"><b>'+escapeHtml(L('Görünen sütunlar','Visible columns'))+'</b><button type="button" data-bl-detail-column-all>'+escapeHtml(L('Tümü','All'))+'</button></div>'+
-    '<div class="blDetailColumnList">'+active.columns.map(col=>'<label><input type="checkbox" value="'+escapeHtml(col.key)+'"'+(selected.has(col.key)?' checked':'')+'><span>'+escapeHtml(col.label)+'</span></label>').join('')+'</div>';
+    '<div class="blDetailColumnList">'+active.columns.map(col=>{const required=Boolean(active.requiredVisible&&active.requiredVisible.has(col.key));return '<label><input type="checkbox" value="'+escapeHtml(col.key)+'"'+(selected.has(col.key)?' checked':'')+(required?' disabled title="'+escapeHtml(L('Bu sütun seçili alt detay metriğidir ve her zaman görünür.','This is the selected drill-down metric and is always visible.'))+'"':'')+'><span>'+escapeHtml(col.label)+'</span></label>';}).join('')+'</div>';
   host.querySelectorAll('input[type="checkbox"]').forEach(input=>input.addEventListener('change',()=>{
     const keys=[...host.querySelectorAll('input[type="checkbox"]:checked')].map(x=>x.value);
     if(!keys.length){input.checked=true;return;}
@@ -510,8 +510,10 @@ function renderColumnsPanel(){
 }
 function reportColumns(){
   if(!active)return[];
+  const current=currentColumns();
+  if(active.flatColumns)return current.map(col=>{const schema=columnSchema(col,active.rows);const numeric=col.type==='number'||Boolean(schema&&['integer','quantity','decimal','currency'].includes(schema.dataType));return {...col,fields:[col],reportRole:numeric?'number':'field'};});
   const labels={identity:L('Sipariş / Model','Order / Model'),buyer:L('Buyer / Grup','Buyer / Group'),supplier:L('Üretici / Sezon','Manufacturer / Season'),status:L('Durum / Portföy','Status / Portfolio'),context:L('Sevkiyat / Rota','Shipment / Route')};
-  return root.BLDetailReportLayout.project(currentColumns(),detailModule(),root.BLCanonicalFields,labels);
+  return root.BLDetailReportLayout.project(current,detailModule(),root.BLCanonicalFields,labels);
 }
 function reportCell(col,row){
   const parts=col.fields.map(field=>{
@@ -554,7 +556,7 @@ function renderTable(){
   const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,colspan=Math.max(1,columns.length+(showImages?1:0));
   table.querySelector('colgroup').innerHTML=(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>'<col style="width:'+columnWidth(col)+'px">').join('');
   applyTableWidth(table,columns,showImages);
-  table.querySelector('thead').innerHTML='<tr>'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
+  table.querySelector('thead').innerHTML=groupHeaderHtml(columns,showImages)+'<tr class="blDetailColumnRow">'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
     const filtered=col.fields.some(field=>active.filters.has(field.key));
     return '<th data-key="'+escapeHtml(col.key)+'" class="'+(col.reportRole==='number'?'blDetailNumeric ':'')+(filtered?'columnFilterActive':'')+'"><div class="blDetailReportHeading"><span>'+escapeHtml(col.label)+'</span>'+
       '<details class="blDetailReportFilter"><summary aria-label="'+escapeHtml(L('Alanları filtrele','Filter fields')+': '+col.label)+'">▾</summary><div>'+col.fields.map(field=>'<button type="button" data-bl-detail-filter="'+escapeHtml(field.key)+'"'+(active.filters.has(field.key)?' class="filterActive"':'')+'>'+escapeHtml(field.label)+'</button>').join('')+'</div></details></div>'+
@@ -713,7 +715,9 @@ function open(options){
   const columns=setup?normalizeColumns([...setupColumns,...contextColumns.filter(col=>!setupColumns.some(base=>base.key===col.key))],rows):contextColumns;
   const scope=input.storageKey||input.scope||input.source||'generic',page=pageScope(input);
   const canonical=root.BLCanonicalFields,moduleId=input.moduleId||input.source||page;
-  const focus=[...new Set(root.BLDetailReportLayout.focusKeys(columns,moduleId,canonical,input.defaultVisible||input.initialVisible).concat(contextKeys))];
+  const requestedDefaults=Array.isArray(input.defaultVisible||input.initialVisible)?(input.defaultVisible||input.initialVisible):[];
+  const exactDefault=input.exactDefaultVisible===true?requestedDefaults.filter(key=>columns.some(col=>col.key===key)):[];
+  const focus=[...new Set((exactDefault.length?exactDefault:root.BLDetailReportLayout.focusKeys(columns,moduleId,canonical,requestedDefaults)).concat(contextKeys))];
   const supplied=setup?{focus:setupPresetKeys(setup,'focus'),extended:setupPresetKeys(setup,'extended')}:normalizeViewPresets(input,columns);
   const extended=[...new Set(focus.concat(supplied?.extended||columns.slice(0,24).map(col=>col.key),contextKeys))];
   const viewPresets={focus,extended};
@@ -725,12 +729,14 @@ function open(options){
   const initialVisible=viewPresets&&preset!=='custom'?(preset==='all'?columns.map(col=>col.key):viewPresets[preset])
     :loadVisible(scope,page,columns,input.defaultVisible||input.initialVisible);
   const allowed=new Set(columns.map(col=>col.key));
+  const requiredVisible=[...new Set((Array.isArray(input.requiredVisible)?input.requiredVisible:[]).filter(key=>allowed.has(key)))];
+  const visible=[...new Set(initialVisible.filter(key=>allowed.has(key)).concat(requiredVisible))];
   active={
     scope,pageScope:page,moduleId:input.moduleId||page,source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
-    rows,columns,visible:initialVisible.filter(key=>allowed.has(key)),width:loadWidth(page)||Math.min(1600,root.innerWidth*0.96),
-    tableSetup:null,viewPresets,contextKeys,preset,
+    rows,columns,visible,width:loadWidth(page)||Math.min(1600,root.innerWidth*0.96),
+    tableSetup:null,viewPresets,contextKeys,preset,flatColumns:input.flatColumns===true,requiredVisible:new Set(requiredVisible),
     colWidths:loadColWidths(scope,page),autoWidths:null,filters:new Map(),filterVersion:0,
     images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
