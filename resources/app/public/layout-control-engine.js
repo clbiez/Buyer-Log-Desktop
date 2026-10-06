@@ -133,18 +133,12 @@
   ].map(fold);
   function extractOriginCountries(value) {
     const text=fold(Array.isArray(value)?value.join(' '):value), out=[];
+    const segments=text.split(/\s*\/+\s*|\[\[PAGE\s+\d+\]\]/).map(item=>item.trim()).filter(Boolean);
     for(const [canonical,aliases] of Object.entries(COUNTRY_ALIASES)) {
-      let accepted=false;
-      for(const alias of aliases) {
-        const token=fold(alias);
-        let from=0, index=-1;
-        while(token && (index=text.indexOf(token,from))>=0) {
-          const context=text.slice(Math.max(0,index-28),Math.min(text.length,index+token.length+28));
-          if(ORIGIN_MARKERS.some(marker=>context.includes(marker))) { accepted=true; break; }
-          from=index+Math.max(1,token.length);
-        }
-        if(accepted) break;
-      }
+      const accepted=segments.some(segment=>{
+        if(!ORIGIN_MARKERS.some(marker=>segment.includes(marker))) return false;
+        return aliases.some(alias=>segment.includes(fold(alias)));
+      });
       if(accepted) out.push(canonical);
     }
     return uniq(out);
