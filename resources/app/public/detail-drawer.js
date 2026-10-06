@@ -556,7 +556,7 @@ function renderTable(){
   const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,colspan=Math.max(1,columns.length+(showImages?1:0));
   table.querySelector('colgroup').innerHTML=(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>'<col style="width:'+columnWidth(col)+'px">').join('');
   applyTableWidth(table,columns,showImages);
-  table.querySelector('thead').innerHTML=groupHeaderHtml(columns,showImages)+'<tr class="blDetailColumnRow">'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
+  table.querySelector('thead').innerHTML=(active.flatColumns?groupHeaderHtml(columns,showImages):'')+'<tr class="blDetailColumnRow">'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
     const filtered=col.fields.some(field=>active.filters.has(field.key));
     return '<th data-key="'+escapeHtml(col.key)+'" class="'+(col.reportRole==='number'?'blDetailNumeric ':'')+(filtered?'columnFilterActive':'')+'"><div class="blDetailReportHeading"><span>'+escapeHtml(col.label)+'</span>'+
       '<details class="blDetailReportFilter"><summary aria-label="'+escapeHtml(L('Alanları filtrele','Filter fields')+': '+col.label)+'">▾</summary><div>'+col.fields.map(field=>'<button type="button" data-bl-detail-filter="'+escapeHtml(field.key)+'"'+(active.filters.has(field.key)?' class="filterActive"':'')+'>'+escapeHtml(field.label)+'</button>').join('')+'</div></details></div>'+
