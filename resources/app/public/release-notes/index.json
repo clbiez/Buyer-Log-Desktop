@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.249",
+      "publishedAt": "2026-10-06",
+      "title": {
+        "tr": "Hazır veri ile daha hızlı açılış ve yenileme",
+        "en": "Faster startup and refresh with prepared data"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 3,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.249/release.json"
+    },
+    {
       "version": "7.0.248",
       "publishedAt": "2026-10-06",
       "title": {

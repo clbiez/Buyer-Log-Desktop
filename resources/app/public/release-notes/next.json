@@ -1,114 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-06",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Hazır veri ile daha hızlı açılış ve yenileme",
-    "en": "Faster startup and refresh with prepared data"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "İlk ekranı bekleten işler ertelendi; CP kararları paylaşılır ve değişmeyen ana snapshot yeniden yazılmaz.",
-    "en": "Secondary startup work is deferred; CP decisions are shared and unchanged main snapshots are reused."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "snapshot-first-screen",
-      "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış",
-        "en": "Overview"
-      },
-      "title": {
-        "tr": "Hazır snapshot ile hızlı açılış",
-        "en": "Fast startup from the prepared snapshot"
-      },
-      "path": {
-        "tr": "Genel Bakış",
-        "en": "Overview"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "snapshot-first-screen.png",
-        "alt": {
-          "tr": "Hazır snapshot ile hızlı açılış — gerçek Buyer Log demo ekranı",
-          "en": "Fast startup from the prepared snapshot — actual Buyer Log demo screen"
-        },
-        "caption": {
-          "tr": "Hazır snapshot ile hızlı açılış",
-          "en": "Fast startup from the prepared snapshot"
-        }
-      },
-      "body": {
-        "tr": "İlk ekran hazır yerel veriden açılır. Tatil sorguları ve yardımcı modüller ilk ekranı bekletmez; son okunma bilgisi tarih ve saatle gösterilir.",
-        "en": "The first screen opens from prepared local data. Holiday requests and secondary modules wait until the first screen is ready; last-loaded information includes its date and time."
-      }
-    },
-    {
-      "id": "cp-background-priority",
-      "type": "improvement",
-      "module": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "title": {
-        "tr": "Öncelikler arka planda hazırlanır",
-        "en": "Priorities are prepared in the background"
-      },
-      "path": {
-        "tr": "CP Tracker",
-        "en": "CP Tracker"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "cp-background-priority.png",
-        "alt": {
-          "tr": "Öncelikler arka planda hazırlanır — gerçek Buyer Log demo ekranı",
-          "en": "Priorities are prepared in the background — actual Buyer Log demo screen"
-        },
-        "caption": {
-          "tr": "Öncelikler arka planda hazırlanır",
-          "en": "Priorities are prepared in the background"
-        }
-      },
-      "body": {
-        "tr": "CP öncelikleri aynı kurallar korunarak kısa işlem parçalarıyla hazırlanır. Genel Bakış ve tablo değişmeyen kararları paylaşır; veri, kullanıcı, kural veya gün değiştiğinde eski sonuç kullanılmaz.",
-        "en": "CP priorities use the same rules in short processing batches. Overview and the table share unchanged decisions; results are invalidated when data, user, rules or day change."
-      }
-    },
-    {
-      "id": "snapshot-unchanged-refresh",
-      "type": "improvement",
-      "module": {
-        "tr": "Yenileme ve yerel veri",
-        "en": "Refresh and local data"
-      },
-      "title": {
-        "tr": "Değişmeyen ana veri yeniden yazılmaz",
-        "en": "Unchanged main data is not rewritten"
-      },
-      "path": {
-        "tr": "Yenileme ve yerel veri",
-        "en": "Refresh and local data"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "snapshot-unchanged-refresh.png",
-        "alt": {
-          "tr": "Değişmeyen ana veri yeniden yazılmaz — gerçek Buyer Log demo ekranı",
-          "en": "Unchanged main data is not rewritten — actual Buyer Log demo screen"
-        },
-        "caption": {
-          "tr": "Değişmeyen ana veri yeniden yazılmaz",
-          "en": "Unchanged main data is not rewritten"
-        }
-      },
-      "body": {
-        "tr": "Kaynak verisi aynıysa ayrıntılı karşılaştırma atlanır ve doğrulanmış büyük snapshot dosyası korunur. Güncel yenileme bilgisi ayrı, checksum bağlı atomik kayıtta saklanır; yedekten dönüş korunur.",
-        "en": "Identical source data skips detailed comparison and retains the verified large snapshot file. Current refresh metadata is saved separately through an atomic, checksum-bound record with backup recovery preserved."
-      }
-    }
-  ]
+  "changes": []
 }
