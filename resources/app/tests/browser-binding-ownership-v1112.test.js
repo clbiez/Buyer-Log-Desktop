@@ -504,6 +504,31 @@ winTest('EDGE_LABEL · "Edg/" etiketli uç nokta seçili profile bağlanabilir',
   assert.equal(result.binding.port, 9223);
 });
 
+winTest('EDGE_INSPECT_RUNTIME · Edge 154 inspect anahtarı açıksa PLM preflight bağlantıyı yeniden açtırmaz', async () => {
+  const net = cdpNetwork({ 9222: cdpResponse('inspect-edge-guid', 9222, 'Edg/154.0.1000.0') });
+  const svc = makeService({
+    version: 'Microsoft Edge 154.0.1000.0',
+    configuration: enabledConfig({ selectedEdgeProfileDirectory: 'Default', preferredPort: 9222 }),
+    fetch: net.fetchImpl,
+    listeningPid: () => 4242,
+    // edge://inspect/#remote-debugging çalışma anında açıldığında gerçek Edge
+    // varsayılan kullanıcı veri kökünü kullanır; komut satırında ayrıca
+    // --user-data-dir bulunması gerekmez.
+    processCommandLine: () => '"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" --profile-directory=Default',
+  });
+
+  const status = await svc.getRuntimeStatus();
+  assert.equal(status.connectionState, 'READY', JSON.stringify(status));
+  assert.equal(status.strategy.mode, 'existing', 'çalışan inspect bağlantısı persistent profil tarafından gölgelenmemeli');
+  assert.equal(status.binding.profileDirectory, 'Default');
+  assert.equal(status.binding.ownership.source, 'listening-process');
+
+  const tested = await svc.testConnection();
+  assert.equal(tested.connectionState, 'READY', JSON.stringify(tested.checks));
+  assert.equal(tested.binding.profileMode, 'existing');
+  assert.equal(tested.binding.port, 9222);
+});
+
 winTest('LISTENING_PROCESS · portu dinleyen süreç BAŞKA klasör açtıysa bağlanılmaz', async () => {
   const net = cdpNetwork({ 9222: cdpResponse('other-edge', 9222, 'Edg/153.0.4234.32') });
   const svc = makeService({
