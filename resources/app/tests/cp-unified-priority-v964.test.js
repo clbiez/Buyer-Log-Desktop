@@ -48,7 +48,7 @@ test('v9.64 Handover is a reason/signal and CP action is ACTION_THIS_WEEK', () =
   assert.doesNotMatch(analysis.priority, LEGACY);
 });
 
-test('v9.64 CP/Orders client wiring renders, filters and sorts canonical Action Priority', () => {
+test('CP preserves canonical Action Priority while Orders no longer runs priority rules', () => {
   assert.match(APP, /row\['Priority'\]=code/);
   assert.doesNotMatch(APP, /row\['Priority'\]\s*=\s*cf\.priority/);
   // Unified Priority refactor ortak tablo primitive'lerini silemez. Priority
@@ -60,7 +60,8 @@ test('v9.64 CP/Orders client wiring renders, filters and sorts canonical Action 
   assert.match(APP, /priorityRank\(a\)-priorityRank\(b\)/);
   assert.match(APP, /key==='Priority' \? priorityDisplay\(v\)/);
   assert.match(APP, /syncUnifiedPrioritiesForTable\('cp'\)/);
-  assert.match(APP, /syncUnifiedPrioritiesForTable\('orders'\)/);
+  assert.doesNotMatch(APP, /syncUnifiedPrioritiesForTable\('orders'\)/);
+  assert.match(APP, /if\(tableKey==='orders'\)return true;/);
   assert.match(HTML, /\(tableKey==='cp'\|\|tableKey==='orders'\)&&k==='Priority'/);
 });
 

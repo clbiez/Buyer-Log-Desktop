@@ -290,6 +290,7 @@ const {
 } = require('./lib/power-bi-import-dashboard');
 const { saveModelSnapshotAsync, loadModelSnapshot, loadModelSnapshotAsync, SNAPSHOT_ROOT } = require('./lib/model-snapshot');
 const pageProjectionCache = require('./lib/page-projection-cache');
+const derivedInputKeys = require('./lib/derived-input-keys');
 const { runProjectionWorker } = require('./lib/projection-worker-client');
 const { SharedRevisionStore } = require('./lib/shared-revision-store');
 const platform = require('./lib/platform');
@@ -7539,7 +7540,9 @@ function projectionSourceRevision(runtime){
   // Genel Bakış önbelleklerini boşuna geçersiz kılıyordu.
   const sources=source.sources&&typeof source.sources==='object'?{...source.sources}:null;
   if(sources)delete sources.lfl;
-  return stableHashValue({loadedAt:source.loadedAt||null,sources:sources&&Object.keys(sources).length?sources:null,excelRefresh:source.excelRefresh||null});
+  // Excel telemetry can still acquire timings after publication. It is not
+  // source identity and must not invalidate a generation built by this refresh.
+  return stableHashValue({loadedAt:source.loadedAt||null,sources:sources&&Object.keys(sources).length?sources:null});
 }
 function pageProjectionMatchesRuntime(manifest,runtime){
   const expected=String(runtime&&runtime.loadedAt||'');
@@ -7636,6 +7639,15 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
   const active = runtime || cacheForUser(id);
   if (!Array.isArray(active.asasOrders)) return null;
   const overrides = effectiveOverridesForUser(id);
+  const {backlog:backlogInputKey,...moduleInputKeys}=derivedInputKeys.keys(active,ctx.contextHash,overrides,{version:APP_VERSION});
+  const reused=await pageProjectionCache.readReusableProjections(id,ctx.contextHash,moduleInputKeys);
+  const wanted=new Set(Object.keys(moduleInputKeys).filter(module=>!reused.projections[module]));
+  const extra={runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),moduleInputKeys,backlogInputKey,performance:{reusedModules:Object.keys(reused.projections)}};
+  if(!wanted.size){
+    const hit=await pageProjectionCache.reuseGeneration(id,{contextHash:ctx.contextHash,generation:reused.manifest.activeGeneration,moduleInputKeys,sourceLoadedAt:active.loadedAt||null,extra});
+    if(hit)return hit;
+    Object.keys(moduleInputKeys).forEach(module=>wanted.add(module));reused.projections={};
+  }
   const cpDataAllowed = !currentUser || ['overview','cp','orders','koleksiyon','shipping','source'].some(area => userAccess.hasArea(currentUser, area));
   const orderSummaryDataAllowed = !currentUser || ['overview','backlog','source'].some(area => userAccess.hasArea(currentUser, area));
   const scoped = (target,rows) => currentUser ? userAccess.filterRowsByScope(currentUser, filterRowsByEffectiveHorizon(currentUser,target,rows)) : rows;
@@ -7657,20 +7669,24 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
       }).map(row => row.ocode) : scopedCpSource.map(row => row && row.ocode);
       const worker=await runProjectionWorker({
         cpSource:scopedCpSource,ordersSource:scopedOrdersSource,cpAntrepo,ordersAntrepo,overrides,cpModelColumns,
+        modules:[...wanted],catalogOrdersBuffer:wanted.has('collection-catalog')?reused.projections.orders?.buffer:null,
         shared:cpAntrepo===ordersAntrepo&&sameProjectionSourceRows(scopedCpSource,scopedOrdersSource),
         orderSummaryAllowed:orderSummaryDataAllowed,editableOrderCodes,
       });
-      const compressed=Object.fromEntries(Object.entries(worker.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]));
+      const compressed={...reused.projections,...Object.fromEntries(Object.entries(worker.compressed||{}).map(([module,entry])=>[module,{buffer:Buffer.from(entry.buffer),uncompressedBytes:entry.uncompressedBytes}]))};
       return pageProjectionCache.writeCompressedGeneration(id,{
         contextHash:ctx.contextHash,sourceLoadedAt:active.loadedAt||null,projections:compressed,
-        extra:{runtimeMeta:pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active),performance:{projectionWorker:true,...(worker.metrics||{})}},
+        extra:{...extra,performance:{...extra.performance,projectionWorker:true,...(worker.metrics||{})}},
       });
     }catch(workerError){logRuntimeFailure('projectionWorkerFallback',workerError);}
   }
-  const projected = buildCpAndOrdersProjectionRows(scopedCpSource, scopedOrdersSource, cpAntrepo, ordersAntrepo, overrides, cpDataAllowed);
+  const projected = wanted.has('cp')&&wanted.has('orders')?buildCpAndOrdersProjectionRows(scopedCpSource, scopedOrdersSource, cpAntrepo, ordersAntrepo, overrides, cpDataAllowed):{
+    cpRows:cpDataAllowed&&wanted.has('cp')?buildCPRowsFromASAS(scopedCpSource,cpAntrepo,overrides):[],
+    ordersRows:cpDataAllowed&&wanted.has('orders')?buildOrdersRowsFromASAS(scopedOrdersSource,ordersAntrepo,overrides):[],
+  };
   const cpRows = projected.cpRows, ordersRows = projected.ordersRows;
-  const orderSummaryRows = orderSummaryDataAllowed ? buildOrderSummaryRowsFromASAS(scopedCpSource, antrepoForTarget(active, 'cp'), overrides) : [];
-  const overviewRows = orderSummaryDataAllowed ? buildOverviewSummaryRowsFromASAS(scopedCpSource, overrides) : [];
+  const orderSummaryRows = wanted.has('order-summary')&&orderSummaryDataAllowed ? buildOrderSummaryRowsFromASAS(scopedCpSource, antrepoForTarget(active, 'cp'), overrides) : [];
+  const overviewRows = (wanted.has('overview')||wanted.has('collection-catalog'))&&orderSummaryDataAllowed ? buildOverviewSummaryRowsFromASAS(scopedCpSource, overrides) : [];
   // v7.16: _canEdit her satır için ayrı hesaplanıyordu ve her hesap alt kullanıcı
   // ağacını yürüyüp izin kümesini yeniden kuruyordu. Gerçek ölçüm: çağrı başına
   // 35 ms; 1.155 satırlık bir yenilemede page-cache aşaması 28 saniye sürüyordu.
@@ -7686,21 +7702,24 @@ async function buildAndWritePageProjectionCache(currentUser, runtime = null) {
   cpRows.forEach(row => { row._canEdit = rowCanEdit(row); });
   ordersRows.forEach(row => { row._canEdit = false; });
   orderSummaryRows.forEach(row => { row._canEdit = rowCanEdit(row); });
+  let catalogRows=ordersRows;
+  if(wanted.has('collection-catalog')&&reused.projections.orders)catalogRows=(await pageProjectionCache.decodeProjection(reused.projections.orders.buffer)).rows||[];
   const projections = {
     cp: { rows: cpRows, cpModelColumns },
     overview: { rows: overviewRows },
     orders: { rows: ordersRows },
     'order-summary': { rows: orderSummaryRows },
     'collection-catalog': {
-      catalogs: cpDataAllowed ? buildCollectionCatalogs(ordersRows.length ? ordersRows : overviewRows) : {},
+      catalogs: cpDataAllowed ? buildCollectionCatalogs(catalogRows.length ? catalogRows : overviewRows) : {},
       catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION,
     },
   };
   return pageProjectionCache.writeGeneration(id, {
     contextHash: ctx.contextHash,
     sourceLoadedAt: active.loadedAt || null,
-    projections,
-    extra: { runtimeMeta: pageCacheRuntimeMeta(active),sourceRevisionKey:projectionSourceRevision(active) },
+    projections:Object.fromEntries(Object.entries(projections).filter(([module])=>wanted.has(module))),
+    reused:reused.projections,
+    extra,
   });
 }
 async function warmPageProjectionCachesFromSnapshots() {
@@ -8380,14 +8399,17 @@ async function captureBacklogPlanActualSnapshot(id, runtime, overrides) {
   const active = runtime || cacheForUser(id);
   if (!active || !active.loadedAt || !Array.isArray(active.asasOrders)) return null;
   const effective = overrides || effectiveOverridesForUser(id);
+  const inputKey=derivedInputKeys.keys(active,id,effective,{version:APP_VERSION}).backlog;
+  const capturedAt=new Date().toISOString(),sourceGenerationId=active.modelRefresh&&active.modelRefresh.sourceGenerationId||active.loadedAt||'';
+  const reused=await backlogPlanActual.appendSnapshot(id,{capturedAt,sourceGenerationId,reuseInputKey:inputKey});
+  if(reused)return reused;
   const orders = ordersForTarget(active, 'backlog', effective);
   const antrepo = antrepoForTarget(active, 'backlog');
   const templateRows = buildBacklogTemplateRows(orders, antrepo, effective, {}, [], {});
   const snapshot = backlogPlanActual.projectSnapshot(orders, templateRows, {
-    capturedAt: new Date().toISOString(),
-    sourceGenerationId: active.modelRefresh && active.modelRefresh.sourceGenerationId || active.loadedAt || '',
+    capturedAt,sourceGenerationId,inputKey,
   });
-  return backlogPlanActual.appendSnapshot(id, snapshot);
+  return backlogPlanActual.appendSnapshot(id, {...snapshot,inputKey});
 }
 
 async function ensureBacklogPlanActualArchive(id) {
@@ -9170,7 +9192,7 @@ function projectionPatchMatches(row, item) {
   if (ccode && String(row['C.Code']||'').trim() !== ccode) return false;
   return true;
 }
-function applyIncrementalProjectionPatch(row, patch, overrides) {
+function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true) {
   if (patch.notes && typeof patch.notes === 'object') {
     if (Object.prototype.hasOwnProperty.call(patch.notes,'Notes')) row.Notes=patch.notes.Notes==null?'':String(patch.notes.Notes);
     if (Object.prototype.hasOwnProperty.call(patch.notes,'EkNot')) row['Ek Not']=patch.notes.EkNot==null?'':String(patch.notes.EkNot);
@@ -9205,7 +9227,7 @@ function applyIncrementalProjectionPatch(row, patch, overrides) {
       row[id] = value == null ? '' : String(value);
     }
   }
-  if (patch.delType != null || patch.dates) parseLib.applyFormulas(row, overrides.transitRules);
+  if (patch.delType != null || patch.dates) parseLib.applyFormulas(row, overrides.transitRules, includePriority);
   return row;
 }
 async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, items) {
@@ -9222,7 +9244,7 @@ async function rewriteProjectionCacheForRowPatches(currentUser, beforeContext, i
       if (Array.isArray(payload.rows)) lists.push(payload.rows);
       if (Array.isArray(payload.orderSummary)) lists.push(payload.orderSummary);
       for (const rows of lists) for (const row of rows) for (const item of clean) {
-        if (projectionPatchMatches(row,item)) applyIncrementalProjectionPatch(row,item.patch,overrides);
+        if (projectionPatchMatches(row,item)) applyIncrementalProjectionPatch(row,item.patch,overrides,_module!=='orders');
       }
       return payload;
     },

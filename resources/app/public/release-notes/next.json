@@ -1,14 +1,147 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-06",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Orders priority kaldırıldı · Değişmeyen veride daha az tekrar işlem",
+    "en": "Orders priority removed · Less repeated work for unchanged data"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Siparişler ekranındaki priority hesabı, sütunu ve filtresi kaldırıldı. Aynı kaynakla filtreleme ve sayfa geçişinde sütun tipleri tekrar taranmıyor. Yenile sırasında değişmeyen ekran sonuçları ve Backlog plan kayıtları tekrar kullanılıyor; veri, gün veya yetki değişirse sonuçlar yeniden hazırlanıyor.",
+    "en": "Removes the priority calculation, column and filter from Orders. Filtering and paging over the same source reuse column types. Refresh reuses unchanged page results and Backlog plan records; changes to data, day or authorization rebuild the affected results."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "orders-no-priority",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Siparişler priority yükünden kurtuldu",
+        "en": "Orders no longer computes priority"
+      },
+      "body": {
+        "tr": "Priority hesabı, sütunu, hızlı filtresi ve eski kayıtlı priority filtre/sıralaması Siparişler’den kaldırıldı. CP’nin priority kuralları korunur. Aktif/pasif durum, lojistik hesapları, tüm kayıtlar ve görselli dışa aktarım çalışmaya devam eder.",
+        "en": "Removes the priority calculation, column, quick filter and legacy saved priority filters/sort from Orders. CP priority rules remain available. Active/inactive status, logistics calculations, complete records and exports with images keep working."
+      },
+      "path": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-without-priority.png",
+        "alt": {
+          "tr": "Priority olmadan filtrelenmiş Siparişler ve 50 kayıt görünür aralık (demo veri)",
+          "en": "Filtered Orders without priority and a visible range of 50 records (demo data)"
+        },
+        "caption": {
+          "tr": "Siparişler priority yükünden kurtuldu",
+          "en": "Orders no longer computes priority"
+        }
+      }
+    },
+    {
+      "id": "table-schema-reuse",
+      "type": "improvement",
+      "module": {
+        "tr": "Büyük tablolar",
+        "en": "Large tables"
+      },
+      "title": {
+        "tr": "Filtreleme ve sayfa geçişinde sütun tipleri tekrar kullanılabiliyor",
+        "en": "Filtering and paging reuse column types"
+      },
+      "body": {
+        "tr": "Sütun tipleri ilk çözümlemede bütün kaynak satırlarıyla belirlenir. Aynı oturumda aynı kaynak ve sütun tanımıyla yapılan filtreleme, sıralama, sayfa geçişi ve dışa aktarım bu sonucu tekrar kullanır. Kaynak, tip tanımı veya ilgili veri sürümü değişince çözümleme yenilenir.",
+        "en": "Column types are initially inferred from the complete source dataset. Filtering, sorting, paging and exports in the same session reuse the result for the same source and column definitions. Source, type-definition or relevant data revisions trigger a new resolution."
+      },
+      "path": {
+        "tr": "Büyük tablolar",
+        "en": "Large tables"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "orders-schema-reuse.png",
+        "alt": {
+          "tr": "Siparişler tablosunda yüzde filtresi, kaynak toplamları ve doğru sayısal görünüm (demo veri)",
+          "en": "Percentage filter, source totals and correctly formatted numeric values in Orders (demo data)"
+        },
+        "caption": {
+          "tr": "Filtreleme ve sayfa geçişinde sütun tipleri tekrar kullanılabiliyor",
+          "en": "Filtering and paging reuse column types"
+        }
+      }
+    },
+    {
+      "id": "refresh-projection-reuse",
+      "type": "improvement",
+      "module": {
+        "tr": "Yenile · CP / Siparişler",
+        "en": "Refresh · CP / Orders"
+      },
+      "title": {
+        "tr": "Değişmeyen ekran sonuçları yeniden hesaplanmıyor",
+        "en": "Unchanged page results are reused"
+      },
+      "body": {
+        "tr": "Yenile kaynak veriyi okumaya devam eder. İçerik aynıysa doğrulanmış ekran sonuçları tekrar kullanılır; yalnız değişen hedeflerin sonuçları hazırlanır. Veri, kurallar, yetki kapsamı, gün ve sürüm kontrol edilir. Yalnız Backlog verisi değiştiğinde eski Backlog raporları düşürülür.",
+        "en": "Refresh continues to read source data. Identical content reuses verified page results; only changed targets are rebuilt. Checks include data, rules, authorization scope, day and version. A Backlog-only data change invalidates earlier Backlog reports."
+      },
+      "path": {
+        "tr": "Yenile · CP / Siparişler",
+        "en": "Refresh · CP / Orders"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-verified-projections.png",
+        "alt": {
+          "tr": "Yenilenmiş CP tablosu ve korunan priority grubu (demo veri)",
+          "en": "Refreshed CP table with its retained priority group (demo data)"
+        },
+        "caption": {
+          "tr": "Değişmeyen ekran sonuçları yeniden hesaplanmıyor",
+          "en": "Unchanged page results are reused"
+        }
+      }
+    },
+    {
+      "id": "backlog-snapshot-reuse",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Planlanan ve Gerçekleşen",
+        "en": "Backlog · Planned and Actual"
+      },
+      "title": {
+        "tr": "Değişmeyen kayıtlarda yeni zaman işareti korunuyor",
+        "en": "Unchanged records retain a new refresh marker"
+      },
+      "body": {
+        "tr": "Aynı veri ve kurallarla başarılı her Yenile yeni bir snapshot zaman işareti oluşturur. Kayıtlar değişmediyse plan satırları tekrar hazırlanmaz; mevcut kayıtlar boş farkla korunur. Veri veya kurallar değişirse normal snapshot farkı hesaplanır; dönem analizi ve geçmiş korunur.",
+        "en": "Every successful Refresh with the same data and rules still creates a new snapshot time marker. Unchanged records reuse existing plan rows with an empty delta. Changes to data or rules compute the normal snapshot delta, preserving period analysis and history."
+      },
+      "path": {
+        "tr": "Backlog · Planlanan ve Gerçekleşen",
+        "en": "Backlog · Planned and Actual"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-refresh-history.png",
+        "alt": {
+          "tr": "Backlog plan/gerçekleşen analizi ve kullanılan snapshot sınırları (demo veri)",
+          "en": "Backlog planned/actual analysis and resolved snapshot boundaries (demo data)"
+        },
+        "caption": {
+          "tr": "Değişmeyen kayıtlarda yeni zaman işareti korunuyor",
+          "en": "Unchanged records retain a new refresh marker"
+        }
+      }
+    }
+  ]
 }

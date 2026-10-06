@@ -48,7 +48,9 @@ test('v4.89 Collection option catalogs are produced once from ASAS-backed Orders
   // Katalog artık Refresh sonunda page projection cache'e bir kez yazılıyor.
   // Schema version eski/partial collection-catalog cache'lerinin güvenle
   // yalnız bu projection için rebuild edilmesini sağlar.
-  assert.match(SERVER, /'collection-catalog': \{[\s\S]{0,240}?catalogs: cpDataAllowed \? buildCollectionCatalogs\(ordersRows\.length \? ordersRows : overviewRows\) : \{\},[\s\S]{0,120}?catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION/);
+  assert.match(SERVER, /let catalogRows=ordersRows/);
+  assert.match(SERVER, /catalogRows=\(await pageProjectionCache\.decodeProjection\(reused\.projections\.orders\.buffer\)\)\.rows\|\|\[\]/);
+  assert.match(SERVER, /'collection-catalog': \{[\s\S]{0,240}?catalogs: cpDataAllowed \? buildCollectionCatalogs\(catalogRows\.length \? catalogRows : overviewRows\) : \{\},[\s\S]{0,120}?catalogSchemaVersion: COLLECTION_CATALOG_SCHEMA_VERSION/);
 });
 
 test('v4.89 Collection cells use ASAS suggestions without an LFL dependency or strict selection', () => {

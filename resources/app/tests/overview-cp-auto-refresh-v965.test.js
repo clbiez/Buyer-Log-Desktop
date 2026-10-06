@@ -63,7 +63,7 @@ test('old length + first order identity is only a compatibility fallback, not au
 test('personal Priority Rules / checklist changes invalidate Overview too', () => {
   const start = APP.indexOf("window.addEventListener('bl:cp-decision-context-changed'");
   const block = APP.slice(start, start + 500);
-  assert.match(block, /invalidateUnifiedPriorityDecisions\('personal-decision-context'\)/);
+  assert.match(block, /invalidateUnifiedPriorityDecisions\('personal-decision-context',\['cp'\]\)/);
   assert.match(block, /scheduleOverviewRender\('personal-decision-context'\)/);
 });
 

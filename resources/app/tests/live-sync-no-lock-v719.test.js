@@ -261,7 +261,7 @@ test('v7.19 uzak yama satırı yerinde günceller ve türevleri korur', () => {
 test('v7.19 istemci yaması sunucudaki artımlı yamayla aynı alanları yazar', () => {
   // İki uygulama ayrışırsa karşı ekran sessizce yanlış değer gösterir.
   const client = blockOf(APP, 'function applyRemoteRowPatch(row,patch)', 'function remoteEditingRowIds()');
-  const server = blockOf(SERVER, 'function applyIncrementalProjectionPatch(row, patch, overrides)', 'function rewriteProjectionCacheForRowPatches');
+  const server = blockOf(SERVER, 'function applyIncrementalProjectionPatch(row, patch, overrides, includePriority = true)', 'function rewriteProjectionCacheForRowPatches');
   const fields = ["row.Notes", "row['Ek Not']", "row['Supp. FOB']", "row['Del. Type']", 'row._suppFobManual', 'row._suppFobOverride', 'row._suppFobRule', 'row._suppFobMeta', 'row._imageRef', 'row._imageUrl'];
   fields.forEach(field => {
     assert.ok(client.includes(field), `istemci yaması ${field} alanını yazmalı`);

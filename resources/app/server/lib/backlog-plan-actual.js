@@ -210,7 +210,7 @@ async function readArchive(userId) {
       const parsed = JSON.parse(raw.toString('utf8'));
       if (!parsed || parsed.schemaVersion !== SCHEMA_VERSION) continue;
       if (!parsed.base || !Array.isArray(parsed.base.rows)) return emptyArchive();
-      return { schemaVersion: SCHEMA_VERSION, base: parsed.base, deltas: Array.isArray(parsed.deltas) ? parsed.deltas : [] };
+      return { schemaVersion: SCHEMA_VERSION, base: parsed.base, deltas: Array.isArray(parsed.deltas) ? parsed.deltas : [], ...(typeof parsed.inputKey==='string'?{inputKey:parsed.inputKey}:{}) };
     } catch (error) {
       if (error && error.code === 'ENOENT') continue;
     }
@@ -271,6 +271,7 @@ function pruneArchive(archive, nowMs = Date.now()) {
   const rebasedRows = rowsAtMarker(archive, keepIndex);
   return {
     schemaVersion: SCHEMA_VERSION,
+    ...(archive.inputKey?{inputKey:archive.inputKey}:{}),
     base: { capturedAt: markers[keepIndex].capturedAt, sourceGenerationId: markers[keepIndex].sourceGenerationId || '', rows: rebasedRows },
     deltas: (archive.deltas || []).slice(keepIndex),
   };
@@ -281,11 +282,11 @@ async function appendSnapshot(userId, snapshot) {
   const previous = writeTails.get(key) || Promise.resolve();
   const next = previous.catch(() => {}).then(async () => {
     let archive = await readArchive(userId);
+    if(snapshot.reuseInputKey&&(!archive.base||archive.inputKey!==snapshot.reuseInputKey))return null;
     if (!archive.base) {
       archive.base = { capturedAt: snapshot.capturedAt, sourceGenerationId: snapshot.sourceGenerationId || '', rows: snapshot.rows || [] };
     } else {
-      const prevRows = latestRows(archive);
-      const delta = deltaBetween(prevRows, snapshot.rows || []);
+      const delta = snapshot.reuseInputKey?{upserts:[],removed:[]}:deltaBetween(latestRows(archive), snapshot.rows || []);
       archive.deltas.push({
         capturedAt: snapshot.capturedAt,
         sourceGenerationId: snapshot.sourceGenerationId || '',
@@ -293,9 +294,11 @@ async function appendSnapshot(userId, snapshot) {
         removed: delta.removed,
       });
     }
+    if(snapshot.inputKey)archive.inputKey=String(snapshot.inputKey);
+    else if(!snapshot.reuseInputKey)delete archive.inputKey;
     archive = pruneArchive(archive);
     const saved = await writeArchive(userId, archive);
-    return { ...saved, snapshots: markerList(archive).length, capturedAt: snapshot.capturedAt };
+    return { ...saved, snapshots: markerList(archive).length, capturedAt: snapshot.capturedAt, reused:Boolean(snapshot.reuseInputKey) };
   });
   writeTails.set(key, next);
   return next.finally(() => { if (writeTails.get(key) === next) writeTails.delete(key); });
