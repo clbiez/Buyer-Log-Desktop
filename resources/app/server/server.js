@@ -7289,6 +7289,9 @@ async function yieldToEventLoopEvery(index, everyN = 500) {
 // "Yenile" sonrası kullanıcıya "neler değişti" özetini verebilmek için eski/yeni
 // siparişleri (ocode|colour bazında) karşılaştırır.
 async function computeRefreshSummary(oldOrders, oldAntrepoMap, newOrders, newAntrepoMap, overrides) {
+  await new Promise(resolve=>setImmediate(resolve));
+  const unchanged = require('./lib/refresh-content-equality').unchangedRefreshSummary(oldOrders||[],oldAntrepoMap||{},newOrders||[],newAntrepoMap||{});
+  if(unchanged)return unchanged;
   const matchRule = (overrides && overrides.antrepoMatchConfig) || undefined;
   const statusOf = (o, map) => {
     const hit = findAntrepoHit(map, o, { rule: matchRule });

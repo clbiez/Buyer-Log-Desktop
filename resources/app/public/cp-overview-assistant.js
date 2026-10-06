@@ -419,7 +419,7 @@
     state.sharedChecklistAdopted = true;
     try { savePrefs(); }
     catch (error) { state.rules = previousRules; state.sharedChecklistAdopted = false; throw error; }
-    recompute();
+    if(lastRows){state.rowsSignature='';onOverviewRendered(lastRows,{dataRevision:window.BL_CP_DECISION_DATA_REVISION?.()||0,filterRevision:'adopted-checklist'});}
     return incoming.length > 0;
   }
 
@@ -3098,11 +3098,46 @@
     return changed;
   }
 
+  function decisionCacheKey() {
+    const user = window.BL_USER_CONTEXT || {};
+    const dataRevision = window.BL_CP_DECISION_DATA_REVISION?.() || 0;
+    const day = new Date();
+    return JSON.stringify([user.id || '',user.accessRevision || 0,dataRevision,decisionContextRevision,
+      day.getFullYear(),day.getMonth(),day.getDate(),state.settings.targetType,isEn()?'en':'tr',
+      ]);
+  }
+  const decisionRuntime = window.BLCpDecisionRuntime.create({
+    contextKey:decisionCacheKey, analyzeRow:Engine.analyzeOrder, summarize:Engine.summarizeAnalyses,
+  });
+  const personalEvaluations = new WeakMap();
+  async function analyzeRowsWithPersonalRulesAsync(rows, options = {}) {
+    const key = decisionCacheKey();
+    const transitRules = window.state?.overrides?.transitRules || [];
+    const model = await decisionRuntime.computeAsync(rows, { settings:{targetType:state.settings.targetType},transitRules });
+    if (!model || decisionCacheKey() !== key || options.isCurrent?.() === false) return null;
+    const steps = personalModelSteps(model, options);
+    let start = performance.now(),step;
+    do {
+      if (decisionCacheKey() !== key || options.isCurrent?.() === false) return null;
+      step = steps.next();
+      if (!step.done && performance.now()-start>=8) { await new Promise(resolve=>setTimeout(resolve,0));start=performance.now(); }
+    } while (!step.done);
+    return decisionCacheKey() === key && options.isCurrent?.() !== false ? step.value : null;
+  }
+
   function analyzeRowsWithPersonalRules(rows, options) {
     const list = Array.isArray(rows) ? rows : [];
     const opts = options || {};
     const transitRules = (window.state && window.state.overrides && window.state.overrides.transitRules) || [];
-    let model = Engine.analyze(list, { settings: { targetType: state.settings.targetType }, transitRules });
+    const model = decisionRuntime.compute(list, { settings: { targetType: state.settings.targetType }, transitRules });
+    const steps = personalModelSteps(model, opts);
+    let step;
+    do { step = steps.next(); } while (!step.done);
+    return step.value;
+  }
+
+  function* personalModelSteps(initialModel, opts) {
+    let model = initialModel;
     // v1'den kalan PO-bazlı onayları, yeni model/renk kapsamı seçiliyse
     // değerlendirmeden önce seçenek anahtarına yükselt.
     promoteReusableChecklistAnswers(model.orders);
@@ -3118,14 +3153,19 @@
     const preparedRules=Rules.prepareEvaluation?.(state.rules);
     for (const analysis of model.orders) {
       if (analysis.calculatedPriority == null) analysis.calculatedPriority = analysis.priority;
-      const evaluated = Rules.evaluateOrder(analysis, {
-        rules: state.rules, preparedRules, answers: state.answers, plmEvidence, checklistEnabled: state.checklistSettings.enabled,
-      });
+      let evaluated = personalEvaluations.get(analysis);
+      if (!evaluated) {
+        evaluated = Rules.evaluateOrder(analysis, {
+          rules: state.rules, preparedRules, answers: state.answers, plmEvidence, checklistEnabled: state.checklistSettings.enabled,
+        });
+        personalEvaluations.set(analysis, evaluated);
+      }
       evaluations.set(analysis.orderKey, evaluated);
       analysis.checklistItemIds = evaluated.customItems.map(item => item.id);
       analysis.checklistState = evaluated.checklistState;
       customItems.set(analysis.orderKey, evaluated.customItems);
       checklistState.set(analysis.orderKey, evaluated.checklistState);
+      yield;
     }
     for (const analysis of model.orders) {
       const applied = evaluations.get(analysis.orderKey);
@@ -3154,6 +3194,7 @@
         reasonEn: String(rule.reasonEn || ''),
         reason: customRuleReasonText(rule),
       }));
+      yield;
     }
     model = Engine.recount(model);
 
@@ -3178,9 +3219,30 @@
   /* CP / Orders Priority hücreleri de Overview ile AYNI kişisel decision
      context'ini kullanır. byRow WeakMap'i aynı row objesi üzerinden O(1)
      eşleşme sağlar; display text hiçbir zaman identity olarak kullanılmaz. */
+  const decisionResults = new WeakMap(), decisionJobs = new WeakMap();
+  function peekDecisionsForRows(rows) {
+    const cached=decisionResults.get(rows);
+    return cached && cached.key===decisionCacheKey() ? cached.result : null;
+  }
   function computeDecisionsForRows(rows) {
     const list = Array.isArray(rows) ? rows : [];
+    const cached=peekDecisionsForRows(list);if(cached)return cached;
     const model = analyzeRowsWithPersonalRules(list, { commit: false });
+    const result=decisionResult(model);
+    decisionResults.set(list,{key:decisionCacheKey(),result});return result;
+  }
+  function computeDecisionsForRowsAsync(rows) {
+    const list=Array.isArray(rows)?rows:[],key=decisionCacheKey(),cached=peekDecisionsForRows(list);
+    if(cached)return Promise.resolve(cached);
+    const running=decisionJobs.get(list);if(running&&running.key===key)return running.promise;
+    const job={key};
+    job.promise=analyzeRowsWithPersonalRulesAsync(list,{commit:false}).then(model=>{
+      if(!model||decisionCacheKey()!==key)return null;
+      const result=decisionResult(model);decisionResults.set(list,{key,result});return result;
+    }).finally(()=>{if(decisionJobs.get(list)===job)decisionJobs.delete(list);});
+    decisionJobs.set(list,job);return job.promise;
+  }
+  function decisionResult(model) {
     const byRow = new WeakMap();
     const byOrderKey = new Map();
     for (const analysis of model.orders || []) {
@@ -3192,6 +3254,13 @@
 
   /* Genel Bakış her çizildiğinde çağrılır. Aynı satır kümesi için yeniden
      hesap yapılmaz — açılış ve filtre akışı ağırlaşmasın (CLAUDE.md §11). */
+  let overviewDecisionGeneration = 0;
+  let overviewDecisionPending = false;
+  function renderPreparing() {
+    const host=document.getElementById('cpAssistant');
+    for(const id of ['cpAssistantAttention','cpAssistantCoverage']){const node=document.getElementById(id);if(node)node.innerHTML='';}
+    if(host)host.innerHTML='<section class="cpaCard"><header><b>'+L('Bugünün Üretim Öncelikleri',"Today's Production Focus")+'</b></header><div class="cpaCardBody"><p class="cpaEmpty">'+L('Üretim öncelikleri arka planda hazırlanıyor…','Production priorities are being prepared in the background…')+'</p></div></section>';
+  }
   function onOverviewRendered(rows, context = {}) {
     const list = Array.isArray(rows) ? rows : [];
     lastRows = list;
@@ -3205,12 +3274,18 @@
     const datasetSignature = dataRevision > 0
       ? `rev:${dataRevision}`
       : `fallback:${list.length}:${list.length ? list[0]['Order Code'] : ''}`;
-    const signature = `${datasetSignature}|filter:${filterRevision}|target:${state.settings.targetType}|decision:${decisionContextRevision}|${columnSignature}`;
-    if (signature === state.rowsSignature && state.model) { render(); return; }
+    const signature = `${datasetSignature}|filter:${filterRevision}|target:${state.settings.targetType}|decision:${decisionContextRevision}|day:${new Date().toDateString()}|lang:${isEn()?'en':'tr'}|${columnSignature}`;
+    if (signature === state.rowsSignature) { if (state.model && !overviewDecisionPending) render(); return; }
     state.rowsSignature = signature;
     try { window.BLPerf?.mark?.('PRODUCTION_FOCUS_RECOMPUTE', { dataRevision, rows: list.length }); } catch (_) {}
-    recompute();
-    render();
+    const generation = ++overviewDecisionGeneration;
+    overviewDecisionPending = true;renderPreparing();
+    void analyzeRowsWithPersonalRulesAsync(list, {commit:true,isCurrent:()=>generation === overviewDecisionGeneration}).then(model=>{
+      if (generation !== overviewDecisionGeneration) return;
+      overviewDecisionPending=false;
+      if (!model) { state.rowsSignature='';onOverviewRendered(lastRows,context);return; }
+      render();
+    }).catch(error=>{if(generation!==overviewDecisionGeneration)return;overviewDecisionPending=false;state.rowsSignature='';if(typeof showToast==='function')showToast(error.message);});
   }
 
   loadPrefs();
@@ -3224,8 +3299,7 @@
      CP öncelik hücreleri aynı olayla yeniden hesaplanır. */
   function onPlmSampleRequestsChanged() {
     notifyDecisionContextChanged('plm-sample-requests');
-    recompute();
-    render();
+    if(lastRows){state.rowsSignature='';onOverviewRendered(lastRows,{dataRevision:window.BL_CP_DECISION_DATA_REVISION?.()||0,filterRevision:'plm-evidence'});}
   }
   window.addEventListener('bl:plm-requests-changed', onPlmSampleRequestsChanged);
   if (sampleRequests()) sampleRequests().load().then(data => { if (data && data.loaded && Object.keys(data.models || {}).length) onPlmSampleRequestsChanged(); });
@@ -3233,7 +3307,7 @@
      aynı oturumda sunucudan yeni değer gelirse (BLStorage hydrate) kurallar
      depodan yeniden okunur. */
   window.BLCpAssistant = {
-    onOverviewRendered, render, computeDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
+    onOverviewRendered, render, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
     persistChecklistAnswers: saveAnswers,
     openRules, openSettings,
     decisionContextRevision: () => decisionContextRevision, _state: state,

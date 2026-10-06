@@ -1,0 +1,53 @@
+'use strict';
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-snapshot-249-'));
+process.env.BUYER_LOG_LOCAL_DATA_ROOT = root;
+const snapshots = require('../server/lib/model-snapshot');
+test.after(() => fs.rmSync(root, { recursive:true, force:true }));
+const payload = (model = 'DEMO', loadedAt = '2026-10-06T10:00:00.000Z') => {
+  const orders = [{ ocode:1, model, date:new Date('2026-10-05T21:00:00.000Z') }];
+  return { asasOrders:orders, asasOrdersByTarget:{cp:orders,orders}, antrepoMap:{}, lflRows:[{model}], loadedAt, lastRefreshResult:{at:loadedAt} };
+};
+test('unchanged source reuses verified raw bytes while persisting current metadata across cold load', async () => {
+  const first = await snapshots.saveModelSnapshotAsync('same', payload());
+  const bytes = fs.readFileSync(first.file), stat = fs.statSync(first.file);
+  const next = payload('DEMO', '2026-10-06T11:00:00.000Z');
+  const saved = await snapshots.saveModelSnapshotAsync('same', next);
+  assert.equal(saved.reused, true);
+  assert.deepEqual(fs.readFileSync(first.file), bytes);
+  assert.equal(fs.statSync(first.file).mtimeMs, stat.mtimeMs);
+  const loaded = await snapshots.loadModelSnapshotAsync('same');
+  assert.equal(loaded.loadedAt, next.loadedAt);
+  assert.deepEqual(loaded.lastRefreshResult, next.lastRefreshResult);
+  assert.equal(loaded.asasOrdersByTarget.cp, loaded.asasOrders);
+  assert.ok(loaded.asasOrders[0].date instanceof Date);
+  assert.equal(snapshots.loadModelSnapshot('same').loadedAt, next.loadedAt);
+});
+test('changed content, LFL and target routing invalidate reuse; corrupt raw bytes cannot be reused', async () => {
+  await snapshots.saveModelSnapshotAsync('change', payload());
+  const changed = payload(); changed.lflRows[0].model='OTHER';
+  assert.equal((await snapshots.saveModelSnapshotAsync('change', changed)).reused, false);
+  changed.asasOrdersByTarget.cp=[{ocode:2,model:'TARGET'}];
+  assert.equal((await snapshots.saveModelSnapshotAsync('change', changed)).reused, false);
+  fs.writeFileSync(snapshots.snapshotPath('change'), 'corrupt');
+  assert.equal((await snapshots.saveModelSnapshotAsync('change', changed)).reused, false);
+  assert.equal((await snapshots.loadModelSnapshotAsync('change')).asasOrdersByTarget.cp[0].model, 'TARGET');
+});
+test('metadata checksum corruption falls back safely and never crosses different raw generations or users', async () => {
+  await snapshots.saveModelSnapshotAsync('rollback', payload('FIRST'));
+  await snapshots.saveModelSnapshotAsync('rollback', payload('FIRST','2026-10-06T11:00:00.000Z'));
+  const meta = snapshots.snapshotPath('rollback')+'.meta.json';
+  fs.writeFileSync(meta, '{"checksum":"invalid"}');
+  assert.equal((await snapshots.loadModelSnapshotAsync('rollback')).loadedAt, '2026-10-06T10:00:00.000Z');
+  await snapshots.saveModelSnapshotAsync('rollback', payload('SECOND','2026-10-06T12:00:00.000Z'));
+  assert.equal((await snapshots.loadModelSnapshotAsync('rollback')).asasOrders[0].model, 'SECOND');
+  fs.writeFileSync(snapshots.snapshotPath('rollback'), 'corrupt');
+  const fallback=await snapshots.loadModelSnapshotAsync('rollback');
+  assert.equal(fallback.asasOrders[0].model, 'FIRST');
+  assert.equal(fallback._snapshotMetrics.fallback, true);
+  assert.equal(await snapshots.loadModelSnapshotAsync('different-user'), null);
+});

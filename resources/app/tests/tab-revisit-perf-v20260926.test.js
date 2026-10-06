@@ -18,7 +18,7 @@ const APP = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'),
 test('Genel Bakış’a tekrar girişte öncelik kararları temizlenmez; yalnız motor ilk yüklendiğinde', () => {
   const body = extractFunction(APP, 'switchTab');
   assert.match(body, /const decisionEngineWasReady=Boolean\(window\.BLCpAssistant&&typeof window\.BLCpAssistant\.computeDecisionsForRows==='function'\);/);
-  assert.match(body, /\.then\(\(\)=>\{if\(decisionEngineWasReady\)return;try\{invalidateUnifiedPriorityDecisions\('overview-decision-engine-ready'\)/);
+  assert.match(body, /\.then\(\(\)=>\{if\(decisionEngineWasReady\)return;try\{invalidateUnifiedPriorityDecisions\('overview-decision-engine-ready',\['cp'\]\)/);
 });
 
 test('bağlantı zenginleştirmesi yalnız eklenen düğümlerin tablolarını işler', () => {

@@ -3511,7 +3511,7 @@ tfoot .collectionWeightedAverage .collectionWeightedChangeLine strong.isNegative
 }
 
 /* ===================== v5.10 — Overview refresh result ===================== */
-.ovRefreshResult{margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:var(--shadow-1);overflow:hidden;}
+.ovRefreshResult{display:block;margin:0 0 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:var(--shadow-1);overflow:hidden;}
 .ovRefreshResult[hidden]{display:none!important;}
 .ovRefreshResult.isSuccess{border-color:color-mix(in srgb,var(--green) 32%,var(--line));}
 .ovRefreshResult.isWarning{border-color:color-mix(in srgb,var(--yellow,#d89b00) 42%,var(--line));}

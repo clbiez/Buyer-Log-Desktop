@@ -17,6 +17,38 @@ const TARGET_GROUPS = Object.freeze([
   ['antrepoMap', 'antrepoMapByTarget'],
 ]);
 const snapshotWriteTails = new Map();
+const verifiedSnapshots = new Map();
+const CONTENT_KEYS = Object.freeze(['asasOrders','asasOrdersByTarget','antrepoMap','antrepoMapByTarget','lflRows','targetAliases']);
+
+function splitSnapshotPayload(payload) {
+  const compacted = compactSnapshotPayload(payload), content = {}, metadata = {};
+  for (const [key, value] of Object.entries(compacted.value)) {
+    (CONTENT_KEYS.includes(key) ? content : metadata)[key] = value;
+  }
+  return { contentKey:checksum(JSON.stringify(content)), metadata, aliasCount:compacted.aliasCount };
+}
+function rememberSnapshot(userId, payload, baseChecksum, buffer, metrics = {}) {
+  if (!baseChecksum) return;
+  const split = splitSnapshotPayload(payload);
+  verifiedSnapshots.set(safeUserId(userId), {
+    contentKey:split.contentKey, baseChecksum, compressedChecksum:checksum(buffer), bytes:buffer.length, ...metrics,
+  });
+}
+function applySnapshotMetadata(userId, value) {
+  const baseChecksum = value._baseChecksum;
+  if (!baseChecksum) return value;
+  for (const file of [snapshotPath(userId)+'.meta.json', snapshotPath(userId)+'.meta.json.bak']) {
+    try {
+      const wrapper = JSON.parse(fs.readFileSync(file, 'utf8'));
+      if (wrapper.schemaVersion !== 1 || wrapper.baseChecksum !== baseChecksum || !wrapper.payload
+          || checksum(JSON.stringify(wrapper.payload)) !== wrapper.checksum) continue;
+      if (Object.keys(wrapper.payload).some(key => CONTENT_KEYS.includes(key) || key.startsWith('_'))) continue;
+      Object.assign(value, wrapper.payload);
+      break;
+    } catch (_) { /* incomplete/corrupt metadata: keep the verified base or backup */ }
+  }
+  return value;
+}
 
 function safeUserId(value) {
   return String(value || 'moderator').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 100) || 'moderator';
@@ -84,7 +116,7 @@ function encodeSnapshot(payload) {
   const bodyJson = JSON.stringify(body);
   const digest = checksum(bodyJson);
   const json = `{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","payload":${bodyJson}}`;
-  return { json: Buffer.from(json, 'utf8'), savedAt: body.savedAt, aliasCount: compacted.aliasCount };
+  return { json: Buffer.from(json, 'utf8'), savedAt: body.savedAt, aliasCount: compacted.aliasCount, baseChecksum:digest };
 }
 
 /* Model snapshot'ı düz JSON'dur: Date alanları "2026-03-09T21:00:00.000Z"
@@ -140,6 +172,7 @@ function decodeSnapshotText(text) {
     const payloadJson = text.slice(start + marker.length, -1);
     if (!parsed.checksum || checksum(payloadJson) !== parsed.checksum) throw new Error('Snapshot checksum uyuşmuyor.');
     value = expandSnapshotPayload(parsed.payload);
+    Object.defineProperty(value, '_baseChecksum', { value:parsed.checksum, enumerable:false });
   } else {
     throw new Error('Snapshot schema sürümü desteklenmiyor.');
   }
@@ -158,20 +191,35 @@ function saveModelSnapshot(userId, payload) {
   decodeSnapshotBuffer(buffer);
   const file = snapshotPath(userId);
   atomicWriteBuffer(file, buffer);
-  return { file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount, totalMs: Date.now() - started };
+  rememberSnapshot(userId, payload, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.json.length });
+  return { file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false, totalMs: Date.now() - started };
 }
 
 async function writeModelSnapshotAsync(userId, payload) {
   const started = Date.now();
   await new Promise(resolve => setImmediate(resolve));
+  const split = splitSnapshotPayload(payload), previous = verifiedSnapshots.get(safeUserId(userId));
+  if (previous && previous.contentKey === split.contentKey) {
+    // Re-read and hash the compressed primary: a replaced/deleted/corrupt file
+    // must never inherit an in-memory verification from an older generation.
+    const primary = await fs.promises.readFile(snapshotPath(userId)).catch(() => null);
+    if (primary && checksum(primary) === previous.compressedChecksum) {
+      const metadata = { savedAt:new Date().toISOString(), ...split.metadata };
+      const wrapper = { schemaVersion:1, baseChecksum:previous.baseChecksum, checksum:checksum(JSON.stringify(metadata)), payload:metadata };
+      await atomicWriteBufferAsync(snapshotPath(userId)+'.meta.json', Buffer.from(JSON.stringify(wrapper)));
+      return { file:snapshotPath(userId), savedAt:metadata.savedAt, bytes:previous.bytes, uncompressedBytes:previous.uncompressedBytes,
+        aliasCount:split.aliasCount, reused:true, totalMs:Date.now()-started };
+    }
+  }
   const serializeStarted = Date.now(), encoded = encodeSnapshot(payload);
   const compressStarted = Date.now(), buffer = await gzip(encoded.json, { level: 6 });
   const validateStarted = Date.now(), raw = await gunzip(buffer);
   decodeSnapshotText(raw.toString('utf8'));
   const writeStarted = Date.now(), file = snapshotPath(userId);
   await atomicWriteBufferAsync(file, buffer);
+  verifiedSnapshots.set(safeUserId(userId), { contentKey:split.contentKey, baseChecksum:encoded.baseChecksum, compressedChecksum:checksum(buffer), bytes:buffer.length, uncompressedBytes:encoded.json.length });
   return {
-    file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount,
+    file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false,
     serializeMs: compressStarted - serializeStarted, compressMs: validateStarted - compressStarted,
     validateMs: writeStarted - validateStarted, writeMs: Date.now() - writeStarted, totalMs: Date.now() - started,
   };
@@ -188,7 +236,11 @@ function loadModelSnapshot(userId) {
   const file = snapshotPath(userId);
   for (const candidate of [file, file + '.bak']) {
     if (!fs.existsSync(candidate)) continue;
-    try { return decodeSnapshotBuffer(fs.readFileSync(candidate)); }
+    try {
+      const buffer = fs.readFileSync(candidate), value = decodeSnapshotBuffer(buffer);
+      if (candidate === file) rememberSnapshot(userId, value, value._baseChecksum, buffer);
+      return applySnapshotMetadata(userId, value);
+    }
     catch (_) { /* bozuk ana kopyada yedeği dene */ }
   }
   return null;
@@ -202,6 +254,8 @@ async function loadModelSnapshotAsync(userId) {
       const compressed = await fs.promises.readFile(candidate);
       const readMs = Date.now() - started, raw = await gunzip(compressed), inflateMs = Date.now() - started - readMs;
       const parseStarted = Date.now(), value = decodeSnapshotText(raw.toString('utf8'));
+      if (candidate === file) rememberSnapshot(userId, value, value._baseChecksum, compressed, { uncompressedBytes:raw.length });
+      applySnapshotMetadata(userId, value);
       Object.defineProperty(value, '_snapshotMetrics', {
         value:{ readMs, inflateMs, parseMs:Date.now() - parseStarted, totalMs:Date.now() - started, bytes:compressed.length, fallback:candidate !== file },
         enumerable:false,

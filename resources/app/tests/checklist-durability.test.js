@@ -16,7 +16,9 @@ function browser(saved = new Map(), fetch = async () => ({ ok: true, json: async
   const storage = { getItem: k => saved.get(k) || null, setItem: (k,v) => saved.set(k,String(v)), removeItem: k => saved.delete(k) };
   const ctx = { console, Map, Set, WeakMap, Date, JSON, Blob, Promise, localStorage: storage,
     BLStorage: { ...storage, actualKey: k => 'user.' + k, native: storage }, BL_USER_CONTEXT: { id: 'buyer' },
-    BLCpChecklistEngine: Checklist, BLCpRulesEngine: Rules, BLCpReadinessEngine: {},
+    BLCpChecklistEngine: Checklist, BLCpRulesEngine: Rules,
+    BLCpReadinessEngine:{analyzeOrder:row=>row,summarizeAnalyses:orders=>({orders}),recount:model=>model},
+    BLCpDecisionRuntime:require('../public/cp-decision-runtime'),
     document: { documentElement: { lang: 'en' }, querySelector: () => null, getElementById: () => null },
     fetch, setTimeout: f => { timers.push(f); return timers.length; }, clearTimeout: () => {},
     CustomEvent: class { constructor(type, props) { this.type = type; Object.assign(this, props); } },
@@ -186,7 +188,6 @@ test('supplier Excel updates preserve server PDFs and multiline notes without a 
 test('option migration retains each PO evidence and never overwrites a newer Pending decision',()=>{
   const b=browser(); const one={...analysis,orderKey:'PO1',daysToLoad:1,stage:'PRODUCTION'};
   const two={...one,orderKey:'PO2'};
-  Object.assign(b.ctx.BLCpReadinessEngine,{analyze:()=>({orders:[one,two]}),recount:model=>model});
   b.assistant._state.rules=[Rules.normalizeRule({id:'shared',kind:'checklist',approvalScope:'option',name:'Shared',conditions:[{field:'@daysToLoad',operator:'lte',value:60}],expressionVersion:Rules.EXPRESSION_VERSION})];
   const option=Checklist.optionAnswerKey(one,'shared');
   b.assistant._state.answers={
@@ -194,14 +195,15 @@ test('option migration retains each PO evidence and never overwrites a newer Pen
     'PO2::shared':{state:'approved',at:'2026-10-01T11:00:00Z',loadDate:19000,note:'PO2 note',attachments:[{id:'b'.repeat(32)}]},
     [option]:{state:'open',at:'2026-10-04T12:00:00Z',note:'newer Pending'},
   };
-  b.assistant.computeDecisionsForRows([]);
+  b.assistant.computeDecisionsForRows([one,two]);
   assert.equal(b.assistant._state.answers[option].state,'open');
   assert.equal(b.assistant._state.answers['PO1::shared'].note,'PO1 note');
   assert.equal(b.assistant._state.answers['PO2::shared'].attachments[0].id,'b'.repeat(32));
   delete b.assistant._state.answers[option];
-  b.assistant.computeDecisionsForRows([]);
+  b.assistant.persistChecklistAnswers();
+  b.assistant.computeDecisionsForRows([one,two]);
   const revision=b.assistant.decisionContextRevision();
-  b.assistant.computeDecisionsForRows([]);
+  b.assistant.computeDecisionsForRows([one,two]);
   assert.equal(b.assistant.decisionContextRevision(),revision,'unchanged migration must not render/save recursively');
   assert.equal(b.assistant._state.answers[option].state,'approved');
   assert.equal(b.assistant._state.answers['PO1::shared'].attachments.length,1);

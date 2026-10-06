@@ -49,7 +49,7 @@ test('v9.48 kanca Genel Bakış çiziminin İÇİNDE; yükleme bir kez tetikleni
   // Kanca ensureFeature'dan ÖNCE gelmeli: modül yüklüyse yükleme hiç denenmez.
   const bootstrapIndex = APP.indexOf('window.__cpAssistantBootstrapped');
   assert.ok(bootstrapIndex > hookIndex, 'önce mevcut panel güncellenmeli');
-  assert.match(APP, /if\(!window\.BLCpAssistant && !window\.__cpAssistantBootstrapped\)\{/);
+  assert.match(APP, /if\(startupReadySignaled && !window\.BLCpAssistant && !window\.__cpAssistantBootstrapped\)\{/);
   // Bayrak ensureFeature'dan ÖNCE set edilmeli; yoksa yavaş yüklemede her
   // çizim yeni bir yükleme başlatır.
   const guard = APP.slice(bootstrapIndex, bootstrapIndex + 400);
@@ -65,7 +65,7 @@ test('v9.48 lazy yükleme listesi kanonik teslimat motorunu da içerir ve sıra 
   // order-decision-engine.js artık index.html'de eager. Aynı script'i lazy
   // listede yeniden beklemek geçmiş load event'inde deadlock oluşturuyordu.
   // PLM numune talepleri (kontrol listesi kanıtı) görünümden önce yüklenir.
-  assert.match(PERF, /cpAssistant:\['backlog-delivery-engine\.js','cp-readiness-engine\.js','cp-checklist-engine\.js','cp-rules-engine\.js','plm-sample-requests-engine\.js','plm-sample-requests\.js','cp-overview-assistant\.js(?:\?[^']*)?'\]/);
+  assert.match(PERF, /cpAssistant:\['backlog-delivery-engine\.js','cp-readiness-engine\.js','cp-checklist-engine\.js','cp-rules-engine\.js','plm-sample-requests-engine\.js','plm-sample-requests\.js','cp-decision-runtime\.js','cp-overview-assistant\.js(?:\?[^']*)?'\]/);
   assert.doesNotMatch(PERF, /cpAssistant:\[[^\]]*'order-decision-engine\.js'/);
   assert.match(PERF, /if\(name==='cpAssistant'&&global\.BLCpAssistant&&typeof global\.BLCpAssistant\.computeDecisionsForRows==='function'\)return;/);
   // Görünüm üç motoru da window'dan okur; biri eksikse hiç kurulmamalı
@@ -149,7 +149,7 @@ test('v9.48 kullanıcı tercihleri hesapla birlikte taşınır (iki listeye de k
 });
 
 test('v9.48 iş mantığı görünümde DEĞİL: eşik ve sınıflandırma motorda kalır', () => {
-  assert.match(VIEW, /Engine\.analyze\(/);
+  assert.match(VIEW, /analyzeRow:Engine\.analyzeOrder/);
   assert.match(VIEW, /Checklist\.summarize\(/);
   assert.match(VIEW, /Checklist\.normalizeSettings\(/);
   // Görünüm kendi öncelik/sonuç kuralını yazmamalı.
