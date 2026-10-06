@@ -457,14 +457,24 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
       }
       await net(() => fsp.mkdir(deviceRoot, { recursive: true }), 'Cihaz klasörü oluşturma');
 
-      const pendingAll = await localDb.pending(10000);
-      const pending = typeof filterOutgoingDeltas === 'function' ? filterOutgoingDeltas(pendingAll) : pendingAll;
-      const retained = new Set(pending.map(item => item && item.eventId).filter(Boolean));
-      const discarded = pendingAll.filter(item => item && item.eventId && !retained.has(item.eventId));
+      let pending = [], discardedEventIds = [];
+      if (typeof localDb.pendingForSync === 'function') {
+        const selected = await localDb.pendingForSync(10000, filterOutgoingDeltas);
+        pending = Array.isArray(selected && selected.pending) ? selected.pending : [];
+        discardedEventIds = Array.isArray(selected && selected.discardedEventIds) ? selected.discardedEventIds : [];
+      } else {
+        // Eski Local DB uygulamalarıyla geri uyumluluk.
+        const pendingAll = await localDb.pending(10000);
+        pending = typeof filterOutgoingDeltas === 'function' ? filterOutgoingDeltas(pendingAll) : pendingAll;
+        const retained = new Set(pending.map(item => item && item.eventId).filter(Boolean));
+        discardedEventIds = pendingAll.filter(item => item && item.eventId && !retained.has(item.eventId)).map(item => item.eventId);
+      }
       // Eski genel taşıma yolundan çıkarılan belgeler tekrar pakete girmesin.
       // İş verisi, ilgili modülün sahip-bazlı replikasyon yolunda korunur;
-      // burada yalnız genel paketten emniyetle düşürülür.
-      if (discarded.length) await localDb.markSynced(discarded.map(item => item.eventId));
+      // burada yalnız genel paketten emniyetle düşürülür. Filtre Local DB
+      // içinde derin klondan önce çalıştığı için dev Collection belgeleri de
+      // V8 string sınırına çarpmadan güvenle elenir.
+      if (discardedEventIds.length) await localDb.markSynced(discardedEventIds);
       const pendingTotal = pending.length;
       const localCreate = pending.filter(item => item.operation === 'create' || item.patch?._created).length;
       const localDelete = pending.filter(item => item.delete || item.operation === 'delete').length;
