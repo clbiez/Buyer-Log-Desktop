@@ -2931,7 +2931,7 @@ function canonicalModelImageSource(plmId,colourCode,colour=''){
   return window.BLModelImageCache?.resolveRegistrySource?.(plmId,colourCode,COLLECTION_IMAGE_API,colour)||'';
 }
 function canonicalModelImageKnown(plmId,colourCode,colour=''){
-  return window.BLModelImageCache?.hasImageKey?.(state?.overrides?.imagemap||{},plmId,colourCode,colour)||false;
+  return window.BLModelImageCache?.hasRegistryKey?.(plmId,colourCode,colour)||false;
 }
 // Görseller için ortak lazy-load/hover katmanı. Tablo hücreleri gerçek kaynağı
 // data-src'te tutar; IntersectionObserver yalnız görünür hücreleri yükler.
@@ -3089,7 +3089,7 @@ const BLImageRuntime=(()=>{
   };
   const ensureObserver=()=>{
     if(observer||typeof IntersectionObserver==='undefined')return;
-    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const img=entry.target;if(isImageSource(img.dataset.src))loadTableImage(img);else scheduleAutoImageComplete(img);observer.unobserve(img);}}),{root:null,rootMargin:'160px 0px'});
+    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){const img=entry.target;if(!img.isConnected){observer.unobserve(img);return;}if(isImageSource(img.dataset.src))loadTableImage(img);else scheduleAutoImageComplete(img);observer.unobserve(img);}}),{root:null,rootMargin:'160px 0px'});
   };
   const observe=img=>{
     if(!img||img.dataset.blImageObserved==='1')return;
@@ -3101,6 +3101,7 @@ const BLImageRuntime=(()=>{
     ensureObserver();
     if(observer)observer.observe(img);else if(hasSource)loadTableImage(img);else scheduleAutoImageComplete(img);
   };
+  const release=root=>{for(const img of root?.querySelectorAll('img[data-src]')||[]){observer?.unobserve(img);delete img.dataset.blImageObserved;}};
   const cancelHover=()=>{if(hoverTimer){clearTimeout(hoverTimer);hoverTimer=0;}hoverToken++;};
   const scheduleHover=(img,event)=>{
     cancelHover();const src=tableImageSource(img);if(!isImageSource(src))return;
@@ -3124,7 +3125,7 @@ const BLImageRuntime=(()=>{
     try{await window.BLModelImageCache?.clearAll?.();}catch(_){}
     return true;
   };
-  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,inFlight,failed,observe,load,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource,scheduleAutoImageComplete,holdAutoImageComplete};
+  return {IMAGE_HOVER_DELAY,IMAGE_REQUEST_CONCURRENCY,inFlight,failed,observe,release,load,scheduleHover,cancelHover,invalidate,clearAll,source:tableImageSource,scheduleAutoImageComplete,holdAutoImageComplete};
 })();
 window.BLImageRuntime=BLImageRuntime;
 function cpImageCellHtml(row){
@@ -7082,6 +7083,7 @@ function setupVirtualizedBody(tbody, table, rows, buildRow, colCount, freezePlan
     if(tbody._virtualState !== state) return;
     const frag=document.createDocumentFragment();
     for(let i=0;i<state.rows.length;i++) frag.appendChild(state.buildRow(state.rows[i], i));
+    BLImageRuntime.release(tbody);
     tbody.replaceChildren(frag);
     tbody._virtualState = null;
   }
@@ -7090,7 +7092,7 @@ function setupVirtualizedBody(tbody, table, rows, buildRow, colCount, freezePlan
   function paint(){
     if(tbody._virtualState !== state) return; // bu tbody daha yeni bir render'a ait
     const total = state.rows.length;
-    if(!total){ tbody.innerHTML=''; state.renderedStart=-1; state.renderedEnd=-1; return; }
+    if(!total){ BLImageRuntime.release(tbody);tbody.innerHTML=''; state.renderedStart=-1; state.renderedEnd=-1; return; }
     const rowH = state.rowHeight || 26;
     const viewportH = scrollHost.clientHeight || 400;
     const scrollTop = scrollHost.scrollTop || 0;
@@ -7113,6 +7115,7 @@ function setupVirtualizedBody(tbody, table, rows, buildRow, colCount, freezePlan
     }
     // replaceChildren tek adımda değiştirir; innerHTML='' + appendChild ikilisi
     // arada bir kare boyunca tabloyu boş bırakıp gözle görülür titremeye yol açıyordu.
+    BLImageRuntime.release(tbody);
     tbody.replaceChildren(frag);
     if(!state.rowHeight){
       const firstRow=tbody.querySelector('tr:not(.virtualSpacerRow)');
@@ -7134,12 +7137,52 @@ function setupVirtualizedBody(tbody, table, rows, buildRow, colCount, freezePlan
   paint();
 }
 
+const _tableRangeViews=new WeakMap();
+function renderTableRangeControls(table,tableKey,rows,rerender){
+  if(!window.BLTableRange)return rows;
+  const T=(tr,en)=>appLang==='en'?en:tr;
+  let view=_tableRangeViews.get(table);
+  if(!view){
+    let size=50;try{size=(window.BLStorage||localStorage).getItem(`bl.tableRange.${tableKey}.v1`);}catch(_){}
+    const bar=document.createElement('div');bar.className='tableRangeBar';
+    bar.innerHTML='<label data-range-label><span></span><select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select></label><output data-range-info role="status" aria-live="polite"></output><button type="button" class="tbtn" data-range-prev>‹</button><label data-range-page-label><span></span><input data-range-page type="number" min="1" step="1"></label><button type="button" class="tbtn" data-range-next>›</button>';
+    const wrap=table.closest('.tablewrap')||table;wrap.before(bar);
+    view={controller:BLTableRange.create(size),bar,rerender};_tableRangeViews.set(table,view);
+    const draw=()=>{window.BLGridClipboard?.clear?.(table.id);const host=table.closest('.tablewrap');if(host)host.scrollTop=0;view.rerender();};
+    bar.querySelector('[data-range-size]').addEventListener('change',event=>{
+      view.controller.setSize(event.target.value);
+      try{(window.BLStorage||localStorage).setItem(`bl.tableRange.${tableKey}.v1`,String(view.controller.snapshot().size));}catch(_){}
+      draw();
+    });
+    bar.querySelector('[data-range-prev]').addEventListener('click',()=>{view.controller.go(view.controller.snapshot().page-1);draw();});
+    bar.querySelector('[data-range-next]').addEventListener('click',()=>{view.controller.go(view.controller.snapshot().page+1);draw();});
+    bar.querySelector('[data-range-page]').addEventListener('change',event=>{view.controller.go(Number(event.target.value)-1);draw();});
+  }
+  view.rerender=rerender;
+  const range=view.controller.update(rows),bar=view.bar;
+  bar.querySelector('[data-range-label] span').textContent=T('Görünür satır aralığı','Visible row range');
+  bar.title=T('Filtreler, toplamlar ve dışa aktarma tüm eşleşen satırları kapsar.','Filters, totals and exports include all matching rows.');
+  const select=bar.querySelector('[data-range-size]');select.value=String(range.size);select.lastElementChild.textContent=T('Tümü','All');
+  bar.querySelector('[data-range-info]').textContent=`${range.total?range.start+1:0}–${range.end} / ${range.total.toLocaleString(appLang==='en'?'en-GB':'tr-TR')}`;
+  bar.querySelector('[data-range-page-label] span').textContent=T('Sayfa','Page');
+  const page=bar.querySelector('[data-range-page]');page.value=range.page+1;page.max=range.pages;page.disabled=range.pages===1;
+  const prev=bar.querySelector('[data-range-prev]'),next=bar.querySelector('[data-range-next]');
+  prev.disabled=range.page===0;next.disabled=range.page+1>=range.pages;
+  prev.setAttribute('aria-label',T('Önceki sayfa','Previous page'));next.setAttribute('aria-label',T('Sonraki sayfa','Next page'));
+  return range.rows;
+}
+
 // ---------- generic table renderer with grouped/colored header ----------
 function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   opts = opts || {};
+  const pageOnly=opts.pageOnly===true;opts={...opts,pageOnly:false};
   const withChk = opts.withChk !== false;
   const table = document.getElementById(tableId);
   if(!table)return;
+  const fullRows=rows;
+  if(tableKey==='cp'||tableKey==='orders'||opts.range===true){
+    rows=renderTableRangeControls(table,tableKey,fullRows,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,{...opts,pageOnly:true}));
+  }
   if(!table.querySelector('colgroup'))table.insertAdjacentHTML('afterbegin','<colgroup></colgroup>');
   if(!table.querySelector('thead'))table.insertAdjacentHTML('beforeend','<thead></thead>');
   if(!table.querySelector('tbody'))table.insertAdjacentHTML('beforeend','<tbody></tbody>');
@@ -7150,10 +7193,10 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   // for this render; recalculating later can map data-r to a different record.
   table._blRenderedRows=rows;
   table._blRenderedColumns=cols;
-  resolveTableColumnSchemas(tableKey,rows);
+  if(!pageOnly)resolveTableColumnSchemas(tableKey,fullRows);
   const selSet = opts.selectedSet;
   const notifySelectionChange = ()=>{
-    if(typeof opts.onSelectionChange==='function') opts.onSelectionChange(selSet,rows);
+    if(typeof opts.onSelectionChange==='function') opts.onSelectionChange(selSet,fullRows);
     else if((tableKey==='cp'||tableKey==='orders') && typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
   };
   const groupBoundaryKeys=opts.withGroups?groupedColumnBoundaryKeys(cols):new Set();
@@ -7200,7 +7243,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
   }
 
   if(opts.withGroups&&['cp','orders'].includes(tableKey)){
-    const rerenderGroups=()=>renderFullTable(tableId,tableKey,rows,sortState,onSort,opts);
+    const rerenderGroups=()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,opts);
     thead.querySelectorAll('tr.groupRow th[data-grp]').forEach(th=>attachGroupDrag(th,th.dataset.grp,tableKey,rerenderGroups));
   }
 
@@ -7212,20 +7255,21 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     else label.addEventListener('click', e=>{ e.stopPropagation(); onSort(key); });
     const fbtn = th.querySelector('.thFilterBtn');
     if(fbtn)fbtn.addEventListener('click', e=>{ e.stopPropagation(); openHeaderFilter(tableKey, key, fbtn, opts.rerenderOuter); });
-    th.addEventListener('contextmenu',e=>openManagedTableColumnMenu(e,tableKey,key,()=>renderFullTable(tableId,tableKey,rows,sortState,onSort,opts)));
-    attachDrag(th, key, tableKey, ()=>renderFullTable(tableId, tableKey, rows, sortState, onSort, opts));
+    th.addEventListener('contextmenu',e=>openManagedTableColumnMenu(e,tableKey,key,()=>renderFullTable(tableId,tableKey,fullRows,sortState,onSort,opts)));
+    attachDrag(th, key, tableKey, ()=>renderFullTable(tableId, tableKey, fullRows, sortState, onSort, opts));
     attachResize(th, key, tableKey, table, withChk);
   });
   if(withChk){
     const selAll = document.getElementById(`${tableId}_selAll`);
-    const allChecked = rows.length>0 && rows.every(r=>selectionHasId(selSet,r._id));
+    const allChecked = fullRows.length>0 && fullRows.every(r=>selectionHasId(selSet,r._id));
     selAll.checked = allChecked;
+    selAll.setAttribute('aria-label',appLang==='en'?'Select all matching rows':'Tüm eşleşen satırları seç');
     selAll.addEventListener('change', ()=>{
-      rows.forEach(r=>selectionSetId(selSet,r._id,selAll.checked));
+      fullRows.forEach(r=>selectionSetId(selSet,r._id,selAll.checked));
       // Satır seçimi elle işaretlenince eski hücre/aralık seçimi otomatik geçersiz
       // sayılır: aksi halde Kopyala hâlâ bayat tek hücreyi kopyalar (bkz. clear()).
       if(selSet.size>0) window.BLGridClipboard?.clear?.(tableId);
-      renderFullTable(tableId, tableKey, rows, sortState, onSort, opts);
+      renderFullTable(tableId, tableKey, fullRows, sortState, onSort, opts);
       notifySelectionChange();
     });
     const chkFilterBtn = thead.querySelector('.chkFilterBtn');
@@ -7242,7 +7286,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
       if(e.target && e.target.closest && e.target.closest('.chkFilterBtn')) return;
       e.preventDefault();
       e.stopPropagation();
-      const rerender = opts.rerenderOuter || (()=>renderFullTable(tableId, tableKey, rows, sortState, onSort, opts));
+      const rerender = opts.rerenderOuter || (()=>renderFullTable(tableId, tableKey, fullRows, sortState, onSort, opts));
       cycleCheckFilter(tableKey, rerender);
     };
     if(chkTh) chkTh.addEventListener('contextmenu', cycleFromEvent);
@@ -7285,6 +7329,7 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
     setupVirtualizedBody(tbody, table, rows, buildRow, cols.length+(withChk?1:0), freezePlan);
   } else {
     tbody._virtualState = null;
+    BLImageRuntime.release(tbody);
     tbody.innerHTML='';
     if(!rows.length&&opts.emptyText){const tr=document.createElement('tr');tr.innerHTML=`<td colspan="${Math.max(1,cols.length+(withChk?1:0))}" class="empty">${escapeHtml(opts.emptyText)}</td>`;tbody.appendChild(tr);}
     else{
@@ -7339,16 +7384,16 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         else if((meta.tableKey==='cp'||meta.tableKey==='orders') && typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
       });
     }
-    tbody._chkMeta = { selSet, table, tableKey, tableId, rows, getId:row=>row._id, onSelectionChange:notifySelectionChange };
+    tbody._chkMeta = { selSet, table, tableKey, tableId, rows:fullRows, getId:row=>row._id, onSelectionChange:notifySelectionChange };
     // v10.11 — CP/Orders özet satırı Koleksiyon'daki ağırlıklı/aritmetik
     // ortalama desenini paylaşır (kolWeightedAverage/kolArithmeticAverage,
     // kolAverageFooter): filtreyi yeniden kurmaz, ekrandaki `rows` zaten
     // aktif filtreyi yansıtır (bkz. filteredCP()/filteredOrders()).
-    const footerRows=partialViewEnabled(tableKey)?partialViewUniqueSourceRows(rows):rows;
-    renderQuantityTotalsFooter(table,rows,cols,{withCheck:true,selectedSet:selSet,getId:row=>row._id,getValue:(row,c)=>row[c.k],averageCols:cpOrdersAverageFooterCols(tableKey),totalRows:footerRows,statusRows:rows,statusSubtotal:partialViewEnabled(tableKey)?{key:'STATUS',getQty:row=>row&&row._partialViewStatusQuantity}:null});
+    const footerRows=partialViewEnabled(tableKey)?partialViewUniqueSourceRows(fullRows):fullRows;
+    if(!pageOnly||!table.tFoot)renderQuantityTotalsFooter(table,fullRows,cols,{withCheck:true,selectedSet:selSet,getId:row=>row._id,getValue:(row,c)=>row[c.k],averageCols:cpOrdersAverageFooterCols(tableKey),totalRows:footerRows,statusRows:fullRows,statusSubtotal:partialViewEnabled(tableKey)?{key:'STATUS',getQty:row=>row&&row._partialViewStatusQuantity}:null});
     if(opts.withGroups&&table.tFoot?.rows?.[0])applyGroupedBoundariesToRow(table.tFoot.rows[0],cols,1);
   }else if(typeof opts.footerHtmlFn==='function'){
-    let tfoot=table.querySelector('tfoot');if(!tfoot){tfoot=document.createElement('tfoot');table.appendChild(tfoot);}tfoot.innerHTML=opts.footerHtmlFn(rows,cols)||'';
+    let tfoot=table.querySelector('tfoot');if(!tfoot){tfoot=document.createElement('tfoot');table.appendChild(tfoot);}tfoot.innerHTML=opts.footerHtmlFn(fullRows,cols)||'';
   }else table.querySelector('tfoot')?.remove();
   // Sütun dondurma: başlık, gövde ve toplam satırı çizildikten SONRA uygulanır.
   applyFreeze(tableId, tableKey, withChk);
@@ -7378,6 +7423,7 @@ window.BLTableFramework={
       // Ortak tabloyu kullanan büyük ekranlar otomatik olarak yalnız pencereyi
       // çizer. Küçük tablolar mevcut tam çizim yolunda kalır.
       virtualize:config.virtualize !== false,
+      range:config.range===true,
       hasExpandedRows:config.hasExpandedRows === true,
     });
   },
@@ -13964,6 +14010,10 @@ async function waitForRefreshJob(expectedJob=null){
     if(userVisibleRefresh&&(!Array.isArray(targets)||!targets.length||targets.includes('priceanalysis'))){
       try{window.BLPriceSupplierAnalysis?.invalidate?.();}catch(_){}
     }
+    if((userVisibleRefresh||leanReload)&&(!Array.isArray(targets)||!targets.length||targets.some(target=>['orders','backlog','lfl','priceanalysis'].includes(target)))){
+      window.BLManufacturersPage?.invalidate?.();
+      window.BLTransitAnalysisUI?.invalidate?.({liveOnly:true});
+    }
     // Yenileme bitti: yenilenen ama açık olmayan sayfaların verisi arka planda
     // hazırlanır (sayfalar arası geçişte bekleme olmasın) ve genel filtre CP'yi
     // kapsamıyorsa kullanıcı ayrıca uyarılır.
@@ -20375,7 +20425,7 @@ function _setExcelJsCellFromSheetSpec(cell,spec){
    baytları bir kez hazırlar. */
 async function _prepareExcelJsImages(entries){
   const list=entries||[];
-  const keyOf=entry=>{const identity=entry&&entry.identity;return identity?identity.key:String((entry&&entry.src)||'');};
+  const keyOf=entry=>{const identity=entry&&entry.identity;return identity?(identity.source||identity.key):String((entry&&entry.src)||'');};
   // Benzersiz görseller SINIRLI EŞZAMANLILIKLA hazırlanır: her görsel ağdan
   // çekilip canvas'ta yeniden kodlandığı için yüzlerce satırı aynı anda
   // başlatmak tarayıcıyı kilitliyordu. Aynı model görselini paylaşan satırlar
@@ -20404,9 +20454,23 @@ function beginFullTableLayout(table){
   if(!already){table.classList.add('blForceFullRender');void table.offsetHeight;}
   return()=>{if(!already)table.classList.remove('blForceFullRender');};
 }
+// Build one detached row at a time: export all matching records without expanding
+// the visible table or allocating thousands of offscreen DOM rows.
+function* managedExcelExportRows(records,tableKey,columns,computeFn,selectedSet){
+  for(const record of records){
+    if(selectedSet?.size&&!selectedSet.has(record._id)&&!selectedSet.has(String(record._id))&&!selectedSet.has(Number(record._id)))continue;
+    const flags=typeof computeFn==='function'?computeFn(record):null;
+    const tr=document.createElement('tr');tr.dataset.id=String(record._id);
+    tr._blExportFlags=flags;
+    tr.innerHTML=columns.map(column=>tableKey==='orders'?ordersCellHtml(column,record,flags,tableKey):cellHtml(column,record,flags,tableKey)).join('');
+    [...tr.children].forEach((td,index)=>{td.dataset.key=columns[index].k;});
+    yield tr;
+  }
+}
 async function exportStyledDomTable(tableSel, opts){
   opts=opts||{};
-  flushPendingTableRenders();
+  const managedRecords=['cp','orders'].includes(opts.tableKey)&&Array.isArray(opts.records)?opts.records:null;
+  if(!managedRecords)flushPendingTableRenders();
   const table=document.querySelector(tableSel);
   if(!table){showToast('Tablo bulunamadı.');return;}
   if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
@@ -20416,12 +20480,14 @@ async function exportStyledDomTable(tableSel, opts){
   try{
 
   const idAttr=opts.idAttr||'data-id';
-  const candidateRows=[...table.querySelectorAll('tbody tr')].filter(tr=>tr.style.display!=='none'&&!tr.classList.contains('cpLogisticDetailRow'));
+  const candidateRows=managedRecords
+    ?managedExcelExportRows(managedRecords,opts.tableKey,visibleCols(opts.tableKey),opts.computeFn,opts.selectedSet)
+    :[...table.querySelectorAll('tbody tr')].filter(tr=>tr.style.display!=='none'&&!tr.classList.contains('cpLogisticDetailRow'));
   const requestedSet=opts.selectedSet&&opts.selectedSet.size?opts.selectedSet:null;
-  const hasVisibleSelection=!!(requestedSet&&candidateRows.some(tr=>{
+  const hasVisibleSelection=!!(requestedSet&&(managedRecords||candidateRows.some(tr=>{
     const id=tr.getAttribute(idAttr)??tr.dataset.id;
     return id!=null&&(requestedSet.has(Number(id))||requestedSet.has(String(id))||requestedSet.has(id));
-  }));
+  })));
   const selSet=hasVisibleSelection?requestedSet:null;
   const isIdentifierHeader=label=>{
     const key=String(label||'').toLocaleUpperCase('tr-TR').replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/[^A-Z0-9]+/g,' ').trim();
@@ -20479,7 +20545,7 @@ async function exportStyledDomTable(tableSel, opts){
     }
     const rowId=tr.getAttribute(idAttr)??tr.dataset.id;
     const record=rowId==null?null:(recordById.get(String(rowId))||null);
-    const cf=record&&typeof opts.computeFn==='function'?opts.computeFn(record):null;
+    const cf=managedRecords?tr._blExportFlags:(record&&typeof opts.computeFn==='function'?opts.computeFn(record):null);
     let col=1;
     for(const td of [...tr.children]){
       if(td.classList.contains('chkCell'))continue;
@@ -20499,7 +20565,7 @@ async function exportStyledDomTable(tableSel, opts){
         const tdRect=td.getBoundingClientRect(),trRect=tr.getBoundingClientRect();
         if(identity||domImage){
           imagesRequested++;
-          imageEntries.push({row:excelRow,col:col-1,identity,src:domImage,cellWidth:tdRect.width||0,cellHeight:trRect.height||0});
+          imageEntries.push({row:excelRow,col:col-1,identity,src:domImage,cellWidth:tdRect.width||0,cellHeight:trRect.height||(managedRecords?cpOrdersImageDims(opts.tableKey).row:0)});
         }
       }else{
         const spec=_xlsCellFromTd(td,{forceIdentifierText:isIdentifierHeader(leafHeaders[col-1]),fieldKey,palette});
@@ -20507,8 +20573,9 @@ async function exportStyledDomTable(tableSel, opts){
       }
       col++;maxCol=Math.max(maxCol,col-1);
     }
-    ws.getRow(excelRow).height=Math.max(18,Math.ceil(tr.getBoundingClientRect().height||19))*72/96;
+    ws.getRow(excelRow).height=Math.max(18,Math.ceil(tr.getBoundingClientRect().height||(managedRecords?cpOrdersImageDims(opts.tableKey).row:19)))*72/96;
     excelRow++;exported++;
+    if(managedRecords&&exported%100===0)await new Promise(resolve=>setTimeout(resolve,0));
   }
   if(!exported){showToast('Aktarılacak satır yok.');return;}
 
@@ -20530,10 +20597,10 @@ async function exportStyledDomTable(tableSel, opts){
       const cellWidth=kolExcelColumnWidthPx(column.width||8),cellHeight=(Number(row.height)||24)*96/72;
       // Aynı model görselini paylaşan satırlar tek medya kaydını kullanır; ankraj
       // yine SATIR BAŞINA yazılır, yani her satır kendi görselini taşır.
-      const mediaKey=entry.identity?entry.identity.key:String(entry.src||index);
+      const mediaKey=entry.identity?(entry.identity.source||entry.identity.key):String(entry.src||index);
       let imageId=mediaIds.get(mediaKey);
       if(imageId===undefined){imageId=wb.addImage({base64:image.dataUrl,extension:image.extension||'png'});mediaIds.set(mediaKey,imageId);}
-      ws.addImage(imageId,kolExcelImageTwoCellPlacement(image,entry.row,cellWidth,cellHeight,entry.col+1,2));
+      ws.addImage(imageId,kolExcelImageMoveAndSizePlacement(image,entry.row,cellWidth,cellHeight,entry.col+1,2));
       imagesEmbedded++;
     }catch(err){console.warn('Excel image could not be embedded:',err);}
   });
@@ -27675,7 +27742,7 @@ const _manufacturerRowVersions=new WeakMap();let _manufacturerRowVersionSeq=0;
 window.BLManufacturerDataBridge={
   async rows(){await ensureOrdersLoaded();return (state.orders&&state.orders.rows)||[];},
   // Yenilemede satır dizisi yeniden kurulur; dizi kimliği sürüm olarak yeter.
-  version(){const rows=(state.orders&&state.orders.rows)||null;if(!rows)return '';if(!_manufacturerRowVersions.has(rows))_manufacturerRowVersions.set(rows,++_manufacturerRowVersionSeq);return `orders:${_manufacturerRowVersions.get(rows)}`;},
+  version(){const rows=(state.orders&&state.orders.rows)||null;if(!rows)return '';if(!_manufacturerRowVersions.has(rows))_manufacturerRowVersions.set(rows,++_manufacturerRowVersionSeq);return `orders:${_manufacturerRowVersions.get(rows)}:${_unifiedPriorityTableRevision.orders}`;},
   openOrders(rows,title){
     const list=Array.isArray(rows)?rows:[];
     const day=value=>{const d=coerceDateLoose(value);return d?fmtDate(d):'';};

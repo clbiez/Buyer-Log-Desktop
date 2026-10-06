@@ -52,6 +52,7 @@
     headingEditor: null,
     refreshTimer: null, heartbeatTimer: null,
   };
+  let snapshotSignature='',refreshPending=null;
 
   async function api(url, options = {}) {
     const response = await fetch(url, {
@@ -70,10 +71,14 @@
     if (data.revision != null) S.data.revision = data.revision;
     if (data.lockTtlMs) S.data.lockTtlMs = data.lockTtlMs;
     if (data.currentUserId) S.currentUserId = data.currentUserId;
+    const signature=JSON.stringify({data:S.data,currentUserId:S.currentUserId});
+    if(signature===snapshotSignature){directoryLoadedAt=Date.now();return false;}
+    snapshotSignature=signature;
     rebuildDirectory();
     /* v7.0.229 — Üreticiler sayfası kartları bu rehberden eşler; rehber her
        değiştiğinde (kayıt, alternatif ad, kilit) sayfa yeniden eşleme yapar. */
     try { window.dispatchEvent(new CustomEvent('bl:manufacturer-directory-changed', { detail: { ...S.data } })); } catch (_) { /* eski tarayıcı */ }
+    return true;
   }
 
   /* ---------------- ORTAK ADRES REHBERİ (v7.35) ----------------
@@ -315,10 +320,19 @@
 
   /* ---------------- veri ---------------- */
 
-  async function refresh({ force = false } = {}) {
+  function refresh({ force = false } = {}) {
     // Düzenleme formu açıkken yeniden çizmeyiz: yazılan metin silinirdi.
     if (S.editingId && !force) return;
-    try { absorb(await api('/api/email-groups')); render(); } catch (_) { /* geçici ağ hatası: sonraki tazelemede düzelir */ }
+    if(refreshPending)return refreshPending;
+    refreshPending=(async()=>{
+      try {
+        const changed=absorb(await api('/api/email-groups'));
+        // An editor may have opened while the read was in flight. Server-side
+        // locks remain authoritative; never redraw an active draft after a poll.
+        if((changed||force)&&(!S.editingId||force))render();
+      } catch (_) { /* geçici ağ hatası: sonraki tazelemede düzelir */ }
+    })().finally(()=>{refreshPending=null;});
+    return refreshPending;
   }
 
   async function startEdit(id) {
@@ -736,6 +750,7 @@
     });
     document.addEventListener('keydown', onKey, true);
 
+    render(); // Reuse the existing directory snapshot while revalidating locks.
     await refresh({ force: true });
     if (await reconcileLegacyDirectoryIfSparse()) { render(); }
     S.refreshTimer = setInterval(() => refresh(), REFRESH_MS);

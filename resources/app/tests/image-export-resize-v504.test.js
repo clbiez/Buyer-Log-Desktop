@@ -53,7 +53,7 @@ test('v5.18 Excel images use native EMU one-cell anchors so aspect ratio cannot 
   assert.doesNotMatch(placement,/editAs:'oneCell'/);
   assert.doesNotMatch(placement,/nativeColOff:-emu\(right\)/);
   const cp=between('async function exportStyledDomTable','async function exportCpTableWithLightTheme');
-  assert.match(cp,/kolExcelImageTwoCellPlacement\(image,entry\.row,cellWidth,cellHeight,entry\.col\+1,2\)/);
+  assert.match(cp,/kolExcelImageMoveAndSizePlacement\(image,entry\.row,cellWidth,cellHeight,entry\.col\+1,2\)/);
   assert.match(cp,/if\(Number\(entry\.cellWidth\)>0\)column\.width/);
   assert.match(cp,/if\(Number\(entry\.cellHeight\)>0\)row\.height/);
 });

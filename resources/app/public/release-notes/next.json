@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-06",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Artwork Detayı sütunu ve PLM Sync bağlantı iyileştirmeleri · analiz performansı",
-    "en": "Artwork Detail column and PLM Sync connection improvements · analysis performance"
+    "tr": "Büyük tablolar, hazır analizler ve Excel görselleri · PLM iyileştirmeleri",
+    "en": "Large tables, analysis snapshots and Excel images · PLM improvements"
   },
   "summary": {
-    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir. Artwork Detayı ön ve arka baskıyı tek BOM satırında da doğru sayar, All Over baskıyı (kumaşta yazdığı için) özete katmaz ve ön/arka teknikleri farklıysa her bölgeyi kendi tekniğiyle yazar. CP Tracker’da sütun başlığı sürüklemek artık test raporu bırakma alanını açmaz.",
-    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed. Artwork Detail now counts front and back prints correctly even when they share one BOM line, leaves All Over prints out of the summary (they are already in Fabric) and writes each placement with its own technique when front and back differ. Dragging a column header in CP Tracker no longer opens the test report drop area."
+    "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir. Artwork Detayı ön ve arka baskıyı tek BOM satırında da doğru sayar, All Over baskıyı (kumaşta yazdığı için) özete katmaz ve ön/arka teknikleri farklıysa her bölgeyi kendi tekniğiyle yazar. CP Tracker’da sütun başlığı sürüklemek artık test raporu bırakma alanını açmaz. Büyük tablolarda 50/100/200/tümü görünür aralık, değişmemiş analizlerde hazır sonuçlar, daha az tekrar kural ve görsel işlemi, sayfa dışı kayıtlarla hücreye bağlı Excel görselleri eklendi.",
+    "en": "The Artwork Detail column filled by PLM SYNC now works like every other Collection column: it can be filtered, sorted, moved, edited by hand and read by LCW AI. PLM User Sign-In clears the CoreNectum cache and retries automatically on ERR_FAILED. The PLM/ASAS sync guide enables the browser connection in one click and verifies it right away; the browser opened during setup shows that setup is complete and the page can be closed. Artwork Detail now counts front and back prints correctly even when they share one BOM line, leaves All Over prints out of the summary (they are already in Fabric) and writes each placement with its own technique when front and back differ. Dragging a column header in CP Tracker no longer opens the test report drop area. Adds a 50/100/200/all visible range, prepared results for unchanged analyses, less repeated rule and image processing, and off-page exports with cell-bound Excel images."
   },
   "changes": [
     {
@@ -338,6 +338,209 @@
         "caption": {
           "tr": "Seçilen grubun fiyat, hacim ve üretici sonuçları korunur.",
           "en": "Prices, volumes and supplier results for the selected group are preserved."
+        }
+      }
+    },
+    {
+      "id": "large-table-visible-range",
+      "type": "feature",
+      "module": {
+        "tr": "Büyük tablolar",
+        "en": "Large tables"
+      },
+      "title": {
+        "tr": "50 / 100 / 200 / tümü görünür aralık",
+        "en": "50 / 100 / 200 / all visible range"
+      },
+      "body": {
+        "tr": "CP Tracker, Siparişler ve LFL tabloları varsayılan olarak 50 eşleşen satırı gösterir. Aralığı değiştirin veya sayfalar arasında ilerleyin; filtreler, toplamlar, işaretlenen kayıtlar ve dışa aktarma tüm eşleşen veri üzerinde çalışır. Boyut tercihiniz korunur; yeni filtre ilk sayfaya döner.",
+        "en": "CP Tracker, Orders and LFL tables show 50 matching rows by default. Change the range or move between pages; filters, totals, checked records and exports use the complete matching dataset. Your size preference is retained; a changed filter returns to the first page."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "large-table-visible-range.png",
+        "alt": {
+          "tr": "50 / 100 / 200 / tümü görünür aralık · gerçek Buyer Log demo ekranı",
+          "en": "50 / 100 / 200 / all visible range · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "50 / 100 / 200 / tümü görünür aralık",
+          "en": "50 / 100 / 200 / all visible range"
+        }
+      }
+    },
+    {
+      "id": "orders-rule-preparation-performance",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler · CP Tracker",
+        "en": "Orders · CP Tracker"
+      },
+      "title": {
+        "tr": "Büyük sipariş listelerinde daha az tekrar hesaplama",
+        "en": "Less repeated work on large order lists"
+      },
+      "body": {
+        "tr": "Tekrarlanan kural metinleri sınırlı önbellekte kullanılır; kontrol listesi ve öncelik koşulları her toplu değerlendirmede bir kez hazırlanır. Sayısal sipariş kodları model istatistiklerinin etiket önbelleğini doldurmaz. İş kuralları ve karar sonuçları korunur.",
+        "en": "Repeated rule text uses a bounded cache; checklist and priority conditions are prepared once per batch. Numeric order codes no longer fill the model-statistics label cache. Business rules and decision results are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "large-table-visible-range.png",
+        "alt": {
+          "tr": "Büyük sipariş listelerinde daha az tekrar hesaplama · gerçek Buyer Log demo ekranı",
+          "en": "Less repeated work on large order lists · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Büyük sipariş listelerinde daha az tekrar hesaplama",
+          "en": "Less repeated work on large order lists"
+        }
+      }
+    },
+    {
+      "id": "manufacturers-revisit-snapshot",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Üreticilere dönerken hazır analiz kullanılır",
+        "en": "Reuse the prepared analysis when returning to Manufacturers"
+      },
+      "body": {
+        "tr": "Aynı oturumda sipariş verisi, rehber sürümü ve gün değişmemişse analiz yeniden hesaplanmaz. Rehber her sekme dönüşünde tekrar indirilmez; arka planda kontrol edilir. Veri değişimi ve Yenile hazır sonucu geçersiz kılar.",
+        "en": "Within the same session, unchanged order data, directory revision and day reuse the analysis. Returning to the page does not download the directory every time; it is checked in the background. Data changes and Refresh invalidate the prepared result."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturers-snapshot-performance.png",
+        "alt": {
+          "tr": "Üreticilere dönerken hazır analiz kullanılır · gerçek Buyer Log demo ekranı",
+          "en": "Reuse the prepared analysis when returning to Manufacturers · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Üreticilere dönerken hazır analiz kullanılır",
+          "en": "Reuse the prepared analysis when returning to Manufacturers"
+        }
+      }
+    },
+    {
+      "id": "email-groups-revisit-snapshot",
+      "type": "improvement",
+      "module": {
+        "tr": "Manufacturers & Email Groups",
+        "en": "Manufacturers & Email Groups"
+      },
+      "title": {
+        "tr": "Rehber açılırken mevcut kayıtlar hemen görünür",
+        "en": "Show existing directory records immediately on open"
+      },
+      "body": {
+        "tr": "Rehber tekrar açıldığında eldeki kayıtlar hemen gösterilir; güncel veriler ve düzenleme kilitleri sunucudan doğrulanır. Değişmemiş arka plan yanıtı ekranı yeniden çizmez; yanıt beklenirken açtığınız düzenleme taslağı korunur.",
+        "en": "Reopening the directory displays existing records immediately while current data and edit locks are checked with the server. An unchanged background response does not redraw the screen; an editing draft opened while a poll is pending is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "email-groups-snapshot-performance.png",
+        "alt": {
+          "tr": "Rehber açılırken mevcut kayıtlar hemen görünür · gerçek Buyer Log demo ekranı",
+          "en": "Show existing directory records immediately on open · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Rehber açılırken mevcut kayıtlar hemen görünür",
+          "en": "Show existing directory records immediately on open"
+        }
+      }
+    },
+    {
+      "id": "transit-revisit-snapshot",
+      "type": "improvement",
+      "module": {
+        "tr": "Yol Süreleri",
+        "en": "Transit Times"
+      },
+      "title": {
+        "tr": "Kapsamlar arasında hazır analizle hızlı dönüş",
+        "en": "Reuse analysis snapshots across scopes"
+      },
+      "body": {
+        "tr": "Canlı yol süresi sonuçları aynı oturumda kapsam ve dönem başına beş dakika kullanılır; en fazla dört sonuç ve 40.000 analiz kaydı tutulur. Özetler yeniden kullanılır. Yenile, kaynak değişimi veya gün değişimi yeni hesap başlatır; geç gelen eski yanıt güncel kapsamı değiştiremez.",
+        "en": "Live transit results are reused within the same session for five minutes per scope and period, retaining at most four results and 40,000 analysis records. Summaries are reused. Refresh, source changes or a new day trigger a new calculation; a late older response cannot replace the current scope."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "transit-snapshot-performance.png",
+        "alt": {
+          "tr": "Kapsamlar arasında hazır analizle hızlı dönüş · gerçek Buyer Log demo ekranı",
+          "en": "Reuse analysis snapshots across scopes · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Kapsamlar arasında hazır analizle hızlı dönüş",
+          "en": "Reuse analysis snapshots across scopes"
+        }
+      }
+    },
+    {
+      "id": "model-image-registry-performance",
+      "type": "improvement",
+      "module": {
+        "tr": "Model Görselleri",
+        "en": "Model Images"
+      },
+      "title": {
+        "tr": "Görsel listesi her hücrede yeniden taranmaz",
+        "en": "Avoid scanning the image registry for every cell"
+      },
+      "body": {
+        "tr": "Model ve renk görsellerinin isimli anahtarları kayıt güncellendiğinde bir kez indekslenir. Sayfa ve kaydırma değişiminde kaldırılan görsellerin gözlemcileri bırakılır. Yanlış renk eşleşmesini önleyen kurallar, kaynak görsel kalitesi ve mevcut önizleme davranışı korunur.",
+        "en": "Named model and colour image keys are indexed once when the registry changes. Image observers are released when rows leave the page or scroll window. Rules preventing incorrect colour matches, original image quality and existing preview behavior are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "model-images-export-performance.png",
+        "alt": {
+          "tr": "Görsel listesi her hücrede yeniden taranmaz · gerçek Buyer Log demo ekranı",
+          "en": "Avoid scanning the image registry for every cell · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Görsel listesi her hücrede yeniden taranmaz",
+          "en": "Avoid scanning the image registry for every cell"
+        }
+      }
+    },
+    {
+      "id": "orders-complete-excel-images",
+      "type": "fix",
+      "module": {
+        "tr": "Excel · CP Tracker · Siparişler",
+        "en": "Excel · CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Sayfa dışında kalan kayıtlar ve hücreye bağlı görseller",
+        "en": "Export off-page records and cell-bound images"
+      },
+      "body": {
+        "tr": "Excel aktarımı görünen aralıkla sınırlanmaz: tüm filtrelenmiş kayıtları veya sayfalar arasındaki işaretli kayıtları alır. Satırlar parça parça hazırlanır; aynı görsel kaynağı kitapta bir medya kaydı kullanır. Görseller oranları korunarak hücreye sığdırılır, oran kilidiyle hücreyle taşınıp boyutlanacak şekilde gömülür.",
+        "en": "Excel export includes all filtered records or checked records across pages, regardless of the visible range. Rows are prepared incrementally; the same image source uses one media entry in the workbook. Images fit the cell with their aspect ratio preserved and are embedded with an aspect lock and move-and-size-with-cells anchors."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "model-images-export-performance.png",
+        "alt": {
+          "tr": "Sayfa dışında kalan kayıtlar ve hücreye bağlı görseller · gerçek Buyer Log demo ekranı",
+          "en": "Export off-page records and cell-bound images · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sayfa dışında kalan kayıtlar ve hücreye bağlı görseller",
+          "en": "Export off-page records and cell-bound images"
         }
       }
     }

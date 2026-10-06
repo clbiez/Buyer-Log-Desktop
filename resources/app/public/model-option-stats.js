@@ -17,6 +17,10 @@
   const keyText=value=>{
     const raw=value==null?'':value;
     if(typeof raw!=='string'&&typeof raw!=='number')return text(raw).toLocaleUpperCase('tr-TR');
+    // Numeric identities have no case. Keeping 33k unique order codes in the
+    // text cache evicted the repeatedly used model/colour labels every pass.
+    const numericText=String(raw).trim();
+    if(/^\d+$/.test(numericText))return numericText;
     let key=keyTextCache.get(raw);
     if(key===undefined){
       if(keyTextCache.size>=KEY_TEXT_CACHE_MAX)keyTextCache.clear();

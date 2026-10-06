@@ -38,6 +38,9 @@ function boot(native, userId) {
 
 // Kullanıcı tercihi olup daha önce ortak anahtara yazılan örnekler.
 const PERSONAL_KEYS = [
+  'bl.tableRange.cp.v1',
+  'bl.tableRange.orders.v1',
+  'bl.tableRange.lfl.v1',
   'bl.quickFilterGroups.cp.v1',
   'lcw.collection.quickDims.v1',
   'bl.formulaColumns.cp.v1',
