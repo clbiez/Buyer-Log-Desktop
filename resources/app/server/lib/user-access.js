@@ -1119,7 +1119,13 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     centralService = centralConfigured ? centralIam.createCentralIam({ ...centralOptions, cacheFile: ACCESS_FILE, onApply: cache => { storeCache = null; reconcilePersonalLogin(cache); iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive }) : null;
   }
   let authoritySnapshot = readStore().orderAccess || {};
-  const runtimeSecret = crypto.randomBytes(32), ttlMs = SESSION_HOURS * 3600 * 1000, loginAttempts = new Map();
+  // Gözetmen (server/watchdog.js) kendi ömrü boyunca sabit bir anahtarı yalnız
+  // ortam değişkeniyle verir; sunucu çöküp yeniden başlatılınca açık oturumlar
+  // düşmez. Anahtar diske yazılmaz ve alt süreçlere sızmasın diye silinir.
+  const inheritedSecret = String(process.env.BUYER_LOG_USER_SESSION_SECRET || '');
+  delete process.env.BUYER_LOG_USER_SESSION_SECRET;
+  const runtimeSecret = /^[a-f0-9]{64,}$/i.test(inheritedSecret) ? Buffer.from(inheritedSecret, 'hex') : crypto.randomBytes(32);
+  const ttlMs = SESSION_HOURS * 3600 * 1000, loginAttempts = new Map();
   function loginAttemptKey(req, username) {
     const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
     return `${forwarded || req.socket && req.socket.remoteAddress || 'local'}|${usernameKey(username)}`;
