@@ -21,11 +21,20 @@ const LICMAP = {};
 const COUNTRY_MAP = { 'HINDISTAN': 'India', 'BANGLADES': 'Bangladesh', 'CIN': 'China', 'TURKIYE': 'Turkey', 'MISIR': 'Egypt', 'FAS': 'Morocco', 'MYANMAR': 'Myanmar', 'ENDONEZYA': 'Indonesia' };
 
 function norm(s) { return String(s == null ? '' : s).trim(); }
+// Saf fonksiyon; ASAS/Antrepo eşleştirmesinde aynı kısa değerler (üretici,
+// statü, ülke…) satır başına onlarca kez normalleştiriliyordu. Kısa metinler
+// sınırlı bir bellekte tutulur; sonuç birebir aynıdır.
+const TURKNORM_CACHE = new Map();
+const TURKNORM_PAIRS = [['İ', 'I'], ['I', 'I'], ['Ş', 'S'], ['Ç', 'C'], ['Ö', 'O'], ['Ü', 'U'], ['Ğ', 'G']];
 function turknorm(s) {
-  let x = String(s == null ? '' : s).toUpperCase();
-  const pairs = [['İ', 'I'], ['I', 'I'], ['Ş', 'S'], ['Ç', 'C'], ['Ö', 'O'], ['Ü', 'U'], ['Ğ', 'G']];
-  pairs.forEach(([a, b]) => { x = x.split(a).join(b); });
-  return x.replace(/\s+/g, ' ').trim();
+  const raw = String(s == null ? '' : s);
+  const cacheable = raw.length <= 160;
+  if (cacheable) { const hit = TURKNORM_CACHE.get(raw); if (hit !== undefined) return hit; }
+  let x = raw.toUpperCase();
+  TURKNORM_PAIRS.forEach(([a, b]) => { x = x.split(a).join(b); });
+  x = x.replace(/\s+/g, ' ').trim();
+  if (cacheable) { if (TURKNORM_CACHE.size >= 50000) TURKNORM_CACHE.clear(); TURKNORM_CACHE.set(raw, x); }
+  return x;
 }
 
 // ASAS ↔ IAS EŞLEŞTİRME ANAHTARI.

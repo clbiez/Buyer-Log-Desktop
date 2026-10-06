@@ -56,15 +56,28 @@
   window.BLCanAccessArea = hasArea;
   // Check only the local validated session. Central polling belongs to the
   // server, so an unavailable share never blocks page guards or normal APIs.
-  let iamSessionCheck = false;
+  let iamSessionCheck = false, lastSessionSignature = '';
   async function checkIamSession() {
     if (iamSessionCheck || !current()?.centralIamEnabled) return;
     iamSessionCheck = true;
     try {
       const response = await fetch('/api/current-user', { credentials: 'same-origin', cache: 'no-store' });
       if (!response.ok) return;
-      const result = await response.json();
-      if (!result.selected) { location.assign('/select-user.html'); return; }
+      let result = await response.json();
+      if (!result.selected) {
+        // Tek bir olumsuz yanıt (sunucu yeniden başlıyor, dizin o an yazılıyor)
+        // kullanıcıyı giriş ekranına atmaz; kısa bir aradan sonra doğrulanır.
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const second = await fetch('/api/current-user', { credentials: 'same-origin', cache: 'no-store' });
+        if (!second.ok) return;
+        result = await second.json();
+        if (!result.selected) { location.assign('/select-user.html'); return; }
+      }
+      // 5 sn'lik denetim profili değişmediyse arayüzü yeniden çizmez: her
+      // turda erişim olayı Genel Bakış/rehber/checklist çizimini tetikliyordu.
+      const signature = JSON.stringify(result.user || null);
+      if (signature === lastSessionSignature) return;
+      lastSessionSignature = signature;
       window.BL_USER_CONTEXT = result.user;
       if (typeof state !== 'undefined') state.currentUser = result.user;
       applyUserAccessUI();

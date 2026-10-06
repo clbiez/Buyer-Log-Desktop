@@ -596,6 +596,19 @@ function normalizeStoredProfile(profile, fallback = {}) {
 // guvence hicbir zaman yoktu. Yazan yollar loadStore() kullanmaya devam eder.
 //
 let storeCache = null;
+// Son başarılı merkezi IAM okuması (yalnız anlık okuma hatalarına karşı kısa tampon).
+let lastGoodCentralStore = null;
+const CENTRAL_READ_GRACE_MS = 60 * 1000;
+function fileStamp(file) {
+  try { const stat = fs.statSync(file); return `${stat.size}-${stat.mtimeMs}-${stat.ino}`; }
+  catch (_) { return ''; }
+}
+/* Merkezi mod imzası: önbellek dosyası + türetilmiş yetki dosyası. Önbellek
+   dosyası yoksa imza yoktur (kurtarma/yedek yolları her seferinde çalışır). */
+function centralStoreTag() {
+  const access = fileStamp(ACCESS_FILE);
+  return access ? `central|${access}|${fileStamp(path.join(AUTH_DATA_ROOT, 'iam-derived.json'))}` : null;
+}
 /* Depo imzasi: boyut+mtime. Dosya degisince kendiliginden gecersizlesir. */
 function storeTag() {
   try { const stat = fs.statSync(ACCESS_FILE); return `${stat.size}-${stat.mtimeMs}`; }
@@ -626,11 +639,29 @@ function resolveStore(shared) {
     }
   }
   if (centralConfigured) {
+    /* Merkezi IAM önbelleği de dosya imzasıyla bellekte tutulur. Eskiden her
+       readStore() çağrısı user-access.json'u iki kez, iam-derived.json'u
+       (sipariş yetki haritası, MB'larca) bir kez okuyup ayrıştırıyor ve tüm
+       dizini klonluyordu: istek başına ~50-60 ms olay döngüsü bloğu, açılışta
+       yüzlerce istekle saniyeler. İmza değişince (merkezi uygulama, türetilmiş
+       yetki yazımı, geri yükleme) önbellek kendiliğinden düşer. */
+    const centralTag = centralStoreTag();
+    if (centralTag && storeCache && storeCache.tag === centralTag) {
+      return shared ? storeCache.value : JSON.parse(JSON.stringify(storeCache.value));
+    }
     let restoreSeed = readAccessStoreFile(ACCESS_FILE);
     const cached = restoreSeed && restoreSeed._restoreSeed ? null : getCentralIam().readLocal();
     if (cached) {
       try { const derived = JSON.parse(fs.readFileSync(path.join(AUTH_DATA_ROOT, 'iam-derived.json'), 'utf8')); cached.orderAccess = derived.orderAccess || {}; cached.scopeCatalog = derived.scopeCatalog || {}; } catch (_) {}
-      return cached;
+      if (centralTag) { storeCache = { tag: centralTag, value: cached }; lastGoodCentralStore = { at: Date.now(), value: cached }; }
+      return shared ? cached : JSON.parse(JSON.stringify(cached));
+    }
+    /* Windows'ta atomik değiştirme/antivirüs/OneDrive kilidi sırasında önbellek
+       bir an okunamayabilir. Bu anlık hata oturumu düşürüp kullanıcıyı giriş
+       ekranına atmasın: kısa bir süre son doğrulanmış dizin kullanılır. Kalıcı
+       bozulma/silinme bu pencereden sonra eskisi gibi kapalı-güvenli işler. */
+    if (lastGoodCentralStore && !(restoreSeed && restoreSeed._restoreSeed) && Date.now() - lastGoodCentralStore.at < CENTRAL_READ_GRACE_MS) {
+      return shared ? lastGoodCentralStore.value : JSON.parse(JSON.stringify(lastGoodCentralStore.value));
     }
 
     // Central IAM may be enabled before this machine has produced a valid
@@ -1016,6 +1047,15 @@ function verify(secret, token) {
   try { const parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf8')); return parsed.exp > Date.now() ? parsed : null; } catch (_) { return null; }
 }
 function initials(name) { return userInitials(clean(name)); }
+/* Oturum imza anahtarı. Masaüstü/gözetmen her açılışta bellekte bir anahtar
+   üretip sunucuya ortamla verir; sunucu süreci yeniden başlasa da (çökme
+   sonrası gözetmen yeniden başlatması) mevcut oturumlar geçerli kalır ve
+   kullanıcı uygulamaya dönerken giriş ekranına atılmaz. Uygulama kapanınca
+   anahtar kaybolur; doğrudan çalıştırmada eskisi gibi süreç başına rastgeledir. */
+function sessionSigningSecret(env = process.env) {
+  const value = String(env.BUYER_LOG_SESSION_SECRET || '');
+  return /^[0-9a-f]{64,}$/i.test(value) ? Buffer.from(value, 'hex') : crypto.randomBytes(32);
+}
 /* Audit saklama/rotasyon. Varsayılan: aktif dosya 20 MB'ı aşınca zaman damgalı
    arşive TAŞINIR (silinmez); en yeni 24 arşiv tutulur (~500 MB tavan). Ortam:
    BUYER_LOG_AUDIT_MAX_BYTES, BUYER_LOG_AUDIT_MAX_ARCHIVES (0 = arşivleri hiç
@@ -1119,7 +1159,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     centralService = centralConfigured ? centralIam.createCentralIam({ ...centralOptions, cacheFile: ACCESS_FILE, onApply: cache => { storeCache = null; reconcilePersonalLogin(cache); iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive }) : null;
   }
   let authoritySnapshot = readStore().orderAccess || {};
-  const runtimeSecret = crypto.randomBytes(32), ttlMs = SESSION_HOURS * 3600 * 1000, loginAttempts = new Map();
+  const runtimeSecret = sessionSigningSecret(), ttlMs = SESSION_HOURS * 3600 * 1000, loginAttempts = new Map();
   function loginAttemptKey(req, username) {
     const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
     return `${forwarded || req.socket && req.socket.remoteAddress || 'local'}|${usernameKey(username)}`;
@@ -1955,8 +1995,8 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       return res.json({ ok: true, revision: saved._revision });
     } catch (err) { return res.status(err.statusCode || 503).json({ error: err.message, code: err.code }); }
   }
-  function beginRestore() { restoreActive = true; storeCache = null; }
-  function endRestore() { restoreActive = false; storeCache = null; }
+  function beginRestore() { restoreActive = true; storeCache = null; lastGoodCentralStore = null; }
+  function endRestore() { restoreActive = false; storeCache = null; lastGoodCentralStore = null; }
   function profileIdentity(profile) {
     return [profile && profile.id, profile && profile.userId, profile && profile.legacyId, profile && profile.username, profile && profile.email]
       .map(value => clean(value)).filter(Boolean).map((value, index) => index >= 3 ? usernameKey(value) : value);
@@ -1994,7 +2034,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     // The old central cache marker describes the pre-restore snapshot. Keeping
     // it would make Central IAM treat the recovery seed as a valid stale cache.
     delete restored._centralIam;
-    atomicWriteJson(ACCESS_FILE, restored); storeCache = null;
+    atomicWriteJson(ACCESS_FILE, restored); storeCache = null; lastGoodCentralStore = null;
     const restoredProfiles = allProfiles(restored);
     const recoverySeed = centralConfigured || options.centralIamExpected === true;
     return {

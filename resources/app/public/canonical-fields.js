@@ -21,10 +21,17 @@
 
   var VERSION='7.67';
   var TR_MAP={'ı':'I','İ':'I','ş':'S','Ş':'S','ğ':'G','Ğ':'G','ü':'U','Ü':'U','ö':'O','Ö':'O','ç':'C','Ç':'C'};
+  // Saf fonksiyon: aynı kısa başlık/değerler satır başına tekrar tekrar
+  // normalleştiriliyordu. Kısa metinler sınırlı bellekte tutulur.
+  var TOKEN_CACHE=new Map();
   function token(value){
-    return String(value==null?'':value)
+    var raw=String(value==null?'':value),cacheable=raw.length<=160;
+    if(cacheable){var hit=TOKEN_CACHE.get(raw);if(hit!==undefined)return hit;}
+    var out=raw
       .replace(/[ıİşŞğĞüÜöÖçÇ]/g,function(ch){return TR_MAP[ch]||ch;})
       .toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
+    if(cacheable){if(TOKEN_CACHE.size>=50000)TOKEN_CACHE.clear();TOKEN_CACHE.set(raw,out);}
+    return out;
   }
   function textValue(value){return String(value==null?'':value).replace(/\s+/g,' ').trim();}
   function codeValue(value){

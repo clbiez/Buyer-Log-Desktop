@@ -40,6 +40,7 @@
 const fs = require('fs');
 const path = require('path');
 const http = require('http');
+const crypto = require('crypto');
 const { spawn, execFile } = require('child_process');
 
 const { backendEnv, resolveAppUrl, readJsonFile } = require('./portable-paths');
@@ -151,6 +152,10 @@ class BackendProcess {
     this.log = typeof options.log === 'function' ? options.log : () => {};
     this.onUnexpectedExit = typeof options.onUnexpectedExit === 'function' ? options.onUnexpectedExit : () => {};
     this.desktopBridgeSecret = String(options.desktopBridgeSecret || '');
+    // Oturum çerezlerinin imza anahtarı bu masaüstü oturumu boyunca sabittir:
+    // sunucu/gözetmen yeniden başlasa da kullanıcı giriş ekranına düşmez.
+    // Yalnız bellekte ve alt süreç ortamında yaşar; diske yazılmaz.
+    this.sessionSecret = crypto.randomBytes(32).toString('hex');
     this.downloadsRoot = String(options.downloadsRoot || '');
     this.child = null;
     this.stopping = false;
@@ -195,6 +200,7 @@ class BackendProcess {
     this.openLogStream();
     const env = backendEnv(this.paths, process.env);
     if (this.desktopBridgeSecret) env.BUYER_LOG_DESKTOP_BRIDGE_SECRET = this.desktopBridgeSecret;
+    env.BUYER_LOG_SESSION_SECRET = this.sessionSecret;
     // LCW AI tarafından üretilen PDF/PPTX/XLSX/HTML dosyaları, diğer
     // Buyer Log dışa aktarımlarıyla aynı gerçek İndirilenler klasörüne gider.
     // Sunucu Electron API'sini göremez; ana süreç güvenilir yolu env ile verir.

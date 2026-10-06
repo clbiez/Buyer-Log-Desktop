@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { spawn } = require('child_process');
+const crypto = require('crypto');
 /* v7.44 — SÜRÜM ZIP'İ ARTIK AÇILIŞTA OLUŞTURULMUYOR.
    Kullanıcı talebi: "program versiyon değişiklikleri sırasında her ilk açılışta
    versiyon kopyasını zip olarak oluşturuyor. Buna gerek yok, yapmasın."
@@ -24,6 +25,9 @@ const RUNTIME_ROOT = process.env.LOCALAPPDATA
 const RUNTIME_FILE = path.join(RUNTIME_ROOT, 'watchdog.json');
 
 let child = null;
+const SESSION_SECRET = /^[0-9a-f]{64,}$/i.test(String(process.env.BUYER_LOG_SESSION_SECRET || ''))
+  ? String(process.env.BUYER_LOG_SESSION_SECRET)
+  : crypto.randomBytes(32).toString('hex');
 let restartTimer = null;
 let stopping = false;
 let recentRestarts = [];
@@ -103,6 +107,9 @@ function startServer() {
   writeRuntimeState(null);
   const env = {
     ...process.env,
+    // Sunucu çökmesi/yeniden başlatması kullanıcı oturumlarını düşürmesin:
+    // çerez imza anahtarı gözetmen ömrü boyunca aynı kalır (yalnız bellekte).
+    BUYER_LOG_SESSION_SECRET: SESSION_SECRET,
     // The application must remain alive even when every browser tab is closed.
     BL_AUTOEXIT: '0',
     BL_KEEP_ALIVE: '1',

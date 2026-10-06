@@ -141,9 +141,12 @@
     /* lcwai-assistant.js — LCW AI ortak istemcisi (window.BuyerLogAI). AI paneli
        açan modüller (Otomasyon, CP Kuralları) onu ayrıca _loadScript ile
        ister; aynı dize tek kez yüklenir. */
+    /* user-access-ui.js LCW AI istemcisi ve güncelleme testinin hemen ardından gelir: açılış
+       perdesinin "profil" kapısı ona bağlıdır ve diğer ertelenmiş modüllerin
+       yüklenmesini beklemez. */
     deferredUi:[
-      'lcwai-assistant.js?rev=1','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
-      'quick-filter-groups.js','kpi-groups.js','update-test-ui.js?rev=4','user-access-ui.js?rev=APP-UPDATE-V3','user-management.js',
+      'lcwai-assistant.js?rev=1','update-test-ui.js?rev=4','user-access-ui.js?rev=APP-UPDATE-V3','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
+      'quick-filter-groups.js','kpi-groups.js','user-management.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
          artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx.js',
     ],
@@ -174,8 +177,24 @@
     if(name==='cpAssistant'&&global.BLCpAssistant&&typeof global.BLCpAssistant.computeDecisionsForRows==='function')return;
     const key='feature:'+name;
     if(loadedFeatures.has(name))return;
-    if(!pending.has(key))pending.set(key,(async()=>{for(const file of files)await loadScript(file);})().then(()=>{loadedFeatures.add(name);}).finally(()=>pending.delete(key)));
+    if(!pending.has(key)){
+      // Dosyalar paralel indirilir, yürütme sırası korunur (sıralı loadScript).
+      // Eskiden her dosya bir öncekinin bitmesini bekleyip ancak sonra
+      // indiriliyordu; 18 dosyalık grup açılış perdesini ~1 sn uzatıyordu.
+      preloadScripts(files);
+      pending.set(key,(async()=>{for(const file of files)await loadScript(file);})().then(()=>{loadedFeatures.add(name);}).finally(()=>pending.delete(key)));
+    }
     return pending.get(key);
+  }
+  const preloaded=new Set();
+  function preloadScripts(files){
+    if(!document.head)return;
+    for(const file of files){
+      const src=withVersion(file),key=scriptKey(src);
+      if(preloaded.has(key)||scriptStates.has(key)||[...document.scripts].some(el=>scriptKey(el.src||'')===key))continue;
+      preloaded.add(key);
+      try{const link=document.createElement('link');link.rel='preload';link.as='script';link.fetchPriority='low';link.href=src;document.head.appendChild(link);}catch(_){}
+    }
   }
 
   function clock(){return global.performance&&typeof global.performance.now==='function'?global.performance.now():Date.now();}
