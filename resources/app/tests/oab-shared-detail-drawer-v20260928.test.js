@@ -67,7 +67,7 @@ test('OAB drill-down Excel rehberindeki üst başlıkları ve tarih/kod biçimle
   assert.match(OAB,/\['baslangic yil hafta','bitis yil hafta','start year week','end year week'\]/);
   assert.match(OAB,/\['siparis onaylama ayi','order approval month'\]/);
   assert.match(OAB,/\['retail depo tarihi','retail warehouse date'\]/);
-  assert.match(OAB,/return `\$\{week\}\. Hafta \$\{month\} \$\{dateYear\}`/);
+  assert.match(OAB,/: `\$\{week\}\. Hafta \$\{month\} \$\{dateYear\}`/);
   assert.match(OAB,/return `\$\{oabDrillMonthName\(month\)\} \$\{year\}`/);
   assert.match(OAB,/return `\$\{pad\(date\.getDate\(\)\)\}\.\$\{pad\(date\.getMonth\(\) \+ 1\)\}\.\$\{String\(date\.getFullYear\(\)\)\.slice\(-2\)\}`/);
   assert.match(OAB,/if \(isLikelyCodeField\(field\)\) return String\(value\)/);
