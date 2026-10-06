@@ -241,6 +241,39 @@
         "tr": "Checklist ve PLM Numune durumu yalnız CP Tracker'da hesaplanır; Siparişler tablosunda bu sütun açılmaz ve numune değişikliklerinde Siparişler yeniden çizilmez.",
         "en": "Checklist and PLM Sample status are computed only in CP Tracker; the Orders table no longer shows that column or re-renders on sample changes."
       }
+    },
+    {
+      "id": "session-survives-server-restart",
+      "type": "fix",
+      "module": {
+        "tr": "Kullanıcı Girişi",
+        "en": "User Sign-in"
+      },
+      "title": {
+        "tr": "Uygulama açıkken giriş ekranına dönülmüyor",
+        "en": "No more unexpected return to the sign-in screen"
+      },
+      "path": {
+        "tr": "Kullanıcı Girişi",
+        "en": "User Sign-in"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "session-survives-server-restart.png",
+        "alt": {
+          "tr": "Sunucu yeniden başladıktan sonra oturum açık kalan Genel Bakış — gerçek Buyer Log demo ekranı",
+          "en": "Overview still signed in after a server restart — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sunucu yeniden başlasa da oturum açık kalır",
+          "en": "The session stays open even when the server restarts"
+        }
+      },
+      "body": {
+        "tr": "Arka plandaki Buyer Log sunucusu bir hata sonrası kendiliğinden yeniden başladığında açık oturum artık düşmüyor; uygulama açıkken durup durup kullanıcı girişi ekranına dönme sorunu giderildi.",
+        "en": "When the background Buyer Log server restarts itself after an error, the open session is no longer lost; the app no longer keeps returning to the sign-in screen while it is open."
+      }
     }
   ]
 }

@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const { spawn } = require('child_process');
+const crypto = require('crypto');
 /* v7.44 — SÜRÜM ZIP'İ ARTIK AÇILIŞTA OLUŞTURULMUYOR.
    Kullanıcı talebi: "program versiyon değişiklikleri sırasında her ilk açılışta
    versiyon kopyasını zip olarak oluşturuyor. Buna gerek yok, yapmasın."
@@ -23,6 +24,10 @@ const RUNTIME_ROOT = process.env.LOCALAPPDATA
   : path.join(APP_ROOT, 'server', 'data', 'runtime');
 const RUNTIME_FILE = path.join(RUNTIME_ROOT, 'watchdog.json');
 
+/* Kullanıcı oturum çerezi imza anahtarı: gözetmen ömrü boyunca sabit, yalnız
+   bellekte. Sunucu çöküp yeniden başlatılınca açık oturum giriş ekranına
+   düşmesin diye her başlatmada aynı değer ortamla aktarılır; diske yazılmaz. */
+const USER_SESSION_SECRET = crypto.randomBytes(32).toString('hex');
 let child = null;
 let restartTimer = null;
 let stopping = false;
@@ -106,6 +111,7 @@ function startServer() {
     // The application must remain alive even when every browser tab is closed.
     BL_AUTOEXIT: '0',
     BL_KEEP_ALIVE: '1',
+    BUYER_LOG_USER_SESSION_SECRET: USER_SESSION_SECRET,
   };
   try {
     child = spawn(process.execPath, [SERVER_FILE], {
