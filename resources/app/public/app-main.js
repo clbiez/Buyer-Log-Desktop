@@ -3325,7 +3325,9 @@ const CP_COLS = [
 const ORDERS_STATUS_COL = {k:'Active/Inactive', label:'Order Status', type:'active', weight:8, group:'Sipariş Detayları'};
 // Orders, CP sütunlarının kopyasıdır; Sipariş Durumu Sipariş Detayları'nın başında durur.
 function ordersColumnsFromCp(cpCols){
-  const copied=(Array.isArray(cpCols)?cpCols:[]).filter(c=>c.k!=='Priority').map(c=>({...c}));
+  /* Siparişler'de checklist çalışmaz: öncelik ve PLM numune (checklist kanıtı)
+     sütunları yalnız CP'dedir. */
+  const copied=(Array.isArray(cpCols)?cpCols:[]).filter(c=>c.k!=='Priority'&&c.type!=='plmSample').map(c=>({...c}));
   const at=copied.findIndex(c=>c.k==='Season');
   copied.splice(at>=0?at:copied.length,0,ORDERS_STATUS_COL);
   return copied;
@@ -8652,7 +8654,6 @@ function plmSampleCellHtml(r,tableKey){
 }
 window.addEventListener('bl:plm-requests-changed',()=>{
   if(currentActiveTab()==='cp')renderCP();
-  if(currentActiveTab()==='orders')renderOrders();
 });
 function cpRowPasses(r,ctx,ids){
   if(!cpPassesBase(r,ctx)) return false;
@@ -9013,8 +9014,7 @@ function ordersEvaluateAll(){
 function filteredOrders(){
   if(!state.orders)return [];
   const ctx=ordersBuildFilterContext();
-  ensurePlmSampleAccessors(state.orders.rows);
-  const source=partialViewRows('orders',state.orders.rows);ensurePlmSampleAccessors(source);
+  const source=partialViewRows('orders',state.orders.rows);
   let rows=source.filter(row=>ordersRowPasses(row,ctx,ORDERS_MIRROR_IDS));
   if(state.ordersSort.key)rows=sortRows(rows,state.ordersSort.key,state.ordersSort.dir);
   return rows;
