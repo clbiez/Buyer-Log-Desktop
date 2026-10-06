@@ -42,6 +42,9 @@
      Türkçe karakter) tek anahtarda birleşir; ekranda ilk görülen yazım kalır. */
   function prepare(observations){
     const records=[],labels=Object.fromEntries(DIMENSIONS.map(dim=>[dim,new Map()]));
+    // Normalization repeats for the same labels across thousands of rows.
+    // Keep this bounded cache local to preparation; dataset changes start fresh.
+    const normalizedLabels=new Map();
     let withQty=0;
     for(const obs of observations||[]){
       if(!obs)continue;
@@ -50,7 +53,9 @@
         opd:monthValue(field(obs,'opdMonth')),
       }};
       for(const dim of DIMENSIONS){
-        const label=clean(field(obs,dim)),key=keyOf(label);rec.k[dim]=key;
+        const label=clean(field(obs,dim));let key=normalizedLabels.get(label);
+        if(key===undefined){key=keyOf(label);if(normalizedLabels.size<1024)normalizedLabels.set(label,key);}
+        rec.k[dim]=key;
         if(key&&!labels[dim].has(key))labels[dim].set(key,label);
       }
       if(rec.qty>0)withQty++;
@@ -158,9 +163,17 @@
     const change=previous>0?(current-previous)/previous*100:0;
     return change>VOLUME_STATUS_BAND?'growing':change<-VOLUME_STATUS_BAND?'declining':'stable';
   }
+  function prepareFilters(filters){
+    const prepared=[];
+    for(const dim of Object.keys(filters||{})){
+      if(!isFilterDim(dim))continue;
+      const raw=filters[dim],wanted=new Set((Array.isArray(raw)?raw:[raw]).map(keyOf).filter(Boolean));
+      if(wanted.size)prepared.push({dim,wanted});
+    }
+    return prepared;
+  }
   function matches(rec,filters){
-    if(!filters)return true;
-    for(const dim of Object.keys(filters)){if(!isFilterDim(dim))continue;const raw=filters[dim],wanted=(Array.isArray(raw)?raw:[raw]).map(keyOf).filter(Boolean);if(wanted.length&&!wanted.includes(recordKey(rec,dim)))return false;}
+    for(const {dim,wanted} of filters)if(!wanted.has(recordKey(rec,dim)))return false;
     return true;
   }
   function weightedMean(parts){let sum=0,weight=0;for(const part of parts){if(part.value==null||!(part.weight>0))continue;sum+=part.value*part.weight;weight+=part.weight;}return weight>0?{value:sum/weight,weight}:null;}
@@ -180,8 +193,9 @@
     const totals={cur:bucket(),prev:bucket()},manufacturers=new Map(),countries=new Map(),groups=new Map();
     const ensure=(map,key,label,extra)=>{let item=map.get(key);if(!item){item={key,name:label,cur:bucket(),prev:bucket(),...(extra?extra():{})};map.set(key,item);}return item;};
     const current=[],previous=[];
+    const filters=prepareFilters(options.filters);
     for(const rec of dataset.records||[]){
-      if(!matches(rec,options.filters))continue;
+      if(!matches(rec,filters))continue;
       const side=!currentSeason||rec.season===currentSeason?'cur':hasComparison&&rec.season===previousSeasonValue?'prev':'';
       if(!side)continue;
       if(!periodMatches(rec,side==='cur'?options.currentPeriod:options.previousPeriod))continue;

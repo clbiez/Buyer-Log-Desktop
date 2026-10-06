@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-05",
+  "publishedAt": "2026-10-06",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Artwork Detayı sütunu ve PLM Sync bağlantı iyileştirmeleri",
-    "en": "Artwork Detail column and PLM Sync connection improvements"
+    "tr": "Artwork Detayı sütunu ve PLM Sync bağlantı iyileştirmeleri · analiz performansı",
+    "en": "Artwork Detail column and PLM Sync connection improvements · analysis performance"
   },
   "summary": {
     "tr": "PLM SYNC’ten gelen Artwork Detayı sütunu diğer Koleksiyon sütunlarıyla aynı yapıya taşındı: filtrelenebilir, sıralanabilir, taşınabilir, elle düzenlenebilir ve LCW AI tarafından okunabilir. PLM Kullanıcı Girişi ERR_FAILED hatasında CoreNectum önbelleğini temizleyip otomatik yeniden dener. PLM/ASAS senkron rehberi tarayıcı bağlantısını tek tıkla açıp hemen doğrular; kurulumda açılan tarayıcı işlemin tamamlandığını ve sayfanın kapatılabileceğini gösterir. Artwork Detayı ön ve arka baskıyı tek BOM satırında da doğru sayar, All Over baskıyı (kumaşta yazdığı için) özete katmaz ve ön/arka teknikleri farklıysa her bölgeyi kendi tekniğiyle yazar. CP Tracker’da sütun başlığı sürüklemek artık test raporu bırakma alanını açmaz.",
@@ -272,6 +272,72 @@
         "caption": {
           "tr": "LCW AI önerir; Buyer Log doğrular ve siz onaylarsınız.",
           "en": "LCW AI suggests; Buyer Log validates and you approve."
+        }
+      }
+    },
+    {
+      "id": "price-supplier-faster-preparation",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Büyük analiz verisi daha hızlı hazırlanıyor",
+        "en": "Large analysis datasets are prepared faster"
+      },
+      "body": {
+        "tr": "Fiyat & Üretici Analizi ülke, üretici ve diğer tekrar eden boyut etiketlerini sınırlı bir hazırlık önbelleğinde işler. Büyük listelerin hesap hazırlığı hızlanır; fiyatlar, adetler, sezonlar ve ilk görülen etiket yazımı korunur.",
+        "en": "Price & Supplier Analysis uses a bounded preparation cache for repeated country, supplier and other dimension labels. Preparing calculations for large lists is faster while prices, quantities, seasons and the first displayed label spelling are preserved."
+      },
+      "path": {
+        "tr": "Fiyat & Üretici Analizi › veri ve filtre seçimi",
+        "en": "Price & Supplier Analysis › data and filter selection"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-supplier-faster-analysis.png",
+        "alt": {
+          "tr": "Demo Excel verisinde KIDS BOY filtresiyle Fiyat & Üretici Analizi ekranı",
+          "en": "Price & Supplier Analysis with the KIDS BOY filter on demo Excel data"
+        },
+        "caption": {
+          "tr": "Seçilen grubun fiyat, hacim ve üretici sonuçları korunur.",
+          "en": "Prices, volumes and supplier results for the selected group are preserved."
+        }
+      }
+    },
+    {
+      "id": "price-supplier-faster-active-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Aktif filtrelerle analiz daha hızlı hesaplanıyor",
+        "en": "Analysis with active filters calculates faster"
+      },
+      "body": {
+        "tr": "Seçtiğiniz filtre değerleri her satır için yeniden normalleştirilmez; analiz başında bir kez hazırlanır. Çoklu seçimler ve ham sütun filtreleri aynı sonuçları verir; seçim değiştirdiğinizde yeni filtreler hemen uygulanır.",
+        "en": "Selected filter values are prepared once at the start of an analysis instead of being normalized again for each row. Multiple selections and raw-column filters produce the same results, and changed selections take effect immediately."
+      },
+      "path": {
+        "tr": "Fiyat & Üretici Analizi › veri ve filtre seçimi",
+        "en": "Price & Supplier Analysis › data and filter selection"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "price-supplier-faster-analysis.png",
+        "alt": {
+          "tr": "Demo Excel verisinde KIDS BOY filtresiyle Fiyat & Üretici Analizi ekranı",
+          "en": "Price & Supplier Analysis with the KIDS BOY filter on demo Excel data"
+        },
+        "caption": {
+          "tr": "Seçilen grubun fiyat, hacim ve üretici sonuçları korunur.",
+          "en": "Prices, volumes and supplier results for the selected group are preserved."
         }
       }
     }
