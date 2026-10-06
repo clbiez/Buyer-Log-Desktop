@@ -2154,7 +2154,7 @@
   const OAB_DRILL_ID_FIELDS = Object.freeze([
     'Tedarik Sepeti', 'Merch Alt Grup', 'Buyer Grup Tanımı', 'Sezon', 'Option Adı', 'Özel Kod', 'Renk Adı', 'Renk Kodu',
     'Fit', 'Klasman Kod', 'Klasman Tanımı', 'Klasman Grup Tanımı', 'Plan Başlangıç Ayı', 'Alım Dönem',
-    'Başlangıç Yıl Hafta', 'Bitiş Yıl Hafta', 'Retail Depo Tarihi', 'Sipariş Onaylama Ayı', 'Line Tanımı',
+    'Başlangıç Yıl Hafta', 'Bitiş Yıl Hafta', 'Retail Depo Tarihi', 'Sipariş Onaylama Ayı', 'Line Tanımı', // i18n-ignore: OAB raw data keys
   ]);
   // OAB örnek gruplama.xlsx rehberi: alt detay sütunları bu üst başlık sırasını
   // izler. Seçili metriğin grubu en sona taşınır ve metriğin kendisi daima en
