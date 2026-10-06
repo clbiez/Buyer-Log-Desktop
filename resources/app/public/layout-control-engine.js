@@ -139,7 +139,7 @@
         const token=fold(alias);
         let from=0, index=-1;
         while(token && (index=text.indexOf(token,from))>=0) {
-          const context=text.slice(Math.max(0,index-110),Math.min(text.length,index+token.length+110));
+          const context=text.slice(Math.max(0,index-28),Math.min(text.length,index+token.length+28));
           if(ORIGIN_MARKERS.some(marker=>context.includes(marker))) { accepted=true; break; }
           from=index+Math.max(1,token.length);
         }
