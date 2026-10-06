@@ -219,7 +219,7 @@ test('LCW AI inceleme bağlamı Buyer Log sonucunu, test adlarını ve adımlar�
   const ctx = E.reviewContext([{ report: report({
     talepNo: '1', genelSonuc: 'Kalır',
     testler: [{ ad: 'pH', sonuc: 'Kalır' }, { ad: 'Azo', sonuc: 'Geçer' }],
-    kararlar: [{ test: 'Baskı Dayanımı', karar: 'Ticari Onay', aciklama: '', tarih: '06.10.2026' }],
+    kararlar: [{ test: 'Baskı Dayanımı', karar: 'Kalır', aciklama: '', tarih: '06.10.2026' }],
   }), matchLevel: 'exact', currentStep: 'tests', currentStatus: 'open' }], [{ id: 'tests', name: 'Testler' }]);
   assert.equal(ctx.reports[0].buyerLogOutcome, 'fail');
   assert.deepEqual(ctx.reports[0].testNames, ['pH', 'Azo', 'Baskı Dayanımı']);
