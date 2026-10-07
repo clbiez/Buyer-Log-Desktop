@@ -1,14 +1,213 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "PLM ID listesinden toplu model ekleme",
+    "en": "Bulk-add models from a PLM ID list"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Koleksiyon’a PLM ID listesi (yapıştırma, Excel/CSV ya da LCW AI ile metinden) vererek modelleri PLM SYNC ile toplu ekleyin; varsayılanlar, renk seçimi, sonuç raporu ve bulunamayanlar için bekleyen liste dahil.",
+    "en": "Give the Collection a PLM ID list (pasted, from Excel/CSV or extracted from text with LCW AI) to add models in bulk with PLM SYNC; including defaults, colour choice, a result report and a waiting list for IDs not found."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "plm-id-list-import",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "PLM ID listesinden toplu model ekleme",
+        "en": "Bulk-add models from a PLM ID list"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › PLM Senkronizasyonu › PLM ID Listesinden Ekle",
+        "en": "Collection › PLM SYNC › PLM Synchronization › Add from PLM ID List"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-id-list-paste.png",
+        "alt": {
+          "tr": "PLM ID listesi ve ön kontrol — gerçek Buyer Log demo ekranı",
+          "en": "PLM ID list and pre-check — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "PLM ID listesi ve ön kontrol",
+          "en": "PLM ID list and pre-check"
+        }
+      },
+      "body": {
+        "tr": "Koleksiyon’a toplu giriş için PLM ID listesini yapıştırın; Buyer Log her ID’yi PLM SYNC ile PLM’de bulur ve önizleme ile onayınızdan sonra modelleri ekler. Liste satır, virgül, noktalı virgül, sekme veya boşlukla ayrılabilir. PLM’e gitmeden önce geçerli, yeni, Koleksiyon’da zaten olan, geçersiz ve listede tekrar eden ID’ler gösterilir. Koleksiyon’da zaten olan modeller için her biri için sor, hepsini güncelle ya da hepsini atla seçilebilir; mevcut PLM ID’den ikinci satır yalnız açıkça “Yeni olarak ekle” denirse oluşur.",
+        "en": "Paste a list of PLM IDs to add models to the Collection in bulk; Buyer Log finds every ID in PLM with PLM SYNC and adds the models after your preview and approval. The list can be separated by lines, commas, semicolons, tabs or spaces. Before anything is sent to PLM you see the valid, new, already-in-Collection, invalid and repeated IDs. For models already in the Collection you can choose to be asked for each, update all or skip all; a second row for an existing PLM ID is created only when you explicitly choose “Add as a New”."
+      }
+    },
+    {
+      "id": "plm-id-list-excel",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "PLM ID listesini Excel/CSV dosyasından okuma",
+        "en": "Read the PLM ID list from an Excel/CSV file"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › PLM Senkronizasyonu › PLM ID Listesinden Ekle",
+        "en": "Collection › PLM SYNC › PLM Synchronization › Add from PLM ID List"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-id-list-excel.png",
+        "alt": {
+          "tr": "Excel dosyasında bulunan PLM ve Buyer Log sütunları — gerçek Buyer Log demo ekranı",
+          "en": "PLM and Buyer Log columns found in the Excel file — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Excel dosyasında bulunan PLM ve Buyer Log sütunları",
+          "en": "PLM and Buyer Log columns found in the Excel file"
+        }
+      },
+      "body": {
+        "tr": "Liste bir Excel ya da CSV dosyasından da okunabilir. PLM Code / PLM ID sütunu ortak sütun eşleme motoruyla otomatik bulunur. Dosyadaki Target Price, Notlar veya tarih gibi Buyer Log sütunları da tanınır ve isterseniz yeni oluşturulan modellere yazılır; PLM’nin yönettiği alanlar her zaman PLM’den gelir.",
+        "en": "The list can also be read from an Excel or CSV file. The PLM Code / PLM ID column is detected automatically by the shared column-mapping engine. Buyer Log columns in the file such as Target Price, Notes or dates are recognised too and, if you want, written to the newly created models; PLM-managed fields always come from PLM."
+      }
+    },
+    {
+      "id": "plm-id-list-defaults",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "Yeni modeller için varsayılan Durum, Buyer ve Not",
+        "en": "Default Status, Buyer and Notes for new models"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › PLM Senkronizasyonu › PLM ID Listesinden Ekle",
+        "en": "Collection › PLM SYNC › PLM Synchronization › Add from PLM ID List"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-id-list-defaults.png",
+        "alt": {
+          "tr": "Yeni modeller için varsayılanlar — gerçek Buyer Log demo ekranı",
+          "en": "Defaults for new models — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Yeni modeller için varsayılanlar",
+          "en": "Defaults for new models"
+        }
+      },
+      "body": {
+        "tr": "Listeden eklenen yeni modellere tek seferde ortak Durum, Buyer ve Not atanabilir (ör. “SS27 Drop 2 · Yeni teklif”). Varsayılanlar yalnız yeni oluşturulan modellere yazılır; mevcut satırların Buyer Log verisi korunur. Seçimler bir sonraki kullanım için hatırlanır.",
+        "en": "New models added from the list can get a common Status, Buyer and Notes in one go (e.g. “SS27 Drop 2 · new quotation”). Defaults are written only to newly created models; existing rows keep their Buyer Log data. Your choices are remembered for next time."
+      }
+    },
+    {
+      "id": "plm-id-list-report",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "Sonuç raporu ve PLM’de bulunamayanlar için bekleyen liste",
+        "en": "Result report and a waiting list for IDs not found in PLM"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › PLM Senkronizasyonu › PLM ID Listesinden Ekle",
+        "en": "Collection › PLM SYNC › PLM Synchronization › Add from PLM ID List"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-id-list-report.png",
+        "alt": {
+          "tr": "PLM ID listesi sonuç raporu — gerçek Buyer Log demo ekranı",
+          "en": "PLM ID list result report — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "PLM ID listesi sonuç raporu",
+          "en": "PLM ID list result report"
+        }
+      },
+      "body": {
+        "tr": "İşlem sonunda istenen, eklenen, güncellenen, atlanan ve PLM’de bulunamayan ID’ler raporlanır; yeni satırlar Koleksiyon’da seçili gelir, böylece hemen toplu düzenleme, fiyatlamaya gönderme ya da dosya indirme yapılabilir. PLM’de bulunamayan ID’ler kopyalanabilir, tek tıkla yeniden denenebilir ve bekleyen listeye eklenir; bu liste bir sonraki Koleksiyon PLM Senkronizasyonu’nda (Model Detayları) otomatik olarak yeniden denenir ve bulunanlar yine önizleme ve onaydan geçer.",
+        "en": "At the end you get a report of requested, added, updated, skipped and not-found IDs; the new rows are selected in the Collection so you can edit them in bulk, send them to pricing or download files right away. IDs not found in PLM can be copied, retried with one click and are added to a waiting list that is retried automatically on the next Collection PLM Synchronization (Model Details); models found then still go through preview and approval."
+      }
+    },
+    {
+      "id": "plm-id-list-colours",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "Renk varyantları: her renk ayrı satır ya da tek satır",
+        "en": "Colour variants: a row per colour or a single row"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › PLM Senkronizasyonu › PLM ID Listesinden Ekle",
+        "en": "Collection › PLM SYNC › PLM Synchronization › Add from PLM ID List"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-id-list-colours.png",
+        "alt": {
+          "tr": "Her PLM rengi ayrı satır olarak eklenen modeller — gerçek Buyer Log demo ekranı",
+          "en": "Models added with a row for every PLM colour — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Her PLM rengi ayrı satır olarak eklenen modeller",
+          "en": "Models added with a row for every PLM colour"
+        }
+      },
+      "body": {
+        "tr": "PLM’de birden fazla rengi olan modeller için “PLM’deki her renk ayrı satır” (renkler aynı model grubunda bağlanır) ya da “PLM ID başına tek satır (ilk renk)” seçilebilir.",
+        "en": "For models with several colours in PLM you can choose “A row for every PLM colour” (colours are linked in the same model group) or “One row per PLM ID (first colour)”."
+      }
+    },
+    {
+      "id": "plm-id-list-lcw-ai",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · PLM SYNC",
+        "en": "Collection · PLM SYNC"
+      },
+      "title": {
+        "tr": "LCW AI ile serbest metinden PLM ID ayıklama",
+        "en": "Extract PLM IDs from free text with LCW AI"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › PLM Senkronizasyonu › PLM ID Listesinden Ekle",
+        "en": "Collection › PLM SYNC › PLM Synchronization › Add from PLM ID List"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-id-list-lcw-ai.png",
+        "alt": {
+          "tr": "LCW AI ile ayıklanan ve doğrulanan PLM ID’ler — gerçek Buyer Log demo ekranı",
+          "en": "PLM IDs extracted with LCW AI and verified — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "LCW AI ile ayıklanan ve doğrulanan PLM ID’ler",
+          "en": "PLM IDs extracted with LCW AI and verified"
+        }
+      },
+      "body": {
+        "tr": "Bir e-posta, not ya da belge metni yapıştırıldığında LCW AI metindeki PLM ID’leri bulur. Buyer Log her adayı doğrular: yalnız metinde gerçekten yazılı olan ID’ler kabul edilir, uydurma ya da değiştirilmiş sayılar atılır. Bulunan liste devam etmeden önce düzenlenebilir hâlde gösterilir.",
+        "en": "When you paste an e-mail, note or document text, LCW AI finds the PLM IDs in it. Buyer Log checks every candidate: only IDs really written in the text are accepted, invented or altered numbers are discarded. The list is shown in editable form before you continue."
+      }
+    }
+  ]
 }

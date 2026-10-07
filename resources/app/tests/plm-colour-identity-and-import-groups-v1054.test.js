@@ -82,7 +82,7 @@ test('PLM içe aktarımı farklı PLM veya model adlarını yanlışlıkla birle
   assert.ok(linked.every(row => !row.modelGroupId));
 });
 
-test('iki aktarım yolu da yeni renk varyantlarını bağlama yardımcısını çağırır', () => {
+test('üç aktarım yolu da (PLM Excel, PLM’de seçili, PLM ID listesi) yeni renk varyantlarını bağlama yardımcısını çağırır', () => {
   const occurrences = app.match(/created=kolLinkImportedColourVariants\(created\);/g) || [];
-  assert.equal(occurrences.length, 2);
+  assert.equal(occurrences.length, 3);
 });

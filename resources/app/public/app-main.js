@@ -28678,7 +28678,7 @@ function kolPlmMappingRows(parsedInfo){
     ['Colour Code / Renk Kod','Colour Code',has('colourCode')],['Renk','Colour',has('colour')],['Image','Picture',has('image')],
   ];
 }
-function showKolPlmImportPreview(plan,parsedInfo,translationInfo,imageCount,sourceLabel){
+function showKolPlmImportPreview(plan,parsedInfo,translationInfo,imageCount,sourceLabel,{existingMode='ask'}={}){
   const en=appLang==='en',mapping=kolPlmMappingRows(parsedInfo),baseSuggestions=translationInfo.suggestions||[],reviewed=translationInfo.reviewedMappings||[];
   const reviewedKeys=new Set(reviewed.map(item=>`${item.field}\u0000${turknorm(item.source)}`));
   const suggestions=[...reviewed,...baseSuggestions.filter(item=>!reviewedKeys.has(`${item.field}\u0000${turknorm(item.source)}`))];
@@ -28706,7 +28706,8 @@ function showKolPlmImportPreview(plan,parsedInfo,translationInfo,imageCount,sour
         <div class="kolPlanStat"><span>${escapeHtml(en?'Approved PLM→ASAS rules':'Onaylı PLM→ASAS kuralları')}</span><strong>${translationInfo.approvedRuleApplied||0}</strong></div>
       </div>
       <div class="plmImportBody">
-        ${plan.existing.length?`<div class="plmExistingNotice">${escapeHtml(en?`${plan.existing.length} PLM ID already exist in Collection. After this screen, Buyer Log will ask you one by one whether each model should be updated, kept, or added as a new row. “Add as a New” deliberately creates a second independent Collection row for another In Store period.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut. Bu ekrandan sonra Buyer Log her modeli tek tek soracak: güncelle, mevcut bırak veya yeni satır olarak ekle. “Yeni olarak ekle” farklı bir In Store dönemi için bilinçli olarak ikinci, bağımsız bir Koleksiyon satırı oluşturur.`)}</div>`:''}
+        ${plan.existing.length&&existingMode!=='ask'?`<div class="plmExistingNotice">${escapeHtml(existingMode==='update'?(en?`${plan.existing.length} PLM ID already exist in Collection and will be updated with PLM data; Buyer Log user data is kept.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut ve PLM verisiyle güncellenecek; Buyer Log kullanıcı verisi korunur.`):(en?`${plan.existing.length} PLM ID already exist in Collection and will be skipped.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut ve atlanacak.`))}</div>`:''}
+        ${plan.existing.length&&existingMode==='ask'?`<div class="plmExistingNotice">${escapeHtml(en?`${plan.existing.length} PLM ID already exist in Collection. After this screen, Buyer Log will ask you one by one whether each model should be updated, kept, or added as a new row. “Add as a New” deliberately creates a second independent Collection row for another In Store period.`:`${plan.existing.length} PLM ID Koleksiyon'da zaten mevcut. Bu ekrandan sonra Buyer Log her modeli tek tek soracak: güncelle, mevcut bırak veya yeni satır olarak ekle. “Yeni olarak ekle” farklı bir In Store dönemi için bilinçli olarak ikinci, bağımsız bir Koleksiyon satırı oluşturur.`)}</div>`:''}
         ${(plan.ambiguous.length||plan.inputDuplicates.length)?`<div class="plmExistingWarning">${escapeHtml(en?`${plan.ambiguous.length} ambiguous existing PLM ID(s) and ${plan.inputDuplicates.length} duplicate PLM row(s) in the Excel will be skipped; no duplicate Collection model will be created.`:`Koleksiyon'da ${plan.ambiguous.length} belirsiz mevcut PLM ID ve Excel içinde ${plan.inputDuplicates.length} tekrar PLM satırı atlanacak; ikinci Koleksiyon modeli oluşturulmayacak.`)}</div>`:''}
         <h4>${escapeHtml(en?'Direct field mapping':'Doğrudan alan eşlemesi')}</h4>
         <div class="plmImportTableWrap"><table class="plmImportTable"><thead><tr><th>PLM</th><th></th><th>Buyer Log</th><th>${escapeHtml(en?'Status':'Durum')}</th></tr></thead><tbody>${directRows}</tbody></table></div>
@@ -28906,6 +28907,423 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     if(span)span.textContent=old;
   }
 }
+/* ===================================================================
+   KOLEKSİYON — PLM ID LİSTESİNDEN EKLE
+
+   Kullanıcı PLM ID listesini (yapıştırma, Excel/CSV ya da LCW AI ile serbest
+   metinden ayıklama) verir; Buyer Log bu ID'leri PLM SYNC'in MEVCUT ekleme
+   hattından geçirir: /api/plm-sync/fetch → kolPlmNormalizeAndTranslate →
+   kolBuildPlmImportPlan → önizleme → kullanıcı kararı. İkinci bir PLM
+   istemcisi ya da eşleme motoru YOKTUR; saf yardımcılar
+   public/kol-plm-list-import.js (window.BLPlmListImport) içindedir.
+
+   - Mevcut PLM ID'den ikinci satır yalnız kullanıcı "Yeni olarak ekle"
+     derse oluşur (kolBuildPlmImportPlan kuralı aynen geçerli).
+   - Varsayılanlar ve Excel'deki ek sütunlar YALNIZ yeni modellere ve YALNIZ
+     PLM'nin yönetmediği Buyer Log alanlarına yazılır.
+   - PLM'de bulunamayan ID'ler kullanıcının bekleyen listesine düşer; sonraki
+     Koleksiyon PLM Senkronizasyonu (Model Detayları) onları yeniden dener.
+   - LCW AI yalnız aday listesi üretir; her aday metinde gerçekten geçmek
+     zorundadır ve liste kullanıcı onayından önce düzenlenebilir hâlde gösterilir.
+   =================================================================== */
+const KOL_PLM_LIST_OPTIONS_KEY='lcw.koleksiyon.plmListOptions.v1';
+const KOL_PLM_LIST_AI_TEXT_LIMIT=18000;
+function kolPlmListApi(){return window.BLPlmListImport||null;}
+function kolPlmPendingStorageKey(){const api=kolPlmListApi();return api?api.pendingKey(kolWorkspaceOwnerId):'';}
+function kolPlmPendingLoad(){
+  const api=kolPlmListApi();if(!api)return [];
+  try{const raw=BLStorage.getItem(kolPlmPendingStorageKey());return api.normalizePending(raw?JSON.parse(raw):[]);}
+  catch(_){return [];}
+}
+function kolPlmPendingSave(list){
+  const api=kolPlmListApi();if(!api)return [];
+  const items=api.normalizePending(list);
+  try{
+    if(items.length)BLStorage.setItem(kolPlmPendingStorageKey(),JSON.stringify({v:1,items}));
+    else BLStorage.removeItem(kolPlmPendingStorageKey());
+  }catch(_){}
+  return items;
+}
+function kolPlmListLoadOptions(){
+  const fallback={existingMode:'ask',colourMode:'each',language:appLang==='en'?'en':'tr',downloadFile:false,defaults:{status:'',buyer:'',note:''}};
+  try{
+    const raw=JSON.parse(BLStorage.getItem(KOL_PLM_LIST_OPTIONS_KEY)||'null');
+    if(!raw||typeof raw!=='object')return fallback;
+    return {
+      existingMode:['ask','update','skip'].includes(raw.existingMode)?raw.existingMode:fallback.existingMode,
+      colourMode:raw.colourMode==='single'?'single':'each',
+      language:raw.language==='en'?'en':raw.language==='tr'?'tr':fallback.language,
+      downloadFile:raw.downloadFile===true,
+      defaults:{status:norm(raw.defaults&&raw.defaults.status),buyer:norm(raw.defaults&&raw.defaults.buyer),note:norm(raw.defaults&&raw.defaults.note)},
+    };
+  }catch(_){return fallback;}
+}
+function kolPlmListSaveOptions(options){
+  try{BLStorage.setItem(KOL_PLM_LIST_OPTIONS_KEY,JSON.stringify({existingMode:options.existingMode,colourMode:options.colourMode,language:options.language,downloadFile:Boolean(options.downloadFile),defaults:options.defaults||{}}));}catch(_){}
+}
+function kolPlmListExistingIds(){
+  return new Set(kolRows.map(row=>kolPlmNormalizeId(row&&row.plmId)).filter(Boolean));
+}
+/* Excel'den gelebilecek ek değerler: PLM'nin yönettiği alanlar PLM'den
+   gelir; bu yüzden aday listesinde yalnız PLM ID (kimlik) ve Buyer Log'a ait
+   alanlar bulunur. Alan kataloğu Koleksiyon'un Excel içe aktarma kataloğudur. */
+function kolPlmListFileFields(){
+  const managed=new Set(PLM_MANAGED_FIELDS());
+  return kolImportFields().filter(field=>field.id==='plmId'||!managed.has(field.id));
+}
+function kolPlmListFieldLabel(fieldId){
+  const field=kolImportFields().find(item=>item.id===fieldId);
+  return field?field.label:fieldId;
+}
+function kolPlmListApplyNewRowValues(row,defaults,valuesById){
+  const managed=new Set(PLM_MANAGED_FIELDS());
+  const values=(valuesById||{})[kolPlmNormalizeId(row&&row.plmId)]||{};
+  if(norm(defaults&&defaults.status))row.durum=norm(defaults.status);
+  if(norm(defaults&&defaults.buyer))row.buyer=norm(defaults.buyer);
+  if(norm(defaults&&defaults.note))row.not=norm(defaults.note);
+  Object.keys(values).forEach(fieldId=>{
+    if(fieldId==='plmId'||managed.has(fieldId))return;
+    kolImportWriteTyped(row,fieldId,values[fieldId]);
+  });
+  return row;
+}
+async function kolPlmListReadFile(file){
+  const api=kolPlmListApi();
+  const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+  const sheet=workbook.Sheets[workbook.SheetNames[0]];
+  if(!sheet)throw new Error(appLang==='en'?'The file has no worksheet.':'Dosyada çalışma sayfası bulunamadı.');
+  const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:''});
+  const layout=api.detectSheet(matrix,kolPlmListFileFields(),window.BLExcelImportMapping);
+  if(!layout)throw new Error(appLang==='en'?'No PLM Code / PLM ID column was found in the first sheet.':'İlk sayfada PLM Code / PLM ID sütunu bulunamadı.');
+  return {name:file.name,matrix,layout};
+}
+/* LCW AI bağlamındaki tek bir metin 2000 karakterle sınırlı; metin parçalara
+   bölünür ve toplam KOL_PLM_LIST_AI_TEXT_LIMIT ile kesilir. Doğrulama yalnız
+   gerçekten gönderilen metne karşı yapılır. */
+function kolPlmListAiTextParts(text){
+  const source=String(text||'');
+  const sent=source.slice(0,KOL_PLM_LIST_AI_TEXT_LIMIT);
+  const parts=[];
+  for(let start=0;start<sent.length;start+=1800)parts.push(sent.slice(start,start+1800));
+  return {parts,sent,truncated:source.length>sent.length};
+}
+async function kolPlmListAiExtract(text){
+  if(!window.BuyerLogAI)await window.BLPerf?._loadScript?.('lcwai-assistant.js?rev=1');
+  const ai=window.BuyerLogAI;
+  if(!ai||typeof ai.ask!=='function')throw new Error(appLang==='en'?'LCW AI is not available.':'LCW AI kullanılamıyor.');
+  const prepared=kolPlmListAiTextParts(text);
+  const result=await ai.ask({
+    source:'plm-id-extract',
+    lang:appLang==='en'?'en':'tr',
+    context:{text:prepared.parts},
+    task:appLang==='en'?'Find the PLM Codes (PLM IDs) written in this text.':'Bu metinde yazılı PLM Code (PLM ID) değerlerini bul.',
+  });
+  const data=result&&(result.data||(result.structured&&result.structured.partial))||{};
+  const checked=kolPlmListApi().validateAiIds(Array.isArray(data.plmIds)?data.plmIds:[],prepared.sent);
+  return {...checked,truncated:prepared.truncated,explanation:norm(data.explanation),model:result&&result.model&&result.model.label||''};
+}
+function kolPlmListStatusOptions(selected){
+  const en=appLang==='en';
+  const entries=kolStatusEntries();
+  return `<option value="">${escapeHtml(en?'— Default —':'— Varsayılan —')}</option>`+entries.map(entry=>{
+    const label=KOL_STATUS_API?KOL_STATUS_API.label(entry.name,en?'en':'tr'):entry.name;
+    return `<option value="${escapeHtml(entry.name)}"${entry.name===selected?' selected':''}>${escapeHtml(label)}</option>`;
+  }).join('');
+}
+function showKolPlmListImportDialog({initialIds=[],trigger=null}={}){
+  const api=kolPlmListApi(),en=appLang==='en',options=kolPlmListLoadOptions();
+  return new Promise(resolve=>{
+    document.getElementById('_kolPlmListModal')?.remove();
+    const modal=document.createElement('div');modal.id='_kolPlmListModal';modal.className='warnOverlay';
+    const opt=(value,label,current)=>`<option value="${value}"${value===current?' selected':''}>${escapeHtml(label)}</option>`;
+    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmListCard" role="dialog" aria-modal="true" aria-labelledby="_kolPlmListTitle">
+      <div class="verHistHead"><div><strong id="_kolPlmListTitle">${escapeHtml(en?'Add from PLM ID List':'PLM ID Listesinden Ekle')}</strong>
+        <div class="muted">${escapeHtml(en?'Give Buyer Log a list of PLM IDs; PLM SYNC finds every model in PLM and adds it to this Collection after your preview and approval.':'Buyer Log’a PLM ID listesi verin; PLM SYNC her modeli PLM’de bulur ve önizleme ile onayınızdan sonra bu Koleksiyon’a ekler.')}</div></div></div>
+      <div class="plmListTabs" role="tablist" aria-label="${escapeHtml(en?'List source':'Liste kaynağı')}">
+        <button type="button" class="tbtn" role="tab" data-plmlist-tab="paste" aria-selected="true"><svg class="ic"><use href="#i-copy"/></svg><span>${escapeHtml(en?'Paste list':'Liste yapıştır')}</span></button>
+        <button type="button" class="tbtn" role="tab" data-plmlist-tab="file" aria-selected="false"><svg class="ic"><use href="#i-file-import"/></svg><span>${escapeHtml(en?'Excel / CSV file':'Excel / CSV dosyası')}</span></button>
+        <button type="button" class="tbtn" role="tab" data-plmlist-tab="ai" aria-selected="false"><svg class="ic"><use href="#i-bl-sync"/></svg><span>${escapeHtml(en?'Extract with LCW AI':'LCW AI ile ayıkla')}</span></button>
+      </div>
+      <div class="plmImportBody">
+        <section class="plmListPane" data-plmlist-pane="paste">
+          <label class="plmListLabel" for="_kolPlmListText">${escapeHtml(en?'PLM IDs — one per line, or separated by comma, semicolon, tab or space':'PLM ID’ler — her satıra bir tane ya da virgül, noktalı virgül, sekme veya boşlukla ayrılmış')}</label>
+          <textarea id="_kolPlmListText" class="plmListText" rows="7" spellcheck="false" placeholder="${escapeHtml(en?'e.g. paste a column copied from Excel':'ör. Excel’den kopyaladığınız sütunu yapıştırın')}"></textarea>
+        </section>
+        <section class="plmListPane" data-plmlist-pane="file" hidden>
+          <div class="plmListFileRow"><button type="button" class="tbtn" data-plmlist="pick-file"><svg class="ic"><use href="#i-folder"/></svg><span>${escapeHtml(en?'Choose file…':'Dosya seç…')}</span></button><span class="muted" data-plmlist-file-name>${escapeHtml(en?'No file selected':'Dosya seçilmedi')}</span><input type="file" accept=".xlsx,.xls,.csv" hidden data-plmlist-file></div>
+          <div class="muted">${escapeHtml(en?'The PLM Code column is detected automatically. Buyer Log columns such as Target Price, Notes or dates can be written to the new models too.':'PLM Code sütunu otomatik bulunur. Target Price, Notlar ya da tarih gibi Buyer Log sütunları da yeni modellere yazılabilir.')}</div>
+          <div data-plmlist-extras></div>
+        </section>
+        <section class="plmListPane" data-plmlist-pane="ai" hidden>
+          <label class="plmListLabel" for="_kolPlmListAiText">${escapeHtml(en?'Paste an e-mail, note or document text':'Bir e-posta, not ya da belge metni yapıştırın')}</label>
+          <textarea id="_kolPlmListAiText" class="plmListText" rows="7" placeholder="${escapeHtml(en?'LCW AI finds the PLM IDs in the text; Buyer Log keeps only those really written in it.':'LCW AI metindeki PLM ID’leri bulur; Buyer Log yalnız metinde gerçekten yazılı olanları tutar.')}"></textarea>
+          <div class="plmListFileRow"><button type="button" class="tbtn" data-plmlist="ai-run"><svg class="ic"><use href="#i-bl-sync"/></svg><span>${escapeHtml(en?'Find PLM IDs':'PLM ID’leri bul')}</span></button><span class="muted" data-plmlist-ai-status></span></div>
+        </section>
+        <div class="kolPlanStats" data-plmlist-stats></div>
+        <div data-plmlist-issues></div>
+        <div data-plmlist-pending></div>
+        <h4>${escapeHtml(en?'Options':'Seçenekler')}</h4>
+        <div class="plmListOptions">
+          <label><span>${escapeHtml(en?'Models already in the Collection':'Koleksiyon’da zaten olan modeller')}</span><select data-plmlist-opt="existingMode">${opt('ask',en?'Ask for each model':'Her model için sor',options.existingMode)}${opt('update',en?'Update all with PLM data':'Hepsini PLM verisiyle güncelle',options.existingMode)}${opt('skip',en?'Skip all':'Hepsini atla',options.existingMode)}</select></label>
+          <label><span>${escapeHtml(en?'Colour variants':'Renk varyantları')}</span><select data-plmlist-opt="colourMode">${opt('each',en?'A row for every PLM colour':'PLM’deki her renk ayrı satır',options.colourMode)}${opt('single',en?'One row per PLM ID (first colour)':'PLM ID başına tek satır (ilk renk)',options.colourMode)}</select></label>
+          <label><span>${escapeHtml(en?'PLM data language':'PLM veri dili')}</span><select data-plmlist-opt="language">${opt('tr','Türkçe',options.language)}${opt('en','English',options.language)}</select></label>
+          <label class="plmListCheck"><input type="checkbox" data-plmlist-opt="downloadFile"${options.downloadFile?' checked':''}><span>${escapeHtml(en?'Download model files too':'Model dosyalarını da indir')}</span></label>
+        </div>
+        <h4>${escapeHtml(en?'Defaults for new models':'Yeni modeller için varsayılanlar')}</h4>
+        <div class="plmListOptions">
+          <label><span>${escapeHtml(en?'Status':'Durum')}</span><select data-plmlist-def="status">${kolPlmListStatusOptions(options.defaults.status)}</select></label>
+          <label><span>${escapeHtml(L('Buyer'))}</span><input type="text" maxlength="120" data-plmlist-def="buyer" value="${escapeHtml(options.defaults.buyer)}"></label>
+          <label class="plmListWide"><span>${escapeHtml(en?'Notes':'Notlar')}</span><input type="text" maxlength="400" data-plmlist-def="note" value="${escapeHtml(options.defaults.note)}" placeholder="${escapeHtml(en?'e.g. SS27 Drop 2 · new quotation':'ör. SS27 Drop 2 · Yeni teklif')}"></label>
+        </div>
+        <div class="muted">${escapeHtml(en?'Defaults and file columns are written only to newly created models; existing rows keep their Buyer Log data.':'Varsayılanlar ve dosya sütunları yalnız yeni oluşturulan modellere yazılır; mevcut satırların Buyer Log verisi korunur.')}</div>
+      </div>
+      <div class="verHistFoot"><button type="button" class="tbtn" data-plmlist="cancel">${escapeHtml(en?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-plmlist="run" disabled></button></div>
+    </div>`;
+    const textArea=modal.querySelector('#_kolPlmListText'),aiArea=modal.querySelector('#_kolPlmListAiText');
+    const statsHost=modal.querySelector('[data-plmlist-stats]'),issuesHost=modal.querySelector('[data-plmlist-issues]'),pendingHost=modal.querySelector('[data-plmlist-pending]');
+    const runBtn=modal.querySelector('[data-plmlist="run"]'),fileInput=modal.querySelector('[data-plmlist-file]'),extrasHost=modal.querySelector('[data-plmlist-extras]');
+    let tab='paste',fileState=null,aiNote='',current={ids:[],invalid:[],duplicates:[],valuesById:{}};
+    textArea.value=api.uniqueIds(initialIds).join('\n');
+    const chosenExtras=()=>fileState?fileState.layout.extras.filter(extra=>modal.querySelector(`[data-plmlist-extra="${extra.index}"]`)?.checked):[];
+    const compute=()=>{
+      if(tab==='file'){
+        if(!fileState)return {ids:[],invalid:[],duplicates:[],valuesById:{}};
+        return api.readSheetRows(fileState.matrix,fileState.layout,chosenExtras());
+      }
+      return {...api.parseIdText(textArea.value),valuesById:{}};
+    };
+    const renderPending=()=>{
+      const pending=kolPlmPendingLoad();
+      pendingHost.innerHTML=pending.length?`<div class="plmExistingNotice plmListPending"><span>${escapeHtml(en?`${pending.length} PLM ID(s) from earlier lists were not found in PLM yet. They are retried automatically on the next Collection PLM Synchronization.`:`Önceki listelerden ${pending.length} PLM ID henüz PLM’de bulunamadı. Bir sonraki Koleksiyon PLM Senkronizasyonu’nda otomatik olarak yeniden denenir.`)}</span><span class="plmListPendingActions"><button type="button" class="tbtn" data-plmlist="pending-add">${escapeHtml(en?'Add to list':'Listeye ekle')}</button><button type="button" class="tbtn" data-plmlist="pending-clear">${escapeHtml(en?'Clear waiting list':'Bekleyenleri temizle')}</button></span></div>`:'';
+    };
+    const refresh=()=>{
+      current=compute();
+      const split=api.classify(current.ids,kolPlmListExistingIds());
+      const stat=(label,value)=>`<div class="kolPlanStat"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`;
+      statsHost.innerHTML=stat(en?'Valid PLM IDs':'Geçerli PLM ID',current.ids.length)+stat(en?'New':'Yeni',split.fresh.length)+stat(en?'Already in Collection':'Koleksiyon’da var',split.existing.length)+stat(en?'Invalid':'Geçersiz',current.invalid.length)+stat(en?'Repeated in list':'Listede tekrar',current.duplicates.length);
+      const issues=[];
+      if(aiNote&&tab==='paste')issues.push(`<div class="plmExistingNotice">${escapeHtml(aiNote)}</div>`);
+      if(current.invalid.length)issues.push(`<div class="plmExistingWarning">${escapeHtml(en?'Not a valid PLM ID (skipped): ':'Geçerli PLM ID değil (atlanacak): ')}${escapeHtml(current.invalid.slice(0,30).join(', '))}${current.invalid.length>30?' …':''}</div>`);
+      if(current.duplicates.length)issues.push(`<div class="muted">${escapeHtml(en?'Repeated IDs are queried once: ':'Tekrarlanan ID’ler bir kez sorgulanır: ')}${escapeHtml(current.duplicates.slice(0,30).join(', '))}${current.duplicates.length>30?' …':''}</div>`);
+      if(split.existing.length)issues.push(`<div class="muted">${escapeHtml(en?'Already in the Collection: ':'Koleksiyon’da zaten var: ')}${escapeHtml(split.existing.slice(0,30).join(', '))}${split.existing.length>30?' …':''}</div>`);
+      issuesHost.innerHTML=issues.join('');
+      runBtn.disabled=!current.ids.length;
+      runBtn.textContent=en?`Find in PLM and add (${current.ids.length})`:`PLM’de bul ve ekle (${current.ids.length})`;
+    };
+    const setTab=next=>{
+      tab=next;
+      modal.querySelectorAll('[data-plmlist-tab]').forEach(button=>{const on=button.dataset.plmlistTab===next;button.setAttribute('aria-selected',on?'true':'false');button.classList.toggle('isSelected',on);});
+      modal.querySelectorAll('[data-plmlist-pane]').forEach(pane=>{pane.hidden=pane.dataset.plmlistPane!==next;});
+      refresh();
+    };
+    const renderExtras=()=>{
+      if(!fileState){extrasHost.innerHTML='';return;}
+      const layout=fileState.layout;
+      const extras=layout.extras.map(extra=>`<label class="plmListCheck"><input type="checkbox" data-plmlist-extra="${extra.index}" checked><span>${escapeHtml(extra.header)} → ${escapeHtml(kolPlmListFieldLabel(extra.fieldId))}</span></label>`).join('');
+      extrasHost.innerHTML=`<div class="plmExistingNotice">${escapeHtml(en?`PLM ID column: “${layout.plmHeader||'—'}”`:`PLM ID sütunu: “${layout.plmHeader||'—'}”`)}</div>${extras?`<h4>${escapeHtml(en?'Also write to new models':'Yeni modellere ayrıca yaz')}</h4><div class="plmListExtras">${extras}</div>`:`<div class="muted">${escapeHtml(en?'No other Buyer Log column was recognised in this file.':'Bu dosyada başka bir Buyer Log sütunu tanınmadı.')}</div>`}`;
+    };
+    let settled=false;
+    const finish=value=>{
+      if(settled)return;settled=true;
+      window.BLLayerSystem?.closeDialog?.(modal,{trigger});
+      modal.remove();resolve(value);
+    };
+    modal.addEventListener('input',event=>{if(event.target===textArea){aiNote='';refresh();}});
+    modal.addEventListener('change',event=>{
+      if(event.target.matches('[data-plmlist-extra]'))refresh();
+      if(event.target===fileInput){
+        const file=fileInput.files&&fileInput.files[0];fileInput.value='';
+        if(!file)return;
+        const nameHost=modal.querySelector('[data-plmlist-file-name]');
+        nameHost.textContent=en?'Reading…':'Okunuyor…';
+        kolPlmListReadFile(file).then(state=>{fileState=state;nameHost.textContent=state.name;renderExtras();refresh();})
+          .catch(err=>{fileState=null;nameHost.textContent=file.name;extrasHost.innerHTML=`<div class="plmExistingWarning">${escapeHtml(err&&err.message||String(err))}</div>`;refresh();});
+      }
+    });
+    modal.addEventListener('click',event=>{
+      const tabBtn=event.target.closest('[data-plmlist-tab]');
+      if(tabBtn){setTab(tabBtn.dataset.plmlistTab);return;}
+      const action=event.target.closest('[data-plmlist]');
+      if(!action){if(event.target===modal)finish(null);return;}
+      const kind=action.dataset.plmlist;
+      if(kind==='cancel'){finish(null);return;}
+      if(kind==='pick-file'){fileInput.click();return;}
+      if(kind==='pending-add'){
+        const merged=api.uniqueIds([...api.parseIdText(textArea.value).ids,...kolPlmPendingLoad().map(item=>item.plmId)]);
+        textArea.value=merged.join('\n');setTab('paste');return;
+      }
+      if(kind==='pending-clear'){kolPlmPendingSave([]);renderPending();return;}
+      if(kind==='ai-run'){
+        const status=modal.querySelector('[data-plmlist-ai-status]');
+        if(!norm(aiArea.value)){status.textContent=en?'Paste a text first.':'Önce bir metin yapıştırın.';return;}
+        action.disabled=true;status.textContent=en?'LCW AI is reading the text…':'LCW AI metni okuyor…';
+        kolPlmListAiExtract(aiArea.value).then(result=>{
+          const merged=api.uniqueIds([...api.parseIdText(textArea.value).ids,...result.accepted]);
+          textArea.value=merged.join('\n');
+          aiNote=en
+            ?`LCW AI found ${result.accepted.length} PLM ID(s)${result.rejected.length?`; ${result.rejected.length} candidate(s) not written in the text were discarded`:''}${result.truncated?`; only the first ${KOL_PLM_LIST_AI_TEXT_LIMIT} characters were read`:''}. Check the list below before continuing.`
+            :`LCW AI ${result.accepted.length} PLM ID buldu${result.rejected.length?`; metinde yazılı olmayan ${result.rejected.length} aday atıldı`:''}${result.truncated?`; metnin yalnız ilk ${KOL_PLM_LIST_AI_TEXT_LIMIT} karakteri okundu`:''}. Devam etmeden önce aşağıdaki listeyi kontrol edin.`;
+          status.textContent='';setTab('paste');
+        }).catch(err=>{
+          status.textContent=window.BuyerLogAI?.errorText?.(err)||(err&&err.message)||String(err);
+        }).finally(()=>{action.disabled=false;});
+        return;
+      }
+      if(kind==='run'){
+        if(!current.ids.length)return;
+        const read=name=>modal.querySelector(`[data-plmlist-opt="${name}"]`);
+        const config={
+          ids:current.ids.slice(),
+          valuesById:current.valuesById||{},
+          invalid:current.invalid.slice(),
+          duplicates:current.duplicates.slice(),
+          source:tab,
+          existingMode:read('existingMode').value,
+          colourMode:read('colourMode').value,
+          language:read('language').value,
+          downloadFile:read('downloadFile').checked,
+          defaults:{
+            status:norm(modal.querySelector('[data-plmlist-def="status"]').value),
+            buyer:norm(modal.querySelector('[data-plmlist-def="buyer"]').value),
+            note:norm(modal.querySelector('[data-plmlist-def="note"]').value),
+          },
+        };
+        kolPlmListSaveOptions(config);
+        finish(config);
+      }
+    });
+    renderPending();
+    refresh();
+    document.body.appendChild(modal);
+    window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:()=>finish(null),initialFocus:'#_kolPlmListText'});
+  });
+}
+function showKolPlmListImportReport(report){
+  const en=appLang==='en';
+  return new Promise(resolve=>{
+    document.getElementById('_kolPlmListReport')?.remove();
+    const modal=document.createElement('div');modal.id='_kolPlmListReport';modal.className='warnOverlay';
+    const stat=(label,value)=>`<div class="kolPlanStat"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`;
+    const notFound=report.notFound||[];
+    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmListReportCard" role="dialog" aria-modal="true" aria-labelledby="_kolPlmListReportTitle">
+      <div class="verHistHead"><div><strong id="_kolPlmListReportTitle">${escapeHtml(en?'PLM ID list · result':'PLM ID listesi · sonuç')}</strong><div class="muted">${escapeHtml(report.imageSummary||'')}</div></div></div>
+      <div class="kolPlanStats">${stat(en?'Requested':'İstenen',report.requested)}${stat(en?'Models added':'Eklenen model',report.created)}${stat(en?'Updated':'Güncellendi',report.updated)}${stat(en?'Kept / skipped':'Mevcut kaldı / atlandı',report.skipped)}${stat(en?'Not found in PLM':'PLM’de bulunamadı',notFound.length)}</div>
+      <div class="plmImportBody">
+        ${report.created?`<div class="plmExistingNotice">${escapeHtml(en?`${report.createdRows||report.created} new Collection row(s) are selected; you can edit them in bulk, send them to pricing or download their files right away.`:`Yeni ${report.createdRows||report.created} Koleksiyon satırı seçili; hemen toplu düzenleyebilir, fiyatlamaya gönderebilir ya da dosyalarını indirebilirsiniz.`)}</div>`:''}
+        ${notFound.length?`<h4>${escapeHtml(en?'Not found in PLM':'PLM’de bulunamadı')}</h4><div class="plmListIdBox">${escapeHtml(notFound.join(', '))}</div><div class="muted">${escapeHtml(en?'These IDs were added to the waiting list and are retried on the next Collection PLM Synchronization.':'Bu ID’ler bekleyen listeye eklendi; bir sonraki Koleksiyon PLM Senkronizasyonu’nda yeniden denenir.')}</div>`:''}
+        ${(report.invalid||[]).length?`<h4>${escapeHtml(en?'Invalid input':'Geçersiz giriş')}</h4><div class="muted">${escapeHtml(report.invalid.join(', '))}</div>`:''}
+      </div>
+      <div class="verHistFoot">${notFound.length?`<button type="button" class="tbtn" data-plmlistrep="copy">${escapeHtml(en?'Copy not found IDs':'Bulunamayanları kopyala')}</button><button type="button" class="tbtn" data-plmlistrep="retry">${escapeHtml(en?'Retry not found':'Bulunamayanları yeniden dene')}</button>`:''}<button type="button" class="tbtn primary" data-plmlistrep="close">${escapeHtml(en?'Close':'Kapat')}</button></div>
+    </div>`;
+    let settled=false;
+    const finish=value=>{if(settled)return;settled=true;window.BLLayerSystem?.closeDialog?.(modal,{});modal.remove();resolve(value);};
+    modal.addEventListener('click',event=>{
+      const action=event.target.closest('[data-plmlistrep]');
+      if(!action){if(event.target===modal)finish('close');return;}
+      if(action.dataset.plmlistrep==='copy'){
+        const text=notFound.join('\n');
+        Promise.resolve(navigator.clipboard?.writeText?.(text)).then(()=>showToast(en?'Copied.':'Kopyalandı.')).catch(()=>showToast(en?'Could not copy.':'Kopyalanamadı.'));
+        return;
+      }
+      finish(action.dataset.plmlistrep);
+    });
+    document.body.appendChild(modal);
+    window.BLLayerSystem?.openDialog?.(modal,{onClose:()=>finish('close'),initialFocus:'[data-plmlistrep="close"]'});
+  });
+}
+/* Ekleme hattı. config: showKolPlmListImportDialog sonucu.
+   quietWhenEmpty: bekleyen listenin otomatik denemesinde hiçbir ID PLM'de
+   yoksa rapor penceresi açılmaz, yalnız kısa bilgi verilir. */
+async function kolPlmListImportRun(button,config,{quietWhenEmpty=false}={}){
+  if(!kolRequireWorkspaceEdit())return {ok:false,reason:'view-only'};
+  const api=kolPlmListApi(),en=appLang==='en';
+  const wanted=api.uniqueIds(config&&config.ids);
+  if(!wanted.length)return {ok:false,reason:'no-ids'};
+  const records=[],failed=[];let styleLinks=null;
+  try{
+    for(const part of api.chunk(wanted,api.FETCH_CHUNK_SIZE)){
+      const result=await kolPlmSyncFetchRecords(part,button,config.language||'');
+      if(!result)return {ok:false,reason:'api-not-configured'};
+      if(Array.isArray(result.records))records.push(...result.records);
+      if(Array.isArray(result.failed))failed.push(...result.failed);
+      if(result.styleLinks)styleLinks=result.styleLinks;
+    }
+  }catch(err){
+    showToast((en?'PLM data could not be retrieved: ':'PLM verisi alınamadı: ')+plmSyncErrorMessage(err),{icon:false,duration:12000});
+    return {ok:false,reason:'fetch-failed',error:err};
+  }
+  if(styleLinks)applyPlmStyleLinksPayload(styleLinks);
+  const foundIds=api.uniqueIds(records.map(record=>record&&record.plmId));
+  const foundSet=new Set(foundIds);
+  const notFound=wanted.filter(id=>!foundSet.has(id));
+  kolPlmPendingSave(api.updatePending(kolPlmPendingLoad(),{found:foundIds,notFound},new Date().toISOString()));
+  const baseReport={requested:wanted.length,created:0,updated:0,skipped:0,notFound,invalid:config.invalid||[],imageSummary:''};
+  if(!records.length){
+    if(quietWhenEmpty){showToast(en?`${notFound.length} waiting PLM ID(s) are still not in PLM.`:`Bekleyen ${notFound.length} PLM ID hâlâ PLM’de yok.`,{icon:false});return {ok:true,applied:0,report:baseReport};}
+    const choice=await showKolPlmListImportReport(baseReport);
+    if(choice==='retry')return openKolPlmListImport(button,{initialIds:notFound});
+    return {ok:true,applied:0,report:baseReport};
+  }
+  const translated=await kolPlmNormalizeAndTranslate(api.applyColourMode(records,config.colourMode));
+  if(translated.cancelled)return {ok:true,applied:0,cancelled:true};
+  const parsed={rows:translated.rows,mapped:KOL_PLM_DIRECT_MAPPED_FIELDS};
+  const plan=kolBuildPlmImportPlan(translated.rows);
+  const approved=await showKolPlmImportPreview(plan,parsed,translated.translationInfo||{matchedPlm:0},0,en?'Add from PLM ID List':'PLM ID Listesinden Ekle',{existingMode:config.existingMode});
+  if(!approved)return {ok:true,applied:0,cancelled:true};
+  let decisions;
+  if(config.existingMode==='update')decisions={cancelled:false,approved:plan.existing.slice(),skipped:[],added:[]};
+  else if(config.existingMode==='skip')decisions={cancelled:false,approved:[],skipped:plan.existing.slice(),added:[]};
+  else decisions=await kolResolvePlmExistingDecisions(plan.existing);
+  if(decisions.cancelled)return {ok:true,applied:0,cancelled:true};
+  kolPushUndo();
+  decisions.approved.forEach(kolApplyApprovedPlmUpdate);
+  const createInputs=[...plan.creates,...decisions.added.map(item=>item.parsed)];
+  let created=createInputs.map(row=>{
+    row.id=kolNextId++;row.img='';row.imgRef='';delete row._plmImportRow;
+    return kolPlmListApplyNewRowValues(kolApplyNewModelDefaults(migrateKolRow(row)),config.defaults,config.valuesById);
+  });
+  created=kolLinkImportedColourVariants(created);
+  if(created.length)kolRows=[...created,...kolRows];
+  kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
+  saveKolRows();renderKol();renderCP();renderOrders();
+  const teachable=translated.translationInfo?.reviewedMappings||[];
+  if(teachable.length){try{await kolPlmSaveApprovedTranslations(teachable);}catch(err){console.warn('PLM list translation save failed:',err);}}
+  const fileRows=[...created,...decisions.approved.map(item=>item.target)];
+  const images=fileRows.length?await updateModelImages({source:MODEL_ASSET_SOURCE_PLM,mode:'selected',button:null}):{ok:true,skipped:true};
+  const files=config.downloadFile&&fileRows.length?await kolPlmSyncModelFilesRun(button,fileRows,{language:config.language}):{ok:true,skipped:true};
+  const imageSaved=Number(images?.data?.imagesSaved)||0;
+  const imageSummary=images?.ok===false
+    ?(en?'Image sync failed.':'Görsel senkronizasyonu başarısız.')
+    :images?.skipped?'':(en?`Images synchronized${imageSaved?`: ${imageSaved}`:''}.`:`Görseller senkronize edildi${imageSaved?`: ${imageSaved}`:''}.`)+(config.downloadFile?(en?` Model files: ${Number(files?.saved)||0}.`:` Model dosyaları: ${Number(files?.saved)||0}.`):'');
+  const createdModels=new Set(created.map(row=>kolPlmNormalizeId(row.plmId)).filter(Boolean)).size;
+  const report={...baseReport,created:createdModels,createdRows:created.length,updated:decisions.approved.length,skipped:decisions.skipped.length+plan.ambiguous.length+plan.inputDuplicates.length,imageSummary};
+  const choice=await showKolPlmListImportReport(report);
+  if(choice==='retry'&&notFound.length)return openKolPlmListImport(button,{initialIds:notFound});
+  return {ok:true,applied:created.length+decisions.approved.length,report,images,files};
+}
+async function openKolPlmListImport(button,{initialIds=[]}={}){
+  if(!kolPlmListApi()){showToast(appLang==='en'?'The PLM list tool could not be loaded. Refresh the page.':'PLM liste aracı yüklenemedi. Sayfayı yenileyin.');return {ok:false,reason:'engine-missing'};}
+  if(!kolRequireWorkspaceEdit())return {ok:false,reason:'view-only'};
+  const config=await showKolPlmListImportDialog({initialIds,trigger:button});
+  if(!config)return {ok:true,applied:0,cancelled:true};
+  if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
+  try{ return await kolPlmListImportRun(button,config); }
+  catch(err){
+    showToast((appLang==='en'?'Adding from the PLM ID list failed: ':'PLM ID listesinden ekleme başarısız: ')+(err?.message||String(err)));
+    return {ok:false,reason:'import-failed',error:err};
+  }
+  finally{ if(button){button.disabled=false;button.removeAttribute('aria-busy');} }
+}
+/* Koleksiyon PLM Senkronizasyonu (Model Detayları) bittikten sonra bekleyen
+   listedeki ID'ler yeniden sorulur. Bulunanlar yine önizleme ve onaydan
+   geçer — PLM Sync kendiliğinden model OLUŞTURMAZ (§21). */
+async function kolPlmPendingAutoRetry(button,language){
+  const pending=kolPlmPendingLoad();
+  if(!pending.length||!kolWorkspaceCanEdit)return {ok:true,skipped:true};
+  const options=kolPlmListLoadOptions();
+  return kolPlmListImportRun(button,{...options,ids:pending.map(item=>item.plmId),language:language||options.language,valuesById:{},invalid:[]},{quietWhenEmpty:true});
+}
+window.BLPlmListImportFlow={open:openKolPlmListImport,run:kolPlmListImportRun,pending:kolPlmPendingLoad};
 /* Fetch sonucunu paylaşılan plana indirger. targetRows PLM'e SORULAN
    Koleksiyon satırlarıdır; plan bunlardan hangisinin değiştiğini/değişmediğini,
    fetchResult.failed hangisinin PLM'de bulunamadığını söyler. İkisinde de
@@ -30405,6 +30823,10 @@ function plmSyncScopeActions(scope,{collection=false}={}){
     {id:'missing',label:en?'Complete Missing':'Eksikleri Tamamla',description:en?'Only update missing PLM assets':'Yalnız eksik PLM varlıklarını güncelle',icon:'i-refresh'},
   ];
   if(collection)actions.push({id:'import-selected',label:en?'Import PLM-Selected Models to Buyer Log':"PLM'de Seçili Olan Modelleri Buyer Log'a Aktar",description:en?'Add the models selected in PLM to Buyer Log':'PLM’de seçili modelleri Buyer Log’a ekle',icon:'i-file-import'});
+  if(collection){
+    const pending=kolPlmPendingLoad().length;
+    actions.push({id:'import-list',label:en?'Add from PLM ID List':'PLM ID Listesinden Ekle',description:(en?'Paste IDs, read an Excel/CSV or extract them with LCW AI':'ID yapıştır, Excel/CSV oku ya da LCW AI ile ayıkla')+(pending?(en?` · ${pending} waiting`:` · ${pending} bekleyen`):''),icon:'i-file-import'});
+  }
   return actions;
 }
 function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],trigger=null,onBack=null,confirmSelection=false,confirmLabel=''}={}){
@@ -30573,6 +30995,9 @@ async function runPlmUpdateFlow(page,mode,root,scope){
     }finally{
       if(root){root.disabled=false;root.removeAttribute('aria-busy');}
     }
+    // PLM ID listesinden eklenirken PLM'de bulunamayan ID'ler: Model
+    // Detayları senkronundan sonra yeniden denenir (bulunanlar önizlemeye gider).
+    if(collection&&props.details)await kolPlmPendingAutoRetry(root,language);
     if(!ran)showToast(appLang==='en'?'The selected PLM assets are already complete.':'Seçilen PLM varlıkları zaten tamamlanmış.');
     return {ok:true,skipped:!ran};
   }
@@ -30641,6 +31066,7 @@ async function openPlmSyncCategoryPanel(page,category,trigger){
   });
   if(!action||action==='back')return;
   if(collection&&action==='import-selected')await runPlmSelectedImportV10(root);
+  else if(collection&&action==='import-list')await openKolPlmListImport(root);
   else if(action==='all'||action==='selected'||action==='missing')await runPlmUpdateFlow(page,action,root,scope);
 }
 document.addEventListener('click',event=>{
