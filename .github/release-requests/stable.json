@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.254",
-  "commit_sha": "770509f45f5f023ed02e93782c533718e6cb9752",
-  "release_notes": "Buyer Log 7.0.254: OneDrive Shared Hub'da en yeni kullanıcı revizyonu okunamadığında giriş en yeni geçerli revizyonla sürer; okunamayan revizyonun nedeni Shared Sync panelinde gösterilir.",
-  "request_id": "7.0.254-iam-head-fallback-r1"
+  "version": "7.0.255",
+  "commit_sha": "162edaa557fd7eee9749249b75d3399fd9fae804",
+  "release_notes": "Buyer Log 7.0.255: Genel Bakış Koleksiyon özeti kompakt aylık listeye geçti (ay, adet, model görselleri, status çubuğu, hover detayı); LCW AI çıktı düzenleyici, yerleşim aracı ve paylaşılabilir şablonlar.",
+  "request_id": "7.0.255-overview-collection-monthly-r1"
 }
