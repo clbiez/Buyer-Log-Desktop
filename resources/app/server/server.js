@@ -31,7 +31,7 @@ const {
 const holidayService = require('./lib/holiday-service').createHolidayService({
   cacheFile: path.join(LOCAL_DATA_ROOT, 'holidays', 'world-clock.json'),
 });
-const { createLocalDb, offloadLegacyAssets, sweepWriteDebris } = require('./lib/local-db');
+const { createLocalDb, offloadLegacyAssets, sweepWriteDebris, summarizeConflict } = require('./lib/local-db');
 const { createSyncSettings } = require('./lib/sync-settings');
 const { createSharedHub } = require('./lib/shared-hub');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
@@ -8987,7 +8987,12 @@ app.post('/api/startup/ready', express.json({ limit: '32kb' }), (req, res) => {
   res.status(202).json({ ok: true, backgroundSyncDelayMs: BACKGROUND_SYNC_DELAY_MS });
 });
 // Koleksiyon birleşim çakışmaları (collection:*) aynı listede, yalnız erişilebilir sahipler için.
-async function allSyncConflicts(profile) { return [...await localDb.listConflicts(), ...await collectionMergeConflictsFor(profile)]; }
+/* Arayüze yalnız özet gider (sınırlı önizleme): tam değerler büyük belge
+   alanlarında tek JSON yanıtını V8 string sınırının ötesine taşıyordu. */
+async function allSyncConflicts(profile) {
+  const local = typeof localDb.listConflictSummaries === 'function' ? await localDb.listConflictSummaries() : (await localDb.listConflicts()).map(item => summarizeConflict(item));
+  return [...local, ...(await collectionMergeConflictsFor(profile)).map(item => summarizeConflict(item))];
+}
 app.get('/api/sync-conflicts', userAccess.requireArea('source'), async (req, res) => {
   try { res.set('Cache-Control', 'no-store').json({ ok: true, conflicts: await allSyncConflicts(req.currentUser) }); }
   catch (err) { apiError(res, err, 'Sync çakışmaları okunamadı.'); }
@@ -9001,7 +9006,7 @@ app.post('/api/sync-conflicts/:id/resolve', userAccess.requireArea('source'), ex
       if (!visible) return res.status(404).json({ error:'Koleksiyon çakışması bulunamadı.', code:'COLLECTION_CONFLICT_NOT_FOUND' });
       conflict = await collectionReplication.resolveMergeConflict(req.params.id, choice, item => applyCollectionConflictChoice(req.currentUser, item));
     } else conflict = await localDb.resolveConflict(req.params.id, choice, req.body && req.body.value);
-    res.json({ ok: true, conflict, conflicts: await allSyncConflicts(req.currentUser) });
+    res.json({ ok: true, conflict: summarizeConflict(conflict), conflicts: await allSyncConflicts(req.currentUser) });
   } catch (err) {
     if (err && err.statusCode) return res.status(err.statusCode).json({ error: err.message, code: err.code });
     apiError(res, err, 'Sync çakışması çözülemedi.');
