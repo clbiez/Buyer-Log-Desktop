@@ -6,13 +6,13 @@
 
 const crypto = require('crypto');
 
-const TTL_MS = 30 * 60 * 1000;
+const TTL_MS = 4 * 60 * 60 * 1000;
 const MAX_SESSIONS = 20;
 const MAX_TOTAL_BYTES = 300 * 1024 * 1024;
 const sessions = new Map();
 
 function purge(now) {
-  for (const [id, session] of sessions) if (now - session.createdAt > TTL_MS) sessions.delete(id);
+  for (const [id, session] of sessions) if (now - (session.lastAccessAt || session.createdAt) > TTL_MS) sessions.delete(id);
   while (sessions.size > MAX_SESSIONS) sessions.delete(sessions.keys().next().value);
   let total = 0;
   for (const session of sessions.values()) total += session.bytes;
@@ -26,7 +26,7 @@ function createSession(userId) {
   const now = Date.now();
   purge(now);
   const id = crypto.randomBytes(16).toString('hex');
-  const session = { id, userId: String(userId || ''), createdAt: now, bytes: 0, files: new Map(), reports: [], aiCandidates: new Map() };
+  const session = { id, userId: String(userId || ''), createdAt: now, lastAccessAt: now, bytes: 0, files: new Map(), reports: [], aiCandidates: new Map() };
   sessions.set(id, session);
   return {
     id,
@@ -43,9 +43,11 @@ function createSession(userId) {
 }
 
 function getSession(id, userId) {
-  purge(Date.now());
+  const now = Date.now();
+  purge(now);
   const session = sessions.get(String(id || ''));
   if (!session || session.userId !== String(userId || '')) return null;
+  session.lastAccessAt = now;
   return session;
 }
 function dropSession(id) { sessions.delete(String(id || '')); }

@@ -11,10 +11,12 @@ const prompts=require('../server/lib/lcwai/lcwai-prompt.js');
 const CP=[
   {
     'Model Name':'FORTNITE-4-YD','C.Code':'GDA','Colour':'DULL GREEN','Order Code':1381184,
+    'Special Code':'S7IQ75Z4',Season:'S7','Merch Alt Grup Kod':'CU17','Merch Marka Yaş Grup Kod':'CU4E','Line':'LSN-KKL1-NK LINE',
     Country:'India','Karışım':'%100 PAMUK','Category':'T-Shirt','Ürün Tanım':'T-Shirt'
   },
   {
     'Model Name':'FORTNITE-4-YD','C.Code':'BLK','Colour':'BLACK','Order Code':1381185,
+    'Special Code':'S7IQ75Z4',Season:'S7','Merch Alt Grup Kod':'CU17','Merch Marka Yaş Grup Kod':'CU4E','Line':'LSN-KKL1-NK LINE',
     Country:'India','Karışım':'100% COTTON','Category':'T-Shirt','Ürün Tanım':'T-Shirt'
   }
 ];
@@ -36,6 +38,42 @@ test('native text uses exact CP identities without manual model input',()=>{
   assert.deepEqual(extraction.countries,['INDIA']);
   assert.equal(engine.compositionKey(extraction.composition),'COTTON:100');
   assert.equal(extraction.confidence,'EXACT');
+});
+
+test('care-label country extraction ignores importer/distributor countries',()=>{
+  const extraction=engine.deriveLocalExtraction(
+    'MAIN FABRIC / 100% COTTON / MADE IN INDIA / IMPORTATOR ROMANIA / MAROC: LC WAIKIKI RETAIL MA',
+    CP
+  );
+  assert.deepEqual(extraction.countries,['INDIA']);
+  assert.equal(engine.extractOriginCountries('MADE IN INDIA / MAROC: importer').join(','),'INDIA');
+});
+
+test('price-tag order number anchors CP and identityText resolves business codes',()=>{
+  const extraction=engine.mergeExtraction({},{
+    documentType:'PRICE_TAG',
+    modelCodes:['KK.BDY,FORTNITE-4-YD'],
+    orderNumbers:['1381184'],
+    colourCodes:['GDA'],
+    countries:['India'],
+    productMainDefinitions:['T-Shirt'],
+    identityText:'KK.BDY,FORTNITE-4-YD / S7IQ75Z4 / GDA S7-CU17 / CU4E / 19R3 / LSN-KKL1-NK LINE / T-Shirt / HINDISTAN',
+    confidence:'HIGH',
+    explanation:'Visible identity band'
+  });
+  const report=engine.compare(extraction,CP);
+  const byRule=Object.fromEntries(report.checks.map(check=>[check.rule,check]));
+  assert.equal(report.referenceRows.length,1);
+  assert.equal(byRule.MODEL_MATCH.status,'MATCH');
+  assert.equal(byRule.ORDER_MATCH.status,'MATCH');
+  assert.equal(byRule.SPECIAL_CODE_MATCH.status,'MATCH');
+  assert.equal(byRule.COLOR_CODE_MATCH.status,'MATCH');
+  assert.equal(byRule.SEASON_MATCH.status,'MATCH');
+  assert.equal(byRule.MAG_MATCH.status,'MATCH');
+  assert.equal(byRule.MMYG_MATCH.status,'MATCH');
+  assert.equal(byRule.LINE_MATCH.status,'MATCH');
+  assert.equal(byRule.PRODUCT_MAIN_DEFINITION_MATCH.status,'MATCH');
+  assert.equal(byRule.COUNTRY_MATCH.status,'MATCH');
 });
 
 test('composition normalization treats multilingual cotton forms as equivalent',()=>{
@@ -119,6 +157,8 @@ test('LCW AI layout-control contract keeps multi-page arrays beyond legacy ten-i
   const payload={
     documentType:'PRICE_TAG',
     modelCodes:['FORTNITE-3-YD'],
+    specialCodes:['S7IQ75Z4'],seasonCodes:['S7'],magCodes:['CU17'],mmygCodes:['CU4E'],lineCodes:['LSN-KKL1-NK LINE'],
+    productMainDefinitions:['T-Shirt'],identityText:'FORTNITE-3-YD / S7IQ75Z4 / S7-CU17 / CU4E / LSN-KKL1-NK LINE',
     sizes:Array.from({length:14},(_,i)=>(i+1)+'y-'+(i+2)+'y'),
     barcodes:Array.from({length:14},(_,i)=>String(8685000000000+i)),
     qrCodes:['https://example.invalid/qr'],
@@ -133,6 +173,9 @@ test('LCW AI layout-control contract keeps multi-page arrays beyond legacy ten-i
   assert.equal(parsed.data.pageVariants.length,14);
   assert.equal(parsed.data.qrCodes.length,1);
   assert.equal(parsed.data.documentType,'PRICE_TAG');
+  assert.deepEqual(parsed.data.specialCodes,['S7IQ75Z4']);
+  assert.deepEqual(parsed.data.seasonCodes,['S7']);
+  assert.equal(parsed.data.identityText.includes('S7IQ75Z4'),true);
 });
 
 test('layout-control wiring reuses central BuyerLogAI and exposes LCW AI workspace entry',()=>{
@@ -167,4 +210,12 @@ test('layout-control result and history panels are not hidden by the global sect
   sections.forEach(tag=>assert.doesNotMatch(tag,/class="layout(Report|History)"/,'report/history must not be <section>: '+tag));
   assert.match(ui,/<div class="layoutReport">/);
   assert.match(ui,/<div class="layoutHistory">/);
+});
+
+test('layout-control visual theme uses square corners throughout the modal',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'..','public','layout-control.css'),'utf8');
+  const radii=[...css.matchAll(/border-radius\s*:\s*([^;}]+)/g)].map(match=>match[1].trim());
+  assert.ok(radii.length>0);
+  radii.forEach(value=>assert.ok(value==='0'||value==='0!important','rounded radius remains: '+value));
+  assert.match(css,/\.layoutControlModal \*\{border-radius:0!important\}/);
 });

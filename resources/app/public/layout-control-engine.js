@@ -125,6 +125,24 @@
     }
     return uniq(out);
   }
+  const ORIGIN_MARKERS = [
+    'MADE IN','URETILMISTIR','URETILDI','FABRICAT IN','WYPRODUKOWANO W','ISTEHSAL EDILMISDIR',
+    'FABRIQUE EN','DIBUAT DI','PRODHUAR NE','PROIZVEDENO U','FABRICADO EN','FABRICADO EM',
+    'SZARMAZASI ORSZAG','ISHLAB CHIQARILGAN','HERGESTELLT IN','PRODOTTO IN',
+    'СДЕЛАНО В','ВИРОБЛЕНО В','ПРОИЗВЕДЕНО','ΚΑΤΑΣΚΕΥΑΣΤΗΚΕ ΣΤΗΝ'
+  ].map(fold);
+  function extractOriginCountries(value) {
+    const text=fold(Array.isArray(value)?value.join(' '):value), out=[];
+    const segments=text.split(/\s*\/+\s*|\[\[PAGE\s+\d+\]\]/).map(item=>item.trim()).filter(Boolean);
+    for(const [canonical,aliases] of Object.entries(COUNTRY_ALIASES)) {
+      const accepted=segments.some(segment=>{
+        if(!ORIGIN_MARKERS.some(marker=>segment.includes(marker))) return false;
+        return aliases.some(alias=>segment.includes(fold(alias)));
+      });
+      if(accepted) out.push(canonical);
+    }
+    return uniq(out);
+  }
   function normalizeSize(value) {
     return fold(value).replace(/YEARS?|YAS|YAŞ/g,'Y').replace(/\s+/g,'').replace(/[–—]/g,'-');
   }
@@ -181,13 +199,25 @@
     const colourCodes=scanKnown(raw,cpCatalog(rows,'C.Code'),true);
     const colours=scanKnown(raw,cpCatalog(rows,'Colour'),false);
     const orderNumbers=scanKnown(raw,cpCatalog(rows,'Order Code').map(String),true);
+    const specialCodes=scanKnown(raw,cpCatalog(rows,'Special Code'),true);
+    const seasonCodes=scanKnown(raw,cpCatalog(rows,'Season'),true);
+    const magCodes=scanKnown(raw,cpCatalog(rows,'Merch Alt Grup Kod'),true);
+    const mmygCodes=scanKnown(raw,cpCatalog(rows,'Merch Marka Yaş Grup Kod'),true);
+    const lineCodes=scanKnown(raw,cpCatalog(rows,'Line'),false);
+    const productMainDefinitions=scanKnown(raw,cpCatalog(rows,'Ürün Tanım'),false);
     return {
       documentType: classifyDocument(raw),
       modelCodes,
       colourCodes,
       colours,
       orderNumbers,
-      countries: extractCountries(raw),
+      specialCodes,
+      seasonCodes,
+      magCodes,
+      mmygCodes,
+      lineCodes,
+      productMainDefinitions,
+      countries: extractOriginCountries(raw),
       composition: parseComposition(raw).map(item=>String(item.percent)+'% '+item.material),
       careInstructions: [],
       warnings: /KEEP\s+AWAY\s+FROM\s+FIRE|ATES.*UZAK/i.test(fold(raw))?['KEEP AWAY FROM FIRE']:[],
@@ -197,6 +227,7 @@
       pageVariants: [],
       productClass:'',
       fit:'',
+      identityText:raw,
       prices:[],
       visualFindings:[],
       confidence: raw ? (modelCodes.length?'EXACT':'HIGH') : 'LOW',
@@ -205,7 +236,7 @@
     };
   }
 
-  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','visualFindings'];
+  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','specialCodes','seasonCodes','magCodes','mmygCodes','lineCodes','productMainDefinitions','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','visualFindings'];
   function mergeExtraction(localData, aiData) {
     const local=localData&&typeof localData==='object'?localData:{};
     const ai=aiData&&typeof aiData==='object'?aiData:{};
@@ -218,7 +249,7 @@
       if(!a.length) out[field]=b;
       out._sources[field]=a.length?'local':'ai';
     });
-    ['productClass','fit'].forEach(field=>{
+    ['productClass','fit','identityText'].forEach(field=>{
       out[field]=clean(local[field])||clean(ai[field]);
       out._sources[field]=clean(local[field])?'local':'ai';
     });
@@ -228,19 +259,55 @@
     return out;
   }
 
+  function enrichExtractionFromCp(extraction, cpRows) {
+    const ex=extraction&&typeof extraction==='object'?{...extraction}:{};
+    ex._sources={...(ex._sources||{})};
+    const nativeText=clean(ex._nativeText), aiText=clean(ex.identityText);
+    const specs=[
+      ['modelCodes','Model Name',false],
+      ['orderNumbers','Order Code',true],
+      ['specialCodes','Special Code',true],
+      ['colourCodes','C.Code',true],
+      ['colours','Colour',false],
+      ['seasonCodes','Season',true],
+      ['magCodes','Merch Alt Grup Kod',true],
+      ['mmygCodes','Merch Marka Yaş Grup Kod',true],
+      ['lineCodes','Line',false],
+      ['productMainDefinitions','Ürün Tanım',false]
+    ];
+    specs.forEach(([field,cpField,exactToken])=>{
+      const candidates=cpCatalog(cpRows,cpField);
+      if(!candidates.length) return;
+      const localHits=nativeText?scanKnown(nativeText,candidates,exactToken):[];
+      const aiHits=aiText?scanKnown(aiText,candidates,exactToken):[];
+      if(localHits.length){ex[field]=localHits;ex._sources[field]='local';}
+      else if(aiHits.length){ex[field]=aiHits;ex._sources[field]='ai';}
+    });
+    return ex;
+  }
+
   function exactMatchRows(cpRows, extraction) {
     const rows=Array.isArray(cpRows)?cpRows:[];
     const models=list(extraction&&extraction.modelCodes).map(compactIdentifier).filter(Boolean);
-    if(!models.length) return [];
-    let matched=rows.filter(row=>models.includes(compactIdentifier(row&&row['Model Name'])));
+    const orders=list(extraction&&extraction.orderNumbers).map(compactIdentifier).filter(Boolean);
+    const specials=list(extraction&&extraction.specialCodes).map(compactIdentifier).filter(Boolean);
+    let matched=[];
+    if(orders.length) matched=rows.filter(row=>orders.includes(compactIdentifier(row&&row['Order Code'])));
+    if(!matched.length && models.length) matched=rows.filter(row=>models.includes(compactIdentifier(row&&row['Model Name'])));
+    if(!matched.length && specials.length) matched=rows.filter(row=>specials.includes(compactIdentifier(row&&row['Special Code'])));
+    if(!matched.length) return [];
+
+    if(models.length) {
+      const narrowed=matched.filter(row=>models.includes(compactIdentifier(row&&row['Model Name'])));
+      if(narrowed.length) matched=narrowed;
+    }
     const colours=list(extraction&&extraction.colourCodes).map(compactIdentifier).filter(Boolean);
     if(colours.length) {
       const narrowed=matched.filter(row=>colours.includes(compactIdentifier(row&&row['C.Code'])));
       if(narrowed.length) matched=narrowed;
     }
-    const orders=list(extraction&&extraction.orderNumbers).map(compactIdentifier).filter(Boolean);
-    if(orders.length) {
-      const narrowed=matched.filter(row=>orders.includes(compactIdentifier(row&&row['Order Code'])));
+    if(specials.length) {
+      const narrowed=matched.filter(row=>specials.includes(compactIdentifier(row&&row['Special Code'])));
       if(narrowed.length) matched=narrowed;
     }
     return matched;
@@ -268,7 +335,7 @@
   }
 
   function compare(extraction, cpRows, options) {
-    const ex=extraction&&typeof extraction==='object'?extraction:{};
+    const ex=enrichExtractionFromCp(extraction,cpRows);
     const rows=exactMatchRows(cpRows,ex);
     const checks=[];
     const add=(...args)=>checks.push(makeCheck(...args));
@@ -293,6 +360,13 @@
 
     if(isPrice || has('orderNumbers')) compareField('ORDER_MATCH','IDENTITY','orderNumbers',cpCatalog(rows,'Order Code').map(String),compactIdentifier,T('CP sipariş referansı yok.','CP order reference is unavailable.'));
     else skip('ORDER_MATCH','IDENTITY',[], T('Care Label için sipariş numarası zorunlu kontrol alanı değildir.','Order number is not a mandatory check for Care Label.'));
+
+    if(isPrice || has('specialCodes')) compareField('SPECIAL_CODE_MATCH','IDENTITY','specialCodes',cpCatalog(rows,'Special Code'),compactIdentifier,T('CP Special Code referansı yok.','CP Special Code reference is unavailable.'));
+    if(isPrice || has('seasonCodes')) compareField('SEASON_MATCH','IDENTITY','seasonCodes',cpCatalog(rows,'Season'),compactIdentifier,T('CP sezon referansı yok.','CP season reference is unavailable.'));
+    if(isPrice || has('magCodes')) compareField('MAG_MATCH','IDENTITY','magCodes',cpCatalog(rows,'Merch Alt Grup Kod'),compactIdentifier,T('CP MAG referansı yok.','CP MAG reference is unavailable.'));
+    if(isPrice || has('mmygCodes')) compareField('MMYG_MATCH','IDENTITY','mmygCodes',cpCatalog(rows,'Merch Marka Yaş Grup Kod'),compactIdentifier,T('CP MMYG referansı yok.','CP MMYG reference is unavailable.'));
+    if(isPrice || has('lineCodes')) compareField('LINE_MATCH','IDENTITY','lineCodes',cpCatalog(rows,'Line'),key,T('CP Line referansı yok.','CP Line reference is unavailable.'));
+    if(isPrice || has('productMainDefinitions')) compareField('PRODUCT_MAIN_DEFINITION_MATCH','IDENTITY','productMainDefinitions',cpCatalog(rows,'Ürün Tanım'),key,T('CP Product Main Definition referansı yok.','CP Product Main Definition reference is unavailable.'));
 
     compareField('COUNTRY_MATCH','COUNTRY','countries',cpCatalog(rows,'Country'),normalizeCountry,T('CP üretim ülkesi referansı yok.','CP country-of-origin reference is unavailable.'));
 
@@ -387,6 +461,6 @@
 
   return {
     STATUS,DOC,FIELD_ALIASES,clean,fold,key,uniq,list,normalizeCountry,normalizeSize,normalizeBarcode,normalizePrice,
-    parseComposition,compositionKey,classifyDocument,deriveLocalExtraction,mergeExtraction,exactMatchRows,compare,summarize
+    parseComposition,compositionKey,classifyDocument,extractCountries,extractOriginCountries,deriveLocalExtraction,mergeExtraction,enrichExtractionFromCp,exactMatchRows,compare,summarize
   };
 });

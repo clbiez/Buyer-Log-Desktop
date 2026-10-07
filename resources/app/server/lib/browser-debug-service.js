@@ -718,6 +718,29 @@ function createBrowserDebugService(options = {}) {
     }
     return { browser, mode: 'buyer-log-persistent', profileDirectory: 'Default', userDataDir: path.join(localDataRoot, 'browser-profiles', browser), label: `Buyer Log Persistent ${browserName} Profile`, profiles, selectedProfileDirectory: selected, profileSelectionStale };
   }
+  /* Edge'in edge://inspect/#remote-debugging anahtarı modern sürümlerde
+     kullanıcının GERÇEK tarayıcı örneğinde CDP'yi çalışma anında açabilir.
+     Programatik --remote-debugging-port başlatması Chromium 136+ için hâlâ
+     ayrı --user-data-dir gerektirir; bu yardımcı yalnız zaten açık olan
+     kullanıcı profilini doğrulamak için kullanılır. */
+  function resolveExistingProfileStrategy(resolved, configuration = loadConfiguration()) {
+    const browser = resolved && resolved.resolvedBrowser;
+    if (!BROWSERS.includes(browser)) return null;
+    const selected = normalizeProfileDirectory(configuration.selectedEdgeProfileDirectory);
+    const { root, profiles } = discoverUserProfiles(browser);
+    const match = selected ? profiles.find(item => item.id === selected) : null;
+    const profileSelectionStale = Boolean(selected) && !match;
+    const profile = match || profiles[0];
+    if (!root || !profile) return null;
+    const browserName = browser === 'edge' ? 'Edge' : 'Chrome';
+    return {
+      browser, mode: 'existing', profileDirectory: profile.id, userDataDir: root,
+      label: `${profile.name} — Existing ${browserName} Profile`, profiles,
+      selectedProfileDirectory: selected, profileSelectionStale,
+      manualRemoteDebugging: true,
+    };
+  }
+
   function browserProcessRunning(browser) {
     if (options.processRunning) return Boolean(options.processRunning(browser));
     if (process.platform !== 'win32') return false;
@@ -830,24 +853,47 @@ function createBrowserDebugService(options = {}) {
       return parseListeningPid(result.stdout, port);
     } catch (_) { return 0; }
   }
-  function processUserDataDir(pid) {
-    if (options.processUserDataDir) return clean(options.processUserDataDir(pid));
+  function processCommandLine(pid) {
+    if (options.processCommandLine) return clean(options.processCommandLine(pid));
     if (process.platform !== 'win32' || !pid) return '';
     try {
       const result = spawnSyncImpl('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command',
         `$p = Get-CimInstance Win32_Process -Filter "ProcessId=${Number(pid)}" -ErrorAction SilentlyContinue; if ($p) { $p.CommandLine }`],
         { encoding: 'utf8', windowsHide: true, timeout: 6000, shell: false });
-      return parseUserDataDirArgument(result.stdout);
+      return clean(result.stdout);
     } catch (_) { return ''; }
+  }
+  function processUserDataDir(pid) {
+    if (options.processUserDataDir) return clean(options.processUserDataDir(pid));
+    return parseUserDataDirArgument(processCommandLine(pid));
+  }
+  function commandLineMatchesBrowser(commandLine, browser) {
+    const text = clean(commandLine);
+    if (!text) return false;
+    return browser === 'edge' ? /(?:^|[\\/"\s])msedge\.exe(?:["\s]|$)/i.test(text)
+      : /(?:^|[\\/"\s])chrome\.exe(?:["\s]|$)/i.test(text);
   }
   function endpointOwnedByProcess(strategy, port) {
     const pid = options.listeningPid ? Number(options.listeningPid(port)) || 0 : listeningPid(port);
     if (!pid) return null;
     const key = `${port}:${pid}`;
-    if (!processOwnerCache.has(key)) processOwnerCache.set(key, processUserDataDir(pid));
-    const dir = processOwnerCache.get(key);
-    if (!dir) return null;
-    return samePath(dir, strategy && strategy.userDataDir);
+    if (!processOwnerCache.has(key)) {
+      const commandLine = processCommandLine(pid);
+      const dir = options.processUserDataDir ? clean(options.processUserDataDir(pid)) : parseUserDataDirArgument(commandLine);
+      /* edge://inspect ile açılan Edge 154+ CDP sunucusunda süreç komut
+         satırında --user-data-dir bulunmayabilir. Bu durumda dinleyen PID'nin
+         gerçekten msedge.exe olduğu ve stratejinin GERÇEK kullanıcı profili
+         olduğu kanıtlanıyorsa Chromium'un varsayılan veri kökü kullanılıyor
+         demektir. Böylece açık bağlantıyı "kapalı" sanmayız; özel Buyer Log
+         profilleri ve yabancı süreçler bu kestirmeden ASLA sahiplenilmez. */
+      const defaultRoot = !dir && strategy && strategy.mode === 'existing'
+        && commandLineMatchesBrowser(commandLine, strategy.browser);
+      processOwnerCache.set(key, { dir, defaultRoot });
+    }
+    const owner = processOwnerCache.get(key) || {};
+    if (owner.dir) return samePath(owner.dir, strategy && strategy.userDataDir);
+    if (owner.defaultRoot && strategy && strategy.mode === 'existing') return true;
+    return null;
   }
   function recordForStrategy(strategy) {
     const record = readEndpointRecord();
@@ -1156,6 +1202,23 @@ function createBrowserDebugService(options = {}) {
     }
     return !browserProcessRunning(browser);
   }
+  /* Edge 154+ edge://inspect ile gerçek kullanıcı profilinde çalışan bir
+     endpoint sunabiliyor. Programatik başlatma stratejisi güvenlik nedeniyle
+     yine Buyer Log persistent profilinde kalır; fakat zaten çalışan ve
+     sahipliği işletim sistemi üzerinden doğrulanan gerçek Edge bağlantısı
+     status/test/PLM preflight tarafından öncelikle yeniden kullanılır. */
+  async function findConnectionCandidate(resolved, configuration) {
+    const primary = resolveProfileStrategy(resolved, configuration);
+    if (resolved && resolved.resolvedBrowser === 'edge' && resolved.defaultProfileDebuggingBlocked) {
+      const existing = resolveExistingProfileStrategy(resolved, configuration);
+      if (existing && !profileSelectionState(existing)) {
+        const foundExisting = await findOwnedEndpoint(existing, configuration);
+        if (foundExisting.connection) return { strategy: existing, found: foundExisting };
+      }
+    }
+    return { strategy: primary, found: await findOwnedEndpoint(primary, configuration) };
+  }
+
   /* "Test Connection" ARTIK PORT TESTİ DEĞİL.
 
      Sırayla kanıtlanır: tarayıcı kurulu mu, politika izin veriyor mu, seçili
@@ -1184,13 +1247,15 @@ function createBrowserDebugService(options = {}) {
     if (!note('policy', policy.status !== 'BLOCKED_BY_ORGANIZATION', policy.status)) {
       return done('REMOTE_DEBUG_DISABLED', 'Blocked by organization', 'policy-blocked', { policy });
     }
-    const strategy = resolveProfileStrategy(resolved, configuration);
-    const selectionState = profileSelectionState(strategy);
-    note('profile', !selectionState, selectionState || strategy.label);
-    if (selectionState === 'PROFILE_NOT_FOUND') return done('PROFILE_NOT_FOUND', 'Profile not found', 'profile-not-found', { strategy, policy });
-    if (selectionState === 'PROFILE_REQUIRED') return done('PROFILE_REQUIRED', 'Profile required', 'profile-required', { strategy, policy });
-    if (!configuration.enabled) return done('DISABLED', 'Ready', 'not-enabled', { strategy, policy });
-    const found = await findOwnedEndpoint(strategy, configuration);
+    const configuredStrategy = resolveProfileStrategy(resolved, configuration);
+    const selectionState = profileSelectionState(configuredStrategy);
+    note('profile', !selectionState, selectionState || configuredStrategy.label);
+    if (selectionState === 'PROFILE_NOT_FOUND') return done('PROFILE_NOT_FOUND', 'Profile not found', 'profile-not-found', { strategy: configuredStrategy, policy });
+    if (selectionState === 'PROFILE_REQUIRED') return done('PROFILE_REQUIRED', 'Profile required', 'profile-required', { strategy: configuredStrategy, policy });
+    if (!configuration.enabled) return done('DISABLED', 'Ready', 'not-enabled', { strategy: configuredStrategy, policy });
+    const located = await findConnectionCandidate(resolved, configuration);
+    const strategy = located.strategy;
+    const found = located.found;
     runtime.portConflict = found.conflict || null;
     if (!found.connection) {
       if (found.conflict) {
@@ -1276,15 +1341,23 @@ function createBrowserDebugService(options = {}) {
     const resolved = resolveEffectiveBrowser(configuration);
     runtime.resolved = resolved;
     let endpoint = await getActiveEndpoint();
-    const strategy = BROWSERS.includes(resolved.resolvedBrowser) ? resolveProfileStrategy(resolved, configuration) : null;
+    let strategy = BROWSERS.includes(resolved.resolvedBrowser) ? resolveProfileStrategy(resolved, configuration) : null;
     /* Sunucu yeniden başladığında BELLEK boştur ama bağlantı yaşıyor olabilir.
        Eskiden bu durumda ekran "Remote Debugging kapalı" diyordu; kullanıcı
        çalışan bir bağlantıyı kapalı sanıyordu. Durum kendi kanıtını arar:
-       yalnız SAHİPLİĞİ doğrulanmış uç nokta bağlantı sayılır. */
+       yalnız SAHİPLİĞİ doğrulanmış uç nokta bağlantı sayılır.
+       
+       Edge 154+ edge://inspect bağlantısı gerçek kullanıcı profilinde
+       çalışabiliyor; bu yüzden "programatik başlatma persistent olmalı"
+       kararı durum tespitinde çalışan bağlantıyı gölgelememeli. */
     if (!endpoint && strategy && configuration.enabled && !profileSelectionState(strategy)) {
-      const found = await findOwnedEndpoint(strategy, configuration);
+      const located = await findConnectionCandidate(resolved, configuration);
+      strategy = located.strategy;
+      const found = located.found;
       runtime.portConflict = found.conflict || null;
       if (found.connection) endpoint = markConnected(found.connection, strategy, found.ownership);
+    } else if (endpoint && runtime.binding && runtime.binding.profileMode === 'existing') {
+      strategy = resolveExistingProfileStrategy(resolved, configuration) || strategy;
     }
     const selectionState = profileSelectionState(strategy);
     const state = selectionState && !endpoint ? selectionState : connectionState(endpoint);
@@ -1301,7 +1374,7 @@ function createBrowserDebugService(options = {}) {
     configFile, configRoot: path.dirname(configFile), localDataRoot, deviceId, deviceBinding, loadConfiguration, getConfiguration: loadConfiguration, saveConfiguration,
     detectInstalledBrowsers, detectBrowser, detectSystemDefaultBrowser,
     listBrowserProfiles, getRemoteDebugPolicy, resolveEffectiveBrowser,
-    resolveProfileStrategy, getConfiguredBrowser: resolveEffectiveBrowser, resolveDebugPort, verifyEndpoint, enableAndLaunch, restartWithRemoteDebugging,
+    resolveProfileStrategy, resolveExistingProfileStrategy, getConfiguredBrowser: resolveEffectiveBrowser, resolveDebugPort, verifyEndpoint, enableAndLaunch, restartWithRemoteDebugging,
     ensureEndpoint, testConnection, getRuntimeStatus, getActiveEndpoint,
     publishActiveEndpoint, disable, getBrowserBinding, publishBoundContext,
     endpointOwnership, findOwnedEndpoint, profileSelectionState,

@@ -842,6 +842,26 @@ function createLocalDb(file) {
     const state = await read();
     return state.journal.filter(item => !item.uploaded).slice(0, Math.max(1, Number(limit) || 1000)).map(clone);
   }
+  /* Sync'in taşıma politikasını DERİN klondan önce uygular.
+     Collection gibi genel delta kanalından bilinçli olarak çıkarılmış büyük
+     belgeler, pending() içinde JSON.stringify edilirse V8'in string sınırına
+     takılıp bütün senkronu durdurabilir. Filtre ham journal dizisini yalnız
+     okumalıdır; kabul edilen kayıtları zaten sanitize/clone ederek döndürür.
+     Böylece elenen kayıtların payload'ı hiç serialize edilmez. */
+  async function pendingForSync(limit = 1000, filter = null) {
+    const state = await read();
+    const candidates = state.journal.filter(item => !item.uploaded).slice(0, Math.max(1, Number(limit) || 1000));
+    if (typeof filter !== 'function') {
+      return { pending: candidates.map(clone), discardedEventIds: [], sourceCount: candidates.length };
+    }
+    const filtered = filter(candidates);
+    const pending = Array.isArray(filtered) ? filtered : [];
+    const retained = new Set(pending.map(item => eventId(item && item.eventId)).filter(Boolean));
+    const discardedEventIds = candidates
+      .map(item => eventId(item && item.eventId))
+      .filter(id => id && !retained.has(id));
+    return { pending, discardedEventIds, sourceCount: candidates.length };
+  }
   /* Yalnız SAYI için: pending()'in varsayılan limiti (1000) gerçek bekleyen
      sayısı ondan büyük olduğunda durum raporunu yanlış gösterirdi (ör. 15.000
      bekleyen kayıt varken "1000 Pending" yazardı). Bu, dilimlemeden/klonlamadan
@@ -1137,7 +1157,7 @@ function createLocalDb(file) {
       return { status, deviceId: current.deviceId };
     });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, resolveConflict, putAsset, putAssets };
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================

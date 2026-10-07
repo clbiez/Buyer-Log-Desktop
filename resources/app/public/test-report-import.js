@@ -123,11 +123,13 @@
       const typeKey = E().talepTipiKey(report.talepTipi);
       const mapped = (link && link.itemId) || (store.typeMap[typeKey] && store.typeMap[typeKey].itemId) || ui.newTypeMap[typeKey] || '';
       const fromAi = report.kaynak === 'ai';
+      const ignored = Boolean(E().normalizeOrderCode(report.siparisKodu)) && match.level === 'none' && match.reason === 'order';
       return {
         id: 'r' + (ui.seq++), report: report, match: match, candidates: candidates, chosen: chosen,
         typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === mapped; }) ? mapped : '',
-        // LCW AI'ın okuduğu rapor varsayılan olarak seçilmez: kullanıcı alanları kontrol edip işaretler.
-        include: Boolean(chosen) && !fromAi, override: false, linked: Boolean(link), fromAi: fromAi,
+        // CP'de siparişi olmayan raporlar aktarım ve LCW AI incelemesi dışında kalır.
+        // LCW AI'ın okuduğu rapor da varsayılan olarak seçilmez: kullanıcı alanları kontrol edip işaretler.
+        include: !ignored && Boolean(chosen) && !fromAi, override: false, linked: Boolean(link), fromAi: fromAi, ignored: ignored,
       };
     });
   }
@@ -162,6 +164,7 @@
       out.skippedDecisions = (entry.report.kararlar || []).filter(function (d) { return known.has(E().decisionKey(d, stored.talepNo)); }).length;
     }
     if (!entry.report.talepNo) { out.reason = T('Talep no okunamadı.', 'No request number was read.'); return out; }
+    if (entry.ignored) { out.reason = T('Sipariş kodu CP\'de olmadığı için dikkate alınmadı.', 'Ignored because the order code is not in CP.'); return out; }
     const row = rowFor(entry);
     if (!row) { out.reason = entry.candidates.length ? T('Satır seçin.', 'Choose a row.') : T('CP satırı bulunamadı.', 'No CP row was found.'); return out; }
     if (row._canEdit === false) { out.reason = T('Bu satır için düzenleme yetkiniz yok.', 'You do not have edit access to this row.'); return out; }
@@ -189,9 +192,11 @@
       ambiguous: { tone: 'orange', tr: 'Belirsiz', en: 'Ambiguous' },
       none: { tone: 'red', tr: 'Eşleşmedi', en: 'Not matched' },
     };
-    const level = entry.linked && entry.chosen ? { tone: 'blue', tr: 'Önceki bağlantı', en: 'Previous link' } : map[entry.match.level] || map.none;
+    const level = entry.ignored
+      ? { tone: 'blue', tr: 'Dikkate alınmadı', en: 'Ignored' }
+      : (entry.linked && entry.chosen ? { tone: 'blue', tr: 'Önceki bağlantı', en: 'Previous link' } : map[entry.match.level] || map.none);
     const reasons = {
-      order: T('Sipariş kodu CP\'de yok.', 'Order code is not in CP.'),
+      order: T('Sipariş kodu CP\'de yok; aktarım ve LCW AI incelemesine alınmadı.', 'Order code is not in CP; it was excluded from import and LCW AI review.'),
       model: T('Model adı tutmadı.', 'Model name did not match.'),
       colour: T('Renk tanımı tutmadı.', 'Colour description did not match.'),
       multiple: T('Birden çok satır uyuyor.', 'Several rows fit.'),
@@ -209,6 +214,12 @@
     const decision = (report.kararlar || []).length ? E().resultLabel(report.kararlar[report.kararlar.length - 1].karar, lang()) : '';
     const label = raw || decision || T('Sonuç yok', 'No result');
     return '<span class="trBadge tone-' + tone + '">' + html(label) + '</span>' + (raw && decision ? '<small>' + html(decision) + '</small>' : '');
+  }
+  function testNames(report) {
+    const names = [];
+    (report && report.testler || []).forEach(function (t) { const name = text(t && t.ad); if (name && names.indexOf(name) < 0) names.push(name); });
+    (report && report.kararlar || []).forEach(function (k) { const name = text(k && k.test); if (name && names.indexOf(name) < 0) names.push(name); });
+    return names;
   }
   function rowCell(entry) {
     if (!entry.candidates.length) return '<span class="trMuted">—</span>';
@@ -259,7 +270,7 @@
   function aiStepForType(typeKey) {
     const counts = {};
     ui.entries.forEach(function (e) {
-      const review = e.typeKey === typeKey && e.report.talepNo ? ui.ai.reviews[e.report.talepNo] : null;
+      const review = !e.ignored && e.typeKey === typeKey && e.report.talepNo ? ui.ai.reviews[e.report.talepNo] : null;
       if (review && review.step) counts[review.step] = (counts[review.step] || 0) + 1;
     });
     return Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; })[0] || '';
@@ -277,7 +288,7 @@
   }
   function typeMappingHtml() {
     const pending = new Map();
-    ui.entries.forEach(function (entry) { if (!entry.itemId && entry.typeKey && !pending.has(entry.typeKey)) pending.set(entry.typeKey, entry.report.talepTipi); });
+    ui.entries.forEach(function (entry) { if (!entry.ignored && !entry.itemId && entry.typeKey && !pending.has(entry.typeKey)) pending.set(entry.typeKey, entry.report.talepTipi); });
     if (!pending.size) return '';
     return '<section class="trTypes"><b>' + html(T('Buyer Log\'da karşılığı olmayan talep tipleri', 'Request types without a Buyer Log step')) + '</b>'
       + [...pending.entries()].map(function (pair) {
@@ -302,7 +313,8 @@
       [T('Tam eşleşme', 'Exact'), count(function (e) { return e.match.level === 'exact'; }), 'green'],
       [T('Kısmi', 'Partial'), count(function (e) { return e.match.level === 'partial'; }), 'orange'],
       [T('Belirsiz', 'Ambiguous'), count(function (e) { return e.match.level === 'ambiguous'; }), 'orange'],
-      [T('Eşleşmedi', 'Not matched'), count(function (e) { return e.match.level === 'none'; }), 'red'],
+      [T('Eşleşmedi', 'Not matched'), count(function (e) { return e.match.level === 'none' && !e.ignored; }), 'red'],
+      [T('Dikkate alınmadı', 'Ignored'), count(function (e) { return e.ignored; }), 'blue'],
       [T('Uyarı', 'Warnings'), warnings, warnings ? 'orange' : ''],
       [T('Yazılacak', 'To write'), plans.filter(function (p, i) { return p.ready && ui.entries[i].include; }).length, 'blue'],
     ];
@@ -344,14 +356,14 @@
     if (!ui.session) { body.innerHTML = drop; footer.disabled = true; return; }
     const plans = ui.entries.map(plan);
     const rowsHtml = ui.entries.map(function (entry, index) {
-      const p = plans[index], r = entry.report;
+      const p = plans[index], r = entry.report, tests = testNames(r);
       return '<tr class="' + (p.ready ? '' : 'is-blocked') + '">'
         + '<td><input type="checkbox" data-tr-include="' + entry.id + '"' + (entry.include && p.ready ? ' checked' : '') + (p.ready ? '' : ' disabled') + ' aria-label="' + html(T('Bu raporu yaz', 'Write this report')) + '"></td>'
-        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small><small>' + html([r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small></td>'
+        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small><small>' + html([r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small>' + (tests.length ? '<small><b>' + html(T('Test adı: ', 'Test name: ')) + '</b>' + html(tests.join(', ')) + '</small>' : '') + '</td>'
         + '<td>' + resultBadge(r) + '</td>'
         + '<td>' + levelBadge(entry) + '</td>'
         + '<td>' + rowCell(entry) + '</td>'
-        + '<td><select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId) + '</select></td>'
+        + '<td>' + (entry.ignored ? '<span class="trMuted">—</span>' : '<select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId) + '</select>') + '</td>'
         + '<td>' + changeCell(entry, p) + '</td>'
         + '<td>' + warningsCell(entry, p) + '<div class="trFiles">' + filesCell(r) + '</div></td></tr>';
     }).join('');
@@ -394,6 +406,7 @@
 
   /* ----------------------------------------------------------- LCW AI */
   function aiCandidates() { return ui.files.filter(function (f) { return f.ai; }).slice(0, MAX_AI_FILES); }
+  function reviewableEntries() { return ui.entries.filter(function (e) { return e.report.talepNo && !e.ignored; }); }
   function aiDone() { return ui.aiRun; }
   async function stagedFile(candidate) {
     const response = await root.fetch(API + '/staged/' + encodeURIComponent(ui.session) + '/' + encodeURIComponent(candidate.ai.uploadId), { cache: 'no-store' });
@@ -435,12 +448,18 @@
     const run = ++ui.aiRun;
     const set = function (patch) { if (run === ui.aiRun) { Object.assign(ui.ai, patch); render(); } };
     try {
+      const candidates = aiCandidates();
+      const initialReviewable = reviewableEntries();
+      if (!candidates.length && !initialReviewable.length) {
+        const ignored = ui.entries.filter(function (e) { return e.ignored; }).length;
+        set({ state: 'done', progress: '', model: '', message: ignored ? T(ignored + ' rapor, sipariş kodu CP\'de olmadığı için dikkate alınmadı; LCW AI\'a gönderilmedi.', ignored + ' reports were ignored because their order code is not in CP and were not sent to LCW AI.') : '' });
+        return;
+      }
       let status = await AI.getStatus();
       if (status && !status.connected && options && options.interactive) status = await AI.connect();
       if (run !== ui.aiRun) return;
       if (!status || !status.connected) { set({ state: 'offline', progress: '' }); return; }
       set({ state: 'running', message: '', progress: '' });
-      const candidates = aiCandidates();
       let read = 0, failed = 0;
       for (let i = 0; i < candidates.length; i++) {
         set({ progress: T('Okunuyor ', 'Reading ') + (i + 1) + '/' + candidates.length + ': ' + candidates[i].name });
@@ -456,7 +475,7 @@
         }
       }
       if (run !== ui.aiRun) return;
-      const entries = ui.entries.filter(function (e) { return e.report.talepNo; });
+      const entries = reviewableEntries();
       let model = '';
       if (entries.length) {
         set({ progress: T('Raporlar inceleniyor: ', 'Reviewing reports: ') + entries.length });
@@ -474,6 +493,8 @@
       const notes = [];
       if (read) notes.push(T(read + ' dosyayı LCW AI okudu; alanları kontrol edip işaretleyin.', 'LCW AI read ' + read + ' files; check the fields and tick them.'));
       if (failed) notes.push(T(failed + ' dosya LCW AI ile de okunamadı.', failed + ' files could not be read by LCW AI either.'));
+      const ignored = ui.entries.filter(function (e) { return e.ignored; }).length;
+      if (ignored) notes.push(T(ignored + ' rapor, sipariş kodu CP\'de olmadığı için dikkate alınmadı ve LCW AI incelemesine gönderilmedi.', ignored + ' reports were ignored because their order code is not in CP and were not sent for LCW AI review.'));
       set({ state: 'done', progress: '', model: model, message: notes.join(' ') });
     } catch (error) {
       if (run !== ui.aiRun) return;
@@ -491,7 +512,7 @@
   function setTypeItem(typeKey, itemId) {
     ui.newTypeMap[typeKey] = itemId;
     ui.entries.forEach(function (entry) {
-      if (entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen) && !entry.fromAi; }
+      if (!entry.ignored && entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen) && !entry.fromAi; }
     });
     render();
   }

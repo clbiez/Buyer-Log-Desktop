@@ -2152,8 +2152,31 @@
   }
 
   const OAB_DRILL_ID_FIELDS = Object.freeze([
-    'Sezon', 'Merch Alt Grup', 'Buyer Grup Tanımı', 'Klasman Grup Tanımı', 'Klasman Kod', 'Klasman Tanımı', 'Line Tanımı',
-    'Option Adı', 'Renk Kodu', 'Renk Adı', 'Özel Kod', 'Alım Dönem', 'Sipariş Onaylama Ayı', 'Retail Depo Tarihi',
+    'Tedarik Sepeti', 'Merch Alt Grup', 'Buyer Grup Tanımı', 'Sezon', 'Option Adı', 'Özel Kod', 'Renk Adı', 'Renk Kodu',
+    'Fit', 'Klasman Kod', 'Klasman Tanımı', 'Klasman Grup Tanımı', 'Plan Başlangıç Ayı', 'Alım Dönem',
+    'Başlangıç Yıl Hafta', 'Bitiş Yıl Hafta', 'Retail Depo Tarihi', 'Sipariş Onaylama Ayı', 'Line Tanımı', // i18n-ignore: OAB raw data keys
+  ]);
+  // OAB örnek gruplama.xlsx rehberi: alt detay sütunları bu üst başlık sırasını
+  // izler. Seçili metriğin grubu en sona taşınır ve metriğin kendisi daima en
+  // sağda kalır; böylece hangi hücreden drill-down açıldığı kaybolmaz.
+  const OAB_DRILL_LAYOUT = Object.freeze([
+    { tr:'Satın Alma', en:'Buying', fields:['Tedarik Sepeti','Merch Alt Grup','Buyer Grup Tanımı'] },
+    { tr:'Model Özellikleri', en:'Model Features', fields:['Sezon','Option Adı','Özel Kod','Renk Adı','Renk Kodu','Fit','Malzeme Türü','Klasman Kod','Klasman Tanımı','Klasman Grup Tanımı'] },
+    { tr:'Model Bütçe', en:'Model Budget', fields:['Plan Başlangıç Ayı','Başlangıç Faz','Alım Dönem Sayısı','Alım Dönem','Başlangıç Yıl Hafta','Bitiş Yıl Hafta','Retail Depo Tarihi','Sipariş Onaylama Ayı','PO Yıl Hafta'] },
+    { tr:'Planlama', en:'Planning', fields:['Line Tanımı',"Optionın Eşlendiği Diğer Linelar",'Plan Ömür','Plan Mağaza Sayısı','Alım Bütçe Tipi','Öneri Tedarik Sepeti','Depo Giren Miktar','Uygun Giren Miktar','Üretim Süresi (gün)','Havuz Option','Devir Option'] },
+    { tr:'Asorti & Fiyat', en:'Assortment & Price', fields:['Ana Beden Asorti','Brüt Asorti','Landed Fiyat','Hedef PSF'] },
+    { tr:'Mark-Up', en:'Mark-Up', fields:['Ortalama Markup','Ortalama Markup (Yİ)','Ortalama Markup (YD)'] },
+    { tr:'Diğer', en:'Other', fields:['Hayır Kurumu','Alım Dönem Onaylı Mı?','İç ekranda çalışıldı mı?',"Mb 'den Yd 'ye",'Özel Onaylı Temiz Devir Mi','Özel Onaylı Temiz Devir Adet','Option Trend Seviyesi','Nos','Is Top Store','Persona','Siluet'] },
+    { tr:'Tedarik Sepeti Adet', en:'Supply Basket Qty', fields:['Fas','Mısır','Türkiye','YurtDisi'] },
+    { tr:'Plan Sipariş', en:'Plan Order', fields:['Plan Sipariş Miktarı','Plan Sipariş Miktarı (Yİ)','Plan Sipariş Miktarı (YD)','Toplam Klasman Analize Konu Olan Toplam Adet'] },
+    { tr:'Alım Dönem Sipariş', en:'Buying Period Order', fields:['Alım Dönem Sipariş Miktarı','Alım Dönem Sipariş Miktarı (Yİ)','Alım Dönem Sipariş Miktarı (YD)','Alım Sipariş Miktarı %'] },
+    { tr:'Onaylı Sipariş', en:'Approved Order', fields:['Onaylı Sipariş Miktarı','Onaylı Sipariş Miktarı (Yİ)','Onaylı Sipariş Miktarı (YD)','Toplam Onaylı Sipariş Miktarı'] },
+    { tr:'Onaysız Sipariş', en:'Unapproved Order', fields:['Onaysız Sipariş Miktarı','Onaysız Sipariş Miktarı (Yİ)','Onaysız Sipariş Miktarı (YD)'] },
+    { tr:'Yedek Bütçe', en:'Reserve Budget', fields:['Onaylı Yedek Bütçe Sipariş Miktarı','Onaylı Yedek Bütçe Sipariş Miktarı (Yİ)','Onaylı Yedek Bütçe Sipariş Miktarı (YD)'] },
+    { tr:'Hızlı Sipariş', en:'Fast Order', fields:['Onaylı Hizli Siparis Adet','Onaylı Hizli Siparis Adet (Yİ)','Onaylı Hizli Siparis Adet (YD)'] },
+    { tr:'WSSI', en:'WSSI', fields:['WSSI Sipariş Miktarı','Düşük Adetli FT WSSI Sipariş Miktarı','Wssi Sipariş Miktarı TR','Wssi Sipariş Miktarı YD','Toplam WSSI Sipariş Miktarı'] },
+    { tr:'PO', en:'PO', fields:['PO Miktarı','PoQuantity (Yİ)','PoQuantity (YD)'] },
+    { tr:'PO Geçilmemiş Adet', en:'Not Yet Ordered Qty', fields:['Toplam Onaylanmış - Sipariş Geçilmemiş Adet'] },
   ]);
   const OAB_DRILL_METRIC_DEPENDENCIES = Object.freeze({
     'Toplam WSSI Sipariş Miktarı': ['WSSI Sipariş Miktarı'],
@@ -2161,6 +2184,87 @@
     'Toplam Onaylanmış - Sipariş Geçilmemiş Adet': ['WSSI Sipariş Miktarı', 'Onaylı Sipariş Miktarı'],
     'Toplam Klasman Analize Konu Olan Toplam Adet': ['WSSI Sipariş Miktarı', 'Onaylı Sipariş Miktarı'],
   });
+
+  function oabDrillLayoutEntry(field) {
+    const key = String(field || '');
+    return OAB_DRILL_LAYOUT.find(group => group.fields.includes(key)) || null;
+  }
+  function oabDrillFieldGroup(field) {
+    const group = oabDrillLayoutEntry(field);
+    return group ? oabT(group.tr, group.en) : oabT('Diğer Alanlar', 'Other Fields');
+  }
+  function oabDrillOrderedFields(fields, selectedField) {
+    const available = [...new Set((Array.isArray(fields) ? fields : []).map(String).filter(Boolean))];
+    const availableSet = new Set(available);
+    const selected = String(selectedField || '');
+    const selectedGroup = selected ? oabDrillLayoutEntry(selected) : null;
+    const ordered = [], push = field => { if (availableSet.has(field) && field !== selected && !ordered.includes(field)) ordered.push(field); };
+    OAB_DRILL_LAYOUT.filter(group => group !== selectedGroup).forEach(group => group.fields.forEach(push));
+    const known = new Set(OAB_DRILL_LAYOUT.flatMap(group => group.fields));
+    available.filter(field => !known.has(field) && field !== selected).forEach(push);
+    if (selectedGroup) selectedGroup.fields.forEach(push);
+    if (selected && availableSet.has(selected)) ordered.push(selected);
+    return ordered;
+  }
+  function oabDrillMetricRows(rows, descriptor) {
+    const list = Array.isArray(rows) ? rows.slice() : [];
+    const field = descriptor && descriptor.sourceField;
+    if (!field || !descriptor.numeric || !OABDataUtils.isNumericField(list, field)) return list;
+    return list.filter(source => {
+      const value = fieldNumericValue(source, field);
+      return value != null && value !== 0;
+    });
+  }
+  function oabDrillFieldKey(field) {
+    return String(field || '').trim().toLocaleLowerCase('tr-TR')
+      .replace(/[ıİ]/g, 'i').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+  function oabDrillDateKind(field) {
+    const key = oabDrillFieldKey(field);
+    if (['baslangic yil hafta','bitis yil hafta','start year week','end year week'].includes(key)) return 'year-week';
+    if (['siparis onaylama ayi','order approval month'].includes(key)) return 'month';
+    if (['retail depo tarihi','retail warehouse date'].includes(key)) return 'date';
+    return '';
+  }
+  function oabDrillMonthName(month) {
+    const tr = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const en = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return (oabLang() ? en : tr)[month - 1] || '';
+  }
+  function oabDrillYearWeekText(value) {
+    const raw = String(value == null ? '' : value).trim();
+    const digits = raw.replace(/\D/g, '');
+    if (!/^\d{6}$/.test(digits)) return raw;
+    const year = Number(digits.slice(0, 4)), week = Number(digits.slice(4, 6));
+    if (week < 1 || week > 53) return raw;
+    const jan4 = new Date(Date.UTC(year, 0, 4));
+    const jan4Day = jan4.getUTCDay() || 7;
+    const monday = new Date(Date.UTC(year, 0, 4 - jan4Day + 1 + (week - 1) * 7));
+    const month = oabDrillMonthName(monday.getUTCMonth() + 1);
+    const dateYear = monday.getUTCFullYear();
+    return oabLang() ? `Week ${week} ${month} ${dateYear}` : `${week}. Hafta ${month} ${dateYear}`;
+  }
+  function oabDrillMonthText(value) {
+    const raw = String(value == null ? '' : value).trim();
+    const digits = raw.replace(/\D/g, '');
+    if (!/^\d{6}$/.test(digits)) return raw;
+    const year = Number(digits.slice(0, 4)), month = Number(digits.slice(4, 6));
+    if (month < 1 || month > 12) return raw;
+    return `${oabDrillMonthName(month)} ${year}`;
+  }
+  function oabDrillDateText(value) {
+    const date = oabParseDate(value);
+    if (!date) return String(value == null ? '' : value);
+    const pad = number => String(number).padStart(2, '0');
+    return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${String(date.getFullYear()).slice(-2)}`;
+  }
+  function oabDrillDisplayValue(field, value) {
+    const kind = oabDrillDateKind(field);
+    if (kind === 'year-week') return oabDrillYearWeekText(value);
+    if (kind === 'month') return oabDrillMonthText(value);
+    if (kind === 'date') return oabDrillDateText(value);
+    return null;
+  }
 
   function oabPivotCellSourceRows(row, descriptor, model) {
     let rows = Array.isArray(row && row.__oabSourceRows) ? row.__oabSourceRows.slice() : [];
@@ -2193,10 +2297,9 @@
     OAB_DRILL_ID_FIELDS.forEach(push);
     const sourceField = descriptor && descriptor.sourceField;
     (OAB_DRILL_METRIC_DEPENDENCIES[sourceField] || []).forEach(push);
-    ['Plan Sipariş Miktarı', 'Onaylı Sipariş Miktarı', 'PO Miktarı'].forEach(push);
     push(sourceField);
     if (!candidates.length) OABDataUtils.deriveFieldList(rows || []).slice(0, 12).forEach(push);
-    return candidates;
+    return oabDrillOrderedFields(candidates, sourceField);
   }
 
   function oabDrillSortRows(rows, descriptor) {
@@ -2213,8 +2316,12 @@
 
   function oabDrillCellText(field, value) {
     if (value == null) return '';
-    if (String(field || '').includes('%') && typeof value === 'number') return `${value.toLocaleString('tr-TR', { maximumFractionDigits: 2 })}%`;
-    if (typeof value === 'number') return value.toLocaleString('tr-TR', { maximumFractionDigits: 2 });
+    const special = oabDrillDisplayValue(field, value);
+    if (special != null) return special;
+    if (isLikelyCodeField(field)) return String(value);
+    const locale = oabLang() ? 'en-GB' : 'tr-TR';
+    if (String(field || '').includes('%') && typeof value === 'number') return `${value.toLocaleString(locale, { maximumFractionDigits: 2 })}%`;
+    if (typeof value === 'number') return value.toLocaleString(locale, { maximumFractionDigits: 2 });
     return String(value);
   }
 
@@ -2249,6 +2356,8 @@
   function oabDrillExportCell(field, value) {
     const preserved = oabExcelPreserveBlank(value);
     if (preserved == null) return null;
+    const special = oabDrillDisplayValue(field, preserved);
+    if (special != null) return special;
     if (isLikelyCodeField(field)) return String(preserved);
     return preserved;
   }
@@ -2326,14 +2435,14 @@
   }
 
   function oabOpenPivotDetail(row, descriptor, model) {
-    const sourceRows = oabDrillSortRows(oabPivotCellSourceRows(row, descriptor, model), descriptor);
+    const sourceRows = oabDrillSortRows(oabDrillMetricRows(oabPivotCellSourceRows(row, descriptor, model), descriptor), descriptor);
     if (!sourceRows.length) { oabToast(oabT('Bu pivot hücresi için alt detay bulunamadı.', 'No drill-down detail was found for this pivot cell.')); return; }
     const metricLabel = descriptor && descriptor.sourceField ? descriptor.sourceField : (descriptor && descriptor.label) || oabT('Pivot Detayı', 'Pivot Detail');
     const clickedValue = row ? row[descriptor.key] : null;
     const valueText = oabPivotPlainValue(clickedValue, descriptor && descriptor.label);
     const context = oabDrillContextText(row, descriptor, model);
     const summaryFields = oabDrillSummaryFields(sourceRows, descriptor, model);
-    const allFields = OABDataUtils.deriveFieldList(sourceRows);
+    const allFields = oabDrillOrderedFields(OABDataUtils.deriveFieldList(sourceRows), descriptor && descriptor.sourceField);
 
     // OAB alt detayları, uygulamadaki diğer analiz detaylarıyla aynı sağ çekmeceyi
     // kullanır. Sütun tercihleri bu OAB görünümüne özel ve kalıcıdır; ilk açılışta
@@ -2344,6 +2453,8 @@
       const columns = allFields.map(field => ({
         key: field,
         label: field,
+        group: oabDrillFieldGroup(field),
+        type: oabDrillDateKind(field) ? 'text' : (OABDataUtils.isNumericField(sourceRows, field) ? 'number' : 'text'),
         format: value => oabDrillCellText(field, value),
         exportValue: value => oabDrillExportCell(field, value),
         html: oabIsOptionNameField(field) ? source => oabOptionPlmLinkHtml(source && source[field]) : undefined,
@@ -2353,7 +2464,7 @@
         descriptor && descriptor.agg ? `${oabT('Hesap', 'Aggregate')}: ${descriptor.agg}` : '',
       ].filter(Boolean);
       global.BLDetailDrawer.open({
-        storageKey: 'oab.pivot.detail',
+        storageKey: `oab.pivot.detail.${descriptor && descriptor.sourceField ? descriptor.sourceField : 'generic'}`,
         pageScope: 'overview.oab',
         moduleId: 'overview',
         source: 'oab',
@@ -2363,6 +2474,9 @@
         rows: sourceRows,
         columns,
         defaultVisible: summaryFields,
+        exactDefaultVisible: true,
+        requiredVisible: descriptor && descriptor.sourceField ? [descriptor.sourceField] : [],
+        flatColumns: true,
         images: true,
         fileName: `OAB_Alt_Detay_${metricLabel}`,
       });
