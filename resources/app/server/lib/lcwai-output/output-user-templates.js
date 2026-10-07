@@ -14,6 +14,7 @@
  */
 const { LAYOUTS, FORMATS, COLUMN_TYPES } = require('./output-contracts');
 const { TEMPLATES } = require('./output-templates');
+const BLOutputLayout = require('../../../public/lcwai-output-layout');
 
 const LIMITS = Object.freeze({ name: 80, instructions: 3000, keepFull: 30, keepFullChars: 80, structure: 40, title: 140, columns: 40, columnChars: 80 });
 const DETAILS = ['summary', 'standard', 'detailed'];
@@ -67,6 +68,8 @@ function normalizeDefinition(raw = {}) {
     instructions: String(source.instructions == null ? '' : source.instructions).replace(/\r\n?/g, '\n').trim().slice(0, LIMITS.instructions),
     keepFull: [...new Set(asArray(source.keepFull).map(item => clean(item, LIMITS.keepFullChars)).filter(Boolean))].slice(0, LIMITS.keepFull),
     structure: normalizeStructure(source.structure, format),
+    // Görsel yerleşim (başlık bandı, yazı boyutları, model ızgarası…); veri değildir.
+    layout: source.layout && typeof source.layout === 'object' ? BLOutputLayout.normalizeLayout(format, source.layout) : null,
   };
 }
 
@@ -161,6 +164,12 @@ function templateInstruction(definition, { name = '', lang = 'tr' } = {}) {
     lines.push(english
       ? `Never shorten, summarise or paraphrase these fields; write their values exactly and completely as in the source data: ${def.keepFull.join(', ')}.`
       : `Şu alanları asla kısaltma, özetleme ya da yeniden yazma; değerlerini kaynak verideki gibi TAM yaz: ${def.keepFull.join(', ')}.`);
+  }
+  if (def.layout && def.format !== 'xlsx') {
+    const grid = `${def.layout.columns} × ${def.layout.rows}`;
+    lines.push(english
+      ? `Layout: model cards are placed ${grid} (${BLOutputLayout.perPage(def.layout)} per ${def.format === 'pptx' ? 'slide' : 'page'}) by Buyer Log. Put model visuals in ${def.format === 'pptx' ? 'ONE "gallery" slide per group (all items; Buyer Log continues on extra slides)' : 'one <div class="bl-gallery"> per group'}; do not split them yourself.`
+      : `Yerleşim: model kartlarını Buyer Log ${grid} ızgarasına (${def.format === 'pptx' ? 'slayt' : 'sayfa'} başına ${BLOutputLayout.perPage(def.layout)}) dizer. Model görsellerini ${def.format === 'pptx' ? 'grup başına TEK "gallery" slaytına (tüm öğeler; devam slaytlarını Buyer Log açar)' : 'grup başına tek <div class="bl-gallery"> içine'} koy; kendin bölme.`);
   }
   if (def.instructions) lines.push(`${english ? 'Additional instructions from the user' : 'Kullanıcının ek talimatı'}:\n${def.instructions}`);
   return lines.join('\n');

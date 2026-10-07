@@ -88,7 +88,7 @@ test('taslak: her çıktı düzenlenebilir taslak bırakır; düzenleme yeniden 
   const draft = service.getDraft('u1', created.output.draftId);
   assert.equal(draft.format, 'pptx');
   assert.equal(draft.data.slides[1].table.rows.length, 30);
-  assert.deepEqual(draft.images, {}, 'sunum taslağı görsel baytı taşımaz');
+  assert.deepEqual(draft.imageKeys, [], 'görsel anahtarı listesi (Yerleşim önizlemesi için)');
   assert.throws(() => service.getDraft('u2', created.output.draftId), error => error.code === 'LCWAI_OUTPUT_NOT_FOUND', 'başka kullanıcı taslağı göremez');
   assert.throws(() => service.getDraft('u1', '../../etc/passwd'), error => error.code === 'LCWAI_OUTPUT_NOT_FOUND');
 
@@ -331,7 +331,7 @@ test('arayüz: düzenleyici tembel yüklenir; rapor iframe’i betiksiz + CSP; D
   assert.match(chat, /ensureFeature\('lcwaiOutputEditor'\)/);
   assert.match(chat, /request\.userTemplate = \{ id: chosen\.item\.id, shared: chosen\.kind === 'team' \}/, 'yalnız kimlik gönderilir');
   const perf = fs.readFileSync(path.join(ROOT, 'public', 'perf-runtime.js'), 'utf8');
-  assert.match(perf, /lcwaiOutputEditor:\['lcwai-output-editor\.js\?rev=1'\]/);
+  assert.match(perf, /lcwaiOutputEditor:\['lcwai-output-layout\.js\?rev=1','lcwai-output-editor\.js\?rev=2'\]/, 'yerleşim modülü düzenleyiciden önce');
   const index = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
   assert.doesNotMatch(index, /lcwai-output-editor\.js/, 'açılışta yüklenmez');
   const assistant = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-assistant.js'), 'utf8');

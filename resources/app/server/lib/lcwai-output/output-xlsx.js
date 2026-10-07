@@ -11,6 +11,7 @@
  * beklenir.
  */
 const { createZip, xmlText } = require('./output-zip');
+const BLOutputLayout = require('../../../public/lcwai-output-layout');
 const { theme, ooxml } = require('./output-theme');
 
 const NUMFMT = { integer: 164, number: 165, percent: 166, currency: 167, date: 168 };
@@ -37,19 +38,20 @@ function currencyFormat(code) {
   return symbol ? `#,##0.00 "${symbol}"` : '#,##0.00';
 }
 
-function stylesXml(currency) {
+function stylesXml(currency, metrics = BLOutputLayout.xlsxMetrics(null)) {
   const c = theme().colors;
   const font = theme().fonts.excel;
+  const body = metrics.bodySize;
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
 <numFmts count="5"><numFmt numFmtId="164" formatCode="#,##0"/><numFmt numFmtId="165" formatCode="#,##0.00"/><numFmt numFmtId="166" formatCode="0.0%"/><numFmt numFmtId="167" formatCode="${xmlText(currencyFormat(currency))}"/><numFmt numFmtId="168" formatCode="dd.mm.yyyy"/></numFmts>
 <fonts count="6">
-<font><sz val="11"/><color rgb="FF${ooxml(c.ink)}"/><name val="${font}"/><family val="2"/></font>
-<font><b/><sz val="11"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
-<font><b/><sz val="16"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
-<font><b/><sz val="11"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
-<font><i/><sz val="10"/><color rgb="FF${ooxml(c.muted)}"/><name val="${font}"/><family val="2"/></font>
-<font><sz val="11"/><color rgb="FF${ooxml(c.ink2)}"/><name val="${font}"/><family val="2"/></font>
+<font><sz val="${body}"/><color rgb="FF${ooxml(c.ink)}"/><name val="${font}"/><family val="2"/></font>
+<font><b/><sz val="${body}"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
+<font><b/><sz val="${metrics.titleSize}"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
+<font><b/><sz val="${body}"/><color rgb="FF${ooxml(c.logo)}"/><name val="${font}"/><family val="2"/></font>
+<font><i/><sz val="${Math.max(8, body - 1)}"/><color rgb="FF${ooxml(c.muted)}"/><name val="${font}"/><family val="2"/></font>
+<font><sz val="${body}"/><color rgb="FF${ooxml(c.ink2)}"/><name val="${font}"/><family val="2"/></font>
 </fonts>
 <fills count="4">
 <fill><patternFill patternType="none"/></fill>
@@ -124,7 +126,8 @@ function conditionalFormats(columns, rowCount) {
   return parts.join('');
 }
 
-const IMAGE_BOX_PT = 60; // hücredeki görsel kutusu (pt)
+// Hücredeki görsel kutusu ve satır/yazı boyutları Yerleşim'den gelir (xlsxMetrics).
+let METRICS = BLOutputLayout.xlsxMetrics(null);
 const EMU_PER_PT = 12700;
 const EMU_PER_PX = 9525;
 
@@ -135,23 +138,23 @@ function drawingXml(anchors) {
 <xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">${anchors.map((anchor, index) => `<xdr:oneCellAnchor><xdr:from><xdr:col>${anchor.col}</xdr:col><xdr:colOff>${anchor.offX}</xdr:colOff><xdr:row>${anchor.row}</xdr:row><xdr:rowOff>${anchor.offY}</xdr:rowOff></xdr:from><xdr:ext cx="${anchor.cx}" cy="${anchor.cy}"/><xdr:pic><xdr:nvPicPr><xdr:cNvPr id="${index + 2}" name="Picture ${index + 1}" descr="${xmlText(anchor.token)}"/><xdr:cNvPicPr><a:picLocks noChangeAspect="1"/></xdr:cNvPicPr></xdr:nvPicPr><xdr:blipFill><a:blip r:embed="${anchor.rel}"/><a:stretch><a:fillRect/></a:stretch></xdr:blipFill><xdr:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${anchor.cx}" cy="${anchor.cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></xdr:spPr></xdr:pic><xdr:clientData/></xdr:oneCellAnchor>`).join('')}</xdr:wsDr>`;
 }
 
-function dataSheetXml(sheet, imageCells = new Map()) {
+function dataSheetXml(sheet, imageCells = new Map(), metrics = METRICS) {
   const columns = sheet.columns;
   const rows = sheet.rows;
   const widths = columns.map((column, index) => {
-    if (column.type === 'image') return 12;
+    if (column.type === 'image') return metrics.imageColChars;
     let width = Math.max(8, String(column.header).length + 2);
     for (const row of rows.slice(0, 300)) width = Math.max(width, textWidth(row[index], column.type) + 2);
     return Math.min(column.width || width, 60);
   });
   const lastRef = `${colName(Math.max(0, columns.length - 1))}${rows.length + 1}`;
   const lines = [];
-  lines.push(`<row r="1" ht="22" customHeight="1">${columns.map((column, index) => cellXml(`${colName(index)}1`, column.header, XF.header)).join('')}</row>`);
+  lines.push(`<row r="1" ht="${metrics.headerHeight}" customHeight="1">${columns.map((column, index) => cellXml(`${colName(index)}1`, column.header, XF.header)).join('')}</row>`);
   rows.forEach((row, rowIndex) => {
     const r = rowIndex + 2;
     const tall = columns.some((column, index) => column.type === 'image' && imageCells.has(`${rowIndex}:${index}`));
     // Görsel sütunu hücresi metin taşımaz (anahtar dosyada görünmez).
-    lines.push(`<row r="${r}"${tall ? ` ht="${IMAGE_BOX_PT + 6}" customHeight="1"` : ''}>${columns.map((column, index) => cellXml(`${colName(index)}${r}`, column.type === 'image' ? null : row[index], typeStyle(column.type), column.type)).join('')}</row>`);
+    lines.push(`<row r="${r}"${tall ? ` ht="${metrics.imageRow}" customHeight="1"` : ''}>${columns.map((column, index) => cellXml(`${colName(index)}${r}`, column.type === 'image' ? null : row[index], typeStyle(column.type), column.type)).join('')}</row>`);
   });
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
@@ -172,7 +175,7 @@ function summarySheetXml(workbook, lang) {
   const english = lang === 'en';
   const rows = [];
   let r = 1;
-  rows.push(`<row r="${r}" ht="26" customHeight="1">${cellXml(`A${r}`, workbook.title, XF.title)}</row>`); r++;
+  rows.push(`<row r="${r}" ht="${Math.round(METRICS.titleSize * 1.6)}" customHeight="1">${cellXml(`A${r}`, workbook.title, XF.title)}</row>`); r++;
   if (workbook.subtitle) { rows.push(`<row r="${r}">${cellXml(`A${r}`, workbook.subtitle, XF.subtitle)}</row>`); r++; }
   rows.push(`<row r="${r}">${cellXml(`A${r}`, `${english ? 'Created' : 'Oluşturma'}: ${workbook.date} · Buyer Log · LCW AI`, XF.note)}</row>`); r += 2;
   if (workbook.kpis.length) {
@@ -203,6 +206,7 @@ function quoteSheet(name) { return `'${String(name).replace(/'/g, "''")}'`; }
 /* workbook: normalizeWorkbook() çıktısı. Döner: Buffer (.xlsx). */
 function renderWorkbook(workbook, { lang = 'tr', date = new Date(), images = {} } = {}) {
   const english = lang === 'en';
+  METRICS = BLOutputLayout.xlsxMetrics(workbook.layout || null);
   const sheets = [];
   const hasSummary = workbook.kpis.length || workbook.notes.length || workbook.subtitle;
   if (hasSummary) sheets.push({ name: english ? 'Summary' : 'Özet', xml: summarySheetXml(workbook, lang) });
@@ -242,10 +246,11 @@ function renderWorkbook(workbook, { lang = 'tr', date = new Date(), images = {} 
       let rel = rels.find(entry => entry.file === file);
       if (!rel) { rel = { id: `rId${rels.length + 1}`, file }; rels.push(rel); }
       const ratio = Math.max(0.05, image.width / Math.max(1, image.height));
-      const boxW = 80, boxH = IMAGE_BOX_PT * 4 / 3; // px (sütun ~12 karakter ≈ 89 px)
+      const colPx = METRICS.imageColChars * 7 + 5; // sütun genişliği (karakter) → px
+      const boxW = colPx - 9, boxH = METRICS.imageBoxPx;
       let pw = boxW, ph = boxW / ratio;
       if (ph > boxH) { ph = boxH; pw = boxH * ratio; }
-      anchors.push({ col, row: rowIndex + 1, offX: Math.round((89 - pw) / 2 * EMU_PER_PX), offY: Math.round(3 * EMU_PER_PT), cx: Math.round(pw * EMU_PER_PX), cy: Math.round(ph * EMU_PER_PX), rel: rel.id, token });
+      anchors.push({ col, row: rowIndex + 1, offX: Math.round((colPx - pw) / 2 * EMU_PER_PX), offY: Math.round(3 * EMU_PER_PT), cx: Math.round(pw * EMU_PER_PX), cy: Math.round(ph * EMU_PER_PX), rel: rel.id, token });
     }
     drawings.push({ sheet: index + 1, number: drawings.length + 1, anchors, rels });
   });
@@ -263,7 +268,7 @@ function renderWorkbook(workbook, { lang = 'tr', date = new Date(), images = {} 
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0"/></bookViews><sheets>${sheets.map((sheet, index) => `<sheet name="${xmlText(sheet.name)}" sheetId="${index + 1}" r:id="rId${index + 1}"/>`).join('')}</sheets>${definedNames ? `<definedNames>${definedNames}</definedNames>` : ''}<calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>` },
     { name: 'xl/_rels/workbook.xml.rels', data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${sheets.map((_, index) => `<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${index + 1}.xml"/>`).join('')}<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>` },
-    { name: 'xl/styles.xml', data: stylesXml(workbook.currency) },
+    { name: 'xl/styles.xml', data: stylesXml(workbook.currency, METRICS) },
     ...sheets.map((sheet, index) => ({ name: `xl/worksheets/sheet${index + 1}.xml`, data: sheet.xml })),
     ...drawings.flatMap(drawing => [
       { name: `xl/worksheets/_rels/sheet${drawing.sheet}.xml.rels`, data: `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

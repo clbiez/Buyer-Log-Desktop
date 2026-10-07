@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "LCW AI dosyalarını düzenleyin, şablon olarak kaydedin ve ekiple paylaşın",
-    "en": "Edit LCW AI files, save them as templates and share them with the team"
+    "tr": "LCW AI dosyalarını düzenleyin, yerleşimini ayarlayın, şablon olarak paylaşın",
+    "en": "Edit LCW AI files, adjust their layout and share them as templates"
   },
   "summary": {
-    "tr": "PDF, PowerPoint, Excel ve HTML çıktıları Buyer Log içinde düzenlenip yeniden oluşturulur; yapı şablon olarak kaydedilip ekiple paylaşılır; uzun kumaş metinleri ve tablolar artık kısaltılmaz.",
-    "en": "PDF, PowerPoint, Excel and HTML outputs can be edited and re-created inside Buyer Log; their structure can be saved as a template and shared with the team; long fabric texts and tables are no longer cut."
+    "tr": "PDF, PowerPoint, Excel ve HTML çıktıları Buyer Log içinde düzenlenir; başlık yüksekliği, yazı boyutları ve sayfa başına model ızgarası görsel Yerleşim aracıyla ayarlanır; yapı ve yerleşim şablon olarak ekiple paylaşılır; uzun kumaş metinleri artık kısaltılmaz.",
+    "en": "PDF, PowerPoint, Excel and HTML outputs are edited inside Buyer Log; title height, text sizes and the model grid per page are set with the visual Layout tool; structure and layout are shared with the team as templates; long fabric texts are no longer cut."
   },
   "changes": [
     {
@@ -42,6 +42,72 @@
       "body": {
         "tr": "LCW AI'ın ürettiği her dosya kartında artık \"Düzenle\" düğmesi var. PowerPoint'te slaytlar sürükle-bırakla sıralanır, çoğaltılır, silinir; düzen (tablo, KPI, grafik, karşılaştırma…) değiştirilir ve her alan form üzerinden düzenlenir. Excel'de sayfalar ve sütun tipleri yönetilir, hücreler Excel'den kopyalanıp yapıştırılabilir. PDF/HTML raporunda metne tıklayıp doğrudan yazılır, bölümler soldan sıralanır. \"Dosyayı Oluştur\" düzenlenmiş hâli LCW AI'a tekrar gitmeden aynı doğrulamadan geçirip yeni dosya olarak kaydeder; eski dosya korunur.",
         "en": "Every file card produced by LCW AI now has an \"Edit\" button. In PowerPoint, slides can be reordered by drag and drop, duplicated and deleted; layouts (table, KPI, chart, comparison…) can be changed and every field is edited in a form. In Excel, sheets and column types are managed and cells can be pasted from Excel. In PDF/HTML reports you click the text and type directly, and reorder sections on the left. \"Create File\" runs the edited version through the same validation without going back to LCW AI and saves it as a new file; the old file is kept."
+      }
+    },
+    {
+      "id": "lcwai-output-layout",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Görsel Yerleşim aracı: başlık, yazı boyutu ve model ızgarası",
+        "en": "Visual Layout tool: title, text size and model grid"
+      },
+      "path": {
+        "tr": "LCW AI › Düzenle › Yerleşim",
+        "en": "LCW AI › Edit › Layout"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-layout.png",
+        "alt": {
+          "tr": "PowerPoint Yerleşim aracı: solda kaydırıcılar ve 5 × 2 model ızgarası seçici, sağda model kartlarıyla canlı slayt önizlemesi — gerçek Buyer Log demo ekranı",
+          "en": "PowerPoint Layout tool: sliders and a 5 × 2 model grid picker on the left, live slide preview with model cards on the right — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Slayt başına kaça kaç model yerleşeceğini seçin",
+          "en": "Choose how many models fit on each slide"
+        }
+      },
+      "body": {
+        "tr": "Düzenleyicide yeni \"Yerleşim\" sekmesi var. Başlık bandı yüksekliği, başlık / metin / tablo yazı boyutu, kenar boşluğu, kartlar arası boşluk, kartta görselin payı ve kart yazı boyutu kaydırıcılarla ayarlanır; model adı, alt bilgi ve not tek tıkla gizlenir. Izgara seçiciyle slayt ya da sayfa başına kaça kaç model yerleşeceği seçilir (ör. 5 × 2 = 10 model); fazlası aynı başlıkla devam slaytlarına geçer. Standart, Kompakt, Büyük görsel ve Katalog hazır yerleşimleri vardır. Önizleme, oluşturulacak dosyayla aynı hesabı kullanır. Yerleşim \"Şablon olarak kaydet\" ile şablona eklenir; şablon seçildiğinde yeni dosya bu yerleşimle oluşur. Excel'de başlık ve hücre yazı boyutu, başlık satırı yüksekliği ve hücredeki görsel boyutu ayarlanır.",
+        "en": "The editor has a new \"Layout\" tab. Title band height, title / text / table text size, margin, gap between cards, the image share of a card and the card text size are set with sliders; model name, subtitle and note can be hidden with one click. The grid picker sets how many models fit on each slide or page (e.g. 5 × 2 = 10 models); the rest continues on extra slides with the same title. Standard, Compact, Large images and Catalogue presets are available. The preview uses the same calculation as the file that is created. \"Save as template\" adds the layout to the template; picking the template creates new files with this layout. In Excel, the title and cell text size, header row height and the image size in cells are adjustable."
+      }
+    },
+    {
+      "id": "lcwai-output-layout-pdf",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "PDF kataloglarında sayfa başına model ızgarası",
+        "en": "Model grid per page in PDF catalogues"
+      },
+      "path": {
+        "tr": "LCW AI › PDF › Düzenle › Yerleşim",
+        "en": "LCW AI › PDF › Edit › Layout"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-layout-pdf.png",
+        "alt": {
+          "tr": "PDF Yerleşim aracı: 4 × 2 ızgarayla sayfalara bölünmüş model kartlarını gösteren baskı önizlemesi — gerçek Buyer Log demo ekranı",
+          "en": "PDF Layout tool: print preview showing model cards split into pages with a 4 × 2 grid — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Kesik çizgi yeni sayfayı gösterir",
+          "en": "The dashed line marks a new page"
+        }
+      },
+      "body": {
+        "tr": "PDF raporlarındaki model kartları artık seçilen sütun × satır ızgarasıyla sayfalara bölünür; her sayfa aynı sayıda model taşır, ilk sayfa rapor başlığına yer bırakır. Baskı önizlemesi sayfayı bütün olarak gösterir ve galerinin kaç sayfaya yerleştiğini yazar. HTML çıktısında ızgara sütun sayısını izler.",
+        "en": "Model cards in PDF reports are now split into pages using the chosen column × row grid; every page carries the same number of models and the first page leaves room for the report header. The print preview shows the whole page and states how many pages the gallery fills. In HTML output the grid follows the column count."
       }
     },
     {

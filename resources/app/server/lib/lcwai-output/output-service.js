@@ -29,6 +29,7 @@ const { createOutputStore } = require('./output-store');
 const { collectTokens, normalizeImages, fillHtmlImages } = require('./output-images');
 const { createDraftStore } = require('./output-drafts');
 const userTemplates = require('./output-user-templates');
+const BLOutputLayout = require('../../../public/lcwai-output-layout');
 
 const MAX_REPAIRS = 2;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
@@ -94,6 +95,8 @@ function createOutputService(options = {}) {
       attempts++;
     }
     if (!parsed.ok) throw lcwAiError('OUTPUT_INVALID', { detail: parsed.errors.join(' | ').slice(0, 300) });
+    // Yerleşim LCW AI'dan değil kullanıcıdan gelir: şablonun yerleşimi ya da varsayılan.
+    parsed.data.layout = spec.userTemplate && spec.userTemplate.definition.layout ? spec.userTemplate.definition.layout : null;
 
     const title = (parsed.data && parsed.data.title) || fallbackTitle(input.message, english);
     const job = {
@@ -123,13 +126,15 @@ function createOutputService(options = {}) {
     const saveMeta = { title, format, template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId, draftId: job.draftId, edited: Boolean(job.edited) };
     try {
       if (format === 'pdf' || format === 'html') {
-        const body = fillHtmlImages(data.body, images, lang);
+        // Yerleşim varsa model galerisi PDF'te sütun × satır sayfalarına bölünür.
+        const filled = fillHtmlImages(data.body, images, lang);
+        const body = data.layout ? BLOutputLayout.paginateGallery(filled, data.layout, { pages: format === 'pdf' }) : filled;
         if (format === 'pdf') {
-          const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel } });
+          const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout: data.layout });
           const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation });
           return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
         }
-        const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel } }), 'utf8');
+        const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout: data.layout }), 'utf8');
         return store.save(ownerId, { buffer, ...saveMeta });
       }
       const buffer = format === 'xlsx' ? renderWorkbook(data, { lang, date, images }) : renderPresentation(data, { lang, date, images });
@@ -185,8 +190,8 @@ function createOutputService(options = {}) {
     const out = {
       id: draft.id, format: draft.format, title: draft.title, lang: draft.lang, orientation: draft.orientation, detail: draft.detail,
       template: draft.template, templateLabel: draft.templateLabel, revision: draft.revision, updatedAt: draft.updatedAt,
-      // Görseller yalnız rapor önizlemesinde gerekir; diğer biçimlere anahtar listesi yeter.
-      data: draft.data, imageKeys: Object.keys(draft.images || {}), images: draft.format === 'pdf' || draft.format === 'html' ? draft.images || {} : {},
+      // Görseller önizlemede (rapor, Yerleşim aracındaki model kartları) kullanılır.
+      data: draft.data, imageKeys: Object.keys(draft.images || {}), images: draft.images || {},
     };
     if (draft.format === 'pdf' || draft.format === 'html') out.previewCss = reportCss({ orientation: draft.orientation, print: false });
     return out;
@@ -222,7 +227,8 @@ function createOutputService(options = {}) {
      veri taşımayan iskeleti. */
   function skeleton(ownerId, draftId, data) {
     const draft = draftOf(ownerId, draftId);
-    return { format: draft.format, orientation: draft.orientation, detail: draft.detail || 'standard', base: draft.template || '', structure: userTemplates.skeletonFromData(draft.format, data && typeof data === 'object' ? data : draft.data) };
+    const source = data && typeof data === 'object' ? data : draft.data;
+    return { format: draft.format, orientation: draft.orientation, detail: draft.detail || 'standard', base: draft.template || '', structure: userTemplates.skeletonFromData(draft.format, source), layout: source.layout ? BLOutputLayout.normalizeLayout(draft.format, source.layout) : null };
   }
 
   return {

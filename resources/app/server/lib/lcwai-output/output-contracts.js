@@ -14,6 +14,9 @@
  */
 const { extractHtml, sanitizeHtml, sanitizeStyleSheet, visibleText } = require('./output-html');
 const { extractJsonObject } = require('../lcwai/lcwai-prompt');
+const BLOutputLayout = require('../../../public/lcwai-output-layout');
+// Yerleşim (Yerleşim aracı): verilmişse sınır içine alınır, yoksa null → varsayılan.
+const layoutOf = (format, raw) => (raw && typeof raw === 'object' && !Array.isArray(raw) ? BLOutputLayout.normalizeLayout(format, raw) : null);
 
 const FORMATS = Object.freeze(['pdf', 'xlsx', 'pptx', 'html']);
 const FORMAT_LABEL = Object.freeze({ pdf: 'PDF', xlsx: 'Excel', pptx: 'PowerPoint', html: 'HTML' });
@@ -26,7 +29,8 @@ const LIMITS = Object.freeze({
 });
 const COLUMN_TYPES = ['text', 'integer', 'number', 'percent', 'currency', 'date', 'image'];
 const LAYOUTS = ['title', 'section', 'bullets', 'kpis', 'table', 'chart', 'comparison', 'summary', 'gallery'];
-const GALLERY_ITEMS = 6;
+// Galeri slaytı Yerleşim ızgarasına göre devam slaytlarına bölünür (output-pptx).
+const GALLERY_ITEMS = 60;
 // Model görseli anahtarı (bağlam CSV'sindeki "BL Image" sütunu): KOL-3, CP-12…
 const IMAGE_TOKEN = /^[A-Z]{2,4}-\d{1,6}$/;
 const imageToken = value => { const token = String(value == null ? '' : value).trim().toUpperCase(); return IMAGE_TOKEN.test(token) ? token : ''; };
@@ -39,7 +43,7 @@ function imageInstruction(format, english) {
     : 'MODEL GÖRSELLERİ: Buyer Log bağlamında (CSV) "BL Image" sütunu varsa her değer (ör. KOL-3) o kaydın Buyer Log’daki gerçek ürün görselinin anahtarıdır. Görselleri göremezsin; anahtarı olan kayıt için asla "görsel yok" yazma. ';
   const how = {
     html: english ? 'Place it with <img class="bl-model-img" data-bl-image="KOL-3" alt="model name"> (no src); Buyer Log inserts the real picture. Model cards: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.' : 'Görseli <img class="bl-model-img" data-bl-image="KOL-3" alt="model adı"> ile koy (src yazma); gerçek resmi Buyer Log ekler. Model kartları: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.',
-    pptx: english ? 'For model visuals use the "gallery" layout: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (max 6 items per slide; split into several slides). A "bullets" slide may also take "image":"KOL-3".' : 'Model görselleri için "gallery" düzenini kullan: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (slayt başına en fazla 6 öğe; gerekirse birkaç slayta böl). "bullets" slaytı da "image":"KOL-3" alabilir.',
+    pptx: english ? 'For model visuals use the "gallery" layout: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (put all models of a group in ONE gallery slide, up to 60 items; Buyer Log places them on the user’s layout grid and continues on extra slides). A "bullets" slide may also take "image":"KOL-3".' : 'Model görselleri için "gallery" düzenini kullan: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (bir grubun tüm modellerini TEK gallery slaytına koy, en fazla 60 öğe; Buyer Log onları kullanıcının yerleşim ızgarasına dizer ve devam slaytlarına böler). "bullets" slaytı da "image":"KOL-3" alabilir.',
     xlsx: english ? 'To show pictures add a column {"header":"Image","type":"image"} whose cells hold the key (e.g. "KOL-3"); Buyer Log embeds the picture in the cell.' : 'Resim göstermek için {"header":"Görsel","type":"image"} sütunu ekle; hücrelerine anahtarı (ör. "KOL-3") yaz, Buyer Log resmi hücreye gömer.',
   };
   return head + (format === 'pptx' ? how.pptx : format === 'xlsx' ? how.xlsx : how.html);
@@ -251,6 +255,7 @@ function normalizeWorkbook(raw, { lang = 'tr', date } = {}) {
     notes: asArray(raw.notes).map(note => clean(note, 1000)).filter(Boolean).slice(0, 30),
     sheets,
     date: date || new Date().toISOString().slice(0, 10),
+    layout: layoutOf('xlsx', raw.layout),
   };
   if (!sheets.length && !errors.length) errors.push(english ? 'No usable sheet was found.' : 'Kullanılabilir sayfa bulunamadı.');
   return { ok: errors.length === 0, data: workbook, errors, warnings };
@@ -331,7 +336,7 @@ function normalizePresentation(raw, { lang = 'tr', date } = {}) {
   // Tek tük bozuk slayt sunumu düşürmez; yarıdan fazlası bozuksa onarım istenir.
   const fatal = !slides.length || errors.length > Math.max(1, Math.floor(list.length / 2));
   if (!fatal && errors.length) { warnings.push(...errors.map(error => `slide-dropped:${error}`)); errors.length = 0; }
-  return { ok: !fatal && slides.length > 0, data: { title, subtitle: clean(raw.subtitle, 240), date: date || new Date().toISOString().slice(0, 10), slides }, errors: fatal ? errors : [], warnings };
+  return { ok: !fatal && slides.length > 0, data: { title, subtitle: clean(raw.subtitle, 240), date: date || new Date().toISOString().slice(0, 10), slides, layout: layoutOf('pptx', raw.layout) }, errors: fatal ? errors : [], warnings };
 }
 
 function normalizeHtmlOutput(text, { lang = 'tr' } = {}) {
@@ -355,16 +360,17 @@ function normalizeHtmlOutput(text, { lang = 'tr' } = {}) {
 
 /* AI Çıktı Düzenleyici: kullanıcının düzenlediği rapor gövdesi aynı
    temizleyiciden geçer (AI HTML'i ile aynı güven düzeyi). */
-function normalizeHtmlDraft({ body, styles = [] } = {}, { lang = 'tr' } = {}) {
+function normalizeHtmlDraft({ body, styles = [], layout = null } = {}, { lang = 'tr' } = {}) {
   const english = lang === 'en';
-  const clean_ = sanitizeHtml(String(body == null ? '' : body));
+  // Önizlemedeki galeri sayfa parçaları tek galeride saklanır (oluştururken yeniden bölünür).
+  const clean_ = sanitizeHtml(BLOutputLayout.paginateGallery(String(body == null ? '' : body), null, { pages: false }));
   const textContent = visibleText(clean_.body);
   const errors = textContent.length ? [] : [english ? 'The report has no visible content.' : 'Raporda görünür içerik yok.'];
   const heading = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(clean_.body);
   const kept = asArray(styles).map(css => sanitizeStyleSheet(String(css || '')));
   return {
     ok: errors.length === 0,
-    data: { body: clean_.body, styles: [...kept, ...clean_.styles].filter(Boolean).slice(0, 8), title: heading ? visibleText(heading[1]).slice(0, LIMITS.titleChars) : '', removed: clean_.removed, mode: 'edited' },
+    data: { body: clean_.body, styles: [...kept, ...clean_.styles].filter(Boolean).slice(0, 8), title: heading ? visibleText(heading[1]).slice(0, LIMITS.titleChars) : '', removed: clean_.removed, mode: 'edited', layout: layoutOf('pdf', layout) },
     errors,
     warnings: clean_.removed ? [`sanitized:${clean_.removed}`] : [],
   };
