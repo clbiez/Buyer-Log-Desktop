@@ -182,7 +182,7 @@
       kpi.innerHTML=items.map(function(item){return '<button type="button" class="ovCollectionKpiCard tone-'+item.tone+'" data-summary-drill="'+item.key+'"><span class="ovCollectionKpiIcon">'+icon(item.icon)+'</span><span class="ovCollectionKpiCopy"><b>'+Number(item.value||0).toLocaleString(locale)+(item.ratio==null?'':' <em>'+item.ratio+'%</em>')+'</b><span>'+esc(item.label)+'</span></span></button>';}).join('');
       Array.from(kpi.querySelectorAll('[data-summary-drill]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({scopeColumn:scoped.column.k,scopeValues:scoped.selected,kpi:button.dataset.summaryDrill});});});
     }
-    const host=document.getElementById('ovCollectionSummaryStatusDistribution'),bar=document.getElementById('ovCollectionSummaryDistributionBar'),order=new Map((ctx.statusCatalog||[]).map(function(entry,index){return [String(entry.name),index];})),totalOptions=Number(result.kpi.optionCount)||0;
+    const order=new Map((ctx.statusCatalog||[]).map(function(entry,index){return [String(entry.name),index];}));
     const rows=(result.rows||[]).slice().sort(function(a,b){const ai=order.has(a.status)?order.get(a.status):9999,bi=order.has(b.status)?order.get(b.status):9999;return ai-bi||String(a.status).localeCompare(String(b.status),'tr-TR',{sensitivity:'base'});});
     /* Renk verilmemiş (varsayılan gri) statüler dağılımda birbirinden ayrılsın:
        yalnız görselleştirmede tema tokenlarından sıralı renk atanır; katalog
@@ -190,14 +190,193 @@
     const VIS_PALETTE=['var(--acc)','var(--green)','var(--orange)','var(--purple,#5e4f8c)','var(--teal,#33685c)','var(--red)','var(--blue-lite,var(--acc))'];
     const visColor=function(status,index){const c=ctx.statusColor(status);return (!c||/^#667085$/i.test(String(c)))?VIS_PALETTE[index%VIS_PALETTE.length]:c;};
     const colorByStatus=new Map(rows.map(function(row,index){return [row.status,visColor(row.status,index)];}));
-    if(bar){
-      bar.innerHTML=rows.map(function(row){const share=pct(row.optionCount,totalOptions),color=colorByStatus.get(row.status);return '<button type="button" class="ovCollectionDistributionSegment" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(color)+';width:'+share+'%" title="'+esc(ctx.statusLabel(row.status)+' · '+share+'%')+'"></button>';}).join('');
-      Array.from(bar.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({scopeColumn:scoped.column.k,scopeValues:scoped.selected,status:button.dataset.summaryStatus});});});
+    const rank=function(status){return order.has(status)?order.get(status):9999;};
+    const drill=function(extra){ctx.drill(Object.assign({scopeColumn:scoped.column.k,scopeValues:scoped.selected},extra));};
+    const legend=document.getElementById('ovCollectionSummaryLegend');
+    if(legend){
+      legend.innerHTML=rows.map(function(row){return '<button type="button" class="ovCollectionMonthLegendItem" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(colorByStatus.get(row.status))+'"><i></i>'+esc(ctx.statusLabel(row.status))+'</button>';}).join('');
+      Array.from(legend.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){drill({status:button.dataset.summaryStatus});});});
     }
-    if(host){
-      host.innerHTML=rows.length?rows.map(function(row){const share=pct(row.optionCount,totalOptions),color=colorByStatus.get(row.status);return '<button type="button" class="ovCollectionStatusCard" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(color)+'"><span class="ovCollectionStatusDot"></span><span class="ovCollectionStatusName">'+esc(ctx.statusLabel(row.status))+'</span><b>'+Number(row.optionCount||0).toLocaleString(locale)+'</b><span class="ovCollectionStatusShare">'+share+'%</span><span class="ovCollectionStatusOptions">'+Number(row.modelCount||0).toLocaleString(locale)+' '+(ctx.language==='en'?'models':'model')+'</span><span class="ovCollectionStatusTrack"><i style="width:'+share+'%"></i></span></button>';}).join(''):'<div class="ovCollectionSummaryEmpty">'+esc(ctx.language==='en'?'No Collection models in this scope.':'Bu kapsamda Koleksiyon modeli yok.')+'</div>';
-      Array.from(host.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({scopeColumn:scoped.column.k,scopeValues:scoped.selected,status:button.dataset.summaryStatus});});});
+    const host=document.getElementById('ovCollectionSummaryMonths');
+    if(!host)return;
+    const filters={};if(scoped.selected.length)filters[scoped.column.k]=scoped.selected;
+    const buckets=ctx.summary.monthBuckets?ctx.summary.monthBuckets(ctx.rows,{columnFilters:filters,columnValue:ctx.columnValue,isConfirmed:ctx.isConfirmed,quantityFor:ctx.quantityFor,imageFor:ctx.imageFor,fields:{month:'inStoreMonth',status:'durum',model:'modelKod'}}):[];
+    const en=ctx.language==='en';
+    host.setAttribute('aria-label',en?'Collection months':'Koleksiyon ayları');
+    if(!buckets.length){
+      revolverTeardown();
+      host.innerHTML='<div class="ovCollectionSummaryEmpty">'+esc(en?'No Collection models in this scope.':'Bu kapsamda Koleksiyon modeli yok.')+'</div>';
+      return;
     }
+    host.innerHTML='<div class="ovCollectionRevolverTrack">'+buckets.map(function(bucket,index){
+      const name=monthLabel(bucket,locale,en);
+      const statuses=bucket.statuses.slice().sort(function(a,b){return rank(a.status)-rank(b.status)||a.status.localeCompare(b.status,'tr-TR',{sensitivity:'base'});});
+      const segments=statuses.map(function(entry){
+        const share=pct(entry.optionCount,bucket.optionCount);
+        const tip=name+' · '+ctx.statusLabel(entry.status)+' · '+Number(entry.optionCount).toLocaleString(locale)+' '+(en?'options':'opsiyon')+' · '+share+'%';
+        return '<button type="button" class="ovCollectionMonthSeg" data-month-status="'+esc(entry.status)+'" style="--status-color:'+esc(colorByStatus.get(entry.status)||VIS_PALETTE[0])+';flex-grow:'+entry.optionCount+'" title="'+esc(tip)+'" aria-label="'+esc(tip)+'"></button>';
+      }).join('');
+      const thumbs=bucket.models.slice(0,MAX_THUMBS).map(function(model){
+        return model.image
+          ?'<span class="ovCollectionMonthThumb" title="'+esc(model.label)+'"><img src="'+esc(model.image)+'" alt="'+esc(model.label)+'" loading="lazy" decoding="async" draggable="false"></span>'
+          :'<span class="ovCollectionMonthThumb isEmpty" title="'+esc(model.label+' · '+(en?'No image':'Görsel yok'))+'">—</span>';
+      }).join('');
+      return '<div class="ovCollectionMonthRow" role="option" data-month-index="'+index+'" data-month="'+esc(bucket.month)+'" data-model-count="'+bucket.modelCount+'">'+
+        '<button type="button" class="ovCollectionMonthName" data-month-open title="'+esc(en?'Open this month in Collection':'Bu ayı Koleksiyon\'da aç')+'">'+esc(name)+'</button>'+
+        '<span class="ovCollectionMonthQty"><b>'+Number(bucket.quantity||0).toLocaleString(locale)+'</b> '+esc(en?'pcs':'adet')+'</span>'+
+        '<span class="ovCollectionMonthThumbs">'+thumbs+'<span class="ovCollectionMonthMore" hidden></span></span>'+
+        '<span class="ovCollectionMonthBar">'+(segments||'<span class="ovCollectionMonthSeg isEmpty"></span>')+'</span>'+
+      '</div>';
+    }).join('')+'</div>';
+    Array.from(host.querySelectorAll('.ovCollectionMonthRow')).forEach(function(row){
+      const month=row.dataset.month;
+      row.querySelector('[data-month-open]')?.addEventListener('click',function(){drill({month:month});});
+      Array.from(row.querySelectorAll('[data-month-status]')).forEach(function(button){button.addEventListener('click',function(){drill({month:month,status:button.dataset.monthStatus});});});
+    });
+    mountRevolver(host,buckets);
+  }
+  function monthLabel(bucket,locale,en){
+    if(!bucket.month)return en?'No month':'Ay yok';
+    if(!bucket.year||!bucket.monthNumber)return bucket.month;
+    try{
+      const name=new Date(bucket.year,bucket.monthNumber-1,1).toLocaleString(locale,{month:'long'});
+      return name.charAt(0).toLocaleUpperCase(locale)+name.slice(1)+' '+bucket.year;
+    }catch(_){return bucket.month;}
+  }
+  /* Revolver: her zaman VISIBLE_ROWS (3) satır görünür; tekerlek/sürükleme
+     serbest kaydırır, bırakınca en yakın ay ortaya oturur (snapRevolver). */
+  const VISIBLE_ROWS=3,MAX_THUMBS=40,SNAP_IDLE_MS=140;
+  let revolver=null;
+  function revolverTeardown(){
+    if(!revolver)return;
+    revolver.cleanup.forEach(function(fn){try{fn();}catch(_){}});
+    revolver=null;
+  }
+  function revolverClamp(state,pos){
+    if(state.count<VISIBLE_ROWS)return 0;
+    const min=Math.floor(VISIBLE_ROWS/2),max=state.count-1-min;
+    return Math.max(min,Math.min(max,pos));
+  }
+  function paintRevolver(state,animate){
+    state.host.classList.toggle('isMoving',!animate);
+    const center=state.count>=VISIBLE_ROWS?Math.floor(VISIBLE_ROWS/2):0;
+    state.rows.forEach(function(row,index){
+      const delta=index-state.pos,distance=Math.abs(delta);
+      const y=(delta+center)*state.rowHeight;
+      row.style.transform='translateY('+y.toFixed(2)+'px) rotateX('+(-delta*24).toFixed(2)+'deg) scale('+(1-Math.min(distance,2)*0.04).toFixed(3)+')';
+      row.style.opacity=distance>=2?'0':String((1-distance*0.25).toFixed(3));
+      row.style.visibility=distance>=2?'hidden':'';
+      row.classList.toggle('isCenter',distance<0.5);
+      row.setAttribute('aria-selected',distance<0.5?'true':'false');
+    });
+  }
+  function snapRevolver(state,target){
+    state.pos=revolverClamp(state,Math.round(target==null?state.pos:target));
+    state.centerMonth=state.rows[state.pos]?state.rows[state.pos].dataset.month:'';
+    paintRevolver(state,true);
+  }
+  function fitThumbs(state){
+    const sample=state.host.querySelector('.ovCollectionMonthThumb');
+    if(sample&&sample.offsetWidth>0)state.thumbStep=sample.offsetWidth+THUMB_GAP;
+    state.rows.forEach(function(row){
+      const strip=row.querySelector('.ovCollectionMonthThumbs');if(!strip)return;
+      const thumbs=Array.from(strip.querySelectorAll('.ovCollectionMonthThumb')),more=strip.querySelector('.ovCollectionMonthMore');
+      const total=Number(row.dataset.modelCount)||thumbs.length,step=state.thumbStep,width=strip.clientWidth;
+      let fit=step>0?Math.max(0,Math.floor((width+THUMB_GAP)/step)):thumbs.length;
+      if(total>fit)fit=Math.max(0,fit-1);
+      fit=Math.min(fit,thumbs.length);
+      thumbs.forEach(function(thumb,index){thumb.hidden=index>=fit;});
+      const hidden=total-fit;
+      if(more){more.hidden=hidden<=0;more.textContent='+'+hidden;}
+    });
+  }
+  const THUMB_GAP=4;
+  function mountRevolver(host,buckets){
+    const previous=revolver&&revolver.host===host?revolver.centerMonth:null;
+    revolverTeardown();
+    const track=host.querySelector('.ovCollectionRevolverTrack');
+    const rows=Array.from(host.querySelectorAll('.ovCollectionMonthRow'));
+    /* Satır yüksekliği CSS'ten okunur: widget gizliyken de (ölçü 0) doğru kalır. */
+    const rowHeight=Math.max(32,parseFloat(getComputedStyle(host).getPropertyValue('--revolver-row'))||46);
+    const state={host:host,track:track,rows:rows,count:rows.length,rowHeight:rowHeight,thumbStep:28+THUMB_GAP,pos:0,centerMonth:'',cleanup:[]};
+    host.style.height=(rowHeight*Math.min(VISIBLE_ROWS,Math.max(1,rows.length)))+'px';
+    let start=previous?buckets.findIndex(function(bucket){return bucket.month===previous;}):-1;
+    if(start<0){
+      const now=new Date(),current=now.getFullYear()*12+now.getMonth()+1;
+      let best=Number.POSITIVE_INFINITY;
+      buckets.forEach(function(bucket,index){if(!bucket.year)return;const distance=Math.abs(bucket.year*12+bucket.monthNumber-current);if(distance<best){best=distance;start=index;}});
+      if(start<0)start=0;
+    }
+    revolver=state;
+    state.pos=revolverClamp(state,start);
+    state.centerMonth=rows[state.pos]?rows[state.pos].dataset.month:'';
+    paintRevolver(state,false);
+    void host.offsetHeight;
+    host.classList.remove('isMoving');
+    fitThumbs(state);
+    const scrollable=state.count>VISIBLE_ROWS;
+    host.classList.toggle('isScrollable',scrollable);
+    if(typeof ResizeObserver==='function'){
+      const observer=new ResizeObserver(function(){fitThumbs(state);});
+      observer.observe(host);state.cleanup.push(function(){observer.disconnect();});
+    }
+    if(!scrollable)return;
+    let idle=0;
+    const settle=function(){clearTimeout(idle);idle=setTimeout(function(){snapRevolver(state);},SNAP_IDLE_MS);};
+    const onWheel=function(event){
+      if(!event.deltaY)return;
+      const edge=event.deltaY>0?revolverClamp(state,state.count):revolverClamp(state,0);
+      if(Math.abs(state.pos-edge)<0.001)return;
+      event.preventDefault();
+      const unit=event.deltaMode===1?16:event.deltaMode===2?state.rowHeight*VISIBLE_ROWS:1;
+      const delta=event.deltaY*unit;
+      if(event.deltaMode!==0||Math.abs(delta)>=60){clearTimeout(idle);snapRevolver(state,Math.round(state.pos)+(delta>0?1:-1));return;}
+      state.pos=revolverClamp(state,state.pos+delta/state.rowHeight);
+      paintRevolver(state,false);settle();
+    };
+    let drag=null,suppressClick=false;
+    const onDown=function(event){
+      if(event.button!==0)return;
+      clearTimeout(idle);
+      drag={id:event.pointerId,y:event.clientY,pos:state.pos,moved:false};
+    };
+    const onMove=function(event){
+      if(!drag||event.pointerId!==drag.id)return;
+      const dy=event.clientY-drag.y;
+      if(!drag.moved&&Math.abs(dy)<5)return;
+      if(!drag.moved){drag.moved=true;try{host.setPointerCapture(drag.id);}catch(_){}}
+      event.preventDefault();
+      state.pos=revolverClamp(state,drag.pos-dy/state.rowHeight);
+      paintRevolver(state,false);
+    };
+    const onUp=function(event){
+      if(!drag||event.pointerId!==drag.id)return;
+      const moved=drag.moved;drag=null;
+      try{host.releasePointerCapture(event.pointerId);}catch(_){}
+      if(moved){suppressClick=true;setTimeout(function(){suppressClick=false;},0);snapRevolver(state);}
+    };
+    const onClick=function(event){if(suppressClick){event.preventDefault();event.stopPropagation();suppressClick=false;}};
+    const onKey=function(event){
+      if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();snapRevolver(state,Math.round(state.pos)+(event.key==='ArrowDown'?1:-1));}
+      else if(event.key==='Home'||event.key==='End'){event.preventDefault();snapRevolver(state,event.key==='Home'?0:state.count-1);}
+    };
+    host.addEventListener('wheel',onWheel,{passive:false});
+    host.addEventListener('pointerdown',onDown);
+    host.addEventListener('pointermove',onMove);
+    host.addEventListener('pointerup',onUp);
+    host.addEventListener('pointercancel',onUp);
+    host.addEventListener('click',onClick,true);
+    host.addEventListener('keydown',onKey);
+    state.cleanup.push(function(){
+      clearTimeout(idle);
+      host.removeEventListener('wheel',onWheel,{passive:false});
+      host.removeEventListener('pointerdown',onDown);
+      host.removeEventListener('pointermove',onMove);
+      host.removeEventListener('pointerup',onUp);
+      host.removeEventListener('pointercancel',onUp);
+      host.removeEventListener('click',onClick,true);
+      host.removeEventListener('keydown',onKey);
+    });
   }
   return {render:render,openColumnDrawer:openColumnDrawer,scopeState:scopeState};
 });

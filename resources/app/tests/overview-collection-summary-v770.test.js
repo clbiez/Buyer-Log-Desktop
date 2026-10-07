@@ -46,8 +46,10 @@ test('Overview Collection widget keeps identity but main surface is visual dashb
   assert.match(INDEX,/id="ovCollectionSummary"/);
   assert.match(INDEX,/data-overview-widget="collectionSummary"/);
   assert.match(INDEX,/id="ovCollectionSummaryKpi"/);
-  assert.match(INDEX,/id="ovCollectionSummaryStatusDistribution"/);
-  assert.match(INDEX,/id="ovCollectionSummaryDistributionBar"/);
+  /* v2026-10-07: tek dağılım çubuğu + status kartları yerini aylık revolver
+     satırlarına (ay · adet · görseller · status çubuğu) bıraktı. */
+  assert.match(INDEX,/id="ovCollectionSummaryMonths"/);
+  assert.match(INDEX,/id="ovCollectionSummaryLegend"/);
   assert.match(INDEX,/id="ovCollectionSummaryScope"/);
   assert.match(INDEX,/id="ovCollectionSummaryScopeLabel"/);
   assert.match(INDEX,/id="ovCollectionSummaryScopeTrigger"/);
@@ -55,7 +57,7 @@ test('Overview Collection widget keeps identity but main surface is visual dashb
   assert.doesNotMatch(INDEX,/id="ovCollectionSummarySettingsBtn"/);
   assert.doesNotMatch(INDEX,/id="ovCollectionSummaryTable"/);
   assert.match(DASH,/ovCollectionKpiCard/);
-  assert.match(DASH,/ovCollectionStatusCard/);
+  assert.match(DASH,/ovCollectionMonthRow/);
   assert.match(DASH,/scopeColumn/);
   assert.match(DASH,/scopeValues/);
   assert.match(DASH,/inStoreMonth/);
@@ -75,7 +77,7 @@ test('Overview KPI drill maps dynamic scope and confirmation to Collection filte
 });
 
 test('Status distribution uses option counts so segments form a real 100% distribution',()=>{
-  assert.match(DASH,/totalOptions=Number\(result\.kpi\.optionCount\)/);
-  assert.match(DASH,/pct\(row\.optionCount,totalOptions\)/);
+  assert.match(DASH,/pct\(entry\.optionCount,bucket\.optionCount\)/);
+  assert.match(DASH,/flex-grow:'\+entry\.optionCount/);
   assert.doesNotMatch(DASH,/pct\(row\.modelCount,total\)/);
 });

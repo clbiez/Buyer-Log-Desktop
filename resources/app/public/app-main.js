@@ -10061,6 +10061,22 @@ function overviewCollectionSummaryPivotColumns(){
 function overviewCollectionSummaryColumnValue(row,key){
   try{return typeof kolFilterValue==='function'?kolFilterValue(row,key):String((row&&row[key])??'');}catch(_){return String((row&&row[key])??'');}
 }
+/* Revolver satırı adet ve görseli: kanonik collectionQuantity bağı + model
+   grubu etkin değeri; görsel Koleksiyon tablosuyla aynı kaynak sırasından. */
+function overviewCollectionSummaryQuantity(row){
+  try{
+    const effective=typeof kolEffectiveValue==='function'?{...row,quantity:kolEffectiveValue(row,'quantity')}:row;
+    const raw=window.BLCanonicalFields?.value?window.BLCanonicalFields.value(effective,'collection','collectionQuantity'):effective?.quantity;
+    const value=typeof kolParseQuantityNum==='function'?kolParseQuantityNum(raw):Number(raw);
+    return Number.isFinite(value)&&value>0?value:0;
+  }catch(_){return 0;}
+}
+function overviewCollectionSummaryImage(row){
+  try{
+    if(!row)return '';
+    return String(row._sharedCollectionImageUrl||'')||canonicalModelImageSource(row.plmId,row.colourCode,row.colour)||String(row.img||'')||(row.imgRef?`${COLLECTION_IMAGE_API}/${encodeURIComponent(row.imgRef)}`:'');
+  }catch(_){return '';}
+}
 function overviewCollectionSummaryConfirmed(row){
   try{return typeof kolConfirmedPricing==='function'&&Boolean(kolConfirmedPricing(row));}catch(_){return false;}
 }
@@ -10094,6 +10110,8 @@ function overviewCollectionSummaryDashboardContext(){
     columns:overviewCollectionSummaryColumns(),
     columnValue:overviewCollectionSummaryColumnValue,
     isConfirmed:overviewCollectionSummaryConfirmed,
+    quantityFor:overviewCollectionSummaryQuantity,
+    imageFor:overviewCollectionSummaryImage,
     statusCatalog:kolStatusEntries(),
     statusLabel:kolStatusDisplayLabel,
     statusColor:kolStatusColor,
