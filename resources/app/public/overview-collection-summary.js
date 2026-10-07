@@ -97,14 +97,14 @@
     return {months:selectedMonths,statuses:selectedStatuses,confirmation:text(saved.confirmation)||'all'};
   }
 
-  function build(rows, options={}){
+  function filterRows(rows, options={}){
     const fields={...DEFAULT_FIELDS,...(options.fields||{})};
     const months=Array.isArray(options.months)?new Set(options.months.map(text).filter(Boolean)):null;
     const statuses=Array.isArray(options.statuses)?new Set(options.statuses.map(text).filter(Boolean)):null;
     const confirmation=text(options.confirmation||'all').toLowerCase();
     const columnFilters=options.columnFilters&&typeof options.columnFilters==='object'?options.columnFilters:{};
     const valueFor=typeof options.columnValue==='function'?options.columnValue:(row,key)=>row&&row[key];
-    const filtered=(Array.isArray(rows)?rows:[]).filter((row,index)=>{
+    return (Array.isArray(rows)?rows:[]).filter((row,index)=>{
       const month=fieldValue(row,'month',fields),status=fieldValue(row,'status',fields);
       if(months&&months.size&&!months.has(month))return false;
       if(statuses&&statuses.size&&!statuses.has(status))return false;
@@ -118,6 +118,12 @@
       if(!passesColumns)return false;
       return Boolean(modelKeyFor(row,index,fields));
     });
+  }
+
+  function build(rows, options={}){
+    const fields={...DEFAULT_FIELDS,...(options.fields||{})};
+    const valueFor=typeof options.columnValue==='function'?options.columnValue:(row,key)=>row&&row[key];
+    const filtered=filterRows(rows,options);
     const modelMap=new Map();
     const statusMap=new Map();
     const statusOptionCounts=new Map();
@@ -174,5 +180,44 @@
     return {rows:resultRows,pivotRows,pivotColumns,kpi:{total:modelMap.size,optionCount:filtered.length,confirmed,notConfirmed:modelMap.size-confirmed}};
   }
 
-  return {build,defaultFilters,availableOptions,availableColumns,fields:DEFAULT_FIELDS};
+  /* Genel Bakış revolver satırları: kapsam filtresinden geçen satırlar ay
+     (fields.month) bazında gruplanır. Adet ve görsel modülün kanonik
+     okuyucularından (quantityFor/imageFor) gelir; burada başlık eşlenmez. */
+  function monthBuckets(rows, options={}){
+    const fields={...DEFAULT_FIELDS,...(options.fields||{})};
+    const quantityFor=typeof options.quantityFor==='function'?options.quantityFor:()=>0;
+    const imageFor=typeof options.imageFor==='function'?options.imageFor:()=>'';
+    const groups=new Map();
+    filterRows(rows,options).forEach((row,index)=>{
+      const month=fieldValue(row,'month',fields),model=modelKeyFor(row,index,fields),status=fieldValue(row,'status',fields)||'—';
+      const group=groups.get(month)||{month,quantity:0,optionCount:0,models:new Map(),statuses:new Map()};
+      const quantity=Number(quantityFor(row));
+      if(Number.isFinite(quantity)&&quantity>0)group.quantity+=quantity;
+      group.optionCount++;
+      const entry=group.models.get(model)||{key:model,label:fieldValue(row,'model',fields)||model,image:''};
+      if(!entry.image)entry.image=text(imageFor(row));
+      group.models.set(model,entry);
+      const statusEntry=group.statuses.get(status)||{status,optionCount:0,quantity:0,models:new Set()};
+      statusEntry.optionCount++;if(Number.isFinite(quantity)&&quantity>0)statusEntry.quantity+=quantity;statusEntry.models.add(model);group.statuses.set(status,statusEntry);
+      groups.set(month,group);
+    });
+    const order=group=>{const parts=monthParts(group.month);return parts?parts.year*12+parts.month:Number.POSITIVE_INFINITY;};
+    return [...groups.values()].sort((a,b)=>order(a)-order(b)||a.month.localeCompare(b.month,'tr-TR',{numeric:true})).map(group=>{
+      const parts=monthParts(group.month);
+      const models=[...group.models.values()];
+      return {
+        month:group.month,
+        year:parts?parts.year:null,
+        monthNumber:parts?parts.month:null,
+        quantity:group.quantity,
+        optionCount:group.optionCount,
+        modelCount:models.length,
+        models:models.filter(model=>model.image).concat(models.filter(model=>!model.image)),
+        statuses:[...group.statuses.values()].map(entry=>({status:entry.status,optionCount:entry.optionCount,modelCount:entry.models.size,quantity:entry.quantity}))
+          .sort((a,b)=>a.status.localeCompare(b.status,'tr-TR',{numeric:true,sensitivity:'base'})),
+      };
+    });
+  }
+
+  return {build,monthBuckets,defaultFilters,availableOptions,availableColumns,fields:DEFAULT_FIELDS};
 });

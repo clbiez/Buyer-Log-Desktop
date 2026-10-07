@@ -24,7 +24,7 @@
     attention:{icon:'alert-triangle',group:'operations',tr:'Aksiyon Gerekenler',en:'Orders Requiring Attention',descTr:'Bugün müdahale bekleyen sipariş satırları.',descEn:'Order rows that need action today.',w:6,h:7,minW:4,minH:4,maxW:12,maxH:16},
     dataCoverage:{icon:'checklist',group:'operations',tr:'Veri Kapsamı',en:'Data Coverage',descTr:'Eksik tarih/kural sayıları ve takip dışı alanlar.',descEn:'Missing dates/rules and untracked fields.',w:4,h:5,minW:3,minH:3,maxW:12,maxH:12},
     globalFlowMap:{icon:'globe',group:'operations',tr:'Global Flow Map',en:'Global Flow Map',descTr:'Üretim ve sevkiyat akışı haritası.',descEn:'Production and shipment flow map.',w:12,h:9,minW:5,minH:5,maxW:12,maxH:16},
-    collectionSummary:{icon:'table',group:'commercial',tr:'Koleksiyon',en:'Collection',descTr:'Model/opsiyon sayıları ve status dağılımı.',descEn:'Model/option counts and status mix.',w:12,h:5,minW:4,minH:3,maxW:12,maxH:12},
+    collectionSummary:{icon:'table',group:'commercial',tr:'Koleksiyon',en:'Collection',descTr:'Aylık adet, model görselleri ve status dağılımı.',descEn:'Monthly quantity, model images and status mix.',w:12,h:3,minW:4,minH:3,maxW:12,maxH:12},
     oab:{icon:'chart-histogram',group:'commercial',tr:'OAB',en:'OAB',descTr:'Order-Assortment-Budget pivotu.',descEn:'Order-Assortment-Budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
     intake:{icon:'database-import',group:'commercial',tr:'INTAKE',en:'INTAKE',descTr:'INTAKE bütçe pivotu.',descEn:'INTAKE budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
   });
@@ -40,9 +40,9 @@
       {key:'dataCoverage',x:8,y:16,w:4,h:9},
     ]},
     {name:{tr:'Ticari',en:'Commercial'},items:[
-      {key:'collectionSummary',x:0,y:0,w:12,h:5},
-      {key:'oab',x:0,y:5,w:12,h:8},
-      {key:'intake',x:0,y:13,w:12,h:8},
+      {key:'collectionSummary',x:0,y:0,w:12,h:3},
+      {key:'oab',x:0,y:3,w:12,h:8},
+      {key:'intake',x:0,y:11,w:12,h:8},
     ]},
   ]);
   /* v1 → v2 taşıması için eski anahtarlar. */
