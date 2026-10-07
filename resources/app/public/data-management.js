@@ -49,6 +49,9 @@
   let groupError = '';
   let loading = false;
   let loadError = '';
+  let merchCalendar = { configured:false, calendar:null, summary:null };
+  let merchBusy = false;
+  let merchMessage = '';
   let view = 'list';           // 'list' | 'matrix'
   let expandedSourceId = '';
   /* Eşleme düzenleyicisi hangi kaynak için açık. Açıkken o kaynağın statik
@@ -124,10 +127,11 @@
     loadError = '';
     render();
     try {
-      const [overviewRes, groupsRes, labRes] = await Promise.all([
+      const [overviewRes, groupsRes, labRes, merchRes] = await Promise.all([
         fetch(`/api/data-management/overview?language=${en() ? 'en' : 'tr'}`, { cache: 'no-store' }),
         fetch('/api/data-management/refresh-groups', { cache: 'no-store' }),
         fetch(`/api/data-management/integration-lab?language=${en() ? 'en' : 'tr'}`, { cache: 'no-store' }).catch(() => null),
+        fetch('/api/merch-calendar', { cache: 'no-store' }).catch(() => null),
       ]);
       const payload = await overviewRes.json().catch(() => ({}));
       if (!overviewRes.ok || !payload.ok) throw new Error(payload.error || T('Veri Yönetimi özeti okunamadı.', 'Could not read the Data Management summary.'));
@@ -140,6 +144,11 @@
         lab = labPayload;
         if (!selectedLabSourceId) selectedLabSourceId = lab.selectedInspector && lab.selectedInspector.sourceId || '';
         if (!selectedAutomationId) selectedAutomationId = lab.automations && lab.automations[0] && lab.automations[0].id || '';
+      }
+      const merchPayload = merchRes ? await merchRes.json().catch(() => null) : null;
+      if (merchRes && merchRes.ok && merchPayload && merchPayload.ok) {
+        merchCalendar = merchPayload;
+        window.BLMerchCalendarRuntime?.apply?.(merchPayload);
       }
     } catch (error) {
       loadError = String(error && error.message || error);
@@ -1205,6 +1214,121 @@
     });
   }
 
+  function merchCalendarPanel() {
+    const summary = merchCalendar && merchCalendar.summary;
+    const configured = Boolean(merchCalendar && merchCalendar.configured && summary);
+    const range = configured && summary.minDate && summary.maxDate ? `${summary.minDate} → ${summary.maxDate}` : '—';
+    const years = configured && Array.isArray(summary.years) ? summary.years : [];
+    const yearText = years.length
+      ? years.map(item => `${item.year}: ${item.weeks} ${T('hafta','weeks')}`).join(' · ')
+      : '';
+    const warnings = configured && Array.isArray(summary.warnings) ? summary.warnings.length : 0;
+    return `<div class="dmMerchPanel">
+      <div class="dmPanelHead dmMerchHead">
+        <div>
+          <div class="dmPanelTitle">Merch Calendar</div>
+          <div class="dmMerchIntro">${esc(T(
+            'LCW iş haftası, iş ayı ve ay haftası için tek kaynak. Backlog, Koleksiyon ve bağlı analizler bu takvimi kullanır.',
+            'Single source for LCW business week, business month and month-week. Backlog, Collection and linked analyses use this calendar.'
+          ))}</div>
+        </div>
+        <span class="dmMerchState${configured ? ' isReady' : ''}">${esc(configured ? T('Aktif','Active') : T('Yüklenmedi','Not uploaded'))}</span>
+      </div>
+      <div class="dmMerchBody">
+        <div class="dmMerchFacts">
+          <div><span class="dmLabel">${esc(T('Kaynak dosya','Source file'))}</span><strong>${esc(configured ? summary.sourceName : '—')}</strong></div>
+          <div><span class="dmLabel">${esc(T('Kapsam','Coverage'))}</span><strong>${esc(range)}</strong></div>
+          <div><span class="dmLabel">${esc(T('LCW hafta kaydı','LCW week records'))}</span><strong>${configured ? Number(summary.weekCount || 0) : '—'}</strong></div>
+          <div><span class="dmLabel">LCW / GLB</span><strong>${esc(T('Tarih seçicilerinde birlikte gösterilir','Shown together in date pickers'))}</strong></div>
+        </div>
+        ${yearText ? `<div class="dmMerchYears">${esc(yearText)}</div>` : ''}
+        ${warnings ? `<div class="dmNotice dmNotice--warn">${esc(T(
+          `${warnings} takvim boşluğu algılandı; kapsam dışındaki tarihler için LCW dönemi üretilmez.`,
+          `${warnings} calendar gaps detected; no LCW period is generated for dates outside coverage.`
+        ))}</div>` : ''}
+        <div class="dmMerchRules">
+          <span>${esc(T('LCW haftaları dosyadan okunur; Buyer Log kendi LCW haftasını tahmin etmez.','LCW weeks are read from the file; Buyer Log does not guess LCW weeks.'))}</span>
+          <span>${esc(T('LCW hafta numarası 1–52 olmalıdır; 53. hafta içeren dosya etkinleştirilmez.','LCW week numbers must be 1–52; a file containing week 53 is not activated.'))}</span>
+        </div>
+        ${merchMessage ? `<div class="dmMerchMessage">${esc(merchMessage)}</div>` : ''}
+        <div class="dmMerchActions">
+          ${model.canManage ? `<label class="tbtn dmMerchUpload${merchBusy ? ' isBusy' : ''}">
+            <input type="file" data-merch-file accept=".xls,.xlsx,.html,.htm" ${merchBusy ? 'disabled' : ''}>
+            ${esc(merchBusy ? T('İşleniyor…','Processing…') : (configured ? T('Takvimi Değiştir','Replace Calendar') : T('Merch Calendar Yükle','Upload Merch Calendar')))}
+          </label>
+          ${configured ? `<button type="button" class="tbtn danger" data-merch-delete ${merchBusy ? 'disabled' : ''}>${esc(T('Takvimi Kaldır','Remove Calendar'))}</button>` : ''}` : `<span class="dmReadOnly">${esc(T('Takvimi değiştirmek için Veri Yönetimi yetkisi gerekir.','Data Management permission is required to change the calendar.'))}</span>`}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function readFileBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(reader.error || new Error(T('Dosya okunamadı.','Could not read the file.')));
+      reader.onload = () => {
+        const raw = String(reader.result || '');
+        resolve(raw.includes(',') ? raw.slice(raw.indexOf(',') + 1) : raw);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadMerchCalendar(file) {
+    if (!file || merchBusy) return;
+    merchBusy = true;
+    merchMessage = '';
+    render();
+    try {
+      if (Number(file.size || 0) > 12 * 1024 * 1024) throw new Error(T('Merch Calendar dosyası 12 MB sınırını aşıyor.','The Merch Calendar file exceeds the 12 MB limit.'));
+      const contentBase64 = await readFileBase64(file);
+      const response = await fetch('/api/merch-calendar', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body:JSON.stringify({ name:file.name, contentBase64 }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || T('Merch Calendar yüklenemedi.','Could not upload Merch Calendar.'));
+      merchCalendar = payload;
+      window.BLMerchCalendarRuntime?.apply?.(payload);
+      merchMessage = T('Merch Calendar doğrulandı ve Buyer Log tarih motoruna uygulandı.','Merch Calendar was validated and applied to the Buyer Log date engine.');
+      if (typeof showToast === 'function') showToast(merchMessage);
+    } catch (error) {
+      merchMessage = String(error && error.message || error);
+      if (typeof showToast === 'function') showToast(merchMessage);
+    } finally {
+      merchBusy = false;
+      render();
+    }
+  }
+
+  async function deleteMerchCalendar() {
+    if (merchBusy) return;
+    const ok = typeof confirm !== 'function' || confirm(T(
+      'Merch Calendar kaldırılsın mı? LCW hafta/ay kırılımları takvim yeniden yüklenene kadar kullanılamaz.',
+      'Remove Merch Calendar? LCW week/month breakdowns will be unavailable until a calendar is uploaded again.'
+    ));
+    if (!ok) return;
+    merchBusy = true;
+    merchMessage = '';
+    render();
+    try {
+      const response = await fetch('/api/merch-calendar', { method:'DELETE' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) throw new Error(payload.error || T('Merch Calendar kaldırılamadı.','Could not remove Merch Calendar.'));
+      merchCalendar = payload;
+      window.BLMerchCalendarRuntime?.apply?.(payload);
+      merchMessage = T('Merch Calendar kaldırıldı.','Merch Calendar removed.');
+      if (typeof showToast === 'function') showToast(merchMessage);
+    } catch (error) {
+      merchMessage = String(error && error.message || error);
+      if (typeof showToast === 'function') showToast(merchMessage);
+    } finally {
+      merchBusy = false;
+      render();
+    }
+  }
+
   function render() {
     if (!root) return;
 
@@ -1238,6 +1362,9 @@
       <div class="dmWizardSlot" data-wizard-slot></div>
 
       ${labPanel()}
+
+      <div class="dmSectionLabel">${esc(T('İş takvimi', 'Business calendar'))}</div>
+      ${merchCalendarPanel()}
 
       ${unsupported ? `<div class="dmNotice">${esc(T('Veri modeli sorguları yalnız Windows üzerinde çalışır; bu makinede bağlantı sınanamaz.', 'Data-model queries run on Windows only; connections cannot be tested on this machine.'))}</div>` : ''}
       ${(model.warnings || []).map(text => `<div class="dmNotice dmNotice--warn">${esc(text)}</div>`).join('')}
@@ -1557,6 +1684,9 @@
       return;
     }
 
+    const merchDelete = event.target.closest('[data-merch-delete]');
+    if (merchDelete) { void deleteMerchCalendar(); return; }
+
     const retry = event.target.closest('[data-retry], [data-reload]');
     if (retry) { void load(); return; }
 
@@ -1862,6 +1992,13 @@
   /* Onay kutuları render'ı tetiklemez: her tıkta yeniden çizmek yazılmakta olan
      ad alanının imlecini kaybettiriyordu. Taslak sessizce güncellenir. */
   function onChange(event) {
+    const merchFile = event.target && event.target.closest ? event.target.closest('[data-merch-file]') : null;
+    if (merchFile) {
+      const file = merchFile.files && merchFile.files[0];
+      merchFile.value = '';
+      if (file) void uploadMerchCalendar(file);
+      return;
+    }
     /* Otomatik yenileme. Değer ve zamanlayıcı app-main.js'te yaşıyor;
        burada yalnız seçim iletiliyor — ikinci bir zamanlayıcı yazmak iki ayrı
        yenileme turu demek olurdu (§9). */
