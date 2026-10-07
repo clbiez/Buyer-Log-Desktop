@@ -30,11 +30,28 @@ test('dil katmanı: EN kipinde Türkçe, TR kipinde İngilizce metin karşılı�
   assert.equal(T('Güncel Durum → Antrepo Giriş Tarihi', 'en'), 'Current Status → Antrepo Entry Date');
   assert.equal(T('Filtrele: Country', 'tr'), 'Filtrele: Ülke');
   assert.equal(T('Create 0 · Update 0 · Delete 0', 'tr'), 'Oluştur 0 · Güncelle 0 · Sil 0');
+  // Sistem/veri değerleri, yalnız bir parçası sözlükte diye değiştirilmez.
+  assert.equal(T('Formula 1', 'tr'), 'Formula 1');
+  assert.equal(T('Season 1', 'tr'), 'Season 1');
+  assert.equal(T('Style 1', 'tr'), 'Style 1');
+  assert.equal(T('Option 1', 'tr'), 'Option 1');
   // Sunucu hata mesajları da çevrilir.
   assert.equal(T('Sync klasörü ayarlanmadı.', 'en'), 'Sync folder is not set.');
   // Bilinçli ortak jargon ve saat gibi veriler değişmez.
   assert.equal(T('CP Tracker', 'tr'), 'CP Tracker');
   assert.equal(T('12:30', 'en'), '12:30');
+});
+
+test('bilinen License sistem değerleri TR/EN dil değişiminde aynen korunur', () => {
+  const { BLI18n } = loadRuntime();
+  const parseSource = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'parse.js'), 'utf8');
+  const licenses = [...parseSource.matchAll(/\[([^\]]+)\]\.forEach\(l => LICMAP\[l\] = '[^']+'\);/g)]
+    .flatMap(match => [...match[1].matchAll(/'([^']+)'/g)].map(item => item[1]));
+  assert.ok(licenses.length >= 20, 'known license catalog unexpectedly small');
+  for (const value of licenses) {
+    assert.equal(BLI18n.translate(value, 'tr'), value, 'TR changed license data: ' + value);
+    assert.equal(BLI18n.translate(value, 'en'), value, 'EN changed license data: ' + value);
+  }
 });
 
 test('dil katmanı sözlüğü: yer tutucular eşleşir ve çift yönleri tutarlıdır', () => {
