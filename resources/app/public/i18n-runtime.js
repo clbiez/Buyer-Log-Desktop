@@ -127,9 +127,13 @@
       const withDot=exact[target].get(affix[2]+affix[3].trim());
       if(withDot!=null)return affix[1]+withDot;
     }
-    // "Create 0", "4 Season" gibi sayı önekli/sonekli etiketler: sayı korunur, etiket çevrilir.
+    // Sayı ekli HER metni parçalayarak çevirmek veri değerlerini bozuyordu
+    // (örn. License "Formula 1" → "Formül 1", "Season 1" → "Sezon 1").
+    // Bu güvenlik ağı yalnız Buyer Log'un kendi işlem sayaçlarında kullanılır.
+    // Diğer sayı içeren metinler ancak sözlükte TAM eşleşme / {0} kalıbı varsa çevrilir.
     const numeric=/^([\d.,%+\-]+\s+)?(.*?[^\d\s].*?)(\s+[\d.,%()+\-]+)?$/.exec(text);
-    if(numeric&&(numeric[1]||numeric[3])&&numeric[2]){
+    const numericUiLabels=new Set(['Create','Update','Delete','Oluştur','Güncelle','Sil']);
+    if(numeric&&(numeric[1]||numeric[3])&&numeric[2]&&numericUiLabels.has(numeric[2])){
       const inner=exact[target].get(numeric[2]);
       if(inner!=null)return (numeric[1]||'')+inner+(numeric[3]||'');
     }
