@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.255",
+      "publishedAt": "2026-10-07",
+      "title": {
+        "tr": "LCW AI dosyalarını düzenleyin, yerleşimini ayarlayın, şablon olarak paylaşın",
+        "en": "Edit LCW AI files, adjust their layout and share them as templates"
+      },
+      "stats": {
+        "features": 4,
+        "improvements": 1,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.255/release.json"
+    },
+    {
       "version": "7.0.254",
       "publishedAt": "2026-10-07",
       "title": {
