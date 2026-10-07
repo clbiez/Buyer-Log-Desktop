@@ -159,7 +159,10 @@ test('koleksiyon satır karşılaştırması iç nesneleri içerikle karşılaş
 });
 
 test('modül sekmesi Genel Bakış’ı ve onun CP bağımlılığını açılışta yüklemez; Genel Bakış ilk girişte yüklenir', () => {
-  assert.match(APP, /window\.BL_BOOT_MODULE=requestedModule;[\s\S]{0,200}await loadInitialBuyerLogData\(\);/);
+  const startup=APP.slice(APP.indexOf("window.addEventListener('DOMContentLoaded', async () => {"),APP.indexOf('async function refreshFolderLabel'));
+  const bootModule=startup.indexOf('window.BL_BOOT_MODULE=requestedModule;');
+  const initialLoad=startup.indexOf('await loadInitialBuyerLogData(');
+  assert.ok(bootModule>=0&&initialLoad>bootModule,'boot module must be selected before initial data hydration');
   assert.match(extractFunction(APP, 'renderStartupActiveModule'), /if\(activeTab==='overview'&&!window\.BL_BOOT_MODULE\)renderOverview\(\);/);
   assert.match(APP, /if\(state\.overviewDeferred&&currentActiveTab\(\)==='overview'\)void ensureOverviewLoaded\(\);/);
   assert.match(extractFunction(APP, 'switchTab'), /if\(tab==='overview'&&state\.overviewDeferred\)void ensureOverviewLoaded\(\);/);
