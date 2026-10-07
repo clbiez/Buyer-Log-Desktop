@@ -121,6 +121,6 @@ test('Collection copy/export call sites share the projection rather than raw par
 });
 
 test('spreadsheet Ctrl+C takes the rendered canonical summary display for collapsed cells only',()=>{
-  assert.match(SHEET,/function valueForCoord\(coord\)\{[^}]*dataset\?\.kolGroupSummary==='1'[^}]*kolSummaryDisplay/);
+  assert.match(SHEET,/function valueForCoord\(coord,liveRows=null\)\{[^}]*dataset\?\.kolGroupSummary==='1'[^}]*kolSummaryDisplay/);
   assert.match(SHEET,/bridge\(\)\?\.rawValue\?\.\(row,coord\.key\)/,'expanded/non-summary cells preserve existing raw clipboard behavior');
 });
