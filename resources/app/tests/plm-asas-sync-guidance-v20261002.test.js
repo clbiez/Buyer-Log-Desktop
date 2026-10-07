@@ -36,10 +36,22 @@ test('PLM/ASAS işlem bildirimi Buyer Log standart notification yüzeyini kullan
   assert.match(ui,/window\.showToast\(message,\{kind:'info'/);
   assert.match(ui,/kindLabel:t\('BİLGİLENDİRME','INFORMATION'\)/);
   assert.match(ui,/close\.update\?\./);
-  assert.match(ui,/if\(watched\)panel=progressFor\(path\)/);
+  assert.match(ui,/if\(watched\)panel=progressFor\(path,usesBrowser\(path,init\)\)/);
   assert.doesNotMatch(ui,/blSyncGuideProgress/);
   assert.doesNotMatch(css,/\.blSyncGuideProgress/);
   assert.match(primitives,/close\.update=update/);
   assert.match(ops,/--plm-ops-strip-offset/);
   assert.match(experience,/bottom:calc\(18px \+ var\(--plm-ops-strip-offset,0px\)\)/);
+});
+
+test('PLM doğrudan API kullanır: PLM butonları Edge/Remote Debugging ön koşuluna kilitlenmez',()=>{
+  const ui=read('plm-sync-guide.js');
+  assert.match(ui,/const guardedCategories=new Set\(\['asas'\]\);/);
+  const usesBrowser=ui.slice(ui.indexOf('function usesBrowser'),ui.indexOf('function progressFor'));
+  assert.match(usesBrowser,/import-asas/);
+  assert.match(usesBrowser,/selectedOnly===true/);
+  const progress=ui.slice(ui.indexOf('function progressFor'),ui.indexOf('const originalFetch'));
+  assert.match(progress,/const detail=browser\?t\(/);
+  assert.match(progress,/Arka planda çalışıyor; tarayıcı açılmaz/);
+  assert.match(progress,/Running in the background; no browser opens/);
 });

@@ -292,7 +292,7 @@ test('OAB: bütün API uçları overview yetki alanıyla korunuyor', () => {
 
 test('OAB: auth durumu açık tarayıcı connector durumundan raporlanır; credential renderer yanıtına çıkmaz', () => {
   const body = SERVER.slice(SERVER.indexOf("app.get('/api/oab/auth/status'"), SERVER.indexOf("app.get('/api/oab/seasons'"));
-  assert.match(body, /oabBrowserAuthStatus\(req\.currentUser\.id\)/);
+  assert.match(body, /oabBrowserAuthStatus\(req\.currentUser\.id, oabRequestTransport\(req\)\)/);
   assert.match(SERVER, /agentBrowserConnector\.passAuthStatus\(userId\)/);
   assert.doesNotMatch(body, /authorization|Bearer/i);
 });
@@ -311,10 +311,10 @@ test('OAB: metadata uçları paketlenmiş JSON kullanıyor; filtre seçiminde PA
   assert.doesNotMatch(bgBody, /ensurePassConnected|fetchPassBuyerGroupOptions|GetVariableWithData/);
 });
 
-test('OAB: /api/oab/report üç filtreyi mevcut Edge/Chrome PASS oturumuna verir', () => {
+test('OAB: /api/oab/report üç filtreyi isteğin OAB taşımasına (masaüstü oturumu / Edge) verir', () => {
   const body = SERVER.slice(SERVER.indexOf("app.post('/api/oab/report'"), SERVER.indexOf("app.get('/api/oab/settings'"));
-  assert.match(body, /ensurePassConnected\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
-  assert.match(body, /fetchOabReportWithLoginRecovery\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}\)/);
+  assert.match(body, /ensurePassConnected\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}, transport\)/);
+  assert.match(body, /fetchOabReportWithLoginRecovery\(req\.currentUser\.id, \{ seasonRef, merchSubGroupRef, buyerGroupRef \}, transport\)/);
   assert.doesNotMatch(body, /fetchOabReportFromInternalSession/);
 });
 

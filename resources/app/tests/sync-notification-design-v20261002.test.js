@@ -12,7 +12,7 @@ test('sync runtime uses Buyer Log standard edge notification instead of custom p
   assert.match(sync,/window\.showToast\(message,\{kind:'info'/);
   assert.match(sync,/kindLabel:t\('BİLGİLENDİRME','INFORMATION'\)/);
   assert.match(sync,/close\.update\?\./);
-  assert.match(sync,/if\(watched\)panel=progressFor\(path\)/);
+  assert.match(sync,/if\(watched\)panel=progressFor\(path,usesBrowser\(path,init\)\)/);
   assert.doesNotMatch(sync,/blSyncGuideProgress/);
   assert.doesNotMatch(css,/\.blSyncGuideProgress/);
 });

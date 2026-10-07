@@ -124,6 +124,19 @@
   }
   async function openOabUserLogin() {
     try {
+      /* Masaüstü: OAB oturumu Electron'un gizli persist:oab bölümünde açılır.
+         Pencere yalnız PASS giriş isterse görünür; dış Edge/Chrome gerekmez. */
+      const desktop = window.buyerLogDesktop;
+      if (desktop && typeof desktop.ensureOabAuth === 'function') {
+        if (typeof showToast === 'function') showToast(tr('OAB oturumu kontrol ediliyor…', 'Checking the OAB session…'));
+        const result = await desktop.ensureOabAuth({ interactive:true });
+        const ready = Boolean(result && result.ok && result.authenticated !== false);
+        const message = ready ? tr('OAB oturumu hazır.', 'OAB session is ready.')
+          : result && result.code === 'OAB_AUTH_CANCELLED' ? tr('OAB girişi tamamlanmadan pencere kapatıldı.', 'The window was closed before OAB sign-in finished.')
+          : tr('OAB bağlantısı tamamlanmadı.', 'OAB connection was not completed.');
+        if (typeof showToast === 'function') showToast(message); else alert(message);
+        return;
+      }
       if (typeof showToast === 'function') showToast(tr('Açık Edge/Chrome OAB oturumu aranıyor…', 'Looking for an open Edge/Chrome OAB session…'));
       const response = await fetch('/api/oab/auth/connect', {
         method:'POST',

@@ -19,13 +19,13 @@ function between(source, startNeedle, endNeedle) {
   return source.slice(start, end);
 }
 
-test('Get OAB reconnects through open Edge/Chrome and retries the failed request once', () => {
+test('Get OAB reconnects (desktop session or open Edge/Chrome) and retries the failed request once', () => {
   const api = between(OAB, 'function oabIsAuthErrorCode', 'const OABApi');
   assert.match(api, /PASS_NOT_CONNECTED/);
   assert.match(api, /PASS_SESSION_EXPIRED/);
   assert.match(api, /\/api\/oab\/auth\/connect/);
+  assert.match(api, /bridge\.ensureOabAuth\(\{ interactive:true, \.\.\.oabLastAuthContext \}\)/);
   assert.match(api, /return oabJson\(url, options, false\)/);
-  assert.doesNotMatch(api, /buyerLogDesktop|ensureOabAuth/);
 });
 
 test('OAB renderer progress text describes the external browser flow', () => {
@@ -57,8 +57,8 @@ test('single Get OAB uses PASS connector and recaptures after session expiry', (
 
 test('batch OAB uses the same PASS browser connection', () => {
   const fetchOne = between(BATCH, 'async function oabFetchOneCombination', '/* Toplu BuyerGroupRefs');
-  assert.match(fetchOne, /ensurePassConnected\(userId, params\)/);
-  assert.match(fetchOne, /fetchOabReportWithLoginRecovery\(userId, params\)/);
+  assert.match(fetchOne, /ensurePassConnected\(userId, params, transport\)/);
+  assert.match(fetchOne, /fetchOabReportWithLoginRecovery\(userId, params, transport\)/);
   assert.doesNotMatch(fetchOne, /fetchOabReportFromInternalSession|requireOabInternalAuth/);
 });
 

@@ -346,6 +346,21 @@
   }
   let oabBrowserAuthInFlight = null;
   let oabLastAuthContext = {};
+  /* Masaüstünde OAB, Electron'un gizli persist:oab oturumuyla çalışır: dış
+     Edge/Chrome, Remote Debugging veya PASS sekmesi gerekmez. Ana süreç PASS'in
+     kendi access_token'ını okuyup yalnız sunucu belleğine verir; renderer token
+     görmez. Tarayıcı kipinde mevcut Edge/CDP yolu aynen kalır. */
+  function oabDesktopBridge() {
+    const bridge = global.buyerLogDesktop;
+    return bridge && typeof bridge.ensureOabAuth === 'function' ? bridge : null;
+  }
+  function oabUsesDesktopSession() { return Boolean(oabDesktopBridge()); }
+  function oabWithTransport(options) {
+    if (!oabUsesDesktopSession()) return options;
+    const next = { ...(options || {}) };
+    next.headers = { ...((options && options.headers) || {}), 'X-BuyerLog-OAB-Transport': 'desktop' };
+    return next;
+  }
   // API katmanı DOM'a dokunmaz. Gerekirse yalnızca UI katmanına semantik
   // bir aşama sinyali yollar; UI görünür değilse bu callback boş kalabilir.
   let oabActivitySignal = null;
@@ -374,7 +389,16 @@
       const nextContext = oabNormalizeAuthContext(authContext);
       if (Object.keys(nextContext).length) oabLastAuthContext = nextContext;
       if (typeof oabActivitySignal === 'function') oabActivitySignal('browser');
-      const request = fetch('/api/oab/auth/connect', {
+      const bridge = oabDesktopBridge();
+      const request = bridge ? Promise.resolve(bridge.ensureOabAuth({ interactive:true, ...oabLastAuthContext })).then(result => {
+        // Giriş penceresi yalnız PASS gerçekten giriş istediğinde görünür.
+        if (result && result.ok && result.authenticated !== false) return { ok:true, status:{ connected:true, authenticated:true, transport:'desktop-session' } };
+        const err = new Error(oabT('OAB bağlantısı tamamlanmadı.', 'OAB connection was not completed.'));
+        err.code = (result && result.code) || 'OAB_AUTH_REQUIRED';
+        throw err;
+      }).finally(() => {
+        if (oabBrowserAuthInFlight === request) oabBrowserAuthInFlight = null;
+      }) : fetch('/api/oab/auth/connect', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
         body:JSON.stringify(oabLastAuthContext),
@@ -393,7 +417,7 @@
     return oabBrowserAuthInFlight;
   }
   async function oabJson(url, options, allowAuthRetry = true) {
-    const res = await fetch(url, options);
+    const res = await fetch(url, oabWithTransport(options));
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       const err = new Error(data.error || res.statusText);
@@ -478,23 +502,36 @@
      kartının normal akışında kalır ve başka Overview widget'larını örtmez. */
   const OAB_ACTIVITY_STEPS = ['prepare', 'browser', 'login', 'fetch', 'done'];
   function oabActivityCopy(stage) {
+    const desktop = oabUsesDesktopSession();
     const copies = {
       prepare: {
         title: oabT('OAB isteği hazırlanıyor', 'Preparing OAB request'),
         detail: oabT('Seçimler kontrol ediliyor ve OAB bağlantısı hazırlanıyor.', 'Checking your selections and preparing the OAB connection.'),
         keepBrowser: false,
       },
-      browser: {
+      browser: desktop ? {
+        title: oabT('OAB oturumu kontrol ediliyor', 'Checking OAB session'),
+        detail: oabT('Buyer Log OAB oturumunu arka planda doğruluyor; tarayıcı açılmaz.', 'Buyer Log is verifying the OAB session in the background; no browser opens.'),
+        keepBrowser: false,
+      } : {
         title: oabT('Tarayıcı hazırlanıyor', 'Preparing browser'),
         detail: oabT('Edge/Chrome içindeki OAB sekmesi bulunuyor veya açılıyor.', 'Finding or opening the OAB tab in Edge/Chrome.'),
         keepBrowser: true,
       },
-      login: {
+      login: desktop ? {
+        title: oabT('OAB girişi bekleniyor', 'Waiting for OAB sign-in'),
+        detail: oabT('Buyer Log OAB giriş penceresinde girişi tamamlayın. Giriş algılanınca pencere kendiliğinden kapanır ve veri çekilir.', 'Complete sign-in in the Buyer Log OAB sign-in window. Once sign-in is detected, the window closes by itself and data is fetched.'),
+        keepBrowser: false,
+      } : {
         title: oabT('OAB girişi bekleniyor', 'Waiting for OAB sign-in'),
         detail: oabT('Açılan OAB sekmesinde PASS girişini tamamlayın. Buyer Log giriş tamamlanınca otomatik devam eder.', 'Complete PASS sign-in in the opened OAB tab. Buyer Log continues automatically after sign-in.'),
         keepBrowser: true,
       },
-      fetch: {
+      fetch: desktop ? {
+        title: oabT('OAB verisi çekiliyor', 'Fetching OAB data'),
+        detail: oabT('OAB rapor verisi doğrudan PASS servisinden alınıyor.', 'OAB report data is being retrieved directly from the PASS service.'),
+        keepBrowser: false,
+      } : {
         title: oabT('OAB verisi çekiliyor', 'Fetching OAB data'),
         detail: oabT('OAB rapor verisi tarayıcı üzerinden alınıyor.', 'OAB report data is being retrieved through the browser.'),
         keepBrowser: true,
@@ -615,6 +652,23 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
+    if (oabUsesDesktopSession()) {
+      if (code === 'OAB_AUTH_CANCELLED') return oabT(
+        'OAB girişi tamamlanmadan giriş penceresi kapatıldı. Tekrar deneyin.',
+        'The sign-in window was closed before OAB sign-in finished. Try again.');
+      if (code === 'OAB_AUTH_TIMEOUT') return oabT(
+        'OAB girişi zamanında tamamlanmadı. Tekrar deneyin.',
+        'OAB sign-in did not finish in time. Try again.');
+      if (code === 'OAB_AUTH_NAVIGATION_FAILED') return oabT(
+        'OAB giriş sayfası açılamadı. Kurumsal ağ bağlantınızı kontrol edip tekrar deneyin.',
+        'The OAB sign-in page could not be opened. Check your corporate network connection and try again.');
+      if (code === 'OAB_AUTH_EXPIRED' || code === 'PASS_SESSION_EXPIRED') return oabT(
+        'OAB oturumu sona erdi. Buyer Log oturumu arka planda yenileyecek; gerekirse giriş penceresi açılır.',
+        'The OAB session expired. Buyer Log will renew it in the background and open the sign-in window only if needed.');
+      if (code === 'OAB_AUTH_REQUIRED' || code === 'PASS_NOT_CONNECTED' || String(code || '').startsWith('OAB_AUTH_')) return oabT(
+        'OAB oturumu gerekli. Buyer Log oturumu arka planda açar; PASS giriş isterse giriş penceresi açılır.',
+        'OAB sign-in is required. Buyer Log signs in in the background and opens the sign-in window only if PASS asks for it.');
+    }
     if (code === 'PASS_SESSION_EXPIRED' || code === 'OAB_AUTH_EXPIRED') return oabT(
       'OAB oturumu sona erdi. Açık Edge/Chrome OAB sekmesi yeniden yakalanacak.',
       'The OAB session expired. Buyer Log will reconnect to the open Edge/Chrome OAB tab.');

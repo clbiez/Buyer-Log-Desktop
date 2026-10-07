@@ -5048,14 +5048,30 @@ require('./routes/test-report-routes')(app, {
    session/Authorization yalnız kullanıcı "Get OAB"/"Refresh OAB" dediğinde
    doğrulanır; Overview > OAB açılışında login penceresi açılmaz.
    =================================================================== */
-// OAB transport — restore the proven v7.0.80 existing-browser model.
-// Buyer Log attaches to the user's already-open Edge/Chrome CDP session.
-// capturePassAuthorization() first reuses an existing PASS/OAB tab; only when
-// no PASS tab exists does it open ONE viewer tab in the same browser context.
-// The captured Authorization remains process-memory-only inside the connector.
-// PLM Sync ile aynı model: açık PASS sekmesinde access_token varsa istekler onu
-// kullanır; sekme yeniden açılmaz/yüklenmez. Yalnız token yoksa yakalamaya düşülür.
-async function ensurePassConnected(userId, params) {
+// OAB transport — two paths, chosen per request.
+// 1) Desktop (X-BuyerLog-OAB-Transport: desktop): Electron main signs in inside
+//    the hidden persist:oab session, reads PASS's own access_token and hands it
+//    to this process over the loopback desktop bridge. The token lives only in
+//    oabAuthState RAM and report data comes straight from the PASS API
+//    (oabApiClient). No external browser, CDP or Remote Debugging is involved.
+// 2) Browser mode: the proven v7.0.80 existing-browser model. Buyer Log attaches
+//    to the user's already-open Edge/Chrome CDP session; capturePassAuthorization()
+//    reuses an existing PASS/OAB tab and opens ONE viewer tab only if none exists.
+const OAB_DESKTOP_TRANSPORT = 'desktop';
+function oabRequestTransport(req) {
+  return String(req && req.get && req.get('X-BuyerLog-OAB-Transport') || '').trim().toLowerCase() === OAB_DESKTOP_TRANSPORT
+    ? OAB_DESKTOP_TRANSPORT : 'browser';
+}
+function oabDesktopAuthRequired() {
+  const error = new Error('OAB oturumu gerekli.');
+  error.code = 'OAB_AUTH_REQUIRED'; error.statusCode = 401;
+  return error;
+}
+async function ensurePassConnected(userId, params, transport) {
+  if (transport === OAB_DESKTOP_TRANSPORT) {
+    if (oabAuthState.status().authenticated) return { connected:true, authenticated:true, transport:'desktop-session' };
+    throw oabDesktopAuthRequired();
+  }
   const status = agentBrowserConnector.passAuthStatus(userId);
   if (status.connected) return status;
   const storage = await agentBrowserConnector.passStorageAuthStatus(userId).catch(() => null);
@@ -5063,8 +5079,11 @@ async function ensurePassConnected(userId, params) {
   return agentBrowserConnector.capturePassAuthorization(userId, params || {});
 }
 // Corporate SSO may expire while the in-memory request template still exists.
-// On the first 401/403, recapture in the SAME browser context and retry once.
-async function fetchOabReportWithLoginRecovery(userId, params) {
+// Browser mode: on the first 401/403, recapture in the SAME browser context and
+// retry once. Desktop mode: oabApiClient clears the RAM token and returns
+// OAB_AUTH_EXPIRED; the renderer renews it through the hidden session and retries.
+async function fetchOabReportWithLoginRecovery(userId, params, transport) {
+  if (transport === OAB_DESKTOP_TRANSPORT) return oabApiClient.fetchReportData(params || {});
   try {
     return await agentBrowserConnector.fetchPassReportData(userId, params);
   } catch (err) {
@@ -5073,7 +5092,11 @@ async function fetchOabReportWithLoginRecovery(userId, params) {
     return agentBrowserConnector.fetchPassReportData(userId, params);
   }
 }
-function oabBrowserAuthStatus(userId) {
+function oabBrowserAuthStatus(userId, transport) {
+  if (transport === OAB_DESKTOP_TRANSPORT) {
+    const authenticated = Boolean(oabAuthState.status().authenticated);
+    return { connected:authenticated, authenticated, transport:'desktop-session' };
+  }
   const current = agentBrowserConnector.passAuthStatus(userId);
   return {
     ...current,
@@ -5082,12 +5105,13 @@ function oabBrowserAuthStatus(userId) {
   };
 }
 app.get('/api/oab/auth/status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try { res.set('Cache-Control','no-store').json({ ok:true, status:oabBrowserAuthStatus(req.currentUser.id) }); }
+  try { res.set('Cache-Control','no-store').json({ ok:true, status:oabBrowserAuthStatus(req.currentUser.id, oabRequestTransport(req)) }); }
   catch (err) { automationError(res, err, 'PASS bağlantı durumu okunamadı.'); }
 });
-// Manual sign-in / reconnect uses the exact same browser path as Get OAB.
-// No Electron OAB window is created: existing PASS tab is reused, otherwise a
-// single PASS viewer tab is opened in the already connected browser context.
+// Manual sign-in / reconnect uses the exact same path as Get OAB. Desktop
+// clients sign in through Electron (buyerLogDesktop.ensureOabAuth) first; here
+// they only learn whether the RAM session is ready. Browser mode reuses the open
+// PASS tab, otherwise opens a single PASS viewer tab in the connected browser.
 app.post('/api/oab/auth/connect', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({ limit: '8kb' }), async (req, res) => {
   try {
     const body = req.body && typeof req.body === 'object' ? req.body : {};
@@ -5096,8 +5120,9 @@ app.post('/api/oab/auth/connect', userAccess.requireAnyArea('overview'), userAcc
       merchSubGroupRef: body.merchSubGroupRef,
       buyerGroupRef: body.buyerGroupRef,
     };
-    const status = await ensurePassConnected(req.currentUser.id, params);
-    res.set('Cache-Control','no-store').json({ ok:true, status:{ ...status, authenticated:Boolean(status && status.connected), transport:'existing-browser-cdp' } });
+    const transport = oabRequestTransport(req);
+    const status = await ensurePassConnected(req.currentUser.id, params, transport);
+    res.set('Cache-Control','no-store').json({ ok:true, status:{ ...status, authenticated:Boolean(status && status.connected), transport:transport === OAB_DESKTOP_TRANSPORT ? 'desktop-session' : 'existing-browser-cdp' } });
   } catch (err) { automationError(res, err, 'PASS bağlantısı kurulamadı.'); }
 });
 app.get('/api/oab/seasons', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
@@ -5181,8 +5206,9 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
         return res.json({ ok:true, rows:cached.rows, fields:cached.fields, fromCache:true, fetchedAt:cached.fetchedAt, ttlMinutes:cached.ttlMinutes });
       }
     }
-    await ensurePassConnected(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef });
-    const rows = await fetchOabReportWithLoginRecovery(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef });
+    const transport = oabRequestTransport(req);
+    await ensurePassConnected(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef }, transport);
+    const rows = await fetchOabReportWithLoginRecovery(req.currentUser.id, { seasonRef, merchSubGroupRef, buyerGroupRef }, transport);
     // Alan listesi HARD-CODE EDİLMEZ: response'taki satırların birleşik anahtar
     // kümesinden dinamik üretilir (81 civarındaki alanın hepsi, hangi satırda
     // olursa olsun kaybolmadan taşınır).
@@ -5216,6 +5242,7 @@ require('./routes/oab-batch-routes')(app, {
   express,
   ensurePassConnected,
   fetchOabReportWithLoginRecovery,
+  oabRequestTransport,
   liveEvents,
   logRuntimeFailure,
   oabBatch,

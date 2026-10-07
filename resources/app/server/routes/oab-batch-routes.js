@@ -16,6 +16,7 @@ module.exports = function registerOabBatchRoutes(app, deps) {
     express,
     ensurePassConnected,
     fetchOabReportWithLoginRecovery,
+    oabRequestTransport,
     liveEvents,
     logRuntimeFailure,
     oabBatch,
@@ -81,7 +82,7 @@ function oabBatchPublicJob(job) {
 // Tek bir (Sezon, MAG, BuyerGroup listesi) isteğini çeker. Cache yalnız TEK
 // buyer group'lu istekler için kullanılır: mevcut cache anahtarı üçlü bazlıdır
 // ve toplu bir yanıtı tek anahtara yazmak sessiz veri karışması olurdu.
-async function oabFetchOneCombination(userId, currentUser, item, forceRefresh) {
+async function oabFetchOneCombination(userId, currentUser, item, forceRefresh, transport) {
   const single = !Array.isArray(item.buyerGroupRefs) || item.buyerGroupRefs.length <= 1;
   const buyerGroupRef = single
     ? (Array.isArray(item.buyerGroupRefs) ? item.buyerGroupRefs[0] : item.buyerGroupRef)
@@ -98,8 +99,8 @@ async function oabFetchOneCombination(userId, currentUser, item, forceRefresh) {
   const params = single
     ? { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRef }
     : { seasonRef:item.seasonRef, merchSubGroupRef:item.merchSubGroupRef, buyerGroupRefs:item.buyerGroupRefs };
-  await ensurePassConnected(userId, params);
-  const rows = await fetchOabReportWithLoginRecovery(userId, params);
+  await ensurePassConnected(userId, params, transport);
+  const rows = await fetchOabReportWithLoginRecovery(userId, params, transport);
   const fields = [...new Set(rows.flatMap(row => Object.keys(row || {})))];
   let fetchedAt = new Date().toISOString();
   if (single) {
@@ -116,8 +117,8 @@ async function oabFetchOneCombination(userId, currentUser, item, forceRefresh) {
    'unsupported' yazılır ve kombinasyon başına isteğe düşülür. Doğrulama
    başarısızsa çekilen satırlar ATILIR: yarım veriyi rapora katmak, kullanıcıya
    sessizce eksik rapor vermek olurdu. */
-async function oabProbeBatchedBuyerGroups(userId, group) {
-  const probe = await oabFetchOneCombination(userId, null, { seasonRef:group.seasonRef, merchSubGroupRef:group.merchSubGroupRef, buyerGroupRefs:group.buyerGroupRefs }, true);
+async function oabProbeBatchedBuyerGroups(userId, group, transport) {
+  const probe = await oabFetchOneCombination(userId, null, { seasonRef:group.seasonRef, merchSubGroupRef:group.merchSubGroupRef, buyerGroupRefs:group.buyerGroupRefs }, true, transport);
   const verdict = oabBatch.verifyBatchedBuyerGroupResponse(probe.rows, group.buyerGroupRefs);
   oabStore.saveBatchCapability({ state: verdict.verified ? 'supported' : 'unsupported', reason: verdict.reason, distinctGroups: verdict.distinct });
   return { verdict, result: verdict.verified ? probe : null };
@@ -129,7 +130,7 @@ async function runOabBatchJob(job, currentUser) {
       if (job.cancelled) break;
       job.currentLabel = oabCombinationLabel(item);
       try {
-        const result = await oabFetchOneCombination(userId, currentUser, item, job.forceRefresh);
+        const result = await oabFetchOneCombination(userId, currentUser, item, job.forceRefresh, job.transport);
         job.results.push(result);
         job.rowCount += result.rows.length;
         if (result.fromCache) job.fromCacheCount += 1;
@@ -305,15 +306,18 @@ app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.req
     if (built.combinationCount > OAB_BATCH_MAX_COMBINATIONS) {
       return res.status(400).json({ error:`Seçim ${built.combinationCount} kombinasyon üretiyor; üst sınır ${OAB_BATCH_MAX_COMBINATIONS}. Seçimi daraltın.`, code:'OAB_BATCH_TOO_LARGE', details:{ combinationCount: built.combinationCount, maxCombinations: OAB_BATCH_MAX_COMBINATIONS } });
     }
-    // v7.0.80 behavior: authentication is established by the first real
-    // browser-backed combination fetch. This keeps cached-only plans browser-free
-    // and prevents a separate Electron auth transport from opening another window.
+    // Authentication is checked by the first real combination fetch, so
+    // cached-only plans never need a session. Desktop clients sign in through
+    // the hidden Electron OAB session before starting; browser mode keeps the
+    // v7.0.80 existing-browser behaviour.
     const job = {
       jobId: `oab_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
       userId: req.currentUser.id,
       running: true, cancelled: false,
       startedAt: new Date().toISOString(), finishedAt: null,
       forceRefresh: Boolean(req.body && req.body.forceRefresh),
+      // Background combinations keep the transport of the request that started them.
+      transport: oabRequestTransport(req),
       selection: built.selection,
       // Açık kombinasyon listesi = "yeniden dene": sonuç eldeki snapshot'ın
       // üzerine EKLENİR, yerine geçmez.
@@ -343,7 +347,7 @@ app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.req
     void (async () => {
       if (job.probe) {
         try {
-          const { verdict, result } = await oabProbeBatchedBuyerGroups(job.userId, job.probe);
+          const { verdict, result } = await oabProbeBatchedBuyerGroups(job.userId, job.probe, job.transport);
           job.batchedBuyerGroups = verdict.verified ? 'supported' : 'unsupported';
           if (verdict.verified && result) {
             job.results.push(result); job.rowCount += result.rows.length; job.completed += 1;
