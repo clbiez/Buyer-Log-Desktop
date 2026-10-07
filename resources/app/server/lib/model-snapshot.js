@@ -20,18 +20,22 @@ const snapshotWriteTails = new Map();
 const verifiedSnapshots = new Map();
 const CONTENT_KEYS = Object.freeze(['asasOrders','asasOrdersByTarget','antrepoMap','antrepoMapByTarget','lflRows','targetAliases']);
 
-function splitSnapshotPayload(payload) {
-  const compacted = compactSnapshotPayload(payload), content = {}, metadata = {};
+function splitCompactedPayload(compacted) {
+  const content = {}, metadata = {};
   for (const [key, value] of Object.entries(compacted.value)) {
     (CONTENT_KEYS.includes(key) ? content : metadata)[key] = value;
   }
-  return { contentKey:checksum(JSON.stringify(content)), metadata, aliasCount:compacted.aliasCount };
+  return { content, metadata };
 }
-function rememberSnapshot(userId, payload, baseChecksum, buffer, metrics = {}) {
-  if (!baseChecksum) return;
-  const split = splitSnapshotPayload(payload);
+/* İçerik anahtarı artık yazılan JSON'un kendisinden üretilir ve dosya başlığında
+   saklanır. Eskiden her kayıtta veri ayrıca sıkıştırılıp serileştirilip
+   hash'leniyor (33 bin siparişte ~3,5 sn), her açılışta da yüklenen snapshot
+   için aynı iş tekrarlanıyordu. Başlığında anahtar olmayan eski dosyalar için
+   yeniden kullanım yalnız bir sonraki tam yazımdan sonra devreye girer. */
+function rememberSnapshot(userId, contentKey, baseChecksum, buffer, metrics = {}) {
+  if (!baseChecksum || !contentKey) return;
   verifiedSnapshots.set(safeUserId(userId), {
-    contentKey:split.contentKey, baseChecksum, compressedChecksum:checksum(buffer), bytes:buffer.length, ...metrics,
+    contentKey, baseChecksum, compressedChecksum:checksum(buffer), bytes:buffer.length, ...metrics,
   });
 }
 function applySnapshotMetadata(userId, value) {
@@ -110,14 +114,24 @@ function expandSnapshotPayload(snapshot) {
   return value;
 }
 
-function encodeSnapshot(payload) {
+// İçerik JSON'u bir kez üretilir: hem dosyaya yazılır hem içerik anahtarı olur.
+// Gövde hash'i ve dosya baytları yalnız gerçekten yazılacaksa hazırlanır.
+function prepareSnapshot(payload) {
   const compacted = compactSnapshotPayload(payload);
-  const body = { savedAt: new Date().toISOString(), ...compacted.value };
-  const bodyJson = JSON.stringify(body);
-  const digest = checksum(bodyJson);
-  const json = `{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","payload":${bodyJson}}`;
-  return { json: Buffer.from(json, 'utf8'), savedAt: body.savedAt, aliasCount: compacted.aliasCount, baseChecksum:digest };
+  const { content, metadata } = splitCompactedPayload(compacted);
+  const contentJson = JSON.stringify(content);
+  return { contentJson, contentKey:checksum(contentJson), metadata, savedAt:new Date().toISOString(), aliasCount:compacted.aliasCount };
 }
+function finishSnapshot(prepared) {
+  // Gövde = metadata + içerik; çözücü gövdeyi olduğu gibi ayrıştırır.
+  const { contentJson, contentKey, metadata, savedAt } = prepared;
+  const metadataJson = JSON.stringify({ savedAt, ...metadata });
+  const bodyJson = contentJson === '{}' ? metadataJson : `${metadataJson.slice(0, -1)},${contentJson.slice(1)}`;
+  const digest = checksum(bodyJson);
+  const json = `{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":${bodyJson}}`;
+  return { ...prepared, json: Buffer.from(json, 'utf8'), baseChecksum:digest };
+}
+function encodeSnapshot(payload) { return finishSnapshot(prepareSnapshot(payload)); }
 
 /* Model snapshot'ı düz JSON'dur: Date alanları "2026-03-09T21:00:00.000Z"
    metnine dönüşür (TR'de 10.03 gece yarısı). Canlı yenilemede ise aynı alanlar
@@ -173,6 +187,7 @@ function decodeSnapshotText(text) {
     if (!parsed.checksum || checksum(payloadJson) !== parsed.checksum) throw new Error('Snapshot checksum uyuşmuyor.');
     value = expandSnapshotPayload(parsed.payload);
     Object.defineProperty(value, '_baseChecksum', { value:parsed.checksum, enumerable:false });
+    if (/^[0-9a-f]{64}$/.test(String(parsed.contentKey || ''))) Object.defineProperty(value, '_contentKey', { value:parsed.contentKey, enumerable:false });
   } else {
     throw new Error('Snapshot schema sürümü desteklenmiyor.');
   }
@@ -185,39 +200,52 @@ function decodeSnapshotBuffer(buffer) {
   return decodeSnapshotText(zlib.gunzipSync(buffer).toString('utf8'));
 }
 
+function assertSnapshotPayload(payload) {
+  if (!payload || !Array.isArray(payload.asasOrders)) throw new Error('Snapshot ana sipariş verisi eksik.');
+}
+/* Yazmadan önce doğrulama: sıkıştırılmış baytlar açılınca üretilen JSON'un
+   birebir aynısı olmalı. Eskiden bunun yerine tüm snapshot yeniden
+   ayrıştırılıyordu (JSON.parse + tarih dönüşümü); bayt eşitliği daha güçlü ve
+   çok daha ucuz bir kanıttır, JSON zaten JSON.stringify ile üretildi. */
+function assertRoundTrip(raw, encoded) {
+  if (!Buffer.isBuffer(raw) || !raw.equals(encoded.json)) throw new Error('Snapshot sıkıştırma doğrulaması başarısız.');
+}
+
 function saveModelSnapshot(userId, payload) {
+  assertSnapshotPayload(payload);
   const started = Date.now(), encoded = encodeSnapshot(payload);
   const buffer = zlib.gzipSync(encoded.json, { level: 6 });
-  decodeSnapshotBuffer(buffer);
+  assertRoundTrip(zlib.gunzipSync(buffer), encoded);
   const file = snapshotPath(userId);
   atomicWriteBuffer(file, buffer);
-  rememberSnapshot(userId, payload, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.json.length });
+  rememberSnapshot(userId, encoded.contentKey, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.json.length });
   return { file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false, totalMs: Date.now() - started };
 }
 
 async function writeModelSnapshotAsync(userId, payload) {
   const started = Date.now();
   await new Promise(resolve => setImmediate(resolve));
-  const split = splitSnapshotPayload(payload), previous = verifiedSnapshots.get(safeUserId(userId));
-  if (previous && previous.contentKey === split.contentKey) {
+  assertSnapshotPayload(payload);
+  const serializeStarted = Date.now(), prepared = prepareSnapshot(payload), previous = verifiedSnapshots.get(safeUserId(userId));
+  if (previous && previous.contentKey === prepared.contentKey) {
     // Re-read and hash the compressed primary: a replaced/deleted/corrupt file
     // must never inherit an in-memory verification from an older generation.
     const primary = await fs.promises.readFile(snapshotPath(userId)).catch(() => null);
     if (primary && checksum(primary) === previous.compressedChecksum) {
-      const metadata = { savedAt:new Date().toISOString(), ...split.metadata };
+      const metadata = { savedAt:prepared.savedAt, ...prepared.metadata };
       const wrapper = { schemaVersion:1, baseChecksum:previous.baseChecksum, checksum:checksum(JSON.stringify(metadata)), payload:metadata };
       await atomicWriteBufferAsync(snapshotPath(userId)+'.meta.json', Buffer.from(JSON.stringify(wrapper)));
       return { file:snapshotPath(userId), savedAt:metadata.savedAt, bytes:previous.bytes, uncompressedBytes:previous.uncompressedBytes,
-        aliasCount:split.aliasCount, reused:true, totalMs:Date.now()-started };
+        aliasCount:prepared.aliasCount, reused:true, totalMs:Date.now()-started };
     }
   }
-  const serializeStarted = Date.now(), encoded = encodeSnapshot(payload);
+  const encoded = finishSnapshot(prepared);
   const compressStarted = Date.now(), buffer = await gzip(encoded.json, { level: 6 });
   const validateStarted = Date.now(), raw = await gunzip(buffer);
-  decodeSnapshotText(raw.toString('utf8'));
+  assertRoundTrip(raw, encoded);
   const writeStarted = Date.now(), file = snapshotPath(userId);
   await atomicWriteBufferAsync(file, buffer);
-  verifiedSnapshots.set(safeUserId(userId), { contentKey:split.contentKey, baseChecksum:encoded.baseChecksum, compressedChecksum:checksum(buffer), bytes:buffer.length, uncompressedBytes:encoded.json.length });
+  rememberSnapshot(userId, encoded.contentKey, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.json.length });
   return {
     file, savedAt: encoded.savedAt, bytes: buffer.length, uncompressedBytes: encoded.json.length, aliasCount: encoded.aliasCount, reused:false,
     serializeMs: compressStarted - serializeStarted, compressMs: validateStarted - compressStarted,
@@ -238,7 +266,7 @@ function loadModelSnapshot(userId) {
     if (!fs.existsSync(candidate)) continue;
     try {
       const buffer = fs.readFileSync(candidate), value = decodeSnapshotBuffer(buffer);
-      if (candidate === file) rememberSnapshot(userId, value, value._baseChecksum, buffer);
+      if (candidate === file) rememberSnapshot(userId, value._contentKey, value._baseChecksum, buffer);
       return applySnapshotMetadata(userId, value);
     }
     catch (_) { /* bozuk ana kopyada yedeği dene */ }
@@ -254,7 +282,7 @@ async function loadModelSnapshotAsync(userId) {
       const compressed = await fs.promises.readFile(candidate);
       const readMs = Date.now() - started, raw = await gunzip(compressed), inflateMs = Date.now() - started - readMs;
       const parseStarted = Date.now(), value = decodeSnapshotText(raw.toString('utf8'));
-      if (candidate === file) rememberSnapshot(userId, value, value._baseChecksum, compressed, { uncompressedBytes:raw.length });
+      if (candidate === file) rememberSnapshot(userId, value._contentKey, value._baseChecksum, compressed, { uncompressedBytes:raw.length });
       applySnapshotMetadata(userId, value);
       Object.defineProperty(value, '_snapshotMetrics', {
         value:{ readMs, inflateMs, parseMs:Date.now() - parseStarted, totalMs:Date.now() - started, bytes:compressed.length, fallback:candidate !== file },

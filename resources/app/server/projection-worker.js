@@ -11,6 +11,19 @@ const CATALOG_FIELDS={category:'category',mag:'mag',mmyg:'mmyg',buyingGroup:'buy
 const COLLECTION_CATALOG_SCHEMA_VERSION=2;
 function dateOnly(value){const p=n=>String(n).padStart(2,'0');return `${value.getFullYear()}-${p(value.getMonth()+1)}-${p(value.getDate())}`;}
 function dateSafeReplacer(key,value){const raw=this&&this[key];return raw instanceof Date?dateOnly(raw):value;}
+/* Aynı çıktı, replacer'sız: Date değerleri yerinde YYYY-MM-DD metnine çevrilir,
+   sonra düz JSON.stringify çalışır. Satırlar bu işçiye özeldir ve serileştirme
+   sonrası atılır. Replacer her alan için JS çağrısı yaptığından 33 bin
+   satırda saniyeler alıyordu. */
+// Değiştirilemeyen (dondurulmuş) bir nesnede tarih bulunursa false döner;
+// çağıran o modül için eski replacer yoluna düşer, çıktı her durumda aynıdır.
+function replaceDatesInPlace(node,seen){
+  if(!node||typeof node!=='object'||seen.has(node))return true;seen.add(node);
+  const frozen=Object.isFrozen(node);let ok=true;
+  if(Array.isArray(node)){for(let i=0;i<node.length;i++){const v=node[i];if(v instanceof Date){if(frozen)ok=false;else node[i]=dateOnly(v);}else if(v&&typeof v==='object')ok=replaceDatesInPlace(v,seen)&&ok;}return ok;}
+  for(const key of Object.keys(node)){const v=node[key];if(v instanceof Date){if(frozen)ok=false;else node[key]=dateOnly(v);}else if(v&&typeof v==='object')ok=replaceDatesInPlace(v,seen)&&ok;}
+  return ok;
+}
 function catalogs(rows){
   const buckets=Object.fromEntries(Object.keys(CATALOG_FIELDS).map(key=>[key,new Map()]));
   for(const row of rows||[])for(const [key,canonicalId] of Object.entries(CATALOG_FIELDS)){
@@ -45,7 +58,8 @@ async function main(){
   if(requested.has('collection-catalog')){const rows=catalogRows||projected.orders;values['collection-catalog']={catalogs:catalogs(rows.length?rows:overview),catalogSchemaVersion:COLLECTION_CATALOG_SCHEMA_VERSION};}
   const compressed={},transfer=[];
   for(const [module,value] of Object.entries(values)){
-    const json=Buffer.from(JSON.stringify(value,dateSafeReplacer),'utf8'),gz=await gzip(json,{level:4}),copy=Uint8Array.from(gz);
+    const converted=replaceDatesInPlace(value,new WeakSet());
+    const json=Buffer.from(converted?JSON.stringify(value):JSON.stringify(value,dateSafeReplacer),'utf8'),gz=await gzip(json,{level:4}),copy=Uint8Array.from(gz);
     compressed[module]={buffer:copy.buffer,uncompressedBytes:json.length};transfer.push(copy.buffer);
   }
   parentPort.postMessage({ok:true,compressed,metrics:{workerMs:Date.now()-started,cpRows:projected.cp.length,ordersRows:projected.orders.length,orderSummaryRows:orderSummary.length}},transfer);

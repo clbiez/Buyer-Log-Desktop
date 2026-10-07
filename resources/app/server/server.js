@@ -8460,12 +8460,12 @@ function antrepoForTarget(active, target) {
    Backlog'un KENDİ hedef veri kümesi ve effective override'ları kullanılır;
    analiz için ikinci bir veri modeli kurulmaz. Snapshot sipariş/model/renk
    düzeyinde kompaktlaştırılır ve store yalnız delta yazar. */
-async function captureBacklogPlanActualSnapshot(id, runtime, overrides) {
+async function captureBacklogPlanActualSnapshot(id, runtime, overrides, options = {}) {
   const active = runtime || cacheForUser(id);
   if (!active || !active.loadedAt || !Array.isArray(active.asasOrders)) return null;
   const effective = overrides || effectiveOverridesForUser(id);
   const inputKey=derivedInputKeys.keys(active,id,effective,{version:APP_VERSION}).backlog;
-  const capturedAt=new Date().toISOString(),sourceGenerationId=active.modelRefresh&&active.modelRefresh.sourceGenerationId||active.loadedAt||'';
+  const capturedAt=options.capturedAt||new Date().toISOString(),sourceGenerationId=active.modelRefresh&&active.modelRefresh.sourceGenerationId||active.loadedAt||'';
   const reused=await backlogPlanActual.appendSnapshot(id,{capturedAt,sourceGenerationId,reuseInputKey:inputKey});
   if(reused)return reused;
   const orders = ordersForTarget(active, 'backlog', effective);
@@ -8477,7 +8477,32 @@ async function captureBacklogPlanActualSnapshot(id, runtime, overrides) {
   return backlogPlanActual.appendSnapshot(id, {...snapshot,inputKey});
 }
 
+/* Planlanan & Gerçekleşen zaman işareti yenilemenin bitmesini BEKLETMEZ.
+   33 bin siparişte bu hesap (Backlog satırları + delta) ~7 sn sürüyor ve
+   kullanıcı yenilemenin sonunu bunun için bekliyordu. İşaret, yenilemenin
+   tamamlandığı anın zamanıyla, ekran yeniden yüklemeleri bittikten sonra
+   kullanıcı başına sırayla yazılır. Analizi açan istek bekleyen kaydı bekler. */
+const BACKLOG_PLAN_ACTUAL_CAPTURE_DELAY_MS = Math.max(0, Number(process.env.BL_PLAN_ACTUAL_CAPTURE_DELAY_MS) || 15000);
+const backlogPlanActualCaptureTails = new Map();
+function scheduleBacklogPlanActualCapture(id, capture) {
+  const key = String(id || 'moderator'), previous = backlogPlanActualCaptureTails.get(key) || Promise.resolve();
+  const next = previous.catch(() => {})
+    .then(() => new Promise(resolve => setTimeout(resolve, BACKLOG_PLAN_ACTUAL_CAPTURE_DELAY_MS)))
+    .then(capture)
+    // Analiz geçmişi türetilebilir bir katmandır; kaydedilememesi başarılı veri
+    // yenilemesini geri almamalı, fakat teşhis kaydı bırakmalıdır.
+    .catch(snapshotError => { logRuntimeFailure('backlogPlanActualSnapshot', snapshotError); return null; });
+  backlogPlanActualCaptureTails.set(key, next);
+  next.finally(() => { if (backlogPlanActualCaptureTails.get(key) === next) backlogPlanActualCaptureTails.delete(key); });
+  return next;
+}
+async function pendingBacklogPlanActualCapture(id) {
+  const pending = backlogPlanActualCaptureTails.get(String(id || 'moderator'));
+  if (pending) await pending;
+}
+
 async function ensureBacklogPlanActualArchive(id) {
+  await pendingBacklogPlanActualCapture(id);
   let archive = await backlogPlanActual.readArchive(id);
   if (archive && archive.base) return archive;
   const runtime = cacheForUser(id);
@@ -8783,14 +8808,11 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   // Her başarılı yenileme bir zaman işareti üretir. İçerik değişmemişse store
   // yalnız boş delta marker'ı yazar; Pzt 10:00 → Pzt 10:00 gibi sınırlar yine
   // doğru snapshot'a çözülebilir.
-  try {
-    await runRefreshTelemetry(telemetry, 'Local storage', 'backlog-plan-actual-snapshot', 'save', () =>
-      captureBacklogPlanActualSnapshot(id, active, effectiveOverridesForUser(id))
+  {
+    const activeSnapshot = active, planActualOverrides = effectiveOverridesForUser(id), planActualCapturedAt = new Date().toISOString();
+    scheduleBacklogPlanActualCapture(id, () =>
+      captureBacklogPlanActualSnapshot(id, activeSnapshot, planActualOverrides, { capturedAt: planActualCapturedAt })
     );
-  } catch (snapshotError) {
-    // Analiz geçmişi türetilebilir bir katmandır; kaydedilememesi başarılı veri
-    // yenilemesini geri almamalı, fakat teşhis kaydı bırakmalıdır.
-    logRuntimeFailure('backlogPlanActualSnapshot', snapshotError);
   }
   if (summary.hasChanges) {
     historyItem = addRefreshHistory({
