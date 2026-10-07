@@ -15,6 +15,7 @@ const crypto = require('crypto');
 const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
 const { resolveLocalDbFolder } = require('./local-path-policy');
 const { createDurableFileRecovery } = require('./durable-file-recovery');
+const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
 
 const SCHEMA_VERSION = 3;
 const DEFAULT_DB_NAME = 'BuyerLogLocal.db';
@@ -61,6 +62,7 @@ function normalizeState(raw, deviceId) {
   state.appliedEvents = state.appliedEvents && typeof state.appliedEvents === 'object' ? state.appliedEvents : {};
   state.appliedPackages = state.appliedPackages && typeof state.appliedPackages === 'object' ? state.appliedPackages : {};
   state.conflicts = Array.isArray(state.conflicts) ? state.conflicts : [];
+  for (const item of state.conflicts) pruneResolvedConflict(item);
   state.syncCheckpoints = state.syncCheckpoints && typeof state.syncCheckpoints === 'object' ? state.syncCheckpoints : {};
   const ledger = state.syncLedger && typeof state.syncLedger === 'object' ? state.syncLedger : {};
   state.syncLedger = {
@@ -83,11 +85,40 @@ function normalizeState(raw, deviceId) {
   state.causalKnowledge = state.causalKnowledge && typeof state.causalKnowledge === 'object' ? state.causalKnowledge : {};
   return state;
 }
+/* Kapanmış çakışmanın iki tarafının TAM değeri artık hiçbir yolda okunmaz
+   (liste ve çözüm yalnız açık kayıtlara bakar). Büyük belge alanlarında bu
+   kopyalar anlık görüntüyü yüzlerce MB şişirip V8 string sınırına
+   taşıyordu; kapanan kaydın yalnız künyesi tutulur. */
+function pruneResolvedConflict(item) {
+  if (!item || !item.resolved || item.valuesPruned) return item;
+  delete item.current; delete item.incoming;
+  item.valuesPruned = true;
+  return item;
+}
+/* Çakışmanın arayüze giden hafif özeti. Değerler sınırlı önizleme olarak
+   taşınır; çözüm sunucuda kayıtlı tam değerle yapılır. */
+function summarizeConflict(item, previewChars = 4000) {
+  if (!item || typeof item !== 'object') return null;
+  const side = value => {
+    if (value === undefined) return { preview: '', truncated: false, missing: true };
+    const { text, truncated } = jsonPreview(value, previewChars);
+    return { preview: text, truncated };
+  };
+  const out = {};
+  for (const key of ['conflictId', 'eventId', 'id', 'type', 'field', 'ownerId', 'rowId', 'at', 'currentRevision', 'baseRevision', 'resolved', 'resolution']) {
+    if (item[key] !== undefined) out[key] = item[key];
+  }
+  out.current = side(item.current);
+  out.incoming = side(item.incoming);
+  return out;
+}
+/* Anlık görüntü dosyası; V8 string sınırını aşan boyutta da okunur. */
+async function readJsonFile(file) { return parseJsonBuffer(await fsp.readFile(file)); }
 async function readState(file, deviceId = null) {
   const errors = [];
   for (const candidate of [file, `${file}.bak`]) {
     try {
-      const state = normalizeState(JSON.parse(await fsp.readFile(candidate, 'utf8')), deviceId);
+      const state = normalizeState(await readJsonFile(candidate), deviceId);
       if (candidate !== file) {
         // Keep the unreadable primary for forensics, then restore the validated
         // backup. writeState must not copy the corrupt primary over the backup.
@@ -118,7 +149,9 @@ async function writeState(file, state) {
     recoveryRoot: path.join(folder, '.buyerlog-db-recovery'),
     allowedRoots: [folder],
   });
-  await recovery.replace(file, Buffer.from(JSON.stringify(state, null, 2), 'utf8'));
+  /* Parçalı serileştirme: tek dev string oluşmaz (bkz. large-json.js). Girinti
+     yok — okuyan her yol JSON.parse kullanır; dosya ~%30 küçülür. */
+  await recovery.replace(file, jsonToBuffer(state));
 }
 
 /* Belge defteri (delta-store DOCUMENT_REVISION_META): her cihaz kendi
@@ -299,10 +332,22 @@ function walLine(operation, payload) {
 
 /* Bozuk ya da yarım satırda durur. Döndürülen sayı, güvenle uygulanabilen
    işlem sayısıdır; sonrası sessizce atılmaz, `truncated` ile bildirilir. */
+function walLines(input) {
+  if (!Buffer.isBuffer(input)) return String(input || '').split('\n');
+  // Büyük WAL tek string'e çevrilmez; satırlar tampon üzerinde ayrılır.
+  const lines = [];
+  for (let start = 0; start < input.length;) {
+    let end = input.indexOf(0x0a, start);
+    if (end < 0) end = input.length;
+    lines.push(input.toString('utf8', start, end));
+    start = end + 1;
+  }
+  return lines;
+}
 function parseWal(text) {
   const entries = [];
   let truncated = false;
-  for (const line of String(text || '').split('\n')) {
+  for (const line of walLines(text)) {
     if (!line.trim()) continue;
     let entry = null;
     try { entry = JSON.parse(line); } catch (_) { truncated = true; break; }
@@ -312,6 +357,25 @@ function parseWal(text) {
     entries.push(entry);
   }
   return { entries, truncated };
+}
+
+/* Kimlik için bütün DB'yi senkron okuyup parse etmek hem olay döngüsünü
+   bloke eder hem de büyük dosyada V8 string sınırına takılıp sessizce YENİ
+   bir kimlik üretirdi. Büyük dosyada üst seviye deviceId (emptyState sırası
+   gereği schemaVersion/revision'dan hemen sonra gelir) dosyanın başından okunur. */
+function readDeviceIdSync(file) {
+  const size = fs.statSync(file).size;
+  if (size <= DIRECT_PARSE_MAX_BYTES) {
+    const existing = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return existing && existing.deviceId ? String(existing.deviceId) : '';
+  }
+  const handle = fs.openSync(file, 'r');
+  try {
+    const head = Buffer.alloc(Math.min(size, 64 * 1024));
+    fs.readSync(handle, head, 0, head.length, 0);
+    const match = head.toString('utf8').match(/^\s*\{(?:\s*"(?:schemaVersion|revision)"\s*:\s*-?[\d.eE+-]+\s*,)*\s*"deviceId"\s*:\s*("(?:[^"\\]|\\.)*")/);
+    return match ? String(JSON.parse(match[1])) : '';
+  } finally { fs.closeSync(handle); }
 }
 
 function createLocalDb(file) {
@@ -346,8 +410,8 @@ function createLocalDb(file) {
     recoverPendingWrites();
     for (const candidate of [dbFile, `${dbFile}.bak`]) {
       try {
-        const existing = JSON.parse(fs.readFileSync(candidate, 'utf8'));
-        if (existing && existing.deviceId) { deviceId = String(existing.deviceId); return deviceId; }
+        const found = readDeviceIdSync(candidate);
+        if (found) { deviceId = found; return deviceId; }
       } catch (_) { /* yoksa ya da okunamıyorsa sıradaki adaya geç */ }
     }
     deviceId = crypto.randomUUID();
@@ -372,7 +436,7 @@ function createLocalDb(file) {
   }
 
   async function readWalEntries(target) {
-    try { return parseWal(await fsp.readFile(target, 'utf8')); }
+    try { return parseWal(await fsp.readFile(target)); }
     catch (error) {
       if (error && error.code === 'ENOENT') return { entries: [], truncated: false };
       throw error;
@@ -637,6 +701,7 @@ function createLocalDb(file) {
       for (const open of state.conflicts) {
         if (!open.resolved && open.type === 'field' && open.id === key && appliedFields.has(open.field)) {
           open.resolved = true; open.resolvedAt = at; open.resolution = 'superseded';
+          pruneResolvedConflict(open);
         }
       }
       for (const conflict of merged.conflicts) state.conflicts.push({ conflictId: nextConflictId(), eventId: eid, id: key, type: 'field', ...conflict, at, resolved: false });
@@ -933,7 +998,7 @@ function createLocalDb(file) {
       records: state.records || {}, tombstones: state.tombstones || {}, conflicts: state.conflicts || [],
       assets: state.assets || {}, migrations: state.migrations || {}, revision: Number(state.revision) || 0,
     };
-    return sha256(Buffer.from(JSON.stringify(business), 'utf8'));
+    return jsonSha256(business);
   }
   async function businessHash() { return businessStateHashFromState(await read()); }
   async function stats() {
@@ -999,11 +1064,11 @@ function createLocalDb(file) {
       const afterHash = businessStateHashFromState(state);
       if (beforeHash !== afterHash) throw Object.assign(new Error('LOCAL_DB_COMPACTION_BUSINESS_HASH_MISMATCH'), { code: 'DATA_INTEGRITY_ERROR' });
 
-      const buffer = Buffer.from(JSON.stringify(state, null, 2), 'utf8');
+      const buffer = jsonToBuffer(state);
       const compacting = `${dbFile}.compacting`;
       const handle = await fsp.open(compacting, 'w');
       try { await handle.writeFile(buffer); try { await handle.sync(); } catch (_) {} } finally { await handle.close(); }
-      const verified = normalizeState(JSON.parse(await fsp.readFile(compacting, 'utf8')), state.deviceId);
+      const verified = normalizeState(await readJsonFile(compacting), state.deviceId);
       if (businessStateHashFromState(verified) !== beforeHash) throw Object.assign(new Error('LOCAL_DB_COMPACTION_TEMP_VALIDATION_FAILED'), { code: 'DATA_INTEGRITY_ERROR' });
       const folder = path.dirname(dbFile);
       const recovery = createDurableFileRecovery({ recoveryRoot: path.join(folder, '.buyerlog-db-recovery'), allowedRoots: [folder] });
@@ -1030,6 +1095,13 @@ function createLocalDb(file) {
     const state = await read();
     return state.conflicts.filter(item => !item.resolved).slice(0, Math.max(1, Number(limit) || 200)).map(clone);
   }
+  /* Arayüz için hafif liste: iki tarafın tam değeri yerine sınırlı önizleme.
+     Tam değerleri tek JSON yanıtına koymak büyük belge alanlarında V8 string
+     sınırını aşıp "Sync çakışmaları okunamadı" hatası veriyordu. */
+  async function listConflictSummaries(limit = 200, previewChars = 4000) {
+    const state = await read();
+    return state.conflicts.filter(item => !item.resolved).slice(0, Math.max(1, Number(limit) || 200)).map(item => summarizeConflict(item, previewChars));
+  }
   async function resolveConflict(conflictId, choice = 'current', customValue) {
     const id = eventId(conflictId);
     const state = await read();
@@ -1053,7 +1125,7 @@ function createLocalDb(file) {
     }
     return transaction(async next => {
       const item = next.conflicts.find(entry => entry.conflictId === id);
-      if (item) { item.resolved = true; item.resolvedAt = now(); item.resolution = choice; }
+      if (item) { item.resolved = true; item.resolvedAt = now(); item.resolution = choice; pruneResolvedConflict(item); }
       return item ? clone(item) : null;
     });
   }
@@ -1157,7 +1229,7 @@ function createLocalDb(file) {
       return { status, deviceId: current.deviceId };
     });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, resolveConflict, putAsset, putAssets };
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================
@@ -1243,4 +1315,4 @@ async function migrateLegacyFiles(db, roots = []) {
   return [];
 }
 
-module.exports = { SCHEMA_VERSION, DEFAULT_DB_NAME, createLocalDb, migrateLegacyFiles, offloadLegacyAssets, sweepWriteDebris };
+module.exports = { SCHEMA_VERSION, DEFAULT_DB_NAME, createLocalDb, summarizeConflict, migrateLegacyFiles, offloadLegacyAssets, sweepWriteDebris };
