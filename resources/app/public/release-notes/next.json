@@ -43,6 +43,39 @@
         "tr": "Bangladeş gibi bazı ülkelerde tatil kaynağı Ramazan Bayramı, Kurban Bayramı, Aşure ve Mevlid gibi ay takvimli dini tatilleri göndermiyordu. Buyer Log bu tarihleri artık Hicri takvimden kendisi hesaplıyor ve kaynakta eksikse listeye \"tahmini\" etiketiyle ekliyor. Resmi ilan ay gözlemine göre ±1 gün kayabilir.",
         "en": "For some countries such as Bangladesh, the holiday source did not send lunar religious holidays like Eid al-Fitr, Eid al-Adha, Ashura and Mawlid. Buyer Log now calculates these dates from the Hijri calendar and adds them with an \"expected\" label when the source is missing them. The official date may shift by ±1 day depending on moon sighting."
       }
+    },
+    {
+      "id": "startup-user-info-fast",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Açılışta \"Kullanıcı bilgileri\" adımı artık beklemiyor",
+        "en": "The \"User information\" startup step no longer stalls"
+      },
+      "path": {
+        "tr": "Buyer Log açılış ekranı",
+        "en": "Buyer Log startup screen"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-user-info-fast.png",
+        "alt": {
+          "tr": "Açılış ekranında Başlangıç verisi, Ekran ve Kullanıcı bilgileri adımları tamamlanmış; Buyer Log hazır — gerçek Buyer Log demo ekranı",
+          "en": "Startup screen with Initial data, Screen and User information completed; Buyer Log is ready — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Kullanıcı bilgileri ilk veriyle birlikte hazırlanır",
+          "en": "User information is prepared together with the initial data"
+        }
+      },
+      "body": {
+        "tr": "Kullanıcı bilgileri adımı, ekran hazır olduktan sonra yüklenen ek modüllerin tamamını bekliyordu; büyük veride bu bekleme dakikalara uzayabiliyordu. Artık kullanıcı katmanı başlangıç verisiyle birlikte yüklenir. Ayrıca başlangıç verisi geldiyse 2 dakikada yanıltıcı \"Tekrar dene\" düğmesi gösterilmez; açılış \"Neredeyse hazır\" mesajıyla sürer ve düğme yalnız gerçek bir takılmada çıkar.",
+        "en": "The User information step waited for every extra module loaded after the screen was ready; with large data this could stretch to minutes. The user layer now loads together with the initial data. In addition, once the initial data has arrived, no misleading \"Retry\" button appears at 2 minutes; startup continues with an \"Almost ready\" message and the button only appears on a real stall."
+      }
     }
   ]
 }

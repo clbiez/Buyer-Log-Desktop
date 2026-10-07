@@ -125,3 +125,18 @@ test('calculated-column directions stay within supported tables and shipping use
   assert.match(DATA.lessons.find(c=>c.id==='calculated').path.tr,/Nakliye → Sütunlar/);assert.match(GUIDE,/selector='#shipColsBtn'/);
   assert.match(DATA.lessons.find(c=>c.id==='new-model').path.en,/PLM SYNC/);
 });
+test('after initial data arrives the 120-second deadline does not show a misleading Retry',()=>{
+  const h=guardHarness();h.win.BLBootGuard.ready();h.win.BLBootGuard.ready('data');
+  const g=h.nodes.get('blBootGuard');[...h.timers.values()].find(t=>t.ms===120000).fn();
+  assert.equal(g.dataset.failed,undefined);assert.ok(!g.querySelector(".blBootCard").children.some(c=>c.dataset.bootRetry));
+  // A real stall still ends with a bounded Retry.
+  [...h.timers.values()].find(t=>t.ms===180000).fn();assert.equal(g.dataset.failed,'1');
+  h.profile();assert.equal(g.dataset.ready,'1');assert.equal(g.dataset.failed,undefined);
+});
+test('the profile gate script is requested with the initial data, not after the whole deferred UI group',()=>{
+  const PERF=read('perf-runtime.js');const src='user-access-ui.js?rev=APP-UPDATE-V3';
+  assert.ok(PERF.includes(`'${src}'`),'deferredUi and the early load must use the same key');
+  const boot=APP.slice(APP.indexOf("window.addEventListener('DOMContentLoaded', async () => {"));
+  const early=boot.indexOf(`_loadScript?.('${src}')`);
+  assert.ok(early>0&&early<boot.indexOf('await loadInitialBuyerLogData()'));
+});
