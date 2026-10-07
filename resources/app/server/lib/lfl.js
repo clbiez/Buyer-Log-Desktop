@@ -1,3 +1,4 @@
+const BLDateDimension = require('../../public/date-dimension');
 let _xlsx = null;
 function getXLSX() { if (!_xlsx) { _xlsx = require('xlsx'); try { require('../../public/excel-date-utils').installSheetJsHooks(_xlsx); } catch (_) {} } return _xlsx; }
 
@@ -71,10 +72,19 @@ function dateIso(value) {
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
-function yearMonth(iso) { return iso ? iso.slice(0, 7) : ''; }
+function yearMonth(iso) {
+  if (!iso) return '';
+  if (!BLDateDimension.hasMerchCalendar()) return String(iso).slice(0, 7);
+  const period = BLDateDimension.describe(iso);
+  return period.businessValid ? period.monthKey : '';
+}
 function isTurkeyCountry(value) { return ['TURKIYE', 'TURKEY', 'TR'].includes(turknorm(value)); }
 function isoWeek(iso) {
   const d = parseDateOnly(iso); if (!d) return '';
+  if (BLDateDimension.hasMerchCalendar()) {
+    const period = BLDateDimension.describe(d);
+    return period.businessValid ? `${period.lcwYear}-${String(period.lcwWeek).padStart(2, '0')}` : '';
+  }
   const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const day = utc.getUTCDay() || 7; utc.setUTCDate(utc.getUTCDate() + 4 - day);
   const y0 = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));

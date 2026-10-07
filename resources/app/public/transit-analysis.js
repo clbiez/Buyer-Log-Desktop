@@ -12,12 +12,13 @@
  *   suggestRules / applySuggestions → Yol Süreleri kurallarına aktarım
  * Kural motoru (business-rules.js) değişmez; analiz yalnız kural üretir. */
 (function attachTransitAnalysis(root, factory) {
-  const api = factory(root && root.BLBusinessRules
-    ? root.BLBusinessRules
-    : (typeof require === 'function' ? require('./business-rules.js') : null));
+  const api = factory(
+    root && root.BLBusinessRules ? root.BLBusinessRules : (typeof require === 'function' ? require('./business-rules.js') : null),
+    root && root.BLDateDimension ? root.BLDateDimension : (typeof require === 'function' ? require('./date-dimension.js') : null)
+  );
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLTransitAnalysis = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function createTransitAnalysis(rules) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function createTransitAnalysis(rules, dateDimension) {
   'use strict';
 
   const VERSION = 1;
@@ -371,8 +372,12 @@
     const unit = UNITS[m[1]];
     return en ? `Last ${n} ${unit.en}${n > 1 ? 's' : ''}` : `Son ${n} ${unit.tr}`;
   }
-  // ISO hafta: YYYYWW (Pazartesi başlangıçlı, perşembe kuralı).
+  // İş dönemi: Merch Calendar yüklüyse LCW, yoksa geriye uyumlu GLB/ISO.
   function isoWeekOf(value) {
+    if (dateDimension && dateDimension.hasMerchCalendar && dateDimension.hasMerchCalendar()) {
+      const period = dateDimension.describe(value);
+      return period && period.businessValid ? String(period.lcwYear) + String(period.lcwWeek).padStart(2, '0') : '';
+    }
     const ord = dayOrdinal(value);
     if (ord == null) return '';
     const d = new Date(ord * 86400000);
@@ -382,7 +387,13 @@
     const week = 1 + Math.round(((thursday - firstThursday) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
     return String(thursday.getUTCFullYear()) + String(week).padStart(2, '0');
   }
-  function monthOf(value) { const m = String(value || '').match(/^(\d{4})-(\d{2})/); return m ? m[1] + m[2] : ''; }
+  function monthOf(value) {
+    if (dateDimension && dateDimension.hasMerchCalendar && dateDimension.hasMerchCalendar()) {
+      const period = dateDimension.describe(value);
+      return period && period.businessValid ? String(period.periodYear) + String(period.month).padStart(2, '0') : '';
+    }
+    const m = String(value || '').match(/^(\d{4})-(\d{2})/); return m ? m[1] + m[2] : '';
+  }
 
   function buildFromShipments(shipments, meta = {}) {
     const today = dayOrdinal(meta.today || new Date().toISOString().slice(0, 10));
