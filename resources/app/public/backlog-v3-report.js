@@ -254,7 +254,7 @@
     });
     const today = ordinal(opts.today || todayIso());
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([key, v]) => ({
-      key, start:v.bucket ? v.bucket.start : '', label:bucketLabel(v.bucket, granularity, opts.lang),
+      key, start:v.bucket ? v.bucket.start : '', end:v.bucket ? (v.bucket.end || v.bucket.start) : '', label:bucketLabel(v.bucket, granularity, opts.lang),
       past:v.bucket ? ordinal(v.bucket.end || v.bucket.start) < today : false,
       items:v.items, ...summarize(v.items),
     }));
