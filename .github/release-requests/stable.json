@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.246",
-  "commit_sha": "cba6df201a80f0039411ac1b4dd967066d43c114",
-  "release_notes": "Buyer Log 7.0.246: Koleksiyon Artwork Detayı sütunu, PLM CoreNectum bağlantı dayanıklılığı ve tek tık Remote Debugging/kurulum doğrulama geliştirmeleri.",
-  "request_id": "7.0.246-plm-artwork-r1"
+  "version": "7.0.253",
+  "commit_sha": "651ee167ee142470077e51451cb246b49a9ea5bf",
+  "release_notes": "Buyer Log 7.0.253: Yenileme başarısız olduğunda hatanın gerçekleştiği adım doğru biçimde Başarısız olarak gösterilir; ASAS/tabular kaynak bellek yetersizliği hataları ayrı teşhis edilerek kullanıcıya doğru çözüm yönlendirmesi sunulur.",
+  "request_id": "7.0.253-refresh-memory-r1"
 }
