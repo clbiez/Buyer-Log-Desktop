@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.257",
-  "commit_sha": "bddf1d57b1d5d37eda4242cda57aaa136c5de69a",
-  "release_notes": "Buyer Log 7.0.257 TEST: Endeksmatik Setleri penceresine Yapı raporu eklendi. Büyük ülke Endeksmatik dosyası bu bilgisayarda okunur ve birkaç KB'lık, değerleri maskeli bir rapor indirilir (başlıklar, ENDEKSMATİK formülleri, ÖZET-pivot anahtar örtüşmesi); hiçbir şey kaydedilmez. Yükleme hatası bu yolu önerir. main'deki i18n sistem verisi düzeltmesi dahildir. Node regression suite (869 dosya) başarıyla geçti."
+  "version": "7.0.258",
+  "commit_sha": "a39bb2d5ff34df4440c0579efa8b1baa42e9e015",
+  "release_notes": "Buyer Log 7.0.258 TEST: Koleksiyon'da MB WEEK, MB Month, STATUS ve diğer seçimli hücrelerde sağ tık Kopyala/Yapıştır güncel seçili değeri kullanıyor; sağ tık Kopyala hücre/aralık odaklı, Ctrl+C/global Copy checkbox ile seçili modellerin önceliğini koruyor. 7.0.257'deki Endeksmatik yapı raporu ve i18n sistem verisi düzeltmeleri de dahildir. PR #430 Buyer Log regresyon paketi başarıyla geçti."
 }
