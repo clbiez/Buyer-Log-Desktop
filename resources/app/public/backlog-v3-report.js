@@ -18,16 +18,19 @@
   const isNode = typeof module === 'object' && module.exports && typeof require === 'function';
   let canonical = root && root.BLCanonicalFields;
   let planActual = root && root.BLPlanActualReport;
+  let dateDimension = root && root.BLDateDimension;
   if (isNode) {
     canonical = require('./canonical-fields.js');
     try { require('./canonical-module-bindings.js')(canonical); } catch (_) { /* tarayıcı paketi zaten bağlar */ }
     planActual = require('./backlog-plan-actual-report.js');
+    dateDimension = require('./date-dimension.js');
   }
   const api = factory(root, () => canonical || (root && root.BLCanonicalFields), () => planActual || (root && root.BLPlanActualReport),
-    () => (root && root.BLBacklogDeliveryEngine) || (isNode ? require('./backlog-delivery-engine.js') : null));
+    () => (root && root.BLBacklogDeliveryEngine) || (isNode ? require('./backlog-delivery-engine.js') : null),
+    () => dateDimension || (root && root.BLDateDimension));
   if (isNode) module.exports = api;
   if (root) root.BLBacklogV3Report = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function createBacklogV3Report(root, canonicalApi, planActualApi, engineApi) {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function createBacklogV3Report(root, canonicalApi, planActualApi, engineApi, dateDimensionApi) {
   'use strict';
 
   /* Aşamalar boru hattı sırasıyla: önce yüklenmemiş, sonra yolda, en sonda depo. */
@@ -203,10 +206,22 @@
     list.sort((a, b) => (b.qty - a.qty) || a.name.localeCompare(b.name, 'tr', { numeric:true }));
     return opts.limit ? list.slice(0, opts.limit) : list;
   }
-  /* ISO hafta: Pazartesi başlangıçlı; anahtar haftanın Pazartesi günüdür. */
+  /* LCW Merch Calendar yüklüyse iş dönemi onun anahtarıdır. Takvim yoksa
+     eski Gregorian/ISO davranışı korunur; GLB yalnız ikincil referanstır. */
   function bucketOf(iso, granularity) {
     const ord = ordinal(iso);
     if (ord == null) return null;
+    const dim = dateDimensionApi && dateDimensionApi();
+    if (dim && dim.hasMerchCalendar && dim.hasMerchCalendar()) {
+      const period = dim.describe(iso);
+      if (!period || !period.businessValid) return null;
+      if (granularity === 'month') {
+        const range = dim.businessMonthRange(iso);
+        return range ? { key:period.monthKey, start:range.start, end:range.end, period } : null;
+      }
+      const range = dim.businessWeekRange(iso);
+      return range ? { key:period.weekKey, start:range.start, end:range.end, period } : null;
+    }
     if (granularity === 'month') { const key = iso.slice(0, 7) + '-01'; return { key, start:key }; }
     const weekday = (new Date(ord * 86400000).getUTCDay() + 6) % 7;
     const start = isoFromOrdinal(ord - weekday);
@@ -220,6 +235,11 @@
   }
   function bucketLabel(bucket, granularity, lang) {
     if (!bucket) return lang === 'en' ? 'No date' : 'Tarih yok';
+    if (bucket.period) {
+      if (granularity === 'month') return lang === 'en' ? bucket.period.monthLabelEn : bucket.period.monthLabelTr;
+      const start = bucket.start.split('-');
+      return (lang === 'en' ? 'W' : 'H') + bucket.period.lcwWeek + ' · ' + start[2] + '.' + start[1];
+    }
     const [y, m, d] = bucket.start.split('-');
     if (granularity === 'month') return m + '.' + y;
     return (lang === 'en' ? 'W' : 'H') + isoWeekNo(bucket.start) + ' · ' + d + '.' + m;
@@ -235,7 +255,7 @@
     const today = ordinal(opts.today || todayIso());
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([key, v]) => ({
       key, start:v.bucket ? v.bucket.start : '', label:bucketLabel(v.bucket, granularity, opts.lang),
-      past:v.bucket ? ordinal(v.bucket.start) + (granularity === 'month' ? 27 : 6) < today : false,
+      past:v.bucket ? ordinal(v.bucket.end || v.bucket.start) < today : false,
       items:v.items, ...summarize(v.items),
     }));
   }
