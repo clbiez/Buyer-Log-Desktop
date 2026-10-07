@@ -17904,7 +17904,10 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
       const dimensionSpec=dateDimensionSources[h];
       const dimensionSourceIndex=dimensionSpec?visibleHeaders.indexOf(dimensionSpec.source):-1;
       const dimensionSourceRef=dimensionSourceIndex>=0?XLSX.utils.encode_col(dimensionSourceIndex)+(ri+2):'';
-      const dimensionFormula=dimensionSourceRef&&window.BLBacklogExcel?.dateDimensionFormula
+      // LCW Merch Calendar aktifken Excel'in ISO WEEKNUM formülü doğru iş
+      // dönemini yeniden üretemez. Ekranda merkezi motordan türetilmiş cached
+      // değer bu nedenle metin olarak yazılır; takvim yoksa legacy formül kalır.
+      const dimensionFormula=!window.BLDateDimension?.hasMerchCalendar?.()&&dimensionSourceRef&&window.BLBacklogExcel?.dateDimensionFormula
         ?BLBacklogExcel.dateDimensionFormula(dimensionSourceRef,dimensionSpec.kind,appLang):'';
       let cell;
       if(h==='Görsel')cell=backlogExcelCellFromValue('','text',baseStyle);
@@ -17944,7 +17947,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
         let cell;
         if(item.kind==='bucket'){
           const timeCi=roleCol.get(item.timeRole),timeRef=timeCi!=null?BLBacklogExcel.columnName(timeCi)+excelRow:'';
-          const formula=backlogChartBucketFormula(timeRef,chartState.granularity);
+          const formula=window.BLDateDimension?.hasMerchCalendar?.()?'':backlogChartBucketFormula(timeRef,chartState.granularity);
           const rawDate=item.timeRole==='time2'?row[chartState.timeField2]:row[chartState.timeField];
           const cached=window.BLDateDimension?.bucketKey?.(rawDate,chartState.granularity)||'';
           cell=formula?backlogExcelFormulaCell({kind:'text',cached,formula},{numFmt:'@'}):backlogExcelCellFromValue(cached,'text',{numFmt:'@'});
