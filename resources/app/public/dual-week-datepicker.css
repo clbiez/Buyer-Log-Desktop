@@ -1,0 +1,40 @@
+/* LCW / GLB date picker — Buyer Log tokens only, square geometry. */
+.blDualDatePicker{
+  position:fixed;z-index:12000;box-sizing:border-box;border:1px solid var(--line2);
+  background:var(--card);color:var(--ink);box-shadow:var(--shadow-lg,0 8px 24px rgba(0,0,0,.16));
+  padding:0;font-size:12px;border-radius:0!important;
+}
+.blDualDatePicker[hidden]{display:none!important}
+.blDualDatePicker *{box-sizing:border-box}
+.blDualDateHead{height:34px;display:grid;grid-template-columns:34px 1fr 34px;align-items:center;border-bottom:1px solid var(--line);background:var(--card2)}
+.blDualDateTitle{text-align:center;font-family:'Barlow Condensed','Barlow',sans-serif;font-size:15px;letter-spacing:.2px}
+.blDualDateNav{height:33px;border:0;background:transparent;color:var(--ink);font:inherit;font-size:20px;cursor:pointer;border-radius:0!important}
+.blDualDateNav:first-child{border-right:1px solid var(--line)}
+.blDualDateNav:last-child{border-left:1px solid var(--line)}
+.blDualDateNav:hover{background:var(--table-hover)}
+.blDualDateLegend{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:5px 7px;border-bottom:1px solid var(--line);color:var(--ink2)}
+.blDualDateLegend>span{font-weight:700;letter-spacing:.35px}
+.blDualDateLegend small{color:var(--muted)}
+.blDualDateWeekdays,.blDualDateWeekRow{display:grid;grid-template-columns:74px repeat(7,1fr)}
+.blDualDateWeekdays{background:var(--card2);border-bottom:1px solid var(--line);color:var(--muted);font-size:10px;font-weight:700}
+.blDualDateWeekdays span{padding:4px 2px;text-align:center;border-right:1px solid var(--line)}
+.blDualDateWeekdays span:last-child{border-right:0}
+.blDualDateWeekRow{min-height:37px;border-bottom:1px solid var(--line)}
+.blDualDateWeekRow:last-child{border-bottom:0}
+.blDualDateWeekNo{display:flex;align-items:center;justify-content:center;gap:4px;border-right:1px solid var(--line);background:var(--card2);color:var(--ink2);font-variant-numeric:tabular-nums}
+.blDualDateWeekNo strong{font-size:12px;color:var(--ink)}
+.blDualDateWeekNo span{color:var(--muted)}
+.blDualDateDay{min-width:0;border:0;border-right:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer;border-radius:0!important}
+.blDualDateDay:last-child{border-right:0}
+.blDualDateDay:hover:not(:disabled){background:var(--table-hover)}
+.blDualDateDay.isOutside{color:var(--muted);background:var(--card2)}
+.blDualDateDay.isSelected{background:var(--acc);color:var(--on-acc);font-weight:700}
+.blDualDateDay.isToday:not(.isSelected){box-shadow:inset 0 -2px 0 var(--acc)}
+.blDualDateDay:disabled{opacity:.35;cursor:not-allowed}
+.blDualDateDay:focus-visible,.blDualDateNav:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.blDualDateFoot{display:flex;justify-content:flex-end;gap:6px;padding:6px 7px;border-top:1px solid var(--line);background:var(--card2)}
+.blDualDateFoot .tbtn{border-radius:0!important}
+@media(max-width:560px){
+  .blDualDatePicker{left:8px!important;right:8px!important;width:auto!important}
+  .blDualDateWeekdays,.blDualDateWeekRow{grid-template-columns:64px repeat(7,1fr)}
+}
