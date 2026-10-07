@@ -129,6 +129,18 @@ const CONTRACTS = Object.freeze({
     }),
     example: { reviews: ['talepNo=3465774|step=tests|summary=…|actions=…; …|risks=…'], explanation: '…' },
   }),
+  /* Koleksiyon › PLM ID Listesinden Ekle: serbest metinden (mail, not, PDF
+     metni) PLM Code ayıklama. AI yalnız ADAY üretir; public/kol-plm-list-import.js
+     validateAiIds her adayı normalize edip kaynak metinde geçtiğini
+     doğrulamadan hiçbir ID listeye girmez. */
+  'plm-id-extract': Object.freeze({
+    label: { tr: 'PLM ID Ayıklama', en: 'PLM ID Extraction' },
+    fields: Object.freeze({
+      plmIds: { type: 'string[]', required: true, max: 20, items: 2000, hint: { tr: 'CONTEXT.text içinde PLM Code / PLM ID olarak geçen değerler, yazıldığı gibi', en: 'values that appear as PLM Code / PLM ID in CONTEXT.text, as written' } },
+      explanation: { type: 'string', required: true, max: 1000 },
+    }),
+    example: { plmIds: ['1234567', '7654321'], explanation: '…' },
+  }),
 });
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
@@ -222,6 +234,10 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Copy every value exactly as printed in the attached report or e-mail (original language and spelling); only "explanation" should be English.'
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. Her değeri ekli rapor ya da mailde basıldığı gibi (özgün dil ve yazım) kopyala; yalnız "explanation" Türkçe olsun.');
+    } else if (key === 'plm-id-extract') {
+      lines.push(english
+        ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" in English.'
+        : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" Türkçe olsun.');
     } else if (key === 'layout-control') {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Preserve all extracted label values in the language and spelling printed in the PDF; only "explanation" should be English.'
@@ -240,6 +256,10 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'Review each report in CONTEXT.reports as a buyer assistant. "step" must be one id from CONTEXT.checklistSteps that fits the request type, or empty. "actions" are concrete next steps for the buyer (e.g. ask the supplier for a retest or an image, reply to the lab). Do not change Buyer Log\'s outcome (buyerLogOutcome); explain it. Write summary, actions and risks in English.'
         : 'CONTEXT.reports içindeki her raporu bir buyer asistanı olarak incele. "step", talep tipine uyan CONTEXT.checklistSteps kimliklerinden biri ya da boş olmalı. "actions" buyer için somut sonraki adımlardır (ör. tedarikçiden tekrar test ya da görsel iste, laboratuvara dönüş yap). Buyer Log\'un sonucunu (buyerLogOutcome) değiştirme; açıkla. summary, actions ve risks Türkçe olsun.');
+    } else if (key === 'plm-id-extract') {
+      lines.push(english
+        ? 'List in "plmIds" only the LC Waikiki PLM Codes (PLM ID; a positive whole number, usually 6–8 digits, sometimes written with a leading underscore or dot separators) that are written in CONTEXT.text. Copy each one exactly as written; never invent, complete, reorder or compute a number. Ignore order numbers, prices, quantities, dates, phone numbers, barcodes and colour codes unless the text clearly labels the value as a PLM Code/PLM ID or it sits in a plain list of such codes. Buyer Log checks every value against the text; anything not found there is discarded. Note any uncertainty in "explanation".'
+        : '"plmIds" içine yalnız CONTEXT.text içinde yazılı LC Waikiki PLM Code değerlerini (PLM ID; pozitif tam sayı, genelde 6–8 hane, bazen başta alt çizgi ya da nokta ayırıcıyla yazılır) koy. Her birini yazıldığı gibi kopyala; sayı uydurma, tamamlama, sıralama ya da hesaplama. Metin bir değeri açıkça PLM Code/PLM ID olarak işaretlemedikçe ya da değer böyle kodların düz bir listesinde durmadıkça sipariş numarası, fiyat, adet, tarih, telefon, barkod ve renk kodlarını alma. Buyer Log her değeri metinle karşılaştırır; metinde olmayan atılır. Belirsizliği "explanation" içinde belirt.');
     } else if (key === 'layout-control') {
       lines.push(english
         ? 'Fill the schema only from values visibly supported by the attached layout PDF. "warnings" means warnings printed on the product label, not your own cautions. "countries" means manufacturing/country-of-origin only: never treat importer, distributor, company-address or legal-contact countries (for example MAROC in an importer block) as production country. For PRICE_TAG, transcribe the whole visible upper identity/code band verbatim into "identityText" and extract modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions and countries when their meaning is visually supportable. If an unlabeled slash-separated code cannot be assigned safely, keep it only in identityText rather than guessing its business meaning. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'

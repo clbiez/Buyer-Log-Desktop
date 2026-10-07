@@ -136,6 +136,7 @@ function selectModules({ source = '', task = '', screens = [], exclude = [] } = 
   const add = key => { if (MODULES[key] && !skip.has(key) && !chosen.includes(key) && chosen.length < MAX_MODULES) chosen.push(key); };
   if (MODULES[source]) add(source);
   if (/^test-report-/.test(clean(source))) add('test-reports');
+  if (clean(source) === 'plm-id-extract') add('collection');
   for (const screen of screens) add(SCREEN_MODULES[clean(screen)] || '');
   const text = ` ${lower(task)} `;
   if (text.trim()) {

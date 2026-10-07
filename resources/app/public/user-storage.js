@@ -24,7 +24,7 @@
     'lcw.orders.imageSize.','lcw.koleksiyon.imageSize.','lcw.koleksiyon.modelGroups.view.','lcw.lfl.analysisHeights.',
     'lcw.backlog.radar.layout.','lcw.backlog.chart.','bl.backlog.excelFormulas.','buyerlog.shipCompare.','buyerlog.overview.worldClocks.',
     'buyerlog.detailDrawer.','buyerlog.backlog.detail.compact.','buyerlog.endeksmatikClipboard.',
-    'buyerlog.fx.pending.','buyerlog.syncGuide.','blPlmSyncColumnChoice','lcw.transitAnalysis.view.','bl.releaseNotes.'
+    'buyerlog.fx.pending.','buyerlog.syncGuide.','blPlmSyncColumnChoice','lcw.koleksiyon.plmPending.','lcw.koleksiyon.plmListOptions.','lcw.transitAnalysis.view.','bl.releaseNotes.'
   ];
   prefixes=prefixes.concat(formerlyDeviceWide);
   function scoped(key){key=String(key);return prefixes.some(function(p){return key.indexOf(p)===0})}
