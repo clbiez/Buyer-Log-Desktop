@@ -196,7 +196,16 @@
   slowTimer=setTimeout(function(){if(finished)return;ensureGuard();if(guard())guard().dataset.slow='1';var hint=guard()?.querySelector('[data-boot-hint]');if(hint)hint.textContent=english()?'Preparation is taking longer. Data volume and source access can affect the wait.':'Hazırlık biraz uzun sürüyor. Veri hacmi ve kaynak erişimi bekleme süresini etkileyebilir.';},15000);
   // Normal slow starts must not be reloaded at 12 seconds. A bounded failure
   // screen still offers Retry if preparation stalls, without a reload loop.
-  timer=setTimeout(function(){if(!finished)message(english()?'Preparation has not completed. You can retry.':'Hazırlık tamamlanmadı. Yeniden deneyebilirsiniz.',true);},120000);
+  // Başlangıç verisi geldiyse yeniden yüklemek işi baştan başlatır ve beklemeyi
+  // uzatır: "Tekrar dene" yalnız veri hiç gelmediyse ya da kalan adımlar ek bir
+  // süre sonra da bitmediyse gösterilir.
+  function stalled(){if(!finished)message(english()?'Preparation has not completed. You can retry.':'Hazırlık tamamlanmadı. Yeniden deneyebilirsiniz.',true);}
+  timer=setTimeout(function(){
+    if(finished)return;
+    if(!gates.data){stalled();return;}
+    message(english()?'Almost ready, finishing the last steps…':'Neredeyse hazır, son adımlar tamamlanıyor…',false);
+    timer=setTimeout(stalled,180000);
+  },120000);
 })();
 </script>
 <script src="perf-runtime.js?v=__BL_ASSET_VERSION__&rev=8"></script>
@@ -290,7 +299,8 @@
 <link rel="stylesheet" href="manufacturers.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="pricing-workspace.css?v=__BL_ASSET_VERSION__&rev=4">
 <link rel="stylesheet" href="data-maintenance.css?v=__BL_ASSET_VERSION__&rev=3">
-<link rel="stylesheet" href="data-management.css?v=__BL_ASSET_VERSION__&rev=1">
+<link rel="stylesheet" href="data-management.css?v=__BL_ASSET_VERSION__&rev=2">
+<link rel="stylesheet" href="dual-week-datepicker.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="backlog-delivery-analysis.css?v=__BL_ASSET_VERSION__&rev=20260926-1">
 <link rel="stylesheet" href="backlog-plan-actual.css?v=__BL_ASSET_VERSION__&rev=2">
 <link rel="stylesheet" href="backlog-overview.css?v=__BL_ASSET_VERSION__&rev=1">
@@ -1413,7 +1423,9 @@
 </main>
 <div class="dropzone" id="dropzone" data-i18n-tr="Dosyayı buraya bırak" data-i18n-en="Drop the file here">Dosyayı buraya bırak</div>
 
-<script src="date-dimension.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="date-dimension.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="merch-calendar-runtime.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="dual-week-datepicker.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="column-schema.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-layout.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="model-option-stats.js?v=__BL_ASSET_VERSION__"></script>

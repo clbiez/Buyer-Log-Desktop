@@ -665,3 +665,33 @@
 .dmLinkOutside { font-size: 11px; color: var(--ink2); border: 1px dashed var(--line2); padding: 1px 7px; }
 .dmLinkOutsideLabel { margin-left: 8px; }
 .dmLinkMark { font-size: 10px; opacity: .7; cursor: help; }
+
+
+/* --- Merch Calendar -------------------------------------------------
+   İş takvimi Veri Yönetimi'nin yerleşik panelidir. Buyer Log isteği gereği
+   yeni yüzeylerde oval köşe yoktur; renkler yalnız mevcut tema tokenlarından. */
+.dmMerchPanel{border:1px solid var(--line);background:var(--card);border-radius:0!important}
+.dmMerchHead{align-items:flex-start}
+.dmMerchIntro{margin-top:3px;max-width:760px;font-size:11px;line-height:1.4;color:var(--muted)}
+.dmMerchState{flex:0 0 auto;border:1px solid var(--line2);padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.35px;color:var(--muted);background:var(--card);border-radius:0!important}
+.dmMerchState.isReady{border-color:var(--green);color:var(--green)}
+.dmMerchBody{display:flex;flex-direction:column;gap:8px;padding:9px 11px}
+.dmMerchFacts{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));border:1px solid var(--line);background:var(--line);gap:1px}
+.dmMerchFacts>div{min-width:0;display:flex;flex-direction:column;gap:3px;padding:7px 8px;background:var(--card2)}
+.dmMerchFacts strong{font-size:11px;color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.dmMerchYears{border:1px solid var(--line);padding:6px 8px;background:var(--card2);color:var(--ink2);font-size:10px;line-height:1.45}
+.dmMerchRules{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
+.dmMerchRules span{background:var(--card);padding:6px 8px;color:var(--ink2);font-size:11px;line-height:1.35}
+.dmMerchMessage{border-left:3px solid var(--acc);padding:6px 8px;background:var(--card2);color:var(--ink2);font-size:11px}
+.dmMerchActions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dmMerchUpload{position:relative;overflow:hidden;border-radius:0!important}
+.dmMerchUpload input[type="file"]{display:none}
+.dmMerchUpload.isBusy{opacity:.6;pointer-events:none}
+.dmMerchActions .tbtn{border-radius:0!important}
+@media(max-width:900px){
+  .dmMerchFacts{grid-template-columns:repeat(2,minmax(140px,1fr))}
+  .dmMerchRules{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .dmMerchFacts{grid-template-columns:1fr}
+}

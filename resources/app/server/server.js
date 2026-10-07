@@ -10771,6 +10771,9 @@ app.get('/api/data-management/overview', userAccess.requireArea('source'), (req,
   } catch (err) { apiError(res, err, 'Veri Yönetimi özeti okunamadı.'); }
 });
 
+// ---- LCW Merch Calendar: Data Management uploads the authoritative business calendar. ----
+require('./routes/merch-calendar-routes')(app, { express, userAccess });
+
 /* CORPORATE INTEGRATION LAB.
 
    This projection deliberately reuses Data Management, the per-user runtime

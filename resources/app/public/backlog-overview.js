@@ -268,8 +268,10 @@ function flowCard(){
   const today=R().dayIso(new Date()),todayMs=Date.parse(today+'T00:00:00Z');
   const bucketIsToday=b=>{
     if(!b||!b.start)return false;
-    if(state.granularity==='month')return b.start.slice(0,7)===today.slice(0,7);
     const startMs=Date.parse(b.start+'T00:00:00Z');
+    const endMs=Date.parse((b.end||b.start)+'T00:00:00Z');
+    if(Number.isFinite(startMs)&&Number.isFinite(endMs)&&Number.isFinite(todayMs))return todayMs>=startMs&&todayMs<=endMs;
+    if(state.granularity==='month')return b.start.slice(0,7)===today.slice(0,7);
     return Number.isFinite(startMs)&&Number.isFinite(todayMs)&&todayMs>=startMs&&todayMs<startMs+7*86400000;
   };
   const cols=series.map(b=>{
