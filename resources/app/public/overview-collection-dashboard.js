@@ -166,10 +166,6 @@
       scopeTrigger.setAttribute('aria-label',(ctx.language==='en'?'Filter values for ':'Filtre değerleri: ')+columnLabel);
       scopeTrigger.onclick=function(event){event.preventDefault();event.stopPropagation();openValuePopover(ctx,scoped);};
     }
-    const intro=document.getElementById('ovCollectionSummaryIntro');
-    if(intro)intro.textContent=ctx.language==='en'?'Collection health at a glance. Double-click the filter title to change column; select one or more values.':'Koleksiyonun durumunu tek bakışta gör. Filtre sütununu değiştirmek için başlığa çift tıkla; bir veya daha fazla değer seç.';
-    const meta=document.getElementById('ovCollectionSummaryScopeMeta');
-    if(meta)meta.textContent=columnLabel+' · '+valueSummary(ctx,scoped)+' · '+total.toLocaleString(locale)+' '+(ctx.language==='en'?'models':'model');
     const order=new Map((ctx.statusCatalog||[]).map(function(entry,index){return [String(entry.name),index];}));
     const rows=(result.rows||[]).slice().sort(function(a,b){const ai=order.has(a.status)?order.get(a.status):9999,bi=order.has(b.status)?order.get(b.status):9999;return ai-bi||String(a.status).localeCompare(String(b.status),'tr-TR',{sensitivity:'base'});});
     /* Renk verilmemiş (varsayılan gri) statüler dağılımda birbirinden ayrılsın:
@@ -201,8 +197,12 @@
       const statuses=bucket.statuses.slice().sort(function(a,b){return rank(a.status)-rank(b.status)||a.status.localeCompare(b.status,'tr-TR',{sensitivity:'base'});});
       const segments=statuses.map(function(entry){
         const share=pct(entry.optionCount,bucket.optionCount);
-        const tip=name+' · '+ctx.statusLabel(entry.status)+' · '+Number(entry.optionCount).toLocaleString(locale)+' '+(en?'options':'opsiyon')+' · '+share+'%';
-        return '<button type="button" class="ovCollectionMonthSeg" data-month-status="'+esc(entry.status)+'" style="--status-color:'+esc(colorByStatus.get(entry.status)||VIS_PALETTE[0])+';flex-grow:'+entry.optionCount+'" title="'+esc(tip)+'" aria-label="'+esc(tip)+'"></button>';
+        const color=colorByStatus.get(entry.status)||VIS_PALETTE[0];
+        const tip='<b>'+esc(name)+'</b><span class="ovCollectionTipStatus" style="--status-color:'+esc(color)+'"><i></i>'+esc(ctx.statusLabel(entry.status))+'<em>'+share+'%</em></span>'+
+          '<span><small>'+esc(en?'Models':'Model')+'</small>'+Number(entry.modelCount).toLocaleString(locale)+'</span>'+
+          '<span><small>'+esc(en?'Quantity':'Adet')+'</small>'+Number(entry.quantity||0).toLocaleString(locale)+'</span>';
+        const label=name+' · '+ctx.statusLabel(entry.status)+' · '+entry.modelCount+' '+(en?'models':'model')+' · '+Number(entry.quantity||0).toLocaleString(locale)+' '+(en?'pcs':'adet');
+        return '<button type="button" class="ovCollectionMonthSeg" data-month-status="'+esc(entry.status)+'" data-month-tip="'+esc(tip)+'" style="--status-color:'+esc(color)+';flex-grow:'+entry.optionCount+'" aria-label="'+esc(label)+'"></button>';
       }).join('');
       const thumbs=bucket.models.slice(0,MAX_THUMBS).map(function(model){
         return model.image
@@ -211,7 +211,7 @@
       }).join('');
       return '<div class="ovCollectionMonthRow" role="option" data-month-index="'+index+'" data-month="'+esc(bucket.month)+'" data-model-count="'+bucket.modelCount+'">'+
         '<button type="button" class="ovCollectionMonthName" data-month-open title="'+esc(en?'Open this month in Collection':'Bu ayı Koleksiyon\'da aç')+'">'+esc(name)+'</button>'+
-        '<span class="ovCollectionMonthQty"><b>'+Number(bucket.quantity||0).toLocaleString(locale)+'</b> '+esc(en?'pcs':'adet')+'</span>'+
+        '<span class="ovCollectionMonthQty"><b>'+Number(bucket.quantity||0).toLocaleString(locale)+'</b><span> '+esc(en?'pcs':'adet')+'</span></span>'+
         '<span class="ovCollectionMonthThumbs">'+thumbs+'<span class="ovCollectionMonthMore" hidden></span></span>'+
         '<span class="ovCollectionMonthBar">'+(segments||'<span class="ovCollectionMonthSeg isEmpty"></span>')+'</span>'+
       '</div>';
@@ -219,10 +219,29 @@
     Array.from(host.querySelectorAll('.ovCollectionMonthRow')).forEach(function(row){
       const month=row.dataset.month;
       row.querySelector('[data-month-open]')?.addEventListener('click',function(){drill({month:month});});
-      Array.from(row.querySelectorAll('[data-month-status]')).forEach(function(button){button.addEventListener('click',function(){drill({month:month,status:button.dataset.monthStatus});});});
+      Array.from(row.querySelectorAll('[data-month-status]')).forEach(function(button){
+        button.addEventListener('click',function(){drill({month:month,status:button.dataset.monthStatus});});
+        button.addEventListener('pointerenter',function(){showSegmentTip(button);});
+        button.addEventListener('pointerleave',hideSegmentTip);
+      });
     });
     mountRevolver(host,buckets);
   }
+  /* Status dilimi hover kartı: model sayısı ve adet (tek, body'ye bağlı). */
+  function segmentTipEl(){
+    let tip=document.getElementById('ovCollectionMonthTip');
+    if(!tip){tip=document.createElement('div');tip.id='ovCollectionMonthTip';tip.className='ovCollectionMonthTip';tip.setAttribute('role','tooltip');tip.hidden=true;document.body.appendChild(tip);}
+    return tip;
+  }
+  function showSegmentTip(button){
+    if(revolver&&revolver.dragging)return;
+    const tip=segmentTipEl();tip.innerHTML=button.dataset.monthTip||'';tip.hidden=false;
+    const rect=button.getBoundingClientRect(),box=tip.getBoundingClientRect(),vw=window.innerWidth||document.documentElement.clientWidth;
+    const left=Math.max(8,Math.min(rect.left+rect.width/2-box.width/2,vw-box.width-8));
+    const top=rect.top-box.height-8>=8?rect.top-box.height-8:rect.bottom+8;
+    tip.style.left=left+'px';tip.style.top=top+'px';
+  }
+  function hideSegmentTip(){const tip=document.getElementById('ovCollectionMonthTip');if(tip)tip.hidden=true;}
   function monthLabel(bucket,locale,en){
     if(!bucket.month)return en?'No month':'Ay yok';
     if(!bucket.year||!bucket.monthNumber)return bucket.month;
@@ -245,17 +264,14 @@
     const min=Math.floor(VISIBLE_ROWS/2),max=state.count-1-min;
     return Math.max(min,Math.min(max,pos));
   }
-  function paintRevolver(state,animate,flat){
+  function paintRevolver(state,animate){
     state.host.classList.toggle('isMoving',!animate);
     const center=state.count>=VISIBLE_ROWS?Math.floor(VISIBLE_ROWS/2):0;
     state.rows.forEach(function(row,index){
-      /* Tambur eğimi yalnız kaydırırken; durunca satırlar düz oturur. */
       const delta=index-state.pos,distance=Math.abs(delta);
       const y=(delta+center)*state.rowHeight;
-      row.style.transform='translateY('+y.toFixed(2)+'px) rotateX('+(animate||flat?0:-delta*24).toFixed(2)+'deg) scale('+(1-Math.min(distance,2)*0.04).toFixed(3)+')';
-      row.style.opacity=distance>=2?'0':String((1-distance*0.25).toFixed(3));
+      row.style.transform='translateY('+y.toFixed(2)+'px)';
       row.style.visibility=distance>=2?'hidden':'';
-      row.classList.toggle('isCenter',distance<0.5);
       row.setAttribute('aria-selected',distance<0.5?'true':'false');
     });
   }
@@ -279,15 +295,15 @@
       if(more){more.hidden=hidden<=0;more.textContent='+'+hidden;}
     });
   }
-  const THUMB_GAP=4;
+  const THUMB_GAP=3;
   function mountRevolver(host,buckets){
     const previous=revolver&&revolver.host===host?revolver.centerMonth:null;
     revolverTeardown();
     const track=host.querySelector('.ovCollectionRevolverTrack');
     const rows=Array.from(host.querySelectorAll('.ovCollectionMonthRow'));
     /* Satır yüksekliği CSS'ten okunur: widget gizliyken de (ölçü 0) doğru kalır. */
-    const rowHeight=Math.max(32,parseFloat(getComputedStyle(host).getPropertyValue('--revolver-row'))||46);
-    const state={host:host,track:track,rows:rows,count:rows.length,rowHeight:rowHeight,thumbStep:28+THUMB_GAP,pos:0,centerMonth:'',cleanup:[]};
+    const rowHeight=Math.max(32,parseFloat(getComputedStyle(host).getPropertyValue('--revolver-row'))||36);
+    const state={host:host,track:track,rows:rows,count:rows.length,rowHeight:rowHeight,thumbStep:22+THUMB_GAP,pos:0,centerMonth:'',cleanup:[]};
     host.style.height=(rowHeight*Math.min(VISIBLE_ROWS,Math.max(1,rows.length)))+'px';
     let start=previous?buckets.findIndex(function(bucket){return bucket.month===previous;}):-1;
     if(start<0){
@@ -299,7 +315,7 @@
     revolver=state;
     state.pos=revolverClamp(state,start);
     state.centerMonth=rows[state.pos]?rows[state.pos].dataset.month:'';
-    paintRevolver(state,false,true);
+    paintRevolver(state,false);
     void host.offsetHeight;
     host.classList.remove('isMoving');
     fitThumbs(state);
@@ -313,6 +329,7 @@
     let idle=0;
     const settle=function(){clearTimeout(idle);idle=setTimeout(function(){snapRevolver(state);},SNAP_IDLE_MS);};
     const onWheel=function(event){
+      hideSegmentTip();
       if(!event.deltaY)return;
       const edge=event.deltaY>0?revolverClamp(state,state.count):revolverClamp(state,0);
       if(Math.abs(state.pos-edge)<0.001)return;
@@ -333,14 +350,14 @@
       if(!drag||event.pointerId!==drag.id)return;
       const dy=event.clientY-drag.y;
       if(!drag.moved&&Math.abs(dy)<5)return;
-      if(!drag.moved){drag.moved=true;try{host.setPointerCapture(drag.id);}catch(_){}}
+      if(!drag.moved){drag.moved=true;state.dragging=true;hideSegmentTip();try{host.setPointerCapture(drag.id);}catch(_){}}
       event.preventDefault();
       state.pos=revolverClamp(state,drag.pos-dy/state.rowHeight);
       paintRevolver(state,false);
     };
     const onUp=function(event){
       if(!drag||event.pointerId!==drag.id)return;
-      const moved=drag.moved;drag=null;
+      const moved=drag.moved;drag=null;state.dragging=false;
       try{host.releasePointerCapture(event.pointerId);}catch(_){}
       if(moved){suppressClick=true;setTimeout(function(){suppressClick=false;},0);snapRevolver(state);}
     };
@@ -357,7 +374,7 @@
     host.addEventListener('click',onClick,true);
     host.addEventListener('keydown',onKey);
     state.cleanup.push(function(){
-      clearTimeout(idle);
+      clearTimeout(idle);hideSegmentTip();
       host.removeEventListener('wheel',onWheel,{passive:false});
       host.removeEventListener('pointerdown',onDown);
       host.removeEventListener('pointermove',onMove);

@@ -197,8 +197,8 @@
       const entry=group.models.get(model)||{key:model,label:fieldValue(row,'model',fields)||model,image:''};
       if(!entry.image)entry.image=text(imageFor(row));
       group.models.set(model,entry);
-      const statusEntry=group.statuses.get(status)||{status,optionCount:0,models:new Set()};
-      statusEntry.optionCount++;statusEntry.models.add(model);group.statuses.set(status,statusEntry);
+      const statusEntry=group.statuses.get(status)||{status,optionCount:0,quantity:0,models:new Set()};
+      statusEntry.optionCount++;if(Number.isFinite(quantity)&&quantity>0)statusEntry.quantity+=quantity;statusEntry.models.add(model);group.statuses.set(status,statusEntry);
       groups.set(month,group);
     });
     const order=group=>{const parts=monthParts(group.month);return parts?parts.year*12+parts.month:Number.POSITIVE_INFINITY;};
@@ -213,7 +213,7 @@
         optionCount:group.optionCount,
         modelCount:models.length,
         models:models.filter(model=>model.image).concat(models.filter(model=>!model.image)),
-        statuses:[...group.statuses.values()].map(entry=>({status:entry.status,optionCount:entry.optionCount,modelCount:entry.models.size}))
+        statuses:[...group.statuses.values()].map(entry=>({status:entry.status,optionCount:entry.optionCount,modelCount:entry.models.size,quantity:entry.quantity}))
           .sort((a,b)=>a.status.localeCompare(b.status,'tr-TR',{numeric:true,sensitivity:'base'})),
       };
     });

@@ -184,8 +184,8 @@
         "en": "Overview"
       },
       "title": {
-        "tr": "Koleksiyon özeti aylık revolver görünümüne geçti",
-        "en": "Collection summary now shows a monthly revolver"
+        "tr": "Koleksiyon özeti kompakt aylık listeye geçti",
+        "en": "Collection summary is now a compact monthly list"
       },
       "path": {
         "tr": "Genel Bakış › Koleksiyon",
@@ -196,17 +196,17 @@
         "capture": "post-change",
         "src": "overview-collection-month-revolver.png",
         "alt": {
-          "tr": "Genel Bakış Koleksiyon widget'ında üç aylık revolver: ay, adet, model görselleri, sığmayan model sayısı ve status çubuğu — gerçek Buyer Log demo ekranı",
-          "en": "Three-month revolver in the Overview Collection widget: month, quantity, model images, overflow model count and status bar — actual Buyer Log demo screen"
+          "tr": "Genel Bakış Koleksiyon widget'ında üç aylık kompakt liste: ay, adet, model görselleri, sığmayan model sayısı ve status çubuğu — gerçek Buyer Log demo ekranı",
+          "en": "Compact three-month list in the Overview Collection widget: month, quantity, model images, overflow model count and status bar — actual Buyer Log demo screen"
         },
         "caption": {
-          "tr": "Her ay tek satırda; ortadaki ay vurgulanır",
-          "en": "One row per month; the middle month is highlighted"
+          "tr": "Her ay tek satırda, 3 ay görünür",
+          "en": "One row per month, three months visible"
         }
       },
       "body": {
-        "tr": "Koleksiyon özeti, Backlog raporundaki satır düzeninden esinlenerek ay bazında listelenir: ay, toplam adet, yan yana model görselleri, sığmayan model sayısı (+N) ve status bazlı yatay çubuk. Aynı anda 3 ay görünür; fare tekerleği, sürükleme veya ok tuşlarıyla tambur gibi animasyonlu kayar, yarıda bırakıldığında en yakın ay ortaya oturur. Ay adına veya bir status dilimine tıklamak Koleksiyon'u o filtreyle açar. Tablonun üstündeki genel özet (Toplam Model, Toplam Opsiyon, Onaylı, Onaysız) kaldırıldı; widget doğrudan aylık görünümü gösterir.",
-        "en": "The Collection summary is now listed by month, inspired by the Backlog report rows: month, total quantity, model images side by side, the number of models that do not fit (+N) and a horizontal status bar. Three months are visible at a time; the mouse wheel, dragging or the arrow keys scroll it like an animated drum, and a partial scroll snaps the nearest month to the middle. Clicking a month name or a status slice opens Collection with that filter. The general summary above the table (Total Models, Total Options, Confirmed, Not Confirmed) was removed; the widget now shows the monthly view directly."
+        "tr": "Koleksiyon özeti, Backlog raporundaki satır düzeninden esinlenerek ay bazında listelenir: ay, toplam adet, yan yana model görselleri, sığmayan model sayısı (+N) ve status bazlı yatay çubuk. Aynı anda 3 ay aynı hizada görünür; fare tekerleği, sürükleme veya ok tuşlarıyla kayar ve yarıda bırakılınca en yakın aya oturur. Çubuktaki bir statünün üzerine gelince model sayısı ve adet görünür; ay adına tıklamak Koleksiyon'u o ay filtreli açar. Genel KPI özeti ve açıklama metinleri kaldırıldı, widget daha kompakt; widget daraldıkça görsel sayısı azalır ve çubuk küçülür.",
+        "en": "The Collection summary is now listed by month, inspired by the Backlog report rows: month, total quantity, model images side by side, the number of models that do not fit (+N) and a horizontal status bar. Three months are visible in line at a time; the mouse wheel, dragging or the arrow keys scroll it and a partial scroll snaps to the nearest month. Hovering a status in the bar shows its model count and quantity; clicking a month name opens Collection filtered to that month. The general KPI summary and description texts were removed, making the widget more compact; as the widget narrows, fewer images are shown and the bar shrinks."
       }
     }
   ]

@@ -29,7 +29,7 @@ test('monthBuckets groups Collection rows chronologically with quantity, models 
   assert.equal(march.optionCount,3);
   assert.equal(march.modelCount,2);
   assert.deepEqual(march.models.map(m=>[m.label,m.image]),[['M-1','a.png'],['M-2','']]);
-  assert.deepEqual(march.statuses.map(s=>[s.status,s.optionCount]),[['Fiyatlamada',2],['Siparişe Hazır',1]]);
+  assert.deepEqual(march.statuses.map(s=>[s.status,s.optionCount,s.modelCount,s.quantity]),[['Fiyatlamada',2,2,1700],['Siparişe Hazır',1,1,300]]);
   assert.equal(buckets[3].year,null);
 });
 
@@ -55,7 +55,14 @@ test('Overview Collection summary renders a 3-row revolver of month rows',()=>{
   assert.match(DASH,/Math\.round\(/);
   assert.match(DASH,/addEventListener\('wheel'/);
   assert.match(DASH,/addEventListener\('pointerup'/);
-  assert.match(DASH,/rotateX\(.+\(animate\|\|flat\?0:-delta\*24\)/);
+  /* Tambur görünümü kaldırıldı: satırlar düz ve aynı hizada. */
+  assert.doesNotMatch(DASH,/rotateX\(/);
+  assert.match(DASH,/function showSegmentTip/);
+  assert.match(DASH,/en\?'Models':'Model'/);
+  assert.match(DASH,/en\?'Quantity':'Adet'/);
+  assert.match(DASH,/\[data-month-open\]'\)\?\.addEventListener\('click',function\(\)\{drill\(\{month:month\}\)/);
+  assert.doesNotMatch(INDEX,/Aylık Özet|id="ovCollectionSummaryIntro"/);
+  assert.match(CSS,/@container ovmonths/);
   assert.match(DASH,/ovCollectionMonthMore/);
   assert.match(DASH,/ctx\.drill\(Object\.assign\(\{scopeColumn:scoped\.column\.k,scopeValues:scoped\.selected\},extra\)\)/);
   assert.match(DASH,/drill\(\{month:month,status:button\.dataset\.monthStatus\}\)/);
