@@ -671,5 +671,7 @@ module.exports = {
   MODEL_ID, PARSER_VERSION, SCHEMA_VERSION, COMPONENTS, COMPONENT_LABELS, LEVEL_LABELS, SHEETS, SCREEN_LAYOUT,
   RECONCILE_TOLERANCE, DEFAULT_LANDED_FACTOR, DEFAULT_TARGET_ADVANTAGE_PCT,
   text, norm, keyOf, levelKey, numberValue, monthCodeOf, formulaRefs, traceFormula, checkSignature,
-  looksLikeModel, parseWorkbookBuffer, describeScreen, buildIndex, resolveRecord, calculate, singOffDecision, reconcile, publicMeta, lookup,
+  looksLikeModel, parseWorkbookBuffer, describeScreen, buildIndex,
+  // Yapı raporu (endeksmatik-report.js) için iç okuyucular:
+  findSheetName, sheetRows, locateDimHeader, walkHierarchy, findMonthColumns, parseRateTables, DIM_HEADERS, WEIGHT_PATTERNS, resolveRecord, calculate, singOffDecision, reconcile, publicMeta, lookup,
 };

@@ -5887,6 +5887,19 @@ app.post('/api/endeksmatik/upload', userAccess.requirePermission('manageModelCon
     res.json(status);
   } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik Excel dosyası yüklenemedi.'); }
 });
+/* Yapı raporu (v7.0.257): reddedilen büyük ülke dosyası için paylaşılabilir,
+   maskeli bir yapı özeti üretir. Hiçbir şey kaydedilmez; rapor yalnız
+   isteyene döner. Yetki yükleme ile aynıdır. */
+app.post('/api/endeksmatik/structure-report', userAccess.requirePermission('manageModelConnections'), (req, res) => {
+  try {
+    const dataBase64 = String(req.body && req.body.dataBase64 || '');
+    if (!dataBase64) return res.status(400).json({ error: 'dataBase64 alanı zorunlu.', code: 'VALIDATION_ERROR' });
+    const buffer = Buffer.from(dataBase64, 'base64');
+    if (!buffer.length || buffer.length > 80 * 1024 * 1024) return res.status(400).json({ error: 'Endeksmatik Excel dosyası boş veya 80 MB sınırını aşıyor.', code: 'VALIDATION_ERROR' });
+    const filename = path.basename(String(req.body && req.body.name || 'ENDEKSMATİK.xlsx')).replace(/[<>:"/\\|?*\x00-\x1F]/g, '_').slice(0, 180) || 'ENDEKSMATİK.xlsx';
+    res.json({ ok: true, filename, report: require('./lib/endeksmatik-report').structureReport(buffer, filename) });
+  } catch (err) { endeksmatikApiError(res, err, 'Endeksmatik yapı raporu üretilemedi.'); }
+});
 // Çoklu set yönetimi (v7.0.172). Listeleme/hesap herkese açık; varsayılan
 // seçimi, ad ve silme Endeksmatik yükleme yetkisiyle aynı izne bağlıdır.
 app.get('/api/endeksmatik/sets', (_req, res) => {

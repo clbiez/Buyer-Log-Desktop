@@ -9,7 +9,13 @@ const fs = require('fs');
 const path = require('path');
 const model = require('../server/lib/endeksmatik-model');
 
-const files = process.argv.slice(2).filter(a => a !== '--screen');
+const files = process.argv.slice(2).filter(a => !a.startsWith('--'));
+// --report: paylaşılabilir, maskeli yapı raporunu yazar (değerler gizli).
+if (process.argv.includes('--report')) {
+  const report = require('../server/lib/endeksmatik-report');
+  files.forEach(file => process.stdout.write(report.structureReport(fs.readFileSync(file), path.basename(file))));
+  process.exit(0);
+}
 if (!files.length) { console.error('Kullanım: node scripts/endeksmatik-inspect.js <dosya.xlsx> [...]'); process.exit(2); }
 let failed = 0;
 for (const file of files) {
