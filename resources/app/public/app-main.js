@@ -22113,25 +22113,22 @@ function kolMonthDisplay(value){
   return `${(appLang==='en'?KOL_MONTHS_EN:KOL_MONTHS_TR)[idx]} ${code.slice(0,4)}`;
 }
 
-// ===================== v8 — Collection In-Store period picker =====================
-// Tek kaynak kuralı:
-//   Ay  -> ayın 1. gününü içeren ISO haftasının pazartesisi In Store tarihidir.
-//   Hafta -> haftanın pazartesisi In Store tarihidir; hafta bir aya taşarsa
-//            hafta, PAZAR gününün ait olduğu aya yazılır.
-// Örnekler: Ekim 2026 => 2026-40 => 28.09.2026
-//           2026-53   => Ocak 2027 => 28.12.2026
+// ===================== Collection In-Store period picker =====================
+// LCW Merch Calendar is the authority for business week/month assignment.
+// Dates remain Gregorian; GLB/ISO week is only shown as a secondary reference.
 function kolIsoWeekYear(date){
-  return window.BLDateDimension?.isoWeekYear?.(date)||0;
+  const period=window.BLDateDimension?.describe?.(date);
+  return period&&period.businessValid?period.lcwYear:0;
 }
 function kolWeekCodeForDate(value){
   const period=window.BLDateDimension?.describe?.(value);
-  if(!period||!period.valid)return '';
-  return `${period.isoWeekYear}-${String(period.isoWeek).padStart(2,'0')}`;
+  if(!period||!period.valid||!period.businessValid)return '';
+  return `${period.lcwYear}-${String(period.lcwWeek).padStart(2,'0')}`;
 }
 function kolWeekCode(value,fallbackDate=''){
   const raw=norm(value);if(!raw)return fallbackDate?kolWeekCodeForDate(fallbackDate):'';
   let m=/^(\d{4})[-/. ]?W?(\d{1,2})$/i.exec(raw);
-  if(m){const w=Number(m[2]);return w>=1&&w<=53?`${m[1]}-${String(w).padStart(2,'0')}`:'';}
+  if(m){const w=Number(m[2]);return w>=1&&w<=52?`${m[1]}-${String(w).padStart(2,'0')}`:'';}
   m=/^(\d{1,2})$/.exec(raw);
   if(m&&fallbackDate){const fromDate=kolWeekCodeForDate(fallbackDate);if(fromDate&&Number(fromDate.slice(5))===Number(m[1]))return fromDate;}
   return '';
@@ -22140,19 +22137,21 @@ function kolWeekDisplay(value,fallbackDate=''){
   const code=kolWeekCode(value,fallbackDate);return code?String(Number(code.slice(5))):'';
 }
 function kolMondayFromIsoWeek(year,week){
-  return window.BLDateDimension?.mondayFromIsoWeek?.(Number(year),Number(week))||null;
+  return window.BLDateDimension?.mondayFromBusinessWeek?.(Number(year),Number(week))||null;
 }
 function kolScheduleFromMonthCode(value){
   const code=kolMonthCode(value);if(!code)return null;
   const year=Number(code.slice(0,4)),month=Number(code.slice(4,6));
-  const first=new Date(year,month-1,1),monday=window.BLDateDimension?.mondayOf?.(first)||mondayOf(first);if(!monday)return null;
+  const range=window.BLDateDimension?.businessMonthRange?.(year,month);
+  const monday=range?window.BLDateDimension?.parseDate?.(range.start):null;
+  if(!monday)return null;
   return {inStoreMonth:code,inStoreWeek:kolWeekCodeForDate(monday),inStore:toISODate(monday),monday};
 }
 function kolScheduleFromWeekMonday(value){
   const monday=window.BLDateDimension?.mondayOf?.(value)||mondayOf(value);if(!monday)return null;
   const period=window.BLDateDimension?.describe?.(monday);
-  const monthCode=period&&period.valid?period.monthCode:`${monday.getFullYear()}${String(monday.getMonth()+1).padStart(2,'0')}`;
-  return {inStoreMonth:monthCode,inStoreWeek:kolWeekCodeForDate(monday),inStore:toISODate(monday),monday};
+  if(!period||!period.valid||!period.businessValid)return null;
+  return {inStoreMonth:period.monthCode,inStoreWeek:kolWeekCodeForDate(monday),inStore:toISODate(monday),monday};
 }
 function kolScheduleFromWeekCode(value){
   const code=kolWeekCode(value);if(!code)return null;
