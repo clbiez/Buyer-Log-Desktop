@@ -13,9 +13,11 @@ function between(source,startText,endText){
 
 test('Collection clipboard reads current bridge rows instead of stale render cache',()=>{
   assert.match(SHEET,/function liveRowSnapshot\(\)/);
-  const matrix=between(SHEET,'function selectedMatrix()','function headerLabelFor');
-  assert.match(matrix,/liveRows=liveRowSnapshot\(\)/);
+  const matrix=between(SHEET,'function selectedMatrix','function headerLabelFor');
+  assert.match(matrix,/function selectedMatrix\(liveRows=null\)/);
   assert.match(matrix,/valueForCoord\(coord,liveRows\)/);
+  const clipboard=between(SHEET,'function selectedClipboard','function updateStatus');
+  assert.match(clipboard,/selectedMatrix\(liveRowSnapshot\(\)\)/);
   const value=between(SHEET,'function valueForCoord','function metadata');
   assert.match(value,/liveRows\?\.get\(String\(coord\.rowId\)\)\|\|state\.rowById\.get/);
 });
