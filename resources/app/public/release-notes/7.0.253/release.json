@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.253",
+  "channel": "stable",
+  "publishedAt": "2026-10-07",
+  "title": {
+    "tr": "Yenileme hatalarında daha net durum",
+    "en": "Clearer status when a refresh fails"
+  },
+  "summary": {
+    "tr": "Başarısız yenileme hatanın oluştuğu adımı gösterir; kaynak sunucunun bellek hatası artık açıkça teşhis edilir.",
+    "en": "A failed refresh shows the step where it failed, and a source-server memory error is now clearly diagnosed."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 2
+  },
+  "changes": [
+    {
+      "id": "refresh-failed-step",
+      "type": "fix",
+      "module": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Başarısız yenileme doğru adımda gösterilir",
+        "en": "A failed refresh is shown at the right step"
+      },
+      "path": {
+        "tr": "Yenile › Yenileme Durumu",
+        "en": "Refresh › Refresh progress"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-failed-step.png",
+        "alt": {
+          "tr": "ASAS adımı başarısız olarak işaretlenmiş yenileme durumu — gerçek Buyer Log demo ekranı",
+          "en": "Refresh progress with the ASAS step marked failed — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Başarısız yenileme doğru adımda gösterilir",
+          "en": "A failed refresh is shown at the right step"
+        }
+      },
+      "body": {
+        "tr": "Yenileme ASAS veya IAS verisi çekilirken başarısız olduğunda ilerleme penceresi artık \"Denetleme ve Kaydetme\" adımını sürüyormuş gibi göstermez; hatanın oluştuğu adım kırmızı \"Başarısız\" olarak işaretlenir.",
+        "en": "When a refresh fails while fetching ASAS or IAS data, the progress panel no longer shows \"Reviewing & saving\" as running; the step where the failure happened is marked red as \"Failed\"."
+      }
+    },
+    {
+      "id": "refresh-source-memory-diagnosis",
+      "type": "fix",
+      "module": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Kaynak sunucu bellek hatası açıkça teşhis edilir",
+        "en": "Source-server memory errors are clearly diagnosed"
+      },
+      "path": {
+        "tr": "Yenile › Yenileme Durumu",
+        "en": "Refresh › Refresh progress"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-source-memory-diagnosis.png",
+        "alt": {
+          "tr": "Veri kaynağı sunucusunun belleği yetmedi teşhisi — gerçek Buyer Log demo ekranı",
+          "en": "Data source server ran out of memory diagnosis — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Kaynak sunucu bellek hatası açıkça teşhis edilir",
+          "en": "Source-server memory errors are clearly diagnosed"
+        }
+      },
+      "body": {
+        "tr": "Veri modeli sunucusu sorgu için yeterli bellek ayıramadığında hata artık \"sınıflandırılamadı\" görünmez: bunun ağ/VPN veya yetki sorunu olmadığı, önce tekrar denemek, sürerse Horizon kapsamını daraltıp gereksiz eşlenmiş alanları kaldırmak gerektiği söylenir.",
+        "en": "When the data-model server cannot allocate enough memory for the query, the error is no longer \"not classified\": Buyer Log explains it is not a network/VPN or permission issue and advises retrying first, then narrowing the Horizon scope and removing unneeded mapped fields."
+      }
+    }
+  ]
+}

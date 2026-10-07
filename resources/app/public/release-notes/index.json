@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.253",
+      "publishedAt": "2026-10-07",
+      "title": {
+        "tr": "Yenileme hatalarında daha net durum",
+        "en": "Clearer status when a refresh fails"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.253/release.json"
+    },
+    {
       "version": "7.0.252",
       "publishedAt": "2026-10-07",
       "title": {

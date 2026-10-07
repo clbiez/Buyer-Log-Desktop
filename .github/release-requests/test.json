@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.246",
-  "commit_sha": "cba6df201a80f0039411ac1b4dd967066d43c114",
-  "release_notes": "Buyer Log 7.0.246: Koleksiyon sayfasında Artwork Detayı gerçek bir sütun haline getirildi; filtreleme, taşıma, düzenleme ve LCW AI bağlamıyla entegre edildi. PLM CoreNectum bağlantısı ERR_FAILED durumunda oturumu bozmadan önbelleği temizleyip yeniden dener. PLM/ASAS senkron rehberine tek tıkla Remote Debugging açma ve kurulum tamamlandı doğrulama sayfası eklendi."
+  "version": "7.0.253",
+  "commit_sha": "651ee167ee142470077e51451cb246b49a9ea5bf",
+  "release_notes": "Buyer Log 7.0.253: Yenileme başarısız olduğunda hatanın gerçekleştiği adım doğru biçimde Başarısız olarak gösterilir; ASAS/tabular kaynak bellek yetersizliği hataları ayrı teşhis edilerek kullanıcıya doğru çözüm yönlendirmesi sunulur."
 }
