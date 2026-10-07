@@ -13121,10 +13121,18 @@ function refreshCompactConnectionKind(value){
   return'';
 }
 function refreshCompactStageIndex(job){
-  const phase=String(job&&job.phase||'').toLowerCase();
+  let phase=String(job&&job.phase||'').toLowerCase();
   if(!job)return 1;
   if(!job.running&&phase==='done')return 4;
-  if(['comparing','saving','page-cache','finalizing','done','error'].includes(phase))return 3;
+  // Başarısız iş hatanın düştüğü adımda kalır: "error" son gerçek faza çözülür.
+  // Eskiden doğrudan 3. adıma atanıyordu; ASAS sorgusunda düşen yenileme
+  // "Denetleme ve Kaydetme" sürüyormuş gibi görünüyordu.
+  if(phase==='error'){
+    const history=Array.isArray(job.phases)?job.phases:[];
+    const last=history.map(item=>String(item&&item.phase||'').toLowerCase()).filter(item=>item&&item!=='error').pop();
+    phase=last||'';
+  }
+  if(['comparing','saving','page-cache','finalizing','done'].includes(phase))return 3;
   const operations=Array.isArray(job.operations)?job.operations:[];
   let asasSeen=false,iasSeen=false,asasQueryDone=false,iasQueryDone=false;
   for(const item of operations){
@@ -13139,15 +13147,15 @@ function refreshCompactStageIndex(job){
   if((asasQueryDone&&iasSeen)||(!asasSeen&&iasSeen)||iasQueryDone)return 2;
   return 1;
 }
-function refreshCompactStepHtml(index,activeIndex,title,subtitle,en){
+function refreshCompactStepHtml(index,activeIndex,title,subtitle,en,failed=false){
   const done=activeIndex===4||index<activeIndex;
   const active=activeIndex===index;
-  const state=done?'done':active?'active':'pending';
-  const status=done?(en?'Done':'Tamamlandı'):active?(en?'In progress':'Sürüyor'):(en?'Queued':'Sırada');
+  const state=done?'done':active?(failed?'failed':'active'):'pending';
+  const status=done?(en?'Done':'Tamamlandı'):active?(failed?(en?'Failed':'Başarısız'):(en?'In progress':'Sürüyor')):(en?'Queued':'Sırada');
   return `<div class="refreshCompactStep is-${state}" data-refresh-step="${index}">
-    <span class="refreshCompactStepMark" aria-hidden="true">${done?'✓':index}</span>
+    <span class="refreshCompactStepMark" aria-hidden="true">${done?'✓':state==='failed'?'!':index}</span>
     <div class="refreshCompactStepText"><b>${escapeHtml(title)}</b><small>${escapeHtml(subtitle)}</small></div>
-    <span class="refreshCompactStepStatus">${active?'<i></i><i></i><i></i>':escapeHtml(status)}</span>
+    <span class="refreshCompactStepStatus">${state==='active'?'<i></i><i></i><i></i>':escapeHtml(status)}</span>
   </div>`;
 }
 function renderRefreshStagesBody(){
@@ -13197,9 +13205,9 @@ function renderRefreshStagesBody(){
       <span class="refreshCompactCount">${escapeHtml(activeIndex===4?(en?'Completed':'Tamamlandı'):`${stepCount}/3 ${en?'steps':'adım'}`)}</span>
     </div>
     <div class="refreshCompactFlow">
-      ${refreshCompactStepHtml(1,activeIndex,en?'Fetching ASAS data…':'ASAS Verisi Çekiliyor…',en?'Order and model data':'Sipariş ve model verileri',en)}
-      ${refreshCompactStepHtml(2,activeIndex,en?'Fetching IAS data…':'IAS Verisi Çekiliyor…',en?'Bonded warehouse / shipment data':'Antrepo ve sevkiyat verileri',en)}
-      ${refreshCompactStepHtml(3,activeIndex,en?'Reviewing & saving':'Denetleme ve Kaydetme',en?'Compare · save · cache · finalize':'Karşılaştırma · kaydetme · önbellek · tamamlama',en)}
+      ${refreshCompactStepHtml(1,activeIndex,en?'Fetching ASAS data…':'ASAS Verisi Çekiliyor…',en?'Order and model data':'Sipariş ve model verileri',en,failed)}
+      ${refreshCompactStepHtml(2,activeIndex,en?'Fetching IAS data…':'IAS Verisi Çekiliyor…',en?'Bonded warehouse / shipment data':'Antrepo ve sevkiyat verileri',en,failed)}
+      ${refreshCompactStepHtml(3,activeIndex,en?'Reviewing & saving':'Denetleme ve Kaydetme',en?'Compare · save · cache · finalize':'Karşılaştırma · kaydetme · önbellek · tamamlama',en,failed)}
     </div>
     <details class="refreshCompactDetails">
       <summary>${escapeHtml(en?'View technical details':'Teknik Detayları Gör')}</summary>
