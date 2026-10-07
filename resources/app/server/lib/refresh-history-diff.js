@@ -79,14 +79,64 @@ function identity(row) {
   line.push(`container:${clean(row && row.containerNo).toLocaleUpperCase('tr-TR')}`);
   return line.join('|');
 }
-function similarity(left, right) {
-  const a = comparable(left), b = comparable(right), names = new Set([...Object.keys(a), ...Object.keys(b)]);
-  let score = 0;
-  for (const name of names) if ((a[name] || '') === (b[name] || '')) score += 1;
-  return score;
-}
 function rowsOf(map) {
   return Object.values(map && typeof map === 'object' ? map : {}).filter(row => row && typeof row === 'object' && !Array.isArray(row));
+}
+// Benzerlik eşleştirmesi k² puan üretir. Bu sınırın üstündeki (gerçek veride
+// görülmeyen, bozuk/boş kimlikli) kovalarda satırlar kaynak sırasıyla eşlenir;
+// bu yalnız yenileme geçmişindeki fark satırlarının eşini etkiler, iş verisini
+// etkilemez ve yenilemenin sunucuyu kilitlemesini önler.
+const MAX_SIMILARITY_BUCKET = 1500;
+function pairInSourceOrder(oldCount, newCount) {
+  const out = [];
+  for (let index = 0; index < Math.min(oldCount, newCount); index += 1) out.push([index, index]);
+  return out;
+}
+// Benzerlik puanı: iki satırdan en az birinde bulunan her alan için
+// (eksik alan '' sayılır) değer eşitse +1. Alan adları kova başına bir kez
+// dizilir; satır başına değerler aynı sırada tutulur (eksik = undefined).
+function pairBySimilarity(oldRows, newRows) {
+  const names = [], nameIndex = new Map();
+  const vectorOf = row => {
+    const values = comparable(row), vector = [];
+    for (const name of Object.keys(values)) {
+      let index = nameIndex.get(name);
+      if (index === undefined) { index = names.length; names.push(name); nameIndex.set(name, index); }
+      vector[index] = values[name];
+    }
+    return vector;
+  };
+  const oldVectors = oldRows.map(vectorOf), newVectors = newRows.map(vectorOf);
+  const width = names.length, oldCount = oldRows.length, newCount = newRows.length;
+  const scores = new Uint16Array(oldCount * newCount), counts = new Uint32Array(width + 2);
+  for (let oi = 0; oi < oldCount; oi += 1) {
+    const a = oldVectors[oi];
+    for (let ni = 0; ni < newCount; ni += 1) {
+      const b = newVectors[ni];
+      let score = 0;
+      for (let field = 0; field < width; field += 1) {
+        const left = a[field], right = b[field];
+        if (left === undefined && right === undefined) continue;
+        if ((left || '') === (right || '')) score += 1;
+      }
+      scores[oi * newCount + ni] = score;
+      counts[score] += 1;
+    }
+  }
+  // Puan kovaları yüksekten düşüğe; her kova içinde (oi, ni) artan sırada.
+  const starts = new Uint32Array(width + 2);
+  for (let score = width, offset = 0; score >= 0; score -= 1) { starts[score] = offset; offset += counts[score]; }
+  const order = new Uint32Array(oldCount * newCount);
+  for (let cell = 0; cell < scores.length; cell += 1) order[starts[scores[cell]]++] = cell;
+  const oldTaken = new Uint8Array(oldCount), newTaken = new Uint8Array(newCount), chosen = [];
+  let remaining = Math.min(oldCount, newCount);
+  for (let position = 0; position < order.length && remaining > 0; position += 1) {
+    const cell = order[position], oi = Math.floor(cell / newCount), ni = cell - oi * newCount;
+    if (oldTaken[oi] || newTaken[ni]) continue;
+    oldTaken[oi] = 1; newTaken[ni] = 1; remaining -= 1;
+    chosen.push([oi, ni]);
+  }
+  return chosen;
 }
 function pairBucket(oldRows, newRows) {
   const oldLeft = oldRows.slice(), newLeft = newRows.slice(), pairs = [];
@@ -118,31 +168,25 @@ function pairBucket(oldRows, newRows) {
   for (const { oldIndex } of [...matched].sort((a, b) => b.oldIndex - a.oldIndex)) oldLeft.splice(oldIndex, 1);
   for (const newIndex of [...takenNew].sort((a, b) => b - a)) newLeft.splice(newIndex, 1);
   // Kalan parsiyelleri en çok ortak sütuna göre eşleştir.
-  // v7.15: similarity(i, j) kalan satırlar değişse de sabittir; eskiden her seçim
-  // turunda baştan hesaplanıyordu (kova başına O(k³) similarity çağrısı ve her
-  // çağrıda iki nesne kurulumu). Matris bir kez kurulur, turlar yalnız sayı
-  // karşılaştırır. Seçim sırası ve sonuç birebir aynıdır: eşit puanda ilk
-  // bulunan (en küçük oi, sonra en küçük ni) yine kazanır.
+  // v7.0.252 — Eski açgözlü döngü her seçim turunda tüm puan matrisini yeniden
+  // tarıyordu: kova başına O(k³) ve tamamı senkron. 1.500 parsiyelli tek kova
+  // ~10 sn, birkaç bin parsiyel dakikalarca sürüyor; sunucu bu sürede hiçbir
+  // isteğe (yenileme durumu dahil) cevap veremediği için ilerleme penceresi
+  // "Denetleme ve Kaydetme" adımında donuyordu. Artık çiftler puan kovalarına
+  // bir kez dağıtılır (sayma sıralaması) ve tek geçişte seçilir. Seçim sırası
+  // ve sonuç birebir aynıdır: en yüksek puan, eşit puanda en küçük oi, sonra
+  // en küçük ni kazanır.
+  const chosen = oldLeft.length && newLeft.length
+    ? (Math.max(oldLeft.length, newLeft.length) > MAX_SIMILARITY_BUCKET
+      ? pairInSourceOrder(oldLeft.length, newLeft.length)
+      : pairBySimilarity(oldLeft, newLeft))
+    : [];
+  const oldAlive = oldLeft.map(() => true), newAlive = newLeft.map(() => true);
+  for (const [oi, ni] of chosen) {
+    oldAlive[oi] = false; newAlive[ni] = false;
+    pairs.push({ oldRow: oldLeft[oi], newRow: newLeft[ni], kind: 'changed' });
+  }
   {
-    const scores = oldLeft.map(oldRow => newLeft.map(newRow => similarity(oldRow, newRow)));
-    const oldAlive = oldLeft.map(() => true), newAlive = newLeft.map(() => true);
-    let remaining = Math.min(oldLeft.length, newLeft.length);
-    const chosen = [];
-    while (remaining > 0) {
-      let bestOld = -1, bestNew = -1, bestScore = -1;
-      for (let oi = 0; oi < oldLeft.length; oi += 1) {
-        if (!oldAlive[oi]) continue;
-        const row = scores[oi];
-        for (let ni = 0; ni < newLeft.length; ni += 1) {
-          if (!newAlive[ni]) continue;
-          if (row[ni] > bestScore) { bestScore = row[ni]; bestOld = oi; bestNew = ni; }
-        }
-      }
-      if (bestOld < 0) break;
-      oldAlive[bestOld] = false; newAlive[bestNew] = false; remaining -= 1;
-      chosen.push({ oldRow: oldLeft[bestOld], newRow: newLeft[bestNew] });
-    }
-    for (const item of chosen) pairs.push({ oldRow: item.oldRow, newRow: item.newRow, kind: 'changed' });
     const restOld = oldLeft.filter((_, index) => oldAlive[index]);
     const restNew = newLeft.filter((_, index) => newAlive[index]);
     oldLeft.length = 0; oldLeft.push(...restOld);

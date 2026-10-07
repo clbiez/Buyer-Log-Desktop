@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yenileme takılması düzeltildi",
+    "en": "Refresh hang fixed"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Yenileme artık çok sayıda IAS parsiyeli değiştiğinde \"Denetleme ve Kaydetme\" adımında beklemiyor.",
+    "en": "Refresh no longer stalls at \"Reviewing & saving\" when many IAS partials change."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "refresh-review-saving-no-freeze",
+      "type": "fix",
+      "module": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Yenileme \"Denetleme ve Kaydetme\" adımında takılmaz",
+        "en": "Refresh no longer hangs at \"Reviewing & saving\""
+      },
+      "path": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-review-saving-no-freeze.png",
+        "alt": {
+          "tr": "Yenileme durumu penceresinde üç adım tamamlandı — gerçek Buyer Log demo ekranı",
+          "en": "All three steps completed in the refresh progress panel — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Denetleme ve Kaydetme adımı kısa sürede tamamlanır",
+          "en": "The Reviewing & saving step completes quickly"
+        }
+      },
+      "body": {
+        "tr": "Aynı sipariş/model/renkte çok sayıda IAS parsiyeli değiştiğinde değişiklik karşılaştırması sunucuyu dakikalarca meşgul ediyor, ilerleme penceresi \"Denetleme ve Kaydetme\" adımında donuyordu. Parsiyel eşleştirmesi aynı sonucu çok daha hızlı üretir; demo veride 2.500 değişen parsiyelle adım bir saniyenin altında biter.",
+        "en": "When many IAS partials of the same order/model/colour changed, the change comparison kept the server busy for minutes and the progress panel froze at \"Reviewing & saving\". Partial matching now produces the same result much faster; with 2,500 changed partials in demo data the step finishes in under a second."
+      }
+    }
+  ]
 }
