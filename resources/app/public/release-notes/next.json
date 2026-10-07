@@ -205,8 +205,8 @@
         }
       },
       "body": {
-        "tr": "Koleksiyon özeti, Backlog raporundaki satır düzeninden esinlenerek ay bazında listelenir: ay, toplam adet, yan yana model görselleri, sığmayan model sayısı (+N) ve status bazlı yatay çubuk. Aynı anda 3 ay görünür; fare tekerleği, sürükleme veya ok tuşlarıyla tambur gibi animasyonlu kayar, yarıda bırakıldığında en yakın ay ortaya oturur. Ay adına veya bir status dilimine tıklamak Koleksiyon'u o filtreyle açar.",
-        "en": "The Collection summary is now listed by month, inspired by the Backlog report rows: month, total quantity, model images side by side, the number of models that do not fit (+N) and a horizontal status bar. Three months are visible at a time; the mouse wheel, dragging or the arrow keys scroll it like an animated drum, and a partial scroll snaps the nearest month to the middle. Clicking a month name or a status slice opens Collection with that filter."
+        "tr": "Koleksiyon özeti, Backlog raporundaki satır düzeninden esinlenerek ay bazında listelenir: ay, toplam adet, yan yana model görselleri, sığmayan model sayısı (+N) ve status bazlı yatay çubuk. Aynı anda 3 ay görünür; fare tekerleği, sürükleme veya ok tuşlarıyla tambur gibi animasyonlu kayar, yarıda bırakıldığında en yakın ay ortaya oturur. Ay adına veya bir status dilimine tıklamak Koleksiyon'u o filtreyle açar. Tablonun üstündeki genel özet (Toplam Model, Toplam Opsiyon, Onaylı, Onaysız) kaldırıldı; widget doğrudan aylık görünümü gösterir.",
+        "en": "The Collection summary is now listed by month, inspired by the Backlog report rows: month, total quantity, model images side by side, the number of models that do not fit (+N) and a horizontal status bar. Three months are visible at a time; the mouse wheel, dragging or the arrow keys scroll it like an animated drum, and a partial scroll snaps the nearest month to the middle. Clicking a month name or a status slice opens Collection with that filter. The general summary above the table (Total Models, Total Options, Confirmed, Not Confirmed) was removed; the widget now shows the monthly view directly."
       }
     }
   ]

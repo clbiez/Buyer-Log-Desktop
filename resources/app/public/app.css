@@ -5809,15 +5809,8 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 .ovCollectionMonthLegendItem i{width:8px;height:8px;background:var(--status-color)}
 .ovCollectionMonthLegendItem:hover{color:var(--ink)}
 @container ovw (max-width:560px){.ovCollectionMonthRow{grid-template-columns:minmax(76px,auto) auto minmax(0,1fr) minmax(70px,26%);gap:8px}}
-/* Özet alanı aylık revolver'a yer açsın: KPI'lar tek satır kompakt çip */
+/* Özet alanı aylık revolver'dır (genel KPI özeti kaldırıldı) */
 .ovCollectionSummaryBody{gap:8px;margin-top:8px}
-.ovCollectionSummaryKpi{display:flex!important;flex-wrap:wrap;gap:6px}
-.ovCollectionSummaryKpi .ovCollectionKpiCard{flex:1 1 150px;gap:8px;padding:6px 10px}
-.ovCollectionSummaryKpi .ovCollectionKpiIcon{width:24px;height:24px}
-.ovCollectionSummaryKpi .ovCollectionKpiIcon .ic{width:14px;height:14px}
-.ovCollectionSummaryKpi .ovCollectionKpiCopy{flex-direction:row;align-items:baseline;gap:6px}
-.ovCollectionSummaryKpi .ovCollectionKpiCopy>b{font-size:16px;white-space:nowrap}
-.ovCollectionSummaryKpi .ovCollectionKpiCopy>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ovCollectionSummaryBody>.ovCollectionStatusSection{padding:10px 12px}
 .ovCollectionSummaryBody>.ovCollectionStatusSection>.ovCollectionStatusSectionHead{margin-bottom:8px}
 .ovCollectionMonthLegend{margin-top:6px}

@@ -45,7 +45,8 @@ test('advanced multi-level pivot remains available only as secondary data view',
 test('Overview Collection widget keeps identity but main surface is visual dashboard, not pivot table',()=>{
   assert.match(INDEX,/id="ovCollectionSummary"/);
   assert.match(INDEX,/data-overview-widget="collectionSummary"/);
-  assert.match(INDEX,/id="ovCollectionSummaryKpi"/);
+  /* v2026-10-07: tablonun (aylık revolver) üstündeki genel KPI özeti kaldırıldı. */
+  assert.doesNotMatch(INDEX,/id="ovCollectionSummaryKpi"/);
   /* v2026-10-07: tek dağılım çubuğu + status kartları yerini aylık revolver
      satırlarına (ay · adet · görseller · status çubuğu) bıraktı. */
   assert.match(INDEX,/id="ovCollectionSummaryMonths"/);
@@ -56,7 +57,7 @@ test('Overview Collection widget keeps identity but main surface is visual dashb
   assert.match(INDEX,/id="ovCollectionSummaryScopePopover"/);
   assert.doesNotMatch(INDEX,/id="ovCollectionSummarySettingsBtn"/);
   assert.doesNotMatch(INDEX,/id="ovCollectionSummaryTable"/);
-  assert.match(DASH,/ovCollectionKpiCard/);
+  assert.doesNotMatch(DASH,/ovCollectionKpiCard/);
   assert.match(DASH,/ovCollectionMonthRow/);
   assert.match(DASH,/scopeColumn/);
   assert.match(DASH,/scopeValues/);

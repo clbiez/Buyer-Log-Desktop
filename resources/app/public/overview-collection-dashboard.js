@@ -3,7 +3,6 @@
   function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});}
   function text(value){return String(value==null?'':value).trim();}
   function pct(value,total){return total>0?Math.round((Number(value)||0)*100/total):0;}
-  function icon(id){return '<svg class="ic" aria-hidden="true"><use href="#'+id+'"/></svg>';}
   function columnCatalog(ctx){
     const seen=new Set();
     return (Array.isArray(ctx.columns)?ctx.columns:[]).map(function(column){
@@ -171,17 +170,6 @@
     if(intro)intro.textContent=ctx.language==='en'?'Collection health at a glance. Double-click the filter title to change column; select one or more values.':'Koleksiyonun durumunu tek bakışta gör. Filtre sütununu değiştirmek için başlığa çift tıkla; bir veya daha fazla değer seç.';
     const meta=document.getElementById('ovCollectionSummaryScopeMeta');
     if(meta)meta.textContent=columnLabel+' · '+valueSummary(ctx,scoped)+' · '+total.toLocaleString(locale)+' '+(ctx.language==='en'?'models':'model');
-    const kpi=document.getElementById('ovCollectionSummaryKpi');
-    if(kpi){
-      const items=[
-        {key:'total',label:ctx.language==='en'?'Total Models':'Toplam Model',value:result.kpi.total,icon:'i-table',tone:'neutral'},
-        {key:'optionCount',label:ctx.language==='en'?'Total Options':'Toplam Opsiyon',value:result.kpi.optionCount,icon:'i-columns-3',tone:'blue'},
-        {key:'confirmed',label:ctx.language==='en'?'Confirmed':'Onaylı',value:result.kpi.confirmed,ratio:pct(result.kpi.confirmed,total),icon:'i-checklist',tone:'green'},
-        {key:'notConfirmed',label:ctx.language==='en'?'Not Confirmed':'Onaysız',value:result.kpi.notConfirmed,ratio:pct(result.kpi.notConfirmed,total),icon:'i-notebook',tone:'amber'}
-      ];
-      kpi.innerHTML=items.map(function(item){return '<button type="button" class="ovCollectionKpiCard tone-'+item.tone+'" data-summary-drill="'+item.key+'"><span class="ovCollectionKpiIcon">'+icon(item.icon)+'</span><span class="ovCollectionKpiCopy"><b>'+Number(item.value||0).toLocaleString(locale)+(item.ratio==null?'':' <em>'+item.ratio+'%</em>')+'</b><span>'+esc(item.label)+'</span></span></button>';}).join('');
-      Array.from(kpi.querySelectorAll('[data-summary-drill]')).forEach(function(button){button.addEventListener('click',function(){ctx.drill({scopeColumn:scoped.column.k,scopeValues:scoped.selected,kpi:button.dataset.summaryDrill});});});
-    }
     const order=new Map((ctx.statusCatalog||[]).map(function(entry,index){return [String(entry.name),index];}));
     const rows=(result.rows||[]).slice().sort(function(a,b){const ai=order.has(a.status)?order.get(a.status):9999,bi=order.has(b.status)?order.get(b.status):9999;return ai-bi||String(a.status).localeCompare(String(b.status),'tr-TR',{sensitivity:'base'});});
     /* Renk verilmemiş (varsayılan gri) statüler dağılımda birbirinden ayrılsın:
