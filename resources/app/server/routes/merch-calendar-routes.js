@@ -2,7 +2,8 @@
 
 const merchCalendarStore = require('../lib/merch-calendar-store');
 
-module.exports = function registerMerchCalendarRoutes(app, deps = {}) {
+module.exports = function registerMerchCalendarRoutes(app, deps) {
+  deps = deps || {};
   const { express, userAccess } = deps;
   if (!app || !express || !userAccess) throw new Error('Merch Calendar route dependencies are incomplete.');
 
