@@ -332,6 +332,7 @@ const {
   loadModelConnections, replaceModelConnections, recordModelConnectionRun,
   loadRefreshGroups, replaceRefreshGroups,
   loadHorizonTemplates, addHorizonTemplate, deleteHorizonTemplate,
+  loadAiOutputTemplates, addAiOutputTemplate, updateAiOutputTemplate, deleteAiOutputTemplate,
 } = require('./db');
 
 const loadedConfig = loadRuntimeConfig(CONFIG_PATH);
@@ -5204,7 +5205,7 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
    mevcut kurumsal Edge oturumundan (agent-browser-connector +
    browser-debug-service) okunur, yalnız bellekte tutulur; AI istekleri
    doğrudan LCW AI HTTP API'sine gider. */
-require('./routes/lcwai-routes')(app, { express, userAccess });
+require('./routes/lcwai-routes')(app, { express, userAccess, outputTemplates: { load: loadAiOutputTemplates, add: addAiOutputTemplate, update: updateAiOutputTemplate, remove: deleteAiOutputTemplate } });
 require('./routes/oab-batch-routes')(app, {
   afterSharedCollectionSave,
   automationError,

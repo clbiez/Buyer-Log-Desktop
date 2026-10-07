@@ -10,6 +10,8 @@
 const { publicError, isLcwAiError, lcwAiError } = require('../lib/lcwai/lcwai-errors');
 const lcwaiConfig = require('../lib/lcwai/lcwai-config');
 const layoutControlStore = require('../lib/layout-control-store');
+const userTemplates = require('../lib/lcwai-output/output-user-templates');
+const { TEMPLATES: BUILT_IN_TEMPLATES } = require('../lib/lcwai-output/output-templates');
 
 module.exports = function registerLcwAiRoutes(app, deps) {
   const {
@@ -30,6 +32,53 @@ module.exports = function registerLcwAiRoutes(app, deps) {
     if (!isLcwAiError(error)) { try { console.warn('[LCWAI] route failure', error && error.code ? `code=${error.code}` : ''); } catch (_) {} }
     res.status(safe.statusCode || 500).set('Cache-Control', 'no-store').json({ ok: false, error: safe.message, ...publicError(safe) });
   };
+  /* ---------------- Çıktı şablonları (kişisel + ekip) ----------------
+     Depo profil deposudur (db.js): kişisel kopya kullanıcıya, ekip şablonları
+     ortak dosyaya yazılır. Ekip şablonunu yalnız sahibi ya da moderatör
+     değiştirir/siler; diğerleri "Kopyasını al" ile kendi listesine alır. */
+  const templateStore = deps.outputTemplates || null;
+  const canModerate = req => { try { return Boolean(typeof userAccess.hasPermission === 'function' && userAccess.hasPermission(req.currentUser, 'manageAllOrders')); } catch (_) { return false; } };
+  const nameOf = req => { const user = req.currentUser || {}; return String(user.displayName || user.username || user.id || '').slice(0, 80); };
+  function requireTemplateStore() { if (!templateStore) throw lcwAiError('OUTPUT_TEMPLATE_NOT_FOUND'); return templateStore; }
+  function publicTemplate(item, shared, req) {
+    const data = item && item.data && typeof item.data === 'object' ? item.data : {};
+    const definition = userTemplates.normalizeDefinition(data.definition);
+    if (!definition) return null;
+    const mine = shared ? String(data.ownerId || '') === ownerOf(req) : true;
+    return {
+      id: item.id, name: String(item.name || '').slice(0, 80), shared, mine, canEdit: shared ? mine || canModerate(req) : true,
+      ownerName: shared ? String(data.ownerName || '').slice(0, 80) : '', updatedAt: item.updatedAt || item.createdAt || null, definition,
+    };
+  }
+  function templateLists(req) {
+    const store = requireTemplateStore();
+    const personal = (store.load(ownerOf(req)).items || []).map(item => publicTemplate(item, false, req)).filter(Boolean);
+    const shared = (store.load(null).items || []).map(item => publicTemplate(item, true, req)).filter(Boolean);
+    return { personal, shared };
+  }
+  function findTemplate(req, id, shared) {
+    const store = requireTemplateStore();
+    const item = (store.load(shared ? null : ownerOf(req)).items || []).find(entry => entry && entry.id === String(id || ''));
+    if (!item) throw lcwAiError('OUTPUT_TEMPLATE_NOT_FOUND');
+    return item;
+  }
+  function templateInput(body) {
+    const name = String(body && body.name || '').replace(/\s+/g, ' ').trim().slice(0, userTemplates.LIMITS.name);
+    const definition = userTemplates.normalizeDefinition(body && body.definition);
+    if (!name || !definition) throw lcwAiError('OUTPUT_TEMPLATE_INVALID');
+    return { name, definition };
+  }
+  /* Sohbetteki istek: { id, shared } → depodaki şablon. İstemcinin gönderdiği
+     tanım kullanılmaz; ekip şablonu da sunucudan okunur. */
+  function resolveUserTemplate(req, output) {
+    const ref = output && output.userTemplate;
+    if (!ref || typeof ref !== 'object') return null;
+    const item = findTemplate(req, ref.id, ref.shared === true);
+    const template = publicTemplate(item, ref.shared === true, req);
+    if (!template) throw lcwAiError('OUTPUT_TEMPLATE_NOT_FOUND');
+    return { name: template.name, definition: template.definition };
+  }
+
   const withLoginError = (owner, status) => {
     const error = loginErrors.get(owner);
     return error && !status.connected && !status.loginInProgress ? { ...status, lastError: error } : status;
@@ -112,8 +161,13 @@ app.post('/api/lcwai/chat', express.json({ limit: '2mb' }), async (req, res) => 
     const contexts = Array.isArray(body.contexts) ? body.contexts : [];
     // output: { format: pdf|xlsx|pptx|html, orientation, detail } → AI Çıktı
     // Oluşturma; aynı sohbet, cevap Buyer Log'un oluşturduğu dosyadır.
-    const output = body.output && typeof body.output === 'object' ? body.output : null;
+    let output = body.output && typeof body.output === 'object' ? { ...body.output } : null;
     try {
+      if (output) {
+        const resolved = resolveUserTemplate(req, output);
+        output = { ...output, userTemplate: resolved };
+        if (resolved) output.format = resolved.definition.format;
+      }
       const input = {
         requestId: body.requestId,
         chatId: body.chatId,
@@ -168,6 +222,105 @@ app.delete('/api/lcwai/layout-control/history', (req, res) => {
       const result = layoutControlStore.clear(ownerOf(req));
       audit(req, 'LCWAI_LAYOUT_HISTORY_CLEAR', { count: result.cleared });
       res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
+    } catch (error) { fail(res, error); }
+  });
+
+  /* ---------------- AI Çıktı Düzenleyici (taslaklar) ----------------
+     Taslak yalnız sahibine açılır; düzenleme yeniden doğrulanır ve yeni bir
+     dosya olarak kaydedilir (eski dosya silinmez). */
+app.get('/api/lcwai/output-drafts/:id', (req, res) => {
+    try {
+      res.set('Cache-Control', 'no-store').json({ ok: true, draft: outputsOf().getDraft(ownerOf(req), req.params.id) });
+    } catch (error) { fail(res, error); }
+  });
+
+app.post('/api/lcwai/output-drafts/:id/render', express.json({ limit: '8mb' }), (req, res) => {
+    try {
+      const body = req.body || {};
+      const result = outputsOf().renderDraft(ownerOf(req), req.params.id, { data: body.data, title: body.title, orientation: body.orientation });
+      audit(req, 'LCWAI_OUTPUT_EDIT', { format: result.output.format, pending: result.output.pending || undefined });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
+    } catch (error) {
+      if (error && error.type === 'entity.too.large') return fail(res, lcwAiError('OUTPUT_RENDER_FAILED', { detail: 'draft-too-large' }));
+      fail(res, error);
+    }
+  });
+
+app.post('/api/lcwai/output-drafts/:id/skeleton', express.json({ limit: '8mb' }), (req, res) => {
+    try {
+      res.set('Cache-Control', 'no-store').json({ ok: true, definition: outputsOf().skeleton(ownerOf(req), req.params.id, req.body && req.body.data) });
+    } catch (error) { fail(res, error); }
+  });
+
+  /* ---------------- Çıktı şablonları ---------------- */
+app.get('/api/lcwai/output-templates', (req, res) => {
+    try {
+      const builtIn = Object.values(BUILT_IN_TEMPLATES).map(item => ({ key: item.key, label: item.label, formats: item.formats }));
+      res.set('Cache-Control', 'no-store').json({ ok: true, builtIn, ...templateLists(req) });
+    } catch (error) { fail(res, error); }
+  });
+
+app.post('/api/lcwai/output-templates', express.json({ limit: '256kb' }), (req, res) => {
+    try {
+      const store = requireTemplateStore();
+      const { name, definition } = templateInput(req.body);
+      const shared = req.body && req.body.shared === true;
+      store.add(shared ? null : ownerOf(req), name, { definition, ownerId: ownerOf(req), ownerName: nameOf(req) }, null);
+      audit(req, 'LCWAI_OUTPUT_TEMPLATE_CREATE', { format: definition.format, shared, items: definition.structure.length });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...templateLists(req) });
+    } catch (error) { fail(res, error); }
+  });
+
+app.put('/api/lcwai/output-templates/:id', express.json({ limit: '256kb' }), (req, res) => {
+    try {
+      const store = requireTemplateStore();
+      const shared = String(req.query && req.query.shared || '') === '1';
+      const item = findTemplate(req, req.params.id, shared);
+      const current = publicTemplate(item, shared, req);
+      if (!current || !current.canEdit) throw lcwAiError('OUTPUT_TEMPLATE_FORBIDDEN');
+      const { name, definition } = templateInput({ name: req.body && req.body.name || current.name, definition: req.body && req.body.definition || current.definition });
+      store.update(shared ? null : ownerOf(req), item.id, { ...item.data, definition }, null, name);
+      audit(req, 'LCWAI_OUTPUT_TEMPLATE_UPDATE', { format: definition.format, shared });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...templateLists(req) });
+    } catch (error) { fail(res, error); }
+  });
+
+app.delete('/api/lcwai/output-templates/:id', (req, res) => {
+    try {
+      const store = requireTemplateStore();
+      const shared = String(req.query && req.query.shared || '') === '1';
+      const item = findTemplate(req, req.params.id, shared);
+      const current = publicTemplate(item, shared, req);
+      if (shared && !(current && current.canEdit)) throw lcwAiError('OUTPUT_TEMPLATE_FORBIDDEN');
+      store.remove(shared ? null : ownerOf(req), item.id, null);
+      audit(req, 'LCWAI_OUTPUT_TEMPLATE_DELETE', { shared });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...templateLists(req) });
+    } catch (error) { fail(res, error); }
+  });
+
+  // Kişisel şablonu ekiple paylaşır: KOPYALAR, taşımaz (sahibinin kopyası kalır).
+app.post('/api/lcwai/output-templates/:id/share', express.json({ limit: '4kb' }), (req, res) => {
+    try {
+      const store = requireTemplateStore();
+      const item = findTemplate(req, req.params.id, false);
+      const current = publicTemplate(item, false, req);
+      if (!current) throw lcwAiError('OUTPUT_TEMPLATE_NOT_FOUND');
+      store.add(null, current.name, { definition: current.definition, ownerId: ownerOf(req), ownerName: nameOf(req) }, null);
+      audit(req, 'LCWAI_OUTPUT_TEMPLATE_SHARE', { format: current.definition.format });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...templateLists(req) });
+    } catch (error) { fail(res, error); }
+  });
+
+  // Ekip şablonunun kişisel kopyası (kullanıcı kendi ihtiyacına göre değiştirir).
+app.post('/api/lcwai/output-templates/:id/copy', express.json({ limit: '4kb' }), (req, res) => {
+    try {
+      const store = requireTemplateStore();
+      const item = findTemplate(req, req.params.id, true);
+      const current = publicTemplate(item, true, req);
+      if (!current) throw lcwAiError('OUTPUT_TEMPLATE_NOT_FOUND');
+      store.add(ownerOf(req), current.name, { definition: current.definition, ownerId: ownerOf(req), ownerName: nameOf(req), copiedFrom: current.ownerName }, null);
+      audit(req, 'LCWAI_OUTPUT_TEMPLATE_COPY', { format: current.definition.format });
+      res.set('Cache-Control', 'no-store').json({ ok: true, ...templateLists(req) });
     } catch (error) { fail(res, error); }
   });
 

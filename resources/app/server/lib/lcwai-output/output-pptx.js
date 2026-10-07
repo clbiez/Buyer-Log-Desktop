@@ -86,19 +86,22 @@ function createSlideBuilder(p, lang, media = {}) {
   function text(x, y, w, h, value, style, opts = {}) {
     box({ x, y, w, h, paragraphs: [paragraph(value, style, p, lang, opts)], anchor: opts.anchor || 't', inset: opts.inset == null ? 2 : opts.inset, name: 'Text' });
   }
-  function table({ x, y, w, columns, rows, fontSize }) {
+  function table({ x, y, w, columns, rows, fontSize, heights = null }) {
     const shapeId = next();
     const colW = Math.floor(w / columns.length);
     const rowH = pt(fontSize * 2.1);
+    // Satır yüksekliği metin uzunluğuna göre (sarılan uzun hücre kesilmez).
+    const hOf = index => (heights && heights[index] ? pt(heights[index]) : rowH);
     const cell = (value, header, index, numeric) => {
       const fill = header ? p.headBg : index % 2 ? p.card : p.paper;
       const color = header ? p.logo : p.ink;
       return `<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:pPr algn="${numeric && !header ? 'r' : 'l'}"/>${run(String(value == null ? '' : value), { size: fontSize, bold: header, color }, p, lang)}</a:p></a:txBody><a:tcPr marL="${pt(5)}" marR="${pt(5)}" marT="${pt(3)}" marB="${pt(3)}" anchor="ctr"><a:lnL w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnL><a:lnR w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnR><a:lnT w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnT><a:lnB w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnB><a:solidFill><a:srgbClr val="${fill}"/></a:solidFill></a:tcPr></a:tc>`;
     };
     const numericCols = columns.map((_, index) => rows.length > 0 && rows.every(row => row[index] === '' || row[index] == null || typeof row[index] === 'number' || NUMERIC_TEXT.test(String(row[index]).trim())));
-    const xmlRows = [`<a:tr h="${rowH}">${columns.map((column, index) => cell(column, true, 0, numericCols[index])).join('')}</a:tr>`]
-      .concat(rows.map((row, rowIndex) => `<a:tr h="${rowH}">${columns.map((_, index) => cell(row[index], false, rowIndex, numericCols[index])).join('')}</a:tr>`));
-    shapes.push(`<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${shapeId}" name="Table ${shapeId}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${colW * columns.length}" cy="${rowH * (rows.length + 1)}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="1" bandRow="1"/><a:tblGrid>${columns.map(() => `<a:gridCol w="${colW}"/>`).join('')}</a:tblGrid>${xmlRows.join('')}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`);
+    const xmlRows = [`<a:tr h="${hOf(0)}">${columns.map((column, index) => cell(column, true, 0, numericCols[index])).join('')}</a:tr>`]
+      .concat(rows.map((row, rowIndex) => `<a:tr h="${hOf(rowIndex + 1)}">${columns.map((_, index) => cell(row[index], false, rowIndex, numericCols[index])).join('')}</a:tr>`));
+    const totalH = [columns, ...rows].reduce((sum, _, index) => sum + hOf(index), 0);
+    shapes.push(`<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${shapeId}" name="Table ${shapeId}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${colW * columns.length}" cy="${totalH}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="1" bandRow="1"/><a:tblGrid>${columns.map(() => `<a:gridCol w="${colW}"/>`).join('')}</a:tblGrid>${xmlRows.join('')}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`);
   }
   /* background: 'RRGGBB' ya da [başlangıç, bitiş] renk geçişi.
      transition: slayt geçişi (fade | push) — sunum hareketli akar. */
@@ -136,6 +139,47 @@ const CONTENT_TOP = pt(110);
 // 1.234,5 · 1,234.5 · 12 · %15 · 15% — tarih (02.11.2026) sayı sayılmaz.
 const NUMERIC_TEXT = /^%?\s*[-+]?(\d{1,3}([.,]\d{3})+|\d+)([.,]\d+)?\s*%?$/;
 const CONTENT_H = H - CONTENT_TOP - pt(44);
+
+/* ---------------- Uzun tablo → devam slaytları ----------------
+   Hücre metni kesilmez: her satırın yüksekliği metnin sarılacağı satır
+   sayısından tahmin edilir; sayfaya sığmayan satırlar aynı başlıklı
+   "(2/3)" devam slaytına geçer. Notlar ve "kaynakta N satır daha" yalnız
+   son parçada görünür. */
+const TABLE_WIDTH_PT = (W - MARGIN * 2) / EMU;
+const tableFontSize = table => (table.columns.length > 6 || table.rows.length > 9 ? 10 : 12);
+function tableRowHeights(columns, rows, fontSize) {
+  const colPt = TABLE_WIDTH_PT / Math.max(1, columns.length);
+  const perLine = Math.max(4, Math.floor((colPt - 10) / (fontSize * 0.55)));
+  const heightOf = cells => {
+    const lines = Math.max(1, ...cells.map(value => String(value == null ? '' : value).split('\n').reduce((sum, part) => sum + Math.max(1, Math.ceil(part.length / perLine)), 0)));
+    return Math.max(fontSize * 2.1, lines * fontSize * 1.22 + 7);
+  };
+  return [heightOf(columns), ...rows.map(row => heightOf(columns.map((_, index) => row[index])))];
+}
+function paginateTableSlide(slide) {
+  const table = slide.table;
+  if (!table || !table.rows.length) return [slide];
+  const fontSize = tableFontSize(table);
+  const heights = tableRowHeights(table.columns, table.rows, fontSize);
+  const noteH = slide.bullets.length ? 60 : 0;
+  const available = CONTENT_H / EMU - 6 - noteH - (table.omitted ? 22 : 0);
+  const pages = [];
+  let current = [];
+  let used = heights[0];
+  table.rows.forEach((row, index) => {
+    const h = heights[index + 1];
+    if (current.length && used + h > available) { pages.push(current); current = []; used = heights[0]; }
+    current.push(row);
+    used += h;
+  });
+  if (current.length) pages.push(current);
+  if (pages.length === 1) return [{ ...slide, table: { ...table, fontSize } }];
+  return pages.map((rows, index) => {
+    const last = index === pages.length - 1;
+    return { ...slide, title: `${slide.title} (${index + 1}/${pages.length})`, bullets: last ? slide.bullets : [], callout: last ? slide.callout : null, table: { ...table, rows, fontSize, omitted: last ? table.omitted : 0 } };
+  });
+}
+const expandSlides = slides => slides.flatMap(slide => (slide.layout === 'table' ? paginateTableSlide(slide) : [slide]));
 
 function renderSlide(slide, index, total, deck, p, lang, media) {
   const s = createSlideBuilder(p, lang, media);
@@ -191,9 +235,9 @@ function renderSlideBody(s, slide, index, total, deck, p, lang) {
     return s.xml();
   }
   if (slide.layout === 'table') {
-    const fontSize = slide.table.rows.length > 9 || slide.table.columns.length > 6 ? 10 : 12;
+    const fontSize = slide.table.fontSize || tableFontSize(slide.table);
     const noteH = slide.bullets.length ? pt(60) : 0;
-    s.table({ x: MARGIN, y: CONTENT_TOP + pt(6), w: width, columns: slide.table.columns, rows: slide.table.rows, fontSize });
+    s.table({ x: MARGIN, y: CONTENT_TOP + pt(6), w: width, columns: slide.table.columns, rows: slide.table.rows, fontSize, heights: tableRowHeights(slide.table.columns, slide.table.rows, fontSize) });
     if (slide.table.omitted) s.text(MARGIN, H - pt(44) - noteH - pt(20), width, pt(18), english ? `+${slide.table.omitted} more rows in the source data` : `Kaynak veride ${slide.table.omitted} satır daha var`, { size: 10, color: p.muted, italic: true });
     if (noteH) s.box({ x: MARGIN, y: H - pt(44) - noteH, w: width, h: noteH, paragraphs: slide.bullets.slice(0, 2).map(item => paragraph(item, { size: 12, color: p.ink2 }, p, lang, { bullet: true, spaceAfter: 2 })), name: 'Notes' });
     return s.xml();
@@ -328,7 +372,8 @@ function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} 
     media[token] = { name, width: image.width, height: image.height };
     mediaFiles.push({ name: `ppt/media/${name}`, data: image.buffer });
   }
-  const rendered = deck.slides.map((slide, index) => renderSlide(slide, index, deck.slides.length, deck, p, langTag, media));
+  const expanded = expandSlides(deck.slides);
+  const rendered = expanded.map((slide, index) => renderSlide(slide, index, expanded.length, deck, p, langTag, media));
   const slides = rendered.map(item => item.xml);
   const created = (date instanceof Date ? date : new Date()).toISOString().replace(/\.\d{3}Z$/, 'Z');
   const entries = [
@@ -369,4 +414,4 @@ function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} 
   return createZip(entries, { date });
 }
 
-module.exports = { renderPresentation, formatNumber, fitSize, SLIDE_SIZE: { width: W, height: H } };
+module.exports = { renderPresentation, formatNumber, fitSize, expandSlides, SLIDE_SIZE: { width: W, height: H } };

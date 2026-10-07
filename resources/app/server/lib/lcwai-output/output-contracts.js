@@ -12,13 +12,16 @@
  * ok=false ise errors onarım (repair) mesajına girer; küçük kusurlar
  * (fazla satır, bilinmeyen düzen…) sessizce düzeltilir ve warnings'e yazılır.
  */
-const { extractHtml, sanitizeHtml, visibleText } = require('./output-html');
+const { extractHtml, sanitizeHtml, sanitizeStyleSheet, visibleText } = require('./output-html');
 const { extractJsonObject } = require('../lcwai/lcwai-prompt');
 
 const FORMATS = Object.freeze(['pdf', 'xlsx', 'pptx', 'html']);
 const FORMAT_LABEL = Object.freeze({ pdf: 'PDF', xlsx: 'Excel', pptx: 'PowerPoint', html: 'HTML' });
+/* Tablo satırı/hücresi eskiden 12 satır × 80 karakterle kesiliyordu; kumaş
+   ve kompozisyon gibi uzun alanlar sessizce kısalıyordu. Uzun tablo artık
+   PPTX'te devam slaytlarına bölünür (output-pptx), hücre metni korunur. */
 const LIMITS = Object.freeze({
-  slides: 25, bullets: 8, bulletChars: 240, kpis: 6, tableCols: 8, tableRows: 12, chartCategories: 12, chartSeries: 3,
+  slides: 40, bullets: 8, bulletChars: 400, kpis: 6, tableCols: 8, tableRows: 60, tableCellChars: 400, tableHeaderChars: 80, chartCategories: 12, chartSeries: 3,
   sheets: 10, sheetCols: 40, sheetRows: 5000, titleChars: 140,
 });
 const COLUMN_TYPES = ['text', 'integer', 'number', 'percent', 'currency', 'date', 'image'];
@@ -97,11 +100,11 @@ function presentationInstruction(english, template) {
   return english ? [
     'Return ONLY one JSON object (no Markdown) in this PRESENTATION shape; Buyer Log designs the 16:9 .pptx itself (colours, fonts, positions):',
     '{"title":"…","subtitle":"…","slides":[{"layout":"title|section|bullets|kpis|table|chart|comparison|summary|gallery","title":"…","subtitle":"…","bullets":["…"],"kpis":[{"label":"…","value":"…","note":"…","tone":"ok|warn|risk|info"}],"table":{"columns":["…"],"rows":[["…"]]},"chart":{"categories":["…"],"series":[{"name":"…","values":[1,2]}],"unit":"%"},"left":{"title":"…","bullets":["…"]},"right":{"title":"…","bullets":["…"]},"callout":{"text":"…","tone":"ok|warn|risk|info"}}]}',
-    `Rules: use only the fields the layout needs; at most ${LIMITS.bullets} short bullets per slide, ${LIMITS.kpis} KPIs, ${LIMITS.tableRows} table rows × ${LIMITS.tableCols} columns, ${LIMITS.chartCategories} chart categories; chart values are numbers. Suggested flow: ${template.slides || 'title → content → summary'}.`,
+    `Rules: use only the fields the layout needs; at most ${LIMITS.bullets} bullets per slide, ${LIMITS.kpis} KPIs, ${LIMITS.tableRows} table rows × ${LIMITS.tableCols} columns, ${LIMITS.chartCategories} chart categories; chart values are numbers. Do not cut long tables: Buyer Log splits them into continuation slides itself. Suggested flow: ${template.slides || 'title → content → summary'}.`,
   ].join('\n') : [
     'YALNIZ tek bir JSON nesnesi döndür (Markdown yok), şu PRESENTATION biçiminde; 16:9 .pptx tasarımını (renk, yazı tipi, yerleşim) Buyer Log yapar:',
     '{"title":"…","subtitle":"…","slides":[{"layout":"title|section|bullets|kpis|table|chart|comparison|summary|gallery","title":"…","subtitle":"…","bullets":["…"],"kpis":[{"label":"…","value":"…","note":"…","tone":"ok|warn|risk|info"}],"table":{"columns":["…"],"rows":[["…"]]},"chart":{"categories":["…"],"series":[{"name":"…","values":[1,2]}],"unit":"%"},"left":{"title":"…","bullets":["…"]},"right":{"title":"…","bullets":["…"]},"callout":{"text":"…","tone":"ok|warn|risk|info"}}]}',
-    `Kurallar: her düzende yalnız gereken alanları kullan; slayt başına en fazla ${LIMITS.bullets} kısa madde, ${LIMITS.kpis} KPI, ${LIMITS.tableRows} satır × ${LIMITS.tableCols} sütun tablo, ${LIMITS.chartCategories} grafik kategorisi; grafik değerleri sayıdır. Önerilen akış: ${template.slides || 'title → içerik → summary'}.`,
+    `Kurallar: her düzende yalnız gereken alanları kullan; slayt başına en fazla ${LIMITS.bullets} madde, ${LIMITS.kpis} KPI, ${LIMITS.tableRows} satır × ${LIMITS.tableCols} sütun tablo, ${LIMITS.chartCategories} grafik kategorisi; grafik değerleri sayıdır. Uzun tabloyu kesme: Buyer Log onu devam slaytlarına kendisi böler. Önerilen akış: ${template.slides || 'title → içerik → summary'}.`,
   ].join('\n');
 }
 
@@ -110,8 +113,8 @@ function buildInstruction({ format, template, orientation = 'portrait', detail =
   const english = lang === 'en';
   const langKey = english ? 'en' : 'tr';
   const head = english
-    ? `=== OUTPUT CONTRACT: ${FORMAT_LABEL[format]} file ===\nThe user wants the answer as a ${FORMAT_LABEL[format]} file. Use the data in the conversation, attached files and Buyer Log context; never invent figures — if data is missing, say so in the file. Write the content in English.`
-    : `=== ÇIKTI SÖZLEŞMESİ: ${FORMAT_LABEL[format]} dosyası ===\nKullanıcı cevabı ${FORMAT_LABEL[format]} dosyası olarak istiyor. Sohbetteki veriyi, ekli dosyaları ve Buyer Log bağlamını kullan; rakam uydurma — veri eksikse dosyada bunu belirt. İçeriği Türkçe yaz.`;
+    ? `=== OUTPUT CONTRACT: ${FORMAT_LABEL[format]} file ===\nThe user wants the answer as a ${FORMAT_LABEL[format]} file. Use the data in the conversation, attached files and Buyer Log context; never invent figures — if data is missing, say so in the file. Copy text values from the source data (fabric, composition, description, codes, names) exactly and completely; never shorten, summarise or paraphrase them. Write the content in English.`
+    : `=== ÇIKTI SÖZLEŞMESİ: ${FORMAT_LABEL[format]} dosyası ===\nKullanıcı cevabı ${FORMAT_LABEL[format]} dosyası olarak istiyor. Sohbetteki veriyi, ekli dosyaları ve Buyer Log bağlamını kullan; rakam uydurma — veri eksikse dosyada bunu belirt. Kaynak verideki metin değerlerini (kumaş, kompozisyon, açıklama, kod, isim) olduğu gibi ve TAM aktar; kısaltma, özetleme ya da yeniden yazma. İçeriği Türkçe yaz.`;
   const body = format === 'xlsx' ? workbookInstruction(english)
     : format === 'pptx' ? presentationInstruction(english, template)
       : htmlInstruction({ format, english, orientation });
@@ -274,10 +277,10 @@ function normalizeSlide(slide, index, english, warnings) {
   }
   if (layout === 'table') {
     const table = isObject(slide.table) ? slide.table : {};
-    const columns = asArray(table.columns).slice(0, LIMITS.tableCols).map(column => clean(isObject(column) ? (column.header || column.name) : column, 40));
+    const columns = asArray(table.columns).slice(0, LIMITS.tableCols).map(column => clean(isObject(column) ? (column.header || column.name) : column, LIMITS.tableHeaderChars));
     if (!columns.length) return { error: english ? `Slide ${index + 1} (table) has no columns.` : `${index + 1}. slayt (table) sütun içermiyor.` };
     const rows = asArray(table.rows).filter(Array.isArray);
-    base.table = { columns, rows: rows.slice(0, LIMITS.tableRows).map(row => columns.map((_, i) => (typeof row[i] === 'number' ? row[i] : clean(row[i], 80)))), omitted: Math.max(0, rows.length - LIMITS.tableRows) };
+    base.table = { columns, rows: rows.slice(0, LIMITS.tableRows).map(row => columns.map((_, i) => (typeof row[i] === 'number' ? row[i] : clean(row[i], LIMITS.tableCellChars)))), omitted: Math.max(0, rows.length - LIMITS.tableRows) + (Number(table.omitted) > 0 ? Math.floor(Number(table.omitted)) : 0) };
   }
   if (layout === 'chart') {
     const chart = isObject(slide.chart) ? slide.chart : {};
@@ -350,6 +353,23 @@ function normalizeHtmlOutput(text, { lang = 'tr' } = {}) {
   };
 }
 
+/* AI Çıktı Düzenleyici: kullanıcının düzenlediği rapor gövdesi aynı
+   temizleyiciden geçer (AI HTML'i ile aynı güven düzeyi). */
+function normalizeHtmlDraft({ body, styles = [] } = {}, { lang = 'tr' } = {}) {
+  const english = lang === 'en';
+  const clean_ = sanitizeHtml(String(body == null ? '' : body));
+  const textContent = visibleText(clean_.body);
+  const errors = textContent.length ? [] : [english ? 'The report has no visible content.' : 'Raporda görünür içerik yok.'];
+  const heading = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(clean_.body);
+  const kept = asArray(styles).map(css => sanitizeStyleSheet(String(css || '')));
+  return {
+    ok: errors.length === 0,
+    data: { body: clean_.body, styles: [...kept, ...clean_.styles].filter(Boolean).slice(0, 8), title: heading ? visibleText(heading[1]).slice(0, LIMITS.titleChars) : '', removed: clean_.removed, mode: 'edited' },
+    errors,
+    warnings: clean_.removed ? [`sanitized:${clean_.removed}`] : [],
+  };
+}
+
 /* Tek giriş noktası. */
 function parseOutput(format, text, options = {}) {
   if (format === 'pdf' || format === 'html') return normalizeHtmlOutput(text, options);
@@ -363,5 +383,5 @@ function parseOutput(format, text, options = {}) {
 module.exports = {
   safeFormula, FORMATS, FORMAT_LABEL, LIMITS, COLUMN_TYPES, LAYOUTS,
   normalizeFormat, buildInstruction, repairMessage, parseOutput, parseJson,
-  normalizeWorkbook, normalizePresentation, normalizeHtmlOutput, toNumber,
+  normalizeWorkbook, normalizePresentation, normalizeHtmlOutput, normalizeHtmlDraft, toNumber,
 };

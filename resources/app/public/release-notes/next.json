@@ -1,14 +1,114 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI dosyalarını düzenleyin, şablon olarak kaydedin ve ekiple paylaşın",
+    "en": "Edit LCW AI files, save them as templates and share them with the team"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "PDF, PowerPoint, Excel ve HTML çıktıları Buyer Log içinde düzenlenip yeniden oluşturulur; yapı şablon olarak kaydedilip ekiple paylaşılır; uzun kumaş metinleri ve tablolar artık kısaltılmaz.",
+    "en": "PDF, PowerPoint, Excel and HTML outputs can be edited and re-created inside Buyer Log; their structure can be saved as a template and shared with the team; long fabric texts and tables are no longer cut."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "lcwai-output-editor",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI çıktıları Buyer Log içinde düzenlenir",
+        "en": "LCW AI outputs are editable inside Buyer Log"
+      },
+      "path": {
+        "tr": "LCW AI › dosya kartı › Düzenle",
+        "en": "LCW AI › file card › Edit"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-editor.png",
+        "alt": {
+          "tr": "PowerPoint düzenleyicisi: solda sürüklenebilir slayt listesi, sağda KPI kartları formu — gerçek Buyer Log demo ekranı",
+          "en": "PowerPoint editor: draggable slide list on the left, KPI card form on the right — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Slaytları sıralayın, düzeni değiştirin, metni düzenleyin",
+          "en": "Reorder slides, change layouts, edit the text"
+        }
+      },
+      "body": {
+        "tr": "LCW AI'ın ürettiği her dosya kartında artık \"Düzenle\" düğmesi var. PowerPoint'te slaytlar sürükle-bırakla sıralanır, çoğaltılır, silinir; düzen (tablo, KPI, grafik, karşılaştırma…) değiştirilir ve her alan form üzerinden düzenlenir. Excel'de sayfalar ve sütun tipleri yönetilir, hücreler Excel'den kopyalanıp yapıştırılabilir. PDF/HTML raporunda metne tıklayıp doğrudan yazılır, bölümler soldan sıralanır. \"Dosyayı Oluştur\" düzenlenmiş hâli LCW AI'a tekrar gitmeden aynı doğrulamadan geçirip yeni dosya olarak kaydeder; eski dosya korunur.",
+        "en": "Every file card produced by LCW AI now has an \"Edit\" button. In PowerPoint, slides can be reordered by drag and drop, duplicated and deleted; layouts (table, KPI, chart, comparison…) can be changed and every field is edited in a form. In Excel, sheets and column types are managed and cells can be pasted from Excel. In PDF/HTML reports you click the text and type directly, and reorder sections on the left. \"Create File\" runs the edited version through the same validation without going back to LCW AI and saves it as a new file; the old file is kept."
+      }
+    },
+    {
+      "id": "lcwai-output-templates",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Çıktı şablonları: kaydedin, ekiple paylaşın",
+        "en": "Output templates: save and share with the team"
+      },
+      "path": {
+        "tr": "LCW AI › Düzenle › Şablon olarak kaydet · Yanıt biçimi › Şablonlar",
+        "en": "LCW AI › Edit › Save as template · Answer as › Templates"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-templates.png",
+        "alt": {
+          "tr": "Şablon olarak kaydet penceresi: ekiple paylaş, kısaltılmayacak alanlar, ek talimat ve slayt yapısı — gerçek Buyer Log demo ekranı",
+          "en": "Save as template dialog: share with the team, fields never to shorten, additional instructions and slide structure — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Yapı kaydedilir, veri paylaşılmaz",
+          "en": "The structure is saved; data is not shared"
+        }
+      },
+      "body": {
+        "tr": "Düzenlediğiniz dosyanın yapısı (slayt/bölüm/sayfa sırası, başlıklar, tablo sütunları), kısaltılmaması gereken alanlar ve ek talimatınız şablon olarak kaydedilir. Şablonu yanıt biçimi çubuğundaki seçiciden seçtiğinizde LCW AI bu yapıya birebir uyar ve güncel veriyle doldurur. \"Ekiple paylaş\" şablonu tüm kullanıcılara açar; ekip şablonu yalnız yapıyı taşır, tablo satırı, rakam ya da görsel paylaşılmaz. \"Şablonlar\" penceresinden kendi ve ekip şablonlarınızı düzenleyebilir, kopyasını alabilir veya silebilirsiniz; ekip şablonunu yalnız sahibi ya da moderatör değiştirir.",
+        "en": "The structure of the file you edited (slide/section/sheet order, titles, table columns), the fields that must never be shortened and your additional instructions are saved as a template. When you pick the template in the answer format bar, LCW AI follows that structure exactly and fills it with current data. \"Share with the team\" makes the template available to all users; a team template only carries the structure, no table rows, figures or images are shared. In the \"Templates\" window you can edit, copy or delete your own and team templates; only the owner or a moderator can change a team template."
+      }
+    },
+    {
+      "id": "lcwai-output-full-text",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Kumaş detayları ve uzun tablolar artık kısaltılmıyor",
+        "en": "Fabric details and long tables are no longer shortened"
+      },
+      "path": {
+        "tr": "LCW AI › PowerPoint / PDF / Excel çıktısı",
+        "en": "LCW AI › PowerPoint / PDF / Excel output"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-full-text.png",
+        "alt": {
+          "tr": "PowerPoint düzenleyicisinde tam kumaş açıklamalarıyla tablo slaytı ve devam slaytı notu — gerçek Buyer Log demo ekranı",
+          "en": "Table slide with full fabric descriptions and the continuation-slide note in the PowerPoint editor — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Uzun tablo devam slaytlarına bölünür",
+          "en": "Long tables continue on extra slides"
+        }
+      },
+      "body": {
+        "tr": "PowerPoint tablolarında hücreler 80 karakterde, tablolar 12 satırda kesiliyordu; kumaş ve kompozisyon açıklamaları yarım kalıyordu. Artık hücre metni korunur, tablo 60 satıra kadar alınır ve uzun tablo aynı başlıkla \"(1/2)\", \"(2/2)\" devam slaytlarına bölünür. LCW AI'a giden talimat da kumaş, kompozisyon, açıklama, kod ve isim gibi kaynak değerlerin kısaltılmadan, olduğu gibi aktarılmasını ister.",
+        "en": "PowerPoint table cells were cut at 80 characters and tables at 12 rows, leaving fabric and composition descriptions incomplete. Cell text is now kept, tables take up to 60 rows, and a long table continues on extra slides with the same title, \"(1/2)\", \"(2/2)\". The instruction sent to LCW AI also asks for source values such as fabric, composition, description, codes and names to be copied exactly, without shortening."
+      }
+    }
+  ]
 }

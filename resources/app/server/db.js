@@ -40,6 +40,10 @@ const FILTERS_FILE = path.join(DATA_DIR, 'filters.json');
    Kişisel kopya kullanıcının profil klasöründe, paylaşılan kopya ortak
    dosyada durur (scopedProfileFile userId'siz çağrılınca ortak döner). */
 const HORIZON_TEMPLATES_FILE = path.join(DATA_DIR, 'horizon-templates.json');
+// LCW AI çıktı şablonları: kişisel kopya kullanıcı klasöründe, ekip şablonları
+// bu ortak dosyada (profil deposu; Sync/delta ile diğer cihazlara gider).
+// Şablon iş verisi taşımaz, yalnız dosya yapısını (bkz. output-user-templates).
+const AI_OUTPUT_TEMPLATES_FILE = path.join(DATA_DIR, 'ai-output-templates.json');
 const SHIP_FILE = path.join(DATA_DIR, 'shipping-comparison.json');
 const OPEN_COSTING_FILE = path.join(DATA_DIR, 'open-costing.json');
 // FX artık kullanıcı tercihi değil, bütün Buyer Log kullanıcılarının aynı
@@ -128,7 +132,7 @@ function deltaSeedPayload() {
      gölgelemesin. Kullanıcıya özel dosyalar (görünümler, filtreler, döviz)
      ilk yazıldıklarında aynalanır; tohumlama yalnız mevcut ortak veriyi taşır. */
   const payload = {};
-  for (const file of [OVERRIDES_FILE, SETTINGS_FILE, SHIP_FILE, OPEN_COSTING_FILE, VIEWS_FILE, FILTERS_FILE, HORIZON_TEMPLATES_FILE, LEGACY_FX_FILE]) {
+  for (const file of [OVERRIDES_FILE, SETTINGS_FILE, SHIP_FILE, OPEN_COSTING_FILE, VIEWS_FILE, FILTERS_FILE, HORIZON_TEMPLATES_FILE, AI_OUTPUT_TEMPLATES_FILE, LEGACY_FX_FILE]) {
     if (!fs.existsSync(file)) continue;
     try { payload[deltaStoreId(file)] = toDocumentRecord(readJsonWithBackup(file, () => ({ _revision: 0 }))); }
     catch (_) { /* okunamayan dosya tohumlanmaz; eski yolu kullanmaya devam eder */ }
@@ -1590,6 +1594,7 @@ function profileArgs(args, operation) {
 function profileKindOf(baseFile) {
   if (baseFile === VIEWS_FILE) return 'view';
   if (baseFile === HORIZON_TEMPLATES_FILE) return 'horizonTemplate';
+  if (baseFile === AI_OUTPUT_TEMPLATES_FILE) return 'aiOutputTemplate';
   return 'filter';
 }
 function addScopedProfile(baseFile, storeName, args) {
@@ -1732,6 +1737,10 @@ module.exports = {
   addHorizonTemplate: function () { return addScopedProfile(HORIZON_TEMPLATES_FILE, 'Horizon şablonları', arguments); },
   updateHorizonTemplate: function () { return updateScopedProfile(HORIZON_TEMPLATES_FILE, 'Horizon şablonları', arguments); },
   deleteHorizonTemplate: function () { return deleteScopedProfile(HORIZON_TEMPLATES_FILE, 'Horizon şablonları', arguments); },
+  loadAiOutputTemplates: userId => loadProfileFile(scopedProfileFile(AI_OUTPUT_TEMPLATES_FILE, userId), userId, 'aiOutputTemplate'),
+  addAiOutputTemplate: function () { return addScopedProfile(AI_OUTPUT_TEMPLATES_FILE, 'LCW AI çıktı şablonları', arguments); },
+  updateAiOutputTemplate: function () { return updateScopedProfile(AI_OUTPUT_TEMPLATES_FILE, 'LCW AI çıktı şablonları', arguments); },
+  deleteAiOutputTemplate: function () { return deleteScopedProfile(AI_OUTPUT_TEMPLATES_FILE, 'LCW AI çıktı şablonları', arguments); },
   addFilterProfile: function () { return addScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   updateFilterProfile: function () { return updateScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   deleteFilterProfile: function () { return deleteScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },

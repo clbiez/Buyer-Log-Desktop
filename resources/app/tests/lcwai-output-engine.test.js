@@ -172,7 +172,7 @@ test('PRESENTATION normalize: düzen çıkarımı, başlık slaytı, sınırlar;
   const deck = contracts.parseOutput('pptx', JSON.stringify({
     title: 'Sezon', slides: [
       { title: 'Grafik', chart: { categories: ['A', 'B'], series: [{ name: 'Gün', values: ['12', 7] }] } },
-      { layout: 'table', title: 'Tablo', table: { columns: ['K', 'V'], rows: Array.from({ length: 20 }, (_, i) => [`R${i}`, i]) } },
+      { layout: 'table', title: 'Tablo', table: { columns: ['K', 'V'], rows: Array.from({ length: 70 }, (_, i) => [`R${i}`, i]) } },
       { layout: 'bullets', title: 'Madde', bullets: Array.from({ length: 12 }, (_, i) => `madde ${i}`) },
       { layout: 'kpis', title: 'Boş KPI', kpis: [] },
     ],
@@ -183,7 +183,7 @@ test('PRESENTATION normalize: düzen çıkarımı, başlık slaytı, sınırlar;
   assert.equal(slides[1].layout, 'chart');
   assert.deepEqual(slides[1].chart.series[0].values, [12, 7]);
   assert.equal(slides[2].table.rows.length, contracts.LIMITS.tableRows);
-  assert.equal(slides[2].table.omitted, 8);
+  assert.equal(slides[2].table.omitted, 10);
   assert.equal(slides[3].bullets.length, contracts.LIMITS.bullets);
   assert.equal(slides.length, 4, 'tek bozuk slayt düşer, sunum düşmez');
   assert.ok(deck.warnings.some(item => item.startsWith('slide-dropped')));
