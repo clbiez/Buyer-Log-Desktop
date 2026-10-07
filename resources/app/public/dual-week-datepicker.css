@@ -1,7 +1,7 @@
 /* LCW / GLB date picker — Buyer Log tokens only, square geometry. */
 .blDualDatePicker{
   position:fixed;z-index:12000;box-sizing:border-box;border:1px solid var(--line2);
-  background:var(--card);color:var(--ink);box-shadow:var(--shadow-lg,0 8px 24px rgba(0,0,0,.16));
+  background:var(--card);color:var(--ink);box-shadow:var(--shadow-lg,var(--shadow));
   padding:0;font-size:12px;border-radius:0!important;
 }
 .blDualDatePicker[hidden]{display:none!important}
