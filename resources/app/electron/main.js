@@ -119,7 +119,51 @@ const OAB_HOME_URL = 'https://pass.lcwaikiki.com/';
 const OAB_UI_HOST = 'pass.lcwaikiki.com';
 const OAB_API_HOST = 'pass.prod.lcwaikiki.com';
 const OAB_AUTH_CAPTURE_FILTER = { urls: [`https://${OAB_API_HOST}/pass/*`] };
-const OAB_SILENT_PROBE_MS = 8000;
+const OAB_SILENT_PROBE_MS = 15000;
+/* After the user closes the sign-in window, keep the (now hidden) PASS page
+ * alive briefly so a login that already completed can still be picked up. */
+const OAB_CLOSE_GRACE_MS = 15000;
+/* The same rejected stored token is not re-validated more often than this. */
+const OAB_STORED_TOKEN_RETRY_MS = 10000;
+/* PASS (pass.lcwaikiki.com) keeps its OAuth access token in its own web
+ * storage. This is the same reader the proven Edge/CDP path uses
+ * (agent-browser-connector PASS_STORED_TOKEN_READER), plus oidc-client style
+ * "oidc.user:*" entries. Detecting sign-in from storage does not depend on PASS
+ * issuing a report request in the hidden window, which used to leave a
+ * completed login unnoticed. The value goes only to the loopback backend. */
+const OAB_STORAGE_PROBE = `(() => {
+  const extract = value => {
+    let text = String(value == null ? '' : value).trim();
+    if (!text) return '';
+    if (text[0] === '"' || text[0] === '{') {
+      try {
+        const parsed = JSON.parse(text);
+        text = typeof parsed === 'string' ? parsed : String(parsed && (parsed.access_token || parsed.accessToken) || '');
+      } catch (_) { return ''; }
+    }
+    text = text.trim().replace(/^bearer\s+/i, '');
+    return text.length >= 20 && !/\s/.test(text) ? 'Bearer ' + text : '';
+  };
+  const stores = [];
+  try { if (typeof localStorage !== 'undefined' && localStorage) stores.push(localStorage); } catch (_) {}
+  try { if (typeof sessionStorage !== 'undefined' && sessionStorage) stores.push(sessionStorage); } catch (_) {}
+  const found = [];
+  const add = value => { if (value && !found.includes(value)) found.push(value); };
+  for (const store of stores) {
+    for (const key of ['access_token', 'accessToken']) {
+      try { add(extract(store.getItem(key))); } catch (_) {}
+    }
+  }
+  for (const store of stores) {
+    try {
+      for (let index = 0; index < store.length; index += 1) {
+        const key = String(store.key(index) || '');
+        if (/^oidc\.user:/i.test(key)) add(extract(store.getItem(key)));
+      }
+    } catch (_) {}
+  }
+  return found.slice(0, 6);
+})()`;
 let oabAuthWindow = null;
 let oabAuthInFlight = null;
 let oabAuthFlowState = null;
@@ -1091,6 +1135,8 @@ async function acquireOabAuthorization(options = {}) {
     let networkCaptureInstalled = false;
     let authWebRequest = null;
     let networkReady = null;
+    let closeRequested = false;
+    let closeGraceTimer = null;
     const popupWindows = new Set();
 
     const targetViewerUrl = () => flowState.viewerUrl || OAB_VIEWER_URL;
@@ -1109,6 +1155,7 @@ async function acquireOabAuthorization(options = {}) {
     };
     const cleanup = () => {
       if (timeoutTimer) { clearTimeout(timeoutTimer); timeoutTimer = null; }
+      if (closeGraceTimer) { clearTimeout(closeGraceTimer); closeGraceTimer = null; }
       clearSilentProbe();
       cleanupCapture();
       for (const popup of popupWindows) {
@@ -1118,22 +1165,68 @@ async function acquireOabAuthorization(options = {}) {
       if (authWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
       if (oabAuthWindow === authWindow) oabAuthWindow = null;
     };
-    const finishAuthorization = async authorization => {
+    const finishAuthorizationNow = async (authorization, source) => {
       if (settled || !authorization) return false;
       try {
         const pushed = await pushOabAuthorizationToBackend(authorization);
         if (!pushed || !pushed.ok) return false;
+        if (settled) return true;
         settled = true;
-        log('OAB otomatik oturumu hazır (report API Authorization doğrulandı).');
+        log('OAB otomatik oturumu hazır (' + source + ', report API Authorization doğrulandı).');
         cleanup();
         if (resolvePromise) resolvePromise({ ok:true, authenticated:true, source:'desktop-oab-sso' });
         return true;
       } catch (error) {
         // A rejected report token must not leave an older backend RAM token
         // looking authenticated while the persistent browser recovers.
-        await clearOabBackendAuthorization();
+        if (!settled) await clearOabBackendAuthorization();
         log('OAB oturum adayı doğrulanamadı: ' + (error && error.code || 'OAB_AUTH_FAILED'));
         return false;
+      }
+    };
+    /* Network capture and the storage probe can find candidates at the same
+     * time. The backend holds a single RAM token, so candidates are validated
+     * strictly one after another; a later rejected candidate can therefore
+     * never wipe an already accepted one. */
+    let authorizationChain = Promise.resolve(false);
+    const finishAuthorization = (authorization, source = 'network') => {
+      const run = authorizationChain.then(() => finishAuthorizationNow(authorization, source));
+      authorizationChain = run.catch(() => false);
+      return run;
+    };
+    const clearBackendAuthorizationInChain = () => {
+      const run = authorizationChain.then(async () => { if (!settled) await clearOabBackendAuthorization(); return false; });
+      authorizationChain = run.catch(() => false);
+      return run;
+    };
+    const storedTokenAttempts = new Map();
+    let storageProbeBusy = false;
+    const probeStoredAuthorization = async () => {
+      if (settled || storageProbeBusy) return false;
+      const targets = [authWindow, ...popupWindows].filter(target => target && !target.isDestroyed());
+      storageProbeBusy = true;
+      try {
+        for (const target of targets) {
+          let host = '';
+          try { host = new URL(target.webContents.getURL()).hostname.toLowerCase(); } catch (_) { continue; }
+          if (host !== OAB_UI_HOST) continue;
+          let candidates = [];
+          try { candidates = await target.webContents.executeJavaScript(OAB_STORAGE_PROBE, true); }
+          catch (_) { continue; }
+          // Every distinct stored token is tried, so a stale plain key cannot
+          // hide a fresh oidc.user entry.
+          for (const candidate of Array.isArray(candidates) ? candidates : []) {
+            const authorization = String(candidate || '');
+            if (!authorization || settled) continue;
+            const lastTriedAt = storedTokenAttempts.get(authorization) || 0;
+            if (lastTriedAt && Date.now() - lastTriedAt < OAB_STORED_TOKEN_RETRY_MS) continue;
+            storedTokenAttempts.set(authorization, Date.now());
+            if (await finishAuthorization(authorization, 'PASS storage')) return true;
+          }
+        }
+        return false;
+      } finally {
+        storageProbeBusy = false;
       }
     };
 
@@ -1147,7 +1240,7 @@ async function acquireOabAuthorization(options = {}) {
         resolve({ ok:false, authenticated:false, code, error });
       };
       const showWindow = target => {
-        if (!flowState.interactive || settled || !target || target.isDestroyed()) return false;
+        if (!flowState.interactive || settled || closeRequested || !target || target.isDestroyed()) return false;
         try {
           target.show();
           target.focus();
@@ -1181,11 +1274,21 @@ async function acquireOabAuthorization(options = {}) {
       };
       const promoteInteractive = ({ immediate = true } = {}) => {
         flowState.interactive = true;
+        if (closeRequested) {
+          // A new interactive request after the user closed the window: the
+          // window becomes usable again instead of silently cancelling.
+          closeRequested = false;
+          if (closeGraceTimer) { clearTimeout(closeGraceTimer); closeGraceTimer = null; }
+          immediate = true;
+        }
         clearSilentProbe();
         armHardTimeout();
         if (immediate || loginRequiredKnown) showInteractiveWindow();
       };
       flowState.promoteInteractive = promoteInteractive;
+      // Programmatic clear (clearOabAuthSession) ends the flow without the
+      // close grace period.
+      flowState.abort = () => finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
 
       const loadLoginTarget = async (url, allowFallback = true) => {
         if (settled || navigationBusy || !authWindow || authWindow.isDestroyed()) return false;
@@ -1211,7 +1314,8 @@ async function acquireOabAuthorization(options = {}) {
               }
             }
           }
-          finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı açılamadı.');
+          if (closeRequested) finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
+          else finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı açılamadı.');
           return false;
         } finally {
           navigationBusy = false;
@@ -1223,6 +1327,9 @@ async function acquireOabAuthorization(options = {}) {
       };
       const markLoginRequired = (url, target = authWindow) => {
         if (!isLikelyOabSignInUrl(url)) return false;
+        // After the user closed the window an SSO hop may still pass through a
+        // sign-in URL silently; never reveal it again, let the grace timer decide.
+        if (closeRequested) return true;
         loginRequiredKnown = true;
         clearSilentProbe();
         if (lifecycle) void lifecycle.observe({ url, signIn:true });
@@ -1231,6 +1338,10 @@ async function acquireOabAuthorization(options = {}) {
       };
       const pulseLifecycle = async () => {
         if (settled || !lifecycle || !authWindow || authWindow.isDestroyed()) return;
+        // A token already present in PASS storage wins over every heuristic
+        // below: a signed-in session must never be sent back to the login page.
+        if (await probeStoredAuthorization()) return;
+        if (settled || authWindow.isDestroyed()) return;
         let url = '';
         try { url = authWindow.webContents.getURL(); } catch (_) { return; }
         const signIn = await oabWindowLooksLikeSignIn(authWindow);
@@ -1241,7 +1352,8 @@ async function acquireOabAuthorization(options = {}) {
         await lifecycle.observe({ url, signIn:false });
       };
       const recoverStaleSilentProbe = async () => {
-        if (settled || !flowState.interactive || forceFresh || loginRequiredKnown) return;
+        if (settled || !flowState.interactive || forceFresh || loginRequiredKnown || closeRequested) return;
+        if (await probeStoredAuthorization()) return;
         const state = lifecycle && lifecycle.snapshot();
         if (state && state.candidateBusy) {
           silentProbeTimer = setTimeout(() => { void recoverStaleSilentProbe(); }, 1000);
@@ -1254,7 +1366,9 @@ async function acquireOabAuthorization(options = {}) {
         // stale backend RAM token, reveal the current page and let the bounded
         // viewer lifecycle retry once if authenticated API traffic is still absent.
         log('OAB sessiz oturum kontrolü sonuçlanmadı; mevcut kalıcı OAB oturumu korunarak görünür akışa geçiliyor.');
-        await clearOabBackendAuthorization();
+        // Serialized with candidate validation: a DELETE must never abort a
+        // candidate that the backend is still validating.
+        await clearBackendAuthorizationInChain();
         lifecycle?.resetForFreshViewer?.();
         showInteractiveWindow();
 
@@ -1370,7 +1484,8 @@ async function acquireOabAuthorization(options = {}) {
       authWindow.webContents.on('did-fail-load', (_event, errorCode, _description, _validatedURL, isMainFrame) => {
         if (!isMainFrame || settled || Number(errorCode) === -3) return;
         log('OAB giriş sayfası main-frame yükleme hatası: ' + Number(errorCode));
-        finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı yüklenemedi.');
+        if (closeRequested) finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
+        else finishFailure('OAB_AUTH_NAVIGATION_FAILED', 'OAB giriş ekranı yüklenemedi.');
       });
       authWindow.webContents.on('render-process-gone', (_event, details) => {
         if (settled) return;
@@ -1467,6 +1582,36 @@ async function acquireOabAuthorization(options = {}) {
         }
         event.preventDefault();
       });
+      /* Closing the sign-in window used to end the flow as "cancelled" even when
+       * the user had just signed in and PASS had not issued a report request
+       * yet. Now the window is only hidden: the PASS page keeps running for a
+       * short grace period, storage/network detection continues, and only if
+       * no session appears (or PASS asks for sign-in again) is it cancelled. */
+      authWindow.on('close', event => {
+        if (settled || closeRequested) return;
+        event.preventDefault();
+        closeRequested = true;
+        clearSilentProbe();
+        log('OAB giriş penceresi kapatıldı; tamamlanmış oturum arka planda kontrol ediliyor.');
+        for (const target of [authWindow, ...popupWindows]) {
+          if (target && !target.isDestroyed()) { try { target.hide(); } catch (_) {} }
+        }
+        closeGraceTimer = setTimeout(() => {
+          closeGraceTimer = null;
+          finishFailure('OAB_AUTH_CANCELLED', 'OAB kullanıcı girişi iptal edildi.');
+        }, OAB_CLOSE_GRACE_MS);
+        closeGraceTimer.unref?.();
+        void (async () => {
+          if (await probeStoredAuthorization()) return;
+          if (settled) return;
+          // Let PASS finish its SSO callback with the cookies the login just set.
+          let currentUrl = '';
+          try { currentUrl = authWindow.webContents.getURL(); } catch (_) {}
+          if (!currentUrl || !isAllowedOabLoginUrl(currentUrl) || isLikelyOabSignInUrl(currentUrl)) {
+            await loadLoginTarget(targetViewerUrl(), false);
+          }
+        })();
+      });
       authWindow.on('closed', () => {
         oabAuthWindow = null;
         clearSilentProbe();
@@ -1515,6 +1660,7 @@ async function acquireOabAuthorization(options = {}) {
 
 async function clearOabAuthSession() {
   const pending = oabAuthInFlight;
+  try { oabAuthFlowState?.abort?.(); } catch (_) {}
   if (oabAuthWindow && !oabAuthWindow.isDestroyed()) {
     try { oabAuthWindow.close(); } catch (_) {}
   }

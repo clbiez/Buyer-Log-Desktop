@@ -43,6 +43,8 @@ const fakePass = {
   calls: [],
   failOn: null,               // { buyerGroupRef } → o kombinasyon hata versin
   delayMs: 0,
+  desktopCalls: 0,            // oab-api-client (masaüstü oturumu) üzerinden yapılan istekler
+  captureCalls: 0,            // dış tarayıcı (CDP) yakalama denemeleri
 };
 const connectorPath = require.resolve('../server/lib/agent-browser-connector');
 const realConnector = require(connectorPath);
@@ -50,7 +52,7 @@ require.cache[connectorPath] = {
   id: connectorPath, filename: connectorPath, loaded: true, exports: {
     ...realConnector,
     passAuthStatus: () => ({ connected: fakePass.connected, captureInProgress: false }),
-    capturePassAuthorization: async () => ({ connected: true }),
+    capturePassAuthorization: async () => { fakePass.captureCalls += 1; return { connected: true }; },
     fetchPassReportData: async (ownerId, params) => {
       fakePass.calls.push(params);
       if (fakePass.delayMs) await new Promise(resolve => setTimeout(resolve, fakePass.delayMs));
@@ -78,6 +80,7 @@ require.cache[oabApiClientPath] = {
   id: oabApiClientPath, filename: oabApiClientPath, loaded: true, exports: {
     validateAuthorization: async () => true,
     fetchReportData: async params => {
+      fakePass.desktopCalls += 1;
       fakePass.calls.push(params);
       if (fakePass.delayMs) await new Promise(resolve => setTimeout(resolve, fakePass.delayMs));
       const refs = params.buyerGroupRefs && params.buyerGroupRefs.length
@@ -133,12 +136,12 @@ require.cache[metadataPath] = {
 require('../server/server.js');
 
 let cookie = '';
-function request(method, urlPath, body) {
+function request(method, urlPath, body, extraHeaders = {}) {
   return new Promise((resolve, reject) => {
     const data = body ? Buffer.from(JSON.stringify(body)) : null;
     const req = http.request({
       host: '127.0.0.1', port: PORT, path: urlPath, method,
-      headers: { ...(data ? { 'Content-Type': 'application/json', 'Content-Length': data.length } : {}), ...(cookie ? { Cookie: cookie } : {}) },
+      headers: { ...(data ? { 'Content-Type': 'application/json', 'Content-Length': data.length } : {}), ...(cookie ? { Cookie: cookie } : {}), ...extraHeaders },
     }, res => {
       let out = '';
       res.on('data', chunk => { out += chunk; });
@@ -182,7 +185,7 @@ test.before(async () => { await waitForServer(); await login(); });
 // (Önbelleğin kendisi ayrı bir testte, bilerek doldurularak sınanır.)
 const OAB_CACHE_DIR = path.join(root, 'data', 'oab-cache');
 function clearOabCache() { fs.rmSync(OAB_CACHE_DIR, { recursive: true, force: true }); }
-test.beforeEach(() => { fakePass.calls = []; fakePass.failOn = null; fakePass.delayMs = 0; clearOabCache(); });
+test.beforeEach(() => { fakePass.calls = []; fakePass.failOn = null; fakePass.delayMs = 0; fakePass.desktopCalls = 0; fakePass.captureCalls = 0; clearOabCache(); });
 
 test('v7.20 plan ucu kombinasyon ve maliyeti hesaplar, karşılıksızları bildirir', async () => {
   const res = await request('POST', '/api/oab/plan', { seasonRefs: ['S6', 'S7'], merchSubGroupRefs: ['CU4E', 'CK1E'], buyerGroupRefs: ['1', '2'] });
@@ -300,4 +303,47 @@ test('v7.20 hiçbir geçerli kombinasyon yoksa iş başlatılmaz', async () => {
 test.after(() => {
   fs.rmSync(root, { recursive: true, force: true });
   setImmediate(() => process.exit(0));
+});
+
+const DESKTOP = { 'X-BuyerLog-OAB-Transport': 'desktop' };
+test('masaüstü OAB isteği gizli oturumun RAM token\'ıyla doğrudan PASS API\'den çekilir; dış tarayıcıya gidilmez', async () => {
+  const res = await request('POST', '/api/oab/report', { seasonRef: 'S6', merchSubGroupRef: 'CU4E', buyerGroupRef: '1', forceRefresh: true }, DESKTOP);
+  assert.equal(res.status, 200, JSON.stringify(res.body).slice(0, 300));
+  assert.equal(fakePass.desktopCalls, 1);
+  assert.equal(fakePass.captureCalls, 0);
+  assert.equal(res.body.rows.length, 1);
+  const status = await request('GET', '/api/oab/auth/status', null, DESKTOP);
+  assert.equal(status.body.status.transport, 'desktop-session');
+  assert.equal(status.body.status.authenticated, true);
+});
+
+test('masaüstü OAB oturumu yoksa OAB_AUTH_REQUIRED döner; Edge/CDP yakalamasına düşülmez', async () => {
+  oabAuthState.clear();
+  try {
+    const res = await request('POST', '/api/oab/report', { seasonRef: 'S6', merchSubGroupRef: 'CU4E', buyerGroupRef: '2', forceRefresh: true }, DESKTOP);
+    assert.equal(res.status, 401);
+    assert.equal(res.body.code, 'OAB_AUTH_REQUIRED');
+    const connect = await request('POST', '/api/oab/auth/connect', {}, DESKTOP);
+    assert.equal(connect.body.code, 'OAB_AUTH_REQUIRED');
+    assert.equal(fakePass.captureCalls, 0, 'masaüstü kipi dış tarayıcı açmamalı');
+    assert.equal(fakePass.desktopCalls, 0);
+  } finally {
+    oabAuthState.setAuthorization(`Bearer ${'x'.repeat(48)}`);
+  }
+});
+
+test('masaüstü toplu OAB işi başlatan isteğin taşımasını korur', async () => {
+  await request('POST', '/api/oab/batch/reset-capability');
+  const started = await request('POST', '/api/oab/batch', { seasonRefs: ['S7'], merchSubGroupRefs: ['CU4E'], buyerGroupRefs: ['1', '2'], forceRefresh: true }, DESKTOP);
+  assert.equal(started.status, 202, JSON.stringify(started.body).slice(0, 300));
+  let finished = null;
+  for (let attempt = 0; attempt < 200 && !finished; attempt += 1) {
+    const status = await request('GET', '/api/oab/batch-status', null, DESKTOP);
+    if (status.body.job && !status.body.job.running) finished = status.body;
+    else await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  assert.ok(finished, 'toplu iş bitmedi');
+  assert.ok(fakePass.desktopCalls >= 1);
+  assert.equal(fakePass.desktopCalls, fakePass.calls.length, 'bütün istekler masaüstü oturumundan geçmeli');
+  assert.equal(fakePass.captureCalls, 0);
 });

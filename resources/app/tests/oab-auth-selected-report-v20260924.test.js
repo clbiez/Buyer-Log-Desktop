@@ -24,7 +24,7 @@ test('browser-backed OAB connect endpoint forwards selected report refs', () => 
   assert.match(body, /seasonRef: body\.seasonRef/);
   assert.match(body, /merchSubGroupRef: body\.merchSubGroupRef/);
   assert.match(body, /buyerGroupRef: body\.buyerGroupRef/);
-  assert.match(body, /ensurePassConnected\(req\.currentUser\.id, params\)/);
+  assert.match(body, /ensurePassConnected\(req\.currentUser\.id, params, transport\)/);
 });
 
 test('renderer derives auth context from single report and first batch combination', () => {

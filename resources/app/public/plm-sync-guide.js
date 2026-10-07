@@ -3,7 +3,11 @@
 
   const STORAGE_KEY='buyerlog.syncGuide.dismissed.v1';
   const GUIDE_VERSION=1;
-  const guardedCategories=new Set(['plm','asas']);
+  /* PLM (CoreNectum) metadata, görsel, teknik föy ve numune çağrıları doğrudan
+     API ile, Electron'un gizli kurumsal oturumundan alınan token'la yürür; dış
+     Edge/Remote Debugging gerektirmez. Bu yüzden PLM butonları tarayıcı
+     ön koşuluna kilitlenmez. ASAS/PIM görselleri hâlâ Edge oturumunu kullanır. */
+  const guardedCategories=new Set(['asas']);
   const syncEndpoints=new Set([
     '/api/plm-sync/fetch',
     '/api/plm-style-links/sync-links',
@@ -244,14 +248,24 @@
     })();
   },true);
 
-  function progressFor(url){
+  /* Yalnız gerçekten Edge/CDP kullanan çağrılar tarayıcı uyarısı taşır:
+     ASAS görselleri ve açık Style List sekmesindeki seçili modellerin aktarımı. */
+  function usesBrowser(url,init){
+    if(String(url).includes('import-asas'))return true;
+    if(String(url)!=='/api/plm-sync/fetch')return false;
+    try{const body=JSON.parse(String(init&&init.body||'{}'));return Boolean(body&&body.selectedOnly===true);}catch(_){return false;}
+  }
+  function progressFor(url,browser){
     const isAsas=String(url).includes('import-asas');
     const source=isAsas?'ASAS':'PLM';
     closeProgress();
     const message=source+' · '+t('Senkronizasyon devam ediyor','Synchronization in progress');
-    const detail=t(
+    const detail=browser?t(
       'Açılan tarayıcı penceresini kapatmayın. “Allow Remote Debugging?” görünürse Allow seçin.',
       'Keep the opened browser window open. If “Allow Remote Debugging?” appears, choose Allow.'
+    ):t(
+      'Arka planda çalışıyor; tarayıcı açılmaz. Sayfa değiştirmek işi durdurmaz.',
+      'Running in the background; no browser opens. Changing pages does not stop it.'
     );
     let close=null;
     try{
@@ -262,7 +276,7 @@
       }
     }catch(_){close=null;}
     if(typeof close!=='function')return null;
-    const progress={source,close,update(messageText,options){try{close.update?.(messageText,options);}catch(_){}}};
+    const progress={source,browser:Boolean(browser),close,update(messageText,options){try{close.update?.(messageText,options);}catch(_){}}};
     activeProgress=progress;
     return progress;
   }
@@ -276,7 +290,7 @@
     const watched=method==='POST'&&syncEndpoints.has(path);
     const category=path==='/api/model-images/import-asas'?'asas':'plm';
     let panel=null;
-    if(watched)panel=progressFor(path);
+    if(watched)panel=progressFor(path,usesBrowser(path,init));
     const promise=originalFetch(input,init);
     if(!watched)return promise;
     return promise.then(response=>{
@@ -287,7 +301,7 @@
           {
             kind:ok?'success':'error',
             kindLabel:ok?t('TAMAMLANDI','COMPLETED'):t('HATA','ERROR'),
-            detail:ok?t('Buyer Log veriyi aldı.','Buyer Log received the data.'):t('Tarayıcı bağlantısını ve Allow onayını kontrol edin.','Check the browser connection and the Allow approval.')
+            detail:ok?t('Buyer Log veriyi aldı.','Buyer Log received the data.'):panel.browser?t('Tarayıcı bağlantısını ve Allow onayını kontrol edin.','Check the browser connection and the Allow approval.'):t('Ayrıntı PLM Operasyon Merkezi’nde.','Details are in the PLM Operations Center.')
           }
         );
         setTimeout(()=>{if(panel===activeProgress)closeProgress({immediate:false});},ok?3500:9000);
@@ -300,7 +314,7 @@
           {
             kind:'error',
             kindLabel:t('HATA','ERROR'),
-            detail:t('Tarayıcıyı kapatmadığınızdan ve Remote Debugging iznini verdiğinizden emin olun.','Make sure the browser stayed open and Remote Debugging permission was allowed.')
+            detail:panel.browser?t('Tarayıcıyı kapatmadığınızdan ve Remote Debugging iznini verdiğinizden emin olun.','Make sure the browser stayed open and Remote Debugging permission was allowed.'):t('Bağlantı kesildi; işi PLM Operasyon Merkezi’nden yeniden deneyin.','The connection dropped; retry the job from the PLM Operations Center.')
           }
         );
       }
