@@ -2236,13 +2236,12 @@
     const digits = raw.replace(/\D/g, '');
     if (!/^\d{6}$/.test(digits)) return raw;
     const year = Number(digits.slice(0, 4)), week = Number(digits.slice(4, 6));
-    if (week < 1 || week > 53) return raw;
-    const jan4 = new Date(Date.UTC(year, 0, 4));
-    const jan4Day = jan4.getUTCDay() || 7;
-    const monday = new Date(Date.UTC(year, 0, 4 - jan4Day + 1 + (week - 1) * 7));
-    const month = oabDrillMonthName(monday.getUTCMonth() + 1);
-    const dateYear = monday.getUTCFullYear();
-    return oabLang() ? `Week ${week} ${month} ${dateYear}` : `${week}. Hafta ${month} ${dateYear}`;
+    if (week < 1 || week > 52) return raw;
+    const dimension = window.BLDateDimension;
+    const monday = dimension?.mondayFromBusinessWeek?.(year, week);
+    const period = monday ? dimension?.describe?.(monday) : null;
+    if (!period || !period.businessValid) return raw;
+    return oabLang() ? period.weekLabelEn : period.weekLabelTr;
   }
   function oabDrillMonthText(value) {
     const raw = String(value == null ? '' : value).trim();
