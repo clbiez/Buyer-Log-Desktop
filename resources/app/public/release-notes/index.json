@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.252",
+      "publishedAt": "2026-10-07",
+      "title": {
+        "tr": "PLM ID listesinden toplu ekleme, sync ve yenileme onarımları",
+        "en": "Bulk-add from a PLM ID list, sync and refresh repairs"
+      },
+      "stats": {
+        "features": 7,
+        "improvements": 0,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.252/release.json"
+    },
+    {
       "version": "7.0.251",
       "publishedAt": "2026-10-07",
       "title": {
