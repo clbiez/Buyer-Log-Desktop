@@ -52,6 +52,10 @@
     LCWAI_OUTPUT_INVALID: { tr: 'LCW AI istenen dosya için geçerli içerik üretmedi (düzeltme denemeleri de sonuç vermedi). İsteği sadeleştirip tekrar deneyin.', en: 'LCW AI did not produce valid content for the requested file (repair attempts failed too). Simplify the request and try again.' },
     LCWAI_OUTPUT_RENDER_FAILED: { tr: 'Dosya oluşturulamadı.', en: 'The file could not be created.' },
     LCWAI_OUTPUT_NOT_FOUND: { tr: 'Dosya bulunamadı; silinmiş ya da taşınmış olabilir.', en: 'The file was not found; it may have been deleted or moved.' },
+    LCWAI_OUTPUT_EDIT_INVALID: { tr: 'Düzenlenen içerik dosyaya çevrilemedi. İşaretli sorunları düzeltip tekrar deneyin.', en: 'The edited content could not be turned into a file. Fix the listed issues and try again.' },
+    LCWAI_OUTPUT_TEMPLATE_NOT_FOUND: { tr: 'Çıktı şablonu bulunamadı; silinmiş olabilir.', en: 'The output template was not found; it may have been deleted.' },
+    LCWAI_OUTPUT_TEMPLATE_INVALID: { tr: 'Şablon adı ve dosya biçimi zorunludur.', en: 'A template name and file format are required.' },
+    LCWAI_OUTPUT_TEMPLATE_FORBIDDEN: { tr: 'Bu ekip şablonunu yalnız sahibi ya da bir moderatör değiştirebilir.', en: 'Only the owner or a moderator can change this team template.' },
     LCWAI_QUOTA_EXCEEDED: { tr: 'LCW AI dosya kotanız doldu. Eski sohbet dosyalarını silip tekrar deneyin.', en: 'Your LCW AI file quota is full. Delete old chat files and try again.' },
     LCWAI_INVALID_RESPONSE: { tr: 'LCW AI’ın cevabı anlaşılamadı. Tekrar deneyin ya da isteği sadeleştirin.', en: 'The LCW AI answer could not be understood. Try again or simplify the request.' },
     LCWAI_SCHEMA_MISMATCH: { tr: 'LCW AI beklenen biçimde bir öneri üretmedi. Tekrar deneyin ya da isteği netleştirin.', en: 'LCW AI did not produce a suggestion in the expected format. Try again or clarify the request.' },
@@ -71,6 +75,7 @@
     error.retryable = Boolean(data.retryable);
     error.lcwai = true;
     if (code === 'LCWAI_QUOTA_EXCEEDED' && data.remoteMessage) error.remoteMessage = String(data.remoteMessage).slice(0, 200);
+    if (code === 'LCWAI_OUTPUT_EDIT_INVALID' && Array.isArray(data.issues)) error.issues = data.issues.slice(0, 6).map(item => String(item).slice(0, 240));
     return error;
   }
   function errorText(error) {
@@ -643,6 +648,29 @@
     if (!data.ok) throw lcwError({ code: 'LCWAI_OUTPUT_NOT_FOUND' });
     return true;
   };
+  /* ---------------- AI Çıktı Düzenleyici + çıktı şablonları ----------------
+     Taslak, dosyanın doğrulanmış yapısıdır (JSON ya da temizlenmiş HTML).
+     Yeniden oluşturma aynı doğrulayıcıdan geçer; PDF son adımı yine masaüstü
+     kabuğunda basılır (finalizePdf). LCW AI'a istek gitmez. */
+  const jsonPost = (url, body, method = 'POST') => api(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  const getDraft = async id => (await api(`/api/lcwai/output-drafts/${encodeURIComponent(String(id || ''))}`)).draft;
+  async function renderDraft(id, payload = {}, options = {}) {
+    const onProgress = typeof options.onProgress === 'function' ? options.onProgress : () => {};
+    const data = await jsonPost(`/api/lcwai/output-drafts/${encodeURIComponent(String(id || ''))}/render`, payload);
+    const result = { output: data.output, warnings: data.warnings || [] };
+    return result.output && result.output.pending === 'pdf' ? finalizePdf(result, onProgress) : result;
+  }
+  const draftSkeleton = async (id, data) => (await jsonPost(`/api/lcwai/output-drafts/${encodeURIComponent(String(id || ''))}/skeleton`, { data })).definition;
+  const templatePath = (id, shared, suffix = '') => `/api/lcwai/output-templates/${encodeURIComponent(String(id || ''))}${suffix}${shared ? '?shared=1' : ''}`;
+  const outputTemplates = {
+    list: () => api('/api/lcwai/output-templates'),
+    create: body => jsonPost('/api/lcwai/output-templates', body),
+    update: (id, shared, body) => jsonPost(templatePath(id, shared), body, 'PUT'),
+    remove: (id, shared) => api(templatePath(id, shared), { method: 'DELETE' }),
+    share: id => jsonPost(templatePath(id, false, '/share'), {}),
+    copy: id => jsonPost(templatePath(id, false, '/copy'), {}),
+  };
+
   const openOutput = outputAction('open');
   const revealOutput = outputAction('reveal');
   const listOutputs = async () => (await api('/api/lcwai/outputs')).outputs || [];
@@ -696,7 +724,7 @@
   root.BuyerLogAI = {
     ask: askAuthed, askWithFiles: options => withDesktopAuth(() => askWithFiles(options)), uploadFile: uploadAuthed, cancel, getStatus, onStatus, connect, disconnect,
     chat: chatAuthed, createConversation, continueConversation, openChat,
-    openOutput, revealOutput, listOutputs,
+    openOutput, revealOutput, listOutputs, getDraft, renderDraft, draftSkeleton, outputTemplates,
     registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,
     errorText, notifyError, needsLogin, loadConfig,

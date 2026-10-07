@@ -28,6 +28,10 @@ const CODES = Object.freeze({
   OUTPUT_INVALID: { status: 422, tr: 'LCW AI istenen dosya için geçerli bir içerik üretmedi (düzeltme denemeleri de sonuç vermedi). İsteği sadeleştirip tekrar deneyin.', en: 'LCW AI did not produce valid content for the requested file (repair attempts failed too). Simplify the request and try again.', retryable: true },
   OUTPUT_RENDER_FAILED: { status: 500, tr: 'Dosya oluşturulamadı.', en: 'The file could not be created.', retryable: true },
   OUTPUT_NOT_FOUND: { status: 404, tr: 'Dosya bulunamadı; silinmiş ya da taşınmış olabilir.', en: 'The file was not found; it may have been deleted or moved.' },
+  OUTPUT_EDIT_INVALID: { status: 422, tr: 'Düzenlenen içerik dosyaya çevrilemedi. İşaretli sorunları düzeltip tekrar deneyin.', en: 'The edited content could not be turned into a file. Fix the listed issues and try again.' },
+  OUTPUT_TEMPLATE_NOT_FOUND: { status: 404, tr: 'Çıktı şablonu bulunamadı; silinmiş olabilir.', en: 'The output template was not found; it may have been deleted.' },
+  OUTPUT_TEMPLATE_INVALID: { status: 400, tr: 'Şablon adı ve dosya biçimi zorunludur.', en: 'A template name and file format are required.' },
+  OUTPUT_TEMPLATE_FORBIDDEN: { status: 403, tr: 'Bu ekip şablonunu yalnız sahibi ya da bir moderatör değiştirebilir.', en: 'Only the owner or a moderator can change this team template.' },
   SCHEMA_MISMATCH: { status: 422, tr: 'LCW AI beklenen biçimde bir öneri üretmedi. Tekrar deneyin ya da isteği netleştirin.', en: 'LCW AI did not produce a suggestion in the expected format. Try again or clarify the request.', retryable: true },
   CANCELLED: { status: 499, tr: 'LCW AI isteği iptal edildi.', en: 'The LCW AI request was cancelled.' },
   BUSY: { status: 429, tr: 'Aynı anda çok fazla LCW AI isteği var. Öncekinin bitmesini bekleyin.', en: 'Too many LCW AI requests at once. Wait for the previous one to finish.', retryable: true },
@@ -54,6 +58,8 @@ class LcwAiError extends Error {
     // Yalnız kota için LCW AI'ın kendi açıklaması kullanıcıya gösterilir
     // (ör. kalan alan); sırlardan arındırılır ve kısa tutulur.
     if (options.remoteMessage) this.remoteMessage = redactSecrets(String(options.remoteMessage)).replace(/[<>]/g, '').slice(0, 200);
+    // Düzenleyici doğrulama sorunları: Buyer Log'un kendi (TR/EN) metinleri.
+    if (Array.isArray(options.issues)) this.issues = options.issues.slice(0, 6).map(item => redactSecrets(String(item)).replace(/[<>]/g, '').slice(0, 240));
   }
 }
 
@@ -102,6 +108,7 @@ function publicError(error) {
   if (safe.action) out.action = safe.action;
   if (safe.retryAfterSec) out.retryAfterSec = safe.retryAfterSec;
   if (safe.shortCode === 'QUOTA_EXCEEDED' && safe.remoteMessage) out.remoteMessage = safe.remoteMessage;
+  if (safe.shortCode === 'OUTPUT_EDIT_INVALID' && Array.isArray(safe.issues)) out.issues = safe.issues;
   return out;
 }
 

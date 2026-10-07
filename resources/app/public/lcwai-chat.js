@@ -169,7 +169,9 @@
   const state = {
     conversations: [], activeId: '', files: [], contexts: [], busy: false, requestId: '', config: null, status: null, mounted: false,
     // Yanıt biçimi: '' = sohbet; pdf/pptx/xlsx/html = AI Çıktı Oluşturma.
-    output: { format: '', orientation: 'portrait', detail: 'standard' },
+    output: { format: '', orientation: 'portrait', detail: 'standard', template: '' },
+    // Çıktı şablonları: hazır (sunucu) + kişisel + ekip (/api/lcwai/output-templates).
+    templates: { builtIn: [], personal: [], shared: [] },
     // Mesajda ekran adı geçerse o ekranın verisi otomatik eklenir.
     autoContext: true,
   };
@@ -195,6 +197,8 @@
       template: String(file.template || '').slice(0, 80), templateLabel: String(file.templateLabel || '').slice(0, 160),
       bytes: Number(file.bytes) || 0, createdAt: String(file.createdAt || '').slice(0, 40),
       attempts: Math.max(1, Number(file.attempts) || 1), fallback: String(file.fallback || '').slice(0, 20),
+      // Düzenleyici taslağının kimliği (içerik değil); "Düzenle" bununla açılır.
+      draftId: /^[a-f0-9]{24}$/.test(String(file.draftId || '')) ? String(file.draftId) : '', edited: Boolean(file.edited),
     };
   }
   function historyMessage(message) {
@@ -358,6 +362,7 @@
             <div class="lcwaiOutputBar" data-chat-output>
               <span class="lcwaiOutputLabel">${esc(L('Yanıt biçimi', 'Answer as'))}</span>
               <div class="lcwaiSeg" role="radiogroup" aria-label="${esc(L('Yanıt biçimi', 'Answer as'))}">${OUTPUT_FORMATS().map(item => `<button type="button" role="radio" data-output-format="${esc(item.key)}">${esc(item.label)}</button>`).join('')}</div>
+              <span class="lcwaiOutputTpl"><select data-output-template data-no-i18n aria-label="${esc(L('Çıktı şablonu', 'Output template'))}"></select><button type="button" class="lcwaiBtn" data-output-templates title="${esc(L('Kayıtlı ve ekip şablonlarını yönet', 'Manage saved and team templates'))}">${esc(L('Şablonlar', 'Templates'))}</button></span>
               <span class="lcwaiOutputOptions" data-output-options hidden>
                 <select data-output-orientation aria-label="${esc(L('Sayfa yönü', 'Page orientation'))}"><option value="portrait">${esc(L('Dikey', 'Portrait'))}</option><option value="landscape">${esc(L('Yatay', 'Landscape'))}</option></select>
                 <select data-output-detail aria-label="${esc(L('Detay seviyesi', 'Level of detail'))}"><option value="summary">${esc(L('Kısa', 'Brief'))}</option><option value="standard">${esc(L('Standart', 'Standard'))}</option><option value="detailed">${esc(L('Detaylı', 'Detailed'))}</option></select>
@@ -398,6 +403,7 @@
     if (options) options.hidden = !format;
     if (orientation) { orientation.hidden = !(format === 'pdf' || format === 'html'); orientation.value = state.output.orientation; }
     if (detail) { detail.hidden = format === 'xlsx'; detail.value = state.output.detail; }
+    renderTemplateSelect();
     const input = $('[data-chat-input]');
     if (input) {
       input.placeholder = format
@@ -408,14 +414,93 @@
     if (sendButton) sendButton.textContent = format ? L(`${formatLabel(format)} Oluştur`, `Create ${formatLabel(format)}`) : L('Gönder', 'Send');
   }
 
+  /* Şablon seçici: Otomatik · hazır şablonlar (seçili biçim için) ·
+     Şablonlarım · Ekip şablonları. Kullanıcı şablonu biçimi de belirler. */
+  const templateValue = (kind, id) => `${kind}:${id}`;
+  function selectedTemplate() {
+    const [kind, ...rest] = String(state.output.template || '').split(':');
+    const id = rest.join(':');
+    if (kind === 'builtin') return { kind, key: id };
+    const list = kind === 'mine' ? state.templates.personal : kind === 'team' ? state.templates.shared : [];
+    const item = list.find(entry => entry.id === id);
+    return item ? { kind, item } : null;
+  }
+  function renderTemplateSelect() {
+    const box = $('[data-output-template]');
+    if (!box) return;
+    const format = state.output.format;
+    const lang = isEn() ? 'en' : 'tr';
+    const builtIn = format ? state.templates.builtIn.filter(item => (item.formats || []).includes(format)) : [];
+    const line = item => `${item.name} · ${formatLabel(item.definition.format)}${item.shared && item.ownerName ? ` · ${item.ownerName}` : ''}`;
+    const group = (label, list, kind) => (list.length ? `<optgroup label="${esc(label)}">${list.map(item => `<option value="${esc(templateValue(kind, item.id))}">${esc(line(item))}</option>`).join('')}</optgroup>` : '');
+    box.innerHTML = `<option value="">${esc(L('Şablon: Otomatik', 'Template: Automatic'))}</option>`
+      + (builtIn.length ? `<optgroup label="${esc(L('Hazır şablonlar', 'Built-in templates'))}">${builtIn.map(item => `<option value="${esc(templateValue('builtin', item.key))}">${esc(item.label && item.label[lang] || item.key)}</option>`).join('')}</optgroup>` : '')
+      + group(L('Şablonlarım', 'My templates'), state.templates.personal, 'mine')
+      + group(L('Ekip şablonları', 'Team templates'), state.templates.shared, 'team');
+    if (state.output.template && !selectedTemplate()) state.output.template = '';
+    box.value = state.output.template || '';
+  }
+  function applyUserTemplate(kind, item) {
+    const def = item.definition;
+    state.output = { ...state.output, format: def.format, orientation: def.orientation || 'portrait', detail: def.detail || 'standard', template: templateValue(kind, item.id) };
+    renderOutputBar();
+  }
+  async function loadTemplates() {
+    const api = AI();
+    if (!api || !api.outputTemplates) return;
+    try { setTemplates(await api.outputTemplates.list()); } catch (_) { /* şablonlar isteğe bağlıdır; sohbet etkilenmez */ }
+  }
+  function setTemplates(lists) {
+    if (!lists) return;
+    state.templates = { builtIn: lists.builtIn || state.templates.builtIn, personal: lists.personal || [], shared: lists.shared || [] };
+    renderTemplateSelect();
+  }
+  /* Gönderilen çıktı isteği: hazır şablon anahtarı ya da kullanıcı şablonu
+     kimliği. Şablon tanımı sunucuda depodan okunur. */
+  function outputRequest() {
+    if (!state.output.format) return null;
+    const request = { format: state.output.format, orientation: state.output.orientation, detail: state.output.detail };
+    const chosen = selectedTemplate();
+    if (chosen && chosen.kind === 'builtin') request.template = chosen.key;
+    if (chosen && chosen.item) { request.userTemplate = { id: chosen.item.id, shared: chosen.kind === 'team' }; request.templateName = chosen.item.name; }
+    return request;
+  }
+
+  /* Çıktı Düzenleyici tembel yüklenir (BLPerf özelliği); ilk açılışta indirilir. */
+  async function withEditor(run) {
+    try {
+      if (!window.BLOutputEditor && window.BLPerf && typeof window.BLPerf.ensureFeature === 'function') await window.BLPerf.ensureFeature('lcwaiOutputEditor');
+      if (!window.BLOutputEditor) throw new Error('editor');
+      run(window.BLOutputEditor);
+    } catch (_) { if (typeof showToast === 'function') showToast(L('Çıktı düzenleyici yüklenemedi.', 'The output editor could not be loaded.'), { kind: 'error' }); }
+  }
+  function openEditor(file, conv) {
+    withEditor(editor => editor.open({
+      draftId: file.draftId,
+      onTemplatesChanged: setTemplates,
+      onRendered: record => {
+        // Düzenlenmiş dosya aynı sohbete yeni bir kart olarak eklenir.
+        conv.messages.push({ role: 'ai', text: L('Düzenlenmiş dosya oluşturuldu.', 'The edited file was created.'), file: { ...record, draftId: record.draftId || file.draftId } });
+        persistConversations();
+        if (state.activeId === conv.id) renderMessages();
+      },
+    }));
+  }
+  function openTemplateManager() {
+    withEditor(editor => editor.openTemplates({
+      onChanged: setTemplates,
+      onUse: item => { applyUserTemplate(item.shared ? 'team' : 'mine', item); $('[data-chat-input]')?.focus(); },
+    }));
+  }
+
   const formatBytesSafe = bytes => (Number(bytes) > 0 ? formatBytes(Number(bytes)) : '');
   function fileCardHtml(file) {
     const format = String(file.format || '').toLowerCase();
-    const details = [file.templateLabel, formatBytesSafe(file.bytes), file.attempts > 1 ? L(`${file.attempts - 1} otomatik düzeltme`, `${file.attempts - 1} automatic repair(s)`) : ''].filter(Boolean).join(' · ');
+    const details = [file.edited ? L('Düzenlendi', 'Edited') : '', file.templateLabel, formatBytesSafe(file.bytes), file.attempts > 1 ? L(`${file.attempts - 1} otomatik düzeltme`, `${file.attempts - 1} automatic repair(s)`) : ''].filter(Boolean).join(' · ');
     const fallback = file.fallback === 'html'
       ? `<p class="lcwaiNote">${esc(L('PDF basımı bu ortamda yapılamadı; rapor HTML olarak kaydedildi. Açıp Yazdır → PDF olarak kaydet ile PDF alabilirsiniz.', 'PDF printing is not available here; the report was saved as HTML. Open it and use Print → Save as PDF.'))}</p>`
       : '';
-    return `<div class="lcwaiFile" data-file-card="${esc(file.id)}"><span class="lcwaiFileIcon is-${esc(format)}">${esc(format === 'pptx' ? 'PPT' : format.toUpperCase())}</span><div class="lcwaiFileInfo"><b title="${esc(file.path || file.fileName)}">${esc(file.fileName)}</b><small>${esc(details)}</small></div><div class="lcwaiFileActions"><button type="button" class="lcwaiBtn is-primary" data-file-open="${esc(file.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="lcwaiBtn" data-file-reveal="${esc(file.id)}">${esc(L('Klasörde Göster', 'Show in folder'))}</button></div></div>${fallback}`;
+    return `<div class="lcwaiFile" data-file-card="${esc(file.id)}"><span class="lcwaiFileIcon is-${esc(format)}">${esc(format === 'pptx' ? 'PPT' : format.toUpperCase())}</span><div class="lcwaiFileInfo"><b title="${esc(file.path || file.fileName)}">${esc(file.fileName)}</b><small>${esc(details)}</small></div><div class="lcwaiFileActions">${file.draftId ? `<button type="button" class="lcwaiBtn" data-file-edit="${esc(file.id)}" title="${esc(L('Dosyayı Buyer Log’da düzenleyip yeniden oluşturun', 'Edit the file in Buyer Log and create it again'))}">✎ ${esc(L('Düzenle', 'Edit'))}</button>` : ''}<button type="button" class="lcwaiBtn is-primary" data-file-open="${esc(file.id)}">${esc(L('Aç', 'Open'))}</button><button type="button" class="lcwaiBtn" data-file-reveal="${esc(file.id)}">${esc(L('Klasörde Göster', 'Show in folder'))}</button></div></div>${fallback}`;
   }
 
   /* Çıktının kullandığı model görsellerini yerel depodan çözer ve küçültür
@@ -489,7 +574,7 @@
 
   function messageHtml(message, index, conv) {
     if (message.role === 'user') {
-      const meta = [...(message.contextLabels || []).map(label => `◆ ${label}`), ...(message.fileNames || []).map(name => `📎 ${name}`), ...(message.output && message.output.format ? [`⇩ ${formatLabel(message.output.format)}`] : [])];
+      const meta = [...(message.contextLabels || []).map(label => `◆ ${label}`), ...(message.fileNames || []).map(name => `📎 ${name}`), ...(message.output && message.output.format ? [`⇩ ${formatLabel(message.output.format)}${message.output.templateName ? ` · ${message.output.templateName}` : ''}`] : [])];
       return `<div class="lcwaiMsg is-user"><div class="lcwaiMsgBody">${esc(message.text).replace(/\n/g, '<br>')}</div>${meta.length ? `<div class="lcwaiMsgMeta">${meta.map(esc).join(' · ')}</div>` : ''}</div>`;
     }
     const last = index === conv.messages.length - 1;
@@ -611,7 +696,7 @@
     const auto = reuse || state.contexts.length ? [] : autoContextsFor(text);
     const contextIds = reuse ? [] : [...state.contexts.map(item => item.id), ...auto.map(item => item.id)];
     if (!message && !files.length && !reuse) return;
-    const userMessage = reuse || { role: 'user', text: message, contextLabels: [...state.contexts.map(item => item.label), ...auto.map(item => `${item.label} · ${L('otomatik', 'automatic')}`)], fileNames: files.map(file => file.name), contexts: null, attachments: null, output: state.output.format ? { ...state.output } : null };
+    const userMessage = reuse || { role: 'user', text: message, contextLabels: [...state.contexts.map(item => item.label), ...auto.map(item => `${item.label} · ${L('otomatik', 'automatic')}`)], fileNames: files.map(file => file.name), contexts: null, attachments: null, output: outputRequest() };
     const output = userMessage.output || null;
     if (!reuse) conv.messages.push(userMessage);
     if (!conv.title) conv.title = (message || files.map(file => file.name).join(', ')).slice(0, 60);
@@ -736,7 +821,21 @@
     if (target.matches('[data-chat-new]')) { if (!state.busy) { newConversation(); renderList(); renderMessages(); input.focus(); } return; }
     if (target.matches('[data-chat-open]')) { if (!state.busy) { state.activeId = target.dataset.chatOpen; renderList(); renderMessages(); } return; }
     if (target.matches('[data-chat-file]')) { fileInput.click(); return; }
-    if (target.matches('[data-output-format]')) { state.output.format = target.dataset.outputFormat; renderOutputBar(); input.focus(); return; }
+    if (target.matches('[data-output-format]')) {
+      state.output.format = target.dataset.outputFormat;
+      // Kullanıcı şablonu biçime bağlıdır; başka biçim seçilirse şablon bırakılır.
+      const chosen = selectedTemplate();
+      if (chosen && chosen.item && chosen.item.definition.format !== state.output.format) state.output.template = '';
+      if (chosen && chosen.kind === 'builtin') state.output.template = '';
+      renderOutputBar(); input.focus(); return;
+    }
+    if (target.matches('[data-output-templates]')) { openTemplateManager(); return; }
+    if (target.matches('[data-file-edit]')) {
+      const conv = activeConversation();
+      const file = conv.messages.map(message => message && message.file).find(item => item && String(item.id) === String(target.dataset.fileEdit));
+      if (file && file.draftId) openEditor(file, conv);
+      return;
+    }
     if (target.matches('[data-file-open], [data-file-reveal]')) {
       const api = AI();
       const opening = target.matches('[data-file-open]');
@@ -781,6 +880,12 @@
     form.addEventListener('submit', event => { event.preventDefault(); send(input.value); });
     $('[data-output-orientation]').addEventListener('change', event => { state.output.orientation = event.target.value === 'landscape' ? 'landscape' : 'portrait'; });
     $('[data-output-detail]').addEventListener('change', event => { state.output.detail = event.target.value; });
+    $('[data-output-template]').addEventListener('change', event => {
+      state.output.template = event.target.value;
+      const chosen = selectedTemplate();
+      if (chosen && chosen.item) applyUserTemplate(chosen.kind, chosen.item);
+      else renderOutputBar();
+    });
     $('[data-chat-auto]').addEventListener('change', event => {
       state.autoContext = Boolean(event.target.checked);
     });
@@ -852,6 +957,7 @@
       if (api) {
         api.onStatus(status => { state.status = status; renderConnection(); });
         api.loadConfig().then(config => { state.config = config; renderLimits(); }).catch(() => {});
+        loadTemplates();
       }
       if (!restoreConversations()) newConversation();
       window.addEventListener('buyerlog:lcwai-open', () => { if (state.mounted) applyPendingOpen(); });
@@ -862,5 +968,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, addFiles, persistConversations, restoreConversations };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, addFiles, persistConversations, restoreConversations };
 })();

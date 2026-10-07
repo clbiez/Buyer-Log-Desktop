@@ -106,10 +106,12 @@ function createOutputStore(options = {}) {
       id: record.id, fileName: record.fileName, format: record.format, title: record.title,
       template: record.template, templateLabel: record.templateLabel, bytes: record.bytes,
       createdAt: record.createdAt, attempts: record.attempts, path: record.path, folder: path.dirname(record.path),
+      // Düzenlenebilir taslağın kimliği (AI Çıktı Düzenleyici); içerik değil.
+      draftId: record.draftId || null, edited: Boolean(record.edited),
     };
   }
 
-  function save(ownerId, { buffer, title, format, template = '', templateLabel = '', attempts = 1, requestId = '' } = {}) {
+  function save(ownerId, { buffer, title, format, template = '', templateLabel = '', attempts = 1, requestId = '', draftId = '', edited = false } = {}) {
     if (!Buffer.isBuffer(buffer) || !buffer.length) throw new Error('ai-output-empty');
     const created = now();
     const written = writeUnique(fileNameFor(title, format, created), buffer);
@@ -124,6 +126,8 @@ function createOutputStore(options = {}) {
       bytes: buffer.length,
       attempts,
       requestId: String(requestId || '').slice(0, 64),
+      draftId: /^[a-f0-9]{24}$/.test(String(draftId || '')) ? String(draftId) : null,
+      edited: Boolean(edited),
       createdAt: created.toISOString(),
     };
     const list = readIndex();

@@ -151,3 +151,173 @@
 .lcwaiContextGroup button small{color:var(--muted);font-size:10.8px;}
 .lcwaiTopBtn span{margin-left:4px;font-size:12px;font-weight:650;}
 @media (max-width:900px){.lcwaiChat{grid-template-columns:1fr;}.lcwaiChatSide{display:none;}}
+/* ---------------- AI Çıktı Düzenleyici + çıktı şablonları ----------------
+   Yalnız design.css değişkenleri; yeni renk yok. */
+.lcwaiOutputTpl{display:inline-flex;gap:6px;align-items:center;}
+.lcwaiOutputTpl select{height:var(--ctl-h);max-width:260px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:12px;padding:0 6px;}
+.lcwaiEdOverlay{z-index:420;}
+.lcwaiEd{width:min(1480px,97vw);height:min(920px,94vh);display:flex;flex-direction:column;padding:0;overflow:hidden;position:relative;}
+.lcwaiEdHead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card2);}
+.lcwaiEdHead .lcwaiFileIcon{width:38px;height:38px;}
+.lcwaiEdHeadTitle{flex:1;min-width:160px;display:flex;flex-direction:column;gap:2px;}
+.lcwaiEdHeadTitle small{font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);}
+
+.lcwaiEdHead select{height:var(--ctl-h);border:1px solid var(--line2);background:var(--card);color:var(--ink);font-size:12px;padding:0 6px;}
+.lcwaiEdBody{flex:1;min-height:0;display:grid;grid-template-columns:270px minmax(0,1fr);}
+.lcwaiEdRail{display:flex;flex-direction:column;gap:8px;padding:10px;border-right:1px solid var(--line);background:var(--card);overflow:auto;}
+.lcwaiEdRailHead{display:flex;flex-direction:column;gap:1px;padding:2px 4px 6px;border-bottom:1px solid var(--line);}
+.lcwaiEdRailHead b{font-size:12px;color:var(--ink);}
+.lcwaiEdRailHead small{font-size:10.8px;color:var(--muted);}
+.lcwaiEdRailList{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;}
+.lcwaiEdRailItem{position:relative;display:flex;align-items:stretch;border:1px solid var(--line);background:var(--card);}
+.lcwaiEdRailItem:hover{border-color:var(--line2);background:var(--hover);}
+.lcwaiEdRailItem.is-active{border-color:var(--acc);box-shadow:inset 3px 0 0 var(--acc);background:var(--acc-bg);}
+.lcwaiEdRailItem.is-drop{box-shadow:inset 0 -3px 0 var(--acc);}
+.lcwaiEdRailItem[draggable="true"]{cursor:grab;}
+.lcwaiEdRailPick{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:7px 8px;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit;}
+.lcwaiEdRailPick:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.lcwaiEdRailNo{flex:none;display:grid;place-items:center;min-width:22px;height:22px;padding:0 3px;border:1px solid var(--line2);background:var(--card2);font:600 11px/1 var(--head);color:var(--ink2);}
+.lcwaiEdRailText{min-width:0;display:flex;flex-direction:column;gap:1px;}
+.lcwaiEdRailText b{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lcwaiEdRailText small{font-size:10.5px;color:var(--muted);}
+.lcwaiEdRailOps{display:none;align-items:center;gap:1px;padding-right:4px;}
+.lcwaiEdRailItem:hover .lcwaiEdRailOps,.lcwaiEdRailItem:focus-within .lcwaiEdRailOps,.lcwaiEdRailOps.is-visible{display:inline-flex;}
+.lcwaiEdRailOps button,.lcwaiEdIconBtn{width:22px;height:22px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;}
+.lcwaiEdRailOps button:hover,.lcwaiEdIconBtn:hover{color:var(--acc-ink);background:var(--card2);}
+.lcwaiEdRailOps button[data-rail-del]:hover,.lcwaiEdRailOps button[data-tpl-del]:hover,.lcwaiEdIconBtn:hover{color:var(--red);}
+.lcwaiEdAdd{height:var(--ctl-h);border:1px dashed var(--line2);background:var(--card);color:var(--acc-ink);font-size:12px;font-weight:600;padding:0 8px;cursor:pointer;}
+.lcwaiEdMain{min-width:0;overflow:auto;padding:18px 22px;background:var(--bg);}
+.lcwaiEdCard{max-width:1120px;margin:0 auto;border:1px solid var(--line2);background:var(--card);box-shadow:var(--shadow-1,none);}
+.lcwaiEdSlideBand{display:grid;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--card2);}
+.lcwaiEdSlideBody{display:grid;gap:14px;padding:16px;}
+.lcwaiEdRow{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.lcwaiEdSlideBand .lcwaiEdRow{grid-template-columns:200px minmax(0,1fr);}
+.lcwaiEdField{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.lcwaiEdField>span{font-size:11px;font-weight:600;color:var(--ink2);}
+.lcwaiEdField>small{font-size:10.8px;color:var(--muted);}
+.lcwaiEd input:not([type="checkbox"]),.lcwaiEd textarea,.lcwaiEd select,.lcwaiEdDialog input:not([type="checkbox"]),.lcwaiEdDialog textarea,.lcwaiEdDialog select{min-width:0;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font:inherit;font-size:12.5px;padding:6px 8px;}
+.lcwaiEd select,.lcwaiEdDialog select{height:var(--ctl-h);padding:0 6px;}
+.lcwaiEd textarea,.lcwaiEdDialog textarea{line-height:1.45;resize:vertical;}
+.lcwaiEd input:focus,.lcwaiEd textarea:focus,.lcwaiEd select:focus,.lcwaiEdDialog input:focus,.lcwaiEdDialog textarea:focus,.lcwaiEdDialog select:focus{outline:none;border-color:var(--acc);box-shadow:var(--focus-ring);}
+.lcwaiEdSlideBand [data-path$=".title"]{font:650 16px/1.3 var(--head);}
+.lcwaiEd .lcwaiEdHeadTitle input{height:30px;border-color:transparent;background:transparent;box-shadow:none;font:650 15px/1.2 var(--head);padding:0 6px;margin-left:-6px;}
+.lcwaiEd .lcwaiEdHeadTitle input:hover{border-color:var(--line2);}
+.lcwaiEd .lcwaiEdHeadTitle input:focus{border-color:var(--acc);background:var(--card);}
+.lcwaiEdBlock{display:grid;gap:8px;}
+.lcwaiEdBlockHead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;}
+.lcwaiEdBlockHead b{font-size:12px;color:var(--ink);}
+.lcwaiEdBlockHead small{font-size:10.8px;color:var(--muted);}
+.lcwaiEdBlockHead .lcwaiEdField{max-width:160px;}
+.lcwaiEdKpi{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,1.6fr) 110px 24px;gap:6px;align-items:center;}
+.lcwaiEdKpi.is-gallery{grid-template-columns:120px minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) 110px 24px;}
+.lcwaiEdCols{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.lcwaiEdCol{display:grid;gap:8px;align-content:start;padding:10px;border:1px solid var(--line);background:var(--card2);}
+.lcwaiEdMore{border-top:1px solid var(--line);padding-top:10px;}
+.lcwaiEdMore summary{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--ink2);margin-bottom:8px;}
+.lcwaiEdGridWrap{overflow:auto;max-height:56vh;border:1px solid var(--line2);background:var(--card);}
+.lcwaiEdGrid{border-collapse:collapse;min-width:100%;font-size:12px;}
+.lcwaiEdGrid th,.lcwaiEdGrid td{border:1px solid var(--line);padding:0;vertical-align:top;min-width:140px;}
+.lcwaiEdGrid thead th{position:sticky;top:0;z-index:1;background:var(--card2);padding:4px;text-align:left;}
+.lcwaiEdGrid thead th select{width:100%;margin-top:4px;height:26px;font-size:11px;}
+.lcwaiEdGrid .lcwaiEdRowNo{min-width:44px;width:44px;text-align:center;background:var(--card2);color:var(--muted);font-size:10.8px;padding:4px 2px;}
+.lcwaiEdGrid .lcwaiEdRowNo span{display:block;}
+.lcwaiEdGrid td textarea,.lcwaiEdGrid td input{display:block;width:100%;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:6px 8px;resize:none;min-height:30px;}
+.lcwaiEdGrid td textarea:focus,.lcwaiEdGrid td input:focus{background:var(--acc-bg)!important;box-shadow:inset 0 0 0 2px var(--acc)!important;}
+.lcwaiEdColHead{display:flex;gap:2px;align-items:center;}
+.lcwaiEdColHead input{flex:1;font-weight:650;}
+.lcwaiEdGridTools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.lcwaiEdPager{display:inline-flex;align-items:center;gap:6px;}
+.lcwaiEdReport{display:flex;flex-direction:column;gap:8px;height:100%;}
+.lcwaiEdToolbar{position:sticky;top:-18px;z-index:2;display:flex;align-items:center;gap:2px;flex-wrap:wrap;padding:5px;border:1px solid var(--line2);background:var(--card);}
+.lcwaiEdToolbar button{min-width:32px;height:30px;padding:0 8px;border:1px solid transparent;background:transparent;color:var(--ink);font-size:12.5px;font-weight:650;cursor:pointer;}
+.lcwaiEdToolbar button:hover{border-color:var(--line2);background:var(--card2);}
+.lcwaiEdToolbar button.is-active{background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);}
+.lcwaiEdSep{width:1px;height:20px;background:var(--line2);margin:0 4px;}
+.lcwaiEdFrame{flex:1;min-height:560px;width:100%;max-width:1020px;margin:0 auto;border:1px solid var(--line2);background:var(--paper,var(--card));}
+.lcwaiEdFrame.is-landscape{max-width:1320px;}
+.lcwaiEdSource{flex:1;min-height:560px;font-family:var(--mono)!important;font-size:12px!important;white-space:pre;}
+.lcwaiEdFoot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 14px;border-top:1px solid var(--line);background:var(--card);}
+.lcwaiEdFootStatus{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0;}
+.lcwaiEdFootStatus .lcwaiIssues{flex-basis:100%;}
+/* Şablon formu (düzenleyici ya da yönetici üstünde) */
+.lcwaiEdDialog{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--ink) 38%,transparent);padding:16px;}
+.lcwaiTplOverlay .lcwaiEdDialog{position:fixed;z-index:430;}
+.lcwaiEdDialogCard{width:min(860px,96vw);max-height:90vh;display:flex;flex-direction:column;border:1px solid var(--line2);background:var(--card);box-shadow:var(--shadow-3);}
+.lcwaiEdDialogHead{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);}
+.lcwaiEdDialogHead b{font-size:15px;color:var(--ink);}
+.lcwaiEdDialogHead .lcwaiFileIcon{width:34px;height:34px;}
+.lcwaiEdDialogBody{display:grid;gap:12px;padding:14px 16px;overflow:auto;}
+.lcwaiEdDialogFoot{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--line);}
+.lcwaiEdCheck{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border:1px solid var(--line);background:var(--card2);cursor:pointer;}
+.lcwaiEdCheck span{display:flex;flex-direction:column;gap:2px;}
+.lcwaiEdCheck b{font-size:12.5px;color:var(--ink);}
+.lcwaiEdCheck small{font-size:11px;color:var(--muted);}
+.lcwaiTplChips{display:flex;flex-wrap:wrap;gap:5px;margin-top:-6px;}
+.lcwaiTplChips .lcwaiChip{cursor:pointer;padding:2px 8px;color:var(--acc-ink);}
+.lcwaiTplList{list-style:none;margin:0;padding:0;display:grid;gap:5px;}
+.lcwaiTplItem{display:grid;grid-template-columns:24px 150px minmax(0,1fr) minmax(0,1.2fr) auto;gap:6px;align-items:center;padding:5px;border:1px solid var(--line);background:var(--card);}
+.lcwaiTplParts{grid-column:2 / -2;display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--ink2);}
+.lcwaiTplParts label{display:inline-flex;align-items:center;gap:3px;cursor:pointer;}
+/* Şablon yöneticisi */
+.lcwaiTplCard{width:min(900px,96vw);}
+.lcwaiTplCard .verHistTop p{margin:4px 0 0;}
+.lcwaiTplTabs{display:flex;align-items:center;gap:4px;padding:10px 20px 0;border-bottom:1px solid var(--line);}
+.lcwaiTplTabs [data-tpl-tab]{height:32px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--ink2);font-size:12.5px;font-weight:600;cursor:pointer;}
+.lcwaiTplTabs [data-tpl-tab].is-active{border-bottom-color:var(--acc);color:var(--acc-ink);}
+.lcwaiTplTabs .lcwaiBtn{margin-bottom:6px;}
+.lcwaiTplBody{overflow:auto;padding:12px 20px 18px;min-height:220px;}
+.lcwaiTplCards{list-style:none;margin:0;padding:0;display:grid;gap:8px;}
+.lcwaiTplRow{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line2);border-left:3px solid var(--acc);background:var(--card);}
+.lcwaiTplRow .lcwaiFileInfo small.lcwaiTplPreview{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+@media (max-width:900px){.lcwaiEdBody{grid-template-columns:1fr;}.lcwaiEdRail{max-height:180px;border-right:0;border-bottom:1px solid var(--line);}.lcwaiEdKpi,.lcwaiEdKpi.is-gallery,.lcwaiTplItem,.lcwaiEdCols,.lcwaiEdSlideBand .lcwaiEdRow{grid-template-columns:1fr;}.lcwaiTplRow{flex-wrap:wrap;}}
+/* ---------------- Yerleşim aracı (Çıktı Düzenleyici › Yerleşim) ---------------- */
+.lcwaiEdModes button{min-width:84px;}
+.lcwaiLay{display:grid;grid-template-columns:310px minmax(0,1fr);gap:18px;align-items:start;min-height:100%;}
+.lcwaiLayControls{position:sticky;top:0;display:flex;flex-direction:column;gap:12px;padding:12px;border:1px solid var(--line2);background:var(--card);max-height:calc(100% - 4px);overflow:auto;}
+.lcwaiLayPresets{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.lcwaiLayPresets .lcwaiBtn{padding:0 6px;}
+.lcwaiLayGroup{display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line);}
+.lcwaiLayGroup h4{margin:0;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+.lcwaiLayCtl{display:grid;gap:3px;font-size:11.5px;color:var(--ink2);}
+.lcwaiLayCtl>span{display:flex;justify-content:space-between;gap:8px;}
+.lcwaiLayCtl b{color:var(--acc-ink);font-variant-numeric:tabular-nums;}
+.lcwaiLayCtl small{font-size:10.5px;color:var(--muted);}
+.lcwaiLayCtl input[type="range"]{width:100%;accent-color:var(--acc);padding:0!important;border:0!important;box-shadow:none!important;}
+.lcwaiLayGridPick{display:grid;gap:3px;width:100%;max-width:240px;}
+.lcwaiLayGridPick button{aspect-ratio:1/1;border:1px solid var(--line2);background:var(--card2);padding:0;cursor:pointer;}
+.lcwaiLayGridPick button.is-on{background:var(--acc);border-color:var(--acc);}
+.lcwaiLayGridPick button:hover{border-color:var(--acc-ink);}
+.lcwaiLayGridPick:hover button.is-on{opacity:.75;}
+.lcwaiLayGridText{margin:0;font-size:12px;color:var(--ink2);}
+.lcwaiLayGridText b{color:var(--acc-ink);font-size:14px;}
+.lcwaiLayFlags{display:flex;flex-wrap:wrap;gap:4px 12px;}
+.lcwaiLayFlag{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink2);cursor:pointer;}
+.lcwaiLayStage{min-width:0;display:flex;flex-direction:column;gap:10px;}
+.lcwaiLayStageHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2);}
+.lcwaiLayStageHead small{color:var(--muted);}
+.lcwaiLayStageHead select{height:28px;margin-left:6px;}
+.lcwaiLaySlide{position:relative;overflow:hidden;margin:0 auto;background:var(--paper,var(--card));border:1px solid var(--line2);box-shadow:var(--shadow-3);font-family:var(--head);}
+.lcwaiLayBox{position:absolute;overflow:hidden;}
+.lcwaiLayBox.is-band{background:var(--card2);border-bottom:1px solid var(--line2);}
+.lcwaiLayBox.is-title{display:flex;align-items:flex-end;color:var(--ink);}
+.lcwaiLayBox.is-rule{background:var(--ink);}
+.lcwaiLayBox.is-card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);box-shadow:inset 0 3px 0 var(--acc);padding:0 3%;}
+.lcwaiLayBox.is-bar{background:var(--acc);}
+.lcwaiLayBox.is-clip table{border-collapse:collapse;width:100%;}
+.lcwaiLayBox.is-clip th,.lcwaiLayBox.is-clip td{border:1px solid var(--line);padding:.25em .4em;text-align:left;vertical-align:top;}
+.lcwaiLayBox.is-clip th{background:var(--card2);}
+.lcwaiLayBox ul,.lcwaiLayBox ol{margin:0;padding-left:1.3em;color:var(--ink);}
+.lcwaiLayText{line-height:1.25;color:var(--ink);overflow:hidden;}
+.lcwaiLayText.is-muted{color:var(--ink2);}
+.lcwaiLayText.is-right{text-align:right;}
+.lcwaiLayImg{flex:none;display:grid;place-items:center;margin-top:6%;background:var(--card2);overflow:hidden;}
+.lcwaiLayImg img{width:100%;height:100%;object-fit:contain;}
+.lcwaiLayImg span{font-size:10px;color:var(--muted);}
+.lcwaiLaySheet{overflow:auto;border:1px solid var(--line2);background:var(--card);padding:10px;}
+.lcwaiLaySheetTitle{font-weight:700;color:var(--ink);margin-bottom:8px;}
+.lcwaiLaySheet table{border-collapse:collapse;}
+.lcwaiLaySheet th{background:var(--card2);border:1px solid var(--line2);padding:0 8px;text-align:left;white-space:nowrap;}
+.lcwaiLaySheet td{border:1px solid var(--line);padding:2px 8px;vertical-align:top;max-width:320px;}
+.lcwaiLaySheet td.is-img{text-align:center;}
+@media (max-width:1100px){.lcwaiLay{grid-template-columns:1fr;}.lcwaiLayControls{position:static;}}
+.lcwaiLayStage .lcwaiEdFrame{flex:none;height:calc(94vh - 190px);min-height:420px;max-width:none;}

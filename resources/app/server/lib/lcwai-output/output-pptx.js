@@ -14,12 +14,30 @@
  */
 const { createZip, xmlText } = require('./output-zip');
 const { theme, ooxml } = require('./output-theme');
+const BLOutputLayout = require('../../../public/lcwai-output-layout');
 
 const EMU = 12700; // 1 pt
 const W = 12192000;
 const H = 6858000;
 const pt = value => Math.round(value * EMU);
-const MARGIN = pt(48);
+/* Yerleşim geometrisi (kullanıcının Yerleşim aracındaki ayarları; bkz.
+   public/lcwai-output-layout.js). Oluşturma eşzamanlıdır: renderPresentation
+   / expandSlides başında applyGeometry ile ayarlanır, sonra yalnız okunur. */
+let LAYOUT = BLOutputLayout.defaults('pptx');
+let MARGIN = pt(48);
+let BAND = pt(96);
+let CONTENT_TOP = pt(110);
+let CONTENT_H = H - CONTENT_TOP - pt(44);
+let TABLE_WIDTH_PT = (W - MARGIN * 2) / EMU;
+function applyGeometry(layout) {
+  const g = BLOutputLayout.pptxGeometry(layout);
+  LAYOUT = g.layout;
+  MARGIN = pt(g.margin);
+  BAND = pt(g.band);
+  CONTENT_TOP = pt(g.contentTop);
+  CONTENT_H = pt(g.contentH);
+  TABLE_WIDTH_PT = g.width;
+}
 
 function palette() {
   const c = theme().colors;
@@ -86,19 +104,22 @@ function createSlideBuilder(p, lang, media = {}) {
   function text(x, y, w, h, value, style, opts = {}) {
     box({ x, y, w, h, paragraphs: [paragraph(value, style, p, lang, opts)], anchor: opts.anchor || 't', inset: opts.inset == null ? 2 : opts.inset, name: 'Text' });
   }
-  function table({ x, y, w, columns, rows, fontSize }) {
+  function table({ x, y, w, columns, rows, fontSize, heights = null }) {
     const shapeId = next();
     const colW = Math.floor(w / columns.length);
     const rowH = pt(fontSize * 2.1);
+    // Satır yüksekliği metin uzunluğuna göre (sarılan uzun hücre kesilmez).
+    const hOf = index => (heights && heights[index] ? pt(heights[index]) : rowH);
     const cell = (value, header, index, numeric) => {
       const fill = header ? p.headBg : index % 2 ? p.card : p.paper;
       const color = header ? p.logo : p.ink;
       return `<a:tc><a:txBody><a:bodyPr/><a:lstStyle/><a:p><a:pPr algn="${numeric && !header ? 'r' : 'l'}"/>${run(String(value == null ? '' : value), { size: fontSize, bold: header, color }, p, lang)}</a:p></a:txBody><a:tcPr marL="${pt(5)}" marR="${pt(5)}" marT="${pt(3)}" marB="${pt(3)}" anchor="ctr"><a:lnL w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnL><a:lnR w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnR><a:lnT w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnT><a:lnB w="${pt(0.75)}"><a:solidFill><a:srgbClr val="${p.line}"/></a:solidFill></a:lnB><a:solidFill><a:srgbClr val="${fill}"/></a:solidFill></a:tcPr></a:tc>`;
     };
     const numericCols = columns.map((_, index) => rows.length > 0 && rows.every(row => row[index] === '' || row[index] == null || typeof row[index] === 'number' || NUMERIC_TEXT.test(String(row[index]).trim())));
-    const xmlRows = [`<a:tr h="${rowH}">${columns.map((column, index) => cell(column, true, 0, numericCols[index])).join('')}</a:tr>`]
-      .concat(rows.map((row, rowIndex) => `<a:tr h="${rowH}">${columns.map((_, index) => cell(row[index], false, rowIndex, numericCols[index])).join('')}</a:tr>`));
-    shapes.push(`<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${shapeId}" name="Table ${shapeId}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${colW * columns.length}" cy="${rowH * (rows.length + 1)}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="1" bandRow="1"/><a:tblGrid>${columns.map(() => `<a:gridCol w="${colW}"/>`).join('')}</a:tblGrid>${xmlRows.join('')}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`);
+    const xmlRows = [`<a:tr h="${hOf(0)}">${columns.map((column, index) => cell(column, true, 0, numericCols[index])).join('')}</a:tr>`]
+      .concat(rows.map((row, rowIndex) => `<a:tr h="${hOf(rowIndex + 1)}">${columns.map((_, index) => cell(row[index], false, rowIndex, numericCols[index])).join('')}</a:tr>`));
+    const totalH = [columns, ...rows].reduce((sum, _, index) => sum + hOf(index), 0);
+    shapes.push(`<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${shapeId}" name="Table ${shapeId}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${colW * columns.length}" cy="${totalH}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="1" bandRow="1"/><a:tblGrid>${columns.map(() => `<a:gridCol w="${colW}"/>`).join('')}</a:tblGrid>${xmlRows.join('')}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`);
   }
   /* background: 'RRGGBB' ya da [başlangıç, bitiş] renk geçişi.
      transition: slayt geçişi (fade | push) — sunum hareketli akar. */
@@ -123,19 +144,69 @@ function fitSize(lines, base, min, capacity) {
 
 function chrome(s, slide, index, total, deck, p, lang) {
   // Başlık bandı: tablo başlığı grisi; başlık metni logo siyahı.
-  s.box({ x: 0, y: 0, w: W, h: pt(96), fill: p.headBg, name: 'HeadBand' });
+  s.box({ x: 0, y: 0, w: W, h: BAND, fill: p.headBg, name: 'HeadBand' });
   s.box({ x: W - pt(150), y: -pt(110), w: pt(240), h: pt(240), fill: { color: p.logo, alpha: 4 }, geometry: 'ellipse', name: 'Orb' });
-  s.box({ x: 0, y: pt(96), w: W, h: pt(1), fill: p.headLine, name: 'HeadLine' });
-  s.text(MARGIN, pt(26), W - MARGIN * 2, pt(52), slide.title, { size: slide.title.length > 60 ? 24 : 30, bold: true, color: p.logo }, { anchor: 'b' });
-  s.box({ x: MARGIN, y: pt(84), w: pt(64), h: pt(3), fill: p.logo, name: 'Rule' });
+  s.box({ x: 0, y: BAND, w: W, h: pt(1), fill: p.headLine, name: 'HeadLine' });
+  const titleSize = slide.title.length > 60 ? Math.round(LAYOUT.titleSize * 0.8) : LAYOUT.titleSize;
+  s.text(MARGIN, Math.round(BAND * 0.12), W - MARGIN * 2, BAND - Math.round(BAND * 0.12) - pt(16), slide.title, { size: titleSize, bold: true, color: p.logo }, { anchor: 'b' });
+  s.box({ x: MARGIN, y: BAND - pt(12), w: pt(64), h: pt(3), fill: p.logo, name: 'Rule' });
   s.text(MARGIN, H - pt(30), W / 2, pt(18), `Buyer Log · LCW AI${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });
   s.text(W - MARGIN - pt(120), H - pt(30), pt(120), pt(18), `${index + 1} / ${total}`, { size: 9, color: p.muted }, { align: 'r' });
 }
 
-const CONTENT_TOP = pt(110);
 // 1.234,5 · 1,234.5 · 12 · %15 · 15% — tarih (02.11.2026) sayı sayılmaz.
 const NUMERIC_TEXT = /^%?\s*[-+]?(\d{1,3}([.,]\d{3})+|\d+)([.,]\d+)?\s*%?$/;
-const CONTENT_H = H - CONTENT_TOP - pt(44);
+
+/* ---------------- Uzun tablo → devam slaytları ----------------
+   Hücre metni kesilmez: her satırın yüksekliği metnin sarılacağı satır
+   sayısından tahmin edilir; sayfaya sığmayan satırlar aynı başlıklı
+   "(2/3)" devam slaytına geçer. Notlar ve "kaynakta N satır daha" yalnız
+   son parçada görünür. */
+const tableFontSize = table => LAYOUT.tableSize || (table.columns.length > 6 || table.rows.length > 9 ? 10 : 12);
+function tableRowHeights(columns, rows, fontSize) {
+  const colPt = TABLE_WIDTH_PT / Math.max(1, columns.length);
+  const perLine = Math.max(4, Math.floor((colPt - 10) / (fontSize * 0.55)));
+  const heightOf = cells => {
+    const lines = Math.max(1, ...cells.map(value => String(value == null ? '' : value).split('\n').reduce((sum, part) => sum + Math.max(1, Math.ceil(part.length / perLine)), 0)));
+    return Math.max(fontSize * 2.1, lines * fontSize * 1.22 + 7);
+  };
+  return [heightOf(columns), ...rows.map(row => heightOf(columns.map((_, index) => row[index])))];
+}
+function paginateTableSlide(slide) {
+  const table = slide.table;
+  if (!table || !table.rows.length) return [slide];
+  const fontSize = tableFontSize(table);
+  const heights = tableRowHeights(table.columns, table.rows, fontSize);
+  const noteH = slide.bullets.length ? 60 : 0;
+  const available = CONTENT_H / EMU - 6 - noteH - (table.omitted ? 22 : 0);
+  const pages = [];
+  let current = [];
+  let used = heights[0];
+  table.rows.forEach((row, index) => {
+    const h = heights[index + 1];
+    if (current.length && used + h > available) { pages.push(current); current = []; used = heights[0]; }
+    current.push(row);
+    used += h;
+  });
+  if (current.length) pages.push(current);
+  if (pages.length === 1) return [{ ...slide, table: { ...table, fontSize } }];
+  return pages.map((rows, index) => {
+    const last = index === pages.length - 1;
+    return { ...slide, title: `${slide.title} (${index + 1}/${pages.length})`, bullets: last ? slide.bullets : [], callout: last ? slide.callout : null, table: { ...table, rows, fontSize, omitted: last ? table.omitted : 0 } };
+  });
+}
+/* Galeri: Yerleşim'deki sütun × satır kadar model bir slayta; fazlası
+   aynı başlıklı devam slaytlarına. */
+function paginateGallerySlide(slide) {
+  const size = BLOutputLayout.perPage(LAYOUT);
+  if (!slide.items || slide.items.length <= size) return [slide];
+  const pages = Math.ceil(slide.items.length / size);
+  return Array.from({ length: pages }, (_, index) => ({ ...slide, title: `${slide.title} (${index + 1}/${pages})`, items: slide.items.slice(index * size, (index + 1) * size) }));
+}
+function expandSlides(slides, layout) {
+  if (layout !== undefined) applyGeometry(layout);
+  return slides.flatMap(slide => (slide.layout === 'table' ? paginateTableSlide(slide) : slide.layout === 'gallery' ? paginateGallerySlide(slide) : [slide]));
+}
 
 function renderSlide(slide, index, total, deck, p, lang, media) {
   const s = createSlideBuilder(p, lang, media);
@@ -186,14 +257,14 @@ function renderSlideBody(s, slide, index, total, deck, p, lang) {
     });
     if (slide.bullets.length) {
       const y = CONTENT_TOP + pt(8) + rowsCount * (cardH + gap);
-      s.box({ x: MARGIN, y, w: width, h: H - pt(44) - y, paragraphs: slide.bullets.slice(0, 4).map(item => paragraph(item, { size: 14, color: p.ink }, p, lang, { bullet: true, spaceAfter: 4 })), name: 'Notes' });
+      s.box({ x: MARGIN, y, w: width, h: H - pt(44) - y, paragraphs: slide.bullets.slice(0, 4).map(item => paragraph(item, { size: Math.max(9, LAYOUT.bodySize - 6), color: p.ink }, p, lang, { bullet: true, spaceAfter: 4 })), name: 'Notes' });
     }
     return s.xml();
   }
   if (slide.layout === 'table') {
-    const fontSize = slide.table.rows.length > 9 || slide.table.columns.length > 6 ? 10 : 12;
+    const fontSize = slide.table.fontSize || tableFontSize(slide.table);
     const noteH = slide.bullets.length ? pt(60) : 0;
-    s.table({ x: MARGIN, y: CONTENT_TOP + pt(6), w: width, columns: slide.table.columns, rows: slide.table.rows, fontSize });
+    s.table({ x: MARGIN, y: CONTENT_TOP + pt(6), w: width, columns: slide.table.columns, rows: slide.table.rows, fontSize, heights: tableRowHeights(slide.table.columns, slide.table.rows, fontSize) });
     if (slide.table.omitted) s.text(MARGIN, H - pt(44) - noteH - pt(20), width, pt(18), english ? `+${slide.table.omitted} more rows in the source data` : `Kaynak veride ${slide.table.omitted} satır daha var`, { size: 10, color: p.muted, italic: true });
     if (noteH) s.box({ x: MARGIN, y: H - pt(44) - noteH, w: width, h: noteH, paragraphs: slide.bullets.slice(0, 2).map(item => paragraph(item, { size: 12, color: p.ink2 }, p, lang, { bullet: true, spaceAfter: 2 })), name: 'Notes' });
     return s.xml();
@@ -243,31 +314,32 @@ function renderSlideBody(s, slide, index, total, deck, p, lang) {
       s.box({ x, y: CONTENT_TOP + pt(8), w: colW, h: cardH, fill: p.card, line: { color: p.line }, name: 'Column' });
       s.box({ x, y: CONTENT_TOP + pt(8), w: colW, h: pt(5), fill: i ? p.headInk : p.logo, name: 'Tone' });
       s.text(x + pt(14), CONTENT_TOP + pt(22), colW - pt(28), pt(30), column.title, { size: 20, bold: true, color: p.logo });
-      const size = fitSize(column.bullets, 16, 11, 9);
+      const size = fitSize(column.bullets, Math.max(10, LAYOUT.bodySize - 4), Math.min(11, LAYOUT.bodySize - 4), 9);
       s.box({ x: x + pt(14), y: CONTENT_TOP + pt(60), w: colW - pt(28), h: cardH - pt(64), paragraphs: column.bullets.map(item => paragraph(item, { size, color: p.ink }, p, lang, { bullet: true })), name: 'Bullets' });
     });
     return s.xml();
   }
   if (slide.layout === 'gallery') {
-    // Model kartları: görsel + ad + alt başlık + not; en fazla 6 (3 × 2).
-    const list = slide.items;
-    const perRow = list.length <= 3 ? list.length : 3;
-    const rowsCount = Math.ceil(list.length / perRow);
-    const gap = pt(14);
-    const cardW = (width - gap * (perRow - 1)) / perRow;
-    const cardH = (CONTENT_H - pt(8) - gap * (rowsCount - 1)) / rowsCount;
-    const textH = pt(58);
-    list.forEach((item, i) => {
-      const x = MARGIN + (i % perRow) * (cardW + gap);
-      const y = CONTENT_TOP + pt(8) + Math.floor(i / perRow) * (cardH + gap);
+    // Model kartları Yerleşim ızgarasına (sütun × satır) yerleşir; boyutlar
+    // tarayıcıdaki önizlemeyle aynı hesaptan gelir (galleryCells).
+    const cells = BLOutputLayout.galleryCells(LAYOUT, slide.items.length);
+    const textSize = LAYOUT.cardTextSize;
+    slide.items.slice(0, cells.length).forEach((item, i) => {
+      const cell = cells[i];
+      const x = pt(cell.x), y = pt(cell.y), cardW = pt(cell.w), cardH = pt(cell.h), imgH = pt(cell.imgH);
+      const inset = Math.min(pt(8), cardW * 0.06);
       s.box({ x, y, w: cardW, h: cardH, fill: p.card, line: { color: p.line }, name: 'Card' });
       s.box({ x, y, w: cardW, h: pt(4), fill: toneColor(item.tone, p), name: 'Tone' });
-      const imgH = Math.max(pt(40), cardH - textH - pt(16));
-      s.picture({ x: x + pt(8), y: y + pt(10), w: cardW - pt(16), h: imgH, token: item.image, label: item.title });
-      const ty = y + pt(10) + imgH + pt(4);
-      s.text(x + pt(8), ty, cardW - pt(16), pt(18), item.title, { size: 12, bold: true, color: p.logo });
-      const meta = [item.subtitle, item.note].filter(Boolean).join(' · ');
-      if (meta) s.text(x + pt(8), ty + pt(18), cardW - pt(16), textH - pt(22), meta, { size: 9.5, color: p.ink2 });
+      s.picture({ x: x + inset, y: y + pt(8), w: cardW - inset * 2, h: imgH, token: item.image, label: item.title });
+      let ty = y + pt(8) + imgH + pt(3);
+      const bottom = y + cardH - pt(3);
+      if (LAYOUT.showTitle && item.title && ty < bottom) {
+        const h = Math.min(pt(textSize * 1.45), bottom - ty);
+        s.text(x + inset, ty, cardW - inset * 2, h, item.title, { size: textSize, bold: true, color: p.logo });
+        ty += h;
+      }
+      const meta = [LAYOUT.showSubtitle ? item.subtitle : '', LAYOUT.showNote ? item.note : ''].filter(Boolean).join(' · ');
+      if (meta && ty < bottom - pt(6)) s.text(x + inset, ty, cardW - inset * 2, bottom - ty, meta, { size: Math.max(7, textSize - 2.5), color: p.ink2 });
     });
     return s.xml();
   }
@@ -275,7 +347,7 @@ function renderSlideBody(s, slide, index, total, deck, p, lang) {
   const numbered = slide.layout === 'summary';
   const items = slide.bullets;
   const hasCallout = Boolean(slide.callout);
-  const size = fitSize(items, 20, 12, hasCallout ? 7 : 9);
+  const size = fitSize(items, LAYOUT.bodySize, Math.min(12, LAYOUT.bodySize), hasCallout ? 7 : 9);
   const bodyH = CONTENT_H - (hasCallout ? pt(78) : 0);
   // Maddeli slayt model görseli taşıyabilir (sağda).
   const sideImage = slide.layout === 'bullets' && slide.image;
@@ -328,7 +400,8 @@ function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} 
     media[token] = { name, width: image.width, height: image.height };
     mediaFiles.push({ name: `ppt/media/${name}`, data: image.buffer });
   }
-  const rendered = deck.slides.map((slide, index) => renderSlide(slide, index, deck.slides.length, deck, p, langTag, media));
+  const expanded = expandSlides(deck.slides, deck.layout || null);
+  const rendered = expanded.map((slide, index) => renderSlide(slide, index, expanded.length, deck, p, langTag, media));
   const slides = rendered.map(item => item.xml);
   const created = (date instanceof Date ? date : new Date()).toISOString().replace(/\.\d{3}Z$/, 'Z');
   const entries = [
@@ -369,4 +442,4 @@ function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} 
   return createZip(entries, { date });
 }
 
-module.exports = { renderPresentation, formatNumber, fitSize, SLIDE_SIZE: { width: W, height: H } };
+module.exports = { renderPresentation, formatNumber, fitSize, expandSlides, SLIDE_SIZE: { width: W, height: H } };

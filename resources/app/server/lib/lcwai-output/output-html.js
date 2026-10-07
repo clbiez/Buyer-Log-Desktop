@@ -219,7 +219,7 @@ function visibleText(html) {
 const CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; script-src 'none'";
 
 /* Temiz gövdeyi Buyer Log raporu belgesine sarar. */
-function buildDocument({ body, styles = [], title = '', lang = 'tr', orientation = 'portrait', print = false, meta = {} } = {}) {
+function buildDocument({ body, styles = [], title = '', lang = 'tr', orientation = 'portrait', print = false, meta = {}, layout = null } = {}) {
   const english = lang === 'en';
   const date = meta.date || new Date().toISOString().slice(0, 10);
   const brand = english ? 'Buyer Log · LCW AI Report' : 'Buyer Log · LCW AI Raporu';
@@ -235,6 +235,7 @@ function buildDocument({ body, styles = [], title = '', lang = 'tr', orientation
 <meta name="generator" content="Buyer Log · LCW AI">
 <title>${esc(title || brand)}</title>
 <style>${reportCss({ orientation, print })}</style>
+${layout ? `<style>${require('../../../public/lcwai-output-layout').layoutCss(layout, { orientation })}</style>` : ''}
 ${styles.filter(Boolean).map(css => `<style>${css}</style>`).join('\n')}
 </head>
 <body>
