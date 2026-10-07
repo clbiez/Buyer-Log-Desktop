@@ -105,6 +105,21 @@ function diagnoseRefreshError(error, context = {}) {
     );
   }
 
+  // Tabular sunucu sorgu sırasında belleği tükettiğinde (MODEL_QUERY_OUT_OF_MEMORY)
+  // bağlantı ve yetki sağlamdır; sorunu ağda veya eşlemede aramak yanlış yönlendirir.
+  if (/MODEL_QUERY_OUT_OF_MEMORY/.test(code) || /not enough memory|yeterli bellek/i.test(raw)) {
+    return result(
+      'source-memory', source,
+      lang('Veri kaynağı sunucusunun belleği yetmedi', 'The data source server ran out of memory'),
+      lang('Buyer Log kaynağa bağlandı ve sorguyu gönderdi; ancak kaynak sunucu sorguyu tamamlayacak belleği ayıramadı. Bu ağ/VPN veya yetki hatası değil. Sunucu o an başka işlerle yoğunsa geçici olabilir; tekrarlıyorsa sorgunun ara sonucu sunucu için fazla büyüktür.',
+        'Buyer Log reached the source and sent the query, but the source server could not allocate enough memory to finish it. This is not a network/VPN or permission problem. It can be temporary when the server is busy; if it repeats, the query\'s intermediate result is too large for the server.'),
+      lang('Birkaç dakika sonra Yenile’yi tekrar deneyin. Tekrarlarsa Data Management → Horizon kapsamını (sezon, tarih) daraltın ve kullanılmayan eşlenmiş alanları (özellikle farklı tablolardan gelen sütunları) kaldırın; sürerse sunucu belleğini BI ekibiyle kontrol edin.',
+        'Retry Refresh in a few minutes. If it repeats, narrow the Data Management → Horizon scope (season, dates) and remove unused mapped fields (especially columns from other tables); if it persists, ask the BI team to check server memory.'),
+      lang('Kaynak sunucu kapasitesi / sorgu kapsamı', 'Source server capacity / query scope'),
+      raw, code, { confidence: 'high', repairable: false, vpnRelated: false }
+    );
+  }
+
   if (/permission|access denied|forbidden|unauthori[sz]ed|yetki|read access/i.test(raw)) {
     return result(
       'permission', source,
