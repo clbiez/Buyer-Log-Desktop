@@ -142,21 +142,30 @@
     });
   }
 
+  /* Aynı satır dizisi + aynı ayar/dönem/tercih/dil/gün için model zaten
+     hesaplıdır. Eskiden her Genel Bakış çiziminde 33 bin satırda ~2 sn
+     baştan hesaplanıyordu. */
+  let modelInputs = null;
   function computeModel() {
     const ordinal = typeof dateOrdinal === 'function' ? dateOrdinal : Engine.defaultOrdinal;
     const allRows = state.rows || [];
-    const rows = applyPeriod(allRows);
-    state.periodRowCount = rows.length;
-    state.totalRowCount = allRows.length;
-    const model = Engine.analyze(rows, {
-      settings: state.settings,
-      dateOrdinal: ordinal,
-      today: ordinal(new Date()),
-    });
-    state.model = model;
-    state.insights = Insights.build(model, {
-      lang: lang(), preferences: state.preferences, customRules: state.customRules,
-    });
+    const today = ordinal(new Date());
+    const key = JSON.stringify([state.settings, periodBounds(), state.preferences, state.customRules, lang(), today]);
+    if (!(modelInputs && modelInputs.rows === allRows && modelInputs.key === key && state.model)) {
+      const rows = applyPeriod(allRows);
+      state.periodRowCount = rows.length;
+      state.totalRowCount = allRows.length;
+      const model = Engine.analyze(rows, {
+        settings: state.settings,
+        dateOrdinal: ordinal,
+        today,
+      });
+      state.model = model;
+      state.insights = Insights.build(model, {
+        lang: lang(), preferences: state.preferences, customRules: state.customRules,
+      });
+      modelInputs = { rows: allRows, key };
+    }
     /* §63 — filtre eşitliği. Analiz, Backlog ekranının gördüğü kümeyi
        görmelidir; sapma varsa gizlenmez, kullanıcıya söylenir. Dönem filtresi
        açıkken karşılaştırma DAR küme üzerinden yapılamaz: bu durumda tüm

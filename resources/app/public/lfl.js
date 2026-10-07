@@ -145,9 +145,13 @@
   const dateTR=iso=>{if(!iso)return '—';const m=String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}.${m[2]}.${m[1].slice(-2)}`:iso;};
   const dateTimeShort=value=>{const d=new Date(value);if(isNaN(d))return '—';const p=n=>String(n).padStart(2,'0');return `${p(d.getDate())}.${p(d.getMonth()+1)}.${String(d.getFullYear()).slice(-2)} ${p(d.getHours())}:${p(d.getMinutes())}`;};
   const isEn=()=>typeof appLang!=='undefined'&&appLang==='en';
-  const countryKey=value=>norm(value).toLocaleUpperCase('tr-TR').replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' ');
-  const searchKey=value=>countryKey(value).replace(/[^A-Z0-9]+/g,' ').trim();
-  const searchCompact=value=>searchKey(value).replace(/\s+/g,'');
+  // Saf metin anahtarları: aynı kısa değerler (ülke, üretici, sezon…) satır ×
+  // boyut başına tekrar tekrar normalleştiriliyordu (59 bin satırda ~4,4 sn).
+  // Sınırlı bellekte tutulur; sonuç birebir aynıdır.
+  const memoText=fn=>{const cache=new Map();return value=>{const raw=norm(value);if(raw.length>160)return fn(raw);let hit=cache.get(raw);if(hit===undefined){if(cache.size>=50000)cache.clear();hit=fn(raw);cache.set(raw,hit);}return hit;};};
+  const countryKey=memoText(value=>value.toLocaleUpperCase('tr-TR').replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' '));
+  const searchKey=memoText(value=>countryKey(value).replace(/[^A-Z0-9]+/g,' ').trim());
+  const searchCompact=memoText(value=>searchKey(value).replace(/\s+/g,''));
   const normalizeSearchTerms=query=>{const parsed=Array.isArray(query)?query:parseTableSearchTerms(query),mapCriterion=criterion=>{const item=criterion&&typeof criterion==='object'?criterion:{mode:'exact',value:criterion};return {...item,value:searchKey(item.value).toLowerCase()};};return Array.isArray(parsed[0])?parsed.map(group=>group.map(mapCriterion)):parsed.map(mapCriterion);};
   const matchesSearch=(value,query)=>{const terms=normalizeSearchTerms(query);if(!terms.length)return true;const text=searchKey(value),groups=Array.isArray(terms[0])?terms:[terms],compactText=searchCompact(text);const compactCriterionMatches=criterion=>{const term=searchCompact(criterion.value);if(!term)return false;if(criterion.mode==='contains')return compactText.includes(term);if(criterion.mode==='notContains')return !compactText.includes(term);return compactText.includes(term);};return tableSearchMatches(text,terms,{plainMode:'contains'})||groups.every(group=>group.some(compactCriterionMatches));};
   const isTurkeyCountry=value=>['TURKIYE','TURKEY','TR'].includes(countryKey(value));

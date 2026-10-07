@@ -133,7 +133,15 @@
   const EMPTY = '(Boş)';
   const text = value => String(value == null ? '' : value).trim();
   const num = value => { const n = Number(value); return Number.isFinite(n) ? n : 0; };
-  const dimKey = value => text(value).replace(/[ıİ]/g, 'I').toUpperCase().replace(/Ş/g, 'S').replace(/Ç/g, 'C').replace(/Ö/g, 'O').replace(/Ü/g, 'U').replace(/Ğ/g, 'G').replace(/\s+/g, ' ');
+  // Saf fonksiyon: aynı boyut etiketleri satır × boyut başına tekrarlanır.
+  const DIM_KEY_CACHE = new Map();
+  const dimKey = value => {
+    const raw = text(value), hit = DIM_KEY_CACHE.get(raw);
+    if (hit !== undefined) return hit;
+    const out = raw.replace(/[ıİ]/g, 'I').toUpperCase().replace(/Ş/g, 'S').replace(/Ç/g, 'C').replace(/Ö/g, 'O').replace(/Ü/g, 'U').replace(/Ğ/g, 'G').replace(/\s+/g, ' ');
+    if (raw.length <= 160) { if (DIM_KEY_CACHE.size >= 20000) DIM_KEY_CACHE.clear(); DIM_KEY_CACHE.set(raw, out); }
+    return out;
+  };
 
   function defaultOrdinal(value) {
     if (value == null || value === '') return null;

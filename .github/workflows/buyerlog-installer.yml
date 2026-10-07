@@ -34,9 +34,17 @@ jobs:
         shell: bash
         env:
           DISPATCH_VERSION: ${{ github.event.inputs.version }}
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
         run: |
           set -euo pipefail
           VERSION="${DISPATCH_VERSION:-}"
+          # STABLE terfisi workflow_dispatch ile yapıldığında stable.json eski
+          # sürümde kalır; asıl yayınlanan sürüm release reposundaki
+          # stable/latest.json'dur. Okunamazsa eski davranışa düşülür.
+          if [[ -z "$VERSION" ]]; then
+            VERSION="$(gh api -H 'Accept: application/vnd.github.raw' "repos/$RELEASE_REPO/contents/stable/latest.json" 2>/dev/null | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{process.stdout.write(String(JSON.parse(s).version||''))}catch(_){}})" || true)"
+          fi
           if [[ -z "$VERSION" ]]; then
             VERSION="$(node -e "process.stdout.write(String(require('./.github/release-requests/stable.json').version||''))")"
           fi
