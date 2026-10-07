@@ -66,53 +66,61 @@ function storeFromSnapshot(snapshot, local = {}) {
   };
 }
 function validateSnapshot(s) {
-  const invalid = () => { throw error('IAM_REMOTE_INVALID'); };
+  // detail names the failed rule/field (never a value) so a device that
+  // rejects the directory can say why instead of a bare IAM_REMOTE_INVALID.
+  const invalid = (detail = 'snapshot') => { throw Object.assign(error('IAM_REMOTE_INVALID'), { detail }); };
   if (!s || s.schemaVersion !== 2 || !Number.isSafeInteger(s.revision) || s.revision < 1 ||
     s.previousRevision !== s.revision - 1 || !Array.isArray(s.users) || !s.users.length || !s.roles || !s.workspacePolicies ||
-    s.iamVersion !== 5 || !Number.isFinite(Date.parse(s.updatedAt))) invalid();
+    s.iamVersion !== 5 || !Number.isFinite(Date.parse(s.updatedAt))) invalid('snapshot.header');
   const top = new Set(['schemaVersion','revision','previousRevision','updatedAt','updatedBy','users','roles','workspacePolicies','iamVersion','iamMigratedAt']);
-  if (Object.keys(s).some(k => !top.has(k))) invalid();
+  const extraTop = Object.keys(s).find(k => !top.has(k));
+  if (extraTop) invalid(`snapshot.unknownField:${extraTop}`);
   const ids = new Set(), legacy = new Set(), names = new Set();
-  for (const u of s.users) {
-    if (!u || !UUID.test(u.id) || ids.has(u.id) || !u.legacyId || legacy.has(u.legacyId) ||
-      Object.keys(u).some(k => !PROFILE_FIELDS.includes(k) && !['id','legacyId','normalizedUsername'].includes(k))) invalid();
+  for (const [index, u] of s.users.entries()) {
+    const at = `users[${index}]`;
+    if (!u || !UUID.test(u.id) || ids.has(u.id) || !u.legacyId || legacy.has(u.legacyId)) invalid(`${at}.id`);
+    const extra = Object.keys(u).find(k => !PROFILE_FIELDS.includes(k) && !['id','legacyId','normalizedUsername'].includes(k));
+    if (extra) invalid(`${at}.unknownField:${extra}`);
     ids.add(u.id); legacy.add(u.legacyId);
     const name = normalizeUsername(u.username);
     // Disabled source-directory records historically have no login name.
-    if ((!name && !(u.legacySourceAccount && u.enabled === false)) || (name && names.has(name)) || u.normalizedUsername !== name) invalid();
+    if ((!name && !(u.legacySourceAccount && u.enabled === false)) || (name && names.has(name)) || u.normalizedUsername !== name) invalid(`${at}.username`);
     if (name) names.add(name);
-    if (!s.roles[u.systemRole] || !iam.ORG_LEVELS[u.orgLevel] || !iam.USER_STATUSES[u.status] ||
-      u.enabled !== (u.status === 'ACTIVE') || !Number.isSafeInteger(u.credentialRevision) || u.credentialRevision < 1 ||
-      !Number.isSafeInteger(u.accessRevision) || u.accessRevision < 1) invalid();
-    for (const key of ['passwordHash','pinHash']) if (u[key] && !/^scrypt\$[a-f0-9]{32}\$[a-f0-9]{64}$/i.test(u[key])) invalid();
-    if (u.passwordHash && u.pinHash && u.passwordHash !== u.pinHash) invalid();
-    if (u.enabled && !(u.passwordHash || u.pinHash)) invalid();
+    if (!s.roles[u.systemRole]) invalid(`${at}.systemRole`);
+    if (!iam.ORG_LEVELS[u.orgLevel]) invalid(`${at}.orgLevel`);
+    if (!iam.USER_STATUSES[u.status] || u.enabled !== (u.status === 'ACTIVE')) invalid(`${at}.status`);
+    if (!Number.isSafeInteger(u.credentialRevision) || u.credentialRevision < 1 ||
+      !Number.isSafeInteger(u.accessRevision) || u.accessRevision < 1) invalid(`${at}.revision`);
+    for (const key of ['passwordHash','pinHash']) if (u[key] && !/^scrypt\$[a-f0-9]{32}\$[a-f0-9]{64}$/i.test(u[key])) invalid(`${at}.${key}`);
+    if (u.passwordHash && u.pinHash && u.passwordHash !== u.pinHash) invalid(`${at}.pinHash`);
+    if (u.enabled && !(u.passwordHash || u.pinHash)) invalid(`${at}.passwordHash`);
     for (const key of ['directPermissions','temporaryPermissions']) {
-      if (!Array.isArray(u[key])) invalid();
-      for (const grant of u[key]) if (!grant || !iam.PERMISSION_CODES.has(grant.permission)) invalid();
+      if (!Array.isArray(u[key])) invalid(`${at}.${key}`);
+      for (const grant of u[key]) if (!grant || !iam.PERMISSION_CODES.has(grant.permission)) invalid(`${at}.${key}`);
     }
   }
   for (const [id, role] of Object.entries(s.roles)) if (!iam.SYSTEM_ROLES[id] || role.id !== id ||
-    !Array.isArray(role.permissions) || role.permissions.some(p => !iam.PERMISSION_CODES.has(p))) invalid();
-  for (const role of Object.keys(iam.SYSTEM_ROLES)) if (!s.roles[role]) invalid();
+    !Array.isArray(role.permissions) || role.permissions.some(p => !iam.PERMISSION_CODES.has(p))) invalid(`roles.${id}`);
+  for (const role of Object.keys(iam.SYSTEM_ROLES)) if (!s.roles[role]) invalid(`roles.${role}`);
   const byId = new Map(s.users.map(u => [u.id, u]));
-  for (const u of s.users) {
-    if ((u.managerId && !ids.has(u.managerId)) || (u.supervisorId && !ids.has(u.supervisorId)) || !Array.isArray(u.collectionAccess)) invalid();
-    for (const a of u.collectionAccess) if (!ids.has(a.ownerId) || !['view','edit'].includes(a.level)) invalid();
+  for (const [index, u] of s.users.entries()) {
+    if ((u.managerId && !ids.has(u.managerId)) || (u.supervisorId && !ids.has(u.supervisorId))) invalid(`users[${index}].managerId`);
+    if (!Array.isArray(u.collectionAccess)) invalid(`users[${index}].collectionAccess`);
+    for (const a of u.collectionAccess) if (!ids.has(a.ownerId) || !['view','edit'].includes(a.level)) invalid(`users[${index}].collectionAccess`);
     const seen = new Set([u.id]); let parent = u.managerId;
-    while (parent) { if (seen.has(parent)) invalid(); seen.add(parent); parent = byId.get(parent).managerId; }
+    while (parent) { if (seen.has(parent)) invalid(`users[${index}].managerCycle`); seen.add(parent); parent = byId.get(parent).managerId; }
   }
   // Recursively reject device/session/config material, even inside a workspace
   // preference value. Verifiers are allowed ONLY at the profile's top level.
-  function noSecrets(value) {
+  function noSecrets(value, at) {
     if (!value || typeof value !== 'object') return;
     for (const [key, item] of Object.entries(value)) {
-      if (/password|pinHash|secret|token|cookie|session|oauth|deviceId|localPath|config/i.test(key)) invalid();
-      noSecrets(item);
+      if (/password|pinHash|secret|token|cookie|session|oauth|deviceId|localPath|config/i.test(key)) invalid(`${at}.secretKey:${key}`);
+      noSecrets(item, `${at}.${key}`);
     }
   }
-  noSecrets(s.roles); noSecrets(s.workspacePolicies);
-  for (const u of s.users) for (const [key, value] of Object.entries(u)) if (!['passwordHash','pinHash'].includes(key)) noSecrets(value);
+  noSecrets(s.roles, 'roles'); noSecrets(s.workspacePolicies, 'workspacePolicies');
+  for (const [index, u] of s.users.entries()) for (const [key, value] of Object.entries(u)) if (!['passwordHash','pinHash'].includes(key)) noSecrets(value, `users[${index}].${key}`);
   const restored = storeFromSnapshot(s);
   if (!profiles(restored).some(u => u.enabled && u.systemRole === 'moderator' && (u.passwordHash || u.pinHash) &&
     iam.hasPermission(u, 'USER.MANAGE', restored) && iam.hasPermission(u, 'USER.GRANT', restored))) throw error('IAM_LAST_ADMIN_REQUIRED', 400);
@@ -157,9 +165,13 @@ async function writeStaged(file, value) {
   try { await handle.writeFile(JSON.stringify(value)); await handle.sync(); } finally { await handle.close(); }
   if (digest(JSON.parse(await fsp.readFile(file, 'utf8'))) !== digest(value)) throw error('IAM_REMOTE_INVALID');
 }
+function remoteInvalid(detail) { return Object.assign(error('IAM_REMOTE_INVALID'), { detail }); }
+// A revision that cannot be read is skipped only for at most this many older
+// revisions; the reader never goes below its own synced revision floor.
+const MAX_REVISION_FALLBACK = 20;
 function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () => {}, fault = async () => {}, canApply = () => true, canCommit = () => true } = {}) {
   const metrics = { remoteReads: 0, snapshotReads: 0, cacheWrites: 0 };
-  const health = { enabled: true, localRevision: 0, remoteRevision: null, status: 'uninitialized', lastSyncAt: null, source: 'local', lastError: null };
+  const health = { enabled: true, localRevision: 0, remoteRevision: null, status: 'uninitialized', lastSyncAt: null, source: 'local', lastError: null, lastErrorDetail: null };
   let memo = null, memoTag = '', pending = null;
   const auditFile = path.join(path.dirname(cacheFile), 'iam-audit.json');
   function localAudit() { try { return JSON.parse(fs.readFileSync(auditFile, 'utf8')); } catch (_) { return []; } }
@@ -200,7 +212,7 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     writeLocalAtomic(cacheFile.replace(/\.json$/, '.meta.json'), { iamRevision: snapshot.revision, syncedAt, sourceSha256 });
     if (audit) writeLocalAtomic(auditFile, [audit, ...localAudit().filter(a => a.revision !== audit.revision)].slice(0, 1000));
     metrics.cacheWrites++; memo = null;
-    Object.assign(health, { localRevision: snapshot.revision, remoteRevision: snapshot.revision, lastSyncAt: syncedAt, status: 'synced', source: 'central', lastError: null });
+    Object.assign(health, { localRevision: snapshot.revision, remoteRevision: snapshot.revision, lastSyncAt: syncedAt, status: 'synced', source: 'central', lastError: null, lastErrorDetail: null });
     onApply(cache); return cache;
   }
   async function root() {
@@ -211,7 +223,7 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     catch (_) { throw error('IAM_OFFLINE'); }
     return path.join(selected, 'iam');
   }
-  async function head(base) {
+  async function listRevisions(base) {
     metrics.remoteReads++;
     let entries;
     try { entries = await fsp.readdir(path.join(base, 'revisions'), { withFileTypes: true }); }
@@ -224,12 +236,19 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     // meta.json okunurken reddedilir.
     const revisions = entries.filter(e => (e.isDirectory() || e.isSymbolicLink()) && /^\d{16}$/.test(e.name)).map(e => e.name).sort();
     if (!revisions.length) throw error('IAM_NOT_INITIALIZED');
-    const dir = path.join(base, 'revisions', revisions.at(-1));
-    try {
-      const meta = JSON.parse(await fsp.readFile(path.join(dir, 'meta.json'), 'utf8'));
-      if (meta.revision !== Number(revisions.at(-1)) || !/^[a-f0-9]{64}$/.test(meta.sha256)) throw error('IAM_REMOTE_INVALID');
-      return { ...meta, dir };
-    } catch (_) { throw error('IAM_REMOTE_INVALID'); }
+    return revisions;
+  }
+  async function readMeta(base, name) {
+    const dir = path.join(base, 'revisions', name);
+    let meta;
+    try { meta = JSON.parse(await fsp.readFile(path.join(dir, 'meta.json'), 'utf8')); }
+    catch (e) { throw remoteInvalid(`rev ${Number(name)} meta.json ${e.code || 'PARSE'}`); }
+    if (!meta || meta.revision !== Number(name) || !/^[a-f0-9]{64}$/.test(meta.sha256)) throw remoteInvalid(`rev ${Number(name)} meta.json fields`);
+    return { ...meta, dir };
+  }
+  async function head(base) {
+    const revisions = await listRevisions(base);
+    return readMeta(base, revisions.at(-1));
   }
   function revisionSafety(meta, local) {
     let floor = local && local._revision || 0;
@@ -240,25 +259,63 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
   }
   async function readSnapshot(meta) {
     metrics.snapshotReads++;
-    try {
-      const snapshot = JSON.parse(await fsp.readFile(path.join(meta.dir, 'snapshot.json'), 'utf8'));
-      validateSnapshot(snapshot);
-      if (snapshot.revision !== meta.revision || digest(snapshot) !== meta.sha256) throw error('IAM_REMOTE_INVALID');
-      return snapshot;
-    } catch (_) { throw error('IAM_REMOTE_INVALID'); }
+    let snapshot;
+    try { snapshot = JSON.parse(await fsp.readFile(path.join(meta.dir, 'snapshot.json'), 'utf8')); }
+    catch (e) { throw remoteInvalid(`rev ${meta.revision} snapshot.json ${e.code || 'PARSE'}`); }
+    try { validateSnapshot(snapshot); }
+    catch (e) { throw remoteInvalid(`rev ${meta.revision} ${e.detail || e.code || 'snapshot'}`); }
+    if (snapshot.revision !== meta.revision || digest(snapshot) !== meta.sha256) throw remoteInvalid(`rev ${meta.revision} snapshot.sha256`);
+    return snapshot;
+  }
+  async function readRevisionAudit(meta) {
+    try { return safeAudit(JSON.parse(await fsp.readFile(path.join(meta.dir, 'audit.json'), 'utf8'))); }
+    catch (e) { throw remoteInvalid(`rev ${meta.revision} audit.json ${e.code && e.code !== 'IAM_REMOTE_INVALID' ? e.code : 'PARSE'}`); }
   }
   function failed(e) {
     health.lastError = e.code || 'IAM_OFFLINE';
+    health.lastErrorDetail = e.detail || null;
     health.status = health.lastError === 'IAM_NOT_INITIALIZED' ? 'uninitialized' : health.lastError.includes('CONFLICT') ? 'conflict' : health.lastError === 'IAM_OFFLINE' ? 'offline' : 'invalid';
     return e;
   }
   async function refresh(options = {}) {
     if (pending) return pending;
     pending = (async () => {
-      const meta = await head(await root()), local = readLocal(); health.remoteRevision = meta.revision;
-      revisionSafety(meta, local);
-      if (local && meta.revision === local._revision) { health.status = 'synced'; health.lastError = null; return local; }
-      const snapshot = await readSnapshot(meta);
+      const base = await root(), revisions = await listRevisions(base), local = readLocal();
+      health.remoteRevision = Number(revisions.at(-1));
+      // The newest revision folder can be unreadable on this device while the
+      // rest of the directory is fine: OneDrive/SharePoint may still be
+      // downloading it (folder visible, files not yet), or a newer Buyer Log
+      // build wrote a field this build does not know. Previously one such
+      // folder made the whole directory unavailable (IAM_REMOTE_INVALID) and
+      // a device without a cache could not show any user. Use the newest
+      // VALID revision instead, never below this device's synced floor, and
+      // report the skipped head as 'stale' so a later refresh moves forward.
+      let floor = local && local._revision || 0;
+      try { floor = Math.max(floor, JSON.parse(fs.readFileSync(cacheFile.replace(/\.json$/, '.meta.json'), 'utf8')).iamRevision || 0); } catch (_) {}
+      if (Number(revisions.at(-1)) < floor) throw error('IAM_REMOTE_REVISION_REGRESSION');
+      let headError = null, meta = null, snapshot = null, audit;
+      for (const name of revisions.slice(-MAX_REVISION_FALLBACK).reverse()) {
+        if (Number(name) < floor) break;
+        try {
+          const candidate = await readMeta(base, name);
+          revisionSafety(candidate, local);
+          if (local && candidate.revision === local._revision) {
+            // Nothing newer than this device's cache is readable: keep the
+            // original failure (the cache stays the login source).
+            if (headError) throw headError;
+            meta = candidate; break;
+          }
+          snapshot = await readSnapshot(candidate);
+          audit = await readRevisionAudit(candidate);
+          meta = candidate; break;
+        } catch (e) {
+          if (e.code !== 'IAM_REMOTE_INVALID' || e === headError) throw e;
+          headError = headError || e; snapshot = null;
+        }
+      }
+      if (!meta) throw headError || error('IAM_REMOTE_INVALID');
+      const stale = () => Object.assign(health, { status: 'stale', lastError: headError.code, lastErrorDetail: headError.detail || null, remoteRevision: Number(revisions.at(-1)) });
+      if (!snapshot) { Object.assign(health, { status: 'synced', lastError: null, lastErrorDetail: null }); return local; }
       if (!canApply()) throw error('IAM_RESTORE_IN_PROGRESS', 409);
       if (!local && fs.existsSync(cacheFile)) {
         // Existing independently managed directories must not silently lose
@@ -292,9 +349,9 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
         // Retain unparseable original evidence before remote recovery too.
         if (!legacy || legacy._centralIam) fs.copyFileSync(cacheFile, `${cacheFile}.invalid-${crypto.randomUUID()}`, fs.constants.COPYFILE_EXCL);
       }
-      let audit;
-      try { audit = safeAudit(JSON.parse(await fsp.readFile(path.join(meta.dir, 'audit.json'), 'utf8'))); } catch (_) { throw error('IAM_REMOTE_INVALID'); }
-      return apply(snapshot, local || {}, audit);
+      const applied = apply(snapshot, local || {}, audit);
+      if (headError) stale();
+      return applied;
     })().catch(e => { throw failed(e); }).finally(() => { pending = null; });
     return pending;
   }

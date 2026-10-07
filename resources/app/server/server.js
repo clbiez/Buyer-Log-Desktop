@@ -1536,7 +1536,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
       // "0 kullanıcı · 0 aktif" as DONE after an auth-cache loss.
       if (!iam && !userAccess.hasLocalLoginSnapshot()) {
         // Hata kodu adımda görünür; "neden kullanıcı yok" sorusu tahmin gerektirmesin.
-        setBootstrapStep('users', { status:'error', detail:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED' });
+        setBootstrapStep('users', { status:'error', detail:[iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
         throw Object.assign(new Error('Kullanıcı verileri Shared Hub’dan alınamadı ve geçerli yerel kullanıcı önbelleği bulunamadı.'), { code:iamHealth.lastError || 'IAM_BOOTSTRAP_FAILED', statusCode:503 });
       }
       const profiles = userAccess.allPublicProfiles();
@@ -1548,7 +1548,10 @@ async function bootstrapSharedHub({ force = false } = {}) {
         markStartup('IAM_PERSONAL_LOGIN_FALLBACK', { code:iamHealth.lastError || null, profiles:profiles.length });
         setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, personalFallback:true, code:iamHealth.lastError || 'IAM_OFFLINE', detail:`Kişisel yerel giriş · ${iamHealth.lastError || 'IAM_OFFLINE'}` });
       } else {
-        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif` });
+        // 'stale': the newest IAM revision is still unreadable here (e.g. OneDrive
+        // has not finished downloading it); the newest valid one is in use.
+        const staleIam = iamHealth.status === 'stale' ? ` · rev ${iamHealth.localRevision}/${iamHealth.remoteRevision} · ${[iamHealth.lastError, iamHealth.lastErrorDetail].filter(Boolean).join(' ')}` : '';
+        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, detail:`${profiles.length} kullanıcı · ${activeProfiles.length} aktif${staleIam}` });
       }
 
       setBootstrapProgress({ phase:'master', message:'Sistem ayarları eşitleniyor…' });
