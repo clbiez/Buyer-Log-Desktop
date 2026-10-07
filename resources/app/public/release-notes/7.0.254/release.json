@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.254",
+  "channel": "stable",
+  "publishedAt": "2026-10-07",
+  "title": {
+    "tr": "OneDrive Shared Hub'da güvenilir kullanıcı girişi",
+    "en": "Reliable sign-in on a OneDrive Shared Hub"
+  },
+  "summary": {
+    "tr": "En yeni kullanıcı revizyonu okunamadığında giriş en yeni geçerli revizyonla sürer.",
+    "en": "When the newest user revision cannot be read, sign-in continues with the newest valid revision."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "iam-latest-valid-revision",
+      "type": "fix",
+      "module": {
+        "tr": "Giriş",
+        "en": "Sign-in"
+      },
+      "title": {
+        "tr": "OneDrive Shared Hub'da kullanıcılar okunamayan revizyona takılmaz",
+        "en": "Users no longer blocked by an unreadable revision on a OneDrive Shared Hub"
+      },
+      "path": {
+        "tr": "Giriş › Kullanıcı adı",
+        "en": "Sign-in › Username"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "iam-latest-valid-revision.png",
+        "alt": {
+          "tr": "En yeni kullanıcı revizyonu henüz inmemişken eşleşen hesapları listeleyen giriş ekranı — gerçek Buyer Log demo ekranı",
+          "en": "Sign-in screen listing matching accounts while the newest user revision has not finished downloading — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Kullanıcılar en yeni geçerli revizyondan yüklenir",
+          "en": "Users load from the newest valid revision"
+        }
+      },
+      "body": {
+        "tr": "Shared Hub OneDrive ile eşitlenirken en yeni kullanıcı revizyonu henüz tam inmediyse ya da daha yeni bir sürümün yazdığı bilinmeyen bir alan içeriyorsa, giriş ekranı artık \"Merkezi kullanıcı dizini alınamadı\" (IAM_REMOTE_INVALID) hatasında kalmaz: en yeni geçerli revizyon kullanılır ve eşitleme tamamlanınca güncel revizyona geçilir. Shared Sync panelindeki \"Kullanıcılar ve yetkiler\" adımı okunamayan revizyonu ve nedenini (ör. dosya veya alan adı) gösterir.",
+        "en": "When the newest user revision on a OneDrive-synced Shared Hub has not finished downloading, or contains an unknown field written by a newer version, the sign-in screen no longer stops at \"The central user directory could not be fetched\" (IAM_REMOTE_INVALID): the newest valid revision is used and the current one is picked up once syncing completes. The \"Users and permissions\" step in the Shared Sync panel shows the unreadable revision and the reason (e.g. file or field name)."
+      }
+    }
+  ]
+}

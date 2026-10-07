@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.254",
+      "publishedAt": "2026-10-07",
+      "title": {
+        "tr": "OneDrive Shared Hub'da güvenilir kullanıcı girişi",
+        "en": "Reliable sign-in on a OneDrive Shared Hub"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.254/release.json"
+    },
+    {
       "version": "7.0.253",
       "publishedAt": "2026-10-07",
       "title": {
