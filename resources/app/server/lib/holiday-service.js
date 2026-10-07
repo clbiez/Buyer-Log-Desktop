@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { mergeIslamicHolidays } = require('./islamic-holidays');
 
 const NAGER_V4 = 'https://nagerholidays.com/api/v4/Holidays';
 const NAGER_V3 = 'https://nagerholidays.com/api/v3/PublicHolidays';
@@ -89,6 +90,8 @@ function normalizeRows(rows) {
         ? row.holidayTypes.slice()
         : (Array.isArray(row.types) ? row.types.slice() : ['Public']),
     };
+    if (row.estimated === true) item.estimated = true;
+    if (row.holidayKey) item.holidayKey = String(row.holidayKey);
     const key = item.date + '|' + item.name.toLocaleLowerCase('en');
     if (seen.has(key)) continue;
     seen.add(key);
@@ -259,6 +262,14 @@ function createHolidayService(options = {}) {
     saveCache(cacheFile, cache);
   }
 
+  // Ay takvimli dini bayramlar sağlayıcıda eksikse tahmini olarak eklenir;
+  // kalıcı önbellek yalnız sağlayıcının kendi verisini tutar.
+  function withIslamicHolidays(result) {
+    return Object.assign({}, result, {
+      rows:normalizeRows(mergeIslamicHolidays(result.rows, result.countryCode, result.year)),
+    });
+  }
+
   async function resolveYear(countryCode, year) {
     const code = normalizeCountryCode(countryCode);
     const y = normalizeYear(year);
@@ -285,13 +296,13 @@ function createHolidayService(options = {}) {
         stale:false,
       };
       persist(code, y, result);
-      return result;
+      return withIslamicHolidays(result);
     }
 
     const cached = fromPersistentCache(code, y);
-    if (cached) return Object.assign({ ok:true, countryCode:code, year:y }, cached);
+    if (cached) return withIslamicHolidays(Object.assign({ ok:true, countryCode:code, year:y }, cached));
 
-    return {
+    return withIslamicHolidays({
       ok:true,
       countryCode:code,
       year:y,
@@ -302,7 +313,7 @@ function createHolidayService(options = {}) {
       verifiedAt:null,
       stale:true,
       warning:'No holiday provider returned data for this country/year.',
-    };
+    });
   }
 
   async function getYear(input = {}) {
