@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.253",
-  "commit_sha": "651ee167ee142470077e51451cb246b49a9ea5bf",
-  "release_notes": "Buyer Log 7.0.253: Yenileme başarısız olduğunda hatanın gerçekleştiği adım doğru biçimde Başarısız olarak gösterilir; ASAS/tabular kaynak bellek yetersizliği hataları ayrı teşhis edilerek kullanıcıya doğru çözüm yönlendirmesi sunulur.",
-  "request_id": "7.0.253-refresh-memory-r1"
+  "version": "7.0.254",
+  "commit_sha": "770509f45f5f023ed02e93782c533718e6cb9752",
+  "release_notes": "Buyer Log 7.0.254: OneDrive Shared Hub'da en yeni kullanıcı revizyonu okunamadığında giriş en yeni geçerli revizyonla sürer; okunamayan revizyonun nedeni Shared Sync panelinde gösterilir.",
+  "request_id": "7.0.254-iam-head-fallback-r1"
 }
