@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.256",
-  "commit_sha": "936b452b1832e7dd189ce38178517388a63199b4",
-  "release_notes": "Buyer Log 7.0.256: LCW Merch Calendar iş tarihi tek kaynağı oldu ve LCW/GLB hafta görünümü eklendi; dünya saatlerinde dini bayramlar ve açılış kullanıcı bilgileri performans düzeltmesi dahil."
+  "version": "7.0.257",
+  "commit_sha": "bddf1d57b1d5d37eda4242cda57aaa136c5de69a",
+  "release_notes": "Buyer Log 7.0.257 TEST: Endeksmatik Setleri penceresine Yapı raporu eklendi. Büyük ülke Endeksmatik dosyası bu bilgisayarda okunur ve birkaç KB'lık, değerleri maskeli bir rapor indirilir (başlıklar, ENDEKSMATİK formülleri, ÖZET-pivot anahtar örtüşmesi); hiçbir şey kaydedilmez. Yükleme hatası bu yolu önerir. main'deki i18n sistem verisi düzeltmesi dahildir. Node regression suite (869 dosya) başarıyla geçti."
 }
