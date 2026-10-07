@@ -176,6 +176,46 @@
     }
     return mondayFromIsoWeek(year,week);
   }
+  function businessWeekRange(value){
+    const d=describe(value);
+    if(!d.valid||!d.businessValid)return null;
+    return {start:d.weekStart||toISO(d.monday),end:d.weekEnd||toISO(d.sunday),year:d.lcwYear,week:d.lcwWeek};
+  }
+  function businessMonthRange(value,explicitMonth){
+    let year=null,month=null;
+    if(explicitMonth!=null){
+      year=Number(value);month=Number(explicitMonth);
+    }else{
+      const d=describe(value);
+      if(!d.valid||!d.businessValid)return null;
+      year=d.periodYear;month=d.month;
+    }
+    if(!Number.isInteger(year)||!Number.isInteger(month)||month<1||month>12)return null;
+    if(merch.active){
+      const list=merch.weeks.filter(item=>item.year===year&&item.month===month);
+      if(!list.length)return null;
+      return {start:list[0].start,end:list[list.length-1].end,year,month,weeks:list.length};
+    }
+    const start=new Date(year,month-1,1),end=new Date(year,month,0);
+    return {start:toISO(start),end:toISO(end),year,month,weeks:null};
+  }
+  function previousBusinessMonthRange(value){
+    const d=describe(value);if(!d.valid||!d.businessValid)return null;
+    let year=d.periodYear,month=d.month-1;
+    if(month<1){month=12;year-=1;}
+    return businessMonthRange(year,month);
+  }
+  function weekPair(value){
+    const d=describe(value);
+    return {
+      lcw:d.businessValid?d.lcwWeek:null,
+      lcwYear:d.businessValid?d.lcwYear:null,
+      glb:d.globalWeek,
+      glbYear:d.globalWeekYear,
+      mapped:Boolean(d.businessValid)
+    };
+  }
+
   function bucketKey(value,granularity){
     const d=describe(value);if(!d.valid)return '';
     if(granularity==='year')return d.businessValid?String(d.periodYear):'';
@@ -235,6 +275,7 @@
   return {
     MONTHS_TR,MONTHS_EN,parseDate,toISO,mondayOf,sundayOf,isoWeekYear,isoWeekNumber,mondayFromIsoWeek,mondayFromBusinessWeek,
     setMerchCalendar,clearMerchCalendar,hasMerchCalendar,merchCalendarMeta,
-    describe,bucketKey,bucketLabel,monthLabel,weekLabel
+    describe,businessWeekRange,businessMonthRange,previousBusinessMonthRange,weekPair,
+    bucketKey,bucketLabel,monthLabel,weekLabel
   };
 }));
