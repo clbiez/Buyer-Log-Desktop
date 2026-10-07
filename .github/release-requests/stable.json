@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.255",
-  "commit_sha": "162edaa557fd7eee9749249b75d3399fd9fae804",
-  "release_notes": "Buyer Log 7.0.255: Genel Bakış Koleksiyon özeti kompakt aylık listeye geçti (ay, adet, model görselleri, status çubuğu, hover detayı); LCW AI çıktı düzenleyici, yerleşim aracı ve paylaşılabilir şablonlar.",
-  "request_id": "7.0.255-overview-collection-monthly-r1"
+  "version": "7.0.256",
+  "commit_sha": "936b452b1832e7dd189ce38178517388a63199b4",
+  "release_notes": "Buyer Log 7.0.256: LCW Merch Calendar iş tarihi tek kaynağı oldu ve LCW/GLB hafta görünümü eklendi; dünya saatlerinde dini bayramlar ve açılış kullanıcı bilgileri performans düzeltmesi dahil.",
+  "request_id": "7.0.256-stable-r1"
 }

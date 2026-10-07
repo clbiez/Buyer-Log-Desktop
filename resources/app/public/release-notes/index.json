@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.256",
+      "publishedAt": "2026-10-07",
+      "title": {
+        "tr": "Dünya saatinde dini bayramlar",
+        "en": "Religious holidays in world clocks"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.256/release.json"
+    },
+    {
       "version": "7.0.255",
       "publishedAt": "2026-10-07",
       "title": {
