@@ -3,14 +3,113 @@
   "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yenileme takılması düzeltildi",
-    "en": "Refresh hang fixed"
+    "tr": "Sync onarımları, çakışma çözümü ve yenileme düzeltmesi",
+    "en": "Sync repairs, conflict resolution and refresh fix"
   },
   "summary": {
-    "tr": "Yenileme artık çok sayıda IAS parsiyeli değiştiğinde \"Denetleme ve Kaydetme\" adımında beklemiyor.",
-    "en": "Refresh no longer stalls at \"Reviewing & saving\" when many IAS partials change."
+    "tr": "Büyük yerel veride sync yeniden çalışıyor; çakışmalar ayrıntılı görülüp çözülebiliyor. Yenileme artık \"Denetleme ve Kaydetme\" adımında takılmıyor.",
+    "en": "Sync works again on large local data; conflicts can be inspected and resolved. Refresh no longer stalls at \"Reviewing & saving\"."
   },
   "changes": [
+    {
+      "id": "sync-large-local-db",
+      "type": "fix",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Büyük yerel veride sync artık durmuyor",
+        "en": "Sync no longer stops on large local data"
+      },
+      "path": {
+        "tr": "Üst menü › Sync durumu",
+        "en": "Top bar › Sync Status"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-large-local-db.png",
+        "alt": {
+          "tr": "Büyük yerel veride sync artık durmuyor — gerçek Buyer Log demo ekranı",
+          "en": "Sync no longer stops on large local data — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Büyük yerel veride sync artık durmuyor",
+          "en": "Sync no longer stops on large local data"
+        }
+      },
+      "body": {
+        "tr": "Yerel veritabanı çok büyüdüğünde sync her denemede \"Invalid string length\" hatasıyla duruyor ve paylaşılan klasör kullanılamıyor görünüyordu. Yerel veri artık parça parça yazılıp okunuyor; 600 MB üzerindeki demo veride de sync, sıkıştırma ve yeniden açılış sorunsuz tamamlanıyor. Çözülmüş çakışmaların gereksiz büyük kopyaları da artık saklanmıyor.",
+        "en": "When the local database grew very large, every sync attempt stopped with \"Invalid string length\" and the shared folder appeared unavailable. Local data is now written and read in chunks; on demo data over 600 MB sync, compaction and reopening complete normally. Resolved conflicts no longer keep unnecessary large copies."
+      }
+    },
+    {
+      "id": "sync-conflicts-detail",
+      "type": "feature",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Sync çakışmaları ayrıntılı görülüp çözülebiliyor",
+        "en": "Sync conflicts can be inspected and resolved"
+      },
+      "path": {
+        "tr": "Üst menü › Sync durumu › Çakışmaları Görüntüle",
+        "en": "Top bar › Sync Status › View Conflicts"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-conflicts-detail.png",
+        "alt": {
+          "tr": "Sync çakışmaları ayrıntılı görülüp çözülebiliyor — gerçek Buyer Log demo ekranı",
+          "en": "Sync conflicts can be inspected and resolved — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sync çakışmaları ayrıntılı görülüp çözülebiliyor",
+          "en": "Sync conflicts can be inspected and resolved"
+        }
+      },
+      "body": {
+        "tr": "\"Çakışmaları Görüntüle\" artık yalnız sayı göstermiyor: her çakışmanın kaydı, alanı, bu cihazdaki ve gelen değeri listelenir; \"Benimkini koru\" ya da \"Gelen değeri al\" ile tek tıkla çözülür ve seçim bir sonraki sync ile diğer cihazlara gider. Büyük değerler kısaltılmış önizlemeyle gösterildiği için liste \"Sync çakışmaları okunamadı\" hatasına düşmez.",
+        "en": "\"View Conflicts\" no longer shows only a count: each conflict lists its record, field, the value on this device and the incoming value; resolve it with one click using \"Keep mine\" or \"Accept incoming\", and the choice reaches other devices on the next sync. Large values are shown as a truncated preview, so the list no longer fails with \"Sync conflicts could not be read\"."
+      }
+    },
+    {
+      "id": "module-script-retry",
+      "type": "fix",
+      "module": {
+        "tr": "Genel",
+        "en": "General"
+      },
+      "title": {
+        "tr": "Modül dosyası geçici hatada yeniden denenir",
+        "en": "Module files are retried after a temporary error"
+      },
+      "path": {
+        "tr": "Sol menü › Veri Yönetimi",
+        "en": "Left menu › Data Management"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "module-script-retry.png",
+        "alt": {
+          "tr": "Modül dosyası geçici hatada yeniden denenir — gerçek Buyer Log demo ekranı",
+          "en": "Module files are retried after a temporary error — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Modül dosyası geçici hatada yeniden denenir",
+          "en": "Module files are retried after a temporary error"
+        }
+      },
+      "body": {
+        "tr": "Sunucu kısa süre meşgulken bir ekranın dosyası (ör. data-management-picker.js) yüklenemezse ekran artık hemen hata vermiyor; dosya kısa bir beklemeyle bir kez daha istenir ve Veri Yönetimi gibi ekranlar normal açılır.",
+        "en": "If a screen's file (e.g. data-management-picker.js) fails to load while the server is briefly busy, the screen no longer fails immediately; the file is requested once more after a short wait and screens such as Data Management open normally."
+      }
+    },
     {
       "id": "refresh-review-saving-no-freeze",
       "type": "fix",
