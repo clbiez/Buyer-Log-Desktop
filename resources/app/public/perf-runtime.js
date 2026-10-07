@@ -86,11 +86,19 @@
     return promise;
   }
 
+  /* Geçici yükleme hatası (sunucu kısa süre meşgul/yeniden başlıyor) bütün
+     modülü kullanılamaz bırakmasın: başarısız betik bir kez, kısa bir
+     beklemeyle yeniden istenir. loadScript hatalı kaydı zaten temizler. */
+  async function loadScriptWithRetry(rawSrc){
+    try{return await loadScript(rawSrc);}
+    catch(_){await new Promise(resolve=>setTimeout(resolve,600));return loadScript(rawSrc);}
+  }
+
   async function ensureLibrary(name){
     const spec=specs[name];if(!spec)throw new Error((uiEn()?'Unknown performance module: ':'Bilinmeyen performans modülü: ')+name);
     if(global[spec.global] && (name!=='pdf'||global.jspdf?.jsPDF)){spec.after?.();return global[spec.global];}
     if(!pending.has(name))pending.set(name,(async()=>{
-      for(const file of spec.files)await loadScript(file);
+      for(const file of spec.files)await loadScriptWithRetry(file);
       spec.after?.();
       if(!global[spec.global] || (name==='pdf'&&!global.jspdf?.jsPDF))throw new Error(name+(uiEn()?' library could not be started.':' kütüphanesi başlatılamadı.'));
       return global[spec.global];
@@ -182,7 +190,7 @@
       // Eskiden her dosya bir öncekinin bitmesini bekleyip ancak sonra
       // indiriliyordu; 18 dosyalık grup açılış perdesini ~1 sn uzatıyordu.
       preloadScripts(files);
-      pending.set(key,(async()=>{for(const file of files)await loadScript(file);})().then(()=>{loadedFeatures.add(name);}).finally(()=>pending.delete(key)));
+      pending.set(key,(async()=>{for(const file of files)await loadScriptWithRetry(file);})().then(()=>{loadedFeatures.add(name);}).finally(()=>pending.delete(key)));
     }
     return pending.get(key);
   }

@@ -135,7 +135,8 @@ test('sunucu: birleşim canlı yayılır, uzak değişiklik yoklanır, çakışm
   assert.match(publish, /if \(result && result\.merged\) liveEvents\.notifyChange\('collection', null, \{ ownerId/);
   assert.match(publish, /collectionReplication\.pollOwners\(userId, ownerIds\)/);
   assert.match(publish, /setInterval\(\(\) => \{\s*if \(!uiReadySignaled\) return;\s*void pollCollectionReplicas\(\)/);
-  assert.match(source, /async function allSyncConflicts\(profile\) \{ return \[\.\.\.await localDb\.listConflicts\(\), \.\.\.await collectionMergeConflictsFor\(profile\)\]; \}/);
+  // Yerel + koleksiyon çakışmaları tek listede; arayüze yalnız sınırlı özet gider.
+  assert.match(source, /async function allSyncConflicts\(profile\) \{[\s\S]{0,300}localDb\.listConflictSummaries\(\)[\s\S]{0,200}return \[\.\.\.local, \.\.\.\(await collectionMergeConflictsFor\(profile\)\)\.map\(item => summarizeConflict\(item\)\)\];/);
   assert.match(source, /String\(req\.params\.id\)\.startsWith\('collection:'\)[\s\S]{0,400}collectionReplication\.resolveMergeConflict\(req\.params\.id, choice, item => applyCollectionConflictChoice\(req\.currentUser, item\)\)/);
   assert.match(source, /function applyCollectionConflictChoice\(profile, conflict\) \{[\s\S]{0,200}collectionWorkspaceEditAllowed\(profile, ownerId\)/, 'çözüm yazımı düzenleme yetkisine bağlı');
 });
