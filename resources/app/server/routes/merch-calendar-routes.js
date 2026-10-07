@@ -15,9 +15,9 @@ module.exports = function registerMerchCalendarRoutes(app, deps) {
     }
   };
 
-  app.get('/api/merch-calendar', read);
+app.get('/api/merch-calendar', read);
 
-  app.post(
+app.post(
     '/api/merch-calendar',
     userAccess.requireArea('source'),
     userAccess.requirePermission('manageModelConnections'),
@@ -55,7 +55,7 @@ module.exports = function registerMerchCalendarRoutes(app, deps) {
     },
   );
 
-  app.delete(
+app.delete(
     '/api/merch-calendar',
     userAccess.requireArea('source'),
     userAccess.requirePermission('manageModelConnections'),
