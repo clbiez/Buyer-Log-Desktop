@@ -1,114 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-07",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Daha hızlı yenileme ve modül açılışları",
-    "en": "Faster refresh and module opening"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Yenile işleminin iç adımları kısaldı; Backlog ve LFL ilk açılışta, Genel Bakış ise Backlog'dan dönüşte beklemiyor.",
-    "en": "Refresh's internal steps are shorter; Backlog and LFL open faster the first time and Overview no longer waits after visiting Backlog."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "refresh-faster",
-      "type": "improvement",
-      "module": {
-        "tr": "Yenile",
-        "en": "Refresh"
-      },
-      "title": {
-        "tr": "Yenileme daha kısa sürer",
-        "en": "Refresh takes less time"
-      },
-      "path": {
-        "tr": "Yenile",
-        "en": "Refresh"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "refresh-faster.png",
-        "alt": {
-          "tr": "Yenileme daha kısa sürer — gerçek Buyer Log demo ekranı",
-          "en": "Refresh takes less time — actual Buyer Log demo screen"
-        },
-        "caption": {
-          "tr": "Yenileme daha kısa sürer",
-          "en": "Refresh takes less time"
-        }
-      },
-      "body": {
-        "tr": "Veri yenilemenin Buyer Log içindeki adımları hızlandı: yerel kayıt veriyi tek kez işler, sayfa hazırlığı iki iş parçacığında paralel yapılır, değişen veri karşılaştırması ilk farkta durur ve Planlanan & Gerçekleşen kaydı yenilemenin bitişini bekletmez. 33 bin siparişlik demo veride değişen bir yenileme 58 sn'den yaklaşık 33 sn'ye indi.",
-        "en": "Buyer Log's own refresh steps are faster: the local save processes the data once, page preparation runs on two threads in parallel, the change comparison stops at the first difference and the Plan vs Actual record no longer holds up the end of the refresh. On 33,000 demo orders a refresh with changed data went from 58 s to about 33 s."
-      }
-    },
-    {
-      "id": "backlog-lfl-first-open",
-      "type": "improvement",
-      "module": {
-        "tr": "Backlog · LFL Analizi",
-        "en": "Backlog · LFL Analysis"
-      },
-      "title": {
-        "tr": "Backlog ve LFL ilk açılışta beklemez",
-        "en": "Backlog and LFL open without the long first wait"
-      },
-      "path": {
-        "tr": "Backlog · LFL Analizi",
-        "en": "Backlog · LFL Analysis"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "backlog-lfl-first-open.png",
-        "alt": {
-          "tr": "Backlog ve LFL ilk açılışta beklemez — gerçek Buyer Log demo ekranı",
-          "en": "Backlog and LFL open without the long first wait — actual Buyer Log demo screen"
-        },
-        "caption": {
-          "tr": "Backlog ve LFL ilk açılışta beklemez",
-          "en": "Backlog and LFL open without the long first wait"
-        }
-      },
-      "body": {
-        "tr": "Backlog ve LFL ilk açılırken aynı metinleri satır satır yeniden normalleştiriyordu. Bu hesaplar artık bir kez yapılıyor: 33 bin siparişlik demo veride Backlog ilk açılışta ekranı ~9 sn yerine ~2 sn, LFL ~5 sn yerine ~1,6 sn meşgul ediyor.",
-        "en": "Backlog and LFL re-normalised the same text values row by row when first opened. These are now computed once: on 33,000 demo orders Backlog's first opening keeps the screen busy for about 2 s instead of 9 s, and LFL about 1.6 s instead of 5 s."
-      }
-    },
-    {
-      "id": "overview-backlog-reuse",
-      "type": "improvement",
-      "module": {
-        "tr": "Genel Bakış",
-        "en": "Overview"
-      },
-      "title": {
-        "tr": "Backlog'dan Genel Bakış'a dönüş anında",
-        "en": "Returning to Overview from Backlog is instant"
-      },
-      "path": {
-        "tr": "Genel Bakış",
-        "en": "Overview"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "overview-backlog-reuse.png",
-        "alt": {
-          "tr": "Backlog'dan Genel Bakış'a dönüş anında — gerçek Buyer Log demo ekranı",
-          "en": "Returning to Overview from Backlog is instant — actual Buyer Log demo screen"
-        },
-        "caption": {
-          "tr": "Backlog'dan Genel Bakış'a dönüş anında",
-          "en": "Returning to Overview from Backlog is instant"
-        }
-      },
-      "body": {
-        "tr": "Backlog sayfası her açıldığında Genel Bakış'taki Backlog özetleri ve Teslimat Riski analizi aynı veriyi baştan hesaplıyordu. Veri değişmediyse önceki sonuç kullanılır; dönüş ~4 sn yerine ~0,3 sn sürer.",
-        "en": "Every visit to the Backlog page made Overview's Backlog summaries and Delivery Risk analysis recompute the same data. When the data has not changed the previous result is reused; returning takes about 0.3 s instead of 4 s."
-      }
-    }
-  ]
+  "changes": []
 }

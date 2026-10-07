@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.251",
+      "publishedAt": "2026-10-07",
+      "title": {
+        "tr": "Daha hızlı yenileme ve modül açılışları",
+        "en": "Faster refresh and module opening"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 3,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.251/release.json"
+    },
+    {
       "version": "7.0.250",
       "publishedAt": "2026-10-06",
       "title": {
