@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "PLM ID listesinden toplu ekleme ve sync onarımları",
-    "en": "Bulk-add from a PLM ID list and sync repairs"
+    "tr": "PLM ID listesinden toplu ekleme, sync ve yenileme onarımları",
+    "en": "Bulk-add from a PLM ID list, sync and refresh repairs"
   },
   "summary": {
-    "tr": "Koleksiyon’a PLM ID listesi (yapıştırma, Excel/CSV ya da LCW AI ile metinden) vererek modelleri PLM SYNC ile toplu ekleyin; varsayılanlar, renk seçimi, sonuç raporu ve bulunamayanlar için bekleyen liste dahil. Büyük yerel veride sync yeniden çalışıyor; çakışmalar ayrıntılı görülüp çözülebiliyor.",
-    "en": "Give the Collection a PLM ID list (pasted, from Excel/CSV or extracted from text with LCW AI) to add models in bulk with PLM SYNC; including defaults, colour choice, a result report and a waiting list for IDs not found. Sync works again on large local data; conflicts can be inspected and resolved."
+    "tr": "Koleksiyon’a PLM ID listesi (yapıştırma, Excel/CSV ya da LCW AI ile metinden) vererek modelleri PLM SYNC ile toplu ekleyin; varsayılanlar, renk seçimi, sonuç raporu ve bulunamayanlar için bekleyen liste dahil. Büyük yerel veride sync yeniden çalışıyor; çakışmalar ayrıntılı görülüp çözülebiliyor. Yenile'nin Denetleme ve Kaydetme adımı artık donmuyor.",
+    "en": "Give the Collection a PLM ID list (pasted, from Excel/CSV or extracted from text with LCW AI) to add models in bulk with PLM SYNC; including defaults, colour choice, a result report and a waiting list for IDs not found. Sync works again on large local data; conflicts can be inspected and resolved. Refresh's Review and Save step no longer freezes."
   },
   "changes": [
     {
@@ -306,6 +306,39 @@
       "body": {
         "tr": "Sunucu kısa süre meşgulken bir ekranın dosyası (ör. data-management-picker.js) yüklenemezse ekran artık hemen hata vermiyor; dosya kısa bir beklemeyle bir kez daha istenir ve Veri Yönetimi gibi ekranlar normal açılır.",
         "en": "If a screen's file (e.g. data-management-picker.js) fails to load while the server is briefly busy, the screen no longer fails immediately; the file is requested once more after a short wait and screens such as Data Management open normally."
+      }
+    },
+    {
+      "id": "refresh-review-saving-no-freeze",
+      "type": "fix",
+      "module": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Yenileme \"Denetleme ve Kaydetme\" adımında takılmaz",
+        "en": "Refresh no longer hangs at \"Reviewing & saving\""
+      },
+      "path": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-review-saving-no-freeze.png",
+        "alt": {
+          "tr": "Yenileme durumu penceresinde üç adım tamamlandı — gerçek Buyer Log demo ekranı",
+          "en": "All three steps completed in the refresh progress panel — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Denetleme ve Kaydetme adımı kısa sürede tamamlanır",
+          "en": "The Reviewing & saving step completes quickly"
+        }
+      },
+      "body": {
+        "tr": "Aynı sipariş/model/renkte çok sayıda IAS parsiyeli değiştiğinde değişiklik karşılaştırması sunucuyu dakikalarca meşgul ediyor, ilerleme penceresi \"Denetleme ve Kaydetme\" adımında donuyordu. Parsiyel eşleştirmesi aynı sonucu çok daha hızlı üretir; demo veride 2.500 değişen parsiyelle adım bir saniyenin altında biter.",
+        "en": "When many IAS partials of the same order/model/colour changed, the change comparison kept the server busy for minutes and the progress panel froze at \"Reviewing & saving\". Partial matching now produces the same result much faster; with 2,500 changed partials in demo data the step finishes in under a second."
       }
     }
   ]
