@@ -22843,7 +22843,7 @@ async function importEndeksmatikWorkbook(file){
     const lines=err&&err.details&&(Array.isArray(err.details.failures)?err.details.failures:Array.isArray(err.details.checks)?err.details.checks.filter(c=>!c.ok).map(c=>`${c.label} (${c.cell}): Excel ${c.excel} ≠ Buyer Log ${c.buyerLog}`):null);
     if(lines&&lines.length)console.warn('[Endeksmatik] yükleme reddedildi',err.code,lines);
     if(err&&err.details&&err.details.diagnostics)console.warn('[Endeksmatik] anahtar tanısı',err.details.diagnostics);
-    showToast((appLang==='en'?'Endeksmatik workbook could not be loaded: ':'Endeksmatik Excel yüklenemedi: ')+(err?.message||String(err)));
+    showToast((appLang==='en'?'Endeksmatik workbook could not be loaded: ':'Endeksmatik Excel yüklenemedi: ')+(err?.message||String(err))+(appLang==='en'?' — Collection › Tools › Endeksmatik Sets › Structure report creates a small, masked report you can share.':' — Koleksiyon › Araçlar › Endeksmatik Setleri › Yapı raporu ile paylaşılabilir, maskeli bir rapor üretebilirsiniz.'));
   }
   finally{if(input)input.value='';if(label){label.style.pointerEvents='';label.removeAttribute('aria-busy');}if(span)span.textContent=old;}
 }
@@ -22859,6 +22859,27 @@ function triggerEndeksmatikUpload(){
 /* Endeksmatik Setleri (v7.0.172): yüklenen ülke/bölge dosyalarının listesi.
    Kullanıcı varsayılan seti seçer, setleri adlandırır ya da siler. Liste
    yalnız pencere açılınca okunur (lazy). */
+/* Yapı raporu (v7.0.257): ülke dosyaları büyük ve şirket verisi olduğu için
+   hiçbir yere yüklenemiyor. Rapor dosyayı yerel sunucuda okur; değerleri
+   maskeli, birkaç KB'lık bir metin indirir ve panoya kopyalar. */
+async function createEndeksmatikStructureReport(){
+  const en=appLang==='en';
+  const input=document.createElement('input');input.type='file';input.accept='.xlsx,.xlsm';
+  input.addEventListener('change',async()=>{
+    const file=input.files&&input.files[0];if(!file)return;
+    showToast(en?'Reading workbook structure…':'Dosya yapısı okunuyor…',{icon:false});
+    try{
+      const dataBase64=await endeksmatikFileBase64(file);
+      const res=await fetch('/api/endeksmatik/structure-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file.name,dataBase64})}),data=await res.json().catch(()=>({}));
+      if(!res.ok)throw new Error(data.error||res.statusText);
+      const blob=new Blob([data.report],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download=`Endeksmatik-yapi-raporu-${String(file.name).replace(/\.[^.]+$/,'')}.txt`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000);
+      let copied=false;try{await navigator.clipboard.writeText(data.report);copied=true;}catch(_){}
+      showToast(en?`Structure report downloaded${copied?' and copied':''}. Values are masked; review it and share.`:`Yapı raporu indirildi${copied?' ve panoya kopyalandı':''}. Değerler maskeli; inceleyip paylaşabilirsiniz.`,{icon:false});
+    }catch(err){showToast((en?'Structure report failed: ':'Yapı raporu üretilemedi: ')+(err?.message||String(err)));}
+  });
+  input.click();
+}
 async function openEndeksmatikSetManager(){
   const en=appLang==='en';
   const status=await refreshEndeksmatikStatus({silent:false});if(!status)return;
@@ -22885,7 +22906,7 @@ async function openEndeksmatikSetManager(){
       <div class="endeksmatikNotice">${escapeHtml(en?'Each upload is checked against the ENDEKSMATIK screen: its formula logic (signature) and its cached results must match Buyer Log’s recalculation, otherwise the workbook is rejected as a changed model.':'Her yükleme ENDEKSMATİK ekranıyla kontrol edilir: formül mantığı (imza) ve önbellekli sonuçlar Buyer Log’un yeniden hesabıyla tutmalıdır; tutmazsa dosya “model değişti” diye reddedilir.')}</div>
       <div class="endeksmatikComponentWrap"><table class="endeksmatikSetTable"><thead><tr><th>${escapeHtml(en?'Set':'Set')}</th><th>${escapeHtml(en?'Region':'Bölge')}</th><th>${escapeHtml(en?'Season':'Sezon')}</th><th>${escapeHtml(en?'Workbook date':'Dosya tarihi')}</th><th>${escapeHtml(en?'Uploaded':'Yüklendi')}</th><th>${escapeHtml(en?'Classes':'Klasman')}</th><th>${escapeHtml(en?'Validation':'Doğrulama')}</th><th></th></tr></thead><tbody>${sets.map(rowHtml).join('')||`<tr><td colspan="8">${escapeHtml(en?'No Endeksmatik data yet.':'Henüz Endeksmatik verisi yok.')}</td></tr>`}</tbody></table></div>
     </div>
-    <div class="endeksmatikModalFoot"><button type="button" class="tbtn" data-em-close>${escapeHtml(en?'Close':'Kapat')}</button><button type="button" class="tbtn primary" data-em-set-upload${canManage?'':' disabled'}>${escapeHtml(en?'Upload new workbook':'Yeni dosya yükle')}</button></div>
+    <div class="endeksmatikModalFoot"><button type="button" class="tbtn" data-em-close>${escapeHtml(en?'Close':'Kapat')}</button><button type="button" class="tbtn" data-em-structure-report${canManage?'':' disabled'} title="${escapeHtml(en?'Reads a workbook on this computer and downloads a small report with masked values (headers, formulas, key overlap). Nothing is saved.':'Dosyayı bu bilgisayarda okur; değerleri maskeli küçük bir rapor indirir (başlıklar, formüller, anahtar örtüşmesi). Hiçbir şey kaydedilmez.')}">${escapeHtml(en?'Structure report':'Yapı raporu')}</button><button type="button" class="tbtn primary" data-em-set-upload${canManage?'':' disabled'}>${escapeHtml(en?'Upload new workbook':'Yeni dosya yükle')}</button></div>
   </div>`;
   document.body.appendChild(overlay);
   // Üstte açık ad penceresi varsa Escape yalnız onu kapatır.
@@ -22895,6 +22916,7 @@ async function openEndeksmatikSetManager(){
   overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
   overlay.querySelectorAll('[data-em-close]').forEach(btn=>btn.addEventListener('click',close));
   overlay.querySelector('[data-em-set-upload]')?.addEventListener('click',()=>triggerEndeksmatikUpload());
+  overlay.querySelector('[data-em-structure-report]')?.addEventListener('click',()=>void createEndeksmatikStructureReport());
   const call=async(url,options,okText)=>{
     try{
       const res=await fetch(url,{headers:{'Content-Type':'application/json'},...options}),data=await res.json().catch(()=>({}));
