@@ -120,6 +120,8 @@
         global:nationalHoliday,
         subdivisionCodes,
         holidayTypes,
+        estimated:row.estimated===true,
+        holidayKey:String(row.holidayKey||''),
       };
     }).filter(Boolean);
   }
@@ -187,7 +189,7 @@
     return {hour:(hour+minute/60+second/3600)*30,minute:(minute+second/60)*6,second:second*6};
   }
 
-  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,HOLIDAY_LOCAL_API,OFFICIAL_HOLIDAY_OVERRIDES,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,officialHolidayOverride,upcomingHolidays,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
+  if(typeof document==='undefined')return {STORAGE_KEY,DISPLAY_KEY,HOLIDAY_KEY,HOLIDAY_PERIOD_KEY,HOLIDAY_API,HOLIDAY_API_FALLBACK,HOLIDAY_LOCAL_API,OFFICIAL_HOLIDAY_OVERRIDES,DEFAULT_HOLIDAY_MONTHS,HOLIDAY_MONTH_OPTIONS,HOLIDAY_MAX_ITEMS,DEFAULT_CLOCKS,DEFAULT_DISPLAY,CLOCKS,greetingKey,greeting,normalizeSelection,normalizeDisplayMode,normalizeHolidayPref,normalizeHolidayMonths,addMonthsISO,zonedISODate,isoDayDiff,normalizeHolidayRows,holidayIsPublic,holidayApplies,officialHolidayOverride,upcomingHolidays,holidayDisplayName,clockParts,clockAngles,supportedTimeZones,clockFromId,clockSearchKey,clockMatchesSearch};
 
   const lang=()=>(document.documentElement.lang||'tr').toLowerCase().startsWith('en')?'en':'tr';
   const esc=value=>String(value==null?'':value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -264,11 +266,24 @@
   function holidayPeriodLabel(months,l){
     const n=normalizeHolidayMonths(months);return l==='en'?'Next '+n+' '+(n===1?'month':'months'):'Önümüzdeki '+n+' ay';
   }
+  // Sunucunun Hicri takvimden hesapladığı (sağlayıcıda eksik) bayramlar.
+  function holidayDisplayName(item,l){
+    const name=String(item&&(item.name||item.localName)||'').trim();
+    if(!item||!item.estimated)return name;
+    const pair={
+      eid_al_fitr:{tr:'Ramazan Bayramı',en:'Eid al-Fitr'},
+      eid_al_adha:{tr:'Kurban Bayramı',en:'Eid al-Adha'},
+      islamic_new_year:{tr:'Hicri Yılbaşı',en:'Islamic New Year'},
+      ashura:{tr:'Aşure Günü',en:'Ashura'},
+      mawlid:{tr:'Mevlid Kandili',en:"Prophet's Birthday (Mawlid)"},
+    }[item.holidayKey];
+    return (pair?(l==='en'?pair.en:pair.tr):name)+(l==='en'?' (expected)':' (tahmini)');
+  }
   function holidayMarkup(rows,localISO,l,months){
     if(!rows.length)return '';
     const heading=l==='en'?'Upcoming public holidays':'Yakındaki resmi tatiller';
     return '<div class="ovClockHolidayTitle"><span title="'+esc(heading)+'">'+esc(heading)+'</span><small>'+esc(holidayPeriodLabel(months,l))+'</small></div>'+rows.map(item=>{
-      const diff=isoDayDiff(localISO,item.date),name=String(item.name||item.localName||'').trim(),dateLabel=holidayDateLabel(item.date,l);
+      const diff=isoDayDiff(localISO,item.date),name=holidayDisplayName(item,l),dateLabel=holidayDateLabel(item.date,l);
       return '<div class="ovClockHoliday"><span class="ovClockHolidayWhen">'+esc(holidayWhenLabel(diff,l))+'</span><span class="ovClockHolidayName" title="'+esc(name)+'">'+esc(name)+'</span><span class="ovClockHolidayDate" title="'+esc(dateLabel)+'">'+esc(dateLabel)+'</span></div>';
     }).join('');
   }
