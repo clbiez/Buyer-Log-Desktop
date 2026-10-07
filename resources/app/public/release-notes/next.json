@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sync onarımları ve çakışma çözümü",
-    "en": "Sync repairs and conflict resolution"
+    "tr": "Sync onarımları, çakışma çözümü ve yenileme düzeltmesi",
+    "en": "Sync repairs, conflict resolution and refresh fix"
   },
   "summary": {
-    "tr": "Büyük yerel veride sync yeniden çalışıyor; çakışmalar ayrıntılı görülüp çözülebiliyor.",
-    "en": "Sync works again on large local data; conflicts can be inspected and resolved."
+    "tr": "Büyük yerel veride sync yeniden çalışıyor; çakışmalar ayrıntılı görülüp çözülebiliyor. Yenileme artık \"Denetleme ve Kaydetme\" adımında takılmıyor.",
+    "en": "Sync works again on large local data; conflicts can be inspected and resolved. Refresh no longer stalls at \"Reviewing & saving\"."
   },
   "changes": [
     {
@@ -108,6 +108,39 @@
       "body": {
         "tr": "Sunucu kısa süre meşgulken bir ekranın dosyası (ör. data-management-picker.js) yüklenemezse ekran artık hemen hata vermiyor; dosya kısa bir beklemeyle bir kez daha istenir ve Veri Yönetimi gibi ekranlar normal açılır.",
         "en": "If a screen's file (e.g. data-management-picker.js) fails to load while the server is briefly busy, the screen no longer fails immediately; the file is requested once more after a short wait and screens such as Data Management open normally."
+      }
+    },
+    {
+      "id": "refresh-review-saving-no-freeze",
+      "type": "fix",
+      "module": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "title": {
+        "tr": "Yenileme \"Denetleme ve Kaydetme\" adımında takılmaz",
+        "en": "Refresh no longer hangs at \"Reviewing & saving\""
+      },
+      "path": {
+        "tr": "Yenile",
+        "en": "Refresh"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "refresh-review-saving-no-freeze.png",
+        "alt": {
+          "tr": "Yenileme durumu penceresinde üç adım tamamlandı — gerçek Buyer Log demo ekranı",
+          "en": "All three steps completed in the refresh progress panel — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Denetleme ve Kaydetme adımı kısa sürede tamamlanır",
+          "en": "The Reviewing & saving step completes quickly"
+        }
+      },
+      "body": {
+        "tr": "Aynı sipariş/model/renkte çok sayıda IAS parsiyeli değiştiğinde değişiklik karşılaştırması sunucuyu dakikalarca meşgul ediyor, ilerleme penceresi \"Denetleme ve Kaydetme\" adımında donuyordu. Parsiyel eşleştirmesi aynı sonucu çok daha hızlı üretir; demo veride 2.500 değişen parsiyelle adım bir saniyenin altında biter.",
+        "en": "When many IAS partials of the same order/model/colour changed, the change comparison kept the server busy for minutes and the progress panel froze at \"Reviewing & saving\". Partial matching now produces the same result much faster; with 2,500 changed partials in demo data the step finishes in under a second."
       }
     }
   ]
