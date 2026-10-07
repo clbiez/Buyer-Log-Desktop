@@ -64,8 +64,19 @@
   const text = value => String(value == null ? '' : value).trim();
   const pick = (lang, item) => (lang === 'en' ? item.en : item.tr);
   function fields() { const eng = engineApi(); return (eng && eng.FIELDS) || FALLBACK_FIELDS; }
+  // Saf fonksiyon; aynı kısa değerler (statü, risk) satır başına tekrarlanır.
+  const TURK_CACHE = new Map();
   function turk(value) {
-    return text(value).toLocaleUpperCase('tr-TR').replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ğ/g, 'G').replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C').replace(/\s+/g, ' ');
+    const raw = text(value);
+    const hit = TURK_CACHE.get(raw); if (hit !== undefined) return hit;
+    const out = raw.toLocaleUpperCase('tr-TR').replace(/İ/g, 'I').replace(/Ş/g, 'S').replace(/Ğ/g, 'G').replace(/Ü/g, 'U').replace(/Ö/g, 'O').replace(/Ç/g, 'C').replace(/\s+/g, ' ');
+    if (raw.length <= 160) { if (TURK_CACHE.size >= 20000) TURK_CACHE.clear(); TURK_CACHE.set(raw, out); }
+    return out;
+  }
+  // "YYYY-MM-DDTHH:MM" ile başlayan metin; regex'ten önce ucuz karakter kontrolü.
+  const TIMESTAMP_TEXT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
+  function isTimestampText(value) {
+    return typeof value === 'string' && value.length >= 16 && value.charCodeAt(4) === 45 && value.charCodeAt(10) === 84 && TIMESTAMP_TEXT.test(value);
   }
   function stageOf(status) {
     const eng = engineApi();
@@ -145,15 +156,20 @@
     DIMENSIONS.forEach(id => { item[id] = canon(row, id); });
     item.season = canon(row, 'season');
     // Sunucu tarihleri gün metni olarak gönderir; saatli ham değer bir veri yolu hatasıdır.
-    item.rawTimestampFields = Object.keys(row || {}).filter(key => key[0] !== '_' && typeof row[key] === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(row[key]));
+    item.rawTimestampFields = Object.keys(row || {}).filter(key => key[0] !== '_' && isTimestampText(row[key]));
     item.lineId = [item.orderCode, item.modelName, item.colourCode].join('\u001f');
-    const today = ordinal(ctx.today || todayIso());
+    const today = ctx.todayOrdinal != null ? ctx.todayOrdinal : ordinal(ctx.today || todayIso());
     const exOrd = ordinal(exFactory);
     item.overdueNotLoaded = PRE_LOAD.has(stage) && exOrd != null && today != null && exOrd < today;
     item.overdueDays = item.overdueNotLoaded ? today - exOrd : 0;
     return item;
   }
-  function normalizeRows(rows, context) { return (Array.isArray(rows) ? rows : []).map(row => normalizeRow(row, context)); }
+  function normalizeRows(rows, context) {
+    // "Bugün" bir kez hesaplanır; eskiden her satırda yeni Date + metin dönüşümü yapılıyordu.
+    const ctx = { ...(context || {}) };
+    if (ctx.todayOrdinal == null) ctx.todayOrdinal = ordinal(ctx.today || todayIso());
+    return (Array.isArray(rows) ? rows : []).map(row => normalizeRow(row, ctx));
+  }
 
   function emptyStages() { const out = {}; STAGE_KEYS.forEach(k => { out[k] = 0; }); return out; }
   function summarize(items) {

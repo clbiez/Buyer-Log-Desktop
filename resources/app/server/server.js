@@ -8308,6 +8308,8 @@ app.get('/api/backlog-source-columns', userAccess.requireArea('backlog'), async 
    girdi değişince anahtar da değişir; TTL yalnız bellek tavanıdır. */
 const BACKLOG_ROWS_CACHE_MS=60*1000,BACKLOG_ROWS_CACHE_MAX=12;
 const backlogRowsCache=new Map(),backlogObjectIds=new WeakMap();let backlogObjectSeq=0;
+// Nesne kimlik sayaçları süreç başına sıfırlanır; revizyon süreçler arası çakışmasın.
+const BACKLOG_ROWS_PROCESS_NONCE=crypto.randomBytes(8).toString('hex');
 function backlogObjectIdentity(value){
   if(!value||typeof value!=='object')return '0';
   let id=backlogObjectIds.get(value);if(!id){id=String(++backlogObjectSeq);backlogObjectIds.set(value,id);}return id;
@@ -8356,7 +8358,10 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     const exportHeaders=[...BACKLOG_TEMPLATE_HEADERS,...sourceColumns.map(column=>column.label)];
     // format=json: satırlar istemciye gider, Excel istemcide CP ile AYNI stil motoruyla üretilir.
     if(req.query.format==='json'){
-      return sendDateSafeJson(res, { headers: exportHeaders, rows: detailRows, totalRows:detailRows.totalRows||detailRows.length, sourceColumns, sourceCatalog });
+      // rowsRevision: aynı girdiler = aynı satırlar. İstemci aynı revizyonda
+      // elindeki normalleştirilmiş/analiz edilmiş veriyi yeniden kullanır.
+      const rowsRevision=crypto.createHash('sha1').update(BACKLOG_ROWS_PROCESS_NONCE).update(detailRowsKey).digest('hex');
+      return sendDateSafeJson(res, { headers: exportHeaders, rows: detailRows, totalRows:detailRows.totalRows||detailRows.length, sourceColumns, sourceCatalog, rowsRevision });
     }
     const workerResult=await runExcelTask('writeBacklogWorkbook',{headers:exportHeaders,detailRows,templatePath:path.join(__dirname,'templates','BACKLOG.xlsx')},{timeoutMs:300000});
     const buffer=Buffer.from(workerResult.data);

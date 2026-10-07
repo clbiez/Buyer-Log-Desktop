@@ -118,7 +118,10 @@ function reapplyOverviewFilters(){items=applyOverviewFilters(baseItems||[]);save
 
 
 /* ------------------------------------------------ ortak satır önbelleği */
-const rowsCache={signature:'',promise:null,rows:null};
+/* revision: sunucunun girdilerden türettiği satır revizyonu. Önbellek düşse de
+   yeniden çekilen satırlar aynı revizyondaysa ÖNCEKİ dizi döndürülür; böylece
+   Genel Bakış ve Teslimat Riski panelleri aynı veriyi baştan hesaplamaz. */
+const rowsCache={signature:'',promise:null,rows:null,lastRevision:'',lastRows:null};
 function loadRows(params){
   const sig=JSON.stringify(params||{});
   if(rowsCache.signature===sig&&(rowsCache.rows||rowsCache.promise))return rowsCache.rows?Promise.resolve(rowsCache.rows):rowsCache.promise;
@@ -127,7 +130,10 @@ function loadRows(params){
   const promise=fetch('/api/backlog-export?'+qs,{credentials:'same-origin'}).then(async res=>{
     const body=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(body&&body.error?body.error:`HTTP ${res.status}`);
-    const rows=Array.isArray(body.rows)?body.rows:[];
+    let rows=Array.isArray(body.rows)?body.rows:[];
+    const revision=typeof body.rowsRevision==='string'?body.rowsRevision:'';
+    if(revision&&revision===rowsCache.lastRevision&&rowsCache.lastRows)rows=rowsCache.lastRows;
+    else{rowsCache.lastRevision=revision;rowsCache.lastRows=revision?rows:null;}
     if(rowsCache.signature===sig){rowsCache.rows=rows;rowsCache.promise=null;}
     return rows;
   }).catch(err=>{if(rowsCache.signature===sig){rowsCache.signature='';rowsCache.promise=null;}throw err;});
@@ -149,11 +155,13 @@ async function refresh(force){
     if(force)window.BLBacklogRows.invalidate();
     const rows=await loadRows(params);
     if(!R())throw new Error(L('Backlog V3 rapor motoru yüklenemedi.','Backlog V3 report engine could not be loaded.'));
-    baseItems=R().normalizeRows(rows);items=applyOverviewFilters(baseItems);signature=sig;
+    // Aynı satır dizisi (aynı sunucu revizyonu) zaten normalleştirildiyse tekrarlanmaz.
+    if(!(rows===normalizedRows&&baseItems))baseItems=R().normalizeRows(rows);
+    normalizedRows=rows;items=applyOverviewFilters(baseItems);signature=sig;
   }catch(err){error=String(err&&err.message||err);baseItems=null;items=null;}
   finally{loading=false;render();}
 }
-let pendingTimer=0,lastData=null;
+let pendingTimer=0,lastData=null,normalizedRows=null;
 function onBacklogRendered(data){
   $('backlogContent')?.classList.add('has-blv');
   // Her yeni Backlog yanıtı (filtre değişimi veya veri yenileme) taze satır
