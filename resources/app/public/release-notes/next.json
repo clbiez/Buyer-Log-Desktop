@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-07",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Daha hızlı ve net açılış",
+    "en": "Faster, clearer startup"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Kullanıcı bilgileri adımı artık ek modülleri beklemiyor; veri geldiyse yanıltıcı Tekrar dene düğmesi gösterilmiyor.",
+    "en": "The User information step no longer waits for extra modules; once data has arrived, no misleading Retry button is shown."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "startup-user-info-fast",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Açılışta \"Kullanıcı bilgileri\" adımı artık beklemiyor",
+        "en": "The \"User information\" startup step no longer stalls"
+      },
+      "path": {
+        "tr": "Buyer Log açılış ekranı",
+        "en": "Buyer Log startup screen"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-user-info-fast.png",
+        "alt": {
+          "tr": "Açılış ekranında Başlangıç verisi, Ekran ve Kullanıcı bilgileri adımları tamamlanmış; Buyer Log hazır — gerçek Buyer Log demo ekranı",
+          "en": "Startup screen with Initial data, Screen and User information completed; Buyer Log is ready — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Kullanıcı bilgileri ilk veriyle birlikte hazırlanır",
+          "en": "User information is prepared together with the initial data"
+        }
+      },
+      "body": {
+        "tr": "Kullanıcı bilgileri adımı, ekran hazır olduktan sonra yüklenen ek modüllerin tamamını bekliyordu; büyük veride bu bekleme dakikalara uzayabiliyordu. Artık kullanıcı katmanı başlangıç verisiyle birlikte yüklenir. Ayrıca başlangıç verisi geldiyse 2 dakikada yanıltıcı \"Tekrar dene\" düğmesi gösterilmez; açılış \"Neredeyse hazır\" mesajıyla sürer ve düğme yalnız gerçek bir takılmada çıkar.",
+        "en": "The User information step waited for every extra module loaded after the screen was ready; with large data this could stretch to minutes. The user layer now loads together with the initial data. In addition, once the initial data has arrived, no misleading \"Retry\" button appears at 2 minutes; startup continues with an \"Almost ready\" message and the button only appears on a real stall."
+      }
+    }
+  ]
 }

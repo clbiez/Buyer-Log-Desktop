@@ -15417,6 +15417,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
   const requestedModule=new URLSearchParams(location.search).get('module');
   if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
+  // Açılış perdesinin "Kullanıcı bilgileri" kapısı user-access-ui.js'e bağlıdır.
+  // deferredUi grubu ekran hazır olduktan ve önceki dosyalar bittikten sonra
+  // yüklendiği için kapı dakikalarca açık kalabiliyordu; betik ilk veriyle
+  // birlikte istenir. Aynı dize deferredUi'de tek kez yüklenir; profil hazırsa
+  // betik kendisi, değilse loadFromServer applyUserAccessUI'yi çağırır.
+  void window.BLPerf?._loadScript?.('user-access-ui.js?rev=APP-UPDATE-V3')?.catch(error=>console.warn('Kullanıcı erişim katmanı erken yüklenemedi:',error));
   const initialDataLoaded=await loadInitialBuyerLogData();
   if(initialDataLoaded)window.BLBootGuard?.ready('data');
   else window.BLBootGuard?.fail('initial-data-failed');
