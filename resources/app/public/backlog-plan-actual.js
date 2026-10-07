@@ -63,11 +63,21 @@ function applyPreset(preset){
 /* Plan penceresi: "bu aralıkta yüklenmesi planlananlar". Analiz döneminden
    bağımsız seçilebilir; tarihi geçmiş kararı analiz bitiş günüyle verilir. */
 function planWindow(){
-  const mode=state.planMode,now=new Date();
+  const mode=state.planMode,now=new Date(),dimension=window.BLDateDimension;
   if(mode==='custom'&&/^\d{4}-\d{2}-\d{2}$/.test(state.planFrom)&&/^\d{4}-\d{2}-\d{2}$/.test(state.planTo)&&state.planFrom<=state.planTo)return {from:state.planFrom,to:state.planTo};
   if(mode==='thisWeek'){const s=new Date(now);s.setDate(s.getDate()-((s.getDay()+6)%7));const e=new Date(s);e.setDate(e.getDate()+6);return {from:dayValue(s),to:dayValue(e)};}
-  if(mode==='thisMonth'){const s=new Date(now.getFullYear(),now.getMonth(),1),e=new Date(now.getFullYear(),now.getMonth()+1,0);return {from:dayValue(s),to:dayValue(e)};}
-  if(mode==='lastMonth'){const s=new Date(now.getFullYear(),now.getMonth()-1,1),e=new Date(now.getFullYear(),now.getMonth(),0);return {from:dayValue(s),to:dayValue(e)};}
+  if(mode==='thisMonth'){
+    const merch=dimension?.businessMonthRange?.(now);
+    if(merch)return {from:merch.start,to:merch.end};
+    if(dimension?.hasMerchCalendar?.())return {from:'',to:''};
+    const s=new Date(now.getFullYear(),now.getMonth(),1),e=new Date(now.getFullYear(),now.getMonth()+1,0);return {from:dayValue(s),to:dayValue(e)};
+  }
+  if(mode==='lastMonth'){
+    const merch=dimension?.previousBusinessMonthRange?.(now);
+    if(merch)return {from:merch.start,to:merch.end};
+    if(dimension?.hasMerchCalendar?.())return {from:'',to:''};
+    const s=new Date(now.getFullYear(),now.getMonth()-1,1),e=new Date(now.getFullYear(),now.getMonth(),0);return {from:dayValue(s),to:dayValue(e)};
+  }
   return {from:String(state.from||'').slice(0,10),to:String(state.to||'').slice(0,10)};
 }
 function fmtDate(value){
