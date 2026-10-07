@@ -1,81 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-07",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "PLM ve OAB dış tarayıcısız",
-    "en": "PLM and OAB without an external browser"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "PLM senkronizasyonu Edge beklemiyor; OAB masaüstünde Buyer Log'un gizli oturumuyla çalışıyor.",
-    "en": "PLM synchronization no longer waits for Edge; on desktop, OAB works through Buyer Log's hidden session."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "plm-sync-no-external-browser",
-      "type": "improvement",
-      "module": {
-        "tr": "PLM Senkronizasyonu",
-        "en": "PLM Synchronization"
-      },
-      "title": {
-        "tr": "PLM senkronizasyonu artık dış tarayıcı istemiyor",
-        "en": "PLM synchronization no longer needs an external browser"
-      },
-      "path": {
-        "tr": "CP Tracker / Siparişler / Koleksiyon › PLM Senkronizasyonu",
-        "en": "CP Tracker / Orders / Collection › PLM Synchronization"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "plm-sync-no-external-browser.png",
-        "alt": {
-          "tr": "CP Tracker ekranında arka planda çalışan PLM senkronizasyonu bildirimi — demo verili Buyer Log ekranı",
-          "en": "PLM synchronization notification running in the background on CP Tracker — Buyer Log screen with demo data"
-        },
-        "caption": {
-          "tr": "PLM işi arka planda sürer; Edge açılmaz, Remote Debugging onayı istenmez",
-          "en": "The PLM job runs in the background; Edge does not open and no Remote Debugging approval is asked"
-        }
-      },
-      "body": {
-        "tr": "PLM verisi, model görselleri, teknik föyler ve numune durumları doğrudan PLM servisinden çekiliyor. PLM butonları artık önce Edge'i Remote Debugging ile açmayı veya yeniden başlatmayı beklemiyor; ilerleme bildirimi de \"tarayıcıyı kapatmayın / Allow seçin\" uyarısı göstermiyor. Edge yalnız açık Style List sekmesindeki seçili modellerin aktarımı ve ASAS görselleri için kullanılmaya devam ediyor.",
-        "en": "PLM data, model images, technical sheets and sample statuses are fetched directly from the PLM service. PLM buttons no longer wait for Edge to be opened or restarted with Remote Debugging, and the progress notification no longer shows the \"keep the browser open / choose Allow\" warning. Edge is still used only for importing the models selected in an open Style List tab and for ASAS images."
-      }
-    },
-    {
-      "id": "oab-desktop-session",
-      "type": "fix",
-      "module": {
-        "tr": "OAB",
-        "en": "OAB"
-      },
-      "title": {
-        "tr": "OAB masaüstünde arka planda oturum açıyor; girişi doğru algılıyor",
-        "en": "OAB signs in in the background on desktop and detects sign-in reliably"
-      },
-      "path": {
-        "tr": "Genel Bakış › Ticari › OAB › Get OAB",
-        "en": "Overview › Commercial › OAB › Get OAB"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "oab-desktop-session.png",
-        "alt": {
-          "tr": "OAB kartında \"OAB oturumu kontrol ediliyor; tarayıcı açılmaz\" adımı — demo verili Buyer Log ekranı",
-          "en": "\"Checking OAB session; no browser opens\" step on the OAB card — Buyer Log screen with demo data"
-        },
-        "caption": {
-          "tr": "OAB oturumu Buyer Log'un kendi gizli oturumunda doğrulanır",
-          "en": "The OAB session is verified in Buyer Log's own hidden session"
-        }
-      },
-      "body": {
-        "tr": "Masaüstü uygulamasında OAB verisi artık dış Edge/Chrome sekmesi ve Remote Debugging olmadan, Buyer Log'un kendi gizli oturumuyla doğrudan PASS servisinden çekiliyor. Giriş penceresi yalnız PASS gerçekten giriş istediğinde açılıyor. Giriş, PASS'in kendi oturum bilgisinden algılandığı için oturum açıkken tekrar girişe yönlendirme yapılmıyor. Giriş yaptıktan sonra pencereyi kapatırsanız Buyer Log tamamlanan oturumu birkaç saniye daha arayıp işe devam ediyor.",
-        "en": "In the desktop app, OAB data is now fetched directly from the PASS service through Buyer Log's own hidden session, without an external Edge/Chrome tab or Remote Debugging. The sign-in window opens only when PASS really asks for sign-in. Sign-in is detected from PASS's own session data, so an active session is no longer sent back to the login page. If you close the window after signing in, Buyer Log keeps looking for the completed session for a few more seconds and continues."
-      }
-    }
-  ]
+  "changes": []
 }
