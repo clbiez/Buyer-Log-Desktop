@@ -245,13 +245,14 @@
     const min=Math.floor(VISIBLE_ROWS/2),max=state.count-1-min;
     return Math.max(min,Math.min(max,pos));
   }
-  function paintRevolver(state,animate){
+  function paintRevolver(state,animate,flat){
     state.host.classList.toggle('isMoving',!animate);
     const center=state.count>=VISIBLE_ROWS?Math.floor(VISIBLE_ROWS/2):0;
     state.rows.forEach(function(row,index){
+      /* Tambur eğimi yalnız kaydırırken; durunca satırlar düz oturur. */
       const delta=index-state.pos,distance=Math.abs(delta);
       const y=(delta+center)*state.rowHeight;
-      row.style.transform='translateY('+y.toFixed(2)+'px) rotateX('+(-delta*24).toFixed(2)+'deg) scale('+(1-Math.min(distance,2)*0.04).toFixed(3)+')';
+      row.style.transform='translateY('+y.toFixed(2)+'px) rotateX('+(animate||flat?0:-delta*24).toFixed(2)+'deg) scale('+(1-Math.min(distance,2)*0.04).toFixed(3)+')';
       row.style.opacity=distance>=2?'0':String((1-distance*0.25).toFixed(3));
       row.style.visibility=distance>=2?'hidden':'';
       row.classList.toggle('isCenter',distance<0.5);
@@ -298,7 +299,7 @@
     revolver=state;
     state.pos=revolverClamp(state,start);
     state.centerMonth=rows[state.pos]?rows[state.pos].dataset.month:'';
-    paintRevolver(state,false);
+    paintRevolver(state,false,true);
     void host.offsetHeight;
     host.classList.remove('isMoving');
     fitThumbs(state);

@@ -55,7 +55,7 @@ test('Overview Collection summary renders a 3-row revolver of month rows',()=>{
   assert.match(DASH,/Math\.round\(/);
   assert.match(DASH,/addEventListener\('wheel'/);
   assert.match(DASH,/addEventListener\('pointerup'/);
-  assert.match(DASH,/rotateX\(/);
+  assert.match(DASH,/rotateX\(.+\(animate\|\|flat\?0:-delta\*24\)/);
   assert.match(DASH,/ovCollectionMonthMore/);
   assert.match(DASH,/ctx\.drill\(Object\.assign\(\{scopeColumn:scoped\.column\.k,scopeValues:scoped\.selected\},extra\)\)/);
   assert.match(DASH,/drill\(\{month:month,status:button\.dataset\.monthStatus\}\)/);
