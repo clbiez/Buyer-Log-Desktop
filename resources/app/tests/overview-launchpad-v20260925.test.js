@@ -103,6 +103,9 @@ test('Bugün alanında sayfa kısayolları yoktur; kullanıcı dünya saati ekle
   assert.ok(india2026.some(item=>item.date==='2026-11-08'&&/Diwali/.test(item.name)));
   assert.ok(india2027.some(item=>item.date==='2027-10-29'&&/Diwali/.test(item.name)));
   assert.equal(launchpad.normalizeHolidayRows([{date:'2026-01-26',name:'Republic Day',nationalHoliday:true,holidayTypes:['Public']}])[0].name, 'Republic Day');
+  const eid=launchpad.normalizeHolidayRows([{date:'2027-03-10',name:'Eid al-Fitr',nationalHoliday:true,holidayTypes:['Public'],estimated:true,holidayKey:'eid_al_fitr'}])[0];
+  assert.equal(launchpad.holidayDisplayName(eid,'tr'), 'Ramazan Bayramı (tahmini)');
+  assert.equal(launchpad.holidayDisplayName(eid,'en'), 'Eid al-Fitr (expected)');
   assert.match(SOURCE, /filterClockOptions/);
   assert.match(SOURCE, /Analog \+ dijital/);
   assert.match(SOURCE, /Intl\.supportedValuesOf\('timeZone'\)/);

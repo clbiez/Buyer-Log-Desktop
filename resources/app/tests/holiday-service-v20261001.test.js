@@ -10,6 +10,7 @@ const {
   verifiedCatalogRows,
   createHolidayService,
 } = require('../server/lib/holiday-service');
+const { islamicHolidayRows, mergeIslamicHolidays } = require('../server/lib/islamic-holidays');
 
 function jsonResponse(payload, status = 200) {
   return {
@@ -73,7 +74,7 @@ test('provider chain prefers live Nager data when available', async () => {
   const result = await service.getYear({countryCode:'TR',year:2028});
   assert.equal(result.source, 'nager-v4');
   assert.equal(result.stale, false);
-  assert.deepEqual(result.rows.map(row=>row.date), ['2028-10-29']);
+  assert.deepEqual(result.rows.filter(row=>!row.estimated).map(row=>row.date), ['2028-10-29']);
   assert.equal(seen.length, 1);
 });
 
@@ -122,7 +123,7 @@ test('unsupported live API countries continue with a live ICS provider for futur
   const result = await service.getYear({countryCode:'IN',year:2028});
   assert.equal(result.source, 'officeholidays-ics');
   assert.equal(result.stale, false);
-  assert.deepEqual(result.rows.map(row=>row.date), ['2028-01-26','2028-08-15']);
+  assert.deepEqual(result.rows.filter(row=>!row.estimated).map(row=>row.date), ['2028-01-26','2028-08-15']);
   assert.ok(seen.some(url=>url.includes('/ics-clean/india')));
 });
 
@@ -153,4 +154,40 @@ test('last-known-good cache prevents holidays disappearing during provider outag
   } finally {
     fs.rmSync(root, { recursive:true, force:true });
   }
+});
+
+test('Bangladesh gets lunar Eid holidays when the live provider omits them', async () => {
+  // Nager BD verisi Ramazan/Kurban Bayramını içermiyordu; dünya saatinde görünmüyordu.
+  const service = createHolidayService({
+    fetchFn:async url => {
+      if (url.includes('/api/v4/Holidays/BD/2027')) {
+        return jsonResponse([
+          {date:'2027-02-21',name:'International Mother Language Day',nationalHoliday:true,holidayTypes:['Public']},
+          {date:'2027-03-26',name:'Independence and National Day',nationalHoliday:true,holidayTypes:['Public']},
+        ]);
+      }
+      throw new Error('unexpected provider');
+    },
+    now:()=>Date.UTC(2026,9,8),
+  });
+  const result = await service.getYear({countryCode:'BD',year:2027});
+  assert.equal(result.source, 'nager-v4');
+  const eid = result.rows.filter(row=>row.estimated).map(row=>[row.date,row.holidayKey]);
+  assert.deepEqual(eid.filter(([,key])=>/^eid/.test(key)), [
+    ['2027-03-10','eid_al_fitr'],
+    ['2027-05-17','eid_al_adha'],
+  ]);
+  assert.ok(result.rows.some(row=>row.name === 'International Mother Language Day'));
+});
+
+test('lunar holidays already listed by the provider are not duplicated', () => {
+  const india = verifiedCatalogRows('IN', 2026);
+  assert.equal(mergeIslamicHolidays(india, 'IN', 2026).length, india.length);
+  const turkey = [
+    {date:'2027-03-09',name:'Ramazan Bayramı'},
+    {date:'2027-05-16',name:'Kurban Bayramı'},
+  ];
+  assert.equal(mergeIslamicHolidays(turkey, 'TR', 2027).length, 2);
+  assert.deepEqual(islamicHolidayRows('TR', 2027).map(row=>row.date), ['2027-03-09','2027-05-16']);
+  assert.deepEqual(islamicHolidayRows('DE', 2027), []);
 });
