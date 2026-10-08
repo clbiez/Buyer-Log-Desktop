@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.259",
-  "commit_sha": "cc8348996b29d8eb5f6aa49704a6a6b51d5710d4",
-  "release_notes": "Buyer Log 7.0.259 TEST: CP ve Siparişler model görselleri başka sayfadan dönüldüğünde ve uygulama yeniden açıldığında beklemeden yerinde görünür; aynı görsel her ekranda tek adresle önbellekten gelir, CP'de ilk 300 satırın görselleri hazırlanır. Tümü görünümünde kaydırılmışken dönüşte tablo boş kalmaz. LCW AI çıktı düzenleyicisi sadeleşti ve Koleksiyon'a Orders/CP görünür satır aralığı eklendi. PR #433 Buyer Log regresyon paketi başarıyla geçti."
+  "version": "7.0.260",
+  "commit_sha": "b5d3c44cfa694d8dcba35b338e8c632d26b52294",
+  "release_notes": "Buyer Log 7.0.260 TEST: Merch Calendar dosyalarında LCW 53. hafta kabul edilir, 54. hafta reddedilir. Calendar yönetimi Data Management > Tools > Calculation Rules altında açılır/kapanır modül olarak bulunur. LCW/GLB hafta ve yıl geçişi eşlemesi korunur. PR #434 ve release PR #436 regresyon testleri geçti."
 }
