@@ -153,8 +153,7 @@
 @media (max-width:900px){.lcwaiChat{grid-template-columns:1fr;}.lcwaiChatSide{display:none;}}
 /* ---------------- AI Çıktı Düzenleyici + çıktı şablonları ----------------
    Yalnız design.css değişkenleri; yeni renk yok. */
-.lcwaiOutputTpl{display:inline-flex;gap:6px;align-items:center;}
-.lcwaiOutputTpl select{height:var(--ctl-h);max-width:260px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:12px;padding:0 6px;}
+.lcwaiOutputOptions [data-output-template]{max-width:240px;}
 .lcwaiEdOverlay{z-index:420;}
 .lcwaiEd{width:min(1480px,97vw);height:min(920px,94vh);display:flex;flex-direction:column;padding:0;overflow:hidden;position:relative;}
 .lcwaiEdHead{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card2);}
@@ -271,11 +270,8 @@
 .lcwaiTplRow .lcwaiFileInfo small.lcwaiTplPreview{color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 @media (max-width:900px){.lcwaiEdBody{grid-template-columns:1fr;}.lcwaiEdRail{max-height:180px;border-right:0;border-bottom:1px solid var(--line);}.lcwaiEdKpi,.lcwaiEdKpi.is-gallery,.lcwaiTplItem,.lcwaiEdCols,.lcwaiEdSlideBand .lcwaiEdRow{grid-template-columns:1fr;}.lcwaiTplRow{flex-wrap:wrap;}}
 /* ---------------- Yerleşim aracı (Çıktı Düzenleyici › Yerleşim) ---------------- */
-.lcwaiEdModes button{min-width:84px;}
 .lcwaiLay{display:grid;grid-template-columns:310px minmax(0,1fr);gap:18px;align-items:start;min-height:100%;}
 .lcwaiLayControls{position:sticky;top:0;display:flex;flex-direction:column;gap:12px;padding:12px;border:1px solid var(--line2);background:var(--card);max-height:calc(100% - 4px);overflow:auto;}
-.lcwaiLayPresets{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
-.lcwaiLayPresets .lcwaiBtn{padding:0 6px;}
 .lcwaiLayGroup{display:grid;gap:8px;padding-top:10px;border-top:1px solid var(--line);}
 .lcwaiLayGroup h4{margin:0;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
 .lcwaiLayCtl{display:grid;gap:3px;font-size:11.5px;color:var(--ink2);}
@@ -321,3 +317,42 @@
 .lcwaiLaySheet td.is-img{text-align:center;}
 @media (max-width:1100px){.lcwaiLay{grid-template-columns:1fr;}.lcwaiLayControls{position:static;}}
 .lcwaiLayStage .lcwaiEdFrame{flex:none;height:calc(94vh - 190px);min-height:420px;max-width:none;}
+/* Sadeleştirme: 3 adımlı üst çubuk, hazır yerleşim kartları, katlanır ince ayar */
+.lcwaiEdSteps{display:inline-flex;align-items:stretch;border:1px solid var(--line2);background:var(--card);}
+.lcwaiEdSteps button{display:inline-flex;align-items:center;gap:7px;height:var(--ctl-h);padding:0 14px;border:0;border-left:1px solid var(--line2);background:transparent;color:var(--ink2);font-size:12.5px;font-weight:600;cursor:pointer;}
+.lcwaiEdSteps button:first-child{border-left:0;}
+.lcwaiEdSteps button span{display:grid;place-items:center;width:18px;height:18px;border:1px solid var(--line2);font-size:10.5px;color:var(--muted);}
+.lcwaiEdSteps button:hover{background:var(--card2);color:var(--ink);}
+.lcwaiEdSteps button.is-active{background:var(--acc-bg);color:var(--acc-ink);box-shadow:inset 0 -2px 0 var(--acc);}
+.lcwaiEdSteps button.is-active span{border-color:var(--acc);color:var(--acc-ink);}
+.lcwaiEdSteps button.is-final{background:var(--acc);color:var(--on-acc,#fff);}
+.lcwaiEdSteps button.is-final span{border-color:currentColor;color:inherit;}
+.lcwaiEdSteps button.is-final:hover{filter:brightness(1.08);}
+.lcwaiEdSteps button:disabled{opacity:.6;cursor:progress;}
+.lcwaiEdSteps button:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.lcwaiEdHeadTools{display:inline-flex;align-items:center;gap:6px;margin-left:4px;}
+.lcwaiEdIconBtn.is-tool{width:var(--ctl-h);height:var(--ctl-h);font-size:16px;border:1px solid var(--line2);background:var(--card);color:var(--ink2);}
+.lcwaiEdIconBtn.is-tool:hover{color:var(--ink);}
+.lcwaiLayGroup.is-first{border-top:0;padding-top:0;}
+.lcwaiLayPresets{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.lcwaiLayPreset{display:grid;justify-items:start;gap:2px;padding:8px;border:1px solid var(--line2);background:var(--card);color:var(--ink);text-align:left;cursor:pointer;font:inherit;}
+.lcwaiLayPreset:hover{border-color:var(--acc);}
+.lcwaiLayPreset.is-active{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);background:var(--acc-bg);}
+.lcwaiLayPreset b{font-size:12px;}
+.lcwaiLayPreset small{font-size:10.5px;color:var(--muted);line-height:1.3;}
+.lcwaiLayThumb{display:grid;gap:2px;width:100%;height:34px;margin-bottom:4px;padding:3px;border:1px solid var(--line);background:var(--card2);}
+.lcwaiLayThumb i{display:block;background:var(--line2);min-height:0;}
+.lcwaiLayPreset.is-active .lcwaiLayThumb i{background:var(--acc);}
+.lcwaiLayThumb.is-text{display:flex;align-items:flex-end;gap:6px;}
+.lcwaiLayThumb.is-text b,.lcwaiLayThumb.is-text i{background:none;font-style:normal;color:var(--ink2);line-height:1;}
+.lcwaiLayGridPick{max-width:200px;}
+.lcwaiLayGridPick button.is-hover{background:var(--acc-bg);border-color:var(--acc);}
+.lcwaiLayGridPick button.is-on.is-hover{background:var(--acc);}
+.lcwaiLayGridText.is-hover span{color:var(--muted);}
+.lcwaiLayMore{border-top:1px solid var(--line);padding-top:8px;}
+.lcwaiLayMore>summary,.lcwaiEdAdvanced>summary{cursor:pointer;font-size:11.5px;font-weight:600;color:var(--ink2);}
+.lcwaiLayMore>.lcwaiLayGroup{border-top:0;margin-top:8px;}
+.lcwaiLayFlags>span{font-size:11.5px;color:var(--muted);}
+.lcwaiEdAdvanced{border:1px solid var(--line);padding:8px 10px;background:var(--card2);}
+.lcwaiEdDialogBody.is-nested{padding:10px 0 2px;overflow:visible;}
+.lcwaiEdIntro{font-size:12px;color:var(--ink2);}

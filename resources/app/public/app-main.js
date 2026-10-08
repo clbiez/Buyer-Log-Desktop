@@ -26699,6 +26699,9 @@ function renderKol(){
   updateKolAllVariantsToggle();
   renderActiveFilterContext('koleksiyon');
   const table=document.getElementById('kolTable');
+  // Orders/CP ile aynı görünür satır aralığı: kaynak/filtre/seçim mantığı tam veri üzerinde kalır,
+  // yalnız Koleksiyon gövdesine çizilen presentation satırları sayfalanır.
+  const visibleRows=renderTableRangeControls(table,'koleksiyon',rows,renderKol);
   const thead=table.querySelector('thead'),tbody=table.querySelector('tbody'),colgroup=table.querySelector('colgroup');
   const descriptors=kolDisplayDescriptors();
   descriptors.forEach(descriptor=>{
@@ -26796,7 +26799,7 @@ function renderKol(){
   const groupMembersById=kolGroupMembersIndex(kolRows);
   const collapsedSummaryCache=new Map();
   const logicalIds=new Set(logicalRows.map(row=>String(row.id)));
-  rows.forEach((r,ri)=>{
+  visibleRows.forEach((r,ri)=>{
     const tr=document.createElement('tr'),groupMembers=groupMembersById.get(String(r.modelGroupId||''))||[],isGrouped=groupMembers.length>1,isParent=isGrouped&&(r.modelGroupRole==='parent'||groupMembers[0]===r);
     const groupParent=isGrouped?(groupMembers.find(item=>item.modelGroupRole==='parent')||groupMembers[0]):null;
     const parentInLogical=Boolean(groupParent&&logicalIds.has(String(groupParent.id)));
@@ -27139,7 +27142,7 @@ function renderKol(){
   if(_freezePick?.tableId==='kolTable') freezeHighlight();
   if(typeof fitTableHeights==='function')setTimeout(fitTableHeights,0);
   try{window.BL_QUOTATIONS?.syncCollectionPricingUI?.();}catch(_){}
-  try{window.BLCollectionSpreadsheet?.afterRender?.({rows,descriptors,pictureVisible});}catch(err){console.warn('Collection spreadsheet afterRender failed',err);}
+  try{window.BLCollectionSpreadsheet?.afterRender?.({rows:visibleRows,descriptors,pictureVisible});}catch(err){console.warn('Collection spreadsheet afterRender failed',err);}
 }
 // Görsel boyutu Picture başlığındaki ortak slider'dan değiştirilir.
 
