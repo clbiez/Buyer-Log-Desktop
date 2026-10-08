@@ -127,13 +127,16 @@
       const mapped = (link && link.itemId) || (store.typeMap[typeKey] && store.typeMap[typeKey].itemId) || ui.newTypeMap[typeKey] || (labDipItem && labDipItem.id) || '';
       const fromAi = report.kaynak === 'ai';
       const ignored = Boolean(E().normalizeOrderCode(report.siparisKodu)) && match.level === 'none' && match.reason === 'order';
-      return {
+      const entry = {
         id: 'r' + (ui.seq++), report: report, match: match, candidates: candidates, chosen: chosen,
         typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === mapped; }) ? mapped : '',
         // CP'de siparişi olmayan raporlar aktarım ve LCW AI incelemesi dışında kalır.
         // LCW AI'ın okuduğu rapor da varsayılan olarak seçilmez: kullanıcı alanları kontrol edip işaretler.
         include: !ignored && Boolean(chosen) && !fromAi, override: false, linked: Boolean(link), fromAi: fromAi, ignored: ignored,
       };
+      // ROS sonucu tek PO'ya aday olsa bile kullanıcı açıkça işaretlemeli.
+      if ((report.labDipColors || []).length) entry.include = false;
+      return entry;
     });
   }
   function rowFor(entry) {
@@ -541,7 +544,7 @@
   function setTypeItem(typeKey, itemId) {
     ui.newTypeMap[typeKey] = itemId;
     ui.entries.forEach(function (entry) {
-      if (!entry.ignored && entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen) && !entry.fromAi; }
+      if (!entry.ignored && entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen) && !entry.fromAi; if ((entry.report.labDipColors || []).length) entry.include = false; }
     });
     render();
   }
