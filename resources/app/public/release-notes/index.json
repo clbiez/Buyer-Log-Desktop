@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.264",
+      "publishedAt": "2026-10-08",
+      "title": {
+        "tr": "Güncellemeler geri alınmıyor",
+        "en": "Updates are no longer rolled back"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.264/release.json"
+    },
+    {
       "version": "7.0.263",
       "publishedAt": "2026-10-08",
       "title": {

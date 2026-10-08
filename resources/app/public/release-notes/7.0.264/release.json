@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.264",
+  "channel": "stable",
+  "publishedAt": "2026-10-08",
+  "title": {
+    "tr": "Güncellemeler geri alınmıyor",
+    "en": "Updates are no longer rolled back"
+  },
+  "summary": {
+    "tr": "Yeni sürüm ilk açılışta yavaş başlasa da kurulumu tamamlanıyor; OAB düzeltmesi de bu sürümle geliyor.",
+    "en": "A new version completes installation even if its first launch is slow; the OAB fix arrives with this version too."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "update-health-confirm-early",
+      "type": "fix",
+      "module": {
+        "tr": "Güncellemeler",
+        "en": "Updates"
+      },
+      "title": {
+        "tr": "Yeni sürüm ilk açılışta yavaş başlasa da geri alınmıyor",
+        "en": "A new version is no longer rolled back when its first launch is slow"
+      },
+      "path": {
+        "tr": "Kullanıcı menüsü › Güncellemeleri Kontrol Et",
+        "en": "User menu › Check for Updates"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "update-health-confirm-early.png",
+        "alt": {
+          "tr": "Güncellemeleri Kontrol Et penceresinde mevcut sürüm 7.0.264 ve Güncel durumu — demo verili Buyer Log ekranı",
+          "en": "Check for Updates dialog showing current version 7.0.264 and Up to date status — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yeni sürüm ilk açılışta kurulu kalıyor",
+          "en": "The new version stays installed after its first launch"
+        }
+      },
+      "body": {
+        "tr": "Bazı bilgisayarlarda yeni sürümün ilk açılışı bir dakikayı aşınca güncelleme \"health check başarısız\" diyerek önceki sürüme dönüyordu; OAB düzeltmesini içeren 7.0.263 de bu yüzden kurulamadı. Buyer Log artık yeni sürümün sağlıklı olduğunu sunucusu yanıt verdiği anda onaylıyor; pencerenin yüklenmesi beklenmiyor. Bu sürüm 7.0.263'teki OAB giriş düzeltmesini de içeriyor.",
+        "en": "On some computers, when a new version's first launch took over a minute, the update reported \"health check failed\" and returned to the previous version; 7.0.263 with the OAB fix could not be installed for this reason. Buyer Log now confirms the new version is healthy as soon as its server responds, without waiting for the window to load. This version also includes the OAB sign-in fix from 7.0.263."
+      }
+    }
+  ]
+}
