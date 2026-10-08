@@ -860,8 +860,8 @@
         const exact = modelMatch(a, b);
         if (exact) return exact;
         const x = modelKey(a), y = modelKey(b);
-        // ROS'daki kısa model (MINECRAFT-13-YD), CP'de ürün sınıfı
-        // önekiyle kayıtlı olabilir (KK.BDY,MINECRAFT-13-YD).
+        // ROS'daki kısa model (EXAMPLE-13-YD), CP'de ürün sınıfı
+        // önekiyle kayıtlı olabilir (KK.BDY,EXAMPLE-13-YD).
         return x.length >= 9 && y.endsWith(x) ? 'partial' : '';
       };
       const matching = (rows || []).filter(row => row && rosModel(report.modelAdi, row[fields.model]));
