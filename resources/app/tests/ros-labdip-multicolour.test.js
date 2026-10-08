@@ -70,7 +70,7 @@ test('ROS request is not an approval and cannot infer an order from request ID',
 test('without PO identifier ROS never reaches exact match; multiple candidate POs require manual choice', () => {
   const report = E.parseMail(rosMail('LCW- ROS - Renk Sonuç Bildirimi', 'Approved', 'Rejected')).report;
   const rows = [
-    {'Order Code':'1400011','Model Name':'MINECRAFT-13-YD','Colour':'EKRU','C.Code':'R9J'},
+    {'Order Code':'1400011','Model Name':'KK.BDY,MINECRAFT-13-YD','Colour':'EKRU','C.Code':'R9J'},
     {'Order Code':'1400012','Model Name':'MINECRAFT-13-YD','Colour':'EKRU','C.Code':'R9J'},
     {'Order Code':'1400013','Model Name':'OTHER-1-YD','Colour':'EKRU','C.Code':'R9J'},
   ];
@@ -87,6 +87,9 @@ test('Lab Dip UI keeps detail inside existing checklist cell and no new columns'
   assert.match(ui,/meta\.note = labDipText/);
   assert.match(ui,/previous\.note/);
   assert.match(ui,/data-tr-drop/);
+  const menu = fs.readFileSync(path.join(__dirname,'../public/checklist-supplier-sync.js'),'utf8');
+  assert.match(menu,/clRosStatusDetails/);
+  assert.match(menu,/answer\.note/);
   assert.match(ui,/source: 'test-report-review'/);
   assert.doesNotMatch(ui,/Lab Dip Status\s+Column/);
 });
