@@ -508,6 +508,28 @@ function planMappingEntry(items, { sourceId, header, entry } = {}) {
   return { ok: true, code: 'OK', message: '', items: next, warnings: [], sourceId: item.id };
 }
 
+/** Birden çok değişikliği TEK işlemde uygular, eşleştirilmemiş diğer alanları korur.
+ * Kaynak revizyonu HTTP katmanında kontrol edilir; burada herhangi bir
+ * değişiklik geçersizse bütün işlem reddedilir (kısmi kayıt yapılmaz). */
+function planMappingChanges(items, { sourceId, changes } = {}) {
+  if (!Array.isArray(changes) || !changes.length || changes.length > 100) {
+    return { ok: false, code: 'MAPPING_CHANGES_INVALID', message: '1-100 alan değişikliği gönderin.', items, warnings: [] };
+  }
+  let draft = items;
+  const seen = new Set();
+  for (const change of changes) {
+    const header = String(change && change.header || '').trim();
+    if (!header || seen.has(header)) {
+      return { ok: false, code: 'MAPPING_CHANGES_DUPLICATE', message: 'Eşleme başlığı boş veya tekrar ediyor.', items, warnings: [] };
+    }
+    seen.add(header);
+    const step = planMappingEntry(draft, { sourceId, header, entry: change.entry });
+    if (!step.ok) return { ...step, items };
+    draft = step.items;
+  }
+  return { ok: true, code: 'OK', message: '', items: draft, warnings: [], sourceId };
+}
+
 /** Excel connection discovery sonucunu AYNI canonical modelConnections store'una yazar.
  * Password/secret bu nesneye hiçbir zaman girmez; kimlik bilgisi local credential
  * store tarafından sourceId ile ayrı tutulur. */
@@ -577,7 +599,7 @@ function createOptions() {
 module.exports = {
   MAX_NAME, MAX_SOURCES,
   planSourceCreate, planDiscoveredSourceCreate, planSourceUpdate, planSourceEnabled, planSourceDelete,
-  planCpColumn, planSourceQuery, planMappingWrite, planMappingEntry,
+  planCpColumn, planSourceQuery, planMappingWrite, planMappingEntry, planMappingChanges,
   createOptions,
   _checkName: checkName,
 };
