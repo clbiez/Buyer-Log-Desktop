@@ -183,18 +183,20 @@
     // (slayt başlığı, sütun adı, şablon adı) çevirmesin.
     overlay.setAttribute('data-no-i18n', '');
     const icon = FORMAT_ICON[ed.format] || ed.format.toUpperCase();
-    const orientation = ed.format === 'pdf' || ed.format === 'html'
-      ? `<select data-ed-orientation aria-label="${esc(L('Sayfa yönü', 'Page orientation'))}">${options([{ key: 'portrait', label: L('Dikey', 'Portrait') }, { key: 'landscape', label: L('Yatay', 'Landscape') }], ed.orientation)}</select>` : '';
     overlay.innerHTML = `<div class="modalCard lcwaiEd" role="dialog" aria-modal="true" aria-label="${esc(L('Çıktı Düzenleyici', 'Output Editor'))}">
       <header class="lcwaiEdHead">
         <span class="lcwaiFileIcon is-${esc(ed.format)}">${esc(icon)}</span>
         <div class="lcwaiEdHeadTitle"><small>${esc(L(`${FORMAT_NAME[ed.format] || ''} düzenleyici`, `${FORMAT_NAME[ed.format] || ''} editor`))}${ed.draft.templateLabel ? ` · ${esc(ed.draft.templateLabel)}` : ''}</small><input data-ed-title value="${esc(ed.title)}" aria-label="${esc(L('Dosya başlığı', 'File title'))}" placeholder="${esc(L('Dosya başlığı', 'File title'))}"></div>
-        ${LAY() ? `<div class="lcwaiSeg lcwaiEdModes" role="tablist" aria-label="${esc(L('Düzenleme modu', 'Editing mode'))}"><button type="button" role="tab" data-ed-mode="content" class="is-active" aria-selected="true">${esc(L('İçerik', 'Content'))}</button><button type="button" role="tab" data-ed-mode="layout" aria-selected="false">▦ ${esc(L('Yerleşim', 'Layout'))}</button></div>` : ''}
-        ${orientation}
-        <button type="button" class="lcwaiBtn" data-ed-undo title="${esc(L('Geri al', 'Undo'))}">↶ ${esc(L('Geri al', 'Undo'))}</button>
-        <button type="button" class="lcwaiBtn" data-ed-save-template>${esc(L('Şablon olarak kaydet', 'Save as template'))}</button>
-        <button type="button" class="lcwaiBtn" data-ed-close>${esc(L('Kapat', 'Close'))}</button>
-        <button type="button" class="lcwaiBtn is-primary" data-ed-render>${esc(L('Dosyayı Oluştur', 'Create File'))}</button>
+        <nav class="lcwaiEdSteps" role="tablist" aria-label="${esc(L('Adımlar', 'Steps'))}">
+          <button type="button" role="tab" data-ed-mode="content" class="is-active" aria-selected="true"><span>1</span>${esc(L('İçerik', 'Content'))}</button>
+          ${LAY() ? `<button type="button" role="tab" data-ed-mode="layout" aria-selected="false"><span>2</span>${esc(L('Yerleşim', 'Layout'))}</button>` : ''}
+          <button type="button" class="is-final" data-ed-render><span>${LAY() ? 3 : 2}</span>${esc(L('Dosyayı Oluştur', 'Create File'))}</button>
+        </nav>
+        <span class="lcwaiEdHeadTools">
+          <button type="button" class="lcwaiEdIconBtn is-tool" data-ed-undo title="${esc(L('Geri al', 'Undo'))}" aria-label="${esc(L('Geri al', 'Undo'))}">↶</button>
+          <button type="button" class="lcwaiBtn" data-ed-save-template title="${esc(L('Bu düzeni sonraki dosyalar için sakla', 'Keep this arrangement for later files'))}">${esc(L('Şablon olarak kaydet', 'Save as template'))}</button>
+          <button type="button" class="lcwaiEdIconBtn is-tool" data-ed-close title="${esc(L('Kapat', 'Close'))}" aria-label="${esc(L('Kapat', 'Close'))}">×</button>
+        </span>
       </header>
       <div class="lcwaiEdBody">
         <aside class="lcwaiEdRail" data-ed-rail aria-label="${esc(L('İçindekiler', 'Contents'))}"></aside>
@@ -211,6 +213,17 @@
     overlay.addEventListener('dragover', onDragOver);
     overlay.addEventListener('dragleave', event => { const item = event.target.closest && event.target.closest('[data-rail]'); if (item) item.classList.remove('is-drop'); });
     overlay.addEventListener('drop', onDrop);
+    // Izgara seçici: fareyle üzerine gelince seçilecek ızgara önizlenir.
+    overlay.addEventListener('mouseover', event => {
+      const cell = event.target.closest && event.target.closest('[data-gp]');
+      const picker = event.target.closest && event.target.closest('.lcwaiLayGridPick');
+      if (!picker) { if (ed && ed.gridHover) { ed.gridHover = null; updateLayoutPreviewGridText(); } return; }
+      if (!cell) return;
+      const [c, r] = cell.dataset.gp.split(',').map(Number);
+      ed.gridHover = { c, r };
+      picker.querySelectorAll('[data-gp]').forEach(item => { const [x, y] = item.dataset.gp.split(',').map(Number); item.classList.toggle('is-hover', x <= c && y <= r); });
+      updateLayoutPreviewGridText();
+    });
     document.addEventListener('keydown', onKeydown, true);
     renderRail(); renderMain(); renderFoot();
     $('[data-ed-title]')?.focus();
@@ -526,6 +539,7 @@
     }
     if (ed.sourceMode && mode === 'layout') { const source = $('[data-source]'); if (source) ed.data.body = source.value; ed.sourceMode = false; }
     ed.mode = mode;
+    renderFoot();
     root().querySelectorAll('[data-ed-mode]').forEach(button => { const active = button.dataset.edMode === mode; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', active ? 'true' : 'false'); });
     renderRail(); renderMain();
   }
@@ -567,8 +581,9 @@
   }
   function gridPicker() {
     const { columns, rows } = ed.data.layout;
-    const maxC = LAY().SPEC[LAY().specKey(ed.format)].columns[1];
-    const maxR = LAY().SPEC[LAY().specKey(ed.format)].rows[1];
+    // Küçük başlar (6 × 4); seçili ızgara büyükse sınır kadar açılır.
+    const maxC = Math.min(LAY().SPEC[LAY().specKey(ed.format)].columns[1], Math.max(6, columns + 1));
+    const maxR = Math.min(LAY().SPEC[LAY().specKey(ed.format)].rows[1], Math.max(4, rows + 1));
     const cells = [];
     for (let r = 1; r <= maxR; r++) for (let c = 1; c <= maxC; c++) cells.push(`<button type="button" data-gp="${c},${r}" class="${c <= columns && r <= rows ? 'is-on' : ''}" title="${esc(`${c} × ${r}`)}" aria-label="${esc(L(`${c} sütun, ${r} satır`, `${c} columns, ${r} rows`))}"></button>`);
     const unit = ed.format === 'pptx' ? L('slayt', 'slide') : L('sayfa', 'page');
@@ -577,42 +592,82 @@
   }
   const flag = (key, label) => `<label class="lcwaiLayFlag"><input type="checkbox" data-lay-flag="${key}"${ed.data.layout[key] ? ' checked' : ''}> ${esc(label)}</label>`;
 
+  /* Hazır yerleşim kartları: küçük bir ızgara çizimiyle ne yaptığı görülür. */
+  const PRESET_INFO = () => [
+    ['standard', L('Standart', 'Standard'), L('Dengeli, varsayılan', 'Balanced default')],
+    ['compact', L('Kompakt', 'Compact'), L('Daha çok model, küçük yazı', 'More models, smaller text')],
+    ['largeImage', L('Büyük görsel', 'Large images'), L('Az model, büyük görsel', 'Fewer models, big images')],
+    ['catalog', L('Katalog', 'Catalogue'), L('Sayfaya en çok model', 'Most models per page')],
+  ];
+  function presetActive(name) {
+    const current = ed.data.layout;
+    if (name === 'standard') return LAY().isDefault(ed.format, current);
+    const target = LAY().applyPreset(ed.format, name, current);
+    return JSON.stringify(target) === JSON.stringify(LAY().normalizeLayout(ed.format, current));
+  }
+  function presetThumb(name) {
+    const sample = LAY().applyPreset(ed.format, name, null);
+    if (ed.format === 'xlsx') return `<span class="lcwaiLayThumb is-text"><b style="font-size:${Math.round(sample.titleSize * 0.75)}px">Aa</b><i style="font-size:${Math.round(sample.bodySize * 0.9)}px">Aa</i></span>`;
+    const cells = Array.from({ length: Math.min(24, sample.columns * sample.rows) }, () => '<i></i>').join('');
+    return `<span class="lcwaiLayThumb" style="grid-template-columns:repeat(${sample.columns},1fr)">${cells}</span>`;
+  }
+  const hasGallery = () => (ed.format === 'pptx' ? (ed.data.slides || []).some(slide => slide.layout === 'gallery') : ed.format === 'xlsx' ? false : /class="[^"]*\bbl-gallery\b/.test(ed.data.body || ''));
+
   function renderLayoutPanel(main) {
     if (!main || !LAY()) return;
-    const presets = [['standard', L('Standart', 'Standard')], ['compact', L('Kompakt', 'Compact')], ['largeImage', L('Büyük görsel', 'Large images')], ['catalog', L('Katalog', 'Catalogue')]];
     const isSheet = ed.format === 'xlsx';
-    const groups = isSheet ? [
-      [L('Başlık', 'Title'), slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('headerHeight', L('Sütun başlığı satır yüksekliği', 'Column header row height'))],
-      [L('Metin', 'Text'), slider('bodySize', L('Hücre yazı boyutu', 'Cell text size'))],
-      [L('Model görselleri', 'Model images'), slider('imageSize', L('Hücredeki görsel boyutu', 'Image size in the cell'), L('Görsel sütunu ve satır yüksekliği buna göre ayarlanır.', 'The image column and row height follow this size.'))],
-    ] : [
-      [L('Başlık', 'Title'), slider('headerHeight', ed.format === 'pptx' ? L('Başlık bandı yüksekliği', 'Title band height') : L('Rapor başlığı yüksekliği', 'Report header height')) + slider('titleSize', L('Başlık yazı boyutu', 'Title text size'))],
-      [L('Metin', 'Text'), slider('bodySize', ed.format === 'pptx' ? L('Madde / metin boyutu', 'Bullet / text size') : L('Metin boyutu', 'Text size')) + slider('tableSize', L('Tablo yazı boyutu', 'Table text size'))],
-      [L('Model ızgarası', 'Model grid'), `${gridPicker()}${slider('gap', L('Kartlar arası boşluk', 'Gap between cards'))}${slider('imageShare', L('Kartta görselin payı', 'Image share of the card'))}${slider('cardTextSize', L('Kart yazı boyutu', 'Card text size'))}<div class="lcwaiLayFlags">${flag('showTitle', L('Model adı', 'Model name'))}${flag('showSubtitle', L('Alt bilgi', 'Subtitle'))}${flag('showNote', L('Not', 'Note'))}</div>`],
-      [ed.format === 'pptx' ? L('Slayt', 'Slide') : L('Sayfa', 'Page'), slider('margin', L('Kenar boşluğu', 'Margin'))],
-    ];
+    const isReport = ed.format === 'pdf' || ed.format === 'html';
+    const gallery = hasGallery();
+    // Ana ayarlar: herkesin ihtiyaç duyduğu üç-dört kontrol. Diğerleri "İnce ayar"da.
+    const basics = isSheet
+      ? slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('bodySize', L('Hücre yazı boyutu', 'Cell text size')) + slider('imageSize', L('Model görseli boyutu', 'Model image size'))
+      : slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('bodySize', L('Metin boyutu', 'Text size'));
+    const grid = isSheet ? '' : gallery
+      ? `<section class="lcwaiLayGroup"><h4>${esc(ed.format === 'pptx' ? L('Slayt başına model', 'Models per slide') : L('Sayfa başına model', 'Models per page'))}</h4>${gridPicker()}</section>`
+      : `<section class="lcwaiLayGroup"><h4>${esc(L('Model ızgarası', 'Model grid'))}</h4><p class="lcwaiNote">${esc(ed.format === 'pptx' ? L('Bu sunumda model galerisi yok. İçerik adımında “Model galerisi” slaytı ekleyince burada kaça kaç model yerleşeceğini seçebilirsiniz.', 'This deck has no model gallery. Add a “Model gallery” slide in the Content step to choose how many models fit here.') : L('Bu raporda model galerisi yok; ızgara galeri olan raporlarda görünür.', 'This report has no model gallery; the grid appears for reports with a gallery.'))}</p></section>`;
+    const orientation = isReport ? `<section class="lcwaiLayGroup"><h4>${esc(L('Sayfa yönü', 'Page orientation'))}</h4><div class="lcwaiSeg" role="radiogroup">${[['portrait', L('Dikey', 'Portrait')], ['landscape', L('Yatay', 'Landscape')]].map(([key, label]) => `<button type="button" role="radio" data-ed-orient="${key}" class="${ed.orientation === key ? 'is-active' : ''}" aria-checked="${ed.orientation === key}">${esc(label)}</button>`).join('')}</div></section>` : '';
+    const fine = isSheet
+      ? slider('headerHeight', L('Sütun başlığı satır yüksekliği', 'Column header row height'))
+      : slider('headerHeight', ed.format === 'pptx' ? L('Başlık bandı yüksekliği', 'Title band height') : L('Rapor başlığı yüksekliği', 'Report header height'))
+        + slider('tableSize', L('Tablo yazı boyutu', 'Table text size'))
+        + slider('margin', L('Kenar boşluğu', 'Margin'))
+        + (gallery ? slider('gap', L('Kartlar arası boşluk', 'Gap between cards')) + slider('imageShare', L('Kartta görselin payı', 'Image share of the card')) + slider('cardTextSize', L('Kart yazı boyutu', 'Card text size'))
+          + `<div class="lcwaiLayFlags"><span>${esc(L('Kartta göster:', 'Show on card:'))}</span>${flag('showTitle', L('Model adı', 'Model name'))}${flag('showSubtitle', L('Alt bilgi', 'Subtitle'))}${flag('showNote', L('Not', 'Note'))}</div>` : '');
     main.innerHTML = `<div class="lcwaiLay">
       <aside class="lcwaiLayControls">
-        <div class="lcwaiLayPresets" role="group" aria-label="${esc(L('Hazır yerleşimler', 'Layout presets'))}">${presets.map(([key, label]) => `<button type="button" class="lcwaiBtn" data-lay-preset="${key}">${esc(label)}</button>`).join('')}</div>
-        ${groups.map(([title, body]) => `<section class="lcwaiLayGroup"><h4>${esc(title)}</h4>${body}</section>`).join('')}
-        <button type="button" class="lcwaiBtn" data-lay-reset>${esc(L('Varsayılana dön', 'Reset to default'))}</button>
-        <p class="lcwaiNote">${esc(L('Yerleşim bu dosyaya uygulanır; “Şablon olarak kaydet” ile şablona da eklenir.', 'The layout applies to this file; “Save as template” adds it to the template too.'))}</p>
+        <section class="lcwaiLayGroup is-first"><h4>${esc(L('Hazır yerleşimler', 'Ready-made layouts'))}</h4>
+          <div class="lcwaiLayPresets" role="group">${PRESET_INFO().map(([key, label, hint]) => `<button type="button" class="lcwaiLayPreset${presetActive(key) ? ' is-active' : ''}" data-lay-preset="${key}">${presetThumb(key)}<b>${esc(label)}</b><small>${esc(hint)}</small></button>`).join('')}</div></section>
+        ${grid}
+        <section class="lcwaiLayGroup"><h4>${esc(L('Yazı boyutu', 'Text size'))}</h4>${basics}</section>
+        ${orientation}
+        <details class="lcwaiLayMore" data-lay-more${ed.layMoreOpen ? ' open' : ''}><summary>${esc(L('İnce ayar', 'Fine-tune'))}</summary><div class="lcwaiLayGroup">${fine}<button type="button" class="lcwaiBtn is-link" data-lay-reset>${esc(L('Varsayılana dön', 'Reset to default'))}</button></div></details>
       </aside>
       <div class="lcwaiLayStage" data-lay-stage></div>
     </div>`;
+    const more = main.querySelector('[data-lay-more]');
+    if (more) more.addEventListener('toggle', () => { ed.layMoreOpen = more.open; });
     updateLayoutPreview();
   }
 
+  function updateLayoutPreviewGridText() {
+    const grid = $('[data-lay-grid-text]');
+    if (!grid || !ed) return;
+    const hover = ed.gridHover;
+    if (!hover) root().querySelectorAll('[data-gp].is-hover').forEach(item => item.classList.remove('is-hover'));
+    const c = hover ? hover.c : ed.data.layout.columns, r = hover ? hover.r : ed.data.layout.rows;
+    const unit = ed.format === 'pptx' ? L('slayt', 'slide') : L('sayfa', 'page');
+    grid.classList.toggle('is-hover', Boolean(hover));
+    grid.innerHTML = `<b>${c} × ${r}</b> · ${esc(L(`${unit} başına ${c * r} model`, `${c * r} models per ${unit}`))}${hover ? ` · <span>${esc(L('seçmek için tıklayın', 'click to choose'))}</span>` : ''}`;
+  }
   let previewTimer = 0;
   function updateLayoutPreview() {
     const stage = $('[data-lay-stage]');
     if (!stage || !ed || ed.mode !== 'layout') return;
-    const grid = $('[data-lay-grid-text]');
-    if (grid && ed.data.layout.columns) {
-      const unit = ed.format === 'pptx' ? L('slayt', 'slide') : L('sayfa', 'page');
-      grid.innerHTML = `<b>${ed.data.layout.columns} × ${ed.data.layout.rows}</b> · ${esc(L(`${unit} başına ${ed.data.layout.columns * ed.data.layout.rows} model`, `${ed.data.layout.columns * ed.data.layout.rows} models per ${unit}`))}`;
+    if (ed.data.layout.columns) {
+      updateLayoutPreviewGridText();
       root().querySelectorAll('[data-gp]').forEach(cell => { const [c, r] = cell.dataset.gp.split(',').map(Number); cell.classList.toggle('is-on', c <= ed.data.layout.columns && r <= ed.data.layout.rows); });
     }
+    root().querySelectorAll('[data-lay-preset]').forEach(card => card.classList.toggle('is-active', presetActive(card.dataset.layPreset)));
     if (ed.format === 'pdf' || ed.format === 'html') { clearTimeout(previewTimer); previewTimer = setTimeout(renderReportPreview, 120); return; }
     stage.innerHTML = ed.format === 'pptx' ? pptxPreview(stage) : xlsxPreview();
   }
@@ -733,11 +788,13 @@
     let status;
     if (ed.busy) status = `<span class="lcwaiStatus is-busy">${esc(ed.busyText || L('Dosya oluşturuluyor…', 'Creating the file…'))}</span>`;
     else if (ed.error) status = `<span class="lcwaiStatus is-error">${esc(ed.error)}</span>`;
-    else if (ed.result) status = `<span class="lcwaiStatus is-ok">✓ ${esc(L(`${ed.result.fileName} oluşturuldu`, `${ed.result.fileName} created`))}</span> <button type="button" class="lcwaiBtn is-link" data-ed-open>${esc(L('Aç', 'Open'))}</button> <button type="button" class="lcwaiBtn is-link" data-ed-reveal>${esc(L('Klasörde Göster', 'Show in folder'))}</button>${ed.result.fallback === 'html' ? ` <small class="lcwaiNote">${esc(L('PDF basımı bu ortamda yapılamadı; HTML olarak kaydedildi.', 'PDF printing is not available here; saved as HTML.'))}</small>` : ''}`;
-    else if (ed.dirty) status = `<span class="lcwaiStatus is-warn">● ${esc(L('Değişiklikler henüz dosyaya yansımadı', 'Changes are not in a file yet'))}</span>`;
-    else status = `<span class="lcwaiStatus">${esc(L('Düzenleyin, sonra “Dosyayı Oluştur”a basın. Her oluşturma yeni bir dosyadır; eski dosya korunur.', 'Edit, then press “Create File”. Each creation is a new file; the old file is kept.'))}</span>`;
+    else if (ed.result) status = `<span class="lcwaiStatus is-ok">✓ ${esc(L(`${ed.result.fileName} oluşturuldu`, `${ed.result.fileName} created`))}</span> <button type="button" class="lcwaiBtn is-link" data-ed-open>${esc(L('Aç', 'Open'))}</button> <button type="button" class="lcwaiBtn is-link" data-ed-reveal>${esc(L('Klasörde Göster', 'Show in folder'))}</button>${ed.savedTemplate ? '' : ` <span class="lcwaiNote">· ${esc(L('Bu düzeni yine kullanacak mısınız?', 'Will you use this arrangement again?'))}</span> <button type="button" class="lcwaiBtn is-link" data-ed-save-template>${esc(L('Şablon olarak kaydet', 'Save as template'))}</button>`}${ed.result.fallback === 'html' ? ` <small class="lcwaiNote">${esc(L('PDF basımı bu ortamda yapılamadı; HTML olarak kaydedildi.', 'PDF printing is not available here; saved as HTML.'))}</small>` : ''}`;
+    else if (ed.dirty) status = `<span class="lcwaiStatus is-warn">● ${esc(L('Değişiklikleriniz hazır. Dosyaya yansıtmak için “Dosyayı Oluştur”a basın.', 'Your changes are ready. Press “Create File” to put them in a file.'))}</span>`;
+    else status = `<span class="lcwaiStatus">${esc(ed.mode === 'layout'
+      ? L('Hazır bir yerleşim seçin; gerekirse ince ayar yapın. Sonra “Dosyayı Oluştur”a basın.', 'Pick a ready-made layout and fine-tune if needed. Then press “Create File”.')
+      : L('Metne tıklayıp düzeltin. Sayfa düzeni için 2. adıma geçin ya da doğrudan “Dosyayı Oluştur”a basın.', 'Click any text to fix it. Go to step 2 for the page layout, or press “Create File” straight away.'))}</span>`;
     const warnings = ed.warnings && ed.warnings.length ? `<small class="lcwaiNote">${esc(L(`${ed.warnings.length} küçük düzeltme uygulandı (sınır aşımı/boş öğe).`, `${ed.warnings.length} small adjustment(s) applied (limits/empty items).`))}</small>` : '';
-    foot.innerHTML = `<div class="lcwaiEdFootStatus">${status}${warnings}${issues}</div><small class="lcwaiNote">${esc(L('Ctrl+Enter: Dosyayı oluştur · Esc: Kapat', 'Ctrl+Enter: Create file · Esc: Close'))}</small>`;
+    foot.innerHTML = `<div class="lcwaiEdFootStatus">${status}${warnings}${issues}</div><small class="lcwaiNote" title="${esc(L('Ctrl+Enter: Dosyayı oluştur · Esc: Kapat', 'Ctrl+Enter: Create file · Esc: Close'))}">${esc(L('Eski dosya korunur', 'The old file is kept'))}</small>`;
     const render = $('[data-ed-render]');
     if (render) render.disabled = Boolean(ed.busy);
   }
@@ -841,6 +898,7 @@
     if (target.matches('[data-ed-render]')) { renderFile(); return; }
     if (target.matches('[data-ed-undo]')) { undo(); return; }
     if (target.matches('[data-ed-mode]')) { setMode(target.dataset.edMode); return; }
+    if (target.matches('[data-ed-orient]')) { ed.orientation = target.dataset.edOrient === 'landscape' ? 'landscape' : 'portrait'; markDirty(); renderMain(); return; }
     if (target.matches('[data-lay-preset]')) { setLayout(LAY().applyPreset(ed.format, target.dataset.layPreset, ed.data.layout), { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
     if (target.matches('[data-lay-reset]')) { setLayout(LAY().defaults(ed.format), { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
     if (target.matches('[data-gp]')) { const [columns, rows] = target.dataset.gp.split(',').map(Number); setLayout({ ...ed.data.layout, columns, rows }, { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
@@ -1111,25 +1169,35 @@
     const formatField = dialog.mode === 'new'
       ? field(L('Dosya biçimi', 'File format'), `<select name="format" data-tpl-format>${options(Object.keys(FORMAT_NAME).map(key => ({ key, label: FORMAT_NAME[key] })), format)}</select>`)
       : `<input type="hidden" name="format" value="${esc(format)}">`;
+    const intro = dialog.mode === 'save'
+      ? L('Bu dosyanın düzeni (bölüm sırası, başlıklar, sütunlar ve yerleşim) kaydedilir. Şablonu seçtiğinizde LCW AI aynı düzende güncel veriyle hazırlar.', 'This file’s arrangement (section order, titles, columns and layout) is saved. When you pick the template, LCW AI prepares the same arrangement with current data.')
+      : dialog.mode === 'new' ? L('Şablona bir ad ve isterseniz kısa bir talimat verin. Yapıyı “Ayrıntılar”dan ekleyebilirsiniz.', 'Give the template a name and, if you like, a short instruction. Add the structure under “Details”.') : '';
     host.innerHTML = `<div class="lcwaiEdDialogCard" role="dialog" aria-modal="true" aria-label="${esc(title)}">
       <div class="lcwaiEdDialogHead"><b>${esc(title)}</b><span class="lcwaiFileIcon is-${esc(format)}">${esc(FORMAT_ICON[format])}</span></div>
       <div class="lcwaiEdDialogBody">
+        ${intro ? `<p class="lcwaiNote lcwaiEdIntro">${esc(intro)}</p>` : ''}
         <div class="lcwaiEdRow">${field(L('Şablon adı', 'Template name'), `<input name="name" value="${esc(dialog.name || '')}" maxlength="80" placeholder="${esc(L('Ör. Haftalık kumaş durum sunumu', 'E.g. Weekly fabric status deck'))}">`)}${formatField}</div>
-        <div class="lcwaiEdRow">
-          ${format === 'xlsx' ? '' : field(L('Detay seviyesi', 'Level of detail'), `<select name="detail">${options(DETAILS(), def.detail)}</select>`)}
-          ${format === 'pdf' || format === 'html' ? field(L('Sayfa yönü', 'Page orientation'), `<select name="orientation">${options([{ key: 'portrait', label: L('Dikey', 'Portrait') }, { key: 'landscape', label: L('Yatay', 'Landscape') }], def.orientation)}</select>`) : ''}
-        </div>
-        ${dialog.mode === 'edit' ? '' : `<label class="lcwaiEdCheck"><input type="checkbox" name="shared"${dialog.shared ? ' checked' : ''}> <span><b>${esc(L('Ekiple paylaş', 'Share with the team'))}</b><small>${esc(L('Ekip şablonları tüm Buyer Log kullanıcılarına görünür. Yalnız yapı paylaşılır; tablo satırları, rakamlar ve görseller paylaşılmaz.', 'Team templates are visible to all Buyer Log users. Only the structure is shared; table rows, figures and images are not.'))}</small></span></label>`}
-        ${def.layout ? `<label class="lcwaiEdCheck"><input type="checkbox" name="includeLayout"${dialog.includeLayout !== false ? ' checked' : ''}> <span><b>${esc(L('Yerleşimi şablona kaydet', 'Save the layout in the template'))}</b><small>${esc(layoutSummary(format, def.layout))}</small></span></label>` : (dialog.mode === 'new' ? `<p class="lcwaiNote">${esc(L('Yerleşimi (başlık, yazı boyutu, model ızgarası) bir dosyayı düzenlerken “Yerleşim” sekmesinde ayarlayıp şablona kaydedebilirsiniz.', 'You can set the layout (title, text size, model grid) in the “Layout” tab while editing a file and save it in a template.'))}</p>` : '')}
-        ${field(L('Kısaltılmayacak alanlar', 'Fields never to shorten'), `<input name="keepFull" value="${esc((def.keepFull || []).join(', '))}" placeholder="${esc(L('Ör. Kumaş, Kompozisyon, Açıklama', 'E.g. Fabric, Composition, Description'))}">`, L('LCW AI bu alanların değerlerini kaynak verideki gibi tam yazar. Virgülle ayırın.', 'LCW AI writes these fields exactly as in the source data. Separate with commas.'))}
+        ${dialog.mode === 'edit' ? '' : `<label class="lcwaiEdCheck"><input type="checkbox" name="shared"${dialog.shared ? ' checked' : ''}> <span><b>${esc(L('Ekiple paylaş', 'Share with the team'))}</b><small>${esc(L('Tüm kullanıcılar görür. Yalnız düzen paylaşılır, veri paylaşılmaz.', 'Everyone can see it. Only the arrangement is shared, never the data.'))}</small></span></label>`}
+        ${field(L('Kısaltılmayacak alanlar', 'Fields never to shorten'), `<input name="keepFull" value="${esc((def.keepFull || []).join(', '))}" placeholder="${esc(L('Ör. Kumaş, Kompozisyon', 'E.g. Fabric, Composition'))}">`, columns.length ? L('Aşağıdan tıklayarak ekleyin.', 'Click below to add.') : L('Virgülle ayırın.', 'Separate with commas.'))}
         ${columns.length ? `<div class="lcwaiTplChips">${columns.map(name => `<button type="button" class="lcwaiChip" data-tpl-keep="${esc(name)}">＋ ${esc(name)}</button>`).join('')}</div>` : ''}
-        ${field(L('Ek talimat', 'Additional instructions'), `<textarea name="instructions" rows="3" maxlength="3000" placeholder="${esc(L('Ör. Tabloyu termin tarihine göre sırala; geciken satırları risk rozetiyle göster.', 'E.g. Sort the table by due date; mark late rows with a risk badge.'))}">${esc(def.instructions || '')}</textarea>`)}
-        <div class="lcwaiEdBlock"><div class="lcwaiEdBlockHead"><b>${esc(L('Yapı', 'Structure'))}</b><small>${esc(L('LCW AI bu sırayı, başlıkları ve sütunları izler; içeriği güncel veriyle doldurur.', 'LCW AI follows this order, these titles and columns, and fills them with current data.'))}</small></div>
-          <ol class="lcwaiTplList">${structureRows(format, def.structure) || `<p class="lcwaiNote">${esc(L('Yapı boş: LCW AI yapıyı kendisi seçer.', 'No structure: LCW AI chooses the structure.'))}</p>`}</ol>
-          <button type="button" class="lcwaiBtn" data-tpl-add${def.structure.length >= 40 ? ' disabled' : ''}>＋ ${esc(L('Öğe ekle', 'Add item'))}</button></div>
+        ${field(L('LCW AI’a ek talimat (isteğe bağlı)', 'Extra instruction for LCW AI (optional)'), `<textarea name="instructions" rows="2" maxlength="3000" placeholder="${esc(L('Ör. Tabloyu termin tarihine göre sırala.', 'E.g. Sort the table by due date.'))}">${esc(def.instructions || '')}</textarea>`)}
+        <details class="lcwaiEdAdvanced" data-tpl-advanced${dialog.advancedOpen ? ' open' : ''}><summary>${esc(L('Ayrıntılar: yapı, yerleşim, detay seviyesi', 'Details: structure, layout, level of detail'))}</summary>
+          <div class="lcwaiEdDialogBody is-nested">
+            <div class="lcwaiEdRow">
+              ${format === 'xlsx' ? '' : field(L('Detay seviyesi', 'Level of detail'), `<select name="detail">${options(DETAILS(), def.detail)}</select>`)}
+              ${format === 'pdf' || format === 'html' ? field(L('Sayfa yönü', 'Page orientation'), `<select name="orientation">${options([{ key: 'portrait', label: L('Dikey', 'Portrait') }, { key: 'landscape', label: L('Yatay', 'Landscape') }], def.orientation)}</select>`) : ''}
+            </div>
+            ${def.layout ? `<label class="lcwaiEdCheck"><input type="checkbox" name="includeLayout"${dialog.includeLayout !== false ? ' checked' : ''}> <span><b>${esc(L('Yerleşimi de kaydet', 'Save the layout too'))}</b><small>${esc(layoutSummary(format, def.layout))}</small></span></label>` : ''}
+            <div class="lcwaiEdBlock"><div class="lcwaiEdBlockHead"><b>${esc(L('Yapı', 'Structure'))}</b><small>${esc(L('LCW AI bu sırayı, başlıkları ve sütunları izler.', 'LCW AI follows this order, these titles and columns.'))}</small></div>
+              <ol class="lcwaiTplList">${structureRows(format, def.structure) || `<p class="lcwaiNote">${esc(L('Yapı boş: LCW AI yapıyı kendisi seçer.', 'No structure: LCW AI chooses the structure.'))}</p>`}</ol>
+              <button type="button" class="lcwaiBtn" data-tpl-add${def.structure.length >= 40 ? ' disabled' : ''}>＋ ${esc(L('Öğe ekle', 'Add item'))}</button></div>
+          </div>
+        </details>
       </div>
       <div class="lcwaiEdDialogFoot"><span class="lcwaiStatus is-error" data-tpl-error></span><span style="flex:1"></span><button type="button" class="lcwaiBtn" data-tpl-cancel>${esc(L('Vazgeç', 'Cancel'))}</button><button type="button" class="lcwaiBtn is-primary" data-tpl-save>${esc(L('Kaydet', 'Save'))}</button></div>
     </div>`;
+    const advanced = host.querySelector('[data-tpl-advanced]');
+    if (advanced) advanced.addEventListener('toggle', () => { dialog.advancedOpen = advanced.open; });
     host.querySelector('[name="name"]')?.focus();
   }
 
@@ -1186,6 +1254,7 @@
           : await api.outputTemplates.create({ name: state.name, shared: state.shared, definition: state.definition });
         const saved = dialog.onSaved;
         const mode = dialog.mode;
+        if (ed && mode === 'save') { ed.savedTemplate = true; renderFoot(); }
         closeDialog();
         toast(mode === 'edit' ? L('Şablon güncellendi.', 'Template updated.') : state.shared ? L('Şablon kaydedildi ve ekiple paylaşıldı.', 'Template saved and shared with the team.') : L('Şablon kaydedildi. Yanıt biçimi çubuğundan seçebilirsiniz.', 'Template saved. Pick it from the answer format bar.'), 'success');
         if (typeof saved === 'function') saved(lists);

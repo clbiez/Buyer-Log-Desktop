@@ -362,11 +362,13 @@
             <div class="lcwaiOutputBar" data-chat-output>
               <span class="lcwaiOutputLabel">${esc(L('Yanıt biçimi', 'Answer as'))}</span>
               <div class="lcwaiSeg" role="radiogroup" aria-label="${esc(L('Yanıt biçimi', 'Answer as'))}">${OUTPUT_FORMATS().map(item => `<button type="button" role="radio" data-output-format="${esc(item.key)}">${esc(item.label)}</button>`).join('')}</div>
-              <span class="lcwaiOutputTpl"><select data-output-template data-no-i18n aria-label="${esc(L('Çıktı şablonu', 'Output template'))}"></select><button type="button" class="lcwaiBtn" data-output-templates title="${esc(L('Kayıtlı ve ekip şablonlarını yönet', 'Manage saved and team templates'))}">${esc(L('Şablonlar', 'Templates'))}</button></span>
               <span class="lcwaiOutputOptions" data-output-options hidden>
+                <select data-output-template data-no-i18n aria-label="${esc(L('Çıktı şablonu', 'Output template'))}"></select>
                 <select data-output-orientation aria-label="${esc(L('Sayfa yönü', 'Page orientation'))}"><option value="portrait">${esc(L('Dikey', 'Portrait'))}</option><option value="landscape">${esc(L('Yatay', 'Landscape'))}</option></select>
                 <select data-output-detail aria-label="${esc(L('Detay seviyesi', 'Level of detail'))}"><option value="summary">${esc(L('Kısa', 'Brief'))}</option><option value="standard">${esc(L('Standart', 'Standard'))}</option><option value="detailed">${esc(L('Detaylı', 'Detailed'))}</option></select>
               </span>
+              <span style="flex:1"></span>
+              <button type="button" class="lcwaiBtn is-link" data-output-templates title="${esc(L('Kayıtlı ve ekip şablonlarını yönet', 'Manage saved and team templates'))}">${esc(L('Şablonlarım', 'My templates'))}</button>
             </div>
             <div class="lcwaiChips" data-chat-chips></div>
             <textarea data-chat-input rows="3" placeholder="${esc(L('Mesajınızı yazın… (Enter gönderir, Shift+Enter yeni satır)', 'Type your message… (Enter sends, Shift+Enter new line)'))}"></textarea>
