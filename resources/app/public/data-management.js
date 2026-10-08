@@ -220,10 +220,14 @@
      isteyen mevcut eşleme ekranını açar. */
   function mappingSection(source) {
     const health = source.mapping;
+    const label = model.canManage && (source.capabilities || []).includes('field-mapping')
+      ? `<button type="button" class="dmMappingLink" data-open-mapping="${esc(source.id)}"
+          aria-label="${esc(T('Alan eşlemelerini aç ve düzenle', 'Open and edit field mappings'))}">${esc(T('Alan eşlemesi', 'Field mapping'))}</button>`
+      : `<span class="dmLabel">${esc(T('Alan eşlemesi', 'Field mapping'))}</span>`;
     if (!health) return '';
     if (!health.needsAttention) {
       return `<div class="dmMapping dmMapping--ok">
-        <span class="dmLabel">${esc(T('Alan eşlemesi', 'Field mapping'))}</span>
+        ${label}
         <span class="dmValue">${esc(T(`${health.ok} alan eşlendi, hepsi beklenen adla tutuyor.`, `${health.ok} fields mapped, all match their expected names.`))}</span>
       </div>`;
     }
@@ -240,7 +244,7 @@
     }).join('');
     return `<div class="dmMapping">
       <div class="dmMappingHead">
-        <span class="dmLabel">${esc(T('Alan eşlemesi', 'Field mapping'))}</span>
+        ${label}
         <span class="dmMappingSummary">
           <span class="isOk">✓ ${health.ok} ${esc(T('otomatik eşlendi', 'auto-mapped'))}</span>
           ${health.review ? `<span class="isWarn">⚠ ${health.review} ${esc(T('gözden geçirilmeli', 'need review'))}</span>` : ''}
@@ -1837,14 +1841,6 @@
     const problems = repairProblem
       ? [repairProblem, ...baseProblems.filter(problem => String(problem && problem.header || '') !== repairProblem.header)]
       : baseProblems;
-    if (!problems.length) {
-      mappingEditorSourceId = '';
-      render();
-      if (typeof showToast === 'function') {
-        showToast(T('Gözden geçirilecek alan kalmadı.', 'No fields left to review.'));
-      }
-      return;
-    }
     /* Düzenleyici KAYNAĞIN KENDİ ayrıntısında açılır — ekranın tepesinde değil.
        Düzenlenen şey o kaynağa ait; uzakta bir panelde açmak, kullanıcının
        hangi kaynağı düzenlediğini takip etmesini zorlaştırırdı. */
@@ -1859,7 +1855,10 @@
       server: source.connection.server,
       catalog: source.connection.catalog,
       revision: source.revision,
+      role: source.mappingRole || 'asas',
+      mappingEntries: source.mappingEntries || {},
       problems,
+      repair,
       onSaved: async (warnings, saved) => {
         await load();
         const repairedTarget = repair && saved && String(saved.header || '') === String(repair.header || '');
