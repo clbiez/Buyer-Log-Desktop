@@ -5821,3 +5821,14 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 @container ovmonths (max-width:620px){.ovCollectionMonthRow{grid-template-columns:78px 72px minmax(0,1fr) minmax(60px,26%);gap:8px}.ovCollectionMonthQty span{display:none}}
 @container ovmonths (max-width:420px){.ovCollectionMonthRow{grid-template-columns:70px minmax(0,1fr) minmax(48px,30%)}.ovCollectionMonthQty{display:none}}
 @media(prefers-reduced-motion:reduce){.ovCollectionMonthRow{transition:none}}
+
+
+/* Lab Dip / ROS: existing square-cornered CP checklist visual language. */
+.trLabDipDetails { margin-top: 6px; border-top: 1px solid var(--border, #d6dce2); padding-top: 5px; }
+.trLabDipDetails summary { cursor: pointer; font-size: 12px; font-weight: 600; }
+.trLabDipDetails ul { list-style: none; margin: 5px 0 0; padding: 0; }
+.trLabDipRow { padding: 6px 0; border-bottom: 1px solid var(--border, #d6dce2); }
+.trLabDipRow:last-child { border-bottom: 0; }
+.trLabDipRow .trBadge { margin-left: 6px; }
+.trLabDipRow small { display: inline-block; margin-left: 6px; }
+.trLabDipRow p { margin: 4px 0 0; font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
