@@ -8959,6 +8959,8 @@ app.get('/api/data/price-analysis', userAccess.requireArea('priceanalysis'), asy
 });
 async function currentSyncStatus() {
   const status = await syncSettings.read();
+  const state = await localDb.read();
+  status.conflict = state.conflicts.reduce((count, item) => count + (item.resolved ? 0 : 1), 0);
   try { status.localSnapshotDate = (await fs.promises.stat(localDb.getFile())).mtime.toISOString(); }
   catch (_) { status.localSnapshotDate = null; }
   return { ...status, localDbPath: localDb.getFile(), sharedSyncRoot: status.sharedSyncRoot || '' };

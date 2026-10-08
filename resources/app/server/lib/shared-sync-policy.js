@@ -43,6 +43,21 @@ function sanitizeSettings(record) {
   }
   return source;
 }
+// Aynı ortak tanım karşılaştırılır; çalıştırma sonucu bu bilgisayara aittir.
+function sharedModelConnections(value) {
+  return sanitizeSettings({ modelConnections: value }).modelConnections;
+}
+function mergeModelConnectionRuntime(incoming, current) {
+  if (!Array.isArray(incoming)) return incoming;
+  const local = new Map((Array.isArray(current) ? current : []).filter(item => item && item.id).map(item => [String(item.id), item]));
+  return sharedModelConnections(incoming).map(item => {
+    if (!item || typeof item !== 'object') return item;
+    const prior = local.get(String(item.id || ''));
+    const next = { ...item };
+    for (const [key, value] of Object.entries(prior || {})) if (RUNTIME_KEY.test(key)) next[key] = clone(value);
+    return next;
+  });
+}
 function sanitizeOverridesMaster(record) {
   const source = scrubSecrets(clone(record || {})), out = {};
   for (const key of MASTER_OVERRIDE_FIELDS) if (Object.hasOwn(source, key)) out[key] = source[key];
@@ -143,7 +158,7 @@ function mergeCheckpointRecord(local, remote) {
   const remoteWriters = incoming._fieldWriters || {};
   for (const [key, value] of Object.entries(incoming)) {
     if (key === '_revision' || key === '_fieldRevisions' || key === '_fieldWriters') continue;
-    out[key] = value;
+    out[key] = key === 'modelConnections' ? mergeModelConnectionRuntime(value, local[key]) : value;
     const revision = Number(remoteFields[key]) || 0;
     if (revision > (Number(fields[key]) || 0)) fields[key] = revision;
     if (remoteWriters[key]) writers[key] = remoteWriters[key];
@@ -175,6 +190,7 @@ function mergeKnowledge(current, incoming) {
 }
 
 module.exports = {
+  sharedModelConnections, mergeModelConnectionRuntime,
   checkpointWriterKnowledge, mergeKnowledge,
   MASTER_OVERRIDE_FIELDS, CP_OVERRIDE_FIELDS, classifyRecordId, scrubSecrets,
   sanitizeSettings, sanitizeOverridesMaster, sanitizeOverridesBusiness,

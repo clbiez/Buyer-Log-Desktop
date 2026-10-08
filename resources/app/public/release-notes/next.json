@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-08",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Sync bağlantı çakışması düzeltmesi",
+    "en": "Sync connection conflict fix"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tekrarlayan çalışma zamanı çakışmaları giderildi; gerçek ayar seçimleri korundu.",
+    "en": "Repeated runtime conflicts fixed; genuine configuration choices preserved."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "sync-model-connections-runtime",
+      "type": "fix",
+      "module": {
+        "tr": "Senkronizasyon",
+        "en": "Synchronization"
+      },
+      "title": {
+        "tr": "Aynı bağlantı ayarında tekrarlayan Sync çakışmaları giderildi",
+        "en": "Repeated Sync conflicts for identical connection settings fixed"
+      },
+      "body": {
+        "tr": "Refresh çalışma sonuçları artık ortak bağlantı ayarı değişikliği gibi gönderilmez. Eski, aynı ayara ait çalışma zamanı çakışmaları otomatik kapanır; birebir aynı seçimler tekilleştirilir. Gerçek farklı ayarlar kullanıcı seçimine bırakılır ve her cihazın kendi çalışma sonucu korunur. Sync sayacı güncel açık kayıtları gösterir.",
+        "en": "Refresh run results are no longer sent as shared connection-setting changes. Existing runtime conflicts with identical settings close automatically; identical choices are deduplicated. Genuine different settings remain for user selection and each device keeps its own run results. The Sync counter reflects current open records."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-model-connections-runtime.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Sync ekranında 155 demo çalışma zamanı çakışmasının güvenli onarımı sonrası açık çakışma yok.",
+          "en": "Actual Buyer Log Sync screen showing no open conflicts after safe repair of 155 demo runtime conflicts."
+        },
+        "caption": {
+          "tr": "Aynı ayara ait çalışma zamanı çakışmaları otomatik kapanır.",
+          "en": "Runtime conflicts for identical settings close automatically."
+        }
+      },
+      "path": {
+        "tr": "Alt durum çubuğu › Sync durumu › Çakışmaları Görüntüle",
+        "en": "Bottom status bar › Sync Status › View Conflicts"
+      }
+    }
+  ]
 }

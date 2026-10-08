@@ -12,6 +12,8 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const { isDeepStrictEqual } = require('util');
+const { sharedModelConnections, mergeModelConnectionRuntime } = require('./shared-sync-policy');
 const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
 const { resolveLocalDbFolder } = require('./local-path-policy');
 const { createDurableFileRecovery } = require('./durable-file-recovery');
@@ -83,7 +85,31 @@ function normalizeState(raw, deviceId) {
   state.migrations = state.migrations && typeof state.migrations === 'object' ? state.migrations : {};
   // Olay dışı yoldan (checkpoint onarımı) edinilmiş bilgi: kaynak cihaz → sıra.
   state.causalKnowledge = state.causalKnowledge && typeof state.causalKnowledge === 'object' ? state.causalKnowledge : {};
+  reconcileModelConnectionConflicts(state);
   return state;
+}
+function sameSharedConnections(a, b) {
+  return Array.isArray(a) && Array.isArray(b) && isDeepStrictEqual(sharedModelConnections(a), sharedModelConnections(b));
+}
+/* Eski sürümlerin lastRun farkından açtığı kayıtlar iş kararı içermez.
+   Yalnız iki ortak tanımı eşit olan kayıtlar otomatik kapanır. Gerçek farklı
+   seçenekler korunur; birebir aynı seçimlerin kopyaları audit referansıyla kapanır. */
+function reconcileModelConnectionConflicts(state) {
+  const choices = new Map();
+  for (const item of state.conflicts) {
+    if (item.resolved || item.type !== 'field' || item.id !== 'store:settings.json' || item.field !== 'modelConnections') continue;
+    if (!Array.isArray(item.current) || !Array.isArray(item.incoming)) continue;
+    if (sameSharedConnections(item.current, item.incoming)) {
+      item.resolved = true; item.resolution = 'runtime-equivalent';
+    } else {
+      const signature = `${jsonSha256(sharedModelConnections(item.current))}:${jsonSha256(sharedModelConnections(item.incoming))}`;
+      const prior = choices.get(signature);
+      if (!prior) { choices.set(signature, item); continue; }
+      item.resolved = true; item.resolution = 'duplicate-equivalent'; item.duplicateOf = prior.conflictId;
+    }
+    item.resolvedAt = item.at;
+    pruneResolvedConflict(item);
+  }
 }
 /* Kapanmış çakışmanın iki tarafının TAM değeri artık hiçbir yolda okunmaz
    (liste ve çözüm yalnız açık kayıtlara bakar). Büyük belge alanlarında bu
@@ -218,8 +244,17 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
   const writer = causal && causal.writer && causal.writer.d ? { d: String(causal.writer.d), s: Number(causal.writer.s) || 0 } : null;
   const seen = writer && causal.seen && typeof causal.seen === 'object' ? causal.seen : null;
   const conflicts = [];
-  for (const [key, value] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
+  const skippedFields = [];
+  for (const [key, rawValue] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
     if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters') continue;
+    const connectionField = recordKey === 'store:settings.json' && key === 'modelConnections';
+    const value = connectionField && !(causal && causal.local) ? mergeModelConnectionRuntime(rawValue, next[key]) : rawValue;
+    if (connectionField && !(causal && causal.forceConnections) && sameSharedConnections(next[key], value)) {
+      // Runtime-only writes never become the last writer of the shared config.
+      next[key] = value;
+      skippedFields.push(key);
+      continue;
+    }
     const previousRevision = Number(fields[key]) || 0;
     if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
       next[key] = newerRevisionMeta(next[key], value);
@@ -231,8 +266,8 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
        doğru cevaplanamaz; yerel kaydı hiç görmemiş cihazın yüksek tabanlı olayı
        listeyi bütün olarak yazıp yeni kaydı sessizce siliyordu. Birleşim
        değişmeli ve tekrarlanabilir olduğundan her durumda güvenlidir; silme,
-       silme iziyle taşınır. (Yerel yazımda recordKey yoktur: liste aynen yazılır.) */
-    const listRule = recordKey ? listMergeRule(recordKey, key) : null;
+       silme iziyle taşınır. (Yerel yazımda causal.local: liste aynen yazılır.) */
+    const listRule = recordKey && !(causal && causal.local) ? listMergeRule(recordKey, key) : null;
     if (listRule && next[key] !== undefined) {
       if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
       else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {});
@@ -244,7 +279,7 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
     if (lastWriter) {
       if (lastWriter.d === writer.d) {
         // Aynı cihazın daha eski olayı daha yeni değeri geri almaz.
-        if (writer.s < (Number(lastWriter.s) || 0)) continue;
+        if (writer.s < (Number(lastWriter.s) || 0)) { skippedFields.push(key); continue; }
       } else if (!(Number(seen[lastWriter.d]) >= (Number(lastWriter.s) || 0)) && JSON.stringify(next[key]) !== JSON.stringify(value)) {
         conflicts.push({ field: key, current: clone(next[key]), incoming: clone(value), currentRevision: previousRevision, baseRevision: Number(baseRevision) || 0 });
         continue;
@@ -276,7 +311,7 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
   next._fieldRevisions = fields;
   if (Object.keys(writers).length) next._fieldWriters = writers;
   next._revision = Math.max(Number(base._revision) || 0, revision);
-  return { value: next, conflicts };
+  return { value: next, conflicts, skippedFields };
 }
 
 /* ===================================================================
@@ -491,6 +526,7 @@ function createLocalDb(file) {
     const entries = previous.entries.concat(current.entries);
     if (!entries.length) return state;
     const replayed = replayWal(state, entries);
+    reconcileModelConnectionConflicts(replayed);
     /* Birincil dosya bozulmuş ve yedekten dönülmüşse, o görüntü WAL'daki
        işlemleri içermiyor. Onarımı yarım bırakmamak için tam durumu hemen
        kalıcı yaz: bundan sonra birincil dosya tek başına eksiksizdir. */
@@ -602,9 +638,13 @@ function createLocalDb(file) {
       ? Number(state.records[key] && state.records[key]._revision) || 0
       : Number(baseRevision) || 0;
     const revision = Math.max(Number(state.revision) || 0, effectiveBaseRevision) + 1;
+    const journalPatch = clone(patch || {});
+    // Refresh is a local observation, never a resolution of another device's
+    // configuration. Keep the local value, but send no config field for it.
+    if (key === 'store:settings.json' && origin !== 'conflict-resolution' && Object.hasOwn(journalPatch, 'modelConnections') && sameSharedConnections(state.records[key] && state.records[key].modelConnections, journalPatch.modelConnections)) delete journalPatch.modelConnections;
     // Local writes are authoritative for this device; baseRevision is carried
     // in the journal for remote conflict detection, not used to reject the edit.
-    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 } });
+    const merged = fieldMerge(state.records[key], patch, revision, null, key, { local: true, forceConnections: origin === 'conflict-resolution', writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 } });
     const operation = state.records[key] ? 'update' : 'create';
     state.revision = revision;
     state.localSequence = Number(state.localSequence) + 1;
@@ -615,7 +655,7 @@ function createLocalDb(file) {
     for (const source of [state.syncCheckpoints || {}, state.causalKnowledge || {}]) {
       for (const [device, seq] of Object.entries(source)) if (Number(seq) > (seenVector[device] || 0)) seenVector[device] = Number(seq);
     }
-    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
+    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: journalPatch, revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
     state.journal.push(journalItem);
@@ -690,16 +730,24 @@ function createLocalDb(file) {
       // kopyalanmış bir kardeş kurulumdan gelir: "aynı cihazın eski olayı"
       // kuralıyla sessizce atlanmamalı, ayrı yazar olarak değerlendirilmeli.
       const writerDevice = delta.deviceId && isRetiredDeviceId(state, delta.deviceId) ? `${delta.deviceId}${CLONE_WRITER_SUFFIX}` : String(delta.deviceId || '');
-      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen } : null;
+      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen, forceConnections: delta.origin === 'conflict-resolution' } : null;
       const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key, causal);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
       // Alan, çakışmayı görmüş daha yeni bir olayla çakışmasız güncellendi:
       // o alandaki eski çakışmanın seçenekleri artık geçersiz, kayıt kapanır.
       const conflictedFields = new Set(merged.conflicts.map(item => item.field));
-      const appliedFields = new Set(Object.keys(delta.patch || delta.value || {}).filter(field => !conflictedFields.has(field)));
+      const appliedFields = new Set(Object.keys(delta.patch || delta.value || {}).filter(field => !conflictedFields.has(field) && !merged.skippedFields.includes(field)));
       for (const open of state.conflicts) {
         if (!open.resolved && open.type === 'field' && open.id === key && appliedFields.has(open.field)) {
+          if (key === 'store:settings.json' && open.field === 'modelConnections') {
+            const source = state.events[open.eventId];
+            const seq = Number(source && source.localSequence) || 0;
+            const coversConflict = source && source.deviceId && seq
+              ? (delta.deviceId === source.deviceId && Number(delta.sourceLastSeq || delta.localSequence) >= seq) || Number(delta.seen && delta.seen[source.deviceId]) >= seq
+              : Number(delta.baseRevision) >= (Number(source && source.revision) || Number(open.currentRevision) || 0);
+            if (!coversConflict) continue;
+          }
           open.resolved = true; open.resolvedAt = at; open.resolution = 'superseded';
           pruneResolvedConflict(open);
         }
@@ -707,9 +755,10 @@ function createLocalDb(file) {
       for (const conflict of merged.conflicts) state.conflicts.push({ conflictId: nextConflictId(), eventId: eid, id: key, type: 'field', ...conflict, at, resolved: false });
     }
     state.revision = Math.max(Number(state.revision) || 0, revision);
-    state.events[eid] = { eventId: eid, revision, at, origin: 'remote', deviceId: delta.deviceId || null, localSequence: Number(delta.localSequence) || 0 };
+    state.events[eid] = { eventId: eid, revision, at, origin: 'remote', deviceId: delta.deviceId || null, localSequence: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 };
     state.appliedEvents[eid] = { eventId: eid, revision, at, origin: delta.origin || 'remote', deviceId: delta.deviceId || null };
     if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, Number(delta.sourceFirstSeq) || Number(delta.localSequence) || 0, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
+    reconcileModelConnectionConflicts(state);
     return { duplicate: false, applied: true, revision, id: key, conflicts: state.conflicts.filter(item => item.eventId === eid) };
   }
 
@@ -1113,7 +1162,9 @@ function createLocalDb(file) {
     const incomingRevision = Number(state.events[conflict.eventId] && state.events[conflict.eventId].revision) || 0;
     const resolutionBase = Math.max(Number(conflict.currentRevision) || 0, incomingRevision);
     if (choice === 'incoming' && conflict.type === 'field') {
-      await queuePatch({ id: conflict.id, patch: { [conflict.field]: customValue === undefined ? conflict.incoming : customValue }, baseRevision: resolutionBase, origin: 'conflict-resolution' });
+      let value = customValue === undefined ? conflict.incoming : customValue;
+      if (conflict.id === 'store:settings.json' && conflict.field === 'modelConnections') value = mergeModelConnectionRuntime(value, state.records[conflict.id] && state.records[conflict.id].modelConnections);
+      await queuePatch({ id: conflict.id, patch: { [conflict.field]: value }, baseRevision: resolutionBase, origin: 'conflict-resolution' });
     } else if (choice === 'current' && conflict.type === 'field') {
       const record = state.records[conflict.id];
       const kept = record && Object.prototype.hasOwnProperty.call(record, conflict.field) ? record[conflict.field] : conflict.current;
