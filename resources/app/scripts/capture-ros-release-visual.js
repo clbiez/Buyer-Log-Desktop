@@ -74,7 +74,8 @@ async function capture(){
   await continueButton.waitFor({timeout:25000}).then(()=>continueButton.click()).catch(()=>{});
   await page.waitForFunction(()=>!document.getElementById('blBootGuard'),null,{timeout:40000});
   // İlk açılış sürüm notları penceresi tab butonlarının tıklanmasını engeller.
-  await page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  const releaseClose = page.locator('dialog.blRnDialog[open] [data-rn-close]');
+  await releaseClose.waitFor({state:'visible',timeout:12000}).then(()=>releaseClose.click()).catch(()=>{});
   await page.locator('nav.tabs button[data-tab="cp"]').click();
   await page.evaluate(async ()=>{
     await window.BLPerf.ensureFeature('cpAssistant');
