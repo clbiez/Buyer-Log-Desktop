@@ -45,11 +45,22 @@ test('HTML olarak export edilmiş .xls Merch Calendar hafta satırlarına dönü
   assert.equal(parsed.sourceName,'MerchCalendar.xls');
 });
 
-test('LCW 53. hafta içeren Merch Calendar etkinleştirilmez',()=>{
+test('LCW 53. hafta kabul edilir ve tarih motorunda iş haftası olarak çözülür',()=>{
   const source=html([row(53,[28,29,30,31,1,2,3],'December')]);
+  const parsed=store.parseBuffer(Buffer.from(source),'week53.xls');
+  assert.equal(parsed.weeks[0].week,53);
+  assert.equal(parsed.weeks[0].start,'2026-12-28');
+  assert.equal(parsed.weeks[0].end,'2027-01-03');
+  assert.equal(dateDimension.setMerchCalendar(parsed),true);
+  assert.equal(dateDimension.describe('2027-01-01').lcwWeek,53);
+  dateDimension.clearMerchCalendar();
+});
+
+test('53 üzerindeki LCW hafta numaraları reddedilir',()=>{
+  const source=html([row(54,[4,5,6,7,8,9,10],'December')]);
   assert.throws(()=>store.parseBuffer(Buffer.from(source),'bad.xls'),error=>{
     assert.equal(error.code,'MERCH_WEEK_OUT_OF_RANGE');
-    assert.match(error.message,/1–52/);
+    assert.match(error.message,/1–53/);
     return true;
   });
 });
@@ -79,6 +90,9 @@ test('Veri Yönetimi Merch Calendar upload/değiştir/kaldır akışını taşı
   assert.match(ui,/data-merch-file/);
   assert.match(ui,/data-merch-delete/);
   assert.match(ui,/LCW \/ GLB/);
+  assert.match(ui,/id: 'merch', icon: 'i-calculator', inline: true/);
+  assert.match(ui,/openTool === 'merch'/);
+  assert.doesNotMatch(ui,/dmSectionLabel[^\n]*İş takvimi/);
   assert.match(css,/\.dmMerchPanel[^{]*\{[^}]*border-radius:0!important/);
   assert.match(picker,/LCW \/ GLB/);
   assert.match(picker,/weekPair/);
