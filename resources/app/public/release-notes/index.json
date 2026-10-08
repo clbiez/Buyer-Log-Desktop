@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.259",
+      "publishedAt": "2026-10-08",
+      "title": {
+        "tr": "Anında görseller ve sade LCW AI düzenleyicisi",
+        "en": "Instant images and a simpler LCW AI editor"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 3,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.259/release.json"
+    },
+    {
       "version": "7.0.258",
       "publishedAt": "2026-10-07",
       "title": {

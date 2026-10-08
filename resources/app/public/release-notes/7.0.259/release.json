@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.259",
+  "channel": "stable",
+  "publishedAt": "2026-10-08",
+  "title": {
+    "tr": "Anında görseller ve sade LCW AI düzenleyicisi",
+    "en": "Instant images and a simpler LCW AI editor"
+  },
+  "summary": {
+    "tr": "CP ve Siparişler model görselleri başka bir sayfadan dönüldüğünde yer tutucuyla beklemeden yerinde görünür; aynı görsel her ekranda tek adresle önbellekten gelir. Düzenleyici artık 3 adımda yönlendiriyor; yerleşimde önce hazır seçenekler ve temel ayarlar görünür, ince ayar istenince açılır.",
+    "en": "CP and Orders model images stay in place when you come back from another page; each image now uses a single address and is served from the cache on every screen. The editor now guides you in 3 steps; the layout shows ready-made options and basic settings first, fine-tuning opens on demand."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 3,
+    "fixes": 2
+  },
+  "changes": [
+    {
+      "id": "cp-model-images-instant-return",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker / Siparişler",
+        "en": "CP Tracker / Orders"
+      },
+      "title": {
+        "tr": "Sayfa dönüşünde model görselleri yeniden yüklenmiyor",
+        "en": "Model images no longer reload when you return to a page"
+      },
+      "path": {
+        "tr": "CP Tracker / Siparişler › Görsel sütunu",
+        "en": "CP Tracker / Orders › Picture column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-images-instant-return.png",
+        "alt": {
+          "tr": "Koleksiyon sayfasından dönüldükten hemen sonra CP Tracker tablosunda bütün model görselleri yerinde — demo verili Buyer Log ekranı",
+          "en": "All model images in place on the CP Tracker table right after returning from Collection — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Koleksiyon’dan CP’ye dönüşte görseller ilk karede yerinde; ağa yeni görsel isteği çıkmaz",
+          "en": "Returning from Collection to CP shows the images in the first frame; no new image request goes to the network"
+        }
+      },
+      "body": {
+        "tr": "Aynı model görseli CP’de, Koleksiyon’da ve PLM eşitlemesinden sonra farklı adreslerle isteniyordu; bu yüzden Koleksiyon’dan CP’ye dönünce görseller yer tutucudan başlayıp tek tek yeniden yükleniyordu. Artık her görselin tek bir adresi var, sayfa yeniden çizilse de değişmeyen satırın görseli yerinde kalır ve bu oturumda açılmış görseller doğrudan gösterilir. Görsel değiştirildiğinde yeni görsel yeni adresle gelir ve ilk dönüşte görünür; “Tüm Görselleri Sil” sonrasında silinen görsel geri gelmez.",
+        "en": "The same model image was requested under different addresses in CP, in Collection and after a PLM sync, so returning from Collection to CP restarted every image from a placeholder and loaded them one by one. Each image now has a single address, a redraw keeps the image of an unchanged row in place, and images already opened in this session are shown directly. A replaced image gets a new address and appears on the first return; after “Delete All Images” a deleted image never comes back."
+      }
+    },
+    {
+      "id": "cp-model-images-warmed-scroll",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP’de ilk 300 satırın görselleri hazır bekler",
+        "en": "Images for the first 300 CP rows are prepared in the background"
+      },
+      "path": {
+        "tr": "CP Tracker › Görsel sütunu",
+        "en": "CP Tracker › Picture column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-images-warmed-scroll.png",
+        "alt": {
+          "tr": "CP Tracker tablosu aşağı kaydırıldıktan hemen sonra yeni görünen satırların model görselleri yerinde — demo verili Buyer Log ekranı",
+          "en": "Model images already shown for newly visible rows right after scrolling down the CP Tracker table — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Kaydırınca görünen satırların görselleri hazır; yer tutucu görünmez",
+          "en": "Rows that come into view while scrolling already have their images; no placeholder is shown"
+        }
+      },
+      "body": {
+        "tr": "CP açıldığında geçerli filtre ve sıralamadaki ilk 300 satırın görselleri, ekran boştayken uygulamanın kendi görsel deposundan yüklenir. Kaydırınca ya da sayfaya dönünce görseller hazırdır. Filtre değişince veya başka sayfaya geçince bu iş durur; PLM’e otomatik istek gönderilmez.",
+        "en": "When CP opens, the images of the first 300 rows in the current filter and sort order load from Buyer Log’s own image store while the screen is idle. They are ready when you scroll or come back to the page. The work stops when the filter changes or you switch pages; no automatic request is sent to PLM."
+      }
+    },
+    {
+      "id": "cp-model-images-reopen",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker / Siparişler / Koleksiyon",
+        "en": "CP Tracker / Orders / Collection"
+      },
+      "title": {
+        "tr": "Uygulama yeniden açıldığında görseller doğrudan cihaz önbelleğinden gelir",
+        "en": "Images come straight from the device cache when the app is reopened"
+      },
+      "path": {
+        "tr": "CP Tracker / Siparişler / Koleksiyon › Görsel sütunu",
+        "en": "CP Tracker / Orders / Collection › Picture column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-images-reopen.png",
+        "alt": {
+          "tr": "Buyer Log yeniden açıldıktan sonra ilk CP Tracker girişinde model görselleri yerinde — demo verili Buyer Log ekranı",
+          "en": "Model images in place on the first CP Tracker visit after reopening Buyer Log — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Bu cihazda açılmış görseller açılışta beklemeden gösterilir; yer tutucu yalnız bir kare görünür",
+          "en": "Images already opened on this device are shown without waiting at startup; the placeholder appears for a single frame"
+        }
+      },
+      "body": {
+        "tr": "Bu cihazda daha önce açılmış model görsellerinin adresleri sınırlı bir listede tutulur. Uygulama yeniden açıldığında bu görseller görünür olmayı beklemeden cihazdaki önbellekten okunur; ağa istek gitmez. Görsel silinmiş ya da erişilemiyorsa hücre yer tutucuya döner. “Tüm Görselleri Sil” bu listeyi de temizler. Bellekte tutulan görseller artık hem adetle hem toplam boyutla sınırlıdır.",
+        "en": "The addresses of model images already opened on this device are kept in a limited list. When the app is reopened these images are read from the device cache without waiting to become visible; no network request is made. If an image was deleted or is not accessible, the cell falls back to the placeholder. “Delete All Images” clears this list as well. Images kept in memory are now limited by both count and total size."
+      }
+    },
+    {
+      "id": "cp-all-rows-scroll-kept-on-return",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker / Siparişler",
+        "en": "CP Tracker / Orders"
+      },
+      "title": {
+        "tr": "“Tümü” görünümünde dönüşte tablo boş kalmıyor",
+        "en": "The table no longer goes blank on return in the “All” view"
+      },
+      "path": {
+        "tr": "CP Tracker / Siparişler › Satır aralığı: Tümü",
+        "en": "CP Tracker / Orders › Row range: All"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-all-rows-scroll-kept-on-return.png",
+        "alt": {
+          "tr": "Tümü görünümünde aşağı kaydırılmış CP Tracker tablosu, başka sayfadan dönüldükten hemen sonra aynı konumda ve görselleriyle dolu — demo verili Buyer Log ekranı",
+          "en": "CP Tracker table in the All view, scrolled down, showing the same position with its images right after returning from another page — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Kaydırma konumu korunur; görünen satırlar ve görselleri ilk karede yerinde",
+          "en": "The scroll position is kept; visible rows and their images are in place in the first frame"
+        }
+      },
+      "body": {
+        "tr": "Satır aralığı “Tümü” iken tablo aşağı kaydırılmışsa ve başka bir sayfadayken veri güncellendiyse, CP’ye dönüldüğünde görünen alan boş kalıyor, satırlar ancak tekrar kaydırınca geliyordu. Gizli sayfada yapılan çizim artık son kaydırma konumunu kullanıyor: konum korunur ve o konumdaki satırlar görselleriyle birlikte hemen görünür; dönüş süresi uzamaz.",
+        "en": "With the row range set to “All”, if the table was scrolled down and the data was updated while you were on another page, the visible area stayed blank when you returned to CP until you scrolled again. A redraw done while the page is hidden now uses the last scroll position: the position is kept and the rows there appear immediately with their images, without making the return slower."
+      }
+    },
+    {
+      "id": "lcwai-output-editor-simple",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Daha sade, yönlendiren çıktı düzenleyicisi",
+        "en": "A simpler, guiding output editor"
+      },
+      "path": {
+        "tr": "LCW AI › Düzenle",
+        "en": "LCW AI › Edit"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-editor-simple.png",
+        "alt": {
+          "tr": "Sadeleşmiş düzenleyici: üstte 1 İçerik, 2 Yerleşim, 3 Dosyayı Oluştur adımları; solda görsel hazır yerleşim kartları, slayt başına model ızgarası ve iki yazı boyutu ayarı — gerçek Buyer Log demo ekranı",
+          "en": "Simplified editor: steps 1 Content, 2 Layout, 3 Create File at the top; visual layout preset cards, models-per-slide grid and two text size settings on the left — actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Üç adım, önce hazır seçenekler",
+          "en": "Three steps, ready-made options first"
+        }
+      },
+      "body": {
+        "tr": "Düzenleyicinin üst çubuğu artık sırayı gösteriyor: 1 İçerik, 2 Yerleşim, 3 Dosyayı Oluştur; alt satır her adımda ne yapılacağını söyler. Yerleşimde önce küçük çizimli hazır yerleşim kartları, slayt/sayfa başına model ızgarası ve iki yazı boyutu ayarı görünür; diğer ayarlar \"İnce ayar\" altında kapalı durur. Izgarada fareyle gezinince kaç model sığacağı önceden gösterilir. Dosyada model galerisi yoksa ızgara yerine nasıl ekleneceği anlatılır. Sayfa yönü Yerleşim adımına taşındı. \"Şablon olarak kaydet\" penceresi ad, paylaşım, kısaltılmayacak alanlar ve kısa talimata indi; yapı ve ayrıntılar katlanır bölümde. Dosya oluşturulunca düzeni şablon olarak kaydetme önerilir. Sohbette şablon seçici yalnız bir dosya biçimi seçiliyken görünür.",
+        "en": "The editor's top bar now shows the order: 1 Content, 2 Layout, 3 Create File; the bottom line says what to do at each step. Layout first shows preset cards with small drawings, the models-per-slide/page grid and two text size settings; other settings stay folded under \"Fine-tune\". Hovering over the grid shows in advance how many models will fit. If the file has no model gallery, a short note explains how to add one instead of the grid. Page orientation moved to the Layout step. The \"Save as template\" dialog is down to name, sharing, fields never to shorten and a short instruction; structure and details are in a folded section. After a file is created, saving the arrangement as a template is suggested. In the chat, the template picker only appears when a file format is selected."
+      }
+    }
+  ]
+}
