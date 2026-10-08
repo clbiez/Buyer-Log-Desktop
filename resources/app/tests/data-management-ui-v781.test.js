@@ -496,7 +496,9 @@ test('v7.81 her araç NE YAPTIĞINI yazar — iki dilde', () => {
   const tools = groups.flatMap(group => group.tools);
   // v7.0.172: + Endeksmatik Setleri (çoklu set yöneticisi).
   // + Data Temizliği (kurulum/sync klasörü temizliği).
-  assert.equal(tools.length, 15, `15 araç beklenir, bulunan: ${tools.length}`);
+  // Merch Calendar da Calculation Rules altında satır içi açılır.
+  assert.equal(tools.length, 16, `16 araç beklenir, bulunan: ${tools.length}`);
+  assert.equal(groups.find(group => group.id === 'rules').tools.find(tool => tool.id === 'merch').inline, true);
 
   for (const item of groups.concat(tools)) {
     const name = item.id;

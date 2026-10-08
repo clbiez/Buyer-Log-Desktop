@@ -60,9 +60,9 @@ function merchError(message, code, status = 400, details = null) {
   return error;
 }
 function assertWeekNumber(week, year) {
-  if (!Number.isInteger(week) || week < 1 || week > 52) {
+  if (!Number.isInteger(week) || week < 1 || week > 53) {
     throw merchError(
-      `Merch Calendar ${year} yılında geçersiz LCW hafta numarası içeriyor: ${week}. Buyer Log LCW için 1–52 aralığını kabul eder.`,
+      `Merch Calendar ${year} yılında geçersiz LCW hafta numarası içeriyor: ${week}. Buyer Log LCW için 1–53 aralığını kabul eder.`,
       'MERCH_WEEK_OUT_OF_RANGE',
       400,
       { year, week },
