@@ -1,5 +1,6 @@
 'use strict';
-/* Capture a genuine post-change Buyer Log screen using synthetic demo data.
+/* Automated UI capture (isolated demo only).
+   Capture a genuine post-change Buyer Log screen using synthetic demo data.
    NEVER connect to company data or upload production Outlook messages. */
 const fs = require('node:fs');
 const os = require('node:os');
