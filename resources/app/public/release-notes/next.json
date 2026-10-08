@@ -1,14 +1,114 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-08",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "CP görselleri sayfa dönüşünde anında",
+    "en": "CP images appear instantly when you return"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP ve Siparişler model görselleri başka bir sayfadan dönüldüğünde yer tutucuyla beklemeden yerinde görünür; aynı görsel her ekranda tek adresle önbellekten gelir.",
+    "en": "CP and Orders model images stay in place when you come back from another page; each image now uses a single address and is served from the cache on every screen."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-model-images-instant-return",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker / Siparişler",
+        "en": "CP Tracker / Orders"
+      },
+      "title": {
+        "tr": "Sayfa dönüşünde model görselleri yeniden yüklenmiyor",
+        "en": "Model images no longer reload when you return to a page"
+      },
+      "path": {
+        "tr": "CP Tracker / Siparişler › Görsel sütunu",
+        "en": "CP Tracker / Orders › Picture column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-images-instant-return.png",
+        "alt": {
+          "tr": "Koleksiyon sayfasından dönüldükten hemen sonra CP Tracker tablosunda bütün model görselleri yerinde — demo verili Buyer Log ekranı",
+          "en": "All model images in place on the CP Tracker table right after returning from Collection — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Koleksiyon’dan CP’ye dönüşte görseller ilk karede yerinde; ağa yeni görsel isteği çıkmaz",
+          "en": "Returning from Collection to CP shows the images in the first frame; no new image request goes to the network"
+        }
+      },
+      "body": {
+        "tr": "Aynı model görseli CP’de, Koleksiyon’da ve PLM eşitlemesinden sonra farklı adreslerle isteniyordu; bu yüzden Koleksiyon’dan CP’ye dönünce görseller yer tutucudan başlayıp tek tek yeniden yükleniyordu. Artık her görselin tek bir adresi var, sayfa yeniden çizilse de değişmeyen satırın görseli yerinde kalır ve bu oturumda açılmış görseller doğrudan gösterilir. Görsel değiştirildiğinde yeni görsel yeni adresle gelir ve ilk dönüşte görünür; “Tüm Görselleri Sil” sonrasında silinen görsel geri gelmez.",
+        "en": "The same model image was requested under different addresses in CP, in Collection and after a PLM sync, so returning from Collection to CP restarted every image from a placeholder and loaded them one by one. Each image now has a single address, a redraw keeps the image of an unchanged row in place, and images already opened in this session are shown directly. A replaced image gets a new address and appears on the first return; after “Delete All Images” a deleted image never comes back."
+      }
+    },
+    {
+      "id": "cp-model-images-warmed-scroll",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP’de ilk 300 satırın görselleri hazır bekler",
+        "en": "Images for the first 300 CP rows are prepared in the background"
+      },
+      "path": {
+        "tr": "CP Tracker › Görsel sütunu",
+        "en": "CP Tracker › Picture column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-images-warmed-scroll.png",
+        "alt": {
+          "tr": "CP Tracker tablosu aşağı kaydırıldıktan hemen sonra yeni görünen satırların model görselleri yerinde — demo verili Buyer Log ekranı",
+          "en": "Model images already shown for newly visible rows right after scrolling down the CP Tracker table — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Kaydırınca görünen satırların görselleri hazır; yer tutucu görünmez",
+          "en": "Rows that come into view while scrolling already have their images; no placeholder is shown"
+        }
+      },
+      "body": {
+        "tr": "CP açıldığında geçerli filtre ve sıralamadaki ilk 300 satırın görselleri, ekran boştayken uygulamanın kendi görsel deposundan yüklenir. Kaydırınca ya da sayfaya dönünce görseller hazırdır. Filtre değişince veya başka sayfaya geçince bu iş durur; PLM’e otomatik istek gönderilmez.",
+        "en": "When CP opens, the images of the first 300 rows in the current filter and sort order load from Buyer Log’s own image store while the screen is idle. They are ready when you scroll or come back to the page. The work stops when the filter changes or you switch pages; no automatic request is sent to PLM."
+      }
+    },
+    {
+      "id": "cp-all-rows-scroll-kept-on-return",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker / Siparişler",
+        "en": "CP Tracker / Orders"
+      },
+      "title": {
+        "tr": "“Tümü” görünümünde dönüşte tablo boş kalmıyor",
+        "en": "The table no longer goes blank on return in the “All” view"
+      },
+      "path": {
+        "tr": "CP Tracker / Siparişler › Satır aralığı: Tümü",
+        "en": "CP Tracker / Orders › Row range: All"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-all-rows-scroll-kept-on-return.png",
+        "alt": {
+          "tr": "Tümü görünümünde aşağı kaydırılmış CP Tracker tablosu, başka sayfadan dönüldükten hemen sonra aynı konumda ve görselleriyle dolu — demo verili Buyer Log ekranı",
+          "en": "CP Tracker table in the All view, scrolled down, showing the same position with its images right after returning from another page — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Kaydırma konumu korunur; görünen satırlar ve görselleri ilk karede yerinde",
+          "en": "The scroll position is kept; visible rows and their images are in place in the first frame"
+        }
+      },
+      "body": {
+        "tr": "Satır aralığı “Tümü” iken tablo aşağı kaydırılmışsa ve başka bir sayfadayken veri güncellendiyse, CP’ye dönüldüğünde görünen alan boş kalıyor, satırlar ancak tekrar kaydırınca geliyordu. Gizli sayfada yapılan çizim artık son kaydırma konumunu kullanıyor: konum korunur ve o konumdaki satırlar görselleriyle birlikte hemen görünür; dönüş süresi uzamaz.",
+        "en": "With the row range set to “All”, if the table was scrolled down and the data was updated while you were on another page, the visible area stayed blank when you returned to CP until you scrolled again. A redraw done while the page is hidden now uses the last scroll position: the position is kept and the rows there appear immediately with their images, without making the return slower."
+      }
+    }
+  ]
 }
