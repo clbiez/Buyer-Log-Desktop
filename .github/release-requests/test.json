@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.262",
-  "commit_sha": "b83afa61123ee8ab0b8b5d421e882d9773b30db2",
-  "release_notes": "Buyer Log 7.0.262 TEST: OAB masaüstünde oturum, girişin yapıldığı gizli PASS sayfası içinde doğrulanıyor ve OAB verisi o sayfa üzerinden çekiliyor; giriş tamamlandığında zaman aşımı yaşanmıyor. Kurumsal Bağlantılar'da OAB bağlantı durumu gösteriliyor. PR #438."
+  "version": "7.0.263",
+  "commit_sha": "7830b9581a0a91634ee377728f63e5ab44e27d89",
+  "release_notes": "Buyer Log 7.0.263 TEST: Masaüstü OAB girişi artık kabul ediliyor; oturum doğrulaması PASS'in HTTP 405 döndürdüğü uç nokta yerine OAB rapor servisiyle (GetReportData) yapılıyor ve rapor verisi tabloya geliyor. PR #441."
 }
