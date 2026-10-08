@@ -5832,3 +5832,8 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 .trLabDipRow .trBadge { margin-left: 6px; }
 .trLabDipRow small { display: inline-block; margin-left: 6px; }
 .trLabDipRow p { margin: 4px 0 0; font-size: 12px; white-space: normal; overflow-wrap: anywhere; }
+
+
+.clRosStatusDetails { padding: 7px 9px; margin-top: 4px; border-top: 1px solid var(--line, #d6dce2); max-width: 360px; max-height: 230px; overflow: auto; background: var(--card2, #fff); }
+.clRosStatusDetails b { font-size: 12px; }
+.clRosStatusDetails p { border-top: 1px solid var(--line, #d6dce2); margin: 6px 0 0; padding-top: 6px; font-size: 11px; line-height: 1.45; white-space: normal; overflow-wrap: anywhere; }
