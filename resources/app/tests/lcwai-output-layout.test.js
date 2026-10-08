@@ -90,6 +90,8 @@ test('ortak modül: katalog sayfası blokları 12 sütunlu ızgarada; gruplama v
   const many = Array.from({ length: 7 }, (_, i) => ({ title: `M${i}`, group: i < 5 ? 'Örme' : 'Dokuma' }));
   const pages = layout.catalogPages(many, { order: [] }, layout.normalizeLayout('pptx', { columns: 2, rows: 2 }));
   assert.deepEqual(pages.map(item => [item.group, item.entries.length, item.part, item.parts]), [['Örme', 4, 1, 2], ['Örme', 1, 2, 2], ['Dokuma', 2, 1, 1]]);
+  // Veri kaynaklı grup adları prototip anahtarlarıyla çakışmaz.
+  assert.deepEqual(layout.catalogPages([{ title: 'X', group: 'constructor' }, { title: 'Y', group: '__proto__' }], { subOrder: JSON.parse('{"__proto__":["a"]}') }, layout.normalizeLayout('pptx', {})).map(item => item.group), ['constructor', '__proto__']);
   const css = layout.layoutCss({ columns: 4, rows: 3, headerHeight: 90, titleSize: 34, showNote: false }, { orientation: 'landscape' });
   assert.match(css, /\.bl-catalog-page\{/);
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
@@ -139,6 +141,10 @@ test('PDF: kartlar katalog verisine ayrılır, gruplara göre sayfalanır; öniz
   assert.equal(draft.data.galleries[0].items[2].note, 'Kumaş detayı uzun açıklama 2', 'not kısaltılmaz');
   assert.match(draft.data.body, /<div class="bl-catalog" data-bl-catalog="0"><\/div>/);
   assert.doesNotMatch(draft.data.body, /bl-card/);
+  // Galeri başlığı yalnız hemen önceki <h2>; önceki bölümler korunur.
+  const split = contracts.normalizeHtmlDraft({ body: '<h2>Giriş</h2><p>Önemli metin</p><h2>Modeller</h2><div class="bl-gallery"><div class="bl-card"><h3>M1</h3></div></div>' }).data;
+  assert.match(split.body, /<h2>Giriş<\/h2><p>Önemli metin<\/p>/);
+  assert.equal(split.galleries[0].title, 'Modeller');
   // Tarayıcı düzenleyicisinin eklediği öznitelikler yer tutucuyu kaybettirmez.
   assert.equal(contracts.normalizeHtmlDraft({ body: draft.data.body.replace('data-bl-catalog="0">', 'data-bl-catalog="0" style="" contenteditable="false"><br>'), galleries: draft.data.galleries }).data.galleries.length, 1);
   const galleries = [{ ...draft.data.galleries[0], items: draft.data.galleries[0].items.map((item, i) => ({ ...item, group: i < 3 ? 'Örme' : 'Dokuma' })) }];

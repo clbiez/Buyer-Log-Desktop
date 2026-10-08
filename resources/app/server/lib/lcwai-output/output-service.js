@@ -252,7 +252,7 @@ function createOutputService(options = {}) {
     if (draft.format === 'xlsx') return { format: 'xlsx', data };
     const layout = BLOutputLayout.normalizeLayout('pdf', data.layout);
     const print = draft.format === 'pdf';
-    const doc = body => buildDocument({ body, styles: data.styles, title: input.title || draft.title, lang, orientation, print, meta: { date: draft.day, template: draft.templateLabel }, layout });
+    const doc = body => buildDocument({ body, styles: data.styles, title: String(input.title == null ? '' : input.title).replace(/\s+/g, ' ').trim().slice(0, contracts.LIMITS.titleChars) || draft.title, lang, orientation, print, meta: { date: draft.day, template: draft.templateLabel }, layout });
     const catalogs = (data.galleries || []).map((gallery, index) => ({ gallery: index, title: gallery.title, pages: catalog.catalogPagesHtml(gallery, layout, { lang }) }));
     return {
       format: draft.format, orientation, layout, data,

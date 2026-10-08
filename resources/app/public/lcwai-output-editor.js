@@ -122,8 +122,11 @@
     renderFoot();
   }
   function pushHistory() {
-    if (!ed || ed.format === 'pdf' || ed.format === 'html') return;
-    ed.history.push(JSON.stringify(ed.data));
+    if (!ed) return;
+    const report = ed.format === 'pdf' || ed.format === 'html';
+    // Rapor metni iframe'in kendi geri alması ile; Yerleşimde yalnız yerleşim + katalog saklanır.
+    if (report && ed.mode !== 'layout') return;
+    ed.history.push(JSON.stringify(report ? { layout: ed.data.layout, galleries: ed.data.galleries || [] } : ed.data));
     if (ed.history.length > 60) ed.history.shift();
   }
   let typingTimer = 0;
@@ -137,7 +140,8 @@
     if ((ed.format === 'pdf' || ed.format === 'html') && ed.mode !== 'layout') { const doc = frameDoc(); if (doc) doc.execCommand('undo'); return; }
     const last = ed.history.pop();
     if (!last) { toast(L('Geri alınacak değişiklik yok.', 'Nothing to undo.')); return; }
-    ed.data = JSON.parse(last);
+    if (ed.format === 'pdf' || ed.format === 'html') Object.assign(ed.data, JSON.parse(last));
+    else ed.data = JSON.parse(last);
     clampSelection();
     renderRail(); renderMain(); markDirty();
     if (ed.mode === 'layout') schedulePreview(0);
@@ -174,6 +178,7 @@
     document.removeEventListener('keydown', onKeydown, true);
     window.removeEventListener('pointermove', onBlockPointerMove);
     window.removeEventListener('pointerup', onBlockPointerUp);
+    window.removeEventListener('pointercancel', onBlockPointerCancel);
     clearTimeout(previewTimer);
     if (previewAbort) previewAbort.abort();
     ed = null;
@@ -233,6 +238,7 @@
     overlay.addEventListener('pointerdown', onBlockPointerDown);
     window.addEventListener('pointermove', onBlockPointerMove);
     window.addEventListener('pointerup', onBlockPointerUp);
+    window.addEventListener('pointercancel', onBlockPointerCancel);
     overlay.addEventListener('keydown', onBlockKey);
     // Izgara seçici: fareyle üzerine gelince seçilecek ızgara önizlenir.
     overlay.addEventListener('mouseover', event => {
@@ -665,7 +671,8 @@
     obj.items = obj.items || [];
     obj.catalog = obj.catalog || { by: '', then: '', order: [], subOrder: {} };
     obj.catalog.order = obj.catalog.order || [];
-    obj.catalog.subOrder = obj.catalog.subOrder || {};
+    // Grup adları veriden gelir ("constructor" vb.): prototipsiz sözlük.
+    if (Object.getPrototypeOf(obj.catalog.subOrder || {}) !== null) obj.catalog.subOrder = Object.assign(Object.create(null), obj.catalog.subOrder || {});
     return found;
   }
 
@@ -746,12 +753,12 @@
       const src = imageOf(entry.item.image);
       return `<span class="lcwaiGrpChip" draggable="true" data-grp-item="${entry.index}" title="${esc([entry.item.title, entry.item.subtitle].filter(Boolean).join(' · '))}">${src ? `<img src="${esc(src)}" alt="">` : ''}${esc(entry.item.title || entry.item.image || '—')}</span>`;
     };
-    const tree = groups.map((group, gi) => `<div class="lcwaiGrp" data-grp-drop="${esc(group.group)}|">
+    const tree = groups.map((group, gi) => `<div class="lcwaiGrp" data-grp-drop="${grpKey(group.group, '')}">
         <div class="lcwaiGrpHead" data-grp-name="${esc(group.group)}"><b data-grp-rename="${esc(group.group)}" title="${esc(L('Adı değiştirmek için çift tıklayın', 'Double-click to rename'))}">${esc(group.group || NO_GROUP())}</b><small>${group.subgroups.reduce((sum, sub) => sum + sub.entries.length, 0)}</small>
           <span class="lcwaiEdRailOps is-visible"><button type="button" data-grp-move="${esc(group.group)}" data-dir="-1"${gi ? '' : ' disabled'} aria-label="${esc(L('Yukarı taşı', 'Move up'))}">↑</button><button type="button" data-grp-move="${esc(group.group)}" data-dir="1"${gi < groups.length - 1 ? '' : ' disabled'} aria-label="${esc(L('Aşağı taşı', 'Move down'))}">↓</button></span></div>
-        ${group.subgroups.map(sub => `<div class="lcwaiGrpSub" data-grp-drop="${esc(group.group)}|${esc(sub.subgroup)}">
-          ${sub.subgroup || group.subgroups.length > 1 ? `<div class="lcwaiGrpSubHead" data-grp-go="${esc(group.group)}|${esc(sub.subgroup)}"><span data-grp-rename-sub="${esc(group.group)}|${esc(sub.subgroup)}" title="${esc(L('Adı değiştirmek için çift tıklayın', 'Double-click to rename'))}">${esc(sub.subgroup || L('(alt grupsuz)', '(no subgroup)'))}</span><small>${sub.entries.length}</small></div>` : ''}
-          <div class="lcwaiGrpChips">${sub.entries.map(chip).join('')}</div></div>`).join('') || `<div class="lcwaiGrpSub is-empty" data-grp-drop="${esc(group.group)}|"><p class="lcwaiNote">${esc(L('Modelleri buraya sürükleyin', 'Drag models here'))}</p></div>`}
+        ${group.subgroups.map(sub => `<div class="lcwaiGrpSub" data-grp-drop="${grpKey(group.group, sub.subgroup)}">
+          ${sub.subgroup || group.subgroups.length > 1 ? `<div class="lcwaiGrpSubHead" data-grp-go="${grpKey(group.group, sub.subgroup)}"><span data-grp-rename-sub="${grpKey(group.group, sub.subgroup)}" title="${esc(L('Adı değiştirmek için çift tıklayın', 'Double-click to rename'))}">${esc(sub.subgroup || L('(alt grupsuz)', '(no subgroup)'))}</span><small>${sub.entries.length}</small></div>` : ''}
+          <div class="lcwaiGrpChips">${sub.entries.map(chip).join('')}</div></div>`).join('') || `<div class="lcwaiGrpSub is-empty" data-grp-drop="${grpKey(group.group, '')}"><p class="lcwaiNote">${esc(L('Modelleri buraya sürükleyin', 'Drag models here'))}</p></div>`}
       </div>`).join('');
     return `${list.length > 1 ? `<label class="lcwaiEdField"><span>${esc(L('Katalog', 'Catalogue'))}</span><select data-grp-gallery>${list.map(entry => `<option value="${esc(entry.key)}"${entry.key === gallery.key ? ' selected' : ''}>${esc(entry.label)}</option>`).join('')}</select></label>` : ''}
       <div class="lcwaiEdRow lcwaiGrpPick">
@@ -770,7 +777,7 @@
     if (ed.manualGroups && !window.confirm(L('Elle yaptığınız grup değişiklikleri seçilen sütuna göre yeniden hesaplanacak. Devam edilsin mi?', 'Your manual group changes will be recalculated from the chosen column. Continue?'))) { renderLayPanel(); return; }
     pushHistory();
     obj.items = LAY().assignGroups(obj.items, ed.draft.attributes || {}, by, by ? then : '');
-    obj.catalog = { by, then: by ? then : '', order: [], subOrder: {} };
+    obj.catalog = { by, then: by ? then : '', order: [], subOrder: Object.create(null) };
     ed.manualGroups = false;
     ed.pageIndex = null;
     markDirty(); renderLayPanel(); schedulePreview();
@@ -833,6 +840,8 @@
   function schedulePreview(delay = 220) {
     if (!ed || ed.mode !== 'layout' || ed.format === 'xlsx') return;
     clearTimeout(previewTimer);
+    // Yoldaki eski istek iptal: eski yanıt "Dosyayla aynı" diye çizilmez.
+    if (previewAbort) { previewAbort.abort(); previewAbort = null; }
     previewTimer = setTimeout(fetchPreview, delay);
     setPreviewStatus('busy');
   }
@@ -852,6 +861,13 @@
     try {
       const preview = await api.previewDraft(draftId, { data: collectData(), title: ed.title, orientation: ed.orientation }, controller.signal);
       if (!ed || ed.draft.id !== draftId || controller.signal.aborted) return;
+      // Eski taslak: galeri hâlâ gövdedeyse sunucunun ayırdığı katalog verisi alınır.
+      if ((ed.format === 'pdf' || ed.format === 'html') && !(ed.data.galleries || []).length && preview.data && (preview.data.galleries || []).length) {
+        ed.data.galleries = preview.data.galleries;
+        ed.data.body = preview.data.body;
+        renderLayoutPanel($('[data-ed-main]'));
+        return;
+      }
       const before = ed.pvPages && ed.pageIndex != null ? ed.pvPages[ed.pageIndex] : null;
       ed.preview = preview;
       ed.pvPages = previewPages(preview);
@@ -1086,6 +1102,11 @@
     const b = drag.block;
     updateBlock(b.id, drag.mode === 'move' ? { x: b.x + dCol, y: b.y + dRow } : { w: b.w + dCol, h: b.h + dRow });
   }
+  function onBlockPointerCancel() {
+    if (!blockDrag) return;
+    blockDrag = null;
+    if (ed) refreshBlocks();
+  }
   function onBlockKey(event) {
     const block = ed && ed.mode === 'layout' && selectedBlock();
     if (!block || !event.target.closest || !event.target.closest('[data-blk]')) return;
@@ -1159,8 +1180,9 @@
     grid.innerHTML = `<b>${c} × ${r}</b> · ${esc(L(`${unit} başına ${c * r} model`, `${c * r} models per ${unit}`))}${hover ? ` · <span>${esc(L('seçmek için tıklayın', 'click to choose'))}</span>` : ''}`;
   }
 
-  // "grup|alt grup" anahtarı; grup adında | olabilir, son | ayırır.
-  const splitKey = key => { const i = String(key).lastIndexOf('|'); return [key.slice(0, i), key.slice(i + 1)]; };
+  // "grup|alt grup" anahtarı; adlarda | olabileceği için iki parça ayrı kodlanır.
+  const grpKey = (group, subgroup) => esc(`${encodeURIComponent(group)}|${encodeURIComponent(subgroup)}`);
+  const splitKey = key => { const [group = '', subgroup = ''] = String(key).split('|'); try { return [decodeURIComponent(group), decodeURIComponent(subgroup)]; } catch (_) { return ['', '']; } };
   const imageOf = token => (token && ed.draft.images && ed.draft.images[String(token).toUpperCase()]) || '';
 
   function xlsxPreview() {

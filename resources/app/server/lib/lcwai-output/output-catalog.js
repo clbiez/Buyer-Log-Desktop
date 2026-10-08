@@ -63,7 +63,8 @@ function extractGalleries(body, existing = []) {
     let start = gallery.start;
     let title = '';
     const before = source.slice(0, start);
-    const heading = /<h2\b[^>]*>([\s\S]*?)<\/h2>\s*$/i.exec(before);
+    // Yalnız galeriden hemen önceki <h2> (aradaki içerik başlığa katılmaz).
+    const heading = /<h2\b[^>]*>((?:(?!<h2\b)[\s\S])*?)<\/h2>\s*$/i.exec(before);
     if (heading) { title = clean(visibleText(heading[1]), LIMITS.title); start = heading.index; }
     galleries.push({ title, items, catalog: BLOutputLayout.normalizeCatalog(null) });
     source = `${source.slice(0, start)}<div class="bl-catalog" data-bl-catalog="${galleries.length - 1}"></div>${source.slice(gallery.end)}`;

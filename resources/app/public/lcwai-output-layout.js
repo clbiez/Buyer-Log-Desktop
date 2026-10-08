@@ -207,7 +207,8 @@
     const source = raw && typeof raw === 'object' ? raw : {};
     const text = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
     const list = value => (Array.isArray(value) ? [...new Set(value.map(item => text(item, 120)))].slice(0, 200) : []);
-    const subOrder = {};
+    // Grup adı veri kaynaklıdır ("constructor", "__proto__" olabilir): prototipsiz sözlük.
+    const subOrder = Object.create(null);
     if (source.subOrder && typeof source.subOrder === 'object') for (const [group, items] of Object.entries(source.subOrder).slice(0, 200)) subOrder[text(group, 120)] = list(items);
     return { by: text(source.by, 80), then: text(source.then, 80), order: list(source.order), subOrder };
   }
@@ -216,8 +217,8 @@
      "f:subtitle|note|title" kartın kendi alanı. */
   function fieldValue(item, field, attributes) {
     const key = String(field || '');
-    if (key.startsWith('a:')) { const row = attributes && item && item.image ? attributes[String(item.image).toUpperCase()] : null; return row ? String(row[key.slice(2)] == null ? '' : row[key.slice(2)]).trim() : ''; }
-    if (key.startsWith('f:') && ITEM_FIELDS.includes(key.slice(2))) return String(item && item[key.slice(2)] || '').trim();
+    if (key.startsWith('a:')) { const row = attributes && item && item.image ? attributes[String(item.image).toUpperCase()] : null; return row && Object.prototype.hasOwnProperty.call(row, key.slice(2)) ? String(row[key.slice(2)] == null ? '' : row[key.slice(2)]).replace(/\s+/g, ' ').trim() : ''; }
+    if (key.startsWith('f:') && ITEM_FIELDS.includes(key.slice(2))) return String(item && item[key.slice(2)] || '').replace(/\s+/g, ' ').trim();
     return '';
   }
   /* Seçilebilir gruplama alanları: en az 2, en çok kart sayısından az farklı değeri olanlar. */
@@ -248,7 +249,7 @@
     const ordered = (keys, order) => [...order.filter(key => keys.includes(key)), ...keys.filter(key => !order.includes(key))];
     return ordered([...groups.keys()], catalog.order).map(group => {
       const subs = groups.get(group);
-      return { group, subgroups: ordered([...subs.keys()], catalog.subOrder[group] || []).map(subgroup => ({ subgroup, entries: subs.get(subgroup) })) };
+      return { group, subgroups: ordered([...subs.keys()], Array.isArray(catalog.subOrder[group]) ? catalog.subOrder[group] : []).map(subgroup => ({ subgroup, entries: subs.get(subgroup) })) };
     });
   }
   /* Katalog sayfaları: her alt grup kendi sayfasında başlar; model alanına
