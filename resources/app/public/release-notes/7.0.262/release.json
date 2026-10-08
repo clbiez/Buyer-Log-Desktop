@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.262",
+  "channel": "stable",
+  "publishedAt": "2026-10-08",
+  "title": {
+    "tr": "OAB oturumu düzeltildi",
+    "en": "OAB session fixed"
+  },
+  "summary": {
+    "tr": "OAB girişi artık tamamlandığında kabul ediliyor ve Kurumsal Bağlantılar'da görünüyor.",
+    "en": "OAB sign-in is now accepted once completed and shows in Corporate Connections."
+  },
+  "stats": {
+    "features": 0,
+    "improvements": 0,
+    "fixes": 1
+  },
+  "changes": [
+    {
+      "id": "oab-session-accepted",
+      "type": "fix",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "OAB girişi tamamlanınca kabul ediliyor; bağlantı durumu görünüyor",
+        "en": "OAB sign-in is accepted once completed; connection state is shown"
+      },
+      "path": {
+        "tr": "Kullanıcı menüsü › Kurumsal Bağlantılar › OAB Kullanıcı Girişi",
+        "en": "User menu › Corporate Connections › OAB User Sign-In"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-session-accepted.png",
+        "alt": {
+          "tr": "Kurumsal Bağlantılar'da OAB Kullanıcı Girişi satırında Bağlı rozeti — demo verili Buyer Log ekranı",
+          "en": "Connected badge on the OAB User Sign-In row in Corporate Connections — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "OAB oturumu Kurumsal Bağlantılar'da \"Bağlı\" olarak görünüyor",
+          "en": "The OAB session shows as \"Connected\" in Corporate Connections"
+        }
+      },
+      "body": {
+        "tr": "OAB giriş penceresinde PASS raporu açıldığı hâlde Buyer Log oturumu kabul etmiyor ve işlem zaman aşımına düşüyordu. Oturum doğrulaması ve OAB veri istekleri artık girişin yapıldığı PASS sayfasının içinden yapılıyor; giriş tamamlanınca pencere kapanıyor ve veri çekiliyor. Kurumsal Bağlantılar'da OAB satırı da PLM ve LCW AI gibi bağlantı durumunu gösteriyor.",
+        "en": "Even though the PASS report opened in the OAB sign-in window, Buyer Log did not accept the session and the operation timed out. Session validation and OAB data requests now run inside the PASS page where you signed in; once sign-in completes, the window closes and data is fetched. In Corporate Connections, the OAB row now shows its connection state like PLM and LCW AI."
+      }
+    }
+  ]
+}

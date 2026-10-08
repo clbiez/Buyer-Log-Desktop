@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.262",
+      "publishedAt": "2026-10-08",
+      "title": {
+        "tr": "OAB oturumu düzeltildi",
+        "en": "OAB session fixed"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.262/release.json"
+    },
+    {
       "version": "7.0.261",
       "publishedAt": "2026-10-08",
       "title": {
